@@ -201,7 +201,6 @@ export async function getSubmarketChoropleth(
   const { rows } = await pool.query(
     `WITH kids AS (
        SELECT id, name,
-              regexp_replace(lower(name), '\\s+', '-', 'g') AS slug,
               ST_AsGeoJSON(ST_SimplifyPreserveTopology(geom, 0.002)) AS geojson,
               ST_Y(ST_Centroid(geom)) AS lat, ST_X(ST_Centroid(geom)) AS lng
        FROM areas WHERE parent_id = $1
@@ -211,12 +210,13 @@ export async function getSubmarketChoropleth(
        WHERE mm.area_id IN (SELECT id FROM kids)
        GROUP BY 1
      ), lm AS (
+       -- tháng mới nhất CÓ adr (tháng cuối window thường chưa có booking)
        SELECT DISTINCT ON (area_id) area_id, adr, occupancy, revpar
        FROM market_metrics
-       WHERE area_id IN (SELECT id FROM kids)
+       WHERE area_id IN (SELECT id FROM kids) AND adr IS NOT NULL
        ORDER BY area_id, month DESC
      )
-     SELECT k.id, k.name, k.slug, k.lat, k.lng, k.geojson,
+     SELECT k.id, k.name, k.lat, k.lng, k.geojson,
             agg.listings, agg.revenue, lm.adr, lm.occupancy, lm.revpar
      FROM kids k
      JOIN agg ON agg.area_id = k.id
@@ -229,7 +229,7 @@ export async function getSubmarketChoropleth(
     .map((r) => ({
       id: r.id,
       name: r.name,
-      slug: r.slug,
+      slug: slugifyName(r.name),
       lat: Number(r.lat),
       lng: Number(r.lng),
       metrics: {
@@ -267,11 +267,13 @@ export async function getTopSubmarkets(marketId: string, limit = 10): Promise<To
        FROM market_metrics mm JOIN kids k ON k.id = mm.area_id
        GROUP BY 1
      ), lm AS (
+       -- tháng mới nhất CÓ adr (tháng cuối window thường chưa có booking)
        SELECT DISTINCT ON (mm.area_id) mm.area_id, mm.adr, mm.occupancy, mm.revpar
        FROM market_metrics mm JOIN kids k ON k.id = mm.area_id
+       WHERE mm.adr IS NOT NULL
        ORDER BY mm.area_id, mm.month DESC
      )
-     SELECT k.id, k.name, k.slug, agg.listings, agg.revenue, lm.adr, lm.occupancy, lm.revpar
+     SELECT k.id, k.name, agg.listings, agg.revenue, lm.adr, lm.occupancy, lm.revpar
      FROM agg
      JOIN lm USING (area_id)
      JOIN kids k ON k.id = agg.area_id
@@ -282,7 +284,7 @@ export async function getTopSubmarkets(marketId: string, limit = 10): Promise<To
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
-    slug: r.slug,
+    slug: slugifyName(r.name),
     listings: Number(r.listings ?? 0),
     adr: r.adr === null ? null : Number(r.adr),
     occupancy: r.occupancy === null ? null : Number(r.occupancy),
