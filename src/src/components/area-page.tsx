@@ -71,8 +71,11 @@ export async function AreaPage({ areaId }: { areaId: string }) {
           </div>
           <h1 className="text-3xl font-bold text-neutral-900">{area.name}</h1>
           <div className="text-sm text-neutral-500">
-            {area.regionType === "market" ? "Market" : "Submarket"} · Inside Airbnb snapshot ·{" "}
-            {metrics.length} months loaded
+            {area.regionType === "market" ? "Market" : "Submarket"} ·{" "}
+            {area.parentId === "th-bangkok" || areaId.startsWith("th-")
+              ? "Inside Airbnb snapshot"
+              : "Airbnb self-collected"}{" "}
+            · {metrics.length} months loaded
           </div>
         </div>
         {area.regionType === "market" ? (
