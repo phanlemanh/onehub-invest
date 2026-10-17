@@ -25,6 +25,20 @@ Thay thế các lộ trình rời rạc trước đây. Nguyên tắc: mỗi gia
 
 ---
 
+## Giai đoạn G0 — Dọn các hạng mục dang dở (chạy trước G1)
+
+*Tổng hợp từ audit các đợt trước — chất lượng dữ liệu trước, UI sau.*
+
+| # | Hạng mục | Gốc | Tiêu chí đạt |
+|---|---|---|---|
+| G0-a | Discovery fallback "Trang cuối" (~13 listings trang 15 bị bỏ) | audit ① | collector bắt được link "Trang cuối", rerun discovery đủ trang |
+| G0-b | **Chuẩn hoá gán khu vực bằng point-in-polygon** (ST_Contains vào 126 phường OSM) thay vì tin theo title — xử lý luôn: areas ngoài tỉnh (Văn Giang, Phục Yên = Hưng Yên/Vĩnh Phúc), area "Hà Nội" tự tham chiếu, trùng slug (Dong Da vs Quận Đống Đa), 20 areas thiếu polygon | audit ⑤ | mọi listing Hà Nội thuộc đúng phường theo tọa độ; không còn area tự-tham-chiếu; số area sạch |
+| G0-c | Top Submarkets sort theo metric (ADR/occ/revpar) | audit ⑦ | đổi sort được từ UI |
+| G0-d | Trang chi tiết listing (drill-down click tên) | audit ⑧ | /listing/<id> hiển thị chi tiết + calendar |
+| G0-e | Cron vận hành chính thức (launchd plist) | audit ⑫ | collector tự chạy tuần không cần tay |
+
+(Các mục audit khác đã có chủ: ③⑨ → G2 AirDNA; ⑩ → G3; ⑬ divergence đã ghi docs.)
+
 ## Giai đoạn G1 — Mock Zalo + Tính năng Yield (chạy NGAY, không dependency)
 
 *Không chờ AirDNA, không chờ join nhóm. Mục tiêu: tính năng yield hoàn chỉnh
