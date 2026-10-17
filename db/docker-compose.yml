@@ -1,0 +1,20 @@
+services:
+  db:
+    image: kartoza/postgis:17-3.5
+    container_name: one-invest-db
+    environment:
+      POSTGRES_DB: oneinvest
+      POSTGRES_USER: oneinvest
+      POSTGRES_PASS: oneinvest
+    ports:
+      - "5433:5432"
+    volumes:
+      - oneinvest_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oneinvest -d oneinvest"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  oneinvest_pgdata:

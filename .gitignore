@@ -1,0 +1,21 @@
+# dependencies / build
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# research artifacts — chứa token/cookie session, TUYỆT ĐỐI không commit
+research-local/
+*.har
+
+# pipeline data (CSV/GeoJSON thô từ Inside Airbnb)
+pipeline/data/
+
+# misc
+.DS_Store
+*.log
