@@ -1,11 +1,11 @@
 // import-airbnb.mjs — nạp snapshot từ one-invest-collector theo DATA-CONTRACT
-// (docs/DATA-CONTRACT.md schemaVersion 1): verify sha256 từng file trước khi parse,
-// payload listing giữ nguyên vẹn vào stg_abnb_listings, calendar bung thành
-// stg_abnb_nights (PdpCalendarDay). Không chuẩn hoá gì khác — transform lo phần còn lại.
+// (docs/DATA-CONTRACT.md schemaVersion 1): verify sha256 từng file trước khi parse.
+// - airbnb-listing items → stg_abnb_listings (payload nguyên vẹn) + stg_abnb_nights
+// - airbnb-discovery items → stg_abnb_discovery (title là nguồn suy ra area)
 //
 // Dùng: node import-airbnb.mjs <đường-dẫn-snapshot-dir>
 //   (vd: ../one-invest-collector/snapshots/hanoi/hanoi__airbnb-listing__2026…)
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
@@ -58,41 +58,65 @@ async function main() {
 
     let listings = 0;
     let nights = 0;
+    let discovery = 0;
     for (const it of items) {
-      if (it.source !== "airbnb-listing") continue;
-      await client.query(
-        `INSERT INTO stg_abnb_listings (listing_id, snapshot_id, fetched_at, payload)
-         VALUES ($1,$2,$3,$4)
-         ON CONFLICT (listing_id, snapshot_id) DO UPDATE SET payload = EXCLUDED.payload`,
-        [it.sourceId, manifest.snapshotId, it.fetchedAt, JSON.stringify(it.payload)],
-      );
-      listings++;
-
-      // bung PdpAvailabilityCalendar → stg_abnb_nights
-      const months =
-        it.payload?.calendar?.data?.node?.pdpAvailabilityCalendar?.calendarMonths ?? [];
-      const values = [];
-      const params = [];
-      let p = 0;
-      for (const m of months) {
-        for (const d of m.days ?? []) {
-          if (!d.calendarDate) continue;
-          params.push(it.sourceId, manifest.snapshotId, d.calendarDate, d.available ?? null, d.minNights ?? null);
-          values.push(`($${++p},$${++p},$${++p},$${++p},$${++p})`);
-        }
-      }
-      if (values.length) {
+      if (it.source === "airbnb-listing") {
         await client.query(
-          `INSERT INTO stg_abnb_nights (listing_id, snapshot_id, night, available, min_nights)
-           VALUES ${values.join(",")}
-           ON CONFLICT (listing_id, snapshot_id, night) DO NOTHING`,
-          params,
+          `INSERT INTO stg_abnb_listings (listing_id, snapshot_id, fetched_at, payload)
+           VALUES ($1,$2,$3,$4)
+           ON CONFLICT (listing_id, snapshot_id) DO UPDATE SET payload = EXCLUDED.payload`,
+          [it.sourceId, manifest.snapshotId, it.fetchedAt, JSON.stringify(it.payload)],
         );
-        nights += values.length;
+        listings++;
+
+        const months =
+          it.payload?.calendar?.data?.node?.pdpAvailabilityCalendar?.calendarMonths ?? [];
+        const values = [];
+        const params = [];
+        let p = 0;
+        for (const m of months) {
+          for (const d of m.days ?? []) {
+            if (!d.calendarDate) continue;
+            params.push(
+              it.sourceId,
+              manifest.snapshotId,
+              d.calendarDate,
+              d.available ?? null,
+              d.minNights ?? null,
+            );
+            values.push(`($${++p},$${++p},$${++p},$${++p},$${++p})`);
+          }
+        }
+        if (values.length) {
+          await client.query(
+            `INSERT INTO stg_abnb_nights (listing_id, snapshot_id, night, available, min_nights)
+             VALUES ${values.join(",")}
+             ON CONFLICT (listing_id, snapshot_id, night) DO NOTHING`,
+            params,
+          );
+          nights += values.length;
+        }
+      } else if (it.source === "airbnb-discovery") {
+        await client.query(
+          `INSERT INTO stg_abnb_discovery (listing_id, snapshot_id, title, href, price_label, fetched_at)
+           VALUES ($1,$2,$3,$4,$5,$6)
+           ON CONFLICT (listing_id, snapshot_id) DO NOTHING`,
+          [
+            it.sourceId,
+            manifest.snapshotId,
+            it.payload?.title ?? null,
+            it.payload?.href ?? null,
+            it.payload?.price ?? null,
+            it.fetchedAt,
+          ],
+        );
+        discovery++;
       }
     }
     await client.query("COMMIT");
-    console.log(`đã nạp: ${listings} listings, ${nights} đêm (nights)`);
+    console.log(
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs`,
+    );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     throw err;

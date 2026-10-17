@@ -42,9 +42,17 @@ export async function AreaPage({ areaId }: { areaId: string }) {
   const currency = currencyFor(areaId);
   const points = metrics.map((m) => ({ label: fmtMonth(m.month), ...m }));
   const [cc, ...rest] = area.id.split("-");
-  const basePath = `/${cc}/${rest.join("-")}`;
-  const slug = area.name.toLowerCase().replace(/\s+/g, "-");
-  const currentPath = area.regionType === "submarket" ? `${basePath}/${slug}` : basePath;
+  const basePath = `/${cc}/${rest.join("-")}`; // vd "/th/bangkok", "/vn/hanoi"
+  // slug bỏ dấu cho URL submarket (khớp resolveSubmarketId + pipeline slugify)
+  const subSlug = area.name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const currentPath = area.regionType === "submarket" ? `${basePath}/${subSlug}` : basePath;
 
   // Paywall (mirror AirDNA): free = field-level redaction trên KPI revenue +
   // endpoint-level 401 analog cho Revenue/RevPAR timeseries và Top Listings.

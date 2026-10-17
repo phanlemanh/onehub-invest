@@ -1,7 +1,7 @@
 import { pool } from "./db";
 
-// Tiền tệ theo market — M1′ chỉ có Bangkok/THB (xem pipeline/README.md divergence 4).
-const CURRENCY: Record<string, string> = { "th-bangkok": "THB" };
+// Tiền tệ theo market — THB (Bangkok/Inside Airbnb) + VND (Hà Nội/tự thu).
+const CURRENCY: Record<string, string> = { "th-bangkok": "THB", "vn-hanoi": "VND" };
 export function currencyFor(areaId: string): string {
   const marketId = areaId.split("-").slice(0, 2).join("-");
   return CURRENCY[marketId] ?? "USD";
@@ -39,18 +39,30 @@ export async function getArea(areaId: string): Promise<Area | null> {
     : null;
 }
 
+/** Slug bỏ dấu tiếng Việt (khớp slugify của pipeline/transform-airbnb.mjs). */
+function slugifyName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 /** Resolve submarket theo slug tên (URL thân thiện, không phụ thuộc id nội bộ). */
 export async function resolveSubmarketId(
   marketId: string,
   subSlug: string,
 ): Promise<string | null> {
   const { rows } = await pool.query(
-    `SELECT id FROM areas
-     WHERE region_type = 'submarket' AND parent_id = $1
-       AND regexp_replace(lower(name), '\\s+', '-', 'g') = $2`,
-    [marketId, subSlug],
+    `SELECT id, name FROM areas
+     WHERE region_type = 'submarket' AND parent_id = $1`,
+    [marketId],
   );
-  return rows[0]?.id ?? null;
+  const hit = rows.find((r) => slugifyName(r.name) === subSlug);
+  return hit?.id ?? null;
 }
 
 export type MetricRow = {

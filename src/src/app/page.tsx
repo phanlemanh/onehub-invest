@@ -7,6 +7,9 @@ export default function Home() {
       <p className="mt-2 text-neutral-600">Market Insights cho thuê ngắn hạn — dữ liệu công khai.</p>
       <ul className="mt-6 space-y-2 text-blue-700 underline">
         <li>
+          <Link href="/vn/hanoi">Hà Nội (self-collected Airbnb data)</Link>
+        </li>
+        <li>
           <Link href="/th/bangkok/map">Bangkok — Market Finder (choropleth map)</Link>
         </li>
         <li>
