@@ -83,18 +83,3 @@ export async function toggleSaved(formData: FormData): Promise<void> {
   revalidatePath("/", "layout");
   redirect(redirectTo);
 }
-
-/**
- * Demo plan switch — thay cho billing webhook thật.
- * Chỉ đổi plan của chính user đang đăng nhập.
- */
-export async function setPlan(formData: FormData): Promise<void> {
-  const plan = String(formData.get("plan") ?? "");
-  const redirectTo = safeNext(formData.get("redirectTo") as string | null);
-  const user = await getSessionUser();
-  if (user && (plan === "free" || plan === "pro")) {
-    await pool.query(`UPDATE users SET plan = $1 WHERE id = $2`, [plan, user.id]);
-  }
-  revalidatePath("/", "layout");
-  redirect(redirectTo);
-}
