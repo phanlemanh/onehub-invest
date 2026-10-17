@@ -44,16 +44,22 @@ function extractListing(payload) {
     meta?.seoFeatures?.ogTags?.ogTitle?.content?.localizedString ??
     meta?.sharingConfig?.title ??
     null;
-  // structuredDisplayPrice nằm trong sections.sections[] — lấy section đầu có giá
+  // structuredDisplayPrice nằm trong sections.sections[] — lấy section đầu có giá.
+  // Hai variant: primaryLine.discountedPrice hoặc chỉ primaryLine.price/priceString.
   let priceListed = null;
-  let priceOriginal = null;
   for (const s of sections?.sections ?? []) {
     const line = s?.section?.structuredDisplayPrice?.primaryLine;
-    if (line?.discountedPrice ?? line?.originalPrice) {
-      priceListed = parseVnd(line.discountedPrice) ?? parseVnd(line.originalPrice);
-      priceOriginal = parseVnd(line.originalPrice);
+    const raw =
+      line?.discountedPrice ?? line?.price ?? line?.priceString ?? line?.originalPrice ?? null;
+    if (raw) {
+      priceListed = parseVnd(raw);
       break;
     }
+  }
+  if (priceListed === null) {
+    // Fallback cuối: chuỗi giá VND đầu tiên trong toàn payload (primary price)
+    const m = String(JSON.stringify(pdp)).match(/"(?:discountedPrice|priceString|price)":"([\d.,\s]+)₫/);
+    if (m) priceListed = parseVnd(m[1]);
   }
   return {
     name: node?.pdpPresentation?.overview?.title ?? ogTitle,
@@ -63,7 +69,6 @@ function extractListing(payload) {
     lng: node?.location?.coordinate?.longitude ?? null,
     bedrooms: parseBedrooms(ogTitle),
     priceListed,
-    priceOriginal,
   };
 }
 
