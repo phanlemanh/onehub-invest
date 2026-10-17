@@ -243,7 +243,51 @@ export async function getSubmarketChoropleth(
     }));
 }
 
-// ---------- M3′: các section sâu ----------
+// ---------- P2: supply growth (từ stg discovery snapshots) ----------
+
+export type SupplyPoint = {
+  snapshotId: string;
+  date: string;
+  seen: number; // listings snapshot thấy
+  newVsPrev: number; // id mới so với snapshot trước đó
+};
+
+/**
+ * Lịch sử discovery theo city + tổng unique từng thấy.
+ * Lưu ý trung thực: search-paging xáo trộn giữa các lần chạy → new/removed
+ * là "mới xuất hiện/không còn thấy", không hẳn listing mới thật.
+ */
+export async function getSupplyHistory(
+  marketAreaId: string,
+): Promise<{ points: SupplyPoint[]; cumulative: number } | null> {
+  const city = marketAreaId.split("-").slice(1).join("-"); // 'vn-hanoi' → 'hanoi'
+  const { rows } = await pool.query(
+    `SELECT d.snapshot_id,
+            to_char(min(a.collected_at), 'YYYY-MM-DD HH24:MI') AS date,
+              array_agg(DISTINCT d.listing_id) AS ids
+     FROM stg_abnb_discovery d JOIN airbnb_snapshots a ON a.snapshot_id = d.snapshot_id
+     WHERE a.city = $1
+     GROUP BY d.snapshot_id ORDER BY min(a.collected_at)`,
+    [city],
+  );
+  if (rows.length === 0) return null;
+  // đơn giản hoá: tính new bằng JS để tránh SQL rối
+  const seen = new Set<string>();
+  const points: SupplyPoint[] = [];
+  for (const r of rows) {
+    const ids: string[] = r.ids ?? [];
+    let fresh = 0;
+    for (const id of ids) if (!seen.has(id)) fresh++;
+    ids.forEach((i) => seen.add(i));
+    points.push({
+      snapshotId: r.snapshot_id,
+      date: r.date,
+      seen: ids.length,
+      newVsPrev: fresh,
+    });
+  }
+  return { points, cumulative: seen.size };
+}
 
 export type TopSubmarket = {
   id: string;
@@ -319,77 +363,44 @@ export type AreaBreakdown = {
 };
 
 /**
- * Cả 3 breakdown theo area (hoặc market = chính nó + các con) trong MỘT lần quét nights
- * — per_listing CTE gom theo listing rồi group tiếp theo bucket phòng ngủ / room type / top.
+ * Đọc 3 breakdown từ bảng cache area_breakdowns (precompute bởi
+ * pipeline/sql/400_breakdowns.sql) — không quét nights runtime.
  */
 export async function getAreaBreakdown(areaId: string): Promise<AreaBreakdown> {
   const { rows } = await pool.query(
-    `WITH scope AS (
-       SELECT id FROM areas WHERE id = $1 OR parent_id = $1
-     ), per_listing AS (
-       SELECT l.id, l.name, l.bedrooms, l.room_type,
-              count(*) FILTER (WHERE NOT n.available) AS booked,
-              count(*) FILTER (WHERE n.available) AS avail,
-              COALESCE(sum(n.price) FILTER (WHERE NOT n.available), 0) AS revenue
-       FROM nights n
-       JOIN listings l ON l.id = n.listing_id
-       WHERE l.area_id IN (SELECT id FROM scope)
-       GROUP BY l.id, l.name, l.bedrooms, l.room_type
-     ), beds AS (
-       SELECT CASE
-                WHEN bedrooms IS NULL THEN 'N/A'
-                WHEN bedrooms = 0 THEN 'Studio'
-                WHEN bedrooms >= 4 THEN '4+'
-                ELSE bedrooms::text
-              END AS label,
-              count(*) AS listings,
-              sum(revenue) AS revenue,
-              sum(revenue) / NULLIF(sum(booked), 0) AS adr,
-              sum(booked)::numeric / NULLIF(sum(booked) + sum(avail), 0) AS occupancy
-       FROM per_listing GROUP BY 1
-     ), rtypes AS (
-       SELECT COALESCE(room_type, 'N/A') AS label,
-              count(*) AS listings,
-              sum(revenue) AS revenue,
-              sum(revenue) / NULLIF(sum(booked), 0) AS adr,
-              sum(booked)::numeric / NULLIF(sum(booked) + sum(avail), 0) AS occupancy
-       FROM per_listing GROUP BY 1
-     ), tops AS (
-       SELECT id, name, bedrooms, room_type, revenue,
-              revenue / NULLIF(booked, 0) AS adr,
-              booked::numeric / NULLIF(booked + avail, 0) AS occupancy
-       FROM (SELECT * FROM per_listing ORDER BY revenue DESC LIMIT 8) x
-     )
-     SELECT
-       (SELECT json_agg(row_to_json(b) ORDER BY array_position(ARRAY['Studio','1','2','3','4+','N/A'], b.label))
-        FROM beds b) AS bedrooms,
-       (SELECT json_agg(row_to_json(r) ORDER BY r.revenue DESC NULLS LAST) FROM rtypes r) AS room_types,
-       (SELECT json_agg(row_to_json(t) ORDER BY t.revenue DESC) FROM tops t) AS top_listings`,
+    `SELECT kind, label, payload FROM area_breakdowns WHERE area_id = $1`,
     [areaId],
   );
+  const beds: Record<string, unknown>[] = [];
+  const rtypes: Record<string, unknown>[] = [];
+  const tops: Record<string, unknown>[] = [];
+  for (const r of rows) {
+    const p = r.payload as Record<string, string | number | null>;
+    const row = { label: r.label, ...p };
+    if (r.kind === "bedrooms") beds.push(row);
+    else if (r.kind === "roomTypes") rtypes.push(row);
+    else if (r.kind === "topListings") tops.push(row);
+  }
+  const order = ["Studio", "1", "2", "3", "4+", "N/A"];
+  beds.sort((a, b) => order.indexOf(String(a.label)) - order.indexOf(String(b.label)));
+  rtypes.sort((a, b) => Number(b.revenue ?? 0) - Number(a.revenue ?? 0));
+  tops.sort((a, b) => Number(b.revenue ?? 0) - Number(a.revenue ?? 0));
 
-  const r = rows[0] ?? {};
-  const withShare = (arr: unknown[]): BreakdownRow[] => {
-    const total = arr.reduce<number>(
-      (s, x) => s + Number((x as { revenue: string | number }).revenue ?? 0),
-      0,
-    );
-    return arr.map((x) => {
-      const b = x as Record<string, string | number | null>;
-      return {
-        label: String(b.label),
-        listings: Number(b.listings ?? 0),
-        revenue: Number(b.revenue ?? 0),
-        adr: b.adr === null || b.adr === undefined ? null : Number(b.adr),
-        occupancy: b.occupancy === null || b.occupancy === undefined ? null : Number(b.occupancy),
-        share: total > 0 ? Number(b.revenue ?? 0) / total : 0,
-      };
-    });
+  const withShare = (arr: Record<string, unknown>[]): BreakdownRow[] => {
+    const total = arr.reduce<number>((s, x) => s + Number(x.revenue ?? 0), 0);
+    return arr.map((b) => ({
+      label: String(b.label),
+      listings: Number(b.listings ?? 0),
+      revenue: Number(b.revenue ?? 0),
+      adr: b.adr === null || b.adr === undefined ? null : Number(b.adr),
+      occupancy: b.occupancy === null || b.occupancy === undefined ? null : Number(b.occupancy),
+      share: total > 0 ? Number(b.revenue ?? 0) / total : 0,
+    }));
   };
   return {
-    bedrooms: withShare(r.bedrooms ?? []),
-    roomTypes: withShare(r.room_types ?? []),
-    topListings: (r.top_listings ?? []).map((x: Record<string, string | number | null>) => ({
+    bedrooms: withShare(beds),
+    roomTypes: withShare(rtypes),
+    topListings: tops.map((x) => ({
       id: String(x.id),
       name: x.name === null || x.name === undefined ? null : String(x.name),
       bedrooms: x.bedrooms === null || x.bedrooms === undefined ? null : Number(x.bedrooms),

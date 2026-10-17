@@ -59,6 +59,7 @@ async function main() {
     let listings = 0;
     let nights = 0;
     let discovery = 0;
+    let osm = 0;
     for (const it of items) {
       if (it.source === "airbnb-listing") {
         await client.query(
@@ -111,11 +112,19 @@ async function main() {
           ],
         );
         discovery++;
+      } else if (it.source === "osm-boundaries") {
+        await client.query(
+          `INSERT INTO stg_osm_boundaries (osm_id, snapshot_id, name, payload)
+           VALUES ($1,$2,$3,$4)
+           ON CONFLICT (osm_id, snapshot_id) DO NOTHING`,
+          [it.sourceId, manifest.snapshotId, it.meta?.name ?? null, JSON.stringify(it.payload)],
+        );
+        osm++;
       }
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

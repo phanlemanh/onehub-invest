@@ -26,7 +26,7 @@ const parseVnd = (s) => {
 };
 
 const parseBedrooms = (ogTitle) => {
-  const m = String(ogTitle ?? "").match(/(\d+)\s*ph[oò]ng\s*ng[uỷ]y?/i);
+  const m = String(ogTitle ?? "").match(/(\d+)\s*phòng\s*ngủ/i);
   if (m) return Number(m[1]);
   if (/studio/i.test(String(ogTitle))) return 0;
   return null;

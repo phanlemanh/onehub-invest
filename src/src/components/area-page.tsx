@@ -8,6 +8,7 @@ import {
   getMarketGeoJson,
   getMetrics,
   getSiblingBenchmark,
+  getSupplyHistory,
   getTopSubmarkets,
 } from "@/lib/queries";
 import { getSessionUser, isSaved } from "@/lib/auth";
@@ -27,7 +28,7 @@ export async function AreaPage({ areaId }: { areaId: string }) {
   const area = await getArea(areaId);
   if (!area) notFound();
 
-  const [metrics, kpis, benchmark, geo, breakdown, topSubs, user] = await Promise.all([
+  const [metrics, kpis, benchmark, geo, breakdown, topSubs, user, supply] = await Promise.all([
     getMetrics(areaId),
     getKpis(areaId),
     area.regionType === "submarket" ? getSiblingBenchmark(areaId) : Promise.resolve(null),
@@ -35,6 +36,7 @@ export async function AreaPage({ areaId }: { areaId: string }) {
     getAreaBreakdown(areaId),
     area.regionType === "market" ? getTopSubmarkets(areaId, 10) : Promise.resolve(null),
     getSessionUser(),
+    area.regionType === "market" ? getSupplyHistory(areaId) : Promise.resolve(null),
   ]);
   const saved = user ? await isSaved(user.id, areaId) : false;
 
@@ -142,6 +144,35 @@ export async function AreaPage({ areaId }: { areaId: string }) {
             subtitle={`Ranked by 12-month listed-price revenue · latest-month ADR / occupancy / RevPAR`}
           >
             <TopSubmarkets rows={topSubs} currency={currency} basePath={basePath} />
+          </Section>
+        ) : null}
+
+        {supply ? (
+          <Section
+            title="Supply tracking"
+            subtitle="Discovery snapshots — search-paging xáo trộn giữa các lần chạy nên new/removed là 'mới xuất hiện/không còn thấy'"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm">
+              <span className="font-semibold text-neutral-900">
+                {fmtInt(supply.cumulative)} listings
+              </span>
+              <span className="text-neutral-500">đã từng thấy (union mọi snapshot)</span>
+              <span className="text-neutral-600">
+                snapshot gần nhất: {fmtInt(supply.points.at(-1)?.seen ?? 0)} thấy ·+
+                {fmtInt(supply.points.at(-1)?.newVsPrev ?? 0)} mới
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {supply.points.map((p) => (
+                <span
+                  key={p.snapshotId}
+                  className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600"
+                  title={`+${p.newVsPrev} mới so với snapshot trước`}
+                >
+                  {p.date} · {p.seen}
+                </span>
+              ))}
+            </div>
           </Section>
         ) : null}
 
