@@ -11,6 +11,7 @@ import {
   getSupplyHistory,
   getTopSubmarkets,
   getYieldRows,
+  getAirdnaComparison,
 } from "@/lib/queries";
 import { getSessionUser, isSaved } from "@/lib/auth";
 import { toggleSaved } from "@/app/actions";
@@ -25,6 +26,7 @@ import { TopSubmarkets } from "@/components/top-submarkets";
 import { TopListings } from "@/components/top-listings";
 import { AuthBar } from "@/components/auth-bar";
 import { YieldCard } from "@/components/yield-card";
+import { AirdnaCompare } from "@/components/airdna-compare";
 
 export async function AreaPage({
   areaId,
@@ -47,6 +49,7 @@ export async function AreaPage({
     area.regionType === "market" ? getSupplyHistory(areaId) : Promise.resolve(null),
   ]);
   const yieldRows = area.regionType === "market" ? await getYieldRows(areaId) : [];
+  const airdna = area.regionType === "market" ? await getAirdnaComparison(areaId) : null;
   const saved = user ? await isSaved(user.id, areaId) : false;
 
   const currency = currencyFor(areaId);
@@ -194,6 +197,15 @@ export async function AreaPage({
               ⚠ SIMULATED DATA — tin rao giả lập để build tính năng
             </div>
             <YieldCard rows={yieldRows} currency={currency} />
+          </Section>
+        ) : null}
+
+        {airdna ? (
+          <Section
+            title="Đối chiếu AirDNA"
+            subtitle="One Invest (tự thu) vs AirDNA Market Research (LTM) — 2 phương pháp độc lập"
+          >
+            <AirdnaCompare data={airdna} />
           </Section>
         ) : null}
 

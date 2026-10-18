@@ -559,3 +559,102 @@ export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
     };
   });
 }
+
+// ---------- G2: AirDNA đối chiếu ----------
+
+export type AirdnaComparison = {
+  marketScore: { total: number; seasonality: number; revenueGrowth: number; regulation: number; rentalDemand: number } | null;
+  metrics: {
+    metric: string;
+    ourValue: number | null;
+    ourUnit: string;
+    airdnaValue: number | null;
+    airdnaUnit: string;
+    ratio: number | null; // our / airdna
+  }[];
+  submarketCount: number;
+  capturedAt: string | null;
+};
+
+export async function getAirdnaComparison(areaId: string): Promise<AirdnaComparison | null> {
+  // Crosswalk: areaId → airdna_id
+  const { rows: xw } = await pool.query(
+    `SELECT source_area_key FROM area_sources WHERE area_id = $1 AND source = 'airdna' LIMIT 1`,
+    [areaId],
+  );
+  const airdnaId = xw[0]?.source_area_key;
+  if (!airdnaId) return null;
+
+  const { rows: scores } = await pool.query(
+    `SELECT * FROM airdna_scores WHERE airdna_id = $1`, [airdnaId],
+  );
+  const { rows: airdnaMetrics } = await pool.query(
+    `SELECT metric, period, value FROM airdna_market_metrics
+     WHERE airdna_id = $1 AND period = (SELECT max(period) FROM airdna_market_metrics WHERE airdna_id = $1 AND metric = 'adr')
+     ORDER BY metric`, [airdnaId],
+  );
+  const { rows: ourMetrics } = await pool.query(
+    `SELECT adr, occupancy, revpar, listing_count FROM market_metrics
+     WHERE area_id = $1 ORDER BY month DESC LIMIT 1`, [areaId],
+  );
+  const { rows: subCount } = await pool.query(
+    `SELECT count(*) n FROM airdna_submarket_metrics WHERE airdna_market_id = $1`, [airdnaId],
+  );
+
+  const ours = ourMetrics[0] ?? {};
+  const byMetric = new Map(airdnaMetrics.map(m => [m.metric, Number(m.value)]));
+  const USD_VND = 25350; // approx
+
+  const metrics = [
+    {
+      metric: "ADR",
+      ourValue: ours.adr !== null && ours.adr !== undefined ? Number(ours.adr) : null,
+      ourUnit: "VND",
+      airdnaValue: byMetric.get("adr") ?? null,
+      airdnaUnit: "USD",
+      ratio: null as number | null,
+    },
+    {
+      metric: "Occupancy",
+      ourValue: ours.occupancy !== null && ours.occupancy !== undefined ? Number(ours.occupancy) : null,
+      ourUnit: "%",
+      airdnaValue: byMetric.get("occupancy") ?? null,
+      airdnaUnit: "%",
+      ratio: null as number | null,
+    },
+    {
+      metric: "Listings",
+      ourValue: ours.listing_count ? Number(ours.listing_count) : null,
+      ourUnit: "",
+      airdnaValue: byMetric.get("listing_count") ?? null,
+      airdnaUnit: "",
+      ratio: null as number | null,
+    },
+  ];
+  for (const m of metrics) {
+    const av = m.airdnaValue ?? 0;
+    if (m.ourValue !== null && av > 0) {
+      if (m.ourUnit === "VND" && m.airdnaUnit === "USD") {
+        m.ratio = (m.ourValue / USD_VND) / av;
+      } else if (m.ourUnit === "%" && m.airdnaUnit === "%") {
+        m.ratio = m.ourValue / (av > 1 ? av / 100 : av);
+      } else {
+        m.ratio = m.ourValue / av;
+      }
+    }
+  }
+
+  const score = scores[0];
+  return {
+    marketScore: score ? {
+      total: Number(score.total),
+      seasonality: Number(score.seasonality),
+      revenueGrowth: Number(score.revenue_growth),
+      regulation: Number(score.regulation),
+      rentalDemand: Number(score.rental_demand),
+    } : null,
+    metrics,
+    submarketCount: Number(subCount[0]?.n ?? 0),
+    capturedAt: score?.captured_at?.toISOString?.() ?? null,
+  };
+}
