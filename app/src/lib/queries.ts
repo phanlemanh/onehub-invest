@@ -65,6 +65,40 @@ export async function resolveSubmarketId(
   return hit?.id ?? null;
 }
 
+export type SearchEntry = {
+  id: string;
+  kind: "market" | "submarket";
+  name: string;
+  parentName: string | null;
+  slug: string; // ASCII, dùng cho tìm kiếm không dấu
+  href: string;
+};
+
+/** Chỉ mục tìm kiếm ⌘K: mọi market + submarket, đường dẫn theo slug tên. */
+export async function getSearchIndex(): Promise<SearchEntry[]> {
+  const { rows } = await pool.query(
+    `SELECT a.id, a.region_type, a.name, a.parent_id, p.name AS parent_name
+     FROM areas a LEFT JOIN areas p ON p.id = a.parent_id
+     WHERE a.region_type IN ('market', 'submarket')
+     ORDER BY a.region_type, a.name`,
+  );
+  return rows.map((r) => {
+    const marketId: string = r.parent_id ?? r.id;
+    const [country, ...rest] = marketId.split("-");
+    const marketPath = `/${country}/${rest.join("-")}`;
+    const slug = slugifyName(r.name);
+    const isMarket = r.region_type === "market";
+    return {
+      id: r.id,
+      kind: isMarket ? "market" : "submarket",
+      name: r.name,
+      parentName: r.parent_name,
+      slug,
+      href: isMarket ? marketPath : `${marketPath}/${slug}`,
+    };
+  });
+}
+
 export type MetricRow = {
   month: string; // YYYY-MM-DD
   listingCount: number;

@@ -13,24 +13,25 @@ ReUI block → shadcn/ui → custom (LAST RESORT). Lập inventory mọi compone
 ## Structure
 ```
 app/src/
-├── app/              # Routes
-│   ├── vn/           # /vn (national overview)
-│   ├── [country]/[market]/  # /vn/hanoi, /th/bangkok
-│   ├── listing/[id]/        # /listing/abnb_xxx
-│   └── login|saved/         # Auth + saved markets
+├── app/
+│   ├── (marketing)/      # Invest Portal — trang chủ (shell không đóng khung)
+│   ├── (app)/            # Invest Portal — /vn, /[country]/[market]/…, /listing, /saved, /login
+│   ├── ops/              # Ops Portal — bắt buộc đăng nhập (proxy.ts + ops/layout.tsx)
+│   └── actions.ts        # Server actions (login, logout, toggleSaved)
+├── proxy.ts              # Next 16 "middleware": chặn sớm /ops khi thiếu cookie
 ├── components/
-│   ├── ui/           # shadcn base (button, card, dialog...)
-│   ├── reui/         # ReUI installed blocks (charts, stats, grids)
-│   ├── custom/       # Custom components (LAST RESORT, see DESIGN_RULES.md)
-│   └── maps/         # MapLibre components (no ReUI equivalent)
-└── lib/
-    ├── queries.ts    # ALL database queries
-    ├── db.ts         # pg Pool (max 5)
-    ├── auth.ts       # Session (scrypt + cookie)
-    ├── format.ts     # Currency/number formatting
-    ├── map-worker.ts # MapLibre Turbopack fix
-    └── utils.ts      # shadcn cn() utility
+│   ├── shell/            # PortalShell (chuyển thể @reui/app-shell-30), nav.tsx, ⌘K, footer
+│   ├── states/           # Lỗi / 404 / skeleton chuẩn
+│   ├── blocks/           # Block ReUI gốc (tham chiếu, không import trực tiếp)
+│   ├── examples/         # c-* ReUI gốc (tham chiếu)
+│   ├── reui/             # ReUI components (import trực tiếp, KHÔNG sửa)
+│   ├── ui/               # shadcn base-nova (import trực tiếp, KHÔNG sửa)
+│   └── *.tsx             # Component viết tay cũ — thay dần theo P1–P5
+└── lib/                  # queries.ts, auth.ts, ops-access.ts, format.ts, map-worker.ts, utils.ts
 ```
+
+IA + lộ trình: `docs/architecture/invest-portal-ia.md`. Trang mới phải khai báo
+cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/nav.tsx`.
 
 ## ReUI Quick Reference
 - Registry: `@reui` in `components.json`
@@ -48,11 +49,12 @@ app/src/
 - Format: `fmtMoney(value, currency)` → "₫109,162" or "THB 2,179"
 
 ## Routes
-- `/vn` — National overview (AirDNA markets)
-- `/vn/hanoi` — Hanoi insights (STR + AirDNA + yield)
-- `/vn/hcmc` — HCMC insights
-- `/th/bangkok` — Bangkok (Inside Airbnb data)
-- `/listing/[id]` — Listing drill-down with calendar heatmap
+- `/` — Trang chủ (marketing)
+- `/vn` — Thị trường Việt Nam (Finder)
+- `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
+- `/th/bangkok` — Bangkok (legacy, Inside Airbnb)
+- `/listing/[id]` — Chi tiết listing
+- `/ops`, `/ops/design` — Ops Portal (đăng nhập; `OPS_EMAILS` tuỳ chọn để giới hạn)
 
 ## Don't
 - **Don't create custom UI when ReUI block exists** (see DESIGN_RULES.md)

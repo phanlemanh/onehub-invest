@@ -24,7 +24,6 @@ import { Section } from "@/components/section";
 import { BreakdownChart } from "@/components/breakdown-chart";
 import { TopSubmarkets } from "@/components/top-submarkets";
 import { TopListings } from "@/components/top-listings";
-import { AuthBar } from "@/components/auth-bar";
 import { YieldCard } from "@/components/yield-card";
 import { AirdnaCompare } from "@/components/airdna-compare";
 
@@ -100,7 +99,6 @@ export async function AreaPage({
             Open in Market Finder →
           </Link>
         ) : null}
-        <AuthBar user={user} redirectTo={currentPath} />
         <form action={toggleSaved}>
           <input type="hidden" name="areaId" value={areaId} />
           <input type="hidden" name="redirectTo" value={currentPath} />

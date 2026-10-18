@@ -200,6 +200,10 @@ src/components/
 | `@reui/c-chart-19` | examples/c-chart-19.tsx | Donut phân bổ revenue | Center total |
 | `@reui/c-card-15` | examples/c-card-15.tsx | KPI card + trend | Có overflow menu |
 | `@reui/c-data-grid-11` | examples/c-data-grid-11.tsx | Bảng phường sortable | + reui/data-grid/* engine |
+| `@reui/app-shell-30` | blocks/app-shell-30/ (bản gốc, tham chiếu) → **components/shell/** (bản dùng) | Shell mọi cổng: top bar, nav, ⌘K, account | Cài 2026-10-18 (P0). Nav khai báo ở `shell/nav.tsx` |
+| `@reui/c-command-5` | examples/c-command-5.tsx → shell/search-command.tsx | ⌘K tìm tỉnh/phường | cmdk, tìm không dấu qua `keywords` |
+| `@reui/c-alert-1` | examples/c-alert-1.tsx → states/page-error.tsx | Trạng thái lỗi + Thử lại | `error.tsx` |
+| `@reui/c-empty-3` | examples/c-empty-3.tsx → states/not-found-state.tsx | 404 | `not-found.tsx` |
 
 ### shadcn/ui Base (installed)
 | Component | File | Note |
@@ -213,7 +217,9 @@ src/components/
 |-----------|------|---------------|
 | MiniMap | components/mini-map.tsx | ReUI không có MapLibre blocks |
 | FinderMap | components/finder-map.tsx | Same — MapLibre choropleth |
-| AirdnaCompare | components/airdna-compare.tsx | Domain-specific (đối chiếu 2 nguồn) |
+| AirdnaCompare | components/airdna-compare.tsx | Domain-specific (đối chiếu 2 nguồn) — sẽ dời sang /ops/quality (IA R1) |
+| SiteFooter | components/shell/site-footer.tsx | ReUI không có block footer |
+| PageSkeleton | components/states/page-skeleton.tsx | Ghép từ `ui/skeleton` theo bố cục Insight; dùng trong `<Suspense>`, KHÔNG làm `loading.tsx` cấp segment (mất mã 404/307) |
 
 ## PROHIBITED (TUYỆT ĐỐI KHÔNG)
 

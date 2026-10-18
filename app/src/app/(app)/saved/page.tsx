@@ -4,7 +4,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSavedAreas, getSessionUser } from "@/lib/auth";
 import { toggleSaved } from "@/app/actions";
-import { AuthBar } from "@/components/auth-bar";
 
 export default async function SavedPage() {
   const user = await getSessionUser();
@@ -20,7 +19,6 @@ export default async function SavedPage() {
           <h1 className="text-2xl font-bold text-neutral-900">Saved markets</h1>
           <div className="text-sm text-neutral-500">{areas.length} đã lưu · {user.email}</div>
         </div>
-        <AuthBar user={user} redirectTo="/saved" />
       </div>
 
       {areas.length === 0 ? (
