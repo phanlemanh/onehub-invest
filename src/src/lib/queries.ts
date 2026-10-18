@@ -603,7 +603,6 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
 
   const ours = ourMetrics[0] ?? {};
   const byMetric = new Map(airdnaMetrics.map(m => [m.metric, Number(m.value)]));
-  const USD_VND = 25350; // approx
 
   const metrics = [
     {
@@ -611,7 +610,7 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
       ourValue: ours.adr !== null && ours.adr !== undefined ? Number(ours.adr) : null,
       ourUnit: "VND",
       airdnaValue: byMetric.get("adr") ?? null,
-      airdnaUnit: "USD",
+      airdnaUnit: "VND", // user đã đổi AirDNA sang VND — cùng đơn vị
       ratio: null as number | null,
     },
     {
@@ -634,12 +633,13 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
   for (const m of metrics) {
     const av = m.airdnaValue ?? 0;
     if (m.ourValue !== null && av > 0) {
-      if (m.ourUnit === "VND" && m.airdnaUnit === "USD") {
-        m.ratio = (m.ourValue / USD_VND) / av;
-      } else if (m.ourUnit === "%" && m.airdnaUnit === "%") {
-        m.ratio = m.ourValue / (av > 1 ? av / 100 : av);
+      if (m.ourUnit === "%" && m.airdnaUnit === "%") {
+        // occupancy: both as decimal (0-1) — normalize
+        const o = m.ourValue > 1 ? m.ourValue / 100 : m.ourValue;
+        const a = av > 1 ? av / 100 : av;
+        m.ratio = a > 0 ? o / a : null;
       } else {
-        m.ratio = m.ourValue / av;
+        m.ratio = m.ourValue / av; // same unit (VND or count) — direct
       }
     }
   }

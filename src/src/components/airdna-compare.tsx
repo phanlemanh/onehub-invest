@@ -3,10 +3,13 @@ import { fmtInt, fmtMoney, fmtPct } from "@/lib/format";
 
 const fmtVal = (v: number | null, unit: string) => {
   if (v === null) return "—";
-  if (unit === "VND") return fmtMoney(v, "VND");
-  if (unit === "USD") return `$${v.toFixed(1)}`;
-  if (unit === "%") return v > 1 ? `${(v * 100).toFixed(1)}%` : `${v.toFixed(1)}%`;
-  return fmtInt(v);
+  // Auto-detect: giá trị lớn = tiền tệ VND, nhỏ = % hoặc count
+  if (unit === "%" || (unit === "" && v <= 1)) {
+    return v > 1 ? `${(v * 100).toFixed(1)}%` : `${(v * 100).toFixed(1)}%`;
+  }
+  if (unit === "" ) return Math.round(v).toLocaleString();
+  // VND (hoặc bất kỳ giá trị tiền tệ lớn nào)
+  return fmtMoney(v, "VND");
 };
 
 /** Section đối chiếu One Invest (self-collected) vs AirDNA (LTM bookings). */

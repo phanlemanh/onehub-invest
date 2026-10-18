@@ -96,6 +96,7 @@ async function main() {
         const date = p?.date ?? p?.period;
         const value = p?.[valueKey] ?? p?.value;
         if (!date || value === undefined || value === null) continue;
+        if (typeof value !== "number" || isNaN(value)) continue; // bỏ JSON objects
         const period = date.slice(0, 7); // '2025-10'
         await client.query(
           `INSERT INTO airdna_market_metrics (airdna_id, metric, period, value)
