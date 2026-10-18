@@ -10,6 +10,7 @@ import {
   getSiblingBenchmark,
   getSupplyHistory,
   getTopSubmarkets,
+  getYieldRows,
 } from "@/lib/queries";
 import { getSessionUser, isSaved } from "@/lib/auth";
 import { toggleSaved } from "@/app/actions";
@@ -23,6 +24,7 @@ import { BreakdownChart } from "@/components/breakdown-chart";
 import { TopSubmarkets } from "@/components/top-submarkets";
 import { TopListings } from "@/components/top-listings";
 import { AuthBar } from "@/components/auth-bar";
+import { YieldCard } from "@/components/yield-card";
 
 export async function AreaPage({
   areaId,
@@ -44,6 +46,7 @@ export async function AreaPage({
     getSessionUser(),
     area.regionType === "market" ? getSupplyHistory(areaId) : Promise.resolve(null),
   ]);
+  const yieldRows = area.regionType === "market" ? await getYieldRows(areaId) : [];
   const saved = user ? await isSaved(user.id, areaId) : false;
 
   const currency = currencyFor(areaId);
@@ -179,6 +182,18 @@ export async function AreaPage({
                 </span>
               ))}
             </div>
+          </Section>
+        ) : null}
+
+        {yieldRows.length > 0 ? (
+          <Section
+            title="Yield theo phường/quận"
+            subtitle="Giá bán + thuê dài hạn (từ tin rao) vs doanh thu STR (từ Airbnb) → hiệu suất đầu tư"
+          >
+            <div className="mb-2 inline-flex items-center gap-1.5 rounded bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+              ⚠ SIMULATED DATA — tin rao giả lập để build tính năng
+            </div>
+            <YieldCard rows={yieldRows} currency={currency} />
           </Section>
         ) : null}
 

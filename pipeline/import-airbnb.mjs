@@ -60,8 +60,24 @@ async function main() {
     let nights = 0;
     let discovery = 0;
     let osm = 0;
+    let zalo = 0;
     for (const it of items) {
-      if (it.source === "airbnb-listing") {
+      if (it.source === "zalo-mock" || it.source === "zalo-groups") {
+        await client.query(
+          `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text)
+           VALUES ($1,$2,$3,$4,$5,$6)
+           ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text, captured_at = now()`,
+          [
+            it.sourceId,
+            manifest.snapshotId,
+            it.payload?.group ?? null,
+            it.payload?.author ?? null,
+            it.fetchedAt,
+            it.payload?.text ?? "",
+          ],
+        );
+        zalo++;
+      } else if (it.source === "airbnb-listing") {
         await client.query(
           `INSERT INTO stg_abnb_listings (listing_id, snapshot_id, fetched_at, payload)
            VALUES ($1,$2,$3,$4)
@@ -124,7 +140,7 @@ async function main() {
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

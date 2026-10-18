@@ -500,3 +500,62 @@ export async function getListingDetail(id: string): Promise<ListingDetail | null
     calendar: nightRows.map((n) => ({ night: n.night, available: n.available })),
   };
 }
+
+// ---------- G1: asset stats + yield ----------
+
+export type YieldRow = {
+  areaId: string;
+  name: string;
+  slug: string;
+  nSale: number;
+  medianPerm2: number | null; // VND/m²
+  nRentLt: number;
+  medianRentLt: number | null; // VND/tháng
+  strRevenueMonth: number | null; // từ market_metrics tháng mới nhất có adr
+  yieldStr: number | null; // (strRevenueMonth × 12) / (medianPerm2 × 60m²) — giả định 60m²
+  yieldLt: number | null; // (medianRentLt × 12) / (medianPerm2 × 60m²)
+};
+
+/** Yield theo submarket — kết hợp market_asset_stats (bán/thuê) + market_metrics (STR). */
+export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
+  const { rows } = await pool.query(
+    `WITH sales AS (
+       SELECT area_id, n_offers, median_perm2 FROM market_asset_stats WHERE kind = 'sale'
+     ), rents AS (
+       SELECT area_id, n_offers, median_rent FROM market_asset_stats WHERE kind = 'rent_lt'
+     ), lm AS (
+       SELECT DISTINCT ON (area_id) area_id, adr, occupancy, listing_count
+       FROM market_metrics WHERE adr IS NOT NULL ORDER BY area_id, month DESC
+     )
+     SELECT a.id, a.name, s.n_offers AS n_sale, s.median_perm2,
+            r.n_offers AS n_rent_lt, r.median_rent,
+            lm.adr * lm.listing_count AS str_revenue_month,
+            lm.listing_count
+     FROM areas a
+     LEFT JOIN sales s ON s.area_id = a.id
+     LEFT JOIN rents r ON r.area_id = a.id
+     LEFT JOIN lm ON lm.area_id = a.id
+     WHERE a.parent_id = $1 AND (s.area_id IS NOT NULL OR r.area_id IS NOT NULL)
+     ORDER BY s.median_perm2 DESC NULLS LAST`,
+    [marketId],
+  );
+  return rows.map((r) => {
+    const slug = slugifyName(r.name);
+    const ASSUMED_M2 = 60; // giả định căn hộ 60m² để tính yield
+    const salePrice = r.median_perm2 ? Number(r.median_perm2) * ASSUMED_M2 : null;
+    const strMonth = r.str_revenue_month ? Number(r.str_revenue_month) : null;
+    const rentLt = r.median_rent ? Number(r.median_rent) : null;
+    return {
+      areaId: r.id,
+      name: r.name,
+      slug,
+      nSale: Number(r.n_sale ?? 0),
+      medianPerm2: r.median_perm2 === null ? null : Number(r.median_perm2),
+      nRentLt: Number(r.n_rent_lt ?? 0),
+      medianRentLt: r.median_rent === null ? null : Number(r.median_rent),
+      strRevenueMonth: strMonth,
+      yieldStr: salePrice && strMonth ? (strMonth * 12) / salePrice : null,
+      yieldLt: salePrice && rentLt ? (rentLt * 12) / salePrice : null,
+    };
+  });
+}
