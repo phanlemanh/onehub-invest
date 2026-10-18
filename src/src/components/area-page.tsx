@@ -24,7 +24,13 @@ import { TopSubmarkets } from "@/components/top-submarkets";
 import { TopListings } from "@/components/top-listings";
 import { AuthBar } from "@/components/auth-bar";
 
-export async function AreaPage({ areaId }: { areaId: string }) {
+export async function AreaPage({
+  areaId,
+  sortBy = "revenue",
+}: {
+  areaId: string;
+  sortBy?: "revenue" | "adr" | "occupancy" | "revpar";
+}) {
   const area = await getArea(areaId);
   if (!area) notFound();
 
@@ -34,7 +40,7 @@ export async function AreaPage({ areaId }: { areaId: string }) {
     area.regionType === "submarket" ? getSiblingBenchmark(areaId) : Promise.resolve(null),
     getMarketGeoJson(area.parentId ?? areaId, areaId),
     getAreaBreakdown(areaId),
-    area.regionType === "market" ? getTopSubmarkets(areaId, 10) : Promise.resolve(null),
+    area.regionType === "market" ? getTopSubmarkets(areaId, 10, sortBy) : Promise.resolve(null),
     getSessionUser(),
     area.regionType === "market" ? getSupplyHistory(areaId) : Promise.resolve(null),
   ]);
@@ -143,7 +149,7 @@ export async function AreaPage({ areaId }: { areaId: string }) {
             title="Top Submarkets"
             subtitle={`Ranked by 12-month listed-price revenue · latest-month ADR / occupancy / RevPAR`}
           >
-            <TopSubmarkets rows={topSubs} currency={currency} basePath={basePath} />
+            <TopSubmarkets rows={topSubs} currency={currency} basePath={basePath} sortBy={sortBy} />
           </Section>
         ) : null}
 

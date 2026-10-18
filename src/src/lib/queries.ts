@@ -300,28 +300,40 @@ export type TopSubmarket = {
   revenue: number; // tổng cửa sổ 12 tháng
 };
 
-/** Bảng xếp hạng submarket con của một market — đọc từ market_metrics (đã precompute). */
-export async function getTopSubmarkets(marketId: string, limit = 10): Promise<TopSubmarket[]> {
+/** Bảng xếp hạng submarket con của một market — đọc từ market_metrics (đã precompute).
+ * sortBy: revenue (12 tháng) | adr | occupancy | revpar (tháng mới nhất có adr). */
+export async function getTopSubmarkets(
+  marketId: string,
+  limit = 10,
+  sortBy: "revenue" | "adr" | "occupancy" | "revpar" = "revenue",
+): Promise<TopSubmarket[]> {
+  const order =
+    sortBy === "revenue"
+      ? `agg.revenue DESC NULLS LAST`
+      : sortBy === "adr"
+        ? `lm.adr DESC NULLS LAST`
+        : sortBy === "occupancy"
+          ? `lm.occupancy DESC NULLS LAST`
+          : `lm.revpar DESC NULLS LAST`;
   const { rows } = await pool.query(
     `WITH kids AS (
-       SELECT id, name, regexp_replace(lower(name), '\\s+', '-', 'g') AS slug
-       FROM areas WHERE parent_id = $1
+       SELECT id, name FROM areas WHERE parent_id = $1
      ), agg AS (
        SELECT mm.area_id, max(mm.listing_count) AS listings, sum(mm.revenue) AS revenue
-       FROM market_metrics mm JOIN kids k ON k.id = mm.area_id
+       FROM market_metrics mm
+       WHERE mm.area_id IN (SELECT id FROM kids)
        GROUP BY 1
      ), lm AS (
-       -- tháng mới nhất CÓ adr (tháng cuối window thường chưa có booking)
        SELECT DISTINCT ON (mm.area_id) mm.area_id, mm.adr, mm.occupancy, mm.revpar
-       FROM market_metrics mm JOIN kids k ON k.id = mm.area_id
-       WHERE mm.adr IS NOT NULL
+       FROM market_metrics mm
+       WHERE mm.area_id IN (SELECT id FROM kids) AND mm.adr IS NOT NULL
        ORDER BY mm.area_id, mm.month DESC
      )
      SELECT k.id, k.name, agg.listings, agg.revenue, lm.adr, lm.occupancy, lm.revpar
      FROM agg
      JOIN lm USING (area_id)
      JOIN kids k ON k.id = agg.area_id
-     ORDER BY agg.revenue DESC NULLS LAST
+     ORDER BY ${order}
      LIMIT $2`,
     [marketId, limit],
   );
@@ -409,5 +421,82 @@ export async function getAreaBreakdown(areaId: string): Promise<AreaBreakdown> {
       occupancy: x.occupancy === null || x.occupancy === undefined ? null : Number(x.occupancy),
       revenue: Number(x.revenue ?? 0),
     })),
+  };
+}
+
+// ---------- G0-d: chi tiết 1 listing ----------
+
+export type ListingDetail = {
+  id: string;
+  name: string | null;
+  roomType: string | null;
+  bedrooms: number | null;
+  accommodates: number | null;
+  priceListed: number | null;
+  lat: number | null;
+  lng: number | null;
+  areaId: string | null;
+  areaName: string | null;
+  marketPath: string | null; // vd "/vn/hanoi"
+  currency: string;
+  stats: { nights: number; booked: number; revenue: number; occupancy: number | null };
+  calendar: { night: string; available: boolean | null }[];
+};
+
+export async function getListingDetail(id: string): Promise<ListingDetail | null> {
+  const { rows } = await pool.query(
+    `SELECT l.*, a.name AS area_name, a.id AS area_id,
+            p.id AS parent_id
+     FROM listings l
+     LEFT JOIN areas a ON a.id = l.area_id
+     LEFT JOIN areas p ON p.id = a.parent_id
+     WHERE l.id = $1`,
+    [id],
+  );
+  const r = rows[0];
+  if (!r) return null;
+
+  const { rows: nightRows } = await pool.query(
+    `SELECT night::text, available,
+            count(*) OVER () AS total,
+            count(*) FILTER (WHERE NOT available) OVER () AS booked,
+            COALESCE(sum(price) FILTER (WHERE NOT available) OVER (), 0) AS revenue
+     FROM nights WHERE listing_id = $1 ORDER BY night`,
+    [id],
+  );
+  const stats = nightRows[0]
+    ? {
+        nights: Number(nightRows[0].total),
+        booked: Number(nightRows[0].booked),
+        revenue: Number(nightRows[0].revenue),
+        occupancy:
+          Number(nightRows[0].total) > 0
+            ? Number(nightRows[0].booked) / Number(nightRows[0].total)
+            : null,
+      }
+    : { nights: 0, booked: 0, revenue: 0, occupancy: null };
+
+  const areaId = r.area_id as string | null;
+  let marketPath: string | null = null;
+  if (areaId) {
+    const parts = areaId.split("-");
+    marketPath = `/${parts[0]}/${parts.slice(1).join("-")}`;
+  }
+
+  return {
+    id: r.id,
+    name: r.name,
+    roomType: r.room_type,
+    bedrooms: r.bedrooms,
+    accommodates: r.accommodates,
+    priceListed: r.price_listed === null ? null : Number(r.price_listed),
+    lat: r.latitude === null ? null : Number(r.latitude),
+    lng: r.longitude === null ? null : Number(r.longitude),
+    areaId,
+    areaName: r.area_name,
+    marketPath,
+    currency: currencyFor(areaId ?? r.id),
+    stats,
+    calendar: nightRows.map((n) => ({ night: n.night, available: n.available })),
   };
 }

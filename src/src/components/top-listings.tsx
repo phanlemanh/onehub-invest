@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { fmtMoney, fmtPct } from "@/lib/format";
 import type { TopListingRow } from "@/lib/queries";
 
@@ -27,7 +28,9 @@ export function TopListings({
             <tr key={r.id} className="border-b border-neutral-100 last:border-0">
               <td className="py-2 pr-2 text-neutral-400">{i + 1}</td>
               <td className="max-w-[22rem] truncate py-2 pr-2 font-medium text-neutral-800">
-                {r.name ?? "—"}
+                <Link href={`/listing/${encodeURIComponent(r.id)}`} className="hover:text-blue-700 hover:underline">
+                  {r.name ?? "—"}
+                </Link>
               </td>
               <td className="py-2 pr-2 text-neutral-600">
                 {r.bedrooms === null
