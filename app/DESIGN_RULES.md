@@ -39,64 +39,87 @@
 └─────────────────────────────────────────────┘
 ```
 
-## REUI BLOCKS — Danh sách available
+## REUI BLOCKS — Danh sách available (2004 items, tên ĐÃ XÁC MINH 2026-10)
 
-### Charts (52 blocks) — DÙNG THAY VÌ custom Recharts
+> **QUAN TRỌNG — CÁCH TÌM BLOCK ĐÚNG:**
+> ```bash
+> # Liệt kê 100 item đầu (có paging)
+> npx shadcn@latest search @reui
+> npx shadcn@latest search @reui --offset 100   # trang 2, 3...
+>
+> # Lọc theo nhu cầu (grep từ khóa)
+> npx shadcn@latest search @reui --offset 200 | grep -E "c-chart|c-data-grid"
+> ```
+> **Quy ước tên**: `c-<component>-N` = demo 1 pattern (charts, cards, grids...),
+> `<category>-N` = trang hoàn chỉnh (app-shell, auth, blog...), tên trần = UI primitive.
 
-| Nhu cầu | Block | Install |
-|---------|-------|---------|
-| Timeseries (revenue, ADR, occupancy) | chart-area-* | `@reui/chart-area-interactive` |
-| Bar chart (ADR by size, room type) | chart-bar-* | `@reui/chart-bar-multiple` |
-| Line chart (multi-metric trends) | chart-line-* | `@reui/chart-line-multiple` |
-| Pie/donut (revenue distribution) | chart-pie-* | `@reui/chart-pie-donut-text` |
-| Sparkline (inline KPI) | sparkline-* | `@reui/chart-sparkline-area` |
-| Radial (gauge, score) | radial-* | `@reui/chart-radial-shape` |
-| Sankey (data flow) | sankey-* | `@reui/chart-sankey` |
-| Composed (bar + line combo) | composed-* | `@reui/chart-composed-*` |
+### Charts (`c-chart-1` → `c-chart-25`, 25 blocks) — DÙNG THAY VÌ custom Recharts
 
-### Dashboard & Stats (25 blocks) — DÙNG THAY VÌ custom KPI cards
+| Nhu cầu | Block | Mô tả |
+|---------|-------|-------|
+| Timeseries area (revenue, ADR, occupancy) | `@reui/c-chart-16` | Area chart with glowing dot markers |
+| Timeseries + forecast | `@reui/c-chart-17` | Forecast line with stripe pattern zone |
+| Gradient area | `@reui/c-chart-13` | Gradient area with stripe overlay |
+| Stacked area | `@reui/c-chart-14` | Stacked area, dashed strokes |
+| Bar (ADR by size, room type) | `@reui/c-chart-2` | Multi-dataset bar chart |
+| Bar gradient | `@reui/c-chart-7` | Gradient bar chart |
+| Donut (revenue split) | `@reui/c-chart-19` | Donut chart with center total |
+| Donut + stats | `@reui/c-chart-20` | Donut with center stats |
+| Pie | `@reui/c-chart-21` | Pie with stripe patterns |
+| Radar | `@reui/c-chart-23` | Radar with gradient fill |
+| Radial gauge (Market Score) | `@reui/c-chart-25` | Lighthouse radial with labels |
 
-| Nhu cầu | Block | Install |
-|---------|-------|---------|
-| 4-column KPI strip | card-stats-01 | `@reui/card-stats-01` |
-| Single metric + trend | card-metric-01 | `@reui/card-metric-01` |
-| Sidebar dashboard layout | sidebar-07 | `@reui/sidebar-07` |
-| Navbar/header | navbar-* | `@reui/navbar-01` |
-| Settings page | settings-01 | `@reui/settings-01` |
-| Kanban board | kanban-01 | `@reui/kanban-01` |
+### Stats & Cards (`c-card-*`) — DÙNG THAY VÌ custom KPI cards
 
-### Data Tables (Grid) — DÙNG THAY VÌ custom tables
+| Nhu cầu | Block | Mô tả |
+|---------|-------|-------|
+| KPI card + trend + menu | `@reui/c-card-15` | Stat card with trend and overflow menu |
+| Expandable usage card | `@reui/c-card-13` | Expandable billing usage card |
+| Status summary | `@reui/c-card-14` | Deployment status summary card |
+| Card + actions | `@reui/c-card-16` | Card with header badge and actions |
 
-| Nhu cầu | Block | Install |
-|---------|-------|---------|
-| Sortable/filterable table | data-grid-filter | `@reui/data-grid-filter` |
-| Editable table | data-grid-edit | `@reui/data-grid-edit` |
-| Virtualized (large data) | data-grid-virtual | `@reui/data-grid-virtualized` |
-| Column grouping | data-grid-group | `@reui/data-grid-grouping` |
+### Data Grids (`c-data-grid-1` → `c-data-grid-34`, 34 blocks) — DÙNG THAY VÌ custom tables
 
-### Auth (Login/Signup)
+| Nhu cầu | Block | Mô tả |
+|---------|-------|-------|
+| Table phường sortable | `@reui/c-data-grid-11` | Sortable columns |
+| Phân trang | `@reui/c-data-grid-1` | Pagination |
+| Search + filter | `@reui/c-data-grid-34` | Server-side pagination, sorting, search, filter |
+| Row selection | `@reui/c-data-grid-7` | Row selection |
+| Expandable rows | `@reui/c-data-grid-8` | Expandable rows |
+| Summary footer | `@reui/c-data-grid-25` | Summary stats footer |
+| Infinite scroll | `@reui/c-data-grid-27` | Local infinite scroll |
+| Virtual hóa (data lớn) | `@reui/c-data-grid-32` | Column virtualization |
 
-| Nhu cầu | Block | Install |
-|---------|-------|---------|
-| Login page | auth-login-01 | `@reui/auth-login-01` |
-| Signup page | auth-signup-01 | `@reui/auth-signup-01` |
-| Forgot password | auth-forgot-01 | `@reui/auth-forgot-01` |
+### Layout / App Shell (`app-shell-1` → `app-shell-27+`)
 
-### AI & Agents
+| Nhu cầu | Block | Mô tả |
+|---------|-------|-------|
+| Dashboard + sidebar | `@reui/app-shell-1` | Icon-collapsible sidebar + workspace switcher |
+| SOC/analytics console | `@reui/app-shell-26` | Top bar + section pills + Cmd+K |
 
-| Nhu cầu | Block | Install |
-|---------|-------|---------|
-| AI chat interface | ai-chat-01 | `@reui/ai-chat-01` |
-| Agent activity feed | agent-activity-01 | `@reui/agent-activity-01` |
+### Auth (`auth-1` → `auth-20`)
 
-### Cards (43 blocks) — General purpose
+| Nhu cầu | Block |
+|---------|-------|
+| Login email+password | `@reui/auth-1` |
+| Magic link | `@reui/auth-3` |
+| Đăng ký | `@reui/auth-5` |
+
+### AI & Agents (Agent Swarm UI tương lai)
+
+| Nhu cầu | Block | Mô tả |
+|---------|-------|-------|
+| Agent activity feed | `@reui/agent-activity-2` | Narrates an agent run |
+| Agent task wrap-up | `@reui/agent-activity-5` | Finished task card |
+| AI spend monitor | `@reui/ai-usage-1` | Token usage ruler |
+
+### Cards khác
 
 | Nhu cầu | Sử dụng |
 |---------|----------|
-| Metric card | @reui/card-* series |
-| Comparison card | @reui/card-metric-* series |
-| List card | @reui/card-list-* series |
-| Timeline | @reui/timeline-* series |
+| List card | `@reui/c-card-*` series |
+| Timeline | `@reui/c-accordion-11` (onboarding steps) |
 
 ## REUI PATTERNS — Khi tạo component mới
 
@@ -144,12 +167,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // ❌ Không tạo 1 giant component chứa tất cả
 ```
 
+## ⚠️ BASE-NOVA — BẪY LỚN NHẤT (đã gặp 2026-10)
+
+ReUI ship **2 biến thể** cho mọi item: **Base UI** và **Radix UI**, chọn qua
+`{style}` trong URL registry. Project này dùng **`base-nova`** (Base UI).
+
+- ✅ `components.json` → `"style": "base-nova"` → primitives import từ `@base-ui/react/*`
+- ❌ `"style": "new-york"` → Radix → block ReUI báo lỗi TS `Property 'render' does not exist`
+  (block dùng prop `render`/`indeterminate`/`alignItemWithTrigger` — chỉ Base UI có)
+
+**Nếu gặp TS errors như trên → kiểm tra `"style"` trong `components.json` trước khi sửa code.**
+
+## CẤU TRÚC SAU INSTALL
+
+```
+src/components/
+├── examples/          # Block demo (c-chart-16.tsx, c-card-15.tsx...)
+│                      # → COPY pattern từ đây vào feature component
+├── reui/              # Component tái sử dụng (reui/data-grid/*, reui/badge...)
+│                      # → IMPORT TRỰC TIẾP trong app code
+└── ui/                # Primitives Base UI (button, card, dropdown-menu...)
+                       # → IMPORT TRỰC TIẾP, KHÔNG SỬA
+```
+
 ## COMPONENT INVENTORY — Đã cài + tự tạo
 
-### ReUI Blocks (installed)
-| Block | File | Used in | Note |
-|-------|------|---------|------|
-| _(chưa cài — chạy setup trước)_ | | | |
+### ReUI Blocks (installed 2026-10-17)
+| Block | File | Dùng cho | Ghi chú |
+|-------|------|----------|---------|
+| `@reui/c-chart-16` | examples/c-chart-16.tsx | Timeseries revenue/ADR/occupancy | Area + glowing dots |
+| `@reui/c-chart-2` | examples/c-chart-2.tsx | Bar so sánh city/room-type | Multi-dataset |
+| `@reui/c-chart-19` | examples/c-chart-19.tsx | Donut phân bổ revenue | Center total |
+| `@reui/c-card-15` | examples/c-card-15.tsx | KPI card + trend | Có overflow menu |
+| `@reui/c-data-grid-11` | examples/c-data-grid-11.tsx | Bảng phường sortable | + reui/data-grid/* engine |
 
 ### shadcn/ui Base (installed)
 | Component | File | Note |
@@ -188,9 +238,9 @@ npx shadcn@latest add @reui/<block-name>
 npx shadcn@latest add <component-name>
 
 # Examples:
-npx shadcn@latest add @reui/chart-area-interactive
-npx shadcn@latest add @reui/card-stats-01
-npx shadcn@latest add @reui/data-grid-filter
+npx shadcn@latest add @reui/c-chart-16
+npx shadcn@latest add @reui/c-card-15
+npx shadcn@latest add @reui/c-data-grid-11
 npx shadcn@latest add button card dialog
 ```
 
@@ -201,7 +251,8 @@ npx shadcn@latest add button card dialog
 npm run build
 
 # 2. Import hoạt động
-# Trong component/page: import { ChartAreaInteractive } from "@/components/reui/chart-area-interactive"
+# Data grid engine: import { DataGrid } from "@/components/reui/data-grid/data-grid"
+# Pattern demo:     xem src/components/examples/c-chart-16.tsx
 
 # 3. Update DESIGN_RULES.md inventory (thêm block mới vào bảng)
 ```

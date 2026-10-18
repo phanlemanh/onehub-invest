@@ -26,9 +26,15 @@ và customize được.
 cd ~/dev/one-invest/app
 npx shadcn@latest init
 # Chọn: Default style, Neutral color, CSS variables = yes
+# ⚠️ SAU ĐÓ SỬA "style" thành "base-nova" (Bước 2)
 ```
 
 ### Bước 2: Thêm ReUI registry với Pro key
+
+> **QUAN TRỌNG**: `"style"` phải là **`base-nova`** (biến thể Base UI của ReUI).
+> Nếu dùng `"new-york"`/`"default"` → primitives thành Radix → block ReUI báo
+> lỗi TS `Property 'render' does not exist`. ReUI ship 2 biến thể cho mọi item,
+> chọn qua `{style}` trong URL. Project này chuẩn = Base UI.
 
 ```bash
 # Tạo .env.local (nếu chưa có) hoặc append
@@ -38,7 +44,7 @@ echo "REUI_LICENSE_KEY=YOUR_KEY_HERE" >> .env.local
 cat > components.json << 'EOF'
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "default",
+  "style": "base-nova",
   "rsc": true,
   "tsx": true,
   "tailwind": {
@@ -66,42 +72,49 @@ cat > components.json << 'EOF'
 EOF
 ```
 
-### Bước 3: Install blocks cho One Invest Dashboard
+### Bước 3: Install blocks cho One Invest Dashboard (tên ĐÃ XÁC MINH 2026-10)
 
 ```bash
-# Layout (sidebar + header)
-npx shadcn@latest add @reui/sidebar-07  # Dashboard with sidebar
+# TÌM BLOCK (2004 items, có paging):
+npx shadcn@latest search @reui                  # 100 item đầu
+npx shadcn@latest search @reui --offset 200     # trang 3...
+
+# Quy ước tên: c-<component>-N (pattern demo), <category>-N (trang hoàn chỉnh)
 
 # Charts (timeseries)
-npx shadcn@latest add @reui/chart-area-interactive   # Revenue/ADR timeseries
-npx shadcn@latest add @reui/chart-bar-multiple       # ADR by size, room type
-npx shadcn@latest add @reui/chart-line-multiple      # Occupancy trends
-npx shadcn@latest add @reui/chart-sparkline-area     # KPI inline sparklines
+npx shadcn@latest add @reui/c-chart-16   # Area + glowing dots — revenue/ADR timeseries
+npx shadcn@latest add @reui/c-chart-2    # Multi-dataset bar — ADR by size/room type
+npx shadcn@latest add @reui/c-chart-19   # Donut center total — revenue split
 
 # Stats / KPI cards
-npx shadcn@latest add @reui/card-stats-01  # 4-column KPI cards
-npx shadcn@latest add @reui/card-metric-01  # Single metric with trend
+npx shadcn@latest add @reui/c-card-15    # Stat card + trend + overflow menu
 
 # Data tables
-npx shadcn@latest add @reui/data-grid-filter  # Sortable/filterable table
+npx shadcn@latest add @reui/c-data-grid-11   # Sortable columns
+npx shadcn@latest add @reui/c-data-grid-34   # Server-side pagination+search+filter
+
+# Layout
+npx shadcn@latest add @reui/app-shell-1  # Dashboard sidebar shell
 
 # Auth
-npx shadcn@latest add @reui/auth-login-01  # Login page
+npx shadcn@latest add @reui/auth-1  # Login page
 ```
+
+Sau install: demo pattern nằm ở `src/components/examples/`, engine tái sử dụng
+ở `src/components/reui/` (import trực tiếp), primitives Base UI ở `src/components/ui/`.
 
 ## Mapping: One Invest UI → ReUI Blocks
 
 | One Invest hiện tại | ReUI block thay thế | Lợi ích |
 |---|---|---|
-| KpiStrip (4 cards) | @reui/card-stats-01 | Trend indicators, sparklines |
-| MetricChart (Recharts) | @reui/chart-area-interactive | Tooltip, zoom, brush |
-| BenchmarkBar (chips) | @reui/card-metric-01 | Progress bars, delta % |
-| TopSubmarkets (table) | @reui/data-grid-filter | Sort, filter, pagination |
-| TopListings (table) | @reui/data-grid-filter | Same |
+| KpiStrip (4 cards) | @reui/c-card-15 ×4 | Trend indicators, overflow menu |
+| MetricChart (Recharts) | @reui/c-chart-16 | Tooltip, gradient, dots |
+| BenchmarkBar (chips) | @reui/c-card-15 | Progress, delta % |
+| TopSubmarkets (table) | @reui/c-data-grid-11 | Sort, filter, pagination |
+| TopListings (table) | @reui/c-data-grid-11 | Same |
 | MiniMap (MapLibre) | Keep MapLibre (reui không có map) | — |
-| YieldCard (table) | @reui/data-grid-edit | Inline editing potential |
-| AuthBar + login | @reui/auth-login-01 | Polished, accessible |
-| Supply tracking | @reui/card-stats-02 | Timeline style |
+| YieldCard (table) | @reui/c-data-grid-8 (expandable) | Inline details |
+| AuthBar + login | @reui/auth-1 | Polished, accessible |
 
 ## CLAUDE.md Section cho AI Agents
 
