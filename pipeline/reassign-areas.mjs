@@ -8,6 +8,8 @@
 import pg from "pg";
 import { slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
 
+const CITY = process.argv[2] ?? 'hanoi';
+const MARKET_ID = CITY === 'hcmc' ? 'vn-hcmc' : MARKET_ID;
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -30,7 +32,7 @@ async function main() {
       if (!mp) continue;
       await client.query(
         `INSERT INTO areas (id, parent_id, region_type, name, country_code, geom, meta)
-         VALUES ($1, 'vn-hanoi', 'submarket', $2, 'vn', ST_GeomFromGeoJSON($3),
+         VALUES ($1, ${MARKET_ID}', 'submarket', $2, 'vn', ST_GeomFromGeoJSON($3),
                  '{"source":"osm-phuong"}'::jsonb)
          ON CONFLICT (id) DO UPDATE SET geom = ST_GeomFromGeoJSON($3),
            meta = areas.meta || '{"source":"osm-phuong"}'::jsonb`,
@@ -44,7 +46,7 @@ async function main() {
     const { rowCount: reassigned } = await client.query(
       `UPDATE listings l SET area_id = a.id
        FROM areas a
-       WHERE a.parent_id = 'vn-hanoi' AND a.geom IS NOT NULL
+       WHERE a.parent_id = '${MARKET_ID}' AND a.geom IS NOT NULL
          AND l.latitude IS NOT NULL
          AND l.area_id LIKE 'vn-hanoi-%'
          AND ST_Contains(a.geom::geometry,
@@ -55,7 +57,7 @@ async function main() {
     // ---- 3. Listings còn sót (ngoài mọi phường) → area ngoai_vung ----
     await client.query(
       `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
-       VALUES ('vn-hanoi-ngoai-vung', 'vn-hanoi', 'submarket', 'Ngoài vùng測绘',
+       VALUES ('vn-hanoi-ngoai-vung', ${MARKET_ID}', 'submarket', 'Ngoài vùng測绘',
                'vn', '{"note":"listings ngoài 126 phường OSM — thường ngoài tỉnh"}'::jsonb)
        ON CONFLICT (id) DO NOTHING`,
     );
@@ -65,7 +67,7 @@ async function main() {
          AND area_id <> 'vn-hanoi-ngoai-vung'
          AND id NOT IN (
            SELECT l.id FROM listings l JOIN areas a ON a.id = l.area_id
-           WHERE a.parent_id = 'vn-hanoi' AND a.geom IS NOT NULL
+           WHERE a.parent_id = '${MARKET_ID}' AND a.geom IS NOT NULL
              AND l.latitude IS NOT NULL
              AND ST_Contains(a.geom::geometry,
                  ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326)))`,
@@ -75,7 +77,7 @@ async function main() {
     // ---- 4. Xoá submarket rỗng & không polygon (title-area đã thay thế) ----
     // metrics cũ tham chiếu các area này — xoá trước (300 truncate rebuild sau)
     const doomed = `SELECT a.id FROM areas a
-       WHERE a.parent_id = 'vn-hanoi' AND a.region_type = 'submarket'
+       WHERE a.parent_id = '${MARKET_ID}' AND a.region_type = 'submarket'
          AND a.geom IS NULL
          AND NOT EXISTS (SELECT 1 FROM listings l WHERE l.area_id = a.id)
          AND NOT EXISTS (SELECT 1 FROM saved_markets s WHERE s.area_id = a.id)`;
@@ -86,7 +88,7 @@ async function main() {
 
     const { rows: final } = await client.query(
       `SELECT count(*) FILTER (WHERE geom IS NOT NULL) co_geom, count(*) total
-       FROM areas WHERE parent_id = 'vn-hanoi'`,
+       FROM areas WHERE parent_id = '${MARKET_ID}'`,
     );
     console.log(`areas Hà Nội sau dọn: ${final[0].co_geom} có polygon / ${final[0].total}`);
   } finally {

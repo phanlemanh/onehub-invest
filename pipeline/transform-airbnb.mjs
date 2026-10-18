@@ -1,11 +1,14 @@
 // transform-airbnb.mjs — staging Airbnb → canonical (areas + listings + nights)
 // Mọi suy diễn nằm ở đây (staging giữ nguyên vẹn):
-//  - area: title discovery "Căn hộ tại Quận Hoàn Kiếm" → submarket; market 'vn-hanoi'
+//  - area: title discovery "Căn hộ tại Quận Hoàn Kiếm" → submarket; market MARKET_PREFIX
 //  - listings: pdpSections (lat/lng, capacity, roomType, giá VND) + ogTitle (bedrooms)
 //  - nights: stg_abnb_nights snapshot mới nhất per listing (price NULL — divergence
 //    cùng mô hình Bangkok: giá niêm yết từ price_listed)
 import pg from "pg";
 
+const CITY = process.argv[2] ?? 'hanoi';
+const MARKET_PREFIX = CITY === 'hcmc' ? 'vn-hcmc' : 'vn-hanoi';
+const MARKET_NAME = CITY === 'hcmc' ? 'Hồ Chí Minh' : 'Hà Nội';
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -79,7 +82,7 @@ async function main() {
     // ---- 0. Discovery mới nhất: listing_id → location (từ title) ----
     const { rows: disc } = await client.query(
       `SELECT DISTINCT ON (listing_id) listing_id, title
-       FROM stg_abnb_discovery ORDER BY listing_id, snapshot_id DESC`,
+       FROM stg_abnb_discovery WHERE snapshot_id LIKE '${CITY}__%' ORDER BY listing_id, snapshot_id DESC`,
     );
     const locationOf = new Map();
     for (const d of disc) {
@@ -92,13 +95,13 @@ async function main() {
     // ---- 1. Areas: market vn-hanoi + submarket theo location ----
     await client.query(
       `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
-       VALUES ('vn-hanoi', NULL, 'market', 'Hà Nội', 'vn', '{"source":"airbnb-discovery"}'::jsonb)
+       VALUES ('${MARKET_PREFIX}', NULL, 'market', '${MARKET_NAME}', 'vn', '{"source":"airbnb-discovery"}'::jsonb)
        ON CONFLICT (id) DO NOTHING`,
     );
     for (const loc of locations) {
       await client.query(
         `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
-         VALUES ($1, 'vn-hanoi', 'submarket', $2, 'vn', $3)
+         VALUES ($1, '${MARKET_PREFIX}', 'submarket', $2, 'vn', $3)
          ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
         [`vn-hanoi-${slugify(loc)}`, loc, JSON.stringify({ source: "airbnb-discovery" })],
       );
@@ -108,7 +111,7 @@ async function main() {
     // ---- 2. Canonical listings (snapshot pdp mới nhất per listing) ----
     const { rows: stg } = await client.query(
       `SELECT DISTINCT ON (listing_id) listing_id, fetched_at, payload
-       FROM stg_abnb_listings ORDER BY listing_id, snapshot_id DESC`,
+       FROM stg_abnb_listings WHERE snapshot_id LIKE '${CITY}__%' ORDER BY listing_id, snapshot_id DESC`,
     );
     let nListings = 0;
     let missingField = 0;
@@ -116,7 +119,7 @@ async function main() {
       const ex = extractListing(r.payload);
       if (!ex) continue;
       const loc = locationOf.get(r.listing_id);
-      const areaId = loc ? `vn-hanoi-${slugify(loc)}` : null;
+      const areaId = loc ? `${MARKET_PREFIX}-${slugify(loc)}` : null;
       const id = `abnb_${r.listing_id}`;
       await client.query(
         `INSERT INTO listings (id, area_id, name, room_type, bedrooms, accommodates,
