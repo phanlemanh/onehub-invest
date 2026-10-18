@@ -21,6 +21,8 @@ app/src/
 ├── proxy.ts              # Next 16 "middleware": chặn sớm /ops khi thiếu cookie
 ├── components/
 │   ├── shell/            # PortalShell (chuyển thể @reui/app-shell-30), nav.tsx, ⌘K, footer
+│   ├── insight/          # Trang Insight (stats-1, chart-6, chart-13, data-grid chuyển thể)
+│   ├── finder/           # Finder: bảng xếp hạng + ChoroplethMap (MapLibre) + bins
 │   ├── states/           # Lỗi / 404 / skeleton chuẩn
 │   ├── blocks/           # Block ReUI gốc (tham chiếu, không import trực tiếp)
 │   ├── examples/         # c-* ReUI gốc (tham chiếu)
@@ -50,7 +52,7 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 
 ## Routes
 - `/` — Trang chủ (marketing)
-- `/vn` — Thị trường Việt Nam (Finder)
+- `/vn`, `/th` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
 - `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
 - `/th/bangkok` — Bangkok (legacy, Inside Airbnb)
 - `/listing/[id]` — Chi tiết listing

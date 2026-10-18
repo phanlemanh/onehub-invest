@@ -11,7 +11,7 @@ import {
   getMetrics,
   getSiblingBenchmark,
   getSupplyHistory,
-  getTopSubmarkets,
+  getFinderAreas,
   getYieldRows,
   type MetricRow,
 } from "@/lib/queries";
@@ -31,7 +31,7 @@ import { RevenueMixChart } from "./revenue-mix/chart";
 
 const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam", th: "Thái Lan" };
 /** Quốc gia có trang Finder riêng (link được trong breadcrumb). */
-const COUNTRY_PAGES = new Set(["vn"]);
+const COUNTRY_PAGES = new Set(["vn", "th"]);
 
 /** Slug bỏ dấu cho URL submarket (khớp resolveSubmarketId + pipeline slugify). */
 function slugOf(name: string) {
@@ -85,7 +85,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
       isMarket ? Promise.resolve(null) : getSiblingBenchmark(areaId),
       getMarketGeoJson(area.parentId ?? areaId, areaId),
       getAreaBreakdown(areaId),
-      isMarket ? getTopSubmarkets(areaId, 500, "revenue") : Promise.resolve([]),
+      isMarket ? getFinderAreas({ marketId: areaId }, { geometry: false }) : Promise.resolve([]),
       getSessionUser(),
       isMarket ? getSupplyHistory(areaId) : Promise.resolve(null),
       isMarket ? getYieldRows(areaId) : Promise.resolve([]),
@@ -190,7 +190,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
 
         {isMarket && submarkets.length > 0 && (
           <Section id="phuong">
-            <SubmarketsTable rows={submarkets} currency={currency} basePath={basePath} />
+            <SubmarketsTable rows={submarkets} currency={currency} />
           </Section>
         )}
 

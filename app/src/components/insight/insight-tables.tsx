@@ -8,8 +8,8 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format"
 import type {
   BreakdownRow,
+  FinderRow,
   TopListingRow,
-  TopSubmarket,
   YieldRow,
 } from "@/lib/queries"
 import { InsightGrid, type InsightColumn } from "./insight-grid"
@@ -49,13 +49,11 @@ function numberColumn<T extends object>(
 export function SubmarketsTable({
   rows,
   currency,
-  basePath,
 }: {
-  rows: TopSubmarket[]
+  rows: FinderRow[]
   currency: string
-  basePath: string
 }) {
-  const columns = useMemo<InsightColumn<TopSubmarket>[]>(
+  const columns = useMemo<InsightColumn<FinderRow>[]>(
     () => [
       {
         id: "name",
@@ -64,7 +62,7 @@ export function SubmarketsTable({
         cell: ({ row }) => (
           <Link
             prefetch={false}
-            href={`${basePath}/${row.original.slug}`}
+            href={row.original.href}
             className="text-foreground font-medium hover:underline"
           >
             {row.original.name}
@@ -73,11 +71,11 @@ export function SubmarketsTable({
         size: 200,
         enableSorting: true,
       },
-      numberColumn<TopSubmarket>("listings", "Listing", (r) => r.listings, fmtInt, 90),
-      numberColumn<TopSubmarket>("adr", "ADR", (r) => r.adr, moneyOrDash(currency)),
-      numberColumn<TopSubmarket>("occupancy", "Công suất", (r) => r.occupancy, (v) => fmtPct(v), 100),
-      numberColumn<TopSubmarket>("revpar", "RevPAR", (r) => r.revpar, moneyOrDash(currency)),
-      numberColumn<TopSubmarket>(
+      numberColumn<FinderRow>("listings", "Listing", (r) => r.listings, fmtInt, 90),
+      numberColumn<FinderRow>("adr", "ADR", (r) => r.adr, moneyOrDash(currency)),
+      numberColumn<FinderRow>("occupancy", "Công suất", (r) => r.occupancy, (v) => fmtPct(v), 100),
+      numberColumn<FinderRow>("revpar", "RevPAR", (r) => r.revpar, moneyOrDash(currency)),
+      numberColumn<FinderRow>(
         "revenue",
         "Doanh thu",
         (r) => r.revenue,
@@ -85,12 +83,12 @@ export function SubmarketsTable({
         120
       ),
     ],
-    [basePath, currency]
+    [currency]
   )
   return (
     <InsightGrid
       title="Phường nổi bật"
-      description="Doanh thu cả cửa sổ dữ liệu; ADR, công suất, RevPAR của tháng gần nhất có giá"
+      description="Cả cửa sổ lịch đặt; ADR, công suất, RevPAR bình quân theo đêm — cùng công thức với KPI và Finder"
       data={rows}
       columns={columns}
       getRowId={(r) => r.id}

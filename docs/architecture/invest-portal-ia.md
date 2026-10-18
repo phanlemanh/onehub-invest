@@ -200,7 +200,7 @@ heatmap lịch, footer, dialog chia sẻ. Mọi thứ khác **xoá** sau khi tha
 |---|---|---|
 | **P0 Nền móng** ✅ 2026-10-18 | Commit nền ReUI hiện có (R5) → token shadcn đầy đủ + dark mode + `next-themes` + font Geist + `lang="vi"` (R2–R4) → route groups `(marketing)` / `(app)` / `ops` với layout riêng → cài `app-shell-30` + ⌘K + footer → `nav.config.ts` → `loading/error/not-found` → middleware chặn `/ops/**`, dời `/design` → `/ops/design` | `/design` hiển thị đúng màu; mọi trang cũ nằm trong shell mới; `npm run build` sạch |
 | **P1 Insight** ✅ 2026-10-18 | Thay `area-page` bằng template mục 3.2 (navbar-6, stats-1, chart-6, c-chart-25, chart-36, chart-13, data-grid). Dời AirDNA sang `/ops/quality` (R1). Xoá component cũ | `/vn/hanoi` và một phường hoạt động; không còn import component viết tay |
-| **P2 Finder** | `/vn` dùng data-grid-base-2 + filters + chia đôi list\|map + công tắc Thị trường\|Phường + khay So sánh. Redirect `/vn/[m]/map` | Xếp hạng theo metric tự thu; không còn số AirDNA |
+| **P2 Finder** ✅ 2026-10-19 | `/vn` dùng data-grid-base-2 + filters + chia đôi list\|map + công tắc Thị trường\|Phường + khay So sánh. Redirect `/vn/[m]/map` | Xếp hạng theo metric tự thu; không còn số AirDNA |
 | **P3 Listing** | `/listing/[id]` (KPI + lịch + giá) + `/vn/[m]/listings` (lưới + map nhãn giá) | Map và list đồng bộ khi zoom |
 | **P4 Lợi suất** | `/yield` form-11 → báo cáo + độ tin cậy | Ra báo cáo cho 10+ phường, badge MÔ PHỎNG |
 | **P5 Còn lại** | Trang chủ marketing, `/phuong-phap`, `/so-sanh`, `/saved` (wishlist-2), auth-4/5 | Không còn trang viết tay nào |
@@ -211,5 +211,13 @@ Ghi chú P1:
 - Dữ liệu tự thu hiện là **lịch đặt 12 tháng tới**, không phải lịch sử. Vì vậy: không vẽ "Mùa vụ", không có % so với kỳ trước; chỉ số gộp theo trọng số đêm; benchmark phường tính trên cả cửa sổ.
 - Mục lục trang = 7 phần: Tổng quan · Hiệu suất · Cơ cấu · Phường · Listing · Nguồn cung · Lợi suất (Doanh thu/Công suất/ADR gộp trong Hiệu suất qua 4 ô chuyển chỉ số).
 - Số AirDNA đã rời trang Insight sang `/ops/quality`. `/vn` vẫn còn bảng Market Score AirDNA → gỡ ở P2.
+
+Ghi chú P2:
+- Finder là route chung `/[country]` (vn, th) thay cho `/vn` tĩnh; `/[country]/[market]/map` redirect về `/[country]?level=submarket&market=…&view=map`.
+- Mặc định cấp **Phường** của thị trường nhiều listing nhất (mới 2 tỉnh tự thu, so sánh có nghĩa nằm ở phường), xếp theo RevPAR.
+- Chỉ xếp hạng khu vực **≥ 5 listing** (bật/tắt được); khu vực ít mẫu vẫn hiện xám trên bản đồ. Lý do: 1 listing cho số cực đoan chiếm đầu bảng.
+- Một bộ chọn "Theo" điều khiển cột thanh, màu bản đồ và chú giải 4 bậc; trạng thái nằm trên URL (`level`, `market`, `metric`, `view`).
+- Finder và bảng "Phường nổi bật" của Insight dùng chung `getFinderAreas` → cùng công thức với KPI. `/vn` không còn số AirDNA (R1 xong).
+- Chưa làm: bộ lọc theo số phòng ngủ/loại phòng (cần tính lại metric theo bộ lọc ở pipeline), khay So sánh (P5).
 
 Ops Portal (`app-shell-26`) dựng song song từ P0, chỉ gồm khung và `/ops/design`, `/ops/quality`. Các trang Ops khác làm theo lộ trình G trong `portals.md`.
