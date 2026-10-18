@@ -24,6 +24,12 @@ JOIN listings l ON l.id = n.listing_id
 GROUP BY 1, 2;
 
 -- Market rollup — generic cho mọi market có submarket (th-bangkok, vn-hanoi, ...)
+-- Xoá rows market-level tạo bởi listings trực tiếp (không qua submarket)
+-- trước khi rollup — nếu không, DO NOTHING sẽ giữ số sai
+DELETE FROM market_metrics WHERE area_id IN (
+  SELECT id FROM areas WHERE region_type = 'market'
+);
+
 INSERT INTO market_metrics
   (area_id, month, listing_count, booked_nights, available_nights,
    revenue, adr, occupancy, revpar)
