@@ -4,12 +4,12 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-COLLECTOR="${COLLECTOR:-$HOME/dev/one-invest-collector}"
+COLLECTOR="${COLLECTOR:-/bin/../collector}"
 DB_DIR="$(cd ../db && pwd)"
 PSQL=(docker compose exec -T -e PGPASSWORD=oneinvest db psql -h localhost -U oneinvest -d oneinvest)
 
 echo "=== 1. Import các snapshot chưa nạp ==="
-for d in "$COLLECTOR"/snapshots/hanoi/hanoi__airbnb-*__*; do
+for d in "../collector"/snapshots/hanoi/hanoi__airbnb-*__*; do
   [ -d "$d" ] || continue
   sid=$(basename "$d")
   n=$(cd "$DB_DIR" && "${PSQL[@]}" -t -A -c "SELECT count(*) FROM airbnb_snapshots WHERE snapshot_id='$sid'")

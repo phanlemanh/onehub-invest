@@ -4,7 +4,7 @@
 // - airbnb-discovery items → stg_abnb_discovery (title là nguồn suy ra area)
 //
 // Dùng: node import-airbnb.mjs <đường-dẫn-snapshot-dir>
-//   (vd: ../one-invest-collector/snapshots/hanoi/hanoi__airbnb-listing__2026…)
+//   (vd: ../collector/snapshots/hanoi/hanoi__airbnb-listing__2026…)
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";

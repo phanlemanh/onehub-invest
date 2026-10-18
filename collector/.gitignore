@@ -1,0 +1,9 @@
+node_modules/
+dist/
+snapshots/
+state/
+.env*
+*.log
+.DS_Store
+tmp/
+.airdna-profile/

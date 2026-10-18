@@ -1,21 +1,27 @@
-# dependencies / build
+# Dependencies
 node_modules/
-.next/
-out/
-*.tsbuildinfo
 
-# env & secrets
-.env
-.env.*
+# Build outputs
+.next/
+dist/
+
+# Environment
+.env*
 !.env.example
 
-# research artifacts — chứa token/cookie session, TUYỆT ĐỐI không commit
+# Data (not committed — too large, contains cookies)
+snapshots/
+state/
+.airdna-profile/
 research-local/
 *.har
-
-# pipeline data (CSV/GeoJSON thô từ Inside Airbnb)
 pipeline/data/
+pipeline/logs/
 
-# misc
+# OS
 .DS_Store
 *.log
+
+# Cache
+.cache/
+*.tsbuildinfo

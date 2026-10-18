@@ -1,0 +1,19 @@
+{
+  "name": "one-invest-collector",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "One Invest data collector — Airbnb VN + other sources, raw immutable snapshots + manifest contract",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "collect": "node dist/cli.js"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "one-invest",
+  "private": true,
+  "version": "0.1.0",
+  "description": "One Invest — Real estate investment analytics (Vietnam)",
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "app:dev": "cd app && npm run dev",
+    "app:build": "cd app && npm run build",
+    "app:start": "cd app && npm run start",
+    "collect": "cd collector && npm run collect"
+  }
+}
