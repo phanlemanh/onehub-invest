@@ -204,6 +204,11 @@ src/components/
 | `@reui/c-command-5` | examples/c-command-5.tsx → shell/search-command.tsx | ⌘K tìm tỉnh/phường | cmdk, tìm không dấu qua `keywords` |
 | `@reui/c-alert-1` | examples/c-alert-1.tsx → states/page-error.tsx | Trạng thái lỗi + Thử lại | `error.tsx` |
 | `@reui/c-empty-3` | examples/c-empty-3.tsx → states/not-found-state.tsx | 404 | `not-found.tsx` |
+| `@reui/stats-1` | blocks/stats-1/ → insight/insight-stats.tsx | KPI Insight | Bỏ menu "…"; badge = vị trí so với phường anh em (p30/p60/p90) thay cho % tháng trước |
+| `@reui/chart-6` | blocks/chart-6/ → insight/performance/ | Hiệu suất theo tháng (4 ô chuyển 1 đường) | Theo THÁNG, dữ liệu qua props, bỏ lớp "kỳ trước" (lịch tương lai), mốc = Tết/30-4/Hè/2-9 |
+| `@reui/chart-13` | blocks/chart-13/ → insight/revenue-mix/ | Cơ cấu doanh thu theo loại phòng | Một cửa sổ (bỏ đổi kỳ); cột "thay đổi" → số listing |
+| `@reui/chart-36` | blocks/chart-36/ (chưa dùng) | Dành cho báo cáo Lợi suất (P4) | Không dùng cho Mùa vụ: chưa có dữ liệu lịch sử |
+| `@reui/frame`, `@reui/icon-tile`, `breadcrumb`, `sonner` | reui/, ui/ | Khung panel, breadcrumb, toast | `Toaster` gắn trong providers.tsx |
 
 ### shadcn/ui Base (installed)
 | Component | File | Note |
@@ -217,7 +222,8 @@ src/components/
 |-----------|------|---------------|
 | MiniMap | components/mini-map.tsx | ReUI không có MapLibre blocks |
 | FinderMap | components/finder-map.tsx | Same — MapLibre choropleth |
-| AirdnaCompare | components/airdna-compare.tsx | Domain-specific (đối chiếu 2 nguồn) — sẽ dời sang /ops/quality (IA R1) |
+| InsightGrid | components/insight/insight-grid.tsx | Không phải component mới: Frame + DataGrid theo đúng mẫu c-data-grid-11, gom lại để 6 bảng dùng chung nhãn tiếng Việt (`DATA_GRID_VI`) |
+| InsightNav | components/insight/insight-nav.tsx | Style view track của app-shell-30; tự theo dõi cuộn vì `@reui/scrollspy` với target document bám vào `scroll-area-viewport` đầu tiên trong trang (vùng cuộn DataGrid) và luôn báo nhầm mục cuối |
 | SiteFooter | components/shell/site-footer.tsx | ReUI không có block footer |
 | PageSkeleton | components/states/page-skeleton.tsx | Ghép từ `ui/skeleton` theo bố cục Insight; dùng trong `<Suspense>`, KHÔNG làm `loading.tsx` cấp segment (mất mã 404/307) |
 

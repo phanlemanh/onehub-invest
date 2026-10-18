@@ -1,57 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { pool } from "@/lib/db";
+import { getAirdnaMarkets } from "@/lib/queries";
 import { fmtInt } from "@/lib/format";
 
-type VnMarket = {
-  airdnaId: string;
-  name: string;
-  score: number | null;
-  ourAreaId: string | null;
-  ourListings: number | null;
-};
-
-async function getVnMarkets(): Promise<VnMarket[]> {
-  const { rows } = await pool.query(
-    `SELECT am.airdna_id, am.name,
-            s.total AS score,
-            -- Crosswalk qua area_sources (chính xác), fallback fuzzy
-            COALESCE(
-              (SELECT x.area_id FROM area_sources x
-               WHERE x.source = 'airdna' AND x.source_area_key = am.airdna_id
-               LIMIT 1),
-              (SELECT a.id FROM areas a
-               WHERE a.country_code = 'vn' AND a.region_type = 'market'
-                 AND (translate(lower(a.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                   = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                 )
-               LIMIT 1)
-            ) AS our_area_id,
-            (SELECT mm.listing_count FROM market_metrics mm
-             WHERE mm.area_id = COALESCE(
-               (SELECT x.area_id FROM area_sources x
-                WHERE x.source = 'airdna' AND x.source_area_key = am.airdna_id LIMIT 1),
-               (SELECT a.id FROM areas a WHERE a.country_code='vn' AND a.region_type='market'
-                 AND translate(lower(a.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                   = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                 LIMIT 1))
-             ORDER BY mm.month DESC LIMIT 1) AS our_listings
-     FROM airdna_markets am
-     LEFT JOIN airdna_scores s ON s.airdna_id = am.airdna_id
-     ORDER BY s.total DESC NULLS LAST, am.name`,
-  );
-  return rows.map((r) => ({
-    airdnaId: r.airdna_id,
-    name: r.name,
-    score: r.score === null ? null : Number(r.score),
-    ourAreaId: r.our_area_id,
-    ourListings: r.our_listings === null ? null : Number(r.our_listings),
-  }));
-}
-
 export default async function VnPage() {
-  const markets = await getVnMarkets();
+  const markets = await getAirdnaMarkets();
   const withScore = markets.filter(m => m.score !== null);
   const withOurData = markets.filter(m => m.ourAreaId);
 

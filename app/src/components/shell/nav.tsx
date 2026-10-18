@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { MapIcon, PaletteIcon } from "lucide-react"
+import { GaugeIcon, MapIcon, PaletteIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
@@ -32,6 +32,13 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
     },
   ],
   ops: [
+    {
+      id: "quality",
+      label: "Chất lượng dữ liệu",
+      href: "/ops/quality",
+      icon: icon(GaugeIcon),
+      match: (p) => p.startsWith("/ops/quality"),
+    },
     {
       id: "design",
       label: "Thư viện thiết kế",

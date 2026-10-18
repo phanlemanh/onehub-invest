@@ -106,11 +106,14 @@ export type MetricRow = {
   adr: number | null;
   occupancy: number | null;
   revpar: number | null;
+  bookedNights: number;
+  availableNights: number;
 };
 
 export async function getMetrics(areaId: string): Promise<MetricRow[]> {
   const { rows } = await pool.query(
-    `SELECT month::text, listing_count, revenue, adr, occupancy, revpar
+    `SELECT month::text, listing_count, revenue, adr, occupancy, revpar,
+            booked_nights, available_nights
      FROM market_metrics WHERE area_id = $1 ORDER BY month`,
     [areaId],
   );
@@ -121,6 +124,8 @@ export async function getMetrics(areaId: string): Promise<MetricRow[]> {
     adr: r.adr === null ? null : Number(r.adr),
     occupancy: r.occupancy === null ? null : Number(r.occupancy),
     revpar: r.revpar === null ? null : Number(r.revpar),
+    bookedNights: Number(r.booked_nights ?? 0),
+    availableNights: Number(r.available_nights ?? 0),
   }));
 }
 
@@ -146,36 +151,44 @@ export async function getKpis(areaId: string) {
   };
 }
 
-/** Benchmark so với các submarket anh em ở tháng mới nhất (mirror metric_percentiles). */
+/**
+ * Benchmark so với các submarket anh em trên CẢ cửa sổ dữ liệu (mirror
+ * metric_percentiles). Không dùng tháng mới nhất: dữ liệu là lịch tương lai nên
+ * tháng xa nhất gần như chưa có booking.
+ */
 export async function getSiblingBenchmark(areaId: string) {
   const q = `
-    WITH last AS (
-      SELECT max(month) AS m FROM market_metrics WHERE area_id = $1
-    ), siblings AS (
-      SELECT mm.adr, mm.occupancy
+    WITH win AS (
+      SELECT mm.area_id,
+             sum(mm.revenue) / nullif(sum(mm.booked_nights), 0) AS adr,
+             sum(mm.booked_nights)::numeric
+               / nullif(sum(mm.booked_nights) + sum(mm.available_nights), 0) AS occupancy
       FROM market_metrics mm
       JOIN areas a ON a.id = mm.area_id
       WHERE a.parent_id = (SELECT parent_id FROM areas WHERE id = $1)
-        AND mm.month = (SELECT m FROM last)
-    ), me AS (
-      SELECT adr, occupancy FROM market_metrics
-      WHERE area_id = $1 AND month = (SELECT m FROM last)
+      GROUP BY mm.area_id
     )
     SELECT
-      (SELECT percentile_cont(array[0.3, 0.6, 0.9]) WITHIN GROUP (ORDER BY adr) FROM siblings) AS adr_p,
-      (SELECT percentile_cont(array[0.3, 0.6, 0.9]) WITHIN GROUP (ORDER BY occupancy) FROM siblings) AS occ_p,
-      (SELECT count(*) FROM siblings) AS n,
-      me.adr AS my_adr, me.occupancy AS my_occ
-    FROM me`;
+      -- ADR = 0: có đêm đặt nhưng chưa có giá — loại khỏi phân vị.
+      percentile_cont(array[0.3, 0.6, 0.9]) WITHIN GROUP (ORDER BY adr)
+        FILTER (WHERE adr > 0) AS adr_p,
+      percentile_cont(array[0.3, 0.6, 0.9]) WITHIN GROUP (ORDER BY occupancy)
+        FILTER (WHERE occupancy IS NOT NULL) AS occ_p,
+      count(*) AS n,
+      max(adr) FILTER (WHERE area_id = $1) AS my_adr,
+      max(occupancy) FILTER (WHERE area_id = $1) AS my_occ
+    FROM win`;
   const { rows } = await pool.query(q, [areaId]);
   const r = rows[0];
-  if (!r || !r.adr_p) return null;
+  if (!r || !r.adr_p || Number(r.n) < 3) return null;
   return {
     nSiblings: Number(r.n),
     adr: { p: (r.adr_p as number[]).map(Number), mine: r.my_adr === null ? null : Number(r.my_adr) },
     occ: { p: (r.occ_p as number[]).map(Number), mine: r.my_occ === null ? null : Number(r.my_occ) },
   };
 }
+
+export type SiblingBenchmark = NonNullable<Awaited<ReturnType<typeof getSiblingBenchmark>>>;
 
 type MapFeature = {
   type: "Feature";
@@ -595,6 +608,56 @@ export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
 }
 
 // ---------- G2: AirDNA đối chiếu ----------
+// CHỈ dùng trong Ops Portal (/ops/quality) — AirDNA là nguồn hiệu chuẩn, không
+// hiển thị cho nhà đầu tư (CLAUDE.md "Don't", IA rủi ro R1).
+
+export type AirdnaMarketRow = {
+  airdnaId: string;
+  name: string;
+  score: number | null;
+  ourAreaId: string | null;
+  ourListings: number | null;
+};
+
+/** Danh sách market AirDNA toàn quốc + crosswalk sang khu vực của ta (chỉ Ops). */
+export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
+  const { rows } = await pool.query(
+    `SELECT am.airdna_id, am.name,
+            s.total AS score,
+            -- Crosswalk qua area_sources (chính xác), fallback fuzzy
+            COALESCE(
+              (SELECT x.area_id FROM area_sources x
+               WHERE x.source = 'airdna' AND x.source_area_key = am.airdna_id
+               LIMIT 1),
+              (SELECT a.id FROM areas a
+               WHERE a.country_code = 'vn' AND a.region_type = 'market'
+                 AND (translate(lower(a.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
+                   = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
+                 )
+               LIMIT 1)
+            ) AS our_area_id,
+            (SELECT mm.listing_count FROM market_metrics mm
+             WHERE mm.area_id = COALESCE(
+               (SELECT x.area_id FROM area_sources x
+                WHERE x.source = 'airdna' AND x.source_area_key = am.airdna_id LIMIT 1),
+               (SELECT a.id FROM areas a WHERE a.country_code='vn' AND a.region_type='market'
+                 AND translate(lower(a.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
+                   = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
+                 LIMIT 1))
+             ORDER BY mm.month DESC LIMIT 1) AS our_listings
+     FROM airdna_markets am
+     LEFT JOIN airdna_scores s ON s.airdna_id = am.airdna_id
+     ORDER BY s.total DESC NULLS LAST, am.name`,
+  );
+  return rows.map((r) => ({
+    airdnaId: r.airdna_id,
+    name: r.name,
+    score: r.score === null ? null : Number(r.score),
+    ourAreaId: r.our_area_id,
+    ourListings: r.our_listings === null ? null : Number(r.our_listings),
+  }));
+}
+
 
 export type AirdnaComparison = {
   marketScore: { total: number; seasonality: number; revenueGrowth: number; regulation: number; rentalDemand: number } | null;
@@ -627,9 +690,14 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
      WHERE airdna_id = $1 AND period = (SELECT max(period) FROM airdna_market_metrics WHERE airdna_id = $1 AND metric = 'adr')
      ORDER BY metric`, [airdnaId],
   );
+  // Số tự thu gộp CẢ cửa sổ (có trọng số đêm), không lấy tháng cuối: dữ liệu là
+  // lịch tương lai nên tháng xa nhất gần như chưa có booking.
   const { rows: ourMetrics } = await pool.query(
-    `SELECT adr, occupancy, revpar, listing_count FROM market_metrics
-     WHERE area_id = $1 ORDER BY month DESC LIMIT 1`, [areaId],
+    `SELECT sum(revenue) / nullif(sum(booked_nights), 0) AS adr,
+            sum(booked_nights)::numeric
+              / nullif(sum(booked_nights) + sum(available_nights), 0) AS occupancy,
+            max(listing_count) AS listing_count
+     FROM market_metrics WHERE area_id = $1`, [areaId],
   );
   const { rows: subCount } = await pool.query(
     `SELECT count(*) n FROM airdna_submarket_metrics WHERE airdna_market_id = $1`, [airdnaId],

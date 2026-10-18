@@ -1,19 +1,19 @@
 export const dynamic = "force-dynamic";
 
-import { AreaPage } from "@/components/area-page";
+import type { Metadata } from "next";
 
-type SortKey = "revenue" | "adr" | "occupancy" | "revpar";
-const SORTS: SortKey[] = ["revenue", "adr", "occupancy", "revpar"];
+import { InsightPage } from "@/components/insight/insight-page";
+import { getArea } from "@/lib/queries";
 
-export default async function MarketPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ country: string; market: string }>;
-  searchParams: Promise<{ sort?: string }>;
-}) {
+type Params = Promise<{ country: string; market: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { country, market } = await params;
-  const { sort } = await searchParams;
-  const sortBy = SORTS.includes(sort as SortKey) ? (sort as SortKey) : "revenue";
-  return <AreaPage areaId={`${country}-${market}`} sortBy={sortBy} />;
+  const area = await getArea(`${country}-${market}`);
+  return { title: area ? `${area.name} — Insight thị trường` : "Không tìm thấy" };
+}
+
+export default async function MarketPage({ params }: { params: Params }) {
+  const { country, market } = await params;
+  return <InsightPage areaId={`${country}-${market}`} />;
 }

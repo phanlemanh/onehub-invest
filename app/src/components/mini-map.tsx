@@ -33,6 +33,13 @@ export function MiniMap({
       center: [lng, lat],
       zoom: 10,
       attributionControl: false,
+      // Bản đồ nằm giữa trang dài: lăn chuột để cuộn trang, giữ ⌘/Ctrl mới zoom.
+      cooperativeGestures: true,
+      locale: {
+        "CooperativeGesturesHandler.WindowsHelpText": "Giữ Ctrl và lăn chuột để phóng to bản đồ",
+        "CooperativeGesturesHandler.MacHelpText": "Giữ ⌘ và lăn chuột để phóng to bản đồ",
+        "CooperativeGesturesHandler.MobileHelpText": "Dùng hai ngón tay để di chuyển bản đồ",
+      },
     });
     mapRef.current = map;
 
@@ -100,5 +107,5 @@ export function MiniMap({
     };
   }, [features, lat, lng]);
 
-  return <div ref={ref} className="h-72 w-full rounded-lg border border-neutral-200" />;
+  return <div ref={ref} className="h-72 w-full" />;
 }
