@@ -3,7 +3,7 @@ import type { Collector, RawItem } from "../core/types.js";
 
 type Card = { href: string; title: string | null; price: string | null };
 
-const MAX_PAGES = 15; // Airbnb thường ~15 trang/khu vực; tăng nếu cần
+const MAX_PAGES = Number(process.env.AIRBNB_DISCOVERY_MAX_PAGES ?? 15); // Airbnb thường ~15 trang/khu vực
 const SETTLE_MS = 2500; // chờ XHR + card render đủ sau mỗi trang
 
 /**
