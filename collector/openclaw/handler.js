@@ -20,7 +20,11 @@ export default async function (context) {
   const ev = context?.event ?? {};
   if (ev.channelId !== "zalouser") return;
   const text = (ev.content ?? "").trim();
-  if (!text) return; // media-only: C3 sau
+  if (!text) {
+    const hasMedia = !!(ev.media?.length || ev.originalMedia?.length || ev.metadata?.mediaPath);
+    await log(`media-only skip${hasMedia ? " (có ảnh)" : " (rỗng)"} group=${ev.metadata?.channelName ?? "?"}`);
+    return; // quyết định OCR/vision khi có số liệu tỷ lệ
+  }
   const meta = ev.metadata ?? {};
   const group = meta.channelName || meta.threadId || ev.conversationId || "zalo-group";
   const ts = ev.timestamp ?? new Date().toISOString();
