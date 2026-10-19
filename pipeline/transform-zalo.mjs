@@ -1,7 +1,10 @@
 // transform-zalo.mjs — parse tin rao VN + dedup + canonical offers (G1).
 // Pipeline 5 bước: clean → parse regex → confidence → dedup → offers.
 // Parser đo coverage: % tin có đủ (giá + diện tích + phường) cho confidence=high.
+// Export parsePost/matchPhuong cho bench-extraction dùng chung (C2) — nguồn
+// chân lý của parser là một, bench và transform không được fork logic.
 import { createHash } from "node:crypto";
+import { pathToFileURL } from "node:url";
 import pg from "pg";
 
 const DB_URL =
@@ -20,7 +23,7 @@ const slugify = (s) =>
 const stripPrefix = (s) => s.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/, "");
 
 // ---- Bước 2: parse ----
-function parsePost(text) {
+export function parsePost(text) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null };
 
   // loại tin: bán vs thuê
@@ -54,7 +57,7 @@ function parsePost(text) {
 }
 
 /** Match phường: tên phường xuất hiện trong text. */
-function matchPhuong(text, phuongSlugs) {
+export function matchPhuong(text, phuongSlugs) {
   const textLower = text.toLowerCase();
   for (const [slug, name] of phuongSlugs) {
     if (textLower.includes(name.toLowerCase()) || textLower.includes(slug.replace(/-/g, " "))) {
@@ -150,4 +153,6 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+const isMain =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) main().catch((e) => { console.error(e); process.exit(1); });
