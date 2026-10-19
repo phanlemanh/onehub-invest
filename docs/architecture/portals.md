@@ -192,8 +192,8 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
 6. **Chuyển `/design` → `/ops/design`** trong lần refactor kế tiếp (cùng middleware).
 7. **Cập nhật tài liệu này** mỗi khi thêm portal/section mới; ADR mới chỉ cần
    khi thay đổi quyết định phân cổng (phương án C), không cần cho từng trang.
-8. **Legacy `/th/**`** (Bangkok) thuộc Invest Portal, giữ nguyên không đầu tư
-   thêm; quyết định xoá bằng ADR riêng.
+8. **Legacy `/th/**` (Bangkok) đã XOÁ** theo ADR-0008 (2026-10-20): scope
+   sản phẩm = Việt Nam. Route `/[country]` động chỉ còn dữ liệu `vn`.
 
 ---
 

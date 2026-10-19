@@ -15,7 +15,7 @@ const FAQ: FaqItem[] = [
     id: "nguon",
     question: "Số liệu lấy từ đâu?",
     answer:
-      "Từ lịch đặt phòng Airbnb do chúng tôi tự thu thập (Hà Nội, TP. Hồ Chí Minh) và dữ liệu công khai Inside Airbnb (Bangkok). Listing được gán vào phường theo toạ độ trên ranh giới OpenStreetMap.",
+      "Từ lịch đặt phòng Airbnb do chúng tôi tự thu thập (Hà Nội, TP. Hồ Chí Minh). Listing được gán vào phường theo toạ độ trên ranh giới OpenStreetMap.",
   },
   {
     id: "lich",

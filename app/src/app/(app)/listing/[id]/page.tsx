@@ -26,7 +26,7 @@ import { getListingDetail, getListingPeers, getMarketListings } from "@/lib/quer
 
 type Params = Promise<{ id: string }>;
 
-const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam", th: "Thái Lan" };
+const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam" };
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { id } = await params;

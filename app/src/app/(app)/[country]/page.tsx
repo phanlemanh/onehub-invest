@@ -9,7 +9,7 @@ import { Badge } from "@/components/reui/badge";
 import { fmtInt } from "@/lib/format";
 import { currencyFor, getCountryMarkets, getFinderAreas } from "@/lib/queries";
 
-const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam", th: "Thái Lan" };
+const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam" };
 
 type Params = Promise<{ country: string }>;
 type Search = Promise<{ level?: string; market?: string; metric?: string; view?: string }>;

@@ -86,11 +86,6 @@ const SOURCES: FaqItem[] = [
       "Hà Nội và TP. Hồ Chí Minh: collector duyệt tìm kiếm Airbnb bằng trình duyệt thật rồi đọc lịch và giá của từng listing, chạy định kỳ. Mỗi lần quét chỉ thấy một phần thị trường, nên số listing “mới” là mới xuất hiện trong kết quả, không hẳn mới đăng.",
   },
   {
-    id: "inside-airbnb",
-    question: "Inside Airbnb",
-    answer: "Bangkok dùng dữ liệu công khai của Inside Airbnb, xử lý cùng công thức.",
-  },
-  {
     id: "ranh-gioi",
     question: "Ranh giới phường",
     answer: "Từ OpenStreetMap (đơn vị hành chính sau sáp nhập 2025). Listing được gán vào phường theo toạ độ.",

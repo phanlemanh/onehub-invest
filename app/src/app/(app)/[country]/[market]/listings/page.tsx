@@ -10,7 +10,7 @@ import { currencyFor, getArea, getMarketListings } from "@/lib/queries";
 
 type Params = Promise<{ country: string; market: string }>;
 
-const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam", th: "Thái Lan" };
+const COUNTRY_VI: Record<string, string> = { vn: "Việt Nam" };
 /** Số listing gửi xuống trình duyệt (DOM marker + thẻ) — xếp theo doanh thu. */
 const LIMIT = 300;
 

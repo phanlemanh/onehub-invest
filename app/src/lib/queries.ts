@@ -1,7 +1,7 @@
 import { pool } from "./db";
 
 // Tiền tệ theo QUỐC GIA (tiền tố của area id): mọi thị trường VN là VND.
-const CURRENCY: Record<string, string> = { vn: "VND", th: "THB" };
+const CURRENCY: Record<string, string> = { vn: "VND" }; // ADR-0008: scope VN
 export function currencyFor(areaId: string): string {
   return CURRENCY[areaId.split("-")[0]] ?? "USD";
 }

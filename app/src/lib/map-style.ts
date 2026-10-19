@@ -30,7 +30,7 @@ export function basemapUrl(kind: BasemapKind, dark: boolean) {
 
 /**
  * Tên địa danh: style gốc ưu tiên name_en ("West Lake"). Đổi sang tiếng Việt nếu
- * có, rồi tên chữ Latin (Việt Nam: chính là tên gốc; Bangkok: phiên âm), rồi tên gốc.
+ * * có, rồi tên gốc (tiếng Việt đã là dạng Latin).
  */
 const LABEL_FIELD: ExpressionSpecification = [
   "coalesce",
