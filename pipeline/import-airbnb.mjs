@@ -6,6 +6,7 @@
 // Dùng: node import-airbnb.mjs <đường-dẫn-snapshot-dir>
 //   (vd: ../collector/snapshots/hanoi/hanoi__airbnb-listing__2026…)
 import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
@@ -19,6 +20,12 @@ async function main() {
   if (!dir) {
     console.error("thiếu tham số: node import-airbnb.mjs <snapshot-dir>");
     process.exit(1);
+  }
+  // Orphan: crash giữa write items và finalize → dir không có manifest.
+  // Skip + warn (không nạp, không ném) để một dir mồ côi không gãy cả finalize.
+  if (!existsSync(join(dir, "manifest.json"))) {
+    console.warn(`bỏ qua snapshot mồ côi (thiếu manifest): ${dir}`);
+    process.exit(0);
   }
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
   if (manifest.schemaVersion !== 1) {
@@ -62,7 +69,7 @@ async function main() {
     let osm = 0;
     let zalo = 0;
     for (const it of items) {
-      if (it.source === "zalo-mock" || it.source === "zalo-groups") {
+      if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
         await client.query(
           `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text)
            VALUES ($1,$2,$3,$4,$5,$6)
@@ -71,7 +78,7 @@ async function main() {
             it.sourceId,
             manifest.snapshotId,
             it.payload?.group ?? null,
-            it.payload?.author ?? null,
+            it.payload?.author ?? it.payload?.agent_id ?? null,
             it.fetchedAt,
             it.payload?.text ?? "",
           ],

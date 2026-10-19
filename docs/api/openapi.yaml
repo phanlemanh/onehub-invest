@@ -52,3 +52,32 @@ paths:
                         status: { type: string, enum: [fresh, stale, none] }
         "401":
           description: Thiếu session + bearer token
+  /api/v1/ops/extraction-quality:
+    get:
+      operationId: getOpsExtractionQuality
+      summary: F1 extractor (regex/llm) mới nhất từ bench-extraction
+      responses:
+        "200":
+          description: Kết quả bench per extractor
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [generatedAt, results]
+                properties:
+                  generatedAt: { type: string, format: date-time }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required: [extractor, f1ByField, f1Avg, samples, checkedAt]
+                      properties:
+                        extractor: { type: string, enum: [regex, llm] }
+                        f1ByField:
+                          type: object
+                          additionalProperties: { type: number }
+                        f1Avg: { type: [number, "null"] }
+                        samples: { type: integer }
+                        checkedAt: { type: string, format: date-time }
+        "401":
+          description: Thiếu session + bearer token

@@ -40,7 +40,18 @@ interface MockPost {
   images: string[];
 }
 
-function salePost(idx: number): string {
+/** Ground truth cho benchmark extraction — phản ánh những gì CÓ trong text
+ *  (template thiếu tr/m² → pricePerm2Vnd null), không phải giá trị nguồn. */
+interface GroundTruth {
+  kind: "sale" | "rent_lt";
+  priceVnd: number | null;
+  pricePerm2Vnd: number | null;
+  areaM2: number | null;
+  bedrooms: number | null;
+  phuong: string | null;
+}
+
+function salePost(idx: number): { text: string; gt: GroundTruth } {
   const phuong = pick(Object.keys(PHUONG_GRADIENT));
   const grade = PHUONG_GRADIENT[phuong];
   const area = Math.round(rnd(35, 120)); // m²
@@ -54,10 +65,21 @@ function salePost(idx: number): string {
     `Bán gấp ${phuong} — ${area}m², ${beds} phòng ngủ, ${perm2}tr/m2, tổng ${total}t. Tư vấn ${phone}`,
     `Cần tiền bán gấp CH ${phuong}, DT ${area}m2, ${beds}PN. Giá chỉ ${total} tỷ. A/C ${phone}`,
   ];
-  return pick(templates);
+  const text = pick(templates);
+  return {
+    text,
+    gt: {
+      kind: "sale",
+      priceVnd: Math.round(total * 1e9),
+      pricePerm2Vnd: /\/m[²2]/.test(text) ? perm2 * 1e6 : null,
+      areaM2: area,
+      bedrooms: beds,
+      phuong,
+    },
+  };
 }
 
-function rentLtPost(idx: number): string {
+function rentLtPost(idx: number): { text: string; gt: GroundTruth } {
   const phuong = pick(Object.keys(PHUONG_GRADIENT));
   const grade = PHUONG_GRADIENT[phuong];
   const beds = Math.floor(rnd(1, 3));
@@ -69,7 +91,18 @@ function rentLtPost(idx: number): string {
     `Thuê dài hạn: ${phuong}, ${area}m2, ${beds}PN. Giá ${rent} triệu/th. Đặt cọc 1. ${phone}`,
     `Cần cho thuê gấp ${phuong} — ${area}m² ${beds}PN, ${rent}tr. Vào ở ngay. ${phone}`,
   ];
-  return pick(templates);
+  const text = pick(templates);
+  return {
+    text,
+    gt: {
+      kind: "rent_lt",
+      priceVnd: rent * 1e6,
+      pricePerm2Vnd: null,
+      areaM2: area,
+      bedrooms: beds,
+      phuong,
+    },
+  };
 }
 
 export const zaloMock: Collector = {
@@ -83,18 +116,18 @@ export const zaloMock: Collector = {
     const groups = ["BĐS Hà Nội", "Chung cư Hà Nội", "Môi giới Miền Bắc"];
     const items: RawItem[] = [];
 
-    const mkPost = (text: string, kind: string, idx: number): RawItem => ({
+    const mkPost = (p: { text: string; gt: GroundTruth }, kind: string, idx: number): RawItem => ({
       source: "zalo-mock",
       sourceId: `mock-${kind}-${idx}-${Math.random().toString(36).slice(2, 8)}`,
       kind,
       fetchedAt: new Date().toISOString(),
       payload: {
-        text,
+        text: p.text,
         group: pick(groups),
         author: `author-${Math.floor(rnd(1, 30))}`,
         images: [],
       },
-      meta: { city: city.id, mock: true },
+      meta: { city: city.id, mock: true, gt: p.gt },
     });
 
     // Tin bán
@@ -111,18 +144,30 @@ export const zaloMock: Collector = {
         sourceId: `mock-repost-${i}-${Math.random().toString(36).slice(2, 8)}`,
         fetchedAt: new Date(Date.now() + rnd(0, 3 * 864e5)).toISOString(),
         payload: { ...(src.payload as MockPost), group: pick(groups), author: `author-${Math.floor(rnd(1, 30))}` },
+        // deep-copy gt: strip text bản này không null gt của bản gốc (review I4)
+        meta: { city: src.meta?.city ?? "hanoi", mock: true, gt: { ...(src.meta?.gt as GroundTruth) } },
       });
     }
 
-    // ~25% tin thiếu trường (confidence test) — bỏ giá hoặc diện tích
+    // ~25% tin thiếu trường (confidence test) — bỏ giá hoặc diện tích.
+    // gt phản ánh text SAU khi strip: chỉ null field khi replace thật sự đổi
+    // text (vd "…tr." của template thuê không khớp regex → giá còn → gt giữ).
     const broken = Math.floor((N_SALE + N_RENT) * 0.25);
     for (let i = 0; i < broken; i++) {
       const idx = Math.floor(Math.random() * items.length);
       const it = items[idx].payload as MockPost;
+      const gt = items[idx].meta?.gt as GroundTruth | undefined;
       if (Math.random() > 0.5) {
-        it.text = it.text.replace(/[\d.,]+\s*(tỷ|tr\/m²|triệu\/th|tr\/tháng)/g, "giá tốt");
+        it.text = it.text.replace(/[\d.,]+\s*(tỷ|tr\/m[²2]|triệu\/th|tr\/tháng)/g, "giá tốt");
+        if (gt) {
+          // null theo CÒN LẠI trong text: template tr/m2 (ASCII) từng sót
+          // perm2 khi chỉ strip được "tỷ" → gt sai lệch text (review I4)
+          if (!/tr\/m[²2]/i.test(it.text)) gt.pricePerm2Vnd = null;
+          if (!/\d[\d.,]*\s*(tỷ|triệu|tr)(?!\/m)/i.test(it.text)) gt.priceVnd = null;
+        }
       } else {
         it.text = it.text.replace(/\d+\s*m[²2]/g, "DT đẹp");
+        if (gt && !/m[²2]/i.test(it.text)) gt.areaM2 = null;
       }
     }
 

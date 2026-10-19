@@ -9,7 +9,7 @@ DB_DIR="$(cd ../db && pwd)"
 PSQL=(docker compose exec -T -e PGPASSWORD=oneinvest db psql -h localhost -U oneinvest -d oneinvest)
 
 echo "=== 1. Import các snapshot chưa nạp ==="
-for d in "../collector"/snapshots/hanoi/hanoi__airbnb-*__*; do
+for d in "../collector"/snapshots/hanoi/hanoi__airbnb-*__* "../collector"/snapshots/hanoi/hanoi__zalo-agent__*; do
   [ -d "$d" ] || continue
   sid=$(basename "$d")
   n=$(cd "$DB_DIR" && "${PSQL[@]}" -t -A -c "SELECT count(*) FROM airbnb_snapshots WHERE snapshot_id='$sid'")
@@ -26,6 +26,7 @@ node reassign-areas.mjs hanoi
 
 echo "=== 3. Transform (listings + nights; area = phường chứa tọa độ) ==="
 node transform-airbnb.mjs
+node transform-zalo.mjs
 
 echo "=== 4. Rebuild metrics + breakdowns + listing_stats + DQ checks ==="
 cd "$DB_DIR" && "${PSQL[@]}" -q < ../pipeline/sql/300_metrics.sql

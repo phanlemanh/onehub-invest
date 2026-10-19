@@ -1,7 +1,10 @@
 // transform-zalo.mjs — parse tin rao VN + dedup + canonical offers (G1).
 // Pipeline 5 bước: clean → parse regex → confidence → dedup → offers.
 // Parser đo coverage: % tin có đủ (giá + diện tích + phường) cho confidence=high.
+// Export parsePost/matchPhuong cho bench-extraction dùng chung (C2) — nguồn
+// chân lý của parser là một, bench và transform không được fork logic.
 import { createHash } from "node:crypto";
+import { pathToFileURL } from "node:url";
 import pg from "pg";
 
 const DB_URL =
@@ -19,8 +22,15 @@ const slugify = (s) =>
 
 const stripPrefix = (s) => s.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/, "");
 
+/** Số VN: "2.9"/"2,9" (thập phân, 1-2 chữ số) giữ nguyên; "2.900" (nhóm 3)
+ *  là ngăn cách nghìn → bỏ separator. Comma cũng là thập phân chuẩn VN. */
+export function parseVnNumber(raw) {
+  if (/^\d+[.,]\d{1,2}$/.test(raw)) return parseFloat(raw.replace(",", "."));
+  return parseFloat(raw.replace(/[.,]/g, ""));
+}
+
 // ---- Bước 2: parse ----
-function parsePost(text) {
+export function parsePost(text) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null };
 
   // loại tin: bán vs thuê
@@ -30,14 +40,16 @@ function parsePost(text) {
 
   // giá: "45tr/m2", "3.2 tỷ", "2tỷ", "15tr/tháng", "12 triệu/th"
   const perm2 = text.match(/([\d.,]+)\s*(?:tr|triệu)\/m[²2]/i);
-  if (perm2) out.pricePerm2Vnd = Math.round(parseFloat(perm2[1].replace(/\./g, "")) * 1e6);
+  if (perm2) out.pricePerm2Vnd = Math.round(parseVnNumber(perm2[1]) * 1e6);
 
-  const ty = text.match(/([\d.,]+)\s*t(?:ỷ|y|\b)/i);
-  if (ty) out.priceVnd = Math.round(parseFloat(ty[1].replace(/\./g, "")) * 1e9);
+  // (?!..) chặn 't' của chữ thường tiếng Việt ("62m2, tổng …") — \b của JS
+  // chỉ theo ASCII nên 'tổ' vẫn tạo boundary giả (bench C2 bắt được).
+  const ty = text.match(/(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/i);
+  if (ty) out.priceVnd = Math.round(parseVnNumber(ty[1]) * 1e9);
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {
     const trieu = text.match(/([\d.,]+)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
-    if (trieu) out.priceVnd = Math.round(parseFloat(trieu[1].replace(/\./g, "")) * 1e6);
+    if (trieu) out.priceVnd = Math.round(parseVnNumber(trieu[1]) * 1e6);
   }
 
   // diện tích: "65m2", "65m²", "DT 45m"
@@ -53,15 +65,31 @@ function parsePost(text) {
   return out;
 }
 
-/** Match phường: tên phường xuất hiện trong text. */
-function matchPhuong(text, phuongSlugs) {
-  const textLower = text.toLowerCase();
+/** Match phường: tên phường xuất hiện trong text. Chọn ứng viên khớp DÀI
+ *  NHẤT (không phải đầu tiên) — tránh "Láng" nuốt "Láng Thượng"; thử cả tên
+ *  bỏ prefix vì tin rao chỉ ghi tên trần. Normalize NFC hai phía — tên OSM
+ *  trong DB trộn NFC/NFD khiến includes() thất bại byte-wise. Slug/tên rỗng
+ *  và bare chỉ toàn số/chữ ngược (vd "3" của "Quận 3") skip. */
+export function matchPhuong(text, phuongSlugs) {
+  const textLower = text.normalize("NFC").toLowerCase();
+  let best = null;
+  let bestLen = 0;
   for (const [slug, name] of phuongSlugs) {
-    if (textLower.includes(name.toLowerCase()) || textLower.includes(slug.replace(/-/g, " "))) {
-      return { slug, name };
+    if (!slug || !name) continue;
+    const variants = [
+      name,
+      slug.replace(/-/g, " "),
+      name.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/i, ""),
+    ].map((v) => v.normalize("NFC").toLowerCase());
+    for (const v of variants) {
+      if (v.length < 2 || /^[\d\s]+$/.test(v)) continue;
+      if (textLower.includes(v) && v.length > bestLen) {
+        best = { slug, name };
+        bestLen = v.length;
+      }
     }
   }
-  return null;
+  return best;
 }
 
 async function main() {
@@ -150,4 +178,6 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+const isMain =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) main().catch((e) => { console.error(e); process.exit(1); });
