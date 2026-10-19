@@ -1,7 +1,12 @@
-# One Invest — Lộ trình toàn diện (v2, 2026-10-18)
+# One Invest — Lộ trình toàn diện (v3, 2026-10-18)
 
 Thay thế các lộ trình rời rạc trước đây. Nguyên tắc: mỗi giai đoạn có tiêu chí
 đạt đo được + không phụ thuộc thứ chưa sẵn sàng.
+
+> **v3**: bổ sung track Collector C1–C4 (kèm ADR-0007 — 5 workstream xuyên
+> suốt: SPL mã hoá nguồn · CCP hành vi thu thập · DCA GUI+API song song ·
+> DQO chất lượng dữ liệu · DR backup). Các phase G bên dưới giữ làm lịch sử;
+> phần còn dở map sang C (xem cuối file).
 
 ## Trạng thái hiện tại (đã xong)
 
@@ -11,11 +16,12 @@ Thay thế các lộ trình rời rạc trước đây. Nguyên tắc: mỗi gia
   listing gán theo tọa độ (point-in-polygon, G0-b) — không còn khu vực theo title
 - **Pipeline 2-repo**: collector plugins (airbnb-discovery/listing, osm-boundaries)
   + DATA-CONTRACT (raw immutable + manifest + sha256) + staging → transform →
-  canonical → metrics (300) → breakdowns precompute (400)
-- **Sản phẩm**: /vn/hanoi + 62 submarket, KPI/benchmark/charts/deep-sections,
-  supply tracking, mini-map choropleth, trang market 0.03-0.06s
+  canonical → metrics (300) → breakdowns precompute (400) → listing_stats (410)
+- **Sản phẩm**: Invest Portal trên ReUI (P0–P5 xong) — Finder, Insight, Listing,
+  Yield, So sánh, Saved, auth; trang market 0.03-0.06s
 - **ADR**: 0001 stack · 0002 insights-core · 0003 collector split · 0004 đa
-  tài sản (Zalo) · 0005 AirDNA nguồn hạng nhất (buy-now own-later)
+  tài sản (Zalo) · 0005 AirDNA nguồn hạng nhất · 0006 agent swarm (sửa bởi 0007)
+  · 0007 nền tảng vận hành collector
 
 ## Nguyên tắc kiến trúc (không đổi qua các giai đoạn)
 
@@ -96,3 +102,90 @@ G1 (mock+yield) ──┐
 G2 (AirDNA) ──────┘        cần crosswalk + source từ G2
 ```
 G1 ∥ G2 song song được; G3 cần G2; G4 cần G1 (tính năng) + user (nhóm).
+
+---
+
+# TRACK COLLECTOR C1–C4 (v3, kèm ADR-0007)
+
+5 workstream xuyên suốt mỗi phase — nguyên tắc chi tiết ở ADR-0007:
+**SPL** (mã hoá nguồn) · **CCP** (hành vi thu thập) · **DCA** (GUI+API song
+song) · **DQO** (chất lượng dữ liệu) · **DR** (backup).
+
+## C1 — Vận hành hoá collector hiện tại *(không dependency, bắt đầu ngay)*
+
+Việc chính: gộp raw zone về monorepo (snapshots + state + `.airdna-profile`
+từ repo cũ; `PROFILE_DIR` dùng path tương đối) · cài launchd cron hằng tuần
+(Hà Nội full + HCMC tích lũy) · G0-a "Trang cuối" discovery đủ 15 trang ·
+HCMC depth 25 → ≥100 listings.
+
+| Workstream | Việc ở C1 |
+|---|---|
+| SPL | Bảng `source_registry` local + cột `source` serving chuyển sang mã B; `/ops/sources` bảng giải mã (gated admin) |
+| CCP | Jitter + trần/ngày + cửa sổ giờ vào scheduler; incremental calendar; randomized cron delay; smoke test hằng ngày |
+| DCA | OpenAPI v1 skeleton + `GET /api/v1/ops/coverage` (freshness, coverage, snapshot cuối) + webhook ngưỡng |
+| DQO | `450_dq_checks.sql` (4 trụ) + freshness SLO GUI footer + API |
+| DR | pg_dump tuần + rsync mã hoá raw zone; `users` thêm `role` (user\|admin) — clearance portals.md |
+
+**Tiêu chí đạt**: 2 tuần không đụng tay vẫn có snapshot + metrics mới; mọi raw
+trong monorepo; HCMC ≥100 listings; `/api/v1/ops/coverage` trả JSON đúng.
+
+## C2 — Agent ingest bridge *(test được ngay với zalo-mock, không cần Zalo thật)*
+
+Việc chính: Collector API `POST /api/v1/agent-report` (localhost, API key
+per-agent) **ghi raw snapshot theo DATA-CONTRACT** (`source='zalo-agent'`,
+sửa đổi ADR-0006) rồi transform; Ollama + Qwen 27B; benchmark extraction
+trên zalo-mock (có ground truth) so với regex transform-zalo; OpenClaw agent
++ skill `real-estate-monitor` trên 1 group test khi user sẵn sàng.
+
+| Workstream | Việc ở C2 |
+|---|---|
+| SPL | Agent-report theo SPL: raw tầng A (tên thật) → transform ra mã B |
+| CCP | Extractor chạy offline trên mock (không chạm platform nào) |
+| DCA | `/agent-report` + `GET /api/v1/ops/extraction-quality` (F1 LLM vs regex) |
+| DQO | So sánh F1 như một DQ test có ngưỡng |
+| DR | — (không dữ liệu mới ngoài raw zone đã backup ở C1) |
+
+**Tiêu chí đạt**: end-to-end agent-report → raw → transform → `sale_offers`
+chạy; F1 extract LLM ≥ regex parser (≥80% coverage trên mock).
+
+## C3 — Zalo thật *(chỉ còn logistics user: join 10-20 nhóm)*
+
+Việc chính: collector `zalo-groups` poll CHỈ ĐỌC 1-2 lần/ngày theo checkpoint
+→ cùng contract; `market_asset_stats` thêm nguồn thật; đối chiếu mock vs real
+(phân phối giá, coverage parser ≥60%); mock retire giữ lineage.
+
+| Workstream | Việc ở C3 |
+|---|---|
+| SPL | Mã nguồn Cộng đồng vào serving; nhãn i18n |
+| CCP | HBP đầy đủ: event-driven, không re-poll history, không đăng; fail = lùi + báo; credential registry Zalo |
+| DCA | `GET /api/v1/offers` + MCP tool `oneinvest_get_asset_stats` đầu tiên |
+| DQO | Test phân phối mock vs real |
+| DR | Backup rule cho credential Zalo (Keychain) |
+
+**Tiêu chí đạt**: tin thật chảy về hàng ngày không can thiệp; parser ≥60%
+coverage trên tin thật; không có block/captcha quá ngưỡng circuit breaker.
+
+## C4 — Cloud + mở rộng
+
+Việc chính: sync local → Supabase (15 phút, outbound-only) → Vercel deploy +
+auth teammates; AirDNA E2 submarket focus cities + Track B MCP khi live;
+city 3+ theo xếp hạng; MCP server hoàn chỉnh (`oneinvest_query_market`,
+`oneinvest_rank_markets`, `oneinvest_get_yield`, `oneinvest_get_coverage`).
+
+| Workstream | Việc ở C4 |
+|---|---|
+| SPL | **Ranh giới enforcement**: sync chỉ đưa mã B + bảng đổi tên trung tính (`airdna_*` → `ref_calib_*`); **Leak Gate CI** chặn tên thật trong artifact rời máy |
+| CCP | SLO 4 tuần không đụng tay kiểm chứng |
+| DCA | RBAC role×scope + machine token + audit log + Idempotency-Key mọi trigger |
+| DQO | DQ report đám mây (cùng nguồn dữ liệu với GUI) |
+| DR | Drill khôi phục 1 lần (RPO 7d / RTO 1d kiểm chứng) |
+
+**Tiêu chí đạt**: dashboard đọc được từ cloud; teammate read-only vào được;
+Leak Gate xanh; drill khôi phục pass.
+
+## Map G cũ → C
+
+- G0 còn dở (G0-a, launchd máy mới, gộp raw zone) → **C1**
+- G3 (HCMC depth, city 3+ theo rank) → **C1** (depth) + **C4** (city 3+)
+- G4 (Zalo thật) → **C3**
+- G2 còn dở (E2 submarket, Track B MCP) → **C4**

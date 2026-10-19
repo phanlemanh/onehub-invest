@@ -39,7 +39,10 @@ Thay vì scrape truyền thống (Playwright + headless), dùng **trợ lý AI c
 ## Next steps (khi user yêu cầu research)
 
 1. Research OpenClaw + các nền tảng AI agent tương tự (Manus, Devin, etc.)
-2. Research anti-detect browser (Dolphin Anty, Multilogin, etc.)
+2. ~~Research anti-detect browser (Dolphin Anty, Multilogin, etc.)~~ —
+   **LOẠI khỏi hướng research (ADR-0007/CCP)**: arms race leo thang, chính
+   hành vi "giả vờ nhiều người" là dấu hiệu bot rõ nhất. Chiến lược thay:
+   một account thật, đọc chậm, chỉ đọc, không xoay identity.
 3. Prototype 1 agent Zalo: đọc 1 group, extract tin BĐS
 4. Đề xuất kiến trúc agent swarm (orchestrator + agents + data pipeline)
 5. Chi phí vận hành ước tính

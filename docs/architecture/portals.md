@@ -126,20 +126,47 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 
 - **Khán giả**: đội vận hành dữ liệu + vận hành Agent Swarm. **Bắt buộc đăng nhập.**
 - **URL prefix**: `/ops/**` — middleware chặn redirect `/login?next=…`.
-- **Cấu trúc dự kiến** (xây dần theo G-roadmap, chưa dựng trước):
+- **Cấu trúc đích** (bản đồ toàn cảnh kèm ADR-0007 — 5 workstream làm nhà
+  chủ yếu ở cổng này; xây dần theo track C1–C4, chưa dựng trước):
 
-| Route | Tên hiển thị (VI) | Chức năng | Giai đoạn |
-|---|---|---|---|
-| `/ops` | Tổng quan vận hành | health tổng + KPI thu thập | G0-e+ |
-| `/ops/collections` | Thu thập dữ liệu | lịch chạy collector, kết quả, lỗi | G0-e |
-| `/ops/pipeline` | Pipeline | transform/rollup chạy chưa, số liệu | G3+ |
-| `/ops/quality` | Chất lượng dữ liệu | coverage phường, divergence vs AirDNA | G2+ |
-| `/ops/agents` | Agent Swarm | agent đang làm gì, permission, chi phí | G4 |
-| `/ops/sources` | Nguồn dữ liệu | AirDNA license/sync, nguồn mới | G2+ |
-| `/ops/design` | Thư viện thiết kế | ReUI Gallery (dời từ `/design`) | ngay |
+| Route | Tên hiển thị (VI) | Chức năng | Workstream | Giai đoạn |
+|---|---|---|---|---|
+| `/ops` | Tổng quan vận hành | health tổng: freshness SLO từng nguồn, block rate, trạng thái circuit breaker, run gần nhất | CCP+DQO | C1 |
+| `/ops/collections` | Thu thập dữ liệu | lịch chạy collector, tuân thủ conduct (jitter, trần volume), điều khiển circuit breaker | CCP | C1 |
+| `/ops/pipeline` | Pipeline | transform/rollup chạy chưa, kết quả DQ gates | DQO | C1 |
+| `/ops/quality` | Chất lượng dữ liệu | 4 trụ DQ: freshness/volume/schema/distribution + divergence đối chiếu | DQO | đã có (mở rộng C1) |
+| `/ops/agents` | Agent Swarm | agent đang làm gì, F1 extraction vs regex, chi phí token | DCA | C2/C3 |
+| `/ops/console` | Bảng điều khiển | bề mặt NGƯỜI của hành động máy: trigger collect/transform (Idempotency-Key) | DCA | C2 |
+| `/ops/audit` | Nhật ký thao tác | audit log mọi `ops:write` (token nào, lệnh gì, khi nào, kết quả) | DCA | C4 |
+| `/ops/backups` | Sao lưu | lần pg_dump/replica gần nhất, drill khôi phục | DR | C4 |
+| `/ops/sources` | Nguồn dữ liệu 🔒 | registry vòng đời mã (retired vĩnh viễn, đổi nhãn qua mini-ADR) + **bảng giải mã mã↔tên thật — gated `role=admin`** | SPL | C1 |
+| `/ops/design` | Thư viện thiết kế | ReUI Gallery (dời từ `/design`) | — | ngay |
 
 - **Shell thiết kế**: `@reui/app-shell-26` (SOC console) + `agent-activity-*`,
   `ai-usage-*` cho `/ops/agents`.
+- **Ngôn ngữ danh tính**: toàn bộ Ops dùng **mã tầng B** (`S01`…); chỉ
+  `/ops/sources` với `role=admin` giải mã ra tầng A (tên thật).
+
+### Clearance law (ADR-0007 + portals.md, 2026-10-18)
+
+Một cổng Ops, **hai mức clearance** — tách URL `/admin/**` hoãn tới khi có
+≥2 role người thật, nhưng phân nội dung làm ngay:
+
+| Mức | Điều kiện | Thấy gì |
+|---|---|---|
+| data-ops | đăng nhập | mọi trang trừ phần gated admin |
+| admin | `users.role = 'admin'` | + `/ops/sources` (giải mã SPL tầng A), `/ops/audit`, `/ops/backups`, quản lý machine token |
+
+**Đường cắt sẵn**: khi tách `/admin/**`, các trang admin-class dời nguyên khối,
+không đổi logic. Cột `role` (`user`\|`admin`) thêm vào migration C1.
+
+### Bảng ghép 3 tầng SPL ↔ 3 cổng (tra nhanh)
+
+| Tầng SPL | Giá trị | Bề mặt hiển thị |
+|---|---|---|
+| C — Nhãn ("Tự thu", "Hiệu chuẩn"…) | public | Invest Portal: badge KPI + `/phuong-phap` |
+| B — Mã (`S01`…) | internal | API/MCP `/api/v1/*` + mọi trang `/ops/**` |
+| A — Tên thật | secret | `/ops/sources` (role admin) + máy local — không rời máy chủ |
 
 ### Cổng 3 — ADMIN (dự phòng, CHƯA dựng)
 
@@ -177,4 +204,4 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
 | Cho nhà đầu tư xem số liệu | Invest | `/vn/…`, `/listing/…`, `/yield` |
 | Theo dõi/điều hành thu thập & agent | Ops | `/ops/…` |
 | Xem trước component ReUI | Ops | `/ops/design` |
-| Thêm API cho agent/máy | (chưa chuẩn hoá — ADR riêng) | `/api/…` |
+| Thêm API cho agent/máy | (không phải GUI) | `/api/v1/…` — chuẩn hoá bởi ADR-0007/DCA (OpenAPI + RBAC scope) |

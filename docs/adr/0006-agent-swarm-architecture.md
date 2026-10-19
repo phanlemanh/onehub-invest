@@ -1,6 +1,8 @@
 # ADR-0006: Agent Swarm Data Collection — Kiến trúc Hub-and-Spoke
 
-Ngày: 2026-10-18 · Trạng thái: proposed
+Ngày: 2026-10-18 · Trạng thái: accepted (sửa đổi bởi ADR-0007: agent-report
+ghi raw snapshot theo DATA-CONTRACT trước khi vào staging — không insert
+thẳng `stg_zalo_posts` như diagram cũ; conduct thu thập tuân theo CCP)
 
 ## Bối cảnh
 
