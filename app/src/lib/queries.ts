@@ -668,30 +668,41 @@ export type YieldRow = {
   medianPerm2: number | null; // VND/m²
   nRentLt: number;
   medianRentLt: number | null; // VND/tháng
-  strRevenueMonth: number | null; // từ market_metrics tháng mới nhất có adr
+  strRevenueMonth: number | null; // một căn/tháng: trung vị giá × công suất 90 đêm đầu
   yieldStr: number | null; // (strRevenueMonth × 12) / (medianPerm2 × 60m²) — giả định 60m²
   yieldLt: number | null; // (medianRentLt × 12) / (medianPerm2 × 60m²)
 };
 
 /** Yield theo submarket — kết hợp market_asset_stats (bán/thuê) + market_metrics (STR). */
 export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
+  // Doanh thu ngắn hạn của MỘT căn/tháng = trung vị (giá niêm yết × công suất
+  // 90 đêm đầu) × 365/12 trên các listing của phường — cùng mô hình với /yield.
+  // (Bản cũ lấy ADR × số listing = doanh thu cả phường, thổi phồng yield.)
   const { rows } = await pool.query(
-    `WITH sales AS (
+    `WITH cand AS (
+       SELECT l.id, l.area_id, l.price_listed FROM listings l
+       JOIN areas a ON a.id = l.area_id
+       WHERE a.parent_id = $1 AND l.price_listed > 0
+     ), ${PER_LISTING_NEAR_TERM},
+     str AS (
+       SELECT c.area_id,
+              percentile_cont(0.5) WITHIN GROUP (
+                ORDER BY c.price_listed * p.booked90::numeric / nullif(p.nights90, 0)
+              ) * 365 / 12 AS str_month,
+              count(*) AS n
+       FROM cand c JOIN per_listing p ON p.listing_id = c.id
+       GROUP BY c.area_id
+     ), sales AS (
        SELECT area_id, n_offers, median_perm2 FROM market_asset_stats WHERE kind = 'sale'
      ), rents AS (
        SELECT area_id, n_offers, median_rent FROM market_asset_stats WHERE kind = 'rent_lt'
-     ), lm AS (
-       SELECT DISTINCT ON (area_id) area_id, adr, occupancy, listing_count
-       FROM market_metrics WHERE adr IS NOT NULL ORDER BY area_id, month DESC
      )
      SELECT a.id, a.name, s.n_offers AS n_sale, s.median_perm2,
-            r.n_offers AS n_rent_lt, r.median_rent,
-            lm.adr * lm.listing_count AS str_revenue_month,
-            lm.listing_count
+            r.n_offers AS n_rent_lt, r.median_rent, str.str_month
      FROM areas a
      LEFT JOIN sales s ON s.area_id = a.id
      LEFT JOIN rents r ON r.area_id = a.id
-     LEFT JOIN lm ON lm.area_id = a.id
+     LEFT JOIN str ON str.area_id = a.id
      WHERE a.parent_id = $1 AND (s.area_id IS NOT NULL OR r.area_id IS NOT NULL)
      ORDER BY s.median_perm2 DESC NULLS LAST`,
     [marketId],
@@ -700,7 +711,7 @@ export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
     const slug = slugifyName(r.name);
     const ASSUMED_M2 = 60; // giả định căn hộ 60m² để tính yield
     const salePrice = r.median_perm2 ? Number(r.median_perm2) * ASSUMED_M2 : null;
-    const strMonth = r.str_revenue_month ? Number(r.str_revenue_month) : null;
+    const strMonth = r.str_month ? Number(r.str_month) : null;
     const rentLt = r.median_rent ? Number(r.median_rent) : null;
     return {
       areaId: r.id,
@@ -715,6 +726,127 @@ export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
       yieldLt: salePrice && rentLt ? (rentLt * 12) / salePrice : null,
     };
   });
+}
+
+// ---------- P4: ước tính lợi suất (/yield) ----------
+
+/**
+ * Công suất "90 đêm đầu" của mỗi listing: lịch tương lai thưa dần về cuối
+ * (Hà Nội: 28,6% ở 90 đêm đầu vs 14,4% cả 365), nên 90 đêm đầu gần thực tế hơn.
+ */
+const PER_LISTING_NEAR_TERM = `
+  per_listing AS (
+    SELECT n.listing_id,
+           count(*) FILTER (WHERE n.night < f.first + 90) AS nights90,
+           count(*) FILTER (WHERE n.night < f.first + 90 AND NOT n.available) AS booked90,
+           count(*) AS nights,
+           count(*) FILTER (WHERE NOT n.available) AS booked
+    FROM nights n
+    JOIN (SELECT listing_id, min(night) AS first FROM nights
+          WHERE listing_id IN (SELECT id FROM cand) GROUP BY listing_id) f
+      ON f.listing_id = n.listing_id
+    WHERE n.listing_id IN (SELECT id FROM cand)
+    GROUP BY n.listing_id
+  )`;
+
+export type YieldArea = {
+  id: string;
+  name: string;
+  listings: number;
+  medianPerm2: number | null;
+  rentLt: number | null;
+};
+
+/** Thị trường có dữ liệu bán/thuê (hiện là mô phỏng G1) — /yield chỉ chạy ở đó. */
+export async function getYieldMarkets() {
+  const { rows } = await pool.query<{ id: string; name: string }>(
+    `SELECT DISTINCT m.id, m.name
+     FROM market_asset_stats s
+     JOIN areas a ON a.id = s.area_id
+     JOIN areas m ON m.id = a.parent_id
+     ORDER BY m.name`,
+  );
+  return rows;
+}
+
+/** Phường của một thị trường cho form: số listing + giá bán/m², giá thuê (mô phỏng). */
+export async function getYieldAreas(marketId: string): Promise<YieldArea[]> {
+  const { rows } = await pool.query(
+    `SELECT a.id, a.name,
+            (SELECT count(*) FROM listings l WHERE l.area_id = a.id) AS listings,
+            (SELECT median_perm2 FROM market_asset_stats WHERE area_id = a.id AND kind = 'sale') AS perm2,
+            (SELECT median_rent FROM market_asset_stats WHERE area_id = a.id AND kind = 'rent_lt') AS rent
+     FROM areas a
+     WHERE a.parent_id = $1 AND a.region_type = 'submarket'
+     ORDER BY a.name`,
+    [marketId],
+  );
+  return rows
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      listings: Number(r.listings),
+      medianPerm2: r.perm2 === null ? null : Number(r.perm2),
+      rentLt: r.rent === null ? null : Number(r.rent),
+    }))
+    .filter((a) => a.listings > 0 || a.medianPerm2 !== null);
+}
+
+export type YieldCompRow = ListingCardRow & { occupancy90: number | null };
+
+/**
+ * Listing so sánh cho ước tính: cùng phường + số phòng ngủ (≥ 5), lùi về cả
+ * thị trường cùng số phòng ngủ, rồi cả thị trường. Chỉ listing có giá niêm yết.
+ */
+export async function getYieldComps(
+  marketId: string,
+  areaId: string,
+  bedrooms: number,
+): Promise<{ scope: "area-bedrooms" | "market-bedrooms" | "market"; rows: YieldCompRow[] }> {
+  const [cc, ...rest] = marketId.split("-");
+  const marketPath = `/${cc}/${rest.join("-")}`;
+  const run = async (where: string, params: unknown[]) => {
+    const { rows } = await pool.query(
+      `WITH cand AS (
+         SELECT l.*, a.name AS area_name, a.region_type
+         FROM listings l JOIN areas a ON a.id = l.area_id
+         WHERE (a.id = $1 OR a.parent_id = $1) AND l.price_listed > 0 AND ${where}
+       ), ${PER_LISTING_NEAR_TERM}
+       SELECT cand.id, cand.name, cand.room_type, cand.bedrooms, cand.accommodates,
+              cand.price_listed, cand.area_name, cand.region_type, cand.latitude, cand.longitude,
+              p.nights, p.booked, p.nights90, p.booked90
+       FROM cand JOIN per_listing p ON p.listing_id = cand.id
+       ORDER BY p.booked90 DESC`,
+      [marketId, ...params],
+    );
+    return rows.map((r): YieldCompRow => {
+      const nights = Number(r.nights);
+      const booked = Number(r.booked);
+      const n90 = Number(r.nights90);
+      return {
+        id: r.id,
+        name: r.name,
+        roomType: r.room_type,
+        bedrooms: r.bedrooms,
+        accommodates: r.accommodates,
+        priceListed: Number(r.price_listed),
+        areaName: r.region_type === "submarket" ? r.area_name : null,
+        areaPath: r.region_type === "submarket" ? `${marketPath}/${slugifyName(r.area_name)}` : null,
+        lat: Number(r.latitude),
+        lng: Number(r.longitude),
+        booked,
+        nights,
+        occupancy: nights > 0 ? booked / nights : null,
+        revenue: 0,
+        occupancy90: n90 > 0 ? Number(r.booked90) / n90 : null,
+      };
+    });
+  };
+  const inArea = await run("l.area_id = $2 AND l.bedrooms = $3", [areaId, bedrooms]);
+  if (inArea.length >= 5) return { scope: "area-bedrooms", rows: inArea };
+  const sameBeds = await run("l.bedrooms = $2", [bedrooms]);
+  if (sameBeds.length >= 5) return { scope: "market-bedrooms", rows: sameBeds };
+  return { scope: "market", rows: await run("TRUE", []) };
 }
 
 // ---------- G2: AirDNA đối chiếu ----------

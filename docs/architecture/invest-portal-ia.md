@@ -202,7 +202,7 @@ heatmap lịch, footer, dialog chia sẻ. Mọi thứ khác **xoá** sau khi tha
 | **P1 Insight** ✅ 2026-10-18 | Thay `area-page` bằng template mục 3.2 (navbar-6, stats-1, chart-6, c-chart-25, chart-36, chart-13, data-grid). Dời AirDNA sang `/ops/quality` (R1). Xoá component cũ | `/vn/hanoi` và một phường hoạt động; không còn import component viết tay |
 | **P2 Finder** ✅ 2026-10-19 | `/vn` dùng data-grid-base-2 + filters + chia đôi list\|map + công tắc Thị trường\|Phường + khay So sánh. Redirect `/vn/[m]/map` | Xếp hạng theo metric tự thu; không còn số AirDNA |
 | **P3 Listing** ✅ 2026-10-19 | `/listing/[id]` (KPI + lịch + giá) + `/vn/[m]/listings` (lưới + map nhãn giá) | Map và list đồng bộ khi zoom |
-| **P4 Lợi suất** | `/yield` form-11 → báo cáo + độ tin cậy | Ra báo cáo cho 10+ phường, badge MÔ PHỎNG |
+| **P4 Lợi suất** ✅ 2026-10-19 | `/yield` form-11 → báo cáo + độ tin cậy | Ra báo cáo cho 10+ phường, badge MÔ PHỎNG |
 | **P5 Còn lại** | Trang chủ marketing, `/phuong-phap`, `/so-sanh`, `/saved` (wishlist-2), auth-4/5 | Không còn trang viết tay nào |
 
 Ghi chú P0: shell chung `components/shell/PortalShell` phục vụ cả hai cổng qua `nav.tsx`; mặc định giao diện sáng cho tới khi trang cũ được thay; KHÔNG dùng `loading.tsx` cấp segment (làm mất mã 404/307 — dùng `<Suspense>` + `PageSkeleton` trong trang).
@@ -225,5 +225,13 @@ Ghi chú P3:
 - Không có biểu đồ giá theo ngày: chỉ 44/237 listing Hà Nội có giá theo đêm và mỗi listing chỉ một mức giá → đường phẳng, vô nghĩa. "Giá" = giá niêm yết đặt cạnh phân bố giá cùng khu vực.
 - `/[country]/[market]/listings`: 300 listing doanh thu cao nhất (Bangkok có 30.922); lọc phường, sắp xếp, lọc theo khung bản đồ khi người dùng kéo/zoom, rê thẻ ↔ nhãn giá. Truy vấn gộp 11 triệu dòng nights → cache 1 giờ (`lib/cached.ts`); hướng lâu dài: pipeline tính sẵn bảng thống kê theo listing.
 - Nav có mục "Listing" → `/vn/hanoi/listings`; bảng "Listing nổi bật" của Insight có nút "Xem tất cả".
+
+Ghi chú P4:
+- `/yield`: báo cáo tính ở server từ tham số URL (chia sẻ được) thay cho `/yield/[reportId]` — chưa cần lưu báo cáo. Chỉ chạy ở thị trường có dữ liệu bán/thuê (hiện Hà Nội, mô phỏng G1).
+- Mô hình (`lib/yield.ts`): doanh thu/năm = p25/trung vị/p75 của (giá niêm yết × công suất 90 đêm đầu × 365) trên listing so sánh; listing so sánh lùi dần cùng phường+PN (≥5) → thị trường+PN → thị trường; độ tin cậy theo số mẫu, phạm vi, độ phân tán giá.
+- Chi phí mặc định sửa được: quản lý 20%, nền tảng 3%, thuế 7% (tham khảo: hộ KD lưu trú 5% GTGT + 2% TNCN), cố định 4 tr/tháng, nội thất 150 tr. Thuê dài hạn trừ thuế 10% (tham khảo).
+- Doanh thu không phụ thuộc diện tích (Airbnb không công bố m², chỉ khớp số phòng ngủ); diện tích chỉ ảnh hưởng giá mua gợi ý và giá/m².
+- Sửa bảng "Lợi suất theo phường" của Insight: doanh thu ngắn hạn trước đây = ADR × số listing (doanh thu cả phường) → yield thổi phồng; nay theo một căn, cùng mô hình với `/yield`.
+- Gộp nights cho công suất 90 đêm → cache 1 giờ (`lib/cached.ts`); xem đề xuất bảng thống kê theo listing ở pipeline.
 
 Ops Portal (`app-shell-26`) dựng song song từ P0, chỉ gồm khung và `/ops/design`, `/ops/quality`. Các trang Ops khác làm theo lộ trình G trong `portals.md`.

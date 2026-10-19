@@ -302,8 +302,22 @@ export function YieldTable({
   return (
     <InsightGrid
       title="Lợi suất theo phường"
-      description="Giá bán, thuê dài hạn (tin rao) so với doanh thu ngắn hạn (Airbnb), căn 60 m²"
-      badge={<Badge variant="warning-light">DỮ LIỆU MÔ PHỎNG</Badge>}
+      description="Một căn 60 m²: giá bán, thuê dài hạn (tin rao) so với doanh thu ngắn hạn (trung vị giá × công suất 90 đêm đầu)"
+      badge={
+        <div className="flex items-center gap-2">
+          <Badge variant="warning-light">DỮ LIỆU MÔ PHỎNG</Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs shadow-xs"
+            nativeButton={false}
+            render={<Link href="/yield" />}
+          >
+            Ước tính một căn
+            <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
+          </Button>
+        </div>
+      }
       data={rows}
       columns={columns}
       getRowId={(r) => r.areaId}

@@ -207,11 +207,13 @@ src/components/
 | `@reui/stats-1` | blocks/stats-1/ → insight/insight-stats.tsx | KPI Insight | Bỏ menu "…"; badge = vị trí so với phường anh em (p30/p60/p90) thay cho % tháng trước |
 | `@reui/chart-6` | blocks/chart-6/ → insight/performance/ | Hiệu suất theo tháng (4 ô chuyển 1 đường) | Theo THÁNG, dữ liệu qua props, bỏ lớp "kỳ trước" (lịch tương lai), mốc = Tết/30-4/Hè/2-9 |
 | `@reui/chart-13` | blocks/chart-13/ → insight/revenue-mix/ | Cơ cấu doanh thu theo loại phòng | Một cửa sổ (bỏ đổi kỳ); cột "thay đổi" → số listing |
-| `@reui/chart-36` | blocks/chart-36/ (chưa dùng) | Dành cho báo cáo Lợi suất (P4) | Không dùng cho Mùa vụ: chưa có dữ liệu lịch sử |
 | `@reui/frame`, `@reui/icon-tile`, `breadcrumb`, `sonner` | reui/, ui/ | Khung panel, breadcrumb, toast | `Toaster` gắn trong providers.tsx |
 | `@reui/data-grid-base-2` | blocks/data-grid-base-2/ → finder/finder-cells.tsx | Finder: thanh chỉ số (ScoreCell) + sparkline lịch đặt | Thanh tô theo bậc p30/p60/p90 (cùng màu bản đồ); sparkline một màu trung tính vì lịch tương lai luôn thưa dần |
 | `@reui/form-5` | blocks/form-5/ → listing/booking-heatmap.tsx | Lịch đặt 365 đêm của listing | Lấy riêng activity heatmap: cột = tuần (T2→CN), 3 trạng thái thay 4 mức cường độ; tooltip từng đêm |
 | `@reui/product-grid-2` | blocks/product-grid-2/ → listing/listing-card.tsx | Thẻ listing ở trang Duyệt listing | Bỏ panel ảnh (chưa thu ảnh, không dùng ảnh giả); swatch/giá → badge loại phòng + 3 chỉ số |
+| `@reui/form-11` | blocks/form-11/ → yield/yield-form.tsx | Form ước tính lợi suất + dải tóm tắt trực tiếp | Đặt trong Frame (trang họ Frame); `noValidate` vì bước ±0,1 tỷ chỉ là bước của nút |
+| `@reui/chart-36` | blocks/chart-36/ → yield/pnl/ | Doanh thu vs chi phí 12 tháng + biên lợi nhuận | Dữ liệu qua props, mốc = biên để ngang thuê dài hạn (ẩn khi > 100%), làn biên tối thiểu 20 điểm %, bước trục theo bậc độ lớn |
+| `@reui/number-field` | reui/number-field.tsx | Ô nhập số (PN, m², giá, chi phí) | `id` của NumberField là id của ô nhập |
 
 ### shadcn/ui Base (installed)
 | Component | File | Note |
