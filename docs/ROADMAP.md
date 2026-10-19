@@ -150,20 +150,34 @@ chạy; F1 extract LLM ≥ regex parser (≥80% coverage trên mock).
 
 ## C3 — Zalo thật *(chỉ còn logistics user: join 10-20 nhóm)*
 
-Việc chính: collector `zalo-groups` poll CHỈ ĐỌC 1-2 lần/ngày theo checkpoint
-→ cùng contract; `market_asset_stats` thêm nguồn thật; đối chiếu mock vs real
-(phân phối giá, coverage parser ≥60%); mock retire giữ lineage.
+Kiến trúc đã chốt sau research OpenClaw source + decision models (2026-10-19):
+thu thập **event-driven** qua plugin `zalouser` (tài khoản cá nhân zca-js,
+queue durable 30 ngày — KHÔNG poll, không heartbeat 30s như diagram cũ
+ADR-0006), tin group → **decision gate Kev-4B local (:8009)** chấm "là tin
+rao BĐS?" → chỉ tin đúng mới đánh thức agent 27B → skill
+`real-estate-monitor` → `POST :9210/agent-report` (C2). Tiết kiệm ~95% turn
+27B (500 tin/ngày, ~30% là BĐS).
+
+Việc chính: login zalouser (QR — user) + allowlist nhóm theo group ID;
+cài `decisionModel: typesafe/kev-latest` cho agent dedicated (đã cài plugin
+typesafe link từ source, config baseUrl :8009); validate cổng bằng
+`pipeline/scripts/bench-gate.mjs` (recall ≥95% là ràng buộc ngưỡng);
+viết skill real-estate-monitor; `market_asset_stats` thêm nguồn thật;
+đối chiếu mock vs real (phân phối giá, coverage parser ≥60% — Kev làm judge
+theo rubric); mock retire giữ lineage.
 
 | Workstream | Việc ở C3 |
 |---|---|
 | SPL | Mã nguồn Cộng đồng vào serving; nhãn i18n |
-| CCP | HBP đầy đủ: event-driven, không re-poll history, không đăng; fail = lùi + báo; credential registry Zalo |
+| CCP | Event-driven (zca-js listener, không re-poll history), không đăng; gate decision model chạy trước agent turn; fail = lùi + báo; credential registry Zalo (Keychain) |
 | DCA | `GET /api/v1/offers` + MCP tool `oneinvest_get_asset_stats` đầu tiên |
-| DQO | Test phân phối mock vs real |
+| DQO | Test phân phối mock vs real; judge coverage = decision rubric (đúng/thiếu/sai giá) |
 | DR | Backup rule cho credential Zalo (Keychain) |
 
-**Tiêu chí đạt**: tin thật chảy về hàng ngày không can thiệp; parser ≥60%
-coverage trên tin thật; không có block/captcha quá ngưỡng circuit breaker.
+**Tiêu chí đạt**: tin thật chảy về hàng ngày không can thiệp; cổng chặn
+recall ≥95% trên mock gt + fallout <10% trên âm tính tổng hợp (bench-gate);
+parser ≥60% coverage trên tin thật (Kev judge); không block/captcha quá
+ngưỡng circuit breaker.
 
 ## C4 — Cloud + mở rộng
 
