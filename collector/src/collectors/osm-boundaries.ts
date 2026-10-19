@@ -9,12 +9,20 @@ const OVERPASS = "https://overpass-api.de/api/interpreter";
 
 export const osmBoundaries: Collector = {
   id: "osm-boundaries",
-  description: "OSM admin boundaries (Overpass) — quận/huyện level 6 theo tên thành phố",
+  description:
+    "OSM admin boundaries (Overpass) — quận/huyện level 6 theo tên thành phố; OSM_MODE=provinces → cấp tỉnh toàn quốc (level 4)",
   requestsPerSecond: 0.2, // Overpass nhờ dùng tiết kiệm
   async collect(ctx) {
     const { city, rateLimit, log } = ctx;
-    // Tên area OSM có thể kèm prefix hành chính ("Thành phố Hà Nội") — dùng regex
-    const query = `[out:json][timeout:120];
+    // OSM_MODE=provinces: mọi relation admin_level=4 trong Việt Nam (34 tỉnh
+    // sau sáp nhập 2025) — nền cho bản đồ quốc gia (G2, ADR-0008 scope VN).
+    const provinces = process.env.OSM_MODE === "provinces";
+    const query = provinces
+      ? `[out:json][timeout:180];
+area["name"="Việt Nam"]["admin_level"="2"]["boundary"="administrative"]->.vn;
+relation(area.vn)["admin_level"="4"]["boundary"="administrative"];
+out geom;`
+      : `[out:json][timeout:120];
 area["name"~"^(Thành phố |Tỉnh )?${city.name}$", i]["admin_level"="4"]->.city;
 relation(area.city)["admin_level"="6"]["boundary"="administrative"];
 out geom;`;
