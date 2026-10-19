@@ -190,6 +190,9 @@ src/components/
                        # → IMPORT TRỰC TIẾP, KHÔNG SỬA
 ```
 
+`npm run lint` bỏ qua `reui/**` và `blocks/**` (code vendor, không sửa — eslint.config.mjs):
+lint phải 0 lỗi trên code của mình. Chuyển thể block sang thư mục feature thì lint áp dụng.
+
 ## COMPONENT INVENTORY — Đã cài + tự tạo
 
 ### ReUI Blocks (installed 2026-10-17)

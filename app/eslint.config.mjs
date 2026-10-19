@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Code vendor ReUI — cài nguyên bản qua shadcn CLI, quy ước KHÔNG sửa (xem DESIGN_RULES.md).
+    "src/components/reui/**",
+    "src/components/blocks/**",
+    // Bản sao nguyên văn maplibre-gl/dist (đã minify), xem lib/map-worker.ts.
+    "public/maplibre-gl-worker.mjs",
   ]),
 ]);
 
