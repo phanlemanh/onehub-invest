@@ -8,13 +8,12 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | Script | Purpose |
 |--------|---------|
 | import-airbnb.mjs | Import snapshots (verify sha256, write staging tables) |
-| transform-airbnb.mjs | Staging → canonical (listings, nights, areas) |
+| transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ |
 | transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers |
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
-| reassign-areas.mjs | Point-in-polygon assign listings to phường |
-| apply-polygons.mjs | Apply OSM boundary polygons to areas |
-| finalize-hanoi.sh | Full pipeline: import → transform → metrics |
+| reassign-areas.mjs | Upsert phường OSM (areas + polygon), point-in-polygon mọi listing VN, bỏ listing ngoài tỉnh, xoá area không phải phường OSM |
+| finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400 |
 
 ## SQL Files (execute in order)
 
@@ -39,7 +38,10 @@ airdna_markets / airdna_scores / airdna_market_metrics
 ## Conventions
 - **City-parametric**: most scripts accept city as arg (`node transform-airbnb.mjs hcmc`)
 - **Staging → canonical**: raw data goes to stg_* tables first, then transforms to clean tables
-- **Point-in-polygon**: listings assigned to phường by ST_Contains(coordinates, polygon)
+- **Point-in-polygon**: area của listing VN = phường OSM chứa tọa độ (ST_Covers). KHÔNG suy area từ title discovery
+  (title dùng tên quận cũ / tên tỉnh / tỉnh lân cận → area trùng, ngoài tỉnh — G0-b). Submarket VN chỉ là phường OSM
+  (`meta.source = 'osm-phuong'`); listing ngoài mọi phường bị bỏ khỏi canonical (staging giữ nguyên).
+- Sau MỌI transform VN (kể cả transform-hcmc-simple): `node reassign-areas.mjs` rồi 300 + 400.
 - **Idempotent**: scripts can run multiple times without duplicating data (ON CONFLICT)
 
 ## Gotchas

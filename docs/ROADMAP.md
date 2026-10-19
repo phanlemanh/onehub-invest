@@ -7,7 +7,8 @@ Thay thế các lộ trình rời rạc trước đây. Nguyên tắc: mỗi gia
 
 - **Hà Nội self-collected STR**: 239 listings (calendar + giá VND 97.5%),
   vũ trụ 873 listings union, coverage overlap 2-method đo được (65%)
-- **Areas + polygons**: 62 khu vực từ titles, 34/54 có polygon OSM (126 phường 2025)
+- **Areas + polygons**: Hà Nội 126 phường OSM 2025 + TP.HCM 167 phường, mọi submarket có polygon;
+  listing gán theo tọa độ (point-in-polygon, G0-b) — không còn khu vực theo title
 - **Pipeline 2-repo**: collector plugins (airbnb-discovery/listing, osm-boundaries)
   + DATA-CONTRACT (raw immutable + manifest + sha256) + staging → transform →
   canonical → metrics (300) → breakdowns precompute (400)
@@ -32,7 +33,7 @@ Thay thế các lộ trình rời rạc trước đây. Nguyên tắc: mỗi gia
 | # | Hạng mục | Gốc | Tiêu chí đạt |
 |---|---|---|---|
 | G0-a | Discovery fallback "Trang cuối" (~13 listings trang 15 bị bỏ) | audit ① | collector bắt được link "Trang cuối", rerun discovery đủ trang |
-| G0-b | **Chuẩn hoá gán khu vực bằng point-in-polygon** (ST_Contains vào 126 phường OSM) thay vì tin theo title — xử lý luôn: areas ngoài tỉnh (Văn Giang, Phục Yên = Hưng Yên/Vĩnh Phúc), area "Hà Nội" tự tham chiếu, trùng slug (Dong Da vs Quận Đống Đa), 20 areas thiếu polygon | audit ⑤ | mọi listing Hà Nội thuộc đúng phường theo tọa độ; không còn area tự-tham-chiếu; số area sạch |
+| G0-b ✅ | **Chuẩn hoá gán khu vực bằng point-in-polygon** (ST_Contains vào 126 phường OSM) thay vì tin theo title — xử lý luôn: areas ngoài tỉnh (Văn Giang, Phục Yên = Hưng Yên/Vĩnh Phúc), area "Hà Nội" tự tham chiếu, trùng slug (Dong Da vs Quận Đống Đa), 20 areas thiếu polygon | audit ⑤ | mọi listing Hà Nội thuộc đúng phường theo tọa độ; không còn area tự-tham-chiếu; số area sạch |
 | G0-c | Top Submarkets sort theo metric (ADR/occ/revpar) | audit ⑦ | đổi sort được từ UI |
 | G0-d | Trang chi tiết listing (drill-down click tên) | audit ⑧ | /listing/<id> hiển thị chi tiết + calendar |
 | G0-e | Cron vận hành chính thức (launchd plist) | audit ⑫ | collector tự chạy tuần không cần tay |
