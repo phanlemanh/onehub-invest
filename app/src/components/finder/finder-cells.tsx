@@ -63,11 +63,13 @@ function buildSmoothLinePath(pts: { x: number; y: number }[]): string {
     }
   }
 
-  let d = `M ${pts[0].x} ${pts[0].y}`
+  // Làm tròn 2 chữ số: cos/sin lệch ở chữ số cuối giữa Node và trình duyệt → lệch hydrate.
+  const r = (v: number) => Math.round(v * 100) / 100
+  let d = `M ${r(pts[0].x)} ${r(pts[0].y)}`
   for (let i = 1; i < pts.length; i++) {
     const start = controlPoint(pts[i - 1], pts[i - 2], pts[i])
     const end = controlPoint(pts[i], pts[i - 1], pts[i + 1], true)
-    d += ` C ${start.x} ${start.y} ${end.x} ${end.y} ${pts[i].x} ${pts[i].y}`
+    d += ` C ${r(start.x)} ${r(start.y)} ${r(end.x)} ${r(end.y)} ${r(pts[i].x)} ${r(pts[i].y)}`
   }
   return d
 }

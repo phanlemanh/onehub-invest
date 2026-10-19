@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 import { LngLatBounds, Map as MLMap, Popup } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@/lib/map-worker";
 
+import { MAP_OPTIONS, addAttribution, basemapUrl, prepareBasemap } from "@/lib/map-style";
+
+/**
+ * Bản đồ nhỏ trên trang Insight: các phường của thị trường, phường đang xem tô
+ * đậm. Nền OpenFreeMap xám nhạt (tối: nền tối), lớp màu nằm dưới tên đường.
+ */
 export function MiniMap({
   features,
   lat,
@@ -14,98 +21,102 @@ export function MiniMap({
   lat: number;
   lng: number;
 }) {
+  const { resolvedTheme } = useTheme();
+  const dark = resolvedTheme === "dark";
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
+  const styleRef = useRef<string | null>(null);
 
+  const themeKnown = resolvedTheme !== undefined;
   useEffect(() => {
-    if (!ref.current || mapRef.current) return;
+    // Chờ biết sáng/tối để nạp đúng nền ngay lần đầu, khỏi nháy.
+    if (!ref.current || !themeKnown) return;
+    const bounds = new LngLatBounds();
+    const walk = (x: unknown) => {
+      if (!Array.isArray(x)) return;
+      if (typeof x[0] === "number" && typeof x[1] === "number") {
+        bounds.extend([x[0], x[1]]);
+        return;
+      }
+      for (const y of x) walk(y);
+    };
+    for (const f of features) walk((f.geometry as { coordinates?: unknown })?.coordinates);
+
+    const url = basemapUrl("muted", dark);
     const map = new MLMap({
+      ...MAP_OPTIONS,
       container: ref.current,
-      // Blank style: chỉ polygon từ DB — không phụ thuộc tile service ngoài
-      // (divergence: AirDNA dùng Google Maps basemap).
-      style: {
-        version: 8,
-        sources: {},
-        layers: [
-          { id: "bg", type: "background", paint: { "background-color": "#f1f5f9" } },
-        ],
-      },
-      center: [lng, lat],
-      zoom: 10,
-      attributionControl: false,
-      // Bản đồ nằm giữa trang dài: lăn chuột để cuộn trang, giữ ⌘/Ctrl mới zoom.
-      cooperativeGestures: true,
-      locale: {
-        "CooperativeGesturesHandler.WindowsHelpText": "Giữ Ctrl và lăn chuột để phóng to bản đồ",
-        "CooperativeGesturesHandler.MacHelpText": "Giữ ⌘ và lăn chuột để phóng to bản đồ",
-        "CooperativeGesturesHandler.MobileHelpText": "Dùng hai ngón tay để di chuyển bản đồ",
-      },
+      style: url,
+      bounds: bounds.isEmpty() ? undefined : bounds,
+      center: bounds.isEmpty() ? [lng, lat] : undefined,
+      zoom: bounds.isEmpty() ? 10 : undefined,
+      fitBoundsOptions: { padding: 24 },
     });
     mapRef.current = map;
+    styleRef.current = url;
+    addAttribution(map);
 
-    map.on("load", () => {
+    // Chạy mỗi lần nạp style (lần đầu và mỗi lần đổi sáng/tối): nền mới xoá hết lớp riêng.
+    map.on("style.load", () => {
+      const beforeLabels = prepareBasemap(map);
       map.addSource("areas", {
         type: "geojson",
         data: { type: "FeatureCollection", features } as never,
       });
-      map.addLayer({
-        id: "areas-fill",
-        type: "fill",
-        source: "areas",
-        paint: {
-          "fill-color": [
-            "case",
-            ["get", "active"],
-            "#2563eb",
-            "#93c5fd",
-          ],
-          "fill-opacity": 0.55,
+      map.addLayer(
+        {
+          id: "areas-fill",
+          type: "fill",
+          source: "areas",
+          paint: {
+            "fill-color": ["case", ["get", "active"], "#2563eb", "#93c5fd"],
+            "fill-opacity": ["case", ["get", "active"], 0.6, 0.35],
+          },
         },
-      });
-      map.addLayer({
-        id: "areas-line",
-        type: "line",
-        source: "areas",
-        paint: { "line-color": "#1e3a8a", "line-width": 1 },
-      });
-      const popup = new Popup({ closeButton: false, offset: 4 });
-      map.on("mousemove", "areas-fill", (e) => {
-        map.getCanvas().style.cursor = "pointer";
-        const f = e.features?.[0];
-        if (f) {
-          popup
-            .setLngLat(e.lngLat)
-            .setHTML(`<strong>${f.properties?.name}</strong>`)
-            .addTo(map);
-        }
-      });
-      map.on("mouseleave", "areas-fill", () => {
-        map.getCanvas().style.cursor = "";
-        popup.remove();
-      });
-      const bounds = new LngLatBounds();
-      for (const f of features) {
-        const g = f.geometry as { type: string; coordinates: unknown };
-        const flat: [number, number][] = [];
-        const walk = (x: unknown) => {
-          if (!Array.isArray(x)) return;
-          if (typeof x[0] === "number" && typeof x[1] === "number") {
-            flat.push([x[0] as number, x[1] as number]);
-            return;
-          }
-          for (const y of x) walk(y);
-        };
-        walk(g.coordinates);
-        for (const c of flat) bounds.extend([c[0], c[1]]);
-      }
-      if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 24, duration: 0 });
+        beforeLabels,
+      );
+      map.addLayer(
+        {
+          id: "areas-line",
+          type: "line",
+          source: "areas",
+          paint: { "line-color": "#1e3a8a", "line-width": 1 },
+        },
+        beforeLabels,
+      );
+    });
+
+    const popup = new Popup({ closeButton: false, offset: 4 });
+    map.on("mousemove", "areas-fill", (e) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      map.getCanvas().style.cursor = "pointer";
+      const name = document.createElement("strong");
+      name.textContent = String(f.properties?.name ?? "");
+      popup.setLngLat(e.lngLat).setDOMContent(name).addTo(map);
+    });
+    map.on("mouseleave", "areas-fill", () => {
+      map.getCanvas().style.cursor = "";
+      popup.remove();
     });
 
     return () => {
-      mapRef.current?.remove();
+      map.remove();
       mapRef.current = null;
+      styleRef.current = null;
     };
-  }, [features, lat, lng]);
+    // Đổi sáng/tối xử lý ở effect dưới, không dựng lại bản đồ.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [features, lat, lng, themeKnown]);
+
+  // Đổi sáng/tối: thay nền, giữ khung nhìn; style.load dựng lại các lớp.
+  useEffect(() => {
+    const map = mapRef.current;
+    const url = basemapUrl("muted", dark);
+    if (!map || styleRef.current === url) return;
+    styleRef.current = url;
+    map.setStyle(url, { diff: false });
+  }, [dark]);
 
   return <div ref={ref} className="h-72 w-full" />;
 }

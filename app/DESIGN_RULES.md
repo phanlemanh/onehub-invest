@@ -231,13 +231,21 @@ src/components/
 | Button | components/ui/button.tsx | Actions |
 | cn() | lib/utils.ts | Tailwind merge utility |
 
+### Bản đồ nền (mọi bản đồ MapLibre)
+- Dùng `lib/map-style.ts`: `basemapUrl("colored" | "muted", dark)` + `MAP_OPTIONS` + `addAttribution` + `prepareBasemap`. Nguồn OpenFreeMap (OSM, không khoá, không giới hạn lượt).
+- `colored` (Liberty) cho bản đồ cần định vị (nhãn giá listing); `muted` (Positron) cho bản đồ mà màu là dữ liệu (choropleth). Chế độ tối dùng `dark` cho cả hai.
+- Lớp dữ liệu dạng vùng chèn trước id mà `prepareBasemap` trả về, để tên đường nằm trên. Marker/nhãn thì thêm sau cùng.
+- Dựng lớp riêng trong `map.on("style.load")`, đổi sáng/tối bằng `setStyle(url, { diff: false })` — không dựng lại bản đồ, giữ khung nhìn.
+- Màu trong MapLibre phải là hex; màu "chưa có số" đổi theo sáng/tối (`NO_DATA_COLOR` / `NO_DATA_COLOR_DARK`).
+- Popup: `setDOMContent` + `textContent`, không `setHTML` với tên lấy từ DB.
+
 ### Custom Components (created — LAST RESORT only)
 | Component | File | Why not ReUI? |
 |-----------|------|---------------|
-| MiniMap | components/mini-map.tsx | ReUI không có MapLibre blocks |
-| ChoroplethMap | components/finder/choropleth-map.tsx | MapLibre thuần (chỉ vẽ + popup + bấm); bộ chọn chỉ số và chú giải là ReUI bên ngoài. Màu bậc chung ở finder/bins.ts |
+| MiniMap | components/mini-map.tsx | ReUI không có MapLibre blocks. Nền xám nhạt (lib/map-style.ts), phường đang xem tô đậm |
+| ChoroplethMap | components/finder/choropleth-map.tsx | MapLibre thuần (chỉ vẽ + popup + bấm); bộ chọn chỉ số và chú giải là ReUI bên ngoài. Màu bậc chung ở finder/bins.ts. Nền xám nhạt, lớp màu chèn DƯỚI lớp nhãn của nền |
 | PageHeader / StatTiles | components/page/ | Không phải component mới: page-header của app-shell-30 và stats-1 gom lại để Insight, Listing, Duyệt listing dùng chung (`actions` slot; `tierOf` ở page/tiers.ts để trang server gọi được) |
-| ListingsMap | components/listing/listings-map.tsx | MapLibre + DOM marker nhãn giá; chỉ lọc danh sách theo khung nhìn khi có cử chỉ thật (dragstart/zoomstart có originalEvent) |
+| ListingsMap | components/listing/listings-map.tsx | MapLibre, nền có màu; nhãn giá kiểu Airbnb vẽ bằng lớp symbol (ảnh viên thuốc co giãn), gom cụm tới zoom 11, nhãn đè nhau tự ẩn còn chấm; chỉ lọc danh sách theo khung nhìn khi có cử chỉ thật (dragstart/zoomstart có originalEvent, hoặc bấm cụm) |
 | InsightGrid | components/insight/insight-grid.tsx | Không phải component mới: Frame + DataGrid theo đúng mẫu c-data-grid-11, gom lại để 6 bảng dùng chung nhãn tiếng Việt (`DATA_GRID_VI`) |
 | InsightNav | components/insight/insight-nav.tsx | Style view track của app-shell-30; tự theo dõi cuộn vì `@reui/scrollspy` với target document bám vào `scroll-area-viewport` đầu tiên trong trang (vùng cuộn DataGrid) và luôn báo nhầm mục cuối |
 | SiteFooter | components/shell/site-footer.tsx | ReUI không có block footer |
