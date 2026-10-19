@@ -17,8 +17,7 @@ import { PnlChart } from "@/components/yield/pnl/chart";
 import { YieldConfidence } from "@/components/yield/yield-confidence";
 import { YieldForm } from "@/components/yield/yield-form";
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format";
-import { getYieldCompsCached } from "@/lib/cached";
-import { currencyFor, getYieldAreas, getYieldMarkets } from "@/lib/queries";
+import { currencyFor, getYieldAreas, getYieldComps, getYieldMarkets } from "@/lib/queries";
 import { COST_DEFAULTS, estimateYield, monthlyPnl, type YieldInputs } from "@/lib/yield";
 
 export const metadata: Metadata = { title: "Ước tính lợi suất" };
@@ -68,7 +67,7 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
     setupCost: num(sp.setup, COST_DEFAULTS.setupCost, 0, 2e9),
   };
 
-  const comps = await getYieldCompsCached(market.id, area.id, inputs.bedrooms);
+  const comps = await getYieldComps(market.id, area.id, inputs.bedrooms);
   const samples = comps.rows
     .filter((r) => r.priceListed && r.occupancy90 !== null)
     .map((r) => ({ price: r.priceListed!, occupancy: r.occupancy90! }));

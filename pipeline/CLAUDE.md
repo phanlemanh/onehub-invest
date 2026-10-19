@@ -21,7 +21,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 |------|---------|
 | 300_metrics.sql | Build market_metrics from nights + listings |
 | 400_breakdowns.sql | Precompute ADR by size, room type, top listings |
-| 410_listing_stats.sql | Rebuild listing_stats (nights/booked/revenue/occupancy per listing) — app không gộp nights runtime |
+| 410_listing_stats.sql | Rebuild listing_stats (nights/booked/revenue/occupancy + nights90/booked90 per listing) — app không gộp nights runtime |
 | 500_asset_stats.sql | Compute median prices + yield per phường |
 
 ## Database Schema (key tables)
