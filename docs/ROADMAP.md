@@ -179,6 +179,22 @@ recall ≥95% trên mock gt + fallout <10% trên âm tính tổng hợp (bench-g
 parser ≥60% coverage trên tin thật (Kev judge); không block/captcha quá
 ngưỡng circuit breaker.
 
+### Trạng thái as-built (2026-10-19 tối) & 2 giai đoạn còn lại
+
+Đã sống (E2E chứng minh bằng tin mô phỏng "2,6 tỷ" → sale_offers đúng giá):
+hook `oneinvest-zalo-pipe` trong gateway (repo: `collector/openclaw/`) →
+Kev gate noul ≥0.9 → POST :9210 → snapshot → sale_offers; watcher agent
+thinking-low NO_REPLY; launchd `com.oneinvest.{kev,collector-api}` bền reboot;
+gate đo 620 mẫu recall 100%/81ms. Log: `~/.openclaw/logs/oneinvest-zalo-pipe.log`.
+
+- **C3-soak (bây giờ → vài ngày, thụ động)**: chờ 4 nhóm chảy thật; theo dõi
+  `/ops` + log hook; thu tỷ lệ media-only + phân phối giá thật. Gate vào
+  C3-wrap: ~50-100 tin BĐS thật đã qua gate.
+- **C3-wrap (2-3 buổi)**: (1) đối chiếu mock-vs-real + judge coverage parser
+  (tiêu chí ≥60%) → quyết định retire mock; (2) `GET /api/v1/offers` + MCP tool
+  `oneinvest_get_asset_stats`; (3) quyết định media-only bằng số liệu (>20%
+  → bật qwen vision :8080); (4) gom 11 deferred minors + drill nhỏ.
+
 ## C4 — Cloud + mở rộng
 
 Việc chính: sync local → Supabase (15 phút, outbound-only) → Vercel deploy +
