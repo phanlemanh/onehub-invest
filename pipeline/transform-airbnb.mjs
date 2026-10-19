@@ -1,26 +1,14 @@
-// transform-airbnb.mjs — staging Airbnb → canonical (areas + listings + nights)
+// transform-airbnb.mjs — staging Airbnb → canonical (listings + nights)
 // Mọi suy diễn nằm ở đây (staging giữ nguyên vẹn):
-//  - area: title discovery "Căn hộ tại Quận Hoàn Kiếm" → submarket; market MARKET_PREFIX
+//  - area: phường OSM chứa tọa độ listing (point-in-polygon, G0-b) — không theo title
 //  - listings: pdpSections (lat/lng, capacity, roomType, giá VND) + ogTitle (bedrooms)
 //  - nights: stg_abnb_nights snapshot mới nhất per listing (price NULL — divergence
-//    cùng mô hình Bangkok: giá niêm yết từ price_listed)
+//    cùng mô hình Bangkok: giá niêm yết từ price_listed; đêm cũ còn NULL được lấp lại)
 import pg from "pg";
 
 const CITY = process.argv[2] ?? 'hanoi';
-const MARKET_PREFIX = CITY === 'hcmc' ? 'vn-hcmc' : 'vn-hanoi';
-const MARKET_NAME = CITY === 'hcmc' ? 'Hồ Chí Minh' : 'Hà Nội';
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
-
-const slugify = (s) =>
-  s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 
 const parseVnd = (s) => {
   if (!s) return null;
@@ -79,34 +67,28 @@ async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
-    // ---- 0. Discovery mới nhất: listing_id → location (từ title) ----
-    const { rows: disc } = await client.query(
-      `SELECT DISTINCT ON (listing_id) listing_id, title
-       FROM stg_abnb_discovery WHERE snapshot_id LIKE '${CITY}__%' ORDER BY listing_id, snapshot_id DESC`,
+    // ---- 1. Phường OSM (reassign-areas.mjs upsert) — area_id suy từ TỌA ĐỘ ----
+    // Không tin title discovery ("Căn hộ tại Quận Tây Hồ"): title dùng tên quận cũ,
+    // tên tỉnh, cả tỉnh lân cận → area trùng/ngoài tỉnh (G0-b).
+    const { rows: [{ n: nPhuong }] } = await client.query(
+      `SELECT count(*)::int n FROM areas
+       WHERE country_code = 'vn' AND meta->>'source' = 'osm-phuong' AND geom IS NOT NULL`,
     );
-    const locationOf = new Map();
-    for (const d of disc) {
-      const m = String(d.title ?? "").match(/tại\s+(.+?)(?:,|$)/);
-      if (m) locationOf.set(d.listing_id, m[1].trim());
+    if (nPhuong === 0) {
+      throw new Error("chưa có phường OSM — chạy `node reassign-areas.mjs` trước");
     }
-    const locations = [...new Set([...locationOf.values()])].sort();
-    console.log(`discovery: ${disc.length} refs, ${locationOf.size} có vị trí, ${locations.length} khu vực duy nhất`);
-
-    // ---- 1. Areas: market vn-hanoi + submarket theo location ----
-    await client.query(
-      `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
-       VALUES ('${MARKET_PREFIX}', NULL, 'market', '${MARKET_NAME}', 'vn', '{"source":"airbnb-discovery"}'::jsonb)
-       ON CONFLICT (id) DO NOTHING`,
-    );
-    for (const loc of locations) {
-      await client.query(
-        `INSERT INTO areas (id, parent_id, region_type, name, country_code, meta)
-         VALUES ($1, '${MARKET_PREFIX}', 'submarket', $2, 'vn', $3)
-         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
-        [`vn-hanoi-${slugify(loc)}`, loc, JSON.stringify({ source: "airbnb-discovery" })],
+    const phuongOf = async (lat, lng) => {
+      if (lat === null || lng === null) return null;
+      const { rows } = await client.query(
+        `SELECT id FROM areas
+         WHERE region_type = 'submarket' AND country_code = 'vn'
+           AND meta->>'source' = 'osm-phuong'
+           AND ST_Covers(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))
+         ORDER BY ST_Area(geom), id LIMIT 1`,
+        [lng, lat],
       );
-    }
-    console.log(`areas: 1 market + ${locations.length} submarket`);
+      return rows[0]?.id ?? null;
+    };
 
     // ---- 2. Canonical listings (snapshot pdp mới nhất per listing) ----
     const { rows: stg } = await client.query(
@@ -115,18 +97,24 @@ async function main() {
     );
     let nListings = 0;
     let missingField = 0;
+    let outside = 0;
     for (const r of stg) {
       const ex = extractListing(r.payload);
       if (!ex) continue;
-      const loc = locationOf.get(r.listing_id);
-      const areaId = loc ? `${MARKET_PREFIX}-${slugify(loc)}` : null;
       const id = `abnb_${r.listing_id}`;
+      const areaId = await phuongOf(ex.lat, ex.lng);
+      if (!areaId) {
+        // ngoài mọi phường đã có polygon (ngoài tỉnh) / thiếu tọa độ → không vào canonical
+        await client.query(`DELETE FROM listings WHERE id = $1`, [id]);
+        outside++;
+        continue;
+      }
       await client.query(
         `INSERT INTO listings (id, area_id, name, room_type, bedrooms, accommodates,
                                price_listed, latitude, longitude, last_seen)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
          ON CONFLICT (id) DO UPDATE SET
-           area_id = COALESCE(EXCLUDED.area_id, listings.area_id),
+           area_id = EXCLUDED.area_id,
            name = EXCLUDED.name, room_type = EXCLUDED.room_type,
            bedrooms = EXCLUDED.bedrooms, accommodates = EXCLUDED.accommodates,
            price_listed = EXCLUDED.price_listed,
@@ -152,7 +140,7 @@ async function main() {
       if (filled < 4) missingField++;
     }
     console.log(
-      `listings: ${nListings} chuẩn hoá (thiếu ≥2 trường chính: ${missingField})`,
+      `listings: ${nListings} chuẩn hoá (thiếu ≥2 trường chính: ${missingField}; ngoài mọi phường — bỏ: ${outside})`,
     );
 
     // ---- 3. Nights: snapshot mới nhất per listing → canonical nights ----
@@ -168,6 +156,18 @@ async function main() {
        ON CONFLICT (listing_id, night) DO NOTHING`,
     );
     console.log(`nights: +${nNights ?? 0} dòng mới`);
+
+    // ---- 4. Lấp giá đêm còn NULL bằng price_listed hiện tại ----
+    // Bước 3 chỉ nạp nights cho listing CHƯA có đêm nào, nên đêm nạp lúc listing chưa
+    // bóc được giá sẽ kẹt NULL mãi (2026-10: 64k/80k đêm Hà Nội) → ADR/RevPAR bị pha
+    // loãng vì revenue thiếu giá mà booked_nights vẫn đếm. Chỉ lấp NULL, không ghi đè giá đã có.
+    const { rowCount: nFilled } = await client.query(
+      `UPDATE nights n SET price = l.price_listed
+       FROM listings l
+       WHERE l.id = n.listing_id
+         AND n.price IS NULL AND l.price_listed IS NOT NULL`,
+    );
+    console.log(`nights: lấp giá ${nFilled ?? 0} đêm còn NULL từ price_listed`);
   } finally {
     await client.end();
   }

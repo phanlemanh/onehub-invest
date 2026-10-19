@@ -489,11 +489,14 @@ export async function getListingDetail(id: string): Promise<ListingDetail | null
     [id],
   );
   const booked = nightRows.filter((n) => n.available === false);
+  // Listing không giá nằm ngoài mẫu metrics (pipeline/sql/300_metrics.sql): lịch
+  // "kín" của nó phần lớn là bị chặn, không phải đặt thật → công suất là "chưa biết".
   const stats = {
     nights: nightRows.length,
     booked: booked.length,
     revenue: booked.reduce((sum, n) => sum + Number(n.price ?? 0), 0),
-    occupancy: nightRows.length > 0 ? booked.length / nightRows.length : null,
+    occupancy:
+      r.price_listed !== null && nightRows.length > 0 ? booked.length / nightRows.length : null,
   };
 
   // Market = cha của phường; listing gán thẳng vào market thì chính nó.
@@ -540,11 +543,9 @@ export async function getListingDetail(id: string): Promise<ListingDetail | null
 export async function getListingPeers(areaId: string, marketId: string | null) {
   const q = (scope: string) => `
     WITH peers AS (
-      SELECT l.id, l.price_listed,
-             count(*) FILTER (WHERE NOT n.available)::numeric / nullif(count(n.*), 0) AS occ
-      FROM listings l LEFT JOIN nights n ON n.listing_id = l.id
+      SELECT l.id, l.price_listed, st.occupancy AS occ
+      FROM listings l LEFT JOIN listing_stats st ON st.listing_id = l.id
       WHERE ${scope}
-      GROUP BY l.id, l.price_listed
     )
     SELECT count(*) AS n,
            percentile_cont(array[0.3, 0.6, 0.9]) WITHIN GROUP (ORDER BY price_listed)
@@ -594,7 +595,8 @@ export type ListingCardRow = {
 /**
  * Listing của một thị trường cho trang Duyệt listing (lưới thẻ + bản đồ nhãn
  * giá). Lọc theo phường / số phòng ngủ / loại trừ một id dùng cho "listing tương tự".
- * Gộp ~11 triệu dòng nights cho Bangkok mất ~2s — gọi qua bản cache ở lib/cached.ts.
+ * Số đêm / đặt / doanh thu đọc từ listing_stats (pipeline/sql/410_listing_stats.sql)
+ * — không gộp nights runtime.
  */
 export async function getMarketListings(
   marketId: string,
@@ -609,7 +611,7 @@ export async function getMarketListings(
     areaId?: string;
     excludeId?: string;
     bedrooms?: number | null;
-    /** Lấy `limit` listing gần điểm này nhất (comps) — lọc trước khi gộp nights nên nhanh. */
+    /** Lấy `limit` listing gần điểm này nhất (comps). */
     near?: { lat: number; lng: number };
   } = {},
 ): Promise<{ rows: ListingCardRow[]; total: number }> {
@@ -627,20 +629,13 @@ export async function getMarketListings(
        ORDER BY CASE WHEN $6::float8 IS NULL THEN 0
                      ELSE (l.latitude - $6) ^ 2 + ((l.longitude - $7) * cos(radians($6))) ^ 2 END
        LIMIT CASE WHEN $6::float8 IS NULL THEN NULL ELSE $2::int END
-     ), st AS (
-       SELECT n.listing_id,
-              count(*) AS nights,
-              count(*) FILTER (WHERE NOT n.available) AS booked,
-              COALESCE(sum(n.price) FILTER (WHERE NOT n.available), 0) AS revenue
-       FROM nights n WHERE n.listing_id IN (SELECT id FROM ls)
-       GROUP BY n.listing_id
      )
      SELECT ls.id, ls.name, ls.room_type, ls.bedrooms, ls.accommodates, ls.price_listed,
             ls.area_name, ls.region_type, ls.latitude, ls.longitude,
             COALESCE(st.nights, 0) AS nights, COALESCE(st.booked, 0) AS booked,
             COALESCE(st.revenue, 0) AS revenue,
             count(*) OVER () AS total
-     FROM ls LEFT JOIN st ON st.listing_id = ls.id
+     FROM ls LEFT JOIN listing_stats st ON st.listing_id = ls.id
      ORDER BY COALESCE(st.revenue, 0) DESC, COALESCE(st.booked, 0) DESC, ls.id
      LIMIT $2::int`,
     [marketId, limit, areaId ?? null, excludeId ?? null, bedrooms ?? null, near?.lat ?? null, near?.lng ?? null],

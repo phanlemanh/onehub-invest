@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# finalize-hanoi.sh — import mọi snapshot airbnb-listing mới + transform + metrics.
+# finalize-hanoi.sh — import mọi snapshot airbnb-listing mới + gán phường + transform + metrics.
 # Idempotent: snapshot đã nạp thì ON CONFLICT bỏ qua.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -21,13 +21,18 @@ for d in "../collector"/snapshots/hanoi/hanoi__airbnb-*__*; do
   fi
 done
 
-echo "=== 2. Transform (areas + listings + nights) ==="
+echo "=== 2. Phường OSM + gán khu vực theo tọa độ (G0-b) ==="
+node reassign-areas.mjs hanoi
+
+echo "=== 3. Transform (listings + nights; area = phường chứa tọa độ) ==="
 node transform-airbnb.mjs
 
-echo "=== 3. Rebuild metrics ==="
+echo "=== 4. Rebuild metrics + breakdowns + listing_stats ==="
 cd "$DB_DIR" && "${PSQL[@]}" -q < ../pipeline/sql/300_metrics.sql
+"${PSQL[@]}" -q < ../pipeline/sql/400_breakdowns.sql
+"${PSQL[@]}" -q -v ON_ERROR_STOP=1 < ../pipeline/sql/410_listing_stats.sql
 
-echo "=== 4. Sanity ==="
+echo "=== 5. Sanity ==="
 "${PSQL[@]}" -c "
 SELECT count(*) FILTER (WHERE area_id LIKE 'vn-hanoi-%') listings_hn,
        count(price_listed) FILTER (WHERE area_id LIKE 'vn-hanoi-%') co_gia

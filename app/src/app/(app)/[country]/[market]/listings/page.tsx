@@ -5,9 +5,8 @@ import { notFound } from "next/navigation";
 
 import { ListingsExplorer } from "@/components/listing/listings-explorer";
 import { PageHeader } from "@/components/page/page-header";
-import { getMarketListingsCached } from "@/lib/cached";
 import { fmtInt } from "@/lib/format";
-import { currencyFor, getArea } from "@/lib/queries";
+import { currencyFor, getArea, getMarketListings } from "@/lib/queries";
 
 type Params = Promise<{ country: string; market: string }>;
 
@@ -28,7 +27,7 @@ export default async function MarketListingsPage({ params }: { params: Params })
   const area = await getArea(marketId);
   if (!area || area.regionType !== "market") notFound();
 
-  const { rows, total } = await getMarketListingsCached(marketId, { limit: LIMIT });
+  const { rows, total } = await getMarketListings(marketId, { limit: LIMIT });
   const capped = total > rows.length;
 
   return (

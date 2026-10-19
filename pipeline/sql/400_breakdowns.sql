@@ -1,6 +1,9 @@
 -- 400_breakdowns.sql — precompute breakdowns (ADR/room-type/top-listings)
 -- cho MỖI area (market = self + children) để trang market không quét nights runtime.
 -- Cùng logic per_listing CTE như getAreaBreakdown cũ — viết vào bảng cache.
+-- Giá đêm: COALESCE(n.price, l.price_listed) — cùng quy tắc với 300_metrics.sql.
+-- Quy tắc mẫu: chỉ listing có price_listed (xem 300_metrics.sql) — số listing, ADR,
+-- công suất của breakdown khớp market_metrics; top listings không có listing không giá.
 TRUNCATE area_breakdowns;
 
 INSERT INTO area_breakdowns (area_id, kind, label, payload)
@@ -14,10 +17,11 @@ WITH scope AS (
          l.id, l.name, l.bedrooms, l.room_type,
          count(*) FILTER (WHERE NOT n.available) AS booked,
          count(*) FILTER (WHERE n.available) AS avail,
-         COALESCE(sum(n.price) FILTER (WHERE NOT n.available), 0) AS revenue
+         COALESCE(sum(COALESCE(n.price, l.price_listed)) FILTER (WHERE NOT n.available), 0) AS revenue
   FROM nights n
   JOIN listings l ON l.id = n.listing_id
   JOIN scope s ON s.member_id = l.area_id
+  WHERE l.price_listed IS NOT NULL
   GROUP BY s.area_id, l.id, l.name, l.bedrooms, l.room_type
 ), beds AS (
   SELECT area_id,
@@ -58,10 +62,11 @@ WITH scope AS (
          l.id, l.name, l.bedrooms, l.room_type,
          count(*) FILTER (WHERE NOT n.available) AS booked,
          count(*) FILTER (WHERE n.available) AS avail,
-         COALESCE(sum(n.price) FILTER (WHERE NOT n.available), 0) AS revenue
+         COALESCE(sum(COALESCE(n.price, l.price_listed)) FILTER (WHERE NOT n.available), 0) AS revenue
   FROM nights n
   JOIN listings l ON l.id = n.listing_id
   JOIN scope s ON s.member_id = l.area_id
+  WHERE l.price_listed IS NOT NULL
   GROUP BY s.area_id, l.id, l.name, l.bedrooms, l.room_type
 ), ranked AS (
   SELECT *, row_number() OVER (PARTITION BY area_id ORDER BY revenue DESC) AS rk

@@ -51,6 +51,7 @@ psqlc -v snapshot="$SNAPSHOT" < "$ROOT/pipeline/sql/200_transform.sql"
 
 echo "==> metrics"
 psqlc < "$ROOT/pipeline/sql/300_metrics.sql"
+psqlc -q < "$ROOT/pipeline/sql/410_listing_stats.sql"
 
 psqlc -q -c "
 SELECT 'areas' t, count(*) FROM areas
