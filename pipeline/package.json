@@ -5,5 +5,8 @@
   "description": "Transform + import scripts — đọc raw snapshots theo DATA-CONTRACT, ghi staging/canonical",
   "dependencies": {
     "pg": "^8.23.1"
+  },
+  "scripts": {
+    "test": "node --test 'parse.test.mjs' 'scripts/*.test.mjs'"
   }
 }
