@@ -1,6 +1,12 @@
 -- 300_metrics.sql — precompute market_metrics (area × tháng)
 -- Cửa sổ dữ liệu: 12 tháng TỚI TỪ snapshot (xem divergence list — pipeline/README.md).
 -- Rollup: mỗi submarket + tổng market ('th-bangkok').
+-- Giá đêm: COALESCE(n.price, l.price_listed) — đêm đã đặt thiếu giá dùng giá niêm yết
+-- của chính listing đó. Không lấp thì revenue thiếu giá mà booked_nights vẫn đếm đêm
+-- → ADR/RevPAR bị pha loãng (2026-10: Hà Nội chỉ 18% đêm có giá, ADR 174k thay vì ~1,4tr).
+-- Cùng quy tắc với bước lấp giá trong transform-airbnb.mjs; ở đây để metrics đúng cả
+-- khi nights nạp trước khi listing bóc được giá. Listing không có price_listed vẫn
+-- góp booked_nights với revenue 0 (Bangkok ~7% listing) — chưa xử lý ở đây.
 
 TRUNCATE market_metrics;
 
@@ -13,12 +19,12 @@ SELECT l.area_id,
        count(DISTINCT l.id) FILTER (WHERE NOT n.available),
        count(*) FILTER (WHERE NOT n.available),
        count(*) FILTER (WHERE n.available),
-       COALESCE(sum(n.price) FILTER (WHERE NOT n.available), 0),
+       COALESCE(sum(COALESCE(n.price, l.price_listed)) FILTER (WHERE NOT n.available), 0),
        CASE WHEN count(*) FILTER (WHERE NOT n.available) > 0
-            THEN sum(n.price) FILTER (WHERE NOT n.available)
+            THEN sum(COALESCE(n.price, l.price_listed)) FILTER (WHERE NOT n.available)
                  / count(*) FILTER (WHERE NOT n.available) END,
        count(*) FILTER (WHERE NOT n.available)::numeric / NULLIF(count(*), 0),
-       COALESCE(sum(n.price) FILTER (WHERE NOT n.available), 0) / NULLIF(count(*), 0)
+       COALESCE(sum(COALESCE(n.price, l.price_listed)) FILTER (WHERE NOT n.available), 0) / NULLIF(count(*), 0)
 FROM nights n
 JOIN listings l ON l.id = n.listing_id
 GROUP BY 1, 2;

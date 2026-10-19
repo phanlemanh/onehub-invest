@@ -3,7 +3,7 @@
 //  - area: phường OSM chứa tọa độ listing (point-in-polygon, G0-b) — không theo title
 //  - listings: pdpSections (lat/lng, capacity, roomType, giá VND) + ogTitle (bedrooms)
 //  - nights: stg_abnb_nights snapshot mới nhất per listing (price NULL — divergence
-//    cùng mô hình Bangkok: giá niêm yết từ price_listed)
+//    cùng mô hình Bangkok: giá niêm yết từ price_listed; đêm cũ còn NULL được lấp lại)
 import pg from "pg";
 
 const CITY = process.argv[2] ?? 'hanoi';
@@ -156,6 +156,18 @@ async function main() {
        ON CONFLICT (listing_id, night) DO NOTHING`,
     );
     console.log(`nights: +${nNights ?? 0} dòng mới`);
+
+    // ---- 4. Lấp giá đêm còn NULL bằng price_listed hiện tại ----
+    // Bước 3 chỉ nạp nights cho listing CHƯA có đêm nào, nên đêm nạp lúc listing chưa
+    // bóc được giá sẽ kẹt NULL mãi (2026-10: 64k/80k đêm Hà Nội) → ADR/RevPAR bị pha
+    // loãng vì revenue thiếu giá mà booked_nights vẫn đếm. Chỉ lấp NULL, không ghi đè giá đã có.
+    const { rowCount: nFilled } = await client.query(
+      `UPDATE nights n SET price = l.price_listed
+       FROM listings l
+       WHERE l.id = n.listing_id
+         AND n.price IS NULL AND l.price_listed IS NOT NULL`,
+    );
+    console.log(`nights: lấp giá ${nFilled ?? 0} đêm còn NULL từ price_listed`);
   } finally {
     await client.end();
   }
