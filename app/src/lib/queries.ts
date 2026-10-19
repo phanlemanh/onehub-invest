@@ -1004,7 +1004,8 @@ export async function getMarketFreshness(
        WHERE area_id = $1 OR area_id LIKE $1 || '-%'
      ), s AS (
        SELECT max(collected_at)::text AS last FROM airbnb_snapshots
-       WHERE city = $2 AND source = 'airbnb-listing'
+       WHERE city = $2
+         AND source IN (SELECT unnest(source_ids) FROM source_registry WHERE code = 'S01')
      )
      SELECT l.n, s.last FROM l, s`,
     [areaId, city],

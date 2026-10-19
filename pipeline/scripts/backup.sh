@@ -3,8 +3,9 @@
 # RPO 7 ngày / RTO 1 ngày. BACKUP_DIR unset → ghi note + exit 0 (không fail
 # cron); prune giữ 56 ngày (8 tuần).
 #
-# Env: BACKUP_DIR (bắt buộc để backup thật) · BACKUP_PASS (passphrase openssl,
-# bắt buộc khi BACKUP_DIR đặt) — KHÔNG hardcode giá trị thật trong file này.
+# Env: BACKUP_DIR (bắt buộc để backup thật) · BACKUP_PASS (passphrase mã hoá;
+# nếu unset, đọc từ macOS Keychain service oneinvest-backup do install-cron
+# ghi — ADR-0007 DR: credential không nằm file plaintext).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -15,9 +16,13 @@ if [ -z "${BACKUP_DIR:-}" ]; then
   exit 0
 fi
 if [ -z "${BACKUP_PASS:-}" ]; then
-  echo "backup: BACKUP_PASS chưa đặt — cần passphrase mã hoá raw zone." >&2
+  BACKUP_PASS="$(security find-generic-password -w -s oneinvest-backup 2>/dev/null || true)"
+fi
+if [ -z "${BACKUP_PASS:-}" ]; then
+  echo "backup: không có BACKUP_PASS (env hoặc Keychain oneinvest-backup)." >&2
   exit 1
 fi
+export BACKUP_PASS
 mkdir -p "$BACKUP_DIR"
 
 # 1. Database dump (qua container, auth TCP — kartoza tắt peer auth)

@@ -15,16 +15,7 @@ export type CoverageRow = {
   status: "fresh" | "stale" | "none";
 };
 
-/** Map source thật (tầng A, trong airbnb_snapshots) → mã B. Cục bộ, không lưu DB serving. */
-const CODE_BY_SOURCE: Record<string, string> = {
-  "airbnb-discovery": "S01",
-  "airbnb-listing": "S01",
-  "airdna-research": "S02",
-  "zalo-mock": "S03",
-  "osm-boundaries": "S04",
-};
-
-/** Freshness SLO theo mã nguồn (ngày) — ADR-0007 DQO. */
+/** Freshness SLO theo mã nguồn (ngày) — ADR-0007 DQO (chính sách, không phải bí mật). */
 export const SLO_DAYS: Record<string, number> = {
   S01: 8,
   S02: 35,
@@ -32,21 +23,42 @@ export const SLO_DAYS: Record<string, number> = {
   S04: 90,
 };
 
-export async function getCoverageOverview(): Promise<CoverageRow[]> {
-  const { rows } = await pool.query<{ source: string; city: string; last: string | null }>(
-    `SELECT source, city, max(collected_at)::text AS last
-     FROM airbnb_snapshots GROUP BY source, city`,
+/**
+ * Map source_id collector (raw zone) → mã B, đọc từ source_registry —
+ * mapping không hardcode trong code serving (ADR-0007 SPL).
+ */
+async function codeBySourceId(): Promise<Map<string, string>> {
+  const { rows } = await pool.query<{ source_ids: string[]; code: string }>(
+    `SELECT source_ids, code FROM source_registry WHERE status = 'active'`,
   );
-  // Nhiều source thật map về cùng mã (discovery+listing→S01): gộp lấy snapshot mới nhất
+  const m = new Map<string, string>();
+  for (const r of rows) for (const id of r.source_ids) m.set(id, r.code);
+  return m;
+}
+
+export async function getCoverageOverview(): Promise<CoverageRow[]> {
+  const [snapRows, codeMap] = await Promise.all([
+    pool.query<{ source: string; city: string; last: string | null }>(
+      `SELECT source, city, max(collected_at)::text AS last
+       FROM airbnb_snapshots GROUP BY source, city`,
+    ),
+    codeBySourceId(),
+  ]);
+  const rows = snapRows.rows;
+  // Nhiều source thật map về cùng mã (discovery+listing→S01): gộp lấy snapshot
+  // mới nhất. collected_at NULL = "không có ý kiến" — không đè lên ngày thật.
   const byKey = new Map<string, CoverageRow>();
   const cities = new Set<string>();
   for (const r of rows) {
     cities.add(r.city);
-    const code = CODE_BY_SOURCE[r.source];
+    const code = codeMap.get(r.source);
     if (!code) continue; // nguồn lạ (vd example) — không báo cáo
     const key = `${code}/${r.city}`;
     const prev = byKey.get(key);
-    if (!prev || !r.last || (prev.lastSnapshotAt && r.last > prev.lastSnapshotAt)) {
+    const newer =
+      r.last !== null &&
+      (!prev || prev.lastSnapshotAt === null || r.last > prev.lastSnapshotAt);
+    if (newer) {
       const sloDays = SLO_DAYS[code];
       const ageDays = r.last
         ? Math.floor((Date.now() - new Date(r.last).getTime()) / 864e5)
