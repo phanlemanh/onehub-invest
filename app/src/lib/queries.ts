@@ -456,6 +456,9 @@ export type ListingDetail = {
   accommodates: number | null;
   minimumNights: number | null;
   priceListed: number | null;
+  /** URL ảnh CDN (đường dẫn gốc, render thêm ?im_w=) — null khi snapshot cũ thiếu. */
+  photoUrls: string[] | null;
+  reviewCount: number | null;
   lat: number | null;
   lng: number | null;
   areaId: string | null;
@@ -511,6 +514,8 @@ export async function getListingDetail(id: string): Promise<ListingDetail | null
   return {
     id: r.id,
     name: r.name,
+    photoUrls: Array.isArray(r.photo_urls) ? r.photo_urls : null,
+    reviewCount: r.review_count ?? null,
     roomType: r.room_type,
     propertyType: r.property_type,
     bedrooms: r.bedrooms,

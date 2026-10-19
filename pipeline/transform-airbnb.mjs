@@ -52,6 +52,24 @@ function extractListing(payload) {
     const m = String(JSON.stringify(pdp)).match(/"(?:discountedPrice|priceString|price)":"([\d.,\s]+)₫/);
     if (m) priceListed = parseVnd(m[1]);
   }
+  // Ảnh + review (E2 B1): URL CDN muscache có sẵn trong raw — unique theo
+  // path, bỏ query (kích thước render thêm ?im_w=), giữ thứ tự xuất hiện,
+  // cover = phần tử đầu. reviewCount: số review của listing.
+  // Chỉ giữ ảnh căn hộ: loại avatar (user/), asset platform & AI-review.
+  // Ưu tiên hosting/Hosting-<id> (ảnh do chủ nhà đăng) lên đầu.
+  const rawAll = JSON.stringify(payload);
+  const seenPath = new Set();
+  const all = [];
+  for (const m of rawAll.matchAll(/(a0\.muscache\.com\/im\/pictures\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+){2,6})(?:\?[^"]*)?/g)) {
+    const p = m[1].replace(/\/$/, "");
+    if (/\/(user|AirbnbPlatformAssets)(\/|$)/.test(p)) continue;
+    if (!seenPath.has(p)) {
+      seenPath.add(p);
+      all.push(p);
+    }
+  }
+  const photos = [...all.filter((p) => p.includes("/hosting/")), ...all.filter((p) => !p.includes("/hosting/"))].slice(0, 10);
+  const reviewCount = Number(rawAll.match(/"reviewCount":(\d+)/)?.[1] ?? 0) || null;
   return {
     name: node?.pdpPresentation?.overview?.title ?? ogTitle,
     roomType: log.roomType ?? null,
@@ -60,6 +78,8 @@ function extractListing(payload) {
     lng: node?.location?.coordinate?.longitude ?? null,
     bedrooms: parseBedrooms(ogTitle),
     priceListed,
+    photos,
+    reviewCount,
   };
 }
 
@@ -111,15 +131,18 @@ async function main() {
       }
       await client.query(
         `INSERT INTO listings (id, area_id, name, room_type, bedrooms, accommodates,
-                               price_listed, latitude, longitude, last_seen)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+                               price_listed, latitude, longitude, last_seen,
+                               photo_urls, review_count)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
          ON CONFLICT (id) DO UPDATE SET
            area_id = EXCLUDED.area_id,
            name = EXCLUDED.name, room_type = EXCLUDED.room_type,
            bedrooms = EXCLUDED.bedrooms, accommodates = EXCLUDED.accommodates,
            price_listed = EXCLUDED.price_listed,
            latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude,
-           last_seen = EXCLUDED.last_seen`,
+           last_seen = EXCLUDED.last_seen,
+           photo_urls = EXCLUDED.photo_urls,
+           review_count = EXCLUDED.review_count`,
         [
           id,
           areaId,
@@ -131,6 +154,8 @@ async function main() {
           ex.lat,
           ex.lng,
           new Date(r.fetched_at).toISOString().slice(0, 10),
+          ex.photos.length ? JSON.stringify(ex.photos) : null,
+          ex.reviewCount,
         ],
       );
       nListings++;

@@ -79,6 +79,7 @@ export default async function ListingPage({ params }: { params: Params }) {
   ];
   const badges = [
     roomTypeVi(listing.roomType),
+    listing.reviewCount ? `${fmtInt(listing.reviewCount)} đánh giá` : null,
     bedroomsVi(listing.bedrooms),
     listing.accommodates ? `${listing.accommodates} khách` : null,
     listing.minimumNights ? `Tối thiểu ${listing.minimumNights} đêm` : null,
@@ -128,6 +129,22 @@ export default async function ListingPage({ params }: { params: Params }) {
         description={`Airbnb · ${listing.id}${listing.lastSeen ? ` · quét gần nhất ${listing.lastSeen.split("-").reverse().join("/")}` : ""}`}
         actions={<ListingActions airbnbUrl={airbnbUrlOf(listing.id)} />}
       />
+
+      {listing.photoUrls && listing.photoUrls.length > 0 && (
+        <div className="grid grid-cols-4 gap-2 md:grid-cols-5">
+          {listing.photoUrls.slice(0, 10).map((u, i) => (
+            // eslint-disable-next-line @next/next/no-img-element -- CDN Airbnb ngoài domain, kích thước động
+            <img
+              key={u}
+              src={`https://${u}?im_w=${i === 0 ? 1024 : 480}`}
+              alt={i === 0 ? `Ảnh chính — ${listing.name ?? listing.id}` : `Ảnh ${i + 1}`}
+              className={`h-28 w-full rounded-md object-cover md:h-32 ${i === 0 ? "col-span-2 row-span-2 h-60 md:h-60" : ""}`}
+              loading={i < 2 ? "eager" : "lazy"}
+              referrerPolicy="no-referrer"
+            />
+          ))}
+        </div>
+      )}
 
       <StatTiles items={tiles} />
 
