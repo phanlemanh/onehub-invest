@@ -49,8 +49,10 @@ if (!snapId) {
   console.error("bench: không tìm thấy snapshot zalo-mock có meta.gt — chạy lại zalo-mock trước.");
   process.exit(1);
 }
-const sample = items.filter((i) => i.meta?.gt);
-console.log(`bench: ${snapId} — ${sample.length}/${items.length} items có gt`);
+let sample = items.filter((i) => i.meta?.gt);
+const LIMIT = Number(process.env.BENCH_LIMIT ?? 0); // >0: chỉ N item đầu (dev/LLM leg)
+if (LIMIT > 0) sample = sample.slice(0, LIMIT);
+console.log(`bench: ${snapId} — ${sample.length}/${items.length} items có gt${LIMIT ? ` (BENCH_LIMIT=${LIMIT})` : ""}`);
 
 // ---- Phường list từ DB ----
 const client = new pg.Client({
@@ -164,6 +166,8 @@ if (ollama) {
           model,
           messages: [{ role: "user", content: PROMPT(it.payload.text) }],
           temperature: 0,
+          reasoning_effort: process.env.BENCH_REASONING ?? "low", // xhigh: +10x thời gian, extraction không cần
+          max_tokens: 800,
         }),
       });
       const j = await res.json();
