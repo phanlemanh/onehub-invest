@@ -25,6 +25,16 @@ SELECT 'not-null', 'market_metrics',
 FROM market_metrics
 WHERE adr IS NULL AND occupancy IS NULL AND revenue IS NULL AND listing_count IS NULL;
 
+-- Area slug hợp lệ: id submarket không được kết thúc bằng '-' (dòng rác
+-- 'vn-hanoi-' từng khiến matchPhuong khớp MỌI text vì includes('') luôn true)
+INSERT INTO dq_check_results (check_name, entity, status, detail)
+SELECT 'area-slug-valid', 'areas',
+  CASE WHEN count(*) = 0 THEN 'pass' ELSE 'fail' END,
+  'slug rỗng/lệch: ' || count(*)
+FROM areas
+WHERE region_type = 'submarket'
+  AND (id ~ '-$' OR length(split_part(id, '-', 3)) = 0);
+
 -- ============ (b) Volume: tổng items thu được 7 ngày gần nhất vs 7 ngày trước đó ============
 -- Theo (city, source airbnb-listing). Mỗi run batch cap 25 theo thiết kế → so
 -- batch-to-batch chỉ nhiễu; tổng cửa sổ tuần phản ánh volume thu thập thật.

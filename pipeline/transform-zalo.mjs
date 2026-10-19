@@ -56,10 +56,12 @@ export function parsePost(text) {
   return out;
 }
 
-/** Match phường: tên phường xuất hiện trong text. */
+/** Match phường: tên phường xuất hiện trong text. Slug/tên rỗng bỏ qua —
+ *  String.includes('') luôn true nên một dòng area hỏng sẽ "khớp" mọi text. */
 export function matchPhuong(text, phuongSlugs) {
   const textLower = text.toLowerCase();
   for (const [slug, name] of phuongSlugs) {
+    if (!slug || !name) continue;
     if (textLower.includes(name.toLowerCase()) || textLower.includes(slug.replace(/-/g, " "))) {
       return { slug, name };
     }

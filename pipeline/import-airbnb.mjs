@@ -62,7 +62,7 @@ async function main() {
     let osm = 0;
     let zalo = 0;
     for (const it of items) {
-      if (it.source === "zalo-mock" || it.source === "zalo-groups") {
+      if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
         await client.query(
           `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text)
            VALUES ($1,$2,$3,$4,$5,$6)
@@ -71,7 +71,7 @@ async function main() {
             it.sourceId,
             manifest.snapshotId,
             it.payload?.group ?? null,
-            it.payload?.author ?? null,
+            it.payload?.author ?? it.payload?.agent_id ?? null,
             it.fetchedAt,
             it.payload?.text ?? "",
           ],
