@@ -25,3 +25,6 @@ pipeline/logs/
 # Cache
 .cache/
 *.tsbuildinfo
+
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
