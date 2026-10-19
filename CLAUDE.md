@@ -29,6 +29,10 @@ pipeline/ (import + transform) → PostgreSQL → app/ (Dashboard)
 3. **DATA-CONTRACT.md is the interface** — changes require schemaVersion bump
 4. **Modular monolith** — no microservices; all modules in this repo
 5. **TypeScript strict everywhere** — type errors catch bugs early
+6. **Portals** — mọi trang UI thuộc 1 cổng theo `docs/architecture/portals.md`:
+   Invest Portal (`/vn/**` công khai, cho nhà đầu tư) và Ops Portal
+   (`/ops/**` bắt buộc auth, cho vận hành dữ liệu/Agent Swarm). Trang mới
+   phải khai báo cổng; không route nội bộ nào nằm ngoài `/ops`.
 
 ## Conventions
 
