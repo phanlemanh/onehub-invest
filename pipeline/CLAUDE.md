@@ -13,7 +13,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
 | reassign-areas.mjs | Upsert phường OSM (areas + polygon), point-in-polygon mọi listing VN, bỏ listing ngoài tỉnh, xoá area không phải phường OSM |
-| finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400 |
+| finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 
 ## SQL Files (execute in order)
 
@@ -21,6 +21,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 |------|---------|
 | 300_metrics.sql | Build market_metrics from nights + listings |
 | 400_breakdowns.sql | Precompute ADR by size, room type, top listings |
+| 410_listing_stats.sql | Rebuild listing_stats (nights/booked/revenue/occupancy per listing) — app không gộp nights runtime |
 | 500_asset_stats.sql | Compute median prices + yield per phường |
 
 ## Database Schema (key tables)

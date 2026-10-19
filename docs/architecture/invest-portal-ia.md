@@ -223,7 +223,7 @@ Ghi chú P2:
 Ghi chú P3:
 - `/listing/[id]`: KPI so với listing cùng phường (dưới 5 thì cả thị trường) — giá dùng nhãn trung tính (Giá thấp → Cao cấp), công suất dùng bậc tốt/xấu; lịch 365 đêm (heatmap form-5); 10 listing gần nhất cùng số phòng ngủ (comps theo khoảng cách như AirDNA).
 - Không có biểu đồ giá theo ngày: chỉ 44/237 listing Hà Nội có giá theo đêm và mỗi listing chỉ một mức giá → đường phẳng, vô nghĩa. "Giá" = giá niêm yết đặt cạnh phân bố giá cùng khu vực.
-- `/[country]/[market]/listings`: 300 listing doanh thu cao nhất (Bangkok có 30.922); lọc phường, sắp xếp, lọc theo khung bản đồ khi người dùng kéo/zoom, rê thẻ ↔ nhãn giá. Truy vấn gộp 11 triệu dòng nights → cache 1 giờ (`lib/cached.ts`); hướng lâu dài: pipeline tính sẵn bảng thống kê theo listing.
+- `/[country]/[market]/listings`: 300 listing doanh thu cao nhất (Bangkok có 30.922); lọc phường, sắp xếp, lọc theo khung bản đồ khi người dùng kéo/zoom, rê thẻ ↔ nhãn giá. Số liệu theo listing đọc từ bảng `listing_stats` do pipeline tính sẵn (`410_listing_stats.sql`) — không gộp 11 triệu dòng nights lúc tải trang.
 - Nav có mục "Listing" → `/vn/hanoi/listings`; bảng "Listing nổi bật" của Insight có nút "Xem tất cả".
 
 Ops Portal (`app-shell-26`) dựng song song từ P0, chỉ gồm khung và `/ops/design`, `/ops/quality`. Các trang Ops khác làm theo lộ trình G trong `portals.md`.

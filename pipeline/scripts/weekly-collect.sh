@@ -35,7 +35,7 @@ else
 fi
 
 # 3. Finalize: import → reassign-areas (phường theo tọa độ, G0-b) → transform
-#    → 300_metrics → 400_breakdowns. Thứ tự nằm trong finalize-hanoi.sh,
+#    → 300_metrics → 400_breakdowns → 410_listing_stats. Thứ tự nằm trong finalize-hanoi.sh,
 #    psql đi qua docker compose ở $ROOT/db (DB_DIR).
 bash "$PIPELINE_DIR/finalize-hanoi.sh"
 

@@ -27,9 +27,10 @@ node reassign-areas.mjs hanoi
 echo "=== 3. Transform (listings + nights; area = phường chứa tọa độ) ==="
 node transform-airbnb.mjs
 
-echo "=== 4. Rebuild metrics + breakdowns ==="
+echo "=== 4. Rebuild metrics + breakdowns + listing_stats ==="
 cd "$DB_DIR" && "${PSQL[@]}" -q < ../pipeline/sql/300_metrics.sql
 "${PSQL[@]}" -q < ../pipeline/sql/400_breakdowns.sql
+"${PSQL[@]}" -q -v ON_ERROR_STOP=1 < ../pipeline/sql/410_listing_stats.sql
 
 echo "=== 5. Sanity ==="
 "${PSQL[@]}" -c "
