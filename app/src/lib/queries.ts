@@ -992,3 +992,22 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
     capturedAt: score?.captured_at?.toISOString?.() ?? null,
   };
 }
+
+/** Độ tươi dữ liệu thị trường cho footer Insight (DQO — ADR-0007). */
+export async function getMarketFreshness(
+  areaId: string,
+): Promise<{ lastSnapshotAt: string | null; listingCount: number }> {
+  const city = areaId.split("-").slice(0, 2).join("-").split("-")[1] ?? areaId;
+  const { rows } = await pool.query(
+    `WITH l AS (
+       SELECT count(*)::int AS n FROM listings
+       WHERE area_id = $1 OR area_id LIKE $1 || '-%'
+     ), s AS (
+       SELECT max(collected_at)::text AS last FROM airbnb_snapshots
+       WHERE city = $2 AND source = 'airbnb-listing'
+     )
+     SELECT l.n, s.last FROM l, s`,
+    [areaId, city],
+  );
+  return { lastSnapshotAt: rows[0]?.last ?? null, listingCount: rows[0]?.n ?? 0 };
+}
