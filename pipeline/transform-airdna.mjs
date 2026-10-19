@@ -136,7 +136,7 @@ async function main() {
     // 5. Crosswalk: map AirDNA Hà Nội (id=47) → areas vn-hanoi
     await client.query(
       `INSERT INTO area_sources (area_id, source, source_area_key, meta)
-       VALUES ('vn-hanoi', 'airdna', '47', '{"note":"AirDNA market ID for Hanoi"}'::jsonb)
+       VALUES ('vn-hanoi', 'S02', '47', '{"note":"AirDNA market ID for Hanoi"}'::jsonb)
        ON CONFLICT DO NOTHING`,
     );
     console.log("crosswalk: vn-hanoi ↔ airdna:47");

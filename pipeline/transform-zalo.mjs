@@ -132,12 +132,12 @@ async function main() {
     console.log(`dedup: ${dedup.size} unique offers (từ ${parsed.filter(p => p.confidence !== "low").length} tin có giá)`);
 
     // ---- Bước 5: ghi canonical ----
-    await client.query("DELETE FROM sale_offers WHERE source = 'mock'");
+    await client.query("DELETE FROM sale_offers WHERE source = 'S03'");
     for (const o of dedup.values()) {
       await client.query(
         `INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
                                    bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'mock')
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'S03')
          ON CONFLICT (offer_id) DO UPDATE SET n_reposts = EXCLUDED.n_reposts,
            last_seen = EXCLUDED.last_seen, post_ids = EXCLUDED.post_ids`,
         [o.offerId, o.areaId, o.kind, o.priceVnd, o.areaM2, o.pricePerm2, o.bedrooms,
