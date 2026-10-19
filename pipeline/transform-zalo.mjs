@@ -22,12 +22,11 @@ const slugify = (s) =>
 
 const stripPrefix = (s) => s.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/, "");
 
-/** Số VN: "2.9" (thập phân, 1-2 chữ số) giữ nguyên; "2.900" (nhóm 3) là
- *  ngăn cách nghìn → bỏ chấm. Bench C2 phát hiện bug strip-mọi-chấm nhân
- *  giá lên 10 lần ("2.9 tỷ" → 29 tỷ). */
+/** Số VN: "2.9"/"2,9" (thập phân, 1-2 chữ số) giữ nguyên; "2.900" (nhóm 3)
+ *  là ngăn cách nghìn → bỏ separator. Comma cũng là thập phân chuẩn VN. */
 export function parseVnNumber(raw) {
-  if (/^\d+\.\d{1,2}$/.test(raw)) return parseFloat(raw);
-  return parseFloat(raw.replace(/\./g, ""));
+  if (/^\d+[.,]\d{1,2}$/.test(raw)) return parseFloat(raw.replace(",", "."));
+  return parseFloat(raw.replace(/[.,]/g, ""));
 }
 
 // ---- Bước 2: parse ----
@@ -45,7 +44,7 @@ export function parsePost(text) {
 
   // (?!..) chặn 't' của chữ thường tiếng Việt ("62m2, tổng …") — \b của JS
   // chỉ theo ASCII nên 'tổ' vẫn tạo boundary giả (bench C2 bắt được).
-  const ty = text.match(/(\d+(?:\.\d+)*)\s*t(?:ỷ|y|\b)(?![a-zà-ỹ])/i);
+  const ty = text.match(/(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/i);
   if (ty) out.priceVnd = Math.round(parseVnNumber(ty[1]) * 1e9);
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {

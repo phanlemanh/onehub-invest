@@ -50,3 +50,9 @@ test("tỷ chấm ngàn: '2.900 tỷ' → 2900e9; không trộn với 'triệu'"
   assert.equal(parsePost("Bán 2.900 tỷ nhà phố").priceVnd, 2_900_000_000_000);
   assert.equal(parsePost("Thuê dài hạn: 12 triệu/th").priceVnd, 12_000_000);
 });
+
+test("phẩy thập phân kiểu VN: '2,9 tỷ' → 2.9e9, '8,5tr/tháng' → 8.5e6", () => {
+  assert.equal(parsePost("Bán gấp Tây Hồ 2,9 tỷ").priceVnd, 2_900_000_000);
+  assert.equal(parsePost("Cho thuê 8,5tr/tháng 1PN").priceVnd, 8_500_000);
+  assert.equal(parsePost("Bán 2,93 tỷ").priceVnd, 2_930_000_000);
+});

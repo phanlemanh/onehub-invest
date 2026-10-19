@@ -6,6 +6,7 @@
 // Dùng: node import-airbnb.mjs <đường-dẫn-snapshot-dir>
 //   (vd: ../collector/snapshots/hanoi/hanoi__airbnb-listing__2026…)
 import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
@@ -19,6 +20,12 @@ async function main() {
   if (!dir) {
     console.error("thiếu tham số: node import-airbnb.mjs <snapshot-dir>");
     process.exit(1);
+  }
+  // Orphan: crash giữa write items và finalize → dir không có manifest.
+  // Skip + warn (không nạp, không ném) để một dir mồ côi không gãy cả finalize.
+  if (!existsSync(join(dir, "manifest.json"))) {
+    console.warn(`bỏ qua snapshot mồ côi (thiếu manifest): ${dir}`);
+    process.exit(0);
   }
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
   if (manifest.schemaVersion !== 1) {

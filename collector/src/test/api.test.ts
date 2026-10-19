@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { strict as assert } from "node:assert";
 import { gunzipSync } from "node:zlib";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -25,25 +25,25 @@ function fresh() {
   return root;
 }
 
-test("ingest: key đúng → 202, đếm accepted vs duplicates", () => {
-  const s = createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: ["k1"] });
+test("ingest: key đúng → 202, đếm accepted vs duplicates", async () => {
+  const s = await createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: ["k1"] });
   const r = s.ingest(BODY, "Bearer k1");
   assert.equal(r.status, 202);
   assert.equal(r.body.accepted, 2);
   assert.equal(r.body.duplicates, 1);
 });
 
-test("ingest: sai key → 401; keys rỗng → 401 mọi request (fail closed)", () => {
-  const s = createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: ["k1"] });
+test("ingest: sai key → 401; keys rỗng → 401 mọi request (fail closed)", async () => {
+  const s = await createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: ["k1"] });
   assert.equal(s.ingest(BODY, "Bearer wrong").status, 401);
-  const closed = createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: [] });
+  const closed = await createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: [] });
   assert.equal(closed.ingest(BODY, "Bearer k1").status, 401);
   assert.equal(closed.ingest(BODY, null).status, 401);
 });
 
-test("ingest: thiếu text/ts hoặc messages rỗng → 400, không ghi gì", () => {
+test("ingest: thiếu text/ts hoặc messages rỗng → 400, không ghi gì", async () => {
   const root = fresh();
-  const s = createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
   assert.equal(s.ingest({ agent_id: "a", group: "g", messages: [{ text: "thiếu ts" }] }, "Bearer k1").status, 400);
   assert.equal(s.ingest({ agent_id: "a", group: "g", messages: [] }, "Bearer k1").status, 400);
   assert.equal(s.ingest({ agent_id: "a", group: "g" }, "Bearer k1").status, 400);
@@ -51,9 +51,9 @@ test("ingest: thiếu text/ts hoặc messages rỗng → 400, không ghi gì", (
   assert.equal(existsSync(root), false); // chưa flush → chưa ghi gì xuống đĩa
 });
 
-test("ingest: sourceId lọc theo tập seen — post lại sau flush vẫn dedup", () => {
+test("ingest: sourceId lọc theo tập seen — post lại sau flush vẫn dedup", async () => {
   const root = fresh();
-  const s = createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
   s.ingest(BODY, "Bearer k1");
   return s.flush().then(() => {
     const r2 = s.ingest(BODY, "Bearer k1"); // cùng 3 message sau khi đã flush
@@ -63,9 +63,9 @@ test("ingest: sourceId lọc theo tập seen — post lại sau flush vẫn dedu
   });
 });
 
-test("flush: snapshot items-0001 + manifest sha256 khớp DATA-CONTRACT, source=zalo-agent", () => {
+test("flush: snapshot items-0001 + manifest sha256 khớp DATA-CONTRACT, source=zalo-agent", async () => {
   const root = fresh();
-  const s = createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
   s.ingest(BODY, "Bearer k1");
   return s.flush().then((m) => {
     assert.ok(m && m.snapshotId.startsWith("hanoi__zalo-agent__"));
@@ -89,9 +89,9 @@ test("flush: snapshot items-0001 + manifest sha256 khớp DATA-CONTRACT, source=
   });
 });
 
-test("flush: buffer rỗng → null, không tạo thư mục snapshot", () => {
+test("flush: buffer rỗng → null, không tạo thư mục snapshot", async () => {
   const root = fresh();
-  const s = createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
   return s.flush().then((m) => {
     assert.equal(m, null);
     assert.equal(existsSync(join(root, "hanoi")), false);

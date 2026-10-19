@@ -20,7 +20,7 @@ const port = Number(process.env.AGENT_PORT ?? 9210);
 const city = process.env.CITY ?? "hanoi";
 const root = new URL("../../snapshots", import.meta.url).pathname;
 
-const agent = createAgentServer({ snapshotRoot: root, city, keys });
+const agent = await createAgentServer({ snapshotRoot: root, stateDir: new URL("../../state", import.meta.url).pathname, city, keys });
 const server = createServer((req, res) => {
   agent.handle(req, res).catch((err) => {
     console.error("api error:", err);
@@ -32,5 +32,8 @@ server.listen(port, "127.0.0.1", () => {
   console.log(`collector api :${port} (city=${city}, ${keys.length} key(s)) — POST /agent-report`);
 });
 setInterval(() => {
-  agent.flush().then((m) => m && console.log(`flush → ${m.snapshotId}`));
+  agent
+    .flush()
+    .then((m) => m && console.log(`flush → ${m.snapshotId}`))
+    .catch((err) => console.error("flush failed (giữ buffer, thử lại sau 60s):", err.message));
 }, 60_000).unref();

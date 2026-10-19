@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 import { SnapshotWriter } from "../core/storage.js";
 import type { RawItem } from "../core/types.js";
@@ -30,10 +31,21 @@ export type IngestResult = { status: number; body: Record<string, unknown> };
 
 export type AgentServerOptions = {
   snapshotRoot: string;
+  /** Dedup sống qua restart: id đã thấy lưu stateDir/agent-seen.json. */
+  stateDir?: string;
   city: string;
   keys: string[];
   flushAfterItems?: number; // default 50
 };
+
+/** Đọc body gộp BUFFER rồi decode một lần — nối chuỗi từng chunk sẽ corrupt
+ *  ký tự đa byte bị chặn ngang ranh giới chunk (payload phải NGUYÊN VẬN). */
+export async function readBody(req: { on: Function }): Promise<string> {
+  const chunks: Buffer[] = [];
+  req.on("data", (c: Buffer) => chunks.push(c));
+  await new Promise<void>((done) => req.on("end", done));
+  return Buffer.concat(chunks).toString("utf8");
+}
 
 const SEEN_CAP = 5000;
 
@@ -46,7 +58,7 @@ function keyOk(keys: string[], auth: string | null): boolean {
   });
 }
 
-export function createAgentServer(opts: AgentServerOptions) {
+export async function createAgentServer(opts: AgentServerOptions) {
   const { snapshotRoot, city, keys } = opts;
   const flushAfterItems = opts.flushAfterItems ?? 50;
 
@@ -55,6 +67,16 @@ export function createAgentServer(opts: AgentServerOptions) {
   let writer: SnapshotWriter | null = null;
   let duplicatesTotal = 0;
   let acceptedTotal = 0;
+  const newIds: string[] = []; // id mới từ lần flush trước — persist xuống state
+
+  // Dedup sống qua restart (review I3): nạp id đã thấy từ stateDir
+  const stateFile = opts.stateDir ? join(opts.stateDir, "agent-seen.json") : null;
+  if (stateFile) {
+    try {
+      const arr = JSON.parse(await readFile(stateFile, "utf8")) as string[];
+      for (const id of arr) seen.add(id);
+    } catch { /* chưa có file — lần đầu */ }
+  }
 
   const sourceIdOf = (group: string, ts: string, text: string) =>
     createHash("sha256").update(`${group}|${ts}|${text}`).digest("hex").slice(0, 32);
@@ -102,7 +124,9 @@ export function createAgentServer(opts: AgentServerOptions) {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
     writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
     const items = buffer;
-    buffer = [];
+    const ids = items.map((i) => i.sourceId);
+    // KHÔNG clear buffer trước khi ghi xong — flush fail giữ items cho lần
+    // sau (đã ack 202 không được mất âm thầm — review I1a)
     await writer.write(items);
     const manifest = await writer.finalize({
       discovered: items.length,
@@ -112,6 +136,19 @@ export function createAgentServer(opts: AgentServerOptions) {
       notes: [`agent ingest; duplicates bỏ từ đầu chạy: ${duplicatesTotal}`],
     });
     writer = null; // snapshot mới cho lần flush sau
+    buffer = buffer.filter((i) => !ids.includes(i.sourceId));
+    if (stateFile) {
+      newIds.push(...ids);
+      // FIFO cap 5000 — bỏ cũ, giữ mới
+      while (seen.size + newIds.length > 5000 && newIds.length > 0) {
+        seen.delete(seen.values().next().value as string);
+      }
+      const persist = [...seen, ...newIds].slice(-5000);
+      await mkdir(dirname(stateFile), { recursive: true });
+      await writeFile(stateFile, JSON.stringify(persist));
+      for (const id of newIds) seen.add(id);
+      newIds.length = 0;
+    }
     return { snapshotId: manifest.snapshotId };
   }
 
@@ -124,12 +161,9 @@ export function createAgentServer(opts: AgentServerOptions) {
     if (req.method !== "POST" || !req.url?.startsWith("/agent-report")) {
       return json(404, { error: "not found" });
     }
-    let raw = "";
-    req.on("data", (c) => (raw += c));
-    await new Promise<void>((done) => req.on("end", done));
     let body: unknown;
     try {
-      body = JSON.parse(raw);
+      body = JSON.parse(await readBody(req as unknown as { on: Function }));
     } catch {
       return json(400, { error: "JSON không hợp lệ" });
     }

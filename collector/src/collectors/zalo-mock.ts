@@ -144,6 +144,8 @@ export const zaloMock: Collector = {
         sourceId: `mock-repost-${i}-${Math.random().toString(36).slice(2, 8)}`,
         fetchedAt: new Date(Date.now() + rnd(0, 3 * 864e5)).toISOString(),
         payload: { ...(src.payload as MockPost), group: pick(groups), author: `author-${Math.floor(rnd(1, 30))}` },
+        // deep-copy gt: strip text bản này không null gt của bản gốc (review I4)
+        meta: { city: src.meta?.city ?? "hanoi", mock: true, gt: { ...(src.meta?.gt as GroundTruth) } },
       });
     }
 
@@ -156,18 +158,16 @@ export const zaloMock: Collector = {
       const it = items[idx].payload as MockPost;
       const gt = items[idx].meta?.gt as GroundTruth | undefined;
       if (Math.random() > 0.5) {
-        const before = it.text;
-        it.text = it.text.replace(/[\d.,]+\s*(tỷ|tr\/m²|triệu\/th|tr\/tháng)/g, "giá tốt");
-        if (it.text !== before && gt) {
-          gt.priceVnd = null;
-          gt.pricePerm2Vnd = null;
+        it.text = it.text.replace(/[\d.,]+\s*(tỷ|tr\/m[²2]|triệu\/th|tr\/tháng)/g, "giá tốt");
+        if (gt) {
+          // null theo CÒN LẠI trong text: template tr/m2 (ASCII) từng sót
+          // perm2 khi chỉ strip được "tỷ" → gt sai lệch text (review I4)
+          if (!/tr\/m[²2]/i.test(it.text)) gt.pricePerm2Vnd = null;
+          if (!/\d[\d.,]*\s*(tỷ|triệu|tr)(?!\/m)/i.test(it.text)) gt.priceVnd = null;
         }
       } else {
-        const before = it.text;
         it.text = it.text.replace(/\d+\s*m[²2]/g, "DT đẹp");
-        if (it.text !== before && gt) {
-          gt.areaM2 = null;
-        }
+        if (gt && !/m[²2]/i.test(it.text)) gt.areaM2 = null;
       }
     }
 
