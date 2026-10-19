@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
 import { getSessionUser, isSaved } from "@/lib/auth";
-import { getYieldRowsCached } from "@/lib/cached";
 import { fmtInt, fmtMoney, fmtMonth, fmtPct } from "@/lib/format";
 import {
   currencyFor,
@@ -13,6 +12,7 @@ import {
   getSiblingBenchmark,
   getSupplyHistory,
   getFinderAreas,
+  getYieldRows,
   type MetricRow,
 } from "@/lib/queries";
 import { PageHeader, type Crumb } from "@/components/page/page-header";
@@ -89,7 +89,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
       isMarket ? getFinderAreas({ marketId: areaId }, { geometry: false }) : Promise.resolve([]),
       getSessionUser(),
       isMarket ? getSupplyHistory(areaId) : Promise.resolve(null),
-      isMarket ? getYieldRowsCached(areaId) : Promise.resolve([]),
+      isMarket ? getYieldRows(areaId) : Promise.resolve([]),
     ]);
   const saved = user ? await isSaved(user.id, areaId) : false;
 

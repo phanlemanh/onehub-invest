@@ -685,19 +685,20 @@ export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
   // Doanh thu ngắn hạn của MỘT căn/tháng = trung vị (giá niêm yết × công suất
   // 90 đêm đầu) × 365/12 trên các listing của phường — cùng mô hình với /yield.
   // (Bản cũ lấy ADR × số listing = doanh thu cả phường, thổi phồng yield.)
+  // nights90/booked90 tính sẵn trong listing_stats (pipeline/sql/410_listing_stats.sql):
+  // lịch tương lai thưa dần về cuối (Hà Nội: 28,6% ở 90 đêm đầu vs 14,4% cả 365).
   const { rows } = await pool.query(
     `WITH cand AS (
        SELECT l.id, l.area_id, l.price_listed FROM listings l
        JOIN areas a ON a.id = l.area_id
        WHERE a.parent_id = $1 AND l.price_listed > 0
-     ), ${PER_LISTING_NEAR_TERM},
-     str AS (
+     ), str AS (
        SELECT c.area_id,
               percentile_cont(0.5) WITHIN GROUP (
                 ORDER BY c.price_listed * p.booked90::numeric / nullif(p.nights90, 0)
               ) * 365 / 12 AS str_month,
               count(*) AS n
-       FROM cand c JOIN per_listing p ON p.listing_id = c.id
+       FROM cand c JOIN listing_stats p ON p.listing_id = c.id
        GROUP BY c.area_id
      ), sales AS (
        SELECT area_id, n_offers, median_perm2 FROM market_asset_stats WHERE kind = 'sale'
@@ -736,25 +737,6 @@ export async function getYieldRows(marketId: string): Promise<YieldRow[]> {
 }
 
 // ---------- P4: ước tính lợi suất (/yield) ----------
-
-/**
- * Công suất "90 đêm đầu" của mỗi listing: lịch tương lai thưa dần về cuối
- * (Hà Nội: 28,6% ở 90 đêm đầu vs 14,4% cả 365), nên 90 đêm đầu gần thực tế hơn.
- */
-const PER_LISTING_NEAR_TERM = `
-  per_listing AS (
-    SELECT n.listing_id,
-           count(*) FILTER (WHERE n.night < f.first + 90) AS nights90,
-           count(*) FILTER (WHERE n.night < f.first + 90 AND NOT n.available) AS booked90,
-           count(*) AS nights,
-           count(*) FILTER (WHERE NOT n.available) AS booked
-    FROM nights n
-    JOIN (SELECT listing_id, min(night) AS first FROM nights
-          WHERE listing_id IN (SELECT id FROM cand) GROUP BY listing_id) f
-      ON f.listing_id = n.listing_id
-    WHERE n.listing_id IN (SELECT id FROM cand)
-    GROUP BY n.listing_id
-  )`;
 
 export type YieldArea = {
   id: string;
@@ -804,6 +786,7 @@ export type YieldCompRow = ListingCardRow & { occupancy90: number | null };
 /**
  * Listing so sánh cho ước tính: cùng phường + số phòng ngủ (≥ 5), lùi về cả
  * thị trường cùng số phòng ngủ, rồi cả thị trường. Chỉ listing có giá niêm yết.
+ * Công suất 90 đêm đầu đọc từ listing_stats như getYieldRows.
  */
 export async function getYieldComps(
   marketId: string,
@@ -818,12 +801,12 @@ export async function getYieldComps(
          SELECT l.*, a.name AS area_name, a.region_type
          FROM listings l JOIN areas a ON a.id = l.area_id
          WHERE (a.id = $1 OR a.parent_id = $1) AND l.price_listed > 0 AND ${where}
-       ), ${PER_LISTING_NEAR_TERM}
+       )
        SELECT cand.id, cand.name, cand.room_type, cand.bedrooms, cand.accommodates,
               cand.price_listed, cand.area_name, cand.region_type, cand.latitude, cand.longitude,
               p.nights, p.booked, p.nights90, p.booked90
-       FROM cand JOIN per_listing p ON p.listing_id = cand.id
-       ORDER BY p.booked90 DESC`,
+       FROM cand JOIN listing_stats p ON p.listing_id = cand.id
+       ORDER BY p.booked90 DESC, cand.id`,
       [marketId, ...params],
     );
     return rows.map((r): YieldCompRow => {

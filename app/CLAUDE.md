@@ -34,7 +34,7 @@ app/src/
 │   ├── reui/             # ReUI components (import trực tiếp, KHÔNG sửa)
 │   ├── ui/               # shadcn base-nova (import trực tiếp, KHÔNG sửa)
 │   └── *.tsx             # Component viết tay cũ — thay dần theo P1–P5
-└── lib/                  # queries.ts, cached.ts, yield.ts, auth.ts, ops-access.ts, format.ts, map-worker.ts, map-style.ts, utils.ts
+└── lib/                  # queries.ts, yield.ts, auth.ts, ops-access.ts, format.ts, map-worker.ts, map-style.ts, utils.ts
 ```
 
 IA + lộ trình: `docs/architecture/invest-portal-ia.md`. Trang mới phải khai báo
@@ -48,7 +48,9 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - Full catalog: https://reui.io/blocks
 
 ## Key Files
-- `lib/queries.ts` — ALL database queries (getKpis, getMetrics, getYieldRows, getAirdnaComparison...)
+- `lib/queries.ts` — ALL database queries (getKpis, getMetrics, getYieldRows, getAirdnaComparison...).
+  Số liệu theo listing (đêm/đặt/doanh thu, công suất 90 đêm đầu) đọc `listing_stats` do
+  `pipeline/sql/410_listing_stats.sql` tính sẵn — không gộp bảng nights (~11 triệu dòng) lúc tải trang.
 - `lib/map-worker.ts` — MapLibre worker fix (setWorkerUrl from public/)
 - `lib/map-style.ts` — bản đồ nền OpenFreeMap dùng chung (sáng/tối, nhãn tiếng Việt, ghi nguồn)
 

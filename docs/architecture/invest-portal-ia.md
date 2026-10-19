@@ -232,7 +232,7 @@ Ghi chú P4:
 - Chi phí mặc định sửa được: quản lý 20%, nền tảng 3%, thuế 7% (tham khảo: hộ KD lưu trú 5% GTGT + 2% TNCN), cố định 4 tr/tháng, nội thất 150 tr. Thuê dài hạn trừ thuế 10% (tham khảo).
 - Doanh thu không phụ thuộc diện tích (Airbnb không công bố m², chỉ khớp số phòng ngủ); diện tích chỉ ảnh hưởng giá mua gợi ý và giá/m².
 - Sửa bảng "Lợi suất theo phường" của Insight: doanh thu ngắn hạn trước đây = ADR × số listing (doanh thu cả phường) → yield thổi phồng; nay theo một căn, cùng mô hình với `/yield`.
-- Gộp nights cho công suất 90 đêm → cache 1 giờ (`lib/cached.ts`); xem đề xuất bảng thống kê theo listing ở pipeline.
+- Công suất 90 đêm đầu đọc cột `nights90`/`booked90` của `listing_stats` (migration 011, `410_listing_stats.sql`) — đã bỏ cache 1 giờ `lib/cached.ts`; `/yield`, `/so-sanh`, Insight thị trường luôn đọc số mới sau mỗi lần pipeline chạy.
 
 Ghi chú P5:
 - Trang chủ + `/phuong-phap` dùng layout marketing (navbar-12 + footer); `/login`, `/register` ở nhóm `(auth)` toàn màn hình (auth-4, auth-5); `/saved` (wishlist-2), `/so-sanh?areas=` (comparison-1, tối đa 4) ở shell app.

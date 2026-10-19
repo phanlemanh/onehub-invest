@@ -4,9 +4,8 @@ import type { Metadata } from "next";
 
 import { AreaComparison } from "@/components/compare/comparison";
 import { COMPARE_MAX, type CompareArea, type CompareGroup } from "@/components/compare/compare-types";
-import { getYieldRowsCached } from "@/lib/cached";
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format";
-import { currencyFor, getFinderAreas, getSearchIndex, type YieldRow } from "@/lib/queries";
+import { currencyFor, getFinderAreas, getSearchIndex, getYieldRows, type YieldRow } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "So sánh khu vực" };
 
@@ -50,7 +49,7 @@ export default async function ComparePage({
   // Lợi suất theo phường của các thị trường liên quan.
   const marketIds = [...new Set(rows.map((r) => r.id.split("-").slice(0, 2).join("-")))];
   const yieldById = new Map<string, YieldRow>();
-  for (const m of marketIds) for (const y of await getYieldRowsCached(m)) yieldById.set(y.areaId, y);
+  for (const m of marketIds) for (const y of await getYieldRows(m)) yieldById.set(y.areaId, y);
 
   const byId = new Map(rows.map((r) => [r.id, r]));
   const areas: CompareArea[] = ids.flatMap((id) => {

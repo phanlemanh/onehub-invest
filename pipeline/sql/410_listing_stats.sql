@@ -4,19 +4,26 @@
 -- Quy tắc mẫu: listing không có price_listed KHÔNG có dòng (xem 300_metrics.sql) — lịch
 -- chặn của listing ngừng hoạt động không hiện thành công suất 100% trên thẻ/bảng listing
 -- và không vào phân vị công suất "listing cùng phường".
+-- nights90 / booked90: "90 đêm đầu" tính từ đêm sớm nhất của TỪNG listing — lịch tương lai
+-- thưa dần về cuối nên lợi suất (/yield, Insight, So sánh) dùng công suất 90 đêm đầu.
 -- Một transaction: trang đang đọc thấy bản cũ cho tới khi COMMIT, không thấy bảng rỗng.
 BEGIN;
 TRUNCATE listing_stats;
 
-INSERT INTO listing_stats (listing_id, nights, booked, revenue, occupancy, first_night, last_night)
+INSERT INTO listing_stats (listing_id, nights, booked, revenue, occupancy, first_night, last_night,
+                           nights90, booked90)
 SELECT n.listing_id,
        count(*) AS nights,
        count(*) FILTER (WHERE NOT n.available) AS booked,
        COALESCE(sum(COALESCE(n.price, l.price_listed)) FILTER (WHERE NOT n.available), 0) AS revenue,
        count(*) FILTER (WHERE NOT n.available)::numeric / count(*) AS occupancy,
-       min(n.night), max(n.night)
+       min(n.night), max(n.night),
+       count(*) FILTER (WHERE n.night < f.first + 90) AS nights90,
+       count(*) FILTER (WHERE n.night < f.first + 90 AND NOT n.available) AS booked90
 FROM nights n
 JOIN listings l ON l.id = n.listing_id
+JOIN (SELECT listing_id, min(night) AS first FROM nights GROUP BY listing_id) f
+  ON f.listing_id = n.listing_id
 WHERE l.price_listed IS NOT NULL
 GROUP BY n.listing_id;
 COMMIT;
