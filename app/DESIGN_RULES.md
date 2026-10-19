@@ -214,6 +214,15 @@ src/components/
 | `@reui/form-11` | blocks/form-11/ → yield/yield-form.tsx | Form ước tính lợi suất + dải tóm tắt trực tiếp | Đặt trong Frame (trang họ Frame); `noValidate` vì bước ±0,1 tỷ chỉ là bước của nút |
 | `@reui/chart-36` | blocks/chart-36/ → yield/pnl/ | Doanh thu vs chi phí 12 tháng + biên lợi nhuận | Dữ liệu qua props, mốc = biên để ngang thuê dài hạn (ẩn khi > 100%), làn biên tối thiểu 20 điểm %, bước trục theo bậc độ lớn |
 | `@reui/number-field` | reui/number-field.tsx | Ô nhập số (PN, m², giá, chi phí) | `id` của NumberField là id của ô nhập |
+| `@reui/auth-4` | blocks/auth-4/ → auth/login-form.tsx | Đăng nhập | Bỏ đăng nhập mạng xã hội + "Quên mật khẩu" (chưa có); nối server action; nền noise ở (auth)/layout |
+| `@reui/auth-5` | blocks/auth-5/ → auth/register-form.tsx | Đăng ký | Bỏ dải logo khách hàng (không có thật); hero viết cho nhà đầu tư, số đếm thật |
+| `@reui/wishlist-2` | blocks/wishlist-2/ → saved/ | Đã lưu | Tín hiệu giá → loại khu vực; ảnh → panel số RevPAR; ✕ = bỏ lưu thật; "Add all" → So sánh |
+| `@reui/comparison-1` | blocks/comparison-1/ → compare/ | So sánh tối đa 4 khu vực | Cột trên URL; ô tốt nhất mỗi hàng tô xanh; thêm cột bằng hộp c-command-5. Hằng số ở compare-types.ts (module thường) |
+| `@reui/navbar-12` | blocks/navbar-12/ → marketing/marketing-navbar.tsx | Thanh điều hướng trang chủ/Phương pháp | Thêm ⌘K + tài khoản + menu ☰ cho màn hẹp (bản gốc không có) |
+| `@reui/hero-8` | blocks/hero-8/ → marketing/hero.tsx | Hero trang chủ | Ô email → ô tìm khu vực; "console" giả → bản xem trước số thật |
+| `@reui/card-29` | blocks/card-29/ → marketing/market-cards.tsx | Thị trường đang theo dõi | Dải diện tích vẽ từ doanh thu theo tháng thật (bản gốc là hình cố định) |
+| `@reui/how-it-works-1` | blocks/how-it-works-1/ → marketing/how-it-works.tsx | 3 bước dùng sản phẩm | Card → Frame (trang chủ họ Frame) |
+| `@reui/faq-6` | blocks/faq-6/ → marketing/faq-section.tsx | Hỏi đáp trang chủ + định nghĩa trang Phương pháp | Dữ liệu qua props |
 
 ### shadcn/ui Base (installed)
 | Component | File | Note |
@@ -233,6 +242,14 @@ src/components/
 | InsightNav | components/insight/insight-nav.tsx | Style view track của app-shell-30; tự theo dõi cuộn vì `@reui/scrollspy` với target document bám vào `scroll-area-viewport` đầu tiên trong trang (vùng cuộn DataGrid) và luôn báo nhầm mục cuối |
 | SiteFooter | components/shell/site-footer.tsx | ReUI không có block footer |
 | PageSkeleton | components/states/page-skeleton.tsx | Ghép từ `ui/skeleton` theo bố cục Insight; dùng trong `<Suspense>`, KHÔNG làm `loading.tsx` cấp segment (mất mã 404/307) |
+
+## BẪY "use client" (đã gặp 2 lần)
+
+Trang server import GIÁ TRỊ (hàm, hằng số) từ file `"use client"` chỉ nhận được
+**tham chiếu client**: gọi hàm → lỗi 500 (`tierOf`, P3); dùng hằng số →
+`.slice(0, ref)` ra mảng rỗng, KHÔNG báo lỗi (`COMPARE_MAX`, P5). Hằng số, kiểu,
+hàm thuần dùng chung giữa server và client → để ở module thường (`*.ts`, không
+`"use client"`): `page/tiers.ts`, `finder/bins.ts`, `compare/compare-types.ts`.
 
 ## PROHIBITED (TUYỆT ĐỐI KHÔNG)
 

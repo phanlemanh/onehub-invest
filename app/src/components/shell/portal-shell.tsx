@@ -15,26 +15,20 @@ export function PortalShell({
   portal,
   user,
   searchEntries,
-  framed = true,
   children,
 }: {
   portal: Portal
   user: ShellUser | null
   searchEntries: SearchEntry[]
-  /** true = nội dung nằm trong page panel viền mờ của app-shell-30. */
-  framed?: boolean
   children: ReactNode
 }) {
   return (
     <div className="bg-background text-foreground flex min-h-svh w-full flex-col">
       <TopBar portal={portal} user={user} searchEntries={searchEntries} />
-      {framed ? (
-        <div className="inset-ring-ring/20 flex min-h-0 flex-1 flex-col rounded-t-xl inset-ring">
-          <div className="flex flex-1 flex-col px-4 py-4 sm:px-6 sm:py-6">{children}</div>
-        </div>
-      ) : (
-        <div className="flex flex-1 flex-col">{children}</div>
-      )}
+      {/* Page panel viền mờ của app-shell-30. */}
+      <div className="inset-ring-ring/20 flex min-h-0 flex-1 flex-col rounded-t-xl inset-ring">
+        <div className="flex flex-1 flex-col px-4 py-4 sm:px-6 sm:py-6">{children}</div>
+      </div>
       <SiteFooter portal={portal} />
     </div>
   )

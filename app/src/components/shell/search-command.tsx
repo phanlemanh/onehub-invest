@@ -22,11 +22,20 @@ import type { SearchEntry } from "@/lib/queries"
  * ⌘K tìm khu vực. Trigger + phím tắt theo search-menu của app-shell-30;
  * danh sách theo c-command-5 (tên, đường dẫn mờ, badge loại).
  */
-export function SearchCommand({ entries }: { entries: SearchEntry[] }) {
+export function SearchCommand({
+  entries,
+  variant = "bar",
+}: {
+  entries: SearchEntry[]
+  /** "bar" = ô nhỏ trên thanh trên cùng; "hero" = ô lớn ở hero trang chủ. */
+  variant?: "bar" | "hero"
+}) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
+    // Ô ở hero không giữ ⌘K: thanh trên cùng đã giữ, hai nơi cùng nghe sẽ mở hai hộp.
+    if (variant === "hero") return
     function onKeyDown(event: KeyboardEvent) {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
@@ -36,7 +45,7 @@ export function SearchCommand({ entries }: { entries: SearchEntry[] }) {
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+  }, [variant])
 
   const markets = entries.filter((e) => e.kind === "market")
   const submarkets = entries.filter((e) => e.kind === "submarket")
@@ -48,6 +57,22 @@ export function SearchCommand({ entries }: { entries: SearchEntry[] }) {
 
   return (
     <>
+      {variant === "hero" ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          className="text-muted-foreground w-full max-w-md justify-start shadow-xs"
+        >
+          <SearchIcon aria-hidden="true" />
+          Tìm tỉnh, quận, phường…
+          <Kbd className="ml-auto">⌘K</Kbd>
+        </Button>
+      ) : (
+      <>
       {/* Desktop: ô tìm có gợi ý phím; điện thoại: chỉ còn kính lúp. */}
       <Button
         type="button"
@@ -74,6 +99,8 @@ export function SearchCommand({ entries }: { entries: SearchEntry[] }) {
       >
         <SearchIcon aria-hidden="true" />
       </Button>
+      </>
+      )}
 
       <CommandDialog
         open={open}

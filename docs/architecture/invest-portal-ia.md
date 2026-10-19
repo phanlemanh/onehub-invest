@@ -203,7 +203,7 @@ heatmap lịch, footer, dialog chia sẻ. Mọi thứ khác **xoá** sau khi tha
 | **P2 Finder** ✅ 2026-10-19 | `/vn` dùng data-grid-base-2 + filters + chia đôi list\|map + công tắc Thị trường\|Phường + khay So sánh. Redirect `/vn/[m]/map` | Xếp hạng theo metric tự thu; không còn số AirDNA |
 | **P3 Listing** ✅ 2026-10-19 | `/listing/[id]` (KPI + lịch + giá) + `/vn/[m]/listings` (lưới + map nhãn giá) | Map và list đồng bộ khi zoom |
 | **P4 Lợi suất** ✅ 2026-10-19 | `/yield` form-11 → báo cáo + độ tin cậy | Ra báo cáo cho 10+ phường, badge MÔ PHỎNG |
-| **P5 Còn lại** | Trang chủ marketing, `/phuong-phap`, `/so-sanh`, `/saved` (wishlist-2), auth-4/5 | Không còn trang viết tay nào |
+| **P5 Còn lại** ✅ 2026-10-19 | Trang chủ marketing, `/phuong-phap`, `/so-sanh`, `/saved` (wishlist-2), auth-4/5 | Không còn trang viết tay nào |
 
 Ghi chú P0: shell chung `components/shell/PortalShell` phục vụ cả hai cổng qua `nav.tsx`; mặc định giao diện sáng cho tới khi trang cũ được thay; KHÔNG dùng `loading.tsx` cấp segment (làm mất mã 404/307 — dùng `<Suspense>` + `PageSkeleton` trong trang).
 
@@ -233,5 +233,12 @@ Ghi chú P4:
 - Doanh thu không phụ thuộc diện tích (Airbnb không công bố m², chỉ khớp số phòng ngủ); diện tích chỉ ảnh hưởng giá mua gợi ý và giá/m².
 - Sửa bảng "Lợi suất theo phường" của Insight: doanh thu ngắn hạn trước đây = ADR × số listing (doanh thu cả phường) → yield thổi phồng; nay theo một căn, cùng mô hình với `/yield`.
 - Gộp nights cho công suất 90 đêm → cache 1 giờ (`lib/cached.ts`); xem đề xuất bảng thống kê theo listing ở pipeline.
+
+Ghi chú P5:
+- Trang chủ + `/phuong-phap` dùng layout marketing (navbar-12 + footer); `/login`, `/register` ở nhóm `(auth)` toàn màn hình (auth-4, auth-5); `/saved` (wishlist-2), `/so-sanh?areas=` (comparison-1, tối đa 4) ở shell app.
+- Vá open redirect: `?next=` của `/login` đi qua `safeNext` (lib/safe-next.ts) — trước đây `redirect(next)` nhận cả `//evil.com`.
+- Giao diện mặc định theo hệ thống (sáng/tối) — mọi trang Invest đã dùng token ReUI.
+- Lối vào So sánh: nút trên Insight, nút trong Đã lưu, mục nav. Khay chọn nhiều dòng trong Finder: chưa làm.
+- Phát hiện dữ liệu (chưa sửa, thuộc pipeline): ADR/RevPAR Hà Nội trong market_metrics thấp ~6–7 lần vì doanh thu chỉ cộng 18% đêm có giá theo đêm nhưng chia cho mọi đêm đã đặt.
 
 Ops Portal (`app-shell-26`) dựng song song từ P0, chỉ gồm khung và `/ops/design`, `/ops/quality`. Các trang Ops khác làm theo lộ trình G trong `portals.md`.

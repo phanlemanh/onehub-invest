@@ -14,6 +14,7 @@ const LINKS: Record<Portal, { label: string; href: string }[]> = {
     { label: "Thị trường Việt Nam", href: "/vn" },
     { label: "Hà Nội", href: "/vn/hanoi" },
     { label: "Đã lưu", href: "/saved" },
+    { label: "Phương pháp", href: "/phuong-phap" },
     { label: "Nội bộ", href: "/ops" },
   ],
   ops: [{ label: "Về Invest Portal", href: "/" }],

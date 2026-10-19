@@ -1,10 +1,10 @@
 import type { ReactNode } from "react"
-import { CalculatorIcon, GaugeIcon, HouseIcon, MapIcon, PaletteIcon } from "lucide-react"
+import { CalculatorIcon, GaugeIcon, GitCompareIcon, HouseIcon, MapIcon, PaletteIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
- * Chỉ khai báo route ĐÃ tồn tại — mục mới (So sánh) thêm
- * vào đây khi trang của nó ship (P2–P5), không hiện tab "sắp có".
+ * Chỉ khai báo route ĐÃ tồn tại — mục mới thêm vào đây khi trang của nó ship,
+ * không hiện tab "sắp có".
  */
 export type Portal = "invest" | "ops"
 
@@ -44,6 +44,13 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       href: "/yield",
       icon: icon(CalculatorIcon),
       match: (p) => p.startsWith("/yield"),
+    },
+    {
+      id: "compare",
+      label: "So sánh",
+      href: "/so-sanh",
+      icon: icon(GitCompareIcon),
+      match: (p) => p.startsWith("/so-sanh"),
     },
   ],
   ops: [

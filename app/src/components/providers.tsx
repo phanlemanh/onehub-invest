@@ -9,12 +9,12 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 /**
  * Shell ReUI gọi useTheme → bắt buộc ThemeProvider; tooltip cần TooltipProvider;
  * block chart báo "đã tải CSV" qua sonner → Toaster.
- * Mặc định "light" vì trang cũ viết tay còn hardcode màu sáng — đổi sang
- * "system" khi P1–P5 thay hết bằng block ReUI.
+ * Mặc định theo hệ thống: mọi trang đã dùng token của ReUI (P5), không còn
+ * trang viết tay hardcode màu sáng.
  */
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <TooltipProvider>
         {children}
         <Toaster />

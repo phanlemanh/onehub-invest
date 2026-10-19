@@ -247,17 +247,25 @@ export type FinderRow = {
  * market. Cùng công thức với getKpis để số khớp giữa Finder và Insight.
  */
 export async function getFinderAreas(
-  scope: { country: string } | { marketId: string },
+  scope: { country: string } | { marketId: string } | { ids: string[] },
   { geometry = true }: { geometry?: boolean } = {},
 ): Promise<FinderRow[]> {
   const isCountry = "country" in scope;
+  const isIds = "ids" in scope;
+  if (isIds && scope.ids.length === 0) return [];
   const { rows } = await pool.query(
     `WITH a AS (
        SELECT a.id, a.name, a.parent_id, p.name AS parent_name,
               CASE WHEN $2 THEN ST_AsGeoJSON(ST_SimplifyPreserveTopology(a.geom, $3)) END AS geojson,
               ST_Y(ST_Centroid(a.geom)) AS lat, ST_X(ST_Centroid(a.geom)) AS lng
        FROM areas a LEFT JOIN areas p ON p.id = a.parent_id
-       WHERE ${isCountry ? "a.region_type = 'market' AND a.id LIKE $1 || '-%'" : "a.parent_id = $1"}
+       WHERE ${
+         isCountry
+           ? "a.region_type = 'market' AND a.id LIKE $1 || '-%'"
+           : isIds
+             ? "a.id = ANY($1::text[])"
+             : "a.parent_id = $1"
+       }
      ), agg AS (
        SELECT area_id,
               max(listing_count) AS listings,
@@ -271,7 +279,11 @@ export async function getFinderAreas(
      SELECT a.*, agg.listings, agg.revenue, agg.booked, agg.nights, agg.series
      FROM a JOIN agg ON agg.area_id = a.id
      ORDER BY agg.revenue DESC`,
-    [isCountry ? scope.country : scope.marketId, geometry, isCountry ? 0.01 : 0.002],
+    [
+      isCountry ? scope.country : isIds ? scope.ids : scope.marketId,
+      geometry,
+      isCountry ? 0.01 : 0.002,
+    ],
   );
   return rows.map((r) => {
     const revenue = Number(r.revenue ?? 0);

@@ -14,7 +14,8 @@ ReUI block → shadcn/ui → custom (LAST RESORT). Lập inventory mọi compone
 ```
 app/src/
 ├── app/
-│   ├── (marketing)/      # Invest Portal — trang chủ (shell không đóng khung)
+│   ├── (marketing)/      # Invest Portal — trang chủ, /phuong-phap (navbar-12 + footer)
+│   ├── (auth)/           # /login, /register — toàn màn hình (auth-4, auth-5)
 │   ├── (app)/            # Invest Portal — /vn, /[country]/[market]/…, /listing, /saved, /login
 │   ├── ops/              # Ops Portal — bắt buộc đăng nhập (proxy.ts + ops/layout.tsx)
 │   └── actions.ts        # Server actions (login, logout, toggleSaved)
@@ -26,6 +27,7 @@ app/src/
 │   ├── listing/          # Chi tiết + Duyệt listing (heatmap form-5, thẻ product-grid-2, ListingsMap)
 │   ├── page/             # PageHeader, StatTiles, tiers — dùng chung mọi trang
 │   ├── yield/            # Form (form-11), độ tin cậy, pnl/ (chart-36 chuyển thể)
+│   ├── marketing/ auth/ saved/ compare/  # P5: trang chủ, đăng nhập/ký, Đã lưu, So sánh
 │   ├── states/           # Lỗi / 404 / skeleton chuẩn
 │   ├── blocks/           # Block ReUI gốc (tham chiếu, không import trực tiếp)
 │   ├── examples/         # c-* ReUI gốc (tham chiếu)
@@ -54,7 +56,10 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - Format: `fmtMoney(value, currency)` → "₫109,162" or "THB 2,179"
 
 ## Routes
-- `/` — Trang chủ (marketing)
+- `/` — Trang chủ (marketing: navbar-12, hero-8, card-29, how-it-works-1, faq-6)
+- `/phuong-phap` — Phương pháp & thuật ngữ
+- `/login`, `/register` — nhóm `(auth)`, không shell; `?next=` đi qua `safeNext`
+- `/saved` — Đã lưu; `/so-sanh?areas=a,b` — So sánh tối đa 4 khu vực
 - `/vn`, `/th` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
 - `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
 - `/th/bangkok` — Bangkok (legacy, Inside Airbnb)

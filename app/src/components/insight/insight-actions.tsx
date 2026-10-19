@@ -1,12 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { BookmarkCheckIcon, BookmarkIcon, MapIcon } from "lucide-react"
+import { BookmarkCheckIcon, BookmarkIcon, GitCompareIcon, MapIcon } from "lucide-react"
 
 import { toggleSaved } from "@/app/actions"
 import { Button } from "@/components/ui/button"
 
-/** Nút Bản đồ + Lưu của trang Insight (khe `actions` của PageHeader). */
+/** Nút So sánh + Bản đồ + Lưu của trang Insight (khe `actions` của PageHeader). */
 export function InsightActions({
   areaId,
   currentPath,
@@ -22,6 +22,16 @@ export function InsightActions({
 }) {
   return (
     <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="text-xs shadow-xs"
+        nativeButton={false}
+        render={<Link href={`/so-sanh?areas=${areaId}`} />}
+      >
+        <GitCompareIcon data-icon="inline-start" aria-hidden="true" />
+        So sánh
+      </Button>
       {mapHref && (
         <Button
           variant="outline"
