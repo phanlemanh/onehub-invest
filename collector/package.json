@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "collect": "node dist/cli.js",
-    "test": "tsc -p tsconfig.json && node --test 'dist/test/*.test.js'"
+    "test": "tsc -p tsconfig.json && node --test 'dist/test/*.test.js'",
+    "api": "node dist/api/main.js"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
