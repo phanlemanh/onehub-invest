@@ -477,11 +477,14 @@ export async function getListingDetail(id: string): Promise<ListingDetail | null
     [id],
   );
   const booked = nightRows.filter((n) => n.available === false);
+  // Listing không giá nằm ngoài mẫu metrics (pipeline/sql/300_metrics.sql): lịch
+  // "kín" của nó phần lớn là bị chặn, không phải đặt thật → công suất là "chưa biết".
   const stats = {
     nights: nightRows.length,
     booked: booked.length,
     revenue: booked.reduce((sum, n) => sum + Number(n.price ?? 0), 0),
-    occupancy: nightRows.length > 0 ? booked.length / nightRows.length : null,
+    occupancy:
+      r.price_listed !== null && nightRows.length > 0 ? booked.length / nightRows.length : null,
   };
 
   // Market = cha của phường; listing gán thẳng vào market thì chính nó.

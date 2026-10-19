@@ -97,9 +97,12 @@ export default async function ListingPage({ params }: { params: Params }) {
       title: "Công suất",
       value: fmtPct(stats.occupancy),
       tier: tierOf(stats.occupancy, peers?.occ),
-      footer: peers?.occ
-        ? `Trung vị ${peerScope}: ${fmtPct(peers.occ[1])}`
-        : "Đêm đã đặt ÷ tổng đêm của lịch",
+      footer:
+        listing.priceListed === null
+          ? "Listing chưa báo giá — lịch kín có thể do chủ nhà chặn, không tính công suất"
+          : peers?.occ
+            ? `Trung vị ${peerScope}: ${fmtPct(peers.occ[1])}`
+            : "Đêm đã đặt ÷ tổng đêm của lịch",
     },
     {
       title: "Đêm đã đặt",
