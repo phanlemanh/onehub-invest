@@ -13,3 +13,8 @@ export function canAccessOps(user: User | null): boolean {
     .filter(Boolean);
   return allow.length === 0 || allow.includes(user.email.toLowerCase());
 }
+
+/** Clearance law (ADR-0007 + portals.md): admin-class trang /ops gated role=admin. */
+export function isAdmin(user: User | null): boolean {
+  return user?.role === "admin";
+}

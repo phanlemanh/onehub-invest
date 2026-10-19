@@ -859,7 +859,7 @@ export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
             -- Crosswalk qua area_sources (chính xác), fallback fuzzy
             COALESCE(
               (SELECT x.area_id FROM area_sources x
-               WHERE x.source = 'airdna' AND x.source_area_key = am.airdna_id
+               WHERE x.source = 'S02' AND x.source_area_key = am.airdna_id
                LIMIT 1),
               (SELECT a.id FROM areas a
                WHERE a.country_code = 'vn' AND a.region_type = 'market'
@@ -871,7 +871,7 @@ export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
             (SELECT mm.listing_count FROM market_metrics mm
              WHERE mm.area_id = COALESCE(
                (SELECT x.area_id FROM area_sources x
-                WHERE x.source = 'airdna' AND x.source_area_key = am.airdna_id LIMIT 1),
+                WHERE x.source = 'S02' AND x.source_area_key = am.airdna_id LIMIT 1),
                (SELECT a.id FROM areas a WHERE a.country_code='vn' AND a.region_type='market'
                  AND translate(lower(a.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
                    = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
@@ -908,7 +908,7 @@ export type AirdnaComparison = {
 export async function getAirdnaComparison(areaId: string): Promise<AirdnaComparison | null> {
   // Crosswalk: areaId → airdna_id
   const { rows: xw } = await pool.query(
-    `SELECT source_area_key FROM area_sources WHERE area_id = $1 AND source = 'airdna' LIMIT 1`,
+    `SELECT source_area_key FROM area_sources WHERE area_id = $1 AND source = 'S02' LIMIT 1`,
     [areaId],
   );
   const airdnaId = xw[0]?.source_area_key;
@@ -991,4 +991,24 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
     submarketCount: Number(subCount[0]?.n ?? 0),
     capturedAt: score?.captured_at?.toISOString?.() ?? null,
   };
+}
+
+/** Độ tươi dữ liệu thị trường cho footer Insight (DQO — ADR-0007). */
+export async function getMarketFreshness(
+  areaId: string,
+): Promise<{ lastSnapshotAt: string | null; listingCount: number }> {
+  const city = areaId.split("-").slice(0, 2).join("-").split("-")[1] ?? areaId;
+  const { rows } = await pool.query(
+    `WITH l AS (
+       SELECT count(*)::int AS n FROM listings
+       WHERE area_id = $1 OR area_id LIKE $1 || '-%'
+     ), s AS (
+       SELECT max(collected_at)::text AS last FROM airbnb_snapshots
+       WHERE city = $2
+         AND source IN (SELECT unnest(source_ids) FROM source_registry WHERE code = 'S01')
+     )
+     SELECT l.n, s.last FROM l, s`,
+    [areaId, city],
+  );
+  return { lastSnapshotAt: rows[0]?.last ?? null, listingCount: rows[0]?.n ?? 0 };
 }

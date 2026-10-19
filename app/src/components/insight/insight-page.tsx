@@ -13,6 +13,7 @@ import {
   getSupplyHistory,
   getFinderAreas,
   getYieldRows,
+  getMarketFreshness,
   type MetricRow,
 } from "@/lib/queries";
 import { PageHeader, type Crumb } from "@/components/page/page-header";
@@ -79,7 +80,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
   if (!area) notFound();
   const isMarket = area.regionType === "market";
 
-  const [metrics, kpis, benchmark, geo, breakdown, submarkets, user, supply, yieldRows] =
+  const [metrics, kpis, benchmark, geo, breakdown, submarkets, user, supply, yieldRows, freshness] =
     await Promise.all([
       getMetrics(areaId),
       getKpis(areaId),
@@ -90,6 +91,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
       getSessionUser(),
       isMarket ? getSupplyHistory(areaId) : Promise.resolve(null),
       isMarket ? getYieldRows(areaId) : Promise.resolve([]),
+      getMarketFreshness(area.parentId ?? areaId),
     ]);
   const saved = user ? await isSaved(user.id, areaId) : false;
 
@@ -216,6 +218,12 @@ export async function InsightPage({ areaId }: { areaId: string }) {
             <YieldTable rows={yieldRows} currency={currency} basePath={basePath} />
           </Section>
         )}
+
+        <p className="text-muted-foreground pt-2 text-[11px]">
+          {freshness.lastSnapshotAt
+            ? `Cập nhật dữ liệu ${freshness.lastSnapshotAt.slice(0, 10)} · ${fmtInt(freshness.listingCount)} listing`
+            : "Chưa có dữ liệu thu thập cho thị trường này"}
+        </p>
       </div>
     </div>
   );

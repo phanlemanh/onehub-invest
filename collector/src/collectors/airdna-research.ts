@@ -1,14 +1,12 @@
 import { chromium } from "playwright-core";
-import { join } from "node:path";
-import { homedir } from "node:os";
 import type { Collector, RawItem, CoverageReport } from "../core/types.js";
 
 /**
  * AirDNA Market Research collector (Track A — persistent profile).
- * Dùng profile riêng đã login 1 lần (~/dev/one-invest-collector/.airdna-profile/).
- * Capture XHR từ api.airdna.co/api/explorer/ khi duyệt trang VN.
+ * Dùng profile riêng đã login 1 lần (collector/.airdna-profile/ — repo-local,
+ * gitignored). Capture XHR từ api.airdna.co/api/explorer/ khi duyệt trang VN.
  */
-const PROFILE_DIR = join(homedir(), "dev", "one-invest-collector", ".airdna-profile");
+const PROFILE_DIR = new URL("../../.airdna-profile/", import.meta.url).pathname;
 
 export const airdnaResearch: Collector = {
   id: "airdna-research",
