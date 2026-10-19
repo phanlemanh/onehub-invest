@@ -210,6 +210,8 @@ src/components/
 | `@reui/chart-36` | blocks/chart-36/ (chưa dùng) | Dành cho báo cáo Lợi suất (P4) | Không dùng cho Mùa vụ: chưa có dữ liệu lịch sử |
 | `@reui/frame`, `@reui/icon-tile`, `breadcrumb`, `sonner` | reui/, ui/ | Khung panel, breadcrumb, toast | `Toaster` gắn trong providers.tsx |
 | `@reui/data-grid-base-2` | blocks/data-grid-base-2/ → finder/finder-cells.tsx | Finder: thanh chỉ số (ScoreCell) + sparkline lịch đặt | Thanh tô theo bậc p30/p60/p90 (cùng màu bản đồ); sparkline một màu trung tính vì lịch tương lai luôn thưa dần |
+| `@reui/form-5` | blocks/form-5/ → listing/booking-heatmap.tsx | Lịch đặt 365 đêm của listing | Lấy riêng activity heatmap: cột = tuần (T2→CN), 3 trạng thái thay 4 mức cường độ; tooltip từng đêm |
+| `@reui/product-grid-2` | blocks/product-grid-2/ → listing/listing-card.tsx | Thẻ listing ở trang Duyệt listing | Bỏ panel ảnh (chưa thu ảnh, không dùng ảnh giả); swatch/giá → badge loại phòng + 3 chỉ số |
 
 ### shadcn/ui Base (installed)
 | Component | File | Note |
@@ -223,6 +225,8 @@ src/components/
 |-----------|------|---------------|
 | MiniMap | components/mini-map.tsx | ReUI không có MapLibre blocks |
 | ChoroplethMap | components/finder/choropleth-map.tsx | MapLibre thuần (chỉ vẽ + popup + bấm); bộ chọn chỉ số và chú giải là ReUI bên ngoài. Màu bậc chung ở finder/bins.ts |
+| PageHeader / StatTiles | components/page/ | Không phải component mới: page-header của app-shell-30 và stats-1 gom lại để Insight, Listing, Duyệt listing dùng chung (`actions` slot; `tierOf` ở page/tiers.ts để trang server gọi được) |
+| ListingsMap | components/listing/listings-map.tsx | MapLibre + DOM marker nhãn giá; chỉ lọc danh sách theo khung nhìn khi có cử chỉ thật (dragstart/zoomstart có originalEvent) |
 | InsightGrid | components/insight/insight-grid.tsx | Không phải component mới: Frame + DataGrid theo đúng mẫu c-data-grid-11, gom lại để 6 bảng dùng chung nhãn tiếng Việt (`DATA_GRID_VI`) |
 | InsightNav | components/insight/insight-nav.tsx | Style view track của app-shell-30; tự theo dõi cuộn vì `@reui/scrollspy` với target document bám vào `scroll-area-viewport` đầu tiên trong trang (vùng cuộn DataGrid) và luôn báo nhầm mục cuối |
 | SiteFooter | components/shell/site-footer.tsx | ReUI không có block footer |

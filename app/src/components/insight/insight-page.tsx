@@ -15,7 +15,8 @@ import {
   getYieldRows,
   type MetricRow,
 } from "@/lib/queries";
-import { InsightHeader, type Crumb } from "./insight-header";
+import { PageHeader, type Crumb } from "@/components/page/page-header";
+import { InsightActions } from "./insight-actions";
 import { InsightNav, type InsightSection } from "./insight-nav";
 import { MapPanel, SupplyPanel } from "./insight-panels";
 import { InsightStats } from "./insight-stats";
@@ -133,16 +134,20 @@ export async function InsightPage({ areaId }: { areaId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <InsightHeader
+      <PageHeader
         crumbs={crumbs}
         title={area.name}
         stats={stats}
         description={`${source} · lịch đặt ${span}`}
-        areaId={areaId}
-        currentPath={currentPath}
-        saved={saved}
-        signedIn={user !== null}
-        mapHref={isMarket ? `${basePath}/map` : undefined}
+        actions={
+          <InsightActions
+            areaId={areaId}
+            currentPath={currentPath}
+            saved={saved}
+            signedIn={user !== null}
+            mapHref={isMarket ? `${basePath}/map` : undefined}
+          />
+        }
       />
 
       <InsightNav sections={sections} />
@@ -196,7 +201,7 @@ export async function InsightPage({ areaId }: { areaId: string }) {
 
         {breakdown.topListings.length > 0 && (
           <Section id="listing">
-            <ListingsTable rows={breakdown.topListings} currency={currency} />
+            <ListingsTable rows={breakdown.topListings} currency={currency} allHref={`${basePath}/listings`} />
           </Section>
         )}
 

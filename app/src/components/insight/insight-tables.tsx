@@ -2,8 +2,10 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
+import { ArrowRightIcon } from "lucide-react"
 
 import { Badge } from "@/components/reui/badge"
+import { Button } from "@/components/ui/button"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format"
 import type {
@@ -100,9 +102,12 @@ export function SubmarketsTable({
 export function ListingsTable({
   rows,
   currency,
+  allHref,
 }: {
   rows: TopListingRow[]
   currency: string
+  /** Trang Duyệt listing của thị trường. */
+  allHref?: string
 }) {
   const columns = useMemo<InsightColumn<TopListingRow>[]>(
     () => [
@@ -155,6 +160,20 @@ export function ListingsTable({
     <InsightGrid
       title="Listing nổi bật"
       description="Doanh thu ước tính = tổng giá niêm yết các đêm đã đặt trong lịch tương lai"
+      badge={
+        allHref ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs shadow-xs"
+            nativeButton={false}
+            render={<Link href={allHref} />}
+          >
+            Xem tất cả
+            <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
+          </Button>
+        ) : undefined
+      }
       data={rows}
       columns={columns}
       getRowId={(r) => r.id}

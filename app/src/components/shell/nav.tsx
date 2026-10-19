@@ -1,9 +1,9 @@
 import type { ReactNode } from "react"
-import { GaugeIcon, MapIcon, PaletteIcon } from "lucide-react"
+import { GaugeIcon, HouseIcon, MapIcon, PaletteIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
- * Chỉ khai báo route ĐÃ tồn tại — mục mới (Listing, Lợi suất, So sánh) thêm
+ * Chỉ khai báo route ĐÃ tồn tại — mục mới (Lợi suất, So sánh) thêm
  * vào đây khi trang của nó ship (P2–P5), không hiện tab "sắp có".
  */
 export type Portal = "invest" | "ops"
@@ -28,7 +28,15 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       label: "Thị trường",
       href: "/vn",
       icon: icon(MapIcon),
-      match: (p) => /^\/(vn|th)(\/|$)/.test(p) || p.startsWith("/listing"),
+      match: (p) => /^\/(vn|th)(\/|$)/.test(p) && !p.endsWith("/listings"),
+    },
+    {
+      id: "listings",
+      label: "Listing",
+      // Thị trường nhiều listing nhất; Finder/Insight dẫn tới thị trường khác.
+      href: "/vn/hanoi/listings",
+      icon: icon(HouseIcon),
+      match: (p) => p.endsWith("/listings") || p.startsWith("/listing/"),
     },
   ],
   ops: [

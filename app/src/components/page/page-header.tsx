@@ -1,9 +1,8 @@
 "use client"
 
+import type { ReactNode } from "react"
 import Link from "next/link"
-import { BookmarkCheckIcon, BookmarkIcon, MapIcon } from "lucide-react"
 
-import { toggleSaved } from "@/app/actions"
 import { Badge } from "@/components/reui/badge"
 import {
   Breadcrumb,
@@ -13,35 +12,27 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
 export type Crumb = { label: string; href?: string }
 
 /**
- * Page header — chuyển thể từ page-header của @reui/app-shell-30: tiêu đề +
- * badge đếm + mô tả + nút. Thêm breadcrumb (L1 trong IA) phía trên tiêu đề.
+ * Page header dùng chung — chuyển thể từ page-header của @reui/app-shell-30:
+ * tiêu đề + badge đếm + mô tả + nút. Thêm breadcrumb (IA L1) phía trên tiêu đề.
  */
-export function InsightHeader({
+export function PageHeader({
   crumbs,
   title,
   stats,
   description,
-  areaId,
-  currentPath,
-  saved,
-  signedIn,
-  mapHref,
+  actions,
 }: {
   crumbs: Crumb[]
   title: string
   stats: string[]
   description: string
-  areaId: string
-  currentPath: string
-  saved: boolean
-  signedIn: boolean
-  mapHref?: string
+  /** Nút bên phải (Lưu, Bản đồ, Mở trên Airbnb…). */
+  actions?: ReactNode
 }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-2">
@@ -79,51 +70,7 @@ export function InsightHeader({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        {mapHref && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs shadow-xs"
-            nativeButton={false}
-            render={<Link href={mapHref} />}
-          >
-            <MapIcon data-icon="inline-start" aria-hidden="true" />
-            Bản đồ
-          </Button>
-        )}
-        {signedIn ? (
-          <form action={toggleSaved}>
-            <input type="hidden" name="areaId" value={areaId} />
-            <input type="hidden" name="redirectTo" value={currentPath} />
-            <Button
-              type="submit"
-              size="sm"
-              variant={saved ? "default" : "outline"}
-              className="text-xs shadow-xs"
-              aria-pressed={saved}
-            >
-              {saved ? (
-                <BookmarkCheckIcon data-icon="inline-start" aria-hidden="true" />
-              ) : (
-                <BookmarkIcon data-icon="inline-start" aria-hidden="true" />
-              )}
-              {saved ? "Đã lưu" : "Lưu"}
-            </Button>
-          </form>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs shadow-xs"
-            nativeButton={false}
-            render={<Link href={`/login?next=${encodeURIComponent(currentPath)}`} />}
-          >
-            <BookmarkIcon data-icon="inline-start" aria-hidden="true" />
-            Lưu
-          </Button>
-        )}
-      </div>
+      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
   )
 }

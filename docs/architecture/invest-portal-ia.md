@@ -201,7 +201,7 @@ heatmap lịch, footer, dialog chia sẻ. Mọi thứ khác **xoá** sau khi tha
 | **P0 Nền móng** ✅ 2026-10-18 | Commit nền ReUI hiện có (R5) → token shadcn đầy đủ + dark mode + `next-themes` + font Geist + `lang="vi"` (R2–R4) → route groups `(marketing)` / `(app)` / `ops` với layout riêng → cài `app-shell-30` + ⌘K + footer → `nav.config.ts` → `loading/error/not-found` → middleware chặn `/ops/**`, dời `/design` → `/ops/design` | `/design` hiển thị đúng màu; mọi trang cũ nằm trong shell mới; `npm run build` sạch |
 | **P1 Insight** ✅ 2026-10-18 | Thay `area-page` bằng template mục 3.2 (navbar-6, stats-1, chart-6, c-chart-25, chart-36, chart-13, data-grid). Dời AirDNA sang `/ops/quality` (R1). Xoá component cũ | `/vn/hanoi` và một phường hoạt động; không còn import component viết tay |
 | **P2 Finder** ✅ 2026-10-19 | `/vn` dùng data-grid-base-2 + filters + chia đôi list\|map + công tắc Thị trường\|Phường + khay So sánh. Redirect `/vn/[m]/map` | Xếp hạng theo metric tự thu; không còn số AirDNA |
-| **P3 Listing** | `/listing/[id]` (KPI + lịch + giá) + `/vn/[m]/listings` (lưới + map nhãn giá) | Map và list đồng bộ khi zoom |
+| **P3 Listing** ✅ 2026-10-19 | `/listing/[id]` (KPI + lịch + giá) + `/vn/[m]/listings` (lưới + map nhãn giá) | Map và list đồng bộ khi zoom |
 | **P4 Lợi suất** | `/yield` form-11 → báo cáo + độ tin cậy | Ra báo cáo cho 10+ phường, badge MÔ PHỎNG |
 | **P5 Còn lại** | Trang chủ marketing, `/phuong-phap`, `/so-sanh`, `/saved` (wishlist-2), auth-4/5 | Không còn trang viết tay nào |
 
@@ -219,5 +219,11 @@ Ghi chú P2:
 - Một bộ chọn "Theo" điều khiển cột thanh, màu bản đồ và chú giải 4 bậc; trạng thái nằm trên URL (`level`, `market`, `metric`, `view`).
 - Finder và bảng "Phường nổi bật" của Insight dùng chung `getFinderAreas` → cùng công thức với KPI. `/vn` không còn số AirDNA (R1 xong).
 - Chưa làm: bộ lọc theo số phòng ngủ/loại phòng (cần tính lại metric theo bộ lọc ở pipeline), khay So sánh (P5).
+
+Ghi chú P3:
+- `/listing/[id]`: KPI so với listing cùng phường (dưới 5 thì cả thị trường) — giá dùng nhãn trung tính (Giá thấp → Cao cấp), công suất dùng bậc tốt/xấu; lịch 365 đêm (heatmap form-5); 10 listing gần nhất cùng số phòng ngủ (comps theo khoảng cách như AirDNA).
+- Không có biểu đồ giá theo ngày: chỉ 44/237 listing Hà Nội có giá theo đêm và mỗi listing chỉ một mức giá → đường phẳng, vô nghĩa. "Giá" = giá niêm yết đặt cạnh phân bố giá cùng khu vực.
+- `/[country]/[market]/listings`: 300 listing doanh thu cao nhất (Bangkok có 30.922); lọc phường, sắp xếp, lọc theo khung bản đồ khi người dùng kéo/zoom, rê thẻ ↔ nhãn giá. Truy vấn gộp 11 triệu dòng nights → cache 1 giờ (`lib/cached.ts`); hướng lâu dài: pipeline tính sẵn bảng thống kê theo listing.
+- Nav có mục "Listing" → `/vn/hanoi/listings`; bảng "Listing nổi bật" của Insight có nút "Xem tất cả".
 
 Ops Portal (`app-shell-26`) dựng song song từ P0, chỉ gồm khung và `/ops/design`, `/ops/quality`. Các trang Ops khác làm theo lộ trình G trong `portals.md`.
