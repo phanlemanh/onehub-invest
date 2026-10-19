@@ -32,6 +32,14 @@ const BASE_RENT_LT = 12_000_000; // VND/tháng cho 1BR
 const rnd = (min: number, max: number) => min + Math.random() * (max - min);
 const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
+// payload do chính collector này sinh ra — cast khi đọc lại từ RawItem
+interface MockPost {
+  text: string;
+  group: string;
+  author: string;
+  images: string[];
+}
+
 function salePost(idx: number): string {
   const phuong = pick(Object.keys(PHUONG_GRADIENT));
   const grade = PHUONG_GRADIENT[phuong];
@@ -102,7 +110,7 @@ export const zaloMock: Collector = {
         ...src,
         sourceId: `mock-repost-${i}-${Math.random().toString(36).slice(2, 8)}`,
         fetchedAt: new Date(Date.now() + rnd(0, 3 * 864e5)).toISOString(),
-        payload: { ...src.payload, group: pick(groups), author: `author-${Math.floor(rnd(1, 30))}` },
+        payload: { ...(src.payload as MockPost), group: pick(groups), author: `author-${Math.floor(rnd(1, 30))}` },
       });
     }
 
@@ -110,11 +118,11 @@ export const zaloMock: Collector = {
     const broken = Math.floor((N_SALE + N_RENT) * 0.25);
     for (let i = 0; i < broken; i++) {
       const idx = Math.floor(Math.random() * items.length);
-      const it = items[idx];
+      const it = items[idx].payload as MockPost;
       if (Math.random() > 0.5) {
-        it.payload.text = it.payload.text.replace(/[\d.,]+\s*(tỷ|tr\/m²|triệu\/th|tr\/tháng)/g, "giá tốt");
+        it.text = it.text.replace(/[\d.,]+\s*(tỷ|tr\/m²|triệu\/th|tr\/tháng)/g, "giá tốt");
       } else {
-        it.payload.text = it.payload.text.replace(/\d+\s*m[²2]/g, "DT đẹp");
+        it.text = it.text.replace(/\d+\s*m[²2]/g, "DT đẹp");
       }
     }
 
