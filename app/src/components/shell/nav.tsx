@@ -55,6 +55,20 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
   ],
   ops: [
     {
+      id: "overview",
+      label: "Tổng quan",
+      href: "/ops",
+      icon: icon(GaugeIcon),
+      match: (p) => p === "/ops",
+    },
+    {
+      id: "sources",
+      label: "Nguồn dữ liệu",
+      href: "/ops/sources",
+      icon: icon(PaletteIcon),
+      match: (p) => p.startsWith("/ops/sources"),
+    },
+    {
       id: "quality",
       label: "Chất lượng dữ liệu",
       href: "/ops/quality",

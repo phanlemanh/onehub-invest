@@ -2,7 +2,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { pool } from "./db";
 
-export type User = { id: string; email: string; plan: "free" | "pro" };
+export type User = { id: string; email: string; plan: "free" | "pro"; role: "user" | "admin" };
 
 const COOKIE = "oi_session";
 const SESSION_DAYS = 30;
@@ -48,14 +48,19 @@ export async function getSessionUser(): Promise<User | null> {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
   const { rows } = await pool.query(
-    `SELECT u.id, u.email, u.plan
+    `SELECT u.id, u.email, u.plan, u.role
      FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token = $1 AND s.expires_at > now()`,
     [token],
   );
   const r = rows[0];
   if (!r) return null;
-  return { id: r.id, email: r.email, plan: r.plan === "pro" ? "pro" : "free" };
+  return {
+    id: r.id,
+    email: r.email,
+    plan: r.plan === "pro" ? "pro" : "free",
+    role: r.role === "admin" ? "admin" : "user",
+  };
 }
 
 // ----- Saved markets -----
