@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: One Invest Internal API
+  version: 1.0.0
+  description: >
+    API vận hành nội bộ (ADR-0007 DCA — internal-first; public read API là
+    ADR riêng). Mọi response dùng mã nguồn SPL tầng B (S01…) — tên nguồn
+    thật không bao giờ xuất hiện ở tầng API. Breaking change phải qua ADR.
+servers:
+  - url: http://localhost:3000
+    description: Local (dev + ops)
+components:
+  securitySchemes:
+    bearerOpsToken:
+      type: http
+      scheme: bearer
+      description: Machine token — env OPS_API_TOKEN, scope read:ops.
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: oi_session
+      description: Session người dùng có quyền Ops (OPS_EMAILS).
+security:
+  - bearerOpsToken: []
+  - sessionCookie: []
+paths:
+  /api/v1/ops/coverage:
+    get:
+      operationId: getOpsCoverage
+      summary: Freshness/coverage theo mã nguồn × thị trường
+      responses:
+        "200":
+          description: Danh sách dòng coverage
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [generatedAt, rows]
+                properties:
+                  generatedAt: { type: string, format: date-time }
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      required: [code, city, lastSnapshotAt, ageDays, sloDays, status]
+                      properties:
+                        code: { type: string, examples: ["S01"] }
+                        city: { type: string, examples: ["hanoi"] }
+                        lastSnapshotAt: { type: [string, "null"], format: date-time }
+                        ageDays: { type: [integer, "null"] }
+                        sloDays: { type: integer }
+                        status: { type: string, enum: [fresh, stale, none] }
+        "401":
+          description: Thiếu session + bearer token

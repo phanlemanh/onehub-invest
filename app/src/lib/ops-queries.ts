@@ -37,35 +37,47 @@ export async function getCoverageOverview(): Promise<CoverageRow[]> {
     `SELECT source, city, max(collected_at)::text AS last
      FROM airbnb_snapshots GROUP BY source, city`,
   );
-  const seen = new Set<string>();
-  const out: CoverageRow[] = [];
+  // Nhiều source thật map về cùng mã (discovery+listing→S01): gộp lấy snapshot mới nhất
+  const byKey = new Map<string, CoverageRow>();
+  const cities = new Set<string>();
   for (const r of rows) {
+    cities.add(r.city);
     const code = CODE_BY_SOURCE[r.source];
     if (!code) continue; // nguồn lạ (vd example) — không báo cáo
     const key = `${code}/${r.city}`;
-    seen.add(key);
-    const sloDays = SLO_DAYS[code];
-    const ageDays = r.last
-      ? Math.floor((Date.now() - new Date(r.last).getTime()) / 864e5)
-      : null;
-    out.push({
-      code,
-      city: r.city,
-      lastSnapshotAt: r.last,
-      ageDays,
-      sloDays,
-      status: ageDays === null ? "none" : ageDays <= sloDays ? "fresh" : "stale",
-    });
+    const prev = byKey.get(key);
+    if (!prev || !r.last || (prev.lastSnapshotAt && r.last > prev.lastSnapshotAt)) {
+      const sloDays = SLO_DAYS[code];
+      const ageDays = r.last
+        ? Math.floor((Date.now() - new Date(r.last).getTime()) / 864e5)
+        : null;
+      byKey.set(key, {
+        code,
+        city: r.city,
+        lastSnapshotAt: r.last,
+        ageDays,
+        sloDays,
+        status: ageDays === null ? "none" : ageDays <= sloDays ? "fresh" : "stale",
+      });
+    }
   }
   // Nguồn–city chưa từng có snapshot → status none để SLO thấy được khoảng trống
-  const cities = [...new Set(rows.map((r) => r.city))];
   for (const code of Object.keys(SLO_DAYS)) {
     for (const city of cities) {
       const key = `${code}/${city}`;
-      if (!seen.has(key)) {
-        out.push({ code, city, lastSnapshotAt: null, ageDays: null, sloDays: SLO_DAYS[code], status: "none" });
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          code,
+          city,
+          lastSnapshotAt: null,
+          ageDays: null,
+          sloDays: SLO_DAYS[code],
+          status: "none",
+        });
       }
     }
   }
-  return out.sort((a, b) => a.code.localeCompare(b.code) || a.city.localeCompare(b.city));
+  return [...byKey.values()].sort(
+    (a, b) => a.code.localeCompare(b.code) || a.city.localeCompare(b.city),
+  );
 }
