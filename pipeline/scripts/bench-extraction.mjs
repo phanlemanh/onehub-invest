@@ -136,7 +136,7 @@ async function record(client2, entity, f1, avg, status) {
   await client2.query(
     `INSERT INTO dq_check_results (check_name, entity, status, detail)
      VALUES ('extraction-quality', $1, $2, $3)`,
-    [entity, status, `samples=${sample.length} avgF1=${avg.toFixed(3)} ` + FIELDS.map((f) => `${f}=${f1[f].toFixed(2)}`).join(" ")],
+    [entity, status, Object.keys(f1).length === 0 ? "samples=0" : `samples=${sample.length} avgF1=${avg.toFixed(3)} ` + FIELDS.map((f) => `${f}=${f1[f].toFixed(2)}`).join(" ")],
   );
 }
 
@@ -194,7 +194,7 @@ if (ollama) {
   await record(client, "llm", llmF1, llmAvg, llmFail === sample.length ? "skip" : "pass");
 } else {
   console.log("llm: OLLAMA_URL chưa đặt — skip (informational)");
-  await record(client, "llm", Object.fromEntries(FIELDS.map((f) => [f, 0])), 0, "skip");
+  await record(client, "llm", {}, 0, "skip"); // samples=0 — route hiển thị null
 }
 
 await client.end();
