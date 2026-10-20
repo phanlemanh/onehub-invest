@@ -22,10 +22,17 @@ export default async function (context) {
   const ev = context?.event ?? context?.context ?? context ?? {};
   if (ev.channelId !== "zalouser") return;
   const text = (ev.content ?? "").trim();
-  if (!text) {
-    const hasMedia = !!(ev.media?.length || ev.originalMedia?.length || ev.metadata?.mediaPath);
-    await log(`media-only skip${hasMedia ? " (có ảnh)" : " (rỗng)"} group=${ev.metadata?.channelName ?? "?"} account=${account}`);
-    return; // quyết định OCR/vision khi có số liệu tỷ lệ
+  const mediaFacts = (ev.media ?? ev.originalMedia ?? [])
+    .filter((m) => m && (m.mediaPath || m.mediaUrl))
+    .slice(0, 10)
+    .map((m) => ({ path: m.mediaPath ?? null, url: m.mediaUrl ?? null, type: m.mediaType ?? null }));
+  const hasMedia = mediaFacts.length > 0;
+  if (!text && !hasMedia) {
+    await log(`skip (rỗng) group=${ev.metadata?.channelName ?? "?"} account=${account}`);
+    return;
+  }
+  if (!text && hasMedia) {
+    await log(`media-only captured (${mediaFacts.length} ảnh) group=${ev.metadata?.channelName ?? "?"} account=${account}`);
   }
   const meta = ev.metadata ?? {};
   const group = meta.channelName || meta.threadId || ev.conversationId || "zalo-group";
@@ -76,11 +83,21 @@ export default async function (context) {
       body: JSON.stringify({
         agent_id: "openclaw-hook",
         group,
-        messages: [{ text, ts }],
+        messages: [
+          {
+            text,
+            ts,
+            // G1: người đăng + media + luồng — PII tầng A, chỉ máy local
+            senderName: ev.metadata?.senderName ?? null,
+            senderId: ev.metadata?.senderId ?? ev.from ?? null,
+            conversationId: ev.conversationId ?? null,
+            media: mediaFacts.length ? mediaFacts : undefined,
+          },
+        ],
       }),
     });
     const body = await r.text();
-    await log(`post ${r.status} ${body.slice(0, 80)} group=${group} p=${p.toFixed(2)} account=${account}`);
+    await log(`post ${r.status} ${body.slice(0, 60)} group=${group} p=${p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
   } catch (e) {
     await log(`post-error ${e.message} group=${group} account=${account}`);
   }

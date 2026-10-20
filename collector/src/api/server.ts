@@ -19,7 +19,17 @@ import type { RawItem } from "../core/types.js";
  * benchmark đối chiếu; canonical không bao giờ tin nó.
  */
 
-export type AgentMessage = { id?: string; text: string; ts: string; extracted?: unknown };
+export type AgentMediaFact = { path?: string | null; url?: string | null; type?: string | null };
+export type AgentMessage = {
+  id?: string;
+  text: string;
+  ts: string;
+  extracted?: unknown;
+  senderName?: string | null;
+  senderId?: string | null;
+  conversationId?: string | null;
+  media?: AgentMediaFact[];
+};
 
 export type AgentReportBody = {
   agent_id: string;
@@ -110,7 +120,17 @@ export async function createAgentServer(opts: AgentServerOptions) {
         sourceId,
         kind: "post",
         fetchedAt: new Date().toISOString(),
-        payload: { text: m.text, group: b.group, agent_id: b.agent_id, extracted: m.extracted },
+        payload: {
+          text: m.text,
+          group: b.group,
+          agent_id: b.agent_id,
+          extracted: m.extracted,
+          // G1: người đăng + media (PII tầng A — chỉ máy local, không sync)
+          senderName: m.senderName ?? null,
+          senderId: m.senderId ?? null,
+          conversationId: m.conversationId ?? null,
+          media: m.media ?? null,
+        },
         meta: { city, agent: b.agent_id, group: b.group, ts: m.ts },
       });
       accepted++;

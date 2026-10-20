@@ -145,6 +145,31 @@ export default async function ListingPage({ params }: { params: Params }) {
           ))}
         </div>
       )}
+      {listing.photoSource === "airdna" && (
+        <p className="text-muted-foreground text-xs">
+          Ảnh từ AirDNA (listing này chưa tự thu PDP).
+          {listing.listingUrl && (
+            <>
+              {" "}
+              <a
+                href={listing.listingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                Xem trên Airbnb ↗
+              </a>
+            </>
+          )}
+        </p>
+      )}
+      {listing.photoSource === "self" && listing.listingUrl && (
+        <p className="text-muted-foreground text-xs">
+          <a href={listing.listingUrl} target="_blank" rel="noreferrer" className="underline">
+            Xem trên Airbnb ↗
+          </a>
+        </p>
+      )}
 
       <StatTiles items={tiles} />
 

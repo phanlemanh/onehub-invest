@@ -198,8 +198,9 @@ async function main() {
           if (!id) continue;
           await client.query(
             `INSERT INTO airdna_listings (id, combined_market_id, title, rating_overall,
-               review_count, revenue_ltm, revenue_potential_ltm, occupancy, metrics, captured_at)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+               review_count, revenue_ltm, revenue_potential_ltm, occupancy, photo_urls, listing_url,
+               metrics, captured_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12)
              ON CONFLICT (id) DO UPDATE SET
                title = COALESCE(EXCLUDED.title, airdna_listings.title),
                rating_overall = COALESCE(EXCLUDED.rating_overall, airdna_listings.rating_overall),
@@ -207,10 +208,14 @@ async function main() {
                revenue_ltm = COALESCE(EXCLUDED.revenue_ltm, airdna_listings.revenue_ltm),
                revenue_potential_ltm = COALESCE(EXCLUDED.revenue_potential_ltm, airdna_listings.revenue_potential_ltm),
                occupancy = COALESCE(EXCLUDED.occupancy, airdna_listings.occupancy),
+               photo_urls = COALESCE(EXCLUDED.photo_urls, airdna_listings.photo_urls),
+               listing_url = COALESCE(EXCLUDED.listing_url, airdna_listings.listing_url),
                metrics = airdna_listings.metrics || EXCLUDED.metrics,
                captured_at = EXCLUDED.captured_at`,
             [id, sid ?? null, l.title ?? null, l.rating ?? null, l.reviews ?? null,
              l.revenue_ltm ?? null, l.revenue_potential_ltm ?? null, l.occupancy ?? null,
+             JSON.stringify(Array.isArray(l.images) ? l.images.slice(0, 10) : null),
+             l.airbnb_listing_url ?? l.vrbo_listing_url ?? null,
              JSON.stringify(cleanSans(l, ["geospatial"])), fetchedAt],
           );
           nEnrich++;

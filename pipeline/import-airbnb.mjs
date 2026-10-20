@@ -71,9 +71,14 @@ async function main() {
     for (const it of items) {
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
         await client.query(
-          `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text)
-           VALUES ($1,$2,$3,$4,$5,$6)
-           ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text, captured_at = now()`,
+          `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text,
+                                       sender_name, sender_id, conversation_id, media)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)
+           ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text, captured_at = now(),
+             sender_name = COALESCE(EXCLUDED.sender_name, stg_zalo_posts.sender_name),
+             sender_id = COALESCE(EXCLUDED.sender_id, stg_zalo_posts.sender_id),
+             conversation_id = COALESCE(EXCLUDED.conversation_id, stg_zalo_posts.conversation_id),
+             media = COALESCE(EXCLUDED.media, stg_zalo_posts.media)`,
           [
             it.sourceId,
             manifest.snapshotId,
@@ -81,6 +86,10 @@ async function main() {
             it.payload?.author ?? it.payload?.agent_id ?? null,
             it.fetchedAt,
             it.payload?.text ?? "",
+            it.payload?.senderName ?? null,
+            it.payload?.senderId ?? null,
+            it.payload?.conversationId ?? null,
+            JSON.stringify(it.payload?.media ?? null),
           ],
         );
         zalo++;
