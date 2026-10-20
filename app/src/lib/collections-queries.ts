@@ -20,6 +20,41 @@ import {
  *  3. Máy móc có chạy không? (launchd logs + probe port)
  */
 
+// ---- C4 P2: trên cloud (Vercel), các hàn local-bound (đọc log/file/CLI)
+// lấy dữ liệu từ ops_heartbeat do máy thu đẩy mỗi 15 phút ----
+
+type LocalFacts = {
+  pushedAt: string;
+  funnel: GateFunnel;
+  health: ZaloHealth;
+  jobs: JobStatus[];
+  rotation: { cursor: number; total: number; next: { id: string; name: string; lastCapturedAt: string | null }[]; updatedAt?: string | null };
+  zaloGroups: ZaloGroupRow[];
+  zaloFlow: Record<string, { posts?: number; offers?: number }>;
+};
+
+const isCloud = () => process.env.VERCEL === "1";
+
+let factsCache: { at: number; facts: LocalFacts | null } | null = null;
+async function getLocalFacts(): Promise<LocalFacts | null> {
+  if (!isCloud()) return null;
+  if (factsCache && Date.now() - factsCache.at < 30_000) return factsCache.facts;
+  try {
+    const { rows } = await pool.query<{ payload: LocalFacts }>(
+      `SELECT payload FROM ops_heartbeat WHERE id = 'primary'`,
+    );
+    factsCache = { at: Date.now(), facts: rows[0]?.payload ?? null };
+  } catch {
+    factsCache = { at: Date.now(), facts: null };
+  }
+  return factsCache.facts;
+}
+
+export async function getFactsPushedAt(): Promise<string | null> {
+  const f = await getLocalFacts();
+  return f?.pushedAt ?? null;
+}
+
 export type FlowDay = {
   day: string; // YYYY-MM-DD
   airdnaMarkets: number;
@@ -46,17 +81,19 @@ export async function getFlowDays(n = 7): Promise<FlowDay[]> {
   ]);
   const pick = (rows: { d: string; n: number }[]) => new Map(rows.map((r) => [r.d, r.n]));
   const [M, A, L, S, Z, O] = [pick(mk.rows), pick(al.rows), pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
+  const facts = await getLocalFacts();
   const days: FlowDay[] = [];
   for (let i = 0; i < n; i++) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    const z = facts?.zaloFlow?.[d]; // cloud: stg không sync — số zalo từ facts
     days.push({
       day: d,
       airdnaMarkets: M.get(d) ?? 0,
       airdnaListings: A.get(d) ?? 0,
       airbnbListingsSeen: L.get(d) ?? 0,
       airbnbSnapshots: S.get(d) ?? 0,
-      zaloPosts: Z.get(d) ?? 0,
-      zaloOffers: O.get(d) ?? 0,
+      zaloPosts: z?.posts ?? Z.get(d) ?? 0,
+      zaloOffers: z?.offers ?? O.get(d) ?? 0,
     });
   }
   return days; // mốc sinceDate trở đi; đủ n ngày gần nhất
@@ -72,6 +109,10 @@ const EMPTY = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 };
 
 /** Funnel cổng Kev từ hook log (~/.openclaw/logs/oneinvest-zalo-pipe.log). */
 export async function readGateFunnel(): Promise<GateFunnel> {
+  {
+    const f = await getLocalFacts();
+    if (f) return f.funnel;
+  }
   const file = path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log");
   let text = "";
   try {
@@ -152,6 +193,10 @@ async function probe(url: string): Promise<"yes" | "no"> {
 
 /** Trạng thái 5 launchd agent + 2 dịch vụ KeepAlive. */
 export async function readSchedulerStatus(): Promise<JobStatus[]> {
+  {
+    const f = await getLocalFacts();
+    if (f) return f.jobs;
+  }
   const weekly = await latestWeeklyLog();
   const [kevAlive, apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
     probe("http://127.0.0.1:8009/"),
@@ -214,6 +259,10 @@ export type RotationPreview = {
 
 /** Xem trước rotation kế tiếp: lặp logic airdna-rotate.mjs (skip fresh <24h). */
 export async function readRotationPreview(): Promise<RotationPreview> {
+  {
+    const f = await getLocalFacts();
+    if (f) return { updatedAt: f.rotation.updatedAt ?? f.pushedAt, cursor: f.rotation.cursor, total: f.rotation.total, next: f.rotation.next };
+  }
   let cursor = 0;
   let updatedAt: string | null = null;
   try {
@@ -322,6 +371,10 @@ function gateByGroup(text: string): Map<string, ZaloGroupRow> {
 /** Bảng nhóm Zalo: nhóm thật (stg posts snapshot zalo-agent + hook log) và
  * nhóm mock tách riêng để không tô hồng số thật. */
 export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
+  {
+    const f = await getLocalFacts();
+    if (f) return f.zaloGroups;
+  }
   const [postRows, logText] = await Promise.all([
     pool.query(
       `SELECT group_name,
@@ -419,6 +472,10 @@ export type ZaloHealth = {
 
 /** Tầng Ống V2: sức khoẻ ống Zalo từ dòng heartbeat trong log hook. */
 export async function readZaloHealth(): Promise<ZaloHealth> {
+  {
+    const f = await getLocalFacts();
+    if (f) return f.health;
+  }
   let text = "";
   try {
     text = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8");

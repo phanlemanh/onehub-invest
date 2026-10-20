@@ -22,6 +22,9 @@ const MGMT = `https://api.supabase.com/v1/projects/${REF}/database/query`;
 const LOCAL_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
+// local → cloud: bảng airdna_* đổi tên trung tính ref_calib_* (C4 SPL —
+// không tên nguồn tầng A trong DB chia sẻ; app đọc qua rewriter db.ts)
+const RENAME = (t) => t.replace(/^airdna_/, "ref_calib_");
 const FILL = [
   "areas",
   "listings",
@@ -88,11 +91,12 @@ async function main() {
 
   // Một câu TRUNCATE cho cả 17 bảng — CASCADE tự xử thứ tự phụ thuộc FK
   // (DELETE từng bảng vướng FK khi chạy lại).
-  await mgmt(token, `TRUNCATE ${FILL.join(", ")} RESTART IDENTITY CASCADE`);
+  const cloudFILL = FILL.map(RENAME);
+  await mgmt(token, `TRUNCATE ${cloudFILL.join(", ")} RESTART IDENTITY CASCADE`);
   let total = 0;
   for (const table of FILL) {
     const { rows } = await local.query(`SELECT * FROM ${table}`);
-    if (rows.length > 0) await restInsert(key, table, rows);
+    if (rows.length > 0) await restInsert(key, RENAME(table), rows);
     total += rows.length;
     console.log(`  ${table}: ${rows.length}`);
   }
@@ -110,6 +114,11 @@ async function main() {
     const r = await mgmt(token, `SELECT count(*)::int AS n FROM ${t}`);
     if (r[0].n > 0) leaks.push(`${t}=${r[0].n}`);
   }
+  const airdnaTables = await mgmt(
+    token,
+    `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'airdna%'`,
+  );
+  if (airdnaTables[0].n > 0) leaks.push(`còn ${airdnaTables[0].n} bảng airdna% ở cloud`);
   if (leaks.length) {
     console.error("LEAK GATE FAIL:", leaks.join(", "));
     process.exit(1);

@@ -5,4 +5,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 NODE_BIN="$HOME/.local/node-v24.21.0/bin"
 export PATH="$NODE_BIN:$PATH"
-exec node "$ROOT/pipeline/sync-cloud.mjs"
+
+node "$ROOT/pipeline/sync-cloud.mjs"
+node "$ROOT/pipeline/push-ops-facts.mjs"
+

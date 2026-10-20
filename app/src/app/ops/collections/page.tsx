@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FlowTable, SchedulerTable, ZaloGroupsTable } from "@/components/ops/collections-tables";
 import {
   getFlowDays,
+  getFactsPushedAt,
   readGateFunnel,
   readRotationPreview,
   readSchedulerStatus,
@@ -41,7 +42,7 @@ function Stat({
  * Trả lời 3 câu: hôm nay chảy vào gì / qua cổng nào / máy có chạy không.
  */
 export default async function CollectionsPage() {
-  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth] = await Promise.all([
+  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt] = await Promise.all([
     getFlowDays(7),
     readGateFunnel(),
     readSchedulerStatus(),
@@ -49,8 +50,12 @@ export default async function CollectionsPage() {
     getZaloGroups(),
     readZaloAllowlist(),
     readZaloHealth(),
+    getFactsPushedAt(),
   ]);
   const today = days[0];
+  const factsAgeMin = factsPushedAt
+    ? Math.round((Date.now() - new Date(factsPushedAt).getTime()) / 60000)
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,6 +65,12 @@ export default async function CollectionsPage() {
           Dòng chảy dữ liệu vào hệ thống theo nguồn và theo ngày — cho ra quyết
           định thu thập mà không phải mở log tay.
         </p>
+        {factsPushedAt && (
+          <Badge variant={factsAgeMin !== null && factsAgeMin > 30 ? "warning-light" : "outline"}>
+            Dữ liệu máy thu — cập nhật {factsAgeMin !== null ? `${factsAgeMin} phút` : ""} trước
+            {factsAgeMin !== null && factsAgeMin > 30 ? " (máy thu offline?)" : ""}
+          </Badge>
+        )}
       </div>
 
       {/* Hôm nay — 3 nguồn + cổng gate */}
