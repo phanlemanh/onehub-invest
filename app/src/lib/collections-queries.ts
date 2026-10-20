@@ -73,6 +73,7 @@ export async function readGateFunnel(): Promise<GateFunnel> {
   const last7 = { ...EMPTY };
   let lastEventAt: string | null = null;
   for (const line of lines) {
+    if (/ (heartbeat|alert) /.test(line)) continue; // gióng máy, không phải tin
     const ts = line.slice(0, 24);
     const iso = /^\d{4}-\d{2}-\d{2}T/.test(ts) ? ts : null;
     const in7 = iso ? new Date(iso).getTime() >= cutoff : true; // dòng không timestamp: đếm vào 7 ngày
@@ -363,4 +364,61 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
     if (a.isMockOnly !== b.isMockOnly) return a.isMockOnly ? 1 : -1; // thật trước
     return (b.lastSeenAt ?? "").localeCompare(a.lastSeenAt ?? "");
   });
+}
+
+export type ZaloHealth = {
+  connected: boolean | null; // null = chưa có heartbeat nào
+  uptime24h: number | null; // 0-1, chia theo dòng heartbeat 24h qua
+  heartbeatAgeMin: number | null; // dòng heartbeat cuối cách bao lâu (probe chết?)
+  lastHeartbeatAt: string | null;
+  lastPostAt: string | null; // dòng " post 202" cuối
+  silentAlert24h: boolean;
+};
+
+/** Tầng Ống V2: sức khoẻ ống Zalo từ dòng heartbeat trong log hook. */
+export async function readZaloHealth(): Promise<ZaloHealth> {
+  let text = "";
+  try {
+    text = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8");
+  } catch {
+    return {
+      connected: null, uptime24h: null, heartbeatAgeMin: null,
+      lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false,
+    };
+  }
+  const now = Date.now();
+  let up = 0, total = 0, lastHb: string | null = null, lastPost: string | null = null,
+      silentAlert = false;
+  for (const line of text.split("\n")) {
+    const ts = line.slice(0, 24);
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(ts)) continue;
+    const t = new Date(ts).getTime();
+    if (line.includes(" heartbeat ")) {
+      lastHb = ts;
+      if (now - t <= 86400000) {
+        total++;
+        if (line.includes(" up ")) up++;
+      }
+    } else if (line.includes(" post 202")) {
+      lastPost = ts;
+    } else if (line.includes(" alert silent-gate") && now - t <= 86400000) {
+      silentAlert = true;
+    }
+  }
+  const age = lastHb ? Math.round((now - new Date(lastHb).getTime()) / 60000) : null;
+  return {
+    connected: lastHb ? lastLinesUp(text) : null,
+    uptime24h: total > 0 ? up / total : null,
+    heartbeatAgeMin: age,
+    lastHeartbeatAt: lastHb,
+    lastPostAt: lastPost,
+    silentAlert24h: silentAlert,
+  };
+}
+
+// connected = trạng thái của dòng heartbeat CUỐI (không phải any-line)
+function lastLinesUp(text: string): boolean {
+  const hb = text.split("\n").filter((l) => l.includes(" heartbeat "));
+  const last = hb.at(-1) ?? "";
+  return last.includes(" up ");
 }

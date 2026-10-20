@@ -8,6 +8,7 @@ import {
   readRotationPreview,
   readSchedulerStatus,
   readZaloAllowlist,
+  readZaloHealth,
   getZaloGroups,
 } from "@/lib/collections-queries";
 import { fmtInt } from "@/lib/format";
@@ -38,13 +39,14 @@ function Stat({
  * Trả lời 3 câu: hôm nay chảy vào gì / qua cổng nào / máy có chạy không.
  */
 export default async function CollectionsPage() {
-  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist] = await Promise.all([
+  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth] = await Promise.all([
     getFlowDays(7),
     readGateFunnel(),
     readSchedulerStatus(),
     readRotationPreview(),
     getZaloGroups(),
     readZaloAllowlist(),
+    readZaloHealth(),
   ]);
   const today = days[0];
 
@@ -91,6 +93,40 @@ export default async function CollectionsPage() {
           {fmtInt(funnel.last7.messages)} tin thấy → {fmtInt(funnel.last7.passed)} qua cổng →{" "}
           {fmtInt(funnel.last7.accepted)} nhận vào raw
           {funnel.last7.media > 0 ? ` · ${fmtInt(funnel.last7.media)} media-only` : ""}.
+        </p>
+      </section>
+
+      {/* Ống Zalo — tầng Ống V2 */}
+      <section className="rounded-xl border p-4">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <h2 className="font-medium">Ống Zalo</h2>
+          {zaloHealth.connected === null ? (
+            <Badge variant="outline">Chưa có heartbeat</Badge>
+          ) : zaloHealth.connected ? (
+            <Badge variant="success-light">Channel kết nối</Badge>
+          ) : (
+            <Badge variant="warning-light">Channel ĐỨT — cần `openclaw channels login --channel zalouser`</Badge>
+          )}
+          {zaloHealth.uptime24h !== null && (
+            <Badge variant="outline">uptime 24h {(zaloHealth.uptime24h * 100).toFixed(0)}%</Badge>
+          )}
+          {zaloHealth.silentAlert24h && (
+            <Badge variant="warning-light">Cảnh báo im lặng 24h</Badge>
+          )}
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Heartbeat 15′ cuối{" "}
+          {zaloHealth.heartbeatAgeMin === null
+            ? "—"
+            : `${zaloHealth.heartbeatAgeMin}′ trước`}
+          {zaloHealth.heartbeatAgeMin !== null && zaloHealth.heartbeatAgeMin > 20
+            ? " (probe trễ — kiểm tra launchd zalo-heartbeat)"
+            : ""}
+          {" · tin cuối qua cổng "}
+          {zaloHealth.lastPostAt
+            ? `${Math.round((Date.now() - new Date(zaloHealth.lastPostAt).getTime()) / 3600000)}h trước`
+            : "chưa có"}
+          .
         </p>
       </section>
 

@@ -9,6 +9,7 @@ import {
   readRotationPreview,
   readSchedulerStatus,
   readZaloAllowlist,
+  readZaloHealth,
 } from "@/lib/collections-queries";
 
 export const dynamic = "force-dynamic";
@@ -32,13 +33,14 @@ export async function GET(req: Request) {
     90,
     Math.max(1, Number(new URL(req.url).searchParams.get("days") ?? 7) || 7),
   );
-  const [flow, funnel, jobs, rotation, zaloGroups, zaloAllowlist] = await Promise.all([
+  const [flow, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth] = await Promise.all([
     getFlowDays(days),
     readGateFunnel(),
     readSchedulerStatus(),
     readRotationPreview(),
     getZaloGroups(),
     readZaloAllowlist(),
+    readZaloHealth(),
   ]);
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
@@ -48,5 +50,6 @@ export async function GET(req: Request) {
     rotation,
     zaloGroups,
     zaloAllowlist,
+    zaloHealth,
   });
 }
