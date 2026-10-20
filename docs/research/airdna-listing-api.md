@@ -102,6 +102,39 @@ Filter body chuẩn (collect dùng `filters: []` cho toàn thị trường):
 `{"type":"range","field":"bedrooms","value":[0,6]}`,
 `{"type":"select","field":"real_estate_type","value":"apartment"}`.
 
+## Phát hiện khi implement collector v2 (2026-10-20)
+
+- **Path prefix**: endpoint cũ nằm dưới `/api/explorer/v1/...` (market detail,
+  submarkets, metrics, map_listings, submarket listings); chỉ `overview/
+  market_score`, `v2/.../metrics/listing_count`, `future/rates`, `ai_insights`
+  là `/v2/`. Gọi thiếu prefix → 404.
+- **future/rates** (pydantic ERR)): `period` là **số tháng ≤ 12**,
+  `granularity` bắt buộc (`"daily"`). Body chuẩn:
+  `{"filters":[],"currency":"vnd","period":6,"granularity":"daily"}` → ~163
+  hàng daily.
+- **submarket listings**: `sort_order` enum `"revenue"` (không nhận
+  `revenue_ltm`); phải kèm `currency` — thiếu thì trả USD.
+- **map_listings**: bắt buộc `currency:"vnd"` nếu muốn VND (mặc định USD).
+- **Không gian ID**: `map_listings.property_id` là id **mờ** đa số (13-19 chữ
+  số, chỉ ~10% là id Airbnb thật 8 chữ số); `submarket/{sid}/listings` mới
+  trả `abnb_<airbnb_id thật>` + `airbnb_property_id` rõ. `combined_market_id`
+  của map = **market id** (không phải submarket). Join với listings Inside
+  Airbnb phải qua sub-listings (top 50/sub) — C2 có thể page sâu hơn.
+- Hanoi có đúng 7 submarket (142530 Ba Đinh … 142535+); HCMC = market **48**
+  (crosswalk S02 sẵn có).
+
+## Kết quả pilot C1 (2026-10-20)
+
+Hà Nội (47): 65 items — 7 submarket × {detail + 4 metric + listing_count +
+future + listings}. HCMC (48): 169 items — **20 submarket**, 0 lỗi, token
+refresh 2 lần (JWT TTL ~5 phút — collector tự refresh khi 401).
+
+Đối chiếu UI screenshot ↔ DB (độc lập): ADR LTM 1.27M vs hiển thị ₫1.24M;
+occupancy LTM 57.1% vs 58%; Market Score 94.29 vs 94; đủ 4 thành phần score
+khớp 2 chữ số (59.37/76.49/97.47/67.13). **map_listings chạm cap 15.000
+hàng** (HCMC listing_count 2026-09 = 15.066) → collector đã thêm vòng
+lặp pagination (offset += 15000).
+
 ## Evidence
 
 Output console các survey 1–6 trong phiên làm việc 2026-10-20 (request/response

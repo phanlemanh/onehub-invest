@@ -1,4 +1,6 @@
 // transform-airdna.mjs — parse airdna-research snapshot → airdna_ref tables
+// v2 (E2 C1): collector active API emit kind "airdna-v2-*" với payload
+// {url, method, reqBody, data} — cây market → submarket → listing.
 import { readdir, readFile } from "node:fs/promises";
 import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
@@ -6,6 +8,29 @@ import pg from "pg";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+
+/** KhốI value theo tên metric — occupancy trả {date, rate} (survey 9). */
+const METRIC_KEYS = {
+  adr: ["avg_daily_rate"],
+  occupancy: ["rate", "occupancy_rate"],
+  revenue: ["revenue"],
+  revpar: ["revpar"],
+  listing_count: ["listing_count", "value", "count"],
+};
+const valueOf = (metric, p) => {
+  for (const k of METRIC_KEYS[metric] ?? [metric]) {
+    const v = p?.[k];
+    if (typeof v === "number" && !isNaN(v)) return v;
+  }
+  const v = p?.value;
+  return typeof v === "number" && !isNaN(v) ? v : null;
+};
+
+const cleanSans = (obj, drop = ["geospatial"]) => {
+  const out = {};
+  for (const [k, v] of Object.entries(obj ?? {})) if (!drop.includes(k) && v !== null) out[k] = v;
+  return out;
+};
 
 async function main() {
   const snapDir = process.argv[2];
@@ -23,123 +48,222 @@ async function main() {
 
   try {
     let nMarkets = 0, nMetrics = 0, nScores = 0, nSubs = 0;
+    let nSubMonthly = 0, nFuture = 0, nListings = 0, nEnrich = 0;
 
-    // 1. Market list (country VN) → airdna_markets
+    // ===================== v2 (active API) =====================
     for (const it of items) {
-      if (it.kind !== "airdna-markets") continue;
-      const data = it.payload.data;
-      const markets = data?.payload?.markets ?? data?.payload ?? [];
-      if (!Array.isArray(markets)) continue;
+      if (!it.kind?.startsWith("airdna-v2-")) continue;
+      const { url, data } = it.payload;
+      const payload = data?.payload;
+      const fetchedAt = it.fetchedAt;
 
-      for (const m of markets) {
-        if (!m?.id) continue;
-        const clean = {};
-        for (const [k, v] of Object.entries(m)) {
-          if (k !== "geospatial" && v !== null) clean[k] = v;
-        }
+      // ---- market detail → airdna_markets
+      if (it.kind === "airdna-v2-market" && payload?.id) {
         await client.query(
-          `INSERT INTO airdna_markets (airdna_id, name, country_code, meta, captured_at, snapshot_id)
-           VALUES ($1,$2,$3,$4,$5,$6)
-           ON CONFLICT (airdna_id) DO UPDATE SET meta = EXCLUDED.meta, captured_at = EXCLUDED.captured_at`,
-          [String(m.id), m.name ?? null, m.country_code ?? "vn",
-           JSON.stringify(clean), it.fetchedAt, null],
+          `INSERT INTO airdna_markets (airdna_id, name, country_code, meta, captured_at)
+           VALUES ($1,$2,$3,$4,$5)
+           ON CONFLICT (airdna_id) DO UPDATE SET meta = EXCLUDED.meta,
+             name = COALESCE(EXCLUDED.name, airdna_markets.name), captured_at = EXCLUDED.captured_at`,
+          [String(payload.id), payload.name ?? null, payload.country_code ?? "vn",
+           JSON.stringify(cleanSans(payload)), fetchedAt],
         );
         nMarkets++;
       }
-      console.log(`markets: ${nMarkets}`);
-    }
 
-    // 2. Market score → airdna_scores
-    for (const it of items) {
-      const url = it.payload.url ?? "";
-      if (!url.includes("market_score")) continue;
-      const buckets = it.payload.data?.payload?.buckets ?? [];
-      if (!buckets.length) continue;
-      const marketId = String(it.payload.data?.payload?.market_id ?? "");
-      if (!marketId) continue;
-      const get = (cat) => buckets.find(b => b.category === cat)?.value ?? null;
-      await client.query(
-        `INSERT INTO airdna_scores (airdna_id, total, seasonality, revenue_growth, regulation, rental_demand, investability, captured_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-         ON CONFLICT (airdna_id) DO UPDATE SET total=EXCLUDED.total, seasonality=EXCLUDED.seasonality,
-           revenue_growth=EXCLUDED.revenue_growth, regulation=EXCLUDED.regulation,
-           rental_demand=EXCLUDED.rental_demand, investability=EXCLUDED.investability, captured_at=EXCLUDED.captured_at`,
-        [marketId, get("total_score"), get("seasonality"), get("revenue_growth"),
-         get("regulation"), get("rental_demand"), get("investability"), it.fetchedAt],
-      );
-      // Đảm bảo market tồn tại (INSERT nếu chưa có từ market list)
-      await client.query(
-        `INSERT INTO airdna_markets (airdna_id, name, country_code) VALUES ($1, $2, 'vn')
-         ON CONFLICT (airdna_id) DO NOTHING`,
-        [marketId, `Market ${marketId}`],
-      );
-      nScores++;
-    }
-    console.log(`scores: ${nScores}`);
+      // ---- market score buckets → airdna_scores (chỉ cấp market — FK airdna_markets)
+      if (it.kind === "airdna-v2-score" && Array.isArray(payload?.buckets)) {
+        const marketId = String(payload.market_id ?? "");
+        if (marketId) {
+          const get = (cat) => payload.buckets.find(b => b.category === cat)?.value ?? null;
+          await client.query(
+            `INSERT INTO airdna_scores (airdna_id, total, seasonality, revenue_growth, regulation, rental_demand, investability, captured_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+             ON CONFLICT (airdna_id) DO UPDATE SET total=EXCLUDED.total, seasonality=EXCLUDED.seasonality,
+               revenue_growth=EXCLUDED.revenue_growth, regulation=EXCLUDED.regulation,
+               rental_demand=EXCLUDED.rental_demand, investability=EXCLUDED.investability, captured_at=EXCLUDED.captured_at`,
+            [marketId, get("total_score"), get("seasonality"), get("revenue_growth"),
+             get("regulation"), get("rental_demand"), get("investability"), fetchedAt],
+          );
+          nScores++;
+        }
+      }
 
-    // 3. Timeseries → airdna_market_metrics
-    // Cấu trúc: data.payload.metrics = [{date: '2025-10-01', avg_daily_rate: 33.32}, ...]
-    const METRIC_KEYS = {
-      adr: "avg_daily_rate", occupancy: "occupancy_rate",
-      revenue: "revenue", revpar: "revpar", listing_count: "listing_count",
-    };
-    for (const it of items) {
-      if (it.kind !== "airdna-timeseries") continue;
-      const url = it.payload.url ?? "";
-      const match = url.match(/\/(\w+)\/(\d+)\/metrics\/(\w+)/);
-      if (!match) continue;
-      const [, , marketId, metric] = match;
-      const valueKey = METRIC_KEYS[metric] ?? metric;
-      const points = it.payload.data?.payload?.metrics ?? [];
-      if (!Array.isArray(points)) continue;
-      for (const p of points) {
-        const date = p?.date ?? p?.period;
-        const value = p?.[valueKey] ?? p?.value;
-        if (!date || value === undefined || value === null) continue;
-        if (typeof value !== "number" || isNaN(value)) continue; // bỏ JSON objects
-        const period = date.slice(0, 7); // '2025-10'
-        await client.query(
-          `INSERT INTO airdna_market_metrics (airdna_id, metric, period, value)
-           VALUES ($1,$2,$3,$4)
-           ON CONFLICT (airdna_id, metric, period) DO UPDATE SET value = EXCLUDED.value`,
-          [marketId, metric, period, value],
-        );
-        nMetrics++;
+      // ---- submarket list / detail → registry
+      if ((it.kind === "airdna-v2-submarkets" || it.kind === "airdna-v2-submarket") && payload) {
+        const rows = it.kind === "airdna-v2-submarkets"
+          ? (payload.submarkets ?? []).map(s => [s, url?.match(/\/market\/(\d+)/)?.[1]])
+          : [[payload, String(payload.parent_market_id ?? "")]];
+        for (const [s, marketId] of rows) {
+          if (!s?.id || !marketId) continue;
+          await client.query(
+            `INSERT INTO airdna_submarket_metrics (airdna_sub_id, airdna_market_id, name, meta)
+             VALUES ($1,$2,$3,$4)
+             ON CONFLICT (airdna_sub_id) DO UPDATE SET meta = EXCLUDED.meta, name = EXCLUDED.name`,
+            [String(s.id), marketId, s.name ?? null, JSON.stringify(cleanSans(s))],
+          );
+          nSubs++;
+        }
+      }
+
+      // ---- timeseries → airdna_market_metrics | airdna_sub_monthly
+      if (it.kind === "airdna-v2-timeseries") {
+        const match = url?.match(/(?:\/v2)?\/(market|submarket)\/(\d+)\/metrics\/(\w+)/);
+        if (match) {
+          const [, scope, scopeId, metric] = match;
+          const table = scope === "market" ? "airdna_market_metrics" : "airdna_sub_monthly";
+          const idCol = scope === "market" ? "airdna_id" : "airdna_sub_id";
+          const points = payload?.metrics ?? [];
+          for (const p of points) {
+            const date = p?.date ?? p?.period;
+            const value = valueOf(metric, p);
+            if (!date || value === null) continue;
+            await client.query(
+              `INSERT INTO ${table} (${idCol}, metric, period, value) VALUES ($1,$2,$3,$4)
+               ON CONFLICT (${idCol}, metric, period) DO UPDATE SET value = EXCLUDED.value`,
+              [scopeId, metric, date.slice(0, 7), value],
+            );
+            if (scope === "market") nMetrics++; else nSubMonthly++;
+          }
+        }
+      }
+
+      // ---- future rates (payload = MẢNG daily) → airdna_future_daily
+      if (it.kind === "airdna-v2-future-rates") {
+        const sid = url?.match(/\/submarket\/(\d+)\/future\/rates/)?.[1];
+        if (sid && Array.isArray(payload)) {
+          for (const d of payload) {
+            if (!d?.date) continue;
+            await client.query(
+              `INSERT INTO airdna_future_daily (airdna_sub_id, date, booked_count, available_count,
+                 mean_booked_rate, median_booked_rate, mean_available_rate, median_available_rate,
+                 occupancy, revpar, total_revenue)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+               ON CONFLICT (airdna_sub_id, date) DO UPDATE SET
+                 booked_count=EXCLUDED.booked_count, available_count=EXCLUDED.available_count,
+                 mean_booked_rate=EXCLUDED.mean_booked_rate, median_booked_rate=EXCLUDED.median_booked_rate,
+                 mean_available_rate=EXCLUDED.mean_available_rate, median_available_rate=EXCLUDED.median_available_rate,
+                 occupancy=EXCLUDED.occupancy, revpar=EXCLUDED.revpar, total_revenue=EXCLUDED.total_revenue`,
+              [sid, d.date, d.booked_count ?? null, d.available_count ?? null,
+               d.mean_booked_rate ?? null, d.median_booked_rate ?? null,
+               d.mean_available_rate ?? null, d.median_available_rate ?? null,
+               d.occupancy ?? null, d.revpar ?? null, d.total_revenue ?? null],
+            );
+            nFuture++;
+          }
+        }
+      }
+
+      // ---- map_listings → airdna_listings (universe + LTM)
+      if (it.kind === "airdna-v2-map-listings" && Array.isArray(payload?.listings)) {
+        const marketId = url?.match(/\/market\/(\d+)\/map_listings/)?.[1] ?? null;
+        for (const l of payload.listings) {
+          const id = l?.property_id; // 'abnb_<airbnb_id>' — cùng khóa listings.id
+          if (!id) continue;
+          const m = l.metrics ?? {};
+          await client.query(
+            `INSERT INTO airdna_listings (id, airdna_market_id, combined_market_id, bedrooms, bathrooms,
+               rating_overall, rating_location, revenue_ltm, revenue_potential_ltm, occupancy, adr,
+               price_tier, latitude, longitude, metrics, captured_at, snapshot_id)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+             ON CONFLICT (id) DO UPDATE SET
+               airdna_market_id=EXCLUDED.airdna_market_id, combined_market_id=EXCLUDED.combined_market_id,
+               bedrooms=EXCLUDED.bedrooms, bathrooms=EXCLUDED.bathrooms,
+               rating_overall=EXCLUDED.rating_overall, rating_location=EXCLUDED.rating_location,
+               revenue_ltm=EXCLUDED.revenue_ltm, revenue_potential_ltm=EXCLUDED.revenue_potential_ltm,
+               occupancy=EXCLUDED.occupancy, adr=EXCLUDED.adr, price_tier=EXCLUDED.price_tier,
+               latitude=EXCLUDED.latitude, longitude=EXCLUDED.longitude, metrics=EXCLUDED.metrics,
+               captured_at=EXCLUDED.captured_at, snapshot_id=EXCLUDED.snapshot_id`,
+            [id, marketId, l.combined_market_id ? String(l.combined_market_id) : null,
+             m.bedrooms ?? null, m.bathrooms ?? null,
+             m.rating_overall ?? null, m.rating_location ?? null,
+             m.revenue ?? null, m.revenue_potential ?? null,
+             m.occupancy ?? null, m.adr ?? null,
+             m.price_tier ?? null,
+             l.location?.lat ?? null, l.location?.lng ?? null,
+             JSON.stringify(m), fetchedAt, it.meta?.snapshotId ?? null],
+          );
+          nListings++;
+        }
+      }
+
+      // ---- submarket listings (top 50 theo revenue) → upsert: id ở đây là
+      // abnb_<airbnb_id THẬT> (khác id mờ của map_listings) → hàng mới được
+      // tạo để join được với listings của Inside Airbnb.
+      if (it.kind === "airdna-v2-sub-listings" && Array.isArray(payload?.listings)) {
+        const sid = url?.match(/\/submarket\/(\d+)\/listings/)?.[1];
+        for (const l of payload.listings) {
+          const id = l?.property_id ?? (l?.airbnb_property_id ? `abnb_${l.airbnb_property_id}` : null);
+          if (!id) continue;
+          await client.query(
+            `INSERT INTO airdna_listings (id, combined_market_id, title, rating_overall,
+               review_count, revenue_ltm, revenue_potential_ltm, occupancy, metrics, captured_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+             ON CONFLICT (id) DO UPDATE SET
+               title = COALESCE(EXCLUDED.title, airdna_listings.title),
+               rating_overall = COALESCE(EXCLUDED.rating_overall, airdna_listings.rating_overall),
+               review_count = COALESCE(EXCLUDED.review_count, airdna_listings.review_count),
+               revenue_ltm = COALESCE(EXCLUDED.revenue_ltm, airdna_listings.revenue_ltm),
+               revenue_potential_ltm = COALESCE(EXCLUDED.revenue_potential_ltm, airdna_listings.revenue_potential_ltm),
+               occupancy = COALESCE(EXCLUDED.occupancy, airdna_listings.occupancy),
+               metrics = airdna_listings.metrics || EXCLUDED.metrics,
+               captured_at = EXCLUDED.captured_at`,
+            [id, sid ?? null, l.title ?? null, l.rating ?? null, l.reviews ?? null,
+             l.revenue_ltm ?? null, l.revenue_potential_ltm ?? null, l.occupancy ?? null,
+             JSON.stringify(cleanSans(l, ["geospatial"])), fetchedAt],
+          );
+          nEnrich++;
+        }
+        if (sid) console.log(`  sub-listings ${sid}: ${payload.listings.length}`);
       }
     }
-    console.log(`metrics: ${nMetrics}`);
 
-    // 4. Submarkets → airdna_submarket_metrics
-    // Cấu trúc: data.payload.submarkets = [...]
+    console.log(`v2: markets=${nMarkets} scores=${nScores} subs=${nSubs} marketMetrics=${nMetrics}`);
+    console.log(`v2: subMonthly=${nSubMonthly} futureDaily=${nFuture} listings=${nListings} enrich=${nEnrich}`);
+
+    // ===================== v1 (passive XHR — giữ tương thích) =====================
     for (const it of items) {
-      if (it.kind !== "airdna-detail") continue;
-      const url = it.payload.url ?? "";
-      if (!url.includes("/submarkets")) continue;
-      const marketMatch = url.match(/\/market\/(\d+)/);
-      if (!marketMatch) continue;
-      const marketId = marketMatch[1];
-      const subs = it.payload.data?.payload?.submarkets ?? [];
-      if (!Array.isArray(subs)) continue;
-      for (const s of subs) {
-        if (!s?.id) continue;
-        await client.query(
-          `INSERT INTO airdna_submarket_metrics (airdna_sub_id, airdna_market_id, name, meta)
-           VALUES ($1,$2,$3,$4)
-           ON CONFLICT (airdna_sub_id) DO UPDATE SET meta = EXCLUDED.meta, name = EXCLUDED.name`,
-          [String(s.id), marketId, s.name ?? null, JSON.stringify(s)],
-        );
-        nSubs++;
+      if (it.kind === "airdna-markets") {
+        const data = it.payload.data;
+        const markets = data?.payload?.markets ?? data?.payload ?? [];
+        if (!Array.isArray(markets)) continue;
+        for (const m of markets) {
+          if (!m?.id) continue;
+          await client.query(
+            `INSERT INTO airdna_markets (airdna_id, name, country_code, meta, captured_at, snapshot_id)
+             VALUES ($1,$2,$3,$4,$5,$6)
+             ON CONFLICT (airdna_id) DO UPDATE SET meta = EXCLUDED.meta, captured_at = EXCLUDED.captured_at`,
+            [String(m.id), m.name ?? null, m.country_code ?? "vn",
+             JSON.stringify(cleanSans(m)), it.fetchedAt, null],
+          );
+          nMarkets++;
+        }
+      }
+      if (it.kind === "airdna-timeseries") {
+        const url = it.payload.url ?? "";
+        const match = url.match(/\/(\w+)\/(\d+)\/metrics\/(\w+)/);
+        if (!match) continue;
+        const [, , marketId, metric] = match;
+        for (const p of it.payload.data?.payload?.metrics ?? []) {
+          const date = p?.date ?? p?.period;
+          const value = valueOf(metric, p);
+          if (!date || value === null) continue;
+          await client.query(
+            `INSERT INTO airdna_market_metrics (airdna_id, metric, period, value)
+             VALUES ($1,$2,$3,$4)
+             ON CONFLICT (airdna_id, metric, period) DO UPDATE SET value = EXCLUDED.value`,
+            [marketId, metric, date.slice(0, 7), value],
+          );
+          nMetrics++;
+        }
       }
     }
-    console.log(`submarkets: ${nSubs}`);
 
-    // 5. Crosswalk: map AirDNA Hà Nội (id=47) → areas vn-hanoi
+    // Crosswalk: map AirDNA Hà Nội (47) → areas vn-hanoi
     await client.query(
       `INSERT INTO area_sources (area_id, source, source_area_key, meta)
        VALUES ('vn-hanoi', 'S02', '47', '{"note":"AirDNA market ID for Hanoi"}'::jsonb)
        ON CONFLICT DO NOTHING`,
     );
-    console.log("crosswalk: vn-hanoi ↔ airdna:47");
   } finally {
     await client.end();
   }
