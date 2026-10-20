@@ -43,6 +43,25 @@ Inside Airbnb và ghi rõ phương pháp riêng nếu chỉnh.
 - Grade: 90–100=A, 75–90=B, 65–75=C, 50–65=D, 40–50=F.
 - Chỉ so sánh trong cùng quốc gia; market nhiều listing có trọng số cao hơn.
 
+## Lớp mua bán & cho thuê dài hạn (ADR-0010, nguồn S03 Zalo/FB)
+
+Công thức tính từ `sale_offers` + `market_asset_stats` (rollup tuần, pipeline
+tính — React chỉ đọc). Chi tiết đầy đủ:
+`docs/research/invest-portal-full-picture-spec.md`.
+
+- **Giá/m² trung vị** = median `price_perm2` của tin sale active trong tuần
+  (loại outlier IQR). Chỉ số giá gốc của VN (không dùng giá tổng căn).
+- **Rent trung vị** = median `price_vnd` của tin rent_lt, tách nhóm bedrooms
+  khi ≥5 mẫu/nhóm.
+- **Gross yield LTR (tahun)** = `median_rent × 12 / median_price_sale`
+  (cùng area, cùng nhóm PN nếu đủ mẫu). Ước lượng cặp giả định — giá và rent
+  đến từ hai tập tin đăng khác nhau, không phải cặp giao dịch thật.
+- **Gross yield STR** = `RevPAR × 365 / median_price_sale` (RevPAR từ S02).
+- **Premium STR** = yield STR − yield LTR.
+- **GRM** = `median_price / (median_rent × 12)` (năm).
+- Tương đương bước với BiggerPockets: RTP tháng % của BP ≈ gross yield
+  LTR ÷ 12; ta hiển thị dạng %/năm cho quen thuộc nhà đầu tư VN.
+
 ## Áp dụng cho One Invest (M2)
 
 Từ Inside Airbnb (`listings.csv`, `calendar.csv`) tự tính:
