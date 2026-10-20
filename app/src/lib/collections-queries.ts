@@ -3,7 +3,12 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 import { pool } from "./db";
-import { listZaloAccounts, listZaloGroupDirectory } from "./zalo-admin";
+import {
+  directoryCacheIsFresh,
+  listZaloAccounts,
+  readCachedDirectory,
+  refreshZaloGroupDirectoryInBackground,
+} from "./zalo-admin";
 
 /**
  * Queries + trạng thái máy cho /ops/collections "Thu Thập" (E2 tiếp theo,
@@ -25,29 +30,36 @@ export type FlowDay = {
   zaloOffers: number;
 };
 
-/** Luồng N ngày gần nhất theo nguồn (mỗi cột một truy vấn con trên generate_series). */
+/** Luồng N ngày gần nhất theo nguồn. Perf-audit: từng là 42 subquery
+ * non-sargable (col::date = d, 250ms, tăng theo bảng) — nay mỗi nguồn MỘT
+ * GROUP BY có lọc khoảng ngày, gộp bằng JS. */
 export async function getFlowDays(n = 7): Promise<FlowDay[]> {
-  const { rows } = await pool.query(
-    `SELECT d::date::text AS day,
-            (SELECT count(*) FROM airdna_markets m WHERE m.captured_at::date = d)::int AS airdna_markets,
-            (SELECT count(*) FROM airdna_listings al WHERE al.captured_at::date = d)::int AS airdna_listings,
-            (SELECT count(*) FROM listings l WHERE l.last_seen::date = d)::int AS airbnb_listings_seen,
-            (SELECT count(*) FROM airbnb_snapshots s WHERE s.collected_at::date = d)::int AS airbnb_snapshots,
-            (SELECT count(*) FROM stg_zalo_posts z WHERE z.captured_at::date = d)::int AS zalo_posts,
-            (SELECT count(*) FROM sale_offers o WHERE o.first_seen::date = d)::int AS zalo_offers
-       FROM generate_series(current_date - ($1::int - 1), current_date, interval '1 day') d
-      ORDER BY d DESC`,
-    [n],
-  );
-  return rows.map((r) => ({
-    day: r.day,
-    airdnaMarkets: r.airdna_markets,
-    airdnaListings: r.airdna_listings,
-    airbnbListingsSeen: r.airbnb_listings_seen,
-    airbnbSnapshots: r.airbnb_snapshots,
-    zaloPosts: r.zalo_posts,
-    zaloOffers: r.zalo_offers,
-  }));
+  const since = new Date(Date.now() - (n - 1) * 86400000);
+  const sinceDate = since.toISOString().slice(0, 10);
+  const [mk, al, li, sn, zp, of] = await Promise.all([
+    pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM airdna_markets WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT collected_at::date::text d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM stg_zalo_posts WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT first_seen::date::text d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 GROUP BY 1`, [since]),
+  ]);
+  const pick = (rows: { d: string; n: number }[]) => new Map(rows.map((r) => [r.d, r.n]));
+  const [M, A, L, S, Z, O] = [pick(mk.rows), pick(al.rows), pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
+  const days: FlowDay[] = [];
+  for (let i = 0; i < n; i++) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    days.push({
+      day: d,
+      airdnaMarkets: M.get(d) ?? 0,
+      airdnaListings: A.get(d) ?? 0,
+      airbnbListingsSeen: L.get(d) ?? 0,
+      airbnbSnapshots: S.get(d) ?? 0,
+      zaloPosts: Z.get(d) ?? 0,
+      zaloOffers: O.get(d) ?? 0,
+    });
+  }
+  return days; // mốc sinceDate trở đi; đủ n ngày gần nhất
 }
 
 export type GateFunnel = {
@@ -344,15 +356,21 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
       ownerAccount: null,
     });
   }
-  // Attribution từ config: tên nhóm → account (directory cached 60s per account)
+  // Attribution từ config: tên nhóm → account. Perf-audit: KHÔNG bao giờ chờ
+  // CLI ~8s trong render — chỉ dùng cache tươi; cache lạnh thì kick refresh
+  // ngầm song song (song song mọi account) → render sau có owner.
   try {
     const accounts = await listZaloAccounts();
     const dirs = new Map<string, string>(); // groupName → accountId
+    const staleAccounts: string[] = [];
     for (const a of accounts) {
-      for (const g of await listZaloGroupDirectory(a.accountId)) {
-        dirs.set(g.name, a.accountId);
+      if (directoryCacheIsFresh(a.accountId)) {
+        for (const g of readCachedDirectory(a.accountId)) dirs.set(g.name, a.accountId);
+      } else {
+        staleAccounts.push(a.accountId);
       }
     }
+    for (const id of staleAccounts) refreshZaloGroupDirectoryInBackground(id);
     for (const row of rows.values()) {
       if (!row.ownerAccount) row.ownerAccount = dirs.get(row.name) ?? null;
     }

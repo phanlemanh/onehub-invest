@@ -194,6 +194,7 @@ export async function setZaloGroupEnabled(
 
 type LoginHandle = { child: import("node:child_process").ChildProcess; startedAt: number };
 const logins = new Map<string, LoginHandle>();
+let statusCache = { at: 0, text: "" as string };
 
 function qrFile(accountId: string): string {
   return path.join(QR_DIR, `openclaw-zalouser-qr-${accountId === "default" ? "default" : accountId}.png`);
@@ -241,9 +242,12 @@ export async function zaloLoginStatus(accountId: string): Promise<{
   const qrBase64 = await readQr(accountId);
   let connected: boolean | null = null;
   try {
-    const { stdout } = await run(OPENCLAW, ["channels", "status"], { timeout: 15000 });
-    // status in "Zalo Personal <accountId>: ..." — match đúng account để không
-    // nhầm connected của account khác khi đa tài khoản
+    // CLI ~1.4s — cache stdout 10s cho mọi account (poll 3s không đập CLI)
+    let stdout = statusCache.text;
+    if (!stdout || Date.now() - statusCache.at > 10_000) {
+      stdout = (await run(OPENCLAW, ["channels", "status"], { timeout: 15000 })).stdout;
+      statusCache = { at: Date.now(), text: stdout };
+    }
     const re = new RegExp(`Zalo Personal(\\s+${accountId})?\\s*:[^\\n]*connected`);
     connected = re.test(stdout);
   } catch {
@@ -267,26 +271,47 @@ export async function cancelZaloLogin(accountId: string): Promise<void> {
 export type ZaloGroupDir = { groupId: string; name: string };
 
 const dirCache = new Map<string, { at: number; rows: ZaloGroupDir[] }>();
-const DIR_TTL_MS = 60_000;
+const DIR_TTL_MS = 300_000; // membership đổi hiếm — 5 phút
 
-/** Directory nhóm từ Zalo (membership thật). CLI mất ~8s/lượt → cache 60s;
- * force=true bỏ cache (nút refresh trên UI). */
+/** Directory nhóm từ Zalo (membership thật). CLI mất ~8s/lượt → cache 5 phút;
+ * force=true bỏ cache (nút refresh trên UI). isFresh=false khi cache lạnh —
+ * caller có thể kick refresh ngầm thay vì chờ. */
 export async function listZaloGroupDirectory(
   accountId: string,
   force = false,
 ): Promise<ZaloGroupDir[]> {
   const hit = dirCache.get(accountId);
   if (!force && hit && Date.now() - hit.at < DIR_TTL_MS) return hit.rows;
+  await refreshZaloGroupDirectory(accountId);
+  return dirCache.get(accountId)?.rows ?? [];
+}
+
+/** Refresh ngầm: không await — render không bao giờ chờ CLI ~8s. */
+export function refreshZaloGroupDirectoryInBackground(accountId: string): void {
+  const hit = dirCache.get(accountId);
+  if (hit && Date.now() - hit.at < DIR_TTL_MS) return; // còn tươi
+  void refreshZaloGroupDirectory(accountId).catch(() => {});
+}
+
+/** Đọc snapshot cache (không đợi) — rỗng nếu lạnh. */
+export function readCachedDirectory(accountId: string): ZaloGroupDir[] {
+  return dirCache.get(accountId)?.rows ?? [];
+}
+
+export function directoryCacheIsFresh(accountId: string): boolean {
+  const hit = dirCache.get(accountId);
+  return !!hit && Date.now() - hit.at < DIR_TTL_MS;
+}
+
+async function refreshZaloGroupDirectory(accountId: string): Promise<void> {
   const { stdout } = await run(
     OPENCLAW,
     ["directory", "groups", "list", "--channel", "zalouser", ...(accountId !== "default" ? ["--account", accountId] : [])],
     { timeout: 30000 },
   );
-  // bảng │ ID │ Name │
   const rows: ZaloGroupDir[] = [];
   for (const m of stdout.matchAll(/│\s*(group:\S+)\s*│\s*([^│]+?)\s*│/g)) {
     rows.push({ groupId: m[1], name: m[2] });
   }
   dirCache.set(accountId, { at: Date.now(), rows });
-  return rows;
 }
