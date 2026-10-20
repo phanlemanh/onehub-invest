@@ -13,26 +13,57 @@ async function main() {
 const client = new pg.Client({ connectionString: DB_URL });
 await client.connect();
 try {
-  const { rows } = await client.query(
-    `SELECT x.area_id,
-            (SELECT count(*)::int FROM listings l
-               JOIN areas sa ON sa.id = l.area_id
-              WHERE coalesce(sa.parent_id, sa.id) = x.area_id) AS our_listings,
-            lc.value AS airdna_active,
-            lc.period AS airdna_period,
-            (SELECT count(*)::int FROM airdna_listings al
-              WHERE al.airdna_market_id = x.source_area_key) AS airdna_universe,
-            (SELECT count(DISTINCT period)::int FROM airdna_market_metrics mm
-              WHERE mm.airdna_id = x.source_area_key) AS history_months,
-            am.captured_at
-       FROM area_sources x
-       JOIN areas a ON a.id = x.area_id
-       JOIN LATERAL (SELECT value, period FROM airdna_market_metrics m
-                      WHERE m.airdna_id = x.source_area_key AND m.metric = 'listing_count'
-                      ORDER BY period DESC LIMIT 1) lc ON TRUE
-       LEFT JOIN airdna_markets am ON am.airdna_id = x.source_area_key
-      WHERE x.source = 'S02'`,
+  // Sáp nhập 2025: 1 area ← nhiều market AirDNA cũ → cộng gộp (địa lý rời)
+  const { rows: xw } = await client.query(
+    `SELECT x.area_id, x.source_area_key FROM area_sources x WHERE x.source = 'S02'`,
   );
+  const { rows: active } = await client.query(
+    `SELECT DISTINCT ON (airdna_id) airdna_id, value, period
+       FROM airdna_market_metrics WHERE metric='listing_count'
+      ORDER BY airdna_id, period DESC`,
+  );
+  const { rows: uni } = await client.query(
+    `SELECT airdna_market_id, count(*)::int n FROM airdna_listings GROUP BY 1`,
+  );
+  const { rows: hist } = await client.query(
+    `SELECT airdna_id, count(DISTINCT period)::int m FROM airdna_market_metrics GROUP BY 1`,
+  );
+  const { rows: capRows } = await client.query(
+    `SELECT airdna_id, captured_at FROM airdna_markets`,
+  );
+  const { rows: oursRows } = await client.query(
+    `SELECT coalesce(sa.parent_id, sa.id) AS area_id, count(*)::int n
+       FROM listings l JOIN areas sa ON sa.id = l.area_id
+      WHERE sa.id LIKE 'vn-%' GROUP BY 1`,
+  );
+  const activeBy = new Map(active.map((r) => [r.airdna_id, r]));
+  const uniBy = new Map(uni.map((r) => [r.airdna_market_id, r.n]));
+  const histBy = new Map(hist.map((r) => [r.airdna_id, r.m]));
+  const oursBy = new Map(oursRows.map((r) => [r.area_id, r.n]));
+  const capBy = new Map(capRows.map((r) => [r.airdna_id, r.captured_at]));
+  const byArea = new Map();
+  for (const r of xw) {
+    if (!byArea.has(r.area_id)) byArea.set(r.area_id, []);
+    byArea.get(r.area_id).push(r.source_area_key);
+  }
+  const rows = [...byArea.entries()]
+    .map(([area_id, keys]) => {
+      const wd = keys.map((k) => activeBy.get(k)).filter(Boolean);
+      if (wd.length === 0) return null;
+      return {
+        area_id,
+        our_listings: oursBy.get(area_id) ?? 0,
+        airdna_active: wd.reduce((s2, r) => s2 + Number(r.value), 0),
+        airdna_period: wd.reduce((m, r) => (r.period > m ? r.period : m), ""),
+        airdna_universe: keys.reduce((s2, k) => s2 + (uniBy.get(k) ?? 0), 0),
+        history_months: keys.reduce((m, k) => Math.max(m, histBy.get(k) ?? 0), 0),
+        captured_at: keys.reduce((m, k) => {
+          const c = capBy.get(k);
+          return !c || new Date(c) > new Date(m ?? 0) ? c : m;
+        }, null),
+      };
+    })
+    .filter(Boolean);
   if (rows.length === 0) {
     await client.query(
       `INSERT INTO dq_check_results (check_name, entity, status, detail)

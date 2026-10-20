@@ -73,7 +73,7 @@ export function TruthfulCoverageTable({ rows }: { rows: TruthfulCoverageRow[] })
         ),
         cell: ({ row }) =>
           row.original.airdnaActive
-            ? `${fmtInt(row.original.airdnaActive)}${row.original.airdnaPeriod ? ` · ${row.original.airdnaPeriod}` : ""}`
+            ? `${fmtInt(row.original.airdnaActive)}${row.original.airdnaPeriod ? ` · ${row.original.airdnaPeriod}` : ""}${row.original.nMarkets > 1 ? ` · ${row.original.nMarkets} market` : ""}`
             : "—",
         size: 170,
         meta: NUM,

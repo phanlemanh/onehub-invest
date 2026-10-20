@@ -858,50 +858,79 @@ export type TruthfulCoverageRow = {
   historyMonths: number; // độ sâu timeseries AirDNA đã lưu
   capturedAt: string | null;
   ratio: number | null; // our / airdna active
+  nMarkets: number; // số market AirDNA ghép vào area (sáp nhập tỉnh 2025)
 };
 
 /**
  * Độ phủ trung thực (E2 C2/D): listing tự thu ÷ listing active AirDNA của
  * cùng market (crosswalk S02). Tự thu là mẫu discovery theo thiết kế — tỉ lệ
  * này nói độ sâu hiệu chuẩn, KHÔNG phải độ phủ "thị trường đã quét hết".
+ *
+ * Sáp nhập tỉnh 2025: MỘT area mới ghép từ nhiều market AirDNA cũ (TPHCM =
+ * 48 + Bình Dương + Vũng Tàu + Côn Đảo). Địa lý các tỉnh cũ không giao nhau
+ * nên mẫu số = TỔNG active listings của mọi market thành phần.
  */
 export async function getTruthfulCoverage(): Promise<TruthfulCoverageRow[]> {
-  const { rows } = await pool.query(
-    `SELECT x.area_id,
-            a.name,
-            (SELECT count(*)::int FROM listings l
-               JOIN areas sa ON sa.id = l.area_id
-              WHERE coalesce(sa.parent_id, sa.id) = x.area_id) AS our_listings,
-            lc.value  AS airdna_active,
-            lc.period AS airdna_period,
-            (SELECT count(*)::int FROM airdna_listings al
-              WHERE al.airdna_market_id = x.source_area_key) AS airdna_universe,
-            (SELECT count(DISTINCT period)::int FROM airdna_market_metrics mm
-              WHERE mm.airdna_id = x.source_area_key) AS history_months,
-            am.captured_at
-       FROM area_sources x
-       JOIN areas a ON a.id = x.area_id
-       JOIN LATERAL (SELECT value, period FROM airdna_market_metrics m
-                      WHERE m.airdna_id = x.source_area_key AND m.metric = 'listing_count'
-                      ORDER BY period DESC LIMIT 1) lc ON TRUE
-       LEFT JOIN airdna_markets am ON am.airdna_id = x.source_area_key
-      WHERE x.source = 'S02'
-      ORDER BY a.name`,
-  );
-  return rows.map((r) => ({
-    areaId: r.area_id,
-    name: r.name,
-    ourListings: Number(r.our_listings),
-    airdnaActive: r.airdna_active === null ? 0 : Number(r.airdna_active),
-    airdnaPeriod: r.airdna_period ?? null,
-    airdnaUniverse: Number(r.airdna_universe),
-    historyMonths: Number(r.history_months),
-    capturedAt: r.captured_at ? new Date(r.captured_at).toISOString() : null,
-    ratio:
-      r.airdna_active === null || Number(r.airdna_active) === 0
-        ? null
-        : Number(r.our_listings) / Number(r.airdna_active),
-  }));
+  const [xw, active, uni, hist, cap, ours] = await Promise.all([
+    pool.query(
+      `SELECT x.area_id, a.name, x.source_area_key
+         FROM area_sources x JOIN areas a ON a.id = x.area_id
+        WHERE x.source = 'S02' ORDER BY a.name`,
+    ),
+    pool.query(
+      `SELECT DISTINCT ON (airdna_id) airdna_id, value, period
+         FROM airdna_market_metrics WHERE metric = 'listing_count'
+        ORDER BY airdna_id, period DESC`,
+    ),
+    pool.query(
+      `SELECT airdna_market_id, count(*)::int AS n FROM airdna_listings GROUP BY 1`,
+    ),
+    pool.query(
+      `SELECT airdna_id, count(DISTINCT period)::int AS m FROM airdna_market_metrics GROUP BY 1`,
+    ),
+    pool.query(`SELECT airdna_id, captured_at FROM airdna_markets`),
+    pool.query(
+      `SELECT coalesce(sa.parent_id, sa.id) AS market, count(*)::int AS n
+         FROM listings l JOIN areas sa ON sa.id = l.area_id
+        WHERE sa.id LIKE 'vn-%' GROUP BY 1`,
+    ),
+  ]);
+  const activeBy = new Map(active.rows.map((r) => [r.airdna_id, r]));
+  const uniBy = new Map(uni.rows.map((r) => [r.airdna_market_id, r.n]));
+  const histBy = new Map(hist.rows.map((r) => [r.airdna_id, r.m]));
+  const capBy = new Map(cap.rows.map((r) => [r.airdna_id, r.captured_at]));
+  const oursBy = new Map(ours.rows.map((r) => [r.market, r.n]));
+
+  const byArea = new Map<string, { name: string; keys: string[] }>();
+  for (const r of xw.rows) {
+    const e = byArea.get(r.area_id) ?? { name: r.name, keys: [] as string[] };
+    e.keys.push(r.source_area_key);
+    byArea.set(r.area_id, e);
+  }
+  const rows: TruthfulCoverageRow[] = [];
+  for (const [areaId, { name, keys }] of byArea) {
+    const withData = keys.map((k) => activeBy.get(k)).filter(Boolean);
+    if (withData.length === 0) continue; // chưa thu dữ liệu AirDNA → không có dòng
+    const activeTotal = withData.reduce((sum, r) => sum + Number(r.value), 0);
+    rows.push({
+      areaId,
+      name,
+      ourListings: oursBy.get(areaId) ?? 0,
+      airdnaActive: activeTotal,
+      airdnaPeriod: withData.reduce((m, r) => (r.period > m ? r.period : m), ""),
+      airdnaUniverse: keys.reduce((sum, k) => sum + (uniBy.get(k) ?? 0), 0),
+      historyMonths: keys.reduce((m, k) => Math.max(m, histBy.get(k) ?? 0), 0),
+      capturedAt: keys.reduce<string | null>((m, k) => {
+        const c = capBy.get(k);
+        if (!c) return m;
+        const iso = new Date(c).toISOString();
+        return !m || iso > m ? iso : m;
+      }, null),
+      ratio: activeTotal > 0 ? (oursBy.get(areaId) ?? 0) / activeTotal : null,
+      nMarkets: keys.length,
+    });
+  }
+  return rows;
 }
 
 export type AirdnaMarketRow = {

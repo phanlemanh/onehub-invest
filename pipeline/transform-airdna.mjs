@@ -273,10 +273,32 @@ async function main() {
         .replace(/\s+city$/, "")
         .replace(/[^a-z0-9]+/g, " ")
         .trim();
-    // alias: key = norm(tên AirDNA) → value = norm(tên area đích)
+    // alias: key = norm(tên AirDNA) → value = norm(tên area đích).
+    // Bảng sáp nhập 202/2025/QH15 (12/6/2025, 63→34 tỉnh) + lỗi chính tả AirDNA.
+    // Nhiều market cũ → 1 area mới là ĐÚNG (địa lý không giao → mẫu số độ
+    // phủ = tổng các market thành phần, queries.ts đã cộng gộp).
     const ALIAS = {
-      "quang tr": "quang tri", // AirDNA cắt tên
-      "thua thien hue": "hue", // sáp nhập → TP Huế
+      "quang tr": "quang tri", // AirDNA cắt tên (Quảng Trị)
+      "thua thien hue": "hue", // đổi tên → TP Huế
+      "quang nam": "da nang",
+      "binh duong": "ho chi minh",
+      "vung tau": "ho chi minh", // Bà Rịa–Vũng Tàu (norm đã strip " city")
+      "con dao": "ho chi minh", // huyện Côn Đảo thuộc BR-VT cũ
+      "binh thu": "lam dong", // AirDNA cắt "Bình Thuận"
+      "dak nong": "lam dong",
+      "phu yen": "dak lak",
+      "binh dinh": "gia lai",
+      "phan rangathap cham": "khanh hoa", // Ninh Thuận (Phan Rang–Tháp Chàm)
+      "ben tre": "vinh long",
+      "tra vinh": "vinh long",
+      "quang binh": "quang tri",
+      "hoa binh": "phu tho",
+      "bac giang": "bac ninh",
+      "binh phuoc": "dong nai",
+      "ha giang": "tuyen quang",
+      "kon tum": "quang ngai",
+      "soc trang": "can tho",
+      "kien giang": "an giang",
     };
     const { rows: areaRows } = await client.query(
       `SELECT id, name FROM areas WHERE region_type='market' AND country_code='vn'`,
@@ -285,7 +307,6 @@ async function main() {
     const { rows: existing } = await client.query(
       `SELECT area_id, source_area_key FROM area_sources WHERE source='S02'`,
     );
-    const mappedAreas = new Set(existing.map((r) => r.area_id));
     const mappedKeys = new Set(existing.map((r) => r.source_area_key));
     let nCross = 0;
     const unmatched = [];
@@ -300,14 +321,13 @@ async function main() {
     for (const m of candidates) {
       if (mappedKeys.has(m.airdna_id)) continue;
       let target = byNorm.get(ALIAS[norm(m.name)] ?? norm(m.name));
-      if (!target || mappedAreas.has(target)) { unmatched.push(m.name); continue; }
+      if (!target) { unmatched.push(m.name); continue; }
       await client.query(
         `INSERT INTO area_sources (area_id, source, source_area_key, meta)
          VALUES ($1,'S02',$2,'{"note":"auto crosswalk tên chuẩn hoá"}'::jsonb)
          ON CONFLICT DO NOTHING`,
         [target, m.airdna_id],
       );
-      mappedAreas.add(target);
       mappedKeys.add(m.airdna_id);
       nCross++;
       console.log(`  crosswalk: ${m.name} (#${m.airdna_id}) → ${target}`);
