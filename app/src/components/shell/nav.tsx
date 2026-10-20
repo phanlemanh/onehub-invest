@@ -46,6 +46,13 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       match: (p) => p.startsWith("/yield"),
     },
     {
+      id: "deals",
+      label: "Căn giá tốt",
+      href: "/deals",
+      icon: icon(ActivityIcon),
+      match: (p) => p.startsWith("/deals"),
+    },
+    {
       id: "compare",
       label: "So sánh",
       href: "/so-sanh",
