@@ -49,6 +49,7 @@ async function main() {
   try {
     let nMarkets = 0, nMetrics = 0, nScores = 0, nSubs = 0;
     let nSubMonthly = 0, nFuture = 0, nListings = 0, nEnrich = 0;
+    const marketsList = []; // (airdna_id, name) cho auto-crosswalk
 
     // ===================== v2 (active API) =====================
     for (const it of items) {
@@ -59,6 +60,7 @@ async function main() {
 
       // ---- market detail → airdna_markets
       if (it.kind === "airdna-v2-market" && payload?.id) {
+        marketsList.push({ airdna_id: String(payload.id), name: payload.name ?? "" });
         await client.query(
           `INSERT INTO airdna_markets (airdna_id, name, country_code, meta, captured_at)
            VALUES ($1,$2,$3,$4,$5)
@@ -258,12 +260,59 @@ async function main() {
       }
     }
 
-    // Crosswalk: map AirDNA Hà Nội (47) → areas vn-hanoi
-    await client.query(
-      `INSERT INTO area_sources (area_id, source, source_area_key, meta)
-       VALUES ('vn-hanoi', 'S02', '47', '{"note":"AirDNA market ID for Hanoi"}'::jsonb)
-       ON CONFLICT DO NOTHING`,
+    // ---- Crosswalk tự động AirDNA → areas OSM (E2: thẻ độ phủ tự sáng khi
+    // rotation thu tỉnh mới). Chuẩn hoá: bỏ dấu + strip "Tỉnh/Thành phố" +
+    // bỏ " city" + alias cho lỗi chính tả AirDNA / tỉnh đổi tên sau sáp nhập.
+    const norm = (t) =>
+      (t ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/đ/g, "d")
+        .replace(/^(tinh|thanh pho)\s+/, "")
+        .replace(/\s+city$/, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    // alias: key = norm(tên AirDNA) → value = norm(tên area đích)
+    const ALIAS = {
+      "quang tr": "quang tri", // AirDNA cắt tên
+      "thua thien hue": "hue", // sáp nhập → TP Huế
+    };
+    const { rows: areaRows } = await client.query(
+      `SELECT id, name FROM areas WHERE region_type='market' AND country_code='vn'`,
     );
+    const byNorm = new Map(areaRows.map((a) => [norm(a.name), a.id]));
+    const { rows: existing } = await client.query(
+      `SELECT area_id, source_area_key FROM area_sources WHERE source='S02'`,
+    );
+    const mappedAreas = new Set(existing.map((r) => r.area_id));
+    const mappedKeys = new Set(existing.map((r) => r.source_area_key));
+    let nCross = 0;
+    const unmatched = [];
+    // Nguồn candidate: mọi market VN đã biết (bảng airdna_markets) — backfill
+    // được cả province E1 chưa thu, snapshot hằng đêm chỉ bổ sung tên mới.
+    const { rows: allMarkets } = await client.query(
+      `SELECT airdna_id::text AS id, name FROM airdna_markets WHERE country_code='vn'`,
+    );
+    const seenM = new Set(marketsList.map((m) => m.airdna_id));
+    const candidates = [...marketsList, ...allMarkets.filter((m) => !seenM.has(m.id))
+      .map((m) => ({ airdna_id: m.id, name: m.name ?? "" }))];
+    for (const m of candidates) {
+      if (mappedKeys.has(m.airdna_id)) continue;
+      let target = byNorm.get(ALIAS[norm(m.name)] ?? norm(m.name));
+      if (!target || mappedAreas.has(target)) { unmatched.push(m.name); continue; }
+      await client.query(
+        `INSERT INTO area_sources (area_id, source, source_area_key, meta)
+         VALUES ($1,'S02',$2,'{"note":"auto crosswalk tên chuẩn hoá"}'::jsonb)
+         ON CONFLICT DO NOTHING`,
+        [target, m.airdna_id],
+      );
+      mappedAreas.add(target);
+      mappedKeys.add(m.airdna_id);
+      nCross++;
+      console.log(`  crosswalk: ${m.name} (#${m.airdna_id}) → ${target}`);
+    }
+    console.log(`crosswalk auto: +${nCross}; chưa khớp ${unmatched.length}: ${unmatched.join(", ") || "—"}`);
   } finally {
     await client.end();
   }
