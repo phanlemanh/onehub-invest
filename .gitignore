@@ -29,3 +29,4 @@ pipeline/logs/
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
 .superpowers/
+.vercel/
