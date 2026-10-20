@@ -16,6 +16,13 @@ import { promisify } from "node:util";
  */
 
 const OPENCLAW = path.join(homedir(), ".openclaw/bin/openclaw");
+
+/** Cloud (Vercel): không có ~/.openclaw — mọi hàm zalo-admin trả lỗi thân thiện. */
+export function isZaloAdminAvailable(): boolean {
+  return process.env.VERCEL !== "1";
+}
+
+const CLOUD_ERR = "Quản lý nguồn Zalo chỉ có ở máy thu (cần ~/.openclaw CLI + config)";
 const CONFIG = path.join(homedir(), ".openclaw/openclaw.json");
 const QR_DIR = "/tmp/openclaw";
 
@@ -82,6 +89,7 @@ function enabledKeys(groups: Record<string, GroupEntry>): string[] {
 }
 
 export async function listZaloAccounts(): Promise<ZaloAccount[]> {
+  if (!isZaloAdminAvailable()) return [];
   const cfg = await readCfg();
   const z = cfg.channels?.zalouser;
   const ids = new Set<string>(["default"]);
@@ -100,6 +108,7 @@ export async function listZaloAccounts(): Promise<ZaloAccount[]> {
 }
 
 export async function createZaloAccount(accountId: string, name?: string): Promise<ZaloAccount> {
+  if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
   if (!SLUG.test(accountId)) throw new Error("id chỉ gồm a-z 0-9 và gạch ngang (≤31 ký tự)");
   const cfg = await readCfg();
   const z = (cfg.channels ??= {}).zalouser ??= {};
@@ -134,6 +143,7 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
 }
 
 export async function deleteZaloAccount(accountId: string): Promise<void> {
+  if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
   if (accountId === "default") throw new Error("không xoá được tài khoản default");
   // logout session zca trước (best-effort) để không sót credential mồ côi
   try {
@@ -159,6 +169,7 @@ export async function setZaloGroupEnabled(
   groupId: string,
   enabled: boolean,
 ): Promise<{ conflictWith: string | null }> {
+  if (!isZaloAdminAvailable()) return { conflictWith: null }; // cloud
   const cfg = await readCfg();
   const z = (cfg.channels ??= {}).zalouser ??= {};
   const accounts = await listZaloAccounts();
@@ -203,6 +214,7 @@ function qrFile(accountId: string): string {
 export async function startZaloLogin(
   accountId: string,
 ): Promise<{ qrBase64: string | null; startedAt: string }> {
+  if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
   const existing = logins.get(accountId);
   if (existing && existing.child.exitCode === null) {
     const b64 = await readQr(accountId);
@@ -238,6 +250,7 @@ export async function zaloLoginStatus(accountId: string): Promise<{
   processAlive: boolean;
   connected: boolean | null;
 }> {
+  if (!isZaloAdminAvailable()) return { qrBase64: null, processAlive: false, connected: null };
   const handle = logins.get(accountId);
   const qrBase64 = await readQr(accountId);
   let connected: boolean | null = null;
@@ -261,6 +274,7 @@ export async function zaloLoginStatus(accountId: string): Promise<{
 }
 
 export async function cancelZaloLogin(accountId: string): Promise<void> {
+  if (!isZaloAdminAvailable()) return;
   const handle = logins.get(accountId);
   if (handle && handle.child.exitCode === null) handle.child.kill("SIGTERM");
   logins.delete(accountId);
@@ -280,6 +294,7 @@ export async function listZaloGroupDirectory(
   accountId: string,
   force = false,
 ): Promise<ZaloGroupDir[]> {
+  if (!isZaloAdminAvailable()) return [];
   const hit = dirCache.get(accountId);
   if (!force && hit && Date.now() - hit.at < DIR_TTL_MS) return hit.rows;
   await refreshZaloGroupDirectory(accountId);
