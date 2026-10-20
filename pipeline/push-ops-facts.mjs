@@ -200,7 +200,11 @@ async function main() {
     for (const id of Object.keys(z.accounts ?? {})) ids.add(id);
     zaloAccounts = [...ids].map((id) => {
       const acc = id === "default" ? undefined : z.accounts?.[id];
-      const groups = id === "default" ? (z.groups ?? {}) : (acc?.groups ?? {});
+      // Sau multi-account fix, default groups nằm ở accounts.default.groups
+      // (top-level z.groups là bản cũ 4 nhóm — thiếu Duy Ka Masteri)
+      const groups = id === "default"
+        ? (z.accounts?.default?.groups ?? z.groups ?? {})
+        : (acc?.groups ?? {});
       const enabled = Object.entries(groups).filter(([, v]) => v?.enabled !== false && v?.allow !== false).length;
       return { accountId: id, name: acc?.name ?? null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
     });
