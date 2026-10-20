@@ -22,12 +22,14 @@ const QR_DIR = "/tmp/openclaw";
 const run = promisify(execFile);
 const SLUG = /^[a-z0-9][a-z0-9-]{0,30}$/;
 
-type GroupEntry = { enabled?: boolean; allow?: boolean };
+type GroupEntry = { enabled?: boolean; allow?: boolean; requireMention?: boolean };
 type AccountCfg = {
   enabled?: boolean;
   profile?: string;
   name?: string;
   groupPolicy?: string;
+  groupAllowFrom?: string[];
+  requireMention?: boolean;
   groups?: Record<string, GroupEntry>;
 };
 type ZalouserCfg = {
@@ -111,6 +113,7 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
       enabled: true,
       profile: "default",
       ...(z.groupPolicy ? { groupPolicy: z.groupPolicy } : {}),
+      groupAllowFrom: ["*"],
       ...(z.groups ? { groups: z.groups } : {}),
     };
   }
@@ -120,6 +123,9 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
     profile: accountId,
     ...(name ? { name } : {}),
     groupPolicy: "allowlist",
+    // sender-access: nhóm đã allow thì mọi người gửi trong nhóm đều qua
+    // (không có cái này, ingress chặn với "empty allowlist")
+    groupAllowFrom: ["*"],
     groups: {},
   });
   await writeCfg(cfg);
@@ -164,14 +170,21 @@ export async function setZaloGroupEnabled(
     );
     if (owner) return { conflictWith: owner.accountId };
   }
+  const newEntry = () => ({ enabled, requireMention: false }); // monitor: nhận cả tin không nhắc bot
   if (accountId === "default") {
     const target = z.accounts?.default
       ? ((z.accounts.default.groups ??= {}))
       : ((z.groups ??= {}));
-    (target[groupId] ??= {}).enabled = enabled;
+    if (target[groupId]) target[groupId].enabled = enabled;
+    else target[groupId] = newEntry();
   } else {
-    const acc = (z.accounts ??= {})[accountId] ??= { enabled: true, profile: accountId };
-    ((acc.groups ??= {})[groupId] ??= {}).enabled = enabled;
+    const acc = (z.accounts ??= {})[accountId] ??= {
+      enabled: true,
+      profile: accountId,
+      groupAllowFrom: ["*"],
+    };
+    if (acc.groups?.[groupId]) acc.groups[groupId].enabled = enabled;
+    else ((acc.groups ??= {})[groupId] = newEntry());
   }
   await writeCfg(cfg);
   return { conflictWith: null };

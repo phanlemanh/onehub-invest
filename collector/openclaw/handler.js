@@ -17,7 +17,9 @@ const log = (line) =>
   appendFile(LOG, `${new Date().toISOString()} ${line}\n`).catch(() => {});
 
 export default async function (context) {
-  const ev = context?.event ?? {};
+  // Hình dạng lời gọi khác nhau theo phiên bản runtime: InternalHookEvent đặt
+  // payload ở .context; một số đường cũ bọc .event. Đọc phòng thủ cả ba.
+  const ev = context?.event ?? context?.context ?? context ?? {};
   if (ev.channelId !== "zalouser") return;
   const text = (ev.content ?? "").trim();
   if (!text) {
@@ -29,7 +31,12 @@ export default async function (context) {
   const group = meta.channelName || meta.threadId || ev.conversationId || "zalo-group";
   // đa tài khoản: gán nguồn cho mọi dòng log (_phase 2 attribution)
   const account = ev.accountId ?? meta.accountId ?? meta.account ?? "?";
-  const ts = ev.timestamp ?? new Date().toISOString();
+  // MessageReceivedHookContext.timestamp là Unix ms (number) — API collector
+  // cần ISO string; đőd đủ mọi dạng đầu vào.
+  const ts =
+    typeof ev.timestamp === "number"
+      ? new Date(ev.timestamp).toISOString()
+      : (ev.timestamp ?? new Date().toISOString());
 
   let p = null;
   try {
