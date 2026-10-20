@@ -14,13 +14,17 @@ mkdir -p "$(dirname "$LOG")"
 touch "$LOG"
 
 STATUS="$("$OPENCLAW" channels status 2>/dev/null || true)"
-if echo "$STATUS" | grep -q "Zalo Personal.*connected"; then
-  IN="$(echo "$STATUS" | grep "Zalo Personal" | grep -oE 'in:[0-9a-z]+ ago' | head -1)"
-  echo "$TS heartbeat zalouser up ${IN:-in=?}" >> "$LOG"
+# Đa tài khoản: ĐÚNG khi MỌI dòng "Zalo Personal ... connected" đều connected
+TOTAL=$(echo "$STATUS" | grep -c "Zalo Personal" || true)
+UP=$(echo "$STATUS" | grep "Zalo Personal" | grep -c "connected" || true)
+if [ "$TOTAL" -gt 0 ] && [ "$TOTAL" = "$UP" ]; then
+  echo "$TS heartbeat zalouser up accs=${UP}/${TOTAL}" >> "$LOG"
+elif [ "$TOTAL" -gt 0 ]; then
+  echo "$TS heartbeat zalouser DOWN accs=${UP}/${TOTAL}" >> "$LOG"
 else
   echo "$TS heartbeat zalouser DOWN" >> "$LOG"
-  exit 0
 fi
+[ "$TOTAL" -gt 0 ] && [ "$TOTAL" = "$UP" ] || exit 0
 
 # Chết im lặng: up nhưng dòng " post 202" cuối cũ hơn 24h (chỉ cảnh báo khi
 # trước đó từng có tin thật — log có ít nhất 1 dòng post 202)

@@ -33,6 +33,7 @@ type AccountCfg = {
 type ZalouserCfg = {
   enabled?: boolean;
   defaultAccount?: string;
+  groupPolicy?: string;
   groups?: Record<string, GroupEntry>;
   accounts?: Record<string, AccountCfg>;
 };
@@ -63,8 +64,9 @@ function effectiveGroups(z: ZalouserCfg | undefined, accountId: string): {
 } {
   if (!z) return { explicit: false, groups: {} };
   if (accountId === "default") {
-    // default hiện dùng groups cấp channel (layout đang chạy) — tôn trọng
-    return { explicit: true, groups: z.groups ?? {} };
+    // Layout đa tài khoản: default tường minh trong accounts.default;
+    // layout cũ: groups cấp channel
+    return { explicit: true, groups: z.accounts?.default?.groups ?? z.groups ?? {} };
   }
   const acc = z.accounts?.[accountId];
   if (acc?.groups) return { explicit: true, groups: acc.groups };
@@ -100,6 +102,18 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
   const cfg = await readCfg();
   const z = (cfg.channels ??= {}).zalouser ??= {};
   if (z.accounts?.[accountId]) throw new Error(`tài khoản "${accountId}" đã tồn tại`);
+  // Có map accounts mà thiếu default tường minh → resolver OpenClaw ngừng tạo
+  // implicit default (channel không có key `profile`) → MẤT tài khoản chính!
+  // Materialize default với chính groups cấp channel trước khi thêm account.
+  if (!z.accounts) z.accounts = {};
+  if (!z.accounts.default) {
+    z.accounts.default = {
+      enabled: true,
+      profile: "default",
+      ...(z.groupPolicy ? { groupPolicy: z.groupPolicy } : {}),
+      ...(z.groups ? { groups: z.groups } : {}),
+    };
+  }
   // groups tường minh (rỗng) — chặn kế thừa 4 nhóm của default (bất biến 1-1)
   ((z.accounts ??= {})[accountId] = {
     enabled: true,
@@ -143,7 +157,10 @@ export async function setZaloGroupEnabled(
     if (owner) return { conflictWith: owner.accountId };
   }
   if (accountId === "default") {
-    ((z.groups ??= {})[groupId] ??= {}).enabled = enabled;
+    const target = z.accounts?.default
+      ? ((z.accounts.default.groups ??= {}))
+      : ((z.groups ??= {}));
+    (target[groupId] ??= {}).enabled = enabled;
   } else {
     const acc = (z.accounts ??= {})[accountId] ??= { enabled: true, profile: accountId };
     ((acc.groups ??= {})[groupId] ??= {}).enabled = enabled;
