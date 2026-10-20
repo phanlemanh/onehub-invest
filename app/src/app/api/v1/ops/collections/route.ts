@@ -4,9 +4,11 @@ import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
 import {
   getFlowDays,
+  getZaloGroups,
   readGateFunnel,
   readRotationPreview,
   readSchedulerStatus,
+  readZaloAllowlist,
 } from "@/lib/collections-queries";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +32,21 @@ export async function GET(req: Request) {
     90,
     Math.max(1, Number(new URL(req.url).searchParams.get("days") ?? 7) || 7),
   );
-  const [flow, funnel, jobs, rotation] = await Promise.all([
+  const [flow, funnel, jobs, rotation, zaloGroups, zaloAllowlist] = await Promise.all([
     getFlowDays(days),
     readGateFunnel(),
     readSchedulerStatus(),
     readRotationPreview(),
+    getZaloGroups(),
+    readZaloAllowlist(),
   ]);
-  return NextResponse.json({ generatedAt: new Date().toISOString(), flow, funnel, jobs, rotation });
+  return NextResponse.json({
+    generatedAt: new Date().toISOString(),
+    flow,
+    funnel,
+    jobs,
+    rotation,
+    zaloGroups,
+    zaloAllowlist,
+  });
 }

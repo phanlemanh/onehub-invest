@@ -232,3 +232,135 @@ export async function readRotationPreview(): Promise<RotationPreview> {
   }
   return { updatedAt, cursor, total: rows.length, next };
 }
+
+// ---------- Zalo: tầng Nhóm + tách thật/mock (V1 nhóm-metrics) ----------
+
+export type ZaloGroupRow = {
+  name: string;
+  isMockOnly: boolean; // nhóm chỉ xuất hiện trong snapshot zalo-mock
+  realPosts7d: number;
+  mockPosts7d: number;
+  lastSeenAt: string | null;
+  // funnel từ hook log (chỉ nhóm thật)
+  seen: number;
+  passed: number;
+  skipped: number;
+  accepted: number;
+  lastEventAt: string | null;
+};
+
+export type ZaloAllowlistEntry = { groupId: string; enabled: boolean };
+
+/** Allowlist đọc runtime từ ~/.openclaw/openclaw.json — KHÔNG commit id vào
+ * repo/migration (SPL ADR-0007: định danh nguồn thật ở tầng A, máy local). */
+export async function readZaloAllowlist(): Promise<ZaloAllowlistEntry[]> {
+  try {
+    const cfg = JSON.parse(
+      await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"),
+    );
+    const groups = cfg?.channels?.zalouser?.groups ?? {};
+    return Object.entries(groups).map(([groupId, v]) => ({
+      groupId,
+      enabled: Boolean((v as { enabled?: boolean })?.enabled),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Funnel cổng Kev theo nhóm từ hook log (dòng có tag group=). */
+function gateByGroup(text: string): Map<string, ZaloGroupRow> {
+  const m = new Map<string, ZaloGroupRow>();
+  for (const line of text.split("\n")) {
+    const g = line.match(/group=(.+?)(?:\s+p=|$)/)?.[1];
+    if (!g) continue;
+    const row =
+      m.get(g) ??
+      ({
+        name: g,
+        isMockOnly: false,
+        realPosts7d: 0,
+        mockPosts7d: 0,
+        lastSeenAt: null,
+        seen: 0,
+        passed: 0,
+        skipped: 0,
+        accepted: 0,
+        lastEventAt: null,
+      } satisfies ZaloGroupRow);
+    row.seen++;
+    if (line.includes(" post 202")) {
+      row.passed++;
+      row.accepted += Number(line.match(/"accepted":(\d+)/)?.[1] ?? 0);
+    } else if (/ skip /.test(line)) row.skipped++;
+    const ts = line.slice(0, 24);
+    if (/^\d{4}-\d{2}-\d{2}T/.test(ts)) row.lastEventAt = ts;
+    m.set(g, row);
+  }
+  return m;
+}
+
+/** Bảng nhóm Zalo: nhóm thật (stg posts snapshot zalo-agent + hook log) và
+ * nhóm mock tách riêng để không tô hồng số thật. */
+export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
+  const [postRows, logText] = await Promise.all([
+    pool.query(
+      `SELECT group_name,
+              count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%'
+                 AND captured_at >= now() - interval '7 days')::int AS real7,
+              count(*) FILTER (WHERE snapshot_id NOT LIKE '%zalo-agent%'
+                 AND captured_at >= now() - interval '7 days')::int AS mock7,
+              max(captured_at) FILTER (WHERE snapshot_id LIKE '%zalo-agent%') AS last_real,
+              bool_and(snapshot_id NOT LIKE '%zalo-agent%') AS mock_only
+         FROM stg_zalo_posts
+        WHERE group_name IS NOT NULL
+        GROUP BY group_name`,
+    ),
+    readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(
+      () => "",
+    ),
+  ]);
+  const byLog = gateByGroup(logText);
+  const rows = new Map<string, ZaloGroupRow>();
+  for (const r of postRows.rows) {
+    rows.set(r.group_name, {
+      name: r.group_name,
+      isMockOnly: r.mock_only,
+      realPosts7d: r.real7,
+      mockPosts7d: r.mock7,
+      lastSeenAt: r.last_real ? new Date(r.last_real).toISOString() : null,
+      seen: 0,
+      passed: 0,
+      skipped: 0,
+      accepted: 0,
+      lastEventAt: null,
+    });
+  }
+  for (const [name, funnel] of byLog) {
+    const row = rows.get(name) ?? {
+      name,
+      isMockOnly: false,
+      realPosts7d: 0,
+      mockPosts7d: 0,
+      lastSeenAt: null,
+      seen: 0,
+      passed: 0,
+      skipped: 0,
+      accepted: 0,
+      lastEventAt: null,
+    };
+    Object.assign(row, {
+      seen: funnel.seen,
+      passed: funnel.passed,
+      skipped: funnel.skipped,
+      accepted: funnel.accepted,
+      lastEventAt: funnel.lastEventAt,
+      lastSeenAt: row.lastSeenAt ?? funnel.lastEventAt,
+    });
+    rows.set(name, row);
+  }
+  return [...rows.values()].sort((a, b) => {
+    if (a.isMockOnly !== b.isMockOnly) return a.isMockOnly ? 1 : -1; // thật trước
+    return (b.lastSeenAt ?? "").localeCompare(a.lastSeenAt ?? "");
+  });
+}

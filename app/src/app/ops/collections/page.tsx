@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 
 import { Badge } from "@/components/reui/badge";
-import { FlowTable, SchedulerTable } from "@/components/ops/collections-tables";
+import { FlowTable, SchedulerTable, ZaloGroupsTable } from "@/components/ops/collections-tables";
 import {
   getFlowDays,
   readGateFunnel,
   readRotationPreview,
   readSchedulerStatus,
+  readZaloAllowlist,
+  getZaloGroups,
 } from "@/lib/collections-queries";
 import { fmtInt } from "@/lib/format";
 
@@ -36,11 +38,13 @@ function Stat({
  * Trả lời 3 câu: hôm nay chảy vào gì / qua cổng nào / máy có chạy không.
  */
 export default async function CollectionsPage() {
-  const [days, funnel, jobs, rotation] = await Promise.all([
+  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist] = await Promise.all([
     getFlowDays(7),
     readGateFunnel(),
     readSchedulerStatus(),
     readRotationPreview(),
+    getZaloGroups(),
+    readZaloAllowlist(),
   ]);
   const today = days[0];
 
@@ -123,6 +127,7 @@ export default async function CollectionsPage() {
       </section>
 
       <FlowTable days={days} />
+      <ZaloGroupsTable rows={zaloGroups} allowlist={zaloAllowlist} />
       <SchedulerTable jobs={jobs} />
     </div>
   )
