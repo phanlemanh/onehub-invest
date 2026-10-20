@@ -31,7 +31,14 @@ type LocalFacts = {
   rotation: { cursor: number; total: number; next: { id: string; name: string; lastCapturedAt: string | null }[]; updatedAt?: string | null };
   zaloGroups: ZaloGroupRow[];
   zaloFlow: Record<string, { posts?: number; offers?: number }>;
+  zaloAccounts?: { accountId: string; name: string | null; profile: string; enabledGroups: string[] }[];
 };
+
+/** Cloud: danh sách tài khoản Zalo từ ops-heartbeat (read-only). */
+export async function getZaloAccountsFromFacts(): Promise<LocalFacts["zaloAccounts"]> {
+  const f = await getLocalFacts();
+  return f?.zaloAccounts ?? [];
+}
 
 const isCloud = () => process.env.VERCEL === "1";
 

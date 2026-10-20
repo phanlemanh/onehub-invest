@@ -191,12 +191,28 @@ async function main() {
   const [jobs, rot, zalo] = await Promise.all([scheduler(), rotation(client), zaloExtras(client, groups)]);
   await client.end();
 
+  // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud)
+  let zaloAccounts = [];
+  try {
+    const zcfg = JSON.parse(await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"));
+    const z = zcfg?.channels?.zalouser ?? {};
+    const ids = new Set(["default"]);
+    for (const id of Object.keys(z.accounts ?? {})) ids.add(id);
+    zaloAccounts = [...ids].map((id) => {
+      const acc = id === "default" ? undefined : z.accounts?.[id];
+      const groups = id === "default" ? (z.groups ?? {}) : (acc?.groups ?? {});
+      const enabled = Object.entries(groups).filter(([, v]) => v?.enabled !== false && v?.allow !== false).length;
+      return { accountId: id, name: acc?.name ?? null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
+    });
+  } catch { /* config không đọc được */ }
+
   const payload = {
     pushedAt: new Date().toISOString(),
     funnel, health, jobs,
     rotation: { ...rot, updatedAt: rot.updatedAt ?? null },
     zaloGroups: zalo.groups,
     zaloFlow: zalo.flow,
+    zaloAccounts,
   };
   const res = await fetch(INGEST_URL, {
     method: "POST",

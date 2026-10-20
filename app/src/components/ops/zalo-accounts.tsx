@@ -14,8 +14,11 @@ type Account = {
 }
 type GroupRow = { groupId: string; name: string; enabled: boolean; ownedBy: string | null }
 
-/** Quản trị tài khoản zalouser: thêm (QR) + gán nhóm (bất biến 1 nhóm – 1 tài khoản). */
+/** Quản trị tài khoản zalouser: thêm (QR) + gán nhóm (bất biến 1 nhóm – 1 tài khoản).
+ * Trên cloud (Vercel): read-only — danh sách từ ops-heartbeat, không nút quản trị. */
 export function ZaloAccountsPanel() {
+  const isCloud = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
+  const [cloudAccounts, setCloudAccounts] = useState<{ accountId: string; name: string | null; profile: string; enabledGroups: string[] }[] | null>(null);
   const [accounts, setAccounts] = useState<Account[] | null>(null)
   const [selected, setSelected] = useState<string>("default")
   const [groups, setGroups] = useState<GroupRow[] | null>(null)
@@ -51,8 +54,16 @@ export function ZaloAccountsPanel() {
   }, [])
 
   useEffect(() => {
-    loadAccounts()
-  }, [loadAccounts])
+    if (isCloud) {
+      // Cloud: đọc từ ops-heartbeat qua API collections
+      fetch("/api/v1/ops/collections?days=1")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setCloudAccounts(d?.zaloAccounts ?? []))
+        .catch(() => setCloudAccounts([]));
+    } else {
+      loadAccounts();
+    }
+  }, [isCloud, loadAccounts])
   useEffect(() => {
     if (accounts && !accounts.some((a) => a.accountId === selected)) {
       setSelected(accounts[0]?.accountId ?? "default")
@@ -175,6 +186,29 @@ export function ZaloAccountsPanel() {
     setConnected(null)
   }
 
+  if (isCloud) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-muted-foreground text-xs">
+          Danh sách tài khoản từ máy thu (cập nhật mỗi 15 phút). Quản lý (thêm/QR/bật-tắt nhóm) chỉ thực hiện được trên máy thu.
+        </p>
+        {cloudAccounts === null ? (
+          <p className="text-muted-foreground text-sm">Đang tải…</p>
+        ) : cloudAccounts.length === 0 ? (
+          <p className="text-muted-foreground text-sm">Chưa có dữ liệu tài khoản.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {cloudAccounts.map((a) => (
+              <span key={a.accountId} className="rounded-md border px-3 py-1.5 text-sm">
+                {a.accountId}
+                <span className="text-muted-foreground ml-2 text-xs">{a.enabledGroups.length} nhóm</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
   if (accounts === null) return <p className="text-muted-foreground text-sm">Đang tải…</p>
 
   return (
