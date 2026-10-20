@@ -21,9 +21,10 @@ async function auth(req: Request): Promise<boolean> {
 export async function GET(req: Request) {
   if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const accountId = new URL(req.url).searchParams.get("account") ?? "default";
+  const force = new URL(req.url).searchParams.get("refresh") === "1";
   try {
     const [directory, accounts] = await Promise.all([
-      listZaloGroupDirectory(accountId),
+      listZaloGroupDirectory(accountId, force),
       listZaloAccounts(),
     ]);
     const owner = new Map<string, string>();

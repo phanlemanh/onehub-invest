@@ -19,6 +19,9 @@ export function ZaloAccountsPanel() {
   const [accounts, setAccounts] = useState<Account[] | null>(null)
   const [selected, setSelected] = useState<string>("default")
   const [groups, setGroups] = useState<GroupRow[] | null>(null)
+  const [groupsLoading, setGroupsLoading] = useState(false)
+  const [groupsError, setGroupsError] = useState<string | null>(null)
+  const [filter, setFilter] = useState("")
   const [newId, setNewId] = useState("")
   const [msg, setMsg] = useState<string | null>(null)
   const [qr, setQr] = useState<{ accountId: string; base64: string | null } | null>(null)
@@ -29,10 +32,22 @@ export function ZaloAccountsPanel() {
     const r = await fetch("/api/v1/ops/zalo/accounts")
     if (r.ok) setAccounts((await r.json()).accounts)
   }, [])
-  const loadGroups = useCallback(async (accountId: string) => {
-    const r = await fetch(`/api/v1/ops/zalo/groups?account=${encodeURIComponent(accountId)}`)
-    if (r.ok) setGroups((await r.json()).groups)
-    else setGroups([])
+  const loadGroups = useCallback(async (accountId: string, refresh = false) => {
+    setGroupsLoading(true)
+    setGroupsError(null)
+    try {
+      const r = await fetch(
+        `/api/v1/ops/zalo/groups?account=${encodeURIComponent(accountId)}${refresh ? "&refresh=1" : ""}`,
+      )
+      const b = await r.json()
+      if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`)
+      setGroups(b.groups)
+    } catch (e) {
+      setGroups(null)
+      setGroupsError(e instanceof Error ? e.message : "lỗi tải nhóm")
+    } finally {
+      setGroupsLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -227,6 +242,31 @@ export function ZaloAccountsPanel() {
 
       {msg && <p className="text-sm">{msg}</p>}
 
+      <div className="flex items-center gap-2">
+        <input
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Lọc nhóm theo tên…"
+          className="border-input bg-background h-8 w-56 rounded-md border px-2 text-sm"
+        />
+        <span className="text-muted-foreground text-xs">
+          {groups ? `${groups.length} nhóm của "${selected}"` : ""}
+        </span>
+        <Button size="sm" variant="ghost" onClick={() => loadGroups(selected, true)} disabled={groupsLoading}>
+          ↻ Tải lại
+        </Button>
+      </div>
+      {groupsLoading && (
+        <p className="text-muted-foreground text-sm">Đang tải nhóm từ Zalo (lần đầu ~8 giây)…</p>
+      )}
+      {groupsError && (
+        <p className="text-destructive text-sm">
+          Lỗi tải nhóm: {groupsError}{" "}
+          <Button size="sm" variant="outline" onClick={() => loadGroups(selected, true)}>
+            Thử lại
+          </Button>
+        </p>
+      )}
       <div className="overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs">
@@ -237,7 +277,11 @@ export function ZaloAccountsPanel() {
             </tr>
           </thead>
           <tbody>
-            {(groups ?? []).map((g) => {
+            {(groups ?? [])
+              .filter((g) => !filter || g.name.toLowerCase().includes(filter.toLowerCase()))
+              .sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name))
+              .slice(0, 50)
+              .map((g) => {
               const conflict = !g.enabled && g.ownedBy && g.ownedBy !== selected
               return (
                 <tr key={g.groupId} className="border-t">
@@ -257,7 +301,7 @@ export function ZaloAccountsPanel() {
                 </tr>
               )
             })}
-            {groups !== null && groups.length === 0 && (
+            {groups !== null && groups.length === 0 && !groupsError && (
               <tr className="border-t">
                 <td className="text-muted-foreground px-3 py-3 text-xs" colSpan={3}>
                   Chưa thấy nhóm nào (tài khoản chưa login?) — quét QR trước rồi tải lại.

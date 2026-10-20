@@ -245,16 +245,27 @@ export async function cancelZaloLogin(accountId: string): Promise<void> {
 
 export type ZaloGroupDir = { groupId: string; name: string };
 
-export async function listZaloGroupDirectory(accountId: string): Promise<ZaloGroupDir[]> {
+const dirCache = new Map<string, { at: number; rows: ZaloGroupDir[] }>();
+const DIR_TTL_MS = 60_000;
+
+/** Directory nhóm từ Zalo (membership thật). CLI mất ~8s/lượt → cache 60s;
+ * force=true bỏ cache (nút refresh trên UI). */
+export async function listZaloGroupDirectory(
+  accountId: string,
+  force = false,
+): Promise<ZaloGroupDir[]> {
+  const hit = dirCache.get(accountId);
+  if (!force && hit && Date.now() - hit.at < DIR_TTL_MS) return hit.rows;
   const { stdout } = await run(
     OPENCLAW,
     ["directory", "groups", "list", "--channel", "zalouser", ...(accountId !== "default" ? ["--account", accountId] : [])],
-    { timeout: 20000 },
+    { timeout: 30000 },
   );
   // bảng │ ID │ Name │
   const rows: ZaloGroupDir[] = [];
   for (const m of stdout.matchAll(/│\s*(group:\S+)\s*│\s*([^│]+?)\s*│/g)) {
     rows.push({ groupId: m[1], name: m[2] });
   }
+  dirCache.set(accountId, { at: Date.now(), rows });
   return rows;
 }
