@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import { AirdnaMarketsTable, CalibrationTable } from "@/components/ops/quality-tables";
+import { AirdnaMarketsTable, CalibrationTable, TruthfulCoverageTable } from "@/components/ops/quality-tables";
 import { pool } from "@/lib/db";
-import { getAirdnaComparison, getAirdnaMarkets } from "@/lib/queries";
+import { getAirdnaComparison, getAirdnaMarkets, getTruthfulCoverage } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Chất lượng dữ liệu" };
@@ -15,11 +15,12 @@ export default async function QualityPage() {
   const { rows: markets } = await pool.query<{ id: string; name: string }>(
     `SELECT id, name FROM areas WHERE region_type = 'market' ORDER BY name`,
   );
-  const [comparisons, airdnaMarkets] = await Promise.all([
+  const [comparisons, airdnaMarkets, truthful] = await Promise.all([
     Promise.all(
       markets.map(async (m) => ({ market: m, data: await getAirdnaComparison(m.id) })),
     ),
     getAirdnaMarkets(),
+    getTruthfulCoverage(),
   ]);
   const calibrated = comparisons.filter((c) => c.data !== null);
 
@@ -32,6 +33,7 @@ export default async function QualityPage() {
           nhà đầu tư.
         </p>
       </div>
+      <TruthfulCoverageTable rows={truthful} />
       {calibrated.map(({ market, data }) => (
         <CalibrationTable key={market.id} marketName={market.name} data={data!} />
       ))}

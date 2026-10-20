@@ -7,7 +7,7 @@ import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { fmtInt, fmtMoney, fmtPct } from "@/lib/format"
-import type { AirdnaComparison, AirdnaMarketRow } from "@/lib/queries"
+import type { AirdnaComparison, AirdnaMarketRow, TruthfulCoverageRow } from "@/lib/queries"
 
 const NUM = { headerClassName: "text-end", cellClassName: "text-end tabular-nums" }
 
@@ -29,6 +29,110 @@ function ratioBadge(ratio: number | null) {
     <Badge variant={ok ? "success-light" : "warning-light"} className="tabular-nums">
       {ratio.toFixed(2)}× · {ok ? "Khớp" : "Lệch"}
     </Badge>
+  )
+}
+
+/** Độ phủ trung thực: tự thu là mẫu discovery — % này là độ sâu hiệu chuẩn
+ * (mẫu ÷ active AirDNA), không phải "đã quét hết thị trường". Trung thực =
+ * nói đúng con số, không tô hồng. */
+function coverageBadge(ratio: number | null) {
+  if (ratio === null) return <span className="text-muted-foreground">—</span>
+  const pct = ratio * 100
+  const variant = pct >= 5 ? "success-light" : pct >= 1 ? "outline" : "warning-light"
+  return (
+    <Badge variant={variant} className="tabular-nums">
+      {pct >= 1 ? `${pct.toFixed(1)}%` : `${pct.toFixed(2)}%`}
+    </Badge>
+  )
+}
+
+export function TruthfulCoverageTable({ rows }: { rows: TruthfulCoverageRow[] }) {
+  const columns = useMemo<InsightColumn<TruthfulCoverageRow>[]>(
+    () => [
+      {
+        id: "name",
+        accessorKey: "name",
+        header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />,
+        size: 180,
+        enableSorting: true,
+      },
+      {
+        id: "our",
+        accessorFn: (r) => r.ourListings,
+        header: ({ column }) => <DataGridColumnHeader title="Tự thu" column={column} />,
+        cell: ({ row }) => fmtInt(row.original.ourListings),
+        size: 110,
+        meta: NUM,
+        enableSorting: true,
+      },
+      {
+        id: "airdna",
+        accessorFn: (r) => r.airdnaActive,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="AirDNA active" column={column} />
+        ),
+        cell: ({ row }) =>
+          row.original.airdnaActive
+            ? `${fmtInt(row.original.airdnaActive)}${row.original.airdnaPeriod ? ` · ${row.original.airdnaPeriod}` : ""}`
+            : "—",
+        size: 170,
+        meta: NUM,
+        enableSorting: true,
+      },
+      {
+        id: "universe",
+        accessorFn: (r) => r.airdnaUniverse,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Universe đã mua" column={column} />
+        ),
+        cell: ({ row }) => fmtInt(row.original.airdnaUniverse),
+        size: 130,
+        meta: NUM,
+        enableSorting: true,
+      },
+      {
+        id: "ratio",
+        accessorFn: (r) => r.ratio ?? -1,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Độ phủ trung thực" column={column} />
+        ),
+        cell: ({ row }) => coverageBadge(row.original.ratio),
+        size: 150,
+        meta: NUM,
+        enableSorting: true,
+      },
+      {
+        id: "history",
+        accessorFn: (r) => r.historyMonths,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Lịch sử AirDNA" column={column} />
+        ),
+        cell: ({ row }) => (row.original.historyMonths ? `${row.original.historyMonths} tháng` : "—"),
+        size: 130,
+        meta: NUM,
+        enableSorting: true,
+      },
+      {
+        id: "captured",
+        accessorFn: (r) => r.capturedAt ?? "",
+        header: ({ column }) => <DataGridColumnHeader title="Cập nhật" column={column} />,
+        cell: ({ row }) =>
+          row.original.capturedAt ? row.original.capturedAt.slice(0, 10) : "—",
+        size: 110,
+        enableSorting: true,
+      },
+    ],
+    []
+  )
+  return (
+    <InsightGrid
+      title="Độ phủ trung thực"
+      description="Listing tự thu ÷ listing active AirDNA cùng thị trường (crosswalk S02)"
+      data={rows}
+      columns={columns}
+      getRowId={(r) => r.areaId}
+      footnote="Tự thu là mẫu discovery phục vụ hiệu chuẩn (ADR/công suất lệch <20%) — tỉ lệ thấp là đúng thiết kế, không phải thiếu dữ liệu. Universe đã mua = map_listings AirDNA (LTM đầy đủ); lịch sử = timeseries tháng đang lưu (36 tháng nguồn cung + 12 tháng ADR/occupancy/revenue/RevPAR)."
+    />
   )
 }
 

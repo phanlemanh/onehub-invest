@@ -848,6 +848,62 @@ export async function getYieldComps(
 // CHỈ dùng trong Ops Portal (/ops/quality) — AirDNA là nguồn hiệu chuẩn, không
 // hiển thị cho nhà đầu tư (CLAUDE.md "Don't", IA rủi ro R1).
 
+export type TruthfulCoverageRow = {
+  areaId: string;
+  name: string;
+  ourListings: number;
+  airdnaActive: number;
+  airdnaPeriod: string | null;
+  airdnaUniverse: number; // map_listings đã mua (đầy đủ market)
+  historyMonths: number; // độ sâu timeseries AirDNA đã lưu
+  capturedAt: string | null;
+  ratio: number | null; // our / airdna active
+};
+
+/**
+ * Độ phủ trung thực (E2 C2/D): listing tự thu ÷ listing active AirDNA của
+ * cùng market (crosswalk S02). Tự thu là mẫu discovery theo thiết kế — tỉ lệ
+ * này nói độ sâu hiệu chuẩn, KHÔNG phải độ phủ "thị trường đã quét hết".
+ */
+export async function getTruthfulCoverage(): Promise<TruthfulCoverageRow[]> {
+  const { rows } = await pool.query(
+    `SELECT x.area_id,
+            a.name,
+            (SELECT count(*)::int FROM listings l
+               JOIN areas sa ON sa.id = l.area_id
+              WHERE coalesce(sa.parent_id, sa.id) = x.area_id) AS our_listings,
+            lc.value  AS airdna_active,
+            lc.period AS airdna_period,
+            (SELECT count(*)::int FROM airdna_listings al
+              WHERE al.airdna_market_id = x.source_area_key) AS airdna_universe,
+            (SELECT count(DISTINCT period)::int FROM airdna_market_metrics mm
+              WHERE mm.airdna_id = x.source_area_key) AS history_months,
+            am.captured_at
+       FROM area_sources x
+       JOIN areas a ON a.id = x.area_id
+       JOIN LATERAL (SELECT value, period FROM airdna_market_metrics m
+                      WHERE m.airdna_id = x.source_area_key AND m.metric = 'listing_count'
+                      ORDER BY period DESC LIMIT 1) lc ON TRUE
+       LEFT JOIN airdna_markets am ON am.airdna_id = x.source_area_key
+      WHERE x.source = 'S02'
+      ORDER BY a.name`,
+  );
+  return rows.map((r) => ({
+    areaId: r.area_id,
+    name: r.name,
+    ourListings: Number(r.our_listings),
+    airdnaActive: r.airdna_active === null ? 0 : Number(r.airdna_active),
+    airdnaPeriod: r.airdna_period ?? null,
+    airdnaUniverse: Number(r.airdna_universe),
+    historyMonths: Number(r.history_months),
+    capturedAt: r.captured_at ? new Date(r.captured_at).toISOString() : null,
+    ratio:
+      r.airdna_active === null || Number(r.airdna_active) === 0
+        ? null
+        : Number(r.our_listings) / Number(r.airdna_active),
+  }));
+}
+
 export type AirdnaMarketRow = {
   airdnaId: string;
   name: string;
