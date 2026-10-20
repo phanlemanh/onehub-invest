@@ -214,6 +214,14 @@ export function ZaloGroupsTable({
         enableSorting: true,
       },
       {
+        id: "owner",
+        accessorFn: (r) => r.ownerAccount ?? "",
+        header: "Tài khoản",
+        cell: ({ row }) => row.original.ownerAccount ?? "—",
+        size: 110,
+        enableSorting: true,
+      },
+      {
         id: "real7",
         accessorFn: (r) => r.realPosts7d,
         header: ({ column }) => <DataGridColumnHeader title="Post thật 7 ngày" column={column} />,

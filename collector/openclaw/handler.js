@@ -22,11 +22,13 @@ export default async function (context) {
   const text = (ev.content ?? "").trim();
   if (!text) {
     const hasMedia = !!(ev.media?.length || ev.originalMedia?.length || ev.metadata?.mediaPath);
-    await log(`media-only skip${hasMedia ? " (có ảnh)" : " (rỗng)"} group=${ev.metadata?.channelName ?? "?"}`);
+    await log(`media-only skip${hasMedia ? " (có ảnh)" : " (rỗng)"} group=${ev.metadata?.channelName ?? "?"} account=${account}`);
     return; // quyết định OCR/vision khi có số liệu tỷ lệ
   }
   const meta = ev.metadata ?? {};
   const group = meta.channelName || meta.threadId || ev.conversationId || "zalo-group";
+  // đa tài khoản: gán nguồn cho mọi dòng log (_phase 2 attribution)
+  const account = ev.accountId ?? meta.accountId ?? meta.account ?? "?";
   const ts = ev.timestamp ?? new Date().toISOString();
 
   let p = null;
@@ -51,11 +53,11 @@ export default async function (context) {
     });
     if (r.ok) p = (await r.json())?.answers?.is_bds?.noul ?? null;
   } catch (e) {
-    await log(`gate-error ${e.message} group=${group}`);
+    await log(`gate-error ${e.message} group=${group} account=${account}`);
     return;
   }
   if (p === null || p < THRESHOLD) {
-    await log(`skip p=${p === null ? "null" : p.toFixed(2)} group=${group}`);
+    await log(`skip p=${p === null ? "null" : p.toFixed(2)} group=${group} account=${account}`);
     return;
   }
 
@@ -71,8 +73,8 @@ export default async function (context) {
       }),
     });
     const body = await r.text();
-    await log(`post ${r.status} ${body.slice(0, 80)} group=${group} p=${p.toFixed(2)}`);
+    await log(`post ${r.status} ${body.slice(0, 80)} group=${group} p=${p.toFixed(2)} account=${account}`);
   } catch (e) {
-    await log(`post-error ${e.message} group=${group}`);
+    await log(`post-error ${e.message} group=${group} account=${account}`);
   }
 }

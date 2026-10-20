@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 import { pool } from "./db";
+import { listZaloAccounts, listZaloGroupDirectory } from "./zalo-admin";
 
 /**
  * Queries + trạng thái máy cho /ops/collections "Thu Thập" (E2 tiếp theo,
@@ -248,6 +249,7 @@ export type ZaloGroupRow = {
   skipped: number;
   accepted: number;
   lastEventAt: string | null;
+  ownerAccount: string | null; // account đang sở hữu nhóm (config/directory)
 };
 
 export type ZaloAllowlistEntry = { groupId: string; enabled: boolean };
@@ -288,7 +290,11 @@ function gateByGroup(text: string): Map<string, ZaloGroupRow> {
         skipped: 0,
         accepted: 0,
         lastEventAt: null,
+        ownerAccount: null,
       } satisfies ZaloGroupRow);
+    // dòng log mới có tag account= (handler ≥2026-10-20 chiều) — attribution chính xác
+    const acc = line.match(/\baccount=([a-z0-9-]+)/)?.[1];
+    if (acc && acc !== "?") row.ownerAccount = acc;
     row.seen++;
     if (line.includes(" post 202")) {
       row.passed++;
@@ -335,7 +341,23 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
       skipped: 0,
       accepted: 0,
       lastEventAt: null,
+      ownerAccount: null,
     });
+  }
+  // Attribution từ config: tên nhóm → account (directory cached 60s per account)
+  try {
+    const accounts = await listZaloAccounts();
+    const dirs = new Map<string, string>(); // groupName → accountId
+    for (const a of accounts) {
+      for (const g of await listZaloGroupDirectory(a.accountId)) {
+        dirs.set(g.name, a.accountId);
+      }
+    }
+    for (const row of rows.values()) {
+      if (!row.ownerAccount) row.ownerAccount = dirs.get(row.name) ?? null;
+    }
+  } catch {
+    /* directory chưa sẵn sàng — để owner null, lần load sau có */
   }
   for (const [name, funnel] of byLog) {
     const row = rows.get(name) ?? {
@@ -349,6 +371,7 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
       skipped: 0,
       accepted: 0,
       lastEventAt: null,
+      ownerAccount: null,
     };
     Object.assign(row, {
       seen: funnel.seen,
@@ -373,6 +396,7 @@ export type ZaloHealth = {
   lastHeartbeatAt: string | null;
   lastPostAt: string | null; // dòng " post 202" cuối
   silentAlert24h: boolean;
+  driftAlert24h: boolean; // allowlist lệch membership / vi phạm 1-1
 };
 
 /** Tầng Ống V2: sức khoẻ ống Zalo từ dòng heartbeat trong log hook. */
@@ -384,11 +408,12 @@ export async function readZaloHealth(): Promise<ZaloHealth> {
     return {
       connected: null, uptime24h: null, heartbeatAgeMin: null,
       lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false,
+      driftAlert24h: false,
     };
   }
   const now = Date.now();
   let up = 0, total = 0, lastHb: string | null = null, lastPost: string | null = null,
-      silentAlert = false;
+      silentAlert = false, driftAlert = false;
   for (const line of text.split("\n")) {
     const ts = line.slice(0, 24);
     if (!/^\d{4}-\d{2}-\d{2}T/.test(ts)) continue;
@@ -403,6 +428,8 @@ export async function readZaloHealth(): Promise<ZaloHealth> {
       lastPost = ts;
     } else if (line.includes(" alert silent-gate") && now - t <= 86400000) {
       silentAlert = true;
+    } else if (line.includes(" alert drift") && now - t <= 86400000) {
+      driftAlert = true;
     }
   }
   const age = lastHb ? Math.round((now - new Date(lastHb).getTime()) / 60000) : null;
@@ -413,6 +440,7 @@ export async function readZaloHealth(): Promise<ZaloHealth> {
     lastHeartbeatAt: lastHb,
     lastPostAt: lastPost,
     silentAlert24h: silentAlert,
+    driftAlert24h: driftAlert,
   };
 }
 

@@ -26,6 +26,15 @@ else
 fi
 [ "$TOTAL" -gt 0 ] && [ "$TOTAL" = "$UP" ] || exit 0
 
+# Drift-check (Phase 2): 1 giờ/lần — so allowlist với membership thật
+LAST_DRIFT="$(grep ' alert drift' "$LOG" 2>/dev/null | tail -1 | cut -c1-19)"
+RUN_DRIFT=1
+if [ -n "$LAST_DRIFT" ]; then
+  LD_EPOCH="$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "$LAST_DRIFT" +%s 2>/dev/null || echo 0)"
+  [ $(( ($(date -u +%s) - LD_EPOCH) / 3600 )) -lt 1 ] && RUN_DRIFT=0
+fi
+[ "$RUN_DRIFT" = "1" ] && bash "$(dirname "$0")/zalo-drift.sh" || true
+
 # Chết im lặng: up nhưng dòng " post 202" cuối cũ hơn 24h (chỉ cảnh báo khi
 # trước đó từng có tin thật — log có ít nhất 1 dòng post 202)
 LAST_POST="$(grep ' post 202' "$LOG" | tail -1 | cut -c1-19)"

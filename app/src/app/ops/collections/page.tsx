@@ -115,6 +115,9 @@ export default async function CollectionsPage() {
           {zaloHealth.silentAlert24h && (
             <Badge variant="warning-light">Cảnh báo im lặng 24h</Badge>
           )}
+          {zaloHealth.driftAlert24h && (
+            <Badge variant="warning-light">Allowlist lệch membership — xem /ops/sources</Badge>
+          )}
         </div>
         <p className="text-muted-foreground text-xs">
           Heartbeat 15′ cuối{" "}
