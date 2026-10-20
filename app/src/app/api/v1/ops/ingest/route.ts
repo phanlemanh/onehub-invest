@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { auditOpsWrite } from "@/lib/audit";
 import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
@@ -32,5 +33,6 @@ export async function POST(req: Request) {
      ON CONFLICT (id) DO UPDATE SET payload = EXCLUDED.payload, pushed_at = EXCLUDED.pushed_at`,
     [JSON.stringify(payload), new Date(payload.pushedAt as string)],
   );
+  auditOpsWrite("machine:cloud-sync", "ops.ingest", { pushedAt: payload.pushedAt });
   return NextResponse.json({ ok: true, pushedAt: payload.pushedAt });
 }

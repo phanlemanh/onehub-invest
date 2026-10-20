@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
+import { auditOpsWrite } from "@/lib/audit";
 import { createZaloAccount, deleteZaloAccount, listZaloAccounts } from "@/lib/zalo-admin";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { id?: string; name?: string };
   try {
     const account = await createZaloAccount((body.id ?? "").trim(), body.name?.trim() || undefined);
+    auditOpsWrite("api:zalo-admin", "zalo.account.create", { accountId: account.accountId });
     return NextResponse.json({ account });
   } catch (e) {
     return NextResponse.json(
@@ -43,6 +45,7 @@ export async function DELETE(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { id?: string };
   try {
     await deleteZaloAccount((body.id ?? "").trim());
+    auditOpsWrite("api:zalo-admin", "zalo.account.delete", { accountId: (body.id ?? "").trim() });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(

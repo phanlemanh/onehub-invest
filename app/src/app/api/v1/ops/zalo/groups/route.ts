@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
+import { auditOpsWrite } from "@/lib/audit";
 import { listZaloAccounts, listZaloGroupDirectory, setZaloGroupEnabled } from "@/lib/zalo-admin";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
         { status: 409 },
       );
     }
+    auditOpsWrite("api:zalo-admin", "zalo.group.toggle", { accountId: body.accountId, groupId: body.groupId, enabled: body.enabled });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(
