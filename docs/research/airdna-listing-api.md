@@ -71,9 +71,40 @@ per-submarket {metrics timeseries + listings}; bảng `airdna_submarket_metrics`
 (7 dòng hiện tại) + `airdna_listings` keyed airbnb_property_id. History
 listing_count 36 tháng = lịch sử nguồn cung tự động có.
 
+## Tab Rates + Market Score + Seasonality (survey 9, 2026-10-20)
+
+Điều hướng thẳng route UI `/data/vn/47/142530/{rates,seasonality}` +
+`/data/vn/47/overview`, bắt XHR (Playwright headful, ~35 request):
+
+| Endpoint | Shape đáng chú ý |
+|---|---|
+| `POST /submarket/{sid}/metrics/adr` | timeseries 12 tháng `{date, avg_daily_rate}` + monthly/yearly_pct_change |
+| `POST /submarket/{sid}/metrics/adr_by_bedroom` | **36 tháng**, keyed `bedrooms` |
+| `POST /submarket/{sid}/metrics/adr_by_price_tier` | **36 tháng**, keyed `price_tiers` |
+| `POST /submarket/{sid}/metrics/rates_summary` | `summary_cards` (KPI tab Rates) |
+| `POST /submarket/{sid}/avg_daily_revpar` | `{avg_daily_revpar, yearly_pct_change}` |
+| `POST /v2/submarket/{sid}/future/rates` | **163 ngày tương lai** daily `{date, booked_count, available_count, mean/median_booked_rate, mean/median_available_rate, occupancy, revpar, total_revenue}` — forward-looking |
+| `POST /v2/market/{id}/overview/market_score` | **breakdown Market Score**: `buckets[6] {category, value}` (Rental Demand, Revenue Growth, Seasonality, Regulation…) |
+| `POST /market/{id}/submarkets` (body `sort_order:"market_score", compute_metrics:true, metrics:[…]`) | `submarkets[]` kèm `metrics` mỗi quận — chính là bảng **Top Submarkets** + sidebar |
+| `GET /submarket/{sid}/area?include_geoms=true` / `GET /market/{id}/area` | polygon ranh giới |
+| `POST /explorer/v2/datasource_dates` | `{first_date, last_date}` — mốc tươi của nguồn (dùng cho DQ freshness) |
+| `GET /v2/market/{id}/ai_insights` | ai_overview + insights (market level) |
+
+Cấp **market** mirror đủ bộ: `/market/{id}/metrics/{adr,occupancy,revenue,revpar}`,
+`*_summary`, `avg_daily_revpar`, `POST /v2/market/{id}/metrics/listing_count`
+(36 tháng), `POST /market/{id}/listings`, `metric_percentiles`.
+
+**Seasonality: KHÔNG có endpoint riêng** — 6 biến thể probe đều 404 và trang
+không gọi call dữ liệu nào → app tính client-side từ timeseries tháng. Thu
+adr/occupancy/revenue tháng (12–36 tháng) + `future/rates` là đủ gốc suy ra.
+
+Filter body chuẩn (collect dùng `filters: []` cho toàn thị trường):
+`{"type":"range","field":"bedrooms","value":[0,6]}`,
+`{"type":"select","field":"real_estate_type","value":"apartment"}`.
+
 ## Evidence
 
 Output console các survey 1–6 trong phiên làm việc 2026-10-20 (request/response
 thô); bản chưng cất là file này. Endpoint chưa verify trên market thứ 2
 (HCMC) — C1 phải verify id HCMC + shape trước khi dùng đại trà (Review
-Focus #2 của plan).
+Focus #2 của plan). Survey 9: `/tmp/survey9{,b,c}.log` (2026-10-20).
