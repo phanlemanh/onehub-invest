@@ -49,6 +49,28 @@ chỉ đọc, ~30 request khảo sát tổng) · Scripts khảo sát: /tmp/airdn
 4. Submarket ids lộ trong nav (score per submarket) — E2 submarket dùng lại
    `GET /market/{id}/submarkets`.
 
+## Cấp SUBMARKET (survey 7–8, 2026-10-20)
+
+Route UI: `https://app.airdna.co/data/vn/{market_id}/{submarket_id}/overview`
+(ví dụ Ba Đình của Hà Nội = 142530). Danh sách submarket + id:
+`GET /market/{id}/submarkets` → `payload.submarkets[]` (pagination,
+sort_order; nav UI kèm market_score mỗi quận).
+
+| Endpoint | Shape đáng chú ý |
+|---|---|
+| `GET /submarket/{sid}` | metrics, id, name, parent, images, geospatial |
+| `POST /submarket/{sid}/metrics/revenue|occupancy|revpar` | **timeseries 12 tháng** `{date, value}` + monthly/yearly_pct_change |
+| `POST /v2/submarket/{sid}/metrics/listing_count` | **timeseries 36 tháng** (lịch sử nguồn cung 3 năm!) |
+| `POST /submarket/{sid}/listings` | bảng listing: `property_id, airbnb_property_id, vrbo/booking ids, channels, urls, title, rating, reviews, revenue_ltm, revenue_potential_ltm, occupancy…` — **giàu hơn map_listings** |
+| `POST /submarket/{sid}/map_listings` | như market (bản đồ) |
+| `POST /submarket/{sid}/metric_percentiles, /metrics/*_summary` | summary_cards, percentile |
+| `GET /v2/submarket/{sid}/ai_insights` | ai_overview + insights |
+
+Hàm ý: C1 collector sẽ theo thứ tự market → submarkets (lấy id+score) →
+per-submarket {metrics timeseries + listings}; bảng `airdna_submarket_metrics`
+(7 dòng hiện tại) + `airdna_listings` keyed airbnb_property_id. History
+listing_count 36 tháng = lịch sử nguồn cung tự động có.
+
 ## Evidence
 
 Output console các survey 1–6 trong phiên làm việc 2026-10-20 (request/response
