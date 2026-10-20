@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { CalculatorIcon, GaugeIcon, GitCompareIcon, HouseIcon, MapIcon, PaletteIcon } from "lucide-react"
+import { ActivityIcon, CalculatorIcon, GaugeIcon, GitCompareIcon, HouseIcon, MapIcon, PaletteIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
@@ -60,6 +60,13 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       href: "/ops",
       icon: icon(GaugeIcon),
       match: (p) => p === "/ops",
+    },
+    {
+      id: "collections",
+      label: "Thu thập",
+      href: "/ops/collections",
+      icon: icon(ActivityIcon),
+      match: (p) => p.startsWith("/ops/collections"),
     },
     {
       id: "sources",
