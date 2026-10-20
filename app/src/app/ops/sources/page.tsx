@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ZaloAccountsPanel } from "@/components/ops/zalo-accounts";
 import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/ops-access";
@@ -36,8 +38,9 @@ export default async function OpsSourcesPage() {
       <div className="flex flex-col gap-1.5">
         <h1 className="text-xl font-medium">Nguồn dữ liệu</h1>
         <p className="text-muted-foreground text-xs">
-          Registry mã nguồn (SPL): vòng đời mã, giải mã tên thật. Mã retired không tái sử
-          dụng; đổi nhãn công khai phải qua mini-ADR. Nội bộ admin — không sync cloud.
+          Registry mã nguồn (SPL) + quản trị nguồn (IA Ops nguyên tắc 2: quan sát ở
+          Thu thập, quản trị ở đây). Mã retired không tái sử dụng; đổi nhãn công khai
+          phải qua mini-ADR. Nội bộ admin — không sync cloud.
         </p>
       </div>
       <div className="overflow-x-auto">
@@ -66,6 +69,23 @@ export default async function OpsSourcesPage() {
           </tbody>
         </table>
       </div>
+
+      <section className="flex flex-col gap-3 rounded-xl border p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-medium">Quản lý nguồn Zalo</h2>
+          <span className="text-muted-foreground text-xs">
+            thêm tài khoản (QR) · allowlist nhóm · bất biến 1 nhóm – 1 tài khoản
+          </span>
+        </div>
+        <ZaloAccountsPanel />
+        <p className="text-muted-foreground text-xs">
+          Xem nhóm nào đang chảy tin thế nào:{" "}
+          <Link prefetch={false} href="/ops/collections" className="font-medium underline">
+            Thu thập
+          </Link>
+          .
+        </p>
+      </section>
     </div>
   );
 }

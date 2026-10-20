@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 import { Badge } from "@/components/reui/badge";
+import Link from "next/link";
+
 import { FlowTable, SchedulerTable, ZaloGroupsTable } from "@/components/ops/collections-tables";
-import { ZaloAccountsPanel } from "@/components/ops/zalo-accounts";
 import {
   getFlowDays,
   readGateFunnel,
@@ -165,14 +166,13 @@ export default async function CollectionsPage() {
 
       <FlowTable days={days} />
       <ZaloGroupsTable rows={zaloGroups} allowlist={zaloAllowlist} />
-
-      <section className="rounded-xl border p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <h2 className="font-medium">Tài khoản Zalo</h2>
-          <Badge variant="outline">1 nhóm – 1 tài khoản</Badge>
-        </div>
-        <ZaloAccountsPanel />
-      </section>
+      <p className="text-muted-foreground -mt-3 text-xs">
+        Thêm tài khoản / bật-tắt nhóm (quản trị nguồn):{" "}
+        <Link prefetch={false} href="/ops/sources" className="font-medium underline">
+          Nguồn dữ liệu
+        </Link>{" "}
+        — admin, nguyên tắc 1 nhóm – 1 tài khoản.
+      </p>
 
       <SchedulerTable jobs={jobs} />
     </div>

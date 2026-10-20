@@ -132,14 +132,14 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | Route | Tên hiển thị (VI) | Chức năng | Workstream | Giai đoạn |
 |---|---|---|---|---|
 | `/ops` | Tổng quan vận hành | health tổng: freshness SLO từng nguồn, block rate, trạng thái circuit breaker, run gần nhất | CCP+DQO | C1 |
-| `/ops/collections` | Thu thập dữ liệu | lịch chạy collector, tuân thủ conduct (jitter, trần volume), điều khiển circuit breaker | CCP | C1 |
+| `/ops/collections` | Thu thập | QUAN SÁT dòng chảy: hôm nay chảy gì, funnel theo nguồn/nhóm, máy móc launchd, rotation kế tiếp (read-only) | CCP+DQO | C1→E2 |
 | `/ops/pipeline` | Pipeline | transform/rollup chạy chưa, kết quả DQ gates | DQO | C1 |
 | `/ops/quality` | Chất lượng dữ liệu | 4 trụ DQ: freshness/volume/schema/distribution + divergence đối chiếu | DQO | đã có (mở rộng C1) |
 | `/ops/agents` | Agent Swarm | agent đang làm gì, F1 extraction vs regex, chi phí token | DCA | C2/C3 |
 | `/ops/console` | Bảng điều khiển | bề mặt NGƯỜI của hành động máy: trigger collect/transform (Idempotency-Key) | DCA | C2 |
 | `/ops/audit` | Nhật ký thao tác | audit log mọi `ops:write` (token nào, lệnh gì, khi nào, kết quả) | DCA | C4 |
 | `/ops/backups` | Sao lưu | lần pg_dump/replica gần nhất, drill khôi phục | DR | C4 |
-| `/ops/sources` | Nguồn dữ liệu 🔒 | registry vòng đời mã (retired vĩnh viễn, đổi nhãn qua mini-ADR) + **bảng giải mã mã↔tên thật — gated `role=admin`** | SPL | C1 |
+| `/ops/sources` | Nguồn dữ liệu 🔒 | registry SPL + giải mã tầng A + **QUẢN TRỊ nguồn: tài khoản Zalo (QR login), allowlist nhóm (bất biến 1 nhóm–1 tài khoản), sau này profile AirDNA/Airbnb — gated `role=admin`** | SPL | C1→E2 |
 | `/ops/design` | Thư viện thiết kế | ReUI Gallery (dời từ `/design`) | — | ngay |
 
 - **Shell thiết kế**: `@reui/app-shell-26` (SOC console) + `agent-activity-*`,
@@ -159,6 +159,29 @@ Một cổng Ops, **hai mức clearance** — tách URL `/admin/**` hoãn tới 
 
 **Đường cắt sẵn**: khi tách `/admin/**`, các trang admin-class dời nguyên khối,
 không đổi logic. Cột `role` (`user`\|`admin`) thêm vào migration C1.
+
+### IA Ops — nguyên tắc phân trang (2026-10-20, sau khi Thu thập/Nguồn bị trộn)
+
+Áp dụng cho MỌI trang `/ops/**` hiện tại và tương lai. Thêm nội dung mới mà
+vi phạm nguyên tắc dưới → dời về đúng nhà trước khi merge.
+
+1. **Mỗi trang = một câu hỏi quyết định duy nhất**, ghi trong mô tả trang.
+   Nội dung không trả lời câu hỏi đó → không thuộc trang đó.
+   - Tổng quan: *"hệ thống có khoẻ không?"* · Thu thập: *"dòng chảy đang thế
+     nào?"* · Nguồn: *"có những nguồn gì và cấu hình ra sao?"* · Chất lượng:
+     *"số tin được không?"*
+2. **Tách Observability (quan sát) khỏi Administration (quản trị).**
+   - Quan sát = đọc số/hiệu trạng, KHÔNG đổi trạng thái hệ thống → dành cho
+     mọi data-ops.
+   - Quản trị = ghi config, đăng nhập nguồn, bật/tắt thu thập → **admin-gated**
+     (khớp clearance law ở trên) và nằm trong trang Nguồn.
+3. **Metric nằm cạnh dòng chảy; cấu hình nằm cạnh danh tính nguồn.** Bảng
+   funnel/hoạt động của nhóm Zalo → Thu thập; panel thêm tài khoản/quét QR/
+   tick allowlist → Nguồn. Cùng thực thể, hai khía cạnh, hai nhà.
+4. **Liên kết chéo thay vì nhân bản.** Hai trang cùng cần một thông tin →
+   link một chiều có ngữ cảnh, không copy component/query.
+5. **Một khối thông tin một nhà.** Khi thêm khối mới: hỏi "khối này quan sát
+   hay quản trị? trả lời câu hỏi trang nào?" — trả lời được thì chỗ về đúng.
 
 ### Bảng ghép 3 tầng SPL ↔ 3 cổng (tra nhanh)
 
@@ -190,9 +213,11 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
 5. **Đặt tên hiển thị**: code/URL tiếng Anh; UI tiếng Việt theo bảng thuật ngữ
    Mục 4 (Finder/Insight giữ nguyên tiếng Anh vì là thuật ngữ sản phẩm).
 6. **Chuyển `/design` → `/ops/design`** trong lần refactor kế tiếp (cùng middleware).
-7. **Cập nhật tài liệu này** mỗi khi thêm portal/section mới; ADR mới chỉ cần
+7. **IA Ops**: nội dung `/ops/**` mới phải tuân theo "IA Ops — nguyên tắc
+   phân trang" (mục Cổng 2): quan sát ở Thu thập, quản trị admin ở Nguồn.
+8. **Cập nhật tài liệu này** mỗi khi thêm portal/section mới; ADR mới chỉ cần
    khi thay đổi quyết định phân cổng (phương án C), không cần cho từng trang.
-8. **Legacy `/th/**` (Bangkok) đã XOÁ** theo ADR-0008 (2026-10-20): scope
+9. **Legacy `/th/**` (Bangkok) đã XOÁ** theo ADR-0008 (2026-10-20): scope
    sản phẩm = Việt Nam. Route `/[country]` động chỉ còn dữ liệu `vn`.
 
 ---
