@@ -47,6 +47,21 @@ export function ZaloAccountsPanel() {
     if (selected) loadGroups(selected)
   }, [selected, loadGroups])
 
+  // Chọn/refresh lại → nếu có process login đang chạy cho account này (bắt
+  // đầu từ CLI/API ngoài UI), hiện luôn hộp QR thay vì im lặng.
+  useEffect(() => {
+    if (!selected) return
+    ;(async () => {
+      const r = await fetch(`/api/v1/ops/zalo/login?account=${encodeURIComponent(selected)}`)
+      if (!r.ok) return
+      const s = await r.json()
+      if (s.processAlive && s.qrBase64) {
+        setQr({ accountId: selected, base64: s.qrBase64 })
+        setConnected(s.connected)
+      }
+    })()
+  }, [selected])
+
   // Poll trạng thái login khi có QR đang chờ quét
   useEffect(() => {
     if (!qr) return
@@ -66,6 +81,22 @@ export function ZaloAccountsPanel() {
     }
   }, [qr])
 
+  /** Bắt đầu (hoặc tái bắt đầu) QR login cho một tài khoản — dùng cho cả
+   * tạo mới lẫn tài khoản sẵn có (acc tạo ngoài UI vẫn login được từ đây). */
+  const startQr = useCallback(async (accountId: string) => {
+    setMsg(null)
+    const lr = await fetch("/api/v1/ops/zalo/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ accountId }),
+    })
+    const lb = await lr.json()
+    if (!lr.ok) return setMsg(`Lỗi QR: ${lb.error}`)
+    setQr({ accountId, base64: lb.qrBase64 })
+    setConnected(null)
+    setMsg(`Quét QR bằng app Zalo (số điện thoại của tài khoản "${accountId}"):`)
+  }, [])
+
   const createAccount = async () => {
     setMsg(null)
     const r = await fetch("/api/v1/ops/zalo/accounts", {
@@ -78,16 +109,7 @@ export function ZaloAccountsPanel() {
     setNewId("")
     await loadAccounts()
     setSelected(b.account.accountId)
-    // bắt đầu QR luôn
-    const lr = await fetch("/api/v1/ops/zalo/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ accountId: b.account.accountId }),
-    })
-    const lb = await lr.json()
-    if (!lr.ok) return setMsg(`Tạo OK nhưng QR lỗi: ${lb.error}`)
-    setQr({ accountId: b.account.accountId, base64: lb.qrBase64 })
-    setConnected(null)
+    await startQr(b.account.accountId)
     setMsg(`Tài khoản "${b.account.accountId}" đã tạo — quét QR bằng Zalo (số điện thoại mới):`)
   }
 
@@ -163,6 +185,9 @@ export function ZaloAccountsPanel() {
           />
           <Button size="sm" variant="outline" onClick={createAccount} disabled={!newId.trim()}>
             + Thêm tài khoản
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => startQr(selected)}>
+            Đăng nhập QR "{selected}"
           </Button>
         </span>
       </div>

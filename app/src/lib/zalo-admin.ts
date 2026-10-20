@@ -204,7 +204,10 @@ export async function zaloLoginStatus(accountId: string): Promise<{
   let connected: boolean | null = null;
   try {
     const { stdout } = await run(OPENCLAW, ["channels", "status"], { timeout: 15000 });
-    connected = /Zalo Personal.*connected/.test(stdout);
+    // status in "Zalo Personal <accountId>: ..." — match đúng account để không
+    // nhầm connected của account khác khi đa tài khoản
+    const re = new RegExp(`Zalo Personal(\\s+${accountId})?\\s*:[^\\n]*connected`);
+    connected = re.test(stdout);
   } catch {
     /* gateway không trả lời — để null */
   }
