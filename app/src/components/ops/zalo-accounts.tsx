@@ -153,13 +153,14 @@ export function ZaloAccountsPanel() {
   }
 
   const removeAccount = async (accountId: string) => {
+    if (!confirm(`Gỡ tài khoản "${accountId}"?\nSession Zalo bị đăng xuất và cấu hình bị xoá (file .bak vẫn giữ để hoàn nguyên).`)) return
     const r = await fetch("/api/v1/ops/zalo/accounts", {
       method: "DELETE",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ id: accountId }),
     })
     const b = await r.json()
-    setMsg(r.ok ? `Đã gỡ "${accountId}"` : `Lỗi: ${b.error}`)
+    setMsg(r.ok ? `Đã gỡ "${accountId}" (session đã logout)` : `Lỗi: ${b.error}`)
     await loadAccounts()
   }
 
@@ -180,16 +181,24 @@ export function ZaloAccountsPanel() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         {accounts.map((a) => (
-          <button
+          <span
             key={a.accountId}
-            onClick={() => setSelected(a.accountId)}
-            className={`rounded-md border px-2 py-1 text-sm ${a.accountId === selected ? "border-primary bg-primary/10" : ""}`}
+            className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-sm ${a.accountId === selected ? "border-primary bg-primary/10" : ""}`}
           >
-            {a.accountId}
-            <span className="text-muted-foreground ml-1 text-xs">
+            <button onClick={() => setSelected(a.accountId)}>{a.accountId}</button>
+            <span className="text-muted-foreground text-xs">
               {a.enabledGroups.length} nhóm
             </span>
-          </button>
+            {a.accountId !== "default" && (
+              <button
+                onClick={() => removeAccount(a.accountId)}
+                title={`Gỡ tài khoản ${a.accountId}`}
+                className="text-muted-foreground hover:text-destructive ml-1 px-1 text-sm leading-none"
+              >
+                ×
+              </button>
+            )}
+          </span>
         ))}
         <span className="ml-2 flex items-center gap-1">
           <input
@@ -312,13 +321,6 @@ export function ZaloAccountsPanel() {
         </table>
       </div>
 
-      {selected !== "default" && (
-        <div className="flex justify-end">
-          <Button size="sm" variant="ghost" onClick={() => removeAccount(selected)}>
-            Gỡ tài khoản "{selected}"
-          </Button>
-        </div>
-      )}
       <p className="text-muted-foreground text-xs">
         Bất biến: 1 nhóm – 1 tài khoản (API chặn 409 + nút disable). Config ghi tại
         ~/.openclaw/openclaw.json (có .bak); nếu thay đổi không có hiệu lực trong ~1 phút, chạy

@@ -129,6 +129,14 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
 
 export async function deleteZaloAccount(accountId: string): Promise<void> {
   if (accountId === "default") throw new Error("không xoá được tài khoản default");
+  // logout session zca trước (best-effort) để không sót credential mồ côi
+  try {
+    await run(OPENCLAW, ["channels", "logout", "--channel", "zalouser", "--account", accountId], {
+      timeout: 20000,
+    });
+  } catch {
+    /* chưa login / CLI lỗi — vẫn gỡ config */
+  }
   const cfg = await readCfg();
   const z = cfg.channels?.zalouser;
   if (!z?.accounts?.[accountId]) return;
