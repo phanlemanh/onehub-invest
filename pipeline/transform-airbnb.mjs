@@ -76,8 +76,14 @@ function extractListing(payload) {
   }
   const photos = [...all.filter((p) => p.includes("/hosting/")), ...all.filter((p) => !p.includes("/hosting/"))].slice(0, 10);
   const reviewCount = Number(rawAll.match(/"reviewCount":(\d+)/)?.[1] ?? 0) || null;
+  // Tên THẬT do host đặt nằm ở DemandStayListing.description.name.source —
+  // overview.title chỉ là template "Toàn bộ căn hộ cho thuê tại…" (backfill
+  // 2026-10-21: 8/8 payload có tên thật ở path này).
+  const realName = rawAll.match(
+    /"description":\s*\{\s*"name":\s*\{\s*"source":\s*"([^"]{4,150})"/,
+  )?.[1];
   return {
-    name: node?.pdpPresentation?.overview?.title ?? ogTitle,
+    name: realName ?? node?.pdpPresentation?.overview?.title ?? ogTitle,
     roomType: log.roomType ?? null,
     personCapacity: node.personCapacity ?? null,
     lat: node?.location?.coordinate?.latitude ?? null,
