@@ -18,6 +18,7 @@ const GROUPS = [
   "https://www.facebook.com/groups/285736614961804",  // BẤT ĐỘNG SẢN HÀ NỘI
   "https://www.facebook.com/groups/151411010405738",  // MUA BÁN CHUNG CƯ HÀ NỘI
   "https://www.facebook.com/groups/1642453779410701", // HỘI MUA BÁN NHÀ ĐẤT BÌNH THẠNH TP.HCM
+  "https://www.facebook.com/groups/1573989412657228",  // Nhóm user thêm
 ];
 
 const APIFY_API = "https://api.apify.com/v2";
@@ -38,7 +39,7 @@ async function startRun(token) {
   const input = {
     startUrls: GROUPS.map((url) => ({ url })),
     resultsLimit: 100, // 100 posts/run — đủ cho 4h/lần
-    viewOption: "chronological", // newest first
+    viewOption: "CHRONOLOGICAL", // newest first
     onlyPostsNewerThan: "12 hours",
   };
 

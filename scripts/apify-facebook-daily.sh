@@ -9,4 +9,8 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export PATH="$HOME/.local/node-v24.21.0/bin:$PATH"
+# Collector API cần key để accept requests
+AGENT_KEY=$(cat $HOME/.openclaw/credentials/oneinvest-agent.key 2>/dev/null | tr -d '
+')
+export AGENT_API_KEYS="$AGENT_KEY"
 exec node "$ROOT/pipeline/apify-facebook-collector.mjs"
