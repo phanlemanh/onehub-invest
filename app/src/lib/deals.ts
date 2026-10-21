@@ -32,6 +32,7 @@ export type DealRow = {
   sellerPhone: string | null;
   groupName: string | null;
   mediaPath: string | null;
+  mediaUrl: string | null; // ảnh FB (CDN url) — khác path local Zalo
   postText: string | null;
   brokerNAds: number | null;
   brokerMedianGap: number | null;
@@ -71,7 +72,9 @@ export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[
        LIMIT $2
      )
      SELECT b.*,
-       z.sender_name, z.group_name, z.media->0->>'path' AS media_path,
+       z.sender_name, z.group_name,
+       COALESCE(z.media->0->>'path', NULL) AS media_path,
+       COALESCE(z.media->0->>'url', NULL) AS media_url,
        left(z.text, 200) AS post_text
      FROM base b
      LEFT JOIN LATERAL (
@@ -106,6 +109,7 @@ export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[
     sellerPhone: r.seller_phone ?? null,
     groupName: r.group_name ?? null,
     mediaPath: r.media_path ?? null,
+    mediaUrl: r.media_url ?? null,
     postText: r.post_text ?? null,
     brokerNAds: r.broker_n_ads === null ? null : Number(r.broker_n_ads),
     brokerMedianGap:

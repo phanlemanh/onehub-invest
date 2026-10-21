@@ -91,10 +91,14 @@ export default async function DealsPage() {
                 </span>
                 {confBadge(d.confidence)}
               </div>
-              {d.mediaPath && (
-                // eslint-disable-next-line @next/next/no-img-element -- local staging file
+              {(d.mediaPath || d.mediaUrl) && (
+                // eslint-disable-next-line @next/next/no-img-element -- Ảnh local (Zalo path) hoặc CDN (FB url)
                 <img
-                  src={`/api/zalo-media?path=${encodeURIComponent(d.mediaPath)}`}
+                  src={
+                    d.mediaPath
+                      ? `/api/zalo-media?path=${encodeURIComponent(d.mediaPath)}`
+                      : (d.mediaUrl ?? "")
+                  }
                   alt={`Ảnh tin bán — ${d.phuong ?? ""}`}
                   className="h-36 w-full rounded-md object-cover"
                   loading="lazy"

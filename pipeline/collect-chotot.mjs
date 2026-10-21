@@ -25,7 +25,10 @@ const LIMIT = 50; // page nhỏ = request đều nhau theo nhịp người duy�
 const REGIONS = [
   { region_v2: 12000, city: "hanoi", cityCode: "vn-hanoi" },
   { region_v2: 13000, city: "hcmc", cityCode: "vn-hcmc" },
-];
+].filter((r) =>
+  // CHOTOT_REGIONS=hcmc,hanoi — quét chọn lọc (vd bù thước cho 1 thành phố)
+  process.env.CHOTOT_REGIONS ? process.env.CHOTOT_REGIONS.split(",").includes(r.city) : true,
+);
 // cg=1000 nhà đất | cg=1010 căn hộ; st=s bán | st=u thuê (type từng ad là
 // chân lý — feed chỉ quyết định page nào duyệt).
 const FEEDS = [

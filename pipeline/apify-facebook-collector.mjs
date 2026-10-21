@@ -95,24 +95,38 @@ async function getResults(token, datasetId) {
 }
 
 // ─── 4. Parse + đẩy vào collector ───
+// Ảnh nằm trong attachments[] (schema actor 2026-10: KHÔNG có field
+// `images`). `url` là LINK TRANG ảnh (facebook.com/photo/?fbid=) — không
+// nhúng được vào <img>; `thumbnail` là CDN jpg trực tiếp → ưu tiên.
+function postImages(post) {
+  return (post.attachments ?? [])
+    .map((a) => {
+      if (a?.thumbnail) return a.thumbnail;
+      const u = a?.url ?? "";
+      return /\.(jpe?g|png|webp)(\?|$)/i.test(u) ? u : null;
+    })
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
 function parsePost(post) {
   const text = post.text ?? "";
-  const images = (post.images ?? []).filter(Boolean);
-  const author = post.authorName ?? "unknown";
+  const images = postImages(post);
+  const author = post.user?.name ?? post.authorName ?? "unknown";
 
   return {
     text,
-    ts: post.timestamp ?? new Date().toISOString(),
+    ts: post.time ?? post.timestamp ?? new Date().toISOString(),
     // Facebook-specific metadata
     senderName: author,
-    senderId: post.authorId ?? null,
+    senderId: post.user?.id ?? post.authorId ?? null,
     group: post.groupTitle ?? "Facebook",
-    media: images.slice(0, 5).map((url) => ({ path: null, url, type: "image/jpeg" })),
+    media: images.map((url) => ({ path: null, url, type: "image/jpeg" })),
     // Extra fields from Apify
-    postUrl: post.postUrl ?? post.url ?? null,
+    postUrl: post.facebookUrl ?? post.postUrl ?? post.url ?? null,
     likesCount: post.likesCount ?? 0,
     commentsCount: post.commentsCount ?? 0,
-    reactionLike: post.reactionLikeCount ?? 0,
+    reactionLike: post.topReactionsCount ?? 0,
   };
 }
 
