@@ -181,6 +181,22 @@ async function zaloExtras(client, funnelGroups) {
   return { groups: [...byName.values()], flow };
 }
 
+async function sourceRunsQ(client) {
+  // H3: feed health per nguồn cho cloud /ops (mọi lần chạy ghi snapshot)
+  const { rows } = await client.query(`
+    SELECT r.code, r.label_vi, r.status, s.last_run, s.items_24h,
+           COALESCE(o.offers, 0) AS offers
+    FROM source_registry r
+    LEFT JOIN (
+      SELECT source, max(collected_at) AS last_run,
+             count(*) FILTER (WHERE collected_at >= now() - interval '24 hours') AS items_24h
+      FROM airbnb_snapshots GROUP BY source
+    ) s ON s.source = ANY (r.source_ids)
+    LEFT JOIN (SELECT source, count(*) offers FROM sale_offers GROUP BY source) o ON o.source = r.code
+    ORDER BY r.code`);
+  return rows;
+}
+
 async function main() {
   const { token } = await env();
   if (!token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
@@ -188,7 +204,9 @@ async function main() {
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: LOCAL_URL });
   await client.connect();
-  const [jobs, rot, zalo] = await Promise.all([scheduler(), rotation(client), zaloExtras(client, groups)]);
+  const [jobs, rot, zalo, sourceRuns] = await Promise.all([
+    scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
+  ]);
   await client.end();
 
   // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud)
@@ -212,7 +230,7 @@ async function main() {
 
   const payload = {
     pushedAt: new Date().toISOString(),
-    funnel, health, jobs,
+    funnel, health, jobs, sourceRuns,
     rotation: { ...rot, updatedAt: rot.updatedAt ?? null },
     zaloGroups: zalo.groups,
     zaloFlow: zalo.flow,

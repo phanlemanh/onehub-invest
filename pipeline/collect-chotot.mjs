@@ -22,13 +22,36 @@ const SNAP_ROOT = process.env.CHOTOT_SNAP_ROOT ?? join(ROOT, "collector", "snaps
 const API = "https://gateway.chotot.com/v1/public/ad-listing";
 const LIMIT = 50; // page nhỏ = request đều nhau theo nhịp người duyệt web
 
-const REGIONS = [
+// Regions đọc từ DB (source_groups, quản trị /ops/sources) — thêm tỉnh mới
+// (Đà Nẵng, Hải Phòng…) không cần sửa code. Fallback 2 thành phố cũ.
+const FALLBACK_REGIONS = [
   { region_v2: 12000, city: "hanoi", cityCode: "vn-hanoi" },
   { region_v2: 13000, city: "hcmc", cityCode: "vn-hcmc" },
-].filter((r) =>
-  // CHOTOT_REGIONS=hcmc,hanoi — quét chọn lọc (vd bù thước cho 1 thành phố)
-  process.env.CHOTOT_REGIONS ? process.env.CHOTOT_REGIONS.split(",").includes(r.city) : true,
-);
+];
+
+async function loadRegions() {
+  try {
+    const pg = (await import("pg")).default;
+    const c = new pg.Client({
+      connectionString:
+        process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+    });
+    await c.connect();
+    const { rows } = await c.query(
+      `SELECT group_key, name, params FROM source_groups
+       WHERE source_code = 'S06' AND enabled ORDER BY id`,
+    );
+    await c.end();
+    const regions = rows
+      .filter((r) => r.params?.region_v2)
+      .map((r) => ({ region_v2: r.params.region_v2, city: r.group_key, cityCode: r.params.cityCode }));
+    if (regions.length === 0) throw new Error("0 region bật");
+    return regions;
+  } catch (e) {
+    console.warn(`⚠ source_groups DB fail (${e.message}) — fallback ${FALLBACK_REGIONS.length} region`);
+    return FALLBACK_REGIONS;
+  }
+}
 // cg=1000 nhà đất | cg=1010 căn hộ; st=s bán | st=u thuê (type từng ad là
 // chân lý — feed chỉ quyết định page nào duyệt).
 const FEEDS = [
@@ -101,6 +124,11 @@ async function writeSnapshot(city, items, coverage) {
 
 async function main() {
   const startedAt = new Date().toISOString();
+  let REGIONS = await loadRegions();
+  if (process.env.CHOTOT_REGIONS) {
+    REGIONS = REGIONS.filter((r) => process.env.CHOTOT_REGIONS.split(",").includes(r.city));
+  }
+  console.log(`regions (source_groups): ${REGIONS.map((r) => r.city).join(", ")}`);
   const failed = [];
   const notes = [];
   for (const region of REGIONS) {

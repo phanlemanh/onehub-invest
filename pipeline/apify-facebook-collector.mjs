@@ -12,14 +12,34 @@
 //   node apify-facebook-collector.mjs           — chạy 1 lần (test)
 //   node apify-facebook-collector.mjs --poll    — poll kết quả run đang chạy
 //
-// Danh sách nhóm PUBLIC (không cần login để đọc):
-const GROUPS = [
-  "https://www.facebook.com/groups/458803055236158",  // MUA BÁN NHÀ ĐẤT HÀ NỘI
-  "https://www.facebook.com/groups/285736614961804",  // BẤT ĐỘNG SẢN HÀ NỘI
-  "https://www.facebook.com/groups/151411010405738",  // MUA BÁN CHUNG CƯ HÀ NỘI
-  "https://www.facebook.com/groups/1642453779410701", // HỘI MUA BÁN NHÀ ĐẤT BÌNH THẠNH TP.HCM
-  "https://www.facebook.com/groups/1573989412657228",  // Nhóm user thêm
+// Danh sách nhóm ĐỌC TỪ DB (source_groups, quản trị qua /ops/sources admin)
+// — thêm/xoá nhóm không cần sửa code. Fallback danh sách cũ nếu DB không lên.
+const FALLBACK_GROUPS = [
+  "https://www.facebook.com/groups/1642453779410701", // Bình Thạch TPHCM
+  "https://www.facebook.com/groups/151411010405738",  // CHCC Hà Nội
+  "https://www.facebook.com/groups/285736614961804",  // BĐS Hà Nội
+  "https://www.facebook.com/groups/1573989412657228",
 ];
+
+async function loadGroups() {
+  try {
+    const pg = (await import("pg")).default;
+    const c = new pg.Client({
+      connectionString:
+        process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+    });
+    await c.connect();
+    const { rows } = await c.query(
+      `SELECT group_key FROM source_groups WHERE source_code = 'S05' AND enabled ORDER BY id`,
+    );
+    await c.end();
+    if (rows.length === 0) throw new Error("0 nhóm bật");
+    return rows.map((r) => r.group_key);
+  } catch (e) {
+    console.warn(`⚠ source_groups DB fail (${e.message}) — dùng fallback ${FALLBACK_GROUPS.length} nhóm`);
+    return FALLBACK_GROUPS;
+  }
+}
 
 const APIFY_API = "https://api.apify.com/v2";
 const COLLECTOR_URL = process.env.COLLECTOR_URL ?? "http://localhost:9210";
@@ -183,6 +203,8 @@ async function pushToCollector(posts) {
 // ─── Main ───
 async function main() {
   const { token } = await creds();
+  const GROUPS = await loadGroups();
+  console.log(`nhóm thu (source_groups): ${GROUPS.length}`);
   const isPoll = process.argv.includes("--poll");
 
   if (isPoll) {
