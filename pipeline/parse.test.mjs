@@ -56,3 +56,40 @@ test("phẩy thập phân kiểu VN: '2,9 tỷ' → 2.9e9, '8,5tr/tháng' → 8.
   assert.equal(parsePost("Cho thuê 8,5tr/tháng 1PN").priceVnd, 8_500_000);
   assert.equal(parsePost("Bán 2,93 tỷ").priceVnd, 2_930_000_000);
 });
+
+// ---- extractPhones: SĐT VN từ text tin rao (P1b — contact người bán) ----
+import { extractPhones } from "./transform-zalo.mjs";
+
+test("SĐT dạng thường: '0963466005'", () => {
+  assert.deepEqual(extractPhones("Bán gấp 62m². LH 0963466005"), ["0963466005"]);
+});
+
+test("SĐT phân tách space: '0973 034 567'", () => {
+  assert.deepEqual(extractPhones("Chính chủ bán. Call 0973 034 567"), ["0973034567"]);
+});
+
+test("SĐT phân tách chấm: '0973.034.567'", () => {
+  assert.deepEqual(extractPhones("LH: 0973.034.567 (A. Minh)"), ["0973034567"]);
+});
+
+test("SĐT +84: '+84973034567' chuẩn hoá về 0", () => {
+  assert.deepEqual(extractPhones("Liên hệ +84973034567"), ["0973034567"]);
+});
+
+test("SĐT 11 số (đầu số mới): '03745678901'", () => {
+  assert.deepEqual(extractPhones("Zalo 03745678901"), ["03745678901"]);
+});
+
+test("parsePost gắn phone + phones; test cũ có sẵn SĐT trong text", () => {
+  const p = parsePost("Bán gấp Hoàn Kiếm — 62m², 82tr/m2, tổng 5.1t. Tư vấn 0963466005");
+  assert.equal(p.phone, "0963466005");
+  assert.deepEqual(p.phones, ["0963466005"]);
+});
+
+test("bỏ số cố định đầu 024 và dãy số ngắn (diện tích/giá)", () => {
+  assert.deepEqual(extractPhones("Nhà 65m2, giá 4650000000. QLDT 02438266551"), []);
+});
+
+test("không cắt giữa dãy số dài (?<!\\d guard) — mã 12 số không vớ ra", () => {
+  assert.deepEqual(extractPhones("Số TK 0123456789012 — không phải SĐT"), []);
+});

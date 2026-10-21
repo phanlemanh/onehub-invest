@@ -29,9 +29,31 @@ export function parseVnNumber(raw) {
   return parseFloat(raw.replace(/[.,]/g, ""));
 }
 
+/** SĐT di động VN từ text tin rao: "0973034567", "0973 034 567",
+ * "0973.034.567", "+84973…". Chuẩn hoá về dạng 0xxxxxxxxx(x); chỉ nhận đầu
+ * số mobile (3,5,7,8,9) — môi giới gần như luôn dùng mobile, lọc luôn giúp
+ * tránh vớ phải số nhà/mã nào đó. Guard (?<!\d)(?!\d) để không cắt giữa dãy
+ * số dài (mã bưu chính, số tài khoản…). */
+export function extractPhones(text) {
+  const raw = text.match(/(?<!\d)(?:\+84|0)(?:[.\-\s]?\d){8,10}(?!\d)/g) ?? [];
+  const seen = new Set();
+  const out = [];
+  for (const r of raw) {
+    let digits = r.replace(/\D/g, "");
+    if (digits.startsWith("84")) digits = "0" + digits.slice(2);
+    if (digits.length !== 10 && digits.length !== 11) continue;
+    if (!/^[35789]/.test(digits.slice(1))) continue;
+    if (seen.has(digits)) continue;
+    seen.add(digits);
+    out.push(digits);
+    if (out.length >= 3) break; // tin rao hiếm khi có >3 SĐT thật
+  }
+  return out;
+}
+
 // ---- Bước 2: parse ----
 export function parsePost(text) {
-  const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null };
+  const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
   // loại tin: bán vs thuê
   if (/cho thuê|thuê dài hạn|cần cho thuê|thuê dài hạn/i.test(text)) out.kind = "rent_lt";
@@ -59,6 +81,10 @@ export function parsePost(text) {
   // bedrooms: "2PN", "2 phòng ngủ", "2BR"
   const bd = text.match(/(\d+)\s*(?:PN|phòng ngủ|BR)/i);
   if (bd) out.bedrooms = parseInt(bd[1]);
+
+  // SĐT người đăng (nằm sẵn trong text tin rao — nguồn contact chính của P1)
+  out.phones = extractPhones(text);
+  out.phone = out.phones[0] ?? null;
 
   // phường: match tên phường từ text (danh sách sẽ load từ DB)
   out._phuongCandidates = [];
@@ -148,6 +174,7 @@ async function main() {
           bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
           firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
           postIds: [pr.post.post_id],
+          phone: pr.phone, authorHash: pr.post.author_hash,
         });
       } else {
         const o = dedup.get(offerId);
@@ -161,18 +188,43 @@ async function main() {
 
     // ---- Bước 5: ghi canonical ----
     await client.query("DELETE FROM sale_offers WHERE source = 'S03'");
+    const sellerAgg = new Map(); // phone_hash → {n, first, last}
     for (const o of dedup.values()) {
+      const phoneHash = o.phone
+        ? createHash("sha256").update(o.phone).digest("hex").slice(0, 32)
+        : null;
       await client.query(
         `INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
-                                   bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'S03')
+                                   bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
+                                   price_tier, seller_phone, seller_phone_hash, seller_ref)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'S03','P1',$14,$15,$16)
          ON CONFLICT (offer_id) DO UPDATE SET n_reposts = EXCLUDED.n_reposts,
-           last_seen = EXCLUDED.last_seen, post_ids = EXCLUDED.post_ids`,
+           last_seen = EXCLUDED.last_seen, post_ids = EXCLUDED.post_ids,
+           seller_phone = EXCLUDED.seller_phone, seller_phone_hash = EXCLUDED.seller_phone_hash`,
         [o.offerId, o.areaId, o.kind, o.priceVnd, o.areaM2, o.pricePerm2, o.bedrooms,
-         o.phuongRaw, o.confidence, o.firstSeen, o.lastSeen, o.nReposts, o.postIds],
+         o.phuongRaw, o.confidence, o.firstSeen, o.lastSeen, o.nReposts, o.postIds,
+         o.phone, phoneHash, o.authorHash],
+      );
+      if (phoneHash) {
+        const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };
+        s.n++;
+        if (new Date(o.firstSeen) < new Date(s.first)) s.first = o.firstSeen;
+        if (new Date(o.lastSeen) > new Date(s.last)) s.last = o.lastSeen;
+        sellerAgg.set(phoneHash, s);
+      }
+    }
+    console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
+
+    // Sellers registry (LOCAL-ONLY, PII tầng A): hồ sơ theo phone_hash
+    for (const [phoneHash, s] of sellerAgg) {
+      await client.query(
+        `INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen)
+         VALUES ($1, ARRAY['S03'], $2, $3, $4)
+         ON CONFLICT (phone_hash) DO UPDATE SET n_ads = sellers.n_ads + EXCLUDED.n_ads,
+           last_seen = GREATEST(sellers.last_seen, EXCLUDED.last_seen)`,
+        [phoneHash, s.n, s.first, s.last],
       );
     }
-    console.log(`offers ghi: ${dedup.size}`);
   } finally {
     await client.end();
   }
