@@ -34,6 +34,7 @@ const FILL = [
   "market_asset_stats",
   "nights",
   "sale_offers",
+  "sellers",
   "area_sources",
   "dq_check_results",
   "airdna_markets",
@@ -84,6 +85,16 @@ async function restInsert(key, table, rows) {
   }
 }
 
+// PII tầng A (nguyên tắc đã duyệt 2026-10-21, docs/research/
+// investment-pipeline-4-stages.md): cloud CHỈ nhận seller_phone_hash +
+// aggregate. SĐT thô / tên người bán không bao giờ rời máy local.
+// Trước đây SELECT * — may mắn schema cloud thiếu cột mới nên PII chưa
+// lọt, giờ chặn bằng danh sách cột loại bỏ tường minh.
+const PII_EXCLUDE = {
+  sale_offers: ["seller_phone", "seller_name"],
+  sellers: ["name"], // sellers: hash + aggregate OK; name là PII tầng A
+};
+
 async function main() {
   const { key, token } = await creds();
   const local = new pg.Client({ connectionString: LOCAL_URL });
@@ -95,10 +106,31 @@ async function main() {
   await mgmt(token, `TRUNCATE ${cloudFILL.join(", ")} RESTART IDENTITY CASCADE`);
   let total = 0;
   for (const table of FILL) {
-    const { rows } = await local.query(`SELECT * FROM ${table}`);
+    if (PII_EXCLUDE[table]?.includes("*")) {
+      console.log(`  ${table}: SKIP (PII)`);
+      continue;
+    }
+    const exclude = PII_EXCLUDE[table] ?? [];
+    // Postgres không hỗ trợ "SELECT * EXCEPT" — lấy danh sách cột rồi loại PII
+    let rows;
+    if (exclude.length) {
+      const { rows: cols } = await local.query(
+        `SELECT column_name FROM information_schema.columns
+         WHERE table_name = $1 AND table_schema = 'public' ORDER BY ordinal_position`,
+        [table],
+      );
+      const colList = cols
+        .map((c) => c.column_name)
+        .filter((c) => !exclude.includes(c))
+        .map((c) => `"${c}"`)
+        .join(", ");
+      ({ rows } = await local.query(`SELECT ${colList} FROM ${table}`));
+    } else {
+      ({ rows } = await local.query(`SELECT * FROM ${table}`));
+    }
     if (rows.length > 0) await restInsert(key, RENAME(table), rows);
     total += rows.length;
-    console.log(`  ${table}: ${rows.length}`);
+    console.log(`  ${table}: ${rows.length}${exclude.length ? ` (đã loại PII: ${exclude.join(",")})` : ""}`);
   }
   await local.end();
 
@@ -111,6 +143,10 @@ async function main() {
   for (const { table_name } of stg) checks.push(table_name);
   const leaks = [];
   for (const t of checks) {
+    // Bảng VẮNG MẶT ở cloud = sạch tuyệt đối (tốt hơn 0 dòng) — check
+    // existence trước, tránh 42P01 khi đã drop (source_registry 2026-10-21).
+    const ex = await mgmt(token, `SELECT to_regclass('${t}') AS r`);
+    if (!ex[0].r) continue;
     const r = await mgmt(token, `SELECT count(*)::int AS n FROM ${t}`);
     if (r[0].n > 0) leaks.push(`${t}=${r[0].n}`);
   }

@@ -39,8 +39,10 @@ export type DealRow = {
 };
 
 export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[]> {
-  const { rows } = await pool.query(
-    `WITH ruler AS (
+  // Cloud KHÔNG có stg_zalo_posts (PII tầng A — leak gate cấm): query đầy đủ
+  // fail 42P01 → fallback bỏ lateral contact; trang cloud tự nhiên không cột
+  // liên hệ (đúng thiết kế PII — P4).
+  const full = `WITH ruler AS (
        SELECT area_id,
               percentile_cont(0.5) WITHIN GROUP (ORDER BY price_perm2) AS m,
               count(*) AS n
@@ -84,9 +86,17 @@ export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[
        ORDER BY z.captured_at DESC
        LIMIT 1
      ) z ON TRUE
-     ORDER BY b.discount_pct DESC`,
-    [minDiscountPct, limit],
-  );
+     ORDER BY b.discount_pct DESC`;
+  const noContact = full.replace(/LEFT JOIN LATERAL \([\s\S]*?\) z ON TRUE/, "/* cloud: không có stg_zalo_posts (PII) */")
+    .replace(/z\.sender_name, z\.group_name,[\s\S]*?AS post_text/, "NULL AS sender_name, NULL AS group_name, NULL AS media_path, NULL AS media_url, NULL AS post_text")
+    // cột PII cũng không tồn tại trên cloud sale_offers (sync loại) → NULL hoá
+    .replace("o.area_id, o.post_ids, o.seller_name, o.seller_phone,", "o.area_id, o.post_ids, NULL AS seller_name, NULL AS seller_phone,");
+  let rows;
+  try {
+    ({ rows } = await pool.query(full, [minDiscountPct, limit]));
+  } catch {
+    ({ rows } = await pool.query(noContact, [minDiscountPct, limit]));
+  }
   return rows.map((r) => ({
     offerId: r.offer_id,
     source: r.source,
