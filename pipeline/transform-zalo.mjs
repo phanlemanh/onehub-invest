@@ -55,13 +55,14 @@ export function extractPhones(text) {
 export function parsePost(text) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
-  // loại tin: bán vs thuê
+  // loại tin: bán vs thuê. KHÔNG return sớm khi thiếu keyword — môi giới ở
+  // nhóm "mua bán" thường không lặp chữ "bán", chỉ ghi giá ("Giá: 6.1 tỷ").
+  // Transform tự suy kind theo bối cảnh khi cần; parser cứ parse đủ trường.
   if (/cho thuê|thuê dài hạn|cần cho thuê|thuê dài hạn/i.test(text)) out.kind = "rent_lt";
   else if (/bán|chính chủ bán|cần tiền bán|bán gấp/i.test(text)) out.kind = "sale";
-  else return out;
 
   // giá: "45tr/m2", "3.2 tỷ", "2tỷ", "15tr/tháng", "12 triệu/th"
-  const perm2 = text.match(/([\d.,]+)\s*(?:tr|triệu)\/m[²2]/i);
+  const perm2 = text.match(/(\d[\d.,]*)\s*(?:tr|triệu)\/m[²2]/i);
   if (perm2) out.pricePerm2Vnd = Math.round(parseVnNumber(perm2[1]) * 1e6);
 
   // (?!..) chặn 't' của chữ thường tiếng Việt ("62m2, tổng …") — \b của JS
@@ -70,7 +71,7 @@ export function parsePost(text) {
   if (ty) out.priceVnd = Math.round(parseVnNumber(ty[1]) * 1e9);
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {
-    const trieu = text.match(/([\d.,]+)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
+    const trieu = text.match(/(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
     if (trieu) out.priceVnd = Math.round(parseVnNumber(trieu[1]) * 1e6);
   }
 
@@ -85,6 +86,12 @@ export function parsePost(text) {
   // SĐT người đăng (nằm sẵn trong text tin rao — nguồn contact chính của P1)
   out.phones = extractPhones(text);
   out.phone = out.phones[0] ?? null;
+
+  // sanitize: regex "tổng thể" có thể vớ chuỗi lạ → NaN; NaN vô hại hoá
+  // thành null để transform bỏ qua thay vì gãy INSERT bigint.
+  for (const k of ["priceVnd", "pricePerm2Vnd", "areaM2", "bedrooms"]) {
+    if (!Number.isFinite(out[k])) out[k] = null;
+  }
 
   // phường: match tên phường từ text (danh sách sẽ load từ DB)
   out._phuongCandidates = [];
@@ -129,10 +136,13 @@ async function main() {
     const phuongSlugs = areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.name]);
     const areaBySlug = new Map(areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.id]));
 
-    // Load staging posts (mới nhất per post_id)
+    // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
+    // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
     const { rows: posts } = await client.query(
       `SELECT DISTINCT ON (post_id) post_id, text, posted_at, group_name, author_hash
-       FROM stg_zalo_posts ORDER BY post_id, captured_at DESC`,
+       FROM stg_zalo_posts
+       WHERE agent_id IS NULL OR agent_id <> 'apify-facebook'
+       ORDER BY post_id, captured_at DESC`,
     );
     console.log(`posts: ${posts.length}`);
 
