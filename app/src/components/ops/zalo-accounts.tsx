@@ -17,7 +17,7 @@ type GroupRow = { groupId: string; name: string; enabled: boolean; ownedBy: stri
 /** Quản trị tài khoản zalouser: thêm (QR) + gán nhóm (bất biến 1 nhóm – 1 tài khoản).
  * Trên cloud (Vercel): read-only — danh sách từ ops-heartbeat, không nút quản trị. */
 export function ZaloAccountsPanel() {
-  const isCloud = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
+  const isCloud = process.env.VERCEL === "1"; // consistent SSR + client — no hydration mismatch
   const [cloudAccounts, setCloudAccounts] = useState<{ accountId: string; name: string | null; profile: string; enabledGroups: string[] }[] | null>(null);
   const [accounts, setAccounts] = useState<Account[] | null>(null)
   const [selected, setSelected] = useState<string>("default")
