@@ -55,9 +55,9 @@ async function creds() {
 }
 
 // ─── 1. Khởi động actor run ───
-async function startRun(token) {
+async function startRun(token, groups) {
   const input = {
-    startUrls: GROUPS.map((url) => ({ url })),
+    startUrls: groups.map((url) => ({ url })),
     resultsLimit: 100, // 100 posts/run — đủ cho 4h/lần
     viewOption: "CHRONOLOGICAL", // newest first
     onlyPostsNewerThan: "12 hours",
@@ -220,7 +220,7 @@ async function main() {
   } else {
     // Chạy full pipeline
     console.log("🚀 Bắt đầu Apify Facebook Groups Scraper...\n");
-    const run = await startRun(token);
+    const run = await startRun(token, GROUPS);
     const finished = await waitForRun(token, run.id);
     const posts = await getResults(token, finished.defaultDatasetId);
     console.log(`\n📥 ${posts.length} posts từ ${GROUPS.length} groups`);
