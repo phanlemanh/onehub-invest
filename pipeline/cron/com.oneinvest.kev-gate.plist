@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.oneinvest.kev-gate</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/uv</string>
+    <string>run</string>
+    <string>--extra</string>
+    <string>serve</string>
+    <string>python</string>
+    <string>-m</string>
+    <string>kev.serve</string>
+    <string>--run</string>
+    <string>models/kev-4b-qwen3</string>
+    <string>--port</string>
+    <string>8009</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/manhphan/dev/kev</string>
+  <key>KeepAlive</key><true/>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>/Users/manhphan/dev/one-invest/pipeline/logs/kev-gate.log</string>
+  <key>StandardErrorPath</key><string>/Users/manhphan/dev/one-invest/pipeline/logs/kev-gate.log</string>
+</dict>
+</plist>

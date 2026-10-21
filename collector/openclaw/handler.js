@@ -21,6 +21,26 @@ export default async function (context) {
   // payload ở .context; một số đường cũ bọc .event. Đọc phòng thủ cả ba.
   const ev = context?.event ?? context?.context ?? context ?? {};
   if (ev.channelId !== "zalouser") return;
+  const meta = ev.metadata ?? {};
+  // đa tài khoản: gán nguồn cho mọi dòng log (_phase 2 attribution)
+  const account = ev.accountId ?? meta.accountId ?? meta.account ?? "?";
+  const group0 = meta.channelName || meta.threadId || ev.conversationId || "zalo-group";
+
+  // DEBUG (tạm): bắt event shape media thật — user xác nhận nhóm có tin kèm
+  // ảnh nhưng mediaFacts luôn rỗng ⇒ field name khác dự kiến. Ghi mọi key
+  // trông giống media/ảnh; bỏ khi đã map xong.
+  try {
+    const mediaish = {};
+    for (const k of Object.keys(ev)) {
+      if (/media|attach|image|photo|file|thumb/i.test(k)) {
+        mediaish[k] = JSON.stringify(ev[k])?.slice(0, 300);
+      }
+    }
+    if (Object.keys(mediaish).length > 0) {
+      await log(`dbg-media keys=[${Object.keys(ev).join(",")}] ${JSON.stringify(mediaish).slice(0, 600)} group=${group0}`);
+    }
+  } catch {}
+
   const text = (ev.content ?? "").trim();
   const mediaFacts = (ev.media ?? ev.originalMedia ?? [])
     .filter((m) => m && (m.mediaPath || m.mediaUrl))
@@ -28,16 +48,13 @@ export default async function (context) {
     .map((m) => ({ path: m.mediaPath ?? null, url: m.mediaUrl ?? null, type: m.mediaType ?? null }));
   const hasMedia = mediaFacts.length > 0;
   if (!text && !hasMedia) {
-    await log(`skip (rỗng) group=${ev.metadata?.channelName ?? "?"} account=${account}`);
+    await log(`skip (rỗng) group=${group0} account=${account}`);
     return;
   }
   if (!text && hasMedia) {
-    await log(`media-only captured (${mediaFacts.length} ảnh) group=${ev.metadata?.channelName ?? "?"} account=${account}`);
+    await log(`media-only captured (${mediaFacts.length} ảnh) group=${group0} account=${account}`);
   }
-  const meta = ev.metadata ?? {};
-  const group = meta.channelName || meta.threadId || ev.conversationId || "zalo-group";
-  // đa tài khoản: gán nguồn cho mọi dòng log (_phase 2 attribution)
-  const account = ev.accountId ?? meta.accountId ?? meta.account ?? "?";
+  const group = group0;
   // MessageReceivedHookContext.timestamp là Unix ms (number) — API collector
   // cần ISO string; đőd đủ mọi dạng đầu vào.
   const ts =
@@ -67,8 +84,11 @@ export default async function (context) {
     });
     if (r.ok) p = (await r.json())?.answers?.is_bds?.noul ?? null;
   } catch (e) {
-    await log(`gate-error ${e.message} group=${group} account=${account}`);
-    return;
+    // FAIL-OPEN (bài học 2026-10-21: gate chết → mất tin im lặng vì return).
+    // Gate chỉ là pre-filter tiết kiệm volume; transform parsePost mới là
+    // bộ lọc thật → gate down vẫn đẩy tin, đánh dấu chưa phân loại.
+    await log(`gate-down (đẩy chưa phân loại) ${e.message} group=${group} account=${account}`);
+    p = 1.0;
   }
   if (p === null || p < THRESHOLD) {
     await log(`skip p=${p === null ? "null" : p.toFixed(2)} group=${group} account=${account}`);
