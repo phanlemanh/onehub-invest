@@ -77,7 +77,7 @@ export default async function OpsSourcesPage() {
             thêm tài khoản (QR) · allowlist nhóm · bất biến 1 nhóm – 1 tài khoản
           </span>
         </div>
-        <ZaloAccountsPanel />
+        <ZaloAccountsPanel isCloud={process.env.VERCEL === "1"} />
         <p className="text-muted-foreground text-xs">
           Xem nhóm nào đang chảy tin thế nào:{" "}
           <Link prefetch={false} href="/ops/collections" className="font-medium underline">
