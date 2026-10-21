@@ -225,17 +225,7 @@ async function main() {
     }
     console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
 
-    // Sellers registry (LOCAL-ONLY, PII tầng A): hồ sơ theo phone_hash
-    for (const [phoneHash, s] of sellerAgg) {
-      await client.query(
-        `INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen)
-         VALUES ($1, ARRAY['S03'], $2, $3, $4)
-         ON CONFLICT (phone_hash) DO UPDATE SET n_ads = sellers.n_ads + EXCLUDED.n_ads,
-           last_seen = GREATEST(sellers.last_seen, EXCLUDED.last_seen)`,
-        [phoneHash, s.n, s.first, s.last],
-      );
-    }
-  } finally {
+    } finally {
     await client.end();
   }
 }

@@ -15,3 +15,4 @@ for CITY in hanoi hcmc; do
   [ -n "$LATEST" ] && node "$ROOT/pipeline/import-chotot.mjs" "$LATEST"
 done
 node "$ROOT/pipeline/transform-chotot.mjs"
+node "$ROOT/pipeline/refresh-bait-gap.mjs"

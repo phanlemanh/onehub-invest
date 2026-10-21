@@ -31,3 +31,4 @@ for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null 
 done
 echo "$MAXTS" > "$STATE"
 node "$ROOT/pipeline/transform-fb.mjs"
+node "$ROOT/pipeline/refresh-bait-gap.mjs"
