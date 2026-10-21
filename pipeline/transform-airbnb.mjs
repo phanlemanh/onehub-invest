@@ -61,8 +61,14 @@ function extractListing(payload) {
   const seenPath = new Set();
   const all = [];
   for (const m of rawAll.matchAll(/(a0\.muscache\.com\/im\/pictures\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+){2,6})(?:\?[^"]*)?/g)) {
-    const p = m[1].replace(/\/$/, "");
+    let p = m[1].replace(/\/$/, "");
     if (/\/(user|AirbnbPlatformAssets)(\/|$)/.test(p)) continue;
+    // Airbnb CDN trả 404 với path KHÔNG có đuôi file (ảnh vỡ toàn trang
+    // listing — backfill 2026-10-21). Regex trên bắt path trần; gốc HTML
+    // có đuôi .jpeg/.jpg — regex mở rộng bắt cả đuôi, thiếu thì mặc định
+    // .jpeg (chuẩn im/pictures/hosting).
+    const withExt = rawAll.includes(p + ".jpeg") ? p + ".jpeg" : null;
+    p = withExt ?? (/\.(jpe?g|png|webp)$/i.test(p) ? p : p + ".jpeg");
     if (!seenPath.has(p)) {
       seenPath.add(p);
       all.push(p);
