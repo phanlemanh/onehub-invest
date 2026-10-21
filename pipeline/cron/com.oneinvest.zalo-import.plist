@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.oneinvest.zalo-import</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__ROOT__/scripts/zalo-import-daily.sh</string>
+  </array>
+  <!-- 00:00 hằng ngày: nạp tin Zalo đêm (độc lập nguồn FB) -->
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>0</integer><key>Minute</key><integer>0</integer></dict>
+  <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/zalo-import.log</string>
+  <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/zalo-import.log</string>
+</dict>
+</plist>
