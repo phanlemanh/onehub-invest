@@ -19,6 +19,7 @@
 | `/vn/hanoi` | Market Insight Hà Nội | nhà đầu tư |
 | `/th/bangkok/map` | Market Finder (choropleth) | nhà đầu tư (legacy) |
 | `/[country]/[market]/[submarket]` | Insight cấp phường | nhà đầu tư |
+| `/[country]/[market]/dau-tu` | Mô phỏng đầu tư (G3) | máy tính dòng tiền STR×LTR với vay; defaults từ vải P2 + AirDNA | Invest | G3 |
 | `/listing/[id]` | Chi tiết listing | nhà đầu tư |
 | `/saved`, `/login` | Đăng nhập, thị trường đã lưu | nhà đầu tư |
 | `/design` | ReUI Gallery | **nội bộ/dev** — đang nằm chung không gian công khai |

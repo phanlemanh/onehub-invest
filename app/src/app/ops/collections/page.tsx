@@ -71,7 +71,7 @@ export default async function CollectionsPage() {
 
       {/* H3-P1: Sức khoẻ nguồn — liếc một phát biết kênh nào sống/chết/trễ SLO */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium">Sức khoè nguồn</h2>
+        <h2 className="text-sm font-medium">Sức khỏe nguồn</h2>
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-xs">
             <thead>
