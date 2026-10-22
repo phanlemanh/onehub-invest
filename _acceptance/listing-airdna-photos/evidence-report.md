@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 5b730ea3fe3a474d874714ef245a596523899ea8
-human_signoff:
+human_signoff: Mạnh 2026-10-22
 ---
 
 # Evidence Report: listing-airdna-photos
@@ -110,7 +110,7 @@ human_signoff:
   run_id: design-gate-079a804502
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app)
+  verifier: config:executors.design.gate
   verified_at: 2026-10-22T14:58:29Z
   output: |
     "target": "app/src/app/(app)/listing/[id]/page.tsx",
