@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: ruler-p2-views-migration
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent (feature-loop:cham-lenh, E1–E7) + 3 lượt giám khảo mù (feature-loop:cham-doc, E8)
 enforcement_mode: strict
 bypass_used: false
 verified_commit: ac7192c791b68138f711a057830fd45eb0268007
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: ruler-p2-views-migration
@@ -22,7 +22,7 @@ human_signoff:
 | E5 | AC-5 | script | PASS |
 | E6 | AC-6 | script | PASS |
 | E7 | AC-7 | test | PASS |
-| E8 | AC-8 | judgment | PASS (giám khảo) — T3: chờ Mạnh phán trực tiếp |
+| E8 | AC-8 | judgment | PASS (giám khảo ×3; Mạnh phán Đạt 2026-10-23) |
 
 ## Evidence
 
@@ -119,7 +119,7 @@ human_signoff:
   judged_by: judge-subagent (fresh context, blind) — 3 lượt
   verdict: PASS
   rationale: Lượt 3 (chấm trên HEAD 17fcf12) — hướng dẫn có lý do kèm bảng đo local/cloud, thứ tự bắt buộc (merge bản vá PII vào main, grep kiểm trên checkout chính, rồi mới chạy SQL), hai đường chạy cụ thể (Dashboard / curl -fsS Management API) + launchctl kickstart, phần kiểm sau gồm log leak gate, số đối chiếu local và pii_col phải = 0; người chạy là Mạnh, không bước nào giao agent. SQL khớp: không UPDATE/INSERT/DELETE/TRUNCATE, không tạo seller_name, hai view trùng nguyên văn 034. Lượt 1 và 2 cũng PASS; góp ý của chúng đã sửa vào doc (17fcf12), sau lượt 3 sửa thêm đánh số bước 1-2-4 → 1-2-3-4 và thêm kiểm parent_id (bd94edd).
-  human_override:
+  human_override: Mạnh 2026-10-23 — Đạt
 
 ## Known limits
 
