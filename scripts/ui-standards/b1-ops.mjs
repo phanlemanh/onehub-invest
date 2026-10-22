@@ -378,6 +378,8 @@ function designPage() {
       if ((ts.isJsxText(n) || ts.isStringLiteralLike(n)) && !inHref && !(n.parent && ts.isImportDeclaration(n.parent))) {
         const t = n.text ?? "";
         allText.push(t);
+        // URL là đích liên kết (link xem trước), không phải chữ hiển thị cho người đọc.
+        if (/^https?:\/\//.test(t.trim())) return;
         if (/skill|\breui\b|\.claude|gallery/i.test(t)) fail("design-page", `chữ thuật ngữ dev "${t.trim().slice(0, 40)}"`, f, n, sf);
       }
     });
