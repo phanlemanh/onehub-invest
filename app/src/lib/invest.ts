@@ -38,7 +38,7 @@ export async function getInvestmentDefaults(areaId: string): Promise<InvestmentD
   const { rows: sale } = await pool.query(
     `SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY m_per_prop) m, sum(n)::int n
      FROM (
-       SELECT area_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY o.price_perm2) AS m_per_prop, count(*)::int n
+       SELECT v.area_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY o.price_perm2) AS m_per_prop, count(*)::int n
        FROM v_ruler_p2_area v
        JOIN properties pr ON pr.area_id = v.area_id AND pr.kind='sale'
        JOIN property_offers po ON po.property_id = pr.id
@@ -47,7 +47,7 @@ export async function getInvestmentDefaults(areaId: string): Promise<InvestmentD
                             JOIN property_offers po2 ON po2.offer_id = o2.offer_id
                             WHERE po2.property_id = pr.id)
        WHERE v.area_id = ANY($1::text[]) AND o.price_perm2 BETWEEN 5e6 AND 500e6
-       GROUP BY area_id, v.n
+       GROUP BY v.area_id, v.n
      ) x`,
     [ids],
   );
