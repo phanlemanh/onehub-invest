@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: portal-deals-airdna
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 0e3a25c7e01391877a72afe57e50d241b8aa2679
-human_signoff:
+human_signoff: Mạnh 2026-10-22
 ---
 
 # Evidence Report: portal-deals-airdna
@@ -191,13 +191,13 @@ human_signoff:
   rationale: Đường dự phòng của getDeals đúng thiết kế — câu `full` lỗi trên cloud (thiếu cột seller_* và bảng stg_zalo_posts), catch chuyển sang `noContact`; ba lệnh replace khớp đúng chuỗi nên `noContact` không còn nhắc cột/bảng vắng, khối liên hệ ẩn hết. Nhưng `noContact` vẫn đọc view `v_ruler_p2_area`, và ba tệp bằng chứng không cho biết view có trên cloud không; thiếu view thì câu dự phòng cũng lỗi và trang sập (không có try thứ hai).
   required_evidence:
     - Định nghĩa `CREATE VIEW v_ruler_p2_area` trong `db/migrations/*.sql` (chỉ đọc bảng có trên cloud), kèm `SELECT to_regclass('v_ruler_p2_area')` chạy trên Supabase qua Management API cho thấy view có trên cloud.
-  human_override:
+  human_override: Mạnh 2026-10-22 — Đạt
 
 - eval: E15
   run_id: design-gate-d71f8f2810
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app) — file 1/3
+  verifier: config:executors.design.gate
   verified_at: 2026-10-22T14:42:19Z
   output: |
     "target": "app/src/app/ops/deals/page.tsx",
@@ -211,7 +211,7 @@ human_signoff:
   run_id: design-gate-59248b43dc
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app) — file 2/3
+  verifier: config:executors.design.gate
   verified_at: 2026-10-22T14:42:20Z
   output: |
     "target": "app/src/components/invest/investment-simulator.tsx",
@@ -225,7 +225,7 @@ human_signoff:
   run_id: design-gate-5d7701e9e5
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app) — file 3/3
+  verifier: config:executors.design.gate
   verified_at: 2026-10-22T14:42:20Z
   output: |
     "target": "app/src/app/(app)/[country]/[market]/dau-tu/page.tsx",
@@ -257,6 +257,7 @@ human_signoff:
 - E6 có nhánh tự đạt khi DB local không có tin P1 kèm SĐT (`withPhone = 0`); vòng này DB có 1154 tin nên nhánh đó không kích hoạt — kết quả có nghĩa, nhưng phụ thuộc dữ liệu local.
 
 - E14 / AC-9 — tra theo required_evidence của judge (người điều phối, sau lượt chấm): `v_ruler_p2_area` KHÔNG có trong `db/migrations/` (grep cả repo + lịch sử git: commit 50005b7 nhắc view trong message nhưng migration 027 không định nghĩa nó). Ở DB local view tồn tại, chỉ đọc `properties` / `property_offers` / `sale_offers` (đều được sync-cloud đẩy lên). Không có quyền đọc cloud trong vòng này nên chưa biết view có trên Supabase không. Lỗ này có từ trước bản vá và chạm cả `/api/v1/deals` lẫn `/dau-tu` (cùng đọc view) — không do bản vá gây ra.
+- E14 / AC-9 — cập nhật 2026-10-22 từ phiên «Migration cho view thước P2» (truy vấn chỉ đọc trên cloud): cloud ĐÃ CÓ `v_ruler_p2_area` (tạo tay, giống local) nên đường dự phòng chạy được; migration 034 ở nhánh `fix/ruler-p2-views-migration` đưa view vào repo. Nhưng sync cloud đang gãy (cloud `sale_offers` thiếu cột `bathrooms` của 030) nên `sale_offers` trên cloud hiện 0 dòng — `/ops/deals` ở prod sẽ hiện trạng thái trống chứ không lỗi, tới khi Mạnh chạy SQL bắt kịp cloud.
 
 ## Ngoài hợp đồng
 
