@@ -112,6 +112,14 @@ canonical:
       dd: null
       rationale: "URL gốc tin đăng"
       checked_on: "2026-10-22"
+    property_type:
+      dd: PropertyType
+      note: >
+        apartment≈Residential+SubType Condominium; house≈Residential SFR/Townhouse;
+        land≈Land; commercial≈CommercialSale/CommercialLease; unknown=chưa có tín
+        hiệu (P1 text); room=LOCAL EXTENSION VN (Phòng trọ — DD PropertySubType
+        31 giá trị không có; migration 025, xác minh category Chợ Tốt 1050)
+      checked_on: "2026-10-22"
 
 # --------------------------------------------------------------------------
 # LỚP NGUỒN — staging → canonical
@@ -148,12 +156,13 @@ sources:
       "ward_name_v3 | ward_name | area_name + subject": "→ phuong_raw / district_raw (match areas)"
       "seller.full_name": "→ seller_name"
       "payload.account_id": "→ seller_ref"
-    chua_dua_sang_canonical:  # đã biết — chờ phase kế tiếp
-      - "category + house_type → property_type (Lô 1; hiện BỎ QUA làm nhiễu ruler)"
-      - "pty_project_name + projectid → asset_nodes (R1 registry đại đô thị)"
-      - "toilets → BathroomsTotalInteger (Lô 1)"
+    da_dua_sang_canonical:
+      - "category → property_type (migration 025 — ĐÃ LÀM)"
+    chua_dua_sang_canonical:
+      - "pty_project_name → asset_nodes match (G-2 matcher 2 tầng)"
+      - "toilets → BathroomsTotalInteger"
       - "floornumber, unitnumber, block → dedup cấp căn (R4)"
-      - "latitude, longitude (phủ 99.98%) → geo-polygon match asset_nodes (R2)"
+      - "latitude, longitude (phủ 99.98%) → geo-polygon (R2)"
 
 # --------------------------------------------------------------------------
 # ENUM — controlled vocabulary (CHECK constraint theo ADR-0011 Qđ 3.4)
@@ -161,16 +170,20 @@ sources:
 enums:
   kind:
     values: [sale, rent_lt]
-    dd: null
-    constraint: "CHECK — chờ Lô 1"
+    dd: PropertyType (Residential vs ResidentialLease — xem kind)
+    constraint: "CHECK sale_offers_kind_chk (migration 025)"
   confidence:
     values: [high, medium, low]
     dd: null
-    constraint: "CHECK — chờ Lô 1"
+    constraint: "CHECK sale_offers_confidence_chk (migration 025)"
   price_tier:
-    values: [P1, P2]
+    values: [P0, P1, P2]
     dd: null
-    constraint: "CHECK — chờ Lô 1"
+    constraint: "CHECK sale_offers_price_tier_chk (migration 025); P0 = giá giao dịch thật (dự phòng)"
+  property_type:
+    values: [apartment, house, land, room, commercial, unknown]
+    dd: PropertyType (+room local extension)
+    constraint: "CHECK sale_offers_property_type_chk (migration 025)"
   source:
     values_from: source_registry.code
     note: "controlled vocabulary có sẵn từ migration 012 — không khai trùng ở đây"

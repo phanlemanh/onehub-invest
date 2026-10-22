@@ -42,6 +42,9 @@ async function main() {
     let nHigh = 0, nMed = 0, nSkip = 0, nWardV3 = 0, nWardTxt = 0;
     for (const ad of ads) {
       const kind = ad.ad_type === "s" ? "sale" : ad.ad_type === "u" ? "rent_lt" : null;
+      // G-1: property_type theo category Chợ Tốt (migration 025, ADR-0011)
+      const PT = { 1010: "apartment", 1020: "house", 1030: "commercial", 1040: "land", 1050: "room" };
+      const propertyType = PT[ad.category] ?? "unknown";
       if (!kind) { nSkip++; continue; }
 
       // Phường: ward_name_v3 (chuẩn 2025) → ward_name → text-match subject
@@ -75,18 +78,19 @@ async function main() {
       await client.query(
         `INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
                                    bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
-                                   price_tier, district_raw, seller_name, seller_ref)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,1,ARRAY[]::text[],'S06','P2',$11,$12,$13)
+                                   price_tier, district_raw, seller_name, seller_ref, property_type)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,1,ARRAY[]::text[],'S06','P2',$11,$12,$13,$14)
          ON CONFLICT (offer_id) DO UPDATE SET
            last_seen = EXCLUDED.last_seen, price_vnd = EXCLUDED.price_vnd,
            price_perm2 = EXCLUDED.price_perm2, confidence = EXCLUDED.confidence,
            area_id = COALESCE(EXCLUDED.area_id, sale_offers.area_id),
-           phuong_raw = COALESCE(EXCLUDED.phuong_raw, sale_offers.phuong_raw)`,
+           phuong_raw = COALESCE(EXCLUDED.phuong_raw, sale_offers.phuong_raw),
+           property_type = EXCLUDED.property_type`,
         [
           offerId, areaId, kind, Number(ad.price), Number(ad.size_m2), pricePerm2,
           ad.rooms, phuongRaw, confidence, seen,
           ad.area_name, seller.full_name ?? null,
-          payload.account_id ? `ct:${payload.account_id}` : null,
+          payload.account_id ? `ct:${payload.account_id}` : null, propertyType,
         ],
       );
     }

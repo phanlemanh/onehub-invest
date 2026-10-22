@@ -206,8 +206,8 @@ async function main() {
       await client.query(
         `INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
                                    bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
-                                   price_tier, seller_phone, seller_phone_hash, seller_ref)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'S03','P1',$14,$15,$16)
+                                   price_tier, seller_phone, seller_phone_hash, seller_ref, property_type)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'S03','P1',$14,$15,$16,'unknown')
          ON CONFLICT (offer_id) DO UPDATE SET n_reposts = EXCLUDED.n_reposts,
            last_seen = EXCLUDED.last_seen, post_ids = EXCLUDED.post_ids,
            seller_phone = EXCLUDED.seller_phone, seller_phone_hash = EXCLUDED.seller_phone_hash`,
