@@ -34,7 +34,7 @@ zca-js poll Zalo server (session QR-link, mỗi ~10′)
 
 ## Fix ĐÃ LÀM (2026-10-22 tối): port pluginHooks từ WhatsApp sang zalouser
 
-Port chuẩn thay hot-patch `__pregate` (bản vá tay dist 22/10 trưa đã về零):
+Port chuẩn thay hot-patch `__pregate` (bản vá tay dist 22/10 trưa đã gỡ bỏ):
 commit `568ed825b` nhánh `fix/zalouser-plugin-hooks` ở `~/dev/openclaw`
 (đứng trên v2026.10.5, chưa push — chờ PR upstream tuỳ chọn).
 

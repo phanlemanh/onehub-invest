@@ -49,11 +49,12 @@ if "zalo" in d.get("channels", {}):
 zs = d.get("channels", {}).get("zalouser", {})
 for scope in [zs.get("groups")] + [a.get("groups") for a in (zs.get("accounts") or {}).values()]:
     for g, cfg in (scope or {}).items():
-        # Bài học 22/10 tối: điều kiện cũ (enabled and not requireMention) bỏ sót
-        # nhóm requireMention=false mà không có key enabled — chính lỗ hổng để 3
-        # nhóm mới lọt qua tới 20:44. Bắt mọi false tường minh.
-        if cfg.get("requireMention") is False:
-            print(f"L3b: {g} requireMention=false (phải true)"); sys.exit(1)
+        # Bài học 22/10 tối: hai lỗ trước (nhóm requireMention=false có key
+        # enabled; nhóm false thiếu key enabled) đều lọt. Giờ yêu cầu
+        # requireMention=true TƯỜNG MINH cho mọi nhóm chưa tắt — không tin
+        # default runtime của phiên bản (fail closed), nhóm thiếu key = lỗi.
+        if cfg.get("enabled", True) is not False and cfg.get("requireMention") is not True:
+            print(f"L3b: {g} requireMention phải true"); sys.exit(1)
 EOF
 ) && CONFIG_OK=1 || CONFIG_OK=0
 [ "$CONFIG_OK" = "0" ] && alert "$MSG (config bị drill)"
