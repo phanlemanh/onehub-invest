@@ -9,6 +9,7 @@ import type pg from "pg";
 
 import type { ContextResult } from "../src/agents/context-resolver.js";
 import { parseEnrichOutput, type EnrichResult } from "../src/agents/enrich-text.js";
+import { resolveContext } from "../src/agents/context-resolver.js";
 import { runEnrich, type LlmFn, type ResolveFn } from "../src/enrich/run.js";
 import { withTx, insertOffer, insertProperty } from "./helpers/db.js";
 
@@ -31,15 +32,18 @@ const llmWith = (r: EnrichResult | null): LlmFn => async () => ({ result: r, mod
 
 let seq = 0;
 /** Một offer S03 có tin nguồn trong stg_zalo_posts; trả offer_id. */
-async function offerWithPost(c: pg.Client, o: { bedrooms?: number | null; property_type?: string | null } = {}) {
+async function offerWithPost(
+  c: pg.Client,
+  o: { bedrooms?: number | null; property_type?: string | null; text?: string; group?: string } = {},
+) {
   const id = `t_enr_${++seq}`;
   await c.query(
     `INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('t', 'test', 'S03', '{}')
      ON CONFLICT (snapshot_id) DO NOTHING`,
   );
   await c.query(
-    `INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, group_name) VALUES ($1, 't', $2, 'Nhóm thử')`,
-    [`p_${id}`, "Bán gấp căn 2pn tầng trung phố Ba Đình, sẵn sổ, giá thương lượng"],
+    `INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, group_name) VALUES ($1, 't', $2, $3)`,
+    [`p_${id}`, o.text ?? "Bán gấp căn 2pn tầng trung phố Ba Đình, sẵn sổ, giá thương lượng", o.group ?? "Nhóm thử"],
   );
   await insertOffer(c, { offer_id: id, post_ids: [`p_${id}`], property_type: o.property_type ?? "unknown", bedrooms: o.bedrooms ?? null });
   return id;
@@ -195,6 +199,23 @@ test("AC-3 block LLM khớp asset_nodes được áp tên chuẩn", async () => 
     assert.equal(p.route, "corroborated");
     assert.equal(p.corroborated_by, "asset_nodes:gpk-lumiere-boulevard");
     assert.equal(p.status, "applied");
+  });
+});
+
+test("AC-3 E1 thật + asset_nodes thật: mã toà thô áp tên chuẩn", async () => {
+  await withTx(async (c) => {
+    // E1 = resolveContext THẬT (trả buildingHint "LBV"), buildings = asset_nodes THẬT (seed 032)
+    const a = await offerWithPost(c, {
+      property_type: "apartment", bedrooms: 2, text: "LBV 2PN full đồ, view hồ bơi, sẵn sổ", group: "Vinhomes Grand Park",
+    });
+    const { summary } = await runEnrich({
+      client: c, runId: "test-ac3-real", dry: false, limit: 50, offerIds: [a],
+      llm: llmWith({ ...real(19), building: "LBV" }), resolve: resolveContext,
+    });
+    assert.equal((await offerRow(c, a)).block_raw, "Lumiere Boulevard", "AC-3: phải áp tên chuẩn, không áp mã thô 'LBV'");
+    assert.equal(summary.xungDot, 0, "AC-3: cùng một toà không được tính là xung đột E1/LLM");
+    const ps = (await proposals(c, a)).filter((p) => p.field === "block_raw");
+    assert.deepEqual(ps.map((p) => [p.source, p.route, p.status]), [["e2_llm", "corroborated", "applied"]]);
   });
 });
 

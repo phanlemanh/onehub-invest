@@ -118,11 +118,14 @@ export function routeFields(input: {
   for (const field of ENRICH_FIELDS) {
     if (!isEmpty(field, input.current[field])) continue; // fill-gap: giá trị cũ thắng
 
-    const e1v = normalizeValue(field, input.e1[field]);
+    const e1Raw = normalizeValue(field, input.e1[field]);
     const llmRaw = input.llm ? normalizeValue(field, input.llm[field]) : null;
-    // block_raw: viết tắt LLM (vd "LBV") khớp node building → so/áp bằng TÊN CHUẨN của node,
-    // để E1 trả tên chuẩn và LLM trả viết tắt không bị tính là xung đột.
+    // block_raw: CẢ HAI phía khớp node building → so/áp bằng TÊN CHUẨN của node. E1 thật trả
+    // mã thô ("LBV", context-resolver buildingHint), LLM có thể trả mã hoặc tên — chuẩn hoá một
+    // phía thì cùng một toà thành xung đột giả và mã thô bị áp (S4-r1, AC-3).
+    const e1Node = field === "block_raw" && e1Raw !== null ? matchBuilding(e1Raw, input.buildings) : null;
     const node = field === "block_raw" && llmRaw !== null ? matchBuilding(llmRaw, input.buildings) : null;
+    const e1v = e1Node ? e1Node.name : e1Raw;
     const llmv = node ? node.name : llmRaw;
 
     if (e1v !== null) {

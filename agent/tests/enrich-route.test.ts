@@ -142,6 +142,23 @@ test("AC-3 viết tắt toà khớp tên chuẩn E1", () => {
   );
 });
 
+test("AC-3 E1 trả mã thô toà", () => {
+  const lbv = [{ slug: "gpk-lumiere-boulevard", name: "Lumiere Boulevard", aliases: ["lbv"] }];
+  // E1 thật (context-resolver) trả mã IN HOA "LBV", LLM cũng "LBV" → một đề xuất, tên chuẩn
+  assert.deepEqual(
+    routeFields({ current: {}, e1: { block_raw: "LBV" }, llm: { block_raw: "LBV" }, buildings: lbv })
+      .map((r) => [r.source, r.route, r.value, r.corroboratedBy]),
+    [["e2_llm", "corroborated", "Lumiere Boulevard", "e1"]],
+    "AC-3: mã thô của E1 và LLM là cùng một toà — không xung đột, áp tên chuẩn",
+  );
+  // E1 một mình trả mã thô → áp thẳng bằng tên chuẩn, không áp mã thô
+  assert.deepEqual(
+    routeFields({ current: {}, e1: { block_raw: "LBV" }, llm: null, buildings: lbv }).map((r) => [r.route, r.value]),
+    [["direct", "Lumiere Boulevard"]],
+    "AC-3: E1 mã thô khớp node phải áp tên chuẩn",
+  );
+});
+
 test("AC-7 E1 thắng khi trái LLM", () => {
   const input = { current: {}, llm: { property_type: "apartment" }, buildings: [] };
 
