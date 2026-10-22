@@ -66,3 +66,6 @@ dev_server:
   # không có api_base: app chỉ gọi /api/v1 cùng origin
 capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
+feature_loop:
+  suite_keys:            # suite chạy mỗi lượt verify/ghim lại — chỉ app (tsc + lint); thêm module khi hồ sơ chạm tới
+    - executors.test.app
