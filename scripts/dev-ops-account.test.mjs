@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { scryptSync, timingSafeEqual } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -90,6 +91,30 @@ describe("tệp thông tin đăng nhập", () => {
   });
   test("đường dẫn ngoài repo không coi là ignored (script sẽ từ chối ghi)", () => {
     assert.ok(!isGitIgnored(path.join(tmpdir(), "ops-test-account.json")));
+  });
+});
+
+describe("rào DB và đồng bộ cloud", () => {
+  test("DB không có schema auth của onehub → từ chối, chỉ đọc information_schema", async () => {
+    const calls = [];
+    const fake = {
+      query: async (sql) => {
+        calls.push(sql);
+        return { rows: [{ table_name: "users", column_name: "id" }] };
+      },
+    };
+    await assert.rejects(ensureAccount(fake, { email: "ops-test+unit@local.test" }), /schema auth/);
+    assert.equal(calls.length, 1);
+    assert.match(calls[0], /information_schema/);
+  });
+
+  test("users/sessions không nằm trong FILL của pipeline/sync-cloud.mjs", () => {
+    const src = readFileSync(path.join(import.meta.dirname, "../pipeline/sync-cloud.mjs"), "utf8");
+    const m = src.match(/const FILL = \[([\s\S]*?)\];/);
+    assert.ok(m, "không tìm thấy mảng FILL");
+    const tables = [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+    assert.ok(tables.length > 5, "FILL đọc ra quá ít bảng — regex lệch?");
+    for (const t of ["users", "sessions"]) assert.ok(!tables.includes(t), `${t} nằm trong FILL`);
   });
 });
 

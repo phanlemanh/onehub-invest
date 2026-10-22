@@ -140,6 +140,7 @@ bash scripts/audit-all.sh                 # kiểm toàn hệ thống PASS/FAIL/
 # tài khoản ops THỬ cho máy đăng nhập dev (chỉ DB local; mật khẩu ở .claude/ops-test-account.json, gitignored)
 node scripts/dev-ops-account.mjs          # tạo/giữ; --rotate để xoay. OPS_EMAILS có đặt thì thêm ops-test@local.test
 node --test scripts/*.test.mjs            # test script ở scripts/
+bash scripts/dev-ops-login-check.sh       # đăng nhập đầu-cuối bằng tài khoản thử (cần dev :3456 đang chạy)
 ```
 
 ## Bẫy kỹ thuật
