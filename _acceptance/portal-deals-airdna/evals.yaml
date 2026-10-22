@@ -1,0 +1,120 @@
+schema_version: 1
+feature_slug: portal-deals-airdna
+# portal_smoke cần app chạy :3456 TỪ WORKTREE NÀY (config:dev_server.start) + DB local :5433.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; dòng 'ok   khách: nav Invest (/vn) không có link /deals'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; dòng 'ok   nav Invest không có mục deals' và 'ok   không còn route Invest src/app/(app)/deals'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; khách: /deals chuyển sang /ops/deals VÀ /ops/deals bị đưa về /login (khách KHÔNG nhận trang)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; should-NOT-fire: user thường KHÔNG thấy SĐT — '0 link tel:'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; ba khối SĐT/tên, nội dung tin, ảnh tin đều chỉ render khi showContact = isAdmin(user)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; admin thấy ≥1 link tel: khi DB có tin P1 kèm SĐT trong 45 ngày; should-NOT-fire cùng lượt: user thường 0 link tel:"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; should-NOT-fire: HTML /ops/deals của admin có 0 nút chữ chứa Zalo/Facebook/Chợ Tốt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; 'ops/deals: không tên nguồn thật trong mã render (0 dòng)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; khách 404, user thường 404 (bị chặn trước kiểm path), admin 403 (qua cổng quyền, chặn path ngoài vùng)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; 'zalo-media: isAdmin chặn trước stat/readFile'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; should-NOT-fire: /vn/hanoi/dau-tu chứa AirDNA 0 lần; có chữ 'tự thu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Start dev server per config dev_server.start (từ worktree này)"
+      - "config:capture.ui http://localhost:3456/vn/hanoi/dau-tu → evidence/E12-step1.png"
+      - "config:capture.ui http://localhost:3456/deals → evidence/E12-step2.png (khách: phải là trang đăng nhập)"
+    expected: "step1: trang Mô phỏng đầu tư Hà Nội; ô Giá đêm/Công suất có gợi ý 'median tự thu', không có chữ AirDNA; bố cục hai cột STR/LTR như cũ. step2: trang đăng nhập, không lộ thẻ căn giá tốt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]
+
+  - id: E13
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; 'lib/invest.ts không đọc airdna_* / crosswalk S02' và 'lib/invest.ts lấy STR từ listing_stats (90 đêm)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-9
+    executor: judgment
+    question: "Trên cloud, bảng sale_offers không có cột seller_phone/seller_name (pipeline/sync-cloud.mjs loại qua PII_EXCLUDE) và không có bảng stg_zalo_posts. Đọc getDeals trong app/src/lib/deals.ts và trang app/src/app/ops/deals/page.tsx: khi admin mở /ops/deals trên cloud, câu truy vấn dự phòng có chạy được (không tham chiếu cột/bảng vắng) và trang có hiện bản không liên hệ mà không lỗi không?"
+    inputs: [app/src/lib/deals.ts, app/src/app/ops/deals/page.tsx, pipeline/sync-cloud.mjs]
+    evidence_required: [judged_by, verdict, rationale]
+
+  - id: E15
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.gate
+    paths: [app/src/app/ops/deals/page.tsx, app/src/components/invest/investment-simulator.tsx, "app/src/app/(app)/[country]/[market]/dau-tu/page.tsx"]
+    expected: "chạy cmd cho TỪNG file trong paths (đối số cuối): mỗi lần exit 0, verdict PASS, không P0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E16
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc không lỗi, lint 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
