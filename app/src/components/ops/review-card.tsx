@@ -79,7 +79,7 @@ function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
         {offer.bedrooms !== null && (
           <div>
             <p className="text-muted-foreground text-[10px]">PN/WC</p>
-            <p className="font-medium">{offer.bedrooms}PN{"bathrooms" in offer && (offer as Record<string, number | null>).bathrooms ? `/${(offer as Record<string, number | null>).bathrooms}WC` : ""}</p>
+            <p className="font-medium">{offer.bedrooms}PN{"bathrooms" in offer && ((offer as unknown) as Record<string, number | null>).bathrooms ? `/${((offer as unknown) as Record<string, number | null>).bathrooms}WC` : ""}</p>
           </div>
         )}
         <div>
@@ -88,7 +88,7 @@ function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
         </div>
         <div className="col-span-2">
           <p className="text-muted-foreground text-[10px]">Địa chỉ</p>
-          <p className="truncate font-medium">{(offer as Record<string, string | null>).street ?? "—"}</p>
+          <p className="truncate font-medium">{((offer as unknown) as Record<string, string | null>).street ?? "—"}</p>
         </div>
       </div>
       {(() => { const desc = (offer as Record<string, string | null>).text ?? (offer as Record<string, string | null>).subject; return desc ? (
