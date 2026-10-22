@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng màu A/B</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Geist', system-ui, sans-serif; background: #f5f5f5; color: #2d3142; padding: 2rem; display: flex; justify-content: center; }
+    .frame { max-width: 1216px; width: 100%; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <!-- Hỏi-1 ui-clean-b3-charts · nguồn: figures/index.md + design doc §4. Ảnh nhúng theo đường dẫn tương đối ../evidence/ -->
+  <div class="frame">
+<svg viewBox="0 0 1216 1520" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<pattern id="hatch-l" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#ffffff"/><line x1="0" y1="0" x2="0" y2="6" stroke="oklch(87.1% 0.006 286.286)" stroke-width="3"/></pattern>
+<pattern id="hatch-d" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="oklch(0.205 0 0)"/><line x1="0" y1="0" x2="0" y2="6" stroke="oklch(44.2% 0.017 285.786)" stroke-width="3"/></pattern>
+</defs>
+<rect width="100%" height="100%" fill="#f5f5f5"/>
+<text x="32" y="40" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.18em">HỎI-1 · CỔNG PHẠM VI · UI-CLEAN-B3-CHARTS</text>
+<text x="32" y="76" fill="#2d3142" font-size="28" font-family="'Instrument Serif', 'Lora', serif">Bảng màu biểu đồ — A theo nghĩa hay B giữ sắc block</text>
+<text x="32" y="100" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Số = tỉ lệ tương phản đồ hoạ trên nền thẻ (WCAG 2.2 SC 1.4.11, cần ≥ 3:1). Ô màu = giá trị Tailwind v4 thật (oklch).</text>
+<rect x="272" y="120" width="448" height="64" fill="rgba(235,108,54,0.08)" rx="6" stroke="#eb6c36" stroke-width="1.4"/>
+<text x="288" y="144" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">A: Doanh thu = chàm ở cả 3 biểu đồ</text>
+<text x="288" y="176" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.12em">THEO NGHĨA · MỖI NGHĨA MỘT SẮC</text>
+<rect x="660" y="132" width="44" height="16" fill="rgba(235,108,54,0.08)" rx="2" stroke="#eb6c36" stroke-width="1"/>
+<text x="682.0" y="143" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="middle" letter-spacing="0.06em">KHUYÊN</text>
+<rect x="736" y="120" width="448" height="64" fill="#ffffff" rx="6" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+<text x="752" y="144" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">B: Doanh thu = xanh ngọc (Hiệu suất),</text>
+<text x="752" y="160" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">tím (Cơ cấu), chàm (P&amp;L)</text>
+<text x="752" y="176" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.12em">GIỮ SẮC BLOCK GỐC · NÂNG BẬC ĐỦ 3:1</text>
+<rect x="272" y="196" width="224" height="468" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<text x="284" y="216" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.08em">SÁNG · nền #fff</text>
+<rect x="496" y="196" width="224" height="468" fill="oklch(0.205 0 0)"/>
+<text x="508" y="216" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.08em">TỐI · oklch(0.205 0 0)</text>
+<rect x="736" y="196" width="224" height="468" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<text x="748" y="216" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.08em">SÁNG · nền #fff</text>
+<rect x="960" y="196" width="224" height="468" fill="oklch(0.205 0 0)"/>
+<text x="972" y="216" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.08em">TỐI · oklch(0.205 0 0)</text>
+<text x="32" y="216" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.12em">KHOÁ · NGHĨA</text>
+<line x1="32" y1="228" x2="256" y2="228" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="228" x2="488" y2="228" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="228" x2="712" y2="228" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="228" x2="952" y2="228" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="228" x2="1176" y2="228" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="268" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Doanh thu</text>
+<text x="256" y="268" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">revenue</text>
+<rect x="284" y="256" width="24" height="16" fill="oklch(58.5% 0.233 277.117)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="268" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">indigo-500</text>
+<text x="388" y="268" fill="#636b80" font-size="10" font-family="'Geist', sans-serif">cả 3 biểu đồ</text>
+<text x="484" y="268" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,58</text>
+<rect x="508" y="256" width="24" height="16" fill="oklch(67.3% 0.182 276.935)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="268" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">indigo-400</text>
+<text x="612" y="268" fill="#a1a1aa" font-size="10" font-family="'Geist', sans-serif">cả 3 biểu đồ</text>
+<text x="708" y="268" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">5,74</text>
+<rect x="748" y="236" width="24" height="16" fill="oklch(60% 0.118 184.704)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="248" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">teal-600</text>
+<text x="852" y="248" fill="#636b80" font-size="10" font-family="'Geist', sans-serif">Hiệu suất</text>
+<text x="948" y="248" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">3,66</text>
+<rect x="748" y="256" width="24" height="16" fill="oklch(49.1% 0.27 292.581)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="268" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">violet-700</text>
+<text x="852" y="268" fill="#636b80" font-size="10" font-family="'Geist', sans-serif">Cơ cấu</text>
+<text x="948" y="268" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">7,29</text>
+<rect x="748" y="276" width="24" height="16" fill="oklch(58.5% 0.233 277.117)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="288" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">indigo-500</text>
+<text x="852" y="288" fill="#636b80" font-size="10" font-family="'Geist', sans-serif">P&amp;L</text>
+<text x="948" y="288" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,58</text>
+<rect x="972" y="236" width="24" height="16" fill="oklch(77.7% 0.152 181.912)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="248" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">teal-400</text>
+<text x="1076" y="248" fill="#a1a1aa" font-size="10" font-family="'Geist', sans-serif">Hiệu suất</text>
+<text x="1172" y="248" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">9,60</text>
+<rect x="972" y="256" width="24" height="16" fill="oklch(60.6% 0.25 292.717)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="268" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">violet-500</text>
+<text x="1076" y="268" fill="#a1a1aa" font-size="10" font-family="'Geist', sans-serif">Cơ cấu</text>
+<text x="1172" y="268" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,07</text>
+<rect x="972" y="276" width="24" height="16" fill="oklch(67.3% 0.182 276.935)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="288" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">indigo-400</text>
+<text x="1076" y="288" fill="#a1a1aa" font-size="10" font-family="'Geist', sans-serif">P&amp;L</text>
+<text x="1172" y="288" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">5,74</text>
+<line x1="32" y1="300" x2="256" y2="300" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="300" x2="488" y2="300" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="300" x2="712" y2="300" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="300" x2="952" y2="300" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="300" x2="1176" y2="300" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="322" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Công suất</text>
+<text x="256" y="322" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">occupancy</text>
+<rect x="284" y="310" width="24" height="16" fill="oklch(66.6% 0.179 58.318)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="322" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">amber-600</text>
+<text x="484" y="322" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">3,19</text>
+<rect x="508" y="310" width="24" height="16" fill="oklch(82.8% 0.189 84.429)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="322" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">amber-400</text>
+<text x="708" y="322" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">10,43</text>
+<rect x="748" y="310" width="24" height="16" fill="oklch(66.6% 0.179 58.318)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="322" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">amber-600</text>
+<text x="948" y="322" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">3,19</text>
+<rect x="972" y="310" width="24" height="16" fill="oklch(82.8% 0.189 84.429)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="322" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">amber-400</text>
+<text x="1172" y="322" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">10,43</text>
+<line x1="32" y1="336" x2="256" y2="336" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="336" x2="488" y2="336" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="336" x2="712" y2="336" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="336" x2="952" y2="336" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="336" x2="1176" y2="336" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="358" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Giá phòng (ADR)</text>
+<text x="256" y="358" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">adr</text>
+<rect x="284" y="346" width="24" height="16" fill="oklch(58.8% 0.158 241.966)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="358" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">sky-600</text>
+<text x="484" y="358" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,02</text>
+<rect x="508" y="346" width="24" height="16" fill="oklch(74.6% 0.16 232.661)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="358" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">sky-400</text>
+<text x="708" y="358" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">8,21</text>
+<rect x="748" y="346" width="24" height="16" fill="oklch(58.8% 0.158 241.966)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="358" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">sky-600</text>
+<text x="948" y="358" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,02</text>
+<rect x="972" y="346" width="24" height="16" fill="oklch(74.6% 0.16 232.661)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="358" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">sky-400</text>
+<text x="1172" y="358" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">8,21</text>
+<line x1="32" y1="372" x2="256" y2="372" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="372" x2="488" y2="372" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="372" x2="712" y2="372" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="372" x2="952" y2="372" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="372" x2="1176" y2="372" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="394" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">RevPAR</text>
+<text x="256" y="394" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">revpar</text>
+<rect x="284" y="382" width="24" height="16" fill="oklch(60% 0.118 184.704)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="394" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">teal-600</text>
+<text x="484" y="394" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">3,66</text>
+<rect x="508" y="382" width="24" height="16" fill="oklch(77.7% 0.152 181.912)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="394" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">teal-400</text>
+<text x="708" y="394" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">9,60</text>
+<rect x="748" y="382" width="24" height="16" fill="oklch(60.6% 0.25 292.717)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="394" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">violet-500</text>
+<text x="948" y="394" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,40</text>
+<rect x="972" y="382" width="24" height="16" fill="oklch(70.2% 0.183 293.541)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="394" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">violet-400</text>
+<text x="1172" y="394" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">6,28</text>
+<line x1="32" y1="408" x2="256" y2="408" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="408" x2="488" y2="408" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="408" x2="712" y2="408" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="408" x2="952" y2="408" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="408" x2="1176" y2="408" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="430" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Chi phí</text>
+<text x="256" y="430" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">expenses</text>
+<rect x="284" y="418" width="24" height="16" fill="oklch(86.9% 0.022 252.894)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="430" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">slate-300</text>
+<text x="484" y="430" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">1,48</text>
+<rect x="416" y="418" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="432.0" y="429" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="508" y="418" width="24" height="16" fill="oklch(44.6% 0.043 257.281)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="430" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">slate-600</text>
+<text x="708" y="430" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">2,37</text>
+<rect x="640" y="418" width="32" height="16" fill="none" rx="2" stroke="rgba(250,250,250,0.45)" stroke-width="0.8"/>
+<text x="656.0" y="429" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="748" y="418" width="24" height="16" fill="oklch(86.9% 0.022 252.894)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="430" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">slate-300</text>
+<text x="948" y="430" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">1,48</text>
+<rect x="880" y="418" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="896.0" y="429" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="972" y="418" width="24" height="16" fill="oklch(44.6% 0.043 257.281)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="430" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">slate-600</text>
+<text x="1172" y="430" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">2,37</text>
+<rect x="1104" y="418" width="32" height="16" fill="none" rx="2" stroke="rgba(250,250,250,0.45)" stroke-width="0.8"/>
+<text x="1120.0" y="429" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<line x1="32" y1="444" x2="256" y2="444" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="444" x2="488" y2="444" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="444" x2="712" y2="444" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="444" x2="952" y2="444" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="444" x2="1176" y2="444" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="466" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Biên lợi nhuận</text>
+<text x="256" y="466" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">margin</text>
+<rect x="284" y="454" width="24" height="16" fill="oklch(59.6% 0.145 163.225)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="466" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">emerald-600</text>
+<text x="484" y="466" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">3,67</text>
+<rect x="508" y="454" width="24" height="16" fill="oklch(76.5% 0.177 163.223)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="466" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">emerald-400</text>
+<text x="708" y="466" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">9,27</text>
+<rect x="748" y="454" width="24" height="16" fill="oklch(59.6% 0.145 163.225)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="466" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">emerald-600</text>
+<text x="948" y="466" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">3,67</text>
+<rect x="972" y="454" width="24" height="16" fill="oklch(76.5% 0.177 163.223)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="466" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">emerald-400</text>
+<text x="1172" y="466" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">9,27</text>
+<line x1="32" y1="480" x2="256" y2="480" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="480" x2="488" y2="480" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="480" x2="712" y2="480" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="480" x2="952" y2="480" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="480" x2="1176" y2="480" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="502" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Cơ cấu · bậc 1</text>
+<text x="256" y="502" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">share1</text>
+<rect x="284" y="490" width="24" height="16" fill="oklch(45.7% 0.24 277.023)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="502" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">indigo-700</text>
+<text x="484" y="502" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">8,07</text>
+<rect x="508" y="490" width="24" height="16" fill="oklch(58.5% 0.233 277.117)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="502" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">indigo-500</text>
+<text x="708" y="502" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">3,91</text>
+<rect x="748" y="490" width="24" height="16" fill="oklch(49.1% 0.27 292.581)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="502" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">violet-700</text>
+<text x="948" y="502" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">7,29</text>
+<rect x="972" y="490" width="24" height="16" fill="oklch(60.6% 0.25 292.717)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="502" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">violet-500</text>
+<text x="1172" y="502" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,07</text>
+<line x1="32" y1="516" x2="256" y2="516" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="516" x2="488" y2="516" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="516" x2="712" y2="516" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="516" x2="952" y2="516" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="516" x2="1176" y2="516" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="538" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Cơ cấu · bậc 2</text>
+<text x="256" y="538" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">share2</text>
+<rect x="284" y="526" width="24" height="16" fill="oklch(58.5% 0.233 277.117)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="538" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">indigo-500</text>
+<text x="484" y="538" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,58</text>
+<rect x="508" y="526" width="24" height="16" fill="oklch(67.3% 0.182 276.935)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="538" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">indigo-400</text>
+<text x="708" y="538" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">5,74</text>
+<rect x="748" y="526" width="24" height="16" fill="oklch(60.6% 0.25 292.717)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="538" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">violet-500</text>
+<text x="948" y="538" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">4,40</text>
+<rect x="972" y="526" width="24" height="16" fill="oklch(70.2% 0.183 293.541)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="538" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">violet-400</text>
+<text x="1172" y="538" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">6,28</text>
+<line x1="32" y1="552" x2="256" y2="552" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="552" x2="488" y2="552" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="552" x2="712" y2="552" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="552" x2="952" y2="552" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="552" x2="1176" y2="552" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="574" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Cơ cấu · bậc 3</text>
+<text x="256" y="574" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">share3</text>
+<rect x="284" y="562" width="24" height="16" fill="oklch(78.5% 0.115 274.713)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="574" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">indigo-300</text>
+<text x="484" y="574" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">2,01</text>
+<rect x="416" y="562" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="432.0" y="573" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="508" y="562" width="24" height="16" fill="oklch(78.5% 0.115 274.713)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="574" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">indigo-300</text>
+<text x="708" y="574" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">8,92</text>
+<rect x="748" y="562" width="24" height="16" fill="oklch(81.1% 0.111 293.571)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="574" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">violet-300</text>
+<text x="948" y="574" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">1,86</text>
+<rect x="880" y="562" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="896.0" y="573" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="972" y="562" width="24" height="16" fill="oklch(81.1% 0.111 293.571)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="574" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">violet-300</text>
+<text x="1172" y="574" fill="#fafafa" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">9,63</text>
+<line x1="32" y1="588" x2="256" y2="588" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="588" x2="488" y2="588" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="588" x2="712" y2="588" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="588" x2="952" y2="588" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="588" x2="1176" y2="588" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="610" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Phần còn lại</text>
+<text x="256" y="610" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">rest</text>
+<rect x="284" y="598" width="24" height="16" fill="oklch(96.7% 0.001 286.375)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="610" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">zinc-100</text>
+<rect x="452" y="598" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="468.0" y="609" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="508" y="598" width="24" height="16" fill="oklch(27.4% 0.006 286.033)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="610" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">zinc-800</text>
+<rect x="676" y="598" width="32" height="16" fill="none" rx="2" stroke="rgba(250,250,250,0.45)" stroke-width="0.8"/>
+<text x="692.0" y="609" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="748" y="598" width="24" height="16" fill="oklch(96.7% 0.001 286.375)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="610" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">zinc-100</text>
+<rect x="916" y="598" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="932.0" y="609" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="972" y="598" width="24" height="16" fill="oklch(27.4% 0.006 286.033)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="610" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">zinc-800</text>
+<rect x="1140" y="598" width="32" height="16" fill="none" rx="2" stroke="rgba(250,250,250,0.45)" stroke-width="0.8"/>
+<text x="1156.0" y="609" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<line x1="32" y1="624" x2="256" y2="624" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<line x1="280" y1="624" x2="488" y2="624" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="504" y1="624" x2="712" y2="624" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<line x1="744" y1="624" x2="952" y2="624" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+<line x1="968" y1="624" x2="1176" y2="624" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+<text x="32" y="646" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="500">Vạch chéo</text>
+<text x="256" y="646" fill="#636b80" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">hatch</text>
+<rect x="284" y="634" width="24" height="16" fill="url(#hatch-l)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="316" y="646" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">zinc-300</text>
+<rect x="452" y="634" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="468.0" y="645" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="508" y="634" width="24" height="16" fill="url(#hatch-d)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="540" y="646" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">zinc-600</text>
+<rect x="676" y="634" width="32" height="16" fill="none" rx="2" stroke="rgba(250,250,250,0.45)" stroke-width="0.8"/>
+<text x="692.0" y="645" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="748" y="634" width="24" height="16" fill="url(#hatch-l)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="780" y="646" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">zinc-300</text>
+<rect x="916" y="634" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="932.0" y="645" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<rect x="972" y="634" width="24" height="16" fill="url(#hatch-d)" rx="3" stroke="rgba(245,245,245,0.22)" stroke-width="0.8"/>
+<text x="1004" y="646" fill="#e4e4e7" font-size="10" font-family="'Geist Mono', monospace">zinc-600</text>
+<rect x="1140" y="634" width="32" height="16" fill="none" rx="2" stroke="rgba(250,250,250,0.45)" stroke-width="0.8"/>
+<text x="1156.0" y="645" fill="#d4d4d8" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<line x1="32" y1="660" x2="256" y2="660" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<text x="32" y="716" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Hiện tại: teal/amber/sky-500 chỉ 2,2–2,7:1 ở nền sáng</text>
+<rect x="472" y="692" width="712" height="40" fill="#ffffff" rx="4" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<rect x="488" y="704" width="24" height="16" fill="oklch(70.4% 0.14 182.503)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="520" y="716" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">teal-500</text>
+<text x="620" y="716" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">2,42</text>
+<rect x="632" y="704" width="48" height="16" fill="rgba(235,108,54,0.08)" rx="2" stroke="#eb6c36" stroke-width="1"/>
+<text x="656.0" y="715" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="middle" letter-spacing="0.06em">&lt; 3:1</text>
+<rect x="720" y="704" width="24" height="16" fill="oklch(76.9% 0.188 70.08)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="752" y="716" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">amber-500</text>
+<text x="852" y="716" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">2,15</text>
+<rect x="864" y="704" width="48" height="16" fill="rgba(235,108,54,0.08)" rx="2" stroke="#eb6c36" stroke-width="1"/>
+<text x="888.0" y="715" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="middle" letter-spacing="0.06em">&lt; 3:1</text>
+<rect x="952" y="704" width="24" height="16" fill="oklch(68.5% 0.169 237.323)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="984" y="716" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace">sky-500</text>
+<text x="1084" y="716" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">2,71</text>
+<rect x="1096" y="704" width="48" height="16" fill="rgba(235,108,54,0.08)" rx="2" stroke="#eb6c36" stroke-width="1"/>
+<text x="1120.0" y="715" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="middle" letter-spacing="0.06em">&lt; 3:1</text>
+<line x1="32" y1="760" x2="1184" y2="760" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<text x="32" y="784" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.18em">ẢNH THẬT · TRƯỚC  |  BẢN THỬ A (CÙNG DỮ LIỆU)</text>
+<text x="32" y="812" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Hiệu suất phường · sáng — đường Doanh thu teal-500 → indigo-500</text>
+<text x="32" y="836" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" letter-spacing="0.14em">TRƯỚC</text>
+<rect x="32" y="844" width="552" height="268" fill="#ffffff" rx="4" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<image href="../evidence/before/ward-performance-light.png" x="36" y="848" width="544" height="260" preserveAspectRatio="xMidYMid meet"/>
+<text x="632" y="836" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" letter-spacing="0.14em">BẢN THỬ A</text>
+<rect x="632" y="844" width="552" height="268" fill="#ffffff" rx="4" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<image href="../evidence/proto-a/ward-performance-light.png" x="636" y="848" width="544" height="260" preserveAspectRatio="xMidYMid meet"/>
+<text x="32" y="1140" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" font-weight="600">Cơ cấu doanh thu (thị trường) · tối — thang violet → thang indigo</text>
+<text x="32" y="1164" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" letter-spacing="0.14em">TRƯỚC</text>
+<rect x="32" y="1172" width="432" height="268" fill="#ffffff" rx="4" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<image href="../evidence/before/market-mix-dark.png" x="36" y="1176" width="424" height="260" preserveAspectRatio="xMidYMid meet"/>
+<text x="632" y="1164" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" letter-spacing="0.14em">BẢN THỬ A</text>
+<rect x="632" y="1172" width="432" height="268" fill="#ffffff" rx="4" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<image href="../evidence/proto-a/market-mix-dark.png" x="636" y="1176" width="424" height="260" preserveAspectRatio="xMidYMid meet"/>
+<line x1="32" y1="1464" x2="1184" y2="1464" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+<text x="32" y="1492" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" letter-spacing="0.14em">CHÚ GIẢI</text>
+<rect x="120" y="1480" width="24" height="16" fill="oklch(58.5% 0.233 277.117)" rx="3" stroke="rgba(45,49,66,0.18)" stroke-width="0.8"/>
+<text x="152" y="1492" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">ô màu = Tailwind v4 (oklch)</text>
+<rect x="340" y="1480" width="32" height="16" fill="none" rx="2" stroke="rgba(79,93,117,0.55)" stroke-width="0.8"/>
+<text x="356.0" y="1491" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" font-weight="500" text-anchor="middle" letter-spacing="0.06em">MIỄN</text>
+<text x="380" y="1492" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">miễn 3:1 — trung tính / bậc nhạt; danh tính bằng vị trí + chú giải có số</text>
+<rect x="808" y="1480" width="48" height="16" fill="rgba(235,108,54,0.08)" rx="2" stroke="#eb6c36" stroke-width="1"/>
+<text x="832" y="1491" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="middle" letter-spacing="0.06em">&lt; 3:1</text>
+<text x="864" y="1492" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">dưới 3:1, không miễn</text>
+<text x="1184" y="1492" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.08em">AC-1 · AC-2 · AC-3 · AC-9</text>
+</svg>
+  </div>
+</body>
+</html>

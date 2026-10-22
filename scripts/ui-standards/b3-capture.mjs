@@ -1,0 +1,209 @@
+#!/usr/bin/env node
+// Chụp ba biểu đồ của đợt B3 (ui-clean-b3-charts) trên app đang chạy: ảnh khung ở
+// sáng/tối × 1280/390, cộng một "bản chụp cấu trúc" (chữ, vai trò, nhãn aria, số phần tử
+// SVG, chữ tooltip sau các thao tác) để so trước/sau mà không lẫn màu.
+//
+// Dùng: node scripts/ui-standards/b3-capture.mjs --out <thư mục> [--base http://localhost:3456]
+// Ra: <out>/<trang>-<chế độ>.png (khung biểu đồ) + <out>/snapshot.json
+//   snapshot.json = { structure: {...}, colors: {...} } — `structure` không chứa màu,
+//   `colors` là màu tính được của chấm chú giải / nét biểu đồ.
+// Cần playwright-cli đã cài toàn máy (như scripts/ui-capture.sh); mượn playwright-core đi kèm nó.
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+
+const args = process.argv.slice(2);
+const opt = (name, fallback) => {
+  const i = args.indexOf(`--${name}`);
+  return i >= 0 ? args[i + 1] : fallback;
+};
+const OUT = opt("out");
+const BASE = opt("base", "http://localhost:3456");
+if (!OUT) {
+  console.error("usage: b3-capture.mjs --out <dir> [--base <url>]");
+  process.exit(2);
+}
+
+function loadPlaywright() {
+  const bin = realpathSync(execFileSync("which", ["playwright-cli"], { encoding: "utf8" }).trim());
+  // bin = …/node_modules/@playwright/cli/<entry>; playwright-core nằm cạnh trong node_modules của cli.
+  let dir = dirname(bin);
+  while (!dir.endsWith("@playwright/cli") && dir !== "/") dir = dirname(dir);
+  return createRequire(join(dir, "package.json"))("playwright-core");
+}
+
+// Trang có biểu đồ của đợt; mỗi khung nhận ra bằng tiêu đề.
+const PAGES = [
+  { id: "market", path: "/vn/hanoi", frames: ["Hiệu suất theo tháng", "Cơ cấu doanh thu"] },
+  { id: "ward", path: "/vn/hanoi/hoan-kiem", frames: ["Hiệu suất theo tháng", "Cơ cấu doanh thu"] },
+  { id: "yield", path: "/yield", frames: ["Doanh thu và chi phí 12 tháng tới"] },
+];
+const MODES = [
+  { id: "light", scheme: "light", width: 1280 },
+  { id: "dark", scheme: "dark", width: 1280 },
+  { id: "light-390", scheme: "light", width: 390 },
+  { id: "dark-390", scheme: "dark", width: 390 },
+];
+
+// Chạy trong trang: khung (Frame) chứa tiêu đề.
+const FIND_FRAME = (title) => {
+  const heading = [...document.querySelectorAll("[data-slot=frame-panel-title]")].find(
+    (node) => node.textContent?.trim() === title
+  );
+  return heading?.closest("[data-slot=frame]") ?? null;
+};
+
+// Cấu trúc không màu: thẻ, vai trò, aria, chữ trực tiếp; SVG chỉ đếm theo thẻ.
+function structureOf(frame) {
+  const svgCounts = {};
+  const walk = (node) => {
+    if (node.namespaceURI === "http://www.w3.org/2000/svg") {
+      if (node.closest("[data-slot=chart]")) {
+        svgCounts[node.tagName] = (svgCounts[node.tagName] ?? 0) + 1;
+        return null;
+      }
+    }
+    const text = [...node.childNodes]
+      .filter((child) => child.nodeType === 3)
+      .map((child) => child.textContent.trim())
+      .filter(Boolean)
+      .join(" ");
+    const kids = [...node.children].map(walk).filter(Boolean);
+    const entry = { t: node.tagName.toLowerCase() };
+    for (const attr of ["role", "aria-label", "aria-pressed", "aria-level", "type", "data-slot"]) {
+      const value = node.getAttribute(attr);
+      if (value !== null) entry[attr] = value;
+    }
+    if (text) entry.text = text;
+    if (kids.length) entry.c = kids;
+    return entry;
+  };
+  return { tree: walk(frame), svg: svgCounts }
+}
+
+// Màu tính được: chấm/khoá nhỏ (span aria-hidden có nền) và nét/vùng có màu trong SVG.
+function colorsOf(frame) {
+  const dots = [...frame.querySelectorAll("span[aria-hidden=true]")]
+    .map((node) => getComputedStyle(node).backgroundColor)
+    .filter((color) => color && color !== "rgba(0, 0, 0, 0)");
+  const marks = [...frame.querySelectorAll("[data-slot=chart] path, [data-slot=chart] rect, [data-slot=chart] circle")]
+    .flatMap((node) => {
+      const style = getComputedStyle(node);
+      return [style.fill, style.stroke];
+    })
+    .filter((color) => color && color !== "none" && !color.startsWith("url"));
+  return { dots: [...new Set(dots)], marks: [...new Set(marks)] };
+}
+
+const settle = (page) => page.waitForTimeout(1600);
+
+async function tooltipText(page) {
+  const tip = page.locator(".recharts-tooltip-wrapper").first();
+  return (await tip.count()) ? ((await tip.innerText()) || "").trim() : "";
+}
+
+/** Thao tác cố định trên khung, ghi lại chữ thấy được sau mỗi bước. */
+async function interact(page, pageId, title) {
+  const frame = page.locator("[data-slot=frame]", {
+    has: page.locator("[data-slot=frame-panel-title]", { hasText: title }),
+  }).first();
+  const steps = {};
+  const chart = frame.locator("[data-slot=chart]").first();
+  const box = await chart.boundingBox();
+  if (box) {
+    await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.6);
+    await page.waitForTimeout(300);
+    steps.hover = await tooltipText(page);
+    await page.mouse.move(0, 0);
+  }
+  if (title === "Hiệu suất theo tháng") {
+    await frame.getByRole("button", { name: /Công suất/ }).first().click();
+    await settle(page);
+    steps.afterOccupancy = (await frame.innerText()).trim();
+    await frame.getByRole("radio", { name: "6 tháng" }).first().click().catch(async () => {
+      await frame.getByText("6 tháng", { exact: true }).first().click();
+    });
+    await settle(page);
+    steps.afterSixMonths = (await frame.innerText()).trim();
+  }
+  if (title === "Doanh thu và chi phí 12 tháng tới") {
+    await frame.getByText("Quý", { exact: true }).first().click();
+    await settle(page);
+    steps.afterQuarter = (await frame.innerText()).trim();
+  }
+  await frame.getByRole("button", { name: "Thao tác khác" }).first().click();
+  await page.waitForTimeout(300);
+  steps.menu = (await page.locator("[role=menu]").first().innerText().catch(() => "")).trim();
+  await page.keyboard.press("Escape");
+  return steps;
+}
+
+/** Bản chromium playwright-core đòi có thể chưa tải; khi đó dùng headless shell mới nhất trong cache. */
+async function launch(chromium) {
+  try {
+    return await chromium.launch();
+  } catch (error) {
+    const cache = join(homedir(), "Library/Caches/ms-playwright");
+    const shell = readdirSync(cache)
+      .filter((name) => name.startsWith("chromium_headless_shell-"))
+      .sort((a, b) => Number(b.split("-")[1]) - Number(a.split("-")[1]))
+      .map((name) => join(cache, name, "chrome-headless-shell-mac-arm64", "chrome-headless-shell"))
+      .find((path) => existsSync(path));
+    if (!shell) throw error;
+    return chromium.launch({ executablePath: shell });
+  }
+}
+
+const { chromium } = loadPlaywright();
+mkdirSync(OUT, { recursive: true });
+const browser = await launch(chromium);
+// Bản chụp ghi cây app/src nó chụp trên (mã tree của git); app/src bẩn thì không có mã tree.
+const ROOT = join(dirname(new URL(import.meta.url).pathname), "..", "..");
+const git = (...argv) => execFileSync("git", argv, { cwd: ROOT, encoding: "utf8" }).trim();
+const dirty = git("status", "--porcelain", "--", "app/src") !== "";
+const snapshot = {
+  base: BASE,
+  at: new Date().toISOString(),
+  head: git("rev-parse", "HEAD"),
+  app_src_tree: dirty ? null : git("rev-parse", "HEAD:app/src"),
+  structure: {},
+  colors: {},
+  interactions: {},
+};
+try {
+  for (const mode of MODES) {
+    const context = await browser.newContext({
+      colorScheme: mode.scheme,
+      viewport: { width: mode.width, height: 900 },
+      deviceScaleFactor: 1,
+      reducedMotion: "reduce",
+    });
+    const page = await context.newPage();
+    for (const target of PAGES) {
+      await page.goto(BASE + target.path, { waitUntil: "networkidle" });
+      await settle(page);
+      for (const title of target.frames) {
+        const key = `${target.id}/${title}`;
+        const handle = await page.evaluateHandle(FIND_FRAME, title);
+        const element = handle.asElement();
+        if (!element) throw new Error(`không thấy khung "${title}" ở ${target.path} (${mode.id})`);
+        const slug = title === "Cơ cấu doanh thu" ? "mix" : title.startsWith("Hiệu") ? "performance" : "pnl";
+        await element.screenshot({ path: join(OUT, `${target.id}-${slug}-${mode.id}.png`) });
+        snapshot.colors[`${key}@${mode.id}`] = await element.evaluate(colorsOf);
+        // Cấu trúc và thao tác chỉ ghi ở 1280: cùng mã, khác bề rộng thì cây DOM vẫn vậy.
+        if (mode.width === 1280) {
+          const shape = await element.evaluate(structureOf);
+          snapshot.structure[`${key}@${mode.scheme}`] = shape;
+          if (mode.scheme === "light") snapshot.interactions[key] = await interact(page, target.id, title);
+        }
+      }
+    }
+    await context.close();
+  }
+} finally {
+  await browser.close();
+}
+writeFileSync(join(OUT, "snapshot.json"), JSON.stringify(snapshot, null, 2) + "\n");
+console.log(`đã chụp ${Object.keys(snapshot.colors).length} khung → ${OUT}`);
