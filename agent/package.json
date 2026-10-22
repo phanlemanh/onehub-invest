@@ -1,0 +1,21 @@
+{
+  "name": "onehub-ai-agent",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/",
+    "smoke": "tsx scripts/smoke.ts"
+  },
+  "dependencies": {
+    "ai": "7.0.105",
+    "@ai-sdk/openai": "^2.0.0",
+    "pg": "^8.13.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0"
+  }
+}
