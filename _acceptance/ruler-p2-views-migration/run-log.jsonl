@@ -1,0 +1,7 @@
+{"ts":"2026-10-22T22:43:40Z","round":1,"evalId":"E1","run_id":"ruler-p2-views-migration-E1-20261022T224338Z","exit_code":0,"cmd":"bash scripts/check-ruler-views.sh fresh"}
+{"ts":"2026-10-22T22:43:48Z","round":1,"evalId":"E2","run_id":"ruler-p2-views-migration-E2-20261022T224347Z","exit_code":0,"cmd":"bash scripts/check-ruler-views.sh idem"}
+{"ts":"2026-10-22T22:43:49Z","round":1,"evalId":"E3","run_id":"ruler-p2-views-migration-E3-20261022T224349Z","exit_code":0,"cmd":"bash scripts/check-ruler-views.sh idem"}
+{"ts":"2026-10-22T22:43:57Z","round":1,"evalId":"E4","run_id":"ruler-p2-views-migration-E4-20261022T224357Z","exit_code":0,"cmd":"bash scripts/check-ruler-views.sh static"}
+{"ts":"2026-10-22T22:43:58Z","round":1,"evalId":"E5","run_id":"ruler-p2-views-migration-E5-20261022T224358Z","exit_code":0,"cmd":"bash scripts/check-ruler-views.sh static"}
+{"ts":"2026-10-22T22:44:01Z","round":1,"evalId":"E6","run_id":"ruler-p2-views-migration-E6-20261022T224359Z","exit_code":0,"cmd":"bash scripts/check-ruler-views.sh cloudsim"}
+{"ts":"2026-10-22T22:44:12Z","round":1,"evalId":"E7","run_id":"ruler-p2-views-migration-E7-20261022T224412Z","exit_code":0,"cmd":"cd pipeline && npm test"}
