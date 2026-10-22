@@ -6,9 +6,12 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/reui/badge";
 
 /**
- * HITL Review Card — hiển thị 2 offers side-by-side + AI suggestion +
- * 3 nút quyết định (approved/rejected/deferred). Click → POST API →
- * router.refresh() để cập nhật danh sách.
+ * HITL Review Card — rẽ nhánh theo item_type:
+ * - entity_match: 2 offers side-by-side + AI suggestion + 3 nút quyết định.
+ * - agent_output (enrich:<offer_id>): đoạn tin + bảng giá trị LLM đề xuất;
+ *   «Áp dụng» → route decide → decide_enrichment_review (migration 033).
+ * - loại khác: một dòng báo, không làm sập trang.
+ * Click → POST API → router.refresh() để cập nhật danh sách.
  */
 export type ReviewEvidence = {
   offer_a: {
@@ -30,11 +33,20 @@ export type ReviewEvidence = {
   stage_b_score: number;
 };
 
+export type EnrichEvidence = {
+  offer_id?: string;
+  text?: string | null;
+  group_name?: string | null;
+  run_id?: string;
+  model?: string | null;
+  fields?: { proposal_id: number; field: string; value: string; confidence: number | null }[];
+};
+
 export type ReviewItem = {
   id: number;
   item_type: string;
   title: string;
-  evidence: ReviewEvidence;
+  evidence: Record<string, unknown>;
   ai_suggestion: string | null;
   ai_reasoning: string | null;
   ai_confidence: number | null;
@@ -98,15 +110,21 @@ function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
   );
 }
 
-export function ReviewCard({ item }: { item: ReviewItem }) {
+type DecideStatus = "approved" | "rejected" | "deferred";
+
+const DONE_LABEL: Record<string, Record<string, string>> = {
+  entity_match: { approved: "Đã duyệt", rejected: "Đã từ chối", deferred: "Hoãn" },
+  agent_output: { approved: "Đã áp", rejected: "Đã bỏ", deferred: "Hoãn" },
+};
+
+/** Gửi quyết định lên route decide rồi làm mới danh sách. */
+function useDecide(id: number) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
-  const ev = item.evidence;
-
-  const decide = (status: "approved" | "rejected" | "deferred") => {
+  const decide = (status: DecideStatus) => {
     start(async () => {
-      const res = await fetch(`/api/v1/ops/review/${item.id}/decide`, {
+      const res = await fetch(`/api/v1/ops/review/${id}/decide`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ status }),
@@ -119,7 +137,112 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
       }
     });
   };
+  return { pending, msg, decide };
+}
 
+function DoneBadge({ item }: { item: ReviewItem }) {
+  const label = DONE_LABEL[item.item_type]?.[item.status] ?? item.status;
+  return <Badge variant={item.status === "approved" ? "success-light" : "outline"}>{label}</Badge>;
+}
+
+export function ReviewCard({ item }: { item: ReviewItem }) {
+  if (item.item_type === "entity_match") return <EntityMatchCard item={item} />;
+  if (item.item_type === "agent_output") return <AgentOutputCard item={item} />;
+  return (
+    <div className="flex flex-col gap-1 rounded-xl border p-4">
+      <h3 className="text-sm font-medium">{item.title}</h3>
+      <p className="text-muted-foreground text-xs">
+        Loại «{item.item_type}» chưa có giao diện duyệt.
+      </p>
+    </div>
+  );
+}
+
+const FIELD_LABEL: Record<string, string> = {
+  property_type: "Loại BĐS",
+  bedrooms: "Phòng ngủ",
+  bathrooms: "WC",
+  street_raw: "Đường",
+  block_raw: "Toà",
+};
+
+function AgentOutputCard({ item }: { item: ReviewItem }) {
+  const { pending, msg, decide } = useDecide(item.id);
+  const ev = item.evidence as EnrichEvidence;
+  const fields = Array.isArray(ev.fields) ? ev.fields : [];
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-medium">{item.title}</h3>
+        <Badge variant="outline">Bổ sung dữ liệu tin</Badge>
+      </div>
+      {ev.text && (
+        <p className="text-muted-foreground line-clamp-3 rounded-md bg-muted/30 px-2 py-1 text-[11px]">
+          {ev.group_name ? `${ev.group_name} · ` : ""}
+          {ev.text}
+        </p>
+      )}
+      {fields.length === 0 ? (
+        <p className="text-muted-foreground text-xs">Thẻ thiếu dữ liệu đề xuất.</p>
+      ) : (
+        <>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-muted-foreground border-b text-left">
+                <th className="py-1 pr-3 font-medium">Trường</th>
+                <th className="py-1 pr-3 font-medium">Giá trị đề xuất</th>
+                <th className="py-1 font-medium">AI tự tin</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.map((f) => (
+                <tr key={f.proposal_id} className="border-b last:border-0">
+                  <td className="py-1 pr-3">{FIELD_LABEL[f.field] ?? f.field}</td>
+                  <td className="py-1 pr-3 font-medium">{f.value}</td>
+                  <td className="py-1 tabular-nums">
+                    {f.confidence === null ? "—" : `${Math.round(f.confidence * 100)}%`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {item.status === "pending" ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => decide("approved")}
+                disabled={pending}
+                className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Áp dụng
+              </button>
+              <button
+                onClick={() => decide("rejected")}
+                disabled={pending}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                Bỏ
+              </button>
+              <button
+                onClick={() => decide("deferred")}
+                disabled={pending}
+                className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted/50 disabled:opacity-50"
+              >
+                Để sau
+              </button>
+              {msg && <span className="text-muted-foreground text-xs">{msg}</span>}
+            </div>
+          ) : (
+            <DoneBadge item={item} />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function EntityMatchCard({ item }: { item: ReviewItem }) {
+  const { pending, msg, decide } = useDecide(item.id);
+  const ev = item.evidence as ReviewEvidence;
   return (
     <div className="flex flex-col gap-2 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-2">
@@ -168,9 +291,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
           {msg && <span className="text-muted-foreground text-xs">{msg}</span>}
         </div>
       ) : (
-        <Badge variant={item.status === "approved" ? "success-light" : "outline"}>
-          {item.status === "approved" ? "Đã duyệt" : item.status === "rejected" ? "Đã từ chối" : "Hoãn"}
-        </Badge>
+        <DoneBadge item={item} />
       )}
     </div>
   );

@@ -12,6 +12,8 @@ export const dynamic = "force-dynamic";
  *
  * Entity_match approved → property_candidates status='merged'
  * Entity_match rejected → property_candidates status='rejected'
+ * Agent_output enrich:<offer_id> → decide_enrichment_review (migration 033):
+ *   approved áp đề xuất fill-gap · rejected bác · deferred giữ chờ lượt sau
  * Audit mọi quyết định.
  */
 export async function POST(
@@ -78,6 +80,13 @@ export async function POST(
       }
     }
 
+    // agent_output enrich:<offer_id> → áp/bác đề xuất enrichment qua hàm SQL duy nhất
+    // (migration 033) — cùng transaction với cập nhật review_queue ở trên.
+    if (item.item_type === "agent_output" && item.item_id.startsWith("enrich:")) {
+      await client.query(`SELECT decide_enrichment_review($1, $2, $3)`, [
+        id, status, `hitl:${user?.id ?? "api"}`,
+      ]);
+    }
     await client.query("COMMIT");
 
     auditOpsWrite(user?.id ?? "ops-api", "review:decide", {
