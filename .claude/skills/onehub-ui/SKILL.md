@@ -53,7 +53,7 @@ lẫn đoạn này trong cùng PR, kèm lý do.
 ## Không đụng vendor
 
 - `src/components/ui/**`, `src/components/reui/**`, `src/components/blocks/**` và
-  `src/components/examples/**` là code vendor: không sửa tay, lint không quét. Muốn đổi thì
+  `src/components/examples/**` là code vendor: không sửa tay, luật onehub-ui không quét (luật lint của Next vẫn áp dụng cho `ui/` và `examples/`). Muốn đổi thì
   chép sang thư mục feature rồi chuyển thể ở đó (lint áp dụng cho bản chép).
 - Cho tới khi nhánh `fix/portal-deals-airdna` merge, không sửa `src/app/(app)/deals/**`,
   `src/app/(app)/[country]/[market]/dau-tu/**`, `src/components/invest/investment-simulator.tsx`

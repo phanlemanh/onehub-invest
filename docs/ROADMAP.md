@@ -170,6 +170,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | B4 | Trạng thái: Skeleton trong Suspense, Empty + hành động, error.tsx còn thiếu | ⏳ |
 | B5 | Phần còn lại sau `fix/portal-deals-airdna` + gỡ baseline (phải rỗng) | ⏳ |
 
+**Tích hợp nhánh fix/portal-deals-airdna sau A** (nhánh dời `(app)/deals/page.tsx` → `ops/deals/page.tsx`, sửa `dau-tu/page.tsx`, `investment-simulator.tsx`):
+1. Rebase lên `main` đã có A.
+2. `.claude/skills/onehub-ui/routes.md`: dòng `/deals` thành `/ops/deals` (file `ops/deals/page.tsx`, operational, Table-backed management, Frame); nếu không `routes-map.test.mjs` đỏ.
+3. `app/eslint-suppressions.json`: đổi khoá `src/app/(app)/deals/page.tsx` thành `src/app/ops/deals/page.tsx`, giữ nguyên số đếm (hoặc `npx eslint . --prune-suppressions`), rồi kiểm bằng `node eslint-plugin-onehub-ui/check-baseline-growth.mjs <suppressions-của-main> eslint-suppressions.json`.
+4. `cd app && npm run lint && npm run test:lint-rules` xanh.
+
 **Thứ tự khuyến nghị tiếp**: A2 (judge 12 cặp qua /ops/review) → A4 (extract-text) → A3 (MCP) → M3 (consolidation).
 
 ## 5. Chỉ mục quyết định

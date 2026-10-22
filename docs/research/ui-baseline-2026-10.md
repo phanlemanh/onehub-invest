@@ -1,7 +1,7 @@
 # Số đo "trước": vi phạm chuẩn UI ReUI (baseline)
 
 - **Ngày đo:** 2026-10-22
-- **Commit:** `e99a9e6` (nhánh `feat/ui-standards-reui`, cây sạch lúc đo, cộng cấu hình lint của commit này)
+- **Commit:** `b4021dc` (cấu hình lint + baseline; nhánh `feat/ui-standards-reui`)
 - **Chạy lại:** `cd app && npm run lint:ui-report` (cần `eslint-suppressions.json` còn nguyên để tính cả mục baseline)
 - **Đối chiếu tổng:** `node -e 'const s=require("./eslint-suppressions.json");console.log(Object.values(s).flatMap(Object.values).reduce((a,v)=>a+v.count,0))'` (chạy trong `app/`) ra **138**, khớp tổng bên dưới.
 
@@ -54,7 +54,7 @@ Cách đếm: **mỗi chuỗi class / phần tử JSX vi phạm là một báo c
 | Bảng tự dựng | ~5 | 6 `<table>` / 6 file | Kiểm kê tay là ước lượng; lint đếm thẻ `<table>` thực. |
 | Điều khiển thô / hộp thoại tay | 4 cụm component tay | 26 `no-raw-controls` + 3 `no-native-dialogs` | Kiểm kê tay đếm theo cụm component; lint đếm từng thẻ `<input>`/`<select>`/`<button>`… và từng `alert`/`confirm`/`prompt`. |
 
-Hai luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `no-banned-motion` (8) và `no-hardcoded-color` (16, ngoài 5 file bản đồ).
+Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `no-banned-motion` (8) và `no-hardcoded-color` (16, ngoài 5 file bản đồ).
 
 ## Kiểm kê tay (không đo được bằng lint)
 
