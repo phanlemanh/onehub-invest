@@ -1,12 +1,9 @@
-// resolve-properties.mjs — G-2 Stage A/B: gộp offers thành "một căn nhà"
-// (docs/research/unified-property-pipeline.md §4 Lớp 2)
+// resolve-properties.mjs — M-2: Match existing + create NEW properties
+// (property-master-record.md — KHÔNG TRUNCATE, persistent)
 //
-// Stage A (blocking, deterministic — S06 tự gộp): cluster_key = grid geo
-// ~55m + kind + property_type + DT chạm + giá chạm → đo 375/8.645 trùng
-// repost Chợ Tốt. Rebuild mỗi đêm (idempotent).
-// Stage B (P1↔P2 candidates, KHÔNG auto-merge): cùng phường + DT ±15% +
-// giá/m² ±20% → điểm; ≥0.85 = 'needs_llm' (G-3 judge quyết), còn lại
-// 'pending' chờ tín hiệu mạnh hơn (pHash/phone).
+// Stage A: S06 clusters → match existing properties qua stable_key,
+//          tạo NEW (pending) nếu chưa có, enrich existing nếu match.
+// Stage B: cặp ứng viên P1↔P2 (giữ nguyên logic cũ).
 import { pathToFileURL } from "node:url";
 import pg from "pg";
 
@@ -23,9 +20,8 @@ async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
-    // ── Stage A: S06 clusters → properties ──
-    await c.query(`TRUNCATE property_offers, properties RESTART IDENTITY CASCADE`);
-
+    // ── Stage A: match existing + create NEW ──
+    // M-1: KHÔNG TRUNCATE — properties persistent vĩnh viễn.
     const { rows: clusters } = await c.query(`
       WITH g AS (
         SELECT o.offer_id, o.area_id, o.kind, o.property_type,
@@ -44,15 +40,34 @@ async function main() {
              round(avg(latitude)::numeric, 6) lat, round(avg(longitude)::numeric, 6) lng
       FROM g GROUP BY cluster_key`);
 
-    let nEvidence = 0;
+    let nEvidence = 0, nNew = 0, nMatched = 0;
     for (const cl of clusters) {
-      const { rows: ins } = await c.query(
-        `INSERT INTO properties (geo, area_id, property_type, kind, cluster_key,
-                                 n_evidence, first_seen, last_seen, resolved_by)
-         VALUES (ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3, $4, $5, $6, $7, $8, $9, 'stage-ab')
-         RETURNING id`,
-        [cl.lng, cl.lat, cl.area_id, cl.pt, cl.kind, cl.cluster_key, cl.n, cl.fs, cl.ls],
+      // MATCH existing qua stable_key (= cluster_key)
+      const { rows: existing } = await c.query(
+        `SELECT id FROM properties WHERE stable_key = $1`, [cl.cluster_key],
       );
+      let pid;
+      if (existing.length > 0) {
+        pid = existing[0].id;
+        nMatched++;
+        // ENRICH existing: cập nhật last_seen + n_evidence
+        await c.query(
+          `UPDATE properties SET last_seen = GREATEST(last_seen, $2), n_evidence = $3 WHERE id = $1`,
+          [pid, cl.ls, cl.n],
+        );
+      } else {
+        // CREATE NEW (pending — chờ HITL verify)
+        const { rows: ins } = await c.query(
+          `INSERT INTO properties (geo, area_id, property_type, kind, cluster_key, stable_key,
+                                   n_evidence, first_seen, last_seen, resolved_by, verification)
+           VALUES (ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3, $4, $5, $6, $6,
+                   $7, $8, $9, 'stage-ab', 'pending')
+           RETURNING id`,
+          [cl.lng, cl.lat, cl.area_id, cl.pt, cl.kind, cl.cluster_key, cl.n, cl.fs, cl.ls],
+        );
+        pid = ins[0].id;
+        nNew++;
+      }
       await c.query(
         `INSERT INTO property_offers (property_id, offer_id, score, signals)
          SELECT $1, o.offer_id, 1.0, '{"geo":1,"price":1,"area":1}'::jsonb
@@ -61,13 +76,14 @@ async function main() {
            ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || s.list_id::text, 'sha256'), 'hex'), 1, 16)
          WHERE o.source='S06' AND s.latitude IS NOT NULL
            AND o.area_m2 IS NOT NULL AND o.price_vnd > 0
-           AND ${CLUSTER_EXPR} = $2`,
-        [ins[0].id, cl.cluster_key],
+           AND ${CLUSTER_EXPR} = $2
+         ON CONFLICT (property_id, offer_id) DO NOTHING`,
+        [pid, cl.cluster_key],
       );
       nEvidence += cl.n;
     }
     console.log(
-      `Stage A: ${clusters.length} căn nhà từ ${nEvidence} offers S06 (gộp ${nEvidence - clusters.length} repost)`,
+      `Stage A: ${clusters.length} clusters → ${nMatched} match existing + ${nNew} NEW (pending) | ${nEvidence} offers`,
     );
 
     // ── Stage B: cặp ứng viên P1↔P2 (cùng phường, DT ±15%, giá/m² ±20%) ──
@@ -87,8 +103,6 @@ async function main() {
           AND o.area_m2 BETWEEN 20 AND 500 AND o.price_perm2 BETWEEN 10e6 AND 300e6),
       scored AS (
         SELECT p1.offer_id a, p2.offer_id b,
-          -- phường là ĐIỀU KIỆN blocking (không cộng điểm); score = độ gần
-          -- DT + giá/m² — cặp cực gần mới đáng G-3 judge
           round((0.5 * (1 - abs(p1.area_m2 - p2.area_m2)::numeric / GREATEST(p1.area_m2, p2.area_m2))
                + 0.5 * (1 - abs(p1.price_perm2 - p2.price_perm2)::numeric / GREATEST(p1.price_perm2, p2.price_perm2))
                )::numeric, 3) s,
@@ -107,7 +121,7 @@ async function main() {
     const nLlm = pairs.length
       ? (await c.query(`SELECT count(*)::int n FROM property_candidates WHERE status='needs_llm'`)).rows[0].n
       : 0;
-    console.log(`Stage B: ${pairs.length} cặp ứng viên P1↔P2 (trong đó ${nLlm} needs_llm chờ G-3 judge)`);
+    console.log(`Stage B: ${pairs.length} cặp P1↔P2 (${nLlm} needs_llm)`);
   } finally {
     await c.end();
   }
