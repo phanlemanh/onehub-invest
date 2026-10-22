@@ -8,6 +8,8 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 # Hai ổ cắm thiết kế (repo có bề mặt người dùng): cả hai trỏ tới skill repo `onehub-ui`.
 feature_loop:
   ui_standards_skill: onehub-ui
+  # Lệnh chạy mỗi lượt chấm: app (tsc+lint) + portal_static (PR #3) + test luật lint UI (ui-clean-b1-ops, Hỏi-2)
+  suite_keys: [executors.test.app, executors.script.portal_static, executors.test.ui_lint_rules]
 design_pass:
   ds_skill: onehub-ui
 executors:
@@ -89,5 +91,3 @@ dev_server:
   # không có api_base: app chỉ gọi /api/v1 cùng origin
 capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
-feature_loop:
-  suite_keys: [executors.test.app, executors.script.portal_static]
