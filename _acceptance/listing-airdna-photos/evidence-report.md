@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5b730ea3fe3a474d874714ef245a596523899ea8
+verified_commit: 4a639621520872d4fe74ca28c1ab4194ed76e12c
 human_signoff: Mạnh 2026-10-22
 ---
 
@@ -177,3 +177,7 @@ none — mọi eval chạy một lần, tất định.
 ## Iterations
 
 Round 1: mọi eval máy (E1–E8) và ui-check E9 đạt trên commit 5b730ea.
+
+### Re-pin lần 1 — 2026-10-22, do hợp nhất origin/main (PR #3 portal-deals-airdna) vào nhánh
+run_id: repin-20261022T230822Z-46117
+sha: 4a639621520872d4fe74ca28c1ab4194ed76e12c · suites: 1 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths)
