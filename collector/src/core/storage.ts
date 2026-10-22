@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { mkdir, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { CoverageReport, ManifestFile, RawItem, SnapshotManifest } from "./types.js";
 
@@ -22,8 +23,15 @@ export class SnapshotWriter {
   private readonly startedAt = new Date().toISOString();
 
   constructor(rootDir: string, city: string, source: string) {
-    const ts = new Date().toISOString().replace(/[:.]/g, "").slice(0, 17); // yyyymmddThhmmss
-    this.snapshotId = `${city}__${source}__${ts}`;
+    // Giữ cả mili-giây: hai flush liên tiếp (single-flight dồn sát nhau) cùng
+    // giây phải ra hai snapshot khác nhau — id theo giây sẽ đè nhau.
+    const ts = new Date().toISOString().replace(/[:.]/g, "").slice(0, 20); // yyyymmddThhmmssmmm
+    let sid = `${city}__${source}__${ts}`;
+    let n = 1;
+    // Bảo hiểm cuối: dir đã có (đâm trùng ms) thì tăng hậu tố — snapshot ghi
+    // mới, không bao giờ ghi đè.
+    while (existsSync(join(rootDir, city, sid))) sid = `${city}__${source}__${ts}-${n++}`;
+    this.snapshotId = sid;
     this.dir = join(rootDir, city, this.snapshotId);
   }
 

@@ -8,7 +8,9 @@ pipeline (giai đoạn validate/ingest) chỉ nhận theo hợp đồng này.
 ```
 snapshots/
   <city>/                          # hanoi, hcmc, ...
-    <city>__<source>__<yyyymmddThhmmss>/
+    <city>__<source>__<yyyymmddThhmmssmmm>[-n]/   # id giữ mili-giây; hậu tố -n
+                                   # chỉ xuất hiện khi đâm trùng ms (hiếm) —
+                                   # snapshot luôn ghi mới, không ghi đè
       items-0001.json.gz           # mảng RawItem, 1000 item/file
       items-0002.json.gz
       media/<hash16>.<ext>         # TÙY CHỌN (v2): ảnh tải từ URL trong

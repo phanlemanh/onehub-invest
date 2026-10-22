@@ -78,6 +78,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
   let buffer: RawItem[] = [];
   const seen = new Set<string>();
   let writer: SnapshotWriter | null = null;
+  let flushing: Promise<{ snapshotId: string } | null> | null = null;
   let duplicatesTotal = 0;
   let acceptedTotal = 0;
   const newIds: string[] = []; // id mới từ lần flush trước — persist xuống state
@@ -143,10 +144,12 @@ export async function createAgentServer(opts: AgentServerOptions) {
     return { status: 202, body: { accepted, duplicates } };
   }
 
-  async function flush(): Promise<{ snapshotId: string } | null> {
+  async function doFlush(): Promise<{ snapshotId: string } | null> {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
     writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
-    const items = buffer;
+    // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
+    // lượt này — nó nằm lại buffer cho lần flush sau, có ảnh của nó.
+    const items = buffer.slice();
     // N1 media: URL ảnh Zalo (zdn.vn) CÓ HẠN — tải về máy TRƯỚC khi gzip items
     // để meta.mediaFiles nằm trong items-*.json.gz. Fail-open: lỗi tải chỉ ghi
     // error trong meta; lỗi hệ thống bỏ qua bước media, tin vẫn phải chảy.
@@ -190,6 +193,20 @@ export async function createAgentServer(opts: AgentServerOptions) {
       newIds.length = 0;
     }
     return { snapshotId: manifest.snapshotId };
+  }
+
+  /**
+   * Single-flight: flush giờ chờ tải ảnh (vài chục giây tới vài phút) nên
+   * hai nguồn kích — interval 60s và POST đủ flushAfterItems — có thể chồng
+   * nhau. Đang có flush chạy thì caller sau chung đúng promise đó; không ghi
+   * đôi snapshot, không finalize manifest hai lần.
+   */
+  function flush(): Promise<{ snapshotId: string } | null> {
+    if (flushing) return flushing;
+    flushing = doFlush().finally(() => {
+      flushing = null;
+    });
+    return flushing;
   }
 
   /** Bọc http: parse JSON, gọi ingest, auto-flush khi đủ flushAfterItems. */

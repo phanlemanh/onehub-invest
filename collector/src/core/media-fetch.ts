@@ -60,7 +60,7 @@ function mediaUrlsOf(item: RawItem): string[] {
 
 async function downloadOne(
   url: string,
-  opts: { maxBytes: number; timeoutMs: number; userAgent: string },
+  opts: { maxBytes: number; timeoutMs: number; userAgent: string; allowedHostSuffixes: string[] },
 ): Promise<{ bytes: Buffer; error?: string }> {
   const controller = new AbortController();
   let timedOut = false;
@@ -75,6 +75,17 @@ async function downloadOne(
       headers: { "user-agent": opts.userAgent },
     });
     if (res.status !== 200) return { bytes: Buffer.alloc(0), error: `http-${res.status}` };
+    // redirect đã follow — host URL CUỐI cũng phải thuộc allowlist, kẻo
+    // kẻ đăng tin dùng redirect zdn.vn → máy lạ để chộm request nội bộ.
+    try {
+      const finalHost = new URL(res.url).host;
+      if (!hostAllowed(finalHost, opts.allowedHostSuffixes)) {
+        controller.abort();
+        return { bytes: Buffer.alloc(0), error: "redirect-host" };
+      }
+    } catch {
+      // res.url không parse được — giữ URL gốc đã kiểm trước fetch
+    }
     const reader = res.body?.getReader();
     if (!reader) return { bytes: Buffer.alloc(0), error: "no-body" };
     const chunks: Buffer[] = [];
