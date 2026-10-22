@@ -8,6 +8,7 @@ import noArbitraryTextSize from "./rules/no-arbitrary-text-size.mjs";
 import noBannedMotion from "./rules/no-banned-motion.mjs";
 import noAsChild from "./rules/no-aschild.mjs";
 import noEmojiIcons from "./rules/no-emoji-icons.mjs";
+import requireDisableReason from "./rules/require-disable-reason.mjs";
 
 export default {
   meta: { name: "onehub-ui" },
@@ -21,5 +22,6 @@ export default {
     "no-banned-motion": noBannedMotion,
     "no-aschild": noAsChild,
     "no-emoji-icons": noEmojiIcons,
+    "require-disable-reason": requireDisableReason,
   },
 };
