@@ -101,14 +101,14 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 ### Track 1 — AGENT (onehub-ai-agent) — chốt, sẵn sàng thực hiện
 | # | Việc | Trạng thái |
 |---|---|---|
-| A1 | runtime/ loop TS (AI SDK) + trace JSONL | ⬜ |
-| A2 | judge-entity: 124 cặp needs_llm (case đầu, mở khoá G-2) | ⬜ |
+| A1 | runtime/ loop TS (AI SDK) + trace JSONL | ✅ 1fd762e |
+| A2 | judge-entity eval 3 cặp (prefetch, không tool) — cần hand-label | 🔶 5440759 |
 | A3 | MCP server tools (gom C3-wrap + data-api) | ⬜ |
 | A4 | extract-text fallback (coverage 44-65% → tăng) | ⬜ |
 | A5 | evals suite agents (pattern kev 620 mẫu) | ⬜ |
 | A6 | advisor + compaction (chỉ khi agent dài xuất hiện) | ⬜ hoãn có chủ đích |
-| M1 | migration user_events + user_profile + seed (saved/G3) | ⬜ |
-| M2 | memory tool + wire app events | ⬜ |
+| M1 | migration user_events + user_profile + seed (saved/G3) | ✅ 8422289 |
+| M2 | memory tool + wire app events (view_market + dau_tu_input) | ✅ 8422289 |
 | M3 | consolidation đêm (Qwen local, source+evidence) | ⬜ |
 | M4 | form hồ sơ + export JSON (consent, user-owned) | ⬜ |
 | M5 | pgvector — chỉ khi đo thấy cần | ⬜ kháng cự |
