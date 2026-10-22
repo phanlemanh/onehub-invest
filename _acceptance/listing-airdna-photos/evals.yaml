@@ -1,0 +1,71 @@
+schema_version: 1
+feature_slug: listing-airdna-photos
+# listing_smoke cần app chạy :3456 TỪ WORKTREE NÀY (config:dev_server.start) + DB local :5433.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.listing_smoke
+    expected: "exit 0; căn có ảnh AirDNA khác bộ tự thu (>0 ảnh): mọi ảnh hiện thuộc bộ tự thu; should-NOT-fire: '0 ảnh chỉ AirDNA có'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.listing_smoke
+    expected: "exit 0; căn chưa có ảnh tự thu: trả 200 và 'không có ảnh (trạng thái trống)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.listing_smoke
+    expected: "exit 0; should-NOT-fire: cả hai trang 'HTML không có chữ AirDNA'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.listing_static
+    expected: "exit 0; 'getListingDetail không đọc bảng airdna_*' và 'ListingDetail không còn photoSource/listingUrl (nguồn AirDNA)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.listing_static
+    expected: "exit 0; mọi file route/components listing: 'không AirDNA/photoSource trong mã render (0 dòng)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.listing_smoke
+    expected: "exit 0; cả hai trang 'còn link Mở trên Airbnb dựng từ id'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.design.gate
+    paths: ["app/src/app/(app)/listing/[id]/page.tsx"]
+    expected: "chạy cmd với file trong paths làm đối số cuối: exit 0, verdict PASS, không P0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc không lỗi, lint 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Start dev server per config dev_server.start (từ worktree này)"
+      - "config:capture.ui http://localhost:3456/listing/abnb_1684709390587895076 → evidence/E9-step1.png"
+      - "config:capture.ui http://localhost:3456/listing/abnb_1146242072149071598 → evidence/E9-step2.png"
+    expected: "step1: trang listing có lưới ảnh (ảnh chính lớn + ảnh phụ), dưới lưới KHÔNG có dòng chữ chú thích nguồn ảnh, rồi tới ô KPI; nút 'Mở trên Airbnb' ở đầu trang. step2: trang listing không có lưới ảnh — đầu trang đi thẳng xuống ô KPI, không chữ AirDNA; nút 'Mở trên Airbnb' vẫn có"
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]
