@@ -12,8 +12,9 @@ if [ -n "$(git status --porcelain -- app/src)" ]; then
   echo "app/src đang bẩn — commit trước khi chụp" >&2
   exit 1
 fi
-# Luôn trả app/src về HEAD, kể cả khi chụp lỗi giữa chừng.
-trap 'git restore --source=HEAD --worktree -- app/src' EXIT
+# Luôn trả app/src về HEAD (gồm xoá tệp chỉ cây gốc có), kể cả khi chụp lỗi giữa chừng.
+back() { git restore --source=HEAD --worktree -- app/src && git clean -fdq -- app/src; }
+trap back EXIT
 
 # Chờ dev server biên dịch lại sau khi tệp đổi: tải trang tới khi 200.
 warm() {
@@ -30,7 +31,7 @@ sleep 3
 warm
 node scripts/ui-standards/b3-capture.mjs --out "$ev/before" --as-of "$base"
 
-git restore --source=HEAD --worktree -- app/src
+back
 sleep 3
 warm
 node scripts/ui-standards/b3-capture.mjs --out "$ev/after"
