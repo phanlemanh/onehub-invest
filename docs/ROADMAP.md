@@ -127,7 +127,7 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 | # | Việc | Trạng thái |
 |---|---|---|
 | N1 | media Zalo: đọc dbg-media khi tin ảnh về → map → bỏ debug | ⏳ chờ dữ liệu |
-| N2 | FB: đánh giá giá trị 118 offers vs chi phí → quyết ~7/11 | ⏳ chờ user |
+| N2 | FB: user quyết định mua Apify Starter — ĐÃ CHỐT 22/10, S05 active | ✅ |
 | N3 | AirDNA rotation (passive) | 🔄 sống |
 | N4 | S06 phone reveal per-ad (cap 50/ngày, top-deals) | ⬜ |
 
@@ -145,7 +145,7 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 
-**Thứ tự khuyến nghị tiếp**: A1+A2 → M1+M2 → A4 → N2 (khi tới 7/11).
+**Thứ tự khuyến nghị tiếp**: A2 (judge 12 cặp qua /ops/review) → A4 (extract-text) → A3 (MCP) → M3 (consolidation).
 
 ## 5. Chỉ mục quyết định
 
