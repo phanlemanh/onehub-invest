@@ -1,0 +1,49 @@
+{
+  "feature_plain": "Sáu trang vận hành (Ops) được làm lại bằng đúng các mẫu giao diện dùng chung của sản phẩm — cùng đầu trang, cùng kiểu bảng, cùng hộp xác nhận — thay cho các chỗ đang tự vẽ tay; số liệu và thao tác giữ nguyên.",
+  "will_do": [
+    {"id": "AC-3", "p": "Sẽ mở đầu mọi trang Ops bằng cùng một đầu trang (đường dẫn, tiêu đề, mô tả), và sửa hai trang đang lệch: trang Chất lượng có tiêu đề nằm giữa trang, trang Thu thập có khối lồng trong phần tiêu đề."},
+    {"id": "AC-5", "p": "Sẽ hỏi lại bằng hộp xác nhận trước khi xoá nhóm thu hay gỡ tài khoản Zalo (nói rõ số bài sẽ mất); bấm Huỷ thì không có gì xảy ra; mọi kết quả thao tác hiện bằng thông báo nổi."},
+    {"id": "AC-6", "p": "Sẽ giữ nguyên mọi lời gọi tới máy chủ (duyệt tin, bật/tắt/thêm/xoá nhóm, tài khoản Zalo) — máy so với bản chụp trước khi sửa."},
+    {"id": "AC-8", "p": "Sẽ biến trang Thư viện thiết kế thành nơi trưng bày các mẫu dùng chung đang sống (ô số, bảng, đầu trang, đang tải, lỗi, trống), bỏ chữ kỹ thuật dành cho lập trình viên."},
+    {"id": "AC-9", "p": "Sẽ chụp cả sáu trang ở nền sáng, nền tối và màn hẹp điện thoại: một tiêu đề mỗi trang, không cuộn ngang, không chữ đè — và che sẵn tên nguồn thật, tên nhóm Zalo trước khi chụp."},
+    {"id": "AC-10", "p": "Sẽ ghi số đo 'sau đợt B1' vào tài liệu case study và thêm các mẫu mới chọn vào danh mục dùng chung."},
+    {"id": "AC-11", "p": "Sẽ giữ trạng thái đúng ở các vùng viết lại: nút duyệt khoá khi đang gửi, bật/tắt lỗi thì quay về như cũ kèm báo lỗi, hàng chờ trống có thông báo, bảng nhóm Zalo có khung chờ và nút Thử lại, nút chỉ có biểu tượng có nhãn cho trình đọc màn hình."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Chặn mọi ngoại lệ lint giao diện còn sót ở cổng Ops — danh sách tồn đọng của Ops về 0 và không thêm ngoại lệ mới."},
+    {"id": "AC-2", "p": "Chặn các kiểu tự vẽ tay mà lint không bắt: khung viền tự kẻ, dòng thông báo tự viết, ký tự ✓ ✕ ↻ dùng làm biểu tượng."},
+    {"id": "AC-4", "p": "Chặn kiểu bảng và ô số thứ hai — Ops chỉ dùng một kiểu bảng và một kiểu ô số như cổng Invest."},
+    {"id": "AC-7", "p": "Chặn báo động giả của lint: ô nhập ẩn và hàm 'confirm' tự đặt tên không còn bị báo, còn hộp xác nhận thật của trình duyệt vẫn bị chặn."},
+    {"id": "OOS-1", "p": "KHÔNG đụng trang Deals, Đầu tư, bộ mô phỏng đầu tư và thanh điều hướng — để đợt B5 sau khi nhánh vá cổng merge."},
+    {"id": "OOS-2", "p": "KHÔNG làm trạng thái đang tải/trống đầy đủ cho mọi bảng Ops — đợt B4; B1 chỉ làm ở vùng nó viết lại."},
+    {"id": "OOS-3", "p": "KHÔNG sửa đầu trang và ô số dùng chung tự thân — đợt B2."},
+    {"id": "OOS-4", "p": "KHÔNG đổi dữ liệu, câu truy vấn, quyền vào trang hay màu thương hiệu."},
+    {"id": "OOS-5", "p": "KHÔNG chuẩn hoá lại cách hiển thị số ở các bảng đã sạch — chỉ ở thẻ duyệt tin được viết lại."}
+  ],
+  "scope_plain": "Những phần sau cố ý để đợt khác, để B1 không chạm cổng Invest và các nhánh đang chờ merge:",
+  "coverage_plain": [
+    {"i": 0, "p": "Không chạy quét độ phủ tự động — đề bài đợt B1 đã liệt kê đóng các việc; bảng dưới đối chiếu từng việc với từng trang."},
+    {"i": 1, "p": "Bảng trang × việc: mỗi ô có dấu ✓ được ít nhất một tiêu chí đo."},
+    {"i": 2, "p": "Cột: sáu trang Ops và tiêu chí đo."},
+    {"i": 3, "p": "Bảng tự kẻ chuyển sang bảng chuẩn ở 5 trang — đo bằng AC-1 (lint sạch) và AC-4 (một kiểu bảng)."},
+    {"i": 4, "p": "Nút, ô nhập, ô chọn tự dựng chuyển sang thành phần chuẩn ở Duyệt tin và Nguồn dữ liệu — AC-1."},
+    {"i": 5, "p": "Hộp xác nhận của trình duyệt thay bằng hộp xác nhận chuẩn ở hai chỗ của Nguồn dữ liệu — AC-5."},
+    {"i": 6, "p": "Dòng thông báo tự viết thay bằng thông báo nổi ở Duyệt tin và Nguồn dữ liệu — AC-2 và AC-5."},
+    {"i": 7, "p": "Nhãn trạng thái tự tô màu thay bằng nhãn chuẩn ở cả sáu trang — AC-1 và AC-2."},
+    {"i": 8, "p": "Đầu trang chung và khung chuẩn ở cả sáu trang — AC-3 (đọc mã) và AC-9 (ảnh chụp)."},
+    {"i": 9, "p": "Hai lỗi bố cục ở Thu thập và Chất lượng — AC-3 và AC-9."},
+    {"i": 10, "p": "Trang Thư viện thiết kế thành trang trưng bày — AC-8."},
+    {"i": 11, "p": "Lời gọi máy chủ không đổi ở Duyệt tin và Nguồn dữ liệu — AC-6."},
+    {"i": 12, "p": "Ảnh ba chế độ (đã che dữ liệu nhạy cảm) cho cả sáu trang — AC-9."},
+    {"i": 13, "p": "Trạng thái đúng và nhãn cho trình đọc màn hình ở vùng viết lại — AC-11."},
+    {"i": 14, "p": "Hai sửa của luật lint — AC-7."},
+    {"i": 15, "p": "Số đo sau đợt và danh mục mẫu — AC-10."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Ba lựa chọn máy tự quyết chưa đủ căn cứ, nặng nhất là sửa bảng dùng chung với cổng Invest công khai. Đã xử: bỏ hẳn việc sửa bảng dùng chung; cách làm form thêm nhóm chuyển thành câu hỏi Hỏi-5; căn cứ hoãn trạng thái sang B4 đổi sang câu của kế hoạch Phần B."},
+    {"i": 1, "p": "Ảnh bằng chứng có thể lộ tên nguồn thật và tên nhóm Zalo lên GitHub. Đã xử: luôn che trước khi chụp, máy tự kiểm ảnh không còn tên thật; Hỏi-1 vẫn để anh xác nhận."},
+    {"i": 2, "p": "Các trạng thái hứa trong thiết kế (khoá nút khi gửi, quay về khi lỗi, trống, chờ, thử lại) chưa có tiêu chí đo. Đã xử: thêm AC-11 và một phép kiểm đọc mã."},
+    {"i": 3, "p": "Phép kiểm 'mọi thông báo qua thông báo nổi' chỉ đếm có dòng nhập thư viện, đổi tên biến là lọt. Đã xử: đo theo quan hệ — không còn chữ thông báo nào hiện từ biến trạng thái, có ca thử đổi tên."},
+    {"i": 4, "p": "Phép so lời gọi máy chủ tự so với chính nó, bộ đọc sót một kiểu gọi thì cả hai bên cùng sót. Đã xử: thêm bảng kỳ vọng viết tay từ thiết kế, máy kiểm bản chụp phủ đủ bảng đó."}
+  ]
+}

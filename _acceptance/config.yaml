@@ -31,6 +31,17 @@ executors:
     ui_lint_should_not_fire: "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-not-fire"
     ui_baseline_guard: "cd app && node eslint-plugin-onehub-ui/selftest.mjs baseline-guard"
     ui_hook_selftest: "bash .claude/hooks/tests/typecheck-changed.selftest.sh"
+    # Đợt B1 dọn cổng Ops (ui-clean-b1-ops) — một harness, mỗi kiểu kiểm một lệnh
+    ui_b1_suppressions: "node scripts/ui-standards/b1-ops.mjs suppressions"
+    ui_b1_handdrawn: "node scripts/ui-standards/b1-ops.mjs handdrawn"
+    ui_b1_frame: "node scripts/ui-standards/b1-ops.mjs frame"
+    ui_b1_one_way: "node scripts/ui-standards/b1-ops.mjs one-way"
+    ui_b1_dialogs: "node scripts/ui-standards/b1-ops.mjs dialogs"
+    ui_b1_api_contract: "node scripts/ui-standards/b1-ops.mjs api-contract"
+    ui_b1_design_page: "node scripts/ui-standards/b1-ops.mjs design-page"
+    ui_b1_docs: "node scripts/ui-standards/b1-ops.mjs docs"
+    ui_b1_states: "node scripts/ui-standards/b1-ops.mjs states"
+    ui_b1_selftest: "node scripts/ui-standards/b1-ops.mjs selftest"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
