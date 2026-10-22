@@ -39,13 +39,24 @@ export default async function (context) {
     if (Object.keys(mediaish).length > 0) {
       await log(`dbg-media keys=[${Object.keys(ev).join(",")}] ${JSON.stringify(mediaish).slice(0, 600)} group=${group0}`);
     }
+  if (meta.__pregate) {
+    await log(`dbg-pregate reason=${meta.__pregate} raw=${String(meta.__raw ?? "").slice(0, 400)} group=${group0}`);
+  }
   } catch {}
 
   const text = (ev.content ?? "").trim();
+  // Media Zalo: môi giới dán URL ảnh zdn.vn TRỰC TIẾP trong text (khám phá
+  // 2026-10-22 nhờ pregate __raw) — extract bổ sung vào media facts.
+  const textImageUrls = [...new Set(
+    (text.match(/https?:\/\/[a-z0-9.-]+\/(?:[^\s"]+)\.(?:jpe?g|png|webp)(?:\?[^\s]*)?/gi) ?? [])
+  )].slice(0, 5);
   const mediaFacts = (ev.media ?? ev.originalMedia ?? [])
     .filter((m) => m && (m.mediaPath || m.mediaUrl))
     .slice(0, 10)
     .map((m) => ({ path: m.mediaPath ?? null, url: m.mediaUrl ?? null, type: m.mediaType ?? null }));
+  for (const u of textImageUrls) {
+    mediaFacts.push({ path: null, url: u, type: "image/jpeg" });
+  }
   const hasMedia = mediaFacts.length > 0;
   if (!text && !hasMedia) {
     await log(`skip (rỗng) group=${group0} account=${account}`);

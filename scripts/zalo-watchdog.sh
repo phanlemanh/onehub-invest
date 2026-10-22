@@ -73,6 +73,20 @@ if [ -f "$OC_LOG_GLOB" ]; then
   fi
 fi
 
+
+# L4c — COLLECTION STARVED (bài học 22/10: "an toàn 0-turn" có thể là 0 TIN
+# vì mention-gate giết thu — watchdog phải phân biệt). 24h không snapshot
+# zalo-agent MỚI = cảnh báo.
+LAST_SNAP=$(find "$ROOT"/collector/snapshots -name "*__zalo-agent__*" -type f -name "manifest.json" -newer /dev/null 2>/dev/null | xargs stat -f "%m %N" 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2)
+if [ -n "$LAST_SNAP" ]; then
+  LAST_M=$(stat -f %m "$(dirname "$LAST_SNAP")")
+  AGE_H=$(( ( $(date +%s) - LAST_M ) / 3600 ))
+  [ "$AGE_H" -ge 24 ] && echo "$(date -Iseconds) WARN: zalo-agent snapshot cũ ${AGE_H}h — collection starved?" >> "$ALERT_LOG"
+fi
+# L1b — patch pregate còn nguyên (plugin update có thể ghi đè)
+grep -q "oneinvest-pregate-patch" ~/.openclaw/extensions/zalouser/dist/.setup/monitor-*.mjs 2>/dev/null \
+  || alert "patch pregate zalouser BIẾN MẤT (plugin update ghi đè?) — thu S03 sẽ chết khi requireMention=true"
+
 # L5 — ghi nhịp kiểm tra (im lặng = mọi lớp còn nguyên)
 # Kev gate :8009 chết = mất dữ liệu im lặng (đã xảy ra 2026-10-21) → cảnh
 # báo (KHÔNG kill OpenClaw — handler giờ fail-open, thu vẫn chạy).
