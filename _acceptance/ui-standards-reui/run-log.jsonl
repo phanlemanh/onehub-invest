@@ -1,0 +1,12 @@
+{"ts": "2026-10-22T22:32:04Z", "round": 1, "evalId": "E1", "run_id": "ui-standards-reui-E1-20261022T223204Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs mcp-config"}
+{"ts": "2026-10-22T22:32:05Z", "round": 1, "evalId": "E2", "run_id": "ui-standards-reui-E2-20261022T223205Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs mcp-connected"}
+{"ts": "2026-10-22T22:32:06Z", "round": 1, "evalId": "E3", "run_id": "ui-standards-reui-E3-20261022T223206Z", "exit_code": 0, "cmd": "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-fire"}
+{"ts": "2026-10-22T22:32:08Z", "round": 1, "evalId": "E4", "run_id": "ui-standards-reui-E4-20261022T223208Z", "exit_code": 0, "cmd": "cd app && npm run test:lint-rules"}
+{"ts": "2026-10-22T22:32:08Z", "round": 1, "evalId": "E5", "run_id": "ui-standards-reui-E5-20261022T223208Z", "exit_code": 0, "cmd": "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-not-fire"}
+{"ts": "2026-10-22T22:32:13Z", "round": 1, "evalId": "E6", "run_id": "ui-standards-reui-E6-20261022T223213Z", "exit_code": 0, "cmd": "cd app && npx tsc --noEmit && npm run lint"}
+{"ts": "2026-10-22T22:32:21Z", "round": 1, "evalId": "E7", "run_id": "ui-standards-reui-E7-20261022T223221Z", "exit_code": 0, "cmd": "cd app && node eslint-plugin-onehub-ui/selftest.mjs baseline-guard"}
+{"ts": "2026-10-22T22:32:24Z", "round": 1, "evalId": "E8", "run_id": "ui-standards-reui-E8-20261022T223224Z", "exit_code": 0, "cmd": "bash .claude/hooks/tests/typecheck-changed.selftest.sh"}
+{"ts": "2026-10-22T22:32:35Z", "round": 1, "evalId": "E9", "run_id": "ui-standards-reui-E9-20261022T223235Z", "exit_code": 0, "cmd": "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"}
+{"ts": "2026-10-22T22:32:35Z", "round": 1, "evalId": "E10", "run_id": "ui-standards-reui-E10-20261022T223235Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs kit-sockets"}
+{"ts": "2026-10-22T22:32:35Z", "round": 1, "evalId": "E11", "run_id": "ui-standards-reui-E11-20261022T223235Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs pointers"}
+{"ts": "2026-10-22T22:32:35Z", "round": 1, "evalId": "E12", "run_id": "ui-standards-reui-E12-20261022T223235Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs baseline-doc"}
