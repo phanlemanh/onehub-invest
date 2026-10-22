@@ -95,7 +95,7 @@ Runner-up: `app-shell-28`. It has ⌘K built in and the rail moves into a Sheet 
 - The top bar (workspace picker, section pills, ⌘K, notifications feed, primary action) maps to: city or environment picker · Collections / Pipeline / Quality / Agents / Sources pills · ⌘K · collector-failure alerts · "Run Scan" renamed to "Chạy thu thập".
 - The scope-tree sidebar (icon scope tabs, collapsible tree, count/status badges) maps to sources → cities → phường with health badges. Dense SOC density is right for 1–2 operators.
 - Caveats: it adds `@headless-tree/core` and `@headless-tree/react` plus `@reui/sortable`. Drag-to-reorder and add/duplicate scopes are more than Ops needs, so disable them. Mobile uses a Drawer.
-- Alternatives: `app-shell-27` (same scope tree, no top bar, ⌘F) or `app-shell-11` (ops workbench with resizable panes and a bottom sheet, for log or pipeline views later). Pair it with `agent-activity-2/5` and `ai-usage-1` (already listed in DESIGN_RULES).
+- Alternatives: `app-shell-27` (same scope tree, no top bar, ⌘F) or `app-shell-11` (ops workbench with resizable panes and a bottom sheet, for log or pipeline views later). Pair it with `agent-activity-2/5` and `ai-usage-1` (candidates, not installed; find them with the MCP `search`).
 
 ---
 
