@@ -32,11 +32,15 @@ canonical:
       note: "qua SPL mã S0x (ADR-0007) — không phải tên nguồn thật"
       checked_on: "2026-10-22"
     kind:
-      dd: null
-      rationale: >
-        sale|rent_lt trộn trong cùng kênh — thị trường VN đăng bán và thuê dài
-        hạn lẫn nhau trong nhóm; DD không có cờ tương đương (Mỹ tách sale và
-        rental qua hệ MLS riêng)
+      dd: PropertyType
+      note: >
+        DD phân biệt bán vs thuê qua CHÍNH PropertyType (Residential vs
+        ResidentialLease) + ListingAgreement (RightToSell vs RightToLease),
+        không có field "loại giao dịch" riêng. rent_lt ≈ PropertyType=
+        ResidentialLease + LeaseAmountFrequency=Monthly (giá VND/tháng);
+        sale ≈ PropertyType ∈ Residential/Land/ResidentialIncome. STR
+        (rent_st tương lai) KHÔNG có mô hình DD — frequency Daily +
+        LeaseTerm ShortTermLease chỉ là mảnh rời → local extension.
       checked_on: "2026-10-22"
     price_vnd:
       dd: ListPrice

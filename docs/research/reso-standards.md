@@ -147,3 +147,22 @@ RESO sinh ra để trộn nhiều MLS — one-invest đang trộn nhiều nguồ
 - dd.reso.org — tra cứu DD 2.0 / draft 2.1
 - cdatalabs.com — góc nhìn aggregator: field dùng nhiều nhất, caveats certification
 - mev.com — tổng quan modular endorsements
+
+
+## Mô hình "dịch vụ" (bán / thuê dài hạn / thuê ngắn hạn) — verify 22/10/10 từ dd-2.0.json chính thức
+
+Nguồn: github.com/RESOStandards/transport → references/dd/json/dd-2.0.json
+(3683 lookup values). KHÔNG có field "loại giao dịch" riêng cho residential:
+
+| Khái niệm VN | DD 2.0 chính thức | Lookup values (đầy đủ) |
+|---|---|---|
+| **Mua bán** | `PropertyType` ∈ Residential, ResidentialIncome, Land, Farm + `ListingAgreement` ~ ExclusiveRightToSell | PropertyType (9): BusinessOpportunity, CommercialLease, CommercialSale, Farm, Land, ManufacturedInPark, Residential, ResidentialIncome, ResidentialLease |
+| **Cho thuê dài hạn** | `PropertyType` = **ResidentialLease** + `LeaseAmount` + `LeaseAmountFrequency` (FeeFrequency) = Monthly | FeeFrequency (11): Annually, BiMonthly, BiWeekly, **Daily**, Monthly, OneTime, Quarterly, Seasonal, SemiAnnually, SemiMonthly, Weekly |
+| **Cho thuê ngắn hạn (STR)** | KHÔNG có mô hình listing hoàn chỉnh — chỉ mảnh rời: FeeFrequency=Daily, LeaseTerm=ShortTermLease/Weekly | LeaseTerm (10): TwelveMonths, TwentyFourMonths, SixMonths, MonthToMonth, Negotiable, None, Other, RenewalOption, **ShortTermLease**, Weekly |
+
+- `ListingAgreement` (7): Exclusive agency/RightToLease/**RightToSell**/WithException, Net, Open, Probate — phân biệt hợp đồng niêm yết bán vs thuê.
+- `BusinessType` (109 giá trị) là ngành nghề thương mại (Bakery, AutoRepair…)
+  — KHÔNG phải bán-vs-thuê, đỌC nhầm khi map.
+- Kết luận cho one-invest: `kind` ánh xạ được qua PropertyType (xem
+  mappings.yaml); `rent_st` (STR) nếu thêm sẽ là local extension có đủ
+  rationale theo ADR-0011 Qđ 3 (DD thiếu calendar/minimum-stay/nightly model).
