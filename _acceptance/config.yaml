@@ -64,4 +64,4 @@ dev_server:
 capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
 feature_loop:
-  suite_keys: [agent, app, app_ui, pipeline]
+  suite_keys: [executors.test.agent, executors.test.app, executors.test.app_ui, executors.test.pipeline]
