@@ -39,8 +39,8 @@ Migration 034 (`db/migrations/034_ruler_p2_views.sql`) đưa hai view vào repo;
 git -C ~/dev/onehub-invest branch --show-current && grep -n 'properties: \["seller_name"\]' ~/dev/onehub-invest/pipeline/sync-cloud.mjs
 ```
 
-   Rồi chạy SQL catch-up **từ checkout chính** `~/dev/onehub-invest`, chọn một cách (cách thứ hai
-   cần `jq`, có sẵn ở `/usr/bin/jq`):
+3. Kiểm xong mới chạy SQL catch-up **từ checkout chính** `~/dev/onehub-invest`, chọn một cách
+   (cách thứ hai cần `jq`, có sẵn ở `/usr/bin/jq`):
    - Supabase Dashboard → SQL Editor → dán nội dung file → Run.
    - Hoặc Management API (cùng kênh HTTPS mà sync-cloud dùng). `-f` để lỗi HTTP ra exit khác 0;
      thành công thì API trả `[]` (DDL không trả dòng):
@@ -66,7 +66,7 @@ launchctl kickstart gui/$(id -u)/com.oneinvest.cloud-sync
 docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -At -c "SELECT (SELECT count(*) FROM v_ruler_p2_area), (SELECT count(*) FROM v_ruler_p2), (SELECT count(*) FROM properties)"
 ```
 
-- SQL trên cloud:
+- SQL trên cloud (SQL Editor, hoặc cùng lệnh `curl` ở bước 3 với câu dưới thay cho file):
 
 ```sql
 SELECT (SELECT count(*) FROM v_ruler_p2_area) AS ruler_area,   -- ≈ local (150 ngày 22/10)
@@ -74,7 +74,11 @@ SELECT (SELECT count(*) FROM v_ruler_p2_area) AS ruler_area,   -- ≈ local (150
        (SELECT count(*) FROM properties)      AS properties,   -- = local
        (SELECT count(*) FROM information_schema.columns
          WHERE table_schema='public' AND table_name='properties'
-           AND column_name='seller_name')     AS pii_col;      -- phải = 0
+           AND column_name='seller_name')     AS pii_col,      -- phải = 0
+       (SELECT is_nullable || '/' || coalesce(column_default, 'none')
+          FROM information_schema.columns
+         WHERE table_schema='public' AND table_name='asset_nodes'
+           AND column_name='parent_id')       AS parent_id;    -- phải = YES/none (032)
 ```
 
 ## Đã thử trước (local)
