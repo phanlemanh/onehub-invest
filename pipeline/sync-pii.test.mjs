@@ -1,8 +1,15 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
+import pg from "pg";
+
 import { mediaFilesOf } from "./import-airbnb.mjs";
 import { FILL } from "./sync-cloud.mjs";
+
+const DB_URL =
+  process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+// Cột ảnh PII tầng A — không bảng nào trong FILL được mang
+const MEDIA_COLUMNS = ["media", "media_files"];
 
 // ADR-0007: tầng A (stg_*, raw, ảnh media/*) không bao giờ rời máy local.
 // sync-cloud đẩy theo danh sách FILL tường minh — gác ở đây để thêm bảng
@@ -18,6 +25,26 @@ test("FILL không chứa stg_zalo_posts (media, media_files = ảnh PII tầng A
 
 test("FILL không chứa raw/registry tầng A", () => {
   for (const t of ["airbnb_snapshots", "source_registry"]) assert.ok(!FILL.includes(t), t);
+});
+
+test("không bảng nào trong FILL có cột ảnh media/media_files (schema DB local)", async (t) => {
+  const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
+  try {
+    await client.connect();
+  } catch {
+    t.skip("DB local không chạy — chỉ kiểm phần tĩnh");
+    return;
+  }
+  try {
+    const { rows } = await client.query(
+      `SELECT table_name || '.' || column_name AS col FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = ANY($1) AND column_name = ANY($2)`,
+      [FILL, MEDIA_COLUMNS],
+    );
+    assert.deepEqual(rows.map((r) => r.col), []);
+  } finally {
+    await client.end();
+  }
 });
 
 // N1 (DATA-CONTRACT v2): meta.mediaFiles → stg_zalo_posts.media_files
