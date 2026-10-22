@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: df529723aa72d1057d1a0f4c4277800e961e6f0e
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: stg-zalo-media-files
