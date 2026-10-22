@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 
 import { createAgentServer } from "./server.js";
+import { installGracefulShutdown } from "./graceful.js";
 
 /**
  * main — Collector API daemon (ADR-0006): localhost:9210.
@@ -37,3 +38,15 @@ setInterval(() => {
     .then((m) => m && console.log(`flush → ${m.snapshotId}`))
     .catch((err) => console.error("flush failed (giữ buffer, thử lại sau 60s):", err.message));
 }, 60_000).unref();
+
+// launchd gửi SIGTERM khi bootout/restart; tay Ctrl-C là SIGINT. Flush buffer
+// thành snapshot trước khi thoát — tin đã ack 202 không được mất âm thầm.
+installGracefulShutdown(
+  {
+    on: (sig, fn) => process.on(sig, fn),
+    off: (sig, fn) => process.off(sig, fn),
+    exit: (code) => process.exit(code),
+    log: (line) => console.log(line),
+  },
+  { flush: () => agent.flush() },
+);
