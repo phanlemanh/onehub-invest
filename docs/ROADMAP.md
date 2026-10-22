@@ -50,6 +50,8 @@ Public mirrors LIVE: onehub-invest-app + onehub-data-api.
 ```
 thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 → stg_* → transform (parser VN + phone + RESO property_type)
+→ enrichment_proposals (E1/E2 đề xuất → luật xác định / /ops/review;
+  không UPDATE thẳng canonical, không lên cloud)
 → sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
 → sản phẩm: Deals v2 (bait_gap + SĐT) · G3 calculator · /ops panels
