@@ -23,14 +23,6 @@
       "count": 1
     }
   },
-  "src/app/ops/page.tsx": {
-    "onehub-ui/no-raw-palette": {
-      "count": 1
-    },
-    "onehub-ui/no-raw-table": {
-      "count": 1
-    }
-  },
   "src/app/ops/quality/page.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
       "count": 4
