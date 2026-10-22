@@ -36,6 +36,36 @@ Nguồn S01–S07 → collector/ → raw snapshots (bất biến) → pipeline/ 
 app/ không thu dữ liệu; collector/ không phục vụ HTTP cho người dùng; agent/
 không sửa dữ liệu trực tiếp.
 
+## Phân làn hai agent: ZCode ↔ Claude Code (chốt 2026-10-22)
+
+Hai agent cùng làm trên máy này. Ranh giới là **DATA-CONTRACT + bảng `stg_*`**, không
+phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
+
+| Làn | Sở hữu |
+|---|---|
+| **ZCode — thu thập** (nguồn → raw snapshot → `stg_*`) | `collector/` (kể cả `openclaw/`) · trong `pipeline/`: `collect-*`, `import-*`, `apify-*`, `airdna-rotate.mjs`, `fetch-data.sh`, `import.sh`, `cron/*.plist` · trong `scripts/`: `*-daily.sh` (bước thu/nạp), `install-*`, `zalo-*.sh` · `collector/docs/DATA-CONTRACT.md` |
+| **Claude Code — phần còn lại** (`stg_*` → canonical → sản phẩm) | `transform-*` trở đi trong `pipeline/` (`sql/`, `mappings.yaml`, `resolve-properties`, `reassign-areas`, `sync-cloud`, `push-ops-facts`…) · `db/` · `agent/` · `app/` · `data-api/` · `tools/` · `scripts/` còn lại · `docs/` nền · `_acceptance/` |
+
+- **Git**: checkout chính `~/dev/onehub-invest` luôn đứng ở `main` — launchd chạy code
+  từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
+  ZCode làm ở worktree `~/dev/onehub-invest-zcode`, nhánh `zcode/<việc>`; Claude ở
+  `.claude/worktrees/`, nhánh `feat|fix|…/<việc>`. Worktree mới thiếu file gitignored:
+  chép `.env` theo `.worktreeinclude`.
+- **Tích hợp**: ZCode không merge vào `main`. Xong việc → commit lên `zcode/*`, báo Mạnh;
+  Claude review, chạy `/verify`, dựng `_acceptance/<slug>/` khi T2/T3, rồi merge sau khi
+  Mạnh ký. Claude chỉ sửa code làn ZCode khi là lỗi tích hợp; lỗi logic thu → trả lại ZCode.
+- **Chỗ giáp ranh**:
+  - Đổi DATA-CONTRACT / thêm cột `stg_*`: ZCode đề xuất và tăng `schemaVersion`; Claude
+    viết migration (Claude sở hữu `db/migrations/` — tránh hai bên cùng lấy số NNN) và
+    cập nhật transform trước khi merge.
+  - `scripts/chotot-daily.sh` chạy cả chuỗi collect → import → transform → resolve:
+    ZCode sửa bước thu/nạp, bước transform trở đi để Claude.
+  - ROADMAP: ZCode chỉ sửa §2.3 Nguồn, §2.4 Chạy đêm và Track 3; phần còn lại Claude.
+  - DB local :5433 dùng chung: ZCode chỉ ghi `stg_*`/`airbnb_snapshots`, không
+    TRUNCATE/DROP bảng ngoài làn, không chạy migration.
+- **ZCode không có rào của `.claude/`** (hook, deny, luật tự nạp) → trước khi làm phải đọc
+  `collector/AGENTS.md` (an toàn Zalo, SPL, snapshot bất biến).
+
 ## Luật bất biến
 
 1. **Raw snapshot BẤT BIẾN** — collector chỉ ghi mới, không sửa/xoá. Mọi diễn giải nằm ở pipeline.

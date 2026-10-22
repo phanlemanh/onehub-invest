@@ -95,6 +95,10 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 7. **Làm tốt từng nguồn trước**; FB/BDS khả thi nhưng là bài toán chi phí.
 8. **Decision models**: Kev-4B gate chính (local); upgrade kev-9b cùng
    repo; Laya loại (OOD); OpenAI Decisions chỉ phi-PII.
+9. **Hai agent, hai làn** (22/10): ZCode = thu thập (nguồn → raw → `stg_*`),
+   Claude Code = phần còn lại + cổng tích hợp (review, `/verify`, `_acceptance`,
+   merge). Ranh giới = DATA-CONTRACT; mỗi bên một worktree, checkout chính giữ
+   `main`. Chi tiết: AGENTS.md "Phân làn hai agent" + `collector/AGENTS.md`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
