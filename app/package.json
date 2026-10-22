@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && node eslint-plugin-onehub-ui/check-bare-disables.mjs",
+    "lint:ui-report": "eslint -f json . | node eslint-plugin-onehub-ui/report.mjs",
     "test:lint-rules": "node --test \"eslint-plugin-onehub-ui/tests/*.test.mjs\""
   },
   "dependencies": {
