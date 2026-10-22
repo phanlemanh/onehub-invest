@@ -100,7 +100,7 @@ evals:
     criterion: AC-10
     executor: script
     cmd: config:executors.script.ui_b3_docs
-    expected: "exit 0 khi ui-baseline-2026-10.md có mục 'Sau B3' mà tổng vi phạm và từng luật khớp `npm run lint:ui-report` lúc chạy, có dòng file > 200 dòng phạm vi B3 trước 6 / sau 0, và catalog.md nhắc components/charts/ ở ba dòng chart-6/13/36; chiều đỏ: sửa tổng trong fixture → exit 1 'docs: tổng lệch'"
+    expected: "exit 0 khi ui-baseline-2026-10.md có mục 'Sau B3' mà tổng vi phạm và từng luật khớp `npm run lint:ui-report` lúc chạy, có dòng file > 200 dòng phạm vi B3 trước 7 / sau 0, và catalog.md nhắc components/charts/ ở ba dòng chart-6/13/36; chiều đỏ: sửa tổng trong fixture → exit 1 'docs: tổng lệch'"
     paths: ["docs/research/ui-baseline-2026-10.md", ".claude/skills/onehub-ui/catalog.md", "app/eslint-suppressions.json"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

@@ -1,7 +1,8 @@
 {
   "base": "http://localhost:3456",
-  "at": "2026-10-22T22:56:57.473Z",
-  "head": "b273de16343714cf22dfcf2b5cd891c2fecd2265",
+  "at": "2026-10-22T23:29:17.957Z",
+  "head": "fb0fe1ef06d5701b6403987c0e8be2f1c898d8c0",
+  "capture_sha": "4102d811383c9ee3a584da3995fc91092faebe6de8a5569258757562b4f50ffa",
   "app_src_tree": "2574dfbf4d96a64dcd635b7065eb3df278b1f08b",
   "structure": {
     "market/Hiệu suất theo tháng@light": {
@@ -4044,26 +4045,131 @@
       "hover": "Tháng 4/2027\nDoanh thu\n614.746.420 ₫",
       "afterOccupancy": "Hiệu suất theo tháng\nLịch đặt phòng 12 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n21 tỷ ₫\nTổng 12 tháng\nCông suất\n14,0%\nTheo đêm, 12 tháng\nGiá phòng (ADR)\n1.594.875 ₫\nTheo đêm, 12 tháng\nRevPAR\n223.917 ₫\nTheo đêm, 12 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T9/27\nTết\n30/4\nHè\n14,0%\nT11/26\nT1/27\nT3/27\nT5/27\nT7/27\nT9/27\n0%\n20%\n40%\n60%\n80%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
       "afterSixMonths": "Hiệu suất theo tháng\nLịch đặt phòng 6 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n13,3 tỷ ₫\nTổng 6 tháng\nCông suất\n19,8%\nTheo đêm, 6 tháng\nGiá phòng (ADR)\n1.431.376 ₫\nTheo đêm, 6 tháng\nRevPAR\n284.017 ₫\nTheo đêm, 6 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T3/27\nTết\n5,3%\nT10/26\nT11/26\nT12/26\nT1/27\nT2/27\nT3/27\n0%\n20%\n40%\n60%\n80%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
-      "menu": "Xuất dữ liệu\nTải CSV\nSao chép bảng số\nSao chép tóm tắt\nVề mặc định"
+      "menu": "Xuất dữ liệu\nTải CSV\nSao chép bảng số\nSao chép tóm tắt\nVề mặc định",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "hieu-suat-occupancy-6m.csv",
+          "sha256": "e0f1dcbbfc1a393a21e81309da1bc44ae527567b5ed1d4056e088d061f553fc5",
+          "toast": [
+            "Đã tải CSV\nhieu-suat-occupancy-6m.csv, 6 tháng."
+          ]
+        },
+        "Sao chép bảng số": {
+          "toast": [
+            "Đã sao chép bảng số\n6 tháng công suất, dán được vào bảng tính."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nCông suất, T10/26 – T3/27: 19,8%. Tháng cuối 5,3%."
+          ]
+        },
+        "Về mặc định": {
+          "toast": []
+        }
+      }
     },
     "market/Cơ cấu doanh thu": {
       "hover": "",
-      "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt"
+      "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "co-cau-doanh-thu.csv",
+          "sha256": "c24175ad799fd21afe54cc98fa89b9eb6473183d063eb0eebe8f4968f334b408",
+          "toast": [
+            "Đã tải CSV\nco-cau-doanh-thu.csv, 3 loại phòng và tổng."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nDoanh thu 12 tháng tới: 21 tỷ ₫. Nguyên căn 13,8 tỷ ₫ (66%), Phòng riêng 7,2 tỷ ₫ (34%), Phòng ở chung 5,4 tr ₫ (0%)."
+          ]
+        }
+      }
     },
     "ward/Hiệu suất theo tháng": {
       "hover": "Tháng 4/2027\nDoanh thu\n144.360.000 ₫",
       "afterOccupancy": "Hiệu suất theo tháng\nLịch đặt phòng 12 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n4,5 tỷ ₫\nTổng 12 tháng\nCông suất\n19,1%\nTheo đêm, 12 tháng\nGiá phòng (ADR)\n2.794.544 ₫\nTheo đêm, 12 tháng\nRevPAR\n534.608 ₫\nTheo đêm, 12 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T9/27\nTết\n30/4\nHè\n21,7%\nT11/26\nT1/27\nT3/27\nT5/27\nT7/27\nT9/27\n0%\n20%\n40%\n60%\n80%\n100%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
       "afterSixMonths": "Hiệu suất theo tháng\nLịch đặt phòng 6 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n2,7 tỷ ₫\nTổng 6 tháng\nCông suất\n26,5%\nTheo đêm, 6 tháng\nGiá phòng (ADR)\n2.474.885 ₫\nTheo đêm, 6 tháng\nRevPAR\n656.264 ₫\nTheo đêm, 6 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T3/27\nTết\n6,7%\nT10/26\nT11/26\nT12/26\nT1/27\nT2/27\nT3/27\n0%\n20%\n40%\n60%\n80%\n100%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
-      "menu": "Xuất dữ liệu\nTải CSV\nSao chép bảng số\nSao chép tóm tắt\nVề mặc định"
+      "menu": "Xuất dữ liệu\nTải CSV\nSao chép bảng số\nSao chép tóm tắt\nVề mặc định",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "hieu-suat-occupancy-6m.csv",
+          "sha256": "8d241d1ee56775897c87716aa28b3a0f579252760e8ffbceefd805b02102191d",
+          "toast": [
+            "Đã tải CSV\nhieu-suat-occupancy-6m.csv, 6 tháng."
+          ]
+        },
+        "Sao chép bảng số": {
+          "toast": [
+            "Đã sao chép bảng số\n6 tháng công suất, dán được vào bảng tính."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nCông suất, T10/26 – T3/27: 26,5%. Tháng cuối 6,7%."
+          ]
+        },
+        "Về mặc định": {
+          "toast": []
+        }
+      }
     },
     "ward/Cơ cấu doanh thu": {
       "hover": "",
-      "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt"
+      "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "co-cau-doanh-thu.csv",
+          "sha256": "c979adfb61edb9e3616ca0b96182fbb661e4724b50a3e1fefb8bdadfb4c028ff",
+          "toast": [
+            "Đã tải CSV\nco-cau-doanh-thu.csv, 2 loại phòng và tổng."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nDoanh thu 12 tháng tới: 4,5 tỷ ₫. Nguyên căn 3,4 tỷ ₫ (75%), Phòng riêng 1,1 tỷ ₫ (25%)."
+          ]
+        }
+      }
     },
     "yield/Doanh thu và chi phí 12 tháng tới": {
       "hover": "Tháng 4/2027\nDoanh thu\n9,7 tr ₫\nChi phí\n6,9 tr ₫\nThu nhập ròng\n2,8 tr ₫\nBiên lợi nhuận\n28,9%",
       "afterQuarter": "Doanh thu và chi phí 12 tháng tới\nCho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định\nTháng\nQuý\nThu nhập ròng / năm\n34,9 tr ₫\nDoanh thu\nChi phí\nBiên lợi nhuận\nNgang thuê dài hạn\n30%\n40%\n50%\n60%\n70%\n80%\n90%\nNgang thuê DH 91,2%\n29,8%\nT10–T12\nT1–T3\nT4–T6\nT7–T9\n0\n10 tr\n20 tr\n30 tr\nDoanh thu\n118,4 tr ₫\nTrung vị listing so sánh\nChi phí\n83,5 tr ₫\nTheo giả định trong form\nBiên lợi nhuận\n29,5%\nThu nhập ròng ÷ doanh thu\nSo với thuê dài hạn\n−73,1 tr ₫\nThu nhập ròng/năm, thuê DH đã trừ thuế 10%\nƯớc tính, chưa có mùa vụ\nDoanh thu chia theo số đêm của tháng\nVND",
-      "menu": "Hiện\nMốc ngang thuê dài hạn\nXuất dữ liệu\nTải CSV\nSao chép tóm tắt"
+      "afterTargetOff": "Doanh thu và chi phí 12 tháng tới\nCho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định\nTháng\nQuý\nThu nhập ròng / năm\n34,9 tr ₫\nDoanh thu\nChi phí\nBiên lợi nhuận\n30%\n40%\n50%\n60%\n70%\n80%\n90%\nNgang thuê DH 91,2%\n29,8%\nT10–T12\nT1–T3\nT4–T6\nT7–T9\n0\n10 tr\n20 tr\n30 tr\nDoanh thu\n118,4 tr ₫\nTrung vị listing so sánh\nChi phí\n83,5 tr ₫\nTheo giả định trong form\nBiên lợi nhuận\n29,5%\nThu nhập ròng ÷ doanh thu\nSo với thuê dài hạn\n−73,1 tr ₫\nThu nhập ròng/năm, thuê DH đã trừ thuế 10%\nƯớc tính, chưa có mùa vụ\nDoanh thu chia theo số đêm của tháng\nVND",
+      "afterTargetOn": "Doanh thu và chi phí 12 tháng tới\nCho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định\nTháng\nQuý\nThu nhập ròng / năm\n34,9 tr ₫\nDoanh thu\nChi phí\nBiên lợi nhuận\nNgang thuê dài hạn\n30%\n40%\n50%\n60%\n70%\n80%\n90%\nNgang thuê DH 91,2%\n29,8%\nT10–T12\nT1–T3\nT4–T6\nT7–T9\n0\n10 tr\n20 tr\n30 tr\nDoanh thu\n118,4 tr ₫\nTrung vị listing so sánh\nChi phí\n83,5 tr ₫\nTheo giả định trong form\nBiên lợi nhuận\n29,5%\nThu nhập ròng ÷ doanh thu\nSo với thuê dài hạn\n−73,1 tr ₫\nThu nhập ròng/năm, thuê DH đã trừ thuế 10%\nƯớc tính, chưa có mùa vụ\nDoanh thu chia theo số đêm của tháng\nVND",
+      "menu": "Hiện\nMốc ngang thuê dài hạn\nXuất dữ liệu\nTải CSV\nSao chép tóm tắt",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "uoc-tinh-loi-suat-quarter.csv",
+          "sha256": "0127ad628da00e11bffdebb4dd21ec771928559aab8a8cd74bb8156d9b48bb27",
+          "toast": [
+            "Đã tải CSV\n4 quý."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nƯớc tính 12 tháng tới: doanh thu 118,4 tr ₫, chi phí 83,5 tr ₫, thu nhập ròng 34,9 tr ₫ (biên 29,5%). So với thuê dài hạn: thấp hơn 73,1 tr ₫/năm."
+          ]
+        }
+      }
+    },
+    "denied": {
+      "market/Hiệu suất theo tháng": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "market/Cơ cấu doanh thu": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "ward/Hiệu suất theo tháng": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "ward/Cơ cấu doanh thu": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "yield/Doanh thu và chi phí 12 tháng tới": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ]
     }
   }
 }

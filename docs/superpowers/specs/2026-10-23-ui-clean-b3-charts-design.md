@@ -41,8 +41,8 @@ B3 làm ba việc, không đổi dữ liệu, props hay bố cục:
   Fact…) ×3; `icons` (toast) ×3; hàm `copyText` ×2, tải CSV ×3; nút "Thao tác khác"
   (tooltip + dropdown) ×3; ToggleGroup "nổi lên thẻ" ×2; hàng tooltip (glyph · nhãn ·
   số) ×2; "Tháng M/YYYY" ×2.
-- File > 200 dòng: margin-plot 779, metric-plot 509, plot-motion 281, revenue-mix/chart
-  251, performance/chart 231, pnl/chart 203.
+- File > 200 dòng (7): margin-plot 780, metric-plot 510, plot-motion 282, revenue-mix/chart
+  251, performance/chart 231, pnl/chart 203, performance/chart-toolbar 201.
 
 ## 3. Mục tiêu / phi mục tiêu / phản mục tiêu
 

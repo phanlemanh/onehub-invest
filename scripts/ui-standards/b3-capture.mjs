@@ -3,13 +3,14 @@
 // sáng/tối × 1280/390, cộng một "bản chụp cấu trúc" (chữ, vai trò, nhãn aria, số phần tử
 // SVG, chữ tooltip sau các thao tác) để so trước/sau mà không lẫn màu.
 //
-// Dùng: node scripts/ui-standards/b3-capture.mjs --out <thư mục> [--base http://localhost:3456]
+// Dùng: node scripts/ui-standards/b3-capture.mjs --out <thư mục> [--base http://localhost:3456] [--tree <cây git>]
 // Ra: <out>/<trang>-<chế độ>.png (khung biểu đồ) + <out>/snapshot.json
 //   snapshot.json = { structure: {...}, colors: {...} } — `structure` không chứa màu,
 //   `colors` là màu tính được của chấm chú giải / nét biểu đồ.
 // Cần playwright-cli đã cài toàn máy (như scripts/ui-capture.sh); mượn playwright-core đi kèm nó.
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -133,11 +134,83 @@ async function interact(page, pageId, title) {
     await settle(page);
     steps.afterQuarter = (await frame.innerText()).trim();
   }
-  await frame.getByRole("button", { name: "Thao tác khác" }).first().click();
-  await page.waitForTimeout(300);
-  steps.menu = (await page.locator("[role=menu]").first().innerText().catch(() => "")).trim();
-  await page.keyboard.press("Escape");
+  if (title === "Doanh thu và chi phí 12 tháng tới") {
+    // Tắt rồi bật lại mốc thuê dài hạn: chữ khung lúc tắt phải như trước.
+    for (const phase of ["afterTargetOff", "afterTargetOn"]) {
+      await frame.getByRole("button", { name: "Thao tác khác" }).first().click();
+      await page.locator("[role=menuitemcheckbox]", { hasText: "Mốc ngang thuê dài hạn" }).first().click();
+      await page.keyboard.press("Escape");
+      await settle(page);
+      steps[phase] = (await frame.innerText()).trim();
+    }
+  }
+  Object.assign(steps, await menuActions(page, frame));
   return steps;
+}
+
+
+// Toast mới = toast chưa mang dấu đã-thấy (chữ của toast cũ đổi khi chúng xếp chồng, so chữ không tin được).
+const markToasts = (page) =>
+  page.evaluate(() => document.querySelectorAll("[data-sonner-toast]").forEach((t) => t.setAttribute("data-b3-seen", "")));
+const newToasts = async (page) =>
+  (await page.locator("[data-sonner-toast]:not([data-b3-seen])").allInnerTexts()).map((t) => t.trim());
+
+/** Bấm lần lượt mọi mục của "Thao tác khác": tải CSV (tên tệp + sha256), sao chép (chữ toast mới). */
+async function menuActions(page, frame) {
+  const trigger = frame.getByRole("button", { name: "Thao tác khác" }).first();
+  await trigger.click();
+  await page.waitForTimeout(300);
+  const menu = (await page.locator("[role=menu]").first().innerText().catch(() => "")).trim();
+  const names = (await page.locator("[role=menu] [role=menuitem]").allInnerTexts()).map((t) => t.trim());
+  await page.keyboard.press("Escape");
+  const items = {};
+  for (const name of names) {
+    await trigger.click();
+    await page.waitForTimeout(200);
+    const item = page.locator("[role=menu] [role=menuitem]", { hasText: name }).first();
+    await markToasts(page);
+    if (/CSV/.test(name)) {
+      const [download] = await Promise.all([page.waitForEvent("download"), item.click()]);
+      const body = readFileSync(await download.path());
+      items[name] = { file: download.suggestedFilename(), sha256: createHash("sha256").update(body).digest("hex") };
+    } else {
+      await item.click();
+      items[name] = {};
+    }
+    await page.waitForTimeout(400);
+    items[name].toast = await newToasts(page);
+    await page.keyboard.press("Escape");
+  }
+  return { menu, menuItems: items };
+}
+
+/** Sao chép khi trình duyệt chặn clipboard (giả lập writeText bị từ chối): chữ toast lỗi của từng khung. */
+async function deniedToasts(browser) {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: () => Promise.reject(new Error("bị chặn")) },
+    });
+  });
+  const page = await context.newPage();
+  const out = {};
+  for (const target of PAGES) {
+    await page.goto(BASE + target.path, { waitUntil: "networkidle" });
+    await settle(page);
+    for (const title of target.frames) {
+      const frame = page.locator("[data-slot=frame]", {
+        has: page.locator("[data-slot=frame-panel-title]", { hasText: title }),
+      }).first();
+      await frame.getByRole("button", { name: "Thao tác khác" }).first().click();
+      await markToasts(page);
+      await page.locator("[role=menu] [role=menuitem]", { hasText: "Sao chép tóm tắt" }).first().click();
+      await page.waitForTimeout(400);
+      out[`${target.id}/${title}`] = await newToasts(page);
+      await page.keyboard.press("Escape");
+    }
+  }
+  await context.close();
+  return out;
 }
 
 /** Bản chromium playwright-core đòi có thể chưa tải; khi đó dùng headless shell mới nhất trong cache. */
@@ -160,13 +233,16 @@ const { chromium } = loadPlaywright();
 mkdirSync(OUT, { recursive: true });
 const browser = await launch(chromium);
 // Bản chụp ghi cây app/src nó chụp trên (mã tree của git); app/src bẩn thì không có mã tree.
-const ROOT = join(dirname(new URL(import.meta.url).pathname), "..", "..");
+// --tree <dir>: ghi head/cây của cây khác (vd cây gốc chạy ở cổng khác); mặc định cây chứa script.
+const SELF = new URL(import.meta.url).pathname;
+const ROOT = opt("tree", join(dirname(SELF), "..", ".."));
 const git = (...argv) => execFileSync("git", argv, { cwd: ROOT, encoding: "utf8" }).trim();
 const dirty = git("status", "--porcelain", "--", "app/src") !== "";
 const snapshot = {
   base: BASE,
   at: new Date().toISOString(),
   head: git("rev-parse", "HEAD"),
+  capture_sha: createHash("sha256").update(readFileSync(SELF)).digest("hex"),
   app_src_tree: dirty ? null : git("rev-parse", "HEAD:app/src"),
   structure: {},
   colors: {},
@@ -179,6 +255,7 @@ try {
       viewport: { width: mode.width, height: 900 },
       deviceScaleFactor: 1,
       reducedMotion: "reduce",
+      permissions: ["clipboard-read", "clipboard-write"],
     });
     const page = await context.newPage();
     for (const target of PAGES) {
@@ -202,6 +279,7 @@ try {
     }
     await context.close();
   }
+  snapshot.interactions.denied = await deniedToasts(browser);
 } finally {
   await browser.close();
 }
