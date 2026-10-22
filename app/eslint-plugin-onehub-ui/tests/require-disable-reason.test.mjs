@@ -53,6 +53,8 @@ run({
     { code: "// onehub-ui/no-raw-table là luật cấm bảng thô\nconst a = 1;" },
   ],
   invalid: [
+    // Các ca eslint-disable trần / tự nêu require-disable-reason chỉ đúng khi noInlineConfig bật: trong lint thật
+    // ESLint nuốt báo cáo của chúng, nên check-bare-disables.mjs (chạy sau eslint trong `npm run lint`) mới là chỗ bắt.
     {
       code: "// eslint-disable-next-line onehub-ui/no-raw-table\nconst a = 1;",
       errors: [{ messageId: "missingReason", line: 1 }],
