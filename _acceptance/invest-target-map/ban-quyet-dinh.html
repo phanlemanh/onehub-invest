@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản đồ đích Invest</title>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #18181b; --muted: #71717a; --line: #e4e4e7; --card: #ffffff;
+    --accent: #0f766e; --accent-bg: #ccfbf1; --warn-bg: #fef3c7; --warn-fg: #92400e; --chip: #f4f4f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #09090b; --fg: #fafafa; --muted: #a1a1aa; --line: #27272a; --card: #18181b;
+      --accent: #5eead4; --accent-bg: #134e4a; --warn-bg: #451a03; --warn-fg: #fcd34d; --chip: #27272a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #09090b; --fg: #fafafa; --muted: #a1a1aa; --line: #27272a; --card: #18181b;
+    --accent: #5eead4; --accent-bg: #134e4a; --warn-bg: #451a03; --warn-fg: #fcd34d; --chip: #27272a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1400px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 17px; margin: 0; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  section.box { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  table.shell { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.shell th, table.shell td { text-align: left; border-top: 1px solid var(--line); padding: 8px; vertical-align: top; }
+  .row { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: 300px 1fr; gap: 16px; }
+  .row header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .route { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: var(--chip); padding: 2px 6px; border-radius: 6px; }
+  .group { font-size: 12px; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 999px; }
+  .now img { width: 100%; height: 360px; object-fit: cover; object-position: top; border: 1px solid var(--line); border-radius: 8px; display: block; }
+  .now { display: flex; flex-direction: column; gap: 6px; }
+  .cands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .cand { border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .cand.rec { border: 2px solid var(--accent); }
+  .cand img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; object-position: top; border-radius: 6px; background: var(--chip); display: block; }
+  .cand .name { font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 600; }
+  .tag { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--chip); }
+  .tag.rec { background: var(--accent-bg); color: var(--accent); }
+  .tag.now { background: var(--warn-bg); color: var(--warn-fg); }
+  .rec-box { border-left: 3px solid var(--accent); padding-left: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .impact { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; font-size: 12px; }
+  .impact div { background: var(--chip); border-radius: 6px; padding: 6px 8px; }
+  .impact b { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  a { color: var(--accent); }
+  @media (max-width: 900px) {
+    .row { grid-template-columns: 1fr; }
+    .cands, .impact { grid-template-columns: 1fr; }
+    .now img { height: 240px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <h1>Bản đồ đích cổng Invest — trang → block</h1>
+    <p class="muted">Khảo sát MCP reui 2026-10-23 (compose_page · search · get_block · get_thumbnail), plan Pro. Ảnh hiện trạng: nhánh <code>main</code> f51b01c, sáng, 1440px, chụp đầu trang tới 3200px. Ứng viên viền xanh = máy khuyến nghị; nhãn “đang dùng” = block đã chuyển thể. Bấm ảnh để mở to / xem bản sống.</p>
+  </div>
+
+  <section class="box">
+    <h2>Shell cổng Invest</h2>
+    <table class="shell">
+      <tr><th>Ứng viên</th><th>Hợp</th><th>Vướng</th><th>Kết luận</th></tr>
+      <tr><td><a href="https://reui.io/preview/base/app-shell-30?ref=mcp"><code>app-shell-30</code></a> (đang dùng)</td><td>Top nav 4 mục phẳng (Thị trường · Listing · Lợi suất · So sánh), bản đồ + biểu đồ được trọn bề ngang, view track khớp mục lục Insight, cảm giác sản phẩm công khai</td><td>⌘K phải ghép <code>c-command-5</code> (đã ghép). Chật nếu &gt; 6 module</td><td><b>Giữ</b></td></tr>
+      <tr><td><a href="https://reui.io/preview/base/app-shell-36?ref=mcp"><code>app-shell-36</code></a> (Ops, B1)</td><td>Đồng bộ một shell cho hai cổng</td><td>Sidebar nhóm hợp 7 trang quản trị của Ops; Invest chỉ 4 mục, sidebar ăn chỗ của bản đồ; mặt “console giám sát” không hợp cổng công khai</td><td>Loại</td></tr>
+      <tr><td><a href="https://reui.io/preview/base/app-shell-28?ref=mcp"><code>app-shell-28</code></a></td><td>Section tab + rail, gần hướng AirDNA mới</td><td>Rail thừa với 4 module</td><td>Dự phòng khi &gt; 6 module</td></tr>
+    </table>
+    <p class="small muted">Lý do theo IA (invest-portal-ia.md §4): Invest là 4 mục cùng nhóm Research, đọc là chính; whenNotToUse của app-shell-30 chỉ chặn khi cần “side rail of grouped links” — đúng trường hợp Ops (đã sang 36), không phải Invest. Marketing giữ <code>navbar-12</code>; auth không shell.</p>
+  </section>
+
+  <div id="rows" style="display:flex;flex-direction:column;gap:16px"></div>
+
+  <section class="box">
+    <h2>Đề xuất cắt đợt dọn theo NHÓM TRANG</h2>
+    <p class="muted small">Mỗi đợt làm trọn khung + KPI + biểu đồ (đi bảng màu chung của B3) + trạng thái (tải/trống/lỗi) cho nhóm trang của nó — thay cho B2 (khung &amp; KPI) / B4 (trạng thái) / B5 (phần còn lại) cắt theo loại component.</p>
+    <table class="shell">
+      <tr><th>Đợt</th><th>Trang</th><th>Block đích chính</th></tr>
+      <tr><td>I1 Finder</td><td><code>/[country]</code></td><td>solution-analytics-1 + ChoroplethMap</td></tr>
+      <tr><td>I2 Insight</td><td><code>/[country]/[market]</code>, <code>/[submarket]</code></td><td>solution-analytics-8 khung + chart-6/chart-13 + InsightGrid</td></tr>
+      <tr><td>I3 Listing</td><td><code>/listing/[id]</code>, <code>/[market]/listings</code></td><td>product-detail-5 · product-grid-2 + filters</td></tr>
+      <tr><td>I4 Lợi suất</td><td><code>/yield</code>, <code>/[market]/dau-tu</code></td><td>form-11 + data-grid-advanced-7 + chart-36</td></tr>
+      <tr><td>I5 So sánh + Đã lưu</td><td><code>/so-sanh</code>, <code>/saved</code></td><td>comparison-1 · wishlist-2</td></tr>
+      <tr><td>I6 Trang chủ/Phương pháp/Auth</td><td><code>/</code>, <code>/phuong-phap</code>, <code>/login</code>, <code>/register</code></td><td>bộ marketing hiện có · faq-3 · auth-4/5</td></tr>
+    </table>
+  </section>
+</main>
+
+<script>
+const T = (n) => `https://reui.io/thumbnails/blocks/${n}-light.webp`;
+const P = (n) => `https://reui.io/preview/base/${n}?ref=mcp`;
+const ROWS = [
+  {
+    route: "/[country]", name: "Finder — Tìm thị trường", img: "finder", group: "I1 Finder",
+    cands: [
+      ["solution-analytics-1", "Lưới xếp hạng có thanh điểm + sparkline + badge trạng thái, thanh tìm/lọc trong một Frame; dưới là panel sức khoẻ + xu hướng", "rec"],
+      ["data-grid-base-2", "Lưới CRM: thanh điểm + sparkline + bộ lọc facet + ghim dòng; chỉ là lưới, không có đầu Frame", "now"],
+      ["solution-analytics-2", "Hàng nhóm mở rộng (tỉnh → phường), lọc trạng thái, dòng tổng", ""],
+    ],
+    rec: "solution-analytics-1 — phần lưới + đầu Frame (tiêu đề, đếm, tìm/lọc); bỏ panel sức khoẻ/xu hướng",
+    why: "Khớp trọn vùng xếp hạng (cột điểm có thanh, sparkline lịch đặt, badge đủ mẫu) và có sẵn toolbar mà data-grid-base-2 phải ghép thêm. Chênh ít — lối rẻ là giữ data-grid-base-2.",
+    nob: "Bản đồ choropleth + chú giải 4 bậc (MapLibre, giữ ChoroplethMap trong FramePanel); công tắc Thị trường|Phường (toggle-group).",
+    kpi: "Không có ô KPI — số đếm ở badge PageHeader (PageHeader thêm mới).",
+    chart: "Sparkline của block thay sparkline finder-cells; màu theo bảng chung B3.",
+    state: "Cấp tỉnh chưa tự thu: empty-state-5 “đang thu thập”; Skeleton lưới; lỗi + Thử lại.",
+  },
+  {
+    route: "/[country]/[market]", name: "Insight thị trường", img: "insight-market", group: "I2 Insight",
+    cands: [
+      ["solution-analytics-8", "Trang một chỉ số: đầu trang có badge, hàng 4 KPI, đường xu hướng, phân rã có thanh tiến độ, dòng thời gian thay đổi", "rec"],
+      ["dashboard-7", "4 KPI có sparkline, area chồng, bar cơ cấu kênh, lưới đơn hàng", ""],
+      ["solution-bookings-4", "Ô Công suất / ADR kèm biểu đồ nhỏ và chân RevPAR — đúng chữ STR (phần gantt phòng không dùng)", ""],
+    ],
+    rec: "solution-analytics-8 làm khung trang; Hiệu suất giữ chart-6, Cơ cấu giữ chart-13, bảng giữ InsightGrid",
+    why: "Khung đầu trang + hàng KPI + phân rã + timeline khớp 4 vùng thật (KPI, theo số PN, nguồn cung qua các lần quét); whenNotToUse của chính block chỉ sang chart-6 cho “4 ô chuyển 1 đường”.",
+    nob: "Bản đồ phường (MiniMap); view track InsightNav (scrollspy tự viết, đã ghi lý do ở catalog).",
+    kpi: "stats-1 → hàng KPI của analytics-8 (ngoại lệ có tên như G4 của B1); dòng “vs” = trung vị phường anh em, không phải kỳ trước.",
+    chart: "chart-6 + chart-13 giữ (B3 đã thống nhất màu); không dùng đường “so với mục tiêu”.",
+    state: "Skeleton hàng KPI + mỗi Frame; timeline trống khi &lt; 2 lần quét; Empty cho bảng rỗng.",
+  },
+  {
+    route: "/[country]/[market]/[submarket]", name: "Insight phường/xã", img: "insight-submarket", group: "I2 Insight",
+    cands: [
+      ["solution-analytics-8", "Cùng khung thị trường; phân rã có thanh tiến độ → benchmark p30/p60/p90 với phường anh em", "rec"],
+      ["dashboard-7", "Như trang thị trường", ""],
+      ["stats-6", "Thẻ KPI + thanh tiến độ + feed — chỉ cho vùng benchmark", ""],
+    ],
+    rec: "solution-analytics-8 (cùng template thị trường); benchmark = phần phân rã có thanh",
+    why: "Một template cho hai cấp (IA §3.2); thanh tiến độ của block thay benchmark-bar tự vẽ.",
+    nob: "MiniMap tô phường đang xem.",
+    kpi: "Như thị trường; thêm dải benchmark ngay dưới KPI.",
+    chart: "chart-6 + chart-13 giữ.",
+    state: "Như thị trường; ít mẫu (&lt; 5 listing) → badge độ tin cậy thấp.",
+  },
+  {
+    route: "/[country]/[market]/listings", name: "Duyệt listing", img: "listings", group: "I3 Listing",
+    cands: [
+      ["product-grid-2", "Thẻ Frame hai panel (ảnh + nội dung), badge, nút lưu", "rec now"],
+      ["product-grid-3", "Lưới không khung, ảnh + nút, rating", ""],
+      ["filter-sidebar-5", "Bộ lọc trượt ra (Sheet) có chip đang lọc — cho màn hẹp", ""],
+    ],
+    rec: "Giữ product-grid-2, bật lại panel ảnh khi listing có ảnh TỰ THU; bộ lọc trên cùng bằng component filters; filter-sidebar-5 ở màn hẹp",
+    why: "Thẻ đã đúng block; thiếu là lọc (PN, loại phòng, giá) — ReUI giao việc lọc cho filters, không tự dựng.",
+    nob: "ListingsMap (nhãn giá, gom cụm).",
+    kpi: "Không đổi.",
+    chart: "Không.",
+    state: "Lọc ra 0: empty-state-2 (chip gợi ý); Skeleton thẻ; lỗi + Thử lại.",
+  },
+  {
+    route: "/listing/[id]", name: "Chi tiết listing", img: "listing", group: "I3 Listing",
+    cands: [
+      ["product-detail-5", "Gallery thumbnail dính + hộp thông tin dày (loại, giá, nút chính, lưu)", "rec"],
+      ["product-detail-3", "Gallery lớn + hộp dính + bảng thông số", ""],
+      ["solution-bookings-4", "Chỉ hàng ô: Công suất / ADR kèm biểu đồ 30 đêm", ""],
+    ],
+    rec: "product-detail-5 cho đầu trang (ảnh + hộp: loại, PN, khách, giá, “Mở trên Airbnb”, Lưu); dưới giữ StatTiles → form-5 → CompsTable",
+    why: "Trang đã có ảnh nhưng gallery tự ghép; IA đã ghi product-detail-5 “khi có ảnh”. Phụ thuộc việc gỡ ảnh AirDNA khỏi listing (luật 5).",
+    nob: "Lịch 365 đêm (heatmap chuyển thể form-5, giữ).",
+    kpi: "StatTiles giữ.",
+    chart: "Không.",
+    state: "Không ảnh tự thu: ẩn gallery, hộp thông tin trải rộng; comps rỗng: Empty.",
+  },
+  {
+    route: "/yield", name: "Ước tính lợi suất", img: "yield", group: "I4 Lợi suất",
+    cands: [
+      ["form-11", "Form nhãn–điều khiển + dải tóm tắt cập nhật trực tiếp (surface Card, đang đặt trong Frame)", "rec now"],
+      ["data-grid-advanced-7", "Pro forma cho thuê: dòng thu/chi sửa tại chỗ, NOI, dòng tiền, ROI theo năm, tổng ghim", "rec"],
+      ["form-2", "Form hàng nhãn–điều khiển, surface Frame", ""],
+    ],
+    rec: "Giữ form-11 cho căn cần ước tính; khối “Chi phí vận hành” → data-grid-advanced-7",
+    why: "form-11 đúng “dải tóm tắt trực tiếp” của IA; chi phí là bảng dòng sửa được — đúng việc của advanced-7, thay 5 ô số xếp dọc.",
+    nob: "Khối độ tin cậy (giữ YieldConfidence, ghép từ Progress + Badge).",
+    kpi: "StatTiles giữ.",
+    chart: "chart-36 giữ (B3).",
+    state: "Badge MÔ PHỎNG bắt buộc; thị trường chưa có dữ liệu bán/thuê: Empty + chọn thị trường khác.",
+  },
+  {
+    route: "/[country]/[market]/dau-tu", name: "Mô phỏng đầu tư (vốn vay)", img: "dau-tu", group: "I4 Lợi suất",
+    cands: [
+      ["data-grid-advanced-7", "Pro forma: giá, % vốn, lãi, kỳ hạn, thuê, trống, dòng chi phí → NOI, dòng tiền, ROI — trùng đúng bài toán", "rec"],
+      ["form-2", "Form Frame + 2 thẻ kết quả STR/LTR", ""],
+      ["form-11", "Gộp vào /yield, dùng form của /yield", ""],
+    ],
+    rec: "Gộp vào /yield thành phần “Dòng tiền vốn vay” dựng từ data-grid-advanced-7; /dau-tu chuyển hướng sang /yield",
+    why: "Trùng chức năng /yield (câu treo từ PR #3); trang hiện là input thô + nhãn tự vẽ. Nếu Mạnh giữ route riêng thì vẫn advanced-7.",
+    nob: "—",
+    kpi: "2 thẻ kết quả → dòng tổng ghim của grid.",
+    chart: "Không.",
+    state: "Lỗi nhập inline; thiếu dữ liệu P2 → Empty.",
+  },
+  {
+    route: "/so-sanh", name: "So sánh khu vực", img: "so-sanh", group: "I5 So sánh + Đã lưu",
+    cands: [
+      ["comparison-1", "Bảng so sánh cột = đối tượng, nhãn hàng dính, nhóm hàng, xoá cột", "rec now"],
+      ["comparison-6", "Lưới chọn + panel so sánh 4 ô, tự tô ô thắng", ""],
+      ["comparison-2", "Chỉ 2 đối tượng", ""],
+    ],
+    rec: "Giữ comparison-1",
+    why: "Đúng bài 2–4 khu vực, nhóm Hiệu suất / Lợi suất; comparison-6 cần ảnh catalog không có.",
+    nob: "Hộp thêm cột c-command-5 (giữ).",
+    kpi: "Ô RevPAR đầu cột giữ.",
+    chart: "Không.",
+    state: "0 khu vực: Empty + “Thêm khu vực”; thêm PageHeader.",
+  },
+  {
+    route: "/saved", name: "Đã lưu", img: "saved", group: "I5 So sánh + Đã lưu",
+    cands: [
+      ["wishlist-2", "Lưới đã lưu có badge tín hiệu + tab trạng thái", "rec now"],
+      ["wishlist-3", "Lưới + tab đếm sống + gỡ khi rê", ""],
+      ["wishlist-1", "Dạng dòng có chọn nhiều + thao tác hàng loạt", ""],
+    ],
+    rec: "Giữ wishlist-2",
+    why: "Tab theo loại + badge tín hiệu khớp IA; ảnh hiện trạng là trang đăng nhập (cần phiên).",
+    nob: "—",
+    kpi: "Panel số RevPAR trong thẻ giữ.",
+    chart: "Không.",
+    state: "Chưa lưu gì: c-empty-11 + “Tìm thị trường”; thêm PageHeader.",
+  },
+  {
+    route: "/", name: "Trang chủ", img: "home", group: "I6 Trang chủ/Phương pháp/Auth",
+    cands: [
+      ["hero-8", "Bộ hiện có: navbar-12 · hero-8 · card-29 · how-it-works-1 · faq-6", "rec now"],
+      ["hero-15", "compose_page gợi: hero viền blueprint + lưới 3 tính năng", ""],
+      ["cta-4", "compose_page gợi: CTA có lưới chứng cứ 3 cột (Frame)", ""],
+    ],
+    rec: "Giữ bộ hiện có",
+    why: "Đã đúng block từ P5, số thật; compose_page không ra block nào sát hơn (how-it-works bị báo unavailableSections dù how-it-works-1 có trong registry).",
+    nob: "Footer (ReUI không có block footer).",
+    kpi: "Không.",
+    chart: "Dải diện tích card-29 từ doanh thu thật.",
+    state: "Thị trường nổi bật rỗng: ẩn khối.",
+  },
+  {
+    route: "/phuong-phap", name: "Phương pháp & thuật ngữ", img: "phuong-phap", group: "I6 Trang chủ/Phương pháp/Auth",
+    cands: [
+      ["faq-3", "Hỏi đáp mở sẵn, lưới 2 cột, không accordion", "rec"],
+      ["faq-6", "Accordion một cột trong Frame (đang dùng)", "now"],
+      ["blog-6", "Bài một cột có breadcrumb (surface Card)", ""],
+    ],
+    rec: "faq-3",
+    why: "Định nghĩa cần đọc liền và tìm được bằng ⌘F, không giấu trong accordion; compose_page không có block tài liệu/thuật ngữ (mọi section “generic”).",
+    nob: "Eyebrow + tiêu đề (Badge + chữ).",
+    kpi: "Không.", chart: "Không.", state: "Tĩnh.",
+  },
+  {
+    route: "/login", name: "Đăng nhập", img: "login", group: "I6 Trang chủ/Phương pháp/Auth",
+    cands: [
+      ["auth-4", "Form đăng nhập Frame (đang dùng)", "rec now"],
+      ["auth-13", "Chia đôi + ảnh, magic link (chưa có magic link)", ""],
+      ["auth-18", "Chia đôi + lời chứng thực (không có thật)", ""],
+    ],
+    rec: "Giữ auth-4", why: "Đúng block; hai ứng viên kia cần thứ chưa có (magic link, lời chứng thực thật).",
+    nob: "—", kpi: "Không.", chart: "Không.", state: "Lỗi đăng nhập inline (đã có).",
+  },
+  {
+    route: "/register", name: "Đăng ký", img: "register", group: "I6 Trang chủ/Phương pháp/Auth",
+    cands: [
+      ["auth-5", "Hero + form chia đôi (đang dùng)", "rec now"],
+      ["auth-1", "Chia đôi + ảnh toàn cao", ""],
+      ["auth-14", "Chia đôi + panel ảnh xoay", ""],
+    ],
+    rec: "Giữ auth-5", why: "Hero viết cho nhà đầu tư, số đếm thật; không có ảnh thật cho auth-1/14.",
+    nob: "—", kpi: "Không.", chart: "Không.", state: "Lỗi inline (đã có).",
+  },
+];
+const esc = (s) => s;
+document.getElementById("rows").innerHTML = ROWS.map((r) => `
+  <article class="row">
+    <header><span class="route">${r.route}</span><h2>${r.name}</h2><span class="group">${r.group}</span></header>
+    <div class="now">
+      <a href="figures/hien-trang/${r.img}.jpg"><img src="figures/hien-trang/${r.img}.jpg" alt="Ảnh hiện trạng ${r.name}" loading="lazy"></a>
+      <span class="small muted">Hiện trạng (main, sáng 1440px)</span>
+    </div>
+    <div class="right">
+      <div class="cands">${r.cands.map(([n, d, f]) => `
+        <div class="cand ${f.includes("rec") ? "rec" : ""}">
+          <a href="${P(n)}"><img src="${T(n)}" alt="${n}" loading="lazy"></a>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+            <a class="name" href="${P(n)}">${n}</a>
+            ${f.includes("rec") ? '<span class="tag rec">khuyến nghị</span>' : ""}
+            ${f.includes("now") ? '<span class="tag now">đang dùng</span>' : ""}
+          </div>
+          <span class="small muted">${d}</span>
+        </div>`).join("")}
+      </div>
+      <div class="rec-box">
+        <b>Máy khuyến nghị: ${r.rec}</b>
+        <span class="small">${r.why}</span>
+        <span class="small muted">Không có block (giữ ghép từ component): ${r.nob}</span>
+      </div>
+      <div class="impact">
+        <div><b>KPI</b>${r.kpi}</div>
+        <div><b>Biểu đồ</b>${r.chart}</div>
+        <div><b>Trạng thái</b>${r.state}</div>
+        <div><b>Đợt</b>${r.group}</div>
+      </div>
+    </div>
+  </article>`).join("");
+</script>
+</body>
+</html>

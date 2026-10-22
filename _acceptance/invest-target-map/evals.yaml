@@ -1,0 +1,44 @@
+schema_version: 1
+feature_slug: invest-target-map
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    expected: "exit 0; dòng '✔ mọi route có cột Block đích: tên block trong backtick, `chờ (…)`, hoặc `—` cho redirect'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: "node -e \"const t=require('fs').readFileSync('.claude/skills/onehub-ui/routes.md','utf8');const r=t.split('\\n').filter(l=>/^\\| `\\/(?!ops)/.test(l)&&!/\\| redirect \\|/.test(l));const bad=r.filter(l=>/\\| chờ /.test(l));console.log('invest rows',r.length,'chờ',bad.length);process.exit(r.length===13&&bad.length===0?0:1)\""
+    expected: "exit 0; 'invest rows 13 chờ 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: "B=$(mktemp) && cp .claude/skills/onehub-ui/routes.md $B && sed -i '' 's/| `auth-4` (giữ) |/| giữ |/' .claude/skills/onehub-ui/routes.md; (cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs); rc=$?; cp $B .claude/skills/onehub-ui/routes.md; test $rc -ne 0"
+    expected: "exit 0 (test con đỏ, báo '`/login` → \"giữ\"'); routes.md được khôi phục"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: judgment
+    cmd: "Đọc mục 'Shell theo cổng' và 'Đợt dọn cổng Invest theo nhóm trang' trong .claude/skills/onehub-ui/routes.md"
+    expected: "Shell Invest = app-shell-30 kèm lý do; I1–I6 phủ đúng 13 route Invest có UI, mỗi route một đợt; cột biểu đồ có cho từng đợt"
+    evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: ui-check
+    cmd: "Mở _acceptance/invest-target-map/ban-quyet-dinh.html trong Chromium (file://), đếm ảnh hỏng"
+    expected: "13 hàng route; mỗi hàng 1 ảnh hiện trạng + 3 ứng viên có thumbnail và link previewUrl; 0 ảnh hỏng"
+    evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: judgment
+    cmd: "Đọc docs/ROADMAP.md Track 6"
+    expected: "Có dòng BĐ (bản đồ đích) + I1–I6; không còn B2/B4 riêng; B5 = Ops còn lại"
+    evidence_required: [run_id, verifier, verified_at, output]

@@ -35,7 +35,40 @@ function mappedFiles(markdown) {
   return out;
 }
 
+/** Các dòng route (ô đầu dạng `/…`) dưới dạng { tên cột → ô }, theo dòng tiêu đề bắt đầu bằng "Route". */
+function routeRows(markdown) {
+  let header = null;
+  const out = [];
+  for (const line of markdown.split("\n")) {
+    if (!line.trimStart().startsWith("|")) continue;
+    const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+    if (cells[0] === "Route") header = cells;
+    else if (header && /^`\//.test(cells[0])) {
+      out.push({ line, row: Object.fromEntries(header.map((h, i) => [h, cells[i] ?? ""])) });
+    }
+  }
+  return { header, rows: out };
+}
+
 describe("routes.md của skill onehub-ui", () => {
+  it("mọi route có cột Block đích: tên block trong backtick, `chờ (…)`, hoặc `—` cho redirect", () => {
+    const { header, rows } = routeRows(readFileSync(ROUTES_MD, "utf8"));
+    assert.ok(header?.includes("Block đích"), "routes.md: bảng route thiếu cột 'Block đích'");
+    assert.ok(rows.length > 0, "routes.md: không đọc được dòng route nào");
+    const bad = rows.filter(({ row }) => {
+      const value = row["Block đích"];
+      if (row["Bề mặt"] === "redirect") return value !== "—";
+      return !(/^chờ \(.+\)$/.test(value) || /`[^`]+`/.test(value));
+    });
+    assert.equal(
+      bad.length,
+      0,
+      `Dòng thiếu/sai Block đích (cần \`tên-block\`, "chờ (lý do)", hoặc "—" khi redirect):\n  ${bad
+        .map(({ row }) => `${row.Route} → "${row["Block đích"]}"`)
+        .join("\n  ")}`,
+    );
+  });
+
   it("phủ đúng mọi page.tsx dưới app/src/app (không thiếu, không thừa, không trùng)", () => {
     assert.ok(existsSync(ROUTES_MD), `thiếu ${ROUTES_MD}`);
     const fromFiles = pageFiles(APP_DIR).sort();

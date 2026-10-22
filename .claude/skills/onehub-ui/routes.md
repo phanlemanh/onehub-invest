@@ -1,35 +1,69 @@
-# Bản đồ route → bề mặt → archetype → họ khung
+# Bản đồ route → bề mặt → archetype → họ khung → block đích
 
 Mỗi `page.tsx` dưới `app/src/app` đúng một dòng. Thêm, xoá hay dời trang thì sửa bảng
 này **cùng commit**: `app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs` đối chiếu
-cột 2 với cây thư mục và đỏ khi lệch (chạy trong `npm run test:lint-rules` và CI `ui-lint`).
+cột 2 với cây thư mục và đỏ khi lệch, và đỏ khi một dòng thiếu cột Block đích (chạy trong
+`npm run test:lint-rules` và CI `ui-lint`).
 
 - Bề mặt và archetype: tên nguyên văn từ `.claude/skills/reui/rules/compose.md`.
-- Họ khung là **đích**. Nếu khác hiện trạng, cột Ghi chú nói rõ, kèm đợt B dọn nó.
+- Họ khung là **đích**. Nếu khác hiện trạng, cột Ghi chú nói rõ, kèm đợt dọn nó.
+- **Block đích**: block ReUI (tên registry trong backtick) mà trang được dựng từ đó khi dọn xong —
+  đã chốt với Mạnh. Viết `chờ (…)` khi chưa chọn, `—` chỉ cho route không có UI (redirect).
+  Phần không có block (bản đồ MapLibre, view track…) ghi sau dấu `+` kèm tên component tự viết.
+  Cổng Invest chốt 2026-10-23 (hồ sơ `_acceptance/invest-target-map/`, bảng có hình
+  `ban-quyet-dinh.html`); cổng Ops theo bảng 2b của B1 (`_acceptance/ui-clean-b1-ops/`).
 - "khung trang: PageHeader" = `components/page/page-header.tsx` (breadcrumb, tiêu đề 1–3 chữ,
   mô tả 1 mệnh đề, actions bên phải). Bắt buộc cho mọi trang operational ở cả hai cổng.
 - Cổng: `/ops/**` là Ops (bắt buộc đăng nhập), còn lại là Invest. Xem `docs/architecture/portals.md`.
 
-| Route | File (từ `app/src/app`) | Bề mặt | Archetype | Họ khung | Ghi chú |
-|---|---|---|---|---|---|
-| `/` | `(marketing)/page.tsx` | marketing | Marketing spine | Frame | Không PageHeader: navbar-12 + hero-8 là đầu trang. Sau đó card-29, how-it-works-1, faq-6. Frame vì hero-8, card-29, faq-6 gốc dùng Frame (how-it-works-1 đã đổi Card → Frame) |
-| `/phuong-phap` | `(marketing)/phuong-phap/page.tsx` | marketing | Marketing spine | Frame | Không PageHeader. Badge eyebrow + tiêu đề + 3 khối faq-6 (định nghĩa) |
-| `/login` | `(auth)/login/page.tsx` | flow | Auth card | Frame | Không PageHeader. auth-4 gốc là Frame, giữ nguyên. `?mode=register` chuyển sang `/register` |
-| `/register` | `(auth)/register/page.tsx` | flow | Auth card | Frame | Không PageHeader. auth-5 (hero + form chia đôi), gốc là Frame |
-| `/[country]` | `(app)/[country]/page.tsx` | operational | Dashboard grid | Frame | khung trang: PageHeader (chưa có, B2). Finder: xếp hạng `InsightGrid` + choropleth. Cấp chưa tự thu dùng biến thể "đang thu thập" |
-| `/[country]/[market]` | `(app)/[country]/[market]/page.tsx` | operational | Record detail | Frame | khung trang: PageHeader (đã có, qua `InsightPage`). View track `InsightNav` |
-| `/[country]/[market]/[submarket]` | `(app)/[country]/[market]/[submarket]/page.tsx` | operational | Record detail | Frame | khung trang: PageHeader (đã có, qua `InsightPage`). Cùng template thị trường, thêm benchmark với phường anh em |
-| `/[country]/[market]/listings` | `(app)/[country]/[market]/listings/page.tsx` | operational | Table-backed management | Frame | khung trang: PageHeader (đã có). Danh sách thẻ product-grid-2 + `ListingsMap` thay cho data-grid |
-| `/[country]/[market]/map` | `(app)/[country]/[market]/map/page.tsx` | redirect | — | — | Chỉ `redirect()` sang `/[country]?level=submarket&market=…&view=map` (giữ link cũ). Không có UI |
-| `/[country]/[market]/dau-tu` | `(app)/[country]/[market]/dau-tu/page.tsx` | operational | Dashboard grid | Frame | khung trang: PageHeader (chưa có). Đã gỡ số AirDNA (PR #3); dọn UI ở B5 |
-| `/listing/[id]` | `(app)/listing/[id]/page.tsx` | operational | Record detail | Frame | khung trang: PageHeader (đã có). `StatTiles` → heatmap form-5 → `CompsTable` |
-| `/yield` | `(app)/yield/page.tsx` | operational | Dashboard grid | Frame | khung trang: PageHeader (đã có). form-11 → `StatTiles` → chart-36 → `CompsTable`. Luôn có badge "DỮ LIỆU MÔ PHỎNG" |
-| `/so-sanh` | `(app)/so-sanh/page.tsx` | operational | Table-backed management | Frame | khung trang: PageHeader (chưa có, B2). Bảng là comparison-1, không phải data-grid. `<table>` trong `compare/comparison.tsx` là của block gốc: ở B2, mục baseline của nó phải đổi thành ngoại lệ tại chỗ `// eslint-disable-next-line onehub-ui/no-raw-table -- nguyên bản comparison-1`. Thêm cột bằng hộp c-command-5 |
-| `/saved` | `(app)/saved/page.tsx` | operational | Frame stack | Frame | khung trang: PageHeader (chưa có, B2). wishlist-2: Tabs theo loại + thẻ khu vực |
-| `/ops` | `ops/page.tsx` | operational | Table-backed management | Frame | dense. khung trang: PageHeader (chưa có, B1). Bảng độ tươi theo nguồn |
-| `/ops/collections` | `ops/collections/page.tsx` | operational | Table-backed management | Frame | dense. khung trang: PageHeader (chưa có, B1). Sửa section lồng trong header |
-| `/ops/quality` | `ops/quality/page.tsx` | operational | Table-backed management | Frame | dense. khung trang: PageHeader (chưa có, B1). Số AirDNA chỉ được hiện ở trang này. Sửa h1 giữa trang |
-| `/ops/deals` | `ops/deals/page.tsx` | operational | Table-backed management | Frame | dense. Dời từ `/deals` (PR #3, chỉ sau đăng nhập; có SĐT người bán — Tầng A, không lên cổng công khai). khung trang: PageHeader (chưa có). Dọn UI ở B1/B5 |
-| `/ops/review` | `ops/review/page.tsx` | operational | Frame stack | Frame | dense. khung trang: PageHeader (chưa có, B1). Hàng chờ `ReviewCard`: mỗi mục có bằng chứng và nút quyết |
-| `/ops/sources` | `ops/sources/page.tsx` | operational | Frame stack | Frame | dense. khung trang: PageHeader (chưa có, B1). Chỉ admin. Gồm bảng registry, quản lý Zalo, nhóm thu |
-| `/ops/design` | `ops/design/page.tsx` | operational | Frame stack | Frame | dense. khung trang: PageHeader (chưa có, B1). Trang trưng bày danh mục. Hiện đang là Card, B1 đổi sang Frame |
+## Shell theo cổng
+
+| Cổng | Shell | Ghi chú |
+|---|---|---|
+| Invest app (`(app)/**`) | `app-shell-30` (giữ, chốt 2026-10-23) | Top nav 4 mục phẳng, bản đồ cần trọn bề ngang, view track khớp mục lục Insight. Dự phòng `app-shell-28` khi > 6 module |
+| Invest marketing (`(marketing)/**`) | `navbar-12` + `SiteFooter` | ReUI không có block footer |
+| Invest auth (`(auth)/**`) | không shell | auth-4 / auth-5 toàn màn hình |
+| Ops (`ops/**`) | `app-shell-36` (B1) | Sidebar nhóm cho 7 trang quản trị |
+
+## Bảng route
+
+| Route | File (từ `app/src/app`) | Bề mặt | Archetype | Họ khung | Block đích | Ghi chú |
+|---|---|---|---|---|---|---|
+| `/` | `(marketing)/page.tsx` | marketing | Marketing spine | Frame | `navbar-12` · `hero-8` · `card-29` · `how-it-works-1` · `faq-6` (giữ) | Không PageHeader: navbar-12 + hero-8 là đầu trang. Frame vì hero-8, card-29, faq-6 gốc dùng Frame (how-it-works-1 đã đổi Card → Frame). Đợt I6 |
+| `/phuong-phap` | `(marketing)/phuong-phap/page.tsx` | marketing | Marketing spine | Frame | `faq-3` (thay `faq-6`) | Không PageHeader. Badge eyebrow + tiêu đề + các khối định nghĩa mở sẵn (không accordion). Đợt I6 |
+| `/login` | `(auth)/login/page.tsx` | flow | Auth card | Frame | `auth-4` (giữ) | Không PageHeader. auth-4 gốc là Frame, giữ nguyên. `?mode=register` chuyển sang `/register`. Đợt I6 |
+| `/register` | `(auth)/register/page.tsx` | flow | Auth card | Frame | `auth-5` (giữ) | Không PageHeader. auth-5 (hero + form chia đôi), gốc là Frame. Đợt I6 |
+| `/[country]` | `(app)/[country]/page.tsx` | operational | Dashboard grid | Frame | `solution-analytics-1` (lưới + đầu Frame; bỏ panel sức khoẻ/xu hướng) + `ChoroplethMap` | khung trang: PageHeader (chưa có, I1). Cấp chưa tự thu dùng `empty-state-5` "đang thu thập". Đợt I1 |
+| `/[country]/[market]` | `(app)/[country]/[market]/page.tsx` | operational | Record detail | Frame | `solution-analytics-8` (khung + hàng KPI + phân rã + timeline nguồn cung) · `chart-6` · `chart-13` + `InsightGrid` · `MiniMap` · `InsightNav` | khung trang: PageHeader (đã có, qua `InsightPage`). Hàng KPI của block thay `stats-1` (ngoại lệ có tên). Đợt I2 |
+| `/[country]/[market]/[submarket]` | `(app)/[country]/[market]/[submarket]/page.tsx` | operational | Record detail | Frame | `solution-analytics-8` (cùng template thị trường; phân rã = benchmark p30/p60/p90 với phường anh em) + `MiniMap` | khung trang: PageHeader (đã có, qua `InsightPage`). Đợt I2 |
+| `/[country]/[market]/listings` | `(app)/[country]/[market]/listings/page.tsx` | operational | Table-backed management | Frame | `product-grid-2` (giữ, bật panel ảnh tự thu) + component `filters` · `filter-sidebar-5` (màn hẹp) + `ListingsMap` | khung trang: PageHeader (đã có). Thẻ thay cho data-grid. Đợt I3 |
+| `/[country]/[market]/map` | `(app)/[country]/[market]/map/page.tsx` | redirect | — | — | — | Chỉ `redirect()` sang `/[country]?level=submarket&market=…&view=map` (giữ link cũ). Không có UI |
+| `/[country]/[market]/dau-tu` | `(app)/[country]/[market]/dau-tu/page.tsx` | operational | Dashboard grid | Frame | `data-grid-advanced-7` (gộp vào `/yield`, phần "Dòng tiền vốn vay") | Chốt 2026-10-23: gộp vào `/yield`, route này thành chuyển hướng sang `/yield` khi đợt I4 làm. Đã gỡ số AirDNA (PR #3). Đợt I4 |
+| `/listing/[id]` | `(app)/listing/[id]/page.tsx` | operational | Record detail | Frame | `product-detail-5` (đầu trang: ảnh tự thu + hộp thông tin) · `StatTiles` · `form-5` (heatmap) + `CompsTable` | khung trang: PageHeader (đã có). Không ảnh tự thu thì ẩn gallery; ảnh AirDNA không lên Invest (luật 5). Đợt I3 |
+| `/yield` | `(app)/yield/page.tsx` | operational | Dashboard grid | Frame | `form-11` (giữ) · `data-grid-advanced-7` (chi phí vận hành + dòng tiền vốn vay) · `StatTiles` · `chart-36` + `CompsTable` | khung trang: PageHeader (đã có). Luôn có badge "DỮ LIỆU MÔ PHỎNG". Nhận phần của `/dau-tu`. Đợt I4 |
+| `/so-sanh` | `(app)/so-sanh/page.tsx` | operational | Table-backed management | Frame | `comparison-1` (giữ) + `c-command-5` | khung trang: PageHeader (chưa có, I5). Bảng là comparison-1, không phải data-grid. `<table>` trong `compare/comparison.tsx` là của block gốc: ở I5, mục baseline của nó phải đổi thành ngoại lệ tại chỗ `// eslint-disable-next-line onehub-ui/no-raw-table -- nguyên bản comparison-1`. Đợt I5 |
+| `/saved` | `(app)/saved/page.tsx` | operational | Frame stack | Frame | `wishlist-2` (giữ) | khung trang: PageHeader (chưa có, I5). Tabs theo loại + thẻ khu vực; trống dùng `c-empty-11`. Đợt I5 |
+| `/ops` | `ops/page.tsx` | operational | Table-backed management | Frame | `solution-dev-ops-5` | dense. khung trang: PageHeader (chưa có, B1). Bảng độ tươi theo nguồn |
+| `/ops/collections` | `ops/collections/page.tsx` | operational | Table-backed management | Frame | `solution-dev-ops-6` + lưới job của `solution-dev-ops-1` | dense. khung trang: PageHeader (chưa có, B1). Sửa section lồng trong header |
+| `/ops/quality` | `ops/quality/page.tsx` | operational | Table-backed management | Frame | không block Solutions: `InsightGrid` + `StatTiles` | dense. khung trang: PageHeader (chưa có, B1). Số AirDNA chỉ được hiện ở trang này. Sửa h1 giữa trang |
+| `/ops/deals` | `ops/deals/page.tsx` | operational | Table-backed management | Frame | chờ (B5; ứng viên nhóm data-grid/base) | dense. Dời từ `/deals` (PR #3, chỉ sau đăng nhập; có SĐT người bán — Tầng A, không lên cổng công khai). khung trang: PageHeader (chưa có). Dọn UI ở B1/B5 |
+| `/ops/review` | `ops/review/page.tsx` | operational | Frame stack | Frame | `solution-agents-5` | dense. khung trang: PageHeader (chưa có, B1). Hàng chờ `ReviewCard`: mỗi mục có bằng chứng và nút quyết |
+| `/ops/sources` | `ops/sources/page.tsx` | operational | Frame stack | Frame | `solution-ai-ops-2` + lưới kết nối `solution-dev-ops-6` + `InsightGrid` (registry) | dense. khung trang: PageHeader (chưa có, B1). Chỉ admin. Gồm bảng registry, quản lý Zalo, nhóm thu |
+| `/ops/design` | `ops/design/page.tsx` | operational | Frame stack | Frame | không block (trang trưng bày): `PageHeader` + Frame | dense. khung trang: PageHeader (chưa có, B1). Trang trưng bày danh mục. Hiện đang là Card, B1 đổi sang Frame |
+
+## Đợt dọn cổng Invest theo nhóm trang
+
+Mỗi đợt làm trọn khung (shell giữ, PageHeader) + KPI + biểu đồ (bảng màu chung của B3,
+`components/charts/palette.ts`) + trạng thái tải/trống/lỗi cho nhóm trang của nó. Thay cho cách cắt
+B2 (khung & KPI) / B4 (trạng thái) / B5 (phần còn lại) theo loại component — các phần đó của Invest
+đi vào đợt của nhóm trang. Trong trang theo block Solutions, ô KPI và lưới là của chính block
+(ngoại lệ có tên của luật "một loại UI, một cách làm", như G4 của B1).
+
+| Đợt | Trang | Block kéo theo biểu đồ |
+|---|---|---|
+| I1 Finder | `/[country]` | sparkline của `solution-analytics-1` |
+| I2 Insight | `/[country]/[market]`, `/[country]/[market]/[submarket]` | `chart-6`, `chart-13` (giữ, B3) |
+| I3 Listing | `/listing/[id]`, `/[country]/[market]/listings` | không |
+| I4 Lợi suất | `/yield`, `/[country]/[market]/dau-tu` | `chart-36` (giữ, B3) |
+| I5 So sánh + Đã lưu | `/so-sanh`, `/saved` | không |
+| I6 Trang chủ / Phương pháp / Auth | `/`, `/phuong-phap`, `/login`, `/register` | dải diện tích của `card-29` |
