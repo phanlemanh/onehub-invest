@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bảng chốt thuật ngữ</title>
+<style>
+:root{--bg:#fbfbfa;--fg:#1d1d1b;--muted:#6b6b66;--line:#e4e3df;--card:#fff;--accent:#2f5bd3;--ok:#1d7a46;--bad:#b3261e;--hl:#fff7e0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151514;--fg:#ecebe8;--muted:#a19f99;--line:#33322f;--card:#1d1d1c;--accent:#8aa8ff;--ok:#6ccf94;--bad:#ff8a80;--hl:#2b2618}}
+:root[data-theme="dark"]{--bg:#151514;--fg:#ecebe8;--muted:#a19f99;--line:#33322f;--card:#1d1d1c;--accent:#8aa8ff;--ok:#6ccf94;--bad:#ff8a80;--hl:#2b2618}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1280px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:32px 0 8px}
+.muted{color:var(--muted);font-size:12px}.lead{color:var(--muted);margin:0 0 16px;max-width:760px}
+code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:color-mix(in srgb,var(--line) 60%,transparent);padding:1px 4px;border-radius:4px}
+code.ok{color:var(--ok)}code.bad{color:var(--bad);text-decoration:line-through}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:1080px}th,td{text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--bg)}tr:last-child td{border-bottom:0}
+tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{width:26%}
+.vn{font-weight:600}.def{font-size:13px;margin-top:2px}.note{font-size:12px;color:var(--muted);margin-top:4px}
+.av{display:inline-block;font-size:12px;color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);border-radius:4px;padding:0 4px;margin:0 2px 2px 0}
+.use .u{display:block;font-size:12px}.use .u.bad{color:var(--bad)}.use i{color:var(--muted);font-style:normal}
+.choice .q{font-weight:600;margin-bottom:4px}.qid{color:var(--accent)}.opt{font-size:13px;padding:4px 0}.opt.rec b{color:var(--accent)}
+.badge{font-size:11px;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 6px}.why{font-size:12px;margin-top:4px;color:var(--muted)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin:16px 0}
+.box ol,.box ul{margin:4px 0 0;padding-left:20px}pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;font:13px ui-monospace,Menlo,monospace}
+</style></head><body><main>
+<h1>Bảng chốt thuật ngữ onehub-invest</h1>
+<p class="lead">Mỗi khái niệm một hàng: tên tiếng Việt trên UI, tên code (RESO khi có), slug URL tiếng Anh, các tên bỏ và số file đang dùng từng tên. Hàng tô vàng có hai lựa chọn hợp lý — Mạnh chọn. Duyệt xong máy mới ghi <code>CONTEXT.md</code> bản chính thức. Đo 2026-10-23 trên main f51b01c: số file chứa tên (không phân biệt hoa thường) trong app/src, agent, pipeline, db/migrations, data-api/src, docs/architecture, ROADMAP, AGENTS.md; “UI” = app/src/app + components (bỏ components/ui, reui). Tên đỏ = tên sẽ bỏ.</p>
+
+<div class="box"><b>Cần Mạnh trả lời 8 câu</b> — chép dòng dưới, sửa chữ cái nào nghĩ khác, rồi điền ô cuối bằng “duyệt” hoặc ghi chỗ cần sửa:
+<pre>Q1 A · Q2 A · Q3 A · Q4 A · Q5 A · Q6 A · Q7 A · Q8 A — ___</pre>
+<div class="choice"><div class="q"><span class="qid">Q7</span> Hạn của danh sách ngoại lệ route tiếng Việt (so-sanh, phuong-phap, dau-tu)</div><div class="opt rec"><b>A</b> 2026-12-31 <span class="badge">khuyến nghị</span><div class="muted">test đỏ sau ngày này nếu route Việt còn — ép đợt dọn nhóm trang làm trong quý</div></div><div class="opt"><b>B</b> Không hạn — chỉ chặn route Việt MỚI<div class="muted">ít áp lực, nhưng ngoại lệ dễ thành vĩnh viễn</div></div><div class="why">Ngoại lệ có hạn mới là ngoại lệ; ngày gần đủ để B2/B5 làm kịp.</div></div><div class="choice"><div class="q"><span class="qid">Q8</span> Mã redirect khi đổi slug</div><div class="opt rec"><b>A</b> <code>permanent: true</code> (Next.js trả 308) <span class="badge">khuyến nghị</span><div class="muted">mặc định của Next.js; Google xử 308 như 301; giữ method</div></div><div class="opt"><b>B</b> <code>statusCode: 301</code> đúng chữ<div class="muted">khớp câu chốt "301"; phải ghi tay mỗi dòng</div></div><div class="why">Cùng hiệu lực SEO, ít ghi tay; luật ghi "redirect vĩnh viễn (301/308)".</div></div></div>
+
+<div class="box"><b>Luật đặt tên sẽ ghi vào AGENTS.md › Quy ước</b> (thay câu “URL ASCII không dấu (slugifyName())”):
+<ul>
+<li>Code, API, tên bảng/cột: tiếng Anh; field/enum dữ liệu theo RESO Data Dictionary khi có (ADR-0011).</li>
+<li>Chữ UI tiếng Việt, lấy nhãn từ <code>CONTEXT.md</code>; khái niệm chưa có trong đó thì thêm term trước khi viết nhãn.</li>
+<li><b>URL tiếng Anh toàn bộ</b>: ASCII, kebab-case, mỗi đoạn tĩnh nằm trong danh sách slug của <code>CONTEXT.md</code>. Tên riêng địa lý (<code>hanoi</code>, <code>vn-hanoi-tay-ho</code>) và mã quốc gia (<code>vn</code>) là slug động — không cần tiếng Anh.</li>
+<li>Đổi slug cũ phải kèm redirect vĩnh viễn trong <code>app/next.config.ts</code>, làm trong đợt dọn của nhóm trang đó (không đổi lẻ).</li>
+<li>Máy kiểm: <code>app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs</code> — đỏ khi thêm đoạn URL ngoài danh sách, khi ngoại lệ quá hạn, khi đổi slug mà thiếu redirect.</li>
+</ul></div>
+
+<h2>Địa lý</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
+<td><div class="vn">Quốc gia</div><div class="def">Cấp gốc của cây khu vực (<code>areas.region_type = country</code>). Phạm vi sản phẩm hiện chỉ có Việt Nam (ADR-0008).</div></td>
+<td><code>country</code><div class="muted">RESO: Country (ISO 3166-1)</div></td>
+<td><code class="ok">vn</code> <div class="muted">mã quốc gia, đoạn động [country]</div></td>
+<td><span class="av">nước</span></td>
+<td class="use"><span class="u">country <b>18</b> <i>UI 11</i></span><span class="u">quốc gia <b>4</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr class="has-choice">
+<td><div class="vn">Thị trường</div><div class="def">Một tỉnh/thành phố trực thuộc trung ương — cấp <code>areas.region_type = market</code> (34 đơn vị sau sáp nhập 2025). Là đơn vị Finder xếp hạng và trang Insight trình bày.</div></td>
+<td><code>market</code><div class="muted">RESO: StateOrProvince (ISO 3166-2:VN)</div></td>
+<td><div class="muted">tên riêng không dấu, đoạn động [market] (vd. hanoi)</div></td>
+<td><span class="av">tỉnh thành</span> <span class="av">thành phố</span> <span class="av">city</span> <span class="av">province</span></td>
+<td class="use"><span class="u">market <b>60</b> <i>UI 30</i></span><span class="u">markets <b>19</b> <i>UI 10</i></span><span class="u">thị trường <b>50</b> <i>UI 38</i></span><span class="u">tỉnh <b>15</b> <i>UI 5</i></span><span class="u">tỉnh/thành <b>2</b></span><span class="u bad">thành phố <b>7</b> <i>UI 1</i></span><span class="u bad">city <b>22</b> <i>UI 4</i></span><span class="u bad">province <b>2</b></span></td>
+<td><div class="choice"><div class="q"><span class="qid">Q1</span> Nhãn UI cho cấp <code>market</code></div><div class="opt rec"><b>A</b> Thị trường <span class="badge">khuyến nghị</span><div class="muted">đang dùng 50 file, nav "Thị trường", tiêu đề Finder "Thị trường Việt Nam"; khớp tên code</div></div><div class="opt"><b>B</b> Tỉnh/thành<div class="muted">đúng tên hành chính; phải đổi nav, tiêu đề và mọi câu "thị trường này"</div></div><div class="why">Ít đổi nhất, khớp code <code>market</code>; định nghĩa đã nói rõ đó là một tỉnh/thành.</div></div></td>
+</tr>
+<tr class="has-choice">
+<td><div class="vn">Phường</div><div class="def">Đơn vị hành chính cấp xã (phường, xã, đặc khu) — cấp <code>areas.region_type = submarket</code>, con trực tiếp của thị trường. Trang hiện tên riêng ("Xã Bát Tràng"), nhãn chung ghi "Phường".</div><div class="note">Cấp huyện đã bỏ từ 07/2025: "quận" chỉ còn trong dữ liệu thô (<code>district_raw</code>).</div></td>
+<td><code>submarket</code><div class="muted">RESO: không có cấp phường — gần City (mappings.yaml)</div></td>
+<td><div class="muted">tên riêng không dấu, đoạn động [submarket]</div></td>
+<td><span class="av">quận</span> <span class="av">quận/huyện</span> <span class="av">huyện</span> <span class="av">ward</span> <span class="av">tiểu thị trường</span></td>
+<td class="use"><span class="u">submarket <b>34</b> <i>UI 12</i></span><span class="u">submarkets <b>6</b> <i>UI 2</i></span><span class="u">phường <b>72</b> <i>UI 34</i></span><span class="u">phường/xã <b>3</b> <i>UI 2</i></span><span class="u">xã <b>16</b> <i>UI 7</i></span><span class="u bad">quận <b>15</b> <i>UI 2</i></span><span class="u bad">quận/huyện <b>1</b></span><span class="u bad">ward <b>1</b></span></td>
+<td><div class="choice"><div class="q"><span class="qid">Q2</span> Nhãn UI cho cấp <code>submarket</code></div><div class="opt rec"><b>A</b> Phường <span class="badge">khuyến nghị</span><div class="muted">72 file; ngắn, vừa ngân sách nhãn 1–2 chữ; định nghĩa phủ cả xã</div></div><div class="opt"><b>B</b> Phường/xã<div class="muted">đúng pháp lý; UI đang có "Phường / xã" ở 5 chỗ; dài hơn trong cột, nút</div></div><div class="why">Trang luôn hiện tên riêng có tiền tố (Phường…/Xã…), nên nhãn chung ngắn không gây hiểu sai.</div></div></td>
+</tr>
+<tr>
+<td><div class="vn">Khu vực</div><div class="def">Một nút bất kỳ của cây địa lý (<code>areas</code>, khoá <code>area_id</code>, vd. <code>vn-hanoi-tay-ho</code>): quốc gia, thị trường hoặc phường. Dùng khi câu nói về mọi cấp (So sánh, Đã lưu).</div></td>
+<td><code>area</code><div class="muted">RESO: Country / StateOrProvince / City tuỳ cấp</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">địa bàn</span> <span class="av">region</span></td>
+<td class="use"><span class="u">area <b>55</b> <i>UI 28</i></span><span class="u">areas <b>56</b> <i>UI 17</i></span><span class="u">khu vực <b>25</b> <i>UI 18</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Khu đô thị</div><div class="def">Đại đô thị một chủ đầu tư phát triển (Ocean Park, Ecopark) — <code>asset_nodes.node_type = project</code>. Trục song song với khu vực, không thay phường (ADR-0011 Qđ 2).</div></td>
+<td><code>project</code><div class="muted">RESO: SubdivisionName</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">dự án</span> <span class="av">đại đô thị</span></td>
+<td class="use"><span class="u">project <b>5</b> <i>UI 1</i></span><span class="u">khu đô thị <b>3</b></span><span class="u bad">dự án <b>4</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Phân khu</div><div class="def">Một phần/phase trong khu đô thị (Sapphire, The Rainbow) — <code>node_type = subzone</code>. Tên phân khu trùng giữa các khu đô thị nên chỉ resolve qua matcher 2 tầng.</div></td>
+<td><code>subzone</code><div class="muted">RESO: không có — local extension (ADR-0011)</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">dự án con</span> <span class="av">phase</span></td>
+<td class="use"><span class="u">subzone <b>2</b></span><span class="u">phân khu <b>1</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Tòa nhà</div><div class="def">Một tòa chung cư (S1.03, BE02) — <code>node_type = building</code>; mã tòa thô trong tin nằm ở <code>block_raw</code>.</div></td>
+<td><code>building</code><div class="muted">RESO: ComplexName</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">block</span> <span class="av">chung cư</span></td>
+<td class="use"><span class="u">building <b>7</b></span><span class="u">tòa <b>5</b></span><span class="u">tòa nhà <b>1</b></span><span class="u bad">chung cư <b>6</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr></tbody></table></div>
+<h2>Tài sản &amp; tin</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
+<td><div class="vn">Căn nhà</div><div class="def">"Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng <code>properties</code>); nhiều tin rao từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).</div><div class="note"><code>asset_nodes</code> là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.</div></td>
+<td><code>property</code><div class="muted">RESO: resource Property</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">tài sản</span> <span class="av">bất động sản</span> <span class="av">BĐS</span> <span class="av">asset</span></td>
+<td class="use"><span class="u">property <b>8</b> <i>UI 1</i></span><span class="u">properties <b>14</b> <i>UI 4</i></span><span class="u">Một Căn Nhà <b>6</b></span><span class="u">căn nhà <b>6</b></span><span class="u bad">tài sản <b>2</b> <i>UI 1</i></span><span class="u bad">asset <b>7</b> <i>UI 2</i></span><span class="u bad">BĐS <b>7</b> <i>UI 1</i></span><span class="u bad">bất động sản <b>6</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr class="has-choice">
+<td><div class="vn">Listing</div><div class="def">Một chỗ cho thuê ngắn hạn tự thu (bảng <code>listings</code>, id <code>abnb_…</code>): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết.</div></td>
+<td><code>listing</code><div class="muted">RESO: không có mô hình STR — local extension (reso-standards.md)</div></td>
+<td><code class="ok">listings</code> <code class="ok">listing</code> <div class="muted"><code>/[country]/[market]/listings</code> danh sách · <code>/listing/[id]</code> chi tiết</div></td>
+<td><span class="av">chỗ ở</span> <span class="av">phòng cho thuê</span></td>
+<td class="use"><span class="u">listing <b>79</b> <i>UI 39</i></span><span class="u">listings <b>62</b> <i>UI 26</i></span></td>
+<td><div class="choice"><div class="q"><span class="qid">Q3</span> Nhãn UI cho listing cho thuê ngắn hạn (menu đang ghi "Listing")</div><div class="opt rec"><b>A</b> Listing <span class="badge">khuyến nghị</span><div class="muted">79 file; thuật ngữ ngành như ADR/RevPAR; portals.md §4 đã cố định</div></div><div class="opt"><b>B</b> Chỗ ở<div class="muted">tiếng Việt, phủ cả phòng riêng; nhưng mơ hồ với người đọc là nhà đầu tư</div></div><div class="why">"Căn" sai với listing phòng riêng, "chỗ ở" mơ hồ; giữ "Listing" như ADR/RevPAR và đổi cùng nhóm nếu Q5 Việt hoá.</div></div></td>
+</tr>
+<tr class="has-choice">
+<td><div class="vn">Tin rao</div><div class="def">Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng <code>sale_offers</code>, khoá <code>offer_id</code> = hash nguồn + id gốc). Loại tin ở cột <code>kind</code>.</div></td>
+<td><code>sale_offer</code><div class="muted">RESO: Property + ListPrice; bán/thuê qua PropertyType</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">tin đăng</span> <span class="av">offer</span> <span class="av">rao vặt</span> <span class="av">sale offer</span></td>
+<td class="use"><span class="u">sale_offers <b>35</b> <i>UI 2</i></span><span class="u bad">offer <b>8</b> <i>UI 3</i></span><span class="u">offers <b>20</b> <i>UI 4</i></span><span class="u">tin rao <b>8</b> <i>UI 3</i></span><span class="u bad">tin đăng <b>4</b></span><span class="u bad">rao vặt <b>1</b></span></td>
+<td><div class="choice"><div class="q"><span class="qid">Q4</span> Tên tiếng Việt cho <code>sale_offers</code></div><div class="opt rec"><b>A</b> Tin rao <span class="badge">khuyến nghị</span><div class="muted">8 file; khớp "giá rao" của pipeline 4 giai đoạn</div></div><div class="opt"><b>B</b> Tin đăng<div class="muted">4 file; chữ phổ thông hơn</div></div><div class="why">Cặp "tin rao / giá rao" nói đúng bản chất: giá người bán rao, chưa phải giá giao dịch.</div></div></td>
+</tr>
+<tr>
+<td><div class="vn">Tin bán</div><div class="def">Tin rao có <code>kind = sale</code>.</div></td>
+<td><code>kind = sale</code><div class="muted">RESO: PropertyType ∈ Residential, Land, ResidentialIncome</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">tin bán <b>1</b> <i>UI 1</i></span><span class="u">mua bán <b>4</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Tin cho thuê</div><div class="def">Tin rao cho thuê dài hạn, giá theo tháng (<code>kind = rent_lt</code>).</div></td>
+<td><code>kind = rent_lt</code><div class="muted">RESO: PropertyType = ResidentialLease + LeaseAmountFrequency = Monthly</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">rent_lt <b>16</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Căn giá tốt</div><div class="def">Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Chỉ ở cổng Ops vì kèm liên hệ người bán (tầng A).</div></td>
+<td><code>deal</code><div class="muted">RESO: không có — chỉ số nội bộ</div></td>
+<td><code class="ok">deals</code> <div class="muted"><code>/ops/deals</code></div></td>
+<td><span class="av">deal tốt</span> <span class="av">kèo</span></td>
+<td class="use"><span class="u">deals <b>10</b> <i>UI 5</i></span><span class="u">căn giá tốt <b>7</b> <i>UI 3</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Người bán</div><div class="def">Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT; SĐT thô là tầng A.</div></td>
+<td><code>seller</code><div class="muted">RESO: resource Member; <code>seller_phone_hash</code> ≈ ULI</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">chủ nhà</span> <span class="av">broker</span></td>
+<td class="use"><span class="u">seller <b>4</b></span><span class="u">sellers <b>9</b> <i>UI 2</i></span><span class="u">người bán <b>11</b> <i>UI 3</i></span><span class="u bad">chủ nhà <b>3</b> <i>UI 2</i></span><span class="u bad">broker <b>4</b></span><span class="u">môi giới <b>8</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr></tbody></table></div>
+<h2>Giá</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
+<td><div class="vn">Giá rao</div><div class="def">Giá ghi trong tin rao, VND (bigint).</div></td>
+<td><code>price_vnd</code><div class="muted">RESO: ListPrice (thuê: LeaseAmount)</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">giá rao <b>2</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Bậc giá</div><div class="def">Độ gần giá giao dịch của một tin rao: P0 giá giao dịch, P1 giá nội bộ, P2 giá công khai.</div></td>
+<td><code>price_tier</code><div class="muted">RESO: không có — đặc trưng VN (mappings.yaml)</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">tier giá</span></td>
+<td class="use"><span class="u">price_tier <b>14</b> <i>UI 1</i></span><span class="u">P0 <b>7</b></span><span class="u">P1 <b>19</b> <i>UI 4</i></span><span class="u">P2 <b>27</b> <i>UI 7</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Giá giao dịch</div><div class="def">Giá đã chốt thật (P0) — hiếm, trễ; dự phòng.</div></td>
+<td><code>price_tier = P0</code><div class="muted">RESO: ClosePrice (ngữ nghĩa)</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">P0 <b>7</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Giá nội bộ</div><div class="def">Giá rao trong nhóm khép (P1, S03 và S05) — sát giao dịch, kèm SĐT.</div></td>
+<td><code>price_tier = P1</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">giá thật</span></td>
+<td class="use"><span class="u">P1 <b>19</b> <i>UI 4</i></span><span class="u bad">giá thật <b>2</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Giá công khai</div><div class="def">Giá rao trên kênh công khai (P2, S06) — độ phủ rộng nhưng có giá câu và tin treo.</div></td>
+<td><code>price_tier = P2</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">giá vải</span></td>
+<td class="use"><span class="u">P2 <b>27</b> <i>UI 7</i></span><span class="u">giá công khai <b>2</b></span><span class="u bad">giá vải <b>1</b></span><span class="u">vải <b>12</b> <i>UI 4</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Giá/m²</div><div class="def">Giá rao ÷ diện tích (<code>price_vnd / area_m2</code>).</div></td>
+<td><code>price_perm2</code><div class="muted">RESO: không có — tự tính</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">đơn giá</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Thước giá</div><div class="def">Trung vị giá/m² giá công khai (P2) cùng phường × loại hình, cần n ≥ 5 (view <code>v_ruler_p2_*</code>). Thước để đo căn giá tốt.</div></td>
+<td><code>ruler</code><div class="muted">RESO: không có — chỉ số nội bộ</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">ruler</span></td>
+<td class="use"><span class="u bad">ruler <b>8</b> <i>UI 2</i></span><span class="u">thước <b>11</b> <i>UI 4</i></span><span class="u">thước giá <b>1</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Chênh giá câu</div><div class="def">Chênh giữa giá công khai và giá nội bộ của cùng người bán, tính bằng %.</div></td>
+<td><code>bait_gap_pct</code><div class="muted">RESO: không có — chỉ số P4</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">bait gap</span></td>
+<td class="use"><span class="u bad">bait gap <b>1</b></span><span class="u">bait_gap <b>2</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Giá niêm yết</div><div class="def">Giá một đêm listing đang để trên kênh — không phải ADR (ADR chỉ tính trên đêm đã đặt).</div></td>
+<td><code>price_listed</code><div class="muted">RESO: không có mô hình STR</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr></tbody></table></div>
+<h2>Chỉ số</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
+<td><div class="vn">Đêm đã đặt</div><div class="def">Số đêm trong kỳ lịch listing bị chặn vì có khách.</div></td>
+<td><code>booked_nights</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">booked_nights <b>6</b></span><span class="u">đêm đã đặt <b>13</b> <i>UI 9</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Đêm khả dụng</div><div class="def">Đêm đã đặt + đêm trống (<code>available_nights</code>) trong kỳ — mẫu số của công suất và RevPAR.</div></td>
+<td><code>booked_nights + available_nights</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">available_nights <b>4</b></span><span class="u">đêm trống <b>1</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Doanh thu</div><div class="def">Tổng giá các đêm đã đặt trong kỳ (<code>market_metrics.revenue</code>). "Doanh thu năm" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.</div></td>
+<td><code>revenue</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">doanh số</span></td>
+<td class="use"><span class="u">revenue <b>47</b> <i>UI 31</i></span><span class="u">doanh thu <b>25</b> <i>UI 22</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr class="has-choice">
+<td><div class="vn">ADR</div><div class="def">Giá trung bình một đêm đã đặt: doanh thu ÷ đêm đã đặt.</div></td>
+<td><code>adr</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">giá phòng</span> <span class="av">giá đêm</span> <span class="av">giá/đêm</span></td>
+<td class="use"><span class="u">ADR <b>64</b> <i>UI 22</i></span><span class="u bad">giá phòng <b>8</b> <i>UI 7</i></span><span class="u bad">giá đêm <b>6</b> <i>UI 1</i></span><span class="u bad">giá/đêm <b>2</b> <i>UI 2</i></span><span class="u">giá trung bình <b>1</b> <i>UI 1</i></span></td>
+<td><div class="choice"><div class="q"><span class="qid">Q5</span> ADR và RevPAR: giữ chữ tắt ngành hay Việt hoá</div><div class="opt rec"><b>A</b> ADR · RevPAR (chữ tắt + ⓘ định nghĩa) <span class="badge">khuyến nghị</span><div class="muted">64 và 27 file; nhà đầu tư STR quen; UI đang ghi "Giá phòng (ADR)" ở 3 chỗ</div></div><div class="opt"><b>B</b> Giá đêm TB · Doanh thu/đêm khả dụng<div class="muted">tiếng Việt, nhưng dài và dễ lẫn với giá niêm yết</div></div><div class="why">"Giá phòng"/"giá đêm" đang bị dùng cho cả giá niêm yết lẫn ADR — chữ tắt kèm ⓘ là cách duy nhất không lẫn.</div></div></td>
+</tr>
+<tr>
+<td><div class="vn">Công suất</div><div class="def">Đêm đã đặt ÷ đêm khả dụng (<code>market_metrics.occupancy</code>).</div></td>
+<td><code>occupancy</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">tỷ lệ lấp đầy</span> <span class="av">lấp đầy</span> <span class="av">occupancy</span></td>
+<td class="use"><span class="u bad">occupancy <b>40</b> <i>UI 21</i></span><span class="u">công suất <b>33</b> <i>UI 25</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Công suất 90 đêm</div><div class="def">Công suất trên 90 đêm đầu của lịch tương lai (<code>listing_stats</code>, 410) — đầu vào doanh thu năm ở Lợi suất và Mô phỏng đầu tư.</div></td>
+<td><code>booked90 / nights90</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">RevPAR</div><div class="def">Doanh thu ÷ đêm khả dụng = ADR × công suất.</div></td>
+<td><code>revpar</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">RevPAR <b>27</b> <i>UI 17</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Listing hoạt động</div><div class="def">Số listing có ≥ 1 đêm đã đặt trong tháng.</div></td>
+<td><code>listing_count</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Listing so sánh</div><div class="def">Tập listing cùng phường + số phòng ngủ (≥ 5, không đủ thì lùi ra thị trường) dùng để ước tính một căn.</div></td>
+<td><code>comps</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">comps</span> <span class="av">listing tương tự</span></td>
+<td class="use"><span class="u bad">comps <b>6</b> <i>UI 3</i></span><span class="u">listing so sánh <b>8</b> <i>UI 5</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Lợi suất</div><div class="def">Thu nhập năm của một căn ÷ giá mua; luôn ghi rõ gộp hay ròng và ngắn hạn hay dài hạn.</div><div class="note">UI đang có "Yield ngắn hạn"/"Yield dài hạn" (<code>/so-sanh</code>) — đổi khi dọn nhóm trang.</div></td>
+<td><code>yield</code><div class="muted">RESO: không có</div></td>
+<td><code class="ok">yield</code> <div class="muted"><code>/yield</code></div></td>
+<td><span class="av">tỷ suất lợi nhuận</span> <span class="av">ROI</span> <span class="av">cap rate</span></td>
+<td class="use"><span class="u">yield <b>20</b> <i>UI 9</i></span><span class="u">lợi suất <b>17</b> <i>UI 12</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Lợi suất gộp</div><div class="def">Doanh thu năm ÷ giá mua (trước chi phí).</div></td>
+<td><code>grossYield</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">gross yield</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Lợi suất ròng</div><div class="def">Thu nhập ròng ÷ giá mua.</div></td>
+<td><code>netYield</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">net yield</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Thu nhập ròng</div><div class="def">Doanh thu năm trừ phí quản lý, phí nền tảng, thuế và chi phí cố định — chưa trừ trả nợ vay.</div></td>
+<td><code>noi</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">lợi nhuận</span> <span class="av">NOI</span></td>
+<td class="use"><span class="u bad">NOI <b>4</b> <i>UI 1</i></span><span class="u">thu nhập <b>6</b> <i>UI 5</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Độ tin cậy</div><div class="def">Mức chắc của một ước tính, theo cỡ mẫu, phạm vi lùi và độ phân tán giá — luôn hiện cạnh số ước tính.</div></td>
+<td><code>confidence (ước tính)</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">độ tin cậy <b>4</b> <i>UI 3</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Độ tin trích xuất</div><div class="def">Độ chắc của parser khi đọc một tin rao (high | medium | low) — chỉ dùng ở Ops, khác độ tin cậy của ước tính.</div></td>
+<td><code>sale_offers.confidence</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">confidence <b>22</b> <i>UI 5</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Mô phỏng</div><div class="def">Số dựng từ mô hình chứ không quan sát trực tiếp; mọi số như vậy mang badge MÔ PHỎNG.</div></td>
+<td><code>badge warning-light "MÔ PHỎNG"</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">mô phỏng <b>13</b> <i>UI 8</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Điểm One Invest</div><div class="def">Điểm xếp hạng khu vực của riêng nền tảng, một thang cố định, kèm điểm thành phần (chưa ship).</div><div class="note">Market Score là của AirDNA (S02) — không lên cổng Invest (luật 5).</div></td>
+<td><code>score</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">Market Score</span> <span class="av">điểm thị trường</span></td>
+<td class="use"><span class="u">score <b>15</b> <i>UI 5</i></span><span class="u bad">Market Score <b>7</b> <i>UI 3</i></span><span class="u">Điểm One Invest <b>1</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr></tbody></table></div>
+<h2>Chiến lược đầu tư</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
+<td><div class="vn">Cho thuê ngắn hạn</div><div class="def">Chiến lược cho thuê theo đêm qua listing; dòng tiền đo bằng ADR × công suất.</div></td>
+<td><code>str (kind rent_st tương lai)</code><div class="muted">RESO: không có mô hình — FeeFrequency=Daily chỉ là mảnh rời</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">homestay</span></td>
+<td class="use"><span class="u">STR <b>9</b> <i>UI 2</i></span><span class="u">thuê ngắn hạn <b>8</b> <i>UI 6</i></span><span class="u">cho thuê ngắn hạn <b>7</b> <i>UI 6</i></span><span class="u">rent_st <b>2</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Cho thuê dài hạn</div><div class="def">Chiến lược cho thuê theo tháng; dòng tiền đo bằng giá thuê tin cho thuê.</div></td>
+<td><code>ltr / kind rent_lt</code><div class="muted">RESO: PropertyType = ResidentialLease</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">LTR <b>6</b> <i>UI 2</i></span><span class="u">thuê dài hạn <b>19</b> <i>UI 14</i></span><span class="u">cho thuê dài hạn <b>6</b> <i>UI 6</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Pipeline đầu tư</div><div class="def">North star sản phẩm, 4 giai đoạn: chọn thị trường → chọn căn → chi phí, vốn, dòng tiền → khai thác sau mua (<code>docs/research/investment-pipeline-4-stages.md</code>).</div></td>
+<td><code>investment pipeline (4 stages)</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">phễu đầu tư</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr></tbody></table></div>
+<h2>Dữ liệu &amp; nguồn</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
+<td><div class="vn">Nguồn</div><div class="def">Nơi dữ liệu đến, luôn gọi bằng mã S01–S07 (SPL, ADR-0007). Tên thật là tầng A.</div></td>
+<td><code>source (source_registry.code)</code><div class="muted">RESO: OriginatingSystemName</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">kênh dữ liệu</span></td>
+<td class="use"><span class="u">source <b>73</b> <i>UI 29</i></span><span class="u">nguồn <b>56</b> <i>UI 19</i></span><span class="u">mã nguồn <b>6</b> <i>UI 2</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Snapshot</div><div class="def">Bản ghi thô collector thu được — bất biến, chỉ ghi mới (luật 1). Mọi diễn giải nằm ở pipeline.</div></td>
+<td><code>snapshot (raw)</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">bản chụp</span> <span class="av">dump</span></td>
+<td class="use"><span class="u">snapshot <b>29</b> <i>UI 3</i></span><span class="u">raw snapshot <b>3</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Staging</div><div class="def">Bảng nạp từ snapshot (<code>stg_*</code>) — ranh giới làn ZCode (thu) ↔ Claude (phần còn lại), định nghĩa trong DATA-CONTRACT.</div></td>
+<td><code>stg_*</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">staging <b>16</b> <i>UI 2</i></span><span class="u">stg_ <b>4</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Hợp đồng dữ liệu</div><div class="def"><code>collector/docs/DATA-CONTRACT.md</code> — giao diện collector ↔ pipeline; thêm field phải tăng <code>schemaVersion</code>.</div></td>
+<td><code>DATA-CONTRACT (schemaVersion)</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">DATA-CONTRACT <b>7</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Canonical</div><div class="def">Lớp dữ liệu đã chuẩn hoá đa nguồn theo RESO-first, đầu vào của căn nhà và chỉ số.</div></td>
+<td><code>sale_offers, listings</code><div class="muted">RESO: Data Dictionary là lớp canonical</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">canonical <b>10</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Thu thập</div><div class="def">Việc collector lấy dữ liệu từ nguồn về snapshot (launchd, theo lịch).</div></td>
+<td><code>collect / collection</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">collections</code> <div class="muted"><code>/ops/collections</code></div></td>
+<td><span class="av">cào</span> <span class="av">crawl</span></td>
+<td class="use"><span class="u">collection <b>2</b> <i>UI 1</i></span><span class="u">thu thập <b>24</b> <i>UI 13</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Độ tươi</div><div class="def">Thời gian từ lần thu gần nhất của một nguồn; vượt SLO thì <code>check-freshness.mjs</code> exit 1.</div></td>
+<td><code>freshness (SLO)</code><div class="muted">RESO: ≈ ModificationTimestamp</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">freshness</span></td>
+<td class="use"><span class="u bad">freshness <b>7</b> <i>UI 2</i></span><span class="u">độ tươi <b>4</b> <i>UI 2</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Tầng A</div><div class="def">Tên nguồn thật, SĐT, hồ sơ cá nhân — không rời máy local; cloud chỉ nhận hash + aggregate (luật 6).</div></td>
+<td><code>SPL tier A</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">SPL <b>19</b> <i>UI 6</i></span><span class="u">tầng A <b>22</b> <i>UI 6</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Tầng B</div><div class="def">Mã nguồn S0x — dùng ở API và mọi trang Ops.</div></td>
+<td><code>SPL tier B</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">tầng B <b>4</b> <i>UI 2</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Tầng C</div><div class="def">Nhãn công khai ("Tự thu", "Hiệu chuẩn") — thứ duy nhất về nguồn hiện trên cổng Invest.</div></td>
+<td><code>SPL tier C</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">tầng C <b>3</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Tự thu</div><div class="def">Số tính từ dữ liệu nền tảng tự thu (không phải AirDNA) — nhãn tầng C trên cổng Invest.</div></td>
+<td><code>self-collected</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Hiệu chuẩn</div><div class="def">Số AirDNA dùng để đối chiếu số tự thu — chỉ ở <code>/ops/quality</code>, không bao giờ lên cổng Invest (ToS, luật 5).</div></td>
+<td><code>calibration (S02)</code><div class="muted">RESO: —</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">calibration</span></td>
+<td class="use"><span class="u">AirDNA <b>40</b> <i>UI 14</i></span><span class="u">hiệu chuẩn <b>11</b> <i>UI 3</i></span><span class="u bad">calibration <b>3</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Hàng duyệt</div><div class="def">Hàng chờ người phán quyết đề xuất của máy/agent (entity_match, source_decision, agent_output) — LLM không ghi dữ liệu trực tiếp (luật 7).</div><div class="note">Tiêu đề trang <code>/ops/review</code> đang là "Review Queue" — đổi khi dọn B1.</div></td>
+<td><code>review_queue</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">review</code> <div class="muted"><code>/ops/review</code></div></td>
+<td><span class="av">Review Queue</span> <span class="av">hàng chờ</span></td>
+<td class="use"><span class="u">Review <b>16</b> <i>UI 8</i></span><span class="u bad">Review Queue <b>4</b> <i>UI 1</i></span><span class="u">duyệt <b>19</b> <i>UI 13</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr></tbody></table></div>
+<h2>Cổng &amp; tính năng</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
+<td><div class="vn">Cổng Invest</div><div class="def">Cổng công khai, chỉ đọc, cho nhà đầu tư (<code>docs/architecture/portals.md</code>).</div></td>
+<td><code>invest portal</code><div class="muted">RESO: —</div></td>
+<td><div class="muted">không prefix: <code>/</code>, <code>/[country]/…</code>, <code>/listing/…</code>, <code>/yield</code>, <code>/compare</code>, <code>/saved</code></div></td>
+<td><span class="av">Invest Portal</span> <span class="av">cổng nhà đầu tư</span></td>
+<td class="use"><span class="u bad">Invest Portal <b>8</b> <i>UI 4</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Cổng Ops</div><div class="def">Cổng vận hành dữ liệu, bắt buộc đăng nhập, quyền ops/admin; mọi route nội bộ nằm dưới <code>/ops</code> (luật 9).</div></td>
+<td><code>ops portal</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">ops</code> <div class="muted"><code>/ops/**</code></div></td>
+<td><span class="av">Ops Portal</span> <span class="av">trang admin</span></td>
+<td class="use"><span class="u bad">Ops Portal <b>8</b> <i>UI 2</i></span><span class="u">cổng Ops <b>2</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Finder</div><div class="def">Tên tính năng (code, docs) của màn xếp hạng khu vực + bản đồ; UI ghi "Thị trường {quốc gia}", không in chữ Finder.</div></td>
+<td><code>finder</code><div class="muted">RESO: —</div></td>
+<td><div class="muted"><code>/[country]</code> (vd. <code>/vn</code>)</div></td>
+<td><span class="av">Market Finder</span></td>
+<td class="use"><span class="u">Finder <b>13</b> <i>UI 10</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Insight</div><div class="def">Tên tính năng (code, docs) của trang chiều sâu một thị trường hoặc phường; UI ghi tên khu vực, không in chữ Insight.</div></td>
+<td><code>insight</code><div class="muted">RESO: —</div></td>
+<td><div class="muted"><code>/[country]/[market]</code>, <code>/[country]/[market]/[submarket]</code></div></td>
+<td><span class="av">Market Insight</span></td>
+<td class="use"><span class="u">Insight <b>27</b> <i>UI 20</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Bản đồ</div><div class="def">Chế độ bản đồ của Finder (<code>?view=map</code>); route cũ chỉ còn redirect.</div></td>
+<td><code>map</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">map</code> <div class="muted"><code>/[country]/[market]/map</code> (chỉ redirect)</div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Ước tính lợi suất</div><div class="def">Tính năng nhập phường, số PN, diện tích, giá mua → báo cáo lợi suất kèm độ tin cậy (badge MÔ PHỎNG). Nav ghi "Lợi suất".</div></td>
+<td><code>yield estimator</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">yield</code> <div class="muted"><code>/yield</code></div></td>
+<td><span class="av">Rentalizer</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr class="has-choice">
+<td><div class="vn">Mô phỏng đầu tư</div><div class="def">Máy tính dòng tiền cho thuê ngắn hạn × dài hạn kèm vay, mặc định từ số tự thu (giai đoạn 3).</div></td>
+<td><code>investment simulator</code><div class="muted">RESO: —</div></td>
+<td><code class="bad">dau-tu</code> → <code class="ok">yield</code> <div class="muted"><code>/[country]/[market]/dau-tu</code> (đang chạy)</div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><div class="choice"><div class="q"><span class="qid">Q6</span> Đích của <code>/[country]/[market]/dau-tu</code></div><div class="opt rec"><b>A</b> Gộp vào /yield <span class="badge">khuyến nghị</span><div class="muted">trùng chức năng; đã là khuyến nghị ở PR #3; route cũ redirect sang /yield?market=…</div></div><div class="opt"><b>B</b> Giữ trang riêng → /[country]/[market]/cashflow<div class="muted">giữ máy tính vay riêng; thêm từ khoá dành riêng cho [submarket]</div></div><div class="why">Một tính năng một nhà (portals.md); /yield đã có cùng mô hình doanh thu.</div></div></td>
+</tr>
+<tr>
+<td><div class="vn">So sánh</div><div class="def">Đặt 2–4 khu vực cạnh nhau theo nhóm Hiệu suất / Nguồn cung / Lợi suất (<code>?areas=a,b</code>).</div></td>
+<td><code>compare</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">compare</code> <code class="bad">so-sanh</code> → <code class="ok">compare</code> <div class="muted"><code>/so-sanh</code> → <code>/compare</code></div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">Compare <b>9</b> <i>UI 6</i></span><span class="u">so sánh <b>25</b> <i>UI 19</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Đã lưu</div><div class="def">Khu vực (sau này listing, báo cáo) người dùng đã lưu — cần đăng nhập.</div></td>
+<td><code>saved</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">saved</code></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">Saved <b>16</b> <i>UI 11</i></span><span class="u">đã lưu <b>9</b> <i>UI 6</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Phương pháp</div><div class="def">Trang công khai giải nghĩa chỉ số, công thức và nhãn nguồn tầng C; là đích của các ⓘ trên ô KPI.</div></td>
+<td><code>methodology</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">methodology</code> <code class="bad">phuong-phap</code> → <code class="ok">methodology</code> <div class="muted"><code>/phuong-phap</code> → <code>/methodology</code></div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">Phương pháp <b>10</b> <i>UI 9</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Đăng nhập</div><div class="def">Trang đăng nhập (<code>/login?next=</code>).</div></td>
+<td><code>login</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">login</code></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">đăng nhập <b>15</b> <i>UI 9</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Đăng ký</div><div class="def">Trang tạo tài khoản (<code>/register</code>).</div></td>
+<td><code>register</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">register</code></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="u">đăng ký <b>6</b> <i>UI 4</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Tổng quan vận hành</div><div class="def">Trang gốc Ops: hệ thống có khoẻ không (độ tươi từng nguồn, lần chạy gần nhất). Nav ghi "Tổng quan".</div></td>
+<td><code>ops overview</code><div class="muted">RESO: —</div></td>
+<td><div class="muted"><code>/ops</code></div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Nguồn dữ liệu</div><div class="def">Registry nguồn + quản trị tài khoản thu; trang duy nhất giải mã tầng A (chỉ admin).</div></td>
+<td><code>sources</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">sources</code> <div class="muted"><code>/ops/sources</code> (admin)</div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Chất lượng dữ liệu</div><div class="def">Số tin được không: 4 trụ DQ (độ tươi, khối lượng, schema, phân bố) + đối chiếu hiệu chuẩn.</div></td>
+<td><code>quality</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">quality</code> <div class="muted"><code>/ops/quality</code></div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Thư viện thiết kế</div><div class="def">Trang trưng bày component ReUI đã cài.</div></td>
+<td><code>design</code><div class="muted">RESO: —</div></td>
+<td><code class="ok">design</code> <div class="muted"><code>/ops/design</code></div></td>
+<td><span class="av">ReUI Gallery</span></td>
+<td class="use"><span class="u">Thư viện thiết kế <b>2</b> <i>UI 1</i></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr></tbody></table></div>
+
+<div class="box"><b>Phát hiện khi quét (không sửa ở đây — ghi thành việc tiếp theo)</b>
+<ol>
+<li>Tên nguồn thật trên cổng Invest: <code>/listing/[id]</code> “Xem trên Airbnb ↗”, “Giá một đêm trên Airbnb”; <code>booking-heatmap.tsx</code> “…trên Airbnb.” — SPL nói UI chỉ ghi nhãn tầng C. Cần Mạnh quyết: link ra nền tảng gốc có được phép không.</li>
+<li>Ops ghi tên thật thay mã: <code>/ops/collections</code> “Airbnb — listing tươi” (nên là S01).</li>
+<li>Route API mang tên nguồn thật: <code>/api/zalo-media</code>, <code>/api/v1/ops/zalo/*</code> — ngoài phạm vi test trang; nên dời sang mã/tên chức năng khi đụng tới.</li>
+<li>Chữ lẫn tiếng Anh trên UI: “Yield ngắn hạn/dài hạn” (<code>/so-sanh</code>), “cho market này” (<code>investment-simulator.tsx</code>), tiêu đề <code>/ops/review</code> “Review Queue”.</li>
+<li><code>portals.md</code> §4 “Thuật ngữ cố định” ghi Occupancy/Yield tiếng Anh — sẽ thay bằng trỏ tới <code>CONTEXT.md</code>. <code>invest-portal-ia.md</code> liệt <code>so-sanh</code> là từ khoá dành riêng của <code>[submarket]</code> — sai: <code>/so-sanh</code> ở gốc; từ khoá thật là <code>listings</code>, <code>map</code>, <code>dau-tu</code>.</li>
+</ol></div>
+</main></body></html>
