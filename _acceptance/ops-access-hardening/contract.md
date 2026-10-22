@@ -5,7 +5,7 @@ slug: ops-access-hardening
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, auth]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-22T15:15:21Z
 ---
