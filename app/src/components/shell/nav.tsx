@@ -46,13 +46,6 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       match: (p) => p.startsWith("/yield"),
     },
     {
-      id: "deals",
-      label: "Căn giá tốt",
-      href: "/deals",
-      icon: icon(ActivityIcon),
-      match: (p) => p.startsWith("/deals"),
-    },
-    {
       id: "compare",
       label: "So sánh",
       href: "/so-sanh",
@@ -81,6 +74,14 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       href: "/ops/sources",
       icon: icon(PaletteIcon),
       match: (p) => p.startsWith("/ops/sources"),
+    },
+    {
+      // Tín hiệu P1 nội bộ + liên hệ người bán (SPL tầng A) — không thuộc Invest.
+      id: "deals",
+      label: "Căn giá tốt",
+      href: "/ops/deals",
+      icon: icon(ActivityIcon),
+      match: (p) => p.startsWith("/ops/deals"),
     },
     {
       id: "quality",

@@ -1,5 +1,6 @@
 // import-airbnb.mjs — nạp snapshot từ one-invest-collector theo DATA-CONTRACT
-// (docs/DATA-CONTRACT.md schemaVersion 1): verify sha256 từng file trước khi parse.
+// (collector/docs/DATA-CONTRACT.md schemaVersion 1–2): verify sha256 từng file trước khi parse.
+// v2 chỉ thêm file media/* + RawItem.meta.mediaFiles — items đọc y như v1.
 // - airbnb-listing items → stg_abnb_listings (payload nguyên vẹn) + stg_abnb_nights
 // - airbnb-discovery items → stg_abnb_discovery (title là nguồn suy ra area)
 //
@@ -28,7 +29,8 @@ async function main() {
     process.exit(0);
   }
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
-  if (manifest.schemaVersion !== 1) {
+  // v2 (N1 media Zalo) giữ nguyên hình dạng v1, chỉ thêm media/* — media chưa nạp ở đây
+  if (![1, 2].includes(manifest.schemaVersion)) {
     throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
   }
 

@@ -69,8 +69,9 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - `/listing/[id]` — Chi tiết listing (KPI so phường, lịch 365 đêm, comps gần nhất)
 - `/vn/hanoi/listings` — Duyệt listing (`/[country]/[market]/listings`: thẻ + bản đồ nhãn giá)
 - `/yield` — Ước tính lợi suất một căn (`?area&pn&m2&price&mgmt&platform&tax&fixed&setup`; mô hình ở `lib/yield.ts`)
-- `/vn/<market>/dau-tu` — Mô phỏng đầu tư (G3); `/deals` — Căn giá tốt (đọc `sale_offers`, chỉ có ở DB local)
-- `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đăng nhập; `OPS_EMAILS` tuỳ chọn để giới hạn)
+- `/vn/<market>/dau-tu` — Mô phỏng đầu tư (G3; ADR/công suất = listing tự thu — KHÔNG dùng AirDNA trên Invest)
+- `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/deals`, `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đóng mặc định: `role` `ops`/`admin`, hoặc email trong `OPS_EMAILS`; tự đăng ký = `role=user` → 404). Cấp quyền: `UPDATE users SET role = 'ops' WHERE email = …`
+- `/ops/deals` — Căn giá tốt (P1 dưới thước P2); liên hệ/nội dung/ảnh tin (SPL tầng A) chỉ `role=admin`, chỉ có ở DB local. `/deals` redirect sang đây
 
 ## Don't
 - **Don't create custom UI when ReUI block exists** (see skill `onehub-ui`)

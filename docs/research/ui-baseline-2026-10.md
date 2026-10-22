@@ -44,6 +44,10 @@ Cách đếm: **mỗi chuỗi class / phần tử JSX vi phạm là một báo c
 | `components/compare` | 1 | 1 | 0 | 0 |
 | **Tổng** | 138 | 138 | 0 | 0 |
 
+> **Cập nhật 2026-10-23 (merge main sau PR #3 + #5):** trang `/deals` dời sang `/ops/deals`, nên
+> 2 vi phạm của nó (`no-arbitrary-text-size`, `no-emoji-icons`) đổi khoá từ `src/app/(app)/deals/page.tsx`
+> sang `src/app/ops/deals/page.tsx`: `app/(app)` 4 → 2, `app/ops` 15 → 17. Tổng vẫn **138**, không luật
+> nào tăng (`check-baseline-growth` exit 0). Số theo luật giữ nguyên là mốc "trước".
 
 ## Đối chiếu với kiểm kê tay (spec mục 7)
 

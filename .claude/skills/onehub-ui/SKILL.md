@@ -55,9 +55,8 @@ lẫn đoạn này trong cùng PR, kèm lý do.
 - `src/components/ui/**`, `src/components/reui/**`, `src/components/blocks/**` và
   `src/components/examples/**` là code vendor: không sửa tay, luật onehub-ui không quét (luật lint của Next vẫn áp dụng cho `ui/` và `examples/`). Muốn đổi thì
   chép sang thư mục feature rồi chuyển thể ở đó (lint áp dụng cho bản chép).
-- Cho tới khi nhánh `fix/portal-deals-airdna` merge, không sửa `src/app/(app)/deals/**`,
-  `src/app/(app)/[country]/[market]/dau-tu/**`, `src/components/invest/investment-simulator.tsx`
-  và `src/components/shell/nav.tsx`.
+- Trước khi tạo hay đổi một route, kiểm nhánh chưa merge có đang dời/sửa trang đó không
+  (`git for-each-ref refs/heads` + `git diff --name-only main...<nhánh>`); có thì hỏi phiên điều phối.
 - Component tự tạo > 200 dòng thì tách nhỏ. File lớn có sẵn do đợt dọn B3 xử lý (ROADMAP §4 Track 6), không ép số lên file cũ.
 - Block ReUI cần `"use client"`: không import thẳng vào server component. Ghép ở client component rồi truyền dữ liệu qua props (bẫy hằng số/hàm ở `copy-vi.md`).
 
