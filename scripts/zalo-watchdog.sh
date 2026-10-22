@@ -49,8 +49,11 @@ if "zalo" in d.get("channels", {}):
 zs = d.get("channels", {}).get("zalouser", {})
 for scope in [zs.get("groups")] + [a.get("groups") for a in (zs.get("accounts") or {}).values()]:
     for g, cfg in (scope or {}).items():
-        if cfg.get("enabled") and not cfg.get("requireMention"):
-            print(f"L3b: {g} bật nhưng requireMention != true"); sys.exit(1)
+        # Bài học 22/10 tối: điều kiện cũ (enabled and not requireMention) bỏ sót
+        # nhóm requireMention=false mà không có key enabled — chính lỗ hổng để 3
+        # nhóm mới lọt qua tới 20:44. Bắt mọi false tường minh.
+        if cfg.get("requireMention") is False:
+            print(f"L3b: {g} requireMention=false (phải true)"); sys.exit(1)
 EOF
 ) && CONFIG_OK=1 || CONFIG_OK=0
 [ "$CONFIG_OK" = "0" ] && alert "$MSG (config bị drill)"
@@ -83,9 +86,15 @@ if [ -n "$LAST_SNAP" ]; then
   AGE_H=$(( ( $(date +%s) - LAST_M ) / 3600 ))
   [ "$AGE_H" -ge 24 ] && echo "$(date -Iseconds) WARN: zalo-agent snapshot cũ ${AGE_H}h — collection starved?" >> "$ALERT_LOG"
 fi
-# L1b — patch pregate còn nguyên (plugin update có thể ghi đè)
-grep -q "oneinvest-pregate-patch" ~/.openclaw/extensions/zalouser/dist/.setup/monitor-*.mjs 2>/dev/null \
-  || alert "patch pregate zalouser BIẾN MẤT (plugin update ghi đè?) — thu S03 sẽ chết khi requireMention=true"
+# L1b — port pluginHooks.messageReceived tiền-cổng còn nguyên (thay hot-patch
+# __pregate 22/10 tối; plugin update có thể ghi đè). Marker là tên property
+# sống sót qua minify, không phải tên hàm (hàm bị đổi tên khi bundle).
+OCZ_MON=$(ls ~/.openclaw/extensions/zalouser/dist/.setup/monitor-*.mjs 2>/dev/null | head -1)
+[ -n "$OCZ_MON" ] || alert "không thấy dist/.setup/monitor-*.mjs của zalouser (cài đặt extension hỏng?)"
+grep -q "pluginHooks" "$OCZ_MON" 2>/dev/null \
+  || alert "port pluginHooks zalouser BIẾN MẤT (plugin update ghi đè?) — tin thường sẽ không chảy tới hook khi requireMention=true"
+grep -q "SuppressMessageReceivedHooks" "$OCZ_MON" 2>/dev/null \
+  || alert "cờ chặn phát đôi SuppressMessageReceivedHooks BIẾN MẤT trong monitor zalouser — tin qua gate sẽ bị phát hook 2 lần"
 
 # L5 — ghi nhịp kiểm tra (im lặng = mọi lớp còn nguyên)
 # Kev gate :8009 chết = mất dữ liệu im lặng (đã xảy ra 2026-10-21) → cảnh
