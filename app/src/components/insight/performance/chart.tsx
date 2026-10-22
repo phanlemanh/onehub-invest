@@ -15,32 +15,23 @@ import {
   FrameTitle,
 } from "@/components/reui/frame"
 import { IconTile } from "@/components/reui/icon-tile"
-import { cn } from "cn"
-
 import { copyText, downloadFile, toastDownloaded } from "@/components/charts/actions"
-import { CAP_BOX, DotSeparator, Fact, KeyDot } from "@/components/charts/faces"
+import { DotSeparator, Fact } from "@/components/charts/faces"
 import { CHART_ICONS } from "@/components/charts/icons"
+
 import { ChartToolbar, type ChartActions } from "./chart-toolbar"
 import {
   DEFAULT_VIEW,
   metricOf,
   rangeOf,
-  swatchOfMetric,
-  type MetricSpec,
   type MonthRow,
   type ViewState,
 } from "./data"
-import { formatSpan, formattersFor, type Formatters } from "./format"
+import { formatSpan, formattersFor } from "./format"
 import { MetricPlot } from "./metric-plot"
 import { MetricTiles } from "./metric-tiles"
-import {
-  averageOf,
-  plotRows,
-  summariesOf,
-  windowOf,
-  type PlotRow,
-} from "./series"
-import { AverageKey } from "./value-faces"
+import { PlotLegend } from "./plot-legend"
+import { plotRows, summariesOf, windowOf } from "./series"
 
 const sameView = (a: ViewState, b: ViewState) =>
   a.metric === b.metric &&
@@ -48,47 +39,6 @@ const sameView = (a: ViewState, b: ViewState) =>
   a.annotations === b.annotations &&
   a.average === b.average &&
   a.grid === b.grid
-
-/** What the plot measures on the left; its span and average on the right. */
-function PlotLegend({
-  metric,
-  rows,
-  view,
-  format,
-}: {
-  metric: MetricSpec
-  rows: PlotRow[]
-  view: ViewState
-  format: Formatters
-}) {
-  const first = rows[0]?.day ?? 0
-  const last = rows.at(-1)?.day ?? 0
-  const average = averageOf(rows)
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs">
-      <Fact className="text-muted-foreground">{metric.basis}</Fact>
-      <ul
-        aria-label="Chú giải"
-        className="flex flex-wrap items-center gap-x-4 gap-y-2"
-      >
-        <li className="flex h-4 items-center gap-1.5">
-          <KeyDot swatch={swatchOfMetric(metric)} />
-          <span className={cn(CAP_BOX, "tabular-nums")}>
-            {formatSpan(first, last)}
-          </span>
-        </li>
-        {view.average ? (
-          <li className="text-muted-foreground flex h-4 items-center gap-1.5">
-            <AverageKey />
-            <span className={cn(CAP_BOX, "tabular-nums")}>
-              TB {format.value(metric.key, average)}
-            </span>
-          </li>
-        ) : null}
-      </ul>
-    </div>
-  )
-}
 
 export function PerformanceChart({
   months,
