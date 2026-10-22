@@ -1,0 +1,9 @@
+{
+  "feature_plain": "Ảnh Zalo đã tải về máy (bản N1) giờ được ghi kèm từng bài trong kho tạm (bảng stg_zalo_posts), để sau này trang vận hành và bước chuẩn hoá dùng ảnh thay cho đường dẫn gốc sắp hết hạn — ảnh vẫn chỉ nằm trên máy này, không lên cloud.",
+  "scope_plain": "Vòng này chỉ chuẩn bị chỗ chứa ảnh; các việc dưới đây cố ý để sau hoặc thuộc người khác.",
+  "decisions": [],
+  "decisions_plain": [
+    {"id": "d-20261022T230637Z-0b5a29", "p": "KHÔNG chạy vòng phản biện độc lập trước khi duyệt (anh chọn nghiệm thu gọn) — đổi lại, một phiên kiểm tra mới đọc lại code và ghi rõ các giới hạn của bằng chứng."}
+  ],
+  "analyst_plain": "Bộ kiểm cũ của kho (npm test) vốn đã xanh từ trước khi có việc này, nên riêng nó không chứng minh được gì; phép thử 'cố tình cho ảnh lọt lên cloud thì phải báo đỏ' (E5) mới là thứ chứng minh ảnh không rời máy."
+}
