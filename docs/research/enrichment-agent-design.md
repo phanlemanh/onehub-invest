@@ -1,8 +1,16 @@
 # Enrichment Agent — từ regex extract → LLM suy luận bối cảnh
 
-Ngày: 2026-10-22 · Trạng thái: **ĐỀ XUẤT** (nâng cấp A4)
+Ngày: 2026-10-22 · Trạng thái: **E1-E4 ĐÃ THỰC THI** (M-3) · E5 chờ data
 Phát hiện từ user: "không đơn thuần extract-text mà cần làm giàu — model
 phải phán quyết được"
+
+> Kết quả chạy thật 22/10 (backlog 735 offers P1): E1 rule-based resolve
+> property_type 73% (359 apartment / 115 house / 59 land), project 49 offers
+> qua tên nhóm, mã tòa sạch (LD1-3, S2.06, PR2-6 — pattern bắt IN HOA +
+> gate "có chữ số hoặc có trong từ điển" loại nhiễu CHCC/NG/HOME).
+> E2 LLM (Qwen 27B local, ~30s/tin) decode đúng type/bed/tòa/street,
+> sanitize qua CHECK constraint 025 trước khi ghi. Fill-gap: giá trị cũ
+> thắng, chỉ lấp NULL / thay 'unknown'.
 
 ## 1. VÍ DỤ USER ĐƯA — TẠI SAO REGEX KHÔNG ĐỦ
 
@@ -106,13 +114,13 @@ rộng thành knowledge base đầy đủ:
 
 ## 5. LỘ TRÌNH THỰC THI
 
-| Bước | Việc | Phụ thuộc | Ước tính |
+| Bước | Việc | Phụ thuộc | Trạng thái |
 |---|---|---|---|
-| E1 | Context resolver (Lớp 2): group name → project match qua asset_nodes aliases; keywords → property_type; building pattern regex | asset_nodes sẵn có | 1 buổi |
-| E2 | Enrichment agent (Lớp 3): prompt template + knowledge injection (asset_nodes + group context) + LLM call qua runtime A1 | A1 ✅, E1 | 1 buổi |
-| E3 | Transform integration: chạy E1+E2 sau transform-zalo/fb, UPDATE sale_offers thêm fields; unsure → review_queue | E2 | nửa buổi |
-| E4 | Building dictionary: seed 30+ tòa Vinhomes/Masteris/Ecopark + abbreviation aliases; pattern regex mã căn | asset_nodes | nửa buổi |
-| E5 | Feedback loop: LLM decode abbreviation mới → lưu alias → regex match lần sau (tự học) | E3 chạy thật | khi có data |
+| E1 | Context resolver (Lớp 2): group name → project match qua asset_nodes aliases (match 1 node mới nhận — nhiều node là MỜ → nhường LLM); keywords → property_type; building pattern regex | asset_nodes sẵn có | ✅ `agent/src/agents/context-resolver.ts` |
+| E2 | Enrichment agent (Lớp 3): prompt template + knowledge injection (asset_nodes + group context) + LLM call qua runtime A1 | A1 ✅, E1 | ✅ `agent/src/agents/enrich-text.ts` |
+| E3 | Transform integration: enrich-run.ts chạy E1+E2, UPDATE sale_offers fill-gap + cascade properties qua property_offers | E2 | ✅ `agent/scripts/enrich-run.ts` |
+| E4 | Building dictionary: seed building nodes + alias viết tắt dự án. Nguyên tắc: CHỈ seed mã ĐÃ xác minh (LBV — ví dụ user); mã lạ (LD1/LD2, MCP, SAV…) để LLM decode | asset_nodes | ✅ migration 032 (+ sửa bug 026: parent_id bigserial tự trỏ chính nó) |
+| E5 | Feedback loop: LLM decode abbreviation mới → lưu alias vào asset_nodes → E1 regex match lần sau (tự học) | E3 chạy production | ⬜ khi có data |
 
 ## 6. ĐỐI CHIẾU A4 CŨ vs MỚI
 

@@ -120,6 +120,26 @@ canonical:
         hiệu (P1 text); room=LOCAL EXTENSION VN (Phòng trọ — DD PropertySubType
         31 giá trị không có; migration 025, xác minh category Chợ Tốt 1050)
       checked_on: "2026-10-22"
+    street_raw:
+      dd: StreetName
+      note: "tên đường/phố extract từ text P1 (E2 enrich — M-3); số nhà chưa tách cột"
+      checked_on: "2026-10-22"
+    block_raw:
+      dd: null
+      rationale: >
+        mã tòa/block kiểu môi giới VN (LBV, LD2, S1.03) — DD không có trường
+        "block"; tòa chuẩn hoá qua asset_nodes node_type=building (≈ComplexName)
+      checked_on: "2026-10-22"
+    floor_raw:
+      dd: null
+      rationale: >
+        tầng lầu từ text — chưa đối chiếu DD (ứng viên UnitFloorNumber cần tra
+        dd.reso.org trước khi dùng ngoài raw); hiện chỉ lưu raw để matching signals
+      checked_on: "2026-10-22"
+    bathrooms:
+      dd: BathroomsTotalInteger
+      note: "đối chiếu research/reso-standards.md bảng field map; migration 030/031"
+      checked_on: "2026-10-22"
 
 # --------------------------------------------------------------------------
 # LỚP NGUỒN — staging → canonical
