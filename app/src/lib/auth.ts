@@ -2,7 +2,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { pool } from "./db";
 
-export type User = { id: string; email: string; plan: "free" | "pro"; role: "user" | "admin" };
+export type User = { id: string; email: string; plan: "free" | "pro"; role: "user" | "ops" | "admin" };
 
 const COOKIE = "oi_session";
 const SESSION_DAYS = 30;
@@ -59,7 +59,8 @@ export async function getSessionUser(): Promise<User | null> {
     id: r.id,
     email: r.email,
     plan: r.plan === "pro" ? "pro" : "free",
-    role: r.role === "admin" ? "admin" : "user",
+    // Giá trị lạ trong DB rơi về "user" (đóng mặc định — không ai vô tình có quyền Ops).
+    role: r.role === "admin" || r.role === "ops" ? r.role : "user",
   };
 }
 

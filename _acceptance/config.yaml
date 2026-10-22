@@ -68,5 +68,4 @@ dev_server:
 capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
 feature_loop:
-  suite_keys:            # suite chạy mỗi lượt verify/ghim lại — chỉ app (tsc + lint); thêm module khi hồ sơ chạm tới
-    - executors.test.app
+  suite_keys: [executors.test.app, executors.script.portal_static]

@@ -99,6 +99,9 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
    Claude Code = phần còn lại + cổng tích hợp (review, `/verify`, `_acceptance`,
    merge). Ranh giới = DATA-CONTRACT; mỗi bên một worktree, checkout chính giữ
    `main`. Chi tiết: AGENTS.md "Phân làn hai agent" + `collector/AGENTS.md`.
+10. **Cổng Ops đóng mặc định** (22/10): vào `/ops/**` khi `users.role` ∈
+   {`ops`, `admin`} hoặc email trong `OPS_EMAILS`; đăng nhập thôi không đủ
+   (`/register` mở). Cấp quyền data-ops bằng `role = 'ops'`, không cần migration.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -150,6 +153,7 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 | V1 | Backup tuần mã hoá (cần BACKUP_DIR+BACKUP_PASS từ user) | ⏳ nợ cũ nhất |
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
+| V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
 
 **Thứ tự khuyến nghị tiếp**: A2 (judge 12 cặp qua /ops/review) → A4 (extract-text) → A3 (MCP) → M3 (consolidation).
 

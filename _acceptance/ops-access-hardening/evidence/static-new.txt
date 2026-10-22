@@ -1,0 +1,30 @@
+ok   không còn route Invest src/app/(app)/deals
+ok   có route src/app/ops/deals/page.tsx
+ok   nav Invest không có mục deals
+ok   nav Ops có href /ops/deals
+ok   next.config redirect /deals → /ops/deals
+ok   ops/deals tính showContact từ isAdmin(user)
+ok   ops/deals: khối SĐT/tên người bán chỉ render khi showContact
+ok   ops/deals: nội dung tin chỉ render khi showContact
+ok   ops/deals: ảnh tin chỉ render khi showContact
+ok   ops/deals: có đủ 3 khối gate tầng A
+ok   ops/deals: không tên nguồn thật trong mã render (0 dòng)
+ok   zalo-media: isAdmin chặn trước stat/readFile
+ok   lib/invest.ts không đọc airdna_* / crosswalk S02
+ok   src/app/(app)/[country]/[market]/dau-tu/page.tsx: không tên AirDNA/nguồn thật trong mã render (0 dòng)
+ok   src/components/invest/investment-simulator.tsx: không tên AirDNA/nguồn thật trong mã render (0 dòng)
+ok   src/lib/invest.ts: không tên AirDNA/nguồn thật trong mã render (0 dòng)
+ok   lib/invest.ts lấy STR từ listing_stats (90 đêm)
+ok   zalo-media: ALLOWED_ROOTS đúng hai gốc ~/.openclaw/media + /tmp/openclaw
+ok   zalo-media: không so tiền tố chuỗi trên path (startsWith)
+ok   zalo-media: so bằng path.relative trên cả path chữ lẫn realpath
+ok   canAccessOps(khách) = false
+ok   canAccessOps(user thường, OPS_EMAILS trống) = false
+ok   canAccessOps(user thường, OPS_EMAILS rỗng) = false
+ok   canAccessOps(role=ops, OPS_EMAILS trống) = true
+ok   canAccessOps(role=admin, OPS_EMAILS trống) = true
+ok   canAccessOps(role=admin, không có trong OPS_EMAILS) = true
+ok   canAccessOps(user thường có email trong OPS_EMAILS (không phân biệt hoa thường)) = true
+ok   canAccessOps(user thường, email ngoài OPS_EMAILS) = false
+
+portal-compliance: ĐẠT
