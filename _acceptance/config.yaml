@@ -15,6 +15,7 @@ executors:
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts — 8/8 xanh
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
+    app_ui: "cd app && npm test"                     # test render jsdom (app/tests) — thêm ở vòng enrich-qua-de-xuat
   script:
     cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
     product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
@@ -62,3 +63,5 @@ dev_server:
   # không có api_base: app chỉ gọi /api/v1 cùng origin
 capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
+feature_loop:
+  suite_keys: [agent, app, app_ui, pipeline]

@@ -1,0 +1,40 @@
+{
+  "feature_plain": "Giá trị do AI đoán ra cho tin rao (loại nhà, số phòng, đường, toà) không còn tự vào dữ liệu nữa: chỉ vào khi có căn cứ độc lập hoặc khi anh duyệt trên trang Duyệt (Review Queue).",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ tự điền giá trị do luật xác định tìm ra (không phải AI), và lưu kèm nguồn gốc cùng đoạn tin làm bằng chứng — kể cả với tin chưa gắn căn nhà nào."},
+    {"id": "AC-3", "p": "Sẽ tự nhận giá trị AI đoán khi luật cũng ra đúng giá trị đó, hoặc khi tên toà AI đoán khớp từ điển toà nhà — ghi rõ căn cứ, và dùng tên toà chuẩn."},
+    {"id": "AC-5", "p": "Sẽ điền giá trị vào tin và căn nhà liên kết khi anh bấm «Áp dụng», nhưng không bao giờ ghi đè ô đã có số; mỗi lần duyệt đều để lại vết ai duyệt."},
+    {"id": "AC-7", "p": "Sẽ ưu tiên giá trị của luật khi AI đoán khác luật, và báo số ca vênh nhau sau mỗi lượt chạy."},
+    {"id": "AC-9", "p": "Sẽ hiện thẻ «bổ sung dữ liệu tin» trên trang Duyệt với đoạn tin, bảng giá trị đề xuất và ba nút Áp dụng / Bỏ / Để sau; thẻ «cùng căn?» cũ giữ nguyên."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Chặn mọi đường để phần AI tự ghi thẳng vào dữ liệu tin và căn nhà — chỉ còn một cửa ghi duy nhất."},
+    {"id": "AC-4", "p": "Sẽ KHÔNG điền giá trị AI đoán mà không có căn cứ — giá trị đó nằm chờ trên trang Duyệt kèm đoạn tin và độ tự tin của AI."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG đổi dữ liệu khi anh bấm «Bỏ» hay «Để sau»; giá trị đã bỏ không quay lại hàng chờ, giá trị để sau quay lại ở lượt chạy kế."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG nhân đôi thẻ chờ khi chạy lại, và chế độ chạy thử (--dry) KHÔNG ghi bất cứ thứ gì."},
+    {"id": "AC-10", "p": "Sẽ KHÔNG đẩy bảng đề xuất và hàng chờ duyệt lên cloud — chúng chứa đoạn tin gốc có thể có số điện thoại."},
+    {"id": "OOS-1", "p": "Chưa dọn các giá trị AI có thể đã ghi vào tin trong ngày 22/10 — chờ anh trả lời Hỏi-6."},
+    {"id": "OOS-2", "p": "Không dùng độ tự tin của AI làm căn cứ tự nhận giá trị — anh đã bác phương án này."},
+    {"id": "OOS-3", "p": "Chưa cho hệ thống tự học tên viết tắt toà nhà mới từ các lần anh duyệt."},
+    {"id": "OOS-4", "p": "Chưa duyệt được từng ô riêng trong một thẻ, cũng chưa duyệt hàng loạt."},
+    {"id": "OOS-5", "p": "Chưa có giao diện duyệt cho các loại thẻ khác — chỉ bảo đảm trang không sập khi gặp chúng."},
+    {"id": "OOS-6", "p": "Chưa chạy làm giàu cho toàn bộ ~735 tin tồn — vòng này chỉ đổi đường ghi."}
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài vòng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Đã phủ trọn vòng đời một giá trị đề xuất: sinh ra, được xếp đường, người quyết, được ghi, và chạy lại (AC-2…AC-8)."},
+    {"i": 1, "p": "Đã phủ cả năm ca nguồn × căn cứ: luật, AI có luật đồng ý, AI khớp từ điển toà nhà, AI vênh luật, AI không căn cứ (AC-2, AC-3, AC-4, AC-7)."},
+    {"i": 2, "p": "Đã phủ ô trống vs ô đã có số, và tin có vs chưa có căn nhà liên kết (AC-2, AC-5)."},
+    {"i": 3, "p": "Đã phủ bốn chỗ người/máy chạm vào: lượt chạy thật, chạy thử, thẻ trên trang Duyệt, và nút duyệt (AC-8, AC-9, AC-5)."},
+    {"i": 4, "p": "Mười ô trọng tâm thành mười tiêu chí; phần để sau và phần không làm nằm trong bản thiết kế mục 4."},
+    {"i": 5, "p": "Giả định chờ anh gạch: căn cứ độc lập chỉ gồm hai loại — luật đồng ý, hoặc khớp từ điển toà nhà (Hỏi-1)."},
+    {"i": 6, "p": "Giả định chờ anh gạch: mỗi tin một thẻ duyệt, duyệt cả gói giá trị (Hỏi-2)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Ca AI vênh luật bị gạt đi im lặng mà chưa ai quyết — đã thành câu hỏi Hỏi-7 cho anh, và lượt chạy giờ in số ca vênh."},
+    {"i": 1, "p": "Bài kiểm nút duyệt dựng thẻ bằng tay nên không bắt được lỗi thẻ không trỏ tới giá trị nào — đã đổi sang thẻ do chính lượt chạy sinh ra."},
+    {"i": 2, "p": "Bài kiểm chạy thử chỉ đếm số dòng nên lọt ca chạy thử vẫn sửa nội dung — đã đổi sang so dấu vân tay nội dung trước/sau."},
+    {"i": 3, "p": "Dữ liệu thử viết tay đã khớp sẵn nên che lỗi «2» với 2, «Apartment» với «apartment» — đã thêm bước chuẩn hoá giá trị và lấy dữ liệu thử từ các lượt AI thật hôm 22/10."},
+    {"i": 4, "p": "Chưa có bài kiểm cho tin chưa gắn căn nhà — đã thêm vào tiêu chí AC-2."}
+  ]
+}
