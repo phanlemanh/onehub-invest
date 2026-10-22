@@ -55,21 +55,21 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - `lib/map-style.ts` — bản đồ nền OpenFreeMap dùng chung (sáng/tối, nhãn tiếng Việt, ghi nguồn)
 
 ## Currency
-- Map: `currencyFor(areaId)` → "THB" | "VND"
-- Format: `fmtMoney(value, currency)` → "₫109,162" or "THB 2,179"
+- Map: `currencyFor(areaId)` → "VND" (bảng `CURRENCY` theo tiền tố area id; scope chỉ VN — ADR-0008)
+- Format: `fmtMoney(value, currency)` → "₫109,162"
 
 ## Routes
 - `/` — Trang chủ (marketing: navbar-12, hero-8, card-29, how-it-works-1, faq-6)
 - `/phuong-phap` — Phương pháp & thuật ngữ
 - `/login`, `/register` — nhóm `(auth)`, không shell; `?next=` đi qua `safeNext`
 - `/saved` — Đã lưu; `/so-sanh?areas=a,b` — So sánh tối đa 4 khu vực
-- `/vn`, `/th` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
+- `/vn` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
 - `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
-- `/th/bangkok` — Bangkok (legacy, Inside Airbnb)
 - `/listing/[id]` — Chi tiết listing (KPI so phường, lịch 365 đêm, comps gần nhất)
 - `/vn/hanoi/listings` — Duyệt listing (`/[country]/[market]/listings`: thẻ + bản đồ nhãn giá)
 - `/yield` — Ước tính lợi suất một căn (`?area&pn&m2&price&mgmt&platform&tax&fixed&setup`; mô hình ở `lib/yield.ts`)
-- `/ops`, `/ops/design` — Ops Portal (đăng nhập; `OPS_EMAILS` tuỳ chọn để giới hạn)
+- `/vn/<market>/dau-tu` — Mô phỏng đầu tư (G3); `/deals` — Căn giá tốt (đọc `sale_offers`, chỉ có ở DB local)
+- `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đăng nhập; `OPS_EMAILS` tuỳ chọn để giới hạn)
 
 ## Don't
 - **Don't create custom UI when ReUI block exists** (see DESIGN_RULES.md)
