@@ -22,25 +22,13 @@ async function main() {
   try {
     // ---- 1. Ruler: median perm2 theo phường từ vải S06 ----
     const ruler = await c.query(`
-      SELECT area_id,
-             percentile_cont(0.5) WITHIN GROUP (ORDER BY price_perm2) AS m,
-             count(*) AS n
-      FROM sale_offers
-      WHERE source = 'S06' AND kind = 'sale'
-        AND price_perm2 BETWEEN 5e6 AND 500e6 AND area_id IS NOT NULL
-      GROUP BY 1 HAVING count(*) >= 5`);
+      SELECT area_id, m, n FROM v_ruler_p2_area`);
     console.log(`ruler: ${ruler.rows.length} phường (S06 n≥5, max n=${Math.max(0, ...ruler.rows.map((r) => Number(r.n)))})`);
 
     // ---- 2. bait_gap_pct trên offers P1 ----
     await c.query(`UPDATE sale_offers SET bait_gap_pct = NULL WHERE price_tier = 'P1'`);
     const gap = await c.query(`
-      WITH r AS (
-        SELECT area_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY price_perm2) AS m
-        FROM sale_offers
-        WHERE source = 'S06' AND kind = 'sale'
-          AND price_perm2 BETWEEN 5e6 AND 500e6 AND area_id IS NOT NULL
-        GROUP BY 1 HAVING count(*) >= 5
-      )
+      WITH r AS (SELECT area_id, m FROM v_ruler_p2_area)
       UPDATE sale_offers o
       SET bait_gap_pct = ROUND((1 - o.price_perm2::numeric / r.m::numeric) * 100, 1)
       FROM r

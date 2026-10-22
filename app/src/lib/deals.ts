@@ -42,15 +42,7 @@ export async function getDeals(limit = 30, minDiscountPct = 5): Promise<DealRow[
   // Cloud KHÔNG có stg_zalo_posts (PII tầng A — leak gate cấm): query đầy đủ
   // fail 42P01 → fallback bỏ lateral contact; trang cloud tự nhiên không cột
   // liên hệ (đúng thiết kế PII — P4).
-  const full = `WITH ruler AS (
-       SELECT area_id,
-              percentile_cont(0.5) WITHIN GROUP (ORDER BY price_perm2) AS m,
-              count(*) AS n
-       FROM sale_offers
-       WHERE source = 'S06' AND kind = 'sale'
-         AND price_perm2 BETWEEN 5e6 AND 500e6 AND area_id IS NOT NULL
-       GROUP BY 1 HAVING count(*) >= 5
-     ), base AS (
+  const full = `WITH ruler AS (SELECT area_id, m, n FROM v_ruler_p2_area), base AS (
        SELECT o.offer_id, o.source, o.price_vnd, o.area_m2, o.price_perm2, o.bedrooms,
               o.confidence, o.first_seen::text, o.last_seen::text, o.n_reposts,
               o.area_id, o.post_ids, o.seller_name, o.seller_phone,

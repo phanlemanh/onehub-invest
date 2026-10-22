@@ -16,3 +16,4 @@ for CITY in hanoi hcmc; do
 done
 node "$ROOT/pipeline/transform-chotot.mjs"
 node "$ROOT/pipeline/refresh-bait-gap.mjs"
+node "$ROOT/pipeline/resolve-properties.mjs"

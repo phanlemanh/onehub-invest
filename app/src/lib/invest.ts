@@ -34,11 +34,21 @@ export async function getInvestmentDefaults(areaId: string): Promise<InvestmentD
   const ids = [areaId, ...phuong.map((p: { id: string }) => p.id)];
 
   // vải P2: bán + thuê (S06) — n của market = tổng offers dùng tính median
+  // G-2: median bán theo CĂN (v_ruler_p2_area dedup repost — 'Một Căn Nhà')
   const { rows: sale } = await pool.query(
-    `SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY price_perm2) m, count(*) n
-     FROM sale_offers
-     WHERE source='S06' AND kind='sale' AND price_perm2 BETWEEN 5e6 AND 500e6
-       AND area_id = ANY($1::text[])`,
+    `SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY m_per_prop) m, sum(n)::int n
+     FROM (
+       SELECT area_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY o.price_perm2) AS m_per_prop, count(*)::int n
+       FROM v_ruler_p2_area v
+       JOIN properties pr ON pr.area_id = v.area_id AND pr.kind='sale'
+       JOIN property_offers po ON po.property_id = pr.id
+       JOIN sale_offers o ON o.offer_id = po.offer_id
+         AND o.last_seen = (SELECT max(o2.last_seen) FROM sale_offers o2
+                            JOIN property_offers po2 ON po2.offer_id = o2.offer_id
+                            WHERE po2.property_id = pr.id)
+       WHERE v.area_id = ANY($1::text[]) AND o.price_perm2 BETWEEN 5e6 AND 500e6
+       GROUP BY area_id, v.n
+     ) x`,
     [ids],
   );
   const { rows: rent } = await pool.query(
