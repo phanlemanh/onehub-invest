@@ -1,9 +1,4 @@
 {
-  "src/app/(app)/listing/[id]/page.tsx": {
-    "onehub-ui/no-emoji-icons": {
-      "count": 2
-    }
-  },
   "src/app/ops/collections/page.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
       "count": 1
