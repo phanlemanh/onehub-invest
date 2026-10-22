@@ -65,4 +65,4 @@ dev_server:
 capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
 feature_loop:
-  suite_keys: [test.app, script.portal_static]
+  suite_keys: [executors.test.app, executors.script.portal_static]
