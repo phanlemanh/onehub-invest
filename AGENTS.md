@@ -25,6 +25,9 @@ Thêm dependencies theo ADR-0001 khi cần: `@tanstack/react-query`, `recharts`,
 3. **Schema DB thay đổi qua migration** trong `db/` (không sửa tay production).
 4. Metrics precompute server-side (pipeline/), React chỉ đọc — mirror kiến trúc
    đã quan sát ở AirDNA.
+5. **Dữ liệu listing theo ADR-0011 (RESO-first)**: field/enum mới phải tra RESO
+   Data Dictionary (dd.reso.org) trước; chỉ tạo mới khi là đặc trưng VN và khai
+   báo đủ 6 điều kiện trong `pipeline/mappings.yaml`.
 
 ## Điều tra tiếp tục bằng REA + chrome-devtools-mcp
 

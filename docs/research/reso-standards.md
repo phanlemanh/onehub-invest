@@ -66,7 +66,7 @@ không còn là spec riêng.
   `urn:reso:upi:<version>:<Country>:<CountrySubdivision>:<ParcelNumber>[:sub:...]`
   - Country = ISO 3166; Subdivision = GEOID (Mỹ) / NUTS (EU) / **chuẩn riêng từng nước**;
     giữ nguyên parcel number thô (không strip ký tự).
-  - Ví dụ: `urn:reso:upi:2.0:US:48201:R000022430`.
+  - Ví dụ: `urn:reso:upi:2.0:US:48201:R000022230`.
   - Có biến thể **hash sha3-256** khi không thể chia sẻ parcel number công khai.
   - Vấn đề mở: 1 listing nhiều UPI, ID alignment giữa aggregator, quốc tế hoá.
 - **UOI** — định danh tổ chức (đang xúc tiến, cùng USI, 8/2026).
@@ -82,6 +82,10 @@ không còn là spec riêng.
   Mapping Initiative 8/2026 — map tự động field nonstandard → chuẩn).
 
 ## Áp dụng vào one-invest
+
+> Đã luật hoá nội bộ: **ADR-0011** (RESO-first + danh pháp "Dự án" 3 tầng:
+> khu đô thị/`SubdivisionName` · phân khu/extension · tòa/`ComplexName`).
+> Artifact thực thi: `pipeline/mappings.yaml`.
 
 Đây là bài toán RESO giải được cho pipeline 4 giai đoạn: 6 nguồn mỗi nguồn schema riêng
 → đặt **DD làm canonical layer** (không đổi collector, chỉ đổi tầng chuẩn hoá).

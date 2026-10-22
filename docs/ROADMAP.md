@@ -21,7 +21,7 @@ Thay thế các lộ trình rời rạc trước đây. Nguyên tắc: mỗi gia
   Yield, So sánh, Saved, auth; trang market 0.03-0.06s
 - **ADR**: 0001 stack · 0002 insights-core · 0003 collector split · 0004 đa
   tài sản (Zalo) · 0005 AirDNA nguồn hạng nhất · 0006 agent swarm (sửa bởi 0007)
-  · 0007 nền tảng vận hành collector
+  · 0007 nền tảng vận hành collector · 0011 luật dữ liệu RESO-first
 
 ## Nguyên tắc kiến trúc (không đổi qua các giai đoạn)
 

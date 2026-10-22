@@ -1,0 +1,172 @@
+# ==========================================================================
+# pipeline/mappings.yaml — artifact thực thi ADR-0011 (luật dữ liệu RESO-first)
+# Mọi field/enum dữ liệu listing MỚI phải khai ở đây trước khi merge — đủ 6
+# điều kiện ở ADR-0011 Quyết định 3 (bằng chứng tra DD, lý do đặc trưng VN,
+# migration, CHECK constraint, khai báo ở đây, DQ check).
+#
+# Quy ước:
+#   dd         : field Data Dictionary 2.0 tương đương NGỮ NGHĨA (đã tra dd.reso.org)
+#   dd: null   : đã tra, không có tương đương → local extension (bắt buộc có rationale)
+#   checked_on : ngày tra DD gần nhất của ánh xạ
+# Cột DB giữ snake_case; dd chỉ là ánh xạ ngữ nghĩa — không đổi tên cột.
+# ==========================================================================
+
+meta:
+  law: docs/adr/0011-reso-first-data-law.md
+  research: docs/research/reso-standards.md
+  dd_version: "2.0"
+  checked_on: "2026-10-22"
+
+# --------------------------------------------------------------------------
+# LỚP CANONICAL — sale_offers (23 cột hiện tại)
+# --------------------------------------------------------------------------
+canonical:
+  table: sale_offers
+  fields:
+    offer_id:
+      dd: Key
+      note: "hash(source|external_id) — gộp vai trò Key + OriginatingSystemKey"
+      checked_on: "2026-10-22"
+    source:
+      dd: OriginatingSystemName
+      note: "qua SPL mã S0x (ADR-0007) — không phải tên nguồn thật"
+      checked_on: "2026-10-22"
+    kind:
+      dd: null
+      rationale: >
+        sale|rent_lt trộn trong cùng kênh — thị trường VN đăng bán và thuê dài
+        hạn lẫn nhau trong nhóm; DD không có cờ tương đương (Mỹ tách sale và
+        rental qua hệ MLS riêng)
+      checked_on: "2026-10-22"
+    price_vnd:
+      dd: ListPrice
+      note: "VND bigint (ADR-0011 Qđ 4); với rent_lt gần ngữ nghĩa LeaseAmount"
+      checked_on: "2026-10-22"
+    area_m2:
+      dd: LivingArea
+      note: "LivingAreaUnits='sqm' ngầm hiểu (ADR-0011 Qđ 4)"
+      checked_on: "2026-10-22"
+    price_perm2:
+      dd: null
+      rationale: "metric tự tính (price/area) cho ruler — DD không có trường giá/m² chuẩn"
+      checked_on: "2026-10-22"
+    bedrooms:
+      dd: BedroomsTotal
+      checked_on: "2026-10-22"
+    phuong_raw:
+      dd: null
+      rationale: >
+        text phường thô trước khi match areas; sau match thì area_id là phân
+        cấp hành chính ≈ Country/StateOrProvince/City của DD (VN dùng phường)
+      checked_on: "2026-10-22"
+    district_raw:
+      dd: null
+      rationale: "tương tự phuong_raw, cấp quận"
+      checked_on: "2026-10-22"
+    confidence:
+      dd: null
+      rationale: "độ tin parser nội bộ (high|medium|low)"
+      checked_on: "2026-10-22"
+    first_seen:
+      dd: null
+      rationale: >
+        thời điểm collector THẤY lần đầu — không phải OnMarketDate của nguồn;
+        làm mốc replication nội bộ (≈ TimestampReplication)
+      checked_on: "2026-10-22"
+    last_seen:
+      dd: null
+      rationale: "tương tự first_seen — mốc replication nội bộ"
+      checked_on: "2026-10-22"
+    n_reposts:
+      dd: null
+      rationale: "gộp tin trùng trong cùng nguồn (dedup nội bộ)"
+    post_ids:
+      dd: null
+      rationale: "danh sách post gốc gộp vào offer này"
+    price_tier:
+      dd: null
+      rationale: >
+        P1 giá thật (Zalo) / P2 giá vải (Chợ Tốt) — đặc trưng VN: giá công khai
+        ≠ giá giao dịch thật
+      checked_on: "2026-10-22"
+    seller_name:
+      dd: Member
+      note: "ngữ nghĩa resource Member, không phải field Property"
+    seller_phone:
+      dd: Member
+      note: "LOCAL-ONLY (PII) — không sync cloud (audit e163575)"
+    seller_phone_hash:
+      dd: Member
+      note: "khoá sellers registry ≈ ULI — định danh xuyên nguồn"
+    seller_ref:
+      dd: null
+      rationale: "ID người bán tại nguồn (ct:<account_id>…) ≈ OriginatingSystemKey của Member"
+    bait_gap_pct:
+      dd: null
+      rationale: "metric P4 — chênh giá công khai vs nội bộ cùng người bán"
+    listing_url:
+      dd: null
+      rationale: "URL gốc tin đăng"
+      checked_on: "2026-10-22"
+
+# --------------------------------------------------------------------------
+# LỚP NGUỒN — staging → canonical
+# --------------------------------------------------------------------------
+sources:
+  S03:
+    label: "zalo (P1 — giá thật)"
+    staging: stg_zalo_posts
+    transform: pipeline/transform-zalo.mjs
+    distinguish: "agent_id khác 'apify-facebook' (S05 dùng chung bảng staging)"
+    method: "parse text tự do — không có field cấu trúc"
+    fields:
+      text: "→ price_vnd, area_m2, bedrooms, phuong_raw, kind (regex + fallback)"
+      post_id: "→ thành phần hash offer_id"
+  S05:
+    label: "facebook groups (P2)"
+    staging: stg_zalo_posts
+    transform: pipeline/transform-fb.mjs
+    distinguish: "agent_id = 'apify-facebook'"
+    method: "parse text tự do (Apify collector → cùng lưới parse)"
+    fields:
+      text: "→ price_vnd, area_m2, bedrooms, phuong_raw, kind"
+  S06:
+    label: "chợ tốt (P2 — giá vải)"
+    staging: stg_chotot_ads
+    transform: pipeline/transform-chotot.mjs
+    method: "field cấu trúc trực tiếp"
+    fields:
+      list_id: "→ thành phần hash offer_id (S06|list_id)"
+      ad_type: "s→sale, u→rent_lt → kind"
+      price: "→ price_vnd"
+      size_m2: "→ area_m2"
+      rooms: "→ bedrooms"
+      "ward_name_v3 | ward_name | area_name + subject": "→ phuong_raw / district_raw (match areas)"
+      "seller.full_name": "→ seller_name"
+      "payload.account_id": "→ seller_ref"
+    chua_dua_sang_canonical:  # đã biết — chờ phase kế tiếp
+      - "category + house_type → property_type (Lô 1; hiện BỎ QUA làm nhiễu ruler)"
+      - "pty_project_name + projectid → asset_nodes (R1 registry đại đô thị)"
+      - "toilets → BathroomsTotalInteger (Lô 1)"
+      - "floornumber, unitnumber, block → dedup cấp căn (R4)"
+      - "latitude, longitude (phủ 99.98%) → geo-polygon match asset_nodes (R2)"
+
+# --------------------------------------------------------------------------
+# ENUM — controlled vocabulary (CHECK constraint theo ADR-0011 Qđ 3.4)
+# --------------------------------------------------------------------------
+enums:
+  kind:
+    values: [sale, rent_lt]
+    dd: null
+    constraint: "CHECK — chờ Lô 1"
+  confidence:
+    values: [high, medium, low]
+    dd: null
+    constraint: "CHECK — chờ Lô 1"
+  price_tier:
+    values: [P1, P2]
+    dd: null
+    constraint: "CHECK — chờ Lô 1"
+  source:
+    values_from: source_registry.code
+    note: "controlled vocabulary có sẵn từ migration 012 — không khai trùng ở đây"
