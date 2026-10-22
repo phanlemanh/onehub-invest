@@ -1,6 +1,6 @@
 # Khảo sát bộ nhớ agent cá nhân 10/2026 → đề xuất onehub-ai-agent memory
 
-Ngày: 2026-10-22 · Trạng thái: ĐỀ XUẤT chờ duyệt (kèm harness survey)
+Ngày: 2026-10-22 · Trạng thái: **ĐÃ CHỐT 2026-10-22** — Postgres-first 3 lớp + lộ trình M1-M5 nhập ROADMAP v4 §4 Track 1 (kèm harness survey)
 Nguồn: codepointer.dev (so sánh kiến trúc 4 hệ Mem0/Letta/Graphiti/Cognee),
 arXiv 2605.17625 (Dual-Process Episodic-Semantic), qordinate.ai (Enterprise
 vs Personal memory), OpenAI Community (portable user-owned memory), Vellum

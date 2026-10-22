@@ -1,6 +1,6 @@
 # Khảo sát kiến trúc Agent Harness 10/2026 → đề xuất onehub-ai-agent
 
-Ngày: 2026-10-22 · Trạng thái: ĐỀ XUẤT chờ duyệt
+Ngày: 2026-10-22 · Trạng thái: **ĐÃ CHỐT 2026-10-22** — kiến trúc 3 tầng + 1 hợp đồng + lộ trình A1-A6 nhập ROADMAP v4 §4 Track 1
 Nguồn: LangChain "Anatomy of an Agent Harness", Anthropic "Effective
 Harnesses for Long-Running Agents" + "Context Engineering" (9/2025-4/2026),
 Martin Fowler "Harness Engineering" (4/2026), Addy Osmani, Langfuse/Particula
