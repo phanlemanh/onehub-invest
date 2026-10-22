@@ -6,6 +6,9 @@ import type { CoverageReport, ManifestFile, RawItem, SnapshotManifest } from "./
 
 const BATCH = 1000;
 
+/** schemaVersion snapshot — v2 (2026-10-22): thêm file `media/*` + RawItem.meta.mediaFiles. */
+export const SNAPSHOT_SCHEMA_VERSION = 2;
+
 /**
  * Ghi raw snapshots bất biến: snapshots/<city>/<snapshotId>/items-NNNN.json.gz
  * + manifest.json. Payload giữ nguyên vẹn; ghi xong không bao giờ sửa.
@@ -15,6 +18,7 @@ export class SnapshotWriter {
   private readonly dir: string;
   private readonly files: ManifestFile[] = [];
   private itemCount = 0;
+  private itemFileCount = 0;
   private readonly startedAt = new Date().toISOString();
 
   constructor(rootDir: string, city: string, source: string) {
@@ -27,7 +31,9 @@ export class SnapshotWriter {
     await mkdir(this.dir, { recursive: true });
     for (let i = 0; i < items.length; i += BATCH) {
       const batch = items.slice(i, i + BATCH);
-      const name = `items-${String(this.files.length + 1).padStart(4, "0")}.json.gz`;
+      // Đánh số items bằng đếm riêng: file media (addExtraFile) có vào trước
+      // cũng không làm lệch tên items-0001 (DATA-CONTRACT).
+      const name = `items-${String(++this.itemFileCount).padStart(4, "0")}.json.gz`;
       const gz = gzipSync(JSON.stringify(batch));
       await writeFile(join(this.dir, name), gz);
       this.files.push({
@@ -39,9 +45,23 @@ export class SnapshotWriter {
     }
   }
 
+  /**
+   * Ghi file phụ (media tải từ URL) vào snapshot + khai sha256 trong manifest.
+   * Trả null khi tên đã ghi — caller tái dùng (dedup URL trong 1 flush).
+   */
+  async addExtraFile(name: string, bytes: Buffer): Promise<{ sha256: string; bytes: number } | null> {
+    if (this.files.some((f) => f.name === name)) return null;
+    const target = join(this.dir, name);
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, bytes);
+    const sha256 = createHash("sha256").update(bytes).digest("hex");
+    this.files.push({ name, sha256, bytes: bytes.length });
+    return { sha256, bytes: bytes.length };
+  }
+
   async finalize(coverage: CoverageReport, error?: string): Promise<SnapshotManifest> {
     const manifest: SnapshotManifest = {
-      schemaVersion: 1,
+      schemaVersion: SNAPSHOT_SCHEMA_VERSION,
       snapshotId: this.snapshotId,
       city: dirname(this.dir).split("/").pop() ?? "",
       source: this.snapshotId.split("__")[1] ?? "",

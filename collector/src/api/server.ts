@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 import { SnapshotWriter } from "../core/storage.js";
+import { fetchMessageMedia, type MediaFetchOptions } from "../core/media-fetch.js";
 import type { RawItem } from "../core/types.js";
 
 /**
@@ -46,6 +47,8 @@ export type AgentServerOptions = {
   city: string;
   keys: string[];
   flushAfterItems?: number; // default 50
+  /** Ghi đè tuỳ chọn tải media (mặc định: chỉ *.zdn.vn, ≤10MB, timeout 10s). */
+  media?: MediaFetchOptions;
 };
 
 /** Đọc body gộp BUFFER rồi decode một lần — nối chuỗi từng chunk sẽ corrupt
@@ -144,6 +147,23 @@ export async function createAgentServer(opts: AgentServerOptions) {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
     writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
     const items = buffer;
+    // N1 media: URL ảnh Zalo (zdn.vn) CÓ HẠN — tải về máy TRƯỚC khi gzip items
+    // để meta.mediaFiles nằm trong items-*.json.gz. Fail-open: lỗi tải chỉ ghi
+    // error trong meta; lỗi hệ thống bỏ qua bước media, tin vẫn phải chảy.
+    let mediaNote = "";
+    try {
+      const w = writer;
+      const stats = await fetchMessageMedia({
+        items,
+        putFile: (name, bytes) => w.addExtraFile(name, bytes),
+        options: opts.media,
+      });
+      if (stats.fetched > 0 || stats.failed > 0) {
+        mediaNote = `; media fetched=${stats.fetched} failed=${stats.failed}`;
+      }
+    } catch (err) {
+      mediaNote = `; media skipped: ${err instanceof Error ? err.message : String(err)}`;
+    }
     const ids = items.map((i) => i.sourceId);
     // KHÔNG clear buffer trước khi ghi xong — flush fail giữ items cho lần
     // sau (đã ack 202 không được mất âm thầm — review I1a)
@@ -153,7 +173,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
       captured: items.length,
       failed: 0,
       methods: { agentReport: items.length },
-      notes: [`agent ingest; duplicates bỏ từ đầu chạy: ${duplicatesTotal}`],
+      notes: [`agent ingest; duplicates bỏ từ đầu chạy: ${duplicatesTotal}${mediaNote}`],
     });
     writer = null; // snapshot mới cho lần flush sau
     buffer = buffer.filter((i) => !ids.includes(i.sourceId));
