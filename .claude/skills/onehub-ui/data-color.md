@@ -34,3 +34,14 @@ nó được (xem bẫy `"use client"` ở `copy-vi.md`).
   `value-faces`, `chart-toolbar`, `format` và `icons` về một chỗ dùng chung. Trước B3, biểu đồ
   mới giữ nguyên màu của block gốc, không tự chọn màu.
 - Chuỗi biểu diễn bậc (choropleth, thanh xếp hạng) dùng `bins.ts`, không dùng bảng màu chuỗi.
+
+## Ops (chờ B3)
+
+Biểu đồ của cổng Ops (đợt B1, `ui-clean-b1-ops`) — chuỗi chỉ có nghĩa ở Ops:
+
+| Biểu đồ | File | Chuỗi | Màu đang dùng |
+|---|---|---|---|
+| Luồng 7 ngày (`/ops/collections`) | `components/ops/collections/sync-activity.tsx` | S01 listing tươi · S02 listing chạm (chế độ Listing); S03 offer vào DB · S03 post raw (chế độ Tin Zalo) | `var(--chart-1)` / `var(--chart-2)` |
+
+Dùng `--chart-1/2` TẠM; chuyển sang `palette.ts` (`themeOf()`) khi B3 merge — đợt nào merge sau làm bước chuyển.
+Ô số và thanh phân đoạn của Ops dùng token trạng thái (`bg-success`, `bg-warning`, `bg-destructive`, `bg-muted-foreground/40`), không phải màu chuỗi.
