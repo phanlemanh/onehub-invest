@@ -15,3 +15,10 @@ extract có audit). Local-first: Qwen 27B (MTPLX :8000) + Kev-4B pattern;
 cloud chỉ cho phi-PII (docs/research/decision-models-landscape.md).
 
 Trạng thái: SKELETON 2026-10-22 — service đầu tiên (judge-entity) dựng ở G-3.
+
+## Kiến trúc harness (survey 10/2026 → đề xuất)
+
+Xem `docs/research/agent-harness-survey.md`: 5 xu hướng hội tụ (harness>prompt,
+context-rot, fs-as-memory, MCP chuẩn hoá, Vercel AI SDK dẫn dắt TS) → đề xuất
+"3 tầng + 1 hợp đồng": runtime loop TS duy nhất (AI SDK) + MCP tools + agents
+dạng config; trace JSONL mọi bước. Lộ trình A1-A6 (judge-entity là case đầu).
