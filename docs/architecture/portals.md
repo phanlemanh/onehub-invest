@@ -157,7 +157,7 @@ Một cổng Ops, **hai mức clearance** — tách URL `/admin/**` hoãn tới 
 
 | Mức | Điều kiện | Thấy gì |
 |---|---|---|
-| data-ops | đăng nhập | mọi trang trừ phần gated admin |
+| data-ops | `users.role = 'ops'` (hoặc `admin`), hoặc email trong `OPS_EMAILS` — **đóng mặc định**: chỉ đăng nhập thì KHÔNG đủ vì `/register` mở (2026-10-22) | mọi trang trừ phần gated admin |
 | admin | `users.role = 'admin'` | + `/ops/sources` (giải mã SPL tầng A), `/ops/audit`, `/ops/backups`, quản lý machine token |
 
 **Đường cắt sẵn**: khi tách `/admin/**`, các trang admin-class dời nguyên khối,

@@ -3,7 +3,9 @@
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
 //   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
 //   - /api/zalo-media chặn admin trước khi đọc file;
-//   - /dau-tu không đọc bảng AirDNA, không hiện chữ AirDNA.
+//   - /dau-tu không đọc bảng AirDNA, không hiện chữ AirDNA;
+//   - /api/zalo-media chỉ mở hai gốc staging ảnh, so theo đoạn đường dẫn + realpath;
+//   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm.
 // Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -81,6 +83,44 @@ for (const f of [
   check(leaks.length === 0, `${f}: không tên AirDNA/nguồn thật trong mã render (${leaks.length} dòng)`);
 }
 check(/listing_stats/.test(invest) && /booked90/.test(invest), "lib/invest.ts lấy STR từ listing_stats (90 đêm)");
+
+// 8. /api/zalo-media: chỉ hai gốc staging ảnh, không cả ~/.openclaw; không so tiền tố chuỗi.
+const roots = media.slice(media.indexOf("const ALLOWED_ROOTS"), media.indexOf("];", media.indexOf("const ALLOWED_ROOTS")));
+check(
+  // đúng hai phần tử, không phần tử nào là ~/.openclaw trơn
+  /^const ALLOWED_ROOTS = \[path\.join\(HOME, "\.openclaw", "media"\), "\/tmp\/openclaw"$/.test(roots.trim()),
+  "zalo-media: ALLOWED_ROOTS đúng hai gốc ~/.openclaw/media + /tmp/openclaw",
+);
+check(!/(resolved|real|prefix)\.startsWith\(/.test(media), "zalo-media: không so tiền tố chuỗi trên path (startsWith)");
+check(/path\.relative\(/.test(media) && /await realpath\(resolved\)/.test(media), "zalo-media: so bằng path.relative trên cả path chữ lẫn realpath");
+
+// 9. canAccessOps: đóng mặc định — chạy thật hàm (Node bỏ kiểu TS khi import).
+const { canAccessOps } = await import(app("src/lib/ops-access.ts"));
+const u = (role, email = "a@x.test") => ({ id: "t", email, plan: "free", role });
+const withEnv = (v, fn) => {
+  const old = process.env.OPS_EMAILS;
+  if (v === undefined) delete process.env.OPS_EMAILS;
+  else process.env.OPS_EMAILS = v;
+  try {
+    return fn();
+  } finally {
+    if (old === undefined) delete process.env.OPS_EMAILS;
+    else process.env.OPS_EMAILS = old;
+  }
+};
+for (const [env, user, want, label] of [
+  [undefined, null, false, "khách"],
+  [undefined, u("user"), false, "user thường, OPS_EMAILS trống"],
+  ["", u("user"), false, "user thường, OPS_EMAILS rỗng"],
+  [undefined, u("ops"), true, "role=ops, OPS_EMAILS trống"],
+  [undefined, u("admin"), true, "role=admin, OPS_EMAILS trống"],
+  ["b@x.test", u("admin"), true, "role=admin, không có trong OPS_EMAILS"],
+  [" A@X.test , b@x.test", u("user"), true, "user thường có email trong OPS_EMAILS (không phân biệt hoa thường)"],
+  ["b@x.test", u("user"), false, "user thường, email ngoài OPS_EMAILS"],
+]) {
+  const got = withEnv(env, () => canAccessOps(user));
+  check(got === want, `canAccessOps(${label}) = ${want}`);
+}
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);
