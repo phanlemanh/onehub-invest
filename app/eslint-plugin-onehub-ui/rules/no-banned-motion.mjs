@@ -25,6 +25,11 @@ export default {
           else if (base === "animate-bounce") context.report({ node, messageId: "bounce" });
           else if (/^ease-(?:in|out|in-out)$/.test(base)) context.report({ node, messageId: "ease" });
           else {
+            // duration-[250ms] / duration-[0.4s]: giá trị tuỳ ý luôn lệch thang chuẩn.
+            if (base.startsWith("duration-[")) {
+              context.report({ node, messageId: "duration" });
+              continue;
+            }
             const m = /^duration-(\d+)$/.exec(base);
             if (m && !ALLOWED_DURATIONS.has(m[1])) context.report({ node, messageId: "duration" });
           }

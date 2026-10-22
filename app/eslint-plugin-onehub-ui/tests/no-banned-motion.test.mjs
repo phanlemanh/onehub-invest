@@ -17,6 +17,8 @@ tester.run("no-banned-motion", rule, {
     { code: 'const c = "hover:ease-out";', errors: [{ messageId: "ease" }] },
     { code: 'const c = "duration-700";', errors: [{ messageId: "duration" }] },
     { code: 'const c = "md:duration-1000";', errors: [{ messageId: "duration" }] },
+    { code: 'const c = "duration-[250ms]";', errors: [{ messageId: "duration" }] },
+    { code: 'const c = "hover:duration-[0.4s]";', errors: [{ messageId: "duration" }] },
     { code: 'import { motion } from "framer-motion";', errors: [{ messageId: "framer" }] },
     { code: "const a = <div whileHover={{ scale: 1.1 }} />;", errors: [{ messageId: "whileProp" }] },
     { code: "const a = <div whileTap={{}} whileFocus={{}} />;", errors: [{ messageId: "whileProp" }, { messageId: "whileProp" }] },
