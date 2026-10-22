@@ -72,7 +72,7 @@ cổng nhưng mỗi cổng trình bày đúng job của khán giả đó.
 | ReUI Gallery | `/design` | ✅ nhưng sai chỗ (công khai) |
 
 Đặc điểm: bắt buộc auth, mật độ cao kiểu console, ngôn ngữ thiết kế ReUI "SOC"
-(`app-shell-26`, `agent-activity-*`, `ai-usage-*` — đã có sẵn trong DESIGN_RULES).
+(`app-shell-26`, `agent-activity-*`, `ai-usage-*` — tra cứu ở `docs/research/reui-inventory.md`; danh mục đã cài ở `.claude/skills/onehub-ui/catalog.md`).
 
 ### Nhóm C — Quản trị hệ thống (accounts, keys, billing)
 

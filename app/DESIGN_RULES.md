@@ -23,7 +23,8 @@ Gặp lỗi TS như trên → kiểm tra `"style"` trong `components.json` trư�
 
 ```bash
 cd app                                         # luôn chạy từ app/
-npx shadcn@latest search @reui                 # tìm block (có --offset để phân trang)
+npx shadcn@latest search @reui                 # tìm block (không có MCP thì dùng lệnh này)
+npx shadcn@latest search @reui --offset 100    # trang 2, 3... (mỗi trang 100 item)
 npx shadcn@latest add @reui/<name> --yes       # cài block ReUI (cần license trong .env.local)
 npx shadcn@latest add <name>                   # cài component shadcn base
 ```

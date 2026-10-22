@@ -232,4 +232,4 @@ Minimal shadcn base, beyond what is already in `components/ui`: `dialog, command
 
 Then states: `empty-state-2`, `empty-state-5` + `pricing-7`, `c-skeleton-5/6`, `c-alert-1`, `wishlist-2`. Then Ops: `app-shell-26`.
 
-Install pattern (from `app/`): `npx shadcn@latest add @reui/<name> --yes`, then update the DESIGN_RULES.md inventory.
+Install pattern (from `app/`): `npx shadcn@latest add @reui/<name> --yes`, then update the inventory in `.claude/skills/onehub-ui/catalog.md`.

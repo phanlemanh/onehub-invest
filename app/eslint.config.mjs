@@ -58,7 +58,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Code vendor ReUI — cài nguyên bản qua shadcn CLI, quy ước KHÔNG sửa (xem DESIGN_RULES.md).
+    // Code vendor ReUI — cài nguyên bản qua shadcn CLI, quy ước KHÔNG sửa (xem .claude/skills/onehub-ui/SKILL.md, mục "Không đụng vendor").
     "src/components/reui/**",
     "src/components/blocks/**",
     // Bản sao nguyên văn maplibre-gl/dist (đã minify), xem lib/map-worker.ts.

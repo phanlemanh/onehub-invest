@@ -58,6 +58,8 @@ lẫn đoạn này trong cùng PR, kèm lý do.
 - Cho tới khi nhánh `fix/portal-deals-airdna` merge, không sửa `src/app/(app)/deals/**`,
   `src/app/(app)/[country]/[market]/dau-tu/**`, `src/components/invest/investment-simulator.tsx`
   và `src/components/shell/nav.tsx`.
+- Component tự tạo > 200 dòng thì tách nhỏ. File lớn có sẵn do B3 xử lý, không ép số lên file cũ.
+- Block ReUI có hook/tương tác cần `"use client"`: không import thẳng vào server component. Ghép ở client component rồi truyền dữ liệu qua props (bẫy hằng số/hàm ở `copy-vi.md`).
 
 ## Máy chặn
 
