@@ -56,6 +56,10 @@ Luật chọn màu (chốt ở B3, Cổng Phạm vi 2026-10-23):
 | `rest` | "Khác" (nền lát) | zinc-100 | zinc-800 | Cơ cấu doanh thu | miễn |
 | `hatch` | Vạch chéo + chấm "Khác" | zinc-300 | zinc-600 | Cơ cấu doanh thu | miễn |
 
+- **Chuỗi chỉ có ở Ops** (biểu đồ của block Ops, vd `solution-dev-ops-*`): khai nhóm khoá riêng
+  (tiền tố `ops`) trong `palette.ts`, giữ màu block gốc kèm cặp `dark:`; không lẫn vào các nghĩa
+  Invest ở bảng trên. Chuỗi trùng nghĩa ở bất kỳ cổng nào (doanh thu, chi phí, biên, tỷ trọng…)
+  phải dùng đúng khoá Invest. Nhóm Ops do đợt B1 điền khi merge; thước B3 không quét `components/ops`.
 - Chuỗi mới: thêm khoá vào `palette.ts` + một dòng bảng này (`b3-check.mjs data-color` đối chiếu),
   chọn sắc chưa mang nghĩa khác; tái dùng khoá có sẵn khi cùng nghĩa.
 - Biểu đồ dời từ block ReUI: giữ cấu trúc, chỉ thay màu block bằng khoá cùng nghĩa.
