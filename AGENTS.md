@@ -94,6 +94,7 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
   (`slugifyName()`).
 - SQL đánh số theo thứ tự chạy: `db/migrations/NNN_*.sql`; `pipeline/sql/` 200 transform →
   300 metrics → 400 breakdowns → 410 listing_stats → 450 DQ → 500 asset_stats.
+- UI: luật ReUI (khối dưới) + `.claude/skills/onehub-ui/` (route map, danh mục, màu dữ liệu, chữ VN).
 - Prefix: `abnb_` listing Airbnb, `vn-hanoi-…` khu vực phường.
 - Commit theo Conventional Commits (`feat(scope):`, `fix:`, `docs:`, `ops:`…).
 - **Không bao giờ commit**: `.env*` (trừ `.env.example`), `snapshots/`, `state/`,

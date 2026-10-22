@@ -1,8 +1,9 @@
 # app/ — Next.js Dashboard
 
 ## ⚠️ MANDATORY: Design Rules
-**READ FIRST**: `DESIGN_RULES.md` — Quy trình bắt buộc chọn component:
-ReUI block → shadcn/ui → custom (LAST RESORT). Lập inventory mọi component.
+**READ FIRST**: nạp skill `reui` rồi `onehub-ui` (`.claude/skills/onehub-ui/`) trước khi sửa UI —
+ReUI block → shadcn/ui → custom (LAST RESORT); danh mục ở `onehub-ui/catalog.md`.
+`DESIGN_RULES.md` chỉ còn bẫy BASE-NOVA + lệnh cài.
 
 ## Framework
 - Next.js 16 App Router (force-dynamic on all pages)
@@ -72,7 +73,7 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đăng nhập; `OPS_EMAILS` tuỳ chọn để giới hạn)
 
 ## Don't
-- **Don't create custom UI when ReUI block exists** (see DESIGN_RULES.md)
+- **Don't create custom UI when ReUI block exists** (see skill `onehub-ui`)
 - Don't import from collector/ or pipeline/
 - Don't use MapLibre without setWorkerUrl (blank map bug)
 - Don't cache pages (force-dynamic required)

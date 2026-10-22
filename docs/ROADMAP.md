@@ -76,6 +76,17 @@ zalo-import · 05:30 chotot (collect→import→transform→refresh→resolve) �
 ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 506 listings (493 ảnh, tên host thật) · G3 live 2 thị trường.
 
+### 2.6 Chuẩn UI/UX ReUI (A) — nhánh `feat/ui-standards-reui`
+Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
+- Skill `reui` (`.claude/skills/reui/`, vendor do installer quản lý, khối luật trong AGENTS.md) + MCP `reui`.
+- Skill `onehub-ui` (`.claude/skills/onehub-ui/`): route map máy kiểm, danh mục block/component
+  (`catalog.md`), màu dữ liệu, chữ VN, vòng làm việc. `app/DESIGN_RULES.md` thu lại thành con trỏ.
+- Lint `onehub-ui` (`app/eslint-plugin-onehub-ui`): 10 luật; baseline `app/eslint-suppressions.json`
+  = 138 vi phạm / 31 file, chỉ được giảm (B1–B5 dọn dần).
+- CI job `ui-lint` (`.github/workflows/ui-lint.yml`) + hook Stop lint file UI vừa đổi.
+- Rule `.claude/rules/ui.md` (tự nạp khi chạm `app/src/components|app`); ổ cắm kit
+  `_acceptance/config.yaml`: `feature_loop.ui_standards_skill` và `design_pass.ds_skill` = `onehub-ui`.
+
 ## 3. QUYẾT ĐỊNH ĐÃ CHỐT (không hỏi lại)
 
 1. **kind ↔ RESO**: sale≈Residential*; rent_lt≈ResidentialLease+Monthly;
@@ -148,6 +159,16 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 | V1 | Backup tuần mã hoá (cần BACKUP_DIR+BACKUP_PASS từ user) | ⏳ nợ cũ nhất |
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
+
+### Track 6 — Chuẩn UI/UX ReUI
+| # | Việc | Trạng thái |
+|---|---|---|
+| A | Chuẩn: skill reui + onehub-ui, lint 10 luật + baseline, CI ui-lint, hook Stop, ổ cắm kit | ✅ (chờ Mạnh ký) |
+| B1 | Cổng Ops (`/ops/**`): data-grid, primitive, AlertDialog, sonner, PageHeader + Frame | ⏳ |
+| B2 | Khung trang & ô KPI (Invest + marketing): một StatTiles, breadcrumb, thang h1 | ⏳ |
+| B3 | Biểu đồ: bảng màu chung, gom code trùng, tách file > 200 dòng | ⏳ |
+| B4 | Trạng thái: Skeleton trong Suspense, Empty + hành động, error.tsx còn thiếu | ⏳ |
+| B5 | Phần còn lại sau `fix/portal-deals-airdna` + gỡ baseline (phải rỗng) | ⏳ |
 
 **Thứ tự khuyến nghị tiếp**: A2 (judge 12 cặp qua /ops/review) → A4 (extract-text) → A3 (MCP) → M3 (consolidation).
 
