@@ -496,24 +496,39 @@ export async function readZaloHealth(): Promise<ZaloHealth> {
   const now = Date.now();
   let up = 0, total = 0, lastHb: string | null = null, lastPost: string | null = null,
       silentAlert = false, driftAlert = false;
+  // Alert là tín hiệu MỘT THỜI ĐIỂM — phải tự hạ khi có bằng chứng hồi phục:
+  //   silent-gate: có post 202 SAU alert cuối → cổng đã chảy lại
+  //   drift: drift-check chạy cùng nhịp heartbeat (1h) và chỉ log khi còn lệch
+  //          → heartbeat SAU alert cuối mà không alert lại = đã hết lệch
+  // (bug bắt 22/10 tối: ống chảy 118 tin/ngày nhưng 2 badge đỏ treo từ alert cũ)
+  let silentAlertTs: number | null = null;
+  let driftAlertTs: number | null = null;
+  let lastPostTs: number | null = null;
+  let lastHbTs: number | null = null;
   for (const line of text.split("\n")) {
     const ts = line.slice(0, 24);
     if (!/^\d{4}-\d{2}-\d{2}T/.test(ts)) continue;
     const t = new Date(ts).getTime();
     if (line.includes(" heartbeat ")) {
       lastHb = ts;
+      lastHbTs = t;
       if (now - t <= 86400000) {
         total++;
         if (line.includes(" up ")) up++;
       }
     } else if (line.includes(" post 202")) {
       lastPost = ts;
+      lastPostTs = Math.max(lastPostTs ?? 0, t);
     } else if (line.includes(" alert silent-gate") && now - t <= 86400000) {
-      silentAlert = true;
+      silentAlertTs = Math.max(silentAlertTs ?? 0, t);
     } else if (line.includes(" alert drift") && now - t <= 86400000) {
-      driftAlert = true;
+      driftAlertTs = Math.max(driftAlertTs ?? 0, t);
     }
   }
+  silentAlert =
+    silentAlertTs != null && (lastPostTs == null || lastPostTs < silentAlertTs);
+  driftAlert =
+    driftAlertTs != null && (lastHbTs == null || lastHbTs <= driftAlertTs);
   const age = lastHb ? Math.round((now - new Date(lastHb).getTime()) / 60000) : null;
   return {
     connected: lastHb ? lastLinesUp(text) : null,
