@@ -1,5 +1,9 @@
 # One Invest — hướng dẫn workspace
 
+> 2026-10-22: monorepo **onehub-invest** (gộp one-invest + data-api; ADR-0012).
+> `~/dev/one-invest` giờ là symlink → `~/dev/onehub-invest` (launchd cũ vẫn chạy).
+> Public mirrors: `bash tools/sync-public.sh`.
+
 Công cụ đầu tư BĐS cho thuê ngắn hạn. **Tính năng lõi là Market Insights**
 (trang chi tiết thị trường — ADR-0002); Market Finder (map + filter) là lớp
 discovery xây sau. Ngôn ngữ làm việc với user: tiếng Việt.
