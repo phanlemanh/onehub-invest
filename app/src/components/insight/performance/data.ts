@@ -1,6 +1,6 @@
 import { type ChartConfig } from "@/components/ui/chart"
 
-import { swatchOf, themeOf, type SeriesKey } from "../../charts/palette"
+import { swatchOf, themeOf, type SeriesKey } from "@/components/charts/palette"
 
 /**
  * Chuyển thể từ @reui/chart-6. Khác bản gốc: một điểm = một THÁNG (không phải

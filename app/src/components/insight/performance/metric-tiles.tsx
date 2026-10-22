@@ -1,10 +1,10 @@
 import { type CSSProperties } from "react"
 import { cn } from "cn"
 
+import { CAP_TRUNCATE, Fact } from "@/components/charts/faces"
 import { METRICS, swatchOfMetric, type MetricKey } from "./data"
 import { type Formatters } from "./format"
 import { type Summary } from "./series"
-import { CAP_TRUNCATE, Fact } from "./value-faces"
 
 /** Dividers for a 2 by 2 grid that becomes one row of 4 at @xl. */
 const DIVIDERS = [

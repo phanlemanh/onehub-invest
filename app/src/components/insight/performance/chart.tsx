@@ -16,8 +16,10 @@ import {
 } from "@/components/reui/frame"
 import { IconTile } from "@/components/reui/icon-tile"
 import { cn } from "cn"
-import { toast } from "sonner"
 
+import { copyText, downloadFile, toastDownloaded } from "@/components/charts/actions"
+import { CAP_BOX, DotSeparator, Fact, KeyDot } from "@/components/charts/faces"
+import { CHART_ICONS } from "@/components/charts/icons"
 import { ChartToolbar, type ChartActions } from "./chart-toolbar"
 import {
   DEFAULT_VIEW,
@@ -29,7 +31,6 @@ import {
   type ViewState,
 } from "./data"
 import { formatSpan, formattersFor, type Formatters } from "./format"
-import { TOAST_ERROR_ICON, TOAST_SUCCESS_ICON, UI_ICONS } from "./icons"
 import { MetricPlot } from "./metric-plot"
 import { MetricTiles } from "./metric-tiles"
 import {
@@ -39,19 +40,7 @@ import {
   windowOf,
   type PlotRow,
 } from "./series"
-import { AverageKey, CAP_BOX, DotSeparator, Fact, MetricDot } from "./value-faces"
-
-async function copyText(text: string, title: string, description: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    toast.success(title, { icon: TOAST_SUCCESS_ICON, description })
-  } catch {
-    toast.error("Không sao chép được", {
-      icon: TOAST_ERROR_ICON,
-      description: "Trình duyệt chặn quyền truy cập clipboard.",
-    })
-  }
-}
+import { AverageKey } from "./value-faces"
 
 const sameView = (a: ViewState, b: ViewState) =>
   a.metric === b.metric &&
@@ -83,7 +72,7 @@ function PlotLegend({
         className="flex flex-wrap items-center gap-x-4 gap-y-2"
       >
         <li className="flex h-4 items-center gap-1.5">
-          <MetricDot swatch={swatchOfMetric(metric)} />
+          <KeyDot swatch={swatchOfMetric(metric)} />
           <span className={cn(CAP_BOX, "tabular-nums")}>
             {formatSpan(first, last)}
           </span>
@@ -146,18 +135,8 @@ export function PerformanceChart({
   const actions: ChartActions = {
     downloadCsv: () => {
       const name = `hieu-suat-${metric.key}-${view.range}.csv`
-      const url = URL.createObjectURL(
-        new Blob([table(",")], { type: "text/csv" })
-      )
-      const link = document.createElement("a")
-      link.href = url
-      link.download = name
-      link.click()
-      URL.revokeObjectURL(url)
-      toast.success("Đã tải CSV", {
-        icon: TOAST_SUCCESS_ICON,
-        description: `${name}, ${rows.length} tháng.`,
-      })
+      downloadFile(name, table(","), "text/csv")
+      toastDownloaded(`${name}, ${rows.length} tháng.`)
     },
     copyData: () =>
       void copyText(
@@ -177,7 +156,7 @@ export function PerformanceChart({
       <FrameHeader className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
           <IconTile variant="frame" size="sm" aria-hidden="true">
-            {UI_ICONS.chart}
+            {CHART_ICONS.chart}
           </IconTile>
           <div className="flex min-w-0 flex-col gap-px">
             <FrameTitle role="heading" aria-level={2} className="truncate">

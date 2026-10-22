@@ -17,7 +17,6 @@ import {
 } from "@/components/reui/frame"
 import { Badge } from "@/components/reui/badge"
 import { cn } from "cn"
-import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,21 +31,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { fmtInt, fmtMoneyCompact } from "@/lib/format"
+import { copyText, downloadFile, toastDownloaded } from "@/components/charts/actions"
+import { CAP_BOX, CAP_TRUNCATE, DotSeparator } from "@/components/charts/faces"
+import { CHART_ICONS } from "@/components/charts/icons"
 
 import { MoreMenu, type CardActions } from "./card-menu"
-import { TOAST_ERROR_ICON, TOAST_SUCCESS_ICON, UI_ICONS } from "./icons"
 import { MixDonut } from "./mix-donut"
-import { CAP_BOX, CAP_TRUNCATE, DotSeparator, SliceDot } from "./value-faces"
+import { SliceDot } from "./value-faces"
 import { slicesOf, type MixInput, type Slice } from "./view"
-
-function download(name: string, body: string, type: string) {
-  const url = URL.createObjectURL(new Blob([body], { type }))
-  const link = document.createElement("a")
-  link.href = url
-  link.download = name
-  link.click()
-  URL.revokeObjectURL(url)
-}
 
 function csvOf(slices: Slice[], total: number) {
   const header = ["loai_phong", "doanh_thu", "listing", "ti_trong_pct"]
@@ -57,21 +49,6 @@ function csvOf(slices: Slice[], total: number) {
     ),
     ["Tổng", Math.round(total), "", 100].join(","),
   ].join("\n")
-}
-
-async function copyText(text: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    toast.success("Đã sao chép tóm tắt", {
-      icon: TOAST_SUCCESS_ICON,
-      description: text,
-    })
-  } catch {
-    toast.error("Không sao chép được", {
-      icon: TOAST_ERROR_ICON,
-      description: "Trình duyệt chặn quyền truy cập clipboard.",
-    })
-  }
 }
 
 function InfoTooltip() {
@@ -88,7 +65,7 @@ function InfoTooltip() {
           />
         }
       >
-        {UI_ICONS.info}
+        {CHART_ICONS.info}
       </TooltipTrigger>
       <TooltipContent side="top">
         Tổng giá niêm yết các đêm đã đặt, chia theo loại phòng Airbnb.
@@ -168,13 +145,10 @@ export function RevenueMixChart({
   const actions: CardActions = {
     exportCsv: () => {
       const name = "co-cau-doanh-thu.csv"
-      download(name, csvOf(slices, total), "text/csv")
-      toast.success("Đã tải CSV", {
-        icon: TOAST_SUCCESS_ICON,
-        description: `${name}, ${slices.length} loại phòng và tổng.`,
-      })
+      downloadFile(name, csvOf(slices, total), "text/csv")
+      toastDownloaded(`${name}, ${slices.length} loại phòng và tổng.`)
     },
-    copySummary: () => void copyText(summary),
+    copySummary: () => void copyText(summary, "Đã sao chép tóm tắt", summary),
   }
 
   return (

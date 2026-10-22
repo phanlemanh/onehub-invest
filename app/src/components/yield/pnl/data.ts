@@ -1,6 +1,6 @@
 import { type ChartConfig } from "@/components/ui/chart"
 
-import { swatchOf, themeOf } from "../../charts/palette"
+import { swatchOf, themeOf } from "@/components/charts/palette"
 
 /**
  * Chuyển thể từ @reui/chart-36. Khác bản gốc: 12 tháng tới đến qua props (mọi

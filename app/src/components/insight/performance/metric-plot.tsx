@@ -7,7 +7,6 @@ import {
   useMemo,
   useRef,
   useSyncExternalStore,
-  type ReactNode,
 } from "react"
 import { Badge } from "@/components/reui/badge"
 import { cn } from "cn"
@@ -40,7 +39,9 @@ import {
   averageOf,
   type PlotRow,
 } from "./series"
-import { CAP_BOX, MetricDot } from "./value-faces"
+import { CAP_BOX, KeyDot } from "@/components/charts/faces"
+import { HaloText } from "@/components/charts/halo-text"
+import { TooltipRow } from "@/components/charts/tooltip-row"
 
 /** Every series moves in one rhythm: data changes settle in 400ms. */
 const SERIES_MOTION = {
@@ -313,18 +314,14 @@ function EndMark({ cx, cy, index }: DotItemDotProps) {
         strokeWidth={1.5}
       />
       {/* A panel-coloured halo keeps the figure legible over the fill. */}
-      <text
+      <HaloText
         x={cx - 10}
         y={above ? cy - 10 : cy + 18}
         textAnchor="end"
-        stroke="var(--card)"
-        strokeWidth={3}
-        strokeLinejoin="round"
-        paintOrder="stroke"
         className="fill-foreground text-xs font-medium tabular-nums"
       >
         {scope.format.value(scope.metric.key, row.current)}
-      </text>
+      </HaloText>
     </g>
   )
 }
@@ -448,33 +445,6 @@ function AverageRule() {
   )
 }
 
-/** A readout row: a 16px glyph slot, the label, then the figure. */
-function ReadoutRow({
-  glyph,
-  label,
-  value,
-  className,
-}: {
-  glyph: ReactNode
-  label: string
-  value: string
-  className?: string
-}) {
-  return (
-    <div
-      className={cn("flex h-4 items-center justify-between gap-6", className)}
-    >
-      <span className="text-muted-foreground inline-flex items-center gap-1.5">
-        <span className="flex size-4 shrink-0 items-center justify-center">
-          {glyph}
-        </span>
-        <span className={CAP_BOX}>{label}</span>
-      </span>
-      <span className={cn(CAP_BOX, "font-medium tabular-nums")}>{value}</span>
-    </div>
-  )
-}
-
 /** The read month: its name, any event in it, and the figure. */
 function Readout({
   active,
@@ -498,10 +468,11 @@ function Readout({
       )}
       formatter={() => (
         <div className="flex flex-1 flex-col gap-1.5">
-          <ReadoutRow
-            glyph={<MetricDot swatch={swatchOfMetric(metric)} />}
+          <TooltipRow
+            glyph={<KeyDot swatch={swatchOfMetric(metric)} />}
             label={metric.label}
             value={format.value(metric.key, row.current)}
+            className="gap-6"
           />
         </div>
       )}

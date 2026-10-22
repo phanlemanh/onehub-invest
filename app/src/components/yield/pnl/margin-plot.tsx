@@ -12,7 +12,6 @@ import {
   useRef,
   type CSSProperties,
   type ReactElement,
-  type ReactNode,
   type Ref,
   type RefObject,
 } from "react"
@@ -41,9 +40,13 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
+import { CAP_BOX } from "@/components/charts/faces"
+import { HaloText } from "@/components/charts/halo-text"
+import { TREND_ICONS } from "@/components/charts/icons"
+import { TooltipRow } from "@/components/charts/tooltip-row"
+
 import { CHART_CONFIG, type Period } from "./data"
 import { formatAxis, formatPercent, periodTitle } from "./format"
-import { TREND_ICONS } from "./icons"
 import {
   barId,
   captureMorph,
@@ -57,7 +60,7 @@ import {
   staggerOf,
   type Morph,
 } from "./plot-motion"
-import { CAP_BOX, LineKey, SeriesDot } from "./value-faces"
+import { LineKey, SeriesDot } from "./value-faces"
 
 type BarKey = "revenue" | "expenses"
 
@@ -448,18 +451,14 @@ function MarginLane() {
             strokeOpacity={0.7}
             strokeDasharray="4 4"
           />
-          <text
+          <HaloText
             x={right}
             y={targetY + 14}
             textAnchor="end"
-            stroke="var(--card)"
-            strokeWidth={3}
-            strokeLinejoin="round"
-            paintOrder="stroke"
             className="fill-muted-foreground text-xs tabular-nums"
           >
             {`${scope.targetLabel} ${formatPercent(target)}`}
-          </text>
+          </HaloText>
         </g>
         ) : null}
       </g>
@@ -505,18 +504,14 @@ function MarginLane() {
           />
           {/* The last close names the line; it drops below the dot when the
               lane's top leaves no room above. */}
-          <text
+          <HaloText
             x={last.x - 9}
             y={last.y - 22 >= 0 ? last.y - 9 : last.y + 18}
             textAnchor="end"
-            stroke="var(--card)"
-            strokeWidth={3}
-            strokeLinejoin="round"
-            paintOrder="stroke"
             className="fill-foreground text-xs font-medium tabular-nums"
           >
             {formatPercent(last.row.margin)}
-          </text>
+          </HaloText>
         </g>
       ) : null}
       {/* The read column's dot, lit by the plot sheet. */}
@@ -533,29 +528,6 @@ function MarginLane() {
         />
       ))}
     </g>
-  )
-}
-
-/** A tooltip row: a 16px glyph slot, the label, then the amount. */
-function CardRow({
-  glyph,
-  label,
-  value,
-}: {
-  glyph: ReactNode
-  label: string
-  value: string
-}) {
-  return (
-    <div className="flex h-4 items-center justify-between gap-4">
-      <span className="text-muted-foreground inline-flex items-center gap-1.5">
-        <span className="flex size-4 shrink-0 items-center justify-center">
-          {glyph}
-        </span>
-        <span className={CAP_BOX}>{label}</span>
-      </span>
-      <span className={cn("font-medium tabular-nums", CAP_BOX)}>{value}</span>
-    </div>
   )
 }
 
@@ -585,19 +557,19 @@ function PeriodCard({
         const key: BarKey = name === "expenses" ? "expenses" : "revenue"
         return (
           <div className="flex flex-1 flex-col gap-1.5">
-            <CardRow
+            <TooltipRow
               glyph={<SeriesDot series={key} />}
               label={CHART_CONFIG[key].label}
               value={money(Number(value))}
             />
             {index === items.length - 1 ? (
               <div className="flex flex-col gap-1.5 border-t pt-1.5">
-                <CardRow
+                <TooltipRow
                   glyph={row.net >= 0 ? TREND_ICONS.up : TREND_ICONS.down}
                   label="Thu nhập ròng"
                   value={money(row.net)}
                 />
-                <CardRow
+                <TooltipRow
                   glyph={<LineKey />}
                   label="Biên lợi nhuận"
                   value={formatPercent(row.margin)}
