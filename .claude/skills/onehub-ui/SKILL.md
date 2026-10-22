@@ -65,6 +65,7 @@ lẫn đoạn này trong cùng PR, kèm lý do.
 
 - `cd app && npm run lint` (ESLint + `check-bare-disables`) chạy ở CI `ui-lint`; hook Stop lint các file UI vừa đổi.
 - Baseline `app/eslint-suppressions.json` chỉ được giảm: sửa xong vi phạm cũ thì `npx eslint . --prune-suppressions`.
+- Không dùng `eslint --suppress-all` / `--suppress-rule` để làm xanh lint: CI chặn khi baseline tăng (`check-baseline-growth`); sửa vi phạm hoặc dùng ngoại lệ có lý do.
 - Ngoại lệ phải viết đúng dạng `// eslint-disable-next-line onehub-ui/<luật> -- <lý do>`. Thiếu lý do thì lint đỏ.
 - Palette có chủ đích thì để cặp sáng/tối trong CÙNG một chuỗi class (`"text-violet-600 dark:text-violet-400"`), vì luật xét từng chuỗi riêng.
 - Route chưa có dòng trong `routes.md` thì `npm run test:lint-rules` đỏ (`tests/routes-map.test.mjs`).

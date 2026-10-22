@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # PR cần nhánh đích để so baseline
       - uses: actions/setup-node@v7
         with:
           node-version: "24"
@@ -39,3 +41,11 @@ jobs:
       - name: lint (eslint + check-bare-disables)
         working-directory: app
         run: npm run lint
+
+      # Baseline chỉ được giảm: `eslint --suppress-rule/--suppress-all` nâng số đếm mà lint vẫn xanh,
+      # nên so tổng số đếm từng luật với bản ở nhánh đích. Đổi tên file giữ số đếm thì không tính.
+      - name: baseline không được tăng
+        if: github.event_name == 'pull_request'
+        run: |
+          git show "origin/${{ github.base_ref }}:app/eslint-suppressions.json" > /tmp/base-suppressions.json || true
+          node app/eslint-plugin-onehub-ui/check-baseline-growth.mjs /tmp/base-suppressions.json app/eslint-suppressions.json
