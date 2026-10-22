@@ -19,7 +19,7 @@ components:
       type: apiKey
       in: cookie
       name: oi_session
-      description: Session người dùng có quyền Ops (OPS_EMAILS).
+      description: Session người dùng có quyền Ops (users.role ops|admin, hoặc email trong OPS_EMAILS).
 security:
   - bearerOpsToken: []
   - sessionCookie: []

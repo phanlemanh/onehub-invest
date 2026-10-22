@@ -8,7 +8,7 @@ import { Badge } from "@/components/reui/badge";
 
 /**
  * Máy tính dòng tiền đầu tư BĐS cho thuê (G3) — tính client-side tức thời.
- * Hai kịch bản cạnh nhau: cho thuê ngắn hạn (STR — Airbnb/AirDNA) vs dài
+ * Hai kịch bản cạnh nhau: cho thuê ngắn hạn (STR — listing Airbnb tự thu) vs dài
  * hạn (LTR — vải Chợ Tốt). Nguyên tắc UX: mọi giả định HIỆN rõ beside số,
  * số âm màu đỏ, không giấu chi phí.
  */
@@ -21,7 +21,7 @@ type Props = {
     rentN: number;
     adr: number | null;
     occupancy: number | null;
-    adrPeriod: string | null;
+    strN: number;
   };
 };
 
@@ -199,9 +199,9 @@ export function InvestmentSimulator({ defaults }: Props) {
         <div className="flex flex-col gap-3 rounded-xl border p-4">
           <h3 className="text-sm font-medium">Doanh thu &amp; chi phí vận hành</h3>
           <Field label="Giá đêm (ADR)" suffix="nghìn/đêm" step={10} value={adrK} onChange={setAdrK}
-            hint={defaults.adr ? `AirDNA ${defaults.adrPeriod}: ${Math.round(defaults.adr / 1e3)}k` : "không có AirDNA cho market này"} />
+            hint={defaults.adr ? `median tự thu: ${Math.round(defaults.adr / 1e3)}k (n=${defaults.strN})` : "chưa có listing tự thu cho market này"} />
           <Field label="Công suất" suffix="%" value={occPct} onChange={setOccPct} step={1}
-            hint={defaults.occupancy != null ? `AirDNA: ${defaults.occupancy}%` : undefined} />
+            hint={defaults.occupancy != null ? `median tự thu 90 đêm tới: ${defaults.occupancy}%` : undefined} />
           <Field label="Chi phí STR (sạch sẽ, kênh, quản lý)" suffix="%" value={opsStrPct} onChange={setOpsStrPct} step={1} />
           <div className="h-px bg-border" />
           <Field label="Thuê dài hạn" suffix="tr/tháng" step={0.5} value={rentLtM} onChange={setRentLtM}

@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 /**
  * /[country]/[market]/dau-tu — G3: máy tính dòng tiền đầu tư (giai đoạn 3
  * của pipeline 4 giai đoạn). Defaults từ dữ liệu thật: giá bán + thuê LTR
- * = vải P2 Chợ Tốt; ADR + công suất = AirDNA (hiệu chuẩn). Người dùng
- * chỉnh mọi thông số — tính client-side.
+ * = vải P2 Chợ Tốt; ADR + công suất = listing Airbnb tự thu (không dùng
+ * AirDNA — luật 5). Người dùng chỉnh mọi thông số — tính client-side.
  */
 export default async function InvestmentPage({ params }: Params) {
   const { country, market } = await params;
@@ -33,9 +33,8 @@ export default async function InvestmentPage({ params }: Params) {
         <h1 className="text-xl font-medium">Mô phỏng đầu tư · {area.name}</h1>
         <p className="text-muted-foreground text-xs">
           Dòng tiền hai chế độ thuê (ngắn hạn Airbnb / dài hạn) với vốn vay —
-          con số mặc định kéo từ dữ liệu thị trường (vải Chợ Tốt, hiệu chuẩn
-          AirDNA{defaults.adrPeriod ? ` kỳ ${defaults.adrPeriod}` : ""}); chỉnh
-          thoải mái, kết quả tính tức thời.
+          con số mặc định kéo từ dữ liệu thị trường (tin rao bán/thuê, listing
+          tự thu); chỉnh thoải mái, kết quả tính tức thời.
         </p>
       </div>
       <InvestmentSimulator defaults={defaults} />

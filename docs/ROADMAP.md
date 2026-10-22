@@ -52,7 +52,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 → stg_* → transform (parser VN + phone + RESO property_type)
 → sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
-→ sản phẩm: Deals v2 (bait_gap + SĐT) · G3 calculator · /ops panels
+→ sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
 ```
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
@@ -110,6 +110,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    Claude Code = phần còn lại + cổng tích hợp (review, `/verify`, `_acceptance`,
    merge). Ranh giới = DATA-CONTRACT; mỗi bên một worktree, checkout chính giữ
    `main`. Chi tiết: AGENTS.md "Phân làn hai agent" + `collector/AGENTS.md`.
+10. **Cổng Ops đóng mặc định** (22/10): vào `/ops/**` khi `users.role` ∈
+   {`ops`, `admin`} hoặc email trong `OPS_EMAILS`; đăng nhập thôi không đủ
+   (`/register` mở). Cấp quyền data-ops bằng `role = 'ops'`, không cần migration.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -150,6 +153,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | # | Việc | Trạng thái |
 |---|---|---|
 | P-A | Deals v2 + G3 + ảnh/tên listing + ops panels | ✅ |
+| P-A2 | Vá cổng: /deals → /ops/deals (SPL tầng A), gỡ AirDNA khỏi /dau-tu (luật 5) — chờ quyết gộp /dau-tu vào /yield | 🔄 nhánh fix/portal-deals-airdna |
 | P-B | G4 khai thác sau mua (comps giá đêm — data sẵn) | ⬜ |
 | P-C | Advisor chat trên app (dựa A6+M4) | ⬜ xa |
 
@@ -159,6 +163,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V1 | Backup tuần mã hoá (cần BACKUP_DIR+BACKUP_PASS từ user) | ⏳ nợ cũ nhất |
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
+| V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
 
 ### Track 6 — Chuẩn UI/UX ReUI
 | # | Việc | Trạng thái |
