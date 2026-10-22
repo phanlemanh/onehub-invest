@@ -1,12 +1,4 @@
 {
-  "src/app/(app)/deals/page.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 1
-    },
-    "onehub-ui/no-emoji-icons": {
-      "count": 1
-    }
-  },
   "src/app/(app)/listing/[id]/page.tsx": {
     "onehub-ui/no-emoji-icons": {
       "count": 2
@@ -20,6 +12,14 @@
       "count": 2
     },
     "onehub-ui/no-raw-table": {
+      "count": 1
+    }
+  },
+  "src/app/ops/deals/page.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    },
+    "onehub-ui/no-emoji-icons": {
       "count": 1
     }
   },

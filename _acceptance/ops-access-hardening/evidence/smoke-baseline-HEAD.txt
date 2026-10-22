@@ -1,0 +1,10 @@
+FAIL user thường: /ops/deals bị chặn 404 (200)
+FAIL user thường: /ops bị chặn 404 (200)
+FAIL user thường: API /api/v1/ops/coverage trả 401 (200)
+FAIL admin: ~/.openclaw/openclaw.json (cấu hình) → 403 (200)
+FAIL admin: ~/.openclaw/media/../openclaw.json (leo thư mục) → 403 (200)
+FAIL admin: ~/.openclaw/credentials → 403 (404)
+FAIL admin: /tmp/openclaw-evil-*/x.png (khớp tiền tố chuỗi) → 403 (200)
+FAIL admin: file không phải ảnh trong /tmp/openclaw → 403 (200)
+FAIL admin: symlink .png trong /tmp/openclaw trỏ ra ngoài → 403 (200)
+portal-smoke: 9 lỗi

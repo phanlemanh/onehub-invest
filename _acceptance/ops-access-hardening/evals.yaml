@@ -1,0 +1,109 @@
+schema_version: 1
+feature_slug: ops-access-hardening
+# ops_smoke cần app chạy :3456 TỪ WORKTREE NÀY (config:dev_server.start) + DB local :5433,
+# OPS_EMAILS KHÔNG chứa email *.verify.test, và /tmp/openclaw tồn tại.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; user thường: /ops/deals 404, /ops 404, /api/v1/ops/coverage 401"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; canAccessOps(user thường, OPS_EMAILS trống|rỗng|không chứa email) = false"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; role=ops: /ops/deals 200 với 0 link tel:, coverage 200, /ops/sources 404, /api/zalo-media 404"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; admin: /ops/deals 200, ≥1 link tel: khi DB có tin P1 kèm SĐT"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; canAccessOps(role=admin, không có trong OPS_EMAILS) = true"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; canAccessOps(user thường có email trong OPS_EMAILS (không phân biệt hoa thường)) = true"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; canAccessOps(khách) = false"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; khách: /ops/deals bị đưa về /login"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; admin: openclaw.json, media/../openclaw.json, credentials đều 403"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; 'zalo-media: ALLOWED_ROOTS đúng hai gốc ~/.openclaw/media + /tmp/openclaw'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; admin: /tmp/openclaw-evil-*/x.png → 403"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; 'zalo-media: không so tiền tố chuỗi trên path (startsWith)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; admin: symlink .png trong /tmp/openclaw trỏ ra ngoài → 403"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.portal_smoke
+    expected: "exit 0; file không phải ảnh → 403; ảnh PNG trong /tmp/openclaw → 200 image/png; ảnh không tồn tại → 404"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E15
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc + lint 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

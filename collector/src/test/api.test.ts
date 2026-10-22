@@ -71,7 +71,7 @@ test("flush: snapshot items-0001 + manifest sha256 khớp DATA-CONTRACT, source=
     assert.ok(m && m.snapshotId.startsWith("hanoi__zalo-agent__"));
     const dir = join(root, "hanoi", m.snapshotId);
     const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
-    assert.equal(manifest.schemaVersion, 1);
+    assert.equal(manifest.schemaVersion, 2);
     assert.equal(manifest.counts.items, 2);
     assert.equal(manifest.source, "zalo-agent");
     const f = manifest.files[0];

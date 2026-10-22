@@ -1,0 +1,31 @@
+ok   khách: /deals chuyển sang /ops/deals
+ok   khách: /ops/deals bị đưa về /login
+ok   khách: /api/zalo-media trả 404 (không lộ có/không có file)
+ok   khách: /vn/hanoi/dau-tu trả 200
+ok   khách: /dau-tu không chứa chữ AirDNA (0)
+ok   khách: /dau-tu ghi nguồn mặc định là dữ liệu tự thu
+ok   khách: nav Invest (/vn) không có link /deals
+ok   user thường: /ops/deals bị chặn 404 (404)
+ok   user thường: không có SĐT (0 link tel:)
+ok   user thường: /ops bị chặn 404 (404)
+ok   user thường: API /api/v1/ops/coverage trả 401 (401)
+ok   user thường: /api/zalo-media bị chặn (404, chưa tới kiểm path)
+ok   role=ops: /ops/deals trả 200 (200)
+ok   role=ops: không có SĐT (0 link tel:)
+ok   role=ops: API /api/v1/ops/coverage trả 200 (200)
+ok   role=ops: /ops/sources (admin-class) vẫn 404 (404)
+ok   role=ops: /api/zalo-media bị chặn (404 — ảnh tin là tầng A, chỉ admin)
+ok   admin: /ops/deals trả 200
+ok   admin: thấy SĐT người bán (30 link tel:, DB có 1154 tin P1 kèm SĐT)
+ok   admin: chữ hiển thị chỉ dùng mã nguồn S0x (0 nút chữ có tên nguồn thật)
+ok   admin: /api/zalo-media qua cổng quyền, chặn ở kiểm path (403)
+ok   admin: ~/.openclaw/openclaw.json (cấu hình) → 403 (403)
+ok   admin: ~/.openclaw/media/../openclaw.json (leo thư mục) → 403 (403)
+ok   admin: ~/.openclaw/credentials → 403 (403)
+ok   admin: /tmp/openclaw-evil-*/x.png (khớp tiền tố chuỗi) → 403 (403)
+ok   admin: ảnh trong /tmp/openclaw → 200 image/png (200 image/png)
+ok   admin: file không phải ảnh trong /tmp/openclaw → 403 (403)
+ok   admin: symlink .png trong /tmp/openclaw trỏ ra ngoài → 403 (403)
+ok   admin: ảnh không tồn tại trong gốc → 404 (404)
+
+portal-smoke: ĐẠT

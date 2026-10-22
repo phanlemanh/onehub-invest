@@ -1,0 +1,347 @@
+{
+  "generated_at": "2026-10-22T15:24:21Z",
+  "generated_sha": "e721d229010f89fd76e614c943aab677d1a4ef2f",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "ops-access-hardening",
+  "round": 1,
+  "riskTier": "T3",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; user thường: /ops/deals 404, /ops 404, /api/v1/ops/coverage 401\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-1",
+      "cmd": "node scripts/check-portal-compliance.mjs",
+      "expected": "\"exit 0; canAccessOps(user thường, OPS_EMAILS trống|rỗng|không chứa email) = false\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_static"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-2",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; role=ops: /ops/deals 200 với 0 link tel:, coverage 200, /ops/sources 404, /api/zalo-media 404\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-3",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; admin: /ops/deals 200, ≥1 link tel: khi DB có tin P1 kèm SĐT\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-3",
+      "cmd": "node scripts/check-portal-compliance.mjs",
+      "expected": "\"exit 0; canAccessOps(role=admin, không có trong OPS_EMAILS) = true\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_static"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-4",
+      "cmd": "node scripts/check-portal-compliance.mjs",
+      "expected": "\"exit 0; canAccessOps(user thường có email trong OPS_EMAILS (không phân biệt hoa thường)) = true\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_static"
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-5",
+      "cmd": "node scripts/check-portal-compliance.mjs",
+      "expected": "\"exit 0; canAccessOps(khách) = false\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_static"
+    },
+    {
+      "id": "E8",
+      "criterion": "AC-5",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; khách: /ops/deals bị đưa về /login\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E9",
+      "criterion": "AC-6",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; admin: openclaw.json, media/../openclaw.json, credentials đều 403\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E10",
+      "criterion": "AC-6",
+      "cmd": "node scripts/check-portal-compliance.mjs",
+      "expected": "\"exit 0; 'zalo-media: ALLOWED_ROOTS đúng hai gốc ~/.openclaw/media + /tmp/openclaw'\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_static"
+    },
+    {
+      "id": "E11",
+      "criterion": "AC-7",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; admin: /tmp/openclaw-evil-*/x.png → 403\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E12",
+      "criterion": "AC-7",
+      "cmd": "node scripts/check-portal-compliance.mjs",
+      "expected": "\"exit 0; 'zalo-media: không so tiền tố chuỗi trên path (startsWith)'\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_static"
+    },
+    {
+      "id": "E13",
+      "criterion": "AC-8",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; admin: symlink .png trong /tmp/openclaw trỏ ra ngoài → 403\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E14",
+      "criterion": "AC-9",
+      "cmd": "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs",
+      "expected": "\"exit 0; file không phải ảnh → 403; ảnh PNG trong /tmp/openclaw → 200 image/png; ảnh không tồn tại → 404\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.portal_smoke"
+    },
+    {
+      "id": "E15",
+      "criterion": "AC-1",
+      "cmd": "cd app && npx tsc --noEmit && npm run lint",
+      "expected": "\"exit 0; tsc + lint 0 lỗi\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app"
+    }
+  ],
+  "suiteCommands": [
+    "cd app && npx tsc --noEmit && npm run lint",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "95d89969b6bd7d02074e17c413443480dde3944c",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/frosty-kilby-6b3cc8",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/frosty-kilby-6b3cc8/_acceptance/ops-access-hardening/contract.md",
+  "invokedAt": "2026-10-22T15:24:21Z",
+  "invokedSha": "e721d229010f89fd76e614c943aab677d1a4ef2f",
+  "vungVat": [
+    "_acceptance/config.yaml",
+    "_acceptance/ops-access-hardening/evals.yaml",
+    "_acceptance/ops-access-hardening/evidence/smoke-baseline-HEAD.txt",
+    "_acceptance/ops-access-hardening/evidence/smoke-new.txt",
+    "_acceptance/ops-access-hardening/evidence/static-new.txt",
+    "app/src/app/api/zalo-media/route.ts",
+    "app/src/lib/auth.ts",
+    "app/src/lib/ops-access.ts",
+    "scripts/check-portal-compliance.mjs",
+    "scripts/smoke-portal-compliance.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/CLAUDE.md",
+    "PRODUCT-MAP.md",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "_acceptance/ops-access-hardening/contract.md",
+    "_acceptance/ops-access-hardening/decisions.jsonl",
+    "_acceptance/ops-access-hardening/evidence/README.md",
+    "_acceptance/ops-access-hardening/plan.md",
+    "app/CLAUDE.md",
+    "docs/ROADMAP.md",
+    "docs/api/openapi.yaml",
+    "docs/architecture/portals.md"
+  ],
+  "diffFiles": [
+    "_acceptance/config.yaml",
+    "_acceptance/ops-access-hardening/contract.md",
+    "_acceptance/ops-access-hardening/decisions.jsonl",
+    "_acceptance/ops-access-hardening/evals.yaml",
+    "_acceptance/ops-access-hardening/evidence/README.md",
+    "_acceptance/ops-access-hardening/evidence/smoke-baseline-HEAD.txt",
+    "_acceptance/ops-access-hardening/evidence/smoke-new.txt",
+    "_acceptance/ops-access-hardening/evidence/static-new.txt",
+    "_acceptance/ops-access-hardening/plan.md",
+    "app/CLAUDE.md",
+    "app/src/app/api/zalo-media/route.ts",
+    "app/src/lib/auth.ts",
+    "app/src/lib/ops-access.ts",
+    "docs/ROADMAP.md",
+    "docs/api/openapi.yaml",
+    "docs/architecture/portals.md",
+    "scripts/check-portal-compliance.mjs",
+    "scripts/smoke-portal-compliance.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "_acceptance/config.yaml",
+    "_acceptance/ops-access-hardening/evals.yaml",
+    "_acceptance/ops-access-hardening/evidence/smoke-baseline-HEAD.txt",
+    "_acceptance/ops-access-hardening/evidence/smoke-new.txt",
+    "_acceptance/ops-access-hardening/evidence/static-new.txt"
+  ],
+  "coverageFiles": [],
+  "coEvalPaths": false,
+  "evalsHash": "627c5f01221c45ecefe41cbf34bcbea2b6e8ec0f9ec005aaef7e922c27b27d77",
+  "runBaseline": true,
+  "thuocChup": {
+    "sha": "e721d229010f89fd76e614c943aab677d1a4ef2f",
+    "n": 7,
+    "digest": "b411bdc4134b6cc7eb7db0d13daa9ff4abe61e2832b354f756ab42207fbb9356",
+    "tep": {
+      "_acceptance/config.yaml": "4d1c5349bb36d11627dc74bbe0deb682244ea2e44738baa886de56c765caadbe",
+      "_acceptance/ops-access-hardening/evals.yaml": "627c5f01221c45ecefe41cbf34bcbea2b6e8ec0f9ec005aaef7e922c27b27d77",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "collector/src/test/api.test.ts": "d0ca443d07ba55cfc5b8e9e4eac7b3a83eb789288fd880c91b2ec8befd278233",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb"
+    }
+  },
+  "cayChup": {
+    "sha": "e721d229010f89fd76e614c943aab677d1a4ef2f",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}
