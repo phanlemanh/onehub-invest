@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/reui/badge";
 import { getDeals } from "@/lib/deals";
-import { fmtInt, fmtMoney } from "@/lib/format";
+import { fmtInt } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Căn giá tốt" };

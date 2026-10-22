@@ -66,6 +66,59 @@ function Field({
 const fmtTr = (v: number) =>
   v >= 1e9 ? `${(v / 1e9).toFixed(2)} tỷ` : `${Math.round(v / 1e6)} tr`;
 
+/** Kết quả một kịch bản cho thuê (STR hoặc LTR) — đơn vị VND/tháng, tỉ lệ 0–1. */
+type ScenarioResult = {
+  grossMonth: number;
+  netMonth: number;
+  cf: number;
+  cocYear: number;
+  grossYield: number;
+  breakEvenYears: number;
+};
+
+function Scenario({ name, d, accent }: { name: string; d: ScenarioResult; accent: boolean }) {
+  return (
+    <div className={`flex flex-col gap-2 rounded-xl border p-4 ${accent ? "border-primary/40" : ""}`}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium">{name}</h3>
+        <Badge variant={d.cf >= 0 ? "success-light" : "destructive"}>
+          {d.cf >= 0 ? "dòng tiền dương" : "âm"}
+        </Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <p className="text-muted-foreground text-[10px]">Doanh thu brutto/tháng</p>
+          <p className="tabular-nums font-medium">{fmtTr(d.grossMonth)}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-[10px]">Ròng sau vận hành</p>
+          <p className="tabular-nums font-medium">{fmtTr(d.netMonth)}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-[10px]">Dòng tiền sau nợ/tháng</p>
+          <p className={`tabular-nums font-semibold ${d.cf >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            {d.cf >= 0 ? "+" : "−"}{fmtTr(Math.abs(d.cf))}
+          </p>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-[10px]">Cash-on-cash /năm</p>
+          <p className="tabular-nums font-semibold">{(d.cocYear * 100).toFixed(1)}%</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-[10px]">Tổng lợi suất brutto/năm</p>
+          <p className="tabular-nums">{(d.grossYield * 100).toFixed(1)}%</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-[10px]">Hoàn vốn tự có</p>
+          <p className="tabular-nums">
+            {Number.isFinite(d.breakEvenYears) ? `${d.breakEvenYears.toFixed(1)} năm` : "không hoàn vốn"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function InvestmentSimulator({ defaults }: Props) {
   const [salePerm2, setSalePerm2] = useState((defaults.salePerm2 ?? 80e6) / 1e6);
   const [areaM2, setAreaM2] = useState(60);
@@ -122,47 +175,6 @@ export function InvestmentSimulator({ defaults }: Props) {
     };
     return { price, furnish, fee, equity, loan, pay, str, lt };
   }, [salePerm2, areaM2, equityPct, ratePct, years, furnishM, adrK, occPct, rentLtM, opsStrPct, opsLtPct]);
-
-  const Scenario = ({ name, d, accent }: { name: string; d: typeof r.str; accent: boolean }) => (
-    <div className={`flex flex-col gap-2 rounded-xl border p-4 ${accent ? "border-primary/40" : ""}`}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">{name}</h3>
-        <Badge variant={d.cf >= 0 ? "success-light" : "destructive"}>
-          {d.cf >= 0 ? "dòng tiền dương" : "âm"}
-        </Badge>
-      </div>
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div>
-          <p className="text-muted-foreground text-[10px]">Doanh thu brutto/tháng</p>
-          <p className="tabular-nums font-medium">{fmtTr(d.grossMonth)}</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Ròng sau vận hành</p>
-          <p className="tabular-nums font-medium">{fmtTr(d.netMonth)}</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Dòng tiền sau nợ/tháng</p>
-          <p className={`tabular-nums font-semibold ${d.cf >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-            {d.cf >= 0 ? "+" : "−"}{fmtTr(Math.abs(d.cf))}
-          </p>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Cash-on-cash /năm</p>
-          <p className="tabular-nums font-semibold">{(d.cocYear * 100).toFixed(1)}%</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Tổng lợi suất brutto/năm</p>
-          <p className="tabular-nums">{(d.grossYield * 100).toFixed(1)}%</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Hoàn vốn tự có</p>
-          <p className="tabular-nums">
-            {Number.isFinite(d.breakEvenYears) ? `${d.breakEvenYears.toFixed(1)} năm` : "không hoàn vốn"}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="flex flex-col gap-4">

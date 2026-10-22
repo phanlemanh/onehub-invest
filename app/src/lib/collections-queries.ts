@@ -77,7 +77,6 @@ export type FlowDay = {
  * GROUP BY có lọc khoảng ngày, gộp bằng JS. */
 export async function getFlowDays(n = 7): Promise<FlowDay[]> {
   const since = new Date(Date.now() - (n - 1) * 86400000);
-  const sinceDate = since.toISOString().slice(0, 10);
   const [mk, al, li, sn, zp, of] = await Promise.all([
     pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM airdna_markets WHERE captured_at >= $1 GROUP BY 1`, [since]),
     pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
@@ -103,7 +102,7 @@ export async function getFlowDays(n = 7): Promise<FlowDay[]> {
       zaloOffers: z?.offers ?? O.get(d) ?? 0,
     });
   }
-  return days; // mốc sinceDate trở đi; đủ n ngày gần nhất
+  return days; // từ mốc `since` trở đi; đủ n ngày gần nhất
 }
 
 export type GateFunnel = {

@@ -194,7 +194,6 @@ export async function getLockdownStatus(): Promise<{
   collectorUp: boolean;
 }> {
   const { readFile } = await import("node:fs/promises");
-  const { homedir } = await import("node:os");
   const { execFile } = await import("node:child_process");
   const promisify = (await import("node:util")).promisify;
   const run = promisify(execFile);

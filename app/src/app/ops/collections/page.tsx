@@ -38,6 +38,11 @@ function Stat({
   )
 }
 
+/** Số đơn vị (phút/giờ) đã trôi qua từ một mốc ISO, tính lúc request (trang force-dynamic). */
+function ageSince(iso: string, unitMs: number): number {
+  return Math.round((Date.now() - new Date(iso).getTime()) / unitMs);
+}
+
 /**
  * /ops/collections "Thu Thập" — dòng chảy dữ liệu thu thập (portals.md).
  * Trả lời 3 câu: hôm nay chảy vào gì / qua cổng nào / máy có chạy không.
@@ -56,9 +61,7 @@ export default async function CollectionsPage() {
     getLockdownStatus(),
   ]);
   const today = days[0];
-  const factsAgeMin = factsPushedAt
-    ? Math.round((Date.now() - new Date(factsPushedAt).getTime()) / 60000)
-    : null;
+  const factsAgeMin = factsPushedAt ? ageSince(factsPushedAt, 60_000) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -222,7 +225,7 @@ export default async function CollectionsPage() {
             : ""}
           {" · tin cuối qua cổng "}
           {zaloHealth.lastPostAt
-            ? `${Math.round((Date.now() - new Date(zaloHealth.lastPostAt).getTime()) / 3600000)}h trước`
+            ? `${ageSince(zaloHealth.lastPostAt, 3_600_000)}h trước`
             : "chưa có"}
           .
         </p>

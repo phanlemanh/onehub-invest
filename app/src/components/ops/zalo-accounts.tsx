@@ -13,14 +13,34 @@ type Account = {
   enabledGroups: string[]
 }
 type GroupRow = { groupId: string; name: string; enabled: boolean; ownedBy: string | null }
+type GroupsResult = { groups: GroupRow[] | null; error: string | null }
+
+async function fetchAccounts(): Promise<Account[] | null> {
+  const r = await fetch("/api/v1/ops/zalo/accounts")
+  return r.ok ? (await r.json()).accounts : null
+}
+
+async function fetchGroups(accountId: string, refresh = false): Promise<GroupsResult> {
+  try {
+    const r = await fetch(
+      `/api/v1/ops/zalo/groups?account=${encodeURIComponent(accountId)}${refresh ? "&refresh=1" : ""}`,
+    )
+    const b = await r.json()
+    if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`)
+    return { groups: b.groups, error: null }
+  } catch (e) {
+    return { groups: null, error: e instanceof Error ? e.message : "lỗi tải nhóm" }
+  }
+}
 
 /** Quản trị tài khoản zalouser: thêm (QR) + gán nhóm (bất biến 1 nhóm – 1 tài khoản).
  * Trên cloud (Vercel): read-only — danh sách từ ops-heartbeat, không nút quản trị. */
 export function ZaloAccountsPanel({ isCloud = false }: { isCloud?: boolean }) {
   const [cloudAccounts, setCloudAccounts] = useState<{ accountId: string; name: string | null; profile: string; enabledGroups: string[] }[] | null>(null);
   const [accounts, setAccounts] = useState<Account[] | null>(null)
-  const [selected, setSelected] = useState<string>("default")
+  const [picked, setSelected] = useState<string>("default")
   const [groups, setGroups] = useState<GroupRow[] | null>(null)
+  const [groupsFor, setGroupsFor] = useState<string | null>(null)
   const [groupsLoading, setGroupsLoading] = useState(false)
   const [groupsError, setGroupsError] = useState<string | null>(null)
   const [filter, setFilter] = useState("")
@@ -30,27 +50,29 @@ export function ZaloAccountsPanel({ isCloud = false }: { isCloud?: boolean }) {
   const [connected, setConnected] = useState<boolean | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Tài khoản đang chọn bị gỡ (hoặc chưa từng có) → rơi về tài khoản đầu tiên.
+  // Suy ra lúc render thay vì effect ghi lại state.
+  const selected =
+    accounts && !accounts.some((a) => a.accountId === picked)
+      ? (accounts[0]?.accountId ?? "default")
+      : picked
+  // Nhóm đang hiển thị thuộc tài khoản khác tài khoản đang chọn → coi là đang tải.
+  const groupsBusy = groupsLoading || groupsFor !== selected
+
   const loadAccounts = useCallback(async () => {
-    const r = await fetch("/api/v1/ops/zalo/accounts")
-    if (r.ok) setAccounts((await r.json()).accounts)
+    const list = await fetchAccounts()
+    if (list) setAccounts(list)
+  }, [])
+  const applyGroups = useCallback((accountId: string, res: GroupsResult) => {
+    setGroups(res.groups)
+    setGroupsError(res.error)
+    setGroupsFor(accountId)
   }, [])
   const loadGroups = useCallback(async (accountId: string, refresh = false) => {
     setGroupsLoading(true)
-    setGroupsError(null)
-    try {
-      const r = await fetch(
-        `/api/v1/ops/zalo/groups?account=${encodeURIComponent(accountId)}${refresh ? "&refresh=1" : ""}`,
-      )
-      const b = await r.json()
-      if (!r.ok) throw new Error(b.error ?? `HTTP ${r.status}`)
-      setGroups(b.groups)
-    } catch (e) {
-      setGroups(null)
-      setGroupsError(e instanceof Error ? e.message : "lỗi tải nhóm")
-    } finally {
-      setGroupsLoading(false)
-    }
-  }, [])
+    applyGroups(accountId, await fetchGroups(accountId, refresh))
+    setGroupsLoading(false)
+  }, [applyGroups])
 
   useEffect(() => {
     if (isCloud) {
@@ -60,17 +82,22 @@ export function ZaloAccountsPanel({ isCloud = false }: { isCloud?: boolean }) {
         .then((d) => setCloudAccounts(d?.zaloAccounts ?? []))
         .catch(() => setCloudAccounts([]));
     } else {
-      loadAccounts();
+      fetchAccounts().then((list) => {
+        if (list) setAccounts(list)
+      })
     }
-  }, [isCloud, loadAccounts]) // isCloud now a prop — stable
+  }, [isCloud]) // isCloud là prop — ổn định
   useEffect(() => {
-    if (accounts && !accounts.some((a) => a.accountId === selected)) {
-      setSelected(accounts[0]?.accountId ?? "default")
+    if (!selected) return
+    // Đổi tài khoản nhanh → bỏ kết quả của lần tải cũ về muộn.
+    let stale = false
+    fetchGroups(selected).then((res) => {
+      if (!stale) applyGroups(selected, res)
+    })
+    return () => {
+      stale = true
     }
-  }, [accounts, selected])
-  useEffect(() => {
-    if (selected) loadGroups(selected)
-  }, [selected, loadGroups])
+  }, [selected, applyGroups])
 
   // Chọn/refresh lại → nếu có process login đang chạy cho account này (bắt
   // đầu từ CLI/API ngoài UI), hiện luôn hộp QR thay vì im lặng.
@@ -244,7 +271,7 @@ export function ZaloAccountsPanel({ isCloud = false }: { isCloud?: boolean }) {
             + Thêm tài khoản
           </Button>
           <Button size="sm" variant="outline" onClick={() => startQr(selected)}>
-            Đăng nhập QR "{selected}"
+            Đăng nhập QR &quot;{selected}&quot;
           </Button>
         </span>
       </div>
@@ -260,7 +287,7 @@ export function ZaloAccountsPanel({ isCloud = false }: { isCloud?: boolean }) {
             </div>
           )}
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Đăng nhập "{qr.accountId}"</p>
+            <p className="text-sm font-medium">Đăng nhập &quot;{qr.accountId}&quot;</p>
             <p className="text-muted-foreground text-xs">
               Mở app Zalo trên điện thoại của số MỚI → Quét QR. QR hết hạn ~2 phút — huỷ rồi
               thử lại nếu cần.
@@ -294,14 +321,14 @@ export function ZaloAccountsPanel({ isCloud = false }: { isCloud?: boolean }) {
         <span className="text-muted-foreground text-xs">
           {groups ? `${groups.length} nhóm của "${selected}"` : ""}
         </span>
-        <Button size="sm" variant="ghost" onClick={() => loadGroups(selected, true)} disabled={groupsLoading}>
+        <Button size="sm" variant="ghost" onClick={() => loadGroups(selected, true)} disabled={groupsBusy}>
           ↻ Tải lại
         </Button>
       </div>
-      {groupsLoading && (
+      {groupsBusy && (
         <p className="text-muted-foreground text-sm">Đang tải nhóm từ Zalo (lần đầu ~8 giây)…</p>
       )}
-      {groupsError && (
+      {groupsError && !groupsBusy && (
         <p className="text-destructive text-sm">
           Lỗi tải nhóm: {groupsError}{" "}
           <Button size="sm" variant="outline" onClick={() => loadGroups(selected, true)}>
@@ -313,7 +340,7 @@ export function ZaloAccountsPanel({ isCloud = false }: { isCloud?: boolean }) {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs">
             <tr>
-              <th className="px-3 py-2">Nhóm (membership của "{selected}")</th>
+              <th className="px-3 py-2">Nhóm (membership của &quot;{selected}&quot;)</th>
               <th className="px-3 py-2 text-right">Đang bật</th>
               <th className="px-3 py-2">Sở hữu</th>
             </tr>
