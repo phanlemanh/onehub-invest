@@ -1,0 +1,26 @@
+{
+  "feature_plain": "Trang tìm deal (/ops/deals), trang đầu tư và API deals có thước giá/m² theo phường dựng được từ repo trên mọi máy, kèm hướng dẫn để anh đưa cloud bắt kịp và nối lại đồng bộ đang gãy.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ dựng được hai thước giá/m² (theo phường; theo phường × loại hình) trên một DB mới tinh chỉ từ migration trong repo."},
+    {"id": "AC-2", "p": "Sẽ áp được nhiều lần vào DB local mà số giá/m² từng phường không xê dịch một con số nào."},
+    {"id": "AC-6", "p": "Sẽ đưa được một bản sao cloud lên đúng schema local (chạy hai lần vẫn sạch), chỉ trừ cột tên người bán."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Chặn phường có dưới 5 căn khỏi thước giá/m² — thước vẫn có số cho các phường đủ căn."},
+    {"id": "AC-4", "p": "Sẽ KHÔNG đẩy tên người bán (trong bảng căn nhà) lên cloud khi đồng bộ."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG tạo cột tên người bán trên cloud và KHÔNG sửa dòng dữ liệu nào — SQL cho cloud chỉ đổi cấu trúc."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG làm hỏng bộ kiểm của khâu xử lý dữ liệu."},
+    {"id": "OOS-1", "p": "KHÔNG tự chạy gì lên cloud — anh là người chạy SQL bắt kịp."},
+    {"id": "OOS-2", "p": "KHÔNG sửa hai lỗi cũ khiến DB mới dựng từ repo vấp ở migration 012 và 031 — cần một việc riêng."},
+    {"id": "OOS-3", "p": "KHÔNG làm bộ tự áp migration lên cloud."},
+    {"id": "OOS-4", "p": "KHÔNG đổi cách tính thước (5–500 triệu/m², tối thiểu 5 căn) — chép nguyên văn bản đang chạy."},
+    {"id": "OOS-5", "p": "KHÔNG đổi chỗ trang/API đọc thước; thước theo loại hình hiện chưa nơi nào dùng nhưng vẫn được đưa vào repo."},
+    {"id": "OOS-6", "p": "KHÔNG thêm kiểm tra tự động cột nhạy cảm trên cloud vào bước đồng bộ — để việc sau."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Nơi chạy: DB mới từ repo (AC-1), DB local đang dùng (AC-2, AC-3), bản sao cloud (AC-6); cloud thật do anh chạy và kiểm theo hướng dẫn (AC-8)."},
+    {"i": 1, "p": "Dữ liệu rời máy: tên người bán không đi qua đồng bộ (AC-4) và không có cột chờ sẵn trên cloud (AC-5); thước chỉ xuất số tổng hợp (AC-1)."},
+    {"i": 2, "p": "Không hồi quy: số thước giữ nguyên (AC-2), bộ kiểm khâu xử lý dữ liệu xanh (AC-7)."},
+    {"i": 3, "p": "Không quét đầy đủ mọi chiều — thay đổi hẹp (chép hai thước + chặn một cột), ba trục trên đã liệt kê đủ nơi chạy."}
+  ]
+}
