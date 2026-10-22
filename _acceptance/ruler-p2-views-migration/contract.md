@@ -5,9 +5,9 @@ slug: ruler-p2-views-migration
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** + pipeline/sync-cloud.mjs (dữ liệu rời máy)
 surfaces: [config, docs]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-22
 ---
 
 # Acceptance Contract: ruler-p2-views-migration
