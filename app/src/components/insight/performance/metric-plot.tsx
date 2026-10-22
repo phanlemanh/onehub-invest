@@ -32,7 +32,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-import { chartConfigOf, type MetricSpec, type ViewState } from "./data"
+import { chartConfigOf, swatchOfMetric, type MetricSpec, type ViewState } from "./data"
 import { formatLongMonth, formatMonth, type Formatters } from "./format"
 import {
   annotationOn,
@@ -499,7 +499,7 @@ function Readout({
       formatter={() => (
         <div className="flex flex-1 flex-col gap-1.5">
           <ReadoutRow
-            glyph={<MetricDot swatch={metric.swatch} />}
+            glyph={<MetricDot swatch={swatchOfMetric(metric)} />}
             label={metric.label}
             value={format.value(metric.key, row.current)}
           />

@@ -1,5 +1,7 @@
 import { type ChartConfig } from "@/components/ui/chart"
 
+import { swatchOf, themeOf, type SeriesKey } from "../../charts/palette"
+
 /**
  * Chuyển thể từ @reui/chart-6. Khác bản gốc: một điểm = một THÁNG (không phải
  * ngày), dữ liệu đi qua props, và không có lớp "kỳ trước" — dữ liệu hiện là lịch
@@ -27,10 +29,8 @@ export type MetricSpec = {
   label: string
   /** Câu mô tả ngắn cho chú giải. */
   basis: string
-  /** The chart's stroke and fill. */
-  color: string
-  /** The tile's indicator and key dot, as a static class. */
-  swatch: string
+  /** Màu chuỗi trong bảng màu chung (charts/palette.ts): nét, vùng, chấm và thanh của ô. */
+  series: Extract<SeriesKey, MetricKey>
 }
 
 export type Annotation = {
@@ -66,31 +66,30 @@ export const METRICS = [
     key: "revenue",
     label: "Doanh thu",
     basis: "Tổng giá niêm yết các đêm đã đặt, theo tháng",
-    color: "var(--color-teal-500)",
-    swatch: "bg-teal-500",
+    series: "revenue",
   },
   {
     key: "occupancy",
     label: "Công suất",
     basis: "Đêm đã đặt ÷ (đã đặt + còn trống), theo tháng",
-    color: "var(--color-amber-500)",
-    swatch: "bg-amber-500",
+    series: "occupancy",
   },
   {
     key: "adr",
     label: "Giá phòng (ADR)",
     basis: "Doanh thu ÷ đêm đã đặt, theo tháng",
-    color: "var(--color-sky-500)",
-    swatch: "bg-sky-500",
+    series: "adr",
   },
   {
     key: "revpar",
     label: "RevPAR",
     basis: "Doanh thu ÷ đêm khả dụng, theo tháng",
-    color: "var(--color-violet-500)",
-    swatch: "bg-violet-500",
+    series: "revpar",
   },
 ] as const satisfies readonly MetricSpec[]
+
+/** Lớp chấm/thanh của một chỉ số. */
+export const swatchOfMetric = (metric: MetricSpec) => swatchOf(metric.series)
 
 export const metricOf = (key: MetricKey): MetricSpec =>
   METRICS.find((metric) => metric.key === key) ?? METRICS[0]
@@ -116,5 +115,5 @@ export const DEFAULT_VIEW: ViewState = {
 
 export const chartConfigOf = (metric: MetricSpec) =>
   ({
-    current: { label: metric.label, color: metric.color },
+    current: { label: metric.label, theme: themeOf(metric.series) },
   }) satisfies ChartConfig

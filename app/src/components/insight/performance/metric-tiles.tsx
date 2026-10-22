@@ -1,7 +1,7 @@
 import { type CSSProperties } from "react"
 import { cn } from "cn"
 
-import { METRICS, type MetricKey } from "./data"
+import { METRICS, swatchOfMetric, type MetricKey } from "./data"
 import { type Formatters } from "./format"
 import { type Summary } from "./series"
 import { CAP_TRUNCATE, Fact } from "./value-faces"
@@ -34,7 +34,7 @@ export function MetricTiles({
     0,
     METRICS.findIndex((metric) => metric.key === active)
   )
-  const swatch = METRICS[index].swatch
+  const swatch = swatchOfMetric(METRICS[index])
   // The slot's offset in both layouts, in its own widths and heights.
   const slot = {
     "--chart-6-x2": `${(index % 2) * 100}%`,

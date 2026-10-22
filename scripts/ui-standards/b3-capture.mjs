@@ -3,16 +3,16 @@
 // sáng/tối × 1280/390, cộng một "bản chụp cấu trúc" (chữ, vai trò, nhãn aria, số phần tử
 // SVG, chữ tooltip sau các thao tác) để so trước/sau mà không lẫn màu.
 //
-// Dùng: node scripts/ui-standards/b3-capture.mjs --out <thư mục> [--base http://localhost:3456] [--tree <cây git>]
+// Dùng: node scripts/ui-standards/b3-capture.mjs --out <thư mục> [--base http://localhost:3456] [--as-of <commit>]
 // Ra: <out>/<trang>-<chế độ>.png (khung biểu đồ) + <out>/snapshot.json
 //   snapshot.json = { structure: {...}, colors: {...} } — `structure` không chứa màu,
 //   `colors` là màu tính được của chấm chú giải / nét biểu đồ.
 // Cần playwright-cli đã cài toàn máy (như scripts/ui-capture.sh); mượn playwright-core đi kèm nó.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 const args = process.argv.slice(2);
@@ -60,6 +60,8 @@ const FIND_FRAME = (title) => {
 function structureOf(frame) {
   const svgCounts = {};
   const walk = (node) => {
+    // <style> của ChartContainer chứa biến màu: chỉ ghi là có, không ghi chữ.
+    if (node.tagName === "STYLE") return { t: "style" };
     if (node.namespaceURI === "http://www.w3.org/2000/svg") {
       if (node.closest("[data-slot=chart]")) {
         svgCounts[node.tagName] = (svgCounts[node.tagName] ?? 0) + 1;
@@ -233,17 +235,28 @@ const { chromium } = loadPlaywright();
 mkdirSync(OUT, { recursive: true });
 const browser = await launch(chromium);
 // Bản chụp ghi cây app/src nó chụp trên (mã tree của git); app/src bẩn thì không có mã tree.
-// --tree <dir>: ghi head/cây của cây khác (vd cây gốc chạy ở cổng khác); mặc định cây chứa script.
+// Mã cây của các tệp app/src ĐANG TRÊN ĐĨA (chỉ mục tạm, không đụng chỉ mục thật).
+// --as-of <commit>: khai bản chụp này là của <commit> (vd chụp "trước" sau khi tạm khôi phục
+// app/src về commit gốc) — cây trên đĩa phải đúng bằng <commit>:app/src, không thì dừng.
 const SELF = new URL(import.meta.url).pathname;
-const ROOT = opt("tree", join(dirname(SELF), "..", ".."));
-const git = (...argv) => execFileSync("git", argv, { cwd: ROOT, encoding: "utf8" }).trim();
-const dirty = git("status", "--porcelain", "--", "app/src") !== "";
+const ROOT = join(dirname(SELF), "..", "..");
+const git = (argv, env) => execFileSync("git", argv, { cwd: ROOT, encoding: "utf8", env: { ...process.env, ...env } }).trim();
+const tmpIndex = join(mkdtempSync(join(tmpdir(), "b3-index-")), "index");
+git(["read-tree", "HEAD"], { GIT_INDEX_FILE: tmpIndex });
+git(["add", "-A", "--", "app/src"], { GIT_INDEX_FILE: tmpIndex });
+const diskTree = git(["write-tree", "--prefix=app/src/"], { GIT_INDEX_FILE: tmpIndex });
+const asOf = opt("as-of", null);
+const head = git(["rev-parse", asOf ?? "HEAD"]);
+if (diskTree !== git(["rev-parse", `${head}:app/src`])) {
+  console.error(`app/src trên đĩa (${diskTree.slice(0, 12)}) khác ${asOf ?? "HEAD"}:app/src — commit hoặc khôi phục trước khi chụp`);
+  process.exit(1);
+}
 const snapshot = {
   base: BASE,
   at: new Date().toISOString(),
-  head: git("rev-parse", "HEAD"),
+  head,
   capture_sha: createHash("sha256").update(readFileSync(SELF)).digest("hex"),
-  app_src_tree: dirty ? null : git("rev-parse", "HEAD:app/src"),
+  app_src_tree: diskTree,
   structure: {},
   colors: {},
   interactions: {},

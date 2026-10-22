@@ -68,8 +68,8 @@ function paletteKeys() {
   const keys = new Map();
   for (const m of read(PALETTE).matchAll(/^\s*(\w+):\s*\{([^}]*)\}/gm)) {
     const body = m[2];
-    const light = body.match(/light:\s*"([a-z]+-\d+)"/)?.[1];
-    const dark = body.match(/dark:\s*"([a-z]+-\d+)"/)?.[1];
+    const light = body.match(/light:\s*"var\(--color-([a-z]+-\d+)\)"/)?.[1];
+    const dark = body.match(/dark:\s*"var\(--color-([a-z]+-\d+)\)"/)?.[1];
     if (!light || !dark) continue;
     keys.set(m[1], {
       light, dark,
@@ -138,8 +138,12 @@ function checkContrast() {
   const theme = read("app/node_modules/tailwindcss/theme.css");
   const shade = (name) => parseOklch(theme.match(new RegExp(`--color-${name}:\\s*(oklch\\([^)]*\\))`))?.[1] ?? "");
   const css = read("app/src/app/globals.css");
-  const cardOf = (selector) => parseOklch(css.slice(css.indexOf(selector)).match(/--card:\s*(oklch\([^)]*\))/)?.[1] ?? "");
-  const bg = { sáng: cardOf(":root"), tối: cardOf(".dark") };
+  // Khối mở đầu dòng (`:root {` / `.dark {`), không phải chữ `.dark` trong dòng @custom-variant.
+  const cardOf = (block) => {
+    const at = css.search(new RegExp(`^${block}\\s*\\{`, "m"));
+    return at < 0 ? null : parseOklch(css.slice(at).match(/--card:\s*(oklch\([^)]*\))/)?.[1] ?? "");
+  };
+  const bg = { sáng: cardOf(":root"), tối: cardOf("\\.dark") };
   if (!bg.sáng || !bg.tối) return ["contrast: không đọc được --card ở globals.css"];
   const errs = [];
   const exempt = [...keys].filter(([, v]) => v.exempt).map(([k]) => k).sort();
@@ -377,7 +381,7 @@ const CASES = [
   ["palette", add(PERF, '\nexport const X = "var(--chart-1)"\n'), "dùng --chart-*"],
   ["palette", edit(PERF, (t) => t.replace(/(key:\s*"revenue"[^}]*?series:\s*)"revenue"/, '$1"share1"')), "lệch nghĩa revenue"],
   ["contrast", null],
-  ["contrast", edit(PALETTE, (t) => t.replace(/(revenue:\s*\{[^}]*light:\s*)"indigo-500"/, '$1"indigo-300"')), "revenue sáng 2.01 < 3"],
+  ["contrast", edit(PALETTE, (t) => t.replace(/(revenue:\s*\{[^}]*light:\s*)"var\(--color-indigo-500\)"/, '$1"var(--color-indigo-300)"')), "revenue sáng 2.01 < 3"],
   ["contrast", edit(PALETTE, (t) => t.replace(/(margin:\s*\{[^}]*?)\s*\}/, "$1, exempt: true }")), "danh sách miễn đổi"],
   ["contrast", edit(PALETTE, (t) => t.replace("bg-amber-600 dark:bg-amber-400", "bg-amber-500 dark:bg-amber-400")), "swatch occupancy lệch cặp"],
   ["data-color", null],

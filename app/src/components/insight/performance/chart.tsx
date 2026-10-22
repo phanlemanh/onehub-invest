@@ -23,6 +23,7 @@ import {
   DEFAULT_VIEW,
   metricOf,
   rangeOf,
+  swatchOfMetric,
   type MetricSpec,
   type MonthRow,
   type ViewState,
@@ -82,7 +83,7 @@ function PlotLegend({
         className="flex flex-wrap items-center gap-x-4 gap-y-2"
       >
         <li className="flex h-4 items-center gap-1.5">
-          <MetricDot swatch={metric.swatch} />
+          <MetricDot swatch={swatchOfMetric(metric)} />
           <span className={cn(CAP_BOX, "tabular-nums")}>
             {formatSpan(first, last)}
           </span>
