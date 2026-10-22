@@ -5,9 +5,11 @@ gap_probe: advisory          # Luật phản biện context sạch ở pre-merge
                              # `advisory` in NOTE khi một slug T2/T3 trong diff PR thiếu gap-probe.md
                              # và thiếu entry descope; `required` chặn merge.
 recheck: strict              # CI re-check of COMMITTED evidence — repo mới, chưa có báo cáo cũ.
-# Hai ổ cắm thiết kế — khai khi repo có bề mặt người dùng, bỏ trống thì không chặn:
-#   feature_loop.ui_standards_skill: <skill chuẩn plugin/DS của repo>   # chưa khai: app/DESIGN_RULES.md chưa thành skill
-#   design_pass.ds_skill: <skill chuẩn DS của repo>                     # chưa khai: repo chưa có skill design-system
+# Hai ổ cắm thiết kế (repo có bề mặt người dùng): cả hai trỏ tới skill repo `onehub-ui`.
+feature_loop:
+  ui_standards_skill: onehub-ui
+design_pass:
+  ds_skill: onehub-ui
 executors:
   test:
     collector: "cd collector && npm test"            # suy từ: collector/package.json — 13/13 xanh
@@ -15,11 +17,22 @@ executors:
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts — 8/8 xanh
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
+    ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
+    ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
   script:
     cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
     portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
+    ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
+    ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
+    ui_kit_sockets: "node scripts/ui-standards/acceptance.mjs kit-sockets"
+    ui_pointers: "node scripts/ui-standards/acceptance.mjs pointers"
+    ui_baseline_doc: "node scripts/ui-standards/acceptance.mjs baseline-doc"
+    ui_lint_should_fire: "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-fire"
+    ui_lint_should_not_fire: "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-not-fire"
+    ui_baseline_guard: "cd app && node eslint-plugin-onehub-ui/selftest.mjs baseline-guard"
+    ui_hook_selftest: "bash .claude/hooks/tests/typecheck-changed.selftest.sh"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
