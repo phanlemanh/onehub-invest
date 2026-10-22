@@ -72,7 +72,7 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.ui_b3_structure
-    expected: "exit 0 khi evidence/before/snapshot.json và evidence/after/snapshot.json có structure + interactions giống hệt (gồm tên tệp + sha256 CSV và chữ toast sao chép ở ba khung), cùng capture_sha (mã băm b3-capture.mjs), |after.at − before.at| ≤ 2 giờ, before.app_src_tree = cây app/src của merge-base, after.app_src_tree = HEAD:app/src; chiều đỏ: sửa một chữ tooltip trong fixture → exit 1 'structure: khác ở <khoá>'; lệch capture_sha → 'structure: khác bản script chụp'; after.app_src_tree khác HEAD → 'structure: bản sau không chụp trên HEAD'. Phá-thử thật một lần ở S3: đổi chữ tooltip trong code, chụp, lệnh đỏ — log ở evidence/phá-thử-E9.txt"
+    expected: "exit 0 khi evidence/before/snapshot.json và evidence/after/snapshot.json có structure + interactions giống hệt (gồm tên tệp + sha256 CSV và chữ toast sao chép ở ba khung), cùng capture_sha (mã băm b3-capture.mjs), |after.at − before.at| ≤ 2 giờ, before.app_src_tree = cây app/src của before.head và before.head là tổ tiên HEAD, after.app_src_tree = HEAD:app/src; chiều đỏ: sửa một chữ tooltip trong fixture → exit 1 'structure: khác ở <khoá>'; lệch capture_sha → 'structure: khác bản script chụp'; after.app_src_tree khác HEAD → 'structure: bản sau không chụp trên HEAD'. Phá-thử thật một lần ở S3: đổi chữ tooltip trong code, chụp, lệnh đỏ — log ở evidence/phá-thử-E9.txt"
     paths: ["app/src/**", "_acceptance/ui-clean-b3-charts/evidence/before/snapshot.json", "_acceptance/ui-clean-b3-charts/evidence/after/snapshot.json"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
