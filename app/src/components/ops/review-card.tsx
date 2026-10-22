@@ -16,12 +16,16 @@ export type ReviewEvidence = {
     area_m2: number | null; price_perm2: number | null;
     bedrooms: number | null; phuong: string | null;
     property_type: string | null; text: string | null;
+    street?: string | null; block?: string | null; floor?: string | null;
+    bathrooms?: number | null;
   };
   offer_b: {
     offer_id: string; source: string; price_vnd: number | null;
     area_m2: number | null; price_perm2: number | null;
     bedrooms: number | null; phuong: string | null;
     property_type: string | null; subject: string | null;
+    street?: string | null; block?: string | null; floor?: string | null;
+    bathrooms?: number | null; image_url?: string | null;
   };
   stage_b_score: number;
 };
@@ -74,13 +78,17 @@ function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
         </div>
         {offer.bedrooms !== null && (
           <div>
-            <p className="text-muted-foreground text-[10px]">Phòng</p>
-            <p className="font-medium">{offer.bedrooms}PN</p>
+            <p className="text-muted-foreground text-[10px]">PN/WC</p>
+            <p className="font-medium">{offer.bedrooms}PN{"bathrooms" in offer && (offer as Record<string, number | null>).bathrooms ? `/${(offer as Record<string, number | null>).bathrooms}WC` : ""}</p>
           </div>
         )}
         <div>
           <p className="text-muted-foreground text-[10px]">Loại</p>
           <p className="font-medium">{offer.property_type ?? "?"}</p>
+        </div>
+        <div className="col-span-2">
+          <p className="text-muted-foreground text-[10px]">Địa chỉ</p>
+          <p className="truncate font-medium">{(offer as Record<string, string | null>).street ?? "—"}</p>
         </div>
       </div>
       {(() => { const desc = (offer as Record<string, string | null>).text ?? (offer as Record<string, string | null>).subject; return desc ? (
