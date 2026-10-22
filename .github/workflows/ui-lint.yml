@@ -7,11 +7,13 @@ on:
   pull_request:
     paths:
       - "app/**"
+      - ".claude/skills/onehub-ui/**"
       - ".github/workflows/ui-lint.yml"
   push:
     branches: [main]
     paths:
       - "app/**"
+      - ".claude/skills/onehub-ui/**"
       - ".github/workflows/ui-lint.yml"
 
 jobs:
