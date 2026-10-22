@@ -43,6 +43,7 @@ executors:
     ui_b1_design_page: "node scripts/ui-standards/b1-ops.mjs design-page"
     ui_b1_docs: "node scripts/ui-standards/b1-ops.mjs docs"
     ui_b1_states: "node scripts/ui-standards/b1-ops.mjs states"
+    ui_b1_shell: "node scripts/ui-standards/b1-ops.mjs shell"
     ui_b1_selftest: "node scripts/ui-standards/b1-ops.mjs selftest"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.

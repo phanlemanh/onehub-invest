@@ -20,49 +20,67 @@ cục bộ (dùng scope).
 `investment-simulator.tsx`, đổi style/brand, đổi query/API, trạng thái tải/trống đầy đủ cho mọi
 vùng (B4), `PageHeader`/`StatTiles` tự thân (B2).
 
-## 2. Cách chọn khuôn
+## 2. Cách chọn khuôn — chỉ đạo 2026-10-23: dùng block Solutions + app shell
 
-Thứ tự của `onehub-ui/loop.md`: danh mục trước, MCP sau. Bảng "Một loại UI, một cách làm" đã
-phủ ba loại lớn của Ops: **bảng → `InsightGrid`**, **KPI → `StatTiles`**, **đầu trang →
-`PageHeader`** — dùng lại, không cài block mới (luật danh mục: "Có sẵn bản chuyển thể thì dùng
-lại bản đó"). Các vùng danh mục chưa có thì chọn mẫu chính chủ:
+Mạnh chốt (qua phiên điều phối, nguyên văn): «Vì trang Ops của chúng ta gần với dev ops và ai ops
+bên cạnh lựa chọn app shell phù hợp với IA … Nên tôi đề xuất sử dụng các block/component của nó».
+Nguồn khảo sát: nhóm `solutions/dev-ops` (6 block), `solutions/ai-ops` (9), `solutions/agents`
+(10, do `app-shell-10` chỉ sang cho "approval inbox"), `application/app-shell` (36). Mỗi ứng viên
+đọc bestFor / whenNotToUse / agentNotes ở bản `.md` của block (cùng nội dung `get_block` của MCP)
+và so bằng ảnh thumbnail chính chủ (`reui.io/thumbnails/blocks/<tên>-light.webp`). MCP reui chưa
+nạp vào phiên này (Hỏi-4) nên đi bản sao công khai; ảnh so sánh lưu ở
+`_acceptance/ui-clean-b1-ops/figures/thumbs-*.png`.
 
-| Vùng | Khuôn chọn | Ứng viên đã xét | Vì sao |
+### 2a. App shell của cổng Ops
+
+| Ứng viên | Hợp ở đâu | Vướng ở đâu | Kết luận |
 |---|---|---|---|
-| Xác nhận xoá nhóm / gỡ tài khoản Zalo | `c-alert-dialog-5` (Destructive Delete) — `ui/alert-dialog` | `c-dialog-7` (dialog phá huỷ) | ReUI: xác nhận phá huỷ là `AlertDialog` (backdrop không đóng); `c-dialog-7` là Dialog, click ngoài đóng được |
-| Form thêm nhóm thu | `c-dialog-1` (Basic, form 2 trường) — `ui/dialog` + `ui/field` + `ui/select` + `ui/input` | form inline như hiện tại | ReUI Owners: modal form là `Dialog`; form inline hiện là `div rounded-lg border` tự vẽ |
-| Bật/tắt nhóm | `ui/switch` `size="sm"` (mẫu `c-switch-4`) | `Toggle`, Button đổi chữ | ReUI: on/off là Switch; Toggle Group dành cho chọn view |
-| Ô lọc + nút tải lại trên bảng nhóm Zalo | `InputGroup` + nút ghost đặt ở `actions` của `OpsSection` ngay trên bảng (ý đồ của `c-data-grid-23`: toolbar sát bảng) | sửa `InsightGrid` thêm slot `actions` trong FrameHeader | `InsightGrid` dùng chung với cổng Invest công khai (`/yield`, `/listing`); B1 không đụng component chung (phản biện gap-probe P0) |
-| Thông báo kết quả thao tác | `sonner` (`toast`), `Toaster` đã gắn ở `providers.tsx` | `setMsg` + `<p>` | ReUI Owners: toast = sonner |
-| Cảnh báo trạng thái (máy thu offline, kênh Zalo đứt) | `reui/alert` variant warning | Badge dài | Trạng thái có câu giải thích + lệnh sửa → Alert; Badge chỉ cho nhãn ngắn |
+| **`app-shell-36` Observability Console** | Sidebar chia nhóm (Giám sát / Xử lý / Quản trị), lọc nav ⌘F, một header chung, thân trang tự do — đúng IA 7 trang phẳng của Ops | Bộ chuyển workspace và ghim trang là tính năng mẫu → chuyển thành bộ chuyển cổng Invest ↔ Ops; bỏ ghim (không lưu được) | **Khuyên** |
+| `app-shell-26` Security Scope Console (IA cũ chọn) | Mật độ cao, section pills + nút chạy | Thân là cây scope kéo-thả, cần dữ liệu phân cấp nguồn → thành phố → phường mà Ops chưa có; inventory đã ghi "drag-to-reorder … more than Ops needs" | Lối khác |
+| `app-shell-10` AI Agents Console | Subnav Agents/Tools/Runs, công tắc tự làm mới | Thẻ dự án + hạn mức chi tiêu không có dữ liệu thật | Loại |
+| `app-shell-27` Route Search Sidebar | Lọc route, không top bar | Cùng cây scope như 26 | Loại |
 
-**Không sửa `InsightGrid`.** Toolbar của bảng nhóm Zalo nằm ở `actions` của `OpsSection`; lúc tải nhóm thì hiện `Skeleton` theo dáng bảng thay cho lưới (không cần prop `isLoading`). Cổng Invest không đổi một dòng.
+Invest giữ `app-shell-30` (PortalShell) không đổi. Ops có shell riêng `components/shell/ops-shell/`
+(chuyển thể `app-shell-36`); `ops/layout.tsx` đổi lớp bọc, **giữ nguyên** hai dòng chặn quyền
+(`getSessionUser` + `canAccessOps`). Nav Ops khai ở `shell/nav.tsx` (khoá đã gỡ sau PR #3), thêm
+`/ops/review`. Header của shell giữ nút mở sidebar; breadcrumb nằm ở `PageHeader` của từng trang
+(một kiểu đầu trang cho hai cổng — không sửa `PageHeader`).
 
-Ghi chú công cụ: MCP reui đã nối ở dự án (`claude mcp list`: Connected) nhưng **chưa nạp vào phiên
-này** (bật sau khi phiên mở). Tra cứu đi đường dự phòng chính chủ: chỉ mục `reui.io/llms.txt`,
-trang `.md` của từng component (whenToUse/whenNotToUse/agentNotes) và mã nguồn mẫu free ở
-`reui.io/r/styles/base-nova/<tên>.json`. API đọc từ file đã cài trong `components/ui`,
-`components/reui`. Không cài gì mới (mọi primitive cần dùng đã có).
+### 2b. Trang → block
+
+| Trang | Block chọn | Lý do (1 dòng) | Phần bỏ / giữ data-grid |
+|---|---|---|---|
+| `/ops` Tổng quan | **`solution-dev-ops-5`** SLO Error Budgets | Độ tươi theo nguồn × thị trường là bài SLO: ô tóm tắt "đạt N/M" + lưới mục tiêu có tab Đạt / Quá hạn / Chưa có | Bỏ biểu đồ đốt ngân sách + công tắc loại sự cố (chưa có chuỗi SLI theo ngày) |
+| `/ops/collections` Thu thập | **`solution-dev-ops-6`** Data Connections + vùng lưới job của **`solution-dev-ops-1`** Cron Jobs | Sức khoẻ nguồn = connection health; luồng 7 ngày = biểu đồ sync activity; "cần chú ý" = nguồn trễ SLO / nhóm im / lớp lockdown hỏng; launchd = lưới cron job | Bỏ cột "20 lần chạy gần nhất" và bộ sửa cron (không có dữ liệu, không sửa lịch từ web) |
+| `/ops/sources` Nguồn dữ liệu | **`solution-ai-ops-2`** Provider Connections (tài khoản Zalo) + lưới "All connections" của **`solution-dev-ops-6`** (nhóm thu S05/S06) | Hàng tài khoản có trạng thái + công tắc + "Connect" = đăng nhập QR; nhóm thu = kết nối có công tắc đồng bộ, nhóm theo nguồn | Registry mã nguồn giữ `InsightGrid` (bảng thuần cột riêng — whenNotToUse của nhóm Dev Ops) |
+| `/ops/quality` Chất lượng | **không block Solutions** — giữ `InsightGrid` + `StatTiles` | dev-ops-5 cần chuỗi SLI theo ngày; hiệu chuẩn AirDNA là các bảng cột riêng → whenNotToUse "single table on your own columns: use Data Grid" | Toàn trang |
+| `/ops/review` Hàng chờ duyệt | **`solution-agents-5`** Action Approval Inbox | Hàng chờ phán quyết con người cho đề xuất AI: lưới hàng chờ + sheet xem payload (2 tin) + Duyệt / Từ chối (lý do) | Làm SAU khi `feat/enrich-qua-de-xuat` vào main |
+| `/ops/deals` Căn giá tốt | ngoài B1 (đợt B5) — ứng viên nhóm `data-grid/base` | Bản ghi nghiệp vụ (tin rao) → whenNotToUse của Dev Ops chỉ sang Base blocks | Không làm ở B1 |
+| `/ops/design` Thư viện | không block — trang trưng bày | Trưng bày mẫu dùng chung + các block đã chọn ở bảng này (link xem trước) | — |
+
+**Hệ quả cho luật "một loại UI, một cách làm" (G4):** trong các trang theo block Solutions, ô KPI
+và lưới là của chính block (chuyển thể chỉ đổi dữ liệu/chữ/prop), không thay bằng `StatTiles` /
+`InsightGrid`. Catalog ghi ngoại lệ có tên: *"Cổng Ops, trang theo block Solutions: KPI và lưới
+theo block"*. Không có `<table>` hay `useTable` tự dựng ngoài bản chuyển thể block hoặc `InsightGrid`.
+
+**Điều kiện cài:** block Pro cài bằng `npx shadcn@latest add @reui/<tên>` cần `REUI_LICENSE_KEY`
+trong `app/.env.local`. Ở worktree này CLI báo thiếu biến (Hỏi-6).
 
 ## 3. Từng trang (kế hoạch 7 dòng ReUI)
 
-Mọi trang: Surface operational · Container Frame-led · Density dense (`size="sm"` cho control) ·
-Motion none (phần đã cài tự lo) · gốc `flex flex-col gap-6` · `PageHeader` là phần tử đầu tiên,
-breadcrumb `Vận hành › <trang>`, tiêu đề trùng nhãn nav, mô tả 1 mệnh đề. States: giữ trạng thái
-đang có; vùng nào thay mới thì có trống/tải/lỗi tối thiểu (đầy đủ ở B4).
+Mọi trang: Surface operational · Container Frame-led (block Solutions đều dựng trên Frame) ·
+Density dense · Motion none (phần đã cài tự lo) · `PageHeader` là phần tử đầu tiên, breadcrumb
+`Vận hành › <trang>`, tiêu đề trùng nhãn nav. States: theo block (Empty/Skeleton của block); vùng
+không có trong block thì tối thiểu như bảng trạng thái mục Đặc tả UX.
 
 | Trang | Archetype | Vùng (trên → dưới) |
 |---|---|---|
-| `/ops` Tổng quan | Table-backed management | PageHeader (stats: số nguồn, số quá hạn) → `InsightGrid` "Độ tươi theo nguồn" (Mã · Vai trò · Thị trường · Snapshot cuối · Tuổi · SLO · Trạng thái = Badge `success-light`/`destructive-light`/`outline`); dòng SLO vào `footnote` |
-| `/ops/collections` Thu thập | Table-backed management | PageHeader (stats: số nguồn, ngày, "máy thu N′ trước") → Alert warning khi máy thu > 30′ → `InsightGrid` Sức khoẻ nguồn → `InsightGrid` Lockdown (Lớp · Kiểm · Trạng thái Badge; description = watchdog + agent-turn) → mục "Hôm nay" = `StatTiles` 4 ô + dòng phễu cổng 7 ngày → Frame "Ống Zalo" (Badge trạng thái + Alert warning khi kênh đứt, kèm lệnh) → Frame "Rotation AirDNA" (Badge outline mỗi market) → FlowTable → ZaloGroupsTable (link "Nguồn dữ liệu" vào footnote) → SchedulerTable. **Sửa lỗi bố cục:** hết section lồng trong khối tiêu đề |
-| `/ops/quality` Chất lượng dữ liệu | Table-backed management | PageHeader **đầu trang** (sửa h1 giữa trang) → mục "Thước giá & 3 tầng" = `StatTiles` → `InsightGrid` DQ checks (Kết quả = Badge `success-light`/`warning-light`/`destructive-light`) → Độ phủ trung thực → Hiệu chuẩn từng thị trường → AirDNA toàn quốc (3 bảng giữ nguyên) |
-| `/ops/review` Hàng chờ duyệt | Frame stack | PageHeader (stats: chờ / đã duyệt / từ chối) → mỗi mục một `ReviewCard` = Frame: FrameHeader (tiêu đề + Badge AI + Badge điểm B) · FramePanel lý do AI (`Alert` với icon `BotIcon`, bỏ 🤖) · FramePanel 2 tin đặt cạnh nhau (lưới nhãn/giá trị, số qua `lib/format`) · FrameFooter 3 nút `Button` size sm: "Cùng căn" (primary) · "Khác căn" (outline) · "Không chắc" (ghost), icon lucide; kết quả bằng toast. Hết hàng chờ → `Empty` |
-| `/ops/sources` Nguồn dữ liệu | Frame stack | PageHeader → `InsightGrid` Registry (Trạng thái = Badge) → mục "Tài khoản Zalo" (OpsSection): hàng điều khiển (Select tài khoản · "Đăng nhập QR" · "Gỡ" → AlertDialog · Input id mới + "Thêm") → khối QR (Skeleton khi đang sinh) → OpsSection "Nhóm của <tk>" (actions = ô lọc + Tải lại) chứa `InsightGrid` (Đang bật = Switch; xung đột = Switch disabled + chữ "ở <tk>"); đang tải = Skeleton dáng bảng; lỗi = Alert destructive + Thử lại → mục "Nhóm thu thập": mỗi nguồn một `InsightGrid` (Nhóm · Bài · Trạng thái Badge · Bật Switch · Xoá ghost → AlertDialog), nút "Thêm nhóm" → form theo Hỏi-5 (khuyên Dialog `c-dialog-1`; lối khác: form inline trong Frame) |
-| `/ops/design` Thư viện thiết kế | Frame stack | PageHeader → mỗi dòng của "Một loại UI, một cách làm" một mục: tên loại + component + bản mẫu sống (StatTiles, InsightGrid, PageHeader, Badge trạng thái, PageError, Empty, Skeleton). Bỏ 5 import từ `components/examples/` và chữ thuật ngữ dev ("skill reui", ".claude", "Gallery") |
-
-Mục có tiêu đề (không phải Frame) dùng một component nhỏ `ops/ops-section.tsx`: `<section>` +
-`h2 text-sm font-semibold tracking-tight` + mô tả `text-xs` + `actions` bên phải. Lý do: tránh
-Frame lồng Frame khi một mục chứa nhiều `InsightGrid` (ReUI: "never a Frame inside a Frame").
+| `/ops` | Dashboard grid | PageHeader → hàng ô của dev-ops-5 (mục tiêu đạt / quá hạn / nguồn chưa có / tuổi lớn nhất) → lưới mục tiêu dev-ops-5 (Mã · Vai trò · Thị trường · Snapshot cuối · Tuổi · SLO · Trạng thái), tab theo trạng thái |
+| `/ops/collections` | Dashboard grid | PageHeader → Alert warning khi máy thu > 30′ → hàng ô dev-ops-6 (nguồn khoẻ, bản ghi 24h, nhóm Zalo hoạt động, lỗi/trễ) → biểu đồ sync activity (luồng 7 ngày theo nguồn) + danh sách "cần chú ý" → lưới kết nối dev-ops-6 = sức khoẻ nguồn → lớp lockdown (danh sách cần chú ý hoặc lưới kiểm) → Ống Zalo + Rotation AirDNA (Frame) → lưới nhóm Zalo → lưới job dev-ops-1 (launchd). **Sửa lỗi bố cục:** hết section lồng trong khối tiêu đề |
+| `/ops/quality` | Table-backed management | PageHeader **đầu trang** (sửa h1 giữa trang) → `StatTiles` thước giá → `InsightGrid` DQ checks (Badge trạng thái) → 3 bảng AirDNA giữ nguyên |
+| `/ops/review` | Table-backed management | PageHeader → agents-5: ô tóm tắt (chờ / đã duyệt / từ chối) → lưới hàng chờ → sheet chi tiết (2 tin cạnh nhau, lý do AI, điểm B) với Duyệt / Từ chối / Hoãn — sau enrich |
+| `/ops/sources` | Frame stack | PageHeader → `InsightGrid` Registry → ai-ops-2: hàng tài khoản Zalo (trạng thái, số nhóm, công tắc, "Đăng nhập QR" = dialog Connect, Gỡ → AlertDialog) → lưới nhóm của tài khoản đang chọn (công tắc, khoá khi thuộc tài khoản khác) → dev-ops-6 lưới nhóm thu theo nguồn (công tắc, xoá → AlertDialog, thêm theo luồng tạo của block) |
+| `/ops/design` | Frame stack | PageHeader → mỗi dòng "Một loại UI" một mục mẫu sống → bảng block Solutions đã chọn (tên + trang dùng + link xem trước). Bỏ import `components/examples/` và chữ thuật ngữ dev |
 
 ## 4. Hợp đồng API giữ nguyên
 
@@ -120,7 +138,7 @@ Zalo; `/ops/review` hiện nội dung tin. Ảnh evidence được commit và đ
 | ST-review-deciding | Hàng chờ duyệt | 3 nút disabled trong lúc gửi | chờ |
 | ST-review-error | Hàng chờ duyệt | toast lỗi nêu lý do API | bấm lại |
 | ST-sources-delete-confirm | Nguồn dữ liệu | AlertDialog "Xoá nhóm?" + số bài sẽ xoá | Huỷ / Xoá |
-| ST-sources-add | Nguồn dữ liệu | form thêm nhóm (Dialog hoặc inline theo Hỏi-5): nguồn, URL/key, tên | Lưu / Huỷ |
+| ST-sources-add | Nguồn dữ liệu | luồng tạo kết nối của dev-ops-6, rút gọn còn nguồn, URL/key, tên | Lưu / Huỷ |
 | ST-zalo-groups-loading | Nguồn dữ liệu | Skeleton dáng bảng thay chỗ bảng nhóm | chờ |
 | ST-zalo-groups-error | Nguồn dữ liệu | Alert destructive + "Thử lại" | Thử lại |
 | ST-zalo-groups-empty | Nguồn dữ liệu | dòng trống của bảng: "Chưa thấy nhóm — đăng nhập QR rồi tải lại" | Đăng nhập QR |
@@ -140,14 +158,15 @@ Zalo; `/ops/review` hiện nội dung tin. Ảnh evidence được commit và đ
 | Component | Nấc (dùng / ghép / mở rộng / tạo) | Vì sao (1 dòng) |
 |---|---|---|
 | PageHeader | dùng | khung đầu trang chung (danh mục) |
-| InsightGrid | dùng | bảng chung (danh mục); không sửa vì dùng chung với Invest |
+| InsightGrid / StatTiles | dùng | trang không có block Solutions khớp (quality, registry); không sửa vì dùng chung với Invest |
 | StatTiles | dùng | KPI chung (danh mục) |
 | AlertDialog / Dialog / Switch / Select / Input / Field / Empty / Skeleton / Alert / Button / Badge | dùng | primitive đã cài |
-| OpsSection | tạo | tiêu đề mục chứa nhiều Frame, tránh Frame lồng Frame |
-| CoverageTable, FeedHealthTable, LockdownTable, DqChecksTable, RegistryTable, ZaloGroupsGrid | ghép | cột riêng của từng bảng, đều qua InsightGrid |
+| app-shell-36 → ops-shell | dùng (chuyển thể) | shell riêng cho Ops, nav nhóm |
+| solution-dev-ops-5 / -6 / -1, solution-ai-ops-2, solution-agents-5 | dùng (chuyển thể) | bảng 2b |
+| DqChecksTable, RegistryTable | ghép | bảng thuần qua InsightGrid |
 
 ### 6. Khuôn IA đã chọn + căn cứ
 
 Khuôn IA: bảng-điều-khiển (dashboard-first)
-Căn cứ: (ii) — cổng Ops là bảng điều khiển vận hành có nav cố định; IA trang đã chốt ở `docs/architecture/portals.md` và `routes.md`, đợt này không đổi IA, chỉ đổi khung từng trang.
+Căn cứ: (i) đã xem 36 app-shell + 25 block Solutions của ReUI (ảnh thumbnail): console vận hành của ReUI đều là sidebar nhóm + trang bảng điều khiển; Ops giữ 7 trang phẳng theo `portals.md`, chỉ đổi shell và khung trang.
 <!-- UX-SPEC-TEMPLATE>>> -->

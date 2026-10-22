@@ -20,3 +20,11 @@ Một tác tử tươi đọc đúng 4 tệp (design, contract, evals, decisions
 | P1 | contract | Bảng trạng thái UX và mục Hành vi không có AC/eval | review-card quên disabled → bấm đúp gửi 2 POST; toggle 500 mà Switch vẫn bật | AC mới cho các ST-*; test component hoặc quét AST | fixed: thêm AC-11 + E15 (quét AST quan hệ: disabled gắn cờ đang gửi, nhánh lỗi hoàn giá trị + toast.error, Empty, Skeleton, Alert + Thử lại, chặn form thiếu trường, aria-label, data-tier-a). Không dựng test component vì app chưa có framework test (CLAUDE.md app) |
 | P1 | evals | E6 đo chuỗi có mặt (có import toast) thay cho quan hệ "mọi thông báo qua toast" | Đổi tên setMsg thành setNotice + <p>{notice}</p> vẫn xanh | AST: state chuỗi render làm chữ JSX → đỏ; cặp đỏ setNotice | fixed: E6 (b)(c) đo quan hệ bằng AST, có danh sách cho phép kèm lý do (groupsError), selftest có cặp đỏ setNotice |
 | P1 | evals | E7 so snapshot do chính bộ trích sinh — bộ trích sót kiểu gọi thì hai phía cùng sót | Lời gọi qua hàm phụ không được trích; E7 xanh dù body đổi | Ma trận viết tay từ design mục 4; snapshot ⊇ ma trận | fixed: E7 thêm b1-api-expected.json viết tay (từ design mục 4, trước code), kiểm snapshot ⊇ ma trận và sau-sửa = snapshot; selftest có ca hàm phụ |
+
+## Sau phản biện — chỉ đạo mới 2026-10-23
+
+Artifact được sửa lớn sau lượt phản biện này theo chỉ đạo của Mạnh (shell riêng cho Ops + block
+Solutions theo trang): thêm AC-3 (shell), AC-5 viết lại (block theo trang), đánh số lại AC-4…AC-12,
+thêm E16. Không chạy lại phản biện (luật một lượt của vòng); cả năm finding trên vẫn áp và đã xử
+trên bản mới (không sửa thành phần dùng chung của Invest, che tầng A vô điều kiện, đo trạng thái,
+đo toast theo quan hệ, so API theo endpoint + ma trận viết tay).
