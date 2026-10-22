@@ -17,6 +17,7 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 |---|---|---|
 | Ô KPI | `page/stat-tiles.tsx` (`StatTiles`, bậc qua `page/tiers.ts`) | card KPI tự ghép, `c-card-15` mới |
 | Bảng | `insight/insight-grid.tsx` (`InsightGrid`: Frame + data-grid, nhãn `DATA_GRID_VI`) | `<table>`, data-grid dựng lại từ đầu |
+| Bảng so sánh thuộc tính (cột = đối tượng) | `compare/comparison.tsx` (comparison-1; `<table>` là của block gốc → ngoại lệ có lý do, không chuyển data-grid) | data-grid cho bảng so sánh, bảng so sánh tự dựng |
 | Page header | `page/page-header.tsx` (`PageHeader`, slot `actions`) | `h1` + `p` tự viết |
 | Đang tải | `states/page-skeleton.tsx` (hoặc Skeleton theo đúng bố cục vùng) đặt trong `<Suspense>` | `loading.tsx` cấp segment (mất mã 404/307), spinner cả trang |
 | Lỗi | `states/page-error.tsx` (c-alert-1 + Thử lại) | chữ đỏ tự tô |
