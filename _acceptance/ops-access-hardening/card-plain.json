@@ -1,0 +1,5 @@
+{
+  "feature_plain": "Người tự đăng ký không còn vào được khu vận hành; chỉ quản trị viên, nhân viên vận hành được cấp quyền, hoặc email trong danh sách ngoại lệ mới vào. Đường xem ảnh tin Zalo chỉ trả ảnh trong hai thư mục ảnh tạm, không còn đọc được tệp cấu hình hay khoá của OpenClaw.",
+  "scope_plain": "Năm việc cố ý để ngoài vòng này (đã duyệt ở Cổng 1):",
+  "analyst_plain": "Lượt so với bản cũ báo hai bộ kiểm «không phân biệt» là do cách so, không do bộ kiểm yếu: bộ kiểm chạy thật gọi vào máy chủ đang chạy bản mới, còn bộ kiểm tĩnh ở bản cũ chưa có các phép kiểm mới. Đối chứng đúng (bộ kiểm mới chạy trên mã cũ) đã làm tay và lưu trong gói bằng chứng: bộ kiểm chạy thật đỏ 9 ca, bộ kiểm tĩnh đỏ 6 ca."
+}
