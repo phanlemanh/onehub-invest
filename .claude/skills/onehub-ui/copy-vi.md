@@ -1,7 +1,9 @@
 # Chữ tiếng Việt
 
-UI viết tiếng Việt. URL dùng ASCII không dấu (`slugifyName()`). Tên nguồn chỉ được ghi bằng mã
-`S0x` (SPL, ADR-0007), không viết tên nguồn thật lên UI.
+UI viết tiếng Việt. **Nhãn lấy từ `CONTEXT.md`** ở gốc repo (dòng in đậm của mỗi thuật ngữ; tên ở
+`_Avoid_` là tên đã loại). Chưa có thuật ngữ thì thêm vào `CONTEXT.md` trước khi viết nhãn. URL tiếng
+Anh, kebab-case, theo `Slug URL` của `CONTEXT.md` (luật ở `AGENTS.md` › Quy ước). Tên nguồn chỉ được
+ghi bằng mã `S0x` (SPL, ADR-0007), không viết tên nguồn thật lên UI.
 
 ## Số đều đi qua `lib/format.ts`
 

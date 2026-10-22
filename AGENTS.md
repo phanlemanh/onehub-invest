@@ -7,7 +7,9 @@
 
 Nền tảng insight đầu tư BĐS Việt Nam (cho thuê ngắn hạn + mua bán). North star:
 pipeline đầu tư 4 giai đoạn (`docs/research/investment-pipeline-4-stages.md`).
-Làm việc với user bằng **tiếng Việt**.
+Bối cảnh sản phẩm một trang (người dùng, thị trường, hai cổng, nguồn + SPL):
+**`docs/product/CONTEXT-PRODUCT.md`**. Từ vựng chuẩn (nhãn UI, tên code, slug URL):
+**`CONTEXT.md`**. Làm việc với user bằng **tiếng Việt**.
 
 ## Bản đồ monorepo
 
@@ -90,8 +92,17 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 
 ## Quy ước
 
-- Comment domain logic tiếng Việt; API/types tiếng Anh. UI tiếng Việt, URL ASCII không dấu
-  (`slugifyName()`).
+- **Đặt tên** (Mạnh chốt 2026-10-23; từ vựng ở `CONTEXT.md`):
+  - Code, API, tên bảng/cột, types: tiếng Anh; field/enum dữ liệu theo RESO Data Dictionary khi có
+    (ADR-0011). Comment domain logic tiếng Việt.
+  - Chữ UI tiếng Việt, nhãn lấy từ `CONTEXT.md`. Khái niệm chưa có trong đó → thêm thuật ngữ
+    (nhãn · code · slug · định nghĩa · `_Avoid_`) cùng commit với nhãn mới.
+  - **URL tiếng Anh toàn bộ**: ASCII, kebab-case, mỗi đoạn tĩnh có trong `Slug URL` của
+    `CONTEXT.md`. Ngoại lệ duy nhất: slug địa lý là tên riêng (`hanoi`, `vn-hanoi-…`, sinh bằng
+    `slugifyName()`) và mã quốc gia (`vn`). Test `app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs`
+    đỏ khi thêm route ngoài danh sách.
+  - Đổi slug cũ (route tiếng Việt còn sót) phải kèm redirect vĩnh viễn trong `app/next.config.ts`,
+    làm trong đợt dọn của nhóm trang đó — không đổi lẻ từng route.
 - SQL đánh số theo thứ tự chạy: `db/migrations/NNN_*.sql`; `pipeline/sql/` 200 transform →
   300 metrics → 400 breakdowns → 410 listing_stats → 450 DQ → 500 asset_stats.
 - UI: luật ReUI (khối dưới) + `.claude/skills/onehub-ui/` (route map, danh mục, màu dữ liệu, chữ VN).

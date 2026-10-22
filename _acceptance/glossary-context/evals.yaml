@@ -1,0 +1,95 @@
+schema_version: 1
+feature_slug: glossary-context
+# Máy kiểm sống ở scripts/glossary/acceptance.mjs (vật hồ sơ) và app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs (ở lại repo).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.glossary_terms
+    expected: "exit 0; parser kit đọc CONTEXT.md; 7/7 nhóm có thuật ngữ; mọi thuật ngữ có định nghĩa; không tên bị loại nào trùng thuật ngữ chuẩn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.glossary_w6
+    expected: "exit 0; should-fire: hồ sơ mẫu dùng 'tỷ lệ lấp đầy' ra W6 chỉ 'Công suất'; should-NOT-fire: 3 hồ sơ đã ký không có W6"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.glossary_rebuild
+    expected: "exit 0; CONTEXT.md trùng từng byte bản dựng từ terms.mjs; mọi câu Q khớp decisions.jsonl"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    expected: "exit 0; test 'mọi đoạn tĩnh nằm trong CONTEXT.md hoặc ngoại lệ còn hạn; slug cũ có redirect' pass trên cây app/src/app thật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    expected: "exit 0; ca 'route tiếng Việt MỚI: đỏ, nêu đúng đoạn' (tim-kiem) pass; should-NOT-fire: ca 'route tiếng Anh có trong CONTEXT.md: xanh' và ngoại lệ so-sanh còn hạn không đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    expected: "exit 0; các ca quá hạn (2027-01-01 đỏ, đúng 2026-12-31 chưa đỏ), thiếu redirect, redirect tạm không tính, slug đích chưa có trong CONTEXT.md đều pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.glossary_naming_rule
+    expected: "exit 0; Quy ước có đủ 5 dòng OK của 4 vế; câu cũ đã bỏ; AGENTS.md, copy-vi.md, portals.md trỏ CONTEXT.md"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.glossary_product_page
+    expected: "exit 0; ≤ 80 dòng; đủ 5 mục, mỗi mục trỏ tệp có thật, không trỏ tệp chết; AGENTS.md trỏ trang"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: judgment
+    inputs:
+      - docs/product/CONTEXT-PRODUCT.md
+      - docs/research/investment-pipeline-4-stages.md
+      - docs/architecture/portals.md
+      - docs/ROADMAP.md
+    question: "CONTEXT-PRODUCT.md có phải bản tóm tắt + trỏ nguồn (không chép lại đoạn dài, không đưa số liệu sẽ cũ đi) và có điều nào mâu thuẫn với ba tài liệu nguồn không?"
+    evidence_required: [verdict, rationale]
+
+  - id: E10
+    criterion: AC-9
+    executor: judgment
+    inputs:
+      - CONTEXT.md
+      - pipeline/sql/300_metrics.sql
+      - db/migrations/001_init.sql
+      - app/src/lib/yield.ts
+    question: "Định nghĩa ADR, Công suất, RevPAR, Doanh thu, Lợi suất gộp, Lợi suất ròng, Thu nhập ròng trong CONTEXT.md có khớp công thức trong SQL và yield.ts không? Nêu từng chỉ số lệch."
+    evidence_required: [verdict, rationale]
+
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.glossary_runner
+    expected: "exit 0; route-slugs.test.mjs trong glob test:lint-rules; CI ui-lint chạy nó và kích hoạt khi CONTEXT.md đổi; config có executor"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    expected: "exit 0; toàn bộ test luật onehub-ui (gồm route-slugs) pass"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
