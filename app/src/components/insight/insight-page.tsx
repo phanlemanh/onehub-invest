@@ -1,3 +1,4 @@
+import { UserEventBeacon } from "@/components/user-event-beacon";
 import { notFound } from "next/navigation";
 
 import { getSessionUser, isSaved } from "@/lib/auth";
@@ -135,7 +136,9 @@ export async function InsightPage({ areaId }: { areaId: string }) {
       : `${area.name} chưa có listing nào trong dữ liệu tự thu thập.`;
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
+      <UserEventBeacon kind="view_market" payload={{ areaId: area.id }} />
+      <div className="flex flex-col gap-6">
       <PageHeader
         crumbs={crumbs}
         title={area.name}
@@ -226,5 +229,6 @@ export async function InsightPage({ areaId }: { areaId: string }) {
         </p>
       </div>
     </div>
+      </>
   );
 }

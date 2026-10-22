@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { sendUserEvent } from "@/components/user-event-beacon";
+
+import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/reui/badge";
 
@@ -76,6 +78,15 @@ export function InvestmentSimulator({ defaults }: Props) {
   const [rentLtM, setRentLtM] = useState((defaults.rentLt ?? 8e6) / 1e6);
   const [opsStrPct, setOpsStrPct] = useState(25);
   const [opsLtPct, setOpsLtPct] = useState(10);
+
+  // M2: log G3 inputs (hồ sơ tài chính bền — nguồn semantic quý)
+  useEffect(() => {
+    sendUserEvent("dau_tu_input", {
+      salePerm2: defaults.salePerm2, areaM2: 60, equityPct: 30,
+      ratePct: 9, adrK: defaults.adr ? Math.round(defaults.adr / 1e3) : null,
+      rentLtM: defaults.rentLt ? Math.round(defaults.rentLt / 1e6) : null,
+    });
+  }, []); // 1 lần khi mount với defaults thật
 
   const r = useMemo(() => {
     const price = salePerm2 * 1e6 * areaM2; // giá mua
