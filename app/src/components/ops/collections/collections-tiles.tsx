@@ -1,0 +1,99 @@
+"use client"
+
+// chuyển thể từ @reui/solution-dev-ops-6 (stat-cards.tsx): hàng 4 thẻ số — sức khoẻ
+// nguồn, bản ghi 24h, cổng Zalo hôm nay, lớp lockdown. Thanh phân đoạn thay cho
+// biểu đồ xu hướng khi chưa có chuỗi theo ngày; bản ghi 7 ngày ở vùng Luồng bên dưới.
+import { MessageSquareIcon, PlugIcon, ShieldCheckIcon, TrendingUpIcon } from "lucide-react"
+
+import { Badge } from "@/components/reui/badge"
+import type { GateFunnel } from "@/lib/collections-queries"
+import { fmtInt } from "@/lib/format"
+import type { LockdownLayer, SourceFeedHealth } from "@/lib/ops-queries"
+
+import { FEED_STATE, feedState } from "./feed-status"
+import { SegmentBar, StatCard } from "./section"
+
+export function CollectionsTiles({
+  feeds,
+  funnel,
+  layers,
+  agentTurnsToday,
+}: {
+  feeds: SourceFeedHealth[]
+  funnel: GateFunnel
+  layers: LockdownLayer[]
+  agentTurnsToday: number
+}) {
+  const states = feeds.map(feedState)
+  const count = (s: ReturnType<typeof feedState>) => states.filter((x) => x === s).length
+  const items24h = feeds.reduce((sum, f) => sum + (f.items24h || 0), 0)
+  const busiest = [...feeds].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
+  const layersOk = layers.filter((l) => l.ok === true).length
+  const layersBad = layers.filter((l) => l.ok === false).length
+
+  return (
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:gap-3">
+      <StatCard
+        icon={<PlugIcon aria-hidden="true" />}
+        title="Sức khoẻ nguồn"
+        period="Bây giờ"
+        value={fmtInt(count("ok"))}
+        total={fmtInt(feeds.length)}
+        basis="Nguồn còn trong SLO độ tươi"
+        action={{ label: "Xem từng nguồn", href: "#nguon" }}
+      >
+        <SegmentBar
+          label="Nguồn theo sức khoẻ"
+          segments={(["ok", "late", "stopped"] as const).map((s) => ({ key: s, label: FEED_STATE[s].label, count: count(s), tone: FEED_STATE[s].tone }))}
+        />
+      </StatCard>
+
+      <StatCard
+        icon={<TrendingUpIcon aria-hidden="true" />}
+        title="Bản ghi 24h"
+        period="24 giờ"
+        value={fmtInt(items24h)}
+        basis={busiest && busiest.items24h ? `Nhiều nhất: ${busiest.code} (${fmtInt(busiest.items24h)})` : "Chưa có bản ghi trong 24 giờ"}
+        action={{ label: "Xem luồng 7 ngày", href: "#luong" }}
+      />
+
+      <StatCard
+        icon={<MessageSquareIcon aria-hidden="true" />}
+        title="Cổng Zalo hôm nay"
+        period="Hôm nay"
+        value={fmtInt(funnel.today.passed)}
+        total={fmtInt(funnel.today.messages)}
+        basis={`${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
+        action={{ label: "Xem nhóm Zalo", href: "#nhom-zalo" }}
+      >
+        <SegmentBar
+          label="Tin Zalo hôm nay"
+          segments={[
+            { key: "passed", label: "Qua cổng", count: funnel.today.passed, tone: "bg-success" },
+            { key: "skipped", label: "Bị chặn", count: funnel.today.skipped, tone: "bg-muted-foreground/40" },
+          ]}
+        />
+      </StatCard>
+
+      <StatCard
+        icon={<ShieldCheckIcon aria-hidden="true" />}
+        title="Lockdown"
+        period="Bây giờ"
+        value={fmtInt(layersOk)}
+        total={fmtInt(layers.length)}
+        badge={agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
+        basis={agentTurnsToday > 0 ? "Có agent-turn hôm nay — kiểm ngay" : "Không có agent-turn hôm nay"}
+        action={{ label: "Xem các lớp", href: "#lockdown" }}
+      >
+        <SegmentBar
+          label="Lớp lockdown"
+          segments={[
+            { key: "ok", label: "Ổn", count: layersOk, tone: "bg-success" },
+            { key: "bad", label: "Hỏng", count: layersBad, tone: "bg-destructive" },
+            { key: "unknown", label: "Chưa kiểm được", count: layers.length - layersOk - layersBad, tone: "bg-muted-foreground/40" },
+          ]}
+        />
+      </StatCard>
+    </div>
+  )
+}

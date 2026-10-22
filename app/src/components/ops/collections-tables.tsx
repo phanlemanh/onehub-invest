@@ -1,12 +1,13 @@
 "use client"
 
 import { useMemo } from "react"
+import Link from "next/link"
 
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { fmtInt } from "@/lib/format"
-import type { FlowDay, JobStatus } from "@/lib/collections-queries"
+import type { FlowDay } from "@/lib/collections-queries"
 
 const NUM = { headerClassName: "text-end", cellClassName: "text-end tabular-nums" }
 
@@ -89,72 +90,6 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
   )
 }
 
-function aliveBadge(alive: JobStatus["alive"]) {
-  if (alive === "yes") return <Badge variant="success-light">Sống</Badge>
-  if (alive === "no") return <Badge variant="warning-light">Không phản hồi</Badge>
-  return <Badge variant="outline">Theo lịch</Badge>
-}
-
-export function SchedulerTable({ jobs }: { jobs: JobStatus[] }) {
-  const columns = useMemo<InsightColumn<JobStatus>[]>(
-    () => [
-      {
-        id: "label",
-        accessorKey: "label",
-        header: ({ column }) => <DataGridColumnHeader title="Job" column={column} />,
-        size: 300,
-        enableSorting: false,
-      },
-      {
-        id: "schedule",
-        accessorKey: "schedule",
-        header: "Lịch",
-        size: 180,
-      },
-      {
-        id: "alive",
-        header: "Trạng thái",
-        cell: ({ row }) => aliveBadge(row.original.alive),
-        size: 130,
-      },
-      {
-        id: "lastLogAt",
-        accessorFn: (r) => r.lastLogAt ?? "",
-        header: ({ column }) => <DataGridColumnHeader title="Chạy cuối" column={column} />,
-        cell: ({ row }) =>
-          row.original.lastLogAt
-            ? new Date(row.original.lastLogAt).toLocaleString("vi-VN", { hour12: false })
-            : "—",
-        size: 160,
-        enableSorting: true,
-      },
-      {
-        id: "lastLine",
-        accessorKey: "lastLine",
-        header: "Dòng log cuối",
-        cell: ({ row }) => (
-          <span className="text-muted-foreground font-mono text-xs">
-            {row.original.lastLine ?? "—"}
-          </span>
-        ),
-        size: 320,
-        enableSorting: false,
-      },
-    ],
-    []
-  )
-  return (
-    <InsightGrid
-      title="Máy móc (launchd)"
-      description="5 agent tự chạy — log lần cuối + probe dịch vụ KeepAlive"
-      data={jobs}
-      columns={columns}
-      getRowId={(r) => r.id}
-      pageSize={10}
-    />
-  )
-}
-
 function groupStatusBadge(lastSeenAt: string | null) {
   if (!lastSeenAt) return <Badge variant="outline">Chưa thấy tin</Badge>
   const hours = (Date.now() - new Date(lastSeenAt).getTime()) / 3600000
@@ -176,6 +111,8 @@ export function ZaloGroupsTable({
         id: "name",
         accessorKey: "name",
         header: ({ column }) => <DataGridColumnHeader title="Nhóm" column={column} />,
+        // Tên nhóm Zalo là tầng A: đánh dấu để bước chụp che chữ.
+        cell: ({ row }) => <span data-tier-a className="truncate">{row.original.name}</span>,
         size: 260,
         enableSorting: false,
       },
@@ -252,9 +189,15 @@ export function ZaloGroupsTable({
       getRowId={(r) => r.name}
       pageSize={10}
       footnote={
-        "Qua cổng = gate Kev ≥0.9 (parse hook log). Allowlist (group id, chưa map tên — V2): " +
-        (enabled.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—") +
-        ". Nhóm im >72h: kiểm tra bị kick/đổi tên; nhóm mock chỉ để so sánh, không đếm vào dòng thật."
+        <>
+          Qua cổng = gate Kev ≥ 0,9 (parse hook log). Allowlist (group id, chưa map tên — V2):{" "}
+          {enabled.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}. Nhóm im &gt; 72h: kiểm tra bị kick/đổi tên;
+          nhóm mock chỉ để so sánh. Thêm tài khoản, bật/tắt nhóm:{" "}
+          <Link prefetch={false} href="/ops/sources" className="font-medium underline">
+            Nguồn dữ liệu
+          </Link>{" "}
+          (admin, 1 nhóm – 1 tài khoản).
+        </>
       }
     />
   )
