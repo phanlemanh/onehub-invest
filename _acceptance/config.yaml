@@ -13,7 +13,7 @@ executors:
     collector: "cd collector && npm test"            # suy từ: collector/package.json — 13/13 xanh
     pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json — 17/17 xanh
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts — 8/8 xanh
-    app: "cd app && npx tsc --noEmit"                # app chưa có test; `npm run lint` đang ĐỎ (13 lỗi) nên chưa đưa vào
+    app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
   script:
     cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
