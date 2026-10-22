@@ -5,9 +5,9 @@ slug: ops-access-hardening
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, auth]
-status: draft
-approved_by:
-approved_at:
+status: implemented
+approved_by: Mạnh
+approved_at: 2026-10-22T15:15:21Z
 ---
 
 # Acceptance Contract: ops-access-hardening
@@ -59,7 +59,7 @@ Source input: prompt (phiên điều phối giao việc sau bản vá portal-dea
 
 ## Notes
 
-- Hợp đồng viết SAU khi code xong (phiên điều phối giao kèm tiêu chí; Mạnh đã chọn luật trong phiên). T3 → Cổng 1 (hợp đồng + evals), Cổng 1.5 (`plan.md`) và Cổng 2 đều chờ Mạnh ký. Code nằm sẵn trên nhánh `fix/ops-access-hardening`, chưa merge; bằng chứng máy chạy trước ở `evidence/` để Mạnh duyệt cùng lúc.
+- Hợp đồng viết SAU khi code xong (phiên điều phối giao kèm tiêu chí; Mạnh đã chọn luật trong phiên). T3 → Cổng 1 (hợp đồng + evals) và Cổng 1.5 (`plan.md`) Mạnh duyệt 2026-10-22; Cổng 2 chờ ký sau bằng chứng. Code nằm sẵn trên nhánh `fix/ops-access-hardening`, chưa merge; bằng chứng máy chạy trước ở `evidence/` để Mạnh duyệt cùng lúc.
 - **Rủi ro deploy**: prod Vercel — mọi user không phải admin đang vào Ops nhờ `OPS_EMAILS` trống sẽ mất quyền. Trước khi merge: `SELECT email, role FROM users` trên Supabase, cấp `role='ops'` cho ai cần, hoặc đặt `OPS_EMAILS`.
 - Hành vi đổi kèm: admin luôn vào Ops kể cả khi `OPS_EMAILS` đặt mà thiếu email admin (trước đây bị chặn) — đúng clearance law (admin ⊃ data-ops).
 - Gốc media: OpenClaw lưu ảnh inbound ở `~/.openclaw/media/inbound` (`src/media/store.ts`, `getMediaDir`); `/tmp/openclaw` giữ theo đề bài. Rủi ro còn lại: `/tmp/openclaw` có ảnh QR đăng nhập Zalo (`openclaw-zalouser-qr-*.png`) — admin đọc được; admin vốn đã đăng nhập Zalo được ở `/ops/sources` nên không mở thêm quyền.

@@ -1,5 +1,7 @@
 # Kế hoạch (Cổng 1.5 — T3): ops-access-hardening
 
+**Duyệt Cổng 1 + 1.5: Mạnh, 2026-10-22T15:15:21Z** ("Đồng ý" trong phiên, sau khi xem hợp đồng + kế hoạch).
+
 Nhánh `fix/ops-access-hardening` (từ `fix/portal-deals-airdna` — cần cổng admin của
 `/api/zalo-media` và script smoke ở nhánh đó). Merge SAU `fix/portal-deals-airdna`.
 
