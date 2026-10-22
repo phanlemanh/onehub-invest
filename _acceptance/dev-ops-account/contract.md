@@ -5,7 +5,7 @@ slug: dev-ops-account
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-10-22T22:39:27Z
 approved_by:
