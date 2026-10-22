@@ -5,7 +5,7 @@ slug: ui-standards-reui
 owner: phanlemanh@gmail.com
 risk_tier: T3      # đụng .claude/hooks/** (t3_paths)
 surfaces: [config, ci, docs]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-23
 ---
