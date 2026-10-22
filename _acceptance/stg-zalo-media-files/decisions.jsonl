@@ -1,0 +1,1 @@
+{"id":"d-20261022T230637Z-0b5a29","type":"descope","stage":"S1","at":"2026-10-22T23:06:37Z","decision":"bỏ gap-probe — nghiệm thu gọn do Mạnh chọn (qua phiên điều phối 23/10): 4 AC chốt sẵn, toàn eval máy, không hội đồng judge","impact":"đổi lại không có phản biện context sạch trước duyệt; bù một phần bằng phiên VERIFY tươi đọc lại code và ghi Known limits"}
