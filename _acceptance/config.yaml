@@ -8,6 +8,7 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 # Hai ổ cắm thiết kế (repo có bề mặt người dùng): cả hai trỏ tới skill repo `onehub-ui`.
 feature_loop:
   ui_standards_skill: onehub-ui
+  suite_keys: [test.app, test.ui_lint_rules]
 design_pass:
   ds_skill: onehub-ui
 executors:
