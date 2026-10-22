@@ -10,3 +10,4 @@
 {"ts": "2026-10-22T22:32:35Z", "round": 1, "evalId": "E10", "run_id": "ui-standards-reui-E10-20261022T223235Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs kit-sockets"}
 {"ts": "2026-10-22T22:32:35Z", "round": 1, "evalId": "E11", "run_id": "ui-standards-reui-E11-20261022T223235Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs pointers"}
 {"ts": "2026-10-22T22:32:35Z", "round": 1, "evalId": "E12", "run_id": "ui-standards-reui-E12-20261022T223235Z", "exit_code": 0, "cmd": "node scripts/ui-standards/acceptance.mjs baseline-doc"}
+{"ts":"2026-10-22T23:09:29Z","kind":"repin","run_id":"repin-20261022T230905Z-93242","sha":"e8df8884dbc412061421845f9b5961b74f25e275","suites_exit":[0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0,"E11":0,"E12":0},"wall_s":24.8,"so_lenh":13,"tong_ket":{"ket_cuc":"xanh","phut":0.4,"so_lenh":13,"model_goi":0,"model_carry":0,"chap_chon":0}}

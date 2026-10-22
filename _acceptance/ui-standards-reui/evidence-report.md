@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 50ea40b573faebf006ee099f7b4f511de74214b8
+verified_commit: e8df8884dbc412061421845f9b5961b74f25e275
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -210,3 +210,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: E1-E12 đều xanh trên commit 50ea40b573faebf006ee099f7b4f511de74214b8; không cần quay lại triển khai.
+
+### Re-pin lần 1 — 2026-10-22, do merge main sau PR #3 + #5: đổi khoá baseline /deals, route map
+run_id: repin-20261022T230905Z-93242
+sha: e8df8884dbc412061421845f9b5961b74f25e275 · suites: 2 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
