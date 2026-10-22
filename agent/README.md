@@ -1,4 +1,4 @@
-# onehub-ai-agent-invest
+# onehub-ai-agent
 
 Nền tảng agentic cho onehub-invest (ADR-0012). Hai vai:
 

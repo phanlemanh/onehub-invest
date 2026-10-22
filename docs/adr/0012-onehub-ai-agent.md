@@ -1,4 +1,4 @@
-# ADR-0012: onehub-ai-agent-invest — nền tảng agentic cho onehub-invest
+# ADR-0012: onehub-ai-agent — nền tảng agentic cho onehub-invest
 
 Ngày: 2026-10-22 · Trạng thái: accepted (user duyệt 22/10 — "Cả hai")
 
@@ -8,7 +8,7 @@ Monorepo onehub-invest (ADR mới: private + subtree-push public) gom 4 mảnh.
 Lớp agentic hiện rải rác: Kev gate :8009 (repo ~/dev/kev, chạy cho one-invest),
 LLM judge G-3 (kế hoạch "Một Căn Nhà"), VLM gates (Kev-V), và tham vọng tư
 vấn cá nhân cho người dùng onehub-invest-app. User đề xuất repo chuyên:
-**onehub-ai-agent-invest** = "lõi tư vấn cá nhân" + nhà cho pipeline agents.
+**onehub-ai-agent** = "lõi tư vấn cá nhân" + nhà cho pipeline agents.
 
 ## Quyết định
 
@@ -35,7 +35,7 @@ onehub-invest/
 ├── app/        # Invest + Ops portal (source of truth đầy đủ — private)
 ├── data-api/   # public standalone API (subtree → onehub-data-api)
 ├── collector/  # thu thập đa nguồn (hooks, CCP, source_groups)
-├── agent/      # MỚI: onehub-ai-agent-invest (ADR này)
+├── agent/      # MỚI: onehub-ai-agent (ADR này)
 ├── pipeline/ db/ docs/ scripts/   # data platform
 └── tools/      # sync-public (overlay sanitise app → repo public)
 ```

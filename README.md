@@ -7,7 +7,7 @@ one-invest + onehub-data-api; ADR-0012 + quyết định user).
 app/         Invest + Ops portal — source of truth đầy đủ (Next.js)
 data-api/    standalone public API (Hono) → subtree-push onehub-data-api
 collector/   thu thập đa nguồn: AirDNA, Airbnb, Zalo, Chợ Tốt (CCP, SPL)
-agent/       onehub-ai-agent-invest — nền tảng agentic (ADR-0012)
+agent/       onehub-ai-agent — nền tảng agentic (ADR-0012)
 pipeline/    transform → canonical (RESO-first ADR-0011) → entity → sync cloud
 db/          migrations (không sửa tay production — AGENTS.md #3)
 docs/        ADR + research; tools/ sync-public (overlay sanitise)
