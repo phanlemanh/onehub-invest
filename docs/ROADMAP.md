@@ -52,7 +52,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 → stg_* → transform (parser VN + phone + RESO property_type)
 → sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
-→ sản phẩm: Deals v2 (bait_gap + SĐT) · G3 calculator · /ops panels
+→ sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
 ```
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
@@ -139,6 +139,7 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 | # | Việc | Trạng thái |
 |---|---|---|
 | P-A | Deals v2 + G3 + ảnh/tên listing + ops panels | ✅ |
+| P-A2 | Vá cổng: /deals → /ops/deals (SPL tầng A), gỡ AirDNA khỏi /dau-tu (luật 5) — chờ quyết gộp /dau-tu vào /yield | 🔄 nhánh fix/portal-deals-airdna |
 | P-B | G4 khai thác sau mua (comps giá đêm — data sẵn) | ⬜ |
 | P-C | Advisor chat trên app (dựa A6+M4) | ⬜ xa |
 
