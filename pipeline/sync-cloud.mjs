@@ -11,9 +11,11 @@
 // (source_registry DATA, stg_*, airbnb_snapshots, raw) KHÔNG sync — gate
 // kiểm 0 dòng sau mỗi lần chạy.
 // Env: ~/.oneinvest/cloud.env (chmod 600): SUPABASE_SERVICE_KEY + SUPABASE_MGMT_TOKEN
+import { realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const REF = "smqpqiigzulwpmrsrhci";
@@ -25,7 +27,7 @@ const LOCAL_URL =
 // local → cloud: bảng airdna_* đổi tên trung tính ref_calib_* (C4 SPL —
 // không tên nguồn tầng A trong DB chia sẻ; app đọc qua rewriter db.ts)
 const RENAME = (t) => t.replace(/^airdna_/, "ref_calib_");
-const FILL = [
+export const FILL = [
   "areas",
   "listings",
   "market_metrics",
@@ -93,7 +95,7 @@ async function restInsert(key, table, rows) {
 // aggregate. SĐT thô / tên người bán không bao giờ rời máy local.
 // Trước đây SELECT * — may mắn schema cloud thiếu cột mới nên PII chưa
 // lọt, giờ chặn bằng danh sách cột loại bỏ tường minh.
-const PII_EXCLUDE = {
+export const PII_EXCLUDE = {
   sale_offers: ["seller_phone", "seller_name"],
   sellers: ["name"], // sellers: hash + aggregate OK; name là PII tầng A
 };
@@ -165,7 +167,11 @@ async function main() {
   console.log(`sync xong: ${total} dòng, ${FILL.length} bảng; leak gate PASS`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Chỉ chạy khi gọi trực tiếp (test import FILL/PII_EXCLUDE không được đụng mạng).
+// So realpath vì launchd gọi qua symlink ~/dev/one-invest.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
