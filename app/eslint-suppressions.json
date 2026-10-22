@@ -55,16 +55,10 @@
   "src/components/auth/login-form.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
       "count": 1
-    },
-    "onehub-ui/no-raw-controls": {
-      "count": 1
     }
   },
   "src/components/auth/register-form.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
-      "count": 1
-    },
-    "onehub-ui/no-raw-controls": {
       "count": 1
     },
     "onehub-ui/no-raw-palette": {
@@ -84,11 +78,6 @@
   "src/components/finder/finder-view.tsx": {
     "onehub-ui/no-raw-palette": {
       "count": 1
-    }
-  },
-  "src/components/insight/insight-actions.tsx": {
-    "onehub-ui/no-raw-controls": {
-      "count": 2
     }
   },
   "src/components/insight/insight-page.tsx": {
@@ -198,9 +187,6 @@
   "src/components/saved/saved-item.tsx": {
     "onehub-ui/no-banned-motion": {
       "count": 1
-    },
-    "onehub-ui/no-raw-controls": {
-      "count": 2
     }
   },
   "src/components/saved/saved-list.tsx": {
