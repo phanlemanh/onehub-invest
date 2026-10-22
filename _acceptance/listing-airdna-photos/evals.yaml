@@ -47,9 +47,9 @@ evals:
   - id: E7
     criterion: AC-7
     executor: script
-    cmd: config:executors.design.gate
+    cmd: config:executors.script.listing_design_gate
     paths: ["app/src/app/(app)/listing/[id]/page.tsx"]
-    expected: "chạy cmd với file trong paths làm đối số cuối: exit 0, verdict PASS, không P0"
+    expected: "exit 0, verdict PASS, không P0 (lệnh đã ghim file đích trong paths)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E8
