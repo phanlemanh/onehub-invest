@@ -30,3 +30,8 @@ pipeline/logs/
 .playwright-cli/
 .superpowers/
 .vercel/
+
+# Claude Code — cấu hình/ghi chú riêng từng máy
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/

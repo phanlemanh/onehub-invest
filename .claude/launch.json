@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "-p", "3456"],
+      "port": 3456
+    },
+    {
+      "name": "data-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "data-api", "run", "dev"],
+      "port": 3001
+    }
+  ]
+}

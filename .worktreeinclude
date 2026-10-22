@@ -1,0 +1,6 @@
+# File gitignored được Claude Code chép vào mỗi worktree mới (cú pháp gitignore).
+# Chỉ file vừa khớp ở đây VỪA bị .gitignore mới được chép. Không liệt kê
+# snapshots/ hay .airdna-profile/ — dữ liệu lớn và cookie đăng nhập.
+app/.env.local
+**/.env
+**/.env.local
