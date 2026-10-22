@@ -96,16 +96,6 @@
       "count": 1
     }
   },
-  "src/components/insight/performance/metric-plot.tsx": {
-    "onehub-ui/no-banned-motion": {
-      "count": 2
-    }
-  },
-  "src/components/insight/performance/metric-tiles.tsx": {
-    "onehub-ui/no-raw-controls": {
-      "count": 1
-    }
-  },
   "src/components/invest/investment-simulator.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
       "count": 9

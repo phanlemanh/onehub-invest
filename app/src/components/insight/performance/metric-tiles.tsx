@@ -51,6 +51,7 @@ export function MetricTiles({
         const summary = summaries[metric.key]
         const pressed = metric.key === active
         return (
+          // eslint-disable-next-line onehub-ui/no-raw-controls -- nguyên bản @reui/chart-6: cả ô chỉ số là một nút bấm; Button không mang bố cục ô và ReUI cấm đặt padding/height lên nó
           <button
             key={metric.key}
             type="button"
