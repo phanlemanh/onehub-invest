@@ -17,6 +17,8 @@ executors:
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
   script:
     cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
+    portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
+    portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
     listing_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy :3456 TỪ worktree đang kiểm + DB local
