@@ -1,0 +1,6 @@
+{"ts":"2026-10-22T23:04:33Z","round":1,"evalId":"E1","run_id":"stg-zalo-media-files-E1-20261023T060433","exit_code":0,"cmd":"bash db/check-idempotent.sh db/migrations/035_stg_zalo_media_files.sql stg_zalo_posts"}
+{"ts":"2026-10-22T23:04:41Z","round":1,"evalId":"E2","run_id":"stg-zalo-media-files-E2-20261023T060441","exit_code":0,"cmd":"bash db/check-idempotent.selftest.sh"}
+{"ts":"2026-10-22T23:04:48Z","round":1,"evalId":"E3","run_id":"stg-zalo-media-files-E3-20261023T060448","exit_code":0,"cmd":"cd pipeline && node scripts/media-files-roundtrip.mjs"}
+{"ts":"2026-10-22T23:04:55Z","round":1,"evalId":"E4","run_id":"stg-zalo-media-files-E4-20261023T060455","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-22T23:05:01Z","round":1,"evalId":"E5","run_id":"stg-zalo-media-files-E5-20261023T060501","exit_code":0,"cmd":"cd pipeline && node scripts/sync-pii-mutation.mjs"}
+{"ts":"2026-10-22T23:05:09Z","round":1,"evalId":"E6","run_id":"stg-zalo-media-files-E6-20261023T060509","exit_code":0,"cmd":"cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"}
