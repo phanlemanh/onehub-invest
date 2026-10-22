@@ -1,8 +1,8 @@
 {
   "base": "http://localhost:3456",
-  "at": "2026-10-22T23:29:17.957Z",
-  "head": "fb0fe1ef06d5701b6403987c0e8be2f1c898d8c0",
-  "capture_sha": "4102d811383c9ee3a584da3995fc91092faebe6de8a5569258757562b4f50ffa",
+  "at": "2026-10-22T23:39:35.796Z",
+  "head": "b273de16343714cf22dfcf2b5cd891c2fecd2265",
+  "capture_sha": "461655360a23aca26cb5cb33876dce8e9725087b7f9623599d1adef6bdc3d12f",
   "app_src_tree": "2574dfbf4d96a64dcd635b7065eb3df278b1f08b",
   "structure": {
     "market/Hiệu suất theo tháng@light": {
@@ -362,8 +362,7 @@
                     "data-slot": "chart",
                     "c": [
                       {
-                        "t": "style",
-                        "text": "[data-chart=chart-_R_6cn9bn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}\n\n\n.dark [data-chart=chart-_R_6cn9bn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}"
+                        "t": "style"
                       },
                       {
                         "t": "div",
@@ -571,8 +570,7 @@
                         "data-slot": "chart",
                         "c": [
                           {
-                            "t": "style",
-                            "text": "[data-chart=chart-_R_5d4v9bn5ritqitmlb_] {\n  --color-lead: var(--color-violet-700);\n  --color-second: var(--color-violet-500);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-100);\n  --color-hatch: var(--color-zinc-300);\n}\n\n\n.dark [data-chart=chart-_R_5d4v9bn5ritqitmlb_] {\n  --color-lead: var(--color-violet-500);\n  --color-second: var(--color-violet-400);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-800);\n  --color-hatch: var(--color-zinc-600);\n}"
+                            "t": "style"
                           },
                           {
                             "t": "div",
@@ -1120,8 +1118,7 @@
                     "data-slot": "chart",
                     "c": [
                       {
-                        "t": "style",
-                        "text": "[data-chart=chart-_R_cpeinebn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}\n\n\n.dark [data-chart=chart-_R_cpeinebn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}"
+                        "t": "style"
                       },
                       {
                         "t": "div",
@@ -1329,8 +1326,7 @@
                         "data-slot": "chart",
                         "c": [
                           {
-                            "t": "style",
-                            "text": "[data-chart=chart-_R_aq9uinebn5ritqitmlb_] {\n  --color-lead: var(--color-violet-700);\n  --color-second: var(--color-violet-500);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-100);\n  --color-hatch: var(--color-zinc-300);\n}\n\n\n.dark [data-chart=chart-_R_aq9uinebn5ritqitmlb_] {\n  --color-lead: var(--color-violet-500);\n  --color-second: var(--color-violet-400);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-800);\n  --color-hatch: var(--color-zinc-600);\n}"
+                            "t": "style"
                           },
                           {
                             "t": "div",
@@ -1671,8 +1667,7 @@
                 ]
               },
               {
-                "t": "style",
-                "text": "@keyframes chart-36-rise { from { transform: scaleY(0); } }\n@keyframes chart-36-draw { from { clip-path: inset(0 100% 0 0); } }\n@keyframes chart-36-land { from { opacity: 0; transform: scale(0.6); } }\n@keyframes chart-36-fade { from { opacity: 0; } }\n[data-chart-36-rise] { animation: chart-36-rise 420ms cubic-bezier(0.23, 1, 0.32, 1) var(--chart-36-delay, 0ms) backwards; }\n[data-chart-36-draw] { animation: chart-36-draw 640ms cubic-bezier(0.77, 0, 0.175, 1) 120ms backwards; }\n[data-chart-36-land] { animation: chart-36-land 200ms cubic-bezier(0.23, 1, 0.32, 1) 680ms backwards; transform-box: fill-box; transform-origin: center; }\n[data-chart-36-fade] { animation: chart-36-fade 240ms cubic-bezier(0.23, 1, 0.32, 1) 200ms backwards; }\n@media (prefers-reduced-motion: reduce) {\n  :is([data-chart-36-rise], [data-chart-36-draw], [data-chart-36-land], [data-chart-36-fade]) { animation: chart-36-fade 200ms cubic-bezier(0.23, 1, 0.32, 1) backwards; }\n}\n[data-chart-36-settled] :is([data-chart-36-rise], [data-chart-36-draw], [data-chart-36-land], [data-chart-36-fade]) { animation: none; }\n[data-chart-36-reading] [data-chart-36-col]:not([data-chart-36-lit]) { opacity: 0.3; }\n:is([data-chart-36-band], [data-chart-36-dot]):not([data-chart-36-lit]) { opacity: 0; }"
+                "t": "style"
               },
               {
                 "t": "div",
@@ -1681,8 +1676,7 @@
                 "data-slot": "chart",
                 "c": [
                   {
-                    "t": "style",
-                    "text": "[data-chart=chart-_R_1ckslritqitmlb_] {\n  --color-revenue: var(--color-indigo-500);\n  --color-expenses: var(--color-slate-300);\n  --color-margin: var(--color-emerald-600);\n}\n\n\n.dark [data-chart=chart-_R_1ckslritqitmlb_] {\n  --color-revenue: var(--color-indigo-400);\n  --color-expenses: var(--color-slate-600);\n  --color-margin: var(--color-emerald-400);\n}"
+                    "t": "style"
                   },
                   {
                     "t": "div",
@@ -2234,8 +2228,7 @@
                     "data-slot": "chart",
                     "c": [
                       {
-                        "t": "style",
-                        "text": "[data-chart=chart-_R_6cn9bn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}\n\n\n.dark [data-chart=chart-_R_6cn9bn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}"
+                        "t": "style"
                       },
                       {
                         "t": "div",
@@ -2443,8 +2436,7 @@
                         "data-slot": "chart",
                         "c": [
                           {
-                            "t": "style",
-                            "text": "[data-chart=chart-_R_5d4v9bn5ritqitmlb_] {\n  --color-lead: var(--color-violet-700);\n  --color-second: var(--color-violet-500);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-100);\n  --color-hatch: var(--color-zinc-300);\n}\n\n\n.dark [data-chart=chart-_R_5d4v9bn5ritqitmlb_] {\n  --color-lead: var(--color-violet-500);\n  --color-second: var(--color-violet-400);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-800);\n  --color-hatch: var(--color-zinc-600);\n}"
+                            "t": "style"
                           },
                           {
                             "t": "div",
@@ -2992,8 +2984,7 @@
                     "data-slot": "chart",
                     "c": [
                       {
-                        "t": "style",
-                        "text": "[data-chart=chart-_R_cpeinebn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}\n\n\n.dark [data-chart=chart-_R_cpeinebn5ritqitmlb_] {\n  --color-current: var(--color-teal-500);\n}"
+                        "t": "style"
                       },
                       {
                         "t": "div",
@@ -3201,8 +3192,7 @@
                         "data-slot": "chart",
                         "c": [
                           {
-                            "t": "style",
-                            "text": "[data-chart=chart-_R_aq9uinebn5ritqitmlb_] {\n  --color-lead: var(--color-violet-700);\n  --color-second: var(--color-violet-500);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-100);\n  --color-hatch: var(--color-zinc-300);\n}\n\n\n.dark [data-chart=chart-_R_aq9uinebn5ritqitmlb_] {\n  --color-lead: var(--color-violet-500);\n  --color-second: var(--color-violet-400);\n  --color-third: var(--color-violet-300);\n  --color-rest: var(--color-zinc-800);\n  --color-hatch: var(--color-zinc-600);\n}"
+                            "t": "style"
                           },
                           {
                             "t": "div",
@@ -3543,8 +3533,7 @@
                 ]
               },
               {
-                "t": "style",
-                "text": "@keyframes chart-36-rise { from { transform: scaleY(0); } }\n@keyframes chart-36-draw { from { clip-path: inset(0 100% 0 0); } }\n@keyframes chart-36-land { from { opacity: 0; transform: scale(0.6); } }\n@keyframes chart-36-fade { from { opacity: 0; } }\n[data-chart-36-rise] { animation: chart-36-rise 420ms cubic-bezier(0.23, 1, 0.32, 1) var(--chart-36-delay, 0ms) backwards; }\n[data-chart-36-draw] { animation: chart-36-draw 640ms cubic-bezier(0.77, 0, 0.175, 1) 120ms backwards; }\n[data-chart-36-land] { animation: chart-36-land 200ms cubic-bezier(0.23, 1, 0.32, 1) 680ms backwards; transform-box: fill-box; transform-origin: center; }\n[data-chart-36-fade] { animation: chart-36-fade 240ms cubic-bezier(0.23, 1, 0.32, 1) 200ms backwards; }\n@media (prefers-reduced-motion: reduce) {\n  :is([data-chart-36-rise], [data-chart-36-draw], [data-chart-36-land], [data-chart-36-fade]) { animation: chart-36-fade 200ms cubic-bezier(0.23, 1, 0.32, 1) backwards; }\n}\n[data-chart-36-settled] :is([data-chart-36-rise], [data-chart-36-draw], [data-chart-36-land], [data-chart-36-fade]) { animation: none; }\n[data-chart-36-reading] [data-chart-36-col]:not([data-chart-36-lit]) { opacity: 0.3; }\n:is([data-chart-36-band], [data-chart-36-dot]):not([data-chart-36-lit]) { opacity: 0; }"
+                "t": "style"
               },
               {
                 "t": "div",
@@ -3553,8 +3542,7 @@
                 "data-slot": "chart",
                 "c": [
                   {
-                    "t": "style",
-                    "text": "[data-chart=chart-_R_1ckslritqitmlb_] {\n  --color-revenue: var(--color-indigo-500);\n  --color-expenses: var(--color-slate-300);\n  --color-margin: var(--color-emerald-600);\n}\n\n\n.dark [data-chart=chart-_R_1ckslritqitmlb_] {\n  --color-revenue: var(--color-indigo-400);\n  --color-expenses: var(--color-slate-600);\n  --color-margin: var(--color-emerald-400);\n}"
+                    "t": "style"
                   },
                   {
                     "t": "div",
