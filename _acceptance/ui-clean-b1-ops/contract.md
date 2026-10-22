@@ -74,6 +74,8 @@ Thay vào đó là ma trận đóng **trang × việc** lấy từ spec mục 5 
 
 ## Notes
 
+- Thứ tự: `components/ops/review-card.tsx` và `app/ops/review/page.tsx` làm sau cùng, chờ nhánh `feat/enrich-qua-de-xuat` vào main rồi merge main vào nhánh B1 (enrich sửa review-card và thêm `app/tests/review-card.test.tsx`). Tiêu chí không đổi; phần Duyệt tin chỉ chấm được sau mốc đó.
+
 - Bước nhìn (AC-9) cần phiên đăng nhập `/ops` trong Browser pane — PR #1 (`feat/dev-ops-account`) chưa merge (Hỏi-3).
 - Ảnh chụp LUÔN che chữ tầng A (tên nguồn thật, tên nhóm Zalo, nội dung tin) bằng `scripts/ui-standards/mask-tier-a.js` trước khi chụp (E12, E13, E14). Nếu ở Hỏi-1 Mạnh chọn chụp nguyên trạng thì sửa E12–E14 và dòng này trước khi duyệt Cổng Phạm vi.
 - Không bấm nút xác nhận xoá/gỡ trong lúc kiểm (AC-5 chỉ kiểm đường Huỷ): xoá là thao tác khó đảo trên DB local dùng chung.
