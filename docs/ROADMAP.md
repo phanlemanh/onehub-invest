@@ -140,6 +140,7 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 |---|---|---|
 | P-A | Deals v2 + G3 + ảnh/tên listing + ops panels | ✅ |
 | P-B | G4 khai thác sau mua (comps giá đêm — data sẵn) | ⬜ |
+| P-A3 | Gỡ ảnh/chữ AirDNA khỏi /listing/[id] (luật 5) — chỉ ảnh tự thu, căn chưa thu PDP không ảnh | 🔄 nhánh fix/listing-airdna-photos |
 | P-C | Advisor chat trên app (dựa A6+M4) | ⬜ xa |
 
 ### Track 5 — Vận hành

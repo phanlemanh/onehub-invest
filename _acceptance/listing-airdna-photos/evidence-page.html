@@ -1,0 +1,156 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · listing-airdna-photos</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Gỡ ảnh và chữ AirDNA khỏi trang chi tiết listing (Invest)</h1><div class="sub">Trang hồ sơ · <span class="mono">listing-airdna-photos</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Gỡ ảnh và chữ AirDNA khỏi trang chi tiết listing (Invest)</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Kiểm kê UI 2026-10-22 thấy trang chi tiết listing /listing/[id] (Invest, công khai) mượn ảnh từ bảng airdna_listings khi listing chưa tự thu PDP, kèm dòng chữ &quot;Ảnh từ AirDNA (listing này chưa tự thu PDP)&quot; và link Airbnb lấy từ AirDNA — vi phạm AGENTS.md luật 5 (AirDNA chỉ để hiệu chuẩn, chỉ ở /ops/quality). Bản vá fix/portal-deals-airdna cố ý để route này ngoài phạm vi…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra"><span class="vang">chưa có — decisions.jsonl</span></div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">5 mục để ngoài phạm vi · 5 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>7</b></span><span data-k="phep_do">Phép đo <b>9</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="quyet_dinh_nguoi">người <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="ma">Mã <b>5b730ea</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Kiểm kê UI 2026-10-22 thấy trang chi tiết listing /listing/[id] (Invest, công khai) mượn ảnh từ bảng airdna_listings khi listing chưa tự thu PDP, kèm dòng chữ &quot;Ảnh từ AirDNA (listing này chưa tự thu PDP)&quot; và link Airbnb lấy từ AirDNA — vi phạm AGENTS.md luật 5 (AirDNA chỉ để hiệu chuẩn, chỉ ở /ops/quality). Bản vá fix/portal-deals-airdna cố ý để route này ngoài phạm vi. Bản vá này: getListingDetail chỉ đọc ảnh tự thu (listings.photo_urls), bỏ hẳn hai truy vấn airdna_listings; listing chưa có ảnh tự thu rơi về trạng thái trống hiện có (không lưới ảnh). Không restyle — bộ chuẩn UI ReUI làm ở phiên khác.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given listing có cả ảnh tự thu lẫn ảnh AirDNA khác bộ tự thu, When khách mở `/listing/[id]`, Then mọi ảnh trên trang thuộc bộ tự thu và không có ảnh nào chỉ AirDNA có.</li><li data-ac="AC-2"><b>AC-2</b> — Given listing chưa có ảnh tự thu, When khách mở `/listing/[id]`, Then trang trả 200 và không có ảnh listing nào (trạng thái trống hiện có, không lưới ảnh).</li><li data-ac="AC-3"><b>AC-3</b> — Given bất kỳ listing nào, When khách mở `/listing/[id]`, Then HTML trang không chứa chữ &quot;AirDNA&quot; (gồm dòng &quot;Ảnh từ AirDNA&quot;).</li><li data-ac="AC-4"><b>AC-4</b> — Given cây mã, When `getListingDetail` dựng dữ liệu listing, Then không truy vấn bảng `airdna_*`, và kiểu `ListingDetail` không còn trường `photoSource`/`listingUrl` gốc AirDNA.</li><li data-ac="AC-5"><b>AC-5</b> — Given route `app/src/app/(app)/listing` và `app/src/components/listing`, When đọc mã render (bỏ comment), Then không còn chữ AirDNA hay nhánh `photoSource`.</li><li data-ac="AC-6"><b>AC-6</b> — Given khách muốn xem căn gốc, When trang listing hiện, Then vẫn có nút &quot;Mở trên Airbnb&quot; trỏ `https://www.airbnb.com/rooms/&lt;số&gt;` dựng từ id listing (không cần dữ liệu AirDNA).</li><li data-ac="AC-7"><b>AC-7</b> — Given trang listing bị chạm, When chạy cổng thiết kế và tsc/lint, Then không có lỗi P0 a11y/contrast, tsc + lint không lỗi, và khung chụp cho thấy bố cục trang không đổi ngoài việc bỏ dòng chú thích dưới lưới ảnh.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><span class="vang">chưa có — decisions.jsonl</span></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-listing_smoke-20261022145917</td><td class="mono">2026-10-22T14:59:18Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-listing_smoke-20261022145917</td><td class="mono">2026-10-22T14:59:18Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-listing_smoke-20261022145917</td><td class="mono">2026-10-22T14:59:18Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-listing_static-20261022145749</td><td class="mono">2026-10-22T14:57:49Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-listing_static-20261022145749</td><td class="mono">2026-10-22T14:57:49Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-listing_smoke-20261022145917</td><td class="mono">2026-10-22T14:59:18Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">design-gate-079a804502</td><td class="mono">2026-10-22T14:58:29Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-7</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-E8-20261022145810</td><td class="mono">2026-10-22T14:58:17Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-7</td><td>ui-check</td><td><span class="badge pass">PASS</span></td><td class="mono">listing-airdna-photos-E9-20261022145925</td><td class="mono">2026-10-22T14:59:30Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given listing có cả ảnh tự thu lẫn ảnh AirDNA khác bộ tự thu, When khách mở `/listing/[id]`, Then mọi ảnh trên trang thuộc bộ tự thu và không có ảnh nào chỉ AirDNA có.</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-listing_smoke-20261022145917</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">scripts/smoke-listing-no-airdna.mjs (config:executors.script.listing_smoke)</b></span><span>verified_at <b>2026-10-22T14:59:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   DB có listing mang cả ảnh tự thu lẫn ảnh AirDNA (8)
+ok   abnb_1684709390587895076: có 9 ảnh AirDNA khác bộ tự thu (mẫu phân biệt được)
+ok   abnb_1684709390587895076: trả 200 (200)
+ok   abnb_1684709390587895076: hiện 10 ảnh, tất cả từ tự thu
+ok   abnb_1684709390587895076: 0 ảnh chỉ AirDNA có
+listing-smoke: ĐẠT</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given listing chưa có ảnh tự thu, When khách mở `/listing/[id]`, Then trang trả 200 và không có ảnh listing nào (trạng thái trống hiện có, không lưới ảnh).</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-listing_smoke-20261022145917</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">scripts/smoke-listing-no-airdna.mjs (config:executors.script.listing_smoke)</b></span><span>verified_at <b>2026-10-22T14:59:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">info DB không có listing chỉ có ảnh AirDNA — dùng listing không ảnh bất kỳ
+ok   DB có listing chưa có ảnh tự thu
+ok   abnb_1146242072149071598: trả 200 (200)
+ok   abnb_1146242072149071598: không có ảnh (trạng thái trống)
+listing-smoke: ĐẠT</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given bất kỳ listing nào, When khách mở `/listing/[id]`, Then HTML trang không chứa chữ &quot;AirDNA&quot; (gồm dòng &quot;Ảnh từ AirDNA&quot;).</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-listing_smoke-20261022145917</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">scripts/smoke-listing-no-airdna.mjs (config:executors.script.listing_smoke)</b></span><span>verified_at <b>2026-10-22T14:59:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   abnb_1684709390587895076: HTML không có chữ AirDNA
+ok   abnb_1146242072149071598: HTML không có chữ AirDNA
+listing-smoke: ĐẠT</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-4: Given cây mã, When `getListingDetail` dựng dữ liệu listing, Then không truy vấn bảng `airdna_*`, và kiểu `ListingDetail` không còn trường `photoSource`/`listingUrl` gốc AirDNA.</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-listing_static-20261022145749</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">scripts/check-listing-no-airdna.mjs (config:executors.script.listing_static)</b></span><span>verified_at <b>2026-10-22T14:57:49Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   tìm thấy getListingDetail trong lib/queries.ts
+ok   getListingDetail không đọc bảng airdna_*
+ok   ListingDetail không còn photoSource/listingUrl (nguồn AirDNA)
+listing-no-airdna: ĐẠT</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-5: Given route `app/src/app/(app)/listing` và `app/src/components/listing`, When đọc mã render (bỏ comment), Then không còn chữ AirDNA hay nhánh `photoSource`.</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-listing_static-20261022145749</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">scripts/check-listing-no-airdna.mjs (config:executors.script.listing_static)</b></span><span>verified_at <b>2026-10-22T14:57:49Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   quét 8 file route/components listing
+ok   src/app/(app)/listing/[id]/page.tsx: không AirDNA/photoSource trong mã render (0 dòng)
+ok   src/components/listing/booking-heatmap.tsx: không AirDNA/photoSource trong mã render (0 dòng)
+ok   src/components/listing/listing-actions.tsx: không AirDNA/photoSource trong mã render (0 dòng)
+ok   src/components/listing/listing-card.tsx: không AirDNA/photoSource trong mã render (0 dòng)
+ok   src/components/listing/listing-labels.ts: không AirDNA/photoSource trong mã render (0 dòng)
+ok   src/components/listing/listing-tables.tsx: không AirDNA/photoSource trong mã render (0 dòng)
+ok   src/components/listing/listings-explorer.tsx: không AirDNA/photoSource trong mã render (0 dòng)
+ok   src/components/listing/listings-map.tsx: không AirDNA/photoSource trong mã render (0 dòng)
+listing-no-airdna: ĐẠT</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-6: Given khách muốn xem căn gốc, When trang listing hiện, Then vẫn có nút &quot;Mở trên Airbnb&quot; trỏ `https://www.airbnb.com/rooms/&lt;số&gt;` dựng từ id listing (không cần dữ liệu AirDNA).</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-listing_smoke-20261022145917</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">scripts/smoke-listing-no-airdna.mjs (config:executors.script.listing_smoke)</b></span><span>verified_at <b>2026-10-22T14:59:18Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   abnb_1684709390587895076: còn link Mở trên Airbnb dựng từ id
+ok   abnb_1146242072149071598: còn link Mở trên Airbnb dựng từ id
+listing-smoke: ĐẠT</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-7: Given trang listing bị chạm, When chạy cổng thiết kế và tsc/lint, Then không có lỗi P0 a11y/contrast, tsc + lint không lỗi, và khung chụp cho thấy bố cục trang không đổi ngoài việc bỏ dòng chú thích dưới lưới ảnh.</p>
+<div class="kv"><span>run_id <b>design-gate-079a804502</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app)</b></span><span>verified_at <b>2026-10-22T14:58:29Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">&quot;target&quot;: &quot;app/src/app/(app)/listing/[id]/page.tsx&quot;,
+&quot;fail_on&quot;: [ &quot;P0&quot; ],
+&quot;mode&quot;: &quot;dom&quot;,
+&quot;verdict&quot;: &quot;PASS&quot;,
+&quot;p0_count&quot;: 0,
+&quot;blocking&quot;: [],
+&quot;findings&quot;: []</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · test</h3><p class="crit">AC-7: Given trang listing bị chạm, When chạy cổng thiết kế và tsc/lint, Then không có lỗi P0 a11y/contrast, tsc + lint không lỗi, và khung chụp cho thấy bố cục trang không đổi ngoài việc bỏ dòng chú thích dưới lưới ảnh.</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-E8-20261022145810</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app</b></span><span>verified_at <b>2026-10-22T14:58:17Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">&gt; src@0.1.0 lint
+&gt; eslint
+investment-simulator.tsx 142:6 warning react-hooks/exhaustive-deps (có từ trước bản vá)
+user-event-beacon.tsx 51:6 warning react-hooks/exhaustive-deps
+use-file-upload.ts 266:5 warning react-hooks/exhaustive-deps
+✖ 3 problems (0 errors, 3 warnings)</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · ui-check</h3><p class="crit">AC-7: Given trang listing bị chạm, When chạy cổng thiết kế và tsc/lint, Then không có lỗi P0 a11y/contrast, tsc + lint không lỗi, và khung chụp cho thấy bố cục trang không đổi ngoài việc bỏ dòng chú thích dưới lưới ảnh.</p>
+<div class="kv"><span>run_id <b>listing-airdna-photos-E9-20261022145925</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">scripts/ui-capture.sh (config:capture.ui)</b></span><span>verified_at <b>2026-10-22T14:59:30Z</b></span><span>baseline <b>n-a</b></span></div>
+<div class="shot slide" data-n="2"><div class="frame"><img src="evidence/E9-step1.png" alt="frame 1" loading="lazy"></div><div class="frame"><img src="evidence/E9-step2.png" alt="frame 2" loading="lazy"></div></div><div class="slidebar"><button class="btn" data-toggle>⏸ Tạm dừng</button><span>2 frame · chạy như GIF</span></div>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals:
+none — mọi eval tính năng đã đo baseline (E4, E5) đều red trên cây trước bản vá (5b730ea~1): E4 trượt 2 kiểm (getListingDetail đọc `airdna_*`; ListingDetail còn photoSource/listingUrl), E5 trượt ở `listing/[id]/page.tsx` (3 dòng mã render chứa AirDNA/photoSource). Đo bằng `git archive 5b730ea~1 app/src` vào thư mục tạm, không đụng cây làm việc.
+Baseline khong do:
+- E1, E2, E3, E6 (listing_smoke) và E9 (ui-check): cần một dev server chạy cây cũ; vòng này chỉ khởi một server từ cây đang kiểm.
+- E7 (design gate): chạy theo file trên mã mới; không chạy A/B trên page.tsx cũ.
+- E8 (test.app): tsc + lint toàn app trên cây cũ cần node_modules riêng cho bản xuất; không đo.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: mọi eval máy (E1–E8) và ui-check E9 đạt trên commit 5b730ea.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Không restyle trạng thái trống hay lưới ảnh (bộ chuẩn UI ReUI làm ở phiên khác).</li><li data-loai="ngoai">Không đụng bảng/pipeline `airdna_listings` hay việc thu PDP tự thu (làn ZCode) — 13 listing chưa có ảnh tự thu vẫn không ảnh cho tới khi thu.</li><li data-loai="ngoai">Không gỡ AirDNA ở `/dau-tu` — đã làm ở `fix/portal-deals-airdna` (chưa merge main).</li><li data-loai="ngoai">Không đổi `/ops/quality` (nơi duy nhất được hiện AirDNA) và `getAirdnaComparison`/`getTruthfulCoverage` (chỉ Ops gọi).</li><li data-loai="ngoai">Không gộp script kiểm vào `scripts/check-portal-compliance.mjs` (file đó chưa có ở main) — gộp khi cả hai nhánh đã vào main.</li><li data-loai="gioi-han">DB local không có listing «không ảnh tự thu + có ảnh AirDNA» (đúng ca cũ mượn ảnh): smoke in dòng info và rơi về căn không ảnh bất kỳ (`abnb_1146242072149071598`). Ô đó của trục Coverage chỉ được phủ TĨNH bằng E4/E5 (mã không còn đường đọc `airdna_*`, đỏ trên cây trước bản vá), chưa có lần đọc HTML thật nào trên ca đó.</li><li data-loai="gioi-han">AC-7 phần «bố cục không đổi ngoài việc bỏ dòng chú thích»: chỉ có khung SAU bản vá (E9), không có khung trước bản vá để so. Theo diff, với căn có ảnh tự thu bản vá còn bỏ cả dòng link «Xem trên Airbnb ↗» dưới lưới (contract Notes đã khai) — khung step1 xác nhận dòng đó không còn.</li><li data-loai="gioi-han">E2 xác định «không có ảnh» bằng heuristic chuỗi (HTML không chứa «Ảnh chính» và không chứa `muscache.com`), không đếm phần tử ảnh theo DOM.</li><li data-loai="gioi-han">`config:executors.design.gate` ghim kit bản 2.32.0 trong khi kit đang cài mới nhất là 2.33.1 — E7 là kết quả của bộ dò 2.32.0, chế độ DOM trên mã nguồn TSX, không phải trang đang render.</li><li data-loai="gioi-han">Khung E9 chụp trên dev server: nút chỉ báo «N» của Next.js dev đè lên góc trái ô «Giá niêm yết» ở step1 (che chữ số đầu) — chỉ có ở dev, không thuộc trang.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">5b730ea3fe3a474d874714ef245a596523899ea8</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note"></p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
