@@ -69,6 +69,15 @@ không sửa dữ liệu trực tiếp.
 - **Không bao giờ commit**: `.env*` (trừ `.env.example`), `snapshots/`, `state/`,
   `.airdna-profile/`, `*.har`, `research-local/`.
 
+## Cổng nghiệm thu (`_acceptance/`)
+
+Tính năng T2/T3 đi qua Acceptance-Gate Kit: contract → evals → evidence → chữ ký người
+(`/feature-loop:feature-loop` hoặc skill `acceptance-gate:acceptance`). CI
+(`.github/workflows/acceptance-gate.yml`) chặn PR đổi file ngoài `t1_skip_globs` mà không
+kèm `_acceptance/<slug>/`. Tầng rủi ro, lệnh kiểm, `t3_paths`: `_acceptance/config.yaml`.
+`scripts/pre-merge-check.sh`, `scripts/product-map.mjs` … và `lib/*.cjs` là bản chép từ kit —
+không sửa tay, cập nhật bằng cách chép lại từ plugin. `PRODUCT-MAP.md` máy sinh.
+
 ## Lệnh
 
 ```bash

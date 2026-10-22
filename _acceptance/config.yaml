@@ -1,0 +1,64 @@
+# 2-space indentation REQUIRED — the kit's hook parses this file line-by-line.
+schema_version: 1
+enforcement: strict          # strict | warn | off
+gap_probe: advisory          # Luật phản biện context sạch ở pre-merge check: required | advisory | off.
+                             # `advisory` in NOTE khi một slug T2/T3 trong diff PR thiếu gap-probe.md
+                             # và thiếu entry descope; `required` chặn merge.
+recheck: strict              # CI re-check of COMMITTED evidence — repo mới, chưa có báo cáo cũ.
+# Hai ổ cắm thiết kế — khai khi repo có bề mặt người dùng, bỏ trống thì không chặn:
+#   feature_loop.ui_standards_skill: <skill chuẩn plugin/DS của repo>   # chưa khai: app/DESIGN_RULES.md chưa thành skill
+#   design_pass.ds_skill: <skill chuẩn DS của repo>                     # chưa khai: repo chưa có skill design-system
+executors:
+  test:
+    collector: "cd collector && npm test"            # suy từ: collector/package.json — 13/13 xanh
+    pipeline: "cd pipeline && npm test"              # suy từ: pipeline/package.json — 17/17 xanh
+    agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts — 8/8 xanh
+    app: "cd app && npx tsc --noEmit"                # app chưa có test; `npm run lint` đang ĐỎ (13 lỗi) nên chưa đưa vào
+    data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
+  script:
+    cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
+    product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
+  design:                                            # app/ là web UI
+    # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
+    gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
+    ui_check: "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-scan.js"     # browser tier (authoritative P0)
+risk_tiers:
+  t1_skip_globs:
+    - "docs/**"
+    - "README.md"
+    - "**/README.md"
+    - "AGENTS.md"
+    - "**/CLAUDE.md"
+    # Bản đồ sản phẩm — máy sinh, và /acceptance-gate:approve + /acceptance-gate:signoff commit nó CÙNG commit
+    # chữ ký. Thiếu dòng này thì chính commit chữ ký làm evidence stale và
+    # pre-merge chặn merge, thành vòng không thoát (ADR 0007). Miễn trừ CHỈ an
+    # toàn khi repo cũng chạy `executors.script.product_map` trong CI của mình —
+    # .github/workflows/acceptance-gate.yml chạy bước đó.
+    - "PRODUCT-MAP.md"
+  t3_paths:
+    - "app/src/lib/auth.ts"                          # auth + cổng /ops
+    - "app/src/lib/ops-access.ts"
+    - "app/src/proxy.ts"
+    - "app/src/app/(auth)/**"
+    - "app/src/app/actions.ts"                       # login/logout/toggleSaved
+    - "app/src/app/api/v1/ops/**"                    # ingest, review decide, zalo login
+    - "data-api/src/middleware/**"                   # API key auth
+    - "db/migrations/**"                             # schema
+    - "pipeline/sync-cloud.mjs"                      # dữ liệu rời máy (PII tầng A)
+    - "pipeline/push-ops-facts.mjs"
+    - "scripts/cloud-sync.sh"
+    - "tools/**"                                     # đẩy ra repo public
+    - "collector/openclaw/**"                        # an toàn Zalo
+    - "scripts/zalo-watchdog.sh"
+    - ".claude/settings.json"                        # rào chắn máy
+    - ".claude/hooks/**"
+signoff:
+  required_for: [T2, T3]     # tiers that pre-merge-check requires signoff for
+  approvers: ["Mạnh"]        # informational — gate không ép khoá này; chữ ký vẫn được kiểm
+                             # (human_signoff không rỗng, không là placeholder tiếng Anh).
+dev_server:
+  start: "cd app && npm run dev -- -p 3456"          # suy từ: CLAUDE.md + .claude/launch.json
+  url: "http://localhost:3456"
+  # không có api_base: app chỉ gọi /api/v1 cùng origin
+capture:
+  ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)

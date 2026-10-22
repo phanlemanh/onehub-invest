@@ -1,0 +1,43 @@
+name: acceptance-gate
+
+# Cổng nghiệm thu (Acceptance-Gate Kit 2.32.0, chép vào scripts/ + lib/).
+# Thiếu workflow này thì cổng chỉ chạy trên máy, không chặn được merge, và
+# miễn trừ PRODUCT-MAP.md trong t1_skip_globs không còn ai canh (ADR 0007 của kit).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # fetch-depth: 0 — pre-merge-check đọc lịch sử (stale-guard theo verified_commit,
+      # provenance commit chữ ký); product-map --check cần lịch sử để phân biệt
+      # "chưa từng dựng bản đồ" với "bản đồ bị xoá".
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: bản đồ sản phẩm khớp hồ sơ
+        run: node scripts/product-map.mjs --root . --check
+
+      # LUÔN truyền base: luật gap-probe cần phạm vi diff.
+      #   PR   → nhánh đích, răng T1-escape BẬT (đổi file ngoài T1 phải kèm _acceptance/<slug>/)
+      #   push → commit liền trước, T1-escape TẮT (commit vào thẳng main không có tiền đề PR)
+      - name: xác định base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PRE_MERGE_BASE=origin/${{ github.base_ref }}" >> "$GITHUB_ENV"
+            echo "T1_ESCAPE_FLAG=" >> "$GITHUB_ENV"
+          else
+            echo "PRE_MERGE_BASE=$(git rev-parse HEAD~1)" >> "$GITHUB_ENV"
+            echo "T1_ESCAPE_FLAG=--no-t1-escape" >> "$GITHUB_ENV"
+          fi
+
+      - name: pre-merge check (evidence + signoff + stale + gap-probe + T1-escape)
+        run: bash scripts/pre-merge-check.sh . --base "$PRE_MERGE_BASE" $T1_ESCAPE_FLAG
