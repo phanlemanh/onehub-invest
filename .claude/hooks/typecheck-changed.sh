@@ -3,6 +3,7 @@
 #   - Module TS (app, collector, data-api, agent): tsc --noEmit, CHỈ báo lỗi nằm
 #     trong file đã đổi (lỗi tồn đọng chỗ khác không chặn).
 #   - .mjs (pipeline/, scripts/): node --check từng file.
+#   - app/src/**/*.{ts,tsx}: eslint (luật onehub-ui chặn tự vẽ tay) trên đúng các file vừa đổi.
 # Có lỗi → exit 2 để Claude sửa tiếp; lần dừng thứ hai (stop_hook_active) cho qua.
 set -uo pipefail
 
@@ -36,14 +37,35 @@ for mod in app collector data-api agent; do
   [ -n "$hits" ] && report+="[$mod] lỗi TypeScript trong file vừa đổi:"$'\n'"$hits"$'\n'
 done
 
+# Lint UI (onehub-ui) — chỉ các file app/src còn tồn tại, đường dẫn tương đối theo app/.
+# Lưu ý: bash 3.2 (macOS) không có mapfile → dựng mảng bằng vòng while.
+lint_files=()
+while read -r f; do
+  case "$f" in app/src/*.ts|app/src/*.tsx) ;; *) continue ;; esac
+  [ -f "$f" ] && lint_files+=("${f#app/}")
+done <<<"$changed"
+if [ "${#lint_files[@]}" -gt 0 ]; then
+  if [ ! -x app/node_modules/.bin/eslint ]; then
+    report+="[app] bỏ qua lint UI — chưa cài node_modules (cd app && npm install)."$'\n'
+  else
+    lint_out=$(cd app && ./node_modules/.bin/eslint "${lint_files[@]}" 2>&1)
+    lint_rc=$?
+    # eslint thoát khác 0 (có lỗi, hoặc suppressions chưa prune ở file vừa đổi) kèm output → chặn.
+    # Chỉ cảnh báo (warning) thì exit 0 → không chặn.
+    if [ "$lint_rc" -ne 0 ] && [ -n "$lint_out" ]; then
+      report+="[app] lỗi lint UI trong file vừa đổi:"$'\n'"$lint_out"$'\n'
+    fi
+  fi
+fi
+
 while read -r f; do
   case "$f" in pipeline/*.mjs|pipeline/*/*.mjs|scripts/*.mjs) ;; *) continue ;; esac
   [ -f "$f" ] || continue
   err=$(node --check "$f" 2>&1) || report+="[node --check] $f"$'\n'"$err"$'\n'
 done <<<"$changed"
 
-# Chỉ dòng "bỏ qua" thì không chặn
-blocking=$(sed '/^$/d' <<<"$report" | grep -v 'bỏ qua typecheck')
+# Chỉ dòng "bỏ qua" (typecheck/lint) thì không chặn
+blocking=$(sed '/^$/d' <<<"$report" | grep -Ev 'bỏ qua (typecheck|lint)')
 if [ -n "$blocking" ]; then
   echo "$report" >&2
   exit 2
