@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: portal-deals-airdna
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 0e3a25c7e01391877a72afe57e50d241b8aa2679
-human_signoff:
+human_signoff: Mạnh 2026-10-22
 ---
 
 # Evidence Report: portal-deals-airdna
@@ -191,13 +191,13 @@ human_signoff:
   rationale: Đường dự phòng của getDeals đúng thiết kế — câu `full` lỗi trên cloud (thiếu cột seller_* và bảng stg_zalo_posts), catch chuyển sang `noContact`; ba lệnh replace khớp đúng chuỗi nên `noContact` không còn nhắc cột/bảng vắng, khối liên hệ ẩn hết. Nhưng `noContact` vẫn đọc view `v_ruler_p2_area`, và ba tệp bằng chứng không cho biết view có trên cloud không; thiếu view thì câu dự phòng cũng lỗi và trang sập (không có try thứ hai).
   required_evidence:
     - Định nghĩa `CREATE VIEW v_ruler_p2_area` trong `db/migrations/*.sql` (chỉ đọc bảng có trên cloud), kèm `SELECT to_regclass('v_ruler_p2_area')` chạy trên Supabase qua Management API cho thấy view có trên cloud.
-  human_override:
+  human_override: Mạnh 2026-10-22 — Đạt
 
 - eval: E15
   run_id: design-gate-d71f8f2810
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app) — file 1/3
+  verifier: config:executors.design.gate
   verified_at: 2026-10-22T14:42:19Z
   output: |
     "target": "app/src/app/ops/deals/page.tsx",
@@ -211,7 +211,7 @@ human_signoff:
   run_id: design-gate-59248b43dc
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app) — file 2/3
+  verifier: config:executors.design.gate
   verified_at: 2026-10-22T14:42:20Z
   output: |
     "target": "app/src/components/invest/investment-simulator.tsx",
@@ -225,7 +225,7 @@ human_signoff:
   run_id: design-gate-5d7701e9e5
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.design.gate (design-gate.mjs 2.32.0, --jsdom app) — file 3/3
+  verifier: config:executors.design.gate
   verified_at: 2026-10-22T14:42:20Z
   output: |
     "target": "app/src/app/(app)/[country]/[market]/dau-tu/page.tsx",
