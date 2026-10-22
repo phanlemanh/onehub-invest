@@ -63,8 +63,8 @@ và lưới là của chính block (chuyển thể chỉ đổi dữ liệu/ch�
 `InsightGrid`. Catalog ghi ngoại lệ có tên: *"Cổng Ops, trang theo block Solutions: KPI và lưới
 theo block"*. Không có `<table>` hay `useTable` tự dựng ngoài bản chuyển thể block hoặc `InsightGrid`.
 
-**Điều kiện cài:** block Pro cài bằng `npx shadcn@latest add @reui/<tên>` cần `REUI_LICENSE_KEY`
-trong `app/.env.local`. Ở worktree này CLI báo thiếu biến (Hỏi-6).
+**Điều kiện cài:** block Pro cài bằng `npx shadcn@latest add @reui/solution-<nhóm>-<n>` (hoặc
+`@reui/app-shell-36`); khoá `REUI_LICENSE_KEY` đã có trong `app/.env.local` của worktree (2026-10-23).
 
 ## 3. Từng trang (kế hoạch 7 dòng ReUI)
 

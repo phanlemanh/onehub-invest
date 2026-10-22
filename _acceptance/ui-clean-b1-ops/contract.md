@@ -81,7 +81,7 @@ Ma trận đóng **trang × việc** lấy từ spec mục 5 B1 + chỉ đạo 2
 
 - Thứ tự: `components/ops/review-card.tsx` và `app/ops/review/page.tsx` làm sau cùng, chờ nhánh `feat/enrich-qua-de-xuat` vào main rồi merge main vào nhánh B1 (enrich sửa review-card và thêm `app/tests/review-card.test.tsx`). Tiêu chí không đổi; phần Duyệt tin chỉ chấm được sau mốc đó.
 - Bước nhìn (AC-10) cần phiên đăng nhập `/ops` (Hỏi-3).
-- Cài block Pro cần `REUI_LICENSE_KEY`; khoá chưa được khai trên máy (Hỏi-6) — Mạnh thêm vào `app/.env.local` của checkout chính, phiên điều phối chép sang worktree B1. Thiếu khoá thì S3 dừng ở bước cài.
+- Khoá cài block Pro đã có trong `app/.env.local` của worktree B1 (Mạnh khai, phiên điều phối chép; không đọc nội dung). Tên registry có tiền tố `solution-` (vd `@reui/solution-dev-ops-5`).
 - MCP reui chưa nạp vào phiên này: chọn block bằng bản `.md` chính chủ + ảnh thumbnail; `validate_usage` và `get_audit_checklist` qua MCP CHƯA chạy — chạy ở lượt chấm hoặc khi mở lại phiên (Hỏi-4); hand-back ghi rõ nếu vẫn chưa chạy.
 - Ảnh chụp LUÔN che chữ tầng A (tên nguồn thật, tên nhóm Zalo, nội dung tin) bằng `scripts/ui-standards/mask-tier-a.js` trước khi chụp (E12, E13, E14). Nếu ở Hỏi-1 Mạnh chọn chụp nguyên trạng thì sửa E12–E14 và dòng này trước khi duyệt Cổng Phạm vi.
 - Không bấm nút xác nhận xoá/gỡ trong lúc kiểm (AC-6 chỉ kiểm đường Huỷ): xoá là thao tác khó đảo trên DB local dùng chung.
