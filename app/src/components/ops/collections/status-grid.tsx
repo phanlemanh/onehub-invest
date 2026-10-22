@@ -30,6 +30,7 @@ export function StatusGrid<T extends object>({
   getRowId,
   initialSort,
   footnote,
+  actions,
   pageSize = 10,
 }: {
   /** Neo để thẻ số ở đầu trang liên kết tới. */
@@ -42,6 +43,8 @@ export function StatusGrid<T extends object>({
   getRowId: (row: T) => string
   initialSort?: SortingState
   footnote?: ReactNode
+  /** Nút bên phải dải đầu (vd Thêm nhóm). */
+  actions?: ReactNode
   pageSize?: number
 }) {
   const allTabs = useMemo<StatusTab<T>[]>(() => [{ value: "all", label: "Tất cả", match: () => true }, ...tabs], [tabs])
@@ -64,7 +67,9 @@ export function StatusGrid<T extends object>({
   return (
     <DataGrid table={table} recordCount={visible.length} i18n={DATA_GRID_VI}>
       <Frame id={id} spacing="default" className="w-full min-w-0 scroll-mt-4">
-        <SectionHeader title={title} description={description} />
+        <SectionHeader title={title} description={description}>
+          {actions}
+        </SectionHeader>
         <FramePanel className="p-0">
           <div className="flex border-b md:h-12 md:items-stretch">
             <Tabs

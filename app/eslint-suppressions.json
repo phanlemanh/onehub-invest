@@ -12,11 +12,6 @@
       "count": 1
     }
   },
-  "src/app/ops/sources/page.tsx": {
-    "onehub-ui/no-raw-table": {
-      "count": 1
-    }
-  },
   "src/components/auth/gradient-wave.tsx": {
     "onehub-ui/no-banned-motion": {
       "count": 4
@@ -121,37 +116,6 @@
     },
     "onehub-ui/no-raw-palette": {
       "count": 2
-    }
-  },
-  "src/components/ops/source-groups-admin.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 1
-    },
-    "onehub-ui/no-emoji-icons": {
-      "count": 5
-    },
-    "onehub-ui/no-native-dialogs": {
-      "count": 2
-    },
-    "onehub-ui/no-raw-controls": {
-      "count": 8
-    },
-    "onehub-ui/no-raw-palette": {
-      "count": 1
-    }
-  },
-  "src/components/ops/zalo-accounts.tsx": {
-    "onehub-ui/no-emoji-icons": {
-      "count": 2
-    },
-    "onehub-ui/no-native-dialogs": {
-      "count": 1
-    },
-    "onehub-ui/no-raw-controls": {
-      "count": 4
-    },
-    "onehub-ui/no-raw-table": {
-      "count": 1
     }
   },
   "src/components/saved/saved-item.tsx": {

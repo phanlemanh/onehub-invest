@@ -2,8 +2,8 @@
 
 // chuyển thể từ @reui/app-shell-36 (app-shell.tsx): shell riêng của cổng Ops —
 // shadcn Sidebar mở ở desktop, thanh icon ở máy tính bảng, ngăn kéo ở điện thoại;
-// một header, thân trang cuộn bên dưới. Khác bản gốc: thân là trang thật (children)
-// thay cho ContentSkeleton, mục hiện tại suy từ URL, bỏ ghim trang và trạng thái demo.
+// một header, thân trang cuộn bên dưới. Khác bản gốc: thân là trang thật (children),
+// không còn khung xương mẫu; mục hiện tại suy từ URL, bỏ ghim trang và trạng thái demo.
 import { useEffect, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 

@@ -455,23 +455,22 @@ function states() {
   if (!reviewHasEmpty) fails.push("states: hàng chờ duyệt không render Empty khi rỗng");
   // (4) nhóm Zalo: Skeleton lúc tải + Alert destructive có Button Thử lại gọi lại việc tải
   const sources = parsed.filter((p) => p.srcRel.startsWith("components/ops/sources/"));
-  const zaloFile = sources.find(({ sf }) => /\/api\/v1\/ops\/zalo\/groups/.test(sf.text));
-  if (!zaloFile) fails.push("states: không thấy tệp tải nhóm Zalo trong components/ops/sources");
+  const zaloFiles = sources.filter((p) => /zalo/.test(p.srcRel))
+  if (!zaloFiles.some(({ sf }) => /\/api\/v1\/ops\/zalo\/groups/.test(sf.text))) fails.push("states: không thấy tệp tải nhóm Zalo trong components/ops/sources")
   else {
-    const z = zaloFile.sf;
-    if (!imports(z).some((i) => i.names.includes("Skeleton"))) fail("states", "bảng nhóm Zalo thiếu Skeleton lúc tải", zaloFile.f);
-    let retry = false;
-    for (const o of jsxOpenings(z)) {
+    if (!zaloFiles.some(({ sf }) => imports(sf).some((i) => i.names.includes("Skeleton")))) fails.push("states: bảng nhóm Zalo thiếu Skeleton lúc tải")
+    let retry = false
+    for (const { sf: z } of zaloFiles) for (const o of jsxOpenings(z)) {
       if (tagName(o) === "Alert" && attrString(attr(o, "variant")) === "destructive" && ts.isJsxElement(o.parent)) {
         visit(o.parent, (m) => {
           if ((ts.isJsxOpeningElement(m) || ts.isJsxSelfClosingElement(m)) && tagName(m) === "Button") {
-            const oc = attrString(attr(m, "onClick")) ?? "";
-            if (/load|fetch|reload|retry/i.test(oc)) retry = true;
+            const oc = attrString(attr(m, "onClick")) ?? ""
+            if (/load|fetch|reload|retry/i.test(oc)) retry = true
           }
-        });
+        })
       }
     }
-    if (!retry) fail("states", "lỗi tải nhóm Zalo thiếu Alert destructive kèm nút Thử lại gọi lại việc tải", zaloFile.f);
+    if (!retry) fails.push("states: lỗi tải nhóm Zalo thiếu Alert destructive kèm nút Thử lại gọi lại việc tải")
   }
   // (5) tạo nhóm thu chặn khi thiếu trường
   let creates = 0;
