@@ -1,0 +1,124 @@
+{
+ "feature_plain": "Ba biểu đồ (Hiệu suất theo tháng, Cơ cấu doanh thu, Doanh thu và chi phí) dùng chung một bảng màu đọc rõ ở cả nền sáng lẫn tối, và chung một bộ mã — người dùng thấy cùng số, cùng thao tác như hôm nay, chỉ khác màu chuỗi.",
+ "will_do": [
+  {
+   "id": "AC-2",
+   "p": "Sẽ làm mọi đường, cột, lát biểu đồ nổi rõ trên nền thẻ ở cả chế độ sáng và tối (tối thiểu 3:1), trừ đúng các chuỗi phụ anh chốt ở Hỏi-3."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ gom phần mã ba biểu đồ đang chép của nhau (gợi ý nút, chấm màu, biểu tượng, tải CSV, sao chép, menu “Thao tác khác”) về một chỗ dùng chung."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ để kiểm tra giao diện tự động chạy sạch, gỡ hết 8 lỗi tồn đọng của ba biểu đồ; chỉ 3 ngoại lệ có ghi lý do là “nguyên bản block chart-6”."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ giữ nguyên cách trang Insight và trang Ước tính lợi suất gọi ba biểu đồ — hai trang đó không phải sửa."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ giữ y nguyên chữ, số, gợi ý khi rê chuột, đổi chỉ số/kỳ/Tháng-Quý, file CSV tải về và thông báo sao chép; biểu đồ lãi lỗ ở trang lợi suất giống từng điểm ảnh."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ chụp ba biểu đồ ở sáng, tối và màn hẹp điện thoại, trước và sau, để mắt người xác nhận chỉ khác màu chuỗi."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ ghi số đo “sau đợt biểu đồ” vào tài liệu số đo chuẩn giao diện và ghi chỗ dùng chung vào danh mục block."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ KHÔNG để biểu đồ nào tự chọn màu riêng nữa: mọi màu chuỗi lấy từ một bảng màu chung, và Doanh thu cùng một khoá màu ở mọi biểu đồ."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ KHÔNG còn chỗ “để dành” trong luật màu dữ liệu: bảng màu chốt được ghi rõ từng chuỗi, từng chế độ."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ KHÔNG còn tệp biểu đồ nào dài quá 200 dòng (hiện có tệp 779 dòng)."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG đụng các ô số tổng (Tổng doanh thu, các ô dưới biểu đồ lãi lỗ) — đợt khung trang và ô số (B2) làm."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG đụng cổng Ops — đợt B1 đang làm song song."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG đổi màu thương hiệu hay bộ màu biểu đồ mặc định của giao diện."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG gộp hai cơ chế “đứng yên khi bản demo đóng băng” của hai biểu đồ — gộp sẽ đổi cách chúng phản ứng."
+  },
+  {
+   "id": "OOS-5",
+   "p": "KHÔNG sửa bản gốc ReUI lưu làm tham chiếu."
+  },
+  {
+   "id": "OOS-6",
+   "p": "KHÔNG thêm trạng thái đang tải/lỗi mới cho biểu đồ — đợt trạng thái (B4) làm."
+  }
+ ],
+ "scope_plain": "Những thứ người duyệt có thể chờ đợi nhưng đợt này cố ý để lại:",
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Phủ đủ ba biểu đồ của sản phẩm — tìm trong mã chỉ có hai trang dùng chúng."
+  },
+  {
+   "i": 1,
+   "p": "Phủ đủ sáu loại việc của đợt: nguồn màu chung, độ nổi sáng/tối, gom mã trùng, tách tệp dài, kiểm tra tự động, tài liệu."
+  },
+  {
+   "i": 2,
+   "p": "Kiểm ở ba tầng: đọc mã, so cấu trúc trang và kết quả thao tác, nhìn ảnh sáng/tối/màn hẹp."
+  },
+  {
+   "i": 3,
+   "p": "Mười tiêu chí (AC-1…AC-10) phủ mọi ô có nghĩa; gộp hai cơ chế demo để sau, đổi bộ màu mặc định của giao diện thì không làm."
+  },
+  {
+   "i": 4,
+   "p": "Chưa chốt: phương án màu A (theo nghĩa) — anh chọn ở Hỏi-1."
+  },
+  {
+   "i": 5,
+   "p": "Chưa chốt: bốn chuỗi phụ được miễn ngưỡng độ nổi — anh chọn ở Hỏi-3."
+  },
+  {
+   "i": 6,
+   "p": "Lỗ đã biết: biểu đồ cơ cấu khi khu vực chưa có doanh thu không được máy kiểm (dữ liệu máy không có khu vực như vậy; phần đó cũng thuộc vùng đợt B2 không đụng)."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Danh sách chuỗi được miễn ngưỡng độ nổi là việc anh quyết, không phải máy — đã tách thành câu hỏi riêng (Hỏi-3) kèm số đo từng chuỗi."
+  },
+  {
+   "i": 1,
+   "p": "Phép so “trước/sau” có thể lệch vì dữ liệu đổi qua đêm hoặc vì sửa công cụ chụp — đã bắt hai bản chụp liền nhau bằng cùng một công cụ, và sẽ thử phá thật một lần để chứng phép so biết đỏ."
+  },
+  {
+   "i": 2,
+   "p": "Phép so bỏ sót tải CSV, thông báo sao chép, bật/tắt mốc thuê dài hạn — đã thêm đủ; riêng biểu đồ cơ cấu khi chưa có doanh thu để ngỏ (không có dữ liệu thử)."
+  },
+  {
+   "i": 3,
+   "p": "Phép tìm màu tự chọn chỉ bắt một hai kiểu viết màu và không kiểm “Doanh thu cùng màu ở mọi nơi” — đã liệt đủ bảy kiểu viết màu và thêm kiểm khoá màu theo nghĩa."
+  },
+  {
+   "i": 4,
+   "p": "Biểu đồ lãi lỗ không đổi màu nhưng bị tách tệp nhiều nhất, chỉ có mắt người canh — đã thêm so ảnh từng điểm ảnh (ảnh chụp lặp lại giống nhau tuyệt đối)."
+  }
+ ]
+}
