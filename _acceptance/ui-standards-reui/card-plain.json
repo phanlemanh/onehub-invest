@@ -1,26 +1,4 @@
 {
-  "feature_plain": "Mọi agent làm giao diện trong app (Claude, Codex, Cursor, ZCode) nhận cùng một bộ luật ReUI chính chủ, và máy tự chặn khi có ai tự vẽ tay thay vì dùng block/component có sẵn.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ nối công cụ tra cứu ReUI cho cả dự án mà không để lộ khoá license trong repo."},
-    {"id": "AC-2", "p": "Sẽ cho thấy công cụ tra cứu ReUI chạy được bằng đăng nhập của anh (anh làm tay một lần trước khi kiểm)."},
-    {"id": "AC-3", "p": "Sẽ báo lỗi đúng tên luật khi ai đó tự vẽ bảng, nút, hộp thoại, màu, cỡ chữ, hiệu ứng hay icon emoji."},
-    {"id": "AC-5", "p": "Sẽ chặn vi phạm mới, và chặn cả việc lén nới danh sách nợ cũ để qua lint (nợ cũ chỉ được giảm)."},
-    {"id": "AC-6", "p": "Sẽ bắt agent tự sửa lỗi giao diện trước khi kết thúc lượt làm việc."},
-    {"id": "AC-7", "p": "Sẽ báo đỏ khi thêm một trang mới mà quên khai nó thuộc mẫu màn hình nào."},
-    {"id": "AC-8", "p": "Sẽ cho quy trình nghiệm thu tự nạp bộ luật giao diện của repo khi làm việc có chạm UI."},
-    {"id": "AC-9", "p": "Sẽ để mọi tài liệu hướng dẫn cũ chỉ về cùng một nguồn luật, hết chỗ nói ngược nhau."},
-    {"id": "AC-10", "p": "Sẽ ghi lại con số 'trước' (138 chỗ vi phạm) đúng với máy đếm, làm mốc cho case study."}
-  ],
-  "wont_do": [
-    {"id": "AC-4", "p": "Sẽ KHÔNG báo nhầm mã đã đúng chuẩn, không chặn màu hex trong file bản đồ, và không đụng tới code vendor."},
-    {"id": "OOS-1", "p": "KHÔNG dọn 138 chỗ vi phạm hiện có — việc đó là các đợt dọn B1–B5."},
-    {"id": "OOS-2", "p": "KHÔNG đụng việc đẩy app ra repo public và chuyện license — anh quyết sau."},
-    {"id": "OOS-3", "p": "KHÔNG đổi màu thương hiệu hay phong cách giao diện."},
-    {"id": "OOS-4", "p": "KHÔNG chụp kiểm giao diện, vì phần này không đổi gì người dùng nhìn thấy (trừ một dòng chữ trên trang trưng bày Ops)."},
-    {"id": "OOS-5", "p": "KHÔNG merge nhánh dời trang Căn giá tốt sang Ops ở đây — chỉ ghi sẵn các bước ghép."}
-  ],
-  "scope_plain": "Phần này chỉ dựng luật và máy chặn; dọn giao diện là các đợt sau.",
-  "coverage_plain": [
-    {"i": 0, "p": "Không quét thêm trục: 10 tiêu chí lấy nguyên từ kế hoạch anh đã duyệt trước khi thi công, kể cả 5 tình huống dễ hỏng nhất."}
-  ]
+  "feature_plain": "Mọi agent làm giao diện trong app nhận cùng bộ luật ReUI chính chủ, và máy tự chặn khi có ai tự vẽ tay thay vì dùng block/component có sẵn.",
+  "scope_plain": "Phần này chỉ dựng luật và máy chặn; 138 chỗ vi phạm cũ được ghi sổ để dọn ở các đợt B1–B5."
 }
