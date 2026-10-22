@@ -62,7 +62,7 @@ const BLOCK_COLUMNS: InsightColumn<BlockRow>[] = [
     id: "preview",
     header: "Xem trước",
     cell: ({ row }) => (
-      <a href={row.original.preview} target="_blank" rel="noreferrer" className="font-medium underline">
+      <a href={row.original.preview} target="_blank" rel="noopener noreferrer" className="font-medium underline">
         Mở
       </a>
     ),
