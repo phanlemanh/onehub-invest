@@ -22,3 +22,12 @@ Xem `docs/research/agent-harness-survey.md`: 5 xu hướng hội tụ (harness>p
 context-rot, fs-as-memory, MCP chuẩn hoá, Vercel AI SDK dẫn dắt TS) → đề xuất
 "3 tầng + 1 hợp đồng": runtime loop TS duy nhất (AI SDK) + MCP tools + agents
 dạng config; trace JSONL mọi bước. Lộ trình A1-A6 (judge-entity là case đầu).
+
+## Bộ nhớ cá nhân (survey 10/2026 → đề xuất)
+
+Xem `docs/research/agent-memory-survey.md`: 4 triết lý memory (Letta/Mem0/
+Graphiti/Cognee) + xu hướng personal (dual-process, user-owned). Đề xuất
+"Postgres-first, 3 lớp": episodic (user_events) → semantic bi-temporal
+(user_profile, consolidation đêm) → procedural (sau); memory là 1 TOOL của
+runtime harness; KHÔNG graph/vector trước khi đo được nhu cầu (bài học
+Mem0 bỏ graph). Lộ trình M1-M5.
