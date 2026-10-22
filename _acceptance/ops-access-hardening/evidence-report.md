@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e721d229010f89fd76e614c943aab677d1a4ef2f
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: ops-access-hardening
