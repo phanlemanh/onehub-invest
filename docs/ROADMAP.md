@@ -112,6 +112,7 @@ ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 | M3 | consolidation đêm (Qwen local, source+evidence) | ⬜ |
 | M4 | form hồ sơ + export JSON (consent, user-owned) | ⬜ |
 | M5 | pgvector — chỉ khi đo thấy cần | ⬜ kháng cự |
+| HITL | /ops/review Review Queue (12 entity_match seeded) | ✅ c6eea64 |
 
 ### Track 2 — "Một Căn Nhà" hoàn thiện
 | # | Việc | Trạng thái |
