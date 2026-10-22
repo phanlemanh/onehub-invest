@@ -86,7 +86,7 @@ test("AC-3 corroborated e1", () => {
     [{ field: "bedrooms", value: "2", source: "e2_llm", route: "corroborated", corroboratedBy: "e1" }],
     'AC-3: LLM "2" + E1 2 phải corroborated by e1 sau chuẩn hoá',
   );
-  assert.deepEqual(e1Only(rs).map((r) => r.route), ["direct"]);
+  assert.deepEqual(e1Only(rs), [], "AC-3: cùng giá trị thì không sinh thêm E1 direct (đề xuất LLM mới là cái được áp)");
 
   const pt = routeFields({
     current: {},
@@ -127,6 +127,20 @@ test("AC-3 corroborated asset_nodes", () => {
 });
 
 // ── AC-7: E1 trái LLM ───────────────────────────────────────────────────────
+
+test("AC-3 viết tắt toà khớp tên chuẩn E1", () => {
+  const rs = routeFields({
+    current: {},
+    e1: { block_raw: "Lumiere Boulevard" },
+    llm: { block_raw: "LBV" },
+    buildings: [{ slug: "gpk-lumiere-boulevard", name: "Lumiere Boulevard", aliases: ["lbv"] }],
+  });
+  assert.deepEqual(
+    rs.map((r) => [r.source, r.route, r.value, r.corroboratedBy]),
+    [["e2_llm", "corroborated", "Lumiere Boulevard", "e1"]],
+    "AC-3: 'LBV' của LLM là cùng toà với 'Lumiere Boulevard' của E1 — không được thành xung đột",
+  );
+});
 
 test("AC-7 E1 thắng khi trái LLM", () => {
   const input = { current: {}, llm: { property_type: "apartment" }, buildings: [] };
@@ -169,14 +183,14 @@ test("fill-gap", () => {
   // property_type='unknown' tính là trống → vẫn sinh đề xuất
   assert.deepEqual(
     rs.filter((r) => r.field === "property_type").map((r) => r.route),
-    ["direct", "corroborated"],
+    ["corroborated"],
   );
 });
 
 test("summarizeRun đếm theo route qua nhiều offer", () => {
   const a = routeFields({ current: {}, e1: { bedrooms: 2 }, llm: { bedrooms: 2, street_raw: "Xuân La" }, buildings: [] });
   const b = routeFields({ current: {}, e1: { property_type: "house" }, llm: { property_type: "land" }, buildings: [] });
-  assert.deepEqual(summarizeRun([a, b]), { direct: 2, corroborated: 1, review: 1, xungDot: 1 });
+  assert.deepEqual(summarizeRun([a, b]), { direct: 1, corroborated: 1, review: 1, xungDot: 1 });
 });
 
 // ── fixture thật ────────────────────────────────────────────────────────────

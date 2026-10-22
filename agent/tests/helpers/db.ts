@@ -17,6 +17,9 @@ export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   await c.connect();
   try {
     await c.query("BEGIN");
+    // node --test chạy các tệp song song; nạp migration (CREATE OR REPLACE FUNCTION) trong
+    // hai transaction cùng lúc là deadlock → mọi ca DB xếp hàng sau một advisory lock.
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
     await c.query(MIGRATION);
     return await fn(c);
   } finally {

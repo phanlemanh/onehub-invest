@@ -3,7 +3,7 @@
 //
 // Mỗi field còn trống của offer:
 //   E1 luật hợp lệ                         → direct
-//   LLM, E1 cùng giá trị (sau chuẩn hoá)   → corroborated by 'e1'
+//   LLM, E1 cùng giá trị (sau chuẩn hoá)   → corroborated by 'e1' (thay cho E1 direct)
 //   LLM, E1 khác giá trị                   → superseded (E1 thắng, tính xung đột)
 //   LLM block_raw khớp tên/alias building  → corroborated by 'asset_nodes:<slug>', value = tên chuẩn
 //   LLM không căn cứ                       → review
@@ -119,37 +119,37 @@ export function routeFields(input: {
     if (!isEmpty(field, input.current[field])) continue; // fill-gap: giá trị cũ thắng
 
     const e1v = normalizeValue(field, input.e1[field]);
-    const llmv = input.llm ? normalizeValue(field, input.llm[field]) : null;
+    const llmRaw = input.llm ? normalizeValue(field, input.llm[field]) : null;
+    // block_raw: viết tắt LLM (vd "LBV") khớp node building → so/áp bằng TÊN CHUẨN của node,
+    // để E1 trả tên chuẩn và LLM trả viết tắt không bị tính là xung đột.
+    const node = field === "block_raw" && llmRaw !== null ? matchBuilding(llmRaw, input.buildings) : null;
+    const llmv = node ? node.name : llmRaw;
 
     if (e1v !== null) {
+      // E1 cùng giá trị → MỘT đề xuất LLM corroborated (by e1) được áp; dấu E1 nằm ở
+      // corroborated_by. Sinh thêm E1 direct thì fill-gap sẽ biến đề xuất LLM thành
+      // skipped — trái AC-3.
+      if (llmv !== null && valueKey(e1v) === valueKey(llmv)) {
+        out.push({ field, value: llmv, source: "e2_llm", route: "corroborated", corroboratedBy: "e1" });
+        continue;
+      }
       out.push({ field, value: e1v, source: "e1_rule", route: "direct", corroboratedBy: null });
+      if (llmv !== null) {
+        out.push({ field, value: llmv, source: "e2_llm", route: "superseded", corroboratedBy: null });
+      }
+      continue;
     }
     if (llmv === null) continue;
 
-    if (e1v !== null) {
-      const same = valueKey(e1v) === valueKey(llmv);
+    if (node) {
       out.push({
         field,
-        value: llmv,
+        value: node.name,
         source: "e2_llm",
-        route: same ? "corroborated" : "superseded",
-        corroboratedBy: same ? "e1" : null,
+        route: "corroborated",
+        corroboratedBy: `asset_nodes:${node.slug}`,
       });
       continue;
-    }
-
-    if (field === "block_raw") {
-      const node = matchBuilding(llmv, input.buildings);
-      if (node) {
-        out.push({
-          field,
-          value: node.name,
-          source: "e2_llm",
-          route: "corroborated",
-          corroboratedBy: `asset_nodes:${node.slug}`,
-        });
-        continue;
-      }
     }
 
     out.push({ field, value: llmv, source: "e2_llm", route: "review", corroboratedBy: null });
