@@ -5,9 +5,11 @@ slug: job-bao-loi-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-23-job-bao-loi-that-design.md
 lo_trinh_ma: AU3
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: job-bao-loi-that
@@ -54,7 +56,7 @@ design doc §6, theo ba trục:
 ## Đường đo
 
 - «Tắt DB rồi chạy từng job: tất cả thoát khác 0» · số từ `node --test scripts/job-exit.test.mjs` (ca «DB tắt hẳn» × 5 job + 10 bước thật trên cổng canh) · AC-3, AC-5
-- «… có một cảnh báo» · số từ L5b của `scripts/zalo-watchdog.sh` (ZC3, nhánh `zcode/audit-p1-resilience`) — NGOÀI hàng; ngưỡng chờ Hỏi-2 · không AC ở hàng này
+- «… có một cảnh báo» · số từ L5b của `scripts/zalo-watchdog.sh` (ZC3, nhánh `zcode/audit-p1-resilience`) — NGOÀI hàng — Hỏi-2 chốt A: vế này thành ngưỡng của ZC3 · không AC ở hàng này
 
 ## Out of scope
 
