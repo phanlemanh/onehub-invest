@@ -5,7 +5,7 @@ slug: supabase-lock-anon-rls
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** — quyền truy cập dữ liệu prod (PII tầng A: users, sessions, sellers)
 surfaces: [config, docs]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-23
 ---
