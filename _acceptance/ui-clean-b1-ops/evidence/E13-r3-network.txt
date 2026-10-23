@@ -1,0 +1,17 @@
+E13 round 3 — resource timing fetch/xhr per frame @ http://localhost:3457 (ego-browser, task space s4r3-E13)
+light-1440 /ops: app fetch/xhr 0, failed-or-unknown 0
+light-1440 /ops/collections: app fetch/xhr 0, failed-or-unknown 0
+light-1440 /ops/quality: app fetch/xhr 0, failed-or-unknown 0
+light-1440 /ops/sources: app fetch/xhr 6, failed-or-unknown 0 — /api/v1/ops/zalo/accounts 200, /api/v1/ops/zalo/groups 200, /api/v1/ops/zalo/login 200, /api/v1/ops/zalo/accounts 200, /api/v1/ops/zalo/groups 200, /api/v1/ops/zalo/login 200
+light-1440 /ops/design: app fetch/xhr 0, failed-or-unknown 0
+dark-1440 /ops: app fetch/xhr 0, failed-or-unknown 0
+dark-1440 /ops/collections: app fetch/xhr 0, failed-or-unknown 0
+dark-1440 /ops/quality: app fetch/xhr 0, failed-or-unknown 0
+dark-1440 /ops/sources: app fetch/xhr 6, failed-or-unknown 0 — /api/v1/ops/zalo/accounts 200, /api/v1/ops/zalo/groups 200, /api/v1/ops/zalo/login 200, /api/v1/ops/zalo/accounts 200, /api/v1/ops/zalo/groups 200, /api/v1/ops/zalo/login 200
+dark-1440 /ops/design: app fetch/xhr 0, failed-or-unknown 0
+light-390 /ops: app fetch/xhr 0, failed-or-unknown 0
+light-390 /ops/collections: app fetch/xhr 0, failed-or-unknown 0
+light-390 /ops/quality: app fetch/xhr 0, failed-or-unknown 0
+light-390 /ops/sources: app fetch/xhr 6, failed-or-unknown 0 — /api/v1/ops/zalo/accounts 200, /api/v1/ops/zalo/groups 200, /api/v1/ops/zalo/login 200, /api/v1/ops/zalo/accounts 200, /api/v1/ops/zalo/groups 200, /api/v1/ops/zalo/login 200
+light-390 /ops/design: app fetch/xhr 0, failed-or-unknown 0
+invest /vn: app fetch/xhr 0, failed-or-unknown 0

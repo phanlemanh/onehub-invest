@@ -1,0 +1,6 @@
+E12 round 3 — /ops/sources @ http://localhost:3457 (ego-browser, task space s4r3-E12)
+Recorder (fetch/XHR wrapper) from opening dialog to after Huỷ:
+(no app requests)
+POST/DELETE /api/v1/ops/source-groups during interaction: 0
+Resource timing (whole visit, fetch/xhr): fetch /api/v1/ops/zalo/accounts status=200 | fetch /api/v1/ops/zalo/groups status=200 | fetch /api/v1/ops/zalo/login status=200 | fetch /api/v1/ops/zalo/accounts status=200 | fetch /api/v1/ops/zalo/groups status=200 | fetch /api/v1/ops/zalo/login status=200
+Failed app-origin fetch/xhr (status 0 or >=400): 0
