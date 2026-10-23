@@ -1,0 +1,79 @@
+{
+  "_nguon": "Máy sinh bằng `b1-ops.mjs snapshot-api` từ code TRƯỚC khi sửa UI (đợt B1).",
+  "calls": [
+    {
+      "endpoint": "/api/v1/ops/zalo/accounts",
+      "method": "DELETE",
+      "bodyKeys": [
+        "id"
+      ]
+    },
+    {
+      "endpoint": "/api/v1/ops/zalo/login",
+      "method": "DELETE",
+      "bodyKeys": []
+    },
+    {
+      "endpoint": "/api/v1/ops/collections",
+      "method": "GET",
+      "bodyKeys": []
+    },
+    {
+      "endpoint": "/api/v1/ops/zalo/accounts",
+      "method": "GET",
+      "bodyKeys": []
+    },
+    {
+      "endpoint": "/api/v1/ops/zalo/groups",
+      "method": "GET",
+      "bodyKeys": []
+    },
+    {
+      "endpoint": "/api/v1/ops/zalo/login",
+      "method": "GET",
+      "bodyKeys": []
+    },
+    {
+      "endpoint": "/api/v1/ops/review/{}/decide",
+      "method": "POST",
+      "bodyKeys": [
+        "status"
+      ]
+    },
+    {
+      "endpoint": "/api/v1/ops/source-groups",
+      "method": "POST",
+      "bodyKeys": [
+        "action",
+        "enabled",
+        "groupKey",
+        "name",
+        "purge",
+        "sourceCode"
+      ]
+    },
+    {
+      "endpoint": "/api/v1/ops/zalo/accounts",
+      "method": "POST",
+      "bodyKeys": [
+        "id"
+      ]
+    },
+    {
+      "endpoint": "/api/v1/ops/zalo/groups",
+      "method": "POST",
+      "bodyKeys": [
+        "accountId",
+        "enabled",
+        "groupId"
+      ]
+    },
+    {
+      "endpoint": "/api/v1/ops/zalo/login",
+      "method": "POST",
+      "bodyKeys": [
+        "accountId"
+      ]
+    }
+  ]
+}

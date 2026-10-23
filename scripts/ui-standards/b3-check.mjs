@@ -28,7 +28,11 @@ const PALETTE = "app/src/components/charts/palette.ts";
 // Danh sách miễn 3:1 người chốt ở Cổng Phạm vi (Hỏi-3) — đóng, đổi phải qua người.
 const EXEMPT = ["expenses", "share3", "rest", "hatch"];
 // Ma trận khoá viết trước (bảng màu đã duyệt): đọc ra phải đúng tập này, không hơn không kém.
-const EXPECTED_KEYS = ["revenue", "occupancy", "adr", "revpar", "expenses", "margin", "share1", "share2", "share3", "rest", "hatch"];
+const EXPECTED_KEYS = [
+  "revenue", "occupancy", "adr", "revpar", "expenses", "margin", "share1", "share2", "share3", "rest", "hatch",
+  // Nhóm Ops — đợt B1 (ui-clean-b1-ops) điền khi merge, đúng luật data-color.md.
+  "opsVolume", "opsVolumeRaw",
+];
 // Khoá được phép không có lớp chấm: "Khác" dùng chấm màu vạch chéo (hatch).
 const NO_SWATCH = ["rest"];
 const HUES =
