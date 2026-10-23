@@ -5,7 +5,7 @@ slug: invest-target-map
 owner: phanlemanh@gmail.com
 risk_tier: T2      # đổi .claude/skills/** + test lint; không đụng t3_paths, không đổi mã trang
 surfaces: [docs, config]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-23
 design_doc: _acceptance/invest-target-map/ban-quyet-dinh.html
