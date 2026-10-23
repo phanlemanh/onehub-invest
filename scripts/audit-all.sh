@@ -4,7 +4,7 @@
 set -uo pipefail
 ROOT="/Users/manhphan/dev/one-invest"
 DB="docker exec -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -tAc"
-CLOUD="https://app-lilac-one-49.vercel.app"
+CLOUD="https://onehub-invest.vercel.app"
 CTOKEN=$(grep CLOUD_OPS_API_TOKEN ~/.oneinvest/cloud.env 2>/dev/null | cut -d= -f2)
 STOKEN=$(security find-generic-password -s "Supabase CLI" -a supabase -w 2>/dev/null)
 

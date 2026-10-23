@@ -91,6 +91,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 - CI job `ui-lint` (`.github/workflows/ui-lint.yml`) + hook Stop lint file UI vừa đổi.
 - Rule `.claude/rules/ui.md` (tự nạp khi chạm `app/src/components|app`); ổ cắm kit
   `_acceptance/config.yaml`: `feature_loop.ui_standards_skill` và `design_pass.ds_skill` = `onehub-ui`.
+- **B1 Cổng Ops** (nhánh `claude/ui-clean-b1-ops-c5a53a`): shell riêng `components/shell/ops-shell/`
+  (chuyển thể `app-shell-36`, nav nhóm trong `shell/nav.tsx` có `/ops/review`); `/ops` = solution-dev-ops-5,
+  `/ops/collections` = solution-dev-ops-6 + lưới job dev-ops-1, `/ops/sources` = solution-ai-ops-2 + lưới
+  dev-ops-6, `/ops/quality` giữ `StatTiles`/`InsightGrid`, `/ops/design` thành trang trưng bày. Harness
+  kiểm máy `scripts/ui-standards/b1-ops.mjs`; che chữ tầng A khi chụp `scripts/ui-standards/mask-tier-a.js`.
 
 ## 3. QUYẾT ĐỊNH ĐÃ CHỐT (không hỏi lại)
 
@@ -177,11 +182,24 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | # | Việc | Trạng thái |
 |---|---|---|
 | A | Chuẩn: skill reui + onehub-ui, lint 10 luật + baseline, CI ui-lint, hook Stop, ổ cắm kit | ✅ (chờ Mạnh ký) |
-| B1 | Cổng Ops (`/ops/**`): data-grid, primitive, AlertDialog, sonner, PageHeader + Frame | ⏳ |
-| B2 | Khung trang & ô KPI (Invest + marketing): một StatTiles, breadcrumb, thang h1 | ⏳ |
+| B1 | Cổng Ops (`/ops/**`): shell riêng `app-shell-36` + block Solutions (dev-ops-5/-6/-1, ai-ops-2; agents-5 cho `/ops/review`), primitive, AlertDialog, sonner, PageHeader + Frame — nhánh `claude/ui-clean-b1-ops-c5a53a`, hồ sơ `_acceptance/ui-clean-b1-ops/` (T2, Cổng Phạm vi + Cổng Bằng chứng đã ký 2026-10-23, S4 PASS 16/16 sau 3 lượt). Baseline 138 → 85 (sau B3). `/ops/review` (Task 12, agents-5 theo hướng (a)) TÁCH sang vòng sau — chờ backend ảnh tin vào main | 🔨 PR mở |
 | B3 | Biểu đồ: bảng màu chung, gom code trùng, tách file > 200 dòng | ⏳ |
-| B4 | Trạng thái: Skeleton trong Suspense, Empty + hành động, error.tsx còn thiếu | ⏳ |
-| B5 | Phần còn lại sau `fix/portal-deals-airdna` + gỡ baseline (phải rỗng) | ⏳ |
+| BĐ | Bản đồ đích cổng Invest: block đích cho mọi route Invest (cột "Block đích" ở `onehub-ui/routes.md`, test chặn dòng thiếu), shell giữ `app-shell-30`, `/dau-tu` gộp vào `/yield`, slug đích tiếng Anh (cột "Slug đích"), bản đồ nguồn `mapcn`, bước tra Mobbin trong `loop.md` — `_acceptance/invest-target-map` | ✅ Mạnh chọn 23/10 (theo khuyến nghị) — chờ ký PR |
+| I1 | Finder `/[country]`: `solution-analytics-1` + `@mapcn/choropleth`, PageHeader, trạng thái "đang thu thập" | ⏳ |
+| I2 | Insight thị trường + phường: khung `solution-analytics-8`, giữ chart-6/chart-13/InsightGrid, bản đồ `@mapcn/map`, neo mục lục tiếng Anh | ⏳ |
+| I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | ⏳ sau khi gỡ ảnh AirDNA khỏi listing |
+| I4 | Lợi suất: `/yield` form-11 + `data-grid-advanced-7` (chi phí + dòng tiền vốn vay), `/dau-tu` → chuyển hướng `/yield` | ⏳ |
+| I5 | So sánh + Đã lưu: giữ comparison-1 / wishlist-2, thêm PageHeader + trạng thái; `/so-sanh` → `/compare` (301) | ⏳ |
+| I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | ⏳ |
+| B5 | Ops còn lại (`/ops/deals`) + gỡ baseline (phải rỗng) | ⏳ |
+
+Cắt lại 23/10: B2 (khung & KPI) và B4 (trạng thái) không còn là đợt riêng — phần Invest của chúng đi
+vào đợt nhóm trang I1–I6, mỗi đợt làm trọn khung + KPI + biểu đồ (bảng màu B3) + trạng thái; phần Ops
+nằm ở B1/B5.
+
+Phát hiện khi chụp bản đồ đích (chưa kiểm nguyên nhân, việc dữ liệu — chưa mở phiên): bản đồ Hà Nội ở Finder
+và Insight mở ra cả nước vì ranh giới "phường" của `vn-hanoi` trải khắp VN (vùng tô gần Cần Thơ; bảng xếp hạng
+có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới ở pipeline (`reassign-areas.mjs`); mapcn không sửa được.
 
 **Tích hợp nhánh fix/portal-deals-airdna sau A** (nhánh dời `(app)/deals/page.tsx` → `ops/deals/page.tsx`, sửa `dau-tu/page.tsx`, `investment-simulator.tsx`):
 1. Rebase lên `main` đã có A.

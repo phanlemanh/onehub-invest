@@ -1,0 +1,16 @@
+{
+  "_nguon": "Viết tay từ docs/superpowers/specs/2026-10-23-ui-clean-b1-ops-design.md §4, TRƯỚC khi sửa UI. Đối chiếu theo endpoint (đường dẫn, bỏ query) + method + tập khoá body.",
+  "calls": [
+    { "endpoint": "/api/v1/ops/review/{}/decide", "method": "POST", "bodyKeys": ["status"] },
+    { "endpoint": "/api/v1/ops/source-groups", "method": "POST", "bodyKeys": ["action", "enabled", "groupKey", "name", "purge", "sourceCode"] },
+    { "endpoint": "/api/v1/ops/zalo/accounts", "method": "GET", "bodyKeys": [] },
+    { "endpoint": "/api/v1/ops/zalo/accounts", "method": "POST", "bodyKeys": ["id"] },
+    { "endpoint": "/api/v1/ops/zalo/accounts", "method": "DELETE", "bodyKeys": ["id"] },
+    { "endpoint": "/api/v1/ops/zalo/groups", "method": "GET", "bodyKeys": [] },
+    { "endpoint": "/api/v1/ops/zalo/groups", "method": "POST", "bodyKeys": ["accountId", "enabled", "groupId"] },
+    { "endpoint": "/api/v1/ops/zalo/login", "method": "GET", "bodyKeys": [] },
+    { "endpoint": "/api/v1/ops/zalo/login", "method": "POST", "bodyKeys": ["accountId"] },
+    { "endpoint": "/api/v1/ops/zalo/login", "method": "DELETE", "bodyKeys": [] },
+    { "endpoint": "/api/v1/ops/collections", "method": "GET", "bodyKeys": [] }
+  ]
+}
