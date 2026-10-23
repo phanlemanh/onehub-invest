@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -12,20 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 
+import { CAP_BOX } from "@/components/charts/faces"
+import { CHART_ICONS } from "@/components/charts/icons"
+import { OverflowMenu } from "@/components/charts/overflow-menu"
+import { SegmentedToggle } from "@/components/charts/segmented-toggle"
 import { RANGES, type LayerKey, type ViewState } from "./data"
-import { UI_ICONS } from "./icons"
-import { useTriggerTooltip } from "./use-trigger-tooltip"
-import { CAP_BOX } from "./value-faces"
 
 export interface ChartActions {
   downloadCsv: () => void
@@ -35,9 +27,9 @@ export interface ChartActions {
 }
 
 const LAYERS = [
-  { key: "annotations", label: "Mốc lễ, mùa vụ", icon: UI_ICONS.annotations },
-  { key: "average", label: "Đường trung bình", icon: UI_ICONS.average },
-  { key: "grid", label: "Lưới", icon: UI_ICONS.grid },
+  { key: "annotations", label: "Mốc lễ, mùa vụ", icon: CHART_ICONS.annotations },
+  { key: "average", label: "Đường trung bình", icon: CHART_ICONS.average },
+  { key: "grid", label: "Lưới", icon: CHART_ICONS.grid },
 ] as const satisfies readonly {
   key: LayerKey
   label: string
@@ -61,34 +53,40 @@ export function ChartToolbar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {/* Re-clicking the pressed item clears the choice; the guard keeps
-          a range selected. */}
-      <ToggleGroup
-        multiple={false}
-        value={[view.range]}
-        onValueChange={(value) => {
-          const next = RANGES.find((item) => item.value === value[0])
-          if (next) onViewChange({ range: next.value })
-        }}
-        variant="outline"
-        spacing={0}
-        aria-label="Khoảng thời gian"
-      >
-        {RANGES.map((item) => (
-          <ToggleGroupItem
-            key={item.value}
-            value={item.value}
-            // Pressed lifts to the card surface: the stock muted fill is the
-            // header band's own tone and would vanish on it.
-            className="text-muted-foreground data-pressed:bg-card dark:data-pressed:bg-muted data-pressed:text-foreground tabular-nums"
-          >
-            <span className={CAP_BOX}>{item.label}</span>
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <SegmentedToggle
+        items={RANGES}
+        value={view.range}
+        onChange={(range) => onViewChange({ range })}
+        ariaLabel="Khoảng thời gian"
+        itemClassName="tabular-nums"
+        renderLabel={(label) => <span className={CAP_BOX}>{label}</span>}
+      />
       <ButtonGroup aria-label="Thao tác biểu đồ">
         <DisplayMenu view={view} onViewChange={onViewChange} />
-        <MoreMenu canReset={canReset} actions={actions} />
+        <OverflowMenu size="icon">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Xuất dữ liệu</DropdownMenuLabel>
+            <DropdownMenuItem onClick={actions.downloadCsv}>
+              {CHART_ICONS.download}
+              Tải CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={actions.copyData}>
+              {CHART_ICONS.table}
+              Sao chép bảng số
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={actions.copySummary}>
+              {CHART_ICONS.summary}
+              Sao chép tóm tắt
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem disabled={!canReset} onClick={actions.resetView}>
+              {CHART_ICONS.reset}
+              Về mặc định
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </OverflowMenu>
       </ButtonGroup>
     </div>
   )
@@ -113,9 +111,9 @@ function DisplayMenu({
           />
         }
       >
-        {UI_ICONS.display}
+        {CHART_ICONS.display}
         <span className={CAP_BOX}>Hiển thị</span>
-        {UI_ICONS.chevron}
+        {CHART_ICONS.chevron}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto">
         <DropdownMenuGroup>
@@ -135,65 +133,6 @@ function DisplayMenu({
               {layer.label}
             </DropdownMenuCheckboxItem>
           ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-function MoreMenu({
-  canReset,
-  actions,
-}: {
-  canReset: boolean
-  actions: ChartActions
-}) {
-  const [open, setOpen] = useState(false)
-  const hint = useTriggerTooltip(open)
-  return (
-    <DropdownMenu open={open} onOpenChange={(next: boolean) => setOpen(next)}>
-      <Tooltip {...hint.tooltip}>
-        <TooltipTrigger
-          render={
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label="Thao tác khác"
-                  {...hint.triggerProps}
-                />
-              }
-            />
-          }
-        >
-          {UI_ICONS.more}
-        </TooltipTrigger>
-        <TooltipContent>Thao tác khác</TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="end" className="w-auto">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Xuất dữ liệu</DropdownMenuLabel>
-          <DropdownMenuItem onClick={actions.downloadCsv}>
-            {UI_ICONS.download}
-            Tải CSV
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={actions.copyData}>
-            {UI_ICONS.table}
-            Sao chép bảng số
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={actions.copySummary}>
-            {UI_ICONS.summary}
-            Sao chép tóm tắt
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem disabled={!canReset} onClick={actions.resetView}>
-            {UI_ICONS.reset}
-            Về mặc định
-          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
