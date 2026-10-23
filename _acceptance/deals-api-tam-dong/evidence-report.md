@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 62d94b5651f584a3bbc97c508ff66353b069a31f
+verified_commit: d780ab37a1cc253ff682380d7e794808172c46aa
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -188,3 +188,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: E1-E10 đều đạt, E11 (judgment) hội đồng đề xuất PASS và chờ người quyết ở Cổng 2 — verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-10-23, do gộp origin/main (PR #31, #32) và chép khuôn opportunity-template sau chữ ký
+run_id: repin-20261023T103011Z-64016
+sha: d780ab37a1cc253ff682380d7e794808172c46aa · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6
