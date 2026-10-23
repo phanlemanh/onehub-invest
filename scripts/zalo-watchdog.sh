@@ -8,8 +8,10 @@
 #   L2: openclaw.json bindings = [] (rỗng tuyệt đối)
 #   L3: channels.zalo (bot OA) phải vắng mặt
 #   L3b: mọi nhóm zalouser phải requireMention=true
+#   L4a: "drop no mention" tăng bất thường trong gateway.log (spam/lỗ gate)
 #   L4b: log runtime KHÔNG được có agent-turn mới (auto-reply/agent-turn-timing)
 #   L1: hook oneinvest-zalo-pipe không chứa API gửi tin
+#   L5b: Postgres :5433 phải nghe (DB chết 22/10 không ai biết 7 tiếng)
 # Khi vi phạm → kill OpenClaw + bootout launchd (chống respawn) + alert.
 # Fail closed: config đúng nhưng hành vi sai vẫn bị bắt bởi L4b.
 set -uo pipefail
@@ -64,16 +66,51 @@ if grep -qiE "send-?message|sendMessage|reply\(" "$HANDLER" 2>/dev/null; then
   alert "handler oneinvest-zalo-pipe chứa API gửi tin (L1 bị drill)"
 fi
 
-# L4b — RUNTIME GUARD: agent-turn mới trong log hôm nay = hành vi nguy hiểm
-# bất kể config nói gì. Marker ghi số dòng đã quét; chỉ quét phần mới.
+# L4b — RUNTIME GUARD: agent-turn mới trong log = hành vi nguy hiểm bất kể
+# config nói gì. Marker ghi số dòng đã quét; chỉ quét phần mới. Quét CẢ
+# gateway.log canonical (~/Library/Logs/openclaw — runtime-map) lẫn log /tmp
+# theo ngày; gateway.log chứa lịch sử sự cố cũ nên marker lần đầu khởi tạo
+# bằng số dòng HIỆN TẠI (không alert giả trên quá khứ).
+# In phần mới của $1 ra stdout; cập nhật marker $2. Log bị truncate/rotate
+# (cur < last) → reset marker, không quét lại phần cũ.
+scan_new_lines() {
+  local f="$1" mk="$2" last cur
+  [ -f "$f" ] || return 0
+  last=$(cat "$mk" 2>/dev/null || echo "")
+  cur=$(wc -l < "$f" | tr -d ' ')
+  if [ -z "$last" ]; then
+    echo "$cur" > "$mk"
+    return 0
+  fi
+  if [ "$cur" -le "$last" ]; then
+    [ "$cur" -lt "$last" ] && echo "$cur" > "$mk"
+    return 0
+  fi
+  tail -n +"$((last + 1))" "$f"
+  echo "$cur" > "$mk"
+}
+
+DROP_WARN_N=20 # "drop no mention" mới ≥ ngưỡng này trong 1 cửa sổ 5′ = bất thường
+GW_LOG="$HOME/Library/Logs/openclaw/gateway.log"
+GW_NEW=$(scan_new_lines "$GW_LOG" "$ROOT/pipeline/logs/zalo-watchdog-gw-marker")
+if [ -n "$GW_NEW" ]; then
+  # L4b trên gateway.log
+  if echo "$GW_NEW" | grep -q "auto-reply/agent-turn-timing"; then
+    alert "agent-turn MỚI trong gateway.log (auto-reply chạy dù config an toàn) — hành vi sự cố 2026-10-20"
+  fi
+  # L4a — mention-gate drop là hành vi ĐÚNG, nhưng bùng nổ đếm = bất thường
+  # (spam vào nhóm, hoặc gate vô tình nhầm trên nhóm chat thật)
+  DROP_N=$(echo "$GW_NEW" | grep -c "drop no mention" || true)
+  if [ "${DROP_N:-0}" -ge "$DROP_WARN_N" ]; then
+    echo "$(date -Iseconds) WARN: 'drop no mention' +$DROP_N trong 5′ (ngưỡng $DROP_WARN_N) — spam hay gate nhầm nhóm?" >> "$ALERT_LOG"
+    osascript -e "display notification \"drop no mention +$DROP_N/5′ — kiểm tra nhóm Zalo\" with title \"Zalo Watchdog L4a\"" 2>/dev/null || true
+  fi
+fi
+# L4b trên log /tmp theo ngày (nơi launchd ghi)
 if [ -f "$OC_LOG_GLOB" ]; then
-  LAST_N=$(cat "$MARKER" 2>/dev/null || echo 0)
-  CUR_N=$(wc -l < "$OC_LOG_GLOB" | tr -d ' ')
-  if [ "$CUR_N" -gt "$LAST_N" ]; then
-    if tail -n +"$((LAST_N + 1))" "$OC_LOG_GLOB" | grep -q "auto-reply/agent-turn-timing"; then
-      alert "agent-turn MỚI từ kênh xã hội (auto-reply chạy dù config an toàn) — hành vi sự cố 2026-10-20"
-    fi
-    echo "$CUR_N" > "$MARKER"
+  TMP_NEW=$(scan_new_lines "$OC_LOG_GLOB" "$MARKER")
+  if [ -n "$TMP_NEW" ] && echo "$TMP_NEW" | grep -q "auto-reply/agent-turn-timing"; then
+    alert "agent-turn MỚI từ kênh xã hội (auto-reply chạy dù config an toàn) — hành vi sự cố 2026-10-20"
   fi
 fi
 
@@ -107,7 +144,20 @@ KEV_NOTE="kev:ok"
   echo "$(date -Iseconds) WARN: Kev gate :8009 không đáp ứng (HTTP $KEV_OK) — handler đang fail-open" >> "$ALERT_LOG"
   osascript -e "display notification \"Kev gate :8009 DOWN — tin Zalo chưa phân loại vẫn được thu\" with title \"Zalo Watchdog\"" 2>/dev/null || true
 }
-echo "$(date -Iseconds) ok — bindings=0, mention-all, no bot, handler read-only, 0 turn mới, $KEV_NOTE" \
+
+# L5b — Postgres :5433 phải nghe (bài học 22/10: container DB chết 22:49,
+# restart policy=no, không lớp giám sát nào thấy trong 7 tiếng — zalo-import
+# 00:00 fail + chotot nạp fail, không một cảnh báo). Chỉ mở/kết nối TCP rồi
+# đóng: đủ biết Postgres còn nghe, không cần client thật.
+DB_NOTE="db:ok"
+if ! (exec 3<>/dev/tcp/127.0.0.1/5433) 2>/dev/null; then
+  DB_NOTE="db:DOWN($(date +%H:%M))"
+  echo "$(date -Iseconds) WARN: Postgres :5433 KHÔNG NGHE — nạp/transform đêm sẽ fail (container chết? sự cố 22/10 lặp)" >> "$ALERT_LOG"
+  osascript -e "display notification \"Postgres :5433 DOWN — nạp dữ liệu đêm sẽ fail\" with title \"Zalo Watchdog L5b\"" 2>/dev/null || true
+else
+  exec 3>&- 3<&- 2>/dev/null || true
+fi
+echo "$(date -Iseconds) ok — bindings=0, mention-all, no bot, handler read-only, 0 turn mới, $KEV_NOTE, $DB_NOTE" \
   >> "$ROOT/pipeline/logs/zalo-watchdog.log"
 tail -500 "$ROOT/pipeline/logs/zalo-watchdog.log" > "$ROOT/pipeline/logs/zalo-watchdog.log.tmp" \
   && mv "$ROOT/pipeline/logs/zalo-watchdog.log.tmp" "$ROOT/pipeline/logs/zalo-watchdog.log"

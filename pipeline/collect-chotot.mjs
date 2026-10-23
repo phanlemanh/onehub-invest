@@ -179,4 +179,16 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error("❌", e.message); process.exit(1); });
+// AggregateError (vd ECONNREFUSED khi DB chết) có message rỗng — in đủ
+// code + errors để log đêm tự chẩn đoán được (bài học 22/10: 2 dòng "❌"
+// trống làm mù nguyên nhân suốt một đêm).
+const errDetail = (e) => {
+  const parts = [e?.code, e?.message].filter(Boolean);
+  if (e instanceof AggregateError && e.errors?.length) {
+    parts.push(e.errors.map(String).join("; "));
+  }
+  if (parts.length === 0) parts.push(e?.stack ?? String(e));
+  return parts.join(" — ");
+};
+
+main().catch((e) => { console.error("❌", errDetail(e)); process.exit(1); });
