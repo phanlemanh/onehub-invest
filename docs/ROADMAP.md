@@ -188,7 +188,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
 | V5 | Tài khoản ops thử chỉ ở DB local (`scripts/dev-ops-account.mjs`) — máy tự đăng nhập dev để chụp/ui-check `/ops/**` | ✅ 2026-10-22 |
-| V6 | Giảm hỏi quyền ngoài cổng: bỏ luật ask rộng, rào push main = branch protection GitHub (ngang crm/kit) — `_acceptance/narrow-ask-rules` | ⏳ protection đã bật 23/10 — chờ Mạnh ký (T3) |
+| V6 | Giảm hỏi quyền ngoài cổng: bỏ luật ask rộng, rào push main = branch protection GitHub (ngang crm/kit) — `_acceptance/narrow-ask-rules` | ✅ Cổng 2 ký 23/10 — PR #23; branch protection main bật 23/10 |
 
 ### Track 6 — Chuẩn UI/UX ReUI
 | # | Việc | Trạng thái |

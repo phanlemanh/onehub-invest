@@ -5,7 +5,7 @@ slug: narrow-ask-rules
 owner: phanlemanh@gmail.com
 risk_tier: T3      # .claude/settings.json nằm trong t3_paths
 surfaces: [config, ci]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-23
 ---

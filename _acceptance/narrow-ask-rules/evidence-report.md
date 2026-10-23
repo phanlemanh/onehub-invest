@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: fa63379b67010ba5c196448a7d0a7264c66c03bc
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: narrow-ask-rules
