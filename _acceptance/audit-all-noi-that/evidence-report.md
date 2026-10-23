@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 18d14a934a3659263c4eca1916edc5de9acacba9
+verified_commit: 87df8f5470de137bcdf9d689ce0f730cec2396c3
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -153,3 +153,7 @@ none — mọi eval chạy một lần, xác định, không có eval nhiều l�
 ## Iterations
 
 Round 1: E1 đến E6 đạt, E7 do hội đồng ba lens đề xuất PASS, không eval nào hỏng; các lệnh suite đều xanh.
+
+### Re-pin lần 1 — 2026-10-23, do gộp main sau chữ ký (AU4/#38-39, #40, #43)
+run_id: repin-20261023T153053Z-15848
+sha: 87df8f5470de137bcdf9d689ce0f730cec2396c3 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7
