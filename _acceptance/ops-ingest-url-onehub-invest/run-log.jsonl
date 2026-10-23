@@ -1,0 +1,7 @@
+{"ts":"2026-10-23T01:56:37Z","round":1,"evalId":"E1","run_id":"ops-ingest-url-onehub-invest-E1-20261023T085637","exit_code":0,"cmd":"bash scripts/check-cloud-url.sh static"}
+{"ts":"2026-10-23T01:56:42Z","round":1,"evalId":"E2","run_id":"ops-ingest-url-onehub-invest-E2-20261023T085642","exit_code":0,"cmd":"bash scripts/check-cloud-url.sh static"}
+{"ts":"2026-10-23T01:56:47Z","round":1,"evalId":"E3","run_id":"ops-ingest-url-onehub-invest-E3-20261023T085647","exit_code":0,"cmd":"bash scripts/check-cloud-url.sh static"}
+{"ts":"2026-10-23T01:56:51Z","round":1,"evalId":"E4","run_id":"ops-ingest-url-onehub-invest-E4-20261023T085651","exit_code":0,"cmd":"bash scripts/check-cloud-url.sh mutation"}
+{"ts":"2026-10-23T01:56:56Z","round":1,"evalId":"E5","run_id":"ops-ingest-url-onehub-invest-E5-20261023T085656","exit_code":0,"cmd":"bash scripts/check-cloud-url.sh live"}
+{"ts":"2026-10-23T01:57:05Z","round":1,"evalId":"E6","run_id":"ops-ingest-url-onehub-invest-E6-20261023T085705","exit_code":1,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T01:57:33Z","round":1,"evalId":"E6","run_id":"ops-ingest-url-onehub-invest-E6-20261023T085733","exit_code":0,"cmd":"cd pipeline && npm test"}

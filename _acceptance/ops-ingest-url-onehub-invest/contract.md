@@ -3,13 +3,11 @@ schema_version: 1
 feature: Đổi URL cloud cứng từ project Vercel cũ sang prod mới onehub-invest.vercel.app
 slug: ops-ingest-url-onehub-invest
 owner: phanlemanh@gmail.com
-risk_tier: T2      # pipeline/ + scripts/ + app/docs — không chạm t3_paths
+risk_tier: T3      # pipeline/push-ops-facts.mjs nằm trong t3_paths (phiên chấm vòng 1 bắt)
 surfaces: [cli, config]
-status: implemented
+status: verified
 approved_by:
 approved_at:
-veto_state: mo
-veto_opened_at: 2026-10-23T01:55:23Z
 ---
 
 # Acceptance Contract: ops-ingest-url-onehub-invest

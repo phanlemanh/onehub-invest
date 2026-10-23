@@ -1,0 +1,1 @@
+{"id":"d-20261023T020500Z-1","type":"revisit","stage":"S4","at":"2026-10-23T02:05:00Z","decision":"nâng hạng T2 → T3: pipeline/push-ops-facts.mjs nằm trong risk_tiers.t3_paths (phiên chấm vòng 1 bắt, ghi ở mục Ngoài hợp đồng); bỏ veto_state V vì T3 cần Cổng 1 người duyệt","why":"hạng đọc từ t3_paths, không theo cỡ thay đổi","cost_if_wrong":"không có — T3 chỉ thêm chữ người"}
