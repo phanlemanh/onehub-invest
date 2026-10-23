@@ -5,10 +5,10 @@ slug: leak-gate-kiem-anon
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/sync-cloud.mjs — dữ liệu rời máy (t3_paths)
 surfaces: [pipeline, docs]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-23-leak-gate-kiem-anon-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: leak-gate-kiem-anon
@@ -102,4 +102,5 @@ docs/audit/2026-10-23-hien-trang-va-lo-trinh.md] P12 + [SUY-TỪ-REPO: docs/ops/
 
 - KHÔNG xin merge trước khi Mạnh áp 037 lên Supabase prod (BOI-CANH §5 dòng 1, luật đợt): gate merge khi anon còn
   đọc 37/37 bảng thì mọi lượt sync dừng đỏ.
-- Điều kiện merge thứ hai (chờ Mạnh quyết ở Cổng Phạm vi — Hỏi-1): `--kiem-anon` chạy trên prod đã áp 037 trả mã 0.
+- Điều kiện merge thứ hai (Mạnh duyệt Hỏi-1 theo khuyến nghị ở Cổng Phạm vi 23/10): `--kiem-anon` chạy trên prod
+  đã áp 037 trả mã 0; mã thoát và dòng in dán vào PR trước khi merge.
