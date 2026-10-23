@@ -85,7 +85,7 @@ evals:
       - "Chạy `node scripts/ui-standards/b3-capture.mjs --out _acceptance/ui-clean-b3-charts/evidence/s4` → 20 ảnh khung (market/ward × performance/mix, yield × pnl; light, dark, light-390, dark-390)"
       - "Mở từng cặp evidence/before/<tên>.png và evidence/s4/<tên>.png; ở mỗi ảnh s4 ghi: màu chuỗi phân biệt với nền thẻ và với nhau (sáng + tối); ngoài màu chuỗi có khác biệt nhìn thấy nào so với before không (chữ, bố cục, số, khoảng cách)"
       - "Trên Browser pane: Insight phường, rê đường xu hướng → tooltip có chấm màu chỉ số; bấm ô Công suất → đường đổi màu theo palette; /yield bấm Quý → cột gộp quý; chụp evidence/E10-*.png"
-    expected: "đủ 20 ảnh s4; ở cả sáng và tối mọi chuỗi đọc được; khác biệt so với before chỉ nằm ở màu chuỗi (performance, revenue-mix) — pnl không đổi màu; tooltip/đổi chỉ số/Quý chạy như before"
+    expected: "đủ 20 ảnh s4; ở cả sáng và tối mọi chuỗi đọc được; khác biệt so với before chỉ nằm ở màu chuỗi (performance, revenue-mix) — pnl không đổi màu; tooltip/đổi chỉ số/Quý chạy như before. Lưới mạng: POST /api/v1/user-events (beacon telemetry có sẵn, components/user-event-beacon.tsx — không phải request của biểu đồ, ngoài phạm vi B3) được phép trả 200 hoặc 401 khi chưa đăng nhập; mọi request khác tới origin app phải 2xx/3xx"
     evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]
 
   - id: E11

@@ -27,6 +27,10 @@ const SCOPE = [
 const PALETTE = "app/src/components/charts/palette.ts";
 // Danh sách miễn 3:1 người chốt ở Cổng Phạm vi (Hỏi-3) — đóng, đổi phải qua người.
 const EXEMPT = ["expenses", "share3", "rest", "hatch"];
+// Ma trận khoá viết trước (bảng màu đã duyệt): đọc ra phải đúng tập này, không hơn không kém.
+const EXPECTED_KEYS = ["revenue", "occupancy", "adr", "revpar", "expenses", "margin", "share1", "share2", "share3", "rest", "hatch"];
+// Khoá được phép không có lớp chấm: "Khác" dùng chấm màu vạch chéo (hatch).
+const NO_SWATCH = ["rest"];
 const HUES =
   "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone";
 const CSS_NAMES =
@@ -63,14 +67,17 @@ const LITERALS = [
 ];
 const MIX_KEYS = { lead: "share1", second: "share2", third: "share3", rest: "rest", hatch: "hatch" };
 
+// Khoá đọc được từ palette.ts; khoá lệch khuôn ghi vào `malformed` (không bỏ im lặng).
+const malformed = [];
 function paletteKeys() {
   if (!existsSync(join(ctx.root, PALETTE))) return null;
+  malformed.length = 0;
   const keys = new Map();
   for (const m of read(PALETTE).matchAll(/^\s*(\w+):\s*\{([^}]*)\}/gm)) {
     const body = m[2];
     const light = body.match(/light:\s*"var\(--color-([a-z]+-\d+)\)"/)?.[1];
     const dark = body.match(/dark:\s*"var\(--color-([a-z]+-\d+)\)"/)?.[1];
-    if (!light || !dark) continue;
+    if (!light || !dark) { malformed.push(m[1]); continue; }
     keys.set(m[1], {
       light, dark,
       swatch: body.match(/swatch:\s*"([^"]+)"/)?.[1] ?? null,
@@ -83,10 +90,11 @@ function paletteKeys() {
 function checkPalette() {
   const errs = [];
   for (const file of scopeFiles()) {
-    if (file === PALETTE) continue;
     read(file).split("\n").forEach((line, i) => {
       if (isComment(line)) return;
+      // --chart-* cấm ở mọi tệp, kể cả palette.ts; literal màu thì palette.ts là chỗ duy nhất được viết.
       if (/--chart-[1-5](?![\w-])|--color-chart-/.test(line)) errs.push(`palette: dùng --chart-* (${file}:${i + 1})`);
+      if (file === PALETTE) return;
       for (const [name, re] of LITERALS)
         if (re.test(line)) errs.push(`palette: màu ngoài palette.ts (${name}) ${file}:${i + 1}`);
     });
@@ -122,6 +130,17 @@ function checkPalette() {
   return errs;
 }
 
+/** Tập khoá đọc được phải bằng ma trận viết trước; khoá lệch khuôn là lỗi. */
+function keyMatrixErrors(name, keys) {
+  const errs = malformed.map((k) => `${name}: khoá ${k} lệch khuôn (light/dark phải là var(--color-<sắc>-<bậc>))`);
+  const got = [...keys.keys()];
+  const missing = EXPECTED_KEYS.filter((k) => !got.includes(k) && !malformed.includes(k));
+  const extra = got.filter((k) => !EXPECTED_KEYS.includes(k));
+  if (missing.length) errs.push(`${name}: palette thiếu khoá ${missing.join(", ")}`);
+  if (extra.length) errs.push(`${name}: palette có khoá ngoài ma trận ${extra.join(", ")}`);
+  return errs;
+}
+
 // ---------------------------------------------------------------- contrast (AC-2)
 function oklchToLum(L, C, h) {
   const a = C * Math.cos((h * Math.PI) / 180);
@@ -154,7 +173,7 @@ function checkContrast() {
   };
   const bg = { sáng: cardOf(":root"), tối: cardOf("\\.dark") };
   if (!bg.sáng || !bg.tối) return ["contrast: không đọc được --card ở globals.css"];
-  const errs = [];
+  const errs = keyMatrixErrors("contrast", keys);
   const exempt = [...keys].filter(([, v]) => v.exempt).map(([k]) => k).sort();
   if (exempt.join() !== [...EXEMPT].sort().join())
     errs.push(`contrast: danh sách miễn đổi (${exempt.join(", ")} ≠ ${EXEMPT.join(", ")})`);
@@ -167,6 +186,7 @@ function checkContrast() {
       cells.push(`${mode} ${name} ${r.toFixed(2)}`);
       if (!v.exempt && r < 3) errs.push(`contrast: ${key} ${mode} ${r.toFixed(2)} < 3`);
     }
+    if (v.swatch === null && !NO_SWATCH.includes(key)) errs.push(`contrast: ${key} thiếu swatch`);
     if (v.swatch !== null && v.swatch !== `bg-${v.light} dark:bg-${v.dark}`)
       errs.push(`contrast: swatch ${key} lệch cặp (${v.swatch})`);
     console.log(`  ${key.padEnd(10)} ${cells.join(" · ")}${v.exempt ? " (miễn)" : ""}`);
@@ -179,7 +199,7 @@ function checkDataColor() {
   const doc = read(".claude/skills/onehub-ui/data-color.md");
   const keys = paletteKeys();
   if (!keys) return ["data-color: thiếu components/charts/palette.ts"];
-  const errs = [];
+  const errs = keyMatrixErrors("data-color", keys);
   if (/\bTBD\b/.test(doc)) errs.push("data-color: còn TBD");
   // Bậc phải nằm đúng CỘT: tìm cột "Sáng"/"Tối" theo dòng tiêu đề của bảng khoá.
   const lines = doc.split("\n");
@@ -315,6 +335,10 @@ function checkStructure() {
     const d = firstDiff(before[part], after[part]);
     if (d) errs.push(`structure: khác ở ${part}.${d}`);
   }
+  // Rê chuột phải ra tooltip ở MỌI khung: chuỗi rỗng là phép đo không đo gì.
+  for (const [which, s] of [["before", before], ["after", after]])
+    for (const [key, steps] of Object.entries(s.interactions ?? {}))
+      if (key !== "denied" && !steps?.hover) errs.push(`structure: hover rỗng ở ${which}/${key}`);
   if (!before.capture_sha || before.capture_sha !== after.capture_sha) errs.push("structure: khác bản script chụp");
   if (Math.abs(Date.parse(after.at) - Date.parse(before.at)) > 2 * 3600e3) errs.push("structure: hai bản chụp cách nhau quá 2 giờ");
   if (!before.app_src_tree || git("rev-parse", `${before.head}:app/src`).out !== before.app_src_tree)
@@ -401,15 +425,20 @@ const CASES = [
   ["palette", edit(PERF, (t) => t.replace(/(key:\s*"revenue"[^}]*?series:\s*)"revenue"/, '$1"share1"')), "lệch nghĩa revenue"],
   ["palette", edit("app/src/components/yield/pnl/data.ts", (t) => t.replace('revenue: swatchOf("revenue")', 'revenue: swatchOf("margin")')), "lệch nghĩa revenue (pnl/data.ts SWATCHES"],
   ["palette", edit("app/src/components/insight/revenue-mix/value-faces.tsx", (t) => t.replace('lead: swatchOf("share1")', 'lead: swatchOf("share2")')), "lệch nghĩa share1 (revenue-mix chấm lead"],
+  ["palette", edit(PALETTE, (t) => t.replace('revenue:   { light: "var(--color-indigo-500)"', 'revenue:   { light: "var(--chart-1)"')), "palette: dùng --chart-* (app/src/components/charts/palette.ts"],
   ["contrast", null],
   ["contrast", edit(PALETTE, (t) => t.replace(/(revenue:\s*\{[^}]*light:\s*)"var\(--color-indigo-500\)"/, '$1"var(--color-indigo-300)"')), "revenue sáng 2.01 < 3"],
   ["contrast", edit(PALETTE, (t) => t.replace(/(margin:\s*\{[^}]*?)\s*\}/, "$1, exempt: true }")), "danh sách miễn đổi"],
   ["contrast", edit(PALETTE, (t) => t.replace("bg-amber-600 dark:bg-amber-400", "bg-amber-500 dark:bg-amber-400")), "swatch occupancy lệch cặp"],
+  ["contrast", edit(PALETTE, (t) => t.replace('revenue:   { light: "var(--color-indigo-500)"', 'revenue:   { light: "var(--chart-1)"')), "contrast: khoá revenue lệch khuôn"],
+  ["contrast", edit(PALETTE, (t) => t.replace(', swatch: "bg-emerald-600 dark:bg-emerald-400"', '')), "contrast: margin thiếu swatch"],
+  ["contrast", edit(PALETTE, (t) => t.replace(/^(\s*)hatch:/m, '$1extra:     { light: "var(--color-red-500)", dark: "var(--color-red-400)", swatch: "bg-red-500 dark:bg-red-400" },\n$1hatch:')), "contrast: palette có khoá ngoài ma trận extra"],
   ["data-color", null],
   ["data-color", edit(".claude/skills/onehub-ui/data-color.md", (t) => t.split("\n").filter((l) => !(l.startsWith("|") && l.includes("`margin`"))).join("\n")), "thiếu khoá margin"],
   ["data-color", edit(".claude/skills/onehub-ui/data-color.md", (t) => t.replace(/(\|\s*`adr`[^\n]*?)sky-600/, "$1sky-500")), "lệch bậc adr"],
   ["data-color", add(".claude/skills/onehub-ui/data-color.md", "\nBảng phụ: TBD.\n"), "còn TBD"],
   ["data-color", edit(".claude/skills/onehub-ui/data-color.md", (t) => t.replace("| `revenue` | Doanh thu | indigo-500 (4,58) | indigo-400 (5,74) |", "| `revenue` | Doanh thu | indigo-400 (5,74) | indigo-500 (4,58) |")), "lệch bậc revenue"],
+  ["data-color", edit(PALETTE, (t) => t.replace(/^\s*margin:.*\n/m, "")), "data-color: palette thiếu khoá margin"],
   ["duplicates", null],
   ["duplicates", (dir) => cpSync(join(dir, "app/src/components/charts/use-trigger-tooltip.ts"), join(dir, "app/src/components/yield/pnl/hint.ts")), "duplicates: trùng"],
   ["file-size", null],
@@ -423,6 +452,7 @@ const CASES = [
   ["structure", snapEdit("after", (s) => { const k = Object.keys(s.interactions)[0]; s.interactions[k].hover = `${s.interactions[k].hover}x`; return s; }), "structure: khác ở interactions."],
   ["structure", snapEdit("after", (s) => ({ ...s, capture_sha: "0" })), "khác bản script chụp"],
   ["structure", snapEdit("after", (s) => ({ ...s, app_src_tree: "0".repeat(40) })), "bản sau không chụp trên HEAD"],
+  ["structure", (dir) => { for (const w of ["before", "after"]) snapEdit(w, (s) => { s.interactions["ward/Cơ cấu doanh thu"].hover = ""; return s; })(dir); }, "structure: hover rỗng ở before/ward/Cơ cấu doanh thu"],
   ["pixels", null],
   ["pixels", add(`${SLUG_DIR}/evidence/after/yield-pnl-dark.png`, "x"), "pixels: yield-pnl-dark khác"],
   ["pixels", (dir) => rmSync(join(dir, SLUG_DIR, "evidence/after/yield-pnl-light-390.png")), "pixels: thiếu yield-pnl-light-390.png"],

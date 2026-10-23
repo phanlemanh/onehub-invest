@@ -102,8 +102,9 @@ function colorsOf(frame) {
 
 const settle = (page) => page.waitForTimeout(1600);
 
-async function tooltipText(page) {
-  const tip = page.locator(".recharts-tooltip-wrapper").first();
+/** Tooltip của CHÍNH khung đang thao tác (trang có hai biểu đồ Recharts). */
+async function tooltipText(frame) {
+  const tip = frame.locator(".recharts-tooltip-wrapper").first();
   return (await tip.count()) ? ((await tip.innerText()) || "").trim() : "";
 }
 
@@ -113,14 +114,18 @@ async function interact(page, pageId, title) {
     has: page.locator("[data-slot=frame-panel-title]", { hasText: title }),
   }).first();
   const steps = {};
-  const chart = frame.locator("[data-slot=chart]").first();
-  const box = await chart.boundingBox();
-  if (box) {
+  // Donut: rê lên lát đầu tiên; đường/cột: rê giữa vùng vẽ. Tooltip rỗng là lỗi, không nuốt.
+  const sector = frame.locator(".recharts-pie-sector").first();
+  if (await sector.count()) await sector.hover();
+  else {
+    const box = await frame.locator("[data-slot=chart]").first().boundingBox();
+    if (!box) throw new Error(`không thấy vùng biểu đồ của "${title}" (${pageId})`);
     await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.6);
-    await page.waitForTimeout(300);
-    steps.hover = await tooltipText(page);
-    await page.mouse.move(0, 0);
   }
+  await page.waitForTimeout(300);
+  steps.hover = await tooltipText(frame);
+  if (!steps.hover) throw new Error(`rê chuột không ra tooltip ở "${title}" (${pageId})`);
+  await page.mouse.move(0, 0);
   if (title === "Hiệu suất theo tháng") {
     await frame.getByRole("button", { name: /Công suất/ }).first().click();
     await settle(page);
