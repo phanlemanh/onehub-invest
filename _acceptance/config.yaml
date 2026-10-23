@@ -158,6 +158,7 @@ executors:
     shutdown_lost_exit: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs lost-exit"
     shutdown_periodic_hang: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs periodic-hang"   # ~37s
     shutdown_stalled_post: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs stalled-post"
+    shutdown_p3_repeat: "cd collector && rm -rf dist && npm run build && for i in 1 2 3 4 5 6 7 8 9 10; do node --test --test-name-pattern=P3 dist/test/graceful-shutdown-integration.test.js > /dev/null 2>&1 || { echo P3 đỏ ở lần $i; exit 1; }; echo P3 lần $i xanh; done && echo P3x10 PASS"   # ca tích hợp P3 chạy 10 lần liên tiếp — hết chập chờn (vòng 4)
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)

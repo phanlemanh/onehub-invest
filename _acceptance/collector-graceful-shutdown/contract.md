@@ -46,6 +46,9 @@ Source input: prompt (brief phiên điều phối «Phân chia công việc Clau
 
 ## Notes
 
+- Vòng 4 (23/10): ZCode sửa test P3 chập chờn (15f6bd0: socket thô nghe 'error', chờ server nhận request rồi mới SIGTERM) và chú thích main.ts (0d22845); mã sản phẩm không đổi so với vòng 3. Thêm E12 (P3 ×10); E2 chạy suite sau khi xoá dist (tránh test biên dịch sót của nhánh khác).
+- **Ràng buộc ZC6 (giới hạn đã biết):** hook Zalo chưa có spool — POST lỗi chỉ ghi `post-error` rồi bỏ tin. Vì vậy tin hook gửi tới đúng lúc :9210 đang restart (POST dở ở mốc bỏ chờ 3s, connection chưa parse, cổng đang tắt) vẫn MẤT ở nguồn cho tới khi ZC6 (spool + gửi lại) merge. Các tin này chưa được ack nên không phạm AC nào ở đây. Thứ tự triển khai: ZC4 (chuyển :9210 sang launchd, restart thật) phải đi SAU ZC6.
+- Đính chính quyết định d-3 (vòng 3): câu «client không nhận 202 và phải tự gửi lại» là sai ở thời điểm đó — handler.js không retry; việc gửi lại thuộc ZC6.
 - Vòng 3 (23/10): ZCode sửa P2 (huỷ ảnh của lượt flush đang chạy) + P3 (race close 3s), 306f386 — AC-1 thêm ca POST treo, AC-3 thêm ca lượt định kỳ; thêm E10–E11.
 - Vòng 2 (23/10): ZCode sửa theo REJECT vòng 1 (claudedp-2310-3, c6044e3) — AC-1 đổi «cắt cả keep-alive» thành «cắt keep-alive rảnh, làm nốt POST đang dở»; AC-3 thêm ca lượt flush đang tải ảnh treo; thêm AC-5 (exit khác 0 khi mất tin). Ghi ở decisions.jsonl.
 - Hợp đồng dựng SAU khi code xong (ZCode, 2 commit, đã qua review điều phối liên làn) → `gate1_skipped: true`; chữ ký Cổng 2 là điểm duyệt duy nhất.

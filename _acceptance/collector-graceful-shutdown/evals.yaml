@@ -11,7 +11,7 @@ evals:
   - id: E2
     criterion: AC-2
     executor: test
-    cmd: config:executors.test.collector
+    cmd: config:executors.script.collector_test_clean
     expected: "exit 0; 0 fail, 0 skip; các ca graceful-shutdown (đơn vị + tích hợp) đều chạy và xanh, gồm ca tích hợp 'SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot' và ca tích hợp host ảnh treo vĩnh viễn"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -76,4 +76,11 @@ evals:
     executor: script
     cmd: config:executors.script.shutdown_stalled_post
     expected: "exit 0; stdout có 'STALLED-POST PASS'; main.js thật: tin A ack 202, POST B treo nửa body, SIGTERM → exit code 0 signal null sau < 10000ms, tin A có trong snapshot; should-NOT-fire: không 'MẤT', không 'quá deadline'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_p3_repeat
+    expected: "exit 0; stdout có 'P3x10 PASS' và 10 dòng 'P3 lần N xanh' — ca tích hợp POST treo nửa body xanh 10/10 lần liên tiếp (vòng 3 đỏ 4/5)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
