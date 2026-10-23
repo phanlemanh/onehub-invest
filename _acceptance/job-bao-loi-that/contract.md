@@ -5,7 +5,7 @@ slug: job-bao-loi-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-job-bao-loi-that-design.md
 lo_trinh_ma: AU3
 approved_by: Mạnh
@@ -74,3 +74,6 @@ design doc §6, theo ba trục:
   đỏ mọi nhánh sau sửa đúng phần vòng này chừa ra): tệp `bao_ve` bị hook đợt chặn sửa; tệp `t3_paths` bị
   `scripts/pre-merge-check.sh` bắt khi hồ sơ là T2; đoạn thu/nạp của hai tệp `*-daily.sh` giữ nguyên — người soát
   thấy trong diff PR.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: chạy job bằng tay trong một phiên đã đặt sẵn biến `JOB_RC` khác 0 thì job có thể báo hỏng dù mọi bước lành (lịch launchd không đặt biến này).
+  - Ngoài-3: ca «DB tắt hẳn» của ma trận vẫn xanh cả khi gỡ bản vá — năm job vốn đã báo hỏng khi DB tắt hẳn; điều bản vá đổi được chứng ở các ca «một bước hỏng giữa chừng».
