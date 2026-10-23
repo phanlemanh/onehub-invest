@@ -103,6 +103,36 @@ Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.e
 - User dọn (tuỳ chọn): remove OpenClaw Desktop app; giữ ~/dev/openclaw
   tới khi PR upstream xong.
 
+## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
+
+Sự cố gốc (audit L7): tối 22/10 colima khởi động lại, `one-invest-db` không có restart policy nên nằm chết
+khoảng 8 giờ; sáng 23/10 policy được đặt tay. Từ vòng này policy nằm trong `db/docker-compose.yml`:
+`restart: unless-stopped`.
+
+Chuỗi tự khởi động khi máy khởi động lại:
+
+```
+đăng nhập macOS → LaunchAgent homebrew.mxcl.colima (RunAtLoad, `colima start -f`)
+→ VM colima → dockerd → one-invest-db (restart: unless-stopped khai trong db/docker-compose.yml)
+```
+
+- Kiểm (chỉ đọc, chạy lúc nào cũng được): `bash scripts/check-db-autostart.sh live` — policy của container
+  đang chạy, `RunAtLoad` của LaunchAgent colima, và LaunchAgent đang nạp. Thước còn `static`, `diff`,
+  `mutation`, `restart` (khởi động lại dockerd trong một Docker riêng tạm, không đụng DB thật),
+  `cleanup`, `live-selftest`.
+- Triển khai sau merge: KHÔNG cần tạo lại container ngay — container đang sống đã mang `unless-stopped`
+  (đặt tay 23/10). Lần `docker compose up -d` kế tiếp (`scripts/setup.sh`, `scripts/migrate-export.sh` hay
+  chạy tay) thấy cấu hình đổi và tự tạo lại container theo file mới, cùng policy; DB gián đoạn vài giây,
+  dữ liệu nằm trong volume `oneinvest_pgdata` nên không mất.
+- Giới hạn:
+  - Cần đăng nhập macOS: LaunchAgent chỉ chạy trong phiên người dùng, máy khởi động lại mà chưa ai đăng
+    nhập thì colima và DB chưa lên.
+  - `docker stop one-invest-db` có chủ đích thì container KHÔNG tự bật lại sau lần Docker khởi động kế
+    tiếp — đúng nghĩa `unless-stopped`; bật lại bằng `docker start one-invest-db`.
+  - Bằng chứng «Docker khởi động lại → DB lên lại» đo trên Docker riêng tạm; chưa diễn tập trên colima của
+    máy (dừng cùng lúc DB và các container dự án khác). Diễn tập là việc Mạnh chọn giờ làm tay; agent không
+    tự khởi động lại colima hay Docker của máy. Diễn tập xong chạy lại lệnh `live`.
+
 ## Transform S03/S05 và migration enrich (chốt 2026-10-23, `_acceptance/enrich-hau-ky/`)
 
 - Từ vòng enrich-hau-ky, `transform-zalo.mjs` / `transform-fb.mjs` KHÔNG còn `DELETE FROM sale_offers`
