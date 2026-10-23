@@ -26,6 +26,8 @@ function slugCell(t) {
   const parts = [];
   for (const s of t.slug || []) parts.push(`<code class="ok">${esc(s)}</code>`);
   for (const o of t.old || []) parts.push(`<code class="bad">${esc(o.from)}</code> → <code class="ok">${esc(o.to)}</code>`);
+  if (t.anchors?.length) parts.push(`<div>neo: ${t.anchors.map((a) => `<code class="ok">#${esc(a)}</code>`).join(" ")}</div>`);
+  if (t.params?.length) parts.push(`<div>tham số: ${t.params.map((a) => `<code class="ok">${esc(a)}</code>`).join(" ")}</div>`);
   if (t.slugNote) parts.push(`<div class="muted">${code(t.slugNote)}</div>`);
   return parts.join(" ") || '<span class="muted">—</span>';
 }
@@ -37,7 +39,7 @@ function choiceBlock(c) {
 }
 
 function html() {
-  const choices = [...TERMS.filter((t) => t.choice).map((t) => t.choice), ...RULE_CHOICES];
+  const choices = [...TERMS.filter((t) => t.choice).map((t) => t.choice), ...RULE_CHOICES].sort((x, y) => +x.q.slice(1) - +y.q.slice(1));
   const reply = choices.map((c) => `${c.q} ${LETTER[c.rec]}`).join(" · ") + " — ___";
   const groups = GROUPS.map(([g, label]) => {
     const rows = TERMS.filter((t) => t.group === g)
@@ -81,7 +83,7 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <h1>Bảng chốt thuật ngữ onehub-invest</h1>
 <p class="lead">Mỗi khái niệm một hàng: tên tiếng Việt trên UI, tên code (RESO khi có), slug URL tiếng Anh, các tên bỏ và số file đang dùng từng tên. Hàng tô vàng có hai lựa chọn hợp lý — Mạnh chọn. Duyệt xong máy mới ghi <code>CONTEXT.md</code> bản chính thức. Đo ${esc(MEASURED)}: số file chứa tên (không phân biệt hoa thường) trong app/src, agent, pipeline, db/migrations, data-api/src, docs/architecture, ROADMAP, AGENTS.md; “UI” = app/src/app + components (bỏ components/ui, reui). Tên đỏ = tên sẽ bỏ.</p>
 
-<div class="box"><b>Cần Mạnh trả lời ${choices.length} câu</b> — chép dòng dưới, sửa chữ cái nào nghĩ khác, rồi điền ô cuối bằng “duyệt” hoặc ghi chỗ cần sửa:
+<div class="box"><b>Cần Mạnh trả lời ${choices.length} câu</b> (Q6 — đích của <code>/dau-tu</code> — Mạnh đã chốt gộp vào <code>/yield</code>; Q9 mới thêm từ danh sách của phiên Bản đồ đích Invest) — chép dòng dưới, sửa chữ cái nào nghĩ khác, rồi điền ô cuối bằng “duyệt” hoặc ghi chỗ cần sửa:
 <pre>${esc(reply)}</pre>
 ${RULE_CHOICES.map(choiceBlock).join("")}</div>
 
@@ -114,6 +116,8 @@ function contextMd() {
       const meta = [`Code: \`${t.code.replace(/`/g, "")}\``, `RESO: ${t.reso}`];
       const lines = [`**${t.vn}**: ${t.def}`, `- ${meta.join(" · ")}`];
       if (t.slug?.length) lines.push(`- Slug URL: ${t.slug.map((s) => `\`${s}\``).join(" · ")}`);
+      if (t.anchors?.length) lines.push(`- Neo URL: ${t.anchors.map((s) => `\`#${s}\``).join(" · ")}`);
+      if (t.params?.length) lines.push(`- Tham số URL: ${t.params.map((s) => `\`${s}\``).join(" · ")}`);
       for (const o of t.old || []) lines.push(`- Slug cũ: \`${o.from}\` → \`${o.to}\`${o.note ? ` (${o.note})` : ""}`);
       if (t.note) lines.push(`- Ghi chú: ${t.note}`);
       if (t.avoid.length) lines.push(`_Avoid_: ${t.avoid.join(", ")}`);
@@ -135,6 +139,7 @@ Cách đọc — mỗi khối một thuật ngữ:
   (ADR-0011, \`pipeline/mappings.yaml\`).
 - \`Slug URL\` là đoạn URL tiếng Anh của trang. Test \`app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs\`
   đòi mọi đoạn tĩnh của route nằm trong các dòng này. ${GEO_SLUG_NOTE}
+- \`Neo URL\` (đoạn \`#…\`) và \`Tham số URL\` (\`?…=\`) cũng tiếng Anh; tham số camelCase theo tên code.
 - \`Slug cũ\` là route tiếng Việt còn chạy — đổi sang slug đích trong đợt dọn của nhóm trang, kèm
   redirect vĩnh viễn trong \`app/next.config.ts\`.
 - \`_Avoid_\` liệt tên lệch đã loại. Kit nghiệm thu đọc dòng này: lint W6 cảnh báo khi tiêu chí của

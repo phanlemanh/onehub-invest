@@ -66,7 +66,8 @@ export const TERMS = [
   {
     group: "geo", vn: "Khu vực", code: "area", reso: "Country / StateOrProvince / City tuỳ cấp",
     def: "Một nút bất kỳ của cây địa lý (`areas`, khoá `area_id`, vd. `vn-hanoi-tay-ho`): quốc gia, thị trường hoặc phường. Dùng khi câu nói về mọi cấp (So sánh, Đã lưu).",
-    avoid: ["địa bàn", "region"], use: ["area", "areas", "khu vực", "địa bàn"],
+    params: ["area", "areas"], avoid: ["địa bàn", "region"], use: ["area", "areas", "khu vực", "địa bàn"],
+    note: "Tham số URL `area` luôn là mã khu vực địa lý — diện tích căn dùng `livingArea`.",
   },
   {
     group: "geo", vn: "Khu đô thị", code: "project", reso: "SubdivisionName",
@@ -141,6 +142,17 @@ export const TERMS = [
     avoid: ["chủ nhà", "broker"], use: ["seller", "sellers", "người bán", "chủ nhà", "broker", "môi giới"],
   },
 
+  {
+    group: "asset", vn: "Diện tích", code: "area_m2", reso: "LivingArea (LivingAreaUnits = sqm)", params: ["livingArea"],
+    def: "Diện tích sử dụng của căn, m² (`numeric`, ADR-0011 Qđ 4).", avoid: [], use: [],
+    note: "Tham số URL của /yield đang là `m2` → đổi `livingArea` khi dọn nhóm trang.",
+  },
+  {
+    group: "asset", vn: "Phòng ngủ", code: "bedrooms", reso: "BedroomsTotal", params: ["bedrooms"],
+    def: "Số phòng ngủ của căn hoặc listing; UI viết tắt \"PN\" (\"2 PN\").", avoid: [], use: [],
+    note: "Tham số URL của /yield đang là `pn` → đổi `bedrooms` khi dọn nhóm trang.",
+  },
+
   // ---------------------------------------------------------------- Giá
   {
     group: "price", vn: "Giá rao", code: "price_vnd", reso: "ListPrice (thuê: LeaseAmount)",
@@ -198,12 +210,14 @@ export const TERMS = [
   {
     group: "metric", vn: "Doanh thu", code: "revenue", reso: "không có",
     def: "Tổng giá các đêm đã đặt trong kỳ (`market_metrics.revenue`). \"Doanh thu năm\" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.",
-    avoid: ["doanh số"], use: ["revenue", "doanh thu"],
+    avoid: ["doanh số", "doanh thu brutto"], use: ["revenue", "doanh thu"],
+    note: "UI ghi \"Doanh thu ước tính\" khi số dựng từ lịch tương lai (giá niêm yết × đêm đã chặn) — vẫn là thuật ngữ này.",
   },
   {
     group: "metric", vn: "ADR", code: "adr", reso: "không có",
     def: "Giá trung bình một đêm đã đặt: doanh thu ÷ đêm đã đặt.",
     avoid: ["giá phòng", "giá đêm", "giá/đêm"],
+    note: "UI đang có 4 nhãn cho hai khái niệm: \"Giá phòng (ADR)\", \"Giá đêm (ADR)\" (= ADR) và \"Giá niêm yết\", \"Giá/đêm\" (= giá niêm yết một listing) — tách khi dọn nhóm trang.",
     use: ["ADR", "giá phòng", "giá đêm", "giá/đêm", "giá trung bình"],
     choice: {
       q: "Q5", title: "ADR và RevPAR: giữ chữ tắt ngành hay Việt hoá",
@@ -247,11 +261,24 @@ export const TERMS = [
   },
   {
     group: "metric", vn: "Lợi suất gộp", code: "grossYield", reso: "không có",
-    def: "Doanh thu năm ÷ giá mua (trước chi phí).", avoid: ["gross yield"], use: ["gross yield"],
+    def: "Doanh thu năm ÷ giá mua (trước chi phí).", avoid: ["gross yield", "brutto", "tổng lợi suất"], use: ["gross yield"],
   },
   {
     group: "metric", vn: "Lợi suất ròng", code: "netYield", reso: "không có",
-    def: "Thu nhập ròng ÷ giá mua.", avoid: ["net yield"], use: ["net yield"],
+    def: "Thu nhập ròng ÷ giá mua.", avoid: ["net yield", "yield ròng"], use: ["net yield"],
+  },
+  {
+    group: "metric", vn: "Lợi suất vốn tự có", code: "cashOnCash", reso: "không có",
+    def: "(Thu nhập ròng tháng − trả nợ vay tháng) × 12 ÷ vốn tự có bỏ ra — chỉ có nghĩa khi có vay.",
+    avoid: ["cash-on-cash"], use: [],
+    choice: {
+      q: "Q9", title: "Nhãn UI cho cash-on-cash (`cocYear` ở Mô phỏng đầu tư)",
+      options: [
+        { label: "Lợi suất vốn tự có", note: "tiếng Việt, tự giải nghĩa mẫu số; cùng họ Lợi suất gộp/ròng" },
+        { label: "Cash-on-cash", note: "thuật ngữ ngành; UI đang ghi \"Cash-on-cash /năm\"" },
+      ],
+      rec: 0, why: "Khác ADR/RevPAR, chỉ số này có tên Việt ngắn và rõ hơn chữ tắt.",
+    },
   },
   {
     group: "metric", vn: "Thu nhập ròng", code: "noi", reso: "không có",
@@ -381,7 +408,9 @@ export const TERMS = [
   },
   {
     group: "portal", vn: "Insight", code: "insight", reso: "—", slugNote: "`/[country]/[market]`, `/[country]/[market]/[submarket]`",
+    anchors: ["overview", "performance", "mix", "submarkets", "listings", "supply", "yield"],
     def: "Tên tính năng (code, docs) của trang chiều sâu một thị trường hoặc phường; UI ghi tên khu vực, không in chữ Insight.",
+    note: "Neo mục lục đang tiếng Việt (#tong-quan, #hieu-suat, #co-cau, #phuong, #listing, #nguon-cung, #loi-suat — insight-page.tsx) → đổi sang neo tiếng Anh khi dọn nhóm trang.",
     avoid: ["Market Insight"], use: ["Insight"],
   },
   {
@@ -395,18 +424,11 @@ export const TERMS = [
   },
   {
     group: "portal", vn: "Mô phỏng đầu tư", code: "investment simulator", reso: "—",
-    old: [{ from: "dau-tu", to: "yield", note: "gộp vào /yield" }],
+    old: [{ from: "dau-tu", to: "yield", note: "gộp vào /yield — redirect /yield?area=<market>#financing" }],
     slugNote: "`/[country]/[market]/dau-tu` (đang chạy)",
-    def: "Máy tính dòng tiền cho thuê ngắn hạn × dài hạn kèm vay, mặc định từ số tự thu (giai đoạn 3).",
+    def: "Máy tính dòng tiền cho thuê ngắn hạn × dài hạn kèm vay, mặc định từ số tự thu (giai đoạn 3). Gộp vào Ước tính lợi suất thành mục Vay vốn (`#financing`).",
     avoid: [], use: [],
-    choice: {
-      q: "Q6", title: "Đích của `/[country]/[market]/dau-tu`",
-      options: [
-        { label: "Gộp vào /yield", note: "trùng chức năng; đã là khuyến nghị ở PR #3; route cũ redirect sang /yield?market=…" },
-        { label: "Giữ trang riêng → /[country]/[market]/cashflow", note: "giữ máy tính vay riêng; thêm từ khoá dành riêng cho [submarket]" },
-      ],
-      rec: 0, why: "Một tính năng một nhà (portals.md); /yield đã có cùng mô hình doanh thu.",
-    },
+    note: "Mạnh đã chốt gộp vào /yield (phiên invest-target-map, PR #6) — không còn là câu hỏi.",
   },
   {
     group: "portal", vn: "So sánh", code: "compare", reso: "—", slug: ["compare"],

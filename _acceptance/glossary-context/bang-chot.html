@@ -26,8 +26,8 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <h1>Bảng chốt thuật ngữ onehub-invest</h1>
 <p class="lead">Mỗi khái niệm một hàng: tên tiếng Việt trên UI, tên code (RESO khi có), slug URL tiếng Anh, các tên bỏ và số file đang dùng từng tên. Hàng tô vàng có hai lựa chọn hợp lý — Mạnh chọn. Duyệt xong máy mới ghi <code>CONTEXT.md</code> bản chính thức. Đo 2026-10-23 trên main f51b01c: số file chứa tên (không phân biệt hoa thường) trong app/src, agent, pipeline, db/migrations, data-api/src, docs/architecture, ROADMAP, AGENTS.md; “UI” = app/src/app + components (bỏ components/ui, reui). Tên đỏ = tên sẽ bỏ.</p>
 
-<div class="box"><b>Cần Mạnh trả lời 8 câu</b> — chép dòng dưới, sửa chữ cái nào nghĩ khác, rồi điền ô cuối bằng “duyệt” hoặc ghi chỗ cần sửa:
-<pre>Q1 A · Q2 A · Q3 A · Q4 A · Q5 A · Q6 A · Q7 A · Q8 A — ___</pre>
+<div class="box"><b>Cần Mạnh trả lời 8 câu</b> (Q6 — đích của <code>/dau-tu</code> — Mạnh đã chốt gộp vào <code>/yield</code>; Q9 mới thêm từ danh sách của phiên Bản đồ đích Invest) — chép dòng dưới, sửa chữ cái nào nghĩ khác, rồi điền ô cuối bằng “duyệt” hoặc ghi chỗ cần sửa:
+<pre>Q1 A · Q2 A · Q3 A · Q4 A · Q5 A · Q7 A · Q8 A · Q9 A — ___</pre>
 <div class="choice"><div class="q"><span class="qid">Q7</span> Hạn của danh sách ngoại lệ route tiếng Việt (so-sanh, phuong-phap, dau-tu)</div><div class="opt rec"><b>A</b> 2026-12-31 <span class="badge">khuyến nghị</span><div class="muted">test đỏ sau ngày này nếu route Việt còn — ép đợt dọn nhóm trang làm trong quý</div></div><div class="opt"><b>B</b> Không hạn — chỉ chặn route Việt MỚI<div class="muted">ít áp lực, nhưng ngoại lệ dễ thành vĩnh viễn</div></div><div class="why">Ngoại lệ có hạn mới là ngoại lệ; ngày gần đủ để B2/B5 làm kịp.</div></div><div class="choice"><div class="q"><span class="qid">Q8</span> Mã redirect khi đổi slug</div><div class="opt rec"><b>A</b> <code>permanent: true</code> (Next.js trả 308) <span class="badge">khuyến nghị</span><div class="muted">mặc định của Next.js; Google xử 308 như 301; giữ method</div></div><div class="opt"><b>B</b> <code>statusCode: 301</code> đúng chữ<div class="muted">khớp câu chốt "301"; phải ghi tay mỗi dòng</div></div><div class="why">Cùng hiệu lực SEO, ít ghi tay; luật ghi "redirect vĩnh viễn (301/308)".</div></div></div>
 
 <div class="box"><b>Luật đặt tên sẽ ghi vào AGENTS.md › Quy ước</b> (thay câu “URL ASCII không dấu (slugifyName())”):
@@ -64,9 +64,9 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <td><div class="choice"><div class="q"><span class="qid">Q2</span> Nhãn UI cho cấp <code>submarket</code></div><div class="opt rec"><b>A</b> Phường <span class="badge">khuyến nghị</span><div class="muted">72 file; ngắn, vừa ngân sách nhãn 1–2 chữ; định nghĩa phủ cả xã</div></div><div class="opt"><b>B</b> Phường/xã<div class="muted">đúng pháp lý; UI đang có "Phường / xã" ở 5 chỗ; dài hơn trong cột, nút</div></div><div class="why">Trang luôn hiện tên riêng có tiền tố (Phường…/Xã…), nên nhãn chung ngắn không gây hiểu sai.</div></div></td>
 </tr>
 <tr>
-<td><div class="vn">Khu vực</div><div class="def">Một nút bất kỳ của cây địa lý (<code>areas</code>, khoá <code>area_id</code>, vd. <code>vn-hanoi-tay-ho</code>): quốc gia, thị trường hoặc phường. Dùng khi câu nói về mọi cấp (So sánh, Đã lưu).</div></td>
+<td><div class="vn">Khu vực</div><div class="def">Một nút bất kỳ của cây địa lý (<code>areas</code>, khoá <code>area_id</code>, vd. <code>vn-hanoi-tay-ho</code>): quốc gia, thị trường hoặc phường. Dùng khi câu nói về mọi cấp (So sánh, Đã lưu).</div><div class="note">Tham số URL <code>area</code> luôn là mã khu vực địa lý — diện tích căn dùng <code>livingArea</code>.</div></td>
 <td><code>area</code><div class="muted">RESO: Country / StateOrProvince / City tuỳ cấp</div></td>
-<td><span class="muted">—</span></td>
+<td><div>tham số: <code class="ok">area</code> <code class="ok">areas</code></div></td>
 <td><span class="av">địa bàn</span> <span class="av">region</span></td>
 <td class="use"><span class="u">area <b>55</b> <i>UI 28</i></span><span class="u">areas <b>56</b> <i>UI 17</i></span><span class="u">khu vực <b>25</b> <i>UI 18</i></span></td>
 <td><span class="muted">giữ như cột 1</span></td>
@@ -149,6 +149,22 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <td><span class="muted">—</span></td>
 <td><span class="av">chủ nhà</span> <span class="av">broker</span></td>
 <td class="use"><span class="u">seller <b>4</b></span><span class="u">sellers <b>9</b> <i>UI 2</i></span><span class="u">người bán <b>11</b> <i>UI 3</i></span><span class="u bad">chủ nhà <b>3</b> <i>UI 2</i></span><span class="u bad">broker <b>4</b></span><span class="u">môi giới <b>8</b></span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Diện tích</div><div class="def">Diện tích sử dụng của căn, m² (<code>numeric</code>, ADR-0011 Qđ 4).</div><div class="note">Tham số URL của /yield đang là <code>m2</code> → đổi <code>livingArea</code> khi dọn nhóm trang.</div></td>
+<td><code>area_m2</code><div class="muted">RESO: LivingArea (LivingAreaUnits = sqm)</div></td>
+<td><div>tham số: <code class="ok">livingArea</code></div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr>
+<td><div class="vn">Phòng ngủ</div><div class="def">Số phòng ngủ của căn hoặc listing; UI viết tắt "PN" ("2 PN").</div><div class="note">Tham số URL của /yield đang là <code>pn</code> → đổi <code>bedrooms</code> khi dọn nhóm trang.</div></td>
+<td><code>bedrooms</code><div class="muted">RESO: BedroomsTotal</div></td>
+<td><div>tham số: <code class="ok">bedrooms</code></div></td>
+<td><span class="muted">—</span></td>
+<td class="use"><span class="muted">—</span></td>
 <td><span class="muted">giữ như cột 1</span></td>
 </tr></tbody></table></div>
 <h2>Giá</h2><div class="scroll"><table><thead><tr><th>Tên chuẩn (UI tiếng Việt) · định nghĩa</th><th>Tên code</th><th>Slug URL</th><th>Tên bỏ (_Avoid_)</th><th>Đang dùng (số file)</th><th>Khuyến nghị</th></tr></thead><tbody><tr>
@@ -240,15 +256,15 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <td><span class="muted">giữ như cột 1</span></td>
 </tr>
 <tr>
-<td><div class="vn">Doanh thu</div><div class="def">Tổng giá các đêm đã đặt trong kỳ (<code>market_metrics.revenue</code>). "Doanh thu năm" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.</div></td>
+<td><div class="vn">Doanh thu</div><div class="def">Tổng giá các đêm đã đặt trong kỳ (<code>market_metrics.revenue</code>). "Doanh thu năm" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.</div><div class="note">UI ghi "Doanh thu ước tính" khi số dựng từ lịch tương lai (giá niêm yết × đêm đã chặn) — vẫn là thuật ngữ này.</div></td>
 <td><code>revenue</code><div class="muted">RESO: không có</div></td>
 <td><span class="muted">—</span></td>
-<td><span class="av">doanh số</span></td>
+<td><span class="av">doanh số</span> <span class="av">doanh thu brutto</span></td>
 <td class="use"><span class="u">revenue <b>47</b> <i>UI 31</i></span><span class="u">doanh thu <b>25</b> <i>UI 22</i></span></td>
 <td><span class="muted">giữ như cột 1</span></td>
 </tr>
 <tr class="has-choice">
-<td><div class="vn">ADR</div><div class="def">Giá trung bình một đêm đã đặt: doanh thu ÷ đêm đã đặt.</div></td>
+<td><div class="vn">ADR</div><div class="def">Giá trung bình một đêm đã đặt: doanh thu ÷ đêm đã đặt.</div><div class="note">UI đang có 4 nhãn cho hai khái niệm: "Giá phòng (ADR)", "Giá đêm (ADR)" (= ADR) và "Giá niêm yết", "Giá/đêm" (= giá niêm yết một listing) — tách khi dọn nhóm trang.</div></td>
 <td><code>adr</code><div class="muted">RESO: không có</div></td>
 <td><span class="muted">—</span></td>
 <td><span class="av">giá phòng</span> <span class="av">giá đêm</span> <span class="av">giá/đêm</span></td>
@@ -307,7 +323,7 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <td><div class="vn">Lợi suất gộp</div><div class="def">Doanh thu năm ÷ giá mua (trước chi phí).</div></td>
 <td><code>grossYield</code><div class="muted">RESO: không có</div></td>
 <td><span class="muted">—</span></td>
-<td><span class="av">gross yield</span></td>
+<td><span class="av">gross yield</span> <span class="av">brutto</span> <span class="av">tổng lợi suất</span></td>
 <td class="use"><span class="muted">—</span></td>
 <td><span class="muted">giữ như cột 1</span></td>
 </tr>
@@ -315,9 +331,17 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <td><div class="vn">Lợi suất ròng</div><div class="def">Thu nhập ròng ÷ giá mua.</div></td>
 <td><code>netYield</code><div class="muted">RESO: không có</div></td>
 <td><span class="muted">—</span></td>
-<td><span class="av">net yield</span></td>
+<td><span class="av">net yield</span> <span class="av">yield ròng</span></td>
 <td class="use"><span class="muted">—</span></td>
 <td><span class="muted">giữ như cột 1</span></td>
+</tr>
+<tr class="has-choice">
+<td><div class="vn">Lợi suất vốn tự có</div><div class="def">(Thu nhập ròng tháng − trả nợ vay tháng) × 12 ÷ vốn tự có bỏ ra — chỉ có nghĩa khi có vay.</div></td>
+<td><code>cashOnCash</code><div class="muted">RESO: không có</div></td>
+<td><span class="muted">—</span></td>
+<td><span class="av">cash-on-cash</span></td>
+<td class="use"><span class="muted">—</span></td>
+<td><div class="choice"><div class="q"><span class="qid">Q9</span> Nhãn UI cho cash-on-cash (<code>cocYear</code> ở Mô phỏng đầu tư)</div><div class="opt rec"><b>A</b> Lợi suất vốn tự có <span class="badge">khuyến nghị</span><div class="muted">tiếng Việt, tự giải nghĩa mẫu số; cùng họ Lợi suất gộp/ròng</div></div><div class="opt"><b>B</b> Cash-on-cash<div class="muted">thuật ngữ ngành; UI đang ghi "Cash-on-cash /năm"</div></div><div class="why">Khác ADR/RevPAR, chỉ số này có tên Việt ngắn và rõ hơn chữ tắt.</div></div></td>
 </tr>
 <tr>
 <td><div class="vn">Thu nhập ròng</div><div class="def">Doanh thu năm trừ phí quản lý, phí nền tảng, thuế và chi phí cố định — chưa trừ trả nợ vay.</div></td>
@@ -512,9 +536,9 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <td><span class="muted">giữ như cột 1</span></td>
 </tr>
 <tr>
-<td><div class="vn">Insight</div><div class="def">Tên tính năng (code, docs) của trang chiều sâu một thị trường hoặc phường; UI ghi tên khu vực, không in chữ Insight.</div></td>
+<td><div class="vn">Insight</div><div class="def">Tên tính năng (code, docs) của trang chiều sâu một thị trường hoặc phường; UI ghi tên khu vực, không in chữ Insight.</div><div class="note">Neo mục lục đang tiếng Việt (#tong-quan, #hieu-suat, #co-cau, #phuong, #listing, #nguon-cung, #loi-suat — insight-page.tsx) → đổi sang neo tiếng Anh khi dọn nhóm trang.</div></td>
 <td><code>insight</code><div class="muted">RESO: —</div></td>
-<td><div class="muted"><code>/[country]/[market]</code>, <code>/[country]/[market]/[submarket]</code></div></td>
+<td><div>neo: <code class="ok">#overview</code> <code class="ok">#performance</code> <code class="ok">#mix</code> <code class="ok">#submarkets</code> <code class="ok">#listings</code> <code class="ok">#supply</code> <code class="ok">#yield</code></div> <div class="muted"><code>/[country]/[market]</code>, <code>/[country]/[market]/[submarket]</code></div></td>
 <td><span class="av">Market Insight</span></td>
 <td class="use"><span class="u">Insight <b>27</b> <i>UI 20</i></span></td>
 <td><span class="muted">giữ như cột 1</span></td>
@@ -535,13 +559,13 @@ tr.has-choice td{background:var(--hl)}td:first-child{width:28%}td:last-child{wid
 <td class="use"><span class="muted">—</span></td>
 <td><span class="muted">giữ như cột 1</span></td>
 </tr>
-<tr class="has-choice">
-<td><div class="vn">Mô phỏng đầu tư</div><div class="def">Máy tính dòng tiền cho thuê ngắn hạn × dài hạn kèm vay, mặc định từ số tự thu (giai đoạn 3).</div></td>
+<tr>
+<td><div class="vn">Mô phỏng đầu tư</div><div class="def">Máy tính dòng tiền cho thuê ngắn hạn × dài hạn kèm vay, mặc định từ số tự thu (giai đoạn 3). Gộp vào Ước tính lợi suất thành mục Vay vốn (<code>#financing</code>).</div><div class="note">Mạnh đã chốt gộp vào /yield (phiên invest-target-map, PR #6) — không còn là câu hỏi.</div></td>
 <td><code>investment simulator</code><div class="muted">RESO: —</div></td>
 <td><code class="bad">dau-tu</code> → <code class="ok">yield</code> <div class="muted"><code>/[country]/[market]/dau-tu</code> (đang chạy)</div></td>
 <td><span class="muted">—</span></td>
 <td class="use"><span class="muted">—</span></td>
-<td><div class="choice"><div class="q"><span class="qid">Q6</span> Đích của <code>/[country]/[market]/dau-tu</code></div><div class="opt rec"><b>A</b> Gộp vào /yield <span class="badge">khuyến nghị</span><div class="muted">trùng chức năng; đã là khuyến nghị ở PR #3; route cũ redirect sang /yield?market=…</div></div><div class="opt"><b>B</b> Giữ trang riêng → /[country]/[market]/cashflow<div class="muted">giữ máy tính vay riêng; thêm từ khoá dành riêng cho [submarket]</div></div><div class="why">Một tính năng một nhà (portals.md); /yield đã có cùng mô hình doanh thu.</div></div></td>
+<td><span class="muted">giữ như cột 1</span></td>
 </tr>
 <tr>
 <td><div class="vn">So sánh</div><div class="def">Đặt 2–4 khu vực cạnh nhau theo nhóm Hiệu suất / Nguồn cung / Lợi suất (<code>?areas=a,b</code>).</div></td>
