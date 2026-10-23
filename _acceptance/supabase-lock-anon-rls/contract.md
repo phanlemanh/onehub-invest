@@ -90,8 +90,11 @@ Bỏ quét morphological đầy đủ vì thay đổi hẹp: một migration ch�
 
 - Code (037, script, runbook, rollback) viết TRƯỚC contract trong cùng phiên, theo tiền lệ
   `ruler-p2-views-migration`. Contract mô tả đúng cái đã làm, Cổng 1 duyệt trên vật có sẵn.
-- Số 037 là số tạm (sổ ghi 037 trống). Đang xin cấp chính thức qua phiên điều phối liên làn.
-  Đổi số thì đổi tên tệp và các chỗ trỏ tới nó.
+- Số 037 do sổ migration cấp chính thức 2026-10-23 (phiên điều phối liên làn). 037 độc lập với 036,
+  merge trước hay sau đều được.
+- Giáp ranh sync-cloud: bản sync mới nạp và tráo bảng qua Management API bằng postgres (chủ bảng).
+  037 không FORCE RLS nên đường đó vẫn đi. push-ops-facts ghi qua `/api/v1/ops/ingest` của app,
+  app ghi bằng postgres.
 - Lớp HTTP được đo bằng PostgREST thật (`supabase/postgrest` v14.16) trước role authenticator,
   với JWT anon/service_role ký bằng secret tạm của container. Đây là cùng đường mà anon key
   ngoài đời đi qua.
