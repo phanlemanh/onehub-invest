@@ -1,0 +1,9 @@
+{"ts":"2026-10-23T16:09:35Z","round":1,"evalId":"E1","run_id":"watchdog-l4b-cuoi-ngay-E1-20261023T160935","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-23T16:09:43Z","round":1,"evalId":"E2","run_id":"watchdog-l4b-cuoi-ngay-E2-20261023T160941","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"}
+{"ts":"2026-10-23T16:09:48Z","round":1,"evalId":"E3","run_id":"watchdog-l4b-cuoi-ngay-E3-20261023T160948","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-23T16:09:53Z","round":1,"evalId":"E4","run_id":"watchdog-l4b-cuoi-ngay-E4-20261023T160953","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-23T16:09:58Z","round":1,"evalId":"E5","run_id":"watchdog-l4b-cuoi-ngay-E5-20261023T160958","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-23T16:10:03Z","round":1,"evalId":"E6","run_id":"watchdog-l4b-cuoi-ngay-E6-20261023T161003","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-23T16:10:09Z","round":1,"evalId":"E7","run_id":"watchdog-l4b-cuoi-ngay-E7-20261023T161009","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"}
+{"ts":"2026-10-23T16:10:14Z","round":1,"evalId":"E8","run_id":"watchdog-l4b-cuoi-ngay-E8-20261023T161012","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs gateway"}
+{"ts":"2026-10-23T16:10:20Z","round":1,"evalId":"E9","run_id":"watchdog-l4b-cuoi-ngay-E9-20261023T161020","exit_code":0,"cmd":"bash -n scripts/zalo-watchdog.sh && bash -n scripts/zalo-import-daily.sh && node --check pipeline/collect-chotot.mjs && node --check pipeline/import-chotot.mjs && echo SYNTAX OK"}
