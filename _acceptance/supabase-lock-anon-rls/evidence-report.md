@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: supabase-lock-anon-rls
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: db1fd5a5b171095a5393131f650f2d75b4691dc6
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: supabase-lock-anon-rls
@@ -183,7 +183,7 @@ human_signoff:
   judged_by: judge-subagent (fresh context)
   verdict: PASS
   rationale: Runbook đủ mọi ý AC-9 hỏi, và con số khớp do-truoc-cloud.md (36 bảng RLS tắt, 38 quan hệ mở, 4 sequence, số dòng anon thấy). Có bảng đường kết nối kèm role, hai cách áp, thời điểm áp kèm lock_timeout 15s, bốn bước kiểm sau áp, và lệnh hoàn tác có cảnh báo mở lại lỗ. Khuyến nghị dựa trên nơi đã kiểm và dấu vết log, chỉ ghi tên biến, không bước nào giao agent áp prod; 037 và tệp hoàn tác khớp lời runbook. Hạng T3 nên phán quyết này chỉ để tham khảo, Mạnh phải tự chấm.
-  human_override:
+  human_override: Mạnh 2026-10-23 — Đạt
 
 ## Known limits
 
