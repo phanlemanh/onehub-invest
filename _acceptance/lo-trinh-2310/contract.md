@@ -6,8 +6,8 @@ owner: phanlemanh@gmail.com
 risk_tier: T3      # .claude/settings.json nằm trong t3_paths
 surfaces: [config, docs]
 status: implemented
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: lo-trinh-2310
