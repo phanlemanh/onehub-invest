@@ -69,6 +69,25 @@ describe("routes.md của skill onehub-ui", () => {
     );
   });
 
+  it("mọi route có cột Slug đích: `giữ` hoặc đường dẫn tiếng Anh trong backtick", () => {
+    const { header, rows } = routeRows(readFileSync(ROUTES_MD, "utf8"));
+    assert.ok(header?.includes("Slug đích"), "routes.md: bảng route thiếu cột 'Slug đích'");
+    const bad = rows.filter(({ row }) => {
+      const value = row["Slug đích"];
+      if (value === "giữ") return false;
+      const m = /^`(\/[^`]*)`/.exec(value);
+      // Đoạn URL đích không mang dấu tiếng Việt (slug địa lý là biến <market>, [id]…)
+      return !m || /[^\x20-\x7e]/.test(m[1]);
+    });
+    assert.equal(
+      bad.length,
+      0,
+      `Dòng thiếu/sai Slug đích (cần "giữ" hoặc \`/duong-dan-tieng-anh\`):\n  ${bad
+        .map(({ row }) => `${row.Route} → "${row["Slug đích"]}"`)
+        .join("\n  ")}`,
+    );
+  });
+
   it("phủ đúng mọi page.tsx dưới app/src/app (không thiếu, không thừa, không trùng)", () => {
     assert.ok(existsSync(ROUTES_MD), `thiếu ${ROUTES_MD}`);
     const fromFiles = pageFiles(APP_DIR).sort();

@@ -19,10 +19,11 @@ Mạnh muốn các trang Invest chọn shell/block/component như đợt B1 đã
 lượt cho cả cổng rồi dọn theo nhóm trang thay vì theo loại component (KPI/biểu đồ/trạng thái).
 Phiên này khảo sát MCP reui cho 13 route Invest (`khao-sat-mcp.md`), dựng bảng quyết định có ảnh
 hiện trạng + thumbnail ứng viên (`ban-quyet-dinh.html`, `figures/`), trình Mạnh chọn (2026-10-23:
-theo khuyến nghị cả 13 trang; giữ `app-shell-30`; `/dau-tu` gộp vào `/yield` — `decisions.jsonl`),
+theo khuyến nghị cả 13 trang; giữ `app-shell-30`; `/dau-tu` gộp vào `/yield`; URL tiếng Anh toàn bộ;
+bản đồ nguồn `mapcn` — `decisions.jsonl`),
 rồi ghi kết quả vào `routes.md`, thêm test và cắt lại Track 6. Không sửa mã trang.
 
-Phạm vi file: `.claude/skills/onehub-ui/routes.md`, `app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs`,
+Phạm vi file: `.claude/skills/onehub-ui/{routes,loop,catalog}.md`, `app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs`,
 `docs/ROADMAP.md` (Track 6), `_acceptance/invest-target-map/**`.
 
 ## Criteria
@@ -40,10 +41,22 @@ Phạm vi file: `.claude/skills/onehub-ui/routes.md`, `app/eslint-plugin-onehub-
   và phần không có block; mọi ảnh tải được.
 - AC-5: Given `docs/ROADMAP.md` Track 6, When đọc, Then có dòng bản đồ đích + các đợt I1–I6 thay
   cho B2/B4, B5 thu về phần Ops.
+- AC-6: Given `routes.md`, When đọc bảng route, Then có cột "Slug đích" cho mọi route (`giữ` hoặc
+  đường dẫn ASCII trong backtick): `/so-sanh` → `/compare`, `/phuong-phap` → `/methodology`,
+  `/dau-tu` → 301 `/yield`; test đỏ khi thiếu cột hoặc giá trị sai dạng.
+- AC-7: Given `routes.md` mục Bản đồ + `catalog.md` mục Bản đồ nền, When đọc, Then nguồn bản đồ đích
+  là `mapcn` (Finder choropleth, Duyệt listing store-locator + clusters, Insight map cơ bản), và
+  `ban-quyet-dinh.html` có mục Bản đồ với ảnh hiện tại cạnh ảnh block mapcn/shadcn-map + mục
+  "Thuật ngữ cần chốt".
+- AC-8: Given `loop.md` bước 3, When đọc, Then có bước tra Mobbin 3–6 màn khi chốt khuôn IA (≥2 khuôn),
+  ghi `mobbin_url`, Mobbin chỉ cho IA, block từ ReUI (bản đồ mapcn), không có Mobbin thì chọn từ
+  archetype của `reui/rules/compose.md` kèm lý do.
 
 ## Out of scope
 
-- Mọi thay đổi mã trang/component, cài block, `catalog.md` (thêm dòng khi đợt I* cài block thật).
+- Mọi thay đổi mã trang/component, cài block hay mapcn, đổi file route / thêm 301 (làm ở đợt I*).
+- Tham chiếu Mobbin đủ 2–4 cho mọi nhóm trang: phiên này không có MCP Mobbin — mới có 3 link
+  điều phối tra cho Finder/Listing, các nhóm khác ghi từ khoá chờ tra.
 - Gỡ ảnh AirDNA khỏi `/listing/[id]` (phiên riêng); bảng màu biểu đồ (B3).
 - Dòng Ops của routes.md chỉ chép block đã chốt ở bảng 2b của B1, không quyết lại.
 

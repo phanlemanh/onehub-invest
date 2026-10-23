@@ -75,6 +75,44 @@
     <p class="small muted">Lý do theo IA (invest-portal-ia.md §4): Invest là 4 mục cùng nhóm Research, đọc là chính; whenNotToUse của app-shell-30 chỉ chặn khi cần “side rail of grouped links” — đúng trường hợp Ops (đã sang 36), không phải Invest. Marketing giữ <code>navbar-12</code>; auth không shell.</p>
   </section>
 
+  <section class="box">
+    <h2>Bản đồ — ReUI không có; Mạnh chọn mapcn (2026-10-23)</h2>
+    <p class="small muted">Ứng viên do điều phối đưa (Mạnh đề xuất shadcn-map). Đã kiểm lại: app dùng <code>maplibre-gl ^6.14.0</code>; registry <code>@mapcn/map</code> khai <code>maplibre-gl@^6</code> + <code>lucide-react</code>, <code>@mapcn/choropleth</code> kéo thêm <code>next-themes</code>. Không cài gì trong phiên này.</p>
+    <table class="shell">
+      <tr><th>Nguồn</th><th>Hợp</th><th>Vướng</th><th>Kết luận</th></tr>
+      <tr><td><a href="https://www.mapcn.dev/blocks">mapcn</a> (MIT, 12,3k★)</td><td>MapLibre ^6 nguyên bản, cài bằng shadcn CLI (<code>@mapcn/…</code>), không asChild; có block choropleth (chú giải + tooltip), store-locator (danh sách đồng bộ marker), clusters, heatmap</td><td>Phải nối lại <code>lib/map-style.ts</code> (OpenFreeMap sáng/tối, chèn lớp dưới nhãn) và <code>setWorkerUrl</code> Turbopack (<code>lib/map-worker.ts</code>); choropleth mẫu là thế giới, phải đổi sang ranh giới phường + bậc p30/p60/p90 (<code>finder/bins.ts</code>); thêm registry thứ 2 vào components.json</td><td><b>Chọn</b></td></tr>
+      <tr><td><a href="https://shadcn-map.vercel.app/docs">shadcn-map</a> (MIT, 347★)</td><td>Có cluster, shapes, popup, các control</td><td>Leaflet + react-leaflet; MapLibre chỉ qua plugin và đòi maplibre-gl ^5 (app ^6.14); mã new-york-v4 Radix có asChild (bẫy base-nova); 1 file 1.774 dòng + 8 gói; không choropleth/chú giải</td><td>Loại</td></tr>
+      <tr><td>Giữ tự viết (hiện tại)</td><td>Đã chạy, đã có nhãn giá kiểu Airbnb + gom cụm, sáng/tối</td><td>3 file MapLibre tự viết là ngoại lệ hex của lint; không có nguồn chuẩn để so</td><td>Lối không đổi</td></tr>
+    </table>
+    <div class="cands">
+      <div class="cand"><img src="figures/ban-do/hien-tai-finder.jpg" alt="Choropleth Finder hiện tại"><span class="small"><b>Finder hiện tại</b> — ChoroplethMap</span></div>
+      <div class="cand rec"><a href="https://www.mapcn.dev/blocks/choropleth"><img src="figures/ban-do/mapcn-choropleth.jpg" alt="mapcn choropleth"></a><span class="small"><b>mapcn choropleth</b> — Finder</span></div>
+      <div class="cand"><a href="https://shadcn-map.vercel.app/docs/examples/shapes"><img src="figures/ban-do/shadcn-map-shapes.jpg" alt="shadcn-map shapes"></a><span class="small"><b>shadcn-map shapes</b> — không có choropleth</span></div>
+      <div class="cand"><img src="figures/ban-do/hien-tai-listings.jpg" alt="ListingsMap hiện tại"><span class="small"><b>Duyệt listing hiện tại</b> — ListingsMap (nhãn giá + cụm)</span></div>
+      <div class="cand rec"><a href="https://www.mapcn.dev/blocks/store-locator"><img src="figures/ban-do/mapcn-store-locator.jpg" alt="mapcn store-locator"></a><span class="small"><b>mapcn store-locator</b> (+ <a href="https://www.mapcn.dev/docs/clusters">clusters</a>) — Duyệt listing</span></div>
+      <div class="cand"><a href="https://shadcn-map.vercel.app/docs/examples/marker-cluster-group"><img src="figures/ban-do/shadcn-map-cluster.jpg" alt="shadcn-map cluster"></a><span class="small"><b>shadcn-map cluster</b></span></div>
+      <div class="cand"><img src="figures/ban-do/hien-tai-minimap.jpg" alt="MiniMap hiện tại"><span class="small"><b>Insight hiện tại</b> — MiniMap</span></div>
+      <div class="cand rec"><a href="https://www.mapcn.dev/docs/basic-map"><img src="figures/ban-do/mapcn-basic-map.jpg" alt="mapcn basic map"></a><span class="small"><b>mapcn map cơ bản</b> + lớp GeoJSON — Insight</span></div>
+      <div class="cand"><img src="figures/ban-do/mapcn-clusters.jpg" alt="mapcn clusters"><span class="small"><b>mapcn clusters</b></span></div>
+    </div>
+    <p class="small muted">Phát hiện kèm (không thuộc phiên này): bản đồ Finder và MiniMap của Hà Nội mở ra cả nước — trong ảnh có vùng tô gần Cần Thơ và ranh giới “phường” trải khắp Việt Nam — chưa kiểm nguyên nhân (nghi gán khu vực/ranh giới ở pipeline); đổi thư viện bản đồ không sửa được.</p>
+  </section>
+
+  <section class="box">
+    <h2>Thuật ngữ cần chốt (chuyển sang CONTEXT.md)</h2>
+    <table class="shell">
+      <tr><th>Chỗ lệch</th><th>Thấy ở đâu</th><th>Đề xuất</th></tr>
+      <tr><td>Neo mục lục Insight tiếng Việt (<code>#tong-quan #hieu-suat #co-cau #phuong #listing #nguon-cung #loi-suat</code>) — cũng là đoạn URL</td><td><code>components/insight/insight-page.tsx:122</code></td><td><code>#overview #performance #mix #submarkets #listings #supply #yield</code> (đổi ở đợt I2)</td></tr>
+      <tr><td>Tham số <code>area</code> = mã khu vực địa lý, trong khi RESO dùng <code>LivingArea</code> cho diện tích; diện tích đang là <code>m2</code></td><td><code>/yield?area&amp;pn&amp;m2&amp;price…</code></td><td>Địa lý giữ <code>area</code>/<code>market</code>/<code>submarket</code>; diện tích → <code>livingArea</code> (RESO)</td></tr>
+      <tr><td>Tham số <code>pn</code> viết tắt tiếng Việt (phòng ngủ)</td><td><code>/yield?pn=</code></td><td><code>bedrooms</code> (RESO <code>BedroomsTotal</code>)</td></tr>
+      <tr><td>Một chỉ số, bốn nhãn: “Giá phòng (ADR)”, “Giá đêm (ADR)”, “Giá niêm yết”, “Giá/đêm”</td><td>Insight KPI, <code>/dau-tu</code>, <code>/listing/[id]</code>, thẻ <code>/listings</code></td><td>Một nhãn cho ADR (trung bình đêm đã đặt) và một nhãn khác cho giá niêm yết của một listing</td></tr>
+      <tr><td>“Lợi suất / Yield ròng / Tổng lợi suất brutto / Cash-on-cash”</td><td><code>/yield</code>, <code>/dau-tu</code></td><td>Chốt bộ chỉ số khi gộp <code>/dau-tu</code> vào <code>/yield</code> (I4)</td></tr>
+      <tr><td>“Doanh thu” vs “Doanh thu ước tính” vs “Doanh thu brutto/tháng”</td><td>Insight, listing, <code>/dau-tu</code></td><td>Một định nghĩa + một nhãn (Phương pháp)</td></tr>
+      <tr><td><code>listing</code> (Airbnb) vs <code>property</code> (“Một Căn Nhà”) vs nhãn menu “Listing”</td><td>nav, <code>/listing/[id]</code>, <code>/listings</code></td><td>Chốt cùng phiên CONTEXT.md (đã có trong danh sách của phiên đó)</td></tr>
+      <tr><td>Route <code>/dau-tu</code> mang nhãn “Mô phỏng đầu tư”, nút trên Insight ghi “Đầu tư”</td><td>Insight actions</td><td>Hết khi gộp vào <code>/yield</code></td></tr>
+    </table>
+  </section>
+
   <div id="rows" style="display:flex;flex-direction:column;gap:16px"></div>
 
   <section class="box">
@@ -97,7 +135,7 @@ const T = (n) => `https://reui.io/thumbnails/blocks/${n}-light.webp`;
 const P = (n) => `https://reui.io/preview/base/${n}?ref=mcp`;
 const ROWS = [
   {
-    route: "/[country]", name: "Finder — Tìm thị trường", img: "finder", group: "I1 Finder",
+    route: "/[country]", slug: "giữ", name: "Finder — Tìm thị trường", img: "finder", group: "I1 Finder",
     cands: [
       ["solution-analytics-1", "Lưới xếp hạng có thanh điểm + sparkline + badge trạng thái, thanh tìm/lọc trong một Frame; dưới là panel sức khoẻ + xu hướng", "rec"],
       ["data-grid-base-2", "Lưới CRM: thanh điểm + sparkline + bộ lọc facet + ghim dòng; chỉ là lưới, không có đầu Frame", "now"],
@@ -111,7 +149,7 @@ const ROWS = [
     state: "Cấp tỉnh chưa tự thu: empty-state-5 “đang thu thập”; Skeleton lưới; lỗi + Thử lại.",
   },
   {
-    route: "/[country]/[market]", name: "Insight thị trường", img: "insight-market", group: "I2 Insight",
+    route: "/[country]/[market]", slug: "giữ", name: "Insight thị trường", img: "insight-market", group: "I2 Insight",
     cands: [
       ["solution-analytics-8", "Trang một chỉ số: đầu trang có badge, hàng 4 KPI, đường xu hướng, phân rã có thanh tiến độ, dòng thời gian thay đổi", "rec"],
       ["dashboard-7", "4 KPI có sparkline, area chồng, bar cơ cấu kênh, lưới đơn hàng", ""],
@@ -125,7 +163,7 @@ const ROWS = [
     state: "Skeleton hàng KPI + mỗi Frame; timeline trống khi &lt; 2 lần quét; Empty cho bảng rỗng.",
   },
   {
-    route: "/[country]/[market]/[submarket]", name: "Insight phường/xã", img: "insight-submarket", group: "I2 Insight",
+    route: "/[country]/[market]/[submarket]", slug: "giữ", name: "Insight phường/xã", img: "insight-submarket", group: "I2 Insight",
     cands: [
       ["solution-analytics-8", "Cùng khung thị trường; phân rã có thanh tiến độ → benchmark p30/p60/p90 với phường anh em", "rec"],
       ["dashboard-7", "Như trang thị trường", ""],
@@ -139,7 +177,7 @@ const ROWS = [
     state: "Như thị trường; ít mẫu (&lt; 5 listing) → badge độ tin cậy thấp.",
   },
   {
-    route: "/[country]/[market]/listings", name: "Duyệt listing", img: "listings", group: "I3 Listing",
+    route: "/[country]/[market]/listings", slug: "giữ", name: "Duyệt listing", img: "listings", group: "I3 Listing",
     cands: [
       ["product-grid-2", "Thẻ Frame hai panel (ảnh + nội dung), badge, nút lưu", "rec now"],
       ["product-grid-3", "Lưới không khung, ảnh + nút, rating", ""],
@@ -153,7 +191,7 @@ const ROWS = [
     state: "Lọc ra 0: empty-state-2 (chip gợi ý); Skeleton thẻ; lỗi + Thử lại.",
   },
   {
-    route: "/listing/[id]", name: "Chi tiết listing", img: "listing", group: "I3 Listing",
+    route: "/listing/[id]", slug: "giữ", name: "Chi tiết listing", img: "listing", group: "I3 Listing",
     cands: [
       ["product-detail-5", "Gallery thumbnail dính + hộp thông tin dày (loại, giá, nút chính, lưu)", "rec"],
       ["product-detail-3", "Gallery lớn + hộp dính + bảng thông số", ""],
@@ -167,7 +205,7 @@ const ROWS = [
     state: "Không ảnh tự thu: ẩn gallery, hộp thông tin trải rộng; comps rỗng: Empty.",
   },
   {
-    route: "/yield", name: "Ước tính lợi suất", img: "yield", group: "I4 Lợi suất",
+    route: "/yield", slug: "giữ", name: "Ước tính lợi suất", img: "yield", group: "I4 Lợi suất",
     cands: [
       ["form-11", "Form nhãn–điều khiển + dải tóm tắt cập nhật trực tiếp (surface Card, đang đặt trong Frame)", "rec now"],
       ["data-grid-advanced-7", "Pro forma cho thuê: dòng thu/chi sửa tại chỗ, NOI, dòng tiền, ROI theo năm, tổng ghim", "rec"],
@@ -181,7 +219,7 @@ const ROWS = [
     state: "Badge MÔ PHỎNG bắt buộc; thị trường chưa có dữ liệu bán/thuê: Empty + chọn thị trường khác.",
   },
   {
-    route: "/[country]/[market]/dau-tu", name: "Mô phỏng đầu tư (vốn vay)", img: "dau-tu", group: "I4 Lợi suất",
+    route: "/[country]/[market]/dau-tu", slug: "/yield?area=&lt;market&gt;#financing (301, gộp)", name: "Mô phỏng đầu tư (vốn vay)", img: "dau-tu", group: "I4 Lợi suất",
     cands: [
       ["data-grid-advanced-7", "Pro forma: giá, % vốn, lãi, kỳ hạn, thuê, trống, dòng chi phí → NOI, dòng tiền, ROI — trùng đúng bài toán", "rec"],
       ["form-2", "Form Frame + 2 thẻ kết quả STR/LTR", ""],
@@ -195,7 +233,7 @@ const ROWS = [
     state: "Lỗi nhập inline; thiếu dữ liệu P2 → Empty.",
   },
   {
-    route: "/so-sanh", name: "So sánh khu vực", img: "so-sanh", group: "I5 So sánh + Đã lưu",
+    route: "/so-sanh", slug: "/compare", name: "So sánh khu vực", img: "so-sanh", group: "I5 So sánh + Đã lưu",
     cands: [
       ["comparison-1", "Bảng so sánh cột = đối tượng, nhãn hàng dính, nhóm hàng, xoá cột", "rec now"],
       ["comparison-6", "Lưới chọn + panel so sánh 4 ô, tự tô ô thắng", ""],
@@ -209,7 +247,7 @@ const ROWS = [
     state: "0 khu vực: Empty + “Thêm khu vực”; thêm PageHeader.",
   },
   {
-    route: "/saved", name: "Đã lưu", img: "saved", group: "I5 So sánh + Đã lưu",
+    route: "/saved", slug: "giữ", name: "Đã lưu", img: "saved", group: "I5 So sánh + Đã lưu",
     cands: [
       ["wishlist-2", "Lưới đã lưu có badge tín hiệu + tab trạng thái", "rec now"],
       ["wishlist-3", "Lưới + tab đếm sống + gỡ khi rê", ""],
@@ -223,7 +261,7 @@ const ROWS = [
     state: "Chưa lưu gì: c-empty-11 + “Tìm thị trường”; thêm PageHeader.",
   },
   {
-    route: "/", name: "Trang chủ", img: "home", group: "I6 Trang chủ/Phương pháp/Auth",
+    route: "/", slug: "giữ", name: "Trang chủ", img: "home", group: "I6 Trang chủ/Phương pháp/Auth",
     cands: [
       ["hero-8", "Bộ hiện có: navbar-12 · hero-8 · card-29 · how-it-works-1 · faq-6", "rec now"],
       ["hero-15", "compose_page gợi: hero viền blueprint + lưới 3 tính năng", ""],
@@ -237,7 +275,7 @@ const ROWS = [
     state: "Thị trường nổi bật rỗng: ẩn khối.",
   },
   {
-    route: "/phuong-phap", name: "Phương pháp & thuật ngữ", img: "phuong-phap", group: "I6 Trang chủ/Phương pháp/Auth",
+    route: "/phuong-phap", slug: "/methodology", name: "Phương pháp & thuật ngữ", img: "phuong-phap", group: "I6 Trang chủ/Phương pháp/Auth",
     cands: [
       ["faq-3", "Hỏi đáp mở sẵn, lưới 2 cột, không accordion", "rec"],
       ["faq-6", "Accordion một cột trong Frame (đang dùng)", "now"],
@@ -249,7 +287,7 @@ const ROWS = [
     kpi: "Không.", chart: "Không.", state: "Tĩnh.",
   },
   {
-    route: "/login", name: "Đăng nhập", img: "login", group: "I6 Trang chủ/Phương pháp/Auth",
+    route: "/login", slug: "giữ", name: "Đăng nhập", img: "login", group: "I6 Trang chủ/Phương pháp/Auth",
     cands: [
       ["auth-4", "Form đăng nhập Frame (đang dùng)", "rec now"],
       ["auth-13", "Chia đôi + ảnh, magic link (chưa có magic link)", ""],
@@ -259,7 +297,7 @@ const ROWS = [
     nob: "—", kpi: "Không.", chart: "Không.", state: "Lỗi đăng nhập inline (đã có).",
   },
   {
-    route: "/register", name: "Đăng ký", img: "register", group: "I6 Trang chủ/Phương pháp/Auth",
+    route: "/register", slug: "giữ", name: "Đăng ký", img: "register", group: "I6 Trang chủ/Phương pháp/Auth",
     cands: [
       ["auth-5", "Hero + form chia đôi (đang dùng)", "rec now"],
       ["auth-1", "Chia đôi + ảnh toàn cao", ""],
@@ -269,10 +307,15 @@ const ROWS = [
     nob: "—", kpi: "Không.", chart: "Không.", state: "Lỗi inline (đã có).",
   },
 ];
-const esc = (s) => s;
+const MOBBIN = {
+  "I1 Finder": [["Zillow — nhãn giá, cụm, lưới thẻ, lọc giá có histogram", "https://mobbin.com/screens/ac55ce90-c633-46bd-bc99-aedfa1b446a3"], ["GetYourGuide — danh sách trái / bản đồ phải, thẻ xem nhanh", "https://mobbin.com/screens/d405d871-e78c-43c8-83dd-59f04a363d29"]],
+  "I3 Listing": [["Zillow — nhãn giá + cụm + lưới thẻ", "https://mobbin.com/screens/ac55ce90-c633-46bd-bc99-aedfa1b446a3"], ["GetYourGuide — list/map, thẻ xem nhanh", "https://mobbin.com/screens/d405d871-e78c-43c8-83dd-59f04a363d29"], ["H&M — store locator (≈ mapcn store-locator)", "https://mobbin.com/screens/faaa387d-1b69-47e5-93e9-6b31f5e1e614"]],
+};
+const MOBBIN_HINT = { "I2 Insight": "market analytics dashboard", "I4 Lợi suất": "investment calculator", "I5 So sánh + Đã lưu": "comparison table · saved items", "I6 Trang chủ/Phương pháp/Auth": "landing · glossary · sign in" };
+const mob = (g) => MOBBIN[g] ? MOBBIN[g].map(([t, u]) => `<a href="${u}">${t}</a>`).join(" · ") : `chờ tra Mobbin (phiên này không có MCP Mobbin) — từ khoá: ${MOBBIN_HINT[g] ?? "—"}`;
 document.getElementById("rows").innerHTML = ROWS.map((r) => `
   <article class="row">
-    <header><span class="route">${r.route}</span><h2>${r.name}</h2><span class="group">${r.group}</span></header>
+    <header><span class="route">${r.route}</span><span class="small muted">slug đích: <b>${r.slug}</b></span><h2>${r.name}</h2><span class="group">${r.group}</span></header>
     <div class="now">
       <a href="figures/hien-trang/${r.img}.jpg"><img src="figures/hien-trang/${r.img}.jpg" alt="Ảnh hiện trạng ${r.name}" loading="lazy"></a>
       <span class="small muted">Hiện trạng (main, sáng 1440px)</span>
@@ -293,6 +336,7 @@ document.getElementById("rows").innerHTML = ROWS.map((r) => `
         <b>Máy khuyến nghị: ${r.rec}</b>
         <span class="small">${r.why}</span>
         <span class="small muted">Không có block (giữ ghép từ component): ${r.nob}</span>
+        <span class="small muted">Căn cứ IA (Mobbin, chỉ IA — không chép hình): ${mob(r.group)}</span>
       </div>
       <div class="impact">
         <div><b>KPI</b>${r.kpi}</div>

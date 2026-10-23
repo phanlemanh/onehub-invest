@@ -8,7 +8,11 @@ về file ReUI, file này không chép lại.
    Trang mới thì thêm dòng vào đó trước.
 2. **Tra danh mục** `catalog.md`. Đã có bản chuyển thể cho đúng việc này thì dùng lại và nhảy
    tới bước 6. Loại UI nằm trong bảng "Một loại UI, một cách làm" thì dùng đúng cách đã ghi.
-3. **Tìm bằng MCP.** Cả trang thì `compose_page`, một vùng thì `search` (gợi ý `type`/`component`,
+3. **Tìm bằng MCP.** *Trước khi chọn block*, khi chốt khuôn IA/bố cục (≥2 khuôn khả dĩ): tra
+   Mobbin 3–6 màn cùng loại (`mcp__mobbin__search_screens`/`search_flows`, platform web), ghi
+   `mobbin_url` làm căn cứ trong kế hoạch/design doc. Mobbin chỉ cho IA (không chép hình), block
+   vẫn chọn từ ReUI (riêng bản đồ: `mapcn`, xem mục Bản đồ của `routes.md`). Không có Mobbin thì chọn từ danh
+   sách archetype của `reui/rules/compose.md` và ghi lý do. Rồi: cả trang thì `compose_page`, một vùng thì `search` (gợi ý `type`/`component`,
    `surface: "frame"`). Đọc `whenNotToUse` của ứng viên (`get_block`/`get_example`).
    **Nhìn trước khi chọn:** có ≥2 ứng viên lệch nhau ≤15 điểm `score` thì gọi `get_thumbnail`
    cho từng cái rồi so bằng mắt, đừng chọn theo tên.
