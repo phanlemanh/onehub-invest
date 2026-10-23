@@ -1,0 +1,306 @@
+{
+  "generated_at": "2026-10-23T12:12:38Z",
+  "generated_sha": "4add073567b7bdc1279d0f62eb3860b7513bd97c",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "freshness-do-gio-thu-that-s03",
+  "round": 1,
+  "riskTier": "T2",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "node --test scripts/*.test.mjs",
+      "expected": "\"exit 0; ca 'GT-AC-1 importer thật nạp lại snapshot S06 cũ → stale, last = finishedAt' và 'GT-AC-1 đối chứng: importer thật nạp snapshot thu 10 giờ → fresh' ok (không skip)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.scripts"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "node --test scripts/*.test.mjs",
+      "expected": "\"exit 0; ca 'GT-AC-2 S03/S05 nạp lại snapshot cũ → stale, last = collected_at' và 'GT-AC-2 đối chứng: snapshot thu trong SLO → fresh' ok (không skip)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.scripts"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-3",
+      "cmd": "node --test scripts/*.test.mjs",
+      "expected": "\"exit 0; ca 'GT-AC-3 S03 cũ + S05 mới → S03 stale, S05 fresh' và 'GT-AC-3 chiều ngược: S03 mới + S05 cũ → S03 fresh, S05 stale' ok (không skip)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.scripts"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-4",
+      "cmd": "node --test scripts/*.test.mjs",
+      "expected": "\"exit 0; 10 ca 'GT-AC-4 <mã> tuổi = SLO → fresh' / 'GT-AC-4 <mã> tuổi = SLO+1 → stale' ok cho S01, S02, S03, S05, S06 và ca 'GT-AC-4 ma trận biên đủ 10 ca' ok (không skip)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.scripts"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-5",
+      "cmd": "node --test scripts/*.test.mjs",
+      "expected": "\"exit 0; ca 'GT-AC-5 S01 hanoi fresh + hcmc stale cùng lúc, S04 completed quá hạn vẫn không đo' ok (không skip)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.scripts"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-6",
+      "cmd": "node --test scripts/*.test.mjs",
+      "expected": "\"exit 0; ca chẩn đoán riêng 'GT-AC-6 DB hiện tại' in '# gt-live: thoát json=1 chữ=1 · lỗi: S05/hanoi stale last=2026-10-21T11:00…Z · …' kèm từng mã S03/S05/S06 'nạp=<ISO> thu=<ISO> lệch-snapshot=0' và giờ chấm — tập lỗi chỉ S05/hanoi, last = giờ THU 2026-10-21T11:00Z (UTC = 18:00 +07) ±1 phút; chỉ xếp 'nguồn thật đổi' khi thu của S05 khác 2026-10-21T11:00Z (dòng in khác → chưa đạt)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/check-freshness.mjs",
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.scripts"
+    },
+    {
+      "id": "E8",
+      "criterion": "AC-8",
+      "cmd": "node --test scripts/*.test.mjs",
+      "expected": "\"exit 0; ca 'GT-AC-8 TIME_SOURCE bằng ma trận viết trước, đủ mọi mã có SLO' và 'GT-AC-8 SQL từng probe lấy max(đúng cột)' ok; chiều đỏ 'GT-AC-8 bản sao đổi probe S06 về captured_at → bị bắt, nêu S06' ok\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/lib/freshness.mjs",
+        "scripts/check-freshness.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.scripts"
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-7",
+      "question": "\"Đọc chú thích đầu scripts/check-freshness.mjs và mục độ tươi trong .claude/skills/ops-check/SKILL.md: người vận hành có biết mọi mã tính tuổi theo giờ THU (S01/S03/S05/S06 từ airbnb_snapshots.collected_at, S02 từ airdna_markets.captured_at là giờ tải) không? Có câu nào còn nói S03/S05/S06 đo cột nạp của bảng stg, hay lệch phạm vi contract.md không?\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nice-goodall-629173/scripts/check-freshness.mjs",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nice-goodall-629173/.claude/skills/ops-check/SKILL.md",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nice-goodall-629173/_acceptance/freshness-do-gio-thu-that-s03/contract.md"
+      ],
+      "evidence_required": [
+        "judged_by",
+        "verdict",
+        "rationale"
+      ]
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "cd app && npm run test:lint-rules",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "0f0b2fc8b26c9d975cab27db0c571455251383db",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nice-goodall-629173",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/nice-goodall-629173/_acceptance/freshness-do-gio-thu-that-s03/contract.md",
+  "invokedAt": "2026-10-23T12:12:38Z",
+  "invokedSha": "4add073567b7bdc1279d0f62eb3860b7513bd97c",
+  "vungVat": [
+    ".claude/skills/ops-check/SKILL.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/evals.yaml",
+    "scripts/check-freshness.mjs",
+    "scripts/check-freshness.test.mjs",
+    "scripts/lib/freshness.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
+    "CONTEXT.md",
+    ".claude/rules/**",
+    "PRODUCT-MAP.md",
+    "LO-TRINH.html",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/contract.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/decisions.jsonl",
+    "_acceptance/freshness-do-gio-thu-that-s03/duong-nen.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/gap-probe.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/opportunity.md",
+    "docs/superpowers/plans/2026-10-23-freshness-do-gio-thu-that-s03.md",
+    "docs/superpowers/specs/2026-10-23-freshness-do-gio-thu-that-s03-design.md"
+  ],
+  "diffFiles": [
+    ".claude/skills/ops-check/SKILL.md",
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/contract.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/decisions.jsonl",
+    "_acceptance/freshness-do-gio-thu-that-s03/duong-nen.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/evals.yaml",
+    "_acceptance/freshness-do-gio-thu-that-s03/gap-probe.md",
+    "_acceptance/freshness-do-gio-thu-that-s03/opportunity.md",
+    "docs/superpowers/plans/2026-10-23-freshness-do-gio-thu-that-s03.md",
+    "docs/superpowers/specs/2026-10-23-freshness-do-gio-thu-that-s03-design.md",
+    "scripts/check-freshness.mjs",
+    "scripts/check-freshness.test.mjs",
+    "scripts/lib/freshness.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "_acceptance/freshness-do-gio-thu-that-s03/evals.yaml",
+    "scripts/check-freshness.mjs",
+    "scripts/check-freshness.test.mjs",
+    "scripts/lib/freshness.mjs"
+  ],
+  "coverageFiles": [
+    "scripts/check-freshness.mjs",
+    "scripts/check-freshness.test.mjs",
+    "scripts/lib/freshness.mjs"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "fa2a312b31089f0f8d07f283782fe6a69695f9552e47b40dc0638b11e13956e7",
+  "runBaseline": true,
+  "thuocChup": {
+    "sha": "4add073567b7bdc1279d0f62eb3860b7513bd97c",
+    "n": 45,
+    "digest": "0668cb4d3c5ad05fb4f3ce8abd926896c85bcdfcdda5f46807610de4484f3b38",
+    "tep": {
+      "_acceptance/config.yaml": "ab59efaa513839ee15b3793dc8aaab61abd4e267fff38e1b8c74970112f98128",
+      "_acceptance/freshness-do-gio-thu-that-s03/evals.yaml": "fa2a312b31089f0f8d07f283782fe6a69695f9552e47b40dc0638b11e13956e7",
+      "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
+      "agent/tests/enrich-apply.test.ts": "69407e7d1049ac4a8c7db6e61fb4326576773bed97070be691cf782d02993975",
+      "agent/tests/enrich-db.test.ts": "2d22af28021fc9a5109af57d04e5403ce3ac7012f4a4a9a8eebdfdd3070f8747",
+      "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
+      "agent/tests/enrich-revert.test.ts": "91393e322eddcc6da86fd66b6bb3ff7ec238c07ea939b44736e19f46d6aec5eb",
+      "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "app/eslint-plugin-onehub-ui/tests/check-bare-disables.test.mjs": "f4d5a768000e10b0afcd865dda45027bfc374f5d448b365e71b5b22168264a43",
+      "app/eslint-plugin-onehub-ui/tests/check-baseline-growth.test.mjs": "7d3e9509b9a3e78e6f353df55f97625630b4f178d838a97c329509512222e547",
+      "app/eslint-plugin-onehub-ui/tests/index.test.mjs": "655e46d7c05ac26ed76d92ea3d9b19c5c22a59bb7ca198afa960362235771b08",
+      "app/eslint-plugin-onehub-ui/tests/no-arbitrary-text-size.test.mjs": "5ba51c96484865cb98cb413843375d2d88c552b7616e0586771df7287ce60f4d",
+      "app/eslint-plugin-onehub-ui/tests/no-aschild.test.mjs": "29033a30554d246c3404b9c9b442e1282f391c6eb90ed6b64e03271a666c0811",
+      "app/eslint-plugin-onehub-ui/tests/no-banned-motion.test.mjs": "74755fcdf27b99fdbf1a600cbcfc1bb472e98c18317cfd710b7249e3a770de53",
+      "app/eslint-plugin-onehub-ui/tests/no-emoji-icons.test.mjs": "8571b78c4733c9acf687690ce54745452bec6a4f3c7ba7f96ba76b4f87efeaa6",
+      "app/eslint-plugin-onehub-ui/tests/no-hardcoded-color.test.mjs": "ce68e4bd5a75a83233763bcdd435650faf8cc9e85e342e5d3a863c7692bedec9",
+      "app/eslint-plugin-onehub-ui/tests/no-native-dialogs.test.mjs": "deaf6a38eb19305c68d5e30f1417d8908f2036355aa4e02a2f5a47a326acc9cc",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-controls.test.mjs": "b48cbea63e4ca7f380cc27283deb79228375465545df85b91c9a8fcdac926b16",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-palette.test.mjs": "ed3843f2e6445fa54dd3e765f6d749a9d148f8dc4e0e0d239f13016c77db4e65",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-table.test.mjs": "78446ffe3717c3c22e49b6d7787f9ab8bbe0d921d2469c7917f00fba265935f4",
+      "app/eslint-plugin-onehub-ui/tests/require-disable-reason.test.mjs": "6d87f7afd3f155f9f8be54e3eced84ea6c780593d78234f01e3a82d491f03fa5",
+      "app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs": "497e7eadcd4267cda43889626301b1491243cbd014028323e7223688111ed275",
+      "app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs": "2d3664f30a1155fe83fd6dbef3dd7264f6568e8483ae8fa1d1858bcc05be2a85",
+      "app/tests/deals-api-guard.test.tsx": "9de18791dfdf658a52655180e9e3fe9da8c92efe7573991c9f5a6dcb15c46e34",
+      "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
+      "app/tests/review-card.test.tsx": "9b8f78071ef4958abc550436d5bf45d797f4c14e4c145b7acfc1762d790fbaea",
+      "app/tests/review-media.test.tsx": "f33efc12d931b647ef47b1fe8bf77225b676104dc9b36dd4f37137c4cdcff506",
+      "app/tests/review-photos.test.tsx": "517068b876d62f141c7d08a30ba14b8ae121d47f494e36bf3bcd18004882825a",
+      "app/tests/zalo-media.test.tsx": "9c53df7863a5f108b618d13ded829af2d967e637ebe59035de5114b5d384b3f1",
+      "collector/src/test/api.test.ts": "725d0a3098a7e3273246cc652c5e7e161f377fb3aa2c2cdfdd62d32727d0b099",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/kev-nhan.test.ts": "64eca8f8151369b3e105ebf816616cb07ead71df5d58aea8aea59c033bbe847e",
+      "collector/src/test/media-fetch.test.ts": "a342611d97218f01b6b3d9936351d1d45be52f928e0228463c72829bb7d8a7c6",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb",
+      "pipeline/scripts/bait-gap-sellers.test.mjs": "578400b59d89c00a90c04f1b497c4d6fa8b745e5bfa4f2c558c817047171e919",
+      "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218",
+      "pipeline/scripts/test-posts.test.mjs": "3e8ab25cd3b06b427ee3a91db6e7a48ebe13cf4dd55c3498dc088f8bd13f36d3",
+      "pipeline/scripts/write-offers.test.mjs": "6c1162eecb20eeccaf085700b8264e9be758661957e8970d360a3e9418b95917",
+      "pipeline/sync-cloud.test.mjs": "8aa3d4cfa38686314c5548d8bf603b9055e344de701d248c4039a60c5f923b85",
+      "pipeline/sync-pii.test.mjs": "3f0571d3e967460301f86e3001a6dfa7cb65922fcda017cd3b92a692b1a42682",
+      "scripts/check-freshness.test.mjs": "1e98b4e8a07e44a832ad244570de684ffbceef849b1fc9a46a0241fd4e19cdbc",
+      "scripts/dev-ops-account.test.mjs": "eaae93ef5b886eaae6563cfd040c364f0ccff637592bc0c5c5df584bf368e399",
+      "scripts/job-exit.test.mjs": "69290f0a3aa743c2c43b82e24b95683c86b552b1b34fd3c0ca240911c6c596d9"
+    }
+  },
+  "cayChup": {
+    "sha": "4add073567b7bdc1279d0f62eb3860b7513bd97c",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}
