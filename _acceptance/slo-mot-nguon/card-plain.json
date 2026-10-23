@@ -1,0 +1,32 @@
+{
+ "feature_plain": "Hai trang Tổng quan và Thu thập của Ops cùng hiện một con số «x/y nguồn đạt SLO», tính từ đúng một định nghĩa độ tươi — không còn chuyện trang này nói 4/14, trang kia nói 5/6.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ giữ định nghĩa độ tươi trong app khớp từng hằng, từng câu truy vấn và từng kết quả với bản của công cụ kiểm dòng lệnh; lệch một SLO là bộ kiểm đỏ và gọi tên mã."},
+  {"id":"AC-2","p":"Sẽ cho trang Tổng quan đọc độ tươi theo giờ thu thật của từng nguồn ở từng thành phố — có cả S05 (SLO 12 giờ), không còn S04 đã thu xong; bản cũ nạp lại không làm nguồn trông tươi."},
+  {"id":"AC-3","p":"Sẽ cho trang Thu thập lấy độ tươi từ cùng định nghĩa: nguồn trễ ở một thành phố là «Trễ SLO», nguồn chưa có dữ liệu là «Chưa có dữ liệu» (không còn «Ổn»), nguồn chưa khai SLO được gọi tên riêng."},
+  {"id":"AC-4","p":"Sẽ đếm một nguồn là đạt khi mọi thành phố có dữ liệu của nó đạt, và hai trang ra cùng x/y ở mọi tình huống thử."},
+  {"id":"AC-5","p":"Sẽ in cùng «x/y nguồn đạt SLO» ở ô tóm tắt và đầu trang của cả hai trang — đo trên trang render trọn, không chỉ một ô."},
+  {"id":"AC-6","p":"Sẽ hiện tuổi và SLO bằng một cách viết chung cho cả hai trang: dưới 48 giờ ghi giờ, từ 48 giờ ghi ngày."},
+  {"id":"AC-7","p":"Sẽ cho cổng máy của trang Tổng quan trả đúng hàng trang đó dùng, thêm số giờ mà vẫn giữ trường ngày cho máy đọc cũ."},
+  {"id":"AC-8","p":"Sẽ ghi vào hướng dẫn kiểm vận hành buổi sáng rằng hai trang và công cụ dòng lệnh dùng chung định nghĩa, và «nguồn đạt» nghĩa là gì."}
+ ],
+ "wont_do": [
+  {"id":"AC-9","p":"Sẽ KHÔNG đổi gì trên Ops ở cloud: ở đó chưa có dữ liệu nạp, hai trang vẫn hiện «Chưa có nguồn nào» và không báo lỗi — như hôm nay."},
+  {"id":"OOS-1","p":"KHÔNG đưa số độ tươi thật lên Ops ở cloud — dữ liệu thô không rời máy, đó là việc riêng."},
+  {"id":"OOS-2","p":"KHÔNG đổi các mốc SLO (đã chốt ở AU4) và không đọc dữ kiện máy thu đẩy lên cloud."}
+ ],
+ "scope_plain": "Phạm vi bỏ ngoài:",
+ "coverage_plain": [
+  {"i":0,"p":"Mọi nơi hiện số độ tươi đều phủ: trang Tổng quan, trang Thu thập, cổng máy, công cụ dòng lệnh (khớp định nghĩa), và Ops ở cloud không có dữ liệu (AC-1, AC-2, AC-3, AC-5, AC-6, AC-7, AC-9)."},
+  {"i":1,"p":"Mọi trạng thái của một nguồn đều có ca thử: tươi, trễ một thành phố, chưa có dữ liệu, chưa khai SLO, đã thu xong (AC-2, AC-3, AC-4)."},
+  {"i":2,"p":"Cả hai cách viết tuổi đều có ca thử: dưới 48 giờ và từ 48 giờ (AC-6)."},
+  {"i":3,"p":"Hướng dẫn vận hành nói đúng điều trang làm (AC-8)."}
+ ],
+ "gap_probe_plain": [
+  {"i":0,"p":"Chưa nói Ops ở cloud sẽ hiện gì sau khi giao. Đã thêm AC-9: ở cloud hai trang giữ y như hôm nay, «Chưa có nguồn nào», không lỗi."},
+  {"i":1,"p":"Trang Thu thập mới chỉ được thử ở một ô, chưa thử cả trang. Đã tách phần hiển thị để thử trọn trang."},
+  {"i":2,"p":"Nguồn chưa khai SLO chưa có trạng thái rõ. Đã ghi: Thu thập gọi tên «Chưa khai SLO», không tính vào x/y."},
+  {"i":3,"p":"Chưa có cách chứng minh bộ thử đọc đúng dữ liệu thử thay vì dữ liệu thật. Đã thêm một thành phố canh chỉ có trong dữ liệu thử."},
+  {"i":4,"p":"Hướng dẫn hứa công cụ dòng lệnh cũng in x/y trong khi nó không in. Đã sửa: dòng lệnh chung định nghĩa, x/y chỉ có trên trang."}
+ ]
+}
