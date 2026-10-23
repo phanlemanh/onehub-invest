@@ -15,7 +15,8 @@ Project `one-invest` (ref `smqpqiigzulwpmrsrhci`). Hồ sơ nghiệm thu T3:
   `sale_offers` 9.845, `sellers` 1.043, `properties` 8.270 đều trả 200/206.
   `sessions.token` lưu thô (`app/src/lib/auth.ts`), nên ai đọc được bảng này là
   chiếm được phiên `/ops`.
-- Advisor security: `rls_disabled_in_public` ×37, `security_definer_view` ×2
+- Advisor security (chạy `get_advisors` loại security cùng ngày, không nằm trong tệp đo):
+  `rls_disabled_in_public` ×37 (36 bảng của postgres + `spatial_ref_sys`), `security_definer_view` ×2
   (`v_ruler_p2`, `v_ruler_p2_area`), `extension_in_public` (postgis),
   `*_security_definer_function_executable` ×3 (`st_estimatedextent`, của PostGIS).
 
@@ -23,8 +24,10 @@ Project `one-invest` (ref `smqpqiigzulwpmrsrhci`). Hồ sơ nghiệm thu T3:
 
 Chỉ chạm đối tượng do postgres làm chủ trong `public`: thu mọi quyền của anon và authenticated
 trên bảng, view, sequence và hàm; bật RLS (không policy, không FORCE); đặt view sang
-`security_invoker`; thu default privileges để bảng mới không cấp lại. DB không có role
-`anon` (local) thì bỏ qua.
+`security_invoker`; thu default privileges để bảng, sequence và hàm mới không cấp lại. Riêng
+quyền EXECUTE của PUBLIC trên hàm chỉ thu được ở mức toàn cục, nên áp cho hàm postgres tạo ở
+**mọi** schema, không chỉ `public`. postgres vẫn chạy hàm của mình; role khác muốn gọi hàm mới
+thì cần GRANT riêng. DB không có role `anon` (local) thì bỏ qua.
 
 | Đường | Kết nối bằng | Sau 037 |
 |---|---|---|
@@ -56,8 +59,8 @@ cd ~/dev/onehub-invest && jq -Rs '{query: .}' db/migrations/037_lock_anon_enable
 
 ## Kiểm sau khi áp
 
-1. Đo lại cloud (chỉ đọc). Lệnh phải kết thúc bằng `check-supabase-lock cloud: OK`,
-   anon nhận 401 ở mọi dòng, service_role vẫn nhận 200/206:
+1. Đo lại cloud (chỉ đọc) NGAY sau khi áp, trước lượt sync kế tiếp. Lệnh phải kết thúc bằng
+   `check-supabase-lock cloud: OK`, anon nhận 401 ở mọi dòng, service_role vẫn nhận 200/206:
 
 ```bash
 cd ~/dev/onehub-invest && bash scripts/check-supabase-lock.sh cloud > _acceptance/supabase-lock-anon-rls/do-sau-cloud.md; tail -12 _acceptance/supabase-lock-anon-rls/do-sau-cloud.md
@@ -66,7 +69,8 @@ cd ~/dev/onehub-invest && bash scripts/check-supabase-lock.sh cloud > _acceptanc
    Lưu ý giáp ranh sync-cloud: bản sync nạp-rồi-tráo bảng tạo bảng mới mỗi lượt. Bảng mới
    không có quyền anon (nhờ default privileges của 037), nhưng RLS mặc định tắt. Nếu bản tráo
    chưa `ENABLE ROW LEVEL SECURITY` cho bảng mới, `tables_rls_off` sẽ thành > 0 sau lượt sync
-   kế tiếp. Chỉ số quyết định an toàn là `rel_api_open=0` và anon nhận 401.
+   kế tiếp. Đo sau lượt đó mà chỉ `tables_rls_off` đỏ thì vẫn an toàn. Chỉ số quyết định là
+   `rel_api_open=0` và anon nhận 401.
 2. App prod: `https://onehub-invest.vercel.app/vn/hanoi` trả 200 và có số; đăng nhập
    `/ops`, mở `/ops/deals`.
 3. Lượt sync kế tiếp (hoặc `launchctl kickstart gui/$(id -u)/com.oneinvest.cloud-sync`):
@@ -77,6 +81,7 @@ cd ~/dev/onehub-invest && bash scripts/check-supabase-lock.sh cloud > _acceptanc
 ## Hoàn tác (chỉ khi 037 làm gãy một đường sống)
 
 Chạy hoàn tác là **mở lại lỗ**. Trước khi chạy, xem `docs/ops/supabase-lock-anon-rls.rollback.sql`.
+Tệp này cũng đặt `lock_timeout` 15 giây như 037, nên không xếp hàng chặn app đọc.
 Tệp này đưa quyền, RLS và default privileges về đúng trạng thái trước 037 (sim đã kiểm),
 rồi cần áp lại 037 sớm nhất có thể:
 
@@ -97,9 +102,11 @@ Khoá anon từng lộ ở đâu (đo 2026-10-23; chỉ ghi tên biến và nơi
 | Env Vercel `onehub-invest`, `app`, `onehub-data-api` | chỉ có `DATABASE_URL`, `OPS_API_TOKEN`, `RENAME_REFCALIB`. Không có `NEXT_PUBLIC_*`, `SUPABASE_*` |
 | Bundle client prod `onehub-invest.vercel.app` (35 chunk) và `app-lilac-one-49.vercel.app` (36 chunk) | không chứa anon key, không có JWT, không có `supabase.co` |
 | Máy local | `SUPABASE_ANON_KEY` trong `~/.oneinvest/cloud.env`. Không code nào đọc biến này |
+| Máy local (service key) | `SUPABASE_SERVICE_KEY` trong `~/.oneinvest/cloud.env` (chmod 600). `pipeline/sync-cloud.mjs` và `pipeline/drill-restore.mjs` đọc biến này. Không ở nơi nào khác trong bảng này |
 
 Dấu vết truy cập: edge log 24 giờ qua chỉ có service_role (sync, FPT Telecom VN) và 11 lệnh thăm
-anon của chính phiên đo. `pg_stat_statements` từ 2026-10-20 13:25 UTC đến lúc đo không có
+anon của chính phiên đo (10 lần HEAD đếm dòng trong `do-truoc-cloud.md` và 1 lần gọi
+`rpc/postgis_version`). `pg_stat_statements` từ 2026-10-20 13:25 UTC đến lúc đo không có
 câu lệnh nào chạy bằng anon hoặc authenticated. Khoảng trước 20/10 không có log để kiểm.
 
 - **Vô hiệu toàn bộ `sessions` sau khi áp 037: NÊN làm.** Token lưu thô và hạn 30 ngày.

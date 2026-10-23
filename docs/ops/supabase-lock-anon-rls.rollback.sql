@@ -11,6 +11,9 @@
 --   - default privileges của postgres cấp lại cho anon/authenticated
 -- Chỉ chạm quyền + cờ RLS; không đụng dữ liệu. Chạy lại không lỗi.
 
+-- Như 037: chờ khoá quá 15s thì huỷ nguyên khối, không xếp hàng chặn app đọc.
+SET lock_timeout = '15s';
+
 DO $$
 DECLARE
   roles text;
