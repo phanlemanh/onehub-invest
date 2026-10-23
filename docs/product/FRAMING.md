@@ -14,6 +14,9 @@ giao dịch đi **nhanh hơn**.
 - **Ngôi nhà chỉ có một, tin đăng thì trùng lặp.** Để giảm công sức của mọi người cần một **bản ghi gốc**:
   số nhà, mã căn.
 - **Các trường dữ liệu là phần làm giàu** cho bản ghi gốc.
+- **Dữ liệu tin cậy không tự nhiên mà có** (Mạnh, 23/10): nó là kết quả của **nỗ lực liên tục**, và không trắng
+  đen — mỗi căn, mỗi trường đứng ở một **bậc** trên một dải, đi lên nhờ nỗ lực và tụt xuống khi ngừng. Đích
+  đến được nói bằng bậc (§3.4), không bằng «đúng / sai».
 - **Phân loại và enrich không phải là đích.** Chúng có mặt để mỗi tin so được với đúng nhóm của nó (đúng
   căn nhà, đúng phường, đúng loại hình, bán hay thuê), để con số đưa cho nhà đầu tư không đánh lừa họ.
 
@@ -90,6 +93,38 @@ Câu 4 thay cho «khai thác sau mua» trong `CONTEXT-PRODUCT.md` §2 — cần 
 5. **Truy được nguồn** — ai đăng, khi nào, ở đâu.
 6. **Nói rõ độ chắc** — phân biệt «đã xác minh» · «suy ra» · «chưa biết»; không trình bày suy đoán như sự thật.
 
+### 3.4 Thang bậc dữ liệu [đề xuất]
+
+**Bậc của một căn** — mỗi bậc gồm mọi điều của bậc dưới:
+
+| Bậc | Tên | Căn ở bậc này khi | Nỗ lực để lên bậc kế | Tụt bậc khi |
+|---|---|---|---|---|
+| **B0** | Có lời khai | Có ít nhất một tin thô trong raw | Đọc tin theo từ vựng chung | — |
+| **B1** | Đọc được | Trường lõi (bán/thuê, loại, giá, diện tích, vị trí) đã diễn giải, có nguồn gốc | Gắn tin vào một căn, gộp trùng | Từ vựng đổi mà chưa đọc lại |
+| **B2** | Gắn căn | Tin đã gắn về một căn (suy ra), tin trùng đã gộp | Đo các cách đọc trên tập nhãn | Phát biểu mới chỉ ra gắn nhầm |
+| **B3** | Đã đo | Mọi trường lõi đến từ cách đọc có số đo đạt ngưỡng | Khớp danh mục / người có quyền xác nhận | Đo lại thấy ô đó dưới ngưỡng (model trôi, nguồn đổi kiểu viết) |
+| **B4** | Xác minh | Căn khớp danh mục (mã căn) hoặc được xác nhận; trường lõi có ít nhất một nguồn sự thật | Theo dõi hiệu lực và giá theo thời gian | Danh mục đổi; xác nhận bị rút |
+| **B5** | Sống | B4 + lời chào còn hiệu lực trong cửa sổ độ tươi + có lịch sử giá | Giữ nhịp quét và xác nhận | **Hết cửa sổ độ tươi mà không có bằng chứng mới → về B4** |
+
+- Ba nhãn hiển thị là phép chiếu thô của thang: **đã xác minh** = B4–B5 · **suy ra** = B2–B3 · **chưa biết** = B0–B1
+  (tin vẫn hiện, nói rõ là chưa biết).
+- Sáu chiều «tin cậy» (§3.2) nằm trên thang: *truy được nguồn* từ B0, *đúng* có số từ B3, *có thật* + *duy nhất*
+  chắc từ B4, *còn hiệu lực* ở B5, *nói rõ độ chắc* ở mọi bậc.
+- **Mỗi phân khúc có bậc đích riêng**: căn hộ có danh mục → B5; nhà phố (khó có số nhà) → B3; tin Chợ Tốt dùng làm
+  thước → B3. Không đòi mọi căn lên B5.
+
+**Bậc năng lực của một phân khúc** (thị trường × loại hình) — hệ thống làm được đến đâu:
+
+| Bậc | Tên | Nghĩa |
+|---|---|---|
+| **N0** | Thu được | Tin của phân khúc vào raw đầy đủ |
+| **N1** | Đọc được | Có từ vựng + bộ đọc cho trường lõi |
+| **N2** | Đo được | Có tập nhãn, biết độ đúng từng (cách đọc × trường) |
+| **N3** | Tự động ở ngưỡng | Máy quyết phần lớn; người chỉ xử ca dưới ngưỡng |
+| **N4** | Tự duy trì | Phán của người tự thành nhãn; cảnh báo khi độ đúng trôi; danh mục và hiệu lực cập nhật theo nhịp |
+
+Nỗ lực không biến mất ở N4 — nó đổi dạng: từ sửa từng giá trị sang giữ nhịp đo, giữ danh mục, giữ độ tươi (D5).
+
 ### 3.3 Căng thẳng cần tính sớm [đề xuất]
 
 Môi giới thường **cố ý giấu số nhà** để giữ khách. Bản ghi gốc vì thế nhiều khi phải suy từ ảnh, mô tả,
@@ -117,10 +152,11 @@ người đăng đã giấu.
 
 | Tầng | Thước đo | Ghi chú |
 |---|---|---|
-| **North star** | **Số căn đạt «tin cậy»**: có bản ghi gốc, ≥ 1 tin còn hiệu lực, trường lõi qua ngưỡng đúng | Đếm theo thị trường × loại, **tách hai cột: căn gốc «đã xác minh» · «suy ra»** (độ chắc ≥ ngưỡng). Căn «nghi cùng căn» chưa đếm *(Claude chọn — để số không về 0 khi môi giới giấu số nhà, mà vẫn nói rõ độ chắc)* |
+| **North star** | **Phân bố căn theo bậc B0–B5** (§3.4), theo thị trường × loại; số chính = số căn **đạt bậc đích của phân khúc mình** | Mục tiêu là đẩy phân bố lên và **giữ không tụt**; tách B3 «suy ra có số» với B4–B5 «xác minh» |
 | Lõi (sớm) | Tỉ lệ tin gắn được vào căn · độ đúng gộp trùng · độ đúng trường lõi theo nguồn · độ tươi · tỉ lệ tin thật lọt vào hệ thống | Đo trên tập nhãn (review phân loại §3.5) |
 | Môi giới | Số kênh họ không phải tự đăng · tỉ lệ tin của họ hiện đúng và gộp đúng · phản hồi «tin sai» | Phản hồi cần kênh báo sai trên trang hiển thị |
 | Nhà đầu tư | Số thị trường đủ thước theo loại · độ đúng danh sách «Căn giá tốt» · sai số ước giá thuê / giá trị khi có số thật | Câu 1–3 |
+| Năng lực (§3.4) | Bậc N0–N4 của từng phân khúc | Phân khúc nào lên N3 thì mới mở rộng ra cổng công khai rộng |
 | Tự động hoá (D5) | **Tỉ lệ giá trị/căn được máy quyết mà vẫn đạt ngưỡng đúng** · số phút người mỗi 100 tin · xu hướng theo tuần | Phải tăng dần; đo trên tập test đóng băng |
 | Độ tươi (D4) | **Phút** từ lúc tin đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95) | Mục tiêu cụ thể: câu hỏi mở |
 | Giao dịch (trễ) | Thời gian từ tìm tới liên hệ · số liên hệ mỗi căn | Cần sự kiện sản phẩm |
@@ -141,6 +177,9 @@ người đăng đã giấu.
   loại trên đường đó phải đủ nhanh, và giá trị chưa chắc vẫn hiện được — kèm nhãn «chưa xác minh» thay vì chờ duyệt.
 - **Người dạy, model làm** (D5): mỗi nhãn và mỗi quyết định duyệt là dữ liệu huấn luyện/đo cho model (Kev, LLM
   trích xuất); người tập trung vào ca máy chưa đạt ngưỡng, và phần đó phải co lại.
+- **Dữ liệu là vận hành liên tục, không phải dự án một lần**: mỗi bậc có nỗ lực riêng và có cách tụt; kế hoạch
+  phải gồm nhịp lặp (gắn nhãn định kỳ, đo lại, làm mới danh mục, quét hiệu lực) và ngân sách công cho nhịp đó, không
+  chỉ các việc xây.
 - Mọi tính năng mới trả lời: phục vụ phía nào (môi giới / nhà đầu tư / lõi), câu hỏi nào (1–4), và thước đo
   nào ở §5 sẽ đổi.
 
@@ -157,7 +196,8 @@ người đăng đã giấu.
 
 ## 8. Claude đã tự chọn (Mạnh kiểm khi đọc)
 
-- North star đếm cả căn gốc «suy ra», tách cột với «đã xác minh» (§5).
+- North star là phân bố theo bậc (§3.4); bậc đích từng phân khúc (căn hộ có danh mục B5, nhà phố B3, Chợ Tốt làm
+  thước B3) là đề xuất của Claude — Mạnh chỉnh khi đọc.
 - **Listing cho thuê ngắn hạn (S01)** lúc này **không** ghép vào căn gốc: lợi suất STR dùng thước phường × loại.
   Ghép listing Airbnb ↔ tin rao bán (Airbnb không lộ địa chỉ) để đợt sau, khi căn gốc của tin rao đã ổn.
 - Trường «thuộc căn» / «thuộc tin» theo danh sách §3.1 — có thể dời một trường khi làm thật.
@@ -170,3 +210,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | Ngày | Đổi gì | Ai |
 |---|---|---|
 | 2026-10-23 | Bản đầu: mục đích, hai phía một lõi, sáu chiều «tin cậy», thước đo; D1–D5 | Mạnh duyệt · Claude ghi |
+| 2026-10-23 | Thêm sự thật «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh) → thang bậc căn B0–B5, bậc năng lực N0–N4 (§3.4); north star thành phân bố theo bậc | Mạnh nêu · Claude đề xuất thang |

@@ -7,7 +7,7 @@
 >
 > **Khung**: `docs/product/FRAMING.md` (Mạnh duyệt 23/10) — §0.1 đối chiếu review với khung đó.
 > **Rà soát nguyên lý gốc §0.2 (23/10) sửa một phần §3–§5**: thang căn cứ còn 3 lớp, ghép căn là một phát biểu,
-> thêm thời gian (L18), kế hoạch đổi sang lát dọc, quyết định còn 6 câu (§0.2 F). Khi lệch, §0.2 thắng.
+> thêm thời gian (L18), kế hoạch đổi sang lát dọc, quyết định còn 7 câu (§0.2 F); sự thật 8 «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh). Khi lệch, §0.2 thắng.
 > Đọc nhanh: §0 tóm tắt → §0.1 → **§0.2** → §4 quyết định → §5 việc. §1–§3 là căn cứ.
 
 ---
@@ -72,7 +72,7 @@ Phần lõi của review không đổi: raw giữ trọn, phát biểu kèm căn
 > **luôn đúng** về bài toán dù xây bằng gì», dựng lại từ đó, rồi soi review §1–§5 xem phần nào bắt nguồn từ
 > sự thật nền và phần nào chỉ bắt nguồn từ hiện trạng. Mục này **sửa** một số chỗ của §3–§5 (ghi rõ ở D).
 
-### A. Bảy sự thật nền
+### A. Tám sự thật nền (bảy dựng từ bài toán, một do Mạnh bổ sung)
 
 1. **Tin đăng là lời khai, không phải sự thật.** Một người, ở một thời điểm, qua một kênh, nói điều gì đó về
    một căn và một lời chào bán/thuê. Lời khai có thể sai, cũ, trùng, hoặc cố ý giấu (số nhà).
@@ -90,7 +90,11 @@ Phần lõi của review không đổi: raw giữ trọn, phát biểu kèm căn
 7. **Quyết định đầu tư cần so sánh được**: cùng nhóm (vị trí × loại × bán/thuê × cách tính diện tích) và
    không đếm một căn hai lần. Sai nhóm hoặc đếm trùng thì con số đúng từng ô vẫn đánh lừa.
 
-### B. Tám thành phần cơ bản (suy ra từ A)
+8. **Dữ liệu tin cậy là nỗ lực liên tục, có cấp bậc** (Mạnh bổ sung 23/10). Không trắng đen: mỗi căn, mỗi trường
+   đứng ở một bậc, đi lên nhờ nỗ lực (đọc, gắn căn, đo, xác minh, giữ tươi) và **tụt khi ngừng** (thời gian, danh
+   mục cũ, model trôi). Đích đến nói bằng bậc. Thang bậc: FRAMING §3.4 (căn B0–B5, phân khúc N0–N4).
+
+### B. Tám thành phần cơ bản (suy ra từ A1–A7; A8 cho thang bậc đo trên chúng)
 
 | # | Thành phần | Là gì | Bất biến phải giữ | Từ sự thật |
 |---|---|---|---|---|
@@ -103,8 +107,9 @@ Phần lõi của review không đổi: raw giữ trọn, phát biểu kèm căn
 | **T7** | **Phân xử** | Hàm xác định gom các phát biểu → một niềm tin + độ chắc + nguồn gốc | Thuần, chạy lại ra cùng kết quả; độ chắc = suy từ T6, không từ model | 3, 4 |
 | **T8** | **Người** | Người có quyền phán thêm phát biểu bậc cao nhất; phán của người cũng là nhãn cho T6 | Không mất qua nạp lại; mỗi lần phán đủ bằng chứng để phán đúng | 5 |
 
-Đầu ra (không phải thành phần, là phép chiếu): **niềm tin + độ chắc + thời điểm** hiển thị cho môi giới và nhà
-đầu tư. Ba nhãn độ chắc của FRAMING suy thẳng ra: *đã xác minh* = phát biểu thắng đến từ một trong bốn
+Đầu ra (không phải thành phần, là phép chiếu): **niềm tin + độ chắc + thời điểm + bậc** (sự thật 8) hiển thị cho
+môi giới và nhà đầu tư. Bậc của căn là hàm của các thành phần: B1 cần T2+T3, B2 cần T4, B3 cần T6, B4 cần nguồn
+sự thật (T8 hoặc danh mục), B5 cần T5. Ba nhãn độ chắc của FRAMING suy thẳng ra: *đã xác minh* = phát biểu thắng đến từ một trong bốn
 nguồn sự thật (A5); *suy ra* = máy, từ ô đã đo đạt ngưỡng; *chưa biết* = còn lại.
 
 ```
@@ -166,12 +171,15 @@ Nghĩa là các nhóm đang thu chủ yếu không phải nhóm dự án — lá
 thể chờ tin hiện có tự rơi vào.
 
 **Xong khi** (thước đo của lát):
-1. North star của lát có số: số căn đạt «tin cậy», tách «đã xác minh» / «suy ra».
+1. North star của lát có số: **phân bố căn theo bậc B0–B5**, và tỉ lệ căn của lát đạt bậc đích B5 (căn hộ có danh mục).
+   Phân khúc của lát đạt **bậc năng lực N2** (đo được) trước khi đòi N3.
 2. Độ đúng của ghép tin → căn (theo mã căn) và của trường lõi (loại, bán/thuê, giá, diện tích, mã căn) đo trên
    tập test của lát.
 3. Độ tươi p50/p95 từ lúc đăng tới lúc hiển thị (D4).
 4. Bất biến xanh: nạp lại không mất quyết định người; không giá trị nào thiếu nguồn gốc.
 5. Tỉ lệ máy tự quyết ở ngưỡng (D5) có điểm xuất phát.
+6. **Nhịp nỗ lực** của lát được viết ra và chạy (sự thật 8): gắn nhãn định kỳ, đo lại, làm mới danh mục, quét hiệu
+   lực — kèm số công/tuần để giữ bậc.
 
 **Việc của lát** (ánh xạ mã việc §5; thứ tự):
 1. Chọn dự án + nhóm (Mạnh) · thu danh mục mã căn của các dự án đó (**Z1.2**) · nhóm mới vào hook (ZCode).
@@ -200,6 +208,7 @@ không hiện), Q11 (= lát dọc, đo trong lát). Q1 đã chốt.
 | F3 | **Ngưỡng**: bao nhiêu % đúng trên tập test thì máy được tự áp (đề xuất 0,95) và một căn được đếm «suy ra» | Đánh đổi tốc độ ↔ rủi ro hiển thị sai |
 | F4 | **Độ tươi mục tiêu** (phút) cho lát | Đổi kiến trúc nhịp nạp |
 | F5 | **Ai gắn nhãn lát đầu** (~200 tin + ~100 cặp): Mạnh hay người thuê | Giờ công, D5 |
+| F7 | **Bậc đích từng phân khúc và công giữ bậc**: đồng ý căn hộ có danh mục → B5, nhà phố → B3, Chợ Tốt làm thước → B3? Bao nhiêu công/tuần dành cho nhịp giữ bậc? | Đích đến và ngân sách nỗ lực liên tục (sự thật 8) |
 | F6 | **Dọn tồn đọng** (Q12 cũ): hoàn tác 639/644, đóng thẻ 159/161, áp lại quyết định ghép căn `ops_audit` 4 | Ghi DB, khó đảo |
 
 Q7 (subtype), Q8 (tìm mua/thuê), Q10 (thước «Căn giá tốt» tạm) không chặn lát dọc — để sau lát.
