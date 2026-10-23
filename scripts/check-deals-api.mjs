@@ -6,7 +6,7 @@
 //   node scripts/check-deals-api.mjs static    — đo route thật (exit 0 = đạt, 1 = trượt)
 //   node scripts/check-deals-api.mjs mutation  — bản nguyên phải ĐẠT, bốn bản đột biến phải TRƯỢT đúng thông điệp
 // check-portal-compliance.mjs gọi checkDealsRoute trên cây thật (làn ghim lại).
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -59,7 +59,7 @@ export const MUTANTS = {
       : null,
 };
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const mode = process.argv[2] ?? "static";
   const fails = [];

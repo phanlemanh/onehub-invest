@@ -4,7 +4,7 @@
 //   node scripts/check-api-surface.mjs static    — đo cây thật (exit 0 = đạt, 1 = vi phạm)
 //   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M16 phải TRƯỢT đúng thông điệp
 // check-portal-compliance.mjs gọi checkApiSurface trên cây thật (làn ghim lại).
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -239,7 +239,7 @@ export const MUTATIONS = [
   })],
 ];
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const mode = process.argv[2] ?? "static";
   const fails = [];

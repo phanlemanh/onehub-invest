@@ -5,7 +5,8 @@
 // Chạy:
 //   npx tsx scripts/enrich-revert.ts --ids 639,644 --actor hitl:manh --reason "…" --dry   # xem kế hoạch, 0 ghi
 //   npx tsx scripts/enrich-revert.ts --ids 639,644 --actor hitl:manh --reason "…"         # hoàn tác thật
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const DB_URL =
@@ -92,7 +93,7 @@ export async function main(
   }
 }
 
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   main(process.argv.slice(2)).then((code) => process.exit(code));
 }

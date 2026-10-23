@@ -13,7 +13,7 @@
 // Đoạn động `[id]` thay bằng chuỗi không hợp lệ. Không cần DB (chỉ HTTP). Token lấy từ env OPS_API_TOKEN, thiếu thì app/.env.local.
 //   node scripts/smoke-api-matrix.mjs            — sổ thật phải 0 vi phạm
 //   node scripts/smoke-api-matrix.mjs --tu-thu   — cùng lời gọi, so với bản sổ CỐ Ý sai: phải bắt đủ lỗi cài sẵn
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -67,7 +67,7 @@ export function evaluate(results, entries) {
   return { violations, notes };
 }
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const { API_SURFACE } = await import(path.join(root, "app/src/lib/api-surface.ts"));
   const token = opsToken();
