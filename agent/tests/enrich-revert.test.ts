@@ -11,7 +11,7 @@ import { main } from "../scripts/enrich-revert.js";
 import { resolveContext, type ContextResult } from "../src/agents/context-resolver.js";
 import { parseEnrichOutput } from "../src/agents/enrich-text.js";
 import { runEnrich, type LlmFn, type ResolveFn } from "../src/enrich/run.js";
-import { withTx, insertOffer, insertProperty, insertProposal } from "./helpers/db.js";
+import { MIGRATIONS, withTx, insertOffer, insertProperty, insertProposal } from "./helpers/db.js";
 
 let seq = 0;
 const nextId = () => `t_rev_${++seq}`;
@@ -299,6 +299,47 @@ test("AC-2 offer kế đã có thẻ chờ: lượt enrich sau gom vào đúng m
     assert.equal(cards.length, 1, "AC-2 offer kế phải còn đúng một thẻ chờ");
     const fields = cards[0].evidence.fields.map((f: { field: string; value: string }) => `${f.field}=${f.value}`).sort();
     assert.deepEqual(fields, ["bathrooms=3", "street_raw=Quang Trung"], "AC-2 thẻ offer kế thiếu đề xuất của offer cũ");
+  });
+});
+
+// ── AC-10: 036 + 039 áp lại không lỗi, không đổi cấu trúc, không mất/nhân dữ liệu ─────────────
+const SHAPE = `
+  SELECT md5(
+    (SELECT string_agg(table_name || '.' || column_name || ':' || data_type, ',' ORDER BY table_name, column_name)
+       FROM information_schema.columns WHERE table_schema = 'public')
+    || (SELECT string_agg(pg_get_functiondef(p.oid), '|' ORDER BY p.proname)
+          FROM pg_proc p WHERE p.proname IN ('revert_enrichment', 'reconcile_stale_offers', 'enrichment_status_rank'))
+    || (SELECT string_agg(conname || '=' || pg_get_constraintdef(oid), '|' ORDER BY conname)
+          FROM pg_constraint WHERE conrelid = 'enrichment_proposals'::regclass)) AS h`;
+const COUNTS = `SELECT (SELECT count(*) FROM enrichment_proposals) || '/' || (SELECT count(*) FROM sale_offers)
+  || '/' || (SELECT count(*) FROM review_queue) || '/' || (SELECT count(*) FROM ops_audit) AS n`;
+
+test("AC-10 migration idempotent", async () => {
+  const files = MIGRATIONS.filter((p) => /\/(036|039)_/.test(p));
+  assert.equal(files.length, 2, "phải thấy đủ 036 và 039");
+  await withTx(async (c) => {
+    // withTx đã áp 033+036+039 một lần; áp 036+039 thêm hai lần nữa.
+    const s1 = (await c.query(SHAPE)).rows[0].h;
+    const n1 = (await c.query(COUNTS)).rows[0].n;
+    for (const round of [2, 3]) {
+      for (const f of files) {
+        await c.query(readFileSync(f, "utf8")).catch((e: Error) => {
+          throw new Error(`AC-10 không idempotent: ${f.split("/").pop()} lần ${round}: ${e.message}`);
+        });
+      }
+      assert.equal((await c.query(SHAPE)).rows[0].h, s1, `AC-10 cấu trúc đổi ở lần ${round}`);
+      assert.equal((await c.query(COUNTS)).rows[0].n, n1, `AC-10 số dòng đổi ở lần ${round}`);
+    }
+    const dup = Number((await c.query(
+      `SELECT count(*) - count(DISTINCT (offer_id, field, value_key, source)) AS d FROM enrichment_proposals`,
+    )).rows[0].d);
+    assert.equal(dup, 0, "AC-10 dòng đề xuất trùng");
+    // Chiều đỏ: câu không idempotent áp lần hai thì lỗi — thước bắt được.
+    const bad = "ALTER TABLE enrichment_proposals ADD CONSTRAINT t_not_idem CHECK (true);";
+    await c.query(bad);
+    await c.query("SAVEPOINT s");
+    await assert.rejects(c.query(bad), /already exists/, "AC-10 thước không bắt được câu không idempotent");
+    await c.query("ROLLBACK TO SAVEPOINT s");
   });
 });
 

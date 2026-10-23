@@ -38,7 +38,8 @@ const now = new Date("2026-10-23T00:00:00Z");
 /** Một hàng offer như transform dựng (khoá = cột sale_offers). */
 const row = (id, posts, extra = {}) => ({
   offer_id: id, kind: "sale", confidence: "high", first_seen: now, last_seen: now,
-  n_reposts: 1, post_ids: posts, price_tier: "P1", property_type: "unknown", ...extra,
+  n_reposts: 1, post_ids: posts, price_tier: "P1", property_type: "unknown", area_m2: 50, price_perm2: 100_000_000,
+  ...extra,
 });
 const uid = (p) => `t_wo_${p}_${++seq}`;
 

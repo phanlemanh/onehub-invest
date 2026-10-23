@@ -9,7 +9,7 @@
 /** Cột do enrich điền (033) — lượt nạp không ghi đè khi offer đã tồn tại. */
 export const ENRICH_COLS = ["property_type", "street_raw", "block_raw", "bathrooms"];
 
-const COLUMN = /^[a-z_]+$/;
+const COLUMN = /^[a-z_][a-z0-9_]*$/;
 
 /**
  * Upsert `offers` của một nguồn rồi đối soát offer cũ cùng nguồn.
