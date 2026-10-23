@@ -155,6 +155,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | P-A | Deals v2 + G3 + ảnh/tên listing + ops panels | ✅ |
 | P-A2 | Vá cổng: /deals → /ops/deals (SPL tầng A), gỡ AirDNA khỏi /dau-tu (luật 5) — chờ quyết gộp /dau-tu vào /yield | 🔄 nhánh fix/portal-deals-airdna |
 | P-B | G4 khai thác sau mua (comps giá đêm — data sẵn) | ⬜ |
+| P-A3 | Gỡ ảnh/chữ AirDNA khỏi /listing/[id] (luật 5) — chỉ ảnh tự thu, căn chưa thu PDP không ảnh | 🔄 nhánh fix/listing-airdna-photos |
 | P-C | Advisor chat trên app (dựa A6+M4) | ⬜ xa |
 
 ### Track 5 — Vận hành
