@@ -5,7 +5,7 @@ slug: leak-gate-kiem-anon
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/sync-cloud.mjs — dữ liệu rời máy (t3_paths)
 surfaces: [pipeline, docs]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-23-leak-gate-kiem-anon-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
