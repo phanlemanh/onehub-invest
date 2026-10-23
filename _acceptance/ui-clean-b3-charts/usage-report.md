@@ -93,3 +93,49 @@ wall: 425s
 - **claude-opus-5-5**: 3 agent · 62 calls · out 36,372 · in 124 · cache_read 4,140,509 · cache_create 296,894
 - **claude-haiku-5-5**: 13 agent · 26 calls · out 10,574 · in 52 · cache_read 216,753 · cache_create 213,555
 
+### S4 round 3 — wf_4ee88c68-d99 (23 agent, 106,072 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| ui:E13 | claude-sonnet-5-5 | 26 | 19,089 | 52 | 3,067,456 | 247 |
+| ui:E10 | claude-sonnet-5-5 | 29 | 18,370 | 58 | 3,565,900 | 296 |
+| review:measurement | claude-opus-5-5 | 14 | 13,688 | 28 | 653,857 | 150 |
+| review:bugs | claude-opus-5-5 | 17 | 11,632 | 34 | 1,616,637 | 133 |
+| synthesize:report | claude-sonnet-5-5 | 4 | 11,613 | 8 | 149,595 | 84 |
+| baseline:diffBase | claude-sonnet-5-5 | 2 | 7,822 | 4 | 21,164 | 48 |
+| review:conventions | claude-opus-5-5 | 19 | 7,767 | 38 | 1,267,556 | 94 |
+| triage | claude-sonnet-5-5 | 2 | 2,927 | 4 | 18,079 | 24 |
+| refute:b3-check.mjs | claude-sonnet-5-5 | 4 | 2,167 | 8 | 59,592 | 29 |
+| machine:node scripts/ui-standards/b3-check.mjs f | claude-haiku-5-5 | 2 | 1,720 | 4 | 16,931 | 8 |
+| machine:node scripts/ui-standards/b3-check.mjs s | claude-haiku-5-5 | 2 | 1,622 | 4 | 16,931 | 14 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,255 | 4 | 13,871 | 12 |
+| machine:node scripts/ui-standards/b3-check.mjs c | claude-haiku-5-5 | 2 | 977 | 4 | 16,931 | 6 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 928 | 4 | 16,917 | 5 |
+| machine:node scripts/ui-standards/b3-check.mjs s | claude-haiku-5-5 | 2 | 641 | 4 | 16,932 | 5 |
+| machine:node scripts/ui-standards/b3-check.mjs d | claude-haiku-5-5 | 2 | 631 | 4 | 16,931 | 5 |
+| machine:node scripts/ui-standards/b3-check.mjs d | claude-haiku-5-5 | 2 | 581 | 4 | 16,930 | 10 |
+| machine:node scripts/ui-standards/b3-check.mjs d | claude-haiku-5-5 | 2 | 483 | 4 | 16,932 | 5 |
+| machine:node scripts/ui-standards/b3-check.mjs p | claude-haiku-5-5 | 2 | 475 | 4 | 16,930 | 5 |
+| machine:node scripts/ui-standards/b3-check.mjs s | claude-haiku-5-5 | 2 | 474 | 4 | 16,930 | 5 |
+| machine:node scripts/ui-standards/b3-check.mjs p | claude-haiku-5-5 | 2 | 450 | 4 | 16,931 | 5 |
+| machine:node scripts/ui-standards/b3-check.mjs a | claude-haiku-5-5 | 2 | 419 | 4 | 16,929 | 4 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 341 | 4 | 13,492 | 10 |
+
+
+wall: 443s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 7,822 | 21,164 | 48 | 00:32:40 | 00:33:27 |
+| machine | 13 | 10,656 | 217,026 | 18 | 00:32:40 | 00:32:57 |
+| ui | 2 | 37,459 | 6,633,356 | 296 | 00:32:40 | 00:37:36 |
+| review | 3 | 33,087 | 3,538,050 | 156 | 00:32:40 | 00:35:15 |
+| triage | 1 | 2,927 | 18,079 | 24 | 00:37:36 | 00:38:00 |
+| refute | 1 | 2,167 | 59,592 | 29 | 00:38:00 | 00:38:28 |
+| capture | 1 | 341 | 13,492 | 10 | 00:38:28 | 00:38:38 |
+| synthesize | 1 | 11,613 | 149,595 | 84 | 00:38:38 | 00:40:03 |
+
+- **claude-sonnet-5-5**: 7 agent · 69 calls · out 62,329 · in 138 · cache_read 6,895,278 · cache_create 457,104
+- **claude-opus-5-5**: 3 agent · 50 calls · out 33,087 · in 100 · cache_read 3,538,050 · cache_create 324,118
+- **claude-haiku-5-5**: 13 agent · 26 calls · out 10,656 · in 52 · cache_read 217,026 · cache_create 213,331
+

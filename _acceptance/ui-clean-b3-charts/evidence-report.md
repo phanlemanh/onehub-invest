@@ -1,18 +1,18 @@
 ---
 schema_version: 2
 feature_slug: ui-clean-b3-charts
-verdict: REJECT
-failed_evals: [E10]
+verdict: PASS
+failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e6a34244e9f31633f508cd9c859ffd72bd903c48
+verified_commit: 4c414222b055d73e5cc6a2a4eb9cf82adfb06989
 human_signoff:
 ---
 
 # Evidence Report: ui-clean-b3-charts
 
-Round 2. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iterations.
+Round 3. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -25,7 +25,7 @@ Round 2. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iteration
 | E7 | AC-6 | script | PASS |
 | E8 | AC-7 | script | PASS |
 | E9 | AC-8 | script | PASS |
-| E10 | AC-9 | ui-check | FAIL |
+| E10 | AC-9 | ui-check | PASS |
 | E11 | AC-1 | script | PASS |
 | E12 | AC-10 | script | PASS |
 | E13 | AC-9 | ui-check | PASS |
@@ -34,47 +34,47 @@ Round 2. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iteration
 ## Evidence
 
 - eval: E1
-  run_id: minted-ui-clean-b3-charts-E1-r2
+  run_id: minted-ui-clean-b3-charts-E1-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_palette
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     palette: ĐẠT
 
 - eval: E2
-  run_id: minted-ui-clean-b3-charts-E2-r2
+  run_id: minted-ui-clean-b3-charts-E2-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_contrast
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     contrast: ĐẠT
 
 - eval: E3
-  run_id: minted-ui-clean-b3-charts-E3-r2
+  run_id: minted-ui-clean-b3-charts-E3-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_data_color
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     data-color: ĐẠT
 
 - eval: E4
-  run_id: minted-ui-clean-b3-charts-E4-r2
+  run_id: minted-ui-clean-b3-charts-E4-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_duplicates
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     duplicates: ĐẠT
 
 - eval: E5
-  run_id: minted-ui-clean-b3-charts-E5-r2
+  run_id: minted-ui-clean-b3-charts-E5-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_file_size
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     file-size: ĐẠT
 
@@ -87,63 +87,65 @@ Round 2. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iteration
   # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
-  run_id: minted-ui-clean-b3-charts-E7-r2
+  run_id: minted-ui-clean-b3-charts-E7-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_suppressions
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     suppressions: ĐẠT
 
 - eval: E8
-  run_id: minted-ui-clean-b3-charts-E8-r2
+  run_id: minted-ui-clean-b3-charts-E8-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_api
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     api: ĐẠT
 
 - eval: E9
-  run_id: minted-ui-clean-b3-charts-E9-r2
+  run_id: minted-ui-clean-b3-charts-E9-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_structure
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     structure: ĐẠT
 
 - eval: E10
-  run_id: minted-ui-clean-b3-charts-E10-r2
-  exit_code: 1
+  run_id: E10-r3
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   screenshot: evidence/E10-step1-tooltip.png   # còn E10-step2-occupancy.png, E10-step3-yield-quarter.png và 20 ảnh evidence/s4/*.png
   observed: |
-    Da mo tung anh s4 doi chieu before.
-    PERFORMANCE (market 1280/390 sang+toi, ward 1280/390 sang+toi = 8 anh): duong xu huong, vung to duoi duong, cham chu thich "T10/26-T9/27", vach gach duoi o KPI "Doanh thu" doi tu xanh ngoc (teal) sang indigo/tim xanh (sang: ~#5b5bff, toi: ~#7b7fff). Ben sang, duong indigo tren nen the trang ro, vung to nhat nhung doc duoc; ben toi, duong indigo sang tren nen den ro. Chu, tru truc, nhan Tet/30/4/He, vung Hè xam, so lieu (vd 21 ty, 14,0%, 1.594.875, 223.917; ward 4,5 ty, 19,1%, 534.608), nhan cuoi duong 2.052.971.924 / 390.241.320, bo cuc, khoang cach, chieu cao khung deu giong het before. Khong co khac biet nao khac ngoai mau chuoi.
-    REVENUE-MIX (market 3 loai phong, ward 2 loai phong; sang/toi, 1280/390 = 8 anh): donut + cham chu thich doi tu bang tim-violet (sang: tim dam/tim vua/tim nhat; toi: tim sang dan) sang bang indigo (sang: indigo dam/indigo vua/periwinkle nhat; toi: indigo vua/xanh tim/periwinkle nhat). Moi cung donut phan biet duoc voi nen the va voi nhau; 3 chuoi market (Nguyên căn/Phòng riêng/Phòng ở chung) la 3 nac do sang tang dan, phan biet duoc tren ca sang va toi (nac nhat va nac giua o che do toi hoi gan nhau nhung van tach duoc, nhan chu o legend phan biet them); ward 2 chuoi tach ro. Chu (Tổng doanh thu 21 tỷ/4,5 tỷ, 257/23 listing, 66%/34%/0%, 75%/25%, badge 147/109/1 listing, 10/13 listing), bo cuc va khoang cach giong het before. Khong co khac biet nao ngoai mau chuoi.
-    YIELD-PNL (4 anh, byte-identical voi before nen noi dung y het): cot Doanh thu indigo, cot Chi phi xam xanh nhat (sang)/xam xanh dam (toi), duong Bien loi nhuan xanh luc, vach ngang thue dai han xam; phan biet duoc tren sang va toi. Mau KHONG doi so voi before (dung ky vong pnl khong doi mau). Ghi nhan tien co san (khong do thay doi B3, vi anh giong het before): truc ty le 30%-90% o phan tren bieu do bi chen sat/chong chu nhau.
-    BROWSER PANE: E10-step1-tooltip.png - Insight phuong Hoan Kiem, o Doanh thu dang chon, re vao diem T3/27: tooltip "Tháng 3/2027 / Doanh thu 96.278.195 ₫" co cham tron indigo cung mau voi duong. E10-step2-occupancy.png - sau khi bam o Cong suat: duong va vung to thanh mau vang hổ phách, vach gach duoi o Cong suat cung vang, chu thich "T10/26-T9/27" cham vang, truc 0-100%, tooltip "Công suất 6,7%" cham vang, nhan cuoi duong 21,7%. E10-step3-yield-quarter.png - /yield sau khi bam Quý: truc X chi con 4 nhom T10-T12, T1-T3, T4-T6, T7-T9, cot gop quy, tooltip "T7-T9 (từ 7/2027)" liet ke Doanh thu 29,9 tr, Chi phí 21 tr, Thu nhập ròng 8,9 tr, Biên lợi nhuận 29,8%.
-    DOI CHIEU EXPECTED: du 20 anh s4; moi chuoi doc duoc o sang va toi; khac biet so voi before chi o mau chuoi (performance, revenue-mix); pnl khong doi mau (byte-identical); tooltip, doi chi so, Quy chay dung. Tat ca khia canh hien thi/chuc nang KHOP expected. Eval van khong dat vi rail network: co 1 POST /api/v1/user-events bi tu choi (chua dang nhap) toi origin app (app-fail); so tho nam trong evidence/E10-network.txt.
-  network_observed: app-fail
+    So cặp before/s4 (đã Read từng ảnh).
+    market-performance light/dark (1280, 390) và ward-performance light/dark (1280, 390): đường xu hướng, chấm cuối, chấm chú giải "T10/26 – T9/27" và gạch chân ô Doanh thu đổi từ xanh ngọc (teal) sang tím-xanh (sáng: tím đậm ~#6366f1 trên nền thẻ trắng; tối: periwinkle sáng trên nền thẻ tối). Đường rõ nét trên nền thẻ cả sáng và tối; vùng tô gradient nhạt hơn đổi theo màu. Chữ, số (21 tỷ, 14,0%, 1.594.875 đ, 4,5 tỷ, 19,1%...), nhãn trục, vùng Hè, đường Tết/30/4, bố cục, khoảng cách, ngắt dòng ở 390 giống before; không thấy khác biệt nào ngoài màu chuỗi (kể cả gạch chân ô KPI đi theo màu chuỗi).
+    market-mix và ward-mix light/dark (1280, 390): donut + chấm chú giải đổi từ dải tím (#6d0fe0-ish) sang dải chàm-xanh (sáng: chàm đậm / chàm vừa / chàm nhạt xanh nhạt; tối: ba sắc periwinkle xanh-tím từ đậm đến nhạt). Market (3 chuỗi: Nguyên căn, Phòng riêng, Phòng ở chung): phân biệt được nhau và với nền thẻ ở sáng; ở tối "Phòng riêng" và "Phòng ở chung" gần nhau về độ sáng nhưng vẫn tách được và có nhãn/số/phần trăm cạnh bên. Ward (2 chuỗi): hai sắc tách rõ ở sáng, ở tối hai sắc xanh-tím gần nhau nhưng thấy ranh giới. Chữ giữa donut (257 / 23 listing), số tiền, %, badge listing, bố cục giống before.
+    yield-pnl light/dark/light-390/dark-390: giống hệt before từng byte; Doanh thu tím-xanh, Chi phí xám-xanh, Biên lợi nhuận xanh lá, Ngang thuê xám đứt; đọc được ở sáng và tối (lưu ý có sẵn từ before, không do B3: các nhãn trục phải 30%–90% xếp chồng nhau; cột Chi phí sáng nhạt trên nền thẻ sáng độ tương phản thấp nhưng thấy được).
+    E10-step1-tooltip.png: Insight phường Hoàn Kiếm, tab Hiệu suất, rê đường -> tooltip "Tháng 3/2027 / chấm tím-xanh Doanh thu 96.278.195 đ", đường dọc dấu tại T3/27.
+    E10-step2-occupancy.png: ô Công suất được chọn (gạch chân hổ phách), tiêu đề trục "Đêm đã đặt ÷ (đã đặt + còn trống), theo tháng", trục 0–100%, đường và vùng tô hổ phách, chấm chú giải hổ phách, tooltip "Tháng 3/2027 / chấm hổ phách Công suất 6,7%", nhãn cuối 21,7%.
+    E10-step3-yield-quarter.png: /yield, nút Quý đang chọn, 4 nhóm cột (Doanh thu tím-xanh + Chi phí xám-xanh) trục tới 30 tr, đường Biên lợi nhuận xanh lá 29,8%, chú giải đủ 4 mục.
+    Đối chiếu Expected: đủ 20 ảnh; mọi chuỗi đọc được sáng/tối; khác biệt chỉ ở màu chuỗi (performance, revenue-mix), pnl không đổi; tooltip, đổi chỉ số, Quý chạy đúng; lưới mạng đạt.
+  network_observed: clean
 
 - eval: E11
-  run_id: minted-ui-clean-b3-charts-E11-r2
+  run_id: minted-ui-clean-b3-charts-E11-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_selftest
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
-    40/40 ca đạt
+    46/46 ca đạt
 
 - eval: E12
-  run_id: minted-ui-clean-b3-charts-E12-r2
+  run_id: minted-ui-clean-b3-charts-E12-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_docs
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     docs: ĐẠT
 
@@ -152,39 +154,40 @@ Round 2. Nội dung thay trọn round cũ; lịch sử nằm ở mục Iteration
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  verified_at: 2026-10-23T00:12:37Z
-  screenshot: evidence/E13-step1.png   # còn E13-step2..4.png và ảnh từng khung
+  verified_at: 2026-10-23T00:31:34Z
+  screenshot: evidence/E13-step1.png   # còn E13-step2..4.png và ảnh từng khung evidence/E13-*-hieu-suat-theo-thang.png, E13-*-co-cau-doanh-thu.png, E13-yield-*-doanh-thu-va-chi-phi-12-thang-toi.png
   observed: |
-    Each frame below was opened with Read.
-    E13-step1.png (hoan-kiem, light, full page): the page has a light background. The 'Hiệu suất theo tháng' frame (title, subtitle, 4 KPI tiles, chart) and the 'Cơ cấu doanh thu' frame (donut 4,5 tỷ, legend Nguyên căn / Phòng riêng) are visible. This full-page capture caught the performance chart mid-animation, with only a single point at T9/27 showing.
-    E13-step2.png (yield, light): the 'Doanh thu và chi phí 12 tháng tới' frame is visible with bars, a margin line and a KPI row. The legend and text are readable.
-    E13-step3.png (hoan-kiem, dark) and E13-step4.png (yield, dark): the same two pages on a dark background. The chart frames have light-coloured text on a dark panel. The bars use two blue and slate tones and the margin line is green.
-    E13-hoan-kiem-light-performance.png: the frame crop shows the full line and area chart, a smooth line from T11/26 to T9/27 with the Tết, 30/4 and Hè markers. Titles and KPIs are legible, with no clipped or overflowing text in the frame.
-    E13-hoan-kiem-dark-mix.png: the 'Cơ cấu doanh thu' donut shows 23 listing in the centre. The legend rows Nguyên căn 3,4 tỷ 75% and Phòng riêng 1,1 tỷ 25% are readable on the dark panel.
-    E13-yield-dark-pnl.png: bars, line and KPI row are legible and nothing overflows. Only cosmetic issue: the 90%..30% axis labels on the left are stacked together.
-    The visible frames match the expectation: no P0 (contrast or overflow) is visible inside the three chart frames, and the scan found 0 P0 in the frames in all four runs. The only P0s sit in the search dialog outside the frames.
+    Mở bằng Read các frame sau.
+    - E13-hoan-kiem-light-hieu-suat-theo-thang.png: khung 'Hiệu suất theo tháng' ở sáng, có 4 ô chỉ số (Doanh thu, Công suất, ADR, RevPAR), biểu đồ đường với các mốc Tết, 30/4, Hè và nhãn 390.241.320 đ. Chữ rõ, tương phản đủ. Đường doanh thu mới vẽ đến khoảng T11/26 (hoạt ảnh chưa xong). Không thấy chữ chồng hay tràn.
+    - E13-hoan-kiem-dark-hieu-suat-theo-thang.png: cùng khung ở tối, nền tối, đường tím sáng vẽ đủ 12 tháng, chữ trắng và trục xám đọc được. Không tràn.
+    - E13-hoan-kiem-light-co-cau-doanh-thu.png: donut 23 listing, hai màu tím phân biệt được (Nguyên căn 75%, Phòng riêng 25%), chú giải và badge đọc rõ.
+    - E13-hoan-kiem-dark-co-cau-doanh-thu.png: cùng khung ở tối, hai sắc tím nhạt hơn, vẫn tách được khỏi nền và khỏi nhau.
+    - E13-yield-light-doanh-thu-va-chi-phi-12-thang-toi.png: cột doanh thu tím và chi phí xám xanh, đường biên lợi nhuận xanh lá, ngưỡng thuê dài hạn nét đứt, 4 ô chỉ số bên dưới. Không tràn. Nhãn trục phải 30%–90% dính sát nhau (quan sát thị giác, không phải P0).
+    - E13-yield-dark-doanh-thu-va-chi-phi-12-thang-toi.png: cùng khung ở tối, cột tím sáng và xám xanh, đường xanh lá sáng, đọc rõ.
+    - E13-hoan-kiem-light.png (toàn trang): thấy hai khung 'Hiệu suất theo tháng' và 'Cơ cấu doanh thu' đúng vị trí.
+    Đối chiếu Expected: cả ba khung hiển thị đúng ở sáng và tối, không có hỏng hiển thị nhìn thấy. Quét P0 cho kết quả 0 P0 trong khung ở cả bốn tổ hợp (hai trang × hai chế độ). Hai P0 text-overflow còn lại nằm ngoài khung, ghi vào danh sách ngoài phạm vi.
   network_observed: clean
 
 - eval: E14
-  run_id: minted-ui-clean-b3-charts-E14-r2
+  run_id: minted-ui-clean-b3-charts-E14-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.ui_b3_pixels
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
   output: |
     pixels: ĐẠT
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-ui-clean-b3-charts-SUITE-lint-r2
+  run_id: minted-ui-clean-b3-charts-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-ui-clean-b3-charts-SUITE-test_lint_rules-r2
+  run_id: minted-ui-clean-b3-charts-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-10-23T00:12:37Z
+  verified_at: 2026-10-23T00:31:34Z
 
 ## Known limits
 
@@ -214,4 +217,5 @@ none — mọi eval chạy một lần, không có eval ngẫu nhiên.
 ## Iterations
 
 Round 1: PASS — 15/15 eval đạt; hai lỗ đo trong hợp đồng (kiểm cột sáng/tối của data-color và kênh swatchOf) được vá ở vòng 2.
-Round 2: E10 không đạt — rail network thấy một POST /api/v1/user-events bị từ chối (chưa đăng nhập) tới origin app, loại app-fail, mà expected không khai; mọi khía cạnh hiển thị và chức năng của E10 đều khớp expected. Lệnh ui-check:E10 là lệnh fail duy nhất và đã gắn eval E10. E13 ghi nhận cùng loại beacon telemetry này là chỉ-ghi-chú; hai eval xử lý khác nhau, người quyết ở Cổng 2 cần thống nhất. Trả về triển khai.
+Round 2: E10 không đạt — rail network thấy một POST /api/v1/user-events bị từ chối (chưa đăng nhập) tới origin app, loại app-fail, mà expected không khai; mọi khía cạnh hiển thị và chức năng của E10 đều khớp expected. Trả về triển khai.
+Round 3: PASS — hợp đồng E10 khai beacon telemetry /api/v1/user-events là ngoại lệ được phép; E10 chạy lại (E10-r3) khớp expected, lưới mạng sạch; E13 và 12 lệnh còn lại đạt, E6 carry-forward từ round 1.

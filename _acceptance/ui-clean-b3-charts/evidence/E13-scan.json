@@ -1,212 +1,494 @@
 [
-  {
-    "scheme": "light",
-    "page": "hoan-kiem",
-    "status": 200,
-    "env": {
-      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light",
-      "bg": "lab(100 0 0)",
-      "dark": false
-    },
-    "injected": true,
-    "wrapper": {
-      "verdict": "REJECT",
-      "exit_intent": 2,
-      "p0": 2,
-      "hits": [
-        "text-overflow",
-        "line-length",
-        "tiny-text",
-        "overused-font",
-        "skipped-heading",
-        "layout-transition",
-        "nested-cards"
-      ],
-      "blocking": [
-        "text-overflow"
-      ]
-    },
-    "rawCount": 15,
-    "frameFound": [
-      [
-        "Hiệu suất theo tháng",
-        true
-      ],
-      [
-        "Cơ cấu doanh thu",
-        true
-      ]
-    ],
-    "hits": [
-      {
-        "rule": "text-overflow",
-        "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
-        "inFrame": null,
-        "tag": "H2",
-        "text": "Tìm khu vực"
-      },
-      {
-        "rule": "text-overflow",
-        "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
-        "inFrame": null,
-        "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên"
-      }
-    ]
+ {
+  "slug": "hoan-kiem",
+  "url": "http://localhost:3456/vn/hanoi/hoan-kiem",
+  "scheme": "light",
+  "env": {
+   "cls": "light",
+   "bg": "lab(100 0 0)",
+   "scrollH": 3043,
+   "w": 900
   },
-  {
-    "scheme": "light",
-    "page": "yield",
-    "status": 200,
-    "env": {
-      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light",
-      "bg": "lab(100 0 0)",
-      "dark": false
-    },
-    "injected": true,
-    "wrapper": {
-      "verdict": "REJECT",
-      "exit_intent": 2,
-      "p0": 2,
-      "hits": [
-        "text-overflow",
-        "line-length",
-        "overused-font",
-        "single-font",
-        "layout-transition",
-        "nested-cards"
-      ],
-      "blocking": [
-        "text-overflow"
-      ]
-    },
-    "rawCount": 14,
-    "frameFound": [
-      [
-        "Doanh thu và chi phí 12 tháng tới",
-        true
-      ]
+  "frames": [
+   {
+    "t": "Hiệu suất theo tháng",
+    "found": true,
+    "x": 24,
+    "y": 1077,
+    "w": 852,
+    "h": 582,
+    "crop": "hieu-suat-theo-thang"
+   },
+   {
+    "t": "Cơ cấu doanh thu",
+    "found": true,
+    "x": 24,
+    "y": 1699,
+    "w": 852,
+    "h": 368.296875,
+    "crop": "co-cau-doanh-thu"
+   },
+   {
+    "t": "Doanh thu và chi phí 12 tháng tới",
+    "found": false
+   }
+  ],
+  "scan": {
+   "wrapper": {
+    "verdict": "REJECT",
+    "exit_intent": 2,
+    "fail_on": [
+     "P0"
+    ],
+    "p0": 2,
+    "blocking": [
+     "text-overflow"
     ],
     "hits": [
-      {
-        "rule": "text-overflow",
-        "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
-        "inFrame": null,
-        "tag": "H2",
-        "text": "Tìm khu vực"
-      },
-      {
-        "rule": "text-overflow",
-        "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
-        "inFrame": null,
-        "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên"
-      }
-    ]
-  },
-  {
-    "scheme": "dark",
-    "page": "hoan-kiem",
-    "status": 200,
-    "env": {
-      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark",
-      "bg": "lab(2.75381 0 0)",
-      "dark": true
-    },
-    "injected": true,
-    "wrapper": {
-      "verdict": "REJECT",
-      "exit_intent": 2,
-      "p0": 2,
-      "hits": [
-        "text-overflow",
-        "line-length",
-        "tiny-text",
-        "overused-font",
-        "skipped-heading",
-        "layout-transition",
-        "nested-cards"
-      ],
-      "blocking": [
-        "text-overflow"
-      ]
-    },
-    "rawCount": 15,
-    "frameFound": [
-      [
-        "Hiệu suất theo tháng",
-        true
-      ],
-      [
-        "Cơ cấu doanh thu",
-        true
-      ]
+     "text-overflow",
+     "line-length",
+     "tiny-text",
+     "overused-font",
+     "skipped-heading",
+     "layout-transition",
+     "nested-cards"
     ],
-    "hits": [
-      {
-        "rule": "text-overflow",
-        "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
-        "inFrame": null,
-        "tag": "H2",
-        "text": "Tìm khu vực"
-      },
-      {
-        "rule": "text-overflow",
-        "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
-        "inFrame": null,
-        "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên"
-      }
+    "findings": [
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "line-length",
+      "severity": "warning",
+      "detail": "~110 chars/line (aim for <80)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "tiny-text",
+      "severity": "warning",
+      "detail": "11px body text",
+      "pTier": "P2"
+     },
+     {
+      "rule": "overused-font",
+      "severity": "warning",
+      "detail": "Primary font: geist (98% of text)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "skipped-heading",
+      "severity": "warning",
+      "detail": "<h1> \"Hoàn Kiếm\" followed by <h3> \"Doanh thu\" (missing h2)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "layout-transition",
+      "severity": "warning",
+      "detail": "transition: height",
+      "pTier": "P2"
+     },
+     {
+      "rule": "nested-cards",
+      "severity": "warning",
+      "detail": "Card inside card",
+      "pTier": "P1"
+     }
     ]
-  },
-  {
-    "scheme": "dark",
-    "page": "yield",
-    "status": 200,
-    "env": {
-      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark",
-      "bg": "lab(2.75381 0 0)",
-      "dark": true
+   },
+   "rawP0": [
+    {
+     "rule": "text-overflow",
+     "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+     "tag": "H2",
+     "cls": "text-base leading-none font-medium",
+     "text": "Tìm khu vực",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
     },
-    "injected": true,
-    "wrapper": {
-      "verdict": "REJECT",
-      "exit_intent": 2,
-      "p0": 2,
-      "hits": [
-        "text-overflow",
-        "line-length",
-        "overused-font",
-        "single-font",
-        "layout-transition",
-        "nested-cards"
-      ],
-      "blocking": [
-        "text-overflow"
-      ]
-    },
-    "rawCount": 14,
-    "frameFound": [
-      [
-        "Doanh thu và chi phí 12 tháng tới",
-        true
-      ]
-    ],
-    "hits": [
-      {
-        "rule": "text-overflow",
-        "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
-        "inFrame": null,
-        "tag": "H2",
-        "text": "Tìm khu vực"
-      },
-      {
-        "rule": "text-overflow",
-        "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
-        "inFrame": null,
-        "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên"
-      }
-    ]
+    {
+     "rule": "text-overflow",
+     "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+     "tag": "P",
+     "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hov",
+     "text": "Tìm thị trường hoặc phường/xã theo tên",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
+    }
+   ]
   }
+ },
+ {
+  "slug": "yield",
+  "url": "http://localhost:3456/yield",
+  "scheme": "light",
+  "env": {
+   "cls": "light",
+   "bg": "lab(100 0 0)",
+   "scrollH": 3371,
+   "w": 900
+  },
+  "frames": [
+   {
+    "t": "Hiệu suất theo tháng",
+    "found": false
+   },
+   {
+    "t": "Cơ cấu doanh thu",
+    "found": false
+   },
+   {
+    "t": "Doanh thu và chi phí 12 tháng tới",
+    "found": true,
+    "x": 24,
+    "y": 2061.25,
+    "w": 852,
+    "h": 616,
+    "crop": "doanh-thu-va-chi-phi-12-thang-toi"
+   }
+  ],
+  "scan": {
+   "wrapper": {
+    "verdict": "REJECT",
+    "exit_intent": 2,
+    "fail_on": [
+     "P0"
+    ],
+    "p0": 2,
+    "blocking": [
+     "text-overflow"
+    ],
+    "hits": [
+     "text-overflow",
+     "line-length",
+     "overused-font",
+     "single-font",
+     "layout-transition",
+     "nested-cards"
+    ],
+    "findings": [
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "line-length",
+      "severity": "warning",
+      "detail": "~122 chars/line (aim for <80)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "overused-font",
+      "severity": "warning",
+      "detail": "Primary font: geist (100% of text)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "single-font",
+      "severity": "warning",
+      "detail": "only font used is geist",
+      "pTier": "P2"
+     },
+     {
+      "rule": "layout-transition",
+      "severity": "warning",
+      "detail": "transition: height",
+      "pTier": "P2"
+     },
+     {
+      "rule": "nested-cards",
+      "severity": "warning",
+      "detail": "Card inside card",
+      "pTier": "P1"
+     }
+    ]
+   },
+   "rawP0": [
+    {
+     "rule": "text-overflow",
+     "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+     "tag": "H2",
+     "cls": "text-base leading-none font-medium",
+     "text": "Tìm khu vực",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
+    },
+    {
+     "rule": "text-overflow",
+     "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+     "tag": "P",
+     "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hov",
+     "text": "Tìm thị trường hoặc phường/xã theo tên",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
+    }
+   ]
+  }
+ },
+ {
+  "slug": "hoan-kiem",
+  "url": "http://localhost:3456/vn/hanoi/hoan-kiem",
+  "scheme": "dark",
+  "env": {
+   "cls": "dark",
+   "bg": "lab(2.75381 0 0)",
+   "scrollH": 3043,
+   "w": 900
+  },
+  "frames": [
+   {
+    "t": "Hiệu suất theo tháng",
+    "found": true,
+    "x": 24,
+    "y": 1077,
+    "w": 852,
+    "h": 582,
+    "crop": "hieu-suat-theo-thang"
+   },
+   {
+    "t": "Cơ cấu doanh thu",
+    "found": true,
+    "x": 24,
+    "y": 1699,
+    "w": 852,
+    "h": 368.296875,
+    "crop": "co-cau-doanh-thu"
+   },
+   {
+    "t": "Doanh thu và chi phí 12 tháng tới",
+    "found": false
+   }
+  ],
+  "scan": {
+   "wrapper": {
+    "verdict": "REJECT",
+    "exit_intent": 2,
+    "fail_on": [
+     "P0"
+    ],
+    "p0": 2,
+    "blocking": [
+     "text-overflow"
+    ],
+    "hits": [
+     "text-overflow",
+     "line-length",
+     "tiny-text",
+     "overused-font",
+     "skipped-heading",
+     "layout-transition",
+     "nested-cards"
+    ],
+    "findings": [
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "line-length",
+      "severity": "warning",
+      "detail": "~110 chars/line (aim for <80)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "tiny-text",
+      "severity": "warning",
+      "detail": "11px body text",
+      "pTier": "P2"
+     },
+     {
+      "rule": "overused-font",
+      "severity": "warning",
+      "detail": "Primary font: geist (98% of text)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "skipped-heading",
+      "severity": "warning",
+      "detail": "<h1> \"Hoàn Kiếm\" followed by <h3> \"Doanh thu\" (missing h2)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "layout-transition",
+      "severity": "warning",
+      "detail": "transition: height",
+      "pTier": "P2"
+     },
+     {
+      "rule": "nested-cards",
+      "severity": "warning",
+      "detail": "Card inside card",
+      "pTier": "P1"
+     }
+    ]
+   },
+   "rawP0": [
+    {
+     "rule": "text-overflow",
+     "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+     "tag": "H2",
+     "cls": "text-base leading-none font-medium",
+     "text": "Tìm khu vực",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
+    },
+    {
+     "rule": "text-overflow",
+     "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+     "tag": "P",
+     "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hov",
+     "text": "Tìm thị trường hoặc phường/xã theo tên",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
+    }
+   ]
+  }
+ },
+ {
+  "slug": "yield",
+  "url": "http://localhost:3456/yield",
+  "scheme": "dark",
+  "env": {
+   "cls": "dark",
+   "bg": "lab(2.75381 0 0)",
+   "scrollH": 3371,
+   "w": 900
+  },
+  "frames": [
+   {
+    "t": "Hiệu suất theo tháng",
+    "found": false
+   },
+   {
+    "t": "Cơ cấu doanh thu",
+    "found": false
+   },
+   {
+    "t": "Doanh thu và chi phí 12 tháng tới",
+    "found": true,
+    "x": 24,
+    "y": 2061.25,
+    "w": 852,
+    "h": 616,
+    "crop": "doanh-thu-va-chi-phi-12-thang-toi"
+   }
+  ],
+  "scan": {
+   "wrapper": {
+    "verdict": "REJECT",
+    "exit_intent": 2,
+    "fail_on": [
+     "P0"
+    ],
+    "p0": 2,
+    "blocking": [
+     "text-overflow"
+    ],
+    "hits": [
+     "text-overflow",
+     "line-length",
+     "overused-font",
+     "single-font",
+     "layout-transition",
+     "nested-cards"
+    ],
+    "findings": [
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "text-overflow",
+      "severity": "warning",
+      "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+      "pTier": "P0"
+     },
+     {
+      "rule": "line-length",
+      "severity": "warning",
+      "detail": "~122 chars/line (aim for <80)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "overused-font",
+      "severity": "warning",
+      "detail": "Primary font: geist (100% of text)",
+      "pTier": "P2"
+     },
+     {
+      "rule": "single-font",
+      "severity": "warning",
+      "detail": "only font used is geist",
+      "pTier": "P2"
+     },
+     {
+      "rule": "layout-transition",
+      "severity": "warning",
+      "detail": "transition: height",
+      "pTier": "P2"
+     },
+     {
+      "rule": "nested-cards",
+      "severity": "warning",
+      "detail": "Card inside card",
+      "pTier": "P1"
+     }
+    ]
+   },
+   "rawP0": [
+    {
+     "rule": "text-overflow",
+     "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
+     "tag": "H2",
+     "cls": "text-base leading-none font-medium",
+     "text": "Tìm khu vực",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
+    },
+    {
+     "rule": "text-overflow",
+     "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
+     "tag": "P",
+     "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hov",
+     "text": "Tìm thị trường hoặc phường/xã theo tên",
+     "frameTitle": null,
+     "inChartFrame": false,
+     "containsFrame": false
+    }
+   ]
+  }
+ }
 ]

@@ -1,195 +1,699 @@
-light GET 200 document http://localhost:3456/vn/hanoi/hoan-kiem
-light GET 200 stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
-light GET 200 stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
-light GET 200 font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
-light GET 200 font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
-light GET 200 font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
-light GET 200 font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
-light GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
-light GET 200 font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
-light GET 200 script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
-light POST 401 ping http://localhost:3456/api/v1/user-events
-light console.error Failed to load resource: the server responded with a status of 401 (Unauthorized)
-light GET 200 script http://localhost:3456/maplibre-gl-worker.mjs
-light console.warning [.WebGL-0x12c04e11e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
-light GET 200 fetch https://tiles.openfreemap.org/styles/positron
-light console.warning [.WebGL-0x12c04e11e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
-light GET 200 fetch https://tiles.openfreemap.org/planet
-light GET 200 fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
-light GET 200 fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
-light console.warning [.WebGL-0x12c04e11e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
-light console.warning [.WebGL-0x12c04e11e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
-light GET 200 fetch https://tiles.openfreemap.org/planet/20261018_080001_pt/3/6/3.pbf
-light GET 200 fetch https://tiles.openfreemap.org/planet/20261018_080001_pt/3/7/3.pbf
-light GET 200 fetch https://tiles.openfreemap.org/planet/20261018_080001_pt/3/5/3.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/0-255.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/7680-7935.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/256-511.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/7680-7935.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/7680-7935.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/256-511.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/8192-8447.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/512-767.pbf
-light GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/0-255.pbf
-light GET 200 document http://localhost:3456/yield
-light GET 200 font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
-light GET 200 font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
-light GET 200 font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
-light GET 200 font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
-light GET 200 font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
-light GET 200 stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
-light GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
-light GET 200 script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
-dark GET 200 document http://localhost:3456/vn/hanoi/hoan-kiem
-dark GET 200 stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
-dark GET 200 font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
-dark GET 200 font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
-dark GET 200 font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
-dark GET 200 stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
-dark GET 200 font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
-dark GET 200 font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
-dark GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
-dark POST 401 ping http://localhost:3456/api/v1/user-events
-dark console.error Failed to load resource: the server responded with a status of 401 (Unauthorized)
-dark GET 200 script http://localhost:3456/maplibre-gl-worker.mjs
-dark GET 200 fetch https://tiles.openfreemap.org/styles/dark
-dark GET 200 fetch https://tiles.openfreemap.org/planet
-dark GET 200 fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
-dark GET 200 fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
-dark GET 200 fetch https://tiles.openfreemap.org/planet/20261018_080001_pt/3/5/3.pbf
-dark GET 200 fetch https://tiles.openfreemap.org/planet/20261018_080001_pt/3/6/3.pbf
-dark GET 200 fetch https://tiles.openfreemap.org/planet/20261018_080001_pt/3/7/3.pbf
-dark console.warning Image "circle-11" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.
-dark GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/8192-8447.pbf
-dark GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf
-dark GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/7680-7935.pbf
-dark GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf
-dark GET 200 fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/512-767.pbf
-dark GET 200 document http://localhost:3456/yield
-dark GET 200 font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
-dark GET 200 font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
-dark GET 200 font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
-dark GET 200 font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
-dark GET 200 font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
-dark GET 200 stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
-dark GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
-dark GET 200 script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+REQ hoan-kiem/light B47E9D5C5D7D1466DEC0343A923747CB GET Document http://localhost:3456/vn/hanoi/hoan-kiem
+RES hoan-kiem/light B47E9D5C5D7D1466DEC0343A923747CB 200 Document http://localhost:3456/vn/hanoi/hoan-kiem
+REQ hoan-kiem/light 96848.1390 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ hoan-kiem/light 96848.1391 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ hoan-kiem/light 96848.1392 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ hoan-kiem/light 96848.1393 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ hoan-kiem/light 96848.1394 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ hoan-kiem/light 96848.1395 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ hoan-kiem/light 96848.1397 GET Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+REQ hoan-kiem/light 96848.1398 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ hoan-kiem/light 96848.1399 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ hoan-kiem/light 96848.1400 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ hoan-kiem/light 96848.1401 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ hoan-kiem/light 96848.1402 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ hoan-kiem/light 96848.1403 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ hoan-kiem/light 96848.1404 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ hoan-kiem/light 96848.1405 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ hoan-kiem/light 96848.1406 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ hoan-kiem/light 96848.1407 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ hoan-kiem/light 96848.1408 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ hoan-kiem/light 96848.1409 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ hoan-kiem/light 96848.1410 GET Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+REQ hoan-kiem/light 96848.1411 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ hoan-kiem/light 96848.1412 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ hoan-kiem/light 96848.1413 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ hoan-kiem/light 96848.1414 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ hoan-kiem/light 96848.1415 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ hoan-kiem/light 96848.1416 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ hoan-kiem/light 96848.1417 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ hoan-kiem/light 96848.1418 GET Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+REQ hoan-kiem/light 96848.1419 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+REQ hoan-kiem/light 96848.1420 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+REQ hoan-kiem/light 96848.1421 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ hoan-kiem/light 96848.1422 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+REQ hoan-kiem/light 96848.1423 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+REQ hoan-kiem/light 96848.1424 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+REQ hoan-kiem/light 96848.1425 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+REQ hoan-kiem/light 96848.1426 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+REQ hoan-kiem/light 96848.1427 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+REQ hoan-kiem/light 96848.1428 GET Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+RES hoan-kiem/light 96848.1390 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES hoan-kiem/light 96848.1393 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES hoan-kiem/light 96848.1391 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES hoan-kiem/light 96848.1392 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES hoan-kiem/light 96848.1397 200 Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+RES hoan-kiem/light 96848.1394 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES hoan-kiem/light 96848.1395 200 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES hoan-kiem/light 96848.1398 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES hoan-kiem/light 96848.1399 200 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES hoan-kiem/light 96848.1402 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES hoan-kiem/light 96848.1400 200 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES hoan-kiem/light 96848.1403 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES hoan-kiem/light 96848.1404 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES hoan-kiem/light 96848.1405 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES hoan-kiem/light 96848.1406 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES hoan-kiem/light 96848.1408 200 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES hoan-kiem/light 96848.1409 200 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES hoan-kiem/light 96848.1410 200 Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+RES hoan-kiem/light 96848.1401 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES hoan-kiem/light 96848.1407 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES hoan-kiem/light 96848.1412 200 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES hoan-kiem/light 96848.1411 200 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES hoan-kiem/light 96848.1413 200 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES hoan-kiem/light 96848.1415 200 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES hoan-kiem/light 96848.1416 200 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES hoan-kiem/light 96848.1414 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+RES hoan-kiem/light 96848.1417 200 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES hoan-kiem/light 96848.1418 200 Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+RES hoan-kiem/light 96848.1419 200 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+RES hoan-kiem/light 96848.1423 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+RES hoan-kiem/light 96848.1422 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+RES hoan-kiem/light 96848.1421 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES hoan-kiem/light 96848.1420 200 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+RES hoan-kiem/light 96848.1424 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+RES hoan-kiem/light 96848.1425 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+REQ hoan-kiem/light 96848.1475 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES hoan-kiem/light 96848.1426 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+RES hoan-kiem/light 96848.1427 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+RES hoan-kiem/light 96848.1428 200 Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+RES hoan-kiem/light 96848.1475 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+REQ hoan-kiem/light 0FC891E722FF39CCF43C5D8818DFAA8C GET Script http://localhost:3456/maplibre-gl-worker.mjs
+REQ hoan-kiem/light 96848.1486 POST Ping http://localhost:3456/api/v1/user-events
+REQ hoan-kiem/light 96848.1487 GET Fetch https://tiles.openfreemap.org/styles/dark
+RES hoan-kiem/light 96848.1486 200 Ping http://localhost:3456/api/v1/user-events
+RES hoan-kiem/light 96848.1487 200 Fetch https://tiles.openfreemap.org/styles/dark
+REQ hoan-kiem/light 96848.1489 GET Fetch https://tiles.openfreemap.org/planet
+REQ hoan-kiem/light 96848.1490 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+REQ hoan-kiem/light 96848.1491 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+REQ hoan-kiem/light DC554B97EF0D41D3C7442483AAE47DF0 GET Document http://localhost:3456/vn/hanoi/hoan-kiem
+RES hoan-kiem/light 96848.1490 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+RES hoan-kiem/light 96848.1489 200 Fetch https://tiles.openfreemap.org/planet
+RES hoan-kiem/light 96848.1491 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+RES hoan-kiem/light DC554B97EF0D41D3C7442483AAE47DF0 200 Document http://localhost:3456/vn/hanoi/hoan-kiem
+REQ hoan-kiem/light 96848.1493 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES hoan-kiem/light 96848.1493 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ hoan-kiem/light 96848.1494 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES hoan-kiem/light 96848.1494 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ hoan-kiem/light 96848.1495 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES hoan-kiem/light 96848.1495 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ hoan-kiem/light 96848.1496 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES hoan-kiem/light 96848.1496 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ hoan-kiem/light 96848.1497 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES hoan-kiem/light 96848.1497 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ hoan-kiem/light 96848.1498 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ hoan-kiem/light 96848.1500 GET Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+REQ hoan-kiem/light 96848.1501 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ hoan-kiem/light 96848.1502 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ hoan-kiem/light 96848.1503 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ hoan-kiem/light 96848.1504 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ hoan-kiem/light 96848.1505 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ hoan-kiem/light 96848.1506 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ hoan-kiem/light 96848.1507 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ hoan-kiem/light 96848.1508 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ hoan-kiem/light 96848.1509 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ hoan-kiem/light 96848.1510 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ hoan-kiem/light 96848.1511 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ hoan-kiem/light 96848.1512 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ hoan-kiem/light 96848.1513 GET Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+REQ hoan-kiem/light 96848.1514 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ hoan-kiem/light 96848.1515 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ hoan-kiem/light 96848.1516 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ hoan-kiem/light 96848.1517 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ hoan-kiem/light 96848.1518 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ hoan-kiem/light 96848.1519 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ hoan-kiem/light 96848.1520 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ hoan-kiem/light 96848.1521 GET Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+REQ hoan-kiem/light 96848.1522 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+REQ hoan-kiem/light 96848.1523 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+REQ hoan-kiem/light 96848.1524 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ hoan-kiem/light 96848.1525 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+REQ hoan-kiem/light 96848.1526 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+REQ hoan-kiem/light 96848.1527 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+REQ hoan-kiem/light 96848.1528 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+REQ hoan-kiem/light 96848.1529 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+REQ hoan-kiem/light 96848.1530 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+REQ hoan-kiem/light 96848.1531 GET Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+RES hoan-kiem/light 96848.1500 304 Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+RES hoan-kiem/light 96848.1503 304 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES hoan-kiem/light 96848.1502 304 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES hoan-kiem/light 96848.1504 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES hoan-kiem/light 96848.1498 304 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES hoan-kiem/light 96848.1501 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES hoan-kiem/light 96848.1505 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES hoan-kiem/light 96848.1506 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES hoan-kiem/light 96848.1507 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES hoan-kiem/light 96848.1508 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES hoan-kiem/light 96848.1509 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES hoan-kiem/light 96848.1511 304 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES hoan-kiem/light 96848.1510 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES hoan-kiem/light 96848.1512 304 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES hoan-kiem/light 96848.1513 304 Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+RES hoan-kiem/light 96848.1514 304 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES hoan-kiem/light 96848.1515 304 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES hoan-kiem/light 96848.1516 304 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES hoan-kiem/light 96848.1517 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+RES hoan-kiem/light 96848.1518 304 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES hoan-kiem/light 96848.1520 304 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES hoan-kiem/light 96848.1519 304 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES hoan-kiem/light 96848.1521 304 Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+RES hoan-kiem/light 96848.1522 304 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+RES hoan-kiem/light 96848.1523 304 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+RES hoan-kiem/light 96848.1526 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+RES hoan-kiem/light 96848.1524 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES hoan-kiem/light 96848.1525 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+RES hoan-kiem/light 96848.1528 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+RES hoan-kiem/light 96848.1529 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+RES hoan-kiem/light 96848.1527 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+RES hoan-kiem/light 96848.1530 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+RES hoan-kiem/light 96848.1531 304 Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+REQ hoan-kiem/light 96848.1573 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES hoan-kiem/light 96848.1573 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+REQ hoan-kiem/light 96848.1584 GET Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico
+RES hoan-kiem/light 96848.1584 200 Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico
+REQ hoan-kiem/light 85ADE871329F9BA6B37A3E0B791D7009 GET Script http://localhost:3456/maplibre-gl-worker.mjs
+REQ hoan-kiem/light 96848.1585 GET Fetch https://tiles.openfreemap.org/styles/positron
+RES hoan-kiem/light 96848.1585 200 Fetch https://tiles.openfreemap.org/styles/positron
+REQ hoan-kiem/light 96848.1587 GET Fetch https://tiles.openfreemap.org/planet
+REQ hoan-kiem/light 96848.1588 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+REQ hoan-kiem/light 96848.1589 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+RES hoan-kiem/light 96848.1587 200 Fetch https://tiles.openfreemap.org/planet
+RES hoan-kiem/light 96848.1588 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+RES hoan-kiem/light 96848.1589 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+REQ hoan-kiem/light 96848.1590 GET Image data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E %3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E %3C/svg%3E
+RES hoan-kiem/light 96848.1590 200 Image data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E %3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E %3C/svg%3E
+REQ hoan-kiem/light 96848.1594 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/0-255.pbf
+REQ hoan-kiem/light 96848.1595 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/7680-7935.pbf
+REQ hoan-kiem/light 96848.1596 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/256-511.pbf
+REQ hoan-kiem/light 96848.1597 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf
+REQ hoan-kiem/light 96848.1598 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf
+REQ hoan-kiem/light 96848.1599 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/7680-7935.pbf
+REQ hoan-kiem/light 96848.1600 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/0-255.pbf
+REQ hoan-kiem/light 96848.1601 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/7680-7935.pbf
+REQ hoan-kiem/light 96848.1602 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/256-511.pbf
+RES hoan-kiem/light 96848.1594 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/0-255.pbf
+RES hoan-kiem/light 96848.1595 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/7680-7935.pbf
+RES hoan-kiem/light 96848.1596 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/256-511.pbf
+RES hoan-kiem/light 96848.1597 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf
+RES hoan-kiem/light 96848.1598 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf
+RES hoan-kiem/light 96848.1599 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/7680-7935.pbf
+RES hoan-kiem/light 96848.1600 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/0-255.pbf
+RES hoan-kiem/light 96848.1601 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/7680-7935.pbf
+RES hoan-kiem/light 96848.1602 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/256-511.pbf
+REQ hoan-kiem/light 96848.1603 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/8192-8447.pbf
+REQ hoan-kiem/light 96848.1604 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/512-767.pbf
+RES hoan-kiem/light 96848.1603 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/8192-8447.pbf
+RES hoan-kiem/light 96848.1604 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/512-767.pbf
+REQ yield/light 8217AC585E083A1EF1C6661286943999 GET Document http://localhost:3456/yield
+RES yield/light 8217AC585E083A1EF1C6661286943999 200 Document http://localhost:3456/yield
+REQ yield/light 96848.1606 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ yield/light 96848.1607 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ yield/light 96848.1608 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ yield/light 96848.1609 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ yield/light 96848.1610 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ yield/light 96848.1611 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ yield/light 96848.1613 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ yield/light 96848.1614 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ yield/light 96848.1615 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ yield/light 96848.1616 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ yield/light 96848.1617 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ yield/light 96848.1618 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ yield/light 96848.1619 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ yield/light 96848.1620 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ yield/light 96848.1621 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ yield/light 96848.1622 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ yield/light 96848.1623 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ yield/light 96848.1624 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ yield/light 96848.1625 GET Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+REQ yield/light 96848.1626 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ yield/light 96848.1627 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ yield/light 96848.1628 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ yield/light 96848.1629 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ yield/light 96848.1630 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ yield/light 96848.1631 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ yield/light 96848.1632 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ yield/light 96848.1633 GET Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+REQ yield/light 96848.1634 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ yield/light 96848.1635 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+REQ yield/light 96848.1636 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+REQ yield/light 96848.1637 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+REQ yield/light 96848.1638 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+REQ yield/light 96848.1639 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+REQ yield/light 96848.1640 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+REQ yield/light 96848.1641 GET Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+RES yield/light 96848.1606 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES yield/light 96848.1607 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES yield/light 96848.1609 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES yield/light 96848.1608 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES yield/light 96848.1610 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES yield/light 96848.1611 200 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES yield/light 96848.1613 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES yield/light 96848.1615 200 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES yield/light 96848.1616 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES yield/light 96848.1617 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES yield/light 96848.1614 200 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES yield/light 96848.1619 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES yield/light 96848.1621 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES yield/light 96848.1622 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES yield/light 96848.1624 200 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES yield/light 96848.1625 200 Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+RES yield/light 96848.1623 200 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES yield/light 96848.1620 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES yield/light 96848.1627 200 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES yield/light 96848.1618 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES yield/light 96848.1630 200 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES yield/light 96848.1628 200 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES yield/light 96848.1631 200 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES yield/light 96848.1632 200 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES yield/light 96848.1633 200 Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+RES yield/light 96848.1626 200 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES yield/light 96848.1636 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+RES yield/light 96848.1629 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+RES yield/light 96848.1637 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+RES yield/light 96848.1634 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES yield/light 96848.1635 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+RES yield/light 96848.1638 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+REQ yield/light 96848.1685 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES yield/light 96848.1639 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+RES yield/light 96848.1640 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+RES yield/light 96848.1641 200 Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+RES yield/light 96848.1685 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+REQ yield/light 33AEE19E72C546AD75896FD42B6513CD GET Document http://localhost:3456/yield
+RES yield/light 33AEE19E72C546AD75896FD42B6513CD 200 Document http://localhost:3456/yield
+REQ yield/light 96848.1697 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES yield/light 96848.1697 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ yield/light 96848.1698 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES yield/light 96848.1698 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ yield/light 96848.1699 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES yield/light 96848.1699 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ yield/light 96848.1700 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES yield/light 96848.1700 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ yield/light 96848.1701 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES yield/light 96848.1701 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ yield/light 96848.1702 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ yield/light 96848.1704 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ yield/light 96848.1705 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ yield/light 96848.1706 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ yield/light 96848.1707 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ yield/light 96848.1708 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ yield/light 96848.1709 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ yield/light 96848.1710 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ yield/light 96848.1711 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ yield/light 96848.1712 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ yield/light 96848.1713 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ yield/light 96848.1714 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ yield/light 96848.1715 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ yield/light 96848.1716 GET Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+REQ yield/light 96848.1717 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ yield/light 96848.1718 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ yield/light 96848.1719 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ yield/light 96848.1720 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ yield/light 96848.1721 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ yield/light 96848.1722 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ yield/light 96848.1723 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ yield/light 96848.1724 GET Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+REQ yield/light 96848.1725 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ yield/light 96848.1726 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+REQ yield/light 96848.1727 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+REQ yield/light 96848.1728 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+REQ yield/light 96848.1729 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+REQ yield/light 96848.1730 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+REQ yield/light 96848.1731 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+REQ yield/light 96848.1732 GET Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+RES yield/light 96848.1702 304 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES yield/light 96848.1705 304 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES yield/light 96848.1706 304 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES yield/light 96848.1707 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES yield/light 96848.1708 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES yield/light 96848.1704 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES yield/light 96848.1709 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES yield/light 96848.1710 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES yield/light 96848.1711 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES yield/light 96848.1712 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES yield/light 96848.1714 304 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES yield/light 96848.1716 304 Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+RES yield/light 96848.1717 304 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES yield/light 96848.1715 304 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES yield/light 96848.1718 304 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES yield/light 96848.1713 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES yield/light 96848.1719 304 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES yield/light 96848.1723 304 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES yield/light 96848.1722 304 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES yield/light 96848.1720 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+RES yield/light 96848.1721 304 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES yield/light 96848.1724 304 Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+RES yield/light 96848.1727 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+RES yield/light 96848.1728 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+RES yield/light 96848.1729 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+RES yield/light 96848.1730 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+RES yield/light 96848.1725 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES yield/light 96848.1726 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+RES yield/light 96848.1731 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+RES yield/light 96848.1732 304 Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+REQ yield/light 96848.1771 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES yield/light 96848.1771 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+REQ yield/light 96848.1782 GET Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico
+RES yield/light 96848.1782 200 Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico
+REQ hoan-kiem/dark 78214B10572ADC15C8E66477C4063C89 GET Document http://localhost:3456/vn/hanoi/hoan-kiem
+RES hoan-kiem/dark 78214B10572ADC15C8E66477C4063C89 200 Document http://localhost:3456/vn/hanoi/hoan-kiem
+REQ hoan-kiem/dark 96848.1784 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ hoan-kiem/dark 96848.1785 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ hoan-kiem/dark 96848.1786 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ hoan-kiem/dark 96848.1787 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ hoan-kiem/dark 96848.1788 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ hoan-kiem/dark 96848.1789 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ hoan-kiem/dark 96848.1791 GET Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+REQ hoan-kiem/dark 96848.1792 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ hoan-kiem/dark 96848.1793 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ hoan-kiem/dark 96848.1794 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ hoan-kiem/dark 96848.1795 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ hoan-kiem/dark 96848.1796 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ hoan-kiem/dark 96848.1797 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ hoan-kiem/dark 96848.1798 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ hoan-kiem/dark 96848.1799 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ hoan-kiem/dark 96848.1800 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ hoan-kiem/dark 96848.1801 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ hoan-kiem/dark 96848.1802 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ hoan-kiem/dark 96848.1803 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ hoan-kiem/dark 96848.1804 GET Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+REQ hoan-kiem/dark 96848.1805 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ hoan-kiem/dark 96848.1806 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ hoan-kiem/dark 96848.1807 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ hoan-kiem/dark 96848.1808 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ hoan-kiem/dark 96848.1809 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ hoan-kiem/dark 96848.1810 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ hoan-kiem/dark 96848.1811 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ hoan-kiem/dark 96848.1812 GET Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+REQ hoan-kiem/dark 96848.1813 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+REQ hoan-kiem/dark 96848.1814 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+REQ hoan-kiem/dark 96848.1815 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ hoan-kiem/dark 96848.1816 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+REQ hoan-kiem/dark 96848.1817 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+REQ hoan-kiem/dark 96848.1818 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+REQ hoan-kiem/dark 96848.1819 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+REQ hoan-kiem/dark 96848.1820 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+REQ hoan-kiem/dark 96848.1821 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+REQ hoan-kiem/dark 96848.1822 GET Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+RES hoan-kiem/dark 96848.1784 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES hoan-kiem/dark 96848.1785 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES hoan-kiem/dark 96848.1786 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES hoan-kiem/dark 96848.1787 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES hoan-kiem/dark 96848.1788 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES hoan-kiem/dark 96848.1789 200 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES hoan-kiem/dark 96848.1791 200 Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+RES hoan-kiem/dark 96848.1795 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES hoan-kiem/dark 96848.1792 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES hoan-kiem/dark 96848.1796 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES hoan-kiem/dark 96848.1793 200 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES hoan-kiem/dark 96848.1794 200 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES hoan-kiem/dark 96848.1798 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES hoan-kiem/dark 96848.1797 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES hoan-kiem/dark 96848.1800 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES hoan-kiem/dark 96848.1801 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES hoan-kiem/dark 96848.1799 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES hoan-kiem/dark 96848.1802 200 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES hoan-kiem/dark 96848.1803 200 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES hoan-kiem/dark 96848.1804 200 Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+RES hoan-kiem/dark 96848.1806 200 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES hoan-kiem/dark 96848.1805 200 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES hoan-kiem/dark 96848.1807 200 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES hoan-kiem/dark 96848.1809 200 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES hoan-kiem/dark 96848.1808 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ hoan-kiem/dark 96848.1869 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES hoan-kiem/dark 96848.1810 200 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES hoan-kiem/dark 96848.1811 200 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES hoan-kiem/dark 96848.1814 200 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+RES hoan-kiem/dark 96848.1815 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES hoan-kiem/dark 96848.1817 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+RES hoan-kiem/dark 96848.1819 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+RES hoan-kiem/dark 96848.1812 200 Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+RES hoan-kiem/dark 96848.1816 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+RES hoan-kiem/dark 96848.1818 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+RES hoan-kiem/dark 96848.1820 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+RES hoan-kiem/dark 96848.1821 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+RES hoan-kiem/dark 96848.1869 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES hoan-kiem/dark 96848.1822 200 Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+RES hoan-kiem/dark 96848.1813 200 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+REQ hoan-kiem/dark 346FDF8BD4E303D547A81ACE7858C846 GET Script http://localhost:3456/maplibre-gl-worker.mjs
+REQ hoan-kiem/dark 96848.1880 GET Fetch https://tiles.openfreemap.org/styles/positron
+RES hoan-kiem/dark 96848.1880 200 Fetch https://tiles.openfreemap.org/styles/positron
+REQ hoan-kiem/dark 96848.1882 GET Fetch https://tiles.openfreemap.org/planet
+REQ hoan-kiem/dark 96848.1883 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+REQ hoan-kiem/dark 96848.1884 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+REQ hoan-kiem/dark BA5BCDDA3DE9BCCE9A33CFCAD669AEC4 GET Document http://localhost:3456/vn/hanoi/hoan-kiem
+RES hoan-kiem/dark 96848.1883 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+RES hoan-kiem/dark 96848.1882 200 Fetch https://tiles.openfreemap.org/planet
+RES hoan-kiem/dark 96848.1884 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+RES hoan-kiem/dark BA5BCDDA3DE9BCCE9A33CFCAD669AEC4 200 Document http://localhost:3456/vn/hanoi/hoan-kiem
+REQ hoan-kiem/dark 96848.1886 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES hoan-kiem/dark 96848.1886 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ hoan-kiem/dark 96848.1887 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES hoan-kiem/dark 96848.1887 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ hoan-kiem/dark 96848.1888 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES hoan-kiem/dark 96848.1888 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ hoan-kiem/dark 96848.1889 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES hoan-kiem/dark 96848.1889 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ hoan-kiem/dark 96848.1890 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES hoan-kiem/dark 96848.1890 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ hoan-kiem/dark 96848.1891 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ hoan-kiem/dark 96848.1893 GET Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+REQ hoan-kiem/dark 96848.1894 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ hoan-kiem/dark 96848.1895 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ hoan-kiem/dark 96848.1896 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ hoan-kiem/dark 96848.1897 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ hoan-kiem/dark 96848.1898 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ hoan-kiem/dark 96848.1899 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ hoan-kiem/dark 96848.1900 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ hoan-kiem/dark 96848.1901 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ hoan-kiem/dark 96848.1902 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ hoan-kiem/dark 96848.1903 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ hoan-kiem/dark 96848.1904 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ hoan-kiem/dark 96848.1905 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ hoan-kiem/dark 96848.1906 GET Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+REQ hoan-kiem/dark 96848.1907 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ hoan-kiem/dark 96848.1908 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ hoan-kiem/dark 96848.1909 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ hoan-kiem/dark 96848.1910 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ hoan-kiem/dark 96848.1911 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ hoan-kiem/dark 96848.1912 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ hoan-kiem/dark 96848.1913 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ hoan-kiem/dark 96848.1914 GET Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+REQ hoan-kiem/dark 96848.1915 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+REQ hoan-kiem/dark 96848.1916 GET Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+REQ hoan-kiem/dark 96848.1917 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ hoan-kiem/dark 96848.1918 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+REQ hoan-kiem/dark 96848.1919 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+REQ hoan-kiem/dark 96848.1920 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+REQ hoan-kiem/dark 96848.1921 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+REQ hoan-kiem/dark 96848.1922 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+REQ hoan-kiem/dark 96848.1923 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+REQ hoan-kiem/dark 96848.1924 GET Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+RES hoan-kiem/dark 96848.1893 304 Stylesheet http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_css_08xwwibbien6c.css
+RES hoan-kiem/dark 96848.1891 304 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES hoan-kiem/dark 96848.1895 304 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES hoan-kiem/dark 96848.1896 304 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES hoan-kiem/dark 96848.1897 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES hoan-kiem/dark 96848.1894 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES hoan-kiem/dark 96848.1898 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES hoan-kiem/dark 96848.1899 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES hoan-kiem/dark 96848.1900 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES hoan-kiem/dark 96848.1901 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES hoan-kiem/dark 96848.1902 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES hoan-kiem/dark 96848.1903 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES hoan-kiem/dark 96848.1904 304 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES hoan-kiem/dark 96848.1905 304 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES hoan-kiem/dark 96848.1906 304 Script http://localhost:3456/_next/static/chunks/_1r9tgvhx_q3ij._.js
+RES hoan-kiem/dark 96848.1907 304 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES hoan-kiem/dark 96848.1908 304 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES hoan-kiem/dark 96848.1909 304 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES hoan-kiem/dark 96848.1911 304 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES hoan-kiem/dark 96848.1910 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+RES hoan-kiem/dark 96848.1912 304 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES hoan-kiem/dark 96848.1913 304 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES hoan-kiem/dark 96848.1914 304 Script http://localhost:3456/_next/static/chunks/src_0sl5s1o7-xzph._.js
+RES hoan-kiem/dark 96848.1915 304 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_maplibre-gl_mjs_16esp180l2fmy._.js
+RES hoan-kiem/dark 96848.1916 304 Script http://localhost:3456/_next/static/chunks/node_modules_maplibre-gl_dist_05s71g0h3ds7o._.js
+RES hoan-kiem/dark 96848.1917 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES hoan-kiem/dark 96848.1918 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1xugh9exnp-fp._.js
+RES hoan-kiem/dark 96848.1919 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_08771x1a9c-2j._.js
+RES hoan-kiem/dark 96848.1921 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_16tujb00nq741._.js
+RES hoan-kiem/dark 96848.1920 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_1dys70_f5xfy7._.js
+RES hoan-kiem/dark 96848.1922 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js
+RES hoan-kiem/dark 96848.1923 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_1qp_siaee89kw._.js
+RES hoan-kiem/dark 96848.1924 304 Script http://localhost:3456/_next/static/chunks/node_modules_0kon2mal14sob._.js
+REQ hoan-kiem/dark 96848.1966 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES hoan-kiem/dark 96848.1966 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+REQ hoan-kiem/dark 96848.1977 GET Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico
+RES hoan-kiem/dark 96848.1977 200 Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico
+REQ hoan-kiem/dark 41383FCD525439B49AA2C1E93E2793C2 GET Script http://localhost:3456/maplibre-gl-worker.mjs
+REQ hoan-kiem/dark 96848.1978 GET Fetch https://tiles.openfreemap.org/styles/dark
+RES hoan-kiem/dark 96848.1978 200 Fetch https://tiles.openfreemap.org/styles/dark
+REQ hoan-kiem/dark 96848.1980 GET Fetch https://tiles.openfreemap.org/planet
+REQ hoan-kiem/dark 96848.1981 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+REQ hoan-kiem/dark 96848.1982 GET Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+RES hoan-kiem/dark 96848.1980 200 Fetch https://tiles.openfreemap.org/planet
+RES hoan-kiem/dark 96848.1981 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json
+RES hoan-kiem/dark 96848.1982 200 Fetch https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png
+REQ hoan-kiem/dark 96848.1983 GET Image data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E %3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E %3C/svg%3E
+RES hoan-kiem/dark 96848.1983 200 Image data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E %3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E %3C/svg%3E
+REQ hoan-kiem/dark 96848.1987 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf
+REQ hoan-kiem/dark 96848.1988 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf
+REQ hoan-kiem/dark 96848.1989 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/7680-7935.pbf
+REQ hoan-kiem/dark 96848.1990 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/8192-8447.pbf
+CONSOLE-warning hoan-kiem/dark Image "circle-11" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a "sprite" property in your style.
+RES hoan-kiem/dark 96848.1987 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf
+RES hoan-kiem/dark 96848.1988 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf
+RES hoan-kiem/dark 96848.1989 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/7680-7935.pbf
+RES hoan-kiem/dark 96848.1990 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/8192-8447.pbf
+REQ hoan-kiem/dark 96848.1991 GET Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/512-767.pbf
+RES hoan-kiem/dark 96848.1991 200 Fetch https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/512-767.pbf
+REQ yield/dark 78C9A748FFB94239300E975001E557C9 GET Document http://localhost:3456/yield
+RES yield/dark 78C9A748FFB94239300E975001E557C9 200 Document http://localhost:3456/yield
+REQ yield/dark 96848.1993 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ yield/dark 96848.1994 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ yield/dark 96848.1995 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ yield/dark 96848.1996 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ yield/dark 96848.1997 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ yield/dark 96848.1998 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ yield/dark 96848.2000 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ yield/dark 96848.2001 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ yield/dark 96848.2002 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ yield/dark 96848.2003 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ yield/dark 96848.2004 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ yield/dark 96848.2005 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ yield/dark 96848.2006 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ yield/dark 96848.2007 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ yield/dark 96848.2008 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ yield/dark 96848.2009 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ yield/dark 96848.2010 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ yield/dark 96848.2011 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ yield/dark 96848.2012 GET Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+REQ yield/dark 96848.2013 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ yield/dark 96848.2014 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ yield/dark 96848.2015 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ yield/dark 96848.2016 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ yield/dark 96848.2017 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ yield/dark 96848.2018 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ yield/dark 96848.2019 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ yield/dark 96848.2020 GET Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+REQ yield/dark 96848.2021 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ yield/dark 96848.2022 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+REQ yield/dark 96848.2023 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+REQ yield/dark 96848.2024 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+REQ yield/dark 96848.2025 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+REQ yield/dark 96848.2026 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+REQ yield/dark 96848.2027 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+REQ yield/dark 96848.2028 GET Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+RES yield/dark 96848.1993 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES yield/dark 96848.1994 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES yield/dark 96848.1996 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES yield/dark 96848.1995 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES yield/dark 96848.1997 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES yield/dark 96848.1998 200 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES yield/dark 96848.2003 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES yield/dark 96848.2002 200 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES yield/dark 96848.2004 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES yield/dark 96848.2000 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES yield/dark 96848.2006 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES yield/dark 96848.2001 200 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES yield/dark 96848.2008 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES yield/dark 96848.2010 200 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES yield/dark 96848.2009 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES yield/dark 96848.2011 200 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES yield/dark 96848.2012 200 Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+RES yield/dark 96848.2007 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES yield/dark 96848.2005 200 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES yield/dark 96848.2014 200 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES yield/dark 96848.2015 200 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES yield/dark 96848.2017 200 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES yield/dark 96848.2019 200 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES yield/dark 96848.2018 200 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES yield/dark 96848.2013 200 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES yield/dark 96848.2016 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+RES yield/dark 96848.2020 200 Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+RES yield/dark 96848.2023 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+RES yield/dark 96848.2021 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES yield/dark 96848.2024 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+RES yield/dark 96848.2025 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+RES yield/dark 96848.2022 200 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+RES yield/dark 96848.2026 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+REQ yield/dark 96848.2072 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES yield/dark 96848.2027 200 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+RES yield/dark 96848.2028 200 Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+RES yield/dark 96848.2072 200 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+REQ yield/dark B0D4FAA53C244AB9F35E50AA2E9112F6 GET Document http://localhost:3456/yield
+RES yield/dark B0D4FAA53C244AB9F35E50AA2E9112F6 200 Document http://localhost:3456/yield
+REQ yield/dark 96848.2084 GET Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+RES yield/dark 96848.2084 200 Font http://localhost:3456/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2
+REQ yield/dark 96848.2085 GET Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+RES yield/dark 96848.2085 200 Font http://localhost:3456/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2
+REQ yield/dark 96848.2086 GET Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+RES yield/dark 96848.2086 200 Font http://localhost:3456/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2
+REQ yield/dark 96848.2087 GET Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+RES yield/dark 96848.2087 200 Font http://localhost:3456/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2
+REQ yield/dark 96848.2088 GET Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+RES yield/dark 96848.2088 200 Font http://localhost:3456/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+REQ yield/dark 96848.2089 GET Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+REQ yield/dark 96848.2091 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+REQ yield/dark 96848.2092 GET Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+REQ yield/dark 96848.2093 GET Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+REQ yield/dark 96848.2094 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+REQ yield/dark 96848.2095 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+REQ yield/dark 96848.2096 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+REQ yield/dark 96848.2097 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+REQ yield/dark 96848.2098 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+REQ yield/dark 96848.2099 GET Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+REQ yield/dark 96848.2100 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+REQ yield/dark 96848.2101 GET Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+REQ yield/dark 96848.2102 GET Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+REQ yield/dark 96848.2103 GET Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+REQ yield/dark 96848.2104 GET Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+REQ yield/dark 96848.2105 GET Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+REQ yield/dark 96848.2106 GET Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+REQ yield/dark 96848.2107 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+REQ yield/dark 96848.2108 GET Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+REQ yield/dark 96848.2109 GET Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+REQ yield/dark 96848.2110 GET Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+REQ yield/dark 96848.2111 GET Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+REQ yield/dark 96848.2112 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+REQ yield/dark 96848.2113 GET Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+REQ yield/dark 96848.2114 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+REQ yield/dark 96848.2115 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+REQ yield/dark 96848.2116 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+REQ yield/dark 96848.2117 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+REQ yield/dark 96848.2118 GET Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+REQ yield/dark 96848.2119 GET Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+RES yield/dark 96848.2092 304 Script http://localhost:3456/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js
+RES yield/dark 96848.2093 304 Script http://localhost:3456/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js
+RES yield/dark 96848.2095 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js
+RES yield/dark 96848.2089 304 Stylesheet http://localhost:3456/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css
+RES yield/dark 96848.2094 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js
+RES yield/dark 96848.2091 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js
+RES yield/dark 96848.2096 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js
+RES yield/dark 96848.2097 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js
+RES yield/dark 96848.2098 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js
+RES yield/dark 96848.2099 304 Script http://localhost:3456/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js
+RES yield/dark 96848.2101 304 Script http://localhost:3456/_next/static/chunks/_1anvha4rlo79g._.js
+RES yield/dark 96848.2100 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js
+RES yield/dark 96848.2102 304 Script http://localhost:3456/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js
+RES yield/dark 96848.2103 304 Script http://localhost:3456/_next/static/chunks/_1zfatyc6atzzi._.js
+RES yield/dark 96848.2104 304 Script http://localhost:3456/_next/static/chunks/node_modules_14b_hroe7y71h._.js
+RES yield/dark 96848.2105 304 Script http://localhost:3456/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js
+RES yield/dark 96848.2106 304 Script http://localhost:3456/_next/static/chunks/src_18hc04q4_ygoy._.js
+RES yield/dark 96848.2107 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1ai_sf65lurax._.js
+RES yield/dark 96848.2108 304 Script http://localhost:3456/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js
+RES yield/dark 96848.2109 304 Script http://localhost:3456/_next/static/chunks/node_modules_1hflk-d8md6i2._.js
+RES yield/dark 96848.2110 304 Script http://localhost:3456/_next/static/chunks/_0bwdkyk0yo2e-._.js
+RES yield/dark 96848.2111 304 Script http://localhost:3456/_next/static/chunks/src_0zlkpht8c_q7p._.js
+RES yield/dark 96848.2112 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40tanstack_table-core_dist_1-95pnyre8or_._.js
+RES yield/dark 96848.2114 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_util_1cg12-75ms0be._.js
+RES yield/dark 96848.2115 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_component_0wgoprs98opk2._.js
+RES yield/dark 96848.2116 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_state_07_gswnb_b34u._.js
+RES yield/dark 96848.2113 304 Script http://localhost:3456/_next/static/chunks/node_modules_%40base-ui_react_1x9w53rxi3n7r._.js
+RES yield/dark 96848.2117 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_cartesian_0c15ehuau9o07._.js
+RES yield/dark 96848.2118 304 Script http://localhost:3456/_next/static/chunks/node_modules_recharts_es6_046t7akxvq5ni._.js
+RES yield/dark 96848.2119 304 Script http://localhost:3456/_next/static/chunks/node_modules_1a3lgoa_5y8an._.js
+REQ yield/dark 96848.2158 GET Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+RES yield/dark 96848.2158 304 Script http://localhost:3456/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js
+REQ yield/dark 96848.2169 GET Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico
+RES yield/dark 96848.2169 200 Other http://localhost:3456/favicon.ico?favicon.117ezoe8m31dk.ico

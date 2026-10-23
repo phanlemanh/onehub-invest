@@ -1,8 +1,8 @@
 {
   "base": "http://localhost:3456",
-  "at": "2026-10-23T00:13:48.533Z",
-  "head": "e6a34244e9f31633f508cd9c859ffd72bd903c48",
-  "capture_sha": "461655360a23aca26cb5cb33876dce8e9725087b7f9623599d1adef6bdc3d12f",
+  "at": "2026-10-23T00:32:56.509Z",
+  "head": "4c414222b055d73e5cc6a2a4eb9cf82adfb06989",
+  "capture_sha": "bd20068487205397faf5fdbd44a4e7806fe3ce6b32fc63020cf8743b74985d29",
   "app_src_tree": "0128e3250f078fb05ca19d6a4281e6b7d97a8889",
   "structure": {
     "market/Hiệu suất theo tháng@light": {
@@ -4058,7 +4058,7 @@
       }
     },
     "market/Cơ cấu doanh thu": {
-      "hover": "",
+      "hover": "Nguyên căn\n13,8 tỷ ₫\n66%",
       "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt",
       "menuItems": {
         "Tải CSV": {
@@ -4104,7 +4104,7 @@
       }
     },
     "ward/Cơ cấu doanh thu": {
-      "hover": "",
+      "hover": "Nguyên căn\n3,4 tỷ ₫\n75%",
       "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt",
       "menuItems": {
         "Tải CSV": {
