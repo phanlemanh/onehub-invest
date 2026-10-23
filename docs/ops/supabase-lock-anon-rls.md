@@ -63,6 +63,10 @@ cd ~/dev/onehub-invest && jq -Rs '{query: .}' db/migrations/037_lock_anon_enable
 cd ~/dev/onehub-invest && bash scripts/check-supabase-lock.sh cloud > _acceptance/supabase-lock-anon-rls/do-sau-cloud.md; tail -12 _acceptance/supabase-lock-anon-rls/do-sau-cloud.md
 ```
 
+   Lưu ý giáp ranh sync-cloud: bản sync nạp-rồi-tráo bảng tạo bảng mới mỗi lượt. Bảng mới
+   không có quyền anon (nhờ default privileges của 037), nhưng RLS mặc định tắt. Nếu bản tráo
+   chưa `ENABLE ROW LEVEL SECURITY` cho bảng mới, `tables_rls_off` sẽ thành > 0 sau lượt sync
+   kế tiếp. Chỉ số quyết định an toàn là `rel_api_open=0` và anon nhận 401.
 2. App prod: `https://onehub-invest.vercel.app/vn/hanoi` trả 200 và có số; đăng nhập
    `/ops`, mở `/ops/deals`.
 3. Lượt sync kế tiếp (hoặc `launchctl kickstart gui/$(id -u)/com.oneinvest.cloud-sync`):
