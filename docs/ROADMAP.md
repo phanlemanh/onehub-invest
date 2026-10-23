@@ -22,6 +22,7 @@
 | Trạng thái từng việc | máy suy từ `_acceptance/<slug>/`, hiện trên `LO-TRINH.html` | không ai ghi tay |
 | As-built + chỉ mục | §2, §4 của tệp này — §4 trỏ mã hàng của lộ trình, không chép danh sách việc | phiên làm xong việc |
 | Căn cứ (audit, review, nghiên cứu) | `docs/audit/`, `docs/architecture/`, `docs/research/` | đầu vào của cắt lượt, không phải danh sách việc |
+| Bối cảnh khi mở vòng một hàng (đọc gì cho hàng nào, quyết định còn chờ chặn hàng nào, việc của người) | `docs/plan/BOI-CANH.md` | phiên cắt lượt; cập nhật khi cắt đợt mới hoặc chốt quyết định |
 | Giao việc cho ZCode | kênh tin (issue #9) — **mỗi lời giao ghi mã hàng** của lộ trình | điều phối liên làn |
 
 ## 1. Nguyên tắc bất biến (hiến pháp)
@@ -173,7 +174,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
 > Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
-> AU1–AU12). Các bảng track dưới đây là chỉ mục lịch sử; đồng bộ với lộ trình ở hàng AU8.
+> AU1–AU12; lượt cắt chung 23/10 thêm `giao-dien-2310` UI1–UI17, `nen-tang-2310` NT1–NT7, `zcode-2310` ZC1–ZC5,
+> `san-pham-sau-2310` chờ điều kiện SH1–SH14; bối cảnh `docs/plan/BOI-CANH.md`). Các bảng track dưới đây là chỉ mục
+> lịch sử; đồng bộ với lộ trình ở hàng AU8.
 
 ### Track 1 — AGENT (onehub-ai-agent) — chốt, sẵn sàng thực hiện
 | # | Việc | Trạng thái |
