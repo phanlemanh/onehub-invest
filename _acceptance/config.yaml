@@ -65,6 +65,9 @@ executors:
     ui_b3_structure: "node scripts/ui-standards/b3-check.mjs structure"
     ui_b3_docs: "node scripts/ui-standards/b3-check.mjs docs"
     ui_b3_pixels: "node scripts/ui-standards/b3-check.mjs pixels"
+    cloud_url_static: "bash scripts/check-cloud-url.sh static"       # ops-ingest-url-onehub-invest: không còn trỏ project Vercel cũ
+    cloud_url_mutation: "bash scripts/check-cloud-url.sh mutation"   # should-NOT-fire: URL cũ bị bắt ở cả 3 tệp
+    cloud_url_live: "bash scripts/check-cloud-url.sh live"           # cần mạng + ~/.oneinvest/cloud.env; không ghi DB cloud
     ui_b3_selftest: "node scripts/ui-standards/b3-check.mjs selftest"
     glossary_terms: "node scripts/glossary/acceptance.mjs glossary"            # ngôn ngữ chuẩn (glossary-context)
     glossary_w6: "node scripts/glossary/acceptance.mjs w6"
