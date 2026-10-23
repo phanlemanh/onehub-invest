@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: db1fd5a5b171095a5393131f650f2d75b4691dc6
+verified_commit: 02cc9c68b031b621525e64890d57e18168cfacab
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -209,3 +209,7 @@ none — every multi-run eval is uniform. Sáu lượt `sim` trên db1fd5a (E1, 
 Round 1: E1–E9 đều PASS trên db1fd5a. Lượt chạy đầu (03:11–03:14 UTC) bị bỏ vì HEAD đổi giữa chừng: b6c0723 thành db1fd5a, tức merge origin/main thêm migration 036 và 039, từ khoảng 03:11:58 UTC. Kết quả là E3, E8, E7, E1, E2 chạy trên cây cũ còn E4–E9 chạy trên cây mới, với fn_owned 2 so với 5. Lượt đầu cũng PASS hết, nhưng cả 9 eval đã được chạy lại trên một cây cố định là db1fd5a, và HEAD được kiểm trước lẫn sau mỗi lô. run-log.jsonl giữ cả 18 dòng. Báo cáo này chỉ dẫn 9 run_id của lượt chạy lại. E10 (judgment, T3) còn chờ judge và Mạnh.
 
 Sau lượt chấm: judge mù E10 cho PASS và nêu 6 điểm runbook chưa khớp hoặc thiếu rõ ràng. Orchestrator đã sửa cả 6, chỉ trong `docs/ops/**` (nhóm T1): số lần thăm anon (10 HEAD + 1 rpc), đo cloud ngay sau khi áp và trước lượt sync, phạm vi toàn cục của việc thu EXECUTE PUBLIC, nguồn của con số advisor, nơi đặt service key, và `SET lock_timeout = '15s'` thêm vào tệp hoàn tác. Đổi thứ sáu chạm tệp mà E9 dùng. Orchestrator chạy lại `sim` để soát, kết quả OK với cả 4 dòng PASS của phần hoàn tác. Lượt soát này không phải bằng chứng; bằng chứng của E9 vẫn là run_id ở trên.
+
+### Re-pin lần 1 — 2026-10-23, do ghim lại sau merge main 90c712f (PR #22)
+run_id: repin-20261023T033307Z-12981
+sha: 02cc9c68b031b621525e64890d57e18168cfacab · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths) · AC không có chốt máy: AC-9
