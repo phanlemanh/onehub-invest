@@ -45,7 +45,7 @@ evals:
     criterion: AC-6
     executor: script
     cmd: config:executors.script.db_autostart_cleanup
-    expected: "exit 0; PASS lượt ép thoát lỗi sau khi dựng dind (AU7_FAIL_AFTER=dind) — không còn container au7-dind-*; PASS lượt bị SIGTERM sau khi dựng dind — không còn container au7-dind-*; PASS one-invest-db StartedAt đọc được (không rỗng, parse ra thời điểm) và không đổi qua cả hai lượt; đối chứng dương: PASS StartedAt của chính container dind đổi sau docker restart (thước StartedAt phân biệt được)"
+    expected: "exit 0; PASS lượt ép thoát lỗi sau khi dựng dind (AU7_FAIL_AFTER=dind) — không còn container au7-dind-*; PASS lượt bị SIGTERM sau khi dựng dind — không còn container au7-dind-*; PASS one-invest-db StartedAt đọc được (không rỗng, parse ra thời điểm) và không đổi qua cả hai lượt; đối chứng dương: PASS thấy container au7-dind-* khi lượt bị SIGTERM đang chạy (thước đếm-sót phân biệt được); đối chứng dương của thước StartedAt (StartedAt daemon cách ly đổi sau khởi động lại) nằm ở đầu ra của E3"
     paths: ["scripts/check-db-autostart.sh"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
