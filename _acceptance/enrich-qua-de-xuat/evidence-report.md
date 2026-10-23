@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2cf05c098790260fc0527399ffb969612f75f6b3
+verified_commit: 65dc9ec79faf921f034f45810f0dd2388c5c3c17
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -236,3 +236,7 @@ none — every multi-run eval is uniform (không eval nào chạy nhiều lần)
 Round 1: không eval nào hỏng ở lớp lệnh máy; verdict REJECT vì 1 finding mức high nằm TRONG hợp đồng (AC-3: block_raw chỉ chuẩn hoá phía LLM, E1 trả mã thô). Returned to implementation.
 Round 2: sửa S4-r1 (commit 9f36941, chuẩn hoá mã toà E1 về tên node); mọi lệnh máy xanh (E1-E5, E7-E11 chạy lại; E12 carry-forward từ round 1); E6 và E13 chờ người chốt ở Cổng 2.
 Round 3: thêm xử lý E1 trái LLM lên thẻ đối chiếu (AC-7, AC-11) cùng eval E14–E17; mọi lệnh máy xanh, E12 chạy lại; E6, E13, E17 chờ người chốt ở Cổng 2. Round 4 (chấm thêm do Mạnh chọn, sau fix AC-6 «Để sau» commit 28ea749): mọi lệnh máy xanh, E12 carry-forward từ round 3, không còn finding trong hợp đồng; E6, E13, E17 vẫn chờ người chốt ở Cổng 2.
+
+### Re-pin lần 1 — 2026-10-23, do ghim lại sau merge main 2cd8794 (034, 035, B3, glossary)
+run_id: repin-20261023T013046Z-47306
+sha: 65dc9ec79faf921f034f45810f0dd2388c5c3c17 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths), E13 (E13 không khai paths), E17 (E17 không khai paths)
