@@ -4,9 +4,9 @@
 
 - **Rào chắn máy** (`.claude/settings.json`): sửa `snapshots/`, `.airdna-profile/`, đọc
   `.env`/`*.har` bị deny; hook chặn sửa migration đã commit; hook kiểm TypeScript các file
-  vừa đổi trước khi kết thúc lượt; hook `guard-push-deploy` chỉ hỏi người khi `git push` lên
-  `main` (hay force) và khi `vercel` ghi (deploy, `--prod`, `env add`…) — push nhánh riêng và
-  vercel chỉ đọc không hỏi. Bị chặn/hỏi → đọc lý do, đừng tìm đường vòng.
+  vừa đổi trước khi kết thúc lượt. Luật ask chỉ còn `supabase db push` và `sync-public`; `main`
+  có branch protection trên GitHub (push thẳng bị từ chối — vào main chỉ qua `gh pr merge`).
+  Bị chặn → đọc lý do, đừng tìm đường vòng.
 - **Luật theo đường dẫn**: `.claude/rules/` (migration, cổng UI, PII/SPL, an toàn Zalo) tự
   nạp khi chạm file khớp.
 - **Skills dự án**: `/verify` (kiểm module đã đổi) · `/new-migration` · `/ops-check`

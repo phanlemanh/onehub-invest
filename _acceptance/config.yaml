@@ -70,10 +70,11 @@ executors:
     cloud_url_mutation: "bash scripts/check-cloud-url.sh mutation"   # should-NOT-fire: URL cũ bị bắt ở cả 3 tệp
     cloud_url_live: "bash scripts/check-cloud-url.sh live"           # cần mạng + ~/.oneinvest/cloud.env; không ghi DB cloud
     ui_b3_selftest: "node scripts/ui-standards/b3-check.mjs selftest"
-    # narrow-ask-rules — hook PreToolUse guard-push-deploy (chỉ hỏi push main + vercel ghi)
-    guard_hook_selftest: "bash .claude/hooks/tests/guard-push-deploy.selftest.sh"
-    guard_hook_mutation: "bash .claude/hooks/tests/guard-push-deploy.mutation.sh"
-    guard_hook_replay: "node .claude/hooks/tests/guard-push-deploy.replay.mjs --min-old 20 --min-drop 50"   # cần transcript Claude Code trên máy Mạnh
+    # narrow-ask-rules — bỏ ask rộng; rào push main = branch protection GitHub
+    ask_rules_static: "bash scripts/check-ask-rules.sh static"
+    ask_rules_mutation: "bash scripts/check-ask-rules.sh mutation"
+    ask_rules_protection: "bash scripts/check-ask-rules.sh protection"            # cần gh đăng nhập; chỉ đọc
+    ask_rules_protection_selftest: "bash scripts/check-ask-rules.sh protection-selftest"
     glossary_terms: "node scripts/glossary/acceptance.mjs glossary"            # ngôn ngữ chuẩn (glossary-context)
     glossary_w6: "node scripts/glossary/acceptance.mjs w6"
     glossary_rebuild: "node scripts/glossary/acceptance.mjs rebuild"

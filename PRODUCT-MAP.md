@@ -23,7 +23,7 @@ flowchart TD
 
 ## Chờ duyệt phạm vi
 
-- Thu hẹp hỏi quyền — chỉ hỏi push lên main và Vercel ghi (hook guard-push-deploy thay luật ask rộng) (`narrow-ask-rules`)
+- Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
 
 ## Đã giao
 
