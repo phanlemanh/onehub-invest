@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "ten": "Lộ trình onehub-invest",
+  "ghi_chu": "Thêm việc bằng skill cắt lượt (/acceptance-gate:cat-luot), hoặc viết hàng theo khuôn skills/acceptance/references/lo-trinh-template.json của gói acceptance-gate; mở vòng bằng /feature-loop:feature-loop <mã>.",
+  "moc": [],
+  "hang": [],
+  "chan_troi": [],
+  "da_bac": []
+}

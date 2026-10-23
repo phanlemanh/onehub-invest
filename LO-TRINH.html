@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lộ trình onehub-invest</title>
+<style>
+:root{--bg:#fbfaf7;--sf:#ffffff;--fg:#1d1d1b;--mu:#5f5c56;--ln:#e3e0d8;--ac:#245a8a;--acbg:#eaf1f8;--wa:#7a4f00;--wabg:#fff4dc;--ok:#256033;--okbg:#e8f3ea;--bar:#d9d5cb}
+@media (prefers-color-scheme:dark){:root{--bg:#171715;--sf:#1f1f1c;--fg:#ecebe6;--mu:#a7a49c;--ln:#34332f;--ac:#9cc2e6;--acbg:#1d2a36;--wa:#f0c36a;--wabg:#33290f;--ok:#8fcf9a;--okbg:#1b2a1e;--bar:#3a3934}}
+*{box-sizing:border-box}html{scroll-padding-top:16px}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px}h2{font-size:18px;line-height:1.3;margin:32px 0 10px}h3{font-size:16px;margin:24px 0 8px}
+a{color:var(--ac)}a:visited{color:var(--ac)}code{font-size:13px}
+.mu{color:var(--mu)}.nho{font-size:13px}
+.the-dau{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin:16px 0 8px}
+.the{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:16px}
+.the h2{margin:0 0 12px}.the h2 a{text-decoration:none;color:var(--fg)}
+.o{margin:0 0 12px}.o:last-child{margin:0}.nhan{display:block;font-size:13px;color:var(--mu);margin-bottom:2px}
+.ke{font-weight:600}.lenh{display:inline-block;margin-top:6px;padding:6px 8px;background:var(--acbg);border-radius:6px;user-select:all;-webkit-user-select:all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-all}
+.thanh{height:8px;background:var(--bar);border-radius:4px;overflow:hidden;display:flex;margin-top:6px}.thanh i{display:block;height:100%}.thanh .g{background:var(--ok)}.thanh .l{background:var(--ac)}
+.so-co a{display:inline-flex;align-items:center;min-height:44px;font-weight:600;color:var(--wa)}.so-co .khong{color:var(--ok);font-weight:600}
+.co-ds{list-style:none;padding:0;margin:0}.co-ds li{background:var(--wabg);color:var(--wa);border-radius:8px;margin:6px 0}.co-ds li>*{display:block;min-height:44px;padding:11px 12px}.co-ds a{color:inherit;text-decoration:none}.co-ds a:hover{text-decoration:underline}
+.loi{background:var(--wabg);color:var(--wa);border-radius:8px;padding:8px 12px}
+.bang{border:1px solid var(--ln);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.4}th,td{text-align:left;vertical-align:top;padding:5px 8px;border-bottom:1px solid var(--ln)}
+thead th{position:sticky;top:0;background:var(--sf);font-weight:600;color:var(--mu);font-size:13px;z-index:1}
+tbody tr:target{outline:2px solid var(--ac);outline-offset:-2px}
+@media (min-width:641px){td[data-nhan="Việc giao"]{width:40%}}
+.tt{display:inline-block;font-weight:600;border-radius:999px;padding:1px 8px;font-size:13px;background:var(--acbg);color:var(--ac)}.tt.giao{background:var(--okbg);color:var(--ok)}.tt.chua{background:transparent;color:var(--mu);border:1px solid var(--ln)}
+.co-o{display:block;margin-top:4px;font-size:13px;color:var(--wa)}
+details{margin:8px 0}summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600;color:var(--ac)}
+.moc{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(400px,100%),1fr));column-gap:24px}.moc li{position:relative;padding:4px 0 4px 16px;border-left:2px solid var(--ln)}.moc li::before{content:"";position:absolute;left:-6px;top:11px;width:10px;height:10px;border-radius:50%;background:var(--bar)}
+.moc li.qua{color:var(--mu)}.moc li.tre{color:var(--wa)}.moc li.tre::before{background:var(--wa)}.moc li.ke-tiep::before{background:var(--ac)}.moc .ngay{font-variant-numeric:tabular-nums;font-weight:600;margin-right:6px}.moc .con{font-size:13px;color:var(--ac);margin-left:6px}.moc li.qua .con,.moc li.tre .con{color:inherit}.moc .trong{font-size:13px;color:var(--wa);margin-left:6px}
+.moc .dau b{font-weight:600}.moc .dem{color:var(--fg);font-weight:600}.moc .dem.xong{color:var(--ok)}.viec{list-style:none;padding:0 4px 0 0;margin:4px 0 8px;min-width:0}.viec details{margin:0}.viec .dong{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0}.viec summary{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-weight:400;color:var(--fg);min-height:44px}.viec .ten{font-weight:600}.viec .ma{margin-left:auto;flex-shrink:0;padding:0 4px;font-size:13px;color:var(--mu);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.viec details p{margin:0 0 6px}details.chua-hen>summary{font-size:13px;color:var(--mu)}
+@media (max-width:640px){main{padding:16px 12px 48px}.the-dau{gap:10px;margin:10px 0}.the{padding:12px}.the h2{margin:0 0 8px}.o{margin:0 0 6px}.the .nhan{display:inline;margin:0 4px 0 0}.the .nhan::after{content:':'}.lenh{margin-top:4px;padding:4px 6px}.thanh{display:none}.bang{border:0}table,thead,tbody,tr,td{display:block}thead{display:none}
+tr{border:1px solid var(--ln);border-radius:10px;margin:10px 0;padding:6px 0;background:var(--sf)}td{border:0;padding:4px 12px}td[data-nhan]::before{content:attr(data-nhan);display:block;font-size:13px;color:var(--mu)}td:empty{display:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Lộ trình onehub-invest</h1>
+<div class="the-dau"><section class="the"><h2><a href="#lt1">Lộ trình onehub-invest</a></h2>
+<div class="o"><span class="nhan">Làm tiếp</span><span class="mu">Chưa có việc nào đủ điều kiện mở.</span></div>
+<div class="o so-co"><span class="nhan">Cần sửa trong kế hoạch</span><span class="khong">Không có chỗ nào cần sửa</span></div>
+<div class="o"><span class="nhan">Mốc kế tiếp</span><span id="lt1-moc-ke">Kế hoạch chưa có mốc.</span></div>
+<div class="o"><span class="nhan">Tiến độ</span>Kế hoạch chưa có việc nào.</div>
+</section></div>
+<section id="lt1"><h2>Lộ trình onehub-invest</h2>
+<h3>Việc còn mở (0)</h3>
+<p class="mu">Kế hoạch chưa có việc nào — thêm hàng vào <code>docs/plan/lo-trinh.json</code>.</p>
+</section>
+<p class="mu nho">Vẽ từ <code>docs/plan/lo-trinh.json</code> và hồ sơ nghiệm thu; máy vẽ lại mỗi lần một cổng nghiệm thu đóng, trạng thái từng hàng lấy từ hồ sơ, không gõ tay. Đổi kế hoạch bằng PR vào tệp kế hoạch.</p>
+<details><summary>15 hồ sơ không thuộc kế hoạch nào</summary><p class="mu nho">Sửa lỗi, sự cố, việc giao thẳng — hợp lệ, liệt kê để đủ.</p><ul><li><code>dev-ops-account</code></li><li><code>enrich-hau-ky</code></li><li><code>enrich-qua-de-xuat</code></li><li><code>glossary-context</code></li><li><code>invest-target-map</code></li><li><code>listing-airdna-photos</code></li><li><code>ops-access-hardening</code></li><li><code>ops-ingest-url-onehub-invest</code></li><li><code>portal-deals-airdna</code></li><li><code>review-media-backend</code></li><li><code>ruler-p2-views-migration</code></li><li><code>stg-zalo-media-files</code></li><li><code>ui-clean-b1-ops</code></li><li><code>ui-clean-b3-charts</code></li><li><code>ui-standards-reui</code></li></ul></details>
+</main>
+<script type="application/json" id="lo-trinh-du-lieu">{"khuon":"lo-trinh-du-lieu","phien_ban":2,"nguon":["docs/plan/lo-trinh.json"],"lo_trinh":[{"tep":"docs/plan/lo-trinh.json","ten":"Lộ trình onehub-invest","loi":null,"hang_ke":null,"can_sua":[],"tien_do":{"tong":0,"da_giao":0,"dang_lam":0,"chua_bat_dau":0,"khac":0},"hang":[],"moc":[],"da_bac":[],"chua_hen_moc":[]}],"ngoai_lo_trinh":["dev-ops-account","enrich-hau-ky","enrich-qua-de-xuat","glossary-context","invest-target-map","listing-airdna-photos","ops-access-hardening","ops-ingest-url-onehub-invest","portal-deals-airdna","review-media-backend","ruler-p2-views-migration","stg-zalo-media-files","ui-clean-b1-ops","ui-clean-b3-charts","ui-standards-reui"]}</script>
+<script>(function(){var d=new Date();var h=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
+document.querySelectorAll('ol.moc').forEach(function(ol){var ke=null;var tre=[];var hong=0;ol.querySelectorAll('li[data-ngay]').forEach(function(li){var p=li.getAttribute('data-ngay').split('-');var t=Date.UTC(+p[0],+p[1]-1,+p[2]);var n=Math.round((t-h)/864e5);var s=li.querySelector('.con');if(p.length!==3||isNaN(n)){hong++;return;}if(n<0){if(li.hasAttribute('data-con-viec')){tre.push(li.getAttribute('data-ten'));li.classList.add('tre');if(s)s.textContent='đã qua — còn việc chưa giao';}else{li.classList.add('qua');if(s)s.textContent='đã qua';}}else{if(s)s.textContent=n===0?'hôm nay':'còn '+n+' ngày';if(!ke){ke=li;li.classList.add('ke-tiep');}}});
+var o=document.getElementById(ol.getAttribute('data-the'));if(!o||(!ke&&hong))return;o.textContent=(ke?ke.getAttribute('data-ten')+' — '+ke.getAttribute('data-ngay').split('-').reverse().join('/')+' ('+ke.querySelector('.con').textContent+')':'Không còn mốc nào phía trước.')+(tre.length===1?' · mốc «'+tre[0]+'» đã qua, còn việc chưa giao':tre.length?' · '+tre.length+' mốc đã qua còn việc chưa giao (sớm nhất: «'+tre[0]+'»)':'');});})();</script>
+</body>
+</html>

@@ -106,6 +106,7 @@ risk_tiers:
     # toàn khi repo cũng chạy `executors.script.product_map` trong CI của mình —
     # .github/workflows/acceptance-gate.yml chạy bước đó.
     - "PRODUCT-MAP.md"
+    - "LO-TRINH.html"
   t3_paths:
     - "app/src/lib/auth.ts"                          # auth + cổng /ops
     - "app/src/lib/ops-access.ts"
@@ -133,3 +134,5 @@ dev_server:
   # không có api_base: app chỉ gọi /api/v1 cùng origin
 capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
+lo_trinh:
+  tep: docs/plan/lo-trinh.json
