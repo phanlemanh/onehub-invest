@@ -40,7 +40,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.supabase_lock_sim
-    expected: "exit 0; PASS 037 lần 1 exit 0; PASS 037 lần 2 exit 0; PASS bảng quyền sau lần 1 == sau lần 2"
+    expected: "exit 0; PASS 037 lần 1 exit 0; PASS 037 lần 2 exit 0; PASS bảng quyền sau lần 1 == sau lần 2; should-NOT: lần 2 không đổi thêm quyền/cờ RLS nào (md5 bằng nhau)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E7
