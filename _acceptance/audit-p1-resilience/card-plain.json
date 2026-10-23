@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Lớp canh an toàn Zalo không còn bỏ sót tin bot tự trả lời ở đầu ngày mới, có cảnh báo khi tin bị chặn tăng vọt hoặc khi cơ sở dữ liệu chết, và lượt nạp tin Zalo ban đêm tự giữ chỗ để nạp lại khi cơ sở dữ liệu lên trở lại.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
+  "decisions_plain": [
+    {"id": "d-20261023T090355Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, phiên kiểm độc lập được giao tự đi tìm lỗ và đã ghi 6 điểm ngoài phạm vi."}
+  ]
+}
