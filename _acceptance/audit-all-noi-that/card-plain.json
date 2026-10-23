@@ -1,29 +1,80 @@
 {
-  "feature_plain": "Lệnh kiểm toàn hệ thống thôi báo «đạt» giả: chưa có sao lưu thì báo hỏng, nhóm Zalo không kiểm được thì nói rõ, và trang vận hành được kiểm đúng cổng :3456.",
-  "will_do": [
-    {"id":"AC-1","p":"Sẽ báo hỏng khi chưa cài sao lưu tuần, khi đã cài mà chưa chọn thư mục sao lưu, hay khi 8 ngày không có bản sao lưu nào; chỉ báo đạt khi thấy bản sao lưu thật."},
-    {"id":"AC-3","p":"Sẽ đếm đúng một con số ở mọi chỗ đếm, kể cả khi tệp nhật ký vắng — gốc của các «đạt» giả."},
-    {"id":"AC-4","p":"Sẽ kiểm bốn trang vận hành ở đúng cổng :3456 (đổi được qua biến môi trường)."},
-    {"id":"AC-6","p":"Sẽ chứng minh cả lệnh chạy trọn trong hộp giả: tổng kết khớp số dòng in ra và không gọi mạng thật hay Zalo thật."}
-  ],
-  "wont_do": [
-    {"id":"AC-2","p":"Sẽ KHÔNG báo «còn trong nhóm» khi không kiểm được hoặc đã rời nhóm — chỉ báo đạt khi thấy đúng nhóm."},
-    {"id":"AC-5","p":"Sẽ KHÔNG tính trang bị chuyển về đăng nhập là đạt nữa — chỉ trang mở được thật mới đạt."},
-    {"id":"OOS-1","p":"KHÔNG tự cài sao lưu hay chọn thư mục sao lưu — đó là câu Q6 của Mạnh; vòng này chỉ báo đúng trạng thái."},
-    {"id":"OOS-2","p":"KHÔNG sửa các mục khác của lệnh kiểm (luôn đạt), và việc hai trang vận hành dùng chung số là AU6."}
-  ],
-  "coverage_plain": [
-    {"i":0,"p":"Trục mục câu giao: sao lưu, nhóm Zalo, trang vận hành — đủ ba mục đã đo trong audit 23/10."},
-    {"i":1,"p":"Trục gốc lỗi: kiểu đếm sinh «0 0» và đường dẫn gốc viết cứng."},
-    {"i":2,"p":"Trục trạng thái từng mục: năm trạng thái sao lưu, ba trạng thái nhóm, ba mã trả về của trang."},
-    {"i":3,"p":"Trục toàn lệnh: tổng kết khớp, không gọi thật, và hướng dẫn vận hành."}
-  ],
-  "gap_probe_plain": [
-    {"i":0,"p":"Có một lối nữa là cho lệnh kiểm tự đăng nhập để kiểm trang thật — đó là việc anh chọn, đã đưa thành Hỏi-1."},
-    {"i":1,"p":"Đã cài sao lưu mà chưa chọn thư mục thì vẫn báo đạt giả — đã thêm ca này và ca không có bản sao lưu 8 ngày."},
-    {"i":2,"p":"Hộp thử còn có thể gọi nhầm công cụ thật trên máy — đã khoá đường tìm lệnh chỉ còn bản giả và ghi nhật ký mọi lần gọi."},
-    {"i":3,"p":"Dữ liệu thử của danh sách job phải chụp từ máy thật — đã chụp thật; riêng danh sách nhóm Zalo vẫn dựng tay vì không được chạy công cụ Zalo thật."},
-    {"i":4,"p":"Lỗi đếm ở dòng cổng Zalo mới chỉ đo bằng đọc chữ — đã thêm ca chạy lệnh thật khi nhật ký vắng."}
-  ],
-  "scope_plain": "Những việc vòng này cố ý không làm:"
+ "feature_plain": "Bản kiểm sức khoẻ hệ thống không còn báo «ổn» khi sao lưu chưa chạy hay khi chưa kiểm được nhóm Zalo, và soi các trang Ops ở đúng cổng app đang chạy.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ báo hỏng khi chưa cài sao lưu tuần, khi đã cài mà chưa chọn thư mục sao lưu, hay khi 8 ngày không có bản sao lưu nào; chỉ báo đạt khi thấy bản sao lưu thật."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ đếm đúng một con số ở mọi chỗ đếm, kể cả khi tệp nhật ký vắng — gốc của các «đạt» giả."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ kiểm bốn trang vận hành ở đúng cổng :3456 (đổi được qua biến môi trường)."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ chứng minh cả lệnh chạy trọn trong hộp giả: tổng kết khớp số dòng in ra và không gọi mạng thật hay Zalo thật."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-2",
+   "p": "Sẽ KHÔNG báo «còn trong nhóm» khi không kiểm được hoặc đã rời nhóm — chỉ báo đạt khi thấy đúng nhóm."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ KHÔNG tính trang bị chuyển về đăng nhập là đạt nữa — chỉ trang mở được thật mới đạt."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG tự cài sao lưu hay chọn thư mục sao lưu — đó là câu Q6 của Mạnh; vòng này chỉ báo đúng trạng thái."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG sửa các mục khác của lệnh kiểm (luôn đạt), và việc hai trang vận hành dùng chung số là AU6."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Trục mục câu giao: sao lưu, nhóm Zalo, trang vận hành — đủ ba mục đã đo trong audit 23/10."
+  },
+  {
+   "i": 1,
+   "p": "Trục gốc lỗi: kiểu đếm sinh «0 0» và đường dẫn gốc viết cứng."
+  },
+  {
+   "i": 2,
+   "p": "Trục trạng thái từng mục: năm trạng thái sao lưu, ba trạng thái nhóm, ba mã trả về của trang."
+  },
+  {
+   "i": 3,
+   "p": "Trục toàn lệnh: tổng kết khớp, không gọi thật, và hướng dẫn vận hành."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Có một lối nữa là cho lệnh kiểm tự đăng nhập để kiểm trang thật — đó là việc anh chọn, đã đưa thành Hỏi-1."
+  },
+  {
+   "i": 1,
+   "p": "Đã cài sao lưu mà chưa chọn thư mục thì vẫn báo đạt giả — đã thêm ca này và ca không có bản sao lưu 8 ngày."
+  },
+  {
+   "i": 2,
+   "p": "Hộp thử còn có thể gọi nhầm công cụ thật trên máy — đã khoá đường tìm lệnh chỉ còn bản giả và ghi nhật ký mọi lần gọi."
+  },
+  {
+   "i": 3,
+   "p": "Dữ liệu thử của danh sách job phải chụp từ máy thật — đã chụp thật; riêng danh sách nhóm Zalo vẫn dựng tay vì không được chạy công cụ Zalo thật."
+  },
+  {
+   "i": 4,
+   "p": "Lỗi đếm ở dòng cổng Zalo mới chỉ đo bằng đọc chữ — đã thêm ca chạy lệnh thật khi nhật ký vắng."
+  }
+ ],
+ "scope_plain": "Những việc vòng này cố ý không làm:"
 }
