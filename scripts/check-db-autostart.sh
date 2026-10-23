@@ -100,7 +100,8 @@ expect() {
 
 started_at() { docker inspect -f '{{.State.StartedAt}}' "$1" 2>/dev/null; }
 valid_ts() { [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2} ]]; }
-leftovers() { docker ps -aq --filter name=au7-dind- | wc -l | tr -d ' '; }
+# Đếm container dind theo tiền tố tên — mỗi lượt có nhãn riêng (AU7_TAG) để hai lượt chạy song song không đếm lẫn nhau.
+leftovers() { docker ps -aq --filter "name=au7-dind-$1" | wc -l | tr -d ' '; }
 
 ensure_img() { docker image inspect "$1" >/dev/null 2>&1 || docker pull -q "$1" >/dev/null; }
 
@@ -110,7 +111,7 @@ wait_dockerd() { # $1 = container dind
 }
 
 run_restart() {
-  local name="au7-dind-$$" t keep ctrl h0 h1 d0 d1 i
+  local name="au7-dind-${AU7_TAG:-r$$}-$$" t keep ctrl h0 h1 d0 d1 i
   t=$(mktemp -d)
   cleanup() { docker rm -fv "$name" >/dev/null 2>&1; rm -rf "$t"; }
   trap cleanup EXIT
@@ -173,30 +174,30 @@ EOF
   [ "$ctrl" = exited ] && pass "đối chứng: bỏ restart → exited sau khởi động lại" \
     || fail "đối chứng: bỏ restart → $ctrl — thước không phân biệt được"
   cleanup; trap - EXIT
-  [ "$(leftovers)" = 0 ] && pass "không còn container au7-dind-* sau khi dọn" || fail "còn container au7-dind-* sau khi dọn"
+  [ "$(leftovers "${name#au7-dind-}")" = 0 ] && pass "không còn container $name sau khi dọn" || fail "còn container $name sau khi dọn"
   h1=$(started_at "$DB")
   if valid_ts "$h0" && [ "$h0" = "$h1" ]; then pass "$DB StartedAt không đổi ($h1)"; else fail "$DB StartedAt đổi hoặc không đọc được ($h0 → $h1)"; fi
 }
 
 run_cleanup() {
-  local h0 h1 out rc pid i n
+  local h0 h1 out rc pid i n tag="c$$"
   h0=$(started_at "$DB")
   valid_ts "$h0" && pass "$DB StartedAt đọc được trước lượt: $h0" || fail "$DB StartedAt không đọc được (\"$h0\")"
-  [ "$(leftovers)" = 0 ] || { fail "đã có container au7-dind-* từ trước — dọn tay rồi chạy lại"; return; }
-  out=$(AU7_FAIL_AFTER=dind bash "$SELF" restart 2>&1); rc=$?
+  [ "$(leftovers "$tag-")" = 0 ] || { fail "đã có container au7-dind-$tag-* từ trước — dọn tay rồi chạy lại"; return; }
+  out=$(AU7_TAG=$tag AU7_FAIL_AFTER=dind bash "$SELF" restart 2>&1); rc=$?
   if [ $rc != 0 ] && grep -qF "ép thoát lỗi sau khi dựng" <<<"$out"; then
-    [ "$(leftovers)" = 0 ] && pass "lượt ép thoát lỗi (rc=$rc) — không còn container au7-dind-*" \
-      || { fail "lượt ép thoát lỗi để sót container au7-dind-*"; docker ps -aq --filter name=au7-dind- | xargs -r docker rm -fv >/dev/null; }
+    [ "$(leftovers "$tag-")" = 0 ] && pass "lượt ép thoát lỗi (rc=$rc) — không còn container au7-dind-*" \
+      || { fail "lượt ép thoát lỗi để sót container au7-dind-*"; docker ps -aq --filter "name=au7-dind-$tag-" | xargs -r docker rm -fv >/dev/null; }
   else
     fail "lượt ép thoát lỗi không tới điểm ép (rc=$rc)"; echo "$out" | tail -5
   fi
-  AU7_SLEEP_AFTER=dind bash "$SELF" restart >/dev/null 2>&1 & pid=$!
-  n=0; for i in $(seq 1 90); do n=$(leftovers); [ "$n" -ge 1 ] && break; sleep 1; done
+  AU7_TAG=$tag AU7_SLEEP_AFTER=dind bash "$SELF" restart >/dev/null 2>&1 & pid=$!
+  n=0; for i in $(seq 1 90); do n=$(leftovers "$tag-"); [ "$n" -ge 1 ] && break; sleep 1; done
   if [ "$n" -ge 1 ]; then
     pass "đối chứng dương: thấy $n container au7-dind-* khi lượt đang chạy"
     sleep 2; kill -TERM "$pid"; wait "$pid"; rc=$?
-    [ "$(leftovers)" = 0 ] && pass "lượt bị SIGTERM (rc=$rc) — không còn container au7-dind-*" \
-      || { fail "lượt bị SIGTERM để sót container au7-dind-*"; docker ps -aq --filter name=au7-dind- | xargs -r docker rm -fv >/dev/null; }
+    [ "$(leftovers "$tag-")" = 0 ] && pass "lượt bị SIGTERM (rc=$rc) — không còn container au7-dind-*" \
+      || { fail "lượt bị SIGTERM để sót container au7-dind-*"; docker ps -aq --filter "name=au7-dind-$tag-" | xargs -r docker rm -fv >/dev/null; }
   else
     fail "lượt SIGTERM không dựng được daemon cách ly"; kill -TERM "$pid" 2>/dev/null; wait "$pid"
   fi
