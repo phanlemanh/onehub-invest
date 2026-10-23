@@ -25,6 +25,8 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | Đang tải | `states/page-skeleton.tsx` (hoặc Skeleton theo đúng bố cục vùng) đặt trong `<Suspense>` | `loading.tsx` cấp segment (mất mã 404/307), spinner cả trang |
 | Lỗi | `states/page-error.tsx` (c-alert-1 + Thử lại) | chữ đỏ tự tô |
 | Trống | `ui/empty` (`Empty`: tiêu đề, 1 dòng, 1 hành động) | `<p>` canh giữa |
+| Màu chuỗi biểu đồ | `charts/palette.ts` (`themeOf`, `swatchOf`; luật ở `data-color.md`) | màu block gốc chép vào từng biểu đồ, `--chart-1..5`, hex |
+| Phần chung của biểu đồ | `components/charts/` (menu "Thao tác khác", nút chuyển kỳ, hàng tooltip, chấm màu, tải CSV/sao chép, icon) | chép `use-trigger-tooltip`/`icons`/`value-faces` của block vào thư mục biểu đồ |
 
 ## ReUI Blocks (installed 2026-10-17)
 
@@ -40,14 +42,14 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | `@reui/c-alert-1` | examples/c-alert-1.tsx → states/page-error.tsx | Trạng thái lỗi + Thử lại | `error.tsx` | https://reui.io/preview/base/components/c-alert-1 |
 | `@reui/c-empty-3` | examples/c-empty-3.tsx → states/not-found-state.tsx | 404 | `not-found.tsx` | https://reui.io/preview/base/components/c-empty-3 |
 | `@reui/stats-1` | blocks/stats-1/ → insight/insight-stats.tsx | KPI Insight | Bỏ menu "…"; badge = vị trí so với phường anh em (p30/p60/p90) thay cho % tháng trước | https://reui.io/preview/base/stats-1 |
-| `@reui/chart-6` | blocks/chart-6/ → insight/performance/ | Hiệu suất theo tháng (4 ô chuyển 1 đường) | Theo THÁNG, dữ liệu qua props, bỏ lớp "kỳ trước" (lịch tương lai), mốc = Tết/30-4/Hè/2-9 | https://reui.io/preview/base/chart-6 |
-| `@reui/chart-13` | blocks/chart-13/ → insight/revenue-mix/ | Cơ cấu doanh thu theo loại phòng | Một cửa sổ (bỏ đổi kỳ); cột "thay đổi" → số listing | https://reui.io/preview/base/chart-13 |
+| `@reui/chart-6` | blocks/chart-6/ → insight/performance/ | Hiệu suất theo tháng (4 ô chuyển 1 đường) | Theo THÁNG, dữ liệu qua props, bỏ lớp "kỳ trước" (lịch tương lai), mốc = Tết/30-4/Hè/2-9; màu từ `charts/palette.ts`, phần chép trùng dùng chung `components/charts/` (B3) | https://reui.io/preview/base/chart-6 |
+| `@reui/chart-13` | blocks/chart-13/ → insight/revenue-mix/ | Cơ cấu doanh thu theo loại phòng | Một cửa sổ (bỏ đổi kỳ); cột "thay đổi" → số listing; màu từ `charts/palette.ts`, phần chép trùng dùng chung `components/charts/` (B3) | https://reui.io/preview/base/chart-13 |
 | `@reui/frame`, `@reui/icon-tile`, `breadcrumb`, `sonner` | reui/, ui/ | Khung panel, breadcrumb, toast | `Toaster` gắn trong providers.tsx | https://reui.io/components/frame · https://reui.io/components/icon-tile |
 | `@reui/data-grid-base-2` | blocks/data-grid-base-2/ → finder/finder-cells.tsx | Finder: thanh chỉ số (ScoreCell) + sparkline lịch đặt | Thanh tô theo bậc p30/p60/p90 (cùng màu bản đồ); sparkline một màu trung tính vì lịch tương lai luôn thưa dần | https://reui.io/preview/base/data-grid-base-2 |
 | `@reui/form-5` | blocks/form-5/ → listing/booking-heatmap.tsx | Lịch đặt 365 đêm của listing | Lấy riêng activity heatmap: cột = tuần (T2→CN), 3 trạng thái thay 4 mức cường độ; tooltip từng đêm | https://reui.io/preview/base/form-5 |
 | `@reui/product-grid-2` | blocks/product-grid-2/ → listing/listing-card.tsx | Thẻ listing ở trang Duyệt listing | Bỏ panel ảnh (chưa thu ảnh, không dùng ảnh giả); swatch/giá → badge loại phòng + 3 chỉ số | https://reui.io/preview/base/product-grid-2 |
 | `@reui/form-11` | blocks/form-11/ → yield/yield-form.tsx | Form ước tính lợi suất + dải tóm tắt trực tiếp | Đặt trong Frame (trang họ Frame); `noValidate` vì bước ±0,1 tỷ chỉ là bước của nút | https://reui.io/preview/base/form-11 |
-| `@reui/chart-36` | blocks/chart-36/ → yield/pnl/ | Doanh thu vs chi phí 12 tháng + biên lợi nhuận | Dữ liệu qua props, mốc = biên để ngang thuê dài hạn (ẩn khi > 100%), làn biên tối thiểu 20 điểm %, bước trục theo bậc độ lớn | https://reui.io/preview/base/chart-36 |
+| `@reui/chart-36` | blocks/chart-36/ → yield/pnl/ | Doanh thu vs chi phí 12 tháng + biên lợi nhuận | Dữ liệu qua props, mốc = biên để ngang thuê dài hạn (ẩn khi > 100%), làn biên tối thiểu 20 điểm %, bước trục theo bậc độ lớn; màu từ `charts/palette.ts`, phần chép trùng dùng chung `components/charts/` (B3) | https://reui.io/preview/base/chart-36 |
 | `@reui/number-field` | reui/number-field.tsx | Ô nhập số (PN, m², giá, chi phí) | `id` của NumberField là id của ô nhập | https://reui.io/components/number-field |
 | `@reui/auth-4` | blocks/auth-4/ → auth/login-form.tsx | Đăng nhập | Bỏ đăng nhập mạng xã hội + "Quên mật khẩu" (chưa có); nối server action; nền noise ở (auth)/layout | https://reui.io/preview/base/auth-4 |
 | `@reui/auth-5` | blocks/auth-5/ → auth/register-form.tsx | Đăng ký | Bỏ dải logo khách hàng (không có thật); hero viết cho nhà đầu tư, số đếm thật | https://reui.io/preview/base/auth-5 |
@@ -85,6 +87,7 @@ Ma trận trang → block máy kiểm: `scripts/ui-standards/b1-block-map.json`.
 | InsightGrid | components/insight/insight-grid.tsx | Không phải component mới: Frame + DataGrid theo đúng mẫu c-data-grid-11, gom lại để 6 bảng dùng chung nhãn tiếng Việt (`DATA_GRID_VI`) | https://reui.io/preview/base/components/c-data-grid-11 |
 | InsightNav | components/insight/insight-nav.tsx | Style view track của app-shell-30; tự theo dõi cuộn vì `@reui/scrollspy` với target document bám vào `scroll-area-viewport` đầu tiên trong trang (vùng cuộn DataGrid) và luôn báo nhầm mục cuối | https://reui.io/preview/base/app-shell-30 |
 | SiteFooter | components/shell/site-footer.tsx | ReUI không có block footer | |
+| charts/* | components/charts/ | Không phải component mới: phần ba block chart-6/13/36 chép trùng nhau (overflow-menu, segmented-toggle, tooltip-row, faces, halo-text, actions, icons, use-trigger-tooltip) gom lại ở B3, cộng `palette.ts` | https://reui.io/preview/base/chart-6 |
 | PageSkeleton | components/states/page-skeleton.tsx | Ghép từ `ui/skeleton` theo bố cục Insight; dùng trong `<Suspense>`, KHÔNG làm `loading.tsx` cấp segment (mất mã 404/307) | |
 
 ## Bản đồ nền (mọi bản đồ MapLibre)

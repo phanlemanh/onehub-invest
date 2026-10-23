@@ -1,0 +1,4163 @@
+{
+  "base": "http://localhost:3456",
+  "at": "2026-10-23T00:57:20.144Z",
+  "head": "2b6d43e6978663f945b9d55b797b18f73faee98f",
+  "capture_sha": "bd20068487205397faf5fdbd44a4e7806fe3ce6b32fc63020cf8743b74985d29",
+  "app_src_tree": "3a1bdca74382a0693fbd55d7aa7c0cce8a9c28fc",
+  "structure": {
+    "market/Hiệu suất theo tháng@light": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "data-slot": "icon-tile",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "2",
+                        "data-slot": "frame-panel-title",
+                        "text": "Hiệu suất theo tháng"
+                      },
+                      {
+                        "t": "div",
+                        "data-slot": "frame-panel-description",
+                        "text": "Lịch đặt phòng 12 tháng tới, tính tới hôm nay"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Khoảng thời gian",
+                    "data-slot": "toggle-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-pressed": "false",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "6 tháng"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-pressed": "true",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "12 tháng"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Thao tác biểu đồ",
+                    "data-slot": "button-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-label": "Hiển thị, 2/3 lớp đang bật",
+                        "type": "button",
+                        "data-slot": "dropdown-menu-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "Hiển thị"
+                          },
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Thao tác khác",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "role": "group",
+                "aria-label": "Chỉ số",
+                "c": [
+                  {
+                    "t": "button",
+                    "aria-pressed": "true",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Doanh thu"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "21 tỷ ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Tổng 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Công suất"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "14,0%"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Giá phòng (ADR)"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "1.594.875 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "RevPAR"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "223.917 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng giá niêm yết các đêm đã đặt, theo tháng"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Chú giải",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "T10/26 – T9/27"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Doanh thu theo tháng, T10/26 – T9/27. Phím mũi tên để chuyển tháng.",
+                    "data-slot": "chart",
+                    "c": [
+                      {
+                        "t": "style"
+                      },
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Airbnb tự thu thập"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "VND"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "market/Cơ cấu doanh thu@light": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "3",
+                        "data-slot": "frame-panel-title",
+                        "text": "Cơ cấu doanh thu"
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Về cơ cấu doanh thu",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "data-slot": "frame-panel-description",
+                    "text": "Theo loại phòng, 12 tháng tới"
+                  }
+                ]
+              },
+              {
+                "t": "button",
+                "aria-label": "Thao tác khác",
+                "type": "button",
+                "data-slot": "tooltip-trigger",
+                "c": [
+                  {
+                    "t": "svg",
+                    "c": [
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng doanh thu"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "21 tỷ ₫"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "257"
+                          },
+                          {
+                            "t": "span",
+                            "text": "listing"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "div",
+                        "role": "img",
+                        "aria-label": "Doanh thu theo loại phòng: Nguyên căn 66%, Phòng riêng 34%, Phòng ở chung 0%",
+                        "data-slot": "chart",
+                        "c": [
+                          {
+                            "t": "style"
+                          },
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div",
+                                    "c": [
+                                      {
+                                        "t": "div"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Doanh thu theo loại phòng",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Nguyên căn"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "13,8 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "66 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "147 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Phòng riêng"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "7,2 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "34 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "109 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Phòng ở chung"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "5,4 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "0 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "1 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "Giá niêm yết"
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "text": "Đêm đã đặt"
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "VND"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "ward/Hiệu suất theo tháng@light": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "data-slot": "icon-tile",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "2",
+                        "data-slot": "frame-panel-title",
+                        "text": "Hiệu suất theo tháng"
+                      },
+                      {
+                        "t": "div",
+                        "data-slot": "frame-panel-description",
+                        "text": "Lịch đặt phòng 12 tháng tới, tính tới hôm nay"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Khoảng thời gian",
+                    "data-slot": "toggle-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-pressed": "false",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "6 tháng"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-pressed": "true",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "12 tháng"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Thao tác biểu đồ",
+                    "data-slot": "button-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-label": "Hiển thị, 2/3 lớp đang bật",
+                        "type": "button",
+                        "data-slot": "dropdown-menu-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "Hiển thị"
+                          },
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Thao tác khác",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "role": "group",
+                "aria-label": "Chỉ số",
+                "c": [
+                  {
+                    "t": "button",
+                    "aria-pressed": "true",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Doanh thu"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "4,5 tỷ ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Tổng 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Công suất"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "19,1%"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Giá phòng (ADR)"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "2.794.544 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "RevPAR"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "534.608 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng giá niêm yết các đêm đã đặt, theo tháng"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Chú giải",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "T10/26 – T9/27"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Doanh thu theo tháng, T10/26 – T9/27. Phím mũi tên để chuyển tháng.",
+                    "data-slot": "chart",
+                    "c": [
+                      {
+                        "t": "style"
+                      },
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Airbnb tự thu thập"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "VND"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "ward/Cơ cấu doanh thu@light": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "3",
+                        "data-slot": "frame-panel-title",
+                        "text": "Cơ cấu doanh thu"
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Về cơ cấu doanh thu",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "data-slot": "frame-panel-description",
+                    "text": "Theo loại phòng, 12 tháng tới"
+                  }
+                ]
+              },
+              {
+                "t": "button",
+                "aria-label": "Thao tác khác",
+                "type": "button",
+                "data-slot": "tooltip-trigger",
+                "c": [
+                  {
+                    "t": "svg",
+                    "c": [
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng doanh thu"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "4,5 tỷ ₫"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "23"
+                          },
+                          {
+                            "t": "span",
+                            "text": "listing"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "div",
+                        "role": "img",
+                        "aria-label": "Doanh thu theo loại phòng: Nguyên căn 75%, Phòng riêng 25%",
+                        "data-slot": "chart",
+                        "c": [
+                          {
+                            "t": "style"
+                          },
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div",
+                                    "c": [
+                                      {
+                                        "t": "div"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Doanh thu theo loại phòng",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Nguyên căn"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "3,4 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "75 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "10 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Phòng riêng"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "1,1 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "25 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "13 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "Giá niêm yết"
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "text": "Đêm đã đặt"
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "VND"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "yield/Doanh thu và chi phí 12 tháng tới@light": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "data-slot": "icon-tile",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "2",
+                        "data-slot": "frame-panel-title",
+                        "text": "Doanh thu và chi phí 12 tháng tới"
+                      },
+                      {
+                        "t": "div",
+                        "data-slot": "frame-panel-description",
+                        "text": "Cho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Gộp theo",
+                    "data-slot": "toggle-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-pressed": "true",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "text": "Tháng"
+                      },
+                      {
+                        "t": "button",
+                        "aria-pressed": "false",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "text": "Quý"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-label": "Thao tác khác",
+                    "type": "button",
+                    "data-slot": "tooltip-trigger",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "circle"
+                          },
+                          {
+                            "t": "circle"
+                          },
+                          {
+                            "t": "circle"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Thu nhập ròng / năm"
+                      },
+                      {
+                        "t": "span",
+                        "text": "34,9 tr ₫"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Chú giải",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "Doanh thu"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "Chi phí"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "Biên lợi nhuận"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "Ngang thuê dài hạn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "style"
+              },
+              {
+                "t": "div",
+                "role": "group",
+                "aria-label": "Doanh thu và chi phí ước tính theo tháng, biên lợi nhuận là đường phía trên.",
+                "data-slot": "chart",
+                "c": [
+                  {
+                    "t": "style"
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "dl",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "Doanh thu"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "118,4 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Trung vị listing so sánh"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "Chi phí"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "83,5 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo giả định trong form"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "Biên lợi nhuận"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "29,5%"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Thu nhập ròng ÷ doanh thu"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "So với thuê dài hạn"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "−73,1 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Thu nhập ròng/năm, thuê DH đã trừ thuế 10%"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Ước tính, chưa có mùa vụ"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Doanh thu chia theo số đêm của tháng"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "VND"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "market/Hiệu suất theo tháng@dark": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "data-slot": "icon-tile",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "2",
+                        "data-slot": "frame-panel-title",
+                        "text": "Hiệu suất theo tháng"
+                      },
+                      {
+                        "t": "div",
+                        "data-slot": "frame-panel-description",
+                        "text": "Lịch đặt phòng 12 tháng tới, tính tới hôm nay"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Khoảng thời gian",
+                    "data-slot": "toggle-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-pressed": "false",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "6 tháng"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-pressed": "true",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "12 tháng"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Thao tác biểu đồ",
+                    "data-slot": "button-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-label": "Hiển thị, 2/3 lớp đang bật",
+                        "type": "button",
+                        "data-slot": "dropdown-menu-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "Hiển thị"
+                          },
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Thao tác khác",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "role": "group",
+                "aria-label": "Chỉ số",
+                "c": [
+                  {
+                    "t": "button",
+                    "aria-pressed": "true",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Doanh thu"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "21 tỷ ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Tổng 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Công suất"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "14,0%"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Giá phòng (ADR)"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "1.594.875 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "RevPAR"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "223.917 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng giá niêm yết các đêm đã đặt, theo tháng"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Chú giải",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "T10/26 – T9/27"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Doanh thu theo tháng, T10/26 – T9/27. Phím mũi tên để chuyển tháng.",
+                    "data-slot": "chart",
+                    "c": [
+                      {
+                        "t": "style"
+                      },
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Airbnb tự thu thập"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "VND"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "market/Cơ cấu doanh thu@dark": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "3",
+                        "data-slot": "frame-panel-title",
+                        "text": "Cơ cấu doanh thu"
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Về cơ cấu doanh thu",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "data-slot": "frame-panel-description",
+                    "text": "Theo loại phòng, 12 tháng tới"
+                  }
+                ]
+              },
+              {
+                "t": "button",
+                "aria-label": "Thao tác khác",
+                "type": "button",
+                "data-slot": "tooltip-trigger",
+                "c": [
+                  {
+                    "t": "svg",
+                    "c": [
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng doanh thu"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "21 tỷ ₫"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "257"
+                          },
+                          {
+                            "t": "span",
+                            "text": "listing"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "div",
+                        "role": "img",
+                        "aria-label": "Doanh thu theo loại phòng: Nguyên căn 66%, Phòng riêng 34%, Phòng ở chung 0%",
+                        "data-slot": "chart",
+                        "c": [
+                          {
+                            "t": "style"
+                          },
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div",
+                                    "c": [
+                                      {
+                                        "t": "div"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Doanh thu theo loại phòng",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Nguyên căn"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "13,8 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "66 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "147 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Phòng riêng"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "7,2 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "34 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "109 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Phòng ở chung"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "5,4 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "0 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "1 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "Giá niêm yết"
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "text": "Đêm đã đặt"
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "VND"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "ward/Hiệu suất theo tháng@dark": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "data-slot": "icon-tile",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "2",
+                        "data-slot": "frame-panel-title",
+                        "text": "Hiệu suất theo tháng"
+                      },
+                      {
+                        "t": "div",
+                        "data-slot": "frame-panel-description",
+                        "text": "Lịch đặt phòng 12 tháng tới, tính tới hôm nay"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Khoảng thời gian",
+                    "data-slot": "toggle-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-pressed": "false",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "6 tháng"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-pressed": "true",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "12 tháng"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Thao tác biểu đồ",
+                    "data-slot": "button-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-label": "Hiển thị, 2/3 lớp đang bật",
+                        "type": "button",
+                        "data-slot": "dropdown-menu-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "Hiển thị"
+                          },
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Thao tác khác",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "circle"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "role": "group",
+                "aria-label": "Chỉ số",
+                "c": [
+                  {
+                    "t": "button",
+                    "aria-pressed": "true",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Doanh thu"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "4,5 tỷ ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Tổng 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Công suất"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "19,1%"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "Giá phòng (ADR)"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "2.794.544 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-pressed": "false",
+                    "type": "button",
+                    "c": [
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "RevPAR"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "span",
+                        "text": "534.608 ₫"
+                      },
+                      {
+                        "t": "span",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo đêm, 12 tháng"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng giá niêm yết các đêm đã đặt, theo tháng"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Chú giải",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "T10/26 – T9/27"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Doanh thu theo tháng, T10/26 – T9/27. Phím mũi tên để chuyển tháng.",
+                    "data-slot": "chart",
+                    "c": [
+                      {
+                        "t": "style"
+                      },
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Airbnb tự thu thập"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "VND"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "ward/Cơ cấu doanh thu@dark": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "3",
+                        "data-slot": "frame-panel-title",
+                        "text": "Cơ cấu doanh thu"
+                      },
+                      {
+                        "t": "button",
+                        "aria-label": "Về cơ cấu doanh thu",
+                        "type": "button",
+                        "data-slot": "tooltip-trigger",
+                        "c": [
+                          {
+                            "t": "svg",
+                            "c": [
+                              {
+                                "t": "circle"
+                              },
+                              {
+                                "t": "path"
+                              },
+                              {
+                                "t": "path"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "data-slot": "frame-panel-description",
+                    "text": "Theo loại phòng, 12 tháng tới"
+                  }
+                ]
+              },
+              {
+                "t": "button",
+                "aria-label": "Thao tác khác",
+                "type": "button",
+                "data-slot": "tooltip-trigger",
+                "c": [
+                  {
+                    "t": "svg",
+                    "c": [
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      },
+                      {
+                        "t": "circle"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Tổng doanh thu"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "4,5 tỷ ₫"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "23"
+                          },
+                          {
+                            "t": "span",
+                            "text": "listing"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "div",
+                        "role": "img",
+                        "aria-label": "Doanh thu theo loại phòng: Nguyên căn 75%, Phòng riêng 25%",
+                        "data-slot": "chart",
+                        "c": [
+                          {
+                            "t": "style"
+                          },
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div",
+                                "c": [
+                                  {
+                                    "t": "div",
+                                    "c": [
+                                      {
+                                        "t": "div"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Doanh thu theo loại phòng",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Nguyên căn"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "3,4 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "75 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "10 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span",
+                                "text": "Phòng riêng"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "1,1 tỷ ₫"
+                          },
+                          {
+                            "t": "span",
+                            "text": "25 %"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "data-slot": "badge",
+                                "c": [
+                                  {
+                                    "t": "span",
+                                    "text": "13 listing"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "Giá niêm yết"
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "text": "Đêm đã đặt"
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "text": "VND"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    },
+    "yield/Doanh thu và chi phí 12 tháng tới@dark": {
+      "tree": {
+        "t": "div",
+        "data-slot": "frame",
+        "c": [
+          {
+            "t": "header",
+            "data-slot": "frame-panel-header",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "span",
+                    "data-slot": "icon-tile",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          },
+                          {
+                            "t": "path"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "role": "heading",
+                        "aria-level": "2",
+                        "data-slot": "frame-panel-title",
+                        "text": "Doanh thu và chi phí 12 tháng tới"
+                      },
+                      {
+                        "t": "div",
+                        "data-slot": "frame-panel-description",
+                        "text": "Cho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "role": "group",
+                    "aria-label": "Gộp theo",
+                    "data-slot": "toggle-group",
+                    "c": [
+                      {
+                        "t": "button",
+                        "aria-pressed": "true",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "text": "Tháng"
+                      },
+                      {
+                        "t": "button",
+                        "aria-pressed": "false",
+                        "type": "button",
+                        "data-slot": "toggle-group-item",
+                        "text": "Quý"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "button",
+                    "aria-label": "Thao tác khác",
+                    "type": "button",
+                    "data-slot": "tooltip-trigger",
+                    "c": [
+                      {
+                        "t": "svg",
+                        "c": [
+                          {
+                            "t": "circle"
+                          },
+                          {
+                            "t": "circle"
+                          },
+                          {
+                            "t": "circle"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "div",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Thu nhập ròng / năm"
+                      },
+                      {
+                        "t": "span",
+                        "text": "34,9 tr ₫"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "ul",
+                    "aria-label": "Chú giải",
+                    "c": [
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "Doanh thu"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "Chi phí"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span"
+                              },
+                              {
+                                "t": "span"
+                              }
+                            ]
+                          },
+                          {
+                            "t": "span",
+                            "text": "Biên lợi nhuận"
+                          }
+                        ]
+                      },
+                      {
+                        "t": "li",
+                        "c": [
+                          {
+                            "t": "span"
+                          },
+                          {
+                            "t": "span",
+                            "text": "Ngang thuê dài hạn"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "style"
+              },
+              {
+                "t": "div",
+                "role": "group",
+                "aria-label": "Doanh thu và chi phí ước tính theo tháng, biên lợi nhuận là đường phía trên.",
+                "data-slot": "chart",
+                "c": [
+                  {
+                    "t": "style"
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "div",
+                        "c": [
+                          {
+                            "t": "div",
+                            "c": [
+                              {
+                                "t": "div"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "div",
+            "data-slot": "frame-panel",
+            "c": [
+              {
+                "t": "dl",
+                "c": [
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "Doanh thu"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "118,4 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Trung vị listing so sánh"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "Chi phí"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "83,5 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Theo giả định trong form"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "Biên lợi nhuận"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "29,5%"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Thu nhập ròng ÷ doanh thu"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": "div",
+                    "c": [
+                      {
+                        "t": "dt",
+                        "text": "So với thuê dài hạn"
+                      },
+                      {
+                        "t": "dd",
+                        "c": [
+                          {
+                            "t": "span",
+                            "text": "−73,1 tr ₫"
+                          },
+                          {
+                            "t": "span",
+                            "c": [
+                              {
+                                "t": "span",
+                                "text": "Thu nhập ròng/năm, thuê DH đã trừ thuế 10%"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "t": "footer",
+            "data-slot": "frame-panel-footer",
+            "c": [
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Ước tính, chưa có mùa vụ"
+                      }
+                    ]
+                  },
+                  {
+                    "t": "span"
+                  },
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "Doanh thu chia theo số đêm của tháng"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "t": "span",
+                "c": [
+                  {
+                    "t": "span",
+                    "c": [
+                      {
+                        "t": "span",
+                        "text": "VND"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "svg": {
+        "svg": 1
+      }
+    }
+  },
+  "colors": {
+    "market/Hiệu suất theo tháng@light": {
+      "dots": [
+        "oklab(0.969998 -0.00000959635 0.0000227094 / 0.5)",
+        "lab(48.295 38.3129 -81.9673)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(48.496 0 0)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(2.75381 0 0)",
+        "lab(100 0 0)"
+      ]
+    },
+    "market/Cơ cấu doanh thu@light": {
+      "dots": [
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(74.0235 8.54138 -41.6075)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(96.1634 0.0993311 -0.364041)",
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(74.0235 8.54138 -41.6075)"
+      ]
+    },
+    "ward/Hiệu suất theo tháng@light": {
+      "dots": [
+        "oklab(0.969998 -0.00000959635 0.0000227094 / 0.5)",
+        "lab(48.295 38.3129 -81.9673)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(48.496 0 0)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(2.75381 0 0)",
+        "lab(100 0 0)"
+      ]
+    },
+    "ward/Cơ cấu doanh thu@light": {
+      "dots": [
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(96.1634 0.0993311 -0.364041)",
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)"
+      ]
+    },
+    "yield/Doanh thu và chi phí 12 tháng tới@light": {
+      "dots": [
+        "oklab(0.969998 -0.00000959635 0.0000227094 / 0.5)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(84.7652 -1.94535 -7.93337)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(84.7652 -1.94535 -7.93337)",
+        "lab(96.52 -0.0000298023 0.0000119209)",
+        "lab(55.0481 -49.9246 15.93)",
+        "lab(100 0 0)"
+      ]
+    },
+    "market/Hiệu suất theo tháng@dark": {
+      "dots": [
+        "oklab(0.268999 -0.00000260025 0.00000627339 / 0.5)",
+        "lab(59.866 22.4834 -64.4485)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(66.128 -0.0000298023 0.0000119209)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(98.26 0 0)",
+        "lab(7.78201 -0.0000149012 0)"
+      ]
+    },
+    "market/Cơ cấu doanh thu@dark": {
+      "dots": [
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(74.0235 8.54138 -41.6075)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(15.7305 0.613764 -2.16959)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(74.0235 8.54138 -41.6075)"
+      ]
+    },
+    "ward/Hiệu suất theo tháng@dark": {
+      "dots": [
+        "oklab(0.268999 -0.00000260025 0.00000627339 / 0.5)",
+        "lab(59.866 22.4834 -64.4485)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(66.128 -0.0000298023 0.0000119209)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(98.26 0 0)",
+        "lab(7.78201 -0.0000149012 0)"
+      ]
+    },
+    "ward/Cơ cấu doanh thu@dark": {
+      "dots": [
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(15.7305 0.613764 -2.16959)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)"
+      ]
+    },
+    "yield/Doanh thu và chi phí 12 tháng tới@dark": {
+      "dots": [
+        "oklab(0.268999 -0.00000260025 0.00000627339 / 0.5)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(35.5623 -1.74978 -15.4316)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(35.5623 -1.74978 -15.4316)",
+        "lab(15.204 0 -0.00000596046)",
+        "lab(75.0771 -60.7313 19.4147)",
+        "lab(7.78201 -0.0000149012 0)"
+      ]
+    },
+    "market/Hiệu suất theo tháng@light-390": {
+      "dots": [
+        "oklab(0.969998 -0.00000959635 0.0000227094 / 0.5)",
+        "lab(48.295 38.3129 -81.9673)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(48.496 0 0)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(2.75381 0 0)",
+        "lab(100 0 0)"
+      ]
+    },
+    "market/Cơ cấu doanh thu@light-390": {
+      "dots": [
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(74.0235 8.54138 -41.6075)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(96.1634 0.0993311 -0.364041)",
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(74.0235 8.54138 -41.6075)"
+      ]
+    },
+    "ward/Hiệu suất theo tháng@light-390": {
+      "dots": [
+        "oklab(0.969998 -0.00000959635 0.0000227094 / 0.5)",
+        "lab(48.295 38.3129 -81.9673)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(48.496 0 0)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(2.75381 0 0)",
+        "lab(100 0 0)"
+      ]
+    },
+    "ward/Cơ cấu doanh thu@light-390": {
+      "dots": [
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(96.1634 0.0993311 -0.364041)",
+        "lab(32.4486 49.2217 -84.6695)",
+        "lab(48.295 38.3129 -81.9673)"
+      ]
+    },
+    "yield/Doanh thu và chi phí 12 tháng tới@light-390": {
+      "dots": [
+        "oklab(0.969998 -0.00000959635 0.0000227094 / 0.5)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(84.7652 -1.94535 -7.93337)",
+        "oklab(0.555999 -0.00000530481 0.000012964 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(84.7652 -1.94535 -7.93337)",
+        "lab(96.52 -0.0000298023 0.0000119209)",
+        "lab(55.0481 -49.9246 15.93)",
+        "lab(100 0 0)"
+      ]
+    },
+    "market/Hiệu suất theo tháng@dark-390": {
+      "dots": [
+        "oklab(0.268999 -0.00000260025 0.00000627339 / 0.5)",
+        "lab(59.866 22.4834 -64.4485)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(66.128 -0.0000298023 0.0000119209)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(98.26 0 0)",
+        "lab(7.78201 -0.0000149012 0)"
+      ]
+    },
+    "market/Cơ cấu doanh thu@dark-390": {
+      "dots": [
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(74.0235 8.54138 -41.6075)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(15.7305 0.613764 -2.16959)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(74.0235 8.54138 -41.6075)"
+      ]
+    },
+    "ward/Hiệu suất theo tháng@dark-390": {
+      "dots": [
+        "oklab(0.268999 -0.00000260025 0.00000627339 / 0.5)",
+        "lab(59.866 22.4834 -64.4485)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(66.128 -0.0000298023 0.0000119209)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(98.26 0 0)",
+        "lab(7.78201 -0.0000149012 0)"
+      ]
+    },
+    "ward/Cơ cấu doanh thu@dark-390": {
+      "dots": [
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(15.7305 0.613764 -2.16959)",
+        "lab(48.295 38.3129 -81.9673)",
+        "lab(59.866 22.4834 -64.4485)"
+      ]
+    },
+    "yield/Doanh thu và chi phí 12 tháng tới@dark-390": {
+      "dots": [
+        "oklab(0.268999 -0.00000260025 0.00000627339 / 0.5)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(35.5623 -1.74978 -15.4316)",
+        "oklab(0.707999 -0.00000712275 0.0000166297 / 0.4)"
+      ],
+      "marks": [
+        "rgb(0, 0, 0)",
+        "lab(59.866 22.4834 -64.4485)",
+        "lab(35.5623 -1.74978 -15.4316)",
+        "lab(15.204 0 -0.00000596046)",
+        "lab(75.0771 -60.7313 19.4147)",
+        "lab(7.78201 -0.0000149012 0)"
+      ]
+    }
+  },
+  "interactions": {
+    "market/Hiệu suất theo tháng": {
+      "hover": "Tháng 4/2027\nDoanh thu\n614.746.420 ₫",
+      "afterOccupancy": "Hiệu suất theo tháng\nLịch đặt phòng 12 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n21 tỷ ₫\nTổng 12 tháng\nCông suất\n14,0%\nTheo đêm, 12 tháng\nGiá phòng (ADR)\n1.594.875 ₫\nTheo đêm, 12 tháng\nRevPAR\n223.917 ₫\nTheo đêm, 12 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T9/27\nTết\n30/4\nHè\n14,0%\nT11/26\nT1/27\nT3/27\nT5/27\nT7/27\nT9/27\n0%\n20%\n40%\n60%\n80%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
+      "afterSixMonths": "Hiệu suất theo tháng\nLịch đặt phòng 6 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n13,3 tỷ ₫\nTổng 6 tháng\nCông suất\n19,8%\nTheo đêm, 6 tháng\nGiá phòng (ADR)\n1.431.376 ₫\nTheo đêm, 6 tháng\nRevPAR\n284.017 ₫\nTheo đêm, 6 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T3/27\nTết\n5,3%\nT10/26\nT11/26\nT12/26\nT1/27\nT2/27\nT3/27\n0%\n20%\n40%\n60%\n80%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
+      "menu": "Xuất dữ liệu\nTải CSV\nSao chép bảng số\nSao chép tóm tắt\nVề mặc định",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "hieu-suat-occupancy-6m.csv",
+          "sha256": "e0f1dcbbfc1a393a21e81309da1bc44ae527567b5ed1d4056e088d061f553fc5",
+          "toast": [
+            "Đã tải CSV\nhieu-suat-occupancy-6m.csv, 6 tháng."
+          ]
+        },
+        "Sao chép bảng số": {
+          "toast": [
+            "Đã sao chép bảng số\n6 tháng công suất, dán được vào bảng tính."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nCông suất, T10/26 – T3/27: 19,8%. Tháng cuối 5,3%."
+          ]
+        },
+        "Về mặc định": {
+          "toast": []
+        }
+      }
+    },
+    "market/Cơ cấu doanh thu": {
+      "hover": "Nguyên căn\n13,8 tỷ ₫\n66%",
+      "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "co-cau-doanh-thu.csv",
+          "sha256": "c24175ad799fd21afe54cc98fa89b9eb6473183d063eb0eebe8f4968f334b408",
+          "toast": [
+            "Đã tải CSV\nco-cau-doanh-thu.csv, 3 loại phòng và tổng."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nDoanh thu 12 tháng tới: 21 tỷ ₫. Nguyên căn 13,8 tỷ ₫ (66%), Phòng riêng 7,2 tỷ ₫ (34%), Phòng ở chung 5,4 tr ₫ (0%)."
+          ]
+        }
+      }
+    },
+    "ward/Hiệu suất theo tháng": {
+      "hover": "Tháng 4/2027\nDoanh thu\n144.360.000 ₫",
+      "afterOccupancy": "Hiệu suất theo tháng\nLịch đặt phòng 12 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n4,5 tỷ ₫\nTổng 12 tháng\nCông suất\n19,1%\nTheo đêm, 12 tháng\nGiá phòng (ADR)\n2.794.544 ₫\nTheo đêm, 12 tháng\nRevPAR\n534.608 ₫\nTheo đêm, 12 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T9/27\nTết\n30/4\nHè\n21,7%\nT11/26\nT1/27\nT3/27\nT5/27\nT7/27\nT9/27\n0%\n20%\n40%\n60%\n80%\n100%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
+      "afterSixMonths": "Hiệu suất theo tháng\nLịch đặt phòng 6 tháng tới, tính tới hôm nay\n6 tháng\n12 tháng\nHiển thị\nDoanh thu\n2,7 tỷ ₫\nTổng 6 tháng\nCông suất\n26,5%\nTheo đêm, 6 tháng\nGiá phòng (ADR)\n2.474.885 ₫\nTheo đêm, 6 tháng\nRevPAR\n656.264 ₫\nTheo đêm, 6 tháng\nĐêm đã đặt ÷ (đã đặt + còn trống), theo tháng\nT10/26 – T3/27\nTết\n6,7%\nT10/26\nT11/26\nT12/26\nT1/27\nT2/27\nT3/27\n0%\n20%\n40%\n60%\n80%\n100%\nAirbnb tự thu thập\nVND\nTháng xa còn ít booking — công suất thấp không có nghĩa là thị trường yếu",
+      "menu": "Xuất dữ liệu\nTải CSV\nSao chép bảng số\nSao chép tóm tắt\nVề mặc định",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "hieu-suat-occupancy-6m.csv",
+          "sha256": "8d241d1ee56775897c87716aa28b3a0f579252760e8ffbceefd805b02102191d",
+          "toast": [
+            "Đã tải CSV\nhieu-suat-occupancy-6m.csv, 6 tháng."
+          ]
+        },
+        "Sao chép bảng số": {
+          "toast": [
+            "Đã sao chép bảng số\n6 tháng công suất, dán được vào bảng tính."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nCông suất, T10/26 – T3/27: 26,5%. Tháng cuối 6,7%."
+          ]
+        },
+        "Về mặc định": {
+          "toast": []
+        }
+      }
+    },
+    "ward/Cơ cấu doanh thu": {
+      "hover": "Nguyên căn\n3,4 tỷ ₫\n75%",
+      "menu": "Dữ liệu\nTải CSV\nSao chép tóm tắt",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "co-cau-doanh-thu.csv",
+          "sha256": "c979adfb61edb9e3616ca0b96182fbb661e4724b50a3e1fefb8bdadfb4c028ff",
+          "toast": [
+            "Đã tải CSV\nco-cau-doanh-thu.csv, 2 loại phòng và tổng."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nDoanh thu 12 tháng tới: 4,5 tỷ ₫. Nguyên căn 3,4 tỷ ₫ (75%), Phòng riêng 1,1 tỷ ₫ (25%)."
+          ]
+        }
+      }
+    },
+    "yield/Doanh thu và chi phí 12 tháng tới": {
+      "hover": "Tháng 4/2027\nDoanh thu\n9,7 tr ₫\nChi phí\n6,9 tr ₫\nThu nhập ròng\n2,8 tr ₫\nBiên lợi nhuận\n28,9%",
+      "afterQuarter": "Doanh thu và chi phí 12 tháng tới\nCho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định\nTháng\nQuý\nThu nhập ròng / năm\n34,9 tr ₫\nDoanh thu\nChi phí\nBiên lợi nhuận\nNgang thuê dài hạn\n30%\n40%\n50%\n60%\n70%\n80%\n90%\nNgang thuê DH 91,2%\n29,8%\nT10–T12\nT1–T3\nT4–T6\nT7–T9\n0\n10 tr\n20 tr\n30 tr\nDoanh thu\n118,4 tr ₫\nTrung vị listing so sánh\nChi phí\n83,5 tr ₫\nTheo giả định trong form\nBiên lợi nhuận\n29,5%\nThu nhập ròng ÷ doanh thu\nSo với thuê dài hạn\n−73,1 tr ₫\nThu nhập ròng/năm, thuê DH đã trừ thuế 10%\nƯớc tính, chưa có mùa vụ\nDoanh thu chia theo số đêm của tháng\nVND",
+      "afterTargetOff": "Doanh thu và chi phí 12 tháng tới\nCho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định\nTháng\nQuý\nThu nhập ròng / năm\n34,9 tr ₫\nDoanh thu\nChi phí\nBiên lợi nhuận\n30%\n40%\n50%\n60%\n70%\n80%\n90%\nNgang thuê DH 91,2%\n29,8%\nT10–T12\nT1–T3\nT4–T6\nT7–T9\n0\n10 tr\n20 tr\n30 tr\nDoanh thu\n118,4 tr ₫\nTrung vị listing so sánh\nChi phí\n83,5 tr ₫\nTheo giả định trong form\nBiên lợi nhuận\n29,5%\nThu nhập ròng ÷ doanh thu\nSo với thuê dài hạn\n−73,1 tr ₫\nThu nhập ròng/năm, thuê DH đã trừ thuế 10%\nƯớc tính, chưa có mùa vụ\nDoanh thu chia theo số đêm của tháng\nVND",
+      "afterTargetOn": "Doanh thu và chi phí 12 tháng tới\nCho thuê ngắn hạn, sau phí vận hành, nền tảng, thuế và chi phí cố định\nTháng\nQuý\nThu nhập ròng / năm\n34,9 tr ₫\nDoanh thu\nChi phí\nBiên lợi nhuận\nNgang thuê dài hạn\n30%\n40%\n50%\n60%\n70%\n80%\n90%\nNgang thuê DH 91,2%\n29,8%\nT10–T12\nT1–T3\nT4–T6\nT7–T9\n0\n10 tr\n20 tr\n30 tr\nDoanh thu\n118,4 tr ₫\nTrung vị listing so sánh\nChi phí\n83,5 tr ₫\nTheo giả định trong form\nBiên lợi nhuận\n29,5%\nThu nhập ròng ÷ doanh thu\nSo với thuê dài hạn\n−73,1 tr ₫\nThu nhập ròng/năm, thuê DH đã trừ thuế 10%\nƯớc tính, chưa có mùa vụ\nDoanh thu chia theo số đêm của tháng\nVND",
+      "menu": "Hiện\nMốc ngang thuê dài hạn\nXuất dữ liệu\nTải CSV\nSao chép tóm tắt",
+      "menuItems": {
+        "Tải CSV": {
+          "file": "uoc-tinh-loi-suat-quarter.csv",
+          "sha256": "0127ad628da00e11bffdebb4dd21ec771928559aab8a8cd74bb8156d9b48bb27",
+          "toast": [
+            "Đã tải CSV\n4 quý."
+          ]
+        },
+        "Sao chép tóm tắt": {
+          "toast": [
+            "Đã sao chép tóm tắt\nƯớc tính 12 tháng tới: doanh thu 118,4 tr ₫, chi phí 83,5 tr ₫, thu nhập ròng 34,9 tr ₫ (biên 29,5%). So với thuê dài hạn: thấp hơn 73,1 tr ₫/năm."
+          ]
+        }
+      }
+    },
+    "denied": {
+      "market/Hiệu suất theo tháng": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "market/Cơ cấu doanh thu": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "ward/Hiệu suất theo tháng": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "ward/Cơ cấu doanh thu": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ],
+      "yield/Doanh thu và chi phí 12 tháng tới": [
+        "Không sao chép được\nTrình duyệt chặn quyền truy cập clipboard."
+      ]
+    }
+  }
+}
