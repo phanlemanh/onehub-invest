@@ -8,10 +8,11 @@ allowed-tools: Bash(node scripts/check-freshness.mjs) Bash(bash scripts/audit-al
 
 1. **Độ tươi** — `node scripts/check-freshness.mjs` (exit 1 = có ô quá SLO, chưa có dữ liệu, hoặc nguồn
    active chưa khai SLO; `--json` in từng ô `{code, city, last, ageHours, sloHours, status}`). Mỗi mã đo ở
-   bảng nạp thật của nó, chỉ ở thành phố nó có dữ liệu:
-   S01 ≤ 8 ngày (`airbnb_snapshots`) · S02 ≤ 35 ngày (`airdna_markets`) · S03 ≤ 3 ngày và S05 ≤ 12 giờ
-   (`stg_zalo_posts`, tách theo `agent_id`) · S06 ≤ 36 giờ (`stg_chotot_ads`). S04 không đo — địa giới đã
-   thu xong. Định nghĩa: `scripts/lib/freshness.mjs`.
+   bảng nạp thật của nó, chỉ ở thành phố nó có dữ liệu, và tính tuổi theo GIỜ THU (nạp lại bản cũ không làm
+   nguồn trông tươi): S01 ≤ 8 ngày · S03 ≤ 3 ngày · S05 ≤ 12 giờ · S06 ≤ 36 giờ — đều theo
+   `airbnb_snapshots.collected_at` (S03/S05 lấy snapshot chứa bài của mã trong `stg_zalo_posts`, tách theo
+   `agent_id`; S06 lấy snapshot chứa tin `stg_chotot_ads`) · S02 ≤ 35 ngày theo `airdna_markets.captured_at`
+   (giờ tải). S04 không đo — địa giới đã thu xong. Định nghĩa: `scripts/lib/freshness.mjs`.
 2. **Audit toàn hệ thống** — `bash scripts/audit-all.sh` (thu thập, DB + cloud sync, Invest,
    Ops, public API). Tóm các dòng ❌ và ⚠️.
 3. **An toàn Zalo** — `tail -20 pipeline/logs/zalo-watchdog-alerts.log` (thiếu file = chưa
