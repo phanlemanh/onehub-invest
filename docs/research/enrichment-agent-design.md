@@ -102,7 +102,12 @@ stg_zalo_posts (text thô)
           (+ cascade properties qua property_offers). Căn cứ chỉ hai loại:
           E1 cùng giá trị sau chuẩn hoá · block_raw khớp tên/alias node
           building của asset_nodes
-        · LLM trái E1 → E1 áp, đề xuất LLM `superseded`, không thẻ
+        · LLM trái E1 → KHÔNG áp bên nào: cả hai đề xuất lên thẻ, mỗi bên
+          kèm căn cứ (E1: từ khoá khớp ở tin hay tên nhóm; LLM: model ·
+          độ tự tin · trace); người chọn một bên hoặc bỏ cả hai. Field còn
+          thẻ xung đột chờ thì các lượt sau không áp gì cho field đó.
+          (23/10: «E1 thắng» cũ đã áp land cho nhà 4 tầng vì chữ «đất»
+          trong tên nhóm — sổ revisit d-9.)
         · còn lại → một thẻ /ops/review mỗi offer
           (item_type='agent_output', item_id='enrich:<offer_id>');
           người duyệt → decide_enrichment_review() áp hoặc bỏ
