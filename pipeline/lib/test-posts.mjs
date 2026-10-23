@@ -70,3 +70,19 @@ export async function auditRejected(client, source, rejected) {
   );
   return true;
 }
+
+/**
+ * Tệp mã vừa đọc stg_zalo_posts vừa ghi sale_offers — đường thứ hai đưa post vào canonical mà
+ * không qua loadStgPosts. Bỏ dòng chú thích. Thước AC-3 (phải rỗng).
+ * @param {{ path: string, text: string }[]} files
+ * @returns {string[]}
+ */
+export function scanStgWriters(files) {
+  const code = (t) => t.split("\n").filter((l) => !/^\s*(\/\/|\/\*|\*)/.test(l)).join("\n");
+  return files
+    .filter((f) => {
+      const t = code(f.text);
+      return /\bstg_zalo_posts\b/.test(t) && (/\bwriteOffers\(/.test(t) || /INSERT\s+INTO\s+sale_offers\b/i.test(t));
+    })
+    .map((f) => f.path);
+}

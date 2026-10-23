@@ -5,13 +5,19 @@ import { test } from "node:test";
 
 import pg from "pg";
 
-import { TEST_MARKERS, testMarker } from "../lib/test-posts.mjs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
+
+import { TEST_MARKERS, scanStgWriters, testMarker } from "../lib/test-posts.mjs";
+import { scanDeleteAll } from "../lib/write-offers.mjs";
+import { runTransformFb } from "../transform-fb.mjs";
 import { runTransformZalo } from "../transform-zalo.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 // Snapshot fixture (năm 2099 — không trùng snapshot thật).
+const ROOT = join(import.meta.dirname, "../..");
 const AGENT_SNAP = "hanoi__zalo-agent__2099-01-01T000000";
 const MOCK_SNAP = "hanoi__zalo-mock__2099-01-01T000000";
 
@@ -201,9 +207,60 @@ test("AC-9 stg không đổi", { timeout: 300_000 }, async () => {
   await withTx(async (c) => {
     const before = await stgPrint(c);
     await runTransformZalo(c);
+    await runTransformFb(c);
     assert.deepEqual(await stgPrint(c), before, "AC-9 transform sửa stg");
     // Đối chứng: phép đo nhạy với một dòng sửa.
     await c.query(`UPDATE stg_zalo_posts SET text = text || ' ' WHERE post_id = (SELECT min(post_id) FROM stg_zalo_posts)`);
     assert.notDeepEqual(await stgPrint(c), before, "AC-9 vân tay stg không nhạy");
   });
+});
+
+test("AC-3 transform S05 dùng cùng bộ lọc", { timeout: 300_000 }, async () => {
+  await withTx(async (c) => {
+    const p = await insertPost(c, { post_id: pid("fb"), agent_id: "apify-facebook", group_name: "TEST FB", text: saleText("67.7", "0912 000 666") });
+    const res = await runTransformFb(c);
+    assert.equal((await offersWith(c, p)).length, 0, "AC-3 S05 nhận post thử");
+    assert.ok(res.rejected.by_marker.group >= 1);
+    // Đối chứng cùng fixture: nhóm thường → có offer S05.
+    await c.query(`UPDATE stg_zalo_posts SET group_name = 'Mua bán nhà Hà Nội' WHERE post_id = $1`, [p]);
+    await runTransformFb(c);
+    const got = await offersWith(c, p);
+    assert.equal(got.length, 1, "AC-3 đối chứng: post Facebook thường phải thành offer");
+    assert.equal(got[0].source, "S05");
+  });
+});
+
+/** Mọi tệp mã không phải test dưới các thư mục cho trước (bỏ node_modules, tests/, *.test.*). */
+function codeFiles(dirs, exts) {
+  const out = [];
+  const walk = (d) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, e.name);
+      if (e.isDirectory()) {
+        if (["node_modules", "tests", ".next", "dist"].includes(e.name)) continue;
+        walk(full);
+      } else if (exts.some((x) => e.name.endsWith(x)) && !/\.test\./.test(e.name)) {
+        out.push({ path: relative(ROOT, full), text: readFileSync(full, "utf8") });
+      }
+    }
+  };
+  for (const d of dirs) walk(join(ROOT, d));
+  return out;
+}
+
+test("AC-3 quét quan hệ: chỉ loadStgPosts đưa stg vào canonical", () => {
+  const files = codeFiles(["pipeline", "agent/src"], [".mjs", ".ts"]);
+  assert.ok(files.some((f) => f.path === "pipeline/transform-zalo.mjs"), "AC-3 bộ quét không thấy transform — đường dẫn hỏng");
+  assert.deepEqual(scanStgWriters(files), [], "AC-3 có đường đọc stg ghi canonical ngoài loadStgPosts");
+  // Chiều đỏ: tệp mẫu đọc stg rồi gọi writeOffers.
+  const bad = { path: "mau.mjs", text: "const r = await c.query('SELECT * FROM stg_zalo_posts');\nawait writeOffers(c, 'S03', r);" };
+  assert.deepEqual(scanStgWriters([bad, { path: "sach.mjs", text: "// stg_zalo_posts\nawait writeOffers(c, 'S03', r);" }]), ["mau.mjs"]);
+});
+
+test("AC-4 không câu DELETE FROM sale_offers mới", () => {
+  const files = codeFiles(["pipeline", "agent/src", "app/src", "data-api/src", "scripts"], [".mjs", ".ts", ".tsx", ".sh"]);
+  assert.ok(files.length > 50, "AC-4 bộ quét đọc quá ít tệp — đường dẫn hỏng");
+  const hit = [...new Set(scanDeleteAll(files).map((h) => h.split(":")[0]))].sort();
+  assert.deepEqual(hit, ["pipeline/lib/write-offers.mjs"], "AC-4 có câu DELETE FROM sale_offers ngoài đối soát");
+  assert.deepEqual(scanDeleteAll([{ path: "mau.mjs", text: "x\n  await c.query(\"DELETE FROM sale_offers WHERE source = 'S03'\");" }]), ["mau.mjs:2"]);
 });
