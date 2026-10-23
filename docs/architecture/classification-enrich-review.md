@@ -909,6 +909,7 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | Sự thật 8 + thang bậc B0–B5, N0–N4 + bậc đích | FRAMING §3.4 |
 | F2 (danh mục từ nhiều nguồn + từ tin), F5 (Mạnh và đội gắn nhãn) | §0.3 |
 | F3 ngưỡng theo cận dưới Wilson (A 0,95 · B 0,90 · C 0,80); F6 thứ tự dọn (mỗi bước ghi DB vẫn chờ Mạnh gật) | §0.3 |
+| R1–R5 khung RESO → **ADR-0013** (căn = UPI + Building, tin = Property; toà = `BuildingName`, phân khu = `ComplexName`; UPI kiểu VN; phường → `City`; DD 2.1) | `docs/adr/0013-…`, `reso-khung-phan-loai.md` |
 
 | **Còn chờ Mạnh** | Nơi ghi |
 |---|---|
@@ -917,7 +918,6 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | F4: độ tươi p50 ≤ 10′, p95 ≤ 30′; cửa sổ hiệu lực 14/7 ngày (đề xuất) | §0.3 |
 | F7: số giờ công/tuần giữ bậc | §0.2 F |
 | M1–M4 lớp model (sửa luật Local-first, tên nhóm không gửi cloud, Vercel AI Gateway, ADR trợ lý) | §0.4 |
-| R1–R5 khung RESO (căn = UPI + Building, tin = Property; toà = `BuildingName`, phân khu = `ComplexName`; UPI kiểu VN; phường → `City`; lấy DD 2.1) | `reso-khung-phan-loai.md` §9 |
 | Thang căn cứ 3 lớp, ghép căn là phát biểu, lát dọc thay đợt ngang (§0.2 D) — đề xuất, chưa duyệt riêng | §0.2 D |
 
 **Cắt lượt**: bản phạm vi `phan-loai-2310` và lộ trình 31 hàng (PL1–PL31) + 6 mục chờ (PH1–PH6), kèm việc bật gói

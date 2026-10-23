@@ -1,6 +1,6 @@
 # Khung RESO cho phân loại + enrich — cụ thể hoá
 
-> Ngày 2026-10-23 · Trạng thái: **đề xuất, chờ Mạnh duyệt** (quyết định R1–R5 ở §9) · Đi kèm:
+> Ngày 2026-10-23 · Trạng thái: **R1–R5 Mạnh duyệt 23/10 → chốt thành ADR-0013** (`docs/adr/0013-kien-truc-du-lieu-tin-can-reso.md`). Tài liệu này giữ bảng field chi tiết và căn cứ tra DD. · Đi kèm:
 > `docs/architecture/classification-enrich-review.md` (§0.2 tám thành phần, §0.3 lát Ocean Park 1),
 > `docs/product/FRAMING.md` (§3.1 ba lớp, §3.4 thang bậc), ADR-0011 (RESO-first).
 >

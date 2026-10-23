@@ -37,6 +37,10 @@ Field RESO đã xác minh (dd.reso.org): `SubdivisionName` (subdivision/communit
 
 ## Quyết định 2 — Danh pháp "Dự án" (chống mơ hồ)
 
+> **Sửa đổi 2026-10-23 (ADR-0013 §2)**: tra lại `dd-2.0.json`/`dd-2.1.json` — Toà nhà = `BuildingName`
+> (không phải `ComplexName`, vốn không có ở DD 2.0 và ở DD 2.1 là tầng trên toà); Phân khu = `Building.ComplexName`
+> (DD 2.1), bỏ extension; thêm Trục căn = extension `Stack`. Phường/xã → `City`. Bảng dưới giữ để lưu vết.
+
 "**Dự án**" bị cấm dùng làm danh pháp kỹ thuật đứng một mình. Bảng ánh xạ bắt buộc:
 
 | Thị trường gọi | Danh pháp nền tảng | `node_type` | RESO DD |

@@ -157,6 +157,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    **Dữ liệu là nỗ lực liên tục, có cấp bậc**: thang căn B0–B5 (lời khai → đọc được → gắn căn → đã đo → xác
    minh → sống), năng lực phân khúc N0–N4; north star = phân bố căn theo bậc; bậc đích: căn hộ có danh mục B5,
    nhà phố B3, Chợ Tốt B3 (FRAMING §3.4).
+14. **Kiến trúc dữ liệu «tin → căn» theo RESO DD 2.1** (23/10, **ADR-0013**): căn = UPI + `Building`, tin = `Property`;
+   toà = `BuildingName`, phân khu = `ComplexName`, trục = extension `Stack`; UPI kiểu VN `urn:onehub:upi`; phường/xã →
+   `City`; mọi giá trị máy/người ghi `FieldAssertion`; trạng thái chỉ theo bằng chứng. Mọi việc chạm dữ liệu tin/căn
+   kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

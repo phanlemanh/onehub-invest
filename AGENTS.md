@@ -98,6 +98,8 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    migration đã commit, không sửa tay DB production.
 3. **RESO-first (ADR-0011)**: field/enum mới phải tra RESO Data Dictionary trước; chỉ tạo
    mới khi là đặc trưng VN và khai đủ 6 điều kiện trong `pipeline/mappings.yaml`.
+   **Kiến trúc dữ liệu tin → căn (ADR-0013)**: căn = UPI + `Building`, tin = `Property`, tra **DD 2.1**; việc chạm
+   dữ liệu tin/căn kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013; khung mục đích ở `docs/product/FRAMING.md`.
 4. **DATA-CONTRACT** (`collector/docs/DATA-CONTRACT.md`) là giao diện collector↔pipeline;
    thêm field phải tăng `schemaVersion`.
 5. **AirDNA chỉ để hiệu chuẩn** (ToS) — không đưa số AirDNA lên Invest Portal; chỉ ở `/ops/quality`.
@@ -195,7 +197,7 @@ bash scripts/dev-ops-login-check.sh       # đăng nhập đầu-cuối bằng t
 
 ## Tài liệu nền
 
-ROADMAP v4 · ADR 0001–0012 (`docs/adr/`) · `docs/architecture/portals.md` ·
+ROADMAP v4 · ADR 0001–0013 (`docs/adr/`) · `docs/architecture/portals.md` ·
 `docs/architecture/invest-portal-ia.md` · `docs/ops/runtime-map.md` ·
 `docs/research/reso-standards.md` · `docs/research/property-master-record.md`.
 Điều tra web: kết quả thô để ở `research-local/` (gitignored), chưng cất vào `docs/research/`.
