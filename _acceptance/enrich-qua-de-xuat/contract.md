@@ -5,7 +5,7 @@ slug: enrich-qua-de-xuat
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, api, ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
@@ -63,6 +63,20 @@ Source input: prompt — quyết định của chủ kho trong hội thoại 22/
 ## Notes
 
 - Cổng Phạm vi lần 1: Mạnh duyệt 2026-10-22 (AC-1…AC-10, AC-7 cũ «E1 thắng»). Lần 2 (nâng phạm vi sau chạy thử thật 2026-10-23, Mạnh chốt «sửa trước khi ký enrich»): viết lại AC-7, thêm AC-11 — Mạnh duyệt 2026-10-23 theo khuyến nghị (Hỏi-7…10).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: Bài kiểm «Để sau» chạy trên DB local dùng chung nên có thể báo đỏ nhầm khi máy đang có thẻ «Để sau» thật; tính năng vẫn đúng.
+  - Ngoài-2: Cùng gốc Ngoài-1 — ca «Để sau» bốc ngẫu nhiên giữa tin thử và tin hoãn thật của máy.
+  - Ngoài-3: Cùng gốc Ngoài-1 — kết quả bài kiểm phụ thuộc trạng thái dữ liệu máy đang chạy.
+  - Ngoài-4: Lượt làm giàu dài nằm trong một giao dịch: duyệt thẻ vừa bị lượt đó đụng có thể treo, lỗi cuối lượt mất cả lượt.
+  - Ngoài-5: Bản công khai của giao diện sẽ đỏ test vì đọc tệp mẫu nằm trong phần agent riêng.
+  - Ngoài-7: Cùng gốc Ngoài-4 — bước nạp dữ liệu có thể bị chặn chờ trong lúc lượt làm giàu dài chạy.
+  - Ngoài-8: LLM trả kết quả không đọc được thì không có bộ đếm hay cảnh báo; luật E1 áp như khi LLM im lặng.
+  - Ngoài-9: Dòng tổng kết lượt chạy đếm theo kế hoạch định tuyến, có thể nhiều hơn số giá trị thật sự được ghi.
+  - Ngoài-10: Bài kiểm thẻ đối chiếu chưa ghim cặp nhãn ↔ giá trị ↔ căn cứ.
+  - Ngoài-11: Bài kiểm thẻ xung đột chưa có đối chứng dương rằng các ô không xung đột còn hiện.
+  - Ngoài-12: Rào chắn chống ghi thẳng dò theo dòng, có thể sót cách viết trải nhiều dòng.
+  - Ngoài-13: Bài kiểm độ tin cậy trên thẻ dùng dữ liệu mẫu cùng một mức nên chưa phân biệt được từng dòng.
+- Ngoài-6 (khoá ngoại xoá dây chuyền đề xuất khi transform nạp lại S03/S05): Mạnh chọn mở hợp đồng mới 2026-10-23.
 
 - Hàm SQL là một nguồn duy nhất cho việc áp, vì `app/` không được import `agent/` (app/CLAUDE.md).
 - Kiểm thử DB chạy trong transaction rồi ROLLBACK trên Postgres local :5433 — không để lại dữ liệu.
