@@ -39,8 +39,10 @@ setInterval(() => {
     .catch((err) => console.error("flush failed (giữ buffer, thử lại sau 60s):", err.message));
 }, 60_000).unref();
 
-// launchd gửi SIGTERM khi bootout/restart; tay Ctrl-C là SIGINT. Flush buffer
-// thành snapshot trước khi thoát — tin đã ack 202 không được mất âm thầm.
+// launchd gửi SIGTERM khi bootout/restart; tay Ctrl-C là SIGINT. Đóng HTTP
+// trước (không nhận POST mới), rồi LẶP flush buffer thành snapshot tới khi
+// hết buffer mới thoát — tin đã ack 202 không được mất âm thầm. Deadline 45s
+// nằm trong ExitTimeOut 60s của plist — không đua SIGKILL.
 installGracefulShutdown(
   {
     on: (sig, fn) => process.on(sig, fn),
@@ -48,5 +50,14 @@ installGracefulShutdown(
     exit: (code) => process.exit(code),
     log: (line) => console.log(line),
   },
-  { flush: () => agent.flush() },
+  {
+    flush: (flushOpts) => agent.flush(flushOpts),
+    close: () =>
+      new Promise<void>((resolve) => {
+        server.close(() => resolve());
+        // close() chỉ chặn connection MỚI — keep-alive đang mở vẫn nhận POST
+        // tiếp, nên cắt nốt (Node ≥18.2) để cửa đóng thật sự trước khi flush.
+        if (typeof server.closeAllConnections === "function") server.closeAllConnections();
+      }),
+  },
 );
