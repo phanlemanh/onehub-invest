@@ -115,15 +115,24 @@ async function interact(page, pageId, title) {
   }).first();
   const steps = {};
   // Donut: rê lên lát đầu tiên; đường/cột: rê giữa vùng vẽ. Tooltip rỗng là lỗi, không nuốt.
-  const sector = frame.locator(".recharts-pie-sector").first();
-  if (await sector.count()) await sector.hover();
-  else {
-    const box = await frame.locator("[data-slot=chart]").first().boundingBox();
-    if (!box) throw new Error(`không thấy vùng biểu đồ của "${title}" (${pageId})`);
+  const box = await frame.locator("[data-slot=chart]").first().boundingBox();
+  if (!box) throw new Error(`không thấy vùng biểu đồ của "${title}" (${pageId})`);
+  if (await frame.locator(".recharts-pie-sector").count()) {
+    // Donut: thẻ <svg> chặn hover theo phần tử, nên rê theo toạ độ trên vành (bán kính 66 =
+    // giữa inner 56 và outer 76 của mix-donut), thử các góc theo thứ tự cố định tới khi ra tooltip.
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    for (let deg = 0; deg < 360 && !steps.hover; deg += 30) {
+      const rad = (deg * Math.PI) / 180;
+      await page.mouse.move(cx + 66 * Math.cos(rad), cy - 66 * Math.sin(rad));
+      await page.waitForTimeout(250);
+      steps.hover = await tooltipText(frame);
+    }
+  } else {
     await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.6);
+    await page.waitForTimeout(300);
+    steps.hover = await tooltipText(frame);
   }
-  await page.waitForTimeout(300);
-  steps.hover = await tooltipText(frame);
   if (!steps.hover) throw new Error(`rê chuột không ra tooltip ở "${title}" (${pageId})`);
   await page.mouse.move(0, 0);
   if (title === "Hiệu suất theo tháng") {
