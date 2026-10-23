@@ -58,7 +58,8 @@ installGracefulShutdown(
       // P3 (claudedp-2310-3 vòng 3): POST gửi nửa body rồi im → server.close
       // callback KHÔNG BAO GIỜ tới nếu chờ connection treo → mất cả buffer
       // vì deadline cạn lúc còn await close(). Race với 3s: hết giờ thì bỏ
-      // chờ, flush ngay — request dở không được ack, agent tự retry.
+      // chờ, flush ngay — request dở không ack thì hook ZC6 spool gửi lại
+      // (collector/openclaw/handler.js + core/agent-delivery.ts), không phụ thuộc agent.
       const giveUp = new Promise<void>((r) => setTimeout(r, 3_000).unref?.());
       const closing = new Promise<void>((resolve) => {
         server.close(() => resolve()); // resolve khi mọi request đang chạy xong
