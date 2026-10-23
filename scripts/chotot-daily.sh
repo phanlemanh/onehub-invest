@@ -14,6 +14,11 @@ for CITY in hanoi hcmc; do
   LATEST=$(ls -1d "$ROOT"/collector/snapshots/$CITY/${CITY}__chotot-ads__* 2>/dev/null | sort | tail -1)
   [ -n "$LATEST" ] && node "$ROOT/pipeline/import-chotot.mjs" "$LATEST"
 done
-node "$ROOT/pipeline/transform-chotot.mjs"
-node "$ROOT/pipeline/refresh-bait-gap.mjs"
-node "$ROOT/pipeline/resolve-properties.mjs"
+# Từ đây trở xuống là làn Claude (AU3): chạy đủ các bước như cũ — refresh-bait-gap và
+# resolve-properties là bước liên nguồn, vẫn chạy khi transform-chotot hỏng — nhưng thoát bằng
+# mã của bước hỏng ĐẦU TIÊN để launchd thấy lỗi (đêm 22/10: DB lên lại giữa chuỗi → exit 0).
+. "$ROOT/scripts/lib/job-step.sh"
+job_run chotot-daily transform-chotot node "$ROOT/pipeline/transform-chotot.mjs"
+job_run chotot-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+job_run chotot-daily resolve-properties node "$ROOT/pipeline/resolve-properties.mjs"
+exit "$JOB_RC"
