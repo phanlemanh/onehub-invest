@@ -1,0 +1,140 @@
+schema_version: 1
+feature_slug: enrich-qua-de-xuat
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-1 không ghi thẳng' trong agent/tests/enrich-guard.test.ts xanh trên cây thật (quét agent/src + agent/scripts: 0 câu UPDATE sale_offers|properties). Chiều đỏ cùng bộ quét: tệp mẫu dựng trong thư mục tạm chứa 'UPDATE sale_offers SET' → ca đỏ, thông điệp ghim 'ghi thẳng: <tệp>:<dòng>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/**, agent/scripts/**, agent/tests/enrich-guard.test.ts]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-2 E1 áp thẳng kèm nguồn' trong agent/tests/enrich-db.test.ts xanh: offer fixture có property_type='unknown', E1 ra 'apartment' → sale_offers.property_type='apartment' và 1 dòng enrichment_proposals source=e1_rule route=direct status=applied có run_id + evidence.matchedBy; cùng một mảng ids có thêm một offer KHÔNG gắn property nào → cả hai offer đều applied, không lỗi, properties không đổi với offer thứ hai. Chiều đỏ cùng fixture: field đã có giá trị → 0 đề xuất, giá trị cũ giữ nguyên, thông điệp ghim 'AC-2'. Toàn bộ chạy trong BEGIN…ROLLBACK."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/enrich-run.ts, agent/src/enrich/**, db/migrations/033_enrichment_proposals.sql, agent/tests/enrich-db.test.ts]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; các ca 'AC-3' trong agent/tests/enrich-route.test.ts và enrich-db.test.ts xanh. Fixture LLM RÚT TỪ ≥3 tệp trace enrich-text thật (agent/tests/fixtures/, chép output từ agent/traces ngày 22/10) đi qua parseEnrichOutput thật; giá trị E1 sinh bằng resolveContext thật trên fixture group_name/text. Ca: LLM bedrooms "2" (chuỗi) + E1 2 (số) → corroborated sau normalizeValue; LLM 'Apartment' + E1 'apartment' → corroborated, corroborated_by='e1'; LLM block khớp alias node building → corroborated_by='asset_nodes:<slug>', block_raw = tên chuẩn node. Chiều đỏ cùng fixture: alias không khớp node nào → route=review, sale_offers không đổi, thông điệp ghim 'AC-3'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/enrich/**, agent/scripts/enrich-run.ts, db/migrations/033_enrichment_proposals.sql, agent/tests/enrich-route.test.ts, agent/tests/enrich-db.test.ts, agent/tests/fixtures/**]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-4 LLM không căn cứ vào hàng duyệt' trong enrich-db.test.ts xanh: field LLM không căn cứ → sale_offers không đổi, đề xuất status=queued, đúng 1 thẻ review_queue item_type=agent_output item_id=enrich:<offer_id> status=pending, evidence có fields[{proposal_id,field,value,confidence}] + run_id + model + trace_path. Chiều đỏ: thêm một field E1 cho cùng offer → field E1 được áp còn field LLM vẫn queued (thẻ chỉ liệt field LLM), thông điệp ghim 'AC-4'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/enrich-run.ts, agent/src/enrich/**, db/migrations/033_enrichment_proposals.sql, agent/tests/enrich-db.test.ts]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    expected: "exit 0; ca 'AC-5 duyệt áp fill-gap + cascade (nối liền)' trong enrich-db.test.ts xanh: chạy enrich trên fixture LLM không căn cứ → lấy id thẻ DO CHÍNH LƯỢT ĐÓ sinh (không dựng thẻ tay) → decide_enrichment_review(id,'approved','test') → số đề xuất applied = số queued trước đó và > 0, sale_offers nhận đúng giá trị, properties liên kết nhận bedrooms/bathrooms/street còn trống, enrichment_log có phần tử src='enrich-proposals' với proposal_ids + actor. Chiều đỏ cùng fixture: (a) field đã có giá trị khác lúc duyệt → skipped, giá trị cũ giữ, ghim 'AC-5 skipped'; (b) xoá review_id trên các đề xuất trước khi duyệt → ca đỏ, ghim 'AC-5 thẻ không trỏ đề xuất'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [db/migrations/033_enrichment_proposals.sql, agent/tests/enrich-db.test.ts]
+
+  - id: E6
+    criterion: AC-5
+    executor: judgment
+    question: "Trong route.ts, khi item_type là 'agent_output', item_id bắt đầu bằng 'enrich:' và thẻ KHÔNG có đề xuất xung đột (không field nào có từ hai đề xuất queued), route có gọi decide_enrichment_review với đúng status nhận được và người quyết, TRONG cùng transaction (giữa BEGIN và COMMIT) với câu cập nhật review_queue, và vẫn ghi auditOpsWrite 'review:decide' như nhánh entity_match không? (Nhánh thẻ có xung đột chấm ở E17.)"
+    inputs: ["app/src/app/api/v1/ops/review/[id]/decide/route.ts"]
+    evidence_required: [judged_by, verdict, rationale]
+
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-6 bỏ/để sau' trong enrich-db.test.ts xanh: rejected → đề xuất rejected, sale_offers không đổi, chạy lại enrich với cùng giá trị LLM → 0 đề xuất mới, 0 thẻ chờ mới; deferred → đề xuất giữ queued, chạy lại → đúng 1 thẻ chờ mới gắn các đề xuất đó. Chiều đỏ cùng fixture: bỏ ràng buộc duy nhất (offer_id,field,value,source) trong bản sao → ca đỏ với thông điệp ghim 'AC-6 đẩy lại giá trị đã bác'. Thêm (S4-r3): ca 'AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin ngoài bộ lọc thiếu field' xanh — tin chỉ còn đề xuất phòng ngủ, thẻ bị hoãn, lượt backlog limit=1 không chỉ định offer → đúng 1 thẻ pending mới cho tin đó; chiều đỏ: câu chọn backlog cũ (chỉ bộ lọc thiếu field + random) → ca đỏ ghim 'AC-6 để sau không mở lại thẻ'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [db/migrations/033_enrichment_proposals.sql, agent/scripts/enrich-run.ts, agent/src/enrich/**, agent/tests/enrich-db.test.ts]
+
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-7 xung đột E1/LLM lên thẻ' trong agent/tests/enrich-route.test.ts xanh: E1='land', LLM='house' cho property_type → HAI Routed route=review (một source=e1_rule, một e2_llm), cả hai mang conflict=true, KHÔNG có route=direct nào cho field đó, summarizeRun([rs]).xungDot=1 và review=2. Đối chứng dương cùng fixture (should-NOT-fire): (a) E1='house', LLM='house' → đúng một Routed e2_llm corroborated by e1, conflict vắng, xungDot=0; (b) E1='land', LLM vắng property_type → đúng một Routed e1_rule direct. Chiều đỏ: bản sao route.ts trả lại hành vi cũ (E1 direct + LLM superseded) → ca đỏ, thông điệp ghim 'AC-7: E1 không được áp khi trái LLM'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/enrich/**, agent/tests/enrich-route.test.ts]
+
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-8 chạy lại + dry' trong enrich-db.test.ts xanh: hai lượt liên tiếp trên cùng fixture → số dòng enrichment_proposals và số thẻ agent_output pending ở lượt hai bằng lượt một; chạy lại với 'Apartment' sau khi đã bác 'apartment' → 0 đề xuất mới; lượt --dry → băm md5 theo dòng của sale_offers(property_type,bedrooms,bathrooms,street_raw,block_raw), properties(bedrooms,bathrooms,street,enrichment_log), enrichment_proposals, review_queue trước = sau. Chiều đỏ cùng fixture: bản sao để --dry chạy một câu UPDATE sale_offers mà không INSERT đề xuất → ca đỏ, ghim 'AC-8 dry đã ghi'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/enrich-run.ts, agent/src/enrich/**, db/migrations/033_enrichment_proposals.sql, agent/tests/enrich-db.test.ts]
+
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; app/tests/review-card.test.tsx (jsdom) xanh: thẻ agent_output hiện đoạn tin, bảng field·giá trị·độ tin cậy, 3 nút; bấm từng nút → fetch POST /api/v1/ops/review/<id>/decide với body status approved|rejected|deferred; thẻ entity_match vẫn hiện 'Tin A'/'Tin B'; item_type lạ → dòng 'chưa có giao diện duyệt', không ném lỗi. Chiều đỏ cùng fixture: evidence agent_output thiếu fields → thẻ hiện dòng báo thiếu dữ liệu, không sập, thông điệp ghim 'AC-9'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [app/src/components/ops/review-card.tsx, app/tests/review-card.test.tsx]
+
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    expected: "exit 0; ca 'AC-5 duyệt áp fill-gap + cascade (nối liền)' và 'AC-6 bỏ/để sau' trong enrich-db.test.ts xanh — đường backend mà ba nút của thẻ gọi tới (decide_enrichment_review với approved|rejected|deferred) trên thẻ do chính enrich-run sinh trong transaction (nonce run_id riêng của ca)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [db/migrations/033_enrichment_proposals.sql, agent/tests/enrich-db.test.ts]
+
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-10 PII không lên cloud' trong pipeline/scripts/sync-cloud-pii.test.mjs xanh: đọc danh sách FILL từ pipeline/sync-cloud.mjs, enrichment_proposals và review_queue không có mặt. Chiều đỏ cùng bộ đọc: bản sao FILL có thêm 'enrichment_proposals' → ca đỏ, thông điệp ghim 'PII: enrichment_proposals trong FILL'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/sync-cloud.mjs, pipeline/scripts/sync-cloud-pii.test.mjs]
+
+  - id: E13
+    criterion: AC-4
+    executor: judgment
+    question: "docs/research/enrichment-agent-design.md có còn mô tả đường ghi cũ (LLM UPDATE thẳng sale_offers, hay ngưỡng confidence quyết định ghi) không? Bản mô tả hiện tại có khớp đường mới trong design doc của vòng (đề xuất → luật xác định → /ops/review) không?"
+    inputs: [docs/research/enrichment-agent-design.md, docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md]
+    evidence_required: [judged_by, verdict, rationale]
+
+  - id: E14
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    expected: "exit 0; ca 'AC-7 hai tin S05 thật không bị áp land' trong agent/tests/enrich-db.test.ts xanh. Fixture agent/tests/fixtures/e1-conflict-cases.json RÚT TỪ hai lượt chạy thật 2026-10-23 (offer_feb6cd92901f426c, offer_c5ac0386105f18ae): group_name thật + đoạn tin đã bỏ liên hệ + output LLM nguyên văn từ hai trace 2026-10-22T23-26-24 và 23-31-25, đi qua parseEnrichOutput thật; E1 sinh bằng resolveContext thật (ra 'land' — ca ghim điều đó trước, đổi luật E1 thì ca báo rõ). Với mỗi ca, offer fixture property_type='unknown' trong BEGIN…ROLLBACK: sau runEnrich → sale_offers.property_type vẫn 'unknown'; enrichment_proposals của field có 2 dòng (e1_rule 'land', e2_llm 'house') route=review status=queued cùng review_id; thẻ đó item_id=enrich:<offer> pending, evidence.fields có hai phần tử property_type mang conflict=true, source và basis không rỗng (basis E1 nhắc từ khoá 'đất' và 'tên nhóm'; basis LLM nhắc model). Chạy lại lượt hai → số đề xuất và số thẻ pending không đổi, evidence thẻ vẫn mang conflict=true; lượt hai với LLM vắng property_type và một lượt LLM ném lỗi → property_type vẫn 'unknown', đề xuất e1_rule vẫn queued, 0 đề xuất applied cho field (chiều đỏ: bản sao bỏ luật giữ field đang xung đột → ca đỏ ghim 'AC-7 lượt sau áp E1 vượt thẻ'). Ca để sau: decide_enrichment_review(id,'deferred') rồi chạy lại → đúng 1 thẻ pending mới, evidence.fields có 2 phần tử property_type conflict=true, source + basis không rỗng (chiều đỏ ghim 'AC-7 dựng lại mất xung đột'). Evidence thẻ do writer thật sinh phải khớp khuôn khoá (tên khoá + kiểu) của tệp chung agent/tests/fixtures/e1-conflict-card.json — tệp E16 nạp (chiều đỏ ghim 'AC-11 lệch khoá evidence'). Đối chứng dương cùng bộ (should-NOT-fire): LLM fixture sửa property_type thành 'land' → đề xuất e2_llm corroborated by e1, sale_offers.property_type='land', không thẻ nào cho field đó."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/enrich/**, agent/src/agents/context-resolver.ts, agent/scripts/enrich-run.ts, agent/tests/enrich-db.test.ts, agent/tests/fixtures/**]
+
+  - id: E15
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.agent
+    layer: backend-effect
+    expected: "exit 0; ca 'AC-11 chọn một bên rồi áp' trong agent/tests/enrich-db.test.ts xanh trên thẻ DO enrich-run sinh từ fixture xung đột (không dựng tay): đúng chuỗi lệnh SQL mà route chạy — apply_enrichment(ids được chọn + đề xuất không xung đột) rồi decide_enrichment_review(id,'rejected',actor) — cho kết quả: đề xuất LLM 'house' applied, đề xuất E1 'land' rejected, sale_offers.property_type='house', các field không xung đột của thẻ (bathrooms, street_raw) applied; chạy lại enrich → 0 đề xuất mới, 0 thẻ pending mới. Ca «Bỏ»: decide_enrichment_review(id,'rejected') → cả hai rejected, property_type vẫn 'unknown', chạy lại → 0 đề xuất mới. Chiều đỏ cùng fixture: gọi decide_enrichment_review(id,'approved') thẳng (bỏ bước chọn) → ca chứng minh đề xuất id nhỏ hơn (E1 'land') thắng, thông điệp ghim 'AC-11 duyệt không chọn áp nhầm E1' — lý do route phải chặn khi thiếu choices."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [db/migrations/033_enrichment_proposals.sql, agent/src/enrich/**, agent/tests/enrich-db.test.ts, agent/tests/fixtures/**]
+
+  - id: E16
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; app/tests/review-card.test.tsx và app/tests/enrich-choices.test.tsx xanh, nạp evidence thẻ xung đột từ tệp chung agent/tests/fixtures/e1-conflict-card.json (rút từ writer thật, E14 ghim khuôn). Thẻ agent_output có field xung đột: hiện «Theo luật» và «Theo LLM» (Badge), hai giá trị, hai dòng căn cứ, lựa chọn «Bỏ cả hai»; nút «Áp dụng» disabled; chọn «Theo LLM» → nút bật, bấm → fetch POST /api/v1/ops/review/<id>/decide body {status:'approved', choices:{property_type:<proposal_id của LLM>}}. Đối chứng dương (should-NOT-fire): thẻ không xung đột → không có lựa chọn, «Áp dụng» bật ngay, body không có choices. Hàm planEnrichApproval (app/src/lib/enrich-choices.ts, route dùng): thiếu lựa chọn cho field xung đột → lỗi ghim 'thiếu lựa chọn: property_type'; chọn id không thuộc field → lỗi; null → không áp bên nào; không xung đột → applyIds = mọi đề xuất queued. Lint app (suite executors.test.app) xanh và baseline eslint-suppressions.json không tăng."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [app/src/components/ops/review-card.tsx, app/src/lib/enrich-choices.ts, app/tests/review-card.test.tsx, app/tests/enrich-choices.test.tsx, agent/tests/fixtures/e1-conflict-card.json]
+
+  - id: E17
+    criterion: AC-11
+    executor: judgment
+    question: "Trong route.ts, nhánh agent_output enrich: khi status='approved' và thẻ có đề xuất xung đột, route có (1) đọc các đề xuất queued của thẻ và kiểm choices bằng planEnrichApproval (enrich-choices.ts), trả 400 rồi ROLLBACK khi thiếu/sai lựa chọn TRƯỚC khi đổi review_queue, (2) áp bằng apply_enrichment cho các id planEnrichApproval trả về rồi bác phần còn lại bằng decide_enrichment_review(...,'rejected',...) trong CÙNG transaction với cập nhật review_queue, không có câu UPDATE sale_offers hay UPDATE enrichment_proposals viết tay, và (3) ghi auditOpsWrite 'review:decide' kèm choices không? Và trong cùng tệp: khi thẻ không xung đột, route có gọi decide_enrichment_review với đúng status nhận được; nhánh entity_match có KHÔNG gọi hàm enrich nào không?"
+    inputs: ["app/src/app/api/v1/ops/review/[id]/decide/route.ts", app/src/lib/enrich-choices.ts]
+    evidence_required: [judged_by, verdict, rationale]
+

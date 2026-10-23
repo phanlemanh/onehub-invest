@@ -1,0 +1,9 @@
+{
+  "feature_plain": "Giá trị máy đoán thêm cho tin rao không còn tự ghi vào dữ liệu: luật chắc chắn thì áp kèm nguồn, đoán của AI chỉ vào khi có căn cứ độc lập hoặc người duyệt — và khi luật với AI nói khác nhau, cả hai lên thẻ duyệt để người chọn.",
+  "scope_plain": "Các mục dưới vẫn để ngoài vòng này như anh đã duyệt ở Cổng Phạm vi.",
+  "decisions": [
+    {"id": "E6", "q": "Duyệt thẻ không xung đột có ghi đúng và lưu nhật ký người duyệt?", "why": "Hội đồng ba góc nhìn đều đề xuất đạt: nút «Áp dụng» gọi đúng hàm áp trong cùng giao dịch và ghi nhật ký."},
+    {"id": "E13", "q": "Tài liệu thiết kế làm giàu đã bỏ hẳn đường ghi thẳng cũ chưa?", "why": "Hội đồng đề xuất đạt: tài liệu mô tả đúng đường đề xuất → luật → duyệt, gồm cả thẻ đối chiếu khi luật trái AI."},
+    {"id": "E17", "q": "Thẻ xung đột chỉ áp đúng bên anh chọn và chặn khi chưa chọn?", "why": "Hội đồng đề xuất đạt: thiếu lựa chọn thì trả lỗi trước khi đổi gì; bên được chọn áp bằng hàm sẵn có, bên kia bị bác, nhật ký ghi lựa chọn."}
+  ]
+}

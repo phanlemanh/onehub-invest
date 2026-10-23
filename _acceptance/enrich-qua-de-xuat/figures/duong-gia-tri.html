@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đường giá trị enrichment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1280px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · enrich-qua-de-xuat · d-1 · d-3 · d-9</p>
+    <h1>Đường giá trị: từ E1 và LLM đến sale_offers</h1>
+    <p class="sub">Năm nhánh định tuyến (spec §3.2), ba nhánh duyệt (§3.4), một hàm ghi duy nhất (§3.3) · AC-1 … AC-7</p>
+
+    <svg viewBox="0 72 1240 768" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect x="0" y="72" width="1240" height="768" fill="#f5f5f5"/>
+
+      <!-- ===== Vùng ===== -->
+      <!-- Vùng máy tự làm -->
+      <rect x="24" y="96" width="1192" height="392" rx="8" fill="none" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="40" y="120" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">MÁY TỰ LÀM · agent/enrich-run + hàm SQL</text>
+      <!-- Vùng người quyết -->
+      <rect x="24" y="512" width="1192" height="232" rx="8" fill="rgba(79,93,117,0.08)" stroke="rgba(45,49,66,0.20)" stroke-width="1"/>
+      <text x="40" y="536" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">NGƯỜI QUYẾT · /ops/review</text>
+
+      <!-- ===== Mũi tên (vẽ trước hộp) ===== -->
+      <!-- Đầu vào → chuẩn hoá -->
+      <line x1="208" y1="160" x2="248" y2="160" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="208" y1="340" x2="248" y2="340" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Chuẩn hoá → năm nhánh -->
+      <line x1="368" y1="160" x2="528" y2="160" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="368" y1="232" x2="528" y2="232" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="368" y1="304" x2="528" y2="304" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="368" y1="376" x2="528" y2="376" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+      <line x1="368" y1="448" x2="528" y2="448" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Ba nhánh áp → apply_enrichment -->
+      <line x1="768" y1="160" x2="848" y2="160" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="768" y1="232" x2="848" y2="232" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="768" y1="304" x2="848" y2="304" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- queued → thẻ duyệt -->
+      <path d="M648 472 V624 Q648 632 656 632 H728" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Thẻ → ba nhánh duyệt -->
+      <path d="M808 584 V568 Q808 560 816 560 H944" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="888" y1="632" x2="944" y2="632" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M808 680 V696 Q808 704 816 704 H944" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Áp dụng → apply_enrichment -->
+      <line x1="1064" y1="536" x2="1064" y2="328" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- ===== Nhãn mũi tên ===== -->
+      <rect x="400" y="138" width="96" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="448" y="150" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">E1 HỢP LỆ</text>
+
+      <rect x="400" y="210" width="96" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="448" y="222" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">LLM = E1</text>
+
+      <rect x="384" y="282" width="128" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="448" y="294" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">LLM ≈ BUILDING</text>
+
+      <rect x="400" y="354" width="96" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="448" y="366" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">LLM ≠ E1</text>
+
+      <rect x="392" y="426" width="112" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="448" y="438" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KHÔNG CĂN CỨ</text>
+
+      <rect x="844" y="536" width="72" height="16" rx="2" fill="#e8e9eb"/>
+      <text x="880" y="548" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">APPROVED</text>
+
+      <rect x="888" y="608" width="52" height="16" rx="2" fill="#e8e9eb"/>
+      <text x="914" y="620" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">REJECTED</text>
+
+      <rect x="844" y="680" width="72" height="16" rx="2" fill="#e8e9eb"/>
+      <text x="880" y="692" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">DEFERRED</text>
+
+
+      <!-- ===== Nút ===== -->
+      <!-- Đầu vào: Giá trị E1 (luật) -->
+      <rect x="48" y="136" width="160" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="48" y="136" width="160" height="48" rx="24" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <text x="128" y="158" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Giá trị E1 (luật)</text>
+      <text x="128" y="174" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">context-resolver.ts</text>
+
+      <!-- Đầu vào: Giá trị LLM -->
+      <rect x="48" y="316" width="160" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="48" y="316" width="160" height="48" rx="24" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <text x="128" y="338" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Giá trị LLM</text>
+      <text x="128" y="354" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">enrich-text.ts · Qwen</text>
+
+      <!-- Chuẩn hoá -->
+      <rect x="248" y="136" width="120" height="336" rx="6" fill="#f5f5f5"/>
+      <rect x="248" y="136" width="120" height="336" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="308" y="300" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chuẩn hoá</text>
+      <text x="308" y="316" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">normalizeValue()</text>
+      <text x="308" y="330" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">route.ts</text>
+
+      <!-- Nhánh 1: áp thẳng (direct) -->
+      <rect x="528" y="136" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="528" y="136" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="648" y="158" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Áp thẳng</text>
+      <text x="648" y="174" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">direct · e1_rule</text>
+      <text x="760" y="150" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-2</text>
+
+      <!-- Nhánh 2: áp (corroborated · e1) -->
+      <rect x="528" y="208" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="528" y="208" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="648" y="230" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Áp</text>
+      <text x="648" y="246" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">corroborated · e1</text>
+      <text x="760" y="222" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-3</text>
+
+      <!-- Nhánh 3: áp tên chuẩn (corroborated · asset_nodes) -->
+      <rect x="528" y="280" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="528" y="280" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="648" y="302" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Áp tên chuẩn</text>
+      <text x="648" y="318" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">corroborated · asset_nodes</text>
+      <text x="760" y="294" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-3</text>
+
+      <!-- Nhánh 4: superseded — Hỏi d-9 (chờ người chốt) -->
+      <rect x="528" y="352" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="528" y="352" width="240" height="48" rx="6" fill="rgba(235,108,54,0.05)" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="4,4"/>
+      <text x="648" y="374" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">superseded — Hỏi d-9</text>
+      <text x="648" y="390" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">E1 thắng · không đẩy duyệt</text>
+      <text x="760" y="366" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-7</text>
+      <!-- Chú thích: nhánh chờ người chốt -->
+      <text x="788" y="382" fill="#ba4513" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">← chờ người chốt (d-9)</text>
+
+      <!-- Nhánh 5: enrichment_proposals queued -->
+      <rect x="528" y="424" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="528" y="424" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="648" y="446" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">enrichment_proposals</text>
+      <text x="648" y="462" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">status = queued</text>
+      <text x="760" y="438" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-4</text>
+
+      <!-- apply_enrichment — nút ghi duy nhất (focal) -->
+      <rect x="848" y="136" width="240" height="192" rx="6" fill="#f5f5f5"/>
+      <rect x="848" y="136" width="240" height="192" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="1080" y="152" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-1 · AC-5</text>
+      <text x="968" y="216" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">apply_enrichment</text>
+      <text x="968" y="234" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">hàm SQL duy nhất ghi</text>
+      <text x="968" y="250" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">sale_offers / properties</text>
+
+      <!-- Thẻ /ops/review — người quyết -->
+      <polygon points="808,584 888,632 808,680 728,632" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+      <text x="808" y="630" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thẻ duyệt</text>
+      <text x="808" y="646" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/ops/review</text>
+
+      <!-- Áp dụng -->
+      <rect x="944" y="536" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="944" y="536" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1064" y="558" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Áp dụng</text>
+      <text x="1064" y="574" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">fill-gap + cascade properties</text>
+      <text x="1176" y="550" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-5</text>
+
+      <!-- Bỏ -->
+      <rect x="944" y="608" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="944" y="608" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1064" y="630" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Bỏ</text>
+      <text x="1064" y="646" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">rejected · không đẩy lại</text>
+      <text x="1176" y="622" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-6</text>
+
+      <!-- Để sau -->
+      <rect x="944" y="680" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="944" y="680" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1064" y="702" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Để sau</text>
+      <text x="1064" y="718" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">giữ queued · lượt sau mở thẻ mới</text>
+      <text x="1176" y="694" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-6</text>
+
+      <!-- ===== Chú giải ===== -->
+      <line x1="40" y1="768" x2="1200" y2="768" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="788" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="804" width="24" height="12" rx="6" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <text x="72" y="814" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Giá trị đầu vào</text>
+
+      <rect x="200" y="804" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="232" y="814" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Máy tự làm (vùng khung nét đứt)</text>
+
+      <rect x="420" y="800" width="32" height="20" rx="2" fill="rgba(79,93,117,0.08)" stroke="rgba(45,49,66,0.20)" stroke-width="1"/>
+      <polygon points="436,804 446,810 436,816 426,810" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="460" y="814" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Người quyết (vùng tô)</text>
+
+      <rect x="616" y="804" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="648" y="814" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nút ghi duy nhất vào sale_offers / properties</text>
+
+      <line x1="880" y1="810" x2="912" y2="810" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+      <rect x="920" y="804" width="24" height="12" rx="2" fill="rgba(235,108,54,0.05)" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="4,4"/>
+      <text x="952" y="814" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh superseded — chờ người chốt (d-9)</text>
+    </svg>
+  </div>
+</body>
+</html>
