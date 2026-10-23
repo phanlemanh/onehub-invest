@@ -5,7 +5,7 @@ slug: so-be-mat-api
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-so-be-mat-api-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23T12:10:00Z
@@ -82,3 +82,9 @@ Quét bằng morphological-scan (preset test-matrix), ba trục:
 - Merge vào `main` = Vercel prod đóng `/api/v1/offers` với người gọi công khai ngay (khó-đảo nhẹ; đảo bằng `git revert`).
 - Smoke cần app chạy TỪ worktree đang kiểm ở `:3456` (hoặc `BASE_URL`), DB local `:5433`, ít nhất một user `admin`
   trong DB local, và `OPS_API_TOKEN` (env hoặc `app/.env.local`).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-2: Ma trận hành vi chạy riêng không tự xác nhận máy chủ nhận đúng khoá máy; lệch khoá thì nửa phép đo bằng khoá máy rỗng mà vẫn báo đạt (lần tự thử vẫn bắt).
+  - Ngoài-3: Bộ kiểm chữ chưa có bài thử riêng cho hai đường dò «route nhận khoá máy» (qua thư viện, qua lời gọi canCallOpsApi); ma trận hành vi phủ thay.
+  - Ngoài-4: Với các route vận hành viết tay, bộ kiểm chữ chỉ xác nhận có đoạn kiểm quyền, không xác nhận nó chặn thật; ma trận hành vi đo phần khách.
+  - Ngoài-5: Bộ kiểm chữ xét cổng theo cả tệp route, không theo từng thao tác; ma trận hành vi đo từng thao tác cho người gọi khách.
+  - Ngoài-7: Báo cáo kiểm toàn hệ thống vẫn in tin rao và căn giá tốt dưới tiêu đề «API công khai» dù mã trả về đo đúng chế độ tạm đóng.

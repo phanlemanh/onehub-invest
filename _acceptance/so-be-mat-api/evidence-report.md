@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 6585c62507062b6a78074e5eebf3c9eed29d9fe3
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: so-be-mat-api
