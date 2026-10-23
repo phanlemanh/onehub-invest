@@ -123,6 +123,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 10. **Cổng Ops đóng mặc định** (22/10): vào `/ops/**` khi `users.role` ∈
    {`ops`, `admin`} hoặc email trong `OPS_EMAILS`; đăng nhập thôi không đủ
    (`/register` mở). Cấp quyền data-ops bằng `role = 'ops'`, không cần migration.
+11. **Người bán là công khai** (23/10): tên, SĐT, ID tài khoản người bán trên tin
+   rao là tầng C (hoạt động bán hàng/môi giới), không phải lộ danh tính. Tầng A còn:
+   tên nguồn thật, hồ sơ người dùng app. Sửa đổi ADR-0007 mục 9.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

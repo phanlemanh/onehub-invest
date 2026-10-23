@@ -93,6 +93,8 @@ risk_tiers:
     - "AGENTS.md"
     - "**/AGENTS.md"                                 # chỉ dẫn agent theo module (vd collector/AGENTS.md cho ZCode) — cùng loại **/CLAUDE.md; Mạnh duyệt 2026-10-23
     - "**/CLAUDE.md"
+    - "CONTEXT.md"                                   # bảng thuật ngữ + bối cảnh sản phẩm — văn bản; Mạnh duyệt 2026-10-23
+    - ".claude/rules/**"                             # luật chữ theo đường dẫn cho Claude — văn bản; Mạnh duyệt 2026-10-23
     # Bản đồ sản phẩm — máy sinh, và /acceptance-gate:approve + /acceptance-gate:signoff commit nó CÙNG commit
     # chữ ký. Thiếu dòng này thì chính commit chữ ký làm evidence stale và
     # pre-merge chặn merge, thành vòng không thoát (ADR 0007). Miễn trừ CHỈ an

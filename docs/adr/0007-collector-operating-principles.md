@@ -160,3 +160,20 @@ extract đổi + audit được nguồn. ADR-0006 → accepted kèm sửa đổi
 - `users` thêm cột `role` (`user`|`admin`) ở C1 — clearance law portals.md.
 - Bảng `airdna_*` giữ nguyên ở local; đổi tên trung tính bắt đầu từ tầng
   cloud-sync (C4) kèm Leak Gate.
+
+## Sửa đổi 2026-10-23 — định danh người bán là công khai
+
+Mạnh chốt: người đăng tin rao bán đang làm hoạt động bán hàng/môi giới, nên **tên, SĐT, ID tài
+khoản của người bán trên tin rao không tính là lộ danh tính** — chuyển từ tầng A sang **tầng C
+(công khai)**. Thay mục 9 ở trên và câu «PII số ĐT: hash cho dedup, không plaintext ở serving».
+Hash SĐT vẫn dùng làm khoá dedup xuyên nguồn.
+
+Không đổi: tên nguồn thật (kể cả khi nằm trong giá trị như `seller_ref`, `listing_url`), hồ sơ
+người dùng app, `user_events/user_profile`, `review_queue` vẫn là tầng A.
+
+Hệ quả cần làm (việc riêng, không nằm trong sửa đổi này): nới `PII_EXCLUDE` của
+`pipeline/sync-cloud.mjs` cho cột người bán, loại giá trị lộ tên nguồn thật khỏi `seller_ref`, và
+quyết định có đưa liên hệ người bán trở lại cổng Invest công khai hay không (PR #3 vừa gỡ ngày 23/10).
+Rủi ro đã nêu khi chốt: trong người bán có cả chủ nhà cá nhân; Nghị định 13/2023 coi SĐT cá nhân là
+dữ liệu cá nhân.
+
