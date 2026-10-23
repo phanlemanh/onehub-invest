@@ -102,3 +102,19 @@ Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.e
   nguyên — ĐÃ CÓ (L1b checks marker `pluginHooks` từ 22/10 tối).
 - User dọn (tuỳ chọn): remove OpenClaw Desktop app; giữ ~/dev/openclaw
   tới khi PR upstream xong.
+
+## Transform S03/S05 và migration enrich (chốt 2026-10-23, `_acceptance/enrich-hau-ky/`)
+
+- Từ vòng enrich-hau-ky, `transform-zalo.mjs` / `transform-fb.mjs` KHÔNG còn `DELETE FROM sale_offers`
+  toàn nguồn: ghi qua `pipeline/lib/write-offers.mjs` (upsert + hàm SQL `reconcile_stale_offers`).
+  Code này dừng có tên («chưa áp migration 039») trên DB chưa có hàm đó, và từ chối lượt nạp rỗng.
+- **Thứ tự triển khai sau merge**: áp `036_revert_enrichment.sql` rồi `039_enrichment_proposals_retain.sql`
+  lên DB local :5433 TRƯỚC lượt `zalo-import-daily.sh` / `apify-facebook-daily.sh` kế tiếp. Không lên
+  cloud (bảng đề xuất, `ops_audit`, `review_queue` không thuộc `FILL`).
+- Khoá ngoại `enrichment_proposals.offer_id` là RESTRICT: script nào xoá `sale_offers` còn đề xuất mà
+  không qua `reconcile_stale_offers` sẽ lỗi 23503 — đúng thiết kế, đừng đổi lại CASCADE.
+- Hoàn tác một giá trị enrich đã áp: `cd agent && npx tsx scripts/enrich-revert.ts --ids <id,…> --actor
+  hitl:<tên> --reason "<lý do>" [--dry]` (chỉ người; ghi `ops_audit enrich:revert`).
+- Đề xuất của tin biến mất hẳn được chụp ở `ops_audit` action `enrich:retire` (không có đoạn tin, không
+  thông tin người bán); khôi phục khi tin quay lại: `INSERT INTO enrichment_proposals SELECT * FROM
+  jsonb_populate_recordset(NULL::enrichment_proposals, <detail->'proposals'>)`.

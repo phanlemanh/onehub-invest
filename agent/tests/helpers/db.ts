@@ -1,16 +1,22 @@
 // db.ts — tiện ích test DB: mọi ca chạy trong BEGIN…ROLLBACK trên Postgres local,
-// nạp lại migration 033 trong transaction (idempotent) để test không phụ thuộc
-// DB đã áp hay chưa. Không để lại dữ liệu.
-import { readFileSync } from "node:fs";
+// nạp lại migration 033 (+ 036, 039 của vòng enrich-hau-ky) trong transaction (idempotent)
+// để test không phụ thuộc DB đã áp hay chưa. Không để lại dữ liệu.
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import pg from "pg";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
-const MIGRATION = readFileSync(
-  join(import.meta.dirname, "../../../db/migrations/033_enrichment_proposals.sql"),
-  "utf8",
-);
+const MIGRATIONS_DIR = join(import.meta.dirname, "../../../db/migrations");
+/** Đường dẫn migration nạp vào mỗi transaction test — theo thứ tự số. */
+export const MIGRATIONS: string[] = [
+  "033_enrichment_proposals.sql",
+  "036_revert_enrichment.sql",
+  "039_enrichment_proposals_retain.sql",
+]
+  .map((f) => join(MIGRATIONS_DIR, f))
+  .filter((p) => existsSync(p));
+const MIGRATION = MIGRATIONS.map((p) => readFileSync(p, "utf8")).join("\n");
 
 export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   const c = new pg.Client({ connectionString: DB_URL });
