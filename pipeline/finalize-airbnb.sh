@@ -22,8 +22,12 @@ done
 echo "=== 2. Gán phường OSM theo tọa độ (mọi city đã khai MARKETS) ==="
 node reassign-areas.mjs
 
-echo "=== 3. Transform listings + nights ==="
-node transform-airbnb.mjs
+echo "=== 3. Transform listings + nights (từng city có namespace snapshot) ==="
+# transform-airbnb lọc stg theo snapshot_id LIKE '<city>__%' — phải chạy từng
+# city, không arg thì mặc định hanoi và bỏ sót hcmc/danang/vn (review #2)
+for c in hanoi hcmc danang vn; do
+  node transform-airbnb.mjs "$c"
+done
 
 echo "=== 4. Rebuild metrics + breakdowns + listing_stats + DQ checks ==="
 cd "$DB_DIR" && "${PSQL[@]}" -q < ../pipeline/sql/300_metrics.sql

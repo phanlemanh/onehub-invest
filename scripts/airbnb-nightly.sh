@@ -21,15 +21,23 @@ JITTER_MAX="${AIRBNB_NIGHTLY_JITTER_MAX:-1200}"
 echo "$(date -Iseconds) regen worklist từ universe AirDNA"
 node "$ROOT/pipeline/export-airdna-worklist.mjs"
 
-BATCHES="${AIRBNB_NIGHTLY_BATCHES:-32}"
-for i in $(seq 1 "$BATCHES"); do
+# gate delisted 40% (Review Focus #1): tỉ lệ GONE bất thường → dừng cả đêm
+node "$ROOT/pipeline/worklist-health.mjs"
+
+# 24 batch × 25 = 600 = cap ngày của scheduler (CONDUCT_DAILY_MAX) — vượt chỉ
+# quay vòng "skip: vượt cap" (review #5); nút giảm AIRBNB_NIGHTLY_BATCHES.
+BATCHES="${AIRBNB_NIGHTLY_BATCHES:-24}"
+i=0
+while [ "$i" -lt "$BATCHES" ]; do
+  i=$((i + 1))
   echo "$(date -Iseconds) batch $i/$BATCHES"
   OUT="$(AIRBNB_LISTING_WORKLIST=state/airbnb-worklist.json node dist/cli.js collect --city vn --source airbnb-listing 2>&1)" || {
     echo "$OUT"; echo "$(date -Iseconds) batch $i FAIL — dừng, giữ nguyên cho đêm sau"; exit 1;
   }
   echo "$OUT"
-  if echo "$OUT" | grep -q "không còn việc"; then
-    echo "$(date -Iseconds) worklist hết — dừng sớm ở batch $i"
+  # hết việc / scheduler skip (vượt cap ngày, ngoài cửa sổ) → không batch tiếp
+  if echo "$OUT" | grep -qE "còn=0|không còn việc|skip:"; then
+    echo "$(date -Iseconds) dừng sớm ở batch $i (hết việc hoặc scheduler skip)"
     break
   fi
 done

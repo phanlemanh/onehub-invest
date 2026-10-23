@@ -17,17 +17,25 @@ import type { Collector, RawItem } from "../core/types.js";
 const BATCH = Number(process.env.AIRBNB_LISTING_BATCH ?? 25);
 const NAV_TIMEOUT = 45_000;
 
-/** Đọc worklist JSON (Task 2 export-airdna-worklist): chỉ nhận mảng ids hợp lệ. */
+/** Đọc worklist JSON (Task 2 export-airdna-worklist): chỉ nhận mảng ids hợp lệ.
+ *  Id từ universe AirDNA có dạng abnb_<số> — STRIP prefix vì URL /rooms/ và
+ *  checkpoint discovery dùng id số thuần (transform-airbnb tự ghép lại). */
 export function parseWorklist(json: unknown): string[] {
   const ids = (json as { ids?: unknown } | null)?.ids;
   if (!Array.isArray(ids)) return [];
-  return ids.filter((x): x is string => typeof x === "string" && x.length > 0);
+  return ids
+    .filter((x): x is string => typeof x === "string" && x.length > 0)
+    .map((x) => (x.startsWith("abnb_") ? x.slice(5) : x));
 }
 
 /** Listing đã rút (delisted): Airbnb trả trang lỗi hoặc redirect khỏi /rooms/<id>
- *  (về home). Id như vậy ghi goneIds để không retry vô hạn (Review Focus #1/#3). */
-export function isGone(pageTitle: string, landedUrl: string, roomId: string): boolean {
-  if (/không tồn tại|không tìm thấy|not found|page not found/i.test(pageTitle)) return true;
+ *  (về home). Id như vậy ghi goneIds để không retry vô hạn (Review Focus #1/#3).
+ *  hasSourceData: trang CÓ nguồn (deferred-state/pdp) thì title trùng khẩu sấm
+ *  cũng không GONE — host có thể đặt tên chứa "not found"… (review #7). */
+export function isGone(pageTitle: string, landedUrl: string, roomId: string, hasSourceData = false): boolean {
+  if (!hasSourceData && /không (còn )?(tồn tại|có nữa|khả dụng)|không tìm thấy|not found|no longer available|page not found/i.test(pageTitle)) {
+    return true;
+  }
   return !new RegExp(`/rooms/${roomId}(/|\\?|$)`).test(landedUrl);
 }
 
@@ -164,7 +172,7 @@ export const airbnbListing: Collector = {
         const id = batch[i];
         try {
           let r = await fetchOnce(id, defaultCi, defaultCo);
-          if (isGone(r.title, r.landedUrl, id)) {
+          if (isGone(r.title, r.landedUrl, id, !!r.state || !!r.pdp)) {
             // Listing đã rút: đánh dấu gone để không retry vô hạn (Review Focus #3)
             goneIds.add(id);
             doneIds.add(id);
