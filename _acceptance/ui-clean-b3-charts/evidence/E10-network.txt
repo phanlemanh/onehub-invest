@@ -1,0 +1,6 @@
+E10 network/console dump (Browser pane, tab-1; pages /vn/hanoi/hoan-kiem then /yield; origin http://localhost:3456)
+Network: tat ca GET/POST toi origin app tra 200 OK (HTML /vn/hanoi/hoan-kiem 200, /yield 200, POST /api/v1/user-events 200,
+  _next/static chunks + fonts 200). GET /maplibre-gl-worker.mjs: khong co status trong danh sach (static asset, note-only).
+  Khong co request 4xx/5xx, khong co connection error, khong co third-party fail.
+Console: info React DevTools; log [HMR] connected; warn: Image "circle-11" could not be loaded (maplibre style image - ban do, khong thuoc bieu do B3, note-only).
+  Khong co console error.
