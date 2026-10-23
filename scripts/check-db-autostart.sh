@@ -13,7 +13,8 @@
 #                  restart policy của file), khởi động lại dockerd bên trong, đòi container tự về running;
 #                  cùng daemon, bản bỏ restart phải ra exited. Không chạm one-invest-db: StartedAt của nó
 #                  phải không đổi. Tự dọn container dind (trap EXIT/INT/TERM).
-#   cleanup        lượt `restart` thoát lỗi giữa chừng và lượt bị SIGTERM vẫn không để sót au7-dind-*.
+#   cleanup        lượt `restart` thoát lỗi giữa chừng (exit trong hàm, và return rồi mới exit) và lượt bị
+#                  SIGTERM vẫn không để sót au7-dind-*.
 #   live           CHỈ ĐỌC máy này: one-invest-db đang chạy với policy unless-stopped|always; LaunchAgent
 #                  homebrew.mxcl.colima có RunAtLoad=true và đang nạp trong launchctl.
 #   live-selftest  bộ đọc của live chạy trên bản chép plist + JSON inspect thật đã làm hỏng phải đỏ.
@@ -110,17 +111,26 @@ wait_dockerd() { # $1 = container dind
   return 1
 }
 
+# DIND_NAME/DIND_TMP là biến toàn cục, không `local`: trap EXIT chạy SAU khi run_restart đã return, lúc
+# biến cục bộ đã mất — với `local` mọi đường lỗi dùng `return` sẽ để sót container dind privileged.
+DIND_NAME=""; DIND_TMP=""
+dind_cleanup() {
+  [ -n "$DIND_NAME" ] && docker rm -fv "$DIND_NAME" >/dev/null 2>&1
+  [ -n "$DIND_TMP" ] && rm -rf "$DIND_TMP"
+  DIND_NAME=""; DIND_TMP=""
+}
+
 run_restart() {
   local name="au7-dind-${AU7_TAG:-r$$}-$$" t keep ctrl h0 h1 d0 d1 i
-  t=$(mktemp -d)
-  cleanup() { docker rm -fv "$name" >/dev/null 2>&1; rm -rf "$t"; }
-  trap cleanup EXIT
+  t=$(mktemp -d); DIND_TMP="$t"
+  trap dind_cleanup EXIT
   trap 'exit 143' TERM
   trap 'exit 130' INT
   h0=$(started_at "$DB")
   if valid_ts "$h0"; then pass "$DB StartedAt đọc được trước lượt: $h0"; else fail "$DB StartedAt không đọc được (\"$h0\")"; fi
   ensure_img "$DIND_IMG" || { fail "không có ảnh $DIND_IMG"; return; }
   ensure_img "$APP_IMG" || { fail "không có ảnh $APP_IMG"; return; }
+  DIND_NAME="$name"
   docker run -d --privileged --name "$name" -e DOCKER_TLS_CERTDIR= "$DIND_IMG" >/dev/null || { fail "không dựng được $name"; return; }
   wait_dockerd "$name" || { fail "dockerd trong $name không lên"; return; }
   # Móc phá-thử cho chế độ cleanup — lượt thật không đặt hai biến này.
@@ -143,6 +153,8 @@ services:
 EOF
   done
   docker exec "$name" mkdir -p /w
+  # Móc phá-thử: đường lỗi dùng `return` (như compose up hỏng) — phải dọn bằng trap EXIT sau khi hàm đã thoát.
+  [ "${AU7_FAIL_AFTER:-}" = compose ] && { fail "ép lỗi compose up sau khi dựng $name"; return; }
   for f in keep.yml ctrl.yml ov-keep.yml ov-ctrl.yml; do docker cp "$t/$f" "$name:/w/$f" >/dev/null; done
   for p in keep ctrl; do
     docker exec "$name" docker compose -p "$p" -f "/w/$p.yml" -f "/w/ov-$p.yml" up -d >/dev/null 2>&1 \
@@ -173,7 +185,7 @@ EOF
     || fail "sau khi dockerd cách ly khởi động lại: compose của cây → $keep"
   [ "$ctrl" = exited ] && pass "đối chứng: bỏ restart → exited sau khởi động lại" \
     || fail "đối chứng: bỏ restart → $ctrl — thước không phân biệt được"
-  cleanup; trap - EXIT
+  dind_cleanup; trap - EXIT
   [ "$(leftovers "${name#au7-dind-}")" = 0 ] && pass "không còn container $name sau khi dọn" || fail "còn container $name sau khi dọn"
   h1=$(started_at "$DB")
   if valid_ts "$h0" && [ "$h0" = "$h1" ]; then pass "$DB StartedAt không đổi ($h1)"; else fail "$DB StartedAt đổi hoặc không đọc được ($h0 → $h1)"; fi
@@ -191,6 +203,13 @@ run_cleanup() {
   else
     fail "lượt ép thoát lỗi không tới điểm ép (rc=$rc)"; echo "$out" | tail -5
   fi
+  out=$(AU7_TAG=$tag AU7_FAIL_AFTER=compose bash "$SELF" restart 2>&1); rc=$?
+  if [ $rc != 0 ] && grep -qF "ép lỗi compose up sau khi dựng" <<<"$out"; then
+    [ "$(leftovers "$tag-")" = 0 ] && pass "lượt lỗi thoát bằng return (rc=$rc) — không còn container au7-dind-*" \
+      || { fail "lượt lỗi thoát bằng return để sót container au7-dind-*"; docker ps -aq --filter "name=au7-dind-$tag-" | xargs -r docker rm -fv >/dev/null; }
+  else
+    fail "lượt lỗi return không tới điểm ép (rc=$rc)"; echo "$out" | tail -5
+  fi
   AU7_TAG=$tag AU7_SLEEP_AFTER=dind bash "$SELF" restart >/dev/null 2>&1 & pid=$!
   n=0; for i in $(seq 1 90); do n=$(leftovers "$tag-"); [ "$n" -ge 1 ] && break; sleep 1; done
   if [ "$n" -ge 1 ]; then
@@ -202,7 +221,7 @@ run_cleanup() {
     fail "lượt SIGTERM không dựng được daemon cách ly"; kill -TERM "$pid" 2>/dev/null; wait "$pid"
   fi
   h1=$(started_at "$DB")
-  if valid_ts "$h0" && [ "$h0" = "$h1" ]; then pass "$DB StartedAt không đổi qua hai lượt ($h1)"; else fail "$DB StartedAt đổi ($h0 → $h1)"; fi
+  if valid_ts "$h0" && [ "$h0" = "$h1" ]; then pass "$DB StartedAt không đổi qua ba lượt ($h1)"; else fail "$DB StartedAt đổi ($h0 → $h1)"; fi
 }
 
 case "$MODE" in
