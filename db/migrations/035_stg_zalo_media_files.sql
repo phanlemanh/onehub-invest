@@ -1,0 +1,13 @@
+-- 035_stg_zalo_media_files.sql — N1: nạp mapping ảnh zdn.vn đã tải vào snapshot
+-- (RawItem.meta.mediaFiles, DATA-CONTRACT schemaVersion 2) xuống staging.
+-- collector/docs/DATA-CONTRACT.md · ADR-0007 (SPL) · ADR-0011 (RESO: khi lên
+-- canonical thì map sang resource Media — ở staging giữ hình dạng hợp đồng).
+-- KHÔNG sync cloud (PII tầng A): ảnh có thể chứa SĐT/hồ sơ người đăng — chỉ máy local.
+--
+-- Hình dạng: [{url, file, sha256, bytes, error, snapshotId}] — đúng mảng
+-- mediaFiles của collector, importer gắn thêm snapshotId vì `file` là đường dẫn
+-- tương đối trong thư mục snapshot đó (snapshots/<city>/<snapshotId>/<file>)
+-- mà snapshot_id của dòng không đổi khi upsert theo post_id.
+-- Khác cột `media` (019): `media` là payload.media gốc (URL có hạn);
+-- `media_files` là bản đã tải về, dùng thay URL.
+ALTER TABLE stg_zalo_posts ADD COLUMN IF NOT EXISTS media_files jsonb;
