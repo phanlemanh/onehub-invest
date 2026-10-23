@@ -49,9 +49,12 @@ Public mirrors LIVE: onehub-invest-app + onehub-data-api.
 ### 2.2 Pipeline dữ liệu 5 tầng
 ```
 thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
-→ stg_* → transform (parser VN + phone + RESO property_type)
+→ stg_* → transform (parser VN + phone + RESO property_type; S03/S05 upsert + đối soát
+  offer cũ qua `writeOffers` — đề xuất enrich + thẻ duyệt sống qua nạp lại, 039)
 → enrichment_proposals (E1/E2 đề xuất → luật xác định / /ops/review;
-  E1 trái LLM → thẻ đối chiếu, người chọn; không UPDATE thẳng canonical, không lên cloud)
+  E1 trái LLM → thẻ đối chiếu, người chọn; E1 không suy land từ tên nhóm;
+  hoàn tác có audit qua `revert_enrichment` (036) + CLI enrich-revert;
+  không UPDATE thẳng canonical, không lên cloud)
 → sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
 → sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
@@ -123,7 +126,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 10. **Cổng Ops đóng mặc định** (22/10): vào `/ops/**` khi `users.role` ∈
    {`ops`, `admin`} hoặc email trong `OPS_EMAILS`; đăng nhập thôi không đủ
    (`/register` mở). Cấp quyền data-ops bằng `role = 'ops'`, không cần migration.
-11. **Người chỉ đứng ở cổng, không ở từng lệnh** (23/10): bỏ luật ask rộng `git push *` /
+11. **Người bán là công khai** (23/10): tên, SĐT, ID tài khoản người bán trên tin
+   rao là tầng C (hoạt động bán hàng/môi giới), không phải lộ danh tính. Tầng A còn:
+   tên nguồn thật, hồ sơ người dùng app. Sửa đổi ADR-0007 mục 9.
+12. **Người chỉ đứng ở cổng, không ở từng lệnh** (23/10): bỏ luật ask rộng `git push *` /
    `vercel *`; hook `guard-push-deploy` chỉ hỏi push lên `main` (kể cả force, `--all`, push
    không refspec từ main) và Vercel ghi. Đề xuất branch protection cho `main` trên GitHub
    (Mạnh tự bật). Hồ sơ `_acceptance/narrow-ask-rules`.
@@ -145,7 +151,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | M4 | form hồ sơ + export JSON (consent, user-owned) | ⬜ |
 | M5 | pgvector — chỉ khi đo thấy cần | ⬜ kháng cự |
 | HITL | /ops/review Review Queue (12 entity_match seeded) | ✅ c6eea64 |
-| M-3 | enrich qua đề xuất: `enrichment_proposals` (033) + luật xác định + thẻ `agent_output` /ops/review; E1 trái LLM → thẻ đối chiếu chọn một bên | 🔶 chờ ký Cổng Bằng chứng (`_acceptance/enrich-qua-de-xuat/`) |
+| M-3 | enrich qua đề xuất: `enrichment_proposals` (033) + luật xác định + thẻ `agent_output` /ops/review; E1 trái LLM → thẻ đối chiếu chọn một bên | ✅ PR #14 (`_acceptance/enrich-qua-de-xuat/`) |
+| M-3b | hậu kỳ enrich: đề xuất sống qua nạp lại (039 + `writeOffers`, khoá ngoại RESTRICT) · hoàn tác có audit (036 + `enrich-revert`) · E1 không suy land từ tên nhóm | 🔶 chờ Cổng Bằng chứng (`_acceptance/enrich-hau-ky/`); sau merge: áp 036 → 039 lên DB local TRƯỚC lượt nạp đêm kế, rồi hoàn tác 639/644 (Hỏi-2) |
 
 ### Track 2 — "Một Căn Nhà" hoàn thiện
 | # | Việc | Trạng thái |
@@ -180,7 +187,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
-| V5 | Giảm hỏi quyền ngoài cổng: hook `guard-push-deploy` thay luật ask rộng (phát lại transcript: −70% lần hỏi, mọi push main/vercel ghi vẫn hỏi) — `_acceptance/narrow-ask-rules` | ⏳ chờ Mạnh ký (T3) |
+| V5 | Tài khoản ops thử chỉ ở DB local (`scripts/dev-ops-account.mjs`) — máy tự đăng nhập dev để chụp/ui-check `/ops/**` | ✅ 2026-10-22 |
+| V6 | Giảm hỏi quyền ngoài cổng: hook `guard-push-deploy` thay luật ask rộng (phát lại transcript: −70% lần hỏi, mọi push main/vercel ghi vẫn hỏi) — `_acceptance/narrow-ask-rules` | ⏳ chờ Mạnh ký (T3) |
 
 ### Track 6 — Chuẩn UI/UX ReUI
 | # | Việc | Trạng thái |

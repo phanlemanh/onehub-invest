@@ -22,6 +22,7 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
   script:
     cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
     ruler_views_fresh: "bash scripts/check-ruler-views.sh fresh"         # DB trống từ db/migrations → 2 view ruler
@@ -85,6 +86,10 @@ executors:
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
+    # review-media-backend — AC-8 cần DB local :5433 (docker one-invest-db); mọi dòng tạo trong giao dịch rồi ROLLBACK
+    review_media_roundtrip: "cd app && node --import tsx scripts/review-media-roundtrip.ts"
+    review_media_no_cloud: "node scripts/check-review-media-local-only.mjs"
+    ops_login: "bash scripts/dev-ops-login-check.sh"   # đăng nhập đầu-cuối tài khoản ops thử — cần dev server :3456 + DB local
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
@@ -97,6 +102,8 @@ risk_tiers:
     - "AGENTS.md"
     - "**/AGENTS.md"                                 # chỉ dẫn agent theo module (vd collector/AGENTS.md cho ZCode) — cùng loại **/CLAUDE.md; Mạnh duyệt 2026-10-23
     - "**/CLAUDE.md"
+    - "CONTEXT.md"                                   # bảng thuật ngữ + bối cảnh sản phẩm — văn bản; Mạnh duyệt 2026-10-23
+    - ".claude/rules/**"                             # luật chữ theo đường dẫn cho Claude — văn bản; Mạnh duyệt 2026-10-23
     # Bản đồ sản phẩm — máy sinh, và /acceptance-gate:approve + /acceptance-gate:signoff commit nó CÙNG commit
     # chữ ký. Thiếu dòng này thì chính commit chữ ký làm evidence stale và
     # pre-merge chặn merge, thành vòng không thoát (ADR 0007). Miễn trừ CHỈ an
