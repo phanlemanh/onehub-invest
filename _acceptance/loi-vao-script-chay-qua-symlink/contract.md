@@ -5,7 +5,7 @@ slug: loi-vao-script-chay-qua-symlink
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-loi-vao-script-chay-qua-symlink-design.md
 approved_by:
 approved_at:
@@ -44,6 +44,12 @@ Source input: chẩn đoán P4 24/10 + lời giao của giám sát đợt dot0-c
 - Cảnh báo khi một job đêm thoát 0 mà không in gì (giám sát job — hàng AU3/AU6).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: Nạp các script từ một lệnh có đối số không phải tệp có thật sẽ báo lỗi ngay lúc nạp.
+  - Ngoài-2: Công cụ kiểm giao diện check-baseline-growth trong app/ vẫn dùng cách so cũ (chỉ chạy trên CI bằng đường thật).
+  - Ngoài-5: Bài quét cách so cũ chỉ kiểm chuỗi có mặt, chưa kiểm phép so viết đúng hoàn toàn.
+  - Ngoài-6: Bài quét chưa phủ thư mục app/.
 
 - Ra khỏi kho (làn merge): launchd chạy code từ checkout chính — sau merge phải `git -C ~/dev/onehub-invest pull --ff-only origin main` TRƯỚC 05:15 để job chotot 05:30 dùng bản sửa; sau 05:30 xem `pipeline/logs/chotot.log` có dòng của transform-chotot, sau 00:00 xem `zalo-import.log` có dòng `posts:` của transform-zalo.
 

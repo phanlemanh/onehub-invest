@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 1ce82c2bdd55cb48d182ad85c2552a3809e23762
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: loi-vao-script-chay-qua-symlink
