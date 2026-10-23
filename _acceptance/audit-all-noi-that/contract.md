@@ -5,7 +5,7 @@ slug: audit-all-noi-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-audit-all-noi-that-design.md
 lo_trinh_ma: AU5
 approved_by: Mạnh
@@ -58,3 +58,9 @@ Bỏ quét hình thái — xem dòng `bỏ coverage-scan` trong sổ. Ma trận:
 - Fixture `launchctl` là bản chụp đầu ra thật (23/10); đầu ra OpenClaw CLI KHÔNG chụp thật (an toàn Zalo, AGENTS luật 8) — bản giả dựng tay theo khuôn script đọc.
 
 - Phép đo không gọi mạng thật (Supabase, Vercel, OpenClaw): mọi lệnh ngoài đi qua bản giả đầu `PATH` và `HOME` tạm.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-2: bản chụp danh sách job nền chỉ giữ hai dòng thật, chưa có dòng tiêu đề và chưa có ca job backup đang chạy (có PID).
+  - Ngoài-4: nếu ai viết cứng lại đường dẫn tới máy tác giả, bộ kiểm vẫn xanh trên máy này vì log thật cũng có ở đó.
+  - Ngoài-5: phần «không lệnh thật nào chạy» chỉ quét mã nguồn tìm vài đường gọi quen thuộc; một cách gọi mới có thể lọt.
+  - Ngoài-6: cấu hình backup trong test dựng tay theo khoá công cụ cài ghi hôm nay; công cụ cài đổi cách ghi thì bộ kiểm không biết.
