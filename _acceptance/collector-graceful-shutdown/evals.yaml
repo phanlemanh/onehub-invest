@@ -1,0 +1,44 @@
+schema_version: 1
+feature_slug: collector-graceful-shutdown
+evals:
+  - id: E1
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.collector_check
+    expected: "exit 0; tsc --noEmit không lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.collector
+    expected: "exit 0; 0 fail, 0 skip; có ca tích hợp 'SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot' và 10 ca graceful-shutdown (thứ tự close → flush → exit, SIGINT, tín hiệu lần 2, flush lỗi, flush treo quá deadline, skipMedia sát/không sát deadline) đều xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_deadline
+    expected: "exit 0; stdout có 'DEADLINE PASS'; deadline 45000ms, ngưỡng ảnh 10000ms, plist ExitTimeOut 60; main.ts không ghi đè deadlineMs; should-NOT-fire: luật đỏ khi deadline = 60s, 75s hoặc ngưỡng ảnh = deadline"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_skip_media
+    expected: "exit 0; stdout có 'SKIP-MEDIA PASS'; skipMedia=true với host ảnh treo: tin vào snapshot, gọi host ảnh 0 lần, 0 tệp ảnh, flush < 2000ms; đối chứng skipMedia=false: có tải ảnh (≥1 lần gọi, ≥1 tệp ảnh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_process
+    expected: "exit 0; stdout có 'PROCESS PASS'; SIGTERM trên main.js thật: 202 qua keep-alive, keep-alive bị server đóng, exit code 0 signal null, tin đã ack có trong snapshot, log đóng HTTP đứng trước flushed; SIGINT buffer rỗng: exit 0, should-NOT-fire 0 snapshot và không có dòng flushed"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.collector_plist_lint
+    expected: "exit 0; stdout '<đường dẫn plist>: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
