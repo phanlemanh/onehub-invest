@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Khách vô danh thôi lấy được danh sách căn giá tốt (đang lẫn tin giả) qua API công khai; chỉ máy và người của đội vận hành còn đọc được, tới khi tin giả được dọn.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ trả lỗi «không có quyền» cho khách không có khoá hay phiên đăng nhập, không lộ dòng dữ liệu nào và chặn trước khi đụng bảng tin rao."},
+    {"id": "AC-2", "p": "Sẽ trả đủ danh sách như hôm nay cho máy gửi đúng khoá vận hành, và không cần đọc phiên đăng nhập khi khoá đã đúng."},
+    {"id": "AC-3", "p": "Sẽ từ chối khoá sai, và từ chối cả khi máy chủ quên đặt khoá vận hành — không để «khoá rỗng» lọt qua."},
+    {"id": "AC-4", "p": "Sẽ cho người vận hành đã đăng nhập (vai ops, admin, hoặc email trong danh sách cho phép) đọc được; tài khoản thường và phiên hết hạn bị từ chối — chờ anh chốt ở Hỏi-2."},
+    {"id": "AC-6", "p": "Sẽ ghi rõ trong tài liệu rằng API này đang tạm đóng, vì sao, và khi nào mới bàn mở lại."}
+  ],
+  "wont_do": [
+    {"id": "AC-5", "p": "Chặn ở bước kiểm mã: ai lỡ bỏ cổng, dời cổng xuống sau truy vấn, hay quên chờ kết quả cổng thì bộ kiểm báo đỏ có tên."},
+    {"id": "OOS-1", "p": "KHÔNG gom năm API vận hành khác về chung một cổng — việc sổ bề mặt API (NT4) làm ngay sau hàng này."},
+    {"id": "OOS-2", "p": "KHÔNG đóng API danh sách tin rao (offers) dù cùng lỗ tin giả — NT4 làm theo đúng chế độ này."},
+    {"id": "OOS-3", "p": "KHÔNG làm công tắc mở lại API — mở lại sau khi dọn tin giả là một quyết riêng."},
+    {"id": "OOS-4", "p": "KHÔNG đụng project Vercel cũ «app» vẫn mở API bản 22/10 — việc anh xoá project (audit Q2)."},
+    {"id": "OOS-5", "p": "KHÔNG đụng API dữ liệu công khai riêng (data-api) — chưa có bản chạy, thuộc hàng AH2."},
+    {"id": "OOS-6", "p": "KHÔNG thêm tiêu đề báo kiểu xác thực theo chuẩn — để NT4 chuẩn hoá chung."}
+  ],
+  "scope_plain": "Hàng này chỉ đóng đúng một cửa; các cửa cùng loại để hàng kế của dãy.",
+  "coverage_plain": [
+    {"i": 0, "p": "Đã xét đủ ba kiểu người gọi: không mang gì, mang khoá máy, mang phiên đăng nhập."},
+    {"i": 1, "p": "Mỗi kiểu xét đủ bốn trạng thái: hợp lệ, sai hoặc không đủ quyền, rỗng hoặc máy chủ quên đặt khoá, hết hạn."},
+    {"i": 2, "p": "Mỗi ca đo ở hai lớp — hàm cổng chạy riêng và API thật trên app đang chạy — cộng bộ kiểm mã cho thứ tự cổng."},
+    {"i": 3, "p": "Làm ngay: mọi tổ hợp có nghĩa (AC-1 tới AC-4) và rào hồi quy cho thứ tự cổng (AC-5)."},
+    {"i": 4, "p": "Để sau: tiêu đề báo kiểu xác thực theo chuẩn RFC 6750 — các API vận hành khác cũng chưa có."},
+    {"i": 5, "p": "Không làm: ca mang cả khoá lẫn phiên (khoá đúng là đủ) và mọi thứ ngoài kho."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản nháp tự cho người vận hành đăng nhập đọc API trong khi câu giao chỉ nói «khoá vận hành» — đã chuyển thành Hỏi-2 cho anh chốt, và sửa câu bối cảnh cho khỏi gán ý cho anh."},
+    {"i": 1, "p": "Phép thử chưa chứng minh khoá được đọc lúc gọi — nếu đọc một lần lúc khởi động thì máy chủ quên đặt khoá vẫn có thể lọt «khoá rỗng»; đã thêm ca xoá khoá giữa chừng."},
+    {"i": 2, "p": "Bộ kiểm mã chỉ soát thứ tự chữ, bỏ sót ca quên chờ kết quả cổng hay không trả lỗi; đã thêm hai bản hỏng phải bị bắt."},
+    {"i": 3, "p": "Phép chấm tài liệu chấp nhận chỉ sửa một trong hai chỗ; đã đòi cả lộ trình lẫn ghi chú trong mã."},
+    {"i": 4, "p": "Chỉ đo trên máy local trong khi lỗ nằm trên bản thật; đã thêm lượt đo chỉ đọc trên bản thật sau khi merge."}
+  ]
+}
