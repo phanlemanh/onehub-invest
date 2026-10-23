@@ -1,6 +1,7 @@
 // check-cloud-sync.mjs — thước của cloud-sync-atomic (_acceptance/cloud-sync-atomic).
-// Chỉ chạm DB tạm trên :5433 (container one-invest-db, tiền tố acc_cloudsync_),
-// tự xoá khi xong. KHÔNG gọi cloud.
+// Mỗi lượt chạy dựng MỘT container Postgres tạm riêng (cùng image với one-invest-db, cổng ngẫu
+// nhiên trên 127.0.0.1) và xoá nó khi xong — role anon/authenticated (đối tượng cấp cluster)
+// không lọt sang DB local dùng chung. Từ one-invest-db chỉ ĐỌC (pg_dump). KHÔNG gọi cloud.
 //
 //   node scripts/check-cloud-sync.mjs <ca>
 //   stage     migration 038 — quyền anon/authenticated, catalog ngoài sync_stage không đổi
@@ -22,10 +23,43 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PIPE = path.join(HERE, "..");
 const ROOT = path.join(PIPE, "..");
 const MIGRATION = path.join(ROOT, "db/migrations/038_sync_stage.sql");
-const CT = "one-invest-db";
+const CT_SRC = "one-invest-db"; // nguồn dữ liệu — chỉ đọc
+const IMAGE = "kartoza/postgis:17-3.5";
+let CT = null; // container tạm của lượt này
+let PORT = null;
 // Chuỗi kết nối DB local dùng chung (đúng dạng đã có trong sync-cloud.mjs); DB tạm thay tên cuối.
 const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
-const urlOf = (db) => LOCAL_URL.replace(/\/oneinvest$/, `/${db}`);
+const urlOf = (db) => LOCAL_URL.replace(/:5433\/oneinvest$/, `:${PORT}/${db}`);
+
+function startTemp(tag) {
+  const name = `acc-cloudsync-${tag}-${process.pid}`;
+  execFileSync("docker", ["run", "-d", "--rm", "--name", name, "-e", "POSTGRES_USER=oneinvest", "-e", "POSTGRES_PASS=oneinvest",
+    "-e", "POSTGRES_DB=oneinvest", "-e", "ALLOW_IP_RANGE=0.0.0.0/0", "-p", "127.0.0.1::5432", IMAGE], { stdio: "pipe" });
+  CT = name;
+  PORT = execFileSync("docker", ["port", name, "5432/tcp"], { encoding: "utf8" }).trim().split("\n")[0].split(":").pop();
+  // image kartoza khởi động postgres, dừng, rồi khởi động lại khi dựng xong — đòi 5 lần
+  // liên tiếp (cách nhau 1s) mới coi là sẵn sàng.
+  let ok = 0;
+  for (let i = 0; i < 240; i++) {
+    try {
+      psql("oneinvest", "SELECT 1;");
+      if (++ok >= 5) return;
+    } catch {
+      ok = 0;
+    }
+    execFileSync("sleep", ["1"]);
+  }
+  throw new Error(`container tạm ${name} không sẵn sàng sau 180s`);
+}
+function stopTemp() {
+  if (!CT) return;
+  try {
+    execFileSync("docker", ["rm", "-f", CT], { stdio: "pipe" });
+  } catch (e) {
+    console.log(`note: không xoá được container ${CT}: ${e.message}`);
+  }
+  CT = null;
+}
 const PREFIX = "acc_cloudsync_";
 
 let FAILED = false;
@@ -66,7 +100,7 @@ const sync = await import(pathToFileURL(path.join(PIPE, "sync-cloud.mjs")).href)
 const FILL = sync.FILL;
 
 function dump(tables, { schemaOnly }) {
-  const args = ["exec", "-e", "PGPASSWORD=oneinvest", CT, "pg_dump", "-U", "oneinvest", "-h", "localhost", "-d", "oneinvest", "--no-owner", "--no-acl"];
+  const args = ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost", "-d", "oneinvest", "--no-owner", "--no-acl"];
   if (schemaOnly) args.push("-s");
   for (const t of tables) args.push("-t", `public.${t}`);
   return execFileSync("docker", args, { encoding: "utf8", maxBuffer: 1 << 30 });
@@ -113,14 +147,10 @@ export function buildCloudSim(name = "cloud", { roles = true, defaultAcl = true,
 }
 
 async function cleanup() {
-  for (const db of [...created]) {
-    try {
-      dropDb(db);
-    } catch (e) {
-      note(`không xoá được ${db}: ${e.message}`);
-    }
-  }
+  created.clear();
+  stopTemp();
 }
+for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => (stopTemp(), process.exit(130)));
 
 // ─── ca stage (AC-6 / E6) ────────────────────────────────────────────────
 const CATALOG_SQL = `SELECT n.nspname || '.' || c.relname || ':' || c.relkind::text || ':' || coalesce(c.relacl::text, '')
@@ -144,6 +174,21 @@ async function privs(db) {
 }
 
 async function caseStage() {
+  // DB KHÔNG có role anon/authenticated — chạy TRƯỚC mọi bước tạo role trong container tạm
+  const bare = makeDb("stage_bare");
+  const pre = psql(bare, "SELECT count(*) FROM pg_roles WHERE rolname IN ('anon','authenticated');").trim();
+  if (pre === "0") pass("tiền điều kiện: container tạm chưa có role anon/authenticated");
+  else fail(`tiền điều kiện sai: đã có ${pre} role anon/authenticated trước ca «không role»`);
+  for (const i of [1, 2]) {
+    try {
+      psql(bare, readFileSync(MIGRATION, "utf8"));
+      pass(`migration 038 lần ${i} exit 0 (DB không có anon/authenticated)`);
+    } catch (e) {
+      fail(`migration 038 lần ${i} lỗi trên DB không role: ${e.stderr || e.message}`);
+    }
+  }
+  dropDb(bare);
+
   // DB có role + default ACL như cloud
   const db = buildCloudSim("stage", { migrate: false });
   const before = psql(db, CATALOG_SQL);
@@ -158,6 +203,12 @@ async function caseStage() {
   const after = psql(db, CATALOG_SQL);
   if (before === after) pass("catalog ngoài sync_stage (quan hệ, schema, ACL) trước = sau");
   else fail("migration đổi catalog ngoài sync_stage");
+  // đối chứng của phép so catalog: một thay đổi ngoài sync_stage phải bị thấy
+  psql(db, "CREATE TABLE public.zz_catalog_probe (x int);");
+  const probe = psql(db, CATALOG_SQL);
+  psql(db, "DROP TABLE public.zz_catalog_probe;");
+  if (probe !== after) pass("đối chứng: một bảng mới ngoài sync_stage làm catalog khác — phép so có răng");
+  else fail("phép so catalog không thấy một bảng mới ngoài sync_stage");
   const p = await privs(db);
   if (p.length !== 2) fail(`thiếu role trong DB mô phỏng: ${JSON.stringify(p)}`);
   for (const r of p) {
@@ -176,18 +227,6 @@ async function caseStage() {
     await c.end();
   }
   dropDb(db);
-
-  // DB không có role anon/authenticated (như local)
-  const bare = makeDb("stage_bare");
-  for (const i of [1, 2]) {
-    try {
-      psql(bare, readFileSync(MIGRATION, "utf8"));
-      pass(`migration 038 lần ${i} exit 0 (DB không có anon/authenticated)`);
-    } catch (e) {
-      fail(`migration 038 lần ${i} lỗi trên DB không role: ${e.stderr || e.message}`);
-    }
-  }
-  dropDb(bare);
 
   // chiều đỏ: bỏ mọi câu REVOKE → anon đọc được
   const dir = mkdtempSync(path.join(tmpdir(), "cloudsync-acl-"));
@@ -299,7 +338,8 @@ function startReader(db, everyMs = 50) {
       while (!stop) {
         await c.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
         const { rows: lk } = await c.query(
-          `SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory' AND objid = ${sync.ADVISORY_KEY} AND granted) AS open`,
+          `SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory' AND objid = ${sync.ADVISORY_KEY} AND granted
+            AND database = (SELECT oid FROM pg_database WHERE datname = current_database())) AS open`,
         );
         const { rows } = await c.query(sql);
         await c.query("COMMIT");
@@ -503,7 +543,7 @@ async function caseFail() {
   psql(C, readFileSync(MIGRATION, "utf8"));
 
   // (d) kill -9 giữa pha nạp → lượt sau dọn khi quá 2 giờ; staging trẻ của lượt khác còn nguyên
-  const child = spawn(process.execPath, [fileURLToPath(import.meta.url), "__child", L, C, "killed"], { stdio: "ignore" });
+  const child = spawn(process.execPath, [fileURLToPath(import.meta.url), "__child", L, C, "killed", CT, PORT], { stdio: "ignore" });
   for (let i = 0; i < 600; i++) {
     if ((await stagingCount(C, "killed")) > 0) break;
     await sleep(100);
@@ -672,9 +712,12 @@ async function casePii() {
   await runSync(L, C, { exec: captureExec(C, seen) });
   const forbidden = { sale_offers: ["seller_phone", "seller_name"], sellers: ["name"], properties: ["seller_name"] };
   const hits = seen.filter(([t, keys]) => keys.some((k) => forbidden[t].includes(k)));
-  const so = seen.filter(([t]) => t === "sale_offers");
-  if (so.length && so.every(([, k]) => k.includes("offer_id"))) pass(`đối chứng dương: bắt được ${seen.length} payload bảng người bán, sale_offers mang offer_id`);
-  else fail("không bắt được payload sale_offers — thước mù");
+  const KEYCOL = { sale_offers: "offer_id", sellers: "phone_hash", properties: "id" };
+  for (const [t, k] of Object.entries(KEYCOL)) {
+    const rows = seen.filter(([x]) => x === t);
+    if (rows.length && rows.every(([, keys]) => keys.includes(k))) pass(`đối chứng dương: bắt được ${rows.length} payload ${t}, mang ${k}`);
+    else fail(`không bắt được payload ${t} (hoặc thiếu ${k}) — thước mù với bảng này`);
+  }
   if (!hits.length) pass("không payload nào mang seller_phone / seller_name / sellers.name / properties.seller_name");
   else fail(`${hits.length} payload mang cột loại`);
   const leaks = await sync.leakGate(cloudExec(C));
@@ -688,13 +731,21 @@ async function casePii() {
     symlinkSync(path.join(PIPE, "node_modules"), path.join(dir, "node_modules"));
     const p = path.join(dir, "sync-cloud.mjs");
     const src = readFileSync(p, "utf8");
+    // bỏ cả hai lớp chặn cho đủ ba cột của ba bảng
     const mut = src
       .replace('sale_offers: ["seller_phone", "seller_name"]', 'sale_offers: ["seller_name"]')
-      .replace('"offer_id", "area_id",', '"offer_id", "seller_phone", "area_id",');
-    if (mut === src) throw new Error("không cấy được đột biến PII");
+      .replace('sellers: ["name"],', "sellers: [],")
+      .replace('properties: ["seller_name"],', "properties: [],")
+      .replace('"offer_id", "area_id",', '"offer_id", "seller_phone", "area_id",')
+      .replace('sellers: ["phone_hash",', 'sellers: ["name", "phone_hash",')
+      .replace('"id", "geo", "area_id",', '"id", "seller_name", "geo", "area_id",');
+    const changed = ['sale_offers: ["seller_name"]', "sellers: [],", "properties: [],", '"seller_phone", "area_id"', '"name", "phone_hash"', '"seller_name", "geo"'].every((x) => mut.includes(x));
+    if (!changed) throw new Error("không cấy được đủ đột biến PII — khuôn sync-cloud.mjs đổi?");
     writeFileSync(p, mut);
     const m = await import(pathToFileURL(p).href);
     const C2 = buildCloudSim("pii_red");
+    // cloud thật không có properties.seller_name (cố ý) — bản sao đỏ thêm cột để đột biến gửi được
+    await q1(C2, "ALTER TABLE properties ADD COLUMN seller_name text");
     const red = [];
     const local = await client(L, { types: m.localTypes });
     try {
@@ -702,8 +753,10 @@ async function casePii() {
     } finally {
       await local.end();
     }
-    if (red.some(([t, k]) => t === "sale_offers" && k.includes("seller_phone"))) pass("ĐỎ-ĐÚNG pii: bỏ seller_phone khỏi danh sách loại + thêm vào cho phép → thước bắt được trong payload");
-    else fail("thước không bắt được seller_phone lọt vào payload");
+    for (const [t, c] of [["sale_offers", "seller_phone"], ["sellers", "name"], ["properties", "seller_name"]]) {
+      if (red.some(([x, k]) => x === t && k.includes(c))) pass(`ĐỎ-ĐÚNG pii: bỏ ${t}.${c} khỏi danh sách loại + thêm vào cho phép → thước bắt được trong payload`);
+      else fail(`thước không bắt được ${t}.${c} lọt vào payload`);
+    }
     dropDb(C2);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -760,9 +813,14 @@ async function caseAllow() {
   const seen = [];
   const w = [];
   await runSync(L, C, { exec: captureExec(C, seen), log: (m) => w.push(m) });
-  const outside = seen.filter(([t, keys]) => keys.some((k) => !sync.CLOUD_ALLOW[t].includes(k)));
-  if (seen.length && !outside.length) pass(`payload ${seen.length} dòng bảng người bán chỉ gồm cột cho phép (cột giả sale_offers.fake vắng)`);
-  else fail(`payload có cột ngoài danh sách cho phép: ${JSON.stringify(outside[0])}`);
+  for (const t of PEOPLE) {
+    const rows = seen.filter(([x]) => x === t);
+    const outside = rows.filter(([, keys]) => keys.some((k) => !sync.CLOUD_ALLOW[t].includes(k)));
+    if (rows.length && !outside.length) pass(`payload ${rows.length} dòng ${t} chỉ gồm cột cho phép`);
+    else fail(`${t}: ${rows.length} payload, ${outside.length} mang cột ngoài danh sách cho phép`);
+  }
+  if (!seen.some(([, k]) => k.includes("fake"))) pass("cột giả sale_offers.fake vắng trong payload");
+  else fail("cột giả sale_offers.fake lọt vào payload");
   if (w.some((m) => m.includes("cột chưa duyệt") && m.includes("sale_offers.fake"))) pass("WARN 'cột chưa duyệt' nêu sale_offers.fake");
   else fail("không có WARN cột chưa duyệt cho sale_offers.fake");
   const bad = await q1(C, `SELECT count(*)::int AS n FROM sale_offers WHERE seller_ref IS NOT NULL
@@ -778,14 +836,35 @@ async function caseAllow() {
     else fail(`S06 chuẩn hoá sai: ${cloud[0]?.seller_ref}`);
   } else fail("fixture không có dòng S06 có số");
 
-  // chiều đỏ: định danh nguồn lẫn trong giá trị → dừng trước khi gửi
+  // chiều đỏ: định danh nguồn lẫn trong giá trị (mỗi bảng người bán một ô) → dừng trước khi gửi
   const C2 = buildCloudSim("allow_red");
-  const tok = (await q1(L, "SELECT source_ids[1] AS t FROM source_registry WHERE array_length(source_ids, 1) > 0 LIMIT 1"))[0].t;
-  await q1(L, "UPDATE sale_offers SET street_raw = 'ngõ ' || $1 WHERE ctid = (SELECT ctid FROM sale_offers LIMIT 1)", [tok]);
-  const r = await expectFail(runSync(L, C2), "scan");
-  const st = await stagingCount(C2);
-  if (r.ok && st === 0) pass("ĐỎ-ĐÚNG ten-nguon: giá trị mang định danh nguồn → dừng trước khi nạp, 0 dòng staging");
-  else fail(`soát tên nguồn: ${r.msg}; staging ${st}`);
+  const reg = await q1(L, "SELECT code, real_name, source_ids FROM source_registry");
+  const longTok = reg.flatMap((r) => r.source_ids ?? []).find((x) => x.length >= 4);
+  const shortTok = reg.map((r) => r.real_name).find((x) => x && x.length < 4);
+  const plants = [
+    ["sale_offers", "offer_id", "street_raw", "text", longTok],
+    ["properties", "id", "street", "text", longTok],
+    ["sellers", "phone_hash", "flags", "jsonb", longTok],
+  ];
+  if (shortTok) plants.push(["properties", "id", "street", "text", shortTok]);
+  else note("source_registry local không có tên nguồn < 4 ký tự — bỏ ca token ngắn");
+  for (const [t, pk, col, kind, tok] of plants) {
+    const [row] = await q1(L, `SELECT ${pk}::text AS id, ${col}::text AS v FROM ${t} ORDER BY ${pk} LIMIT 1`);
+    const val = kind === "jsonb" ? `jsonb_build_object('ghi_chu', $1::text)` : `'ngõ ' || $1::text || ' 3'`;
+    await q1(L, `UPDATE ${t} SET ${col} = ${val} WHERE ${pk}::text = $2`, [tok, row.id]);
+    const r = await expectFail(runSync(L, C2), "scan");
+    const st = await stagingCount(C2);
+    const label = tok.length < 4 ? "token ngắn" : "token dài";
+    if (r.ok && st === 0 && r.msg.includes(`${t}.${col}`)) pass(`ĐỎ-ĐÚNG ten-nguon (${label}) ở ${t}.${col}: dừng trước khi nạp, 0 dòng staging`);
+    else fail(`soát tên nguồn ${t}.${col} (${label}): ${r.msg}; staging ${st}`);
+    await q1(L, `UPDATE ${t} SET ${col} = ${kind === "jsonb" ? "$1::jsonb" : "$1"} WHERE ${pk}::text = $2`, [row.v, row.id]);
+  }
+  // fail-closed: source_registry rỗng → không soát được → dừng, không gửi
+  await q1(L, "CREATE TABLE sr_backup AS SELECT * FROM source_registry; DELETE FROM source_registry");
+  const re = await expectFail(runSync(L, C2), "scan");
+  if (re.ok && (await stagingCount(C2)) === 0) pass("ĐỎ-ĐÚNG fail-closed: source_registry rỗng → dừng pha scan, không gửi");
+  else fail(`source_registry rỗng mà lượt không dừng: ${re.msg}`);
+  await q1(L, "INSERT INTO source_registry SELECT * FROM sr_backup; DROP TABLE sr_backup");
   dropDb(C2);
 
   // chiều đỏ: seller_ref thô trên cloud → leak gate đỏ
@@ -797,7 +876,9 @@ async function caseAllow() {
 
 // tiến trình con cho ca fail (d): chạy một lượt có nạp chậm để bị kill -9 giữa chừng
 if (process.argv[2] === "__child") {
-  const [, , , L, C, runId] = process.argv;
+  const [, , , L, C, runId, ct, port] = process.argv;
+  CT = ct;
+  PORT = port;
   const slow = cloudExec(C, { hook: (sql) => (sql.startsWith("INSERT INTO sync_stage.rows") ? sleep(400) : undefined) });
   await runSync(L, C, { exec: slow, sync: { runId } }).catch(() => {});
   process.exit(0);
@@ -820,6 +901,7 @@ if (!CASES[which]) {
   process.exit(2);
 }
 try {
+  startTemp(which);
   await CASES[which]();
 } catch (e) {
   fail(`ca ${which} ném lỗi: ${e.stack || e.message}`);

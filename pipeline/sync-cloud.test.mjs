@@ -13,6 +13,7 @@ import {
   localTypes,
   mgmtExec,
   planTables,
+  pool,
   scanSourceNames,
   selectList,
 } from "./sync-cloud.mjs";
@@ -135,6 +136,35 @@ test("scanSourceNames: trúng token không phân biệt hoa thường; danh sác
   assert.equal(scanSourceNames('{"a":"X-Foo:1"}', ["x-foo"]), "x-foo");
   assert.equal(scanSourceNames('{"a":"bar"}', ["x-foo"]), null);
   assert.equal(scanSourceNames('{"a":"X-Foo"}', []), null);
+});
+
+test("scanSourceNames: token ngắn (< 4) so theo ranh giới từ — không bỏ qua, không trúng giữa từ", () => {
+  assert.equal(scanSourceNames('{"a":"ngõ Abc 3"}', ["abc"]), "abc");
+  assert.equal(scanSourceNames('{"a":"abc-xyz"}', ["abc"]), "abc");
+  assert.equal(scanSourceNames('{"a":"xabcx"}', ["abc"]), null);
+  assert.equal(scanSourceNames('{"a":"a.b"}', ["a.b"]), "a.b");
+});
+
+test("pool: một job lỗi → không job mới nào bắt đầu, chỉ trả về khi mọi worker đã dừng", async () => {
+  const started = [];
+  let running = 0;
+  let maxAfterReject = 0;
+  const items = Array.from({ length: 12 }, (_, i) => i);
+  const p = pool(items, 3, async (x) => {
+    started.push(x);
+    running++;
+    await new Promise((r) => setTimeout(r, 5));
+    running--;
+    if (x === 1) throw new Error("mẻ 1 gãy");
+  });
+  await assert.rejects(p, /mẻ 1 gãy/);
+  maxAfterReject = running;
+  assert.equal(maxAfterReject, 0, "còn worker chạy sau khi pool trả về");
+  assert.ok(started.length <= 4, `đã bắt đầu ${started.length} job sau khi job 1 gãy`);
+  // đối chứng: không lỗi thì chạy đủ
+  const all = [];
+  await pool(items, 3, async (x) => all.push(x));
+  assert.equal(all.length, 12);
 });
 
 test("localTypes: date/timestamp giữ nguyên chuỗi, kiểu khác theo node-pg", () => {

@@ -20,8 +20,10 @@
 // người bán trên tin rao (tên, SĐT, ID tài khoản) là TẦNG C — công khai. Tầng A chỉ còn:
 // tên nguồn thật (kể cả lẫn trong giá trị cột), hồ sơ người dùng app, user_events/
 // user_profile, review_queue. Vì vậy:
-//   - bảng tầng A (source_registry, stg_*, airbnb_snapshots, raw) KHÔNG sync — leak gate
-//     kiểm 0 dòng sau mỗi lần chạy; bảng airdna_* lên dưới tên trung tính ref_calib_*;
+//   - bảng thô/registry (source_registry, stg_*, airbnb_snapshots, raw) KHÔNG sync — chúng
+//     mang tên nguồn thật (mapping S0x↔nguồn, payload gốc theo nguồn) nên là tầng A, không phải
+//     vì SĐT/tên người bán; leak gate kiểm 0 dòng sau mỗi lần chạy; airdna_* lên dưới tên
+//     trung tính ref_calib_*;
 //   - bảng người bán chỉ gửi cột trong CLOUD_ALLOW (cột mới mặc định ở lại máy);
 //   - seller_ref lên dạng «<mã S0x>:<dãy số cuối>» — giá trị gốc mang tiền tố/tên nguồn;
 //   - payload bảng người bán được soát ở local với tên + định danh nguồn đọc từ
@@ -273,10 +275,20 @@ END $chk$;`);
   return lines.join("\n");
 }
 
-/** Token định danh nguồn đầu tiên xuất hiện trong text (không phân biệt hoa thường), hoặc null. */
+/** Token định danh nguồn đầu tiên xuất hiện trong text (không phân biệt hoa thường), hoặc null.
+ * Token ngắn (< 4 ký tự, vd tên nguồn ba chữ) so theo ranh giới từ để không trúng nhầm giữa từ. */
 export function scanSourceNames(text, tokens) {
   const low = text.toLowerCase();
-  for (const t of tokens) if (t && low.includes(t.toLowerCase())) return t;
+  for (const t of tokens) {
+    if (!t) continue;
+    const k = t.toLowerCase();
+    if (k.length >= 4) {
+      if (low.includes(k)) return t;
+    } else {
+      const esc = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(low)) return t;
+    }
+  }
   return null;
 }
 
@@ -311,15 +323,23 @@ export function mgmtExec(token, { fetchImpl = fetch, retries = 4, sleep = (ms) =
 const newRunId = () =>
   `${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}-${randomBytes(3).toString("hex")}`;
 
-async function pool(items, n, fn) {
+/** Chạy fn trên items với n worker. Một job lỗi → mọi worker ngừng lấy job mới; chỉ trả về
+ * (ném lỗi đầu tiên) khi MỌI worker đã dừng — để dọn staging sau đó không bị mẻ muộn ghi đè. */
+export async function pool(items, n, fn) {
   let i = 0;
+  let failed = null;
   const workers = Array.from({ length: Math.min(n, items.length) }, async () => {
-    while (i < items.length) {
+    while (!failed && i < items.length) {
       const k = i++;
-      await fn(items[k], k);
+      try {
+        await fn(items[k], k);
+      } catch (e) {
+        failed ??= e;
+      }
     }
   });
-  await Promise.all(workers);
+  await Promise.allSettled(workers);
+  if (failed) throw failed;
 }
 
 /** Leak gate — tầng A / thô phải vắng hoặc 0 dòng ở cloud; seller_ref chỉ dạng S0x;
@@ -418,10 +438,12 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
     if (!tokens) {
       const { rows } = await local.query(
         `SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry
-           UNION ALL SELECT unnest(source_ids) FROM source_registry) s WHERE length(x) >= 4`,
+           UNION ALL SELECT unnest(source_ids) FROM source_registry) s WHERE length(x) > 0`,
       );
       tokens = rows.map((r) => r.x);
     }
+    // Không có gì để soát = bộ chặn tầng A đang mở → dừng thay vì cho qua (fail-closed).
+    if (!tokens.length) throw new PhaseError("scan", "không đọc được tên/định danh nguồn nào từ source_registry local — không soát được, không gửi");
     const { rows: lc } = await local.query(
       `SELECT table_name AS t, column_name AS c, udt_name AS u FROM information_schema.columns
        WHERE table_schema = 'public' AND table_name = ANY($1) ORDER BY table_name, ordinal_position`,
@@ -451,6 +473,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
     await local.query("COMMIT");
   } catch (e) {
     await local.query("ROLLBACK").catch(() => {});
+    if (e instanceof PhaseError) throw e;
     throw new PhaseError("read", e.message);
   }
   lap("read");

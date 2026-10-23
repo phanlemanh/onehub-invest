@@ -22,6 +22,19 @@ FK — Mạnh chọn ở Cổng Phạm vi). Đọc local bằng `row_to_json` n�
 nào ở local còn dưới 50% số dòng trên cloud thì lượt dừng, không tráo. `seller_ref` lên dạng
 `S0x:<số>`; payload bảng người bán được soát tên nguồn thật ở local trước khi gửi.
 
+### Ranh giới dữ liệu lên cloud (luật Mạnh chốt 2026-10-23, AGENTS.md luật 6)
+
+- **Định danh người bán trên tin rao (tên, SĐT, ID tài khoản) là tầng C** — công khai, được lên cloud.
+- **Tầng A chỉ còn:** tên nguồn thật (kể cả lẫn trong giá trị cột), hồ sơ người dùng app,
+  `user_events`/`user_profile`, `review_queue`. Vì thế bảng thô/registry (`source_registry`, `stg_*`,
+  `airbnb_snapshots`) không lên cloud — chúng mang tên nguồn thật; `seller_ref` đổi về `S0x:<số>`;
+  `listing_url`, `photos` (giá trị trỏ tên miền nguồn) ở lại máy; payload ba bảng người bán được soát
+  tên + định danh nguồn đọc từ `source_registry` local trước khi gửi (danh sách đó không rời máy).
+- **Bảng người bán chỉ gửi cột trong danh sách cho phép** (`CLOUD_ALLOW` trong `sync-cloud.mjs`); cột
+  local mới mặc định ở lại máy, log in WARN «cột chưa duyệt».
+- **`PII_EXCLUDE` (SĐT, tên người bán) vẫn loại** — giữ vì phạm vi sản phẩm của đợt này (mở các cột đó
+  là việc sản phẩm riêng chưa xác nhận), không phải vì luật xếp chúng vào tầng A.
+
 Bản mới nạp và tráo qua Management API dưới role chủ bảng — không dùng service key/PostgREST nữa — nên
 bật RLS (migration 037, phiên riêng) không làm sync gãy, miễn RLS không bật `FORCE`.
 
