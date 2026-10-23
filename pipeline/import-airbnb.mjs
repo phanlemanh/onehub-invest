@@ -28,11 +28,26 @@ export function mediaFilesOf(item, snapshotId) {
   return mf.map((m) => ({ ...m, snapshotId }));
 }
 
+// PL1 (claudedp-2310-4): snapshot THỬ — dữ liệu giả sinh ra khi bench parser/
+// e2e/verify tay (nguồn zalo-mock, e2e, TEST…) — KHÔNG BAO GIỜ được vào stg_*.
+// Nhận diện theo SEGMENT tên nguồn (giữa cặp __), không khớp chữ lõi trong
+// tên nguồn thật. Export để test.
+const TEST_SNAPSHOT_RE = /__(?:zalo-mock|e2e|test)(?:__|$)/i;
+export function isTestSnapshot(name) {
+  return TEST_SNAPSHOT_RE.test(name);
+}
+
 async function main() {
   const dir = process.argv[2];
   if (!dir) {
     console.error("thiếu tham số: node import-airbnb.mjs <snapshot-dir>");
     process.exit(1);
+  }
+  // Snapshot thử → bỏ qua CÓ LOG (exit 0 để vòng nạp hằng đêm không gãy,
+  // nhưng stderr nói rõ đã skip cái gì cho auditable).
+  if (isTestSnapshot(dir.split("/").pop() ?? dir)) {
+    console.warn(`bỏ qua snapshot THỬ (không nạp stg): ${dir}`);
+    process.exit(0);
   }
   // Orphan: crash giữa write items và finalize → dir không có manifest.
   // Skip + warn (không nạp, không ném) để một dir mồ côi không gãy cả finalize.

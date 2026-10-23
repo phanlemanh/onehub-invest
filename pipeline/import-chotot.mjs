@@ -96,7 +96,16 @@ async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
-    const dirs = process.argv[2] === "--latest" ? await latestSnapshotDir() : [process.argv[2]];
+    let dirs = process.argv[2] === "--latest" ? await latestSnapshotDir() : [process.argv[2]];
+    // PL1: snapshot THỬ không bao giờ vào stg (đồng bộ luật import-airbnb)
+    const testRe = /__(?:zalo-mock|e2e|test)(?:__|$)/i;
+    dirs = dirs.filter((d) => {
+      if (testRe.test(d.split("/").pop() ?? d)) {
+        console.warn(`bỏ qua snapshot THỬ (không nạp stg): ${d}`);
+        return false;
+      }
+      return true;
+    });
     for (const d of dirs) await importDir(client, d);
   } finally {
     await client.end();
