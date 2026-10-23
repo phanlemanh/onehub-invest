@@ -1,0 +1,72 @@
+schema_version: 1
+feature_slug: narrow-ask-rules
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.guard_hook_selftest
+    expected: "exit 0; khối '-- settings.json' có 5 dòng OK (bỏ ask rộng · giữ ask supabase/sync-public · đủ 9 deny · hook đăng ký · hook +x); dòng cuối PASS"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.guard_hook_selftest
+    expected: "exit 0; khối '-- git push đích main/master → ASK' toàn OK, không dòng FAIL"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.guard_hook_selftest
+    expected: "exit 0; khối '-- force …' 4 dòng OK ASK (--force cuối lệnh, -uf, --force-with-lease, +claude/y)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.guard_hook_selftest
+    expected: "exit 0; khối '-- vercel ghi → ASK' toàn OK"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.guard_hook_selftest
+    expected: "should-NOT-fire: exit 0; các khối '-- push nhánh riêng → PASS', '-- vercel đọc → PASS', '-- không liên quan … → PASS' toàn OK (hook im lặng)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.guard_hook_selftest
+    expected: "exit 0; khối '-- lệnh ghép / lồng: xét từng vế → ASK' toàn OK, và heredoc dữ liệu (cat, ego-browser) nằm ở khối PASS"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.guard_hook_selftest
+    expected: "exit 0; khối '-- fail-closed' OK cho input hỏng → ask, thiếu node → ask, node lỗi → ask; ca đối số động ($BRANCH, $(…)) và nháy không đóng nằm trong khối ASK"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.guard_hook_mutation
+    expected: "exit 0; 'bắt 11/11 bản đột biến' và PASS — mỗi bản hỏng làm selftest đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.guard_hook_replay
+    expected: "exit 0; 'giảm' ≥ 50% và REPLAY PASS; should-NOT-fire ở vế an toàn: 'vế an toàn' hỏi N/N — không lệnh nào nhắm rõ main/vercel ghi lọt qua (một lệnh lọt là exit 1)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: judgment
+    question: "Theo tài liệu và phần đọc mã CLI 2.1.309 ghi trong bypass-ask-note.md, cùng hook guard-push-deploy.sh (in JSON permissionDecision ask, exit 0), một phiên Claude Code chạy bypassPermissions có hiện hộp hỏi người khi hook trả ask không? Bằng chứng có đủ để tin, hay cần phép thử sống mô tả trong ghi chú?"
+    inputs: [_acceptance/narrow-ask-rules/bypass-ask-note.md, .claude/hooks/guard-push-deploy.sh, .claude/settings.json]
+    evidence_required: [judged_by, verdict, rationale]

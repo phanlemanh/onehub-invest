@@ -123,6 +123,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 10. **Cổng Ops đóng mặc định** (22/10): vào `/ops/**` khi `users.role` ∈
    {`ops`, `admin`} hoặc email trong `OPS_EMAILS`; đăng nhập thôi không đủ
    (`/register` mở). Cấp quyền data-ops bằng `role = 'ops'`, không cần migration.
+11. **Người chỉ đứng ở cổng, không ở từng lệnh** (23/10): bỏ luật ask rộng `git push *` /
+   `vercel *`; hook `guard-push-deploy` chỉ hỏi push lên `main` (kể cả force, `--all`, push
+   không refspec từ main) và Vercel ghi. Đề xuất branch protection cho `main` trên GitHub
+   (Mạnh tự bật). Hồ sơ `_acceptance/narrow-ask-rules`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -176,6 +180,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
+| V5 | Giảm hỏi quyền ngoài cổng: hook `guard-push-deploy` thay luật ask rộng (phát lại transcript: −70% lần hỏi, mọi push main/vercel ghi vẫn hỏi) — `_acceptance/narrow-ask-rules` | ⏳ chờ Mạnh ký (T3) |
 
 ### Track 6 — Chuẩn UI/UX ReUI
 | # | Việc | Trạng thái |
