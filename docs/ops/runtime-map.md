@@ -103,6 +103,42 @@ Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.e
 - User dọn (tuỳ chọn): remove OpenClaw Desktop app; giữ ~/dev/openclaw
   tới khi PR upstream xong.
 
+## Leak gate kiểm anon của sync cloud (chốt 2026-10-23, `_acceptance/leak-gate-kiem-anon/`)
+
+- `pipeline/sync-cloud.mjs` dừng lượt (pha `gate`, exit 1) khi role anon/authenticated SELECT được quan hệ nào trong
+  `public` của Supabase, chừa ba quan hệ PostGIS. Dòng log và cách gỡ: `docs/ops/supabase-lock-anon-rls.md` mục
+  «Leak gate kiểm anon». Soi prod chỉ đọc: `node pipeline/sync-cloud.mjs --kiem-anon`.
+
+## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
+
+Sự cố gốc (audit L7): tối 22/10 colima khởi động lại, `one-invest-db` không có restart policy nên nằm chết
+khoảng 8 giờ; sáng 23/10 policy được đặt tay. Từ vòng này policy nằm trong `db/docker-compose.yml`:
+`restart: unless-stopped`.
+
+Chuỗi tự khởi động khi máy khởi động lại:
+
+```
+đăng nhập macOS → LaunchAgent homebrew.mxcl.colima (RunAtLoad, `colima start -f`)
+→ VM colima → dockerd → one-invest-db (restart: unless-stopped khai trong db/docker-compose.yml)
+```
+
+- Kiểm (chỉ đọc, chạy lúc nào cũng được): `bash scripts/check-db-autostart.sh live` — policy của container
+  đang chạy, `RunAtLoad` của LaunchAgent colima, và LaunchAgent đang nạp. Thước còn `static`, `diff`,
+  `mutation`, `restart` (khởi động lại dockerd trong một Docker riêng tạm, không đụng DB thật),
+  `cleanup`, `live-selftest`.
+- Triển khai sau merge: KHÔNG cần tạo lại container ngay — container đang sống đã mang `unless-stopped`
+  (đặt tay 23/10). Lần `docker compose up -d` kế tiếp (`scripts/setup.sh`, `scripts/migrate-export.sh` hay
+  chạy tay) thấy cấu hình đổi và tự tạo lại container theo file mới, cùng policy; DB gián đoạn vài giây,
+  dữ liệu nằm trong volume `oneinvest_pgdata` nên không mất.
+- Giới hạn:
+  - Cần đăng nhập macOS: LaunchAgent chỉ chạy trong phiên người dùng, máy khởi động lại mà chưa ai đăng
+    nhập thì colima và DB chưa lên.
+  - `docker stop one-invest-db` có chủ đích thì container KHÔNG tự bật lại sau lần Docker khởi động kế
+    tiếp — đúng nghĩa `unless-stopped`; bật lại bằng `docker start one-invest-db`.
+  - Bằng chứng «Docker khởi động lại → DB lên lại» đo trên Docker riêng tạm; chưa diễn tập trên colima của
+    máy (dừng cùng lúc DB và các container dự án khác). Diễn tập là việc Mạnh chọn giờ làm tay; agent không
+    tự khởi động lại colima hay Docker của máy. Diễn tập xong chạy lại lệnh `live`.
+
 ## Transform S03/S05 và migration enrich (chốt 2026-10-23, `_acceptance/enrich-hau-ky/`)
 
 - Từ vòng enrich-hau-ky, `transform-zalo.mjs` / `transform-fb.mjs` KHÔNG còn `DELETE FROM sale_offers`
@@ -118,3 +154,32 @@ Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.e
 - Đề xuất của tin biến mất hẳn được chụp ở `ops_audit` action `enrich:retire` (không có đoạn tin, không
   thông tin người bán); khôi phục khi tin quay lại: `INSERT INTO enrichment_proposals SELECT * FROM
   jsonb_populate_recordset(NULL::enrichment_proposals, <detail->'proposals'>)`.
+
+## Job đêm báo lỗi thật (chốt 2026-10-23, `_acceptance/job-bao-loi-that/`, hàng AU3)
+
+Đêm 22→23/10 DB local sập ~8 giờ mà `launchctl` ghi mọi job «last exit 0». Từng bước xử lý (`pipeline/*.mjs`)
+vốn đã thoát 1 khi không tới DB; lỗ ở tệp chạy job không `set -e`: bước giữa hỏng, bước cuối lành (DB lên lại
+giữa chuỗi) thì launchd thấy 0.
+
+| Job launchd | Khi một bước DB hỏng | Ghi chú |
+|---|---|---|
+| `com.oneinvest.chotot` (`scripts/chotot-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | đoạn transform chạy đủ các bước như cũ rồi mới thoát |
+| `com.oneinvest.apify-facebook` (`scripts/apify-facebook-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | như trên |
+| `com.oneinvest.airdna-daily` (`scripts/airdna-daily.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
+| `com.oneinvest.collector` (→ `pipeline/finalize-hanoi.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
+| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | DB tắt hẳn: thoát ≠ 0 · DB chập chờn: **có thể 0** | còn lỗ — xem dưới |
+
+- **Tìm nguyên nhân trong log:** chotot/apify in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr cho mỗi
+  bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`). Bộ chạy bước: `scripts/lib/job-step.sh`.
+- **Còn nuốt lỗi, đang chờ:**
+  - Đoạn **nạp** của `chotot-daily.sh` (`import-chotot` không kiểm mã) và `apify-facebook-daily.sh`
+    (`import-airbnb … || true`, state vẫn nhảy qua snapshot hỏng) — làn ZCode, yêu cầu `P3-1` của đợt
+    `dot0-cam-mau`. Bản vá cùng loại cho `zalo-import-daily.sh` (P1.5) nằm trên nhánh `zcode/audit-p1-resilience`.
+  - `cloud-sync.sh`: khi DB chập chờn (rớt lúc `sync-cloud`, lên lại trước `push-ops-facts`) job vẫn thoát 0;
+    `push-ops-facts.mjs` viết cứng chuỗi kết nối, bỏ qua `DATABASE_URL`. Hai tệp thuộc `t3_paths` — hàng T3 riêng
+    `P3-3` (Mạnh chọn ở Cổng Phạm vi AU3).
+- **Cảnh báo khi DB sập** không đến từ job: đó là lớp L5b của `scripts/zalo-watchdog.sh` (ZC3, làn ZCode, nhánh
+  `zcode/audit-p1-resilience`, chờ Mạnh ký). Job chỉ nói thật bằng mã thoát.
+- **Kiểm:** `node --test scripts/job-exit.test.mjs` — không tắt DB chung; tệp chạy job chạy trong cây tạm với
+  `node`/`docker` giả, bước thật chạy trong hộp cát (`scripts/lib/job-exit-sandbox.mjs`) chặn mọi kết nối trừ một
+  cổng canh. Hai ca `todo` (mã `P3-3`) là lỗ cloud-sync — hiện trong đầu ra cho tới khi hàng T3 vá.

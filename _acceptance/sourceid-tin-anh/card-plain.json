@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Hai tin Zalo chỉ có ảnh, gửi cùng nhóm cùng lúc bởi hai người khác nhau (hoặc hai ảnh khác nhau), giờ đều được giữ lại thay vì tin sau bị coi là trùng và bỏ mất; tin có chữ vẫn giữ mã nhận diện cũ.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
+  "decisions_plain": [
+    {"id": "d-20261023T094558Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, phiên kiểm độc lập được giao tự đi tìm lỗ và đã ghi 5 điểm ngoài phạm vi."}
+  ]
+}

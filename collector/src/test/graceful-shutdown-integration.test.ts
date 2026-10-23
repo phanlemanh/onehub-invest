@@ -275,10 +275,19 @@ test("P3: POST gửi NỬA body rồi im — shutdown không chờ close() treo,
   // mở socket THÔ gửi nửa request rồi im lặng mãi
   const net = await import("node:net");
   const sock = net.connect(port, "127.0.0.1");
+  // socket thô không có handler 'error' mặc định: khi server đóng/đóng idle
+  // connection, ECONNRESET thành exception không xử lý → crash cả process
+  // test (chập chờn 4/5 — claudedp-2310-3 vòng 4). Nuốt chủ động.
+  sock.on("error", () => {});
   await new Promise<void>((done) => sock.once("connect", done));
+  // chờ server THẬT SỰ nhận request (headers đã parse) rồi mới SIGTERM —
+  // bắn sớm quá thì connection còn idle, closeIdleConnections cắt ngay,
+  // không còn là ca "request đang chạy" cần race.
+  const gotRequest = new Promise<void>((r) => server.once("request", () => r()));
   sock.write(
     `POST /agent-report HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nAuthorization: Bearer k1\r\ncontent-type: application/json\r\ncontent-length: 5000\r\n\r\n{"agent_id":"x","gro`,
   );
+  await gotRequest;
   // KHÔNG sock.end() — body dở, connection treo
 
   const exits: number[] = [];

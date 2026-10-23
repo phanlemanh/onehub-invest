@@ -21,6 +21,8 @@ import type { RawItem } from "../core/types.js";
  */
 
 export type AgentMediaFact = { path?: string | null; url?: string | null; type?: string | null };
+/** Kev-nhãn (claudedp-2310-11): điểm gate đi CÙNG tin — p=null khi gate down. */
+export type AgentKevFact = { p: number | null; model: string; threshold: number; at: string };
 export type AgentMessage = {
   id?: string;
   text: string;
@@ -30,6 +32,7 @@ export type AgentMessage = {
   senderId?: string | null;
   conversationId?: string | null;
   media?: AgentMediaFact[];
+  kev?: AgentKevFact | null;
 };
 
 export type AgentReportBody = {
@@ -98,8 +101,26 @@ export async function createAgentServer(opts: AgentServerOptions) {
     } catch { /* chưa có file — lần đầu */ }
   }
 
-  const sourceIdOf = (group: string, ts: string, text: string) =>
-    createHash("sha256").update(`${group}|${ts}|${text}`).digest("hex").slice(0, 32);
+  // ZC1 (claudedp-2310-14): tin CHỈ CÓ ẢNH (text rỗng) — hai tin cùng nhóm
+  // cùng ts đụng nhau ở công thức cũ, tin sau bị bỏ ở dedup. Thêm sender +
+  // danh sách URL/path media PHỤ SAU text rỗng để tách. Tin CÓ TEXT (dù kèm
+  // ảnh) GIỮ NGUYÊN id cũ — không đổi id các tin đã có.
+  const sourceIdOf = (
+    group: string,
+    ts: string,
+    text: string,
+    extra?: { senderId?: string | null; media?: AgentMediaFact[] },
+  ) => {
+    const h = createHash("sha256").update(`${group}|${ts}|${text}`);
+    if (!text && extra) {
+      const urls = (extra.media ?? [])
+        .map((m) => m.url ?? m.path ?? "")
+        .filter(Boolean)
+        .join(",");
+      h.update(`|${extra.senderId ?? ""}|${urls}`);
+    }
+    return h.digest("hex").slice(0, 32);
+  };
 
   function ingest(body: unknown, auth: string | null): IngestResult {
     if (!keyOk(keys, auth)) return { status: 401, body: { error: "unauthorized" } };
@@ -118,7 +139,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     let accepted = 0;
     let duplicates = 0;
     for (const m of b.messages!) {
-      const sourceId = sourceIdOf(b.group!, m.ts, m.text);
+      const sourceId = sourceIdOf(b.group!, m.ts, m.text, { senderId: m.senderId, media: m.media });
       if (seen.has(sourceId)) {
         duplicates++;
         continue;
@@ -141,7 +162,15 @@ export async function createAgentServer(opts: AgentServerOptions) {
           conversationId: m.conversationId ?? null,
           media: m.media ?? null,
         },
-        meta: { city, agent: b.agent_id, group: b.group, ts: m.ts },
+        meta: {
+          city,
+          agent: b.agent_id,
+          group: b.group,
+          ts: m.ts,
+          // Kev-nhãn: điểm gate là DỮ LIỆU đi cùng tin (p=null = gate down),
+          // quyết định dùng p ở đâu nằm ở transform — không lọc ở collector.
+          ...(m.kev ? { kev: m.kev } : {}),
+        },
       });
       accepted++;
     }

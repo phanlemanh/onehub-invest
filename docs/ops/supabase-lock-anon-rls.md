@@ -121,3 +121,66 @@ câu lệnh nào chạy bằng anon hoặc authenticated. Khoảng trước 20/1
 - **Service key: không cần xoay.** Không thấy ở repo, env Vercel hay bundle nào.
 - **Mật khẩu người dùng duy nhất: tuỳ chọn.** `users.password_hash` là scrypt có salt, đọc
   được nếu ai đó từng có anon key. Chưa thấy dấu vết, nên chỉ đổi khi muốn chắc thêm.
+
+## Leak gate kiểm anon (AU1, `_acceptance/leak-gate-kiem-anon/`)
+
+Từ hồ sơ này, mỗi lượt sync cloud (`pipeline/sync-cloud.mjs`, launchd 15′) tự kiểm quyền đọc công khai: role `anon`
+hoặc `authenticated` mà SELECT được bất kỳ bảng, view, materialized view, bảng phân vùng hay bảng ngoại nào trong `public` thì
+lượt dừng và báo đỏ. Kiểm hai chỗ: trước khi đọc local và gửi (không dòng nào lên một cloud đang mở) và trong leak gate
+sau tráo (bắt quyền mở giữa lượt).
+
+### Thứ tự triển khai — làm đúng thứ tự này
+
+1. Áp 037 lên prod theo mục «Áp» ở trên, rồi kiểm theo mục «Kiểm sau khi áp».
+2. Mạnh chạy lệnh chỉ đọc trên prod (cần `~/.oneinvest/cloud.env`):
+
+   ```bash
+   node pipeline/sync-cloud.mjs --kiem-anon
+   ```
+
+   Mã 0 và dòng `kiem-anon: sạch — …` là điều kiện merge (Hỏi-1 Mạnh duyệt 23/10). Dán mã thoát và dòng in vào PR.
+   Có dòng `kiem-anon: <role> đọc được …` thì chưa merge: gỡ theo mục dưới rồi chạy lại.
+3. Merge PR leak gate. Lượt sync kế tiếp tự chạy gate.
+
+Merge khi prod còn mở (chưa áp 037, hoặc `--kiem-anon` còn vi phạm) thì MỌI lượt sync dừng đỏ ở pha `gate` — dữ
+liệu cloud đứng yên ở bản cũ cho tới khi gỡ xong.
+
+### Đọc dòng báo đỏ
+
+Log của `scripts/cloud-sync.sh` có dòng dạng:
+
+```
+SYNC FAIL [gate] <thời điểm>: LEAK GATE FAIL (trước khi gửi): anon đọc được public.users (bảng, cấp thẳng; gỡ: REVOKE SELECT ON public."users" FROM "anon")
+```
+
+- `(trước khi gửi)` — lượt dừng trước khi đọc local; cloud không nhận dòng nào của lượt này.
+  `(sau tráo)` — quyền mở GIỮA lượt; dữ liệu lượt này đã lên rồi mới báo.
+- Mỗi vi phạm: `<role> đọc được public.<quan hệ> (<loại>, <đường cấp>; gỡ: <lệnh>)`, nối nhau bằng dấu phẩy. Loại là
+  một trong: `bảng`, `view`, `materialized view`, `bảng phân vùng`, `bảng ngoại`. Đường cấp là một trong năm:
+  `cấp thẳng`, `qua PUBLIC`, `cấp cột <cột>`, `qua role <role trung gian>`, hoặc `không rõ đường cấp` — role đọc được
+  nhưng không thấy quyền SELECT nào gán cho chính nó, cho PUBLIC hay cho role nó là thành viên (vd role đó là chủ
+  quan hệ). Với đường thứ năm, phần sau `gỡ:` là lời dặn `kiểm tay quyền và chủ sở hữu của quan hệ`, KHÔNG phải lệnh
+  SQL.
+- Mỗi dòng chỉ gọi tên MỘT đường cấp (ưu tiên: cấp thẳng → PUBLIC → qua role → cấp cột). Quyền mở qua nhiều đường
+  cùng lúc thì sau khi gỡ đường đầu, lượt kế có thể đỏ lại với đường tiếp theo và lệnh gỡ mới — gỡ tiếp tới khi xanh.
+- `cloud không có role anon — không kiểm được quyền đọc công khai` — sync đang nói chuyện với một DB không phải
+  Supabase (sai `cloud.env`?); gate không cho qua khi không kiểm được.
+
+### Gỡ đúng
+
+Chạy NGUYÊN VĂN lệnh sau `gỡ:` trong SQL Editor của Supabase — nó nhắm đúng đường cấp (vd quyền đến qua `PUBLIC`
+thì gỡ `FROM PUBLIC`, gỡ `FROM anon` sẽ không ăn thua). Lượt sync kế xanh lại, hoặc đỏ với đường cấp kế tiếp nếu quyền
+mở qua nhiều đường (gỡ tiếp theo dòng mới). Ngoại lệ: dòng mang `không rõ đường cấp` không có lệnh để dán — Mạnh tự
+điều tra chủ sở hữu và quyền của quan hệ đó (`\dp public.<quan hệ>` trong psql, hoặc `pg_class.relowner`/`relacl`)
+rồi quyết cách thu. Không tắt, không nới gate để sync
+chạy tiếp — gate đỏ nghĩa là ai cầm anon key (khoá công khai) đang đọc được dữ liệu đó. Sửa quyền trên prod là việc
+của Mạnh; agent chỉ đọc log và chỉ ra lệnh, không tự chạy trên prod.
+
+### Ba quan hệ PostGIS được chừa
+
+`spatial_ref_sys`, `geometry_columns`, `geography_columns` (hằng `PUBLIC_READ_ALLOW` trong `pipeline/sync-cloud.mjs`)
+vẫn cho anon đọc sau 037: chủ là `supabase_admin`, role `postgres` không thu quyền được (Known limit ở trên), và nội
+dung là bảng tham chiếu hệ toạ độ công khai, không có dữ liệu sản phẩm. Gate chỉ chừa chúng khi là thành viên extension
+`postgis`; bảng thường trùng tên vẫn bị bắt. Muốn chừa thêm quan hệ nào là quyết định của Mạnh, ghi lý do ở đây.
+
+Thước: `cd pipeline && node scripts/check-cloud-sync.mjs anon` (cloud mô phỏng, không gọi prod).
