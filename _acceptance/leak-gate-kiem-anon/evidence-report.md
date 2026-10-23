@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0f912e48e9ea47bdb689f364d3673612e67b8270
+verified_commit: 547e5a5c577fb3ebc2604ac07e7dd6cb79c4a99a
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -330,3 +330,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 
 Round 1: mọi eval máy xanh; E18 (judgment, T3) hội đồng ba thấu kính cùng đề xuất FAIL vì tài liệu docs/ops/supabase-lock-anon-rls.md chưa nêu nhánh `không rõ đường cấp`. Verdict PENDING-JUDGMENT, chờ người quyết ở Gate 2. Ba mục ngoài hợp đồng xem review-findings.md.
 Round 2: tài liệu đã được sửa; sáu lệnh suite chạy lại đều xanh, E1..E17 và E19 mang sang từ round 1 (delta không chạm paths của eval). E18 chấm lại, hội đồng ba thấu kính cùng đề xuất PASS. Verdict PENDING-JUDGMENT vì T3 cần người chốt E18 ở Gate 2; hai mục ngoài hợp đồng mới (cùng gốc chuỗi role lồng nhau) và ba mục mang từ round 1 xem review-findings.md.
+
+### Re-pin lần 1 — 2026-10-23, do hoá cũ do gộp main (PL2 sửa sync-cloud.mjs phần chặn tụt, ZCode collector) sau chữ ký
+run_id: repin-20261023T145040Z-80433
+sha: 547e5a5c577fb3ebc2604ac07e7dd6cb79c4a99a · suites: 6 lệnh exit 0 · evals: 18/18 eval máy đạt kỳ vọng · ngoài làn máy: E18 · diff chạm vật đo ngoài làn máy: E18 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10
