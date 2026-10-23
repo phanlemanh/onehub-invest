@@ -222,6 +222,21 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
    khi thay đổi quyết định phân cổng (phương án C), không cần cho từng trang.
 9. **Legacy `/th/**` (Bangkok) đã XOÁ** theo ADR-0008 (2026-10-20): scope
    sản phẩm = Việt Nam. Route `/[country]` động chỉ còn dữ liệu `vn`.
+10. **Sổ bề mặt API** (2026-10-23, hồ sơ `so-be-mat-api`): mọi `route.ts` dưới `app/src/app/api` khai đúng một
+    dòng trong `app/src/lib/api-surface.ts` — đường, phương thức, chế độ. Thêm route = thêm dòng cùng commit.
+    `scripts/check-api-surface.mjs` (chạy trong `check-portal-compliance.mjs`, tức CI) đỏ khi route chưa khai,
+    sổ còn dòng của route đã xoá, phương thức lệch, hoặc cổng trong mã khác chế độ. Năm chế độ:
+
+    | Chế độ | Ai gọi được | Cổng trong mã |
+    |---|---|---|
+    | `public` | mọi người | không — và **không được đọc `sale_offers`** (tin rao), kể cả gián tiếp qua thư viện |
+    | `ops` | máy có `Authorization: Bearer <OPS_API_TOKEN>` hoặc người vận hành đăng nhập | `canCallOpsApi`, hoặc khuôn `bearerOk` + `canAccessOps` |
+    | `ops-session` | chỉ người vận hành đăng nhập | `canAccessOps` |
+    | `admin` | chỉ role `admin` | `isAdmin` |
+    | `session-or-noop` | người đăng nhập; khách nhận 204, không có gì được ghi | `if (!user) return 204` |
+
+    Chưa chắc chế độ → chọn chặt hơn. Hôm nay tin rao (`/api/v1/offers`) và căn giá tốt (`/api/v1/deals`) ở chế
+    độ `ops` (tạm đóng tới khi PL2 rút tin mock); mở lại là một quyết định riêng, đổi dòng sổ cùng commit.
 
 ---
 
