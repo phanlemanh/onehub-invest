@@ -12,6 +12,9 @@ const KEV = process.env.ONEINVEST_KEV_URL ?? "http://127.0.0.1:8009";
 const API = process.env.ONEINVEST_API_URL ?? "http://127.0.0.1:9210";
 const KEY_FILE = join(homedir(), ".openclaw/credentials/oneinvest-agent.key");
 const LOG = join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log");
+// ZC6: spool từng-tin-một-file; tên = sourceId server sẽ tính → gửi lại
+// không trùng. Chỉ máy local (PII tầng A).
+const SPOOL_DIR = process.env.ONEINVEST_HOOK_SPOOL ?? join(homedir(), ".openclaw/spool/oneinvest-zalo-pipe");
 const THRESHOLD = 0.9;
 
 const log = (line) =>
@@ -74,64 +77,87 @@ export default async function (context) {
       ? new Date(ev.timestamp).toISOString()
       : (ev.timestamp ?? new Date().toISOString());
 
+  // ZC6 (claudedp-2310-5): logic gửi/kev/spool gom ở dist/core/agent-delivery
+  // (có test). Dynamic import — dist chưa build thì rơi về hành vi cũ
+  // (post thẳng, không spool), không tệ hơn trước ZC6.
+  const delivery = await import("../dist/core/agent-delivery.js").catch(() => null);
+
+  // Kev: treo → timeout → p=null; noul không hữu hạn → p=null (ZC6)
   let p = null;
-  try {
-    const r = await fetch(`${KEV}/v1/systemone`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        state: text,
-        model: "kev-latest",
-        questions: {
-          is_bds: {
-            type: "noul",
-            instructions: "Đây có phải là tin rao bất động sản (bán/cho thuê/mua nhà, đất, chung cư)?",
-            criteria: {
-              true: "Tin đăng rao bán, cho thuê, hoặc tìm mua BĐS, có thể kèm giá/diện tích/địa điểm",
-              false: "Trò chuyện, chào hỏi, hỏi đáp, cảm ơn, tin tức, quảng cáo khác chủ đề",
+  if (delivery) {
+    p = await delivery.kevScore(text, { kev: KEV, timeoutMs: 5_000 });
+    if (p === null) await log(`kev null (timeout/gate) group=${group} account=${account}`);
+  } else {
+    try {
+      const r = await fetch(`${KEV}/v1/systemone`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          state: text,
+          model: "kev-latest",
+          questions: {
+            is_bds: {
+              type: "noul",
+              instructions: "Đây có phải là tin rao bất động sản (bán/cho thuê/mua nhà, đất, chung cư)?",
+              criteria: {
+                true: "Tin đăng rao bán, cho thuê, hoặc tìm mua BĐS, có thể kèm giá/diện tích/địa điểm",
+                false: "Trò chuyện, chào hỏi, hỏi đáp, cảm ơn, tin tức, quảng cáo khác chủ đề",
+              },
             },
           },
-        },
-      }),
-    });
-    if (r.ok) p = (await r.json())?.answers?.is_bds?.noul ?? null;
-  } catch (e) {
-    // FAIL-OPEN (bài học 2026-10-21: gate chết → mất tin im lặng vì return).
-    // Nhãn thay lọc: gate down vẫn đẩy tin, meta.kev.p = null — không còn
-    // giả p=1.0 như trước (giả làm bẩn dữ liệu đo ngưỡng).
-    await log(`gate-down (đẩy chưa phân loại) ${e.message} group=${group} account=${account}`);
-    p = null;
+        }),
+      });
+      if (r.ok) {
+        const raw = (await r.json())?.answers?.is_bds?.noul;
+        p = typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+      }
+    } catch (e) {
+      await log(`gate-down (đẩy chưa phân loại) ${e.message} group=${group} account=${account}`);
+      p = null;
+    }
   }
 
-  // NHÃN thay BỘ LỌC (claudedp-2310-11): đo 23/10 cho thấy lọc p<0.9 bỏ
-  // ~70% tin (1270 skip / 549 post; mẫu soát p 0.5–0.9 gần như đều tin rao
-  // thật) — mọi tin phải vào raw; p đi kèm như dữ liệu, transform quyết.
+  // NHÃN thay BỘ LỌC (claudedp-2310-11): mọi tin phải vào raw; p đi kèm.
+  const message = {
+    text,
+    ts,
+    // G1: người đăng + media + luồng — PII tầng A, chỉ máy local
+    senderName: ev.metadata?.senderName ?? null,
+    senderId: ev.metadata?.senderId ?? ev.from ?? null,
+    conversationId: ev.conversationId ?? null,
+    media: mediaFacts.length ? mediaFacts : undefined,
+    kev: { p, model: "kev-latest", threshold: THRESHOLD, at: new Date().toISOString() },
+  };
 
   try {
     const key = (await readFile(KEY_FILE, "utf8")).trim();
+    if (delivery) {
+      // drain spool cũ trước, rồi đẩy tin mới; fail thì vào spool (ZC6)
+      const ok = await delivery.deliverWithSpool(
+        { api: API, key, spoolDir: SPOOL_DIR },
+        group,
+        message,
+      );
+      await log(
+        `${ok ? "post" : "spool"} group=${group} p=${p === null ? "null" : p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`,
+      );
+      return;
+    }
+    // fallback (dist chưa build): post thẳng như trước ZC6
     const r = await fetch(`${API}/agent-report`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        agent_id: "openclaw-hook",
-        group,
-        messages: [
-          {
-            text,
-            ts,
-            // G1: người đăng + media + luồng — PII tầng A, chỉ máy local
-            senderName: ev.metadata?.senderName ?? null,
-            senderId: ev.metadata?.senderId ?? ev.from ?? null,
-            conversationId: ev.conversationId ?? null,
-            media: mediaFacts.length ? mediaFacts : undefined,
-            kev: { p, model: "kev-latest", threshold: THRESHOLD, at: new Date().toISOString() },
-          },
-        ],
-      }),
+      body: JSON.stringify({ agent_id: "openclaw-hook", group, messages: [message] }),
     });
     const body = await r.text();
     await log(`post ${r.status} ${body.slice(0, 60)} group=${group} p=${p === null ? "null" : p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
   } catch (e) {
+    // post-error: nếu có delivery thì cố spool lại (không mất tin ở nguồn)
+    if (delivery) {
+      await delivery.spoolPut(SPOOL_DIR, { group, message }).catch(() => {});
+      await log(`post-error → spool ${e.message} group=${group} account=${account}`);
+      return;
+    }
     await log(`post-error ${e.message} group=${group} account=${account}`);
   }
 }
