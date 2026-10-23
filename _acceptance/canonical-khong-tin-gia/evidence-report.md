@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b982911f88d06313fe73daa8981ff82debfa55d3
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: canonical-khong-tin-gia

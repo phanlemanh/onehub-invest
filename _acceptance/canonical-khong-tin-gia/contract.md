@@ -5,7 +5,7 @@ slug: canonical-khong-tin-gia
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-canonical-khong-tin-gia-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
@@ -66,3 +66,11 @@ liệu canonical và lan lên cloud).
 ## Notes
 
 - Kiểm thử DB chạy trong BEGIN…ROLLBACK trên Postgres local :5433 (khuôn `pipeline/scripts/write-offers.test.mjs`).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: Người bán đã bị dọn khỏi danh sách không tự quay lại khi tin của họ xuất hiện lại, và tên (chỉ ở máy local) mất theo.
+  - Ngoài-2: Lượt dọn người bán lỗi giữa chừng có thể làm danh sách co mà thiếu dòng ghi chú, khiến đồng bộ cloud bị chặn tới khi người vận hành xử lý tay.
+  - Ngoài-3: Lệnh đếm tin thử còn sót có thể báo đỏ oan khi xuất hiện tin thử kênh Facebook.
+  - Ngoài-4: Đồng bộ cloud lỗi liên tục quá 24 giờ ngay sau đêm dọn thì mọi bảng ngừng lên cloud tới khi người vận hành can thiệp tay.
+  - Ngoài-5: Số liệu lệnh đếm tin thử còn sót lệch khi có tin thử kênh Facebook.
+  - Ngoài-6: Chưa có bài kiểm chạy trọn đường từ dòng ghi dọn người bán tới lúc đồng bộ cloud đọc nó.
+  - Ngoài-7: Bài quét chặn đường nạp tin thử chỉ bắt được một số kiểu viết code.
