@@ -2,9 +2,16 @@
   {
     "scheme": "light",
     "page": "hoan-kiem",
-    "htmlClass": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light | bg=lab(100 0 0)",
+    "status": 200,
+    "env": {
+      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light",
+      "bg": "lab(100 0 0)",
+      "dark": false
+    },
+    "injected": true,
     "wrapper": {
       "verdict": "REJECT",
+      "exit_intent": 2,
       "p0": 2,
       "hits": [
         "text-overflow",
@@ -14,14 +21,12 @@
         "skipped-heading",
         "layout-transition",
         "nested-cards"
+      ],
+      "blocking": [
+        "text-overflow"
       ]
     },
-    "rawKeys": [
-      [
-        "el",
-        "findings"
-      ]
-    ],
+    "rawCount": 15,
     "frameFound": [
       [
         "Hiệu suất theo tháng",
@@ -38,25 +43,30 @@
         "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
         "inFrame": null,
         "tag": "H2",
-        "text": "Tìm khu vực",
-        "cls": "text-base leading-none font-medium"
+        "text": "Tìm khu vực"
       },
       {
         "rule": "text-overflow",
         "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
         "inFrame": null,
         "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên",
-        "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underlin"
+        "text": "Tìm thị trường hoặc phường/xã theo tên"
       }
     ]
   },
   {
     "scheme": "light",
     "page": "yield",
-    "htmlClass": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light | bg=lab(100 0 0)",
+    "status": 200,
+    "env": {
+      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light",
+      "bg": "lab(100 0 0)",
+      "dark": false
+    },
+    "injected": true,
     "wrapper": {
       "verdict": "REJECT",
+      "exit_intent": 2,
       "p0": 2,
       "hits": [
         "text-overflow",
@@ -65,14 +75,12 @@
         "single-font",
         "layout-transition",
         "nested-cards"
+      ],
+      "blocking": [
+        "text-overflow"
       ]
     },
-    "rawKeys": [
-      [
-        "el",
-        "findings"
-      ]
-    ],
+    "rawCount": 14,
     "frameFound": [
       [
         "Doanh thu và chi phí 12 tháng tới",
@@ -85,25 +93,30 @@
         "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
         "inFrame": null,
         "tag": "H2",
-        "text": "Tìm khu vực",
-        "cls": "text-base leading-none font-medium"
+        "text": "Tìm khu vực"
       },
       {
         "rule": "text-overflow",
         "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
         "inFrame": null,
         "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên",
-        "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underlin"
+        "text": "Tìm thị trường hoặc phường/xã theo tên"
       }
     ]
   },
   {
     "scheme": "dark",
     "page": "hoan-kiem",
-    "htmlClass": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark | bg=lab(2.75381 0 0)",
+    "status": 200,
+    "env": {
+      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark",
+      "bg": "lab(2.75381 0 0)",
+      "dark": true
+    },
+    "injected": true,
     "wrapper": {
       "verdict": "REJECT",
+      "exit_intent": 2,
       "p0": 2,
       "hits": [
         "text-overflow",
@@ -113,14 +126,12 @@
         "skipped-heading",
         "layout-transition",
         "nested-cards"
+      ],
+      "blocking": [
+        "text-overflow"
       ]
     },
-    "rawKeys": [
-      [
-        "el",
-        "findings"
-      ]
-    ],
+    "rawCount": 15,
     "frameFound": [
       [
         "Hiệu suất theo tháng",
@@ -137,25 +148,30 @@
         "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
         "inFrame": null,
         "tag": "H2",
-        "text": "Tìm khu vực",
-        "cls": "text-base leading-none font-medium"
+        "text": "Tìm khu vực"
       },
       {
         "rule": "text-overflow",
         "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
         "inFrame": null,
         "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên",
-        "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underlin"
+        "text": "Tìm thị trường hoặc phường/xã theo tên"
       }
     ]
   },
   {
     "scheme": "dark",
     "page": "yield",
-    "htmlClass": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark | bg=lab(2.75381 0 0)",
+    "status": 200,
+    "env": {
+      "cls": "geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark",
+      "bg": "lab(2.75381 0 0)",
+      "dark": true
+    },
+    "injected": true,
     "wrapper": {
       "verdict": "REJECT",
+      "exit_intent": 2,
       "p0": 2,
       "hits": [
         "text-overflow",
@@ -164,14 +180,12 @@
         "single-font",
         "layout-transition",
         "nested-cards"
+      ],
+      "blocking": [
+        "text-overflow"
       ]
     },
-    "rawKeys": [
-      [
-        "el",
-        "findings"
-      ]
-    ],
+    "rawCount": 14,
     "frameFound": [
       [
         "Doanh thu và chi phí 12 tháng tới",
@@ -184,16 +198,14 @@
         "detail": "h2.text-base.leading-none.font-medium overflows its box by 89px",
         "inFrame": null,
         "tag": "H2",
-        "text": "Tìm khu vực",
-        "cls": "text-base leading-none font-medium"
+        "text": "Tìm khu vực"
       },
       {
         "rule": "text-overflow",
         "detail": "p.text-sm.text-muted-foreground.*:[a]:underline.*:[a]:underline-offset-3.*:[a]:hover:text-foreground overflows its box by 255px",
         "inFrame": null,
         "tag": "P",
-        "text": "Tìm thị trường hoặc phường/xã theo tên",
-        "cls": "text-sm text-muted-foreground *:[a]:underline *:[a]:underlin"
+        "text": "Tìm thị trường hoặc phường/xã theo tên"
       }
     ]
   }

@@ -1,6 +1,13 @@
-E10 network/console dump (Browser pane, tab-1; pages /vn/hanoi/hoan-kiem then /yield; origin http://localhost:3456)
-Network: tat ca GET/POST toi origin app tra 200 OK (HTML /vn/hanoi/hoan-kiem 200, /yield 200, POST /api/v1/user-events 200,
-  _next/static chunks + fonts 200). GET /maplibre-gl-worker.mjs: khong co status trong danh sach (static asset, note-only).
-  Khong co request 4xx/5xx, khong co connection error, khong co third-party fail.
-Console: info React DevTools; log [HMR] connected; warn: Image "circle-11" could not be loaded (maplibre style image - ban do, khong thuoc bieu do B3, note-only).
-  Khong co console error.
+E10 network/console dump (Browser pane, tab-1; /vn/hanoi/hoan-kiem -> /yield; origin http://localhost:3456; chay lai doc lap luc verify)
+Network (read_network_requests, 158 request):
+  GET /vn/hanoi/hoan-kiem -> 200 OK ; GET /yield -> 200 OK
+  GET /_next/static/chunks/*, fonts, css -> 200 OK (static, note-only)
+  GET /maplibre-gl-worker.mjs -> khong co status trong danh sach (static asset, note-only)
+  POST /api/v1/user-events -> 200 OK  (lan 1, [15616.99])
+  POST /api/v1/user-events -> 401 Unauthorized (lan 2, [15616.302], khi chuyen sang /yield)  <-- FAIL-eligible: fetch toi origin app, 4xx, expected khong khai 401
+  Ghi chu: user-events la beacon telemetry (app/src/components/user-event-beacon.tsx) tra 401 khi getSessionUser() rong; khong lien quan bieu do B3.
+  Lan chay truoc (E10 cu) chi thay 200; lan nay co 1 lan 401.
+Console:
+  [info] React DevTools ; [log] [HMR] connected ; [log] Fast Refresh
+  [warn] Image "circle-11" could not be loaded (maplibre style image, ban do, note-only)
+  [error] Failed to load resource: 401 (Unauthorized)  <-- chinh la POST /api/v1/user-events o tren
