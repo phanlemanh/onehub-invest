@@ -1,0 +1,4 @@
+import-airbnb thật, DB cổng 49451 không nghe: kết thúc lỗi (≠0)
+dòng chứa ECONNREFUSED: 6 → nhánh retry của import_one KÍCH được
+  AggregateError [ECONNREFUSED]: 
+  code: 'ECONNREFUSED',

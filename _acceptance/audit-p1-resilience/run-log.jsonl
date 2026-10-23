@@ -1,0 +1,11 @@
+{"ts":"2026-10-23T09:06:00Z","round":1,"evalId":"E1","run_id":"audit-p1-resilience-E1-20261023T160559","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"}
+{"ts":"2026-10-23T09:07:00Z","round":1,"evalId":"E2 gateway","run_id":"audit-p1-resilience-E2 gateway-20261023T160700","exit_code":2,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs "}
+{"ts":"2026-10-23T09:07:00Z","round":1,"evalId":"E3 l4a-drop","run_id":"audit-p1-resilience-E3 l4a-drop-20261023T160700","exit_code":2,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs "}
+{"ts":"2026-10-23T09:07:00Z","round":1,"evalId":"E4 l5b-db","run_id":"audit-p1-resilience-E4 l5b-db-20261023T160700","exit_code":2,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs "}
+{"ts":"2026-10-23T09:07:10Z","round":1,"evalId":"E2","run_id":"audit-p1-resilience-E2-20261023T160708","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs gateway"}
+{"ts":"2026-10-23T09:07:12Z","round":1,"evalId":"E3","run_id":"audit-p1-resilience-E3-20261023T160710","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs l4a-drop"}
+{"ts":"2026-10-23T09:07:13Z","round":1,"evalId":"E4","run_id":"audit-p1-resilience-E4-20261023T160712","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs l5b-db"}
+{"ts":"2026-10-23T09:07:21Z","round":1,"evalId":"E5","run_id":"audit-p1-resilience-E5-20261023T160719","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs import-daily"}
+{"ts":"2026-10-23T09:07:21Z","round":1,"evalId":"E6","run_id":"audit-p1-resilience-E6-20261023T160721","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs err-detail"}
+{"ts":"2026-10-23T09:07:21Z","round":1,"evalId":"E7","run_id":"audit-p1-resilience-E7-20261023T160721","exit_code":0,"cmd":"bash -n scripts/zalo-watchdog.sh && bash -n scripts/zalo-import-daily.sh && node --check pipeline/collect-chotot.mjs && node --check pipeline/import-chotot.mjs && echo SYNTAX OK"}
+{"ts":"2026-10-23T09:07:27Z","round":1,"evalId":"E8","run_id":"audit-p1-resilience-E8-20261023T160726","exit_code":0,"cmd":"cd pipeline && npm test"}
