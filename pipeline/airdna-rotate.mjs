@@ -15,7 +15,8 @@ const flag = (name, dflt) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 && args[i + 1] ? Number(args[i + 1]) : dflt;
 };
-const N = flag("n", Number(process.env.AIRDNA_DAILY_MARKETS ?? 6));
+// 12/đêm: xong 43 market trong ~3 đêm (~240 req/đêm, <50% cap ADR-0009); sau 43/43 hạ về 7 (Task 7 steady state)
+const N = flag("n", Number(process.env.AIRDNA_DAILY_MARKETS ?? 12));
 const MAX_AGE = flag("max-age-days", 1);
 const DRY = args.includes("--dry");
 
