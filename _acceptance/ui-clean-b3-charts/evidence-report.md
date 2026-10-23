@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b309c4ad4c2a1b86825d8ea717ba685ae262a45b
+verified_commit: d1faf7e8e79ce9fc1c186c353c4cfec95c9547c9
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -223,3 +223,7 @@ Round 3: PASS — hợp đồng E10 khai beacon telemetry /api/v1/user-events l�
 ### Re-pin lần 1 — 2026-10-23, do hoá cũ do merge origin/main 8595dc0 sau chữ ký
 run_id: repin-20261023T010106Z-61164
 sha: b309c4ad4c2a1b86825d8ea717ba685ae262a45b · suites: 3 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths), E13 (E13 không khai paths) · AC không có chốt máy: AC-9
+
+### Re-pin lần 2 — 2026-10-23, do hoá cũ do merge origin/main 15227e2 (PR #11)
+run_id: repin-20261023T010258Z-92058
+sha: d1faf7e8e79ce9fc1c186c353c4cfec95c9547c9 · suites: 3 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths), E13 (E13 không khai paths) · AC không có chốt máy: AC-9
