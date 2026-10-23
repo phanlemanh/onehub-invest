@@ -438,11 +438,15 @@ function docs() {
   for (const need of [map.shell.block, ...new Set(map.pages.flatMap((p) => p.blocks)), "c-alert-dialog-5", "switch", "KPI và lưới theo block"])
     if (!cat.includes(need)) fails.push(`docs: catalog.md thiếu "${need}"`);
   const routes = read(join(ROOT, ".claude/skills/onehub-ui/routes.md")).split("\n");
+  // Cột theo tên tiêu đề của bảng route (bảng thêm cột như "Slug đích" thì chỉ số cột đổi).
+  const header = routes.find((l) => l.startsWith("| Route |") && l.includes("| Archetype |")) ?? "";
+  const archCol = header.split("|").map((c) => c.trim()).indexOf("Archetype");
+  if (archCol < 0) fails.push("docs: routes.md không có bảng route với cột Archetype");
   for (const [route, arch] of Object.entries(ROUTE_ARCHETYPE)) {
     const row = routes.find((l) => l.startsWith(`| \`${route}\` |`));
     if (!row) { fails.push(`docs: routes.md thiếu dòng ${route}`); continue; }
     if (row.includes("(chưa có, B1)")) fails.push(`docs: routes.md dòng ${route} còn "(chưa có, B1)"`);
-    if (row.split("|")[4]?.trim() !== arch) fails.push(`docs: routes.md dòng ${route} archetype "${row.split("|")[4]?.trim()}", cần "${arch}"`);
+    if (row.split("|")[archCol]?.trim() !== arch) fails.push(`docs: routes.md dòng ${route} archetype "${row.split("|")[archCol]?.trim()}", cần "${arch}"`);
   }
   if (!fails.length) ok(`tổng sau B1 = ${total} khớp tài liệu; catalog + routes đủ`);
 }
