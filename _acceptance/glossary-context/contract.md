@@ -22,13 +22,13 @@ repo chưa có file này. Mạnh chốt 2026-10-23: URL tiếng Anh toàn bộ. 
 route tiếng Việt mới — không đụng code trang.
 
 Source input: prompt (phiên điều phối "Setup project Invest" giao việc 2026-10-23).
-Gate 1: bảng chốt thuật ngữ `_acceptance/glossary-context/bang-chot.html` (8 câu Q1–Q8).
+Gate 1: bảng chốt thuật ngữ `_acceptance/glossary-context/bang-chot.html` (8 câu Q1–Q5, Q7–Q9; Q6 — `/dau-tu` gộp vào `/yield` — Mạnh đã chốt ở phiên invest-target-map).
 
 ## Criteria
 
 - AC-1: Given `CONTEXT.md` ở gốc repo, When `lib/context-glossary.js` của kit đọc nó, Then ra ≥ 1 thuật ngữ cho mỗi nhóm trong 7 nhóm (Địa lý, Tài sản & tin, Giá, Chỉ số, Chiến lược đầu tư, Dữ liệu & nguồn, Cổng & tính năng), mỗi thuật ngữ có định nghĩa, và không tên nào trong `_Avoid_` trùng một thuật ngữ chuẩn.
 - AC-2: Given `CONTEXT.md` và một hồ sơ mẫu có tiêu chí dùng tên bị loại ("tỷ lệ lấp đầy"), When chạy `eval-coverage-lint.js --slug <hồ sơ mẫu>`, Then in W6 chỉ đúng thuật ngữ "Công suất"; và trên ba hồ sơ có sẵn (`portal-deals-airdna`, `ops-access-hardening`, `ui-standards-reui`) không có dòng W6 nào.
-- AC-3: Given câu trả lời Q1–Q8 của Mạnh ghi trong `decisions.jsonl`, When dựng lại từ `terms.mjs` (`build.mjs --context --out <tạm>`), Then bản dựng trùng từng byte với `CONTEXT.md` đã commit, và nhãn chuẩn của Q1–Q5 là phương án Mạnh chọn.
+- AC-3: Given câu trả lời Q1–Q9 của Mạnh ghi trong `decisions.jsonl`, When dựng lại từ `terms.mjs` (`build.mjs --context --out <tạm>`), Then bản dựng trùng từng byte với `CONTEXT.md` đã commit, và nhãn chuẩn của mọi câu Q về nhãn là phương án Mạnh chọn.
 - AC-4: Given cây `app/src/app`, When chạy test slug route, Then mọi đoạn URL tĩnh của `page.tsx` (bỏ nhóm `(…)` và tham số `[…]`) là ASCII kebab-case và có trong dòng `Slug URL` của `CONTEXT.md` hoặc trong danh sách ngoại lệ còn hạn.
 - AC-5: Given một route tiếng Việt MỚI (đoạn không có trong `Slug URL`, vd. `tim-kiem`), When chạy test slug route, Then test đỏ và nêu đúng đoạn đó; route tiếng Việt đang chạy (`so-sanh`, `phuong-phap`, `dau-tu`) không làm đỏ khi còn trong hạn.
 - AC-6: Given một ngoại lệ đã quá hạn, hoặc một slug cũ đã không còn route mà `app/next.config.ts` thiếu redirect vĩnh viễn từ slug cũ sang slug đích, When chạy test slug route, Then test đỏ với lời nhắc tương ứng; mỗi ngoại lệ có slug đích nằm trong `Slug URL`.
