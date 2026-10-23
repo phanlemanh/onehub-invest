@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 996e62eaf858a3a45f37bced5f9d91e04a3197c3
+verified_commit: 7446abee7e837127449d4fdb3efacbb8b986cbe5
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -147,3 +147,7 @@ Round 1: E1-E6 đạt, E7 đề xuất PASS; không có eval hỏng. Verdict PAS
 ### Re-pin lần 1 — 2026-10-23, do gộp main sau chữ ký (ZC3 PR #31 đổi collect/import-chotot, zalo-*.sh)
 run_id: repin-20261023T102928Z-55720
 sha: 996e62eaf858a3a45f37bced5f9d91e04a3197c3 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7
+
+### Re-pin lần 2 — 2026-10-23, do gộp main (PR #33 AU2 + khuôn opportunity-template)
+run_id: repin-20261023T103609Z-78877
+sha: 7446abee7e837127449d4fdb3efacbb8b986cbe5 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7
