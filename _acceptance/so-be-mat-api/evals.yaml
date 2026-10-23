@@ -1,0 +1,109 @@
+schema_version: 1
+feature_slug: so-be-mat-api
+# api_surface_smoke cần app chạy :3456 TỪ WORKTREE NÀY (hoặc BASE_URL) + DB local :5433 (rào assertLocalDatabaseUrl),
+# ít nhất một user admin trong DB local, OPS_API_TOKEN (env hoặc app/.env.local). Mỗi ca «chặn» có ca «cho qua» đối
+# chứng trên cùng máy chủ; kiểm tĩnh có chế độ đột biến dựng từ mã thật.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; dòng 'ok   sổ bề mặt API: 18/18 route khớp sổ (đường + phương thức)'"
+    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "scripts/check-api-surface.mjs", "scripts/check-portal-compliance.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.api_surface_mutation
+    expected: "exit 0; bản nguyên ĐẠT; M1 TRƯỢT với 'chưa khai trong sổ'; M2 TRƯỢT với 'sổ trỏ route không còn'; M3 TRƯỢT với 'phương thức lệch sổ'"
+    paths: ["app/src/lib/api-surface.ts", "scripts/check-api-surface.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.api_surface_mutation
+    expected: "exit 0; bản nguyên ĐẠT (không route public nào có sale_offers trong bao đóng import); M4 (trực tiếp), M5 (qua @/lib tầng 1), M6 (qua import tương đối tầng 2) đều TRƯỢT với 'đọc sale_offers mà sổ khai public'"
+    paths: ["app/src/lib/api-surface.ts", "scripts/check-api-surface.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.api_surface_mutation
+    expected: "exit 0; M7–M10 (offers bỏ cổng / không await / không trả 401 / truy vấn trước cổng) TRƯỢT với 'cổng ops (canCallOpsApi) chạy trước pool.query'; M11 TRƯỢT với 'chế độ ops mà mã thiếu cổng'; M12 với 'chế độ ops-session mà mã thiếu canAccessOps'; M13 với 'chế độ admin mà mã không có isAdmin'; M14 với 'chế độ session-or-noop mà khách không nhận 204'; M15 với 'chế độ admin mà mã nhận bearer OPS_API_TOKEN'; M16 với 'chế độ ops-session mà mã nhận bearer OPS_API_TOKEN'"
+    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "app/src/lib/ops/zalo-media.ts", "scripts/check-api-surface.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.api_matrix_smoke
+    expected: "exit 0; dòng 'ok   ma trận hành vi: <n> lời gọi, 0 lần mã cho người gọi mà sổ không cho' và mỗi route ops/admin/ops-session có dòng khách bị từ chối; beacon 204 cho khách và bearer"
+    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "app/src/lib/**", "scripts/smoke-api-matrix.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.api_matrix_tu_thu
+    expected: "exit 0; trên cùng máy chủ, bản sổ cố ý sai (v1/markets → ops, v1/offers → admin, v1/ops/audit → admin) bị bắt đủ 3/3 với thông điệp 'mã cho <người gọi> mà sổ khai <chế độ>'; bản sổ thật 0 vi phạm"
+    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "scripts/smoke-api-matrix.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.api_surface_smoke
+    expected: "exit 0; các dòng 'ok   offers khách: 401 {\"error\":\"unauthorized\"}', 'ok   offers bearer sai: 401', 'ok   offers phiên role=user: 401', 'ok   offers bearer đúng: 200, khuôn generatedAt/kind/count/rows', 'ok   offers phiên role=ops: 200'"
+    paths: ["app/src/app/api/v1/offers/route.ts", "app/src/lib/ops-access.ts", "scripts/smoke-api-surface.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: judgment
+    inputs: ["scripts/audit-all.sh"]
+    question: "Trong scripts/audit-all.sh, phần kiểm /api/v1/offers có đo đúng chế độ mới không: gọi không token phải được tính ĐẠT khi trả 401, gọi kèm bearer CTOKEN phải được tính ĐẠT khi trả 200, và offers không còn được xếp như API công khai?"
+    expected: "Cả hai lời gọi có mặt với đúng mã mong đợi; offers không nằm trong nhóm «PUBLIC» chờ 200 không token"
+    evidence_required: [verdict, rationale]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.api_surface_smoke
+    expected: "exit 0; các dòng 'ok   beacon khách: 204, thân rỗng', 'ok   beacon có phiên: 200, đúng 1 dòng user_events của user tạm'"
+    paths: ["app/src/app/api/v1/user-events/route.ts", "scripts/smoke-api-surface.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AC-6' đạt: tệp QR dựng bằng loginQrPath() của bên viết → 403, symlink tên thường trỏ tệp QR → 403; đối chứng cùng tệp test: ảnh a.jpg vẫn 200"
+    paths: ["app/src/lib/ops/zalo-media.ts", "app/src/lib/zalo-admin.ts", "app/tests/zalo-media.test.tsx"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.api_surface_smoke
+    expected: "exit 0; các dòng 'ok   zalo-media admin: ảnh thử tên QR → 403', 'ok   zalo-media admin: symlink tên thường trỏ QR → 403', 'ok   zalo-media admin: ảnh thử tên thường → 200'"
+    paths: ["app/src/lib/ops/zalo-media.ts", "scripts/smoke-api-surface.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.deals_smoke_local_guard
+    expected: "exit 0; dòng 'ok   DATABASE_URL ngoài local bị từ chối trước khi chạm DB/HTTP' và đối chứng 'ok   --chi-doc không bị rào chặn'"
+    paths: ["scripts/smoke-deals-api.mjs", "scripts/check-smoke-guard.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-8
+    executor: judgment
+    inputs: ["docs/architecture/portals.md"]
+    question: "docs/architecture/portals.md có mục nói sổ bề mặt API nằm ở tệp nào, năm chế độ (public, ops, ops-session, admin, session-or-noop) nghĩa là gì, và luật route đọc sale_offers không được khai public, đủ để người thêm route mới làm đúng không?"
+    expected: "Cả ba ý có mặt và đọc được không cần mở mã"
+    evidence_required: [verdict, rationale]
