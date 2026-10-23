@@ -5,7 +5,7 @@ slug: ui-clean-b3-charts
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-ui-clean-b3-charts-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
@@ -101,3 +101,13 @@ chân ngành `[NGÀNH: WCAG 2.2 SC 1.4.11 Non-text Contrast]` + `[NGÀNH: ReUI r
 
 - Danh sách miễn 3:1 (AC-2) cố ý đóng: chuỗi trung tính/bậc nhạt mà danh tính đi bằng vị trí + chú giải có số.
 - Ảnh "trước" và bản thử phương án A: `evidence/before/`, `evidence/proto-a/` (bản thử là vứt đi, code đã hoàn lại).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: Nếu menu "Thao tác khác" không mở được lúc chụp, phép so trước/sau có thể đạt mà chưa đo tải CSV và sao chép.
+  - Ngoài-2: Dòng "7 → 0" và "8 → 0" trong tài liệu đo chỉ được dò chữ, không tính lại từ số đếm thật.
+  - Ngoài-3: Bộ quét màu bắt mỗi dạng màu cứng bằng một cú pháp; cách viết hiếm (style object, `bg-(--color-…)`) có thể lọt.
+  - Ngoài-4: Công cụ chụp ghi mã cây theo thư mục của script, không kiểm server :3456 có đang chạy đúng cây đó.
+  - Ngoài-5: Công cụ chụp mặc định chụp app ở cổng cố định :3456; nếu cổng đó chạy bản mã khác, ảnh trước/sau có thể là cùng một app.
+  - Ngoài-6: Số trước/sau trong tài liệu đo chỉ được kiểm có mặt, không được đối chiếu với số đo thật.
+  - Ngoài-7: Khi app đổi sau commit đo, thước tài liệu bỏ qua bước so với báo cáo lint mà vẫn báo đạt.
+  - Ngoài-8: Nhánh dò bản chép riêng `use-trigger-tooltip`/`icons` của thước trùng lặp chưa có ca phá chứng nó báo đỏ.
+  - Ngoài-9: Ràng buộc "hai trang dùng biểu đồ không đổi" của thước API chưa có ca phá chứng nó báo đỏ.
