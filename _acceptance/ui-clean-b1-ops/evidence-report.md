@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3b8ec24caa681749f092d3d3c7159e4a39edfb37
+verified_commit: ba9ae020ce0aea60f59b5a11927a676760181cff
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -293,3 +293,7 @@ none — mọi eval chạy một lần, tất định.
 Round 1 (verified_commit ba1b25c): REJECT, E12 hỏng. Hộp xác nhận «Xoá nhóm thu?» in tên nhóm thu thật dạng chữ trần trong câu hậu quả, mask-tier-a.js báo lộ tầng A nên frame step1 không chụp được. Trả lại vòng làm.
 Round 2 (verified_commit 52b9345): PASS, 16/16 eval và 3 lệnh suite đạt; hộp xoá bọc tên trong `data-tier-a`. Ngoài hợp đồng ghi 3 mục: tên nhóm Zalo trong `aria-label` Switch lưới nhóm Zalo ở `/ops/sources`; `data-row-id` là tên nhóm ở bảng Nhóm Zalo `/ops/collections`; `mask-tier-a.js` chỉ tự kiểm innerText.
 Round 3 (verified_commit 3b8ec24): PASS, 16/16 eval và 3 lệnh suite đạt. Cả 3 mục Ngoài hợp đồng của round 2 đã sửa và kiểm độc lập trên bản chạy: Switch Zalo nhãn tĩnh + `aria-describedby` (8/8), `data-row-id` theo vị trí (10 dòng), mask-tier-a.js trả `attrLeaked` — rỗng ở mọi frame của E12/E13/E14, bộ kiểm thuộc tính riêng của lượt chấm cũng 0.
+
+### Re-pin lần 1 — 2026-10-23, do merge main 148c073 (enrich PR #14) + api-contract bỏ so phần hoãn
+run_id: repin-20261023T015632Z-18112
+sha: ba9ae020ce0aea60f59b5a11927a676760181cff · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12 (E12 không khai paths), E13 (E13 không khai paths), E14 (E14 không khai paths) · AC không có chốt máy: AC-10
