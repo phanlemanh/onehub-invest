@@ -5,10 +5,10 @@ slug: canonical-khong-tin-gia
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-23-canonical-khong-tin-gia-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: canonical-khong-tin-gia
