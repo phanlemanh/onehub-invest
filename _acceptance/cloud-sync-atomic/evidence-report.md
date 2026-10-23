@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: cloud-sync-atomic
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 19aba28053275f747bcc178d8dfa8d0a281fc1a8
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: cloud-sync-atomic
@@ -135,7 +135,7 @@ Hội đồng đề xuất PASS cho cả hai mục. Đây chỉ là đề xuất
   judged_by: hội đồng judge 3 lens (fresh context): domain-correctness, operational-feasibility, spec-alignment
   verdict: PASS
   rationale: Cả ba lens cùng thấy chú thích đầu sync-cloud.mjs và mục «Ranh giới dữ liệu» của docs/ops/cloud-sync-atomic.md nói đúng luật AC-9, và khớp code. Chi tiết từng lens ở dưới.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-23 — Đạt
 
   Phiếu từng lens:
   - domain-correctness: PASS — Chú thích đầu sync-cloud.mjs (dòng 19-33) và mục «Ranh giới dữ liệu» trong docs/ops/cloud-sync-atomic.md (dòng 25-36) đều nói đúng luật AC-9. Cả hai xếp định danh người bán vào tầng C và chỉ xếp vào tầng A tên nguồn thật (kể cả lẫn trong giá trị cột), hồ sơ người dùng, user_events/user_profile và review_queue. Cả hai ghi PII_EXCLUDE được giữ vì phạm vi sản phẩm, không vì luật. Mô tả khớp code: CLOUD_ALLOW cho ba bảng, SELLER_REF_EXPR cho `S0x:<số>` (không có số thì NULL), soát tên nguồn từ source_registry và dừng khi danh sách rỗng, SOURCE_EXCLUDE cho listing_url/photos, và leak gate dùng SELLER_REF_RE. Không câu nào còn gọi SĐT hay tên người bán là tầng A.
@@ -146,7 +146,7 @@ Hội đồng đề xuất PASS cho cả hai mục. Đây chỉ là đề xuất
   judged_by: hội đồng judge 3 lens (fresh context): domain-correctness, operational-feasibility, spec-alignment
   verdict: PASS
   rationale: Cả ba lens cùng thấy docs/ops/cloud-sync-atomic.md đủ các ý AC-10 và khớp migration 038 cùng pha catalog của sync-cloud.mjs. Chi tiết từng lens ở dưới.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-23 — Đạt
 
   Phiếu từng lens:
   - domain-correctness: PASS — Tài liệu `cloud-sync-atomic.md` đủ các ý AC-10: vì sao, thứ tự (Mạnh áp migration 038 trước merge), lệnh áp, lệnh kiểm với kết quả mong đợi `t|f|f`, lượt thử có đo bằng `cloud-sync-watch` (kể cả `saved_markets` không đổi), cách lùi, và câu "không bước nào giao agent tự áp DDL". SQL và code khớp lời hướng dẫn. Migration 038 tạo đúng `sync_stage.rows` và `sync_stage.swaps` rồi thu quyền của PUBLIC, anon và authenticated, nên câu kiểm ra `t|f|f`. Trong `sync-cloud.mjs`, pha `catalog` chỉ gửi câu đọc `to_regclass`, sau đó ném lỗi "cloud chưa có sync_stage" trước mọi câu ghi, và lỗi in dạng `SYNC FAIL [catalog]`.

@@ -5,7 +5,7 @@ slug: cloud-sync-atomic
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/sync-cloud.mjs (dữ liệu rời máy, PII tầng A)
 surfaces: [pipeline, config, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-cloud-sync-atomic-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
@@ -79,6 +79,14 @@ Không có `opportunity.md` (vòng không đi từ Cổng Đáng) — xem dòng 
 - KHÔNG thêm bước bỏ qua bảng không đổi (Later).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: tệp cấu hình nghiệm thu khai trùng một dòng (hai bản giống hệt) — bộ đọc YAML chặt về sau có thể báo lỗi.
+  - Ngoài-2: chú thích trong cấu hình nghiệm thu ghi sai nơi thước chạy (thực tế là container tạm, không phải DB dùng chung).
+  - Ngoài-3: hình luồng sync vẽ bước «chặn tụt» sau bước nạp vùng chờ; thực tế chặn trước khi gửi bất kỳ dòng nào.
+  - Ngoài-5: khi cloud có thêm bảng trỏ vào bảng được đồng bộ (bảng giữ chỗ thứ hai), lượt tráo có thể gãy — dữ liệu cũ ở nguyên, sync đứng tới khi sửa.
+  - Ngoài-6: phép thử «không gửi câu đổi cấu trúc nào» của ca cloud chưa chuẩn bị chưa có chiều đỏ riêng.
+- Ngoài-4 (đứt kênh đúng lúc tráo có thể làm cloud COMMIT bảng rỗng, xoá «Lưu khu vực») tách thành hợp đồng mới — Mạnh chọn ở Cổng Bằng chứng 2026-10-23.
 
 - luật sale_offers đã chốt (a) — Mạnh 2026-10-23 qua phiên điều phối (sổ d-…-17). Nếu Hỏi-1 chọn «để việc riêng»: AC-3, E3 sửa theo đáp án rồi duyệt lại Cổng Phạm vi.
 - Văn bản luật mới (AGENTS.md luật 6, pii-spl.md, ADR-0007) nằm ở nhánh `docs/spl-nguoi-ban-cong-khai` @ 24d7c53, KHÔNG sửa ở PR này; `PII_EXCLUDE` (seller_name, seller_phone, sellers.name, properties.seller_name) GIỮ nguyên — mở các cột đó là việc sản phẩm riêng Mạnh chưa xác nhận.
