@@ -39,7 +39,7 @@ nguon: review kiến trúc phân loại + enrich (docs/architecture/classificati
 - `C3.3` — thước phường × loại cho «Căn giá tốt», tin chưa rõ loại gắn nhãn
 - `C3.4` — sửa parser S03 theo số đo (phường HCM, area_basis, chữ «bán»)
 - `C3.5` — cổng Invest hiện độ chắc và bậc của từng căn
-- `Z3.1` — gộp tin chỉ có ảnh vào tin chữ liền trước cùng người gửi
+- `Z3.1` — gộp tin chỉ có ảnh vào tin chữ liền trước cùng người gửi, ở transform (ZCode đề xuất 23/10: raw giữ đúng event)
 - `Z3.2` — chỉnh lại Kev trên tập nhãn G0
 - `CM.1` — sổ cuộc gọi AI và trang chi phí trên /ops
 - `CM.2` — bộ đánh giá nhiều model trên cùng tập nhãn ra bảng chọn model theo ô

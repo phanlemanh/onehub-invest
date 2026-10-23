@@ -472,17 +472,18 @@
     },
     {
       "ma": "PL28",
-      "cau_giao": "Tin chỉ có URL ảnh được gộp vào tin chữ liền trước của cùng người gửi trước khi vào snapshot",
+      "cau_giao": "Transform gộp tin chỉ có ảnh vào tin chữ liền trước cùng nhóm, cùng người gửi, cách nhau dưới 2 phút; raw giữ nguyên từng event",
       "vai": "nen",
       "tieu_chi": 8,
-      "vi_sao": "L06: 59/80 tin bị bỏ là tin chỉ ảnh. Làn ZCode.",
-      "hang": "T3",
+      "vi_sao": "L06: 59/80 tin bị bỏ là tin chỉ ảnh. ZCode đề xuất gộp ở transform (làn Claude) để raw giữ đúng event (§6). Cần L20 sửa trước để tin ảnh không mất lúc ingest.",
+      "hang": "T2",
       "dung_tren": [
-        "PL4"
+        "PL4",
+        "PL17"
       ],
-      "slug": "gop-tin-chi-anh",
-      "bat_khi": "Mẫu một ngày: 0 tin chỉ ảnh đứng riêng khi có tin chữ cùng người trong 2 phút trước",
-      "nhom": "du-lieu-that",
+      "slug": "gop-tin-chi-anh-o-transform",
+      "bat_khi": "Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút trước đều được gộp; raw không đổi",
+      "nhom": "doc-tin",
       "dot": "phan-loai-2310",
       "phu": [
         "Z3.1"

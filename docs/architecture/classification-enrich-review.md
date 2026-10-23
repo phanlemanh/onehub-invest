@@ -130,7 +130,7 @@ T1 Bằng chứng ──► T3 Diễn giải ──► phát biểu ──► T7
 
 | Thành phần | Lỗi trong sổ (§2) | Nhận xét |
 |---|---|---|
-| T1 Bằng chứng | L06 (Kev bỏ tin), L13 (Chợ Tốt không đưa trường stg sang), DELETE listing Airbnb | L06 đã quyết sửa (Kev thành nhãn) |
+| T1 Bằng chứng | L06 (Kev bỏ tin), L13 (Chợ Tốt không đưa trường stg sang), DELETE listing Airbnb, L19 (tin giả), L20 (tin ảnh trùng khoá) | L06 đã quyết sửa (Kev thành nhãn) |
 | T2 Từ vựng | L07, L08, L09 | |
 | T3 Diễn giải | L12 (không nguồn gốc), L15 (audit thủng), L16, L17 | Parser, E1, E2, Kev, judge là **cùng một loại thứ** — review cũ vẫn tách theo tên |
 | T4 Định danh | L03 (băm nội dung), L11 (P1 không thành căn) | Ghép căn (Stage A/B, judge, «Cùng căn») là diễn giải + phân xử trên trường «căn» |
@@ -648,6 +648,7 @@ nhưng đang lan · **Nhẹ** = nợ kỹ thuật.
 | L15 | Audit thủng | Vừa | N6 | Claude | không lưu căn cứ |
 | L16 | E2 bỏ phí đầu ra | Nhẹ | N7 | Claude | — |
 | L17 | Parser S03 chỉ phường HN | Vừa | N7 | Claude | chưa đo |
+| L20 | Tin chỉ ảnh trùng `sourceId` → tin sau bị bỏ lúc ingest (§6) | Nặng | N1 | ZCode | khoá event không phân biệt tin ảnh |
 | L19 | Dữ liệu giả `zalo-mock` lẫn vào canonical S03 (§0.3) | Nặng | N1, FRAMING «có thật» | cả hai | không đánh dấu dữ liệu thử |
 | L18 | Không mô hình thời gian / hiệu lực (§0.2 C) | Nặng | FRAMING «tin cậy» chiều 4, D4 | Claude | thiếu thành phần T5 |
 
@@ -873,17 +874,27 @@ nên bắt đầu C1.3 sớm nhất có thể.
 
 ---
 
-## 6. Câu còn mở cần ZCode trả lời (qua điều phối liên làn)
+## 6. Trả lời của ZCode (qua điều phối liên làn, 23/10)
 
-Q1 đã quyết (Kev thành nhãn, `schemaVersion 3`) nên câu «có đưa điểm cổng vào DATA-CONTRACT» và «còn cần
-cổng để tiết kiệm lượt 27B» không còn treo. Còn lại:
+1. **Ngưỡng 0,9** chọn **tay** từ một lần kiểm ad-hoc 620 mẫu phiên 19/10 (recall 100% @0,9). Không có bench
+   recall/fallout theo ngưỡng trong repo; ROADMAP A5 vẫn ⬜. ZCode đề xuất chọn ngưỡng từ phân bố p thật trong
+   `meta.kev` sau khi Kev thành nhãn. *Ghi chú review*: phân bố p cho biết **chỗ nào cần lấy mẫu** (phân tầng theo
+   khoảng p cho G0), nhưng không cho biết độ đúng — ngưỡng vẫn phải đặt từ nhãn G0 (A4, F3). Ngưỡng đó là ngưỡng
+   lọc ở pipeline (PL5), không phải ở hook.
+2. **Không có tập Zalo gắn nhãn chuẩn nào** — chỉ mẫu soát tay ad-hoc. (12 cặp `needs_llm` là ghép căn, khác loại.)
+   → G0 làm từ đầu (PL7, việc gắn nhãn của đội).
+3. **Mỗi event là một RawItem**, `sourceId = sha256(group|ts|text)`. ZCode đề xuất **không gộp tin chữ với tin ảnh ở
+   raw** (giữ đúng event — khớp N1), mà gộp ở **transform** (làn Claude) theo khoá nhóm + người gửi + |Δts| < 2′.
+   → PL28 chuyển sang làn Claude, gộp ở transform. Kèm lỗi mới **L20** (dưới).
+4. **Chênh 547 / 367**: có thể do buffer 60 giây cộng tiến trình :9210 chạy tay, không tắt êm từ 21/10 (mỗi lần
+   restart mất cả buffer — đúng lỗ `claudedp-2310-3`, nhánh collector-graceful-shutdown), tin trùng bị bỏ lúc ingest
+   (gồm L20), và hai namespace `meta.agent` (`openclaw-hook` / `zalo-agent`) cần đếm tách. Đo đúng được sau khi
+   triển khai tắt êm.
 
-1. Ngưỡng 0,9 chọn theo số đo nào? Kết quả `bench-gate` theo từng ngưỡng (recall/fallout) để ở đâu?
-   (Giữ `threshold` trong `meta.kev` có ích, nhưng pipeline sẽ đặt ngưỡng riêng theo G0.)
-2. Có tập tin Zalo thật đã gắn nhãn nào không (kể cả ngoài repo)?
-3. Tin chỉ có URL ảnh: sau v3 có gộp vào tin chữ liền trước cùng người gửi không (Z3.1)?
-4. Log ghi 547 tin được nhận mà `stg_zalo_posts` có 367 dòng `openclaw-hook`: do buffer, lượt nạp, hay
-   mất khi restart?
+**L20 · Tin chỉ có ảnh trùng `sourceId`, tin sau bị bỏ lúc ingest** — Nặng · N1 · **làn ZCode** (đã giao sửa riêng)
+- Tin chỉ có ảnh có `text` rỗng → hai tin ảnh cùng nhóm, cùng `ts` cho cùng `sha256(group|ts|text)` → bước dedup lúc
+  ingest bỏ tin sau. Ảnh mất trước khi có snapshot — cùng họ lỗi với L06 (raw không đầy đủ).
+- Hướng sửa thuộc ZCode: khoá phải phân biệt được hai event (id tin của Zalo, hoặc băm cả media).
 
 ## 7. Tham chiếu
 
