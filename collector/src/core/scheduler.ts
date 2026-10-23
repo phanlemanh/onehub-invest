@@ -11,9 +11,12 @@ export type RunOptions = {
   stateDir: string; // "state/"
 };
 
-/** Env CCP (ADR-0007) — override được cho chạy tay / smoke test. */
+/** Env CCP (ADR-0007) — override được cho chạy tay / smoke test.
+ *  Cửa sổ giờ 19-23 BỎ làm mặc định 23/10 (Mạnh chốt): thu chạy bất kỳ lúc nào
+ *  hệ thống ổn định; muốn giới hạn lại set CONDUCT_WINDOW=19-23. Jitter + cap
+ *  ngày giữ nguyên. */
 const JITTER = process.env.CONDUCT_JITTER !== "0";
-const WINDOW = process.env.CONDUCT_WINDOW ?? "19-23";
+const WINDOW = process.env.CONDUCT_WINDOW ?? "off";
 const DAILY_MAX = Number(process.env.CONDUCT_DAILY_MAX ?? 600);
 
 /** Bọc rateLimit: sau mỗi take ngủ jitter 2–15s — tránh nhịp metronome. */
