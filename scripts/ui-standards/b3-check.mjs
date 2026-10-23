@@ -106,10 +106,19 @@ function checkPalette() {
     ? read("app/src/components/yield/pnl/data.ts") : "";
   for (const key of ["revenue", "expenses", "margin"])
     relate(key, pnl.match(new RegExp(`\\b${key}:\\s*\\{[^}]*?themeOf\\("(\\w+)"\\)`))?.[1], "pnl/data.ts");
+  // Chấm chú giải/tooltip đi kênh riêng (swatchOf): cùng nghĩa → cùng khoá.
+  for (const key of ["revenue", "expenses", "margin"])
+    relate(key, pnl.match(new RegExp(`\\b${key}:\\s*swatchOf\\("(\\w+)"\\)`))?.[1], "pnl/data.ts SWATCHES");
   const mixFile = filesIn("app/src/components/insight/revenue-mix").find((f) => /chartConfig\s*=/.test(read(f)));
   const mix = mixFile ? read(mixFile) : "";
   for (const [slot, key] of Object.entries(MIX_KEYS))
     relate(key, mix.match(new RegExp(`\\b${slot}:\\s*\\{[^}]*?themeOf\\("(\\w+)"\\)`))?.[1], `revenue-mix ${slot}`);
+  // Chấm lát: "Khác" (rest) mang màu vạch chéo như block gốc chart-13.
+  const DOT_KEYS = { ...MIX_KEYS, rest: "hatch" };
+  for (const [slot, key] of Object.entries(DOT_KEYS)) {
+    if (slot === "hatch") continue;
+    relate(key, mix.match(new RegExp(`\\b${slot}:\\s*swatchOf\\("(\\w+)"\\)`))?.[1], `revenue-mix chấm ${slot}`);
+  }
   return errs;
 }
 
@@ -172,10 +181,20 @@ function checkDataColor() {
   if (!keys) return ["data-color: thiếu components/charts/palette.ts"];
   const errs = [];
   if (/\bTBD\b/.test(doc)) errs.push("data-color: còn TBD");
+  // Bậc phải nằm đúng CỘT: tìm cột "Sáng"/"Tối" theo dòng tiêu đề của bảng khoá.
+  const lines = doc.split("\n");
+  const cells = (line) => line.split("|").slice(1, -1).map((c) => c.trim());
+  const header = lines.find((l) => l.startsWith("|") && /\|\s*Khoá\s*\|/.test(l));
+  const col = header ? { light: cells(header).indexOf("Sáng"), dark: cells(header).indexOf("Tối") } : null;
+  if (!col || col.light < 0 || col.dark < 0) errs.push("data-color: bảng khoá thiếu cột Sáng/Tối");
   for (const [key, v] of keys) {
-    const row = doc.split("\n").find((l) => l.startsWith("|") && l.includes(`\`${key}\``));
+    const row = lines.find((l) => l.startsWith("|") && cells(l)[0] === `\`${key}\``);
     if (!row) { errs.push(`data-color: thiếu khoá ${key}`); continue; }
-    if (!row.includes(v.light) || !row.includes(v.dark)) errs.push(`data-color: lệch bậc ${key}`);
+    if (!col) continue;
+    const c = cells(row);
+    const shade = (cell) => cell?.match(/^[a-z]+-\d+/)?.[0];
+    if (shade(c[col.light]) !== v.light || shade(c[col.dark]) !== v.dark)
+      errs.push(`data-color: lệch bậc ${key} (bảng ${c[col.light]} / ${c[col.dark]}, module ${v.light} / ${v.dark})`);
   }
   for (const rule of ["--chart-", "3:1", "miễn"])
     if (!doc.includes(rule)) errs.push(`data-color: thiếu luật chọn màu (${rule})`);
@@ -380,6 +399,8 @@ const CASES = [
   ["palette", add(PERF, '\n// <path fill="teal" />\nexport const X = \'<path fill="teal" />\'\n'), "màu ngoài palette.ts (tên màu CSS)"],
   ["palette", add(PERF, '\nexport const X = "var(--chart-1)"\n'), "dùng --chart-*"],
   ["palette", edit(PERF, (t) => t.replace(/(key:\s*"revenue"[^}]*?series:\s*)"revenue"/, '$1"share1"')), "lệch nghĩa revenue"],
+  ["palette", edit("app/src/components/yield/pnl/data.ts", (t) => t.replace('revenue: swatchOf("revenue")', 'revenue: swatchOf("margin")')), "lệch nghĩa revenue (pnl/data.ts SWATCHES"],
+  ["palette", edit("app/src/components/insight/revenue-mix/value-faces.tsx", (t) => t.replace('lead: swatchOf("share1")', 'lead: swatchOf("share2")')), "lệch nghĩa share1 (revenue-mix chấm lead"],
   ["contrast", null],
   ["contrast", edit(PALETTE, (t) => t.replace(/(revenue:\s*\{[^}]*light:\s*)"var\(--color-indigo-500\)"/, '$1"var(--color-indigo-300)"')), "revenue sáng 2.01 < 3"],
   ["contrast", edit(PALETTE, (t) => t.replace(/(margin:\s*\{[^}]*?)\s*\}/, "$1, exempt: true }")), "danh sách miễn đổi"],
@@ -388,6 +409,7 @@ const CASES = [
   ["data-color", edit(".claude/skills/onehub-ui/data-color.md", (t) => t.split("\n").filter((l) => !(l.startsWith("|") && l.includes("`margin`"))).join("\n")), "thiếu khoá margin"],
   ["data-color", edit(".claude/skills/onehub-ui/data-color.md", (t) => t.replace(/(\|\s*`adr`[^\n]*?)sky-600/, "$1sky-500")), "lệch bậc adr"],
   ["data-color", add(".claude/skills/onehub-ui/data-color.md", "\nBảng phụ: TBD.\n"), "còn TBD"],
+  ["data-color", edit(".claude/skills/onehub-ui/data-color.md", (t) => t.replace("| `revenue` | Doanh thu | indigo-500 (4,58) | indigo-400 (5,74) |", "| `revenue` | Doanh thu | indigo-400 (5,74) | indigo-500 (4,58) |")), "lệch bậc revenue"],
   ["duplicates", null],
   ["duplicates", (dir) => cpSync(join(dir, "app/src/components/charts/use-trigger-tooltip.ts"), join(dir, "app/src/components/yield/pnl/hint.ts")), "duplicates: trùng"],
   ["file-size", null],

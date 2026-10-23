@@ -9,7 +9,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_palette
     expected: "exit 0 khi 0 literal màu ngoài components/charts/palette.ts theo ma trận 7 dạng (var(--color-sắc-bậc), lớp Tailwind sắc-bậc, hex, rgb(a), hsl, oklch/oklab, tên màu CSS trong fill/stroke/stopColor), 0 --chart-*/--color-chart-*, và quan hệ nghĩa→khoá đúng (performance revenue & pnl revenue → SERIES.revenue; ba lát mix → share1..3; occupancy/adr/revpar/expenses/margin → khoá cùng tên); chiều đỏ (mỗi dạng một ca trên cùng fixture): chèn literal dạng N → exit 1, in 'palette: màu ngoài palette.ts (<dạng>)' kèm đường dẫn:dòng; gán share1 cho doanh thu performance → exit 1 'palette: lệch nghĩa revenue'"
-    paths: ["app/src/components/insight/performance/**", "app/src/components/insight/revenue-mix/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**"]
+    paths: ["app/src/components/insight/performance/**", "app/src/components/insight/revenue-mix/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E2
@@ -17,7 +17,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_contrast
     expected: "exit 0; in bảng khoá × (sáng, tối) với tỉ lệ trên --card; mọi khoá ngoài {expenses, share3, rest, hatch} ≥ 3:1 cả hai chế độ; lớp chấm của mỗi khoá chứa đúng bg-<sáng> và dark:bg-<tối>; chiều đỏ: đổi revenue sáng thành indigo-300 trong fixture → exit 1, in 'contrast: revenue sáng 2.01 < 3'; thêm khoá vào danh sách miễn → exit 1 'contrast: danh sách miễn đổi'"
-    paths: ["app/src/components/charts/palette.ts", "app/src/app/globals.css"]
+    paths: ["app/src/components/charts/palette.ts", "app/src/app/globals.css", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3
@@ -25,7 +25,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_data_color
     expected: "exit 0 khi data-color.md không chứa 'TBD' và mỗi khoá của palette.ts có một dòng bảng với đúng bậc sáng/tối; chiều đỏ: xoá dòng `margin` khỏi bảng fixture → exit 1 'data-color: thiếu khoá margin'; đổi bậc → 'data-color: lệch bậc'"
-    paths: [".claude/skills/onehub-ui/data-color.md", "app/src/components/charts/palette.ts"]
+    paths: [".claude/skills/onehub-ui/data-color.md", "app/src/components/charts/palette.ts", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E4
@@ -33,7 +33,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_duplicates
     expected: "exit 0 khi 0 cửa sổ 6 dòng chuẩn hoá trùng giữa hai file khác nhau trong phạm vi và không còn use-trigger-tooltip.ts / icons.tsx ở ba thư mục biểu đồ; chiều đỏ: chép charts/use-trigger-tooltip.ts vào pnl/ của fixture → exit 1 'duplicates: trùng' nêu cặp file + dòng"
-    paths: ["app/src/components/insight/performance/**", "app/src/components/insight/revenue-mix/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**"]
+    paths: ["app/src/components/insight/performance/**", "app/src/components/insight/revenue-mix/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
@@ -41,7 +41,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_file_size
     expected: "exit 0; in số dòng từng file, mọi file ≤ 200; chiều đỏ: thêm 201 dòng vào một file fixture → exit 1 'file-size: <file> 201+ > 200'"
-    paths: ["app/src/components/insight/performance/**", "app/src/components/insight/revenue-mix/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**"]
+    paths: ["app/src/components/insight/performance/**", "app/src/components/insight/revenue-mix/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E6
@@ -57,7 +57,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_suppressions
     expected: "exit 0 khi eslint-suppressions.json không có khoá thuộc phạm vi và trong phạm vi có đúng 3 disable mang lý do 'nguyên bản @reui/chart-6' (2 no-banned-motion, 1 no-raw-controls) + 1 react-hooks/preserve-manual-memoization; chiều đỏ: thêm khoá performance/data.ts vào suppressions fixture → exit 1 'suppressions: còn mục'; thêm một disable thứ 4 → exit 1 'suppressions: số disable'"
-    paths: ["app/eslint-suppressions.json", "app/src/components/insight/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**"]
+    paths: ["app/eslint-suppressions.json", "app/src/components/insight/**", "app/src/components/yield/pnl/**", "app/src/components/charts/**", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E8
@@ -65,7 +65,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_api
     expected: "exit 0 khi insight-page.tsx và app/(app)/yield/page.tsx không đổi so với merge-base nhánh chính, và ba chart.tsx export đúng PerformanceChart{months,currency,source}, RevenueMixChart{rows,currency,window}, PnlChart{months,currency,breakEvenMargin,ltNetIncome}, performance/data.ts export type MonthRow; chiều đỏ: đổi tên prop `source` trong fixture → exit 1 'api: PerformanceChart thiếu prop source'"
-    paths: ["app/src/components/insight/**", "app/src/components/yield/pnl/**", "app/src/app/(app)/yield/page.tsx"]
+    paths: ["app/src/components/insight/**", "app/src/components/yield/pnl/**", "app/src/app/(app)/yield/page.tsx", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E9
@@ -73,7 +73,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_structure
     expected: "exit 0 khi evidence/before/snapshot.json và evidence/after/snapshot.json có structure + interactions giống hệt (gồm tên tệp + sha256 CSV và chữ toast sao chép ở ba khung), cùng capture_sha (mã băm b3-capture.mjs), |after.at − before.at| ≤ 2 giờ, before.app_src_tree = cây app/src của before.head và before.head là tổ tiên HEAD, after.app_src_tree = HEAD:app/src; chiều đỏ: sửa một chữ tooltip trong fixture → exit 1 'structure: khác ở <khoá>'; lệch capture_sha → 'structure: khác bản script chụp'; after.app_src_tree khác HEAD → 'structure: bản sau không chụp trên HEAD'. Phá-thử thật một lần ở S3: đổi chữ tooltip trong code, chụp, lệnh đỏ — log ở evidence/phá-thử-E9.txt"
-    paths: ["app/src/**", "_acceptance/ui-clean-b3-charts/evidence/before/snapshot.json", "_acceptance/ui-clean-b3-charts/evidence/after/snapshot.json"]
+    paths: ["app/src/**", "_acceptance/ui-clean-b3-charts/evidence/before/snapshot.json", "_acceptance/ui-clean-b3-charts/evidence/after/snapshot.json", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E10
@@ -101,7 +101,7 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_docs
     expected: "exit 0 khi ui-baseline-2026-10.md có mục 'Sau B3' mà tổng vi phạm và từng luật khớp `npm run lint:ui-report` lúc chạy, có dòng file > 200 dòng phạm vi B3 trước 7 / sau 0, và catalog.md nhắc components/charts/ ở ba dòng chart-6/13/36; chiều đỏ: sửa tổng trong fixture → exit 1 'docs: tổng lệch'"
-    paths: ["docs/research/ui-baseline-2026-10.md", ".claude/skills/onehub-ui/catalog.md", "app/eslint-suppressions.json"]
+    paths: ["docs/research/ui-baseline-2026-10.md", ".claude/skills/onehub-ui/catalog.md", "app/eslint-suppressions.json", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E13
@@ -121,5 +121,5 @@ evals:
     executor: script
     cmd: config:executors.script.ui_b3_pixels
     expected: "exit 0 khi 4 ảnh yield-pnl-{light,dark,light-390,dark-390}.png ở evidence/after giống từng byte (sha256) với evidence/before và hai bản chụp cùng capture_sha; chiều đỏ: đổi một byte ảnh fixture → exit 1 'pixels: yield-pnl-<chế độ> khác'; thiếu ảnh → exit 1 'pixels: thiếu'"
-    paths: ["app/src/components/yield/pnl/**", "app/src/components/charts/**", "_acceptance/ui-clean-b3-charts/evidence/before/yield-pnl-*.png", "_acceptance/ui-clean-b3-charts/evidence/after/yield-pnl-*.png"]
+    paths: ["app/src/components/yield/pnl/**", "app/src/components/charts/**", "_acceptance/ui-clean-b3-charts/evidence/before/yield-pnl-*.png", "_acceptance/ui-clean-b3-charts/evidence/after/yield-pnl-*.png", "scripts/ui-standards/b3-check.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
