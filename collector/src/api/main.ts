@@ -42,7 +42,9 @@ setInterval(() => {
 // launchd gửi SIGTERM khi bootout/restart; tay Ctrl-C là SIGINT. Đóng HTTP
 // trước (không nhận POST mới), rồi LẶP flush buffer thành snapshot tới khi
 // hết buffer mới thoát — tin đã ack 202 không được mất âm thầm. Deadline 45s
-// nằm trong ExitTimeOut 60s của plist — không đua SIGKILL.
+// nằm trong ExitTimeOut 60s của plist — không đua SIGKILL. Ảnh đang tải bị
+// huỷ theo deadline (còn 10s) — tin quan trọng hơn ảnh; buffer còn tin lúc
+// thoát → exit(1) cho giám sát thấy (claudedp-2310-3).
 installGracefulShutdown(
   {
     on: (sig, fn) => process.on(sig, fn),
@@ -54,10 +56,13 @@ installGracefulShutdown(
     flush: (flushOpts) => agent.flush(flushOpts),
     close: () =>
       new Promise<void>((resolve) => {
-        server.close(() => resolve());
-        // close() chỉ chặn connection MỚI — keep-alive đang mở vẫn nhận POST
-        // tiếp, nên cắt nốt (Node ≥18.2) để cửa đóng thật sự trước khi flush.
-        if (typeof server.closeAllConnections === "function") server.closeAllConnections();
+        server.close(() => resolve()); // resolve khi mọi request đang chạy xong
+        // close() chỉ chặn connection MỚI; closeIdleConnections cắt nốt các
+        // keep-alive RẢNH nhưng KHÔNG giết request đang đọc body (chưa ack
+        // 202) — khác closeAllConnections (2310-3b): POST đang chạy được làm
+        // nốt trong deadline rồi mới tới lượt flush.
+        if (typeof server.closeIdleConnections === "function") server.closeIdleConnections();
       }),
+    pendingCount: () => agent.stats().buffered,
   },
 );

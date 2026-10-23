@@ -173,7 +173,9 @@ export async function createAgentServer(opts: AgentServerOptions) {
     return { status: 202, body: { accepted, duplicates } };
   }
 
-  async function doFlush(flushOpts?: { skipMedia?: boolean }): Promise<{ snapshotId: string } | null> {
+  async function doFlush(
+    flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
+  ): Promise<{ snapshotId: string } | null> {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
     writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
     // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
@@ -182,23 +184,35 @@ export async function createAgentServer(opts: AgentServerOptions) {
     // N1 media: URL ảnh Zalo (zdn.vn) CÓ HẠN — tải về máy TRƯỚC khi gzip items
     // để meta.mediaFiles nằm trong items-*.json.gz. Fail-open: lỗi tải chỉ ghi
     // error trong meta; lỗi hệ thống bỏ qua bước media, tin vẫn phải chảy.
-    // Shutdown sát deadline gọi với skipMedia — tin quan trọng hơn ảnh.
+    // Shutdown: sát deadline → skipMedia (không bắt đầu tải); ĐANG tải thì
+    // AbortSignal huỷ ở mốc còn MEDIA_CUTOFF tới deadlineAt — không để ảnh
+    // treo kéo flush vượt deadline (claudedp-2310-3).
+    const MEDIA_CUTOFF_MS = 10_000;
     let mediaNote = "";
     if (flushOpts?.skipMedia) {
       mediaNote = "; media skipped: sát deadline shutdown";
     } else {
+      const ac = new AbortController();
+      let abortT: ReturnType<typeof setTimeout> | undefined;
+      if (flushOpts?.deadlineAt) {
+        const inMs = flushOpts.deadlineAt - Date.now() - MEDIA_CUTOFF_MS;
+        abortT = setTimeout(() => ac.abort(), Math.max(0, inMs));
+      }
       try {
         const w = writer;
         const stats = await fetchMessageMedia({
           items,
           putFile: (name, bytes) => w.addExtraFile(name, bytes),
           options: opts.media,
+          signal: ac.signal,
         });
         if (stats.fetched > 0 || stats.failed > 0) {
           mediaNote = `; media fetched=${stats.fetched} failed=${stats.failed}`;
         }
       } catch (err) {
         mediaNote = `; media skipped: ${err instanceof Error ? err.message : String(err)}`;
+      } finally {
+        if (abortT) clearTimeout(abortT);
       }
     }
     const ids = items.map((i) => i.sourceId);
@@ -236,7 +250,9 @@ export async function createAgentServer(opts: AgentServerOptions) {
    * đôi snapshot, không finalize manifest hai lần. (Lượt đang chạy không đổi
    * theo flushOpts — shutdown sát deadline sẽ gọi lại lượt mới sau lượt này.)
    */
-  function flush(flushOpts?: { skipMedia?: boolean }): Promise<{ snapshotId: string } | null> {
+  function flush(
+    flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
+  ): Promise<{ snapshotId: string } | null> {
     if (flushing) return flushing;
     flushing = doFlush(flushOpts).finally(() => {
       flushing = null;
