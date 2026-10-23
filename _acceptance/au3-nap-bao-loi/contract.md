@@ -36,7 +36,7 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
   - snapshot cũ hơn state không bao giờ nạp lại.
 - AC-3: Given bước import hỏng vì lỗi không phải ECONNREFUSED, When job chạy, Then import chỉ thử 1 lần, không chờ, job exit khác 0 và không transform; còn ECONNREFUSED tạm thời (DB lên lại sau vài lần) thì job đi tiếp và exit 0.
 - AC-4: Given DB sống, When job chạy, Then hành vi như cũ:
-  - chotot chỉ nạp snapshot mới nhất mỗi thành phố;
+  - chotot chỉ nạp snapshot mới nhất mỗi thị trường;
   - đủ các bước job-step của làn Claude (chotot: transform → refresh → resolve; apify: transform-fb → refresh);
   - một bước job-step hỏng thì các bước sau vẫn chạy, và job exit bằng mã của bước hỏng đầu tiên kèm dòng `JOB FAIL`.
 
