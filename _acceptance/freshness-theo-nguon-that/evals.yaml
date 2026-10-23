@@ -1,0 +1,76 @@
+schema_version: 1
+feature_slug: freshness-theo-nguon-that
+# Eval máy chạy cùng lệnh (node --test scripts/*.test.mjs) — mỗi eval đọc các ca mang tiền tố AC của nó trong TAP.
+# Ca chạm DB dùng schema tạm trong giao dịch ROLLBACK; DB không tới thì ca SKIP — eval đòi «ok», nên skip là chưa đạt.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'AC-1 S01 gộp max hai source_id → fresh' ok và 'AC-1 chiều đỏ: snapshot mới 9 ngày → S01/<tp> stale' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'AC-2 S02 đọc airdna_markets → một hàng S02/vn fresh, không none' ok và 'AC-2 chiều đỏ: captured_at 36 ngày → stale' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'AC-3 S03/S05 tách theo agent_id, mock cũ không làm S03 quá hạn' ok và 'AC-3 chiều đỏ: S05 13 giờ → stale, S03 vẫn fresh' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'AC-4 S06 theo thành phố của snapshot: hanoi fresh, hcmc stale' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'AC-5 S04 completed không đo, mã thiếu SLO → no-slo' ok và 'AC-5 bảng SLO đúng năm giá trị giờ' ok (giá trị S01/S02/S03 theo đáp án Hỏi-1) (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'AC-6 không ghép chéo thành phố, mã không dữ liệu → đúng một none' ok và 'AC-6 chiều đỏ: bỏ S01/hcmc → không sinh none' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/check-freshness.mjs, scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; các ca CLI thật trên schema tạm ok (không skip): 'AC-7 CLI mọi hàng fresh → thoát 0' · 'AC-7 CLI S05 13 giờ → thoát 1, dòng ghi 13 giờ / SLO 12, --json cùng hàng ageHours 13 sloHours 12 stale' · 'AC-7 CLI none/no-slo → thoát 1' · 'AC-7 webhook nhận đúng một body có S05/hanoi' · 'AC-7 chuỗi canh có trong registry, vắng trong stdout/stderr/--json/webhook'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.scripts
+    layer: backend-effect
+    paths: [scripts/check-freshness.mjs, scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca chẩn đoán 'AC-8 DB hiện tại' ok và in dòng '# live: thoát json=1 chữ=1 · lỗi: S05/hanoi stale last=2026-10-21T14:02… · chấm lúc <ISO>' — cả hai CLI thoát 1, tập lỗi chỉ S05/hanoi, last 21/10 14:02 ±1 phút (dòng in khác → eval chưa đạt dù bộ test xanh; lệch do nguồn thật đổi trạng thái → ghi ngoài hợp đồng)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: judgment
+    inputs: [.claude/skills/ops-check/SKILL.md, CONTEXT.md, scripts/check-freshness.mjs, _acceptance/freshness-theo-nguon-that/contract.md]
+    question: "Đọc mục độ tươi trong .claude/skills/ops-check/SKILL.md, mục «Độ tươi» trong CONTEXT.md và chú thích đầu scripts/check-freshness.mjs: người vận hành có biết mỗi mã đo ở bảng nào, SLO từng mã (kể cả S05, S06), S04 không đo vì đã xong, và lệnh --json không? Có câu nào còn nói mọi nguồn đọc từ bảng snapshot, hay lệch phạm vi của contract.md không?"
+    evidence_required: [judged_by, verdict, rationale]
