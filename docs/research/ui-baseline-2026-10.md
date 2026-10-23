@@ -80,8 +80,8 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 
 - **Ngày đo:** 2026-10-23 · **Commit:** `61f168d` (nhánh `claude/ui-clean-b1-ops-c5a53a`, sau khi merge main có PR #2–#5)
 - **Chạy lại:** `cd app && npm run lint:ui-report`
-- **Phạm vi B1 còn 20 mục** baseline trên các file của đợt (`app/ops/**` trừ `ops/deals`, `components/ops/**`, `components/shell/ops-shell/**`) — đếm từ `eslint-suppressions.json` bằng `node scripts/ui-standards/b1-ops.mjs docs`.
-- Hàng `app/ops` còn lại là `ops/deals/page.tsx` (đợt B5). Hàng `components/ops` còn lại là `review-card.tsx` (làm sau khi nhánh enrich vào main — Task 12 của kế hoạch con).
+- **Phạm vi B1 còn 0 mục** baseline trên các file của đợt (`app/ops/**` trừ `ops/deals` và `ops/review`, `components/ops/**` trừ `review-card.tsx`, `components/shell/ops-shell/**`) — đếm từ `eslint-suppressions.json` bằng `node scripts/ui-standards/b1-ops.mjs docs`.
+- Hàng `app/ops` còn lại là `ops/deals/page.tsx` (đợt B5). Hàng `components/ops` còn lại là 20 mục của `review-card.tsx`: Task 12 (`/ops/review` theo solution-agents-5) đã TÁCH khỏi vòng này (Mạnh quyết «tách» 2026-10-23), làm ở vòng sau khi nhánh enrich vào main.
 
 **Tổng 90 vi phạm trong 23 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
 

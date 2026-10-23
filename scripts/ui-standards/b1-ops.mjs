@@ -24,9 +24,14 @@ const read = (p) => readFileSync(p, "utf8");
 const json = (p) => JSON.parse(read(p));
 const BLOCK_MAP = () => json(join(ROOT, "scripts/ui-standards/b1-block-map.json"));
 
+/** Task 12 (/ops/review + review-card theo solution-agents-5) HOÃN — Mạnh quyết «tách» 2026-10-23
+ * (descope trong decisions.jsonl). Gỡ khỏi danh sách này khi làm Task 12. */
+const DEFERRED = ["app/ops/review/", "components/ops/review-card.tsx", "components/ops/review/"];
+
 /** Phạm vi file của đợt (đường tương đối app/src). ops/deals thuộc B5. */
 function inScope(srcRel) {
   if (srcRel.startsWith("app/ops/deals/")) return false;
+  if (DEFERRED.some((d) => srcRel.startsWith(d))) return false;
   return srcRel.startsWith("app/ops/") || srcRel.startsWith("components/ops/") || srcRel.startsWith("components/shell/ops-shell/");
 }
 
@@ -126,7 +131,7 @@ function handdrawn() {
 }
 
 // ------------------------------------------------------------------ E4 frame
-const PAGES = ["app/ops/page.tsx", "app/ops/collections/page.tsx", "app/ops/quality/page.tsx", "app/ops/review/page.tsx", "app/ops/sources/page.tsx", "app/ops/design/page.tsx"];
+const PAGES = ["app/ops/page.tsx", "app/ops/collections/page.tsx", "app/ops/quality/page.tsx", "app/ops/sources/page.tsx", "app/ops/design/page.tsx"].filter((p) => inScope(p));
 function returnedJsx(fn) {
   let found = null;
   const body = fn.body;
@@ -166,6 +171,7 @@ function oneWay() {
   const map = BLOCK_MAP();
   const comps = join(SRC(), "components");
   for (const pg of map.pages) {
+    if (pg.deferred) continue;
     const f = join(SRC(), pg.page);
     if (!existsSync(f)) { fail("one-way", `thiếu ${pg.page}`); continue; }
     const imps = imports(parse(f));
@@ -328,7 +334,8 @@ function bodyKeys(call, sf) {
 function extractFetches() {
   const byKey = new Map();
   for (const f of walk(join(SRC(), "components", "ops")).concat(walk(join(SRC(), "app", "ops")))) {
-    if (!/\.tsx?$/.test(f) || !inScope(relative(SRC(), f).split(sep).join("/"))) continue;
+    // Hợp đồng API áp cho MỌI mã Ops (kể cả phần hoãn như review-card), chỉ trừ ops/deals (B5).
+    if (!/\.tsx?$/.test(f) || relative(SRC(), f).split(sep).join("/").startsWith("app/ops/deals/")) continue;
     const sf = parse(f);
     visit(sf, (n) => {
       if (!(ts.isCallExpression(n) && n.expression.getText() === "fetch" && n.arguments[0])) return;
@@ -432,15 +439,7 @@ function docs() {
 function states() {
   const files = scopeFiles();
   const parsed = files.map((f) => ({ f, sf: parse(f), srcRel: relative(SRC(), f).split(sep).join("/") }));
-  // (1) nút quyết định ở hàng chờ duyệt có disabled
-  const review = parsed.filter((p) => p.srcRel.startsWith("components/ops/review/"));
-  if (!review.length) fails.push("states: chưa có components/ops/review/ (hàng chờ duyệt chuyển thể agents-5)");
-  for (const { f, sf } of review) for (const o of jsxOpenings(sf)) {
-    if (tagName(o) !== "Button") continue;
-    const el = o.parent;
-    const text = ts.isJsxElement(el) ? el.children.map((c) => c.getText()).join("") : "";
-    if (/Duyệt|Từ chối|Hoãn|Cùng căn|Khác căn|Không chắc/.test(text) && !attr(o, "disabled")) fail("states", "nút quyết định thiếu disabled khi đang gửi", f, o, sf);
-  }
+  // (1) nút quyết định hàng chờ duyệt có disabled — thuộc Task 12 (hoãn), kiểm lại khi gỡ DEFERRED.
   // (2) bật/tắt lỗi → hoàn giá trị + toast.error
   let toggles = 0;
   for (const { f, sf } of parsed) visit(sf, (n) => {
@@ -455,10 +454,7 @@ function states() {
     if (!Object.values(setterCalls).some((c) => c >= 2)) fail("states", `${name}: không hoàn giá trị cũ khi lỗi (setter chỉ gọi một lần)`, f, n, sf);
   });
   if (toggles < 2) fails.push(`states: cần hàm toggle cho nhóm thu và nhóm Zalo, thấy ${toggles}`);
-  // (3) hàng chờ rỗng → Empty
-  const reviewPage = parsed.find((p) => p.srcRel === "app/ops/review/page.tsx");
-  const reviewHasEmpty = [reviewPage, ...review].filter(Boolean).some(({ sf }) => imports(sf).some((i) => i.names.includes("Empty")));
-  if (!reviewHasEmpty) fails.push("states: hàng chờ duyệt không render Empty khi rỗng");
+  // (3) hàng chờ rỗng → Empty — thuộc Task 12 (hoãn).
   // (4) nhóm Zalo: Skeleton lúc tải + Alert destructive có Button Thử lại gọi lại việc tải
   const sources = parsed.filter((p) => p.srcRel.startsWith("components/ops/sources/"));
   const zaloFiles = sources.filter((p) => /zalo/.test(p.srcRel))
