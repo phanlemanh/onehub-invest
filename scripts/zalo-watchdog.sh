@@ -82,8 +82,15 @@ scan_new_lines() {
     echo "$cur" > "$mk"
     return 0
   fi
-  if [ "$cur" -le "$last" ]; then
-    [ "$cur" -lt "$last" ] && echo "$cur" > "$mk"
+  if [ "$cur" -lt "$last" ]; then
+    # Ít dòng hơn lần trước = FILE MỚI (log /tmp xoay theo ngày nhưng marker
+    # dùng chung) hoặc truncate: quét TOÀN BỘ file mới từ dòng 1 — agent-turn
+    # ở những dòng đầu ngày mới không được sót (claudedp-2310-5).
+    tail -n +1 "$f"
+    echo "$cur" > "$mk"
+    return 0
+  fi
+  if [ "$cur" -eq "$last" ]; then
     return 0
   fi
   tail -n +"$((last + 1))" "$f"
