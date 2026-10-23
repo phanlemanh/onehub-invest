@@ -167,3 +167,68 @@ Luồng `runEnrich` mỗi offer: `resolve` → `llm` (khi `needsLLM`) → `route
 ## Thứ tự
 
 Task 1 → (Task 2 ∥ Task 5) → Task 3 → Task 4 → `status: implemented` → S4.
+
+---
+
+## Nâng phạm vi 2026-10-23 — E1 trái LLM lên thẻ đối chiếu (AC-7 viết lại, AC-11)
+
+Cổng Phạm vi lần 2 duyệt 2026-10-23. Ràng buộc thêm: KHÔNG migration mới (033 đã commit; số
+034/035 giữ cho làn khác); lint `onehub-ui` của main phải xanh và `eslint-suppressions.json` không
+tăng (`review-card.tsx` nằm trong baseline). Ba task chạy TUẦN TỰ (task sau dùng vật task trước).
+
+### Task 6: Luật định tuyến — xung đột lên thẻ, giữ field đang xung đột
+
+**Files:** Modify `agent/src/enrich/route.ts`, `agent/tests/enrich-route.test.ts`
+**independent:** false · **Phục vụ:** E8 · **Verify:** `cd agent && npm test`
+
+- `Routed` thêm `conflict?: true`. E1 ≠ LLM (sau chuẩn hoá, toà so bằng tên node) → hai Routed
+  `route: "review"` (e1_rule + e2_llm), cả hai `conflict: true`; không direct.
+- `routeFields` nhận thêm `held?: ReadonlySet<EnrichField>` (field đang có đề xuất queued trên thẻ
+  xung đột): mọi Routed của field đó thành `review` + `conflict: true` (kể cả E1 một mình, LLM
+  đồng ý E1).
+- `summarizeRun`: `xungDot` = số field có conflict (đếm một lần mỗi field), `review` đếm cả hai.
+- [ ] Test trước (ca AC-7 viết lại + hai đối chứng dương + ca held), chạy đỏ → sửa → xanh.
+- [ ] Phá-thử: bản sao trả hành vi cũ → ca đỏ ghim 'AC-7: E1 không được áp khi trái LLM'.
+
+### Task 7: runEnrich — căn cứ mỗi bên, evidence thẻ xung đột, fixture thật
+
+**Files:** Modify `agent/src/agents/context-resolver.ts` (thêm `typeBasis`, `buildingBasis` —
+chuỗi mô tả luật/từ khoá khớp và khớp ở tin hay tên nhóm), `agent/src/enrich/run.ts`
+(basis vào evidence từng đề xuất; nạp `held` từ DB; `syncReview` dựng `fields[]` có `source`,
+`basis`, `conflict`); Create `agent/tests/fixtures/e1-conflict-cases.json` (hai ca thật: tên nhóm,
+đoạn tin đã bỏ liên hệ, output LLM nguyên văn từ trace 23-26-24 và 23-31-25),
+`agent/tests/fixtures/e1-conflict-card.json` (evidence thẻ do writer thật sinh — khuôn chung với
+app); Modify `agent/tests/enrich-db.test.ts`
+**independent:** false · **Phục vụ:** E14, E15 (giữ xanh E2–E7, E9, E11) · **Verify:** `cd agent && npm test`
+
+- [ ] Ca 'AC-7 hai tin S05 thật không bị áp land' (resolveContext thật + parseEnrichOutput thật),
+  lượt hai, lượt LLM vắng, lượt LLM lỗi, để-sau → thẻ mới giữ conflict, khuôn khoá khớp
+  `e1-conflict-card.json`; đối chứng LLM='land' → corroborated.
+- [ ] Ca 'AC-11 chọn một bên rồi áp' (apply_enrichment + decide rejected), ca «Bỏ», chiều đỏ
+  decide approved thẳng → E1 thắng.
+
+### Task 8: Route decide nhận choices + thẻ đối chiếu ReUI
+
+**Files:** Create `app/src/lib/enrich-choices.ts` (`planEnrichApproval`), `app/tests/enrich-choices.test.tsx`;
+Modify `app/src/app/api/v1/ops/review/[id]/decide/route.ts`, `app/src/components/ops/review-card.tsx`,
+`app/tests/review-card.test.tsx`
+**independent:** false · **Phục vụ:** E16, E17, E6, E10 · **Verify:** `cd app && npx tsc --noEmit && npm run lint && npm test`
+
+- Route: nhánh enrich + approved → đọc đề xuất queued của thẻ; có xung đột → `planEnrichApproval`
+  (lỗi → ROLLBACK + 400 trước khi đổi review_queue) → `apply_enrichment(ids)` →
+  `decide_enrichment_review(id,'rejected')`; không xung đột → như cũ. Audit kèm `choices`.
+- Thẻ: nạp skill `reui` + `onehub-ui` trước khi sửa. Phần agent_output dùng `Button`, `Badge`,
+  `ToggleGroup` — bỏ `<button>`/`<table>`/màu thô/cỡ chữ tuỳ ý của phần này; phần entity_match
+  không đụng (để làn B1). Ô xung đột: «Theo luật» / «Theo LLM» / «Bỏ cả hai», căn cứ dưới mỗi bên;
+  «Áp dụng» khoá tới khi chọn đủ; body gửi `choices`.
+- [ ] Test nạp `agent/tests/fixtures/e1-conflict-card.json`; đối chứng thẻ không xung đột.
+- [ ] Lint xanh, baseline không tăng (`check-baseline-growth.mjs` so với origin/main).
+
+### Task 9: Tài liệu
+
+**Files:** `docs/research/enrichment-agent-design.md` (xung đột → thẻ đối chiếu), `docs/ROADMAP.md`
+(§2 as-built + §4) · **Phục vụ:** E13
+
+## Thứ tự (nâng phạm vi)
+
+Task 6 → Task 7 → Task 8 → Task 9 → `status: implemented` → S4 vòng 3.
