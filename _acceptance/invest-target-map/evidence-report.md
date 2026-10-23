@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 81658532432f33831293c4cb5e5776aab2ab39fb
+verified_commit: f21b35b3363c0a7a2b0f805674e507a9ed48e717
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -26,39 +26,39 @@ human_signoff: Mạnh 2026-10-23
 | E9 | AC-8 | judgment | PASS |
 | E10 | AC-6 | script | PASS |
 
-Eval máy chạy lại ở `81658532` (commit chỉ thêm thước `verify.sh`/`verify-e5.js` và đổi `cmd` của E2/E3/E5/E10 sang thước đó). Eval judgment do tác tử chấm ngữ cảnh sạch phán ở `abe0b34`; giữa hai commit không file nào nó đọc (routes.md, ROADMAP.md, catalog.md, loop.md, ban-quyet-dinh.html) thay đổi.
+Eval máy chạy lại ở `f21b35b` (sau chữ ký; các commit từ lượt chấm chỉ là gộp `main` + bỏ nháy trong `cmd` của evals.yaml), mỗi lượt ghi vào `run-log.jsonl` (round 4). Eval judgment do tác tử chấm ngữ cảnh sạch phán ở `abe0b34`; giữa hai commit không file nào nó đọc (routes.md, ROADMAP.md, catalog.md, loop.md, ban-quyet-dinh.html) thay đổi.
 
 ## Evidence
 
 - eval: E1
-  run_id: invest-target-map-e1-20261023T001122Z
+  run_id: invest-target-map-e1-e7-20261023T015313Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ui_lint_rules
-  verified_at: 2026-10-23T00:11:22Z
+  verified_at: 2026-10-23T01:53:12Z
   output: |
-    ✔ mọi route có cột Block đích: tên block trong backtick, `chờ (…)`, hoặc `—` cho redirect (1.846583ms)
-    ✔ mọi route có cột Slug đích: `giữ` hoặc đường dẫn tiếng Anh trong backtick (0.436792ms)
-    ✔ phủ đúng mọi page.tsx dưới app/src/app (không thiếu, không thừa, không trùng) (6.192208ms)
-    ℹ tests 143
-    ℹ pass 143
+    ✔ mọi route có cột Block đích: tên block trong backtick, `chờ (…)`, hoặc `—` cho redirect (2.53425ms)
+    ✔ mọi route có cột Slug đích: `giữ` hoặc đường dẫn tiếng Anh trong backtick (0.327084ms)
+    ✔ phủ đúng mọi page.tsx dưới app/src/app (không thiếu, không thừa, không trùng) (3.850958ms)
+    ℹ tests 154
+    ℹ pass 154
     ℹ fail 0
 
 - eval: E2
-  run_id: invest-target-map-e2-20261023T001122Z
+  run_id: invest-target-map-e2-20261023T015313Z
   exit_code: 0
   baseline: n-a
   verifier: verify.sh
-  verified_at: 2026-10-23T00:11:22Z
+  verified_at: 2026-10-23T01:53:13Z
   output: |
     invest rows 13 chờ 0
 
 - eval: E3
-  run_id: invest-target-map-e3-20261023T001123Z
+  run_id: invest-target-map-e3-20261023T015313Z
   exit_code: 0
   baseline: n-a
   verifier: verify.sh
-  verified_at: 2026-10-23T00:11:23Z
+  verified_at: 2026-10-23T01:53:13Z
   output: |
     ℹ pass 2
     ℹ fail 1
@@ -72,11 +72,11 @@ Eval máy chạy lại ở `81658532` (commit chỉ thêm thước `verify.sh`/`
   rationale: routes.md:32 ghi shell Invest `app-shell-30` (giữ, chốt 2026-10-23) kèm lý do (top nav 4 mục phẳng, bản đồ cần trọn bề ngang, view track khớp mục lục Insight; dự phòng app-shell-28). Bảng Đợt (routes.md:73–78) có I1 1 route, I2 2, I3 2, I4 2, I5 2, I6 4 = 13, đúng tập 13 dòng Invest không redirect của E2; không lặp, không thiếu; `/[country]/[market]/map` (redirect) đứng ngoài đúng; mọi đợt có ô biểu đồ.
 
 - eval: E5
-  run_id: invest-target-map-e5-20261023T001123Z
+  run_id: invest-target-map-e5-20261023T015313Z
   exit_code: 0
   baseline: n-a
   verifier: verify.sh
-  verified_at: 2026-10-23T00:11:23Z
+  verified_at: 2026-10-23T01:53:13Z
   output: |
     imgs 61 broken 0 rows 13 badRows 0
 
@@ -86,14 +86,14 @@ Eval máy chạy lại ở `81658532` (commit chỉ thêm thước `verify.sh`/`
   rationale: ROADMAP Track 6 có dòng BĐ (bản đồ đích, "✅ Mạnh chọn 23/10 — chờ ký PR") và đủ I1…I6; bảng chỉ còn A, B1, B3, BĐ, I1–I6, B5 — không còn B2/B4; B5 = "Ops còn lại (`/ops/deals`) + gỡ baseline"; đoạn "Cắt lại 23/10" giải thích B2/B4 đi vào I1–I6.
 
 - eval: E7
-  run_id: invest-target-map-e1-20261023T001122Z
+  run_id: invest-target-map-e1-e7-20261023T015313Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ui_lint_rules
-  verified_at: 2026-10-23T00:11:22Z
+  verified_at: 2026-10-23T01:53:12Z
   output: |
-    ✔ mọi route có cột Slug đích: `giữ` hoặc đường dẫn tiếng Anh trong backtick (0.436792ms)
-    ℹ pass 143
+    ✔ mọi route có cột Slug đích: `giữ` hoặc đường dẫn tiếng Anh trong backtick (0.327084ms)
+    ℹ pass 154
     ℹ fail 0
 
 - eval: E8
@@ -107,11 +107,11 @@ Eval máy chạy lại ở `81658532` (commit chỉ thêm thước `verify.sh`/`
   rationale: loop.md:11–15 có bước tra Mobbin 3–6 màn khi chốt khuôn IA (≥2 khuôn), ghi `mobbin_url`, Mobbin chỉ cho IA (không chép hình), block từ ReUI (riêng bản đồ `mapcn`), không có Mobbin thì chọn từ archetype của `reui/rules/compose.md` kèm lý do.
 
 - eval: E10
-  run_id: invest-target-map-e10-20261023T001128Z
+  run_id: invest-target-map-e10-20261023T015318Z
   exit_code: 0
   baseline: n-a
   verifier: verify.sh
-  verified_at: 2026-10-23T00:11:28Z
+  verified_at: 2026-10-23T01:53:18Z
   output: |
     ℹ pass 2
     ℹ fail 1
@@ -144,3 +144,8 @@ none — eval máy tất định; riêng E5 phụ thuộc mạng tới reui.io.
 Round 1 (ab5d21f): E1–E9 đạt; phát hiện chữ cũ trong HTML, ô biểu đồ I3, đoạn mở đầu routes.md, PRODUCT-MAP ngoài phạm vi, thiếu eval âm cho cột Slug.
 Round 2 (abe0b34): sửa theo phát hiện, thêm E10; E1–E10 đạt, 4 eval judgment PASS không UNCERTAIN.
 Round 3 (81658532): thay lệnh rời của E2/E3/E5/E10 bằng thước `verify.sh` (hook bằng chứng đòi verifier là script có thật); chạy lại eval máy, đều đạt.
+Round 4 (f21b35b, sau chữ ký): bằng chứng hoá cũ vì gộp `main` + bỏ nháy `cmd`; chạy lại eval máy có ghi sổ `run-log.jsonl`, đều đạt.
+
+### Re-pin lần 1 — 2026-10-23, do hoá cũ do chính commit chữ ký
+run_id: repin-20261023T015227Z-27417
+sha: f21b35b3363c0a7a2b0f805674e507a9ed48e717 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E4 (E4 không khai paths), E6 (E6 không khai paths), E8 (E8 không khai paths), E9 (E9 không khai paths) · AC không có chốt máy: AC-3, AC-5, AC-7, AC-8

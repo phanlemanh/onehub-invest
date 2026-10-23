@@ -1,0 +1,7 @@
+{"ts":"2026-10-23T01:52:41Z","kind":"repin","run_id":"repin-20261023T015227Z-27417","sha":"f21b35b3363c0a7a2b0f805674e507a9ed48e717","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E5":0,"E7":0,"E10":0},"wall_s":13.8,"so_lenh":10,"evals_not_machine":["E4","E6","E8","E9"],"tong_ket":{"ket_cuc":"xanh","phut":0.2,"so_lenh":10,"model_goi":0,"model_carry":0,"chap_chon":0}}
+{"ts":"2026-10-23T01:53:12Z","round":4,"evalId":"E1","run_id":"invest-target-map-e1-e7-20261023T015313Z","exit_code":0,"cmd":"cd app && npm run test:lint-rules"}
+{"ts":"2026-10-23T01:53:12Z","round":4,"evalId":"E7","run_id":"invest-target-map-e1-e7-20261023T015313Z","exit_code":0,"cmd":"cd app && npm run test:lint-rules"}
+{"ts":"2026-10-23T01:53:13Z","round":4,"evalId":"E2","run_id":"invest-target-map-e2-20261023T015313Z","exit_code":0,"cmd":"bash _acceptance/invest-target-map/verify.sh e2"}
+{"ts":"2026-10-23T01:53:13Z","round":4,"evalId":"E3","run_id":"invest-target-map-e3-20261023T015313Z","exit_code":0,"cmd":"bash _acceptance/invest-target-map/verify.sh e3"}
+{"ts":"2026-10-23T01:53:13Z","round":4,"evalId":"E5","run_id":"invest-target-map-e5-20261023T015313Z","exit_code":0,"cmd":"bash _acceptance/invest-target-map/verify.sh e5"}
+{"ts":"2026-10-23T01:53:18Z","round":4,"evalId":"E10","run_id":"invest-target-map-e10-20261023T015318Z","exit_code":0,"cmd":"bash _acceptance/invest-target-map/verify.sh e10"}
