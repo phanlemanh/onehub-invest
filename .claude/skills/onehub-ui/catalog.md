@@ -74,6 +74,8 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 
 ## Bản đồ nền (mọi bản đồ MapLibre)
 
+- **Nguồn đích (chốt 2026-10-23): `mapcn`** (`@mapcn/map`, `@mapcn/choropleth`, `@mapcn/store-locator`, clusters) — ReUI không có bản đồ; thứ tự ReUI → mapcn (chỉ cho bản đồ) → tự ghép. Ba component tự viết dưới đây đổi sang mapcn ở đợt I1/I2/I3; các luật nền bên dưới vẫn áp dụng cho bản mapcn.
+
 - Dùng `lib/map-style.ts`: `basemapUrl("colored" | "muted", dark)` + `MAP_OPTIONS` + `addAttribution` + `prepareBasemap`. Nguồn OpenFreeMap (OSM, không khoá, không giới hạn lượt).
 - `colored` (Liberty) cho bản đồ cần định vị (nhãn giá listing); `muted` (Positron) cho bản đồ mà màu là dữ liệu (choropleth). Chế độ tối dùng `dark` cho cả hai.
 - Lớp dữ liệu dạng vùng chèn trước id mà `prepareBasemap` trả về, để tên đường nằm trên. Marker/nhãn thì thêm sau cùng.

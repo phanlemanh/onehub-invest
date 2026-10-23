@@ -1,0 +1,8 @@
+{
+  "feature_plain": "Mỗi trang của cổng Invest giờ có một khuôn đích đã chốt: dựng từ block nào, địa chỉ tiếng Anh là gì, bản đồ lấy từ đâu — để các đợt dọn sau làm theo một bản đồ chung thay vì chọn lại từng trang.",
+  "scope_plain": "Lượt này chỉ ghi bản đồ và luật kiểm; đổi giao diện thật làm ở các đợt dọn theo nhóm trang.",
+  "decisions_plain": [
+    {"id": "d-20261023T010000Z-gp1", "p": "KHÔNG chạy bước phản biện trước khi trình — vì Mạnh đã tự chọn trên bảng có hình và không có giao diện nào đổi; đổi lại phần kiểm chỉ do người chấm độc lập làm sau, ở bước bằng chứng."}
+  ],
+  "analyst_plain": ""
+}
