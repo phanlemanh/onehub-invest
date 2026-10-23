@@ -9,7 +9,9 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 |--------|---------|
 | import-airbnb.mjs | Import snapshots (verify sha256, write staging tables) |
 | transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ |
-| transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers |
+| transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs) |
+| refresh-bait-gap.mjs | Bait gap P1 + registry sellers (xoá người bán không còn tin, audit) |
+| scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
 | reassign-areas.mjs | Upsert phường OSM (areas + polygon), point-in-polygon mọi listing VN, bỏ listing ngoài tỉnh, xoá area không phải phường OSM |
