@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 58bdd03f0ba9b5ddbe2e027867665fadc9a40fc9
+verified_commit: cb46cef6544db153f885d63904e5551b3ef3236a
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -206,3 +206,7 @@ Round 2: toàn bộ eval máy (E1-E7, E8a, E8b, E11) xanh và cả 5 lệnh suit
 ### Re-pin lần 1 — 2026-10-23, do gộp main ce4ad81 (037, PR #20–#23) trước khi mở PR
 run_id: repin-20261023T044033Z-63422
 sha: 58bdd03f0ba9b5ddbe2e027867665fadc9a40fc9 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths), E10 (E10 không khai paths) · AC không có chốt máy: AC-9, AC-10
+
+### Re-pin lần 2 — 2026-10-23, do gộp main cba11e4 (PR #23 ui-lint) trước khi merge
+run_id: repin-20261023T053640Z-56133
+sha: cb46cef6544db153f885d63904e5551b3ef3236a · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths), E10 (E10 không khai paths) · AC không có chốt máy: AC-9, AC-10
