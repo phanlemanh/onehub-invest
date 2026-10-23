@@ -44,7 +44,7 @@ Nguồn: `docs/adr/0008-remove-thailand-scope.md` · `docs/research/multi-market
 | Cổng | Cho ai | URL | Luật |
 |---|---|---|---|
 | Invest | nhà đầu tư, công khai, chỉ đọc | `/`, `/[country]/…`, `/listing/…`, `/yield`, … | không số AirDNA, không tầng A |
-| Ops | đội vận hành, bắt buộc đăng nhập (role ops/admin) | `/ops/**` | mỗi trang trả lời một câu hỏi; quản trị chỉ admin |
+| Ops | đội vận hành, bắt buộc đăng nhập (role ops/admin hoặc `OPS_EMAILS`) | `/ops/**` | mỗi trang trả lời một câu hỏi; quản trị chỉ admin |
 
 Không route nội bộ nào nằm ngoài `/ops`. Bản đồ route → trang: `.claude/skills/onehub-ui/routes.md`.
 
@@ -53,7 +53,7 @@ Nguồn: `docs/architecture/portals.md` · `docs/architecture/invest-portal-ia.m
 ## 5. Nguồn dữ liệu và SPL
 
 - Bảy nguồn gọi bằng mã **S01–S07** (cho thuê ngắn hạn, hiệu chuẩn, nhóm nội bộ, bản đồ, nhóm
-  công khai, rao vặt công khai, sàn BĐS). Bảng mã ↔ trạng thái: `docs/ROADMAP.md` §2.3.
+  mạng xã hội, rao vặt công khai, sàn BĐS). Bảng mã ↔ trạng thái: `docs/ROADMAP.md` §2.3.
 - Dòng chảy một chiều: nguồn → snapshot thô (bất biến) → `stg_*` → canonical (`sale_offers`,
   `listings`) → căn nhà → chỉ số tính sẵn → app/data-api chỉ đọc.
 - **Bậc giá**: P1 giá nội bộ (nhóm khép, kèm SĐT) là tín hiệu; P2 giá công khai là thước đo.

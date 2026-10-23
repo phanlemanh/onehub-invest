@@ -8,3 +8,13 @@
 {"ts":"2026-10-23T00:09:56Z","round":1,"evalId":"E8","run_id":"glossary-context-E8-20261023T000956Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs product-page"}
 {"ts":"2026-10-23T00:09:56Z","round":1,"evalId":"E11","run_id":"glossary-context-E11-20261023T000956Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs runner"}
 {"ts":"2026-10-23T00:09:57Z","round":1,"evalId":"E12","run_id":"glossary-context-E12-20261023T000956Z","exit_code":0,"cmd":"cd app && npm run test:lint-rules"}
+{"ts":"2026-10-23T00:14:27Z","round":2,"evalId":"E1","run_id":"glossary-context-E1-r2-20261023T001427Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs glossary"}
+{"ts":"2026-10-23T00:14:27Z","round":2,"evalId":"E2","run_id":"glossary-context-E2-r2-20261023T001427Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs w6"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E3","run_id":"glossary-context-E3-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs rebuild"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E4","run_id":"glossary-context-E4-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E5","run_id":"glossary-context-E5-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E6","run_id":"glossary-context-E6-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E7","run_id":"glossary-context-E7-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs naming-rule"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E8","run_id":"glossary-context-E8-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs product-page"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E11","run_id":"glossary-context-E11-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs runner"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E12","run_id":"glossary-context-E12-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && npm run test:lint-rules"}
