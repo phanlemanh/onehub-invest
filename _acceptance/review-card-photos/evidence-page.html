@@ -1,0 +1,193 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · review-card-photos</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Ảnh tin trên thẻ hàng duyệt /ops/review (dải ảnh + phóng to, nối loadReviewMedia)</h1><div class="sub">Trang hồ sơ · <span class="mono">review-card-photos</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Ảnh tin trên thẻ hàng duyệt /ops/review (dải ảnh + phóng to, nối loadReviewMedia)</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Người duyệt ở /ops/review cần nhìn ảnh tin để quyết: E1 từng ghi «đất» cho tin mà ảnh là nhà 4 tầng. Backend đã vào main ở PR #16 (loadReviewMedia, route /api/zalo-media chế độ snapshot). Việc này (Task 12 bản nhỏ, phiên điều phối làn merge giao 23/10) nối loadReviewMedia vào trang và hiện ảnh trên cả hai loại thẻ: «Cùng căn?» (mỗi bên Tin A, Tin B) và «Bổ sung dữ liệu»…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">5 mục để ngoài phạm vi · 3 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>9</b></span><span data-k="phep_do">Phép đo <b>10</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>2</b></span><span data-k="quyet_dinh_nguoi">người <b>0</b></span><span data-k="ma">Mã <b>9648a03</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Người duyệt ở /ops/review cần nhìn ảnh tin để quyết: E1 từng ghi «đất» cho tin mà ảnh là nhà 4 tầng. Backend đã vào main ở PR #16 (loadReviewMedia, route /api/zalo-media chế độ snapshot). Việc này (Task 12 bản nhỏ, phiên điều phối làn merge giao 23/10) nối loadReviewMedia vào trang và hiện ảnh trên cả hai loại thẻ: «Cùng căn?» (mỗi bên Tin A, Tin B) và «Bổ sung dữ liệu». Mỗi thẻ có dải ảnh nhỏ, bấm vào thì phóng to; có trạng thái không có ảnh và ảnh hỏng (URL fbcdn hết hạn). Ảnh tin là tầng A: chỉ admin thấy.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given admin mở `/ops/review` và một thẻ «Cùng căn?» mà `loadReviewMedia` trả ảnh cho cả hai bên, When trang render, Then dưới khối Tin A và khối Tin B mỗi bên có một dải ảnh với đúng số ảnh của bên đó, đúng thứ tự, mỗi ảnh có chữ thay thế nêu bên và số thứ tự.</li><li data-ac="AC-2"><b>AC-2</b> — Given admin và một thẻ «Bổ sung dữ liệu» có ảnh, When trang render, Then dưới đoạn tin có một dải ảnh với đúng số ảnh của tin đó.</li><li data-ac="AC-3"><b>AC-3</b> — Given một dải ảnh, When người duyệt bấm ảnh thứ n, Then một hộp thoại mở ảnh đó cỡ lớn, tiêu đề nêu bên (Tin A / Tin B / Tin) và «ảnh n/N», có nút trước/sau chuyển ảnh (tắt ở hai đầu) và đóng được.</li><li data-ac="AC-4"><b>AC-4</b> — Given một ảnh không tải được (URL gốc hết hạn), When trình duyệt báo lỗi ảnh, Then ô ảnh đó chuyển sang trạng thái «Ảnh hỏng» (biểu tượng + chữ, không còn ảnh vỡ) và vẫn bấm được; trong hộp thoại, ảnh hỏng hiện câu báo URL gốc có thể đã hết hạn thay cho ảnh.</li><li data-ac="AC-5"><b>AC-5</b> — Given một bên/tin mà `loadReviewMedia` trả mảng rỗng, When thẻ render, Then vùng ảnh hiện «Không có ảnh»; Given không có dữ liệu ảnh cho thẻ (người xem không phải admin), Then thẻ không có vùng ảnh nào và không có thẻ `&lt;img&gt;` ảnh tin.</li><li data-ac="AC-6"><b>AC-6</b> — Given ảnh từ URL ngoài (fbcdn, zdn, Chợ Tốt), When thẻ render, Then thẻ `&lt;img&gt;` mang `referrerpolicy=&quot;no-referrer&quot;` và `loading=&quot;lazy&quot;`; ảnh lưu trên máy đi qua `/api/zalo-media`.</li><li data-ac="AC-7"><b>AC-7</b> — Given dev server local và DB local có hàng duyệt thật, When một tài khoản admin thử và một tài khoản ops thử (tạo tạm, xoá sau) cùng tải `/ops/review`, Then HTML của admin chứa ảnh tin (URL fbcdn của Tin A, URL Chợ Tốt của Tin B), HTML của ops không chứa URL ảnh tin nào và vẫn tải đủ thẻ. (cross-layer)</li><li data-ac="AC-8"><b>AC-8</b> — Given toàn bộ thay đổi, When chạy typecheck, lint (gồm luật onehub-ui), bộ test của app và design gate, Then tất cả xanh, không thêm dòng nào vào baseline `eslint-suppressions.json`.</li><li data-ac="AC-9"><b>AC-9</b> — Given admin trên `/ops/review` thật, When chụp vùng thẻ có ảnh ở chế độ sáng, tối và bề rộng 390px, rồi mở hộp thoại phóng to, Then cả hai loại thẻ hiện dải ảnh, hộp thoại hiện ảnh lớn, không có thanh cuộn ngang trang.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 2</button><button class="btn" data-loc="may" aria-pressed="false">Máy 2</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 0</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261023T032000Z-1"><b>2026-10-23</b> · Máy · descope · S1 — KHÔNG dựng lại cả trang /ops/review theo solution-agents-5 ở PR này; chỉ nối loadReviewMedia + dải ảnh và hộp phóng to trên thẻ hiện có.<div class="note">Phiên điều phối làn merge giao Task 12 dạng «PR nhỏ riêng: nối loadReviewMedia vào page.tsx, referrerPolicy no-referrer + onError»; routes.md mô tả Task 12 đầy đủ là dựng lại trang — việc lớn hơn nhiều.</div></li><li data-loai="may" data-id="d-20261023T032000Z-2"><b>2026-10-23</b> · Máy · approach · S1 — Dải ảnh dùng @reui/c-attachment-3 (Attachment dọc + AttachmentTrigger), phóng to bằng shadcn Dialog; ảnh hỏng dùng Attachment state=error.<div class="note">ReUI không có block lightbox; c-attachment-3 là ví dụ dải ảnh duy nhất khớp, có sẵn trạng thái error và nút bấm phủ cả ô.</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E1-20261023T030044Z</td><td class="mono">2026-10-23T03:00:44Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E2-20261023T030046Z</td><td class="mono">2026-10-23T03:00:46Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E3-20261023T030047Z</td><td class="mono">2026-10-23T03:00:47Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E4-20261023T030049Z</td><td class="mono">2026-10-23T03:00:49Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E5-20261023T030051Z</td><td class="mono">2026-10-23T03:00:51Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E6-20261023T030053Z</td><td class="mono">2026-10-23T03:00:53Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E7-20261023T030100Z</td><td class="mono">2026-10-23T03:01:00Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-8</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E8-20261023T030111Z</td><td class="mono">2026-10-23T03:01:11Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E9-20261023T030123Z</td><td class="mono">2026-10-23T03:01:23Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-9</td><td>ui-check</td><td><span class="badge pass">PASS</span></td><td class="mono">review-card-photos-E10-20261023T030524Z</td><td class="mono">2026-10-23T03:05:24Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · test</h3><p class="crit">AC-1: Given admin mở `/ops/review` và một thẻ «Cùng căn?» mà `loadReviewMedia` trả ảnh cho cả hai bên, When trang render, Then dưới khối Tin A và khối Tin B mỗi bên có một dải ảnh với đúng số ảnh của bên đó, đúng thứ tự, mỗi ảnh có chữ thay thế nêu bên và số thứ tự.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E1-20261023T030044Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app_ui</b></span><span>verified_at <b>2026-10-23T03:00:44Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ cd app &amp;&amp; npm test
+✔ AC-1 thẻ Cùng căn?: Tin A và Tin B mỗi bên một dải, đúng số ảnh, đúng thứ tự, alt nêu bên + số (213.060917ms)
+ℹ tests 34
+ℹ pass 34
+ℹ fail 0
+Đối chiếu mã test: so src theo thứ tự [FB1, FB2, FB3] cho Tin A, [CHOTOT] cho Tin B; alt «Tin A — ảnh 1..3», «Tin B — ảnh 1».</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · test</h3><p class="crit">AC-2: Given admin và một thẻ «Bổ sung dữ liệu» có ảnh, When trang render, Then dưới đoạn tin có một dải ảnh với đúng số ảnh của tin đó.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E2-20261023T030046Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app_ui</b></span><span>verified_at <b>2026-10-23T03:00:46Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ cd app &amp;&amp; npm test
+✔ AC-2 thẻ Bổ sung dữ liệu: một dải dưới đoạn tin, đúng số ảnh (9.612875ms)
+ℹ tests 34
+ℹ pass 34
+ℹ fail 0
+Đối chiếu mã test: đúng 1 group «Ảnh …» trên thẻ agent_output, 2 img cho media.offer 2 ảnh.</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · test</h3><p class="crit">AC-3: Given một dải ảnh, When người duyệt bấm ảnh thứ n, Then một hộp thoại mở ảnh đó cỡ lớn, tiêu đề nêu bên (Tin A / Tin B / Tin) và «ảnh n/N», có nút trước/sau chuyển ảnh (tắt ở hai đầu) và đóng được.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E3-20261023T030047Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app_ui</b></span><span>verified_at <b>2026-10-23T03:00:47Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ cd app &amp;&amp; npm test
+✔ AC-3 bấm ảnh n mở hộp thoại «ảnh n/N»; trước/sau chuyển ảnh, tắt ở hai đầu (56.360667ms)
+ℹ tests 34
+ℹ pass 34
+ℹ fail 0
+Đối chiếu mã test: chưa bấm thì dialog null (should-NOT-fire); bấm ảnh 2 → «Tin A · ảnh 2/3» + src ảnh 2; «Ảnh sau» tắt ở 3/3, «Ảnh trước» tắt ở 1/3.
+Vế «đóng được» của AC-3 test không kiểm; đã chứng ở E10 (Esc đóng hộp, có nút Close) — xem Analyst.</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · test</h3><p class="crit">AC-4: Given một ảnh không tải được (URL gốc hết hạn), When trình duyệt báo lỗi ảnh, Then ô ảnh đó chuyển sang trạng thái «Ảnh hỏng» (biểu tượng + chữ, không còn ảnh vỡ) và vẫn bấm được; trong hộp thoại, ảnh hỏng hiện câu báo URL gốc có thể đã hết hạn thay cho ảnh.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E4-20261023T030049Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app_ui</b></span><span>verified_at <b>2026-10-23T03:00:49Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ cd app &amp;&amp; npm test
+✔ AC-4 ảnh lỗi tải → ô «Ảnh hỏng», vẫn bấm được; hộp thoại báo hết hạn; ảnh khác giữ nguyên (20.765459ms)
+ℹ tests 34
+ℹ pass 34
+ℹ fail 0
+Đối chiếu mã test: sự kiện error trên img 1 → dải chỉ còn img 2 (should-NOT-fire giữ nguyên), 1 ô data-state=error chữ «Ảnh hỏng»; bấm ô hỏng mở hộp có câu «Ảnh không tải được — URL gốc có thể đã hết hạn», không có img.</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · test</h3><p class="crit">AC-5: Given một bên/tin mà `loadReviewMedia` trả mảng rỗng, When thẻ render, Then vùng ảnh hiện «Không có ảnh»; Given không có dữ liệu ảnh cho thẻ (người xem không phải admin), Then thẻ không có vùng ảnh nào và không có thẻ `&lt;img&gt;` ảnh tin.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E5-20261023T030051Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app_ui</b></span><span>verified_at <b>2026-10-23T03:00:51Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ cd app &amp;&amp; npm test
+✔ AC-5 mảng rỗng → «không có ảnh»; không có dữ liệu ảnh (không phải admin) → 0 vùng ảnh, 0 img (10.606167ms)
+ℹ tests 34
+ℹ pass 34
+ℹ fail 0
+Đối chiếu mã test: offer_a [] → «Tin A: không có ảnh», không group; media undefined cho cả thẻ Cùng căn? lẫn Bổ sung dữ liệu → 0 group, 0 img, không có chữ «không có ảnh».</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · test</h3><p class="crit">AC-6: Given ảnh từ URL ngoài (fbcdn, zdn, Chợ Tốt), When thẻ render, Then thẻ `&lt;img&gt;` mang `referrerpolicy=&quot;no-referrer&quot;` và `loading=&quot;lazy&quot;`; ảnh lưu trên máy đi qua `/api/zalo-media`.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E6-20261023T030053Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app_ui</b></span><span>verified_at <b>2026-10-23T03:00:53Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ cd app &amp;&amp; npm test
+✔ AC-6 ảnh ngoài: referrerpolicy=no-referrer + lazy; ảnh local đi qua /api/zalo-media, không gắn policy thừa (3.314875ms)
+ℹ tests 34
+ℹ pass 34
+ℹ fail 0
+Đối chiếu mã test: fbcdn + Chợ Tốt mang referrerpolicy no-referrer + loading lazy; ảnh local src ^/api/zalo-media?snapshot= không có referrerpolicy; toàn trang đúng 3 src loader trả (should-NOT-fire).</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-7: Given dev server local và DB local có hàng duyệt thật, When một tài khoản admin thử và một tài khoản ops thử (tạo tạm, xoá sau) cùng tải `/ops/review`, Then HTML của admin chứa ảnh tin (URL fbcdn của Tin A, URL Chợ Tốt của Tin B), HTML của ops không chứa URL ảnh tin nào và vẫn tải đủ thẻ. (cross-layer)</p>
+<div class="kv"><span>run_id <b>review-card-photos-E7-20261023T030100Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.review_photos_smoke</b></span><span>verified_at <b>2026-10-23T03:01:00Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ BASE_URL=http://localhost:3456 node scripts/smoke-review-photos.mjs   (dev server có cwd …/adoring-moser-77aa4f/app; DB one-invest-db :5433)
+thẻ mẫu #13: Tin A scontent-ord5-2.xx.fbcdn.net · Tin B cdn.chotot.com
+ok   admin tải /ops/review (HTTP 200)
+ok   HTML admin có ảnh Tin A (URL gốc từ stg_zalo_posts.media)
+ok   HTML admin có ảnh Tin B (image_url Chợ Tốt)
+ok   ảnh ngoài trong HTML admin mang referrerpolicy=no-referrer
+ok   ops tải /ops/review (HTTP 200)
+ok   HTML ops vẫn có hàng duyệt
+ok   should-NOT-fire: HTML ops không có URL ảnh của thẻ mẫu
+ok   should-NOT-fire: HTML ops không có URL ảnh tin nào (fbcdn/zdn/chotot/zalo-media)
+dọn: còn 0 tài khoản thử
+SMOKE PASS (rpsmoke83068be1)
+Kiểm độc lập của người chấm (script tạm, tài khoản tiền tố graderchk…, đã xoá, còn 0): admin 16 thẻ h3, 67 img ảnh tin; ops 16 thẻ h3, 0 img, 0 lần nhắc URL ảnh; review_queue 16 dòng → ops vẫn tải đủ thẻ.</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · test</h3><p class="crit">AC-8: Given toàn bộ thay đổi, When chạy typecheck, lint (gồm luật onehub-ui), bộ test của app và design gate, Then tất cả xanh, không thêm dòng nào vào baseline `eslint-suppressions.json`.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E8-20261023T030111Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app</b></span><span>verified_at <b>2026-10-23T03:01:11Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ cd app &amp;&amp; npx tsc --noEmit &amp;&amp; npm run lint
+&gt; eslint &amp;&amp; node eslint-plugin-onehub-ui/check-bare-disables.mjs
+investment-simulator.tsx 142:6 warning react-hooks/exhaustive-deps
+user-event-beacon.tsx 51:6 warning react-hooks/exhaustive-deps
+use-file-upload.ts 266:5 warning react-hooks/exhaustive-deps
+✖ 3 problems (0 errors, 3 warnings)   (3 cảnh báo cố ý có sẵn, không thuộc file đổi)
+tsc --noEmit: không in lỗi nào.
+git diff main...HEAD -- app/eslint-suppressions.json: rỗng → baseline không tăng.</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-8: Given toàn bộ thay đổi, When chạy typecheck, lint (gồm luật onehub-ui), bộ test của app và design gate, Then tất cả xanh, không thêm dòng nào vào baseline `eslint-suppressions.json`.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E9-20261023T030123Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.design.gate</b></span><span>verified_at <b>2026-10-23T03:01:23Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">$ node …/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx app/src/components/ops/review-card.tsx
+&quot;target&quot;: &quot;app/src/components/ops/review-card.tsx&quot;, &quot;mode&quot;: &quot;dom&quot;, &quot;verdict&quot;: &quot;PASS&quot;, &quot;p0_count&quot;: 0, &quot;blocking&quot;: []
+findings: single-font (warning, P2)
+design-gate chỉ nhận đối số vị trí CUỐI làm target → review-photos.tsx không được đo ở lệnh trên.
+Lượt bổ sung (run-log, cùng evalId E9) review-card-photos-E9-20261023T030139Z: design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx
+&quot;target&quot;: &quot;app/src/components/ops/review-photos.tsx&quot;, &quot;mode&quot;: &quot;dom&quot;, &quot;verdict&quot;: &quot;PASS&quot;, &quot;p0_count&quot;: 0, &quot;blocking&quot;: [], &quot;findings&quot;: []</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · ui-check</h3><p class="crit">AC-9: Given admin trên `/ops/review` thật, When chụp vùng thẻ có ảnh ở chế độ sáng, tối và bề rộng 390px, rồi mở hộp thoại phóng to, Then cả hai loại thẻ hiện dải ảnh, hộp thoại hiện ảnh lớn, không có thanh cuộn ngang trang.</p>
+<div class="kv"><span>run_id <b>review-card-photos-E10-20261023T030524Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:dev_server.start</b></span><span>verified_at <b>2026-10-23T03:05:24Z</b></span></div>
+<div class="shot slide" data-n="5"><div class="frame"><img src="evidence/E10-step1.png" alt="frame 1" loading="lazy"></div><div class="frame"><img src="evidence/E10-step2.png" alt="frame 2" loading="lazy"></div><div class="frame"><img src="evidence/E10-step3.png" alt="frame 3" loading="lazy"></div><div class="frame"><img src="evidence/E10-step4.png" alt="frame 4" loading="lazy"></div><div class="frame"><img src="evidence/E10-step5.png" alt="frame 5" loading="lazy"></div></div><div class="slidebar"><button class="btn" data-toggle>⏸ Tạm dừng</button><span>5 frame · chạy như GIF</span></div>
+<pre class="out">trước khi làm mờ (sáng 1280, đã cuộn hết vùng cuộn để ảnh lazy tải): 26 dải (24 dải Tin A/Tin B trên 12 thẻ Cùng căn?, 2 dải «Tin»), 67 img ảnh tin, đã tải thật (complete &amp;&amp; naturalWidth &gt; 0) 67, ô «Ảnh hỏng» 0; mọi img referrerpolicy no-referrer
+step3: title «Tin A · ảnh 1/4», img trong hộp tải thật (naturalWidth &gt; 0), nút [Ảnh trước(disabled), Ảnh sau, Close]; Esc → hộp đóng (dialog-content biến mất)
+step4 (tối): 67 img, 15 đã tải quanh vùng nhìn (lazy, chưa cuộn), ô «Ảnh hỏng» 0
+step5 (390px): document.documentElement.scrollWidth 390, innerWidth 390, body.scrollWidth 390, vùng cuộn chính scrollWidth 390 = clientWidth 390; dải Tin A overflow-x auto (scrollWidth 420 trong cột 158)
+mạng (evidence/E10-network.txt): 0 fetch/xhr tới origin app (trang SSR, bấm/trước/sau/Esc không gọi mạng), 3 document /ops/review thành công, 0 request lỗi, 0 console error/warning, 0 exception</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Baseline khong do: E1–E6 trỏ vào `app/tests/review-photos.test.tsx`, E7 vào `scripts/smoke-review-photos.mjs`, E9 vào `review-photos.tsx` — các tệp này chưa có trên diffBase (main), chạy trên mã cũ không chứng gì. E8 (tsc + lint) là hàng rào hồi quy, không đo baseline.
+Thay cho baseline, người chấm thử đột biến trên worktree tạm (`git worktree add --detach`, node_modules symlink, đã gỡ và prune): mỗi đột biến làm đỏ đúng ca mang nhãn AC tương ứng, các ca khác vẫn xanh (33/34).
+- bỏ `referrerPolicy` → ca AC-6 đỏ; bỏ `loading=&quot;lazy&quot;` → ca AC-6 đỏ
+- bỏ `onError` trên img → ca AC-4 đỏ; đánh dấu hỏng cả dải khi một ảnh lỗi → ca AC-4 đỏ
+- bỏ `disabled` ở hai đầu → ca AC-3 đỏ
+- bỏ `&lt;ReviewPhotos&gt;` khỏi thẻ Bổ sung dữ liệu → ca AC-2 đỏ
+- `images` undefined vẫn render vùng ảnh → ca AC-5 đỏ
+- `stripEvidenceImages` không xoá `image_url` → ca «AC-7 (review-card-photos) stripEvidenceImages» trong review-media.test đỏ
+- Không chạy được: bỏ hẳn lời gọi `stripEvidenceImages` trong `page.tsx` (cần dev server thứ hai từ worktree tạm, bị cấm). Suy luận: `evidence.offer_b.image_url` (Chợ Tốt) khi đó sẽ theo props của client component vào HTML của ops và dòng should-NOT-fire `cdn.chotot.com` của E7 sẽ bắt.
+Chỗ eval/test không khớp trọn hợp đồng:
+- AC-3 nói hộp thoại «đóng được», nhưng ca AC-3 jsdom không kiểm việc đóng; E10 bù (Esc đóng hộp, có nút Close). Nên thêm một assert đóng vào ca AC-3.
+- E9 nối `paths:` làm đối số, nhưng design-gate.mjs chỉ lấy đối số vị trí cuối → lệnh đúng như evals.yaml chỉ đo `review-card.tsx`. Người chấm chạy thêm một lượt cho `review-photos.tsx` (PASS, 0 finding). Nên tách E9 thành mỗi file một lệnh.
+- Smoke E7 kiểm «HTML ops vẫn có hàng duyệt» bằng regex `/Cùng căn|Review Queue/`, không đếm thẻ; AC-7 nói «vẫn tải đủ thẻ». Kiểm độc lập của người chấm: ops 16 thẻ = admin 16 = review_queue 16.
+Non-discriminating evals: none measured green-on-both — baseline lane not run (see «Baseline khong do»); mutation probes above show E2–E6 and the strip helper discriminate.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: mọi eval xanh (E1–E10); không trả về implementation.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Dựng lại cả trang `/ops/review` theo `solution-agents-5` (bảng dữ liệu lọc theo loại thẻ + độ tin, sheet chi tiết) — phần lớn của Task 12 trong `routes.md`, để vòng sau; PR này giữ dáng thẻ hiện có.</li><li data-loai="ngoai">Sửa các vi phạm ReUI có sẵn trong `review-card.tsx` (nút tự vẽ, `text-[10px]`, khung `div` viền tay) — thuộc đợt dọn trang này cùng việc dựng lại.</li><li data-loai="ngoai">Proxy ảnh remote qua server, tải ảnh fbcdn về máy, hay làm mới URL hết hạn.</li><li data-loai="ngoai">Mở ảnh cho role `ops` (cần đổi cả route lẫn loader — hồ sơ review-media-backend).</li><li data-loai="ngoai">Phóng to bằng cử chỉ (pinch/zoom), tải ảnh xuống, xoay ảnh.</li><li data-loai="gioi-han">Dữ liệu local hôm nay chưa có ảnh lưu trên máy (0 dòng `media_files`): nhánh ảnh local (`/api/zalo-media?snapshot=…`, không gắn referrerpolicy) chỉ được chứng ở test jsdom (E6), chưa thấy trên trang thật.</li><li data-loai="gioi-han">Trạng thái «Ảnh hỏng» (AC-4) chỉ chứng ở jsdom (E4) và qua đột biến: lúc chấm, cả 67 URL fbcdn/Chợ Tốt còn sống nên E10 không gặp ô hỏng nào trên trang thật.</li><li data-loai="gioi-han">E9 (design gate) chạy ở `--mode dom` trên tệp `.tsx`, tức đọc mã nguồn như HTML: className/prop tính toán không được dựng, nên «0 P0» là tín hiệu yếu cho a11y/contrast; phần nhìn thật nằm ở E10.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">9648a03e06357edafe1d6f63e13df661ba267290</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
