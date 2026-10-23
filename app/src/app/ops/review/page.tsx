@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
+import { loadReviewMedia, stripEvidenceImages } from "@/lib/ops/review-media";
 import { ReviewCard, type ReviewItem } from "@/components/ops/review-card";
 import { Badge } from "@/components/reui/badge";
 
@@ -40,12 +41,16 @@ export default async function ReviewPage() {
     id: r.id,
     item_type: r.item_type,
     title: r.title,
-    evidence: r.evidence as ReviewItem["evidence"],
+    // URL ảnh không đi trong evidence — ảnh tới thẻ chỉ qua loadReviewMedia (admin).
+    evidence: stripEvidenceImages(r.evidence),
     ai_suggestion: r.ai_suggestion,
     ai_reasoning: r.ai_reasoning,
     ai_confidence: r.ai_confidence ? Number(r.ai_confidence) : null,
     status: r.status,
   }));
+
+  // Ảnh tin (tầng A): {} khi không phải admin; một truy vấn cho cả hàng duyệt.
+  const media = await loadReviewMedia(rows, user);
 
   const pending = items.filter((i) => i.status === "pending");
   const decided = items.filter((i) => i.status !== "pending");
@@ -76,7 +81,7 @@ export default async function ReviewPage() {
       ) : (
         <>
           {pending.map((item) => (
-            <ReviewCard key={item.id} item={item} />
+            <ReviewCard key={item.id} item={item} media={media[item.id]} />
           ))}
           {decided.length > 0 && (
             <>
@@ -84,7 +89,7 @@ export default async function ReviewPage() {
                 Đã quyết ({decided.length})
               </h2>
               {decided.map((item) => (
-                <ReviewCard key={item.id} item={item} />
+                <ReviewCard key={item.id} item={item} media={media[item.id]} />
               ))}
             </>
           )}
