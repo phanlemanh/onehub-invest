@@ -5,10 +5,13 @@
 # Dùng: bash scripts/check-lo-trinh.sh static|mutation      (AG=<gốc gói acceptance-gate> để chọn bản kit)
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-AG="${AG:-$(ls -d "$HOME"/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/*/ 2>/dev/null | sort -V | tail -1)}"
+# Bản kit mà 4 tệp lộ trình được chép từ (lo-trinh-khoi-tao 23/10). Lên kit mới: chép lại rồi đổi số này.
+KIT_VER="2.33.1"
+AG="${AG:-$HOME/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/$KIT_VER}"
 AG="${AG%/}"
 LT="docs/plan/lo-trinh.json"
 SCOPES=(docs/plan/pham-vi-phan-loai-2310.md docs/plan/pham-vi-cam-mau-2310.md)
+EXPECT=(37 14)   # số mã của từng bản phạm vi lúc cắt — răng phủ không tự kiểm số này
 fail=0
 ok()  { echo "ok   $*"; }
 bad() { echo "FAIL $*"; fail=1; }
@@ -27,10 +30,11 @@ static() {
     ok "settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền"
   else bad "settings.json: thiếu road-map hoặc đổi thứ khác ngoài enabledPlugins"; fi
   # 2. config
-  if grep -qE '^lo_trinh:' _acceptance/config.yaml && grep -qE '^  tep: docs/plan/lo-trinh.json' _acceptance/config.yaml; then
-    ok "config: lo_trinh.tep = $LT"; else bad "config: thiếu lo_trinh.tep"; fi
-  if grep -qE '^\s+- "LO-TRINH.html"' _acceptance/config.yaml; then ok "config: LO-TRINH.html trong t1_skip_globs"
-  else bad "config: LO-TRINH.html chưa miễn trừ T1"; fi
+  tep="$(node -e 'const k=require("./scripts/lo-trinh-khoa.cjs");const r=k.cacTepTuConfig(require("fs").readFileSync("_acceptance/config.yaml","utf8"));console.log(r?r.tep.join(","):"")')"
+  if [ "$tep" = "$LT" ]; then ok "config: lo_trinh.tep = $LT (đọc bằng bộ đọc khoá của kit)"; else bad "config: lo_trinh.tep = '$tep'"; fi
+  skip="$(awk '/^  t1_skip_globs:/{f=1;next} f&&/^  [^ -]/{f=0} f' _acceptance/config.yaml)"
+  if echo "$skip" | grep -qE '^\s+- "LO-TRINH.html"'; then ok "config: LO-TRINH.html trong t1_skip_globs"
+  else bad "config: LO-TRINH.html không nằm trong khối t1_skip_globs"; fi
   # 3. khởi tạo chạy lại không đổi gì
   out="$(node "$AG/scripts/lo-trinh-khoi-tao.mjs" --root . 2>&1)"
   if echo "$out" | grep -q 'lộ trình đã sẵn — không đổi gì'; then ok "lo-trinh-khoi-tao chạy lại: không đổi gì"
@@ -40,11 +44,13 @@ static() {
   if [ $rc -eq 0 ] && echo "$pm" | grep -q 'LO-TRINH.html khớp'; then ok "product-map --check: PRODUCT-MAP + LO-TRINH khớp"
   else bad "product-map --check: $pm"; fi
   # 5. răng phủ từng đợt
-  for s in "${SCOPES[@]}"; do
+  for k in "${!SCOPES[@]}"; do
+    s="${SCOPES[$k]}"; want="${EXPECT[$k]}"
     r="$(node "$AG/scripts/cat-luot.mjs" --root . --pham-vi "$s" --lo-trinh "$LT" 2>&1)"; rc=$?
-    n="$(echo "$r" | grep -c ' → ')"
-    if [ $rc -eq 0 ] && ! echo "$r" | grep -qE '^(lỗi|cảnh báo):'; then ok "răng phủ $(basename "$s"): xanh, $n mã, 0 lỗi, 0 cảnh báo"
-    else bad "răng phủ $(basename "$s"): $(echo "$r" | grep -E '^(lỗi|cảnh báo):' | head -3)"; fi
+    n="$(echo "$r" | grep -c ' → ')"; m="$(grep -cE '^- `' "$s")"
+    if [ $rc -eq 0 ] && ! echo "$r" | grep -qE '^(lỗi|cảnh báo):' && [ "$n" = "$want" ] && [ "$m" = "$want" ]; then
+      ok "răng phủ $(basename "$s"): xanh, $n mã (đúng $want), 0 lỗi, 0 cảnh báo"
+    else bad "răng phủ $(basename "$s"): rc=$rc, phủ $n mã, phạm vi $m mã, cần $want; $(echo "$r" | grep -E '^(lỗi|cảnh báo):' | head -3)"; fi
   done
   # 6. bản chép kit đúng nguyên
   for f in scripts/lo-trinh.mjs scripts/ho-so-tom-tat.cjs scripts/gio-may.mjs lib/chan-lo-trinh.cjs; do
@@ -60,8 +66,16 @@ static() {
 }
 
 mutation() {
+  for f in "$LT" "${SCOPES[@]}"; do [ -f "$ROOT/$f" ] || { echo "FAIL thiếu $f — thước đột biến không có gì để đo"; echo "LO-TRINH MUTATION FAIL"; exit 1; }; done
   tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
   caught=0; total=0
+  # ca đối chứng: bản nguyên vẹn phải XANH, nếu không thì «đỏ» của các ca dưới vô nghĩa
+  d="$tmp/c0"; mkdir -p "$d/docs/plan"; cp "$ROOT/docs/plan/"*.md "$d/docs/plan/"; cp "$ROOT/$LT" "$d/$LT"
+  (cd "$d" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm t)
+  for s in "${SCOPES[@]}"; do
+    node "$AG/scripts/cat-luot.mjs" --root "$d" --pham-vi "$s" --lo-trinh "$LT" >/dev/null 2>&1 || { echo "FAIL đối chứng: bản nguyên vẹn đỏ ở $s"; echo "LO-TRINH MUTATION FAIL"; exit 1; }
+  done
+  echo "ok   đối chứng: bản nguyên vẹn xanh"
   run_case() { # $1 tên, $2 đoạn node sửa j (lo-trinh)
     total=$((total+1)); d="$tmp/c$total"; mkdir -p "$d/docs/plan"
     cp "$ROOT/docs/plan/"*.md "$d/docs/plan/"
