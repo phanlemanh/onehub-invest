@@ -99,6 +99,8 @@ executors:
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
+    # backfill-zalo-media-v3 (PL32) — chỉ đọc DB local :5433, snapshot v3 giả trong thư mục tạm
+    zalo_media_v3_check: "cd pipeline && node scripts/backfill-v3-check.mjs"
     # review-media-backend — AC-8 cần DB local :5433 (docker one-invest-db); mọi dòng tạo trong giao dịch rồi ROLLBACK
     review_media_roundtrip: "cd app && node --import tsx scripts/review-media-roundtrip.ts"
     review_media_no_cloud: "node scripts/check-review-media-local-only.mjs"
