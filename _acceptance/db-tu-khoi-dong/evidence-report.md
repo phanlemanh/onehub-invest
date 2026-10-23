@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 23c060af3893cabbef0a44ce10654f1a495c1fcb
+verified_commit: 10395081e79cf615d4a4a479419e9014ff0dd416
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -174,3 +174,7 @@ Round 2: E1-E6, E8, E9 đạt trên commit 40fb809 sau khi sửa AC-6 (chờ doc
 ### Re-pin lần 1 — 2026-10-23, do hoá cũ do gộp main (ZC3) vào nhánh sau chữ ký
 run_id: repin-20261023T101730Z-24112
 sha: 23c060af3893cabbef0a44ce10654f1a495c1fcb · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7 · AC không có chốt máy: AC-7
+
+### Re-pin lần 2 — 2026-10-23, do hoá cũ do chép khuôn opportunity-template cho CI và gộp main
+run_id: repin-20261023T103419Z-29764
+sha: 10395081e79cf615d4a4a479419e9014ff0dd416 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7 · AC không có chốt máy: AC-7
