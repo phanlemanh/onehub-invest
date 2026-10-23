@@ -84,8 +84,14 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
   test("OP-AC-2 trang /ops và Thu thập render được, nói «Độ tươi chỉ đo ở máy local»", async () => {
     needDb()
     const [ops, col] = await renderBoth()
-    for (const [name, h] of [["/ops", ops], ["/ops/collections", col]] as const) {
-      assert.ok(h.includes("Độ tươi chỉ đo ở máy local"), `${name} thiếu câu chỉ-đo-ở-local`)
+    const TEXT = "Độ tươi chỉ đo ở máy local"
+    for (const [name, h, title] of [["/ops", ops, "Tổng quan"], ["/ops/collections", col, "Thu thập"]] as const) {
+      // Vị trí 1 — thông báo có tên: đúng MỘT tiêu đề Alert mang câu này.
+      const alerts = [...h.matchAll(/data-slot="alert-title"[^>]*>([^<]*)</g)].map((m) => m[1])
+      assert.deepEqual(alerts.filter((t) => t === TEXT), [TEXT], `${name} phải có đúng một thông báo «${TEXT}»`)
+      // Vị trí 2 — đầu trang: câu nằm giữa tiêu đề trang và thông báo (dòng thống kê của PageHeader).
+      const head = h.slice(h.indexOf(`>${title}<`), h.indexOf('data-slot="alert-title"'))
+      assert.ok(head.includes(TEXT), `${name}: đầu trang (trước thông báo) phải mang «${TEXT}»`)
       assert.ok(!h.includes("Chưa có nguồn nào"), `${name} không được nói «Chưa có nguồn nào» khi chỉ là thiếu bảng`)
       assert.deepEqual(summaries(h), ["0/0", "0/0"])
     }
