@@ -21,3 +21,10 @@ evals:
     cmd: config:executors.script.zalo_media_backfill
     expected: "exit 0; stdout in 'snapshot zalo-agent: N (v2+: M) · bài có ảnh trong raw v2+: K · chưa nạp: 0 · stg_zalo_posts có media_files: R'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; 0 fail; ca 'gọi qua symlink (như ~/dev/one-invest) main vẫn chạy — không thoát 0 im lặng' CHẠY và xanh (should-NOT-fire: không được thoát 0 khi thư mục snapshots không tồn tại)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

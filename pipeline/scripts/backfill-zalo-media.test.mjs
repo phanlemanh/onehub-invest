@@ -2,9 +2,11 @@
 // meta.kev, giữ meta.mediaFiles), không chỉ v2. Chỉ đọc thư mục tạm, không chạm DB —
 // vòng nạp thật qua importer nằm ở media-files-roundtrip.mjs.
 import { strict as assert } from "node:assert";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
 import { gzipSync } from "node:zlib";
 
@@ -47,4 +49,13 @@ test("postsWithMedia đọc được bài có ảnh trong snapshot v3 (có meta.
   const s3 = snaps.find((s) => s.dir === v3);
   assert.ok(s3, "snapshot v3 phải được xét");
   assert.deepEqual(await postsWithMedia(s3.dir, s3.manifest), ["v3-p1"]);
+});
+
+test("gọi qua symlink (như ~/dev/one-invest) main vẫn chạy — không thoát 0 im lặng", () => {
+  const link = join(root, "pipeline-link");
+  symlinkSync(join(dirname(fileURLToPath(import.meta.url)), ".."), link);
+  // thư mục snapshots không tồn tại → main phải ném lỗi trước khi mở DB
+  const r = spawnSync("node", [join(link, "backfill-zalo-media.mjs"), "--check", join(root, "khong-co")], { encoding: "utf8" });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stderr, /không thấy thư mục snapshots/);
 });

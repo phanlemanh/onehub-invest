@@ -9,11 +9,11 @@
 //   --check: chỉ đo, không ghi — exit 1 khi còn bài có ảnh chưa nạp.
 //   snapshots-dir mặc định $SNAPSHOTS_DIR hoặc ../collector/snapshots.
 import { readFile, readdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { gunzipSync } from "node:zlib";
 import { join, dirname } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -101,8 +101,10 @@ async function main(args) {
   console.log(`backfill xong: import lại ${todo.length} snapshot v2+`);
 }
 
-// chỉ chạy khi gọi trực tiếp — test import các hàm trên mà không chạm DB
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// chỉ chạy khi gọi trực tiếp — test import các hàm trên mà không chạm DB. So realpath:
+// gọi qua symlink (~/dev/one-invest) thì argv[1] giữ đường symlink còn import.meta.url
+// đã resolve — so chuỗi thô sẽ bỏ main và --check thoát 0 im lặng.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main(process.argv.slice(2)).catch((e) => {
     console.error(e);
     process.exit(1);
