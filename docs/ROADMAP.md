@@ -62,6 +62,8 @@ agent/      onehub-ai-agent (kiến trúc chốt §3.5-3.6)
 pipeline/ db/ docs/ tools/sync-public (overlay sanitise)
 ```
 `~/dev/one-invest` = symlink → `~/dev/onehub-invest` (launchd cũ chạy được).
+DB local `one-invest-db` (PostGIS :5433 trên colima) tự chạy lại khi Docker/máy khởi động lại:
+`restart: unless-stopped` trong `db/docker-compose.yml` (2026-10-23, AU7) — kiểm `bash scripts/check-db-autostart.sh live`.
 Public mirrors LIVE: onehub-invest-app + onehub-data-api.
 
 ### 2.2 Pipeline dữ liệu 5 tầng
@@ -233,6 +235,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V5 | Tài khoản ops thử chỉ ở DB local (`scripts/dev-ops-account.mjs`) — máy tự đăng nhập dev để chụp/ui-check `/ops/**` | ✅ 2026-10-22 |
 | V6 | Giảm hỏi quyền ngoài cổng: bỏ luật ask rộng, rào push main = branch protection GitHub (ngang crm/kit) — `_acceptance/narrow-ask-rules` | ✅ Cổng 2 ký 23/10 — PR #23; branch protection main bật 23/10 |
 | V7 | Cloud sync nguyên tử — prod không còn cửa sổ trống, không xoá `saved_markets`, ngày đúng — `_acceptance/cloud-sync-atomic` | 🔄 PR #24 — Cổng 2 ký 23/10; migration 038 ĐÃ áp cloud 23/10; chờ merge |
+| V9 | DB local tự khởi động lại sau khi Docker/máy khởi động lại — `restart: unless-stopped` trong `db/docker-compose.yml`, thước `scripts/check-db-autostart.sh` (AU7, audit L7) — `_acceptance/db-tu-khoi-dong` | 🔄 đợt 0 «Cầm máu»; xem `docs/ops/runtime-map.md` mục DB local tự khởi động |
 | V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
 
 ### Track 6 — Chuẩn UI/UX ReUI

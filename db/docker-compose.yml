@@ -2,6 +2,9 @@ services:
   db:
     image: kartoza/postgis:17-3.5
     container_name: one-invest-db
+    # Tự chạy lại khi dockerd/colima khởi động lại (audit L7: DB chết ~8 giờ đêm 22/10).
+    # Kiểm: bash scripts/check-db-autostart.sh static|live
+    restart: unless-stopped
     environment:
       POSTGRES_DB: oneinvest
       POSTGRES_USER: oneinvest
