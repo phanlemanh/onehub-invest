@@ -52,8 +52,8 @@ export default async function ListingPage({ params }: { params: Params }) {
   const marketId = listing.marketPath ? listing.marketPath.slice(1).replace("/", "-") : null;
   const peers = listing.areaId ? await getListingPeers(listing.areaId, marketId) : null;
 
-  // Comps: 10 listing gần nhất cùng số phòng ngủ trong thị trường (AirDNA chọn
-  // comps theo khoảng cách). Lọc trước khi gộp nights → không cần cache.
+  // Comps: 10 listing gần nhất cùng số phòng ngủ trong thị trường (chọn comps
+  // theo khoảng cách). Lọc trước khi gộp nights → không cần cache.
   const comps =
     marketId && listing.lat !== null && listing.lng !== null
       ? (
@@ -148,31 +148,6 @@ export default async function ListingPage({ params }: { params: Params }) {
             />
           ))}
         </div>
-      )}
-      {listing.photoSource === "airdna" && (
-        <p className="text-muted-foreground text-xs">
-          Ảnh từ AirDNA (listing này chưa tự thu PDP).
-          {listing.listingUrl && (
-            <>
-              {" "}
-              <a
-                href={listing.listingUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="underline"
-              >
-                Xem trên Airbnb ↗
-              </a>
-            </>
-          )}
-        </p>
-      )}
-      {listing.photoSource === "self" && listing.listingUrl && (
-        <p className="text-muted-foreground text-xs">
-          <a href={listing.listingUrl} target="_blank" rel="noreferrer" className="underline">
-            Xem trên Airbnb ↗
-          </a>
-        </p>
       )}
 
       <StatTiles items={tiles} />
