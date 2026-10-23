@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2fd4f70c8f7478bfa3621e91c63a1d12113be3f8
+verified_commit: 3d4d488a29461ac1852be7782ec16f8adfb73360
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -196,3 +196,7 @@ sha: d780ab37a1cc253ff682380d7e794808172c46aa · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-23, do gộp origin/main (PR #34–#43) sau chữ ký NT4
 run_id: repin-20261023T153007Z-19028
 sha: 2fd4f70c8f7478bfa3621e91c63a1d12113be3f8 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 3 — 2026-10-23, do gộp origin/main (PR #44) — giải xung đột bản đồ
+run_id: repin-20261023T153400Z-61531
+sha: 3d4d488a29461ac1852be7782ec16f8adfb73360 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6
