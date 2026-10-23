@@ -182,3 +182,140 @@ test("deadline huỷ tải ảnh treo giữa chừng — tin vẫn vào snapshot
   const texts = snapshottedTexts(root);
   assert.ok(texts.has("tin ảnh host treo vẫn phải vào"), "tin phải vào snapshot dù ảnh treo");
 });
+
+test("P2: SIGTERM tới khi lượt flush ĐỊNH KỲ (không deadline) đang tải ảnh treo — vẫn phải huỷ được (claudedp-2310-3 vòng 3)", async () => {
+  // host ảnh TREO VĨNH VIỄN: interval 60s gọi agent.flush() KHÔNG deadlineAt;
+  // single-flight trước đây trả đúng promise cũ cho shutdown → không ai huỷ
+  // ảnh của lượt đó. Giờ: flush({deadlineAt}) phải gắn abort vào lượt đang chạy.
+  const stuck = createServer(() => {
+    /* im lặng mãi */
+  });
+  await new Promise<void>((done) => stuck.listen(0, "127.0.0.1", done));
+  const port = (stuck.address() as AddressInfo).port;
+
+  const root = fresh();
+  const s = await createAgentServer({
+    snapshotRoot: root,
+    city: "hanoi",
+    keys: ["k1"],
+    media: { allowedHostSuffixes: ["127.0.0.1"], timeoutMs: 10_000 },
+  });
+
+  const exits: number[] = [];
+  const handlers = new Map<string, () => void>();
+  installGracefulShutdown(
+    {
+      on: (sig, fn) => handlers.set(sig, fn),
+      off: () => {},
+      exit: (code) => exits.push(code),
+      log: () => {},
+    },
+    {
+      flush: (flushOpts) => s.flush(flushOpts),
+      deadlineMs: 12_000,
+      pendingCount: () => s.stats().buffered,
+    },
+  );
+
+  s.ingest(
+    {
+      agent_id: "a",
+      group: "g",
+      messages: [
+        {
+          text: "tin trong lượt flush định kỳ",
+          ts: "2026-10-23T06:00:00Z",
+          media: [{ url: `http://127.0.0.1:${port}/stuck.jpg`, type: "photo" }],
+        },
+      ],
+    },
+    "Bearer k1",
+  );
+
+  const periodic = s.flush(); // lượt ĐỊNH KỲ — không deadlineAt
+  await sleep(1_500); // đang tải ảnh treo...
+
+  const t0 = Date.now();
+  handlers.get("SIGTERM")!(); // SIGTERM 1.5s sau lượt định kỳ (như probe P2)
+  await periodic;
+  while (exits.length === 0 && Date.now() - t0 < 9_000) await sleep(30);
+  stuck.closeAllConnections?.();
+  stuck.close();
+
+  const elapsed = Date.now() - t0;
+  assert.equal(exits.length, 1, "phải thoát");
+  assert.equal(exits[0], 0, "tin đã vào snapshot → buffer rỗng → exit(0)");
+  // abort gắn vào lượt cũ tại mốc deadline-10s ≈ (12s-10s)+1.5s đã trôi →
+  // gần như ngay; timeout ảnh 10s và deadline 12s là trần nếu KHÔNG sửa.
+  assert.ok(elapsed < 7_000, `shutdown quá lâu: ${elapsed}ms — abort không tới được lượt đang chạy`);
+  assert.ok(snapshottedTexts(root).has("tin trong lượt flush định kỳ"), "tin phải vào snapshot");
+});
+
+test("P3: POST gửi NỬA body rồi im — shutdown không chờ close() treo, buffer vẫn được flush (claudedp-2310-3 vòng 3)", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  // tin đã ack — nằm trong buffer, phải sống sót
+  s.ingest(
+    {
+      agent_id: "a",
+      group: "g",
+      messages: [{ text: "tin phải sống qua POST dở", ts: "2026-10-23T06:10:00Z" }],
+    },
+    "Bearer k1",
+  );
+
+  // server HTTP thật như main.ts + close() có race 3s (bản production)
+  const { createServer: httpCreateServer } = await import("node:http");
+  const server = httpCreateServer((req, res) => {
+    s.handle(req, res).catch(() => {});
+  });
+  await new Promise<void>((done) => server.listen(0, "127.0.0.1", done));
+  const port = (server.address() as AddressInfo).port;
+
+  // mở socket THÔ gửi nửa request rồi im lặng mãi
+  const net = await import("node:net");
+  const sock = net.connect(port, "127.0.0.1");
+  await new Promise<void>((done) => sock.once("connect", done));
+  sock.write(
+    `POST /agent-report HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nAuthorization: Bearer k1\r\ncontent-type: application/json\r\ncontent-length: 5000\r\n\r\n{"agent_id":"x","gro`,
+  );
+  // KHÔNG sock.end() — body dở, connection treo
+
+  const exits: number[] = [];
+  const handlers = new Map<string, () => void>();
+  installGracefulShutdown(
+    {
+      on: (sig, fn) => handlers.set(sig, fn),
+      off: () => {},
+      exit: (code) => exits.push(code),
+      log: () => {},
+    },
+    {
+      flush: (flushOpts) => s.flush(flushOpts),
+      // đúng bản production sau fix P3: race close với 3s
+      close: () => {
+        const giveUp = new Promise<void>((r) => setTimeout(r, 3_000).unref?.());
+        const closing = new Promise<void>((resolve) => {
+          server.close(() => resolve());
+          if (typeof server.closeIdleConnections === "function") server.closeIdleConnections();
+        });
+        return Promise.race([closing, giveUp]);
+      },
+      deadlineMs: 12_000,
+      pendingCount: () => s.stats().buffered,
+    },
+  );
+
+  const t0 = Date.now();
+  handlers.get("SIGTERM")!();
+  while (exits.length === 0 && Date.now() - t0 < 9_000) await sleep(30);
+  const elapsed = Date.now() - t0;
+  sock.destroy();
+  server.closeAllConnections?.();
+  server.close();
+
+  assert.equal(exits.length, 1, "phải thoát — không treo chờ close()");
+  assert.equal(exits[0], 0, "buffer đã flush → exit(0)");
+  assert.ok(elapsed < 7_000, `treo ${elapsed}ms — close() chưa được race`);
+  assert.ok(snapshottedTexts(root).has("tin phải sống qua POST dở"), "tin đã ack phải vào snapshot");
+});
