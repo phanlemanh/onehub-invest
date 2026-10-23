@@ -1,0 +1,8 @@
+{"ts":"2026-10-23T04:43:27Z","round":1,"evalId":"E1","run_id":"narrow-ask-rules-E1-20261023T114327","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh static"}
+{"ts":"2026-10-23T04:43:28Z","round":1,"evalId":"E2","run_id":"narrow-ask-rules-E2-20261023T114328","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh static"}
+{"ts":"2026-10-23T04:43:29Z","round":1,"evalId":"E3","run_id":"narrow-ask-rules-E3-20261023T114329","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh static"}
+{"ts":"2026-10-23T04:43:31Z","round":1,"evalId":"E4","run_id":"narrow-ask-rules-E4-20261023T114330","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh static"}
+{"ts":"2026-10-23T04:43:32Z","round":1,"evalId":"E5","run_id":"narrow-ask-rules-E5-20261023T114332","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh static"}
+{"ts":"2026-10-23T04:43:33Z","round":1,"evalId":"E6","run_id":"narrow-ask-rules-E6-20261023T114333","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh mutation"}
+{"ts":"2026-10-23T04:43:34Z","round":1,"evalId":"E7","run_id":"narrow-ask-rules-E7-20261023T114334","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh protection"}
+{"ts":"2026-10-23T04:43:36Z","round":1,"evalId":"E8","run_id":"narrow-ask-rules-E8-20261023T114336","exit_code":0,"cmd":"bash scripts/check-ask-rules.sh protection-selftest"}
