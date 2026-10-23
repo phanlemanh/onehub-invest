@@ -1,0 +1,101 @@
+{
+  "feature_plain": "Không ai cầm được khoá công khai của Supabase còn đọc hay ghi được dữ liệu prod (phiên đăng nhập, người dùng, phiếu bán, người bán); app, đồng bộ 15 phút và gửi số vận hành vẫn chạy như cũ.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ chặn khách vô danh và khách đã đăng nhập Supabase đọc/ghi mọi bảng của mình — thử trên bản Supabase giả lập: trước sửa đọc được phiên, sau sửa bị từ chối (401)."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ bật khoá theo dòng trên mọi bảng, không mở lối riêng nào, và cho hai bảng tổng hợp giá/m² chạy bằng quyền người hỏi."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ giữ nguyên đường đồng bộ 15 phút (ghi, xoá-nạp lại, kiểm rò rỉ) và đường app đọc/ghi — thử đúng từng thao tác trên bản giả lập."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ không cấp lại quyền cho khách vô danh khi sau này tạo bảng hay hàm mới; đồng bộ vẫn ghi được bảng mới."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ cho chạy lại lần hai mà không đổi gì thêm."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ không làm gì trên DB kiểu máy local (không có lối vào công khai) — thử trên bản sao tạm, chạy hai lần, quyền y nguyên."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ có lệnh hoàn tác đưa quyền về đúng như trước khi sửa, và chạy lại bản sửa sau đó vẫn ra đúng kết quả."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ có hướng dẫn để Mạnh tự áp lên prod: lý do có số đo, ai bị ảnh hưởng, lúc nào chạy, kiểm gì sau, hoàn tác ra sao, và nên xoá phiên/xoay khoá hay không."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-7",
+      "p": "Sẽ KHÔNG đụng dữ liệu, không cấp quyền mới, không đụng quyền của đường đồng bộ."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Sẽ KHÔNG tự áp lên prod — Mạnh ký rồi tự chạy theo hướng dẫn."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Sẽ KHÔNG xoá phiên đăng nhập trên cloud — chỉ khuyến nghị, Mạnh quyết."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Sẽ KHÔNG đổi khoá Supabase hay biến môi trường Vercel."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Sẽ KHÔNG đụng phần bản đồ (PostGIS) do Supabase làm chủ — vẫn đọc được bảng mã toạ độ công khai."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Sẽ KHÔNG sửa mã đồng bộ cloud — phiên khác đang giữ."
+    },
+    {
+      "id": "OOS-6",
+      "p": "Sẽ KHÔNG thêm cơ chế tự bật khoá dòng cho bảng tạo sau — quyền đã chặn sẵn."
+    },
+    {
+      "id": "OOS-7",
+      "p": "Sẽ KHÔNG bật khoá dòng ở DB máy local."
+    }
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần này:",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Ai bị chặn, ai còn vào: khách vô danh/đã đăng nhập bị chặn (AC-1 chặn đọc ghi), đồng bộ và app còn sống (AC-3 đường sống); phần của Supabase nằm ngoài tầm."
+    },
+    {
+      "i": 1,
+      "p": "Loại đối tượng: bảng, bảng tổng hợp, bộ đếm, hàm hiện có (AC-1, AC-2) và đối tượng tạo sau (AC-4 không cấp lại)."
+    },
+    {
+      "i": 2,
+      "p": "Lối vào: thử bằng câu lệnh trực tiếp và bằng đúng cổng web công khai mà khoá đi qua (AC-1, AC-3, AC-8)."
+    },
+    {
+      "i": 3,
+      "p": "Nơi chạy: bản Supabase giả lập, bản sao DB kiểu local (AC-6 không làm gì), cloud thật chỉ đo trước — đo sau khi Mạnh áp (AC-9 hướng dẫn)."
+    },
+    {
+      "i": 4,
+      "p": "Lặp lại: chạy lần hai (AC-5), hoàn tác rồi chạy lại (AC-8)."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "E10",
+      "q": "Hướng dẫn áp đủ để anh tự áp lên prod an toàn chưa?",
+      "why": "Bộ chấm độc lập thấy đủ: lý do có số đo, ai bị ảnh hưởng, lệnh áp, lúc áp, kiểm sau áp, hoàn tác, khuyến nghị phiên và khoá. Hạng rủi ro cao nên anh phải tự đọc và cho ý kiến."
+    }
+  ]
+}

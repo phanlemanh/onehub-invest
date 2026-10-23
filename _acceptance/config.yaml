@@ -70,10 +70,24 @@ executors:
     cloud_url_mutation: "bash scripts/check-cloud-url.sh mutation"   # should-NOT-fire: URL cũ bị bắt ở cả 3 tệp
     cloud_url_live: "bash scripts/check-cloud-url.sh live"           # cần mạng + ~/.oneinvest/cloud.env; không ghi DB cloud
     ui_b3_selftest: "node scripts/ui-standards/b3-check.mjs selftest"
+    # narrow-ask-rules — bỏ ask rộng; rào push main = branch protection GitHub
+    ask_rules_static: "bash scripts/check-ask-rules.sh static"
+    ask_rules_mutation: "bash scripts/check-ask-rules.sh mutation"
+    ask_rules_protection: "bash scripts/check-ask-rules.sh protection"            # cần gh đăng nhập; chỉ đọc
+    ask_rules_protection_selftest: "bash scripts/check-ask-rules.sh protection-selftest"
     glossary_terms: "node scripts/glossary/acceptance.mjs glossary"            # ngôn ngữ chuẩn (glossary-context)
     glossary_w6: "node scripts/glossary/acceptance.mjs w6"
     glossary_rebuild: "node scripts/glossary/acceptance.mjs rebuild"
     glossary_naming_rule: "node scripts/glossary/acceptance.mjs naming-rule"
+    cloud_sync_atomic: "cd pipeline && node scripts/check-cloud-sync.mjs atomic"       # đồng bộ cloud nguyên tử (cloud-sync-atomic) — DB mô phỏng :5433, không gọi cloud
+    cloud_sync_fail: "cd pipeline && node scripts/check-cloud-sync.mjs fail"
+    cloud_sync_fidelity: "cd pipeline && node scripts/check-cloud-sync.mjs fidelity"
+    cloud_sync_keep: "cd pipeline && node scripts/check-cloud-sync.mjs keep"
+    cloud_sync_pii: "cd pipeline && node scripts/check-cloud-sync.mjs pii"
+    cloud_sync_stage: "cd pipeline && node scripts/check-cloud-sync.mjs stage"
+    cloud_sync_overlap: "cd pipeline && node scripts/check-cloud-sync.mjs overlap"
+    cloud_sync_allow: "cd pipeline && node scripts/check-cloud-sync.mjs allow"
+    sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
     # stg-zalo-media-files — cần DB local :5433 (docker one-invest-db)
@@ -85,7 +99,14 @@ executors:
     # review-media-backend — AC-8 cần DB local :5433 (docker one-invest-db); mọi dòng tạo trong giao dịch rồi ROLLBACK
     review_media_roundtrip: "cd app && node --import tsx scripts/review-media-roundtrip.ts"
     review_media_no_cloud: "node scripts/check-review-media-local-only.mjs"
+    review_photos_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-review-photos.mjs"   # review-card-photos AC-7 — cần app chạy TỪ worktree đang kiểm + DB local; tài khoản thử tạo/xoá mỗi lần
+    review_photos_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx"   # design gate ghim MỘT file đích (design-gate chỉ nhận đối số cuối; làn ghim lại không nối paths:)
+    review_card_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-card.tsx"
     ops_login: "bash scripts/dev-ops-login-check.sh"   # đăng nhập đầu-cuối tài khoản ops thử — cần dev server :3456 + DB local
+    # supabase-lock-anon-rls — cần docker; sim: image supabase/postgres 17.6.1.158 + postgrest v14.16; local: kartoza/postgis 17-3.5 (container tạm, không chạm :5433)
+    supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
+    supabase_lock_local: "bash scripts/check-supabase-lock.sh local"
+    supabase_lock_sim: "bash scripts/check-supabase-lock.sh sim"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
