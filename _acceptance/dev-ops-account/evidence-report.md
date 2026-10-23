@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 44cda4a6bc8151fd05e6ab94380648e330aea4e2
+verified_commit: 784143a6858192df296fda85ddaf1355eec283e2
 human_signoff:
 ---
 
@@ -190,3 +190,7 @@ none — không eval stochastic, mọi eval chạy một lần (deterministic).
 ## Iterations
 
 Round 1: cả 9 eval (E1–E9) qua — `node --test scripts/*.test.mjs` 9/9 ca xanh, skipped 0; `bash scripts/dev-ops-login-check.sh` đăng nhập đầu-cuối trên :3456 thành công.
+
+### Re-pin lần 1 — 2026-10-23, do hợp nhất origin/main (148c073) + sửa lời nhắc OPS_EMAILS theo cổng Ops đóng mặc định
+run_id: repin-20261023T014805Z-19442
+sha: 784143a6858192df296fda85ddaf1355eec283e2 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
