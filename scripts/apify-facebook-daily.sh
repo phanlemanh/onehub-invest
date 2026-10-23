@@ -30,5 +30,9 @@ for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null 
   fi
 done
 echo "$MAXTS" > "$STATE"
-node "$ROOT/pipeline/transform-fb.mjs"
-node "$ROOT/pipeline/refresh-bait-gap.mjs"
+# Từ đây trở xuống là làn Claude (AU3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
+# hỏng ĐẦU TIÊN để launchd thấy lỗi.
+. "$ROOT/scripts/lib/job-step.sh"
+job_run apify-facebook-daily transform-fb node "$ROOT/pipeline/transform-fb.mjs"
+job_run apify-facebook-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+exit "$JOB_RC"
