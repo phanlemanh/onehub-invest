@@ -5,7 +5,7 @@ slug: sourceid-tin-anh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -44,5 +44,6 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 
 ## Notes
 
-- AC-5 ghi DB local :5433 dùng chung. Harness kiểm trước `snapshot_id` và `post_id` chưa có trong DB (có thì bỏ chạy, exit 2), nạp với `skipMedia` (không tải ảnh thật), rồi xoá đúng snapshot giả (cascade sang `stg_zalo_posts`).
+- AC-5 ghi DB local :5433 dùng chung. Harness kiểm trước `snapshot_id` và `post_id` chưa có trong DB (có thì bỏ chạy, exit 2), rồi xoá đúng snapshot giả (cascade sang `stg_zalo_posts`).
+- Đính chính sau verify vòng 1: harness gọi `flush({ skipMedia: true })` nhưng trên nhánh này `flush()` chưa nhận tham số (`skipMedia` thuộc nhánh graceful-shutdown chưa merge), nên các eval sourceid và stg-roundtrip đã gửi GET thật tới `f1.zdn.vn` cho đường ảnh giả (không tồn tại). Không gửi gì vào Zalo, không đổi kết quả eval. Vòng sau nên đổi URL giả sang host ngoài allowlist.
 - Hợp đồng dựng SAU khi code xong (ZCode) nên `gate1_skipped: true`. Cùng nhánh với `kev-thanh-nhan` (PL4), tách slug.

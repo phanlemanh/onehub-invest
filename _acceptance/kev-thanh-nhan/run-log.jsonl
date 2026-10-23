@@ -1,0 +1,8 @@
+{"ts":"2026-10-23T09:49:20Z","round":1,"evalId":"E1","run_id":"kev-thanh-nhan-E1-20261023T094920","exit_code":0,"cmd":"node scripts/kev-nhan/acceptance.mjs handler-label"}
+{"ts":"2026-10-23T09:49:26Z","round":1,"evalId":"E2","run_id":"kev-thanh-nhan-E2-20261023T094926","exit_code":0,"cmd":"node scripts/kev-nhan/acceptance.mjs handler-label"}
+{"ts":"2026-10-23T09:49:27Z","round":1,"evalId":"E3","run_id":"kev-thanh-nhan-E3-20261023T094927","exit_code":0,"cmd":"node scripts/kev-nhan/acceptance.mjs handler-label"}
+{"ts":"2026-10-23T09:49:38Z","round":1,"evalId":"E4","run_id":"kev-thanh-nhan-E4-20261023T094938","exit_code":0,"cmd":"cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs manifest-v3"}
+{"ts":"2026-10-23T09:49:45Z","round":1,"evalId":"E5","run_id":"kev-thanh-nhan-E5-20261023T094943","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}
+{"ts":"2026-10-23T09:49:51Z","round":1,"evalId":"E6","run_id":"kev-thanh-nhan-E6-20261023T094951","exit_code":0,"cmd":"grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"}
+{"ts":"2026-10-23T09:49:51Z","round":1,"evalId":"E7","run_id":"kev-thanh-nhan-E7-20261023T094951","exit_code":0,"cmd":"node scripts/kev-nhan/acceptance.mjs import-versions"}
+{"ts":"2026-10-23T09:49:52Z","round":1,"evalId":"E8","run_id":"kev-thanh-nhan-E8-20261023T094952","exit_code":0,"cmd":"node scripts/kev-nhan/acceptance.mjs watchdog-l1"}

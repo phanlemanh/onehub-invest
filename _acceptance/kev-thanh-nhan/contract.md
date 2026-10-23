@@ -5,7 +5,7 @@ slug: kev-thanh-nhan
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config]
-status: implemented
+status: verified
 approved_by:
 approved_at:
 gate1_skipped: true
