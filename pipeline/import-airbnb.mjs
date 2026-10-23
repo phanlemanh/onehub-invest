@@ -1,20 +1,32 @@
 // import-airbnb.mjs — nạp snapshot từ one-invest-collector theo DATA-CONTRACT
 // (collector/docs/DATA-CONTRACT.md schemaVersion 1–2): verify sha256 từng file trước khi parse.
-// v2 chỉ thêm file media/* + RawItem.meta.mediaFiles — items đọc y như v1.
+// v2 chỉ thêm file media/* + RawItem.meta.mediaFiles — items đọc y như v1;
+// meta.mediaFiles (zalo-agent) → stg_zalo_posts.media_files (PII tầng A, chỉ local).
 // - airbnb-listing items → stg_abnb_listings (payload nguyên vẹn) + stg_abnb_nights
 // - airbnb-discovery items → stg_abnb_discovery (title là nguồn suy ra area)
 //
 // Dùng: node import-airbnb.mjs <đường-dẫn-snapshot-dir>
 //   (vd: ../collector/snapshots/hanoi/hanoi__airbnb-listing__2026…)
 import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+
+// meta.mediaFiles (v2) → giá trị cột media_files. Gắn snapshotId vào từng phần
+// tử: `file` tương đối theo thư mục snapshot, còn snapshot_id của dòng không đổi
+// khi bài xuất hiện lại ở snapshot sau (upsert theo post_id).
+// Không có ảnh → null (SQL NULL, để COALESCE giữ bản đã nạp trước).
+export function mediaFilesOf(item, snapshotId) {
+  const mf = item?.meta?.mediaFiles;
+  if (!Array.isArray(mf) || mf.length === 0) return null;
+  return mf.map((m) => ({ ...m, snapshotId }));
+}
 
 async function main() {
   const dir = process.argv[2];
@@ -29,7 +41,7 @@ async function main() {
     process.exit(0);
   }
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
-  // v2 (N1 media Zalo) giữ nguyên hình dạng v1, chỉ thêm media/* — media chưa nạp ở đây
+  // v2 (N1 media Zalo) giữ nguyên hình dạng v1, chỉ thêm media/* + meta.mediaFiles
   if (![1, 2].includes(manifest.schemaVersion)) {
     throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
   }
@@ -47,6 +59,14 @@ async function main() {
   for (const f of manifest.files.filter((f) => f.name.startsWith("items-"))) {
     items.push(...JSON.parse(gunzipSync(await readFile(join(dir, f.name))).toString("utf8")));
   }
+
+  // mediaFiles trỏ tới file không khai trong manifest = lệch hợp đồng → cảnh báo
+  // (file khai trong manifest đã được verify sha256 ở bước 1).
+  const declared = new Set(manifest.files.map((f) => f.name));
+  const undeclared = items
+    .flatMap((it) => it.meta?.mediaFiles ?? [])
+    .filter((m) => m?.file && !declared.has(m.file)).length;
+  if (undeclared) console.warn(`cảnh báo: ${undeclared} mediaFiles trỏ tới file không có trong manifest`);
 
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
@@ -70,18 +90,22 @@ async function main() {
     let discovery = 0;
     let osm = 0;
     let zalo = 0;
+    let zaloMedia = 0;
     for (const it of items) {
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
+        const mediaFiles = mediaFilesOf(it, manifest.snapshotId);
         await client.query(
           `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text,
-                                       sender_name, sender_id, conversation_id, media, agent_id)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11)
+                                       sender_name, sender_id, conversation_id, media, agent_id,
+                                       media_files)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12::jsonb)
            ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text, captured_at = now(),
              sender_name = COALESCE(EXCLUDED.sender_name, stg_zalo_posts.sender_name),
              sender_id = COALESCE(EXCLUDED.sender_id, stg_zalo_posts.sender_id),
              conversation_id = COALESCE(EXCLUDED.conversation_id, stg_zalo_posts.conversation_id),
              media = COALESCE(EXCLUDED.media, stg_zalo_posts.media),
-             agent_id = COALESCE(EXCLUDED.agent_id, stg_zalo_posts.agent_id)`,
+             agent_id = COALESCE(EXCLUDED.agent_id, stg_zalo_posts.agent_id),
+             media_files = COALESCE(EXCLUDED.media_files, stg_zalo_posts.media_files)`,
           [
             it.sourceId,
             manifest.snapshotId,
@@ -94,9 +118,11 @@ async function main() {
             it.payload?.conversationId ?? null,
             JSON.stringify(it.payload?.media ?? null),
             it.payload?.agent_id ?? null,
+            mediaFiles ? JSON.stringify(mediaFiles) : null,
           ],
         );
         zalo++;
+        if (mediaFiles) zaloMedia++;
       } else if (it.source === "airbnb-listing") {
         await client.query(
           `INSERT INTO stg_abnb_listings (listing_id, snapshot_id, fetched_at, payload)
@@ -160,7 +186,7 @@ async function main() {
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files)`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
@@ -170,7 +196,11 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// So realpath: launchd gọi qua symlink ~/dev/one-invest — so URL thô sẽ lệch và
+// main() lặng lẽ không chạy (script daily còn `|| true` nên không ai thấy).
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
