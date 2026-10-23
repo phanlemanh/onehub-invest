@@ -1,0 +1,72 @@
+schema_version: 1
+feature_slug: invest-target-map
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    expected: "exit 0; dòng '✔ mọi route có cột Block đích: tên block trong backtick, `chờ (…)`, hoặc `—` cho redirect'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: bash _acceptance/invest-target-map/verify.sh e2
+    expected: "exit 0; 'invest rows 13 chờ 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: bash _acceptance/invest-target-map/verify.sh e3
+    expected: "exit 0 (test con đỏ, báo '`/login` → \"giữ\"'); routes.md được khôi phục"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: judgment
+    cmd: "Đọc mục 'Shell theo cổng' và 'Đợt dọn cổng Invest theo nhóm trang' trong .claude/skills/onehub-ui/routes.md"
+    expected: "Shell Invest = app-shell-30 kèm lý do; I1–I6 phủ đúng 13 route Invest có UI, mỗi route một đợt; cột biểu đồ có cho từng đợt"
+    evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: bash _acceptance/invest-target-map/verify.sh e5
+    expected: "13 hàng route; mỗi hàng 1 ảnh hiện trạng + 3 ứng viên có thumbnail và link previewUrl; 0 ảnh hỏng"
+    evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: judgment
+    cmd: "Đọc docs/ROADMAP.md Track 6"
+    expected: "Có dòng BĐ (bản đồ đích) + I1–I6; không còn B2/B4 riêng; B5 = Ops còn lại"
+    evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    expected: "exit 0; dòng '✔ mọi route có cột Slug đích: `giữ` hoặc đường dẫn tiếng Anh trong backtick'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: judgment
+    cmd: "Đọc mục Bản đồ của .claude/skills/onehub-ui/routes.md và catalog.md; mở ban-quyet-dinh.html mục Bản đồ + Thuật ngữ cần chốt"
+    expected: "Nguồn bản đồ = mapcn với ánh xạ 3 bản đồ; bảng có 3 ảnh hiện tại cạnh ảnh mapcn/shadcn-map; có bảng Thuật ngữ cần chốt"
+    evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: judgment
+    cmd: "Đọc .claude/skills/onehub-ui/loop.md bước 3"
+    expected: "Có bước Mobbin 3–6 màn, mobbin_url, chỉ cho IA, block từ ReUI (bản đồ mapcn), lối không có Mobbin = archetype compose.md + lý do"
+    evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-6
+    executor: script
+    cmd: bash _acceptance/invest-target-map/verify.sh e10
+    expected: "exit 0 (test con đỏ ở cột Slug đích, báo '`/so-sanh` → \"/so-sánh\"'); routes.md được khôi phục"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
