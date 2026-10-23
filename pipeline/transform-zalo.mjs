@@ -7,6 +7,8 @@ import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import pg from "pg";
 
+import { writeOffers } from "./lib/write-offers.mjs";
+
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -197,24 +199,21 @@ async function main() {
     console.log(`dedup: ${dedup.size} unique offers (từ ${parsed.filter(p => p.confidence !== "low").length} tin có giá)`);
 
     // ---- Bước 5: ghi canonical ----
-    await client.query("DELETE FROM sale_offers WHERE source = 'S03'");
+    // Upsert + đối soát offer cũ (writeOffers, migration 039) thay cho DELETE toàn nguồn:
+    // đề xuất enrich + thẻ duyệt sống qua lần nạp lại (_acceptance/enrich-hau-ky).
     const sellerAgg = new Map(); // phone_hash → {n, first, last}
+    const rows = [];
     for (const o of dedup.values()) {
       const phoneHash = o.phone
         ? createHash("sha256").update(o.phone).digest("hex").slice(0, 32)
         : null;
-      await client.query(
-        `INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
-                                   bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
-                                   price_tier, seller_phone, seller_phone_hash, seller_ref, property_type)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'S03','P1',$14,$15,$16,'unknown')
-         ON CONFLICT (offer_id) DO UPDATE SET n_reposts = EXCLUDED.n_reposts,
-           last_seen = EXCLUDED.last_seen, post_ids = EXCLUDED.post_ids,
-           seller_phone = EXCLUDED.seller_phone, seller_phone_hash = EXCLUDED.seller_phone_hash`,
-        [o.offerId, o.areaId, o.kind, o.priceVnd, o.areaM2, o.pricePerm2, o.bedrooms,
-         o.phuongRaw, o.confidence, o.firstSeen, o.lastSeen, o.nReposts, o.postIds,
-         o.phone, phoneHash, o.authorHash],
-      );
+      rows.push({
+        offer_id: o.offerId, area_id: o.areaId, kind: o.kind, price_vnd: o.priceVnd,
+        area_m2: o.areaM2, price_perm2: o.pricePerm2, bedrooms: o.bedrooms, phuong_raw: o.phuongRaw,
+        confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
+        n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_phone: o.phone,
+        seller_phone_hash: phoneHash, seller_ref: o.authorHash, property_type: "unknown",
+      });
       if (phoneHash) {
         const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };
         s.n++;
@@ -222,6 +221,15 @@ async function main() {
         if (new Date(o.lastSeen) > new Date(s.last)) s.last = o.lastSeen;
         sellerAgg.set(phoneHash, s);
       }
+    }
+    await client.query("BEGIN");
+    try {
+      const { reconcile } = await writeOffers(client, "S03", rows);
+      await client.query("COMMIT");
+      console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
+    } catch (e) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw e;
     }
     console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
 
