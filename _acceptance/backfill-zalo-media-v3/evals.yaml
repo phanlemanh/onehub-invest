@@ -28,3 +28,10 @@ evals:
     cmd: config:executors.test.pipeline
     expected: "exit 0; 0 fail; ca 'gọi qua symlink (như ~/dev/one-invest) main vẫn chạy — không thoát 0 im lặng' CHẠY và xanh (should-NOT-fire: không được thoát 0 khi thư mục snapshots không tồn tại)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zalo_media_v3_check
+    expected: "exit 0; stdout có 'V3 CHECK PASS'; dòng --check của snapshot v3 có ảnh mang '(v2+: 1)' và 'chưa nạp: 1 ' (đỏ); should-NOT-fire: snapshot v3 không ảnh mang 'chưa nạp: 0 ' (xanh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

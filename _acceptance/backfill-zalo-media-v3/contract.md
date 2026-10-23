@@ -29,6 +29,7 @@ Source input: prompt (brief từ phiên điều phối «Phân chia công việc
 - AC-1: Given một thư mục snapshots có `zalo-agent` v1, v2 và v3 (v3 mang `meta.kev` cạnh `meta.mediaFiles`), một snapshot `zalo-agent` mồ côi không `manifest.json` và một snapshot v3 của nguồn khác, When backfill quét thư mục đó, Then nó xét đúng hai snapshot v2 và v3, đọc ra bài có ảnh của snapshot v3, và KHÔNG xét snapshot v1, snapshot mồ côi hay snapshot nguồn khác.
 - AC-2: Given snapshot `zalo-agent` v2 có ảnh và v1 không ảnh dựng giả trên DB local, When chạy vòng `backfill --check` → backfill → nạp lại, Then hành vi v2/v1 giữ như hồ sơ `stg-zalo-media-files`: `--check` đỏ trước khi nạp và xanh sau, `media_files` đúng hợp đồng, nạp lại không nhân đôi, và dữ liệu giả dọn còn 0 dòng.
 - AC-4: Given script được gọi qua một đường symlink tới thư mục `pipeline/` (như `~/dev/one-invest`, đường launchd cũ còn dùng), When chạy `backfill-zalo-media.mjs --check <thư mục không tồn tại>`, Then thân lệnh vẫn chạy và thoát 1 kèm thông điệp «không thấy thư mục snapshots» — không thoát 0 im lặng.
+- AC-5: Given một snapshot `zalo-agent` v3 (có `meta.kev`) mang một bài có ảnh chưa nạp vào `stg_zalo_posts`, When chạy `backfill-zalo-media.mjs --check` trên thư mục chứa nó, Then lệnh thoát khác 0 và báo `chưa nạp: 1`; còn snapshot v3 không bài nào có ảnh thì `--check` thoát 0 (không báo động giả). (Nửa đầu điều kiện bắt của hàng PL32.)
 - AC-3: Given các snapshot `zalo-agent` thật ở `~/dev/onehub-invest/collector/snapshots`, When chạy `backfill-zalo-media.mjs --check`, Then lệnh thoát 0 và in dòng báo cáo mang số snapshot `v2+` (đủ v2 lẫn v3), số bài có ảnh chưa nạp và số dòng `stg_zalo_posts` có `media_files`.
 
 ## Coverage
@@ -38,7 +39,7 @@ Source input: prompt (brief từ phiên điều phối «Phân chia công việc
 ## Out of scope
 
 - Nới `pipeline/import-airbnb.mjs` nhận v3 — đã nằm trong PL4 (làn ZCode `import-*`); trên main hiện tại importer còn từ chối v3, nên backfill thật một snapshot v3 chỉ chạy được sau khi PL4 merge.
-- Ca đầu-cuối v3 qua importer trong `pipeline/scripts/media-files-roundtrip.mjs` — thêm sau khi PL4 merge (cùng lý do trên).
+- Nửa sau điều kiện bắt của PL32 (chạy backfill rồi `--check` thoát 0 và `media_files` có dòng của snapshot v3) — cần importer nhận v3 của PL4; thêm ca v3 vào `pipeline/scripts/media-files-roundtrip.mjs` và chấm lại hồ sơ khi PL4 merge.
 - Đọc hay lưu `meta.kev` vào staging — việc của PL4.
 - Restart collector :9210 hay sinh snapshot v3 thật — việc triển khai PL4.
 
