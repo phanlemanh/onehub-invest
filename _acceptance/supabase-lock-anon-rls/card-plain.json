@@ -90,5 +90,12 @@
       "i": 4,
       "p": "Lặp lại: chạy lần hai (AC-5), hoàn tác rồi chạy lại (AC-8)."
     }
+  ],
+  "decisions": [
+    {
+      "id": "E10",
+      "q": "Hướng dẫn áp đủ để anh tự áp lên prod an toàn chưa?",
+      "why": "Bộ chấm độc lập thấy đủ: lý do có số đo, ai bị ảnh hưởng, lệnh áp, lúc áp, kiểm sau áp, hoàn tác, khuyến nghị phiên và khoá. Hạng rủi ro cao nên anh phải tự đọc và cho ý kiến."
+    }
   ]
 }
