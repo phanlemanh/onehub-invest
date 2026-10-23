@@ -1,0 +1,784 @@
+{
+  "generated_at": "2026-10-23T00:50:57Z",
+  "generated_sha": "2cf05c098790260fc0527399ffb969612f75f6b3",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "enrich-qua-de-xuat",
+  "round": 4,
+  "riskTier": "T3",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-1 không ghi thẳng' trong agent/tests/enrich-guard.test.ts xanh trên cây thật (quét agent/src + agent/scripts: 0 câu UPDATE sale_offers|properties). Chiều đỏ cùng bộ quét: tệp mẫu dựng trong thư mục tạm chứa 'UPDATE sale_offers SET' → ca đỏ, thông điệp ghim 'ghi thẳng: <tệp>:<dòng>'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "agent/src/**",
+        "agent/scripts/**",
+        "agent/tests/enrich-guard.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-2 E1 áp thẳng kèm nguồn' trong agent/tests/enrich-db.test.ts xanh: offer fixture có property_type='unknown', E1 ra 'apartment' → sale_offers.property_type='apartment' và 1 dòng enrichment_proposals source=e1_rule route=direct status=applied có run_id + evidence.matchedBy; cùng một mảng ids có thêm một offer KHÔNG gắn property nào → cả hai offer đều applied, không lỗi, properties không đổi với offer thứ hai. Chiều đỏ cùng fixture: field đã có giá trị → 0 đề xuất, giá trị cũ giữ nguyên, thông điệp ghim 'AC-2'. Toàn bộ chạy trong BEGIN…ROLLBACK.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "agent/scripts/enrich-run.ts",
+        "agent/src/enrich/**",
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/tests/enrich-db.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-3",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; các ca 'AC-3' trong agent/tests/enrich-route.test.ts và enrich-db.test.ts xanh. Fixture LLM RÚT TỪ ≥3 tệp trace enrich-text thật (agent/tests/fixtures/, chép output từ agent/traces ngày 22/10) đi qua parseEnrichOutput thật; giá trị E1 sinh bằng resolveContext thật trên fixture group_name/text. Ca: LLM bedrooms \"2\" (chuỗi) + E1 2 (số) → corroborated sau normalizeValue; LLM 'Apartment' + E1 'apartment' → corroborated, corroborated_by='e1'; LLM block khớp alias node building → corroborated_by='asset_nodes:<slug>', block_raw = tên chuẩn node. Chiều đỏ cùng fixture: alias không khớp node nào → route=review, sale_offers không đổi, thông điệp ghim 'AC-3'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "agent/src/enrich/**",
+        "agent/scripts/enrich-run.ts",
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/tests/enrich-route.test.ts",
+        "agent/tests/enrich-db.test.ts",
+        "agent/tests/fixtures/**"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-4",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-4 LLM không căn cứ vào hàng duyệt' trong enrich-db.test.ts xanh: field LLM không căn cứ → sale_offers không đổi, đề xuất status=queued, đúng 1 thẻ review_queue item_type=agent_output item_id=enrich:<offer_id> status=pending, evidence có fields[{proposal_id,field,value,confidence}] + run_id + model + trace_path. Chiều đỏ: thêm một field E1 cho cùng offer → field E1 được áp còn field LLM vẫn queued (thẻ chỉ liệt field LLM), thông điệp ghim 'AC-4'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "agent/scripts/enrich-run.ts",
+        "agent/src/enrich/**",
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/tests/enrich-db.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-5",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-5 duyệt áp fill-gap + cascade (nối liền)' trong enrich-db.test.ts xanh: chạy enrich trên fixture LLM không căn cứ → lấy id thẻ DO CHÍNH LƯỢT ĐÓ sinh (không dựng thẻ tay) → decide_enrichment_review(id,'approved','test') → số đề xuất applied = số queued trước đó và > 0, sale_offers nhận đúng giá trị, properties liên kết nhận bedrooms/bathrooms/street còn trống, enrichment_log có phần tử src='enrich-proposals' với proposal_ids + actor. Chiều đỏ cùng fixture: (a) field đã có giá trị khác lúc duyệt → skipped, giá trị cũ giữ, ghim 'AC-5 skipped'; (b) xoá review_id trên các đề xuất trước khi duyệt → ca đỏ, ghim 'AC-5 thẻ không trỏ đề xuất'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/tests/enrich-db.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-5",
+      "question": "\"Trong route.ts, khi item_type là 'agent_output', item_id bắt đầu bằng 'enrich:' và thẻ KHÔNG có đề xuất xung đột (không field nào có từ hai đề xuất queued), route có gọi decide_enrichment_review với đúng status nhận được và người quyết, TRONG cùng transaction (giữa BEGIN và COMMIT) với câu cập nhật review_queue, và vẫn ghi auditOpsWrite 'review:decide' như nhánh entity_match không? (Nhánh thẻ có xung đột chấm ở E17.)\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/enrich-qua-de-xuat-e1-conflict-cd8d73/app/src/app/api/v1/ops/review/[id]/decide/route.ts"
+      ],
+      "evidence_required": [
+        "judged_by",
+        "verdict",
+        "rationale"
+      ]
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-6",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-6 bỏ/để sau' trong enrich-db.test.ts xanh: rejected → đề xuất rejected, sale_offers không đổi, chạy lại enrich với cùng giá trị LLM → 0 đề xuất mới, 0 thẻ chờ mới; deferred → đề xuất giữ queued, chạy lại → đúng 1 thẻ chờ mới gắn các đề xuất đó. Chiều đỏ cùng fixture: bỏ ràng buộc duy nhất (offer_id,field,value,source) trong bản sao → ca đỏ với thông điệp ghim 'AC-6 đẩy lại giá trị đã bác'. Thêm (S4-r3): ca 'AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin ngoài bộ lọc thiếu field' xanh — tin chỉ còn đề xuất phòng ngủ, thẻ bị hoãn, lượt backlog limit=1 không chỉ định offer → đúng 1 thẻ pending mới cho tin đó; chiều đỏ: câu chọn backlog cũ (chỉ bộ lọc thiếu field + random) → ca đỏ ghim 'AC-6 để sau không mở lại thẻ'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/scripts/enrich-run.ts",
+        "agent/src/enrich/**",
+        "agent/tests/enrich-db.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E8",
+      "criterion": "AC-7",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-7 xung đột E1/LLM lên thẻ' trong agent/tests/enrich-route.test.ts xanh: E1='land', LLM='house' cho property_type → HAI Routed route=review (một source=e1_rule, một e2_llm), cả hai mang conflict=true, KHÔNG có route=direct nào cho field đó, summarizeRun([rs]).xungDot=1 và review=2. Đối chứng dương cùng fixture (should-NOT-fire): (a) E1='house', LLM='house' → đúng một Routed e2_llm corroborated by e1, conflict vắng, xungDot=0; (b) E1='land', LLM vắng property_type → đúng một Routed e1_rule direct. Chiều đỏ: bản sao route.ts trả lại hành vi cũ (E1 direct + LLM superseded) → ca đỏ, thông điệp ghim 'AC-7: E1 không được áp khi trái LLM'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "agent/src/enrich/**",
+        "agent/tests/enrich-route.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E9",
+      "criterion": "AC-8",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-8 chạy lại + dry' trong enrich-db.test.ts xanh: hai lượt liên tiếp trên cùng fixture → số dòng enrichment_proposals và số thẻ agent_output pending ở lượt hai bằng lượt một; chạy lại với 'Apartment' sau khi đã bác 'apartment' → 0 đề xuất mới; lượt --dry → băm md5 theo dòng của sale_offers(property_type,bedrooms,bathrooms,street_raw,block_raw), properties(bedrooms,bathrooms,street,enrichment_log), enrichment_proposals, review_queue trước = sau. Chiều đỏ cùng fixture: bản sao để --dry chạy một câu UPDATE sale_offers mà không INSERT đề xuất → ca đỏ, ghim 'AC-8 dry đã ghi'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "agent/scripts/enrich-run.ts",
+        "agent/src/enrich/**",
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/tests/enrich-db.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E10",
+      "criterion": "AC-9",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; app/tests/review-card.test.tsx (jsdom) xanh: thẻ agent_output hiện đoạn tin, bảng field·giá trị·độ tin cậy, 3 nút; bấm từng nút → fetch POST /api/v1/ops/review/<id>/decide với body status approved|rejected|deferred; thẻ entity_match vẫn hiện 'Tin A'/'Tin B'; item_type lạ → dòng 'chưa có giao diện duyệt', không ném lỗi. Chiều đỏ cùng fixture: evidence agent_output thiếu fields → thẻ hiện dòng báo thiếu dữ liệu, không sập, thông điệp ghim 'AC-9'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/components/ops/review-card.tsx",
+        "app/tests/review-card.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E11",
+      "criterion": "AC-9",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-5 duyệt áp fill-gap + cascade (nối liền)' và 'AC-6 bỏ/để sau' trong enrich-db.test.ts xanh — đường backend mà ba nút của thẻ gọi tới (decide_enrichment_review với approved|rejected|deferred) trên thẻ do chính enrich-run sinh trong transaction (nonce run_id riêng của ca).\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/tests/enrich-db.test.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E12",
+      "criterion": "AC-10",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-10 PII không lên cloud' trong pipeline/scripts/sync-cloud-pii.test.mjs xanh: đọc danh sách FILL từ pipeline/sync-cloud.mjs, enrichment_proposals và review_queue không có mặt. Chiều đỏ cùng bộ đọc: bản sao FILL có thêm 'enrichment_proposals' → ca đỏ, thông điệp ghim 'PII: enrichment_proposals trong FILL'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/sync-cloud-pii.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E13",
+      "criterion": "AC-4",
+      "question": "\"docs/research/enrichment-agent-design.md có còn mô tả đường ghi cũ (LLM UPDATE thẳng sale_offers, hay ngưỡng confidence quyết định ghi) không? Bản mô tả hiện tại có khớp đường mới trong design doc của vòng (đề xuất → luật xác định → /ops/review) không?\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/enrich-qua-de-xuat-e1-conflict-cd8d73/docs/research/enrichment-agent-design.md",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/enrich-qua-de-xuat-e1-conflict-cd8d73/docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md"
+      ],
+      "evidence_required": [
+        "judged_by",
+        "verdict",
+        "rationale"
+      ]
+    },
+    {
+      "id": "E14",
+      "criterion": "AC-7",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-7 hai tin S05 thật không bị áp land' trong agent/tests/enrich-db.test.ts xanh. Fixture agent/tests/fixtures/e1-conflict-cases.json RÚT TỪ hai lượt chạy thật 2026-10-23 (offer_feb6cd92901f426c, offer_c5ac0386105f18ae): group_name thật + đoạn tin đã bỏ liên hệ + output LLM nguyên văn từ hai trace 2026-10-22T23-26-24 và 23-31-25, đi qua parseEnrichOutput thật; E1 sinh bằng resolveContext thật (ra 'land' — ca ghim điều đó trước, đổi luật E1 thì ca báo rõ). Với mỗi ca, offer fixture property_type='unknown' trong BEGIN…ROLLBACK: sau runEnrich → sale_offers.property_type vẫn 'unknown'; enrichment_proposals của field có 2 dòng (e1_rule 'land', e2_llm 'house') route=review status=queued cùng review_id; thẻ đó item_id=enrich:<offer> pending, evidence.fields có hai phần tử property_type mang conflict=true, source và basis không rỗng (basis E1 nhắc từ khoá 'đất' và 'tên nhóm'; basis LLM nhắc model). Chạy lại lượt hai → số đề xuất và số thẻ pending không đổi, evidence thẻ vẫn mang conflict=true; lượt hai với LLM vắng property_type và một lượt LLM ném lỗi → property_type vẫn 'unknown', đề xuất e1_rule vẫn queued, 0 đề xuất applied cho field (chiều đỏ: bản sao bỏ luật giữ field đang xung đột → ca đỏ ghim 'AC-7 lượt sau áp E1 vượt thẻ'). Ca để sau: decide_enrichment_review(id,'deferred') rồi chạy lại → đúng 1 thẻ pending mới, evidence.fields có 2 phần tử property_type conflict=true, source + basis không rỗng (chiều đỏ ghim 'AC-7 dựng lại mất xung đột'). Evidence thẻ do writer thật sinh phải khớp khuôn khoá (tên khoá + kiểu) của tệp chung agent/tests/fixtures/e1-conflict-card.json — tệp E16 nạp (chiều đỏ ghim 'AC-11 lệch khoá evidence'). Đối chứng dương cùng bộ (should-NOT-fire): LLM fixture sửa property_type thành 'land' → đề xuất e2_llm corroborated by e1, sale_offers.property_type='land', không thẻ nào cho field đó.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "agent/src/enrich/**",
+        "agent/src/agents/context-resolver.ts",
+        "agent/scripts/enrich-run.ts",
+        "agent/tests/enrich-db.test.ts",
+        "agent/tests/fixtures/**"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E15",
+      "criterion": "AC-11",
+      "cmd": "cd agent && npm test",
+      "expected": "\"exit 0; ca 'AC-11 chọn một bên rồi áp' trong agent/tests/enrich-db.test.ts xanh trên thẻ DO enrich-run sinh từ fixture xung đột (không dựng tay): đúng chuỗi lệnh SQL mà route chạy — apply_enrichment(ids được chọn + đề xuất không xung đột) rồi decide_enrichment_review(id,'rejected',actor) — cho kết quả: đề xuất LLM 'house' applied, đề xuất E1 'land' rejected, sale_offers.property_type='house', các field không xung đột của thẻ (bathrooms, street_raw) applied; chạy lại enrich → 0 đề xuất mới, 0 thẻ pending mới. Ca «Bỏ»: decide_enrichment_review(id,'rejected') → cả hai rejected, property_type vẫn 'unknown', chạy lại → 0 đề xuất mới. Chiều đỏ cùng fixture: gọi decide_enrichment_review(id,'approved') thẳng (bỏ bước chọn) → ca chứng minh đề xuất id nhỏ hơn (E1 'land') thắng, thông điệp ghim 'AC-11 duyệt không chọn áp nhầm E1' — lý do route phải chặn khi thiếu choices.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "db/migrations/033_enrichment_proposals.sql",
+        "agent/src/enrich/**",
+        "agent/tests/enrich-db.test.ts",
+        "agent/tests/fixtures/**"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.agent"
+    },
+    {
+      "id": "E16",
+      "criterion": "AC-11",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; app/tests/review-card.test.tsx và app/tests/enrich-choices.test.tsx xanh, nạp evidence thẻ xung đột từ tệp chung agent/tests/fixtures/e1-conflict-card.json (rút từ writer thật, E14 ghim khuôn). Thẻ agent_output có field xung đột: hiện «Theo luật» và «Theo LLM» (Badge), hai giá trị, hai dòng căn cứ, lựa chọn «Bỏ cả hai»; nút «Áp dụng» disabled; chọn «Theo LLM» → nút bật, bấm → fetch POST /api/v1/ops/review/<id>/decide body {status:'approved', choices:{property_type:<proposal_id của LLM>}}. Đối chứng dương (should-NOT-fire): thẻ không xung đột → không có lựa chọn, «Áp dụng» bật ngay, body không có choices. Hàm planEnrichApproval (app/src/lib/enrich-choices.ts, route dùng): thiếu lựa chọn cho field xung đột → lỗi ghim 'thiếu lựa chọn: property_type'; chọn id không thuộc field → lỗi; null → không áp bên nào; không xung đột → applyIds = mọi đề xuất queued. Lint app (suite executors.test.app) xanh và baseline eslint-suppressions.json không tăng.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/components/ops/review-card.tsx",
+        "app/src/lib/enrich-choices.ts",
+        "app/tests/review-card.test.tsx",
+        "app/tests/enrich-choices.test.tsx",
+        "agent/tests/fixtures/e1-conflict-card.json"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E17",
+      "criterion": "AC-11",
+      "question": "\"Trong route.ts, nhánh agent_output enrich: khi status='approved' và thẻ có đề xuất xung đột, route có (1) đọc các đề xuất queued của thẻ và kiểm choices bằng planEnrichApproval (enrich-choices.ts), trả 400 rồi ROLLBACK khi thiếu/sai lựa chọn TRƯỚC khi đổi review_queue, (2) áp bằng apply_enrichment cho các id planEnrichApproval trả về rồi bác phần còn lại bằng decide_enrichment_review(...,'rejected',...) trong CÙNG transaction với cập nhật review_queue, không có câu UPDATE sale_offers hay UPDATE enrichment_proposals viết tay, và (3) ghi auditOpsWrite 'review:decide' kèm choices không? Và trong cùng tệp: khi thẻ không xung đột, route có gọi decide_enrichment_review với đúng status nhận được; nhánh entity_match có KHÔNG gọi hàm enrich nào không?\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/enrich-qua-de-xuat-e1-conflict-cd8d73/app/src/app/api/v1/ops/review/[id]/decide/route.ts",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/enrich-qua-de-xuat-e1-conflict-cd8d73/app/src/lib/enrich-choices.ts"
+      ],
+      "evidence_required": [
+        "judged_by",
+        "verdict",
+        "rationale"
+      ]
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "85ccd4f2ddfc015ad8bd81852f9c3e917366914e",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/enrich-qua-de-xuat-e1-conflict-cd8d73",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/enrich-qua-de-xuat-e1-conflict-cd8d73/_acceptance/enrich-qua-de-xuat/contract.md",
+  "invokedAt": "2026-10-23T00:50:57Z",
+  "invokedSha": "2cf05c098790260fc0527399ffb969612f75f6b3",
+  "vungVat": [
+    "_acceptance/config.yaml",
+    "_acceptance/enrich-qua-de-xuat/card-plain.json",
+    "_acceptance/enrich-qua-de-xuat/card.html",
+    "_acceptance/enrich-qua-de-xuat/evals.yaml",
+    "_acceptance/enrich-qua-de-xuat/evidence/E10-step1-cho-duyet.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/E10-step2-da-ap.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-390.jpg",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-sang.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-toi.jpg",
+    "_acceptance/enrich-qua-de-xuat/figures/duong-gia-tri.html",
+    "_acceptance/enrich-qua-de-xuat/figures/duong-gia-tri.png",
+    "_acceptance/enrich-qua-de-xuat/figures/xung-dot-doi-chieu.html",
+    "_acceptance/enrich-qua-de-xuat/figures/xung-dot-doi-chieu.png",
+    "_acceptance/enrich-qua-de-xuat/s4-args-r2.json",
+    "_acceptance/enrich-qua-de-xuat/s4-args-r3.json",
+    "_acceptance/enrich-qua-de-xuat/s4-args.json",
+    "agent/scripts/enrich-run.ts",
+    "agent/src/agents/context-resolver.ts",
+    "agent/src/agents/enrich-text.ts",
+    "agent/src/enrich/route.ts",
+    "agent/src/enrich/run.ts",
+    "agent/tests/enrich-apply.test.ts",
+    "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-guard.test.ts",
+    "agent/tests/enrich-route.test.ts",
+    "agent/tests/fixtures/e1-conflict-card.json",
+    "agent/tests/fixtures/e1-conflict-cases.json",
+    "agent/tests/fixtures/llm-outputs.json",
+    "agent/tests/helpers/db.ts",
+    "app/package-lock.json",
+    "app/package.json",
+    "app/src/app/api/v1/ops/review/[id]/decide/route.ts",
+    "app/src/components/ops/review-card.tsx",
+    "app/src/lib/enrich-choices.ts",
+    "app/tests/enrich-choices.test.tsx",
+    "app/tests/review-card.test.tsx",
+    "db/migrations/033_enrichment_proposals.sql",
+    "lib/do-san-tren-nen.cjs",
+    "lib/evidence-core.cjs",
+    "lib/nhan-canh-gay.cjs",
+    "pipeline/scripts/sync-cloud-pii.test.mjs",
+    "scripts/product-map.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/CLAUDE.md",
+    "PRODUCT-MAP.md",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "PRODUCT-MAP.md",
+    "_acceptance/enrich-qua-de-xuat/contract.md",
+    "_acceptance/enrich-qua-de-xuat/decisions.jsonl",
+    "_acceptance/enrich-qua-de-xuat/duong-nen.md",
+    "_acceptance/enrich-qua-de-xuat/evidence-report.md",
+    "_acceptance/enrich-qua-de-xuat/evidence/README.md",
+    "_acceptance/enrich-qua-de-xuat/figures/index.md",
+    "_acceptance/enrich-qua-de-xuat/gap-probe.md",
+    "_acceptance/enrich-qua-de-xuat/review-findings.md",
+    "_acceptance/enrich-qua-de-xuat/run-log.jsonl",
+    "_acceptance/enrich-qua-de-xuat/usage-report.md",
+    "docs/ROADMAP.md",
+    "docs/research/enrichment-agent-design.md",
+    "docs/superpowers/plans/2026-10-22-enrich-qua-de-xuat.md",
+    "docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md"
+  ],
+  "diffFiles": [
+    "PRODUCT-MAP.md",
+    "_acceptance/config.yaml",
+    "_acceptance/enrich-qua-de-xuat/card-plain.json",
+    "_acceptance/enrich-qua-de-xuat/card.html",
+    "_acceptance/enrich-qua-de-xuat/contract.md",
+    "_acceptance/enrich-qua-de-xuat/decisions.jsonl",
+    "_acceptance/enrich-qua-de-xuat/duong-nen.md",
+    "_acceptance/enrich-qua-de-xuat/evals.yaml",
+    "_acceptance/enrich-qua-de-xuat/evidence-report.md",
+    "_acceptance/enrich-qua-de-xuat/evidence/E10-step1-cho-duyet.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/E10-step2-da-ap.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/README.md",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-390.jpg",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-sang.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-toi.jpg",
+    "_acceptance/enrich-qua-de-xuat/figures/duong-gia-tri.html",
+    "_acceptance/enrich-qua-de-xuat/figures/duong-gia-tri.png",
+    "_acceptance/enrich-qua-de-xuat/figures/index.md",
+    "_acceptance/enrich-qua-de-xuat/figures/xung-dot-doi-chieu.html",
+    "_acceptance/enrich-qua-de-xuat/figures/xung-dot-doi-chieu.png",
+    "_acceptance/enrich-qua-de-xuat/gap-probe.md",
+    "_acceptance/enrich-qua-de-xuat/review-findings.md",
+    "_acceptance/enrich-qua-de-xuat/run-log.jsonl",
+    "_acceptance/enrich-qua-de-xuat/s4-args-r2.json",
+    "_acceptance/enrich-qua-de-xuat/s4-args-r3.json",
+    "_acceptance/enrich-qua-de-xuat/s4-args.json",
+    "_acceptance/enrich-qua-de-xuat/usage-report.md",
+    "agent/scripts/enrich-run.ts",
+    "agent/src/agents/context-resolver.ts",
+    "agent/src/agents/enrich-text.ts",
+    "agent/src/enrich/route.ts",
+    "agent/src/enrich/run.ts",
+    "agent/tests/enrich-apply.test.ts",
+    "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-guard.test.ts",
+    "agent/tests/enrich-route.test.ts",
+    "agent/tests/fixtures/e1-conflict-card.json",
+    "agent/tests/fixtures/e1-conflict-cases.json",
+    "agent/tests/fixtures/llm-outputs.json",
+    "agent/tests/helpers/db.ts",
+    "app/package-lock.json",
+    "app/package.json",
+    "app/src/app/api/v1/ops/review/[id]/decide/route.ts",
+    "app/src/components/ops/review-card.tsx",
+    "app/src/lib/enrich-choices.ts",
+    "app/tests/enrich-choices.test.tsx",
+    "app/tests/review-card.test.tsx",
+    "db/migrations/033_enrichment_proposals.sql",
+    "docs/ROADMAP.md",
+    "docs/research/enrichment-agent-design.md",
+    "docs/superpowers/plans/2026-10-22-enrich-qua-de-xuat.md",
+    "docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md",
+    "lib/do-san-tren-nen.cjs",
+    "lib/evidence-core.cjs",
+    "lib/nhan-canh-gay.cjs",
+    "pipeline/scripts/sync-cloud-pii.test.mjs",
+    "scripts/product-map.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "_acceptance/config.yaml",
+    "_acceptance/enrich-qua-de-xuat/card-plain.json",
+    "_acceptance/enrich-qua-de-xuat/card.html",
+    "_acceptance/enrich-qua-de-xuat/evals.yaml",
+    "_acceptance/enrich-qua-de-xuat/evidence/E10-step1-cho-duyet.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/E10-step2-da-ap.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-390.jpg",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-sang.png",
+    "_acceptance/enrich-qua-de-xuat/evidence/ac11-the-xung-dot-toi.jpg",
+    "_acceptance/enrich-qua-de-xuat/figures/duong-gia-tri.html",
+    "_acceptance/enrich-qua-de-xuat/figures/duong-gia-tri.png",
+    "_acceptance/enrich-qua-de-xuat/figures/xung-dot-doi-chieu.html",
+    "_acceptance/enrich-qua-de-xuat/figures/xung-dot-doi-chieu.png",
+    "_acceptance/enrich-qua-de-xuat/s4-args-r2.json",
+    "_acceptance/enrich-qua-de-xuat/s4-args-r3.json",
+    "_acceptance/enrich-qua-de-xuat/s4-args.json",
+    "agent/scripts/enrich-run.ts",
+    "agent/src/agents/context-resolver.ts",
+    "agent/src/agents/enrich-text.ts",
+    "agent/src/enrich/route.ts",
+    "agent/src/enrich/run.ts",
+    "agent/tests/enrich-apply.test.ts",
+    "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-guard.test.ts",
+    "agent/tests/enrich-route.test.ts",
+    "agent/tests/fixtures/e1-conflict-card.json",
+    "agent/tests/fixtures/e1-conflict-cases.json",
+    "agent/tests/fixtures/llm-outputs.json",
+    "app/src/components/ops/review-card.tsx",
+    "app/src/lib/enrich-choices.ts",
+    "app/tests/enrich-choices.test.tsx",
+    "app/tests/review-card.test.tsx",
+    "db/migrations/033_enrichment_proposals.sql",
+    "pipeline/scripts/sync-cloud-pii.test.mjs"
+  ],
+  "coverageFiles": [
+    "agent/scripts/enrich-run.ts",
+    "agent/src/agents/context-resolver.ts",
+    "agent/src/agents/enrich-text.ts",
+    "agent/src/enrich/route.ts",
+    "agent/src/enrich/run.ts",
+    "agent/tests/enrich-db.test.ts",
+    "agent/tests/enrich-guard.test.ts",
+    "agent/tests/enrich-route.test.ts",
+    "agent/tests/fixtures/e1-conflict-card.json",
+    "agent/tests/fixtures/e1-conflict-cases.json",
+    "agent/tests/fixtures/llm-outputs.json",
+    "app/src/components/ops/review-card.tsx",
+    "app/src/lib/enrich-choices.ts",
+    "app/tests/enrich-choices.test.tsx",
+    "app/tests/review-card.test.tsx",
+    "db/migrations/033_enrichment_proposals.sql",
+    "pipeline/scripts/sync-cloud-pii.test.mjs"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "0333359a88d19d237affe63d65f8faeac4235f0ce51269350f4e5d1fbad60c3c",
+  "runBaseline": true,
+  "carriedEvals": [
+    {
+      "id": "E12",
+      "runId": "minted-enrich-qua-de-xuat-E12-r3",
+      "fromRound": 3,
+      "verifiedAt": "2026-10-23T00:34:19Z",
+      "cmd": "cd pipeline && npm test"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "agent/scripts/enrich-run.ts",
+      "title": "enrich-run gói CẢ lượt chạy (gồm các lần gọi LLM) vào một transaction — giữ khoá hàng hàng giờ, chặn route decide và pipeline; lỗi cuối lượt bỏ hết công",
+      "severity": "medium",
+      "plain": "Khi chạy làm giàu một lượt lớn kéo dài hàng giờ, người duyệt bấm Áp dụng hoặc Bỏ trên một thẻ mà lượt đó vừa đụng tới có thể bị treo, và một lỗi ở cuối lượt làm mất toàn bộ kết quả cùng công gọi LLM đã bỏ ra.",
+      "can_cu": "Chỉ xảy ra khi chạy lượt lớn, mà vòng này chưa chạy trên toàn backlog; không mất dữ liệu gốc, chạy lại được, và sửa sau không đắt.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/review-card.test.tsx",
+      "title": "Test UI của app đọc fixture nằm trong agent/ — bản app/ đẩy ra repo public sẽ không chạy được npm test",
+      "severity": "low",
+      "plain": "Trên bản công khai của giao diện, bộ test sẽ báo đỏ vì thiếu tệp mẫu, và bản công khai lộ ra việc nó phụ thuộc vào kho riêng. Người dùng cuối không bị ảnh hưởng.",
+      "can_cu": "Chỉ ảnh hưởng người bảo trì bản công khai, không động tới dữ liệu hay chức năng; sửa sau rẻ và an toàn.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "db/migrations/033_enrichment_proposals.sql",
+      "title": "FK ON DELETE CASCADE xoá sạch đề xuất S03/S05 mỗi lần transform chạy: giá trị đã bác bị đẩy lại, thẻ chờ còn lại thì rỗng",
+      "severity": "high",
+      "plain": "Mỗi lần dữ liệu Zalo/Facebook được nạp lại, toàn bộ đề xuất cũ bị xoá: giá trị người duyệt đã bác có thể bị đưa lên thẻ lần nữa, dấu vết các giá trị đã áp mất, và thẻ đang chờ trở nên rỗng nhưng vẫn báo «Đã duyệt» dù không có gì được áp.",
+      "can_cu": "Nặng vì mất dấu kiểm toán và quyết định của người duyệt bị lặp lại hoặc báo sai là đã áp; người dùng không tự khôi phục được lịch sử đã mất, nên cần một việc riêng xử lý.",
+      "proposal": "new-contract",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/scripts/enrich-run.ts",
+      "title": "Cả lượt enrich (có thể tới khoảng 2 giờ gọi LLM) nằm trong một transaction: giữ khoá dòng sale_offers/review_queue, lỗi giữa chừng mất hết",
+      "severity": "medium",
+      "plain": "Khi chạy làm giàu một lượt dài, thao tác duyệt thẻ và bước nạp dữ liệu có thể bị chặn chờ, và một lỗi giữa chừng làm mất sạch kết quả của cả lượt.",
+      "can_cu": "Chỉ lộ khi chạy lượt rất dài, chưa nằm trong vòng này; chạy lại được, không mất dữ liệu gốc, sửa sau không đắt.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/scripts/enrich-run.ts",
+      "title": "LLM trả output không parse được bị nuốt im lặng: không log, không đếm, E1 được áp thẳng như thể không cần LLM",
+      "severity": "medium",
+      "plain": "Nếu mô hình trả rác hàng loạt, lượt chạy trông như bình thường và không ai biết bước đối chiếu giữa luật và LLM đã bị bỏ qua trên các offer đó.",
+      "can_cu": "Giá trị vẫn đi theo luật xác định nên không sai dữ liệu nặng, chỉ thiếu cảnh báo vận hành; bổ sung bộ đếm sau là rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/src/enrich/run.ts",
+      "title": "Tổng kết lượt chạy báo số «áp thẳng/có căn cứ» theo kế hoạch định tuyến, không theo số thực sự được ghi",
+      "severity": "low",
+      "plain": "Dòng tổng kết cuối lượt có thể báo đã áp nhiều giá trị hơn số thực sự được ghi vào dữ liệu, làm người vận hành hiểu sai kết quả lượt chạy.",
+      "can_cu": "Chỉ lệch con số hiển thị, dữ liệu thật không bị sai; người vận hành đối chiếu lại được, sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": true
+    },
+    {
+      "file": "app/tests/review-card.test.tsx",
+      "title": "Hình dạng 3: thẻ xung đột AC-11 chỉ kiểm từng chuỗi có mặt, không kiểm cặp nhãn ↔ giá trị ↔ căn cứ",
+      "severity": "medium",
+      "plain": "Bài kiểm thẻ đối chiếu có thể vẫn xanh nếu sau này nhãn «Theo luật» và «Theo LLM» bị gắn nhầm giá trị hoặc căn cứ, khiến người duyệt chọn nhầm bên.",
+      "can_cu": "Hiện giao diện chưa sai, chỉ là lưới an toàn của test còn lỏng; siết lại sau không ảnh hưởng người dùng và không mất dữ liệu.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/tests/enrich-db.test.ts",
+      "title": "Hình dạng 4: kiểm âm tính bằng every trên tập có thể rỗng, không đối chứng dương rằng field không xung đột có mặt",
+      "severity": "low",
+      "plain": "Nếu thẻ xung đột làm rơi các field không xung đột thì bài kiểm vẫn không báo đỏ, nên người duyệt có thể thiếu thông tin mà không ai hay.",
+      "can_cu": "Hiện chưa có bằng chứng thẻ đang thiếu field, chỉ là test chưa bắt được; bổ sung kiểm tra sau rẻ và không rủi ro dữ liệu.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": true
+    },
+    {
+      "file": "agent/tests/enrich-guard.test.ts",
+      "title": "Hình dạng 5: tuyên quét cả lớp «0 câu UPDATE sale_offers|properties», nhưng bộ dò theo dòng và chiều đỏ chỉ có điểm-case một dòng",
+      "severity": "low",
+      "plain": "Bộ rào chắn chống ghi thẳng giá trị LLM vào dữ liệu có thể bỏ sót vài cách viết, nên sau này ai đó vô tình ghi thẳng mà không bị chặn.",
+      "can_cu": "Hiện không có bằng chứng đang còn đường ghi thẳng, chỉ là rào chắn chưa kín; bổ sung sau rẻ và không ảnh hưởng người dùng hiện tại.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/review-card.test.tsx",
+      "title": "Hình dạng 3: thẻ AC-9 kiểm «độ tin cậy» bằng chuỗi '85%' có mặt, trong khi mọi field của fixture đều 0.85",
+      "severity": "low",
+      "plain": "Bài kiểm có thể vẫn xanh dù thẻ hiện sai độ tin cậy ở từng dòng, nên người duyệt có thể thấy con số không đúng với giá trị đi kèm.",
+      "can_cu": "Giao diện hiện chưa được chứng minh sai, chỉ là test chưa phân biệt được; sửa bằng dữ liệu mẫu đa dạng hơn sau là rẻ và không mất dữ liệu.",
+      "proposal": "known-limits",
+      "fromRound": 3,
+      "tepDoi": false
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/enrich-qua-de-xuat/evals.yaml",
+    "_acceptance/enrich-qua-de-xuat/s4-args-r3.json",
+    "agent/src/enrich/run.ts",
+    "agent/tests/enrich-db.test.ts"
+  ],
+  "carriedPanels": [
+    {
+      "evalId": "E6",
+      "proposal": "PASS",
+      "votes": [
+        {
+          "lens": "domain-correctness",
+          "verdict": "PASS"
+        },
+        {
+          "lens": "operational-feasibility",
+          "verdict": "PASS"
+        },
+        {
+          "lens": "spec-alignment",
+          "verdict": "PASS"
+        }
+      ],
+      "fromRound": 3,
+      "inputsHash": "6ebb9b967d477e43dbe46ede6bec8f3c36ad7a82aea9860ce3ad12a7da18e727"
+    },
+    {
+      "evalId": "E13",
+      "proposal": "PASS",
+      "votes": [
+        {
+          "lens": "domain-correctness",
+          "verdict": "PASS"
+        },
+        {
+          "lens": "operational-feasibility",
+          "verdict": "PASS"
+        },
+        {
+          "lens": "spec-alignment",
+          "verdict": "PASS"
+        }
+      ],
+      "fromRound": 3,
+      "inputsHash": "accca3274fe44806f64820906aa49011fb441dc374174e104bfa607962eb4d58"
+    },
+    {
+      "evalId": "E17",
+      "proposal": "PASS",
+      "votes": [
+        {
+          "lens": "domain-correctness",
+          "verdict": "PASS"
+        },
+        {
+          "lens": "operational-feasibility",
+          "verdict": "PASS"
+        },
+        {
+          "lens": "spec-alignment",
+          "verdict": "PASS"
+        }
+      ],
+      "fromRound": 3,
+      "inputsHash": "592f775626a946f67758a5d9bb3cd4dc2d7fb4f316cecc6449ba0681529aee99"
+    }
+  ],
+  "thuocChup": {
+    "sha": "2cf05c098790260fc0527399ffb969612f75f6b3",
+    "n": 29,
+    "digest": "db53b7b068b01649bb4cdb67b580dad189d0f88d29b4f733c68f66620ddef921",
+    "tep": {
+      "_acceptance/config.yaml": "dc6df447fba8806688493bb632f7ebc10f7b11478b54b0a13b60a8a726a31f18",
+      "_acceptance/enrich-qua-de-xuat/evals.yaml": "0333359a88d19d237affe63d65f8faeac4235f0ce51269350f4e5d1fbad60c3c",
+      "agent/tests/enrich-apply.test.ts": "69407e7d1049ac4a8c7db6e61fb4326576773bed97070be691cf782d02993975",
+      "agent/tests/enrich-db.test.ts": "47da4c973cc8b9112113634bb2c9cb40612e7391977255a456be28152a05a3ed",
+      "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
+      "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "app/eslint-plugin-onehub-ui/tests/check-bare-disables.test.mjs": "f4d5a768000e10b0afcd865dda45027bfc374f5d448b365e71b5b22168264a43",
+      "app/eslint-plugin-onehub-ui/tests/check-baseline-growth.test.mjs": "7d3e9509b9a3e78e6f353df55f97625630b4f178d838a97c329509512222e547",
+      "app/eslint-plugin-onehub-ui/tests/index.test.mjs": "655e46d7c05ac26ed76d92ea3d9b19c5c22a59bb7ca198afa960362235771b08",
+      "app/eslint-plugin-onehub-ui/tests/no-arbitrary-text-size.test.mjs": "5ba51c96484865cb98cb413843375d2d88c552b7616e0586771df7287ce60f4d",
+      "app/eslint-plugin-onehub-ui/tests/no-aschild.test.mjs": "29033a30554d246c3404b9c9b442e1282f391c6eb90ed6b64e03271a666c0811",
+      "app/eslint-plugin-onehub-ui/tests/no-banned-motion.test.mjs": "74755fcdf27b99fdbf1a600cbcfc1bb472e98c18317cfd710b7249e3a770de53",
+      "app/eslint-plugin-onehub-ui/tests/no-emoji-icons.test.mjs": "8571b78c4733c9acf687690ce54745452bec6a4f3c7ba7f96ba76b4f87efeaa6",
+      "app/eslint-plugin-onehub-ui/tests/no-hardcoded-color.test.mjs": "ce68e4bd5a75a83233763bcdd435650faf8cc9e85e342e5d3a863c7692bedec9",
+      "app/eslint-plugin-onehub-ui/tests/no-native-dialogs.test.mjs": "6e416272870f14e77e371283766d314135dbe67004cf40b3e7d1f62569154506",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-controls.test.mjs": "dd56262f5e572f0f5cd139aafd66033e3815ac088c1f72ee9a780b45edc73015",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-palette.test.mjs": "ed3843f2e6445fa54dd3e765f6d749a9d148f8dc4e0e0d239f13016c77db4e65",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-table.test.mjs": "78446ffe3717c3c22e49b6d7787f9ab8bbe0d921d2469c7917f00fba265935f4",
+      "app/eslint-plugin-onehub-ui/tests/require-disable-reason.test.mjs": "6d87f7afd3f155f9f8be54e3eced84ea6c780593d78234f01e3a82d491f03fa5",
+      "app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs": "41bf3d315532e999aece315d13eed020630189447439542e228427474cc4e4e8",
+      "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
+      "app/tests/review-card.test.tsx": "9b8f78071ef4958abc550436d5bf45d797f4c14e4c145b7acfc1762d790fbaea",
+      "collector/src/test/api.test.ts": "a5192a66ca23ef509a452f6ad44e402c38d7466efc2ec9728d1df08c20a1cf6f",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/media-fetch.test.ts": "244f05faac3257defb40409e57127b212425b62d442aacd13b3c97dfc3672ea7",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb",
+      "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218"
+    }
+  },
+  "cayChup": {
+    "sha": "2cf05c098790260fc0527399ffb969612f75f6b3",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}
