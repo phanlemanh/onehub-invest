@@ -80,8 +80,7 @@
       "nhom": "du-lieu-that",
       "dot": "phan-loai-2310",
       "phu": [
-        "C1.1",
-        "KV3"
+        "C1.1"
       ],
       "ghi_chu": "KV3 (nghiệm thu PL4, 23/10): hết lọc Kev thì raw/stg Zalo dự kiến phình ×3 — thêm tiêu chí đo dung lượng và thời gian chạy transform-zalo + sync cloud trên một ngày v3 trước khi bật."
     },
@@ -1642,6 +1641,16 @@
         "TD29"
       ],
       "mo_lai_khi": "Mạnh quyết, PL24 và PL27 giao xong"
+    },
+    {
+      "ma": "KH-KV3",
+      "dot": "bo-sung-2310",
+      "cau_giao": "Đo dung lượng và thời gian chạy transform-zalo + sync cloud khi dữ liệu Zalo phình ×3 sau khi hết lọc Kev",
+      "ly_do": "Không phải một kết quả giao riêng: là phép đo trước khi bật, thuộc tiêu chí của PL5 (đọc meta.kev.p từ stg) — đã ghi vào ghi_chu PL5.",
+      "phu": [
+        "KV3"
+      ],
+      "mo_lai_khi": "PL5 mở vòng: thêm tiêu chí đo ở Cổng Phạm vi; nếu số đo vượt ngưỡng chạy đêm thì cắt hàng riêng."
     }
   ],
   "da_bac": []
