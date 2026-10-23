@@ -5,7 +5,7 @@ slug: deals-api-tam-dong
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-deals-api-tam-dong-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23T09:31:38Z
@@ -75,3 +75,7 @@ Quét bằng morphological-scan (preset test-matrix), ba trục:
 - Merge vào `main` = Vercel deploy prod = API đóng với người gọi công khai ngay (khó-đảo nhẹ; đảo bằng `git revert`).
 - Smoke sống cần app chạy TỪ worktree đang kiểm ở `:3456` (hoặc `BASE_URL`) + DB local `:5433`; token lấy từ env
   `OPS_API_TOKEN`, thiếu thì `app/.env.local`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: Bài kiểm tra trực tiếp không tự chặn khi máy đang trỏ vào cơ sở dữ liệu thật — chạy nhầm mà quên cờ chỉ-đọc thì một tài khoản ops thử bị tạo trên dữ liệu thật.
+  - Ngoài-2: Ca kiểm «máy chủ chưa đặt khoá» chỉ một trong bốn tổ hợp bắt được việc gỡ rào; rào hiện chạy đúng nhưng một lần gỡ nhầm về sau có thể lọt.
+  - Ngoài-3: Bài kiểm tra trực tiếp không tự xác minh app ở :3456 chạy từ đúng bản đang nghiệm thu; người chạy phải tự bảo đảm.

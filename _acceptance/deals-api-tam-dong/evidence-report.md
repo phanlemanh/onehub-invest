@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: deals-api-tam-dong
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 62d94b5651f584a3bbc97c508ff66353b069a31f
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: deals-api-tam-dong
@@ -163,7 +163,7 @@ Hội đồng chỉ ĐỀ XUẤT; ô human_override để trống cho người �
     - domain-correctness: PASS — Docstring của route.ts ghi «TẠM ĐÓNG — chỉ bearer OPS_API_TOKEN hoặc phiên ops», lý do «audit 23/10 P7 — 29/30 deal công khai là tin mock S03 (Q3)», và điều kiện mở lại «khi PL2 đã rút tin mock khỏi canonical là quyết riêng, hàng riêng». ROADMAP §4 Track 5 hàng V9 (dòng 236) nói cùng ba ý đó. Docstring không còn cụm «public API» hay «API công khai» (grep không có kết quả).
     - operational-feasibility: PASS — Docstring của route (dòng 9-12) và ROADMAP §4 Track 5 hàng V9 (dòng 236) đều nêu: tạm đóng, chỉ bearer OPS_API_TOKEN hoặc phiên ops, lý do audit 23/10 P7 (29/30 deal là tin mock S03, Q3), và điều kiện mở lại là PL2 rút tin mock khỏi canonical, quyết riêng, hàng riêng. Docstring không còn gọi route là «public API»; chữ «công khai» duy nhất ở đó chỉ nói về các deal bị lộ.
     - spec-alignment: PASS — Docstring của route.ts (dòng 9-13) ghi «TẠM ĐÓNG — chỉ bearer OPS_API_TOKEN hoặc phiên ops». Lý do là audit 23/10 P7: 29/30 deal là tin mock S03, Q3 «đóng ngay». Điều kiện mở lại là «khi PL2 đã rút tin mock khỏi canonical là quyết riêng, hàng riêng». Dòng V9 của ROADMAP (dòng 236) nói cùng ba ý đó, và cụm «public API» không còn trong docstring. Chữ «công khai» còn lại chỉ mô tả các deal bị lộ, không gọi route là API công khai.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-23
 
 ## Known limits
 
