@@ -1,0 +1,15 @@
+E10 network truth — Browser pane (mcp__Claude_Browser), origin http://localhost:3456 (config dev_server.url; không có api_base)
+Phiên: /vn/hanoi/hoan-kiem (rê tooltip, bấm Công suất) -> /yield (bấm Quý). 253 request ghi nhận (200 cuối được đọc, cộng lọc /api/).
+
+FAIL-eligible (fetch/XHR tới origin app, không phải static):
+  GET  /vn/hanoi/hoan-kiem                -> 200 OK   (nhiều lần)
+  GET  /yield                             -> 200 OK   (nhiều lần)
+  GET  /yield?_rsc=REDACTED               -> 200 OK   (9 lần; 7 lần kèm net::ERR_ABORTED = trình duyệt tự huỷ prefetch RSC khi điều hướng, máy chủ trả 200)
+  POST /api/v1/user-events                -> 200 OK   x1 (lần tải đầu)
+  POST /api/v1/user-events                -> 401 Unauthorized x2 (khi chưa đăng nhập; beacon telemetry có sẵn, components/user-event-beacon.tsx, ngoài phạm vi B3; expected cho phép 200 hoặc 401)
+  Không có request /api/* nào của biểu đồ; không có 4xx/5xx nào khác.
+
+Static (chỉ note): mọi /_next/static/** và font woff2 -> 200/304. GET /maplibre-gl-worker.mjs: Browser pane không ghi status (worker); curl trực tiếp -> xem dòng cuối.
+
+Console: 1 error "Failed to load resource ... 401 (Unauthorized)" = beacon user-events ở trên; 1 warn MapLibre 'Image "circle-11" could not be loaded' (bản đồ nền, ngoài phạm vi B3, không phải request của biểu đồ); còn lại log Fast Refresh/HMR.
+curl /maplibre-gl-worker.mjs -> 200

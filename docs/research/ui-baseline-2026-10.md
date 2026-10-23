@@ -70,6 +70,50 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 | Trang có trạng thái tải | kiểm kê tay | 0 / 21 | mọi trang có vùng dữ liệu |
 | File feature > 200 dòng | `wc -l` | 19 | giảm; không ép số |
 
+## Sau B3 — thống nhất biểu đồ (2026-10-23)
+
+- **Commit:** `fdda593` (nhánh `claude/ui-clean-b3-charts-f4d78e`, đã merge main `8595dc0`: Phần A + #3–#8 + #10; đo lần đầu ở `a7e4ba5` trước merge: 133 vi phạm / 29 file)
+- **Chạy lại:** `cd app && npm run lint:ui-report`; thước của đợt: `node scripts/ui-standards/b3-check.mjs <lệnh>`
+- Mục suppress phạm vi B3 (performance, revenue-mix, yield/pnl): 8 → 0 — 5 `no-raw-palette` sửa thật bằng bảng màu chung (`components/charts/palette.ts`), 3 thành ngoại lệ có lý do "nguyên bản @reui/chart-6" (2 `no-banned-motion`, 1 `no-raw-controls`).
+- File > 200 dòng phạm vi B3: 7 → 0 (margin-plot 780, metric-plot 510, plot-motion 282, revenue-mix/chart 251, performance/chart 231, pnl/chart 203, performance/chart-toolbar 201).
+- Code biểu đồ chép trùng (`b3-check.mjs duplicates`, cửa sổ 6 dòng giữa hai tệp): 7 nhóm trùng + 6 bản riêng `use-trigger-tooltip`/`icons` → 0; một bảng màu chuỗi thay ba bảng riêng.
+
+### Số liệu lint UI toàn app tại commit trên
+
+**Tổng 131 vi phạm trong 28 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
+
+#### Theo luật
+
+| Luật | Tổng | Baseline | Ngoại lệ có lý do | Mới (đỏ) |
+|---|---:|---:|---:|---:|
+| `onehub-ui/no-arbitrary-text-size` | 32 | 32 | 0 | 0 |
+| `onehub-ui/no-raw-controls` | 26 | 25 | 1 | 0 |
+| `onehub-ui/no-raw-palette` | 25 | 25 | 0 | 0 |
+| `onehub-ui/no-hardcoded-color` | 16 | 16 | 0 | 0 |
+| `onehub-ui/no-emoji-icons` | 15 | 15 | 0 | 0 |
+| `onehub-ui/no-banned-motion` | 8 | 6 | 2 | 0 |
+| `onehub-ui/no-raw-table` | 6 | 6 | 0 | 0 |
+| `onehub-ui/no-native-dialogs` | 3 | 3 | 0 | 0 |
+| **Tổng** | 131 | 128 | 3 | 0 |
+
+#### Theo thư mục (cấp 2 dưới `src/`)
+
+| Thư mục | Tổng | Baseline | Ngoại lệ có lý do | Mới (đỏ) |
+|---|---:|---:|---:|---:|
+| `components/ops` | 45 | 45 | 0 | 0 |
+| `components/marketing` | 18 | 18 | 0 | 0 |
+| `app/ops` | 17 | 17 | 0 | 0 |
+| `components/invest` | 12 | 12 | 0 | 0 |
+| `components/auth` | 9 | 9 | 0 | 0 |
+| `components/finder` | 9 | 9 | 0 | 0 |
+| `components/insight` | 6 | 3 | 3 | 0 |
+| `components/saved` | 5 | 5 | 0 | 0 |
+| `components/yield` | 4 | 4 | 0 | 0 |
+| `components/listing` | 3 | 3 | 0 | 0 |
+| `components/shell` | 2 | 2 | 0 | 0 |
+| `components/compare` | 1 | 1 | 0 | 0 |
+| **Tổng** | 131 | 128 | 3 | 0 |
+
 ## Ghi chú
 
 - Dòng "render không thuần" (`Math.random()`/`Date.now()` trong render) do `react-hooks/purity` của `eslint-config-next` lo (mức `error`), không có luật onehub-ui riêng.
