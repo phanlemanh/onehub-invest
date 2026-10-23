@@ -5,7 +5,7 @@ slug: freshness-do-gio-thu-that-s03
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-23-freshness-do-gio-thu-that-s03-design.md
 veto_state: mo
 veto_opened_at: 2026-10-23T12:22:00Z
