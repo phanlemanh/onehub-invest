@@ -45,7 +45,8 @@ Source input: prompt — phiên «Setup project Invest và Điều phối» (`lo
   bảng mới.
 - AC-5: Given Supabase giả lập, When áp 037 hai lần liên tiếp, Then cả hai lần exit 0 và bảng quyền
   sau lần 2 giống hệt sau lần 1.
-- AC-6: Given DB local :5433 (không có role anon), When áp 037 hai lần, Then cả hai lần exit 0 và
+- AC-6: Given một DB cùng image với DB local (kartoza/postgis 17, không có role anon) dựng từ
+  `db/migrations/`, When áp 037 hai lần, Then cả hai lần exit 0 và
   báo bỏ qua. ACL, cờ RLS và option của mọi quan hệ public, quyền hàm và default privileges đều
   không đổi.
 - AC-7: Given tệp 037, When đọc nội dung, Then tệp không ghi hay xoá dữ liệu (INSERT, UPDATE,
@@ -70,7 +71,7 @@ Bỏ quét morphological đầy đủ vì thay đổi hẹp: một migration ch�
   Role của supabase_admin (PostGIS) nằm ngoài tầm (Known limits).
 - Trục đối tượng: bảng, view, sequence, hàm hiện có (AC-1, AC-2). Đối tượng tạo sau (AC-4).
 - Trục lớp truy cập: SQL `SET ROLE` (AC-1, AC-3). PostgREST HTTP thật (AC-1, AC-3, AC-8).
-- Trục nơi chạy: Supabase giả lập (AC-1 đến AC-5, AC-8). DB local (AC-6). Cloud thật chỉ đo trước
+- Trục nơi chạy: Supabase giả lập (AC-1 đến AC-5, AC-8). DB kiểu local trong container tạm (AC-6). Cloud thật chỉ đo trước
   (`do-truoc-cloud.md`). Đo sau khi áp do Mạnh chạy theo runbook (AC-9).
 - Trục thời gian: áp lần 2 (AC-5), hoàn tác rồi áp lại (AC-8).
 
@@ -95,6 +96,9 @@ Bỏ quét morphological đầy đủ vì thay đổi hẹp: một migration ch�
 - Giáp ranh sync-cloud: bản sync mới nạp và tráo bảng qua Management API bằng postgres (chủ bảng).
   037 không FORCE RLS nên đường đó vẫn đi. push-ops-facts ghi qua `/api/v1/ops/ingest` của app,
   app ghi bằng postgres.
+- 2026-10-23 ~03:00 UTC: DB chung :5433 xuất hiện role anon/authenticated và RLS bật trên 43/44
+  bảng public. Phiên này không làm việc đó, và đã hỏi phiên điều phối xem ai làm. Vì vậy bài
+  kiểm AC-6 chạy trên container tạm, không dựa vào trạng thái DB dùng chung.
 - Lớp HTTP được đo bằng PostgREST thật (`supabase/postgrest` v14.16) trước role authenticator,
   với JWT anon/service_role ký bằng secret tạm của container. Đây là cùng đường mà anon key
   ngoài đời đi qua.

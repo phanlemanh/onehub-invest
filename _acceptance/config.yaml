@@ -83,7 +83,7 @@ executors:
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
     ops_login: "bash scripts/dev-ops-login-check.sh"   # đăng nhập đầu-cuối tài khoản ops thử — cần dev server :3456 + DB local
-    # supabase-lock-anon-rls — sim cần docker + image supabase/postgres 17.6.1.158 + postgrest v14.16; local cần :5433
+    # supabase-lock-anon-rls — cần docker; sim: image supabase/postgres 17.6.1.158 + postgrest v14.16; local: kartoza/postgis 17-3.5 (container tạm, không chạm :5433)
     supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
     supabase_lock_local: "bash scripts/check-supabase-lock.sh local"
     supabase_lock_sim: "bash scripts/check-supabase-lock.sh sim"

@@ -4,7 +4,9 @@
 #
 #   static  037 chỉ REVOKE/ENABLE RLS/ALTER DEFAULT PRIVILEGES: không ghi dữ liệu, không
 #           GRANT, không đụng service_role, no-op khi không có role anon
-#   local   áp 037 hai lần vào DB local :5433 → exit 0, quyền/RLS/option local không đổi (no-op)
+#   local   container tạm cùng image DB local (kartoza/postgis, không role Supabase) dựng từ
+#           db/migrations → áp 037 hai lần exit 0, quyền/RLS/option không đổi (no-op). Không chạm
+#           DB chung :5433 (role trong cluster đó do nhiều phiên dùng chung, không ổn định).
 #   sim     container Supabase Postgres + PostgREST tạm (cùng image Supabase, role và default
 #           privileges y cloud) dựng từ db/migrations → trước: anon đọc được (lỗ tái hiện);
 #           sau 037 (áp 2 lần): anon/authenticated hết quyền, RLS bật, service_role + postgres
@@ -86,18 +88,25 @@ case "$MODE" in
     grep -q "rolname = 'anon'" "$MIG" && grep -q 'RETURN;' "$MIG" && pass "037 dừng sớm khi không có role anon" || fail "037 thiếu chốt no-op khi không có role anon"
     ;;
   local)
-    CT=one-invest-db
+    LIMG=kartoza/postgis:17-3.5; CT=acc-sblock-local
+    trap 'docker rm -f "$CT" >/dev/null 2>&1' EXIT; docker rm -f "$CT" >/dev/null 2>&1
+    docker run -d --rm --name "$CT" -e POSTGRES_USER=oneinvest -e POSTGRES_PASS=oneinvest -e POSTGRES_DBNAME=oneinvest "$LIMG" >/dev/null || { echo "FAIL không chạy được container $LIMG"; exit 1; }
     q() { docker exec -i -e PGPASSWORD=oneinvest "$CT" psql -U oneinvest -h localhost -d oneinvest -X -At -v ON_ERROR_STOP=1 "$@"; }
+    for i in $(seq 1 60); do q -c "SELECT 1" >/dev/null 2>&1 && break; sleep 2; done
+    q -c "SELECT 1" >/dev/null 2>&1 || { echo "FAIL DB kiểu local không lên"; exit 1; }
+    BAD=""
+    for f in "$ROOT"/db/migrations/*.sql; do [ "$f" = "$MIG" ] && continue; q -q < "$f" >/dev/null 2>&1 || BAD="$BAD $(basename "$f" .sql)"; done
+    [ -n "$BAD" ] && echo "note: lỗi trên DB trống (tồn đọng, ngoài phạm vi):$BAD"
     SNAP="SELECT md5(string_agg(c.relname||':'||coalesce(c.relacl::text,'')||':'||c.relrowsecurity||':'||coalesce(c.reloptions::text,''), ',' ORDER BY c.relname)) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public'"
     SNAPF="SELECT md5(coalesce(string_agg(p.oid::regprocedure::text||':'||coalesce(p.proacl::text,''), ',' ORDER BY 1),'')||(SELECT coalesce(string_agg(defaclacl::text,',' ORDER BY defaclrole, defaclnamespace, defaclobjtype),'') FROM pg_default_acl)) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public'"
-    [ "$(q -c "SELECT count(*) FROM pg_roles WHERE rolname='anon'")" = 0 ] && pass "DB local không có role anon" || fail "DB local có role anon — 037 sẽ không no-op"
+    [ "$(q -c "SELECT count(*) FROM pg_roles WHERE rolname='anon'")" = 0 ] && pass "DB kiểu local không có role anon" || fail "DB kiểu local có role anon — 037 sẽ không no-op"
     B=$(q -c "$SNAP"); BF=$(q -c "$SNAPF")
     for i in 1 2; do
-      OUT=$(q < "$MIG" 2>&1) && pass "037 lần $i exit 0 trên local" || fail "037 lần $i lỗi trên local: $OUT"
+      OUT=$(q < "$MIG" 2>&1) && pass "037 lần $i exit 0 trên DB kiểu local" || fail "037 lần $i lỗi trên DB kiểu local: $OUT"
       echo "$OUT" | grep -q 'bỏ qua' && pass "037 lần $i báo bỏ qua (no-op)" || fail "037 lần $i không báo bỏ qua"
     done
-    [ "$B" = "$(q -c "$SNAP")" ] && pass "quyền/RLS/option quan hệ local không đổi (md5 $B)" || fail "037 đổi quyền/RLS ở local"
-    [ "$BF" = "$(q -c "$SNAPF")" ] && pass "quyền hàm + default privileges local không đổi" || fail "037 đổi quyền hàm/default privileges ở local"
+    [ "$B" = "$(q -c "$SNAP")" ] && pass "quyền/RLS/option quan hệ không đổi (md5 $B)" || fail "037 đổi quyền/RLS ở DB kiểu local"
+    [ "$BF" = "$(q -c "$SNAPF")" ] && pass "quyền hàm + default privileges không đổi" || fail "037 đổi quyền hàm/default privileges ở DB kiểu local"
     ;;
   sim)
     IMG=public.ecr.aws/supabase/postgres:17.6.1.158
