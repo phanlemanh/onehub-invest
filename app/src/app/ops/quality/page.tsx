@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 
 import { AirdnaMarketsTable, CalibrationTable, TruthfulCoverageTable } from "@/components/ops/quality-tables";
+import { DqChecksTable, type DqCheckRow } from "@/components/ops/quality/dq-checks-table";
+import { PageHeader } from "@/components/page/page-header";
+import { StatTiles } from "@/components/page/stat-tiles";
+import type { StatTile } from "@/components/page/tiers";
+import { fmtInt } from "@/lib/format";
 import { getRulerHealth } from "@/lib/ops-queries";
 import { pool } from "@/lib/db";
 import { getAirdnaComparison, getAirdnaMarkets, getTruthfulCoverage } from "@/lib/queries";
@@ -14,7 +19,7 @@ export const metadata: Metadata = { title: "Chất lượng dữ liệu" };
  */
 export default async function QualityPage() {
   const ruler = await getRulerHealth();
-  const { rows: dq } = await pool.query(
+  const { rows: dq } = await pool.query<DqCheckRow>(
     `SELECT check_name, entity, status, detail, checked_at::text FROM dq_check_results
      WHERE checked_at > now() - interval '7 days' ORDER BY checked_at DESC LIMIT 20`,
   );
@@ -30,71 +35,36 @@ export default async function QualityPage() {
   ]);
   const calibrated = comparisons.filter((c) => c.data !== null);
 
+  const tiles: StatTile[] = [
+    {
+      title: "Phường có thước P2",
+      value: `${fmtInt(ruler.phuongWithRuler)} / ${fmtInt(ruler.totalPhuong)}`,
+      footer: "Thước giá P2 cần n ≥ 5 tin",
+    },
+    ...ruler.offersByTier.map((t) => ({
+      title: `Offers tầng ${t.tier}`,
+      value: fmtInt(t.offers),
+      footer: "Kiến trúc 3 tầng giá",
+    })),
+    {
+      title: "Người bán",
+      value: fmtInt(ruler.sellers),
+      footer: `${fmtInt(ruler.gapOffers)} offers có bait_gap`,
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
-      {/* G-1 Lô 2: kết quả DQ checks gần nhất (enum-vocab + các check khác) */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium">DQ checks (7 ngày)</h2>
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-muted-foreground border-b bg-muted/30 text-left">
-                <th className="px-3 py-2 font-medium">Check</th>
-                <th className="px-2 py-2 font-medium">Đối tượng</th>
-                <th className="px-2 py-2 font-medium">Kết quả</th>
-                <th className="px-3 py-2 font-medium">Chi tiết</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dq.map((r: { check_name: string; entity: string; status: string; detail: string | null; checked_at: string }, i: number) => (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="px-3 py-1.5 font-mono">{r.check_name}</td>
-                  <td className="text-muted-foreground px-2 py-1.5">{r.entity}</td>
-                  <td className="px-2 py-1.5">
-                    <span className={r.status === 'pass' ? 'text-emerald-600' : r.status === 'warn' ? 'text-amber-600' : 'text-red-600'}>
-                      {r.status}
-                    </span>
-                  </td>
-                  <td className="text-muted-foreground px-3 py-1.5">{r.detail}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
+      <PageHeader
+        crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Chất lượng dữ liệu" }]}
+        title="Chất lượng dữ liệu"
+        stats={[`${fmtInt(dq.length)} kiểm`, `${fmtInt(calibrated.length)} thị trường hiệu chuẩn`]}
+        description="Đối chiếu số tự thu với AirDNA — chỉ nội bộ, không hiện cho nhà đầu tư."
+      />
       {/* H3-P3: chất lượng thước P2 + phân bố tier (kiến trúc 3 tầng giá) */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium">Thước giá &amp; kiến trúc 3 tầng</h2>
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-          <div className="rounded-lg border p-3">
-            <p className="text-muted-foreground text-[11px]">Phường có thước P2 (n≥5)</p>
-            <p className="text-lg font-semibold tabular-nums">
-              {ruler.phuongWithRuler}
-              <span className="text-muted-foreground text-xs font-normal">/{ruler.totalPhuong}</span>
-            </p>
-          </div>
-          {ruler.offersByTier.map((t) => (
-            <div key={t.tier} className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-[11px]">Offers tầng {t.tier}</p>
-              <p className="text-lg font-semibold tabular-nums">{t.offers}</p>
-            </div>
-          ))}
-          <div className="rounded-lg border p-3">
-            <p className="text-muted-foreground text-[11px]">Người bán (sellers)</p>
-            <p className="text-lg font-semibold tabular-nums">{ruler.sellers}</p>
-            <p className="text-muted-foreground text-[10px]">{ruler.gapOffers} offers có bait_gap</p>
-          </div>
-        </div>
-      </section>
-
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-xl font-medium">Chất lượng dữ liệu</h1>
-        <p className="text-muted-foreground text-xs">
-          Đối chiếu số tự thu với AirDNA Market Research. Nội bộ — không hiển thị cho
-          nhà đầu tư.
-        </p>
-      </div>
+      <StatTiles items={tiles} />
+      {/* G-1 Lô 2: kết quả DQ checks gần nhất (enum-vocab + các check khác) */}
+      <DqChecksTable rows={dq} />
       <TruthfulCoverageTable rows={truthful} />
       {calibrated.map(({ market, data }) => (
         <CalibrationTable key={market.id} marketName={market.name} data={data!} />

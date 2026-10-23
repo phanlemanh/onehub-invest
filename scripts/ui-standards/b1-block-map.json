@@ -1,0 +1,12 @@
+{
+  "_nguon": "Viết tay từ design §2b (bảng trang → block), Mạnh duyệt Cổng Phạm vi 2026-10-23. adaptedDir tính từ app/src/components.",
+  "shell": { "block": "app-shell-36", "adaptedDir": "shell/ops-shell", "droppedIdentifiers": ["ContentSkeleton", "DASHBOARDS", "PinnedPages", "demoState"] },
+  "pages": [
+    { "route": "/ops", "page": "app/ops/page.tsx", "blocks": ["solution-dev-ops-5"], "adaptedDir": "ops/overview", "droppedIdentifiers": ["generateSeries", "BudgetBurnChart", "Lollipop", "BurnGauge", "RAW_SLOS"] },
+    { "route": "/ops/collections", "page": "app/ops/collections/page.tsx", "blocks": ["solution-dev-ops-6", "solution-dev-ops-1"], "adaptedDir": "ops/collections", "droppedIdentifiers": ["sampleRows", "maskSample", "rotateCredential", "RAW_JOBS", "CronEditor", "TIMEZONES"] },
+    { "route": "/ops/quality", "page": "app/ops/quality/page.tsx", "blocks": [], "adaptedDir": null, "droppedIdentifiers": [] },
+    { "route": "/ops/review", "page": "app/ops/review/page.tsx", "deferred": true, "blocks": ["solution-agents-5"], "adaptedDir": "ops/review", "droppedIdentifiers": ["APPROVALS", "RECENT_DECISIONS", "COVERAGE"] },
+    { "route": "/ops/sources", "page": "app/ops/sources/page.tsx", "blocks": ["solution-ai-ops-2", "solution-dev-ops-6"], "adaptedDir": "ops/sources", "droppedIdentifiers": ["PROVIDER_CONNECTIONS", "PROVIDER_WIDGET_CARDS", "sampleRows", "rotateCredential"] },
+    { "route": "/ops/design", "page": "app/ops/design/page.tsx", "blocks": [], "adaptedDir": "ops/design", "droppedIdentifiers": [] }
+  ]
+}

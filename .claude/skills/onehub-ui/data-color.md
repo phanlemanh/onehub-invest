@@ -55,6 +55,8 @@ Luật chọn màu (chốt ở B3, Cổng Phạm vi 2026-10-23):
 | `share3` | Cơ cấu, lát thứ ba | indigo-300 (2,01) | indigo-300 (8,92) | Cơ cấu doanh thu | miễn |
 | `rest` | "Khác" (nền lát) | zinc-100 | zinc-800 | Cơ cấu doanh thu | miễn |
 | `hatch` | Vạch chéo + chấm "Khác" | zinc-300 | zinc-600 | Cơ cấu doanh thu | miễn |
+| `opsVolume` | Ops: bản ghi đã vào kho theo ngày | blue-600 (5,26) | blue-400 (6,79) | Ops — Luồng 7 ngày | |
+| `opsVolumeRaw` | Ops: bản ghi thô/chạm theo ngày | violet-600 (5,88) | violet-400 (6,28) | Ops — Luồng 7 ngày | |
 
 - **Chuỗi chỉ có ở Ops** (biểu đồ của block Ops, vd `solution-dev-ops-*`): khai nhóm khoá riêng
   (tiền tố `ops`) trong `palette.ts`, giữ màu block gốc kèm cặp `dark:`; không lẫn vào các nghĩa
@@ -64,3 +66,14 @@ Luật chọn màu (chốt ở B3, Cổng Phạm vi 2026-10-23):
   chọn sắc chưa mang nghĩa khác; tái dùng khoá có sẵn khi cùng nghĩa.
 - Biểu đồ dời từ block ReUI: giữ cấu trúc, chỉ thay màu block bằng khoá cùng nghĩa.
 - Chuỗi biểu diễn bậc (choropleth, thanh xếp hạng) dùng `bins.ts`, không dùng bảng màu chuỗi.
+
+## Ops
+
+Biểu đồ của cổng Ops (đợt B1, `ui-clean-b1-ops`) — chuỗi chỉ có nghĩa ở Ops, lấy màu qua `themeOf()`:
+
+| Biểu đồ | File | Chuỗi → khoá |
+|---|---|---|
+| Luồng 7 ngày (`/ops/collections`) | `components/ops/collections/sync-activity.tsx` | Chế độ Listing: S01 listing tươi → `opsVolume`, S02 listing chạm → `opsVolumeRaw`; chế độ Tin Zalo: S03 offer vào DB → `opsVolume`, S03 post raw → `opsVolumeRaw` |
+
+`opsVolume` giữ sắc "volume" (xanh dương) của block gốc `solution-dev-ops-6`; `opsVolumeRaw` là chuỗi thứ hai (tím).
+Ô số và thanh phân đoạn của Ops dùng token trạng thái (`bg-success`, `bg-warning`, `bg-destructive`, `bg-muted-foreground/40`), không phải màu chuỗi.

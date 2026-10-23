@@ -1,0 +1,11 @@
+E12 — /ops/sources, khoảng thao tác: bấm nút "Xoá nhóm" dòng đầu → AlertDialog → "Huỷ" (CDP Network.enable trên trang, ego-browser page.events()).
+Request trong khoảng thao tác (2):
+  GET  http://localhost:3457/_next/static/media/6306c77e7c8268e4-s.2dbetqa9o8jxf.woff2  [Font]  200
+  GET  http://localhost:3457/__nextjs_font/geist-latin.woff2                             [Font]  200
+fetch/XHR tới origin app: 0
+POST/DELETE /api/v1/ops/source-groups: 0
+Network.loadingFailed: 0
+Số dòng nhóm thu (nút Xoá nhóm): trước 7, sau 7.
+Tự kiểm tầng A (mask-tier-a.js) lúc hộp mở: masked 21, leaked [3] (một tên tầng A hiện trong mô tả hộp) → KHÔNG chụp step1.
+Tự kiểm tầng A sau khi Huỷ: masked 21, leaked [] → chụp step2.
+Tài khoản Zalo: chỉ "default" → step3 n-a.

@@ -31,6 +31,10 @@ export const SERIES = {
   share3:    { light: "var(--color-indigo-300)",  dark: "var(--color-indigo-300)",  swatch: "bg-indigo-300 dark:bg-indigo-300", exempt: true },
   rest:      { light: "var(--color-zinc-100)",    dark: "var(--color-zinc-800)",    exempt: true },
   hatch:     { light: "var(--color-zinc-300)",    dark: "var(--color-zinc-600)",    swatch: "bg-zinc-300 dark:bg-zinc-600", exempt: true },
+  // Ops (B1): chuỗi chỉ có nghĩa ở cổng vận hành — khối lượng bản ghi thu theo ngày.
+  // opsVolume giữ sắc "volume" (--info) của solution-dev-ops-6; opsVolumeRaw là chuỗi thứ hai (bản ghi thô).
+  opsVolume:    { light: "var(--color-blue-600)",   dark: "var(--color-blue-400)",   swatch: "bg-blue-600 dark:bg-blue-400" },
+  opsVolumeRaw: { light: "var(--color-violet-600)", dark: "var(--color-violet-400)", swatch: "bg-violet-600 dark:bg-violet-400" },
 } as const satisfies Record<string, SeriesColor>
 
 export type SeriesKey = keyof typeof SERIES
