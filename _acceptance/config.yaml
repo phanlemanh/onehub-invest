@@ -89,6 +89,7 @@ executors:
     cloud_sync_stage: "cd pipeline && node scripts/check-cloud-sync.mjs stage"
     cloud_sync_overlap: "cd pipeline && node scripts/check-cloud-sync.mjs overlap"
     cloud_sync_allow: "cd pipeline && node scripts/check-cloud-sync.mjs allow"
+    cloud_sync_anon: "cd pipeline && node scripts/check-cloud-sync.mjs anon"          # leak-gate-kiem-anon (AU1): gate đỏ khi anon/authenticated SELECT được public
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
