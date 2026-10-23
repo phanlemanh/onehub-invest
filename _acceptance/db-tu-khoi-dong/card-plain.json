@@ -1,0 +1,32 @@
+{
+  "feature_plain": "Sau khi Docker hay máy khởi động lại, DB local tự chạy lại mà không cần ai gõ lệnh — không lặp lại vụ DB nằm chết 8 giờ đêm 22/10.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ ghi chính sách tự khởi động vào tệp cấu hình DB (compose), và mọi cấu hình khác của DB giữ nguyên như trước."},
+    {"id": "AC-2", "p": "Sẽ có phép kiểm bắt được tệp cấu hình thiếu, tắt hoặc chọn sai chính sách tự khởi động, và bắt được cả khi lỡ đổi cấu hình khác (cổng)."},
+    {"id": "AC-3", "p": "Sẽ chứng rằng khi Docker khởi động lại, DB dựng từ tệp cấu hình tự chạy lại — thử trên một Docker riêng tạm, không đụng DB thật."},
+    {"id": "AC-4", "p": "Sẽ chứng ngược: cùng phép thử nhưng bỏ dòng tự khởi động thì DB nằm chết — để biết phép thử phân biệt được."},
+    {"id": "AC-5", "p": "Sẽ đọc máy thật (chỉ đọc): DB đang chạy với chính sách tự khởi động và colima tự bật khi đăng nhập máy; phép đọc này cũng được thử trên bản hỏng."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG làm DB thật khởi động lại khi đo, và không để sót Docker tạm nào — kể cả khi lượt đo lỗi hay bị ngắt giữa chừng."},
+    {"id": "AC-7", "p": "Sẽ ghi vào sổ vận hành chuỗi tự khởi động, lệnh kiểm, cách triển khai sau khi gộp và giới hạn."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không tự khởi động lại colima thật trên máy để diễn tập — việc đó dừng DB và 14 container khác; Mạnh tự làm khi muốn (câu hỏi bên dưới)."},
+    {"id": "OOS-2", "p": "Không dựng lại container DB ngay — nó đã đang chạy với chính sách đúng; lần dựng lại kế tiếp tự lấy cấu hình mới."},
+    {"id": "OOS-3", "p": "Không làm cho colima chạy trước khi đăng nhập máy (cấu hình máy, ngoài kho)."},
+    {"id": "OOS-4", "p": "Không xử job báo lỗi khi DB không tới (việc AU3) và không đụng hai tiến trình nền của làn ZCode."}
+  ],
+  "scope_plain": "Phần cắt hoặc để việc khác:",
+  "coverage_plain": [
+    {"i": 0, "p": "Các tình huống làm DB dừng: Docker khởi động lại (AC-3, AC-4), máy khởi động lại rồi đăng nhập (AC-5), dựng lại container từ cấu hình (AC-1, AC-2); người chủ động dừng DB thì cố ý không tự bật."},
+    {"i": 1, "p": "Các tầng giữ lời hứa: tệp cấu hình (AC-1, AC-2), DB đang chạy và colima (AC-5), sổ vận hành (AC-7)."},
+    {"i": 2, "p": "Cách chứng: đọc cấu hình, thử bản hỏng, Docker riêng tạm hai chiều, đọc máy thật; diễn tập thật để Mạnh quyết."},
+    {"i": 3, "p": "Mọi phép đo không chạm DB dùng chung (AC-6)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Nặng nhất: chọn bằng chứng thử trên Docker riêng tạm thay vì diễn tập thật là việc của người, không phải máy — đã đưa lên thẻ thành câu hỏi cho Mạnh."},
+    {"i": 1, "p": "Lời hứa «không sót Docker tạm khi lượt đo lỗi» chưa từng được thử ở lượt lỗi — đã thêm lượt ép lỗi và lượt bị ngắt."},
+    {"i": 2, "p": "Lời hứa «cấu hình khác giữ nguyên» chưa có cách bắt sai — đã so với cấu hình trước vòng và thêm bản hỏng đổi cổng."},
+    {"i": 3, "p": "Phép đọc máy thật có thể xanh nhầm khi chỉ tìm chữ — đã đổi sang đọc giá trị và thử trên bản chép đã làm hỏng."},
+    {"i": 4, "p": "Phép chấm sổ vận hành không có tệp để đối chiếu — đã đưa tệp cấu hình và tệp kiểm vào cho người chấm."}
+  ]
+}
