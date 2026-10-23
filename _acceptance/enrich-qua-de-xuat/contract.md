@@ -5,10 +5,10 @@ slug: enrich-qua-de-xuat
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, api, ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: enrich-qua-de-xuat
@@ -62,7 +62,7 @@ Source input: prompt — quyết định của chủ kho trong hội thoại 22/
 
 ## Notes
 
-- Cổng Phạm vi lần 1: Mạnh duyệt 2026-10-22 (AC-1…AC-10, AC-7 cũ «E1 thắng»). Lần 2 (nâng phạm vi sau chạy thử thật 2026-10-23, Mạnh chốt «sửa trước khi ký enrich»): viết lại AC-7, thêm AC-11 — chờ duyệt.
+- Cổng Phạm vi lần 1: Mạnh duyệt 2026-10-22 (AC-1…AC-10, AC-7 cũ «E1 thắng»). Lần 2 (nâng phạm vi sau chạy thử thật 2026-10-23, Mạnh chốt «sửa trước khi ký enrich»): viết lại AC-7, thêm AC-11 — Mạnh duyệt 2026-10-23 theo khuyến nghị (Hỏi-7…10).
 
 - Hàm SQL là một nguồn duy nhất cho việc áp, vì `app/` không được import `agent/` (app/CLAUDE.md).
 - Kiểm thử DB chạy trong transaction rồi ROLLBACK trên Postgres local :5433 — không để lại dữ liệu.
