@@ -103,6 +103,12 @@ Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.e
 - User dọn (tuỳ chọn): remove OpenClaw Desktop app; giữ ~/dev/openclaw
   tới khi PR upstream xong.
 
+## Leak gate kiểm anon của sync cloud (chốt 2026-10-23, `_acceptance/leak-gate-kiem-anon/`)
+
+- `pipeline/sync-cloud.mjs` dừng lượt (pha `gate`, exit 1) khi role anon/authenticated SELECT được quan hệ nào trong
+  `public` của Supabase, chừa ba quan hệ PostGIS. Dòng log và cách gỡ: `docs/ops/supabase-lock-anon-rls.md` mục
+  «Leak gate kiểm anon». Soi prod chỉ đọc: `node pipeline/sync-cloud.mjs --kiem-anon`.
+
 ## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
 
 Sự cố gốc (audit L7): tối 22/10 colima khởi động lại, `one-invest-db` không có restart policy nên nằm chết
