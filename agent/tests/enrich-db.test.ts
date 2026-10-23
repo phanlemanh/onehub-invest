@@ -268,6 +268,16 @@ type ConflictCase = { offer_id: string; trace: string; text: string; output: str
 const CONFLICT: { group_name: string; cases: ConflictCase[] } = JSON.parse(
   readFileSync(join(import.meta.dirname, "fixtures/e1-conflict-cases.json"), "utf8"),
 );
+/**
+ * E1 của lượt chạy thử 23/10: luật cũ ra land vì chữ «đất» trong tên nhóm. Vòng enrich-hau-ky đã siết
+ * luật thật (context-resolver.test.ts AC-8), nên các ca xung đột E1↔LLM dưới đây dựng lại đúng đầu ra
+ * cũ đó trên nền resolveContext thật — cơ chế xung đột vẫn được đo, chỉ nguồn sinh xung đột đổi.
+ */
+const resolveOldLand: ResolveFn = async (g, t) => ({
+  ...(await resolveContext(g, t)),
+  propertyType: "land",
+  typeBasis: `luật từ khoá: «đất» trong tên nhóm «${g}» → land`,
+});
 /** Khuôn evidence thẻ xung đột mà app/tests nạp (E16) — writer thật phải khớp khuôn khoá này. */
 const CARD_FIXTURE = JSON.parse(
   readFileSync(join(import.meta.dirname, "fixtures/e1-conflict-card.json"), "utf8"),
@@ -307,13 +317,9 @@ const ptypeProposals = async (c: pg.Client, id: string) =>
 test("AC-7 hai tin S05 thật không bị áp land", async () => {
   for (const [i, cc] of CONFLICT.cases.entries()) {
     await withTx(async (c) => {
-      // Ghim tiền đề: luật E1 thật vẫn ra land cho ca thật — đổi luật E1 thì ca này báo rõ.
-      const e1 = await resolveContext(CONFLICT.group_name, cc.text);
-      assert.equal(e1.propertyType, "land", `${cc.offer_id}: luật E1 không còn ra land — cập nhật fixture`);
-
       const a = await conflictOffer(c, i);
       const llm = llmFrom(cc);
-      await run(c, [a], llmWith(llm), resolveContext);
+      await run(c, [a], llmWith(llm), resolveOldLand);
 
       assert.equal((await offerRow(c, a)).property_type, "unknown", "AC-7: E1 không được áp khi trái LLM");
       const ps = await ptypeProposals(c, a);
@@ -342,7 +348,7 @@ test("AC-7 hai tin S05 thật không bị áp land", async () => {
 
       // Lượt hai cùng dữ liệu: không nhân, thẻ vẫn giữ dấu xung đột.
       const nP = (await proposals(c, a)).length;
-      await run(c, [a], llmWith(llm), resolveContext);
+      await run(c, [a], llmWith(llm), resolveOldLand);
       assert.equal((await proposals(c, a)).length, nP);
       const again = await pendingCards(c, a);
       assert.equal(again.length, 1);
@@ -350,10 +356,10 @@ test("AC-7 hai tin S05 thật không bị áp land", async () => {
         .every((f: { conflict?: boolean }) => f.conflict === true));
 
       // Lượt sau LLM vắng property_type, rồi LLM lỗi: E1 không được áp vượt thẻ.
-      await run(c, [a], llmWith({ ...llm, property_type: undefined }), resolveContext);
-      await run(c, [a], llmWith(null), resolveContext);
+      await run(c, [a], llmWith({ ...llm, property_type: undefined }), resolveOldLand);
+      await run(c, [a], llmWith(null), resolveOldLand);
       // Lượt sau LLM đổi ý, đồng ý luật («land» của LLM là dòng đề xuất MỚI): vẫn không áp.
-      await run(c, [a], llmWith({ ...llm, property_type: "land" }), resolveContext);
+      await run(c, [a], llmWith({ ...llm, property_type: "land" }), resolveOldLand);
       assert.equal((await offerRow(c, a)).property_type, "unknown", "AC-7 lượt sau áp E1 vượt thẻ");
       const after = await ptypeProposals(c, a);
       assert.ok(after.every((p) => p.status === "queued" && p.route === "review"), "AC-7 lượt sau áp E1 vượt thẻ");
@@ -366,10 +372,10 @@ test("AC-7 để sau thẻ xung đột giữ dấu xung đột", async () => {
   await withTx(async (c) => {
     const a = await conflictOffer(c, 0);
     const llm = llmFrom(CONFLICT.cases[0]);
-    const r1 = await run(c, [a], llmWith(llm), resolveContext);
+    const r1 = await run(c, [a], llmWith(llm), resolveOldLand);
     await c.query(`SELECT decide_enrichment_review($1, 'deferred', 'hitl:test')`, [r1.reviewIds[0]]);
     await c.query(`UPDATE review_queue SET status='deferred' WHERE id=$1`, [r1.reviewIds[0]]);
-    await run(c, [a], llmWith(llm), resolveContext);
+    await run(c, [a], llmWith(llm), resolveOldLand);
     const cards = await pendingCards(c, a);
     assert.equal(cards.length, 1, "AC-7: để sau → đúng một thẻ chờ mới");
     assert.notEqual(Number(cards[0].id), r1.reviewIds[0]);
@@ -386,7 +392,7 @@ test("AC-7 để sau thẻ xung đột giữ dấu xung đột", async () => {
 test("AC-7 đối chứng: LLM đồng ý luật thì áp như cũ", async () => {
   await withTx(async (c) => {
     const a = await conflictOffer(c, 0);
-    await run(c, [a], llmWith({ ...llmFrom(CONFLICT.cases[0]), property_type: "land" }), resolveContext);
+    await run(c, [a], llmWith({ ...llmFrom(CONFLICT.cases[0]), property_type: "land" }), resolveOldLand);
     assert.equal((await offerRow(c, a)).property_type, "land");
     assert.deepEqual(
       (await ptypeProposals(c, a)).map((p) => [p.source, p.route, p.corroborated_by, p.status]),
@@ -402,7 +408,7 @@ test("AC-11 chọn một bên rồi áp", async () => {
     // Chọn «Theo LLM»: đúng chuỗi SQL route chạy — apply_enrichment(chọn + không xung đột) rồi rejected.
     const a = await conflictOffer(c, 0);
     const llm = llmFrom(CONFLICT.cases[0]);
-    const r = await run(c, [a], llmWith(llm), resolveContext);
+    const r = await run(c, [a], llmWith(llm), resolveOldLand);
     const card = r.reviewIds[0];
     const queued = (await c.query(
       `SELECT id, field, source FROM enrichment_proposals WHERE review_id=$1 AND status='queued' ORDER BY id`, [card],
@@ -420,20 +426,20 @@ test("AC-11 chọn một bên rồi áp", async () => {
     const pt = await ptypeProposals(c, a);
     assert.deepEqual(pt.map((p) => [p.source, p.status]), [["e1_rule", "rejected"], ["e2_llm", "applied"]]);
     const nP = (await proposals(c, a)).length;
-    await run(c, [a], llmWith(llm), resolveContext);
+    await run(c, [a], llmWith(llm), resolveOldLand);
     assert.equal((await proposals(c, a)).length, nP, "AC-11: chạy lại không sinh đề xuất mới");
     assert.equal((await pendingCards(c, a)).length, 0, "AC-11: chạy lại không mở thẻ mới");
 
     // «Bỏ»: cả hai rejected, ô giữ trống, chạy lại không đẩy lại.
     const b = await conflictOffer(c, 1);
     const llmB = llmFrom(CONFLICT.cases[1]);
-    const rb = await run(c, [b], llmWith(llmB), resolveContext);
+    const rb = await run(c, [b], llmWith(llmB), resolveOldLand);
     await c.query(`SELECT decide_enrichment_review($1, 'rejected', 'hitl:test')`, [rb.reviewIds[0]]);
     await c.query(`UPDATE review_queue SET status='rejected' WHERE id=$1`, [rb.reviewIds[0]]);
     assert.deepEqual((await ptypeProposals(c, b)).map((p) => p.status), ["rejected", "rejected"]);
     assert.equal((await offerRow(c, b)).property_type, "unknown");
     const nB = (await proposals(c, b)).length;
-    await run(c, [b], llmWith(llmB), resolveContext);
+    await run(c, [b], llmWith(llmB), resolveOldLand);
     assert.equal((await proposals(c, b)).length, nB, "AC-11: «Bỏ» rồi chạy lại không đẩy lại");
     assert.equal((await offerRow(c, b)).property_type, "unknown");
   });
@@ -443,7 +449,7 @@ test("AC-11 chiều đỏ: duyệt thẻ xung đột không chọn thì áp nh�
   // Vì sao route PHẢI chặn khi thiếu choices: decide 'approved' thẳng áp theo thứ tự id → E1 thắng.
   await withTx(async (c) => {
     const a = await conflictOffer(c, 0);
-    const r = await run(c, [a], llmWith(llmFrom(CONFLICT.cases[0])), resolveContext);
+    const r = await run(c, [a], llmWith(llmFrom(CONFLICT.cases[0])), resolveOldLand);
     await c.query(`SELECT decide_enrichment_review($1, 'approved', 'hitl:test')`, [r.reviewIds[0]]);
     assert.equal((await offerRow(c, a)).property_type, "land", "AC-11 duyệt không chọn áp nhầm E1");
     assert.deepEqual((await ptypeProposals(c, a)).map((p) => p.status), ["applied", "skipped"]);

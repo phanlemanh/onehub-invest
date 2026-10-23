@@ -14,11 +14,13 @@ Code ở các đường dẫn này đưa dữ liệu RA KHỎI máy local (cloud
 
 | Tầng | Gì | Được đi đâu |
 |---|---|---|
-| A — bí mật | tên nguồn thật, SĐT, tên/ID người bán, hồ sơ người dùng, `sale_offers` thô, `review_queue`, `user_events/user_profile` | **chỉ máy local** — cloud chỉ nhận hash hoặc aggregate |
+| A — bí mật | tên nguồn thật, hồ sơ người dùng app, `review_queue`, `user_events/user_profile` | **chỉ máy local** — cloud chỉ nhận hash hoặc aggregate |
 | B — nội bộ | mã `S01`…`S07` | API `/api/v1/*`, trang `/ops/**` |
-| C — công khai | nhãn ("Tự thu", "Hiệu chuẩn") | Invest Portal, `/phuong-phap` |
+| C — công khai | nhãn ("Tự thu", "Hiệu chuẩn") · **định danh người bán trên tin rao** (tên, SĐT, ID tài khoản — hoạt động bán hàng/môi giới, Mạnh chốt 2026-10-23) | Invest Portal, `/phuong-phap`, cloud, API |
 
 - Thêm cột/bảng vào luồng sync hoặc response API → kiểm từng field thuộc tầng nào trước.
+- Định danh người bán là tầng C, NHƯNG giá trị nào mang tên nguồn thật (vd `seller_ref` dạng `apify-facebook…`,
+  `listing_url` theo domain nguồn) vẫn là tầng A — loại hoặc đổi sang mã `S0x` trước khi rời máy.
 - `data-api/` và `app/` được `tools/sync-public.sh` đẩy ra repo PUBLIC: không hostname nội bộ,
   không secret, không query thật nhạy cảm (app dùng stub trong `tools/public-overlay/`).
 - Không hardcode literal nguồn — đọc mã từ `source_registry`.

@@ -1,0 +1,11 @@
+# E10 network — review-card-photos vòng 2 HEAD c1adef1 (ego-browser CDP Network/Runtime, task space 7: sáng 1280, tối 1280, tối 390px)
+tong request: 260; cung origin http://localhost:3456: 93 (document 3, fetch/xhr 0); websocket HMR khong tinh
+document app: GET /ops/review -> 200 | GET /ops/review -> 200 | GET /ops/review -> 200
+fetch/xhr app: (khong co)
+theo loai: {"Image":167,"Document":3,"Font":15,"Stylesheet":3,"Script":72}
+## request loi/that bai (0)
+## console error/warning (0) + exception (0)
+anh ngoai: 167 request, 149 tra 200, 0 loi
+## ket luan pham vi (luat Network truth)
+FAIL-eligible = fetch/XHR toi http://localhost:3456 (config khong khai api_base): 0 request -> network_observed: no-app-traffic.
+Trang SSR; bam anh / truoc / sau / Esc chi doi state client, khong goi mang. Document /ops/review deu thanh cong; anh ngoai (fbcdn/chotot) la static/third-party, khong tinh.

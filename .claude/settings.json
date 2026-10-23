@@ -14,10 +14,7 @@
       "Bash(git log *)"
     ],
     "ask": [
-      "Bash(git push *)",
       "Bash(bash tools/sync-public.sh *)",
-      "Bash(vercel *)",
-      "Bash(npx vercel *)",
       "Bash(supabase db push *)",
       "Bash(npx supabase db push *)"
     ],
@@ -70,6 +67,7 @@
     "acceptance-gate@acceptance-gate-kit": true,
     "feature-loop@acceptance-gate-kit": true,
     "diagram-design@acceptance-gate-kit": true,
+    "road-map@acceptance-gate-kit": true,
     "superpowers@claude-plugins-official": true
   }
 }

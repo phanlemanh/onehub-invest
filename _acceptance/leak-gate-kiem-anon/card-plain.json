@@ -1,0 +1,6 @@
+{
+  "feature_plain": "Mỗi lượt đồng bộ lên cloud tự kiểm xem khoá công khai (anon) có đọc lén được bảng nào không; có là dừng ngay, báo đỏ và chỉ đúng lệnh để đóng lại.",
+  "decisions": [
+    {"id": "E18", "q": "Sổ vận hành đã đủ rõ để Mạnh tự triển khai và gỡ khi đỏ chưa?", "why": "Hội đồng ba người đọc lại sau khi sửa và đều thấy đủ bốn điều, khớp code."}
+  ]
+}

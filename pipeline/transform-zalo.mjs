@@ -7,6 +7,9 @@ import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import pg from "pg";
 
+import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
+import { writeOffers } from "./lib/write-offers.mjs";
+
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -125,107 +128,119 @@ export function matchPhuong(text, phuongSlugs) {
   return best;
 }
 
+/**
+ * Thân transform S03 — người gọi giữ transaction (main bọc BEGIN…COMMIT; test và thước dư
+ * lượng bọc BEGIN…ROLLBACK). Post thử bị gạt ở đầu đọc (lib/test-posts.mjs, PL2).
+ * @param {import("pg").Client} client
+ */
+export async function runTransformZalo(client) {
+  // Load phường list (tên + area_id)
+  const { rows: areas } = await client.query(
+    `SELECT id, name FROM areas WHERE parent_id = 'vn-hanoi' AND region_type = 'submarket'`,
+  );
+  const phuongSlugs = areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.name]);
+  const areaBySlug = new Map(areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.id]));
+
+  // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
+  // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
+  // Post thử (zalo-mock, e2e, nhóm TEST) bị gạt tại đây — L19.
+  const { posts, rejected } = await loadStgPosts(client, "zalo");
+  console.log(`posts: ${posts.length} (gạt ${rejected.total} post thử ${JSON.stringify(rejected.by_marker)})`);
+
+  // ---- Bước 2+3: parse + confidence ----
+  const parsed = [];
+  let nFull = 0, nPartial = 0, nFail = 0;
+  for (const p of posts) {
+    const pr = parsePost(p.text);
+    if (!pr.kind) { nFail++; continue; }
+    const ph = matchPhuong(p.text, phuongSlugs);
+    if (ph) pr.phuong = ph.slug;
+    // tính price_perm2 nếu thiếu
+    if (!pr.pricePerm2Vnd && pr.priceVnd && pr.areaM2) {
+      pr.pricePerm2Vnd = Math.round(pr.priceVnd / pr.areaM2);
+    }
+    const hasPrice = pr.priceVnd !== null || pr.pricePerm2Vnd !== null;
+    const hasArea = pr.areaM2 !== null;
+    const hasPhuong = pr.phuong !== null;
+    pr.confidence = hasPrice && hasArea && hasPhuong ? "high" : hasPrice ? "medium" : "low";
+    if (pr.confidence === "high") nFull++;
+    else if (pr.confidence !== "low") nPartial++;
+    else if (hasPrice) nPartial++;
+    parsed.push({ ...pr, post: p });
+  }
+  console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${(nFull / posts.length * 100).toFixed(1)}%`);
+
+  // ---- Bước 4: dedup — hash(kind + phường + price + area + bedrooms) ----
+  const dedup = new Map();
+  for (const pr of parsed) {
+    if (pr.confidence === "low") continue;
+    const key = createHash("sha256")
+      .update(`${pr.kind}|${pr.phuong ?? "?"}|${pr.priceVnd ?? pr.pricePerm2Vnd}|${pr.areaM2 ?? "?"}|${pr.bedrooms ?? "?"}`)
+      .digest("hex").slice(0, 16);
+    const offerId = `offer_${key}`;
+    if (!dedup.has(offerId)) {
+      dedup.set(offerId, {
+        offerId, kind: pr.kind, areaId: pr.phuong ? areaBySlug.get(pr.phuong) : null,
+        priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
+        bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
+        firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
+        postIds: [pr.post.post_id],
+        phone: pr.phone, authorHash: pr.post.author_hash,
+      });
+    } else {
+      const o = dedup.get(offerId);
+      o.nReposts++;
+      o.postIds.push(pr.post.post_id);
+      if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
+      if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
+    }
+  }
+  console.log(`dedup: ${dedup.size} unique offers (từ ${parsed.filter(p => p.confidence !== "low").length} tin có giá)`);
+
+  // ---- Bước 5: ghi canonical ----
+  // Upsert + đối soát offer cũ (writeOffers, migration 039) thay cho DELETE toàn nguồn:
+  // đề xuất enrich + thẻ duyệt sống qua lần nạp lại (_acceptance/enrich-hau-ky).
+  const sellerAgg = new Map(); // phone_hash → {n, first, last}
+  const rows = [];
+  for (const o of dedup.values()) {
+    const phoneHash = o.phone
+      ? createHash("sha256").update(o.phone).digest("hex").slice(0, 32)
+      : null;
+    rows.push({
+      offer_id: o.offerId, area_id: o.areaId, kind: o.kind, price_vnd: o.priceVnd,
+      area_m2: o.areaM2, price_perm2: o.pricePerm2, bedrooms: o.bedrooms, phuong_raw: o.phuongRaw,
+      confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
+      n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_phone: o.phone,
+      seller_phone_hash: phoneHash, seller_ref: o.authorHash, property_type: "unknown",
+    });
+    if (phoneHash) {
+      const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };
+      s.n++;
+      if (new Date(o.firstSeen) < new Date(s.first)) s.first = o.firstSeen;
+      if (new Date(o.lastSeen) > new Date(s.last)) s.last = o.lastSeen;
+      sellerAgg.set(phoneHash, s);
+    }
+  }
+  await auditRejected(client, "S03", rejected);
+  const { reconcile } = await writeOffers(client, "S03", rows);
+  console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
+  console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
+  return { offers: rows.length, rejected, reconcile };
+}
+
 async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
-    // Load phường list (tên + area_id)
-    const { rows: areas } = await client.query(
-      `SELECT id, name FROM areas WHERE parent_id = 'vn-hanoi' AND region_type = 'submarket'`,
-    );
-    const phuongSlugs = areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.name]);
-    const areaBySlug = new Map(areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.id]));
-
-    // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
-    // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
-    const { rows: posts } = await client.query(
-      `SELECT DISTINCT ON (post_id) post_id, text, posted_at, group_name, author_hash
-       FROM stg_zalo_posts
-       WHERE agent_id IS NULL OR agent_id <> 'apify-facebook'
-       ORDER BY post_id, captured_at DESC`,
-    );
-    console.log(`posts: ${posts.length}`);
-
-    // ---- Bước 2+3: parse + confidence ----
-    const parsed = [];
-    let nFull = 0, nPartial = 0, nFail = 0;
-    for (const p of posts) {
-      const pr = parsePost(p.text);
-      if (!pr.kind) { nFail++; continue; }
-      const ph = matchPhuong(p.text, phuongSlugs);
-      if (ph) pr.phuong = ph.slug;
-      // tính price_perm2 nếu thiếu
-      if (!pr.pricePerm2Vnd && pr.priceVnd && pr.areaM2) {
-        pr.pricePerm2Vnd = Math.round(pr.priceVnd / pr.areaM2);
-      }
-      const hasPrice = pr.priceVnd !== null || pr.pricePerm2Vnd !== null;
-      const hasArea = pr.areaM2 !== null;
-      const hasPhuong = pr.phuong !== null;
-      pr.confidence = hasPrice && hasArea && hasPhuong ? "high" : hasPrice ? "medium" : "low";
-      if (pr.confidence === "high") nFull++;
-      else if (pr.confidence !== "low") nPartial++;
-      else if (hasPrice) nPartial++;
-      parsed.push({ ...pr, post: p });
+    await client.query("BEGIN");
+    try {
+      await runTransformZalo(client);
+      await client.query("COMMIT");
+    } catch (e) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw e;
     }
-    console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${(nFull / posts.length * 100).toFixed(1)}%`);
-
-    // ---- Bước 4: dedup — hash(kind + phường + price + area + bedrooms) ----
-    const dedup = new Map();
-    for (const pr of parsed) {
-      if (pr.confidence === "low") continue;
-      const key = createHash("sha256")
-        .update(`${pr.kind}|${pr.phuong ?? "?"}|${pr.priceVnd ?? pr.pricePerm2Vnd}|${pr.areaM2 ?? "?"}|${pr.bedrooms ?? "?"}`)
-        .digest("hex").slice(0, 16);
-      const offerId = `offer_${key}`;
-      if (!dedup.has(offerId)) {
-        dedup.set(offerId, {
-          offerId, kind: pr.kind, areaId: pr.phuong ? areaBySlug.get(pr.phuong) : null,
-          priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
-          bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
-          firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-          postIds: [pr.post.post_id],
-          phone: pr.phone, authorHash: pr.post.author_hash,
-        });
-      } else {
-        const o = dedup.get(offerId);
-        o.nReposts++;
-        o.postIds.push(pr.post.post_id);
-        if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
-        if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
-      }
-    }
-    console.log(`dedup: ${dedup.size} unique offers (từ ${parsed.filter(p => p.confidence !== "low").length} tin có giá)`);
-
-    // ---- Bước 5: ghi canonical ----
-    await client.query("DELETE FROM sale_offers WHERE source = 'S03'");
-    const sellerAgg = new Map(); // phone_hash → {n, first, last}
-    for (const o of dedup.values()) {
-      const phoneHash = o.phone
-        ? createHash("sha256").update(o.phone).digest("hex").slice(0, 32)
-        : null;
-      await client.query(
-        `INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
-                                   bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
-                                   price_tier, seller_phone, seller_phone_hash, seller_ref, property_type)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'S03','P1',$14,$15,$16,'unknown')
-         ON CONFLICT (offer_id) DO UPDATE SET n_reposts = EXCLUDED.n_reposts,
-           last_seen = EXCLUDED.last_seen, post_ids = EXCLUDED.post_ids,
-           seller_phone = EXCLUDED.seller_phone, seller_phone_hash = EXCLUDED.seller_phone_hash`,
-        [o.offerId, o.areaId, o.kind, o.priceVnd, o.areaM2, o.pricePerm2, o.bedrooms,
-         o.phuongRaw, o.confidence, o.firstSeen, o.lastSeen, o.nReposts, o.postIds,
-         o.phone, phoneHash, o.authorHash],
-      );
-      if (phoneHash) {
-        const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };
-        s.n++;
-        if (new Date(o.firstSeen) < new Date(s.first)) s.first = o.firstSeen;
-        if (new Date(o.lastSeen) > new Date(s.last)) s.last = o.lastSeen;
-        sellerAgg.set(phoneHash, s);
-      }
-    }
-    console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-
-    } finally {
+  } finally {
     await client.end();
   }
 }

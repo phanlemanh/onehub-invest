@@ -3,6 +3,7 @@
 > Một trang cho agent và người mới: sản phẩm là gì, cho ai, đang ở đâu. Chỉ tóm tắt và trỏ nguồn —
 > chi tiết, số liệu và quyết định nằm ở tài liệu được trỏ. Từ vựng: `CONTEXT.md` ở gốc repo.
 > Trạng thái và quyết định đã chốt: `docs/ROADMAP.md` (§1 hiến pháp, §3 quyết định).
+> **Mục đích, mục tiêu, thước đo: `docs/product/FRAMING.md`** (Mạnh duyệt 23/10) — đọc trước trang này.
 
 ## 1. Người dùng
 
@@ -18,10 +19,12 @@ Nguồn: `docs/architecture/portals.md` §1–2 · `AGENTS.md` "Phân làn hai a
 
 1. **Chọn thị trường** — thị trường/phường nào hợp chiến lược (dòng tiền ngắn hạn, dài hạn,
    tăng giá, lai): Finder, Insight.
-2. **Chọn căn** — tin rao nào rẻ hơn thước giá cùng phường: Căn giá tốt (hiện chỉ ở Ops).
+2. **Chọn căn** — tin rao nào rẻ hơn thước giá cùng phường: Căn giá tốt (hiện chỉ ở Ops; FRAMING D4: tin P1
+   hiện công khai).
 3. **Chi phí, vốn, dòng tiền** — mua + nội thất + vay → dòng tiền, lợi suất: Ước tính lợi suất,
    Mô phỏng đầu tư.
-4. **Khai thác sau mua** — định giá đêm theo listing so sánh và mùa vụ: chưa có.
+4. **Quản lý danh mục** — lợi nhuận dòng tiền, tăng giá; định giá lại định kỳ từ căn so sánh: chưa có
+   (FRAMING §2.2 thay cho «khai thác sau mua»).
 
 Mỗi tính năng mới phải nói nó phục vụ giai đoạn nào. Đơn vị phân tích là **căn nhà** ("Một Căn
 Nhà"); nguồn chỉ là bằng chứng.

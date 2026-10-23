@@ -4,8 +4,10 @@
 //   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
 //   - /api/zalo-media chặn admin trước khi đọc file;
 //   - /dau-tu không đọc bảng AirDNA, không hiện chữ AirDNA;
-//   - /api/zalo-media chỉ mở hai gốc staging ảnh, so theo đoạn đường dẫn + realpath;
-//   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm.
+//   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
+//     so theo đoạn đường dẫn + realpath;
+//   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm;
+//   - /api/v1/deals đang tạm đóng: cổng ops chạy trước truy vấn (check-deals-api.mjs).
 // Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -65,11 +67,21 @@ const realNames = /\b(Zalo|Facebook|Chợ Tốt|Chotot|AirDNA)\b/;
 const dealsLeaks = deals.split("\n").filter((l) => realNames.test(l) && !/zalo-media/.test(l));
 check(dealsLeaks.length === 0, `ops/deals: không tên nguồn thật trong mã render (${dealsLeaks.length} dòng)`);
 
-// 6. /api/zalo-media: gate admin ĐỨNG TRƯỚC mọi đọc file.
-const media = code(read("src/app/api/zalo-media/route.ts"));
-const gateAt = media.indexOf("isAdmin(await getSessionUser())");
-const readAt = media.indexOf("await stat(");
-check(gateAt > 0 && readAt > gateAt, "zalo-media: isAdmin chặn trước stat/readFile");
+// 6. /api/zalo-media: gate admin ĐỨNG TRƯỚC mọi đọc file. Route chỉ chuyển phiên cho lõi
+//    `lib/ops/zalo-media.ts`; mọi đọc đĩa nằm trong sendImage (không export), chỉ gọi sau gate.
+const mediaRoute = code(read("src/app/api/zalo-media/route.ts"));
+const media = code(read("src/lib/ops/zalo-media.ts"));
+const serve = media.slice(media.indexOf("export async function serveZaloMedia"));
+const gateAt = serve.indexOf("if (!isAdmin(user)) return");
+const sendAt = serve.indexOf("sendImage(");
+check(
+  /serveZaloMedia\(req, await getSessionUser\(\)\)/.test(mediaRoute) &&
+    !/readFile|realpath|stat\(/.test(mediaRoute) &&
+    !/export async function sendImage/.test(media) &&
+    gateAt >= 0 && sendAt > gateAt &&
+    media.indexOf("await stat(") > media.indexOf("async function sendImage"),
+  "zalo-media: isAdmin chặn trước stat/readFile",
+);
 
 // 7. /dau-tu: không bảng AirDNA, không chữ AirDNA/tên nguồn thật ở Invest.
 const invest = code(read("src/lib/invest.ts"));
@@ -84,11 +96,15 @@ for (const f of [
 }
 check(/listing_stats/.test(invest) && /booked90/.test(invest), "lib/invest.ts lấy STR từ listing_stats (90 đêm)");
 
-// 8. /api/zalo-media: chỉ hai gốc staging ảnh, không cả ~/.openclaw; không so tiền tố chuỗi.
-const roots = media.slice(media.indexOf("const ALLOWED_ROOTS"), media.indexOf("];", media.indexOf("const ALLOWED_ROOTS")));
+// 8. /api/zalo-media: chế độ path chỉ hai gốc staging ảnh, không cả ~/.openclaw; gốc raw
+//    snapshots chỉ qua chế độ snapshot+file và chỉ thư mục media/; không so tiền tố chuỗi.
+const roots = media.slice(media.indexOf("function openclawRoots"), media.indexOf("];", media.indexOf("function openclawRoots")));
 check(
   // đúng hai phần tử, không phần tử nào là ~/.openclaw trơn
-  /^const ALLOWED_ROOTS = \[path\.join\(HOME, "\.openclaw", "media"\), "\/tmp\/openclaw"$/.test(roots.trim()),
+  /return \[path\.join\(home, "\.openclaw", "media"\), "\/tmp\/openclaw"$/.test(roots.trim()) &&
+    (serve.match(/sendImage\(/g) ?? []).length === 2 &&
+    /sendImage\(path\.resolve\(p\), openclawRoots\(\), false\)/.test(serve) &&
+    /sendImage\(joined, \[snapshotsRoot\(\)\], true\)/.test(serve),
   "zalo-media: ALLOWED_ROOTS đúng hai gốc ~/.openclaw/media + /tmp/openclaw",
 );
 check(!/(resolved|real|prefix)\.startsWith\(/.test(media), "zalo-media: không so tiền tố chuỗi trên path (startsWith)");
@@ -121,6 +137,11 @@ for (const [env, user, want, label] of [
   const got = withEnv(env, () => canAccessOps(user));
   check(got === want, `canAccessOps(${label}) = ${want}`);
 }
+
+// 10. /api/v1/deals tạm đóng (deals-api-tam-dong): cổng ops có await, trả 401, đứng trước pool.query.
+const { checkDealsRoute } = await import("./check-deals-api.mjs");
+const dealsApi = checkDealsRoute(read("src/app/api/v1/deals/route.ts"));
+check(dealsApi.ok, dealsApi.msg);
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);

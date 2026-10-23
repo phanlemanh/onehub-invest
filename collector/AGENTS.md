@@ -32,7 +32,9 @@
 
 - Nguồn gọi bằng mã `S01`…`S07`, đọc từ `source_registry` — không hardcode tên nguồn thật
   trong code hay log đi ra ngoài máy.
-- Tầng A (tên nguồn thật, SĐT, tên/ID người bán, hồ sơ cá nhân) **không rời máy local**.
+- Tầng A (tên nguồn thật, hồ sơ người dùng app) **không rời máy local**. Định danh người bán trên
+  tin rao (tên, SĐT, ID tài khoản) là tầng C — công khai (Mạnh chốt 2026-10-23), nhưng giá trị
+  nào lộ tên nguồn thật vẫn là tầng A.
   Collector không gửi dữ liệu lên cloud; việc sync là của `pipeline/sync-cloud.mjs` (làn Claude).
 - AirDNA chỉ để hiệu chuẩn (ToS) — số AirDNA không được đi tới Invest Portal.
 
@@ -46,7 +48,7 @@
 ## Giao tiếp với Claude (luật tin của plugin dieu-phoi)
 
 Đầu mối duy nhất phía Claude là **điều phối liên làn** (`claudedp`). Mọi giao việc, hỏi, báo đi qua
-kênh issue `phanlemanh/onehub-invest#9` bằng lệnh bọc — không nhắn qua Mạnh, không sửa tay issue.
+kênh issue riêng tư `phanlemanh/onehub-coord#1` (kho onehub-invest đã công khai — đừng đăng gì về điều phối lên issue của kho này) bằng lệnh bọc — không nhắn qua Mạnh, không sửa tay issue.
 
 ```bash
 T=~/dev/onehub-coord/bin/tin
@@ -68,7 +70,7 @@ $T zcode TRẢ <mã> "<lý do>" --chuyen claudedp
   tác trong checkout chính hay dịch vụ đang chạy (build, restart, `launchctl`) ngoài lời giao triển khai ·
   việc khó đảo (xoá, push, cắt bản) · hai nguồn nói trái nhau.
 - **Không hỏi**: đặt tên, thứ tự việc trong làn, chọn giữa hai cách đều đảo được — tự quyết, ghi vào commit.
-- **Không đưa PII tầng A lên kênh**: không SĐT, tên/ID người bán, tên nguồn thật, URL ảnh tin. Dùng
+- **Không đưa tầng A lên kênh**: không tên nguồn thật, hồ sơ người dùng app, URL ảnh tin. Dùng
   mã S0x, offer/post id, nhánh, sha.
 
 ## Kiểm trước khi báo xong

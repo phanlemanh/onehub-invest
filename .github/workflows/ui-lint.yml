@@ -3,13 +3,10 @@ name: ui-lint
 # Chặn tự vẽ tay UI (luật onehub-ui + baseline suppressions trong app/eslint-suppressions.json).
 # Vi phạm mới → eslint exit 1; suppression đã hết hiệu lực mà chưa prune → exit 2.
 # Chạy riêng khỏi acceptance-gate để lỗi lint hiện thẳng ở check của PR.
+# PR: chạy trên MỌI PR (không lọc paths) — ui-lint là check bắt buộc của branch protection `main`;
+# lọc paths thì PR không chạm app/ treo mãi ở «Expected — waiting» (hồ sơ narrow-ask-rules).
 on:
   pull_request:
-    paths:
-      - "app/**"
-      - ".claude/skills/onehub-ui/**"
-      - "CONTEXT.md" # slug URL chuẩn — test route-slugs đọc file này
-      - ".github/workflows/ui-lint.yml"
   push:
     branches: [main]
     paths:
