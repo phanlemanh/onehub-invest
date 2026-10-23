@@ -118,10 +118,16 @@ test("AC-4 LLM không căn cứ vào hàng duyệt", async () => {
 test("AC-4 chiều đỏ: field E1 áp, thẻ chỉ liệt field LLM", async () => {
   await withTx(async (c) => {
     const a = await offerWithPost(c);
-    await run(c, [a], llmWith(real(0)), resolveWith({ propertyType: "house" }));
-    assert.equal((await offerRow(c, a)).property_type, "house");
+    // E1 ra toà, LLM không có ý kiến về toà → toà áp thẳng; các field LLM vẫn chờ.
+    // (E1 trái LLM cùng field là AC-7 — không áp, xem ca AC-7.)
+    await run(c, [a], llmWith(real(0)), resolveWith({ buildingHint: "S1.03" }));
+    assert.equal((await offerRow(c, a)).block_raw, "S1.03");
     const ev = (await pendingCards(c, a))[0].evidence;
-    assert.deepEqual(ev.fields.map((f: { field: string }) => f.field).sort(), ["bedrooms", "street_raw"], "AC-4");
+    assert.deepEqual(
+      ev.fields.map((f: { field: string }) => f.field).sort(),
+      ["bedrooms", "property_type", "street_raw"],
+      "AC-4",
+    );
   });
 });
 
