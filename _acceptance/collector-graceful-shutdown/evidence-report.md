@@ -2,12 +2,12 @@
 schema_version: 2
 feature_slug: collector-graceful-shutdown
 verdict: REJECT
-failed_evals: [E7]
+failed_evals: [E2]
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: dfaa45b673ae79e78d20f58ecb20f0b3c55297da
+verified_commit: 29050d4aa765f3d7379fc80eb64e426a466d1474
 human_signoff:
 ---
 
@@ -16,69 +16,84 @@ human_signoff:
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-4 | script | PASS |
-| E2 | AC-2 | test | PASS |
+| E2 | AC-2 | test | FAIL (1/35 ca đỏ: ca tích hợp mới «P3: POST gửi NỬA body rồi im», ECONNRESET; đỏ chập chờn do race trong test, xem Variance) |
 | E3 | AC-3 | script | PASS |
 | E4 | AC-3 | script | PASS |
 | E5 | AC-1 | script | PASS |
 | E6 | AC-4 | script | PASS |
-| E7 | AC-3 | script | FAIL (trượt ở cấp tiêu chí: lệnh đạt expected của E7, nhưng phép thử P2 của verifier phản ví dụ mệnh đề AC-3 mà E7 đứng ra chứng) |
+| E7 | AC-3 | script | PASS |
 | E8 | AC-1 | script | PASS |
 | E9 | AC-5 | script | PASS |
+| E10 | AC-3 | script | PASS |
+| E11 | AC-1 | script | PASS |
 
-**Lý do REJECT (tóm tắt):** vòng 2 đã sửa đúng ca của vòng 1: lượt flush DO SHUTDOWN KHỞI giờ nhận
-`deadlineAt` và huỷ ảnh ở mốc còn 10s (E7 và P1 đều xanh). Nhưng AC-3 nói «một lượt flush ĐANG tải ảnh
-treo (vd 24 ảnh, số mặc định thật) bị huỷ tải ảnh ở mốc còn 10s và tin vẫn vào snapshot trước deadline».
-Lượt flush định kỳ 60s của `main.ts` (`agent.flush()` không tham số) không có `deadlineAt`. Nếu SIGTERM
-tới lúc lượt đó đang tải ảnh treo, shutdown gọi `flush({deadlineAt})` thì single-flight trả lại đúng
-promise đang chạy, và `flushOpts` mới bị bỏ qua (`server.ts` dòng 227). Không có gì huỷ ảnh, lượt
-chạy quá deadline, và tin đã ack 202 mất. P2: 24 ảnh treo, SIGTERM 2s sau khi lượt định kỳ bắt đầu,
-deadline mặc định. Kết quả: 0 snapshot, buffered 1, host ảnh vẫn bị gọi ở đợt thứ năm (còn khoảng 7s
-tới deadline), thoát mã khác 0 kèm «MẤT 1 tin». AC-5 giữ được (không mất âm thầm), nhưng mệnh đề huỷ
-ảnh và giữ tin của AC-3 không đúng cho ca này. Với host ảnh treo, ca này không hiếm: lượt định kỳ kéo
-dài ceil(N/4) × 10s (24 ảnh thành 60s, trần 100 URL thành 250s). SIGTERM rơi vào bất kỳ lúc nào lượt
-đó còn hơn khoảng 45s nữa mới xong thì mất tin. Chi tiết và cách tái hiện ở khối P2 và mục «Ngoài hợp đồng».
+**Lý do REJECT (tóm tắt):** về sản phẩm, vòng 3 đã sửa đúng cả hai lỗi của vòng 2. P2: lượt flush định kỳ
+đang tải ảnh treo giờ bị huỷ ở mốc còn 10s (E10, probe P2). P3: POST treo nửa body không còn giữ shutdown
+(E11 trên main.js thật thoát sau khoảng 3s, tin A vào snapshot). Probe P1/P2/P3 đều không mất tin. Hai
+probe mới (auto-flush P4, POST tới muộn P5) cũng không thấy lỗ.
+
+Lý do trượt là **E2 không đạt expected «0 fail»**. Ca tích hợp mới mà ZCode thêm ở 306f386 («P3: POST gửi
+NỬA body rồi im — shutdown không chờ close() treo…», `collector/src/test/graceful-shutdown-integration.test.ts`)
+đỏ ở lượt chạy chính thức với `Error: read ECONNRESET` sau khoảng 1ms. Chạy riêng ca này trên worktree thì
+đỏ 3/3 lần. Trên bản chép dist trong scratchpad thì đỏ 8/10.
+
+Nguyên nhân là race trong chính test. Test gọi `sock.write(...)` rồi gọi handler SIGTERM ngay trong cùng
+tick, khi server chưa kịp đọc và parse header. Lúc đó connection còn bị coi là RẢNH, nên `closeIdleConnections()`
+cắt nó. Socket thô của test không có listener `error`, nên ECONNRESET thành lỗi không bắt và ca chết. Kiểm
+trên bản chép: chỉ cần chèn `await sleep(200)` sau `sock.write` và trước SIGTERM là xanh 5/5.
+
+Harness E11 đã có sẵn `sleep(100)` và `sock.on("error")`, nên E11 không vấp race này. Lỗi nằm ở test
+(làn ZCode), không ở mã sản phẩm. Nhưng cổng đòi suite xanh, và một ca đỏ chập chờn trong `npm test` sẽ làm
+đỏ CI và che lỗi thật về sau.
+
+Sửa gợi ý (làn ZCode, qua `tin MỞ LẠI`), ở ca P3 của test:
+- thêm `sock.on("error", () => {})`;
+- chờ server thực sự nhận request (hook `server.once("request")`, hoặc sleep ngắn) rồi mới gọi SIGTERM.
 
 ## Evidence
 
 - eval: E1
-  run_id: collector-graceful-shutdown-E1-20261023T053926
+  run_id: collector-graceful-shutdown-E1-20261023T092016
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.collector_check
-  verified_at: 2026-10-23T05:39:26Z
+  verified_at: 2026-10-23T09:20:16Z
   output: |
     > one-invest-collector@0.1.0 check
     > tsc -p tsconfig.json --noEmit
     (không có dòng lỗi nào; tsc im lặng = biên dịch sạch)
 
 - eval: E2
-  run_id: collector-graceful-shutdown-E2-20261023T053932
-  exit_code: 0
+  run_id: collector-graceful-shutdown-E2-20261023T092024
+  exit_code: 1
   baseline: red
   verifier: config:executors.test.collector
-  verified_at: 2026-10-23T05:39:32Z
+  verified_at: 2026-10-23T09:20:24Z
   output: |
-    ✔ SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot (189.72175ms)
-    ✔ deadline huỷ tải ảnh treo giữa chừng — tin vẫn vào snapshot, không chờ ảnh (claudedp-2310-3) (2021.925166ms)
-    ✔ SIGTERM: flush xong RỒI mới exit(0) — đúng thứ tự (41.354834ms)
-    ✔ signal lần 2 khi đang chờ flush → exit ngay, flush chỉ 1 lần (10.89475ms)
-    ✔ flush treo quá deadline → exit vẫn diễn ra (không đợi launchd SIGKILL) (46.141667ms)
-    ✔ shutdown: sát deadline (còn <10s) → flush nhận skipMedia=true (bỏ ảnh giữ tin) (19.797625ms)
-    ✔ shutdown: flush nhận deadlineAt = thời điểm bắt đầu + deadline (claudedp-2310-3) (21.524833ms)
-    ✔ quá deadline mà buffer còn tin → exit(1) + log số tin mất, không im lặng exit(0) (51.413542ms)
-    ✔ flush xong hết buffer → exit(0) (pendingCount=0) (21.388417ms)
-    ℹ tests 33 · pass 33 · fail 0 · cancelled 0 · skipped 0 · todo 0 · duration_ms 45090.366417
+    ✔ SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot (67.076042ms)
+    ✔ deadline huỷ tải ảnh treo giữa chừng — tin vẫn vào snapshot, không chờ ảnh (claudedp-2310-3) (2035.686ms)
+    ✔ P2: SIGTERM tới khi lượt flush ĐỊNH KỲ (không deadline) đang tải ảnh treo — vẫn phải huỷ được (claudedp-2310-3 vòng 3) (3538.958875ms)
+    ✖ P3: POST gửi NỬA body rồi im — shutdown không chờ close() treo, buffer vẫn được flush (claudedp-2310-3 vòng 3) (1.305041ms)
+    ...
+    ℹ tests 35 · pass 34 · fail 1 · cancelled 0 · skipped 0 · todo 0 · duration_ms 45097.902083
+    ✖ failing tests:
+    test at dist/test/graceful-shutdown-integration.test.js:211:1
+      Error: read ECONNRESET
+          at TCP.onStreamRead (node:internal/stream_base_commons:216:20) { errno: -54, code: 'ECONNRESET', syscall: 'read' }
   note: |
-    14 ca graceful-shutdown (2 tích hợp + 12 đơn vị) đều chạy và xanh, gồm hai ca tích hợp expected
-    gọi tên: «SIGTERM giữa lúc flush chậm + POST giữa chừng» và ca host ảnh treo vĩnh viễn («deadline huỷ
-    tải ảnh treo giữa chừng»). 0 fail, 0 skip.
+    Hai ca tích hợp mà expected gọi tên đều xanh: «SIGTERM giữa lúc flush chậm + POST giữa chừng» và ca host
+    ảnh treo vĩnh viễn («deadline huỷ tải ảnh treo giữa chừng»). Ca mới P2 cũng xanh. Ca mới P3 đỏ, nên
+    expected «0 fail» không đạt và E2 FAIL. Tái hiện:
+    `cd collector && node --test --test-name-pattern=P3 dist/test/graceful-shutdown-integration.test.js`
+    (đỏ 3/3 trên worktree). Nguyên nhân và số liệu có/không chèn chờ: xem đầu báo cáo, mục Variance và
+    `evidence/probes-round3.txt`. Node v24.21.0.
 
 - eval: E3
-  run_id: collector-graceful-shutdown-E3-20261023T054023
+  run_id: collector-graceful-shutdown-E3-20261023T092017
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.shutdown_deadline
-  verified_at: 2026-10-23T05:40:23Z
+  verified_at: 2026-10-23T09:20:17Z
   output: |
     graceful.ts: DEFAULT_DEADLINE_MS=45000 · MEDIA_CUTOFF_MS=10000 · plist ExitTimeOut=60s
     ok   deadline mặc định = 45000ms
@@ -95,11 +110,11 @@ dài ceil(N/4) × 10s (24 ảnh thành 60s, trần 100 URL thành 250s). SIGTERM
     DEADLINE PASS
 
 - eval: E4
-  run_id: collector-graceful-shutdown-E4-20261023T054023
+  run_id: collector-graceful-shutdown-E4-20261023T092327
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.shutdown_skip_media
-  verified_at: 2026-10-23T05:40:23Z
+  verified_at: 2026-10-23T09:23:27Z
   output: |
     skipMedia=true, host ảnh treo: flush 1ms · gọi host ảnh 0 lần · tệp ảnh 0
     ok   tin ack 202 và flush trả snapshotId
@@ -113,11 +128,11 @@ dài ceil(N/4) × 10s (24 ảnh thành 60s, trần 100 URL thành 250s). SIGTERM
     SKIP-MEDIA PASS
 
 - eval: E5
-  run_id: collector-graceful-shutdown-E5-20261023T054040
+  run_id: collector-graceful-shutdown-E5-20261023T092327
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.shutdown_process
-  verified_at: 2026-10-23T05:40:40Z
+  verified_at: 2026-10-23T09:23:27Z
   output: |
     ok   SIGTERM: connection keep-alive còn mở sau 202 (header connection: keep-alive)
     SIGTERM, 1 tin trong buffer: mã thoát 0, signal null · snapshot 1
@@ -132,31 +147,27 @@ dài ceil(N/4) × 10s (24 ảnh thành 60s, trần 100 URL thành 250s). SIGTERM
     ok   should-NOT-fire: buffer rỗng → không ghi snapshot rỗng
     ok   should-NOT-fire: buffer rỗng → không có dòng flushed
     PROCESS PASS
-  note: |
-    Lệnh tốn 16s tường, nhưng shutdown thật chỉ vài ms. Đo riêng trên main.js thật: SIGTERM tới thoát
-    là 4ms khi có tin, 2ms khi buffer rỗng. Phần còn lại là timer `sleep(15_000)` của harness giữ event
-    loop sau khi race đã xong; đó là chuyện của harness, không phải sản phẩm.
 
 - eval: E6
-  run_id: collector-graceful-shutdown-E6-20261023T054056
+  run_id: collector-graceful-shutdown-E6-20261023T092017
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.collector_plist_lint
-  verified_at: 2026-10-23T05:40:56Z
+  verified_at: 2026-10-23T09:20:17Z
   output: |
     pipeline/cron/com.oneinvest.collector-api.plist: OK
 
 - eval: E7
-  run_id: collector-graceful-shutdown-E7-20261023T054118
+  run_id: collector-graceful-shutdown-E7-20261023T092405
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.shutdown_hang_default
-  verified_at: 2026-10-23T05:41:18Z
+  verified_at: 2026-10-23T09:24:05Z
   output: |
-    24 ảnh treo, deadline mặc định: mã thoát 0 sau 35013ms · snapshot 1 · buffer còn 0 · gọi host ảnh 16
+    24 ảnh treo, deadline mặc định: mã thoát 0 sau 35005ms · snapshot 1 · buffer còn 0 · gọi host ảnh 16
       log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
-      log: 35013ms shutdown: flushed hanoi__zalo-agent__2026-10-23T054118798
-      log: 35013ms shutdown: flush xong — thoát
+      log: 35005ms shutdown: flushed hanoi__zalo-agent__2026-10-23T092406310
+      log: 35005ms shutdown: flush xong — thoát
     ok   tin ack 202
     ok   exit 0 (không mất tin)
     ok   tin đã ack có trong snapshot
@@ -164,51 +175,13 @@ dài ceil(N/4) × 10s (24 ảnh thành 60s, trần 100 URL thành 250s). SIGTERM
     ok   thoát trước deadline 45s (ảnh treo bị huỷ, không chạy tới mốc deadline)
     ok   should-NOT-fire: không có dòng 'flush quá deadline'
     HANG-DEFAULT PASS
-  note: |
-    Lệnh đạt đúng expected của E7. E7 bị đánh trượt ở CẤP TIÊU CHÍ: E7 chỉ có MỘT lượt flush, do chính
-    shutdown khởi, nên nó nhận `deadlineAt`. E7 không phủ ca lượt flush ĐANG chạy lúc SIGTERM tới (lượt
-    định kỳ 60s hoặc lượt auto-flush khi buffer ≥ 50). Mệnh đề AC-3 «một lượt flush ĐANG tải ảnh treo …
-    bị huỷ tải ảnh ở mốc còn 10s và tin vẫn vào snapshot» sai cho ca đó: xem phép thử P2 dưới đây, chạy
-    trên cùng cây.
-
-- probe: P2 (verifier tự dựng, không thuộc evals.yaml; không có dòng run-log)
-  criterion: AC-3 (và mục đích AC-1)
-  verifier: _acceptance/collector-graceful-shutdown/evidence/P2-inflight-periodic-probe.mjs
-  evidence: _acceptance/collector-graceful-shutdown/evidence/probes-round2.txt
-  verified_at: 2026-10-23T05:44:31Z
-  setup: |
-    collector/dist build từ dfaa45b. Nối dây y như main.ts: createAgentServer thật + installGracefulShutdown
-    thật, deadline mặc định 45s, media mặc định (timeout 10s, concurrency 4). Allowlist trỏ host ảnh
-    127.0.0.1 nhận kết nối nhưng không bao giờ trả lời. Ingest 1 tin kèm 24 URL ảnh (ack 202), gọi
-    `s.flush()` không tham số y như setInterval 60s của main.ts, chờ D ms, rồi SIGTERM (giả lập qua
-    deps.on). Snapshot ghi vào thư mục tạm của hệ và bị xoá.
-    Lệnh: node _acceptance/collector-graceful-shutdown/evidence/P2-inflight-periodic-probe.mjs $PWD 24 <D>
-  output: |
-    N=24 D=2000ms: ack=202 · SIGTERM sau 2005ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 45002ms kể từ SIGTERM · mã khác 0 · snapshot hoàn tất 0 · buffered 1 · gọi host ảnh 20
-      log: 1ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
-      log: 45002ms shutdown: flush quá deadline — thoát
-      log: 45002ms shutdown: MẤT 1 tin đã ack chưa kịp flush — thoát mã 1 để giám sát thấy
-    Đối chứng D=20000ms: ack=202 · thoát sau 40015ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 24
-  observed: |
-    Khi SIGTERM rơi 2s sau khi lượt định kỳ bắt đầu, ảnh không bị huỷ ở mốc còn 10s: host ảnh bị gọi 20
-    lần, tức đợt thứ năm mở ở giây 40 của lượt, khoảng 38s sau SIGTERM, còn khoảng 7s tới deadline. Lượt
-    định kỳ cần 60s nên chưa xong khi deadline bắn, và tin đã ack không vào snapshot nào. Ở đối chứng
-    (SIGTERM ở giây 20) lượt định kỳ xong ở giây 60, trước deadline, nên tin vào snapshot.
-  repro: |
-    cd collector && npm run build && cd .. && node _acceptance/collector-graceful-shutdown/evidence/P2-inflight-periodic-probe.mjs $PWD 24 2000
-    (khoảng 47s). Nguyên nhân trong mã: `server.ts` flush() single-flight, dòng 227
-    `if (flushing) return flushing;` bỏ qua `flushOpts` của lời gọi sau. Lượt định kỳ ở `main.ts` dòng 37
-    gọi `agent.flush()` không có `deadlineAt`, nên AbortController của nó không bao giờ được hẹn giờ
-    (`server.ts` dòng 168–171). Chú thích ở `server.ts` dòng 221–222 tự nhận «Lượt đang chạy không đổi
-    theo flushOpts», nhưng giả định «shutdown sẽ gọi lại lượt mới sau lượt này» chỉ đúng khi lượt đang
-    chạy xong trước deadline.
 
 - eval: E8
-  run_id: collector-graceful-shutdown-E8-20261023T054159
+  run_id: collector-graceful-shutdown-E8-20261023T092343
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.shutdown_inflight
-  verified_at: 2026-10-23T05:41:59Z
+  verified_at: 2026-10-23T09:23:43Z
   output: |
     POST dở lúc SIGTERM: trả 202 · connection mới sau SIGTERM: ECONNREFUSED · mã thoát 0, signal null · snapshot 1
     ok   POST đang dở được làm nốt và ack 202 (không bị cắt)
@@ -216,18 +189,13 @@ dài ceil(N/4) × 10s (24 ảnh thành 60s, trần 100 URL thành 250s). SIGTERM
     ok   tiến trình tự exit(0)
     ok   tin của POST dở có trong snapshot
     INFLIGHT PASS
-  note: |
-    Điểm phụ vòng 1 («closeAllConnections cắt POST đang dở») đã được xử lý: `main.ts` gọi
-    `closeIdleConnections()`, E3 xác nhận không còn `closeAllConnections()`. Chạy harness E8 trên mã
-    vòng 1 (863c15b) thì POST dở không có phản hồi và tin không vào snapshot (xem Analyst). E8 dùng
-    `Connection: close`; ca POST keep-alive dở chỉ được phủ ở P3 (ka).
 
 - eval: E9
-  run_id: collector-graceful-shutdown-E9-20261023T054215
+  run_id: collector-graceful-shutdown-E9-20261023T092441
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.shutdown_lost_exit
-  verified_at: 2026-10-23T05:42:15Z
+  verified_at: 2026-10-23T09:24:41Z
   output: |
     flush treo quá deadline, còn 3 tin: mã thoát khác 0 · shutdown: MẤT 3 tin đã ack chưa kịp flush — thoát mã 1 để giám sát thấy
     ok   quá deadline mà còn tin → exit khác 0
@@ -239,80 +207,154 @@ dài ceil(N/4) × 10s (24 ảnh thành 60s, trần 100 URL thành 250s). SIGTERM
     ok   should-NOT-fire: buffer rỗng → exit 0
     ok   should-NOT-fire: buffer rỗng → không có dòng MẤT
     LOST-EXIT PASS
+
+- eval: E10
+  run_id: collector-graceful-shutdown-E10-20261023T092549
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.shutdown_periodic_hang
+  verified_at: 2026-10-23T09:25:49Z
+  output: |
+    SIGTERM 2s sau khi lượt định kỳ bắt đầu, 24 ảnh treo: mã thoát 0 sau 35010ms · snapshot 1 · buffer còn 0 · gọi host ảnh 16
+      log: 1ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+      log: 35010ms shutdown: flushed hanoi__zalo-agent__2026-10-23T092550178
+      log: 35010ms shutdown: flush xong — thoát
+    ok   exit 0 (không mất tin)
+    ok   tin đã ack có trong snapshot
+    ok   buffer rỗng lúc thoát
+    ok   thoát trước deadline 45s — ảnh của lượt ĐANG CHẠY bị huỷ
+    ok   should-NOT-fire: không có dòng 'quá deadline' hay 'MẤT'
+    PERIODIC-HANG PASS
   note: |
-    Điểm phụ vòng 1 («thoát mã 0 cả ở đường mất tin») đã được xử lý: `graceful.ts` finish() đọc
-    `pendingCount()`, nếu còn tin thì log «MẤT N tin» và thoát mã 1; `main.ts` nối
-    `pendingCount: () => agent.stats().buffered`. E9 dùng flush giả và pendingCount giả. Trên tiến trình
-    main.js thật, đường thoát mã khác 0 kèm «MẤT 1 tin» được thấy ở P3 (stall). Lệnh tốn 61s tường vì
-    timer deadline 60s của ca tín hiệu lần 2 trong harness vẫn treo event loop; đó là chuyện của harness.
+    Host ảnh bị gọi 16 lần (bốn đợt × 4) rồi dừng: ảnh của lượt định kỳ bị huỷ ở giây 35 sau SIGTERM (còn 10s).
+    Cùng harness trên mã vòng 2 dfaa45b ra PERIODIC-HANG FAIL (5 mục; xem Analyst).
+
+- eval: E11
+  run_id: collector-graceful-shutdown-E11-20261023T092627
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.shutdown_stalled_post
+  verified_at: 2026-10-23T09:26:27Z
+  output: |
+    tin A ack 202, POST B treo nửa body: mã thoát 0, signal null sau 3004ms · snapshot 1
+      log: shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+      log: shutdown: flushed hanoi__zalo-agent__2026-10-23T092630928
+      log: shutdown: flush xong — thoát
+    ok   tin A được ack 202 trước SIGTERM
+    ok   tiến trình tự exit(0)
+    ok   tin A có trong snapshot dù còn POST treo
+    ok   thoát sau < 10s — không chờ POST treo tới deadline 45s
+    ok   should-NOT-fire: không có dòng 'MẤT' hay 'quá deadline'
+    STALLED-POST PASS
+  note: |
+    Chạy trên main.js THẬT (bản chép dist, cổng ngẫu nhiên, key giả). Thoát ở mốc race 3s của close().
+    Lệnh tốn 60s tường vì timer `sleep(60_000)` của harness còn giữ event loop sau khi race xong; đó là
+    chuyện của harness. Cùng harness trên dfaa45b ra STALLED-POST FAIL (4 mục).
 
 ## Known limits
 
-- E7 và P2 chạy trong tiến trình harness (createAgentServer + installGracefulShutdown thật, deps tín hiệu và exit giả), không chạy trên main.js thật. Lý do: main.js không cho ghi đè allowlist ảnh (cố định `zdn.vn`, không có env), nên không trỏ được vào host treo cục bộ. Việc `main.ts` chuyển `flushOpts` (gồm `deadlineAt`) sang `agent.flush` được đọc từ mã (dòng 56), chưa đo đầu-cuối trên tiến trình thật.
-- AC-2 vẫn chỉ được chứng bằng ca tích hợp trong E2 với deps tín hiệu và exit giả: «POST giữa chừng» là lời gọi thẳng `s.ingest()`, không qua HTTP, ca đặt `deadlineMs: 10_000` và ảnh chậm 150ms chứ không treo. Tiến trình thật không phủ ca flush chậm + tin đến giữa chừng.
-- AC-1 «đóng HTTP trước khi flush»: dòng log «shutdown: SIGTERM — đóng HTTP…» được in TRƯỚC khi `close()` được gọi, nên thứ tự log ở E5 không chứng được close đã xong trước flush. Trên tiến trình thật, thứ tự này chỉ thấy gián tiếp ở P3 (stall): không có lượt flush nào chạy khi còn một POST dở. E8 dùng `Connection: close`; POST keep-alive dở chỉ phủ ở P3 (ka).
-- AC-1 «lặp flush tới khi buffer rỗng»: E5, E7, E8 mỗi ca chỉ có 1 lượt flush; vòng lặp nhiều lượt chỉ được chứng ở ca tích hợp đầu của E2.
-- AC-3 «tín hiệu lần 2 thoát ngay» và AC-5 chỉ có test đơn vị và harness với flush giả (E2, E9). E3 là kiểm tĩnh (regex hằng số trong `graceful.ts`, `plutil -extract` plist), không chạy mã.
-- AC-4: `plutil -lint` chỉ kiểm cú pháp. Plist còn placeholder `__ROOT__`, chưa từng được launchd nạp; hành vi thật của launchd (SIGTERM rồi SIGKILL sau `ExitTimeOut` 60) và cách launchd xử lý mã thoát khác 0 (KeepAlive true sẽ khởi động lại) không được đo. E1 chỉ là `tsc --noEmit`; `npm run build` chạy xanh ở bước đầu của E4, E5, E7, E8, E9.
-- E5, E8 và các probe P3 chạy bản chép `collector/dist` trong thư mục tạm với `node_modules` symlink: giống runtime thật về mã, khác đường dẫn snapshot và state.
+- E10 chạy trong tiến trình harness, không chạy trên main.js thật. Harness dùng createAgentServer và installGracefulShutdown thật, còn tín hiệu và exit là giả, và không có `close()`. Lý do: allowlist ảnh của main.js cố định `zdn.vn`, không có env để ghi đè, nên không trỏ được vào host treo cục bộ. Vì vậy chuyện «ca P2 khi có race close 3s đứng trước» chỉ được thấy ở probe P4/P5: harness nối dây y như main.ts, gồm cả close race 3s, nhưng vẫn không phải main.js.
+- Ca tích hợp P3 trong E2 (đang đỏ) chép tay thân `close()` của main.ts vào test. ZCode tự ghi đó chỉ là đặc tả, nên nó không chứng main.ts. Bằng chứng P3 cho main.js thật là E11 và probe P3 (stall, ka, reuse).
+- AC-2 vẫn chỉ được chứng bằng ca tích hợp trong E2, với tín hiệu và exit giả. Trong ca đó, «POST giữa chừng» là lời gọi thẳng `s.ingest()`, không qua HTTP. Probe P5 (verifier, harness) phủ thêm ca POST qua HTTP thật hoàn tất giữa lúc flush dài: B được 202 và vào snapshot lượt thứ hai.
+- AC-1 «đóng HTTP trước khi flush»: dòng log «đóng HTTP…» được in TRƯỚC khi gọi `close()`. Từ vòng 3, `close()` chỉ chờ tối đa 3s rồi flush luôn, nên flush CÓ THỂ chạy khi request cũ chưa xong. Đây là chủ ý của sửa P3. Vòng lặp flush gom các tin tới muộn (P5).
+- AC-3 «tín hiệu lần 2 thoát ngay» và AC-5 chỉ có test đơn vị và harness với flush giả (E2, E9). E3 là kiểm tĩnh: regex trên hằng số trong `graceful.ts` và `plutil -extract` plist. E3 không đọc hằng `MEDIA_CUTOFF_MS` thứ hai, khai riêng trong `server.ts` (hằng mà sửa P2 thực sự dùng).
+- AC-4: `plutil -lint` chỉ kiểm cú pháp. Plist còn placeholder `__ROOT__` và chưa từng được launchd nạp. Hai hành vi thật của launchd không được đo: SIGTERM rồi SIGKILL sau `ExitTimeOut` 60, và cách KeepAlive xử lý mã thoát khác 0.
+- E5, E8, E11 và probe P3 chạy bản chép `collector/dist` trong thư mục tạm, `node_modules` là symlink. Mã giống runtime thật, nhưng đường dẫn snapshot và state khác.
+- run-log vòng 3 có ba dòng hỏng do verifier gọi sai: evalId «E4 skip-media», «E5 process», «E8 inflight», mã thoát 2, lệnh thiếu tên mode. Nguyên nhân là zsh không tách từ biến trong vòng lặp của verifier. Harness chỉ in dòng «dùng: …» rồi thoát, không chạy eval nào. Ba eval được chạy lại đúng ngay sau đó (run_id 092327/092343). Ba dòng hỏng được giữ nguyên vì luật chỉ-nối-thêm của log.
 
 ## Ngoài hợp đồng
 
-- **[Lỗi thật, chạm AC-3; là lý do REJECT]** Lượt flush đang chạy lúc SIGTERM tới (lượt định kỳ 60s của `main.ts`, hoặc lượt auto-flush trong `handle()` khi buffer ≥ 50) không có `deadlineAt`. Single-flight khiến shutdown chỉ chờ chung lượt đó, nên ảnh treo không bị huỷ và tin mất (P2; có thoát mã khác 0 và «MẤT N tin», nên không mất âm thầm). Ca auto-flush còn nặng hơn (đọc từ mã, chưa đo): `handle()` chờ flush xong mới trả 202, nên `close()` cũng chờ theo, và lượt flush của shutdown không bắt đầu trước deadline. Hướng sửa gợi ý (làn ZCode, qua `tin MỞ LẠI`): giữ AbortController của lượt đang chạy ở phạm vi server; khi `flush()` được gọi kèm `deadlineAt` mà đang có lượt chạy thì hẹn giờ abort cho chính lượt đó (hoặc có `agent.abortMediaAt(deadlineAt)` để shutdown gọi trước vòng lặp). Thêm một ca eval: lượt flush không tham số đang tải 24 ảnh treo, SIGTERM ngay sau đó, deadline mặc định (P2 có thể thành eval).
-- **[Rủi ro, gần AC-1]** Một POST dở mà không bao giờ xong (đã gửi header và một phần body rồi im) giữ `close()` tới deadline. Vì vòng flush chỉ chạy sau `close()`, MỌI tin đã ack 202 TRƯỚC ĐÓ cũng mất, không chỉ tin của POST dở. P3 (stall) trên main.js thật: tin A ack 202, một POST treo nửa body, SIGTERM → thoát sau 45009ms, mã khác 0, «MẤT 1 tin», 0 snapshot. `requestTimeout` mặc định của Node (300s) dài hơn deadline nên không cứu được. Quyết định d-20261023T053649Z-2 có nêu «keep-alive đang có request bị giữ tới khi request xong (tối đa deadline)», nhưng không nêu hệ quả là cả buffer bị giữ lại. Hướng gợi ý: chờ `close()` có trần (vd tới `deadlineAt - MEDIA_CUTOFF_MS`) rồi vẫn flush; hoặc flush song song với chờ close rồi lặp thêm một lượt sau khi close xong.
-- **[Rủi ro nhỏ]** Sau SIGTERM, server vẫn trả `connection: keep-alive` và vẫn nhận request mới trên socket keep-alive ĐÃ CÓ (không phải connection mới). P3 (reuse): POST thứ hai trên cùng socket, 1,3s sau SIGTERM, được 202 và vào snapshot. Mỗi request như vậy kéo `close()` thêm khoảng keepAliveTimeout (P3 ka: socket đóng 5998ms sau phản hồi, thoát sau 6320ms). Không mất tin trong phép thử, nhưng (suy từ mã, chưa đo) một client gửi đều hơn 5s một lần qua cùng socket sẽ giữ `close()` tới deadline, rồi rơi vào đúng ca stall ở trên.
-- Harness `scripts/collector-shutdown/acceptance.mjs` để timer `sleep(15_000)` (process, inflight) và deadline 60s (lost-exit) treo event loop sau khi race đã xong: E5, E8 tốn 16s, E9 tốn 61s tường, dù shutdown thật chỉ vài ms. Không ảnh hưởng kết quả, chỉ làm chậm cổng.
+- **[Lỗi test, là lý do REJECT]** Ca «P3: POST gửi NỬA body rồi im» trong `graceful-shutdown-integration.test.ts` có race: SIGTERM tới khi server chưa parse header. Chi tiết, cách tái hiện và hướng sửa ở đầu báo cáo. Làn ZCode.
+- **[Rủi ro, gần AC-1; ghi chú trong mã sai]** Chú thích ở `main.ts` dòng 58–61 viết «request dở không được ack, agent tự retry». Quyết định d-20261023T091705Z-3 cũng ghi «client … phải tự gửi lại». Nhưng hook thật `collector/openclaw/handler.js` (dòng 109–134, chỉ đọc, không chạy) không retry: POST lỗi chỉ ghi `post-error …` vào log rồi bỏ tin. Như vậy có hai loại tin mất phía client. Cả hai đều CHƯA được ack 202, nên không phạm AC-1/AC-5, nhưng vẫn là mất dữ liệu nguồn:
+  - POST còn dở ở mốc bỏ chờ 3s mà vòng flush xong trước khi nó hoàn tất;
+  - connection đã gửi header nhưng server chưa parse lúc SIGTERM. `closeIdleConnections()` coi connection đó là rảnh và cắt (đúng cơ chế làm đỏ E2).
+
+  Thực tế rủi ro thấp: hook gửi trọn body nhỏ một lần, chỉ mất vài ms, nên ca nửa body treo gần như chỉ có ở client hỏng. Nhưng cửa sổ restart vẫn làm rơi tin: trong lúc API tắt, mọi POST của hook bị ECONNREFUSED và mất. Khi chuyển sang launchd, mỗi lần restart sẽ mở cửa sổ này. Hướng gợi ý: hook retry có backoff, hoặc spool ra đĩa. Việc này thuộc làn ZCode; hợp đồng đã ghi «Hành vi thu của OpenClaw — không đổi».
+- **[Nợ nhỏ]** `MEDIA_CUTOFF_MS = 10_000` được khai hai lần: export ở `graceful.ts` và hằng riêng ở `server.ts` dòng 66. E3 chỉ kiểm bản ở `graceful.ts`. Nếu một bên bị đổi mà bên kia không, ngưỡng skipMedia và ngưỡng huỷ ảnh sẽ lệch nhau mà không eval nào đỏ.
+- **[Không phải lỗi, đã kiểm]** Timer abort do caller muộn gắn vào trong nhánh single-flight (`server.ts` dòng 243–249) không được clear khi lượt xong. Timer đã `unref`, nên không giữ tiến trình. Nó bắt AbortController CỤ THỂ của lượt đó (biến cục bộ `ac`), nên khi bắn muộn chỉ abort một controller đã hết dùng, không huỷ nhầm lượt sau. Mỗi lần shutdown có tối đa một timer như vậy. Không rò đáng kể.
+- **[Không phải lỗi, đã đo]** Auto-flush (buffer ≥ flushAfterItems, `handle()` gọi `await flush()` không tham số) không còn kẹt. Probe P4: POST kích auto-flush với 24 ảnh treo, SIGTERM 2s sau. Kết quả: close bỏ chờ ở 3s, shutdown nhập vào lượt đang chạy và gắn abort, ảnh bị huỷ ở giây 35, tin vào snapshot, POST kích nhận 202, thoát mã 0.
+- **[Đường mất-tin-mà-exit-0: không tìm thấy]** `finish()` luôn đọc `pendingCount()` (= `buffer.length`). Buffer chỉ được lọc SAU `writer.finalize`, nên tin đã ack mà chưa ghi thì luôn còn đếm. Mọi đường thoát đều đi qua kiểm này: deadline, tín hiệu lần 2, flush lỗi, flush xong. Giữa lần flush cuối trả null và `process.exit` không có await nào nhường event loop, nên không có POST nào chen vào được. P5 xác nhận: tin tới muộn được vòng lặp gom ở lượt thứ hai.
+- Harness `scripts/collector-shutdown/acceptance.mjs` để timer `sleep(15_000)` (process, inflight), deadline 60s (lost-exit) và `sleep(60_000)` (stalled-post) treo event loop sau khi race đã xong. Vì vậy E5, E8 tốn 16s, còn E9, E11 tốn 60–61s tường, dù shutdown thật chỉ vài ms (E11 khoảng 3s).
+- Trong thư mục tạm của hệ có 4 thư mục `acc-zc3-*` tạo lúc 09:07Z, trước phiên verify này (bắt đầu 09:20Z). Verifier không tạo, cũng không xoá chúng.
 
 ## Analyst
 
-Non-discriminating evals: none — E2, eval duy nhất đo được trên diffBase, red; ba eval mới E7, E8, E9
-cũng red khi chạy trên mã vòng 1 (đối chứng ngoài baseline, xem dưới). E1 (`tsc --noEmit`) về bản chất
-là guard hồi quy, không đo nên không xếp. Riêng E7 tuy phân biệt được mã vòng 1 với mã vòng 2, nhưng
-không đủ ở cấp tiêu chí: nó không phát hiện được phản ví dụ P2.
+Non-discriminating evals: none. E2 là eval duy nhất đo được trên diffBase; vòng 2 đã đo nó red trên
+diffBase cba11e4 (19/19 xanh nhưng 0 ca graceful-shutdown), vòng này không đo lại. E10 và E11, hai eval
+mới của vòng 3, cũng red trên mã vòng 2 (đối chứng ngoài baseline, xem dưới). E1 (`tsc --noEmit`) về bản
+chất là guard hồi quy nên không xếp.
 
-Baseline E2 đo được: worktree tạm detached tại diffBase cba11e4 (merge-base của HEAD với origin/main),
-đặt trong scratchpad ngoài repo, symlink `collector/node_modules`. `npm test` cho 19/19 xanh nhưng 0 ca
-graceful-shutdown, nên KHÔNG đạt expected của E2 → red (eval phân biệt). Worktree tạm đã gỡ bằng
-`git worktree remove --force` rồi `git worktree prune`.
+Đối chứng với mã vòng 2 (không phải baseline diffBase): worktree tạm detached tại dfaa45b trong scratchpad,
+ngoài repo. Đã chép `scripts/collector-shutdown/acceptance.mjs` của HEAD vào, chạy `npm ci` (4 gói) và build
+collector ở đó (2026-10-23T09:32:35Z). Kết quả:
+- periodic-hang ra PERIODIC-HANG FAIL (5 mục): thoát mã khác 0 sau 45001ms, snapshot 0, buffer còn 1, gọi
+  host ảnh 20, có «flush quá deadline» và «MẤT 1 tin».
+- stalled-post ra STALLED-POST FAIL (4 mục): thoát mã khác 0 sau 45006ms, snapshot 0, «MẤT 1 tin».
 
-Đối chứng với mã vòng 1 (không phải baseline diffBase): worktree tạm detached tại 863c15b trong
-scratchpad, chép `scripts/collector-shutdown/acceptance.mjs` của HEAD vào, build collector rồi chạy ba
-mode mới. Kết quả bằng chữ: hang-default ra HANG-DEFAULT FAIL (4 mục; tin không vào snapshot, chạm
-«flush quá deadline»); inflight ra INFLIGHT FAIL (2 mục; POST dở không có phản hồi, tin không vào
-snapshot); lost-exit ra LOST-EXIT FAIL (4 mục; không có dòng MẤT, tín hiệu lần 2 vẫn thoát mã 0).
-Ba eval mới phân biệt được mã cũ với mã mới. Worktree tạm đã gỡ.
+Cả hai eval mới phân biệt được mã vòng 2 với mã vòng 3. Worktree tạm đã gỡ bằng `git worktree remove --force`
+rồi `git worktree prune`.
 
-P1 (probe vòng 1, chạy nguyên văn với số mặc định, không sửa tệp probe; 2026-10-23T05:43:25Z):
-`cd collector && npm run build && cd .. && node _acceptance/collector-graceful-shutdown/evidence/P1-deadline-probe.mjs $PWD 24`
+Probe chạy lại theo yêu cầu (collector build từ 29050d4; số liệu nguyên văn ở `evidence/probes-round3.txt`):
 
-    ack=202 images=24 · exit sau 35011ms · code 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+P1 — `node _acceptance/collector-graceful-shutdown/evidence/P1-deadline-probe.mjs $PWD 24` (09:27:49Z)
+
+    ack=202 images=24 · exit sau 35004ms · code 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
       log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
-      log: 35010ms shutdown: flushed hanoi__zalo-agent__2026-10-23T054326255
-      log: 35010ms shutdown: flush xong — thoát
+      log: 35003ms shutdown: flushed hanoi__zalo-agent__2026-10-23T092749746
+      log: 35003ms shutdown: flush xong — thoát
 
-Đạt yêu cầu: snapshot hoàn tất 1 (≥ 1), buffered 0, không mất tin; ảnh bị huỷ ở giây 35 (còn 10s).
-Vòng 1 cùng probe cho 0 snapshot, buffered 1.
+Đạt: snapshot 1, buffered 0, không mất tin.
 
-Probe P3 (`evidence/P3-stalled-post-probe.mjs`, main.js thật, cổng ngẫu nhiên, key giả): ka, stall,
-reuse. Số liệu nguyên văn ở `evidence/probes-round2.txt` và tóm ở «Ngoài hợp đồng».
+P2 — `node _acceptance/collector-graceful-shutdown/evidence/P2-inflight-periodic-probe.mjs $PWD 24 2000` (09:28:29Z)
 
-Không đụng runtime thật: trước và sau mọi lần chạy, tiến trình nghe :9210 vẫn là cùng PID. Trong
-`~/dev/onehub-invest/collector/snapshots/hanoi` có thêm 6 snapshot trong lúc verify. Cả 6 đều có tên
-rơi đúng giây :53 mỗi phút (interval 60s của API đang chạy), và không có item nào chứa chuỗi đánh dấu
-của eval hay probe. Worktree không phát sinh `collector/snapshots`; không còn thư mục tạm `acc-*` sót lại.
+    N=24 D=2000ms: ack=202 · SIGTERM sau 2004ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 35007ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+      log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+      log: 35007ms shutdown: flushed hanoi__zalo-agent__2026-10-23T092829054
+      log: 35007ms shutdown: flush xong — thoát
+    Đối chứng D=20000: N=24 D=20000ms: ack=202 · SIGTERM sau 20005ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 35004ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 24
+
+Đạt: snapshot 1, buffered 0, không mất tin. Vòng 2, cùng lệnh: snapshot 0, buffered 1, «MẤT 1 tin».
+Ở đối chứng D=20000, lượt định kỳ lẽ ra tự xong ở giây 60 (40s sau SIGTERM), nhưng giờ bị huỷ ảnh ở mốc
+35s sau SIGTERM. Abort đến đúng lượt đang chạy.
+
+P3 — `node _acceptance/collector-graceful-shutdown/evidence/P3-stalled-post-probe.mjs $PWD <stall|ka|reuse>` (main.js thật, 09:30:08Z–09:30:15Z)
+
+    stall: tin A trả 202 trước SIGTERM · POST treo (nửa body) · thoát sau 3010ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+    ka: POST keep-alive dở lúc SIGTERM trả 202 (header connection: keep-alive) sau 313ms · socket server đóng chưa · thoát sau 3013ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+    reuse: POST 1 (dở lúc SIGTERM) trả 202 · POST 2 trên cùng socket, 1,3s sau SIGTERM, trả 202 · thoát sau 3011ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+
+Đạt: không mất tin trong cả ba mode. Vòng 2 stall: thoát sau 45009ms, mã khác 0, «MẤT 1 tin», snapshot 0.
+Ka và reuse giờ thoát ở mốc 3s thay vì 6–7s, vì socket keep-alive còn mở không còn giữ shutdown.
+
+Probe mới của verifier (harness, nối dây như main.ts kèm close race 3s): P4 auto-flush và P5 POST hoàn tất
+sau mốc bỏ chờ. Số liệu ở «Ngoài hợp đồng» và `evidence/probes-round3.txt`; tệp probe nằm ở
+`evidence/P4-autoflush-probe.mjs` và `evidence/P5-late-post-probe.mjs`. Không probe nào tìm thấy tin đã ack bị mất.
+
+Không đụng runtime thật: trước, trong và sau mọi lần chạy, tiến trình nghe :9210 vẫn là PID 63069. Trong
+`~/dev/onehub-invest/collector/snapshots/hanoi` có thêm 12 snapshot `zalo-agent` từ 09:20Z. Cả 12 đều có tên
+rơi đúng giây :53 mỗi phút (interval 60s của API đang chạy), và không item nào chứa chuỗi đánh dấu của eval
+hay probe (đã grep gzcat). Worktree không phát sinh `collector/snapshots`. Thay đổi trong repo chỉ có
+`run-log.jsonl`, báo cáo này, `evidence/probes-round3.txt` và hai tệp probe P4/P5, cộng `collector/dist` do build.
 
 Baseline khong do:
-- E1: `collector/src/api/graceful.ts` chưa tồn tại trên diffBase; typecheck cây cũ chỉ chứng cây cũ biên dịch được, không nói gì về tính năng.
-- E3: `scripts/collector-shutdown/acceptance.mjs`, `collector/src/api/graceful.ts` và `pipeline/cron/com.oneinvest.collector-api.plist` chưa tồn tại trên diffBase.
-- E4, E5, E7, E8, E9: `scripts/collector-shutdown/acceptance.mjs` chưa tồn tại trên diffBase (E5, E7, E8, E9 còn cần `graceful.ts`). E7, E8, E9 đã được đối chứng với mã vòng 1 như trên.
+- E1: `collector/src/api/graceful.ts` chưa tồn tại trên diffBase; typecheck cây cũ không nói gì về tính năng.
+- E3: `scripts/collector-shutdown/acceptance.mjs`, `collector/src/api/graceful.ts` và plist chưa tồn tại trên diffBase.
+- E4, E5, E7, E8, E9, E10, E11: `scripts/collector-shutdown/acceptance.mjs` chưa tồn tại trên diffBase. E10 và E11 đã được đối chứng với mã vòng 2 (dfaa45b) như trên; E7, E8, E9 đã đối chứng với mã vòng 1 ở vòng 2.
 - E6: `pipeline/cron/com.oneinvest.collector-api.plist` chưa tồn tại trên diffBase.
 
 ## Variance
 
-none — every multi-run eval is uniform (không eval nào khai runs > 1). P2 chạy hai mốc D (2000 mất tin,
-20000 giữ tin), khớp đúng phép tính ceil(24/4) × 10s = 60s so với 45s deadline; không có biến thiên ngẫu nhiên.
+E2 — flaky. Eval tất định (không khai runs) nhưng cho kết quả khác nhau giữa các lần chạy. Ca tích hợp «P3:
+POST gửi NỬA body rồi im» cho:
+- worktree: đỏ 4/4, gồm lượt `npm test` chính thức và 3 lần chạy riêng ca;
+- bản chép dist trong scratchpad, test nguyên văn: xanh 2/10, đỏ 8/10;
+- bản chép có chèn `await sleep(200)` giữa `sock.write` và SIGTERM: xanh 5/5.
+
+Gốc là race thời gian giữa lúc client ghi request và lúc server parse header, không phải hành vi sản phẩm
+ngẫu nhiên. Sửa ở test (xem đầu báo cáo).
 
 ## Iterations
 
-Round 1: E4 failed (cấp tiêu chí). Probe P1 cho thấy lượt flush đầu khi shutdown không huỷ ảnh sát deadline: 24 ảnh treo, tin đã ack mất, tiến trình vẫn thoát mã 0. Returned to implementation.
-Round 2: E1–E9 đều đạt expected của từng eval, và P1 giờ giữ được tin. Hai điểm phụ vòng 1 đã xử lý (E8: POST dở không bị cắt; E9: mất tin thì thoát mã khác 0 kèm «MẤT N tin»). E7 failed (cấp tiêu chí): probe P2 cho thấy lượt flush ĐANG chạy lúc SIGTERM (định kỳ 60s) không có deadlineAt, ảnh treo không bị huỷ, tin mất. Returned to implementation.
+Round 1: E4 failed (cấp tiêu chí). Probe P1 cho thấy lượt flush đầu khi shutdown không huỷ ảnh sát deadline; tin đã ack mất mà vẫn thoát mã 0. Returned to implementation.
+Round 2: E7 failed (cấp tiêu chí). Lượt flush định kỳ đang chạy lúc SIGTERM không nhận deadlineAt, ảnh treo không bị huỷ, tin mất (P2). Thêm rủi ro: POST treo nửa body giữ close() tới deadline và làm mất cả buffer (P3). Returned to implementation.
+Round 3: sản phẩm sửa đúng P2 (flushAbort) và P3 (race close 3s). E1, E3–E11 đạt; P1/P2/P3 cùng hai probe mới P4/P5 đều không mất tin. E2 failed vì ca tích hợp mới «P3» trong test có race (SIGTERM trước khi server parse header, socket thô thiếu listener error), đỏ chập chờn khoảng 80–100%. Returned to implementation (sửa test, làn ZCode). Đã hết 3 vòng, cần escalate tới user.
