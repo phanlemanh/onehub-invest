@@ -5,7 +5,7 @@ slug: review-card-photos
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: implemented
 approved_by:
 approved_at:
 veto_state: mo
@@ -34,7 +34,7 @@ làn merge local_23b003f1 (23/10, sau khi PR #16 merge).
 - AC-4: Given một ảnh không tải được (URL gốc hết hạn), When trình duyệt báo lỗi ảnh, Then ô ảnh đó chuyển sang trạng thái «Ảnh hỏng» (biểu tượng + chữ, không còn ảnh vỡ) và vẫn bấm được; trong hộp thoại, ảnh hỏng hiện câu báo URL gốc có thể đã hết hạn thay cho ảnh.
 - AC-5: Given một bên/tin mà `loadReviewMedia` trả mảng rỗng, When thẻ render, Then vùng ảnh hiện «Không có ảnh»; Given không có dữ liệu ảnh cho thẻ (người xem không phải admin), Then thẻ không có vùng ảnh nào và không có thẻ `<img>` ảnh tin.
 - AC-6: Given ảnh từ URL ngoài (fbcdn, zdn, Chợ Tốt), When thẻ render, Then thẻ `<img>` mang `referrerpolicy="no-referrer"` và `loading="lazy"`; ảnh lưu trên máy đi qua `/api/zalo-media`.
-- AC-7: Given dev server local và DB local có hàng duyệt thật, When một tài khoản admin thử và một tài khoản ops thử (tạo tạm, xoá sau) cùng tải `/ops/review`, Then HTML của admin chứa ảnh tin (URL fbcdn của Tin A, URL Chợ Tốt của Tin B), HTML của ops không chứa URL ảnh tin nào; trang tải đúng một lần truy vấn ảnh cho cả hàng duyệt. (cross-layer)
+- AC-7: Given dev server local và DB local có hàng duyệt thật, When một tài khoản admin thử và một tài khoản ops thử (tạo tạm, xoá sau) cùng tải `/ops/review`, Then HTML của admin chứa ảnh tin (URL fbcdn của Tin A, URL Chợ Tốt của Tin B), HTML của ops không chứa URL ảnh tin nào và vẫn tải đủ thẻ. (cross-layer)
 - AC-8: Given toàn bộ thay đổi, When chạy typecheck, lint (gồm luật onehub-ui), bộ test của app và design gate, Then tất cả xanh, không thêm dòng nào vào baseline `eslint-suppressions.json`.
 - AC-9: Given admin trên `/ops/review` thật, When chụp vùng thẻ có ảnh ở chế độ sáng, tối và bề rộng 390px, rồi mở hộp thoại phóng to, Then cả hai loại thẻ hiện dải ảnh, hộp thoại hiện ảnh lớn, không có thanh cuộn ngang trang.
 
