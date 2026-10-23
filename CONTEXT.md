@@ -76,12 +76,12 @@ _Avoid_: tin đăng, offer, rao vặt, sale offer
 **Tin cho thuê**: Tin rao cho thuê dài hạn, giá theo tháng (`kind = rent_lt`).
 - Code: `kind = rent_lt` · RESO: PropertyType = ResidentialLease + LeaseAmountFrequency = Monthly
 
-**Căn giá tốt**: Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Chỉ ở cổng Ops vì kèm liên hệ người bán (tầng A).
+**Căn giá tốt**: Tin rao giá nội bộ (P1) có giá/m² thấp hơn thước giá cùng phường và loại hình. Hiện chỉ ở cổng Ops (PR #3); từ 23/10 liên hệ người bán là tầng C nên có thể đưa lại lên cổng công khai.
 - Code: `deal` · RESO: không có — chỉ số nội bộ
 - Slug URL: `deals`
 _Avoid_: deal tốt, kèo
 
-**Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT; SĐT thô là tầng A.
+**Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 _Avoid_: chủ nhà, broker
 
@@ -242,7 +242,7 @@ _Avoid_: cào, crawl
 - Code: `freshness (SLO)` · RESO: ≈ ModificationTimestamp
 _Avoid_: freshness
 
-**Tầng A**: Tên nguồn thật, SĐT, hồ sơ cá nhân — không rời máy local; cloud chỉ nhận hash + aggregate (luật 6).
+**Tầng A**: Tên nguồn thật, hồ sơ người dùng app — không rời máy local; cloud chỉ nhận hash + aggregate (luật 6). Định danh người bán trên tin rao KHÔNG thuộc tầng A (tầng C, 23/10).
 - Code: `SPL tier A` · RESO: —
 
 **Tầng B**: Mã nguồn S0x — dùng ở API và mọi trang Ops.
