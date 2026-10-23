@@ -1,0 +1,23 @@
+schema_version: 1
+feature_slug: backfill-zalo-media-v3
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; 0 fail; ca 'mediaSnapshots nhận v2 và v3, bỏ v1, mồ côi và nguồn khác' (should-NOT-fire: v1/mồ côi/nguồn khác không được xét) và 'postsWithMedia đọc được bài có ảnh trong snapshot v3 (có meta.kev)' CHẠY và xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.zalo_media_roundtrip
+    expected: "exit 0; stdout có 'ROUNDTRIP PASS' và 'dọn: còn 0 dòng giả'; dòng đầu của --check có 'chưa nạp: 1 ' (đỏ trước khi nạp), sau backfill 'chưa nạp: 0 '"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.zalo_media_backfill
+    expected: "exit 0; stdout in 'snapshot zalo-agent: N (v2+: M) · bài có ảnh trong raw v2+: K · chưa nạp: 0 · stg_zalo_posts có media_files: R'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
