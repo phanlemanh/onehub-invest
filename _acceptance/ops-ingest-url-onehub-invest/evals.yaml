@@ -1,0 +1,45 @@
+schema_version: 1
+feature_slug: ops-ingest-url-onehub-invest
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.cloud_url_static
+    expected: "exit 0; stdout có 'không tệp code/config nào còn trỏ' và 'CLOUD-URL STATIC PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_url_static
+    expected: "exit 0; dòng 'ok   push-ops-facts: INGEST_URL mặc định = prod mới, env INGEST_URL vẫn đè được'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.cloud_url_static
+    expected: "exit 0; dòng ok cho audit-all CLOUD, mcp-tools.json cloud_base_url và cú pháp hai script"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.cloud_url_mutation
+    expected: "should-NOT-fire: bản sao quay về URL cũ bị bắt 3/3 — stdout có 'CLOUD-URL MUTATION PASS'; exit 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.cloud_url_live
+    layer: backend-effect
+    expected: "exit 0; không token → 401 (should-NOT-fire); token cloud + payload rỗng → 400; stdout có 'CLOUD-URL LIVE PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
