@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 19aba28053275f747bcc178d8dfa8d0a281fc1a8
+verified_commit: 58bdd03f0ba9b5ddbe2e027867665fadc9a40fc9
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -202,3 +202,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, xác đ
 
 Round 1: E1 và E2 đỏ, E3 vắng kết quả (agent bị bỏ qua), lệnh lint của app đỏ; tổng kết round BLOCKED. Trả về triển khai (commit 8b556ad: pool dừng khi mẻ gãy, soát tên nguồn fail-closed, thước chạy trong container tạm).
 Round 2: toàn bộ eval máy (E1-E7, E8a, E8b, E11) xanh và cả 5 lệnh suite xanh trên commit đã ghim; E9 và E10 hội đồng judge đề xuất PASS nhưng chờ người chốt ở Cổng 2, nên verdict là PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-10-23, do gộp main ce4ad81 (037, PR #20–#23) trước khi mở PR
+run_id: repin-20261023T044033Z-63422
+sha: 58bdd03f0ba9b5ddbe2e027867665fadc9a40fc9 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths), E10 (E10 không khai paths) · AC không có chốt máy: AC-9, AC-10

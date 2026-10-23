@@ -52,3 +52,4 @@
 {"ts":"2026-10-23T03:21:11Z","sha":"19aba28053275f747bcc178d8dfa8d0a281fc1a8","round":2,"kind":"round-tally","verdict":"PENDING-JUDGMENT","expected":15,"returned":15,"blocked":0}
 {"ts":"2026-10-23T03:21:11Z","sha":"19aba28053275f747bcc178d8dfa8d0a281fc1a8","round":2,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":2,"bypass_ack":0,"verified_at":15}
 {"kind":"thuoc-vat","ts":"2026-10-23T03:30:13Z","round":2,"san":"77e2502d2a154aaf10fac472fbef3a307447947f","vat":[188,53],"thuoc":[0,0],"ho_so":[732,0],"nhat":0,"lan":0,"tep_thuoc":[]}
+{"ts":"2026-10-23T04:44:03Z","kind":"repin","run_id":"repin-20261023T044033Z-63422","sha":"58bdd03f0ba9b5ddbe2e027867665fadc9a40fc9","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E11":0,"E8a":0,"E8b":0},"wall_s":209.9,"so_lenh":15,"evals_not_machine":["E9","E10"],"tong_ket":{"ket_cuc":"xanh","phut":3.5,"so_lenh":15,"model_goi":0,"model_carry":0,"chap_chon":0}}
