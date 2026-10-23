@@ -1,0 +1,22 @@
+{"ts":"2026-10-23T03:00:44Z","round":1,"evalId":"E1","run_id":"review-card-photos-E1-20261023T030044Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:00:46Z","round":1,"evalId":"E2","run_id":"review-card-photos-E2-20261023T030046Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:00:47Z","round":1,"evalId":"E3","run_id":"review-card-photos-E3-20261023T030047Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:00:49Z","round":1,"evalId":"E4","run_id":"review-card-photos-E4-20261023T030049Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:00:51Z","round":1,"evalId":"E5","run_id":"review-card-photos-E5-20261023T030051Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:00:53Z","round":1,"evalId":"E6","run_id":"review-card-photos-E6-20261023T030053Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:01:00Z","round":1,"evalId":"E7","run_id":"review-card-photos-E7-20261023T030100Z","exit_code":0,"cmd":"BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-review-photos.mjs"}
+{"ts":"2026-10-23T03:01:11Z","round":1,"evalId":"E8","run_id":"review-card-photos-E8-20261023T030111Z","exit_code":0,"cmd":"cd app && npx tsc --noEmit && npm run lint"}
+{"ts":"2026-10-23T03:01:23Z","round":1,"evalId":"E9","run_id":"review-card-photos-E9-20261023T030123Z","exit_code":0,"cmd":"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx app/src/components/ops/review-card.tsx"}
+{"ts":"2026-10-23T03:01:39Z","round":1,"evalId":"E9","run_id":"review-card-photos-E9-20261023T030139Z","exit_code":0,"cmd":"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx"}
+{"ts":"2026-10-23T03:05:24Z","round":1,"evalId":"E10","run_id":"review-card-photos-E10-20261023T030524Z","exit_code":0,"cmd":"ego-browser nodejs (task space 6) http://localhost:3456/ops/review — sang 1280, toi 1280, 390px; frames evidence/E10-step1..5.png"}
+{"ts":"2026-10-23T03:13:03Z","round":2,"evalId":"E1","run_id":"review-card-photos-E1-r2-20261023T031303Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:13:05Z","round":2,"evalId":"E2","run_id":"review-card-photos-E2-r2-20261023T031305Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:13:08Z","round":2,"evalId":"E3","run_id":"review-card-photos-E3-r2-20261023T031308Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:13:10Z","round":2,"evalId":"E4","run_id":"review-card-photos-E4-r2-20261023T031310Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:13:12Z","round":2,"evalId":"E5","run_id":"review-card-photos-E5-r2-20261023T031312Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:13:14Z","round":2,"evalId":"E6","run_id":"review-card-photos-E6-r2-20261023T031314Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T03:13:16Z","round":2,"evalId":"E7","run_id":"review-card-photos-E7-r2-20261023T031316Z","exit_code":0,"cmd":"BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-review-photos.mjs"}
+{"ts":"2026-10-23T03:13:17Z","round":2,"evalId":"E8","run_id":"review-card-photos-E8-r2-20261023T031317Z","exit_code":0,"cmd":"cd app && npx tsc --noEmit && npm run lint"}
+{"ts":"2026-10-23T03:13:28Z","round":2,"evalId":"E9","run_id":"review-card-photos-E9-r2-20261023T031328Z","exit_code":0,"cmd":"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx"}
+{"ts":"2026-10-23T03:13:29Z","round":2,"evalId":"E11","run_id":"review-card-photos-E11-r2-20261023T031329Z","exit_code":0,"cmd":"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-card.tsx"}
+{"ts":"2026-10-23T03:14:35Z","round":2,"evalId":"E10","run_id":"review-card-photos-E10-r2-20261023T031435Z","exit_code":0,"cmd":"ego-browser nodejs (task space 7) http://localhost:3456/ops/review — sang 1280, toi 1280, 390px; frames evidence/E10-r2-step1..5.png"}

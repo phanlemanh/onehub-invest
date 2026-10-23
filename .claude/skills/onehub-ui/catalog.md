@@ -17,6 +17,9 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 |---|---|---|
 | Ô KPI | `page/stat-tiles.tsx` (`StatTiles`, bậc qua `page/tiers.ts`) | card KPI tự ghép, `c-card-15` mới |
 | Bảng | `insight/insight-grid.tsx` (`InsightGrid`: Frame + data-grid, nhãn `DATA_GRID_VI`) | `<table>`, data-grid dựng lại từ đầu |
+| Ô KPI / bảng — cổng Ops, trang theo block Solutions | Ngoại lệ có tên (Mạnh duyệt B1, 2026-10-23): **KPI và lưới theo block** — ô số, lưới, tab trạng thái là của chính block Solutions đã chuyển thể (`ops/overview/`, `ops/collections/`, `ops/sources/`). Trang Ops không có block khớp (`/ops/quality`, registry) vẫn dùng `StatTiles` / `InsightGrid` | thay ô/lưới của block bằng `StatTiles`/`InsightGrid`, lưới tự dựng ngoài bản chuyển thể |
+| Xác nhận phá huỷ | `ops/sources/confirm-delete.tsx` (`AlertDialog` theo `c-alert-dialog-5`) | `window.confirm`, Dialog thường |
+| Bật/tắt trong hàng | `ui/switch` `size="sm"` + `aria-label` (mẫu `c-switch-4`) | toggle tự vẽ bằng `span`, Button đổi chữ |
 | Bảng so sánh thuộc tính (cột = đối tượng) | `compare/comparison.tsx` (comparison-1; `<table>` là của block gốc → ngoại lệ có lý do, không chuyển data-grid) | data-grid cho bảng so sánh, bảng so sánh tự dựng |
 | Page header | `page/page-header.tsx` (`PageHeader`, slot `actions`) | `h1` + `p` tự viết |
 | Đang tải | `states/page-skeleton.tsx` (hoặc Skeleton theo đúng bố cục vùng) đặt trong `<Suspense>` | `loading.tsx` cấp segment (mất mã 404/307), spinner cả trang |
@@ -58,6 +61,22 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | `@reui/how-it-works-1` | blocks/how-it-works-1/ → marketing/how-it-works.tsx | 3 bước dùng sản phẩm | Card → Frame (trang chủ họ Frame) | https://reui.io/preview/base/how-it-works-1 |
 | `@reui/faq-6` | blocks/faq-6/ → marketing/faq-section.tsx | Hỏi đáp trang chủ + định nghĩa trang Phương pháp | Dữ liệu qua props | https://reui.io/preview/base/faq-6 |
 
+## Cổng Ops — block Solutions (B1, cài 2026-10-23)
+
+Bản gốc ở `blocks/<tên>/` (chỉ tham chiếu). Bản chuyển thể: comment đầu tệp ghi `chuyển thể từ @reui/<tên>`.
+Ma trận trang → block máy kiểm: `scripts/ui-standards/b1-block-map.json`.
+
+| Block | File | Dùng cho | Đã đổi so với bản gốc | previewUrl |
+|-------|------|----------|------------------------|------------|
+| `@reui/app-shell-36` | blocks/app-shell-36/ → **shell/ops-shell/** | Shell riêng của cổng Ops: thanh bên nhóm (Giám sát · Xử lý · Quản trị · Hệ thống), thanh icon ở máy tính bảng, ngăn kéo ở điện thoại, lọc ⌘F | Nav đọc từ `shell/nav.tsx` (mục `group`); workspace switcher → bộ chuyển cổng Vận hành ↔ Đầu tư; thẻ tài khoản chỉ giữ giao diện + đăng xuất; bỏ ghim trang, khung xương mẫu, breadcrumb ở header (breadcrumb ở PageHeader); meta `text-xs` | https://reui.io/preview/base/app-shell-36 |
+| `@reui/solution-dev-ops-5` | blocks/solution-dev-ops-5/ → ops/overview/ | `/ops`: ô KPI ba dải + lưới mục tiêu độ tươi có tab trạng thái | Bỏ biểu đồ đốt ngân sách, kẹo mút mini trong ô, sheet SLO, chọn hàng/thao tác hàng loạt (chưa có chuỗi độ tươi theo ngày; trang chỉ đọc) | https://reui.io/preview/base/solution-dev-ops-5 |
+| `@reui/solution-dev-ops-6` | blocks/solution-dev-ops-6/ → ops/collections/ (thẻ số, luồng, cần chú ý, `status-grid`) + ops/sources/ (`source-groups`, `new-group-sheet`) | Sức khoẻ nguồn, luồng 7 ngày, việc cần chú ý; nhóm thu theo nguồn | Trục luồng theo NGÀY (không theo giờ), hai chế độ Listing / Tin Zalo; thẻ số không chip so hôm qua, chân thẻ là liên kết neo; cần chú ý không nút sửa tại chỗ; sheet tạo rút gọn còn nguồn · URL/mã · tên; bỏ preview mẫu, xoay khoá, export | https://reui.io/preview/base/solution-dev-ops-6 |
+| `@reui/solution-dev-ops-1` | blocks/solution-dev-ops-1/ → ops/collections/jobs-grid.tsx | Lưới job launchd có tab sức khoẻ | Bỏ công tắc bật/tắt job, cột 20 lần chạy, lần chạy kế, bộ sửa cron (không sửa launchd từ web) | https://reui.io/preview/base/solution-dev-ops-1 |
+| `@reui/solution-ai-ops-2` | blocks/solution-ai-ops-2/ → ops/sources/ (`zalo-accounts`, `zalo-account-row`, `zalo-qr-dialog`) | Tài khoản Zalo: hàng kết nối + hộp kết nối QR | Connect key → Đăng nhập QR (ảnh QR / Skeleton); bỏ ưu tiên/định tuyến, công tắc tạm dừng, ô widget mẫu, bóng đổ tự tô của logo | https://reui.io/preview/base/solution-ai-ops-2 |
+| `@reui/solution-agents-5` | (chờ) → ops/review/ | `/ops/review`: hàng chờ duyệt + sheet chi tiết | Làm sau khi `feat/enrich-qua-de-xuat` vào main | https://reui.io/preview/base/solution-agents-5 |
+| `@reui/c-attachment-3` | ops/review-photos.tsx (`ui/attachment` + shadcn `Dialog`; file ví dụ không giữ trong `examples/`) | Dải ảnh tin trên thẻ `/ops/review` (Tin A/Tin B, tin bổ sung) + hộp phóng to có trước/sau | Bỏ tên tệp/kích thước; ô ảnh hỏng → `state="error"` + `ImageOff`; ảnh ngoài `referrerPolicy="no-referrer"`; chỉ có dữ liệu khi admin (`loadReviewMedia`) | https://reui.io/preview/base/components/c-attachment-3 |
+| `@reui/c-alert-dialog-5` | ops/sources/confirm-delete.tsx | Xác nhận xoá nhóm thu / gỡ tài khoản Zalo | Chữ tiếng Việt, câu hậu quả nêu số bài sẽ xoá | https://reui.io/preview/base/components/c-alert-dialog-5 |
+
 ## Custom Components (created — LAST RESORT only)
 
 | Component | File | Why not ReUI? | previewUrl |
@@ -73,6 +92,8 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | PageSkeleton | components/states/page-skeleton.tsx | Ghép từ `ui/skeleton` theo bố cục Insight; dùng trong `<Suspense>`, KHÔNG làm `loading.tsx` cấp segment (mất mã 404/307) | |
 
 ## Bản đồ nền (mọi bản đồ MapLibre)
+
+- **Nguồn đích (chốt 2026-10-23): `mapcn`** (`@mapcn/map`, `@mapcn/choropleth`, `@mapcn/store-locator`, clusters) — ReUI không có bản đồ; thứ tự ReUI → mapcn (chỉ cho bản đồ) → tự ghép. Ba component tự viết dưới đây đổi sang mapcn ở đợt I1/I2/I3; các luật nền bên dưới vẫn áp dụng cho bản mapcn.
 
 - Dùng `lib/map-style.ts`: `basemapUrl("colored" | "muted", dark)` + `MAP_OPTIONS` + `addAttribution` + `prepareBasemap`. Nguồn OpenFreeMap (OSM, không khoá, không giới hạn lượt).
 - `colored` (Liberty) cho bản đồ cần định vị (nhãn giá listing); `muted` (Positron) cho bản đồ mà màu là dữ liệu (choropleth). Chế độ tối dùng `dark` cho cả hai.

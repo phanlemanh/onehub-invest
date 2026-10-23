@@ -8,11 +8,27 @@
 ## 0. Cách dùng
 
 - Mọi phiên bắt đầu: đọc §1 nguyên tắc + §3 quyết định đã chốt (KHÔNG hỏi
-  lại user những gì đã chốt), §4 lộ trình để biết vị trí hiện tại.
-- Làm xong việc: cập nhật §2 as-built + §4 đánh dấu ✅.
-- Việc mới phải tra §3 xem đã chốt chưa; quyết mới → ghi §3/§4.
+  lại user những gì đã chốt), rồi **`LO-TRINH.html` / `docs/plan/lo-trinh.json`** để biết việc kế tiếp.
+- Làm xong việc: cập nhật §2 as-built; trạng thái việc máy tự suy từ `_acceptance/<slug>/` lên lộ trình.
+- Việc mới phải tra §3 xem đã chốt chưa; quyết mới → ghi §3.
+
+**Mỗi loại thông tin một chỗ** (Mạnh chốt 23/10):
+
+| Loại | Ở đâu | Ai cập nhật |
+|---|---|---|
+| Mục đích, mục tiêu, thước đo | `docs/product/FRAMING.md` | Mạnh duyệt, có nhật ký §9 |
+| Hiến pháp, quyết định đã chốt | §1, §3 của tệp này + `docs/adr/` | phiên làm việc, sau khi Mạnh chốt |
+| **Việc phát triển sắp làm + mốc** | **`docs/plan/lo-trinh.json`** (trang `LO-TRINH.html`) | thêm bằng cắt lượt (`/acceptance-gate:cat-luot`) từ một bản phạm vi `docs/plan/pham-vi-*.md`; mốc ở khối `moc` |
+| Trạng thái từng việc | máy suy từ `_acceptance/<slug>/`, hiện trên `LO-TRINH.html` | không ai ghi tay |
+| As-built + chỉ mục | §2, §4 của tệp này — §4 trỏ mã hàng của lộ trình, không chép danh sách việc | phiên làm xong việc |
+| Căn cứ (audit, review, nghiên cứu) | `docs/audit/`, `docs/architecture/`, `docs/research/` | đầu vào của cắt lượt, không phải danh sách việc |
+| Bối cảnh khi mở vòng một hàng (đọc gì cho hàng nào, quyết định còn chờ chặn hàng nào, việc của người) | `docs/plan/BOI-CANH.md` | phiên cắt lượt; cập nhật khi cắt đợt mới hoặc chốt quyết định |
+| Giao việc cho ZCode | kênh tin (issue #9) — **mỗi lời giao ghi mã hàng** của lộ trình | điều phối liên làn |
 
 ## 1. Nguyên tắc bất biến (hiến pháp)
+
+> Khung mục đích · mục tiêu · thước đo: **`docs/product/FRAMING.md`** (Mạnh duyệt 23/10). Hiến pháp
+> dưới đây là luật kỹ thuật phục vụ khung đó; việc mới nói nó phục vụ phía nào, câu hỏi nào, thước đo nào.
 
 1. **Dữ liệu**: KHÔNG scrape AirDNA cho sản phẩm; RESO-first (ADR-0011 —
    tra DD trước khi bịa field); migration-only (AGENTS.md #3); metrics
@@ -28,6 +44,8 @@
    (lockdown 7 lớp + watchdog runtime guard — 2 sự cố đã xảy ra).
 6. **Local-first AI**: Qwen 27B (MTPLX :8000) + Kev-4B gate (81ms) là mặc
    định; cloud (OpenAI Decisions) chỉ cho dữ liệu phi-PII.
+   *(23/10: Mạnh nêu cần AI Gateway chọn model theo việc + biết chi phí — đề xuất sửa luật này ở review
+   phân loại §0.4 M1, chờ Mạnh chốt.)*
 7. **Đơn vị nghĩ là CĂN NHÀ**: "Một Căn Nhà" (entity properties) là đơn vị
    phân tích; nguồn chỉ là evidence.
 8. **Đo trước khi build**: không graph/vector/infra mới trước khi số liệu
@@ -49,7 +67,12 @@ Public mirrors LIVE: onehub-invest-app + onehub-data-api.
 ### 2.2 Pipeline dữ liệu 5 tầng
 ```
 thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
-→ stg_* → transform (parser VN + phone + RESO property_type)
+→ stg_* → transform (parser VN + phone + RESO property_type; S03/S05 upsert + đối soát
+  offer cũ qua `writeOffers` — đề xuất enrich + thẻ duyệt sống qua nạp lại, 039)
+→ enrichment_proposals (E1/E2 đề xuất → luật xác định / /ops/review;
+  E1 trái LLM → thẻ đối chiếu, người chọn; E1 không suy land từ tên nhóm;
+  hoàn tác có audit qua `revert_enrichment` (036) + CLI enrich-revert;
+  không UPDATE thẳng canonical, không lên cloud)
 → sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
 → sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
@@ -57,6 +80,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
+- Cloud sync (15', `pipeline/sync-cloud.mjs`): nguyên tử từ cloud-sync-atomic (23/10) — nạp
+  `sync_stage.rows` (migration 038, schema riêng, anon không đọc được) qua Management API rồi MỘT giao
+  dịch DELETE+UPSERT+INSERT; không TRUNCATE (giữ `saved_markets`); đọc local `row_to_json` một snapshot
+  (ngày/micro-giây/số jsonb nguyên vẹn); chặn tụt 50%; bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
+  → `S0x:<số>`, soát tên nguồn trước khi gửi. Thước `pipeline/scripts/check-cloud-sync.mjs <ca>`,
+  máy đo prod chỉ đọc `cloud-sync-watch.mjs`; triển khai: `docs/ops/cloud-sync-atomic.md`.
+- Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
+  (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
+  CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 | Mã | Nguồn | Trạng thái | Ghi chú |
@@ -75,6 +107,8 @@ zalo-import · 05:30 chotot (collect→import→transform→refresh→resolve) �
 15′ cloud-sync + ops-facts · 5′ zalo-watchdog · KeepAlive kev-gate.
 
 ### 2.5 Số liệu hôm nay
+> ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
+> sellers, bait gap dưới đây gồm cả tin giả. Xem `docs/architecture/classification-enrich-review.md` §0.3 (L19).
 1.195 P1 + 8.647 P2 offers · 8.270 properties (gộp 375 repost) ·
 ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 506 listings (493 ảnh, tên host thật) · G3 live 2 thị trường.
@@ -89,6 +123,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 - CI job `ui-lint` (`.github/workflows/ui-lint.yml`) + hook Stop lint file UI vừa đổi.
 - Rule `.claude/rules/ui.md` (tự nạp khi chạm `app/src/components|app`); ổ cắm kit
   `_acceptance/config.yaml`: `feature_loop.ui_standards_skill` và `design_pass.ds_skill` = `onehub-ui`.
+- **B1 Cổng Ops** (nhánh `claude/ui-clean-b1-ops-c5a53a`): shell riêng `components/shell/ops-shell/`
+  (chuyển thể `app-shell-36`, nav nhóm trong `shell/nav.tsx` có `/ops/review`); `/ops` = solution-dev-ops-5,
+  `/ops/collections` = solution-dev-ops-6 + lưới job dev-ops-1, `/ops/sources` = solution-ai-ops-2 + lưới
+  dev-ops-6, `/ops/quality` giữ `StatTiles`/`InsightGrid`, `/ops/design` thành trang trưng bày. Harness
+  kiểm máy `scripts/ui-standards/b1-ops.mjs`; che chữ tầng A khi chụp `scripts/ui-standards/mask-tier-a.js`.
 
 ## 3. QUYẾT ĐỊNH ĐÃ CHỐT (không hỏi lại)
 
@@ -116,8 +155,28 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 10. **Cổng Ops đóng mặc định** (22/10): vào `/ops/**` khi `users.role` ∈
    {`ops`, `admin`} hoặc email trong `OPS_EMAILS`; đăng nhập thôi không đủ
    (`/register` mở). Cấp quyền data-ops bằng `role = 'ops'`, không cần migration.
+11. **Người bán là công khai** (23/10): tên, SĐT, ID tài khoản người bán trên tin
+   rao là tầng C (hoạt động bán hàng/môi giới), không phải lộ danh tính. Tầng A còn:
+   tên nguồn thật, hồ sơ người dùng app. Sửa đổi ADR-0007 mục 9.
+12. **Người chỉ đứng ở cổng, không ở từng lệnh** (23/10): bỏ luật ask rộng `git push *` /
+   `vercel *` / `npx vercel *` (giữ ask `supabase db push`, `sync-public`); rào push main chuyển
+   sang branch protection GitHub (PR bắt buộc, check `gate` + `ui-lint`, admin không vượt, cấm
+   force-push) như crm/kit. Làn merge dùng `gh pr merge`. Hồ sơ `_acceptance/narrow-ask-rules`.
+13. **Framing** (23/10, `docs/product/FRAMING.md` §2.0): mạng lưới listing tin cậy, **gom vào** (không
+   đăng hộ ra kênh khác), OneHub Invest là nơi hiển thị; căn gốc = số nhà / mã căn. D1 dùng/mua danh mục dự
+   án · toà · mã căn · D2 người dùng đầu tiên là chính đội (vừa đầu tư vừa môi giới) · D3 căn hộ trước, môi
+   giới giữ mã căn · D4 tin P1 hiện công khai, trao đổi tức thời (độ tươi tính bằng phút) · D5 thuê người gắn
+   nhãn/duyệt được, nhưng model phải gánh tối đa.
+   **Dữ liệu là nỗ lực liên tục, có cấp bậc**: thang căn B0–B5 (lời khai → đọc được → gắn căn → đã đo → xác
+   minh → sống), năng lực phân khúc N0–N4; north star = phân bố căn theo bậc; bậc đích: căn hộ có danh mục B5,
+   nhà phố B3, Chợ Tốt B3 (FRAMING §3.4).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
+
+> Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
+> AU1–AU12; lượt cắt chung 23/10 thêm `giao-dien-2310` UI1–UI17, `nen-tang-2310` NT1–NT7, `zcode-2310` ZC1–ZC5,
+> `san-pham-sau-2310` chờ điều kiện SH1–SH14; bối cảnh `docs/plan/BOI-CANH.md`). Các bảng track dưới đây là chỉ mục
+> lịch sử; đồng bộ với lộ trình ở hàng AU8.
 
 ### Track 1 — AGENT (onehub-ai-agent) — chốt, sẵn sàng thực hiện
 | # | Việc | Trạng thái |
@@ -134,6 +193,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | M4 | form hồ sơ + export JSON (consent, user-owned) | ⬜ |
 | M5 | pgvector — chỉ khi đo thấy cần | ⬜ kháng cự |
 | HITL | /ops/review Review Queue (12 entity_match seeded) | ✅ c6eea64 |
+| M-3 | enrich qua đề xuất: `enrichment_proposals` (033) + luật xác định + thẻ `agent_output` /ops/review; E1 trái LLM → thẻ đối chiếu chọn một bên | ✅ PR #14 (`_acceptance/enrich-qua-de-xuat/`) |
+| M-3b | hậu kỳ enrich: đề xuất sống qua nạp lại (039 + `writeOffers`, khoá ngoại RESTRICT) · hoàn tác có audit (036 + `enrich-revert`) · E1 không suy land từ tên nhóm | 🔶 chờ Cổng Bằng chứng (`_acceptance/enrich-hau-ky/`); sau merge: áp 036 → 039 lên DB local TRƯỚC lượt nạp đêm kế, rồi hoàn tác 639/644 (Hỏi-2) |
+| R-PL | Review kiến trúc phân loại + enrich (`docs/architecture/classification-enrich-review.md`, khung `docs/product/FRAMING.md`): sổ 17 lỗi, kiến trúc đích, việc theo làn | 🔶 FRAMING đã duyệt; chờ Mạnh quyết Q2–Q12 (Q1 Kev thành nhãn đã chốt) |
 
 ### Track 2 — "Một Căn Nhà" hoàn thiện
 | # | Việc | Trạng thái |
@@ -168,16 +230,33 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V2 | sync-public sau mỗi milestone | 🔄 thủ công |
 | V3 | Soak đêm tự động; soi /ops mỗi sáng | 🔄 |
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
+| V5 | Tài khoản ops thử chỉ ở DB local (`scripts/dev-ops-account.mjs`) — máy tự đăng nhập dev để chụp/ui-check `/ops/**` | ✅ 2026-10-22 |
+| V6 | Giảm hỏi quyền ngoài cổng: bỏ luật ask rộng, rào push main = branch protection GitHub (ngang crm/kit) — `_acceptance/narrow-ask-rules` | ✅ Cổng 2 ký 23/10 — PR #23; branch protection main bật 23/10 |
+| V7 | Cloud sync nguyên tử — prod không còn cửa sổ trống, không xoá `saved_markets`, ngày đúng — `_acceptance/cloud-sync-atomic` | 🔄 PR #24 — Cổng 2 ký 23/10; migration 038 ĐÃ áp cloud 23/10; chờ merge |
+| V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
 
 ### Track 6 — Chuẩn UI/UX ReUI
 | # | Việc | Trạng thái |
 |---|---|---|
 | A | Chuẩn: skill reui + onehub-ui, lint 10 luật + baseline, CI ui-lint, hook Stop, ổ cắm kit | ✅ (chờ Mạnh ký) |
-| B1 | Cổng Ops (`/ops/**`): data-grid, primitive, AlertDialog, sonner, PageHeader + Frame | ⏳ |
-| B2 | Khung trang & ô KPI (Invest + marketing): một StatTiles, breadcrumb, thang h1 | ⏳ |
+| B1 | Cổng Ops (`/ops/**`): shell riêng `app-shell-36` + block Solutions (dev-ops-5/-6/-1, ai-ops-2; agents-5 cho `/ops/review`), primitive, AlertDialog, sonner, PageHeader + Frame — nhánh `claude/ui-clean-b1-ops-c5a53a`, hồ sơ `_acceptance/ui-clean-b1-ops/` (T2, Cổng Phạm vi + Cổng Bằng chứng đã ký 2026-10-23, S4 PASS 16/16 sau 3 lượt). Baseline 138 → 85 (sau B3). `/ops/review` (Task 12, agents-5 theo hướng (a)) TÁCH sang vòng sau — chờ backend ảnh tin vào main | 🔨 PR mở |
 | B3 | Biểu đồ: bảng màu chung, gom code trùng, tách file > 200 dòng | ⏳ |
-| B4 | Trạng thái: Skeleton trong Suspense, Empty + hành động, error.tsx còn thiếu | ⏳ |
-| B5 | Phần còn lại sau `fix/portal-deals-airdna` + gỡ baseline (phải rỗng) | ⏳ |
+| BĐ | Bản đồ đích cổng Invest: block đích cho mọi route Invest (cột "Block đích" ở `onehub-ui/routes.md`, test chặn dòng thiếu), shell giữ `app-shell-30`, `/dau-tu` gộp vào `/yield`, slug đích tiếng Anh (cột "Slug đích"), bản đồ nguồn `mapcn`, bước tra Mobbin trong `loop.md` — `_acceptance/invest-target-map` | ✅ Mạnh chọn 23/10 (theo khuyến nghị) — chờ ký PR |
+| I1 | Finder `/[country]`: `solution-analytics-1` + `@mapcn/choropleth`, PageHeader, trạng thái "đang thu thập" | ⏳ |
+| I2 | Insight thị trường + phường: khung `solution-analytics-8`, giữ chart-6/chart-13/InsightGrid, bản đồ `@mapcn/map`, neo mục lục tiếng Anh | ⏳ |
+| I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | ⏳ sau khi gỡ ảnh AirDNA khỏi listing |
+| I4 | Lợi suất: `/yield` form-11 + `data-grid-advanced-7` (chi phí + dòng tiền vốn vay), `/dau-tu` → chuyển hướng `/yield` | ⏳ |
+| I5 | So sánh + Đã lưu: giữ comparison-1 / wishlist-2, thêm PageHeader + trạng thái; `/so-sanh` → `/compare` (301) | ⏳ |
+| I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | ⏳ |
+| B5 | Ops còn lại (`/ops/deals`) + gỡ baseline (phải rỗng) | ⏳ |
+
+Cắt lại 23/10: B2 (khung & KPI) và B4 (trạng thái) không còn là đợt riêng — phần Invest của chúng đi
+vào đợt nhóm trang I1–I6, mỗi đợt làm trọn khung + KPI + biểu đồ (bảng màu B3) + trạng thái; phần Ops
+nằm ở B1/B5.
+
+Phát hiện khi chụp bản đồ đích (chưa kiểm nguyên nhân, việc dữ liệu — chưa mở phiên): bản đồ Hà Nội ở Finder
+và Insight mở ra cả nước vì ranh giới "phường" của `vn-hanoi` trải khắp VN (vùng tô gần Cần Thơ; bảng xếp hạng
+có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới ở pipeline (`reassign-areas.mjs`); mapcn không sửa được.
 
 **Tích hợp nhánh fix/portal-deals-airdna sau A** (nhánh dời `(app)/deals/page.tsx` → `ops/deals/page.tsx`, sửa `dau-tu/page.tsx`, `investment-simulator.tsx`):
 1. Rebase lên `main` đã có A.

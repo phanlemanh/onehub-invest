@@ -14,6 +14,10 @@ export type ContextResult = {
   buildingHint: string | null;
   areaHint: string | null; // phường từ tên nhóm
   matchedBy: string; // "group_name" | "text_keyword" | "abbrev_dict" | ""
+  /** Căn cứ của propertyType cho người duyệt: luật nào khớp, khớp ở tin hay tên nhóm. */
+  typeBasis?: string | null;
+  /** Căn cứ của buildingHint cho người duyệt. */
+  buildingBasis?: string | null;
 };
 
 type AssetNode = {
@@ -54,6 +58,48 @@ async function loadNodes(): Promise<AssetNode[]> {
   } finally {
     await c.end();
   }
+}
+
+// Luật loại BĐS (vòng enrich-hau-ky, Hỏi-4 chốt 2026-10-23). Tên nhóm Zalo/FB là tên nhóm mua
+// bán chung («HỘI MUA BÁN NHÀ ĐẤT…») — chữ «đất» trong đó KHÔNG nói gì về tin. Land chỉ suy từ
+// NỘI DUNG tin, bằng cụm chỉ đất rõ, và bị phủ quyết khi tin tả nhà nhiều tầng/phòng ngủ. Các
+// loại khác giữ cách cũ: quét chuỗi ghép tin + tên nhóm (tên nhóm cũng là text môi giới:
+// "…Chung Cư Vin 1,2,3" → apartment); riêng tin có cụm đất rõ thì thắng loại chỉ khớp ở tên nhóm.
+const TYPE_RULES: [RegExp, string][] = [
+  [/chung cư|căn hộ|cc |chcc|apartment|condo|studio/, "apartment"],
+  [/nhà mặt tiền|mặt phố|biệt thự|liền kề|nhà phố|nhà riêng|nhà ngõ|nhà hẻm/, "house"],
+  [/phòng trọ|phòng thuê|nhà trọ/, "room"],
+  [/văn phòng|mặt bằng kinh doanh|shop house/, "commercial"],
+];
+/** Thứ tự ưu tiên cũ: land đứng sau house, trước room. */
+const LAND_RANK = 2;
+const LAND_IN_TEXT =
+  /đất nền|nền đất|lô đất|bán đất|đất thổ cư|thửa đất|đất ở|đất vườn|đất trống|đất dự án/;
+const MULTI_STOREY = /\d+\s*(tầng|lầu)|trệt|\d+\s*(pn|phòng ngủ)/;
+
+/** E1 loại BĐS từ tin + tên nhóm; null = không luật nào khớp. */
+export function resolvePropertyType(
+  text: string,
+  groupName: string | null,
+): { type: string; basis: string } | null {
+  const tl = text.toLowerCase();
+  // «nhà đất», «bất động sản» là chữ chung của ngành — bỏ trước khi tìm cụm chỉ đất.
+  const landHit = LAND_IN_TEXT.exec(tl.replace(/nhà đất|bất động sản/g, " "));
+  const land = landHit && !MULTI_STOREY.test(tl)
+    ? { type: "land", basis: `luật từ khoá: «${landHit[0]}» trong tin → land` }
+    : null;
+
+  const t = `${text} ${groupName ?? ""}`.toLowerCase();
+  for (const [i, [re, type]] of TYPE_RULES.entries()) {
+    if (i === LAND_RANK && land) return land;
+    const m = re.exec(t);
+    if (!m) continue;
+    const inGroup = m.index >= text.length;
+    if (inGroup && land) return land;
+    const where = inGroup ? `tên nhóm «${groupName}»` : "tin";
+    return { type, basis: `luật từ khoá: «${m[0].trim()}» trong ${where} → ${type}` };
+  }
+  return land;
 }
 
 /** E1: Phân giải bối cảnh từ tên nhóm + text → project/type/building */
@@ -100,18 +146,10 @@ export async function resolveContext(
 
   // ── 2. Text + group name keywords → property_type ──
   if (!result.propertyType) {
-    // group name cũng là text môi giới: "…Chung Cư Vin 1,2,3" → apartment
-    const t = `${text} ${groupName ?? ""}`.toLowerCase();
-    if (/chung cư|căn hộ|cc |chcc|apartment|condo|studio/.test(t)) {
-      result.propertyType = "apartment";
-    } else if (/nhà mặt tiền|mặt phố|biệt thự|liền kề|nhà phố|nhà riêng|nhà ngõ|nhà hẻm/.test(t)) {
-      result.propertyType = "house";
-    } else if (/đất|nền|lô đất|diện tích đất/.test(t)) {
-      result.propertyType = "land";
-    } else if (/phòng trọ|phòng thuê|nhà trọ/.test(t)) {
-      result.propertyType = "room";
-    } else if (/văn phòng|mặt bằng kinh doanh|shop house/.test(t)) {
-      result.propertyType = "commercial";
+    const pt = resolvePropertyType(text, groupName);
+    if (pt) {
+      result.propertyType = pt.type;
+      result.typeBasis = pt.basis;
     }
 
     // Nếu group match project → default type từ tên dự án
@@ -120,6 +158,7 @@ export async function resolveContext(
       if (project?.slug.includes("vinhomes") || project?.slug.includes("masteri") ||
           project?.slug.includes("ecopark")) {
         result.propertyType = "apartment"; // khu đô thị lớn → apartment mặc định
+        result.typeBasis = `luật dự án: nhóm thuộc ${project?.name} → mặc định apartment`;
       }
     }
   }
@@ -145,6 +184,7 @@ export async function resolveContext(
     // T1-T12 = tháng nhận nhà; OP/GP/PMH/OCP = viết tắt dự án, không phải tòa
     if (/^T\d{1,2}$/.test(code) || ["OP", "GP", "PMH", "OCP"].includes(code)) continue;
     result.buildingHint = code;
+    result.buildingBasis = `luật mã toà: «${(m?.[0] ?? code).trim()}» trong tin`;
     break;
   }
 

@@ -66,6 +66,34 @@ commit `568ed825b` nhánh `fix/zalouser-plugin-hooks` ở `~/dev/openclaw`
    mới; turn bị gián đoạn 17:59 được restart-recovery chạy xong (stopReason=stop)
    và KHÔNG gửi tin nào; watchdog 21:29/21:34 "ok".
 
+## Vercel — prod của app/ (chốt 2026-10-23)
+
+Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.env` (chmod 600).
+
+| Mục | Giá trị |
+|---|---|
+| Project | `onehub-invest` (`prj_8yL9qkwndG39LNjVTEnXzBAxMjnc`), team `phanlemanh-8330s-projects` |
+| Git | `phanlemanh/onehub-invest`, nhánh prod `main` (merge → deploy production tự động) |
+| Root / framework | `app` · Next.js · Node 24.x · Fluid compute |
+| Domain prod | `onehub-invest.vercel.app` (chưa có domain riêng) |
+| Vùng hàm | `hnd1` Tokyo, cùng vùng Supabase `ap-northeast-1`. Nguồn chính: `app/vercel.json` `regions`; mặc định project cũng đặt `hnd1` |
+| Env Production | `DATABASE_URL` (= `POOLER_TX`, pooler transaction :6543, sensitive) · `OPS_API_TOKEN` (= `CLOUD_OPS_API_TOKEN`, sensitive) · `RENAME_REFCALIB=1` |
+| Env Preview | Không có — preview không nối DB prod (API ops có ghi). Preview trả 500 là đúng thiết kế |
+| `OPS_EMAILS` | Bỏ trống — vào /ops chỉ theo `users.role` admin/ops trên DB cloud |
+| Bảo vệ truy cập | Vercel Authentication «Standard» (`all_except_custom_domains`): domain prod công khai; URL từng deployment + preview cần đăng nhập Vercel. /ops còn cổng đăng nhập của app |
+| Ignored Build Step | `git diff --quiet "${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}" HEAD -- . 2>/dev/null \|\| exit 1` (chạy trong `app/`): exit 0 = bỏ build khi app/ không đổi so với bản deploy thành công gần nhất; mọi lỗi git (SHA không có trong clone nông) → exit 1 = vẫn build. Thiếu `\|\| exit 1` thì Vercel coi exit 128 là deploy ERROR. Build app không đọc file ngoài app/ |
+
+- Biến sensitive không đọc lại được (`vercel env pull` trả rỗng). Đổi giá trị: pipe từ
+  `cloud.env` vào `vercel env add <KEY> production --project onehub-invest --sensitive --force`.
+- Triệu chứng thiếu `DATABASE_URL`: runtime error `ECONNREFUSED 127.0.0.1:5433` (app rơi về DB local).
+- Redeploy bằng tay (sau khi đổi env): `vercel redeploy <url bản production MỚI NHẤT> --target production`.
+  Lấy url từ danh sách deploy production, đừng lấy bản cũ hơn — redeploy bản cũ là rollback code.
+- API ops đọc bảng chưa có trên cloud (vd `/api/v1/ops/coverage` → `source_registry`) trả 500 trên
+  cloud — lỗi dữ liệu/schema cloud, không phải cấu hình Vercel.
+- Project cũ `app` (alias `app-lilac-one-49.vercel.app`, repo cũ `one-invest`) ngừng deploy
+  từ 22/10. `pipeline/push-ops-facts.mjs` (`INGEST_URL`) và `scripts/audit-all.sh` (`CLOUD`) phải
+  trỏ sang domain mới trước khi tắt project cũ.
+
 ## Vận hành lâu dài
 
 - Sau fix: không cần mở app nào; reboot → launchd tự dậy toàn chuỗi.
@@ -74,3 +102,19 @@ commit `568ed825b` nhánh `fix/zalouser-plugin-hooks` ở `~/dev/openclaw`
   nguyên — ĐÃ CÓ (L1b checks marker `pluginHooks` từ 22/10 tối).
 - User dọn (tuỳ chọn): remove OpenClaw Desktop app; giữ ~/dev/openclaw
   tới khi PR upstream xong.
+
+## Transform S03/S05 và migration enrich (chốt 2026-10-23, `_acceptance/enrich-hau-ky/`)
+
+- Từ vòng enrich-hau-ky, `transform-zalo.mjs` / `transform-fb.mjs` KHÔNG còn `DELETE FROM sale_offers`
+  toàn nguồn: ghi qua `pipeline/lib/write-offers.mjs` (upsert + hàm SQL `reconcile_stale_offers`).
+  Code này dừng có tên («chưa áp migration 039») trên DB chưa có hàm đó, và từ chối lượt nạp rỗng.
+- **Thứ tự triển khai sau merge**: áp `036_revert_enrichment.sql` rồi `039_enrichment_proposals_retain.sql`
+  lên DB local :5433 TRƯỚC lượt `zalo-import-daily.sh` / `apify-facebook-daily.sh` kế tiếp. Không lên
+  cloud (bảng đề xuất, `ops_audit`, `review_queue` không thuộc `FILL`).
+- Khoá ngoại `enrichment_proposals.offer_id` là RESTRICT: script nào xoá `sale_offers` còn đề xuất mà
+  không qua `reconcile_stale_offers` sẽ lỗi 23503 — đúng thiết kế, đừng đổi lại CASCADE.
+- Hoàn tác một giá trị enrich đã áp: `cd agent && npx tsx scripts/enrich-revert.ts --ids <id,…> --actor
+  hitl:<tên> --reason "<lý do>" [--dry]` (chỉ người; ghi `ops_audit enrich:revert`).
+- Đề xuất của tin biến mất hẳn được chụp ở `ops_audit` action `enrich:retire` (không có đoạn tin, không
+  thông tin người bán); khôi phục khi tin quay lại: `INSERT INTO enrichment_proposals SELECT * FROM
+  jsonb_populate_recordset(NULL::enrichment_proposals, <detail->'proposals'>)`.

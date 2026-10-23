@@ -1,0 +1,430 @@
+{
+  "generated_at": "2026-10-23T03:21:11Z",
+  "generated_sha": "19aba28053275f747bcc178d8dfa8d0a281fc1a8",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "cloud-sync-atomic",
+  "round": 2,
+  "riskTier": "T3",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs atomic",
+      "expected": "\"exit 0; in bảng số lần đọc theo pha (trước/staging/tráo-mở/sau) × trạng thái (cũ/mới/lẫn/0); PASS ≥5 lần đọc trong lúc giao dịch tráo mở (pg_stat_activity) đều 'cũ'; PASS 0 lần '0', 0 lần 'lẫn'; fixture: số dòng lượt cũ ≠ lượt mới ở mọi bảng + 2 view (kiểm trước khi chạy); chiều đỏ cùng fixture: PASS 'ĐỎ-ĐÚNG truncate' (bộ nạp kiểu cũ → thấy 0) và PASS 'ĐỎ-ĐÚNG non-atomic' (SQL tráo gửi từng câu tự COMMIT + móc thử → thấy 0 hoặc lẫn)\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs",
+        "db/migrations/*_sync_stage.sql"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_atomic"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs fail",
+      "expected": "\"exit 0; PASS (a) gãy-staging: md5 không đổi, thông điệp nêu pha 'stage', 0 dòng staging của run_id; PASS (b) gãy-tráo (cột NOT NULL cấy vào bảng đích): md5 không đổi, thông điệp nêu pha 'swap', 0 dòng staging; PASS (c) chưa có sync_stage: thoát≠0, md5 không đổi, nhật ký exec không có câu CREATE/ALTER/DROP/TRUNCATE; PASS (d) kill -9 giữa pha nạp → lùi staged_at các dòng writer thật ghi về 3 giờ trước → lượt kế xoá chúng, còn dòng staging 10 phút tuổi của run khác còn nguyên; đối chứng: lượt lành sau cùng đổi md5 (thước không hằng-đúng)\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_fail"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-3",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs fidelity",
+      "expected": "\"exit 0; PASS 21/21 bảng cùng số dòng + md5 cột gửi; PASS mọi cột date khớp min/max với local; chiều đỏ cùng fixture (bản sao cloud bị phá): ngày lùi một ngày → 'ĐỎ-ĐÚNG date', số jsonb bị cắt độ chính xác → 'ĐỎ-ĐÚNG số'; PASS lệch-schema (i): xoá một cột trên cloud mô phỏng → lượt lành + WARN 'lệch schema' nêu đúng tên cột; PASS (ii): thêm cột generated + cột có mặc định trên cloud → lượt lành, cột ấy giữ giá trị cloud\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_fidelity"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-4",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs keep",
+      "expected": "\"exit 0; PASS saved_markets trỏ area còn ở local còn nguyên, tổng số dòng saved_markets không đổi; PASS chặn tụt: local giả tụt (bảng areas của DB local mô phỏng còn 30%) → thoát≠0 trước tráo, md5 cloud + saved_markets không đổi, thông điệp 'tụt'; PASS area biến mất thật → theo đáp án Hỏi-2; chiều đỏ: bộ nạp TRUNCATE CASCADE kiểu cũ xoá dòng còn hợp lệ ('ĐỎ-ĐÚNG cascade')\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_keep"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-5",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs pii",
+      "expected": "\"exit 0; PASS không dòng sync_stage.rows nào (bắt lúc giữa lượt) mang khoá seller_phone/seller_name/name(sellers)/seller_name(properties); đối chứng dương: payload sale_offers có khoá offer_id; chiều đỏ: bản sao sync-cloud bỏ seller_phone khỏi PII_EXCLUDE → thước bắt (thông điệp ghim 'ĐỎ-ĐÚNG pii')\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_pii"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-6",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs stage",
+      "expected": "\"exit 0; migration 2 lần exit 0 trên DB có role anon/authenticated + ALTER DEFAULT PRIVILEGES cấp ALL cho hai role (bản sao số đo cloud) và trên DB không có hai role; PASS anon/authenticated không USAGE sync_stage, không SELECT sync_stage.rows; PASS catalog (pg_class/pg_namespace/ACL) ngoài sync_stage trước = sau; đối chứng dương: postgres ghi được sync_stage.rows; chiều đỏ: bản migration bỏ REVOKE → anon SELECT được ('ĐỎ-ĐÚNG acl')\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "db/migrations/*_sync_stage.sql",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_stage"
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-7",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs overlap",
+      "expected": "\"exit 0; hai lượt chạy chồng đều xong; PASS luồng đọc 0 lần '0'; PASS khớp local như E3; PASS 0 dòng staging còn lại; PASS lượt đọc local sớm hơn mà tráo sau bị từ chối với thông điệp 'cũ hơn lượt đã tráo', dữ liệu cloud là của lượt đọc muộn hơn\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_overlap"
+    },
+    {
+      "id": "E11",
+      "criterion": "AC-11",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs allow",
+      "expected": "\"exit 0; PASS payload sale_offers/sellers/properties chỉ gồm cột thuộc danh sách cho phép; PASS seller_ref trên cloud mô phỏng 100% NULL hoặc khớp ^S0[1-9]:[0-9]+$ và mã S0x bằng cột source của dòng; đối chứng dương: dòng S06 local ct:<số> thành S06:<số> cùng số; PASS danh sách cho phép ∩ danh sách loại = ∅; chiều đỏ: thêm cột giả vào bảng local mô phỏng → cột không có trong payload + WARN cột chưa duyệt; cấy định danh nguồn (đọc từ source_registry local mô phỏng) vào một ô street_raw → lượt dừng trước nạp, 0 dòng staging (ĐỎ-ĐÚNG ten-nguon); chèn seller_ref thô lên cloud mô phỏng → leak gate đỏ (ĐỎ-ĐÚNG seller_ref)\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_allow"
+    },
+    {
+      "id": "E8a",
+      "criterion": "AC-8",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; mọi test pipeline xanh, gồm sync-cloud.test.mjs mới (kế hoạch topo, chia mẻ, SQL tráo) và sync-pii*.test.mjs cũ\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/**"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E8b",
+      "criterion": "AC-8",
+      "cmd": "cd pipeline && node scripts/sync-pii-mutation.mjs",
+      "expected": "\"exit 0; M0 xanh, M1 đỏ, M2 đỏ (đột biến FILL vẫn bị bắt với sync-cloud mới)\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/sync-pii.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.sync_pii_mutation"
+    },
+    {
+      "id": "E9",
+      "criterion": "AC-9",
+      "question": "\"Luật Mạnh chốt 2026-10-23 được trích nguyên văn ở AC-9 trong contract.md. Chú thích đầu sync-cloud.mjs và docs/ops/cloud-sync-atomic.md có nói đúng luật đó không: định danh người bán là tầng C; tên nguồn thật (kể cả lẫn trong giá trị cột) là tầng A; seller_ref chuẩn hoá về mã S0x; PII_EXCLUDE giữ vì phạm vi chứ không vì luật? Có câu nào còn gọi SĐT/tên người bán là tầng A, hay mô tả hành vi lệch code (danh sách cột cho phép, chuẩn hoá seller_ref, soát tên nguồn trước khi gửi) không?\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/pipeline/sync-cloud.mjs",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/docs/ops/cloud-sync-atomic.md",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/_acceptance/cloud-sync-atomic/contract.md",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/_acceptance/cloud-sync-atomic/decisions.jsonl"
+      ],
+      "evidence_required": [
+        "judged_by",
+        "verdict",
+        "rationale"
+      ],
+      "inputsHash": "7bed67cd240086250a604ea8b3d25728f0bc1015b4bdca5487d1d4f553f8c0d4"
+    },
+    {
+      "id": "E10",
+      "criterion": "AC-10",
+      "question": "\"Hướng dẫn có cho Mạnh đủ để triển khai an toàn không: vì sao; thứ tự bắt buộc (Mạnh áp migration sync_stage lên cloud TRƯỚC khi merge); lệnh áp + lệnh kiểm (sync_stage có, anon không có quyền); cách chạy lượt thử có đo bằng cloud-sync-watch và đọc kết quả; cách lùi về bản cũ; hành vi của code mới khi cloud chưa có sync_stage (dừng, không đụng dữ liệu) — và không bước nào giao agent tự đổi schema production? SQL được trỏ có khớp lời hướng dẫn không?\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/docs/ops/cloud-sync-atomic.md",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/db/migrations/038_sync_stage.sql",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/pipeline/sync-cloud.mjs",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/_acceptance/cloud-sync-atomic/contract.md"
+      ],
+      "evidence_required": [
+        "judged_by",
+        "verdict",
+        "rationale"
+      ],
+      "inputsHash": "59e70e5f71e42d63ff709b48e5f884c66c0411bdb64bdae20836864e1d7a5d33"
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "cd app && npm run test:lint-rules",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "b4466370db9ae18d59d01991c526e0d7eac26e83",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/dreamy-mirzakhani-7e8322/_acceptance/cloud-sync-atomic/contract.md",
+  "invokedAt": "2026-10-23T03:21:11Z",
+  "invokedSha": "19aba28053275f747bcc178d8dfa8d0a281fc1a8",
+  "vungVat": [
+    "_acceptance/cloud-sync-atomic/card-plain.json",
+    "_acceptance/cloud-sync-atomic/card.html",
+    "_acceptance/cloud-sync-atomic/evals.yaml",
+    "_acceptance/cloud-sync-atomic/figures/luong-sync.html",
+    "_acceptance/cloud-sync-atomic/figures/luong-sync.png",
+    "_acceptance/cloud-sync-atomic/s4-args.json",
+    "_acceptance/config.yaml",
+    "db/migrations/038_sync_stage.sql",
+    "pipeline/package.json",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/cloud-sync-watch.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
+    "CONTEXT.md",
+    ".claude/rules/**",
+    "PRODUCT-MAP.md",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "PRODUCT-MAP.md",
+    "_acceptance/cloud-sync-atomic/contract.md",
+    "_acceptance/cloud-sync-atomic/decisions.jsonl",
+    "_acceptance/cloud-sync-atomic/duong-nen.md",
+    "_acceptance/cloud-sync-atomic/evidence-report.md",
+    "_acceptance/cloud-sync-atomic/figures/index.md",
+    "_acceptance/cloud-sync-atomic/gap-probe.md",
+    "_acceptance/cloud-sync-atomic/review-findings.md",
+    "_acceptance/cloud-sync-atomic/run-log.jsonl",
+    "docs/ROADMAP.md",
+    "docs/ops/cloud-sync-atomic.md",
+    "docs/superpowers/plans/2026-10-23-cloud-sync-atomic.md",
+    "docs/superpowers/specs/2026-10-23-cloud-sync-atomic-design.md"
+  ],
+  "diffFiles": [
+    "PRODUCT-MAP.md",
+    "_acceptance/cloud-sync-atomic/card-plain.json",
+    "_acceptance/cloud-sync-atomic/card.html",
+    "_acceptance/cloud-sync-atomic/contract.md",
+    "_acceptance/cloud-sync-atomic/decisions.jsonl",
+    "_acceptance/cloud-sync-atomic/duong-nen.md",
+    "_acceptance/cloud-sync-atomic/evals.yaml",
+    "_acceptance/cloud-sync-atomic/evidence-report.md",
+    "_acceptance/cloud-sync-atomic/figures/index.md",
+    "_acceptance/cloud-sync-atomic/figures/luong-sync.html",
+    "_acceptance/cloud-sync-atomic/figures/luong-sync.png",
+    "_acceptance/cloud-sync-atomic/gap-probe.md",
+    "_acceptance/cloud-sync-atomic/review-findings.md",
+    "_acceptance/cloud-sync-atomic/run-log.jsonl",
+    "_acceptance/cloud-sync-atomic/s4-args.json",
+    "_acceptance/config.yaml",
+    "db/migrations/038_sync_stage.sql",
+    "docs/ROADMAP.md",
+    "docs/ops/cloud-sync-atomic.md",
+    "docs/superpowers/plans/2026-10-23-cloud-sync-atomic.md",
+    "docs/superpowers/specs/2026-10-23-cloud-sync-atomic-design.md",
+    "pipeline/package.json",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/cloud-sync-watch.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "_acceptance/cloud-sync-atomic/card-plain.json",
+    "_acceptance/cloud-sync-atomic/card.html",
+    "_acceptance/cloud-sync-atomic/evals.yaml",
+    "_acceptance/cloud-sync-atomic/figures/luong-sync.html",
+    "_acceptance/cloud-sync-atomic/figures/luong-sync.png",
+    "_acceptance/cloud-sync-atomic/s4-args.json",
+    "_acceptance/config.yaml",
+    "db/migrations/038_sync_stage.sql",
+    "pipeline/package.json",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/cloud-sync-watch.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs"
+  ],
+  "coverageFiles": [
+    "db/migrations/038_sync_stage.sql",
+    "pipeline/package.json",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/cloud-sync-watch.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "4af962672db82e6a45448d06315a418b98f26b7d0a211dbce67d0eb79bc40271",
+  "runBaseline": false,
+  "carriedAnalyst": {
+    "fromRound": 1,
+    "nonDiscriminating": [
+      {
+        "cmd": "cd pipeline && npm test",
+        "evals": [
+          "E8a"
+        ]
+      },
+      {
+        "cmd": "cd pipeline && node scripts/sync-pii-mutation.mjs",
+        "evals": [
+          "E8b"
+        ]
+      }
+    ]
+  },
+  "thuocChup": {
+    "sha": "19aba28053275f747bcc178d8dfa8d0a281fc1a8",
+    "n": 38,
+    "digest": "693f9fedeefaecd10e2ace71ea98e8d5332f1aed53b06d7201fa005127c89673",
+    "tep": {
+      "_acceptance/cloud-sync-atomic/evals.yaml": "4af962672db82e6a45448d06315a418b98f26b7d0a211dbce67d0eb79bc40271",
+      "_acceptance/config.yaml": "626d29bdde027355c9436058a80c2a08e20826e0c45e6219fb5f4bc95b0c302c",
+      "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
+      "agent/tests/enrich-apply.test.ts": "69407e7d1049ac4a8c7db6e61fb4326576773bed97070be691cf782d02993975",
+      "agent/tests/enrich-db.test.ts": "2d22af28021fc9a5109af57d04e5403ce3ac7012f4a4a9a8eebdfdd3070f8747",
+      "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
+      "agent/tests/enrich-revert.test.ts": "91393e322eddcc6da86fd66b6bb3ff7ec238c07ea939b44736e19f46d6aec5eb",
+      "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "app/eslint-plugin-onehub-ui/tests/check-bare-disables.test.mjs": "f4d5a768000e10b0afcd865dda45027bfc374f5d448b365e71b5b22168264a43",
+      "app/eslint-plugin-onehub-ui/tests/check-baseline-growth.test.mjs": "7d3e9509b9a3e78e6f353df55f97625630b4f178d838a97c329509512222e547",
+      "app/eslint-plugin-onehub-ui/tests/index.test.mjs": "655e46d7c05ac26ed76d92ea3d9b19c5c22a59bb7ca198afa960362235771b08",
+      "app/eslint-plugin-onehub-ui/tests/no-arbitrary-text-size.test.mjs": "5ba51c96484865cb98cb413843375d2d88c552b7616e0586771df7287ce60f4d",
+      "app/eslint-plugin-onehub-ui/tests/no-aschild.test.mjs": "29033a30554d246c3404b9c9b442e1282f391c6eb90ed6b64e03271a666c0811",
+      "app/eslint-plugin-onehub-ui/tests/no-banned-motion.test.mjs": "74755fcdf27b99fdbf1a600cbcfc1bb472e98c18317cfd710b7249e3a770de53",
+      "app/eslint-plugin-onehub-ui/tests/no-emoji-icons.test.mjs": "8571b78c4733c9acf687690ce54745452bec6a4f3c7ba7f96ba76b4f87efeaa6",
+      "app/eslint-plugin-onehub-ui/tests/no-hardcoded-color.test.mjs": "ce68e4bd5a75a83233763bcdd435650faf8cc9e85e342e5d3a863c7692bedec9",
+      "app/eslint-plugin-onehub-ui/tests/no-native-dialogs.test.mjs": "deaf6a38eb19305c68d5e30f1417d8908f2036355aa4e02a2f5a47a326acc9cc",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-controls.test.mjs": "b48cbea63e4ca7f380cc27283deb79228375465545df85b91c9a8fcdac926b16",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-palette.test.mjs": "ed3843f2e6445fa54dd3e765f6d749a9d148f8dc4e0e0d239f13016c77db4e65",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-table.test.mjs": "78446ffe3717c3c22e49b6d7787f9ab8bbe0d921d2469c7917f00fba265935f4",
+      "app/eslint-plugin-onehub-ui/tests/require-disable-reason.test.mjs": "6d87f7afd3f155f9f8be54e3eced84ea6c780593d78234f01e3a82d491f03fa5",
+      "app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs": "497e7eadcd4267cda43889626301b1491243cbd014028323e7223688111ed275",
+      "app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs": "2d3664f30a1155fe83fd6dbef3dd7264f6568e8483ae8fa1d1858bcc05be2a85",
+      "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
+      "app/tests/review-card.test.tsx": "9b8f78071ef4958abc550436d5bf45d797f4c14e4c145b7acfc1762d790fbaea",
+      "app/tests/review-media.test.tsx": "ea4e97182c75c066689c371629d01971d5f0d25a2df847d027fe31f532283ca6",
+      "app/tests/zalo-media.test.tsx": "9c53df7863a5f108b618d13ded829af2d967e637ebe59035de5114b5d384b3f1",
+      "collector/src/test/api.test.ts": "a5192a66ca23ef509a452f6ad44e402c38d7466efc2ec9728d1df08c20a1cf6f",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/media-fetch.test.ts": "244f05faac3257defb40409e57127b212425b62d442aacd13b3c97dfc3672ea7",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb",
+      "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218",
+      "pipeline/scripts/write-offers.test.mjs": "6c1162eecb20eeccaf085700b8264e9be758661957e8970d360a3e9418b95917",
+      "pipeline/sync-cloud.test.mjs": "76a54c2542de85ee3100ad7191938a4dc801bc51d06786be92e76ce18a20bbc0",
+      "pipeline/sync-pii.test.mjs": "3f0571d3e967460301f86e3001a6dfa7cb65922fcda017cd3b92a692b1a42682",
+      "scripts/dev-ops-account.test.mjs": "eaae93ef5b886eaae6563cfd040c364f0ccff637592bc0c5c5df584bf368e399"
+    }
+  },
+  "cayChup": {
+    "sha": "19aba28053275f747bcc178d8dfa8d0a281fc1a8",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}

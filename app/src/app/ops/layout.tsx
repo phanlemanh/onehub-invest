@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import { PortalShell } from "@/components/shell/portal-shell";
+import { OpsShell } from "@/components/shell/ops-shell/ops-shell";
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
 
@@ -14,16 +14,14 @@ export const metadata: Metadata = {
 
 /**
  * Ops Portal. proxy.ts chặn sớm khi thiếu cookie; đây là kiểm tra thật
- * (session còn hạn + quyền). Shell tạm dùng chung PortalShell với cấu hình
- * nav "ops" — đổi sang @reui/app-shell-26 khi có trang ops thật.
+ * (session còn hạn + quyền). Shell riêng của Ops chuyển thể @reui/app-shell-36
+ * (thanh bên nhóm); Invest giữ khung app-shell-30.
  */
 export default async function OpsLayout({ children }: LayoutProps<"/ops">) {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/ops");
   if (!canAccessOps(user)) notFound();
   return (
-    <PortalShell portal="ops" user={user} searchEntries={[]}>
-      {children}
-    </PortalShell>
+    <OpsShell user={{ email: user.email, role: user.role }}>{children}</OpsShell>
   );
 }

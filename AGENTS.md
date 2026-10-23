@@ -4,6 +4,9 @@
 > `CLAUDE.md`), Codex, Cursor… Trạng thái + quyết định đã chốt: **`docs/ROADMAP.md`**
 > (đọc §1 hiến pháp + §3 quyết định trước khi đề xuất việc mới; KHÔNG hỏi lại
 > điều đã chốt). Làm xong việc: cập nhật ROADMAP §2 as-built + §4 trạng thái.
+> **Việc phát triển sắp làm + mốc: `docs/plan/lo-trinh.json`** (trang `LO-TRINH.html` vẽ tự động; trạng thái máy suy
+> từ `_acceptance/<slug>/`, không ghi tay). Thêm việc bằng `/acceptance-gate:cat-luot`; mở vòng bằng
+> `/feature-loop:feature-loop <mã>`. Bảng «mỗi loại thông tin một chỗ»: ROADMAP §0.
 
 Nền tảng insight đầu tư BĐS Việt Nam (cho thuê ngắn hạn + mua bán). North star:
 pipeline đầu tư 4 giai đoạn (`docs/research/investment-pipeline-4-stages.md`).
@@ -60,7 +63,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
     NHẤT với ZCode: giao việc, review `zcode/*`, giữ luật làn + hợp đồng dữ liệu + sổ số
     migration, giao bước triển khai sau merge. Không merge vào `main`.
   - *Điều phối làn merge* (phiên Claude «Setup project Invest và Điều phối») — thứ tự PR,
-    CI, merge trên GitHub, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    CI, merge trên GitHub bằng `gh pr merge`, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    Không merge trên máy rồi `git push` lên main — branch protection của `main` từ chối, kể cả
+    token admin (chốt 2026-10-23, hồ sơ `narrow-ask-rules`).
     Không nhắn ZCode, không review `zcode/*`.
 - **Giao tiếp Claude ↔ ZCode = luật tin của plugin `dieu-phoi`** (khối LUAT-TIN): khẩu lệnh
   `GIAO · HỎI · BÁO · NHẬN · XONG · KẸT · TRẢ · HUỶ · MỞ LẠI`, mỗi yêu cầu là một vòng mở có
@@ -99,8 +104,11 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 4. **DATA-CONTRACT** (`collector/docs/DATA-CONTRACT.md`) là giao diện collector↔pipeline;
    thêm field phải tăng `schemaVersion`.
 5. **AirDNA chỉ để hiệu chuẩn** (ToS) — không đưa số AirDNA lên Invest Portal; chỉ ở `/ops/quality`.
-6. **SPL (ADR-0007)**: nguồn gọi bằng mã `S0x`. Tầng A (tên nguồn thật, SĐT, hồ sơ cá nhân)
-   KHÔNG rời máy local — cloud chỉ nhận hash + aggregate. `sale_offers` không sync cloud.
+6. **SPL (ADR-0007)**: nguồn gọi bằng mã `S0x`. Tầng A (tên nguồn thật, hồ sơ người dùng app,
+   `user_events/user_profile`, `review_queue`) KHÔNG rời máy local — cloud chỉ nhận hash + aggregate.
+   **Định danh người bán trên tin rao (tên, SĐT, ID tài khoản) là tầng C — công khai, KHÔNG tính là
+   lộ danh tính**: người đăng rao bán đang làm hoạt động bán hàng/môi giới (Mạnh chốt 2026-10-23,
+   sửa đổi ADR-0007 mục 9). `sale_offers` được lên cloud; vẫn loại mọi cột lộ tên nguồn thật.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
@@ -169,6 +177,11 @@ cd agent && npx tsc --noEmit && npm test && npm run smoke
 # vận hành
 node scripts/check-freshness.mjs          # SLO độ tươi từng nguồn (exit 1 khi quá hạn)
 bash scripts/audit-all.sh                 # kiểm toàn hệ thống PASS/FAIL/LIMITED
+
+# tài khoản ops THỬ cho máy đăng nhập dev (chỉ DB local; mật khẩu ở .claude/ops-test-account.json, gitignored)
+node scripts/dev-ops-account.mjs          # tạo/giữ ops-test@local.test (role admin); --rotate để xoay
+node --test scripts/*.test.mjs            # test script ở scripts/
+bash scripts/dev-ops-login-check.sh       # đăng nhập đầu-cuối bằng tài khoản thử (cần dev :3456 đang chạy)
 ```
 
 ## Bẫy kỹ thuật

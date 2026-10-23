@@ -22,11 +22,14 @@ Phạm vi: `$ARGUMENTS`. Trống → chỉ các module có file đổi so với 
 | pipeline | `npm test` → `node --check` từng `.mjs` vừa đổi |
 | data-api | `npm run typecheck` (chưa có `node_modules` → báo user cần `npm install`, không tự cài) |
 | agent | `npx tsc --noEmit` → `npm test` |
+| scripts | `node --test scripts/*.test.mjs` (chạy ở root repo) |
 
 - `agent/` có sẵn 2 lỗi TS tồn đọng ở `src/runtime/loop.ts` và `src/runtime/models.ts`. Chỉ
   coi là lỗi mới nếu nằm ở file khác hoặc số lỗi tăng.
 - Nếu app đã build và có DB: `npm run start -- -p 3456` ở nền rồi
   `curl -sf http://localhost:3456/vn/hanoi -o /dev/null` phải trả 200; tắt server sau đó.
+- Kiểm trang `/ops/**` (cần đăng nhập): `node scripts/dev-ops-account.mjs` rồi đăng nhập `/login` bằng
+  email/mật khẩu trong `.claude/ops-test-account.json` — không in mật khẩu ra output.
 - Đổi SQL trong `pipeline/sql/` hoặc `db/migrations/`: áp vào DB local và chạy lại câu SQL
   liên quan một lần để chứng minh idempotent.
 

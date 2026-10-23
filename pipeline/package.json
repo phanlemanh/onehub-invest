@@ -7,6 +7,6 @@
     "pg": "^8.23.1"
   },
   "scripts": {
-    "test": "node --test 'parse.test.mjs' 'sync-pii.test.mjs' 'scripts/*.test.mjs'"
+    "test": "node --test 'parse.test.mjs' 'sync-pii.test.mjs' 'sync-cloud.test.mjs' 'scripts/*.test.mjs'"
   }
 }

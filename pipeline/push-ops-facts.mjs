@@ -9,7 +9,7 @@ import path from "node:path";
 import pg from "pg";
 
 const ROOT = "/Users/manhphan/dev/one-invest";
-const INGEST_URL = process.env.INGEST_URL ?? "https://app-lilac-one-49.vercel.app/api/v1/ops/ingest";
+const INGEST_URL = process.env.INGEST_URL ?? "https://onehub-invest.vercel.app/api/v1/ops/ingest";
 const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
 async function env() {
