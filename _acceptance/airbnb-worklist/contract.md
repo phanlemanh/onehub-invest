@@ -5,7 +5,7 @@ slug: airbnb-worklist
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config, docs]
-status: implemented
+status: verified
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -82,6 +82,7 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 
 ## Notes
 
-- **Ràng buộc AU9:** worklist hiện có id của Đà Nẵng (market 89491). Nightly sẽ thu PDP Đà Nẵng ngay đêm đầu, nhưng listing chỉ gán được phường Đà Nẵng sau khi AU9 xong. Trước đó, listing ĐN không có phường đúng, và metrics/breakdown ĐN chưa tin được. Cần AU9 merge trước khi triển khai, hoặc chấp nhận có tên.
+- **Ràng buộc AU9:** worklist hiện có id của Đà Nẵng (market 89491). Listing chỉ gán được phường Đà Nẵng sau khi AU9 xong. Trước đó, listing ĐN không có phường đúng, và metrics/breakdown ĐN chưa tin được. Cần AU9 merge trước khi nightly lấy id ĐN, hoặc chấp nhận có tên.
+  - Đính chính sau verify vòng 1: theo thứ tự worklist hiện tại (HCMC → HN → ĐN, 600 id/đêm), id ĐN đầu tiên rơi vào khoảng đêm thứ 48, không phải ngay đêm đầu. Trong khi chưa có AU9, `reassign-areas` chỉ khai HN và HCMC: listing ĐN bị bỏ khỏi bảng canonical, raw vẫn giữ, và transform hằng đêm sẽ nhặt lại sau AU9.
 - Eval chạy installer, `airbnb-nightly.sh`, `finalize-airbnb.sh` thật trên bản chép trong thư mục tạm, với HOME giả và stub `launchctl`/`docker`/`sleep`/`npm`/`security`/`osascript` (kiểm stub thắng PATH). Các bước con của nightly và finalize là bản giả. `export-db` chỉ đọc DB local.
 - Hợp đồng dựng SAU khi code xong (ZCode, 9 commit) nên `gate1_skipped: true`. ADR-0007 sửa trên nhánh nghiệm thu (làn Claude).

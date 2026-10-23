@@ -1,0 +1,11 @@
+{"ts":"2026-10-23T15:32:07Z","round":1,"evalId":"E1","run_id":"airbnb-worklist-E1-20261023T153206","exit_code":0,"cmd":"node scripts/airbnb-worklist/acceptance.mjs installers"}
+{"ts":"2026-10-23T15:32:11Z","round":1,"evalId":"E2","run_id":"airbnb-worklist-E2-20261023T153211","exit_code":0,"cmd":"node scripts/airbnb-worklist/acceptance.mjs static"}
+{"ts":"2026-10-23T15:32:11Z","round":1,"evalId":"E4","run_id":"airbnb-worklist-E4-20261023T153211","exit_code":0,"cmd":"node scripts/airbnb-worklist/acceptance.mjs static"}
+{"ts":"2026-10-23T15:32:17Z","round":1,"evalId":"E3","run_id":"airbnb-worklist-E3-20261023T153216","exit_code":0,"cmd":"node scripts/airbnb-worklist/acceptance.mjs nightly-flow"}
+{"ts":"2026-10-23T15:32:22Z","round":1,"evalId":"E5","run_id":"airbnb-worklist-E5-20261023T153221","exit_code":0,"cmd":"cd collector && rm -rf dist && npm run build && cd .. && node scripts/airbnb-worklist/acceptance.mjs export-db"}
+{"ts":"2026-10-23T15:32:36Z","round":1,"evalId":"E6","run_id":"airbnb-worklist-E6-20261023T153230","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T15:32:52Z","round":1,"evalId":"E7","run_id":"airbnb-worklist-E7-20261023T153251","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}
+{"ts":"2026-10-23T15:32:57Z","round":1,"evalId":"E8","run_id":"airbnb-worklist-E8-20261023T153257","exit_code":0,"cmd":"node scripts/airbnb-worklist/acceptance.mjs health-gate"}
+{"ts":"2026-10-23T15:32:57Z","round":1,"evalId":"E9","run_id":"airbnb-worklist-E9-20261023T153257","exit_code":0,"cmd":"node scripts/airbnb-worklist/acceptance.mjs finalize-cities"}
+{"ts":"2026-10-23T15:33:09Z","round":1,"evalId":"E10","run_id":"airbnb-worklist-E10-20261023T153302","exit_code":0,"cmd":"cd collector && rm -rf dist && npm run build && cd .. && node scripts/airbnb-worklist/acceptance.mjs scheduler"}
+{"ts":"2026-10-23T15:33:09Z","round":1,"evalId":"E11","run_id":"airbnb-worklist-E11-20261023T153309","exit_code":0,"cmd":"node scripts/airbnb-worklist/acceptance.mjs adr"}
