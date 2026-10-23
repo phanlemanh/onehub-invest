@@ -1,6 +1,6 @@
 # Review kiến trúc phân loại + enrich — từ lúc tin vào tới lúc thành căn nhà
 
-> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** (chưa phải quyết định) · Phạm vi: Kev-4B gate →
+> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** (chưa phải quyết định; riêng Q1 Kev đã chốt 23/10) · Phạm vi: Kev-4B gate →
 > parser `transform-*` → E1/E2/định tuyến → `/ops/review` → `resolve-properties`.
 > Cách làm: chỉ đọc code (HEAD `b446637`, đã gồm PR #14, #16, #21), DB local :5433 (SELECT) và log.
 > Không sửa code, không ghi DB. Bản xem trên điện thoại (riêng tư): https://claude.ai/artifact/RSzE1VKhUjbw7jVMyorGHd
@@ -29,7 +29,7 @@
 
 | Số | Nghĩa |
 |---|---|
-| **~70%** tin Zalo bị Kev-4B bỏ **trước khi có raw snapshot** (1.268/1.815 lượt chấm, 20–23/10) | Trong mẫu soát được, gần như mọi tin bị bỏ là tin rao thật (p 0,5–0,69). Không phục hồi được. |
+| **~70%** tin Zalo bị Kev-4B bỏ **trước khi có raw snapshot** (skip 1.270 / post 549, log hook tới 23/10) | Trong mẫu soát được, gần như mọi tin bị bỏ là tin rao thật (p 0,5–0,69). Không phục hồi được. **Đã quyết 23/10: Kev thành nhãn, không lọc** (Q1). |
 | **1.102/1.102** tin S03 và **114/118** tin S05 có `property_type = unknown` | Parser P1 không phân loại; đề xuất enrich S03 mất sạch 23/10. |
 | **0** tin P1 (S03/S05) nào nằm trong `properties` | «Một Căn Nhà» thực chất chỉ gồm S06 (trái hiến pháp §1.7). |
 | **«Căn giá tốt» so giá/m² với trung vị cả phường, không tách loại hình** | `refresh-bait-gap.mjs` dùng `v_ruler_p2_area` — CONTEXT.md định nghĩa «phường × loại hình». Đây là hệ quả sản phẩm trực tiếp của việc P1 không có loại. |
@@ -41,7 +41,7 @@ phát biểu theo thứ bậc căn cứ để dựng cột canonical (kèm ngu�
 (luật × field × nguồn) **đã đo trên tập nhãn** đạt ngưỡng mới được tự áp, còn lại lên thẻ duyệt hiện
 đủ căn cứ; quyết định của người là phát biểu bậc cao nhất và sống qua mọi lượt nạp.
 
-**Khuyến nghị thứ tự**: **đo trước, xây sau** — giữ trọn raw (Kev không bỏ tin) + một taxonomy + tập
+**Khuyến nghị thứ tự**: **đo trước, xây sau** — giữ trọn raw (Kev không bỏ tin — Mạnh đã chốt 23/10) + một taxonomy + tập
 nhãn + số đo nền, rồi mới làm lớp phát biểu/phân xử và thẻ duyệt v2 (§5).
 
 ---
@@ -179,13 +179,17 @@ nhưng đang lan · **Nhẹ** = nợ kỹ thuật.
 **L06 · Kev-4B bỏ tin trước raw snapshot** — Nặng · N1, N6, N7 · làn ZCode
 - `handler.js:104-107`: `p === null || p < 0.9` → ghi `skip` rồi `return`. Tin không tới :9210 →
   không snapshot → **không phục hồi, không chạy lại được** khi đổi ngưỡng/mô hình.
-- Số đo từ `~/.openclaw/logs/oneinvest-zalo-pipe.log` (20–23/10): skip ~70%; 43% số skip có p 0,5–0,89.
+- Số đo từ `~/.openclaw/logs/oneinvest-zalo-pipe.log` (điều phối liên làn đo lại 23/10): skip 1.270 / post 549
+  (≈70% bị bỏ), 0 gate-down. Phân bố p của tin bị bỏ: p < 0,5: 725 · 0,5–0,8: 506 · 0,8–0,9: 39.
 - Mẫu ghép được (khung 22/10 05:41–10:55, 80 tin skip): **59 tin chỉ có URL ảnh zdn.vn** (nhánh
   media-only `:65` không chạy vì text không rỗng → ảnh mất); **20 tin rao rõ ràng** («Bán 3N… 5,5x tỷ»,
   «Cho thuê 2n2vs 75m 6,5tr») p 0,51–0,67; 1 tin tìm thuê p 0,28; chỉ ~2 tin thật sự âm.
 - `p=null` (HTTP không 2xx, đổi hình response) → **bỏ im lặng**, không fail-open; 69 tin `gate-error`
   ngày 21/10 đã mất. Comment `:100` «đánh dấu chưa phân loại» không đúng thực tế.
 - p không vào RawItem, `stg_zalo_posts`, DATA-CONTRACT. Watchdog chỉ kiểm Kev sống, không kiểm tỉ lệ skip.
+- **Đã quyết (Mạnh, 23/10)**: Kev thành **nhãn, không lọc** — hook đẩy mọi tin kèm `meta.kev {p, model,
+  threshold, at}`, DATA-CONTRACT lên `schemaVersion 3`; ZCode làm (`claudedp-2310-11`). Lỗi gốc của L06 đóng
+  khi việc này vào chạy; phần còn lại là transform dùng `meta.kev.p` (việc C1.1, §5).
 - Chênh chưa giải thích: log nhận 547 tin, `stg_zalo_posts` có 367 dòng `openclaw-hook` (có thể do
   buffer/độ trễ nạp — cần ZCode xác nhận).
 
@@ -263,7 +267,7 @@ nhưng đang lan · **Nhẹ** = nợ kỹ thuật.
 | L03 | Nạp lại xoá dây chuyền; quyết định ghép căn đã mất | Nặng | N5 N8 | Claude | định danh nội dung |
 | L04 | Thẻ duyệt thiếu căn cứ, hiện % | Nặng | N8 N4 N6 | Claude | không lưu căn cứ |
 | L05 | Không tập nhãn; 50,3% là độ phủ | Nặng | N7 | cả hai | chưa đo |
-| L06 | Kev bỏ tin trước snapshot, ~70% skip | Nặng | N1 N6 N7 | ZCode | chưa đo + vi phạm raw |
+| L06 | Kev bỏ tin trước snapshot, ~70% skip — **đã quyết sửa** (Kev thành nhãn) | Nặng | N1 N6 N7 | ZCode | chưa đo + vi phạm raw |
 | L07 | Ba định nghĩa «tin rao» / bán-thuê | Vừa | N2 | cả hai | không taxonomy |
 | L08 | Từ vựng loại ở 12 chỗ, trộn cấp RESO | Vừa | N2 | Claude | không taxonomy |
 | L09 | P1 không được phân loại | Nặng | N2 N9 | Claude | không taxonomy + L03 |
@@ -369,7 +373,7 @@ raw snapshot (bất biến) ──► stg_* (khoá gốc nguồn: post_id / list
 
 | Tập | Chủ thể | Trường | Cỡ đề xuất | Nguồn mẫu |
 |---|---|---|---|---|
-| **G0 Cổng** | tin Zalo thật (cả tin bị skip) | `listing_intent`, `kind` | 400, phân tầng theo khoảng p | Cần raw giữ trọn (việc Z1) hoặc giữ tạm tin skip (Z0) |
+| **G0 Cổng** | tin Zalo thật (cả tin p thấp) | `listing_intent`, `kind` | 400, phân tầng theo khoảng p | raw giữ trọn kèm `meta.kev` (việc Z1, đã quyết) |
 | **G1 Parser** | post S03/S05 + ad S06 | kind, giá, DT + area_basis, PN, phường, đường, loại, tầng | 200 S03 + 100 S05 + 100 S06 | stg, phân tầng theo nhóm/thành phố |
 | **G2 Enrich** | cùng mẫu G1 | loại, toà, dự án, đường, WC — đo riêng E1, E2, theo bậc | dùng lại G1 | — |
 | **G3 Ghép căn** | cặp tin | cùng căn / khác căn | 150 cặp | `property_candidates` + cặp ngẫu nhiên cùng phường |
@@ -408,7 +412,7 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 
 | # | Câu hỏi | Phương án | Khuyến nghị |
 |---|---|---|---|
-| **Q1** | Kev-4B đứng ở đâu? | (a) Giữ lọc trước snapshot, chỉnh ngưỡng sau khi đo · (b) **Mọi tin vào raw kèm `gate{model,p,threshold}`; lọc là phát biểu ở pipeline** (DATA-CONTRACT tăng `schemaVersion`) · (c) Bỏ cổng, pipeline tự phân loại | **(b)**. Giữ đúng luật 1 (raw đầy đủ), chạy lại được khi đổi ngưỡng; dung lượng ~1.800 tin/ngày không đáng kể. (c) mất bộ lọc rẻ cho LLM 27B |
+| **Q1** | Kev-4B đứng ở đâu? | **ĐÃ QUYẾT (Mạnh, 23/10)**: Kev thành nhãn, không lọc — mọi tin vào raw kèm `meta.kev {p, model, threshold, at}`, DATA-CONTRACT `schemaVersion 3` (ZCode, `claudedp-2310-11`) | Trùng phương án review khuyến nghị (raw đầy đủ, lọc là phát biểu ở pipeline). Không cần quyết thêm |
 | **Q2** | Phát biểu/quyết định treo vào khoá nào? | (a) Giữ `offer_id` băm nội dung, mở rộng đối soát 039 sang `property_offers/candidates` + thẻ `pair:` · (b) **Treo vào khoá gốc nguồn (post_id/list_id); `offer_id` chỉ còn là id cụm** · (c) Đổi khoá chính `sale_offers` sang khoá gốc | **(b)**. (a) là thêm một lớp vá cho mỗi bảng mới; (c) đụng mọi bảng và mọi API. (b) thêm một cột + một bảng |
 | **Q3** | Giá trị phân loại sống ở đâu? | (a) Giữ cột canonical + đề xuất + fill-gap (hiện trạng) · (b) **Bảng phát biểu append-only + bộ phân xử dựng canonical có provenance** · (c) Giữ `enrichment_proposals`, ghi thêm giá trị parser thành đề xuất + cột provenance | **(b)**. (c) là bước đệm hợp lý nếu muốn đi từng nấc; (a) giữ nguyên gốc của L02, L04, L12 |
 | **Q4** | Tên nhóm (ngữ cảnh) được làm gì? | (a) **Chỉ là H5 — không bao giờ tự quyết; hiện trên thẻ như gợi ý** · (b) Được quyết khi tin im lặng, cho danh sách nhóm đơn-chủ-đề đã đo precision ≥ 95% · (c) Giữ như sau PR #21 (land bị cấm, 4 loại kia vẫn quét) | **(a) ngay**, chuyển sang **(b)** khi có G2. (c) đang giữ 50 tin apartment sai đã đo được |
@@ -431,8 +435,7 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 
 | Mã | Việc | Làn | Phụ thuộc | Hạng |
 |---|---|---|---|---|
-| Z0.1 | Kev: `p=null` / HTTP lỗi → **fail-open** (cho tin qua, gắn cờ); tin chỉ ảnh đi nhánh media | Z | — | T2 |
-| Z0.2 | Kev: tạm giữ tin bị skip vào tệp cách ly local (id + text + p) cho tới khi Q1 xong — nguồn mẫu G0 | Z | — | T2 |
+| ~~Z0.1~~ ~~Z0.2~~ | Fail-open khi `p=null` / tạm giữ tin skip — **gộp vào Z1** sau quyết định Kev thành nhãn (không còn tin bị bỏ) | Z | — | — |
 | C0.1 | Q12: hoàn tác 639/644, đóng thẻ 159/161, áp lại quyết định ghép căn đã mất | C (+M duyệt) | Q12 | T2 |
 | C0.2 | Thẻ duyệt: bỏ % và `ai_suggestion` mặc định; hiện `basis` mọi field; render ảnh PR #16; text đầy đủ | C | Q9 | T2 |
 | C0.3 | Audit decide trong transaction + trường lý do | C | — | T2 |
@@ -442,12 +445,12 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 
 | Mã | Việc | Làn | Phụ thuộc | Hạng |
 |---|---|---|---|---|
-| Z1 | Mọi tin Zalo vào raw kèm `gate{model,p,threshold,decision}`; DATA-CONTRACT tăng `schemaVersion` | Z | Q1 | T3 |
-| C1.1 | Migration cột `gate_*` ở `stg_zalo_posts`; importer nhận v3 | C | Z1 (hợp đồng) | T3 |
+| Z1 | **Đã giao** (`claudedp-2310-11`): hook đẩy mọi tin kèm `meta.kev {p, model, threshold, at}`; DATA-CONTRACT `schemaVersion 3` | Z | Q1 (đã quyết) | T3 |
+| C1.1 | Nhận `meta.kev` ở importer + migration cột `kev_*` trên `stg_zalo_posts`; **transform dùng `meta.kev.p` làm một căn cứ**: ghi phát biểu `listing_intent` (method `kev@<model>`, kèm p) thay cho bỏ tin; ngưỡng lọc ở pipeline đặt theo số đo G0 — chưa đo thì không loại tin theo Kev, chỉ ghi nhãn; tin p thấp mà parser ra kind + giá vẫn thành tin rao | C | Z1 (hợp đồng v3), C1.2 (`listing_intent`) | T3 |
 | C1.2 | Sổ taxonomy một nguồn → bảng `ref_*`, hằng TS/JS, enum prompt, nhãn UI, thuật ngữ CONTEXT.md «Loại hình»; lint chặn enum viết tay; VALIDATE các CHECK 025 | C | Q7, Q8 | T3 |
 | C1.3 | Khung đánh giá: màn gắn nhãn mù `/ops/labels`, lưu nhãn (tầng A, không lên cloud), dev/test, lệnh `eval:classify`, đổ `dq_check_results` | C | C1.2 | T2 |
 | M1 | Gắn nhãn G1/G2 (~400 tin), G3 (150 cặp) | M | C1.3 | — |
-| M1b | Gắn nhãn G0 (400 tin cổng) | M | Z0.2 hoặc Z1, C1.3 | — |
+| M1b | Gắn nhãn G0 (400 tin cổng) | M | Z1, C1.3 | — |
 | C1.4 | Báo cáo số nền: precision/recall/phủ theo tầng × trường × nguồn × bậc trên `/ops/quality` | C | M1 | T2 |
 
 ### Đợt 2 — nền bền (Q2, Q3)
@@ -468,25 +471,25 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 | C3.2 | resolve-properties: `stable_key` bỏ giá/loại; đọc `must_link/cannot_link`; đưa P1 vào căn; sinh thẻ ghép căn từ ứng viên; judge-entity: ngưỡng là code, LLM chỉ giải thích, lưu model/trace | C | C2.1 | T3 |
 | C3.3 | Thước giá phường × loại cho «Căn giá tốt» theo Q10 | C | C2.4 (P1 có loại), Q10 | T2 |
 | C3.4 | Parser S03 sửa theo số đo: phường HCM, `area_basis`, «bán» dương tính giả, dùng tên nhóm làm H5 | C | C1.4 | T2 |
-| Z3.1 | Gộp tin chỉ ảnh vào tin chữ liền trước cùng người gửi (collector) | Z | Z0.1 | T2 |
+| Z3.1 | Gộp tin chỉ ảnh vào tin chữ liền trước cùng người gửi (collector) | Z | Z1 | T2 |
 | Z3.2 | Chỉnh lại/huấn luyện Kev trên G0 (nếu giữ cổng làm bộ lọc rẻ) | Z | M1b | T2 |
 
 ### Đồ thị phụ thuộc
 
 ```
-Đợt 0:  Z0.1  Z0.2  Z0.3  C0.1  C0.2  C0.3        (song song, không phụ thuộc kiến trúc)
+Đợt 0:  Z0.3  C0.1  C0.2  C0.3                    (song song, không phụ thuộc kiến trúc)
           │     │
-Đợt 1:   Z1 ──► C1.1        C1.2 ──► C1.3 ──► M1 ──► C1.4
+Đợt 1:   Z1 ──► C1.1 ◄────── C1.2 ──► C1.3 ──► M1 ──► C1.4
           └──────────────────────────┴──► M1b ───────┘
 Đợt 2:                      C1.2 ──► C2.1 ──► C2.2
                                        └────► C2.3 ──► C2.4 ──► C2.5 ◄── C1.4
 Đợt 3:                                 C2.1 ──► C3.2
                                        C2.3 ──► C3.1
                                        C2.4 ──► C3.3        C1.4 ──► C3.4
-                                       M1b  ──► Z3.2        Z0.1 ──► Z3.1
+                                       M1b  ──► Z3.2        Z1   ──► Z3.1
 ```
 
-Song song tối đa 3–4 phiên: Đợt 0 chia {C0.1+C0.3}, {C0.2}, {Z0.*}; Đợt 1 chạy Z1 ∥ C1.2 → C1.3.
+Song song tối đa 3–4 phiên: Đợt 0 chia {C0.1+C0.3}, {C0.2}, {Z0.3}; Đợt 1 chạy Z1 (đã giao) ∥ C1.2 → C1.3, rồi C1.1.
 Đường găng: **C1.2 → C1.3 → M1 → C1.4 → C2.5**. Thời gian gắn nhãn của Mạnh nằm trên đường găng —
 nên bắt đầu C1.3 sớm nhất có thể.
 
@@ -494,16 +497,15 @@ nên bắt đầu C1.3 sớm nhất có thể.
 
 ## 6. Câu còn mở cần ZCode trả lời (qua điều phối liên làn)
 
-Số liệu Kev lấy được ở máy local từ log hook; những câu sau cần ZCode:
+Q1 đã quyết (Kev thành nhãn, `schemaVersion 3`) nên câu «có đưa điểm cổng vào DATA-CONTRACT» và «còn cần
+cổng để tiết kiệm lượt 27B» không còn treo. Còn lại:
 
 1. Ngưỡng 0,9 chọn theo số đo nào? Kết quả `bench-gate` theo từng ngưỡng (recall/fallout) để ở đâu?
-2. Tỉ lệ skip mục tiêu là bao nhiêu? Đã ai soát mẫu skip trên tin thật chưa?
-3. Có tập tin Zalo thật đã gắn nhãn nào không (kể cả ngoài repo)?
-4. Tin chỉ có URL ảnh: định gộp vào tin chữ trước, hay cho qua cổng thẳng?
-5. Còn cần cổng để «tiết kiệm lượt 27B» không, khi parse do transform làm?
-6. Log ghi 547 tin được nhận mà `stg_zalo_posts` có 367 dòng `openclaw-hook`: do buffer, lượt nạp, hay
+   (Giữ `threshold` trong `meta.kev` có ích, nhưng pipeline sẽ đặt ngưỡng riêng theo G0.)
+2. Có tập tin Zalo thật đã gắn nhãn nào không (kể cả ngoài repo)?
+3. Tin chỉ có URL ảnh: sau v3 có gộp vào tin chữ liền trước cùng người gửi không (Z3.1)?
+4. Log ghi 547 tin được nhận mà `stg_zalo_posts` có 367 dòng `openclaw-hook`: do buffer, lượt nạp, hay
    mất khi restart?
-7. Có ý định thêm `gate{model,p,threshold,decision}` vào DATA-CONTRACT không (Q1)?
 
 ## 7. Tham chiếu
 
