@@ -261,3 +261,191 @@ test("AC-8 chạy lại + dry", async () => {
     assert.notEqual(await hash(), h0, "AC-8 dry đã ghi: thước băm phải bắt được một lần ghi");
   });
 });
+
+// ── AC-7 / AC-11: E1 trái LLM — hai tin S05 thật của lượt chạy thử 23/10 ─────────
+
+type ConflictCase = { offer_id: string; trace: string; text: string; output: string };
+const CONFLICT: { group_name: string; cases: ConflictCase[] } = JSON.parse(
+  readFileSync(join(import.meta.dirname, "fixtures/e1-conflict-cases.json"), "utf8"),
+);
+/** Khuôn evidence thẻ xung đột mà app/tests nạp (E16) — writer thật phải khớp khuôn khoá này. */
+const CARD_FIXTURE = JSON.parse(
+  readFileSync(join(import.meta.dirname, "fixtures/e1-conflict-card.json"), "utf8"),
+);
+/** bedrooms thật của hai tin lúc chạy thử (LLM không đề xuất bedrooms). */
+const REAL_BEDROOMS = [3, 9];
+
+/** Tập «đường:kiểu» của mọi khoá (mảng: hợp mọi phần tử) — so khuôn, không so giá trị. */
+function shape(v: unknown, path = ""): Set<string> {
+  const out = new Set<string>();
+  if (Array.isArray(v)) {
+    for (const x of v) for (const s of shape(x, `${path}[]`)) out.add(s);
+  } else if (v !== null && typeof v === "object") {
+    for (const [k, x] of Object.entries(v)) {
+      out.add(`${path}.${k}`);
+      for (const s of shape(x, `${path}.${k}`)) out.add(s);
+    }
+  } else {
+    out.add(`${path}:${v === null ? "null" : typeof v}`);
+  }
+  return out;
+}
+
+const llmFrom = (cc: ConflictCase): EnrichResult => {
+  const r = parseEnrichOutput(cc.output);
+  assert.ok(r, `${cc.trace} phải parse được`);
+  return r;
+};
+
+/** Offer fixture của ca thật (property_type='unknown') — trả offer_id. */
+const conflictOffer = (c: pg.Client, i: number) =>
+  offerWithPost(c, { text: CONFLICT.cases[i].text, group: CONFLICT.group_name, bedrooms: REAL_BEDROOMS[i] });
+
+const ptypeProposals = async (c: pg.Client, id: string) =>
+  (await proposals(c, id)).filter((p) => p.field === "property_type");
+
+test("AC-7 hai tin S05 thật không bị áp land", async () => {
+  for (const [i, cc] of CONFLICT.cases.entries()) {
+    await withTx(async (c) => {
+      // Ghim tiền đề: luật E1 thật vẫn ra land cho ca thật — đổi luật E1 thì ca này báo rõ.
+      const e1 = await resolveContext(CONFLICT.group_name, cc.text);
+      assert.equal(e1.propertyType, "land", `${cc.offer_id}: luật E1 không còn ra land — cập nhật fixture`);
+
+      const a = await conflictOffer(c, i);
+      const llm = llmFrom(cc);
+      await run(c, [a], llmWith(llm), resolveContext);
+
+      assert.equal((await offerRow(c, a)).property_type, "unknown", "AC-7: E1 không được áp khi trái LLM");
+      const ps = await ptypeProposals(c, a);
+      assert.deepEqual(
+        ps.map((p) => [p.source, p.value, p.route, p.status]),
+        [["e1_rule", "land", "review", "queued"], ["e2_llm", "house", "review", "queued"]],
+        "AC-7: hai đề xuất chờ duyệt",
+      );
+      assert.equal(Number(ps[0].review_id), Number(ps[1].review_id), "AC-7: cùng một thẻ");
+
+      const cards = await pendingCards(c, a);
+      assert.equal(cards.length, 1);
+      const ev = cards[0].evidence;
+      const pt = ev.fields.filter((f: { field: string }) => f.field === "property_type");
+      assert.equal(pt.length, 2);
+      assert.ok(pt.every((f: { conflict?: boolean }) => f.conflict === true), "AC-7: thẻ phải đánh dấu xung đột");
+      const e1f = pt.find((f: { source: string }) => f.source === "e1_rule");
+      const llmf = pt.find((f: { source: string }) => f.source === "e2_llm");
+      assert.match(e1f.basis, /đất/, "AC-7: căn cứ E1 phải nêu từ khoá");
+      assert.match(e1f.basis, /tên nhóm/, "AC-7: căn cứ E1 phải nêu khớp ở tên nhóm");
+      assert.match(llmf.basis, /qwen27b/, "AC-7: căn cứ LLM phải nêu model");
+      // Field không xung đột của cùng thẻ (bathrooms, street) không mang cờ.
+      assert.ok(ev.fields.filter((f: { field: string }) => f.field !== "property_type")
+        .every((f: { conflict?: boolean }) => f.conflict === undefined));
+      assert.deepEqual([...shape(ev)].sort(), [...shape(CARD_FIXTURE.evidence)].sort(), "AC-11 lệch khoá evidence");
+
+      // Lượt hai cùng dữ liệu: không nhân, thẻ vẫn giữ dấu xung đột.
+      const nP = (await proposals(c, a)).length;
+      await run(c, [a], llmWith(llm), resolveContext);
+      assert.equal((await proposals(c, a)).length, nP);
+      const again = await pendingCards(c, a);
+      assert.equal(again.length, 1);
+      assert.ok(again[0].evidence.fields.filter((f: { field: string }) => f.field === "property_type")
+        .every((f: { conflict?: boolean }) => f.conflict === true));
+
+      // Lượt sau LLM vắng property_type, rồi LLM lỗi: E1 không được áp vượt thẻ.
+      await run(c, [a], llmWith({ ...llm, property_type: undefined }), resolveContext);
+      await run(c, [a], llmWith(null), resolveContext);
+      // Lượt sau LLM đổi ý, đồng ý luật («land» của LLM là dòng đề xuất MỚI): vẫn không áp.
+      await run(c, [a], llmWith({ ...llm, property_type: "land" }), resolveContext);
+      assert.equal((await offerRow(c, a)).property_type, "unknown", "AC-7 lượt sau áp E1 vượt thẻ");
+      const after = await ptypeProposals(c, a);
+      assert.ok(after.every((p) => p.status === "queued" && p.route === "review"), "AC-7 lượt sau áp E1 vượt thẻ");
+      assert.equal(after.length, 3);
+    });
+  }
+});
+
+test("AC-7 để sau thẻ xung đột giữ dấu xung đột", async () => {
+  await withTx(async (c) => {
+    const a = await conflictOffer(c, 0);
+    const llm = llmFrom(CONFLICT.cases[0]);
+    const r1 = await run(c, [a], llmWith(llm), resolveContext);
+    await c.query(`SELECT decide_enrichment_review($1, 'deferred', 'hitl:test')`, [r1.reviewIds[0]]);
+    await c.query(`UPDATE review_queue SET status='deferred' WHERE id=$1`, [r1.reviewIds[0]]);
+    await run(c, [a], llmWith(llm), resolveContext);
+    const cards = await pendingCards(c, a);
+    assert.equal(cards.length, 1, "AC-7: để sau → đúng một thẻ chờ mới");
+    assert.notEqual(Number(cards[0].id), r1.reviewIds[0]);
+    const pt = cards[0].evidence.fields.filter((f: { field: string }) => f.field === "property_type");
+    assert.equal(pt.length, 2);
+    assert.ok(
+      pt.every((f: { conflict?: boolean; source?: string; basis?: string }) => f.conflict === true && f.source && f.basis),
+      "AC-7 dựng lại mất xung đột",
+    );
+    assert.equal((await offerRow(c, a)).property_type, "unknown");
+  });
+});
+
+test("AC-7 đối chứng: LLM đồng ý luật thì áp như cũ", async () => {
+  await withTx(async (c) => {
+    const a = await conflictOffer(c, 0);
+    await run(c, [a], llmWith({ ...llmFrom(CONFLICT.cases[0]), property_type: "land" }), resolveContext);
+    assert.equal((await offerRow(c, a)).property_type, "land");
+    assert.deepEqual(
+      (await ptypeProposals(c, a)).map((p) => [p.source, p.route, p.corroborated_by, p.status]),
+      [["e2_llm", "corroborated", "e1", "applied"]],
+    );
+    const ev = (await pendingCards(c, a))[0]?.evidence;
+    assert.ok(!ev || ev.fields.every((f: { field: string }) => f.field !== "property_type"));
+  });
+});
+
+test("AC-11 chọn một bên rồi áp", async () => {
+  await withTx(async (c) => {
+    // Chọn «Theo LLM»: đúng chuỗi SQL route chạy — apply_enrichment(chọn + không xung đột) rồi rejected.
+    const a = await conflictOffer(c, 0);
+    const llm = llmFrom(CONFLICT.cases[0]);
+    const r = await run(c, [a], llmWith(llm), resolveContext);
+    const card = r.reviewIds[0];
+    const queued = (await c.query(
+      `SELECT id, field, source FROM enrichment_proposals WHERE review_id=$1 AND status='queued' ORDER BY id`, [card],
+    )).rows;
+    const land = queued.find((p) => p.field === "property_type" && p.source === "e1_rule");
+    const applyIds = queued.filter((p) => p !== land).map((p) => Number(p.id));
+    await c.query(`SELECT apply_enrichment($1, 'hitl:test')`, [applyIds]);
+    await c.query(`SELECT decide_enrichment_review($1, 'rejected', 'hitl:test')`, [card]);
+    await c.query(`UPDATE review_queue SET status='approved' WHERE id=$1`, [card]);
+
+    const o = await offerRow(c, a);
+    assert.equal(o.property_type, "house", "AC-11: giá trị được chọn phải áp");
+    assert.equal(o.bathrooms, 4);
+    assert.equal(o.street_raw, "Quang Trung");
+    const pt = await ptypeProposals(c, a);
+    assert.deepEqual(pt.map((p) => [p.source, p.status]), [["e1_rule", "rejected"], ["e2_llm", "applied"]]);
+    const nP = (await proposals(c, a)).length;
+    await run(c, [a], llmWith(llm), resolveContext);
+    assert.equal((await proposals(c, a)).length, nP, "AC-11: chạy lại không sinh đề xuất mới");
+    assert.equal((await pendingCards(c, a)).length, 0, "AC-11: chạy lại không mở thẻ mới");
+
+    // «Bỏ»: cả hai rejected, ô giữ trống, chạy lại không đẩy lại.
+    const b = await conflictOffer(c, 1);
+    const llmB = llmFrom(CONFLICT.cases[1]);
+    const rb = await run(c, [b], llmWith(llmB), resolveContext);
+    await c.query(`SELECT decide_enrichment_review($1, 'rejected', 'hitl:test')`, [rb.reviewIds[0]]);
+    await c.query(`UPDATE review_queue SET status='rejected' WHERE id=$1`, [rb.reviewIds[0]]);
+    assert.deepEqual((await ptypeProposals(c, b)).map((p) => p.status), ["rejected", "rejected"]);
+    assert.equal((await offerRow(c, b)).property_type, "unknown");
+    const nB = (await proposals(c, b)).length;
+    await run(c, [b], llmWith(llmB), resolveContext);
+    assert.equal((await proposals(c, b)).length, nB, "AC-11: «Bỏ» rồi chạy lại không đẩy lại");
+    assert.equal((await offerRow(c, b)).property_type, "unknown");
+  });
+});
+
+test("AC-11 chiều đỏ: duyệt thẻ xung đột không chọn thì áp nhầm luật", async () => {
+  // Vì sao route PHẢI chặn khi thiếu choices: decide 'approved' thẳng áp theo thứ tự id → E1 thắng.
+  await withTx(async (c) => {
+    const a = await conflictOffer(c, 0);
+    const r = await run(c, [a], llmWith(llmFrom(CONFLICT.cases[0])), resolveContext);
+    await c.query(`SELECT decide_enrichment_review($1, 'approved', 'hitl:test')`, [r.reviewIds[0]]);
+    assert.equal((await offerRow(c, a)).property_type, "land", "AC-11 duyệt không chọn áp nhầm E1");
+    assert.deepEqual((await ptypeProposals(c, a)).map((p) => p.status), ["applied", "skipped"]);
+  });
+});

@@ -2,13 +2,15 @@
 // E1 (luật) + E2 (LLM) → routeFields → INSERT enrichment_proposals →
 //   direct/corroborated: apply_enrichment (hàm SQL duy nhất ghi sale_offers/properties)
 //   review: thẻ /ops/review agent_output enrich:<offer_id> (người quyết)
-//   superseded: lưu, không làm gì
+//   review + conflict (E1 trái LLM): cả hai lên thẻ, người chọn một bên (AC-7, AC-11)
 // File này KHÔNG có câu UPDATE sale_offers/properties nào (AC-1).
 import type pg from "pg";
 
 import type { ContextResult } from "../agents/context-resolver.js";
 import { needsLLM, type EnrichResult } from "../agents/enrich-text.js";
-import { llmFieldsFromEnrich, routeFields, summarizeRun, type BuildingNode, type Routed } from "./route.js";
+import {
+  llmFieldsFromEnrich, routeFields, summarizeRun, type BuildingNode, type EnrichField, type Routed,
+} from "./route.js";
 
 export type LlmFn = (
   text: string,
@@ -70,6 +72,38 @@ async function loadBuildings(c: pg.Client): Promise<BuildingNode[]> {
 }
 
 /**
+ * Field đang xung đột chờ người: có từ hai đề xuất queued (giá trị khác nhau) cho cùng field.
+ * Lượt này không được áp gì cho chúng (AC-7) — kể cả khi thẻ đã bị hoãn.
+ */
+async function heldFields(c: pg.Client, offerId: string): Promise<Set<EnrichField>> {
+  const { rows } = await c.query(
+    `SELECT field FROM enrichment_proposals
+     WHERE offer_id = $1 AND status = 'queued' AND route = 'review'
+     GROUP BY field HAVING count(DISTINCT value_key) > 1`,
+    [offerId],
+  );
+  return new Set(rows.map((r) => r.field as EnrichField));
+}
+
+/** Căn cứ một bên cho người duyệt — E1: luật đã khớp; LLM: model · độ tự tin · trace. */
+function basisOf(
+  r: Routed,
+  ctx: ContextResult,
+  llm: { model: string; confidence: number | null; tracePath: string | null } | null,
+): string | null {
+  if (r.source === "e1_rule") {
+    if (r.field === "property_type") return ctx.typeBasis ?? "luật E1";
+    if (r.field === "block_raw") return ctx.buildingBasis ?? "luật E1";
+    return "luật E1";
+  }
+  if (!llm) return null;
+  const parts = [`LLM ${llm.model}`];
+  if (llm.confidence !== null) parts.push(`tự tin ${Math.round(llm.confidence * 100)}%`);
+  if (llm.tracePath) parts.push(`trace ${llm.tracePath.split("/").pop()}`);
+  return parts.join(" · ");
+}
+
+/**
  * Đề xuất review còn queued mà chưa nằm trên thẻ ĐANG CHỜ → gắn vào thẻ chờ của offer
  * (tạo mới khi chưa có, kể cả khi thẻ cũ đã bị hoãn), rồi dựng lại evidence từ mọi đề
  * xuất queued của thẻ. Trả id thẻ chờ, hoặc null khi offer không có gì chờ duyệt.
@@ -106,7 +140,9 @@ async function syncReview(
     ]);
   }
   const { rows: fields } = await c.query(
-    `SELECT id, field, value, confidence FROM enrichment_proposals
+    `SELECT id, field, value, confidence, source, evidence->>'basis' AS basis,
+            count(*) OVER (PARTITION BY field) > 1 AS conflict
+     FROM enrichment_proposals
      WHERE review_id = $1 AND status = 'queued' ORDER BY id`,
     [cardId],
   );
@@ -117,11 +153,16 @@ async function syncReview(
     run_id: meta.runId,
     model: meta.model,
     trace_path: meta.tracePath,
+    // Field có từ hai đề xuất chờ = xung đột E1/LLM: thẻ cho người chọn một bên (AC-11).
+    // Dựng lại từ bảng mỗi lượt nên thẻ mới sau «Để sau» vẫn giữ dấu xung đột.
     fields: fields.map((f) => ({
       proposal_id: Number(f.id),
       field: f.field,
       value: f.value,
       confidence: f.confidence === null ? null : Number(f.confidence),
+      source: f.source,
+      basis: f.basis ?? null,
+      ...(f.conflict ? { conflict: true as const } : {}),
     })),
   };
   const conf = evidence.fields.map((f) => f.confidence).filter((x): x is number => x !== null);
@@ -146,6 +187,7 @@ export async function runEnrich(
     const ctx = await opts.resolve(o.group_name, text);
     // --dry: chỉ E1, 0 lượt gọi model, 0 lần ghi.
     const llmRes = !opts.dry && needsLLM(ctx, text) ? await opts.llm(text, ctx) : null;
+    const held = await heldFields(c, o.offer_id);
     const rs = routeFields({
       current: {
         property_type: o.property_type, bedrooms: o.bedrooms, bathrooms: o.bathrooms,
@@ -154,6 +196,7 @@ export async function runEnrich(
       e1: { property_type: ctx.propertyType, block_raw: ctx.buildingHint },
       llm: llmRes?.result ? llmFieldsFromEnrich(llmRes.result) : null,
       buildings,
+      held,
     });
     routed.push(rs);
     if (opts.dry) continue;
@@ -162,6 +205,9 @@ export async function runEnrich(
       text: text.slice(0, 300), group_name: o.group_name,
       matchedBy: ctx.matchedBy, projectSlug: ctx.projectSlug,
     };
+    const llmMeta = llmRes?.result
+      ? { model: llmRes.model, confidence: llmRes.result.confidence ?? null, tracePath: llmRes.tracePath }
+      : null;
     const applyIds: number[] = [];
     for (const r of rs) {
       const llmRow = r.source === "e2_llm";
@@ -177,7 +223,7 @@ export async function runEnrich(
           llmRow ? (llmRes?.result?.confidence ?? null) : null,
           llmRow ? (llmRes?.model ?? null) : "context-resolver",
           llmRow ? (llmRes?.tracePath ?? null) : null,
-          evidence,
+          { ...evidence, basis: basisOf(r, ctx, llmMeta) },
           r.route === "superseded" ? "superseded" : "queued",
         ],
       );
