@@ -5,7 +5,7 @@ slug: glossary-context
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-23T00:05:02Z
 ---

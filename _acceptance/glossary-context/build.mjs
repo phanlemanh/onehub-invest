@@ -151,8 +151,11 @@ ${blocks.join("\n\n")}
 `;
 }
 
-writeFileSync(join(HERE, "bang-chot.html"), html());
-console.log("ghi", join(HERE, "bang-chot.html"));
+// --out là dựng thử (máy kiểm rebuild): không chạm cây hồ sơ.
+if (!process.argv.includes("--out")) {
+  writeFileSync(join(HERE, "bang-chot.html"), html());
+  console.log("ghi", join(HERE, "bang-chot.html"));
+}
 if (process.argv.includes("--context")) {
   const date = process.argv.find((a) => /^\d{4}-\d{2}-\d{2}$/.test(a)) || new Date().toISOString().slice(0, 10);
   const i = process.argv.indexOf("--out");
