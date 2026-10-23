@@ -95,8 +95,26 @@ export async function createAgentServer(opts: AgentServerOptions) {
     } catch { /* chưa có file — lần đầu */ }
   }
 
-  const sourceIdOf = (group: string, ts: string, text: string) =>
-    createHash("sha256").update(`${group}|${ts}|${text}`).digest("hex").slice(0, 32);
+  // ZC1 (claudedp-2310-14): tin CHỈ CÓ ẢNH (text rỗng) — hai tin cùng nhóm
+  // cùng ts đụng nhau ở công thức cũ, tin sau bị bỏ ở dedup. Thêm sender +
+  // danh sách URL/path media PHỤ SAU text rỗng để tách. Tin CÓ TEXT (dù kèm
+  // ảnh) GIỮ NGUYÊN id cũ — không đổi id các tin đã có.
+  const sourceIdOf = (
+    group: string,
+    ts: string,
+    text: string,
+    extra?: { senderId?: string | null; media?: AgentMediaFact[] },
+  ) => {
+    const h = createHash("sha256").update(`${group}|${ts}|${text}`);
+    if (!text && extra) {
+      const urls = (extra.media ?? [])
+        .map((m) => m.url ?? m.path ?? "")
+        .filter(Boolean)
+        .join(",");
+      h.update(`|${extra.senderId ?? ""}|${urls}`);
+    }
+    return h.digest("hex").slice(0, 32);
+  };
 
   function ingest(body: unknown, auth: string | null): IngestResult {
     if (!keyOk(keys, auth)) return { status: 401, body: { error: "unauthorized" } };
@@ -115,7 +133,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     let accepted = 0;
     let duplicates = 0;
     for (const m of b.messages!) {
-      const sourceId = sourceIdOf(b.group!, m.ts, m.text);
+      const sourceId = sourceIdOf(b.group!, m.ts, m.text, { senderId: m.senderId, media: m.media });
       if (seen.has(sourceId)) {
         duplicates++;
         continue;

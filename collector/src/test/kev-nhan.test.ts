@@ -17,7 +17,10 @@ function fresh(): string {
   return join(tmpdir(), `kev-nhan-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 }
 
-function snapshotItems(root: string, snapshotId: string): Array<{ meta: Record<string, unknown> }> {
+function snapshotItems(
+  root: string,
+  snapshotId: string,
+): Array<{ sourceId: string; meta: Record<string, unknown> }> {
   const dir = join(root, "hanoi", snapshotId);
   const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
   const out = [];
@@ -91,4 +94,46 @@ test("kev-nhãn: flush tin có kev → manifest khai schemaVersion 3 (PL4, claud
   assert.equal(manifest.schemaVersion, 3, "hợp đồng DATA-CONTRACT v3 — bộ ghi phải khai đúng");
   const items = snapshotItems(root, m.snapshotId);
   assert.ok((items[0].meta as { kev?: unknown }).kev, "items có meta.kev");
+});
+
+test("ZC1: hai tin CHỈ ẢNH cùng nhóm cùng ts → 2 RawItem; tin chữ giữ nguyên sourceId cũ", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  // tin chữ — phải giữ nguyên công thức cũ sha256(group|ts|text)
+  const r1 = s.ingest(
+    {
+      agent_id: "openclaw-hook",
+      group: "g",
+      messages: [{ text: "tin chữ bình thường", ts: "2026-10-23T04:00:00Z", senderId: "u1", media: [{ url: null, path: "/p/a.jpg", type: "photo" }] }],
+    },
+    "Bearer k1",
+  );
+  assert.equal(r1.status, 202);
+  assert.equal(r1.body.accepted, 1);
+  const crypto = await import("node:crypto");
+  const legacyId = crypto.createHash("sha256").update("g|2026-10-23T04:00:00Z|tin chữ bình thường").digest("hex").slice(0, 32);
+
+  // hai tin media-only text rỗng, cùng nhóm, cùng ts, URL ảnh khác nhau
+  const r2 = s.ingest(
+    {
+      agent_id: "openclaw-hook",
+      group: "g",
+      messages: [
+        { text: "", ts: "2026-10-23T04:01:00Z", senderId: "moi-gioi-a", media: [{ url: "https://img.zdn.vn/a.jpg", type: "photo" }] },
+        { text: "", ts: "2026-10-23T04:01:00Z", senderId: "moi-gioi-a", media: [{ url: "https://img.zdn.vn/b.jpg", type: "photo" }] },
+      ],
+    },
+    "Bearer k1",
+  );
+  assert.equal(r2.status, 202);
+  assert.equal(r2.body.accepted, 2, "hai tin ảnh phải thành 2 RawItem — không bị dedup");
+
+  const m = await s.flush();
+  assert.ok(m);
+  const items = snapshotItems(root, m.snapshotId);
+  assert.equal(items.length, 3);
+  const chu = items.find((i) => i.meta.ts === "2026-10-23T04:00:00Z");
+  assert.equal((chu as { sourceId: string }).sourceId, legacyId, "tin chữ giữ nguyên sourceId công thức cũ");
+  const anhIds = items.filter((i) => i.meta.ts === "2026-10-23T04:01:00Z").map((i) => (i as { sourceId: string }).sourceId);
+  assert.equal(new Set(anhIds).size, 2, "hai tin ảnh có sourceId khác nhau");
 });
