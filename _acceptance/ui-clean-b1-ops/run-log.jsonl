@@ -1,0 +1,17 @@
+{"ts": "2026-10-23T01:13:06Z", "round": 1, "evalId": "E2", "run_id": "ui-clean-b1-ops-E2-20261023T011301Z", "exit_code": 0, "cmd": "cd app && npx tsc --noEmit && npm run lint"}
+{"ts": "2026-10-23T01:13:13Z", "round": 1, "evalId": "E8", "run_id": "ui-clean-b1-ops-E8-20261023T011313Z", "exit_code": 0, "cmd": "cd app && npm run test:lint-rules"}
+{"ts": "2026-10-23T01:13:13Z", "round": 1, "evalId": "SUITE-portal-compliance", "run_id": "ui-clean-b1-ops-SUITE-portal-compliance-20261023T011313Z", "exit_code": 0, "cmd": "node scripts/check-portal-compliance.mjs"}
+{"ts": "2026-10-23T01:13:18Z", "round": 1, "evalId": "E1", "run_id": "ui-clean-b1-ops-E1-20261023T011318Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs suppressions"}
+{"ts": "2026-10-23T01:13:19Z", "round": 1, "evalId": "E3", "run_id": "ui-clean-b1-ops-E3-20261023T011319Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs handdrawn"}
+{"ts": "2026-10-23T01:13:21Z", "round": 1, "evalId": "E4", "run_id": "ui-clean-b1-ops-E4-20261023T011320Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs frame"}
+{"ts": "2026-10-23T01:13:22Z", "round": 1, "evalId": "E5", "run_id": "ui-clean-b1-ops-E5-20261023T011322Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs one-way"}
+{"ts": "2026-10-23T01:13:23Z", "round": 1, "evalId": "E6", "run_id": "ui-clean-b1-ops-E6-20261023T011323Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs dialogs"}
+{"ts": "2026-10-23T01:13:24Z", "round": 1, "evalId": "E7", "run_id": "ui-clean-b1-ops-E7-20261023T011324Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs api-contract"}
+{"ts": "2026-10-23T01:13:30Z", "round": 1, "evalId": "E9", "run_id": "ui-clean-b1-ops-E9-20261023T011330Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs design-page"}
+{"ts": "2026-10-23T01:13:35Z", "round": 1, "evalId": "E10", "run_id": "ui-clean-b1-ops-E10-20261023T011331Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs docs"}
+{"ts": "2026-10-23T01:13:36Z", "round": 1, "evalId": "E15", "run_id": "ui-clean-b1-ops-E15-20261023T011336Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs states"}
+{"ts": "2026-10-23T01:13:37Z", "round": 1, "evalId": "E16", "run_id": "ui-clean-b1-ops-E16-20261023T011337Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs shell"}
+{"ts": "2026-10-23T01:13:59Z", "round": 1, "evalId": "E11", "run_id": "ui-clean-b1-ops-E11-20261023T011343Z", "exit_code": 0, "cmd": "node scripts/ui-standards/b1-ops.mjs selftest"}
+{"ts": "2026-10-23T01:15:45Z", "round": 1, "evalId": "E12", "run_id": "ui-clean-b1-ops-E12-20261023T011545Z", "exit_code": 1, "cmd": "ego-browser nodejs (task space s4-E12, /ops/sources @ http://localhost:3457) — dev_server: cd app && npm run dev -- -p 3456 (đang chạy ở :3457)"}
+{"ts": "2026-10-23T01:18:56Z", "round": 1, "evalId": "E13", "run_id": "ui-clean-b1-ops-E13-20261023T011856Z", "exit_code": 0, "cmd": "ego-browser nodejs (task space s4-E13; 5 trang /ops* x sáng-1440/tối-1440/sáng-390 + /vn @ http://localhost:3457) — dev_server: cd app && npm run dev -- -p 3456 (đang chạy ở :3457)"}
+{"ts": "2026-10-23T01:20:16Z", "round": 1, "evalId": "E14", "run_id": "ui-clean-b1-ops-E14-20261023T012016Z", "exit_code": 0, "cmd": "ego-browser nodejs (task space s4-E14; /ops/design sáng + tối 1440 @ http://localhost:3457) — dev_server: cd app && npm run dev -- -p 3456 (đang chạy ở :3457)"}
