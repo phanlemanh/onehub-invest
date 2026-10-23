@@ -5,7 +5,7 @@ slug: slo-mot-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-slo-mot-nguon-design.md
 lo_trinh_ma: AU6
 approved_by: Mạnh
@@ -53,3 +53,10 @@ Bỏ quét hình thái — xem dòng `bỏ coverage-scan` trong sổ. Ma trận:
 ## Notes
 
 - Phép đo AC-2/3/5/7 chỉ ghi vào lược đồ tạm của chính nó trong DB local rồi xoá; không đụng bảng công khai.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: lưới nguồn trang Thu thập chưa có tab lọc cho «Chưa có dữ liệu» và «Chưa khai SLO» — tìm ở tab «Tất cả».
+  - Ngoài-2: bộ kiểm của app nay cần DB local; máy không có DB thấy một ca đỏ, và ca mới ghi cứng địa chỉ DB.
+  - Ngoài-4: phép đo cách viết tuổi trên /ops quét cả trang, chưa ghim vào ô của lưới.
+  - Ngoài-5: ca tóm tắt x/y tự chép lại bộ chuyển của trang Thu thập thay vì gọi hàm thật.
+  - Ngoài-7: thời điểm chạy gần nhất và số tin 24 giờ chỉ được kiểm ở giá trị rỗng.

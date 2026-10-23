@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 4b2d81bba24e34a5b569f1dd196e102ba8db9c7e
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: slo-mot-nguon
