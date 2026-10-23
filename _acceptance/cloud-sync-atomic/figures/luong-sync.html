@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luồng sync nguyên tử</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1280px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · cloud-sync-atomic · d-1 · d-9 · d-10</p>
+    <h1>Lượt sync: thay TRUNCATE bằng một lần tráo</h1>
+    <p class="sub">Hai làn, cũ so với mới · hai điểm chờ người chọn (Hỏi-1, Hỏi-3) · AC-1 · AC-2 · AC-4 · AC-11</p>
+
+    <svg viewBox="0 80 1240 624" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+
+      <rect x="0" y="80" width="1240" height="624" fill="#f5f5f5"/>
+
+      <!-- ===================== PANEL CŨ ===================== -->
+      <text x="40" y="100" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CŨ · TRUNCATE RỒI NẠP DẦN</text>
+
+      <line x1="40" y1="108" x2="1212" y2="108" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="40" y1="172" x2="1212" y2="172" stroke="rgba(45,49,66,0.10)" stroke-width="1"/>
+      <line x1="40" y1="228" x2="1212" y2="228" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="160" y1="108" x2="160" y2="228" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+
+      <text x="48" y="136" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LƯỢT SYNC</text>
+      <text x="48" y="152" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">local → Supabase</text>
+      <text x="48" y="196" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">PROD ĐỌC</text>
+      <text x="48" y="212" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">app Vercel</text>
+
+      <!-- arrows / ticks first -->
+      <line x1="464" y1="140" x2="500" y2="140" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="384" y1="164" x2="384" y2="184" stroke="#4f5d75" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="848" y1="164" x2="848" y2="184" stroke="#4f5d75" stroke-width="1" stroke-dasharray="3,3"/>
+
+      <!-- TRUNCATE -->
+      <rect x="304" y="116" width="160" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="384" y="136" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">TRUNCATE 21 bảng</text>
+      <text x="384" y="152" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">CASCADE xoá saved_markets</text>
+
+      <!-- Nạp dần -->
+      <rect x="504" y="116" width="352" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="680" y="136" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nạp dần qua PostgREST</text>
+      <text x="680" y="152" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">~7′ mỗi chu kỳ · gãy giữa chừng = trống tới lượt lành</text>
+
+      <!-- Prod band CŨ -->
+      <rect x="176" y="184" width="208" height="28" rx="4" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="280" y="202" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">đủ (dữ liệu cũ)</text>
+      <rect x="384" y="184" width="464" height="28" rx="4" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="5,4"/>
+      <text x="616" y="202" fill="#ba4513" font-size="10" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">prod thấy 0 / thiếu dòng ~7′</text>
+      <rect x="848" y="184" width="364" height="28" rx="4" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="1030" y="202" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">đủ (dữ liệu mới)</text>
+
+      <!-- ===================== PANEL MỚI ===================== -->
+      <text x="40" y="300" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">MỚI · STAGING → MỘT GIAO DỊCH → COMMIT</text>
+
+      <line x1="40" y1="308" x2="1212" y2="308" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="40" y1="552" x2="1212" y2="552" stroke="rgba(45,49,66,0.10)" stroke-width="1"/>
+      <line x1="40" y1="636" x2="1212" y2="636" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="160" y1="308" x2="160" y2="636" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+
+      <text x="48" y="352" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LƯỢT SYNC</text>
+      <text x="48" y="368" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">local → Supabase</text>
+      <text x="48" y="382" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">qua Management API</text>
+      <text x="48" y="584" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">PROD ĐỌC</text>
+      <text x="48" y="600" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">app Vercel</text>
+
+      <!-- arrows first: main row -->
+      <line x1="288" y1="356" x2="304" y2="356" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="436" y1="356" x2="452" y2="356" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="584" y1="356" x2="600" y2="356" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="708" y1="356" x2="724" y2="356" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="1088" y1="356" x2="1104" y2="356" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Hỏi-1 fork (from Đọc local) -->
+      <line x1="356" y1="384" x2="356" y2="420" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <path d="M400,384 V392 Q400,400 408,400 H504 Q512,400 512,408 V420" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+      <!-- N1 catalog -->
+      <rect x="176" y="328" width="112" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="232" y="350" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đọc catalog</text>
+      <text x="232" y="366" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">cloud · chỉ đọc</text>
+
+      <!-- N2 local -->
+      <rect x="308" y="328" width="128" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="372" y="350" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đọc local</text>
+      <text x="372" y="366" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">1 snapshot · chọn cột</text>
+
+      <!-- N3 staging -->
+      <rect x="456" y="328" width="128" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="520" y="348" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nạp staging</text>
+      <text x="520" y="362" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">sync_stage.rows</text>
+      <text x="520" y="376" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">mẻ ≤1,8MB</text>
+
+      <!-- N4 chặn tụt -->
+      <rect x="604" y="328" width="104" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="656" y="350" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chặn tụt</text>
+      <text x="656" y="366" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">&lt;50% → dừng</text>
+
+      <!-- Transaction container -->
+      <rect x="728" y="320" width="360" height="216" rx="8" fill="#f5f5f5"/>
+      <rect x="728" y="320" width="360" height="216" rx="8" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="744" y="340" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">MỘT GIAO DỊCH</text>
+      <text x="744" y="354" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">lỗi bất kỳ → rollback, cloud giữ lượt trước</text>
+
+      <!-- Hỏi-3 fork (from Xoá area thừa) -->
+      <path d="M868,458 H880 Q888,458 888,450 V444 Q888,436 896,436 H916" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <path d="M868,470 H892 Q900,470 900,478 V488 Q900,496 908,496 H916" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+      <!-- COMMIT tick to prod band -->
+      <line x1="816" y1="520" x2="816" y2="572" stroke="#4f5d75" stroke-width="1" stroke-dasharray="3,3"/>
+
+      <!-- rail + rows -->
+      <line x1="748" y1="372" x2="748" y2="488" stroke="#4f5d75" stroke-width="1"/>
+      <circle cx="748" cy="376" r="3" fill="#4f5d75"/>
+      <text x="760" y="380" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif">DELETE bảng thay-trọn</text>
+      <circle cx="748" cy="404" r="3" fill="#4f5d75"/>
+      <text x="760" y="408" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif">UPSERT areas</text>
+      <circle cx="748" cy="432" r="3" fill="#4f5d75"/>
+      <text x="760" y="436" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif">INSERT bảng thay-trọn</text>
+      <circle cx="748" cy="464" r="3" fill="#4f5d75"/>
+
+      <!-- Xoá area thừa (branch point) -->
+      <rect x="756" y="452" width="112" height="24" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="812" y="468" fill="#2d3142" font-size="10" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Xoá area thừa</text>
+
+      <!-- COMMIT (focal) -->
+      <rect x="740" y="488" width="152" height="32" rx="6" fill="#f5f5f5"/>
+      <rect x="740" y="488" width="152" height="32" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="816" y="508" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">COMMIT</text>
+
+      <!-- Hỏi-3 options -->
+      <text x="920" y="412" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.12em">HỎI-3 · AREA BIẾN MẤT</text>
+      <rect x="920" y="420" width="152" height="32" rx="6" fill="#f5f5f5"/>
+      <rect x="920" y="420" width="152" height="32" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="928" y="433" fill="#2d3142" font-size="10" font-weight="600" font-family="'Geist', sans-serif">a · xoá theo FK</text>
+      <text x="928" y="446" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">kéo saved_markets · khuyên</text>
+      <rect x="920" y="480" width="152" height="32" rx="6" fill="#f5f5f5"/>
+      <rect x="920" y="480" width="152" height="32" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="928" y="493" fill="#2d3142" font-size="10" font-weight="600" font-family="'Geist', sans-serif">b · không xoá</text>
+      <text x="928" y="506" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">phường đã gộp đọng lại</text>
+
+      <!-- N6 leak gate -->
+      <rect x="1108" y="328" width="104" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1160" y="350" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Leak gate</text>
+      <text x="1160" y="366" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">+ seller_ref băm</text>
+
+      <!-- Hỏi-1 label + options -->
+      <text x="176" y="440" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.12em">HỎI-1</text>
+      <text x="176" y="454" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">luật cột sale_offers</text>
+      <rect x="300" y="424" width="136" height="40" rx="6" fill="#f5f5f5"/>
+      <rect x="300" y="424" width="136" height="40" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="308" y="440" fill="#2d3142" font-size="10" font-weight="600" font-family="'Geist', sans-serif">a · cột cho phép</text>
+      <text x="308" y="454" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">băm seller_ref · khuyên</text>
+      <rect x="452" y="424" width="136" height="40" rx="6" fill="#f5f5f5"/>
+      <rect x="452" y="424" width="136" height="40" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="460" y="440" fill="#2d3142" font-size="10" font-weight="600" font-family="'Geist', sans-serif">b · không đẩy sale_offers</text>
+      <text x="460" y="454" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">deals prod trống</text>
+
+      <!-- Prod band MỚI: liền một dải, không đoạn rỗng -->
+      <rect x="176" y="572" width="640" height="28" rx="4" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="496" y="590" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">trước COMMIT: đọc dữ liệu cũ, đủ (kể cả lúc đang tráo)</text>
+      <rect x="816" y="572" width="396" height="28" rx="4" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="1014" y="590" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">sau COMMIT: đọc trọn dữ liệu mới</text>
+      <text x="176" y="620" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">không có đoạn rỗng · không lẫn cũ/mới · saved_markets giữ nguyên</text>
+
+      <!-- ===================== LEGEND ===================== -->
+      <line x1="40" y1="652" x2="1212" y2="652" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="672" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="684" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="64" y="694" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước của lượt</text>
+
+      <rect x="160" y="684" width="16" height="12" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="184" y="694" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lựa chọn chờ người (Hỏi-1 / Hỏi-3)</text>
+
+      <rect x="372" y="684" width="16" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="396" y="694" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Prod đọc đủ</text>
+
+      <rect x="480" y="684" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="504" y="694" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Điểm mấu chốt: đoạn rỗng (cũ) · COMMIT (mới)</text>
+
+      <line x1="732" y1="684" x2="732" y2="696" stroke="#4f5d75" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="744" y="694" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Mốc thời gian chiếu xuống làn prod</text>
+    </svg>
+  </div>
+</body>
+</html>
