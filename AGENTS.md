@@ -172,6 +172,11 @@ cd agent && npx tsc --noEmit && npm test && npm run smoke
 # vận hành
 node scripts/check-freshness.mjs          # SLO độ tươi từng nguồn (exit 1 khi quá hạn)
 bash scripts/audit-all.sh                 # kiểm toàn hệ thống PASS/FAIL/LIMITED
+
+# tài khoản ops THỬ cho máy đăng nhập dev (chỉ DB local; mật khẩu ở .claude/ops-test-account.json, gitignored)
+node scripts/dev-ops-account.mjs          # tạo/giữ ops-test@local.test (role admin); --rotate để xoay
+node --test scripts/*.test.mjs            # test script ở scripts/
+bash scripts/dev-ops-login-check.sh       # đăng nhập đầu-cuối bằng tài khoản thử (cần dev :3456 đang chạy)
 ```
 
 ## Bẫy kỹ thuật

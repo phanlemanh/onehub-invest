@@ -35,3 +35,5 @@ pipeline/logs/
 CLAUDE.local.md
 .claude/settings.local.json
 .claude/worktrees/
+# Tài khoản ops thử (scripts/dev-ops-account.mjs) — chứa mật khẩu DB local
+.claude/ops-test-account.json

@@ -60,6 +60,48 @@ async function loadNodes(): Promise<AssetNode[]> {
   }
 }
 
+// Luật loại BĐS (vòng enrich-hau-ky, Hỏi-4 chốt 2026-10-23). Tên nhóm Zalo/FB là tên nhóm mua
+// bán chung («HỘI MUA BÁN NHÀ ĐẤT…») — chữ «đất» trong đó KHÔNG nói gì về tin. Land chỉ suy từ
+// NỘI DUNG tin, bằng cụm chỉ đất rõ, và bị phủ quyết khi tin tả nhà nhiều tầng/phòng ngủ. Các
+// loại khác giữ cách cũ: quét chuỗi ghép tin + tên nhóm (tên nhóm cũng là text môi giới:
+// "…Chung Cư Vin 1,2,3" → apartment); riêng tin có cụm đất rõ thì thắng loại chỉ khớp ở tên nhóm.
+const TYPE_RULES: [RegExp, string][] = [
+  [/chung cư|căn hộ|cc |chcc|apartment|condo|studio/, "apartment"],
+  [/nhà mặt tiền|mặt phố|biệt thự|liền kề|nhà phố|nhà riêng|nhà ngõ|nhà hẻm/, "house"],
+  [/phòng trọ|phòng thuê|nhà trọ/, "room"],
+  [/văn phòng|mặt bằng kinh doanh|shop house/, "commercial"],
+];
+/** Thứ tự ưu tiên cũ: land đứng sau house, trước room. */
+const LAND_RANK = 2;
+const LAND_IN_TEXT =
+  /đất nền|nền đất|lô đất|bán đất|đất thổ cư|thửa đất|đất ở|đất vườn|đất trống|đất dự án/;
+const MULTI_STOREY = /\d+\s*(tầng|lầu)|trệt|\d+\s*(pn|phòng ngủ)/;
+
+/** E1 loại BĐS từ tin + tên nhóm; null = không luật nào khớp. */
+export function resolvePropertyType(
+  text: string,
+  groupName: string | null,
+): { type: string; basis: string } | null {
+  const tl = text.toLowerCase();
+  // «nhà đất», «bất động sản» là chữ chung của ngành — bỏ trước khi tìm cụm chỉ đất.
+  const landHit = LAND_IN_TEXT.exec(tl.replace(/nhà đất|bất động sản/g, " "));
+  const land = landHit && !MULTI_STOREY.test(tl)
+    ? { type: "land", basis: `luật từ khoá: «${landHit[0]}» trong tin → land` }
+    : null;
+
+  const t = `${text} ${groupName ?? ""}`.toLowerCase();
+  for (const [i, [re, type]] of TYPE_RULES.entries()) {
+    if (i === LAND_RANK && land) return land;
+    const m = re.exec(t);
+    if (!m) continue;
+    const inGroup = m.index >= text.length;
+    if (inGroup && land) return land;
+    const where = inGroup ? `tên nhóm «${groupName}»` : "tin";
+    return { type, basis: `luật từ khoá: «${m[0].trim()}» trong ${where} → ${type}` };
+  }
+  return land;
+}
+
 /** E1: Phân giải bối cảnh từ tên nhóm + text → project/type/building */
 export async function resolveContext(
   groupName: string | null,
@@ -104,23 +146,10 @@ export async function resolveContext(
 
   // ── 2. Text + group name keywords → property_type ──
   if (!result.propertyType) {
-    // group name cũng là text môi giới: "…Chung Cư Vin 1,2,3" → apartment
-    const t = `${text} ${groupName ?? ""}`.toLowerCase();
-    const TYPE_RULES: [RegExp, string][] = [
-      [/chung cư|căn hộ|cc |chcc|apartment|condo|studio/, "apartment"],
-      [/nhà mặt tiền|mặt phố|biệt thự|liền kề|nhà phố|nhà riêng|nhà ngõ|nhà hẻm/, "house"],
-      [/đất|nền|lô đất|diện tích đất/, "land"],
-      [/phòng trọ|phòng thuê|nhà trọ/, "room"],
-      [/văn phòng|mặt bằng kinh doanh|shop house/, "commercial"],
-    ];
-    for (const [re, type] of TYPE_RULES) {
-      const m = re.exec(t);
-      if (!m) continue;
-      result.propertyType = type;
-      // Vị trí khớp sau phần tin → khớp trong tên nhóm (ca thật 23/10: «đất» của «NHÀ ĐẤT»).
-      const where = m.index >= text.length ? `tên nhóm «${groupName}»` : "tin";
-      result.typeBasis = `luật từ khoá: «${m[0].trim()}» trong ${where} → ${type}`;
-      break;
+    const pt = resolvePropertyType(text, groupName);
+    if (pt) {
+      result.propertyType = pt.type;
+      result.typeBasis = pt.basis;
     }
 
     // Nếu group match project → default type từ tên dự án
