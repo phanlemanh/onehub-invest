@@ -8,7 +8,9 @@
 > **Khung**: `docs/product/FRAMING.md` (Mạnh duyệt 23/10) — §0.1 đối chiếu review với khung đó.
 > **Rà soát nguyên lý gốc §0.2 (23/10) sửa một phần §3–§5**: thang căn cứ còn 3 lớp, ghép căn là một phát biểu,
 > thêm thời gian (L18), kế hoạch đổi sang lát dọc, quyết định còn 7 câu (§0.2 F); sự thật 8 «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh). Khi lệch, §0.2 thắng.
-> Đọc nhanh: §0 tóm tắt → §0.1 → **§0.2** → §4 quyết định → §5 việc. §1–§3 là căn cứ.
+> **§0.3 (23/10)**: 1.020/1.102 tin S03 là dữ liệu giả `zalo-mock` (L19) — số S03 ở §0–§2 đọc kèm bảng đính chính;
+> trả lời F1–F6: lát đầu Vinhomes Ocean Park 1, ngưỡng theo cận dưới Wilson, độ tươi p50 ≤ 10′, thứ tự dọn tồn đọng.
+> Đọc nhanh: §0 tóm tắt → §0.1 → **§0.2** → **§0.3** → §4 quyết định → §5 việc. §1–§3 là căn cứ.
 
 ---
 
@@ -33,7 +35,7 @@
 | Số | Nghĩa |
 |---|---|
 | **~70%** tin Zalo bị Kev-4B bỏ **trước khi có raw snapshot** (skip 1.270 / post 549, log hook tới 23/10) | Trong mẫu soát được, gần như mọi tin bị bỏ là tin rao thật (p 0,5–0,69). Không phục hồi được. **Đã quyết 23/10: Kev thành nhãn, không lọc** (Q1). |
-| **1.102/1.102** tin S03 và **114/118** tin S05 có `property_type = unknown` | Parser P1 không phân loại; đề xuất enrich S03 mất sạch 23/10. |
+| **1.102/1.102** tin S03 (⚠ 1.020 là tin giả `zalo-mock` — §0.3; 82 tin thật cũng 100%) và **114/118** tin S05 có `property_type = unknown` | Parser P1 không phân loại; đề xuất enrich S03 mất sạch 23/10. |
 | **0** tin P1 (S03/S05) nào nằm trong `properties` | «Một Căn Nhà» thực chất chỉ gồm S06 (trái hiến pháp §1.7). |
 | **«Căn giá tốt» so giá/m² với trung vị cả phường, không tách loại hình** | `refresh-bait-gap.mjs` dùng `v_ruler_p2_area` — CONTEXT.md định nghĩa «phường × loại hình». Đây là hệ quả sản phẩm trực tiếp của việc P1 không có loại. |
 | **12** chỗ tự khai từ vựng loại BĐS; **0** tập nhãn tin thật | Không có một taxonomy; không đo được độ chính xác. |
@@ -199,7 +201,7 @@ qua cùng hợp đồng phát biểu → thước phường × loại cho «Căn
 nhóm = suy luận, không tự quyết — D-1), Q5 (= T6: tự áp chỉ ô đã đo), Q9 (độ chắc suy từ đo; confidence tự khai
 không hiện), Q11 (= lát dọc, đo trong lát). Q1 đã chốt.
 
-**Còn cần Mạnh** (xếp theo mức chặn lát dọc):
+**Còn cần Mạnh** (xếp theo mức chặn lát dọc) — *Mạnh trả lời 23/10, phân tích và đề xuất ở §0.3*:
 
 | # | Câu | Vì sao chỉ Mạnh trả lời được |
 |---|---|---|
@@ -212,6 +214,125 @@ không hiện), Q11 (= lát dọc, đo trong lát). Q1 đã chốt.
 | F6 | **Dọn tồn đọng** (Q12 cũ): hoàn tác 639/644, đóng thẻ 159/161, áp lại quyết định ghép căn `ops_audit` 4 | Ghi DB, khó đảo |
 
 Q7 (subtype), Q8 (tìm mua/thuê), Q10 (thước «Căn giá tốt» tạm) không chặn lát dọc — để sau lát.
+
+## 0.3 Trả lời F1–F6 + đính chính số liệu (23/10)
+
+### Đính chính: 93% tin S03 trong `sale_offers` là dữ liệu giả
+
+Khi đo cho F1 (DB local, SELECT): **1.020/1.102 tin S03 sinh từ snapshot `zalo-mock`** (bộ sinh tin giả của
+collector, `snapshot_id` dạng `hanoi__zalo-mock__2026-10-18…`, nhóm «Chung cư Hà Nội», «Môi giới Miền Bắc»,
+«BĐS Hà Nội» — 1.260 post trong `stg_zalo_posts`). Chỉ **82 tin S03 là thật** (từ hook OpenClaw, 367 post).
+
+Số trong §0–§2 có S03 phải đọc lại:
+
+| Chỗ | Số cũ | Số thật (bỏ mock) |
+|---|---|---|
+| §0, L09 «1.102/1.102 tin S03 không có loại» | 1.102 | **82 tin thật**, cũng 100% `unknown` — kết luận giữ, quy mô nhỏ hơn |
+| L05 «50,3%» | 819/1.628 post | Phần lớn mẫu là mock (tin mock viết đúng khuôn regex). Trên tin thật: **5/81 high (6%)**, 76 medium — tin nhóm dự án gần như không ghi phường |
+| L10 «155 tin S03 mang `bait_gap_pct`» | 155 | **153 là tin giả**, 2 là tin thật → «Căn giá tốt» S03 hôm nay gần như toàn tin giả |
+| L18 «940/1.102 tin S03 quá 3 ngày» | 940 | 2/81 tin thật — mock là lô một lần ngày 18/10 |
+| §0.2 E «10/1.102 tin nhắc dự án» | 10 | Đo trên tin thật: xem F1 bên dưới (nhóm dự án chiếm 87%) |
+| ROADMAP §2.5 «1.195 P1», «1.043 sellers» | — | Gồm tin và người bán giả |
+
+**L19 · Dữ liệu giả lẫn vào bảng canonical** — Nặng · N1, FRAMING «tin cậy» chiều 1 (có thật), phản mục tiêu
+«trình bày suy đoán như sự thật»
+- Snapshot `zalo-mock` đi qua importer → `stg_zalo_posts` → transform-zalo → `sale_offers` S03 → `bait_gap_pct`,
+  `sellers` (SĐT giả), Deals. Không cột nào đánh dấu dữ liệu thử.
+- `sync-cloud` FILL có `sale_offers` → **có thể tin giả đã lên Supabase / `/ops/deals` bản prod** — phiên này chỉ đọc DB
+  local nên chưa kiểm cloud; cần điều phối kiểm.
+- Cũng là gốc của số «parser F1 0,966»: bộ đo và dữ liệu cùng là mock.
+
+### F1 — Lát đầu: Vinhomes Ocean Park 1
+
+Dữ liệu thật hiện có (367 post hook Zalo, 18–23/10):
+
+| Nhóm | Post | Nội dung |
+|---|---|---|
+| Duy Ka Masteri | 179 | Phần lớn toà Ocean Park 1 (LD, PR, S, BE, Masteri Waterfront, Senique) |
+| CHUYỂN NHƯỢNG OCP1-F1 CĐT BÁN MỚI | 142 | Ocean Park 1 |
+| 6 nhóm khác (Grand Park N1, Smart City, Vin 1,2,3, Yeshomes…) | 46 | rải rác |
+
+**Đề xuất: lát đầu = một dự án, Vinhomes Ocean Park 1** — 321/367 post thật (87%) thuộc về nó, `asset_nodes` đã có
+node dự án. Thêm Grand Park / Smart City khi lượng tin đủ (hiện < 10 post mỗi nhóm).
+
+Ba điều đo được từ tin thật của lát, đổi cách làm:
+1. **Môi giới che một phần mã căn**: «LD2xx11_2N_64m2», «PR5 tầng trung», «S1 tầng trung» — có toà và trục căn,
+   **giấu tầng**. Gắn căn vì thế thường dừng ở **trục căn** (toà + trục, cùng DT + số PN), chưa tới căn. Đề xuất
+   thêm mức «gắn trục» trong B2 (gắn căn): trục là bản ghi gốc tạm cho đến khi biết tầng.
+2. **Số bị che**: 191/367 post (52%) có số dạng «36XX tỷ», «3.8x tỷ», «1750 thu về». Giá phải là **khoảng**, không
+   phải một số — đúng tinh thần sự thật 8 (không trắng đen). Từ vựng cần kiểu giá trị khoảng.
+3. **Nghĩa của giá**: 155/367 post ghi «thu về», «NET», «đã bao gồm 5%». Cần trường `price_basis` (giá chủ nhận ·
+   giá gồm phí) — không có thì so thước sai dù số đúng.
+
+Ghi chú: nhóm Zalo (S03) đang khai ở một sổ riêng (`zalo.group.toggle` trong `ops_audit`), nhóm FB/Chợ Tốt ở
+`source_groups` (7 dòng, 0 dòng S03). Đề xuất một sổ nhóm duy nhất, mỗi nhóm khai thêm **dự án nó chuyên** — đó là
+ngữ cảnh do người khai, mạnh hơn đoán từ tên nhóm, nhưng vẫn là suy luận về từng tin (tin trong nhóm OCP1 vẫn
+có thể rao dự án khác).
+
+### F2 — Danh mục từ nhiều nguồn và từ chính tin đăng
+
+Danh mục cũng là dữ liệu, nên cũng có bậc (sự thật 8). Mỗi dòng danh mục (toà, trục, căn) mang nguồn và bậc:
+
+| Bậc dòng danh mục | Từ đâu | Dùng để |
+|---|---|---|
+| **Xác minh** | Mặt bằng / bảng hàng chủ đầu tư, tài liệu chính thức | Gắn tin → B4 |
+| **Suy ra mạnh** | ≥ 3 môi giới **độc lập** (khác người đăng, khác nhóm) cùng mô tả một toà + trục với DT, PN khớp | Gắn tin → B2 «gắn trục»; ưu tiên tìm nguồn xác minh |
+| **Một lời khai** | 1 tin | Chỉ là ứng viên, không gắn |
+
+Việc thu (làn ZCode, Z1.2): nguồn công khai của CĐT cho Ocean Park 1 trước. Việc dựng từ tin (làn Claude, C1.5/C1.6):
+gom (toà, trục, DT, PN) từ phát biểu của các tin, đếm môi giới độc lập.
+
+### F3 — Ngưỡng tự áp: đề xuất
+
+Nguyên tắc: ngưỡng so với **cận dưới khoảng tin cậy 95% (Wilson)** của độ đúng trên tập test, không so với tỉ lệ
+thô — vì tập nhãn do đội tự gắn sẽ nhỏ, và 98/100 đúng chưa chứng minh được 95%.
+
+| Nhóm trường | Ví dụ | Sai thì sao | Ngưỡng tự áp (cận dưới) | Dưới ngưỡng |
+|---|---|---|---|---|
+| **A · định nhóm, định danh** | có phải tin rao, bán/thuê, loại, dự án, toà, gắn trục/căn | Tin vào sai nhóm so sánh hoặc sai căn → hỏng thước, hỏng gộp trùng, công khai sai | **≥ 0,95** | Thẻ duyệt; tin vẫn hiện ở B1 «chưa biết» |
+| **B · số** | giá (khoảng chứa giá thật), DT (±3%), PN, `price_basis` | Sai số của một tin; phát hiện được bằng ngoại lai | **≥ 0,90** | Hiện kèm «suy ra»; ngoại lai lên thẻ |
+| **C · mô tả** | hướng, view, nội thất, đường | Ít ảnh hưởng quyết định | **≥ 0,80** | Hiện kèm «suy ra», không thẻ |
+
+Cỡ tập test cần cho mỗi ô (cách đọc × trường × phân khúc), tính sẵn:
+- Đạt cận dưới 0,95: 100 nhãn chỉ được 0 lỗi; **150 nhãn được ≤ 2 lỗi**; 200 nhãn được ≤ 3 lỗi.
+- Đạt cận dưới 0,90: 100 nhãn được ≤ 4 lỗi; 150 nhãn được ≤ 8 lỗi.
+
+→ Lát Ocean Park 1 cần **~200 tin có nhãn** (đủ cho nhóm A) + ~100 cặp cho gộp trùng. Đo lại mỗi tuần; ô rơi
+dưới ngưỡng tự hạ về thẻ (bậc B3 → B2 của các căn liên quan).
+
+Ước công: hook hiện cho qua ~150 tin/ngày; khi Kev thành nhãn ước ~300 tin rao/ngày. Nếu 80% trường nhóm A tự áp,
+còn ~60 thẻ/ngày × ~30 giây ≈ **30 phút/ngày** — trong tầm đội; số này là mục tiêu của bậc năng lực N3.
+
+### F4 — Độ tươi: đề xuất
+
+Hiện trạng đo được: từ lúc đăng tới lúc vào `stg_zalo_posts` p50 **335 phút**, p95 **1.448 phút** (nạp lô 00:00),
+chưa tính transform đêm và cloud-sync 15′. Nút cổ chai: lô nạp đêm, rồi cloud-sync.
+
+| Giai đoạn | Mục tiêu (từ lúc đăng tới lúc hiện trên OneHub Invest) | Điều kiện |
+|---|---|---|
+| Lát đầu | **p50 ≤ 10 phút, p95 ≤ 30 phút** | Đường theo từng tin (C2.6): hook → stg → parser/luật → phân xử → sync; LLM 27B (~9–30 giây/tin) chạy sau, chỉ cho trường dưới ngưỡng, cập nhật lại khi xong |
+| Sau lát | p50 ≤ 3 phút, p95 ≤ 10 phút | Sync theo sự kiện thay vì 15′ |
+
+**Cửa sổ hiệu lực (B5 → B4)** — tạm: căn hộ bán 14 ngày, cho thuê 7 ngày kể từ bằng chứng cuối (tin đăng lại, tin
+«còn»). Chưa đủ dữ liệu để đo (tin thật mới 5 ngày); đo lại khoảng cách đăng lại sau 4 tuần rồi chỉnh.
+
+### F5 — Mạnh và đội gắn nhãn
+
+Vì nhiều người gắn: viết **hướng dẫn gắn nhãn** cho lát (ca khó: tầng bị che, giá khoảng, «thu về», tin nhiều căn);
+**20% tin gắn trùng hai người** để đo độ đồng thuận — dưới 0,9 thì sửa hướng dẫn trước khi tin vào số đo; màn gắn
+nhãn mù (không hiện giá trị máy).
+
+### F6 — Dọn tồn đọng: đề xuất
+
+Thứ tự đề xuất (mỗi bước ghi DB local, cần Mạnh đồng ý từng bước):
+
+| # | Việc | Phân tích | Đề xuất |
+|---|---|---|---|
+| 1 | **Thẻ 159, 161** (zombie) | Hai thẻ trỏ tin **giả** (`offer_d0a7…` «Hàng Trống 89m²», `offer_ad3c…` «Ngọc Thụy 51m²», đều mock) | Bác cả hai qua `/ops/review` kèm ghi chú «thẻ trên tin giả zalo-mock»; không chạy lại enrich |
+| 2 | **Dọn dữ liệu giả (L19)** | 1.020 tin S03 + 1.260 post stg + `bait_gap` 153 tin + người bán giả trong `sellers`; có thể đã lên cloud | (a) ZCode: importer bỏ qua snapshot `zalo-mock` (giữ nguyên file raw — bất biến). (b) Claude: xoá dòng stg có `snapshot_id` mock → lượt transform kế qua `reconcile_stale_offers` tự rút tin giả (có audit) → chạy lại bait gap + sellers. (c) Điều phối: kiểm và dọn bản cloud. **Làm trước mọi việc đo** — nếu không, tập nhãn và số nền nhiễm mock |
+| 3 | **639/644** (`land` sai, tin S05 thật) | Hàm 036 sẵn; hai tin chưa gắn căn nên không lan; sai đang hiện ở Deals | `enrich-revert --ids 639,644 --dry` rồi chạy thật, actor `hitl:manh`. 640/645 (LLM `house`) mở lại, lượt enrich kế gắn vào thẻ 160/162 cùng đề xuất WC + đường → Mạnh duyệt trên thẻ |
+| 4 | **Quyết định ghép căn đã mất** (`ops_audit` 4 → review 24) | Cặp thật: tin S05 «Lê Quang Định, 2 tầng 52m², ~7 tỷ» ↔ tin S06 60m², 8,5 tỷ. Nhãn `merged` hiện chưa có tác dụng (resolve không đọc) và có thể mất lần nữa (CASCADE còn đó) | Duyệt lại review 24 trên `/ops/review` (đường có audit). Chấp nhận có thể mất lại cho tới C2.1/C3.2; ghi ca này vào tập hồi quy |
+| 5 | Dòng audit của thẻ thử (`enrich:demo-cong2`, `enrich:t_vis_conflict`) | Audit là chỉ-thêm | Không xoá; từ nay thẻ thử ghi `env='test'` |
 
 ## 1. Bản đồ hiện trạng — mỗi điểm phân loại một dòng
 
@@ -446,6 +567,7 @@ nhưng đang lan · **Nhẹ** = nợ kỹ thuật.
 | L15 | Audit thủng | Vừa | N6 | Claude | không lưu căn cứ |
 | L16 | E2 bỏ phí đầu ra | Nhẹ | N7 | Claude | — |
 | L17 | Parser S03 chỉ phường HN | Vừa | N7 | Claude | chưa đo |
+| L19 | Dữ liệu giả `zalo-mock` lẫn vào canonical S03 (§0.3) | Nặng | N1, FRAMING «có thật» | cả hai | không đánh dấu dữ liệu thử |
 | L18 | Không mô hình thời gian / hiệu lực (§0.2 C) | Nặng | FRAMING «tin cậy» chiều 4, D4 | Claude | thiếu thành phần T5 |
 
 Ba gốc ở §0 cộng gốc taxonomy phủ 16/17 lỗi: **không lưu căn cứ/bậc căn cứ** (L01 L02 L04 L12

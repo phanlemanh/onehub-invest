@@ -83,6 +83,8 @@ zalo-import · 05:30 chotot (collect→import→transform→refresh→resolve) �
 15′ cloud-sync + ops-facts · 5′ zalo-watchdog · KeepAlive kev-gate.
 
 ### 2.5 Số liệu hôm nay
+> ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
+> sellers, bait gap dưới đây gồm cả tin giả. Xem `docs/architecture/classification-enrich-review.md` §0.3 (L19).
 1.195 P1 + 8.647 P2 offers · 8.270 properties (gộp 375 repost) ·
 ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 506 listings (493 ảnh, tên host thật) · G3 live 2 thị trường.
