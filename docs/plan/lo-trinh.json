@@ -153,7 +153,7 @@
     },
     {
       "ma": "PL10",
-      "cau_giao": "Collector thu danh mục toà · trục · mã căn của Vinhomes Ocean Park 1 từ nguồn công khai vào raw",
+      "cau_giao": "Collector thu danh mục toà · trục · mã căn của Vinhomes Ocean Park 1 vào raw, từ nguồn công khai hoặc nguồn cần đăng nhập đã được Mạnh duyệt sau khi kiểm điều khoản",
       "vai": "nen",
       "tieu_chi": 8,
       "vi_sao": "D1/F2: căn gốc căn hộ là dòng danh mục. Làn ZCode.",
@@ -164,7 +164,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "Z1.2"
-      ]
+      ],
+      "ghi_chu": "23/10 Mạnh chốt thêm một nguồn danh mục cần đăng nhập; ZCode kiểm ToS ở bước 0 (claudedp-2310-25) trước khi thu. Gọi nguồn bằng mã S0x khi cấp, không ghi tên thật (ADR-0007)."
     },
     {
       "ma": "PL11",
