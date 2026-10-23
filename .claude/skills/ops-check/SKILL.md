@@ -13,6 +13,11 @@ allowed-tools: Bash(node scripts/check-freshness.mjs) Bash(bash scripts/audit-al
    `airbnb_snapshots.collected_at` (S03/S05 lấy snapshot chứa bài của mã trong `stg_zalo_posts`, tách theo
    `agent_id`; S06 lấy snapshot chứa tin `stg_chotot_ads`) · S02 ≤ 35 ngày theo `airdna_markets.captured_at`
    (giờ tải). S04 không đo — địa giới đã thu xong. Định nghĩa: `scripts/lib/freshness.mjs`.
+   Trang `/ops` và `/ops/collections` dùng CÙNG định nghĩa từng ô nguồn × thành phố này — bản của app ở
+   `app/src/lib/freshness.ts`, giữ khớp từng hằng và câu truy vấn bằng `scripts/freshness-parity.test.mjs`.
+   Hai trang cùng hiện con số «x/y nguồn đạt SLO»: một nguồn đạt khi MỌI thành phố có dữ liệu của nó đạt,
+   `y` = nguồn active có SLO (S04 xong rồi và nguồn chưa khai SLO không đếm). CLI không in x/y — nó liệt
+   từng ô; ô nào CLI báo lỗi thì trên trang nguồn đó không đạt.
 2. **Audit toàn hệ thống** — `bash scripts/audit-all.sh` (thu thập, DB + cloud sync, Invest,
    Ops, public API). Tóm các dòng ❌ và ⚠️. Đọc ba mục dễ hiểu nhầm:
    - **Backup tuần**: chưa cài job, job lỗi, chưa đặt `BACKUP_DIR`, hay không có `db-*.sql.gz` trong

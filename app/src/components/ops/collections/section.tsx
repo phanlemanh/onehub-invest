@@ -35,6 +35,7 @@ export function StatCard({
   basis,
   children,
   action,
+  sloSummary,
 }: {
   icon: ReactNode
   title: string
@@ -45,9 +46,11 @@ export function StatCard({
   basis: string
   children?: ReactNode
   action: { label: string; href: string }
+  /** Giá trị `data-slo-summary` (AU6) — chỉ ô «Sức khoẻ nguồn» mang. */
+  sloSummary?: string
 }) {
   return (
-    <Frame spacing="default" className="h-full min-w-0">
+    <Frame spacing="default" className="h-full min-w-0" data-slo-summary={sloSummary}>
       <FramePanel className="flex flex-col gap-3">
         <div className="text-muted-foreground flex min-w-0 items-center gap-2 [&_svg:not([class*=size-])]:size-4">
           {icon}

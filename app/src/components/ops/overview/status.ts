@@ -12,5 +12,8 @@ export const FRESHNESS: Record<Freshness, { label: string; variant: BadgeProps["
 
 export const FRESHNESS_ORDER: Freshness[] = ["stale", "none", "fresh"]
 
-/** Tuổi chia SLO: >1 là quá hạn; null khi chưa có snapshot. */
-export const ageRatio = (r: CoverageRow) => (r.ageDays === null ? null : r.ageDays / r.sloDays)
+/** Tuổi chia SLO (theo giờ): >1 là quá hạn; null khi chưa có dữ liệu. */
+export const ageRatio = (r: CoverageRow) => (r.ageHours === null ? null : r.ageHours / r.sloHours)
+
+/** Ô nguồn × thị trường; mã chưa có dữ liệu không có thị trường. */
+export const where = (r: CoverageRow) => (r.city ? `${r.code} · ${r.city}` : r.code)
