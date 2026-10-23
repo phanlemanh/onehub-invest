@@ -103,10 +103,15 @@ done
 
 echo ""
 echo "─── E. PUBLIC APIs ───"
-CODE_OFFERS=$(curl -s -o /dev/null -w "%{http_code}" "$CLOUD/api/v1/offers?kind=sale&limit=5" 2>/dev/null)
 CODE_STATS=$(curl -s -o /dev/null -w "%{http_code}" "$CLOUD/api/v1/asset-stats?market=vn-hanoi" 2>/dev/null)
-[ "$CODE_OFFERS" = "200" ] && pass "GET /api/v1/offers → 200" || fail "GET /api/v1/offers → $CODE_OFFERS"
 [ "$CODE_STATS" = "200" ] && pass "GET /api/v1/asset-stats → 200" || fail "GET /api/v1/asset-stats → $CODE_STATS"
+# Tin rao + căn giá tốt đang tạm đóng (sổ bề mặt: ops) — khách phải 401, bearer phải 200.
+for ep in "offers?kind=sale&limit=5" "deals?limit=5"; do
+  CODE_ANON=$(curl -s -o /dev/null -w "%{http_code}" "$CLOUD/api/v1/$ep" 2>/dev/null)
+  CODE_TOK=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $CTOKEN" "$CLOUD/api/v1/$ep" 2>/dev/null)
+  [ "$CODE_ANON" = "401" ] && pass "GET /api/v1/$ep khách → 401 (tạm đóng)" || fail "GET /api/v1/$ep khách → $CODE_ANON (phải 401)"
+  [ "$CODE_TOK" = "200" ] && pass "GET /api/v1/$ep bearer → 200" || fail "GET /api/v1/$ep bearer → $CODE_TOK"
+done
 
 echo ""
 echo "─── F. INFRASTRUCTURE ───"
