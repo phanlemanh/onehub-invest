@@ -5,7 +5,7 @@ slug: lo-trinh-2310
 owner: phanlemanh@gmail.com
 risk_tier: T3      # .claude/settings.json nằm trong t3_paths
 surfaces: [config, docs]
-status: implemented
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-23
 ---
