@@ -4,7 +4,8 @@
 // Mỗi field còn trống của offer:
 //   E1 luật hợp lệ                         → direct
 //   LLM, E1 cùng giá trị (sau chuẩn hoá)   → corroborated by 'e1' (thay cho E1 direct)
-//   LLM, E1 khác giá trị                   → superseded (E1 thắng, tính xung đột)
+//   LLM, E1 khác giá trị                   → CẢ HAI review + conflict (người chọn, AC-7)
+//   field đang giữ (thẻ xung đột còn chờ)  → mọi đề xuất của field: review + conflict
 //   LLM block_raw khớp tên/alias building  → corroborated by 'asset_nodes:<slug>', value = tên chuẩn
 //   LLM không căn cứ                       → review
 // Confidence LLM KHÔNG BAO GIỜ là căn cứ. Field đã có giá trị → không đề xuất (fill-gap).
@@ -33,6 +34,8 @@ export type Routed = {
   source: "e1_rule" | "e2_llm";
   route: "direct" | "corroborated" | "review" | "superseded";
   corroboratedBy: string | null;
+  /** Field có hai giá trị E1/LLM trái nhau (hoặc đang giữ vì thẻ xung đột còn chờ). */
+  conflict?: true;
 };
 
 /** NFC + trim + gộp khoảng trắng. */
@@ -113,6 +116,8 @@ export function routeFields(input: {
   e1: Partial<Record<EnrichField, unknown>>;
   llm: Partial<Record<EnrichField, unknown>> | null;
   buildings: BuildingNode[];
+  /** Field đang có đề xuất queued trên thẻ xung đột — lượt này không áp gì cho chúng. */
+  held?: ReadonlySet<EnrichField>;
 }): Routed[] {
   const out: Routed[] = [];
   for (const field of ENRICH_FIELDS) {
@@ -128,6 +133,14 @@ export function routeFields(input: {
     const e1v = e1Node ? e1Node.name : e1Raw;
     const llmv = node ? node.name : llmRaw;
 
+    // Field đang xung đột chờ người: mọi giá trị mới vào thẻ, không áp — kể cả khi LLM lượt
+    // này vắng/lỗi hay đồng ý E1 (gap-probe F1 vòng nâng phạm vi).
+    if (input.held?.has(field)) {
+      if (e1v !== null) out.push({ field, value: e1v, source: "e1_rule", route: "review", corroboratedBy: null, conflict: true });
+      if (llmv !== null) out.push({ field, value: llmv, source: "e2_llm", route: "review", corroboratedBy: null, conflict: true });
+      continue;
+    }
+
     if (e1v !== null) {
       // E1 cùng giá trị → MỘT đề xuất LLM corroborated (by e1) được áp; dấu E1 nằm ở
       // corroborated_by. Sinh thêm E1 direct thì fill-gap sẽ biến đề xuất LLM thành
@@ -136,10 +149,14 @@ export function routeFields(input: {
         out.push({ field, value: llmv, source: "e2_llm", route: "corroborated", corroboratedBy: "e1" });
         continue;
       }
-      out.push({ field, value: e1v, source: "e1_rule", route: "direct", corroboratedBy: null });
+      // E1 trái LLM → KHÔNG áp bên nào, cả hai lên thẻ cho người chọn (AC-7). «E1 thắng» cũ
+      // để luật sai (chữ «đất» trong tên nhóm) ghi thẳng mà không ai thấy — sổ revisit d-9.
       if (llmv !== null) {
-        out.push({ field, value: llmv, source: "e2_llm", route: "superseded", corroboratedBy: null });
+        out.push({ field, value: e1v, source: "e1_rule", route: "review", corroboratedBy: null, conflict: true });
+        out.push({ field, value: llmv, source: "e2_llm", route: "review", corroboratedBy: null, conflict: true });
+        continue;
       }
+      out.push({ field, value: e1v, source: "e1_rule", route: "direct", corroboratedBy: null });
       continue;
     }
     if (llmv === null) continue;
@@ -160,7 +177,7 @@ export function routeFields(input: {
   return out;
 }
 
-/** Tổng kết lượt chạy — xungDot = số đề xuất LLM bị E1 thắng (superseded). */
+/** Tổng kết lượt chạy — xungDot = số field có giá trị E1/LLM trái nhau (đếm một lần mỗi field). */
 export function summarizeRun(routed: Routed[][]): {
   direct: number;
   corroborated: number;
@@ -169,10 +186,12 @@ export function summarizeRun(routed: Routed[][]): {
 } {
   const s = { direct: 0, corroborated: 0, review: 0, xungDot: 0 };
   for (const offer of routed) {
+    const conflictFields = new Set<EnrichField>();
     for (const r of offer) {
-      if (r.route === "superseded") s.xungDot++;
-      else s[r.route]++;
+      if (r.conflict) conflictFields.add(r.field);
+      if (r.route !== "superseded") s[r.route]++;
     }
+    s.xungDot += conflictFields.size;
   }
   return s;
 }

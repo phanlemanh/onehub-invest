@@ -159,28 +159,62 @@ test("AC-3 E1 trả mã thô toà", () => {
   );
 });
 
-test("AC-7 E1 thắng khi trái LLM", () => {
-  const input = { current: {}, llm: { property_type: "apartment" }, buildings: [] };
+test("AC-7 xung đột E1/LLM lên thẻ", () => {
+  // Ca thật 23/10: E1 «land» (chữ «đất» trong tên nhóm) trái LLM «house» (nhà 4 tầng).
+  const input = { current: {}, llm: { property_type: "house" }, buildings: [] };
 
-  const rs = routeFields({ ...input, e1: { property_type: "house" } });
+  const rs = routeFields({ ...input, e1: { property_type: "land" } });
   assert.deepEqual(
-    rs.map((r) => [r.source, r.value, r.route]),
+    rs.map((r) => [r.source, r.value, r.route, r.conflict]),
     [
-      ["e1_rule", "house", "direct"],
-      ["e2_llm", "apartment", "superseded"],
+      ["e1_rule", "land", "review", true],
+      ["e2_llm", "house", "review", true],
     ],
-    "AC-7: E1 phải direct, LLM phải superseded",
+    "AC-7: E1 không được áp khi trái LLM — cả hai lên thẻ, đánh dấu xung đột",
   );
-  assert.equal(summarizeRun([rs]).xungDot, 1, "AC-7: summarizeRun phải đếm 1 xung đột");
+  assert.ok(!rs.some((r) => r.route === "direct"), "AC-7: E1 không được áp khi trái LLM");
+  const sum = summarizeRun([rs]);
+  assert.equal(sum.xungDot, 1, "AC-7: summarizeRun phải đếm 1 field xung đột");
+  assert.equal(sum.review, 2, "AC-7: hai đề xuất chờ duyệt");
 
-  // Chiều đỏ cùng fixture: E1 vắng → LLM review, không superseded.
-  const noE1 = routeFields({ ...input, e1: {} });
+  // Đối chứng dương (a): E1 = LLM → một đề xuất LLM corroborated, không xung đột.
+  const same = routeFields({ ...input, e1: { property_type: "house" } });
   assert.deepEqual(
-    noE1.map((r) => [r.source, r.route]),
-    [["e2_llm", "review"]],
-    "AC-7: E1 vắng thì LLM phải review",
+    same.map((r) => [r.source, r.route, r.corroboratedBy, r.conflict]),
+    [["e2_llm", "corroborated", "e1", undefined]],
+    "AC-7: E1 cùng LLM thì áp như AC-3",
   );
+  assert.equal(summarizeRun([same]).xungDot, 0);
+
+  // Đối chứng dương (b): LLM im lặng cho field → E1 áp thẳng như AC-2.
+  const llmSilent = routeFields({ current: {}, e1: { property_type: "land" }, llm: { bedrooms: 3 }, buildings: [] });
+  assert.deepEqual(
+    llmSilent.filter((r) => r.field === "property_type").map((r) => [r.source, r.route, r.conflict]),
+    [["e1_rule", "direct", undefined]],
+    "AC-7: LLM không có giá trị thì E1 áp thẳng",
+  );
+
+  // E1 vắng → LLM review thường (không xung đột).
+  const noE1 = routeFields({ ...input, e1: {} });
+  assert.deepEqual(noE1.map((r) => [r.source, r.route, r.conflict]), [["e2_llm", "review", undefined]]);
   assert.equal(summarizeRun([noE1]).xungDot, 0, "AC-7: không E1 thì không xung đột");
+});
+
+test("AC-7 field đang xung đột: lượt sau không áp gì", () => {
+  const held = new Set(["property_type"] as const);
+  // LLM lượt sau vắng → E1 một mình vẫn KHÔNG direct.
+  const silent = routeFields({ current: {}, e1: { property_type: "land" }, llm: null, buildings: [], held });
+  assert.deepEqual(
+    silent.map((r) => [r.source, r.route, r.conflict]),
+    [["e1_rule", "review", true]],
+    "AC-7 lượt sau áp E1 vượt thẻ",
+  );
+  // LLM lượt sau đồng ý E1 → vẫn vào thẻ, không corroborated.
+  const agree = routeFields({ current: {}, e1: { property_type: "land" }, llm: { property_type: "land" }, buildings: [], held });
+  assert.ok(agree.every((r) => r.route === "review" && r.conflict), "AC-7 lượt sau áp E1 vượt thẻ");
+  // Field khác không bị giữ → đi như thường.
+  const other = routeFields({ current: {}, e1: {}, llm: { bedrooms: 3 }, buildings: [], held });
+  assert.deepEqual(other.map((r) => [r.field, r.route, r.conflict]), [["bedrooms", "review", undefined]]);
 });
 
 // ── fill-gap ────────────────────────────────────────────────────────────────
@@ -207,7 +241,7 @@ test("fill-gap", () => {
 test("summarizeRun đếm theo route qua nhiều offer", () => {
   const a = routeFields({ current: {}, e1: { bedrooms: 2 }, llm: { bedrooms: 2, street_raw: "Xuân La" }, buildings: [] });
   const b = routeFields({ current: {}, e1: { property_type: "house" }, llm: { property_type: "land" }, buildings: [] });
-  assert.deepEqual(summarizeRun([a, b]), { direct: 1, corroborated: 1, review: 1, xungDot: 1 });
+  assert.deepEqual(summarizeRun([a, b]), { direct: 0, corroborated: 1, review: 3, xungDot: 1 });
 });
 
 // ── fixture thật ────────────────────────────────────────────────────────────
