@@ -5,7 +5,7 @@ slug: cloud-sync-atomic
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/sync-cloud.mjs (dữ liệu rời máy, PII tầng A)
 surfaces: [pipeline, config, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-23-cloud-sync-atomic-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
