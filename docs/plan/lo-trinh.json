@@ -80,8 +80,10 @@
       "nhom": "du-lieu-that",
       "dot": "phan-loai-2310",
       "phu": [
-        "C1.1"
-      ]
+        "C1.1",
+        "KV3"
+      ],
+      "ghi_chu": "KV3 (nghiệm thu PL4, 23/10): hết lọc Kev thì raw/stg Zalo dự kiến phình ×3 — thêm tiêu chí đo dung lượng và thời gian chạy transform-zalo + sync cloud trên một ngày v3 trước khi bật."
     },
     {
       "ma": "PL6",
@@ -540,6 +542,41 @@
       "phu": [
         "CM.4"
       ]
+    },
+    {
+      "ma": "PL32",
+      "cau_giao": "backfill-zalo-media xử lý snapshot schemaVersion 3, và phép kiểm --check đỏ khi snapshot v3 còn thiếu ảnh",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Nghiệm thu PL4/ZC1: pipeline/backfill-zalo-media.mjs dòng 50 chỉ xét schemaVersion === 2 — snapshot v3 bị bỏ qua, zalo_media_backfill --check báo xanh giả.",
+      "hang": "T2",
+      "slug": "backfill-zalo-media-v3",
+      "bat_khi": "Cấy một snapshot v3 có ảnh chưa tải: --check thoát khác 0; chạy backfill rồi --check: thoát 0 và media_files có dòng của snapshot đó",
+      "nhom": "du-lieu-that",
+      "dot": "bo-sung-2310",
+      "phu": [
+        "KV1"
+      ],
+      "ghi_chu": "Phải merge trước hoặc cùng lúc triển khai hook Kev vào ~/.openclaw (việc vận hành sau PL4, BOI-CANH §5)."
+    },
+    {
+      "ma": "PL33",
+      "cau_giao": "Phễu «skip» của cổng Kev trên audit-all và trang Ops đếm theo meta.kev.p của tin, không theo dòng log của hook",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Nghiệm thu PL4: hook thôi ghi dòng «skip p=», nên GATE_SKIP ở scripts/audit-all.sh (grep log) và funnel trên trang Ops rơi về 0 giả.",
+      "hang": "T2",
+      "slug": "pheu-kev-theo-meta",
+      "dung_tren": [
+        "PL4"
+      ],
+      "bat_khi": "Một ngày có tin p dưới ngưỡng: số skip trên audit-all và trang Ops bằng số tin có meta.kev.p < threshold trong raw/stg; xoá log hook: số không đổi",
+      "nhom": "giam-sat",
+      "dot": "bo-sung-2310",
+      "phu": [
+        "KV2"
+      ],
+      "ghi_chu": "Chung scripts/audit-all.sh với AU5 (dãy P3 đợt dot0-cam-mau) — mở sau khi AU5 merge. Đọc meta.kev cần cột kev_* ở stg (PL5)."
     },
     {
       "ma": "AU1",
