@@ -1,39 +1,4 @@
 {
-  "feature_plain": "Công duyệt bổ sung dữ liệu tin rao không còn mất mỗi đêm nạp lại; hai tin nhà phố bị gán nhầm «đất» có đường hoàn tác có ghi vết; luật tự suy loại BĐS thôi lấy chữ «đất» trong tên nhóm.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ giữ nguyên mọi đề xuất, thẻ duyệt và giá trị đã bổ sung của tin khi dữ liệu Zalo/Facebook được nạp lại."},
-    {"id": "AC-2", "p": "Sẽ chuyển đề xuất và thẻ duyệt sang tin mới khi người đăng sửa tin (giá đổi), và tự điền lại giá trị đã duyệt cho tin mới."},
-    {"id": "AC-3", "p": "Sẽ giữ quyết định của người (đã duyệt / đã bác) khi tin mới tình cờ có cùng đề xuất đang chờ."},
-    {"id": "AC-4", "p": "Sẽ xoá có ghi vết đề xuất của tin biến mất hẳn, đủ để khôi phục khi tin quay lại (theo Hỏi-1)."},
-    {"id": "AC-6", "p": "Sẽ cho người hoàn tác một giá trị đã áp: trả ô về trống, ghi vết, và đưa giá trị LLM từng bị lấn lên thẻ duyệt."},
-    {"id": "AC-9", "p": "Sẽ vẫn nhận ra tin đất nền thật («bán lô đất», «đất thổ cư») từ chính nội dung tin, kể cả khi tin nằm trong nhóm chung cư."}
-  ],
-  "wont_do": [
-    {"id": "AC-5", "p": "Chặn mọi đường xoá tin còn đề xuất mà chưa đối soát — lệnh xoá thẳng sẽ báo lỗi thay vì lặng lẽ xoá công duyệt."},
-    {"id": "AC-7", "p": "Sẽ KHÔNG ghi gì khi chạy thử hoàn tác, và luật tự động sẽ KHÔNG đẩy lại giá trị người đã hoàn tác."},
-    {"id": "AC-8", "p": "Sẽ KHÔNG suy «đất» chỉ vì tên nhóm có chữ «NHÀ ĐẤT» — hai tin nhà phố thật lên thẻ duyệt thay vì bị gán thẳng."},
-    {"id": "AC-10", "p": "Sẽ KHÔNG xoá hay nhân đôi dữ liệu khi hai bản nâng cấp cơ sở dữ liệu chạy lại lần hai."},
-    {"id": "OOS-1", "p": "Ghép căn và quyết định ghép căn của tin biến mất hẳn vẫn bị xoá theo — việc riêng nếu cần."},
-    {"id": "OOS-2", "p": "Không đổi cách đặt mã tin rao."},
-    {"id": "OOS-3", "p": "Chưa chạy hoàn tác hai tin sai trong vòng này — chạy sau khi gộp, khi anh đồng ý (Hỏi-2)."},
-    {"id": "OOS-4", "p": "Không tự áp bản nâng cấp cơ sở dữ liệu — phiên điều phối liên làn làm sau khi gộp."},
-    {"id": "OOS-5", "p": "Chưa có nút hoàn tác trên trang duyệt; chưa thêm luật mới nhận «nhà nhiều tầng»."}
-  ],
-  "scope_plain": "Những việc dưới đây cố ý để ngoài vòng này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Mọi số phận của một tin khi nạp lại đã có tiêu chí: giữ nguyên (AC-1), sửa tin (AC-2), trùng đề xuất (AC-3), biến mất hẳn (AC-4), bị xoá thẳng (AC-5)."},
-    {"i": 1, "p": "Mọi trạng thái đề xuất (chờ, đã áp, đã bác, bị lấn, bỏ qua, đã hoàn tác) đều đi qua đối soát mà giữ nguyên."},
-    {"i": 2, "p": "Hoàn tác phủ đủ: áp còn nguyên, đã bị sửa, chưa áp, máy tự gọi, gọi lại, lan sang căn, mở lại giá trị bị lấn (AC-6, AC-7)."},
-    {"i": 3, "p": "Luật suy loại BĐS phủ chỗ khớp (tin hay tên nhóm) × loại đất hay loại khác × có dấu nhà nhiều tầng hay không (AC-8, AC-9)."},
-    {"i": 4, "p": "10 ô cốt lõi thành 10 tiêu chí; việc để sau ở thiết kế §3."},
-    {"i": 5, "p": "Giả định: tin sửa là nguồn chính của tin «có tin kế»; tin biến mất hẳn chỉ khi bộ tách tin đổi hoặc tin rớt ngưỡng."},
-    {"i": 6, "p": "Giả định: mỗi lượt nạp đọc toàn bộ tin của nguồn, nên tin vắng mặt là tin cũ thật."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Tự điền lại giá trị đã duyệt cho tin đã sửa (giá, diện tích có thể khác) là việc người chốt chứ không phải máy — đã chuyển thành Hỏi-3, thêm ca tin tách làm hai."},
-    {"i": 1, "p": "Cách siết luật «đất» trong nội dung tin là đánh đổi bỏ sót / gán nhầm chưa ai duyệt — đã đo trên 735 tin thật và chuyển thành Hỏi-4."},
-    {"i": 2, "p": "Hoàn tác chưa có bảng «mỗi lần ghi có một lần ghi ngược» — đã thêm bảng 5 trường × 2 bảng dữ liệu và kiểm từng ô."},
-    {"i": 3, "p": "«Khôi phục được» sau khi xoá tin biến mất chưa được thử thật — đã thêm phép thử khôi phục khi tin quay lại."},
-    {"i": 4, "p": "Lệnh hoàn tác thật (không chạy thử) chưa được kiểm — đã thêm ca chạy thật trong giao dịch huỷ được, và chiều đỏ thật."}
-  ]
+  "feature_plain": "Công duyệt bổ sung dữ liệu tin rao không còn mất mỗi đêm nạp lại; có lệnh hoàn tác giá trị đã áp (chỉ người, có ghi vết); luật tự suy loại BĐS thôi lấy chữ «đất» trong tên nhóm.",
+  "scope_plain": "Những việc cố ý để ngoài vòng này (đã chốt ở Cổng Phạm vi):"
 }
