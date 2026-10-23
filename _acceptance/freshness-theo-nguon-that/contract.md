@@ -5,7 +5,7 @@ slug: freshness-theo-nguon-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-freshness-theo-nguon-that-design.md
 lo_trinh_ma: AU4
 approved_by: Mạnh
@@ -64,3 +64,10 @@ Bỏ quét hình thái — xem dòng `bỏ coverage-scan` trong sổ. Không gia
 
 - Phép đo không đụng bảng thật của DB chung: hàng mẫu nằm trong schema tạm riêng của lượt chạy (giao dịch `ROLLBACK` cho ca module; schema `freshness_test_<pid>_<n>` đã commit cho ca CLI, `DROP SCHEMA … CASCADE` ở cuối ca).
 - Cho tới AU6, `/ops` (app) và CLI giữ hai bảng SLO khác nhau (app: S01 36 · S02 36 · S03 2 giờ) — AU6 nối app vào module này.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: gõ `--schema` mà quên giá trị thì lệnh lặng lẽ đo dữ liệu thật thay vì báo lỗi (chỉ khi chạy tay).
+  - Ngoài-2: chạy kiểm vận hành với `--json` sẽ bật hỏi quyền thêm một lần.
+  - Ngoài-4: trùng Ngoài-1 — `--schema` thiếu giá trị bị bỏ qua im lặng.
+  - Ngoài-5: phép đo chưa bắt được trường hợp S05 đang chạy làm S03 trông tươi giả (mã hiện tại vẫn tách đúng).
+  - Ngoài-6: vài tiêu chí chỉ có một mốc đo — thiếu ô S03 quá hạn và chiều quá hạn của AC-5/AC-6.
+- Ngoài-3 (S03/S05/S06 đo giờ nạp, chưa đo giờ thu) — Mạnh chọn mở hợp đồng mới ở Cổng Bằng chứng 23/10.
