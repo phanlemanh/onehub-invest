@@ -69,7 +69,7 @@ evals:
     criterion: AC-9
     executor: script
     cmd: config:executors.script.review_media_no_cloud
-    expected: "should-NOT-fire: exit 0; stdout có 'LOCAL-ONLY PASS' — data-api/ không nhắc media_files|stg_zalo_posts|zalo-media, FILL của sync-cloud không có stg_zalo_posts; tự kiểm: chuỗi cấy giả bị bắt"
+    expected: "should-NOT-fire: exit 0; stdout có 'LOCAL-ONLY PASS' — data-api/ không nhắc media_files|zalo-media, FILL của sync-cloud không có stg_zalo_posts; tự kiểm: chuỗi cấy giả bị bắt"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E11

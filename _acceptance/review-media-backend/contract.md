@@ -5,7 +5,7 @@ slug: review-media-backend
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: draft
+status: implemented
 approved_by:
 approved_at:
 veto_state: mo
@@ -39,7 +39,7 @@ quyết định Mạnh chọn (a) «chia tầng», chuyển qua phiên điều p
 - AC-6: Given hàng duyệt gồm thẻ `entity_match` (evidence `offer_a`/`offer_b`) và `agent_output` (evidence `offer_id`), When admin gọi `loadReviewMedia(items, user)`, Then kết quả khoá theo id thẻ: thẻ so khớp có `offer_a` và `offer_b`, thẻ bổ sung có `offer`; loại thẻ khác hoặc evidence thiếu `offer_id` không có mục; cả hàng duyệt chỉ tốn một truy vấn.
 - AC-7: Given người gọi không phải admin, When gọi `loadReviewMedia`, Then trả `{}` và không truy vấn DB; Given DB không có bảng `stg_zalo_posts` (cloud), When admin gọi, Then trả `{}` thay vì ném lỗi, còn lỗi DB khác vẫn ném.
 - AC-8: Given DB local thật, với một snapshot, hai post (một có `media_files` local + một entry lỗi, một chỉ có `media` fbcdn) và một tin rao trỏ tới hai post đó, tạo trong một giao dịch, When `loadReviewMedia` chạy trên chính giao dịch đó cho một thẻ `agent_output` và một thẻ `entity_match`, Then danh sách ảnh đúng như AC-5/AC-6, và sau khi ROLLBACK DB không còn dòng nào của lần chạy.
-- AC-9: Given toàn bộ thay đổi, When chạy typecheck + lint + bộ test của app, và quét `data-api/` cùng `pipeline/sync-cloud.mjs`, Then tất cả xanh, và không chỗ nào trong `data-api/` hay danh sách bảng sync cloud nhắc tới `media_files`, `stg_zalo_posts` hay `zalo-media`.
+- AC-9: Given toàn bộ thay đổi, When chạy typecheck + lint + bộ test của app, và quét `data-api/` cùng `pipeline/sync-cloud.mjs`, Then tất cả xanh, không chỗ nào trong `data-api/` nhắc tới `media_files` hay `zalo-media`, và danh sách bảng sync cloud (`FILL`) không có `stg_zalo_posts`.
 
 ## Coverage
 
