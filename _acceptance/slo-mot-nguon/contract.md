@@ -5,7 +5,7 @@ slug: slo-mot-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-23-slo-mot-nguon-design.md
 lo_trinh_ma: AU6
 approved_by: Mạnh
