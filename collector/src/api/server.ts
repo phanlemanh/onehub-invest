@@ -21,6 +21,8 @@ import type { RawItem } from "../core/types.js";
  */
 
 export type AgentMediaFact = { path?: string | null; url?: string | null; type?: string | null };
+/** Kev-nhãn (claudedp-2310-11): điểm gate đi CÙNG tin — p=null khi gate down. */
+export type AgentKevFact = { p: number | null; model: string; threshold: number; at: string };
 export type AgentMessage = {
   id?: string;
   text: string;
@@ -30,6 +32,7 @@ export type AgentMessage = {
   senderId?: string | null;
   conversationId?: string | null;
   media?: AgentMediaFact[];
+  kev?: AgentKevFact | null;
 };
 
 export type AgentReportBody = {
@@ -135,7 +138,15 @@ export async function createAgentServer(opts: AgentServerOptions) {
           conversationId: m.conversationId ?? null,
           media: m.media ?? null,
         },
-        meta: { city, agent: b.agent_id, group: b.group, ts: m.ts },
+        meta: {
+          city,
+          agent: b.agent_id,
+          group: b.group,
+          ts: m.ts,
+          // Kev-nhãn: điểm gate là DỮ LIỆU đi cùng tin (p=null = gate down),
+          // quyết định dùng p ở đâu nằm ở transform — không lọc ở collector.
+          ...(m.kev ? { kev: m.kev } : {}),
+        },
       });
       accepted++;
     }
