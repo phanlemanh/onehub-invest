@@ -328,7 +328,7 @@ function LocalAccounts() {
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
         title="Gỡ tài khoản Zalo?"
-        description={`Gỡ "${removing ?? ""}": session Zalo bị đăng xuất và cấu hình bị xoá (tệp .bak vẫn giữ để hoàn nguyên).`}
+        description={<>Gỡ «<span data-tier-a>{removing ?? ""}</span>»: session Zalo bị đăng xuất và cấu hình bị xoá (tệp .bak vẫn giữ để hoàn nguyên).</>}
         confirmLabel="Gỡ tài khoản"
         onConfirm={() => removing && removeAccount(removing)}
       />

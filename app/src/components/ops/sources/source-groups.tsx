@@ -101,7 +101,7 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
         header: "Nhóm",
         cell: ({ row }) => (
           <span data-tier-a className="flex min-w-0 flex-col">
-            <span className="truncate font-medium">{row.original.name}</span>
+            <span id={`nhom-${row.original.id}`} className="truncate font-medium">{row.original.name}</span>
             <span className="text-muted-foreground truncate text-xs">{row.original.group_key}</span>
           </span>
         ),
@@ -114,8 +114,8 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
         header: "",
         cell: ({ row }) => (
           <span className="flex items-center justify-end gap-2">
-            <Switch size="sm" checked={row.original.enabled} onCheckedChange={() => toggle(row.original)} aria-label={`Bật/tắt thu nhóm ${row.original.name}`} />
-            <Button size="icon-sm" variant="ghost" aria-label={`Xoá nhóm ${row.original.name}`} onClick={() => setDeleting(row.original)}>
+            <Switch size="sm" checked={row.original.enabled} onCheckedChange={() => toggle(row.original)} aria-label="Bật/tắt thu nhóm" aria-describedby={`nhom-${row.original.id}`} />
+            <Button size="icon-sm" variant="ghost" aria-label="Xoá nhóm" aria-describedby={`nhom-${row.original.id}`} onClick={() => setDeleting(row.original)}>
               <Trash2Icon aria-hidden="true" />
             </Button>
           </span>
@@ -162,9 +162,9 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
         description={
           deleting
             ? deleting.fb_posts > 0
-              ? `Xoá "${deleting.name}" và ${fmtInt(deleting.fb_posts)} bài dữ liệu của nó. Nhóm khác không bị đụng.`
-              : `Xoá "${deleting.name}" khỏi danh sách thu.`
-            : ""
+              ? <>Xoá «<span data-tier-a>{deleting.name}</span>» và {fmtInt(deleting.fb_posts)} bài dữ liệu của nó. Nhóm khác không bị đụng.</>
+              : <>Xoá «<span data-tier-a>{deleting.name}</span>» khỏi danh sách thu.</>
+            : null
         }
         confirmLabel="Xoá nhóm"
         pending={pending}

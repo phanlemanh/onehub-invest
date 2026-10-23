@@ -3,6 +3,7 @@
 // Theo mẫu @reui/c-alert-dialog-5 (Destructive Delete): biểu tượng thùng rác, tiêu đề
 // câu hỏi, câu hậu quả, Huỷ (ghost) + nút phá huỷ. Base UI: AlertDialogAction không
 // tự đóng — đóng khi việc xong.
+import type { ReactNode } from "react"
 import { Trash2Icon } from "lucide-react"
 
 import {
@@ -29,7 +30,8 @@ export function ConfirmDelete({
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  description: string
+  /** Câu hậu quả; tên tầng A bên trong phải bọc `data-tier-a` (ảnh chụp tự che). */
+  description: ReactNode
   confirmLabel: string
   pending?: boolean
   onConfirm: () => void
