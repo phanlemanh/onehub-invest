@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: fa63379b67010ba5c196448a7d0a7264c66c03bc
+verified_commit: a7a5b5f29fe5f6027f6bfd3d7c283b1ba89060b8
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -177,3 +177,7 @@ none — every multi-run eval is uniform (không eval nào khai runs > 1)
 ## Iterations
 
 Round 1: E1–E8 đều đạt expected trên fa63379; không sửa code.
+
+### Re-pin lần 1 — 2026-10-23, do gộp origin/main sau chữ ký (xung đột PRODUCT-MAP.md); node_modules mượn symlink từ checkout chính (lock giống hệt) + next typegen
+run_id: repin-20261023T050942Z-51569
+sha: a7a5b5f29fe5f6027f6bfd3d7c283b1ba89060b8 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
