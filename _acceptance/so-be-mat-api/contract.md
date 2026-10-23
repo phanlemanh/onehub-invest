@@ -5,7 +5,7 @@ slug: so-be-mat-api
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-23-so-be-mat-api-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23T12:10:00Z
