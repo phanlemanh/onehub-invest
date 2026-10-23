@@ -10,6 +10,7 @@ import { join, relative } from "node:path";
 
 import { TEST_MARKERS, scanStgWriters, testMarker } from "../lib/test-posts.mjs";
 import { scanDeleteAll } from "../lib/write-offers.mjs";
+import { refreshBaitGap } from "../refresh-bait-gap.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
 import { runTransformZalo } from "../transform-zalo.mjs";
 
@@ -263,4 +264,32 @@ test("AC-4 không câu DELETE FROM sale_offers mới", () => {
   const hit = [...new Set(scanDeleteAll(files).map((h) => h.split(":")[0]))].sort();
   assert.deepEqual(hit, ["pipeline/lib/write-offers.mjs"], "AC-4 có câu DELETE FROM sale_offers ngoài đối soát");
   assert.deepEqual(scanDeleteAll([{ path: "mau.mjs", text: "x\n  await c.query(\"DELETE FROM sale_offers WHERE source = 'S03'\");" }]), ["mau.mjs:2"]);
+});
+
+test("AC-6 bait gap tính lại", { timeout: 300_000 }, async () => {
+  await withTx(async (c) => {
+    const ward = (await c.query(`SELECT 1 FROM v_ruler_p2_area WHERE area_id = 'vn-hanoi-nghia-do'`)).rowCount;
+    assert.equal(ward, 1, "AC-6 fixture: phường Nghĩa Đô không còn thước P2 — đổi phường fixture");
+    const pReal = await insertPost(c, { post_id: pid("gap_real"), text: saleText("61.9", "0912 000 777") });
+    const pTest = await insertPost(c, { post_id: pid("gap_test"), snapshot_id: MOCK_SNAP, agent_id: null, text: saleText("70.1", "0912 000 888") });
+    await runTransformZalo(c);
+    await refreshBaitGap(c);
+    const [real] = await offersWith(c, pReal);
+    assert.equal(real.area_id, "vn-hanoi-nghia-do");
+    assert.notEqual(real.bait_gap_pct, null, "AC-6 tin thật mất bait gap");
+    assert.equal((await offersWith(c, pTest)).length, 0, `AC-6 bait gap trên tin thử: ${pTest}`);
+    // Không offer S03 nào giao với tập post thử của stg mang bait gap.
+    const { rows } = await c.query(`SELECT post_id, snapshot_id, agent_id, group_name FROM stg_zalo_posts`);
+    const testIds = rows.filter((r) => testMarker(r)).map((r) => r.post_id);
+    const leaked = (await c.query(
+      `SELECT offer_id FROM sale_offers WHERE post_ids && $1::text[] AND bait_gap_pct IS NOT NULL`, [testIds],
+    )).rows.map((r) => r.offer_id);
+    assert.deepEqual(leaked, [], `AC-6 bait gap trên tin thử: ${leaked[0]}`);
+    // Đối chứng cùng fixture: bỏ dấu của p_test → offer của nó có bait gap.
+    await c.query(`UPDATE stg_zalo_posts SET snapshot_id = $2, agent_id = 'openclaw-hook' WHERE post_id = $1`, [pTest, AGENT_SNAP]);
+    await runTransformZalo(c);
+    await refreshBaitGap(c);
+    const [ctrl] = await offersWith(c, pTest);
+    assert.notEqual(ctrl?.bait_gap_pct ?? null, null, "AC-6 đối chứng: tin cùng loại phải có bait gap");
+  });
 });
