@@ -109,6 +109,7 @@ executors:
     supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
     supabase_lock_local: "bash scripts/check-supabase-lock.sh local"
     supabase_lock_sim: "bash scripts/check-supabase-lock.sh sim"
+    test_data_residue: "cd pipeline && node scripts/test-data-residue.mjs --simulate"   # canonical-khong-tin-gia AC-8 — DB local :5433, mọi ghi trong giao dịch rồi ROLLBACK
     # db-tu-khoi-dong (AU7) — restart policy của DB local nằm trong compose; restart dùng daemon dind cách ly, không chạm :5433
     db_autostart_static: "bash scripts/check-db-autostart.sh static"
     db_autostart_mutation: "bash scripts/check-db-autostart.sh mutation"
