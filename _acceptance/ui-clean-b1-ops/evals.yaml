@@ -97,7 +97,7 @@ evals:
     layer: ui-observed
     cmd: config:dev_server.start
     steps:
-      - "Trình duyệt: ego-browser (CLI `ego-browser nodejs`, đọc `ego-browser skill` trước). App B1 chạy ở http://localhost:3457 (cổng 3456 bận). Phiên Ops: task space 7 đã đăng nhập ops-test@local.test (tài khoản thử chỉ ở DB local); hết phiên thì đăng nhập lại tại /login bằng tệp .claude/ops-test-account.json — đọc tệp TRONG script ego, KHÔNG in mật khẩu"
+      - "Trình duyệt: ego-browser (CLI `ego-browser nodejs`, đọc `ego-browser skill` trước). App B1 chạy ở http://localhost:3457 (cổng 3456 bận). Phiên Ops: tạo task space RIÊNG cho eval này (cùng hồ sơ trình duyệt ego lite nên có sẵn phiên ops-test@local.test, task space 7 đã đăng nhập) (tài khoản thử chỉ ở DB local); hết phiên thì đăng nhập lại tại /login bằng tệp .claude/ops-test-account.json — đọc tệp TRONG script ego, KHÔNG in mật khẩu"
       - "Danh sách tên tầng A: `node scripts/ui-standards/tier-a-names.mjs` (ghi tệp 600, không in tên). Trước MỖI lần chụp: page.evaluate(window.__TIER_A_NAMES = <mảng từ tệp>; + nội dung scripts/ui-standards/mask-tier-a.js) → leaked phải rỗng, ghi masked: <số> cho frame đó"
       - "Mở /ops/sources (1440, sáng). Bấm nút 'Xoá nhóm …' (biểu tượng thùng rác) ở dòng nhóm thu đầu tiên → AlertDialog hiện tiêu đề 'Xoá nhóm thu?' và câu hậu quả → chụp evidence/E12-step1.png"
       - "Bấm 'Huỷ' → hộp đóng, số dòng nhóm thu không đổi, không có POST /api/v1/ops/source-groups trong lúc thao tác (bật page.cdp Network.enable và đếm request) → chụp evidence/E12-step2.png. TUYỆT ĐỐI KHÔNG bấm 'Xoá nhóm'"
@@ -111,7 +111,7 @@ evals:
     layer: ui-observed
     cmd: config:dev_server.start
     steps:
-      - "Trình duyệt: ego-browser (CLI `ego-browser nodejs`, đọc `ego-browser skill` trước). App B1 chạy ở http://localhost:3457 (cổng 3456 bận). Phiên Ops: task space 7 đã đăng nhập ops-test@local.test (tài khoản thử chỉ ở DB local); hết phiên thì đăng nhập lại tại /login bằng tệp .claude/ops-test-account.json — đọc tệp TRONG script ego, KHÔNG in mật khẩu"
+      - "Trình duyệt: ego-browser (CLI `ego-browser nodejs`, đọc `ego-browser skill` trước). App B1 chạy ở http://localhost:3457 (cổng 3456 bận). Phiên Ops: tạo task space RIÊNG cho eval này (cùng hồ sơ trình duyệt ego lite nên có sẵn phiên ops-test@local.test, task space 7 đã đăng nhập) (tài khoản thử chỉ ở DB local); hết phiên thì đăng nhập lại tại /login bằng tệp .claude/ops-test-account.json — đọc tệp TRONG script ego, KHÔNG in mật khẩu"
       - "Danh sách tên tầng A: `node scripts/ui-standards/tier-a-names.mjs` (ghi tệp 600, không in tên). Trước MỖI lần chụp: page.evaluate(window.__TIER_A_NAMES = <mảng từ tệp>; + nội dung scripts/ui-standards/mask-tier-a.js) → leaked phải rỗng, ghi masked: <số> cho frame đó"
       - "Với mỗi chế độ (sáng 1440×900 · tối 1440×900 · sáng 390×844, đặt bằng page.cdp Emulation.setDeviceMetricsOverride + Emulation.setEmulatedMedia prefers-color-scheme) và mỗi trang /ops, /ops/collections, /ops/quality, /ops/sources, /ops/design: mở trang, chờ tải, che tầng A, đo document.querySelectorAll('h1').length === 1 và documentElement.scrollWidth <= innerWidth, chụp evidence/E13-<trang>-<chế độ>.png (thân trang cuộn trong vùng riêng của shell — ảnh là khung nhìn)"
       - "Ở 1440: thanh bên Ops thấy đủ 7 mục nav (đọc snapshot); ở 390: thanh bên thu thành nút menu. Mở thêm http://localhost:3457/vn (1440, sáng) → vẫn top nav cũ → chụp evidence/E13-invest.png. Xong gọi Emulation.clearDeviceMetricsOverride"
@@ -124,7 +124,7 @@ evals:
     layer: ui-observed
     cmd: config:dev_server.start
     steps:
-      - "Trình duyệt: ego-browser (CLI `ego-browser nodejs`, đọc `ego-browser skill` trước). App B1 chạy ở http://localhost:3457 (cổng 3456 bận). Phiên Ops: task space 7 đã đăng nhập ops-test@local.test (tài khoản thử chỉ ở DB local); hết phiên thì đăng nhập lại tại /login bằng tệp .claude/ops-test-account.json — đọc tệp TRONG script ego, KHÔNG in mật khẩu"
+      - "Trình duyệt: ego-browser (CLI `ego-browser nodejs`, đọc `ego-browser skill` trước). App B1 chạy ở http://localhost:3457 (cổng 3456 bận). Phiên Ops: tạo task space RIÊNG cho eval này (cùng hồ sơ trình duyệt ego lite nên có sẵn phiên ops-test@local.test, task space 7 đã đăng nhập) (tài khoản thử chỉ ở DB local); hết phiên thì đăng nhập lại tại /login bằng tệp .claude/ops-test-account.json — đọc tệp TRONG script ego, KHÔNG in mật khẩu"
       - "Danh sách tên tầng A: `node scripts/ui-standards/tier-a-names.mjs` (ghi tệp 600, không in tên). Trước MỖI lần chụp: page.evaluate(window.__TIER_A_NAMES = <mảng từ tệp>; + nội dung scripts/ui-standards/mask-tier-a.js) → leaked phải rỗng, ghi masked: <số> cho frame đó"
       - "Mở /ops/design ở sáng 1440 → chụp evidence/E14-step1.png; đổi prefers-color-scheme tối → chụp evidence/E14-step2.png; đọc snapshot xác nhận có các mục Đầu trang, Ô KPI, Bảng, Trạng thái, Đang tải, Lỗi, Trống và bảng mẫu Ops"
     expected: "/ops/design ở sáng và tối: PageHeader 'Thư viện thiết kế' đầu trang; có mục mẫu sống cho ô KPI, bảng, page header, đang tải, lỗi, trống và hàng Badge trạng thái, mỗi mục có tên component; không thấy chữ 'skill', 'reui', '.claude'. Frame evidence/E14-step1.png (sáng), step2 (tối). Chạy mask-tier-a.js trước khi chụp như E13."
