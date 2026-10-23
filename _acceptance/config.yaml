@@ -23,6 +23,10 @@ executors:
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
   script:
     cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
+    ruler_views_fresh: "bash scripts/check-ruler-views.sh fresh"         # DB trống từ db/migrations → 2 view ruler
+    ruler_views_idem: "bash scripts/check-ruler-views.sh idem"           # 034 áp 2 lần vào DB local, kết quả không đổi
+    ruler_views_static: "bash scripts/check-ruler-views.sh static"       # PII seller_name không rời máy; catch-up chỉ DDL
+    ruler_views_cloudsim: "bash scripts/check-ruler-views.sh cloudsim"   # DB mô phỏng cloud + SQL catch-up
     portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
