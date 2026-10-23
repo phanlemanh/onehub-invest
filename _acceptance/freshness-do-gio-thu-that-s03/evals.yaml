@@ -1,0 +1,60 @@
+schema_version: 1
+feature_slug: freshness-do-gio-thu-that-s03
+# Cùng lệnh với AU4 (node --test scripts/*.test.mjs); mỗi eval đọc ca mang tiền tố «GT-AC-n» trong TAP. DB không tới → skip = chưa đạt.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'GT-AC-1 importer thật nạp lại snapshot S06 cũ → stale, last = finishedAt' và 'GT-AC-1 đối chứng: importer thật nạp snapshot thu 10 giờ → fresh' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'GT-AC-2 S03/S05 nạp lại snapshot cũ → stale, last = collected_at' và 'GT-AC-2 đối chứng: snapshot thu trong SLO → fresh' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'GT-AC-3 S03 cũ + S05 mới → S03 stale, S05 fresh' và 'GT-AC-3 chiều ngược: S03 mới + S05 cũ → S03 fresh, S05 stale' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; 10 ca 'GT-AC-4 <mã> tuổi = SLO → fresh' / 'GT-AC-4 <mã> tuổi = SLO+1 → stale' ok cho S01, S02, S03, S05, S06 và ca 'GT-AC-4 ma trận biên đủ 10 ca' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'GT-AC-5 S01 hanoi fresh + hcmc stale cùng lúc, S04 completed quá hạn vẫn không đo' ok (không skip)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.scripts
+    layer: backend-effect
+    paths: [scripts/check-freshness.mjs, scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca chẩn đoán riêng 'GT-AC-6 DB hiện tại' in '# gt-live: thoát json=1 chữ=1 · lỗi: S05/hanoi stale last=2026-10-21T11:00…Z · …' kèm từng mã S03/S05/S06 'nạp=<ISO> thu=<ISO> lệch-snapshot=0' và giờ chấm — tập lỗi chỉ S05/hanoi, last = giờ THU 2026-10-21T11:00Z (UTC = 18:00 +07) ±1 phút; chỉ xếp 'nguồn thật đổi' khi thu của S05 khác 2026-10-21T11:00Z (dòng in khác → chưa đạt)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'GT-AC-8 TIME_SOURCE bằng ma trận viết trước, đủ mọi mã có SLO' và 'GT-AC-8 SQL từng probe lấy max(đúng cột)' ok; chiều đỏ 'GT-AC-8 bản sao đổi probe S06 về captured_at → bị bắt, nêu S06' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: judgment
+    inputs: [scripts/check-freshness.mjs, .claude/skills/ops-check/SKILL.md, _acceptance/freshness-do-gio-thu-that-s03/contract.md]
+    question: "Đọc chú thích đầu scripts/check-freshness.mjs và mục độ tươi trong .claude/skills/ops-check/SKILL.md: người vận hành có biết mọi mã tính tuổi theo giờ THU (S01/S03/S05/S06 từ airbnb_snapshots.collected_at, S02 từ airdna_markets.captured_at là giờ tải) không? Có câu nào còn nói S03/S05/S06 đo cột nạp của bảng stg, hay lệch phạm vi contract.md không?"
+    evidence_required: [judged_by, verdict, rationale]

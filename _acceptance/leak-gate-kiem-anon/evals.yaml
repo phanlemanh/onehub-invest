@@ -1,0 +1,155 @@
+schema_version: 1
+feature_slug: leak-gate-kiem-anon
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; đối chứng dương: PASS cloud đã khoá 037 + ba quan hệ PostGIS cho anon SELECT → lượt sync xanh, gate 0 vi phạm; PASS tiền điều kiện: anon thật sự SELECT được spatial_ref_sys trong cloud mô phỏng (không phải xanh vì thiếu quyền)"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; tiền điều kiện: PASS md5 local khác cloud trước lượt (ít nhất một bảng); phải-bắn: PASS ĐỎ-ĐÚNG bảng users: dừng pha gate, thông điệp chứa «(trước khi gửi)» và «anon đọc được public.users», md5 từng bảng sync không đổi, staging của lượt 0 dòng; đối chứng đỏ: PASS bản đột biến bỏ chỗ kiểm trước khi gửi làm ô FAIL ở vế md5 (thước phân biệt được); thiếu một vế → FAIL ghim tên vế"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; ma trận loại quan hệ (3 ô, mỗi ô một lượt): PASS ĐỎ-ĐÚNG view v_ruler_p2_area; PASS ĐỎ-ĐÚNG materialized view; PASS ĐỎ-ĐÚNG bảng phân vùng — mỗi ô dừng pha gate, thông điệp gọi đúng tên quan hệ"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; ma trận đường cấp (4 ô, 4 assert): PASS ĐỎ-ĐÚNG authenticated — thông điệp chứa «authenticated đọc được» và KHÔNG chứa «anon đọc được»; PASS ĐỎ-ĐÚNG PUBLIC — đường «qua PUBLIC»; PASS ĐỎ-ĐÚNG cấp cột — đường «cấp cột»; PASS ĐỎ-ĐÚNG role thành viên — đường «qua role»; mỗi ô có «gỡ: REVOKE …» nhắm đúng đường"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; PASS ĐỎ-ĐÚNG spatial_ref_sys_copy (bảng thường, không thuộc extension postgis) — dừng pha gate gọi tên bảng; cùng lượt ba quan hệ PostGIS thật không xuất hiện trong thông điệp"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; PASS ĐỎ-ĐÚNG thiếu role anon: cloud mô phỏng dựng không role → dừng pha gate với «cloud không có role anon»"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; PASS ĐỎ-ĐÚNG cấp giữa lượt: hook GRANT lúc tráo → thông điệp chứa «(sau tráo)» và tên bảng, KHÔNG chứa «(trước khi gửi)»; đối chứng: hook không GRANT thì cùng lượt xanh"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; ma trận gỡ (số ô gỡ = số ô đỏ của AC-2..AC-5): mỗi ô áp NGUYÊN VĂN lệnh «gỡ: …» trong thông điệp của chính ô đó → PASS lượt kế xanh; thiếu ô nào → FAIL gọi tên ô"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; test đơn vị pipeline xanh (sync-cloud.test.mjs, sync-pii.test.mjs, parse.test.mjs)"
+    paths: ["pipeline/**"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_atomic
+    expected: "exit 0; check-cloud-sync atomic: OK trên cloud mô phỏng đã áp 037"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_fail
+    expected: "exit 0; check-cloud-sync fail: OK trên cloud mô phỏng đã áp 037"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_fidelity
+    expected: "exit 0; check-cloud-sync fidelity: OK"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_keep
+    expected: "exit 0; check-cloud-sync keep: OK"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_pii
+    expected: "exit 0; check-cloud-sync pii: OK"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E15
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_stage
+    expected: "exit 0; check-cloud-sync stage: OK (ca này dựng DB trước 037 khi cần — tuỳ chọn lock: false)"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E16
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_overlap
+    expected: "exit 0; check-cloud-sync overlap: OK"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E17
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.cloud_sync_allow
+    expected: "exit 0; check-cloud-sync allow: OK"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E18
+    criterion: AC-10
+    executor: judgment
+    inputs: ["docs/ops/supabase-lock-anon-rls.md", "pipeline/sync-cloud.mjs"]
+    question: "Trong docs/ops/supabase-lock-anon-rls.md, mục «Leak gate kiểm anon» có đủ bốn điều không, đối chiếu với pipeline/sync-cloud.mjs: (1) thứ tự triển khai — áp 037 lên prod, chạy chế độ --kiem-anon trên prod và thấy sạch, rồi mới merge, và hệ quả nếu ngược lại (mọi lượt sync dừng đỏ); (2) cách đọc dòng báo đỏ — role, quan hệ, đường cấp, lệnh gỡ — khớp khuôn thông điệp mà sync-cloud.mjs thật sự sinh; (3) cách gỡ — chạy lệnh gỡ in trong thông điệp, không tắt hay nới gate; (4) ba quan hệ PostGIS được chừa và vì sao, khớp danh sách chừa trong sync-cloud.mjs? Và không câu nào bảo agent tự sửa quyền trên Supabase prod. Thiếu điều nào hoặc tài liệu nói khác code thì FAIL."
+    expected: "đủ bốn điều; chuỗi thông điệp và danh sách chừa trong tài liệu khớp code; không giao agent sửa prod"
+    paths: ["docs/ops/supabase-lock-anon-rls.md", "pipeline/sync-cloud.mjs"]
+    evidence_required: [run_id, verdict, judges, verified_at]
+
+  - id: E19
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.cloud_sync_anon
+    expected: "exit 0; PASS runMain trên cloud có anon đọc users: mã 1 và một dòng khớp /SYNC FAIL \\[gate\\] .*anon đọc được public\\.users/; đối chứng: PASS runMain trên cloud sạch: mã 0 và dòng «leak gate PASS»; PASS --kiem-anon (runKiemAnon) cloud bẩn: mã 1, in vi phạm, mọi câu gửi đi bắt đầu bằng SELECT; PASS --kiem-anon cloud sạch: mã 0"
+    paths: ["pipeline/sync-cloud.mjs", "pipeline/scripts/check-cloud-sync.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
