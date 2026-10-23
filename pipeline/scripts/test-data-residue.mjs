@@ -98,6 +98,9 @@ export async function simulate(c) {
   await c.query("BEGIN");
   let before, after, audit, keep;
   try {
+    // Xếp hàng với các bộ test nạp lại hàm 039 trong giao dịch (khoá 33033) — tránh deadlock khi
+    // lượt chấm chạy thước này song song với suite pipeline/agent.
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
     const maxId = Number((await c.query(`SELECT coalesce(max(id), 0) AS m FROM ops_audit`)).rows[0].m);
     before = await measureResidue(c);
     await runTransformZalo(c);

@@ -15,6 +15,9 @@ async function withTx(fn) {
   await c.connect();
   try {
     await c.query("BEGIN");
+    // Cùng khoá với write-offers.test.mjs / agent tests: bộ đó nạp lại hàm 039 trong giao dịch —
+    // chạy song song với một lượt đối soát là deadlock.
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});

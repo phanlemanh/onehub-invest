@@ -28,6 +28,9 @@ async function withTx(fn) {
   await c.connect();
   try {
     await c.query("BEGIN");
+    // Cùng khoá với write-offers.test.mjs / agent tests: bộ đó nạp lại hàm 039 trong giao dịch —
+    // chạy song song với một lượt đối soát là deadlock.
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
     // stg_zalo_posts.snapshot_id có khoá ngoại tới airbnb_snapshots — đăng ký hai snapshot fixture.
     for (const [id, source] of [[AGENT_SNAP, "zalo-agent"], [MOCK_SNAP, "zalo-mock"]]) {
       await c.query(
