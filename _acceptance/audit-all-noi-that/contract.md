@@ -5,7 +5,7 @@ slug: audit-all-noi-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-23-audit-all-noi-that-design.md
 lo_trinh_ma: AU5
 approved_by: Mạnh
