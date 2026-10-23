@@ -4,12 +4,13 @@
  * chưa khai SLO; POST $WEBHOOK_URL khi đặt. Query thẳng DB (không phụ thuộc app server) — chạy được từ
  * cron/launchd độc lập.
  *
- * Định nghĩa độ tươi nằm ở `scripts/lib/freshness.mjs` — mỗi mã đọc bảng nạp thật của nó:
- *   S01 ≤ 8 ngày   airbnb_snapshots (mọi luồng thu của S01 gộp lần mới nhất)
- *   S02 ≤ 35 ngày  airdna_markets.captured_at
- *   S03 ≤ 3 ngày   stg_zalo_posts (tách khỏi S05 theo agent_id)
- *   S05 ≤ 12 giờ   stg_zalo_posts (agent_id của S05)
- *   S06 ≤ 36 giờ   stg_chotot_ads
+ * Định nghĩa độ tươi nằm ở `scripts/lib/freshness.mjs` — mỗi mã đọc bảng nạp thật của nó và tính tuổi theo
+ * GIỜ THU (không theo `captured_at` của bảng stg — importer ghi giờ nạp vào cột đó):
+ *   S01 ≤ 8 ngày   airbnb_snapshots.collected_at (mọi luồng thu của S01 gộp lần mới nhất)
+ *   S02 ≤ 35 ngày  airdna_markets.captured_at (giờ tải của lần thu)
+ *   S03 ≤ 3 ngày   airbnb_snapshots.collected_at của snapshot chứa bài S03 (stg_zalo_posts, tách khỏi S05 theo agent_id)
+ *   S05 ≤ 12 giờ   airbnb_snapshots.collected_at của snapshot chứa bài S05 (stg_zalo_posts, agent_id của S05)
+ *   S06 ≤ 36 giờ   airbnb_snapshots.collected_at của snapshot chứa tin stg_chotot_ads
  *   S04            không đo — địa giới đã thu xong (status completed)
  * Mỗi nguồn chỉ được đo ở thành phố nó thật sự có dữ liệu. Đầu ra chỉ mang mã S0x (SPL).
  *
