@@ -36,7 +36,7 @@
 ### Task 1: Migration `sync_stage` + khung thước + ca `stage`
 
 **Files:**
-- Create: `db/migrations/NNN_sync_stage.sql` (số xin ở sổ chung — chưa cấp thì dùng tên tạm `XXX_sync_stage.sql`, đổi tên trước commit cuối)
+- Create: `db/migrations/038_sync_stage.sql` (số 038 cấp ở sổ chung 23/10; 037 là migration RLS vào trước)
 - Create: `pipeline/scripts/check-cloud-sync.mjs` (khung + ca `stage`)
 
 **Interfaces:**
@@ -47,7 +47,7 @@
 - [ ] **Step 2:** Chạy `cd pipeline && node scripts/check-cloud-sync.mjs stage` → FAIL (chưa có migration).
 - [ ] **Step 3:** Viết migration theo Interfaces.
 - [ ] **Step 4:** Chạy lại → mọi dòng PASS, exit 0; DB tạm đã xoá (`\l` không còn `acc_cloudsync_`).
-- [ ] **Step 5:** Commit `feat(db): NNN sync_stage — bảng tạm cho sync-cloud nguyên tử`.
+- [ ] **Step 5:** Commit `feat(db): 038 sync_stage — bảng tạm cho sync-cloud nguyên tử`.
 
 **Verify:** `cd pipeline && node scripts/check-cloud-sync.mjs stage` · phục vụ E6 · `independent: true` (với Task 2)
 

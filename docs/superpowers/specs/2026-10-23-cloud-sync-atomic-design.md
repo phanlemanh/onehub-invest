@@ -39,7 +39,7 @@ Một lượt ≈ 274k dòng / ~104MB JSON. Hậu quả đo được:
 
 ## Thiết kế (lối D)
 
-**Một lần, qua migration đánh số** (`db/migrations/NNN_sync_stage.sql`, số xin ở sổ chung; AGENTS.md
+**Một lần, qua migration đánh số** (`db/migrations/038_sync_stage.sql`, số cấp ở sổ chung; AGENTS.md
 luật 2 «Schema chỉ đổi qua migration mới»): schema `sync_stage` + bảng
 `sync_stage.rows(run_id text, tbl text, payload jsonb, staged_at timestamptz default now())` và
 `sync_stage.swaps(run_id text primary key, read_at timestamptz, swapped_at timestamptz)`,
