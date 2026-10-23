@@ -1,0 +1,6 @@
+{
+  "feature_plain": "Khách vô danh thôi lấy được danh sách căn giá tốt (đang lẫn tin giả) qua API công khai; chỉ máy và người của đội vận hành còn đọc được, tới khi tin giả được dọn.",
+  "decisions": [
+    {"id": "E11", "q": "Tài liệu đã nói rõ API đang tạm đóng, vì sao, khi nào mở lại?", "why": "Hội đồng ba người chấm đề xuất ĐẠT: lộ trình (V9) và ghi chú trong mã đều có đủ ba ý, ghi chú không còn chữ «public API»."}
+  ]
+}

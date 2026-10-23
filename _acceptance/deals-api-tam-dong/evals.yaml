@@ -1,0 +1,94 @@
+schema_version: 1
+feature_slug: deals-api-tam-dong
+# deals_api_smoke cần app chạy :3456 TỪ WORKTREE NÀY (config:dev_server.start, hoặc BASE_URL) + DB local :5433;
+# token ops lấy từ env OPS_API_TOKEN, thiếu thì đọc app/.env.local — vẫn thiếu thì smoke TRƯỢT có tên.
+# Ma trận người gọi (đơn vị, app_ui) và smoke sống cùng đo một ma trận ở hai lớp: mỗi ca «cho qua» có ca «chặn» đối
+# chứng trên cùng fixture (cùng hàm / cùng máy chủ).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AC-1 khách: không bearer, không phiên → không qua' đạt; cùng tệp có ca đối chứng bearer đúng → qua"
+    paths: ["app/src/lib/ops-access.ts", "app/tests/deals-api-guard.test.tsx"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.deals_api_smoke
+    expected: "exit 0; dòng 'ok   khách: 401 {\"error\":\"unauthorized\"}, không khoá data/meta'"
+    paths: ["app/src/app/api/v1/deals/route.ts", "app/src/lib/ops-access.ts", "scripts/smoke-deals-api.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AC-2 bearer đúng → qua, không gọi getUser' đạt (bộ đếm lời gọi getUser = 0)"
+    paths: ["app/src/lib/ops-access.ts", "app/tests/deals-api-guard.test.tsx"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.deals_api_smoke
+    expected: "exit 0; dòng 'ok   bearer đúng: 200, data là mảng, meta có total/minDiscount/ruler'"
+    paths: ["app/src/app/api/v1/deals/route.ts", "app/src/lib/ops-access.ts", "scripts/smoke-deals-api.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AC-3' đạt: bearer sai → không qua; OPS_API_TOKEN thiếu + 'Bearer ' / 'Bearer undefined' → không qua; token đọc lúc gọi: env có T → 'Bearer T' qua, xoá env trong cùng tiến trình → 'Bearer T' KHÔNG qua"
+    paths: ["app/src/lib/ops-access.ts", "app/tests/deals-api-guard.test.tsx"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.deals_api_smoke
+    expected: "exit 0; dòng 'ok   bearer sai: 401'"
+    paths: ["app/src/app/api/v1/deals/route.ts", "app/src/lib/ops-access.ts", "scripts/smoke-deals-api.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AC-4' đạt: role ops/admin/email trong OPS_EMAILS → qua; role user, phiên null (hết hạn) → không qua"
+    paths: ["app/src/lib/ops-access.ts", "app/tests/deals-api-guard.test.tsx"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.deals_api_smoke
+    expected: "exit 0; các dòng 'ok   phiên role=user: 401', 'ok   phiên hết hạn: 401', 'ok   phiên role=ops: 200'"
+    paths: ["app/src/app/api/v1/deals/route.ts", "app/src/lib/ops-access.ts", "scripts/smoke-deals-api.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; dòng 'ok   deals: cổng ops (canCallOpsApi) chạy trước pool.query'"
+    paths: ["app/src/app/api/v1/deals/route.ts", "scripts/check-deals-api.mjs", "scripts/check-portal-compliance.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.deals_api_mutation
+    expected: "exit 0; bản nguyên ĐẠT; bốn bản đột biến — 'bỏ cổng (giữ dòng import)', 'cổng sau truy vấn', 'gọi cổng không await', 'gọi cổng mà không return 401' — đều TRƯỢT với thông điệp 'deals: cổng ops (canCallOpsApi) chạy trước pool.query'"
+    paths: ["app/src/app/api/v1/deals/route.ts", "scripts/check-deals-api.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-6
+    executor: judgment
+    inputs: ["app/src/app/api/v1/deals/route.ts", "docs/ROADMAP.md"]
+    question: "Docstring của route và ROADMAP (§2 as-built hoặc §4) có nói /api/v1/deals đang tạm đóng chỉ cho ops (token hoặc phiên), vì sao (tin mock, audit P7/Q3), và điều kiện mở lại (PL2 rút tin mock, quyết riêng) không? Docstring còn gọi route là «public API» không?"
+    expected: "ROADMAP (§2 as-built hoặc §4) có trạng thái tạm đóng, lý do và điều kiện mở lại; docstring route không còn «public API», có trạng thái chỉ-ops và điều kiện mở lại"
+    evidence_required: [verdict, rationale]
