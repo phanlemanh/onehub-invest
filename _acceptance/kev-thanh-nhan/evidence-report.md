@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9fc333634a2629507f93fd75518a4297bc07432d
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: kev-thanh-nhan
