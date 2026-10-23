@@ -109,6 +109,15 @@ executors:
     supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
     supabase_lock_local: "bash scripts/check-supabase-lock.sh local"
     supabase_lock_sim: "bash scripts/check-supabase-lock.sh sim"
+    # kev-thanh-nhan (PL4) + sourceid-tin-anh (ZC1) — handler.js chạy với HOME giả, Kev/collector giả; không chạm ~/.openclaw, :8009, :9210
+    collector_test_clean: "cd collector && rm -rf dist && npm test"   # xoá dist cũ — tsc không xoá test đã biên dịch của nhánh khác
+    kev_handler_label: "node scripts/kev-nhan/acceptance.mjs handler-label"
+    kev_manifest_v3: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs manifest-v3"
+    kev_import_versions: "node scripts/kev-nhan/acceptance.mjs import-versions"
+    kev_watchdog_l1: "node scripts/kev-nhan/acceptance.mjs watchdog-l1"
+    kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
+    zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
+    zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
