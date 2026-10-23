@@ -25,6 +25,7 @@ if [ -n "$SNAP" ]; then
   echo "$(date -Iseconds) transform $SNAP"
   node "$ROOT/pipeline/transform-airdna.mjs" "$ROOT/collector/$SNAP"
   node "$ROOT/pipeline/dq-truthful-coverage.mjs"
+  node "$ROOT/pipeline/export-airdna-worklist.mjs"
 else
   echo "$(date -Iseconds) không thấy snapshot mới (ngoài activity window?)" >&2
 fi
