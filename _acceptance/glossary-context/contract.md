@@ -5,9 +5,9 @@ slug: glossary-context
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: implemented
+approved_by: Mạnh
+approved_at: 2026-10-23T00:05:02Z
 ---
 
 # Acceptance Contract: glossary-context

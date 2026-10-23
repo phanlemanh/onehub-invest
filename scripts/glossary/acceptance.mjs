@@ -90,7 +90,7 @@ function w6() {
     writeFileSync(join(tmp, "_acceptance/w6-mau/evals.yaml"),
       "schema_version: 1\nfeature_slug: w6-mau\nevals:\n  - id: E1\n    criterion: AC-1\n    executor: judgment\n    question: \"?\"\n");
     const out = lint(tmp, "w6-mau");
-    const hit = out.split("\n").filter((l) => /\bW6\b/.test(l) && /contract line/.test(l));
+    const hit = out.split("\n").filter((l) => /\bW6 contract line\b/.test(l)); // dòng chú giải cuối cũng có chữ "contract line"
     // "lấp đầy" cũng bị loại và nằm trong "tỷ lệ lấp đầy" → có thể ra 2 dòng, đều phải chỉ "Công suất".
     if (!hit.some((l) => /"tỷ lệ lấp đầy"/.test(l)) || !hit.every((l) => /for "Công suất"/.test(l)))
       fail(`hồ sơ mẫu: cần W6 nêu "tỷ lệ lấp đầy" và mọi dòng W6 chỉ "Công suất", nhận:\n${out}`);
