@@ -5,7 +5,7 @@ slug: enrich-hau-ky
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-enrich-hau-ky-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
@@ -59,3 +59,14 @@ Source input: prompt — việc hậu kỳ giao từ phiên điều phối làn 
 
 - Số migration 039 do phiên điều phối liên làn cấp 2026-10-23 (037 thuộc phiên RLS, 038 sync_stage); merge 036 trước 039.
 - Kiểm thử DB chạy trong transaction rồi ROLLBACK trên Postgres local :5433 — không để lại dữ liệu, không áp migration thật.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: Hình và thẻ Cổng Phạm vi còn ghi số bản cập nhật đối soát là 037; số đúng là 039 (áp 036 trước 039).
+  - Ngoài-2: Lệnh hoàn tác chỉ kiểm tên người thực hiện có dạng «người», không xác thực đó có đúng là người thật.
+  - Ngoài-3: Một phép kiểm luật «đất» đọc dữ liệu thật trên máy, nên có thể báo đỏ trên máy mới dựng hoặc vừa dọn dữ liệu.
+  - Ngoài-5: Bộ kiểm của phần làm giàu dữ liệu lặng lẽ bỏ qua bản cập nhật 036/039 nếu tệp bị đổi tên.
+  - Ngoài-6: Ca kiểm «giá trị đã hoàn tác không quay lại» chưa đỏ được khi lớp chặn bị gỡ.
+  - Ngoài-7: Bảng kiểm gộp đề xuất trùng chưa có ô «đã hoàn tác» và ô hai quyết định ngang hạng.
+  - Ngoài-8: Bộ kiểm chưa phân biệt chọn tin kế theo số bài chung với chọn theo mã nhỏ nhất.
+  - Ngoài-9: Bộ kiểm bước ghi dùng hàng mẫu đơn giản hơn hàng transform thật (chưa đo việc giữ số phòng ngủ đã bổ sung).
+  - Ngoài-10: Phép kiểm «transform không xoá toàn nguồn» đọc chữ trong mã, có thể sót cách viết lệnh xoá khác.
+- Ngoài-4 (thẻ chờ chuyển sang tin kế không dựng lại nội dung — người chọn một bên mà máy áp bên kia ở tổ hợp hiếm): Mạnh chọn mở hợp đồng mới 2026-10-23.

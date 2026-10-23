@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 232fb1124ecc9b61ef36ff143fbef97a9b60a327
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: enrich-hau-ky
