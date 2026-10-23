@@ -4,15 +4,15 @@
  * tin đã ack 202 mà chưa flush không được mất âm thầm.
  *
  * Bảo hiểm nhiều lớp:
- * - Đóng server HTTP TRƯỚC khi flush (close) — không nhận POST mới giữa lúc
- *   đang dọn; tin ingest giữa chừng nằm lại buffer nên phải LẶP flush tới
- *   khi buffer rỗng (flush trả null) mới exit — một lượt flush duy nhất làm
- *   trên bản chép buffer nên bắt không hết tin đến trễ.
+ * - Đóng server HTTP TRƯỚC khi flush (close) — idle connections bị cắt nhưng
+ *   request đang chạy được làm nốt (closeIdleConnections, claudedp-2310-3b),
+ *   rồi LẶP flush tới khi buffer rỗng (flush trả null) hoặc chạm deadline.
  * - Signal thứ hai thoát ngay (operator ép thoát).
- * - Deadline (flush treo — ví dụ tải ảnh chết mạng — không đợi launchd
- *   SIGKILL). Sát deadline (<10s) flush bỏ bước media: tin quan trọng hơn ảnh.
- * - Deadline 45s < launchd ExitTimeOut 60s (plist) để exit tự chủ, không đua
- *   SIGKILL.
+ * - Deadline (mỗi 45s < launchd ExitTimeOut 60s). Sát deadline (<10s) flush
+ *   bỏ bước media; ĐANG TẢI ảnh thì huỷ theo AbortSignal (deadlineAt) —
+ *   tin quan trọng hơn ảnh, không đợi ảnh treo vượt deadline (2310-3).
+ * - Thoát vì deadline/ép mà buffer VẪN còn tin → exit(1) + log số tin mất,
+ *   không im lặng exit(0) (2310-3a) — để giám sát thấy mất.
  *
  * Deps tiêm vào để test không đụng process thật.
  */
@@ -27,7 +27,7 @@ export type GracefulShutdownDeps = {
   log?: (line: string) => void;
 };
 
-/** Còn ít hơn ngưỡng này tới deadline → flush bỏ bước media (tin > ảnh). */
+/** Còn ít hơn ngưỡng này tới deadline → flush bỏ/huỷ bước media (tin > ảnh). */
 export const MEDIA_CUTOFF_MS = 10_000;
 
 const DEFAULT_DEADLINE_MS = 45_000;
@@ -35,11 +35,15 @@ const DEFAULT_DEADLINE_MS = 45_000;
 export function installGracefulShutdown(
   deps: GracefulShutdownDeps,
   opts: {
-    /** Flush một lượt; trả null khi buffer rỗng. skipMedia: bỏ tải ảnh, giữ tin. */
-    flush: (flushOpts?: { skipMedia?: boolean }) => Promise<unknown>;
-    /** Đóng server HTTP trước khi flush — không nhận POST mới giữa lúc dọn. */
+    /** Flush một lượt; trả null khi buffer rỗng. skipMedia: bỏ tải ảnh;
+     *  deadlineAt (epoch ms): huỷ tải ảnh khi còn MEDIA_CUTOFF tới mốc. */
+    flush: (flushOpts?: { skipMedia?: boolean; deadlineAt?: number }) => Promise<unknown>;
+    /** Đóng server HTTP trước khi flush — không nhận POST mới giữa lúc dọn
+     *  (dùng closeIdleConnections để request đang chạy được làm nốt). */
     close?: () => Promise<void> | void;
     deadlineMs?: number;
+    /** Số tin còn nằm buffer — >0 lúc thoát → exit(1) + log mất (2310-3a). */
+    pendingCount?: () => number;
   },
 ): { uninstall: () => void } {
   const log = deps.log ?? (() => {});
@@ -51,6 +55,12 @@ export function installGracefulShutdown(
     if (settled) return;
     settled = true;
     log(why);
+    const pending = opts.pendingCount?.() ?? 0;
+    if (pending > 0) {
+      log(`shutdown: MẤT ${pending} tin đã ack chưa kịp flush — thoát mã 1 để giám sát thấy`);
+      deps.exit(1);
+      return;
+    }
     deps.exit(0);
   };
 
@@ -62,6 +72,7 @@ export function installGracefulShutdown(
     }
     shuttingDown = true;
     const startedAt = Date.now();
+    const deadlineAt = startedAt + deadlineMs;
     log(`shutdown: ${sig} — đóng HTTP, flush buffer rồi thoát (tối đa ${deadlineMs}ms)`);
     const deadline = setTimeout(
       () => finish("shutdown: flush quá deadline — thoát"),
@@ -79,9 +90,9 @@ export function installGracefulShutdown(
       // ingest giữa chừng nằm lại — phải có lượt tiếp theo. Dừng khi flush
       // báo buffer rỗng (null) hoặc không còn cho ra snapshot nào nữa.
       for (;;) {
-        const remaining = deadlineMs - (Date.now() - startedAt);
+        const remaining = deadlineAt - Date.now();
         const skipMedia = remaining < MEDIA_CUTOFF_MS;
-        const m = await opts.flush(skipMedia ? { skipMedia: true } : undefined);
+        const m = await opts.flush(skipMedia ? { skipMedia: true, deadlineAt } : { deadlineAt });
         if (m === null || m === undefined || typeof m !== "object" || !("snapshotId" in m)) break;
         log(`shutdown: flushed ${(m as { snapshotId: string }).snapshotId}${skipMedia ? " (bỏ media — sát deadline)" : ""}`);
       }

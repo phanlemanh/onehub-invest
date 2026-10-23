@@ -19,9 +19,10 @@ type Harness = {
 };
 
 function harness(opts: {
-  flush: (flushOpts?: { skipMedia?: boolean }) => Promise<unknown>;
+  flush: (flushOpts?: { skipMedia?: boolean; deadlineAt?: number }) => Promise<unknown>;
   close?: () => Promise<void> | void;
   deadlineMs?: number;
+  pendingCount?: () => number;
 }): Harness {
   const order: string[] = [];
   const exitCodes: number[] = [];
@@ -34,9 +35,11 @@ function harness(opts: {
         order.push("exit");
         exitCodes.push(code);
       },
-      log: () => {}, // không bẩn mảng order — test chỉ quan tâm thứ tự flush/exit
+      log: (line) => {
+        if (/MẤT|Mất|mất .*tin/.test(line)) order.push("mat-tin");
+      }, // chỉ mảng order quan tâm thứ tự flush/exit/mất-tin
     },
-    { flush: opts.flush, close: opts.close, deadlineMs: opts.deadlineMs },
+    { flush: opts.flush, close: opts.close, deadlineMs: opts.deadlineMs, pendingCount: opts.pendingCount },
   );
   return {
     order,
@@ -162,5 +165,43 @@ test("shutdown: còn dư thời gian → flush nhận skipMedia=false (không b�
   h.fire("SIGTERM");
   await sleep(20);
   assert.deepEqual(seen, [false]);
+  assert.deepEqual(h.exitCodes, [0]);
+});
+
+test("shutdown: flush nhận deadlineAt = thời điểm bắt đầu + deadline (claudedp-2310-3)", async () => {
+  const seen: number[] = [];
+  const h = harness({
+    deadlineMs: 30_000,
+    flush: async (flushOpts) => {
+      if (flushOpts?.deadlineAt) seen.push(flushOpts.deadlineAt - Date.now());
+    },
+  });
+  h.fire("SIGTERM");
+  await sleep(20);
+  assert.equal(seen.length, 1);
+  // deadlineAt nằm trong [29s, 30s] tính từ lúc gọi flush
+  assert.ok(seen[0]! <= 30_000 && seen[0]! >= 29_000, `deadlineAt còn ${seen[0]}ms`);
+});
+
+test("quá deadline mà buffer còn tin → exit(1) + log số tin mất, không im lặng exit(0)", async () => {
+  const h = harness({
+    deadlineMs: 25,
+    pendingCount: () => 3,
+    flush: () => new Promise(() => {}), // treo — deadline chọc
+  });
+  h.fire("SIGTERM");
+  await sleep(50);
+  assert.deepEqual(h.exitCodes, [1], "còn tin trong buffer phải exit(1)");
+  assert.ok(h.order.includes("mat-tin"), "log phải nói rõ mất bao nhiêu tin");
+});
+
+test("flush xong hết buffer → exit(0) (pendingCount=0)", async () => {
+  const h = harness({
+    deadlineMs: 5_000,
+    pendingCount: () => 0,
+    flush: async () => null,
+  });
+  h.fire("SIGTERM");
+  await sleep(20);
   assert.deepEqual(h.exitCodes, [0]);
 });
