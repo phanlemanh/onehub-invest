@@ -60,7 +60,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
     NHẤT với ZCode: giao việc, review `zcode/*`, giữ luật làn + hợp đồng dữ liệu + sổ số
     migration, giao bước triển khai sau merge. Không merge vào `main`.
   - *Điều phối làn merge* (phiên Claude «Setup project Invest và Điều phối») — thứ tự PR,
-    CI, merge trên GitHub, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    CI, merge trên GitHub bằng `gh pr merge`, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    Không merge trên máy rồi `git push` lên main — branch protection của `main` từ chối, kể cả
+    token admin (chốt 2026-10-23, hồ sơ `narrow-ask-rules`).
     Không nhắn ZCode, không review `zcode/*`.
 - **Giao tiếp Claude ↔ ZCode = luật tin của plugin `dieu-phoi`** (khối LUAT-TIN): khẩu lệnh
   `GIAO · HỎI · BÁO · NHẬN · XONG · KẸT · TRẢ · HUỶ · MỞ LẠI`, mỗi yêu cầu là một vòng mở có
