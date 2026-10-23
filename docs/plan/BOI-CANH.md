@@ -12,6 +12,10 @@
 3. Tra §4 xem hàng có ghi chú bổ sung (tiêu chí khảo sát đã tìm ra mà chưa nằm trong câu giao).
 4. Tra §2 xem hàng có bị chặn bởi quyết định chưa chốt không — chặn thì hỏi Mạnh ở Cổng Phạm vi, không tự quyết.
 5. Việc của người liên quan (§5) không làm thay; nêu nó ở «Ra khỏi kho» nếu vòng cần nó.
+6. **Dẫn nguồn** (Mạnh duyệt 24/10): contract của mọi hồ sơ có một dòng `Căn cứ:` ở `## Context` — đường dẫn tài
+   liệu + mục + mã có tiền tố, ví dụ `Căn cứ: docs/architecture/classification-enrich-review.md §4 RV-Q1, §2 RV-L06`.
+   Tiền tố: `RV-` = review phân loại + enrich (Q1–Q12, L01–L20, C/Z/M), `AU-` = audit 23/10 (Q1–Q8, mục 0.x/1.x),
+   `FR-` = FRAMING (D1–D6, F1–F7). Lý do: Q1 của review và Q1 của audit là hai câu khác nhau; mã trần không tra ngược được.
 
 ## 1. Nền chung (mọi hàng)
 
@@ -77,6 +81,8 @@ cần ký, T3 phải ký); branch protection main (gate + ui-lint).
 | PL32 | Merge trước hoặc cùng lúc triển khai hook Kev vào `~/.openclaw` (§5) — không thì media backfill bỏ qua snapshot v3 |
 | PL33 ↔ AU5 | Chung `scripts/audit-all.sh` — mở PL33 sau khi AU5 merge |
 | PL5 | Thêm tiêu chí đo dung lượng + thời gian transform-zalo/sync khi Zalo phình ×3 (mục chờ KH-KV3) |
+| PL4 (`kev-thanh-nhan`) | Căn cứ bổ sung (hồ sơ đã ký chỉ ghi «Q1»): `classification-enrich-review.md` §4 RV-Q1, §2 RV-L06, §5 RV-Z1 + RV-C1.1 |
+| ZC1 (`sourceid-tin-anh`) | Căn cứ bổ sung (hồ sơ đã ký chỉ ghi «L20»): `classification-enrich-review.md` §6 RV-L20 |
 | Lint | Baseline 82 vi phạm / 19 tệp (đo 23/10); ROADMAP Track 6 còn ghi 85 — AU8 sửa |
 
 ## 5. Ra khỏi kho — việc của người (không thành hàng; luật kit 17/10, ADR 0026)
