@@ -92,7 +92,19 @@ scan_new_lines() {
   # biệt được ngày mới DÀI HƠN ngày cũ (cur > last quét từ last+1 → sót dòng
   # đầu, claudedp-2310-5 mở lại). Khác path/inode = file mới (log xoay ngày);
   # cùng file mà ít dòng hơn = truncate — cả hai quét TOÀN BỘ từ dòng 1.
-  if [ "$prevPath" != "$f" ] || [ "$prevInode" != "$curInode" ] || [ "$curLines" -lt "$prevLines" ]; then
+  if [ "$prevPath" != "$f" ] || [ "$prevInode" != "$curInode" ]; then
+    # ĐỔI FILE: đuôi file CŨ viết SAU lượt quét cuối ngày (~23:55–00:00) chưa
+    # ai quét — quét NỐT từ prevLines+1 TRƯỚC khi đổi sang file mới
+    # (claudedp-2310-7). File cũ bị xoá/tmp dọn thì bỏ qua im lặng; inode khác
+    # (path bị tái sử dụng) cũng bỏ — không quét nhầm file lạ.
+    if [ -n "$prevPath" ] && [ -f "$prevPath" ]; then
+      oldInode=$(stat -f '%i' "$prevPath" 2>/dev/null || echo x)
+      if [ "$oldInode" = "$prevInode" ]; then
+        tail -n +"$((prevLines + 1))" "$prevPath" 2>/dev/null
+      fi
+    fi
+    tail -n +1 "$f"
+  elif [ "$curLines" -lt "$prevLines" ]; then
     tail -n +1 "$f"
   elif [ "$curLines" -gt "$prevLines" ]; then
     tail -n +"$((prevLines + 1))" "$f"
