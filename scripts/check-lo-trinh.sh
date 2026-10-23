@@ -26,6 +26,7 @@ static() {
     const old=JSON.parse(cp.execSync("git show '"$base"':.claude/settings.json").toString());
     if(cur.enabledPlugins?.["road-map@acceptance-gate-kit"]!==true) process.exit(1);
     delete cur.enabledPlugins["road-map@acceptance-gate-kit"];
+    if(old.enabledPlugins) delete old.enabledPlugins["road-map@acceptance-gate-kit"];  // sau merge nền đã có road-map
     process.exit(JSON.stringify(cur)===JSON.stringify(old)?0:2);'; then
     ok "settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền"
   else bad "settings.json: thiếu road-map hoặc đổi thứ khác ngoài enabledPlugins"; fi
