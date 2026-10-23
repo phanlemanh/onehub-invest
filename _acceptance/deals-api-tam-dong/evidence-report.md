@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d780ab37a1cc253ff682380d7e794808172c46aa
+verified_commit: 2fd4f70c8f7478bfa3621e91c63a1d12113be3f8
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -192,3 +192,7 @@ Round 1: E1-E10 đều đạt, E11 (judgment) hội đồng đề xuất PASS v�
 ### Re-pin lần 1 — 2026-10-23, do gộp origin/main (PR #31, #32) và chép khuôn opportunity-template sau chữ ký
 run_id: repin-20261023T103011Z-64016
 sha: d780ab37a1cc253ff682380d7e794808172c46aa · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 2 — 2026-10-23, do gộp origin/main (PR #34–#43) sau chữ ký NT4
+run_id: repin-20261023T153007Z-19028
+sha: 2fd4f70c8f7478bfa3621e91c63a1d12113be3f8 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6

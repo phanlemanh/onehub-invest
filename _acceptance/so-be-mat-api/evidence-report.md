@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6585c62507062b6a78074e5eebf3c9eed29d9fe3
+verified_commit: 2fd4f70c8f7478bfa3621e91c63a1d12113be3f8
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -195,3 +195,7 @@ none — every multi-run eval is uniform
 Round 1: mọi eval máy đạt (E1-E5, E7-E10) và hai judgment đề xuất PASS (E6, E11) — không cần quay lại implementation.
 Round 2: sau bản fix S4-r1 (chế độ chỉ-phiên cấm nhánh bearer, khai lại 6 route ops), chạy lại E1-E4 cùng các lệnh suite, tất cả đạt; E5, E7-E10 mang sang từ round 1 vì delta không chạm paths của chúng; hai judgment E6, E11 chấm lại và vẫn đề xuất PASS.
 Round 3: đổi khuôn AC-3 sang ma trận hành vi — chạy E4 cùng hai eval mới E12, E13 và các lệnh suite, tất cả đạt; E1-E3 mang sang từ round 2, E5, E7-E10 mang sang từ round 1 vì delta không chạm paths của chúng; hai judgment E6, E11 giữ đề xuất PASS.
+
+### Re-pin lần 1 — 2026-10-23, do gộp origin/main (PR #34–#43) sau chữ ký NT4
+run_id: repin-20261023T153007Z-19028
+sha: 2fd4f70c8f7478bfa3621e91c63a1d12113be3f8 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths), E11 (E11 không khai paths) · AC không có chốt máy: AC-8
