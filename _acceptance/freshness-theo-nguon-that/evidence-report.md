@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 09726f83e9228c7c1e89138f188c15cc639cb23c
+verified_commit: c4eed61b9c801468560bfe6db46419146424721d
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -174,3 +174,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: E1–E9 đều đạt — không eval nào hỏng. Các lỗi ngoài hợp đồng nằm ở review-findings.md để người quyết ở Gate 2.
+
+### Re-pin lần 1 — 2026-10-23, do gộp main sau chữ ký (collector/** đổi)
+run_id: repin-20261023T115832Z-35345
+sha: c4eed61b9c801468560bfe6db46419146424721d · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths) · AC không có chốt máy: AC-9
