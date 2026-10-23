@@ -722,6 +722,501 @@
       "phu": [
         "A1.5"
       ]
+    },
+    {
+      "ma": "UI1",
+      "cau_giao": "Người duyệt mở /ops/review và thấy hàng chờ dạng bảng theo solution-agents-5, lọc theo loại thẻ, bấm một hàng mở sheet chi tiết có dải ảnh tin xem được cả ở màn 390px",
+      "vai": "Người duyệt",
+      "tieu_chi": 10,
+      "vi_sao": "Tệp nhiều vi phạm lint nhất (review-card.tsx: 20). Chạy TRƯỚC PL3 vì cùng tệp: UI1 dựng khung, PL3 đổ căn cứ vào sheet. Sửa routes.md: lọc theo loại thẻ/bậc thay «theo độ tin» (trái PL3).",
+      "hang": "T2",
+      "slug": "ops-review-khung-hang-cho",
+      "nhom": "ops-review",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD9"
+      ]
+    },
+    {
+      "ma": "UI2",
+      "cau_giao": "Khách mở trang chủ và /methodology (301 từ /phuong-phap) thấy định nghĩa dạng faq-3, hero và thẻ thị trường không còn màu cứng, lỗi nhóm marketing có error.tsx và lỗi toàn cục có global-error.tsx",
+      "vai": "Khách",
+      "tieu_chi": 10,
+      "vi_sao": "19 vi phạm lint (frame-backdrop 13). Không phụ thuộc. Bản đồ đích chưa tra Mobbin cho nhóm này: vòng tự tra.",
+      "hang": "T2",
+      "slug": "trang-chu-methodology",
+      "nhom": "invest-trang-chu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD7"
+      ]
+    },
+    {
+      "ma": "UI3",
+      "cau_giao": "Nhà đầu tư dùng /yield thấy bảng chi phí vận hành và phần «Dòng tiền vốn vay» dựng bằng data-grid-advanced-7, còn link /vn/<market>/dau-tu cũ chuyển 301 về /yield?area=…#financing",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 11,
+      "vi_sao": "16 vi phạm lint (investment-simulator 12). Gộp /dau-tu vào /yield đã chốt ở bản đồ đích (PR #6).",
+      "hang": "T2",
+      "slug": "yield-dong-tien-von-vay",
+      "nhom": "invest-loi-suat",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD5"
+      ],
+      "ghi_chu": "11 tiêu chí: gỡ simulator và redirect 301 phải đi cùng thay thế, tách ra thì có lúc mất chức năng dòng tiền."
+    },
+    {
+      "ma": "UI4",
+      "cau_giao": "Nhà đầu tư mở So sánh ở /compare (301 từ /so-sanh) và Đã lưu, cả hai có PageHeader, trạng thái tải/trống/lỗi, Đã lưu trống dùng c-empty-11",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "vi_sao": "Hàng đầu tiên thêm redirect 301 vào next.config.ts — làm mẫu cho UI2, UI3. 4 vi phạm lint.",
+      "hang": "T2",
+      "slug": "compare-saved-trang-thai",
+      "nhom": "invest-so-sanh-luu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD6"
+      ]
+    },
+    {
+      "ma": "UI5",
+      "cau_giao": "Nhà đầu tư mở /listing/[id] thấy đầu trang product-detail-5, ảnh tự thu khi có (không có thì ẩn gallery), lịch form-5 không còn điều khiển thô, vùng dữ liệu có Skeleton và Empty",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "vi_sao": "3 vi phạm lint. Ảnh AirDNA đã gỡ (listing-airdna-photos đã ký).",
+      "hang": "T2",
+      "slug": "listing-detail-product-detail-5",
+      "nhom": "invest-listing",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD3"
+      ]
+    },
+    {
+      "ma": "UI6",
+      "cau_giao": "Nhà đầu tư duyệt listing lọc bằng filters (màn hẹp filter-sidebar-5) và bản đồ @mapcn/store-locator gom cụm, vẫn lọc theo khung nhìn khi kéo hoặc zoom",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "vi_sao": "Hàng chạy trước trong các hàng bản đồ phải khai registry @mapcn trong components.json.",
+      "hang": "T2",
+      "slug": "listings-filters-store-locator",
+      "nhom": "invest-listing",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD4"
+      ]
+    },
+    {
+      "ma": "UI7",
+      "cau_giao": "Khách đăng nhập hoặc đăng ký qua auth-4/auth-5 không còn chuyển động bị cấm, gradient tự chọn hay chữ kích thước tuỳ ý, và lỗi nhóm (auth) hiện error.tsx",
+      "vai": "Khách",
+      "tieu_chi": 8,
+      "vi_sao": "7 vi phạm lint. (auth)/** thuộc t3_paths nên tách khỏi UI2.",
+      "hang": "T3",
+      "slug": "auth-hop-chuan",
+      "nhom": "invest-auth",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD8"
+      ]
+    },
+    {
+      "ma": "UI8",
+      "cau_giao": "Nhà đầu tư mở /vn thấy Finder có PageHeader, lưới và sparkline solution-analytics-1, bản đồ @mapcn/choropleth đúng ranh giới, cấp chưa tự thu hiện «đang thu thập», đủ tải/trống/lỗi và ô «chưa đủ mẫu» đúng ở chế độ tối",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "vi_sao": "9 vi phạm lint (bins.ts 8 — MapLibre bắt hex, có thể thành ngoại lệ có tên). Đứng trên AU9: không thì bản đồ Hà Nội trải cả nước.",
+      "hang": "T2",
+      "slug": "finder-analytics-choropleth",
+      "dung_tren": [
+        "AU9"
+      ],
+      "nhom": "invest-finder-insight",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD1"
+      ]
+    },
+    {
+      "ma": "UI9",
+      "cau_giao": "Nhà đầu tư mở Insight thị trường hoặc phường thấy khung solution-analytics-8, KPI của block, bản đồ @mapcn/map, neo mục lục tiếng Anh vẫn giữ link cũ, và mục trống hiện Empty thay vì bị ẩn",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "vi_sao": "Đứng trên AU9 (ranh giới đúng).",
+      "hang": "T2",
+      "slug": "insight-analytics-8-mapcn",
+      "dung_tren": [
+        "AU9"
+      ],
+      "nhom": "invest-finder-insight",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD2"
+      ]
+    },
+    {
+      "ma": "UI10",
+      "cau_giao": "Người vận hành mở «Căn giá tốt» /ops/deals thấy PageHeader, bảng theo block data-grid, đủ trạng thái tải/trống/lỗi, cột tầng A vẫn chỉ admin thấy",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "vi_sao": "B5 của chuẩn UI. Đứng trên PL26 (cùng trang, đổi thước phường × loại). Không đụng AU2 (API).",
+      "hang": "T2",
+      "slug": "ops-deals-data-grid",
+      "dung_tren": [
+        "PL26"
+      ],
+      "nhom": "ops-con-lai",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD11"
+      ]
+    },
+    {
+      "ma": "UI11",
+      "cau_giao": "Người vận hành mở /ops, /ops/collections, /ops/quality, /ops/sources thấy Skeleton đúng bố cục trong Suspense khi tải, lưới trống có Empty kèm một hành động, lỗi thao tác hiện tại chỗ có Thử lại",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "Phần Ops của B4 không có chủ sau khi B4 giải thể. Đứng trên AU6 và PL12 để không đụng tệp.",
+      "hang": "T2",
+      "slug": "ops-trang-thai-tai",
+      "dung_tren": [
+        "AU6",
+        "PL12"
+      ],
+      "nhom": "ops-con-lai",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD12"
+      ]
+    },
+    {
+      "ma": "UI12",
+      "cau_giao": "Người duyệt chọn nhiều thẻ và trả lại hàng loạt (không duyệt hàng loạt), mỗi thẻ trả lại có lý do và được ghi audit trong cùng giao dịch",
+      "vai": "Người duyệt",
+      "tieu_chi": 7,
+      "vi_sao": "routes.md /ops/review: «chỉ trả lại hàng loạt». Cần API mới cạnh review/[id]/decide (t3).",
+      "hang": "T3",
+      "slug": "ops-review-tra-lai-hang-loat",
+      "dung_tren": [
+        "UI1",
+        "PL3"
+      ],
+      "nhom": "ops-review",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD10"
+      ]
+    },
+    {
+      "ma": "UI13",
+      "cau_giao": "Quản trị mở /ops/audit thấy mọi thao tác ops:write (token, lệnh, thời điểm, kết quả, lý do duyệt) và lọc được",
+      "vai": "Quản trị",
+      "tieu_chi": 8,
+      "vi_sao": "portals.md §4 Cổng 2 (C4). API và bảng 018_ops_audit đã có. Thành T3 nếu phải sửa api/v1/ops/audit.",
+      "hang": "T2",
+      "slug": "ops-audit-trang",
+      "dung_tren": [
+        "PL3"
+      ],
+      "nhom": "ops-con-lai",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD16"
+      ]
+    },
+    {
+      "ma": "UI14",
+      "cau_giao": "Nhà đầu tư tick nhiều dòng ở bảng xếp hạng Finder rồi mở So sánh cho các khu vực đã chọn bằng một khay",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 8,
+      "vi_sao": "invest-portal-ia §3.2 P2/P5 «khay So sánh: chưa làm».",
+      "hang": "T2",
+      "slug": "finder-khay-so-sanh",
+      "dung_tren": [
+        "UI8",
+        "UI4"
+      ],
+      "nhom": "invest-ia-con-thieu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD13"
+      ]
+    },
+    {
+      "ma": "UI15",
+      "cau_giao": "Nhà đầu tư bấm «Chia sẻ» trên Insight, Listing và Lợi suất và sao chép được link giữ đủ tham số",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 8,
+      "vi_sao": "invest-portal-ia §1 L12, §5.",
+      "hang": "T2",
+      "slug": "nut-chia-se",
+      "dung_tren": [
+        "UI9",
+        "UI5",
+        "UI3"
+      ],
+      "nhom": "invest-ia-con-thieu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD14"
+      ]
+    },
+    {
+      "ma": "UI16",
+      "cau_giao": "Nhà đầu tư lưu được listing và báo cáo lợi suất và thấy chúng ở các tab Thị trường · Phường · Listing · Báo cáo của Đã lưu",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "vi_sao": "invest-portal-ia §3 sitemap. Cần migration + actions.ts (t3).",
+      "hang": "T3",
+      "slug": "saved-listing-bao-cao",
+      "dung_tren": [
+        "UI4"
+      ],
+      "nhom": "invest-ia-con-thieu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD15"
+      ]
+    },
+    {
+      "ma": "UI17",
+      "cau_giao": "Lint UI ra 0 vi phạm khi không còn tệp eslint-suppressions.json",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Đóng sổ case study chuẩn UI (138 → 0). Chạy cuối.",
+      "hang": "T2",
+      "slug": "go-baseline-lint",
+      "dung_tren": [
+        "UI1",
+        "UI2",
+        "UI3",
+        "UI4",
+        "UI5",
+        "UI6",
+        "UI7",
+        "UI8",
+        "UI9",
+        "UI10",
+        "UI11"
+      ],
+      "bat_khi": "Xoá eslint-suppressions.json: npm run lint xanh; bảng trước/sau ui-baseline-2026-10.md đủ cột; mọi trang có trạng thái tải",
+      "nhom": "dong-so-lint",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD17"
+      ],
+      "ghi_chu": "6 tiêu chí: hàng đóng sổ, không gộp được vì phải đứng sau mọi hàng giao diện."
+    },
+    {
+      "ma": "NT1",
+      "cau_giao": "Sync cloud không bao giờ COMMIT bảng FILL rỗng và không gãy vì khoá ngoại phía cloud",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Ngoài-4 (Mạnh chọn mở hợp đồng mới) và Ngoài-5 của cloud-sync-atomic. Lỗ còn ở sync-cloud.mjs cleanup() khi pha tráo lỗi phía client.",
+      "hang": "T3",
+      "slug": "sync-cloud-khong-commit-rong",
+      "bat_khi": "Cắt mạng giữa pha tráo (504 giả): areas/saved_markets trên cloud không đổi, lượt sau tự hồi; thêm một FK phía cloud trỏ vào bảng đồng bộ: lượt tráo vẫn xanh",
+      "nhom": "sync-cloud",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH1",
+        "TD2"
+      ]
+    },
+    {
+      "ma": "NT2",
+      "cau_giao": "Mọi đường dữ liệu rời máy (sync và ops-facts) qua cùng một bộ soát tầng A chặn khi lỗi",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "push-ops-facts đẩy nhãn job và log thô chứa tên nguồn thật lên ops_heartbeat, leak gate không kiểm đường này; leak gate cũng chưa soát cột PII.",
+      "hang": "T3",
+      "slug": "soat-tang-a-moi-duong-len-cloud",
+      "bat_khi": "Cấy tên nguồn thật vào payload ops-facts hoặc một cột: lệnh đẩy dừng trước khi gửi; leak gate đỏ khi cloud có cột PII ngoài danh sách cho phép",
+      "nhom": "roi-may",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH2",
+        "TD3"
+      ],
+      "ghi_chu": "Tên nhóm Zalo và tên tài khoản thu thuộc tầng A hay C: Mạnh xác nhận ở Cổng Phạm vi. Chung tệp với AU12 — chạy liền nhau."
+    },
+    {
+      "ma": "NT3",
+      "cau_giao": "Token phiên đăng nhập chỉ lưu dạng băm trong DB",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "vi_sao": "Token đang lưu thô, hạn 30 ngày (runbook 037). Lớp đăng nhập phải tách hàng riêng (luật 3).",
+      "hang": "T3",
+      "slug": "session-token-bam",
+      "bat_khi": "SELECT sessions không trả ra token dùng được; đăng nhập/đăng xuất vẫn chạy; phiên cũ hết hiệu lực khi chuyển",
+      "nhom": "bao-mat",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH3"
+      ],
+      "ghi_chu": "4 tiêu chí: lớp đăng nhập không gộp với lớp khác."
+    },
+    {
+      "ma": "NT4",
+      "cau_giao": "Mọi route API của app nằm trong một sổ bề mặt và chỉ trả đúng thứ sổ cho phép",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "/api/v1/offers công khai, cùng lỗ mock như /deals mà AU2 không phủ; beacon user-events 401 với khách; /api/zalo-media cho admin xem ảnh QR đăng nhập Zalo.",
+      "hang": "T2",
+      "slug": "so-be-mat-api",
+      "bat_khi": "Thêm một route đọc sale_offers công khai chưa khai: test đỏ; gọi /api/v1/offers không token theo đúng chế độ AU2; khách không gây 401 ở beacon; ảnh QR không tải được qua /api/zalo-media",
+      "nhom": "bao-mat",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH4",
+        "TD7",
+        "TD30"
+      ],
+      "ghi_chu": "Thành T3 nếu phải sửa proxy.ts. Chạy sau AU2."
+    },
+    {
+      "ma": "NT5",
+      "cau_giao": "Kho tái lập được: DB trống dựng từ db/migrations xanh, tài liệu vận hành khớp code, sản phẩm chạy thử không lọt vào git",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "012 cập nhật bảng không migration nào tạo, 031 sai alias; runbook 037 và DATA-CONTRACT lệch code; .acceptance-runs/ chưa ignore.",
+      "hang": "T3",
+      "slug": "kho-tai-lap-duoc",
+      "bat_khi": "Lệnh dựng-từ-đầu trên container tạm xanh; mọi câu lệch đã liệt trong hồ sơ được sửa; git status sạch sau một lượt chấm",
+      "nhom": "tai-lap",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH6",
+        "VH14",
+        "VH13g"
+      ],
+      "ghi_chu": "Cách sửa 012/031 (ngoại lệ sửa migration đã commit hay baseline mới theo .claude/rules/migrations.md) Mạnh chọn ở Cổng Phạm vi."
+    },
+    {
+      "ma": "NT6",
+      "cau_giao": "Enrich chạy hết backlog P1 mà không treo thẻ, lỗi LLM có đếm và cảnh báo, và mọi tin có phát biểu của bộ đọc mới",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Ngoài-4/7/8/9 của enrich-qua-de-xuat; đề xuất S03 mất do CASCADE trước 039 (23/10).",
+      "hang": "T2",
+      "slug": "enrich-backlog-ben",
+      "dung_tren": [
+        "PL16",
+        "PL18",
+        "PL2"
+      ],
+      "bat_khi": "Một lượt toàn backlog: không giao dịch nào giữ khoá quá ngưỡng, số lỗi LLM khớp log, mọi tin P1 sạch mock có phát biểu bộ đọc mới",
+      "nhom": "enrich",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "TD9",
+        "TD8"
+      ]
+    },
+    {
+      "ma": "NT7",
+      "cau_giao": "dq-truthful-coverage chạy lại không nhân dòng và ghi overlap mức listing",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "vi_sao": "Plan coverage-worklist Task 6; code còn INSERT thuần.",
+      "hang": "T2",
+      "slug": "dq-truthful-coverage-idempotent",
+      "dung_tren": [
+        "ZC5"
+      ],
+      "bat_khi": "Chạy 3 lần liên tiếp: số dòng dq_check_results không đổi; overlap = matched/universe ở mức listing",
+      "nhom": "do-luong",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH12"
+      ],
+      "ghi_chu": "4 tiêu chí: giá trị tăng sau worklist; không có hàng cùng nhóm để gộp."
+    },
+    {
+      "ma": "ZC1",
+      "cau_giao": "Hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "vi_sao": "L20 (review §6): tin ảnh trùng sha256(group|ts|text), tin sau bị bỏ lúc ingest. claudedp-2310-14. Làn ZCode, có thể chung nhánh zcode/kev-nhan nhưng hồ sơ tách slug.",
+      "hang": "T2",
+      "slug": "sourceid-tin-anh",
+      "bat_khi": "Bơm hai event ảnh cùng nhóm cùng ts: hai raw item, hai dòng stg",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "L20"
+      ],
+      "ghi_chu": "Hồ sơ do ZCode dựng; cỡ theo hợp đồng của hồ sơ."
+    },
+    {
+      "ma": "ZC2",
+      "cau_giao": "Collector tắt êm không mất tin: huỷ tải ảnh theo hạn, flush định kỳ có hạn chót, thoát khác 0 khi còn tin chưa ghi",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "claudedp-2310-3, nhánh zcode/collector-graceful-shutdown (vòng 2 REJECT, chờ vòng 3). Mỗi lần restart :9210 chạy tay mất buffer.",
+      "hang": "T2",
+      "slug": "collector-graceful-shutdown",
+      "bat_khi": "SIGTERM giữa lúc có tin treo ảnh: mọi tin có snapshot hoặc exit khác 0 có tên tin mất",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH7"
+      ]
+    },
+    {
+      "ma": "ZC3",
+      "cau_giao": "Watchdog Zalo cảnh báo drop-no-mention bất thường, không sót log đầu ngày, và collector phục hồi sau khi DB sập",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "claudedp-2310-5 MỞ LẠI (sót log đầu ngày). Phía collector/hook; phía job pipeline là AU3 — hai hàng không chồng.",
+      "hang": "T3",
+      "slug": "audit-p1-resilience",
+      "bat_khi": "Tắt DB rồi bật lại: collector tự nối lại không mất tin; tăng drop giả: watchdog cảnh báo; dòng log 00:00: được đọc",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH9"
+      ]
+    },
+    {
+      "ma": "ZC4",
+      "cau_giao": "Collector API :9210 và Kev :8009 chạy dưới launchd KeepAlive với plist và script cài trong repo, và media_files S03 có dòng thật",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Audit L2/L11: :9210 chạy tay, không có plist collector-api; N1 đã merge 605a837 nhưng 0 dòng media_files thật.",
+      "hang": "T2",
+      "slug": "collector-api-launchd",
+      "dung_tren": [
+        "ZC2"
+      ],
+      "bat_khi": "Kill tiến trình: launchd dựng lại trong 1 phút; sau một ngày có ảnh: media_files S03 > 0",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH8"
+      ],
+      "ghi_chu": "Cài plist lên máy là việc vận hành (Ra khỏi kho), hàng này giao plist + script + kiểm."
+    },
+    {
+      "ma": "ZC5",
+      "cau_giao": "Job AirDNA/Airbnb nightly theo worklist thay job tuần và không gọi vượt CONDUCT_WINDOW",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Plan 2026-10-21-coverage-worklist Task 1/2/3/5/7, nhánh zcode/airbnb-worklist (review sơ bộ đạt, chờ bỏ collector.plist khỏi install-cron.sh).",
+      "hang": "T2",
+      "slug": "airbnb-worklist",
+      "dung_tren": [
+        "AU9"
+      ],
+      "bat_khi": "Một đêm thật: worklist chạy đủ id, không lượt gọi nào ngoài cửa sổ; ADR-0007 CCP cập nhật",
+      "nhom": "airbnb",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH11"
+      ],
+      "ghi_chu": "Đứng trên AU9: Đà Nẵng phải có phường trước khi nightly lấy id ĐN (plan Review Focus #4)."
     }
   ],
   "chan_troi": [
@@ -804,6 +1299,276 @@
         "A1.6"
       ],
       "mo_lai_khi": "Mạnh quyết Q7 audit, hoặc PL2 + PL21 giao xong"
+    },
+    {
+      "ma": "UH1",
+      "dot": "giao-dien-2310",
+      "cau_giao": "Bộ lọc dùng chung theo số phòng ngủ và loại phòng",
+      "ly_do": "Pipeline chưa tính metric theo bộ lọc (IA L3)",
+      "phu": [
+        "GDH1"
+      ],
+      "mo_lai_khi": "Pipeline precompute metric theo phòng ngủ/loại phòng"
+    },
+    {
+      "ma": "UH2",
+      "dot": "giao-dien-2310",
+      "cau_giao": "Khoá theo gói (empty-state-5 + pricing-7)",
+      "ly_do": "Chưa chốt gói Pro (IA L13)",
+      "phu": [
+        "GDH2"
+      ],
+      "mo_lai_khi": "Mạnh chốt gói Pro"
+    },
+    {
+      "ma": "UH3",
+      "dot": "giao-dien-2310",
+      "cau_giao": "Điểm One Invest dạng radial",
+      "ly_do": "Chưa có mô hình điểm (IA L7)",
+      "phu": [
+        "GDH3"
+      ],
+      "mo_lai_khi": "Có mô hình điểm đã đo"
+    },
+    {
+      "ma": "UH4",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/pipeline",
+      "ly_do": "Cần câu hỏi quyết định khác /ops/collections và nguồn số lần chạy",
+      "phu": [
+        "GDH4"
+      ],
+      "mo_lai_khi": "Có câu hỏi quyết định riêng và nguồn số lần chạy job"
+    },
+    {
+      "ma": "UH5",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/agents phần hoạt động agent",
+      "ly_do": "Agent Swarm G4 chưa bắt đầu (phần chi phí đã là PL29)",
+      "phu": [
+        "GDH5"
+      ],
+      "mo_lai_khi": "Agent Swarm G4 bắt đầu"
+    },
+    {
+      "ma": "UH6",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/backups",
+      "ly_do": "Chưa có job backup",
+      "phu": [
+        "GDH6"
+      ],
+      "mo_lai_khi": "AH1 giao xong"
+    },
+    {
+      "ma": "UH7",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/console (trigger)",
+      "ly_do": "Giai đoạn C2 theo portals.md",
+      "phu": [
+        "GDH7"
+      ],
+      "mo_lai_khi": "Bắt đầu giai đoạn C2 của Cổng Ops"
+    },
+    {
+      "ma": "NH1",
+      "dot": "nen-tang-2310",
+      "cau_giao": "media_files từ stg lên canonical theo RESO Media",
+      "ly_do": "Chưa có snapshot ảnh v2 thật để đo (0 dòng media_files)",
+      "phu": [
+        "TD11"
+      ],
+      "mo_lai_khi": "ZC4 giao xong và media_files S03 có dòng thật"
+    },
+    {
+      "ma": "NH2",
+      "dot": "nen-tang-2310",
+      "cau_giao": "Bản công khai của app không đỏ test vì đọc tệp mẫu trong agent/",
+      "ly_do": "Gắn với sync-public — Mạnh đang hoãn mọi quyết định repo public",
+      "phu": [
+        "TD31"
+      ],
+      "mo_lai_khi": "Mạnh quyết hướng cho repo public"
+    },
+    {
+      "ma": "NH3",
+      "dot": "nen-tang-2310",
+      "cau_giao": "Chép lại lớp CI khi kit vá lỗ T1-escape",
+      "ly_do": "Lỗi của kit đã bàn giao cho phiên điều phối kit (Mạnh: gửi cho kit, không tự sửa)",
+      "phu": [
+        "TD32"
+      ],
+      "mo_lai_khi": "Kit ra bản vá T1-escape"
+    },
+    {
+      "ma": "NH4",
+      "dot": "nen-tang-2310",
+      "cau_giao": "Sync bỏ qua bảng không đổi",
+      "ly_do": "Ưu tiên thấp; đo trước khi build (sync hiện ~2 phút)",
+      "phu": [
+        "TD33"
+      ],
+      "mo_lai_khi": "Thời gian sync vượt 5 phút hoặc chi phí egress thành vấn đề"
+    },
+    {
+      "ma": "ZH1",
+      "dot": "zcode-2310",
+      "cau_giao": "Discovery sharding 65 query cấp quận",
+      "ly_do": "Phạm vi hoãn của plan coverage-worklist (Giai đoạn 1b)",
+      "phu": [
+        "TD16"
+      ],
+      "mo_lai_khi": "ZC5 giao xong và AU9 có phường đủ"
+    },
+    {
+      "ma": "ZH2",
+      "dot": "zcode-2310",
+      "cau_giao": "Lịch sử LTM AirDNA theo market",
+      "ly_do": "Trần gọi của ADR-0009",
+      "phu": [
+        "TD17"
+      ],
+      "mo_lai_khi": "Mạnh nới trần gọi AirDNA hoặc có nhu cầu đo cụ thể"
+    },
+    {
+      "ma": "SH1",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Liên hệ người bán lên cổng Invest (nới PII_EXCLUDE cột người bán)",
+      "ly_do": "Mạnh chưa quyết (rủi ro Nghị định 13/2023); phải sau khi rút mock để không hiện SĐT giả",
+      "phu": [
+        "TD5"
+      ],
+      "mo_lai_khi": "Mạnh quyết và PL2 giao xong"
+    },
+    {
+      "ma": "SH2",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Tên nguồn S01/S04/bộ dữ liệu mở trên cổng Invest",
+      "ly_do": "Chờ quyết Q4 của audit (ngoại lệ ghi công hay nhãn tầng C)",
+      "phu": [
+        "TD6"
+      ],
+      "mo_lai_khi": "Mạnh quyết Q4 audit"
+    },
+    {
+      "ma": "SH3",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "S06 lộ SĐT theo từng tin (tối đa 50/ngày, top deals)",
+      "ly_do": "Phụ thuộc quyết định liên hệ người bán",
+      "phu": [
+        "TD26"
+      ],
+      "mo_lai_khi": "SH1 mở"
+    },
+    {
+      "ma": "SH4",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "E5 học alias mới vào asset_nodes từ quyết định duyệt",
+      "ly_do": "Mạnh chưa quyết; cần danh mục cấp căn và thẻ duyệt v2",
+      "phu": [
+        "TD10"
+      ],
+      "mo_lai_khi": "Mạnh quyết, PL11 và PL23 giao xong"
+    },
+    {
+      "ma": "SH5",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "asset_nodes thêm phân khu/subzone và geo-polygon",
+      "ly_do": "Cần cấp trục/căn của lát đầu trước",
+      "phu": [
+        "TD24"
+      ],
+      "mo_lai_khi": "PL11 giao xong và lát mở rộng ngang"
+    },
+    {
+      "ma": "SH6",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Ghép listing Airbnb với tin rao bán",
+      "ly_do": "FRAMING: để đợt sau, chờ ghép căn ổn định",
+      "phu": [
+        "TD18"
+      ],
+      "mo_lai_khi": "PL20 và PL24 giao xong"
+    },
+    {
+      "ma": "SH7",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Kev-V media gate và VLM collage",
+      "ly_do": "Cần ảnh thật và cổng model",
+      "phu": [
+        "TD23"
+      ],
+      "mo_lai_khi": "NH1 mở và PH4 giao xong"
+    },
+    {
+      "ma": "SH8",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "MCP server tools (gom C3-wrap và data-api)",
+      "ly_do": "data-api chưa có bản deploy",
+      "phu": [
+        "TD19"
+      ],
+      "mo_lai_khi": "AH2 mở"
+    },
+    {
+      "ma": "SH9",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Consolidation đêm bằng Qwen local",
+      "ly_do": "Chưa có user_events thật; Mạnh chưa quyết ưu tiên",
+      "phu": [
+        "TD20"
+      ],
+      "mo_lai_khi": "Mạnh quyết và có user_events thật"
+    },
+    {
+      "ma": "SH10",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Form hồ sơ nhà đầu tư và export JSON có consent",
+      "ly_do": "Cần ADR SPL cho hồ sơ nhà đầu tư (FRAMING §7 câu 1)",
+      "phu": [
+        "TD21"
+      ],
+      "mo_lai_khi": "ADR SPL hồ sơ nhà đầu tư được chấp nhận"
+    },
+    {
+      "ma": "SH11",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "G4 quản lý danh mục sau mua (comps giá đêm)",
+      "ly_do": "Cần ADR SPL cho hồ sơ (FRAMING §7 câu 1)",
+      "phu": [
+        "TD22"
+      ],
+      "mo_lai_khi": "ADR SPL hồ sơ nhà đầu tư được chấp nhận"
+    },
+    {
+      "ma": "SH12",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Tin «tìm mua / tìm thuê» thành tín hiệu cầu",
+      "ly_do": "Quyết định sản phẩm riêng (review Q8b)",
+      "phu": [
+        "TD27"
+      ],
+      "mo_lai_khi": "Mạnh quyết Q8(b)"
+    },
+    {
+      "ma": "SH13",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Luật hiển thị và gỡ tin của môi giới, kênh báo «tin sai»",
+      "ly_do": "FRAMING §7 câu 5, 6 còn mở",
+      "phu": [
+        "TD28"
+      ],
+      "mo_lai_khi": "Mạnh trả lời FRAMING §7 câu 5, 6"
+    },
+    {
+      "ma": "SH14",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Môi giới «nhận căn» để xác nhận hoặc sửa",
+      "ly_do": "FRAMING ghi «đề xuất, sau»; cần căn và độ chắc trên Invest",
+      "phu": [
+        "TD29"
+      ],
+      "mo_lai_khi": "Mạnh quyết, PL24 và PL27 giao xong"
     }
   ],
   "da_bac": []
