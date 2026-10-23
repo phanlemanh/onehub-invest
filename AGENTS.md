@@ -52,10 +52,31 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
   ZCode làm ở worktree `~/dev/onehub-invest-zcode`, nhánh `zcode/<việc>`; Claude ở
   `.claude/worktrees/`, nhánh `feat|fix|…/<việc>`. Worktree mới thiếu file gitignored:
-  chép `.env` theo `.worktreeinclude`.
-- **Tích hợp**: ZCode không merge vào `main`. Xong việc → commit lên `zcode/*`, báo Mạnh;
-  Claude review, chạy `/verify`, dựng `_acceptance/<slug>/` khi T2/T3, rồi merge sau khi
-  Mạnh ký. Claude chỉ sửa code làn ZCode khi là lỗi tích hợp; lỗi logic thu → trả lại ZCode.
+  chép `.env` theo `.worktreeinclude`. Hook git (`core.hooksPath` = `.git/hooks-onehub`,
+  chuyển tiếp git-secrets) chặn mọi commit/merge-commit trong checkout chính.
+- **Ba vai, không chồng nhau** (chốt 2026-10-23):
+  - *Mạnh* — quyết định, ký cổng; bảo ZCode «đọc tin» khi có việc.
+  - *Điều phối liên làn* (phiên Claude «Phân chia công việc Claude/Zcode») — đầu mối DUY
+    NHẤT với ZCode: giao việc, review `zcode/*`, giữ luật làn + hợp đồng dữ liệu + sổ số
+    migration, giao bước triển khai sau merge. Không merge vào `main`.
+  - *Điều phối làn merge* (phiên Claude «Setup project Invest và Điều phối») — thứ tự PR,
+    CI, merge trên GitHub, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    Không nhắn ZCode, không review `zcode/*`.
+- **Giao tiếp Claude ↔ ZCode = luật tin của plugin `dieu-phoi`** (khối LUAT-TIN): khẩu lệnh
+  `GIAO · HỎI · BÁO · NHẬN · XONG · KẸT · TRẢ · HUỶ · MỞ LẠI`, mỗi yêu cầu là một vòng mở có
+  mã. Kênh: issue riêng tư `phanlemanh/onehub-invest#9`, qua lệnh bọc `~/dev/onehub-coord/bin/tin
+  <claude|zcode> …` (mỗi bên giữ kênh ở `~/dev/onehub-coord/<bên>` vì trạng thái kênh gắn với
+  gốc kho git). Chi tiết cho ZCode: `collector/AGENTS.md` mục «Giao tiếp với Claude».
+  KHÔNG đưa PII tầng A lên kênh (kênh nằm trên GitHub).
+- **Tích hợp**: ZCode không merge vào `main`. Xong việc → `tin XONG` kèm nhánh, sha, lệnh kiểm;
+  điều phối liên làn review, chạy `/verify`, dựng `_acceptance/<slug>/` khi T2/T3, chuyển
+  điều phối làn merge mở PR sau khi Mạnh ký. Claude chỉ sửa code làn ZCode khi là lỗi tích
+  hợp; lỗi logic thu → `tin MỞ LẠI` trả ZCode.
+- **Triển khai sau merge** (merge ≠ đang chạy): việc làn ZCode có runtime (collector API,
+  plist launchd, OpenClaw, `dist/`) cần một `tin GIAO` triển khai riêng. Đây là ngoại lệ DUY
+  NHẤT cho phép ZCode thao tác trong checkout chính: chỉ build/khởi động lại theo checklist
+  trong lời giao, không sửa tệp, rồi `tin XONG` kèm bằng chứng hai phía (watchdog ok, có
+  snapshot mới).
 - **Chỗ giáp ranh**:
   - Đổi DATA-CONTRACT / thêm cột `stg_*`: ZCode đề xuất và tăng `schemaVersion`; Claude
     viết migration (Claude sở hữu `db/migrations/` — tránh hai bên cùng lấy số NNN) và

@@ -43,6 +43,34 @@
 - Field/enum mới: tra RESO Data Dictionary trước (`docs/research/reso-standards.md` ở gốc repo).
 - Script nạp (`pipeline/import-*.mjs`) chỉ ghi bảng `stg_*` / `airbnb_snapshots`.
 
+## Giao tiếp với Claude (luật tin của plugin dieu-phoi)
+
+Đầu mối duy nhất phía Claude là **điều phối liên làn** (`claudedp`). Mọi giao việc, hỏi, báo đi qua
+kênh issue `phanlemanh/onehub-invest#9` bằng lệnh bọc — không nhắn qua Mạnh, không sửa tay issue.
+
+```bash
+T=~/dev/onehub-coord/bin/tin
+$T zcode doc                                   # ĐẦU MỖI LƯỢT: đọc tin mới gửi mình (mỗi tin hiện một lần)
+$T zcode so                                    # sổ vòng đang mở (của mình và mình gửi)
+$T zcode NHẬN <mã> "sẽ giao <một câu bằng lời của mình>"
+$T zcode XONG <mã> --vat "nhánh zcode/<việc> @ <sha> · check/test/build xanh"
+$T zcode KẸT <mã> "<cần gì, từ ai>"
+$T zcode HỎI claudedp "<câu hỏi>" --chan     # --chan khi không đi tiếp được nếu thiếu câu trả lời
+$T zcode BÁO claudedp "<một câu>"             # không mở vòng, không ai phải đáp
+$T zcode TRẢ <mã> "<lý do>" --chuyen claudedp
+```
+
+- Nhận lời giao → `NHẬN` ngay, câu «sẽ giao …» nói lại ý định bằng lời mình (để người giao so lệch sớm).
+- `XONG` phải kèm nhánh, sha và lệnh kiểm đã chạy. Không đạt → Claude `MỞ LẠI` trong 24 giờ.
+- Phát hiện việc ngoài lời giao → `BÁO claudedp`, không tự mở rộng phạm vi.
+- **Phải `HỎI --chan`, không tự làm**: chạm tệp ngoài làn · đổi DATA-CONTRACT/`schemaVersion` · chạm
+  cấu hình OpenClaw/Zalo hay launchd · cần cột/bảng `stg_*` mới (số migration do Claude cấp) · mọi thao
+  tác trong checkout chính hay dịch vụ đang chạy (build, restart, `launchctl`) ngoài lời giao triển khai ·
+  việc khó đảo (xoá, push, cắt bản) · hai nguồn nói trái nhau.
+- **Không hỏi**: đặt tên, thứ tự việc trong làn, chọn giữa hai cách đều đảo được — tự quyết, ghi vào commit.
+- **Không đưa PII tầng A lên kênh**: không SĐT, tên/ID người bán, tên nguồn thật, URL ảnh tin. Dùng
+  mã S0x, offer/post id, nhánh, sha.
+
 ## Kiểm trước khi báo xong
 
 ```bash
