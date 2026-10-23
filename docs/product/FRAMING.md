@@ -43,6 +43,7 @@ cứ đăng ở nơi quen thuộc                      4 câu hỏi đầu tư
 | D3 | Loại hình làm trước? | **Căn hộ** — có mã căn, toà; **người môi giới đang giữ chính mã căn** | Mã căn là trường lõi phải trích được từ tin (và từ môi giới); nhà phố đi sau, sống với «suy ra» |
 | D4 | Tin nhóm khép (P1) hiện công khai từng tin? | **Công khai** — đội giao dịch trên đó, tốc độ là thứ mong muốn, trao đổi phải **tức thời** | P1 là danh sách chính, không chỉ là tín hiệu. Độ tươi tính bằng **phút**, không phải ngày — trái với nhịp nạp đêm hiện nay. Vẫn giữ SPL: hiện nhãn tầng C, không tên nguồn thật |
 | D5 | Giờ công người cho gắn nhãn + duyệt? | **Sẵn sàng thuê người** để bảo đảm, nhưng **kỳ vọng model đem lại độ chính xác để bỏ người nhiều nhất có thể** | Công người là khoản đầu tư để đo và dạy model, không phải chi phí vận hành vĩnh viễn. Thước đo phải có «tỉ lệ tự động ở ngưỡng đúng» và nó phải tăng theo thời gian |
+| D6 | Model AI và chi phí? | Qwen 27B local yếu tốc độ + độ chính xác; cần **AI Gateway** để đổi/chọn model cho từng việc, **biết rõ chi phí** để quyết; **trợ lý AI cho nhà đầu tư tính tiền riêng** về sau | Chọn model theo số đo (đúng × trễ × chi phí), sổ chi phí riêng cho pipeline và cho trợ lý; review phân loại §0.4 |
 
 ### 2.1 Phía môi giới — giảm nỗ lực tối đa
 
@@ -159,6 +160,7 @@ người đăng đã giấu.
 | Năng lực (§3.4) | Bậc N0–N4 của từng phân khúc | Phân khúc nào lên N3 thì mới mở rộng ra cổng công khai rộng |
 | Tự động hoá (D5) | **Tỉ lệ giá trị/căn được máy quyết mà vẫn đạt ngưỡng đúng** · số phút người mỗi 100 tin · xu hướng theo tuần | Phải tăng dần; đo trên tập test đóng băng |
 | Độ tươi (D4) | **Phút** từ lúc tin đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95) | Mục tiêu cụ thể: câu hỏi mở |
+| Chi phí (D6) | Chi phí model + phút người **để đưa một căn lên bậc**, theo phân khúc · chi phí trợ lý theo người dùng | Sổ cuộc gọi AI (review §0.4) |
 | Giao dịch (trễ) | Thời gian từ tìm tới liên hệ · số liên hệ mỗi căn | Cần sự kiện sản phẩm |
 | **Bất biến** (test, không phải tỉ lệ) | 0 quyết định người bị mất qua nạp lại · 0 giá trị máy không có căn cứ · 0 dữ liệu tầng A lên cloud | Chặn ở CI |
 
@@ -211,4 +213,5 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | Ngày | Đổi gì | Ai |
 |---|---|---|
 | 2026-10-23 | Bản đầu: mục đích, hai phía một lõi, sáu chiều «tin cậy», thước đo; D1–D5 | Mạnh duyệt · Claude ghi |
+| 2026-10-23 | D6 lớp model: AI Gateway, chọn model theo số đo, biết rõ chi phí; trợ lý nhà đầu tư tính tiền riêng | Mạnh nêu · Claude ghi |
 | 2026-10-23 | Thêm sự thật «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh) → thang bậc căn B0–B5, bậc năng lực N0–N4 (§3.4); north star thành phân bố theo bậc | Mạnh nêu · Claude đề xuất thang · Mạnh duyệt thang + bậc đích |

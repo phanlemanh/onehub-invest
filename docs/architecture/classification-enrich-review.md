@@ -10,7 +10,8 @@
 > thêm thời gian (L18), kế hoạch đổi sang lát dọc, quyết định còn 7 câu (§0.2 F); sự thật 8 «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh). Khi lệch, §0.2 thắng.
 > **§0.3 (23/10)**: 1.020/1.102 tin S03 là dữ liệu giả `zalo-mock` (L19) — số S03 ở §0–§2 đọc kèm bảng đính chính;
 > trả lời F1–F6: lát đầu Vinhomes Ocean Park 1, ngưỡng theo cận dưới Wilson, độ tươi p50 ≤ 10′, thứ tự dọn tồn đọng.
-> Đọc nhanh: §0 tóm tắt → §0.1 → **§0.2** → **§0.3** → §4 quyết định → §5 việc. §1–§3 là căn cứ.
+> **§0.4 (23/10)**: lớp model — chọn model theo số đo qua AI Gateway, sổ chi phí, trợ lý nhà đầu tư tách sổ; M1–M4.
+> Đọc nhanh: §0 tóm tắt → §0.1 → **§0.2** → **§0.3** → **§0.4** → §4 quyết định → §5 việc. §1–§3 là căn cứ.
 
 ---
 
@@ -282,7 +283,7 @@ Danh mục cũng là dữ liệu, nên cũng có bậc (sự thật 8). Mỗi d�
 Việc thu (làn ZCode, Z1.2): nguồn công khai của CĐT cho Ocean Park 1 trước. Việc dựng từ tin (làn Claude, C1.5/C1.6):
 gom (toà, trục, DT, PN) từ phát biểu của các tin, đếm môi giới độc lập.
 
-### F3 — Ngưỡng tự áp: đề xuất
+### F3 — Ngưỡng tự áp (Mạnh đồng ý 23/10)
 
 Nguyên tắc: ngưỡng so với **cận dưới khoảng tin cậy 95% (Wilson)** của độ đúng trên tập test, không so với tỉ lệ
 thô — vì tập nhãn do đội tự gắn sẽ nhỏ, và 98/100 đúng chưa chứng minh được 95%.
@@ -322,7 +323,7 @@ Vì nhiều người gắn: viết **hướng dẫn gắn nhãn** cho lát (ca k
 **20% tin gắn trùng hai người** để đo độ đồng thuận — dưới 0,9 thì sửa hướng dẫn trước khi tin vào số đo; màn gắn
 nhãn mù (không hiện giá trị máy).
 
-### F6 — Dọn tồn đọng: đề xuất
+### F6 — Dọn tồn đọng (Mạnh đồng ý thứ tự 23/10; mỗi bước ghi DB vẫn chạy ở phiên được giao việc)
 
 Thứ tự đề xuất (mỗi bước ghi DB local, cần Mạnh đồng ý từng bước):
 
@@ -333,6 +334,86 @@ Thứ tự đề xuất (mỗi bước ghi DB local, cần Mạnh đồng ý t�
 | 3 | **639/644** (`land` sai, tin S05 thật) | Hàm 036 sẵn; hai tin chưa gắn căn nên không lan; sai đang hiện ở Deals | `enrich-revert --ids 639,644 --dry` rồi chạy thật, actor `hitl:manh`. 640/645 (LLM `house`) mở lại, lượt enrich kế gắn vào thẻ 160/162 cùng đề xuất WC + đường → Mạnh duyệt trên thẻ |
 | 4 | **Quyết định ghép căn đã mất** (`ops_audit` 4 → review 24) | Cặp thật: tin S05 «Lê Quang Định, 2 tầng 52m², ~7 tỷ» ↔ tin S06 60m², 8,5 tỷ. Nhãn `merged` hiện chưa có tác dụng (resolve không đọc) và có thể mất lần nữa (CASCADE còn đó) | Duyệt lại review 24 trên `/ops/review` (đường có audit). Chấp nhận có thể mất lại cho tới C2.1/C3.2; ghi ca này vào tập hồi quy |
 | 5 | Dòng audit của thẻ thử (`enrich:demo-cong2`, `enrich:t_vis_conflict`) | Audit là chỉ-thêm | Không xoá; từ nay thẻ thử ghi `env='test'` |
+
+## 0.4 Lớp model: chọn model theo số đo, qua một cổng, biết rõ chi phí (23/10)
+
+> Mạnh nêu 23/10: Qwen 27B local yếu cả **tốc độ** lẫn **độ chính xác**; kiến trúc cần một **AI Gateway** (ví dụ của
+> Vercel) để đổi và chọn model hợp từng loại việc, **biết rõ chi phí** để quyết; **trợ lý AI cho nhà đầu tư tính
+> tiền riêng** về sau. Mạnh cũng đồng ý ngưỡng F3 và thứ tự dọn F6 (§0.3).
+
+### Từ nguyên lý gốc
+
+Model chỉ là một **bộ diễn giải** (T3). Nên:
+- Chọn model là chọn **cách đọc cho một ô** (việc × trường × phân khúc), và lý do chọn phải là **số đo** (T6) — không
+  phải thói quen «local trước». Ba trục: **độ đúng** (cận dưới Wilson so với ngưỡng F3), **độ trễ** (so với ngân sách
+  F4), **chi phí** (đồng / tin, đồng / căn lên bậc).
+- Quy tắc chọn: **model rẻ nhất mà vẫn đạt ngưỡng đúng của ô và vừa ngân sách độ trễ**. Không đạt với model nào → ô
+  đó đi thẻ người.
+- Đổi model **không đổi hợp đồng**: model mới vẫn phải ra phát biểu kèm trích dẫn; LLM vẫn ngoài đường dữ liệu.
+- Chi phí là một phần của **nỗ lực** (sự thật 8): thước đo mới **«chi phí để đưa một căn lên bậc»** (tiền model + phút
+  người), đo theo phân khúc.
+
+### Kiến trúc
+
+```
+bộ diễn giải (parser · luật · Kev · LLM · VLM sau này)
+        │  gọi qua MỘT chỗ: getModel(việc, ô)        ← agent/src/runtime/models.ts đã là chỗ nối duy nhất
+        ▼
+  Bảng chọn model (theo ô, sinh từ kết quả đo)  ──►  AI Gateway (cloud)  ──► nhiều nhà cung cấp
+        │                                         └►  local: Qwen 27B, Kev-4B (dự phòng · dữ liệu không được ra ngoài)
+        ▼
+  Sổ cuộc gọi AI (DB local): việc · ô · model · token vào/ra · chi phí · độ trễ · run_id · kết quả đo liên quan
+        ▼
+  /ops: chi phí theo việc / phân khúc / ngày · biên «độ đúng × độ trễ × chi phí» của từng ô
+```
+
+- **Hai «khách» tách sổ và tách ngân sách** ngay từ đầu: *pipeline* (diễn giải tin, chi phí vận hành lõi) và *trợ lý
+  nhà đầu tư* (tính tiền riêng — cần đo theo từng người dùng). Mỗi khách một khoá gateway + ngân sách riêng.
+- **Sổ cuộc gọi của mình** song song với dashboard gateway: dashboard tốt để nhìn, nhưng phép chọn model và chi phí
+  theo căn/bậc phải tính được trong DB. *(Chưa xác minh gateway có API số liệu cho máy đọc — kiểm khi làm.)*
+- **Bộ đánh giá chạy nhiều model trên cùng tập nhãn** (G1/G2 của lát Ocean Park 1) → ra bảng biên cho từng ô → bảng
+  chọn model. Đo lại khi có model mới hoặc mỗi tháng.
+- **Dự phòng**: gateway lỗi hoặc dữ liệu không được ra ngoài → local (Qwen, Kev) với ngưỡng riêng của nó; ô nào local
+  không đạt thì đi thẻ thay vì hạ ngưỡng.
+
+Vercel AI Gateway hợp với repo vì app chạy Vercel và agent đã dùng AI SDK. Theo tài liệu Vercel: không cộng phí trên
+giá token của nhà cung cấp (kể cả khi dùng khoá riêng), có ngân sách, theo dõi dùng, cân tải và dự phòng. Cách cấu
+hình dự phòng và API số liệu cần kiểm khi làm.
+
+### Ranh giới dữ liệu (SPL) khi gọi model cloud
+
+| Dữ liệu | Gửi model cloud? | Căn cứ |
+|---|---|---|
+| Nội dung tin rao, người bán (tên, SĐT, ID) | **Được** | Tầng C — ROADMAP §3.11 |
+| Tên nguồn thật, `source_registry`, nhãn nội bộ nguồn | **Không** — bỏ khỏi prompt | Tầng A — ADR-0007 |
+| Tên nhóm | **Chờ quyết** (M2) — tạm không gửi | Có thể lộ nguồn |
+| Hồ sơ, sự kiện, danh mục của nhà đầu tư (trợ lý) | **Chờ ADR riêng** | ADR-0007 xếp tầng A, không rời máy local — trái với trợ lý chạy cloud |
+
+### Ước lượng (để có thứ tự độ lớn, không phải báo giá)
+
+Lát Ocean Park 1: ~300 tin rao/ngày × ~1,5 nghìn token/tin ≈ **~0,5 triệu token/ngày** cho trích xuất. Chi phí thật
+phụ thuộc model được chọn theo số đo — sổ cuộc gọi sẽ cho số sau tuần đầu.
+
+### Quyết định cho Mạnh
+
+| # | Câu | Phương án | Khuyến nghị |
+|---|---|---|---|
+| **M1** | Sửa hiến pháp ROADMAP §1.6 «Local-first AI» | (a) **Thành «chọn model theo số đo (đúng × trễ × chi phí); local là một lựa chọn và là dự phòng»** · (b) Giữ local mặc định, cloud là ngoại lệ | **(a)** — đúng ý Mạnh và đúng nguyên lý gốc A4; local vẫn giữ vai cho dữ liệu không được ra ngoài |
+| **M2** | Tên nhóm có được gửi model cloud? | (a) Không — chỉ gửi nhãn dự án đã khai ở sổ nhóm · (b) Được | **(a)** — dự án đã khai mang đủ ngữ cảnh; tên nhóm có thể lộ nguồn |
+| **M3** | Cổng | (a) **Vercel AI Gateway + sổ cuộc gọi riêng** · (b) Tự dựng cổng (proxy tự host) · (c) Gọi thẳng từng nhà cung cấp | **(a)** — cùng hệ Vercel/AI SDK, không phí cộng thêm theo tài liệu; (c) mất chỗ đổi model và chỗ đo chi phí |
+| **M4** | Trợ lý nhà đầu tư tính tiền riêng | Ghi FRAMING D6 ngay; đo theo người dùng từ ngày đầu; ADR SPL riêng trước khi gửi hồ sơ nhà đầu tư lên cloud | Ghi ngay; ADR khi bắt đầu làm trợ lý |
+
+### Việc
+
+| Mã | Việc | Làn | Phụ thuộc |
+|---|---|---|---|
+| CM.1 | Sổ cuộc gọi AI (bảng local + ghi ở `getModel`) + trang chi phí trên `/ops` | C | — (làm ngay, trước khi đổi model) |
+| CM.2 | Bộ đánh giá nhiều model trên cùng tập nhãn → bảng biên + bảng chọn model theo ô | C | C1.3, M1 nhãn của lát |
+| CM.3 | Nối AI Gateway: hai khoá (pipeline · trợ lý), ngân sách, dự phòng về local; lọc tầng A khỏi prompt | C | M1, M2, M3 |
+| CM.4 | Thước đo «chi phí để đưa một căn lên bậc» trên `/ops` | C | CM.1, C1.4 |
+
+Trong lát Ocean Park 1: CM.1 trước C1.6/C2.4 (trích mã căn, giá khoảng, nghĩa của giá) — để biết ngay Qwen đang tốn
+bao nhiêu thời gian và sai bao nhiêu so với model cloud trên cùng tập nhãn.
 
 ## 1. Bản đồ hiện trạng — mỗi điểm phân loại một dòng
 

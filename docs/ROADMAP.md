@@ -31,6 +31,8 @@
    (lockdown 7 lớp + watchdog runtime guard — 2 sự cố đã xảy ra).
 6. **Local-first AI**: Qwen 27B (MTPLX :8000) + Kev-4B gate (81ms) là mặc
    định; cloud (OpenAI Decisions) chỉ cho dữ liệu phi-PII.
+   *(23/10: Mạnh nêu cần AI Gateway chọn model theo việc + biết chi phí — đề xuất sửa luật này ở review
+   phân loại §0.4 M1, chờ Mạnh chốt.)*
 7. **Đơn vị nghĩ là CĂN NHÀ**: "Một Căn Nhà" (entity properties) là đơn vị
    phân tích; nguồn chỉ là evidence.
 8. **Đo trước khi build**: không graph/vector/infra mới trước khi số liệu
