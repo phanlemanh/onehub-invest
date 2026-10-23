@@ -1,102 +1,75 @@
-# Review findings: enrich-qua-de-xuat (round 2)
-
 ## Trong hợp đồng
 
-(không có)
+- **Thẻ «Để sau» chỉ hiện lại khi offer được bốc ngẫu nhiên lần nữa; offer chỉ còn thiếu bedrooms/block_raw thì không bao giờ được bốc lại**
+  file: `agent/src/enrich/run.ts:61`
+  severity: medium
+  AC: AC-6
+  source: bugs
+  detail: Khi người chọn deferred, decide_enrichment_review để đề xuất ở 'queued' và ghi chú 'lượt enrich sau gắn sang thẻ chờ mới'. Nhưng chỉ có syncReview gắn lại, và syncReview chỉ chạy cho các offer selectOffers trả về. Tập đó (1) lọc `property_type='unknown' OR street_raw IS NULL OR bathrooms IS NULL` và (2) lấy `ORDER BY random() LIMIT`. Một thẻ bị hoãn mà đề xuất chỉ thuộc bedrooms/block_raw, trên offer đã đủ ba field kia, sẽ không bao giờ được chọn lại: các đề xuất 'queued' ấy nằm mãi trên một thẻ 'deferred' mà /ops/review không còn hiện. Với offer vẫn khớp bộ lọc thì việc hiện lại cũng tuỳ may rủi của random().
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **E1 block_raw được đổi sang tên chuẩn node nhưng không ghi lại nguồn asset_nodes (corroborated_by/evidence)**
-  Người dùng thấy gì: Khi hệ thống đổi mã toà viết tắt trong tin thành tên toà chuẩn, bản ghi đề xuất chỉ lưu tên chuẩn và không nói rõ tên đó lấy từ danh mục nào. Người rà soát phải tự đối chiếu với đoạn tin gốc mới biết, nhưng giá trị được điền vẫn đúng.
-  Căn cứ: Hậu quả nhẹ: không mất hay sai dữ liệu, chỉ thiếu một dấu vết giúp người kiểm tra nhanh hơn, và đoạn tin gốc vẫn còn để đối chiếu; ghi lại là đủ, bổ sung sau cũng không đắt.
-  file: `agent/src/enrich/route.ts`
+- **enrich-run gói CẢ lượt chạy (gồm các lần gọi LLM) vào một transaction — giữ khoá hàng hàng giờ, chặn route decide và pipeline; lỗi cuối lượt bỏ hết công**
+  Người dùng thấy gì: Khi chạy làm giàu một lượt lớn kéo dài hàng giờ, người duyệt bấm Áp dụng hoặc Bỏ trên một thẻ mà lượt đó vừa đụng tới có thể bị treo, và một lỗi ở cuối lượt làm mất toàn bộ kết quả cùng công gọi LLM đã bỏ ra.
+  Căn cứ: Chỉ xảy ra khi chạy lượt lớn, mà vòng này chưa chạy trên toàn backlog; không mất dữ liệu gốc, chạy lại được, và sửa sau không đắt.
+  file: `agent/scripts/enrich-run.ts`
+  severity: medium
+  Đề xuất: known-limits
+- **Test UI của app đọc fixture nằm trong agent/ — bản app/ đẩy ra repo public sẽ không chạy được npm test**
+  Người dùng thấy gì: Trên bản công khai của giao diện, bộ test sẽ báo đỏ vì thiếu tệp mẫu, và bản công khai lộ ra việc nó phụ thuộc vào kho riêng. Người dùng cuối không bị ảnh hưởng.
+  Căn cứ: Chỉ ảnh hưởng người bảo trì bản công khai, không động tới dữ liệu hay chức năng; sửa sau rẻ và an toàn.
+  file: `app/tests/review-card.test.tsx`
   severity: low
   Đề xuất: known-limits
-
-- **Hình dạng 6 — đường dẫn hardcode ROOT: s4-args.json trỏ input judgment E6 và repoRoot vào checkout chính (main), không vào worktree đang kiểm**
-  Người dùng thấy gì: Bản ghi kiểm tra vòng đầu đã đo nhầm trên mã của nhánh chính thay vì mã đang làm, nên kết luận của vòng đó không đáng tin. Người dùng cuối không bị ảnh hưởng vì sản phẩm không đổi, và bản kiểm tra vòng sau đã trỏ đúng chỗ.
-  Căn cứ: Không ảnh hưởng người dùng và không mất dữ liệu; lỗi chỉ nằm ở hồ sơ kiểm tra cũ, bản chạy lại đã sửa đúng nên không cần mở thêm việc.
-  file: `_acceptance/enrich-qua-de-xuat/s4-args.json`
+- **FK ON DELETE CASCADE xoá sạch đề xuất S03/S05 mỗi lần transform chạy: giá trị đã bác bị đẩy lại, thẻ chờ còn lại thì rỗng**
+  Người dùng thấy gì: Mỗi lần dữ liệu Zalo/Facebook được nạp lại, toàn bộ đề xuất cũ bị xoá: giá trị người duyệt đã bác có thể bị đưa lên thẻ lần nữa, dấu vết các giá trị đã áp mất, và thẻ đang chờ trở nên rỗng nhưng vẫn báo «Đã duyệt» dù không có gì được áp.
+  Căn cứ: Nặng vì mất dấu kiểm toán và quyết định của người duyệt bị lặp lại hoặc báo sai là đã áp; người dùng không tự khôi phục được lịch sử đã mất, nên cần một việc riêng xử lý.
+  file: `db/migrations/033_enrichment_proposals.sql`
   severity: high
-  Đề xuất: wont-fix
-
-- **LLM confidence goes into a numeric column unchecked; one bad value rolls back the whole batch (r1)**
-  Người dùng thấy gì: Nếu mô hình AI trả độ tin cậy là chữ hoặc số vô lý, cả lượt làm giàu dữ liệu có thể hỏng và mất hết kết quả đã chạy, hoặc thẻ duyệt hiện phần trăm sai (ví dụ 9000%).
-  Căn cứ: Lỗi hiếm gặp và lộ ngay khi chạy (lượt chạy báo hỏng, không ghi dữ liệu sai vào tin), chạy lại là được, nên có thể xử lý ở một vòng riêng.
-  file: `agent/src/enrich/run.ts`
-  severity: medium
   Đề xuất: new-contract
-
-- **enrich-run holds one DB transaction open across every LLM call (~2h for the backlog) (r1)**
-  Người dùng thấy gì: Khi chạy làm giàu dữ liệu trên số lượng lớn tin, hệ thống giữ khoá nhiều giờ nên thao tác duyệt thẻ hoặc các job ban đêm có thể bị treo chờ. Nếu lỗi giữa chừng thì mất toàn bộ lượt.
-  Căn cứ: Vòng này chỉ chạy lô nhỏ và chưa chạy toàn backlog nên ít ai gặp; chỉ trở nên nặng khi chạy hàng loạt, và khi đó cần sửa trước khi chạy.
+- **Cả lượt enrich (có thể tới khoảng 2 giờ gọi LLM) nằm trong một transaction: giữ khoá dòng sale_offers/review_queue, lỗi giữa chừng mất hết**
+  Người dùng thấy gì: Khi chạy làm giàu một lượt dài, thao tác duyệt thẻ và bước nạp dữ liệu có thể bị chặn chờ, và một lỗi giữa chừng làm mất sạch kết quả của cả lượt.
+  Căn cứ: Chỉ lộ khi chạy lượt rất dài, chưa nằm trong vòng này; chạy lại được, không mất dữ liệu gốc, sửa sau không đắt.
   file: `agent/scripts/enrich-run.ts`
   severity: medium
   Đề xuất: known-limits
-
-- **New review card uses raw <table>/<button> with hardcoded colors although shadcn table/button exist (r1)**
-  Người dùng thấy gì: Thẻ duyệt mới dùng bảng và nút tự viết với màu cố định, nên giao diện có thể lệch nhẹ so với phần còn lại của trang vận hành. Chức năng vẫn đúng.
-  Căn cứ: Chỉ là chênh lệch về hình thức ở trang nội bộ, không mất dữ liệu và không ảnh hưởng người dùng đầu tư; sửa sau cũng rẻ nhưng không cần mở việc riêng.
-  file: `app/src/components/ops/review-card.tsx`
-  severity: low
-  Đề xuất: wont-fix
-
-- **Cả batch enrich (gồm các lượt gọi LLM, có thể kéo ~2h) nằm trong MỘT transaction: giữ khoá hàng hàng giờ, và một lỗi DB làm mất toàn bộ (r1)**
-  Người dùng thấy gì: Một lượt làm giàu dữ liệu dài sẽ giữ khoá lâu, có thể làm thao tác duyệt thẻ bị treo, và một lỗi ở cuối lượt làm mất toàn bộ kết quả AI đã tốn thời gian chạy.
-  Căn cứ: Chỉ đau khi chạy lô rất lớn, mà vòng này chưa chạy; dữ liệu không bị ghi sai, chỉ mất công chạy lại.
+- **LLM trả output không parse được bị nuốt im lặng: không log, không đếm, E1 được áp thẳng như thể không cần LLM**
+  Người dùng thấy gì: Nếu mô hình trả rác hàng loạt, lượt chạy trông như bình thường và không ai biết bước đối chiếu giữa luật và LLM đã bị bỏ qua trên các offer đó.
+  Căn cứ: Giá trị vẫn đi theo luật xác định nên không sai dữ liệu nặng, chỉ thiếu cảnh báo vận hành; bổ sung bộ đếm sau là rẻ.
   file: `agent/scripts/enrich-run.ts`
   severity: medium
   Đề xuất: known-limits
-
-- **LLM hỏng, timeout hoặc trả đầu ra không parse được đều thành 'không có đề xuất LLM' mà tổng kết không báo (r1)**
-  Người dùng thấy gì: Nếu máy chạy mô hình AI chết hoặc trả rác, lượt chạy vẫn báo hoàn tất như bình thường nên người vận hành không biết phần AI đã hỏng hoàn toàn.
-  Căn cứ: Không làm sai dữ liệu nhưng che mất sự cố, người vận hành có thể tưởng đã làm giàu xong; dễ sửa sau và chạy lại được.
-  file: `agent/scripts/enrich-run.ts`
-  severity: medium
-  Đề xuất: new-contract
-
-- **syncReview ghi đè model/trace_path/run_id của thẻ chờ bằng meta của lượt hiện tại, kể cả khi lượt này không gọi LLM (r1)**
-  Người dùng thấy gì: Trong một số lần chạy lại, thẻ chờ duyệt có thể hiện sai mô hình hoặc dấu vết nguồn của giá trị đang duyệt, nên người duyệt khó lần lại nguồn thật.
-  Căn cứ: Dữ liệu gốc của từng đề xuất vẫn còn nguyên, chỉ phần hiển thị trên thẻ lệch; không mất dữ liệu và không áp sai giá trị.
+- **Tổng kết lượt chạy báo số «áp thẳng/có căn cứ» theo kế hoạch định tuyến, không theo số thực sự được ghi**
+  Người dùng thấy gì: Dòng tổng kết cuối lượt có thể báo đã áp nhiều giá trị hơn số thực sự được ghi vào dữ liệu, làm người vận hành hiểu sai kết quả lượt chạy.
+  Căn cứ: Chỉ lệch con số hiển thị, dữ liệu thật không bị sai; người vận hành đối chiếu lại được, sửa sau rẻ.
   file: `agent/src/enrich/run.ts`
   severity: low
   Đề xuất: known-limits
-
-- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): giá trị E1 trong ca AC-3/AC-7 viết tay hoặc stub, không rút từ resolveContext thật; có ca dựng hình dạng E1 mà writer thật không sinh ra được (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Một số kiểm thử dùng dữ liệu đầu vào dựng tay thay vì dữ liệu do hệ thống thật tạo ra, nên có thể bỏ sót lỗi thật ở luồng làm giàu.
-  Căn cứ: Không ảnh hưởng trực tiếp người dùng, chỉ làm lưới an toàn kiểm thử lỏng hơn; có thể bổ sung sau mà không đụng dữ liệu.
-  file: `agent/tests/enrich-route.test.ts`
-  severity: high
-  Đề xuất: known-limits
-
-- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): node toà nhà dựng tay, loadBuildings đọc asset_nodes không bao giờ chạy (r1 · tệp đã đổi)**
-  Người dùng thấy gì: Phần đọc danh sách toà nhà từ kho dữ liệu chưa được kiểm thử bằng dữ liệu thật, nên nếu hỏng thì việc nhận diện toà nhà có thể sai mà không ai biết sớm.
-  Căn cứ: Không gây mất dữ liệu ngay; chỉ là chỗ kiểm thử chưa phủ, bổ sung sau rẻ và không ảnh hưởng người dùng hiện tại.
-  file: `agent/tests/enrich-db.test.ts`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): chiều đỏ AC-5 skipped và AC-6 decide chạy trên đề xuất/thẻ chèn tay, không phải thẻ do lượt enrich sinh (r1)**
-  Người dùng thấy gì: Kiểm thử bước áp dụng và quyết định thẻ dùng dữ liệu dựng tay, nên có thể không phát hiện sai lệch giữa thẻ do hệ thống tạo ra và thẻ lúc duyệt.
-  Căn cứ: Chỉ làm kiểm thử kém sát thực tế, không gây mất dữ liệu; người dùng không thấy, bổ sung sau được.
-  file: `agent/tests/enrich-apply.test.ts`
-  severity: medium
-  Đề xuất: known-limits
-
-- **Hình dạng 3 (assert chuỗi có mặt thay vì quan hệ): bảng field·giá trị·độ tin cậy chỉ kiểm bằng includes trên toàn bộ textContent (r1)**
-  Người dùng thấy gì: Kiểm thử thẻ duyệt chỉ kiểm có chữ xuất hiện, không kiểm đúng hàng đúng giá trị, nên nếu bảng bị tráo giá trị hay độ tin cậy thì kiểm thử vẫn qua.
-  Căn cứ: Chưa có bằng chứng thẻ hiển thị sai; rủi ro chỉ là bỏ sót lỗi hiển thị sau này, sửa kiểm thử sau rẻ.
+- **Hình dạng 3: thẻ xung đột AC-11 chỉ kiểm từng chuỗi có mặt, không kiểm cặp nhãn ↔ giá trị ↔ căn cứ**
+  Người dùng thấy gì: Bài kiểm thẻ đối chiếu có thể vẫn xanh nếu sau này nhãn «Theo luật» và «Theo LLM» bị gắn nhầm giá trị hoặc căn cứ, khiến người duyệt chọn nhầm bên.
+  Căn cứ: Hiện giao diện chưa sai, chỉ là lưới an toàn của test còn lỏng; siết lại sau không ảnh hưởng người dùng và không mất dữ liệu.
   file: `app/tests/review-card.test.tsx`
   severity: medium
   Đề xuất: known-limits
-
-- **Hình dạng 5 (tuyên quét lớp nhưng chỉ bắt một dạng): guard AC-1 tuyên 'không còn đường ghi thẳng' nhưng chỉ bắt UPDATE nằm cùng một dòng (r1)**
-  Người dùng thấy gì: Công cụ canh chừng việc ghi thẳng vào dữ liệu tin chỉ bắt được một số kiểu viết, nên sau này có người thêm đường ghi thẳng theo kiểu khác thì có thể không bị phát hiện.
-  Căn cứ: Hiện chưa có đường ghi thẳng nào được chỉ ra, nên chưa ảnh hưởng dữ liệu; đây là rủi ro tương lai và làm chặt công cụ canh sau cũng rẻ.
+- **Hình dạng 4: kiểm âm tính bằng every trên tập có thể rỗng, không đối chứng dương rằng field không xung đột có mặt**
+  Người dùng thấy gì: Nếu thẻ xung đột làm rơi các field không xung đột thì bài kiểm vẫn không báo đỏ, nên người duyệt có thể thiếu thông tin mà không ai hay.
+  Căn cứ: Hiện chưa có bằng chứng thẻ đang thiếu field, chỉ là test chưa bắt được; bổ sung kiểm tra sau rẻ và không rủi ro dữ liệu.
+  file: `agent/tests/enrich-db.test.ts`
+  severity: low
+  Đề xuất: known-limits
+- **Hình dạng 5: tuyên quét cả lớp «0 câu UPDATE sale_offers|properties», nhưng bộ dò theo dòng và chiều đỏ chỉ có điểm-case một dòng**
+  Người dùng thấy gì: Bộ rào chắn chống ghi thẳng giá trị LLM vào dữ liệu có thể bỏ sót vài cách viết, nên sau này ai đó vô tình ghi thẳng mà không bị chặn.
+  Căn cứ: Hiện không có bằng chứng đang còn đường ghi thẳng, chỉ là rào chắn chưa kín; bổ sung sau rẻ và không ảnh hưởng người dùng hiện tại.
   file: `agent/tests/enrich-guard.test.ts`
-  severity: medium
+  severity: low
+  Đề xuất: known-limits
+- **Hình dạng 3: thẻ AC-9 kiểm «độ tin cậy» bằng chuỗi '85%' có mặt, trong khi mọi field của fixture đều 0.85**
+  Người dùng thấy gì: Bài kiểm có thể vẫn xanh dù thẻ hiện sai độ tin cậy ở từng dòng, nên người duyệt có thể thấy con số không đúng với giá trị đi kèm.
+  Căn cứ: Giao diện hiện chưa được chứng minh sai, chỉ là test chưa phân biệt được; sửa bằng dữ liệu mẫu đa dạng hơn sau là rẻ và không mất dữ liệu.
+  file: `app/tests/review-card.test.tsx`
+  severity: low
   Đề xuất: known-limits
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
