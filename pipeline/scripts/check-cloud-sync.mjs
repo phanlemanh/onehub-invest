@@ -12,6 +12,7 @@
 //   pii       payload không mang cột loại
 //   overlap   hai lượt chồng nhau
 //   allow     cột cho phép, chuẩn hoá seller_ref, soát tên nguồn
+//   anon      leak gate kiểm quyền đọc công khai anon/authenticated (leak-gate-kiem-anon, AU1)
 import { execFileSync, spawn } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,6 +24,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PIPE = path.join(HERE, "..");
 const ROOT = path.join(PIPE, "..");
 const MIGRATION = path.join(ROOT, "db/migrations/038_sync_stage.sql");
+const LOCK_037 = path.join(ROOT, "db/migrations/037_lock_anon_enable_rls.sql");
+const POSTGIS_RELS = ["spatial_ref_sys", "geometry_columns", "geography_columns"];
 const CT_SRC = "one-invest-db"; // nguồn dữ liệu — chỉ đọc
 const IMAGE = "kartoza/postgis:17-3.5";
 let CT = null; // container tạm của lượt này
@@ -117,8 +120,10 @@ export function buildLocalSim(name = "local") {
 /** DB «cloud mô phỏng»: schema FILL theo tên cloud (RENAME), không cột properties.seller_name,
  * thêm users/saved_markets (FK ON DELETE CASCADE như 002_auth), role anon/authenticated +
  * default ACL như Supabase (đo 23/10: pg_default_acl cấp arwdDxtm cho anon/authenticated),
- * hai view ruler, rồi áp migration 038 (trừ khi migrate=false). */
-export function buildCloudSim(name = "cloud", { roles = true, defaultAcl = true, migrate = true, migration = MIGRATION } = {}) {
+ * hai view ruler, rồi áp migration 038 (trừ khi migrate=false). `lock` (mặc định) áp thêm 037 — cloud như prod
+ * sau khi Mạnh áp — rồi cấp SELECT ba quan hệ PostGIS cho anon (Known limit của 037 trên prod). Ca chỉ đo 038
+ * cần default ACL trước 037 thì truyền lock:false. */
+export function buildCloudSim(name = "cloud", { roles = true, defaultAcl = true, migrate = true, migration = MIGRATION, lock = true } = {}) {
   const db = makeDb(name);
   psql(db, "CREATE EXTENSION IF NOT EXISTS postgis;");
   if (roles) {
@@ -143,6 +148,10 @@ export function buildCloudSim(name = "cloud", { roles = true, defaultAcl = true,
   const views = readFileSync(path.join(ROOT, "db/migrations/034_ruler_p2_views.sql"), "utf8");
   psql(db, views);
   if (migrate) psql(db, readFileSync(migration, "utf8"));
+  if (lock && roles) {
+    psql(db, readFileSync(LOCK_037, "utf8"));
+    psql(db, `GRANT SELECT ON ${POSTGIS_RELS.map((r) => `public.${r}`).join(", ")} TO anon;`);
+  }
   return db;
 }
 
@@ -190,7 +199,7 @@ async function caseStage() {
   dropDb(bare);
 
   // DB có role + default ACL như cloud
-  const db = buildCloudSim("stage", { migrate: false });
+  const db = buildCloudSim("stage", { migrate: false, lock: false });
   const before = psql(db, CATALOG_SQL);
   for (const i of [1, 2]) {
     try {
@@ -241,7 +250,7 @@ async function caseStage() {
     } else {
       const mp = path.join(dir, "038_mut.sql");
       writeFileSync(mp, mutated);
-      const red = buildCloudSim("stage_red", { migration: mp });
+      const red = buildCloudSim("stage_red", { migration: mp, lock: false });
       const rp = await privs(red);
       if (rp.some((r) => r.sel_rows)) pass("ĐỎ-ĐÚNG acl: bỏ REVOKE thì anon/authenticated SELECT được sync_stage.rows");
       else fail("thước không bắt được migration thiếu REVOKE (anon vẫn không đọc được dù đã bỏ REVOKE)");
@@ -805,6 +814,225 @@ async function caseOverlap() {
   else fail(`còn ${st} dòng staging`);
 }
 
+// ─── ca anon (leak-gate-kiem-anon AU1 — AC-1…AC-8, AC-11) ────────────────
+const asRole = async (db, role, sql) => {
+  const c = await client(db);
+  try {
+    await c.query(`SET ROLE ${role}`);
+    return (await c.query(sql)).rows;
+  } finally {
+    await c.end();
+  }
+};
+const GATE_PRE = "(trước khi gửi)";
+const GATE_POST = "(sau tráo)";
+/** Tách lệnh gỡ ra khỏi thông điệp gate: mỗi vi phạm «<role> đọc được … (…; gỡ: <lệnh>)», nối bằng ", ". */
+function goCommands(msg) {
+  const body = msg.replace(/^.*?LEAK GATE FAIL \([^)]*\): /, "");
+  const out = [];
+  for (const piece of body.split(/, (?=(?:anon|authenticated) đọc được )/)) {
+    const m = piece.match(/; gỡ: (REVOKE .*)\)$/);
+    if (m && !out.includes(m[1])) out.push(m[1]);
+  }
+  return out;
+}
+/** Bản sao sync-cloud.mjs bỏ chốt trước khi gửi (dòng mang mốc AU1:kiem-truoc-khi-gui) — đối chứng đỏ của AC-2. */
+async function loadMutant() {
+  const dir = mkdtempSync(path.join(tmpdir(), "au1-mut-"));
+  const lines = readFileSync(path.join(PIPE, "sync-cloud.mjs"), "utf8").split("\n");
+  const at = lines.findIndex((l) => l.includes("AU1:kiem-truoc-khi-gui"));
+  if (at < 0) throw new Error("không thấy mốc AU1:kiem-truoc-khi-gui trong sync-cloud.mjs — đột biến không dựng được");
+  lines.splice(at, 1);
+  writeFileSync(path.join(dir, "sync-cloud.mjs"), lines.join("\n"));
+  symlinkSync(path.join(PIPE, "node_modules"), path.join(dir, "node_modules"));
+  return { mod: await import(pathToFileURL(path.join(dir, "sync-cloud.mjs")).href), dir };
+}
+
+async function caseAnon() {
+  const L = buildLocalSim("anon_local");
+  // AC-6 — cloud không có role anon. Role là đối tượng cấp cluster: ô này chạy TRƯỚC khi dựng cloud có role.
+  const pre = psql("oneinvest", "SELECT count(*) FROM pg_roles WHERE rolname = 'anon';").trim();
+  if (pre === "0") {
+    const N = buildCloudSim("anon_norole", { roles: false });
+    const r6 = await expectFail(runSync(L, N, { sync: { runId: "anon_norole" } }), "gate");
+    if (r6.ok && r6.msg.includes("cloud không có role anon")) pass(`ĐỎ-ĐÚNG thiếu role anon: ${r6.msg.slice(0, 160)}`);
+    else fail(`thiếu role anon: ${r6.msg.slice(0, 300)}`);
+  } else fail(`tiền điều kiện AC-6 sai: container tạm đã có role anon (${pre}) trước ô «không role»`);
+  const C = buildCloudSim("anon_cloud");
+
+  // AC-1 — đối chứng dương: cloud đã khoá + ba quan hệ PostGIS mở cho anon như prod
+  const srs = await asRole(C, "anon", "SELECT count(*)::int AS n FROM public.spatial_ref_sys").then(() => true, () => false);
+  if (srs) pass("tiền điều kiện AC-1: anon SELECT được public.spatial_ref_sys trong cloud mô phỏng (như prod sau 037)");
+  else fail("tiền điều kiện AC-1: anon KHÔNG đọc được spatial_ref_sys — ô đối chứng không giống prod");
+  const free = await sync.anonReadable(cloudExec(C));
+  try {
+    await runSync(L, C, { sync: { runId: "anon_seed" } });
+    if (!free.length) pass("AC-1 cloud đã khoá + ba quan hệ PostGIS: lượt sync xanh, anonReadable 0 vi phạm");
+    else fail(`AC-1 anonReadable không rỗng trên cloud sạch: ${free.join(" | ")}`);
+  } catch (e) {
+    fail(`AC-1 lượt sync trên cloud sạch gãy: [${e.phase}] ${e.message}`);
+  }
+
+  let red = 0;
+  let healed = 0;
+  /** Một ô đỏ: mở quyền → lượt dừng pha gate với đủ token → áp nguyên văn lệnh gỡ → lượt kế xanh (AC-8). */
+  async function cell(label, grantSql, want, notWant = []) {
+    await q1(C, grantSql);
+    const r = await expectFail(runSync(L, C, { sync: { runId: `anon_${red}` } }), "gate");
+    const miss = [GATE_PRE, ...want].filter((t) => !r.msg.includes(t));
+    const extra = notWant.filter((t) => r.msg.includes(t));
+    if (r.ok && !miss.length && !extra.length) {
+      pass(`ĐỎ-ĐÚNG ${label}: ${r.msg.slice(0, 220)}`);
+      red++;
+    } else {
+      fail(`${label}: ${r.msg.slice(0, 300)}; thiếu ${JSON.stringify(miss)}; thừa ${JSON.stringify(extra)}`);
+      return;
+    }
+    const cmds = goCommands(r.msg);
+    if (!cmds.length) return fail(`${label}: thông điệp không có lệnh «gỡ: REVOKE …»`);
+    for (const g of cmds) await q1(C, g);
+    try {
+      await runSync(L, C, { sync: { runId: `anon_heal_${red}` } });
+      healed++;
+      pass(`gỡ ${label}: áp nguyên văn ${cmds.join(" ; ")} → lượt kế xanh`);
+    } catch (e) {
+      fail(`gỡ ${label}: sau ${cmds.join(" ; ")} lượt kế vẫn gãy [${e.phase}] ${e.message.slice(0, 200)}`);
+    }
+  }
+
+  // AC-2 — bảng users; cloud lệch local trước lượt; đối chứng đỏ bằng bản đột biến bỏ chốt trước khi gửi
+  const mut = await loadMutant();
+  try {
+    await makeOldDiffer(C);
+    const baseM = await md5Map(C);
+    await q1(C, "GRANT SELECT ON users TO anon");
+    const lc = await client(L, { types: sync.localTypes });
+    let mm;
+    try {
+      mm = await mut.mod.syncOnce({ local: lc, exec: cloudExec(C), log: () => {}, runId: "anon_mut" }).then(
+        () => ({ ok: false, msg: "lượt KHÔNG gãy" }),
+        (e) => ({ ok: e.phase === "gate", msg: `[${e.phase}] ${e.message}` }),
+      );
+    } finally {
+      await lc.end();
+    }
+    if (mm.ok && !sameMap(baseM, await md5Map(C)) && mm.msg.includes(GATE_POST))
+      pass("ĐỎ-ĐÚNG đột biến bỏ chốt trước khi gửi: dữ liệu đã lên cloud (md5 đổi) rồi mới đỏ sau tráo — ô AC-2 phân biệt được");
+    else fail(`đột biến bỏ chốt trước khi gửi không lộ ra ở vế md5: ${mm.msg.slice(0, 200)}`);
+    await q1(C, "REVOKE SELECT ON users FROM anon");
+  } finally {
+    rmSync(mut.dir, { recursive: true, force: true });
+  }
+  await makeOldDiffer(C);
+  const base = await md5Map(C);
+  await q1(C, "GRANT SELECT ON users TO anon");
+  const r2 = await expectFail(runSync(L, C, { sync: { runId: "anon_users" } }), "gate");
+  const st2 = await stagingCount(C, "anon_users");
+  const same = sameMap(base, await md5Map(C));
+  const t2 = [GATE_PRE, "anon đọc được public.users"].filter((t) => !r2.msg.includes(t));
+  if (r2.ok && !t2.length && same && st2 === 0) {
+    pass(`ĐỎ-ĐÚNG bảng users: dừng pha gate trước khi gửi, md5 các bảng sync không đổi, staging 0 dòng — ${r2.msg.slice(0, 200)}`);
+    red++;
+    for (const g of goCommands(r2.msg)) await q1(C, g);
+    await runSync(L, C, { sync: { runId: "anon_users_heal" } });
+    healed++;
+    if (!sameMap(base, await md5Map(C))) pass("gỡ bảng users: áp lệnh gỡ → lượt kế xanh và đổi md5 (cloud lệch local thật — fixture phân biệt được)");
+    else fail("gỡ bảng users: lượt kế không đổi md5 — fixture không lệch local, vế md5 của ô đỏ hằng-đúng");
+  } else {
+    fail(`bảng users: ${r2.msg.slice(0, 300)}; thiếu ${JSON.stringify(t2)}; md5 giữ ${same}; staging ${st2}`);
+  }
+
+  // AC-3 — loại quan hệ
+  await q1(C, `CREATE MATERIALIZED VIEW acc_mv AS SELECT 1 AS x;
+    CREATE TABLE acc_part (id int) PARTITION BY RANGE (id);
+    CREATE TABLE acc_part_1 PARTITION OF acc_part FOR VALUES FROM (0) TO (10);
+    CREATE TABLE spatial_ref_sys_copy (id int);
+    REVOKE ALL ON acc_mv, acc_part, acc_part_1, spatial_ref_sys_copy FROM anon, authenticated, PUBLIC;`);
+  await cell("view v_ruler_p2_area", "GRANT SELECT ON v_ruler_p2_area TO anon", ["anon đọc được public.v_ruler_p2_area (view"]);
+  await cell("materialized view", "GRANT SELECT ON acc_mv TO anon", ["anon đọc được public.acc_mv (materialized view"]);
+  await cell("bảng phân vùng", "GRANT SELECT ON acc_part TO anon", ["anon đọc được public.acc_part (bảng phân vùng"]);
+
+  // AC-4 — đường cấp
+  await cell("authenticated", "GRANT SELECT ON users TO authenticated", ["authenticated đọc được public.users (bảng, cấp thẳng"], ["anon đọc được"]);
+  await cell("PUBLIC", "GRANT SELECT ON users TO PUBLIC", ["anon đọc được public.users (bảng, qua PUBLIC", 'gỡ: REVOKE SELECT ON public."users" FROM PUBLIC']);
+  await cell("cấp cột", "GRANT SELECT (email) ON users TO anon", ["anon đọc được public.users (bảng, cấp cột email", 'gỡ: REVOKE SELECT ("email") ON public."users" FROM "anon"']);
+  await cell("role thành viên", "CREATE ROLE acc_reader NOLOGIN; GRANT SELECT ON users TO acc_reader; GRANT acc_reader TO anon",
+    ["anon đọc được public.users (bảng, qua role acc_reader", 'gỡ: REVOKE "acc_reader" FROM "anon"']);
+
+  // AC-5 — chỉ ba quan hệ PostGIS thuộc extension được chừa
+  await cell("spatial_ref_sys_copy", "GRANT SELECT ON spatial_ref_sys_copy TO anon", ["anon đọc được public.spatial_ref_sys_copy (bảng"],
+    ["public.spatial_ref_sys (", "geometry_columns", "geography_columns"]);
+
+  // AC-8 — mọi ô đỏ đều được gỡ bằng chính lệnh nó in
+  if (red === 9 && healed === red) pass(`AC-8 ma trận gỡ: ${healed}/${red} ô đỏ xanh lại bằng lệnh gỡ in trong thông điệp`);
+  else fail(`AC-8 ma trận gỡ: ${healed} ô gỡ xanh / ${red} ô đỏ (kỳ vọng 9/9)`);
+
+  // AC-7 — quyền mở giữa lượt (lúc tráo) → đỏ sau tráo; đối chứng hook không cấp → xanh
+  let fired = false;
+  const r7 = await expectFail(
+    runSync(L, C, {
+      exec: cloudExec(C, {
+        hook: async (sql) => {
+          if (!fired && sql.startsWith("BEGIN;")) {
+            fired = true;
+            await q1(C, "GRANT SELECT ON users TO anon");
+          }
+        },
+      }),
+      sync: { runId: "anon_mid" },
+    }),
+    "gate",
+  );
+  if (fired && r7.ok && r7.msg.includes(GATE_POST) && !r7.msg.includes(GATE_PRE) && r7.msg.includes("anon đọc được public.users"))
+    pass(`ĐỎ-ĐÚNG cấp giữa lượt: qua chốt trước khi gửi, dừng ở chốt sau tráo — ${r7.msg.slice(0, 160)}`);
+  else fail(`cấp giữa lượt: hook chạy ${fired}; ${r7.msg.slice(0, 300)}`);
+  await q1(C, "REVOKE SELECT ON users FROM anon");
+  let fired2 = false;
+  try {
+    await runSync(L, C, { exec: cloudExec(C, { hook: (sql) => void (sql.startsWith("BEGIN;") && (fired2 = true)) }), sync: { runId: "anon_mid_ok" } });
+    if (fired2) pass("đối chứng cấp giữa lượt: cùng hook không cấp quyền → lượt xanh");
+    else fail("đối chứng cấp giữa lượt: hook không chạy tới nhát tráo");
+  } catch (e) {
+    fail(`đối chứng cấp giữa lượt gãy: [${e.phase}] ${e.message.slice(0, 200)}`);
+  }
+
+  // AC-11 — đường chạy thật của tiến trình + --kiem-anon chỉ đọc
+  await q1(C, "GRANT SELECT ON users TO anon");
+  const lines = { out: [], err: [] };
+  const lc = await client(L, { types: sync.localTypes });
+  let codeBad, codeOk;
+  try {
+    codeBad = await sync.runMain({ local: lc, exec: cloudExec(C), out: (m) => lines.out.push(m), err: (m) => lines.err.push(m) });
+  } finally {
+    await lc.end();
+  }
+  if (codeBad === 1 && lines.err.some((l) => /SYNC FAIL \[gate\] .*anon đọc được public\.users/.test(l)))
+    pass(`runMain cloud bẩn: mã 1, ${lines.err.find((l) => l.startsWith("SYNC FAIL")).slice(0, 160)}`);
+  else fail(`runMain cloud bẩn: mã ${codeBad}; err ${JSON.stringify(lines.err).slice(0, 300)}`);
+  const sentBad = [];
+  const outBad = [];
+  const kBad = await sync.runKiemAnon({ exec: cloudExec(C, { log: sentBad }), out: (m) => outBad.push(m) });
+  await q1(C, "REVOKE SELECT ON users FROM anon");
+  const sentOk = [];
+  const outOk = [];
+  const kOk = await sync.runKiemAnon({ exec: cloudExec(C, { log: sentOk }), out: (m) => outOk.push(m) });
+  const readOnly = [...sentBad, ...sentOk].every((q) => /^\s*(SELECT|WITH)\b/i.test(q) && !/\b(INSERT|UPDATE|DELETE|GRANT|REVOKE|CREATE|ALTER|DROP|TRUNCATE)\b/i.test(q));
+  if (kBad === 1 && outBad.some((l) => l.includes("anon đọc được public.users")) && kOk === 0 && readOnly)
+    pass(`--kiem-anon: cloud bẩn mã 1 (${outBad.length} dòng), cloud sạch mã 0, ${sentBad.length + sentOk.length} câu gửi đều chỉ đọc`);
+  else fail(`--kiem-anon: bẩn ${kBad}, sạch ${kOk}, chỉ đọc ${readOnly}; ${JSON.stringify(outBad).slice(0, 200)}`);
+  lines.out.length = 0;
+  lines.err.length = 0;
+  const lc2 = await client(L, { types: sync.localTypes });
+  try {
+    codeOk = await sync.runMain({ local: lc2, exec: cloudExec(C), out: (m) => lines.out.push(m), err: (m) => lines.err.push(m) });
+  } finally {
+    await lc2.end();
+  }
+  if (codeOk === 0 && lines.out.some((l) => l.includes("leak gate PASS")) && !lines.err.length) pass("runMain cloud sạch: mã 0, «leak gate PASS»");
+  else fail(`runMain cloud sạch: mã ${codeOk}; err ${JSON.stringify(lines.err).slice(0, 200)}`);
+
+}
+
 // ─── ca allow (AC-11 / E11) ──────────────────────────────────────────────
 async function caseAllow() {
   const L = buildLocalSim("allow_local");
@@ -893,6 +1121,7 @@ const CASES = {
   pii: casePii,
   overlap: caseOverlap,
   allow: caseAllow,
+  anon: caseAnon,
 };
 
 const which = process.argv[2];
