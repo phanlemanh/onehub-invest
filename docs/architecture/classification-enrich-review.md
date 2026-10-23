@@ -1,6 +1,6 @@
 # Review kiến trúc phân loại + enrich — từ lúc tin vào tới lúc thành căn nhà
 
-> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** (chưa phải quyết định; riêng Q1 Kev đã chốt 23/10) · Phạm vi: Kev-4B gate →
+> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** — cái gì đã chốt, cái gì còn chờ: **§7.0**. Đối chiếu audit 23/10: §7.1 · Phạm vi: Kev-4B gate →
 > parser `transform-*` → E1/E2/định tuyến → `/ops/review` → `resolve-properties`.
 > Cách làm: chỉ đọc code (HEAD `b446637`, đã gồm PR #14, #16, #21), DB local :5433 (SELECT) và log.
 > Không sửa code, không ghi DB. Bản xem trên điện thoại (riêng tư): https://claude.ai/artifact/RSzE1VKhUjbw7jVMyorGHd
@@ -198,7 +198,7 @@ qua cùng hợp đồng phát biểu → thước phường × loại cho «Căn
 
 ### F. Quyết định còn lại sau khi rút gọn
 
-**Tự trả lời từ nguyên lý (không cần hỏi nữa)**: Q2 (= T4: khoá tin + phát biểu `căn`), Q3 (= T3+T7), Q4 (tên
+**Đề xuất trả lời từ nguyên lý — chờ Mạnh xác nhận** (chưa phải quyết định): Q2 (= T4: khoá tin + phát biểu `căn`), Q3 (= T3+T7), Q4 (tên
 nhóm = suy luận, không tự quyết — D-1), Q5 (= T6: tự áp chỉ ô đã đo), Q9 (độ chắc suy từ đo; confidence tự khai
 không hiện), Q11 (= lát dọc, đo trong lát). Q1 đã chốt.
 
@@ -239,8 +239,8 @@ Số trong §0–§2 có S03 phải đọc lại:
 «trình bày suy đoán như sự thật»
 - Snapshot `zalo-mock` đi qua importer → `stg_zalo_posts` → transform-zalo → `sale_offers` S03 → `bait_gap_pct`,
   `sellers` (SĐT giả), Deals. Không cột nào đánh dấu dữ liệu thử.
-- `sync-cloud` FILL có `sale_offers` → **có thể tin giả đã lên Supabase / `/ops/deals` bản prod** — phiên này chỉ đọc DB
-  local nên chưa kiểm cloud; cần điều phối kiểm.
+- `sync-cloud` FILL có `sale_offers` → tin giả đã lên cloud. **Audit 23/10 xác nhận** (`docs/audit/2026-10-23-hien-trang-va-lo-trinh.md`
+  P7, P15): cloud có 1.020 tin S03 mock, 153 mang `bait_gap`; `/api/v1/deals` **công khai** trả 30 deal, 29 là tin mock.
 - Cũng là gốc của số «parser F1 0,966»: bộ đo và dữ liệu cùng là mock.
 
 ### F1 — Lát đầu: Vinhomes Ocean Park 1
@@ -897,6 +897,62 @@ nên bắt đầu C1.3 sớm nhất có thể.
 - Hướng sửa thuộc ZCode: khoá phải phân biệt được hai event (id tin của Zalo, hoặc băm cả media).
 
 ## 7. Tham chiếu
+
+### 7.0 Trạng thái quyết định (23/10) — đọc trước khi dựa vào tài liệu này
+
+| Đã chốt (Mạnh) | Nơi ghi |
+|---|---|
+| Q1 Kev thành nhãn, không lọc; DATA-CONTRACT v3 | §4, §6 |
+| FRAMING D1–D5 (danh mục, người dùng đầu là đội, căn hộ trước, P1 công khai + tức thời, thuê người được nhưng model gánh tối đa) | FRAMING §2.0, ROADMAP §3.13 |
+| D6 là yêu cầu Mạnh nêu (AI Gateway, biết chi phí, trợ lý tính tiền riêng) — **cách làm cụ thể M1–M4 chưa chốt** | FRAMING §2.0, §0.4 |
+| Sự thật 8 + thang bậc B0–B5, N0–N4 + bậc đích | FRAMING §3.4 |
+| F2 (danh mục từ nhiều nguồn + từ tin), F5 (Mạnh và đội gắn nhãn) | §0.3 |
+| F3 ngưỡng theo cận dưới Wilson (A 0,95 · B 0,90 · C 0,80); F6 thứ tự dọn (mỗi bước ghi DB vẫn chờ Mạnh gật) | §0.3 |
+
+| **Còn chờ Mạnh** | Nơi ghi |
+|---|---|
+| Q2–Q12 của §4. §0.2 F *đề xuất* trả lời Q2, Q3, Q4, Q5, Q9, Q11 từ nguyên lý gốc — **chưa được duyệt**; Q7 (subtype), Q8 (tìm mua/thuê), Q10 (thước «Căn giá tốt» tạm) chưa bàn | §4, §0.2 F |
+| F1: chọn **Vinhomes Ocean Park 1** làm lát đầu (đề xuất của review, Mạnh chỉ nói «dữ liệu đã có dự án và nhóm») | §0.3 |
+| F4: độ tươi p50 ≤ 10′, p95 ≤ 30′; cửa sổ hiệu lực 14/7 ngày (đề xuất) | §0.3 |
+| F7: số giờ công/tuần giữ bậc | §0.2 F |
+| M1–M4 lớp model (sửa luật Local-first, tên nhóm không gửi cloud, Vercel AI Gateway, ADR trợ lý) | §0.4 |
+| Thang căn cứ 3 lớp, ghép căn là phát biểu, lát dọc thay đợt ngang (§0.2 D) — đề xuất, chưa duyệt riêng | §0.2 D |
+
+**Cắt lượt**: bản phạm vi `phan-loai-2310` và lộ trình 31 hàng (PL1–PL31) + 6 mục chờ (PH1–PH6), kèm việc bật gói
+road-map, nằm ở **nhánh riêng `claude/lo-trinh-phan-loai-2310`** (chạm `.claude/settings.json` → T3, cần hồ sơ và chữ
+ký riêng). PR tài liệu này không chứa chúng.
+
+### 7.1 Đối chiếu với audit hiện trạng 23/10 (`docs/audit/2026-10-23-hien-trang-va-lo-trinh.md`, PR #25)
+
+Lưu ý tên: audit đánh số câu hỏi Q1–Q8 **riêng**, không trùng Q1–Q12 của review này.
+
+**Khớp nhau**
+
+| Điểm | Review | Audit |
+|---|---|---|
+| Tin giả trong canonical | L19, §0.3 | P7, P15 (xác nhận trên cloud và API công khai) |
+| Làm sạch mock trước mọi việc đo | F6 bước 2, PL1/PL2 | 0.4 (chạy đầu tiên), 1.1 (đo nền chỉ sau khi hết mock) |
+| Kev bỏ phần lớn tin | L06 (~70% theo log hook) | L13 (61% hôm nay theo `/ops/collections`) |
+| Hoàn tác 639/644 | F6 bước 3 | §4 |
+| Dựng lại `/ops/review` | PL3, PL23 (C3.1 thẻ duyệt v2) | gộp B1 Task 12 vào C3.1, không làm riêng |
+| Đợt phân loại | lát Ocean Park 1, PL1–PL31 | Đợt 1 = `phan-loai-2310`, audit không chia lại |
+| Đo trước, xây sau | Q11, §0.2 E | nguyên tắc sắp xếp §6 |
+| 331 tin S03 không có phường | L17 | L8 (377 offer chưa gán area) |
+
+**Khác hoặc bổ sung**
+
+| Điểm | Review | Audit | Hệ quả cho review |
+|---|---|---|---|
+| Ranh giới khu vực sai (33 khu vực cấp tỉnh dưới `vn-hanoi`) | không phát hiện | L8, P5, việc 1.2 | Trường phường là trường lõi nhóm A; PL26 (thước phường × loại) và mọi so sánh theo phường phải chờ 1.2 |
+| Giám sát báo sai (DB sập 8 giờ, job exit 0) | không xét | L5–L7, L10, việc 0.6 | Điều kiện của sự thật 8: không thấy lượt thu hỏng thì số đo nền không đáng tin — đo nền chờ 0.6 |
+| Sổ migration, CI test module, backup | ngoài phạm vi | 1.3, 1.4, 0.8 | Nền vận hành cho lớp phát biểu (PL14–PL16 là T3 nhiều migration) — nên có 1.3 trước PL14 |
+| S05 đứng từ 21/10 (402) | không xét | L10, Q8-audit | Lát đầu chỉ dùng S03 (+ S06 làm thước), khớp F1 |
+| Lớp model / AI Gateway | PH4 — **chờ M1–M3** | §6 ghi «lớp model qua AI Gateway» trong đợt 1 | Chưa vào đợt 1 cho tới khi Mạnh chốt M1–M3; CM.1 sổ cuộc gọi (PL29) thì làm được ngay |
+| Câu 4 của nhà đầu tư | FRAMING: **quản lý danh mục** | 2.5 «G4 khai thác sau mua» | Audit dùng tên cũ; theo FRAMING thì G4 là quản lý danh mục |
+| Tạm đóng `/api/v1/deals` công khai | không có | 0.5, Q3-audit | Review ủng hộ: đến khi PL2 xong, API công khai đang phát tin giả |
+
+### 7.2 Nguồn
+
 
 - Code: `collector/openclaw/handler.js` · `pipeline/transform-{zalo,fb,chotot,airbnb}.mjs` ·
   `pipeline/lib/write-offers.mjs` · `pipeline/resolve-properties.mjs` · `pipeline/refresh-bait-gap.mjs` ·
