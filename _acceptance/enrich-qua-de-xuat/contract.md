@@ -5,10 +5,10 @@ slug: enrich-qua-de-xuat
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, api, ui]
-status: verified
+status: draft
 design_doc: docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md
-approved_by: Mạnh
-approved_at: 2026-10-22
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: enrich-qua-de-xuat
@@ -30,20 +30,22 @@ Source input: prompt — quyết định của chủ kho trong hội thoại 22/
 - AC-2: Given một offer S03/S05 có field trống mà E1 (luật) ra giá trị hợp lệ, When chạy enrich-run (không `--dry`), Then field được điền, và có một dòng `enrichment_proposals` `source=e1_rule`, `route=direct`, `status=applied` mang `run_id` và evidence (đoạn tin, matchedBy); offer không gắn property nào vẫn được điền bình thường, không làm hỏng việc áp các offer khác trong cùng lượt.
 - AC-3: Given LLM ra giá trị cho một field và E1 ra CÙNG giá trị cho field đó, hoặc field `block_raw` khớp tên/alias một node `building` của `asset_nodes`, When chạy enrich-run, Then đề xuất LLM có `route=corroborated`, `corroborated_by` ghi đúng căn cứ (`e1` hoặc `asset_nodes:<slug>`), được áp — riêng `block_raw` áp tên chuẩn của node.
 - AC-4: Given LLM ra giá trị cho một field mà không có căn cứ độc lập nào, When chạy enrich-run, Then `sale_offers` KHÔNG đổi field đó, đề xuất có `status=queued`, và có đúng một thẻ `review_queue` `item_type=agent_output`, `item_id=enrich:<offer_id>` đang chờ, `evidence` liệt kê field · giá trị · confidence · run_id · model · trace.
-- AC-5: Given một thẻ `agent_output` đang chờ, When route `POST /api/v1/ops/review/[id]/decide` nhận `approved`, Then các đề xuất `queued` của thẻ được áp fill-gap vào `sale_offers` (field đã có giá trị lúc áp thì `skipped`, không ghi đè), `properties` liên kết nhận bedrooms/bathrooms/street còn trống, `properties.enrichment_log` có phần tử `src=enrich-proposals` kèm `proposal_ids` và người duyệt, và `ops_audit` có dòng `review:decide`.
+- AC-5: Given một thẻ `agent_output` đang chờ không có field xung đột (thẻ có xung đột: AC-11), When route `POST /api/v1/ops/review/[id]/decide` nhận `approved`, Then các đề xuất `queued` của thẻ được áp fill-gap vào `sale_offers` (field đã có giá trị lúc áp thì `skipped`, không ghi đè), `properties` liên kết nhận bedrooms/bathrooms/street còn trống, `properties.enrichment_log` có phần tử `src=enrich-proposals` kèm `proposal_ids` và người duyệt, và `ops_audit` có dòng `review:decide`.
 - AC-6: Given một thẻ `agent_output` đang chờ, When người bấm «Bỏ» (`rejected`) hoặc «Để sau» (`deferred`), Then `sale_offers` không đổi; với «Bỏ» các đề xuất thành `rejected` và lượt enrich-run sau KHÔNG đẩy lại cùng giá trị; với «Để sau» đề xuất giữ `queued` và lượt enrich-run sau mở một thẻ chờ mới cho chúng.
-- AC-7: Given LLM và E1 ra hai giá trị KHÁC nhau cho cùng field (sau chuẩn hoá), When chạy enrich-run, Then giá trị E1 được áp, đề xuất LLM có `status=superseded`, không sinh thẻ duyệt, và tổng kết lượt chạy in số ca xung đột.
+- AC-7: Given luật E1 và LLM ra hai giá trị KHÁC nhau cho cùng một field còn trống (sau chuẩn hoá — vd hai tin S05 thật «Nhà Gò Vấp 4 tầng» và «CHDV 9PN 4 tầng» trong nhóm «…NHÀ ĐẤT…»: E1 `land`, LLM `house`), When chạy enrich-run, Then `sale_offers` KHÔNG đổi field đó; cả hai đề xuất (`source=e1_rule` và `source=e2_llm`) có `route=review`, `status=queued` và gắn cùng một thẻ `agent_output` đang chờ của offer; `evidence` của thẻ đánh dấu field đó là xung đột và liệt cả hai giá trị kèm căn cứ mỗi bên (E1: luật/từ khoá khớp và khớp ở tin hay tên nhóm; LLM: model · confidence · trace); tổng kết lượt chạy in số ca xung đột. Field đã có đề xuất `queued` trên thẻ xung đột (đang chờ hoặc đã «Để sau») → lượt enrich-run sau KHÔNG áp gì cho field đó (kể cả khi LLM lượt sau vắng, lỗi, hay đồng ý với E1) — mọi đề xuất mới của field vào thẻ; thẻ dựng lại vẫn giữ dấu xung đột + căn cứ. Ngược lại — offer chưa có xung đột chờ: E1 và LLM cùng giá trị → áp như AC-3; E1 có giá trị mà LLM không cho giá trị hợp lệ → E1 áp thẳng như AC-2.
 - AC-8: Given enrich-run chạy hai lần liên tiếp trên cùng dữ liệu, When lần hai kết thúc, Then số dòng `enrichment_proposals` và số thẻ `agent_output` đang chờ không tăng; và Given cờ `--dry`, When chạy, Then không bảng nào trong `enrichment_proposals`, `review_queue`, `sale_offers`, `properties` có thay đổi.
 - AC-9: Given `/ops/review` có thẻ `agent_output` và thẻ `entity_match`, When trang render, Then thẻ `agent_output` hiện đoạn tin, bảng field · giá trị · độ tin cậy và ba nút «Áp dụng» «Bỏ» «Để sau» gọi route decide với đúng status; thẻ `entity_match` hiển thị như trước; thẻ loại chưa hỗ trợ hiện một dòng báo thay vì làm sập trang. (cross-layer)
 - AC-10: Given luồng đồng bộ cloud `pipeline/sync-cloud.mjs`, When đọc danh sách bảng đẩy lên (`FILL`), Then `enrichment_proposals` và `review_queue` không nằm trong danh sách — evidence chứa đoạn tin gốc (PII tầng A).
 
+- AC-11: Given một thẻ `agent_output` đang chờ có field xung đột (AC-7), When trang `/ops/review` render thẻ, Then field đó hiện thành hai lựa chọn «Theo luật» / «Theo LLM» (nhãn nguồn bằng `Badge` ReUI), mỗi lựa chọn có giá trị + căn cứ, kèm lựa chọn «Bỏ cả hai», và nút «Áp dụng» khoá tới khi mọi field xung đột đã chọn; When người chọn rồi bấm «Áp dụng», Then route decide nhận `choices` {field → đề xuất được chọn | null}, áp đề xuất được chọn qua `apply_enrichment`, các đề xuất xung đột không được chọn thành `rejected` (qua `decide_enrichment_review`), cùng transaction, `ops_audit` `review:decide` ghi kèm `choices`; «Áp dụng» thiếu lựa chọn cho một field xung đột → 400 và không bảng nào đổi; «Bỏ» → cả hai đề xuất `rejected`, lượt enrich-run sau không đẩy lại. (cross-layer)
+
 ## Coverage
 
 - Trục A — Vòng đời đề xuất: sinh | định tuyến | người quyết | áp + cascade | chạy lại [thước CE: state machine design doc §3 + vòng đời task MDM steward [NGÀNH: Informatica MDM]]
-- Trục B — Nguồn × căn cứ: E1 luật | LLM có E1 cùng giá trị | LLM khớp asset_nodes | LLM trái E1 | LLM không căn cứ [thước CE: ROADMAP §1 luật 2 + bảng §3.2; [NGÀNH: Amazon A2I] định tuyến dự đoán ML sang người]
+- Trục B — Nguồn × căn cứ: E1 luật | LLM có E1 cùng giá trị | LLM khớp asset_nodes | LLM trái E1 (→ thẻ đối chiếu, AC-7 + AC-11) | LLM không căn cứ [thước CE: ROADMAP §1 luật 2 + bảng §3.2; [NGÀNH: Amazon A2I] định tuyến dự đoán ML sang người]
 - Trục C — Trạng thái đích: field trống | field đã có | offer có property | offer không property [thước CE: câu UPDATE fill-gap + cascade hiện tại trong agent/scripts/enrich-run.ts]
 - Trục D — Bề mặt: script thật | `--dry` | thẻ `/ops/review` | route decide [thước CE: enrich-run.ts, app/src/app/ops/review/page.tsx, route decide]
-- Core: 10 ô → AC-1…AC-10. Later/Never: design doc §4.
+- Core: 10 ô → AC-1…AC-10; nâng phạm vi 2026-10-23 (ô «LLM trái E1» đổi từ «E1 thắng» sang «thẻ đối chiếu») → viết lại AC-7, thêm AC-11. Later/Never: design doc §4.
 - [GIẢ ĐỊNH] «Căn cứ độc lập» gồm đúng hai loại: E1 cùng giá trị, và khớp node `building` của `asset_nodes`. Regex mới, khớp chuỗi trong tin gốc, hay hai lượt LLM đồng ý đều KHÔNG tính.
 - [GIẢ ĐỊNH] Một thẻ duyệt cho mỗi offer (duyệt cả gói field), không phải mỗi field.
 
@@ -55,8 +57,12 @@ Source input: prompt — quyết định của chủ kho trong hội thoại 22/
 - Duyệt từng field riêng trong một thẻ; duyệt hàng loạt.
 - Giao diện duyệt cho `source_decision` / `data_quality` (chỉ bảo đảm không sập trang).
 - Chạy enrich-run trên toàn backlog (~735 offer) — vòng này chỉ đổi đường ghi.
+- Sửa luật E1 nhận chữ «đất» trong tên nhóm «…NHÀ ĐẤT…» thành `land` (gốc của hai ca thật) — vòng này chỉ chặn để xung đột lên thẻ; siết luật là vòng riêng.
+- Hoàn tác hai giá trị `land` đã áp ở DB local bởi lượt chạy thử 2026-10-23 (đề xuất 639, 644) — cần một đường ghi ngược có audit mà migration 033 chưa có; chờ người quyết (sổ Hỏi).
 
 ## Notes
+
+- Cổng Phạm vi lần 1: Mạnh duyệt 2026-10-22 (AC-1…AC-10, AC-7 cũ «E1 thắng»). Lần 2 (nâng phạm vi sau chạy thử thật 2026-10-23, Mạnh chốt «sửa trước khi ký enrich»): viết lại AC-7, thêm AC-11 — chờ duyệt.
 
 - Hàm SQL là một nguồn duy nhất cho việc áp, vì `app/` không được import `agent/` (app/CLAUDE.md).
 - Kiểm thử DB chạy trong transaction rồi ROLLBACK trên Postgres local :5433 — không để lại dữ liệu.

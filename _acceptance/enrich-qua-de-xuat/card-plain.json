@@ -1,8 +1,43 @@
 {
-  "feature_plain": "Giá trị do AI đoán cho tin rao không còn tự vào dữ liệu: chỉ vào khi luật hoặc từ điển toà nhà đồng ý, hoặc khi anh bấm «Áp dụng» trên trang Duyệt.",
-  "decisions": [
-    {"id": "E6", "q": "Nút «Áp dụng» có ghi đúng giá trị và để lại vết người duyệt không?", "why": "Hội đồng đọc mã route: việc áp chạy cùng giao dịch với cập nhật thẻ, có ghi nhật ký thao tác — họ đề xuất ĐẠT."},
-    {"id": "E13", "q": "Tài liệu thiết kế enrichment đã bỏ hết mô tả đường ghi thẳng cũ chưa?", "why": "Hội đồng đối chiếu tài liệu với spec vòng này: đường cũ chỉ còn dưới dạng «đã gỡ ngày 22/10» — họ đề xuất ĐẠT."}
+  "feature_plain": "Giá trị máy đoán thêm cho tin rao (loại BĐS, số phòng, đường, toà) không còn tự ghi vào dữ liệu: luật chắc chắn thì áp kèm nguồn, đoán của AI chỉ vào khi có căn cứ độc lập hoặc người duyệt — và từ lần duyệt này, khi luật và AI nói khác nhau thì người chọn.",
+  "scope_plain": "Lần duyệt này chỉ đổi cách xử lý khi luật và AI trái nhau; các mục dưới vẫn để ngoài.",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ tự điền ô còn trống khi luật chắc chắn ra giá trị, kèm nguồn và đoạn tin làm bằng chứng (AC-2 — luật áp thẳng)."},
+    {"id": "AC-3", "p": "Sẽ áp đoán của AI khi có căn cứ độc lập: luật ra cùng giá trị, hoặc tên toà khớp danh mục toà nhà — toà áp đúng tên chuẩn (AC-3 — AI có căn cứ)."},
+    {"id": "AC-5", "p": "Sẽ ghi các giá trị của thẻ không xung đột vào tin khi người bấm «Áp dụng», không đè ô đã có, lan sang căn liên kết và ghi nhật ký người duyệt (AC-5 — duyệt thẻ thường)."},
+    {"id": "AC-9", "p": "Sẽ hiện thẻ «Bổ sung dữ liệu tin» ở trang duyệt Ops với đoạn tin, bảng giá trị và ba nút; thẻ ghép tin cũ vẫn như trước, loại thẻ lạ không làm sập trang (AC-9 — thẻ duyệt)."},
+    {"id": "AC-11", "p": "Sẽ cho người chọn «Theo luật», «Theo AI» hoặc «Bỏ cả hai» cho mỗi ô xung đột; nút «Áp dụng» chỉ bật khi đã chọn đủ, và bên không được chọn bị bác, có ghi nhật ký (AC-11 — chọn một bên)."}
   ],
-  "analyst_plain": ""
+  "wont_do": [
+    {"id": "AC-1", "p": "Sẽ KHÔNG còn chỗ nào trong bộ máy AI ghi thẳng vào bảng tin hay bảng căn — mọi lần ghi đi qua một cửa duy nhất (AC-1 — một cửa ghi)."},
+    {"id": "AC-4", "p": "Sẽ KHÔNG ghi đoán của AI khi không có căn cứ — nó vào một thẻ chờ duyệt kèm độ tự tin và dấu vết (AC-4 — AI không căn cứ chờ người)."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG đổi tin khi người bấm «Bỏ» hay «Để sau»; giá trị đã bỏ không bị đẩy lại, «Để sau» thì lượt sau mở thẻ mới (AC-6 — bỏ / để sau)."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG áp bên nào khi luật và AI nói khác nhau cho cùng một ô (như hai tin «nhà 4 tầng» bị luật gắn «đất»): cả hai lên thẻ kèm căn cứ, và các lượt sau cũng không tự áp ô đó khi thẻ còn chờ (AC-7 — xung đột lên thẻ)."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG nhân đôi đề xuất hay thẻ khi chạy lại, và chế độ chạy thử không ghi gì (AC-8 — chạy lại an toàn)."},
+    {"id": "AC-10", "p": "Chặn bảng đề xuất và hàng duyệt khỏi luồng đẩy lên cloud vì có đoạn tin gốc (AC-10 — giữ dữ liệu nhạy cảm ở máy)."},
+    {"id": "OOS-1", "p": "KHÔNG truy vết, dọn các giá trị AI có thể đã ghi trước vòng này."},
+    {"id": "OOS-2", "p": "KHÔNG dùng độ tự tin của AI làm căn cứ áp."},
+    {"id": "OOS-3", "p": "KHÔNG tự học tên viết tắt toà mới từ các lần duyệt."},
+    {"id": "OOS-4", "p": "KHÔNG duyệt từng ô riêng trên một thẻ hay duyệt hàng loạt (ngoài việc chọn bên cho ô xung đột)."},
+    {"id": "OOS-5", "p": "KHÔNG làm giao diện duyệt cho các loại thẻ khác — chỉ bảo đảm không sập trang."},
+    {"id": "OOS-6", "p": "KHÔNG chạy làm giàu trên toàn bộ ~735 tin tồn — vòng này chỉ đổi cách ghi."},
+    {"id": "OOS-7", "p": "KHÔNG sửa luật đang gắn «đất» cho mọi tin trong nhóm có tên «…NHÀ ĐẤT…» — để vòng riêng (Hỏi-8)."},
+    {"id": "OOS-8", "p": "KHÔNG hoàn tác ở vòng này hai giá trị «đất» sai mà lượt chạy thử đã ghi vào DB local — chờ anh chọn cách (Hỏi-9)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Vòng đời một đề xuất — sinh ra, xếp đường, người quyết, áp và lan sang căn, chạy lại — mỗi bước có tiêu chí riêng (AC-2…AC-8)."},
+    {"i": 1, "p": "Mọi tổ hợp nguồn × căn cứ: luật một mình, AI cùng luật, AI khớp danh mục toà, AI trái luật (nay lên thẻ đối chiếu — AC-7, AC-11), AI không căn cứ."},
+    {"i": 2, "p": "Trạng thái ô đích: còn trống, đã có giá trị, tin có căn liên kết hoặc không — đủ khi ô đã có không bao giờ bị đè (AC-2, AC-5)."},
+    {"i": 3, "p": "Bốn mặt chạm: lệnh chạy thật, chạy thử, thẻ duyệt, đường quyết định — mỗi mặt có ca đo riêng."},
+    {"i": 4, "p": "Phạm vi cốt lõi 10 ô; lần nâng này đổi đúng ô «AI trái luật» từ «luật thắng» sang «thẻ đối chiếu» → viết lại AC-7, thêm AC-11."},
+    {"i": 5, "p": "Giả định: «căn cứ độc lập» chỉ có hai loại — luật cùng giá trị, hoặc khớp danh mục toà; mọi thứ khác không tính."},
+    {"i": 6, "p": "Giả định: mỗi tin một thẻ duyệt cả gói ô, không tách theo ô."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Thiếu: chưa nói lượt chạy sau làm gì khi ô đã có thẻ xung đột đang chờ — AI lượt sau im lặng thì luật có thể áp vượt thẻ. Đã sửa: thêm vế vào AC-7 (ô đang xung đột thì lượt sau không áp gì) và hai ca đo kèm chiều đỏ."},
+    {"i": 1, "p": "Thiếu: không ca nào đo thẻ dựng lại sau «Để sau» còn giữ dấu xung đột — mất dấu thì «Áp dụng» lại áp nhầm luật. Đã sửa: thêm ca để-sau thẻ xung đột vào bộ đo."},
+    {"i": 2, "p": "Thiếu: sổ ghi «máy quyết, chỉ một lối» cho cách áp lựa chọn, trong khi còn lối hàm cơ sở dữ liệu ở bản nâng cấp sau — là đánh đổi anh phải chọn. Đã sửa: chuyển thành câu hỏi (Hỏi-10)."},
+    {"i": 3, "p": "Thiếu: dữ liệu thẻ mẫu phía giao diện dựng tay, không ghim khớp với thứ bộ máy thật ghi ra. Đã sửa: một tệp mẫu chung do bộ máy thật sinh, giao diện nạp đúng tệp đó, lệch khoá thì đỏ."},
+    {"i": 4, "p": "Thiếu: tiêu chí duyệt thẻ thường và hai câu hỏi chấm bằng người-máy va với cách chọn bên mới. Đã sửa: AC-5 chỉ áp cho thẻ không xung đột; hai câu hỏi chấm viết lại theo đúng thứ đọc được trong tệp."}
+  ]
 }

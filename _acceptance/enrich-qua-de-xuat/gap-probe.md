@@ -1,22 +1,24 @@
 ---
 slug: enrich-qua-de-xuat
-at: 2026-10-22T13:11:40Z
+at: 2026-10-23T00:20:00Z
 verdict: findings
 p0: 0
-p1: 4
-p2: 1
+p1: 3
+p2: 2
 ---
 
-# Phản biện context sạch — enrich-qua-de-xuat
+# Phản biện context sạch — enrich-qua-de-xuat (nâng phạm vi 2026-10-23)
 
-Tác tử mới, chỉ đọc 4 tệp: design doc · contract.md · evals.yaml · decisions.jsonl. Không có input thứ 5 (claim-scan trả corpus rỗng).
+Tác tử mới, chỉ đọc 4 tệp (design doc · contract.md · evals.yaml · decisions.jsonl) + input thứ 5
+(claim-scan). Tập trung phần nâng phạm vi: AC-7 viết lại, AC-11 mới, E8/E14–E17, sổ từ d-…-15.
+Phản biện lần 1 (Cổng Phạm vi 22/10, 0 P0 · 4 P1 · 1 P2) nằm trong lịch sử git của tệp này.
 
 ## Findings
 
 | Sev | Artifact | Thiếu gì | Kịch bản fail | Thước đo | Xử lý |
 |---|---|---|---|---|---|
-| P1 | design | Ca LLM trái E1 thành superseded im lặng, lệch «phần còn lại vào /ops/review», sổ không có dòng cho lựa chọn chỉ-người này | asset_nodes khớp sai, E1 ghi 'house' còn LLM đúng 'apartment' bị loại không ai thấy; E8 vẫn xanh | Dòng sổ chi-nguoi nêu hai lối; sửa AC-7/E8 theo lựa chọn chốt | fixed: thêm dòng sổ d-20261022T131228Z-9 (chi-nguoi, lên thẻ Cổng Phạm vi); AC-7 + E8 thêm in số ca xung đột |
-| P1 | evals | E5/E11 dựng thẻ review_queue + liên kết đề xuất bằng tay, không rút từ bên ghi thật | enrich-run quên đặt review_id; duyệt thẻ thật áp 0 field mà E5/E11 vẫn xanh | Ca nối liền: enrich-run sinh thẻ → decide trên id đó → applied = queued > 0; đỏ khi xoá review_id | fixed: E5/E11 đổi sang ca nối liền + chiều đỏ ghim 'AC-5 thẻ không trỏ đề xuất' |
-| P1 | evals | E9 so số dòng trong khi lời hứa --dry là không đổi nội dung | --dry vẫn chạy UPDATE fill-gap + cascade; số dòng không đổi nên E9 xanh | Băm md5 theo dòng các cột của sale_offers/properties/bảng đề xuất/hàng duyệt trước = sau; đỏ khi dry chạy UPDATE | fixed: E9 đổi sang băm nội dung + chiều đỏ ghim 'AC-8 dry đã ghi' |
-| P1 | evals | Fixture LLM/E1 là chuỗi viết tay đã khớp sẵn; so «cùng giá trị» và khoá duy nhất phụ thuộc chuẩn hoá | LLM trả "2" hoặc 'Apartment' còn E1 trả 2/'apartment' → không corroborated, giá trị đã bác bị đẩy lại | Fixture rút từ ≥3 trace thật qua parser thật; ca "2"↔2, 'Apartment'↔'apartment', chạy lại sau bác | fixed: design §3.1 thêm normalizeValue; E3 dùng fixture từ trace thật; E9 thêm ca chạy lại sau bác |
-| P2 | contract | Ô «offer không property» của trục C không có AC/eval | Cascade với property NULL ném lỗi, hỏng cả mảng ids của lượt | Ca gộp offer có/không property trong cùng mảng ids, cả hai applied | fixed: AC-2 + E2 thêm offer không gắn property trong cùng mảng ids |
+| P1 | contract AC-7 + evals E14 | Chưa nói lượt SAU làm gì khi field đã có thẻ xung đột đang chờ | Lượt 2 LLM vắng/lỗi → E1 direct → land áp vượt thẻ, chọn LLM sau đó bị skipped | Vế mới trong AC-7; ca E14 lượt 2 LLM vắng + LLM lỗi, chiều đỏ ghim 'AC-7 lượt sau áp E1 vượt thẻ' | fixed: AC-7 thêm vế giữ field đang xung đột; design §3.2 thêm luật tập field đang giữ; E14 thêm hai ca + chiều đỏ |
+| P1 | evals E7, E14 | Không ca nào đo evidence dựng lại còn giữ cờ conflict | Thẻ xung đột «Để sau» → thẻ mới mất conflict → «Áp dụng» không chọn → E1 thắng | Ca để-sau thẻ xung đột, chiều đỏ ghim 'AC-7 dựng lại mất xung đột' | fixed: E14 thêm ca deferred + kiểm conflict ở lượt 2 |
+| P1 | design + sổ d-16 | d-16 ghi một-lối trong khi sổ nêu lối migration sau 035; lệch d-2 là đánh đổi người quyết | Cổng duyệt với nhãn «máy quyết» mà Mạnh không được hỏi TS hay hàm SQL | Không còn dòng S1 một-lối có lối khác trong sổ | fixed: dòng mới thay d-16, nguồn chỉ-người (khuyến nghị TS + hai hàm 033; lối khác hàm SQL ở migration mới) |
+| P2 | evals E16 | Fixture thẻ xung đột phía app dựng tay, không ghim khớp khoá writer | Writer ghi khoá khác tên → E16 xanh, thẻ thật không hiện lựa chọn | Tệp chung agent/tests/fixtures/e1-conflict-card.json, E14 ghim khuôn, E16 nạp; chiều đỏ 'AC-11 lệch khoá evidence' | fixed: E14 + E16 + paths |
+| P2 | contract AC-5 + evals E6, E17 | AC-5 không giới hạn thẻ không xung đột; E6 «đúng status» va AC-11; E17 hỏi «hành vi cũ» ngoài inputs | Hội đồng chấm E6 FAIL hoặc E17 INCONCLUSIVE | Sửa AC-5, câu hỏi E6, E17 mô tả hành vi đọc được từ route.ts | fixed: AC-5 «không có field xung đột (thẻ có xung đột: AC-11)», E6 giới hạn thẻ không xung đột, E17 mô tả cụ thể |

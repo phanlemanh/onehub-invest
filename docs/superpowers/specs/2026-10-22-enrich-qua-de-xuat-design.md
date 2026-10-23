@@ -51,8 +51,10 @@ Cho từng field còn trống của offer:
 | E1 luật | có giá trị hợp lệ | `direct` → áp |
 | E2 LLM | E1 cùng field ra **cùng** giá trị | `corroborated` (by `e1`) → áp |
 | E2 LLM | field `block_raw`: giá trị khớp tên/alias một node `building` trong `asset_nodes` | `corroborated` (by `asset_nodes:<slug>`), áp **tên chuẩn** của node |
-| E2 LLM | E1 cùng field ra giá trị **khác** | `superseded` (E1 thắng, không đẩy duyệt) — **chờ người chốt ở Cổng Phạm vi** (sổ d-…-9); số ca xung đột in trong tổng kết lượt chạy |
+| E1 + E2 | E1 và LLM ra giá trị **khác** nhau cho cùng field | **KHÔNG áp bên nào**: cả hai thành `review` → `queued` trên thẻ `/ops/review` của offer, đánh dấu xung đột, mỗi bên kèm căn cứ; người chọn một bên (hoặc bỏ cả hai). Số ca xung đột in trong tổng kết lượt chạy. (Nâng phạm vi 2026-10-23 — thay quyết định «E1 thắng» d-…-9; xem §3.6) |
 | E2 LLM | không căn cứ nào | `review` → `queued` + thẻ `/ops/review` |
+
+Field đang có đề xuất `queued` trên thẻ xung đột (chờ hoặc đã hoãn) → lượt sau KHÔNG áp gì cho field đó (kể cả LLM vắng/lỗi/đồng ý E1): `routeFields` nhận tập field đang giữ và đẩy mọi đề xuất mới của field vào thẻ.
 
 Confidence của LLM KHÔNG bao giờ là căn cứ (lưu để người đọc). Field đã có giá trị trong
 `sale_offers` → không sinh đề xuất (fill-gap: giá trị cũ thắng).
@@ -82,9 +84,26 @@ và dựng lại `evidence`. Thẻ bị hoãn (`deferred`) → lượt kế mở
 Route `POST /api/v1/ops/review/[id]/decide`: nhánh `agent_output` + `enrich:` gọi
 `decide_enrichment_review` trong cùng transaction, ghi `ops_audit` như hiện tại.
 
+Thẻ có field xung đột: `evidence.fields` mang thêm `source` (`e1_rule`|`e2_llm`), `basis` (căn
+cứ — E1: từ khoá/luật khớp và khớp ở tin hay tên nhóm; LLM: model · độ tự tin · tên trace) và
+`conflict: true` cho mọi đề xuất của field có ≥2 giá trị chờ. Route decide nhận thêm
+`choices: { <field>: <proposal_id> | null }` — bắt buộc cho mỗi field xung đột khi `approved`
+(thiếu → 400, không bảng nào đổi). Áp = `apply_enrichment(<đề xuất được chọn + đề xuất không
+xung đột>)` rồi `decide_enrichment_review(id, 'rejected')` cho phần còn lại — hai hàm sẵn có của
+033, cùng transaction; không migration mới, không câu UPDATE viết tay. Logic chọn id nằm trong
+hàm thuần `planEnrichApproval` (`app/src/lib/enrich-choices.ts`) để test được.
+
 ### 3.5 `--dry`
 
 In bảng định tuyến (field · nguồn · route) cho từng offer; KHÔNG ghi bảng nào.
+
+### 3.6 Vì sao đổi «E1 thắng» (2026-10-23)
+
+Chạy thật `LIMIT=6` trên DB local: E1 áp `property_type=land` cho hai tin S05 rõ là nhà 4 tầng
+(«Nhà Gò Vấp 4 tầng», «CHDV 9PN 4 tầng») vì luật từ khoá nhận chữ «đất» trong tên nhóm «HỘI MUA
+BÁN NHÀ ĐẤT…»; LLM ra `house` nhưng bị `superseded`, thẻ duyệt không hiện gì — đúng rủi ro sổ d-9
+đã ghi («E1 sai thì giá trị LLM đúng bị bỏ mà không ai nhìn»). E1 vẫn áp thẳng khi LLM không có ý
+kiến hoặc đồng ý; chỉ khi hai nguồn TRÁI nhau thì người quyết. Siết chính luật E1 là vòng riêng.
 
 ## 4. Quét không gian AC (morphological-scan, preset entity-feature)
 
@@ -119,6 +138,7 @@ bảng mới không sync cloud), transaction ở route.
 
 - Suôn sẻ: `/ops/review` → thẻ «Bổ sung dữ liệu tin» → đọc đoạn tin + bảng field đề xuất → bấm «Áp dụng» → thẻ chuyển «Đã duyệt», giá trị vào `sale_offers` (điểm ra: danh sách đã quyết)
 - Biên: thẻ có field mà lúc duyệt đã có giá trị khác → field đó «bỏ qua (đã có giá trị)», không ghi đè
+- Xung đột: field mà luật và LLM ra hai giá trị khác nhau → chọn «Theo luật», «Theo LLM» hoặc «Bỏ cả hai» rồi mới «Áp dụng»; field không xung đột của cùng thẻ áp như thường
 - Lỗi & quay lại: route lỗi → dòng «❌ <lỗi>» cạnh nút, thẻ vẫn chờ; bấm lại được
 
 ### 2. Kiểm kê màn
@@ -134,6 +154,8 @@ bảng mới không sync cloud), transaction ở route.
 |---|---|---|---|
 | ST-review-agent-pending | thẻ agent_output | đoạn tin, bảng field · giá trị · độ tin cậy LLM, 3 nút «Áp dụng» «Bỏ» «Để sau» | bấm một nút |
 | ST-review-agent-done | thẻ agent_output | badge «Đã áp» / «Đã bỏ» / «Hoãn» thay cho nút | không gì |
+| ST-review-agent-conflict | thẻ agent_output | field xung đột thành hai lựa chọn «Theo luật» / «Theo LLM» (Badge nguồn) + giá trị + căn cứ, thêm «Bỏ cả hai»; «Áp dụng» khoá | chọn một bên cho mỗi field xung đột |
+| ST-review-agent-conflict-chosen | thẻ agent_output | lựa chọn được đánh dấu; «Áp dụng» bật | bấm «Áp dụng» / «Bỏ» / «Để sau» |
 | ST-review-agent-error | thẻ agent_output | «❌ <thông điệp route>» cạnh nút | bấm lại |
 | ST-review-unknown-type | thẻ loại chưa hỗ trợ | tiêu đề + «loại <item_type> chưa có giao diện duyệt» | không gì — trang không sập |
 <!-- UX-STATE-TABLE>>> -->
@@ -147,7 +169,8 @@ bảng mới không sync cloud), transaction ở route.
 | Component | Nấc (dùng / ghép / mở rộng / tạo) | Vì sao (1 dòng) |
 |---|---|---|
 | ReviewCard | mở rộng | rẽ nhánh theo item_type, giữ nguyên thẻ entity_match |
-| Badge (reui) | dùng | nhãn nguồn/độ tin cậy, trạng thái |
+| Badge (reui) | dùng | nhãn nguồn (luật / LLM), độ tin cậy, trạng thái |
+| Button, ToggleGroup (components/ui) | dùng | ba nút quyết định và ô chọn một bên cho field xung đột — thay `<button>`/`<table>` tự dựng (lint onehub-ui) |
 
 ### 6. Khuôn IA đã chọn + căn cứ
 
