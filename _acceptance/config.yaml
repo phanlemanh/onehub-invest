@@ -116,6 +116,8 @@ executors:
     api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
     api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
     deals_smoke_local_guard: "node scripts/check-smoke-guard.mjs"
+    api_matrix_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs"     # ma trận hành vi khách/bearer — cần app chạy TỪ worktree đang kiểm
+    api_matrix_tu_thu: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs --tu-thu"
     # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
     zc3_l4b_scan: "node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"
     zc3_gateway: "node scripts/audit-p1-resilience/acceptance.mjs gateway"

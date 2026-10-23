@@ -5,10 +5,10 @@ slug: so-be-mat-api
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: draft
 design_doc: docs/superpowers/specs/2026-10-23-so-be-mat-api-design.md
-approved_by: Mạnh
-approved_at: 2026-10-23T10:58:00Z
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: so-be-mat-api
@@ -29,9 +29,11 @@ Source input: `docs/plan/lo-trinh.json` hàng NT4 · `_acceptance/so-be-mat-api/
   các phương thức nó export; route chưa khai, dòng sổ trỏ route không còn, hay phương thức lệch đều trượt có tên.
 - AC-2: Given một route (hoặc module `@/lib` nó import) đọc bảng `sale_offers`, When sổ khai route ấy `public`, Then kiểm
   sổ trượt có tên route; trên cây thật không route `public` nào đọc `sale_offers`.
-- AC-3: Given chế độ sổ khai cho từng route, When kiểm sổ chạy, Then cổng trong mã phải khớp chế độ (`ops`, `ops-session`,
-  `admin`, `session-or-noop`), và route dùng `canCallOpsApi` phải gọi nó có `await`, trả 401, trước `pool.query`; lệch
-  thì trượt có tên.
+- AC-3: Given chế độ sổ khai cho từng route, When gọi MỌI route và MỌI phương thức trong sổ trên app đang chạy, một lần như
+  khách và một lần chỉ mang bearer `OPS_API_TOKEN`, Then không route nào cho qua một người gọi mà chế độ của nó không cho
+  (sổ rộng bằng hoặc hơn mã; mã chặt hơn sổ chỉ được ghi chú), beacon `session-or-noop` trả 204 cho cả hai, lệch thì ma
+  trận trượt có tên route + phương thức + người gọi; ma trận tự thử bằng một bản sổ cố ý sai phải bắt đủ các lỗi cài sẵn.
+  Kiểm tĩnh (chữ trong mã) vẫn chạy như rào nhanh: cổng `canCallOpsApi` có `await`, trả 401, trước `pool.query`.
 - AC-4: Given người gọi `GET /api/v1/offers`, When không có bearer đúng hay phiên ops (khách, bearer sai, role `user`),
   Then nhận 401 `{"error":"unauthorized"}` trước khi truy vấn; bearer `OPS_API_TOKEN` hoặc phiên ops nhận 200 với khuôn
   `{generatedAt, kind, count, rows}` như cũ; `scripts/audit-all.sh` đo đúng chế độ mới (khách 401, bearer 200).
@@ -56,7 +58,7 @@ Quét bằng morphological-scan (preset test-matrix), ba trục:
   `app/src/lib/ops-access.ts` — SUY-TỪ-REPO]
 - Trục C — lớp đo: tĩnh (cây mã, có bản đột biến) · đơn vị (hàm thuần) · HTTP trên app đang chạy [thước CE: khuôn ba
   lớp của AU2 — SUY-TỪ-REPO `_acceptance/deals-api-tam-dong/evals.yaml`]
-- Core: AC-1…AC-3 lớp tĩnh với bảng đột biến M1–M14 viết trước (mỗi chế độ, mỗi điều kiện cổng, import bắc cầu); AC-4, AC-5 lớp sống (+ tĩnh qua AC-3); AC-6 lớp sống + đơn vị; AC-7 vá Ngoài-1 AU2.
+- Core: AC-1, AC-2 lớp tĩnh với bảng đột biến viết trước; AC-3 lớp HÀNH VI (ma trận khách/bearer trên mọi route × phương thức của sổ, có tự thử bằng sổ sai) + tĩnh làm rào nhanh; AC-4, AC-5 lớp sống; AC-6 sống + đơn vị; AC-7 vá Ngoài-1 AU2. (Đổi khuôn sau dừng-vá S4-r2: dò chữ không giữ được lời hứa «chỉ trả đúng thứ sổ cho phép».)
 - Later: luật «không công khai» cho bảng tầng A khác (users, sessions, review_queue) — hôm nay không route public nào đọc.
 - Never: gom 5 route `/api/v1/ops/*` về một hàm (đường T3, hàng riêng); `WWW-Authenticate`.
 

@@ -36,6 +36,22 @@ evals:
     paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "app/src/lib/ops/zalo-media.ts", "scripts/check-api-surface.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
+  - id: E12
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.api_matrix_smoke
+    expected: "exit 0; dòng 'ok   ma trận hành vi: <n> lời gọi, 0 lần mã cho người gọi mà sổ không cho' và mỗi route ops/admin/ops-session có dòng khách bị từ chối; beacon 204 cho khách và bearer"
+    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "app/src/lib/**", "scripts/smoke-api-matrix.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.api_matrix_tu_thu
+    expected: "exit 0; trên cùng máy chủ, bản sổ cố ý sai (v1/markets → ops, v1/offers → admin, v1/ops/audit → admin) bị bắt đủ 3/3 với thông điệp 'mã cho <người gọi> mà sổ khai <chế độ>'; bản sổ thật 0 vi phạm"
+    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "scripts/smoke-api-matrix.mjs"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
   - id: E5
     criterion: AC-4
     executor: script

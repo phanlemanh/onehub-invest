@@ -11,7 +11,7 @@
     },
     {
       "id": "AC-3",
-      "p": "Sẽ báo đỏ khi cổng quyền trong mã khác chế độ sổ khai (vận hành, vận hành đăng nhập, quản trị, khách được bỏ qua)."
+      "p": "Sẽ gọi thật mọi API trong sổ, mỗi thao tác hai lần (như khách và chỉ mang khoá máy), và báo đỏ khi API nào cho qua người gọi mà sổ không cho — viết mã kiểu gì cũng bắt; phép đo tự thử bằng một bản sổ cố ý sai phải bắt đủ lỗi cài sẵn."
     },
     {
       "id": "AC-4",
@@ -71,7 +71,7 @@
     },
     {
       "i": 3,
-      "p": "Làm ngay: 14 bản hỏng viết trước cho mọi chế độ và mọi điều kiện cổng, đo sống cho API tin rao, beacon, ảnh QR, và vá Ngoài-1."
+      "p": "Làm ngay: bản hỏng viết trước cho sổ; đo HÀNH VI cổng quyền trên mọi API × thao tác (đổi khuôn sau hai lượt dò chữ hụt); đo sống API tin rao, beacon, ảnh QR; vá Ngoài-1."
     },
     {
       "i": 4,
