@@ -1,0 +1,12 @@
+{"ts":"2026-10-23T10:20:35Z","round":1,"evalId":"E1","run_id":"backfill-zalo-media-v3-E1-20261023T102035Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T10:20:47Z","round":1,"evalId":"E2","run_id":"backfill-zalo-media-v3-E2-20261023T102047Z","exit_code":0,"cmd":"cd pipeline && node scripts/media-files-roundtrip.mjs"}
+{"ts":"2026-10-23T10:20:53Z","round":1,"evalId":"E3","run_id":"backfill-zalo-media-v3-E3-20261023T102053Z","exit_code":0,"cmd":"cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"}
+{"ts":"2026-10-23T10:23:30Z","round":2,"evalId":"E1","run_id":"backfill-zalo-media-v3-E1-20261023T102330Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T10:23:32Z","round":2,"evalId":"E4","run_id":"backfill-zalo-media-v3-E4-20261023T102332Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T10:23:40Z","round":2,"evalId":"E2","run_id":"backfill-zalo-media-v3-E2-20261023T102340Z","exit_code":0,"cmd":"cd pipeline && node scripts/media-files-roundtrip.mjs"}
+{"ts":"2026-10-23T10:23:42Z","round":2,"evalId":"E3","run_id":"backfill-zalo-media-v3-E3-20261023T102342Z","exit_code":0,"cmd":"cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"}
+{"ts":"2026-10-23T10:26:00Z","round":3,"evalId":"E1","run_id":"backfill-zalo-media-v3-E1-20261023T102600Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T10:26:01Z","round":3,"evalId":"E2","run_id":"backfill-zalo-media-v3-E2-20261023T102601Z","exit_code":0,"cmd":"cd pipeline && node scripts/media-files-roundtrip.mjs"}
+{"ts":"2026-10-23T10:26:03Z","round":3,"evalId":"E3","run_id":"backfill-zalo-media-v3-E3-20261023T102603Z","exit_code":0,"cmd":"cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"}
+{"ts":"2026-10-23T10:26:04Z","round":3,"evalId":"E4","run_id":"backfill-zalo-media-v3-E4-20261023T102604Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T10:26:05Z","round":3,"evalId":"E5","run_id":"backfill-zalo-media-v3-E5-20261023T102605Z","exit_code":0,"cmd":"cd pipeline && node scripts/backfill-v3-check.mjs"}
