@@ -200,7 +200,8 @@ export const TERMS = [
   // ---------------------------------------------------------------- Chỉ số
   {
     group: "metric", vn: "Đêm đã đặt", code: "booked_nights", reso: "không có",
-    def: "Số đêm trong kỳ lịch listing bị chặn vì có khách.", avoid: [], use: ["booked_nights", "đêm đã đặt"],
+    def: "Số đêm trong kỳ lịch listing bị chặn (`nights.available = false`) — gồm cả đêm chủ tự chặn, vì lịch công khai không tách hai loại.",
+    avoid: [], use: ["booked_nights", "đêm đã đặt"],
   },
   {
     group: "metric", vn: "Đêm khả dụng", code: "booked_nights + available_nights", reso: "không có",
@@ -209,7 +210,7 @@ export const TERMS = [
   },
   {
     group: "metric", vn: "Doanh thu", code: "revenue", reso: "không có",
-    def: "Tổng giá các đêm đã đặt trong kỳ (`market_metrics.revenue`). \"Doanh thu năm\" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.",
+    def: "Tổng giá các đêm đã đặt trong kỳ (`market_metrics.revenue`); đêm thiếu giá lấy giá niêm yết của listing, listing không có giá niêm yết bị loại khỏi mẫu (300_metrics.sql). \"Doanh thu năm\" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.",
     avoid: ["doanh số", "doanh thu brutto"], use: ["revenue", "doanh thu"],
     note: "UI ghi \"Doanh thu ước tính\" khi số dựng từ lịch tương lai (giá niêm yết × đêm đã chặn) — vẫn là thuật ngữ này.",
   },
@@ -217,7 +218,7 @@ export const TERMS = [
     group: "metric", vn: "ADR", code: "adr", reso: "không có",
     def: "Giá trung bình một đêm đã đặt: doanh thu ÷ đêm đã đặt.",
     avoid: ["giá phòng", "giá đêm", "giá/đêm"],
-    note: "UI đang có 4 nhãn cho hai khái niệm: \"Giá phòng (ADR)\", \"Giá đêm (ADR)\" (= ADR) và \"Giá niêm yết\", \"Giá/đêm\" (= giá niêm yết một listing) — tách khi dọn nhóm trang.",
+    note: "Biến `adr` trong `lib/yield.ts` (Lợi suất) là trung vị giá niêm yết của listing so sánh, KHÔNG phải ADR — đổi tên khi dọn nhóm trang. UI đang có 4 nhãn cho hai khái niệm: \"Giá phòng (ADR)\", \"Giá đêm (ADR)\" (= ADR) và \"Giá niêm yết\", \"Giá/đêm\" (= giá niêm yết một listing) — tách khi dọn nhóm trang.",
     use: ["ADR", "giá phòng", "giá đêm", "giá/đêm", "giá trung bình"],
     choice: {
       q: "Q5", title: "ADR và RevPAR: giữ chữ tắt ngành hay Việt hoá",
@@ -282,7 +283,7 @@ export const TERMS = [
   },
   {
     group: "metric", vn: "Thu nhập ròng", code: "noi", reso: "không có",
-    def: "Doanh thu năm trừ phí quản lý, phí nền tảng, thuế và chi phí cố định — chưa trừ trả nợ vay.",
+    def: "Cho thuê ngắn hạn: doanh thu năm trừ phí quản lý, phí nền tảng, thuế và chi phí cố định. Cho thuê dài hạn: tiền thuê năm × (1 − thuế 10%). Cả hai chưa trừ trả nợ vay.",
     avoid: ["lợi nhuận", "NOI"], use: ["NOI", "thu nhập"],
   },
   {

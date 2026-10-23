@@ -132,20 +132,20 @@ _Avoid_: bait gap
 
 ## Chỉ số
 
-**Đêm đã đặt**: Số đêm trong kỳ lịch listing bị chặn vì có khách.
+**Đêm đã đặt**: Số đêm trong kỳ lịch listing bị chặn (`nights.available = false`) — gồm cả đêm chủ tự chặn, vì lịch công khai không tách hai loại.
 - Code: `booked_nights` · RESO: không có
 
 **Đêm khả dụng**: Đêm đã đặt + đêm trống (`available_nights`) trong kỳ — mẫu số của công suất và RevPAR.
 - Code: `booked_nights + available_nights` · RESO: không có
 
-**Doanh thu**: Tổng giá các đêm đã đặt trong kỳ (`market_metrics.revenue`). "Doanh thu năm" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.
+**Doanh thu**: Tổng giá các đêm đã đặt trong kỳ (`market_metrics.revenue`); đêm thiếu giá lấy giá niêm yết của listing, listing không có giá niêm yết bị loại khỏi mẫu (300_metrics.sql). "Doanh thu năm" ở Lợi suất = giá niêm yết × công suất 90 đêm × 365, lấy p25/trung vị/p75 trên listing so sánh.
 - Code: `revenue` · RESO: không có
 - Ghi chú: UI ghi "Doanh thu ước tính" khi số dựng từ lịch tương lai (giá niêm yết × đêm đã chặn) — vẫn là thuật ngữ này.
 _Avoid_: doanh số, doanh thu brutto
 
 **ADR**: Giá trung bình một đêm đã đặt: doanh thu ÷ đêm đã đặt.
 - Code: `adr` · RESO: không có
-- Ghi chú: UI đang có 4 nhãn cho hai khái niệm: "Giá phòng (ADR)", "Giá đêm (ADR)" (= ADR) và "Giá niêm yết", "Giá/đêm" (= giá niêm yết một listing) — tách khi dọn nhóm trang.
+- Ghi chú: Biến `adr` trong `lib/yield.ts` (Lợi suất) là trung vị giá niêm yết của listing so sánh, KHÔNG phải ADR — đổi tên khi dọn nhóm trang. UI đang có 4 nhãn cho hai khái niệm: "Giá phòng (ADR)", "Giá đêm (ADR)" (= ADR) và "Giá niêm yết", "Giá/đêm" (= giá niêm yết một listing) — tách khi dọn nhóm trang.
 _Avoid_: giá phòng, giá đêm, giá/đêm
 
 **Công suất**: Đêm đã đặt ÷ đêm khả dụng (`market_metrics.occupancy`).
@@ -183,7 +183,7 @@ _Avoid_: net yield, yield ròng
 - Code: `cashOnCash` · RESO: không có
 _Avoid_: cash-on-cash
 
-**Thu nhập ròng**: Doanh thu năm trừ phí quản lý, phí nền tảng, thuế và chi phí cố định — chưa trừ trả nợ vay.
+**Thu nhập ròng**: Cho thuê ngắn hạn: doanh thu năm trừ phí quản lý, phí nền tảng, thuế và chi phí cố định. Cho thuê dài hạn: tiền thuê năm × (1 − thuế 10%). Cả hai chưa trừ trả nợ vay.
 - Code: `noi` · RESO: không có
 _Avoid_: lợi nhuận, NOI
 
