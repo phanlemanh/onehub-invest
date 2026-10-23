@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: c1adef1629be1d25a5b01d6a6be7dff369e25d84
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: review-card-photos
