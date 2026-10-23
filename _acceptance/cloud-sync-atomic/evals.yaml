@@ -21,7 +21,7 @@ evals:
     criterion: AC-3
     executor: script
     cmd: config:executors.script.cloud_sync_fidelity
-    expected: "exit 0; PASS 21/21 bảng cùng số dòng + md5 cột gửi; PASS mọi cột date khớp min/max với local; chiều đỏ: đọc local bằng bộ phân tích kiểu mặc định node-pg → 'ĐỎ-ĐÚNG date'; PASS lệch-schema (i): xoá một cột trên cloud mô phỏng → lượt lành + WARN 'lệch schema' nêu đúng tên cột; PASS (ii): thêm cột generated + cột có mặc định trên cloud → lượt lành, cột ấy giữ giá trị cloud"
+    expected: "exit 0; PASS 21/21 bảng cùng số dòng + md5 cột gửi; PASS mọi cột date khớp min/max với local; chiều đỏ cùng fixture (bản sao cloud bị phá): ngày lùi một ngày → 'ĐỎ-ĐÚNG date', số jsonb bị cắt độ chính xác → 'ĐỎ-ĐÚNG số'; PASS lệch-schema (i): xoá một cột trên cloud mô phỏng → lượt lành + WARN 'lệch schema' nêu đúng tên cột; PASS (ii): thêm cột generated + cột có mặc định trên cloud → lượt lành, cột ấy giữ giá trị cloud"
     paths: [pipeline/sync-cloud.mjs, pipeline/scripts/check-cloud-sync.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

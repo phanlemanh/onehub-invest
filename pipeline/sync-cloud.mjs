@@ -121,9 +121,11 @@ const STAGE_PARALLEL = 3;
 const SELLER_REF_EXPR = `CASE WHEN substring("seller_ref" from '([0-9]+)$') IS NULL THEN NULL
   ELSE "source" || ':' || substring("seller_ref" from '([0-9]+)$') END AS "seller_ref"`;
 
-// date/timestamp (và mảng của chúng) giữ nguyên chuỗi Postgres: mặc định node-pg dựng
-// Date theo giờ máy (+07) rồi JSON hoá sang UTC → cloud lưu lùi một ngày.
-const RAW_OIDS = new Set([1082, 1114, 1182, 1115]);
+// Mọi kiểu thời gian (và mảng của chúng) giữ nguyên chuỗi Postgres: mặc định node-pg dựng
+// Date theo giờ máy (+07) rồi JSON hoá sang UTC → cột date lùi một ngày; Date của JS
+// cũng cắt micro-giây của timestamptz.
+// date 1082/1182 · timestamp 1114/1115 · timestamptz 1184/1185 · time 1083/1183 · timetz 1266/1270
+const RAW_OIDS = new Set([1082, 1182, 1114, 1115, 1184, 1185, 1083, 1183, 1266, 1270]);
 export const localTypes = {
   getTypeParser: (oid, format) => (RAW_OIDS.has(oid) ? (v) => v : pg.types.getTypeParser(oid, format)),
 };
@@ -132,15 +134,22 @@ const q = (id) => `"${String(id).replace(/"/g, '""')}"`;
 const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 const SAFE = /^[A-Za-z0-9_-]+$/;
 
-/** Danh sách biểu thức SELECT cho một bảng local: loại PII_EXCLUDE, chỉ CLOUD_ALLOW với
- * bảng người bán, chuẩn hoá seller_ref. `unapproved` = cột local chưa duyệt lên cloud. */
-export function selectList(table, localCols) {
+/** Danh sách biểu thức SELECT cho một bảng local: loại PII_EXCLUDE/SOURCE_EXCLUDE, chỉ
+ * CLOUD_ALLOW với bảng người bán, chuẩn hoá seller_ref, cột geometry/geography → hex EWKB
+ * (`geoCols`). `unapproved` = cột local chưa duyệt lên cloud. */
+export function selectList(table, localCols, geoCols = []) {
   const exclude = [...(PII_EXCLUDE[table] ?? []), ...(SOURCE_EXCLUDE[table] ?? [])];
   const allow = CLOUD_ALLOW[table];
   const cols = localCols.filter((c) => !exclude.includes(c) && (!allow || allow.includes(c)));
   const unapproved = allow ? localCols.filter((c) => !allow.includes(c) && !exclude.includes(c)) : [];
   const sql = cols
-    .map((c) => (table === "sale_offers" && c === "seller_ref" ? SELLER_REF_EXPR : q(c)))
+    .map((c) =>
+      table === "sale_offers" && c === "seller_ref"
+        ? SELLER_REF_EXPR
+        : geoCols.includes(c)
+          ? `${q(c)}::text AS ${q(c)}`
+          : q(c),
+    )
     .join(", ");
   return { sql, cols, unapproved };
 }
@@ -174,13 +183,14 @@ export function planTables({ fill, fks, pks }) {
   return { insertOrder, deleteOrder: [...insertOrder].reverse(), keep };
 }
 
-/** Chia dòng thành các mảng JSON sao cho thân yêu cầu (SQL đã JSON hoá) ≤ maxBytes. */
+/** Chia dòng (chuỗi JSON hoặc object) thành các mảng JSON sao cho thân yêu cầu (SQL đã
+ * JSON hoá) ≤ maxBytes. */
 export function chunkRows(rows, maxBytes) {
   const out = [];
   let cur = [];
   let size = 2;
   for (const row of rows) {
-    const s = JSON.stringify(row);
+    const s = typeof row === "string" ? row : JSON.stringify(row);
     const b = Buffer.byteLength(JSON.stringify(s)) + 1;
     if (b + 2 > maxBytes) throw new Error(`dòng quá lớn: ${b} byte > ${maxBytes}`);
     if (size + b > maxBytes && cur.length) {
@@ -312,6 +322,36 @@ async function pool(items, n, fn) {
   await Promise.all(workers);
 }
 
+/** Leak gate — tầng A / thô phải vắng hoặc 0 dòng ở cloud; seller_ref chỉ dạng S0x;
+ * anon/authenticated không vào được sync_stage. Trả danh sách vi phạm (rỗng = PASS). */
+export async function leakGate(exec) {
+  const leaks = [];
+  const checks = ["source_registry", "airbnb_snapshots"];
+  const stg = await exec(
+    `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'stg_%'`,
+  );
+  for (const { table_name } of stg) checks.push(table_name);
+  for (const t of checks) {
+    // Bảng VẮNG MẶT ở cloud = sạch tuyệt đối — check existence trước (tránh 42P01).
+    const ex = await exec(`SELECT to_regclass(${lit(t)})::text AS r`);
+    if (!ex[0].r) continue;
+    const r = await exec(`SELECT count(*)::int AS n FROM public.${q(t)}`);
+    if (r[0].n > 0) leaks.push(`${t}=${r[0].n}`);
+  }
+  const airdna = await exec(
+    `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'airdna%'`,
+  );
+  if (airdna[0].n > 0) leaks.push(`còn ${airdna[0].n} bảng airdna% ở cloud`);
+  const ref = await exec(
+    `SELECT count(*)::int AS n FROM public.sale_offers WHERE seller_ref IS NOT NULL AND seller_ref !~ ${lit(SELLER_REF_RE)}`,
+  );
+  if (ref[0].n > 0) leaks.push(`sale_offers.seller_ref chưa chuẩn hoá S0x: ${ref[0].n} dòng`);
+  const acl = await exec(`SELECT count(*)::int AS n FROM pg_roles r
+    WHERE r.rolname IN ('anon','authenticated') AND has_schema_privilege(r.rolname, 'sync_stage', 'USAGE')`);
+  if (acl[0].n > 0) leaks.push("anon/authenticated có USAGE trên sync_stage");
+  return leaks;
+}
+
 /** Một lượt đồng bộ. `local`: pg.Client tới DB local (dựng với `types: localTypes`).
  * `exec(sql, opts)` → mảng dòng của câu cuối. Ném PhaseError (`err.phase`) khi gãy. */
 export async function syncOnce({ local, exec, log = console.log, runId = newRunId(), swapPause = 0, sourceTokens } = {}) {
@@ -383,12 +423,16 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       tokens = rows.map((r) => r.x);
     }
     const { rows: lc } = await local.query(
-      `SELECT table_name AS t, column_name AS c FROM information_schema.columns
+      `SELECT table_name AS t, column_name AS c, udt_name AS u FROM information_schema.columns
        WHERE table_schema = 'public' AND table_name = ANY($1) ORDER BY table_name, ordinal_position`,
       [FILL],
     );
     const localCols = new Map();
-    for (const r of lc) (localCols.get(r.t) ?? localCols.set(r.t, []).get(r.t)).push(r.c);
+    const geo = new Map();
+    for (const r of lc) {
+      (localCols.get(r.t) ?? localCols.set(r.t, []).get(r.t)).push(r.c);
+      if (r.u === "geometry" || r.u === "geography") (geo.get(r.t) ?? geo.set(r.t, []).get(r.t)).push(r.c);
+    }
     for (const t of FILL) {
       const ct = cloudOf.get(t);
       const sel = selectList(t, localCols.get(t) ?? []);
@@ -398,9 +442,11 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       for (const c of drift) warn(`lệch schema: cloud thiếu cột ${ct}.${c} — cột này không gửi`);
       const send = sel.cols.filter((c) => cloudSet.has(c));
       columns[ct] = send;
-      const list = selectList(t, send).sql;
-      const { rows } = await local.query(`SELECT ${list || "1 AS _"} FROM ${q(t)}`);
-      data.set(ct, send.length ? rows : []);
+      // Dòng dạng JSON do Postgres sinh: số thập phân trong jsonb, micro-giây, ngày giữ
+      // nguyên (JSON.parse của node-pg làm tròn số jsonb về double).
+      const list = selectList(t, send, geo.get(t) ?? []).sql;
+      const { rows } = await local.query(`SELECT row_to_json(x)::text AS j FROM (SELECT ${list || "1 AS _"} FROM ${q(t)}) x`);
+      data.set(ct, send.length ? rows.map((r) => r.j) : []);
     }
     await local.query("COMMIT");
   } catch (e) {
@@ -411,17 +457,13 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
 
   // 3. soát tên nguồn (bảng người bán) + chặn tụt
   for (const t of Object.keys(CLOUD_ALLOW)) {
-    for (const row of data.get(RENAME(t)) ?? []) {
-      for (const [c, v] of Object.entries(row)) {
-        if (v == null) continue;
-        const hit = scanSourceNames(typeof v === "string" ? v : JSON.stringify(v), tokens);
-        if (hit) {
-          throw new PhaseError(
-            "scan",
-            `giá trị mang định danh nguồn (tầng A) ở ${t}.${c} — dừng trước khi gửi, không dòng nào rời máy`,
-          );
-        }
-      }
+    for (const j of data.get(RENAME(t)) ?? []) {
+      if (!scanSourceNames(j, tokens)) continue;
+      const col = Object.entries(JSON.parse(j)).find(([, v]) => v != null && scanSourceNames(JSON.stringify(v), tokens))?.[0];
+      throw new PhaseError(
+        "scan",
+        `giá trị mang định danh nguồn (tầng A) ở ${t}.${col ?? "?"} — dừng trước khi gửi, không dòng nào rời máy`,
+      );
     }
   }
   const counts = Object.fromEntries([...data].map(([t, rows]) => [t, rows.length]));
@@ -457,32 +499,10 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   }
   lap("swap");
 
-  // 6. leak gate — tầng A / thô phải vắng hoặc 0 dòng ở cloud
-  const leaks = [];
+  // 6. leak gate
+  let leaks;
   try {
-    const checks = ["source_registry", "airbnb_snapshots"];
-    const stg = await exec(
-      `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'stg_%'`,
-    );
-    for (const { table_name } of stg) checks.push(table_name);
-    for (const t of checks) {
-      // Bảng VẮNG MẶT ở cloud = sạch tuyệt đối — check existence trước (tránh 42P01).
-      const ex = await exec(`SELECT to_regclass(${lit(t)})::text AS r`);
-      if (!ex[0].r) continue;
-      const r = await exec(`SELECT count(*)::int AS n FROM public.${q(t)}`);
-      if (r[0].n > 0) leaks.push(`${t}=${r[0].n}`);
-    }
-    const airdna = await exec(
-      `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'airdna%'`,
-    );
-    if (airdna[0].n > 0) leaks.push(`còn ${airdna[0].n} bảng airdna% ở cloud`);
-    const ref = await exec(
-      `SELECT count(*)::int AS n FROM public.sale_offers WHERE seller_ref IS NOT NULL AND seller_ref !~ ${lit(SELLER_REF_RE)}`,
-    );
-    if (ref[0].n > 0) leaks.push(`sale_offers.seller_ref chưa chuẩn hoá S0x: ${ref[0].n} dòng`);
-    const acl = await exec(`SELECT count(*)::int AS n FROM pg_roles r
-      WHERE r.rolname IN ('anon','authenticated') AND has_schema_privilege(r.rolname, 'sync_stage', 'USAGE')`);
-    if (acl[0].n > 0) leaks.push("anon/authenticated có USAGE trên sync_stage");
+    leaks = await leakGate(exec);
   } catch (e) {
     throw new PhaseError("gate", e.message);
   }
