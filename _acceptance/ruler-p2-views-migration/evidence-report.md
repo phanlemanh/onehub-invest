@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent (feature-loop:cham-lenh, E1–E7) + 3 lượt giám khảo mù (feature-loop:cham-doc, E8)
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ac7192c791b68138f711a057830fd45eb0268007
+verified_commit: d2e7f8376c0f0c28d425e5d4ce282549ec28dc36
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -142,3 +142,7 @@ none — mọi eval chạy một lần, tất định.
 ## Iterations
 
 Round 1: E1–E7 PASS (tác tử chấm lệnh); E8 PASS ở cả ba lượt giám khảo mù, góp ý của lượt 1–3 đã sửa vào hướng dẫn (chỉ docs). T3 → PENDING-JUDGMENT chờ Mạnh phán E8 trực tiếp và ký.
+
+### Re-pin lần 1 — 2026-10-23, do merge main sau #2/#4/#5/#7
+run_id: repin-20261023T005304Z-41595
+sha: d2e7f8376c0f0c28d425e5d4ce282549ec28dc36 · suites: 2 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths) · AC không có chốt máy: AC-8
