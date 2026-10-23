@@ -54,15 +54,22 @@ installGracefulShutdown(
   },
   {
     flush: (flushOpts) => agent.flush(flushOpts),
-    close: () =>
-      new Promise<void>((resolve) => {
+    close: () => {
+      // P3 (claudedp-2310-3 vòng 3): POST gửi nửa body rồi im → server.close
+      // callback KHÔNG BAO GIỜ tới nếu chờ connection treo → mất cả buffer
+      // vì deadline cạn lúc còn await close(). Race với 3s: hết giờ thì bỏ
+      // chờ, flush ngay — request dở không được ack, agent tự retry.
+      const giveUp = new Promise<void>((r) => setTimeout(r, 3_000).unref?.());
+      const closing = new Promise<void>((resolve) => {
         server.close(() => resolve()); // resolve khi mọi request đang chạy xong
         // close() chỉ chặn connection MỚI; closeIdleConnections cắt nốt các
         // keep-alive RẢNH nhưng KHÔNG giết request đang đọc body (chưa ack
         // 202) — khác closeAllConnections (2310-3b): POST đang chạy được làm
         // nốt trong deadline rồi mới tới lượt flush.
         if (typeof server.closeIdleConnections === "function") server.closeIdleConnections();
-      }),
+      });
+      return Promise.race([closing, giveUp]);
+    },
     pendingCount: () => agent.stats().buffered,
   },
 );
