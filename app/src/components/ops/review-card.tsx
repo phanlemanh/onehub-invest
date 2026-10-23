@@ -4,12 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/reui/badge";
+import { Button } from "@/components/ui/button";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import type { EnrichChoices } from "@/lib/enrich-choices";
 
 /**
  * HITL Review Card — rẽ nhánh theo item_type:
  * - entity_match: 2 offers side-by-side + AI suggestion + 3 nút quyết định.
- * - agent_output (enrich:<offer_id>): đoạn tin + bảng giá trị LLM đề xuất;
- *   «Áp dụng» → route decide → decide_enrichment_review (migration 033).
+ * - agent_output (enrich:<offer_id>): đoạn tin + danh sách giá trị đề xuất;
+ *   «Áp dụng» → route decide → decide_enrichment_review (migration 033). Field luật E1 trái
+ *   LLM (conflict) hiện hai bên kèm căn cứ; người chọn một bên trước khi áp (AC-11).
  * - loại khác: một dòng báo, không làm sập trang.
  * Click → POST API → router.refresh() để cập nhật danh sách.
  */
@@ -39,7 +44,17 @@ export type EnrichEvidence = {
   group_name?: string | null;
   run_id?: string;
   model?: string | null;
-  fields?: { proposal_id: number; field: string; value: string; confidence: number | null }[];
+  fields?: EnrichField[];
+};
+
+export type EnrichField = {
+  proposal_id: number;
+  field: string;
+  value: string;
+  confidence: number | null;
+  source?: string;
+  basis?: string | null;
+  conflict?: boolean;
 };
 
 export type ReviewItem = {
@@ -122,12 +137,12 @@ function useDecide(id: number) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
-  const decide = (status: DecideStatus) => {
+  const decide = (status: DecideStatus, choices?: EnrichChoices) => {
     start(async () => {
       const res = await fetch(`/api/v1/ops/review/${id}/decide`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(choices ? { status, choices } : { status }),
       });
       if (res.ok) {
         setMsg(status === "approved" ? "✓ Đã duyệt" : status === "rejected" ? "✓ Đã từ chối" : "⏸ Hoãn");
@@ -166,18 +181,81 @@ const FIELD_LABEL: Record<string, string> = {
   block_raw: "Toà",
 };
 
+const SOURCE_LABEL: Record<string, string> = { e1_rule: "Theo luật", e2_llm: "Theo LLM" };
+const CHOICE_LABEL: Record<string, string> = { e1_rule: "Chọn luật", e2_llm: "Chọn LLM" };
+/** Giá trị ToggleGroup cho «Bỏ cả hai». */
+const NONE = "none";
+
+function fmtConfidence(c: number | null) {
+  return c === null ? null : `AI tự tin ${Math.round(c * 100)}%`;
+}
+
+/** Field có từ hai đề xuất chờ (luật E1 trái LLM): hai bên kèm căn cứ + ô chọn một bên. */
+function ConflictField({ options, value, onChange, disabled }: {
+  options: EnrichField[];
+  value: string | undefined;
+  onChange: (v: string | undefined) => void;
+  disabled: boolean;
+}) {
+  const field = options[0].field;
+  return (
+    <div role="listitem" className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">{FIELD_LABEL[field] ?? field}</span>
+        <Badge variant="warning-light">Luật và LLM khác nhau — chọn một bên</Badge>
+      </div>
+      {options.map((o) => (
+        <Item key={o.proposal_id} variant="outline" size="xs">
+          <ItemContent>
+            <ItemTitle>
+              <Badge variant={o.source === "e1_rule" ? "info-light" : "primary-light"}>
+                {SOURCE_LABEL[o.source ?? ""] ?? o.source}
+              </Badge>
+              {o.value}
+            </ItemTitle>
+            {o.basis && <ItemDescription>{o.basis}</ItemDescription>}
+          </ItemContent>
+        </Item>
+      ))}
+      <ToggleGroup
+        variant="outline"
+        size="sm"
+        value={value ? [value] : []}
+        onValueChange={(v) => onChange(v[0])}
+        disabled={disabled}
+      >
+        {options.map((o) => (
+          <ToggleGroupItem key={o.proposal_id} value={String(o.proposal_id)}>
+            {CHOICE_LABEL[o.source ?? ""] ?? o.value}
+          </ToggleGroupItem>
+        ))}
+        <ToggleGroupItem value={NONE}>Bỏ cả hai</ToggleGroupItem>
+      </ToggleGroup>
+    </div>
+  );
+}
+
 function AgentOutputCard({ item }: { item: ReviewItem }) {
   const { pending, msg, decide } = useDecide(item.id);
+  const [picked, setPicked] = useState<Record<string, string | undefined>>({});
   const ev = item.evidence as EnrichEvidence;
   const fields = Array.isArray(ev.fields) ? ev.fields : [];
+  const conflictFields = [...new Set(fields.filter((f) => f.conflict).map((f) => f.field))];
+  const ready = conflictFields.every((f) => picked[f] !== undefined);
+  const approve = () => {
+    if (conflictFields.length === 0) return decide("approved");
+    const choices: EnrichChoices = {};
+    for (const f of conflictFields) choices[f] = picked[f] === NONE ? null : Number(picked[f]);
+    decide("approved", choices);
+  };
   return (
-    <div className="flex flex-col gap-2 rounded-xl border p-4">
+    <div className="flex flex-col gap-3 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-medium">{item.title}</h3>
         <Badge variant="outline">Bổ sung dữ liệu tin</Badge>
       </div>
       {ev.text && (
-        <p className="text-muted-foreground line-clamp-3 rounded-md bg-muted/30 px-2 py-1 text-[11px]">
+        <p className="text-muted-foreground line-clamp-3 text-xs">
           {ev.group_name ? `${ev.group_name} · ` : ""}
           {ev.text}
         </p>
@@ -186,49 +264,40 @@ function AgentOutputCard({ item }: { item: ReviewItem }) {
         <p className="text-muted-foreground text-xs">Thẻ thiếu dữ liệu đề xuất.</p>
       ) : (
         <>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-muted-foreground border-b text-left">
-                <th className="py-1 pr-3 font-medium">Trường</th>
-                <th className="py-1 pr-3 font-medium">Giá trị đề xuất</th>
-                <th className="py-1 font-medium">AI tự tin</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fields.map((f) => (
-                <tr key={f.proposal_id} className="border-b last:border-0">
-                  <td className="py-1 pr-3">{FIELD_LABEL[f.field] ?? f.field}</td>
-                  <td className="py-1 pr-3 font-medium">{f.value}</td>
-                  <td className="py-1 tabular-nums">
-                    {f.confidence === null ? "—" : `${Math.round(f.confidence * 100)}%`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ItemGroup>
+            {conflictFields.map((f) => (
+              <ConflictField
+                key={f}
+                options={fields.filter((x) => x.field === f)}
+                value={picked[f]}
+                onChange={(v) => setPicked((p) => ({ ...p, [f]: v }))}
+                disabled={item.status !== "pending" || pending}
+              />
+            ))}
+            {fields.filter((f) => !f.conflict).map((f) => (
+              <Item key={f.proposal_id} size="xs" role="listitem">
+                <ItemContent>
+                  <ItemDescription>{FIELD_LABEL[f.field] ?? f.field}</ItemDescription>
+                  <ItemTitle>{f.value}</ItemTitle>
+                </ItemContent>
+                {fmtConfidence(f.confidence) && (
+                  <span className="text-muted-foreground text-xs tabular-nums">{fmtConfidence(f.confidence)}</span>
+                )}
+              </Item>
+            ))}
+          </ItemGroup>
           {item.status === "pending" ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => decide("approved")}
-                disabled={pending}
-                className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-              >
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" onClick={approve} disabled={pending || !ready}>
                 Áp dụng
-              </button>
-              <button
-                onClick={() => decide("rejected")}
-                disabled={pending}
-                className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => decide("rejected")} disabled={pending}>
                 Bỏ
-              </button>
-              <button
-                onClick={() => decide("deferred")}
-                disabled={pending}
-                className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted/50 disabled:opacity-50"
-              >
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => decide("deferred")} disabled={pending}>
                 Để sau
-              </button>
+              </Button>
+              {!ready && <span className="text-muted-foreground text-xs">Chọn một bên cho trường xung đột trước khi áp.</span>}
               {msg && <span className="text-muted-foreground text-xs">{msg}</span>}
             </div>
           ) : (

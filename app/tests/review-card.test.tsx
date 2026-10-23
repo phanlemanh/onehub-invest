@@ -2,6 +2,8 @@
 // fetch giả ghi lại body gửi lên route decide; router giả qua AppRouterContext.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { JSDOM } from "jsdom";
 
 const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost:3456/ops/review" });
@@ -128,3 +130,59 @@ test("AC-9 thẻ đã quyết hiện nhãn", async () => {
   assert.equal(document.querySelectorAll("button").length, 0);
   await r.unmount();
 });
+
+// ── AC-11: thẻ xung đột — evidence lấy từ khuôn thẻ chung do enrich-run thật sinh ─────────
+
+type CardField = { proposal_id: number; field: string; source: string; value: string; basis: string };
+const CONFLICT_CARD = JSON.parse(
+  readFileSync(join(import.meta.dirname, "../../agent/tests/fixtures/e1-conflict-card.json"), "utf8"),
+);
+const fieldOf = (source: string) =>
+  (CONFLICT_CARD.evidence.fields as CardField[]).find((f) => f.field === "property_type" && f.source === source)!;
+const button = (label: string) =>
+  [...document.querySelectorAll("button")].find((x) => x.textContent?.trim() === label);
+const isDisabled = (b: HTMLButtonElement | undefined) =>
+  !!b && (b.disabled || b.getAttribute("aria-disabled") === "true");
+
+test("AC-11 thẻ xung đột: hai bên + căn cứ, chọn rồi mới áp", async () => {
+  const r = await render(agentItem(CONFLICT_CARD.evidence));
+  const t = r.text();
+  const e1 = fieldOf("e1_rule");
+  const llm = fieldOf("e2_llm");
+  assert.ok(t.includes("Theo luật") && t.includes("Theo LLM"), "AC-11: thiếu nhãn nguồn hai bên");
+  assert.ok(t.includes(e1.value) && t.includes(llm.value), "AC-11: thiếu hai giá trị");
+  assert.ok(t.includes(e1.basis) && t.includes(llm.basis), "AC-11: thiếu căn cứ mỗi bên");
+  assert.ok(button("Chọn luật") && button("Chọn LLM") && button("Bỏ cả hai"), "AC-11: thiếu lựa chọn");
+  assert.ok(isDisabled(button("Áp dụng")), "AC-11: «Áp dụng» phải khoá khi chưa chọn");
+
+  await r.click("Chọn LLM");
+  assert.ok(!isDisabled(button("Áp dụng")), "AC-11: chọn xong «Áp dụng» phải bật");
+  await r.click("Áp dụng");
+  assert.deepEqual(
+    r.sent.at(-1)!.body,
+    { status: "approved", choices: { property_type: llm.proposal_id } },
+    "AC-11: body phải mang lựa chọn",
+  );
+  // «Bỏ» và «Để sau» không cần chọn.
+  await r.click("Bỏ");
+  assert.deepEqual(r.sent.at(-1)!.body, { status: "rejected" });
+  await r.unmount();
+});
+
+test("AC-11 thẻ xung đột: «Bỏ cả hai» gửi null", async () => {
+  const r = await render(agentItem(CONFLICT_CARD.evidence));
+  await r.click("Bỏ cả hai");
+  await r.click("Áp dụng");
+  assert.deepEqual(r.sent.at(-1)!.body, { status: "approved", choices: { property_type: null } });
+  await r.unmount();
+});
+
+test("AC-11 đối chứng: thẻ không xung đột không có lựa chọn", async () => {
+  const r = await render(agentItem(ENRICH_EVIDENCE));
+  assert.equal(button("Chọn luật"), undefined);
+  assert.ok(!isDisabled(button("Áp dụng")), "thẻ thường: «Áp dụng» bật ngay");
+  await r.click("Áp dụng");
+  assert.deepEqual(r.sent.at(-1)!.body, { status: "approved" });
+  await r.unmount();
+});
+
