@@ -24,6 +24,9 @@ executors:
     portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
+    listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
+    listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
+    listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
     ui_kit_sockets: "node scripts/ui-standards/acceptance.mjs kit-sockets"
