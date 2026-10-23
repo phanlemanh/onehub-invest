@@ -15,7 +15,9 @@ import {
   FrameTitle,
 } from "@/components/reui/frame"
 import { IconTile } from "@/components/reui/icon-tile"
-import { toast } from "sonner"
+import { copyText, downloadFile, toastDownloaded } from "@/components/charts/actions"
+import { CAP_BOX, DotSeparator, Fact } from "@/components/charts/faces"
+import { CHART_ICONS } from "@/components/charts/icons"
 
 import { ChartToolbar, type ChartActions } from "./chart-toolbar"
 import {
@@ -27,9 +29,8 @@ import {
   type ViewState,
 } from "./data"
 import { formatPercent, moneyFormatter, periodTitle } from "./format"
-import { TOAST_ERROR_ICON, TOAST_SUCCESS_ICON, UI_ICONS } from "./icons"
 import { MarginPlot, type PlotHandle } from "./margin-plot"
-import { CAP_BOX, DotSeparator, Fact, LineKey, SeriesDot, TargetKey } from "./value-faces"
+import { LineKey, SeriesDot, TargetKey } from "./value-faces"
 
 function Stat({ label, value, meta }: { label: string; value: string; meta: string }) {
   return (
@@ -52,18 +53,6 @@ function LegendItem({ glyph, children }: { glyph: ReactNode; children: string })
       <span className={CAP_BOX}>{children}</span>
     </li>
   )
-}
-
-async function copyText(text: string, title: string, description: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    toast.success(title, { icon: TOAST_SUCCESS_ICON, description })
-  } catch {
-    toast.error("Không sao chép được", {
-      icon: TOAST_ERROR_ICON,
-      description: "Trình duyệt chặn quyền truy cập clipboard.",
-    })
-  }
 }
 
 export function PnlChart({
@@ -106,16 +95,8 @@ export function PnlChart({
           [periodTitle(row), Math.round(row.revenue), Math.round(row.expenses), Math.round(row.net), row.margin.toFixed(4)].join(",")
         ),
       ].join("\n")
-      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }))
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `uoc-tinh-loi-suat-${view.granularity}.csv`
-      link.click()
-      URL.revokeObjectURL(url)
-      toast.success("Đã tải CSV", {
-        icon: TOAST_SUCCESS_ICON,
-        description: `${rows.length} ${view.granularity === "month" ? "tháng" : "quý"}.`,
-      })
+      downloadFile(`uoc-tinh-loi-suat-${view.granularity}.csv`, csv, "text/csv")
+      toastDownloaded(`${rows.length} ${view.granularity === "month" ? "tháng" : "quý"}.`)
     },
     copySummary: () => void copyText(summary, "Đã sao chép tóm tắt", summary),
   }
@@ -127,7 +108,7 @@ export function PnlChart({
       <FrameHeader className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
           <IconTile variant="frame" size="sm" aria-hidden="true">
-            {UI_ICONS.ledger}
+            {CHART_ICONS.ledger}
           </IconTile>
           <div className="flex min-w-0 flex-col gap-px">
             <FrameTitle role="heading" aria-level={2} className="truncate">

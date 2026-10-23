@@ -34,8 +34,7 @@ export const formatMonth = (day: number) =>
   `T${MONTH(day).getUTCMonth() + 1}/${String(MONTH(day).getUTCFullYear()).slice(2)}`
 
 /** "Tháng 10/2026" */
-export const formatLongMonth = (day: number) =>
-  `Tháng ${MONTH(day).getUTCMonth() + 1}/${MONTH(day).getUTCFullYear()}`
+export { formatLongMonth } from "@/components/charts/format"
 
 /** "T10/26 – T9/27" */
 export const formatSpan = (from: number, to: number) =>

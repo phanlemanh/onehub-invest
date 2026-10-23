@@ -1,5 +1,7 @@
 import { type ChartConfig } from "@/components/ui/chart"
 
+import { swatchOf, themeOf } from "@/components/charts/palette"
+
 /**
  * Chuyển thể từ @reui/chart-36. Khác bản gốc: 12 tháng tới đến qua props (mọi
  * cột là ước tính, không có "đã chốt sổ"), đường mục tiêu = biên lợi nhuận để
@@ -28,36 +30,18 @@ export const DEFAULT_VIEW: ViewState = {
 }
 
 export const CHART_CONFIG = {
-  revenue: {
-    label: "Doanh thu",
-    theme: {
-      light: "var(--color-indigo-500)",
-      dark: "var(--color-indigo-400)",
-    },
-  },
-  expenses: {
-    label: "Chi phí",
-    theme: {
-      light: "var(--color-slate-300)",
-      dark: "var(--color-slate-600)",
-    },
-  },
-  margin: {
-    label: "Biên lợi nhuận",
-    theme: {
-      light: "var(--color-emerald-600)",
-      dark: "var(--color-emerald-400)",
-    },
-  },
+  revenue: { label: "Doanh thu", theme: themeOf("revenue") },
+  expenses: { label: "Chi phí", theme: themeOf("expenses") },
+  margin: { label: "Biên lợi nhuận", theme: themeOf("margin") },
 } satisfies ChartConfig
 
 export type SeriesKey = keyof typeof CHART_CONFIG
 
 /** Legend and tooltip dots, in the config's colours. */
 export const SWATCHES = {
-  revenue: "bg-indigo-500 dark:bg-indigo-400",
-  expenses: "bg-slate-300 dark:bg-slate-600",
-  margin: "bg-emerald-600 dark:bg-emerald-400",
+  revenue: swatchOf("revenue"),
+  expenses: swatchOf("expenses"),
+  margin: swatchOf("margin"),
 } satisfies Record<SeriesKey, string>
 
 /** One plotted column: a month or a quarter. */

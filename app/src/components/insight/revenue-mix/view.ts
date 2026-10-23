@@ -55,3 +55,15 @@ export function slicesOf(rows: MixInput[]): { slices: Slice[]; total: number } {
       : tracked
   return { slices, total }
 }
+
+/** CSV tải về: từng loại phòng rồi dòng tổng. */
+export function csvOf(slices: Slice[], total: number) {
+  const header = ["loai_phong", "doanh_thu", "listing", "ti_trong_pct"]
+  return [
+    header.join(","),
+    ...slices.map((slice) =>
+      [slice.name, Math.round(slice.amount), slice.listings, slice.share].join(",")
+    ),
+    ["Tổng", Math.round(total), "", 100].join(","),
+  ].join("\n")
+}
