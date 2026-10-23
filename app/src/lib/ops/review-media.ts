@@ -116,6 +116,22 @@ function sidesOf(item: ReviewMediaItem): Side[] {
   return [];
 }
 
+/**
+ * Bản `evidence` gửi xuống client: bỏ `image_url` của từng bên. Ảnh tới thẻ chỉ qua
+ * `loadReviewMedia` (chỉ admin) — để nguyên thì URL ảnh nằm trong dữ liệu trang của mọi role ops.
+ */
+export function stripEvidenceImages(evidence: unknown): Record<string, unknown> {
+  const ev = { ...record(evidence) };
+  for (const key of ["offer_a", "offer_b"]) {
+    if (key in ev && ev[key] && typeof ev[key] === "object" && !Array.isArray(ev[key])) {
+      const side = { ...record(ev[key]) };
+      delete side.image_url;
+      ev[key] = side;
+    }
+  }
+  return ev;
+}
+
 const SQL = `
   SELECT o.offer_id, p.snapshot_id, p.media, p.media_files
   FROM sale_offers o

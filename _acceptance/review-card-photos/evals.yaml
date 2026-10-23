@@ -1,0 +1,86 @@
+schema_version: 1
+feature_slug: review-card-photos
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AC-1' của tests/review-photos.test.tsx xanh — Tin A và Tin B mỗi bên một dải, đúng số ảnh, đúng thứ tự, alt nêu bên + số thứ tự"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "ca 'AC-2' xanh — thẻ Bổ sung dữ liệu có một dải đúng số ảnh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "ca 'AC-3' xanh — bấm ảnh n mở hộp thoại 'ảnh n/N', nút sau/trước chuyển ảnh, tắt ở hai đầu; should-NOT-fire: chưa bấm thì không có hộp thoại"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "ca 'AC-4' xanh — sự kiện error trên ảnh đổi ô sang 'Ảnh hỏng' (không còn img), vẫn bấm được, hộp thoại hiện câu báo hết hạn; should-NOT-fire: ảnh khác trong dải không bị đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "should-NOT-fire: ca 'AC-5' xanh — mảng rỗng hiện 'Không có ảnh'; không có dữ liệu ảnh thì 0 vùng ảnh và 0 img ảnh tin"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "ca 'AC-6' xanh — img remote có referrerpolicy=no-referrer + loading=lazy; ảnh local có src /api/zalo-media?snapshot=; should-NOT-fire: ảnh local không mang referrerpolicy no-referrer thừa và không ảnh nào có src ngoài danh sách loader trả"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.review_photos_smoke
+    expected: "exit 0; stdout có 'SMOKE PASS' và 'dọn: còn 0 tài khoản thử'; dòng ok: HTML admin có URL fbcdn + Chợ Tốt; should-NOT-fire: HTML ops không có URL ảnh tin nào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc 0 lỗi; eslint 0 lỗi; baseline eslint-suppressions.json không tăng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.review_photos_design_gate
+    expected: "exit 0 — không P0 a11y/contrast trên component ảnh (review-photos.tsx)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.review_card_design_gate
+    expected: "exit 0 — không P0 a11y/contrast trên thẻ duyệt (review-card.tsx)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Dev server chạy từ worktree đang kiểm (:3456) với DB local; đăng nhập admin thử (tạo tạm bằng SQL, xoá sau)"
+      - "Mở /ops/review, cuộn tới thẻ Cùng căn? đầu tiên → chụp evidence/E10-step1.png (sáng, desktop): dải ảnh dưới Tin A và Tin B"
+      - "Cuộn tới thẻ Bổ sung dữ liệu có ảnh → chụp evidence/E10-step2.png: dải ảnh dưới đoạn tin"
+      - "Bấm ảnh đầu của Tin A → chụp evidence/E10-step3.png: hộp thoại ảnh lớn, tiêu đề 'ảnh 1/N'"
+      - "Đổi sang tối → chụp evidence/E10-step4.png; đổi bề rộng 390px → chụp evidence/E10-step5.png, kiểm document.documentElement.scrollWidth <= innerWidth"
+    expected: "5 khung đúng mô tả; không thanh cuộn ngang ở 390px; ảnh hiện (không vỡ) hoặc ô 'Ảnh hỏng' khi URL đã hết hạn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot, observed]
