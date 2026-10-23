@@ -96,9 +96,12 @@ Bỏ quét morphological đầy đủ vì thay đổi hẹp: một migration ch�
 - Giáp ranh sync-cloud: bản sync mới nạp và tráo bảng qua Management API bằng postgres (chủ bảng).
   037 không FORCE RLS nên đường đó vẫn đi. push-ops-facts ghi qua `/api/v1/ops/ingest` của app,
   app ghi bằng postgres.
-- 2026-10-23 ~03:00 UTC: DB chung :5433 xuất hiện role anon/authenticated và RLS bật trên 43/44
-  bảng public. Phiên này không làm việc đó, và đã hỏi phiên điều phối xem ai làm. Vì vậy bài
-  kiểm AC-6 chạy trên container tạm, không dựa vào trạng thái DB dùng chung.
+- Sự cố 2026-10-23 ~03:00 UTC: bài kiểm sync-cloud đã tạo role anon/authenticated (cấp cluster)
+  trong DB chung :5433. Sau đó bản đầu của bài kiểm `local` (chạy thẳng vào DB chung) áp 037 khi
+  hai role đã có, nên 037 không còn no-op: RLS bật trên 43 bảng, 2 view thành security_invoker,
+  PUBLIC mất EXECUTE trên 2 hàm của 033. Đã hoàn tác bằng tay đúng các thay đổi đó trong một giao
+  dịch, đo trước và sau: rls_on 43→0, option view hết, EXECUTE PUBLIC trở lại, defacl toàn cục
+  trở về mặc định. Bài kiểm AC-6 nay chạy trên container tạm, không chạm DB chung.
 - Lớp HTTP được đo bằng PostgREST thật (`supabase/postgrest` v14.16) trước role authenticator,
   với JWT anon/service_role ký bằng secret tạm của container. Đây là cùng đường mà anon key
   ngoài đời đi qua.
