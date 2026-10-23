@@ -191,7 +191,7 @@ async function main() {
   }
   console.log(`tài khoản ops thử: ${result.email} — ${result.action}`);
   console.log(`thông tin đăng nhập: ${path.relative(process.cwd(), CRED_FILE) || CRED_FILE} (gitignored, không in mật khẩu)`);
-  console.log(`lưu ý: app/.env.local có đặt OPS_EMAILS thì thêm ${result.email} vào danh sách đó, không thì /ops trả 404.`);
+  console.log(`role admin → vào được mọi trang /ops (cổng Ops mở cho role admin/ops, không cần OPS_EMAILS).`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

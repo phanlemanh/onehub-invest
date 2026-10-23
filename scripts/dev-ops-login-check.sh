@@ -38,7 +38,7 @@ grep -qi '^set-cookie: oi_session=[0-9a-f]\{64\};.*httponly' "$tmp/hdr" || fail 
 echo "POST /login: 303, có cookie oi_session HttpOnly"
 
 with="$(curl -s -o /dev/null -b "$tmp/jar" -w '%{http_code}' "$base/ops/sources")"
-[ "$with" = "200" ] || fail "/ops/sources có cookie trả $with, cần 200 (OPS_EMAILS ở app/.env.local thiếu $email?)"
+[ "$with" = "200" ] || fail "/ops/sources có cookie trả $with, cần 200 (user không còn role admin?)"
 without="$(curl -s -o /dev/null -w '%{http_code}' "$base/ops/sources")"
 [ "$without" != "200" ] || fail "/ops/sources KHÔNG cookie vẫn trả 200"
 echo "/ops/sources: có cookie 200, không cookie bị chặn"
