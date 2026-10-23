@@ -147,6 +147,10 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # au3-nap-bao-loi (AU3 phần nạp, làn ZCode) — bản chép script trong thư mục tạm: bước thu là bản giả, sleep là stub; ca DB chết dùng import thật trỏ cổng chết
+    au3_chotot: "node scripts/au3-nap-bao-loi/acceptance.mjs chotot"
+    au3_apify: "node scripts/au3-nap-bao-loi/acceptance.mjs apify"
+    au3_syntax: "bash -n scripts/chotot-daily.sh && bash -n scripts/apify-facebook-daily.sh && echo SYNTAX OK"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)

@@ -1,0 +1,58 @@
+schema_version: 1
+feature_slug: au3-nap-bao-loi
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.au3_chotot
+    expected: "exit 0; stdout có 'CHOTOT PASS'; (a) DB chết thật: import-chotot thật → 10 dòng retry (5 mỗi thành phố), 10× sleep 20, exit khác 0, không transform/refresh/resolve"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.au3_apify
+    expected: "exit 0; stdout có 'APIFY PASS'; (a) DB chết thật: import-airbnb thật → 5 dòng retry, 5× sleep 20, state giữ nguyên, dừng ở snapshot đầu, không transform"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.au3_apify
+    expected: "exit 0; (b) lượt 1 state giữ ở snapshot thành công cuối, snapshot sau không nạp; lượt 2 nạp lại đúng snapshot lỗi + snapshot sau, state tới cuối; should-NOT-fire: snapshot cũ hơn state không nạp lại"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.au3_chotot
+    expected: "exit 0; should-NOT-fire (c): lỗi khác ECONNREFUSED → 1 lần thử, 0 sleep, không transform; ECONNREFUSED 2 lần rồi lên → 3 lần thử, đi tiếp, exit 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.au3_apify
+    expected: "exit 0; should-NOT-fire (c): lỗi khác → 1 lần thử, 0 sleep; ECONNREFUSED 3 lần rồi lên → 4 lần thử, nạp hết"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.au3_chotot
+    expected: "exit 0; (d) DB sống: chỉ nạp snapshot mới nhất mỗi thành phố, đủ transform → refresh → resolve; transform hỏng → refresh + resolve vẫn chạy, exit 3, dòng JOB FAIL"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.au3_apify
+    expected: "exit 0; (d) transform-fb hỏng → refresh vẫn chạy, exit 4, dòng JOB FAIL, state tới cuối"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.au3_syntax
+    expected: "exit 0; stdout 'SYNTAX OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
