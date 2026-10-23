@@ -1,0 +1,58 @@
+schema_version: 1
+feature_slug: audit-p1-resilience
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc3_l4b_scan
+    expected: "exit 0; stdout có 'L4B-SCAN PASS'; hàm scan_new_lines trích nguyên văn: A ngày mới dài hơn bắt turn dòng 1 (5 dòng), A' cùng đường dẫn inode khác bắt dòng 1, B truncate quét toàn bộ, C không đổi rỗng, D nối chỉ phần mới (should-NOT-fire: turn cũ không lặp), E marker '4211' quét toàn bộ + stderr rỗng + marker viết lại, F marker rỗng không in lịch sử, G file chưa có im lặng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.zc3_gateway
+    expected: "exit 0; stdout có 'an toàn: … → stub' và 'GATEWAY PASS'; lượt 1 (lịch sử có turn + 30 drop, gw-marker rỗng): exit 0, không KILL, không gọi launchctl/pkill, không WARN L4a, gw-marker = đường_dẫn:inode:36, turn-marker '4211' viết lại, stderr rỗng; lượt 3 turn mới: exit 1, KILL lý do gateway.log, stub launchctl+pkill được gọi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.zc3_l4a_drop
+    expected: "exit 0; stdout có 'L4A-DROP PASS'; +25 drop → đúng 1 WARN '+25 trong 5′ (ngưỡng 20)', thông báo L4a, không kill; should-NOT-fire +19 → không thêm WARN; biên +20 → WARN"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.zc3_l5b_db
+    expected: "exit 0; stdout có 'L5B-DB PASS'; cổng không nghe: watchdog exit 0, WARN L5b, nhịp db:DOWN(HH:MM), thông báo L5b, không kill; cổng đang nghe: db:ok, should-NOT-fire không thêm WARN"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc3_import_daily
+    expected: "exit 0; stdout có 'IMPORT-DAILY PASS'; ca 1 ok: state tới cuối, transform chạy, should-NOT-fire snapshot cũ không nạp lại; ca 2 lỗi thường: exit ≠ 0, state giữ, chuỗi dừng, 1 lần thử, không sleep, không transform; ca 3 ECONNREFUSED×2: 3 lần thử, 2× sleep 20, đi tiếp; ca 4 ECONNREFUSED mãi: 5 lần thử, sleep 20, exit ≠ 0, state giữ, không transform"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc3_err_detail
+    expected: "exit 0; stdout có 'ERR-DETAIL PASS'; cả hai tệp: main().catch dùng errDetail, AggregateError message rỗng → in code + hai lỗi con, lỗi thường giữ message, lỗi trống vẫn in; import-chotot thật với DB cổng chết: exit 1, dòng ❌ có ECONNREFUSED và :cổng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc3_syntax
+    expected: "exit 0; stdout 'SYNTAX OK' — bash -n hai script và node --check hai tệp mjs"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; 0 fail — suite pipeline không hồi quy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
