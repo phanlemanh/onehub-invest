@@ -12,7 +12,7 @@ evals:
     criterion: AC-2
     executor: test
     cmd: config:executors.test.collector
-    expected: "exit 0; 0 fail, 0 skip; có ca tích hợp 'SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot' và 10 ca graceful-shutdown (thứ tự close → flush → exit, SIGINT, tín hiệu lần 2, flush lỗi, flush treo quá deadline, skipMedia sát/không sát deadline) đều xanh"
+    expected: "exit 0; 0 fail, 0 skip; các ca graceful-shutdown (đơn vị + tích hợp) đều chạy và xanh, gồm ca tích hợp 'SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot' và ca tích hợp host ảnh treo vĩnh viễn"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3
@@ -33,7 +33,7 @@ evals:
     criterion: AC-1
     executor: script
     cmd: config:executors.script.shutdown_process
-    expected: "exit 0; stdout có 'PROCESS PASS'; SIGTERM trên main.js thật: 202 qua keep-alive, keep-alive bị server đóng, exit code 0 signal null, tin đã ack có trong snapshot, log đóng HTTP đứng trước flushed; SIGINT buffer rỗng: exit 0, should-NOT-fire 0 snapshot và không có dòng flushed"
+    expected: "exit 0; stdout có 'PROCESS PASS'; SIGTERM trên main.js thật: 202 qua keep-alive, keep-alive rảnh bị server đóng, exit code 0 signal null, tin đã ack có trong snapshot, log đóng HTTP đứng trước flushed; SIGINT buffer rỗng: exit 0, should-NOT-fire 0 snapshot và không có dòng flushed"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E6
@@ -41,4 +41,25 @@ evals:
     executor: script
     cmd: config:executors.script.collector_plist_lint
     expected: "exit 0; stdout '<đường dẫn plist>: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_hang_default
+    expected: "exit 0; stdout có 'HANG-DEFAULT PASS'; deadline MẶC ĐỊNH 45s (không ghi đè) + 24 ảnh trên host treo: exit 0 trước 45000ms, tin có trong snapshot, buffer rỗng; should-NOT-fire: không có dòng 'flush quá deadline'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_inflight
+    expected: "exit 0; stdout có 'INFLIGHT PASS'; main.js thật: POST đã gửi header + nửa body lúc SIGTERM được làm nốt (202), tin có trong snapshot, exit code 0; should-NOT-fire: connection mới sau SIGTERM bị từ chối"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.shutdown_lost_exit
+    expected: "exit 0; stdout có 'LOST-EXIT PASS'; quá deadline còn 3 tin → exit khác 0 + 'MẤT 3 tin'; tín hiệu lần 2 còn 2 tin → exit khác 0 + 'MẤT 2 tin'; should-NOT-fire: buffer rỗng → exit 0, không có dòng MẤT"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
