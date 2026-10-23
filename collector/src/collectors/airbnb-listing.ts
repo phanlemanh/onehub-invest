@@ -17,6 +17,20 @@ import type { Collector, RawItem } from "../core/types.js";
 const BATCH = Number(process.env.AIRBNB_LISTING_BATCH ?? 25);
 const NAV_TIMEOUT = 45_000;
 
+/** Đọc worklist JSON (Task 2 export-airdna-worklist): chỉ nhận mảng ids hợp lệ. */
+export function parseWorklist(json: unknown): string[] {
+  const ids = (json as { ids?: unknown } | null)?.ids;
+  if (!Array.isArray(ids)) return [];
+  return ids.filter((x): x is string => typeof x === "string" && x.length > 0);
+}
+
+/** Listing đã rút (delisted): Airbnb trả trang lỗi hoặc redirect khỏi /rooms/<id>
+ *  (về home). Id như vậy ghi goneIds để không retry vô hạn (Review Focus #1/#3). */
+export function isGone(pageTitle: string, landedUrl: string, roomId: string): boolean {
+  if (/không tồn tại|không tìm thấy|not found|page not found/i.test(pageTitle)) return true;
+  return !new RegExp(`/rooms/${roomId}(/|\\?|$)`).test(landedUrl);
+}
+
 export const airbnbListing: Collector = {
   id: "airbnb-listing",
   description:
@@ -25,24 +39,34 @@ export const airbnbListing: Collector = {
   async collect(ctx) {
     const { city, rateLimit, log, checkpoint, paths } = ctx;
 
-    // ---- Đọc ID từ snapshot discovery mới nhất ----
-    const cityDir = join(paths.snapshotRoot, city.id);
-    const dirs = (await readdir(cityDir).catch(() => [] as string[]))
-      .filter((d) => d.startsWith(`${city.id}__airbnb-discovery__`))
-      .sort();
-    if (dirs.length === 0) throw new Error(`không có snapshot airbnb-discovery cho ${city.id}`);
-    const discoveryDir = join(cityDir, dirs[dirs.length - 1]);
-
-    const ids = new Set<string>();
-    for (const f of (await readdir(discoveryDir)).filter((f) => f.startsWith("items-"))) {
-      const batch: RawItem[] = JSON.parse(
-        gunzipSync(await readFile(join(discoveryDir, f))).toString("utf8"),
-      );
-      for (const it of batch) ids.add(it.sourceId);
+    // ---- Lấy ID: worklist (Task 3 plan coverage) hoặc snapshot discovery ----
+    const worklistPath = process.env.AIRBNB_LISTING_WORKLIST;
+    let ids: Set<string>;
+    let idSource: string; // ghi log + meta nguồn id
+    if (worklistPath) {
+      ids = new Set(parseWorklist(JSON.parse(await readFile(worklistPath, "utf8"))));
+      idSource = `worklist ${worklistPath}`;
+      if (ids.size === 0) throw new Error(`worklist rỗng/hỏng: ${worklistPath}`);
+    } else {
+      const cityDir = join(paths.snapshotRoot, city.id);
+      const dirs = (await readdir(cityDir).catch(() => [] as string[]))
+        .filter((d) => d.startsWith(`${city.id}__airbnb-discovery__`))
+        .sort();
+      if (dirs.length === 0) throw new Error(`không có snapshot airbnb-discovery cho ${city.id}`);
+      const discoveryDir = join(cityDir, dirs[dirs.length - 1]);
+      ids = new Set<string>();
+      for (const f of (await readdir(discoveryDir)).filter((f) => f.startsWith("items-"))) {
+        const batch: RawItem[] = JSON.parse(
+          gunzipSync(await readFile(join(discoveryDir, f))).toString("utf8"),
+        );
+        for (const it of batch) ids.add(it.sourceId);
+      }
+      idSource = dirs[dirs.length - 1];
     }
     const doneIds = new Set<string>(checkpoint.get<string[]>("doneIds") ?? []);
-    const todo = [...ids].filter((id) => !doneIds.has(id));
-    log(`discovery=${ids.size} (từ ${dirs[dirs.length - 1]}), đã fetch=${doneIds.size}, còn=${todo.length}`);
+    const goneIds = new Set<string>(checkpoint.get<string[]>("goneIds") ?? []);
+    const todo = [...ids].filter((id) => !doneIds.has(id) && !goneIds.has(id));
+    log(`ids=${ids.size} (từ ${idSource}), đã fetch=${doneIds.size}, gone=${goneIds.size}, còn=${todo.length}`);
     if (todo.length === 0) {
       return {
         items: [],
@@ -72,6 +96,7 @@ export const airbnbListing: Collector = {
     let hasCalendar = 0;
     let hasPrice = 0;
     let retried = 0;
+    let delisted = 0;
     const batch = todo.slice(0, BATCH);
 
     /** Một lượt goto + bắt 3 nguồn. */
@@ -79,7 +104,7 @@ export const airbnbListing: Collector = {
       id: string,
       ci: string,
       co: string,
-    ): Promise<{ url: string; state: unknown; pdp: unknown; cal: unknown }> => {
+    ): Promise<{ url: string; landedUrl: string; title: string; state: unknown; pdp: unknown; cal: unknown }> => {
       const url = `https://www.airbnb.com.vn/rooms/${id}?adults=1&check_in=${ci}&check_out=${co}`;
       await rateLimit.take();
       const pdpP = page
@@ -102,6 +127,8 @@ export const airbnbListing: Collector = {
       }
       return {
         url,
+        landedUrl: page.url(),
+        title: await page.title().catch(() => ""),
         state: stateJson,
         pdp: pdpR ? await pdpR.json().catch(() => null) : null,
         cal: calR ? await calR.json().catch(() => null) : null,
@@ -137,41 +164,49 @@ export const airbnbListing: Collector = {
         const id = batch[i];
         try {
           let r = await fetchOnce(id, defaultCi, defaultCo);
-          let pdpStr = priceOf(r.pdp);
-          if (!pdpStr && r.cal) {
-            // window mặc định hết chỗ → thử window available từ calendar
-            const w = firstWindow(r.cal);
-            if (w) {
-              retried++;
-              const r2 = await fetchOnce(id, w.ci, w.co);
-              const p2 = priceOf(r2.pdp);
-              if (p2) {
-                pdpStr = p2;
-                r = { ...r2, cal: r2.cal ?? r.cal };
+          if (isGone(r.title, r.landedUrl, id)) {
+            // Listing đã rút: đánh dấu gone để không retry vô hạn (Review Focus #3)
+            goneIds.add(id);
+            doneIds.add(id);
+            delisted++;
+            log(`[${i + 1}/${batch.length}] ${id}: GONE (${r.title || r.landedUrl})`);
+          } else {
+            let pdpStr = priceOf(r.pdp);
+            if (!pdpStr && r.cal) {
+              // window mặc định hết chỗ → thử window available từ calendar
+              const w = firstWindow(r.cal);
+              if (w) {
+                retried++;
+                const r2 = await fetchOnce(id, w.ci, w.co);
+                const p2 = priceOf(r2.pdp);
+                if (p2) {
+                  pdpStr = p2;
+                  r = { ...r2, cal: r2.cal ?? r.cal };
+                }
               }
             }
+            if (!r.state && !r.pdp && !r.cal) throw new Error("không bắt được nguồn nào");
+            if (r.cal) hasCalendar++;
+            if (pdpStr) hasPrice++;
+            items.push({
+              source: "airbnb-listing",
+              sourceId: id,
+              kind: "listing",
+              fetchedAt: new Date().toISOString(),
+              payload: { url: r.url, deferredState: r.state, pdpSections: r.pdp, calendar: r.cal },
+              meta: {
+                idSource,
+                hasState: !!r.state,
+                hasPdp: !!r.pdp,
+                hasCalendar: !!r.cal,
+                hasPrice: !!pdpStr,
+              },
+            });
+            doneIds.add(id);
+            log(
+              `[${i + 1}/${batch.length}] ${id}: state=${!!r.state} cal=${!!r.cal} price=${pdpStr ?? "—"}`,
+            );
           }
-          if (!r.state && !r.pdp && !r.cal) throw new Error("không bắt được nguồn nào");
-          if (r.cal) hasCalendar++;
-          if (pdpStr) hasPrice++;
-          items.push({
-            source: "airbnb-listing",
-            sourceId: id,
-            kind: "listing",
-            fetchedAt: new Date().toISOString(),
-            payload: { url: r.url, deferredState: r.state, pdpSections: r.pdp, calendar: r.cal },
-            meta: {
-              discoverySnapshot: dirs[dirs.length - 1],
-              hasState: !!r.state,
-              hasPdp: !!r.pdp,
-              hasCalendar: !!r.cal,
-              hasPrice: !!pdpStr,
-            },
-          });
-          doneIds.add(id);
-          log(
-            `[${i + 1}/${batch.length}] ${id}: state=${!!r.state} cal=${!!r.cal} price=${pdpStr ?? "—"}`,
-          );
         } catch (err) {
           failed++;
           log(`[${i + 1}/${batch.length}] ${id}: FAIL ${err instanceof Error ? err.message : err}`);
@@ -179,6 +214,7 @@ export const airbnbListing: Collector = {
         // checkpoint định kỳ để đứt giữa chừng không mất tiến độ
         if ((i + 1) % 10 === 0) {
           checkpoint.set("doneIds", [...doneIds]);
+          checkpoint.set("goneIds", [...goneIds]);
           await checkpoint.save();
         }
       }
@@ -189,7 +225,8 @@ export const airbnbListing: Collector = {
     }
 
     checkpoint.set("doneIds", [...doneIds]);
-    const remaining = ids.size - doneIds.size;
+    checkpoint.set("goneIds", [...goneIds]);
+    const remaining = ids.size - doneIds.size - goneIds.size;
     return {
       items,
       coverage: {
@@ -200,6 +237,7 @@ export const airbnbListing: Collector = {
         notes: [
           `batch ${batch.length}/${todo.length} còn lại; còn ${remaining} id cho lần chạy sau`,
           `calendar: ${hasCalendar}/${items.length} · giá: ${hasPrice}/${items.length} (retry window: ${retried})`,
+          ...(delisted > 0 ? [`delisted: ${delisted}/${batch.length}`] : []),
         ],
       },
     };
