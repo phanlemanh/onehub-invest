@@ -1,0 +1,33 @@
+{
+  "feature_plain": "Lệnh kiểm độ tươi chỉ báo quá hạn khi một nguồn thật sự đứng (hôm nay: chỉ S05), đọc đúng bảng của từng nguồn, và có ngưỡng cho S05, S06.",
+  "will_do": [
+    {"id":"AC-1","p":"Sẽ gộp hai luồng thu của S01 lấy lần thu mới nhất, để một luồng cũ không làm cả nguồn báo quá hạn."},
+    {"id":"AC-3","p":"Sẽ tách S03 và S05 (đi chung một ống nạp) theo tác nhân thu, để tin thử cũ không làm S03 báo giả và S05 đứng thì báo đúng S05."},
+    {"id":"AC-4","p":"Sẽ đo S06 theo từng thành phố của chính lần thu."},
+    {"id":"AC-7","p":"Sẽ để lệnh thoát lỗi đúng khi có nguồn quá hạn, in tuổi và ngưỡng của đúng nguồn đó, có bản máy đọc, và không lộ tên nguồn thật ở bất kỳ đầu ra nào (kể cả tin báo webhook)."},
+    {"id":"AC-8","p":"Sẽ chứng minh trên dữ liệu hôm nay: chỉ S05 (đứng từ 21/10) báo quá hạn."}
+  ],
+  "wont_do": [
+    {"id":"AC-2","p":"Sẽ KHÔNG còn báo «S02 chưa có dữ liệu» — S02 đọc từ bảng hiệu chuẩn của nó."},
+    {"id":"AC-5","p":"Sẽ KHÔNG đo S04 (địa giới đã thu xong một lần); nguồn mới chưa khai ngưỡng thì báo lỗi chứ không lọt im."},
+    {"id":"AC-6","p":"Sẽ KHÔNG ghép chéo mọi nguồn × mọi thành phố nữa — mỗi nguồn chỉ được đo ở nơi nó thật sự thu."},
+    {"id":"OOS-1","p":"KHÔNG sửa trang vận hành /ops ở vòng này — để hai trang dùng chung một con số là việc của AU6."},
+    {"id":"OOS-2","p":"KHÔNG sửa ADR-0007 — chỉ đề nghị thêm ngưỡng S05/S06, chủ kho sửa riêng."},
+    {"id":"OOS-3","p":"KHÔNG làm độ tươi theo phút (mục tiêu của lát đầu) hay kênh cảnh báo mới."},
+    {"id":"OOS-4","p":"KHÔNG sửa việc S05 đứng — đó là việc thu của ZCode."}
+  ],
+  "coverage_plain": [
+    {"i":0,"p":"Trục nguồn: đủ sáu nguồn trong sổ nguồn, cộng ca nguồn mới chưa khai ngưỡng (AC-1 đến AC-5)."},
+    {"i":1,"p":"Trục trạng thái: tươi, quá hạn, chưa có dữ liệu, thiếu ngưỡng — mỗi tiêu chí có cặp tươi/quá hạn."},
+    {"i":2,"p":"Trục lỗi giả: đủ bốn lớp đã đo trong 9 dòng báo giả hôm 23/10 (AC-1, AC-2, AC-3, AC-5, AC-6)."},
+    {"i":3,"p":"Trục bề mặt: phần tính, lệnh chạy thật, dữ liệu hôm nay và tài liệu vận hành (AC-7, AC-8, AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i":0,"p":"Ngưỡng của S01, S02, S03 là việc của người chốt, không phải máy — đã đưa thành Hỏi-1 kèm số đo cả hai lựa chọn."},
+    {"i":1,"p":"Chưa đo mã thoát của lệnh chạy thật — đã thêm ca chạy lệnh thật trên dữ liệu mẫu, có cả ca phải thoát lành."},
+    {"i":2,"p":"Tin báo webhook có thể lộ tên nguồn thật mà không ai đo — đã thêm máy nhận tin thử và chuỗi canh."},
+    {"i":3,"p":"Ca dữ liệu hôm nay chưa ghim thời điểm S05 đứng và giờ chấm — đã ghim cả hai."},
+    {"i":4,"p":"Dòng báo có thể in tuổi/ngưỡng của nguồn khác mà vẫn xanh — đã ghim đúng 13 giờ / 12 giờ cho đúng S05."}
+  ],
+  "scope_plain": "Những việc vòng này cố ý không làm:"
+}
