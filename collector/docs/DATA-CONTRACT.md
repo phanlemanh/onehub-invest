@@ -19,11 +19,11 @@ snapshots/
       manifest.json
 ```
 
-## manifest.json (schemaVersion 2)
+## manifest.json (schemaVersion 3)
 
 ```jsonc
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "snapshotId": "hanoi__airbnb-listing__20261017T101500",
   "city": "hanoi",
   "source": "airbnb-listing",
@@ -63,6 +63,10 @@ snapshots/
 
 ## Lịch sử phiên bản
 
+- **schemaVersion 3 (2026-10-23, claudedp-2310-11 Kev-nhãn)**: thêm
+  `RawItem.meta.kev = {p, model, threshold, at}` cho nguồn `zalo-agent`/`openclaw-hook` —
+  điểm gate Kev-4B đi CÙNG tin như dữ liệu (p=null khi gate down); KHÔNG còn lọc p<0.9 ở
+  hook. Bên tiêu thụ v2 bỏ qua key lạ vẫn đọc được; **bên import phải chấp nhận `{1,2,3}`**.
 - **schemaVersion 2 (2026-10-22)**: thêm file `media/*` trong snapshot +
   `RawItem.meta.mediaFiles` (ảnh zdn.vn tải lúc flush vì URL có hạn). Mọi hình
   dạng v1 giữ nguyên — bên tiêu thụ v1 bỏ qua key lạ vẫn đọc được items; chỉ

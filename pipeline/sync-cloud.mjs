@@ -113,6 +113,30 @@ for (const [t, allow] of Object.entries(CLOUD_ALLOW)) {
 
 export const CHUNK_BYTES = 1_800_000; // thân yêu cầu mỗi mẻ nạp (413 đo ở ~2,5–4MB)
 export const SHRINK_MIN = 0.5; // local < 50% số dòng đang có trên cloud → dừng (local đang dựng dở)
+// Bảng được co dưới ngưỡng khi một lượt dọn xác định ghi audit giải thích đúng số dòng còn lại
+// (canonical-khong-tin-gia AC-10: refresh-bait-gap xoá người bán mồ côi sau khi rút tin thử).
+export const SHRINK_AUDIT = { sellers: "bait-gap:sellers-orphan" };
+export const SHRINK_AUDIT_HOURS = 24;
+
+/**
+ * Quyết định chặn tụt cho một bảng. Co dưới SHRINK_MIN chỉ được qua khi bảng có trong
+ * SHRINK_AUDIT và có dòng audit trong SHRINK_AUDIT_HOURS mà detail.remaining = số dòng gửi.
+ * @param {{ table: string, local: number, cloud: number, audits: { action: string, at: Date|string, detail: any }[], now: Date|string }} a
+ * @returns {{ ok: boolean, reason: string }}
+ */
+export function shrinkVerdict({ table, local, cloud, audits, now }) {
+  if (!(cloud > 0) || local >= SHRINK_MIN * cloud) return { ok: true, reason: "" };
+  const action = SHRINK_AUDIT[table];
+  const since = new Date(now).getTime() - SHRINK_AUDIT_HOURS * 3600_000;
+  const explained = action && audits.some(
+    (r) => r.action === action && new Date(r.at).getTime() >= since && Number(r.detail?.remaining) === local,
+  );
+  if (explained) return { ok: true, reason: `tụt ${table} có audit ${action} khớp ${local} dòng` };
+  return {
+    ok: false,
+    reason: `local tụt ${table}: ${local} < ${SHRINK_MIN * 100}% của ${cloud} dòng trên cloud — local đang dựng dở? không tráo`,
+  };
+}
 export const STALE_STAGE_HOURS = 2; // staging của lượt chết quá ngần này thì dọn
 export const ADVISORY_KEY = 74210231; // hai lượt tráo chồng nhau xếp hàng
 export const SELLER_REF_RE = "^S0[1-9]:[0-9]+$";
@@ -369,7 +393,73 @@ export async function leakGate(exec) {
   const acl = await exec(`SELECT count(*)::int AS n FROM pg_roles r
     WHERE r.rolname IN ('anon','authenticated') AND has_schema_privilege(r.rolname, 'sync_stage', 'USAGE')`);
   if (acl[0].n > 0) leaks.push("anon/authenticated có USAGE trên sync_stage");
+  leaks.push(...(await anonReadable(exec)));
   return leaks;
+}
+
+/** Ba quan hệ PostGIS anon vẫn đọc được trên prod sau 037 (Known limit: chủ là supabase_admin, postgres
+ * không thu quyền được; nội dung là bảng tham chiếu toạ độ công khai). Chỉ chừa khi là thành viên extension
+ * postgis — bảng thường trùng tên vẫn bị bắt. Mở rộng danh sách = quyết định của người (docs/ops/supabase-lock-anon-rls.md). */
+export const PUBLIC_READ_ALLOW = ["spatial_ref_sys", "geometry_columns", "geography_columns"];
+const REL_KIND = { r: "bảng", p: "bảng phân vùng", v: "view", m: "materialized view", f: "bảng ngoại" };
+
+/** Quyền đọc công khai (AU1, audit P12): role anon/authenticated SELECT được quan hệ nào trong `public` —
+ * cửa PostgREST mở cho ai cầm anon key. Trả danh sách vi phạm (rỗng = sạch); mỗi dòng nói role, quan hệ,
+ * đường cấp và lệnh gỡ. Cloud không có role anon → vi phạm (không kiểm được thì không cho qua). */
+export async function anonReadable(exec) {
+  const [role] = await exec(`SELECT count(*)::int AS n FROM pg_roles WHERE rolname = 'anon'`);
+  if (!role || role.n === 0) return ["cloud không có role anon — không kiểm được quyền đọc công khai"];
+  // has_*_privilege tính cả PUBLIC và quyền thừa kế qua role thành viên; aclexplode chỉ để gọi tên đường cấp.
+  const rows = await exec(`WITH rel AS (
+      SELECT c.oid, c.relname, c.relkind::text AS kind, c.relacl
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relkind IN ('r','p','v','m','f')
+        AND NOT (c.relname = ANY(ARRAY[${PUBLIC_READ_ALLOW.map(lit).join(",")}]) AND EXISTS (
+          SELECT 1 FROM pg_depend d JOIN pg_extension e ON e.oid = d.refobjid
+          WHERE d.classid = 'pg_class'::regclass AND d.objid = c.oid AND d.deptype = 'e' AND e.extname = 'postgis'))
+    ), ro AS (SELECT oid, rolname FROM pg_roles WHERE rolname IN ('anon','authenticated'))
+    SELECT ro.rolname AS role, rel.relname AS rel, rel.kind,
+      CASE WHEN EXISTS (SELECT 1 FROM aclexplode(rel.relacl) a WHERE a.grantee = ro.oid AND a.privilege_type = 'SELECT') THEN 'thang'
+           WHEN EXISTS (SELECT 1 FROM aclexplode(rel.relacl) a WHERE a.grantee = 0 AND a.privilege_type = 'SELECT') THEN 'public'
+      END AS bang,
+      (SELECT pg_get_userbyid(a.grantee) FROM aclexplode(rel.relacl) a
+        WHERE a.privilege_type = 'SELECT' AND a.grantee NOT IN (0, ro.oid) AND pg_has_role(ro.oid, a.grantee, 'MEMBER')
+        ORDER BY 1 LIMIT 1) AS qua_role,
+      (SELECT att.attname AS c FROM pg_attribute att, aclexplode(att.attacl) x
+        WHERE att.attrelid = rel.oid AND att.attnum > 0 AND NOT att.attisdropped AND x.privilege_type = 'SELECT'
+          AND (x.grantee = 0 OR pg_has_role(ro.oid, x.grantee, 'MEMBER'))
+        ORDER BY att.attnum LIMIT 1) AS cot,
+      (SELECT CASE WHEN x.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(x.grantee) END
+        FROM pg_attribute att, aclexplode(att.attacl) x
+        WHERE att.attrelid = rel.oid AND att.attnum > 0 AND NOT att.attisdropped AND x.privilege_type = 'SELECT'
+          AND (x.grantee = 0 OR pg_has_role(ro.oid, x.grantee, 'MEMBER'))
+        ORDER BY att.attnum LIMIT 1) AS cot_cho
+    FROM rel CROSS JOIN ro
+    WHERE has_table_privilege(ro.oid, rel.oid, 'SELECT') OR has_any_column_privilege(ro.oid, rel.oid, 'SELECT')
+    ORDER BY rel.relname, ro.rolname`);
+  return rows.map((r) => {
+    const t = `public.${q(r.rel)}`;
+    let duong, go;
+    if (r.bang === "thang") [duong, go] = ["cấp thẳng", `REVOKE SELECT ON ${t} FROM ${q(r.role)}`];
+    else if (r.bang === "public") [duong, go] = ["qua PUBLIC", `REVOKE SELECT ON ${t} FROM PUBLIC`];
+    else if (r.qua_role) [duong, go] = [`qua role ${r.qua_role}`, `REVOKE ${q(r.qua_role)} FROM ${q(r.role)}`];
+    else if (r.cot) {
+      const cho = r.cot_cho === "PUBLIC" ? "PUBLIC" : q(r.cot_cho);
+      [duong, go] = [`cấp cột ${r.cot}`, `REVOKE SELECT (${q(r.cot)}) ON ${t} FROM ${cho}`];
+    } else [duong, go] = ["không rõ đường cấp", "kiểm tay quyền và chủ sở hữu của quan hệ"];
+    return `${r.role} đọc được public.${r.rel} (${REL_KIND[r.kind] ?? r.kind}, ${duong}; gỡ: ${go})`;
+  });
+}
+
+/** Chốt quyền đọc công khai trước khi gửi — vi phạm hay lỗi truy vấn đều dừng lượt ở pha gate. */
+async function gateAnon(exec) {
+  let found;
+  try {
+    found = await anonReadable(exec);
+  } catch (e) {
+    throw new PhaseError("gate", e.message);
+  }
+  if (found.length) throw new PhaseError("gate", `LEAK GATE FAIL (trước khi gửi): ${found.join(", ")}`);
 }
 
 /** Một lượt đồng bộ. `local`: pg.Client tới DB local (dựng với `types: localTypes`).
@@ -427,14 +517,28 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   }
   lap("catalog");
 
+  // 1b. quyền đọc công khai — dừng TRƯỚC khi đọc local/gửi: không dòng nào lên một cloud anon đang đọc được
+  await gateAnon(exec); // AU1:kiem-truoc-khi-gui
+  lap("gate-pre");
+
   // 2. đọc local — một snapshot
   const data = new Map();
   const columns = {};
   let readAt;
+  let shrinkAudits = [];
   let tokens = sourceTokens;
   try {
     await local.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
     readAt = (await local.query("SELECT transaction_timestamp()::text AS t")).rows[0].t;
+    // Dòng audit giải thích bảng co (cùng snapshot với số dòng đọc ra). DB không có ops_audit
+    // (DB mô phỏng) → không miễn trừ nào, chặn tụt như cũ.
+    if ((await local.query("SELECT to_regclass('public.ops_audit') IS NOT NULL AS ok")).rows[0].ok) {
+      ({ rows: shrinkAudits } = await local.query(
+        `SELECT action, at, detail FROM ops_audit
+         WHERE action = ANY($1) AND at > transaction_timestamp() - make_interval(hours => $2)`,
+        [Object.values(SHRINK_AUDIT), SHRINK_AUDIT_HOURS],
+      ));
+    }
     if (!tokens) {
       const { rows } = await local.query(
         `SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry
@@ -491,13 +595,9 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   }
   const counts = Object.fromEntries([...data].map(([t, rows]) => [t, rows.length]));
   for (const t of cloudNames) {
-    const have = cloudCounts[t] ?? 0;
-    if (have > 0 && counts[t] < SHRINK_MIN * have) {
-      throw new PhaseError(
-        "shrink",
-        `local tụt ${t}: ${counts[t]} < ${SHRINK_MIN * 100}% của ${have} dòng trên cloud — local đang dựng dở? không tráo`,
-      );
-    }
+    const v = shrinkVerdict({ table: t, local: counts[t] ?? 0, cloud: cloudCounts[t] ?? 0, audits: shrinkAudits, now: readAt });
+    if (!v.ok) throw new PhaseError("shrink", v.reason);
+    if (v.reason) warn(v.reason);
   }
 
   // 4. nạp staging
@@ -530,30 +630,57 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
     throw new PhaseError("gate", e.message);
   }
   lap("gate");
-  if (leaks.length) throw new PhaseError("gate", `LEAK GATE FAIL: ${leaks.join(", ")}`);
+  if (leaks.length) throw new PhaseError("gate", `LEAK GATE FAIL (sau tráo): ${leaks.join(", ")}`);
 
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   return { runId, total, counts, timings, warnings };
+}
+
+/** Đường chạy của tiến trình sync: in như log launchd đọc, trả mã thoát (0 xong, 1 gãy). main() chỉ dựng
+ * deps thật rồi gọi hàm này — thước đo đúng dòng SYNC FAIL mà không cần đổi đích cloud. */
+export async function runMain({ local, exec, out = console.log, err = console.error }) {
+  const started = new Date();
+  out(`sync bắt đầu ${started.toISOString()}`);
+  try {
+    const r = await syncOnce({ local, exec, log: out });
+    for (const [t, n] of Object.entries(r.counts)) out(`  ${t}: ${n}`);
+    const tm = Object.entries(r.timings).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join(" · ");
+    out(
+      `sync xong ${new Date().toISOString()} (run ${r.runId}): ${r.total} dòng, ${FILL.length} bảng; ${tm}; tổng ${((Date.now() - started) / 1000).toFixed(1)}s; leak gate PASS`,
+    );
+    return 0;
+  } catch (e) {
+    err(`SYNC FAIL [${e.phase ?? "?"}] ${new Date().toISOString()}: ${e.message}`);
+    return 1;
+  }
+}
+
+/** `--kiem-anon`: chỉ ĐỌC catalog cloud, in từng quyền đọc công khai còn mở; mã 1 khi có. Mạnh chạy trên prod
+ * sau khi áp 037, trước khi merge leak gate (docs/ops/supabase-lock-anon-rls.md). */
+export async function runKiemAnon({ exec, out = console.log }) {
+  const found = await anonReadable(exec);
+  if (!found.length) {
+    out(`kiem-anon: sạch — anon/authenticated không đọc được quan hệ nào trong public (chừa ${PUBLIC_READ_ALLOW.join(", ")})`);
+    return 0;
+  }
+  for (const v of found) out(`kiem-anon: ${v}`);
+  out(`kiem-anon: ${found.length} vi phạm`);
+  return 1;
 }
 
 async function main() {
   const env = await readFile(path.join(homedir(), ".oneinvest/cloud.env"), "utf8");
   const token = process.env.SUPABASE_MGMT_TOKEN ?? env.match(/SUPABASE_MGMT_TOKEN=(\S+)/)?.[1];
   if (!token) throw new Error("thiếu SUPABASE_MGMT_TOKEN trong ~/.oneinvest/cloud.env");
+  const exec = mgmtExec(token);
+  if (process.argv.includes("--kiem-anon")) {
+    process.exitCode = await runKiemAnon({ exec });
+    return;
+  }
   const local = new pg.Client({ connectionString: LOCAL_URL, types: localTypes });
   await local.connect();
-  const started = new Date();
-  console.log(`sync bắt đầu ${started.toISOString()}`);
   try {
-    const r = await syncOnce({ local, exec: mgmtExec(token) });
-    for (const [t, n] of Object.entries(r.counts)) console.log(`  ${t}: ${n}`);
-    const tm = Object.entries(r.timings).map(([k, v]) => `${k} ${v.toFixed(1)}s`).join(" · ");
-    console.log(
-      `sync xong ${new Date().toISOString()} (run ${r.runId}): ${r.total} dòng, ${FILL.length} bảng; ${tm}; tổng ${((Date.now() - started) / 1000).toFixed(1)}s; leak gate PASS`,
-    );
-  } catch (e) {
-    console.error(`SYNC FAIL [${e.phase ?? "?"}] ${new Date().toISOString()}: ${e.message}`);
-    process.exitCode = 1;
+    process.exitCode = await runMain({ local, exec });
   } finally {
     await local.end();
   }

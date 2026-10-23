@@ -41,8 +41,8 @@ async function main() {
     process.exit(0);
   }
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
-  // v2 (N1 media Zalo) giữ nguyên hình dạng v1, chỉ thêm media/* + meta.mediaFiles
-  if (![1, 2].includes(manifest.schemaVersion)) {
+  // v2 (N1 media) + v3 (Kev-nhãn meta.kev) đều giữ nguyên hình dạng cũ, chỉ thêm key
+  if (![1, 2, 3].includes(manifest.schemaVersion)) {
     throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
   }
 
