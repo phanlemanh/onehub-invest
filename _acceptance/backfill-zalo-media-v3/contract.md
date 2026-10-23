@@ -5,7 +5,7 @@ slug: backfill-zalo-media-v3
 owner: phanlemanh@gmail.com
 risk_tier: T2      # chỉ pipeline/backfill-zalo-media.mjs + test; không đụng t3_paths
 surfaces: [cli]
-status: verified
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-23T10:19:14Z
 approved_by:
@@ -30,6 +30,7 @@ Source input: prompt (brief từ phiên điều phối «Phân chia công việc
 - AC-2: Given snapshot `zalo-agent` v2 có ảnh và v1 không ảnh dựng giả trên DB local, When chạy vòng `backfill --check` → backfill → nạp lại, Then hành vi v2/v1 giữ như hồ sơ `stg-zalo-media-files`: `--check` đỏ trước khi nạp và xanh sau, `media_files` đúng hợp đồng, nạp lại không nhân đôi, và dữ liệu giả dọn còn 0 dòng.
 - AC-4: Given script được gọi qua một đường symlink tới thư mục `pipeline/` (như `~/dev/one-invest`, đường launchd cũ còn dùng), When chạy `backfill-zalo-media.mjs --check <thư mục không tồn tại>`, Then thân lệnh vẫn chạy và thoát 1 kèm thông điệp «không thấy thư mục snapshots» — không thoát 0 im lặng.
 - AC-5: Given một snapshot `zalo-agent` v3 (có `meta.kev`) mang một bài có ảnh chưa nạp vào `stg_zalo_posts`, When chạy `backfill-zalo-media.mjs --check` trên thư mục chứa nó, Then lệnh thoát khác 0 và báo `chưa nạp: 1`; còn snapshot v3 không bài nào có ảnh thì `--check` thoát 0 (không báo động giả). (Nửa đầu điều kiện bắt của hàng PL32.)
+- AC-6: Given DB local và một snapshot `zalo-agent` v3 dựng giả (bài có ảnh mang `meta.kev` + `meta.mediaFiles`, bài không ảnh mang `meta.kev` p=null) đặt cạnh các snapshot v2/v1 đã nạp, When chạy `backfill --check` → backfill → `--check`, Then lần đầu đỏ với `chưa nạp: 1`, backfill nạp đúng snapshot v3, lần sau xanh với `chưa nạp: 0`, bài có ảnh có `media_files` mang `snapshotId` của snapshot v3, bài không ảnh có `media_files` NULL, và dữ liệu giả dọn còn 0 dòng. (Nửa sau điều kiện bắt của hàng PL32.)
 - AC-3: Given các snapshot `zalo-agent` thật ở `~/dev/onehub-invest/collector/snapshots`, When chạy `backfill-zalo-media.mjs --check`, Then lệnh thoát 0 và in dòng báo cáo mang số snapshot `v2+` (đủ v2 lẫn v3), số bài có ảnh chưa nạp và số dòng `stg_zalo_posts` có `media_files`.
 
 ## Coverage
@@ -38,14 +39,13 @@ Source input: prompt (brief từ phiên điều phối «Phân chia công việc
 
 ## Out of scope
 
-- Nới `pipeline/import-airbnb.mjs` nhận v3 — đã nằm trong PL4 (làn ZCode `import-*`); trên main hiện tại importer còn từ chối v3, nên backfill thật một snapshot v3 chỉ chạy được sau khi PL4 merge.
-- Nửa sau điều kiện bắt của PL32 (chạy backfill rồi `--check` thoát 0 và `media_files` có dòng của snapshot v3) — cần importer nhận v3 của PL4; thêm ca v3 vào `pipeline/scripts/media-files-roundtrip.mjs` và chấm lại hồ sơ khi PL4 merge.
+- Nới `pipeline/import-airbnb.mjs` nhận v3 — PL4 làm (làn ZCode `import-*`), đã vào main `a624879`; việc này chỉ dùng nó.
 - Đọc hay lưu `meta.kev` vào staging — việc của PL4.
 - Restart collector :9210 hay sinh snapshot v3 thật — việc triển khai PL4.
 
 ## Notes
 
-- Nhánh `fix/backfill-zalo-media-v3` cắt từ main `1682fb5` vì PR của `claude/acceptance-kev-nhan` chưa merge.
+- Nhánh `fix/backfill-zalo-media-v3` cắt từ main `1682fb5` lúc PL4 chưa merge; sau khi PL4 vào main (`a624879`) đã rebase lên main `eb61e9d` và thêm AC-6 (ca v3 đầu-cuối trong roundtrip) — vòng chấm 4.
 - Các hàm quét được export (`mediaSnapshots`, `postsWithMedia`, `MEDIA_SCHEMA_MIN`) và `main` chỉ chạy khi gọi trực tiếp, để test AC-1 không cần DB.
 - AC-4 thêm ở vòng chấm 2: phiên VERIFY vòng 1 phát hiện điều kiện «chỉ chạy khi gọi trực tiếp» so chuỗi thô nên gọi qua symlink thì `--check` thoát 0 im lặng — đúng loại xanh giả việc này định sửa; sửa bằng so `realpathSync`.
 - E2, E3 cần DB local :5433; E2 dùng tiền tố riêng mỗi lần chạy và luôn xoá dữ liệu giả.

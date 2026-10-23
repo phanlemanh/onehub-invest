@@ -35,3 +35,10 @@ evals:
     cmd: config:executors.script.zalo_media_v3_check
     expected: "exit 0; stdout có 'V3 CHECK PASS'; dòng --check của snapshot v3 có ảnh mang '(v2+: 1)' và 'chưa nạp: 1 ' (đỏ); should-NOT-fire: snapshot v3 không ảnh mang 'chưa nạp: 0 ' (xanh)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zalo_media_roundtrip
+    expected: "exit 0; stdout có dòng 'ok: v3 có ảnh → --check đỏ; backfill → --check xanh, media_files mang snapshotId v3', 'ROUNDTRIP PASS' và 'dọn: còn 0 dòng giả'; trước backfill v3 dòng --check có 'chưa nạp: 1 ' (đỏ)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
