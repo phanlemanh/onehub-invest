@@ -3,11 +3,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type pg from "pg";
 
 import { main } from "../scripts/enrich-revert.js";
-import type { ContextResult } from "../src/agents/context-resolver.js";
+import { resolveContext, type ContextResult } from "../src/agents/context-resolver.js";
+import { parseEnrichOutput } from "../src/agents/enrich-text.js";
 import { runEnrich, type LlmFn, type ResolveFn } from "../src/enrich/run.js";
 import { withTx, insertOffer, insertProperty, insertProposal } from "./helpers/db.js";
 
@@ -22,7 +24,10 @@ const resolveWith = (o: Partial<ContextResult> = {}): ResolveFn => async () => c
 const llmNone: LlmFn = async () => ({ result: null, model: "qwen27b", tracePath: null });
 
 /** Một offer S03 có tin nguồn; trả offer_id. */
-async function offerWithPost(c: pg.Client, o: { text?: string; group?: string; bedrooms?: number | null } = {}) {
+async function offerWithPost(
+  c: pg.Client,
+  o: { text?: string; group?: string; bedrooms?: number | null; source?: string } = {},
+) {
   const id = nextId();
   await c.query(
     `INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ('t', 'test', 'S03', '{}')
@@ -31,7 +36,9 @@ async function offerWithPost(c: pg.Client, o: { text?: string; group?: string; b
   await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, group_name) VALUES ($1, 't', $2, $3)`, [
     `p_${id}`, o.text ?? "Bán nhà 4 tầng ngay chợ, sổ hồng chính chủ, giá thương lượng", o.group ?? "Nhóm thử",
   ]);
-  await insertOffer(c, { offer_id: id, post_ids: [`p_${id}`], property_type: "unknown", bedrooms: o.bedrooms ?? null });
+  await insertOffer(c, {
+    offer_id: id, source: o.source ?? "S03", post_ids: [`p_${id}`], property_type: "unknown", bedrooms: o.bedrooms ?? null,
+  });
   return id;
 }
 
@@ -219,6 +226,80 @@ test("AC-7 CLI hoàn tác", async () => {
   const r = spawnSync("npx", ["tsx", "scripts/enrich-revert.ts"], { cwd: join(import.meta.dirname, ".."), encoding: "utf8" });
   assert.equal(r.status, 2, r.stderr);
   assert.match(r.stdout, /thiếu --ids/);
+});
+
+// ── AC-7 sau hoàn tác: hai tin S05 thật, luật E1 thật mới, đầu ra LLM thật ───────────────────
+const CONFLICT: { group_name: string; cases: { text: string; output: string }[] } = JSON.parse(
+  readFileSync(join(import.meta.dirname, "fixtures/e1-conflict-cases.json"), "utf8"),
+);
+const oldLand = resolveWith({ propertyType: "land", typeBasis: "luật từ khoá: «đất» trong tên nhóm → land" });
+
+/** Dựng đúng trạng thái DB local 23/10: land áp thẳng, LLM house bị lấn (superseded). */
+async function landApplied(c: pg.Client, i: number) {
+  const cc = CONFLICT.cases[i];
+  const a = await offerWithPost(c, { text: cc.text, group: CONFLICT.group_name, bedrooms: [3, 9][i] });
+  await run(c, [a], oldLand);
+  const land = (await c.query(`SELECT id FROM enrichment_proposals WHERE offer_id = $1 AND value = 'land'`, [a])).rows[0];
+  const house = await insertProposal(c, { offer_id: a, field: "property_type", value: "house", route: "superseded" });
+  await c.query(`UPDATE enrichment_proposals SET status = 'superseded' WHERE id = $1`, [house]);
+  const llm = parseEnrichOutput(cc.output);
+  assert.ok(llm);
+  return { a, land: Number(land.id), house, llm: (async () => ({ result: llm, model: "qwen27b", tracePath: null })) as LlmFn };
+}
+const landRows = async (c: pg.Client, a: string) =>
+  Number((await c.query(`SELECT count(*) FROM enrichment_proposals WHERE offer_id = $1 AND value = 'land'`, [a])).rows[0].count);
+
+test("AC-7 sau hoàn tác: luật không đẩy lại land, house lên thẻ", async () => {
+  for (const i of [0, 1]) {
+    await withTx(async (c) => {
+      const { a, land, house, llm } = await landApplied(c, i);
+      assert.equal(await revert(c, [land], "hitl:test", "E1 suy land từ tên nhóm"), 1);
+      await run(c, [a], resolveContext, llm);
+      assert.equal(await landRows(c, a), 1, "AC-7 luật đẩy lại giá trị đã hoàn tác");
+      const cards = (await c.query(`SELECT evidence FROM review_queue WHERE item_id = $1 AND status = 'pending'`, [`enrich:${a}`])).rows;
+      assert.equal(cards.length, 1);
+      const pt = cards[0].evidence.fields.filter((f: { field: string }) => f.field === "property_type");
+      assert.deepEqual(pt.map((f: { proposal_id: number; value: string }) => [f.proposal_id, f.value]), [[house, "house"]]);
+      assert.equal((await c.query(`SELECT property_type FROM sale_offers WHERE offer_id = $1`, [a])).rows[0].property_type,
+        "unknown");
+    });
+  }
+});
+
+test("AC-7 chiều đỏ: hoàn tác xoá dòng thay vì đánh dấu thì luật đẩy lại land", async () => {
+  await withTx(async (c) => {
+    const { a, land } = await landApplied(c, 0);
+    await revert(c, [land]);
+    // Bản hoàn tác «xoá dòng» (không để lại dấu reverted) — dòng chặn của unique index biến mất.
+    await c.query(`DELETE FROM enrichment_proposals WHERE id = $1`, [land]);
+    await run(c, [a], oldLand);
+    const back = (await c.query(
+      `SELECT status FROM enrichment_proposals WHERE offer_id = $1 AND value = 'land'`, [a],
+    )).rows;
+    assert.ok(back.length === 1 && back[0].status !== "reverted",
+      "thước phải thấy land bị đẩy lại khi dấu reverted không còn");
+  });
+});
+
+// ── AC-2 (biến thể): thẻ offer kế gom đề xuất «lỏng» của offer cũ ở lượt enrich sau ─────────
+test("AC-2 offer kế đã có thẻ chờ: lượt enrich sau gom vào đúng một thẻ", async () => {
+  await withTx(async (c) => {
+    // Nguồn thử 'TST': đối soát chỉ chạm offer của nguồn đó, không đụng S03/S05 thật.
+    const x = await offerWithPost(c, { source: "TST" });
+    const y = await offerWithPost(c, { source: "TST" });
+    const postX = (await c.query(`SELECT post_ids FROM sale_offers WHERE offer_id = $1`, [x])).rows[0].post_ids;
+    await c.query(`UPDATE sale_offers SET post_ids = post_ids || $2::text[] WHERE offer_id = $1`, [y, postX]);
+    const llmStreet: LlmFn = async () => ({ result: { street: "Quang Trung" }, model: "qwen27b", tracePath: null });
+    const llmBath: LlmFn = async () => ({ result: { bathrooms: 3 }, model: "qwen27b", tracePath: null });
+    await run(c, [x], resolveWith(), llmStreet);
+    await run(c, [y], resolveWith(), llmBath);
+    await c.query(`SELECT reconcile_stale_offers('TST', ARRAY[$1]::text[], 'test')`, [y]);
+    await run(c, [y], resolveWith(), llmNone);
+    const cards = (await c.query(`SELECT id, evidence FROM review_queue WHERE item_id = $1 AND status = 'pending'`, [`enrich:${y}`])).rows;
+    assert.equal(cards.length, 1, "AC-2 offer kế phải còn đúng một thẻ chờ");
+    const fields = cards[0].evidence.fields.map((f: { field: string; value: string }) => `${f.field}=${f.value}`).sort();
+    assert.deepEqual(fields, ["bathrooms=3", "street_raw=Quang Trung"], "AC-2 thẻ offer kế thiếu đề xuất của offer cũ");
+  });
 });
 
 function run(c: pg.Client, offerIds: string[], resolve: ResolveFn, llm: LlmFn = llmNone) {

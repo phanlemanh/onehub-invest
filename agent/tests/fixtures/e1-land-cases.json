@@ -1,0 +1,15 @@
+{
+  "_note": "Hai tin đất nền thật S05 ở DB local 2026-10-23 (vòng enrich-hau-ky, AC-9). text = 500 ký tự đầu như run.ts đọc, đã bỏ phần liên hệ (tên, SĐT). group_name che phần riêng của nhóm (SPL tầng A), giữ cụm chung «MUA BÁN CHUNG CƯ» / «BẤT ĐỘNG SẢN» — chính cụm đó từng kéo luật cũ ra apartment hoặc land.",
+  "cases": [
+    {
+      "offer_id": "offer_76060ec556721a1b",
+      "group_name": "MUA BÁN CHUNG CƯ [tên nhóm S05 đã che]",
+      "text": "CHÍNH CHỦ BÁN LÔ ĐẤT TÁI ĐỊNH CƯ KIẾN HƯNG DT 86M .MT 8.20 M .HƯỚNG ĐÔNG NAM .CHỦ CẦN BÁN GẤP .GIÁ 15 TỶ X ."
+    },
+    {
+      "offer_id": "offer_c0f04c88f9255699",
+      "group_name": "BẤT ĐỘNG SẢN [tên nhóm S05 đã che]",
+      "text": "Chủ cần bán gấp\n👉38m2 đất thổ cư TT Trạm Trôi giá chỉ nhỉnh 2 tỷ"
+    }
+  ]
+}
