@@ -4,27 +4,37 @@
  * về sau `/ops` (AU6) dùng chung một con số.
  *
  * Mỗi mã đọc bảng NẠP THẬT của nó, lọc bằng `source_ids` đọc từ `source_registry` (SPL: không literal
- * nguồn trong mã, không đọc `real_name`):
+ * nguồn trong mã, không đọc `real_name`), và tính tuổi theo GIỜ THU — không theo giờ nạp: `captured_at` của
+ * stg_zalo_posts / stg_chotot_ads bị importer ghi `now()` mỗi lần upsert, nên nạp lại bản cũ trông như mới.
  *   S01  airbnb_snapshots.collected_at (mọi source_id của S01 gộp max)
- *   S02  airdna_markets.captured_at theo country_code
- *   S03  stg_zalo_posts.captured_at — hàng có agent_id không thuộc mã khác, snapshot thuộc S03
- *   S05  stg_zalo_posts.captured_at — hàng có agent_id ∈ source_ids của S05 (đi chung snapshot với S03)
- *   S06  stg_chotot_ads.captured_at, thành phố lấy từ snapshot của chính hàng
+ *   S02  airdna_markets.captured_at theo country_code (transform-airdna gán fetchedAt của lần tải)
+ *   S03  airbnb_snapshots.collected_at của snapshot chứa bài S03 (agent_id không thuộc mã khác)
+ *   S05  airbnb_snapshots.collected_at của snapshot chứa bài S05 (agent_id ∈ source_ids của S05)
+ *   S06  airbnb_snapshots.collected_at của snapshot chứa tin stg_chotot_ads
  * Thành phố = nơi mã đó có dữ liệu (không ghép chéo). Mã `completed` (S04) không đo.
  */
 
 /** SLO theo giờ. S01/S02/S03 = 8/35/3 ngày (ADR-0007; Mạnh chốt Hỏi-1 AU4 23/10); S05/S06 theo nhịp thu. */
 export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 12, S06: 36 };
 
+/** Cột thời gian (giờ thu) mà probe của từng mã lấy max — phép đo đối chiếu khai báo này với SQL thật. */
+export const TIME_SOURCE = {
+  S01: "airbnb_snapshots.collected_at",
+  S02: "airdna_markets.captured_at",
+  S03: "airbnb_snapshots.collected_at",
+  S05: "airbnb_snapshots.collected_at",
+  S06: "airbnb_snapshots.collected_at",
+};
+
 const ZALO_POSTS = `
-  SELECT s.city, max(p.captured_at) AS last
+  SELECT s.city, max(s.collected_at) AS last
   FROM stg_zalo_posts p JOIN airbnb_snapshots s USING (snapshot_id)
   WHERE p.agent_id = ANY($1)
      OR (s.source = ANY($1) AND (p.agent_id IS NULL OR NOT p.agent_id = ANY($2)))
   GROUP BY s.city`;
 
 /** Truy vấn bảng thật theo mã; `args(ids, others)` = source_ids của mã và của mọi mã active khác. */
-const PROBES = {
+export const PROBES = {
   S01: {
     sql: `SELECT city, max(collected_at) AS last FROM airbnb_snapshots
           WHERE source = ANY($1) GROUP BY city`,
@@ -38,7 +48,7 @@ const PROBES = {
   S03: { sql: ZALO_POSTS, args: (ids, others) => [ids, others] },
   S05: { sql: ZALO_POSTS, args: (ids, others) => [ids, others] },
   S06: {
-    sql: `SELECT s.city, max(c.captured_at) AS last
+    sql: `SELECT s.city, max(s.collected_at) AS last
           FROM stg_chotot_ads c JOIN airbnb_snapshots s USING (snapshot_id)
           WHERE s.source = ANY($1) GROUP BY s.city`,
     args: (ids) => [ids],

@@ -5,13 +5,17 @@
 // Registry fixture dùng chuỗi canh thay tên/mã nguồn thật — ca AC-7 đòi chúng vắng khỏi mọi đầu ra.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
+import { tmpdir } from "node:os";
+import { gzipSync } from "node:zlib";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { after, before, describe, test } from "node:test";
 
-import { SLO_HOURS, readFreshness } from "./lib/freshness.mjs";
+import { PROBES, SLO_HOURS, TIME_SOURCE, readFreshness } from "./lib/freshness.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLI = path.join(HERE, "check-freshness.mjs");
@@ -69,6 +73,8 @@ function baseFixture() {
       { id: "hcmc__s01b__1", city: "hcmc", source: IDS.S01[1], at: ago(48) },
       { id: "hanoi__s04__1", city: "hanoi", source: IDS.S04[0], at: ago(24 * 200) },
       { id: "hanoi__s03agent__1", city: "hanoi", source: IDS.S03[0], at: ago(1) },
+      // bài S05 đi chung ống snapshot với S03 (source của S03), lần thu riêng
+      { id: "hanoi__s05agent__1", city: "hanoi", source: IDS.S03[0], at: ago(2) },
       { id: "hanoi__s03mock__1", city: "hanoi", source: IDS.S03[1], at: ago(24 * 5) },
       { id: "hanoi__s06__1", city: "hanoi", source: IDS.S06[0], at: ago(10) },
       { id: "hcmc__s06__1", city: "hcmc", source: IDS.S06[0], at: ago(10) },
@@ -76,7 +82,7 @@ function baseFixture() {
     airdna: [{ id: "m1", country: "vn", at: ago(48) }],
     posts: [
       { id: "p-s03", snap: "hanoi__s03agent__1", agent: "hook-khac", at: ago(1) },
-      { id: "p-s05", snap: "hanoi__s03agent__1", agent: IDS.S05[0], at: ago(2) },
+      { id: "p-s05", snap: "hanoi__s05agent__1", agent: IDS.S05[0], at: ago(2) },
       { id: "p-mock", snap: "hanoi__s03mock__1", agent: null, at: ago(24 * 5) },
     ],
     ads: [
@@ -86,9 +92,16 @@ function baseFixture() {
   };
 }
 
+/** Dời giờ THU của một snapshot (và giờ nạp các hàng của nó theo cùng mốc) — tuổi tính theo snapshot. */
+function ageSnapshot(f, id, at) {
+  f.snapshots.find((s) => s.id === id).at = at;
+  for (const r of [...f.posts, ...f.ads]) if (r.snap === id) r.at = at;
+  return f;
+}
+
 async function seed(c, schema, f) {
   await c.query(`CREATE SCHEMA "${schema}"`);
-  for (const t of TABLES) await c.query(`CREATE TABLE "${schema}".${t} (LIKE public.${t} INCLUDING DEFAULTS)`);
+  for (const t of TABLES) await c.query(`CREATE TABLE "${schema}".${t} (LIKE public.${t} INCLUDING ALL)`);
   const q = (sql, v) => c.query(sql.replaceAll("§", `"${schema}"`), v);
   for (const r of f.registry) {
     await q(`INSERT INTO §.source_registry (code, real_name, label_vi, status, source_ids) VALUES ($1,$2,'x',$3,$4)`,
@@ -176,8 +189,7 @@ describe("AC-3 S03/S05", () => {
   });
   test("AC-3 chiều đỏ: S05 13 giờ → stale, S03 vẫn fresh", async (t) => {
     if (needDb(t)) return;
-    const f = baseFixture();
-    f.posts.find((p) => p.id === "p-s05").at = ago(13);
+    const f = ageSnapshot(baseFixture(), "hanoi__s05agent__1", ago(13));
     const rows = await freshnessOf(f);
     assert.equal(one(rows, "S05", "hanoi").status, "stale", "S05/hanoi phải stale ở 13 giờ (SLO 12)");
     assert.equal(one(rows, "S03", "hanoi").status, "fresh", "S03/hanoi không bị kéo theo S05");
@@ -187,8 +199,7 @@ describe("AC-3 S03/S05", () => {
 // ------------------------------------------------------------------ AC-4 --
 test("AC-4 S06 theo thành phố của snapshot: hanoi fresh, hcmc stale", async (t) => {
   if (needDb(t)) return;
-  const f = baseFixture();
-  f.ads.find((a) => a.snap === "hcmc__s06__1").at = ago(40);
+  const f = ageSnapshot(baseFixture(), "hcmc__s06__1", ago(40));
   const rows = await freshnessOf(f);
   assert.equal(one(rows, "S06", "hanoi").status, "fresh", "S06/hanoi 10 giờ phải tươi");
   assert.equal(one(rows, "S06", "hcmc").status, "stale", "S06/hcmc 40 giờ phải quá hạn (SLO 36)");
@@ -253,11 +264,7 @@ function cli(schema, args = [], env = {}) {
     c.on("close", (code) => resolve({ code, stdout, stderr }));
   });
 }
-const s05Stale = () => {
-  const f = baseFixture();
-  f.posts.find((p) => p.id === "p-s05").at = ago(13);
-  return f;
-};
+const s05Stale = () => ageSnapshot(baseFixture(), "hanoi__s05agent__1", ago(13));
 
 describe("AC-7 CLI", () => {
   test("AC-7 CLI mọi hàng fresh → thoát 0", async (t) => {
@@ -346,4 +353,248 @@ test("AC-8 DB hiện tại (chẩn đoán, không chặn)", async (t) => {
       .map((r) => `${r.code}/${r.city ?? "—"} ${r.status} last=${r.last ?? "—"}`).join(", ") || "(không)";
   } catch { /* DB không tới → in nguyên trạng thái */ }
   t.diagnostic(`live: thoát json=${js.code} chữ=${txt.code} · lỗi: ${bad} · chấm lúc ${new Date().toISOString()}`);
+});
+
+// ═══ freshness-do-gio-thu-that-s03 (GT-…): tuổi tính theo GIỜ THU của snapshot, không theo giờ nạp ═══
+
+const PIPE = path.join(HERE, "..", "pipeline");
+const SCRATCH = mkdtempSync(path.join(realpathSync(tmpdir()), "freshness-gt-"));
+
+/** Snapshot S06 đúng DATA-CONTRACT cho importer thật: manifest + sha256 + items gzip. */
+function chototSnapshot(name, { city, finishedAt, listIds }) {
+  const dir = path.join(SCRATCH, name);
+  mkdirSync(dir, { recursive: true });
+  const items = listIds.map((id) => ({
+    source: "chotot-ads",   // importer lọc theo trường này
+    payload: { list_id: id, region_v2: 0, category: 0, type: "s" },
+    meta: { city },
+    fetchedAt: finishedAt,
+  }));
+  const gz = gzipSync(Buffer.from(JSON.stringify(items)));
+  writeFileSync(path.join(dir, "items-0001.json.gz"), gz);
+  writeFileSync(path.join(dir, "manifest.json"), JSON.stringify({
+    schemaVersion: 1, snapshotId: name, city, source: IDS.S06[0], finishedAt,
+    files: [{ name: "items-0001.json.gz", sha256: createHash("sha256").update(gz).digest("hex") }],
+  }));
+  return dir;
+}
+/** Chạy importer THẬT pipeline/import-chotot.mjs với search_path trỏ schema tạm. */
+function importChotot(schema, dir) {
+  const u = new URL(DB_URL);
+  u.searchParams.set("options", `-c search_path=${schema}`);
+  return new Promise((resolve) => {
+    const c = spawn(process.execPath, [path.join(PIPE, "import-chotot.mjs"), dir], {
+      cwd: PIPE, env: { ...process.env, DATABASE_URL: u.toString() },
+    });
+    let err = "";
+    c.stderr.on("data", (d) => { err += d; });
+    c.stdout.resume();
+    c.on("close", (code) => resolve({ code, err }));
+  });
+}
+const noS06 = () => {
+  const f = baseFixture();
+  f.snapshots = f.snapshots.filter((x) => !x.id.includes("s06"));
+  f.ads = [];
+  return f;
+};
+
+describe("GT-AC-1 S06 importer thật", () => {
+  test("GT-AC-1 importer thật nạp lại snapshot S06 cũ → stale, last = finishedAt", async (t) => {
+    if (needDb(t)) return;
+    const a = chototSnapshot("hcmc__s06gt__old", { city: "hcmc", finishedAt: ago(40), listIds: [9001, 9002] });
+    const r = await withSchema(noS06(), async (schema) => {
+      for (const run of [1, 2]) {
+        const x = await importChotot(schema, a);
+        assert.equal(x.code, 0, `import-chotot lượt ${run} phải thoát 0\n${x.err.slice(0, 800)}`);
+      }
+      const nap = (await client.query(`SELECT max(captured_at) AS m FROM "${schema}".stg_chotot_ads`)).rows[0].m;
+      await client.query(`SET search_path TO "${schema}"`);
+      try { return { nap, rows: await readFreshness(client, { now: NOW }) }; } finally { await client.query("RESET search_path"); }
+    });
+    // tiền đề của lỗi: lượt nạp lại đã làm giờ nạp thành mới (importer ghi now())
+    assert.ok(Date.now() - new Date(r.nap).getTime() < 10 * 60e3, `importer phải ghi captured_at = giờ nạp (thấy ${r.nap})`);
+    const s06 = one(r.rows, "S06", "hcmc");
+    assert.equal(s06.status, "stale", "S06/hcmc: nạp lại snapshot 40 giờ phải báo quá hạn dù captured_at vừa mới");
+    assert.equal(s06.last, ago(40), "S06/hcmc: last phải là finishedAt của snapshot (giờ thu)");
+  });
+  test("GT-AC-1 đối chứng: importer thật nạp snapshot thu 10 giờ → fresh", async (t) => {
+    if (needDb(t)) return;
+    const a = chototSnapshot("hcmc__s06gt__old2", { city: "hcmc", finishedAt: ago(40), listIds: [9101] });
+    const b = chototSnapshot("hcmc__s06gt__new", { city: "hcmc", finishedAt: ago(10), listIds: [9101] });
+    const rows = await withSchema(noS06(), async (schema) => {
+      for (const d of [a, b]) { const x = await importChotot(schema, d); assert.equal(x.code, 0, x.err.slice(0, 800)); }
+      await client.query(`SET search_path TO "${schema}"`);
+      try { return await readFreshness(client, { now: NOW }); } finally { await client.query("RESET search_path"); }
+    });
+    const s06 = one(rows, "S06", "hcmc");
+    assert.equal(s06.status, "fresh", "S06/hcmc: snapshot thu 10 giờ phải tươi");
+    assert.equal(s06.last, ago(10), "S06/hcmc: last = finishedAt snapshot mới");
+  });
+});
+
+describe("GT-AC-2 S03/S05 nạp lại", () => {
+  const reimported = (s03At, s05At) => {
+    const f = baseFixture();
+    f.snapshots.find((x) => x.id === "hanoi__s03agent__1").at = s03At;
+    f.snapshots.find((x) => x.id === "hanoi__s05agent__1").at = s05At;
+    for (const p of f.posts) if (p.id !== "p-mock") p.at = ago(1);   // giờ nạp mới — như upsert ghi now()
+    return f;
+  };
+  test("GT-AC-2 S03/S05 nạp lại snapshot cũ → stale, last = collected_at", async (t) => {
+    if (needDb(t)) return;
+    const rows = await freshnessOf(reimported(ago(80), ago(13)));
+    for (const [code, h] of [["S03", 80], ["S05", 13]]) {
+      const r = one(rows, code, "hanoi");
+      assert.equal(r.status, "stale", `${code}/hanoi: bài nạp lại 1 giờ nhưng snapshot thu ${h} giờ phải quá hạn`);
+      assert.equal(r.last, ago(h), `${code}/hanoi: last = collected_at của snapshot`);
+    }
+  });
+  test("GT-AC-2 đối chứng: snapshot thu trong SLO → fresh", async (t) => {
+    if (needDb(t)) return;
+    const rows = await freshnessOf(reimported(ago(70), ago(11)));
+    assert.equal(one(rows, "S03", "hanoi").status, "fresh");
+    assert.equal(one(rows, "S05", "hanoi").status, "fresh");
+  });
+});
+
+describe("GT-AC-3 S03/S05 không kéo nhau", () => {
+  const two = (s03At, s05At) => {
+    const f = baseFixture();
+    f.snapshots.find((x) => x.id === "hanoi__s03agent__1").at = s03At;
+    f.snapshots.find((x) => x.id === "hanoi__s05agent__1").at = s05At;
+    return f;
+  };
+  test("GT-AC-3 S03 cũ + S05 mới → S03 stale, S05 fresh", async (t) => {
+    if (needDb(t)) return;
+    const rows = await freshnessOf(two(ago(80), ago(1)));
+    assert.equal(one(rows, "S03", "hanoi").status, "stale", "S05 mới không được làm S03 trông tươi");
+    assert.equal(one(rows, "S05", "hanoi").status, "fresh");
+  });
+  test("GT-AC-3 chiều ngược: S03 mới + S05 cũ → S03 fresh, S05 stale", async (t) => {
+    if (needDb(t)) return;
+    const rows = await freshnessOf(two(ago(1), ago(13)));
+    assert.equal(one(rows, "S03", "hanoi").status, "fresh");
+    assert.equal(one(rows, "S05", "hanoi").status, "stale", "S03 mới không được làm S05 trông tươi");
+  });
+});
+
+// Ma trận biên viết trước: 5 mã có SLO × {tuổi = SLO, SLO + 1}
+const EDGE = [
+  ["S01", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s01a__1").at = ago(400); f.snapshots.find((x) => x.id === "hanoi__s01b__1").at = ago(h); }],
+  ["S02", "vn", (f, h) => { f.airdna[0].at = ago(h); }],
+  ["S03", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s03agent__1").at = ago(h); f.snapshots.find((x) => x.id === "hanoi__s03mock__1").at = ago(400); }],
+  ["S05", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s05agent__1").at = ago(h); }],
+  ["S06", "hanoi", (f, h) => { f.snapshots.find((x) => x.id === "hanoi__s06__1").at = ago(h); }],
+];
+let edgeRan = 0;
+describe("GT-AC-4 ma trận biên SLO", () => {
+  for (const [code, city, set] of EDGE) {
+    for (const [plus, want] of [[0, "fresh"], [1, "stale"]]) {
+      test(`GT-AC-4 ${code} tuổi = SLO${plus ? "+1" : ""} → ${want}`, async (t) => {
+        if (needDb(t)) return;
+        const f = baseFixture();
+        set(f, SLO_HOURS[code] + plus);
+        const r = one(await freshnessOf(f), code, city);
+        assert.equal(r.status, want, `${code}/${city}: tuổi ${SLO_HOURS[code] + plus} giờ (SLO ${SLO_HOURS[code]}) phải ${want}`);
+        edgeRan++;
+      });
+    }
+  }
+  test("GT-AC-4 ma trận biên đủ 10 ca", () => {
+    assert.deepEqual(EDGE.map((e) => e[0]).sort(), Object.keys(SLO_HOURS).sort(), "ma trận phải phủ đúng mọi mã có SLO");
+    assert.equal(edgeRan, 10, `chỉ ${edgeRan}/10 ca biên đã chạy tới cuối`);
+  });
+});
+
+test("GT-AC-5 S01 hanoi fresh + hcmc stale cùng lúc, S04 completed quá hạn vẫn không đo", async (t) => {
+  if (needDb(t)) return;
+  const f = baseFixture();
+  f.snapshots.find((x) => x.id === "hcmc__s01b__1").at = ago(24 * 9);
+  const rows = await freshnessOf(f);
+  assert.equal(one(rows, "S01", "hanoi").status, "fresh");
+  assert.equal(one(rows, "S01", "hcmc").status, "stale", "S01/hcmc 9 ngày phải quá hạn độc lập với hanoi");
+  assert.equal(rows.filter((r) => r.code === "S04").length, 0, "S04 completed (snapshot 200 ngày) không được đo");
+});
+
+// Ma trận viết trước mã → cột thời gian (giờ thu)
+const TIME_MATRIX = {
+  S01: "airbnb_snapshots.collected_at",
+  S02: "airdna_markets.captured_at",
+  S03: "airbnb_snapshots.collected_at",
+  S05: "airbnb_snapshots.collected_at",
+  S06: "airbnb_snapshots.collected_at",
+};
+/** Cột mà SQL của probe thật sự lấy max — giải bí danh bảng từ FROM/JOIN. Trả danh sách lỗi có tên mã. */
+function timeColumnProblems(probes, declared) {
+  const out = [];
+  for (const code of Object.keys(SLO_HOURS)) {
+    const sql = probes[code]?.sql;
+    if (!sql) { out.push(`${code}: không có probe`); continue; }
+    const m = sql.match(/max\(\s*(?:(\w+)\.)?(\w+)\s*\)/);
+    if (!m) { out.push(`${code}: SQL không có max(cột)`); continue; }
+    const [, alias, col] = m;
+    const table = alias
+      ? sql.match(new RegExp(`(?:FROM|JOIN)\\s+(\\w+)\\s+${alias}\\b`))?.[1]
+      : sql.match(/FROM\s+(\w+)/)?.[1];
+    const got = `${table}.${col}`;
+    if (got !== TIME_MATRIX[code]) out.push(`${code}: probe lấy max(${got}), ma trận đòi ${TIME_MATRIX[code]}`);
+    if (declared[code] !== TIME_MATRIX[code]) out.push(`${code}: TIME_SOURCE khai ${declared[code]}, ma trận đòi ${TIME_MATRIX[code]}`);
+  }
+  return out;
+}
+describe("GT-AC-8 ma trận mã → cột thời gian", () => {
+  test("GT-AC-8 TIME_SOURCE bằng ma trận viết trước, đủ mọi mã có SLO", () => {
+    assert.deepEqual(TIME_SOURCE, TIME_MATRIX);
+    assert.deepEqual(Object.keys(TIME_SOURCE).sort(), Object.keys(SLO_HOURS).sort());
+  });
+  test("GT-AC-8 SQL từng probe lấy max(đúng cột)", () => {
+    assert.deepEqual(timeColumnProblems(PROBES, TIME_SOURCE), []);
+  });
+  test("GT-AC-8 bản sao đổi probe S06 về captured_at → bị bắt, nêu S06", async () => {
+    const src = readFileSync(path.join(HERE, "lib", "freshness.mjs"), "utf8");
+    const needle = "FROM stg_chotot_ads c JOIN airbnb_snapshots s";
+    assert.ok(src.includes("SELECT s.city, max(s.collected_at) AS last\n          " + needle), "khuôn đột biến lệch mã nguồn probe S06");
+    const mut = src.replace("SELECT s.city, max(s.collected_at) AS last\n          " + needle, "SELECT s.city, max(c.captured_at) AS last\n          " + needle);
+    const f = path.join(SCRATCH, "freshness-mut.mjs");
+    writeFileSync(f, mut);
+    const m = await import(pathToFileURL(f).href);
+    const p = timeColumnProblems(m.PROBES, m.TIME_SOURCE);
+    assert.deepEqual(p, ["S06: probe lấy max(stg_chotot_ads.captured_at), ma trận đòi airbnb_snapshots.collected_at"]);
+  });
+});
+
+test("GT-AC-6 DB hiện tại (chẩn đoán, không chặn)", async (t) => {
+  const run = (args) => new Promise((resolve) => {
+    const c = spawn(process.execPath, [CLI, ...args], { env: { ...process.env, WEBHOOK_URL: "" } });
+    let stdout = "";
+    c.stdout.on("data", (d) => { stdout += d; });
+    c.stderr.resume();
+    c.on("close", (code) => resolve({ code, stdout }));
+  });
+  const [js, txt] = [await run(["--json"]), await run([])];
+  let bad = "không đọc được --json";
+  try {
+    bad = JSON.parse(js.stdout).filter((r) => r.status !== "fresh")
+      .map((r) => `${r.code}/${r.city ?? "—"} ${r.status} last=${r.last ?? "—"}`).join(", ") || "(không)";
+  } catch { /* DB không tới */ }
+  const extra = [];
+  if (client) {
+    const { rows: reg } = await client.query(`SELECT code, source_ids FROM public.source_registry WHERE status='active'`);
+    const ids = Object.fromEntries(reg.map((r) => [r.code, r.source_ids]));
+    const others = (code) => reg.filter((r) => r.code !== code).flatMap((r) => r.source_ids);
+    for (const code of ["S03", "S05"]) {
+      const { rows: [r] } = await client.query(
+        `SELECT max(p.captured_at) AS nap, max(s.collected_at) AS thu, count(*) FILTER (WHERE s.snapshot_id IS NULL)::int AS lech
+         FROM public.stg_zalo_posts p LEFT JOIN public.airbnb_snapshots s USING (snapshot_id)
+         WHERE p.agent_id = ANY($1) OR (s.source = ANY($1) AND (p.agent_id IS NULL OR NOT p.agent_id = ANY($2)))`,
+        [ids[code] ?? [], others(code)]);
+      extra.push(`${code} nạp=${r.nap?.toISOString?.() ?? "—"} thu=${r.thu?.toISOString?.() ?? "—"} lệch-snapshot=${r.lech}`);
+    }
+    const { rows: [c6] } = await client.query(
+      `SELECT max(c.captured_at) AS nap, max(s.collected_at) AS thu, count(*) FILTER (WHERE s.snapshot_id IS NULL)::int AS lech
+       FROM public.stg_chotot_ads c LEFT JOIN public.airbnb_snapshots s USING (snapshot_id)`);
+    extra.push(`S06 nạp=${c6.nap?.toISOString?.() ?? "—"} thu=${c6.thu?.toISOString?.() ?? "—"} lệch-snapshot=${c6.lech}`);
+  }
+  t.diagnostic(`gt-live: thoát json=${js.code} chữ=${txt.code} · lỗi: ${bad} · ${extra.join(" · ")} · chấm lúc ${new Date().toISOString()}`);
 });
