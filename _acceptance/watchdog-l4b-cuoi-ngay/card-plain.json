@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Lớp canh an toàn Zalo giờ bắt được cả tin bot tự trả lời rơi vào 5 phút cuối ngày (ghi sau lượt quét cuối ngày), thay vì để lọt khi log chuyển sang file ngày mới.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
+  "decisions_plain": [
+    {"id": "d-20261023T160801Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, phiên kiểm độc lập tự đi tìm lỗ và đã bắt một hồi quy khi marker bị hỏng."}
+  ]
+}
