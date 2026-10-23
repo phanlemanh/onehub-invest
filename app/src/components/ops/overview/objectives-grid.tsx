@@ -89,7 +89,7 @@ export function ObjectivesGrid({ rows }: { rows: CoverageRow[] }) {
       { id: "city", accessorKey: "city", header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />, size: 160, enableSorting: true },
       { id: "last", accessorFn: (r) => r.lastSnapshotAt ?? "", header: ({ column }) => <DataGridColumnHeader title="Snapshot cuối" column={column} />, cell: ({ row }) => row.original.lastSnapshotAt?.slice(0, 10) ?? "—", size: 130, enableSorting: true },
       { id: "age", accessorFn: (r) => r.ageDays ?? Number.POSITIVE_INFINITY, header: ({ column }) => <DataGridColumnHeader title="Tuổi (ngày)" column={column} />, cell: ({ row }) => fmtInt(row.original.ageDays), size: 120, meta: NUM, enableSorting: true },
-      { id: "slo", accessorKey: "sloDays", header: "SLO (ngày)", cell: ({ row }) => fmtInt(row.original.sloDays), size: 110, meta: NUM },
+      { id: "slo", accessorKey: "sloDays", header: "SLO (ngày)", cell: ({ row }) => fmtInt(Number.isFinite(row.original.sloDays) ? row.original.sloDays : null), size: 110, meta: NUM },
       { id: "status", accessorKey: "status", header: "Trạng thái", cell: ({ row }) => <Badge variant={FRESHNESS[row.original.status].variant}>{FRESHNESS[row.original.status].label}</Badge>, size: 120 },
     ],
     []

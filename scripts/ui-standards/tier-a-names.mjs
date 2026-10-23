@@ -3,6 +3,7 @@
 // một tệp tạm quyền 600 để mask-tier-a.js tự kiểm ảnh chụp. KHÔNG in tên ra stdout —
 // chỉ in đường dẫn tệp và số lượng (tên thật không được rời máy, kể cả vào transcript).
 // Dùng: node scripts/ui-standards/tier-a-names.mjs [--out <tệp>]
+import { execFileSync } from "node:child_process"
 import { chmodSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
@@ -35,7 +36,18 @@ const names = [
   ...(await q("SELECT DISTINCT group_name FROM stg_zalo_posts WHERE group_name IS NOT NULL")),
 ]
 await db.end()
-const uniq = [...new Set(names.map((n) => String(n).trim()).filter((n) => n.length >= 3))]
+// Tên đã có sẵn trong mã nguồn/tài liệu đã commit (vd tên nguồn hiệu chuẩn hiện ở /ops/quality)
+// không phải thứ ảnh chụp làm lộ thêm → bỏ khỏi danh sách tự kiểm.
+const inRepo = (n) => {
+  try {
+    execFileSync("git", ["grep", "-q", "-i", "-F", n, "--", "app/src", "docs"], { cwd: ROOT, stdio: "ignore" })
+    return true
+  } catch {
+    return false
+  }
+}
+const all = [...new Set(names.map((n) => String(n).trim()).filter((n) => n.length >= 3))]
+const uniq = all.filter((n) => !inRepo(n))
 writeFileSync(out, JSON.stringify(uniq))
 chmodSync(out, 0o600)
-console.log(`tier-a-names: ${uniq.length} tên → ${out} (quyền 600)`)
+console.log(`tier-a-names: ${uniq.length} tên chỉ có ở DB local (bỏ ${all.length - uniq.length} tên đã có trong mã nguồn) → ${out} (quyền 600)`)

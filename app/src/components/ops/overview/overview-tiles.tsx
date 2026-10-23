@@ -60,7 +60,7 @@ export function OverviewTiles({ rows }: { rows: CoverageRow[] }) {
   const stale = rows.filter((r) => r.status === "stale").sort((a, b) => (ageRatio(b) ?? 0) - (ageRatio(a) ?? 0))
   const none = rows.filter((r) => r.status === "none")
   // SLO lấy từ chính dữ liệu (SLO_DAYS ở lib/ops-queries), không chép tay.
-  const slos = [...new Map(rows.map((r) => [r.code, r.sloDays])).entries()].sort(([a], [b]) => a.localeCompare(b))
+  const slos = [...new Map(rows.filter((r) => Number.isFinite(r.sloDays)).map((r) => [r.code, r.sloDays])).entries()].sort(([a], [b]) => a.localeCompare(b))
   const newest = rows
     .filter((r) => r.lastSnapshotAt)
     .sort((a, b) => (b.lastSnapshotAt ?? "").localeCompare(a.lastSnapshotAt ?? ""))[0]
@@ -96,7 +96,7 @@ export function OverviewTiles({ rows }: { rows: CoverageRow[] }) {
                 <ToneDot tone={FRESHNESS.stale.tick} />
                 <span className="truncate">Lâu nhất: {where(stale[0])}</span>
                 <span className="text-foreground ms-auto shrink-0 font-medium tabular-nums">
-                  {fmtInt(stale[0].ageDays)} / {fmtInt(stale[0].sloDays)} ngày
+                  {fmtInt(stale[0].ageDays)} / {fmtInt(Number.isFinite(stale[0].sloDays) ? stale[0].sloDays : null)} ngày
                 </span>
               </>
             ) : (

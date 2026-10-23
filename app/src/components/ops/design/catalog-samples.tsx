@@ -33,6 +33,24 @@ function Sample({ title, component, description, children }: { title: string; co
   )
 }
 
+/** Mục cho mẫu tự là Frame (StatTiles): tiêu đề rời, tránh Frame lồng Frame. */
+function BareSample({ title, component, description, children }: { title: string; component: string; description: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
+          <p className="text-muted-foreground text-xs">{description}</p>
+        </div>
+        <Badge variant="outline" className="font-mono">
+          {component}
+        </Badge>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 type DemoRow = { area: string; adr: string; occupancy: string }
 const DEMO_ROWS: DemoRow[] = [
   { area: "Phường mẫu A", adr: "1.150.000 ₫", occupancy: "62,0%" },
@@ -77,7 +95,7 @@ export function CatalogSamples() {
         <p className="text-muted-foreground text-sm">Mọi trang vận hành và đầu tư mở bằng đầu trang này; không tự viết tiêu đề bằng thẻ chữ lớn.</p>
       </Sample>
 
-      <Sample title="Ô KPI" component="StatTiles" description="Hàng số chính, bậc so nhóm so sánh nằm ở Badge">
+      <BareSample title="Ô KPI" component="StatTiles" description="Hàng số chính, bậc so nhóm so sánh nằm ở Badge">
         <StatTiles
           items={[
             { title: "ADR trung vị", value: "1.150.000 ₫", tier: { label: "Khá", variant: "info-light" }, footer: "Số minh hoạ" },
@@ -85,7 +103,7 @@ export function CatalogSamples() {
             { title: "Listing", value: "257", footer: "Số minh hoạ" },
           ]}
         />
-      </Sample>
+      </BareSample>
 
       <InsightGrid title="Bảng" description="InsightGrid — Frame + lưới dữ liệu, sắp xếp, phân trang, nhãn tiếng Việt" data={DEMO_ROWS} columns={DEMO_COLUMNS} getRowId={(r) => r.area} />
 

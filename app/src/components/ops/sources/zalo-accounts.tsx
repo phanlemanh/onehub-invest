@@ -285,7 +285,7 @@ function LocalAccounts() {
         >
           <ButtonGroup className="w-full sm:w-auto">
             <Input value={newId} onChange={(e) => setNewId(e.target.value)} placeholder="id mới, vd acc2" aria-label="Id tài khoản mới" className="sm:w-40" />
-            <Button type="submit" size="sm" variant="outline" disabled={!newId.trim()}>
+            <Button type="submit" variant="outline" disabled={!newId.trim()}>
               <PlusIcon data-icon="inline-start" aria-hidden="true" />
               Thêm
             </Button>
