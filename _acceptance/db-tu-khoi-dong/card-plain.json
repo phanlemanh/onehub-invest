@@ -1,0 +1,3 @@
+{
+  "feature_plain": "Sau khi Docker hay máy khởi động lại, DB local tự chạy lại mà không cần ai gõ lệnh — không lặp lại vụ DB nằm chết 8 giờ đêm 22/10."
+}
