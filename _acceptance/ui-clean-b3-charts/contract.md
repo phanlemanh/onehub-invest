@@ -5,7 +5,7 @@ slug: ui-clean-b3-charts
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, docs]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-23-ui-clean-b3-charts-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
