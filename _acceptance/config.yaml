@@ -47,6 +47,7 @@ risk_tiers:
     - "README.md"
     - "**/README.md"
     - "AGENTS.md"
+    - "**/AGENTS.md"                                 # chỉ dẫn agent theo module (vd collector/AGENTS.md cho ZCode) — cùng loại **/CLAUDE.md; Mạnh duyệt 2026-10-23
     - "**/CLAUDE.md"
     # Bản đồ sản phẩm — máy sinh, và /acceptance-gate:approve + /acceptance-gate:signoff commit nó CÙNG commit
     # chữ ký. Thiếu dòng này thì chính commit chữ ký làm evidence stale và
