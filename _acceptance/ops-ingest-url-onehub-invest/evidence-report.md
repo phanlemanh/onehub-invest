@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6a42eaeca23f97286f21a9af07b085aa8374d570
+verified_commit: 5e93bdd3eea4e817420ae32ec1928d184cecdc21
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -129,3 +129,7 @@ none — every multi-run eval is uniform (không eval nào khai runs > 1)
 ## Iterations
 
 Round 1: E1–E6 đều đạt expected trên 6a42eae; lần chạy E6 đầu vấp môi trường (thiếu node_modules) và được chạy lại sau khi có đủ phụ thuộc, không sửa code.
+
+### Re-pin lần 1 — 2026-10-23, do ghim lại sau merge main 76fc9a5 (PR #17)
+run_id: repin-20261023T022247Z-41459
+sha: 5e93bdd3eea4e817420ae32ec1928d184cecdc21 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
