@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/v1/user-events — M2: app beacon ghi user_events (memory episodic).
  * Body: { kind, payload } — kind enum khớp migration 028.
- * Auth: session. Rate-limit client: 1 event/kind/30s (localStorage dedupe
+ * Auth: session. Khách (không phiên) nhận 204 và không có gì được ghi — beacon chạy trên trang công khai nên
+ * khách là ca thường, không phải lỗi (sổ bề mặt: session-or-noop). Rate-limit client: 1 event/kind/30s (localStorage dedupe
  * trong UserEventBeacon component, không server-side — đủ cho volume thấp).
  * KHÔNG sync cloud (bảng PII tầng A — cùng luật sellers/stg).
  */
@@ -19,7 +20,7 @@ const VALID_KINDS = new Set([
 
 export async function POST(req: NextRequest) {
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return new NextResponse(null, { status: 204 });
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body?.kind || typeof body.kind !== "string" || !VALID_KINDS.has(body.kind)) {

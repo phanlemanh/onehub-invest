@@ -14,7 +14,13 @@ allowed-tools: Bash(node scripts/check-freshness.mjs) Bash(bash scripts/audit-al
    `agent_id`; S06 lấy snapshot chứa tin `stg_chotot_ads`) · S02 ≤ 35 ngày theo `airdna_markets.captured_at`
    (giờ tải). S04 không đo — địa giới đã thu xong. Định nghĩa: `scripts/lib/freshness.mjs`.
 2. **Audit toàn hệ thống** — `bash scripts/audit-all.sh` (thu thập, DB + cloud sync, Invest,
-   Ops, public API). Tóm các dòng ❌ và ⚠️.
+   Ops, public API). Tóm các dòng ❌ và ⚠️. Đọc ba mục dễ hiểu nhầm:
+   - **Backup tuần**: chưa cài job, job lỗi, chưa đặt `BACKUP_DIR`, hay không có `db-*.sql.gz` trong
+     8 ngày đều là ❌ — chỉ ✅ khi thấy tệp sao lưu (tên tệp in kèm).
+   - **Trang `/ops`**: kiểm ở `OPS_BASE_URL` (mặc định `http://localhost:3456`, app dev). Audit chỉ
+     đọc, không đăng nhập: 307 là ⚠️ «chưa đăng nhập» — chỉ biết trang sống, chưa thấy nội dung.
+     Muốn kiểm trang thật sau đăng nhập: `bash scripts/dev-ops-login-check.sh`.
+   - **Membership nhóm S03**: ⚠️ «không kiểm được» khi không có CLI OpenClaw — không phải ✅.
 3. **An toàn Zalo** — `tail -20 pipeline/logs/zalo-watchdog-alerts.log` (thiếu file = chưa
    từng có cảnh báo). KHÔNG chạy `scripts/zalo-watchdog.sh`: script đó kill OpenClaw khi
    phát hiện vi phạm.

@@ -5,10 +5,11 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 import type { User } from "../src/lib/auth";
 import { serveZaloMedia, snapshotMediaUrl } from "../src/lib/ops/zalo-media";
+import { loginQrPath } from "../src/lib/zalo-admin";
 
 const SNAP = "hcmc__zalo-agent__2026-10-23T000000";
 const JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5]);
@@ -42,6 +43,11 @@ before(() => {
   mkdirSync(join(tmp, "home", ".openclaw", "media", "inbound"), { recursive: true });
   writeFileSync(join(tmp, "home", ".openclaw", "media", "inbound", "x.png"), JPG);
   writeFileSync(join(tmp, "home", ".openclaw", "openclaw.json"), SECRET);
+  // Ảnh QR đăng nhập Zalo: tên dựng bằng chính hàm của bên viết (zalo-admin.ts), đặt trong gốc cho phép;
+  // cộng một symlink tên vô hại trỏ tới nó (so-be-mat-api AC-6).
+  const inbound = join(tmp, "home", ".openclaw", "media", "inbound");
+  writeFileSync(join(inbound, basename(loginQrPath("acc2"))), SECRET);
+  symlinkSync(join(inbound, basename(loginQrPath("acc2"))), join(inbound, "vo-hai.png"));
 
   env = { HOME: process.env.HOME, SNAPSHOTS_DIR: process.env.SNAPSHOTS_DIR };
   process.env.HOME = join(tmp, "home");
@@ -133,4 +139,20 @@ test("AC-4 chế độ path cũ: OpenClaw media 200, openclaw.json 403, ảnh g�
 
   const prefix = await get(p(join(tmp, "home", ".openclaw", "media-evil", "x.png")));
   assert.equal(prefix.status, 403);
+});
+
+test("AC-6 tên QR: ảnh QR đăng nhập Zalo → 403 cả khi admin, kể cả qua symlink tên vô hại; ảnh thường vẫn 200", async () => {
+  const p = (f: string) => `path=${encodeURIComponent(f)}`;
+  const inbound = join(tmp, "home", ".openclaw", "media", "inbound");
+  for (const [name, f] of [
+    ["tệp QR (tên do zalo-admin đặt)", join(inbound, basename(loginQrPath("acc2")))],
+    ["symlink tên thường trỏ tệp QR", join(inbound, "vo-hai.png")],
+  ]) {
+    const r = await get(p(f));
+    assert.equal(r.status, 403, `${name}: status ${r.status}`);
+    assert.ok(!(await bodyOf(r)).includes(SECRET), `${name}: lộ byte QR`);
+  }
+  // Đối chứng cùng gốc: ảnh tin tên thường vẫn qua.
+  const ok = await get(p(join(inbound, "x.png")));
+  assert.equal(ok.status, 200);
 });

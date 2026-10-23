@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 
+import { getSessionUser } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { canCallOpsApi } from "@/lib/ops-access";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/v1/offers — C3-wrap DCA: bề mặt máy cho sale/rent offers.
- * Public (không cần auth — dữ liệu đã pseudonymize theo SPL).
+ * GET /api/v1/offers — C3-wrap DCA: bề mặt máy cho tin rao bán / cho thuê dài hạn.
+ * TẠM ĐÓNG cùng chế độ với /api/v1/deals — chỉ bearer OPS_API_TOKEN hoặc phiên ops; người gọi
+ * khác nhận 401 trước khi truy vấn. Lý do: cùng bảng sale_offers lẫn tin mock S03 (audit 23/10 P7).
+ * Mở lại khi PL2 đã rút tin mock khỏi canonical là quyết riêng — sổ bề mặt: app/src/lib/api-surface.ts.
  * Query: ?kind=sale|rent_lt&area=<area_id>&limit=50&since_days=30
  */
 export async function GET(req: Request) {
+  if (!(await canCallOpsApi(req, getSessionUser))) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
   const u = new URL(req.url);
   const kind = u.searchParams.get("kind") === "rent_lt" ? "rent_lt" : "sale";
   const area = u.searchParams.get("area");

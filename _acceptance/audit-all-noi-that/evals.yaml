@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: audit-all-noi-that
+# Mọi eval máy chạy cùng lệnh node --test scripts/*.test.mjs; mỗi eval đọc ca mang tiền tố «AA-AC-n» trong TAP.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; năm ca 'AA-AC-1 backup (a) vắng job → ❌ CHƯA cài' · '(b) mã 1 → ❌ kèm mã' · '(c) mã 0, plist không BACKUP_DIR → ❌ chưa đặt BACKUP_DIR' · '(d) BACKUP_DIR không có bản 8 ngày → ❌' · '(e) có bản 2 ngày → ✅ kèm tên tệp' ok, fixture launchctl phát lại scripts/fixtures/launchctl-list-2026-10-23.txt; chiều đỏ 'AA-AC-1 bản sao giữ || echo 0 → backup ra PASS, bị bắt' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; ba ca 'AA-AC-2 membership CLI vắng (command -v thất bại trong hộp) → ⚠️ không kiểm được' · 'có id → ✅, bản giả ghi 1 lần gọi' · 'không id → ⚠️ rời nhóm' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; ca 'AA-AC-3 count_matches tệp vắng/0 khớp/3 khớp/stdin → 0/0/3/đúng số, một dòng', 'AA-AC-3 dòng gate hai số nguyên khi log vắng / 0 khớp' và 'AA-AC-3 mọi grep -c chỉ nằm trong count_matches' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; ca 'AA-AC-4 /ops mặc định ở :3456, không :3000' và 'AA-AC-4 OPS_BASE_URL đổi cổng' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; ba ca 'AA-AC-5 /ops 200 → ✅' · '307 → ⚠️ chưa đăng nhập' · '500 → ❌' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; ca 'AA-AC-6 TỔNG KẾT khớp số dòng ✅/❌/⚠️, chỉ lệnh giả được gọi, ROOT = cây tạm' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: judgment
+    inputs: [.claude/skills/ops-check/SKILL.md, _acceptance/audit-all-noi-that/contract.md]
+    question: "Đọc bước audit trong .claude/skills/ops-check/SKILL.md: người vận hành có biết backup chưa cài là FAIL, /ops kiểm ở OPS_BASE_URL (mặc định :3456), và 307 nghĩa là chỉ thấy trang sống — muốn kiểm trang thật thì chạy scripts/dev-ops-login-check.sh không? Có câu nào lệch phạm vi contract.md không?"
+    evidence_required: [judged_by, verdict, rationale]
