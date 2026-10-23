@@ -5,10 +5,10 @@ slug: deals-api-tam-dong
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-23-deals-api-tam-dong-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-23T09:31:38Z
 ---
 
 # Acceptance Contract: deals-api-tam-dong
