@@ -98,6 +98,9 @@ async function restInsert(key, table, rows) {
 export const PII_EXCLUDE = {
   sale_offers: ["seller_phone", "seller_name"],
   sellers: ["name"], // sellers: hash + aggregate OK; name là PII tầng A
+  // 031 thêm properties.seller_name (copy từ sale_offers). Cloud chưa có cột
+  // này nên chưa lọt — chặn trước khi schema cloud bắt kịp 031.
+  properties: ["seller_name"],
 };
 
 async function main() {

@@ -19,4 +19,4 @@ paths:
   (`lib/source-labels.ts`). Ops dùng mã `S0x`.
 - URL ASCII kebab-case không dấu; UI tiếng Việt; thuật ngữ sản phẩm giữ nguyên: Finder, Insight,
   Listing, ADR, Occupancy, Yield.
-- Mọi trang `export const dynamic = "force-dynamic"`; chọn block ReUI trước (app/DESIGN_RULES.md).
+- Mọi trang `export const dynamic = "force-dynamic"`; chọn block ReUI trước (skill `onehub-ui`).

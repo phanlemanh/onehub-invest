@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Trang deals, trang đầu tư và API deals có thước giá/m² theo phường dựng được từ repo trên mọi máy; anh có sẵn hướng dẫn để đưa cloud bắt kịp và nối lại đồng bộ đang gãy, mà tên người bán không lên cloud.",
+  "decisions": [
+    {"id": "E8", "q": "Hướng dẫn áp cloud có đủ để anh tự chạy an toàn không?", "why": "Hạng T3: giám khảo máy chấm đạt cả ba lượt nhưng chỉ là tư vấn — anh phải tự đọc hướng dẫn và phán."}
+  ],
+  "analyst_plain": "Bài kiểm khâu xử lý dữ liệu đạt cả trước và sau thay đổi — đó là lưới chống hồi quy, đúng ý. Sáu bài kiểm còn lại đo những thứ chưa tồn tại trước thay đổi nên không có số đối chứng trên bản cũ; thay vào đó thước đo đã được thử bằng cách gài lỗi và bắt được đủ."
+}

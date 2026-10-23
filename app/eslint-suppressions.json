@@ -1,0 +1,224 @@
+{
+  "src/app/ops/collections/page.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-palette": {
+      "count": 2
+    },
+    "onehub-ui/no-raw-table": {
+      "count": 1
+    }
+  },
+  "src/app/ops/deals/page.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    },
+    "onehub-ui/no-emoji-icons": {
+      "count": 1
+    }
+  },
+  "src/app/ops/page.tsx": {
+    "onehub-ui/no-raw-palette": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-table": {
+      "count": 1
+    }
+  },
+  "src/app/ops/quality/page.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 4
+    },
+    "onehub-ui/no-raw-palette": {
+      "count": 3
+    },
+    "onehub-ui/no-raw-table": {
+      "count": 1
+    }
+  },
+  "src/app/ops/sources/page.tsx": {
+    "onehub-ui/no-raw-table": {
+      "count": 1
+    }
+  },
+  "src/components/auth/gradient-wave.tsx": {
+    "onehub-ui/no-banned-motion": {
+      "count": 4
+    }
+  },
+  "src/components/auth/login-form.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 1
+    }
+  },
+  "src/components/auth/register-form.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-palette": {
+      "count": 1
+    }
+  },
+  "src/components/compare/comparison.tsx": {
+    "onehub-ui/no-raw-table": {
+      "count": 1
+    }
+  },
+  "src/components/finder/bins.ts": {
+    "onehub-ui/no-raw-palette": {
+      "count": 8
+    }
+  },
+  "src/components/finder/finder-view.tsx": {
+    "onehub-ui/no-raw-palette": {
+      "count": 1
+    }
+  },
+  "src/components/insight/insight-actions.tsx": {
+    "onehub-ui/no-raw-controls": {
+      "count": 2
+    }
+  },
+  "src/components/insight/insight-page.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    }
+  },
+  "src/components/insight/performance/data.ts": {
+    "onehub-ui/no-raw-palette": {
+      "count": 4
+    }
+  },
+  "src/components/insight/performance/metric-plot.tsx": {
+    "onehub-ui/no-banned-motion": {
+      "count": 2
+    }
+  },
+  "src/components/insight/performance/metric-tiles.tsx": {
+    "onehub-ui/no-raw-controls": {
+      "count": 1
+    }
+  },
+  "src/components/insight/revenue-mix/value-faces.tsx": {
+    "onehub-ui/no-raw-palette": {
+      "count": 1
+    }
+  },
+  "src/components/invest/investment-simulator.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 9
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-palette": {
+      "count": 2
+    }
+  },
+  "src/components/listing/booking-heatmap.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 2
+    }
+  },
+  "src/components/marketing/frame-backdrop.tsx": {
+    "onehub-ui/no-hardcoded-color": {
+      "count": 13
+    }
+  },
+  "src/components/marketing/market-cards.tsx": {
+    "onehub-ui/no-raw-palette": {
+      "count": 4
+    }
+  },
+  "src/components/marketing/marketing-navbar.tsx": {
+    "onehub-ui/no-banned-motion": {
+      "count": 1
+    }
+  },
+  "src/components/ops/review-card.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 9
+    },
+    "onehub-ui/no-emoji-icons": {
+      "count": 6
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 3
+    },
+    "onehub-ui/no-raw-palette": {
+      "count": 2
+    }
+  },
+  "src/components/ops/source-groups-admin.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    },
+    "onehub-ui/no-emoji-icons": {
+      "count": 5
+    },
+    "onehub-ui/no-native-dialogs": {
+      "count": 2
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 8
+    },
+    "onehub-ui/no-raw-palette": {
+      "count": 1
+    }
+  },
+  "src/components/ops/zalo-accounts.tsx": {
+    "onehub-ui/no-emoji-icons": {
+      "count": 2
+    },
+    "onehub-ui/no-native-dialogs": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 4
+    },
+    "onehub-ui/no-raw-table": {
+      "count": 1
+    }
+  },
+  "src/components/saved/saved-item.tsx": {
+    "onehub-ui/no-banned-motion": {
+      "count": 1
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 2
+    }
+  },
+  "src/components/saved/saved-list.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 2
+    }
+  },
+  "src/components/shell/account-menu.tsx": {
+    "onehub-ui/no-arbitrary-text-size": {
+      "count": 1
+    }
+  },
+  "src/components/shell/site-footer.tsx": {
+    "onehub-ui/no-emoji-icons": {
+      "count": 1
+    }
+  },
+  "src/components/yield/yield-form.tsx": {
+    "onehub-ui/no-hardcoded-color": {
+      "count": 3
+    },
+    "onehub-ui/no-raw-controls": {
+      "count": 1
+    }
+  }
+}

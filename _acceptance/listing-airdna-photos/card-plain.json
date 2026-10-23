@@ -1,0 +1,5 @@
+{
+  "feature_plain": "Khách xem trang chi tiết một căn Airbnb chỉ thấy ảnh do mình tự thu; căn chưa thu ảnh thì không có ảnh, và trang không còn chữ AirDNA hay ảnh mượn từ AirDNA.",
+  "scope_plain": "Những việc cố ý để ngoài lần sửa này:",
+  "analyst_plain": "Hai phép kiểm mã đều trượt trên bản cũ và đạt trên bản mới, nên chúng phân biệt được trước/sau. Các phép kiểm trên trang đang chạy chỉ đo bản mới."
+}

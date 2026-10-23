@@ -5,7 +5,9 @@ import { pool } from "./db";
  * docs/research/investment-pipeline-4-stages.md).
  * Defaults dẫn xuất từ dữ liệu thật của chính hệ thống:
  *   giá bán/m² + thuê LTR = vải công khai P2 (S06 Chợ Tốt, phường market)
- *   ADR + công suất = AirDNA (nguồn hiệu chuẩn, chỉ cấp số — CLAUDE.md)
+ *   ADR + công suất = listing Airbnb TỰ THU (listing_stats, 90 đêm đầu —
+ *   cùng mô hình với /yield). AirDNA chỉ để hiệu chuẩn ở /ops/quality
+ *   (AGENTS.md luật 5) — không cấp số mặc định cho Invest.
  * Người dùng chỉnh mọi thông số — máy tính chạy client-side.
  */
 export type InvestmentDefaults = {
@@ -15,9 +17,9 @@ export type InvestmentDefaults = {
   saleN: number;
   rentLt: number | null; // VND/tháng — median P2 rent
   rentN: number;
-  adr: number | null; // VND/đêm — AirDNA
-  occupancy: number | null; // % — AirDNA
-  adrPeriod: string | null;
+  adr: number | null; // VND/đêm — median giá niêm yết listing tự thu
+  occupancy: number | null; // % — median công suất 90 đêm đầu, listing tự thu
+  strN: number; // số listing tự thu dựng ADR/công suất
 };
 
 export async function getInvestmentDefaults(areaId: string): Promise<InvestmentDefaults | null> {
@@ -59,31 +61,19 @@ export async function getInvestmentDefaults(areaId: string): Promise<InvestmentD
     [ids],
   );
 
-  // AirDNA qua crosswalk area_sources (giống getAirdnaComparison)
-  let adr: number | null = null;
-  let occupancy: number | null = null;
-  let adrPeriod: string | null = null;
-  const { rows: xw } = await pool.query(
-    `SELECT source_area_key FROM area_sources WHERE area_id = $1 AND source = 'S02' LIMIT 1`,
+  // STR tự thu: lịch tương lai thưa dần về cuối nên công suất lấy 90 đêm đầu
+  // (nights90/booked90 tính sẵn ở pipeline/sql/410_listing_stats.sql).
+  const { rows: str } = await pool.query(
+    `SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY l.price_listed) AS adr,
+            percentile_cont(0.5) WITHIN GROUP (ORDER BY p.booked90::numeric / p.nights90) AS occ,
+            count(*)::int AS n
+     FROM listings l
+     JOIN areas a ON a.id = l.area_id
+     JOIN listing_stats p ON p.listing_id = l.id
+     WHERE (a.id = $1 OR a.parent_id = $1) AND l.price_listed > 0 AND p.nights90 > 0`,
     [areaId],
   );
-  if (xw[0]?.source_area_key) {
-    const { rows: am } = await pool.query(
-      `SELECT metric, value, period FROM airdna_market_metrics
-       WHERE airdna_id = $1 AND metric IN ('adr','occupancy')
-         AND period = (SELECT max(period) FROM airdna_market_metrics
-                       WHERE airdna_id = $1 AND metric = 'adr')`,
-      [xw[0].source_area_key],
-    );
-    for (const r of am) {
-      if (r.metric === "adr") {
-        adr = Number(r.value);
-        adrPeriod = r.period;
-      } else if (r.metric === "occupancy") {
-        occupancy = Number(r.value);
-      }
-    }
-  }
+  const strN = Number(str[0]?.n ?? 0);
 
   return {
     marketId: areaId,
@@ -92,8 +82,8 @@ export async function getInvestmentDefaults(areaId: string): Promise<InvestmentD
     saleN: Number(sale[0]?.n ?? 0),
     rentLt: rent[0]?.m ? Math.round(Number(rent[0].m)) : null,
     rentN: Number(rent[0]?.n ?? 0),
-    adr,
-    occupancy,
-    adrPeriod,
+    adr: strN > 0 && str[0].adr !== null ? Math.round(Number(str[0].adr)) : null,
+    occupancy: strN > 0 && str[0].occ !== null ? Math.round(Number(str[0].occ) * 100) : null,
+    strN,
   };
 }

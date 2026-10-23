@@ -1,0 +1,126 @@
+#!/usr/bin/env node
+// Kiểm TĨNH ranh giới cổng (AGENTS.md luật 5, 6, 9): đo TRẠNG THÁI cây mã, không đo diff.
+//   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
+//   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
+//   - /api/zalo-media chặn admin trước khi đọc file;
+//   - /dau-tu không đọc bảng AirDNA, không hiện chữ AirDNA;
+//   - /api/zalo-media chỉ mở hai gốc staging ảnh, so theo đoạn đường dẫn + realpath;
+//   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm.
+// Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const app = (p) => path.join(root, "app", p);
+// Thiếu file → chuỗi rỗng: kiểm báo FAIL có tên thay vì văng lỗi.
+const read = (p) => (existsSync(app(p)) ? readFileSync(app(p), "utf8") : "");
+// Bỏ comment để chỉ đo mã/chữ thật sự render (chú thích được nhắc AirDNA để giải thích luật).
+const code = (src) =>
+  src
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+    .split("\n")
+    .map((l) => l.replace(/(^|[^:"'`])\/\/.*$/, "$1"))
+    .join("\n");
+
+const fails = [];
+const check = (ok, msg) => {
+  console.log(`${ok ? "ok  " : "FAIL"} ${msg}`);
+  if (!ok) fails.push(msg);
+};
+
+// 1. Route: không còn /deals trong Invest; /ops/deals tồn tại.
+check(!existsSync(app("src/app/(app)/deals")), "không còn route Invest src/app/(app)/deals");
+check(existsSync(app("src/app/ops/deals/page.tsx")), "có route src/app/ops/deals/page.tsx");
+
+// 2. Nav: Invest không có mục deals; Ops có /ops/deals.
+const nav = code(read("src/components/shell/nav.tsx"));
+const investBlock = nav.slice(nav.indexOf("invest: ["), nav.indexOf("ops: ["));
+const opsBlock = nav.slice(nav.indexOf("ops: ["));
+check(investBlock.length > 0 && !/deals/.test(investBlock), "nav Invest không có mục deals");
+check(/href: "\/ops\/deals"/.test(opsBlock), "nav Ops có href /ops/deals");
+
+// 3. Link cũ /deals chuyển sang /ops/deals (proxy.ts chặn tiếp /ops).
+const nextCfg = code(readFileSync(app("next.config.ts"), "utf8"));
+check(
+  /source:\s*"\/deals",\s*destination:\s*"\/ops\/deals"/.test(nextCfg),
+  "next.config redirect /deals → /ops/deals",
+);
+
+// 4. /ops/deals: liên hệ + nội dung + ảnh tin chỉ khi showContact = isAdmin(user).
+const deals = code(read("src/app/ops/deals/page.tsx"));
+check(/const showContact = isAdmin\(user\)/.test(deals), "ops/deals tính showContact từ isAdmin(user)");
+for (const [label, re] of [
+  ["khối SĐT/tên người bán", /\{showContact && \(d\.sellerPhone \|\| d\.sellerName\)/],
+  ["nội dung tin", /\{showContact && d\.postText/],
+  ["ảnh tin", /\{showContact && \(d\.mediaPath \|\| d\.mediaUrl\)/],
+]) {
+  check(re.test(deals), `ops/deals: ${label} chỉ render khi showContact`);
+}
+check((deals.match(/showContact &&/g) ?? []).length >= 3, "ops/deals: có đủ 3 khối gate tầng A");
+
+// 5. Ops chỉ dùng mã tầng B — không literal tên nguồn thật trong chữ hiển thị.
+const realNames = /\b(Zalo|Facebook|Chợ Tốt|Chotot|AirDNA)\b/;
+const dealsLeaks = deals.split("\n").filter((l) => realNames.test(l) && !/zalo-media/.test(l));
+check(dealsLeaks.length === 0, `ops/deals: không tên nguồn thật trong mã render (${dealsLeaks.length} dòng)`);
+
+// 6. /api/zalo-media: gate admin ĐỨNG TRƯỚC mọi đọc file.
+const media = code(read("src/app/api/zalo-media/route.ts"));
+const gateAt = media.indexOf("isAdmin(await getSessionUser())");
+const readAt = media.indexOf("await stat(");
+check(gateAt > 0 && readAt > gateAt, "zalo-media: isAdmin chặn trước stat/readFile");
+
+// 7. /dau-tu: không bảng AirDNA, không chữ AirDNA/tên nguồn thật ở Invest.
+const invest = code(read("src/lib/invest.ts"));
+check(!/airdna_|area_sources/i.test(invest), "lib/invest.ts không đọc airdna_* / crosswalk S02");
+for (const f of [
+  "src/app/(app)/[country]/[market]/dau-tu/page.tsx",
+  "src/components/invest/investment-simulator.tsx",
+  "src/lib/invest.ts",
+]) {
+  const leaks = code(read(f)).split("\n").filter((l) => realNames.test(l));
+  check(leaks.length === 0, `${f}: không tên AirDNA/nguồn thật trong mã render (${leaks.length} dòng)`);
+}
+check(/listing_stats/.test(invest) && /booked90/.test(invest), "lib/invest.ts lấy STR từ listing_stats (90 đêm)");
+
+// 8. /api/zalo-media: chỉ hai gốc staging ảnh, không cả ~/.openclaw; không so tiền tố chuỗi.
+const roots = media.slice(media.indexOf("const ALLOWED_ROOTS"), media.indexOf("];", media.indexOf("const ALLOWED_ROOTS")));
+check(
+  // đúng hai phần tử, không phần tử nào là ~/.openclaw trơn
+  /^const ALLOWED_ROOTS = \[path\.join\(HOME, "\.openclaw", "media"\), "\/tmp\/openclaw"$/.test(roots.trim()),
+  "zalo-media: ALLOWED_ROOTS đúng hai gốc ~/.openclaw/media + /tmp/openclaw",
+);
+check(!/(resolved|real|prefix)\.startsWith\(/.test(media), "zalo-media: không so tiền tố chuỗi trên path (startsWith)");
+check(/path\.relative\(/.test(media) && /await realpath\(resolved\)/.test(media), "zalo-media: so bằng path.relative trên cả path chữ lẫn realpath");
+
+// 9. canAccessOps: đóng mặc định — chạy thật hàm (Node bỏ kiểu TS khi import).
+const { canAccessOps } = await import(app("src/lib/ops-access.ts"));
+const u = (role, email = "a@x.test") => ({ id: "t", email, plan: "free", role });
+const withEnv = (v, fn) => {
+  const old = process.env.OPS_EMAILS;
+  if (v === undefined) delete process.env.OPS_EMAILS;
+  else process.env.OPS_EMAILS = v;
+  try {
+    return fn();
+  } finally {
+    if (old === undefined) delete process.env.OPS_EMAILS;
+    else process.env.OPS_EMAILS = old;
+  }
+};
+for (const [env, user, want, label] of [
+  [undefined, null, false, "khách"],
+  [undefined, u("user"), false, "user thường, OPS_EMAILS trống"],
+  ["", u("user"), false, "user thường, OPS_EMAILS rỗng"],
+  [undefined, u("ops"), true, "role=ops, OPS_EMAILS trống"],
+  [undefined, u("admin"), true, "role=admin, OPS_EMAILS trống"],
+  ["b@x.test", u("admin"), true, "role=admin, không có trong OPS_EMAILS"],
+  [" A@X.test , b@x.test", u("user"), true, "user thường có email trong OPS_EMAILS (không phân biệt hoa thường)"],
+  ["b@x.test", u("user"), false, "user thường, email ngoài OPS_EMAILS"],
+]) {
+  const got = withEnv(env, () => canAccessOps(user));
+  check(got === want, `canAccessOps(${label}) = ${want}`);
+}
+
+console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
+process.exit(fails.length === 0 ? 0 : 1);
