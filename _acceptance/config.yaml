@@ -79,6 +79,15 @@ executors:
     glossary_w6: "node scripts/glossary/acceptance.mjs w6"
     glossary_rebuild: "node scripts/glossary/acceptance.mjs rebuild"
     glossary_naming_rule: "node scripts/glossary/acceptance.mjs naming-rule"
+    cloud_sync_atomic: "cd pipeline && node scripts/check-cloud-sync.mjs atomic"       # đồng bộ cloud nguyên tử (cloud-sync-atomic) — DB mô phỏng :5433, không gọi cloud
+    cloud_sync_fail: "cd pipeline && node scripts/check-cloud-sync.mjs fail"
+    cloud_sync_fidelity: "cd pipeline && node scripts/check-cloud-sync.mjs fidelity"
+    cloud_sync_keep: "cd pipeline && node scripts/check-cloud-sync.mjs keep"
+    cloud_sync_pii: "cd pipeline && node scripts/check-cloud-sync.mjs pii"
+    cloud_sync_stage: "cd pipeline && node scripts/check-cloud-sync.mjs stage"
+    cloud_sync_overlap: "cd pipeline && node scripts/check-cloud-sync.mjs overlap"
+    cloud_sync_allow: "cd pipeline && node scripts/check-cloud-sync.mjs allow"
+    sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"           # đột biến FILL phải làm sync-pii.test đỏ
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
     # stg-zalo-media-files — cần DB local :5433 (docker one-invest-db)
