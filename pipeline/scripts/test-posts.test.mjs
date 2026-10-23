@@ -197,14 +197,25 @@ test("AC-5 lượt sạch và lượt toàn thử", { timeout: 300_000 }, async 
     await runTransformZalo(c);
     assert.equal((await auditSince(c, minId, "transform:reject-test")).length, 1, "AC-5 lượt có post thử không ghi dòng từ chối");
 
-    // (b) mọi post kênh Zalo là post thử → dừng, không xoá nguồn.
-    const before = Number((await c.query(`SELECT count(*) AS n FROM sale_offers WHERE source = 'S03'`)).rows[0].n);
+    // (b) mọi post kênh Zalo là post thử → dừng, không xoá nguồn. Đếm NGAY trong savepoint, sau lời
+    // gọi bị từ chối và TRƯỚC khi hoàn lại — đếm sau ROLLBACK TO SAVEPOINT thì luôn bằng.
+    const s03 = async () => Number((await c.query(`SELECT count(*) AS n FROM sale_offers WHERE source = 'S03'`)).rows[0].n);
+    const before = await s03();
     await c.query("SAVEPOINT allTest");
     await c.query(`UPDATE stg_zalo_posts SET group_name = 'TEST' WHERE agent_id IS NULL OR agent_id <> 'apify-facebook'`);
-    await assert.rejects(runTransformZalo(c), /lượt nạp rỗng/, "AC-5 lượt toàn thử xoá nguồn");
+    const minRec = await maxAuditId(c);
+    await assert.rejects(runTransformZalo(c), /lượt nạp rỗng/, "AC-5 lượt toàn thử không dừng");
+    assert.equal(await s03(), before, "AC-5 lượt toàn thử xoá nguồn");
+    assert.equal((await auditSince(c, minRec, "enrich:reconcile")).length, 0, "AC-5 lượt toàn thử vẫn đối soát");
+    // Đối chứng cùng phép đếm: xoá thật một offer S03 (không đề xuất) trong savepoint con → đếm lệch.
+    await c.query("SAVEPOINT probe");
+    await c.query(
+      `DELETE FROM sale_offers WHERE offer_id = (SELECT o.offer_id FROM sale_offers o WHERE o.source = 'S03'
+         AND NOT EXISTS (SELECT 1 FROM enrichment_proposals e WHERE e.offer_id = o.offer_id) LIMIT 1)`,
+    );
+    assert.equal(await s03(), before - 1, "AC-5 phép đếm không nhạy với một offer bị xoá");
+    await c.query("ROLLBACK TO SAVEPOINT probe");
     await c.query("ROLLBACK TO SAVEPOINT allTest");
-    const after = Number((await c.query(`SELECT count(*) AS n FROM sale_offers WHERE source = 'S03'`)).rows[0].n);
-    assert.equal(after, before, "AC-5 lượt toàn thử xoá nguồn");
   });
 });
 
