@@ -2,6 +2,7 @@
 
 > Bản đồ vẽ lại từ hồ sơ của xưởng mỗi lần một người ký một cổng — đừng sửa tay.
 > (đọc từ thư mục `_acceptance/` và `.out-of-scope/`)
+> Lộ trình: [LO-TRINH.html](LO-TRINH.html)
 
 ```mermaid
 flowchart TD
