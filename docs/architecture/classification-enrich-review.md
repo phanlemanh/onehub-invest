@@ -1,0 +1,518 @@
+# Review kiến trúc phân loại + enrich — từ lúc tin vào tới lúc thành căn nhà
+
+> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** (chưa phải quyết định) · Phạm vi: Kev-4B gate →
+> parser `transform-*` → E1/E2/định tuyến → `/ops/review` → `resolve-properties`.
+> Cách làm: chỉ đọc code (HEAD `b446637`, đã gồm PR #14, #16, #21), DB local :5433 (SELECT) và log.
+> Không sửa code, không ghi DB. Bản xem trên điện thoại (riêng tư): https://claude.ai/artifact/RSzE1VKhUjbw7jVMyorGHd
+>
+> Đọc nhanh: §0 tóm tắt → §4 quyết định → §5 việc. §1–§3 là căn cứ.
+
+---
+
+## 0. Tóm tắt một trang
+
+**Câu trả lời ngắn**: các lỗi ngày 23/10 không phải năm lỗi rời. Chúng cùng ba gốc:
+
+1. **Không có chỗ nào lưu «ai đã nói gì về tin này, dựa vào đâu».** Mỗi tầng (Kev, parser, E1, LLM,
+   người) ghi thẳng một giá trị vào cột canonical hoặc vứt tin đi, rồi tầng sau đè hoặc nhường theo
+   thứ tự chạy («fill-gap»: ai ghi trước thắng). Vì vậy không có thứ bậc căn cứ, xung đột chỉ thấy được
+   ở đúng một cặp (E1↔LLM) mà PR #14 vá, và thẻ duyệt không có gì để hiện ngoài «AI tự tin %».
+2. **Định danh gắn vào nội dung có thể đổi.** `offer_id` của P1 là băm `kind|phường|giá|DT|PN`;
+   `properties.stable_key` chứa giá và loại. Sửa giá, sửa parser → id mới → mọi thứ treo vào id cũ
+   (đề xuất, quyết định ghép căn, thẻ duyệt) bị CASCADE xoá hoặc mồ côi. 039 cứu được đề xuất enrich;
+   quyết định ghép căn của người **đã thực sự mất** (§2 L03).
+3. **Không có tập nhãn ở tầng nào.** Mọi con số đang dùng là độ phủ hoặc đo trên dữ liệu giả
+   (Kev «recall 100%» trên mock, parser «F1 0,966» trên mock tự sinh, E1 «73%» là độ phủ, judge
+   đếm `yes` là pass). Nên không ai biết luật nào đúng bao nhiêu — và luật vẫn được tự áp.
+
+**Năm con số nên biết** (DB local + log, 23/10):
+
+| Số | Nghĩa |
+|---|---|
+| **~70%** tin Zalo bị Kev-4B bỏ **trước khi có raw snapshot** (1.268/1.815 lượt chấm, 20–23/10) | Trong mẫu soát được, gần như mọi tin bị bỏ là tin rao thật (p 0,5–0,69). Không phục hồi được. |
+| **1.102/1.102** tin S03 và **114/118** tin S05 có `property_type = unknown` | Parser P1 không phân loại; đề xuất enrich S03 mất sạch 23/10. |
+| **0** tin P1 (S03/S05) nào nằm trong `properties` | «Một Căn Nhà» thực chất chỉ gồm S06 (trái hiến pháp §1.7). |
+| **«Căn giá tốt» so giá/m² với trung vị cả phường, không tách loại hình** | `refresh-bait-gap.mjs` dùng `v_ruler_p2_area` — CONTEXT.md định nghĩa «phường × loại hình». Đây là hệ quả sản phẩm trực tiếp của việc P1 không có loại. |
+| **12** chỗ tự khai từ vựng loại BĐS; **0** tập nhãn tin thật | Không có một taxonomy; không đo được độ chính xác. |
+
+**Kiến trúc đích, một câu**: mọi tầng chỉ **phát biểu** (assertion: giá trị + bậc căn cứ + luật/model +
+đoạn trích), lưu append-only theo **khoá bất biến của tin gốc**; một **bộ phân xử xác định** đọc các
+phát biểu theo thứ bậc căn cứ để dựng cột canonical (kèm nguồn gốc) sau mỗi lượt nạp; chỉ những ô
+(luật × field × nguồn) **đã đo trên tập nhãn** đạt ngưỡng mới được tự áp, còn lại lên thẻ duyệt hiện
+đủ căn cứ; quyết định của người là phát biểu bậc cao nhất và sống qua mọi lượt nạp.
+
+**Khuyến nghị thứ tự**: **đo trước, xây sau** — giữ trọn raw (Kev không bỏ tin) + một taxonomy + tập
+nhãn + số đo nền, rồi mới làm lớp phát biểu/phân xử và thẻ duyệt v2 (§5).
+
+---
+
+## 1. Bản đồ hiện trạng — mỗi điểm phân loại một dòng
+
+Ký hiệu «ai quyết»: **M** = mô hình/LLM · **L** = luật xác định · **N** = người.
+«Nạp lại» = khi chuỗi transform/resolve chạy lại thì kết quả còn hay mất.
+
+| # | Điểm phân loại | Đầu vào | Ai quyết | Ghi vào đâu | Audit | Nạp lại | Đo chính xác bằng gì | Làn |
+|---|---|---|---|---|---|---|---|---|
+| 1 | **Kev-4B gate** «có phải tin BĐS» (`collector/openclaw/handler.js:78-107`, kev-serve :8009, `THRESHOLD=0.9`) | text tin Zalo | M (Qwen3-4B base + LoRA chung, **không** fine-tune BĐS VN) | Không ghi gì: p ≥ 0,9 → POST :9210; p < 0,9 → **bỏ tin, không có snapshot** | Một dòng log `skip p=… group` (không text, không id) | Tin bị bỏ **mất vĩnh viễn**; không chạy lại được khi đổi ngưỡng | `bench-gate.mjs` trên mock + 20 câu âm lặp ×10 («620 mẫu, recall 100%»). **Không có tin thật gắn nhãn** | ZCode |
+| 2 | **kind** bán/thuê S03 (`transform-zalo.mjs:63-64`) | text | L (regex từ khoá; «bán» trần khớp cả «mua bán», «bán kính») | `sale_offers.kind`; không ra kind → `fail`, tin bị bỏ | Không lưu luật nào khớp | Tính lại mỗi lượt; đổi kind → **đổi `offer_id`** | `bench-extraction.mjs` F1 trên mock tự sinh (vòng tròn) | Claude |
+| 3 | **kind** S05 (`transform-fb.mjs:19-25`) | text | L (bộ luật thứ hai: `parsePost` + `inferKind`) | `sale_offers.kind` | Không | như #2 | Không | Claude |
+| 4 | **kind** S06 (`transform-chotot.mjs:44`) | `ad_type` có cấu trúc | L (bảng s/u) | `sale_offers.kind` | Không cần (trường nguồn) | Ổn định (`offer_id = hash(S06|list_id)`) | Không cần | Claude |
+| 5 | **giá · DT · PN · phường** S03/S05 (`transform-zalo.mjs:57-120`) | text; danh sách phường **chỉ Hà Nội** (:136) | L (regex) | cột `sale_offers` + `confidence` high/medium/low | Không lưu đoạn khớp | Tính lại; giá/DT/PN/phường nằm trong băm `offer_id` | «coverage 50,3%» = tỉ lệ đủ giá+DT+phường (§2 L05) — không phải độ chính xác | Claude |
+| 6 | **property_type** S03 | — | **Không ai**: hằng `'unknown'` (`transform-zalo.mjs:215`) | `sale_offers.property_type` | — | — | — | Claude |
+| 7 | **property_type** S05 | — | Không ai: không ghi → `NULL` (khác S03 `'unknown'`) | `sale_offers.property_type` | — | — | — | Claude |
+| 8 | **property_type** S06 (`transform-chotot.mjs:46`) | `category` 1010–1050 | L (bảng) | `sale_offers.property_type` — **ghi đè mỗi lượt** (`:88`, trái hợp đồng `ENRICH_COLS`) | Không cần | Ổn định nhưng xoá mọi sửa của người/enrich | Không | Claude |
+| 9 | **street/bath/floor** S06 | `stg_chotot_ads.street_name/toilets/…` | L | Chỉ backfill một lần ở migration 030; transform **không duy trì** → 2.730 tin thiếu đường, 1.578 thiếu WC dù stg có | — | Tin mới không có | — | Claude |
+| 10 | **room_type / property_type** Airbnb (`transform-airbnb.mjs:87`) | pdpSections | L | `listings.room_type` (enum Airbnb thô); `listings.property_type` **0/506** | — | Listing ra ngoài polygon → `DELETE` → CASCADE `nights`, `listing_stats` | — | Claude |
+| 11 | **E1 luật ngữ cảnh** loại/toà/dự án (`agent/src/agents/context-resolver.ts:63-189`) | text 500 ký tự + **tên nhóm** + `asset_nodes`; mặc định dự án (vinhomes/masteri/ecopark → apartment, `:156-162`) | L | `enrichment_proposals` → `route=direct` → **tự áp** `apply_enrichment` → cột canonical (fill-gap) + `properties` | `evidence.basis` văn xuôi, không rule id; `apply_enrichment` không ghi `ops_audit` | Từ 039: đề xuất sống, cột enrich đóng băng | 5 ca test + 4 fixture; «73%» là **độ phủ** | Claude |
+| 12 | **E2 LLM** (`enrich-text.ts`, Qwen 27B local) | text 500 ký tự + **đáp án E1 nhét vào prompt** (`:60`); không ảnh | M | đề xuất; tự áp nếu trùng E1 hoặc khớp `asset_nodes`; còn lại thẻ | `model`, `trace_path`, `confidence` (lưu, «không là căn cứ») | như #11 | 34 đầu ra thô, **không nhãn** | Claude |
+| 13 | **Định tuyến** (`agent/src/enrich/route.ts:114-178`) | E1, E2, field đang trống? | L | `route` direct/corroborated/review | có trong hàng đề xuất | — | Test hành vi (acceptance), không đo chất lượng | Claude |
+| 14 | **Người duyệt enrich** (`/ops/review` → `decide` → `apply_enrichment` / `decide_enrichment_review`) | thẻ `agent_output enrich:<offer>` | N | cột canonical + `enrichment_log` | `ops_audit` **sau COMMIT, fire-and-forget**; không lý do | Sống qua nạp lại nếu có offer kế (039); không thì chỉ còn ảnh chụp `ops_audit` | — | Claude |
+| 15 | **Hoàn tác** (`revert_enrichment`, 036 + CLI) | id đề xuất | N | cột canonical → trống; đề xuất `reverted` | `ops_audit enrich:revert` bắt buộc actor `hitl:` + lý do | — | — | Claude |
+| 16 | **Stage A** gom căn S06 (`resolve-properties.mjs:13-87`) | toạ độ ô ~55 m + kind + **property_type** + DT làm tròn + **giá làm tròn triệu** | L | `properties` (`stable_key` = khoá cụm), `property_offers` | `signals` cứng `{geo,price,area:1}` | Đổi giá → căn mới; 45 tin gắn 2 căn, 39 căn mồ côi | Không | Claude |
+| 17 | **Stage B** ứng viên P1↔P2 (`resolve-properties.mjs:89-124`) | phường + DT ±15% + giá/m² ±20%; P2 lọc apartment/house, P1 không lọc loại | L | `property_candidates` — **DELETE pending/needs_llm rồi sinh lại mỗi đêm** | Không | id ứng viên đổi mỗi đêm | Không | Claude |
+| 18 | **judge-entity** (`judge-entity.ts`, `judge-run.ts:55-67`) | cặp tin (A có text, B chỉ subject) + điểm Stage B; **ngưỡng xác định viết trong prompt** | M | `review_queue.ai_suggestion/ai_reasoning/ai_confidence` — **ghi đè, không lịch sử, không model/trace** | Không | — | `judge-eval.ts` đếm `yes` là pass, 3 cặp, không nhãn | Claude |
+| 19 | **Người duyệt ghép căn** (`decide` nhánh `entity_match`) | thẻ `pair:a\|b` | N | chỉ `property_candidates.status` merged/rejected — **resolve không đọc** | `ops_audit` sau COMMIT | **Mất** khi offer bị xoá/đổi id: CASCADE, thẻ `pair:` không đối soát (ca thật §2 L03) | — | Claude |
+| 20 | **Kiểm từ vựng** (CHECK 025, `mappings.yaml`, `dq-enum-vocab.mjs`) | — | L | — | `dq_check_results` | — | 4 CHECK `sale_offers_*_chk` đều **NOT VALID** | Claude |
+
+Hình dạng chung: **5 bộ phân loại độc lập** (Kev, parser, E1, E2, judge) + **2 điểm người**, mỗi cái
+dùng từ vựng riêng, ghi vào chỗ riêng, không cái nào biết cái kia đã nói gì ngoài cặp E1→E2 (mà cặp
+này lại không độc lập vì E2 được mồi bằng đáp án E1).
+
+---
+
+## 2. Sổ lỗi
+
+Mỗi lỗi chỉ **nguyên tắc bị vi phạm**. Mã nguyên tắc:
+
+| Mã | Nguyên tắc | Nguồn |
+|---|---|---|
+| **N1** | Raw đầy đủ + bất biến — mọi diễn giải nằm ở pipeline | AGENTS.md luật 1 |
+| **N2** | Một taxonomy, RESO-first | AGENTS.md luật 3, ADR-0011, ROADMAP §1.1 |
+| **N3** | LLM-off-data-path — LLM chỉ gate/judge/extract kèm audit + evidence; luật xác định thì viết bằng code | AGENTS.md luật 7, ROADMAP §1.2 |
+| **N4** | Thứ bậc căn cứ — quan sát trực tiếp thắng ngữ cảnh; độ tự tin LLM không là căn cứ | 033:23, spec enrich-qua-de-xuat §3.2 |
+| **N5** | Bền qua nạp lại — key không phải nội dung đổi được; quyết định không mất khi chạy lại | ADR-0011 Qđ 1.4, spec enrich-hau-ky |
+| **N6** | Audit + nguồn gốc — biết giá trị đến từ đâu, ai quyết, vì sao | AGENTS.md luật 7, ADR-0007 DQO |
+| **N7** | Đo trước khi build — và mỗi sự cố dữ liệu sinh một test | ROADMAP §1.8, ADR-0007 DQO |
+| **N8** | Người trong vòng lặp phải đủ căn cứ, và quyết định của người phải có hiệu lực | spec enrich-qua-de-xuat §3.4 |
+| **N9** | Đơn vị nghĩ là căn nhà — nguồn chỉ là evidence | ROADMAP §1.7 |
+
+Mức: **Nặng** = mất/sai dữ liệu không tự hồi phục hoặc chặn sản phẩm · **Vừa** = sai có thể sửa
+nhưng đang lan · **Nhẹ** = nợ kỹ thuật.
+
+### 2.1 Năm lỗi đã biết ngày 23/10 (đã xác minh lại, có bổ sung)
+
+**L01 · E1 suy loại từ tên nhóm** — Nặng · N4, N2
+- Luật cũ ghép `text + tên nhóm` rồi `/đất|nền|…/ → land`; «HỘI MUA BÁN NHÀ ĐẤT…» làm hai tin nhà
+  4 tầng thành `land` (đề xuất 639, 644 `applied`; LLM `house` 640, 645 `superseded`).
+- **Đính chính**: hai tin `offer_feb6cd92901f426c` và `offer_c5ac0386105f18ae` là **S05** (Facebook),
+  không phải S03.
+- PR #21 (`ba35f55`) chỉ vá **land**. apartment/house/room/commercial **vẫn quét tên nhóm**
+  (`context-resolver.ts:92`); luật mặc định dự án (vinhomes/masteri/ecopark → apartment,
+  `:156-162`) gán loại **không cần chữ nào trong tin** và vẫn tự áp. Spec hậu kỳ đo được 50 tin
+  apartment(tên nhóm) mà tin nói là nhà phố — phương án sửa bị gác có chủ đích.
+- Gốc: tên nhóm là thuộc tính của **kênh**, không phải của **tin**; không có khái niệm «bậc căn cứ»
+  nên luật chỉ có thứ tự cứng.
+- **Còn treo**: 639/644 vẫn là `land` trong `sale_offers` — `revert_enrichment` chưa chạy (chờ Hỏi-2).
+
+**L02 · «E1 thắng LLM» che lỗi; vá tại chỗ** — Nặng · N4, N3
+- d-9 (22/10) áp E1 khi lệch LLM → LLM đúng bị `superseded`, không ai nhìn. PR #14 đổi thành thẻ đối
+  chiếu. Bản vá **chỉ phủ một cặp nguồn**:
+  - Parser ↔ E1, parser ↔ LLM: field đã có giá trị → không sinh đề xuất (`route.ts:124`) → **bất đồng
+    bị bỏ im lặng**. Parser sai thì không tầng nào cãi được.
+  - E1 một mình → `direct` → tự áp, dù căn cứ là tin hay tên nhóm (router không đọc căn cứ, `run.ts:207`).
+  - **Chứng thực vòng tròn**: E2 được mồi «Loại hình từ nhóm: …» = đáp án E1 (`enrich-text.ts:60`),
+    rồi «LLM = E1» được tính là `corroborated` và tự áp (`route.ts:148`). Hai phiếu này không độc lập.
+  - `needsLLM` (`enrich-text.ts:81-95`) bỏ qua LLM khi E1 ra đủ → E1 đi thẳng, không kiểm chéo.
+
+**L03 · Nạp lại xoá dây chuyền** — Nặng · N5, N8
+- Cơ chế 23/10 xác nhận: transform cũ `DELETE FROM sale_offers WHERE source='S03'` → CASCADE 033 xoá
+  mọi đề xuất S03 → INSERT lại cùng `offer_id` với `property_type='unknown'`. DB còn 8 đề xuất (toàn
+  S05) trong khi sequence đã ở 6.479.
+- 039 vá cho đề xuất enrich (FK RESTRICT + `writeOffers` upsert + `reconcile_stale_offers`). **Quét
+  các thứ khác cùng rủi ro:**
+
+  | Thứ | Hiện trạng | Rủi ro |
+  |---|---|---|
+  | `enrichment_proposals` | RESTRICT, đối soát 039 | Đã vá. Không có offer kế → chỉ còn ảnh chụp `ops_audit` |
+  | `review_queue` thẻ `enrich:` | Không FK; 039 chuyển `item_id` | **2 thẻ zombie** 159, 161 (S03) đang `pending` mà không còn đề xuất nào |
+  | `review_queue` thẻ `pair:` | Không FK; **không đối soát** | Mồ côi khi băm đổi |
+  | `property_candidates` | **CASCADE** (027:39-40) + Stage B xoá/sinh lại mỗi đêm | Quyết định người **mất thật**: `ops_audit` id 4 (22/10) duyệt `pair:offer_1a3b44a8d7c822e0\|offer_728ae98908bf9bbb`; hôm nay review 1 không còn, cùng cặp lại `pending` ở review 24, candidate 8468 `needs_llm` |
+  | `property_offers` | **CASCADE** (027:28) | Hiện chỉ S06 có liên kết (S06 không bị xoá) → an toàn tạm thời; vỡ ngay khi P1 vào căn |
+  | `properties` | `stable_key` chứa giá + loại | Đổi giá/loại → căn mới; 45 tin gắn 2 căn, 39 căn mồ côi |
+  | `nights`, `listing_stats` | CASCADE từ `listings`; transform-airbnb DELETE listing ra ngoài polygon | Đổi polygon phường → mất lịch sử đêm |
+  | Giá trị enrich đã áp | `ENRICH_COLS` đóng băng (`write-offers.mjs:10,40`) | Chiều ngược: **parser sửa xong cũng không cập nhật được** các cột này cho tin cũ, vì không phân biệt giá trị do parser hay enrich ghi |
+  | Sửa của người cho S06 | transform-chotot ghi đè `property_type` mỗi lượt (`:88`) | Người/enrich sửa loại S06 → lượt sau mất |
+
+- Gốc chung: **định danh băm nội dung** (`offer_id` P1 = băm `kind|phường|giá|DT|PN`) và **quyết định
+  treo vào định danh đó**. CONTEXT.md lại ghi `offer_id = hash nguồn + id gốc` — tài liệu và code lệch.
+
+**L04 · Thẻ duyệt thiếu căn cứ** — Nặng · N8, N4, N6
+- **Ảnh**: PR #16 có backend `loadReviewMedia`, thẻ chưa render (type có `image_url` mà không dùng).
+- **Xung đột**: chỉ hiện E1↔LLM. Không hiện giá trị parser / giá trị hiện tại (evidence không lưu).
+- **«AI tự tin %»** vẫn hiện ở field không xung đột (`review-card.tsx:189-191, 283-285`) **thay cho**
+  căn cứ; thẻ ghép căn hiện `AI: yes (85%)` màu success (`:320-322`), mà dòng seed 029:68 còn ghi
+  **điểm Stage B** vào `ai_confidence` — con số hiện ra không phải độ tự tin của ai cả.
+- `ai_suggestion='apply'` gắn cứng mọi thẻ enrich, kể cả thẻ xung đột (`run.ts:143`) → mồi người bấm Áp.
+- Không đoạn trích có vị trí, không rule id, text cắt 300 ký tự `line-clamp-3`, tên nhóm lẫn với tin.
+- Thẻ ghép căn không hiện tín hiệu từng phần (đường, SĐT, tầng) dù 030 đã thêm cột.
+- Decide không nhận lý do (0 dòng `decision_note`); audit `auditOpsWrite` chạy **sau COMMIT,
+  fire-and-forget** (`app/src/lib/audit.ts:9-20`) — lỗi thì quyết định vẫn đứng mà không vết.
+
+**L05 · transform-zalo 50,3% và không có tập nhãn** — Nặng · N7
+- 50,3% = 819/1.628 = `nFull/posts` (`transform-zalo.mjs:172`): tỉ lệ tin có **đủ** giá + DT + phường.
+  Đó là **độ phủ**, không phải độ chính xác. 819 + 533 + 99 = 1.451 — **177 tin `low`** (có kind,
+  không giá) không nằm ô nào; nhánh `else if (hasPrice)` ở `:169` là code chết. `fail` chỉ nghĩa là
+  không thấy từ khoá bán/thuê. (Dòng log đúng «819/533/99» không tìm thấy trong log còn lại; log gần
+  nhất `pipeline/logs/zalo-import.log:2` ghi «815 high, 462 medium, 40 fail — 56,4%»; số 819 khớp DB.)
+- **Không tầng nào có tập nhãn tin thật**:
+
+  | Tầng | Thứ đang gọi là «đo» | Vì sao không phải độ chính xác |
+  |---|---|---|
+  | Kev-4B | «620 mẫu, recall 100%, 81 ms» | Dương = `zalo-mock`; âm = 20 câu lặp ×10; không file kết quả |
+  | Parser | F1 0,966 / 420 mẫu (`dq_check_results` 82) | Nhãn do chính bộ sinh mock tạo từ 7 câu mẫu đúng khuôn regex — vòng tròn |
+  | E1 | «resolve 73%» | Độ phủ; 5 ca test + 4 fixture |
+  | E2 | 34 đầu ra lưu | Không nhãn |
+  | judge-entity | `judge-eval.ts` | Đếm `yes` là pass; 3 cặp; ROADMAP A2 tự ghi «cần hand-label» |
+
+### 2.2 Lỗi tìm thêm
+
+**L06 · Kev-4B bỏ tin trước raw snapshot** — Nặng · N1, N6, N7 · làn ZCode
+- `handler.js:104-107`: `p === null || p < 0.9` → ghi `skip` rồi `return`. Tin không tới :9210 →
+  không snapshot → **không phục hồi, không chạy lại được** khi đổi ngưỡng/mô hình.
+- Số đo từ `~/.openclaw/logs/oneinvest-zalo-pipe.log` (20–23/10): skip ~70%; 43% số skip có p 0,5–0,89.
+- Mẫu ghép được (khung 22/10 05:41–10:55, 80 tin skip): **59 tin chỉ có URL ảnh zdn.vn** (nhánh
+  media-only `:65` không chạy vì text không rỗng → ảnh mất); **20 tin rao rõ ràng** («Bán 3N… 5,5x tỷ»,
+  «Cho thuê 2n2vs 75m 6,5tr») p 0,51–0,67; 1 tin tìm thuê p 0,28; chỉ ~2 tin thật sự âm.
+- `p=null` (HTTP không 2xx, đổi hình response) → **bỏ im lặng**, không fail-open; 69 tin `gate-error`
+  ngày 21/10 đã mất. Comment `:100` «đánh dấu chưa phân loại» không đúng thực tế.
+- p không vào RawItem, `stg_zalo_posts`, DATA-CONTRACT. Watchdog chỉ kiểm Kev sống, không kiểm tỉ lệ skip.
+- Chênh chưa giải thích: log nhận 547 tin, `stg_zalo_posts` có 367 dòng `openclaw-hook` (có thể do
+  buffer/độ trễ nạp — cần ZCode xác nhận).
+
+**L07 · Ba định nghĩa «có phải tin rao» và «bán/thuê»** — Vừa · N2
+- Kev `is_bds` = bán / cho thuê / **tìm mua** → true. Regex `parsePost` không có chỗ cho tìm mua/thuê
+  (không ra kind → `fail`, tin bị bỏ). Bench Kev đếm «tìm mua» là `sale`. `transform-fb` có `inferKind`
+  thứ hai. G-3 còn định thêm bộ `is_bds` thứ ba (Kev-V).
+
+**L08 · Từ vựng loại BĐS ở 12 chỗ, trộn cấp RESO** — Vừa · N2
+- Chỗ tự khai: CHECK 025; CASE trong 025; `transform-chotot.mjs:46`; `route.ts:25` (5 giá trị, thiếu
+  `unknown`); `context-resolver.ts:68-76`; prompt `enrich-text.ts:22`; `mappings.yaml:204`;
+  `dq-enum-vocab.mjs:16`; `resolve-properties.mjs:102`; `properties.property_type` (không CHECK);
+  `listings.property_type` (text trần, 506/506 NULL); `enrichment_proposals.value` (không ràng giá trị).
+- apartment/house ở cấp RESO **PropertySubType**, land/commercial ở cấp **PropertyType**; `commercial`
+  gộp CommercialSale + CommercialLease; `kind` và `property_type` cùng map vào DD `PropertyType` mà
+  không có luật suy ngược; `unknown` không khai extension; `area_m2 = LivingArea` sai cho 500 tin
+  `land` (đó là LotSizeArea; parser không tách DT đất / DT sàn).
+- Hai cách nói «chưa biết»: S03 `'unknown'`, S05 `NULL`.
+- ADR-0011 Qđ 3.2 nêu «shophouse, liền kề» là extension hợp lệ, enum lại gộp mất; CHDV (RESO
+  `ResidentialIncome`) không có chỗ — ca 644 «CHDV 9PN» bị ép vào house/land.
+- CONTEXT.md **không có thuật ngữ «Loại hình»** dù định nghĩa «Thước giá» dùng nó → thẻ duyệt hiện chữ
+  tiếng Anh thô (`review-card.tsx:114,281`).
+
+**L09 · P1 không được phân loại ở đâu cả** — Nặng · N2, N9
+- Parser S03 gán cứng `'unknown'`, S05 để NULL; toàn bộ loại P1 phụ thuộc enrich; đề xuất S03 mất
+  23/10 → hôm nay **1.102/1.102 tin S03 không có loại**.
+
+**L10 · «Căn giá tốt» trộn loại hình** — Nặng · N9 (hệ quả sản phẩm)
+- `refresh-bait-gap.mjs:30-37` tính `bait_gap_pct` của P1 so với `v_ruler_p2_area` — trung vị giá/m²
+  **cả phường**, trộn căn hộ, nhà phố, đất, phòng trọ. CONTEXT.md:122 định nghĩa thước «phường × loại
+  hình». Migration 025 tự ghi «trước đây ruler trộn 5 loại» — view loại hình đã có
+  (`034_ruler_p2_views.sql:38,51`) nhưng bait gap không dùng được vì P1 không có loại (L09).
+  Hiện 155 tin S03 + 32 tin S05 mang `bait_gap_pct` tính theo cách này.
+
+**L11 · P1 không bao giờ thành căn nhà; duyệt «Cùng căn» không có tác dụng** — Nặng · N9, N8
+- S03 0/1.102, S05 0/118 tin có `property_offers`. Stage A chỉ chạy S06; Stage B chỉ sinh ứng viên.
+- `merged` chỉ là nhãn trên `property_candidates` — `resolve-properties` không đọc. Không code nào sinh
+  thẻ `entity_match` ngoài seed 029 → **134 cặp `needs_llm` không có thẻ**. `verification='verified'`:
+  0/10.870.
+
+**L12 · Cột canonical không có nguồn gốc; fill-gap = ai ghi trước thắng** — Vừa · N6, N4, N5
+- `apply_enrichment` ghi thẳng `sale_offers.*` và COALESCE sang `properties`; muốn biết giá trị từ đâu
+  phải join đề xuất `applied`. Không có cột provenance.
+- Thứ bậc thực tế trong code: giá trị hiện có (parser hoặc lần áp trước) > E1 một mình (tự áp) ≈ E1+LLM
+  ≈ LLM+asset_nodes (tự áp) > LLM một mình (thẻ). Không có chỗ cho «căn cứ mạnh hơn thì sửa giá trị yếu».
+
+**L13 · transform-chotot không duy trì trường đã có trong stg** — Vừa · N2 (một nguồn sự thật cho transform)
+- street/bath/floor chỉ backfill một lần (030:12-20); công thức `'S06|'||list_id` chép ở 6 chỗ vì
+  `sale_offers` không có cột khoá gốc của nguồn.
+
+**L14 · judge-entity: luật xác định nằm trong prompt** — Vừa · N3, N6, N7
+- Ngưỡng «lệch giá <15%, DT <10%» viết cho LLM thực hiện (`judge-entity.ts:17-20`) — lẽ ra là code;
+  thiếu confidence → gán 0,5 (`:63`); đầu vào bất đối xứng (A có text, B chỉ subject); ghi đè `ai_*`
+  không lưu model/trace/lịch sử.
+
+**L15 · Audit thủng** — Vừa · N6
+- `apply_enrichment` không ghi `ops_audit` → khi CASCADE chạy (trước 039) dấu vết áp mất hẳn (638/643
+  không khôi phục được). Audit app sau COMMIT; không lý do; `decided_by` của entity_match không theo
+  dạng `hitl:`; thẻ thử (`enrich:demo-cong2`, `enrich:t_vis_conflict`) lẫn vào `ops_audit` thật.
+
+**L16 · E2 bỏ phí đầu ra, nhìn hẹp** — Nhẹ · N7
+- `project_name` (chính là chỗ E1 nhờ LLM chọn dự án), `address_detail`, `features`, `urgency` bị bỏ;
+  text cắt 500 ký tự hai lần; không ảnh.
+
+**L17 · Parser S03 lệch thị trường** — Vừa · N7
+- `matchPhuong` chỉ có phường Hà Nội (`:136`) dù nhóm có tin HCM (331/1.102 tin S03 không có `area_id`);
+  `group_name` SELECT mà không dùng; «bán» trần dương tính giả. Chưa có số đo sai lệch vì không có nhãn.
+
+### 2.3 Bảng gom
+
+| Mã | Lỗi | Mức | Nguyên tắc | Làn | Gốc |
+|---|---|---|---|---|---|
+| L01 | E1 suy loại từ tên nhóm (vá land, còn 4 loại + mặc định dự án) | Nặng | N4 N2 | Claude | không có bậc căn cứ |
+| L02 | Xung đột chỉ thấy ở E1↔LLM; chứng thực vòng tròn | Nặng | N4 N3 | Claude | không có bậc căn cứ |
+| L03 | Nạp lại xoá dây chuyền; quyết định ghép căn đã mất | Nặng | N5 N8 | Claude | định danh nội dung |
+| L04 | Thẻ duyệt thiếu căn cứ, hiện % | Nặng | N8 N4 N6 | Claude | không lưu căn cứ |
+| L05 | Không tập nhãn; 50,3% là độ phủ | Nặng | N7 | cả hai | chưa đo |
+| L06 | Kev bỏ tin trước snapshot, ~70% skip | Nặng | N1 N6 N7 | ZCode | chưa đo + vi phạm raw |
+| L07 | Ba định nghĩa «tin rao» / bán-thuê | Vừa | N2 | cả hai | không taxonomy |
+| L08 | Từ vựng loại ở 12 chỗ, trộn cấp RESO | Vừa | N2 | Claude | không taxonomy |
+| L09 | P1 không được phân loại | Nặng | N2 N9 | Claude | không taxonomy + L03 |
+| L10 | «Căn giá tốt» trộn loại hình | Nặng | N9 | Claude | hệ quả L09 |
+| L11 | P1 không thành căn; «Cùng căn» không hiệu lực | Nặng | N9 N8 | Claude | định danh + chưa nối |
+| L12 | Canonical không nguồn gốc; fill-gap | Vừa | N6 N4 N5 | Claude | không lưu căn cứ |
+| L13 | Chợ Tốt không duy trì trường stg | Vừa | N2 | Claude | transform |
+| L14 | judge-entity: luật trong prompt | Vừa | N3 N6 N7 | Claude | ranh giới LLM/luật |
+| L15 | Audit thủng | Vừa | N6 | Claude | không lưu căn cứ |
+| L16 | E2 bỏ phí đầu ra | Nhẹ | N7 | Claude | — |
+| L17 | Parser S03 chỉ phường HN | Vừa | N7 | Claude | chưa đo |
+
+Ba gốc ở §0 cộng gốc taxonomy phủ 16/17 lỗi: **không lưu căn cứ/bậc căn cứ** (L01 L02 L04 L12
+L14 L15), **định danh gắn nội dung** (L03 L11), **chưa đo** (L05 L06 L16 L17), **không một taxonomy**
+(L07 L08 L09 → L10). L13 là lỗi transform đơn lẻ.
+
+---
+
+## 3. Kiến trúc đích
+
+### 3.1 Năm nguyên lý (bổ sung cho hiến pháp, không thay)
+
+1. **Phát biểu, không ghi đè.** Mọi tầng (Kev, parser, E1, E2, ảnh, judge, người) chỉ ghi *phát biểu*
+   về một trường của một chủ thể, kèm bậc căn cứ và đoạn trích. Không tầng nào ghi thẳng cột canonical.
+2. **Canonical là kết quả phân xử, dựng lại được.** Cột `sale_offers.*` / `properties.*` là cache do một
+   bộ phân xử xác định dựng từ các phát biểu, kèm `provenance`. Xoá cache dựng lại ra đúng như cũ.
+3. **Khoá bất biến.** Phát biểu và quyết định treo vào khoá không đổi theo nội dung: id gốc của nguồn
+   (post Zalo/FB, `list_id` Chợ Tốt, id Airbnb). `offer_id` băm nội dung chỉ còn là id cụm.
+4. **Tự áp phải được đo.** Một ô (phương pháp × trường × nguồn) chỉ được tự áp khi độ chính xác đo trên
+   tập nhãn đóng băng ≥ ngưỡng. Confidence tự khai không bao giờ là căn cứ, và không hiện trên thẻ.
+5. **Raw giữ trọn, lọc ở pipeline.** Cổng (Kev) chấm điểm và ghi điểm vào raw; quyết định bỏ tin là
+   một phát biểu ở pipeline, đổi ngưỡng thì chạy lại được.
+
+### 3.2 Một taxonomy (RESO-first)
+
+Một **sổ đăng ký** duy nhất — đề xuất mở rộng khối `controlled_vocabulary` của `pipeline/mappings.yaml`
+— sinh ra: bảng tra `ref_*` (migration, CHECK/ FK thay text trần), hằng TS/JS cho parser/agent/app,
+danh sách enum cho prompt LLM, nhãn tiếng Việt cho UI, và thuật ngữ trong CONTEXT.md. Một test lint đỏ
+khi có chuỗi enum viết tay ngoài sổ (giống `route-slugs.test.mjs`).
+
+| Trục | Giá trị | RESO DD | Trạng thái |
+|---|---|---|---|
+| **listing_intent** | `offer` · `wanted` · `not_listing` | không có (wanted = extension) | **Mới** — một định nghĩa cho Kev, parser, bench (L07). Q8 |
+| **kind** | `sale` · `rent_lt` · (`rent_st`) | PropertyType Residential* / ResidentialLease + LeaseAmountFrequency | **Đã chốt §3.1** — giữ |
+| **property_type** | `apartment` · `house` · `land` · `room` · `commercial` · `unknown` | Mỗi giá trị khai alias: apartment → Residential/Condominium·Apartment; house → Residential/SingleFamilyResidence·Townhouse; land → Land; commercial → CommercialSale|CommercialLease (theo `kind`); room → extension VN; unknown → «chưa xác định», không gửi ra API | **Đã chốt §3.2** — giữ, chỉ thêm bảng alias + một cách nói «chưa biết» |
+| **property_subtype** | RESO PropertySubType + extension VN: `nha_pho`, `biet_thu`, `lien_ke`, `shophouse`, `chdv` (≈ResidentialIncome), `dat_tho_cu`, `dat_nen`… | PropertySubType | **Đề xuất, hoãn đến khi đo** (Q7) |
+| **area_basis** | `living` · `lot` | LivingArea / LotSizeArea | **Đề xuất** — sửa `area_m2 = LivingArea` sai cho land |
+
+Quy tắc «chưa biết»: cột canonical không bao giờ NULL vì «chưa chạy»; không có phát biểu nào → `unknown`.
+CHECK chuyển từ NOT VALID sang VALIDATE sau khi dọn.
+
+### 3.3 Thứ bậc căn cứ
+
+| Bậc | Loại căn cứ | Ví dụ | Được làm gì |
+|---|---|---|---|
+| **H0** | Quyết định của người (`hitl:`) | chọn «nhà» trên thẻ | Thắng mọi bậc; sống qua mọi lượt nạp |
+| **H1** | Trường có cấu trúc của nguồn | Chợ Tốt `category=1020`, Airbnb `roomType` | Tự áp |
+| **H2** | Câu chữ tường minh trong tin, luật có `rule_id` + vị trí đoạn khớp | «nhà 4 tầng», «lô đất thổ cư», «2PN» | Tự áp nếu ô đã đo ≥ ngưỡng |
+| **H3** | LLM trích xuất **kèm trích dẫn nguyên văn**, code kiểm trích dẫn có thật trong tin | LLM: house, trích «Nhà Gò Vấp 4 tầng» | Tự áp nếu ô đã đo ≥ ngưỡng; LLM không trích được → xuống H5 |
+| **H4** | Ảnh (VLM, sau này — G-3) | ảnh mặt tiền nhà ống | Như H3 |
+| **H5** | Ngữ cảnh / tiên nghiệm | tên nhóm, mặc định dự án, lịch sử người bán, LLM không trích dẫn | **Không bao giờ tự quyết**; chỉ phá hoà giữa các bậc trên, hoặc gợi ý trên thẻ |
+| — | Không phải căn cứ | confidence tự khai, `ai_suggestion` | Chỉ lưu để hiệu chỉnh; không định tuyến, không hiện |
+
+**Luật phân xử** (thuần, xác định, có test):
+1. Lấy bậc cao nhất có phát biểu. Trong cùng bậc: đồng thuận → nhận; bất đồng → thẻ.
+2. Bậc thấp hơn **trái** bậc cao hơn: ghi là *bất đồng*. Bậc cao là H0/H1 → giữ, không thẻ. Bậc cao là
+   H2/H3 và bậc thấp từ H3 trở lên → **thẻ** (đây là chỗ thay cho bản vá cục bộ PR #14, phủ mọi cặp).
+3. **Độc lập**: hai phiếu chỉ được tính là chứng thực khi không phiếu nào thấy đáp án của phiếu kia.
+   E2 chạy **mù** (không nhận đáp án E1).
+4. Ô (phương pháp × trường × nguồn) chưa đo hoặc dưới ngưỡng → mọi phát biểu của nó đi thẻ, không tự áp.
+
+### 3.4 Phân loại bền qua nạp lại
+
+```
+raw snapshot (bất biến) ──► stg_* (khoá gốc nguồn: post_id / list_id / abnb id)
+        │                            │
+        │                   parser ─►┤
+        │                   E1 ─────►┤  field_assertions  (append-only)
+        │                   E2 ─────►┤  subject_key = khoá gốc · field · value · tier H0–H5
+        │                   Kev ────►┤  method + rule_id/model@version · evidence{span,start,end,image}
+        │                   người ──►┘  actor · run_id · created_at · retracted_at/reason
+        │                                      │
+        │                         bộ phân xử (SQL/JS thuần, chạy sau mỗi transform)
+        │                                      ▼
+        └──────────────► sale_offers / properties  (cache canonical + provenance jsonb)
+```
+
+- **Chủ thể của phát biểu** = khoá gốc (`S03:<post_id>`, `S06:<list_id>`, `S01:<abnb id>`). Tin P1 gộp
+  repost thành offer: offer nhận hợp các phát biểu của các post trong nó. Đổi giá, sửa parser, gộp lại
+  repost → offer đổi id, **phát biểu không đổi chủ**.
+- **Quyết định ghép căn** = phát biểu trên cặp khoá gốc (`must_link` / `cannot_link`), resolve đọc như
+  ràng buộc. `properties.stable_key` bỏ giá và loại (chỉ toạ độ/khoá gốc đại diện).
+- **Transform**: upsert + `retired_at` (mềm), không DELETE; mọi FK tới `sale_offers` là RESTRICT;
+  `listings` cũng thế (không DELETE listing ra ngoài polygon — gắn cờ).
+- **Sửa parser** = phát biểu mới với `rule_id` mới, phát biểu cũ `retracted` → phân xử lại → cột cập
+  nhật (gỡ đóng băng `ENRICH_COLS`). Sửa của người (H0) vẫn thắng.
+- `enrichment_proposals` (033/036/039) trở thành một phần/khung nhìn của `field_assertions` — giữ hàm
+  `revert_enrichment`, `apply_enrichment` thành «ghi phát biểu H0 + phân xử».
+- Audit: ghi phát biểu và `ops_audit` **trong cùng transaction**; lý do bắt buộc khi người chọn bậc thấp
+  hơn bậc máy đang giữ.
+
+### 3.5 Tập đánh giá có nhãn cho từng tầng
+
+| Tập | Chủ thể | Trường | Cỡ đề xuất | Nguồn mẫu |
+|---|---|---|---|---|
+| **G0 Cổng** | tin Zalo thật (cả tin bị skip) | `listing_intent`, `kind` | 400, phân tầng theo khoảng p | Cần raw giữ trọn (việc Z1) hoặc giữ tạm tin skip (Z0) |
+| **G1 Parser** | post S03/S05 + ad S06 | kind, giá, DT + area_basis, PN, phường, đường, loại, tầng | 200 S03 + 100 S05 + 100 S06 | stg, phân tầng theo nhóm/thành phố |
+| **G2 Enrich** | cùng mẫu G1 | loại, toà, dự án, đường, WC — đo riêng E1, E2, theo bậc | dùng lại G1 | — |
+| **G3 Ghép căn** | cặp tin | cùng căn / khác căn | 150 cặp | `property_candidates` + cặp ngẫu nhiên cùng phường |
+
+- **Dev / test tách đôi**: luật được chỉnh theo dev; test đóng băng, chỉ dùng để chấm.
+- **Gắn nhãn mù**: màn gắn nhãn không hiện giá trị máy (tránh neo).
+- **Số đo**: precision, recall, độ phủ theo tầng × trường × nguồn × bậc; chạy được bằng một lệnh
+  (`eval:classify`), ghi `dq_check_results` → `/ops/quality`; chạy trong CI khi parser/E1/prompt đổi.
+- **Mỗi sự cố một ca** (ADR-0007 DQO): ca land 639/644, ca «BÁN LÔ ĐẤT» trong nhóm chung cư, ca tin chỉ
+  ảnh của Kev… vào tập hồi quy riêng.
+- Quyết định trên thẻ duyệt cũng là nhãn, nhưng **lệch chọn mẫu** (chỉ ca máy không chắc) — không trộn
+  vào tập test.
+
+### 3.6 Thẻ duyệt đủ căn cứ
+
+Mỗi trường trên thẻ hiện:
+- **Giá trị đang giữ** và nguồn gốc của nó (bậc + phương pháp).
+- **Mọi phát biểu**, nhóm theo bậc, Badge nguồn tiếng Việt: «Người» · «Nguồn» · «Trong tin» · «LLM có
+  trích dẫn» · «Ảnh» · «Ngữ cảnh nhóm». Mỗi phát biểu kèm `rule_id`/model và **đoạn trích được tô trong
+  toàn văn tin** (mở rộng được, không cắt 300 ký tự).
+- Tên nhóm hiện riêng, gắn nhãn «ngữ cảnh», không trộn vào đoạn tin.
+- **Ảnh** (backend PR #16 sẵn: local trước, URL hết hạn gắn cờ).
+- Bất đồng của **mọi cặp bậc** (không chỉ E1↔LLM).
+- **Không** «AI tự tin %», **không** `ai_suggestion` mặc định.
+- Hành động: chọn một phát biểu · nhập giá trị khác · «không xác định được». Lý do bắt buộc khi chọn bậc
+  thấp hơn. Mỗi quyết định = phát biểu H0 trên khoá gốc, sống qua nạp lại.
+- Thẻ ghép căn: bảng tín hiệu từng phần (giá, DT, phường, đường, SĐT, tầng, ảnh) cạnh nhau; judge
+  chỉ giải thích, ngưỡng là code.
+
+---
+
+## 4. Quyết định cho Mạnh
+
+Không hỏi lại điều đã chốt ở ROADMAP §3 (kind ↔ RESO §3.1, tập `property_type` §3.2, phân làn §3.9).
+Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
+
+| # | Câu hỏi | Phương án | Khuyến nghị |
+|---|---|---|---|
+| **Q1** | Kev-4B đứng ở đâu? | (a) Giữ lọc trước snapshot, chỉnh ngưỡng sau khi đo · (b) **Mọi tin vào raw kèm `gate{model,p,threshold}`; lọc là phát biểu ở pipeline** (DATA-CONTRACT tăng `schemaVersion`) · (c) Bỏ cổng, pipeline tự phân loại | **(b)**. Giữ đúng luật 1 (raw đầy đủ), chạy lại được khi đổi ngưỡng; dung lượng ~1.800 tin/ngày không đáng kể. (c) mất bộ lọc rẻ cho LLM 27B |
+| **Q2** | Phát biểu/quyết định treo vào khoá nào? | (a) Giữ `offer_id` băm nội dung, mở rộng đối soát 039 sang `property_offers/candidates` + thẻ `pair:` · (b) **Treo vào khoá gốc nguồn (post_id/list_id); `offer_id` chỉ còn là id cụm** · (c) Đổi khoá chính `sale_offers` sang khoá gốc | **(b)**. (a) là thêm một lớp vá cho mỗi bảng mới; (c) đụng mọi bảng và mọi API. (b) thêm một cột + một bảng |
+| **Q3** | Giá trị phân loại sống ở đâu? | (a) Giữ cột canonical + đề xuất + fill-gap (hiện trạng) · (b) **Bảng phát biểu append-only + bộ phân xử dựng canonical có provenance** · (c) Giữ `enrichment_proposals`, ghi thêm giá trị parser thành đề xuất + cột provenance | **(b)**. (c) là bước đệm hợp lý nếu muốn đi từng nấc; (a) giữ nguyên gốc của L02, L04, L12 |
+| **Q4** | Tên nhóm (ngữ cảnh) được làm gì? | (a) **Chỉ là H5 — không bao giờ tự quyết; hiện trên thẻ như gợi ý** · (b) Được quyết khi tin im lặng, cho danh sách nhóm đơn-chủ-đề đã đo precision ≥ 95% · (c) Giữ như sau PR #21 (land bị cấm, 4 loại kia vẫn quét) | **(a) ngay**, chuyển sang **(b)** khi có G2. (c) đang giữ 50 tin apartment sai đã đo được |
+| **Q5** | Khi nào máy được tự áp? | (a) Theo luật như hiện tại (E1 `direct`, LLM=E1) · (b) **Chỉ ô (phương pháp × trường × nguồn) có precision trên tập test ≥ 0,95; còn lại lên thẻ** · (c) Mọi giá trị máy đều qua người | **(b)**. (c) không kham nổi: 1.220 tin P1 × 5 trường. Ngưỡng 0,95 là đề xuất — Mạnh có thể chọn số khác |
+| **Q6** | Tập nhãn làm thế nào? | (a) **Mạnh gắn nhãn mù trên màn `/ops` riêng, ~600 tin + 150 cặp** (ước 4–6 giờ công, chia nhiều buổi) · (b) Lấy quyết định trên thẻ duyệt làm nhãn (rẻ nhưng lệch mẫu) · (c) LLM lớn gắn trước, người kiểm 20% (làm nhiễm phép đo LLM) | **(a)**, giữ (b) làm tập hồi quy phụ. Không đo được thì Q5 không chạy được |
+| **Q7** | Có thêm `property_subtype` (nhà phố/biệt thự/liền kề/shophouse/CHDV/đất thổ cư)? | (a) **Chưa — chỉ thêm bảng alias RESO cho 6 giá trị đã chốt; đo phương sai thước giá theo loại trước** · (b) Thêm ngay, nullable, theo PropertySubType + extension VN · (c) Mở rộng chính `property_type` | **(a)** (luật đo trước khi build). Làm (b) khi số đo cho thấy «house» trộn nhà ống với biệt thự làm lệch thước |
+| **Q8** | Tin «tìm mua / tìm thuê» là gì? | (a) **`listing_intent = wanted`: giữ ở raw + stg, không thành tin rao** · (b) Thành tín hiệu cầu (sản phẩm mới) · (c) Bỏ như hiện tại | **(a)** ngay — một định nghĩa cho Kev, parser, bench. (b) là quyết định sản phẩm riêng, để sau |
+| **Q9** | Độ tự tin trên thẻ duyệt? | (a) **Bỏ hẳn khỏi thẻ, giữ trong DB để hiệu chỉnh** · (b) Thu vào «Chi tiết máy», đóng mặc định | **(a)**. Spec 033 đã nói nó không là căn cứ; hiện nó ra là mồi người bấm theo |
+| **Q10** | «Căn giá tốt» khi P1 chưa có loại? | (a) Giữ thước cả phường đến khi P1 có loại · (b) Chuyển sang phường × loại ngay; tin P1 `unknown` không có gap · (c) **Phường × loại khi biết loại; `unknown` dùng thước cả phường và gắn nhãn «chưa rõ loại hình»** | **(c)**. (a) đang hiện số sai lệch không báo; (b) làm mất gần hết tin S03 khỏi danh sách |
+| **Q11** | Thứ tự đợt lớn | (a) **Đo trước: raw giữ trọn + taxonomy + tập nhãn + số nền, rồi mới xây lớp phát biểu** · (b) Xây lớp phát biểu trước, đo sau | **(a)**. Không có số nền thì không biết kiến trúc mới có tốt hơn không |
+| **Q12** | Dọn tồn đọng ngay (ghi DB local, khó đảo) | Hoàn tác 639/644 (Hỏi-2 cũ) · đóng thẻ zombie 159/161 thành `rejected` kèm ghi chú · áp lại tay quyết định ghép căn `ops_audit` 4 | **Làm cả ba**, actor `hitl:manh`, trước đợt lớn |
+
+---
+
+## 5. Việc theo làn — thứ tự và phụ thuộc
+
+Đánh số theo đợt. **C** = làn Claude, **Z** = làn ZCode, **M** = Mạnh. Hạng T theo `_acceptance/config.yaml`.
+
+### Đợt 0 — dọn và cầm máu (nhỏ, không chờ kiến trúc)
+
+| Mã | Việc | Làn | Phụ thuộc | Hạng |
+|---|---|---|---|---|
+| Z0.1 | Kev: `p=null` / HTTP lỗi → **fail-open** (cho tin qua, gắn cờ); tin chỉ ảnh đi nhánh media | Z | — | T2 |
+| Z0.2 | Kev: tạm giữ tin bị skip vào tệp cách ly local (id + text + p) cho tới khi Q1 xong — nguồn mẫu G0 | Z | — | T2 |
+| C0.1 | Q12: hoàn tác 639/644, đóng thẻ 159/161, áp lại quyết định ghép căn đã mất | C (+M duyệt) | Q12 | T2 |
+| C0.2 | Thẻ duyệt: bỏ % và `ai_suggestion` mặc định; hiện `basis` mọi field; render ảnh PR #16; text đầy đủ | C | Q9 | T2 |
+| C0.3 | Audit decide trong transaction + trường lý do | C | — | T2 |
+| Z0.3 | Watchdog: cảnh báo tỉ lệ skip và phân bố p (đọc log hook) | Z | — | T1 |
+
+### Đợt 1 — đo (Q11a)
+
+| Mã | Việc | Làn | Phụ thuộc | Hạng |
+|---|---|---|---|---|
+| Z1 | Mọi tin Zalo vào raw kèm `gate{model,p,threshold,decision}`; DATA-CONTRACT tăng `schemaVersion` | Z | Q1 | T3 |
+| C1.1 | Migration cột `gate_*` ở `stg_zalo_posts`; importer nhận v3 | C | Z1 (hợp đồng) | T3 |
+| C1.2 | Sổ taxonomy một nguồn → bảng `ref_*`, hằng TS/JS, enum prompt, nhãn UI, thuật ngữ CONTEXT.md «Loại hình»; lint chặn enum viết tay; VALIDATE các CHECK 025 | C | Q7, Q8 | T3 |
+| C1.3 | Khung đánh giá: màn gắn nhãn mù `/ops/labels`, lưu nhãn (tầng A, không lên cloud), dev/test, lệnh `eval:classify`, đổ `dq_check_results` | C | C1.2 | T2 |
+| M1 | Gắn nhãn G1/G2 (~400 tin), G3 (150 cặp) | M | C1.3 | — |
+| M1b | Gắn nhãn G0 (400 tin cổng) | M | Z0.2 hoặc Z1, C1.3 | — |
+| C1.4 | Báo cáo số nền: precision/recall/phủ theo tầng × trường × nguồn × bậc trên `/ops/quality` | C | M1 | T2 |
+
+### Đợt 2 — nền bền (Q2, Q3)
+
+| Mã | Việc | Làn | Phụ thuộc | Hạng |
+|---|---|---|---|---|
+| C2.1 | Migration: cột khoá gốc trên `sale_offers`; bảng `field_assertions`; hàm phân xử + `provenance`; FK RESTRICT cho `property_offers/candidates`; `retired_at` thay DELETE (cả `listings`) | C | C1.2, Q2, Q3 | T3 |
+| C2.2 | Parser phát biểu: mọi transform ghi phát biểu với `rule_id` + vị trí đoạn khớp; gỡ đóng băng `ENRICH_COLS`; transform-chotot duy trì street/bath/floor và ngừng ghi đè | C | C2.1 | T3 |
+| C2.3 | Chuyển `enrichment_proposals` sang phát biểu (giữ 036 hoàn tác); quyết định người = H0 | C | C2.1 | T3 |
+| C2.4 | E1 viết lại theo bậc: tên nhóm / mặc định dự án = H5; luật trong tin có `rule_id`; E2 chạy mù + bắt buộc trích dẫn nguyên văn (code kiểm), lấy lại `project_name` | C | C2.3, Q4 | T3 |
+| C2.5 | Cổng tự áp theo số đo (ô ≥ ngưỡng mới tự áp) | C | C1.4, C2.4, Q5 | T3 |
+
+### Đợt 3 — người và căn nhà
+
+| Mã | Việc | Làn | Phụ thuộc | Hạng |
+|---|---|---|---|---|
+| C3.1 | Thẻ duyệt v2 (§3.6): phát biểu theo bậc, đoạn trích tô trong toàn văn, ảnh, bất đồng mọi cặp, quyết định = H0 | C | C2.3, C0.2 | T2 |
+| C3.2 | resolve-properties: `stable_key` bỏ giá/loại; đọc `must_link/cannot_link`; đưa P1 vào căn; sinh thẻ ghép căn từ ứng viên; judge-entity: ngưỡng là code, LLM chỉ giải thích, lưu model/trace | C | C2.1 | T3 |
+| C3.3 | Thước giá phường × loại cho «Căn giá tốt» theo Q10 | C | C2.4 (P1 có loại), Q10 | T2 |
+| C3.4 | Parser S03 sửa theo số đo: phường HCM, `area_basis`, «bán» dương tính giả, dùng tên nhóm làm H5 | C | C1.4 | T2 |
+| Z3.1 | Gộp tin chỉ ảnh vào tin chữ liền trước cùng người gửi (collector) | Z | Z0.1 | T2 |
+| Z3.2 | Chỉnh lại/huấn luyện Kev trên G0 (nếu giữ cổng làm bộ lọc rẻ) | Z | M1b | T2 |
+
+### Đồ thị phụ thuộc
+
+```
+Đợt 0:  Z0.1  Z0.2  Z0.3  C0.1  C0.2  C0.3        (song song, không phụ thuộc kiến trúc)
+          │     │
+Đợt 1:   Z1 ──► C1.1        C1.2 ──► C1.3 ──► M1 ──► C1.4
+          └──────────────────────────┴──► M1b ───────┘
+Đợt 2:                      C1.2 ──► C2.1 ──► C2.2
+                                       └────► C2.3 ──► C2.4 ──► C2.5 ◄── C1.4
+Đợt 3:                                 C2.1 ──► C3.2
+                                       C2.3 ──► C3.1
+                                       C2.4 ──► C3.3        C1.4 ──► C3.4
+                                       M1b  ──► Z3.2        Z0.1 ──► Z3.1
+```
+
+Song song tối đa 3–4 phiên: Đợt 0 chia {C0.1+C0.3}, {C0.2}, {Z0.*}; Đợt 1 chạy Z1 ∥ C1.2 → C1.3.
+Đường găng: **C1.2 → C1.3 → M1 → C1.4 → C2.5**. Thời gian gắn nhãn của Mạnh nằm trên đường găng —
+nên bắt đầu C1.3 sớm nhất có thể.
+
+---
+
+## 6. Câu còn mở cần ZCode trả lời (qua điều phối liên làn)
+
+Số liệu Kev lấy được ở máy local từ log hook; những câu sau cần ZCode:
+
+1. Ngưỡng 0,9 chọn theo số đo nào? Kết quả `bench-gate` theo từng ngưỡng (recall/fallout) để ở đâu?
+2. Tỉ lệ skip mục tiêu là bao nhiêu? Đã ai soát mẫu skip trên tin thật chưa?
+3. Có tập tin Zalo thật đã gắn nhãn nào không (kể cả ngoài repo)?
+4. Tin chỉ có URL ảnh: định gộp vào tin chữ trước, hay cho qua cổng thẳng?
+5. Còn cần cổng để «tiết kiệm lượt 27B» không, khi parse do transform làm?
+6. Log ghi 547 tin được nhận mà `stg_zalo_posts` có 367 dòng `openclaw-hook`: do buffer, lượt nạp, hay
+   mất khi restart?
+7. Có ý định thêm `gate{model,p,threshold,decision}` vào DATA-CONTRACT không (Q1)?
+
+## 7. Tham chiếu
+
+- Code: `collector/openclaw/handler.js` · `pipeline/transform-{zalo,fb,chotot,airbnb}.mjs` ·
+  `pipeline/lib/write-offers.mjs` · `pipeline/resolve-properties.mjs` · `pipeline/refresh-bait-gap.mjs` ·
+  `pipeline/mappings.yaml` · `agent/src/agents/{context-resolver,enrich-text,judge-entity}.ts` ·
+  `agent/src/enrich/{route,run}.ts` · `app/src/components/ops/review-card.tsx` ·
+  `app/src/app/api/v1/ops/review/[id]/decide/route.ts` · `app/src/lib/audit.ts`
+- Migration: 025, 027, 029, 030, 031, 033, 034, 036, 039
+- Tài liệu: ROADMAP §1, §3 · ADR-0007, ADR-0011 · `docs/research/enrichment-agent-design.md` ·
+  `docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md`, `2026-10-23-enrich-hau-ky-design.md`
+- Bộ mẫu tin Kev bị skip (có SĐT người đăng, chỉ máy local): scratchpad phiên review, không commit.
