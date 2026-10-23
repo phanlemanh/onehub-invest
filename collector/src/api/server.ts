@@ -62,6 +62,9 @@ export async function readBody(req: { on: Function }): Promise<string> {
 
 const SEEN_CAP = 5000;
 
+/** Còn ít hơn ngưỡng này tới deadline shutdown → bỏ/huỷ bước media (tin > ảnh). */
+const MEDIA_CUTOFF_MS = 10_000;
+
 function keyOk(keys: string[], auth: string | null): boolean {
   if (keys.length === 0 || !auth) return false; // fail closed
   const given = Buffer.from(auth.replace(/^Bearer\s+/i, ""));
@@ -79,6 +82,9 @@ export async function createAgentServer(opts: AgentServerOptions) {
   const seen = new Set<string>();
   let writer: SnapshotWriter | null = null;
   let flushing: Promise<{ snapshotId: string } | null> | null = null;
+  /** AbortController của lượt flush ĐANG CHẠY (P2): caller muộn truyền
+   *  deadlineAt vẫn huỷ được ảnh của chính lượt đó qua flush(). */
+  let flushAbort: AbortController | null = null;
   let duplicatesTotal = 0;
   let acceptedTotal = 0;
   const newIds: string[] = []; // id mới từ lần flush trước — persist xuống state
@@ -158,12 +164,15 @@ export async function createAgentServer(opts: AgentServerOptions) {
     // Shutdown: sát deadline → skipMedia (không bắt đầu tải); ĐANG tải thì
     // AbortSignal huỷ ở mốc còn MEDIA_CUTOFF tới deadlineAt — không để ảnh
     // treo kéo flush vượt deadline (claudedp-2310-3).
-    const MEDIA_CUTOFF_MS = 10_000;
+    // ac LUÔN được tạo (kể cả lượt không deadline — định kỳ/auto-flush) và
+    // exposures qua flushAbort để một caller muộn truyền deadlineAt vẫn huỷ
+    // được ảnh của CHÍNH lượt đang chạy (P2 vòng 3).
+    const ac = new AbortController();
+    flushAbort = ac;
     let mediaNote = "";
     if (flushOpts?.skipMedia) {
       mediaNote = "; media skipped: sát deadline shutdown";
     } else {
-      const ac = new AbortController();
       let abortT: ReturnType<typeof setTimeout> | undefined;
       if (flushOpts?.deadlineAt) {
         const inMs = flushOpts.deadlineAt - Date.now() - MEDIA_CUTOFF_MS;
@@ -186,6 +195,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
         if (abortT) clearTimeout(abortT);
       }
     }
+    if (flushAbort === ac) flushAbort = null;
     const ids = items.map((i) => i.sourceId);
     // KHÔNG clear buffer trước khi ghi xong — flush fail giữ items cho lần
     // sau (đã ack 202 không được mất âm thầm — review I1a)
@@ -224,7 +234,22 @@ export async function createAgentServer(opts: AgentServerOptions) {
   function flush(
     flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
   ): Promise<{ snapshotId: string } | null> {
-    if (flushing) return flushing;
+    if (flushing) {
+      // P2 (claudedp-2310-3 vòng 3): lượt ĐANG CHẠY (định kỳ 60s hoặc
+      // auto-flush ≥50 tin) được bắt đầu KHÔNG deadline — shutdown tới muộn
+      // truyền deadlineAt thì single-flight trả đúng promise cũ. Gắn nốt hẹn
+      // giờ abort vào AbortController của chính lượt đó: còn < MEDIA_CUTOFF
+      // tới mốc thì ảnh đang tải bị huỷ, tin vẫn chảy.
+      if (flushOpts?.deadlineAt) {
+        const ac = flushAbort;
+        if (ac) {
+          const inMs = flushOpts.deadlineAt - Date.now() - MEDIA_CUTOFF_MS;
+          const t = setTimeout(() => ac.abort(), Math.max(0, inMs));
+          t.unref?.(); // không giữ process vì timer này
+        }
+      }
+      return flushing;
+    }
     flushing = doFlush(flushOpts).finally(() => {
       flushing = null;
     });
