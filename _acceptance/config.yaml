@@ -117,6 +117,9 @@ executors:
     db_autostart_diff: "bash scripts/check-db-autostart.sh diff"           # compose của cây bỏ restart == compose commit trước vòng (f3cff1f)
     db_autostart_cleanup: "bash scripts/check-db-autostart.sh cleanup"     # lượt lỗi / SIGTERM giữa chừng vẫn dọn dind; DB thật không bị khởi động lại
     db_autostart_live_selftest: "bash scripts/check-db-autostart.sh live-selftest"   # bộ đọc live trên bản chép plist + inspect thật đã làm hỏng
+    # deals-api-tam-dong (AU2) — /api/v1/deals chỉ ops; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433
+    deals_api_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-deals-api.mjs"
+    deals_api_mutation: "node scripts/check-deals-api.mjs mutation"
     # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
     zc3_l4b_scan: "node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"
     zc3_gateway: "node scripts/audit-p1-resilience/acceptance.mjs gateway"
