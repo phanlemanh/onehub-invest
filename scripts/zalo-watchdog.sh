@@ -74,27 +74,30 @@ fi
 # In phần mới của $1 ra stdout; cập nhật marker $2. Log bị truncate/rotate
 # (cur < last) → reset marker, không quét lại phần cũ.
 scan_new_lines() {
-  local f="$1" mk="$2" last cur
+  local f="$1" mk="$2" prev curInode curLines prevPath rest prevInode prevLines
   [ -f "$f" ] || return 0
-  last=$(cat "$mk" 2>/dev/null || echo "")
-  cur=$(wc -l < "$f" | tr -d ' ')
-  if [ -z "$last" ]; then
-    echo "$cur" > "$mk"
+  curInode=$(stat -f '%i' "$f" 2>/dev/null || echo 0)
+  curLines=$(wc -l < "$f" | tr -d ' ')
+  prev=$(cat "$mk" 2>/dev/null || echo "")
+  if [ -z "$prev" ]; then
+    # khởi tạo (lần đầu với gateway.log chứa lịch sử cũ) — không quét quá khứ
+    echo "$f:$curInode:$curLines" > "$mk"
     return 0
   fi
-  if [ "$cur" -lt "$last" ]; then
-    # Ít dòng hơn lần trước = FILE MỚI (log /tmp xoay theo ngày nhưng marker
-    # dùng chung) hoặc truncate: quét TOÀN BỘ file mới từ dòng 1 — agent-turn
-    # ở những dòng đầu ngày mới không được sót (claudedp-2310-5).
+  prevPath=${prev%%:*}
+  rest=${prev#*:}
+  prevInode=${rest%%:*}
+  prevLines=${rest#*:}
+  # Marker ghi DANH TÍNH file 'đường_dẫn:inode:số_dòng': đếm dòng không phân
+  # biệt được ngày mới DÀI HƠN ngày cũ (cur > last quét từ last+1 → sót dòng
+  # đầu, claudedp-2310-5 mở lại). Khác path/inode = file mới (log xoay ngày);
+  # cùng file mà ít dòng hơn = truncate — cả hai quét TOÀN BỘ từ dòng 1.
+  if [ "$prevPath" != "$f" ] || [ "$prevInode" != "$curInode" ] || [ "$curLines" -lt "$prevLines" ]; then
     tail -n +1 "$f"
-    echo "$cur" > "$mk"
-    return 0
+  elif [ "$curLines" -gt "$prevLines" ]; then
+    tail -n +"$((prevLines + 1))" "$f"
   fi
-  if [ "$cur" -eq "$last" ]; then
-    return 0
-  fi
-  tail -n +"$((last + 1))" "$f"
-  echo "$cur" > "$mk"
+  echo "$f:$curInode:$curLines" > "$mk"
 }
 
 DROP_WARN_N=20 # "drop no mention" mới ≥ ngưỡng này trong 1 cửa sổ 5′ = bất thường
