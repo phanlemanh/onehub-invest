@@ -151,4 +151,7 @@ Q2–Q12 của review phân loại (trừ Q1 đã chốt), cách xếp lớp că
   (và `.xlsx`, `edmx/`), changelog `references/dd/CHANGELOG.md`. Tải về là chấp nhận **RESO EULA**
   (reso.org/eula): được dùng để đưa vào sản phẩm của mình; **không** được phân phối nguyên bản như một sản phẩm
   độc lập — nên bản local để ở `research-local/` (gitignored), không commit, không vào repo public.
+- **Bản local tham chiếu** (Mạnh đồng ý EULA 23/10): `~/dev/onehub-invest/research-local/reso/` — `dd-2.0.json`,
+  `dd-2.1.json`, `RESODataDictionary-2.1.xlsx`, `CHANGELOG.md`, `SHA256SUMS`, `README.md` (lệnh tra field / lookup).
+  Chỉ có ở máy local; worktree đọc theo đường tuyệt đối đó.
 - `docs/research/reso-standards.md` — điều tra RESO 22/10.
