@@ -1,7 +1,7 @@
 // backfill-zalo-media.mjs — nạp lại meta.mediaFiles (N1, DATA-CONTRACT v2) cho
-// snapshot zalo-agent v2 có bài chưa mang stg_zalo_posts.media_files.
+// snapshot zalo-agent v2+ có bài chưa mang stg_zalo_posts.media_files.
 //
-// CHỈ đụng snapshot v2 còn thiếu: import lại upsert `captured_at = now()`, chạy
+// CHỈ đụng snapshot v2+ còn thiếu: import lại upsert `captured_at = now()`, chạy
 // lại cả 299 snapshot v1 sẽ làm lệch số "bài thật 7 ngày" của push-ops-facts.
 // Raw bất biến, importer idempotent (ON CONFLICT post_id) → chạy lại an toàn.
 //
@@ -9,7 +9,7 @@
 //   --check: chỉ đo, không ghi — exit 1 khi còn bài có ảnh chưa nạp.
 //   snapshots-dir mặc định $SNAPSHOTS_DIR hoặc ../collector/snapshots.
 import { readFile, readdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { gunzipSync } from "node:zlib";
 import { join, dirname } from "node:path";
@@ -20,13 +20,13 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
-const args = process.argv.slice(2);
-const check = args.includes("--check");
-const root = args.find((a) => !a.startsWith("--")) ?? process.env.SNAPSHOTS_DIR ?? join(HERE, "../collector/snapshots");
+// meta.mediaFiles có từ v2; v3 (Kev-nhãn) chỉ thêm meta.kev, giữ nguyên ảnh
+// (DATA-CONTRACT §Lịch sử phiên bản) → mọi bản ≥ 2 đều phải xét.
+export const MEDIA_SCHEMA_MIN = 2;
 
-// post_id có mediaFiles trong một snapshot v2 (đọc items, không verify sha —
+// post_id có mediaFiles trong một snapshot v2+ (đọc items, không verify sha —
 // importer verify lúc nạp thật)
-async function postsWithMedia(dir, manifest) {
+export async function postsWithMedia(dir, manifest) {
   const ids = [];
   for (const f of manifest.files.filter((f) => f.name.startsWith("items-"))) {
     const items = JSON.parse(gunzipSync(await readFile(join(dir, f.name))).toString("utf8"));
@@ -35,9 +35,9 @@ async function postsWithMedia(dir, manifest) {
   return ids;
 }
 
-async function main() {
-  if (!existsSync(root)) throw new Error(`không thấy thư mục snapshots: ${root}`);
-  const v2 = [];
+// snapshot zalo-agent dưới <root>/<city>/<id>: tổng số + những bản mang được ảnh
+export async function mediaSnapshots(root) {
+  const snaps = [];
   let total = 0;
   for (const city of await readdir(root, { withFileTypes: true })) {
     if (!city.isDirectory()) continue;
@@ -47,9 +47,17 @@ async function main() {
       if (!existsSync(join(dir, "manifest.json"))) continue; // mồ côi — importer cũng bỏ qua
       total++;
       const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
-      if (manifest.schemaVersion === 2) v2.push({ dir, manifest });
+      if (manifest.schemaVersion >= MEDIA_SCHEMA_MIN) snaps.push({ dir, manifest });
     }
   }
+  return { total, snaps };
+}
+
+async function main(args) {
+  const check = args.includes("--check");
+  const root = args.find((a) => !a.startsWith("--")) ?? process.env.SNAPSHOTS_DIR ?? join(HERE, "../collector/snapshots");
+  if (!existsSync(root)) throw new Error(`không thấy thư mục snapshots: ${root}`);
+  const { total, snaps } = await mediaSnapshots(root);
 
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
@@ -57,7 +65,7 @@ async function main() {
   let missing = 0;
   const todo = [];
   try {
-    for (const s of v2) {
+    for (const s of snaps) {
       const ids = await postsWithMedia(s.dir, s.manifest);
       raw += ids.length;
       if (!ids.length) continue;
@@ -75,7 +83,7 @@ async function main() {
       `SELECT count(*)::int n FROM stg_zalo_posts WHERE media_files IS NOT NULL`,
     );
     console.log(
-      `snapshot zalo-agent: ${total} (v2: ${v2.length}) · bài có ảnh trong raw v2: ${raw} · ` +
+      `snapshot zalo-agent: ${total} (v2+: ${snaps.length}) · bài có ảnh trong raw v2+: ${raw} · ` +
         `chưa nạp: ${missing} · stg_zalo_posts có media_files: ${rows[0].n}`,
     );
   } finally {
@@ -90,10 +98,15 @@ async function main() {
     return;
   }
   for (const dir of todo) execFileSync("node", [join(HERE, "import-airbnb.mjs"), dir], { stdio: "inherit" });
-  console.log(`backfill xong: import lại ${todo.length} snapshot v2`);
+  console.log(`backfill xong: import lại ${todo.length} snapshot v2+`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// chỉ chạy khi gọi trực tiếp — test import các hàm trên mà không chạm DB. So realpath:
+// gọi qua symlink (~/dev/one-invest) thì argv[1] giữ đường symlink còn import.meta.url
+// đã resolve — so chuỗi thô sẽ bỏ main và --check thoát 0 im lặng.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main(process.argv.slice(2)).catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

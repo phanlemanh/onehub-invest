@@ -1,5 +1,6 @@
 // media-files-roundtrip.mjs — kiểm đầu-cuối importer với ảnh N1 trên DB local:
-// dựng snapshot zalo-agent giả (v2 có mediaFiles, v1 không) trong thư mục tạm,
+// dựng snapshot zalo-agent giả (v2 có mediaFiles, v1 không, v3 có meta.kev + mediaFiles)
+// trong thư mục tạm,
 // chạy backfill-zalo-media.mjs + import-airbnb.mjs thật, khẳng định
 // stg_zalo_posts.media_files, rồi LUÔN
 // xoá dữ liệu giả (cascade qua airbnb_snapshots) — kể cả khi khẳng định trượt.
@@ -115,6 +116,30 @@ try {
   assert.equal((await row(3)).media_files, null);
   assert.deepEqual((await row(1)).media_files, r1.media_files);
   console.log("ok: v1 nạp được (media_files NULL); bài lặp giữ media_files");
+
+  // (4) PL32: v3 (Kev-nhãn thêm meta.kev, giữ mediaFiles) có ảnh chưa nạp → --check đỏ;
+  // backfill → --check xanh và media_files mang snapshotId của snapshot v3
+  const url3 = "https://f1.photo.talk.zdn.vn/rt/c.jpg";
+  const f3 = `media/${sha(url3).slice(0, 16)}.jpg`;
+  const kev = { p: 0.97, model: "kev-4b", threshold: 0.9, at: "2026-10-23T00:00:00Z" };
+  const v3 = writeSnapshot(root, {
+    suffix: "v3", schemaVersion: 3, media: [{ name: f3, buf: img }],
+    items: [post(5, { meta: { kev, mediaFiles: [{ url: url3, file: f3, sha256: sha(img), bytes: img.length }] } }),
+      post(6, { meta: { kev: { ...kev, p: null } } })],
+  });
+  const red3 = backfillCheck();
+  console.log(red3.stdout.trim());
+  assert.notEqual(red3.status, 0, "backfill --check phải đỏ khi snapshot v3 còn bài có ảnh chưa nạp");
+  assert.match(red3.stdout, /chưa nạp: 1 /);
+  console.log(execFileSync("node", [BACKFILL, root], { encoding: "utf8" }).trim());
+  const green3 = backfillCheck();
+  assert.equal(green3.status, 0, green3.stdout + green3.stderr);
+  assert.match(green3.stdout, /chưa nạp: 0 /);
+  assert.deepEqual((await row(5)).media_files, [
+    { url: url3, file: f3, sha256: sha(img), bytes: img.length, snapshotId: v3.id },
+  ]);
+  assert.equal((await row(6)).media_files, null);
+  console.log("ok: v3 có ảnh → --check đỏ; backfill → --check xanh, media_files mang snapshotId v3");
   ok = true;
 } finally {
   await client.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id LIKE $1`, [`%${tag}%`]);
