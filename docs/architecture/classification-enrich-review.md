@@ -6,7 +6,9 @@
 > Không sửa code, không ghi DB. Bản xem trên điện thoại (riêng tư): https://claude.ai/artifact/RSzE1VKhUjbw7jVMyorGHd
 >
 > **Khung**: `docs/product/FRAMING.md` (Mạnh duyệt 23/10) — §0.1 đối chiếu review với khung đó.
-> Đọc nhanh: §0 tóm tắt → §0.1 → §4 quyết định → §5 việc. §1–§3 là căn cứ.
+> **Rà soát nguyên lý gốc §0.2 (23/10) sửa một phần §3–§5**: thang căn cứ còn 3 lớp, ghép căn là một phát biểu,
+> thêm thời gian (L18), kế hoạch đổi sang lát dọc, quyết định còn 6 câu (§0.2 F). Khi lệch, §0.2 thắng.
+> Đọc nhanh: §0 tóm tắt → §0.1 → **§0.2** → §4 quyết định → §5 việc. §1–§3 là căn cứ.
 
 ---
 
@@ -63,6 +65,144 @@ Phân loại và enrich chỉ có mặt để mỗi tin **ghép đúng căn** v�
 | «Tin cậy» sáu chiều, có «nói rõ độ chắc» | Provenance (§3.4) là thứ hiển thị ra cổng Invest: «đã xác minh · suy ra · chưa biết» |
 
 Phần lõi của review không đổi: raw giữ trọn, phát biểu kèm căn cứ, khoá bất biến, đo trước khi xây.
+
+## 0.2 Rà soát theo nguyên lý gốc (first principles, 23/10)
+
+> Cách làm: bỏ hết tên thành phần đang có (Kev, parser, E1, E2, judge, Stage A/B, thẻ duyệt), hỏi «điều gì
+> **luôn đúng** về bài toán dù xây bằng gì», dựng lại từ đó, rồi soi review §1–§5 xem phần nào bắt nguồn từ
+> sự thật nền và phần nào chỉ bắt nguồn từ hiện trạng. Mục này **sửa** một số chỗ của §3–§5 (ghi rõ ở D).
+
+### A. Bảy sự thật nền
+
+1. **Tin đăng là lời khai, không phải sự thật.** Một người, ở một thời điểm, qua một kênh, nói điều gì đó về
+   một căn và một lời chào bán/thuê. Lời khai có thể sai, cũ, trùng, hoặc cố ý giấu (số nhà).
+2. **Căn nhà tồn tại độc lập với tin.** Thuộc tính vật lý của căn (loại, diện tích, tầng, mã căn) gần như
+   không đổi; thuộc tính của lời chào (giá, bán/thuê, còn hay hết) thay đổi theo thời gian và theo người đăng.
+3. **Ta không bao giờ biết sự thật trực tiếp — chỉ có niềm tin dựa trên bằng chứng.** Mỗi giá trị hệ thống
+   giữ là một niềm tin; niềm tin chỉ đáng tin bằng đúng độ tin của bằng chứng sau nó.
+4. **Độ tin của một cách đọc bằng chứng chỉ biết được bằng cách đo nó với sự thật đã biết.** Không có đường
+   tắt: độ tự tin tự khai của model, thứ tự luật, cảm giác «hợp lý» đều không phải số đo.
+5. **Sự thật đã biết chỉ đến từ bốn chỗ**: danh mục có thẩm quyền (chủ đầu tư, địa chính — D1), trường có
+   cấu trúc của nguồn, người có quyền xác nhận (môi giới/chủ căn, người vận hành), và người đọc bằng chứng
+   rồi phán (nhãn). Mọi thứ khác là suy luận.
+6. **Thông tin mục theo thời gian.** Lời chào hết hạn, giá đổi, căn được bán. Niềm tin về lời chào luôn kèm
+   thời điểm, và độ tươi là một phần của độ tin (D4).
+7. **Quyết định đầu tư cần so sánh được**: cùng nhóm (vị trí × loại × bán/thuê × cách tính diện tích) và
+   không đếm một căn hai lần. Sai nhóm hoặc đếm trùng thì con số đúng từng ô vẫn đánh lừa.
+
+### B. Tám thành phần cơ bản (suy ra từ A)
+
+| # | Thành phần | Là gì | Bất biến phải giữ | Từ sự thật |
+|---|---|---|---|---|
+| **T1** | **Bằng chứng** | Lời khai nguyên văn + ai/khi nào/kênh nào + ảnh | Đầy đủ (không lọc trước khi ghi), bất biến, có khoá gốc | 1 |
+| **T2** | **Từ vựng** | Tập giá trị chung cho mọi trường (RESO-first) | Một nguồn duy nhất; mọi bộ đọc dùng chung | 7 |
+| **T3** | **Diễn giải** | Bất kỳ bộ đọc nào biến bằng chứng thành *phát biểu* `(chủ thể, trường, giá trị, đoạn trích, phương pháp@phiên bản, thời điểm)` | Không ghi đè; luôn chỉ ra được đoạn bằng chứng | 1, 3 |
+| **T4** | **Định danh** | Hai câu hỏi khác nhau: *tin nào* (khoá gốc nguồn) và *căn nào* (căn gốc trong danh mục / căn suy ra) | Khoá không suy từ nội dung đổi được; «tin X nói về căn Y» là **một phát biểu** như mọi phát biểu khác | 2, 7 |
+| **T5** | **Thời gian** | Mỗi phát biểu có thời điểm quan sát; lời chào có trạng thái hiệu lực | Niềm tin về lời chào luôn trả lời được «tính đến lúc nào» | 6 |
+| **T6** | **Đo** | Nhãn sự thật + độ tin đo được của từng (phương pháp × trường × nguồn) | Là **gốc duy nhất** của mọi con số «độ tin»; tập test đóng băng | 4, 5 |
+| **T7** | **Phân xử** | Hàm xác định gom các phát biểu → một niềm tin + độ chắc + nguồn gốc | Thuần, chạy lại ra cùng kết quả; độ chắc = suy từ T6, không từ model | 3, 4 |
+| **T8** | **Người** | Người có quyền phán thêm phát biểu bậc cao nhất; phán của người cũng là nhãn cho T6 | Không mất qua nạp lại; mỗi lần phán đủ bằng chứng để phán đúng | 5 |
+
+Đầu ra (không phải thành phần, là phép chiếu): **niềm tin + độ chắc + thời điểm** hiển thị cho môi giới và nhà
+đầu tư. Ba nhãn độ chắc của FRAMING suy thẳng ra: *đã xác minh* = phát biểu thắng đến từ một trong bốn
+nguồn sự thật (A5); *suy ra* = máy, từ ô đã đo đạt ngưỡng; *chưa biết* = còn lại.
+
+```
+             T2 Từ vựng ─────────────── dùng chung ───────────────┐
+                                                                  ▼
+T1 Bằng chứng ──► T3 Diễn giải ──► phát biểu ──► T7 Phân xử ──► niềm tin + độ chắc + thời điểm ──► hiển thị
+   (khoá tin)        (mọi bộ đọc)     ▲   ▲            ▲                 │
+                                      │   │            │                 ▼
+                     T4 Định danh ────┘   │      T6 Đo (nhãn) ◄──── T8 Người (phán = phát biểu + nhãn)
+                     «tin X ↔ căn Y»      │
+                     T5 Thời gian ────────┘  (mọi phát biểu có thời điểm; lời chào có hiệu lực)
+```
+
+### C. Kiểm chứng: mỗi lỗi rơi vào một thành phần bị thiếu (L11 chạm hai)
+
+| Thành phần | Lỗi trong sổ (§2) | Nhận xét |
+|---|---|---|
+| T1 Bằng chứng | L06 (Kev bỏ tin), L13 (Chợ Tốt không đưa trường stg sang), DELETE listing Airbnb | L06 đã quyết sửa (Kev thành nhãn) |
+| T2 Từ vựng | L07, L08, L09 | |
+| T3 Diễn giải | L12 (không nguồn gốc), L15 (audit thủng), L16, L17 | Parser, E1, E2, Kev, judge là **cùng một loại thứ** — review cũ vẫn tách theo tên |
+| T4 Định danh | L03 (băm nội dung), L11 (P1 không thành căn) | Ghép căn (Stage A/B, judge, «Cùng căn») là diễn giải + phân xử trên trường «căn» |
+| T5 Thời gian | **— không lỗi nào được ghi —** | Không phải vì ổn, mà vì **không có cơ chế nào để hỏng**: không cột hiệu lực; 940/1.102 tin S03 đã quá 3 ngày không thấy lại vẫn là tin rao. → lỗi mới **L18** |
+| T6 Đo | L05 (không nhãn), L14 (judge-eval đếm yes) | |
+| T7 Phân xử | L01 (ngữ cảnh thắng quan sát), L02 (chỉ cặp E1↔LLM, chứng thực vòng tròn), L10 (so sai nhóm) | |
+| T8 Người | L04 (thẻ thiếu căn cứ), L11 («Cùng căn» không hiệu lực), 639/644 chưa hoàn tác | |
+
+Bộ tám thành phần phủ đủ 17 lỗi và chỉ ra một lỗ mà sổ lỗi bỏ sót (T5).
+
+**L18 · Không có mô hình thời gian / hiệu lực** — Nặng · vi phạm FRAMING «tin cậy» chiều 4 (còn hiệu lực), D4
+- `sale_offers` không có cột trạng thái; chỉ `first_seen/last_seen`. 940/1.102 tin S03 và 3.073/11.395 tin S06
+  có `last_seen` quá 3 ngày, không phân biệt «hết hạn», «đã bán», hay «chỉ là nguồn chưa quét lại».
+- Không giữ lịch sử giá theo căn (`price_vnd` ghi đè; tin sửa giá thành offer mới) → không làm được «giá cùng
+  một căn qua thời gian» mà FRAMING câu 1 cần.
+- Tin «đã bán / đã cọc» trong nhóm là bằng chứng hiệu lực nhưng không bộ đọc nào bắt.
+
+### D. Review cũ sửa gì
+
+| # | Review cũ | Từ nguyên lý gốc | Sửa |
+|---|---|---|---|
+| D-1 | §3.3 thang **H0–H5 cố định** (luật > LLM > ảnh > ngữ cảnh) | A4: thứ tự chỉ biết sau khi đo. Thang cố định là một giả định, chính kiểu giả định đã sinh d-9 «E1 thắng LLM» | Còn **3 lớp**: *sự thật* (4 nguồn A5) › *quan sát có trích dẫn* (luật hoặc LLM chỉ ra đoạn trong tin/ảnh) › *suy luận* (ngữ cảnh, không trích dẫn). **Trong lớp, thứ tự do T6 quyết**; thang H cũ chỉ là thứ tự tạm khi ô chưa đo, và ô chưa đo không được tự áp |
+| D-2 | Kev, parser, E1, E2, judge là **5 thành phần**, mỗi cái một việc sửa | T3: chúng là một loại — bộ diễn giải | Một hợp đồng phát biểu chung; thêm/bỏ một bộ đọc không đổi kiến trúc. Việc sửa từng bộ đọc chỉ là việc nâng số đo của ô đó |
+| D-3 | Ghép căn (C2.7, C3.2) là **luồng riêng** bên cạnh phân loại | T4: «tin X nói về căn Y» là một phát biểu trên trường `căn` | Khớp mã căn với danh mục = quan sát có trích dẫn; khớp toạ độ/giá/diện tích = suy luận; «Cùng căn» của người = sự thật. Cùng bảng phát biểu, cùng bộ phân xử, cùng thẻ duyệt, cùng tập đo (G3) |
+| D-4 | Không có thời gian | T5 | Thêm `observed_at` cho mọi phát biểu; trường `offer_status` (đang chào / hết hạn / đã bán) là một trường được diễn giải + phân xử như mọi trường; lịch sử giá giữ theo căn. Việc mới **C2.8** |
+| D-5 | Độ chắc hiển thị (C3.5) là một việc UI | Đầu ra = niềm tin + độ chắc, độ chắc suy từ T6 | Độ chắc là **đầu ra của bộ phân xử**, không phải lớp trang trí; C3.5 chỉ còn là hiển thị cột đã có |
+| D-6 | §5 chia **đợt ngang** (đo mọi nguồn → nền bền mọi nguồn → người) | North star chỉ đo được khi cả 8 thành phần chạy cho một nhóm; làm ngang thì 4–6 tuần không có số north star nào | **Lát dọc đầu tiên** (E) chạy đủ T1–T8 cho một nhóm hẹp, rồi mới mở rộng ngang |
+| D-7 | 12 câu hỏi Q1–Q12 | Nhiều câu tự trả lời được từ nguyên lý | Xem F: còn 6 câu thật sự cần Mạnh |
+
+Phần review cũ **giữ nguyên**: raw đầy đủ (Q1 đã chốt), phát biểu append-only + bộ phân xử (§3.4 = T3+T7),
+khoá bất biến (= T4), tập nhãn trước khi tự áp (= T6), thẻ duyệt đủ căn cứ (= T8), một taxonomy (= T2).
+
+### E. Lát dọc đầu tiên
+
+**Định nghĩa**: căn hộ, bán và cho thuê, ở **2–3 dự án có danh mục mã căn** (D1, D3), từ các nhóm Zalo/FB
+chuyên về chính các dự án đó, chạy đủ T1–T8, hiển thị trên OneHub Invest với độ chắc.
+
+**Vì sao phải chọn nhóm có chủ đích** (số đo 23/10 trên DB local): trong 1.102 tin S03 hiện có, chỉ 293 tin có
+chữ chỉ căn hộ, **10 tin** nhắc tên một trong 20 dự án đang có ở `asset_nodes`, 34 tin có chuỗi giống mã căn.
+Nghĩa là các nhóm đang thu chủ yếu không phải nhóm dự án — lát dọc cần nguồn tin đúng chỗ có danh mục, không
+thể chờ tin hiện có tự rơi vào.
+
+**Xong khi** (thước đo của lát):
+1. North star của lát có số: số căn đạt «tin cậy», tách «đã xác minh» / «suy ra».
+2. Độ đúng của ghép tin → căn (theo mã căn) và của trường lõi (loại, bán/thuê, giá, diện tích, mã căn) đo trên
+   tập test của lát.
+3. Độ tươi p50/p95 từ lúc đăng tới lúc hiển thị (D4).
+4. Bất biến xanh: nạp lại không mất quyết định người; không giá trị nào thiếu nguồn gốc.
+5. Tỉ lệ máy tự quyết ở ngưỡng (D5) có điểm xuất phát.
+
+**Việc của lát** (ánh xạ mã việc §5; thứ tự):
+1. Chọn dự án + nhóm (Mạnh) · thu danh mục mã căn của các dự án đó (**Z1.2**) · nhóm mới vào hook (ZCode).
+2. Từ vựng tối thiểu cho lát (**C1.2** thu hẹp: `listing_intent`, `kind`, `property_type`, `offer_status`, mã căn).
+3. Bảng phát biểu + bộ phân xử + khoá tin + trường `căn` + `observed_at` (**C2.1** + **C2.8**, chỉ cho lát).
+4. Bộ đọc: parser + luật mã căn + LLM có trích dẫn; Kev thành phát biểu `listing_intent` (**C1.1**, **C1.6**, **C2.2**, **C2.4**).
+5. Nhãn cho lát (**C1.3** + **M1** chỉ trên tin của lát, ~200 tin + ~100 cặp) → số nền (**C1.4**).
+6. Tự áp theo số đo + độ chắc (**C2.5**) · thẻ duyệt cho ca dưới ngưỡng (**C3.1** rút gọn) · đường theo từng tin (**C2.6**).
+7. Hiển thị trên Invest với độ chắc (**C3.5**).
+
+Sau lát: mở rộng ngang theo thứ tự đo được — thêm dự án có danh mục → nhà phố (chỉ «suy ra») → Chợ Tốt
+qua cùng hợp đồng phát biểu → thước phường × loại cho «Căn giá tốt» (C3.3). Đợt 0 (§5) vẫn làm ngay, song song.
+
+### F. Quyết định còn lại sau khi rút gọn
+
+**Tự trả lời từ nguyên lý (không cần hỏi nữa)**: Q2 (= T4: khoá tin + phát biểu `căn`), Q3 (= T3+T7), Q4 (tên
+nhóm = suy luận, không tự quyết — D-1), Q5 (= T6: tự áp chỉ ô đã đo), Q9 (độ chắc suy từ đo; confidence tự khai
+không hiện), Q11 (= lát dọc, đo trong lát). Q1 đã chốt.
+
+**Còn cần Mạnh** (xếp theo mức chặn lát dọc):
+
+| # | Câu | Vì sao chỉ Mạnh trả lời được |
+|---|---|---|
+| F1 | **Lát đầu: dự án nào, nhóm nào?** (2–3 dự án có danh mục mã căn + nhóm chuyên dự án đó) | Chọn thị trường và quan hệ nhóm là quyết định kinh doanh |
+| F2 | **Nguồn danh mục** cho các dự án đó: mua, thu, hay lấy từ môi giới quen | Chi phí + quan hệ |
+| F3 | **Ngưỡng**: bao nhiêu % đúng trên tập test thì máy được tự áp (đề xuất 0,95) và một căn được đếm «suy ra» | Đánh đổi tốc độ ↔ rủi ro hiển thị sai |
+| F4 | **Độ tươi mục tiêu** (phút) cho lát | Đổi kiến trúc nhịp nạp |
+| F5 | **Ai gắn nhãn lát đầu** (~200 tin + ~100 cặp): Mạnh hay người thuê | Giờ công, D5 |
+| F6 | **Dọn tồn đọng** (Q12 cũ): hoàn tác 639/644, đóng thẻ 159/161, áp lại quyết định ghép căn `ops_audit` 4 | Ghi DB, khó đảo |
+
+Q7 (subtype), Q8 (tìm mua/thuê), Q10 (thước «Căn giá tốt» tạm) không chặn lát dọc — để sau lát.
 
 ## 1. Bản đồ hiện trạng — mỗi điểm phân loại một dòng
 
@@ -297,6 +437,7 @@ nhưng đang lan · **Nhẹ** = nợ kỹ thuật.
 | L15 | Audit thủng | Vừa | N6 | Claude | không lưu căn cứ |
 | L16 | E2 bỏ phí đầu ra | Nhẹ | N7 | Claude | — |
 | L17 | Parser S03 chỉ phường HN | Vừa | N7 | Claude | chưa đo |
+| L18 | Không mô hình thời gian / hiệu lực (§0.2 C) | Nặng | FRAMING «tin cậy» chiều 4, D4 | Claude | thiếu thành phần T5 |
 
 Ba gốc ở §0 cộng gốc taxonomy phủ 16/17 lỗi: **không lưu căn cứ/bậc căn cứ** (L01 L02 L04 L12
 L14 L15), **định danh gắn nội dung** (L03 L11), **chưa đo** (L05 L06 L16 L17), **không một taxonomy**
@@ -484,6 +625,7 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 | C2.4 | E1 viết lại theo bậc: tên nhóm / mặc định dự án = H5; luật trong tin có `rule_id`; E2 chạy mù + bắt buộc trích dẫn nguyên văn (code kiểm), lấy lại `project_name` | C | C2.3, Q4 | T3 |
 | C2.5 | Cổng tự áp theo số đo (ô ≥ ngưỡng mới tự áp); dưới ngưỡng vẫn hiện, gắn «suy ra / chưa xác minh» (FRAMING D4) | C | C1.4, C2.4, Q5 | T3 |
 | C2.6 | **Đường theo từng tin cho P1** (FRAMING D4): hook → stg → parser/E1 → phát biểu → phân xử → hiển thị trong vài phút, thay lô 00:00; đo độ tươi p50/p95 | C (+Z nếu đổi nhịp nạp) | C2.1, C2.2, Z1 | T3 |
+| C2.8 | Thời gian (§0.2 D-4): `observed_at` cho mọi phát biểu; trường `offer_status` (đang chào · hết hạn · đã bán) diễn giải + phân xử như mọi trường; lịch sử giá theo căn | C | C2.1 | T3 |
 | C2.7 | Ghép tin căn hộ vào dòng danh mục (căn gốc từ danh mục); Stage A ô lưới chỉ còn cho nhà phố | C | C1.5, C1.6, C2.1 | T3 |
 
 ### Đợt 3 — người và căn nhà
