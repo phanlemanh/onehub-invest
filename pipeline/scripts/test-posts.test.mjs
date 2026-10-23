@@ -11,6 +11,7 @@ import { join, relative } from "node:path";
 import { TEST_MARKERS, scanStgWriters, testMarker } from "../lib/test-posts.mjs";
 import { scanDeleteAll } from "../lib/write-offers.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
+import { exitCodeFor, measureResidue } from "./test-data-residue.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
 import { runTransformZalo } from "../transform-zalo.mjs";
 
@@ -291,5 +292,41 @@ test("AC-6 bait gap tính lại", { timeout: 300_000 }, async () => {
     await refreshBaitGap(c);
     const [ctrl] = await offersWith(c, pTest);
     assert.notEqual(ctrl?.bait_gap_pct ?? null, null, "AC-6 đối chứng: tin cùng loại phải có bait gap");
+  });
+});
+
+test("AC-8 thước dư lượng bắt được tin giả", { timeout: 300_000 }, async () => {
+  await withTx(async (c) => {
+    // Đưa DB trong giao dịch về trạng thái đã dọn, rồi lấy mốc ngay trước khi chèn p.
+    await runTransformZalo(c);
+    await refreshBaitGap(c);
+    const base = await measureResidue(c);
+
+    // Fixture đi qua writer thật: post thường → offer (writeOffers) → người bán theo hash writer ghi.
+    const p = await insertPost(c, { post_id: pid("res"), text: saleText("59.3", "0912 000 999") });
+    await runTransformZalo(c);
+    const [o] = await offersWith(c, p);
+    assert.ok(o?.seller_phone_hash, "AC-8 fixture: offer phải mang hash SĐT");
+    await c.query(
+      `INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen)
+       VALUES ($1, '{S03}', 1, now(), now()) ON CONFLICT (phone_hash) DO NOTHING`,
+      [o.seller_phone_hash],
+    );
+    // Gắn dấu thử cho p trong stg, KHÔNG chạy lại transform → offer giả còn nằm trong canonical.
+    await c.query(`UPDATE stg_zalo_posts SET group_name = 'TEST' WHERE post_id = $1`, [p]);
+    const dirty = await measureResidue(c);
+    assert.ok(dirty.offers_from_test >= base.offers_from_test + 1, "AC-8 thước không thấy offer giả");
+    assert.ok(dirty.sellers_from_test >= base.sellers_from_test + 1, "AC-8 thước không thấy người bán giả");
+    assert.equal(dirty.offers_from_test, dirty.offers_from_test_sql, "AC-8 hai cách đếm lệch nhau");
+    assert.equal(dirty.ok, false);
+    assert.equal(exitCodeFor(dirty), 1);
+
+    // Đối chứng cùng fixture: lượt dọn → về mốc.
+    await runTransformZalo(c);
+    await refreshBaitGap(c);
+    const clean = await measureResidue(c);
+    assert.equal(clean.offers_from_test, base.offers_from_test);
+    assert.equal(clean.sellers_from_test, base.sellers_from_test);
+    assert.equal(exitCodeFor({ ok: true }), 0);
   });
 });
