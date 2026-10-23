@@ -724,6 +724,25 @@
       ]
     },
     {
+      "ma": "AU13",
+      "cau_giao": "Job cloud-sync thoát khác 0 khi bất kỳ bước nào hỏng, và push-ops-facts kết nối theo DATABASE_URL",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "AU3 Hỏi-1 A (Mạnh 23/10): cloud-sync.sh không set -e — sync-cloud hỏng mà push-ops-facts lành thì launchd thấy 0; push-ops-facts.mjs dòng 13 LOCAL_URL viết cứng localhost:5433 nên không đo được bằng cổng chết.",
+      "hang": "T3",
+      "slug": "cloud-sync-bao-loi-that",
+      "dung_tren": [
+        "AU3"
+      ],
+      "bat_khi": "Làm sync-cloud hỏng (leak gate đỏ) khi push-ops-facts lành: cloud-sync.sh thoát khác 0; trỏ DATABASE_URL vào cổng chết: push-ops-facts thoát khác 0",
+      "nhom": "giam-sat",
+      "dot": "bo-sung-2310",
+      "phu": [
+        "CS1"
+      ],
+      "ghi_chu": "Dùng scripts/lib/job-step.sh của AU3. Chung tệp push-ops-facts.mjs với NT2 và AU12, cloud-sync.sh gần AU1 — chạy liền nhau, không song song. Dưới mục tiêu cỡ: một kết quả hẹp, không gộp được với hàng giam-sat khác mà giữ nghĩa."
+    },
+    {
       "ma": "UI1",
       "cau_giao": "Người duyệt mở /ops/review và thấy hàng chờ dạng bảng theo solution-agents-5, lọc theo loại thẻ, bấm một hàng mở sheet chi tiết có dải ảnh tin xem được cả ở màn 390px",
       "vai": "Người duyệt",
@@ -1189,7 +1208,8 @@
       "hang": "T2",
       "slug": "collector-api-launchd",
       "dung_tren": [
-        "ZC2"
+        "ZC2",
+        "ZC6"
       ],
       "bat_khi": "Kill tiến trình: launchd dựng lại trong 1 phút; sau một ngày có ảnh: media_files S03 > 0",
       "nhom": "collector",
@@ -1217,6 +1237,22 @@
         "VH11"
       ],
       "ghi_chu": "Đứng trên AU9: Đà Nẵng phải có phường trước khi nightly lấy id ĐN (plan Review Focus #4)."
+    },
+    {
+      "ma": "ZC6",
+      "cau_giao": "Tin hook Zalo gửi lỗi tới collector API được giữ trong spool cục bộ và gửi lại, không mất khi collector API khởi động lại",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "vi_sao": "Nghiệm thu ZC2 vòng 3: handler.js không retry — POST lỗi chỉ ghi post-error rồi bỏ tin; mọi tin trong lúc :9210 restart mất ở nguồn. Làn ZCode (collector/openclaw).",
+      "hang": "T3",
+      "slug": "hook-zalo-spool-gui-lai",
+      "bat_khi": "Tắt collector API trong lúc hook nhận N tin rồi bật lại: đủ N tin vào raw, không trùng sourceId; spool rỗng sau lượt gửi lại",
+      "nhom": "collector",
+      "dot": "bo-sung-2310",
+      "phu": [
+        "HK1"
+      ],
+      "ghi_chu": "Phải merge TRƯỚC ZC4 (launchd = một lần restart). Sửa chú thích «agent tự retry» ở collector/src/main.ts và d-3 của hồ sơ collector-graceful-shutdown. Đọc .claude/rules/zalo-safety.md: hook chỉ gửi tới collector local, không gửi ra nhóm."
     }
   ],
   "chan_troi": [
