@@ -14,10 +14,12 @@ Không có chỗ nào nói route nào được công khai, nên route mới đ�
 1. **Sổ** `app/src/lib/api-surface.ts` — `API_SURFACE: ApiSurfaceEntry[]`, mỗi route một dòng: `route` (đường URL),
    `methods`, `mode`, `note`. Chế độ (đóng):
    - `public` — ai cũng gọi được (asset-stats, listings, markets);
-   - `ops` — bearer `OPS_API_TOKEN` hoặc phiên ops (deals, offers qua `canCallOpsApi`; collections, coverage,
-     extraction-quality, ingest, truthful-coverage qua khuôn `bearerOk` + `canAccessOps`);
-   - `ops-session` — chỉ phiên ops (review decide, source-groups, zalo accounts/groups/login);
-   - `admin` — chỉ role admin (ops/audit, zalo-media);
+   - `ops` — bearer `OPS_API_TOKEN` hoặc phiên ops (deals, offers qua `canCallOpsApi`; mọi route `/api/v1/ops/*` qua
+     nhánh bearer + `canAccessOps`/`isAdmin` — audit chặt hơn sổ: phiên phải là admin);
+   - `ops-session` — chỉ phiên ops, KHÔNG nhánh bearer (hôm nay chưa route nào);
+   - `admin` — chỉ role admin, KHÔNG nhánh bearer (zalo-media);
+   Nguyên tắc: sổ rộng bằng hoặc hơn mã — mã không bao giờ cho người gọi mà sổ không cho (S4-r1: 5 route khai
+   `ops-session` và audit khai `admin` thực ra nhận bearer → khai lại `ops`, bộ kiểm cấm nhánh bearer ở hai chế độ chỉ-phiên);
    - `session-or-noop` — có phiên thì ghi, khách thì 204 không làm gì (user-events).
 2. **Kiểm tĩnh** `scripts/check-api-surface.mjs` — hàm thuần `checkApiSurface({ entries, files })` (`files` = map đường
    tương đối → mã nguồn của mọi `route.ts` dưới `app/src/app/api` và mọi module nằm trong **bao đóng import bắc cầu** của
@@ -47,9 +49,11 @@ Không có chỗ nào nói route nào được công khai, nên route mới đ�
    | M9 | offers gọi cổng mà không trả 401 | cổng ops (canCallOpsApi) chạy trước pool.query |
    | M10 | offers truy vấn trước cổng | cổng ops (canCallOpsApi) chạy trước pool.query |
    | M11 | route `ops` khuôn bearer mất `canAccessOps` | chế độ ops mà mã thiếu cổng |
-   | M12 | route `ops-session` mất `canAccessOps` | chế độ ops-session mà mã thiếu canAccessOps |
-   | M13 | route `admin` mất `isAdmin` | chế độ admin mà mã không có isAdmin |
+   | M12 | route `ops-session` dựng mới thiếu `canAccessOps` | chế độ ops-session mà mã thiếu canAccessOps |
+   | M13 | route `admin` (zalo-media) mất `isAdmin` | chế độ admin mà mã không có isAdmin |
    | M14 | beacon bỏ nhánh 204 | chế độ session-or-noop mà khách không nhận 204 |
+   | M15 | route `admin` (zalo-media) thêm nhánh bearer | chế độ admin mà mã nhận bearer OPS_API_TOKEN |
+   | M16 | route `ops-session` dựng mới có nhánh bearer | chế độ ops-session mà mã nhận bearer OPS_API_TOKEN |
 
    Đột biến không áp được lên mã hiện tại là TRƯỢT có tên (không im). `check-portal-compliance.mjs` (làn ghim lại) gọi
    `checkApiSurface` trên cây thật.

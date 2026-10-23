@@ -230,12 +230,13 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
     | Chế độ | Ai gọi được | Cổng trong mã |
     |---|---|---|
     | `public` | mọi người | không — và **không được đọc `sale_offers`** (tin rao), kể cả gián tiếp qua thư viện |
-    | `ops` | máy có `Authorization: Bearer <OPS_API_TOKEN>` hoặc người vận hành đăng nhập | `canCallOpsApi`, hoặc khuôn `bearerOk` + `canAccessOps` |
-    | `ops-session` | chỉ người vận hành đăng nhập | `canAccessOps` |
-    | `admin` | chỉ role `admin` | `isAdmin` |
+    | `ops` | máy có `Authorization: Bearer <OPS_API_TOKEN>` hoặc người vận hành đăng nhập | `canCallOpsApi`, hoặc nhánh bearer + `canAccessOps`/`isAdmin` |
+    | `ops-session` | chỉ người vận hành đăng nhập — máy có token KHÔNG qua | `canAccessOps`, không nhánh bearer |
+    | `admin` | chỉ role `admin` — máy có token KHÔNG qua | `isAdmin`, không nhánh bearer |
     | `session-or-noop` | người đăng nhập; khách nhận 204, không có gì được ghi | `if (!user) return 204` |
 
-    Chưa chắc chế độ → chọn chặt hơn. Hôm nay tin rao (`/api/v1/offers`) và căn giá tốt (`/api/v1/deals`) ở chế
+    Sổ phải rộng bằng hoặc hơn mã: mã không bao giờ cho một người gọi mà sổ không cho (mã chặt hơn sổ thì được — ghi ở
+    `note`, vd `/api/v1/ops/audit` khai `ops` nhưng phiên phải là admin). Hôm nay tin rao (`/api/v1/offers`) và căn giá tốt (`/api/v1/deals`) ở chế
     độ `ops` (tạm đóng tới khi PL2 rút tin mock); mở lại là một quyết định riêng, đổi dòng sổ cùng commit.
 
 ---

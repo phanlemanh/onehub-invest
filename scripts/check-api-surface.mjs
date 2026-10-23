@@ -2,7 +2,7 @@
 // Kiểm TĨNH sổ bề mặt API (hồ sơ so-be-mat-api, NT4): mỗi route.ts dưới app/src/app/api khớp đúng một dòng của
 // app/src/lib/api-surface.ts và cổng trong mã khớp chế độ sổ khai. Đo trạng thái cây, không đo diff.
 //   node scripts/check-api-surface.mjs static    — đo cây thật (exit 0 = đạt, 1 = vi phạm)
-//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M14 phải TRƯỢT đúng thông điệp
+//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M16 phải TRƯỢT đúng thông điệp
 // check-portal-compliance.mjs gọi checkApiSurface trên cây thật (làn ghim lại).
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -18,7 +18,9 @@ export const MSG = {
   guardOrder: "cổng ops (canCallOpsApi) chạy trước pool.query",
   ops: "chế độ ops mà mã thiếu cổng",
   opsSession: "chế độ ops-session mà mã thiếu canAccessOps",
+  opsSessionBearer: "chế độ ops-session mà mã nhận bearer OPS_API_TOKEN",
   admin: "chế độ admin mà mã không có isAdmin",
+  adminBearer: "chế độ admin mà mã nhận bearer OPS_API_TOKEN",
   noop: "chế độ session-or-noop mà khách không nhận 204",
 };
 
@@ -102,12 +104,18 @@ export function checkApiSurface({ entries, files }) {
 
     // Route có nhắc canCallOpsApi (kể cả chỉ còn dòng import) phải gọi nó đúng khuôn AU2: await, 401, trước truy vấn.
     if (/\bcanCallOpsApi\b/.test(stripComments(src)) && !checkDealsRoute(src).ok) violations.push(`${e.route}: ${MSG.guardOrder}`);
-    if (e.mode === "ops" && !(/\bcanCallOpsApi\(/.test(run) || (/\bbearerOk\b/.test(run) && /\bcanAccessOps\(/.test(run))))
-      violations.push(`${e.route}: ${MSG.ops}`);
+    // Nhánh bearer: route (hoặc module nó import, trừ ops-access.ts nơi ĐỊNH NGHĨA canCallOpsApi) đọc OPS_API_TOKEN,
+    // hoặc gọi canCallOpsApi(...). Sổ phải rộng bằng hoặc hơn mã: chế độ chỉ-phiên mà mã nhận bearer là sổ nói dối.
+    const own = closure.filter((g) => g !== "app/src/lib/ops-access.ts");
+    const bearer = own.some((g) => /\bOPS_API_TOKEN\b/.test(code(files[g] ?? ""))) || /\bcanCallOpsApi\(/.test(run);
+    const sessionGate = /\bcanAccessOps\(/.test(run) || /(?<!function\s)\bisAdmin\(/.test(run);
+    if (e.mode === "ops" && !(/\bcanCallOpsApi\(/.test(run) || (bearer && sessionGate))) violations.push(`${e.route}: ${MSG.ops}`);
     if (e.mode === "ops-session" && !/\bcanAccessOps\(/.test(run)) violations.push(`${e.route}: ${MSG.opsSession}`);
+    if (e.mode === "ops-session" && bearer) violations.push(`${e.route}: ${MSG.opsSessionBearer}`);
     // Lời gọi isAdmin(...) trong bao đóng — không tính chỗ định nghĩa `function isAdmin(` ở ops-access.ts.
     if (e.mode === "admin" && !closure.some((g) => /(?<!function\s)\bisAdmin\(/.test(code(files[g] ?? ""))))
       violations.push(`${e.route}: ${MSG.admin}`);
+    if (e.mode === "admin" && bearer) violations.push(`${e.route}: ${MSG.adminBearer}`);
     if (e.mode === "session-or-noop" && !/if \(!user\) return new NextResponse\(null, \{ status: 204 \}\)/.test(run))
       violations.push(`${e.route}: ${MSG.noop}`);
   }
@@ -193,12 +201,15 @@ export const MUTATIONS = [
     const r = replaceIn(files, routeFile("v1/ops/coverage"), "if (!canAccessOps(user))", "if (!user)");
     return r && { entries, files: r };
   }],
-  ["M12", "route ops-session mất canAccessOps", MSG.opsSession, ({ entries, files }) => {
-    const r = replaceIn(files, routeFile("v1/ops/zalo/groups"), "return canAccessOps(await getSessionUser());", "return Boolean(await getSessionUser());");
-    return r && { entries, files: r };
-  }],
-  ["M13", "route admin mất isAdmin", MSG.admin, ({ entries, files }) => {
-    const r = replaceIn(files, routeFile("v1/ops/audit"), "if (!isAdmin(user))", "if (!user)");
+  ["M12", "route ops-session (dựng mới) thiếu canAccessOps", MSG.opsSession, ({ entries, files }) => ({
+    entries: [...entries, { route: "v1/moi-phien", methods: ["GET"], mode: "ops-session", note: "đột biến" }],
+    files: {
+      ...files,
+      [routeFile("v1/moi-phien")]: `import { getSessionUser } from "@/lib/auth";\nexport async function GET() {\n  if (!(await getSessionUser())) return Response.json({}, { status: 401 });\n  return Response.json({});\n}\n`,
+    },
+  })],
+  ["M13", "route admin (zalo-media) mất isAdmin", MSG.admin, ({ entries, files }) => {
+    const r = replaceIn(files, "app/src/lib/ops/zalo-media.ts", "if (!isAdmin(user))", "if (!user)");
     return r && { entries, files: r };
   }],
   ["M14", "beacon bỏ nhánh 204", MSG.noop, ({ entries, files }) => {
@@ -210,6 +221,22 @@ export const MUTATIONS = [
     );
     return r && { entries, files: r };
   }],
+  ["M15", "route admin (zalo-media) thêm nhánh bearer", MSG.adminBearer, ({ entries, files }) => {
+    const r = replaceIn(
+      files,
+      routeFile("zalo-media"),
+      "return serveZaloMedia(req, await getSessionUser());",
+      'if (req.headers.get("authorization") === `Bearer ${process.env.OPS_API_TOKEN}`) return new Response("ok");\n  return serveZaloMedia(req, await getSessionUser());',
+    );
+    return r && { entries, files: r };
+  }],
+  ["M16", "route ops-session (dựng mới) có nhánh bearer", MSG.opsSessionBearer, ({ entries, files }) => ({
+    entries: [...entries, { route: "v1/moi-phien-bearer", methods: ["GET"], mode: "ops-session", note: "đột biến" }],
+    files: {
+      ...files,
+      [routeFile("v1/moi-phien-bearer")]: `import { getSessionUser } from "@/lib/auth";\nimport { canAccessOps } from "@/lib/ops-access";\nexport async function GET(req: Request) {\n  const ok = req.headers.get("authorization") === \`Bearer \${process.env.OPS_API_TOKEN}\` || canAccessOps(await getSessionUser());\n  return ok ? Response.json({}) : Response.json({}, { status: 401 });\n}\n`,
+    },
+  })],
 ];
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

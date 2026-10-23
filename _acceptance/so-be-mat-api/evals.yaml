@@ -32,8 +32,8 @@ evals:
     criterion: AC-3
     executor: script
     cmd: config:executors.script.api_surface_mutation
-    expected: "exit 0; M7–M10 (offers bỏ cổng / không await / không trả 401 / truy vấn trước cổng) TRƯỢT với 'cổng ops (canCallOpsApi) chạy trước pool.query'; M11 TRƯỢT với 'chế độ ops mà mã thiếu cổng'; M12 với 'chế độ ops-session mà mã thiếu canAccessOps'; M13 với 'chế độ admin mà mã không có isAdmin'; M14 với 'chế độ session-or-noop mà khách không nhận 204'"
-    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/v1/offers/route.ts", "scripts/check-api-surface.mjs"]
+    expected: "exit 0; M7–M10 (offers bỏ cổng / không await / không trả 401 / truy vấn trước cổng) TRƯỢT với 'cổng ops (canCallOpsApi) chạy trước pool.query'; M11 TRƯỢT với 'chế độ ops mà mã thiếu cổng'; M12 với 'chế độ ops-session mà mã thiếu canAccessOps'; M13 với 'chế độ admin mà mã không có isAdmin'; M14 với 'chế độ session-or-noop mà khách không nhận 204'; M15 với 'chế độ admin mà mã nhận bearer OPS_API_TOKEN'; M16 với 'chế độ ops-session mà mã nhận bearer OPS_API_TOKEN'"
+    paths: ["app/src/lib/api-surface.ts", "app/src/app/api/**/route.ts", "app/src/lib/ops/zalo-media.ts", "scripts/check-api-surface.mjs"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E5
