@@ -1,6 +1,7 @@
 # Review kiến trúc phân loại + enrich — từ lúc tin vào tới lúc thành căn nhà
 
-> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** — cái gì đã chốt, cái gì còn chờ: **§7.0**. Đối chiếu audit 23/10: §7.1 · Phạm vi: Kev-4B gate →
+> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** — cái gì đã chốt, cái gì còn chờ: **§7.0**. Đối chiếu audit 23/10: §7.1
+> Khung RESO cụ thể (field, resource, extension, quyết định R1–R5): `docs/architecture/reso-khung-phan-loai.md`. · Phạm vi: Kev-4B gate →
 > parser `transform-*` → E1/E2/định tuyến → `/ops/review` → `resolve-properties`.
 > Cách làm: chỉ đọc code (HEAD `b446637`, đã gồm PR #14, #16, #21), DB local :5433 (SELECT) và log.
 > Không sửa code, không ghi DB. Bản xem trên điện thoại (riêng tư): https://claude.ai/artifact/RSzE1VKhUjbw7jVMyorGHd
@@ -916,6 +917,7 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | F4: độ tươi p50 ≤ 10′, p95 ≤ 30′; cửa sổ hiệu lực 14/7 ngày (đề xuất) | §0.3 |
 | F7: số giờ công/tuần giữ bậc | §0.2 F |
 | M1–M4 lớp model (sửa luật Local-first, tên nhóm không gửi cloud, Vercel AI Gateway, ADR trợ lý) | §0.4 |
+| R1–R5 khung RESO (căn = UPI + Building, tin = Property; toà = `BuildingName`, phân khu = `ComplexName`; UPI kiểu VN; phường → `City`; lấy DD 2.1) | `reso-khung-phan-loai.md` §9 |
 | Thang căn cứ 3 lớp, ghép căn là phát biểu, lát dọc thay đợt ngang (§0.2 D) — đề xuất, chưa duyệt riêng | §0.2 D |
 
 **Cắt lượt**: bản phạm vi `phan-loai-2310` và lộ trình 31 hàng (PL1–PL31) + 6 mục chờ (PH1–PH6), kèm việc bật gói
@@ -952,6 +954,8 @@ Lưu ý tên: audit đánh số câu hỏi Q1–Q8 **riêng**, không trùng Q1�
 | Tạm đóng `/api/v1/deals` công khai | không có | 0.5, Q3-audit | Review ủng hộ: đến khi PL2 xong, API công khai đang phát tin giả |
 
 ### 7.2 Nguồn
+
+- Khung RESO cụ thể hoá: `docs/architecture/reso-khung-phan-loai.md` (tra `dd-2.0.json`, `dd-2.1.json` ngày 23/10).
 
 
 - Code: `collector/openclaw/handler.js` · `pipeline/transform-{zalo,fb,chotot,airbnb}.mjs` ·
