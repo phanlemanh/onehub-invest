@@ -2,8 +2,11 @@
 // Mọi ca chạy trong BEGIN…ROLLBACK trên Postgres local (helpers/db.ts nạp 033+036+039).
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 import type pg from "pg";
 
+import { main } from "../scripts/enrich-revert.js";
 import type { ContextResult } from "../src/agents/context-resolver.js";
 import { runEnrich, type LlmFn, type ResolveFn } from "../src/enrich/run.js";
 import { withTx, insertOffer, insertProperty, insertProposal } from "./helpers/db.js";
@@ -182,6 +185,40 @@ test("AC-6 gọi lại không hoàn tác lần hai", async () => {
     assert.equal(after, nAudit + 1, "AC-6 lần gọi lại vẫn phải có dòng audit");
     assert.equal((await lastAudit(c)).detail.skipped[0].why, "not-applied");
   });
+});
+
+// ── AC-7 CLI: đường thật trong transaction của test, --dry, cờ thiếu, lệnh khởi được ─────────
+test("AC-7 CLI hoàn tác", async () => {
+  await withTx(async (c) => {
+    const a = await offerWithPost(c);
+    const ids = [
+      await applied(c, a, "property_type", "land"),
+      await applied(c, a, "street_raw", "Quang Trung"),
+      await applied(c, a, "bathrooms", "4"),
+    ];
+    const lines: string[] = [];
+    const h0 = await tablesHash(c);
+    assert.equal(await main(["--ids", `${ids[0]}, ${ids[1]}`, "--actor", "hitl:test", "--reason", "x", "--dry"], c,
+      (s) => lines.push(s)), 0);
+    assert.equal(await tablesHash(c), h0, "AC-7 --dry đã ghi");
+    assert.deepEqual(lines.slice(0, 2), [`${ids[0]} ${a} property_type: land → unknown`, `${ids[1]} ${a} street_raw: Quang Trung → trống`]);
+
+    assert.equal(await main(["--ids", `${ids[0]},${ids[1]}`, "--actor", "hitl:test", "--reason", "x"], c, () => {}), 0);
+    const st = (await c.query(`SELECT id, status FROM enrichment_proposals WHERE id = ANY($1) ORDER BY id`, [ids])).rows;
+    assert.deepEqual(st.map((r) => r.status), ["reverted", "reverted", "applied"], "AC-7 CLI hoàn tác nhầm id");
+    assert.equal((await lastAudit(c)).actor, "hitl:test");
+
+    const msgs: string[] = [];
+    assert.equal(await main(["--ids", "1", "--reason", "x"], c, (s) => msgs.push(s)), 2);
+    assert.equal(await main(["--ids", "1", "--actor", "hitl:test"], c, (s) => msgs.push(s)), 2);
+    assert.equal(await main(["--ids", "1,abc", "--actor", "hitl:test", "--reason", "x"], c, (s) => msgs.push(s)), 2);
+    assert.deepEqual(msgs.filter((m) => m.startsWith("enrich-revert:")),
+      ["enrich-revert: thiếu --actor", "enrich-revert: thiếu --reason", "enrich-revert: --ids không hợp lệ: 1,abc"]);
+  });
+  // Lệnh thật khởi được (tiến trình con, không cờ → mã 2, không chạm DB).
+  const r = spawnSync("npx", ["tsx", "scripts/enrich-revert.ts"], { cwd: join(import.meta.dirname, ".."), encoding: "utf8" });
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stdout, /thiếu --ids/);
 });
 
 function run(c: pg.Client, offerIds: string[], resolve: ResolveFn, llm: LlmFn = llmNone) {
