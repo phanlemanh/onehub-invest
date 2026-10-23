@@ -72,7 +72,7 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 
 ## Sau B3 — thống nhất biểu đồ (2026-10-23)
 
-- **Commit:** `a7e4ba5` (nhánh `claude/ui-clean-b3-charts-f4d78e`, đã merge main `f51b01c`: Phần A + #3 + #5)
+- **Commit:** `fdda593` (nhánh `claude/ui-clean-b3-charts-f4d78e`, đã merge main `8595dc0`: Phần A + #3–#8 + #10; đo lần đầu ở `a7e4ba5` trước merge: 133 vi phạm / 29 file)
 - **Chạy lại:** `cd app && npm run lint:ui-report`; thước của đợt: `node scripts/ui-standards/b3-check.mjs <lệnh>`
 - Mục suppress phạm vi B3 (performance, revenue-mix, yield/pnl): 8 → 0 — 5 `no-raw-palette` sửa thật bằng bảng màu chung (`components/charts/palette.ts`), 3 thành ngoại lệ có lý do "nguyên bản @reui/chart-6" (2 `no-banned-motion`, 1 `no-raw-controls`).
 - File > 200 dòng phạm vi B3: 7 → 0 (margin-plot 780, metric-plot 510, plot-motion 282, revenue-mix/chart 251, performance/chart 231, pnl/chart 203, performance/chart-toolbar 201).
@@ -80,7 +80,7 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 
 ### Số liệu lint UI toàn app tại commit trên
 
-**Tổng 133 vi phạm trong 29 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
+**Tổng 131 vi phạm trong 28 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
 
 #### Theo luật
 
@@ -89,12 +89,12 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 | `onehub-ui/no-arbitrary-text-size` | 32 | 32 | 0 | 0 |
 | `onehub-ui/no-raw-controls` | 26 | 25 | 1 | 0 |
 | `onehub-ui/no-raw-palette` | 25 | 25 | 0 | 0 |
-| `onehub-ui/no-emoji-icons` | 17 | 17 | 0 | 0 |
 | `onehub-ui/no-hardcoded-color` | 16 | 16 | 0 | 0 |
+| `onehub-ui/no-emoji-icons` | 15 | 15 | 0 | 0 |
 | `onehub-ui/no-banned-motion` | 8 | 6 | 2 | 0 |
 | `onehub-ui/no-raw-table` | 6 | 6 | 0 | 0 |
 | `onehub-ui/no-native-dialogs` | 3 | 3 | 0 | 0 |
-| **Tổng** | 133 | 130 | 3 | 0 |
+| **Tổng** | 131 | 128 | 3 | 0 |
 
 #### Theo thư mục (cấp 2 dưới `src/`)
 
@@ -110,10 +110,9 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 | `components/saved` | 5 | 5 | 0 | 0 |
 | `components/yield` | 4 | 4 | 0 | 0 |
 | `components/listing` | 3 | 3 | 0 | 0 |
-| `app/(app)` | 2 | 2 | 0 | 0 |
 | `components/shell` | 2 | 2 | 0 | 0 |
 | `components/compare` | 1 | 1 | 0 | 0 |
-| **Tổng** | 133 | 130 | 3 | 0 |
+| **Tổng** | 131 | 128 | 3 | 0 |
 
 ## Ghi chú
 
