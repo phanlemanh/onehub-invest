@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 547e5a5c577fb3ebc2604ac07e7dd6cb79c4a99a
+verified_commit: c4ac043a8122c7dcd4f45a80c430d90e5b170c01
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -334,3 +334,7 @@ Round 2: tài liệu đã được sửa; sáu lệnh suite chạy lại đều 
 ### Re-pin lần 1 — 2026-10-23, do hoá cũ do gộp main (PL2 sửa sync-cloud.mjs phần chặn tụt, ZCode collector) sau chữ ký
 run_id: repin-20261023T145040Z-80433
 sha: 547e5a5c577fb3ebc2604ac07e7dd6cb79c4a99a · suites: 6 lệnh exit 0 · evals: 18/18 eval máy đạt kỳ vọng · ngoài làn máy: E18 · diff chạm vật đo ngoài làn máy: E18 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-10-23, do hoá cũ do gộp main (bộ kiểm độ tươi của P3) để gỡ xung đột PR #40
+run_id: repin-20261023T150349Z-44100
+sha: c4ac043a8122c7dcd4f45a80c430d90e5b170c01 · suites: 6 lệnh exit 0 · evals: 18/18 eval máy đạt kỳ vọng · ngoài làn máy: E18 · AC không có chốt máy: AC-10
