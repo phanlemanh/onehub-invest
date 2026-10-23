@@ -99,8 +99,11 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 4. **DATA-CONTRACT** (`collector/docs/DATA-CONTRACT.md`) là giao diện collector↔pipeline;
    thêm field phải tăng `schemaVersion`.
 5. **AirDNA chỉ để hiệu chuẩn** (ToS) — không đưa số AirDNA lên Invest Portal; chỉ ở `/ops/quality`.
-6. **SPL (ADR-0007)**: nguồn gọi bằng mã `S0x`. Tầng A (tên nguồn thật, SĐT, hồ sơ cá nhân)
-   KHÔNG rời máy local — cloud chỉ nhận hash + aggregate. `sale_offers` không sync cloud.
+6. **SPL (ADR-0007)**: nguồn gọi bằng mã `S0x`. Tầng A (tên nguồn thật, hồ sơ người dùng app,
+   `user_events/user_profile`, `review_queue`) KHÔNG rời máy local — cloud chỉ nhận hash + aggregate.
+   **Định danh người bán trên tin rao (tên, SĐT, ID tài khoản) là tầng C — công khai, KHÔNG tính là
+   lộ danh tính**: người đăng rao bán đang làm hoạt động bán hàng/môi giới (Mạnh chốt 2026-10-23,
+   sửa đổi ADR-0007 mục 9). `sale_offers` được lên cloud; vẫn loại mọi cột lộ tên nguồn thật.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
