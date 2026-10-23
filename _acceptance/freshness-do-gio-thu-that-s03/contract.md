@@ -5,7 +5,7 @@ slug: freshness-do-gio-thu-that-s03
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-freshness-do-gio-thu-that-s03-design.md
 veto_state: mo
 veto_opened_at: 2026-10-23T12:22:00Z
@@ -60,3 +60,8 @@ Bỏ quét hình thái — thay bằng ma trận mã → cột thời gian đo m
 
 - Fixture cùng khuôn AU4: `LIKE` bảng thật trong schema tạm, không đụng bảng thật. Importer thật (AC-1) chạy với `DATABASE_URL` mang `options=-c search_path=<schema tạm>`.
 - Zalo: chưa round-trip bằng `import-airbnb.mjs` thật (nhiều loại item + media); AC-2 dựng fixture theo đúng dòng upsert đã trích.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: con số «lệch-snapshot» trong dòng chẩn đoán luôn bằng 0 (cơ sở dữ liệu không cho trường hợp đó xảy ra) — không phải một phép kiểm thật.
+  - Ngoài-4: ca chẩn đoán trên DB thật chỉ in số để người chấm đối chiếu, máy không tự báo đỏ khi chúng lệch.
+  - Ngoài-5: ca nạp lại bài Zalo dựng bằng dữ liệu viết tay theo luật nạp đã trích, chưa chạy importer Zalo thật.
+- Ngoài-3 (S03/S05 mốc theo snapshot đầu tiên thấy bài — có thể báo quá hạn giả khi nguồn chỉ ra bài đã có) — Mạnh chọn mở hợp đồng mới ở Cổng Bằng chứng 23/10.
