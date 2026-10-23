@@ -8,12 +8,14 @@ on:
     paths:
       - "app/**"
       - ".claude/skills/onehub-ui/**"
+      - "CONTEXT.md" # slug URL chuẩn — test route-slugs đọc file này
       - ".github/workflows/ui-lint.yml"
   push:
     branches: [main]
     paths:
       - "app/**"
       - ".claude/skills/onehub-ui/**"
+      - "CONTEXT.md" # slug URL chuẩn — test route-slugs đọc file này
       - ".github/workflows/ui-lint.yml"
 
 jobs:
