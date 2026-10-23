@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# install-cron.sh — cài 3 launchd job (collector tuần + smoke ngày + backup
-# tuần). Chạy MỘT LẦN bởi người dùng (đụng ~/Library/LaunchAgents — không tự
+# install-cron.sh — cài 2 launchd job (smoke ngày + backup tuần).
+# Job collector (Chủ nhật discovery-only) ĐÃ NGHỈ — airbnb-nightly thay thế
+# (install-airbnb-cron.sh); template xoá khỏi pipeline/cron nên vòng lặp
+# không còn 'collector' nữa (ZC5/claudedp-2310-2). Chạy MỘT LẦN bởi người dùng (đụng ~/Library/LaunchAgents — không tự
 # chạy trong build/plan):
 #   bash scripts/install-cron.sh
 # Env tùy chọn khi gọi: BACKUP_DIR (đĩa ngoài), BACKUP_PASS (passphrase raw).
@@ -24,7 +26,7 @@ if [ -n "${BACKUP_PASS:-}" ]; then
   echo "BACKUP_PASS → Keychain (oneinvest-backup)"
 fi
 
-for f in collector smoke backup; do
+for f in smoke backup; do
   SRC="$ROOT/pipeline/cron/com.oneinvest.$f.plist"
   OUT="$DEST/com.oneinvest.$f.plist"
   sed "s|__ROOT__|$ROOT|g" "$SRC" > "$OUT"
