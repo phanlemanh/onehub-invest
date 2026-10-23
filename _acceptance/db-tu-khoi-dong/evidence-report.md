@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 40fb80901c8aa5b74a784c34b168173960a18231
+verified_commit: 23c060af3893cabbef0a44ce10654f1a495c1fcb
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -170,3 +170,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, tất �
 
 Round 1: E1-E6, E8, E9 đạt; E7 hội đồng đề xuất PASS; có 1 finding trong hợp đồng (AC-6, dọn dind khi lượt lỗi thoát bằng return) và 2 finding ngoài hợp đồng.
 Round 2: E1-E6, E8, E9 đạt trên commit 40fb809 sau khi sửa AC-6 (chờ dockerd trong dind tới 120 giây, dọn dind cả khi lỗi thoát bằng return); E7 hội đồng đề xuất PASS; không còn finding trong hợp đồng, 2 finding ngoài hợp đồng giữ nguyên từ round 1.
+
+### Re-pin lần 1 — 2026-10-23, do hoá cũ do gộp main (ZC3) vào nhánh sau chữ ký
+run_id: repin-20261023T101730Z-24112
+sha: 23c060af3893cabbef0a44ce10654f1a495c1fcb · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7 · AC không có chốt máy: AC-7
