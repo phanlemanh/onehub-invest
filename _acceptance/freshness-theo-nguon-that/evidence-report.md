@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c4eed61b9c801468560bfe6db46419146424721d
+verified_commit: 5bcf7ba18639278aaff630a79cbd6048abc95c2d
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -178,3 +178,7 @@ Round 1: E1–E9 đều đạt — không eval nào hỏng. Các lỗi ngoài h�
 ### Re-pin lần 1 — 2026-10-23, do gộp main sau chữ ký (collector/** đổi)
 run_id: repin-20261023T115832Z-35345
 sha: c4eed61b9c801468560bfe6db46419146424721d · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths) · AC không có chốt máy: AC-9
+
+### Re-pin lần 2 — 2026-10-23, do nhánh nối tiếp freshness-do-gio-thu-that-s03 đổi freshness.mjs + fixture test
+run_id: repin-20261023T144851Z-54191
+sha: 5bcf7ba18639278aaff630a79cbd6048abc95c2d · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths) · AC không có chốt máy: AC-9
