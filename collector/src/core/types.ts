@@ -37,7 +37,7 @@ export type ManifestFile = {
 };
 
 export type SnapshotManifest = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   snapshotId: string; // "<city>__<source>__<yyyymmdd-hhmmss>"
   city: string;
   source: string;
