@@ -106,8 +106,10 @@ leftovers() { docker ps -aq --filter "name=au7-dind-$1" | wc -l | tr -d ' '; }
 
 ensure_img() { docker image inspect "$1" >/dev/null 2>&1 || docker pull -q "$1" >/dev/null; }
 
+# Chờ dockerd trong dind tối đa 120 giây (máy tải cao từng cần > 60 giây); quá hạn thì in đuôi log dind.
 wait_dockerd() { # $1 = container dind
-  local i; for i in $(seq 1 60); do docker exec "$1" docker info >/dev/null 2>&1 && return 0; sleep 1; done
+  local i; for i in $(seq 1 120); do docker exec "$1" docker info >/dev/null 2>&1 && return 0; sleep 1; done
+  echo "--- đuôi log $1:"; docker logs --tail 15 "$1" 2>&1
   return 1
 }
 
