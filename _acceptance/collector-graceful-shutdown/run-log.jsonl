@@ -1,0 +1,6 @@
+{"ts":"2026-10-23T01:43:47Z","round":1,"evalId":"E1","run_id":"collector-graceful-shutdown-E1-20261023T014347","exit_code":0,"cmd":"cd collector && npm run check"}
+{"ts":"2026-10-23T01:43:53Z","round":1,"evalId":"E2","run_id":"collector-graceful-shutdown-E2-20261023T014353","exit_code":0,"cmd":"cd collector && npm test"}
+{"ts":"2026-10-23T01:44:54Z","round":1,"evalId":"E3","run_id":"collector-graceful-shutdown-E3-20261023T014454","exit_code":0,"cmd":"node scripts/collector-shutdown/acceptance.mjs deadline"}
+{"ts":"2026-10-23T01:44:59Z","round":1,"evalId":"E4","run_id":"collector-graceful-shutdown-E4-20261023T014459","exit_code":0,"cmd":"cd collector && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs skip-media"}
+{"ts":"2026-10-23T01:45:11Z","round":1,"evalId":"E5","run_id":"collector-graceful-shutdown-E5-20261023T014511","exit_code":0,"cmd":"cd collector && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs process"}
+{"ts":"2026-10-23T01:45:33Z","round":1,"evalId":"E6","run_id":"collector-graceful-shutdown-E6-20261023T014533","exit_code":0,"cmd":"plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"}
