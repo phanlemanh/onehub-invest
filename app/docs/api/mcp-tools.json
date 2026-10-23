@@ -40,7 +40,7 @@
     }
   ],
   "base_url": "http://localhost:3000",
-  "cloud_base_url": "https://app-lilac-one-49.vercel.app",
+  "cloud_base_url": "https://onehub-invest.vercel.app",
   "auth": "public (đã pseudonymize theo SPL ADR-0007)",
   "updated": "2026-10-20"
 }
