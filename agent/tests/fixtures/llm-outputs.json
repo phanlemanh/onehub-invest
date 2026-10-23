@@ -1,0 +1,138 @@
+[
+  {
+    "trace": "2026-10-22T10-12-21--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": \"phố Ba Đình\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\"chính chủ\", \"căn góc\", \"mặt phố\", \"miễn trung gian\"],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}"
+  },
+  {
+    "trace": "2026-10-22T10-14-30--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"LD2\",\n  \"features\": [\n    \"hướng Đông Bắc\",\n    \"view hồ điều hòa\",\n    \"nhận nhà tháng 9/2026\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}"
+  },
+  {
+    "trace": "2026-10-22T10-15-48--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": \"Ba Đình\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"chính chủ\",\n    \"căn góc\",\n    \"mặt phố\",\n    \"miễn trung gian\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}"
+  },
+  {
+    "trace": "2026-10-22T10-16-38--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.9\n}"
+  },
+  {
+    "trace": "2026-10-22T10-18-01--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Ba Đình\",\n  \"project_name\": null,\n  \"building\": \"Ba Đình\",\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.78\n}"
+  },
+  {
+    "trace": "2026-10-22T10-18-46--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.85\n}"
+  },
+  {
+    "trace": "2026-10-22T10-19-54--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Mỹ Đình\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.8\n}"
+  },
+  {
+    "trace": "2026-10-22T10-22-12--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Times City\",\n  \"building\": \"Park 09\",\n  \"features\": [\n    \"chính chủ\",\n    \"sẵn sổ\",\n    \"nhà không đồ\",\n    \"tầng trung\",\n    \"cực đẹp\",\n    \"có thương lượng\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}"
+  },
+  {
+    "trace": "2026-10-22T10-22-47--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.6\n}"
+  },
+  {
+    "trace": "2026-10-22T10-23-19--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"full nội thất\",\n    \"view hồ\",\n    \"bán CHCC\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.92\n}"
+  },
+  {
+    "trace": "2026-10-22T10-23-43--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"unknown\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Thanh Xuân\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.35\n}"
+  },
+  {
+    "trace": "2026-10-22T10-25-34--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Định Công\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.74\n}"
+  },
+  {
+    "trace": "2026-10-22T10-29-19--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": \"Mai Động\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"giá tốt\"\n  ],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.6\n}"
+  },
+  {
+    "trace": "2026-10-22T10-30-00--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.85\n}"
+  },
+  {
+    "trace": "2026-10-22T10-32-04--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"mặt phố Gia Lâm\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"chính chủ\",\n    \"miễn trung gian\",\n    \"căn góc\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.65\n}"
+  },
+  {
+    "trace": "2026-10-22T10-33-40--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Phúc Diễn\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.75\n}"
+  },
+  {
+    "trace": "2026-10-22T10-34-29--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": \"Hai Bà Trưng\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"chính chủ\",\n    \"căn góc\",\n    \"mặt phố\",\n    \"miễn trung gian\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.85\n}"
+  },
+  {
+    "trace": "2026-10-22T10-36-22--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": \"Tây Hồ\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"chính chủ\",\n    \"căn góc\",\n    \"mặt phố\",\n    \"miễn trung gian\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.82\n}"
+  },
+  {
+    "trace": "2026-10-22T10-37-21--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"full nội thất\",\n    \"view hồ\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}"
+  },
+  {
+    "trace": "2026-10-22T10-42-16--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"BE3\",\n  \"features\": [\n    \"view bể cảnh quan\",\n    \"hướng Tây Nam\",\n    \"đã nhận nhà\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.88\n}"
+  },
+  {
+    "trace": "2026-10-22T10-43-04--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": \"Xuân La\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"chính chủ\",\n    \"căn góc\",\n    \"mặt phố\",\n    \"miễn trung gian\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.92\n}"
+  },
+  {
+    "trace": "2026-10-22T10-49-11--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"unknown\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Quảng An\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.65\n}"
+  },
+  {
+    "trace": "2026-10-22T10-50-03--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": \"Mai Động\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"full nội thất\",\n    \"view hồ\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}"
+  },
+  {
+    "trace": "2026-10-22T10-50-42--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": \"Hàng Trống\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.75\n}"
+  },
+  {
+    "trace": "2026-10-22T10-51-41--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"full nội thất\",\n    \"view hồ\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}"
+  },
+  {
+    "trace": "2026-10-22T10-52-14--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Thượng Thanh\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"full nội thất\",\n    \"view hồ\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.82\n}"
+  },
+  {
+    "trace": "2026-10-22T10-56-10--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": \"Masteri West Heights\",\n  \"building\": \"LD\",\n  \"features\": [\n    \"view hồ điều hòa\",\n    \"hướng Đông Bắc\",\n    \"nhận nhà t9/2026\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.8\n}"
+  },
+  {
+    "trace": "2026-10-22T10-56-53--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.8\n}"
+  },
+  {
+    "trace": "2026-10-22T10-59-12--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"street\": \"Nguyễn Xí\",\n  \"address_detail\": \"hẻm ô tô 4m\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"3 tầng\",\n    \"hẻm ô tô 4m\",\n    \"an ninh\",\n    \"full nội thất\",\n    \"sẵn sổ\",\n    \"pháp lý chuẩn\",\n    \"công chứng trong ngày\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}"
+  },
+  {
+    "trace": "2026-10-22T11-00-53--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 1,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": \"Tây Mỗ\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.55\n}"
+  },
+  {
+    "trace": "2026-10-22T11-01-58--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": \"Mỹ Đình\",\n  \"address_detail\": \"mặt phố\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"chính chủ\",\n    \"căn góc\",\n    \"miễn trung gian\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.7\n}"
+  },
+  {
+    "trace": "2026-10-22T11-02-50--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.75\n}"
+  },
+  {
+    "trace": "2026-10-22T11-03-33--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 3,\n  \"bathrooms\": null,\n  \"street\": \"Thượng Cát\",\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"chính chủ\",\n    \"miễn trung gian\",\n    \"căn góc\",\n    \"mặt phố\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.9\n}"
+  },
+  {
+    "trace": "2026-10-22T11-03-55--enrich-text.jsonl",
+    "output": "{\n  \"property_type\": \"apartment\",\n  \"bedrooms\": 2,\n  \"bathrooms\": null,\n  \"street\": null,\n  \"address_detail\": null,\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"bán gấp\"\n  ],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.85\n}"
+  }
+]

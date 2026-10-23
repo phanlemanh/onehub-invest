@@ -8,7 +8,7 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 # Hai ổ cắm thiết kế (repo có bề mặt người dùng): cả hai trỏ tới skill repo `onehub-ui`.
 feature_loop:
   ui_standards_skill: onehub-ui
-  suite_keys: [executors.test.app, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt
+  suite_keys: [executors.test.agent, executors.test.app, executors.test.app_ui, executors.test.pipeline, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt — agent/app_ui/pipeline thêm từ vòng enrich-qua-de-xuat
 design_pass:
   ds_skill: onehub-ui
 executors:
@@ -18,6 +18,7 @@ executors:
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts — 8/8 xanh
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
+    app_ui: "cd app && npm test"                     # test render jsdom (app/tests) — thêm ở vòng enrich-qua-de-xuat
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
@@ -71,6 +72,12 @@ executors:
     glossary_naming_rule: "node scripts/glossary/acceptance.mjs naming-rule"
     glossary_product_page: "node scripts/glossary/acceptance.mjs product-page"
     glossary_runner: "node scripts/glossary/acceptance.mjs runner"
+    # stg-zalo-media-files — cần DB local :5433 (docker one-invest-db)
+    migration_035: "bash db/check-idempotent.sh db/migrations/035_stg_zalo_media_files.sql stg_zalo_posts"
+    idempotent_selftest: "bash db/check-idempotent.selftest.sh"
+    zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
+    sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
+    zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)

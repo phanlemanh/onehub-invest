@@ -154,6 +154,7 @@ sources:
     fields:
       text: "→ price_vnd, area_m2, bedrooms, phuong_raw, kind (regex + fallback)"
       post_id: "→ thành phần hash offer_id"
+      media_files: "chưa map — ảnh N1 đã tải (DATA-CONTRACT v2, PII tầng A, chỉ local); lên canonical → RESO Media"
   S05:
     label: "facebook groups (P2)"
     staging: stg_zalo_posts

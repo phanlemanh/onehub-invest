@@ -149,7 +149,27 @@ function edges(cTxt, oTxt) {
   return out.length ? ' · ' + out.join(' · ') : '';
 }
 
+// Nhãn «đỏ sẵn trên nền» (hồ sơ ho-so-da-ky-giu-tuoi): hỏi lib/do-san-tren-nen.cjs#nhanHoSo — cùng hàm thẻ hỏi,
+// nó gọi CHÍNH checkRepinEvals của lưới trước-gộp và kiểm lại. Chỉ khi nhãn đạt (khoá bật, mọi vế khớp) dòng
+// bản đồ mới kèm chữ nhãn, rút từ bảng chung NHAN. Hồ sơ không có dòng ghim mang `do_san` → dòng như cũ.
+// Nạp KHOAN DUNG: kho chép scripts/ + lib/ đời trước chưa có tệp luật thì bản đồ vẽ như cũ, không vỡ.
+let _ds;
+const dsLib = () => {
+  if (_ds !== undefined) return _ds;
+  try { _ds = require(path.join(__dirname, '..', 'lib', 'do-san-tren-nen.cjs')); }
+  catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; _ds = null; }
+  return _ds;
+};
 export function classify(dir, slug) {
+  const it = classifyO(dir, slug);
+  if (it.key === 'hong' || !dsLib() || typeof dsLib().nhanHoSo !== 'function') return it;
+  const n = dsLib().nhanHoSo(dir);
+  if (!n) return it;
+  const ds = `${require(path.join(__dirname, '..', 'lib', 'nhan-canh-gay.cjs')).NHAN.DO_SAN}: ${n.ids.join(', ')}`;
+  return { ...it, note: it.note ? `${it.note} · ${ds}` : ds };
+}
+
+function classifyO(dir, slug) {
   // Đọc LƯỜI và phân biệt lỗi, đúng thứ tự bộ quét đi: mở file nào là câu hỏi
   // của luật chung. Đọc cả ba vô điều kiện thì (a) lỗi quyền ở một hồ sơ trạng
   // thái hiện tại không dùng lại quyết định ô của slug, và (b) `read` cũ nuốt
@@ -377,7 +397,9 @@ export async function veTrangLoTrinh(root) {
       return { loi: 'Kho khai tin_hieu nhưng thiếu scripts/tin-hieu-khoa.cjs — chép theo danh sách chép CI (GUIDE §5.3) hoặc gỡ khối tin_hieu.' };
     if (khoaTinHieu != null && khoaTinHieu(cfg) != null) {
       const TH = await import('./tin-hieu.mjs');
-      tinHieu = TH.duongDi({ root, classify, sections: SECTIONS });
+      // Trang là vật COMMIT: chỉ ý đã theo dõi trong cây đang vẽ (hồ sơ ve-lo-trinh-doc-tin-hieu-cua-cay) — bộ đọc
+      // tương tác của cửa vẫn đọc hộp ý chung ở thư mục chính.
+      tinHieu = TH.duongDi({ root, classify, sections: SECTIONS, chiTheoDoi: true });
     }
     trang = LT.veTrang({ root, classify, sections: SECTIONS, tinHieu });
   }

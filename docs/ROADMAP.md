@@ -50,10 +50,15 @@ Public mirrors LIVE: onehub-invest-app + onehub-data-api.
 ```
 thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 → stg_* → transform (parser VN + phone + RESO property_type)
+→ enrichment_proposals (E1/E2 đề xuất → luật xác định / /ops/review;
+  E1 trái LLM → thẻ đối chiếu, người chọn; không UPDATE thẳng canonical, không lên cloud)
 → sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
 → sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
 ```
+- DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
+  `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
+  `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 | Mã | Nguồn | Trạng thái | Ghi chú |
@@ -136,6 +141,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | M4 | form hồ sơ + export JSON (consent, user-owned) | ⬜ |
 | M5 | pgvector — chỉ khi đo thấy cần | ⬜ kháng cự |
 | HITL | /ops/review Review Queue (12 entity_match seeded) | ✅ c6eea64 |
+| M-3 | enrich qua đề xuất: `enrichment_proposals` (033) + luật xác định + thẻ `agent_output` /ops/review; E1 trái LLM → thẻ đối chiếu chọn một bên | 🔶 chờ ký Cổng Bằng chứng (`_acceptance/enrich-qua-de-xuat/`) |
 
 ### Track 2 — "Một Căn Nhà" hoàn thiện
 | # | Việc | Trạng thái |

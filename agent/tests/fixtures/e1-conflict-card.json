@@ -1,0 +1,48 @@
+{
+  "id": 220,
+  "item_type": "agent_output",
+  "evidence": {
+    "text": "💥Nhà  Gò Vấp Ngay coopmat Quang Trung 50m ra mặt tiền ,4 tầng 44 m2\nNhỉnh hơn 6.xx tỉ💥\n\nDiện tích 3.9m x 11.8\n+ Nhà 1 trệt, 2 lầu, sân thượng.\nGồm: 3 Phòng ngủ, 4 WC, phòng khách rộng.",
+    "model": "qwen27b",
+    "fields": [
+      {
+        "basis": "luật từ khoá: «đất» trong tên nhóm «HỘI MUA BÁN NHÀ ĐẤT [tên nhóm S05 đã che]» → land",
+        "field": "property_type",
+        "value": "land",
+        "source": "e1_rule",
+        "conflict": true,
+        "confidence": null,
+        "proposal_id": 909
+      },
+      {
+        "basis": "LLM qwen27b · tự tin 82% · trace 2026-10-22T23-26-24--enrich-text.jsonl",
+        "field": "property_type",
+        "value": "house",
+        "source": "e2_llm",
+        "conflict": true,
+        "confidence": 0.82,
+        "proposal_id": 910
+      },
+      {
+        "basis": "LLM qwen27b · tự tin 82% · trace 2026-10-22T23-26-24--enrich-text.jsonl",
+        "field": "bathrooms",
+        "value": "4",
+        "source": "e2_llm",
+        "confidence": 0.82,
+        "proposal_id": 911
+      },
+      {
+        "basis": "LLM qwen27b · tự tin 82% · trace 2026-10-22T23-26-24--enrich-text.jsonl",
+        "field": "street_raw",
+        "value": "Quang Trung",
+        "source": "e2_llm",
+        "confidence": 0.82,
+        "proposal_id": 912
+      }
+    ],
+    "run_id": "enrich-2026-10-22T23:25:08.912Z",
+    "offer_id": "t_fx_conflict",
+    "group_name": "HỘI MUA BÁN NHÀ ĐẤT [tên nhóm S05 đã che]",
+    "trace_path": "traces/2026-10-22T23-26-24--enrich-text.jsonl"
+  }
+}
