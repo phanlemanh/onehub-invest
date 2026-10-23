@@ -8,9 +8,21 @@
 ## 0. Cách dùng
 
 - Mọi phiên bắt đầu: đọc §1 nguyên tắc + §3 quyết định đã chốt (KHÔNG hỏi
-  lại user những gì đã chốt), §4 lộ trình để biết vị trí hiện tại.
-- Làm xong việc: cập nhật §2 as-built + §4 đánh dấu ✅.
-- Việc mới phải tra §3 xem đã chốt chưa; quyết mới → ghi §3/§4.
+  lại user những gì đã chốt), rồi **`LO-TRINH.html` / `docs/plan/lo-trinh.json`** để biết việc kế tiếp.
+- Làm xong việc: cập nhật §2 as-built; trạng thái việc máy tự suy từ `_acceptance/<slug>/` lên lộ trình.
+- Việc mới phải tra §3 xem đã chốt chưa; quyết mới → ghi §3.
+
+**Mỗi loại thông tin một chỗ** (Mạnh chốt 23/10):
+
+| Loại | Ở đâu | Ai cập nhật |
+|---|---|---|
+| Mục đích, mục tiêu, thước đo | `docs/product/FRAMING.md` | Mạnh duyệt, có nhật ký §9 |
+| Hiến pháp, quyết định đã chốt | §1, §3 của tệp này + `docs/adr/` | phiên làm việc, sau khi Mạnh chốt |
+| **Việc phát triển sắp làm + mốc** | **`docs/plan/lo-trinh.json`** (trang `LO-TRINH.html`) | thêm bằng cắt lượt (`/acceptance-gate:cat-luot`) từ một bản phạm vi `docs/plan/pham-vi-*.md`; mốc ở khối `moc` |
+| Trạng thái từng việc | máy suy từ `_acceptance/<slug>/`, hiện trên `LO-TRINH.html` | không ai ghi tay |
+| As-built + chỉ mục | §2, §4 của tệp này — §4 trỏ mã hàng của lộ trình, không chép danh sách việc | phiên làm xong việc |
+| Căn cứ (audit, review, nghiên cứu) | `docs/audit/`, `docs/architecture/`, `docs/research/` | đầu vào của cắt lượt, không phải danh sách việc |
+| Giao việc cho ZCode | kênh tin (issue #9) — **mỗi lời giao ghi mã hàng** của lộ trình | điều phối liên làn |
 
 ## 1. Nguyên tắc bất biến (hiến pháp)
 
@@ -159,6 +171,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    nhà phố B3, Chợ Tốt B3 (FRAMING §3.4).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
+
+> Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
+> AU1–AU12). Các bảng track dưới đây là chỉ mục lịch sử; đồng bộ với lộ trình ở hàng AU8.
 
 ### Track 1 — AGENT (onehub-ai-agent) — chốt, sẵn sàng thực hiện
 | # | Việc | Trạng thái |
