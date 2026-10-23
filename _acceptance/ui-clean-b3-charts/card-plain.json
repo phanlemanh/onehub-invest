@@ -1,5 +1,5 @@
 {
- "feature_plain": "Ba biểu đồ (Hiệu suất theo tháng, Cơ cấu doanh thu, Doanh thu và chi phí) dùng chung một bảng màu đọc rõ ở cả nền sáng lẫn tối, và chung một bộ mã — người dùng thấy cùng số, cùng thao tác như hôm nay, chỉ khác màu chuỗi.",
+ "feature_plain": "Ba biểu đồ (Hiệu suất theo tháng, Cơ cấu doanh thu, Doanh thu và chi phí) đã dùng chung một bảng màu đọc rõ ở sáng và tối, chung một bộ mã, mọi tệp ≤ 200 dòng — chữ, số, thao tác, CSV và thông báo giữ y như trước; biểu đồ lãi lỗ giống từng điểm ảnh.",
  "will_do": [
   {
    "id": "AC-2",
