@@ -4,7 +4,7 @@
 // Dùng: node scripts/ui-standards/b1-ops.mjs <lệnh> [--root <thư mục gốc repo>]
 // Đọc mã bằng AST của TypeScript (mượn app/node_modules/typescript — gốc repo không có node_modules).
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, sep } from "node:path";
@@ -566,6 +566,11 @@ function copyTree() {
   for (const p of ["app/src", "app/eslint-suppressions.json", "scripts/ui-standards", "docs/research/ui-baseline-2026-10.md", ".claude/skills/onehub-ui"]) cpSync(join(ROOT, p), join(t, p), { recursive: true });
   return t;
 }
+function withApp(dir) {
+  // docs chạy eslint của app: chép app (trừ node_modules/.next) rồi symlink node_modules.
+  cpSync(join(ROOT, "app"), join(dir, "app"), { recursive: true, filter: (s) => !s.includes(`${sep}node_modules`) && !s.includes(`${sep}.next`) });
+  symlinkSync(join(ROOT, "app", "node_modules"), join(dir, "app", "node_modules"));
+}
 function runOn(root, c) {
   const extra = c === "docs" ? [] : [];
   return spawnSync(process.execPath, [fileURLToPath(import.meta.url), c, "--root", root, ...extra], { encoding: "utf8" });
@@ -577,13 +582,13 @@ function selftest() {
       // docs cần app/node_modules để chạy eslint → chạy trên cây thật cho đối chứng dương, bản sao chỉ đổi tài liệu
     }
     const clean = copyTree();
-    if (c === "docs") cpSync(join(ROOT, "app"), join(clean, "app"), { recursive: true, filter: (s) => !s.includes(`${sep}.next`) });
+    if (c === "docs") withApp(clean);
     const pos = runOn(clean, c);
     rows.push({ c, case: "bản sao sạch", want: 0, got: pos.status, ok: pos.status === 0, out: (pos.stdout + pos.stderr).trim().split("\n").slice(-2).join(" | ") });
     rmSync(clean, { recursive: true, force: true });
     for (const m of muts) {
       const t = copyTree();
-      if (c === "docs") cpSync(join(ROOT, "app"), join(t, "app"), { recursive: true, filter: (s) => !s.includes(`${sep}.next`) });
+      if (c === "docs") withApp(t);
       m.apply(t);
       const r = runOn(t, c);
       const out = r.stdout + r.stderr;
