@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   ADVISORY_KEY,
   CLOUD_ALLOW,
+  SHRINK_AUDIT,
   PII_EXCLUDE,
   SOURCE_EXCLUDE,
   assertNoTag,
@@ -16,6 +17,7 @@ import {
   pool,
   scanSourceNames,
   selectList,
+  shrinkVerdict,
 } from "./sync-cloud.mjs";
 
 // cloud-sync-atomic (_acceptance/cloud-sync-atomic) — lõi thuần của sync nguyên tử.
@@ -194,4 +196,34 @@ test("mgmtExec: 429/503 thử lại rồi thành công; retry:false không lặp
   const d = mk([503, 503, 503]);
   await assert.rejects(mgmtExec("t", { fetchImpl: d.fetchImpl, retries: 2, sleep: async () => {} })("X"), /mgmt 503/);
   assert.equal(d.calls.length, 3);
+});
+
+// canonical-khong-tin-gia AC-10 — chặn tụt cho qua khi bảng co vì một lượt dọn có audit khớp số.
+const NOW = new Date("2026-10-24T00:15:00Z");
+const orphanAudit = (remaining, hoursAgo = 0.25) => ({
+  action: SHRINK_AUDIT.sellers, at: new Date(NOW - hoursAgo * 3600_000), detail: { deleted: 989, remaining },
+});
+const AC10_MATRIX = [
+  ["(1) sellers tụt, audit khớp trong 24h", { table: "sellers", local: 54, cloud: 1043, audits: [orphanAudit(54)] }, true],
+  ["(2) sellers tụt, remaining lệch 1", { table: "sellers", local: 54, cloud: 1043, audits: [orphanAudit(55)] }, false],
+  ["(3) sellers tụt, audit cũ hơn 24h", { table: "sellers", local: 54, cloud: 1043, audits: [orphanAudit(54, 25)] }, false],
+  ["(4) sellers tụt, không audit", { table: "sellers", local: 54, cloud: 1043, audits: [] }, false],
+  ["(5) sale_offers tụt kèm audit sellers", { table: "sale_offers", local: 100, cloud: 12615, audits: [orphanAudit(100)] }, false],
+  ["(6) không tụt", { table: "sellers", local: 1040, cloud: 1043, audits: [] }, true],
+];
+
+test("AC-10 chặn tụt có audit", () => {
+  let n = 0;
+  for (const [name, args, ok] of AC10_MATRIX) {
+    assert.equal(shrinkVerdict({ ...args, now: NOW }).ok, ok, `AC-10 ${ok ? "chặn oan" : "cho qua tụt không giải thích được"}: ${name}`);
+    n++;
+  }
+  assert.equal(n, 6, "AC-10 ma trận phải đủ 6 ô");
+  assert.match(shrinkVerdict({ ...AC10_MATRIX[3][1], now: NOW }).reason, /local tụt sellers: 54 < 50% của 1043/);
+});
+
+test("AC-10 chiều đỏ: bỏ so remaining thì ô (2) cho qua", () => {
+  const loose = (a) => (a.table in SHRINK_AUDIT && a.audits.length > 0) || shrinkVerdict(a).ok;
+  const wrong = AC10_MATRIX.filter(([, args, ok]) => loose({ ...args, now: NOW }) !== ok).map(([name]) => name);
+  assert.deepEqual(wrong, ["(2) sellers tụt, remaining lệch 1", "(3) sellers tụt, audit cũ hơn 24h"]);
 });

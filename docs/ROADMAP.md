@@ -70,7 +70,9 @@ Public mirrors LIVE: onehub-invest-app + onehub-data-api.
 ```
 thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 → stg_* → transform (parser VN + phone + RESO property_type; S03/S05 upsert + đối soát
-  offer cũ qua `writeOffers` — đề xuất enrich + thẻ duyệt sống qua nạp lại, 039)
+  offer cũ qua `writeOffers` — đề xuất enrich + thẻ duyệt sống qua nạp lại, 039;
+  gạt post thử ở đầu đọc qua `lib/test-posts.mjs` — snapshot giả/agent thử/nhóm TEST, audit
+  `transform:reject-test`, PL2)
 → enrichment_proposals (E1/E2 đề xuất → luật xác định / /ops/review;
   E1 trái LLM → thẻ đối chiếu, người chọn; E1 không suy land từ tên nhóm;
   hoàn tác có audit qua `revert_enrichment` (036) + CLI enrich-revert;
@@ -85,7 +87,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Cloud sync (15', `pipeline/sync-cloud.mjs`): nguyên tử từ cloud-sync-atomic (23/10) — nạp
   `sync_stage.rows` (migration 038, schema riêng, anon không đọc được) qua Management API rồi MỘT giao
   dịch DELETE+UPSERT+INSERT; không TRUNCATE (giữ `saved_markets`); đọc local `row_to_json` một snapshot
-  (ngày/micro-giây/số jsonb nguyên vẹn); chặn tụt 50%; bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
+  (ngày/micro-giây/số jsonb nguyên vẹn); chặn tụt 50% (`sellers` được co khi audit
+  `bait-gap:sellers-orphan` ≤24h khớp số dòng — PL2); bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
   → `S0x:<số>`, soát tên nguồn trước khi gửi. Thước `pipeline/scripts/check-cloud-sync.mjs <ca>`,
   máy đo prod chỉ đọc `cloud-sync-watch.mjs`; triển khai: `docs/ops/cloud-sync-atomic.md`.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
@@ -111,6 +114,9 @@ zalo-import · 05:30 chotot (collect→import→transform→refresh→resolve) �
 ### 2.5 Số liệu hôm nay
 > ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
 > sellers, bait gap dưới đây gồm cả tin giả. Xem `docs/architecture/classification-enrich-review.md` §0.3 (L19).
+> PL2 (`_acceptance/canonical-khong-tin-gia`): transform gạt post thử, lượt 00:00 đầu sau merge rút tin giả qua
+> đối soát + xoá người bán mồ côi; đo bằng `cd pipeline && node scripts/test-data-residue.mjs` (mô phỏng 23/10:
+> 1.023 tin giả · 153 bait gap · 988 người bán → 0).
 1.195 P1 + 8.647 P2 offers · 8.270 properties (gộp 375 repost) ·
 ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 506 listings (493 ảnh, tên host thật) · G3 live 2 thị trường.

@@ -154,3 +154,32 @@ Chuỗi tự khởi động khi máy khởi động lại:
 - Đề xuất của tin biến mất hẳn được chụp ở `ops_audit` action `enrich:retire` (không có đoạn tin, không
   thông tin người bán); khôi phục khi tin quay lại: `INSERT INTO enrichment_proposals SELECT * FROM
   jsonb_populate_recordset(NULL::enrichment_proposals, <detail->'proposals'>)`.
+
+## Job đêm báo lỗi thật (chốt 2026-10-23, `_acceptance/job-bao-loi-that/`, hàng AU3)
+
+Đêm 22→23/10 DB local sập ~8 giờ mà `launchctl` ghi mọi job «last exit 0». Từng bước xử lý (`pipeline/*.mjs`)
+vốn đã thoát 1 khi không tới DB; lỗ ở tệp chạy job không `set -e`: bước giữa hỏng, bước cuối lành (DB lên lại
+giữa chuỗi) thì launchd thấy 0.
+
+| Job launchd | Khi một bước DB hỏng | Ghi chú |
+|---|---|---|
+| `com.oneinvest.chotot` (`scripts/chotot-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | đoạn transform chạy đủ các bước như cũ rồi mới thoát |
+| `com.oneinvest.apify-facebook` (`scripts/apify-facebook-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | như trên |
+| `com.oneinvest.airdna-daily` (`scripts/airdna-daily.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
+| `com.oneinvest.collector` (→ `pipeline/finalize-hanoi.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
+| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | DB tắt hẳn: thoát ≠ 0 · DB chập chờn: **có thể 0** | còn lỗ — xem dưới |
+
+- **Tìm nguyên nhân trong log:** chotot/apify in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr cho mỗi
+  bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`). Bộ chạy bước: `scripts/lib/job-step.sh`.
+- **Còn nuốt lỗi, đang chờ:**
+  - Đoạn **nạp** của `chotot-daily.sh` (`import-chotot` không kiểm mã) và `apify-facebook-daily.sh`
+    (`import-airbnb … || true`, state vẫn nhảy qua snapshot hỏng) — làn ZCode, yêu cầu `P3-1` của đợt
+    `dot0-cam-mau`. Bản vá cùng loại cho `zalo-import-daily.sh` (P1.5) nằm trên nhánh `zcode/audit-p1-resilience`.
+  - `cloud-sync.sh`: khi DB chập chờn (rớt lúc `sync-cloud`, lên lại trước `push-ops-facts`) job vẫn thoát 0;
+    `push-ops-facts.mjs` viết cứng chuỗi kết nối, bỏ qua `DATABASE_URL`. Hai tệp thuộc `t3_paths` — hàng T3 riêng
+    `P3-3` (Mạnh chọn ở Cổng Phạm vi AU3).
+- **Cảnh báo khi DB sập** không đến từ job: đó là lớp L5b của `scripts/zalo-watchdog.sh` (ZC3, làn ZCode, nhánh
+  `zcode/audit-p1-resilience`, chờ Mạnh ký). Job chỉ nói thật bằng mã thoát.
+- **Kiểm:** `node --test scripts/job-exit.test.mjs` — không tắt DB chung; tệp chạy job chạy trong cây tạm với
+  `node`/`docker` giả, bước thật chạy trong hộp cát (`scripts/lib/job-exit-sandbox.mjs`) chặn mọi kết nối trừ một
+  cổng canh. Hai ca `todo` (mã `P3-3`) là lỗ cloud-sync — hiện trong đầu ra cho tới khi hàng T3 vá.

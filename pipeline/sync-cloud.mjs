@@ -113,6 +113,30 @@ for (const [t, allow] of Object.entries(CLOUD_ALLOW)) {
 
 export const CHUNK_BYTES = 1_800_000; // thân yêu cầu mỗi mẻ nạp (413 đo ở ~2,5–4MB)
 export const SHRINK_MIN = 0.5; // local < 50% số dòng đang có trên cloud → dừng (local đang dựng dở)
+// Bảng được co dưới ngưỡng khi một lượt dọn xác định ghi audit giải thích đúng số dòng còn lại
+// (canonical-khong-tin-gia AC-10: refresh-bait-gap xoá người bán mồ côi sau khi rút tin thử).
+export const SHRINK_AUDIT = { sellers: "bait-gap:sellers-orphan" };
+export const SHRINK_AUDIT_HOURS = 24;
+
+/**
+ * Quyết định chặn tụt cho một bảng. Co dưới SHRINK_MIN chỉ được qua khi bảng có trong
+ * SHRINK_AUDIT và có dòng audit trong SHRINK_AUDIT_HOURS mà detail.remaining = số dòng gửi.
+ * @param {{ table: string, local: number, cloud: number, audits: { action: string, at: Date|string, detail: any }[], now: Date|string }} a
+ * @returns {{ ok: boolean, reason: string }}
+ */
+export function shrinkVerdict({ table, local, cloud, audits, now }) {
+  if (!(cloud > 0) || local >= SHRINK_MIN * cloud) return { ok: true, reason: "" };
+  const action = SHRINK_AUDIT[table];
+  const since = new Date(now).getTime() - SHRINK_AUDIT_HOURS * 3600_000;
+  const explained = action && audits.some(
+    (r) => r.action === action && new Date(r.at).getTime() >= since && Number(r.detail?.remaining) === local,
+  );
+  if (explained) return { ok: true, reason: `tụt ${table} có audit ${action} khớp ${local} dòng` };
+  return {
+    ok: false,
+    reason: `local tụt ${table}: ${local} < ${SHRINK_MIN * 100}% của ${cloud} dòng trên cloud — local đang dựng dở? không tráo`,
+  };
+}
 export const STALE_STAGE_HOURS = 2; // staging của lượt chết quá ngần này thì dọn
 export const ADVISORY_KEY = 74210231; // hai lượt tráo chồng nhau xếp hàng
 export const SELLER_REF_RE = "^S0[1-9]:[0-9]+$";
@@ -501,10 +525,20 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   const data = new Map();
   const columns = {};
   let readAt;
+  let shrinkAudits = [];
   let tokens = sourceTokens;
   try {
     await local.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
     readAt = (await local.query("SELECT transaction_timestamp()::text AS t")).rows[0].t;
+    // Dòng audit giải thích bảng co (cùng snapshot với số dòng đọc ra). DB không có ops_audit
+    // (DB mô phỏng) → không miễn trừ nào, chặn tụt như cũ.
+    if ((await local.query("SELECT to_regclass('public.ops_audit') IS NOT NULL AS ok")).rows[0].ok) {
+      ({ rows: shrinkAudits } = await local.query(
+        `SELECT action, at, detail FROM ops_audit
+         WHERE action = ANY($1) AND at > transaction_timestamp() - make_interval(hours => $2)`,
+        [Object.values(SHRINK_AUDIT), SHRINK_AUDIT_HOURS],
+      ));
+    }
     if (!tokens) {
       const { rows } = await local.query(
         `SELECT DISTINCT x FROM (SELECT real_name AS x FROM source_registry
@@ -561,13 +595,9 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
   }
   const counts = Object.fromEntries([...data].map(([t, rows]) => [t, rows.length]));
   for (const t of cloudNames) {
-    const have = cloudCounts[t] ?? 0;
-    if (have > 0 && counts[t] < SHRINK_MIN * have) {
-      throw new PhaseError(
-        "shrink",
-        `local tụt ${t}: ${counts[t]} < ${SHRINK_MIN * 100}% của ${have} dòng trên cloud — local đang dựng dở? không tráo`,
-      );
-    }
+    const v = shrinkVerdict({ table: t, local: counts[t] ?? 0, cloud: cloudCounts[t] ?? 0, audits: shrinkAudits, now: readAt });
+    if (!v.ok) throw new PhaseError("shrink", v.reason);
+    if (v.reason) warn(v.reason);
   }
 
   // 4. nạp staging

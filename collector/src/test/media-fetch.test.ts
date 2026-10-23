@@ -94,7 +94,7 @@ test("media: URL hợp lệ tải vào media/, khai manifest.files + meta.mediaF
   assert.ok(m);
   const dir = join(root, "hanoi", m.snapshotId);
   const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
-  assert.equal(manifest.schemaVersion, 2);
+  assert.equal(manifest.schemaVersion, 3);
   const mediaEntry = manifest.files.find((f: { name: string }) => f.name.startsWith("media/"));
   assert.ok(mediaEntry, "manifest phải khai file media kèm sha256/bytes");
   assert.ok(mediaEntry.name.endsWith(".jpg"));

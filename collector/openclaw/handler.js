@@ -1,7 +1,8 @@
 /**
  * oneinvest-zalo-pipe — message:received (zalouser)
- * Gate Kev :8009 (noul is_bds, ngưỡng 0.9) → POST :9210/agent-report.
- * Không ném lỗi — hook quan sát, tác dụng phụ phải tự im lặng.
+ * Gate Kev :8009 (noul is_bds) → NHÃN, không lọc (claudedp-2310-11): MỌI tin
+ * đẩy vào collector kèm điểm kev; quyết định dùng p nằm ở transform. Không
+ * ném lỗi — hook quan sát, tác dụng phụ phải tự im lặng.
  */
 import { appendFile, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -96,15 +97,15 @@ export default async function (context) {
     if (r.ok) p = (await r.json())?.answers?.is_bds?.noul ?? null;
   } catch (e) {
     // FAIL-OPEN (bài học 2026-10-21: gate chết → mất tin im lặng vì return).
-    // Gate chỉ là pre-filter tiết kiệm volume; transform parsePost mới là
-    // bộ lọc thật → gate down vẫn đẩy tin, đánh dấu chưa phân loại.
+    // Nhãn thay lọc: gate down vẫn đẩy tin, meta.kev.p = null — không còn
+    // giả p=1.0 như trước (giả làm bẩn dữ liệu đo ngưỡng).
     await log(`gate-down (đẩy chưa phân loại) ${e.message} group=${group} account=${account}`);
-    p = 1.0;
+    p = null;
   }
-  if (p === null || p < THRESHOLD) {
-    await log(`skip p=${p === null ? "null" : p.toFixed(2)} group=${group} account=${account}`);
-    return;
-  }
+
+  // NHÃN thay BỘ LỌC (claudedp-2310-11): đo 23/10 cho thấy lọc p<0.9 bỏ
+  // ~70% tin (1270 skip / 549 post; mẫu soát p 0.5–0.9 gần như đều tin rao
+  // thật) — mọi tin phải vào raw; p đi kèm như dữ liệu, transform quyết.
 
   try {
     const key = (await readFile(KEY_FILE, "utf8")).trim();
@@ -123,12 +124,13 @@ export default async function (context) {
             senderId: ev.metadata?.senderId ?? ev.from ?? null,
             conversationId: ev.conversationId ?? null,
             media: mediaFacts.length ? mediaFacts : undefined,
+            kev: { p, model: "kev-latest", threshold: THRESHOLD, at: new Date().toISOString() },
           },
         ],
       }),
     });
     const body = await r.text();
-    await log(`post ${r.status} ${body.slice(0, 60)} group=${group} p=${p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
+    await log(`post ${r.status} ${body.slice(0, 60)} group=${group} p=${p === null ? "null" : p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
   } catch (e) {
     await log(`post-error ${e.message} group=${group} account=${account}`);
   }
