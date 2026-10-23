@@ -1,0 +1,2 @@
+-	0	com.oneinvest.smoke
+-	0	com.oneinvest.chotot
