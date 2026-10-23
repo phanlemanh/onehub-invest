@@ -1,4 +1,5 @@
-import { fmtCompact, fmtMoneyCompact } from "@/lib/format"
+import { fmtCompact, fmtMoneyCompact, fmtPct } from "@/lib/format"
+import { formatLongMonth } from "@/components/charts/format"
 
 import { type Period } from "./data"
 
@@ -9,22 +10,12 @@ export const moneyFormatter = (currency: string) => (value: number) =>
 /** Nhãn trục: "40 tr", "0" — đơn vị ghi ở chân khung. */
 export const formatAxis = (value: number) => (value === 0 ? "0" : fmtCompact(value))
 
-const percent = (signDisplay: "auto" | "exceptZero") =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-    signDisplay,
-  })
-const PERCENT = percent("auto")
-const PERCENT_SIGNED = percent("exceptZero")
-
-export const formatPercent = (ratio: number, signed = false) =>
-  (signed ? PERCENT_SIGNED : PERCENT).format(ratio)
+/** Biên: "28,9%" — một chữ số thập phân. */
+export const formatPercent = (ratio: number) => fmtPct(ratio)
 
 /** Tiêu đề tooltip: "Tháng 11/2026" hoặc "T11–T1 (từ 11/2026)". */
 export const periodTitle = (period: Period) => {
+  if (period.months === 1) return formatLongMonth(period.time)
   const d = new Date(period.time)
-  const my = `${d.getUTCMonth() + 1}/${d.getUTCFullYear()}`
-  return period.months === 1 ? `Tháng ${my}` : `${period.key} (từ ${my})`
+  return `${period.key} (từ ${d.getUTCMonth() + 1}/${d.getUTCFullYear()})`
 }

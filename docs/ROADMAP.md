@@ -56,6 +56,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
 → sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
 ```
+- DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
+  `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
+  `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 | Mã | Nguồn | Trạng thái | Ghi chú |

@@ -1,10 +1,10 @@
 import { type CSSProperties } from "react"
 import { cn } from "cn"
 
-import { METRICS, type MetricKey } from "./data"
+import { CAP_TRUNCATE, Fact } from "@/components/charts/faces"
+import { METRICS, swatchOfMetric, type MetricKey } from "./data"
 import { type Formatters } from "./format"
 import { type Summary } from "./series"
-import { CAP_TRUNCATE, Fact } from "./value-faces"
 
 /** Dividers for a 2 by 2 grid that becomes one row of 4 at @xl. */
 const DIVIDERS = [
@@ -34,7 +34,7 @@ export function MetricTiles({
     0,
     METRICS.findIndex((metric) => metric.key === active)
   )
-  const swatch = METRICS[index].swatch
+  const swatch = swatchOfMetric(METRICS[index])
   // The slot's offset in both layouts, in its own widths and heights.
   const slot = {
     "--chart-6-x2": `${(index % 2) * 100}%`,
@@ -51,6 +51,7 @@ export function MetricTiles({
         const summary = summaries[metric.key]
         const pressed = metric.key === active
         return (
+          // eslint-disable-next-line onehub-ui/no-raw-controls -- nguyên bản @reui/chart-6: cả ô chỉ số là một nút bấm; Button không mang bố cục ô và ReUI cấm đặt padding/height lên nó
           <button
             key={metric.key}
             type="button"

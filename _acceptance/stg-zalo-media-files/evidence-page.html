@@ -1,0 +1,127 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · stg-zalo-media-files</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Nạp ảnh Zalo N1 (meta.mediaFiles) xuống stg_zalo_posts.media_files</h1><div class="sub">Trang hồ sơ · <span class="mono">stg-zalo-media-files</span> · tier T3</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Nạp ảnh Zalo N1 (meta.mediaFiles) xuống stg_zalo_posts.media_files</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">N1 (ZCode, đã merge main 605a837) tải ảnh zdn.vn — URL có hạn — vào thư mục raw snapshot lúc flush và ghi mapping ở RawItem.meta.mediaFiles (DATA-CONTRACT schemaVersion 2). Việc này đưa mapping đó xuống tầng staging (stg_zalo_posts.media_files, migration 035) để transform và /ops dùng được về sau. Ảnh là PII tầng A (ADR-0007): chỉ máy local, không bao giờ lên cloud…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">6 mục để ngoài phạm vi · 5 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>4</b></span><span data-k="phep_do">Phép đo <b>6</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>1</b></span><span data-k="quyet_dinh_nguoi">người <b>0</b></span><span data-k="ma">Mã <b>df52972</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>N1 (ZCode, đã merge main 605a837) tải ảnh zdn.vn — URL có hạn — vào thư mục raw snapshot lúc flush và ghi mapping ở RawItem.meta.mediaFiles (DATA-CONTRACT schemaVersion 2). Việc này đưa mapping đó xuống tầng staging (stg_zalo_posts.media_files, migration 035) để transform và /ops dùng được về sau. Ảnh là PII tầng A (ADR-0007): chỉ máy local, không bao giờ lên cloud. Bốn tiêu chí do Mạnh chốt qua phiên điều phối «Phân chia công việc Claude/Zcode» (23/10/2026), chọn «nghiệm thu gọn».</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given DB local đã có hoặc chưa có cột `media_files`, When áp `db/migrations/035_stg_zalo_media_files.sql` hai lần liên tiếp, Then cả hai lần không lỗi, schema sau lần 2 trùng sau lần 1, số dòng `stg_zalo_posts` không giảm và không có dòng trùng; một migration không idempotent đưa vào cùng bộ kiểm thì bị bắt.</li><li data-ac="AC-2"><b>AC-2</b> — Given một snapshot `zalo-agent` schemaVersion 2 có bài mang `meta.mediaFiles` và một snapshot v1 không có, When chạy `pipeline/import-airbnb.mjs` (kể cả nạp lại cùng snapshot), Then bài v2 có ảnh mang `media_files` = mảng hợp đồng `{url,file,sha256,bytes,error}` kèm `snapshotId`, bài không ảnh và bài v1 mới có `media_files` NULL, nạp lại không nhân đôi, và bài lặp lại ở snapshot v1 sau giữ nguyên `media_files` đã có.</li><li data-ac="AC-3"><b>AC-3</b> — Given luồng sync cloud chỉ đẩy các bảng trong `FILL` của `pipeline/sync-cloud.mjs`, When chạy `pipeline/sync-pii.test.mjs`, Then test xanh với code hiện tại, và ĐỎ khi `stg_zalo_posts` (bảng mang `media_files`) bị cấy vào `FILL` — kể cả khi chỉ chạy riêng ca đọc schema DB (không bảng nào trong FILL có cột `media`/`media_files`).</li><li data-ac="AC-4"><b>AC-4</b> — Given các snapshot `zalo-agent` thật trong `~/dev/onehub-invest/collector/snapshots`, When chạy backfill (`pipeline/backfill-zalo-media.mjs`) rồi `--check`, Then báo cáo in ra số snapshot (tổng, v2), số bài có ảnh trong raw v2, số chưa nạp = 0 và số dòng `stg_zalo_posts` mang `media_files`; `--check` đỏ khi còn bài có ảnh chưa nạp.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 1</button><button class="btn" data-loc="may" aria-pressed="false">Máy 1</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 0</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261022T230637Z-0b5a29"><b>2026-10-22</b> · Máy · descope · S1 — bỏ gap-probe — nghiệm thu gọn do Mạnh chọn (qua phiên điều phối 23/10): 4 AC chốt sẵn, toàn eval máy, không hội đồng judge<div class="note">đổi lại không có phản biện context sạch trước duyệt; bù một phần bằng phiên VERIFY tươi đọc lại code và ghi Known limits</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">stg-zalo-media-files-E1-20261023T060433</td><td class="mono">2026-10-22T23:04:33Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">stg-zalo-media-files-E2-20261023T060441</td><td class="mono">2026-10-22T23:04:41Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">stg-zalo-media-files-E3-20261023T060448</td><td class="mono">2026-10-22T23:04:48Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-3</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">stg-zalo-media-files-E4-20261023T060455</td><td class="mono">2026-10-22T23:04:55Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">stg-zalo-media-files-E5-20261023T060501</td><td class="mono">2026-10-22T23:05:01Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">stg-zalo-media-files-E6-20261023T060509</td><td class="mono">2026-10-22T23:05:09Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given DB local đã có hoặc chưa có cột `media_files`, When áp `db/migrations/035_stg_zalo_media_files.sql` hai lần liên tiếp, Then cả hai lần không lỗi, schema sau lần 2 trùng sau lần 1, số dòng `stg_zalo_posts` không giảm và không có dòng trùng; một migration không idempotent đưa vào cùng bộ kiểm thì bị bắt.</p>
+<div class="kv"><span>run_id <b>stg-zalo-media-files-E1-20261023T060433</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.migration_035</b></span><span>verified_at <b>2026-10-22T23:04:33Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">áp 2 lần: ok · schema lần1=e4a57104e3f8c11aa90b297a2250480d lần2=e4a57104e3f8c11aa90b297a2250480d · bảng: stg_zalo_posts · dòng trước: 1876 · sau lần1: 1876 · sau lần2: 1876 · dòng trùng: 0
+IDEMPOTENT PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-1: Given DB local đã có hoặc chưa có cột `media_files`, When áp `db/migrations/035_stg_zalo_media_files.sql` hai lần liên tiếp, Then cả hai lần không lỗi, schema sau lần 2 trùng sau lần 1, số dòng `stg_zalo_posts` không giảm và không có dòng trùng; một migration không idempotent đưa vào cùng bộ kiểm thì bị bắt.</p>
+<div class="kv"><span>run_id <b>stg-zalo-media-files-E2-20261023T060441</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.idempotent_selftest</b></span><span>verified_at <b>2026-10-22T23:04:41Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lần 2: áp /var/folders/.../nonidem.w3fANdSM8a.sql lỗi (không idempotent)
+SELFTEST PASS: migration không idempotent bị bắt
+(kiểm thêm sau lần chạy: 0 bảng acc_nonidem_* còn lại trong DB local)</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-2: Given một snapshot `zalo-agent` schemaVersion 2 có bài mang `meta.mediaFiles` và một snapshot v1 không có, When chạy `pipeline/import-airbnb.mjs` (kể cả nạp lại cùng snapshot), Then bài v2 có ảnh mang `media_files` = mảng hợp đồng `{url,file,sha256,bytes,error}` kèm `snapshotId`, bài không ảnh và bài v1 mới có `media_files` NULL, nạp lại không nhân đôi, và bài lặp lại ở snapshot v1 sau giữ nguyên `media_files` đã có.</p>
+<div class="kv"><span>run_id <b>stg-zalo-media-files-E3-20261023T060448</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zalo_media_roundtrip</b></span><span>verified_at <b>2026-10-22T23:04:48Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok: backfill --check đỏ khi còn 1 bài có ảnh chưa nạp
+đã nạp: 0 listings (+0 đêm), 0 discovery refs, 0 osm boundaries, 2 zalo posts (1 có media_files)
+backfill xong: import lại 1 snapshot v2
+ok: sau backfill, --check xanh (chưa nạp: 0)
+ok: v2 ghi media_files đúng; bài không ảnh = NULL
+ok: nạp lại v2 không nhân đôi (2 dòng)
+ok: v1 nạp được (media_files NULL); bài lặp giữ media_files
+dọn: còn 0 dòng giả
+ROUNDTRIP PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · test</h3><p class="crit">AC-3: Given luồng sync cloud chỉ đẩy các bảng trong `FILL` của `pipeline/sync-cloud.mjs`, When chạy `pipeline/sync-pii.test.mjs`, Then test xanh với code hiện tại, và ĐỎ khi `stg_zalo_posts` (bảng mang `media_files`) bị cấy vào `FILL` — kể cả khi chỉ chạy riêng ca đọc schema DB (không bảng nào trong FILL có cột `media`/`media_files`).</p>
+<div class="kv"><span>run_id <b>stg-zalo-media-files-E4-20261023T060455</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.pipeline</b></span><span>verified_at <b>2026-10-22T23:04:55Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">✔ không bảng nào trong FILL có cột ảnh media/media_files (schema DB local) (32.0185ms)
+✔ mediaFilesOf: gắn snapshotId vào từng phần tử, giữ nguyên field hợp đồng (0.188834ms)
+✔ mediaFilesOf: v1 / không ảnh / mảng rỗng → null (SQL NULL, COALESCE giữ bản cũ) (0.091125ms)
+ℹ tests 23
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-3: Given luồng sync cloud chỉ đẩy các bảng trong `FILL` của `pipeline/sync-cloud.mjs`, When chạy `pipeline/sync-pii.test.mjs`, Then test xanh với code hiện tại, và ĐỎ khi `stg_zalo_posts` (bảng mang `media_files`) bị cấy vào `FILL` — kể cả khi chỉ chạy riêng ca đọc schema DB (không bảng nào trong FILL có cột `media`/`media_files`).</p>
+<div class="kv"><span>run_id <b>stg-zalo-media-files-E5-20261023T060501</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.sync_pii_mutation</b></span><span>verified_at <b>2026-10-22T23:05:01Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   M0 bản gốc: mong XANH → xanh (ℹ pass 6 · ℹ fail 0 · ℹ skipped 0)
+ok   M1 FILL += stg_zalo_posts: mong ĐỎ → đỏ (ℹ pass 3 · ℹ fail 3 · ℹ skipped 0)
+ok   M2 FILL += stg_zalo_posts, chỉ ca schema DB: mong ĐỎ → đỏ (ℹ pass 0 · ℹ fail 1 · ℹ skipped 0)
+MUTATION PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-4: Given các snapshot `zalo-agent` thật trong `~/dev/onehub-invest/collector/snapshots`, When chạy backfill (`pipeline/backfill-zalo-media.mjs`) rồi `--check`, Then báo cáo in ra số snapshot (tổng, v2), số bài có ảnh trong raw v2, số chưa nạp = 0 và số dòng `stg_zalo_posts` mang `media_files`; `--check` đỏ khi còn bài có ảnh chưa nạp.</p>
+<div class="kv"><span>run_id <b>stg-zalo-media-files-E6-20261023T060509</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zalo_media_backfill</b></span><span>verified_at <b>2026-10-22T23:05:09Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">snapshot zalo-agent: 301 (v2: 0) · bài có ảnh trong raw v2: 0 · chưa nạp: 0 · stg_zalo_posts có media_files: 0</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals: E4 — green trên main (17/17) vì `npm test` của main chưa chứa `sync-pii.test.mjs`; đây là lệnh suite hồi quy, ca mới chỉ có trên nhánh. AC-3 được phân biệt bằng E5 (M0 xanh, M1 và M2 đỏ).
+Baseline khong do:
+- E1, E2: `db/check-idempotent.sh`, `db/check-idempotent.selftest.sh` và `db/migrations/035_stg_zalo_media_files.sql` chưa tồn tại trên diffBase main (605a837) — eval mới, chạy trên cây cũ không chứng minh gì.
+- E3: `pipeline/scripts/media-files-roundtrip.mjs` và `pipeline/backfill-zalo-media.mjs` chưa tồn tại trên main.
+- E5: `pipeline/scripts/sync-pii-mutation.mjs` và `pipeline/sync-pii.test.mjs` chưa tồn tại trên main.
+- E6: `pipeline/backfill-zalo-media.mjs` chưa tồn tại trên main.
+- E4 đo được: worktree tạm của main (detached 605a837) ngoài repo, symlink `pipeline/node_modules`, chạy `npm test` → green; worktree đã gỡ bằng `git worktree remove --force`.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1–E6 đều đạt expected trên df52972; không eval nào trượt.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Transform (`transform-zalo.mjs`) và trang `/ops` đọc `media_files` — chỉ chuẩn bị tầng stg.</li><li data-loai="ngoai">Đẩy bytes ảnh hay `media_files` lên cloud dưới bất kỳ dạng nào (kể cả hash) — cấm theo ADR-0007.</li><li data-loai="ngoai">Restart collector API :9210 để sinh snapshot v2 thật — việc của Mạnh/ZCode; hiện 0 snapshot v2 thật nên số backfill thật là 0.</li><li data-loai="ngoai">Map `media_files` sang resource RESO Media ở canonical (ADR-0011) — khi lên canonical.</li><li data-loai="ngoai">Sửa cột `media` cũ (019) đang nhận jsonb `&#39;null&#39;` thay vì SQL NULL.</li><li data-loai="ngoai">Áp migration 035 lên Supabase prod — bảng stg không có ở cloud.</li><li data-loai="gioi-han">AC-4 trên dữ liệu thật là phép đo rỗng: 301 snapshot zalo-agent, 0 snapshot v2, 0 bài có ảnh, 0 dòng mang media_files. E6 chứng được báo cáo in đủ các số và `--check` xanh, nhưng không chứng được backfill nạp đúng ảnh thật. Nửa dương (backfill ghi, `--check` xanh sau nạp) và nửa âm (`--check` đỏ khi còn bài chưa nạp) chỉ được chứng trên snapshot giả ở E3.</li><li data-loai="gioi-han">E6 chỉ chạy `backfill-zalo-media.mjs --check`, không chạy lượt backfill ghi trước đó như AC-4 mô tả («chạy backfill rồi --check»). Với 0 snapshot v2 thì lượt ghi không có việc gì để làm, nên kết quả hiện tại không đổi; khi có snapshot v2 thật thì eval này chỉ đo, không nạp.</li><li data-loai="gioi-han">AC-1 nhánh «DB chưa có cột media_files»: E1 chạy trên DB local đã có cột (lần áp 1 không đổi schema). Nhánh ADD COLUMN thật trên DB chưa có cột không được thực thi trong vòng này; lệnh dùng `ADD COLUMN IF NOT EXISTS` nên rủi ro thấp, nhưng bằng chứng máy chỉ phủ nhánh «đã có».</li><li data-loai="gioi-han">DB local :5433 dùng chung với ống thu. Lúc chạy, stg_zalo_posts giữ nguyên 1876 dòng trước và sau E1, nên không có ghi chen; các eval khác dùng tiền tố riêng và E3 báo dọn còn 0 dòng giả.</li><li data-loai="gioi-han">E4 xanh cả trên main (baseline green): bản thân lệnh suite không phân biệt tính năng. Sức phân biệt của AC-3 nằm ở E5 (đột biến M1/M2 đỏ).</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">df529723aa72d1057d1a0f4c4277800e961e6f0e</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
