@@ -1,0 +1,40 @@
+{
+  "feature_plain": "Trang Deals, «Căn giá tốt» và danh sách người bán thôi hiện tin rao giả sinh từ dữ liệu thử; bước xử lý tin hằng đêm tự gạt tin thử ra nếu chúng còn lọt vào.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ nhận ra tin thử theo ba dấu: lô dữ liệu giả của bộ thu, tài khoản thử, nhóm tên «TEST»; tin thật không bị bắt nhầm (AC-1, bảng ca viết trước)."},
+    {"id": "AC-3", "p": "Sẽ gạt tin thử ở cả nguồn Facebook (S05), dùng chung một bộ nhận diện với Zalo (S03)."},
+    {"id": "AC-4", "p": "Sẽ rút các tin giả đang có khỏi bảng tin rao qua đường đối soát sẵn có, đóng hai thẻ duyệt treo trên tin giả, và ghi sổ kiểm toán nói rõ vì sao rút."},
+    {"id": "AC-8", "p": "Sẽ có một lệnh đếm tin giả còn sót (tin rao, giá-tốt, người bán), chạy thử toàn bộ việc dọn trên dữ liệu thật rồi hoàn lại, không để lại gì."},
+    {"id": "AC-10", "p": "Sẽ cho đồng bộ cloud chấp nhận việc danh sách người bán co lại mạnh, nhưng chỉ khi sổ kiểm toán giải thích đúng số dòng còn lại (nháp theo Hỏi-4)."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Sẽ KHÔNG để tin thật bị đổi khi có tin giả trùng nội dung: tin rao gộp từ cả hai chỉ còn bài thật, số liệu y như lúc không có tin giả."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG ghi sổ khi lượt không gặp tin thử, và KHÔNG xoá cả nguồn nếu mọi tin đều là tin thử — lượt đó dừng có báo lỗi."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG còn «Căn giá tốt» nào tính trên tin giả; tin thật vẫn được tính độ chênh giá như cũ."},
+    {"id": "AC-7", "p": "Chặn người bán chỉ có trong tin giả khỏi danh sách người bán; người bán còn tin thật giữ nguyên (nháp theo Hỏi-2)."},
+    {"id": "AC-9", "p": "Sẽ KHÔNG đụng dữ liệu thô đã nạp (bảng chờ của bộ nạp) — việc dọn bảng đó là của hàng PL1."},
+    {"id": "OOS-1", "p": "KHÔNG sửa bộ nạp và KHÔNG dọn bảng chờ — hàng PL1 của làn thu thập."},
+    {"id": "OOS-2", "p": "KHÔNG sửa tay dữ liệu cloud; cloud sạch ở lượt đồng bộ 15 phút kế."},
+    {"id": "OOS-3", "p": "KHÔNG dọn thật trên máy trước khi ký (theo Hỏi-1)."},
+    {"id": "OOS-4", "p": "KHÔNG sửa phép đo độ tươi nguồn Zalo đang đếm nhầm lô dữ liệu giả — việc sau."},
+    {"id": "OOS-5", "p": "KHÔNG sửa lỗi người bán mới không còn được thêm vào danh sách (từ 21/10) — việc sau."}
+  ],
+  "scope_plain": "Năm việc gần kề cố ý để ngoài vòng:",
+  "coverage_plain": [
+    {"i": 0, "p": "Đã phủ cả ba kiểu dữ liệu thử đang có trên máy (lô giả 1.260 · tài khoản thử 1 · nhóm TEST 2) và tin thật làm đối chứng — AC-1."},
+    {"i": 1, "p": "Đã lần theo mọi nơi tin giả lan tới: tin rao Zalo và Facebook, giá-tốt, người bán, thẻ duyệt, sổ kiểm toán, cloud — AC-2…AC-7, AC-10."},
+    {"i": 2, "p": "Đã phủ các tình huống của lượt chạy: có tin thử, không có, toàn tin thử, tin gộp lẫn thật-giả, chạy thử rồi hoàn lại — AC-2, AC-5, AC-8."},
+    {"i": 3, "p": "Mười ô lõi thành mười tiêu chí; không bảng nào phụ thuộc danh sách người bán nên xoá người bán không kéo theo gì."},
+    {"i": 4, "p": "Đồng bộ cloud đang chặn mọi bảng co dưới một nửa: tin rao còn ~92% (qua), người bán còn ~5% (bị chặn) — nên có AC-10."},
+    {"i": 5, "p": "Căn nhà gộp và cặp ứng viên không thành tiêu chí: chưa căn nào nối với tin giả (đo 23/10); cloud kiểm sau merge."},
+    {"i": 6, "p": "Giả định cần anh gạch: ba dấu trên đủ cho mọi dữ liệu thử hiện có; một nguồn thử đặt tên khác sẽ lọt."},
+    {"i": 7, "p": "Giả định cần anh gạch: người bán không còn tin nào thì xoá khỏi danh sách cũng không mất gì không dựng lại được."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Lệnh đếm tin giả có thể «mù» mà vẫn báo 0 — đã sửa: ca kiểm dựng tin giả qua đúng đường ghi thật, và lệnh đối chiếu với một cách đếm độc lập."},
+    {"i": 1, "p": "Chưa đo vế «tin thật không đổi khi có tin giả trùng» — đã thêm phép so từng cột giữa hai lượt có và không có tin giả."},
+    {"i": 2, "p": "Đồng bộ cloud sẽ dừng hẳn vì danh sách người bán co từ 1.043 xuống ~54 — đẩy cho anh quyết ở Hỏi-4, kèm tiêu chí nháp AC-10."},
+    {"i": 3, "p": "Chưa kê bảng nào phụ thuộc danh sách người bán — đã đo: không bảng nào; phép so số dòng nới ra bảy bảng."},
+    {"i": 4, "p": "Hai phép quét mã chỉ soi vài tệp chọn tay — đã nới ra toàn bộ mã của xử lý dữ liệu và ứng dụng."}
+  ]
+}

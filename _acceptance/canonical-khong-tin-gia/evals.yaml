@@ -1,0 +1,90 @@
+schema_version: 1
+feature_slug: canonical-khong-tin-gia
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-1 ma trận dấu' trong pipeline/scripts/test-posts.test.mjs xanh với MA TRẬN viết trước (số assert = số dòng ma trận = 11), hàng lấy nguyên dạng cột từ stg thật 23/10: snapshot 'hanoi__zalo-mock__2026-10-18T034152' → 'snapshot-source'; 'hanoi__example__2026-10-17T153258' → 'snapshot-source'; 'hcmc__zalo-e2e__…' → 'snapshot-source'; agent_id 'e2e-agent' (snapshot zalo-agent) → 'agent'; agent_id 'test-hook' → 'agent'; group 'TEST' → 'group'; group 'TEST-G1' → 'group'; và null cho: zalo-agent + openclaw-hook + nhóm 'BĐS Hà Nội'; zalo-agent + apify-facebook; nhóm 'Hội mua bán test nhà' (chữ test không ở đầu); nhóm 'TESTING ROOM' (từ dài hơn). Chiều đỏ cùng ma trận: bản sao luật nhóm bỏ ràng buộc ký tự theo sau ('^test' trần) → dòng 'TESTING ROOM' đỏ, thông điệp ghim 'AC-1 bắt nhầm nhóm thật: TESTING ROOM'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/test-posts.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-2 transform S03 từ chối post thử' xanh (BEGIN…ROLLBACK trên DB local): chèn vào stg hai post cùng văn bản tin bán (giá + diện tích + phường) — p_real ở nhóm 'Nhóm thật X', p_test ở nhóm 'TEST-G9' — và một post thử riêng p_only (snapshot '…__zalo-mock__…', văn bản khác) → runTransformZalo(client) → offer chứa p_real có post_ids = [p_real] và n_reposts = 1; không offer nào chứa p_test hay p_only. Đối chứng dương cùng fixture: đổi p_only sang nhóm thường (không dấu) rồi chạy lại → p_only có offer (chứng post đó đủ điều kiện thành offer — thước không xanh vì parser bỏ). Vế «offer thật không đổi»: lượt A (stg không có p_test) và lượt B (có p_test mang SĐT khác và posted_at sớm hơn p_real), cùng giao dịch → mọi cột của offer chứa p_real (trừ cột thời điểm ghi) bằng nhau giữa A và B. Ghim thông điệp 'AC-2 offer mang post thử: <post_id>' và 'AC-2 offer trộn mang trường của post thử: <cột>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/test-posts.mjs, pipeline/transform-zalo.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-3 transform S05 dùng cùng bộ lọc' xanh (BEGIN…ROLLBACK): chèn post agent_id 'apify-facebook' snapshot '…__zalo-agent__…' nhóm 'TEST FB' với văn bản tin bán Hà Nội → runTransformFb(client) → không offer S05 nào chứa post đó. Đối chứng dương cùng fixture: nhóm đổi thành 'Mua bán nhà Hà Nội' → có offer S05 chứa post. Ca quét quan hệ trên TOÀN pipeline/ và agent/src (mọi tệp .mjs/.ts không phải test): tập tệp vừa nhắc 'stg_zalo_posts' vừa ghi sale_offers ('writeOffers(' hoặc 'INSERT INTO sale_offers') phải RỖNG (transform đọc stg qua loadStgPosts; lib/test-posts.mjs đọc stg nhưng không ghi sale_offers) — chiều đỏ: bộ tệp mẫu có một tệp chứa cả hai → trả đúng tên tệp đó. Ghim 'AC-3 S05 nhận post thử'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/test-posts.mjs, pipeline/transform-fb.mjs, pipeline/transform-zalo.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-4 rút offer giả qua đối soát' xanh (BEGIN…ROLLBACK): post p ở nhóm thường → runTransformZalo → offer O có p; chèn thẻ review_queue pending item_id 'enrich:O'; đổi group_name của p thành 'TEST' trong giao dịch → runTransformZalo lần hai → O không còn trong sale_offers, thẻ 'enrich:O' status='rejected' có decision_note, ops_audit trong giao dịch có dòng action='enrich:reconcile' (detail.source='S03', detail.stale ≥ 1) và dòng action='transform:reject-test' (detail.source='S03', detail.rejected ≥ 1, detail.by_marker.group ≥ 1). Đối chứng cùng fixture: lần chạy đầu (p chưa có dấu) không sinh dòng transform:reject-test cho p (by_marker.group không tăng). Ca đọc mã: scanDeleteAll trên MỌI tệp mã không phải test (.mjs/.ts/.tsx/.sh, bỏ thư mục tests/ và *.test.*) trong pipeline/, agent/src, app/src, data-api/src, scripts/ → tập tệp có câu 'DELETE FROM sale_offers' bằng danh sách cho phép viết trước ['pipeline/lib/write-offers.mjs' (dòng chú thích của chính bộ quét)]; chiều đỏ: chuỗi mẫu có câu DELETE → trả '<tệp>:<dòng>'. Ghim 'AC-4 offer giả không bị rút: <offer_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/test-posts.mjs, pipeline/lib/write-offers.mjs, pipeline/transform-zalo.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-5 lượt sạch và lượt toàn thử' xanh (BEGIN…ROLLBACK): (a) trong giao dịch xoá các post kênh zalo mang dấu thử khỏi stg → runTransformZalo → 0 dòng ops_audit action='transform:reject-test' mới; đối chứng cùng giao dịch: chèn lại một post thử → chạy lại → đúng 1 dòng mới. (b) SAVEPOINT, đổi group_name mọi post kênh zalo thành 'TEST' → runTransformZalo ném lỗi chứa 'lượt nạp rỗng' → ROLLBACK TO SAVEPOINT → số dòng sale_offers S03 bằng trước. Ghim 'AC-5 lượt toàn thử xoá nguồn'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/test-posts.mjs, pipeline/lib/write-offers.mjs, pipeline/transform-zalo.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-6 bait gap tính lại' xanh (BEGIN…ROLLBACK): chèn hai post kênh zalo trong cùng một phường có thước (area_id có trong v_ruler_p2_area, chọn lúc chạy), cùng giá/m² — p_real nhóm thường, p_test snapshot '…__zalo-mock__…' (văn bản khác diện tích để ra hai offer) → runTransformZalo → refreshBaitGap(client) → offer của p_real có bait_gap_pct NOT NULL, không offer nào chứa p_test; và trong giao dịch không offer S03 nào giao với tập post thử của stg mang bait_gap_pct. Đối chứng cùng fixture: bỏ dấu của p_test → offer của nó có bait_gap_pct NOT NULL (thước gap thật sự tính cho loại offer này). Ghim 'AC-6 bait gap trên tin thử: <offer_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/transform-zalo.mjs, pipeline/lib/test-posts.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-7 sellers mồ côi' xanh (BEGIN…ROLLBACK): chèn sellers s_orphan (phone_hash không offer nào mang) và s_live (phone_hash của một offer thật có trong giao dịch, n_ads cố ý = 999) → refreshBaitGap(client) → s_orphan không còn; s_live còn, n_ads = số offer mang hash đó; ops_audit có dòng action='bait-gap:sellers-orphan' với detail.deleted ≥ 1 và detail.remaining = count(*) FROM sellers sau lệnh. Cặp hai chiều cùng fixture: chèn thêm một offer mang hash của s_orphan trước khi chạy (biến thể) → s_orphan còn. Ghim 'AC-7 xoá nhầm người bán còn tin' và 'AC-7 người bán mồ côi còn'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.test_data_residue
+    expected: "exit 0; stdout JSON của 'test-data-residue.mjs --simulate' trên DB local: after.offers_from_test = 0, after.bait_gap_from_test = 0, after.sellers_from_test = 0, after.sellers_orphan = 0, audit.reconcile ≥ 1 và audit.reject_test ≥ 1 (dòng mới trong giao dịch), markers có đủ ba khoá snapshot-source/agent/group (số theo stg lúc chạy; trước PL1 là 1260/1/2), rows_before = rows_after cho ĐÚNG 7 bảng viết trước — sale_offers, sellers, ops_audit, review_queue, enrichment_proposals, property_offers, property_candidates (số so = 7; ROLLBACK không để lại gì); before.offers_from_test = before.offers_from_test_sql (đếm độc lập bằng SQL trên snapshot_id/agent_id/group_name, không qua testMarker); keep_ratio in tỉ lệ dòng còn lại sau/trước trong giao dịch cho sale_offers và sellers (để đối chiếu với chặn tụt 50% của sync-cloud — Hỏi-4)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/scripts/test-data-residue.mjs, pipeline/lib/test-posts.mjs, pipeline/transform-zalo.mjs, pipeline/refresh-bait-gap.mjs]
+
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-8 thước dư lượng bắt được tin giả' xanh (BEGIN…ROLLBACK), fixture đi qua writer thật: chèn post p nhóm thường có SĐT riêng → runTransformZalo(client) dựng offer O (writeOffers) → chèn sellers dòng phone_hash = O.seller_phone_hash (lấy từ dòng writer ghi) → đổi group_name của p thành 'TEST' trong stg (KHÔNG chạy lại transform) → measureResidue(client) → offers_from_test tăng ≥ 1 so với trước khi chèn p, sellers_from_test tăng ≥ 1, ok=false; đối chứng cùng fixture: chạy lại runTransformZalo + refreshBaitGap → hai số về giá trị trước khi chèn p. Mã thoát của lệnh lấy từ hàm xuất exitCodeFor(kết quả đo) mà main dùng: exitCodeFor({ok:false}) = 1, exitCodeFor({ok:true}) = 0. Ghim 'AC-8 thước không thấy offer giả'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/scripts/test-data-residue.mjs, pipeline/lib/test-posts.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-9 stg không đổi' xanh (BEGIN…ROLLBACK): dấu vân tay stg = (count(*), md5(string_agg(post_id||snapshot_id||coalesce(group_name,'')||text, '|' ORDER BY post_id, snapshot_id))) trước → runTransformZalo + runTransformFb → sau bằng trước. Đối chứng cùng phép đo: UPDATE một dòng stg trong giao dịch → dấu vân tay khác (chứng phép đo nhạy). Ghim 'AC-9 transform sửa stg'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/lib/test-posts.mjs, pipeline/scripts/test-posts.test.mjs]
+
+  - id: E11
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-10 chặn tụt có audit' trong pipeline/sync-cloud.test.mjs xanh với MA TRẬN viết trước cho hàm quyết chặn tụt (số assert = 6): (1) sellers tụt < 50%, có dòng audit bait-gap:sellers-orphan trong 24h với remaining = số dòng gửi → cho qua; (2) như (1) nhưng remaining lệch 1 → dừng 'shrink'; (3) như (1) nhưng dòng audit cũ hơn 24h → dừng; (4) không dòng audit → dừng; (5) sale_offers tụt < 50% kèm dòng audit sellers → dừng (miễn trừ chỉ cho bảng audit gọi tên); (6) không tụt → cho qua. Chiều đỏ cùng ma trận: bản sao hàm bỏ so remaining → ô (2) đỏ, ghim 'AC-10 cho qua tụt không giải thích được'. (theo khuyến nghị Hỏi-4 — người chốt ở Cổng Phạm vi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs, pipeline/refresh-bait-gap.mjs]
