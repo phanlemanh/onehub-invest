@@ -5,7 +5,8 @@
 > Cách làm: chỉ đọc code (HEAD `b446637`, đã gồm PR #14, #16, #21), DB local :5433 (SELECT) và log.
 > Không sửa code, không ghi DB. Bản xem trên điện thoại (riêng tư): https://claude.ai/artifact/RSzE1VKhUjbw7jVMyorGHd
 >
-> Đọc nhanh: §0 tóm tắt → §4 quyết định → §5 việc. §1–§3 là căn cứ.
+> **Khung**: `docs/product/FRAMING.md` (Mạnh duyệt 23/10) — §0.1 đối chiếu review với khung đó.
+> Đọc nhanh: §0 tóm tắt → §0.1 → §4 quyết định → §5 việc. §1–§3 là căn cứ.
 
 ---
 
@@ -45,6 +46,23 @@ phát biểu theo thứ bậc căn cứ để dựng cột canonical (kèm ngu�
 nhãn + số đo nền, rồi mới làm lớp phát biểu/phân xử và thẻ duyệt v2 (§5).
 
 ---
+
+## 0.1 Đối chiếu với FRAMING (23/10)
+
+FRAMING đặt mục đích trước cách làm: một **mạng lưới listing đủ tin cậy**, gom tin của môi giới (gom vào,
+OneHub Invest hiển thị), **căn gốc** (số nhà / mã căn) là bản ghi duy nhất, trường dữ liệu là phần làm giàu.
+Phân loại và enrich chỉ có mặt để mỗi tin **ghép đúng căn** và **so đúng nhóm**. Những gì đổi trong review:
+
+| FRAMING | Review đổi gì |
+|---|---|
+| **D1** dùng/mua danh mục dự án · toà · mã căn | Căn gốc của căn hộ = một dòng danh mục. Phân loại có thêm việc lõi: **trích mã căn / toà / dự án** từ tin và ghép vào dòng đó (RESO `UnitNumber`, `ComplexName`, `SubdivisionName`). Stage A «ô lưới + giá» chỉ còn cho nhà phố. Việc mới Z1.2, C1.5, C1.6, C2.7 |
+| **D3** căn hộ trước; môi giới giữ mã căn | Mã căn thành trường lõi trong tập nhãn G1; nhà phố sống với «suy ra» |
+| **D4** P1 công khai, trao đổi tức thời | P1 là danh sách chính. Độ tươi tính bằng phút → việc mới C2.6 (đường theo từng tin, thay lô 00:00). Q5 thêm vế: giá trị dưới ngưỡng **vẫn hiện**, gắn «suy ra / chưa xác minh», không chờ thẻ. «Căn giá tốt» lên công khai nên Q10 càng gấp |
+| **D5** thuê người được, nhưng model phải gánh tối đa | Q6: người gắn nhãn có thể là người thuê theo hướng dẫn gắn nhãn. Mỗi nhãn, mỗi quyết định duyệt là dữ liệu đo/dạy model; thước đo «tỉ lệ máy tự quyết đạt ngưỡng» phải tăng theo tuần |
+| Khoá của sự thật là **căn**, khoá của bằng chứng là **id gốc tin** | Q2 tinh lại: phát biểu **thuộc căn** (loại, DT, tầng, phòng, mã căn) treo vào căn khi đã ghép; phát biểu **thuộc tin** (giá, kind, người đăng, hiệu lực) treo vào id gốc tin |
+| «Tin cậy» sáu chiều, có «nói rõ độ chắc» | Provenance (§3.4) là thứ hiển thị ra cổng Invest: «đã xác minh · suy ra · chưa biết» |
+
+Phần lõi của review không đổi: raw giữ trọn, phát biểu kèm căn cứ, khoá bất biến, đo trước khi xây.
 
 ## 1. Bản đồ hiện trạng — mỗi điểm phân loại một dòng
 
@@ -374,7 +392,7 @@ raw snapshot (bất biến) ──► stg_* (khoá gốc nguồn: post_id / list
 | Tập | Chủ thể | Trường | Cỡ đề xuất | Nguồn mẫu |
 |---|---|---|---|---|
 | **G0 Cổng** | tin Zalo thật (cả tin p thấp) | `listing_intent`, `kind` | 400, phân tầng theo khoảng p | raw giữ trọn kèm `meta.kev` (việc Z1, đã quyết) |
-| **G1 Parser** | post S03/S05 + ad S06 | kind, giá, DT + area_basis, PN, phường, đường, loại, tầng | 200 S03 + 100 S05 + 100 S06 | stg, phân tầng theo nhóm/thành phố |
+| **G1 Parser** | post S03/S05 + ad S06 | kind, giá, DT + area_basis, PN, phường, đường, loại, tầng, **mã căn · toà · dự án** (FRAMING D1/D3) | 200 S03 + 100 S05 + 100 S06 | stg, phân tầng theo nhóm/thành phố |
 | **G2 Enrich** | cùng mẫu G1 | loại, toà, dự án, đường, WC — đo riêng E1, E2, theo bậc | dùng lại G1 | — |
 | **G3 Ghép căn** | cặp tin | cùng căn / khác căn | 150 cặp | `property_candidates` + cặp ngẫu nhiên cùng phường |
 
@@ -413,11 +431,11 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 | # | Câu hỏi | Phương án | Khuyến nghị |
 |---|---|---|---|
 | **Q1** | Kev-4B đứng ở đâu? | **ĐÃ QUYẾT (Mạnh, 23/10)**: Kev thành nhãn, không lọc — mọi tin vào raw kèm `meta.kev {p, model, threshold, at}`, DATA-CONTRACT `schemaVersion 3` (ZCode, `claudedp-2310-11`) | Trùng phương án review khuyến nghị (raw đầy đủ, lọc là phát biểu ở pipeline). Không cần quyết thêm |
-| **Q2** | Phát biểu/quyết định treo vào khoá nào? | (a) Giữ `offer_id` băm nội dung, mở rộng đối soát 039 sang `property_offers/candidates` + thẻ `pair:` · (b) **Treo vào khoá gốc nguồn (post_id/list_id); `offer_id` chỉ còn là id cụm** · (c) Đổi khoá chính `sale_offers` sang khoá gốc | **(b)**. (a) là thêm một lớp vá cho mỗi bảng mới; (c) đụng mọi bảng và mọi API. (b) thêm một cột + một bảng |
+| **Q2** | Phát biểu/quyết định treo vào khoá nào? | (a) Giữ `offer_id` băm nội dung, mở rộng đối soát 039 sang `property_offers/candidates` + thẻ `pair:` · (b) **Treo vào khoá gốc nguồn (post_id/list_id); `offer_id` chỉ còn là id cụm** · (c) Đổi khoá chính `sale_offers` sang khoá gốc | **(b)**. (a) là thêm một lớp vá cho mỗi bảng mới; (c) đụng mọi bảng và mọi API. (b) thêm một cột + một bảng. **FRAMING D1**: phát biểu thuộc căn treo vào căn gốc (dòng danh mục) khi đã ghép; thuộc tin treo vào id gốc tin |
 | **Q3** | Giá trị phân loại sống ở đâu? | (a) Giữ cột canonical + đề xuất + fill-gap (hiện trạng) · (b) **Bảng phát biểu append-only + bộ phân xử dựng canonical có provenance** · (c) Giữ `enrichment_proposals`, ghi thêm giá trị parser thành đề xuất + cột provenance | **(b)**. (c) là bước đệm hợp lý nếu muốn đi từng nấc; (a) giữ nguyên gốc của L02, L04, L12 |
 | **Q4** | Tên nhóm (ngữ cảnh) được làm gì? | (a) **Chỉ là H5 — không bao giờ tự quyết; hiện trên thẻ như gợi ý** · (b) Được quyết khi tin im lặng, cho danh sách nhóm đơn-chủ-đề đã đo precision ≥ 95% · (c) Giữ như sau PR #21 (land bị cấm, 4 loại kia vẫn quét) | **(a) ngay**, chuyển sang **(b)** khi có G2. (c) đang giữ 50 tin apartment sai đã đo được |
 | **Q5** | Khi nào máy được tự áp? | (a) Theo luật như hiện tại (E1 `direct`, LLM=E1) · (b) **Chỉ ô (phương pháp × trường × nguồn) có precision trên tập test ≥ 0,95; còn lại lên thẻ** · (c) Mọi giá trị máy đều qua người | **(b)**. (c) không kham nổi: 1.220 tin P1 × 5 trường. Ngưỡng 0,95 là đề xuất — Mạnh có thể chọn số khác |
-| **Q6** | Tập nhãn làm thế nào? | (a) **Mạnh gắn nhãn mù trên màn `/ops` riêng, ~600 tin + 150 cặp** (ước 4–6 giờ công, chia nhiều buổi) · (b) Lấy quyết định trên thẻ duyệt làm nhãn (rẻ nhưng lệch mẫu) · (c) LLM lớn gắn trước, người kiểm 20% (làm nhiễm phép đo LLM) | **(a)**, giữ (b) làm tập hồi quy phụ. Không đo được thì Q5 không chạy được |
+| **Q6** | Tập nhãn làm thế nào? | (a) **Mạnh gắn nhãn mù trên màn `/ops` riêng, ~600 tin + 150 cặp** (ước 4–6 giờ công, chia nhiều buổi) · (b) Lấy quyết định trên thẻ duyệt làm nhãn (rẻ nhưng lệch mẫu) · (c) LLM lớn gắn trước, người kiểm 20% (làm nhiễm phép đo LLM) | **(a)**, giữ (b) làm tập hồi quy phụ. Không đo được thì Q5 không chạy được. **FRAMING D5**: người gắn nhãn có thể là người thuê, theo hướng dẫn gắn nhãn viết sẵn |
 | **Q7** | Có thêm `property_subtype` (nhà phố/biệt thự/liền kề/shophouse/CHDV/đất thổ cư)? | (a) **Chưa — chỉ thêm bảng alias RESO cho 6 giá trị đã chốt; đo phương sai thước giá theo loại trước** · (b) Thêm ngay, nullable, theo PropertySubType + extension VN · (c) Mở rộng chính `property_type` | **(a)** (luật đo trước khi build). Làm (b) khi số đo cho thấy «house» trộn nhà ống với biệt thự làm lệch thước |
 | **Q8** | Tin «tìm mua / tìm thuê» là gì? | (a) **`listing_intent = wanted`: giữ ở raw + stg, không thành tin rao** · (b) Thành tín hiệu cầu (sản phẩm mới) · (c) Bỏ như hiện tại | **(a)** ngay — một định nghĩa cho Kev, parser, bench. (b) là quyết định sản phẩm riêng, để sau |
 | **Q9** | Độ tự tin trên thẻ duyệt? | (a) **Bỏ hẳn khỏi thẻ, giữ trong DB để hiệu chỉnh** · (b) Thu vào «Chi tiết máy», đóng mặc định | **(a)**. Spec 033 đã nói nó không là căn cứ; hiện nó ra là mồi người bấm theo |
@@ -451,6 +469,9 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 | C1.3 | Khung đánh giá: màn gắn nhãn mù `/ops/labels`, lưu nhãn (tầng A, không lên cloud), dev/test, lệnh `eval:classify`, đổ `dq_check_results` | C | C1.2 | T2 |
 | M1 | Gắn nhãn G1/G2 (~400 tin), G3 (150 cặp) | M | C1.3 | — |
 | M1b | Gắn nhãn G0 (400 tin cổng) | M | Z1, C1.3 | — |
+| Z1.2 | Thu danh mục dự án · toà · mã căn (nguồn theo FRAMING D1, câu mở §7.4) vào raw + `stg_*` | Z | nguồn danh mục | T2 |
+| C1.5 | Nạp danh mục vào `asset_nodes` thêm cấp **căn** (`unit`, mã căn ≈ RESO `UnitNumber`); khai `mappings.yaml` | C | Z1.2, C1.2 | T3 |
+| C1.6 | Trích mã căn / toà / dự án từ tin (luật có `rule_id` + LLM có trích dẫn); thêm các trường này vào G1 | C | C1.3, C1.5 | T2 |
 | C1.4 | Báo cáo số nền: precision/recall/phủ theo tầng × trường × nguồn × bậc trên `/ops/quality` | C | M1 | T2 |
 
 ### Đợt 2 — nền bền (Q2, Q3)
@@ -461,13 +482,16 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 | C2.2 | Parser phát biểu: mọi transform ghi phát biểu với `rule_id` + vị trí đoạn khớp; gỡ đóng băng `ENRICH_COLS`; transform-chotot duy trì street/bath/floor và ngừng ghi đè | C | C2.1 | T3 |
 | C2.3 | Chuyển `enrichment_proposals` sang phát biểu (giữ 036 hoàn tác); quyết định người = H0 | C | C2.1 | T3 |
 | C2.4 | E1 viết lại theo bậc: tên nhóm / mặc định dự án = H5; luật trong tin có `rule_id`; E2 chạy mù + bắt buộc trích dẫn nguyên văn (code kiểm), lấy lại `project_name` | C | C2.3, Q4 | T3 |
-| C2.5 | Cổng tự áp theo số đo (ô ≥ ngưỡng mới tự áp) | C | C1.4, C2.4, Q5 | T3 |
+| C2.5 | Cổng tự áp theo số đo (ô ≥ ngưỡng mới tự áp); dưới ngưỡng vẫn hiện, gắn «suy ra / chưa xác minh» (FRAMING D4) | C | C1.4, C2.4, Q5 | T3 |
+| C2.6 | **Đường theo từng tin cho P1** (FRAMING D4): hook → stg → parser/E1 → phát biểu → phân xử → hiển thị trong vài phút, thay lô 00:00; đo độ tươi p50/p95 | C (+Z nếu đổi nhịp nạp) | C2.1, C2.2, Z1 | T3 |
+| C2.7 | Ghép tin căn hộ vào dòng danh mục (căn gốc từ danh mục); Stage A ô lưới chỉ còn cho nhà phố | C | C1.5, C1.6, C2.1 | T3 |
 
 ### Đợt 3 — người và căn nhà
 
 | Mã | Việc | Làn | Phụ thuộc | Hạng |
 |---|---|---|---|---|
-| C3.1 | Thẻ duyệt v2 (§3.6): phát biểu theo bậc, đoạn trích tô trong toàn văn, ảnh, bất đồng mọi cặp, quyết định = H0 | C | C2.3, C0.2 | T2 |
+| C3.1 | Thẻ duyệt v2 (§3.6): phát biểu theo bậc, đoạn trích tô trong toàn văn, ảnh, bất đồng mọi cặp, quyết định = H0 **và thành nhãn dạy model** (FRAMING D5) | C | C2.3, C0.2 | T2 |
+| C3.5 | Cổng Invest hiện độ chắc từng căn/trường: «đã xác minh · suy ra · chưa biết» (FRAMING §3.2 chiều 6) | C | C2.5 | T2 |
 | C3.2 | resolve-properties: `stable_key` bỏ giá/loại; đọc `must_link/cannot_link`; đưa P1 vào căn; sinh thẻ ghép căn từ ứng viên; judge-entity: ngưỡng là code, LLM chỉ giải thích, lưu model/trace | C | C2.1 | T3 |
 | C3.3 | Thước giá phường × loại cho «Căn giá tốt» theo Q10 | C | C2.4 (P1 có loại), Q10 | T2 |
 | C3.4 | Parser S03 sửa theo số đo: phường HCM, `area_basis`, «bán» dương tính giả, dùng tên nhóm làm H5 | C | C1.4 | T2 |
@@ -490,7 +514,7 @@ Mỗi câu: phương án, khuyến nghị **in đậm**, và vì sao.
 ```
 
 Song song tối đa 3–4 phiên: Đợt 0 chia {C0.1+C0.3}, {C0.2}, {Z0.3}; Đợt 1 chạy Z1 (đã giao) ∥ C1.2 → C1.3, rồi C1.1.
-Đường găng: **C1.2 → C1.3 → M1 → C1.4 → C2.5**. Thời gian gắn nhãn của Mạnh nằm trên đường găng —
+Hai đường găng: **đo** C1.2 → C1.3 → M1 → C1.4 → C2.5, và **căn gốc** Z1.2 → C1.5 → C1.6 → C2.7 (FRAMING D1). C2.6 (tức thời) chạy song song sau C2.2. Thời gian gắn nhãn của Mạnh nằm trên đường găng —
 nên bắt đầu C1.3 sớm nhất có thể.
 
 ---

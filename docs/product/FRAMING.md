@@ -1,7 +1,7 @@
 # Framing — OneHub Invest đi đúng hướng
 
-> Ngày 2026-10-23 · Trạng thái: **bản nháp chờ Mạnh duyệt** (D1–D5 ở §2.0 Mạnh đã chốt) · Nguồn: ý của Mạnh trong phiên review kiến trúc
-> phân loại (23/10); phần đánh dấu **[đề xuất]** là của Claude, chưa phải quyết định.
+> Ngày 2026-10-23 · Trạng thái: **đã duyệt (Mạnh, 23/10) — tài liệu sống, cập nhật theo thời gian** (nhật ký §9) · Nguồn: ý của Mạnh trong phiên review kiến trúc
+> phân loại (23/10); phần đánh dấu **[đề xuất]** do Claude đề xuất, Mạnh duyệt cùng toàn văn ngày 23/10.
 > Thứ tự đọc: mục đích → người dùng → «tin cậy» → mục tiêu → thước đo → rồi mới tới cách làm.
 > Tài liệu này đứng trên `CONTEXT-PRODUCT.md` (sản phẩm hôm nay) và ROADMAP §1 (hiến pháp kỹ thuật).
 
@@ -161,3 +161,12 @@ người đăng đã giấu.
 - **Listing cho thuê ngắn hạn (S01)** lúc này **không** ghép vào căn gốc: lợi suất STR dùng thước phường × loại.
   Ghép listing Airbnb ↔ tin rao bán (Airbnb không lộ địa chỉ) để đợt sau, khi căn gốc của tin rao đã ổn.
 - Trường «thuộc căn» / «thuộc tin» theo danh sách §3.1 — có thể dời một trường khi làm thật.
+
+## 9. Nhật ký thay đổi
+
+Tài liệu sống: mỗi lần đổi mục đích, mục tiêu, thước đo hay quyết định D… thì thêm một dòng ở đây và cập
+nhật ROADMAP §3 nếu là quyết định mới.
+
+| Ngày | Đổi gì | Ai |
+|---|---|---|
+| 2026-10-23 | Bản đầu: mục đích, hai phía một lõi, sáu chiều «tin cậy», thước đo; D1–D5 | Mạnh duyệt · Claude ghi |
