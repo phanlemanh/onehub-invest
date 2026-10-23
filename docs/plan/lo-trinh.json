@@ -16,7 +16,7 @@
       "nhom": "du-lieu-that",
       "dot": "phan-loai-2310",
       "phu": [
-        "L19"
+        "L19a"
       ]
     },
     {
@@ -31,7 +31,7 @@
       "nhom": "du-lieu-that",
       "dot": "phan-loai-2310",
       "phu": [
-        "L19"
+        "L19b"
       ]
     },
     {
@@ -231,7 +231,7 @@
       "nhom": "nen-tang",
       "dot": "phan-loai-2310",
       "phu": [
-        "C2.1"
+        "C2.1a"
       ]
     },
     {
@@ -249,7 +249,7 @@
       "nhom": "nen-tang",
       "dot": "phan-loai-2310",
       "phu": [
-        "C2.1"
+        "C2.1b"
       ]
     },
     {
@@ -359,7 +359,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "C2.5"
-      ]
+      ],
+      "bat_khi": "Hạ ngưỡng một ô dưới số đo: ô đó ngừng tự áp ngay ở lượt kế, căn liên quan tụt về B2"
     },
     {
       "ma": "PL22",
@@ -414,7 +415,7 @@
       "nhom": "can-nha",
       "dot": "phan-loai-2310",
       "phu": [
-        "C3.2"
+        "C3.2a"
       ]
     },
     {
@@ -432,7 +433,7 @@
       "nhom": "can-nha",
       "dot": "phan-loai-2310",
       "phu": [
-        "C3.2"
+        "C3.2b"
       ]
     },
     {
