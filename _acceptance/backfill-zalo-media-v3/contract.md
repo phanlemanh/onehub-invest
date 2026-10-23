@@ -5,7 +5,7 @@ slug: backfill-zalo-media-v3
 owner: phanlemanh@gmail.com
 risk_tier: T2      # chỉ pipeline/backfill-zalo-media.mjs + test; không đụng t3_paths
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-23T10:19:14Z
 approved_by:

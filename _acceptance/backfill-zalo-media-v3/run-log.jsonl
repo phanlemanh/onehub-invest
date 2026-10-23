@@ -10,3 +10,9 @@
 {"ts":"2026-10-23T10:26:03Z","round":3,"evalId":"E3","run_id":"backfill-zalo-media-v3-E3-20261023T102603Z","exit_code":0,"cmd":"cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"}
 {"ts":"2026-10-23T10:26:04Z","round":3,"evalId":"E4","run_id":"backfill-zalo-media-v3-E4-20261023T102604Z","exit_code":0,"cmd":"cd pipeline && npm test"}
 {"ts":"2026-10-23T10:26:05Z","round":3,"evalId":"E5","run_id":"backfill-zalo-media-v3-E5-20261023T102605Z","exit_code":0,"cmd":"cd pipeline && node scripts/backfill-v3-check.mjs"}
+{"ts":"2026-10-23T15:17:51Z","round":4,"evalId":"E1","run_id":"backfill-zalo-media-v3-E1-20261023T151751Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T15:17:57Z","round":4,"evalId":"E2","run_id":"backfill-zalo-media-v3-E2-20261023T151757Z","exit_code":0,"cmd":"cd pipeline && node scripts/media-files-roundtrip.mjs"}
+{"ts":"2026-10-23T15:17:59Z","round":4,"evalId":"E3","run_id":"backfill-zalo-media-v3-E3-20261023T151759Z","exit_code":0,"cmd":"cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"}
+{"ts":"2026-10-23T15:18:00Z","round":4,"evalId":"E4","run_id":"backfill-zalo-media-v3-E4-20261023T151800Z","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-23T15:18:07Z","round":4,"evalId":"E5","run_id":"backfill-zalo-media-v3-E5-20261023T151807Z","exit_code":0,"cmd":"cd pipeline && node scripts/backfill-v3-check.mjs"}
+{"ts":"2026-10-23T15:18:08Z","round":4,"evalId":"E6","run_id":"backfill-zalo-media-v3-E6-20261023T151808Z","exit_code":0,"cmd":"cd pipeline && node scripts/media-files-roundtrip.mjs"}
