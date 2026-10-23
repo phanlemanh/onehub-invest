@@ -5,7 +5,7 @@ slug: loi-vao-script-chay-qua-symlink
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-24-loi-vao-script-chay-qua-symlink-design.md
 approved_by:
 approved_at:
