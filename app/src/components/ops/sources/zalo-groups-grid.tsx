@@ -53,7 +53,7 @@ export function ZaloGroupsGrid({
   const conflictOf = (g: ZaloGroup) => !g.enabled && g.ownedBy !== null && g.ownedBy !== account
 
   const columns: InsightColumn<ZaloGroup>[] = [
-    { id: "name", accessorKey: "name", header: "Nhóm", cell: ({ row }) => <span data-tier-a className="block truncate">{row.original.name}</span>, size: 360 },
+    { id: "name", accessorKey: "name", header: "Nhóm", cell: ({ row }) => <span id={`zalo-nhom-${row.original.groupId}`} data-tier-a className="block truncate">{row.original.name}</span>, size: 360 },
     {
       id: "on",
       header: "Đang bật",
@@ -67,7 +67,8 @@ export function ZaloGroupsGrid({
               checked={g.enabled}
               disabled={conflict}
               onCheckedChange={() => onToggle(g)}
-              aria-label={conflict ? `Nhóm đã bật ở tài khoản ${g.ownedBy}` : `Bật/tắt nhóm ${g.name}`}
+              aria-label={conflict ? `Nhóm đã bật ở tài khoản ${g.ownedBy}` : "Bật/tắt nhóm"}
+              aria-describedby={`zalo-nhom-${g.groupId}`}
             />
             {conflict ? <Badge variant="outline">ở {g.ownedBy}</Badge> : null}
           </span>

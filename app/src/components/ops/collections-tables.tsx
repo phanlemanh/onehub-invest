@@ -180,13 +180,15 @@ export function ZaloGroupsTable({
     []
   )
   const enabled = allowlist.filter((a) => a.enabled)
+  // Khoá hàng theo vị trí, không theo tên nhóm: tên là tầng A, khoá hàng lọt vào thuộc tính DOM (data-row-id).
+  const rowKey = new Map(rows.map((r, i) => [r, `nhom-${i}`]))
   return (
     <InsightGrid
       title="Nhóm Zalo"
       description={`Danh mục nguồn cộng đồng — thật tách mock; allowlist đang bật ${enabled.length} nhóm`}
       data={rows}
       columns={columns}
-      getRowId={(r) => r.name}
+      getRowId={(r) => rowKey.get(r) ?? ""}
       pageSize={10}
       footnote={
         <>

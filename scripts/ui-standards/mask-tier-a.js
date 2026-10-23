@@ -1,8 +1,9 @@
 // Che chữ tầng A (SPL, ADR-0007) trong trang ĐANG MỞ trước khi chụp ảnh bằng chứng.
 // Chạy trong trang (page.evaluate / javascript_tool) với window.__TIER_A_NAMES = mảng tên thật.
 // 1) Mọi phần tử [data-tier-a] → chữ thay bằng █ (tối đa 24 ký tự, giữ bố cục gần đúng).
-// 2) Tự kiểm: innerText của trang không còn tên nào trong danh sách (so không phân biệt hoa thường).
-// Trả { masked, leaked } — leaked chỉ là SỐ THỨ TỰ trong danh sách, không lặp lại tên thật.
+// 2) Tự kiểm: innerText của trang VÀ mọi thuộc tính phần tử (aria-label, title, data-row-id…) không còn tên
+//    nào trong danh sách (so không phân biệt hoa thường). Thẻ <script> (dữ liệu RSC) không phải bề mặt hiển thị → bỏ qua.
+// Trả { masked, leaked, attrLeaked } — chỉ là SỐ THỨ TỰ trong danh sách, không lặp lại tên thật.
 (() => {
   const names = (window.__TIER_A_NAMES || []).filter((n) => typeof n === "string" && n.trim().length >= 3)
   const nodes = Array.from(document.querySelectorAll("[data-tier-a]"))
@@ -21,5 +22,15 @@
   names.forEach((n, i) => {
     if (body.includes(n.trim().toLowerCase())) leaked.push(i)
   })
-  return { masked: nodes.length, checkedNames: names.length, leaked }
+  const attrs = []
+  for (const el of document.body.querySelectorAll("*")) {
+    if (el.tagName === "SCRIPT" || el.tagName === "STYLE") continue
+    for (const a of el.attributes) attrs.push(a.value.toLowerCase())
+  }
+  const attrText = attrs.join("\n")
+  const attrLeaked = []
+  names.forEach((n, i) => {
+    if (attrText.includes(n.trim().toLowerCase())) attrLeaked.push(i)
+  })
+  return { masked: nodes.length, checkedNames: names.length, leaked: [...new Set([...leaked, ...attrLeaked])].sort((a, b) => a - b), attrLeaked }
 })()
