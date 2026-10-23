@@ -1,0 +1,119 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · sourceid-tin-anh</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau</h1><div class="sub">Trang hồ sơ · <span class="mono">sourceid-tin-anh</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">ZC1 — hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Collector API tính sourceId = sha256(group|ts|text) để khử trùng. Hai tin chỉ có ảnh (text rỗng) cùng nhóm, cùng thời điểm vì thế đụng nhau, và tin sau bị bỏ lúc ingest (L20, review §6). ZCode thêm sender và danh sách URL/path ảnh vào công thức, CHỈ khi text rỗng. Tin có chữ giữ nguyên id cũ để không đổi id các tin đã có.</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">3 mục để ngoài phạm vi · 4 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>5</b></span><span data-k="phep_do">Phép đo <b>5</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>1</b></span><span data-k="quyet_dinh_nguoi">người <b>0</b></span><span data-k="ma">Mã <b>9fc3336</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Collector API tính sourceId = sha256(group|ts|text) để khử trùng. Hai tin chỉ có ảnh (text rỗng) cùng nhóm, cùng thời điểm vì thế đụng nhau, và tin sau bị bỏ lúc ingest (L20, review §6). ZCode thêm sender và danh sách URL/path ảnh vào công thức, CHỈ khi text rỗng. Tin có chữ giữ nguyên id cũ để không đổi id các tin đã có.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given hai tin chỉ có ảnh cùng nhóm, cùng ts, cùng URL ảnh nhưng khác sender, When collector ingest, Then cả hai được nhận và ra hai RawItem với sourceId khác nhau.</li><li data-ac="AC-2"><b>AC-2</b> — Given hai tin chỉ có ảnh cùng nhóm, cùng ts, cùng sender nhưng khác URL ảnh, When collector ingest, Then cả hai được nhận với sourceId khác nhau.</li><li data-ac="AC-3"><b>AC-3</b> — Given một tin chỉ có ảnh được gửi lại y hệt (cùng nhóm, ts, sender, URL), When collector ingest lần hai, Then lần hai vẫn bị khử trùng (duplicates = 1).</li><li data-ac="AC-4"><b>AC-4</b> — Given một tin có chữ (kèm hoặc không kèm ảnh), When tính sourceId, Then sourceId bằng đúng công thức cũ `sha256(group|ts|text)` cắt 32 ký tự; tin cùng chữ, cùng ts nhưng khác sender vẫn trùng như trước.</li><li data-ac="AC-5"><b>AC-5</b> — Given hai event chỉ có ảnh cùng nhóm cùng ts (khác sender), When flush rồi nạp snapshot bằng `import-airbnb.mjs` vào DB local, Then ra hai raw item và hai dòng `stg_zalo_posts` khác `post_id`.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 1</button><button class="btn" data-loc="may" aria-pressed="false">Máy 1</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 0</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261023T094558Z-1"><b>2026-10-23</b> · Máy · descope · S1 — bỏ gap-probe — nghiệm thu gọn theo brief phiên điều phối liên làn (23/10): AC theo hàng lộ trình, toàn eval máy trong sandbox, không hội đồng judge<div class="note">không có phản biện context sạch trước duyệt; bù bằng phiên VERIFY tươi được giao tự đi tìm lỗ</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">sourceid-tin-anh-E1-20261023T095002</td><td class="mono">2026-10-23T09:50:02Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">sourceid-tin-anh-E2-20261023T095004</td><td class="mono">2026-10-23T09:50:04Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">sourceid-tin-anh-E3-20261023T095005</td><td class="mono">2026-10-23T09:50:06Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">sourceid-tin-anh-E4-20261023T095007</td><td class="mono">2026-10-23T09:50:07Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">sourceid-tin-anh-E5-20261023T095015</td><td class="mono">2026-10-23T09:50:16Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given hai tin chỉ có ảnh cùng nhóm, cùng ts, cùng URL ảnh nhưng khác sender, When collector ingest, Then cả hai được nhận và ra hai RawItem với sourceId khác nhau.</p>
+<div class="kv"><span>run_id <b>sourceid-tin-anh-E1-20261023T095002</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc1_sourceid</b></span><span>verified_at <b>2026-10-23T09:50:02Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">3 tin chỉ ảnh: {&quot;accepted&quot;:3,&quot;duplicates&quot;:0} · lặp y hệt: {&quot;accepted&quot;:0,&quot;duplicates&quot;:1} · tin chữ: {&quot;accepted&quot;:1,&quot;duplicates&quot;:0} / {&quot;accepted&quot;:0,&quot;duplicates&quot;:1}
+ok   khác sender hoặc khác URL, cùng nhóm cùng ts → 3 tin đều được nhận
+ok   3 RawItem chỉ ảnh mang 3 sourceId khác nhau
+ok   snapshot có 4 item (3 chỉ ảnh + 1 tin chữ), được 4
+SOURCEID PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given hai tin chỉ có ảnh cùng nhóm, cùng ts, cùng sender nhưng khác URL ảnh, When collector ingest, Then cả hai được nhận với sourceId khác nhau.</p>
+<div class="kv"><span>run_id <b>sourceid-tin-anh-E2-20261023T095004</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc1_sourceid</b></span><span>verified_at <b>2026-10-23T09:50:04Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">3 tin chỉ ảnh: {&quot;accepted&quot;:3,&quot;duplicates&quot;:0} · lặp y hệt: {&quot;accepted&quot;:0,&quot;duplicates&quot;:1} · tin chữ: {&quot;accepted&quot;:1,&quot;duplicates&quot;:0} / {&quot;accepted&quot;:0,&quot;duplicates&quot;:1}
+ok   khác sender hoặc khác URL, cùng nhóm cùng ts → 3 tin đều được nhận
+ok   3 RawItem chỉ ảnh mang 3 sourceId khác nhau
+SOURCEID PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given một tin chỉ có ảnh được gửi lại y hệt (cùng nhóm, ts, sender, URL), When collector ingest lần hai, Then lần hai vẫn bị khử trùng (duplicates = 1).</p>
+<div class="kv"><span>run_id <b>sourceid-tin-anh-E3-20261023T095005</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc1_sourceid</b></span><span>verified_at <b>2026-10-23T09:50:06Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">3 tin chỉ ảnh: {&quot;accepted&quot;:3,&quot;duplicates&quot;:0} · lặp y hệt: {&quot;accepted&quot;:0,&quot;duplicates&quot;:1} · tin chữ: {&quot;accepted&quot;:1,&quot;duplicates&quot;:0} / {&quot;accepted&quot;:0,&quot;duplicates&quot;:1}
+ok   should-NOT-fire: tin chỉ ảnh lặp y hệt (cùng sender, cùng URL) vẫn bị khử trùng
+SOURCEID PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-4: Given một tin có chữ (kèm hoặc không kèm ảnh), When tính sourceId, Then sourceId bằng đúng công thức cũ `sha256(group|ts|text)` cắt 32 ký tự; tin cùng chữ, cùng ts nhưng khác sender vẫn trùng như trước.</p>
+<div class="kv"><span>run_id <b>sourceid-tin-anh-E4-20261023T095007</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc1_sourceid</b></span><span>verified_at <b>2026-10-23T09:50:07Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">ok   tin có chữ (kèm ảnh) giữ nguyên id cũ sha256(group|ts|text) = b8117e9fd720…
+ok   tin chữ cùng nội dung khác sender vẫn trùng như trước (công thức cũ không đổi)
+SOURCEID PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-5: Given hai event chỉ có ảnh cùng nhóm cùng ts (khác sender), When flush rồi nạp snapshot bằng `import-airbnb.mjs` vào DB local, Then ra hai raw item và hai dòng `stg_zalo_posts` khác `post_id`.</p>
+<div class="kv"><span>run_id <b>sourceid-tin-anh-E5-20261023T095015</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc1_stg_roundtrip</b></span><span>verified_at <b>2026-10-23T09:50:16Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">nạp: exit 0 · đã nạp: 0 listings (+0 đêm), 0 discovery refs, 0 osm boundaries, 2 zalo posts (2 có media_files)
+stg_zalo_posts của snapshot: 2 dòng · sender [s1, s2]
+ok   import-airbnb nạp snapshot v3 không lỗi
+ok   hai event ảnh cùng nhóm cùng ts → hai raw item
+ok   → hai dòng stg_zalo_posts khác post_id
+dọn: xoá 1 snapshot · còn 0 dòng stg của snapshot giả
+ok   dọn sạch dữ liệu giả
+STG-ROUNDTRIP PASS</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals: E3, E4 — xanh trên cả nhánh lẫn baseline; đây là ca giữ hành vi cũ có chủ ý
+(should-NOT-fire và giữ nguyên id tin có chữ), không chứng tính năng mới.
+Baseline khong do: E5 — eval ghi DB local dùng chung; theo brief, không chạy trên cây cũ khi không chắc (flush
+trên cây cũ cũng tải ảnh thật).
+Baseline (ce4ad81, worktree tạm ngoài repo, chép harness, `npm ci` + build collector; đã gỡ worktree):
+`sourceid` red — 3 tin chỉ ảnh khác sender/khác URL ra `{&quot;accepted&quot;:1,&quot;duplicates&quot;:2}` và snapshot 2 item thay
+vì 4 (E1, E2 red). Các dòng kiểm của E3, E4 xanh.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: 5/5 eval PASS; không có lỗi chạm tiêu chí. Harness có một khiếm khuyết (skipMedia không có tác dụng) ghi</li><li>ở Known limits. Các phát hiện ngoài hợp đồng để người quyết.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Ảnh cùng nội dung được giao lại với URL khác (token ký khác) — sẽ ra hai sourceId; không chuẩn hoá URL ở vòng này.</li><li data-loai="ngoai">Tính lại sourceId cho tin chỉ ảnh đã có trong raw cũ — id cũ giữ nguyên, không backfill.</li><li data-loai="ngoai">Khử trùng ở tầng transform/canonical.</li><li data-loai="gioi-han">**Harness tuyên bố `skipMedia` nhưng tuỳ chọn đó không tồn tại.** `stg-roundtrip` gọi `s.flush({ skipMedia: true })`, còn `flush()` trong `collector/src/api/server.ts` không nhận tham số, nên `fetchMessageMedia` vẫn chạy với allowlist mặc định `zdn.vn`. Chế độ `sourceid` gọi `flush()` thẳng. Vì thế E1–E5 (cả ở lượt baseline) đã gửi HTTP GET thật tới `f1.zdn.vn` cho các đường ảnh giả (`/x.jpg`, `/a.jpg`…). Không có gì gửi vào Zalo, không chạm :8009/:9210, và media fail-open nên không đổi kết quả eval. Nhưng câu «nạp với skipMedia (không tải ảnh thật)» trong Notes của hợp đồng không đúng. Dòng «2 có media_files» là `meta.mediaFiles` mang lỗi tải.</li><li data-loai="gioi-han">Cùng một ảnh giao lại với URL khác (token ký zdn.vn khác) ra hai sourceId — đúng như «Out of scope» của hợp đồng (chưa chuẩn hoá URL). Phép thử riêng xác nhận: `a.jpg?tok=1` và `a.jpg?tok=2` cùng sender, cùng ts → 2 accepted.</li><li data-loai="gioi-han">E3 và E4 xanh trên baseline ce4ad81 (ở mức từng dòng kiểm): chúng là ca giữ hành vi cũ (lặp y hệt vẫn khử trùng; tin có chữ giữ công thức cũ), không phân biệt code mới với code cũ — đúng ý đồ hồi quy.</li><li data-loai="gioi-han">E5 không đo baseline (n-a): eval ghi DB local dùng chung, và flush trên cây cũ cũng tải ảnh thật; phần phân biệt đã được lượt baseline của `sourceid` chứng (cây cũ: 3 tin chỉ ảnh → 1 accepted, 2 duplicates).</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">9fc333634a2629507f93fd75518a4297bc07432d</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
