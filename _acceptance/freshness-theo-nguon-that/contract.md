@@ -5,7 +5,7 @@ slug: freshness-theo-nguon-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-23-freshness-theo-nguon-that-design.md
 lo_trinh_ma: AU4
 approved_by: Mạnh
