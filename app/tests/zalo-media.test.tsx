@@ -36,6 +36,8 @@ before(() => {
   symlinkSync(join(tmp, "outside", "secret.jpg"), join(snapDir, "media", "evil.jpg"));
   // Symlink tới một thư mục `media/` NGOÀI gốc — chỉ lớp realpath chặn được.
   symlinkSync(join(tmp, "snapshots-evil", "hcmc", SNAP, "media", "a.jpg"), join(snapDir, "media", "evil-media.jpg"));
+  // Symlink trong media/ trỏ tới ảnh CÙNG gốc nhưng ngoài media/ — chỉ ràng media/ theo đĩa chặn được.
+  symlinkSync(join(snapDir, "other", "b.jpg"), join(snapDir, "media", "to-other.jpg"));
   // HOME giả cho gốc OpenClaw.
   mkdirSync(join(tmp, "home", ".openclaw", "media", "inbound"), { recursive: true });
   writeFileSync(join(tmp, "home", ".openclaw", "media", "inbound", "x.png"), JPG);
@@ -100,6 +102,7 @@ test("AC-3 should-NOT-fire: tham số cố ra khỏi vùng cho phép không bao 
     ["đuôi không phải ảnh", snapQs(SNAP, "media/note.txt")],
     ["symlink trong media/ trỏ ra ngoài", snapQs(SNAP, "media/evil.jpg")],
     ["symlink tới media/ của gốc khác", snapQs(SNAP, "media/evil-media.jpg")],
+    ["symlink tới ảnh cùng gốc ngoài media/", snapQs(SNAP, "media/to-other.jpg")],
     ["thiếu file", `snapshot=${encodeURIComponent(SNAP)}`],
     ["thiếu snapshot", `file=${encodeURIComponent("media/a.jpg")}`],
     ["snapshot rỗng", `snapshot=&file=${encodeURIComponent("media/a.jpg")}`],

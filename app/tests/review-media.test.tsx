@@ -49,12 +49,14 @@ test("AC-5 local trước, entry lỗi rơi về URL gốc expiring, không trù
   ]);
 });
 
-test("AC-5 snapshotId thiếu trong entry thì dùng snapshot_id của post; tham số hỏng không thành ảnh local", () => {
+test("AC-5 snapshotId thiếu trong entry thì dùng snapshot_id của post; tham số hỏng hoặc entry lỗi không thành ảnh local", () => {
   const imgs = buildOfferImages([
     post("o1", [
       { url: ZDN(1), file: "media/1.jpg" },
       { url: ZDN(2), file: "../manifest.json", snapshotId: SNAP },
       { url: ZDN(3), file: "media/3.jpg", snapshotId: "../evil" },
+      // Có file nhưng mang error (vd sha lệch) → không tin file, rơi về URL gốc.
+      { url: ZDN(4), file: "media/4.jpg", error: "sha256 mismatch", snapshotId: SNAP },
     ]),
   ]);
   assert.deepEqual(
@@ -63,6 +65,7 @@ test("AC-5 snapshotId thiếu trong entry thì dùng snapshot_id của post; tha
       ["local", local("media/1.jpg")],
       ["remote", ZDN(2)],
       ["remote", ZDN(3)],
+      ["remote", ZDN(4)],
     ],
   );
 });
