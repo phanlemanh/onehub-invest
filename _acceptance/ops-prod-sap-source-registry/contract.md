@@ -5,7 +5,7 @@ slug: ops-prod-sap-source-registry
 owner: phanlemanh@gmail.com
 risk_tier: T2      # app/src/lib/ops-queries.ts, lib/freshness.ts, hai trang Ops + test; không đụng t3_paths
 surfaces: [ui, api]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-23T23:42:19Z
 approved_by:

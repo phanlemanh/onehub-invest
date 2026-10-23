@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7f1939ea0185bd66623eff98ba1d3fe3ba0c3732
+verified_commit: 5f514db7a520532628169f3bf646661f2b3e2fd1
 human_signoff:
 ---
 
@@ -23,80 +23,79 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-ops-prod-sap-source-registry-E1-r1
+  run_id: minted-ops-prod-sap-source-registry-E1-r2
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-23T23:42:31Z
+  verified_at: 2026-10-23T23:47:10Z
   cmd: cd app && npm test
   output: |
-    ℹ duration_ms 890.911958
+    ℹ duration_ms 890.23525
     Ca 'OP-AC-1 lược đồ vắng source_registry + bảng nạp → hai hàm và route trả rỗng, không 42P01' nằm trong bộ chạy xanh.
 
 - eval: E2
-  run_id: minted-ops-prod-sap-source-registry-E2-r1
+  run_id: minted-ops-prod-sap-source-registry-E2-r2
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-23T23:42:31Z
+  verified_at: 2026-10-23T23:47:10Z
   cmd: cd app && npm test
   output: |
-    ℹ duration_ms 890.911958
-    Ca 'OP-AC-2 trang /ops và Thu thập render được, nói «Độ tươi chỉ đo ở máy local»' và ca đối chứng có source_registry (bảng rỗng) nằm trong bộ chạy xanh.
+    ℹ duration_ms 890.23525
+    Ca 'OP-AC-2 trang /ops và Thu thập render được, nói «Độ tươi chỉ đo ở máy local»' và ca đối chứng có source_registry (bảng rỗng) nằm trong bộ chạy xanh. Ca OP-AC-2 đã ghim thông báo có tên và đầu trang riêng (sửa ở S4 round 1).
 
 - eval: E3
   run_id: minted-ops-prod-sap-source-registry-E3-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-23T23:42:31Z
-  cmd: cd app && npm test
-  output: |
-    ℹ duration_ms 890.911958
-    Các ca 'SL-AC-' của app/tests/slo-mot-nguon.test.tsx nằm trong bộ chạy xanh.
+  carried_from_round: 1
+  note: carry-forward từ round 1 — delta không chạm paths của eval
 
 - eval: E4
   run_id: minted-ops-prod-sap-source-registry-E4-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.scripts
   verified_at: 2026-10-23T23:42:31Z
-  cmd: node --test scripts/*.test.mjs
-  output: |
-    Bộ test scripts chạy xong, ba ca 'SL-AC-1' của scripts/freshness-parity.test.mjs nằm trong bộ chạy xanh.
+  carried_from_round: 1
+  note: carry-forward từ round 1 — delta không chạm paths của eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-ops-prod-sap-source-registry-SUITE-npm_test__bb6271-r1
+  run_id: minted-ops-prod-sap-source-registry-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-23T23:42:31Z
+  verified_at: 2026-10-23T23:47:10Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-ops-prod-sap-source-registry-SUITE-lint-r1
+  run_id: minted-ops-prod-sap-source-registry-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-23T23:42:31Z
+  verified_at: 2026-10-23T23:47:10Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-ops-prod-sap-source-registry-SUITE-npm_test__13563d-r1
+  run_id: minted-ops-prod-sap-source-registry-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-23T23:42:31Z
+  verified_at: 2026-10-23T23:47:10Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-ops-prod-sap-source-registry-SUITE-test_lint_rules-r1
+  run_id: minted-ops-prod-sap-source-registry-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-23T23:42:31Z
+  verified_at: 2026-10-23T23:47:10Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-ops-prod-sap-source-registry-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-ops-prod-sap-source-registry-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-23T23:42:31Z
+  verified_at: 2026-10-23T23:47:10Z
 
 ## Known limits
 
 ## Ngoài hợp đồng
 
 ## Analyst
+
+carried từ round 1 — baseline không đo lại round này (evals.yaml không đổi từ lần baseline cuối, round 1).
 
 Eval không phân biệt (xanh ở cả HEAD lẫn baseline, chứng minh harness chứ chưa chứng minh feature; nên viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý):
 
@@ -111,4 +110,5 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, xác đ
 
 ## Iterations
 
-Round 1: E1, E2, E3, E4 đều xanh; verdict PASS. Không có lệnh fail ngoài eval.
+Round 1: E1, E2, E3, E4 đều xanh; verdict PASS. Một phát hiện trong hợp đồng (AC-2: ca OP-AC-2 chỉ kiểm chuỗi có mặt) được trả về triển khai.
+Round 2: ca OP-AC-2 đã ghim thông báo có tên và đầu trang riêng; chạy lại E1, E2 xanh; E3, E4 carry-forward từ round 1 (delta không chạm paths của eval); verdict PASS. Không có lệnh fail ngoài eval.
