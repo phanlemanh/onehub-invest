@@ -16,8 +16,11 @@ command -v docker >/dev/null || { echo "lỗi: docker không tìm thấy trong P
 command -v node   >/dev/null || { echo "lỗi: node không tìm thấy trong PATH" >&2; exit 1; }
 
 LAUNCH_PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
-# job Chủ nhật discovery-only cũ bị thay bởi nightly — gỡ trước
+# job Chủ nhật discovery-only cũ bị thay bởi nightly — gỡ hẳn: bootout + xoá
+# bản đã cài + xoá khỏi repo (ZC5/B1: install-cron.sh của làn Claude không còn
+# nguồn để cài lại nó nữa — chạy lại installer đó sẽ KHÔNG hồi sinh job cũ)
 launchctl bootout "gui/$UID_N" "$DEST/com.oneinvest.collector.plist" 2>/dev/null || true
+rm -f "$DEST/com.oneinvest.collector.plist"
 
 for f in airbnb-nightly smoke; do
   SRC="$ROOT/pipeline/cron/com.oneinvest.$f.plist"
