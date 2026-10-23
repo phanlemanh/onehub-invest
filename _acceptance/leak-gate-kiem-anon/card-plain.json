@@ -1,36 +1,6 @@
 {
-  "feature_plain": "Mỗi lượt đồng bộ lên cloud tự kiểm xem khoá công khai (anon) có đọc lén được bảng nào không; có là dừng ngay, báo đỏ và chỉ đúng lệnh để đóng lại — lỗ rò sessions/users của audit không tái phát được trong im lặng.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ để lượt đồng bộ chạy bình thường khi cloud đã khoá đúng, chỉ chừa ba bảng tham chiếu bản đồ của PostGIS."},
-    {"id": "AC-2", "p": "Sẽ dừng lượt đồng bộ TRƯỚC khi gửi dữ liệu nếu khoá công khai đọc được một bảng; cloud và vùng đệm không đổi một dòng."},
-    {"id": "AC-3", "p": "Sẽ bắt cả view, materialized view và bảng phân vùng, không chỉ bảng thường."},
-    {"id": "AC-4", "p": "Sẽ bắt mọi đường mở quyền (cho người đăng nhập, cho mọi người, cấp một cột, qua role trung gian) và nói đúng ai đọc được, qua đường nào, gỡ bằng lệnh gì."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG chừa bảng chỉ trùng gần tên với bảng PostGIS — chỉ đúng ba bảng thuộc PostGIS."},
-    {"id": "AC-6", "p": "Sẽ dừng đỏ khi cloud thiếu hẳn role anon — không kiểm được thì không cho qua."},
-    {"id": "AC-7", "p": "Sẽ bắt cả quyền bị mở giữa lượt, ở chốt sau khi tráo dữ liệu."},
-    {"id": "AC-8", "p": "Sẽ xanh lại ngay khi chạy đúng lệnh gỡ mà thông điệp đỏ đã in — mọi ô đỏ đều được thử gỡ."},
-    {"id": "AC-9", "p": "Sẽ giữ nguyên mọi phép kiểm cũ của đồng bộ nguyên tử (8 ca) và test đơn vị pipeline."},
-    {"id": "AC-10", "p": "Sẽ có sổ vận hành nói thứ tự triển khai, cách đọc dòng đỏ, cách gỡ và vì sao chừa PostGIS; không giao agent sửa quyền trên prod."},
-    {"id": "AC-11", "p": "Sẽ in đúng dòng «SYNC FAIL [gate]» và trả mã lỗi như tiến trình thật; thêm lệnh chỉ đọc --kiem-anon để Mạnh soi prod."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "Không kiểm quyền gọi hàm qua /rpc hay các schema khác ngoài public — đã đo ở phép kiểm của 037."},
-    {"id": "OOS-2", "p": "Không tự đo trên Supabase prod trong vòng — lệnh chỉ đọc cần khoá của Mạnh."},
-    {"id": "OOS-3", "p": "Không tự áp 037 hay tự thu quyền trên prod khi đỏ — chỉ dừng và nói."},
-    {"id": "OOS-4", "p": "Không đẩy cảnh báo lên watchdog hay /ops (việc AU3)."}
-  ],
-  "scope_plain": "Phần cắt hoặc để việc khác:",
-  "coverage_plain": [
-    {"i": 0, "p": "Mọi loại bảng có thể lộ: bảng thường (AC-2), view, materialized view, bảng phân vùng (AC-3); bảng ngoại để sau vì cloud không dùng."},
-    {"i": 1, "p": "Mọi đường mở quyền: cấp thẳng (AC-2), cho người đăng nhập, cho mọi người, cấp cột, qua role trung gian (AC-4)."},
-    {"i": 2, "p": "Mọi thời điểm: trước khi gửi (AC-2), giữa lượt (AC-7), sau khi gỡ (AC-8)."},
-    {"i": 3, "p": "Ngoại lệ: đúng ba bảng PostGIS (AC-1), bảng trùng gần tên vẫn đỏ (AC-5), thiếu role anon thì đỏ (AC-6)."},
-    {"i": 4, "p": "Không phá phép kiểm cũ (AC-9); người vận hành đọc được và gỡ đúng (AC-10)."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Nặng nhất: danh sách chừa ba bảng PostGIS mới thử trên cloud giả lập; prod có thể còn bảng lạ — đã thêm lệnh chỉ đọc --kiem-anon và đưa thành câu hỏi điều kiện merge cho Mạnh."},
-    {"i": 1, "p": "Không phân biệt được «dừng trước khi gửi» với «dừng sau tráo» — đã gắn dấu vào thông điệp, cho dữ liệu thử lệch cloud, và thêm bản cố tình bỏ chốt trước để chứng thước bắt được."},
-    {"i": 2, "p": "Thông điệp không nói ai đọc được và qua đường nào nên gỡ dễ sai — đã in role, đường cấp và lệnh gỡ; mọi ô đỏ đều thử gỡ bằng chính lệnh in ra."},
-    {"i": 3, "p": "«Báo đỏ» chưa được đo trên đường chạy thật — đã tách đường chạy chính để đo đúng dòng in và mã lỗi."}
+  "feature_plain": "Mỗi lượt đồng bộ lên cloud tự kiểm xem khoá công khai (anon) có đọc lén được bảng nào không; có là dừng ngay, báo đỏ và chỉ đúng lệnh để đóng lại.",
+  "decisions": [
+    {"id": "E18", "q": "Sổ vận hành đã đủ rõ để Mạnh tự triển khai và gỡ khi đỏ chưa?", "why": "Hội đồng ba người đọc lại sau khi sửa và đều thấy đủ bốn điều, khớp code."}
   ]
 }
