@@ -1,0 +1,49 @@
+E13 — mạng theo từng frame (CDP Network trên trang, ego-browser). Tĩnh (_next/static, font, ảnh) bỏ qua theo luật phạm vi.
+## /ops light-1440: requests=60 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops [Document] 200 
+## /ops/collections light-1440: requests=38 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/collections [Document] 200 
+## /ops/quality light-1440: requests=31 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/quality [Document] 200 
+## /ops/sources light-1440: requests=38 app(non-static)=7 app-fetch/xhr=6 bad=0
+   GET http://localhost:3457/ops/sources [Document] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/accounts [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/groups?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/login?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/accounts [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/groups?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/login?account=default [Fetch] 200 
+## /ops/design light-1440: requests=32 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/design [Document] 200 
+## /ops dark-1440: requests=32 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops [Document] 200 
+## /ops/collections dark-1440: requests=39 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/collections [Document] 200 
+## /ops/quality dark-1440: requests=32 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/quality [Document] 200 
+## /ops/sources dark-1440: requests=38 app(non-static)=7 app-fetch/xhr=6 bad=0
+   GET http://localhost:3457/ops/sources [Document] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/accounts [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/groups?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/login?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/accounts [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/groups?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/login?account=default [Fetch] 200 
+## /ops/design dark-1440: requests=32 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/design [Document] 200 
+## /ops light-390: requests=32 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops [Document] 200 
+## /ops/collections light-390: requests=39 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/collections [Document] 200 
+## /ops/quality light-390: requests=32 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/quality [Document] 200 
+## /ops/sources light-390: requests=38 app(non-static)=7 app-fetch/xhr=6 bad=0
+   GET http://localhost:3457/ops/sources [Document] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/accounts [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/groups?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/login?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/accounts [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/groups?account=default [Fetch] 200 
+   GET http://localhost:3457/api/v1/ops/zalo/login?account=default [Fetch] 200 
+## /ops/design light-390: requests=32 app(non-static)=1 app-fetch/xhr=0 bad=0
+   GET http://localhost:3457/ops/design [Document] 200 
