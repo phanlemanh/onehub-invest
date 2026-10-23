@@ -11,14 +11,14 @@ evals:
   - id: E2
     criterion: AC-1
     executor: script
-    cmd: "bash _acceptance/invest-target-map/verify.sh e2"
+    cmd: bash _acceptance/invest-target-map/verify.sh e2
     expected: "exit 0; 'invest rows 13 chờ 0'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3
     criterion: AC-2
     executor: script
-    cmd: "bash _acceptance/invest-target-map/verify.sh e3"
+    cmd: bash _acceptance/invest-target-map/verify.sh e3
     expected: "exit 0 (test con đỏ, báo '`/login` → \"giữ\"'); routes.md được khôi phục"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -32,7 +32,7 @@ evals:
   - id: E5
     criterion: AC-4
     executor: script
-    cmd: "bash _acceptance/invest-target-map/verify.sh e5"
+    cmd: bash _acceptance/invest-target-map/verify.sh e5
     expected: "13 hàng route; mỗi hàng 1 ảnh hiện trạng + 3 ứng viên có thumbnail và link previewUrl; 0 ảnh hỏng"
     evidence_required: [run_id, verifier, verified_at, output]
 
@@ -67,6 +67,6 @@ evals:
   - id: E10
     criterion: AC-6
     executor: script
-    cmd: "bash _acceptance/invest-target-map/verify.sh e10"
+    cmd: bash _acceptance/invest-target-map/verify.sh e10
     expected: "exit 0 (test con đỏ ở cột Slug đích, báo '`/so-sanh` → \"/so-sánh\"'); routes.md được khôi phục"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

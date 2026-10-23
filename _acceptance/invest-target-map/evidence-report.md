@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 81658532432f33831293c4cb5e5776aab2ab39fb
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: invest-target-map
