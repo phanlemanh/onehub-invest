@@ -105,6 +105,20 @@ export async function createAgentServer(opts: AgentServerOptions) {
   // cùng ts đụng nhau ở công thức cũ, tin sau bị bỏ ở dedup. Thêm sender +
   // danh sách URL/path media PHỤ SAU text rỗng để tách. Tin CÓ TEXT (dù kèm
   // ảnh) GIỮ NGUYÊN id cũ — không đổi id các tin đã có.
+  // ZC1 nối tiếp (claudedp-2310-6): media hỏng (không mảng / phần tử rác)
+  // bị LỌC làm lành thay vì làm 500 cả lô; url/path chuẩn hoá (trim + bỏ
+  // query/fragment rỗng) và SORT trước băm — thứ tự media không ổn định
+  // phải không tạo id mới. Tin CÓ TEXT giữ nguyên công thức legacy.
+  const normMedia = (media: unknown): AgentMediaFact[] => {
+    if (!Array.isArray(media)) return [];
+    return media.filter(
+      (m): m is AgentMediaFact =>
+        typeof m === "object" &&
+        m !== null &&
+        (typeof (m as AgentMediaFact).url === "string" || typeof (m as AgentMediaFact).path === "string"),
+    );
+  };
+  const normRef = (s: string): string => s.trim().replace(/[?#]+$/, "");
   const sourceIdOf = (
     group: string,
     ts: string,
@@ -114,8 +128,9 @@ export async function createAgentServer(opts: AgentServerOptions) {
     const h = createHash("sha256").update(`${group}|${ts}|${text}`);
     if (!text && extra) {
       const urls = (extra.media ?? [])
-        .map((m) => m.url ?? m.path ?? "")
+        .map((m) => normRef(m.url ?? m.path ?? ""))
         .filter(Boolean)
+        .sort()
         .join(",");
       h.update(`|${extra.senderId ?? ""}|${urls}`);
     }
@@ -139,7 +154,11 @@ export async function createAgentServer(opts: AgentServerOptions) {
     let accepted = 0;
     let duplicates = 0;
     for (const m of b.messages!) {
-      const sourceId = sourceIdOf(b.group!, m.ts, m.text, { senderId: m.senderId, media: m.media });
+      // ZC1 nối tiếp: media rác lọc làm lành; text trim — toàn khoảng trắng
+      // coi là media-only (đi nhánh băm media của sourceIdOf)
+      const text = m.text.trim();
+      const mediaClean = normMedia(m.media);
+      const sourceId = sourceIdOf(b.group!, m.ts, text, { senderId: m.senderId, media: mediaClean });
       if (seen.has(sourceId)) {
         duplicates++;
         continue;
@@ -152,7 +171,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
         kind: "post",
         fetchedAt: new Date().toISOString(),
         payload: {
-          text: m.text,
+          text,
           group: b.group,
           agent_id: b.agent_id,
           extracted: m.extracted,
@@ -160,7 +179,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
           senderName: m.senderName ?? null,
           senderId: m.senderId ?? null,
           conversationId: m.conversationId ?? null,
-          media: m.media ?? null,
+          media: mediaClean.length ? mediaClean : null,
         },
         meta: {
           city,
