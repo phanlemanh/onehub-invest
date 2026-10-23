@@ -122,25 +122,25 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 
 ## Sau B1 — cổng Ops (ui-clean-b1-ops)
 
-- **Ngày đo:** 2026-10-23 · **Commit:** `61f168d` (nhánh `claude/ui-clean-b1-ops-c5a53a`, sau khi merge main có PR #2–#5)
+- **Ngày đo:** 2026-10-23 · **Commit:** `70a6d92` (nhánh `claude/ui-clean-b1-ops-c5a53a`, sau khi merge main `021b48e` có B3 — PR #12)
 - **Chạy lại:** `cd app && npm run lint:ui-report`
 - **Phạm vi B1 còn 0 mục** baseline trên các file của đợt (`app/ops/**` trừ `ops/deals` và `ops/review`, `components/ops/**` trừ `review-card.tsx`, `components/shell/ops-shell/**`) — đếm từ `eslint-suppressions.json` bằng `node scripts/ui-standards/b1-ops.mjs docs`.
 - Hàng `app/ops` còn lại là `ops/deals/page.tsx` (đợt B5). Hàng `components/ops` còn lại là 20 mục của `review-card.tsx`: Task 12 (`/ops/review` theo solution-agents-5) đã TÁCH khỏi vòng này (Mạnh quyết «tách» 2026-10-23), làm ở vòng sau khi nhánh enrich vào main.
 
-**Tổng 90 vi phạm trong 23 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
+**Tổng 85 vi phạm trong 21 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
 
 #### Theo luật
 
 | Luật | Tổng | Baseline | Ngoại lệ có lý do | Mới (đỏ) |
 |---|---:|---:|---:|---:|
 | `onehub-ui/no-arbitrary-text-size` | 26 | 26 | 0 | 0 |
-| `onehub-ui/no-raw-palette` | 23 | 23 | 0 | 0 |
+| `onehub-ui/no-raw-palette` | 18 | 18 | 0 | 0 |
 | `onehub-ui/no-hardcoded-color` | 16 | 16 | 0 | 0 |
-| `onehub-ui/no-banned-motion` | 8 | 8 | 0 | 0 |
+| `onehub-ui/no-banned-motion` | 8 | 6 | 2 | 0 |
 | `onehub-ui/no-emoji-icons` | 8 | 8 | 0 | 0 |
-| `onehub-ui/no-raw-controls` | 8 | 8 | 0 | 0 |
+| `onehub-ui/no-raw-controls` | 8 | 7 | 1 | 0 |
 | `onehub-ui/no-raw-table` | 1 | 1 | 0 | 0 |
-| **Tổng** | 90 | 90 | 0 | 0 |
+| **Tổng** | 85 | 82 | 3 | 0 |
 
 #### Theo thư mục (cấp 2 dưới `src/`)
 
@@ -150,15 +150,15 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 | `components/marketing` | 18 | 18 | 0 | 0 |
 | `components/invest` | 12 | 12 | 0 | 0 |
 | `components/finder` | 9 | 9 | 0 | 0 |
-| `components/insight` | 9 | 9 | 0 | 0 |
 | `components/auth` | 7 | 7 | 0 | 0 |
+| `components/insight` | 4 | 1 | 3 | 0 |
 | `components/yield` | 4 | 4 | 0 | 0 |
 | `components/listing` | 3 | 3 | 0 | 0 |
 | `components/saved` | 3 | 3 | 0 | 0 |
 | `app/ops` | 2 | 2 | 0 | 0 |
 | `components/shell` | 2 | 2 | 0 | 0 |
 | `components/compare` | 1 | 1 | 0 | 0 |
-| **Tổng** | 90 | 90 | 0 | 0 |
+| **Tổng** | 85 | 82 | 3 | 0 |
 
 
 ### So với "trước"

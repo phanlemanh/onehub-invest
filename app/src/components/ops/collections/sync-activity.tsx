@@ -6,6 +6,7 @@
 import { useState } from "react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 
+import { themeOf } from "@/components/charts/palette"
 import { Frame, FramePanel } from "@/components/reui/frame"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
@@ -25,11 +26,13 @@ const SERIES: Record<Mode, (keyof FlowDay)[]> = {
   listings: ["airbnbListingsSeen", "airdnaListings"],
   zalo: ["zaloOffers", "zaloPosts"],
 }
+// Chuỗi thứ nhất của mỗi chế độ là khối lượng đã vào kho (opsVolume), chuỗi thứ hai là bản ghi
+// thô/chạm (opsVolumeRaw) — khoá Ops trong palette.ts, xem data-color.md mục Ops.
 const CONFIG = {
-  airbnbListingsSeen: { label: "S01 listing tươi", color: "var(--chart-1)" },
-  airdnaListings: { label: "S02 listing chạm", color: "var(--chart-2)" },
-  zaloOffers: { label: "S03 offer vào DB", color: "var(--chart-1)" },
-  zaloPosts: { label: "S03 post raw", color: "var(--chart-2)" },
+  airbnbListingsSeen: { label: "S01 listing tươi", theme: themeOf("opsVolume") },
+  airdnaListings: { label: "S02 listing chạm", theme: themeOf("opsVolumeRaw") },
+  zaloOffers: { label: "S03 offer vào DB", theme: themeOf("opsVolume") },
+  zaloPosts: { label: "S03 post raw", theme: themeOf("opsVolumeRaw") },
 } satisfies ChartConfig
 
 export function SyncActivity({ days, className }: { days: FlowDay[]; className?: string }) {
