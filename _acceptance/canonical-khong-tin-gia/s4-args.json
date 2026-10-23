@@ -1,0 +1,425 @@
+{
+  "generated_at": "2026-10-23T10:03:42Z",
+  "generated_sha": "fc28b3d727ad2550cfea5b2659de869bfc428431",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "canonical-khong-tin-gia",
+  "round": 1,
+  "riskTier": "T3",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-1 ma trận dấu' trong pipeline/scripts/test-posts.test.mjs xanh với MA TRẬN viết trước (số assert = số dòng ma trận = 11), hàng lấy nguyên dạng cột từ stg thật 23/10: snapshot 'hanoi__zalo-mock__2026-10-18T034152' → 'snapshot-source'; 'hanoi__example__2026-10-17T153258' → 'snapshot-source'; 'hcmc__zalo-e2e__…' → 'snapshot-source'; agent_id 'e2e-agent' (snapshot zalo-agent) → 'agent'; agent_id 'test-hook' → 'agent'; group 'TEST' → 'group'; group 'TEST-G1' → 'group'; và null cho: zalo-agent + openclaw-hook + nhóm 'BĐS Hà Nội'; zalo-agent + apify-facebook; nhóm 'Hội mua bán test nhà' (chữ test không ở đầu); nhóm 'TESTING ROOM' (từ dài hơn). Chiều đỏ cùng ma trận: bản sao luật nhóm bỏ ràng buộc ký tự theo sau ('^test' trần) → dòng 'TESTING ROOM' đỏ, thông điệp ghim 'AC-1 bắt nhầm nhóm thật: TESTING ROOM'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-2 transform S03 từ chối post thử' xanh (BEGIN…ROLLBACK trên DB local): chèn vào stg hai post cùng văn bản tin bán (giá + diện tích + phường) — p_real ở nhóm 'Nhóm thật X', p_test ở nhóm 'TEST-G9' — và một post thử riêng p_only (snapshot '…__zalo-mock__…', văn bản khác) → runTransformZalo(client) → offer chứa p_real có post_ids = [p_real] và n_reposts = 1; không offer nào chứa p_test hay p_only. Đối chứng dương cùng fixture: đổi p_only sang nhóm thường (không dấu) rồi chạy lại → p_only có offer (chứng post đó đủ điều kiện thành offer — thước không xanh vì parser bỏ). Vế «offer thật không đổi»: lượt A (stg không có p_test) và lượt B (có p_test mang SĐT khác và posted_at sớm hơn p_real), cùng giao dịch → mọi cột của offer chứa p_real (trừ cột thời điểm ghi) bằng nhau giữa A và B. Ghim thông điệp 'AC-2 offer mang post thử: <post_id>' và 'AC-2 offer trộn mang trường của post thử: <cột>'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-3",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-3 transform S05 dùng cùng bộ lọc' xanh (BEGIN…ROLLBACK): chèn post agent_id 'apify-facebook' snapshot '…__zalo-agent__…' nhóm 'TEST FB' với văn bản tin bán Hà Nội → runTransformFb(client) → không offer S05 nào chứa post đó. Đối chứng dương cùng fixture: nhóm đổi thành 'Mua bán nhà Hà Nội' → có offer S05 chứa post. Ca quét quan hệ trên TOÀN pipeline/ và agent/src (mọi tệp .mjs/.ts không phải test): tập tệp vừa nhắc 'stg_zalo_posts' vừa ghi sale_offers ('writeOffers(' hoặc 'INSERT INTO sale_offers') phải RỖNG (transform đọc stg qua loadStgPosts; lib/test-posts.mjs đọc stg nhưng không ghi sale_offers) — chiều đỏ: bộ tệp mẫu có một tệp chứa cả hai → trả đúng tên tệp đó. Ghim 'AC-3 S05 nhận post thử'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/transform-fb.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-4",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-4 rút offer giả qua đối soát' xanh (BEGIN…ROLLBACK): post p ở nhóm thường → runTransformZalo → offer O có p; chèn thẻ review_queue pending item_id 'enrich:O'; đổi group_name của p thành 'TEST' trong giao dịch → runTransformZalo lần hai → O không còn trong sale_offers, thẻ 'enrich:O' status='rejected' có decision_note, ops_audit trong giao dịch có dòng action='enrich:reconcile' (detail.source='S03', detail.stale ≥ 1) và dòng action='transform:reject-test' (detail.source='S03', detail.rejected ≥ 1, detail.by_marker.group ≥ 1). Đối chứng cùng fixture: lần chạy đầu (p chưa có dấu) không sinh dòng transform:reject-test cho p (by_marker.group không tăng). Ca đọc mã: scanDeleteAll trên MỌI tệp mã không phải test (.mjs/.ts/.tsx/.sh, bỏ thư mục tests/ và *.test.*) trong pipeline/, agent/src, app/src, data-api/src, scripts/ → tập tệp có câu 'DELETE FROM sale_offers' bằng danh sách cho phép viết trước ['pipeline/lib/write-offers.mjs' (dòng chú thích của chính bộ quét)]; chiều đỏ: chuỗi mẫu có câu DELETE → trả '<tệp>:<dòng>'. Ghim 'AC-4 offer giả không bị rút: <offer_id>'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/lib/write-offers.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-5",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-5 lượt sạch và lượt toàn thử' xanh (BEGIN…ROLLBACK): (a) trong giao dịch xoá các post kênh zalo mang dấu thử khỏi stg → runTransformZalo → 0 dòng ops_audit action='transform:reject-test' mới; đối chứng cùng giao dịch: chèn lại một post thử → chạy lại → đúng 1 dòng mới. (b) SAVEPOINT, đổi group_name mọi post kênh zalo thành 'TEST' → runTransformZalo ném lỗi chứa 'lượt nạp rỗng' → ROLLBACK TO SAVEPOINT → số dòng sale_offers S03 bằng trước. Ghim 'AC-5 lượt toàn thử xoá nguồn'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/lib/write-offers.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-6",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-6 bait gap tính lại' xanh (BEGIN…ROLLBACK): chèn hai post kênh zalo trong cùng một phường có thước (area_id có trong v_ruler_p2_area, chọn lúc chạy), cùng giá/m² — p_real nhóm thường, p_test snapshot '…__zalo-mock__…' (văn bản khác diện tích để ra hai offer) → runTransformZalo → refreshBaitGap(client) → offer của p_real có bait_gap_pct NOT NULL, không offer nào chứa p_test; và trong giao dịch không offer S03 nào giao với tập post thử của stg mang bait_gap_pct. Đối chứng cùng fixture: bỏ dấu của p_test → offer của nó có bait_gap_pct NOT NULL (thước gap thật sự tính cho loại offer này). Ghim 'AC-6 bait gap trên tin thử: <offer_id>'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-7",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-7 sellers mồ côi' xanh (BEGIN…ROLLBACK): chèn sellers s_orphan (phone_hash không offer nào mang) và s_live (phone_hash của một offer thật có trong giao dịch, n_ads cố ý = 999) → refreshBaitGap(client) → s_orphan không còn; s_live còn, n_ads = số offer mang hash đó; ops_audit có dòng action='bait-gap:sellers-orphan' với detail.deleted ≥ 1 và detail.remaining = count(*) FROM sellers sau lệnh. Cặp hai chiều cùng fixture: chèn thêm một offer mang hash của s_orphan trước khi chạy (biến thể) → s_orphan còn. Ghim 'AC-7 xoá nhầm người bán còn tin' và 'AC-7 người bán mồ côi còn'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E8",
+      "criterion": "AC-8",
+      "cmd": "cd pipeline && node scripts/test-data-residue.mjs --simulate",
+      "expected": "\"exit 0; stdout JSON của 'test-data-residue.mjs --simulate' trên DB local: after.offers_from_test = 0, after.bait_gap_from_test = 0, after.sellers_from_test = 0, after.sellers_orphan = 0, audit.reconcile ≥ 1 khi before.offers_from_test > 0 và audit.reject_test ≥ 1 khi tổng markers > 0 (dòng mới trong giao dịch; sau lượt dọn thật before = 0 thì không đòi dòng đối soát), markers có đủ ba khoá snapshot-source/agent/group (số theo stg lúc chạy; trước PL1 là 1260/1/2), rows_before = rows_after cho ĐÚNG 7 bảng viết trước — sale_offers, sellers, ops_audit, review_queue, enrichment_proposals, property_offers, property_candidates (số so = 7; ROLLBACK không để lại gì); before.offers_from_test = before.offers_from_test_sql (đếm độc lập bằng SQL trên snapshot_id/agent_id/group_name, không qua testMarker); keep_ratio in tỉ lệ dòng còn lại sau/trước trong giao dịch cho sale_offers và sellers (để đối chiếu với chặn tụt 50% của sync-cloud — Hỏi-4).\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/scripts/test-data-residue.mjs",
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/refresh-bait-gap.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.test_data_residue"
+    },
+    {
+      "id": "E9",
+      "criterion": "AC-8",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-8 thước dư lượng bắt được tin giả' xanh (BEGIN…ROLLBACK), fixture đi qua writer thật: chèn post p nhóm thường có SĐT riêng → runTransformZalo(client) dựng offer O (writeOffers) → chèn sellers dòng phone_hash = O.seller_phone_hash (lấy từ dòng writer ghi) → đổi group_name của p thành 'TEST' trong stg (KHÔNG chạy lại transform) → measureResidue(client) → offers_from_test tăng ≥ 1 so với trước khi chèn p, sellers_from_test tăng ≥ 1, ok=false; đối chứng cùng fixture: chạy lại runTransformZalo + refreshBaitGap → hai số về giá trị trước khi chèn p. Mã thoát của lệnh lấy từ hàm xuất exitCodeFor(kết quả đo) mà main dùng: exitCodeFor({ok:false}) = 1, exitCodeFor({ok:true}) = 0. Ghim 'AC-8 thước không thấy offer giả'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/scripts/test-data-residue.mjs",
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E10",
+      "criterion": "AC-9",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-9 stg không đổi' xanh (BEGIN…ROLLBACK): dấu vân tay stg = (count(*), md5(string_agg(post_id||snapshot_id||coalesce(group_name,'')||text, '|' ORDER BY post_id, snapshot_id))) trước → runTransformZalo + runTransformFb → sau bằng trước. Đối chứng cùng phép đo: UPDATE một dòng stg trong giao dịch → dấu vân tay khác (chứng phép đo nhạy). Ghim 'AC-9 transform sửa stg'.\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/transform-fb.mjs",
+        "pipeline/lib/test-posts.mjs",
+        "pipeline/scripts/test-posts.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E11",
+      "criterion": "AC-10",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'AC-10 chặn tụt có audit' trong pipeline/sync-cloud.test.mjs xanh với MA TRẬN viết trước cho hàm quyết chặn tụt (số assert = 6): (1) sellers tụt < 50%, có dòng audit bait-gap:sellers-orphan trong 24h với remaining = số dòng gửi → cho qua; (2) như (1) nhưng remaining lệch 1 → dừng 'shrink'; (3) như (1) nhưng dòng audit cũ hơn 24h → dừng; (4) không dòng audit → dừng; (5) sale_offers tụt < 50% kèm dòng audit sellers → dừng (miễn trừ chỉ cho bảng audit gọi tên); (6) không tụt → cho qua. Chiều đỏ cùng ma trận: bản sao hàm bỏ so remaining → ô (2) đỏ, ghim 'AC-10 cho qua tụt không giải thích được'. (theo khuyến nghị Hỏi-4 — người chốt ở Cổng Phạm vi)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/sync-cloud.test.mjs",
+        "pipeline/refresh-bait-gap.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "cd app && npm run test:lint-rules",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "f3cff1f034d9d9365c0e049a4108240e2bcc5db0",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/blissful-dewdney-508032",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/blissful-dewdney-508032/_acceptance/canonical-khong-tin-gia/contract.md",
+  "invokedAt": "2026-10-23T10:03:42Z",
+  "invokedSha": "fc28b3d727ad2550cfea5b2659de869bfc428431",
+  "vungVat": [
+    "_acceptance/canonical-khong-tin-gia/card-plain.json",
+    "_acceptance/canonical-khong-tin-gia/card.html",
+    "_acceptance/canonical-khong-tin-gia/evals.yaml",
+    "_acceptance/canonical-khong-tin-gia/figures/chan-tut.html",
+    "_acceptance/canonical-khong-tin-gia/figures/chan-tut.png",
+    "_acceptance/canonical-khong-tin-gia/figures/don-khi-nao.html",
+    "_acceptance/canonical-khong-tin-gia/figures/don-khi-nao.png",
+    "_acceptance/config.yaml",
+    "pipeline/lib/test-posts.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/bait-gap-sellers.test.mjs",
+    "pipeline/scripts/test-data-residue.mjs",
+    "pipeline/scripts/test-posts.test.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs",
+    "pipeline/transform-fb.mjs",
+    "pipeline/transform-zalo.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
+    "CONTEXT.md",
+    ".claude/rules/**",
+    "PRODUCT-MAP.md",
+    "LO-TRINH.html",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/canonical-khong-tin-gia/contract.md",
+    "_acceptance/canonical-khong-tin-gia/decisions.jsonl",
+    "_acceptance/canonical-khong-tin-gia/duong-nen.md",
+    "_acceptance/canonical-khong-tin-gia/figures/index.md",
+    "_acceptance/canonical-khong-tin-gia/gap-probe.md",
+    "docs/ROADMAP.md",
+    "docs/superpowers/plans/2026-10-23-canonical-khong-tin-gia.md",
+    "docs/superpowers/specs/2026-10-23-canonical-khong-tin-gia-design.md",
+    "pipeline/CLAUDE.md"
+  ],
+  "diffFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/canonical-khong-tin-gia/card-plain.json",
+    "_acceptance/canonical-khong-tin-gia/card.html",
+    "_acceptance/canonical-khong-tin-gia/contract.md",
+    "_acceptance/canonical-khong-tin-gia/decisions.jsonl",
+    "_acceptance/canonical-khong-tin-gia/duong-nen.md",
+    "_acceptance/canonical-khong-tin-gia/evals.yaml",
+    "_acceptance/canonical-khong-tin-gia/figures/chan-tut.html",
+    "_acceptance/canonical-khong-tin-gia/figures/chan-tut.png",
+    "_acceptance/canonical-khong-tin-gia/figures/don-khi-nao.html",
+    "_acceptance/canonical-khong-tin-gia/figures/don-khi-nao.png",
+    "_acceptance/canonical-khong-tin-gia/figures/index.md",
+    "_acceptance/canonical-khong-tin-gia/gap-probe.md",
+    "_acceptance/config.yaml",
+    "docs/ROADMAP.md",
+    "docs/superpowers/plans/2026-10-23-canonical-khong-tin-gia.md",
+    "docs/superpowers/specs/2026-10-23-canonical-khong-tin-gia-design.md",
+    "pipeline/CLAUDE.md",
+    "pipeline/lib/test-posts.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/bait-gap-sellers.test.mjs",
+    "pipeline/scripts/test-data-residue.mjs",
+    "pipeline/scripts/test-posts.test.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs",
+    "pipeline/transform-fb.mjs",
+    "pipeline/transform-zalo.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "_acceptance/canonical-khong-tin-gia/card-plain.json",
+    "_acceptance/canonical-khong-tin-gia/card.html",
+    "_acceptance/canonical-khong-tin-gia/evals.yaml",
+    "_acceptance/canonical-khong-tin-gia/figures/chan-tut.html",
+    "_acceptance/canonical-khong-tin-gia/figures/chan-tut.png",
+    "_acceptance/canonical-khong-tin-gia/figures/don-khi-nao.html",
+    "_acceptance/canonical-khong-tin-gia/figures/don-khi-nao.png",
+    "_acceptance/config.yaml",
+    "pipeline/lib/test-posts.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/bait-gap-sellers.test.mjs",
+    "pipeline/scripts/test-data-residue.mjs",
+    "pipeline/scripts/test-posts.test.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs",
+    "pipeline/transform-fb.mjs",
+    "pipeline/transform-zalo.mjs"
+  ],
+  "coverageFiles": [
+    "pipeline/lib/test-posts.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/test-data-residue.mjs",
+    "pipeline/scripts/test-posts.test.mjs",
+    "pipeline/sync-cloud.mjs",
+    "pipeline/sync-cloud.test.mjs",
+    "pipeline/transform-fb.mjs",
+    "pipeline/transform-zalo.mjs"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "a9e598dda38c8fba3cd0a1cb52272902aee721451a8532422d52280bf27be0c7",
+  "runBaseline": true,
+  "thuocChup": {
+    "sha": "fc28b3d727ad2550cfea5b2659de869bfc428431",
+    "n": 41,
+    "digest": "843049bf7ded877f98b19996ecddd059efc9edcd6b0c722f8c602729977e7e9d",
+    "tep": {
+      "_acceptance/canonical-khong-tin-gia/evals.yaml": "a9e598dda38c8fba3cd0a1cb52272902aee721451a8532422d52280bf27be0c7",
+      "_acceptance/config.yaml": "304068647f5c25e1407ddedbf3386e3e61a9e1eea2a9d627ab462b12b747953b",
+      "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
+      "agent/tests/enrich-apply.test.ts": "69407e7d1049ac4a8c7db6e61fb4326576773bed97070be691cf782d02993975",
+      "agent/tests/enrich-db.test.ts": "2d22af28021fc9a5109af57d04e5403ce3ac7012f4a4a9a8eebdfdd3070f8747",
+      "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
+      "agent/tests/enrich-revert.test.ts": "91393e322eddcc6da86fd66b6bb3ff7ec238c07ea939b44736e19f46d6aec5eb",
+      "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "app/eslint-plugin-onehub-ui/tests/check-bare-disables.test.mjs": "f4d5a768000e10b0afcd865dda45027bfc374f5d448b365e71b5b22168264a43",
+      "app/eslint-plugin-onehub-ui/tests/check-baseline-growth.test.mjs": "7d3e9509b9a3e78e6f353df55f97625630b4f178d838a97c329509512222e547",
+      "app/eslint-plugin-onehub-ui/tests/index.test.mjs": "655e46d7c05ac26ed76d92ea3d9b19c5c22a59bb7ca198afa960362235771b08",
+      "app/eslint-plugin-onehub-ui/tests/no-arbitrary-text-size.test.mjs": "5ba51c96484865cb98cb413843375d2d88c552b7616e0586771df7287ce60f4d",
+      "app/eslint-plugin-onehub-ui/tests/no-aschild.test.mjs": "29033a30554d246c3404b9c9b442e1282f391c6eb90ed6b64e03271a666c0811",
+      "app/eslint-plugin-onehub-ui/tests/no-banned-motion.test.mjs": "74755fcdf27b99fdbf1a600cbcfc1bb472e98c18317cfd710b7249e3a770de53",
+      "app/eslint-plugin-onehub-ui/tests/no-emoji-icons.test.mjs": "8571b78c4733c9acf687690ce54745452bec6a4f3c7ba7f96ba76b4f87efeaa6",
+      "app/eslint-plugin-onehub-ui/tests/no-hardcoded-color.test.mjs": "ce68e4bd5a75a83233763bcdd435650faf8cc9e85e342e5d3a863c7692bedec9",
+      "app/eslint-plugin-onehub-ui/tests/no-native-dialogs.test.mjs": "deaf6a38eb19305c68d5e30f1417d8908f2036355aa4e02a2f5a47a326acc9cc",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-controls.test.mjs": "b48cbea63e4ca7f380cc27283deb79228375465545df85b91c9a8fcdac926b16",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-palette.test.mjs": "ed3843f2e6445fa54dd3e765f6d749a9d148f8dc4e0e0d239f13016c77db4e65",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-table.test.mjs": "78446ffe3717c3c22e49b6d7787f9ab8bbe0d921d2469c7917f00fba265935f4",
+      "app/eslint-plugin-onehub-ui/tests/require-disable-reason.test.mjs": "6d87f7afd3f155f9f8be54e3eced84ea6c780593d78234f01e3a82d491f03fa5",
+      "app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs": "497e7eadcd4267cda43889626301b1491243cbd014028323e7223688111ed275",
+      "app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs": "2d3664f30a1155fe83fd6dbef3dd7264f6568e8483ae8fa1d1858bcc05be2a85",
+      "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
+      "app/tests/review-card.test.tsx": "9b8f78071ef4958abc550436d5bf45d797f4c14e4c145b7acfc1762d790fbaea",
+      "app/tests/review-media.test.tsx": "f33efc12d931b647ef47b1fe8bf77225b676104dc9b36dd4f37137c4cdcff506",
+      "app/tests/review-photos.test.tsx": "517068b876d62f141c7d08a30ba14b8ae121d47f494e36bf3bcd18004882825a",
+      "app/tests/zalo-media.test.tsx": "9c53df7863a5f108b618d13ded829af2d967e637ebe59035de5114b5d384b3f1",
+      "collector/src/test/api.test.ts": "a5192a66ca23ef509a452f6ad44e402c38d7466efc2ec9728d1df08c20a1cf6f",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/media-fetch.test.ts": "244f05faac3257defb40409e57127b212425b62d442aacd13b3c97dfc3672ea7",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb",
+      "pipeline/scripts/bait-gap-sellers.test.mjs": "578400b59d89c00a90c04f1b497c4d6fa8b745e5bfa4f2c558c817047171e919",
+      "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218",
+      "pipeline/scripts/test-posts.test.mjs": "5a9023b17b1767df106648d90935fb7c8421b442c42c8dc937f284947c022662",
+      "pipeline/scripts/write-offers.test.mjs": "6c1162eecb20eeccaf085700b8264e9be758661957e8970d360a3e9418b95917",
+      "pipeline/sync-cloud.test.mjs": "8aa3d4cfa38686314c5548d8bf603b9055e344de701d248c4039a60c5f923b85",
+      "pipeline/sync-pii.test.mjs": "3f0571d3e967460301f86e3001a6dfa7cb65922fcda017cd3b92a692b1a42682",
+      "scripts/dev-ops-account.test.mjs": "eaae93ef5b886eaae6563cfd040c364f0ccff637592bc0c5c5df584bf368e399"
+    }
+  },
+  "cayChup": {
+    "sha": "fc28b3d727ad2550cfea5b2659de869bfc428431",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}

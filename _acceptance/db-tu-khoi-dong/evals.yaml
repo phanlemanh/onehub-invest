@@ -1,0 +1,75 @@
+schema_version: 1
+feature_slug: db-tu-khoi-dong
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_autostart_static
+    expected: "exit 0; PASS compose db.restart=unless-stopped (đọc .services.db.restart từ docker compose config --format json); chiều đỏ ở E2 (ba đột biến restart)"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.db_autostart_mutation
+    expected: "exit 0; đối chứng dương: PASS bản lành xanh ở static và diff; phải-bắn: PASS đột biến bo-dong đỏ — FAIL compose db.restart=(vắng); PASS đột biến no đỏ — FAIL compose db.restart=no; PASS đột biến on-failure đỏ — FAIL compose db.restart=on-failure; PASS đột biến cong-5434 đỏ — FAIL compose lệch commit trước vòng; thiếu một thông điệp ghim → exit 1"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.db_autostart_restart
+    expected: "exit 0; PASS trước khởi động lại: policy=unless-stopped, running (compose của cây); PASS sau khi dockerd cách ly khởi động lại: running, không lệnh tay; chiều đỏ ở E4 cùng lượt cùng daemon"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_autostart_restart
+    expected: "exit 0; PASS đối chứng: compose bỏ dòng restart → policy=no, sau khởi động lại exited; nếu bản đối chứng lại running thì FAIL đối chứng — thước không phân biệt được (exit 1)"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.db_autostart_live
+    expected: "exit 0; PASS one-invest-db running, HostConfig.RestartPolicy.Name=unless-stopped|always (jq trên JSON docker inspect); PASS LaunchAgent homebrew.mxcl.colima RunAtLoad=true (plutil -extract RunAtLoad raw); PASS homebrew.mxcl.colima đang nạp trong launchctl; chỉ đọc (không docker update/start/stop); chiều đỏ ở E9"
+    paths: ["scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.db_autostart_cleanup
+    expected: "exit 0; PASS lượt ép thoát lỗi sau khi dựng dind (AU7_FAIL_AFTER=dind) — không còn container au7-dind-*; PASS lượt lỗi thoát bằng return rồi mới exit (AU7_FAIL_AFTER=compose) — không còn container au7-dind-*; PASS lượt bị SIGTERM sau khi dựng dind — không còn container au7-dind-*; PASS one-invest-db StartedAt đọc được (không rỗng, parse ra thời điểm) và không đổi qua cả ba lượt; đối chứng dương: PASS thấy container au7-dind-* khi lượt bị SIGTERM đang chạy (thước đếm-sót phân biệt được); đối chứng dương của thước StartedAt (StartedAt daemon cách ly đổi sau khởi động lại) nằm ở đầu ra của E3"
+    paths: ["scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: judgment
+    inputs: ["docs/ops/runtime-map.md", "db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    question: "Trong docs/ops/runtime-map.md, mục «DB local tự khởi động» có đủ năm điều không, đối chiếu với db/docker-compose.yml và scripts/check-db-autostart.sh: (1) chuỗi đăng nhập → LaunchAgent homebrew.mxcl.colima → dockerd → restart policy khai trong db/docker-compose.yml, và policy ghi trong tài liệu trùng giá trị trong compose; (2) lệnh kiểm `bash scripts/check-db-autostart.sh live`, và chế độ `live` có thật trong script; (3) cách triển khai sau merge — không cần tạo lại container ngay, lần `docker compose up` kế tiếp tự tạo lại và DB gián đoạn vài giây; (4) giới hạn — cần đăng nhập macOS, `docker stop` có chủ đích thì không tự bật; (5) không câu nào bảo tạo lại container ngay hay bảo agent tự khởi động lại colima hoặc Docker của máy? Thiếu điều nào hoặc tài liệu nói khác compose/script thì FAIL."
+    expected: "đủ năm điều; lệnh và policy trong tài liệu khớp compose và script"
+    paths: ["docs/ops/runtime-map.md", "db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, verdict, judges, verified_at]
+
+  - id: E8
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_autostart_diff
+    expected: "exit 0; PASS cấu hình gộp của cây bỏ services.db.restart == cấu hình gộp của db/docker-compose.yml ở commit f3cff1f (so JSON chuẩn hoá bằng jq -S, từng giá trị); chiều đỏ ở E2 (đột biến cong-5434 → FAIL compose lệch commit trước vòng)"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.db_autostart_live_selftest
+    expected: "exit 0; fixture rút từ vật thật (bản chép plist ~/Library/LaunchAgents/homebrew.mxcl.colima.plist + JSON docker inspect one-invest-db của máy); đối chứng dương: PASS bản chép nguyên vẹn xanh; phải-bắn: PASS RunAtLoad=false đỏ — FAIL colima RunAtLoad=false; PASS RestartPolicy.Name=no đỏ — FAIL one-invest-db policy=no; chỉ ghi vào thư mục tạm"
+    paths: ["scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

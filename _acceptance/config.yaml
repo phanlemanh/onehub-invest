@@ -109,6 +109,18 @@ executors:
     supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
     supabase_lock_local: "bash scripts/check-supabase-lock.sh local"
     supabase_lock_sim: "bash scripts/check-supabase-lock.sh sim"
+    test_data_residue: "cd pipeline && node scripts/test-data-residue.mjs --simulate"   # canonical-khong-tin-gia AC-8 — DB local :5433, mọi ghi trong giao dịch rồi ROLLBACK
+    # db-tu-khoi-dong (AU7) — restart policy của DB local nằm trong compose; restart dùng daemon dind cách ly, không chạm :5433
+    db_autostart_static: "bash scripts/check-db-autostart.sh static"
+    db_autostart_mutation: "bash scripts/check-db-autostart.sh mutation"
+    db_autostart_restart: "bash scripts/check-db-autostart.sh restart"     # cần docker; lần đầu pull docker:28-dind + alpine:3.20
+    db_autostart_live: "bash scripts/check-db-autostart.sh live"           # chỉ đọc máy này: one-invest-db + LaunchAgent colima
+    db_autostart_diff: "bash scripts/check-db-autostart.sh diff"           # compose của cây bỏ restart == compose commit trước vòng (f3cff1f)
+    db_autostart_cleanup: "bash scripts/check-db-autostart.sh cleanup"     # lượt lỗi / SIGTERM giữa chừng vẫn dọn dind; DB thật không bị khởi động lại
+    db_autostart_live_selftest: "bash scripts/check-db-autostart.sh live-selftest"   # bộ đọc live trên bản chép plist + inspect thật đã làm hỏng
+    # deals-api-tam-dong (AU2) — /api/v1/deals chỉ ops; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433
+    deals_api_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-deals-api.mjs"
+    deals_api_mutation: "node scripts/check-deals-api.mjs mutation"
     # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
     zc3_l4b_scan: "node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"
     zc3_gateway: "node scripts/audit-p1-resilience/acceptance.mjs gateway"
