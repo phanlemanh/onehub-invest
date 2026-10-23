@@ -331,11 +331,14 @@ function bodyKeys(call, sf) {
   }
   return new Set(["<không đọc được>"]);
 }
-function extractFetches() {
+/** deferred: undefined = mọi mã Ops; true = chỉ phần hoãn (DEFERRED); false = trừ phần hoãn. */
+function extractFetches({ deferred } = {}) {
   const byKey = new Map();
   for (const f of walk(join(SRC(), "components", "ops")).concat(walk(join(SRC(), "app", "ops")))) {
     // Hợp đồng API áp cho MỌI mã Ops (kể cả phần hoãn như review-card), chỉ trừ ops/deals (B5).
-    if (!/\.tsx?$/.test(f) || relative(SRC(), f).split(sep).join("/").startsWith("app/ops/deals/")) continue;
+    const rel = relative(SRC(), f).split(sep).join("/");
+    if (!/\.tsx?$/.test(f) || rel.startsWith("app/ops/deals/")) continue;
+    if (deferred !== undefined && DEFERRED.some((d) => rel.startsWith(d)) !== deferred) continue;
     const sf = parse(f);
     visit(sf, (n) => {
       if (!(ts.isCallExpression(n) && n.expression.getText() === "fetch" && n.arguments[0])) return;
@@ -357,10 +360,19 @@ function snapshotApi() {
   console.log(`  ghi ${calls.length} lời gọi vào b1-api-snapshot.json`);
 }
 function apiContract() {
-  const snap = json(join(ROOT, "scripts/ui-standards/b1-api-snapshot.json")).calls.map(callKey);
+  const snapCalls = json(join(ROOT, "scripts/ui-standards/b1-api-snapshot.json")).calls;
   const exp = json(join(ROOT, "scripts/ui-standards/b1-api-expected.json")).calls.map(callKey);
-  const now = extractFetches().map(callKey);
-  for (const e of exp) if (!snap.includes(e)) fails.push(`api: bản chụp thiếu phần tử của ma trận viết tay: ${e} (bộ trích sót kiểu gọi?)`);
+  for (const e of exp) if (!snapCalls.map(callKey).includes(e)) fails.push(`api: bản chụp thiếu phần tử của ma trận viết tay: ${e} (bộ trích sót kiểu gọi?)`);
+  // Phần hoãn (Task 12) B1 không đụng: lời gọi của nó đi theo nhánh chính (vd enrich thêm `choices`
+  // vào decide), nên không so với bản chụp mà đòi B1 không sửa file hoãn so với nhánh chính.
+  const defEp = new Set(extractFetches({ deferred: true }).map((c) => `${c.method} ${c.endpoint}`));
+  const snap = snapCalls.filter((c) => !defEp.has(`${c.method} ${c.endpoint}`)).map(callKey);
+  const now = extractFetches({ deferred: false }).map(callKey);
+  const base = spawnSync("git", ["merge-base", "HEAD", "origin/main"], { cwd: ROOT, encoding: "utf8" });
+  if (base.status === 0) {
+    const touched = spawnSync("git", ["diff", "--name-only", base.stdout.trim(), "--", ...DEFERRED.map((d) => `app/src/${d}`)], { cwd: ROOT, encoding: "utf8" }).stdout.trim();
+    if (touched) fails.push(`api: B1 sửa file phần hoãn so với nhánh chính: ${touched.split("\n").join(", ")}`);
+  }
   for (const s of snap) if (!now.includes(s)) fails.push(`api: code sau sửa thiếu ${s}`);
   for (const n of now) if (!snap.includes(n)) fails.push(`api: code sau sửa thừa ${n}`);
   if (!fails.length) ok(`${now.length} lời gọi khớp bản chụp; bản chụp phủ đủ ${exp.length} phần tử ma trận viết tay`);
