@@ -2,6 +2,17 @@ import { classStringVisitor, tokenize } from "../lib/class-strings.mjs";
 
 const DIALOG_FNS = new Set(["confirm", "alert", "prompt"]);
 
+function isLocallyDeclared(context, node, id) {
+  let scope = context.sourceCode.getScope(node);
+  const ref = scope.references.find((r) => r.identifier === id);
+  if (ref) return Boolean(ref.resolved && ref.resolved.defs.length > 0);
+  for (; scope; scope = scope.upper) {
+    const v = scope.set.get(id.name);
+    if (v) return v.defs.length > 0;
+  }
+  return false;
+}
+
 export default {
   meta: {
     type: "problem",
@@ -34,7 +45,10 @@ export default {
                 c.property.type === "Identifier"
               ? c.property.name
               : null;
-        if (name && DIALOG_FNS.has(name)) context.report({ node, messageId: "nativeDialog" });
+        if (!name || !DIALOG_FNS.has(name)) return;
+        // `confirm(...)` mà `confirm` là biến/hàm/tham số/import khai báo trong mã → không phải hộp thoại trình duyệt
+        if (c.type === "Identifier" && isLocallyDeclared(context, node, c)) return;
+        context.report({ node, messageId: "nativeDialog" });
       },
     };
   },

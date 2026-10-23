@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Admin duyệt thẻ ở /ops/review sẽ có sẵn danh sách ảnh của từng tin (Tin A, Tin B, tin được bổ sung) để nhìn ảnh mà quyết; người khác không thấy ảnh, ảnh không rời máy local. Phần hiện ảnh lên thẻ do việc giao diện sau làm.",
+  "scope_plain": "Việc này chỉ chuẩn bị ảnh phía máy chủ; những thứ dưới đây cố ý để lại:"
+}

@@ -8,7 +8,7 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 # Hai ổ cắm thiết kế (repo có bề mặt người dùng): cả hai trỏ tới skill repo `onehub-ui`.
 feature_loop:
   ui_standards_skill: onehub-ui
-  suite_keys: [executors.test.app, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt
+  suite_keys: [executors.test.agent, executors.test.app, executors.test.app_ui, executors.test.pipeline, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt — agent/app_ui/pipeline thêm từ vòng enrich-qua-de-xuat
 design_pass:
   ds_skill: onehub-ui
 executors:
@@ -18,9 +18,11 @@ executors:
     agent: "cd agent && npm test"                    # agent/tests/parsers.test.ts — 8/8 xanh
     app: "cd app && npx tsc --noEmit && npm run lint"   # app chưa có test; lint 0 lỗi (3 cảnh báo cố ý)
     data_api: "cd data-api && npm run typecheck"     # suy từ: data-api/package.json — xanh
+    app_ui: "cd app && npm test"                     # test render jsdom (app/tests) — thêm ở vòng enrich-qua-de-xuat
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
   script:
     cli: "cd collector && npm run build && npm run collect -- list-sources"   # suy từ: CLAUDE.md Verify Commands
     ruler_views_fresh: "bash scripts/check-ruler-views.sh fresh"         # DB trống từ db/migrations → 2 view ruler
@@ -42,6 +44,18 @@ executors:
     ui_lint_should_not_fire: "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-not-fire"
     ui_baseline_guard: "cd app && node eslint-plugin-onehub-ui/selftest.mjs baseline-guard"
     ui_hook_selftest: "bash .claude/hooks/tests/typecheck-changed.selftest.sh"
+    # Đợt B1 dọn cổng Ops (ui-clean-b1-ops) — một harness, mỗi kiểu kiểm một lệnh
+    ui_b1_suppressions: "node scripts/ui-standards/b1-ops.mjs suppressions"
+    ui_b1_handdrawn: "node scripts/ui-standards/b1-ops.mjs handdrawn"
+    ui_b1_frame: "node scripts/ui-standards/b1-ops.mjs frame"
+    ui_b1_one_way: "node scripts/ui-standards/b1-ops.mjs one-way"
+    ui_b1_dialogs: "node scripts/ui-standards/b1-ops.mjs dialogs"
+    ui_b1_api_contract: "node scripts/ui-standards/b1-ops.mjs api-contract"
+    ui_b1_design_page: "node scripts/ui-standards/b1-ops.mjs design-page"
+    ui_b1_docs: "node scripts/ui-standards/b1-ops.mjs docs"
+    ui_b1_states: "node scripts/ui-standards/b1-ops.mjs states"
+    ui_b1_shell: "node scripts/ui-standards/b1-ops.mjs shell"
+    ui_b1_selftest: "node scripts/ui-standards/b1-ops.mjs selftest"
     ui_b3_palette: "node scripts/ui-standards/b3-check.mjs palette"   # đợt B3 thống nhất biểu đồ (ui-clean-b3-charts)
     ui_b3_contrast: "node scripts/ui-standards/b3-check.mjs contrast"
     ui_b3_data_color: "node scripts/ui-standards/b3-check.mjs data-color"
@@ -52,6 +66,9 @@ executors:
     ui_b3_structure: "node scripts/ui-standards/b3-check.mjs structure"
     ui_b3_docs: "node scripts/ui-standards/b3-check.mjs docs"
     ui_b3_pixels: "node scripts/ui-standards/b3-check.mjs pixels"
+    cloud_url_static: "bash scripts/check-cloud-url.sh static"       # ops-ingest-url-onehub-invest: không còn trỏ project Vercel cũ
+    cloud_url_mutation: "bash scripts/check-cloud-url.sh mutation"   # should-NOT-fire: URL cũ bị bắt ở cả 3 tệp
+    cloud_url_live: "bash scripts/check-cloud-url.sh live"           # cần mạng + ~/.oneinvest/cloud.env; không ghi DB cloud
     ui_b3_selftest: "node scripts/ui-standards/b3-check.mjs selftest"
     glossary_terms: "node scripts/glossary/acceptance.mjs glossary"            # ngôn ngữ chuẩn (glossary-context)
     glossary_w6: "node scripts/glossary/acceptance.mjs w6"
@@ -65,6 +82,17 @@ executors:
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
+    # review-media-backend — AC-8 cần DB local :5433 (docker one-invest-db); mọi dòng tạo trong giao dịch rồi ROLLBACK
+    review_media_roundtrip: "cd app && node --import tsx scripts/review-media-roundtrip.ts"
+    review_media_no_cloud: "node scripts/check-review-media-local-only.mjs"
+    review_photos_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-review-photos.mjs"   # review-card-photos AC-7 — cần app chạy TỪ worktree đang kiểm + DB local; tài khoản thử tạo/xoá mỗi lần
+    review_photos_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx"   # design gate ghim MỘT file đích (design-gate chỉ nhận đối số cuối; làn ghim lại không nối paths:)
+    review_card_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-card.tsx"
+    ops_login: "bash scripts/dev-ops-login-check.sh"   # đăng nhập đầu-cuối tài khoản ops thử — cần dev server :3456 + DB local
+    # supabase-lock-anon-rls — cần docker; sim: image supabase/postgres 17.6.1.158 + postgrest v14.16; local: kartoza/postgis 17-3.5 (container tạm, không chạm :5433)
+    supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
+    supabase_lock_local: "bash scripts/check-supabase-lock.sh local"
+    supabase_lock_sim: "bash scripts/check-supabase-lock.sh sim"
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
@@ -83,6 +111,8 @@ risk_tiers:
     - "AGENTS.md"
     - "**/AGENTS.md"                                 # chỉ dẫn agent theo module (vd collector/AGENTS.md cho ZCode) — cùng loại **/CLAUDE.md; Mạnh duyệt 2026-10-23
     - "**/CLAUDE.md"
+    - "CONTEXT.md"                                   # bảng thuật ngữ + bối cảnh sản phẩm — văn bản; Mạnh duyệt 2026-10-23
+    - ".claude/rules/**"                             # luật chữ theo đường dẫn cho Claude — văn bản; Mạnh duyệt 2026-10-23
     # Bản đồ sản phẩm — máy sinh, và /acceptance-gate:approve + /acceptance-gate:signoff commit nó CÙNG commit
     # chữ ký. Thiếu dòng này thì chính commit chữ ký làm evidence stale và
     # pre-merge chặn merge, thành vòng không thoát (ADR 0007). Miễn trừ CHỈ an

@@ -1,0 +1,24 @@
+{"ts":"2026-10-23T01:49:25Z","round":1,"evalId":"E1","run_id":"review-media-backend-E1-20261023T014925","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:49:25Z","round":1,"evalId":"E2","run_id":"review-media-backend-E2-20261023T014925","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:49:25Z","round":1,"evalId":"E3","run_id":"review-media-backend-E3-20261023T014925","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:49:25Z","round":1,"evalId":"E4","run_id":"review-media-backend-E4-20261023T014925","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:49:25Z","round":1,"evalId":"E5","run_id":"review-media-backend-E5-20261023T014925","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:49:25Z","round":1,"evalId":"E6","run_id":"review-media-backend-E6-20261023T014925","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:49:25Z","round":1,"evalId":"E7","run_id":"review-media-backend-E7-20261023T014925","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:49:35Z","round":1,"evalId":"E8","run_id":"review-media-backend-E8-20261023T014935","exit_code":0,"cmd":"cd app && node --import tsx scripts/review-media-roundtrip.ts"}
+{"ts":"2026-10-23T01:49:45Z","round":1,"evalId":"E9","run_id":"review-media-backend-E9-20261023T014945","exit_code":0,"cmd":"cd app && npx tsc --noEmit && npm run lint"}
+{"ts":"2026-10-23T01:49:56Z","round":1,"evalId":"E10","run_id":"review-media-backend-E10-20261023T014956","exit_code":0,"cmd":"node scripts/check-review-media-local-only.mjs"}
+{"ts":"2026-10-23T01:50:02Z","round":1,"evalId":"E11","run_id":"review-media-backend-E11-20261023T015002","exit_code":0,"cmd":"node scripts/check-portal-compliance.mjs"}
+{"ts":"2026-10-23T01:53:01Z","round":2,"evalId":"E1","run_id":"review-media-backend-E1-r2-20261023T015301","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:53:03Z","round":2,"evalId":"E2","run_id":"review-media-backend-E2-r2-20261023T015303","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:53:05Z","round":2,"evalId":"E3","run_id":"review-media-backend-E3-r2-20261023T015305","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:53:07Z","round":2,"evalId":"E4","run_id":"review-media-backend-E4-r2-20261023T015307","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:53:09Z","round":2,"evalId":"E5","run_id":"review-media-backend-E5-r2-20261023T015309","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:53:11Z","round":2,"evalId":"E6","run_id":"review-media-backend-E6-r2-20261023T015311","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:53:13Z","round":2,"evalId":"E7","run_id":"review-media-backend-E7-r2-20261023T015313","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-23T01:53:39Z","round":2,"evalId":"E8","run_id":"review-media-backend-E8-r2-20261023T015339","exit_code":0,"cmd":"cd app && node --import tsx scripts/review-media-roundtrip.ts"}
+{"ts":"2026-10-23T01:53:40Z","round":2,"evalId":"E9","run_id":"review-media-backend-E9-r2-20261023T015340","exit_code":0,"cmd":"cd app && npx tsc --noEmit && npm run lint"}
+{"ts":"2026-10-23T01:53:49Z","round":2,"evalId":"E10","run_id":"review-media-backend-E10-r2-20261023T015349","exit_code":0,"cmd":"node scripts/check-review-media-local-only.mjs"}
+{"ts":"2026-10-23T01:53:50Z","round":2,"evalId":"E11","run_id":"review-media-backend-E11-r2-20261023T015350","exit_code":0,"cmd":"node scripts/check-portal-compliance.mjs"}
+{"ts":"2026-10-23T02:45:20Z","kind":"repin","run_id":"repin-20261023T024514Z-99825","sha":"770c7609db093c0a8f0600888258a577855dbcb3","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0,"E11":0},"wall_s":6.5,"so_lenh":8,"tong_ket":{"ket_cuc":"xanh","phut":0.1,"so_lenh":8,"model_goi":0,"model_carry":0,"chap_chon":0}}
+{"ts":"2026-10-23T02:47:51Z","kind":"repin","run_id":"repin-20261023T024744Z-72700","sha":"fcebec48b28eb21dfd057c005193aa4877c70756","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0,"E11":0},"wall_s":6.7,"so_lenh":8,"tong_ket":{"ket_cuc":"xanh","phut":0.1,"so_lenh":8,"model_goi":0,"model_carry":0,"chap_chon":0}}

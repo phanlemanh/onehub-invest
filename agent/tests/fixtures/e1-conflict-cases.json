@@ -1,0 +1,18 @@
+{
+  "_note": "Hai ca thật của lượt chạy thử enrich-run 2026-10-23 (run enrich-2026-10-22T23:25:08.912Z): E1 áp land, LLM ra house. text = đoạn đầu tin, đã bỏ dòng liên hệ. group_name che phần riêng của nhóm (SPL tầng A), giữ nguyên cụm «NHÀ ĐẤT» — chính chữ «đất» làm luật E1 ra land. output = câu trả lời cuối của LLM, chép nguyên văn từ trace.",
+  "group_name": "HỘI MUA BÁN NHÀ ĐẤT [tên nhóm S05 đã che]",
+  "cases": [
+    {
+      "offer_id": "offer_feb6cd92901f426c",
+      "trace": "2026-10-22T23-26-24--enrich-text.jsonl",
+      "text": "💥Nhà  Gò Vấp Ngay coopmat Quang Trung 50m ra mặt tiền ,4 tầng 44 m2\nNhỉnh hơn 6.xx tỉ💥\n\nDiện tích 3.9m x 11.8\n+ Nhà 1 trệt, 2 lầu, sân thượng.\nGồm: 3 Phòng ngủ, 4 WC, phòng khách rộng.",
+      "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 3,\n  \"bathrooms\": 4,\n  \"street\": \"Quang Trung\",\n  \"address_detail\": \"Gò Vấp, ngay CoopMart Quang Trung, cách mặt tiền 50m\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"4 tầng\",\n    \"1 trệt, 2 lầu, sân thượng\",\n    \"phòng khách rộng\",\n    \"gần mặt tiền 50m\"\n  ],\n  \"urgency\": \"bình thường\",\n  \"confidence\": 0.82\n}"
+    },
+    {
+      "offer_id": "offer_c5ac0386105f18ae",
+      "trace": "2026-10-22T23-31-25--enrich-text.jsonl",
+      "text": "CHỦ GẤP B.ÁN ❌GIẢM 3 TỶ❌\n🏡CHDV 9PN - 83M2 - NỞ HẬU - 4 TẦNG BTCT - NGANG GẦN 5M - DÒNG TIỀN 600TR/NĂM - GIÁ MỚI 9,5 TỶ\n\nMÔ TẢ:\n+ Vị trí: Ngay đường Bạch Đằng P22, gần Ngã Tư Hàng xanh",
+      "output": "{\n  \"property_type\": \"house\",\n  \"bedrooms\": 9,\n  \"bathrooms\": 10,\n  \"street\": \"Bạch Đằng\",\n  \"address_detail\": \"phường 22, Bình Thạnh, gần Ngã Tư Hàng Xanh\",\n  \"project_name\": null,\n  \"building\": null,\n  \"features\": [\n    \"nở hậu\",\n    \"4 tầng BTCT\",\n    \"hoàn công đầy đủ\",\n    \"2 thang thoát hiểm\",\n    \"cửa sổ và ban công\",\n    \"dòng tiền 600tr/năm\",\n    \"giảm 3 tỷ\",\n    \"chính chủ\"\n  ],\n  \"urgency\": \"bán gấp\",\n  \"confidence\": 0.92\n}"
+    }
+  ]
+}
