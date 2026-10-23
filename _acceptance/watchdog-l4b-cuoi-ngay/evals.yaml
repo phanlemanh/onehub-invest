@@ -1,0 +1,65 @@
+schema_version: 1
+feature_slug: watchdog-l4b-cuoi-ngay
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc3b_scan
+    expected: "exit 0; stdout có 'SCAN PASS'; (a) turn ở dòng cuối file hôm qua được bắt, in đúng 1 dòng đuôi cũ + 2 dòng mới, marker chuyển sang file mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc3b_rotate
+    expected: "exit 0; stdout có 'an toàn: … → stub' và 'ROTATE PASS'; lượt cuối ngày exit 0 không kill; lượt đầu ngày mới exit 1, KILL lý do kênh xã hội, stub launchctl + pkill được gọi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.zc3b_scan
+    expected: "exit 0; dòng '(b) turn ở dòng 1 của file hôm nay được bắt, quét đủ 5 dòng' đạt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.zc3b_scan
+    expected: "exit 0; should-NOT-fire: (c) chạy lại → rỗng; nối 1 dòng → chỉ 1 dòng, turn của file cũ không lặp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.zc3b_scan
+    expected: "exit 0; (d) file cũ đã xoá → không lỗi, chỉ 3 dòng mới; should-NOT-fire: đường dẫn cũ tái dùng inode khác → không quét đuôi file lạ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc3b_scan
+    expected: "exit 0; (e) truncate cùng inode → quét lại từ dòng 1; marker «4211» + tệp tên 4211 trong cwd → không đọc nhầm, không lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc3_l4b_scan
+    expected: "exit 0; stdout có 'L4B-SCAN PASS' — mọi ca L4b của ZC3 (A, A', B…G) không hồi quy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc3_gateway
+    expected: "exit 0; stdout có 'GATEWAY PASS' — gateway.log lần đầu chỉ khởi tạo, turn mới → alert (stub)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc3_syntax
+    expected: "exit 0; stdout 'SYNTAX OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
