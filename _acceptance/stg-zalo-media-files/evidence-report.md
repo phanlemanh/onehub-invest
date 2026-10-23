@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9855e15ad47f96627622fa06823a4ec9e354b005
+verified_commit: 178eb2602540e11abe5838dbd6608c3625af2c22
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -133,3 +133,7 @@ Round 1: E1–E6 đều đạt expected trên df52972; không eval nào trượt
 ### Re-pin lần 1 — 2026-10-23, do hoá cũ do merge origin/main 15227e2 (034 ruler, UI standards, glossary) vào nhánh
 run_id: repin-20261023T010024Z-13129
 sha: 9855e15ad47f96627622fa06823a4ec9e354b005 · suites: 2 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-23, do hoá cũ do merge origin/main 021b48e (PR #12 biểu đồ dùng chung) vào nhánh
+run_id: repin-20261023T011336Z-48491
+sha: 178eb2602540e11abe5838dbd6608c3625af2c22 · suites: 3 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
