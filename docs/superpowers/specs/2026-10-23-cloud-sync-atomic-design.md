@@ -59,7 +59,9 @@ DDL nào trên cloud nữa (bỏ cả TRUNCATE).
    chuỗi Postgres (hết lệch ngày). Cột lấy: bảng mang dữ liệu người bán (`sale_offers`, `sellers`,
    `properties`) chỉ gửi cột trong danh sách CHO PHÉP tường minh (cột mới mặc định không lên, WARN
    «cột chưa duyệt»), trừ thêm `PII_EXCLUDE` (lớp chặn thứ hai, giữ hình dạng cho test tĩnh);
-   `sale_offers.seller_ref` gửi dạng `left(sha256(seller_ref), 32)` hex như `seller_phone_hash`.
+   `sale_offers.seller_ref` gửi dạng `source || ':' || <dãy số cuối>` (không có số → NULL) — chỉ còn
+   mã S0x và số, không tiền tố nguồn. Trước khi nạp, payload ba bảng được soát ở local với danh sách
+   tên/định danh nguồn đọc từ `source_registry` local (không gửi danh sách này đi đâu) — trúng là dừng.
    Bảng khác: mọi cột − `PII_EXCLUDE`. Cột local không có ở cloud → in WARN «lệch schema» (không gãy lượt); cột chỉ cloud có
    → để mặc định của cloud.
 3. Nạp vào `sync_stage.rows` theo mẻ ≤ ~1,8MB thân SQL (dòng lớn nhất hiện 1,19MB — `areas`
@@ -72,14 +74,14 @@ DDL nào trên cloud nữa (bỏ cả TRUNCATE).
    `read_at` muộn hơn lượt này (lượt cũ không đè lượt mới) → kiểm số dòng đã nạp đúng bằng số đọc
    ở local cho từng bảng (`RAISE EXCEPTION` nếu lệch — chặn tráo khi mẻ thiếu) → DELETE các bảng thay-trọn (con
    trước) → UPSERT bảng giữ-chỗ → INSERT các bảng thay-trọn (cha trước) → xoá dòng giữ-chỗ không còn
-   ở local (FK `saved_markets` CASCADE theo — Hỏi-3) → ghi `sync_stage.swaps` → xoá staging của lượt →
+   ở local (FK `saved_markets` CASCADE theo — Hỏi-2) → ghi `sync_stage.swaps` → xoá staging của lượt →
    `COMMIT`. Lỗi bất kỳ → rollback toàn bộ, cloud giữ dữ liệu lượt trước. Móc thử (chỉ tham số của
    `syncOnce`, không có biến môi trường): `swapPause` chèn `pg_sleep` giữa DELETE và INSERT.
 6. Đường lỗi bắt được (nạp hay tráo gãy) → xoá staging theo `run_id` của mình rồi thoát ≠ 0 kèm pha.
    Đầu mỗi lượt dọn staging bỏ dở của lượt chết (`staged_at` > 2 giờ). Cloud chưa có `sync_stage`
    → dừng ở pha catalog, không gửi DDL.
 7. Leak gate như cũ + vế mới: `anon`/`authenticated` không có USAGE trên `sync_stage`; mọi
-   `sale_offers.seller_ref` trên cloud khớp `^[0-9a-f]{32}$`.
+   `sale_offers.seller_ref` trên cloud NULL hoặc khớp `^S0[1-9]:[0-9]+$` (đọc giá trị về máy rồi so).
 8. In thời gian từng pha (đọc catalog · đọc local · nạp staging · tráo · gate) và tổng.
 
 `FILL`, `PII_EXCLUDE`, `RENAME` giữ nguyên hình dạng (test tĩnh `sync-pii*.test.mjs` đọc chúng).
@@ -110,12 +112,14 @@ phỏng cloud trên :5433 (dựng từ schema local, đổi tên `airdna_*`→`r
 
 ## Câu hỏi cho người (Cổng Phạm vi)
 
-- **Hỏi-1 — luật `sale_offers` lên cloud.** Khuyên (a): sửa luật thành «được lên cloud qua danh sách
-  cột cho phép; Tầng A (`seller_phone`, `seller_name`) không bao giờ lên; `seller_ref` lên dạng băm» —
-  đúng thực tế từ b78ef99 (20/10) cộng hai điều kiện cứng của phiên điều phối làn merge, giữ `/dau-tu`,
-  `/ops/deals`, `/api/v1/deals` trên prod. Lối (b): ngừng đẩy → ba bề mặt đó trên prod trống.
-- **Hỏi-3 — area biến mất khỏi local.** Khuyên: xoá trên cloud, `saved_markets` trỏ nó xoá theo FK
+- **Luật `sale_offers` — đã chốt (a)**, Mạnh 2026-10-23: «Định danh người bán trên tin rao (tên, SĐT,
+  ID tài khoản) là TẦNG C — công khai, được lên cả cổng Invest. Tầng A chỉ còn: tên nguồn thật (kể cả
+  lẫn trong giá trị cột), hồ sơ người dùng app, user_events/user_profile, review_queue.» Văn bản luật ở
+  nhánh `docs/spl-nguoi-ban-cong-khai`. Hệ quả cho vòng này: `seller_ref` chuẩn hoá về `<S0x>:<số>`
+  (giá trị hằng không số → NULL), soát tên nguồn trong payload ba bảng người bán trước khi gửi;
+  `PII_EXCLUDE` giữ nguyên (mở cột là việc sản phẩm riêng).
+- **Hỏi-1 — sửa lệch ngày trong vòng này.** Khuyên làm: cùng đường đọc vòng này viết lại, có thước
+  md5. Hệ quả người dùng thấy: mọi ngày trên prod dịch +1 về đúng ngày local ngay lượt đầu.
+- **Hỏi-2 — area biến mất khỏi local.** Khuyên: xoá trên cloud, `saved_markets` trỏ nó xoá theo FK
   CASCADE (schema đã khai), kèm chặn tụt 50%. Lối khác: không bao giờ xoá area trên cloud (chỉ
   upsert) — mục đã lưu an toàn nhưng phường đã gộp đọng lại trên prod.
-- **Hỏi-2 — sửa lệch ngày trong vòng này.** Khuyên làm: cùng đường đọc vòng này viết lại, có thước
-  md5. Hệ quả người dùng thấy: mọi ngày trên prod dịch +1 về đúng ngày local ngay lượt đầu.

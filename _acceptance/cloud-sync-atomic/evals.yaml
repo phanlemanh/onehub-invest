@@ -29,7 +29,7 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.cloud_sync_keep
-    expected: "exit 0; PASS saved_markets trỏ area còn ở local còn nguyên, tổng số dòng saved_markets không đổi; PASS chặn tụt: local giả tụt (bảng areas của DB local mô phỏng còn 30%) → thoát≠0 trước tráo, md5 cloud + saved_markets không đổi, thông điệp 'tụt'; PASS area biến mất thật → theo đáp án Hỏi-3; chiều đỏ: bộ nạp TRUNCATE CASCADE kiểu cũ xoá dòng còn hợp lệ ('ĐỎ-ĐÚNG cascade')"
+    expected: "exit 0; PASS saved_markets trỏ area còn ở local còn nguyên, tổng số dòng saved_markets không đổi; PASS chặn tụt: local giả tụt (bảng areas của DB local mô phỏng còn 30%) → thoát≠0 trước tráo, md5 cloud + saved_markets không đổi, thông điệp 'tụt'; PASS area biến mất thật → theo đáp án Hỏi-2; chiều đỏ: bộ nạp TRUNCATE CASCADE kiểu cũ xoá dòng còn hợp lệ ('ĐỎ-ĐÚNG cascade')"
     paths: [pipeline/sync-cloud.mjs, pipeline/scripts/check-cloud-sync.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -61,7 +61,7 @@ evals:
     criterion: AC-11
     executor: script
     cmd: config:executors.script.cloud_sync_allow
-    expected: "exit 0; PASS payload sale_offers/sellers/properties chỉ gồm cột thuộc danh sách cho phép; PASS seller_ref trên cloud mô phỏng 100% khớp ^[0-9a-f]{32}$ và bằng left(sha256(seller_ref local),32); PASS danh sách cho phép ∩ danh sách loại = ∅; chiều đỏ: thêm cột giả vào bảng local (DB local mô phỏng) → cột không có trong payload + WARN 'cột chưa duyệt'; chèn một seller_ref thô lên cloud mô phỏng → leak gate đỏ ('ĐỎ-ĐÚNG seller_ref')"
+    expected: "exit 0; PASS payload sale_offers/sellers/properties chỉ gồm cột thuộc danh sách cho phép; PASS seller_ref trên cloud mô phỏng 100% NULL hoặc khớp ^S0[1-9]:[0-9]+$ và mã S0x bằng cột source của dòng; đối chứng dương: dòng S06 local ct:<số> thành S06:<số> cùng số; PASS danh sách cho phép ∩ danh sách loại = ∅; chiều đỏ: thêm cột giả vào bảng local mô phỏng → cột không có trong payload + WARN cột chưa duyệt; cấy định danh nguồn (đọc từ source_registry local mô phỏng) vào một ô street_raw → lượt dừng trước nạp, 0 dòng staging (ĐỎ-ĐÚNG ten-nguon); chèn seller_ref thô lên cloud mô phỏng → leak gate đỏ (ĐỎ-ĐÚNG seller_ref)"
     paths: [pipeline/sync-cloud.mjs, pipeline/scripts/check-cloud-sync.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -84,8 +84,8 @@ evals:
   - id: E9
     criterion: AC-9
     executor: judgment
-    question: "Bốn chỗ (AGENTS.md luật 6, .claude/rules/pii-spl.md, docs/adr/0007-collector-operating-principles.md, chú thích đầu pipeline/sync-cloud.mjs) có nói CÙNG một luật về sale_offers trên cloud không, và luật đó có khớp PII_EXCLUDE trong sync-cloud.mjs (cột nào bị loại) không? Luật có còn câu nào mâu thuẫn (vd 'sale_offers không sync cloud' trong khi code đẩy) không?"
-    inputs: [AGENTS.md, .claude/rules/pii-spl.md, docs/adr/0007-collector-operating-principles.md, pipeline/sync-cloud.mjs, _acceptance/cloud-sync-atomic/contract.md, _acceptance/cloud-sync-atomic/decisions.jsonl]
+    question: "Luật Mạnh chốt 2026-10-23 được trích nguyên văn ở AC-9 trong contract.md. Chú thích đầu sync-cloud.mjs và docs/ops/cloud-sync-atomic.md có nói đúng luật đó không: định danh người bán là tầng C; tên nguồn thật (kể cả lẫn trong giá trị cột) là tầng A; seller_ref chuẩn hoá về mã S0x; PII_EXCLUDE giữ vì phạm vi chứ không vì luật? Có câu nào còn gọi SĐT/tên người bán là tầng A, hay mô tả hành vi lệch code (danh sách cột cho phép, chuẩn hoá seller_ref, soát tên nguồn trước khi gửi) không?"
+    inputs: [pipeline/sync-cloud.mjs, docs/ops/cloud-sync-atomic.md, _acceptance/cloud-sync-atomic/contract.md, _acceptance/cloud-sync-atomic/decisions.jsonl]
     evidence_required: [judged_by, verdict, rationale]
 
   - id: E10
