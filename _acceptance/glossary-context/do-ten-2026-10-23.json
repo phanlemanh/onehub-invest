@@ -1,0 +1,1732 @@
+{
+ "country": {
+  "total": 18,
+  "ui": 11,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 1,
+  "api": 1,
+  "docs": 2
+ },
+ "quốc gia": {
+  "total": 4,
+  "ui": 1,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "market": {
+  "total": 60,
+  "ui": 30,
+  "lib": 4,
+  "agent": 0,
+  "pipeline": 13,
+  "db": 3,
+  "api": 6,
+  "docs": 4
+ },
+ "markets": {
+  "total": 19,
+  "ui": 10,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 1,
+  "api": 2,
+  "docs": 1
+ },
+ "thị trường": {
+  "total": 50,
+  "ui": 38,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 4,
+  "db": 3,
+  "api": 0,
+  "docs": 3
+ },
+ "tỉnh": {
+  "total": 15,
+  "ui": 5,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 6,
+  "db": 1,
+  "api": 0,
+  "docs": 2
+ },
+ "tỉnh/thành": {
+  "total": 2,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "tỉnh thành": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "thành phố": {
+  "total": 7,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 6,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "city": {
+  "total": 22,
+  "ui": 4,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 13,
+  "db": 3,
+  "api": 0,
+  "docs": 0
+ },
+ "province": {
+  "total": 2,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "submarket": {
+  "total": 34,
+  "ui": 12,
+  "lib": 3,
+  "agent": 0,
+  "pipeline": 12,
+  "db": 3,
+  "api": 2,
+  "docs": 2
+ },
+ "submarkets": {
+  "total": 6,
+  "ui": 2,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 2,
+  "docs": 1
+ },
+ "phường": {
+  "total": 72,
+  "ui": 34,
+  "lib": 4,
+  "agent": 4,
+  "pipeline": 17,
+  "db": 6,
+  "api": 2,
+  "docs": 5
+ },
+ "phường/xã": {
+  "total": 3,
+  "ui": 2,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "xã": {
+  "total": 16,
+  "ui": 7,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 5,
+  "db": 1,
+  "api": 0,
+  "docs": 3
+ },
+ "quận": {
+  "total": 15,
+  "ui": 2,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 7,
+  "db": 3,
+  "api": 0,
+  "docs": 1
+ },
+ "quận/huyện": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "district": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "ward": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "area": {
+  "total": 55,
+  "ui": 28,
+  "lib": 3,
+  "agent": 1,
+  "pipeline": 15,
+  "db": 3,
+  "api": 3,
+  "docs": 2
+ },
+ "areas": {
+  "total": 56,
+  "ui": 17,
+  "lib": 5,
+  "agent": 0,
+  "pipeline": 22,
+  "db": 5,
+  "api": 5,
+  "docs": 2
+ },
+ "khu vực": {
+  "total": 25,
+  "ui": 18,
+  "lib": 1,
+  "agent": 1,
+  "pipeline": 2,
+  "db": 0,
+  "api": 0,
+  "docs": 3
+ },
+ "vùng": {
+  "total": 9,
+  "ui": 7,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "địa bàn": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "project": {
+  "total": 5,
+  "ui": 1,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "khu đô thị": {
+  "total": 3,
+  "ui": 0,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "dự án": {
+  "total": 4,
+  "ui": 0,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 0,
+  "db": 2,
+  "api": 0,
+  "docs": 0
+ },
+ "subzone": {
+  "total": 2,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "phân khu": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "building": {
+  "total": 7,
+  "ui": 0,
+  "lib": 0,
+  "agent": 3,
+  "pipeline": 1,
+  "db": 2,
+  "api": 0,
+  "docs": 1
+ },
+ "tòa": {
+  "total": 5,
+  "ui": 0,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 1,
+  "db": 2,
+  "api": 0,
+  "docs": 0
+ },
+ "toà": {
+  "total": 2,
+  "ui": 1,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "tòa nhà": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "block": {
+  "total": 41,
+  "ui": 35,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 2,
+  "api": 0,
+  "docs": 3
+ },
+ "chung cư": {
+  "total": 6,
+  "ui": 0,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 1,
+  "db": 2,
+  "api": 0,
+  "docs": 1
+ },
+ "property": {
+  "total": 8,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 3,
+  "api": 0,
+  "docs": 2
+ },
+ "properties": {
+  "total": 14,
+  "ui": 4,
+  "lib": 2,
+  "agent": 1,
+  "pipeline": 3,
+  "db": 2,
+  "api": 0,
+  "docs": 2
+ },
+ "Một Căn Nhà": {
+  "total": 6,
+  "ui": 0,
+  "lib": 1,
+  "agent": 1,
+  "pipeline": 0,
+  "db": 2,
+  "api": 0,
+  "docs": 2
+ },
+ "căn nhà": {
+  "total": 6,
+  "ui": 0,
+  "lib": 1,
+  "agent": 1,
+  "pipeline": 0,
+  "db": 2,
+  "api": 0,
+  "docs": 2
+ },
+ "tài sản": {
+  "total": 2,
+  "ui": 1,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "asset": {
+  "total": 7,
+  "ui": 2,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 1,
+  "api": 2,
+  "docs": 0
+ },
+ "BĐS": {
+  "total": 7,
+  "ui": 1,
+  "lib": 0,
+  "agent": 1,
+  "pipeline": 3,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "bất động sản": {
+  "total": 6,
+  "ui": 1,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 2,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "listing": {
+  "total": 79,
+  "ui": 39,
+  "lib": 6,
+  "agent": 0,
+  "pipeline": 17,
+  "db": 10,
+  "api": 2,
+  "docs": 5
+ },
+ "listings": {
+  "total": 62,
+  "ui": 26,
+  "lib": 4,
+  "agent": 0,
+  "pipeline": 18,
+  "db": 7,
+  "api": 4,
+  "docs": 3
+ },
+ "căn lưu trú": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "chỗ ở": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "căn hộ du lịch": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "homestay": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "sale_offers": {
+  "total": 35,
+  "ui": 2,
+  "lib": 4,
+  "agent": 2,
+  "pipeline": 13,
+  "db": 10,
+  "api": 1,
+  "docs": 3
+ },
+ "sale offer": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "offer": {
+  "total": 8,
+  "ui": 3,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 4,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "offers": {
+  "total": 20,
+  "ui": 4,
+  "lib": 3,
+  "agent": 1,
+  "pipeline": 7,
+  "db": 3,
+  "api": 0,
+  "docs": 2
+ },
+ "tin rao": {
+  "total": 8,
+  "ui": 3,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 4,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "tin đăng": {
+  "total": 4,
+  "ui": 0,
+  "lib": 0,
+  "agent": 2,
+  "pipeline": 2,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "tin bán": {
+  "total": 1,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "tin cho thuê": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "rao vặt": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "giá rao": {
+  "total": 2,
+  "ui": 0,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "deal": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "deals": {
+  "total": 10,
+  "ui": 5,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 2,
+  "docs": 2
+ },
+ "căn giá tốt": {
+  "total": 7,
+  "ui": 3,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 1,
+  "docs": 1
+ },
+ "deal tốt": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "seller": {
+  "total": 4,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "sellers": {
+  "total": 9,
+  "ui": 2,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "người bán": {
+  "total": 11,
+  "ui": 3,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 6,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "môi giới": {
+  "total": 8,
+  "ui": 0,
+  "lib": 1,
+  "agent": 2,
+  "pipeline": 4,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "chủ nhà": {
+  "total": 3,
+  "ui": 2,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "broker": {
+  "total": 4,
+  "ui": 0,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "price_tier": {
+  "total": 14,
+  "ui": 1,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 7,
+  "db": 3,
+  "api": 0,
+  "docs": 1
+ },
+ "P0": {
+  "total": 7,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 2,
+  "api": 0,
+  "docs": 2
+ },
+ "P1": {
+  "total": 19,
+  "ui": 4,
+  "lib": 1,
+  "agent": 2,
+  "pipeline": 6,
+  "db": 3,
+  "api": 0,
+  "docs": 3
+ },
+ "P2": {
+  "total": 27,
+  "ui": 7,
+  "lib": 5,
+  "agent": 2,
+  "pipeline": 7,
+  "db": 3,
+  "api": 0,
+  "docs": 3
+ },
+ "giá thật": {
+  "total": 2,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "giá nội bộ": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "giá công khai": {
+  "total": 2,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "giá vải": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "vải": {
+  "total": 12,
+  "ui": 4,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 4,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "ruler": {
+  "total": 8,
+  "ui": 2,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "thước": {
+  "total": 11,
+  "ui": 4,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "thước giá": {
+  "total": 1,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "bait gap": {
+  "total": 1,
+  "ui": 0,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "bait_gap": {
+  "total": 2,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "giá câu": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "ADR": {
+  "total": 64,
+  "ui": 22,
+  "lib": 8,
+  "agent": 3,
+  "pipeline": 15,
+  "db": 11,
+  "api": 1,
+  "docs": 4
+ },
+ "giá phòng": {
+  "total": 8,
+  "ui": 7,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "giá đêm": {
+  "total": 6,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 4,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "giá/đêm": {
+  "total": 2,
+  "ui": 2,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "giá trung bình": {
+  "total": 1,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "occupancy": {
+  "total": 40,
+  "ui": 21,
+  "lib": 3,
+  "agent": 0,
+  "pipeline": 8,
+  "db": 5,
+  "api": 2,
+  "docs": 1
+ },
+ "công suất": {
+  "total": 33,
+  "ui": 25,
+  "lib": 3,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "lấp đầy": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "tỷ lệ lấp đầy": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "RevPAR": {
+  "total": 27,
+  "ui": 17,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 5,
+  "db": 3,
+  "api": 0,
+  "docs": 1
+ },
+ "revenue": {
+  "total": 47,
+  "ui": 31,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 8,
+  "db": 4,
+  "api": 2,
+  "docs": 0
+ },
+ "doanh thu": {
+  "total": 25,
+  "ui": 22,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "thu nhập": {
+  "total": 6,
+  "ui": 5,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "yield": {
+  "total": 20,
+  "ui": 9,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 2,
+  "api": 0,
+  "docs": 4
+ },
+ "lợi suất": {
+  "total": 17,
+  "ui": 12,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "tỷ suất": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "lợi suất gộp": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "lợi suất ròng": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "gross yield": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "net yield": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "cap rate": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "ROI": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "NOI": {
+  "total": 4,
+  "ui": 1,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "dòng tiền": {
+  "total": 4,
+  "ui": 2,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "cashflow": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "booked nights": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "booked_nights": {
+  "total": 6,
+  "ui": 0,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 4,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "đêm đã đặt": {
+  "total": 13,
+  "ui": 9,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 2,
+  "api": 0,
+  "docs": 1
+ },
+ "available_nights": {
+  "total": 4,
+  "ui": 0,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "đêm trống": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "comps": {
+  "total": 6,
+  "ui": 3,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "listing so sánh": {
+  "total": 8,
+  "ui": 5,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "độ tin cậy": {
+  "total": 4,
+  "ui": 3,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "confidence": {
+  "total": 22,
+  "ui": 5,
+  "lib": 2,
+  "agent": 3,
+  "pipeline": 8,
+  "db": 3,
+  "api": 1,
+  "docs": 0
+ },
+ "mô phỏng": {
+  "total": 13,
+  "ui": 8,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "score": {
+  "total": 15,
+  "ui": 5,
+  "lib": 1,
+  "agent": 2,
+  "pipeline": 2,
+  "db": 2,
+  "api": 1,
+  "docs": 2
+ },
+ "Market Score": {
+  "total": 7,
+  "ui": 3,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 1,
+  "docs": 2
+ },
+ "Điểm One Invest": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "điểm": {
+  "total": 14,
+  "ui": 4,
+  "lib": 4,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 1,
+  "api": 0,
+  "docs": 2
+ },
+ "STR": {
+  "total": 9,
+  "ui": 2,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 4
+ },
+ "LTR": {
+  "total": 6,
+  "ui": 2,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "thuê ngắn hạn": {
+  "total": 8,
+  "ui": 6,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "cho thuê ngắn hạn": {
+  "total": 7,
+  "ui": 6,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "thuê dài hạn": {
+  "total": 19,
+  "ui": 14,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "cho thuê dài hạn": {
+  "total": 6,
+  "ui": 6,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "rent_lt": {
+  "total": 16,
+  "ui": 1,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 9,
+  "db": 3,
+  "api": 0,
+  "docs": 1
+ },
+ "rent_st": {
+  "total": 2,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "mua bán": {
+  "total": 4,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "source": {
+  "total": 73,
+  "ui": 29,
+  "lib": 5,
+  "agent": 3,
+  "pipeline": 21,
+  "db": 10,
+  "api": 3,
+  "docs": 2
+ },
+ "nguồn": {
+  "total": 56,
+  "ui": 19,
+  "lib": 8,
+  "agent": 0,
+  "pipeline": 14,
+  "db": 11,
+  "api": 0,
+  "docs": 4
+ },
+ "mã nguồn": {
+  "total": 6,
+  "ui": 2,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "snapshot": {
+  "total": 29,
+  "ui": 3,
+  "lib": 4,
+  "agent": 0,
+  "pipeline": 17,
+  "db": 4,
+  "api": 0,
+  "docs": 1
+ },
+ "raw snapshot": {
+  "total": 3,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "staging": {
+  "total": 16,
+  "ui": 2,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 8,
+  "db": 5,
+  "api": 0,
+  "docs": 1
+ },
+ "stg_": {
+  "total": 4,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "canonical": {
+  "total": 10,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 6,
+  "db": 2,
+  "api": 0,
+  "docs": 2
+ },
+ "SPL": {
+  "total": 19,
+  "ui": 6,
+  "lib": 4,
+  "agent": 0,
+  "pipeline": 4,
+  "db": 2,
+  "api": 0,
+  "docs": 3
+ },
+ "tầng A": {
+  "total": 22,
+  "ui": 6,
+  "lib": 5,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 7,
+  "api": 0,
+  "docs": 3
+ },
+ "tầng B": {
+  "total": 4,
+  "ui": 2,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "tầng C": {
+  "total": 3,
+  "ui": 1,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 0
+ },
+ "AirDNA": {
+  "total": 40,
+  "ui": 14,
+  "lib": 4,
+  "agent": 0,
+  "pipeline": 9,
+  "db": 8,
+  "api": 0,
+  "docs": 5
+ },
+ "hiệu chuẩn": {
+  "total": 11,
+  "ui": 3,
+  "lib": 3,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 4
+ },
+ "calibration": {
+  "total": 3,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 1,
+  "docs": 2
+ },
+ "freshness": {
+  "total": 7,
+  "ui": 2,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 1,
+  "api": 0,
+  "docs": 2
+ },
+ "độ tươi": {
+  "total": 4,
+  "ui": 2,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "collection": {
+  "total": 2,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "thu thập": {
+  "total": 24,
+  "ui": 13,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 2,
+  "api": 0,
+  "docs": 5
+ },
+ "DATA-CONTRACT": {
+  "total": 7,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 3,
+  "db": 2,
+  "api": 0,
+  "docs": 2
+ },
+ "Invest Portal": {
+  "total": 8,
+  "ui": 4,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 3
+ },
+ "cổng Invest": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "Ops Portal": {
+  "total": 8,
+  "ui": 2,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 4
+ },
+ "cổng Ops": {
+  "total": 2,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "Finder": {
+  "total": 13,
+  "ui": 10,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "Insight": {
+  "total": 27,
+  "ui": 20,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 1,
+  "db": 1,
+  "api": 0,
+  "docs": 4
+ },
+ "Compare": {
+  "total": 9,
+  "ui": 6,
+  "lib": 0,
+  "agent": 1,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ },
+ "so sánh": {
+  "total": 25,
+  "ui": 19,
+  "lib": 2,
+  "agent": 1,
+  "pipeline": 1,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "Saved": {
+  "total": 16,
+  "ui": 11,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 3
+ },
+ "đã lưu": {
+  "total": 9,
+  "ui": 6,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 2
+ },
+ "Review": {
+  "total": 16,
+  "ui": 8,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 3,
+  "api": 0,
+  "docs": 3
+ },
+ "duyệt": {
+  "total": 19,
+  "ui": 13,
+  "lib": 1,
+  "agent": 0,
+  "pipeline": 2,
+  "db": 2,
+  "api": 0,
+  "docs": 1
+ },
+ "Review Queue": {
+  "total": 4,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 2
+ },
+ "hàng duyệt": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "Phương pháp": {
+  "total": 10,
+  "ui": 9,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "methodology": {
+  "total": 0,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 0
+ },
+ "Thư viện thiết kế": {
+  "total": 2,
+  "ui": 1,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "Listing explorer": {
+  "total": 1,
+  "ui": 0,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 1
+ },
+ "đăng nhập": {
+  "total": 15,
+  "ui": 9,
+  "lib": 2,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 0,
+  "api": 0,
+  "docs": 4
+ },
+ "đăng ký": {
+  "total": 6,
+  "ui": 4,
+  "lib": 0,
+  "agent": 0,
+  "pipeline": 0,
+  "db": 1,
+  "api": 0,
+  "docs": 1
+ }
+}

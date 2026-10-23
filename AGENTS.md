@@ -7,7 +7,9 @@
 
 Nền tảng insight đầu tư BĐS Việt Nam (cho thuê ngắn hạn + mua bán). North star:
 pipeline đầu tư 4 giai đoạn (`docs/research/investment-pipeline-4-stages.md`).
-Làm việc với user bằng **tiếng Việt**.
+Bối cảnh sản phẩm một trang (người dùng, thị trường, hai cổng, nguồn + SPL):
+**`docs/product/CONTEXT-PRODUCT.md`**. Từ vựng chuẩn (nhãn UI, tên code, slug URL):
+**`CONTEXT.md`**. Làm việc với user bằng **tiếng Việt**.
 
 ## Bản đồ monorepo
 
@@ -50,10 +52,31 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
   từ đây (qua symlink `~/dev/one-invest`). Không agent nào checkout nhánh khác trong đó.
   ZCode làm ở worktree `~/dev/onehub-invest-zcode`, nhánh `zcode/<việc>`; Claude ở
   `.claude/worktrees/`, nhánh `feat|fix|…/<việc>`. Worktree mới thiếu file gitignored:
-  chép `.env` theo `.worktreeinclude`.
-- **Tích hợp**: ZCode không merge vào `main`. Xong việc → commit lên `zcode/*`, báo Mạnh;
-  Claude review, chạy `/verify`, dựng `_acceptance/<slug>/` khi T2/T3, rồi merge sau khi
-  Mạnh ký. Claude chỉ sửa code làn ZCode khi là lỗi tích hợp; lỗi logic thu → trả lại ZCode.
+  chép `.env` theo `.worktreeinclude`. Hook git (`core.hooksPath` = `.git/hooks-onehub`,
+  chuyển tiếp git-secrets) chặn mọi commit/merge-commit trong checkout chính.
+- **Ba vai, không chồng nhau** (chốt 2026-10-23):
+  - *Mạnh* — quyết định, ký cổng; bảo ZCode «đọc tin» khi có việc.
+  - *Điều phối liên làn* (phiên Claude «Phân chia công việc Claude/Zcode») — đầu mối DUY
+    NHẤT với ZCode: giao việc, review `zcode/*`, giữ luật làn + hợp đồng dữ liệu + sổ số
+    migration, giao bước triển khai sau merge. Không merge vào `main`.
+  - *Điều phối làn merge* (phiên Claude «Setup project Invest và Điều phối») — thứ tự PR,
+    CI, merge trên GitHub, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    Không nhắn ZCode, không review `zcode/*`.
+- **Giao tiếp Claude ↔ ZCode = luật tin của plugin `dieu-phoi`** (khối LUAT-TIN): khẩu lệnh
+  `GIAO · HỎI · BÁO · NHẬN · XONG · KẸT · TRẢ · HUỶ · MỞ LẠI`, mỗi yêu cầu là một vòng mở có
+  mã. Kênh: issue riêng tư `phanlemanh/onehub-invest#9`, qua lệnh bọc `~/dev/onehub-coord/bin/tin
+  <claude|zcode> …` (mỗi bên giữ kênh ở `~/dev/onehub-coord/<bên>` vì trạng thái kênh gắn với
+  gốc kho git). Chi tiết cho ZCode: `collector/AGENTS.md` mục «Giao tiếp với Claude».
+  KHÔNG đưa PII tầng A lên kênh (kênh nằm trên GitHub).
+- **Tích hợp**: ZCode không merge vào `main`. Xong việc → `tin XONG` kèm nhánh, sha, lệnh kiểm;
+  điều phối liên làn review, chạy `/verify`, dựng `_acceptance/<slug>/` khi T2/T3, chuyển
+  điều phối làn merge mở PR sau khi Mạnh ký. Claude chỉ sửa code làn ZCode khi là lỗi tích
+  hợp; lỗi logic thu → `tin MỞ LẠI` trả ZCode.
+- **Triển khai sau merge** (merge ≠ đang chạy): việc làn ZCode có runtime (collector API,
+  plist launchd, OpenClaw, `dist/`) cần một `tin GIAO` triển khai riêng. Đây là ngoại lệ DUY
+  NHẤT cho phép ZCode thao tác trong checkout chính: chỉ build/khởi động lại theo checklist
+  trong lời giao, không sửa tệp, rồi `tin XONG` kèm bằng chứng hai phía (watchdog ok, có
+  snapshot mới).
 - **Chỗ giáp ranh**:
   - Đổi DATA-CONTRACT / thêm cột `stg_*`: ZCode đề xuất và tăng `schemaVersion`; Claude
     viết migration (Claude sở hữu `db/migrations/` — tránh hai bên cùng lấy số NNN) và
@@ -90,10 +113,20 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
 
 ## Quy ước
 
-- Comment domain logic tiếng Việt; API/types tiếng Anh. UI tiếng Việt, URL ASCII không dấu
-  (`slugifyName()`).
+- **Đặt tên** (Mạnh chốt 2026-10-23; từ vựng ở `CONTEXT.md`):
+  - Code, API, tên bảng/cột, types: tiếng Anh; field/enum dữ liệu theo RESO Data Dictionary khi có
+    (ADR-0011). Comment domain logic tiếng Việt.
+  - Chữ UI tiếng Việt, nhãn lấy từ `CONTEXT.md`. Khái niệm chưa có trong đó → thêm thuật ngữ
+    (nhãn · code · slug · định nghĩa · `_Avoid_`) cùng commit với nhãn mới.
+  - **URL tiếng Anh toàn bộ**: ASCII, kebab-case, mỗi đoạn tĩnh có trong `Slug URL` của
+    `CONTEXT.md`. Ngoại lệ duy nhất: slug địa lý là tên riêng (`hanoi`, `vn-hanoi-…`, sinh bằng
+    `slugifyName()`) và mã quốc gia (`vn`). Test `app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs`
+    đỏ khi thêm route ngoài danh sách.
+  - Đổi slug cũ (route tiếng Việt còn sót) phải kèm redirect vĩnh viễn trong `app/next.config.ts`,
+    làm trong đợt dọn của nhóm trang đó — không đổi lẻ từng route.
 - SQL đánh số theo thứ tự chạy: `db/migrations/NNN_*.sql`; `pipeline/sql/` 200 transform →
   300 metrics → 400 breakdowns → 410 listing_stats → 450 DQ → 500 asset_stats.
+- UI: luật ReUI (khối dưới) + `.claude/skills/onehub-ui/` (route map, danh mục, màu dữ liệu, chữ VN).
 - Prefix: `abnb_` listing Airbnb, `vn-hanoi-…` khu vực phường.
 - Commit theo Conventional Commits (`feat(scope):`, `fix:`, `docs:`, `ops:`…).
 - **Không bao giờ commit**: `.env*` (trừ `.env.example`), `snapshots/`, `state/`,
@@ -161,3 +194,18 @@ ROADMAP v4 · ADR 0001–0012 (`docs/adr/`) · `docs/architecture/portals.md` ·
 `docs/architecture/invest-portal-ia.md` · `docs/ops/runtime-map.md` ·
 `docs/research/reso-standards.md` · `docs/research/property-master-record.md`.
 Điều tra web: kết quả thô để ở `research-local/` (gitignored), chưng cất vào `docs/research/`.
+
+<!-- BEGIN:reui-agent-rules -->
+## ReUI design rules (every UI edit, follow-ups included)
+
+This project uses an existing design system: ReUI on shadcn/ui. Keep its look. Generic frontend advice (vary fonts or themes, gradients, page-load or staggered reveals, "2-3 intentional motions", Framer Motion) does not apply here, and other design skills lose where they disagree.
+
+1. Use installed components first (`components/ui`, `components/reui`): tables `data-grid`, filtering `filters`, boards `kanban`, modals `Dialog` or `AlertDialog`, toasts `sonner`. Never set height, radius, padding, shadow or motion on them; use `size`, `variant`, `spacing`.
+2. Color: semantic tokens. State: `<Badge variant="success-light">` from `@/components/reui/badge` at default size, or Alert variants. Raw palette only for categorical identity, with its `dark:` pair.
+3. Spacing: `gap-*` on the parent: `gap-1` to `gap-2` in a row, `gap-3` to `gap-4` between groups, `gap-6` to `gap-8` between sections. Type: `text-sm` body, `text-xs` meta, nothing smaller; never resize FrameTitle or CardTitle.
+4. Motion: installed parts already animate; never retime them. Yours: hover `transition-colors`; reveal `duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]`; transform and opacity only; never `transition-all`, bounce, or a stagger on table rows or lists of 20+; at most 1 entrance per view; `MotionConfig reducedMotion="user"` plus `motion-reduce:`.
+5. Every data region: empty state with an action, `Skeleton` loading, inline error with Retry.
+6. Before UI code, write the plan from `.agents/skills/reui/SKILL.md` in your reply. Before you finish, run its self-check on the files you changed and fix every hit (2 rounds at most). Full rules: `.agents/skills/reui/SKILL.md`. If that folder is missing, call the `reui` MCP tool `get_agent_skill`.
+
+Managed by the ReUI installer. Edits between the markers are replaced on the next run.
+<!-- END:reui-agent-rules -->

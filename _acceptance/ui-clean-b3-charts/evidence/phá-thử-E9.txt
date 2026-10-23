@@ -1,0 +1,8 @@
+Phá-thử thật E9 (AC-8) — 2026-10-23T00:00:22Z
+Phá: app/src/components/yield/pnl/period-card.tsx label "Thu nhập ròng" → "Thu nhập rong" (commit WIP tạm, đã gỡ bằng git reset --keep)
+Chụp: node scripts/ui-standards/b3-capture.mjs --out <scratch>/after trên cây phá; before = evidence/before
+Kết quả:
+structure: khác ở interactions.yield/Doanh thu và chi phí 12 tháng tới.hover
+structure: HỎNG (1)
+pixels: ĐẠT
+→ thước cấu trúc đỏ đúng khoá hover của khung P&L; pixels xanh vì tooltip không có trong ảnh tĩnh (đúng kỳ vọng: pixels canh ảnh khung, structure canh chữ thao tác).

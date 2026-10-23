@@ -1,0 +1,11 @@
+{
+  "feature_plain": "Nhà đầu tư trên cổng công khai không còn thấy số điện thoại người bán hay số liệu AirDNA; trang Căn giá tốt chuyển vào cổng vận hành, chỉ admin thấy liên hệ.",
+  "decisions": [
+    {
+      "id": "E14",
+      "q": "Chấp nhận dù chưa chắc trang Căn giá tốt chạy được trên bản online?",
+      "why": "Code dự phòng cho bản online đúng, nhưng trang dựa vào một bảng tính sẵn (bảng giá chuẩn theo phường) chưa từng được tạo bằng migration, nên có thể không có trên bản online. Cập nhật: phiên migration đã kiểm trên bản online — bảng đó có sẵn (tạo tay), và nhánh fix/ruler-p2-views-migration đưa nó vào migration. Bản online hiện trống tin vì đồng bộ đang gãy (việc riêng, có hướng dẫn). Máy khuyên chấp nhận."
+    }
+  ],
+  "analyst_plain": "Một phép kiểm (E8 — không còn tên nguồn thật trên trang Căn giá tốt) cũng đạt trên bản cũ vì nó đọc đường dẫn mới chưa có ở bản cũ; ý đó vẫn được phép kiểm trên trang chạy thật (E7) chứng minh."
+}

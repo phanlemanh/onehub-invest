@@ -15,42 +15,23 @@ import {
   FrameTitle,
 } from "@/components/reui/frame"
 import { IconTile } from "@/components/reui/icon-tile"
-import { cn } from "cn"
-import { toast } from "sonner"
+import { copyText, downloadFile, toastDownloaded } from "@/components/charts/actions"
+import { DotSeparator, Fact } from "@/components/charts/faces"
+import { CHART_ICONS } from "@/components/charts/icons"
 
 import { ChartToolbar, type ChartActions } from "./chart-toolbar"
 import {
   DEFAULT_VIEW,
   metricOf,
   rangeOf,
-  type MetricSpec,
   type MonthRow,
   type ViewState,
 } from "./data"
-import { formatSpan, formattersFor, type Formatters } from "./format"
-import { TOAST_ERROR_ICON, TOAST_SUCCESS_ICON, UI_ICONS } from "./icons"
+import { formatSpan, formattersFor } from "./format"
 import { MetricPlot } from "./metric-plot"
 import { MetricTiles } from "./metric-tiles"
-import {
-  averageOf,
-  plotRows,
-  summariesOf,
-  windowOf,
-  type PlotRow,
-} from "./series"
-import { AverageKey, CAP_BOX, DotSeparator, Fact, MetricDot } from "./value-faces"
-
-async function copyText(text: string, title: string, description: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    toast.success(title, { icon: TOAST_SUCCESS_ICON, description })
-  } catch {
-    toast.error("Không sao chép được", {
-      icon: TOAST_ERROR_ICON,
-      description: "Trình duyệt chặn quyền truy cập clipboard.",
-    })
-  }
-}
+import { PlotLegend } from "./plot-legend"
+import { plotRows, summariesOf, windowOf } from "./series"
 
 const sameView = (a: ViewState, b: ViewState) =>
   a.metric === b.metric &&
@@ -58,47 +39,6 @@ const sameView = (a: ViewState, b: ViewState) =>
   a.annotations === b.annotations &&
   a.average === b.average &&
   a.grid === b.grid
-
-/** What the plot measures on the left; its span and average on the right. */
-function PlotLegend({
-  metric,
-  rows,
-  view,
-  format,
-}: {
-  metric: MetricSpec
-  rows: PlotRow[]
-  view: ViewState
-  format: Formatters
-}) {
-  const first = rows[0]?.day ?? 0
-  const last = rows.at(-1)?.day ?? 0
-  const average = averageOf(rows)
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs">
-      <Fact className="text-muted-foreground">{metric.basis}</Fact>
-      <ul
-        aria-label="Chú giải"
-        className="flex flex-wrap items-center gap-x-4 gap-y-2"
-      >
-        <li className="flex h-4 items-center gap-1.5">
-          <MetricDot swatch={metric.swatch} />
-          <span className={cn(CAP_BOX, "tabular-nums")}>
-            {formatSpan(first, last)}
-          </span>
-        </li>
-        {view.average ? (
-          <li className="text-muted-foreground flex h-4 items-center gap-1.5">
-            <AverageKey />
-            <span className={cn(CAP_BOX, "tabular-nums")}>
-              TB {format.value(metric.key, average)}
-            </span>
-          </li>
-        ) : null}
-      </ul>
-    </div>
-  )
-}
 
 export function PerformanceChart({
   months,
@@ -145,18 +85,8 @@ export function PerformanceChart({
   const actions: ChartActions = {
     downloadCsv: () => {
       const name = `hieu-suat-${metric.key}-${view.range}.csv`
-      const url = URL.createObjectURL(
-        new Blob([table(",")], { type: "text/csv" })
-      )
-      const link = document.createElement("a")
-      link.href = url
-      link.download = name
-      link.click()
-      URL.revokeObjectURL(url)
-      toast.success("Đã tải CSV", {
-        icon: TOAST_SUCCESS_ICON,
-        description: `${name}, ${rows.length} tháng.`,
-      })
+      downloadFile(name, table(","), "text/csv")
+      toastDownloaded(`${name}, ${rows.length} tháng.`)
     },
     copyData: () =>
       void copyText(
@@ -176,7 +106,7 @@ export function PerformanceChart({
       <FrameHeader className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
           <IconTile variant="frame" size="sm" aria-hidden="true">
-            {UI_ICONS.chart}
+            {CHART_ICONS.chart}
           </IconTile>
           <div className="flex min-w-0 flex-col gap-px">
             <FrameTitle role="heading" aria-level={2} className="truncate">

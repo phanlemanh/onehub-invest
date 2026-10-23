@@ -41,8 +41,8 @@ export default function DesignGalleryPage() {
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">ReUI Gallery — đã cài</h1>
         <p className="text-sm text-muted-foreground">
-          5 block từ @reui (style base-nova). Quy tắc chọn component: xem{" "}
-          <code>app/DESIGN_RULES.md</code> (B1 ReUI → B2 shadcn → B3 tạo mới).
+          5 block từ @reui (style base-nova). Quy tắc chọn component: skill{" "}
+          <code>reui</code> + <code>.claude/skills/onehub-ui/</code> (ReUI → shadcn → tạo mới).
         </p>
       </header>
 

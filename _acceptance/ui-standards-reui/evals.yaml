@@ -1,0 +1,86 @@
+schema_version: 1
+feature_slug: ui-standards-reui
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ui_mcp_config
+    expected: "exit 0; .mcp.json có reui → https://mcp.reui.io/api/mcp; 0 file cấu hình agent đã commit chứa Authorization / reui_pat_ / giá trị REUI_LICENSE_KEY"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ui_mcp_connected
+    expected: "exit 0; dòng reui phạm vi dự án (…/api/mcp) báo Connected; không còn cảnh báo trùng phạm vi local"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ui_lint_should_fire
+    expected: "exit 0; mỗi mẫu tự vẽ tay (≥ 14 mẫu, phủ đủ 10 luật onehub-ui) bị báo đúng ruleId qua ESLint thật với cấu hình của app"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    expected: "exit 0; toàn bộ test RuleTester + check-bare-disables + check-baseline-growth + routes-map xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ui_lint_should_not_fire
+    expected: "exit 0; mã tuân chuẩn → 0 báo cáo onehub-ui; hex trong file bản đồ → không có no-hardcoded-color nhưng <table> vẫn bị no-raw-table; file trong ui/ và examples/ → 0 báo cáo onehub-ui"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc + npm run lint (eslint + check-bare-disables) xanh trên nhánh với baseline hiện có"
+    evidence_required: [run_id, exit_code, verifier, verified_at]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ui_baseline_guard
+    expected: "exit 0; (a) thêm vi phạm mới vào bản tạm của một file đã có mục suppress → lint đỏ; (b) check-baseline-growth: tăng 1 luật → exit 1, đổi tên khoá giữ số → exit 0; cây làm việc không đổi sau khi chạy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ui_hook_selftest
+    expected: "exit 0; trên worktree tạm: file UI có <table/> → hook exit 2 + in onehub-ui/no-raw-table; file sạch → hook exit 0; worktree tạm đã gỡ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    expected: "exit 0; routes.md khớp đủ 21 page.tsx"
+    evidence_required: [run_id, exit_code, verifier, verified_at]
+
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.ui_kit_sockets
+    expected: "exit 0; resolveConfigKey của kit trả onehub-ui cho feature_loop.ui_standards_skill và design_pass.ds_skill; SKILL.md có name: onehub-ui"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.ui_pointers
+    expected: "exit 0; AGENTS.md, app/CLAUDE.md, app/DESIGN_RULES.md, .claude/rules/ui.md đều nhắc onehub-ui; AGENTS.md có đúng 1 khối reui-agent-rules; IA §3.3 không còn dặn loading.tsx cấp segment"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.ui_baseline_doc
+    expected: "exit 0; tổng của lint:ui-report = tổng count trong eslint-suppressions.json = con số tổng trong docs/research/ui-baseline-2026-10.md (138)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

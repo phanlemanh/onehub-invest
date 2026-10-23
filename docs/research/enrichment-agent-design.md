@@ -1,6 +1,9 @@
 # Enrichment Agent — từ regex extract → LLM suy luận bối cảnh
 
-Ngày: 2026-10-22 · Trạng thái: **E1-E4 ĐÃ THỰC THI** (M-3) · E5 chờ data
+Ngày: 2026-10-22 · Trạng thái: **E1-E4 ĐÃ THỰC THI** (M-3) · E5 chờ data ·
+**22/10 đổi đường ghi**: enrich không còn `UPDATE` thẳng `sale_offers` —
+mọi giá trị đi qua `enrichment_proposals` → luật xác định → `/ops/review`
+(spec `docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md`)
 Phát hiện từ user: "không đơn thuần extract-text mà cần làm giàu — model
 phải phán quyết được"
 
@@ -79,7 +82,8 @@ agent/src/agents/enrich-text.ts
 │   2. Context match (lớp 2) — group → project, keywords → type
 │   3. LLM call (lớp 3) — CHỈ khi lớp 1+2 thiếu tín hiệu
 │   └── Output: structured JSON + confidence + evidence
-├── Output → sale_offers (thêm fields) + review_queue (nếu unsure)
+├── Output → enrichment_proposals (đề xuất, KHÔNG ghi thẳng sale_offers)
+│   → luật xác định quyết áp / thẻ duyệt (xem pipeline tích hợp)
 └── Trace: mọi bước ghi JSONL (audit được)
 ```
 
@@ -91,10 +95,29 @@ stg_zalo_posts (text thô)
   → ENRICHMENT AGENT (Lớp 2 + 3):
      → match group context → project/type/street
      → LLM decode abbreviations + address + features
-     → UPDATE sale_offers SET property_type, street_raw, project_hint, features
-     → confidence < threshold → INSERT review_queue (item_type='agent_output')
+     → INSERT enrichment_proposals (E1/E2 mỗi field một đề xuất, fill-gap:
+       ô đã có giá trị thì không đề xuất)
+     → LUẬT XÁC ĐỊNH (không dùng confidence):
+        · có căn cứ độc lập → apply_enrichment() ghi vào sale_offers
+          (+ cascade properties qua property_offers). Căn cứ chỉ hai loại:
+          E1 cùng giá trị sau chuẩn hoá · block_raw khớp tên/alias node
+          building của asset_nodes
+        · LLM trái E1 → KHÔNG áp bên nào: cả hai đề xuất lên thẻ, mỗi bên
+          kèm căn cứ (E1: từ khoá khớp ở tin hay tên nhóm; LLM: model ·
+          độ tự tin · trace); người chọn một bên hoặc bỏ cả hai. Field còn
+          thẻ xung đột chờ thì các lượt sau không áp gì cho field đó.
+          (23/10: «E1 thắng» cũ đã áp land cho nhà 4 tầng vì chữ «đất»
+          trong tên nhóm — sổ revisit d-9.)
+        · còn lại → một thẻ /ops/review mỗi offer
+          (item_type='agent_output', item_id='enrich:<offer_id>');
+          người duyệt → decide_enrichment_review() áp hoặc bỏ
   → ruler + deals dùng dữ liệu ĐÃ enriched
 ```
+
+**Confidence của LLM không bao giờ là căn cứ** — chỉ lưu kèm đề xuất để
+người duyệt tham khảo. Đường cũ (`UPDATE sale_offers` thẳng,
+`confidence < threshold → INSERT review_queue`) đã gỡ ngày 22/10. Chi tiết:
+`docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md`.
 
 ## 4. QUAN HỆ asset_nodes — BỘ NHỚ DỰ ÁN
 
@@ -118,7 +141,7 @@ rộng thành knowledge base đầy đủ:
 |---|---|---|---|
 | E1 | Context resolver (Lớp 2): group name → project match qua asset_nodes aliases (match 1 node mới nhận — nhiều node là MỜ → nhường LLM); keywords → property_type; building pattern regex | asset_nodes sẵn có | ✅ `agent/src/agents/context-resolver.ts` |
 | E2 | Enrichment agent (Lớp 3): prompt template + knowledge injection (asset_nodes + group context) + LLM call qua runtime A1 | A1 ✅, E1 | ✅ `agent/src/agents/enrich-text.ts` |
-| E3 | Transform integration: enrich-run.ts chạy E1+E2, UPDATE sale_offers fill-gap + cascade properties qua property_offers | E2 | ✅ `agent/scripts/enrich-run.ts` |
+| E3 | Transform integration: enrich-run.ts chạy E1+E2 → ghi đề xuất vào `enrichment_proposals` (fill-gap) → luật xác định (E1 cùng giá trị / khớp asset_nodes building) áp qua `apply_enrichment()` + cascade properties; còn lại → thẻ `/ops/review` `agent_output`. Confidence LLM không là căn cứ. 22/10 thay đường `UPDATE sale_offers` thẳng — spec `docs/superpowers/specs/2026-10-22-enrich-qua-de-xuat-design.md` | E2 | ✅ `agent/scripts/enrich-run.ts` (đường đề xuất: vòng enrich-qua-de-xuat) |
 | E4 | Building dictionary: seed building nodes + alias viết tắt dự án. Nguyên tắc: CHỈ seed mã ĐÃ xác minh (LBV — ví dụ user); mã lạ (LD1/LD2, MCP, SAV…) để LLM decode | asset_nodes | ✅ migration 032 (+ sửa bug 026: parent_id bigserial tự trỏ chính nó) |
 | E5 | Feedback loop: LLM decode abbreviation mới → lưu alias vào asset_nodes → E1 regex match lần sau (tự học) | E3 chạy production | ⬜ khi có data |
 

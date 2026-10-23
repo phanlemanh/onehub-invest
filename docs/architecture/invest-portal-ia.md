@@ -119,7 +119,7 @@ INVEST PORTAL  (công khai, đọc là chính)
 
 | Trạng thái | Block | Dùng khi |
 |---|---|---|
-| Đang tải | `c-skeleton-6` (hàng KPI), `c-skeleton-5` (bảng), `c-skeleton-2` (chart) | `loading.tsx` theo segment |
+| Đang tải | `PageSkeleton` (Skeleton đúng bố cục trang; ghép từ `c-skeleton-6` hàng KPI, `c-skeleton-5` bảng, `c-skeleton-2` chart) | bọc vùng dữ liệu server trong `<Suspense>`; KHÔNG dùng `loading.tsx` cấp segment (mất mã 404/307) |
 | Trống, không có kết quả | `empty-state-2` (chip gợi ý) | bộ lọc ra 0 kết quả |
 | Trống, chưa lưu gì | `c-empty-11` | `/saved` |
 | **Chưa có dữ liệu / đang thu thập** | `empty-state-5` biến thể "đang thu thập" | tỉnh chưa tự thu |
