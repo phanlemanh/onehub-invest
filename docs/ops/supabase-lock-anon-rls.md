@@ -125,7 +125,7 @@ câu lệnh nào chạy bằng anon hoặc authenticated. Khoảng trước 20/1
 ## Leak gate kiểm anon (AU1, `_acceptance/leak-gate-kiem-anon/`)
 
 Từ hồ sơ này, mỗi lượt sync cloud (`pipeline/sync-cloud.mjs`, launchd 15′) tự kiểm quyền đọc công khai: role `anon`
-hoặc `authenticated` mà SELECT được bất kỳ bảng, view, materialized view hay bảng phân vùng nào trong `public` thì
+hoặc `authenticated` mà SELECT được bất kỳ bảng, view, materialized view, bảng phân vùng hay bảng ngoại nào trong `public` thì
 lượt dừng và báo đỏ. Kiểm hai chỗ: trước khi đọc local và gửi (không dòng nào lên một cloud đang mở) và trong leak gate
 sau tráo (bắt quyền mở giữa lượt).
 
@@ -155,15 +155,24 @@ SYNC FAIL [gate] <thời điểm>: LEAK GATE FAIL (trước khi gửi): anon đ�
 
 - `(trước khi gửi)` — lượt dừng trước khi đọc local; cloud không nhận dòng nào của lượt này.
   `(sau tráo)` — quyền mở GIỮA lượt; dữ liệu lượt này đã lên rồi mới báo.
-- Mỗi vi phạm: `<role> đọc được public.<quan hệ> (<loại>, <đường cấp>; gỡ: <lệnh>)`, nối nhau bằng dấu phẩy. Đường
-  cấp là một trong: `cấp thẳng`, `qua PUBLIC`, `cấp cột <cột>`, `qua role <role trung gian>`.
+- Mỗi vi phạm: `<role> đọc được public.<quan hệ> (<loại>, <đường cấp>; gỡ: <lệnh>)`, nối nhau bằng dấu phẩy. Loại là
+  một trong: `bảng`, `view`, `materialized view`, `bảng phân vùng`, `bảng ngoại`. Đường cấp là một trong năm:
+  `cấp thẳng`, `qua PUBLIC`, `cấp cột <cột>`, `qua role <role trung gian>`, hoặc `không rõ đường cấp` — role đọc được
+  nhưng không thấy quyền SELECT nào gán cho chính nó, cho PUBLIC hay cho role nó là thành viên (vd role đó là chủ
+  quan hệ). Với đường thứ năm, phần sau `gỡ:` là lời dặn `kiểm tay quyền và chủ sở hữu của quan hệ`, KHÔNG phải lệnh
+  SQL.
+- Mỗi dòng chỉ gọi tên MỘT đường cấp (ưu tiên: cấp thẳng → PUBLIC → qua role → cấp cột). Quyền mở qua nhiều đường
+  cùng lúc thì sau khi gỡ đường đầu, lượt kế có thể đỏ lại với đường tiếp theo và lệnh gỡ mới — gỡ tiếp tới khi xanh.
 - `cloud không có role anon — không kiểm được quyền đọc công khai` — sync đang nói chuyện với một DB không phải
   Supabase (sai `cloud.env`?); gate không cho qua khi không kiểm được.
 
 ### Gỡ đúng
 
 Chạy NGUYÊN VĂN lệnh sau `gỡ:` trong SQL Editor của Supabase — nó nhắm đúng đường cấp (vd quyền đến qua `PUBLIC`
-thì gỡ `FROM PUBLIC`, gỡ `FROM anon` sẽ không ăn thua). Lượt sync kế tự xanh lại. Không tắt, không nới gate để sync
+thì gỡ `FROM PUBLIC`, gỡ `FROM anon` sẽ không ăn thua). Lượt sync kế xanh lại, hoặc đỏ với đường cấp kế tiếp nếu quyền
+mở qua nhiều đường (gỡ tiếp theo dòng mới). Ngoại lệ: dòng mang `không rõ đường cấp` không có lệnh để dán — Mạnh tự
+điều tra chủ sở hữu và quyền của quan hệ đó (`\dp public.<quan hệ>` trong psql, hoặc `pg_class.relowner`/`relacl`)
+rồi quyết cách thu. Không tắt, không nới gate để sync
 chạy tiếp — gate đỏ nghĩa là ai cầm anon key (khoá công khai) đang đọc được dữ liệu đó. Sửa quyền trên prod là việc
 của Mạnh; agent chỉ đọc log và chỉ ra lệnh, không tự chạy trên prod.
 
