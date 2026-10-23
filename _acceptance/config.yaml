@@ -109,6 +109,14 @@ executors:
     supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
     supabase_lock_local: "bash scripts/check-supabase-lock.sh local"
     supabase_lock_sim: "bash scripts/check-supabase-lock.sh sim"
+    # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
+    zc3_l4b_scan: "node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"
+    zc3_gateway: "node scripts/audit-p1-resilience/acceptance.mjs gateway"
+    zc3_l4a_drop: "node scripts/audit-p1-resilience/acceptance.mjs l4a-drop"
+    zc3_l5b_db: "node scripts/audit-p1-resilience/acceptance.mjs l5b-db"
+    zc3_import_daily: "node scripts/audit-p1-resilience/acceptance.mjs import-daily"
+    zc3_err_detail: "node scripts/audit-p1-resilience/acceptance.mjs err-detail"   # cần pipeline/node_modules (pg)
+    zc3_syntax: "bash -n scripts/zalo-watchdog.sh && bash -n scripts/zalo-import-daily.sh && node --check pipeline/collect-chotot.mjs && node --check pipeline/import-chotot.mjs && echo SYNTAX OK"
     # kev-thanh-nhan (PL4) + sourceid-tin-anh (ZC1) — handler.js chạy với HOME giả, Kev/collector giả; không chạm ~/.openclaw, :8009, :9210
     collector_test_clean: "cd collector && rm -rf dist && npm test"   # xoá dist cũ — tsc không xoá test đã biên dịch của nhánh khác
     kev_handler_label: "node scripts/kev-nhan/acceptance.mjs handler-label"
