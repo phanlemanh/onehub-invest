@@ -1,0 +1,112 @@
+# Khoá Data API Supabase (migration 037) — runbook áp, kiểm, hoàn tác
+
+Project `one-invest` (ref `smqpqiigzulwpmrsrhci`). Hồ sơ nghiệm thu T3:
+`_acceptance/supabase-lock-anon-rls/`. **Agent không tự áp lên prod** — Mạnh ký hồ sơ rồi tự chạy.
+
+## Vì sao
+
+Đo 2026-10-23 (chỉ đọc, bảng đầy đủ ở `_acceptance/supabase-lock-anon-rls/do-truoc-cloud.md`):
+
+- RLS tắt trên cả 36 bảng của postgres trong `public`; anon và authenticated có
+  SELECT/INSERT/UPDATE/DELETE/TRUNCATE trên 38 bảng + view, USAGE trên 4 sequence.
+- Default privileges của postgres trong `public` cấp lại đủ quyền đó cho mọi bảng,
+  sequence và hàm tạo sau.
+- Thăm PostgREST bằng anon key (HEAD, chỉ đếm): `sessions` 17 dòng, `users` 1,
+  `sale_offers` 9.845, `sellers` 1.043, `properties` 8.270 đều trả 200/206.
+  `sessions.token` lưu thô (`app/src/lib/auth.ts`), nên ai đọc được bảng này là
+  chiếm được phiên `/ops`.
+- Advisor security: `rls_disabled_in_public` ×37, `security_definer_view` ×2
+  (`v_ruler_p2`, `v_ruler_p2_area`), `extension_in_public` (postgis),
+  `*_security_definer_function_executable` ×3 (`st_estimatedextent`, của PostGIS).
+
+## 037 làm gì, ai bị ảnh hưởng
+
+Chỉ chạm đối tượng do postgres làm chủ trong `public`: thu mọi quyền của anon và authenticated
+trên bảng, view, sequence và hàm; bật RLS (không policy, không FORCE); đặt view sang
+`security_invoker`; thu default privileges để bảng mới không cấp lại. DB không có role
+`anon` (local) thì bỏ qua.
+
+| Đường | Kết nối bằng | Sau 037 |
+|---|---|---|
+| App Vercel `onehub-invest` (và project cũ `app`) | `DATABASE_URL` = pooler, user `postgres.<ref>` → role postgres | không đổi: chủ bảng + BYPASSRLS |
+| data-api (Vercel `onehub-data-api`) | `DATABASE_URL` (pooler; DB không có role đăng nhập tự tạo nào khác postgres) | không đổi |
+| `pipeline/sync-cloud.mjs`: INSERT | PostgREST + `SUPABASE_SERVICE_KEY` → service_role | không đổi: giữ grant, BYPASSRLS |
+| `sync-cloud.mjs`: TRUNCATE, leak gate | Management API → postgres | không đổi |
+| `pipeline/push-ops-facts.mjs` | HTTPS tới `/api/v1/ops/ingest` của app → postgres | không đổi |
+| `pipeline/drill-restore.mjs` | PostgREST + service key | không đổi |
+| `scripts/audit-all.sh` | Management API | không đổi |
+| Ai cầm anon key | PostgREST → anon | **401 trên mọi bảng/view của postgres** |
+
+Đã thử trên Supabase giả lập (cùng image `supabase/postgres` 17.6, role và default privileges
+giống cloud, có PostgREST thật): `bash scripts/check-supabase-lock.sh sim`.
+
+## Áp (Mạnh chạy, sau khi ký hồ sơ)
+
+1. PR đã merge và checkout chính đã pull: tệp 037 phải có trong `main`.
+2. Chọn lúc ngay sau một lượt sync, khi log `pipeline/logs/cloud-sync.log` vừa in
+   `leak gate PASS`. 037 tự dừng nếu chờ khoá quá 15 giây (`lock_timeout`). Khi đó
+   cả khối huỷ nguyên vẹn, chạy lại là được.
+3. Chạy từ checkout chính bằng một trong hai cách:
+   - Supabase Dashboard → SQL Editor → dán `db/migrations/037_lock_anon_enable_rls.sql` → Run.
+   - Management API (thành công trả `[]`):
+
+```bash
+cd ~/dev/onehub-invest && jq -Rs '{query: .}' db/migrations/037_lock_anon_enable_rls.sql | curl -fsS -X POST "https://api.supabase.com/v1/projects/smqpqiigzulwpmrsrhci/database/query" -H "Authorization: Bearer $(sed -n 's/^SUPABASE_MGMT_TOKEN=//p' ~/.oneinvest/cloud.env | tr -d '\"'"'"'')" -H "content-type: application/json" --data-binary @-
+```
+
+## Kiểm sau khi áp
+
+1. Đo lại cloud (chỉ đọc). Lệnh phải kết thúc bằng `check-supabase-lock cloud: OK`,
+   anon nhận 401 ở mọi dòng, service_role vẫn nhận 200/206:
+
+```bash
+cd ~/dev/onehub-invest && bash scripts/check-supabase-lock.sh cloud > _acceptance/supabase-lock-anon-rls/do-sau-cloud.md; tail -12 _acceptance/supabase-lock-anon-rls/do-sau-cloud.md
+```
+
+2. App prod: `https://onehub-invest.vercel.app/vn/hanoi` trả 200 và có số; đăng nhập
+   `/ops`, mở `/ops/deals`.
+3. Lượt sync kế tiếp (hoặc `launchctl kickstart gui/$(id -u)/com.oneinvest.cloud-sync`):
+   `pipeline/logs/cloud-sync.log` in `leak gate PASS`; push-ops-facts không báo lỗi.
+4. Advisor security: `rls_disabled_in_public` chỉ còn `spatial_ref_sys` (của PostGIS) và
+   `security_definer_view` hết. Các mục PostGIS còn lại nằm ở Known limits.
+
+## Hoàn tác (chỉ khi 037 làm gãy một đường sống)
+
+Chạy hoàn tác là **mở lại lỗ**. Trước khi chạy, xem `docs/ops/supabase-lock-anon-rls.rollback.sql`.
+Tệp này đưa quyền, RLS và default privileges về đúng trạng thái trước 037 (sim đã kiểm),
+rồi cần áp lại 037 sớm nhất có thể:
+
+```bash
+cd ~/dev/onehub-invest && jq -Rs '{query: .}' docs/ops/supabase-lock-anon-rls.rollback.sql | curl -fsS -X POST "https://api.supabase.com/v1/projects/smqpqiigzulwpmrsrhci/database/query" -H "Authorization: Bearer $(sed -n 's/^SUPABASE_MGMT_TOKEN=//p' ~/.oneinvest/cloud.env | tr -d '\"'"'"'')" -H "content-type: application/json" --data-binary @-
+```
+
+Hỏng một đường thì thường chỉ cần cấp lại đúng quyền cho đúng role, không phải mở toàn bộ.
+Ví dụ sync báo `permission denied` trên một bảng mới: `GRANT ALL ON <bảng> TO service_role`.
+
+## Khuyến nghị: phiên và khoá
+
+Khoá anon từng lộ ở đâu (đo 2026-10-23; chỉ ghi tên biến và nơi xuất hiện, không ghi giá trị):
+
+| Nơi | Kết quả |
+|---|---|
+| Lịch sử git mọi nhánh của `onehub-invest`, `onehub-data-api` (public), `onehub-invest-app` (public), `one-invest`, `one-invest-collector` | không có giá trị anon key hay service key. Chỉ `one-invest` (private) có ref project trong 4 commit |
+| Env Vercel `onehub-invest`, `app`, `onehub-data-api` | chỉ có `DATABASE_URL`, `OPS_API_TOKEN`, `RENAME_REFCALIB`. Không có `NEXT_PUBLIC_*`, `SUPABASE_*` |
+| Bundle client prod `onehub-invest.vercel.app` (35 chunk) và `app-lilac-one-49.vercel.app` (36 chunk) | không chứa anon key, không có JWT, không có `supabase.co` |
+| Máy local | `SUPABASE_ANON_KEY` trong `~/.oneinvest/cloud.env`. Không code nào đọc biến này |
+
+Dấu vết truy cập: edge log 24 giờ qua chỉ có service_role (sync, FPT Telecom VN) và 11 lệnh thăm
+anon của chính phiên đo. `pg_stat_statements` từ 2026-10-20 13:25 UTC đến lúc đo không có
+câu lệnh nào chạy bằng anon hoặc authenticated. Khoảng trước 20/10 không có log để kiểm.
+
+- **Vô hiệu toàn bộ `sessions` sau khi áp 037: NÊN làm.** Token lưu thô và hạn 30 ngày.
+  Log không phủ được khoảng trước 20/10. Bảng chỉ có 17 phiên của 1 người dùng, nên cái giá
+  là Mạnh đăng nhập lại. Mạnh tự chạy trên SQL Editor: `DELETE FROM sessions;` (bảng chỉ có
+  ở cloud, sync không ghi).
+- **Xoay anon key: CHƯA cần.** Sau 037, anon không còn quyền gì nên khoá này hết giá trị.
+  Supabase cũng coi anon key là khoá công khai. Khoá chưa thấy lộ ở nơi nào kiểm được. Nếu
+  muốn xoay khoá kiểu JWT cũ, phải xoay JWT secret, mà việc đó đổi luôn service key và làm
+  gãy sync cho tới khi cập nhật `cloud.env`. Nên để sang việc riêng: chuyển sang khoá
+  publishable/secret mới rồi tắt khoá cũ.
+- **Service key: không cần xoay.** Không thấy ở repo, env Vercel hay bundle nào.
+- **Mật khẩu người dùng duy nhất: tuỳ chọn.** `users.password_hash` là scrypt có salt, đọc
+  được nếu ai đó từng có anon key. Chưa thấy dấu vết, nên chỉ đổi khi muốn chắc thêm.
