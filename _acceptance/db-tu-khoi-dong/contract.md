@@ -5,7 +5,7 @@ slug: db-tu-khoi-dong
 owner: phanlemanh@gmail.com
 risk_tier: T2      # db/docker-compose.yml + scripts/ + docs — không chạm t3_paths
 surfaces: [config, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-db-tu-khoi-dong-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
@@ -92,3 +92,6 @@ containers automatically» — restart policies `no|on-failure|always|unless-sto
 ## Notes
 
 - Không có bề mặt UI → không design-pass, không đặc tả UX, không eval ui-check (sổ quyết định).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: Sổ vận hành nêu nhầm `scripts/migrate-export.sh` là nơi sẽ dựng lại container DB; thực ra chỉ `scripts/setup.sh` hoặc lệnh tay mới dựng lại.
+  - Ngoài-2: Phép kiểm máy thật mới được thử chiều đỏ cho hai trong bốn điều kiện (chính sách tự khởi động, colima tự bật); «DB đang chạy» và «colima đang nạp» chưa có lượt thử đỏ.
