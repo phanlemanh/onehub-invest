@@ -309,10 +309,13 @@ const ROWS = [
 ];
 const MOBBIN = {
   "I1 Finder": [["Zillow — nhãn giá, cụm, lưới thẻ, lọc giá có histogram", "https://mobbin.com/screens/ac55ce90-c633-46bd-bc99-aedfa1b446a3"], ["GetYourGuide — danh sách trái / bản đồ phải, thẻ xem nhanh", "https://mobbin.com/screens/d405d871-e78c-43c8-83dd-59f04a363d29"]],
+  "I2 Insight": [["Meetup Network Analytics — lọc trên cùng → 3 KPI có delta → lưới biểu đồ 2 cột", "https://mobbin.com/screens/642df512-b5d9-45a5-857b-1c0110c194ae"], ["Gumloop Insights — hàng KPI số lớn → 1 biểu đồ chính → bảng phân rã theo tỷ trọng", "https://mobbin.com/screens/9053b6d1-aadb-4f5d-b64d-9aca0ce2404b"], ["Shopify report — biểu đồ + bảng chi tiết cùng màn, panel chỉ số bên phải (trang phường)", "https://mobbin.com/screens/7caf223c-e9fe-416b-89be-83660e8a88cf"]],
+  "I4 Lợi suất": [["Mercury — form trái → thẻ tóm tắt sống bên phải", "https://mobbin.com/screens/b201dd4d-6c7c-488d-ba01-ea066b275aad"], ["Base — số lớn + biểu đồ có tooltip + khối PnL bên dưới", "https://mobbin.com/screens/5d35e943-618c-402a-a9e8-2d8addd1f612"]],
+  "I5 So sánh + Đã lưu": [["So sánh: Calendly compare — cột = đối tượng, hàng nhóm, tiêu đề cột dính", "https://mobbin.com/screens/c3a7b2d3-de35-4e07-8a04-6e23f3b6d0a6"], ["So sánh: Meetup plans — cột nổi bật, hàng chỉ số so thẳng", "https://mobbin.com/screens/9ac3cc80-9e44-4aa7-b3eb-4ad252bb207e"], ["So sánh: Square “Compare to” — sheet chọn kỳ so sánh", "https://mobbin.com/screens/62b4d428-ca60-4284-b008-2800dcc2c9ff"]],
   "I3 Listing": [["Zillow — nhãn giá + cụm + lưới thẻ", "https://mobbin.com/screens/ac55ce90-c633-46bd-bc99-aedfa1b446a3"], ["GetYourGuide — list/map, thẻ xem nhanh", "https://mobbin.com/screens/d405d871-e78c-43c8-83dd-59f04a363d29"], ["H&M — store locator (≈ mapcn store-locator)", "https://mobbin.com/screens/faaa387d-1b69-47e5-93e9-6b31f5e1e614"]],
 };
-const MOBBIN_HINT = { "I2 Insight": "market analytics dashboard", "I4 Lợi suất": "investment calculator", "I5 So sánh + Đã lưu": "comparison table · saved items", "I6 Trang chủ/Phương pháp/Auth": "landing · glossary · sign in" };
-const mob = (g) => MOBBIN[g] ? MOBBIN[g].map(([t, u]) => `<a href="${u}">${t}</a>`).join(" · ") : `chờ tra Mobbin (phiên này không có MCP Mobbin) — từ khoá: ${MOBBIN_HINT[g] ?? "—"}`;
+const MOBBIN_HINT = { "I6 Trang chủ/Phương pháp/Auth": "landing · glossary · sign in" };
+const mob = (g, route) => route === "/saved" ? "chờ tra Mobbin ở đợt I5 — từ khoá: saved items" : MOBBIN[g] ? MOBBIN[g].map(([t, u]) => `<a href="${u}">${t}</a>`).join(" · ") : `chờ tra Mobbin ở đợt của nhóm — từ khoá: ${MOBBIN_HINT[g] ?? "—"}`;
 document.getElementById("rows").innerHTML = ROWS.map((r) => `
   <article class="row">
     <header><span class="route">${r.route}</span><span class="small muted">slug đích: <b>${r.slug}</b></span><h2>${r.name}</h2><span class="group">${r.group}</span></header>
@@ -336,7 +339,7 @@ document.getElementById("rows").innerHTML = ROWS.map((r) => `
         <b>Máy khuyến nghị: ${r.rec}</b>
         <span class="small">${r.why}</span>
         <span class="small muted">Không có block (giữ ghép từ component): ${r.nob}</span>
-        <span class="small muted">Căn cứ IA (Mobbin, chỉ IA — không chép hình): ${mob(r.group)}</span>
+        <span class="small muted">Căn cứ IA (Mobbin, chỉ IA — không chép hình): ${mob(r.group, r.route)}</span>
       </div>
       <div class="impact">
         <div><b>KPI</b>${r.kpi}</div>

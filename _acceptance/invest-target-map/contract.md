@@ -55,8 +55,8 @@ Phạm vi file: `.claude/skills/onehub-ui/{routes,loop,catalog}.md`, `app/eslint
 ## Out of scope
 
 - Mọi thay đổi mã trang/component, cài block hay mapcn, đổi file route / thêm 301 (làm ở đợt I*).
-- Tham chiếu Mobbin đủ 2–4 cho mọi nhóm trang: phiên này không có MCP Mobbin — mới có 3 link
-  điều phối tra cho Finder/Listing, các nhóm khác ghi từ khoá chờ tra.
+- Tham chiếu Mobbin cho Đã lưu và nhóm Trang chủ/Phương pháp/Auth: phiên này không có MCP Mobbin;
+  điều phối tra hộ Finder/Listing, Insight, So sánh, Lợi suất — hai nhóm còn lại tra ở đợt của nhóm.
 - Gỡ ảnh AirDNA khỏi `/listing/[id]` (phiên riêng); bảng màu biểu đồ (B3).
 - Dòng Ops của routes.md chỉ chép block đã chốt ở bảng 2b của B1, không quyết lại.
 
