@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 8d3e45f50b62f03ed2a9a0af1820538d27ea41ad
+verified_commit: 770c7609db093c0a8f0600888258a577855dbcb3
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -219,3 +219,7 @@ none — every multi-run eval is uniform (không eval nào khai runs > 1)
 
 Round 1 (f0ae199): E1–E11 đều đạt expected, verdict PASS. Thử đột biến: bỏ kiểm `mediaOnly` và bỏ `entry.error` trong `localSrc` đều lọt (test vẫn xanh) → ghi Known limits. Báo cáo hoá cũ khi thêm hai ca test chặn đúng hai đột biến đó (8d3e45f, chỉ đổi `app/tests/zalo-media.test.tsx` và `app/tests/review-media.test.tsx`).
 Round 2 (8d3e45f): chạy lại cả 11 eval, đều đạt expected; hai đột biến của vòng 1 giờ đỏ → gỡ Known limits 1–2. Limit «E1–E7 dùng chung một lần chạy» cũng gỡ: đó là cách tổ chức eval, không phải giới hạn của tính năng, và vòng này mỗi eval E1–E7 đã là một lần chạy riêng. Ghi chú: một lượt chạy E8 lúc 01:53:25Z bị khung chạy của người chấm bỏ sót dòng run-log (lỗi cwd ở khung chạy, kéo E9–E11 chạy sai thư mục và không ghi log); E8 lượt đó vẫn ROUNDTRIP PASS và DB còn 0 dòng — cả bốn eval được chạy lại đúng và chỉ các lần chạy lại được ghi log, dùng trong báo cáo này.
+
+### Re-pin lần 1 — 2026-10-23, do hoá cũ do merge main sau verify + chính commit chữ ký
+run_id: repin-20261023T024514Z-99825
+sha: 770c7609db093c0a8f0600888258a577855dbcb3 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
