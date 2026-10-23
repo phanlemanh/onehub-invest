@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4c414222b055d73e5cc6a2a4eb9cf82adfb06989
+verified_commit: b309c4ad4c2a1b86825d8ea717ba685ae262a45b
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -219,3 +219,7 @@ none — mọi eval chạy một lần, không có eval ngẫu nhiên.
 Round 1: PASS — 15/15 eval đạt; hai lỗ đo trong hợp đồng (kiểm cột sáng/tối của data-color và kênh swatchOf) được vá ở vòng 2.
 Round 2: E10 không đạt — rail network thấy một POST /api/v1/user-events bị từ chối (chưa đăng nhập) tới origin app, loại app-fail, mà expected không khai; mọi khía cạnh hiển thị và chức năng của E10 đều khớp expected. Trả về triển khai.
 Round 3: PASS — hợp đồng E10 khai beacon telemetry /api/v1/user-events là ngoại lệ được phép; E10 chạy lại (E10-r3) khớp expected, lưới mạng sạch; E13 và 12 lệnh còn lại đạt, E6 carry-forward từ round 1.
+
+### Re-pin lần 1 — 2026-10-23, do hoá cũ do merge origin/main 8595dc0 sau chữ ký
+run_id: repin-20261023T010106Z-61164
+sha: b309c4ad4c2a1b86825d8ea717ba685ae262a45b · suites: 3 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E10 (E10 không khai paths), E13 (E13 không khai paths) · AC không có chốt máy: AC-9
