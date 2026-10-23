@@ -139,6 +139,15 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # airbnb-worklist (ZC5) — không gọi Airbnb/AirDNA; installer/nightly/finalize chạy bản chép với HOME giả + stub launchctl/docker/sleep
+    zc5_static: "node scripts/airbnb-worklist/acceptance.mjs static"
+    zc5_installers: "node scripts/airbnb-worklist/acceptance.mjs installers"
+    zc5_scheduler: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/airbnb-worklist/acceptance.mjs scheduler"
+    zc5_nightly_flow: "node scripts/airbnb-worklist/acceptance.mjs nightly-flow"
+    zc5_finalize_cities: "node scripts/airbnb-worklist/acceptance.mjs finalize-cities"
+    zc5_health_gate: "node scripts/airbnb-worklist/acceptance.mjs health-gate"
+    zc5_export_db: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/airbnb-worklist/acceptance.mjs export-db"   # DB local :5433, CHỈ ĐỌC
+    zc5_adr: "node scripts/airbnb-worklist/acceptance.mjs adr"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)

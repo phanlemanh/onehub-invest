@@ -57,6 +57,14 @@ dùng chấp nhận được.
 1. **Cadence người**: jitter 2–15s giữa thao tác; trần volume/ngày; cửa sổ giờ
    hoạt động 19–23h; cron có randomized delay trong cửa sổ (systemd
    `RandomizedDelaySec` tương đương).
+   - **Sửa đổi 2026-10-23 (Mạnh chốt, hàng ZC5 `airbnb-worklist`)**: cửa sổ giờ
+     KHÔNG còn là mặc định. `CONDUCT_WINDOW` mặc định `off`, nên thu chạy bất kỳ
+     lúc nào hệ thống ổn định. Muốn giới hạn lại thì đặt `CONDUCT_WINDOW=19-23`
+     (hoặc khung khác) cho job đó. Hai lớp còn lại GIỮ NGUYÊN: jitter 2–15s sau
+     mỗi request (`CONDUCT_JITTER`, chỉ tắt bằng `0` khi chạy tay/smoke) và trần
+     600 items/ngày (`CONDUCT_DAILY_MAX`). Job Airbnb nightly vẫn hẹn 19:35 và tự
+     jitter ≤20′ trước khi chạm nguồn; giờ hẹn là thói quen vận hành, không còn
+     là luật chặn. Code: `collector/src/core/scheduler.ts`.
 2. **Incremental trước tiên**: lịch 60 đêm gần fetch 2×/tuần, toàn bộ 1×/tháng
    — giảm khối lượng gốc thay vì che khối lượng.
 3. **Một identity một nguồn**: persistent profile (đã có), không xoay, không
