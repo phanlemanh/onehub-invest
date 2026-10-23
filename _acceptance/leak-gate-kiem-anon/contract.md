@@ -5,7 +5,7 @@ slug: leak-gate-kiem-anon
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/sync-cloud.mjs — dữ liệu rời máy (t3_paths)
 surfaces: [pipeline, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-23-leak-gate-kiem-anon-design.md
 approved_by: Mạnh
 approved_at: 2026-10-23
@@ -104,3 +104,9 @@ docs/audit/2026-10-23-hien-trang-va-lo-trinh.md] P12 + [SUY-TỪ-REPO: docs/ops/
   đọc 37/37 bảng thì mọi lượt sync dừng đỏ.
 - Điều kiện merge thứ hai (Mạnh duyệt Hỏi-1 theo khuyến nghị ở Cổng Phạm vi 23/10): `--kiem-anon` chạy trên prod
   đã áp 037 trả mã 0; mã thoát và dòng in dán vào PR trước khi merge.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-23:
+  - Ngoài-1: Khi khoá công khai chỉ là thành viên gián tiếp của một role có quyền, lệnh gỡ in ra không có tác dụng và dòng đỏ lặp lại; sổ vận hành chưa chỉ cách tra chuỗi role.
+  - Ngoài-2: Cùng ca role lồng nhau: sổ vận hành hứa «xanh hoặc đỏ với đường kế tiếp» nhưng ca này đỏ lại đúng dòng cũ.
+  - Ngoài-3: Mỗi dòng đỏ chỉ nêu một đường cấp; quyền mở qua nhiều đường phải gỡ vài lượt.
+  - Ngoài-4: Lệnh gỡ chỉ nhắm một đường cấp mỗi role và quan hệ; nhiều đường hoặc chuỗi role lồng nhau thì một lần gỡ không đủ.
+  - Ngoài-5: Phép thử chưa có ô chứng rằng ba quan hệ PostGIS chỉ được chừa khi thật sự thuộc extension postgis (mới thử trục tên).

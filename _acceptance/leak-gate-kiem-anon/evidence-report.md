@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: leak-gate-kiem-anon
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 0f912e48e9ea47bdb689f364d3673612e67b8270
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: leak-gate-kiem-anon
@@ -32,7 +32,7 @@ human_signoff:
 | E15 | AC-9 | script | PASS |
 | E16 | AC-9 | script | PASS |
 | E17 | AC-9 | script | PASS |
-| E18 | AC-10 | judgment | PENDING-JUDGMENT (hội đồng đề xuất PASS, chờ người ở Gate 2) |
+| E18 | AC-10 | judgment | PASS (Mạnh chốt Đạt 2026-10-23; hội đồng đề xuất PASS) |
 | E19 | AC-11 | script | PASS |
 
 ## Evidence
@@ -268,7 +268,7 @@ Hội đồng đề xuất, chưa phải quyết định: T3 nên người phả
     - spec-alignment: PASS — Mục «Leak gate kiểm anon» có đủ bốn điều và khớp code. (1) Thứ tự áp 037, chạy `--kiem-anon`, rồi merge khớp `main()`/`runKiemAnon`; hệ quả ngược lại khớp `gateAnon`, vốn ném `PhaseError("gate")` ở bước 1b nên mọi lượt dừng đỏ. (2) Khuôn dòng báo, `LEAK GATE FAIL (trước khi gửi|sau tráo): <role> đọc được public.<rel> (<loại>, <đường cấp>; gỡ: <lệnh>)`, năm đường cấp, thứ tự ưu tiên và lời dặn không phải SQL ở đường thứ năm đều trùng `anonReadable`. (3) Gỡ bằng lệnh in trong thông điệp, không tắt hay nới gate, agent chỉ đọc log và chỉ lệnh; không câu nào bảo agent tự sửa quyền prod. (4) Ba quan hệ `spatial_ref_sys`, `geometry_columns`, `geography_columns` trùng `PUBLIC_READ_ALLOW`, kể cả điều kiện là thành viên extension postgis và lý do supabase_admin làm chủ.
   required_evidence:
     - (không có — cả ba thấu kính cùng đề xuất PASS; người đọc lại mục «Leak gate kiểm anon» trong docs/ops/supabase-lock-anon-rls.md đối chiếu pipeline/sync-cloud.mjs trước khi điền human_override)
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-23 — Đạt
 
 ### Lệnh suite (hồi quy)
 
