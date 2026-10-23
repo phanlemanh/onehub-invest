@@ -54,6 +54,7 @@ cần ký, T3 phải ký); branch protection main (gate + ui-lint).
 | `nen-tang-2310` (NT1–NT7, NH1–NH4) | `pham-vi-nen-tang-2310.md` | audit 23/10; `_acceptance/cloud-sync-atomic/` (Ngoài-4/5), `_acceptance/enrich-qua-de-xuat/` (Ngoài-4/7/8/9), `_acceptance/enrich-hau-ky/`, `_acceptance/ruler-p2-views-migration/` (Known limits 012/031); `pipeline/sync-cloud.mjs`, `pipeline/push-ops-facts.mjs`; ADR-0007 |
 | `zcode-2310` (ZC1–ZC5, ZH1–ZH2) | `pham-vi-zcode-2310.md` | `collector/AGENTS.md`, `collector/docs/DATA-CONTRACT.md`; `docs/ops/runtime-map.md`; `docs/superpowers/plans/2026-10-21-coverage-worklist.md`; BOARD `~/dev/onehub-coord/BOARD.md`; kênh issue #9 — lời giao qua phiên điều phối liên làn |
 | `san-pham-sau-2310` (SH1–SH14) | `pham-vi-san-pham-sau-2310.md` | ROADMAP §4 Track 1–4 (lịch sử); FRAMING §7 câu mở; review §4 Q8 |
+| `bo-sung-2310` (ZC6, AU13) | `pham-vi-bo-sung-2310.md` | ZC6: `collector/AGENTS.md`, `collector/openclaw/handler.js`, `_acceptance/collector-graceful-shutdown/` (d-3 sai), `.claude/rules/zalo-safety.md` · AU13: `_acceptance/job-bao-loi-that/` (`scripts/lib/job-step.sh`), `scripts/cloud-sync.sh`, `pipeline/push-ops-facts.mjs` |
 
 ## 4. Ghi chú bổ sung khi mở vòng (khảo sát 23/10, chưa nằm trong câu giao)
 
@@ -71,6 +72,8 @@ cần ký, T3 phải ký); branch protection main (gate + ui-lint).
 | UI1 | Sửa `routes.md` dòng `/ops/review`: lọc theo loại thẻ/bậc, bỏ «theo độ tin» (trái PL3) |
 | UI4 | Hàng đầu tiên thêm redirect 301 vào `next.config.ts` — mẫu cho UI2, UI3 |
 | UI6/UI8/UI9 | Hàng bản đồ chạy đầu tiên khai registry `@mapcn` trong `components.json` (chưa có) |
+| ZC6 ↔ ZC4 | ZC6 (hook spool gửi lại) phải merge TRƯỚC ZC4: chuyển collector API sang launchd là một lần restart |
+| AU13 ↔ NT2, AU12, AU1 | Chung `push-ops-facts.mjs` (NT2, AU12) và gần `cloud-sync.sh`/`sync-cloud.mjs` (AU1) — chạy liền nhau, không song song |
 | Lint | Baseline 82 vi phạm / 19 tệp (đo 23/10); ROADMAP Track 6 còn ghi 85 — AU8 sửa |
 
 ## 5. Ra khỏi kho — việc của người (không thành hàng; luật kit 17/10, ADR 0026)
