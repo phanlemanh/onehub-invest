@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Mọi agent làm giao diện trong app nhận cùng bộ luật ReUI chính chủ, và máy tự chặn khi có ai tự vẽ tay thay vì dùng block/component có sẵn.",
+  "scope_plain": "Phần này chỉ dựng luật và máy chặn; 138 chỗ vi phạm cũ được ghi sổ để dọn ở các đợt B1–B5."
+}

@@ -1,0 +1,51 @@
+name: ui-lint
+
+# Chặn tự vẽ tay UI (luật onehub-ui + baseline suppressions trong app/eslint-suppressions.json).
+# Vi phạm mới → eslint exit 1; suppression đã hết hiệu lực mà chưa prune → exit 2.
+# Chạy riêng khỏi acceptance-gate để lỗi lint hiện thẳng ở check của PR.
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - ".claude/skills/onehub-ui/**"
+      - ".github/workflows/ui-lint.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".claude/skills/onehub-ui/**"
+      - ".github/workflows/ui-lint.yml"
+
+jobs:
+  ui-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # PR cần nhánh đích để so baseline
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: cài phụ thuộc
+        working-directory: app
+        run: npm ci
+
+      - name: test luật onehub-ui
+        working-directory: app
+        run: npm run test:lint-rules
+
+      - name: lint (eslint + check-bare-disables)
+        working-directory: app
+        run: npm run lint
+
+      # Baseline chỉ được giảm: `eslint --suppress-rule/--suppress-all` nâng số đếm mà lint vẫn xanh,
+      # nên so tổng số đếm từng luật với bản ở nhánh đích. Đổi tên file giữ số đếm thì không tính.
+      - name: baseline không được tăng
+        if: github.event_name == 'pull_request'
+        run: |
+          git show "origin/${{ github.base_ref }}:app/eslint-suppressions.json" > /tmp/base-suppressions.json || true
+          node app/eslint-plugin-onehub-ui/check-baseline-growth.mjs /tmp/base-suppressions.json app/eslint-suppressions.json

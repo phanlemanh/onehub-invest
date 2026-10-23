@@ -19,7 +19,7 @@
 | `/vn/hanoi` | Market Insight Hà Nội | nhà đầu tư |
 | `/th/bangkok/map` | Market Finder (choropleth) | nhà đầu tư (legacy) |
 | `/[country]/[market]/[submarket]` | Insight cấp phường | nhà đầu tư |
-| `/[country]/[market]/dau-tu` | Mô phỏng đầu tư (G3) | máy tính dòng tiền STR×LTR với vay; defaults từ vải P2 + AirDNA | Invest | G3 |
+| `/[country]/[market]/dau-tu` | Mô phỏng đầu tư (G3) | máy tính dòng tiền STR×LTR với vay; defaults từ vải P2 + listing tự thu (2026-10-22: gỡ AirDNA — luật 5; chờ quyết gộp vào `/yield`) | Invest | G3 |
 | `/listing/[id]` | Chi tiết listing | nhà đầu tư |
 | `/saved`, `/login` | Đăng nhập, thị trường đã lưu | nhà đầu tư |
 | `/design` | ReUI Gallery | **nội bộ/dev** — đang nằm chung không gian công khai |
@@ -72,7 +72,7 @@ cổng nhưng mỗi cổng trình bày đúng job của khán giả đó.
 | ReUI Gallery | `/design` | ✅ nhưng sai chỗ (công khai) |
 
 Đặc điểm: bắt buộc auth, mật độ cao kiểu console, ngôn ngữ thiết kế ReUI "SOC"
-(`app-shell-26`, `agent-activity-*`, `ai-usage-*` — đã có sẵn trong DESIGN_RULES).
+(`app-shell-26`, `agent-activity-*`, `ai-usage-*` — tra cứu ở `docs/research/reui-inventory.md`; danh mục đã cài ở `.claude/skills/onehub-ui/catalog.md`).
 
 ### Nhóm C — Quản trị hệ thống (accounts, keys, billing)
 
@@ -142,6 +142,7 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | `/ops/audit` | Nhật ký thao tác | audit log mọi `ops:write` (token nào, lệnh gì, khi nào, kết quả) | DCA | C4 |
 | `/ops/backups` | Sao lưu | lần pg_dump/replica gần nhất, drill khôi phục | DR | C4 |
 | `/ops/sources` | Nguồn dữ liệu 🔒 | registry SPL + giải mã tầng A + **QUẢN TRỊ nguồn: tài khoản Zalo (QR login), allowlist nhóm (bất biến 1 nhóm–1 tài khoản), sau này profile AirDNA/Airbnb — gated `role=admin`** | SPL | C1→E2 |
+| `/ops/deals` | Căn giá tốt | tin P1 (S03/S05) rẻ hơn thước P2 cùng phường; liên hệ người bán + nội dung/ảnh tin (tầng A) chỉ `role=admin` và chỉ có ở DB local (dời từ `/deals` công khai, 2026-10-22) | P4 | đã có |
 | `/ops/design` | Thư viện thiết kế | ReUI Gallery (dời từ `/design`) | — | ngay |
 
 - **Shell thiết kế**: `@reui/app-shell-26` (SOC console) + `agent-activity-*`,
@@ -156,7 +157,7 @@ Một cổng Ops, **hai mức clearance** — tách URL `/admin/**` hoãn tới 
 
 | Mức | Điều kiện | Thấy gì |
 |---|---|---|
-| data-ops | đăng nhập | mọi trang trừ phần gated admin |
+| data-ops | `users.role = 'ops'` (hoặc `admin`), hoặc email trong `OPS_EMAILS` — **đóng mặc định**: chỉ đăng nhập thì KHÔNG đủ vì `/register` mở (2026-10-22) | mọi trang trừ phần gated admin |
 | admin | `users.role = 'admin'` | + `/ops/sources` (giải mã SPL tầng A), `/ops/audit`, `/ops/backups`, quản lý machine token |
 
 **Đường cắt sẵn**: khi tách `/admin/**`, các trang admin-class dời nguyên khối,

@@ -6,8 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "test": "node --import tsx --test \"tests/*.test.tsx\""
+    "lint": "eslint && node eslint-plugin-onehub-ui/check-bare-disables.mjs",
+    "lint:ui-report": "eslint -f json . | node eslint-plugin-onehub-ui/report.mjs",
+    "test": "node --import tsx --test \"tests/*.test.tsx\"",
+    "test:lint-rules": "node --test \"eslint-plugin-onehub-ui/tests/*.test.mjs\""
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
