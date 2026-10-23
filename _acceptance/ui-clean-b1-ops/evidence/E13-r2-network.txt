@@ -1,0 +1,46 @@
+E13 round 2 — fetch/xhr per frame (resource timing, responseStatus) @ http://localhost:3457
+[ops light-1440] path=/ops fetch/xhr=0
+[collections light-1440] path=/ops/collections fetch/xhr=0
+[quality light-1440] path=/ops/quality fetch/xhr=0
+[sources light-1440] path=/ops/sources fetch/xhr=4
+  /api/v1/ops/zalo/accounts 200
+  /api/v1/ops/zalo/login?account=default 200
+  /api/v1/ops/zalo/accounts 200
+  /api/v1/ops/zalo/login?account=default 200
+[design light-1440] path=/ops/design fetch/xhr=0
+[ops dark-1440] path=/ops fetch/xhr=0
+[collections dark-1440] path=/ops/collections fetch/xhr=0
+[quality dark-1440] path=/ops/quality fetch/xhr=0
+[sources dark-1440] path=/ops/sources fetch/xhr=6
+  /api/v1/ops/zalo/accounts 200
+  /api/v1/ops/zalo/groups?account=default 200
+  /api/v1/ops/zalo/login?account=default 200
+  /api/v1/ops/zalo/accounts 200
+  /api/v1/ops/zalo/groups?account=default 200
+  /api/v1/ops/zalo/login?account=default 200
+[design dark-1440] path=/ops/design fetch/xhr=0
+[ops light-390] path=/ops fetch/xhr=0
+[collections light-390] path=/ops/collections fetch/xhr=0
+[quality light-390] path=/ops/quality fetch/xhr=0
+[sources light-390] path=/ops/sources fetch/xhr=6
+  /api/v1/ops/zalo/accounts 200
+  /api/v1/ops/zalo/groups?account=default 200
+  /api/v1/ops/zalo/login?account=default 200
+  /api/v1/ops/zalo/groups?account=default 200
+  /api/v1/ops/zalo/accounts 200
+  /api/v1/ops/zalo/login?account=default 200
+[design light-390] path=/ops/design fetch/xhr=0
+[invest light-1440] path=/vn fetch/xhr=13
+  https://tiles.openfreemap.org/styles/positron 200
+  https://tiles.openfreemap.org/planet 200
+  https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json 200
+  https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/0-255.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/256-511.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Italic/7680-7935.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/7680-7935.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/0-255.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/256-511.pbf 200
+  https://tiles.openfreemap.org/fonts/Noto%20Sans%20Bold/7680-7935.pbf 200

@@ -43,6 +43,18 @@ executors:
     ui_lint_should_not_fire: "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-not-fire"
     ui_baseline_guard: "cd app && node eslint-plugin-onehub-ui/selftest.mjs baseline-guard"
     ui_hook_selftest: "bash .claude/hooks/tests/typecheck-changed.selftest.sh"
+    # Đợt B1 dọn cổng Ops (ui-clean-b1-ops) — một harness, mỗi kiểu kiểm một lệnh
+    ui_b1_suppressions: "node scripts/ui-standards/b1-ops.mjs suppressions"
+    ui_b1_handdrawn: "node scripts/ui-standards/b1-ops.mjs handdrawn"
+    ui_b1_frame: "node scripts/ui-standards/b1-ops.mjs frame"
+    ui_b1_one_way: "node scripts/ui-standards/b1-ops.mjs one-way"
+    ui_b1_dialogs: "node scripts/ui-standards/b1-ops.mjs dialogs"
+    ui_b1_api_contract: "node scripts/ui-standards/b1-ops.mjs api-contract"
+    ui_b1_design_page: "node scripts/ui-standards/b1-ops.mjs design-page"
+    ui_b1_docs: "node scripts/ui-standards/b1-ops.mjs docs"
+    ui_b1_states: "node scripts/ui-standards/b1-ops.mjs states"
+    ui_b1_shell: "node scripts/ui-standards/b1-ops.mjs shell"
+    ui_b1_selftest: "node scripts/ui-standards/b1-ops.mjs selftest"
     ui_b3_palette: "node scripts/ui-standards/b3-check.mjs palette"   # đợt B3 thống nhất biểu đồ (ui-clean-b3-charts)
     ui_b3_contrast: "node scripts/ui-standards/b3-check.mjs contrast"
     ui_b3_data_color: "node scripts/ui-standards/b3-check.mjs data-color"
@@ -53,6 +65,9 @@ executors:
     ui_b3_structure: "node scripts/ui-standards/b3-check.mjs structure"
     ui_b3_docs: "node scripts/ui-standards/b3-check.mjs docs"
     ui_b3_pixels: "node scripts/ui-standards/b3-check.mjs pixels"
+    cloud_url_static: "bash scripts/check-cloud-url.sh static"       # ops-ingest-url-onehub-invest: không còn trỏ project Vercel cũ
+    cloud_url_mutation: "bash scripts/check-cloud-url.sh mutation"   # should-NOT-fire: URL cũ bị bắt ở cả 3 tệp
+    cloud_url_live: "bash scripts/check-cloud-url.sh live"           # cần mạng + ~/.oneinvest/cloud.env; không ghi DB cloud
     ui_b3_selftest: "node scripts/ui-standards/b3-check.mjs selftest"
     glossary_terms: "node scripts/glossary/acceptance.mjs glossary"            # ngôn ngữ chuẩn (glossary-context)
     glossary_w6: "node scripts/glossary/acceptance.mjs w6"
@@ -87,6 +102,8 @@ risk_tiers:
     - "AGENTS.md"
     - "**/AGENTS.md"                                 # chỉ dẫn agent theo module (vd collector/AGENTS.md cho ZCode) — cùng loại **/CLAUDE.md; Mạnh duyệt 2026-10-23
     - "**/CLAUDE.md"
+    - "CONTEXT.md"                                   # bảng thuật ngữ + bối cảnh sản phẩm — văn bản; Mạnh duyệt 2026-10-23
+    - ".claude/rules/**"                             # luật chữ theo đường dẫn cho Claude — văn bản; Mạnh duyệt 2026-10-23
     # Bản đồ sản phẩm — máy sinh, và /acceptance-gate:approve + /acceptance-gate:signoff commit nó CÙNG commit
     # chữ ký. Thiếu dòng này thì chính commit chữ ký làm evidence stale và
     # pre-merge chặn merge, thành vòng không thoát (ADR 0007). Miễn trừ CHỈ an

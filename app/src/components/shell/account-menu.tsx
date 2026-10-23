@@ -38,7 +38,7 @@ const THEME_OPTIONS = [
   { value: "system", label: "Theo hệ thống", icon: <MonitorIcon aria-hidden="true" /> },
 ]
 
-function ThemeSwatches() {
+export function ThemeSwatches() {
   const { theme, setTheme } = useTheme()
   // The menu mounts on open, long after the theme resolves: no hydration gate.
   const current = theme ?? "system"
@@ -62,7 +62,7 @@ function ThemeSwatches() {
   )
 }
 
-function initialsOf(email: string) {
+export function initialsOf(email: string) {
   return email.slice(0, 2).toUpperCase()
 }
 

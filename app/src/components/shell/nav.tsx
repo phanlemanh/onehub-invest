@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { ActivityIcon, CalculatorIcon, GaugeIcon, GitCompareIcon, HouseIcon, MapIcon, PaletteIcon } from "lucide-react"
+import { ActivityIcon, BadgePercentIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
@@ -15,11 +15,18 @@ export interface NavSection {
   icon: ReactNode
   /** Mục đang chọn tính theo URL, không giữ state. */
   match: (pathname: string) => boolean
+  /** Nhóm trên thanh bên của shell Ops (app-shell-36); Invest không dùng. */
+  group?: OpsNavGroup
 }
+
+export type OpsNavGroup = "Giám sát" | "Xử lý" | "Quản trị" | "Hệ thống"
 
 const icon = (Icon: typeof MapIcon) => (
   <Icon className="size-4" aria-hidden="true" />
 )
+
+// Icon trong nút menu của Sidebar: không gắn size, nút tự định cỡ (ReUI layout).
+const glyph = (Icon: typeof MapIcon) => <Icon aria-hidden="true" />
 
 export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
   invest: [
@@ -58,44 +65,58 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       id: "overview",
       label: "Tổng quan",
       href: "/ops",
-      icon: icon(GaugeIcon),
+      icon: glyph(GaugeIcon),
       match: (p) => p === "/ops",
+      group: "Giám sát",
     },
     {
       id: "collections",
       label: "Thu thập",
       href: "/ops/collections",
-      icon: icon(ActivityIcon),
+      icon: glyph(ActivityIcon),
       match: (p) => p.startsWith("/ops/collections"),
+      group: "Giám sát",
     },
     {
-      id: "sources",
-      label: "Nguồn dữ liệu",
-      href: "/ops/sources",
-      icon: icon(PaletteIcon),
-      match: (p) => p.startsWith("/ops/sources"),
+      id: "quality",
+      label: "Chất lượng dữ liệu",
+      href: "/ops/quality",
+      icon: glyph(ShieldCheckIcon),
+      match: (p) => p.startsWith("/ops/quality"),
+      group: "Giám sát",
+    },
+    {
+      id: "review",
+      label: "Hàng chờ duyệt",
+      href: "/ops/review",
+      icon: glyph(InboxIcon),
+      match: (p) => p.startsWith("/ops/review"),
+      group: "Xử lý",
     },
     {
       // Tín hiệu P1 nội bộ + liên hệ người bán (SPL tầng A) — không thuộc Invest.
       id: "deals",
       label: "Căn giá tốt",
       href: "/ops/deals",
-      icon: icon(ActivityIcon),
+      icon: glyph(BadgePercentIcon),
       match: (p) => p.startsWith("/ops/deals"),
+      group: "Xử lý",
     },
     {
-      id: "quality",
-      label: "Chất lượng dữ liệu",
-      href: "/ops/quality",
-      icon: icon(GaugeIcon),
-      match: (p) => p.startsWith("/ops/quality"),
+      id: "sources",
+      label: "Nguồn dữ liệu",
+      href: "/ops/sources",
+      icon: glyph(DatabaseIcon),
+      match: (p) => p.startsWith("/ops/sources"),
+      group: "Quản trị",
     },
     {
       id: "design",
       label: "Thư viện thiết kế",
       href: "/ops/design",
-      icon: icon(PaletteIcon),
+      icon: glyph(PaletteIcon),
       match: (p) => p.startsWith("/ops/design"),
+      group: "Hệ thống",
     },
   ],
 }
