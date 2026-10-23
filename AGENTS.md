@@ -4,6 +4,9 @@
 > `CLAUDE.md`), Codex, Cursor… Trạng thái + quyết định đã chốt: **`docs/ROADMAP.md`**
 > (đọc §1 hiến pháp + §3 quyết định trước khi đề xuất việc mới; KHÔNG hỏi lại
 > điều đã chốt). Làm xong việc: cập nhật ROADMAP §2 as-built + §4 trạng thái.
+> **Việc phát triển sắp làm + mốc: `docs/plan/lo-trinh.json`** (trang `LO-TRINH.html` vẽ tự động; trạng thái máy suy
+> từ `_acceptance/<slug>/`, không ghi tay). Thêm việc bằng `/acceptance-gate:cat-luot`; mở vòng bằng
+> `/feature-loop:feature-loop <mã>`. Bảng «mỗi loại thông tin một chỗ»: ROADMAP §0.
 
 Nền tảng insight đầu tư BĐS Việt Nam (cho thuê ngắn hạn + mua bán). North star:
 pipeline đầu tư 4 giai đoạn (`docs/research/investment-pipeline-4-stages.md`).
@@ -60,7 +63,9 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
     NHẤT với ZCode: giao việc, review `zcode/*`, giữ luật làn + hợp đồng dữ liệu + sổ số
     migration, giao bước triển khai sau merge. Không merge vào `main`.
   - *Điều phối làn merge* (phiên Claude «Setup project Invest và Điều phối») — thứ tự PR,
-    CI, merge trên GitHub, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    CI, merge trên GitHub bằng `gh pr merge`, rồi `git -C ~/dev/onehub-invest pull --ff-only origin main`.
+    Không merge trên máy rồi `git push` lên main — branch protection của `main` từ chối, kể cả
+    token admin (chốt 2026-10-23, hồ sơ `narrow-ask-rules`).
     Không nhắn ZCode, không review `zcode/*`.
 - **Giao tiếp Claude ↔ ZCode = luật tin của plugin `dieu-phoi`** (khối LUAT-TIN): khẩu lệnh
   `GIAO · HỎI · BÁO · NHẬN · XONG · KẸT · TRẢ · HUỶ · MỞ LẠI`, mỗi yêu cầu là một vòng mở có

@@ -1,0 +1,51 @@
+schema_version: 1
+feature_slug: lo-trinh-2310
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.lo_trinh_static
+    expected: "exit 0; dòng 'ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.lo_trinh_static
+    expected: "exit 0; hai dòng ok config (lo_trinh.tep, LO-TRINH.html trong t1_skip_globs)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.lo_trinh_static
+    expected: "exit 0; dòng 'ok   lo-trinh-khoi-tao chạy lại: không đổi gì'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.lo_trinh_static
+    expected: "exit 0; dòng 'ok   product-map --check: PRODUCT-MAP + LO-TRINH khớp'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.lo_trinh_static
+    expected: "exit 0; hai dòng 'răng phủ … xanh' với 37 mã và 14 mã, 0 lỗi, 0 cảnh báo"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.lo_trinh_static
+    expected: "exit 0; dòng 'ok   4 bản chép kit trùng byte với <bản kit>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.lo_trinh_static
+    expected: "exit 0; dòng 'ok   quy định: AGENTS.md đầu tệp + ROADMAP §0 trỏ docs/plan/lo-trinh.json' và LO-TRINH STATIC PASS"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.lo_trinh_mutation
+    expected: "should-NOT-fire: exit 0; 'bắt 6/6 bản đột biến' và LO-TRINH MUTATION PASS"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
