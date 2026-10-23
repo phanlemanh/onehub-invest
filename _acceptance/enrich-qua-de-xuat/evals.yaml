@@ -53,7 +53,7 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.agent
-    expected: "exit 0; ca 'AC-6 bỏ/để sau' trong enrich-db.test.ts xanh: rejected → đề xuất rejected, sale_offers không đổi, chạy lại enrich với cùng giá trị LLM → 0 đề xuất mới, 0 thẻ chờ mới; deferred → đề xuất giữ queued, chạy lại → đúng 1 thẻ chờ mới gắn các đề xuất đó. Chiều đỏ cùng fixture: bỏ ràng buộc duy nhất (offer_id,field,value,source) trong bản sao → ca đỏ với thông điệp ghim 'AC-6 đẩy lại giá trị đã bác'."
+    expected: "exit 0; ca 'AC-6 bỏ/để sau' trong enrich-db.test.ts xanh: rejected → đề xuất rejected, sale_offers không đổi, chạy lại enrich với cùng giá trị LLM → 0 đề xuất mới, 0 thẻ chờ mới; deferred → đề xuất giữ queued, chạy lại → đúng 1 thẻ chờ mới gắn các đề xuất đó. Chiều đỏ cùng fixture: bỏ ràng buộc duy nhất (offer_id,field,value,source) trong bản sao → ca đỏ với thông điệp ghim 'AC-6 đẩy lại giá trị đã bác'. Thêm (S4-r3): ca 'AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin ngoài bộ lọc thiếu field' xanh — tin chỉ còn đề xuất phòng ngủ, thẻ bị hoãn, lượt backlog limit=1 không chỉ định offer → đúng 1 thẻ pending mới cho tin đó; chiều đỏ: câu chọn backlog cũ (chỉ bộ lọc thiếu field + random) → ca đỏ ghim 'AC-6 để sau không mở lại thẻ'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
     paths: [db/migrations/033_enrichment_proposals.sql, agent/scripts/enrich-run.ts, agent/src/enrich/**, agent/tests/enrich-db.test.ts]
 

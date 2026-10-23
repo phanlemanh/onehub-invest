@@ -449,3 +449,26 @@ test("AC-11 chiều đỏ: duyệt thẻ xung đột không chọn thì áp nh�
     assert.deepEqual((await ptypeProposals(c, a)).map((p) => p.status), ["applied", "skipped"]);
   });
 });
+
+test("AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin ngoài bộ lọc thiếu field", async () => {
+  // S4-r3 t6: tin đã đủ loại/đường/WC, chỉ còn đề xuất phòng ngủ → không nằm trong bộ lọc backlog;
+  // thẻ bị hoãn phải được lượt sau (không chỉ định offerIds) mở lại, không tuỳ random().
+  await withTx(async (c) => {
+    const a = await offerWithPost(c, { property_type: "apartment" });
+    await c.query(`UPDATE sale_offers SET street_raw = 'Xuân La', bathrooms = 1, source = 'S05' WHERE offer_id = $1`, [a]);
+    const r1 = await run(c, [a], llmWith({ ...real(0), street: undefined }), resolveWith());
+    assert.equal(r1.reviewIds.length, 1);
+    await c.query(`SELECT decide_enrichment_review($1, 'deferred', 'hitl:test')`, [r1.reviewIds[0]]);
+    await c.query(`UPDATE review_queue SET status='deferred' WHERE id=$1`, [r1.reviewIds[0]]);
+
+    await runEnrich({
+      client: c, runId: "test-ac6-backlog", dry: false, limit: 1,
+      llm: llmWith(null), resolve: resolveWith(), buildings: [],
+    });
+    const cards = await pendingCards(c, a);
+    assert.equal(cards.length, 1, "AC-6 để sau không mở lại thẻ");
+    assert.ok(
+      (await proposals(c, a)).every((p) => p.status === "queued" && Number(p.review_id) === Number(cards[0].id)),
+    );
+  });
+});

@@ -55,12 +55,23 @@ async function selectOffers(c: pg.Client, limit: number, offerIds?: string[]): P
     const { rows } = await c.query(`${OFFER_SELECT} WHERE o.offer_id = ANY ($1) ORDER BY o.offer_id`, [offerIds]);
     return rows;
   }
+  // Offer còn đề xuất chờ mà không nằm trên thẻ đang chờ (thẻ bị «Để sau») ĐI TRƯỚC, kể cả khi
+  // offer không còn khớp bộ lọc thiếu field — không thì thẻ hoãn chỉ quay lại nhờ random() (AC-6,
+  // S4-r3). Phần còn lại của lượt bốc ngẫu nhiên từ backlog như cũ.
   const { rows } = await c.query(
-    `SELECT * FROM (${OFFER_SELECT}
-       WHERE o.source IN ('S03','S05') AND o.kind = 'sale' AND o.confidence IN ('high','medium')
-         AND (o.property_type = 'unknown' OR o.street_raw IS NULL OR o.bathrooms IS NULL)) t
-     WHERE text IS NOT NULL AND length(text) > 20
-     ORDER BY random() LIMIT $1`,
+    `WITH loose AS (
+       SELECT DISTINCT ep.offer_id FROM enrichment_proposals ep
+       WHERE ep.status = 'queued' AND ep.route = 'review'
+         AND NOT EXISTS (SELECT 1 FROM review_queue rq WHERE rq.id = ep.review_id AND rq.status = 'pending')
+     )
+     SELECT * FROM (
+       SELECT t.*, (t.offer_id IN (SELECT offer_id FROM loose)) AS deferred_first FROM (${OFFER_SELECT}
+         WHERE o.offer_id IN (SELECT offer_id FROM loose)
+            OR (o.source IN ('S03','S05') AND o.kind = 'sale' AND o.confidence IN ('high','medium')
+                AND (o.property_type = 'unknown' OR o.street_raw IS NULL OR o.bathrooms IS NULL))) t
+       WHERE t.text IS NOT NULL AND length(t.text) > 20
+     ) s
+     ORDER BY deferred_first DESC, random() LIMIT $1`,
     [Math.max(1, limit)],
   );
   return rows;
