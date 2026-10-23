@@ -4,6 +4,9 @@
 > `CLAUDE.md`), Codex, Cursor… Trạng thái + quyết định đã chốt: **`docs/ROADMAP.md`**
 > (đọc §1 hiến pháp + §3 quyết định trước khi đề xuất việc mới; KHÔNG hỏi lại
 > điều đã chốt). Làm xong việc: cập nhật ROADMAP §2 as-built + §4 trạng thái.
+> **Việc phát triển sắp làm + mốc: `docs/plan/lo-trinh.json`** (trang `LO-TRINH.html` vẽ tự động; trạng thái máy suy
+> từ `_acceptance/<slug>/`, không ghi tay). Thêm việc bằng `/acceptance-gate:cat-luot`; mở vòng bằng
+> `/feature-loop:feature-loop <mã>`. Bảng «mỗi loại thông tin một chỗ»: ROADMAP §0.
 
 Nền tảng insight đầu tư BĐS Việt Nam (cho thuê ngắn hạn + mua bán). North star:
 pipeline đầu tư 4 giai đoạn (`docs/research/investment-pipeline-4-stages.md`).

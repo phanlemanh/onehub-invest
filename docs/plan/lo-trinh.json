@@ -1,0 +1,1575 @@
+{
+  "schema": 1,
+  "ten": "Lộ trình onehub-invest",
+  "ghi_chu": "Thêm việc bằng skill cắt lượt (/acceptance-gate:cat-luot), hoặc viết hàng theo khuôn skills/acceptance/references/lo-trinh-template.json của gói acceptance-gate; mở vòng bằng /feature-loop:feature-loop <mã>.",
+  "moc": [],
+  "hang": [
+    {
+      "ma": "PL1",
+      "cau_giao": "Importer bỏ qua mọi snapshot thử (zalo-mock, e2e, TEST) và không ghi chúng vào stg_*",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "L19: 1.260 post zalo-mock đã vào stg_zalo_posts rồi thành 1.020 tin S03 giả. Làn ZCode (import-*).",
+      "hang": "T2",
+      "slug": "importer-bo-qua-du-lieu-thu",
+      "bat_khi": "Chạy importer trên toàn bộ snapshot hiện có: 0 dòng stg mang snapshot_id thử",
+      "nhom": "du-lieu-that",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "L19a"
+      ]
+    },
+    {
+      "ma": "PL2",
+      "cau_giao": "Bảng canonical không còn tin sinh từ dữ liệu thử, và transform từ chối post thử nếu lọt vào",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "L19: 93% tin S03 là giả; 153/155 bait gap S03 tính trên tin giả; có thể đã lên cloud. Dọn qua reconcile_stale_offers để có audit.",
+      "hang": "T3",
+      "slug": "canonical-khong-tin-gia",
+      "bat_khi": "0 dòng sale_offers và sellers sinh từ snapshot thử; ops_audit có dòng dọn; tính lại bait gap",
+      "nhom": "du-lieu-that",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "L19b"
+      ]
+    },
+    {
+      "ma": "PL3",
+      "cau_giao": "Người duyệt mở /ops/review và thấy mọi trường kèm căn cứ, ảnh tin và toàn văn tin, không có «AI tự tin %», rồi quyết kèm lý do được ghi audit cùng giao dịch",
+      "vai": "Người duyệt",
+      "tieu_chi": 10,
+      "vi_sao": "L04/L15: thẻ hiện % thay căn cứ, gợi ý «apply» gắn cứng, audit sau COMMIT. Backend ảnh đã có (PR #16).",
+      "hang": "T3",
+      "slug": "the-duyet-du-can-cu",
+      "nhom": "the-duyet",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C0.2",
+        "C0.3"
+      ]
+    },
+    {
+      "ma": "PL4",
+      "cau_giao": "Hook Zalo đẩy mọi tin tới collector kèm meta.kev {p, model, threshold, at}, không bỏ tin theo điểm",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Q1 đã chốt (Kev thành nhãn); việc đã giao ZCode (claudedp-2310-11). L06: ~70% tin bị bỏ trước snapshot.",
+      "hang": "T3",
+      "slug": "kev-thanh-nhan",
+      "bat_khi": "Một ngày chạy thật: số tin hook nhận bằng số tin có snapshot; mọi tin có meta.kev",
+      "nhom": "du-lieu-that",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "Z1"
+      ]
+    },
+    {
+      "ma": "PL5",
+      "cau_giao": "Transform ghi phát biểu listing_intent từ meta.kev.p cho mọi tin, không loại tin nào theo Kev khi ngưỡng chưa đo",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "C1.1: lọc là phát biểu ở pipeline, chạy lại được khi đổi ngưỡng.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL4",
+        "PL6"
+      ],
+      "slug": "meta-kev-thanh-phat-bieu",
+      "bat_khi": "Nạp một ngày v3: mọi tin stg có cột kev_*; số tin rao không giảm so với khi chưa có Kev",
+      "nhom": "du-lieu-that",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C1.1"
+      ]
+    },
+    {
+      "ma": "PL6",
+      "cau_giao": "Một sổ từ vựng sinh bảng ref_*, hằng TS/JS, enum prompt và nhãn tiếng Việt; lint đỏ khi có enum viết tay ngoài sổ",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "L07/L08: từ vựng loại BĐS ở 12 chỗ; thiếu listing_intent, offer_status, mã căn, price_basis, giá khoảng (F1).",
+      "hang": "T3",
+      "slug": "so-tu-vung-mot-nguon",
+      "bat_khi": "Cấy một enum viết tay: lint đỏ; mọi CHECK của 025 VALIDATE được",
+      "nhom": "nen-tang",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C1.2"
+      ]
+    },
+    {
+      "ma": "PL7",
+      "cau_giao": "Người gắn nhãn mở màn gắn nhãn trên /ops, gắn trường lõi cho tin của lát mà không thấy giá trị máy đoán, và 20% tin được gắn trùng để đo đồng thuận",
+      "vai": "Người gắn nhãn",
+      "tieu_chi": 9,
+      "vi_sao": "T6 Đo là gốc mọi con số độ tin (§0.2); F5: Mạnh và đội gắn nhãn.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL6"
+      ],
+      "slug": "man-gan-nhan-mu",
+      "nhom": "do-luong",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C1.3"
+      ]
+    },
+    {
+      "ma": "PL8",
+      "cau_giao": "Tập nhãn mẫu sinh từ khuôn tin thật của Ocean Park 1, mang nhãn mẫu, nằm ngoài bảng canonical",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "PL9 cần nhãn trước khi đội gắn xong (việc vận hành). Sinh từ khuôn, không viết tay; tuyệt đối không vào bảng canonical (bài học L19).",
+      "hang": "T2",
+      "dung_tren": [
+        "PL7"
+      ],
+      "slug": "tap-nhan-mau-ocp1",
+      "bat_khi": "Sinh lại hai lần ra cùng tập; 0 dòng mẫu trong sale_offers",
+      "nhom": "do-luong",
+      "dot": "phan-loai-2310",
+      "phu": [],
+      "du_lieu": "sinh-gia"
+    },
+    {
+      "ma": "PL9",
+      "cau_giao": "Người vận hành dữ liệu chạy eval:classify và thấy trên /ops/quality độ đúng từng (cách đọc × trường × phân khúc) theo cận dưới Wilson so với ngưỡng F3",
+      "vai": "Người vận hành dữ liệu",
+      "tieu_chi": 9,
+      "vi_sao": "L05: không tầng nào có tập nhãn; số cũ là độ phủ hoặc đo trên mock. Tiêu chí cần nhãn thật thành ô bỏ qua có tên.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL8"
+      ],
+      "slug": "eval-classify-wilson",
+      "nhom": "do-luong",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C1.4"
+      ],
+      "du_lieu": "gia"
+    },
+    {
+      "ma": "PL10",
+      "cau_giao": "Collector thu danh mục toà · trục · mã căn của Vinhomes Ocean Park 1 từ nguồn công khai vào raw",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "D1/F2: căn gốc căn hộ là dòng danh mục. Làn ZCode.",
+      "hang": "T2",
+      "slug": "thu-danh-muc-ocp1",
+      "bat_khi": "Mọi toà Ocean Park 1 có trong asset_nodes đều có danh sách trục trong raw",
+      "nhom": "danh-muc",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "Z1.2"
+      ]
+    },
+    {
+      "ma": "PL11",
+      "cau_giao": "asset_nodes có cấp trục và căn cho Ocean Park 1, mỗi dòng mang bậc nguồn (xác minh · suy ra mạnh · một lời khai)",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "F2: danh mục cũng có bậc; trục là bản ghi gốc tạm khi môi giới che tầng.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL10"
+      ],
+      "slug": "danh-muc-truc-can",
+      "bat_khi": "Nạp lại danh mục hai lần không nhân dòng; dòng suy ra mạnh có ≥ 3 môi giới độc lập",
+      "nhom": "danh-muc",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C1.5"
+      ]
+    },
+    {
+      "ma": "PL12",
+      "cau_giao": "Người vận hành khai mọi nhóm Zalo, FB, Chợ Tốt trong một sổ nhóm trên /ops, kèm dự án nhóm chuyên",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "vi_sao": "F1: nhóm Zalo đang ở sổ riêng (zalo.group.toggle), nhóm khác ở source_groups.",
+      "hang": "T3",
+      "slug": "so-nhom-mot-noi",
+      "nhom": "danh-muc",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "SN"
+      ]
+    },
+    {
+      "ma": "PL13",
+      "cau_giao": "Bộ đọc ra phát biểu mã căn, toà, dự án, giá dạng khoảng và price_basis cho tin Ocean Park 1, mỗi phát biểu kèm trích dẫn",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "F1: môi giới che tầng (LD2xx11), 52% tin che số giá, 42% ghi «thu về / NET».",
+      "hang": "T2",
+      "dung_tren": [
+        "PL6",
+        "PL11"
+      ],
+      "slug": "doc-ma-can-gia-khoang",
+      "bat_khi": "Trên tập test của lát: cận dưới Wilson đạt ngưỡng F3 nhóm A cho toà/dự án",
+      "nhom": "danh-muc",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C1.6"
+      ]
+    },
+    {
+      "ma": "PL14",
+      "cau_giao": "Nạp lại mọi nguồn không xoá hàng: khoá tin bền, retired_at thay DELETE, mọi khoá ngoại tới sale_offers và listings là RESTRICT",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "L03: quyết định ghép căn đã mất thật; property_offers/candidates còn CASCADE; listings DELETE kéo theo lịch đêm.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL6"
+      ],
+      "slug": "nap-lai-khong-xoa",
+      "bat_khi": "Ba lượt nạp lại liên tiếp: 0 quyết định người mất, 0 liên kết mất",
+      "nhom": "nen-tang",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.1a"
+      ]
+    },
+    {
+      "ma": "PL15",
+      "cau_giao": "Bảng phát biểu append-only và bộ phân xử ba lớp dựng cột canonical kèm provenance, chạy lại ra y nguyên",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "§0.2 T3+T7: thay ghi thẳng + fill-gap (L02, L12).",
+      "hang": "T3",
+      "dung_tren": [
+        "PL14"
+      ],
+      "slug": "phat-bieu-va-phan-xu",
+      "bat_khi": "Xoá cột canonical rồi dựng lại: kết quả trùng từng ô",
+      "nhom": "nen-tang",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.1b"
+      ]
+    },
+    {
+      "ma": "PL16",
+      "cau_giao": "Đề xuất enrich cũ và quyết định người thành phát biểu; mỗi căn có bậc B0–B5 tính được",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "C2.3 + thang bậc FRAMING §3.4.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL15"
+      ],
+      "slug": "de-xuat-thanh-phat-bieu-bac",
+      "bat_khi": "Mọi đề xuất cũ có phát biểu tương ứng; phân bố bậc in ra được theo phân khúc",
+      "nhom": "nen-tang",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.3"
+      ]
+    },
+    {
+      "ma": "PL17",
+      "cau_giao": "Parser mọi nguồn ghi phát biểu có rule_id và vị trí đoạn khớp; sửa parser cập nhật được tin cũ; Chợ Tốt duy trì đường, WC, tầng",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "L12/L13: ENRICH_COLS đóng băng; 2.730 tin S06 thiếu đường dù stg có.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL15"
+      ],
+      "slug": "parser-ghi-phat-bieu",
+      "bat_khi": "Đổi một luật parser rồi nạp lại: phát biểu cũ bị thay, cột cập nhật",
+      "nhom": "doc-tin",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.2"
+      ]
+    },
+    {
+      "ma": "PL18",
+      "cau_giao": "E1 phát biểu theo lớp (tên nhóm, mặc định dự án là suy luận); E2 chạy mù, chỉ được tính khi trích dẫn có thật trong tin",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "L01/L02: tên nhóm vẫn quyết 4 loại; E2 bị mồi đáp án E1.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL15"
+      ],
+      "slug": "e1-e2-theo-lop",
+      "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%",
+      "nhom": "doc-tin",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.4"
+      ]
+    },
+    {
+      "ma": "PL19",
+      "cau_giao": "Mọi phát biểu có observed_at; offer_status (đang chào · hết hạn · đã bán) được phân xử; căn giữ lịch sử giá",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "L18: không có mô hình thời gian; FRAMING «còn hiệu lực», B5.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL15"
+      ],
+      "slug": "thoi-gian-va-hieu-luc",
+      "bat_khi": "Tin quá cửa sổ hiệu lực tự về hết hạn; căn tụt B5 về B4",
+      "nhom": "nen-tang",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.8"
+      ]
+    },
+    {
+      "ma": "PL20",
+      "cau_giao": "Tin căn hộ Ocean Park 1 được gắn vào dòng danh mục ở mức trục hoặc căn bằng một phát biểu trường căn",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "§0.2 D-3: ghép căn là phát biểu; D1/D3.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL13",
+        "PL15"
+      ],
+      "slug": "ghep-tin-vao-danh-muc",
+      "bat_khi": "Trên tập test: cận dưới Wilson của gắn trục đạt ngưỡng nhóm A",
+      "nhom": "danh-muc",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.7"
+      ]
+    },
+    {
+      "ma": "PL21",
+      "cau_giao": "Máy chỉ tự áp ở ô có cận dưới Wilson đạt ngưỡng F3; dưới ngưỡng thì hiện kèm nhãn suy ra hoặc lên thẻ",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Q5/F3 (Mạnh đồng ý 23/10).",
+      "hang": "T2",
+      "dung_tren": [
+        "PL9",
+        "PL16"
+      ],
+      "slug": "tu-ap-theo-so-do",
+      "nhom": "doc-tin",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.5"
+      ],
+      "bat_khi": "Hạ ngưỡng một ô dưới số đo: ô đó ngừng tự áp ngay ở lượt kế, căn liên quan tụt về B2"
+    },
+    {
+      "ma": "PL22",
+      "cau_giao": "Tin P1 đi theo từng tin từ hook tới OneHub Invest, độ tươi p50 ≤ 10 phút, p95 ≤ 30 phút",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "F4: hiện p50 335 phút, p95 1.448 phút tới stg (nạp lô 00:00). Có thể cần ZCode đổi nhịp nạp.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL5",
+        "PL17"
+      ],
+      "slug": "duong-theo-tung-tin",
+      "bat_khi": "Một ngày thật: p50 ≤ 10 phút, p95 ≤ 30 phút từ posted_at tới lúc hiện",
+      "nhom": "nen-tang",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C2.6"
+      ]
+    },
+    {
+      "ma": "PL23",
+      "cau_giao": "Người duyệt thấy mọi phát biểu theo lớp với đoạn trích tô trong toàn văn và bất đồng của mọi cặp nguồn; mỗi quyết định thành nhãn đo",
+      "vai": "Người duyệt",
+      "tieu_chi": 10,
+      "vi_sao": "L04, §3.6, D5 (người dạy, model làm).",
+      "hang": "T2",
+      "dung_tren": [
+        "PL3",
+        "PL16"
+      ],
+      "slug": "the-duyet-v2",
+      "nhom": "the-duyet",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C3.1"
+      ]
+    },
+    {
+      "ma": "PL24",
+      "cau_giao": "resolve-properties dựng căn với stable_key không chứa giá và loại, đọc must_link/cannot_link, và đưa tin P1 vào căn",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "L03/L11: 45 tin gắn 2 căn, 39 căn mồ côi, 0 tin P1 trong properties, «Cùng căn» không hiệu lực.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL14",
+        "PL16"
+      ],
+      "slug": "resolve-can-ben",
+      "bat_khi": "Đổi giá một tin: không sinh căn mới; quyết định Cùng căn giữ qua resolve",
+      "nhom": "can-nha",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C3.2a"
+      ]
+    },
+    {
+      "ma": "PL25",
+      "cau_giao": "judge-entity áp ngưỡng bằng code, LLM chỉ giải thích; mọi lần chấm lưu model và trace; ứng viên sinh thẻ ghép căn",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "L14: luật xác định nằm trong prompt; 134 cặp needs_llm không có thẻ.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL24"
+      ],
+      "slug": "judge-nguong-la-code",
+      "bat_khi": "Mọi ứng viên needs_llm có thẻ; không prompt nào chứa ngưỡng số",
+      "nhom": "can-nha",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C3.2b"
+      ]
+    },
+    {
+      "ma": "PL26",
+      "cau_giao": "Nhà đầu tư xem «Căn giá tốt» so với thước phường × loại; tin chưa rõ loại dùng thước cả phường và mang nhãn «chưa rõ loại hình»",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 8,
+      "vi_sao": "L10, Q10 phương án c.",
+      "hang": "T2",
+      "dung_tren": [
+        "AU9",
+        "PL21"
+      ],
+      "slug": "thuoc-phuong-loai",
+      "nhom": "can-nha",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C3.3"
+      ]
+    },
+    {
+      "ma": "PL27",
+      "cau_giao": "Nhà đầu tư thấy trên OneHub Invest mỗi căn và trường lõi mang độ chắc «đã xác minh · suy ra · chưa biết»",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "vi_sao": "FRAMING «tin cậy» chiều 6; thang bậc §3.4.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL16"
+      ],
+      "slug": "invest-hien-do-chac",
+      "nhom": "can-nha",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "C3.5"
+      ]
+    },
+    {
+      "ma": "PL28",
+      "cau_giao": "Transform gộp tin chỉ có ảnh vào tin chữ liền trước cùng nhóm, cùng người gửi, cách nhau dưới 2 phút; raw giữ nguyên từng event",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "L06: 59/80 tin bị bỏ là tin chỉ ảnh. ZCode đề xuất gộp ở transform (làn Claude) để raw giữ đúng event (§6). Cần L20 sửa trước để tin ảnh không mất lúc ingest.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL4",
+        "PL17"
+      ],
+      "slug": "gop-tin-chi-anh-o-transform",
+      "bat_khi": "Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút trước đều được gộp; raw không đổi",
+      "nhom": "doc-tin",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "Z3.1"
+      ]
+    },
+    {
+      "ma": "PL29",
+      "cau_giao": "Người vận hành mở /ops và thấy chi phí, token, độ trễ của mọi cuộc gọi AI theo việc, model và ngày",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "vi_sao": "D6/§0.4: Qwen chậm và chưa đo độ đúng; cần biết chi phí trước khi đổi model.",
+      "hang": "T2",
+      "slug": "so-cuoc-goi-ai",
+      "nhom": "model",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "CM.1"
+      ]
+    },
+    {
+      "ma": "PL30",
+      "cau_giao": "Bộ đánh giá chạy nhiều model trên cùng tập nhãn và sinh bảng chọn model theo ô (rẻ nhất đạt ngưỡng và độ trễ)",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "§0.4: chọn model theo số đo.",
+      "hang": "T2",
+      "dung_tren": [
+        "PL9",
+        "PL29"
+      ],
+      "slug": "chon-model-theo-o",
+      "bat_khi": "Đổi model của một ô chỉ bằng bảng chọn, không sửa code bộ đọc",
+      "nhom": "model",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "CM.2"
+      ]
+    },
+    {
+      "ma": "PL31",
+      "cau_giao": "Người vận hành thấy chi phí model cộng phút người để đưa một căn lên mỗi bậc, theo phân khúc",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "D6 + sự thật 8 (nỗ lực quy ra tiền).",
+      "hang": "T2",
+      "dung_tren": [
+        "PL16",
+        "PL29"
+      ],
+      "slug": "chi-phi-len-bac",
+      "nhom": "model",
+      "dot": "phan-loai-2310",
+      "phu": [
+        "CM.4"
+      ]
+    },
+    {
+      "ma": "AU1",
+      "cau_giao": "Leak gate của sync cloud đỏ khi role anon còn SELECT được bất kỳ bảng hay view nào",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Audit P12: RLS 0/37 bảng, anon đọc được sessions (token thô). Chặn tái phát sau khi áp 037.",
+      "hang": "T3",
+      "slug": "leak-gate-kiem-anon",
+      "bat_khi": "Cấp lại quyền SELECT cho anon trên một bảng: lượt sync kế dừng và báo đỏ",
+      "nhom": "bao-mat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.2"
+      ]
+    },
+    {
+      "ma": "AU2",
+      "cau_giao": "/api/v1/deals chỉ trả dữ liệu cho token ops cho tới khi tin mock được rút khỏi canonical",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Audit P7: 29/30 deal công khai là tin mock.",
+      "hang": "T3",
+      "slug": "deals-api-tam-dong",
+      "bat_khi": "Gọi không token: 401; gọi bằng token ops: 200",
+      "nhom": "bao-mat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.5"
+      ]
+    },
+    {
+      "ma": "AU3",
+      "cau_giao": "Mọi job đêm thoát khác 0 khi không tới được DB, và watchdog cảnh báo khi DB sập",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Audit L7, L10: DB sập 8 giờ mà mọi job exit 0. Bước thu/nạp trong *-daily.sh là làn ZCode — báo ZCode phần đó.",
+      "hang": "T2",
+      "slug": "job-bao-loi-that",
+      "bat_khi": "Tắt DB rồi chạy từng job: tất cả thoát khác 0, có một cảnh báo",
+      "nhom": "giam-sat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.6a"
+      ]
+    },
+    {
+      "ma": "AU4",
+      "cau_giao": "check-freshness đo độ tươi theo bảng thật của từng nguồn, có SLO cho S05 và S06, không còn dòng quá hạn giả",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Audit L5: 8/8 dòng quá hạn là giả; S05/S06 không có SLO.",
+      "hang": "T2",
+      "slug": "freshness-theo-nguon-that",
+      "bat_khi": "Trên DB hiện tại: chỉ S05 (đứng từ 21/10) báo quá hạn",
+      "nhom": "giam-sat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.6b"
+      ]
+    },
+    {
+      "ma": "AU5",
+      "cau_giao": "audit-all không còn PASS giả ở backup và membership S03, và kiểm các trang /ops ở đúng cổng :3456",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Audit L6: 2 PASS giả, 4 FAIL giả.",
+      "hang": "T2",
+      "slug": "audit-all-noi-that",
+      "bat_khi": "Khi chưa có job backup: mục backup FAIL",
+      "nhom": "giam-sat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.6c"
+      ]
+    },
+    {
+      "ma": "AU6",
+      "cau_giao": "Người vận hành thấy cùng một số SLO trên /ops và /ops/collections",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "Audit L14: hai trang mâu thuẫn (4/14 đạt vs 5/6 nguồn).",
+      "hang": "T2",
+      "dung_tren": [
+        "AU4"
+      ],
+      "slug": "slo-mot-nguon",
+      "nhom": "giam-sat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.6d"
+      ]
+    },
+    {
+      "ma": "AU7",
+      "cau_giao": "DB local tự khởi động lại sau khi Docker hoặc máy khởi động lại",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Audit L7: compose không khai restart; restart policy đang đặt tay.",
+      "hang": "T2",
+      "slug": "db-tu-khoi-dong",
+      "bat_khi": "Khởi động lại Docker: container DB lên lại không cần tay",
+      "nhom": "giam-sat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.7"
+      ]
+    },
+    {
+      "ma": "AU8",
+      "cau_giao": "ROADMAP §2.5, §4 và CONTEXT-PRODUCT §5 khớp thực tế; §4 chỉ trỏ mã hàng của lộ trình",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Audit R8: §4 lệch 9 mục, §2.5 tính cả tin mock. Quy định mới: việc sắp làm chỉ ở docs/plan/lo-trinh.json.",
+      "hang": "T1",
+      "slug": "roadmap-khop-thuc-te",
+      "bat_khi": "Mọi dòng §4 trỏ một mã hàng hoặc ghi đã giao kèm PR",
+      "nhom": "nen-tang",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A0.9"
+      ]
+    },
+    {
+      "ma": "AU9",
+      "cau_giao": "Khu vực Hà Nội chỉ gồm phường/xã của Hà Nội và Đà Nẵng có phường riêng; metrics tính lại theo ranh giới đúng",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "Audit L8, P5: 33 khu vực cấp tỉnh gắn dưới vn-hanoi, 19 listing gán sai; bản đồ Hà Nội phủ cả nước.",
+      "hang": "T3",
+      "slug": "ranh-gioi-khu-vuc-dung",
+      "bat_khi": "ST_Extent của vn-hanoi nằm trong Hà Nội; 0 khu vực tên «Tỉnh…» dưới vn-hanoi",
+      "nhom": "du-lieu-that",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A1.2"
+      ]
+    },
+    {
+      "ma": "AU10",
+      "cau_giao": "Có sổ migration đã áp ở DB local và cloud, và một lệnh so sổ với db/migrations đỏ khi lệch",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Audit L3, P19: không sổ, 038 áp trước merge, 34 lượt cloud thiếu cột.",
+      "hang": "T3",
+      "slug": "so-migration",
+      "bat_khi": "Xoá một dòng sổ trên bản thử: lệnh so đỏ và nêu số migration",
+      "nhom": "nen-tang",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A1.3"
+      ]
+    },
+    {
+      "ma": "AU11",
+      "cau_giao": "CI chạy typecheck và test của app, pipeline, agent, data-api trên mọi PR",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Audit P21: CI chỉ có gate và ui-lint.",
+      "hang": "T2",
+      "slug": "ci-test-module",
+      "bat_khi": "Cấy một lỗi kiểu ở mỗi module: CI đỏ đúng job",
+      "nhom": "nen-tang",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A1.4"
+      ]
+    },
+    {
+      "ma": "AU12",
+      "cau_giao": "/api/v1/ops/coverage trên cloud trả số độ tươi từng nguồn từ bản registry đã gọt tầng A",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Audit P2: coverage cloud 500 vì source_registry có cột tầng A.",
+      "hang": "T3",
+      "slug": "coverage-cloud-got-tang-a",
+      "bat_khi": "Gọi bằng token ops: 200, không trường nào chứa tên nguồn thật",
+      "nhom": "giam-sat",
+      "dot": "cam-mau-2310",
+      "phu": [
+        "A1.5"
+      ]
+    },
+    {
+      "ma": "UI1",
+      "cau_giao": "Người duyệt mở /ops/review và thấy hàng chờ dạng bảng theo solution-agents-5, lọc theo loại thẻ, bấm một hàng mở sheet chi tiết có dải ảnh tin xem được cả ở màn 390px",
+      "vai": "Người duyệt",
+      "tieu_chi": 10,
+      "vi_sao": "Tệp nhiều vi phạm lint nhất (review-card.tsx: 20). Chạy TRƯỚC PL3 vì cùng tệp: UI1 dựng khung, PL3 đổ căn cứ vào sheet. Sửa routes.md: lọc theo loại thẻ/bậc thay «theo độ tin» (trái PL3).",
+      "hang": "T2",
+      "slug": "ops-review-khung-hang-cho",
+      "nhom": "ops-review",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD9"
+      ]
+    },
+    {
+      "ma": "UI2",
+      "cau_giao": "Khách mở trang chủ và /methodology (301 từ /phuong-phap) thấy định nghĩa dạng faq-3, hero và thẻ thị trường không còn màu cứng, lỗi nhóm marketing có error.tsx và lỗi toàn cục có global-error.tsx",
+      "vai": "Khách",
+      "tieu_chi": 10,
+      "vi_sao": "19 vi phạm lint (frame-backdrop 13). Không phụ thuộc. Bản đồ đích chưa tra Mobbin cho nhóm này: vòng tự tra.",
+      "hang": "T2",
+      "slug": "trang-chu-methodology",
+      "nhom": "invest-trang-chu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD7"
+      ]
+    },
+    {
+      "ma": "UI3",
+      "cau_giao": "Nhà đầu tư dùng /yield thấy bảng chi phí vận hành và phần «Dòng tiền vốn vay» dựng bằng data-grid-advanced-7, còn link /vn/<market>/dau-tu cũ chuyển 301 về /yield?area=…#financing",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 11,
+      "vi_sao": "16 vi phạm lint (investment-simulator 12). Gộp /dau-tu vào /yield đã chốt ở bản đồ đích (PR #6).",
+      "hang": "T2",
+      "slug": "yield-dong-tien-von-vay",
+      "nhom": "invest-loi-suat",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD5"
+      ],
+      "ghi_chu": "11 tiêu chí: gỡ simulator và redirect 301 phải đi cùng thay thế, tách ra thì có lúc mất chức năng dòng tiền."
+    },
+    {
+      "ma": "UI4",
+      "cau_giao": "Nhà đầu tư mở So sánh ở /compare (301 từ /so-sanh) và Đã lưu, cả hai có PageHeader, trạng thái tải/trống/lỗi, Đã lưu trống dùng c-empty-11",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "vi_sao": "Hàng đầu tiên thêm redirect 301 vào next.config.ts — làm mẫu cho UI2, UI3. 4 vi phạm lint.",
+      "hang": "T2",
+      "slug": "compare-saved-trang-thai",
+      "nhom": "invest-so-sanh-luu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD6"
+      ]
+    },
+    {
+      "ma": "UI5",
+      "cau_giao": "Nhà đầu tư mở /listing/[id] thấy đầu trang product-detail-5, ảnh tự thu khi có (không có thì ẩn gallery), lịch form-5 không còn điều khiển thô, vùng dữ liệu có Skeleton và Empty",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "vi_sao": "3 vi phạm lint. Ảnh AirDNA đã gỡ (listing-airdna-photos đã ký).",
+      "hang": "T2",
+      "slug": "listing-detail-product-detail-5",
+      "nhom": "invest-listing",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD3"
+      ]
+    },
+    {
+      "ma": "UI6",
+      "cau_giao": "Nhà đầu tư duyệt listing lọc bằng filters (màn hẹp filter-sidebar-5) và bản đồ @mapcn/store-locator gom cụm, vẫn lọc theo khung nhìn khi kéo hoặc zoom",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 9,
+      "vi_sao": "Hàng chạy trước trong các hàng bản đồ phải khai registry @mapcn trong components.json.",
+      "hang": "T2",
+      "slug": "listings-filters-store-locator",
+      "nhom": "invest-listing",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD4"
+      ]
+    },
+    {
+      "ma": "UI7",
+      "cau_giao": "Khách đăng nhập hoặc đăng ký qua auth-4/auth-5 không còn chuyển động bị cấm, gradient tự chọn hay chữ kích thước tuỳ ý, và lỗi nhóm (auth) hiện error.tsx",
+      "vai": "Khách",
+      "tieu_chi": 8,
+      "vi_sao": "7 vi phạm lint. (auth)/** thuộc t3_paths nên tách khỏi UI2.",
+      "hang": "T3",
+      "slug": "auth-hop-chuan",
+      "nhom": "invest-auth",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD8"
+      ]
+    },
+    {
+      "ma": "UI8",
+      "cau_giao": "Nhà đầu tư mở /vn thấy Finder có PageHeader, lưới và sparkline solution-analytics-1, bản đồ @mapcn/choropleth đúng ranh giới, cấp chưa tự thu hiện «đang thu thập», đủ tải/trống/lỗi và ô «chưa đủ mẫu» đúng ở chế độ tối",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "vi_sao": "9 vi phạm lint (bins.ts 8 — MapLibre bắt hex, có thể thành ngoại lệ có tên). Đứng trên AU9: không thì bản đồ Hà Nội trải cả nước.",
+      "hang": "T2",
+      "slug": "finder-analytics-choropleth",
+      "dung_tren": [
+        "AU9"
+      ],
+      "nhom": "invest-finder-insight",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD1"
+      ]
+    },
+    {
+      "ma": "UI9",
+      "cau_giao": "Nhà đầu tư mở Insight thị trường hoặc phường thấy khung solution-analytics-8, KPI của block, bản đồ @mapcn/map, neo mục lục tiếng Anh vẫn giữ link cũ, và mục trống hiện Empty thay vì bị ẩn",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "vi_sao": "Đứng trên AU9 (ranh giới đúng).",
+      "hang": "T2",
+      "slug": "insight-analytics-8-mapcn",
+      "dung_tren": [
+        "AU9"
+      ],
+      "nhom": "invest-finder-insight",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD2"
+      ]
+    },
+    {
+      "ma": "UI10",
+      "cau_giao": "Người vận hành mở «Căn giá tốt» /ops/deals thấy PageHeader, bảng theo block data-grid, đủ trạng thái tải/trống/lỗi, cột tầng A vẫn chỉ admin thấy",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "vi_sao": "B5 của chuẩn UI. Đứng trên PL26 (cùng trang, đổi thước phường × loại). Không đụng AU2 (API).",
+      "hang": "T2",
+      "slug": "ops-deals-data-grid",
+      "dung_tren": [
+        "PL26"
+      ],
+      "nhom": "ops-con-lai",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD11"
+      ]
+    },
+    {
+      "ma": "UI11",
+      "cau_giao": "Người vận hành mở /ops, /ops/collections, /ops/quality, /ops/sources thấy Skeleton đúng bố cục trong Suspense khi tải, lưới trống có Empty kèm một hành động, lỗi thao tác hiện tại chỗ có Thử lại",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "Phần Ops của B4 không có chủ sau khi B4 giải thể. Đứng trên AU6 và PL12 để không đụng tệp.",
+      "hang": "T2",
+      "slug": "ops-trang-thai-tai",
+      "dung_tren": [
+        "AU6",
+        "PL12"
+      ],
+      "nhom": "ops-con-lai",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD12"
+      ]
+    },
+    {
+      "ma": "UI12",
+      "cau_giao": "Người duyệt chọn nhiều thẻ và trả lại hàng loạt (không duyệt hàng loạt), mỗi thẻ trả lại có lý do và được ghi audit trong cùng giao dịch",
+      "vai": "Người duyệt",
+      "tieu_chi": 7,
+      "vi_sao": "routes.md /ops/review: «chỉ trả lại hàng loạt». Cần API mới cạnh review/[id]/decide (t3).",
+      "hang": "T3",
+      "slug": "ops-review-tra-lai-hang-loat",
+      "dung_tren": [
+        "UI1",
+        "PL3"
+      ],
+      "nhom": "ops-review",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD10"
+      ]
+    },
+    {
+      "ma": "UI13",
+      "cau_giao": "Quản trị mở /ops/audit thấy mọi thao tác ops:write (token, lệnh, thời điểm, kết quả, lý do duyệt) và lọc được",
+      "vai": "Quản trị",
+      "tieu_chi": 8,
+      "vi_sao": "portals.md §4 Cổng 2 (C4). API và bảng 018_ops_audit đã có. Thành T3 nếu phải sửa api/v1/ops/audit.",
+      "hang": "T2",
+      "slug": "ops-audit-trang",
+      "dung_tren": [
+        "PL3"
+      ],
+      "nhom": "ops-con-lai",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD16"
+      ]
+    },
+    {
+      "ma": "UI14",
+      "cau_giao": "Nhà đầu tư tick nhiều dòng ở bảng xếp hạng Finder rồi mở So sánh cho các khu vực đã chọn bằng một khay",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 8,
+      "vi_sao": "invest-portal-ia §3.2 P2/P5 «khay So sánh: chưa làm».",
+      "hang": "T2",
+      "slug": "finder-khay-so-sanh",
+      "dung_tren": [
+        "UI8",
+        "UI4"
+      ],
+      "nhom": "invest-ia-con-thieu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD13"
+      ]
+    },
+    {
+      "ma": "UI15",
+      "cau_giao": "Nhà đầu tư bấm «Chia sẻ» trên Insight, Listing và Lợi suất và sao chép được link giữ đủ tham số",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 8,
+      "vi_sao": "invest-portal-ia §1 L12, §5.",
+      "hang": "T2",
+      "slug": "nut-chia-se",
+      "dung_tren": [
+        "UI9",
+        "UI5",
+        "UI3"
+      ],
+      "nhom": "invest-ia-con-thieu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD14"
+      ]
+    },
+    {
+      "ma": "UI16",
+      "cau_giao": "Nhà đầu tư lưu được listing và báo cáo lợi suất và thấy chúng ở các tab Thị trường · Phường · Listing · Báo cáo của Đã lưu",
+      "vai": "Nhà đầu tư",
+      "tieu_chi": 10,
+      "vi_sao": "invest-portal-ia §3 sitemap. Cần migration + actions.ts (t3).",
+      "hang": "T3",
+      "slug": "saved-listing-bao-cao",
+      "dung_tren": [
+        "UI4"
+      ],
+      "nhom": "invest-ia-con-thieu",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD15"
+      ]
+    },
+    {
+      "ma": "UI17",
+      "cau_giao": "Lint UI ra 0 vi phạm khi không còn tệp eslint-suppressions.json",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Đóng sổ case study chuẩn UI (138 → 0). Chạy cuối.",
+      "hang": "T2",
+      "slug": "go-baseline-lint",
+      "dung_tren": [
+        "UI1",
+        "UI2",
+        "UI3",
+        "UI4",
+        "UI5",
+        "UI6",
+        "UI7",
+        "UI8",
+        "UI9",
+        "UI10",
+        "UI11"
+      ],
+      "bat_khi": "Xoá eslint-suppressions.json: npm run lint xanh; bảng trước/sau ui-baseline-2026-10.md đủ cột; mọi trang có trạng thái tải",
+      "nhom": "dong-so-lint",
+      "dot": "giao-dien-2310",
+      "phu": [
+        "GD17"
+      ],
+      "ghi_chu": "6 tiêu chí: hàng đóng sổ, không gộp được vì phải đứng sau mọi hàng giao diện."
+    },
+    {
+      "ma": "NT1",
+      "cau_giao": "Sync cloud không bao giờ COMMIT bảng FILL rỗng và không gãy vì khoá ngoại phía cloud",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Ngoài-4 (Mạnh chọn mở hợp đồng mới) và Ngoài-5 của cloud-sync-atomic. Lỗ còn ở sync-cloud.mjs cleanup() khi pha tráo lỗi phía client.",
+      "hang": "T3",
+      "slug": "sync-cloud-khong-commit-rong",
+      "bat_khi": "Cắt mạng giữa pha tráo (504 giả): areas/saved_markets trên cloud không đổi, lượt sau tự hồi; thêm một FK phía cloud trỏ vào bảng đồng bộ: lượt tráo vẫn xanh",
+      "nhom": "sync-cloud",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH1",
+        "TD2"
+      ]
+    },
+    {
+      "ma": "NT2",
+      "cau_giao": "Mọi đường dữ liệu rời máy (sync và ops-facts) qua cùng một bộ soát tầng A chặn khi lỗi",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "push-ops-facts đẩy nhãn job và log thô chứa tên nguồn thật lên ops_heartbeat, leak gate không kiểm đường này; leak gate cũng chưa soát cột PII.",
+      "hang": "T3",
+      "slug": "soat-tang-a-moi-duong-len-cloud",
+      "bat_khi": "Cấy tên nguồn thật vào payload ops-facts hoặc một cột: lệnh đẩy dừng trước khi gửi; leak gate đỏ khi cloud có cột PII ngoài danh sách cho phép",
+      "nhom": "roi-may",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH2",
+        "TD3"
+      ],
+      "ghi_chu": "Tên nhóm Zalo và tên tài khoản thu thuộc tầng A hay C: Mạnh xác nhận ở Cổng Phạm vi. Chung tệp với AU12 — chạy liền nhau."
+    },
+    {
+      "ma": "NT3",
+      "cau_giao": "Token phiên đăng nhập chỉ lưu dạng băm trong DB",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "vi_sao": "Token đang lưu thô, hạn 30 ngày (runbook 037). Lớp đăng nhập phải tách hàng riêng (luật 3).",
+      "hang": "T3",
+      "slug": "session-token-bam",
+      "bat_khi": "SELECT sessions không trả ra token dùng được; đăng nhập/đăng xuất vẫn chạy; phiên cũ hết hiệu lực khi chuyển",
+      "nhom": "bao-mat",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH3"
+      ],
+      "ghi_chu": "4 tiêu chí: lớp đăng nhập không gộp với lớp khác."
+    },
+    {
+      "ma": "NT4",
+      "cau_giao": "Mọi route API của app nằm trong một sổ bề mặt và chỉ trả đúng thứ sổ cho phép",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "/api/v1/offers công khai, cùng lỗ mock như /deals mà AU2 không phủ; beacon user-events 401 với khách; /api/zalo-media cho admin xem ảnh QR đăng nhập Zalo.",
+      "hang": "T2",
+      "slug": "so-be-mat-api",
+      "bat_khi": "Thêm một route đọc sale_offers công khai chưa khai: test đỏ; gọi /api/v1/offers không token theo đúng chế độ AU2; khách không gây 401 ở beacon; ảnh QR không tải được qua /api/zalo-media",
+      "nhom": "bao-mat",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH4",
+        "TD7",
+        "TD30"
+      ],
+      "ghi_chu": "Thành T3 nếu phải sửa proxy.ts. Chạy sau AU2."
+    },
+    {
+      "ma": "NT5",
+      "cau_giao": "Kho tái lập được: DB trống dựng từ db/migrations xanh, tài liệu vận hành khớp code, sản phẩm chạy thử không lọt vào git",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "012 cập nhật bảng không migration nào tạo, 031 sai alias; runbook 037 và DATA-CONTRACT lệch code; .acceptance-runs/ chưa ignore.",
+      "hang": "T3",
+      "slug": "kho-tai-lap-duoc",
+      "bat_khi": "Lệnh dựng-từ-đầu trên container tạm xanh; mọi câu lệch đã liệt trong hồ sơ được sửa; git status sạch sau một lượt chấm",
+      "nhom": "tai-lap",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH6",
+        "VH14",
+        "VH13g"
+      ],
+      "ghi_chu": "Cách sửa 012/031 (ngoại lệ sửa migration đã commit hay baseline mới theo .claude/rules/migrations.md) Mạnh chọn ở Cổng Phạm vi."
+    },
+    {
+      "ma": "NT6",
+      "cau_giao": "Enrich chạy hết backlog P1 mà không treo thẻ, lỗi LLM có đếm và cảnh báo, và mọi tin có phát biểu của bộ đọc mới",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Ngoài-4/7/8/9 của enrich-qua-de-xuat; đề xuất S03 mất do CASCADE trước 039 (23/10).",
+      "hang": "T2",
+      "slug": "enrich-backlog-ben",
+      "dung_tren": [
+        "PL16",
+        "PL18",
+        "PL2"
+      ],
+      "bat_khi": "Một lượt toàn backlog: không giao dịch nào giữ khoá quá ngưỡng, số lỗi LLM khớp log, mọi tin P1 sạch mock có phát biểu bộ đọc mới",
+      "nhom": "enrich",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "TD9",
+        "TD8"
+      ]
+    },
+    {
+      "ma": "NT7",
+      "cau_giao": "dq-truthful-coverage chạy lại không nhân dòng và ghi overlap mức listing",
+      "vai": "nen",
+      "tieu_chi": 4,
+      "vi_sao": "Plan coverage-worklist Task 6; code còn INSERT thuần.",
+      "hang": "T2",
+      "slug": "dq-truthful-coverage-idempotent",
+      "dung_tren": [
+        "ZC5"
+      ],
+      "bat_khi": "Chạy 3 lần liên tiếp: số dòng dq_check_results không đổi; overlap = matched/universe ở mức listing",
+      "nhom": "do-luong",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "VH12"
+      ],
+      "ghi_chu": "4 tiêu chí: giá trị tăng sau worklist; không có hàng cùng nhóm để gộp."
+    },
+    {
+      "ma": "ZC1",
+      "cau_giao": "Hai tin chỉ có ảnh cùng nhóm cùng thời điểm đều vào raw với sourceId khác nhau",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "vi_sao": "L20 (review §6): tin ảnh trùng sha256(group|ts|text), tin sau bị bỏ lúc ingest. claudedp-2310-14. Làn ZCode, có thể chung nhánh zcode/kev-nhan nhưng hồ sơ tách slug.",
+      "hang": "T2",
+      "slug": "sourceid-tin-anh",
+      "bat_khi": "Bơm hai event ảnh cùng nhóm cùng ts: hai raw item, hai dòng stg",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "L20"
+      ],
+      "ghi_chu": "Hồ sơ do ZCode dựng; cỡ theo hợp đồng của hồ sơ."
+    },
+    {
+      "ma": "ZC2",
+      "cau_giao": "Collector tắt êm không mất tin: huỷ tải ảnh theo hạn, flush định kỳ có hạn chót, thoát khác 0 khi còn tin chưa ghi",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "claudedp-2310-3, nhánh zcode/collector-graceful-shutdown (vòng 2 REJECT, chờ vòng 3). Mỗi lần restart :9210 chạy tay mất buffer.",
+      "hang": "T2",
+      "slug": "collector-graceful-shutdown",
+      "bat_khi": "SIGTERM giữa lúc có tin treo ảnh: mọi tin có snapshot hoặc exit khác 0 có tên tin mất",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH7"
+      ]
+    },
+    {
+      "ma": "ZC3",
+      "cau_giao": "Watchdog Zalo cảnh báo drop-no-mention bất thường, không sót log đầu ngày, và collector phục hồi sau khi DB sập",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "claudedp-2310-5 MỞ LẠI (sót log đầu ngày). Phía collector/hook; phía job pipeline là AU3 — hai hàng không chồng.",
+      "hang": "T3",
+      "slug": "audit-p1-resilience",
+      "bat_khi": "Tắt DB rồi bật lại: collector tự nối lại không mất tin; tăng drop giả: watchdog cảnh báo; dòng log 00:00: được đọc",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH9"
+      ]
+    },
+    {
+      "ma": "ZC4",
+      "cau_giao": "Collector API :9210 và Kev :8009 chạy dưới launchd KeepAlive với plist và script cài trong repo, và media_files S03 có dòng thật",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Audit L2/L11: :9210 chạy tay, không có plist collector-api; N1 đã merge 605a837 nhưng 0 dòng media_files thật.",
+      "hang": "T2",
+      "slug": "collector-api-launchd",
+      "dung_tren": [
+        "ZC2"
+      ],
+      "bat_khi": "Kill tiến trình: launchd dựng lại trong 1 phút; sau một ngày có ảnh: media_files S03 > 0",
+      "nhom": "collector",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH8"
+      ],
+      "ghi_chu": "Cài plist lên máy là việc vận hành (Ra khỏi kho), hàng này giao plist + script + kiểm."
+    },
+    {
+      "ma": "ZC5",
+      "cau_giao": "Job AirDNA/Airbnb nightly theo worklist thay job tuần và không gọi vượt CONDUCT_WINDOW",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "Plan 2026-10-21-coverage-worklist Task 1/2/3/5/7, nhánh zcode/airbnb-worklist (review sơ bộ đạt, chờ bỏ collector.plist khỏi install-cron.sh).",
+      "hang": "T2",
+      "slug": "airbnb-worklist",
+      "dung_tren": [
+        "AU9"
+      ],
+      "bat_khi": "Một đêm thật: worklist chạy đủ id, không lượt gọi nào ngoài cửa sổ; ADR-0007 CCP cập nhật",
+      "nhom": "airbnb",
+      "dot": "zcode-2310",
+      "phu": [
+        "VH11"
+      ],
+      "ghi_chu": "Đứng trên AU9: Đà Nẵng phải có phường trước khi nightly lấy id ĐN (plan Review Focus #4)."
+    }
+  ],
+  "chan_troi": [
+    {
+      "ma": "PH1",
+      "dot": "phan-loai-2310",
+      "cau_giao": "Watchdog cảnh báo khi phân bố điểm Kev trôi",
+      "ly_do": "Kev đã thành nhãn (Q1) nên không còn mất tin; cảnh báo trôi chỉ có nghĩa khi có chuỗi meta.kev đủ dài",
+      "phu": [
+        "Z0.3"
+      ],
+      "mo_lai_khi": "PL4 giao và có 2 tuần meta.kev"
+    },
+    {
+      "ma": "PH2",
+      "dot": "phan-loai-2310",
+      "cau_giao": "Sửa parser S03 theo số đo (phường HCM, area_basis, chữ «bán»)",
+      "ly_do": "Phạm vi sửa chỉ biết sau khi có số nền thật trên tập nhãn của đội",
+      "phu": [
+        "C3.4"
+      ],
+      "mo_lai_khi": "Đội gắn nhãn xong lát Ocean Park 1 và PL9 có số nền thật"
+    },
+    {
+      "ma": "PH3",
+      "dot": "phan-loai-2310",
+      "cau_giao": "Chỉnh lại Kev trên tập nhãn G0",
+      "ly_do": "Cần tập G0 gắn nhãn thật (việc vận hành)",
+      "phu": [
+        "Z3.2"
+      ],
+      "mo_lai_khi": "G0 gắn nhãn xong"
+    },
+    {
+      "ma": "PH4",
+      "dot": "phan-loai-2310",
+      "cau_giao": "Nối AI Gateway: hai khoá, ngân sách, dự phòng về local, lọc tầng A",
+      "ly_do": "Chờ Mạnh chốt M1 (sửa luật Local-first), M2 (tên nhóm), M3 (cổng)",
+      "phu": [
+        "CM.3"
+      ],
+      "mo_lai_khi": "Mạnh chốt M1–M3"
+    },
+    {
+      "ma": "PH5",
+      "dot": "phan-loai-2310",
+      "cau_giao": "property_subtype theo RESO PropertySubType + extension VN",
+      "ly_do": "Đo trước khi build: chưa có số cho thấy thước giá trộn nhà ống với biệt thự",
+      "phu": [
+        "Q7"
+      ],
+      "mo_lai_khi": "Đo phương sai thước theo loại cho thấy cần tách"
+    },
+    {
+      "ma": "PH6",
+      "dot": "phan-loai-2310",
+      "cau_giao": "Trợ lý nhà đầu tư tính tiền riêng, đo theo người dùng",
+      "ly_do": "Chưa bắt đầu làm trợ lý; cần ADR SPL cho hồ sơ nhà đầu tư trước",
+      "phu": [
+        "M4"
+      ],
+      "mo_lai_khi": "Bắt đầu làm trợ lý nhà đầu tư"
+    },
+    {
+      "ma": "AH1",
+      "dot": "cam-mau-2310",
+      "cau_giao": "Backup tuần V1 của DB local",
+      "ly_do": "Cần Mạnh cấp BACKUP_DIR và BACKUP_PASS (audit Q6)",
+      "phu": [
+        "A0.8"
+      ],
+      "mo_lai_khi": "Mạnh cấp BACKUP_DIR và BACKUP_PASS"
+    },
+    {
+      "ma": "AH2",
+      "dot": "cam-mau-2310",
+      "cau_giao": "data-api có bản deploy chạy được",
+      "ly_do": "Audit khuyến nghị hoãn tới sau đợt phân loại (chưa có dữ liệu sạch để phục vụ) — chờ Mạnh quyết Q7 của audit",
+      "phu": [
+        "A1.6"
+      ],
+      "mo_lai_khi": "Mạnh quyết Q7 audit, hoặc PL2 + PL21 giao xong"
+    },
+    {
+      "ma": "UH1",
+      "dot": "giao-dien-2310",
+      "cau_giao": "Bộ lọc dùng chung theo số phòng ngủ và loại phòng",
+      "ly_do": "Pipeline chưa tính metric theo bộ lọc (IA L3)",
+      "phu": [
+        "GDH1"
+      ],
+      "mo_lai_khi": "Pipeline precompute metric theo phòng ngủ/loại phòng"
+    },
+    {
+      "ma": "UH2",
+      "dot": "giao-dien-2310",
+      "cau_giao": "Khoá theo gói (empty-state-5 + pricing-7)",
+      "ly_do": "Chưa chốt gói Pro (IA L13)",
+      "phu": [
+        "GDH2"
+      ],
+      "mo_lai_khi": "Mạnh chốt gói Pro"
+    },
+    {
+      "ma": "UH3",
+      "dot": "giao-dien-2310",
+      "cau_giao": "Điểm One Invest dạng radial",
+      "ly_do": "Chưa có mô hình điểm (IA L7)",
+      "phu": [
+        "GDH3"
+      ],
+      "mo_lai_khi": "Có mô hình điểm đã đo"
+    },
+    {
+      "ma": "UH4",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/pipeline",
+      "ly_do": "Cần câu hỏi quyết định khác /ops/collections và nguồn số lần chạy",
+      "phu": [
+        "GDH4"
+      ],
+      "mo_lai_khi": "Có câu hỏi quyết định riêng và nguồn số lần chạy job"
+    },
+    {
+      "ma": "UH5",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/agents phần hoạt động agent",
+      "ly_do": "Agent Swarm G4 chưa bắt đầu (phần chi phí đã là PL29)",
+      "phu": [
+        "GDH5"
+      ],
+      "mo_lai_khi": "Agent Swarm G4 bắt đầu"
+    },
+    {
+      "ma": "UH6",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/backups",
+      "ly_do": "Chưa có job backup",
+      "phu": [
+        "GDH6"
+      ],
+      "mo_lai_khi": "AH1 giao xong"
+    },
+    {
+      "ma": "UH7",
+      "dot": "giao-dien-2310",
+      "cau_giao": "/ops/console (trigger)",
+      "ly_do": "Giai đoạn C2 theo portals.md",
+      "phu": [
+        "GDH7"
+      ],
+      "mo_lai_khi": "Bắt đầu giai đoạn C2 của Cổng Ops"
+    },
+    {
+      "ma": "NH1",
+      "dot": "nen-tang-2310",
+      "cau_giao": "media_files từ stg lên canonical theo RESO Media",
+      "ly_do": "Chưa có snapshot ảnh v2 thật để đo (0 dòng media_files)",
+      "phu": [
+        "TD11"
+      ],
+      "mo_lai_khi": "ZC4 giao xong và media_files S03 có dòng thật"
+    },
+    {
+      "ma": "NH2",
+      "dot": "nen-tang-2310",
+      "cau_giao": "Bản công khai của app không đỏ test vì đọc tệp mẫu trong agent/",
+      "ly_do": "Gắn với sync-public — Mạnh đang hoãn mọi quyết định repo public",
+      "phu": [
+        "TD31"
+      ],
+      "mo_lai_khi": "Mạnh quyết hướng cho repo public"
+    },
+    {
+      "ma": "NH3",
+      "dot": "nen-tang-2310",
+      "cau_giao": "Chép lại lớp CI khi kit vá lỗ T1-escape",
+      "ly_do": "Lỗi của kit đã bàn giao cho phiên điều phối kit (Mạnh: gửi cho kit, không tự sửa)",
+      "phu": [
+        "TD32"
+      ],
+      "mo_lai_khi": "Kit ra bản vá T1-escape"
+    },
+    {
+      "ma": "NH4",
+      "dot": "nen-tang-2310",
+      "cau_giao": "Sync bỏ qua bảng không đổi",
+      "ly_do": "Ưu tiên thấp; đo trước khi build (sync hiện ~2 phút)",
+      "phu": [
+        "TD33"
+      ],
+      "mo_lai_khi": "Thời gian sync vượt 5 phút hoặc chi phí egress thành vấn đề"
+    },
+    {
+      "ma": "ZH1",
+      "dot": "zcode-2310",
+      "cau_giao": "Discovery sharding 65 query cấp quận",
+      "ly_do": "Phạm vi hoãn của plan coverage-worklist (Giai đoạn 1b)",
+      "phu": [
+        "TD16"
+      ],
+      "mo_lai_khi": "ZC5 giao xong và AU9 có phường đủ"
+    },
+    {
+      "ma": "ZH2",
+      "dot": "zcode-2310",
+      "cau_giao": "Lịch sử LTM AirDNA theo market",
+      "ly_do": "Trần gọi của ADR-0009",
+      "phu": [
+        "TD17"
+      ],
+      "mo_lai_khi": "Mạnh nới trần gọi AirDNA hoặc có nhu cầu đo cụ thể"
+    },
+    {
+      "ma": "SH1",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Liên hệ người bán lên cổng Invest (nới PII_EXCLUDE cột người bán)",
+      "ly_do": "Mạnh chưa quyết (rủi ro Nghị định 13/2023); phải sau khi rút mock để không hiện SĐT giả",
+      "phu": [
+        "TD5"
+      ],
+      "mo_lai_khi": "Mạnh quyết và PL2 giao xong"
+    },
+    {
+      "ma": "SH2",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Tên nguồn S01/S04/bộ dữ liệu mở trên cổng Invest",
+      "ly_do": "Chờ quyết Q4 của audit (ngoại lệ ghi công hay nhãn tầng C)",
+      "phu": [
+        "TD6"
+      ],
+      "mo_lai_khi": "Mạnh quyết Q4 audit"
+    },
+    {
+      "ma": "SH3",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "S06 lộ SĐT theo từng tin (tối đa 50/ngày, top deals)",
+      "ly_do": "Phụ thuộc quyết định liên hệ người bán",
+      "phu": [
+        "TD26"
+      ],
+      "mo_lai_khi": "SH1 mở"
+    },
+    {
+      "ma": "SH4",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "E5 học alias mới vào asset_nodes từ quyết định duyệt",
+      "ly_do": "Mạnh chưa quyết; cần danh mục cấp căn và thẻ duyệt v2",
+      "phu": [
+        "TD10"
+      ],
+      "mo_lai_khi": "Mạnh quyết, PL11 và PL23 giao xong"
+    },
+    {
+      "ma": "SH5",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "asset_nodes thêm phân khu/subzone và geo-polygon",
+      "ly_do": "Cần cấp trục/căn của lát đầu trước",
+      "phu": [
+        "TD24"
+      ],
+      "mo_lai_khi": "PL11 giao xong và lát mở rộng ngang"
+    },
+    {
+      "ma": "SH6",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Ghép listing Airbnb với tin rao bán",
+      "ly_do": "FRAMING: để đợt sau, chờ ghép căn ổn định",
+      "phu": [
+        "TD18"
+      ],
+      "mo_lai_khi": "PL20 và PL24 giao xong"
+    },
+    {
+      "ma": "SH7",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Kev-V media gate và VLM collage",
+      "ly_do": "Cần ảnh thật và cổng model",
+      "phu": [
+        "TD23"
+      ],
+      "mo_lai_khi": "NH1 mở và PH4 giao xong"
+    },
+    {
+      "ma": "SH8",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "MCP server tools (gom C3-wrap và data-api)",
+      "ly_do": "data-api chưa có bản deploy",
+      "phu": [
+        "TD19"
+      ],
+      "mo_lai_khi": "AH2 mở"
+    },
+    {
+      "ma": "SH9",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Consolidation đêm bằng Qwen local",
+      "ly_do": "Chưa có user_events thật; Mạnh chưa quyết ưu tiên",
+      "phu": [
+        "TD20"
+      ],
+      "mo_lai_khi": "Mạnh quyết và có user_events thật"
+    },
+    {
+      "ma": "SH10",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Form hồ sơ nhà đầu tư và export JSON có consent",
+      "ly_do": "Cần ADR SPL cho hồ sơ nhà đầu tư (FRAMING §7 câu 1)",
+      "phu": [
+        "TD21"
+      ],
+      "mo_lai_khi": "ADR SPL hồ sơ nhà đầu tư được chấp nhận"
+    },
+    {
+      "ma": "SH11",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "G4 quản lý danh mục sau mua (comps giá đêm)",
+      "ly_do": "Cần ADR SPL cho hồ sơ (FRAMING §7 câu 1)",
+      "phu": [
+        "TD22"
+      ],
+      "mo_lai_khi": "ADR SPL hồ sơ nhà đầu tư được chấp nhận"
+    },
+    {
+      "ma": "SH12",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Tin «tìm mua / tìm thuê» thành tín hiệu cầu",
+      "ly_do": "Quyết định sản phẩm riêng (review Q8b)",
+      "phu": [
+        "TD27"
+      ],
+      "mo_lai_khi": "Mạnh quyết Q8(b)"
+    },
+    {
+      "ma": "SH13",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Luật hiển thị và gỡ tin của môi giới, kênh báo «tin sai»",
+      "ly_do": "FRAMING §7 câu 5, 6 còn mở",
+      "phu": [
+        "TD28"
+      ],
+      "mo_lai_khi": "Mạnh trả lời FRAMING §7 câu 5, 6"
+    },
+    {
+      "ma": "SH14",
+      "dot": "san-pham-sau-2310",
+      "cau_giao": "Môi giới «nhận căn» để xác nhận hoặc sửa",
+      "ly_do": "FRAMING ghi «đề xuất, sau»; cần căn và độ chắc trên Invest",
+      "phu": [
+        "TD29"
+      ],
+      "mo_lai_khi": "Mạnh quyết, PL24 và PL27 giao xong"
+    }
+  ],
+  "da_bac": []
+}
