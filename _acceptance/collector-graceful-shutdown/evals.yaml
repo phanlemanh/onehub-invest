@@ -63,3 +63,17 @@ evals:
     cmd: config:executors.script.shutdown_lost_exit
     expected: "exit 0; stdout có 'LOST-EXIT PASS'; quá deadline còn 3 tin → exit khác 0 + 'MẤT 3 tin'; tín hiệu lần 2 còn 2 tin → exit khác 0 + 'MẤT 2 tin'; should-NOT-fire: buffer rỗng → exit 0, không có dòng MẤT"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_periodic_hang
+    expected: "exit 0; stdout có 'PERIODIC-HANG PASS'; lượt flush định kỳ (không deadline) đang tải 24 ảnh treo, SIGTERM 2s sau: exit 0 trước 45000ms, tin có trong snapshot, buffer rỗng; should-NOT-fire: không 'quá deadline', không 'MẤT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_stalled_post
+    expected: "exit 0; stdout có 'STALLED-POST PASS'; main.js thật: tin A ack 202, POST B treo nửa body, SIGTERM → exit code 0 signal null sau < 10000ms, tin A có trong snapshot; should-NOT-fire: không 'MẤT', không 'quá deadline'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

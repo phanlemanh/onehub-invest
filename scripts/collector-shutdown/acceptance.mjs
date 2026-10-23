@@ -8,6 +8,8 @@
  *   node scripts/collector-shutdown/acceptance.mjs hang-default # deadline MẶC ĐỊNH 45s + 24 ảnh treo → tin vẫn vào snapshot
  *   node scripts/collector-shutdown/acceptance.mjs inflight    # main.js thật: POST đang dở lúc SIGTERM được làm nốt
  *   node scripts/collector-shutdown/acceptance.mjs lost-exit   # thoát mà buffer còn tin → exit khác 0 + log MẤT
+ *   node scripts/collector-shutdown/acceptance.mjs periodic-hang # SIGTERM lúc lượt flush ĐỊNH KỲ (không deadline) đang tải ảnh treo
+ *   node scripts/collector-shutdown/acceptance.mjs stalled-post # main.js thật: POST gửi nửa body rồi im không giữ shutdown tới deadline
  *
  * Cần `cd collector && npm run build` trước (đọc collector/dist). Mọi snapshot
  * ghi vào thư mục tạm của hệ và được xoá — không chạm collector/snapshots,
@@ -411,8 +413,110 @@ async function modeLostExit() {
   finish("LOST-EXIT");
 }
 
+// ----------------------------------------------------------- periodic-hang
+/** P2 vòng 2 thành eval: lượt flush định kỳ (như setInterval của main.ts, không tham số) đang tải 24 ảnh treo thì SIGTERM tới. */
+async function modePeriodicHang() {
+  const { createAgentServer } = await import(join(COLLECTOR, "dist/api/server.js"));
+  const { installGracefulShutdown } = await import(join(COLLECTOR, "dist/api/graceful.js"));
+  let hits = 0;
+  const media = createServer(() => {
+    hits++; // treo, không trả lời
+  });
+  const port = await listen(media);
+  const root = mkdtempSync(join(tmpdir(), "acc-periodic-"));
+  try {
+    const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k"], media: { allowedHostSuffixes: ["127.0.0.1"] } });
+    const text = `acc-periodic-${Date.now()}`;
+    s.ingest(
+      {
+        agent_id: "acc",
+        group: "acc-group",
+        messages: [{ text, ts: new Date().toISOString(), media: Array.from({ length: 24 }, (_, i) => ({ url: `http://127.0.0.1:${port}/${i}.jpg`, type: "photo" })) }],
+      },
+      "Bearer k",
+    );
+    const periodic = s.flush(); // lượt định kỳ: KHÔNG deadlineAt
+    periodic.catch(() => {});
+    await sleep(2_000);
+    const t0 = Date.now();
+    const logs = [];
+    const exitCode = await new Promise((done) => {
+      const handlers = new Map();
+      installGracefulShutdown(
+        { on: (sig, fn) => handlers.set(sig, fn), off: () => {}, exit: done, log: (l) => logs.push(`${Date.now() - t0}ms ${l}`) },
+        { flush: (o) => s.flush(o), pendingCount: () => s.stats().buffered },
+      );
+      handlers.get("SIGTERM")();
+    });
+    const ms = Date.now() - t0;
+    const snap = readSnapshots(root);
+    console.log(`SIGTERM 2s sau khi lượt định kỳ bắt đầu, 24 ảnh treo: exit ${exitCode} sau ${ms}ms · snapshot ${snap.count} · buffer còn ${s.stats().buffered} · gọi host ảnh ${hits}`);
+    for (const l of logs) console.log(`  log: ${l}`);
+    check(exitCode === 0, "exit 0 (không mất tin)");
+    check(snap.texts.has(text), "tin đã ack có trong snapshot");
+    check(s.stats().buffered === 0, "buffer rỗng lúc thoát");
+    check(ms < 45_000, "thoát trước deadline 45s — ảnh của lượt ĐANG CHẠY bị huỷ");
+    check(!logs.some((l) => /quá deadline|MẤT/.test(l)), "should-NOT-fire: không có dòng 'quá deadline' hay 'MẤT'");
+  } finally {
+    media.closeAllConnections?.();
+    media.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+  finish("PERIODIC-HANG");
+}
+
+// ------------------------------------------------------------ stalled-post
+/** P3 vòng 2 thành eval, trên main.js thật: tin A đã ack; một POST gửi header + nửa body rồi im; SIGTERM. */
+async function modeStalledPost() {
+  const base = stageCollector();
+  const port = await freePort();
+  const child = spawn(process.execPath, [join(base, "dist/api/main.js")], {
+    env: { ...process.env, AGENT_API_KEYS: "acc-key", AGENT_PORT: String(port), CITY: "hanoi" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let out = "";
+  child.stdout.on("data", (c) => (out += c));
+  child.stderr.on("data", (c) => (out += c));
+  const exited = new Promise((done) => child.on("exit", (code, sig) => done({ code, sig })));
+  const sock = { s: null };
+  try {
+    const t0 = Date.now();
+    while (!out.includes(`collector api :${port}`) && Date.now() - t0 < 10_000) await sleep(20);
+    if (!out.includes(`collector api :${port}`)) throw new Error(`main.js không lên trong 10s:\n${out}`);
+
+    const textA = `acc-stall-A-${Date.now()}`;
+    const a = await post(port, new Agent({ keepAlive: false }), textA);
+    sock.s = connect(port, "127.0.0.1");
+    await new Promise((done) => sock.s.once("connect", done));
+    sock.s.on("error", () => {});
+    const body = JSON.stringify({ agent_id: "acc", group: "acc-group", messages: [{ text: "acc-stall-B", ts: new Date().toISOString() }] });
+    sock.s.write(
+      `POST /agent-report HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nAuthorization: Bearer acc-key\r\nContent-Length: ${Buffer.byteLength(body)}\r\n\r\n${body.slice(0, Math.floor(body.length / 2))}`,
+    );
+    await sleep(100); // POST B treo: không bao giờ gửi nốt
+    const tSig = Date.now();
+    child.kill("SIGTERM");
+    const ex = await Promise.race([exited, sleep(60_000).then(() => ({ code: "timeout", sig: null }))]);
+    const ms = Date.now() - tSig;
+    if (ex.code === "timeout") child.kill("SIGKILL");
+    const snap = readSnapshots(join(base, "snapshots"));
+    console.log(`tin A ack ${a.status}, POST B treo nửa body: exit code=${ex.code} signal=${ex.sig} sau ${ms}ms · snapshot ${snap.count}`);
+    for (const l of out.split("\n").filter((l) => l.startsWith("shutdown:"))) console.log(`  log: ${l}`);
+    check(a.status === 202, "tin A được ack 202 trước SIGTERM");
+    check(ex.code === 0 && ex.sig === null, "tiến trình tự exit(0)");
+    check(snap.texts.has(textA), "tin A có trong snapshot dù còn POST treo");
+    check(ms < 10_000, "thoát sau < 10s — không chờ POST treo tới deadline 45s");
+    check(!/MẤT|quá deadline/.test(out), "should-NOT-fire: không có dòng 'MẤT' hay 'quá deadline'");
+  } finally {
+    sock.s?.destroy();
+    if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+    rmSync(base, { recursive: true, force: true });
+  }
+  finish("STALLED-POST");
+}
+
 const mode = process.argv[2];
-const modes = { deadline: modeDeadline, "skip-media": modeSkipMedia, process: modeProcess, "hang-default": modeHangDefault, inflight: modeInflight, "lost-exit": modeLostExit };
+const modes = { deadline: modeDeadline, "skip-media": modeSkipMedia, process: modeProcess, "hang-default": modeHangDefault, inflight: modeInflight, "lost-exit": modeLostExit, "periodic-hang": modePeriodicHang, "stalled-post": modeStalledPost };
 if (!modes[mode]) {
   console.error(`dùng: node scripts/collector-shutdown/acceptance.mjs <${Object.keys(modes).join("|")}>`);
   process.exit(2);
