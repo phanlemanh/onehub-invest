@@ -1,7 +1,8 @@
 // enrich-text.ts — E2: LLM Enrichment Agent (Lớp 3, Qwen 27B local)
 // Chạy SAU E1 context resolver. Decode abbreviations lạ, suy luận địa chỉ
 // từ mô tả, extract features. CHỈ gọi LLM khi E1 không giải quyết đủ.
-// Output → UPDATE sale_offers + properties (enrich, không replace).
+// Output → ĐỀ XUẤT trong enrichment_proposals (agent/src/enrich/run.ts) — LLM
+// không ghi thẳng sale_offers/properties (ROADMAP §1 luật 2, vòng enrich-qua-de-xuat).
 import type { AgentConfig } from "../runtime/loop.js";
 import type { ContextResult } from "./context-resolver.js";
 
