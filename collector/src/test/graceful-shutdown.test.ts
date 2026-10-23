@@ -19,7 +19,8 @@ type Harness = {
 };
 
 function harness(opts: {
-  flush: () => Promise<unknown>;
+  flush: (flushOpts?: { skipMedia?: boolean }) => Promise<unknown>;
+  close?: () => Promise<void> | void;
   deadlineMs?: number;
 }): Harness {
   const order: string[] = [];
@@ -35,7 +36,7 @@ function harness(opts: {
       },
       log: () => {}, // không bẩn mảng order — test chỉ quan tâm thứ tự flush/exit
     },
-    { flush: opts.flush, deadlineMs: opts.deadlineMs },
+    { flush: opts.flush, close: opts.close, deadlineMs: opts.deadlineMs },
   );
   return {
     order,
@@ -120,4 +121,46 @@ test("uninstall gỡ cả hai signal", () => {
   g.uninstall();
   assert.deepEqual(removed.sort(), ["SIGINT", "SIGTERM"]);
   assert.equal(handlers.size, 0, "handler không giữ lại");
+});
+
+test("shutdown: đóng HTTP (close) TRƯỚC khi flush — không nhận POST mới nữa", async () => {
+  const h = harness({
+    close: () => {
+      h.order.push("close");
+    },
+    flush: async () => {
+      h.order.push("flush");
+    },
+  });
+  h.fire("SIGTERM");
+  await sleep(30);
+  assert.deepEqual(h.order, ["close", "flush", "exit"]);
+});
+
+test("shutdown: sát deadline (còn <10s) → flush nhận skipMedia=true (bỏ ảnh giữ tin)", async () => {
+  const seen: boolean[] = [];
+  const h = harness({
+    deadlineMs: 40, // gần hết deadline ngay từ đầu
+    flush: async (flushOpts) => {
+      seen.push(flushOpts?.skipMedia === true);
+    },
+  });
+  h.fire("SIGTERM");
+  await sleep(20);
+  assert.deepEqual(seen, [true]);
+  assert.deepEqual(h.exitCodes, [0]);
+});
+
+test("shutdown: còn dư thời gian → flush nhận skipMedia=false (không bỏ ảnh sớm)", async () => {
+  const seen: boolean[] = [];
+  const h = harness({
+    deadlineMs: 60_000,
+    flush: async (flushOpts) => {
+      seen.push(flushOpts?.skipMedia === true);
+    },
+  });
+  h.fire("SIGTERM");
+  await sleep(20);
+  assert.deepEqual(seen, [false]);
+  assert.deepEqual(h.exitCodes, [0]);
 });
