@@ -5,7 +5,7 @@ slug: ui-clean-b1-ops
 owner: phanlemanh@gmail.com
 risk_tier: T2      # không đụng t3_paths (ops-access/auth/api/v1/ops không sửa)
 surfaces: [ui, config]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-23
 design_doc: docs/superpowers/specs/2026-10-23-ui-clean-b1-ops-design.md
