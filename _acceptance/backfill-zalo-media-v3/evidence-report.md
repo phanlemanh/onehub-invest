@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 54720c572ad7b75411e52a2a5949b8f2de34ef6e
+verified_commit: 5a146dd24789ef62766951974689febb20883e87
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -144,3 +144,7 @@ Round 1: E1, E2, E3 xanh nhưng phát hiện chốt «chỉ chạy main khi gọ
 Round 2: thi công sửa bằng so realpath, thêm AC-4/E4; E1–E4 xanh; E1, E4 red trên baseline đột biến; kiểm tay đường symlink xác nhận đã sửa.
 Round 3: thêm AC-5/E5 (nửa đầu PL32, không đổi code backfill); E1–E5 xanh; E5 red trên baseline đột biến `=== 2`.
 Round 4: rebase lên main `eb61e9d` (PL4 đã vào: importer nhận v3), thêm AC-6/E6 (nửa sau PL32, ca v3 đầu-cuối trong roundtrip); E1–E6 xanh; E1, E4, E5, E6 red trên baseline đột biến; tệp khôi phục sạch, DB không còn dữ liệu giả.
+
+### Re-pin lần 1 — 2026-10-23, do gộp main (PR #40/#42/#43) sau chữ ký
+run_id: repin-20261023T152714Z-30036
+sha: 5a146dd24789ef62766951974689febb20883e87 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
