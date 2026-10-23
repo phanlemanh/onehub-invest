@@ -27,7 +27,7 @@ cả hai transform gọi nó; mọi thứ trong MỘT transaction:
    diện tích, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, price_tier, seller_*),
    `bedrooms = COALESCE(EXCLUDED.bedrooms, sale_offers.bedrooms)`; KHÔNG đụng các cột enrich
    (`property_type`, `street_raw`, `block_raw`, `bathrooms`). Hàng mới vẫn INSERT như cũ.
-2. Gọi `reconcile_stale_offers(source, live_ids, actor)` (migration 037) cho các offer cùng nguồn
+2. Gọi `reconcile_stale_offers(source, live_ids, actor)` (migration 039) cho các offer cùng nguồn
    không còn trong lượt này (offer «cũ»).
 
 **`reconcile_stale_offers`** — với mỗi offer cũ X:
@@ -55,7 +55,7 @@ mọi đường xoá offer chưa đối soát đề xuất (một transform cũ 
 GÃY có tiếng thay vì lặng lẽ xoá công duyệt.
 
 `writeOffers` kiểm hàm `reconcile_stale_offers` tồn tại TRƯỚC khi ghi; thiếu → dừng với thông điệp
-«chưa áp migration 037» (code mới chạy trên DB chưa áp migration không được nửa chừng).
+«chưa áp migration 039» (code mới chạy trên DB chưa áp migration không được nửa chừng).
 
 ### 2.2 Hoàn tác có audit (mục 2) — migration 036
 
@@ -134,8 +134,8 @@ nguồn sinh xung đột đổi.
 
 ### 2.5 Thứ tự triển khai (sau merge — việc của điều phối liên làn)
 
-Áp 036 → 037 lên DB local TRƯỚC lượt `zalo-import-daily` / `apify-facebook-daily` kế tiếp (code
-transform mới dừng có tên nếu chưa có 037). Không lên cloud: `enrichment_proposals`, `ops_audit`,
+Áp 036 → 039 lên DB local TRƯỚC lượt `zalo-import-daily` / `apify-facebook-daily` kế tiếp (code
+transform mới dừng có tên nếu chưa có 039). Không lên cloud: `enrichment_proposals`, `ops_audit`,
 `review_queue` không thuộc `FILL`. Rồi (Hỏi-2) chạy hoàn tác 639/644.
 
 ## 3. Ngoài phạm vi

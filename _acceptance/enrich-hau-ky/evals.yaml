@@ -5,9 +5,9 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.pipeline
-    expected: "exit 0; ca 'AC-1 nạp lại giữ đề xuất' trong pipeline/scripts/write-offers.test.mjs xanh: nguồn thử 'TST' (BEGIN…ROLLBACK, nạp 033+036+037 trong transaction), offer có đề xuất applied/rejected/queued+thẻ chờ và property_type/street_raw/bathrooms đã enrich → writeOffers cùng tập offer (n_reposts tăng) → ảnh chụp (id,status,decided_by,review_id) của mọi đề xuất bằng nhau trước/sau, thẻ chờ còn, field enrich giữ, n_reposts/post_ids mới. Chiều đỏ cùng fixture: chạy khối ghi CŨ (DELETE toàn nguồn + INSERT) trên bản sao → ca đỏ, thông điệp ghim 'AC-1 nạp lại làm mất đề xuất' (hoặc lỗi khoá ngoại RESTRICT, ghim tên ràng buộc)."
+    expected: "exit 0; ca 'AC-1 nạp lại giữ đề xuất' trong pipeline/scripts/write-offers.test.mjs xanh: nguồn thử 'TST' (BEGIN…ROLLBACK, nạp 033+036+039 trong transaction), offer có đề xuất applied/rejected/queued+thẻ chờ và property_type/street_raw/bathrooms đã enrich → writeOffers cùng tập offer (n_reposts tăng) → ảnh chụp (id,status,decided_by,review_id) của mọi đề xuất bằng nhau trước/sau, thẻ chờ còn, field enrich giữ, n_reposts/post_ids mới. Chiều đỏ cùng fixture: chạy khối ghi CŨ (DELETE toàn nguồn + INSERT) trên bản sao → ca đỏ, thông điệp ghim 'AC-1 nạp lại làm mất đề xuất' (hoặc lỗi khoá ngoại RESTRICT, ghim tên ràng buộc)."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-    paths: [pipeline/lib/write-offers.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, db/migrations/037_*.sql, pipeline/scripts/write-offers.test.mjs]
+    paths: [pipeline/lib/write-offers.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, db/migrations/039_*.sql, pipeline/scripts/write-offers.test.mjs]
 
   - id: E2
     criterion: AC-2
@@ -15,7 +15,7 @@ evals:
     cmd: config:executors.test.pipeline
     expected: "exit 0; các ca 'AC-2 offer kế' trong write-offers.test.mjs xanh: X có post p1 + đề xuất applied(property_type=house, X đã mang house) + rejected + queued trên thẻ chờ; lượt mới chỉ có Y chứa p1 (giá khác) → X không còn, đề xuất ở Y cùng status/decided_by, Y.property_type='house' (áp lại), thẻ item_id='enrich:Y', ops_audit enrich:reconcile có cặp X→Y. Biến thể Y đã có thẻ chờ → thẻ X 'deferred', đề xuất lỏng, runEnrich thật trên Y gắn chúng vào thẻ của Y (đúng 1 thẻ chờ). Biến thể Y đã có property_type khác → đề xuất áp lại thành 'skipped'. Biến thể tách: X có p1,p2,p3; Y1 chứa p1,p2, Y2 chứa p3 → đề xuất ở Y1, Y2 không có đề xuất nào; hoà (Y1 p1, Y2 p2) → offer_id nhỏ hơn. Chiều đỏ cùng fixture: Y KHÔNG chung post với X → không chuyển (rơi về AC-4), thông điệp ghim 'AC-2 chuyển nhầm sang offer không chung post'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-    paths: [pipeline/lib/write-offers.mjs, db/migrations/037_*.sql, pipeline/scripts/write-offers.test.mjs, agent/src/enrich/run.ts]
+    paths: [pipeline/lib/write-offers.mjs, db/migrations/039_*.sql, pipeline/scripts/write-offers.test.mjs, agent/src/enrich/run.ts]
 
   - id: E3
     criterion: AC-3
@@ -23,7 +23,7 @@ evals:
     cmd: config:executors.test.pipeline
     expected: "exit 0; ca 'AC-3 trùng khoá giữ dòng đã quyết' xanh với MA TRẬN viết trước: (X rejected, Y queued) → rejected; (X applied, Y superseded) → applied; (X queued, Y rejected) → rejected của Y; (X queued, Y queued) → dòng của Y — 4 assert, mỗi ô đúng một dòng cho khoá ở Y. Chiều đỏ: đảo thứ hạng trong bản sao hàm (queued thắng) → ô đầu đỏ, ghim 'AC-3 mất quyết định của người'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-    paths: [db/migrations/037_*.sql, pipeline/scripts/write-offers.test.mjs]
+    paths: [db/migrations/039_*.sql, pipeline/scripts/write-offers.test.mjs]
 
   - id: E4
     criterion: AC-4
@@ -31,21 +31,21 @@ evals:
     cmd: config:executors.test.pipeline
     expected: "exit 0; ca 'AC-4 offer không kế' xanh: X có đề xuất applied+queued(thẻ chờ), lượt mới không chứa post nào của X → X và đề xuất của X không còn, ops_audit enrich:retire chứa đủ các dòng (id, field, value, status, decided_by, source, run_id) và KHÔNG chứa evidence.text, thẻ X status='rejected' có decision_note, ảnh chụp có property_type/street_raw của X và KHÔNG có seller_phone/seller_name. Round-trip qua đường ghi thật: lượt writeOffers sau có lại post của X (X sinh lại cùng offer_id) → INSERT … SELECT FROM jsonb_populate_recordset(NULL::enrichment_proposals, detail->'proposals') thành công (không lỗi 23503), các dòng chèn lại bằng dòng cũ trừ evidence.text. Chiều đỏ: bỏ khoá 'text' khỏi phép loại trong bản sao → ghim 'AC-4 audit mang đoạn tin gốc'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-    paths: [db/migrations/037_*.sql, pipeline/lib/write-offers.mjs, pipeline/scripts/write-offers.test.mjs]
+    paths: [db/migrations/039_*.sql, pipeline/lib/write-offers.mjs, pipeline/scripts/write-offers.test.mjs]
 
   - id: E5
     criterion: AC-5
     executor: test
     cmd: config:executors.test.pipeline
-    expected: "exit 0; ca 'AC-5 khoá ngoại RESTRICT' xanh: DELETE FROM sale_offers trên offer có đề xuất → lỗi mã 23503, đếm dòng trước/sau bằng nhau; đối chứng dương: offer KHÔNG có đề xuất xoá được. Ca 'AC-5 transform không DELETE' quét đúng hai tệp transform thật: 0 câu 'DELETE FROM sale_offers' và có import writeOffers; chiều đỏ: chuỗi mẫu chứa câu DELETE cũ → bộ quét trả '<tệp>:<dòng>'. Ca 'AC-5 thiếu 037': writeOffers trong transaction đã DROP FUNCTION reconcile_stale_offers → ném lỗi chứa 'chưa áp migration 037', 0 dòng sale_offers đổi."
+    expected: "exit 0; ca 'AC-5 khoá ngoại RESTRICT' xanh: DELETE FROM sale_offers trên offer có đề xuất → lỗi mã 23503, đếm dòng trước/sau bằng nhau; đối chứng dương: offer KHÔNG có đề xuất xoá được. Ca 'AC-5 transform không DELETE' quét đúng hai tệp transform thật: 0 câu 'DELETE FROM sale_offers' và có import writeOffers; chiều đỏ: chuỗi mẫu chứa câu DELETE cũ → bộ quét trả '<tệp>:<dòng>'. Ca 'AC-5 thiếu 039': writeOffers trong transaction đã DROP FUNCTION reconcile_stale_offers → ném lỗi chứa 'chưa áp migration 039', 0 dòng sale_offers đổi."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-    paths: [db/migrations/037_*.sql, pipeline/lib/write-offers.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/write-offers.test.mjs]
+    paths: [db/migrations/039_*.sql, pipeline/lib/write-offers.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/scripts/write-offers.test.mjs]
 
   - id: E6
     criterion: AC-6
     executor: test
     cmd: config:executors.test.agent
-    expected: "exit 0; các ca 'AC-6' trong agent/tests/enrich-revert.test.ts xanh (BEGIN…ROLLBACK, nạp 033+036+037): MA TRẬN viết trước 5 dòng từ các câu ghi của apply_enrichment 033 (property_type: chỉ sale_offers · bedrooms/bathrooms/street_raw: sale_offers + properties · block_raw: chỉ sale_offers) — mỗi dòng áp THẬT bằng apply_enrichment rồi revert, assert hiệu ứng ngược ở đúng các bảng đó và properties.property_type không bị revert đụng; số assert ma trận = 5. Ngoài ma trận: ca land (E1 tiêm qua runEnrich) → property_type='unknown', status='reverted' + reverted_by/at/reason, đề xuất superseded (house) → queued/review, căn liên kết: street bằng giá trị hoàn tác và không offer khác mang → NULL, có offer khác mang → giữ (cặp hai chiều), enrichment_log src=enrich-revert, ops_audit enrich:revert. Ma trận bỏ qua: value-changed, not-applied. Lỗi: actor 'enrich-run:x' và lý do rỗng → RAISE, hash các bảng không đổi. Gọi lại → 0. Chiều đỏ: bản sao hàm bỏ nhánh trả ngược properties → dòng ma trận bedrooms đỏ, ghim 'AC-6 ma trận: properties.bedrooms'; ghim thông điệp từng vế ('AC-6 không trả field về trống', 'AC-6 hoàn tác đè giá trị người khác đã sửa', 'AC-6 máy hoàn tác không cần người')."
+    expected: "exit 0; các ca 'AC-6' trong agent/tests/enrich-revert.test.ts xanh (BEGIN…ROLLBACK, nạp 033+036+039): MA TRẬN viết trước 5 dòng từ các câu ghi của apply_enrichment 033 (property_type: chỉ sale_offers · bedrooms/bathrooms/street_raw: sale_offers + properties · block_raw: chỉ sale_offers) — mỗi dòng áp THẬT bằng apply_enrichment rồi revert, assert hiệu ứng ngược ở đúng các bảng đó và properties.property_type không bị revert đụng; số assert ma trận = 5. Ngoài ma trận: ca land (E1 tiêm qua runEnrich) → property_type='unknown', status='reverted' + reverted_by/at/reason, đề xuất superseded (house) → queued/review, căn liên kết: street bằng giá trị hoàn tác và không offer khác mang → NULL, có offer khác mang → giữ (cặp hai chiều), enrichment_log src=enrich-revert, ops_audit enrich:revert. Ma trận bỏ qua: value-changed, not-applied. Lỗi: actor 'enrich-run:x' và lý do rỗng → RAISE, hash các bảng không đổi. Gọi lại → 0. Chiều đỏ: bản sao hàm bỏ nhánh trả ngược properties → dòng ma trận bedrooms đỏ, ghim 'AC-6 ma trận: properties.bedrooms'; ghim thông điệp từng vế ('AC-6 không trả field về trống', 'AC-6 hoàn tác đè giá trị người khác đã sửa', 'AC-6 máy hoàn tác không cần người')."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
     paths: [db/migrations/036_*.sql, agent/tests/enrich-revert.test.ts, agent/tests/helpers/db.ts]
 
@@ -77,6 +77,6 @@ evals:
     criterion: AC-10
     executor: test
     cmd: config:executors.test.agent
-    expected: "exit 0; ca 'AC-10 migration idempotent' trong enrich-revert.test.ts xanh: trong BEGIN…ROLLBACK áp 036 rồi 037 HAI lần; md5 của (cột public + định nghĩa hàm revert_enrichment/reconcile_stale_offers + ràng buộc enrichment_proposals) sau lần 1 = sau lần 2; đếm dòng enrichment_proposals/sale_offers/review_queue/ops_audit không đổi; 0 dòng trùng. Chiều đỏ: tệp mẫu 'ALTER TABLE … ADD CONSTRAINT' không IF NOT EXISTS/DROP trước → lần 2 lỗi, ghim 'AC-10 không idempotent: <tệp>'."
+    expected: "exit 0; ca 'AC-10 migration idempotent' trong enrich-revert.test.ts xanh: trong BEGIN…ROLLBACK áp 036 rồi 039 HAI lần; md5 của (cột public + định nghĩa hàm revert_enrichment/reconcile_stale_offers + ràng buộc enrichment_proposals) sau lần 1 = sau lần 2; đếm dòng enrichment_proposals/sale_offers/review_queue/ops_audit không đổi; 0 dòng trùng. Chiều đỏ: tệp mẫu 'ALTER TABLE … ADD CONSTRAINT' không IF NOT EXISTS/DROP trước → lần 2 lỗi, ghim 'AC-10 không idempotent: <tệp>'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
-    paths: [db/migrations/036_*.sql, db/migrations/037_*.sql, agent/tests/enrich-revert.test.ts]
+    paths: [db/migrations/036_*.sql, db/migrations/039_*.sql, agent/tests/enrich-revert.test.ts]

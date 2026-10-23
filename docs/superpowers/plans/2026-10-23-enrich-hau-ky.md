@@ -4,7 +4,7 @@
 
 **Goal:** Đề xuất enrich sống qua nạp lại S03/S05, có hàm hoàn tác một lượt áp kèm audit, và luật E1 thôi suy `land` từ tên nhóm.
 
-**Architecture:** Hai migration mới (036 hoàn tác, 037 khoá ngoại RESTRICT + hàm đối soát) là nguồn duy nhất của logic ghi; `pipeline/lib/write-offers.mjs` thay câu DELETE toàn nguồn của hai transform; `agent/scripts/enrich-revert.ts` là CLI người gọi; luật loại BĐS tách thành hàm thuần trong `context-resolver.ts`.
+**Architecture:** Hai migration mới (036 hoàn tác, 039 khoá ngoại RESTRICT + hàm đối soát) là nguồn duy nhất của logic ghi; `pipeline/lib/write-offers.mjs` thay câu DELETE toàn nguồn của hai transform; `agent/scripts/enrich-revert.ts` là CLI người gọi; luật loại BĐS tách thành hàm thuần trong `context-resolver.ts`.
 
 **Tech Stack:** PostgreSQL 16 + PostGIS (plpgsql), Node .mjs (pipeline, `node --test`), TypeScript strict (agent, `node --import tsx --test`), `pg`.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Migration mới là file mới, idempotent (`IF NOT EXISTS`, `CREATE OR REPLACE`, `DROP … IF EXISTS` trước `ADD CONSTRAINT`); không sửa 033. Đầu file: tên, mục đích, nguồn, `KHÔNG sync cloud (PII tầng A)`.
-- Số 037 đang chờ điều phối liên làn xác nhận; đổi số = đổi tên file + chuỗi «037» trong thông điệp/test.
+- Số 039 do điều phối liên làn cấp (037 thuộc phiên RLS, 038 sync_stage); merge 036 trước 039.
 - Không áp migration lên DB local/cloud thật; mọi test DB chạy trong `BEGIN … ROLLBACK`, nạp migration trong transaction sau `pg_advisory_xact_lock(33033)`.
 - Không câu `UPDATE sale_offers|properties` trong `agent/src`, `agent/scripts` (AC-1 vòng trước, `enrich-guard.test.ts`) — CLI chỉ gọi hàm SQL.
 - Actor hoàn tác: regex `^hitl:.+`; lý do: `length(trim(p_reason)) > 0`.
@@ -25,7 +25,7 @@
 1. Lượt nạp rỗng (stg lỗi lọc, query trả 0 tin) — đối soát sẽ xoá mọi offer của nguồn. Kỳ vọng: `writeOffers` từ chối khi `offers.length === 0`, không ghi gì. Test ở Task 2.
 2. Hai offer cũ X1 (rejected) và X2 (queued) cùng đổ về một Y với cùng khoá — kỳ vọng: còn một dòng, `rejected`. Test ở Task 2.
 3. `--ids` chứa id không tồn tại — kỳ vọng: bỏ qua lý do `not-found`, id còn lại vẫn hoàn tác. Test ở Task 1 (SQL) + Task 3 (CLI dry in dòng `not-found`).
-4. Transform mới chạy trên DB chưa áp 037 — kỳ vọng: dừng trước khi ghi, thông điệp «chưa áp migration 037». Test ở Task 2 (AC-5).
+4. Transform mới chạy trên DB chưa áp 039 — kỳ vọng: dừng trước khi ghi, thông điệp «chưa áp migration 039». Test ở Task 2 (AC-5).
 5. Hoàn tác giá trị `street_raw` mà căn có offer khác cùng mang giá trị đó — kỳ vọng: `properties.street` giữ. Test ở Task 1 (cặp hai chiều).
 
 ---
@@ -36,7 +36,7 @@
 
 **Files:**
 - Create: `db/migrations/036_revert_enrichment.sql`
-- Modify: `agent/tests/helpers/db.ts` (nạp 033 → 036 → 037 nếu file tồn tại; export `MIGRATIONS: string[]` đường dẫn đã nạp)
+- Modify: `agent/tests/helpers/db.ts` (nạp 033 → 036 → 039 nếu file tồn tại; export `MIGRATIONS: string[]` đường dẫn đã nạp)
 - Test: `agent/tests/enrich-revert.test.ts`
 
 **Interfaces:**
@@ -55,12 +55,12 @@
 - [ ] **Step 4:** chạy lại → PASS; `cd agent && npm test` xanh (các ca vòng trước không đổi).
 - [ ] **Step 5:** commit `feat(db): 036 revert_enrichment — hoàn tác một lượt áp qua audit`.
 
-### Task 2: Migration 037 + `writeOffers` — nạp lại không xoá đề xuất
+### Task 2: Migration 039 + `writeOffers` — nạp lại không xoá đề xuất
 
 **Phục vụ:** E1, E2, E3, E4, E5 · `independent: false` (cần Task 1)
 
 **Files:**
-- Create: `db/migrations/037_enrichment_proposals_retain.sql`
+- Create: `db/migrations/039_enrichment_proposals_retain.sql`
 - Create: `pipeline/lib/write-offers.mjs`
 - Modify: `pipeline/transform-zalo.mjs:199-230`, `pipeline/transform-fb.mjs:113-140` (thay DELETE + vòng INSERT bằng `BEGIN` → `writeOffers` → `COMMIT`, ROLLBACK khi lỗi)
 - Test: `pipeline/scripts/write-offers.test.mjs`
@@ -68,19 +68,19 @@
 **Interfaces:**
 - Consumes: hàm `apply_enrichment` (033), trạng thái `reverted` (036).
 - Produces (SQL): FK `enrichment_proposals_offer_id_fkey … ON DELETE RESTRICT`; `reconcile_stale_offers(p_source text, p_live text[], p_actor text) RETURNS jsonb` = `{stale, moved, merged, reapplied, retired, pairs:[{from,to}]}`; audit `enrich:reconcile` (mọi lượt có offer cũ) và `enrich:retire` (detail `{offers:[{offer_id, enriched:{property_type,bedrooms,bathrooms,street_raw,block_raw}}], proposals:[<dòng trừ evidence.text>]}`).
-- Produces (JS): `export async function writeOffers(client, source, offers, { actor = \`transform:${source}\` } = {})` → `{ upserted: number, reconcile: object }`. `offers` là mảng object khoá = tên cột sale_offers (có `offer_id`). Cột làm mới khi trùng: mọi khoá có mặt trừ `offer_id`, `source` và `ENRICH_COLS = ['property_type','street_raw','block_raw','bathrooms']`; `bedrooms = COALESCE(EXCLUDED.bedrooms, sale_offers.bedrooms)`. Từ chối: `offers.length === 0` → `Error('writeOffers: lượt nạp rỗng — không đối soát')`; thiếu hàm → `Error('writeOffers: chưa áp migration 037 (thiếu hàm reconcile_stale_offers)')`, cả hai trước mọi lần ghi. Export thêm `scanDeleteAll(files: {path,text}[]) → string[]` ('<tệp>:<dòng>' cho mỗi `DELETE FROM sale_offers`).
+- Produces (JS): `export async function writeOffers(client, source, offers, { actor = \`transform:${source}\` } = {})` → `{ upserted: number, reconcile: object }`. `offers` là mảng object khoá = tên cột sale_offers (có `offer_id`). Cột làm mới khi trùng: mọi khoá có mặt trừ `offer_id`, `source` và `ENRICH_COLS = ['property_type','street_raw','block_raw','bathrooms']`; `bedrooms = COALESCE(EXCLUDED.bedrooms, sale_offers.bedrooms)`. Từ chối: `offers.length === 0` → `Error('writeOffers: lượt nạp rỗng — không đối soát')`; thiếu hàm → `Error('writeOffers: chưa áp migration 039 (thiếu hàm reconcile_stale_offers)')`, cả hai trước mọi lần ghi. Export thêm `scanDeleteAll(files: {path,text}[]) → string[]` ('<tệp>:<dòng>' cho mỗi `DELETE FROM sale_offers`).
 - Thứ hạng «đã quyết» (AC-3): applied=rejected=reverted (2) > queued=superseded=skipped (1); ngang → giữ dòng của Y. Offer kế: chung nhiều post nhất, hoà → `offer_id` nhỏ nhất.
 
-- [ ] **Step 1: Viết test đỏ** (nguồn `'TST'`, `withTx` riêng của pipeline nạp 033/036/037 trong transaction; helper `seed(c, {offer_id, post_ids, ...})`):
+- [ ] **Step 1: Viết test đỏ** (nguồn `'TST'`, `withTx` riêng của pipeline nạp 033/036/039 trong transaction; helper `seed(c, {offer_id, post_ids, ...})`):
   - `AC-1 nạp lại giữ đề xuất` — ảnh chụp `(id,status,decided_by,review_id)` bằng nhau; field enrich giữ; `n_reposts`/`post_ids` mới. Chiều đỏ: hàm `legacyWrite` (DELETE toàn nguồn + INSERT) trên cùng fixture → `assert.rejects` mã `23503` hoặc mất đề xuất, ghim `AC-1 nạp lại làm mất đề xuất`.
   - `AC-2 offer kế` + ba biến thể (Y có thẻ chờ → `runEnrich` từ `../../agent/src/enrich/run.ts` không import được từ .mjs → thay bằng assert: thẻ X `deferred`, đề xuất `review_id` trỏ thẻ không pending; ca gắn vào thẻ Y đo ở agent Task 4), Y đã có giá trị → `skipped`, tách p1/p2/p3 và hoà. Chiều đỏ: Y không chung post → không chuyển, ghim `AC-2 chuyển nhầm sang offer không chung post`.
   - `AC-3 trùng khoá` — ma trận 4 ô viết trước + ca Review Focus 2 (X1 rejected, X2 queued → rejected); `assert.equal(cells.length, 4)`.
   - `AC-4 offer không kế` + round-trip `jsonb_populate_recordset`; assert ảnh chụp không có `text`, không có `seller_phone`.
-  - `AC-5 khoá ngoại RESTRICT` (mã 23503 + đối chứng offer không đề xuất xoá được) · `AC-5 transform không DELETE` (`scanDeleteAll` trên hai file thật = [], đối chứng chuỗi mẫu) · `AC-5 thiếu 037` (DROP FUNCTION trong tx) · Review Focus 1 (mảng rỗng).
+  - `AC-5 khoá ngoại RESTRICT` (mã 23503 + đối chứng offer không đề xuất xoá được) · `AC-5 transform không DELETE` (`scanDeleteAll` trên hai file thật = [], đối chứng chuỗi mẫu) · `AC-5 thiếu 039` (DROP FUNCTION trong tx) · Review Focus 1 (mảng rỗng).
 - [ ] **Step 2:** `cd pipeline && node --test scripts/write-offers.test.mjs` → FAIL.
-- [ ] **Step 3:** Viết 037 (DROP CONSTRAINT IF EXISTS + ADD FK RESTRICT; hàm đối soát gọi `apply_enrichment` cho đề xuất applied đã chuyển sau khi đặt lại `queued`), `write-offers.mjs`, sửa hai transform.
+- [ ] **Step 3:** Viết 039 (DROP CONSTRAINT IF EXISTS + ADD FK RESTRICT; hàm đối soát gọi `apply_enrichment` cho đề xuất applied đã chuyển sau khi đặt lại `queued`), `write-offers.mjs`, sửa hai transform.
 - [ ] **Step 4:** test PASS; `cd pipeline && npm test` xanh.
-- [ ] **Step 5:** commit `feat(pipeline): nạp lại S03/S05 không xoá đề xuất — 037 + writeOffers`.
+- [ ] **Step 5:** commit `feat(pipeline): nạp lại S03/S05 không xoá đề xuất — 039 + writeOffers`.
 
 ### Task 3: CLI `enrich-revert`
 
@@ -118,13 +118,13 @@
   - Ca `AC-2` Y có thẻ chờ: dựng X, Y bằng `insertOffer`, gọi thẳng `SELECT reconcile_stale_offers('S03', ARRAY[Y], 'test')` (không import .mjs từ TS) rồi `runEnrich` trên Y → đúng 1 thẻ chờ chứa đề xuất của X.
 - [ ] **Step 2:** FAIL → **Step 3:** sửa `context-resolver.ts`, fixture, `enrich-db.test.ts` → **Step 4:** `cd agent && npm test` xanh → **Step 5:** commit `fix(agent): E1 không suy land từ tên nhóm — chỉ từ nội dung tin`.
 
-### Task 5: Idempotent 036/037 + tài liệu
+### Task 5: Idempotent 036/039 + tài liệu
 
 **Phục vụ:** E10 · `independent: false` (cần Task 1, 2)
 
 **Files:**
 - Test: `agent/tests/enrich-revert.test.ts` (ca `AC-10 migration idempotent`)
-- Modify: `docs/ROADMAP.md` §2 as-built + §4 trạng thái; `docs/ops/runtime-map.md` (thứ tự áp 036→037 trước lượt nạp đêm)
+- Modify: `docs/ROADMAP.md` §2 as-built + §4 trạng thái; `docs/ops/runtime-map.md` (thứ tự áp 036→039 trước lượt nạp đêm)
 
-- [ ] **Step 1:** Test: trong tx áp 036, 037 hai lần; md5 (cột public + `pg_get_functiondef` hai hàm + `pg_get_constraintdef` ràng buộc enrichment_proposals) và đếm bốn bảng bằng nhau; 0 dòng trùng. Chiều đỏ: chuỗi mẫu `ALTER TABLE enrichment_proposals ADD CONSTRAINT t_x CHECK (true)` áp hai lần → lần 2 lỗi, ghim `AC-10 không idempotent: <tệp>`.
-- [ ] **Step 2:** PASS → cập nhật hai tài liệu → `/verify` → commit `docs: enrich-hau-ky as-built + thứ tự áp 036/037`.
+- [ ] **Step 1:** Test: trong tx áp 036, 039 hai lần; md5 (cột public + `pg_get_functiondef` hai hàm + `pg_get_constraintdef` ràng buộc enrichment_proposals) và đếm bốn bảng bằng nhau; 0 dòng trùng. Chiều đỏ: chuỗi mẫu `ALTER TABLE enrichment_proposals ADD CONSTRAINT t_x CHECK (true)` áp hai lần → lần 2 lỗi, ghim `AC-10 không idempotent: <tệp>`.
+- [ ] **Step 2:** PASS → cập nhật hai tài liệu → `/verify` → commit `docs: enrich-hau-ky as-built + thứ tự áp 036/039`.
