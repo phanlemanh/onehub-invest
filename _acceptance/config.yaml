@@ -85,6 +85,7 @@ executors:
     # review-media-backend — AC-8 cần DB local :5433 (docker one-invest-db); mọi dòng tạo trong giao dịch rồi ROLLBACK
     review_media_roundtrip: "cd app && node --import tsx scripts/review-media-roundtrip.ts"
     review_media_no_cloud: "node scripts/check-review-media-local-only.mjs"
+    review_photos_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-review-photos.mjs"   # review-card-photos AC-7 — cần app chạy TỪ worktree đang kiểm + DB local; tài khoản thử tạo/xoá mỗi lần
     ops_login: "bash scripts/dev-ops-login-check.sh"   # đăng nhập đầu-cuối tài khoản ops thử — cần dev server :3456 + DB local
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
