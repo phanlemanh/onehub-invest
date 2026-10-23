@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { User } from "@/lib/auth";
 import { isAdmin } from "@/lib/ops-access";
+import { isLoginQrFile } from "@/lib/zalo-admin";
 
 /**
  * Lõi của GET /api/zalo-media — phục vụ ảnh tin (PII tầng A, ADR-0007) cho trang /ops.
@@ -84,14 +85,15 @@ const outside = () => new Response("path ngoài vùng cho phép", { status: 403 
 
 async function sendImage(resolved: string, roots: string[], mediaOnly: boolean): Promise<Response> {
   const real = await realRoots(roots);
-  // Lớp 1 — theo chữ: phải là file ảnh nằm trong một gốc (dạng gốc hoặc realpath).
-  if (!isImage(resolved) || (mediaOnly && !inMediaDir(resolved))) return outside();
+  // Lớp 1 — theo chữ: phải là file ảnh nằm trong một gốc (dạng gốc hoặc realpath), không phải ảnh QR
+  // đăng nhập Zalo (quét được là đăng nhập được tài khoản thu — so-be-mat-api AC-6).
+  if (!isImage(resolved) || isLoginQrFile(resolved) || (mediaOnly && !inMediaDir(resolved))) return outside();
   if (![...roots, ...real].some((root) => isInside(root, resolved))) return outside();
   try {
     // Lớp 2 — theo đĩa: đi theo symlink tới đích thật rồi kiểm lại (chặn symlink
     // đặt trong vùng cho phép trỏ ra ngoài, vd. tới ~/.openclaw/openclaw.json).
     const target = await realpath(resolved);
-    if (!isImage(target) || (mediaOnly && !inMediaDir(target))) return outside();
+    if (!isImage(target) || isLoginQrFile(target) || (mediaOnly && !inMediaDir(target))) return outside();
     if (!real.some((root) => isInside(root, target))) return outside();
     const st = await stat(target);
     if (!st.isFile()) return new Response("not found", { status: 404 });
