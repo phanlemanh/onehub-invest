@@ -208,7 +208,7 @@ không hiện), Q11 (= lát dọc, đo trong lát). Q1 đã chốt.
 | F3 | **Ngưỡng**: bao nhiêu % đúng trên tập test thì máy được tự áp (đề xuất 0,95) và một căn được đếm «suy ra» | Đánh đổi tốc độ ↔ rủi ro hiển thị sai |
 | F4 | **Độ tươi mục tiêu** (phút) cho lát | Đổi kiến trúc nhịp nạp |
 | F5 | **Ai gắn nhãn lát đầu** (~200 tin + ~100 cặp): Mạnh hay người thuê | Giờ công, D5 |
-| F7 | **Bậc đích từng phân khúc và công giữ bậc**: đồng ý căn hộ có danh mục → B5, nhà phố → B3, Chợ Tốt làm thước → B3? Bao nhiêu công/tuần dành cho nhịp giữ bậc? | Đích đến và ngân sách nỗ lực liên tục (sự thật 8) |
+| F7 | **Công giữ bậc**: bao nhiêu giờ công/tuần cho nhịp giữ bậc? (Thang B0–B5, N0–N4 và bậc đích — căn hộ có danh mục B5, nhà phố B3, Chợ Tốt B3 — **Mạnh đã duyệt 23/10**) | Ngân sách nỗ lực liên tục (sự thật 8) |
 | F6 | **Dọn tồn đọng** (Q12 cũ): hoàn tác 639/644, đóng thẻ 159/161, áp lại quyết định ghép căn `ops_audit` 4 | Ghi DB, khó đảo |
 
 Q7 (subtype), Q8 (tìm mua/thuê), Q10 (thước «Căn giá tốt» tạm) không chặn lát dọc — để sau lát.

@@ -93,7 +93,7 @@ Câu 4 thay cho «khai thác sau mua» trong `CONTEXT-PRODUCT.md` §2 — cần 
 5. **Truy được nguồn** — ai đăng, khi nào, ở đâu.
 6. **Nói rõ độ chắc** — phân biệt «đã xác minh» · «suy ra» · «chưa biết»; không trình bày suy đoán như sự thật.
 
-### 3.4 Thang bậc dữ liệu [đề xuất]
+### 3.4 Thang bậc dữ liệu (Mạnh duyệt 23/10)
 
 **Bậc của một căn** — mỗi bậc gồm mọi điều của bậc dưới:
 
@@ -193,11 +193,12 @@ người đăng đã giấu.
 4. **Nguồn danh mục cụ thể** (D1) — chủ đầu tư nào, bản đồ nào, địa chính; mua hay thu; ưu tiên dự án nào trước.
 5. **Luật hiển thị tin của môi giới** — hiện gì, ghi công thế nào, gỡ thế nào khi họ yêu cầu.
 6. **Kênh phản hồi «tin sai»** — với D2 (đội là người dùng đầu tiên), đặt ngay trên trang hiển thị?
+7. **Công giữ bậc** — bao nhiêu giờ công/tuần cho nhịp gắn nhãn, đo lại, làm mới danh mục, quét hiệu lực (§3.4).
 
 ## 8. Claude đã tự chọn (Mạnh kiểm khi đọc)
 
-- North star là phân bố theo bậc (§3.4); bậc đích từng phân khúc (căn hộ có danh mục B5, nhà phố B3, Chợ Tốt làm
-  thước B3) là đề xuất của Claude — Mạnh chỉnh khi đọc.
+- North star là phân bố theo bậc (§3.4); thang B0–B5, N0–N4 và bậc đích từng phân khúc (căn hộ có danh mục B5,
+  nhà phố B3, Chợ Tốt làm thước B3) — Mạnh duyệt 23/10. Còn mở: số công/tuần cho nhịp giữ bậc (§7).
 - **Listing cho thuê ngắn hạn (S01)** lúc này **không** ghép vào căn gốc: lợi suất STR dùng thước phường × loại.
   Ghép listing Airbnb ↔ tin rao bán (Airbnb không lộ địa chỉ) để đợt sau, khi căn gốc của tin rao đã ổn.
 - Trường «thuộc căn» / «thuộc tin» theo danh sách §3.1 — có thể dời một trường khi làm thật.
@@ -210,4 +211,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | Ngày | Đổi gì | Ai |
 |---|---|---|
 | 2026-10-23 | Bản đầu: mục đích, hai phía một lõi, sáu chiều «tin cậy», thước đo; D1–D5 | Mạnh duyệt · Claude ghi |
-| 2026-10-23 | Thêm sự thật «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh) → thang bậc căn B0–B5, bậc năng lực N0–N4 (§3.4); north star thành phân bố theo bậc | Mạnh nêu · Claude đề xuất thang |
+| 2026-10-23 | Thêm sự thật «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh) → thang bậc căn B0–B5, bậc năng lực N0–N4 (§3.4); north star thành phân bố theo bậc | Mạnh nêu · Claude đề xuất thang · Mạnh duyệt thang + bậc đích |
