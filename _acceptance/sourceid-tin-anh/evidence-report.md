@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9fc333634a2629507f93fd75518a4297bc07432d
+verified_commit: 7617e4a21b697fb63ce8745f4da734c1affa8faf
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -160,3 +160,7 @@ none — mọi eval đều tất định (runs: 1). E1–E4 chạy chung lệnh 
 
 Round 1: 5/5 eval PASS; không có lỗi chạm tiêu chí. Harness có một khiếm khuyết (skipMedia không có tác dụng) ghi
 ở Known limits. Các phát hiện ngoài hợp đồng để người quyết.
+
+### Re-pin lần 1 — 2026-10-23, do hoá cũ do merge origin/main d72479f (ZC3 PR #31) vào nhánh
+run_id: repin-20261023T103114Z-38290
+sha: 7617e4a21b697fb63ce8745f4da734c1affa8faf · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng

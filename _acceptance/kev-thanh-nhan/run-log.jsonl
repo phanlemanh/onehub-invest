@@ -6,3 +6,4 @@
 {"ts":"2026-10-23T09:49:51Z","round":1,"evalId":"E6","run_id":"kev-thanh-nhan-E6-20261023T094951","exit_code":0,"cmd":"grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"}
 {"ts":"2026-10-23T09:49:51Z","round":1,"evalId":"E7","run_id":"kev-thanh-nhan-E7-20261023T094951","exit_code":0,"cmd":"node scripts/kev-nhan/acceptance.mjs import-versions"}
 {"ts":"2026-10-23T09:49:52Z","round":1,"evalId":"E8","run_id":"kev-thanh-nhan-E8-20261023T094952","exit_code":0,"cmd":"node scripts/kev-nhan/acceptance.mjs watchdog-l1"}
+{"ts":"2026-10-23T10:30:52Z","kind":"repin","run_id":"repin-20261023T103041Z-17532","sha":"7617e4a21b697fb63ce8745f4da734c1affa8faf","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0},"wall_s":11.2,"so_lenh":12,"tong_ket":{"ket_cuc":"xanh","phut":0.2,"so_lenh":12,"model_goi":0,"model_carry":0,"chap_chon":0}}
