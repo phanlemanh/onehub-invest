@@ -5,9 +5,11 @@ slug: audit-all-noi-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-23-audit-all-noi-that-design.md
 lo_trinh_ma: AU5
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: audit-all-noi-that
@@ -28,7 +30,7 @@ Source input: hàng AU5 `docs/plan/lo-trinh.json` + ô cơ hội `_acceptance/au
 - AC-2: Given cùng hộp (PATH chỉ gồm thư mục bản giả + `/usr/bin:/bin`, `HOME` tạm), When CLI OpenClaw (a) không có — ca kiểm trước `command -v openclaw` thất bại và `$HOME/.openclaw/bin/openclaw` không tồn tại trong hộp, (b) bản giả in danh sách CÓ id nhóm, (c) bản giả in danh sách KHÔNG có id nhóm, Then (a) `⚠️` «không kiểm được membership», (b) `✅` còn membership và nhật ký bản giả ghi đúng 1 lần gọi, (c) `⚠️` rời nhóm — không đường nào ngoài (b) ra PASS.
 - AC-3: Given hàm `count_matches` của script, When đếm trên tệp vắng, tệp 0 khớp, tệp 3 khớp và trên stdin, Then in đúng MỘT dòng số nguyên `0`, `0`, `3`, đúng số; khi chạy nguyên script với log pipe (a) vắng và (b) có mà 0 khớp, dòng gate `gate <số> pass/<số> skip` mang đúng hai số nguyên; và mọi `grep -c` trong `audit-all.sh` chỉ nằm trong thân `count_matches`.
 - AC-4: Given `curl` giả ghi mọi URL, When chạy script không đặt `OPS_BASE_URL`, Then bốn trang `/ops`, `/ops/collections`, `/ops/quality`, `/ops/sources` được gọi ở `http://localhost:3456` và không URL nào chứa `:3000`; đặt `OPS_BASE_URL=http://localhost:4999` thì bốn trang đi tới cổng đó.
-- AC-5: Given `curl` giả trả mã cho trang `/ops`, When mã là 200, 307, 500, Then dòng tương ứng là `✅` · `⚠️` «chưa đăng nhập» · `❌` — 307 không còn được tính PASS (cách kiểm trang sau đăng nhập theo đáp án Hỏi-1).
+- AC-5: Given `curl` giả trả mã cho trang `/ops`, When mã là 200, 307, 500, Then dòng tương ứng là `✅` · `⚠️` «chưa đăng nhập» · `❌` — 307 không còn được tính PASS và dòng ⚠️ trỏ `scripts/dev-ops-login-check.sh` để kiểm sau đăng nhập (Hỏi-1 = A, Mạnh 23/10).
 - AC-6: Given hộp giả (PATH chỉ thư mục bản giả + `/usr/bin:/bin`; mọi bản giả `docker`, `curl`, `launchctl`, `security`, `openclaw` ghi nhật ký lời gọi), When chạy trọn script, Then script chạy tới dòng `TỔNG KẾT: <p> PASS · <f> FAIL · <l> LIMITED` với ba số bằng đúng số dòng ✅/❌/⚠️ đã in, tập lệnh ngoài được gọi nằm trong danh sách bản giả (không `curl`/`docker`/`openclaw` thật nào chạy), và `ROOT` trỏ cây tạm (log đọc ở `<cây tạm>/pipeline/logs`).
 - AC-7: Given `.claude/skills/ops-check/SKILL.md` (bước audit), When người vận hành đọc, Then biết backup chưa cài là FAIL, `/ops` kiểm ở `OPS_BASE_URL` (mặc định `:3456`) và 307 nghĩa là chỉ thấy trang sống — muốn kiểm trang thật thì chạy `scripts/dev-ops-login-check.sh`. (judgment)
 
