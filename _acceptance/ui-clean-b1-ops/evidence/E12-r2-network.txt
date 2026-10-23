@@ -1,0 +1,16 @@
+E12 round 2 — network during step1-step2 (open delete dialog, cancel) on /ops/sources @ http://localhost:3457
+fetch/xhr (in-page interceptor): 0
+resource timing entries: 3
+  fetch http://localhost:3457/api/v1/ops/zalo/login?account=default
+  fetch http://localhost:3457/api/v1/ops/zalo/login?account=default
+  css http://localhost:3457/_next/static/media/6306c77e7c8268e4-s.2dbetqa9o8jxf.woff2
+cdp Network.requestWillBeSent: 2
+  undefined undefined 
+  GET http://localhost:3457/_next/static/media/6306c77e7c8268e4-s.2dbetqa9o8jxf.woff2 Font
+non-GET to /api/v1/ops/source-groups: 0
+zalo account menus: 1, non-default: 0
+
+-- lần lặp kiểm thứ hai (mở hộp + Huỷ), resource timing kèm responseStatus --
+delete buttons after cancel: 7
+
+non-GET to /api/v1/ops/source-groups: 0 (resource timing không có method; mọi entry source-groups được tính)

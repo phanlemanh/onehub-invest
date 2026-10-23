@@ -1,0 +1,5 @@
+E14 — /ops/design (CDP Network trên trang, ego-browser). Tĩnh bỏ qua theo luật phạm vi.
+## /ops/design light: app(non-static)=1 bad=0
+   GET http://localhost:3457/ops/design [Document] 200 
+## /ops/design dark: app(non-static)=1 bad=0
+   GET http://localhost:3457/ops/design [Document] 200 
