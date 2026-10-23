@@ -84,6 +84,19 @@ node pipeline/sync-cloud.mjs
   `SAVED_MARKETS_DOI` là prod đã đọc thấy rỗng/đổi dữ liệu người dùng — dừng, báo lại.
 - Tự kiểm máy đo (không gọi mạng): `node pipeline/scripts/cloud-sync-watch.mjs --selftest`.
 
+### Lượt thử thật 2026-10-23 (agent chạy theo yêu cầu của Mạnh, sau khi áp 038)
+
+- Migration 038 áp lúc ~12:18 (+07); kiểm `t | f | f`.
+- Lượt bản mới 12:29–12:31 (+07), run `20261023052923-9a491b`: 282.640 dòng, 21 bảng; catalog 4.8s · read 0.6s ·
+  stage 86.3s · swap 14.2s · gate 18.6s; tổng 124.4s; leak gate PASS.
+- `cloud-sync-watch` 7 phút: 208 lần đọc, 0 lỗi, không bảng nào về 0, `saved_markets` không đổi.
+- Sau lượt: `nights` cloud 2026-10-01…2027-09-30 (khớp local, hết lùi một ngày); 12.415/12.415 `seller_ref`
+  dạng `S0x:<số>`; `sync_stage.rows` 0 dòng.
+- Hai [GIẢ ĐỊNH] của hợp đồng đã đo được: Management API chạy trọn `BEGIN … COMMIT` trong một lời gọi;
+  nhát tráo 14s, dưới giới hạn thời gian của kênh.
+- Tới lúc merge, lượt launchd 15' vẫn chạy bản cũ (TRUNCATE, ngày lùi, `seller_ref` thô) — sau merge + pull
+  checkout chính thì bản mới thay hẳn.
+
 ## Lùi về bản cũ
 
 `git revert` các commit `feat(pipeline): sync-cloud nguyên tử…` trên `main`, pull vào checkout chính.
