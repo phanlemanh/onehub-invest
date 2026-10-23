@@ -24,7 +24,7 @@ Vì sao: Audit L7, L10: DB sập 8 giờ mà mọi job exit 0. Bước thu/nạp
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Tắt DB rồi chạy từng job: tất cả thoát khác 0, có một cảnh báo» chưa?
-- Kết quả nào là SỐNG: [đề xuất] Tắt DB rồi chạy từng job: tất cả thoát khác 0, có một cảnh báo
-- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Tắt DB rồi chạy từng job: tất cả thoát khác 0, có một cảnh báo» khi hết timebox
+- Câu hỏi phép đo trả lời: đã đạt «Tắt DB rồi chạy từng job: tất cả thoát khác 0» chưa? (vế «có một cảnh báo» chuyển sang ngưỡng ZC3 — Mạnh chốt Hỏi-2 ở Cổng Phạm vi 23/10)
+- Kết quả nào là SỐNG: Tắt DB rồi chạy từng job: tất cả thoát khác 0
+- Kết quả nào là CHẾT: chưa đạt «Tắt DB rồi chạy từng job: tất cả thoát khác 0» khi hết timebox
 - Timebox: …
