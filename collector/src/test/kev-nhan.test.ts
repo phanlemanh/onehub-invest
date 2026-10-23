@@ -73,3 +73,22 @@ test("kev-nhãn: p=null (gate down) vẫn nhận, meta.kev.p = null", async () =
   assert.equal((items[0].meta.kev as { p: number | null }).p, null);
   assert.ok(existsSync(join(root, "hanoi", m.snapshotId)));
 });
+
+test("kev-nhãn: flush tin có kev → manifest khai schemaVersion 3 (PL4, claudedp-2310-11 mở lại)", async () => {
+  const root = fresh();
+  const s = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  s.ingest(
+    {
+      agent_id: "openclaw-hook",
+      group: "g",
+      messages: [{ text: "manifest phải là v3", ts: "2026-10-23T03:03:00Z", kev: { p: 0.91, model: "kev-latest", threshold: 0.9, at: "2026-10-23T03:03:00Z" } }],
+    },
+    "Bearer k1",
+  );
+  const m = await s.flush();
+  assert.ok(m);
+  const manifest = JSON.parse(readFileSync(join(root, "hanoi", m.snapshotId, "manifest.json"), "utf8"));
+  assert.equal(manifest.schemaVersion, 3, "hợp đồng DATA-CONTRACT v3 — bộ ghi phải khai đúng");
+  const items = snapshotItems(root, m.snapshotId);
+  assert.ok((items[0].meta as { kev?: unknown }).kev, "items có meta.kev");
+});
