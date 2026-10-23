@@ -61,9 +61,15 @@ evals:
   - id: E9
     criterion: AC-8
     executor: script
-    cmd: config:executors.design.gate
-    paths: [app/src/components/ops/review-photos.tsx, app/src/components/ops/review-card.tsx]
-    expected: "exit 0 — không P0 a11y/contrast trên component ảnh và thẻ"
+    cmd: config:executors.script.review_photos_design_gate
+    expected: "exit 0 — không P0 a11y/contrast trên component ảnh (review-photos.tsx)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.review_card_design_gate
+    expected: "exit 0 — không P0 a11y/contrast trên thẻ duyệt (review-card.tsx)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E10
