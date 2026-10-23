@@ -1,0 +1,72 @@
+schema_version: 1
+feature_slug: supabase-lock-anon-rls
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.supabase_lock_sim
+    expected: "exit 0; vế phải-bắn: PASS giả lập tái hiện lỗ + PASS trước: anon GET /sessions = 200; sau: PASS rel_api_open=0, seq_api_open=0, fn_api_exec=0; should-NOT: anon/authenticated SELECT/INSERT sessions, users, sale_offers, sellers, saved_markets, v_ruler_p2_area → permission denied; PostgREST anon /sessions, /users, /sale_offers = 401"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.supabase_lock_sim
+    expected: "exit 0; PASS sau: tables_rls_off=0; PASS sau: views_definer=0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.supabase_lock_static
+    expected: "exit 0; should-NOT: PASS 037 không FORCE RLS; PASS 037 không thêm policy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.supabase_lock_sim
+    expected: "exit 0; PASS svc_tables_missing=0; PASS service_role đọc sessions/areas; PASS service_role INSERT ops_audit; PASS PostgREST service_role GET /sessions = 200; PASS PostgREST service_role POST /ops_audit = 201; PASS postgres TRUNCATE … CASCADE; PASS postgres đọc users/sessions/view + truy vấn leak gate; PASS postgres INSERT ops_audit; should-NOT: không thao tác nào của service_role/postgres bị từ chối (đường sync, app, ingest không gãy)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.supabase_lock_sim
+    expected: "exit 0; PASS defacl_api=0; PASS defacl_fn_public=false; PASS bảng/sequence/hàm tạo sau: anon+authenticated không quyền, service_role vẫn có"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.supabase_lock_sim
+    expected: "exit 0; PASS 037 lần 1 exit 0; PASS 037 lần 2 exit 0; PASS bảng quyền sau lần 1 == sau lần 2; should-NOT: lần 2 không đổi thêm quyền/cờ RLS nào (md5 bằng nhau)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.supabase_lock_local
+    expected: "exit 0; PASS DB local không có role anon; 037 hai lần exit 0 và báo bỏ qua; should-NOT: quyền/RLS/option quan hệ, quyền hàm, default privileges local không đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.supabase_lock_static
+    expected: "exit 0; should-NOT: không INSERT/UPDATE/DELETE/TRUNCATE/DROP/COPY, không GRANT, không đụng service_role; PASS chốt no-op khi không có role anon"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.supabase_lock_sim
+    expected: "exit 0; PASS rollback exit 0; PASS sau rollback: bảng quyền + default privileges == trước 037; PASS sau rollback: anon /sessions = 200; PASS áp lại 037 sau rollback → bảng quyền == sau 037; should-NOT: không lệch một quyền/cờ RLS/default privilege nào so với trước 037 (md5 bằng nhau)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: judgment
+    question: "Runbook có cho Mạnh đủ để tự áp 037 lên prod an toàn không: lý do có số đo (khớp bản đo trước), bảng đường kết nối và role của từng đường, lệnh áp + thời điểm áp (tránh lượt sync), cách kiểm sau áp (đo lại cloud, trang prod, log sync), lệnh hoàn tác kèm cảnh báo nó mở lại lỗ? Khuyến nghị về sessions / anon key / service key có dựa trên căn cứ ghi trong tài liệu (nơi đã kiểm, dấu vết log) không, và tài liệu có tránh in giá trị khoá không? Có bước nào giao agent tự áp lên production không (phải là không)? Migration và tệp hoàn tác có khớp với lời runbook không?"
+    inputs: [docs/ops/supabase-lock-anon-rls.md, docs/ops/supabase-lock-anon-rls.rollback.sql, db/migrations/037_lock_anon_enable_rls.sql, _acceptance/supabase-lock-anon-rls/do-truoc-cloud.md, _acceptance/supabase-lock-anon-rls/contract.md]
+    evidence_required: [judged_by, verdict, rationale]
