@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b982911f88d06313fe73daa8981ff82debfa55d3
+verified_commit: 34d7e7b006fad8cb3905df54fe2f150a6f197255
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -195,3 +195,7 @@ none — every multi-run eval is uniform
 
 Round 1: tất cả eval máy (E1 đến E11) và năm lệnh suite đều đạt; không eval nào thất bại, không có mục cần người chốt.
 Round 2: sau sổ fix S4-r1 (đổi test AC-5(b) đếm nguồn trong savepoint, thêm đối chứng nhạy), E1 đến E7, E9, E10 và năm lệnh suite chạy lại đều đạt; E8 và E11 giữ nguyên từ round 1 vì delta không chạm paths của chúng.
+
+### Re-pin lần 1 — 2026-10-23, do đồng bộ main (PR #31, #32) sau chữ ký
+run_id: repin-20261023T103642Z-12662
+sha: 34d7e7b006fad8cb3905df54fe2f150a6f197255 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
