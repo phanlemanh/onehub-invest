@@ -1,41 +1,144 @@
 {
   "feature_plain": "Trang đầu tư và trang tin bán trên bản chạy thật không còn lúc trống hay thiếu dữ liệu mỗi lần cập nhật 15 phút, mục «Lưu khu vực» của người dùng không bị xoá, ngày hiển thị đúng ngày.",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ đổi dữ liệu trên cloud trong một nhát: người xem luôn thấy bản cũ đủ cho tới đúng lúc bản mới thay vào, không lúc nào trống hay lẫn (thử cả lúc cố tình giữ nhát tráo mở 2 giây)."},
-    {"id": "AC-3", "p": "Sẽ cho dữ liệu trên cloud khớp đúng máy local từng bảng, ngày không còn lùi một ngày, và vẫn chạy được khi cloud thiếu hay thừa cột so với local."},
-    {"id": "AC-4", "p": "Sẽ giữ nguyên mục «Lưu khu vực» của người dùng; lượt nào thấy local đang dựng dở (một bảng tụt dưới nửa) thì dừng, không thay dữ liệu."},
-    {"id": "AC-6", "p": "Sẽ đặt vùng chờ dữ liệu ở chỗ người ngoài có khoá công khai cũng không đọc được."},
-    {"id": "AC-8", "p": "Sẽ giữ xanh mọi bộ kiểm cũ của đường đẩy dữ liệu (kể cả bộ chặn bảng bí mật)."},
-    {"id": "AC-11", "p": "Sẽ chỉ đẩy những cột tin bán đã được duyệt tên; cột mới mặc định ở lại máy; mã tài khoản người bán lên cloud chỉ còn mã nguồn S0x và số, không lộ tên nguồn; giá trị nào chứa tên nguồn thật thì lượt dừng trước khi gửi."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ đổi dữ liệu trên cloud trong một nhát: người xem luôn thấy bản cũ đủ cho tới đúng lúc bản mới thay vào, không lúc nào trống hay lẫn (thử cả lúc cố tình giữ nhát tráo mở 2 giây)."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ cho dữ liệu trên cloud khớp đúng máy local từng bảng, ngày không còn lùi một ngày, và vẫn chạy được khi cloud thiếu hay thừa cột so với local."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ giữ nguyên mục «Lưu khu vực» của người dùng; lượt nào thấy local đang dựng dở (một bảng tụt dưới nửa) thì dừng, không thay dữ liệu."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ đặt vùng chờ dữ liệu ở chỗ người ngoài có khoá công khai cũng không đọc được."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ giữ xanh mọi bộ kiểm cũ của đường đẩy dữ liệu (kể cả bộ chặn bảng bí mật)."
+    },
+    {
+      "id": "AC-11",
+      "p": "Sẽ chỉ đẩy những cột tin bán đã được duyệt tên; cột mới mặc định ở lại máy; mã tài khoản người bán lên cloud chỉ còn mã nguồn S0x và số, không lộ tên nguồn; giá trị nào chứa tên nguồn thật thì lượt dừng trước khi gửi."
+    }
   ],
   "wont_do": [
-    {"id": "AC-2", "p": "Sẽ KHÔNG làm mất dữ liệu đang hiển thị khi một lượt cập nhật gãy giữa chừng — bản cũ ở nguyên, phần nạp dở được dọn."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG đưa bảng thô hay cột đang bị loại (SĐT, tên người bán — giữ như cũ trong đợt này) lên cloud."},
-    {"id": "AC-7", "p": "Chặn hai lượt cập nhật chạy chồng làm trống dữ liệu hoặc để bản cũ đè bản mới."},
-    {"id": "OOS-1", "p": "KHÔNG đưa bảng giải mã nguồn lên cloud (luật bảo vệ nguồn cấm); trang độ phủ nguồn trên bản thật để việc riêng."},
-    {"id": "OOS-2", "p": "KHÔNG sửa quyền đọc công khai đang mở trên cloud — rủi ro bảo mật riêng, đã báo phiên điều phối."},
-    {"id": "OOS-3", "p": "KHÔNG để máy tự đổi cấu trúc cơ sở dữ liệu thật — anh tự áp; máy chỉ chạy lượt cập nhật thử khi anh cho phép."},
-        {"id": "OOS-4", "p": "KHÔNG sửa văn bản luật bảo vệ nguồn (đã ở nhánh riêng) và chưa mở các cột người bán đang bị loại."},
-    {"id": "OOS-5", "p": "KHÔNG đổi bước đẩy số liệu vận hành, script bọc và lịch chạy 15 phút."},
-    {"id": "OOS-6", "p": "KHÔNG làm bước bỏ qua bảng không đổi (để sau)."}
+    {
+      "id": "AC-2",
+      "p": "Sẽ KHÔNG làm mất dữ liệu đang hiển thị khi một lượt cập nhật gãy giữa chừng — bản cũ ở nguyên, phần nạp dở được dọn."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ KHÔNG đưa bảng thô hay cột đang bị loại (SĐT, tên người bán — giữ như cũ trong đợt này) lên cloud."
+    },
+    {
+      "id": "AC-7",
+      "p": "Chặn hai lượt cập nhật chạy chồng làm trống dữ liệu hoặc để bản cũ đè bản mới."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG đưa bảng giải mã nguồn lên cloud (luật bảo vệ nguồn cấm); trang độ phủ nguồn trên bản thật để việc riêng."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG sửa quyền đọc công khai đang mở trên cloud — rủi ro bảo mật riêng, đã báo phiên điều phối."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG để máy tự đổi cấu trúc cơ sở dữ liệu thật — anh tự áp; máy chỉ chạy lượt cập nhật thử khi anh cho phép."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG sửa văn bản luật bảo vệ nguồn (đã ở nhánh riêng) và chưa mở các cột người bán đang bị loại."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG đổi bước đẩy số liệu vận hành, script bọc và lịch chạy 15 phút."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG làm bước bỏ qua bảng không đổi (để sau)."
+    }
   ],
   "coverage_plain": [
-    {"i": 0, "p": "Đã thử người xem đọc ở cả bốn lúc của một lượt: trước, trong lúc nạp, trong nhát tráo, sau khi xong (AC-1 nhát tráo nguyên tử, AC-7 chạy chồng)."},
-    {"i": 1, "p": "Đã phủ mọi kết cục của một lượt: lành, gãy lúc nạp, gãy lúc tráo, chạy chồng, máy chết bỏ dở, cloud chưa được chuẩn bị (AC-2, AC-3, AC-7, AC-10)."},
-    {"i": 2, "p": "Đã phủ từng loại dữ liệu: bảng thay trọn, bảng khu vực mà mục lưu của người dùng trỏ tới, hai bảng giá chuẩn, cột bí mật, cột được duyệt, cột ngày, cloud lệch cột, local đang dựng dở (AC-3, AC-4, AC-5, AC-6, AC-11)."},
-    {"i": 3, "p": "Đã phủ phần chữ: chú thích code và hướng dẫn nói đúng luật người bán mới, hướng dẫn cho anh, bộ kiểm cũ không hồi quy (AC-8, AC-9, AC-10)."},
-    {"i": 4, "p": "Để sau: bỏ qua bảng không đổi để lượt nhẹ hơn — chưa cần vì một lượt vừa trong 15 phút."},
-    {"i": 5, "p": "Không bao giờ: tráo bằng cách đổi tên bảng — hai bảng giá chuẩn và mục lưu sẽ bám nhầm bảng cũ."},
-    {"i": 6, "p": "Giả định chưa đo trên cloud thật: kênh gửi lệnh chạy trọn một nhát tráo nhiều câu trong một lần — lượt thử thật sẽ lộ ra; sai thì lượt gãy và dữ liệu cũ ở nguyên."},
-    {"i": 7, "p": "Giả định chưa đo trên cloud thật: nhát tráo ~274 nghìn dòng xong trong giới hạn thời gian của kênh (mô phỏng mất vài giây)."}
+    {
+      "i": 0,
+      "p": "Đã thử người xem đọc ở cả bốn lúc của một lượt: trước, trong lúc nạp, trong nhát tráo, sau khi xong (AC-1 nhát tráo nguyên tử, AC-7 chạy chồng)."
+    },
+    {
+      "i": 1,
+      "p": "Đã phủ mọi kết cục của một lượt: lành, gãy lúc nạp, gãy lúc tráo, chạy chồng, máy chết bỏ dở, cloud chưa được chuẩn bị (AC-2, AC-3, AC-7, AC-10)."
+    },
+    {
+      "i": 2,
+      "p": "Đã phủ từng loại dữ liệu: bảng thay trọn, bảng khu vực mà mục lưu của người dùng trỏ tới, hai bảng giá chuẩn, cột bí mật, cột được duyệt, cột ngày, cloud lệch cột, local đang dựng dở (AC-3, AC-4, AC-5, AC-6, AC-11)."
+    },
+    {
+      "i": 3,
+      "p": "Đã phủ phần chữ: chú thích code và hướng dẫn nói đúng luật người bán mới, hướng dẫn cho anh, bộ kiểm cũ không hồi quy (AC-8, AC-9, AC-10)."
+    },
+    {
+      "i": 4,
+      "p": "Để sau: bỏ qua bảng không đổi để lượt nhẹ hơn — chưa cần vì một lượt vừa trong 15 phút."
+    },
+    {
+      "i": 5,
+      "p": "Không bao giờ: tráo bằng cách đổi tên bảng — hai bảng giá chuẩn và mục lưu sẽ bám nhầm bảng cũ."
+    },
+    {
+      "i": 6,
+      "p": "Giả định chưa đo trên cloud thật: kênh gửi lệnh chạy trọn một nhát tráo nhiều câu trong một lần — lượt thử thật sẽ lộ ra; sai thì lượt gãy và dữ liệu cũ ở nguyên."
+    },
+    {
+      "i": 7,
+      "p": "Giả định chưa đo trên cloud thật: nhát tráo ~274 nghìn dòng xong trong giới hạn thời gian của kênh (mô phỏng mất vài giây)."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "P0 — phép thử cũ không phân biệt được tráo một nhát với tráo nhanh hai nhát; đã sửa: cố tình giữ nhát tráo mở 2 giây, đòi người xem đọc trúng lúc đó ít nhất 5 lần và vẫn thấy bản cũ, thêm chiều đỏ tráo từng câu."},
-    {"i": 1, "p": "Luật xoá khu vực không còn ở local kéo theo xoá mục lưu của người dùng — là xoá dữ liệu nên chuyển thành câu hỏi cho anh (Hỏi-2), thêm chặn khi local tụt dưới nửa."},
-    {"i": 2, "p": "Hứa dọn phần nạp dở nhưng ngưỡng 2 giờ chưa khớp; đã viết lại: lượt gãy tự dọn phần của mình, lượt chết đột ngột được dọn sau 2 giờ, phần của lượt khác không bị đụng."},
-    {"i": 3, "p": "Lời hứa «người ngoài không đọc được vùng chờ» chưa có chiều đỏ; đã thêm: dựng quyền mặc định giống cloud, bỏ câu thu quyền thì phép thử phải đỏ."},
-    {"i": 4, "p": "Ca cloud lệch cột so với local chưa có phép thử chạy thật; đã cấy đủ các biến thể (thiếu cột, thừa cột, cloud chưa chuẩn bị)."},
-    {"i": 5, "p": "Hợp đồng chọn sẵn đáp án hai câu hỏi; luật tin bán anh đã chốt, câu sửa ngày (Hỏi-1) chọn khác thì máy sửa tiêu chí rồi xin duyệt lại."},
-    {"i": 6, "p": "Hai lượt chồng nhau có thể để bản đọc sớm đè bản đọc muộn; đã sửa: ghi giờ đọc, lượt cũ hơn bị từ chối."}
-  ]
+    {
+      "i": 0,
+      "p": "P0 — phép thử cũ không phân biệt được tráo một nhát với tráo nhanh hai nhát; đã sửa: cố tình giữ nhát tráo mở 2 giây, đòi người xem đọc trúng lúc đó ít nhất 5 lần và vẫn thấy bản cũ, thêm chiều đỏ tráo từng câu."
+    },
+    {
+      "i": 1,
+      "p": "Luật xoá khu vực không còn ở local kéo theo xoá mục lưu của người dùng — là xoá dữ liệu nên chuyển thành câu hỏi cho anh (Hỏi-2), thêm chặn khi local tụt dưới nửa."
+    },
+    {
+      "i": 2,
+      "p": "Hứa dọn phần nạp dở nhưng ngưỡng 2 giờ chưa khớp; đã viết lại: lượt gãy tự dọn phần của mình, lượt chết đột ngột được dọn sau 2 giờ, phần của lượt khác không bị đụng."
+    },
+    {
+      "i": 3,
+      "p": "Lời hứa «người ngoài không đọc được vùng chờ» chưa có chiều đỏ; đã thêm: dựng quyền mặc định giống cloud, bỏ câu thu quyền thì phép thử phải đỏ."
+    },
+    {
+      "i": 4,
+      "p": "Ca cloud lệch cột so với local chưa có phép thử chạy thật; đã cấy đủ các biến thể (thiếu cột, thừa cột, cloud chưa chuẩn bị)."
+    },
+    {
+      "i": 5,
+      "p": "Hợp đồng chọn sẵn đáp án hai câu hỏi; luật tin bán anh đã chốt, câu sửa ngày (Hỏi-1) chọn khác thì máy sửa tiêu chí rồi xin duyệt lại."
+    },
+    {
+      "i": 6,
+      "p": "Hai lượt chồng nhau có thể để bản đọc sớm đè bản đọc muộn; đã sửa: ghi giờ đọc, lượt cũ hơn bị từ chối."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "E9",
+      "q": "Chú thích code và hướng dẫn có nói đúng luật người bán anh chốt hôm nay không?",
+      "why": "Ba người chấm cùng thấy đúng luật và khớp code; mục ranh giới dữ liệu đã thêm vào hướng dẫn."
+    },
+    {
+      "id": "E10",
+      "q": "Hướng dẫn triển khai có đủ để anh tự áp migration và chạy thử an toàn không?",
+      "why": "Ba người chấm cùng thấy đủ thứ tự, lệnh áp, lệnh kiểm, cách đo lượt thử và cách lùi."
+    }
+  ],
+  "analyst_plain": ""
 }
