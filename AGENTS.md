@@ -69,7 +69,7 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
     Không nhắn ZCode, không review `zcode/*`.
 - **Giao tiếp Claude ↔ ZCode = luật tin của plugin `dieu-phoi`** (khối LUAT-TIN): khẩu lệnh
   `GIAO · HỎI · BÁO · NHẬN · XONG · KẸT · TRẢ · HUỶ · MỞ LẠI`, mỗi yêu cầu là một vòng mở có
-  mã. Kênh: issue riêng tư `phanlemanh/onehub-invest#9`, qua lệnh bọc `~/dev/onehub-coord/bin/tin
+  mã. Kênh: issue trong repo RIÊNG TƯ `phanlemanh/onehub-coord#1` (từ 23/10; kho này đã công khai, #9 đóng), qua lệnh bọc `~/dev/onehub-coord/bin/tin
   <claude|zcode> …` (mỗi bên giữ kênh ở `~/dev/onehub-coord/<bên>` vì trạng thái kênh gắn với
   gốc kho git). Chi tiết cho ZCode: `collector/AGENTS.md` mục «Giao tiếp với Claude».
   KHÔNG đưa PII tầng A lên kênh (kênh nằm trên GitHub).
