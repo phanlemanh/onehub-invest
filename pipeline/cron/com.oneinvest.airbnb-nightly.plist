@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.oneinvest.airbnb-nightly</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>bash</string>
+    <string>__ROOT__/scripts/airbnb-nightly.sh</string>
+  </array>
+  <!-- Hằng ngày 19:35 (trong cửa sổ CCP 19-23; script tự jitter ≤20 phút) —
+       PDP theo worklist AirDNA thay cron Chủ nhật discovery-only -->
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>19</integer><key>Minute</key><integer>35</integer></dict>
+  <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/airbnb-nightly.log</string>
+  <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/airbnb-nightly.log</string>
+</dict>
+</plist>

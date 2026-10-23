@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# install-airbnb-cron.sh — cài 2 launchd job cho nguồn Airbnb tự thu (C1):
-#   collector: Chủ nhật 19:30 (+jitter ≤30 phút) — discovery + listing + finalize
-#   smoke:     hằng ngày 20:00 — 1 trang discovery phát hiện Airbnb đổi markup
-# (Backup tuần là job thứ 3 của install-cron.sh — cài riêng khi có BACKUP_DIR.)
+# install-airbnb-cron.sh — cài launchd job nguồn Airbnb tự thu:
+#   airbnb-nightly: hằng ngày 19:35 (+jitter ≤20′) — PDP theo worklist AirDNA
+#                   (Task 5 plan 2026-10-21-coverage-worklist) thay cron Chủ nhật
+#   smoke:          hằng ngày 20:00 — 1 trang discovery phát hiện Airbnb đổi markup
+# Job com.oneinvest.collector (Chủ nhật discovery-only) bị bootout — nightly thay thế.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,7 +16,10 @@ command -v docker >/dev/null || { echo "lỗi: docker không tìm thấy trong P
 command -v node   >/dev/null || { echo "lỗi: node không tìm thấy trong PATH" >&2; exit 1; }
 
 LAUNCH_PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
-for f in collector smoke; do
+# job Chủ nhật discovery-only cũ bị thay bởi nightly — gỡ trước
+launchctl bootout "gui/$UID_N" "$DEST/com.oneinvest.collector.plist" 2>/dev/null || true
+
+for f in airbnb-nightly smoke; do
   SRC="$ROOT/pipeline/cron/com.oneinvest.$f.plist"
   OUT="$DEST/com.oneinvest.$f.plist"
   sed "s|__ROOT__|$ROOT|g" "$SRC" > "$OUT"
