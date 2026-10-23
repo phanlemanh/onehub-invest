@@ -3,11 +3,11 @@ schema_version: 2
 feature_slug: lo-trinh-2310
 verdict: PASS
 failed_evals: []
-reason: vòng 2 — 8/8 eval xanh trên d228ddc; baseline origin/main (eea7128) đỏ cả static lẫn mutation; bốn lỗ vòng 1 đã bịt (thử lại trên bản sao tạm)
+reason: vòng 3 — 8/8 eval xanh trên 9f23bf7; baseline origin/main (eea7128) đỏ cả static lẫn mutation; thước AC-1 đã sửa chạy được sau merge (giả lập base=HEAD và gộp thật đều ok) và vẫn đỏ khi đổi khoá quyền chưa commit
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d228ddc126881c71fcd4306410890f458dabf912
+verified_commit: 9f23bf7eed49a043edc08eab0a5e80441ff23f4b
 human_signoff:
 ---
 
@@ -27,11 +27,11 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: lo-trinh-2310-E1-20261023T074439
+  run_id: lo-trinh-2310-E1-20261023T074645
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_static
-  verified_at: 2026-10-23T07:44:39Z
+  verified_at: 2026-10-23T07:46:45Z
   output: |
     $ bash scripts/check-lo-trinh.sh static
     ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền
@@ -46,11 +46,11 @@ human_signoff:
     LO-TRINH STATIC PASS
 
 - eval: E2
-  run_id: lo-trinh-2310-E2-20261023T074441
+  run_id: lo-trinh-2310-E2-20261023T074646
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_static
-  verified_at: 2026-10-23T07:44:41Z
+  verified_at: 2026-10-23T07:46:46Z
   output: |
     $ bash scripts/check-lo-trinh.sh static
     ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền
@@ -65,11 +65,11 @@ human_signoff:
     LO-TRINH STATIC PASS
 
 - eval: E3
-  run_id: lo-trinh-2310-E3-20261023T074442
+  run_id: lo-trinh-2310-E3-20261023T074648
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_static
-  verified_at: 2026-10-23T07:44:42Z
+  verified_at: 2026-10-23T07:46:48Z
   output: |
     $ bash scripts/check-lo-trinh.sh static
     ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền
@@ -84,11 +84,11 @@ human_signoff:
     LO-TRINH STATIC PASS
 
 - eval: E4
-  run_id: lo-trinh-2310-E4-20261023T074443
+  run_id: lo-trinh-2310-E4-20261023T074649
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_static
-  verified_at: 2026-10-23T07:44:43Z
+  verified_at: 2026-10-23T07:46:49Z
   output: |
     $ bash scripts/check-lo-trinh.sh static
     ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền
@@ -103,11 +103,11 @@ human_signoff:
     LO-TRINH STATIC PASS
 
 - eval: E5
-  run_id: lo-trinh-2310-E5-20261023T074445
+  run_id: lo-trinh-2310-E5-20261023T074650
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_static
-  verified_at: 2026-10-23T07:44:45Z
+  verified_at: 2026-10-23T07:46:50Z
   output: |
     $ bash scripts/check-lo-trinh.sh static
     ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền
@@ -122,11 +122,11 @@ human_signoff:
     LO-TRINH STATIC PASS
 
 - eval: E6
-  run_id: lo-trinh-2310-E6-20261023T074446
+  run_id: lo-trinh-2310-E6-20261023T074652
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_static
-  verified_at: 2026-10-23T07:44:46Z
+  verified_at: 2026-10-23T07:46:52Z
   output: |
     $ bash scripts/check-lo-trinh.sh static
     ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền
@@ -141,11 +141,11 @@ human_signoff:
     LO-TRINH STATIC PASS
 
 - eval: E7
-  run_id: lo-trinh-2310-E7-20261023T074448
+  run_id: lo-trinh-2310-E7-20261023T074653
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_static
-  verified_at: 2026-10-23T07:44:48Z
+  verified_at: 2026-10-23T07:46:53Z
   output: |
     $ bash scripts/check-lo-trinh.sh static
     ok   settings.json: bật road-map@acceptance-gate-kit, quyền/hook/khác giữ nguyên như nền
@@ -160,11 +160,11 @@ human_signoff:
     LO-TRINH STATIC PASS
 
 - eval: E8
-  run_id: lo-trinh-2310-E8-20261023T074449
+  run_id: lo-trinh-2310-E8-20261023T074654
   exit_code: 0
   baseline: red
   verifier: config:executors.script.lo_trinh_mutation
-  verified_at: 2026-10-23T07:44:49Z
+  verified_at: 2026-10-23T07:46:54Z
   output: |
     $ bash scripts/check-lo-trinh.sh mutation
     ok   đối chứng: bản nguyên vẹn xanh
@@ -177,7 +177,7 @@ human_signoff:
     bắt 6/6 bản đột biến
     LO-TRINH MUTATION PASS
 
-Baseline (worktree tạm `/tmp/claude-503/lt-base2` ở origin/main `eea7128`, chép `scripts/check-lo-trinh.sh` vào; đã gỡ):
+Baseline (worktree tạm `/tmp/claude-503/lt-base3` ở origin/main `eea7128`, chép `scripts/check-lo-trinh.sh` vào; đã gỡ):
 
 ```
 $ bash scripts/check-lo-trinh.sh static          # rc=1
@@ -186,9 +186,14 @@ FAIL config: lo_trinh.tep = ''
 FAIL config: LO-TRINH.html không nằm trong khối t1_skip_globs
 FAIL lo-trinh-khoi-tao còn việc: kho chưa cài road-map ở phạm vi kho — không tạo lộ trình
 FAIL product-map --check: PRODUCT-MAP.md khớp hồ sơ xưởng.
+grep: docs/plan/pham-vi-phan-loai-2310.md: No such file or directory
 FAIL răng phủ pham-vi-phan-loai-2310.md: rc=2, phủ 0 mã, phạm vi  mã, cần 37;
+grep: docs/plan/pham-vi-cam-mau-2310.md: No such file or directory
 FAIL răng phủ pham-vi-cam-mau-2310.md: rc=2, phủ 0 mã, phạm vi  mã, cần 14;
-FAIL bản chép khác kit: scripts/lo-trinh.mjs / scripts/ho-so-tom-tat.cjs / scripts/gio-may.mjs / lib/chan-lo-trinh.cjs
+FAIL bản chép khác kit: scripts/lo-trinh.mjs
+FAIL bản chép khác kit: scripts/ho-so-tom-tat.cjs
+FAIL bản chép khác kit: scripts/gio-may.mjs
+FAIL bản chép khác kit: lib/chan-lo-trinh.cjs
 FAIL quy định «một chỗ» thiếu ở AGENTS.md hoặc ROADMAP §0
 LO-TRINH STATIC FAIL
 $ bash scripts/check-lo-trinh.sh mutation        # rc=1
@@ -198,18 +203,19 @@ LO-TRINH MUTATION FAIL
 
 ## Known limits
 
-- Bước 1 (AC-1) so `.claude/settings.json` với `git merge-base HEAD origin/main`: chỉ có nghĩa khi nhánh chưa vào main. Sau merge, merge-base = HEAD nên khoá road-map đã có ở cả hai phía và phép so sẽ báo FAIL (cur bỏ khoá ≠ nền còn khoá) — thước này là thước của nhánh, không dùng lại làm kiểm hồi quy sau merge.
-- Số mã 37/14 ghim cứng trong `EXPECT`; cắt lượt kế làm đổi số mã của bản phạm vi thì phải sửa script cùng lúc (đúng ý: răng phủ của kit tự nó không phát hiện mã bị xoá đồng thời ở cả hai phía — xem (a) bên dưới).
+- Sau merge, bước 1 (AC-1) so `.claude/settings.json` với `git merge-base HEAD origin/main` = HEAD, tức chỉ so cây làm việc với commit hiện tại: bắt được đổi quyền/hook **chưa commit** và mất khoá road-map, nhưng một thay đổi quyền **đã commit** lên main về sau vẫn xanh (thử (C) dưới). Trên main, AC-1 là kiểm «road-map còn bật + không trôi cục bộ», không phải kiểm hồi quy quyền so với nền trước nhánh.
+- Số mã 37/14 ghim cứng trong `EXPECT`; cắt lượt kế làm đổi số mã của bản phạm vi thì phải sửa script cùng lúc.
 - Ghim `KIT_VER=2.33.1`: máy không còn bản cache 2.33.1 thì bước 3, 5, 6 và mutation đỏ dù kho đúng (đỏ đúng chiều, không xanh giả).
 - Dòng «ok 4 bản chép kit trùng byte» chỉ in khi chưa bước nào trước đó FAIL (dùng chung biến `fail`) — chỉ ảnh hưởng chữ báo khi đã đỏ, không ảnh hưởng verdict.
 - Đọc `t1_skip_globs` bằng awk theo thụt lề 2 dấu cách; đổi kiểu thụt lề của config sẽ làm bước này đỏ (đỏ đúng chiều).
+- Baseline in thêm dòng `grep: … No such file or directory` ra stderr khi thiếu tệp phạm vi — chỉ là nhiễu chữ, verdict vẫn đỏ.
 
 ## Ngoài hợp đồng
 
-Thử lại bốn lỗ vòng 1 trên worktree tạm của HEAD (`/tmp/claude-503/lt-probe2`, detached d228ddc; kho chính không đổi; đã gỡ):
+Phản biện điểm vừa sửa (bỏ khoá road-map ở cả hai phía khi so settings) trên worktree tạm của HEAD (`/tmp/claude-503/lt-probe3`, detached 9f23bf7; kho chính không đổi; đã gỡ, không còn nhánh tạm):
 
-- (a) Xoá `C0.3` khỏi cả `docs/plan/pham-vi-phan-loai-2310.md` lẫn `PL3.phu`: `cat-luot.mjs` trần vẫn rc=0 (răng phủ kit không bắt), nhưng `static` đỏ — `FAIL răng phủ pham-vi-phan-loai-2310.md: rc=0, phủ 36 mã, phạm vi 36 mã, cần 37` → `LO-TRINH STATIC FAIL`. Lỗ đã bịt.
-- (b) Xoá `docs/plan/lo-trinh.json` rồi chạy `mutation`: `FAIL thiếu docs/plan/lo-trinh.json — thước đột biến không có gì để đo` / `LO-TRINH MUTATION FAIL`, rc=1. Thêm (b2): xoá `pham-vi-cam-mau-2310.md` → cũng `MUTATION FAIL`. Ca đối chứng bản nguyên vẹn chạy xanh trước sáu ca đột biến (E8). Lỗ đã bịt.
-- (c) Chuyển `- "LO-TRINH.html"` từ `t1_skip_globs` sang cuối `t3_paths`: `FAIL config: LO-TRINH.html không nằm trong khối t1_skip_globs` → `STATIC FAIL` (kèm `product-map --check` cũng báo thiếu miễn trừ). Thêm (c2): để dòng đó thành comment trong khối t1 → cũng đỏ. Lỗ đã bịt.
-- (d) Bản kit: thước ghim `2.33.1` thay vì «bản mới nhất»; bốn bản chép trùng byte với 2.33.1 (E6). Lỗ đã bịt.
-- `lo_trinh.tep` đọc bằng `scripts/lo-trinh-khoa.cjs` (bộ đọc khoá của kit) thay vì grep dòng.
+- (A) Giả lập sau merge: sửa dòng `base=` của bản script chép trong worktree tạm thành `base=HEAD`, commit tạm (`7ee55c3`) → `static` rc=0, `ok settings.json: … giữ nguyên như nền`, `LO-TRINH STATIC PASS`. Known limit cũ (sau merge báo FAIL) đã hết.
+- (B) Cùng nền `base=HEAD`, bỏ `permissions.deny[0]` (`Read(**/.env)`) chưa commit → `FAIL settings.json: thiếu road-map hoặc đổi thứ khác ngoài enabledPlugins` / `LO-TRINH STATIC FAIL`, rc=1. (B2) thêm cả một `allow` lạ → cũng đỏ. (D) bỏ khoá road-map → đỏ.
+- (C) Commit luôn thay đổi (B) rồi chạy lại với `base=HEAD` → `ok settings.json` / `STATIC PASS` — đúng như Known limit 1: sau merge thước chỉ bắt trôi chưa commit.
+- (E) Gộp thật bằng script gốc (không sửa `base=`): detached ở origin/main `eea7128`, `merge --no-ff 9f23bf7` → merge-base HEAD origin/main = `eea7128` → `ok settings.json`, `STATIC PASS`, rc=0.
+- Ghi chú sổ: dòng cuối `decisions.jsonl` (`d-20261023T080500Z-5`, `at` 08:05:00Z) có giờ muộn hơn đồng hồ máy lúc chấm vòng 3 (07:46Z) — giờ ghi tay đặt trước, không ảnh hưởng verdict nhưng làm lệch thứ tự thời gian trong sổ.
