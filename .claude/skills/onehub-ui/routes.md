@@ -2,7 +2,7 @@
 
 Mỗi `page.tsx` dưới `app/src/app` đúng một dòng. Thêm, xoá hay dời trang thì sửa bảng
 này **cùng commit**: `app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs` đối chiếu
-cột 2 với cây thư mục và đỏ khi lệch, và đỏ khi một dòng thiếu cột Block đích (chạy trong
+cột 2 với cây thư mục và đỏ khi lệch, và đỏ khi một dòng thiếu/sai cột Block đích hoặc Slug đích (chạy trong
 `npm run test:lint-rules` và CI `ui-lint`).
 
 - Bề mặt và archetype: tên nguyên văn từ `.claude/skills/reui/rules/compose.md`.
@@ -72,7 +72,7 @@ B2 (khung & KPI) / B4 (trạng thái) / B5 (phần còn lại) theo loại compo
 |---|---|---|
 | I1 Finder | `/[country]` | sparkline của `solution-analytics-1`; bản đồ `@mapcn/choropleth` |
 | I2 Insight | `/[country]/[market]`, `/[country]/[market]/[submarket]` | `chart-6`, `chart-13` (giữ, B3) |
-| I3 Listing | `/listing/[id]`, `/[country]/[market]/listings` | không |
+| I3 Listing | `/listing/[id]`, `/[country]/[market]/listings` | không có biểu đồ chuỗi (heatmap lịch `form-5` giữ nguyên, tô theo trạng thái đêm) |
 | I4 Lợi suất | `/yield`, `/[country]/[market]/dau-tu` | `chart-36` (giữ, B3) |
 | I5 So sánh + Đã lưu | `/so-sanh`, `/saved` | không |
 | I6 Trang chủ / Phương pháp / Auth | `/`, `/phuong-phap`, `/login`, `/register` | dải diện tích của `card-29` |

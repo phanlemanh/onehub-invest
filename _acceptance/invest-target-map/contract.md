@@ -24,7 +24,7 @@ bản đồ nguồn `mapcn` — `decisions.jsonl`),
 rồi ghi kết quả vào `routes.md`, thêm test và cắt lại Track 6. Không sửa mã trang.
 
 Phạm vi file: `.claude/skills/onehub-ui/{routes,loop,catalog}.md`, `app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs`,
-`docs/ROADMAP.md` (Track 6), `_acceptance/invest-target-map/**`.
+`docs/ROADMAP.md` (Track 6), `_acceptance/invest-target-map/**`, `PRODUCT-MAP.md` (máy sinh).
 
 ## Criteria
 

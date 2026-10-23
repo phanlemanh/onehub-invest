@@ -63,3 +63,10 @@ evals:
     cmd: "Đọc .claude/skills/onehub-ui/loop.md bước 3"
     expected: "Có bước Mobbin 3–6 màn, mobbin_url, chỉ cho IA, block từ ReUI (bản đồ mapcn), lối không có Mobbin = archetype compose.md + lý do"
     evidence_required: [run_id, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-6
+    executor: script
+    cmd: "B=$(mktemp) && cp .claude/skills/onehub-ui/routes.md $B && sed -i '' 's#| `/compare` |#| /so-sánh |#' .claude/skills/onehub-ui/routes.md; (cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs); rc=$?; cp $B .claude/skills/onehub-ui/routes.md; test $rc -ne 0"
+    expected: "exit 0 (test con đỏ ở cột Slug đích, báo '`/so-sanh` → \"/so-sánh\"'); routes.md được khôi phục"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

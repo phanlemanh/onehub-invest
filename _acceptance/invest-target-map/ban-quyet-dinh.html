@@ -120,9 +120,9 @@
     <p class="muted small">Mỗi đợt làm trọn khung + KPI + biểu đồ (đi bảng màu chung của B3) + trạng thái (tải/trống/lỗi) cho nhóm trang của nó — thay cho B2 (khung &amp; KPI) / B4 (trạng thái) / B5 (phần còn lại) cắt theo loại component.</p>
     <table class="shell">
       <tr><th>Đợt</th><th>Trang</th><th>Block đích chính</th></tr>
-      <tr><td>I1 Finder</td><td><code>/[country]</code></td><td>solution-analytics-1 + ChoroplethMap</td></tr>
-      <tr><td>I2 Insight</td><td><code>/[country]/[market]</code>, <code>/[submarket]</code></td><td>solution-analytics-8 khung + chart-6/chart-13 + InsightGrid</td></tr>
-      <tr><td>I3 Listing</td><td><code>/listing/[id]</code>, <code>/[market]/listings</code></td><td>product-detail-5 · product-grid-2 + filters</td></tr>
+      <tr><td>I1 Finder</td><td><code>/[country]</code></td><td>solution-analytics-1 + @mapcn/choropleth</td></tr>
+      <tr><td>I2 Insight</td><td><code>/[country]/[market]</code>, <code>/[submarket]</code></td><td>solution-analytics-8 khung + chart-6/chart-13 + InsightGrid + @mapcn/map</td></tr>
+      <tr><td>I3 Listing</td><td><code>/listing/[id]</code>, <code>/[market]/listings</code></td><td>product-detail-5 · product-grid-2 + filters + @mapcn/store-locator</td></tr>
       <tr><td>I4 Lợi suất</td><td><code>/yield</code>, <code>/[market]/dau-tu</code></td><td>form-11 + data-grid-advanced-7 + chart-36</td></tr>
       <tr><td>I5 So sánh + Đã lưu</td><td><code>/so-sanh</code>, <code>/saved</code></td><td>comparison-1 · wishlist-2</td></tr>
       <tr><td>I6 Trang chủ/Phương pháp/Auth</td><td><code>/</code>, <code>/phuong-phap</code>, <code>/login</code>, <code>/register</code></td><td>bộ marketing hiện có · faq-3 · auth-4/5</td></tr>
@@ -143,7 +143,7 @@ const ROWS = [
     ],
     rec: "solution-analytics-1 — phần lưới + đầu Frame (tiêu đề, đếm, tìm/lọc); bỏ panel sức khoẻ/xu hướng",
     why: "Khớp trọn vùng xếp hạng (cột điểm có thanh, sparkline lịch đặt, badge đủ mẫu) và có sẵn toolbar mà data-grid-base-2 phải ghép thêm. Chênh ít — lối rẻ là giữ data-grid-base-2.",
-    nob: "Bản đồ choropleth + chú giải 4 bậc (MapLibre, giữ ChoroplethMap trong FramePanel); công tắc Thị trường|Phường (toggle-group).",
+    nob: "Bản đồ choropleth + chú giải 4 bậc → @mapcn/choropleth (thay ChoroplethMap, chốt mục Bản đồ); công tắc Thị trường|Phường (toggle-group).",
     kpi: "Không có ô KPI — số đếm ở badge PageHeader (PageHeader thêm mới).",
     chart: "Sparkline của block thay sparkline finder-cells; màu theo bảng chung B3.",
     state: "Cấp tỉnh chưa tự thu: empty-state-5 “đang thu thập”; Skeleton lưới; lỗi + Thử lại.",
@@ -157,7 +157,7 @@ const ROWS = [
     ],
     rec: "solution-analytics-8 làm khung trang; Hiệu suất giữ chart-6, Cơ cấu giữ chart-13, bảng giữ InsightGrid",
     why: "Khung đầu trang + hàng KPI + phân rã + timeline khớp 4 vùng thật (KPI, theo số PN, nguồn cung qua các lần quét); whenNotToUse của chính block chỉ sang chart-6 cho “4 ô chuyển 1 đường”.",
-    nob: "Bản đồ phường (MiniMap); view track InsightNav (scrollspy tự viết, đã ghi lý do ở catalog).",
+    nob: "Bản đồ phường → @mapcn/map (thay MiniMap); view track InsightNav (scrollspy tự viết, đã ghi lý do ở catalog).",
     kpi: "stats-1 → hàng KPI của analytics-8 (ngoại lệ có tên như G4 của B1); dòng “vs” = trung vị phường anh em, không phải kỳ trước.",
     chart: "chart-6 + chart-13 giữ (B3 đã thống nhất màu); không dùng đường “so với mục tiêu”.",
     state: "Skeleton hàng KPI + mỗi Frame; timeline trống khi &lt; 2 lần quét; Empty cho bảng rỗng.",
@@ -171,7 +171,7 @@ const ROWS = [
     ],
     rec: "solution-analytics-8 (cùng template thị trường); benchmark = phần phân rã có thanh",
     why: "Một template cho hai cấp (IA §3.2); thanh tiến độ của block thay benchmark-bar tự vẽ.",
-    nob: "MiniMap tô phường đang xem.",
+    nob: "Bản đồ tô phường đang xem → @mapcn/map (thay MiniMap).",
     kpi: "Như thị trường; thêm dải benchmark ngay dưới KPI.",
     chart: "chart-6 + chart-13 giữ.",
     state: "Như thị trường; ít mẫu (&lt; 5 listing) → badge độ tin cậy thấp.",
@@ -185,7 +185,7 @@ const ROWS = [
     ],
     rec: "Giữ product-grid-2, bật lại panel ảnh khi listing có ảnh TỰ THU; bộ lọc trên cùng bằng component filters; filter-sidebar-5 ở màn hẹp",
     why: "Thẻ đã đúng block; thiếu là lọc (PN, loại phòng, giá) — ReUI giao việc lọc cho filters, không tự dựng.",
-    nob: "ListingsMap (nhãn giá, gom cụm).",
+    nob: "Bản đồ nhãn giá + gom cụm → @mapcn/store-locator + clusters (thay ListingsMap).",
     kpi: "Không đổi.",
     chart: "Không.",
     state: "Lọc ra 0: empty-state-2 (chip gợi ý); Skeleton thẻ; lỗi + Thử lại.",
