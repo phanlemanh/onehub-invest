@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 6a42eaeca23f97286f21a9af07b085aa8374d570
-human_signoff:
+human_signoff: Mạnh 2026-10-23
 ---
 
 # Evidence Report: ops-ingest-url-onehub-invest

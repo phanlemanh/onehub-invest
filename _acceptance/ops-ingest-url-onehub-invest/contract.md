@@ -5,9 +5,9 @@ slug: ops-ingest-url-onehub-invest
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs nằm trong t3_paths (phiên chấm vòng 1 bắt)
 surfaces: [cli, config]
-status: verified
-approved_by:
-approved_at:
+status: signed-off
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: ops-ingest-url-onehub-invest
