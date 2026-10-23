@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Admin duyệt thẻ ở /ops/review giờ thấy ảnh của từng tin ngay trên thẻ (Tin A, Tin B, tin được bổ sung), bấm vào để phóng to; ảnh hỏng hay tin không có ảnh đều được báo rõ, và người không phải admin không nhận được URL ảnh nào.",
+  "scope_plain": "PR này chỉ thêm ảnh vào thẻ đang có; những thứ dưới đây cố ý để lại:"
+}

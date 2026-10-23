@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
+import type { ReviewMedia } from "@/lib/ops/review-media";
+
+import { ReviewPhotos } from "./review-photos";
 
 /**
  * HITL Review Card — rẽ nhánh theo item_type:
@@ -16,6 +19,7 @@ import type { EnrichChoices } from "@/lib/enrich-choices";
  *   «Áp dụng» → route decide → decide_enrichment_review (migration 033). Field luật E1 trái
  *   LLM (conflict) hiện hai bên kèm căn cứ; người chọn một bên trước khi áp (AC-11).
  * - loại khác: một dòng báo, không làm sập trang.
+ * Ảnh tin (`media`, từ loadReviewMedia — chỉ admin) hiện dưới mỗi tin; vắng thì không có vùng ảnh.
  * Click → POST API → router.refresh() để cập nhật danh sách.
  */
 export type ReviewEvidence = {
@@ -160,9 +164,9 @@ function DoneBadge({ item }: { item: ReviewItem }) {
   return <Badge variant={item.status === "approved" ? "success-light" : "outline"}>{label}</Badge>;
 }
 
-export function ReviewCard({ item }: { item: ReviewItem }) {
-  if (item.item_type === "entity_match") return <EntityMatchCard item={item} />;
-  if (item.item_type === "agent_output") return <AgentOutputCard item={item} />;
+export function ReviewCard({ item, media }: { item: ReviewItem; media?: ReviewMedia }) {
+  if (item.item_type === "entity_match") return <EntityMatchCard item={item} media={media} />;
+  if (item.item_type === "agent_output") return <AgentOutputCard item={item} media={media} />;
   return (
     <div className="flex flex-col gap-1 rounded-xl border p-4">
       <h3 className="text-sm font-medium">{item.title}</h3>
@@ -235,7 +239,7 @@ function ConflictField({ options, value, onChange, disabled }: {
   );
 }
 
-function AgentOutputCard({ item }: { item: ReviewItem }) {
+function AgentOutputCard({ item, media }: { item: ReviewItem; media?: ReviewMedia }) {
   const { pending, msg, decide } = useDecide(item.id);
   const [picked, setPicked] = useState<Record<string, string | undefined>>({});
   const ev = item.evidence as EnrichEvidence;
@@ -260,6 +264,7 @@ function AgentOutputCard({ item }: { item: ReviewItem }) {
           {ev.text}
         </p>
       )}
+      <ReviewPhotos label="Tin" images={media?.offer} />
       {fields.length === 0 ? (
         <p className="text-muted-foreground text-xs">Thẻ thiếu dữ liệu đề xuất.</p>
       ) : (
@@ -309,7 +314,7 @@ function AgentOutputCard({ item }: { item: ReviewItem }) {
   );
 }
 
-function EntityMatchCard({ item }: { item: ReviewItem }) {
+function EntityMatchCard({ item, media }: { item: ReviewItem; media?: ReviewMedia }) {
   const { pending, msg, decide } = useDecide(item.id);
   const ev = item.evidence as ReviewEvidence;
   return (
@@ -331,8 +336,14 @@ function EntityMatchCard({ item }: { item: ReviewItem }) {
         </p>
       )}
       <div className="flex gap-2">
-        <OfferCard label="Tin A" offer={ev.offer_a} />
-        <OfferCard label="Tin B" offer={ev.offer_b} />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <OfferCard label="Tin A" offer={ev.offer_a} />
+          <ReviewPhotos label="Tin A" images={media?.offer_a} />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <OfferCard label="Tin B" offer={ev.offer_b} />
+          <ReviewPhotos label="Tin B" images={media?.offer_b} />
+        </div>
       </div>
       {item.status === "pending" ? (
         <div className="flex items-center gap-2">

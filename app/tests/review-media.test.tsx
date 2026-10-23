@@ -8,6 +8,7 @@ import {
   MAX_IMAGES_PER_OFFER,
   buildOfferImages,
   loadReviewMedia,
+  stripEvidenceImages,
   type PostMediaRow,
 } from "../src/lib/ops/review-media";
 
@@ -163,4 +164,18 @@ test("AC-7 không thẻ nào cần ảnh → {} và không truy vấn", async ()
   const { calls, query } = fakeQuery([]);
   assert.deepEqual(await loadReviewMedia([ITEMS[2], ITEMS[3]], ADMIN, query), {});
   assert.equal(calls.length, 0);
+});
+
+test("AC-7 (review-card-photos) stripEvidenceImages bỏ image_url hai bên, giữ mọi field khác, không đụng bản gốc", () => {
+  const ev = {
+    stage_b_score: 0.8,
+    offer_a: { offer_id: "a", text: "nhà" },
+    offer_b: { offer_id: "b", subject: "nhà", image_url: CHOTOT },
+  };
+  const out = stripEvidenceImages(ev);
+  assert.deepEqual(out, { stage_b_score: 0.8, offer_a: { offer_id: "a", text: "nhà" }, offer_b: { offer_id: "b", subject: "nhà" } });
+  assert.equal(ev.offer_b.image_url, CHOTOT, "bản gốc giữ nguyên (loader còn cần)");
+  assert.doesNotMatch(JSON.stringify(stripEvidenceImages({ offer_a: { image_url: FB(1) }, offer_b: { image_url: FB(2) } })), /fbcdn/);
+  assert.deepEqual(stripEvidenceImages({ offer_id: "x", fields: [] }), { offer_id: "x", fields: [] });
+  assert.deepEqual(stripEvidenceImages(null), {});
 });
