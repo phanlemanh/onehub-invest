@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: de50b3e0b75f379f0c9206777bd11a88be2245f5
+verified_commit: ded85a49d805032d321f48125901cce0e0beae92
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -223,3 +223,7 @@ none — mọi eval chạy một lần, tất định.
 
 Round 1: mọi eval máy (E1–E8, E11, E12) đạt trên commit 80011b2; E9 (judgment) PASS; E10 (judgment) trượt — định nghĩa chỉ số trong CONTEXT.md lệch code: Đêm đã đặt chưa ghi gồm cả đêm chủ chặn, Doanh thu thiếu quy tắc lấy mẫu (lấp giá niêm yết, loại listing không giá), `adr` trong yield.ts là trung vị giá niêm yết, thu nhập ròng dài hạn chưa nêu. Trả về bước làm.
 Round 2: trên commit de50b3e (sửa CONTEXT.md + terms.mjs) mọi eval máy đạt (E3 vẫn trùng byte); giám khảo mù mới chấm E9 PASS, E10 PASS — bốn điểm lệch vòng 1 đã được định nghĩa/ghi chú khớp code.
+
+### Re-pin lần 1 — 2026-10-23, do hoá cũ do merge main (PR listing-airdna-photos) sau verify
+run_id: repin-20261023T002309Z-10984
+sha: ded85a49d805032d321f48125901cce0e0beae92 · suites: 2 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E9 (E9 không khai paths), E10 (E10 không khai paths) · AC không có chốt máy: AC-9
