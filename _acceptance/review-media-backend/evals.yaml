@@ -1,0 +1,80 @@
+schema_version: 1
+feature_slug: review-media-backend
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; 0 fail; ca 'AC-1' của tests/zalo-media.test.tsx xanh — 200, content-type image/jpeg, thân bằng byte file, cache-control private; should-NOT-fire: cùng snapshot nhưng file không có trên đĩa → 404"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "should-NOT-fire: ca 'AC-2' xanh — khách / role user / role ops nhận 404 ở cả chế độ snapshot+file và path, kể cả khi file ảnh hợp lệ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "should-NOT-fire: ca 'AC-3' xanh — '..', '/' trong snapshot, file ngoài media/, đuôi lạ, snapshots-evil, symlink trỏ ra ngoài, thiếu tham số đều 400/403/404 và thân không chứa byte file đích"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "ca 'AC-4' xanh — ?path= ảnh trong ~/.openclaw/media → 200; ~/.openclaw/openclaw.json → 403; ?path= ảnh trong gốc snapshots → 403"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "ca 'AC-5' của tests/review-media.test.tsx xanh — local trước, entry lỗi rơi về URL gốc expiring, không trùng, bỏ URL không http(s), giữ thứ tự post_ids, cắt ở 12"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "ca 'AC-6' xanh — khoá theo id thẻ, entity_match có offer_a/offer_b, agent_output có offer, loại khác không có mục, đúng 1 truy vấn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "should-NOT-fire: ca 'AC-7' xanh — không phải admin → {} và 0 truy vấn; lỗi 42P01 → {}; lỗi DB khác vẫn ném"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.review_media_roundtrip
+    expected: "exit 0; stdout có 'ROUNDTRIP PASS' và 'dọn: còn 0 dòng của lần chạy'; các dòng ok: agent_output nhận ảnh local + URL dự phòng + URL fbcdn đúng thứ tự, entity_match nhận offer_a/offer_b"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc --noEmit 0 lỗi; eslint 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.review_media_no_cloud
+    expected: "should-NOT-fire: exit 0; stdout có 'LOCAL-ONLY PASS' — data-api/ không nhắc media_files|stg_zalo_posts|zalo-media, FILL của sync-cloud không có stg_zalo_posts; tự kiểm: chuỗi cấy giả bị bắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0 — ranh giới cổng tĩnh (luật 5/6/9) không đổi sau khi thêm chế độ snapshot vào route"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
