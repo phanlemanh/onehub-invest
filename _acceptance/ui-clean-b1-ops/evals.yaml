@@ -79,7 +79,7 @@ evals:
     criterion: AC-11
     executor: script
     cmd: config:executors.script.ui_b1_docs
-    expected: "exit 0; chạy eslint -f json qua report.mjs: tổng sau B1 trong docs/research/ui-baseline-2026-10.md (mục 'Sau B1') bằng tổng máy đếm, hàng app/ops và components/ops = 0 hoặc vắng; catalog.md có dòng app-shell-36 (shell Ops), mỗi block trong b1-block-map.json, c-alert-dialog-5, switch và câu ngoại lệ G4 'KPI và lưới theo block'; routes.md 6 dòng /ops* không còn '(chưa có, B1)' và archetype khớp bảng mục 3 của design. Chiều đỏ (selftest): bản sao tài liệu lệch tổng 1 → exit 1, thông điệp 'docs: tổng …'"
+    expected: "exit 0; chạy eslint -f json qua report.mjs: tổng sau B1 trong docs/research/ui-baseline-2026-10.md (mục 'Sau B1') bằng tổng máy đếm; số mục baseline còn lại trong PHẠM VI FILE của B1 (đếm từ eslint-suppressions.json, ops/deals thuộc B5 nên không tính) = 0 và bằng con số dòng 'Phạm vi B1 … N mục' của tài liệu; catalog.md có dòng app-shell-36 (shell Ops), mỗi block trong b1-block-map.json, c-alert-dialog-5, switch và câu ngoại lệ G4 'KPI và lưới theo block'; routes.md 6 dòng /ops* không còn '(chưa có, B1)' và archetype khớp bảng mục 3 của design. Chiều đỏ (selftest): bản sao tài liệu lệch tổng 1 → exit 1, thông điệp 'docs: tổng …'"
     paths: ["docs/research/ui-baseline-2026-10.md", ".claude/skills/onehub-ui/catalog.md", ".claude/skills/onehub-ui/routes.md", "app/src/**"]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

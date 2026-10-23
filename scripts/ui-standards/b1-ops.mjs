@@ -405,10 +405,14 @@ function docs() {
     const dm = /Tổng\s+(\d+)\s+vi phạm/.exec(after);
     if (!dm) fails.push("docs: mục 'Sau B1' không có dòng 'Tổng N vi phạm'");
     else if (Number(dm[1]) !== total) fails.push(`docs: tổng mục 'Sau B1' = ${dm[1]}, máy đếm ${total}`);
-    for (const dir of ["app/ops", "components/ops"]) {
-      const row = after.split("\n").find((l) => l.startsWith(`| \`${dir}\``));
-      if (row && !/\|\s*0\s*\|/.test(row.split("|").slice(2, 3).join("|") ? `|${row.split("|")[2]}|` : "")) fails.push(`docs: hàng ${dir} ở mục 'Sau B1' khác 0`);
-    }
+    // Phạm vi B1 tính theo FILE (ops/deals thuộc B5) — hàng thư mục của báo cáo gộp cả deals.
+    const supp = json(join(ROOT, "app", "eslint-suppressions.json"))
+    const inB1 = Object.entries(supp).filter(([k]) => k.startsWith("src/") && inScope(k.slice(4)))
+    const left = inB1.reduce((n, [, rules]) => n + Object.values(rules).reduce((m, r) => m + r.count, 0), 0)
+    if (left) fails.push(`docs: còn ${left} mục baseline trong phạm vi B1 (${inB1.map(([k]) => k).join(", ")})`)
+    const sm = /Phạm vi B1[^\n]*?(\d+)\s+mục/.exec(after)
+    if (!sm) fails.push("docs: mục 'Sau B1' thiếu dòng 'Phạm vi B1 … N mục'")
+    else if (Number(sm[1]) !== left) fails.push(`docs: mục 'Sau B1' ghi phạm vi B1 còn ${sm[1]} mục, máy đếm ${left}`)
   }
   const cat = read(join(ROOT, ".claude/skills/onehub-ui/catalog.md"));
   const map = BLOCK_MAP();

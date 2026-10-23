@@ -75,3 +75,52 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 - Dòng "render không thuần" (`Math.random()`/`Date.now()` trong render) do `react-hooks/purity` của `eslint-config-next` lo (mức `error`), không có luật onehub-ui riêng.
 - `eslint-suppressions.json` chỉ được giảm: ESLint 9.39.5 mặc định thoát mã 2 khi còn mục suppression không còn xảy ra, buộc phải `npx eslint --prune-suppressions` sau khi sửa xong.
 - ESLint không tự bắt `eslint-disable` trần hay directive nêu đích danh `onehub-ui/require-disable-reason` (nó nuốt báo cáo); `npm run lint` chạy thêm `check-bare-disables.mjs` để bắt hai dạng đó.
+
+## Sau B1 — cổng Ops (ui-clean-b1-ops)
+
+- **Ngày đo:** 2026-10-23 · **Commit:** `61f168d` (nhánh `claude/ui-clean-b1-ops-c5a53a`, sau khi merge main có PR #2–#5)
+- **Chạy lại:** `cd app && npm run lint:ui-report`
+- **Phạm vi B1 còn 20 mục** baseline trên các file của đợt (`app/ops/**` trừ `ops/deals`, `components/ops/**`, `components/shell/ops-shell/**`) — đếm từ `eslint-suppressions.json` bằng `node scripts/ui-standards/b1-ops.mjs docs`.
+- Hàng `app/ops` còn lại là `ops/deals/page.tsx` (đợt B5). Hàng `components/ops` còn lại là `review-card.tsx` (làm sau khi nhánh enrich vào main — Task 12 của kế hoạch con).
+
+**Tổng 90 vi phạm trong 23 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
+
+#### Theo luật
+
+| Luật | Tổng | Baseline | Ngoại lệ có lý do | Mới (đỏ) |
+|---|---:|---:|---:|---:|
+| `onehub-ui/no-arbitrary-text-size` | 26 | 26 | 0 | 0 |
+| `onehub-ui/no-raw-palette` | 23 | 23 | 0 | 0 |
+| `onehub-ui/no-hardcoded-color` | 16 | 16 | 0 | 0 |
+| `onehub-ui/no-banned-motion` | 8 | 8 | 0 | 0 |
+| `onehub-ui/no-emoji-icons` | 8 | 8 | 0 | 0 |
+| `onehub-ui/no-raw-controls` | 8 | 8 | 0 | 0 |
+| `onehub-ui/no-raw-table` | 1 | 1 | 0 | 0 |
+| **Tổng** | 90 | 90 | 0 | 0 |
+
+#### Theo thư mục (cấp 2 dưới `src/`)
+
+| Thư mục | Tổng | Baseline | Ngoại lệ có lý do | Mới (đỏ) |
+|---|---:|---:|---:|---:|
+| `components/ops` | 20 | 20 | 0 | 0 |
+| `components/marketing` | 18 | 18 | 0 | 0 |
+| `components/invest` | 12 | 12 | 0 | 0 |
+| `components/finder` | 9 | 9 | 0 | 0 |
+| `components/insight` | 9 | 9 | 0 | 0 |
+| `components/auth` | 7 | 7 | 0 | 0 |
+| `components/yield` | 4 | 4 | 0 | 0 |
+| `components/listing` | 3 | 3 | 0 | 0 |
+| `components/saved` | 3 | 3 | 0 | 0 |
+| `app/ops` | 2 | 2 | 0 | 0 |
+| `components/shell` | 2 | 2 | 0 | 0 |
+| `components/compare` | 1 | 1 | 0 | 0 |
+| **Tổng** | 90 | 90 | 0 | 0 |
+
+
+### So với "trước"
+
+| Chỉ số | Trước (138 / 31 file) | Sau B1 |
+|---|---:|---:|
+| `components/ops` | 45 | xem bảng trên |
+| `app/ops` (trừ deals) | 15 | 0 |
+| Kiểu bảng / ô KPI / đầu trang ở cổng Ops | 3 / 2 / 5 | 1 InsightGrid + lưới của block · StatTiles + ô của block (ngoại lệ có tên) · 1 PageHeader |
