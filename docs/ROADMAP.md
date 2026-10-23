@@ -68,6 +68,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (ngày/micro-giây/số jsonb nguyên vẹn); chặn tụt 50%; bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
   → `S0x:<số>`, soát tên nguồn trước khi gửi. Thước `pipeline/scripts/check-cloud-sync.mjs <ca>`,
   máy đo prod chỉ đọc `cloud-sync-watch.mjs`; triển khai: `docs/ops/cloud-sync-atomic.md`.
+- Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
+  (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
+  CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
 | Mã | Nguồn | Trạng thái | Ghi chú |
@@ -191,6 +194,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V4 | Siết quyền: cổng Ops đóng mặc định (role `ops`/`admin` hoặc `OPS_EMAILS`); `/api/zalo-media` chỉ ảnh trong `~/.openclaw/media` + `/tmp/openclaw` (realpath, không khớp tiền tố) — `_acceptance/ops-access-hardening` | ✅ Cổng 2 ký 23/10 — PR #5 (xếp chồng trên #3). Trước deploy: kiểm Vercel prod — user không phải admin cần `role='ops'` hoặc `OPS_EMAILS` |
 | V5 | Tài khoản ops thử chỉ ở DB local (`scripts/dev-ops-account.mjs`) — máy tự đăng nhập dev để chụp/ui-check `/ops/**` | ✅ 2026-10-22 |
 | V6 | Cloud sync nguyên tử — prod không còn cửa sổ trống, không xoá `saved_markets`, ngày đúng — `_acceptance/cloud-sync-atomic` | 🔄 code + thước xanh; chờ Mạnh áp migration 038 lên Supabase rồi merge (docs/ops/cloud-sync-atomic.md) |
+| V7 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
 
 ### Track 6 — Chuẩn UI/UX ReUI
 | # | Việc | Trạng thái |
