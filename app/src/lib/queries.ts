@@ -458,8 +458,6 @@ export type ListingDetail = {
   priceListed: number | null;
   /** URL ảnh CDN (đường dẫn gốc, render thêm ?im_w=) — null khi snapshot cũ thiếu. */
   photoUrls: string[] | null;
-  photoSource: "self" | "airdna" | null; // G1: fallback ảnh AirDNA khi tự thu thiếu
-  listingUrl: string | null; // link Airbnb gốc (từ AirDNA)
   reviewCount: number | null;
   lat: number | null;
   lng: number | null;
@@ -494,28 +492,10 @@ export async function getListingDetail(id: string): Promise<ListingDetail | null
     [id],
   );
 
-  // G1: listing chưa có ảnh (tự thu thiếu/PDP chưa fetch) → mượn ảnh AirDNA
-  // của cùng căn (id trùng abnb_*), kèm URL Airbnb gốc.
-  let photoUrls: string[] | null = Array.isArray(r.photo_urls) ? r.photo_urls : null;
-  let photoSource: "self" | "airdna" | null = photoUrls ? "self" : null;
-  let listingUrl: string | null = null;
-  if (!photoUrls) {
-    const { rows: al } = await pool.query(
-      `SELECT photo_urls, listing_url FROM airdna_listings WHERE id = $1 AND photo_urls IS NOT NULL LIMIT 1`,
-      [id],
-    );
-    if (al[0]?.photo_urls?.length) {
-      photoUrls = al[0].photo_urls;
-      photoSource = "airdna";
-      listingUrl = al[0].listing_url ?? null;
-    }
-  } else {
-    const { rows: al } = await pool.query(
-      `SELECT listing_url FROM airdna_listings WHERE id = $1 AND listing_url IS NOT NULL LIMIT 1`,
-      [id],
-    );
-    listingUrl = al[0]?.listing_url ?? null;
-  }
+  // Chỉ ảnh tự thu (luật 5: AirDNA không lên Invest) — listing chưa thu PDP
+  // thì không có ảnh, trang hiện trạng thái trống.
+  const photoUrls: string[] | null =
+    Array.isArray(r.photo_urls) && r.photo_urls.length > 0 ? r.photo_urls : null;
   const booked = nightRows.filter((n) => n.available === false);
   // Listing không giá nằm ngoài mẫu metrics (pipeline/sql/300_metrics.sql): lịch
   // "kín" của nó phần lớn là bị chặn, không phải đặt thật → công suất là "chưa biết".
@@ -540,8 +520,6 @@ export async function getListingDetail(id: string): Promise<ListingDetail | null
     id: r.id,
     name: r.name,
     photoUrls,
-    photoSource,
-    listingUrl,
     reviewCount: r.review_count ?? null,
     roomType: r.room_type,
     propertyType: r.property_type,

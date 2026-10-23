@@ -1,0 +1,21 @@
+{"ts":"2026-10-23T00:09:38Z","round":1,"evalId":"E1","run_id":"glossary-context-E1-20261023T000938Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs glossary"}
+{"ts":"2026-10-23T00:09:38Z","round":1,"evalId":"E2","run_id":"glossary-context-E2-20261023T000938Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs w6"}
+{"ts":"2026-10-23T00:09:39Z","round":1,"evalId":"E3","run_id":"glossary-context-E3-20261023T000938Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs rebuild"}
+{"ts":"2026-10-23T00:09:45Z","round":1,"evalId":"E4","run_id":"glossary-context-E4-20261023T000945Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:09:45Z","round":1,"evalId":"E5","run_id":"glossary-context-E5-20261023T000945Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:09:46Z","round":1,"evalId":"E6","run_id":"glossary-context-E6-20261023T000946Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:09:56Z","round":1,"evalId":"E7","run_id":"glossary-context-E7-20261023T000956Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs naming-rule"}
+{"ts":"2026-10-23T00:09:56Z","round":1,"evalId":"E8","run_id":"glossary-context-E8-20261023T000956Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs product-page"}
+{"ts":"2026-10-23T00:09:56Z","round":1,"evalId":"E11","run_id":"glossary-context-E11-20261023T000956Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs runner"}
+{"ts":"2026-10-23T00:09:57Z","round":1,"evalId":"E12","run_id":"glossary-context-E12-20261023T000956Z","exit_code":0,"cmd":"cd app && npm run test:lint-rules"}
+{"ts":"2026-10-23T00:14:27Z","round":2,"evalId":"E1","run_id":"glossary-context-E1-r2-20261023T001427Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs glossary"}
+{"ts":"2026-10-23T00:14:27Z","round":2,"evalId":"E2","run_id":"glossary-context-E2-r2-20261023T001427Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs w6"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E3","run_id":"glossary-context-E3-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs rebuild"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E4","run_id":"glossary-context-E4-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E5","run_id":"glossary-context-E5-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E6","run_id":"glossary-context-E6-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E7","run_id":"glossary-context-E7-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs naming-rule"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E8","run_id":"glossary-context-E8-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs product-page"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E11","run_id":"glossary-context-E11-r2-20261023T001428Z","exit_code":0,"cmd":"node scripts/glossary/acceptance.mjs runner"}
+{"ts":"2026-10-23T00:14:28Z","round":2,"evalId":"E12","run_id":"glossary-context-E12-r2-20261023T001428Z","exit_code":0,"cmd":"cd app && npm run test:lint-rules"}
+{"ts":"2026-10-23T00:23:14Z","kind":"repin","run_id":"repin-20261023T002309Z-10984","sha":"ded85a49d805032d321f48125901cce0e0beae92","suites_exit":[0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E11":0,"E12":0},"wall_s":5.4,"so_lenh":10,"evals_not_machine":["E9","E10"],"tong_ket":{"ket_cuc":"xanh","phut":0.1,"so_lenh":10,"model_goi":0,"model_carry":0,"chap_chon":0}}
