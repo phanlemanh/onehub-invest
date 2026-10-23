@@ -40,7 +40,7 @@ evals:
     executor: test
     cmd: config:executors.test.scripts
     paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
-    expected: "exit 0; ca 'AC-5 S04 completed không đo, mã thiếu SLO → no-slo' ok và 'AC-5 bảng SLO đúng năm giá trị giờ' ok (giá trị S01/S02/S03 theo đáp án Hỏi-1) (không skip)"
+    expected: "exit 0; ca 'AC-5 S04 completed không đo, mã thiếu SLO → no-slo' ok và 'AC-5 bảng SLO đúng năm giá trị giờ' ok (S01 192 · S02 840 · S03 72 · S05 12 · S06 36 giờ) (không skip)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E6

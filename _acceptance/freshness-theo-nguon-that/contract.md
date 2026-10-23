@@ -5,9 +5,11 @@ slug: freshness-theo-nguon-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, docs]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-23-freshness-theo-nguon-that-design.md
 lo_trinh_ma: AU4
+approved_by: Mạnh
+approved_at: 2026-10-23
 ---
 
 # Acceptance Contract: freshness-theo-nguon-that
@@ -29,7 +31,7 @@ Source input: hàng AU4 `docs/plan/lo-trinh.json` + ô cơ hội `_acceptance/fr
 - AC-2: Given fixture S02 chỉ có hàng `airdna_markets` (captured_at 2 ngày, `country_code` vn) và KHÔNG có hàng S02 nào trong `airbnb_snapshots`, When `readFreshness`, Then đúng một hàng S02/vn `fresh` và không hàng S02 nào `none`; chiều đỏ: captured_at 36 ngày → S02/vn `stale`.
 - AC-3: Given fixture `stg_zalo_posts` trong snapshot thuộc S03 có hàng `agent_id` ∈ `source_ids` của S05 (mới 2 giờ), hàng `agent_id` khác (mới 1 giờ) và hàng snapshot mock cũ 5 ngày, When `readFreshness`, Then S05/hanoi `fresh` từ đúng hàng S05, S03/hanoi `fresh` từ hàng S03 mới (hàng mock cũ không làm S03 quá hạn); chiều đỏ: hàng S05 thành 13 giờ → S05/hanoi `stale` trong khi S03/hanoi vẫn `fresh` (hai mã tách nhau).
 - AC-4: Given fixture `stg_chotot_ads` ở hai snapshot hanoi và hcmc của S06 (10 giờ và 40 giờ), When `readFreshness`, Then S06/hanoi `fresh`, S06/hcmc `stale` (SLO S06 36 giờ) — thành phố lấy từ snapshot của chính hàng.
-- AC-5: Given registry fixture có S04 `completed` (có hàng dữ liệu cũ) và một mã `active` không có trong bảng SLO (có hàng mới), When `readFreshness`, Then không hàng S04 nào; mã thiếu SLO ra `no-slo`; SLO đúng bảng S05 12 · S06 36 giờ và S01 · S02 · S03 theo đáp án Hỏi-1 (khuyến nghị 192 · 840 · 72 giờ = 8 · 35 · 3 ngày của ADR-0007) — ca ghim cả năm giá trị.
+- AC-5: Given registry fixture có S04 `completed` (có hàng dữ liệu cũ) và một mã `active` không có trong bảng SLO (có hàng mới), When `readFreshness`, Then không hàng S04 nào; mã thiếu SLO ra `no-slo`; SLO đúng bảng S05 12 · S06 36 giờ và S01 192 · S02 840 · S03 72 giờ (8 · 35 · 3 ngày của ADR-0007 — Hỏi-1 = A, Mạnh 23/10) — ca ghim cả năm giá trị.
 - AC-6: Given fixture S03 chỉ có dữ liệu Hà Nội và S01 có Hà Nội + TP.HCM, và một mã `active` không có hàng nào, When `readFreshness`, Then không hàng S03/hcmc nào (bỏ ghép chéo), S01 có đúng hai thành phố, mã không dữ liệu ra đúng một hàng `none`; chiều đỏ: bỏ hàng S01/hcmc khỏi fixture → S01 còn một hàng, không sinh `none` cho hcmc.
 - AC-7: Given fixture dựng trong một schema tạm riêng của lượt chạy (`LIKE` bảng thật, xoá khi xong) và CLI thật `node scripts/check-freshness.mjs --schema <tạm>` chạy làm tiến trình con, When (a) mọi hàng `fresh`, (b) S05 `last` = now − 13 giờ với `--now` cố định, (c) có `none`/`no-slo`, Then (a) thoát 0; (b) thoát 1, dòng chữ của S05/hanoi ghi đúng tuổi `13` giờ và SLO `12` giờ, và `--json` có hàng `code` S05, `city` hanoi với `ageHours` 13, `sloHours` 12, `status` stale (cùng một hàng); (c) thoát 1; webhook trỏ máy chủ HTTP local nhận đúng một body chứa `S05/hanoi`; registry fixture mang `real_name` là chuỗi canh `REALNAME-CANARY` và `source_ids` canh — ca kiểm chuỗi canh CÓ trong registry trước, rồi đòi nó VẮNG trong stdout, stderr, `--json` và body webhook.
 - AC-8: Given DB local hiện tại lúc chấm, When chạy CLI thật `node scripts/check-freshness.mjs --json` và bản chữ, Then cả hai thoát 1 và tập hàng `stale | none | no-slo` chỉ gồm S05/hanoi với `status` stale và `last` 2026-10-21T14:02 (±1 phút) — ca chẩn đoán in đủ mã, thành phố, status, `last` và giờ chấm, không chặn bộ test; tập lệch vì một nguồn thật đổi trạng thái thì ghi «ngoài hợp đồng» kèm hàng gây lệch.
