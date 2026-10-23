@@ -92,5 +92,5 @@ evals:
     criterion: AC-10
     executor: judgment
     question: "Hướng dẫn có cho Mạnh đủ để triển khai an toàn không: vì sao; thứ tự bắt buộc (Mạnh áp migration sync_stage lên cloud TRƯỚC khi merge); lệnh áp + lệnh kiểm (sync_stage có, anon không có quyền); cách chạy lượt thử có đo bằng cloud-sync-watch và đọc kết quả; cách lùi về bản cũ; hành vi của code mới khi cloud chưa có sync_stage (dừng, không đụng dữ liệu) — và không bước nào giao agent tự đổi schema production? SQL được trỏ có khớp lời hướng dẫn không?"
-    inputs: [docs/ops/cloud-sync-atomic.md, pipeline/sync-cloud.mjs, _acceptance/cloud-sync-atomic/contract.md]
+    inputs: [docs/ops/cloud-sync-atomic.md, db/migrations/038_sync_stage.sql, pipeline/sync-cloud.mjs, _acceptance/cloud-sync-atomic/contract.md]
     evidence_required: [judged_by, verdict, rationale]
