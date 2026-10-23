@@ -25,9 +25,18 @@ const freshnessClient: QueryClient = {
   query: (sql, args) => pool.query(sql, args as unknown[] | undefined),
 };
 
+/** Độ tươi chỉ đo được ở máy local: cloud KHÔNG có source_registry và bảng nạp (tầng A — leak gate, drop
+ * 2026-10-21; cùng lý do với getMarketFreshness ở lib/queries). Khi vắng, hai hàm độ tươi trả rỗng thay vì 500
+ * (sự cố prod 24/10) và trang nói rõ «Độ tươi chỉ đo ở máy local». */
+export async function freshnessLocalOnly(): Promise<boolean> {
+  const { rows } = await pool.query<{ r: string | null }>(`SELECT to_regclass('source_registry')::text AS r`);
+  return rows[0]?.r == null;
+}
+
 /** /ops (+ /api/v1/ops/coverage): từng ô nguồn × thành phố theo định nghĩa chung (lib/freshness, AU6).
  * Mã active chưa khai SLO không có ô — nó hiện ở /ops/collections là «Chưa khai SLO». */
 export async function getCoverageOverview(): Promise<CoverageRow[]> {
+  if (await freshnessLocalOnly()) return [];
   const rows = await readFreshness(freshnessClient);
   return rows
     .filter((r): r is FreshnessRow & { sloHours: number; status: CoverageRow["status"] } => r.status !== "no-slo")
@@ -66,6 +75,7 @@ export type SourceFeedHealth = {
  * ghi snapshot) + stg/offers; ĐỘ TƯƠI và SLO lấy từ định nghĩa chung lib/freshness (AU6) — cùng số với /ops.
  * Không cần fact mới — đúng nguyên tắc precompute/derive, React chỉ đọc. */
 export async function getSourceFeedHealth(): Promise<SourceFeedHealth[]> {
+  if (await freshnessLocalOnly()) return [];
   const { rows: reg } = await pool.query(
     `SELECT code, label_vi, status, note FROM source_registry ORDER BY code`,
   );
