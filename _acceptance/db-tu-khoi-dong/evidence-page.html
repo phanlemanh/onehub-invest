@@ -1,0 +1,115 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · db-tu-khoi-dong</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>DB local tự khởi động lại sau khi Docker hoặc máy khởi động lại</h1><div class="sub">Trang hồ sơ · <span class="mono">db-tu-khoi-dong</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">DB local tự khởi động lại sau khi Docker hoặc máy khởi động lại</div></div><div class="o" data-o="vi_sao" data-nguon="opportunity.md"><div class="hoi">Vì sao</div><div class="tra">Audit L7: compose không khai restart; restart policy đang đặt tay.</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra">2026-10-23</div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra">[đề xuất] đã đạt «Khởi động lại Docker: container DB lên lại không cần tay» chưa? — hạn …</div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">4 mục để ngoài phạm vi · 0 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Đáng: Mạnh · Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>7</b></span><span data-k="phep_do">Phép đo <b>9</b></span><span data-k="luot_cham">Lượt chấm <b>2</b></span><span data-k="token">Token <b>90.763</b></span><span data-k="quyet_dinh_may">Quyết định máy <b>9</b></span><span data-k="quyet_dinh_nguoi">người <b>1</b></span><span data-k="ma">Mã <b>40fb809</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Audit L7: compose không khai restart; restart policy đang đặt tay.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given `db/docker-compose.yml` của cây, When đọc cấu hình gộp bằng</li><li data-ac="AC-2"><b>AC-2</b> — Given bốn bản compose hỏng trong thư mục tạm — bỏ dòng `restart`, `restart: &quot;no&quot;`,</li><li data-ac="AC-3"><b>AC-3</b> — Given một daemon Docker cách ly (container dind tạm) và container dựng bằng</li><li data-ac="AC-4"><b>AC-4</b> — Given cùng daemon cách ly ở AC-3 và bản compose bỏ dòng `restart`, When dockerd khởi động lại</li><li data-ac="AC-5"><b>AC-5</b> — Given máy này đang chạy, When chạy `live` (chỉ đọc), Then `one-invest-db` đang chạy với</li><li data-ac="AC-6"><b>AC-6</b> — Given DB thật `one-invest-db` và các container khác trên daemon của máy, When chạy `restart` —</li><li data-ac="AC-7"><b>AC-7</b> — Given `docs/ops/runtime-map.md` sau vòng, When Mạnh hoặc agent đọc mục DB local tự khởi</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="mono" data-design-doc>docs/superpowers/specs/2026-10-23-db-tu-khoi-dong-design.md</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 10</button><button class="btn" data-loc="may" aria-pressed="false">Máy 9</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 1</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261023T092300Z-1"><b>2026-10-23</b> · Máy · approach · S1 — Khai restart: unless-stopped (không phải always) cho service db trong db/docker-compose.yml.<div class="note">Audit 23/10 §6 dòng 0.7 ghi đúng lựa chọn này, và nó trùng policy đang đặt tay nên hành vi máy không đổi.</div></li><li data-loai="may" data-id="d-20261023T092300Z-2"><b>2026-10-23</b> · Máy · approach · S1 — Chứng «Docker khởi động lại → DB lên lại» bằng daemon cách ly (container dind tạm, docker restart nó) kèm đối chứng compose bỏ restart, không diễn tập colima restart thật.<div class="note">Đã thử 23/10: compose có restart → running sau khi dockerd cách ly lên lại; bản gốc không restart → exited; đo không chạm one-invest-db (E3, E4, E6).</div></li><li data-loai="may" data-id="d-20261023T092300Z-3"><b>2026-10-23</b> · Máy · descope · S1 — Không tạo lại container one-invest-db trong vòng; lần docker compose up kế tiếp sẽ tự tạo lại theo file mới.<div class="note">docker inspect 23/10: container đang sống đã mang policy unless-stopped (đặt tay), nên tạo lại không thêm hành vi nào.</div></li><li data-loai="may" data-id="d-20261023T092300Z-4"><b>2026-10-23</b> · Máy · descope · S1 — bỏ đặc-tả-UX — việc chỉ đổi compose, script kiểm và tài liệu, không có màn hình nào.<div class="note">contract surfaces: [config, docs]; không tệp nào dưới app/ bị đụng.</div></li><li data-loai="nguoi" data-id="d-20261023T093128Z-6"><b>2026-10-23</b> · Người · seal · gate1 — </li><li data-loai="may" data-id="d-20261023T092600Z-5"><b>2026-10-23</b> · Máy · approach · S1 — Hỏi Mạnh: nhận phép thử khởi động lại Docker trong daemon cách ly (dind) cộng đọc máy thật chỉ đọc làm bằng chứng ngưỡng sống, hay hẹn giờ diễn tập colima restart thật.<div class="note">Gap-probe P0: lối diễn tập thật không chết, chỉ cần người cho phép và chọn giờ ngoài khung job; dind là proxy (E3, E4), live chỉ đọc (E5).</div></li><li data-loai="may" data-id="d-20261023T093838Z-7"><b>2026-10-23</b> · Máy · fix · S3 — Viết lại vế (5) câu hỏi E7 thành «bảo agent tự khởi động lại colima hoặc Docker của máy», bỏ cụm có chữ chạy-lệnh trong backtick; nghĩa không đổi.<div class="note">s4-args từ chối sinh tệp vì câu hỏi judgment chứa «chạy `» — đọc như đòi hội đồng chạy lệnh.</div></li><li data-loai="may" data-id="d-20261023T093858Z-8"><b>2026-10-23</b> · Máy · fix · S3 — Sửa expected của E6 cho khớp chế độ cleanup: đối chứng dương là thấy container dind khi lượt đang chạy; đối chứng dương của StartedAt ghi là nằm ở E3.<div class="note">Bản cũ đòi một dòng mà chế độ cleanup không in (nó ở chế độ restart, E3) — bộ chấm sẽ đánh trượt oan.</div></li><li data-loai="may" data-id="d-20261023T094644Z-9"><b>2026-10-23</b> · Máy · fix · S4-r1 — Đưa tên container dind và thư mục tạm ra biến toàn cục để trap EXIT dọn được cả đường lỗi thoát bằng return, và thêm lượt ép lỗi compose (AU7_FAIL_AFTER=compose) vào chế độ cleanup.<div class="note">S4 r1 rejectFindings (AC-6): biến local mất khi trap EXIT chạy sau return nên bốn đường lỗi để sót container privileged; E6 cũ chỉ thử exit trong hàm và SIGTERM.</div></li><li data-loai="may" data-id="d-20261023T095006Z-10"><b>2026-10-23</b> · Máy · fix · S4-r1 — Nới thời gian chờ dockerd trong Docker tạm từ 60 lên 120 giây và in đuôi log khi quá hạn.<div class="note">Sau sửa r1, một lượt restart đỏ vì dockerd tạm chưa lên trong 60 giây lúc máy tải ~5; chạy lại 3/3 xanh khoảng 45 giây mỗi lượt.</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E1-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E2-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E3-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E4-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E5-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E6-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>judgment</td><td><span class="badge pass">PASS</span></td><td class="mono">—</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E8-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-db-tu-khoi-dong-E9-r2</td><td class="mono">2026-10-23T09:50:19Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given `db/docker-compose.yml` của cây, When đọc cấu hình gộp bằng</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E1-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_static</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart static: ĐẠT</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given bốn bản compose hỏng trong thư mục tạm — bỏ dòng `restart`, `restart: &quot;no&quot;`,</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E2-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_mutation</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart mutation: ĐẠT</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given một daemon Docker cách ly (container dind tạm) và container dựng bằng</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E3-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_restart</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart restart: ĐẠT</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-4: Given cùng daemon cách ly ở AC-3 và bản compose bỏ dòng `restart`, When dockerd khởi động lại</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E4-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_restart</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart restart: ĐẠT</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-5: Given máy này đang chạy, When chạy `live` (chỉ đọc), Then `one-invest-db` đang chạy với</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E5-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_live</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart live: ĐẠT</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-6: Given DB thật `one-invest-db` và các container khác trên daemon của máy, When chạy `restart` —</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E6-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_cleanup</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart cleanup: ĐẠT</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · judgment</h3><p class="crit">AC-7: Given `docs/ops/runtime-map.md` sau vòng, When Mạnh hoặc agent đọc mục DB local tự khởi</p>
+<div class="kv"><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>judged_by <b>judge-subagent (fresh context), hội đồng ba lăng kính</b></span></div>
+<p class="note"><b>Phán đoán:</b> Mục «DB local tự khởi động» trong docs/ops/runtime-map.md (dòng 106-134) có đủ năm điều; lệnh và policy trong tài liệu khớp compose và script.</p>
+<div class="ov ovok">human_override: # chi nguoi ghi</div>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-1: Given `db/docker-compose.yml` của cây, When đọc cấu hình gộp bằng</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E8-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_diff</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart diff: ĐẠT</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-5: Given máy này đang chạy, When chạy `live` (chỉ đọc), Then `one-invest-db` đang chạy với</p>
+<div class="kv"><span>run_id <b>minted-db-tu-khoi-dong-E9-r2</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.db_autostart_live_selftest</b></span><span>verified_at <b>2026-10-23T09:50:19Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">check-db-autostart live-selftest: ĐẠT</pre>
+</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1-E6, E8, E9 đạt; E7 hội đồng đề xuất PASS; có 1 finding trong hợp đồng (AC-6, dọn dind khi lượt lỗi thoát bằng return) và 2 finding ngoài hợp đồng.</li><li>Round 2: E1-E6, E8, E9 đạt trên commit 40fb809 sau khi sửa AC-6 (chờ dockerd trong dind tới 120 giây, dọn dind cả khi lỗi thoát bằng return); E7 hội đồng đề xuất PASS; không còn finding trong hợp đồng, 2 finding ngoài hợp đồng giữ nguyên từ round 1.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><table data-tai-nguyen><thead><tr><th>Khối</th><th>Tác tử</th><th>Token đầu ra</th></tr></thead><tbody><tr><td>S4 round 1</td><td>24</td><td>49.700</td></tr><tr><td>S4 round 2</td><td>22</td><td>41.063</td></tr></tbody></table><p class="note">2 lượt chấm · tổng 90.763 token</p></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Diễn tập thật `colima restart` trên máy: dừng cùng lúc DB và 14 container dự án khác giữa giờ job chạy. Mạnh muốn diễn tập thì chạy tay rồi `bash scripts/check-db-autostart.sh live`.</li><li data-loai="ngoai">Tạo lại `one-invest-db` ngay trong vòng — policy đang sống đã là `unless-stopped`, tạo lại chỉ thêm gián đoạn.</li><li data-loai="ngoai">Chuyển colima sang LaunchDaemon chạy trước đăng nhập (cấu hình máy, ngoài kho).</li><li data-loai="ngoai">Job thoát ≠ 0 / cảnh báo khi DB không tới (AU3), plist collector-api/kev (L11, làn ZCode).</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">40fb80901c8aa5b74a784c34b168173960a18231</b></span><span>Ngày ký <b>—</b></span><span>Cổng Đáng: Mạnh · Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><ul data-gia-tri-nguong><li data-nguong>Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Khởi động lại Docker: container DB lên lại không cần tay» chưa? — <b>chưa đo</b></li><li data-nguong>Kết quả nào là SỐNG: [đề xuất] Khởi động lại Docker: container DB lên lại không cần tay — <b>chưa đo</b></li><li data-nguong>Kết quả nào là CHẾT: [đề xuất] chưa đạt «Khởi động lại Docker: container DB lên lại không cần tay» khi hết timebox — <b>chưa đo</b></li><li data-nguong>Timebox: … — <b>chưa đo</b></li></ul></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
