@@ -155,7 +155,7 @@ export async function resolveContext(
     // T1-T12 = tháng nhận nhà; OP/GP/PMH/OCP = viết tắt dự án, không phải tòa
     if (/^T\d{1,2}$/.test(code) || ["OP", "GP", "PMH", "OCP"].includes(code)) continue;
     result.buildingHint = code;
-    result.buildingBasis = `luật mã toà: «${m[0].trim()}» trong tin`;
+    result.buildingBasis = `luật mã toà: «${(m?.[0] ?? code).trim()}» trong tin`;
     break;
   }
 
