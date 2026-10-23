@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ba9ae020ce0aea60f59b5a11927a676760181cff
+verified_commit: d1270328ec4a69050f263e89c9b1b94fdf49b116
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -297,3 +297,7 @@ Round 3 (verified_commit 3b8ec24): PASS, 16/16 eval và 3 lệnh suite đạt. C
 ### Re-pin lần 1 — 2026-10-23, do merge main 148c073 (enrich PR #14) + api-contract bỏ so phần hoãn
 run_id: repin-20261023T015632Z-18112
 sha: ba9ae020ce0aea60f59b5a11927a676760181cff · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12 (E12 không khai paths), E13 (E13 không khai paths), E14 (E14 không khai paths) · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-10-23, do merge main b5aef31 (PR #6 bản đồ đích Invest) + thước docs đọc cột theo tiêu đề
+run_id: repin-20261023T021448Z-51921
+sha: d1270328ec4a69050f263e89c9b1b94fdf49b116 · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng · ngoài làn máy: E12 (E12 không khai paths), E13 (E13 không khai paths), E14 (E14 không khai paths) · AC không có chốt máy: AC-10
