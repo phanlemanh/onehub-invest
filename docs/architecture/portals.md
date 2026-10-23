@@ -119,9 +119,8 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | `/saved` | Đã lưu | auth |
 | `/login` | Đăng nhập | auth |
 
-- **Thuật ngữ cố định trong portal** (bắt buộc dùng thống nhất trong UI):
-  `Finder` = chế độ khám phá/rồi hẹp; `Insight` = trang chi tiết một khu vực;
-  `Listing`; `Market Score`; `ADR`; `Occupancy`; `Yield`.
+- **Thuật ngữ**: nhãn UI, tên code và slug URL chốt ở `CONTEXT.md` (gốc repo, 2026-10-23) —
+  thay danh sách cũ ở đây.
 
 ### Cổng 2 — OPS PORTAL (cổng vận hành dữ liệu)
 
@@ -205,7 +204,8 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
 
 1. **Mọi trang mới phải khai báo portal.** Không biết thuộc cổng nào → dừng và
    hỏi, đừng tự chen route vào `/`.
-2. **URL**: ASCII kebab-case không dấu; giữ pattern `/[country]/[market]/…`
+2. **URL**: tiếng Anh, ASCII kebab-case, theo `Slug URL` của `CONTEXT.md` (luật ở `AGENTS.md` ›
+   Quy ước); giữ pattern `/[country]/[market]/…`
    cho Invest Portal; `/ops/<tính-năng-số-nhiều>` cho Ops. Danh từ số nhiều
    cho collection (`/ops/collections`), số ít cho detail (`/listing/abc`).
 3. **Auth**: `/ops/**` = middleware auth + (sau này) role `ops`. Mọi thứ dưới
@@ -213,8 +213,8 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
    ngoài `/ops`.
 4. **Nav tách riêng**: Invest Portal không hiển thị link Ops trong nav chính
    (chỉ footer dạng "Nội bộ"). Ops nav không trỏ về trang marketing.
-5. **Đặt tên hiển thị**: code/URL tiếng Anh; UI tiếng Việt theo bảng thuật ngữ
-   Mục 4 (Finder/Insight giữ nguyên tiếng Anh vì là thuật ngữ sản phẩm).
+5. **Đặt tên hiển thị**: code/URL tiếng Anh; UI tiếng Việt theo `CONTEXT.md`
+   (Finder/Insight là tên tính năng trong code và tài liệu, UI không in hai chữ này).
 6. **Chuyển `/design` → `/ops/design`** trong lần refactor kế tiếp (cùng middleware).
 7. **IA Ops**: nội dung `/ops/**` mới phải tuân theo "IA Ops — nguyên tắc
    phân trang" (mục Cổng 2): quan sát ở Thu thập, quản trị admin ở Nguồn.
