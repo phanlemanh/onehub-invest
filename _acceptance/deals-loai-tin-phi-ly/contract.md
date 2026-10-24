@@ -5,7 +5,7 @@ slug: deals-loai-tin-phi-ly
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-deals-loai-tin-phi-ly-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24T12:02:57Z
@@ -82,3 +82,9 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Đưa «Căn giá tốt» lên cổng Invest.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: nếu bước tính đêm hỏng giữa chừng, vài căn có diện tích hay số phòng phi lý có thể hiện lại trên «Căn giá tốt» tới lượt đêm sau.
+  - Ngoài-2: mục «Chênh giá câu» trong từ điển và giải thích cột trong mappings.yaml chưa ghi rằng tin phi lý bị bỏ số giảm.
+  - Ngoài-3: nhãn % giảm và nút gọi trên thẻ còn kiểu cũ, chưa theo bộ thành phần chuẩn — để UI10 làm lại trang.
+  - Ngoài-4: khi truy vấn đầy đủ gặp lỗi bất ngờ, trang lặng lẽ hiện danh sách không có liên hệ, ảnh, nội dung tin.
