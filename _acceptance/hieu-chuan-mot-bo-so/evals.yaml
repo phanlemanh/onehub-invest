@@ -8,7 +8,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-1 market đại diện' ma trận viết trước pickRepresentative 4 dòng (hai market 10/3 → market 10; hoà 5/5 → mã nhỏ hơn; một market 0 cạnh market 7 → market 7; danh sách rỗng → null) kèm số market; ca fixture: khu vực có 2 market S02 (một rỗng) gọi hai lần → cùng airdna_id, là market có listing; vẽ thẻ trong jsdom → có chữ nguyên văn 'đại diện cho 2 market S02'; chiều đỏ: câu cũ LIMIT 1 không ORDER BY trả market rỗng khi xếp bảng nghịch"
+    expected: "exit 0; ca 'HC-AC-1 market đại diện' ma trận viết trước pickRepresentative 4 dòng (hai market 10/3 → market 10; hoà 5/5 → mã nhỏ hơn; một market 0 cạnh market 7 → market 7; danh sách rỗng → null) kèm số market; ca fixture: khu vực có 2 market S02 (một rỗng) gọi hai lần → cùng airdna_id, là market có listing; vẽ thẻ trong jsdom → có chữ nguyên văn 'đại diện cho 2 thị trường S02'; chiều đỏ: câu cũ LIMIT 1 không ORDER BY trả market rỗng khi xếp bảng nghịch"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2

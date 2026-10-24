@@ -16,7 +16,7 @@ state → `playwright-cli state-load` → che tầng A → chụp), runner `play
 
 ## Global Constraints
 
-- Chữ nguyên văn (Cổng Phạm vi 25/10): `Listing tự thu: số listing đang theo dõi trong cả khu vực (gồm phường con)` · `<n> thị trường hiệu chuẩn` · `đại diện cho <k> market S02` · Badge `warning-light` `mẫu mỏng` · `Chưa có số: A, B, …`.
+- Chữ nguyên văn (Cổng Phạm vi 25/10): `Listing tự thu: số listing đang theo dõi trong cả khu vực (gồm phường con)` · `<n> thị trường hiệu chuẩn` · `đại diện cho <k> thị trường S02` · Badge `warning-light` `mẫu mỏng` · `Chưa có số: A, B, …`.
 - Ngưỡng mẫu mỏng: cỡ mẫu metrics (`max(listing_count)` của `market_metrics` cho khu vực) `< 5`.
 - Market đại diện: nhiều `listing_count` S02 (kỳ mới nhất) nhất; hoà → `airdna_id` nhỏ nhất (so số khi cả hai là số).
 - «Chưa có số» = mọi số của hai phía null hoặc 0 và điểm S02 null hoặc 0.
@@ -67,7 +67,7 @@ independent: false (dùng Task 1) · phục vụ E1 (fixture), E2
 
 **Interfaces:**
 - Consumes: `loadOurListings`, `pickRepresentative`, `Queryable` (Task 1).
-- Produces: `getTruthfulCoverage(db?: Queryable)`, `getAirdnaMarkets(db?: Queryable)` (`ourListings` = số cây của `ourAreaId`, `null` khi không nối), `getAirdnaComparison(areaId: string, db?: Queryable)` trả thêm `representative: { airdnaId: string; ofMarkets: number }`, `ourListings: number` (số cây), `sampleListings: number | null` (`max(listing_count)` market_metrics); dòng metric `"Listing"` đổi tên `"Listing tự thu"` với `ourValue = ourListings`.
+- Produces: `getTruthfulCoverage(db?: Queryable)`, `getAirdnaMarkets(db?: Queryable)` (`ourListings` = số cây của `ourAreaId`, `null` khi không nối), `getAirdnaComparison(areaId: string, db?: Queryable)` trả thêm `representative: { airdnaId: string; ofMarkets: number }`, `ourListings: number` (số cây), `sampleListings: number | null` (`max(listing_count)` market_metrics); dòng metric `"Listing"` (giữ tên — ON12 ghim) với `ourValue = ourListings`.
 - Crosswalk mới: lấy MỌI `source_area_key` của khu vực kèm `listing_count` kỳ mới nhất (`DISTINCT ON (airdna_id) … ORDER BY period DESC`), rồi `pickRepresentative`.
 
 - [ ] **Step 1: Viết test hỏng** — fixture trong giao dịch (khoá 33033): khu vực `vn-zz-test` + phường con `vn-zz-test-p1`, 3 listing ở cha + 4 ở phường; hai market S02 `zz1` (listing_count 0) chèn TRƯỚC `zz2` (listing_count 9); `market_metrics` cho khu vực với `listing_count` 1. Ca `HC-AC-1 fixture`: gọi `getAirdnaComparison('vn-zz-test', c)` hai lần → cả hai `representative.airdnaId === 'zz2'`, `ofMarkets === 2`; chiều đỏ: câu cũ `SELECT source_area_key … LIMIT 1` trả `'zz1'`. Ca `HC-AC-2 một số tự thu`: dòng `vn-zz-test` của `getTruthfulCoverage(c)`, dòng `zz2` của `getAirdnaMarkets(c)` và `getAirdnaComparison` đều cho 7 (vẽ ở Task 3); chiều đỏ: `max(listing_count)` = 1 ≠ 7.
@@ -92,7 +92,7 @@ independent: false (dùng Task 1–2) · phục vụ E1 (vẽ), E2 (vẽ), E3, E
 - Trang: `const cal = splitCalibrated(comparisons)`; header dùng `cal.label`; vẽ `cal.calibrated`, rồi `<CalibrationEmptyLine names={cal.empty} />`.
 - `CONTEXT.md`: ba mục «Listing tự thu», «Mẫu mỏng», «Thị trường hiệu chuẩn» (nhãn · code · slug — · định nghĩa · _Avoid_).
 
-- [ ] **Step 1: Viết test hỏng** — jsdom (khuôn `dq-moi-nhat.test.tsx`): `HC-AC-1` thẻ có chữ `đại diện cho 2 market S02`; `HC-AC-2` vẽ ba bảng từ kết quả Task 2 → ô tự thu của khu vực fixture đều `7`; `HC-AC-3` mỗi bảng chứa `TU_THU_DINH_NGHIA` và hằng bằng chữ nguyên văn; `HC-AC-4` thẻ sample 1 có Badge `mẫu mỏng`, sample 5 không; fixture cây 7 / metrics 1 → có; `HC-AC-5` `CalibrationEmptyLine` một dòng liệt hai tên; `HC-AC-6` quét `page.tsx` (bỏ comment): `splitCalibrated(` xuất hiện một lần, header và danh sách thẻ đọc cùng biến `cal`, không còn `.filter((c) => c.data !== null)`.
+- [ ] **Step 1: Viết test hỏng** — jsdom (khuôn `dq-moi-nhat.test.tsx`): `HC-AC-1` thẻ có chữ `đại diện cho 2 thị trường S02`; `HC-AC-2` vẽ ba bảng từ kết quả Task 2 → ô tự thu của khu vực fixture đều `7`; `HC-AC-3` mỗi bảng chứa `TU_THU_DINH_NGHIA` và hằng bằng chữ nguyên văn; `HC-AC-4` thẻ sample 1 có Badge `mẫu mỏng`, sample 5 không; fixture cây 7 / metrics 1 → có; `HC-AC-5` `CalibrationEmptyLine` một dòng liệt hai tên; `HC-AC-6` quét `page.tsx` (bỏ comment): `splitCalibrated(` xuất hiện một lần, header và danh sách thẻ đọc cùng biến `cal`, không còn `.filter((c) => c.data !== null)`.
 - [ ] **Step 2:** chạy → FAIL.
 - [ ] **Step 3:** sửa component/trang/CONTEXT.
 - [ ] **Step 4:** `cd app && npm test && npx tsc --noEmit && npm run lint` sạch.

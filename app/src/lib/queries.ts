@@ -1056,7 +1056,7 @@ export async function getAirdnaComparison(areaId: string, db: Queryable = pool):
       ratio: null as number | null,
     },
     {
-      metric: "Listing tự thu",
+      metric: "Listing",
       ourValue: ourListings,
       ourUnit: "",
       airdnaValue: byMetric.get("listing_count") ?? null,

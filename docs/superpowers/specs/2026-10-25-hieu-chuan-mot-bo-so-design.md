@@ -20,7 +20,7 @@ Vùng «Hiệu chuẩn» của `/ops/quality` (số S02 được phép ở đây
    cùng đọc số này cho dòng «Listing tự thu» → cùng một khu vực ra cùng một số ở mọi bảng. ADR và công suất tự thu của thẻ
    giữ nguồn `market_metrics` (cả cửa sổ) nhưng được ghi định nghĩa riêng.
 2. **Crosswalk xác định**: khu vực có nhiều market S02 → chọn market đại diện theo luật cố định — nhiều `listing_count`
-   S02 nhất, hoà thì `airdna_id` nhỏ nhất (`ORDER BY`). Thẻ ghi «đại diện cho k market S02». Chạy hai lần ra cùng số.
+   S02 nhất, hoà thì `airdna_id` nhỏ nhất (`ORDER BY`). Thẻ ghi «đại diện cho k thị trường S02». Chạy hai lần ra cùng số.
 3. **Định nghĩa ghi rõ ở từng bảng**: mỗi bảng (thẻ hiệu chuẩn, Độ phủ, toàn quốc) có một dòng mô tả nói «tự thu» là gì
    (listing đang theo dõi trong cây khu vực; ADR/công suất trên cửa sổ lịch đã thu).
 4. **Mẫu mỏng** (câu hỏi «ngưỡng mẫu mỏng»): cờ tính trên cỡ mẫu sinh ADR/công suất của thẻ (`listing_count` của `market_metrics`), không
@@ -33,7 +33,7 @@ Vùng «Hiệu chuẩn» của `/ops/quality` (số S02 được phép ở đây
 
 ## Chữ trên trang (câu hỏi «bộ chữ nhãn»)
 
-«Chưa có số: A, B, …» · «<n> thị trường hiệu chuẩn» · «đại diện cho <k> market S02» · Badge «mẫu mỏng» · câu định nghĩa
+«Chưa có số: A, B, …» · «<n> thị trường hiệu chuẩn» · «đại diện cho <k> thị trường S02» · Badge «mẫu mỏng» · câu định nghĩa
 «Listing tự thu: số listing đang theo dõi trong cả khu vực (gồm phường con)». Vùng gọi đối tượng là «thị trường». Evals
 ghim nguyên văn; `CONTEXT.md` thêm «Listing tự thu», «Mẫu mỏng», «Thị trường hiệu chuẩn».
 

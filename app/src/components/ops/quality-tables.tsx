@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
+import { isThin, TU_THU_DINH_NGHIA } from "@/lib/calibration"
 import { fmtInt, fmtMoney, fmtPct, fmtVnDate } from "@/lib/format"
 import type { AirdnaComparison, AirdnaMarketRow, TruthfulCoverageRow } from "@/lib/queries"
 import { marketNameOf, s02MarketName, shortAreaName } from "@/lib/market-names"
@@ -63,7 +64,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
       {
         id: "our",
         accessorFn: (r) => r.ourListings,
-        header: ({ column }) => <DataGridColumnHeader title="Tự thu" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Listing tự thu" column={column} />,
         cell: ({ row }) => fmtInt(row.original.ourListings),
         size: 110,
         meta: NUM,
@@ -135,7 +136,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
       data={rows}
       columns={columns}
       getRowId={(r) => r.areaId}
-      footnote={`Tự thu là mẫu dò phục vụ hiệu chuẩn (ADR/công suất lệch <20%) — tỉ lệ thấp là đúng thiết kế, không phải thiếu dữ liệu. Số đã mua = số listing ${s02} trong bản đã mua (đủ 12 tháng qua); lịch sử = chuỗi tháng đang lưu (36 tháng nguồn cung + 12 tháng ADR, công suất, doanh thu, RevPAR).`}
+      footnote={`${TU_THU_DINH_NGHIA}. Tự thu là mẫu dò phục vụ hiệu chuẩn (ADR/công suất lệch <20%) — tỉ lệ thấp là đúng thiết kế, không phải thiếu dữ liệu. Số đã mua = số listing ${s02} trong bản đã mua (đủ 12 tháng qua); lịch sử = chuỗi tháng đang lưu (36 tháng nguồn cung + 12 tháng ADR, công suất, doanh thu, RevPAR).`}
     />
   )
 }
@@ -187,14 +188,19 @@ export function CalibrationTable({
           : `Chưa có điểm ${s02}`
       }
       badge={
-        data.capturedAt ? (
-          <Badge variant="outline">Thu {fmtVnDate(data.capturedAt)}</Badge>
-        ) : undefined
+        <div className="flex flex-wrap items-center gap-2">
+          {/* ON10: khu vực gộp nhiều market S02 → số của market đại diện; cỡ mẫu ADR/công suất < 5 → mẫu mỏng */}
+          {(data.representative?.ofMarkets ?? 1) > 1 ? (
+            <Badge variant="outline">{`đại diện cho ${data.representative?.ofMarkets} thị trường ${s02}`}</Badge>
+          ) : null}
+          {isThin(data.sampleListings ?? null) ? <Badge variant="warning-light">mẫu mỏng</Badge> : null}
+          {data.capturedAt ? <Badge variant="outline">Thu {fmtVnDate(data.capturedAt)}</Badge> : null}
+        </div>
       }
       data={data.metrics}
       columns={columns}
       getRowId={(r) => r.metric}
-      footnote={`Tự thu = cả cửa sổ lịch đặt tương lai (bình quân theo đêm); ${s02} = 12 tháng đã qua. Hai phương pháp khác nhau — tỉ lệ để phát hiện lệch lớn, không để thay số.`}
+      footnote={`${TU_THU_DINH_NGHIA}. ADR, công suất tự thu = cả cửa sổ lịch đặt tương lai (bình quân theo đêm), từ ${fmtInt(data.sampleListings)} listing; ${s02} = 12 tháng đã qua. Hai phương pháp khác nhau — tỉ lệ để phát hiện lệch lớn, không để thay số.`}
     />
   )
 }
@@ -258,6 +264,13 @@ export function AirdnaMarketsTable({ rows, roles = {}, areaNames = {} }: { rows:
       getRowId={(r) => r.airdnaId}
       initialSort={[{ id: "score", desc: true }]}
       pageSize={25}
+      footnote={TU_THU_DINH_NGHIA}
     />
   )
+}
+
+/** Thị trường chưa có số nào (ON10): gộp thành một dòng thay cho hàng chục thẻ toàn «—». */
+export function CalibrationEmptyLine({ names }: { names: string[] }) {
+  if (names.length === 0) return null
+  return <p className="text-muted-foreground text-sm">Chưa có số: {names.join(", ")}</p>
 }
