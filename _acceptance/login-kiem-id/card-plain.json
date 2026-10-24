@@ -1,0 +1,32 @@
+{
+  "feature_plain": "Nút «Đăng nhập QR» cho tài khoản thu chỉ mở phiên đăng nhập cho đúng tài khoản có trong danh sách (kể cả tài khoản chính «default»); mã rỗng, có khoảng trắng, mã lạ hay mã trông như tuỳ chọn dòng lệnh bị từ chối trước khi đụng tới phần mềm thu Zalo.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ từ chối (400) khi mã tài khoản bị bỏ trống, rỗng, không phải chữ hoặc thân yêu cầu hỏng — phần mềm thu Zalo không nhận lệnh nào."},
+    {"id": "AC-2", "p": "Sẽ từ chối mã có khoảng trắng (kể cả khoảng trắng bao quanh một mã thật) thay vì tự cắt rồi mở phiên."},
+    {"id": "AC-4", "p": "Sẽ mở phiên đăng nhập cho tài khoản có thật (kể cả tên ngoài khuôn thường): đúng một lệnh, trả về ảnh QR của chính tài khoản đó."},
+    {"id": "AC-5", "p": "Sẽ luôn cho đăng nhập lại tài khoản thu chính «default», kể cả trên máy cấu hình kiểu cũ không ghi nó ra."},
+    {"id": "AC-6", "p": "Sẽ vẫn từ chối mã sai ngay cả khi một tài khoản khác đang chờ quét QR — không trả nhầm QR của phiên đang chờ."},
+    {"id": "AC-7", "p": "Sẽ có phép kiểm tĩnh bảo đảm mọi chỗ trong mã ra lệnh đăng nhập đều đứng sau bước kiểm mã tài khoản."},
+    {"id": "AC-8", "p": "Sẽ cho chính bộ kiểm tự dừng trước mọi ca nếu nó — hay bất kỳ bản sao thử nghiệm nào — lỡ trỏ vào máy thu thật hoặc thư mục QR thật."},
+    {"id": "AC-9", "p": "Sẽ giữ chỗ đọc ảnh QR khi chạy thật đúng thư mục phần mềm thu ghi ra (/tmp/openclaw), có phép đo riêng."},
+    {"id": "AC-10", "p": "Sẽ giữ nguyên hành vi nút «Gỡ tài khoản thu» vừa sửa ở ON14 — mọi phép kiểm của nó vẫn xanh."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Chặn mã không có trong danh sách (kể cả các tên đặc biệt như «constructor») và mã trông như tuỳ chọn dòng lệnh, mỗi loại kèm lời báo riêng."},
+    {"id": "OOS-1", "p": "KHÔNG đổi phần đọc trạng thái và huỷ phiên đăng nhập — chúng không gửi lệnh ghi nào tới phần mềm thu."},
+    {"id": "OOS-2", "p": "KHÔNG đổi đường bật/tắt nhóm và KHÔNG đổi giao diện trang quản lý nguồn — lỗi hiện qua thông báo sẵn có."},
+    {"id": "OOS-3", "p": "KHÔNG kiểm nhánh đăng nhập bằng phiên trình duyệt — phép đo đi đường khoá máy, phần quyền không đổi."},
+    {"id": "OOS-4", "p": "KHÔNG đòi phép kiểm tĩnh chứng được «mã được kiểm chính là mã đưa vào lệnh» — giống hạn chế đã biết của ON14; các ca chạy thật đo hành vi."}
+  ],
+  "scope_plain": "Bốn việc gần kề cố ý để ngoài lượt này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi kiểu mã tài khoản gửi lên đã được liệt trước, mỗi kiểu một tiêu chí: bỏ trống (AC-1), khoảng trắng (AC-2), mã lạ hoặc dạng tuỳ chọn (AC-3), mã thật (AC-4), tài khoản chính (AC-5), lúc đang có phiên chờ QR (AC-6); thêm thứ tự trong mã nguồn (AC-7), an toàn của bộ kiểm (AC-8), thư mục QR khi chạy thật (AC-9) và không làm hỏng việc gỡ tài khoản (AC-10)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Tên đặc biệt có sẵn trong mọi đối tượng (như «constructor») có thể lọt nếu phép kiểm danh sách viết sai cách — đã thêm bốn tên như vậy vào ma trận và một ca chứng phép kiểm sai thì lọt."},
+    {"i": 1, "p": "Chưa có gì bảo đảm khi chạy thật app vẫn đọc QR đúng thư mục phần mềm thu ghi — đã thêm AC-9 đo riêng giá trị mặc định."},
+    {"i": 2, "p": "Bản sao thử nghiệm cố tình hỏng có thể chạy lệnh thật nếu đường của nó khác bản gốc — đã buộc kiểm an toàn trên chính từng bản sao trước khi chạy."},
+    {"i": 3, "p": "Chưa đo trường hợp đang có phiên chờ QR mà gửi mã sai — đã thêm AC-6."},
+    {"i": 4, "p": "Phép kiểm tĩnh chỉ bắt một kiểu viết lệnh — đã mở rộng sang nháy đơn và chuỗi lệnh gộp; phần so «đúng mã» ghi thành hạn chế như ON14."}
+  ]
+}
