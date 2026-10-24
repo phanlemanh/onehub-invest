@@ -49,10 +49,9 @@ export function DqChecksTable({ rows, areaNames = {} }: { rows: DqCheckRow[]; ar
         accessorFn: (r) => dqCheckName(r.check_name).text,
         header: ({ column }) => <DataGridColumnHeader title="Kiểm" column={column} />,
         cell: ({ row }) => <DqCell t={dqCheckName(row.original.check_name)} />,
-        size: 200,
+        size: 190,
         enableSorting: true,
       },
-      { id: "entity", accessorFn: (r) => dqEntityLabel(r.entity, names).text, header: "Đối tượng", cell: ({ row }) => <DqCell t={dqEntityLabel(row.original.entity, names)} />, size: 160 },
       {
         id: "status",
         accessorKey: "status",
@@ -64,6 +63,7 @@ export function DqChecksTable({ rows, areaNames = {} }: { rows: DqCheckRow[]; ar
         size: 120,
         enableSorting: true,
       },
+      { id: "entity", accessorFn: (r) => dqEntityLabel(r.entity, names).text, header: "Đối tượng", cell: ({ row }) => <DqCell t={dqEntityLabel(row.original.entity, names)} />, size: 160 },
       {
         id: "detail",
         accessorKey: "detail",
