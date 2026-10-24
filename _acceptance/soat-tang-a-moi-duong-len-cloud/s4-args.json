@@ -1,0 +1,436 @@
+{
+  "generated_at": "2026-10-24T08:58:24Z",
+  "generated_sha": "7f993c9e0a596d53c15c13fbbfa94ca0785def9f",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "soat-tang-a-moi-duong-len-cloud",
+  "round": 1,
+  "riskTier": "T3",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-1 bản tin lành → thoát 0, máy chủ thu nhận đúng một POST' ok (đối chứng dương cùng cây log của AC-2)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/push-ops-facts.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/scripts/soat-tang-a.test.mjs",
+        "pipeline/scripts/capture-ops-facts.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-2 bản sao bỏ bộ che → thoát ≠0, 0 POST, dòng FACTS CHẶN [tầng A] jobs[0].lastLine S02, không in tên' ok\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/push-ops-facts.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/scripts/soat-tang-a.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-3",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-3 ma trận viết trước: mỗi khoá cấp một + một chuỗi lồng sâu + trường anh em cạnh đường miễn → mỗi bản thoát ≠0, 0 POST, dòng chặn nêu đúng đường JSON viết trước' ok; đối chứng dương 'NT2-AC-3 tên trong zaloGroups[0].name (tầng C) → không chặn' ok\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/push-ops-facts.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/scripts/soat-tang-a.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-4",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-4 cấu hình tài khoản có tên → bản tin gửi zaloAccounts[i].name null' ok; chiều đỏ 'NT2-AC-4 bản sao gửi tên tài khoản → chặn, nêu zaloAccounts[0].name' ok\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/push-ops-facts.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/scripts/soat-tang-a.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-5",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-5 không đọc được source_registry → chặn, 0 POST, dòng nói không có danh sách tên' ok\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/push-ops-facts.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/scripts/soat-tang-a.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-6",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-6 bảng ca ON7 qua scanSourceNames và guardValues → cùng kết quả từng ca' ok (≥ 10 ca)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/lib/mask-source-names.mjs",
+        "pipeline/scripts/soat-tang-a.test.mjs",
+        "pipeline/scripts/mask-source-names.cases.json"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E6b",
+      "criterion": "AC-6",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs allow",
+      "expected": "\"exit 0; dòng PASS 'ĐỎ-ĐÚNG fail-closed: source_registry rỗng → dừng pha scan, không gửi'; dòng PASS 'ĐỎ-ĐÚNG ten-nguon (token dài)' và '(token ngắn)' — đối chứng: bộ soát chung bắt tên trong payload bảng người bán\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/lib/mask-source-names.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_allow"
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-7",
+      "cmd": "cd pipeline && node scripts/check-cloud-sync.mjs pii-cot",
+      "expected": "\"exit 0; dòng PASS 'cloud sạch → leak gate xanh' (đối chứng dương); dòng PASS 'ĐỎ-ĐÚNG cột ngoài danh sách: sale_offers.seller_phone'; dòng PASS 'ĐỎ-ĐÚNG qua bên ghi: cột local ngoài danh sách → gate đỏ, cloud không mang cột, giữ số cũ'; dòng PASS 'ĐỎ-ĐÚNG bảng tầng A có dòng: user_events=1'; mỗi ca đỏ dừng trước khi tráo\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/sync-cloud.mjs",
+        "pipeline/scripts/check-cloud-sync.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.cloud_sync_pii_cot"
+    },
+    {
+      "id": "E8",
+      "criterion": "AC-8",
+      "expected": "\"đủ bốn điều, khớp code\"",
+      "question": "\"Trong docs/ops/runtime-map.md, mục cloud-sync có nói đủ và đúng không, đối chiếu ba tệp code: (1) mọi đường lên cloud (sync-cloud, push-ops-facts) đi qua một bộ soát tầng A là pipeline/lib/tier-a-guard.mjs; (2) dòng 'FACTS CHẶN [tầng A] <đường> <S0x>' để tìm trong log và việc người vận hành phải làm; (3) leak gate đỏ khi bảng người bán ở cloud có cột ngoài CLOUD_ALLOW hoặc bảng tầng A có dòng; (4) tên tài khoản thu xử lý theo đúng Hỏi-1? Tài liệu nói khác code thì FAIL.\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/bold-bassi-0e7f42/docs/ops/runtime-map.md",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/bold-bassi-0e7f42/pipeline/lib/tier-a-guard.mjs",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/bold-bassi-0e7f42/pipeline/push-ops-facts.mjs",
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/bold-bassi-0e7f42/pipeline/sync-cloud.mjs"
+      ],
+      "paths": [
+        "docs/ops/runtime-map.md",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/push-ops-facts.mjs",
+        "pipeline/sync-cloud.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "verdict",
+        "judges",
+        "verified_at"
+      ]
+    },
+    {
+      "id": "E9",
+      "criterion": "AC-9",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-9 /ops/sources cloud với zaloAccounts[i].name null → hiện mã tài khoản, không lỗi, không chữ null' ok; chiều đỏ 'NT2-AC-9 bản sao hiện name thô → ca bắt' ok\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/components/ops/sources/**",
+        "app/src/app/ops/sources/**",
+        "app/src/lib/collections-queries.ts",
+        "app/tests/soat-tang-a.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E10",
+      "criterion": "AC-10",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'NT2-AC-10 bản tin dựng từ log và cấu hình thật (chế độ khô, không gửi) → 0 chỗ trúng' ok; đầu ra chỉ có đường JSON + mã S0x\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/push-ops-facts.mjs",
+        "pipeline/lib/tier-a-guard.mjs",
+        "pipeline/scripts/soat-tang-a.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "cd app && npm run test:lint-rules",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "a4af9368d698146a677c984e33dbccf679ae1d5d",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/bold-bassi-0e7f42",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/bold-bassi-0e7f42/_acceptance/soat-tang-a-moi-duong-len-cloud/contract.md",
+  "invokedAt": "2026-10-24T08:58:24Z",
+  "invokedSha": "7f993c9e0a596d53c15c13fbbfa94ca0785def9f",
+  "vungVat": [
+    "_acceptance/config.yaml",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/card-plain.json",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/card.html",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/evals.yaml",
+    "app/tests/soat-tang-a.test.tsx",
+    "docs/ops/runtime-map.md",
+    "pipeline/lib/tier-a-guard.mjs",
+    "pipeline/push-ops-facts.mjs",
+    "pipeline/scripts/capture-ops-facts.mjs",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/ops-nhan-ma-nguon.test.mjs",
+    "pipeline/scripts/soat-tang-a.test.mjs",
+    "pipeline/sync-cloud.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
+    "CONTEXT.md",
+    ".claude/rules/**",
+    "PRODUCT-MAP.md",
+    "LO-TRINH.html",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/contract.md",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/decisions.jsonl",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/duong-nen.md",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/figures/index.md",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/gap-probe.md",
+    "docs/ROADMAP.md",
+    "docs/superpowers/plans/2026-10-24-soat-tang-a-moi-duong-len-cloud.md",
+    "docs/superpowers/specs/2026-10-24-soat-tang-a-moi-duong-len-cloud-design.md"
+  ],
+  "diffFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/config.yaml",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/card-plain.json",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/card.html",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/contract.md",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/decisions.jsonl",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/duong-nen.md",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/evals.yaml",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/figures/index.md",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/gap-probe.md",
+    "app/tests/soat-tang-a.test.tsx",
+    "docs/ROADMAP.md",
+    "docs/ops/runtime-map.md",
+    "docs/superpowers/plans/2026-10-24-soat-tang-a-moi-duong-len-cloud.md",
+    "docs/superpowers/specs/2026-10-24-soat-tang-a-moi-duong-len-cloud-design.md",
+    "pipeline/lib/tier-a-guard.mjs",
+    "pipeline/push-ops-facts.mjs",
+    "pipeline/scripts/capture-ops-facts.mjs",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/ops-nhan-ma-nguon.test.mjs",
+    "pipeline/scripts/soat-tang-a.test.mjs",
+    "pipeline/sync-cloud.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "_acceptance/config.yaml",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/card-plain.json",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/card.html",
+    "_acceptance/soat-tang-a-moi-duong-len-cloud/evals.yaml",
+    "app/tests/soat-tang-a.test.tsx",
+    "docs/ops/runtime-map.md",
+    "pipeline/lib/tier-a-guard.mjs",
+    "pipeline/push-ops-facts.mjs",
+    "pipeline/scripts/capture-ops-facts.mjs",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/ops-nhan-ma-nguon.test.mjs",
+    "pipeline/scripts/soat-tang-a.test.mjs",
+    "pipeline/sync-cloud.mjs"
+  ],
+  "coverageFiles": [
+    "app/tests/soat-tang-a.test.tsx",
+    "docs/ops/runtime-map.md",
+    "pipeline/lib/tier-a-guard.mjs",
+    "pipeline/push-ops-facts.mjs",
+    "pipeline/scripts/capture-ops-facts.mjs",
+    "pipeline/scripts/check-cloud-sync.mjs",
+    "pipeline/scripts/soat-tang-a.test.mjs",
+    "pipeline/sync-cloud.mjs"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "5ff983e9346c6fed2ccf99dd3a34494b67d3cd6d25672fae071f5ecb78224ba4",
+  "runBaseline": true,
+  "thuocChup": {
+    "sha": "7f993c9e0a596d53c15c13fbbfa94ca0785def9f",
+    "n": 61,
+    "digest": "b430674cfcc1cf9fb4d3cc37f410a4af0d183387fb33cd09c65e30bfa294e894",
+    "tep": {
+      "_acceptance/config.yaml": "6e02f9159963cb4de0dfde7385548b06ff932a100c9bc04b9359f67bbda635f5",
+      "_acceptance/soat-tang-a-moi-duong-len-cloud/evals.yaml": "5ff983e9346c6fed2ccf99dd3a34494b67d3cd6d25672fae071f5ecb78224ba4",
+      "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
+      "agent/tests/enrich-apply.test.ts": "69407e7d1049ac4a8c7db6e61fb4326576773bed97070be691cf782d02993975",
+      "agent/tests/enrich-db.test.ts": "2d22af28021fc9a5109af57d04e5403ce3ac7012f4a4a9a8eebdfdd3070f8747",
+      "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
+      "agent/tests/enrich-revert.test.ts": "91393e322eddcc6da86fd66b6bb3ff7ec238c07ea939b44736e19f46d6aec5eb",
+      "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "app/eslint-plugin-onehub-ui/tests/check-bare-disables.test.mjs": "f4d5a768000e10b0afcd865dda45027bfc374f5d448b365e71b5b22168264a43",
+      "app/eslint-plugin-onehub-ui/tests/check-baseline-growth.test.mjs": "7d3e9509b9a3e78e6f353df55f97625630b4f178d838a97c329509512222e547",
+      "app/eslint-plugin-onehub-ui/tests/index.test.mjs": "655e46d7c05ac26ed76d92ea3d9b19c5c22a59bb7ca198afa960362235771b08",
+      "app/eslint-plugin-onehub-ui/tests/no-arbitrary-text-size.test.mjs": "5ba51c96484865cb98cb413843375d2d88c552b7616e0586771df7287ce60f4d",
+      "app/eslint-plugin-onehub-ui/tests/no-aschild.test.mjs": "29033a30554d246c3404b9c9b442e1282f391c6eb90ed6b64e03271a666c0811",
+      "app/eslint-plugin-onehub-ui/tests/no-banned-motion.test.mjs": "74755fcdf27b99fdbf1a600cbcfc1bb472e98c18317cfd710b7249e3a770de53",
+      "app/eslint-plugin-onehub-ui/tests/no-emoji-icons.test.mjs": "8571b78c4733c9acf687690ce54745452bec6a4f3c7ba7f96ba76b4f87efeaa6",
+      "app/eslint-plugin-onehub-ui/tests/no-hardcoded-color.test.mjs": "ce68e4bd5a75a83233763bcdd435650faf8cc9e85e342e5d3a863c7692bedec9",
+      "app/eslint-plugin-onehub-ui/tests/no-native-dialogs.test.mjs": "deaf6a38eb19305c68d5e30f1417d8908f2036355aa4e02a2f5a47a326acc9cc",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-controls.test.mjs": "b48cbea63e4ca7f380cc27283deb79228375465545df85b91c9a8fcdac926b16",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-palette.test.mjs": "ed3843f2e6445fa54dd3e765f6d749a9d148f8dc4e0e0d239f13016c77db4e65",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-table.test.mjs": "78446ffe3717c3c22e49b6d7787f9ab8bbe0d921d2469c7917f00fba265935f4",
+      "app/eslint-plugin-onehub-ui/tests/require-disable-reason.test.mjs": "6d87f7afd3f155f9f8be54e3eced84ea6c780593d78234f01e3a82d491f03fa5",
+      "app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs": "497e7eadcd4267cda43889626301b1491243cbd014028323e7223688111ed275",
+      "app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs": "2d3664f30a1155fe83fd6dbef3dd7264f6568e8483ae8fa1d1858bcc05be2a85",
+      "app/tests/deals-api-guard.test.tsx": "9de18791dfdf658a52655180e9e3fe9da8c92efe7573991c9f5a6dcb15c46e34",
+      "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
+      "app/tests/lockdown-local.test.tsx": "2f5776719eded1ff70525ef4be20eb8411ad0def68500ec342015998e5b4a33d",
+      "app/tests/ops-cloud-khong-bang-nap.test.tsx": "c4595bb5bb1edf317551c657102fecd74e6199fcd8bf1f58bade1d45363ed623",
+      "app/tests/ops-nhan-ma-nguon-cloud.test.tsx": "a78dfc6caa4dea053595217bd53260183fae581696fef01bbcb964fb211264a8",
+      "app/tests/ops-nhan-ma-nguon-db-chet.test.tsx": "d817ee9c0c71932aebd0e4982b1384d8d479d1aa2f1b63e4c3b51be81fb89187",
+      "app/tests/ops-nhan-ma-nguon.test.tsx": "84b1005acf8f48be094c21840488712ac3d71fecf1df970a797e9ecdfaafa6b1",
+      "app/tests/ops-review-sources-cloud.test.tsx": "a3aea84b1bb477998dfa81736f5489f76027461b39e8abd52375f854b7db9708",
+      "app/tests/review-card.test.tsx": "9b8f78071ef4958abc550436d5bf45d797f4c14e4c145b7acfc1762d790fbaea",
+      "app/tests/review-media.test.tsx": "f33efc12d931b647ef47b1fe8bf77225b676104dc9b36dd4f37137c4cdcff506",
+      "app/tests/review-photos.test.tsx": "517068b876d62f141c7d08a30ba14b8ae121d47f494e36bf3bcd18004882825a",
+      "app/tests/slo-mot-nguon.test.tsx": "a2bcf401bbb0651863163a33350c96cbf268b30a5cf984052b8df630c55f2952",
+      "app/tests/soat-tang-a.test.tsx": "bae54882e8631d3c2332e60ad980f3093e06620d2be6dd650df4349a07d12589",
+      "app/tests/zalo-media.test.tsx": "54cb449517798b04ce2d3d1772396cd1313424ee45424520d064de2c2ba785db",
+      "collector/src/test/api.test.ts": "725d0a3098a7e3273246cc652c5e7e161f377fb3aa2c2cdfdd62d32727d0b099",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/kev-nhan.test.ts": "64eca8f8151369b3e105ebf816616cb07ead71df5d58aea8aea59c033bbe847e",
+      "collector/src/test/media-fetch.test.ts": "a342611d97218f01b6b3d9936351d1d45be52f928e0228463c72829bb7d8a7c6",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb",
+      "pipeline/scripts/backfill-zalo-media.test.mjs": "4949a4141c51d6a443283af1b4026eadf506b177fcd43da9c57851a509413af3",
+      "pipeline/scripts/bait-gap-sellers.test.mjs": "578400b59d89c00a90c04f1b497c4d6fa8b745e5bfa4f2c558c817047171e919",
+      "pipeline/scripts/entrypoint-symlink.test.mjs": "ced4ad1c37f16bb8eb218425ed71dbcb180e364eb1c5fdd4e0a2de938b62939b",
+      "pipeline/scripts/last-log-line.test.mjs": "1f22f358521d221dbe7d3d7fc154f97f707e71c079a0c05bde3347c9df49e3ad",
+      "pipeline/scripts/ops-nhan-ma-nguon.test.mjs": "ed69540523d76225165e2b49ca49f1976a6ca9162c7f8ae126ca4e13d677bda8",
+      "pipeline/scripts/soat-tang-a.test.mjs": "83df236f4181ec9cfe4bdc4fb8215f48c391740ced5d9225488257d76bfe3a85",
+      "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218",
+      "pipeline/scripts/test-posts.test.mjs": "3e8ab25cd3b06b427ee3a91db6e7a48ebe13cf4dd55c3498dc088f8bd13f36d3",
+      "pipeline/scripts/write-offers.test.mjs": "6c1162eecb20eeccaf085700b8264e9be758661957e8970d360a3e9418b95917",
+      "pipeline/sync-cloud.test.mjs": "8aa3d4cfa38686314c5548d8bf603b9055e344de701d248c4039a60c5f923b85",
+      "pipeline/sync-pii.test.mjs": "3f0571d3e967460301f86e3001a6dfa7cb65922fcda017cd3b92a692b1a42682",
+      "scripts/audit-all.test.mjs": "6ce6e2e932614762575a382d47cfec4bb7d00eb01a7139c70f92ac699fa9aa68",
+      "scripts/check-freshness.test.mjs": "1e98b4e8a07e44a832ad244570de684ffbceef849b1fc9a46a0241fd4e19cdbc",
+      "scripts/dev-ops-account.test.mjs": "eaae93ef5b886eaae6563cfd040c364f0ccff637592bc0c5c5df584bf368e399",
+      "scripts/freshness-parity.test.mjs": "fe666329104ba61c5e386838da05a14fc3ae6572ed51103ee3bb9b2519dc66b9",
+      "scripts/job-exit.test.mjs": "df24c0de31d7f5b4737f2b073d53b2295579f7bef2976ced9347749f3f29fee8",
+      "scripts/ops-nhan-ma-nguon.test.mjs": "a94377b277038b0016e301fe993c6398bf4083286f868cbee2881862d8349c98"
+    }
+  },
+  "cayChup": {
+    "sha": "7f993c9e0a596d53c15c13fbbfa94ca0785def9f",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}

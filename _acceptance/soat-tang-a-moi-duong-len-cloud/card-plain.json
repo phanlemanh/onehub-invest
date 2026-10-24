@@ -1,0 +1,10 @@
+{
+  "feature_plain": "Mọi dữ liệu rời máy lên cloud (bảng đồng bộ 15 phút và bản tin vận hành) đi qua cùng một bộ soát: còn tên nguồn thật thì không gửi; cloud có cột lạ ở bảng người bán hay có dữ liệu người dùng app thì đồng bộ dừng.",
+  "decisions": [
+    {
+      "id": "E8",
+      "q": "Sổ vận hành nói đủ và đúng cách đọc dòng chặn mới chưa?",
+      "why": "Ba người chấm cùng đề xuất đạt: sổ nêu bộ soát chung, dòng «FACTS CHẶN» để tìm trong log và việc phải làm, hai phép soát mới của cổng đồng bộ, và tên tài khoản thu chỉ ở máy."
+    }
+  ]
+}
