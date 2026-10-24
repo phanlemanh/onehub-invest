@@ -5,7 +5,7 @@ slug: go-tai-khoan-kiem-id
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm app/src/app/api/v1/ops/** (t3_paths)
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-go-tai-khoan-kiem-id-design.md
@@ -57,3 +57,6 @@ trắng, không phải chuỗi} (AC-1) · {đệm hai đầu, đệm cuối, kho
 - Phép đo không bao giờ gọi `openclaw` thật, không đọc/ghi `~/.openclaw`, không gọi route trên dev server đang chạy.
 - `DATABASE_URL` của test trỏ cổng đóng: dòng `ops_audit` của ca thành công không được ghi vào DB local dùng chung (và không
   được đo).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-3: phép kiểm bản sao lưu khi gỡ tài khoản chỉ đòi có tệp sao lưu trong thư mục, nên nếu sau này bước sao lưu bị gỡ thì phép kiểm này không báo.
+  - Ngoài-4: thước quét tĩnh chỉ nhận ra bước kiểm id bằng chữ, nên một dòng kiểm bị biến thành chú thích vẫn qua thước; các ca chạy thật vẫn bắt id rỗng và id lạ.

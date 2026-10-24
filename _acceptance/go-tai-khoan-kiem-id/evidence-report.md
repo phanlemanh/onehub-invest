@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b654bc5f69820748c5755baf54eafa53f6dd19b7
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: go-tai-khoan-kiem-id
