@@ -1,0 +1,390 @@
+{
+  "generated_at": "2026-10-24T14:54:12Z",
+  "generated_sha": "858c45334aa2e733131727eaa6fd7bef11ed4c21",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "dq-moi-nhat-moi-kiem",
+  "round": 2,
+  "riskTier": "T2",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DQ-AC-1 mới nhất theo cặp' trên fixture (bảng gạt dòng thật trong giao dịch): kiểm A đối tượng x có 3 lần (−3 ngày pass, −2 ngày fail, −1 ngày warn) + kiểm A đối tượng y 1 lần + kiểm A đối tượng z chỉ có lần −8 ngày → kết quả có đúng 2 dòng của A: (A,x,warn) và (A,y); không có z; chiều đỏ trên cùng fixture: câu cũ ORDER BY checked_at DESC LIMIT 20 trả 4 dòng của A (có lặp x)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/dq-checks.ts",
+        "app/tests/dq-moi-nhat.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DQ-AC-2 kiểm dày không đè kiểm thưa' : 25 đối tượng của kiểm D (mới nhất) + 1 dòng kiểm E cũ hơn → kết quả có cả D (25 dòng) và E (1 dòng); chiều đỏ: câu cũ LIMIT 20 không có E\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/dq-checks.ts",
+        "app/tests/dq-moi-nhat.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-3",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DQ-AC-3 trang lấy bảng và số qua loadDqChecks' : loadDqChecks(client giao dịch) trên fixture E2 trả rows có cả D (25) và E (1) và stats {checks: 2, entities: 26} với nhãn đúng nguyên văn ['2 kiểm', '26 đối tượng']; chiều đỏ: thay câu trong hàm bằng câu cũ LIMIT 20 thì rows thiếu E; quét page.tsx: không còn chuỗi 'dq_check_results' nào (trang không tự truy vấn), có gọi loadDqChecks và đưa stats vào PageHeader\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/dq-checks.ts",
+        "app/src/app/ops/quality/page.tsx",
+        "app/tests/dq-moi-nhat.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-4",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DQ-AC-4 nhãn kết quả' ma trận viết trước 10 dòng = 10 assert trên dqResult: (truthful-coverage,pass)→'Có số tham chiếu' info-light; (truthful-coverage,fail)→'Thiếu số tham chiếu' warning-light; (truthful-coverage,warn)→'Cảnh báo' warning-light; (truthful-coverage,skip)→'Bỏ qua' outline; (truthful-coverage,xyz)→'xyz' destructive-light; (freshness,pass)→'Đạt' success-light; (freshness,warn)→'Cảnh báo' warning-light; (freshness,fail)→'Không đạt' destructive-light; (freshness,skip)→'Bỏ qua' outline; (freshness,xyz)→'xyz' destructive-light; và với mọi trạng thái của truthful-coverage: nhãn ≠ 'Đạt', variant ≠ success-light; ca 'DQ-AC-4 bảng vẽ' vẽ DqChecksTable trong jsdom với một dòng truthful-coverage pass (detail coverage=0.00%) và một dòng freshness pass: badge hàng truthful-coverage có chữ 'Có số tham chiếu' và class KHÁC class của Badge success-light (vẽ đối chiếu), badge hàng freshness có 'Đạt' và class BẰNG class Badge success-light (đối chứng dương)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/dq-checks.ts",
+        "app/src/components/ops/quality/dq-checks-table.tsx",
+        "app/tests/dq-moi-nhat.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-5",
+      "cmd": "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs",
+      "expected": "\"exit 0; chạy bằng tsx của app, import loadDqChecks + dqResult (không chép câu SQL hay bảng nhãn), trên DB local chỉ đọc: dòng '<n> kiểm · <m> đối tượng'; 'ok từ hai loại kiểm trở lên'; 'ok mỗi (kiểm, đối tượng) một dòng'; 'ok số kiểm = số loại kiểm'; 'ok có <k> dòng kiểm độ phủ tham chiếu' (k = 0 → FAIL, exit 1); 'ok không dòng kiểm độ phủ tham chiếu nào mang «Đạt» hay success-light'; đối chứng cùng lượt: câu cũ LIMIT 20 cho ít loại kiểm hơn → 'ok đối chứng: câu cũ chỉ <j> loại kiểm'\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/dq-moi-nhat-do.mjs",
+        "app/src/lib/dq-checks.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.dq_moi_nhat_do"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-6",
+      "expected": "\"Có đủ hai mục, mỗi mục bốn phần; mục «Có số tham chiếu» nói rõ không phải độ phủ đạt.\"",
+      "question": "\"CONTEXT.md có mục thuật ngữ cho «Kiểm chất lượng» và cho nhãn «Có số tham chiếu» — mỗi mục đủ nhãn, tên trong code, định nghĩa và từ tránh dùng — và mục «Có số tham chiếu» nói rõ nhãn này KHÔNG có nghĩa là độ phủ đạt không?\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a/CONTEXT.md"
+      ],
+      "paths": [
+        "CONTEXT.md"
+      ],
+      "evidence_required": [
+        "run_id",
+        "verdict",
+        "judges"
+      ],
+      "inputsHash": "6cbe1044737a6ca401c20dbb4a81c47484a82bdd364fb79ea7289d5560b6504f"
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "cd app && npm run test:lint-rules",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "6ce4b606ebed349c9518453a1c9f95d72ce1ad76",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a/_acceptance/dq-moi-nhat-moi-kiem/contract.md",
+  "invokedAt": "2026-10-24T14:54:12Z",
+  "invokedSha": "858c45334aa2e733131727eaa6fd7bef11ed4c21",
+  "vungVat": [
+    "CONTEXT.md",
+    "_acceptance/config.yaml",
+    "_acceptance/dq-moi-nhat-moi-kiem/card-plain.json",
+    "_acceptance/dq-moi-nhat-moi-kiem/card.html",
+    "_acceptance/dq-moi-nhat-moi-kiem/du-bao.json",
+    "_acceptance/dq-moi-nhat-moi-kiem/evals.yaml",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/nhan-do-phu.html",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/nhan-do-phu.png",
+    "_acceptance/dq-moi-nhat-moi-kiem/s4-args.json",
+    "app/src/app/ops/quality/page.tsx",
+    "app/src/components/ops/quality/dq-checks-table.tsx",
+    "app/src/lib/dq-checks.ts",
+    "app/tests/dq-moi-nhat.test.tsx",
+    "scripts/dq-moi-nhat-do.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
+    "CONTEXT.md",
+    ".claude/rules/**",
+    "PRODUCT-MAP.md",
+    "LO-TRINH.html",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/contract.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/decisions.jsonl",
+    "_acceptance/dq-moi-nhat-moi-kiem/duong-nen.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/evidence-report.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/index.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/gap-probe.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/opportunity.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/review-findings.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/run-log.jsonl",
+    "_acceptance/dq-moi-nhat-moi-kiem/usage-report.md",
+    "docs/superpowers/plans/2026-10-24-dq-moi-nhat-moi-kiem.md",
+    "docs/superpowers/specs/2026-10-24-dq-moi-nhat-moi-kiem-design.md"
+  ],
+  "diffFiles": [
+    "CONTEXT.md",
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/config.yaml",
+    "_acceptance/dq-moi-nhat-moi-kiem/card-plain.json",
+    "_acceptance/dq-moi-nhat-moi-kiem/card.html",
+    "_acceptance/dq-moi-nhat-moi-kiem/contract.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/decisions.jsonl",
+    "_acceptance/dq-moi-nhat-moi-kiem/du-bao.json",
+    "_acceptance/dq-moi-nhat-moi-kiem/duong-nen.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/evals.yaml",
+    "_acceptance/dq-moi-nhat-moi-kiem/evidence-report.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/index.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/nhan-do-phu.html",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/nhan-do-phu.png",
+    "_acceptance/dq-moi-nhat-moi-kiem/gap-probe.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/opportunity.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/review-findings.md",
+    "_acceptance/dq-moi-nhat-moi-kiem/run-log.jsonl",
+    "_acceptance/dq-moi-nhat-moi-kiem/s4-args.json",
+    "_acceptance/dq-moi-nhat-moi-kiem/usage-report.md",
+    "app/src/app/ops/quality/page.tsx",
+    "app/src/components/ops/quality/dq-checks-table.tsx",
+    "app/src/lib/dq-checks.ts",
+    "app/tests/dq-moi-nhat.test.tsx",
+    "docs/superpowers/plans/2026-10-24-dq-moi-nhat-moi-kiem.md",
+    "docs/superpowers/specs/2026-10-24-dq-moi-nhat-moi-kiem-design.md",
+    "scripts/dq-moi-nhat-do.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "CONTEXT.md",
+    "_acceptance/config.yaml",
+    "_acceptance/dq-moi-nhat-moi-kiem/card-plain.json",
+    "_acceptance/dq-moi-nhat-moi-kiem/card.html",
+    "_acceptance/dq-moi-nhat-moi-kiem/du-bao.json",
+    "_acceptance/dq-moi-nhat-moi-kiem/evals.yaml",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/nhan-do-phu.html",
+    "_acceptance/dq-moi-nhat-moi-kiem/figures/nhan-do-phu.png",
+    "_acceptance/dq-moi-nhat-moi-kiem/s4-args.json",
+    "app/src/app/ops/quality/page.tsx",
+    "app/src/components/ops/quality/dq-checks-table.tsx",
+    "app/src/lib/dq-checks.ts",
+    "app/tests/dq-moi-nhat.test.tsx",
+    "scripts/dq-moi-nhat-do.mjs"
+  ],
+  "coverageFiles": [
+    "CONTEXT.md",
+    "app/src/app/ops/quality/page.tsx",
+    "app/src/components/ops/quality/dq-checks-table.tsx",
+    "app/src/lib/dq-checks.ts",
+    "app/tests/dq-moi-nhat.test.tsx",
+    "scripts/dq-moi-nhat-do.mjs"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "283c45d469c62690d5573d61e0e03a408ac0bf002a03426ada35a242ffe505af",
+  "runBaseline": false,
+  "carriedAnalyst": {
+    "fromRound": 1,
+    "nonDiscriminating": [
+      {
+        "cmd": "cd app && npm test",
+        "evals": [
+          "E1",
+          "E2",
+          "E3",
+          "E4"
+        ]
+      }
+    ]
+  },
+  "carriedFindings": [
+    {
+      "file": "app/src/lib/dq-checks.ts",
+      "title": "lib/ import kiểu từ components/ — chiều phụ thuộc mới, chưa có tiền lệ trong app/src/lib",
+      "severity": "low",
+      "plain": "Người vận hành không thấy khác biệt nào: bảng Kiểm chất lượng vẫn hiện đúng. Chỉ là cách tổ chức mã hơi lệch so với phần còn lại, có thể làm người sửa sau này bối rối.",
+      "can_cu": "Không ảnh hưởng người dùng hay dữ liệu, chỉ là quy ước nội bộ; để sau dọn lúc rảnh thì rẻ, ghi lại là đủ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    },
+    {
+      "file": "app/tests/dq-moi-nhat.test.tsx",
+      "title": "Hình dạng 5: AC-4 tuyên cả lớp «các kiểm khác», ma trận chỉ có một điểm đại diện là freshness",
+      "severity": "low",
+      "plain": "Bài thử mới thử nhãn kết quả trên một loại kiểm khác (độ tươi), chưa thử từng loại còn lại. Nếu một loại kiểm khác hiện nhãn sai thì chưa có gì báo trước.",
+      "can_cu": "Chưa có bằng chứng nhãn nào sai và loại kiểm khác dùng chung cách gắn nhãn; lỗi nếu có chỉ là nhãn hiện sai, người dùng tải lại không đổi nhưng thấy ngay, sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    },
+    {
+      "file": "scripts/dq-moi-nhat-do.mjs",
+      "title": "Hình dạng 4: phép đo dữ liệu thật AC-5 khẳng định âm tính một mình (không dòng tham chiếu nào xanh), không đối chứng dương cùng lượt",
+      "severity": "low",
+      "plain": "Phép đo trên dữ liệu thật chỉ xác nhận không có dòng độ phủ nào hiện xanh, chưa xác nhận các kiểm khác vẫn hiện xanh khi đạt. Nếu nhãn xanh hỏng hẳn thì phép đo này vẫn báo ổn.",
+      "can_cu": "Phần nhãn xanh cho kiểm khác đã được thử riêng ở bài thử đơn vị nên rủi ro thấp; chỉ là phép đo thêm một lớp bảo đảm, thêm sau không tốn kém.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/dq-moi-nhat-moi-kiem/s4-args.json",
+    "app/src/app/ops/quality/page.tsx",
+    "app/src/lib/dq-checks.ts",
+    "app/tests/dq-moi-nhat.test.tsx"
+  ],
+  "thuocChup": {
+    "sha": "858c45334aa2e733131727eaa6fd7bef11ed4c21",
+    "n": 72,
+    "digest": "9539740ca7db6037daffdaa3eaa12996f1f6c61142ecf5a448bae9e4c67f322e",
+    "tep": {
+      "_acceptance/config.yaml": "7e08606bcbf7b619533598ea71f9636e41037cbb10f17bd87d6ee2778da33802",
+      "_acceptance/dq-moi-nhat-moi-kiem/evals.yaml": "283c45d469c62690d5573d61e0e03a408ac0bf002a03426ada35a242ffe505af",
+      "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
+      "agent/tests/enrich-apply.test.ts": "69407e7d1049ac4a8c7db6e61fb4326576773bed97070be691cf782d02993975",
+      "agent/tests/enrich-db.test.ts": "2d22af28021fc9a5109af57d04e5403ce3ac7012f4a4a9a8eebdfdd3070f8747",
+      "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
+      "agent/tests/enrich-revert.test.ts": "91393e322eddcc6da86fd66b6bb3ff7ec238c07ea939b44736e19f46d6aec5eb",
+      "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "app/eslint-plugin-onehub-ui/tests/check-bare-disables.test.mjs": "f4d5a768000e10b0afcd865dda45027bfc374f5d448b365e71b5b22168264a43",
+      "app/eslint-plugin-onehub-ui/tests/check-baseline-growth.test.mjs": "7d3e9509b9a3e78e6f353df55f97625630b4f178d838a97c329509512222e547",
+      "app/eslint-plugin-onehub-ui/tests/index.test.mjs": "655e46d7c05ac26ed76d92ea3d9b19c5c22a59bb7ca198afa960362235771b08",
+      "app/eslint-plugin-onehub-ui/tests/no-arbitrary-text-size.test.mjs": "5ba51c96484865cb98cb413843375d2d88c552b7616e0586771df7287ce60f4d",
+      "app/eslint-plugin-onehub-ui/tests/no-aschild.test.mjs": "29033a30554d246c3404b9c9b442e1282f391c6eb90ed6b64e03271a666c0811",
+      "app/eslint-plugin-onehub-ui/tests/no-banned-motion.test.mjs": "74755fcdf27b99fdbf1a600cbcfc1bb472e98c18317cfd710b7249e3a770de53",
+      "app/eslint-plugin-onehub-ui/tests/no-emoji-icons.test.mjs": "8571b78c4733c9acf687690ce54745452bec6a4f3c7ba7f96ba76b4f87efeaa6",
+      "app/eslint-plugin-onehub-ui/tests/no-hardcoded-color.test.mjs": "ce68e4bd5a75a83233763bcdd435650faf8cc9e85e342e5d3a863c7692bedec9",
+      "app/eslint-plugin-onehub-ui/tests/no-native-dialogs.test.mjs": "deaf6a38eb19305c68d5e30f1417d8908f2036355aa4e02a2f5a47a326acc9cc",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-controls.test.mjs": "b48cbea63e4ca7f380cc27283deb79228375465545df85b91c9a8fcdac926b16",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-palette.test.mjs": "ed3843f2e6445fa54dd3e765f6d749a9d148f8dc4e0e0d239f13016c77db4e65",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-table.test.mjs": "78446ffe3717c3c22e49b6d7787f9ab8bbe0d921d2469c7917f00fba265935f4",
+      "app/eslint-plugin-onehub-ui/tests/require-disable-reason.test.mjs": "6d87f7afd3f155f9f8be54e3eced84ea6c780593d78234f01e3a82d491f03fa5",
+      "app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs": "497e7eadcd4267cda43889626301b1491243cbd014028323e7223688111ed275",
+      "app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs": "2d3664f30a1155fe83fd6dbef3dd7264f6568e8483ae8fa1d1858bcc05be2a85",
+      "app/tests/deals-api-guard.test.tsx": "9de18791dfdf658a52655180e9e3fe9da8c92efe7573991c9f5a6dcb15c46e34",
+      "app/tests/deals-phi-ly.test.tsx": "7a48a57a5b974fea815d545f15f6e2d82e2751d9af2908dc120ddedbcbd15dfa",
+      "app/tests/dq-moi-nhat.test.tsx": "372296232b14672764b019f4f3fef53bfaa0f9199562c61fa4d5bed72e0e0ad2",
+      "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
+      "app/tests/gio-ops-gio-vn.test.tsx": "09fa5a6eae29fd652bbf20c26fcbd1dbb0a219e61d16a9310850026676564efe",
+      "app/tests/go-tai-khoan-kiem-id.test.tsx": "4e499959144ae63676e610ad3253f47a6f87b9e276452db846513c70bc3e7afd",
+      "app/tests/lockdown-local.test.tsx": "2f5776719eded1ff70525ef4be20eb8411ad0def68500ec342015998e5b4a33d",
+      "app/tests/login-kiem-id.test.tsx": "5240a19d06e8934a66a878847e8768d7029a7e0ada964341ba13e1b1e75a0f0b",
+      "app/tests/ops-cloud-khong-bang-nap.test.tsx": "c4595bb5bb1edf317551c657102fecd74e6199fcd8bf1f58bade1d45363ed623",
+      "app/tests/ops-facts-so-tong-hop.test.tsx": "3cbba30ed11b06387550db55ef309073bad054e577708f11e9f2bc79aff61b89",
+      "app/tests/ops-nhan-ma-nguon-cloud.test.tsx": "a78dfc6caa4dea053595217bd53260183fae581696fef01bbcb964fb211264a8",
+      "app/tests/ops-nhan-ma-nguon-db-chet.test.tsx": "d817ee9c0c71932aebd0e4982b1384d8d479d1aa2f1b63e4c3b51be81fb89187",
+      "app/tests/ops-nhan-ma-nguon.test.tsx": "84b1005acf8f48be094c21840488712ac3d71fecf1df970a797e9ecdfaafa6b1",
+      "app/tests/ops-review-sources-cloud.test.tsx": "a3aea84b1bb477998dfa81736f5489f76027461b39e8abd52375f854b7db9708",
+      "app/tests/review-card.test.tsx": "9b8f78071ef4958abc550436d5bf45d797f4c14e4c145b7acfc1762d790fbaea",
+      "app/tests/review-media.test.tsx": "f33efc12d931b647ef47b1fe8bf77225b676104dc9b36dd4f37137c4cdcff506",
+      "app/tests/review-photos.test.tsx": "517068b876d62f141c7d08a30ba14b8ae121d47f494e36bf3bcd18004882825a",
+      "app/tests/slo-mot-nguon.test.tsx": "a2bcf401bbb0651863163a33350c96cbf268b30a5cf984052b8df630c55f2952",
+      "app/tests/soat-tang-a.test.tsx": "bae54882e8631d3c2332e60ad980f3093e06620d2be6dd650df4349a07d12589",
+      "app/tests/zalo-media.test.tsx": "54cb449517798b04ce2d3d1772396cd1313424ee45424520d064de2c2ba785db",
+      "collector/src/test/api.test.ts": "725d0a3098a7e3273246cc652c5e7e161f377fb3aa2c2cdfdd62d32727d0b099",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/graceful-shutdown-integration.test.ts": "fc45cfd1210b45e4a1ee397e7cc455b936080be0279ab9fb360dbe2c6877f188",
+      "collector/src/test/graceful-shutdown.test.ts": "e1cf620f4aba0c525b29453d8f16c2f9f985bcb5128490b33a05da8fffa8dac0",
+      "collector/src/test/kev-nhan.test.ts": "64eca8f8151369b3e105ebf816616cb07ead71df5d58aea8aea59c033bbe847e",
+      "collector/src/test/media-fetch.test.ts": "a342611d97218f01b6b3d9936351d1d45be52f928e0228463c72829bb7d8a7c6",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb",
+      "pipeline/scripts/backfill-zalo-media.test.mjs": "4949a4141c51d6a443283af1b4026eadf506b177fcd43da9c57851a509413af3",
+      "pipeline/scripts/bait-gap-sellers.test.mjs": "578400b59d89c00a90c04f1b497c4d6fa8b745e5bfa4f2c558c817047171e919",
+      "pipeline/scripts/deals-phi-ly.test.mjs": "b8ba3222a1a7b5eaf33f5c4f419f2f380e53b47379872aa10b508c5410218e6c",
+      "pipeline/scripts/entrypoint-symlink.test.mjs": "ced4ad1c37f16bb8eb218425ed71dbcb180e364eb1c5fdd4e0a2de938b62939b",
+      "pipeline/scripts/last-log-line.test.mjs": "1f22f358521d221dbe7d3d7fc154f97f707e71c079a0c05bde3347c9df49e3ad",
+      "pipeline/scripts/ops-facts-so-tong-hop.test.mjs": "40b5ae33467fa63baa6b6741300ecc45cf422624bc0e1220765356fb35e06c69",
+      "pipeline/scripts/ops-nhan-ma-nguon.test.mjs": "8e970a715391886dbe193b880ce80a658b9c7a0417c928b69ea80413510a7e3a",
+      "pipeline/scripts/soat-tang-a.test.mjs": "6a157e25f1cc9b45f2b4c5b3539270a068888ef101202f73d8b631411e002741",
+      "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218",
+      "pipeline/scripts/test-posts.test.mjs": "3e8ab25cd3b06b427ee3a91db6e7a48ebe13cf4dd55c3498dc088f8bd13f36d3",
+      "pipeline/scripts/vn-day.test.mjs": "59a1e768b9c7835184c437b0173377ac8f503a467ee270ed4e4520fc12205436",
+      "pipeline/scripts/write-offers.test.mjs": "6c1162eecb20eeccaf085700b8264e9be758661957e8970d360a3e9418b95917",
+      "pipeline/sync-cloud.test.mjs": "8aa3d4cfa38686314c5548d8bf603b9055e344de701d248c4039a60c5f923b85",
+      "pipeline/sync-pii.test.mjs": "e3172447552ac5b6a4ffe766e3bcda029d4564a5b9b1bc3fafbb592b0768c8f8",
+      "scripts/audit-all.test.mjs": "6ce6e2e932614762575a382d47cfec4bb7d00eb01a7139c70f92ac699fa9aa68",
+      "scripts/check-freshness.test.mjs": "1e98b4e8a07e44a832ad244570de684ffbceef849b1fc9a46a0241fd4e19cdbc",
+      "scripts/dev-ops-account.test.mjs": "eaae93ef5b886eaae6563cfd040c364f0ccff637592bc0c5c5df584bf368e399",
+      "scripts/freshness-parity.test.mjs": "fe666329104ba61c5e386838da05a14fc3ae6572ed51103ee3bb9b2519dc66b9",
+      "scripts/job-exit.test.mjs": "df24c0de31d7f5b4737f2b073d53b2295579f7bef2976ced9347749f3f29fee8",
+      "scripts/ops-nhan-ma-nguon.test.mjs": "a94377b277038b0016e301fe993c6398bf4083286f868cbee2881862d8349c98"
+    }
+  },
+  "cayChup": {
+    "sha": "858c45334aa2e733131727eaa6fd7bef11ed4c21",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}
