@@ -79,7 +79,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx, app/tests/trang-chu-methodology.test.tsx]
-    expected: "exit 0; ca 'TCM-AC-8 lỗi toàn cục': renderToStaticMarkup(GlobalError) → bắt đầu bằng <html lang=\"vi\" và có <body>, chứa 'One Invest không mở được', 'Thử lại', link href=\"/\" chữ 'Về trang chủ'; vẽ AppCrash trong jsdom với digest 'xyz' → role=alert có 'Mã lỗi: xyz', bấm 'Thử lại' → retry 1 lần; global-error.tsx import './globals.css' (CSS của app có mặt khi layout gốc không chạy)"
+    expected: "exit 0; ca 'TCM-AC-8 lỗi toàn cục': global-error.tsx là client, import './globals.css', có <html lang=\"vi\" và <body>, truyền error + retry cho AppCrash (đọc tệp — next/font/google chỉ chạy dưới trình biên dịch Next nên GlobalError không vẽ được trong node; tài liệu thật do E19 đo); vẽ AppCrash trong jsdom với digest 'abc123' → role=alert có 'One Invest không mở được' và 'Mã lỗi: abc123', link 'Về trang chủ' href '/', bấm 'Thử lại' → retry 1 lần, reset 0; error là chuỗi (không phải Error) vẫn vẽ, không có dòng mã lỗi"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E12
     criterion: AC-9
