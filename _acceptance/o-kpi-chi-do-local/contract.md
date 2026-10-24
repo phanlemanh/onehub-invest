@@ -5,7 +5,7 @@ slug: o-kpi-chi-do-local
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, docs]
-status: implemented
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24
@@ -85,3 +85,17 @@ coverage-scan» trong sổ. Trục:
 
 - Chung `components/ops/collections/collections-tiles.tsx` với ON7, `overview-tiles.tsx` với UI11 — không song song.
 - Phụ thuộc ON8 (giờ VN, `lib/freshness.ts`): S1-D và S3 sau khi ON8 merge (P2-31).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-5: Phép đo «không chữ trạng thái giả» trên trang Thu thập ở cloud chưa có ca đối chứng có chữ giả thật.
+  - Ngoài-6: Mục ghi về hàm đọc bảng thô vắng thành rỗng — hàm này đã gỡ ở lượt 3, giữ dòng để vết.
+  - Ngoài-7: Bản dựng thử «như cloud» giữ tên bảng hiệu chuẩn cũ và để mọi bảng rỗng, nên ảnh bằng chứng có thể khác trang cloud thật ở vài bảng.
+  - Ngoài-9: Phép đo «không câu trấn an trên số cũ» chưa có ca fixture sinh ra câu ấy.
+  - Ngoài-10: Tên ca kiểm trong hồ sơ tiêu chí lệch tên ca chạy thật ở vài chỗ.
+  - Ngoài-12: Phép đo «trang ở máy local không đọc bản tin» chưa chứng minh bộ bắt truy vấn bắt được truy vấn ấy.
+  - Ngoài-13: Bản tin sai khuôn từ máy local có thể làm sập trang tổng quan Ops trên cloud thay vì hiện «—».
+  - Ngoài-14: Một khối số đã cũ nằm trong bản tin còn mới vẫn hiện như số tươi.
+  - Ngoài-15: Khi số theo nguồn không đọc được, ô Bản ghi 24h có thể kèm chú thích «chưa có bản ghi» mâu thuẫn với số.
+  - Ngoài-17: Tổng Bản ghi 24h có thể đếm hai lần bản ghi của luồng Zalo.
+  - Ngoài-18: Phép đo «hai trang cùng một con số x/y» mới thử trên dữ liệu rỗng.
+  - Ngoài-19: Mục ghi về test lắp props tay — test đã dựng trang thật ở lượt 2–3, giữ dòng để vết.
+  - Ngoài-20: Tên ca kiểm trong hồ sơ tiêu chí lệch tên ca chạy thật ở vài chỗ (ghi từ lượt 1).

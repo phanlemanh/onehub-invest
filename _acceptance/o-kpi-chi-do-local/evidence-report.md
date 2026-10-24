@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: o-kpi-chi-do-local
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 12e4d7874da733569512bc40a3368c396c6b9c3a
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: o-kpi-chi-do-local
@@ -121,7 +121,7 @@ Vòng 3 (lối ra ON3: chấm thêm một lượt sau khi đổi khuôn). Mọi 
     - Nguồn của prop `funnel` mà CloudCollections nhận khi chạy trên cloud, tức hàm dựng `CollectionsData.funnel` trong app/src/app/ops/collections/page.tsx kèm hàm nó gọi (getGateFunnel trong app/src/lib/collections-queries.ts hay getLocalFacts). Cần thấy `funnel.today.passed/messages/skipped` trên cloud lấy từ khối `ops_heartbeat` đã đo, chứ không phải giá trị mặc định 0 khi tệp log vắng. Nếu `funnel` là số 0 mặc định mà ô vẫn hiện «0 / 0» và «0 tin bị cổng chặn» khi state là fresh hay stale (`funnelMeasured: cloud.state !== "none"`), thì đó là câu trấn an khi không đo được và kết luận chuyển sang không đạt. Nếu là số đo thật thì mục này không còn chặn PASS.
     - Xác nhận ý định về số Alert info của /ops/collections khi state là none. Hàng ST-collections-none ghi «1 Alert info», nhưng collections-view.tsx dựng 2 LocalOnlyAlert: «Chỉ đo ở máy local» và «Phần còn lại của trang chưa có số trên cloud». Cần bảng Đặc tả UX của design được cập nhật theo khuôn lượt 3 (ghi 2 Alert, chữ «Chỉ đo ở máy local» chỉ một lần), hoặc ghi chú trong sổ quyết định `_acceptance/o-kpi-chi-do-local` rằng Alert thứ hai không tính vào «đúng một lần mỗi trang».
     - Xác nhận FactsStamp được phép hiện cùng FactsStaleAlert ở state stale. Design §3 bước 3 cho phép, nhưng bảng ST-*-stale và bảng «Ngưỡng trễ» của ADR-0014 chỉ ghi Alert cho mức Cũ. Cần một dòng chốt trong design hoặc sổ quyết định để đối chiếu.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-25 — Đạt
 
 - eval: E9
   run_id: minted-o-kpi-chi-do-local-E9-r3
@@ -137,7 +137,7 @@ Vòng 3 (lối ra ON3: chấm thêm một lượt sau khi đổi khuôn). Mọi 
   run_id: minted-o-kpi-chi-do-local-E10-r3
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui_check
+  verifier: config:capture.ui   # tác tử chấm chụp bằng playwright-cli theo capture.ui (kèm đăng nhập ops thử); bản tổng hợp ghi nhầm khoá executors.ui_check không có trong config — sổ d-41
   verified_at: 2026-10-24T22:31:06Z
   screenshot: evidence/E10-ST-ops-none.png   # 11 khung khác cùng thư mục evidence/, danh sách ở dưới
   observed: |
