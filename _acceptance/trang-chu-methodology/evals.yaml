@@ -162,7 +162,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.trang_chu_loi_db_smoke
     paths: [app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx, app/src/app/(marketing)/layout.tsx, scripts/smoke-trang-chu-loi-db.mjs]
-    expected: "exit 0; bản build thật (next build) chạy next start ở cổng 3462 với DATABASE_URL trỏ cổng chết: 'ok / → HTML bắt đầu <html lang=\"vi\", có One Invest không mở được, có Thử lại và href=\"/\" Về trang chủ'; 'ok /methodology → cùng trang lỗi toàn cục (layout marketing đọc DB nên hỏng trước trang)'; 'ok không có chữ Internal Server Error'; đối chứng dương cùng lượt: bản dev :3460 với DB sống → / KHÔNG có 'One Invest không mở được' (nêu rõ nếu có); server tạm được tắt ở finally"
+    expected: "exit 0; bản build thật (next build) chạy next start ở cổng 3462 với DATABASE_URL trỏ cổng chết; với / và /methodology: 'ok … server trả 500 với tài liệu lỗi của Next, không phải chữ Internal Server Error trần' (vỏ <html id=\"__next_error__\">), rồi trong TRÌNH DUYỆT thật (playwright-cli): 'ok … <html lang=\"vi\">', 'ok … Alert «One Invest không mở được» kèm mã lỗi', 'ok … nút Thử lại + link Về trang chủ href=\"/\"', 'ok … trang lỗi toàn cục (không navbar, tiêu đề «Có lỗi · One Invest»)'; đối chứng dương cùng lượt: dev :3460 với DB sống → trình duyệt KHÔNG thấy «One Invest không mở được», có navbar; 'ok server tạm ở :3462 đã tắt'; chiều đỏ: chạy với SMOKE_DEAD_DATABASE_URL trỏ DB sống → FAIL «Alert … (thật: )»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E17
     criterion: AC-4

@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(APP, "..");
@@ -85,7 +85,11 @@ const walk = (dir: string): string[] =>
   });
 
 test("TCM-AC-2 không còn /phuong-phap trong app/src và scripts/; next.config chỉ còn redirect 301", () => {
-  const hits = findOldSlug([...walk(join(APP, "src")), ...walk(join(ROOT, "scripts"))]);
+  // Loại đúng một tệp: smoke đo redirect phải GET /phuong-phap — đó là phép đo của AC-1, không phải link nội bộ.
+  const MEASURES = [join(ROOT, "scripts/smoke-trang-chu-methodology.mjs")];
+  const files = [...walk(join(APP, "src")), ...walk(join(ROOT, "scripts"))].filter((f) => !MEASURES.includes(f));
+  assert.ok(MEASURES.every((f) => existsSync(f)), "tệp đo bị loại khỏi quét phải có thật");
+  const hits = findOldSlug(files);
   assert.deepEqual(hits, [], `còn /phuong-phap: ${hits.map((h) => `${h.file}:${h.line}`).join(", ")}`);
   const cfg = readFileSync(join(APP, "next.config.ts"), "utf8");
   const lines = cfg.split("\n").filter((l) => l.includes('source: "/phuong-phap"'));
@@ -247,12 +251,12 @@ test("TCM-AC-6 trống: 0 thị trường → Empty với đúng 1 hành động
 
 // ── TCM-AC-7: lỗi trang marketing ──────────────────────────────────────────────────────────────
 
-async function clickRetry(Comp: (p: never) => ReactNode) {
+type RetryProps = { error: Error & { digest?: string }; retry: () => void; reset?: () => void };
+
+async function clickRetry(Comp: ComponentType<RetryProps>) {
   const calls = { retry: 0, reset: 0 };
   const err = Object.assign(new Error("x"), { digest: "abc123" });
-  const root = await render(
-    <Comp {...({ error: err, retry: () => calls.retry++, reset: () => calls.reset++ } as never)} />,
-  );
+  const root = await render(<Comp error={err} retry={() => calls.retry++} reset={() => calls.reset++} />);
   return { root, calls };
 }
 

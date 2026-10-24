@@ -65,7 +65,7 @@
 - Consumes: `app/.next` do `next build` của executor `trang_chu_loi_db_smoke` vừa dựng.
 - Produces: dòng `ok …` như E19.
 
-- [ ] **Step 1:** Viết script: spawn `npx next start -p 3462` trong `app/` với env `DATABASE_URL=postgres://x:x@127.0.0.1:1/x`, chờ cổng mở (≤ 60 s), GET `/` và `/methodology` → HTML bắt đầu `<html lang="vi"`, có «One Invest không mở được», «Thử lại», `href="/"` «Về trang chủ», không «Internal Server Error»; đối chứng dương: GET dev `${BASE_URL}/` (DB sống) KHÔNG có «One Invest không mở được»; tắt tiến trình ở `finally` (kill cả nhóm).
+- [ ] **Step 1:** Viết script: kiểm cổng 3462 trống; spawn `node node_modules/next/dist/bin/next start -p 3462` trong `app/` với env `DATABASE_URL=postgres://127.0.0.1:1/x` (cổng chết, không thông tin đăng nhập); server phải trả 500 với vỏ lỗi `__next_error__`; trình duyệt thật (`playwright-cli`) thấy `<html lang="vi">`, Alert «One Invest không mở được» + mã lỗi, Thử lại, `href="/"` «Về trang chủ», không navbar; đối chứng dương ở dev `${BASE_URL}/` (DB sống); tắt tiến trình ở `finally` (SIGTERM rồi SIGKILL, kiểm cổng đã trống). (Đổi ở S3: global-error là client component nên HTML server không chứa chữ của nó.)
 - [ ] **Step 2:** `cd app && npx next build && cd .. && node scripts/smoke-trang-chu-loi-db.mjs` → exit 0.
 - [ ] **Step 3:** Phá thử: chạy script với `DATABASE_URL` sống (biến môi trường ghi đè cho phép) → đỏ «không thấy trang lỗi toàn cục».
 - [ ] **Step 4:** Commit `test(trang-chu-methodology): smoke bản build DB chết`.
