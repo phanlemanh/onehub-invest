@@ -58,7 +58,12 @@ export async function getAreaNames(): Promise<Record<string, string>> {
  * Mã active chưa khai SLO không có ô — nó hiện ở /ops/collections là «Chưa khai SLO». */
 export async function getCoverageOverview(): Promise<CoverageRow[]> {
   if (await freshnessLocalOnly()) return [];
-  const rows = await readFreshness(freshnessClient);
+  return toCoverageRows(await readFreshness(freshnessClient));
+}
+
+/** Hàng độ tươi (readFreshness ở local, hoặc khối `freshness` máy local đẩy lên cloud — ON3) → ô /ops. Một phép chuyển
+ * cho cả hai đường để cloud và local ra cùng con số. */
+export function toCoverageRows(rows: FreshnessRow[]): CoverageRow[] {
   return rows
     .filter((r): r is FreshnessRow & { sloHours: number; status: CoverageRow["status"] } => r.status !== "no-slo")
     .map((r) => ({

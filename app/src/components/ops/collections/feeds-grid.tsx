@@ -23,7 +23,8 @@ const TABS: StatusTab<SourceFeedHealth>[] = (["late", "stopped", "ok"] as const)
   match: (f) => feedState(f) === s,
 }))
 
-export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
+/** `stale`: số là lần đo cuối của bản tin máy local cũ quá 45′ (ON3) — không badge trạng thái xanh. */
+export function FeedsGrid({ feeds, stale = false }: { feeds: SourceFeedHealth[]; stale?: boolean }) {
   const columns = useMemo<InsightColumn<SourceFeedHealth>[]>(
     () => [
       {
@@ -45,7 +46,7 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
         header: "Trạng thái",
         cell: ({ row }) => {
           const s = FEED_STATE[feedState(row.original)]
-          return <Badge variant={s.variant}>{row.original.status !== "active" ? <RawLabel n={sourceStatusLabel(row.original.status)} raw={row.original.status} /> : s.label}</Badge>
+          return <Badge variant={stale && s.variant === "success-light" ? "outline" : s.variant}>{row.original.status !== "active" ? <RawLabel n={sourceStatusLabel(row.original.status)} raw={row.original.status} /> : s.label}</Badge>
         },
         size: 120,
       },
@@ -76,7 +77,7 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
       { id: "stg", accessorKey: "stgRows", header: "Staging", cell: ({ row }) => (row.original.stgRows ? fmtInt(row.original.stgRows) : "—"), size: 100, meta: NUM },
       { id: "offers", accessorFn: (f) => f.offers ?? -1, header: "Tin rao", cell: ({ row }) => fmtInt(row.original.offers), size: 100, meta: NUM },
     ],
-    []
+    [stale]
   )
   return (
     <StatusGrid
