@@ -63,3 +63,24 @@ evals:
     cmd: config:executors.script.zc3_syntax
     expected: "exit 0; stdout 'SYNTAX OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc3b_marker_hong
+    expected: "exit 0; stdout có 'MARKER-HONG PASS'; (b) marker /tmp hỏng cả hai trường + turn dòng 1 → KILL, WARN, marker đúng dạng; (b2) inode đúng + số dòng hỏng → không 'unbound variable', KILL, WARN, marker sang file mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.zc3b_marker_hong
+    expected: "exit 0; should-NOT-fire (a): gw-marker hỏng + gateway.log có 2 turn cũ → exit 0, không launchctl bootout/pkill, có WARN, marker ghi lại đúng dạng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.zc3b_marker_hong
+    expected: "exit 0; (c) sau khi khởi tạo lại, 1 turn MỚI ghi vào gateway.log → lượt sau exit 1, alert 'KILL: agent-turn MỚI trong gateway.log'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

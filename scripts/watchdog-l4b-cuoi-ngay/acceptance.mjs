@@ -3,6 +3,7 @@
  * Eval máy cho hồ sơ nghiệm thu `watchdog-l4b-cuoi-ngay` (ZC3 nối tiếp).
  *
  *   node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan    # scan_new_lines trích nguyên văn: đuôi file cũ, xoay ngày, xoá, inode khác, truncate
+ *   node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong  # marker hỏng: /tmp quét lại từ dòng 1; gateway.log khởi tạo lại, không kill vì quá khứ
  *   node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate  # watchdog trọn vẹn trên bản chép: turn ghi sau lượt quét cuối ngày → alert ở lượt đầu ngày mới
  *
  * AN TOÀN (luật 8 — alert() của watchdog kill OpenClaw): bản chép trong thư mục
@@ -153,51 +154,58 @@ function modeScan() {
 // ------------------------------------------------------------------ rotate
 const STUB_NAMES = ["launchctl", "pkill", "pgrep", "osascript", "curl", "sleep"];
 
+/** Dựng bản chép watchdog trong thư mục tạm: HOME giả, stub đứng đầu PATH (kiểm stub thắng, sai thì exit 2).
+ *  `gwLines` = nội dung gateway.log ban đầu. Trả các hàm chạy/đọc dùng chung cho rotate và marker-hong. */
+function makeSandbox(S, gwLines = lines(2, BENIGN)) {
+  const repo = join(S, "repo");
+  const home = join(S, "home");
+  const stub = join(S, "bin");
+  const calls = join(S, "calls.log");
+  for (const d of ["scripts", "collector/openclaw", "pipeline/logs"]) mkdirSync(join(repo, d), { recursive: true });
+  mkdirSync(join(home, ".openclaw/extensions/zalouser/dist/.setup"), { recursive: true });
+  mkdirSync(join(home, "Library/Logs/openclaw"), { recursive: true });
+  const src = readFileSync(WATCHDOG, "utf8");
+  const ocLine = 'OC_LOG_GLOB="/tmp/openclaw/openclaw-$(date +%Y-%m-%d).log"';
+  const dbTok = "/dev/tcp/127.0.0.1/5433";
+  if (src.split(ocLine).length !== 2 || src.split(dbTok).length !== 2) {
+    console.error("bản chép: không tìm thấy đúng MỘT dòng log /tmp và MỘT cổng :5433 — bỏ chạy");
+    process.exit(2);
+  }
+  const copy = src.replace(ocLine, 'OC_LOG_GLOB="${WD_TEST_OC_LOG:?}"').replace(dbTok, "/dev/tcp/127.0.0.1/${WD_TEST_DB_PORT:?}");
+  const a = src.split("\n");
+  const b = copy.split("\n");
+  if (a.length !== b.length || a.filter((l, i) => l !== b[i]).length !== 2) {
+    console.error("bản chép đổi khác 2 dòng — bỏ chạy");
+    process.exit(2);
+  }
+  writeFileSync(join(repo, "scripts/zalo-watchdog.sh"), copy);
+  writeFileSync(join(repo, "collector/openclaw/handler.js"), "export default async function handler(evt) { return evt; }\n");
+  writeFileSync(join(home, ".openclaw/openclaw.json"), JSON.stringify({ bindings: [], channels: { zalouser: { groups: { "acc-group": { requireMention: true } } } } }));
+  writeFileSync(join(home, ".openclaw/extensions/zalouser/dist/.setup/monitor-acc.mjs"), "const pluginHooks = {}; const SuppressMessageReceivedHooks = 1;\n");
+  writeFileSync(join(home, "Library/Logs/openclaw/gateway.log"), gwLines);
+  mkdirSync(stub, { recursive: true });
+  for (const n of STUB_NAMES) {
+    writeFileSync(join(stub, n), `#!/bin/bash\necho "${n} $*" >> "${calls}"\n${n === "curl" ? "echo -n 200\n" : ""}exit 0\n`);
+    chmodSync(join(stub, n), 0o755);
+  }
+  const env = { HOME: home, PATH: `${stub}:/usr/bin:/bin:/usr/sbin:/sbin`, WD_TEST_DB_PORT: "1" };
+  const w = spawnSync("bash", ["-c", `for c in ${STUB_NAMES.join(" ")}; do command -v "$c"; done`], { env, encoding: "utf8" });
+  if (!w.stdout.trim().split("\n").every((p) => p.startsWith(stub + "/"))) {
+    console.error(`AN TOÀN: stub không thắng PATH — bỏ chạy.\n${w.stdout}`);
+    process.exit(2);
+  }
+  console.log(`an toàn: ${STUB_NAMES.join("/")} → stub trong thư mục tạm`);
+  const alerts = join(repo, "pipeline/logs/zalo-watchdog-alerts.log");
+  const killed = () => /^(launchctl bootout|pkill )/m.test(read(calls));
+  const run = (oc) => spawnSync("bash", [join(repo, "scripts/zalo-watchdog.sh")], { env: { ...env, WD_TEST_OC_LOG: oc }, encoding: "utf8", timeout: 60_000 });
+
+  return { repo, home, calls, alerts, killed, run };
+}
+
 function modeRotate() {
   const S = mkdtempSync(join(tmpdir(), "acc-l4b-rot-"));
   try {
-    const repo = join(S, "repo");
-    const home = join(S, "home");
-    const stub = join(S, "bin");
-    const calls = join(S, "calls.log");
-    for (const d of ["scripts", "collector/openclaw", "pipeline/logs"]) mkdirSync(join(repo, d), { recursive: true });
-    mkdirSync(join(home, ".openclaw/extensions/zalouser/dist/.setup"), { recursive: true });
-    mkdirSync(join(home, "Library/Logs/openclaw"), { recursive: true });
-    const src = readFileSync(WATCHDOG, "utf8");
-    const ocLine = 'OC_LOG_GLOB="/tmp/openclaw/openclaw-$(date +%Y-%m-%d).log"';
-    const dbTok = "/dev/tcp/127.0.0.1/5433";
-    if (src.split(ocLine).length !== 2 || src.split(dbTok).length !== 2) {
-      console.error("bản chép: không tìm thấy đúng MỘT dòng log /tmp và MỘT cổng :5433 — bỏ chạy");
-      process.exit(2);
-    }
-    const copy = src.replace(ocLine, 'OC_LOG_GLOB="${WD_TEST_OC_LOG:?}"').replace(dbTok, "/dev/tcp/127.0.0.1/${WD_TEST_DB_PORT:?}");
-    const a = src.split("\n");
-    const b = copy.split("\n");
-    if (a.length !== b.length || a.filter((l, i) => l !== b[i]).length !== 2) {
-      console.error("bản chép đổi khác 2 dòng — bỏ chạy");
-      process.exit(2);
-    }
-    writeFileSync(join(repo, "scripts/zalo-watchdog.sh"), copy);
-    writeFileSync(join(repo, "collector/openclaw/handler.js"), "export default async function handler(evt) { return evt; }\n");
-    writeFileSync(join(home, ".openclaw/openclaw.json"), JSON.stringify({ bindings: [], channels: { zalouser: { groups: { "acc-group": { requireMention: true } } } } }));
-    writeFileSync(join(home, ".openclaw/extensions/zalouser/dist/.setup/monitor-acc.mjs"), "const pluginHooks = {}; const SuppressMessageReceivedHooks = 1;\n");
-    writeFileSync(join(home, "Library/Logs/openclaw/gateway.log"), lines(2, BENIGN));
-    mkdirSync(stub, { recursive: true });
-    for (const n of STUB_NAMES) {
-      writeFileSync(join(stub, n), `#!/bin/bash\necho "${n} $*" >> "${calls}"\n${n === "curl" ? "echo -n 200\n" : ""}exit 0\n`);
-      chmodSync(join(stub, n), 0o755);
-    }
-    const env = { HOME: home, PATH: `${stub}:/usr/bin:/bin:/usr/sbin:/sbin`, WD_TEST_DB_PORT: "1" };
-    const w = spawnSync("bash", ["-c", `for c in ${STUB_NAMES.join(" ")}; do command -v "$c"; done`], { env, encoding: "utf8" });
-    if (!w.stdout.trim().split("\n").every((p) => p.startsWith(stub + "/"))) {
-      console.error(`AN TOÀN: stub không thắng PATH — bỏ chạy.\n${w.stdout}`);
-      process.exit(2);
-    }
-    console.log(`an toàn: ${STUB_NAMES.join("/")} → stub trong thư mục tạm`);
-    const alerts = join(repo, "pipeline/logs/zalo-watchdog-alerts.log");
-    const killed = () => /^(launchctl bootout|pkill )/m.test(read(calls));
-    const run = (oc) => spawnSync("bash", [join(repo, "scripts/zalo-watchdog.sh")], { env: { ...env, WD_TEST_OC_LOG: oc }, encoding: "utf8", timeout: 60_000 });
-
+    const { calls, alerts, killed, run } = makeSandbox(S);
     const d1 = join(S, "openclaw-2026-10-22.log");
     const d2 = join(S, "openclaw-2026-10-23.log");
     writeFileSync(d1, lines(3, BENIGN));
@@ -217,8 +225,79 @@ function modeRotate() {
   finish("ROTATE");
 }
 
+// ------------------------------------------------------------- marker-hong
+// Vòng 2 (MỞ LẠI claudedp-2310-7 lần 2): marker hỏng trường số. Log /tmp theo ngày → quét lại từ dòng 1;
+// gateway.log là log LỊCH SỬ (còn turn của sự cố cũ) → khởi tạo lại ở số dòng hiện tại, KHÔNG kill vì quá khứ.
+const OLD_TURN = "2026-10-20T14:02:11 [auto-reply/agent-turn-timing] turn=1 ms=812";
+const markerOk = (p, f) => new RegExp(`^${f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:\\d+:\\d+$`).test(read(p).trim());
+
+function modeMarkerHong() {
+  const S = mkdtempSync(join(tmpdir(), "acc-l4b-mk-"));
+  try {
+    // gateway.log mang lịch sử: 2 dòng turn của sự cố cũ giữa các dòng thường
+    const { repo, home, calls, alerts, killed, run } = makeSandbox(S, lines(2, BENIGN) + OLD_TURN + "\n" + lines(3, BENIGN) + OLD_TURN + "\n");
+    const gw = join(home, "Library/Logs/openclaw/gateway.log");
+    const gwMk = join(repo, "pipeline/logs/zalo-watchdog-gw-marker");
+    const ocMk = join(repo, "pipeline/logs/zalo-watchdog-turn-marker");
+    const warns = () => read(alerts).split("\n").filter((l) => /WARN/.test(l) && /marker/i.test(l)).length;
+    const reset = () => writeFileSync(calls, "");
+    const oc = join(S, "openclaw-2026-10-23.log");
+    writeFileSync(oc, lines(3, BENIGN));
+
+    let r = run(oc); // lượt đầu: khởi tạo cả hai marker, không quét quá khứ
+    check(r.status === 0 && !killed(), "khởi tạo: gateway.log có turn cũ → không kill (đúng hành vi trước khi sửa)");
+
+    // (a) gw-marker hỏng + gateway.log có turn cũ → KHÔNG kill, có WARN, marker ghi lại đúng
+    reset();
+    writeFileSync(gwMk, `${gw}:abc:def\n`);
+    const w0 = warns();
+    r = run(oc);
+    console.log(`(a) exit ${r.status} · stub: ${read(calls).trim().split("\n").filter((l) => /^(launchctl|pkill)/.test(l)).join(" | ") || "không"}`);
+    check(r.status === 0 && !killed(), "(a) should-NOT-fire: gw-marker hỏng KHÔNG làm watchdog kill gateway vì turn của quá khứ");
+    check(warns() > w0, "(a) có dòng WARN về marker hỏng trong alert log");
+    check(markerOk(gwMk, gw), `(a) gw-marker ghi lại đúng dạng đường_dẫn:inode:số_dòng (được ${JSON.stringify(read(gwMk).trim().slice(-40))})`);
+
+    // (c) sau (a): một turn MỚI vào gateway.log → lượt sau bị bắt
+    reset();
+    appendFileSync(gw, TURN + "\n");
+    r = run(oc);
+    check(r.status === 1 && killed() && /KILL: agent-turn MỚI trong gateway\.log/.test(read(alerts)), "(c) turn MỚI ghi vào gateway.log sau khi khởi tạo lại → bị bắt, alert KILL");
+
+    // (b) marker log /tmp hỏng + turn ở dòng 1 của file hôm nay → vẫn bị bắt, có WARN, marker ghi lại
+    reset();
+    writeFileSync(gw, lines(2, BENIGN)); // gateway.log sạch để chỉ đo nhánh /tmp
+    writeFileSync(gwMk, "");
+    run(oc);
+    reset();
+    const oc2 = join(S, "openclaw-2026-10-24.log");
+    writeFileSync(oc2, TURN + "\n" + lines(2, BENIGN));
+    writeFileSync(ocMk, `${oc2}:xyz:123x\n`);
+    const w1 = warns();
+    r = run(oc2);
+    check(r.status === 1 && killed() && /KILL: agent-turn MỚI từ kênh xã hội/.test(read(alerts)), "(b) marker /tmp hỏng + turn ở dòng 1 → vẫn bị bắt, alert KILL");
+    check(warns() > w1, "(b) có dòng WARN về marker hỏng");
+    check(markerOk(ocMk, oc2), "(b) marker /tmp ghi lại đúng dạng đường_dẫn:inode:số_dòng");
+
+    // (b2) lỗi gốc vòng 1: file hôm qua CÒN, inode trong marker ĐÚNG, chỉ trường số dòng hỏng → turn dòng 1 file mới vẫn bị bắt
+    reset();
+    const y = join(S, "openclaw-2026-10-25.log");
+    const t = join(S, "openclaw-2026-10-26.log");
+    writeFileSync(y, lines(3, BENIGN));
+    writeFileSync(t, TURN + "\n" + lines(2, BENIGN));
+    writeFileSync(ocMk, `${y}:${inode(y)}:abc\n`);
+    const w2 = warns();
+    r = run(t);
+    check(r.status === 1 && killed() && r.stderr.indexOf("unbound variable") < 0, "(b2) inode đúng + số dòng hỏng: không chết dưới set -u, turn dòng 1 file mới bị bắt");
+    check(warns() > w2, "(b2) có dòng WARN về marker hỏng");
+    check(markerOk(ocMk, t), "(b2) marker chuyển sang file mới đúng dạng");
+  } finally {
+    rmSync(S, { recursive: true, force: true });
+  }
+  finish("MARKER-HONG");
+}
+
 const mode = process.argv[2];
-const modes = { scan: modeScan, rotate: modeRotate };
+const modes = { scan: modeScan, rotate: modeRotate, "marker-hong": modeMarkerHong };
 if (!modes[mode]) {
   console.error(`dùng: node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs <${Object.keys(modes).join("|")}>`);
   process.exit(2);

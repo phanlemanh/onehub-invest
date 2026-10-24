@@ -34,6 +34,9 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 - AC-4: Given file cũ đã bị xoá, hoặc đường dẫn cũ bị tái dùng bởi một file khác (inode khác), When lượt quét đổi sang file mới, Then không lỗi và không quét nhầm file lạ; chỉ file mới được quét.
 - AC-5: Given cùng một file bị truncate (cùng inode, ít dòng hơn), When quét, Then quét lại từ dòng 1; marker số cũ (`4211`) vẫn quét toàn file hôm nay mà không lỗi; các ca L4b/gateway của ZC3 không hồi quy.
 
+- AC-6: Given marker của log /tmp theo ngày hỏng trường số (inode hoặc số dòng không phải số — kể cả khi file hôm qua còn và inode trong marker đúng), When lượt quét chạy, Then watchdog không chết dưới `set -u`, quét file hôm nay từ dòng 1 (turn ở dòng 1 bị bắt, alert KILL), ghi một dòng WARN về marker hỏng vào alert log, và ghi lại marker đúng dạng `đường_dẫn:inode:số_dòng`. (thêm ở vòng 2)
+- AC-7: Given `gateway.log` còn dòng agent-turn của sự cố cũ và marker của nó hỏng trường số, When lượt quét chạy, Then watchdog KHÔNG kill gateway vì quá khứ (exit 0, không bootout/pkill), ghi WARN, khởi tạo lại marker ở số dòng hiện tại; và một turn MỚI ghi vào `gateway.log` sau đó vẫn bị bắt ở lượt kế. (thêm ở vòng 2)
+
 ## Coverage
 
 - Bỏ coverage-scan: 5 AC theo brief. Các trục:
@@ -42,7 +45,7 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
   - vị trí turn: cuối file cũ / đầu file mới;
   - lặp: chạy lại / nối thêm;
   - truncate;
-  - marker: số cũ / định dạng mới.
+  - marker: số cũ / định dạng mới / hỏng trường số (log /tmp và gateway.log).
 
 ## Out of scope
 
@@ -55,3 +58,4 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 - T3 vì `scripts/zalo-watchdog.sh` ∈ `t3_paths` (an toàn Zalo). Chữ ký Mạnh bắt buộc.
 - Hợp đồng dựng SAU khi code xong nên `gate1_skipped: true`.
 - Eval trích nguyên văn `scan_new_lines` từ watchdog, và chạy watchdog trọn vẹn trên bản chép đổi đúng 2 dòng (đường log /tmp và cổng :5433), với HOME giả và stub `launchctl`/`pkill`/`pgrep`/`osascript`/`curl`/`sleep` (kiểm stub thắng PATH, sai thì bỏ chạy).
+- Vòng 2 (24/10): ZCode sửa marker hỏng ở 163c2c3 nhưng quét lại từ dòng 1 cho cả `gateway.log`. Tệp đó còn turn của sự cố 20/10, nên marker hỏng làm watchdog KILL gateway vì quá khứ. Lỗi do lời MỞ LẠI lần 1 không tách hai loại log; MỞ LẠI lần 2 `claudedp-2310-7`. Thêm AC-6, AC-7 + E10–E12 (harness `marker-hong`: bản chép, HOME giả, stub). Kiểm harness biết đỏ: trên e109402 đỏ 6 mục (gồm (b2) chết dưới `set -u`), trên 163c2c3 đỏ đúng 1 mục (a).
