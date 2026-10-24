@@ -1,0 +1,37 @@
+{
+  "feature_plain": "Trang Phương pháp chuyển sang địa chỉ /methodology (link cũ /phuong-phap tự chuyển tới) và in sẵn mọi định nghĩa, không phải bấm từng câu; nền hero và thẻ thị trường trang chủ thôi dùng màu cứng; khi trang hỏng, khách thấy thông báo lỗi tiếng Việt có nút Thử lại thay vì trang 500 tiếng Anh.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chuyển mọi link cũ /phuong-phap (kể cả có tham số) sang /methodology bằng mã 301, và /methodology mở bình thường."},
+    {"id": "AC-3", "p": "Sẽ in sẵn đủ 15 định nghĩa của ba mục Chỉ số, Mô hình lợi suất, Nguồn dữ liệu ngay khi mở trang — không nút mở/đóng; mục lục và mỗi định nghĩa có địa chỉ riêng để link thẳng tới (vd /methodology#revpar)."},
+    {"id": "AC-4", "p": "Sẽ xếp định nghĩa thành lưới hai cột kẻ mảnh trên màn rộng, một cột trên điện thoại, cuối trang có hai nút «Xem thị trường» và «Ước tính lợi suất»."},
+    {"id": "AC-6", "p": "Sẽ giữ dải doanh thu theo tháng thật trên từng thẻ thị trường, màu chàm có bản cho nền tối; khi chưa có thị trường nào có số, vùng thẻ báo «Chưa có thị trường nào có số» kèm một nút."},
+    {"id": "AC-7", "p": "Sẽ giữ thanh điều hướng và chân trang khi một trang marketing hỏng, vùng giữa báo «Không tải được dữ liệu» kèm nút Thử lại tải lại từ máy chủ."},
+    {"id": "AC-8", "p": "Sẽ hiện trang lỗi toàn cục tiếng Việt «One Invest không mở được» với Thử lại và Về trang chủ khi phần khung trang hỏng (vd cơ sở dữ liệu sập), đọc được ở nền sáng và tối."},
+    {"id": "AC-9", "p": "Sẽ gỡ hết 18 vi phạm chuẩn giao diện của nhóm trang chủ (màu cứng, màu thiếu bản tối, chuyển động cấm); kiểm mã và kiểu sạch."},
+    {"id": "AC-10", "p": "Sẽ cập nhật bản đồ trang và danh mục giao diện để nói đúng: Phương pháp ở /methodology dùng lưới mở sẵn, trang chủ giữ hỏi đáp gập mở, có hai trang lỗi mới."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Sẽ KHÔNG còn link nội bộ nào trỏ /phuong-phap — navbar, trang chủ, chân trang, trang đăng nhập đều trỏ /methodology."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG còn mã màu cứng trong nền hero — chỉ dùng màu có sẵn trong bảng màu của hệ thiết kế, hình vẫn như trước."},
+    {"id": "OOS-1", "p": "KHÔNG thêm trạng thái tải (khung xương) cho trang chủ — xem Hỏi-1."},
+    {"id": "OOS-2", "p": "KHÔNG sửa trang lỗi của nhóm trang ứng dụng (/vn, /listing…) — nút Thử lại ở đó vẫn chỉ vẽ lại phía trình duyệt."},
+    {"id": "OOS-3", "p": "KHÔNG đụng trang đăng nhập/đăng ký ngoài việc đổi link Phương pháp."},
+    {"id": "OOS-4", "p": "KHÔNG gắn nút ⓘ trên ô số trỏ về định nghĩa — hàng này chỉ dựng sẵn địa chỉ cho từng định nghĩa."},
+    {"id": "OOS-5", "p": "KHÔNG viết lại nội dung định nghĩa — chữ giữ nguyên văn."},
+    {"id": "OOS-6", "p": "KHÔNG vẽ nền hero riêng cho chế độ tối — một bản vẽ cho cả hai như trước."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Bề mặt: trang chủ, /methodology, link cũ /phuong-phap, lỗi trang marketing, lỗi toàn cục — đủ năm vế của câu giao (AC-1 đến AC-8)."},
+    {"i": 1, "p": "Trạng thái: mặc định, trống (0 thị trường), lỗi trang, lỗi khung, link sâu và chuyển hướng; trạng thái tải trang chủ để Hỏi-1."},
+    {"i": 2, "p": "Khổ × giao diện: 1280 sáng, 1280 tối, 375 sáng — mỗi tiêu chí nhìn thấy được có một lượt chụp riêng; vùng trống chỉ đo bằng máy vì DB máy luôn có thị trường."},
+    {"i": 3, "p": "Lớp đo: máy chủ thật (chuyển hướng, HTML, bản build với DB tắt), quét mã, dựng component, và ảnh chụp — tiêu chí nào cũng có ít nhất một lớp máy."},
+    {"i": 4, "p": "Luật cổng: trang Phương pháp vẫn nói rõ số AirDNA chỉ dùng nội bộ."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chuyện khách mất thanh điều hướng khi DB sập là một đánh đổi trải nghiệm, máy đã tự quyết — nay đưa lên thành Hỏi-2 cho anh chọn."},
+    {"i": 1, "p": "Nút mới dẫn khách đi đâu (cuối trang Phương pháp, thẻ thị trường trống) là nghĩa sản phẩm, máy đã tự quyết — nay thành Hỏi-3; chỉ ghim vào phép đo sau khi anh chọn."},
+    {"i": 2, "p": "Trang lỗi toàn cục chưa được đo trên bản chạy thật khi DB sập — đã thêm một lượt dựng bản build với DB tắt và kiểm trang lỗi tiếng Việt hiện ra."},
+    {"i": 3, "p": "Ảnh chụp lỗi trang, lỗi toàn cục và hero gộp chung một phép đo — đã tách mỗi tiêu chí một lượt chụp, lỗi trang kiểm thêm thứ tự điều hướng trên, thông báo giữa, chân trang dưới."},
+    {"i": 4, "p": "Hàng không khai cách đo giá trị sau khi ship — nay thành Hỏi-4 (máy khuyên bỏ, vì đây là hàng dọn giao diện)."}
+  ]
+}

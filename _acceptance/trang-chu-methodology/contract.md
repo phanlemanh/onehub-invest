@@ -45,7 +45,7 @@ Source input: `docs/plan/lo-trinh.json` hàng UI2; ô Cổng Đáng `_acceptance
 - AC-7: Given một trang thuộc nhóm marketing ném lỗi khi dựng, When khách mở trang ấy, Then navbar và chân trang
   vẫn hiện, vùng nội dung là Alert lỗi «Không tải được dữ liệu» (kèm mã lỗi khi có) với nút «Thử lại»; bấm «Thử lại»
   gọi `retry()` (tải lại từ server), không gọi `reset()`.
-- AC-8: Given layout (gốc hoặc của một cổng) ném lỗi, When khách mở trang, Then thấy trang lỗi toàn cục tiếng Việt:
+- AC-8 (cross-layer): Given layout (gốc hoặc của một cổng) ném lỗi — vd DB sập làm layout marketing hỏng, When khách mở trang, Then thấy trang lỗi toàn cục tiếng Việt:
   tài liệu riêng `<html lang="vi">` + `<body>`, Alert «One Invest không mở được» kèm mã lỗi, nút «Thử lại» gọi
   `retry()` và link «Về trang chủ» `href="/"`; đọc được ở sáng và tối.
 - AC-9: Given `npm run lint` + `tsc --noEmit` ở `app/`, When chạy, Then sạch; `app/eslint-suppressions.json` không
@@ -67,9 +67,10 @@ Quét hình thái (preset entity-feature, chân sản phẩm: routes.md/catalog.
   [thước CE: luật ReUI «mỗi vùng dữ liệu có trống/tải/lỗi» + bảng ST trong design doc] → AC-3, AC-6, AC-7, AC-8;
   trạng thái **tải** của trang chủ: Later (descope có tên).
 - Trục **khổ × giao diện**: 1280 sáng | 1280 tối | 375 sáng [thước CE: `onehub-ui/loop.md` bước nhìn] → AC-4, AC-5,
-  AC-8 (ui-check).
-- Trục **lớp đo**: HTTP (redirect, HTML server) | cây mã (quét chuỗi, lint) | DOM jsdom (lỗi, Empty) | mắt (ảnh)
-  → mỗi AC có ít nhất một lớp máy; AC-4/5/8 thêm lớp mắt.
+  AC-7, AC-8 (mỗi AC một eval ui-check: E16, E20, E21, E22); Empty thẻ thị trường chỉ đo ở jsdom (E9) — DB local
+  luôn có thị trường nên không chụp được.
+- Trục **lớp đo**: HTTP (redirect, HTML server, bản build với DB chết) | cây mã (quét chuỗi, lint) | DOM jsdom (lỗi,
+  Empty) | mắt (ảnh) → mỗi AC có ít nhất một lớp máy; AC-4/5/7/8 thêm lớp mắt; AC-8 thêm lớp backend-effect (E19).
 - Cross-cutting: luật cổng (Invest công khai, không số AirDNA, chỉ nhãn tầng C) — trang Phương pháp giữ nguyên câu
   «Có dùng AirDNA không?» (chỉ nội bộ).
 

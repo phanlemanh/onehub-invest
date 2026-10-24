@@ -114,15 +114,56 @@ evals:
     criterion: AC-4
     executor: ui-check
     layer: ui-observed
-    paths: [app/src/app/(marketing)/**, app/src/components/marketing/**, app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx]
+    paths: [app/src/app/(marketing)/methodology/**, app/src/components/marketing/definition-grid.tsx]
     steps:
       - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json)"
       - "/methodology cả trang: 1280 px sáng → evidence/E16-step1.png, 1280 px tối (prefers-color-scheme: dark) → evidence/E16-step2.png, 375 px sáng → evidence/E16-step3.png; ghi document.documentElement.scrollWidth và clientWidth ở 375"
       - "/methodology#revpar ở 1280 sáng → evidence/E16-step4.png (ô RevPAR nằm trong khung nhìn, không bị navbar che)"
-      - "/ ở 1280 sáng → evidence/E16-step5.png, 1280 tối → evidence/E16-step6.png, 375 sáng → evidence/E16-step7.png; cuộn tới 'Thị trường đang theo dõi' ở 1280 tối → evidence/E16-step8.png"
-      - "Lỗi: tạo TẠM app/src/app/(marketing)/design-pass-loi-trang/page.tsx và app/src/app/design-pass-loi-toan-cuc/page.tsx, mỗi tệp chỉ ném Error; mở /design-pass-loi-trang ở 1280 sáng → evidence/E16-step9.png, 375 sáng → evidence/E16-step10.png; /design-pass-loi-toan-cuc ở 1280 sáng → evidence/E16-step11.png, 1280 tối → evidence/E16-step12.png (Escape đóng lớp phủ lỗi của dev server nếu có); XOÁ hai tệp tạm ngay sau khi chụp và ghi lại rằng đã xoá"
-    expected: "/methodology: lưới hai cột kẻ mảnh ở 1280, một cột ở 375 và scrollWidth = clientWidth; mọi câu trả lời đọc được không cần bấm, ở sáng lẫn tối; #revpar đưa ô RevPAR vào tầm nhìn. Trang chủ: nền hero xanh có dải sáng như ảnh trước (evidence/design-pass/home-truoc--*), dải diện tích chàm đọc rõ ở sáng và tối. Lỗi trang: navbar + chân trang còn, Alert 'Không tải được dữ liệu' + 'Thử lại'. Lỗi toàn cục: Alert 'One Invest không mở được' + 'Thử lại' + 'Về trang chủ', đọc được ở sáng và tối."
+    expected: "/methodology: lưới hai cột kẻ mảnh ở 1280, một cột ở 375 và scrollWidth = clientWidth; mọi câu trả lời đọc được không cần bấm, ở sáng lẫn tối; hàng hai nút cuối trang đọc được; #revpar đưa ô RevPAR vào tầm nhìn."
     evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E20
+    criterion: AC-5
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/marketing/frame-backdrop.tsx, app/src/components/marketing/hero.tsx, app/src/components/marketing/market-cards.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460"
+      - "/ ở 1280 sáng → evidence/E20-step1.png, 1280 tối → evidence/E20-step2.png, 375 sáng → evidence/E20-step3.png (ghi scrollWidth/clientWidth)"
+      - "Cuộn tới 'Thị trường đang theo dõi': 1280 sáng → evidence/E20-step4.png, 1280 tối → evidence/E20-step5.png"
+      - "Đặt cạnh ảnh trước evidence/design-pass/home-truoc--desktop-1280--light.png và --dark.png"
+    expected: "Nền hero vẫn là nền xanh có dải sáng như ảnh trước (khác biệt chỉ ở sắc, không mất dải, không đổi bố cục), ở sáng lẫn tối; dải diện tích chàm của thẻ thị trường đọc rõ trên nền sáng và tối; 375 px không cuộn ngang."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E21
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/app/(marketing)/error.tsx, app/src/app/(marketing)/layout.tsx, app/src/components/states/page-error.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460"
+      - "Tạo TẠM app/src/app/(marketing)/design-pass-loi-trang/page.tsx chỉ ném Error; mở /design-pass-loi-trang (Escape đóng lớp phủ lỗi của dev server nếu có): 1280 sáng → evidence/E21-step1.png, 1280 tối → evidence/E21-step2.png, 375 sáng → evidence/E21-step3.png"
+      - "Ghi thứ tự trong DOM: header (navbar) đứng trước role=alert, role=alert đứng trước footer"
+      - "XOÁ tệp tạm ngay sau khi chụp và ghi lại rằng đã xoá (git status không còn đường design-pass-loi-trang)"
+    expected: "Navbar ở trên và chân trang ở dưới vẫn hiện; giữa chúng là Alert 'Không tải được dữ liệu' kèm mã lỗi và nút 'Thử lại', đọc được ở sáng, tối và 375 px; thứ tự DOM header < alert < footer."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E22
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460"
+      - "Tạo TẠM app/src/app/design-pass-loi-toan-cuc/page.tsx chỉ ném Error (ngoài mọi nhóm, không error.tsx nào phía trên); mở nó (Escape đóng lớp phủ lỗi của dev server nếu có): 1280 sáng → evidence/E22-step1.png, 1280 tối → evidence/E22-step2.png, 375 sáng → evidence/E22-step3.png"
+      - "XOÁ tệp tạm ngay sau khi chụp và ghi lại rằng đã xoá"
+    expected: "Trang lỗi toàn cục: Alert 'One Invest không mở được' + mã lỗi + 'Thử lại' + 'Về trang chủ', không navbar, đọc được ở sáng, tối và 375 px (nền và chữ đổi theo giao diện tối)."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E19
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.trang_chu_loi_db_smoke
+    paths: [app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx, app/src/app/(marketing)/layout.tsx, scripts/smoke-trang-chu-loi-db.mjs]
+    expected: "exit 0; bản build thật (next build) chạy next start ở cổng 3462 với DATABASE_URL trỏ cổng chết: 'ok / → HTML bắt đầu <html lang=\"vi\", có One Invest không mở được, có Thử lại và href=\"/\" Về trang chủ'; 'ok /methodology → cùng trang lỗi toàn cục (layout marketing đọc DB nên hỏng trước trang)'; 'ok không có chữ Internal Server Error'; đối chứng dương cùng lượt: bản dev :3460 với DB sống → / KHÔNG có 'One Invest không mở được' (nêu rõ nếu có); server tạm được tắt ở finally"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E17
     criterion: AC-4
     executor: script

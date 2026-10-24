@@ -51,16 +51,22 @@ không còn màu cứng, lỗi nhóm marketing có `error.tsx` và lỗi toàn c
    Alert destructive «One Invest không mở được» + mã lỗi + «Thử lại» (`retry()`) + «Về trang chủ» bằng thẻ `<a>`
    thường (tải lại cả tài liệu; router phía client có thể chính là thứ hỏng — ngoại lệ lint có lý do).
    Layout marketing đọc DB (phiên + chỉ mục tìm kiếm): DB sập hẳn thì layout hỏng trước trang → `global-error`
-   bắt; `(marketing)/error.tsx` bắt lỗi của riêng trang khi layout còn sống.
+   bắt; `(marketing)/error.tsx` bắt lỗi của riêng trang khi layout còn sống. Máy khuyên giữ như vậy — **Hỏi-2** ở
+   Cổng Phạm vi (lối khác: layout nuốt lỗi DB để navbar còn đứng).
 8. **Lint.** `--prune-suppressions` → baseline giảm đúng 18 (3 khoá của nhóm biến mất).
 9. **Tài liệu.** routes.md (dòng `/methodology`, ghi chú `/`), catalog.md (`faq-3`, hero, card-29, dòng «Lỗi» thêm
    `app-crash`), `app/CLAUDE.md`, IA doc, ROADMAP §2/§4 (I6 phần trang chủ/Phương pháp).
 
-## Phương án đã loại
+## Câu hỏi cho người (Cổng Phạm vi)
 
-- **Layout marketing chịu lỗi DB** (bắt lỗi phiên/chỉ mục, hiện navbar rỗng) để `(marketing)/error.tsx` bắt được cả
-  khi DB sập: loại — người đã đăng nhập sẽ thấy mình như bị đăng xuất, ô tìm kiếm rỗng không lời giải thích; trang lỗi
-  toàn cục nói thật hơn.
+- **Hỏi-1** — trạng thái tải trang chủ: máy khuyên để hàng sau (câu giao không đòi).
+- **Hỏi-2** — DB sập: trang lỗi toàn cục (máy khuyên) hay layout marketing nuốt lỗi DB để navbar/chân trang còn đứng
+  (giá: người đã đăng nhập thấy mình như bị đăng xuất, ô tìm kiếm rỗng không lời giải thích).
+- **Hỏi-3** — đích các nút mới: hàng cuối /methodology → /vn + /yield, nút thẻ thị trường trống → /methodology#nguon
+  (máy khuyên giữ).
+- **Hỏi-4** — đường đo: bỏ cho hàng dọn giao diện (máy khuyên) hay khai một thước sau ship.
+
+## Phương án đã loại
 - **Token màu riêng cho hero trong `globals.css`** (giữ đúng 16 hex): loại — chỉ dời hex sang chỗ khác, thêm token
   chỉ một bản vẽ dùng; palette Tailwind đã có sắc gần như trùng.
 - **Bỏ hẳn nền vẽ hero** (`bg-muted`): loại — đổi gu nhìn của trang chủ, ngoài câu giao.
