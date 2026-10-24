@@ -118,7 +118,17 @@ export async function createAgentServer(opts: AgentServerOptions) {
         (typeof (m as AgentMediaFact).url === "string" || typeof (m as AgentMediaFact).path === "string"),
     );
   };
-  const normRef = (s: string): string => s.trim().replace(/[?#]+$/, "");
+  // An toàn kiểu (vòng 2 mở lại): đầu vào có thể là số/object từ media rác;
+  // chọn CHUỖI ĐẦU TIÊN — url string có nội dung (sau norm) thì dùng, không thì
+  // path string, không thì rỗng. Giải quyết {url:5} (5.trim() nổ) và
+  // {url:"",path:"/a"} vs {url:"",path:"/b"} (url rỗng che path → gộp nhầm).
+  const normRef = (x: unknown): string =>
+    typeof x === "string" ? x.trim().replace(/[?#]+$/, "") : "";
+  const mediaRefOf = (m: AgentMediaFact): string => {
+    const u = normRef(m.url);
+    if (u) return u;
+    return normRef(m.path);
+  };
   const sourceIdOf = (
     group: string,
     ts: string,
@@ -128,7 +138,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
     const h = createHash("sha256").update(`${group}|${ts}|${text}`);
     if (!text && extra) {
       const urls = (extra.media ?? [])
-        .map((m) => normRef(m.url ?? m.path ?? ""))
+        .map((m) => mediaRefOf(m))
         .filter(Boolean)
         .sort()
         .join(",");

@@ -61,7 +61,7 @@ test("sort URL trước băm: cùng tin gửi lại với media đảo thứ t�
   assert.equal(b.body.duplicates, 1);
 });
 
-test("chuẩn hoá url/path: query rác / slash cuối / whitespace không tạo id khác", async () => {
+test("chuẩn hoá url/path: query/fragment rác / whitespace không tạo id khác", async () => {
   const s = await createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: ["k1"] });
   const a = s.ingest(
     {
@@ -137,4 +137,39 @@ test("MỞ LẠI 2310-6: tin chữ ' abc ' (khoảng trắng 2 đầu) GIỮ id 
   assert.equal(r3.status, 400, "text null → 400 rõ ràng, không 500");
   const r4 = s.ingest({ agent_id: "a", group: "g", messages: [{ text: 123, ts: "2026-10-24T01:03:00Z" }] } as never, "Bearer k1");
   assert.equal(r4.status, 400, "text số → 400, không 500");
+});
+
+test("MỞ LẠI 2310-6 vòng 2: url không phải chuỗi ({url:5},{url:{}}) không 500; url rỗng + path khác nhau = 2 tin", async () => {
+  const s = await createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: ["k1"] });
+  // (1) url là SỐ/object nhưng path là chuỗi → trước đây m.url ?? m.path → 5.trim() TypeError → 500
+  const r1 = s.ingest(
+    {
+      agent_id: "a", group: "g",
+      messages: [{ text: "", ts: "2026-10-24T02:00:00Z", senderId: "u1", media: [{ url: 5, path: "/a.jpg" }] }],
+    } as never,
+    "Bearer k1",
+  );
+  assert.equal(r1.status, 202, "url=5 (số) không được 500 — path chuỗi được dùng cho băm");
+  const r2 = s.ingest(
+    {
+      agent_id: "a", group: "g",
+      messages: [{ text: "", ts: "2026-10-24T02:01:00Z", senderId: "u1", media: [{ url: {}, path: "/b.jpg" }] }],
+    } as never,
+    "Bearer k1",
+  );
+  assert.equal(r2.status, 202, "url={} không được 500");
+
+  // (2) url rỗng + path khác nhau, cùng nhóm/ts/sender → PHẢI 2 RawItem khác id
+  const r3 = s.ingest(
+    {
+      agent_id: "a", group: "g",
+      messages: [
+        { text: "", ts: "2026-10-24T02:02:00Z", senderId: "u2", media: [{ url: "", path: "/a.jpg" }] },
+        { text: "", ts: "2026-10-24T02:02:00Z", senderId: "u2", media: [{ url: "", path: "/b.jpg" }] },
+      ],
+    },
+    "Bearer k1",
+  );
+  assert.equal(r3.status, 202);
+  assert.equal(r3.body.accepted, 2, "hai tin url rỗng + path khác nhau = 2 RawItem (trước đây gộp 1 vì url rỗng che path)");
 });
