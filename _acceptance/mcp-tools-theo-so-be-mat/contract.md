@@ -5,7 +5,7 @@ slug: mcp-tools-theo-so-be-mat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-24-mcp-tools-theo-so-be-mat-design.md
 veto_state: mo
 veto_opened_at: 2026-10-24T10:47:00Z
