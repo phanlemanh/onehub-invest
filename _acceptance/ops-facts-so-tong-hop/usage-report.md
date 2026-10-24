@@ -35,3 +35,35 @@ wall: 248s
 - **claude-sonnet-5-5**: 6 agent · 20 calls · out 15,241 · in 40 · cache_read 338,191 · cache_create 161,943
 - **claude-haiku-5-5**: 6 agent · 12 calls · out 11,176 · in 24 · cache_read 116,176 · cache_create 111,905
 
+### S4 round 2 — wf_c08b9b1c-ffe (12 agent, 35,813 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| synthesize:report | claude-sonnet-5-5 | 4 | 8,689 | 8 | 116,692 | 57 |
+| review:measurement | claude-opus-5-5 | 10 | 8,252 | 20 | 448,298 | 112 |
+| review:conventions | claude-opus-5-5 | 6 | 3,967 | 12 | 139,501 | 56 |
+| review:bugs | claude-opus-5-5 | 11 | 3,625 | 22 | 400,189 | 78 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,100 | 4 | 19,890 | 17 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 1,705 | 4 | 19,886 | 9 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,659 | 4 | 19,904 | 9 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,652 | 4 | 19,898 | 8 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,619 | 4 | 19,909 | 14 |
+| triage | claude-sonnet-5-5 | 2 | 1,464 | 4 | 18,630 | 13 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 731 | 4 | 19,884 | 16 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 350 | 4 | 18,542 | 5 |
+
+
+wall: 192s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 6 | 9,466 | 119,371 | 83 | 11:50:08 | 11:51:31 |
+| review | 3 | 15,844 | 987,988 | 112 | 11:50:08 | 11:52:00 |
+| triage | 1 | 1,464 | 18,630 | 13 | 11:52:01 | 11:52:14 |
+| capture | 1 | 350 | 18,542 | 5 | 11:52:16 | 11:52:21 |
+| synthesize | 1 | 8,689 | 116,692 | 57 | 11:52:23 | 11:53:20 |
+
+- **claude-sonnet-5-5**: 3 agent · 8 calls · out 10,503 · in 16 · cache_read 153,864 · cache_create 104,527
+- **claude-opus-5-5**: 3 agent · 27 calls · out 15,844 · in 54 · cache_read 987,988 · cache_create 149,730
+- **claude-haiku-5-5**: 6 agent · 12 calls · out 9,466 · in 24 · cache_read 119,371 · cache_create 108,997
+

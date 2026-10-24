@@ -5,7 +5,7 @@ slug: ops-facts-so-tong-hop
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [pipeline, api, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-24-ops-facts-so-tong-hop-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24
