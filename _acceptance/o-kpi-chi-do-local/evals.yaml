@@ -1,0 +1,88 @@
+schema_version: 1
+feature_slug: o-kpi-chi-do-local
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON3-AC-1 không facts: mỗi trang đúng một chữ chỉ-local (regex mọi biến thể chỉ đo/chỉ có ở (máy) local, không phân biệt hoa thường; nguyên văn ghim theo trang), 0 ô KPI số 0, 0 badge success, ô không số là «—»' ok (ma trận 3 trang viết trước); chiều đỏ 'ON3-AC-1 bản sao còn «chỉ đo ở local» trong stats PageHeader → bắt' ok; chiều đỏ 'ON3-AC-1 bản sao ô Quá hạn hiện 0 kèm badge xanh → bắt' ok"
+    paths: [app/src/app/ops/page.tsx, app/src/app/ops/collections/page.tsx, app/src/components/ops/**, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON3-AC-2 /ops facts tươi: bốn ô bằng số tính từ khối freshness, dòng «Số đo lúc HH:MM (giờ VN) từ máy local» đúng measured_at' ok (bản tin từ push-ops-facts thật qua handler ingest thật); chiều đỏ 'ON3-AC-2 bản sao lệch giờ VN → bắt' ok"
+    paths: [app/src/app/ops/page.tsx, app/src/components/ops/overview/**, app/src/components/ops/facts-status.tsx, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Lockdown «—»' ok; chiều đỏ 'ON3-AC-3 bản sao Bản ghi 24h đọc 0 → bắt' ok"
+    paths: [app/src/app/ops/collections/page.tsx, app/src/components/ops/collections/**, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON3-AC-4 bản tin thật qua handler ingest thật, mốc lùi 46′: mỗi trang đúng một Alert «Máy local không đẩy số từ HH:MM (giờ VN)», số mờ, 0 badge success, không còn Alert 30′ cũ' ok (2 trang); chiều đỏ 'ON3-AC-4 bản tin 44′ → không Alert' ok"
+    paths: [app/src/app/ops/page.tsx, app/src/app/ops/collections/page.tsx, app/src/components/ops/**, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON3-AC-5 /ops/review cloud: review_queue local seed N pending + M đã quyết, ≥2 loại; bản tin thật qua handler ingest thật; «N thẻ đang chờ» = phép đếm SQL pending, từng loại = đếm theo item_type, một chỗ chữ chỉ-local' ok; ca 'ON3-AC-5 không số → «—»' ok; chiều đỏ 'ON3-AC-5 bản sao bên ghi đổi khuôn byType → bắt' ok"
+    paths: [app/src/app/ops/review/page.tsx, app/src/components/ops/review-content.tsx, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON3-AC-6 ma trận khối lỗi do bên ghi thật (lược đồ thiếu stg_chotot_ads → freshness, thiếu airbnb_snapshots → records24h, thiếu review_queue → reviewQueue) → ô «—» + «Chưa có số», 0 số 0, 0 badge success' ok (3 ca viết trước)"
+    paths: [app/src/components/ops/**, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON3-AC-7 DB local đủ bảng: ba trang không dòng mốc đo, không Alert số cũ, không truy vấn ops_heartbeat' ok"
+    paths: [app/src/app/ops/**, app/src/components/ops/**, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: judgment
+    inputs: ["docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md", "docs/adr/0014-ops-cloud-doc-so-tong-hop.md", "app/src/components/ops/facts-status.tsx", "app/src/components/ops/local-only-alert.tsx", "app/src/components/ops/overview/overview-tiles.tsx", "app/src/components/ops/collections/collections-tiles.tsx", "app/src/components/ops/review-content.tsx"]
+    question: "Đối chiếu bảng trạng thái của mục «Đặc tả UX» trong design (có chép ngưỡng bat_khi ON3) với chữ thật trong năm tệp component và với ADR-0014 §Ngưỡng trễ: chữ «Số đo lúc HH:MM (giờ VN) từ máy local» khi tươi, «Máy local không đẩy số từ HH:MM (giờ VN)» khi cũ, chữ chỉ-local đúng nguyên văn từng trang khi không có; ô không có số có câu trấn an nào («Không có», «Mọi nguồn …», số 0) khi không đo được không? Lệch ADR hay còn câu trấn an thì FAIL."
+    expected: "chữ khớp ADR-0014 và bảng trạng thái, không câu trấn an"
+    paths: ["docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md", "app/src/components/ops/facts-status.tsx", "app/src/components/ops/local-only-alert.tsx", "app/src/components/ops/overview/overview-tiles.tsx", "app/src/components/ops/collections/collections-tiles.tsx", "app/src/components/ops/review-content.tsx"]
+    evidence_required: [run_id, verdict, judges, verified_at]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc sạch và npm run lint sạch — luật onehub-ui không bắt vi phạm nào ở tệp của vòng"
+    paths: [app/src/components/ops/**, app/src/app/ops/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Dựng lược đồ như cloud bằng `node scripts/ops-cloud-proto.mjs --mode <none|fresh|stale>` (in DATABASE_URL); chạy dev server của worktree đang kiểm ở cổng :3460 với DATABASE_URL đó; đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs)"
+      - "--mode none: chụp evidence/E10-ST-ops-none.png (/ops), evidence/E10-ST-collections-none.png (/ops/collections), evidence/E10-ST-review-none.png (/ops/review)"
+      - "--mode fresh: chụp evidence/E10-ST-ops-fresh.png, evidence/E10-ST-collections-fresh.png, evidence/E10-ST-review-count.png"
+      - "--mode stale: chụp evidence/E10-ST-ops-stale.png, evidence/E10-ST-collections-stale.png"
+      - "Tối: chụp evidence/E10-dark-ST-collections-stale.png; 390px: chụp evidence/E10-narrow-ST-ops-stale.png, evidence/E10-narrow-ST-collections-stale.png, evidence/E10-narrow-ST-review-count.png, mỗi trang kiểm document.documentElement.scrollWidth <= innerWidth"
+    expected: "mỗi dòng ST của bảng trạng thái có khung mang đúng tên, khớp mô tả; khung tối và 390px đúng trang/trạng thái ghi trong tên; không thanh cuộn ngang ở ba trang"
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot, observed]

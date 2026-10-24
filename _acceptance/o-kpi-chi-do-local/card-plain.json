@@ -1,0 +1,34 @@
+{
+  "feature_plain": "Người trực mở trang Ops trên cloud thấy ô số lấy từ số máy thu đẩy lên kèm «Số đo lúc HH:MM (giờ VN)»; không có số thì «—» và một câu «Chỉ đo ở máy local»; số cũ quá 45 phút thì cảnh báo, không còn badge xanh hay số 0 trấn an; trang Review hiện «N thẻ đang chờ».",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ cho trang Tổng quan trên cloud hiện đúng số độ tươi máy thu đẩy lên, kèm giờ đo theo giờ VN."},
+    {"id": "AC-3", "p": "Sẽ cho trang Thu thập hiện đúng «Bản ghi 24h» và «Sức khoẻ nguồn» từ số máy thu; ô Lockdown hiện theo Hỏi-1 tới khi ON23 nối số."},
+    {"id": "AC-4", "p": "Sẽ báo «Máy local không đẩy số từ HH:MM» khi số cũ quá 45 phút; số vẫn hiện nhưng mờ, không badge xanh; bỏ cảnh báo 30 phút cũ."},
+    {"id": "AC-5", "p": "Sẽ cho trang Review trên cloud hiện «N thẻ đang chờ» theo từng loại, đúng bằng số đếm ở máy thu."},
+    {"id": "AC-6", "p": "Sẽ hiện «—» và «Chưa có số» cho ô nào máy thu đo không được."},
+    {"id": "AC-7", "p": "Sẽ giữ nguyên trang ở máy local — vẫn đo trực tiếp, không dòng giờ đo hay cảnh báo số cũ."},
+    {"id": "AC-10", "p": "Sẽ có ảnh chụp đủ tám trạng thái của ba trang, sáng, tối và màn hẹp, không cuộn ngang."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Sẽ KHÔNG hiện số 0 hay badge xanh khi chưa có số; câu «chỉ đo ở máy local» chỉ xuất hiện một lần mỗi trang."},
+    {"id": "AC-9", "p": "Sẽ KHÔNG thêm màu thô, chữ quá nhỏ hay khung tự vẽ — lint giao diện của kho phải sạch."},
+    {"id": "OOS-1", "p": "Chưa nối lưới và ô Lockdown với số máy thu — việc của ON23."},
+    {"id": "OOS-2", "p": "Chưa đổi lưới job, luồng 7 ngày, nhóm S03 trên cloud — ON4, ON5."},
+    {"id": "OOS-3", "p": "Không đổi API độ phủ (AU12) và không tự làm bộ định dạng giờ VN (dùng của ON8)."},
+    {"id": "OOS-4", "p": "Không đổi các trang Chất lượng, Deals, Nguồn."}
+  ],
+  "scope_plain": "Hàng này chỉ đổi ô số và các dòng trạng thái của ba trang; bản bấm được và code làm sau khi ON8 (giờ VN) vào main.",
+  "coverage_plain": [
+    {"i": 0, "p": "Đủ ba trang mà hàng giao: Tổng quan (AC-2, AC-4), Thu thập (AC-3, AC-4), Review (AC-5)."},
+    {"i": 1, "p": "Mỗi trang qua bốn tình huống của số: chưa có (AC-1), tươi (AC-2, AC-3, AC-5), cũ quá 45 phút (AC-4), một nhóm số lỗi (AC-6)."},
+    {"i": 2, "p": "Trên cloud (AC-1…AC-6) và ở máy local không đổi (AC-7)."},
+    {"i": 3, "p": "Đo bằng HTML trang dựng thật (AC-1…AC-7), ảnh chụp (AC-10), chữ (AC-8) và lint (AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Ô Lockdown trên cloud trước ON23 là lựa chọn trên tín hiệu an toàn Zalo mà máy đã tự quyết — đã chuyển thành Hỏi-1 cho anh."},
+    {"i": 1, "p": "Phép đếm câu «chỉ đo ở máy local» bỏ sót biến thể và lệch chữ trang Review — đã ghim chữ từng trang và đếm mọi biến thể."},
+    {"i": 2, "p": "Ba phép đo dùng dữ liệu viết tay đúng khuôn bên đọc — đã đổi sang bản tin thật của máy thu, trang Review so với phép đếm thật."},
+    {"i": 3, "p": "Phép chấm chữ thiếu các tệp có chữ của ô — đã thêm đủ."},
+    {"i": 4, "p": "Ảnh chụp chưa phủ đủ trạng thái — đã đòi đủ tám trạng thái, khung tối và màn hẹp ghi rõ trang."}
+  ]
+}
