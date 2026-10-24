@@ -74,7 +74,9 @@ fi
 # In phần mới của $1 ra stdout; cập nhật marker $2. Log bị truncate/rotate
 # (cur < last) → reset marker, không quét lại phần cũ.
 scan_new_lines() {
-  local f="$1" mk="$2" prev curInode curLines prevPath rest prevInode prevLines
+  # $3 = 'history' (log lịch sử dài ngày như gateway.log — KHÔNG bao giờ quét
+  # quá khứ) hoặc 'daily' (log /tmp theo ngày — file mới quét từ dòng 1)
+  local f="$1" mk="$2" mode="${3:-daily}" prev curInode curLines prevPath rest prevInode prevLines
   [ -f "$f" ] || return 0
   curInode=$(stat -f '%i' "$f" 2>/dev/null || echo 0)
   curLines=$(wc -l < "$f" | tr -d ' ')
@@ -88,11 +90,42 @@ scan_new_lines() {
   rest=${prev#*:}
   prevInode=${rest%%:*}
   prevLines=${rest#*:}
+  # Marker hỏng trường số dòng (vd 'abc') → ((prevLines + 1)) chết dưới
+  # set -u, hàm không in gì (kể cả turn của file MỚI) và không ghi lại marker
+  # → L4b mù tới khi file cũ biến mất. Coi như FILE MỚI: quét từ dòng 1 +
+  # WARN alert-log để thấy (mở lại 2310-7).
+  if ! [[ "$prevInode" =~ ^[0-9]+$ && "$prevLines" =~ ^[0-9]+$ ]]; then
+    # Log LỊCH SỬ (gateway.log chứa turn của sự cố cũ đã xử lý): quét từ
+    # dòng 1 sẽ gặp agent-turn 20/10 → alert → KILL gateway vì QUÁ KHỨ
+    # (claudedp-2310-7 mở lại lần 2). Marker hỏng → khởi tạo lại ở dòng
+    # HIỆN TẠI như nhánh marker rỗng, chỉ WARN — không quét quá khứ.
+    # Log THEO NGÀY (file mới mỗi ngày, không có quá khứ): quét từ dòng 1.
+    if [ "$mode" = "history" ]; then
+      echo "$(date -Iseconds) WARN: marker L4b (history) hỏng '${prev:0:120}' — khởi tạo lại ở dòng $curLines, không quét quá khứ" >> "$ALERT_LOG"
+    else
+      echo "$(date -Iseconds) WARN: marker L4b hỏng '${prev:0:120}' — quét từ dòng 1" >> "$ALERT_LOG"
+      tail -n +1 "$f"
+    fi
+    echo "$f:$curInode:$curLines" > "$mk"
+    return 0
+  fi
   # Marker ghi DANH TÍNH file 'đường_dẫn:inode:số_dòng': đếm dòng không phân
   # biệt được ngày mới DÀI HƠN ngày cũ (cur > last quét từ last+1 → sót dòng
   # đầu, claudedp-2310-5 mở lại). Khác path/inode = file mới (log xoay ngày);
   # cùng file mà ít dòng hơn = truncate — cả hai quét TOÀN BỘ từ dòng 1.
-  if [ "$prevPath" != "$f" ] || [ "$prevInode" != "$curInode" ] || [ "$curLines" -lt "$prevLines" ]; then
+  if [ "$prevPath" != "$f" ] || [ "$prevInode" != "$curInode" ]; then
+    # ĐỔI FILE: đuôi file CŨ viết SAU lượt quét cuối ngày (~23:55–00:00) chưa
+    # ai quét — quét NỐT từ prevLines+1 TRƯỚC khi đổi sang file mới
+    # (claudedp-2310-7). File cũ bị xoá/tmp dọn thì bỏ qua im lặng; inode khác
+    # (path bị tái sử dụng) cũng bỏ — không quét nhầm file lạ.
+    if [ -n "$prevPath" ] && [ -f "$prevPath" ]; then
+      oldInode=$(stat -f '%i' "$prevPath" 2>/dev/null || echo x)
+      if [ "$oldInode" = "$prevInode" ]; then
+        tail -n +"$((prevLines + 1))" "$prevPath" 2>/dev/null
+      fi
+    fi
+    tail -n +1 "$f"
+  elif [ "$curLines" -lt "$prevLines" ]; then
     tail -n +1 "$f"
   elif [ "$curLines" -gt "$prevLines" ]; then
     tail -n +"$((prevLines + 1))" "$f"
@@ -102,7 +135,7 @@ scan_new_lines() {
 
 DROP_WARN_N=20 # "drop no mention" mới ≥ ngưỡng này trong 1 cửa sổ 5′ = bất thường
 GW_LOG="$HOME/Library/Logs/openclaw/gateway.log"
-GW_NEW=$(scan_new_lines "$GW_LOG" "$ROOT/pipeline/logs/zalo-watchdog-gw-marker")
+GW_NEW=$(scan_new_lines "$GW_LOG" "$ROOT/pipeline/logs/zalo-watchdog-gw-marker" history)
 if [ -n "$GW_NEW" ]; then
   # L4b trên gateway.log
   if echo "$GW_NEW" | grep -q "auto-reply/agent-turn-timing"; then
