@@ -2,18 +2,18 @@
 schema_version: 2
 feature_slug: o-kpi-chi-do-local
 verdict: REJECT
-failed_evals: [E10]
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9b7cae0cde693c67fe0dd40de51901ef9c5809db
+verified_commit: e30f7a81b36ff5413e06443d9b5b5a165ed11801
 human_signoff:
 ---
 
 # Evidence Report: o-kpi-chi-do-local
 
-Vòng 1. Một eval ui-check (E10) không đạt: trang /ops/collections hiện khung lỗi ở cả ba trạng thái, không hiện nội dung ST-collections-*. Một lệnh suite không gắn eval (pipeline) cũng không xanh, ghi ở mục Lệnh suite.
+Vòng 2. Mọi eval máy (E1-E7, E9, E10) đều đạt và bốn lệnh suite không gắn eval đều xanh. Vòng này vẫn bị REJECT vì bước rà soát tìm ra ba lỗi nằm TRONG hợp đồng (AC-3, AC-4, AC-8), chi tiết ở review-findings.md: RotationPanel hiện câu «mọi thị trường đều tươi» khi không đo được, «Cần chú ý» trên cloud vẫn báo «Hỏng» cho lớp lockdown đo trên máy chạy trang, và trạng thái stale của /ops/collections vẫn còn hai badge xanh (Kênh kết nối, Hoạt động). Các test hiện tại không phát hiện được vì fixture không chạm tới các nhánh này. Mục E8 (judgment) còn hai lens UNCERTAIN, chờ người quyết ở Cổng 2.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -24,151 +24,162 @@ Vòng 1. Một eval ui-check (E10) không đạt: trang /ops/collections hiện 
 | E5 | AC-5 | test | PASS |
 | E6 | AC-6 | test | PASS |
 | E7 | AC-7 | test | PASS |
-| E8 | AC-8 | judgment | UNCERTAIN (hội đồng đề xuất FAIL, chờ người quyết) |
+| E8 | AC-8 | judgment | UNCERTAIN |
 | E9 | AC-9 | test | PASS |
-| E10 | AC-10 | ui-check | FAIL |
+| E10 | AC-10 | ui-check | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-o-kpi-chi-do-local-E1-r1
+  run_id: minted-o-kpi-chi-do-local-E1-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npm test
-    ℹ duration_ms 10261.846458
+    ca ON3-AC-1 không facts (ma trận 3 trang), hai chiều đỏ bắt được bản sao: ok
+    ℹ duration_ms 18364.703083
 
 - eval: E2
-  run_id: minted-o-kpi-chi-do-local-E2-r1
+  run_id: minted-o-kpi-chi-do-local-E2-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npm test
-    ℹ duration_ms 10261.846458
+    ca ON3-AC-2 /ops facts tươi và chiều đỏ lệch giờ VN: ok
+    ℹ duration_ms 18364.703083
 
 - eval: E3
-  run_id: minted-o-kpi-chi-do-local-E3-r1
+  run_id: minted-o-kpi-chi-do-local-E3-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npm test
-    ℹ duration_ms 10261.846458
+    ca ON3-AC-3 /ops/collections facts tươi và chiều đỏ Bản ghi 24h đọc 0: ok
+    ℹ duration_ms 18364.703083
 
 - eval: E4
-  run_id: minted-o-kpi-chi-do-local-E4-r1
+  run_id: minted-o-kpi-chi-do-local-E4-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npm test
-    ℹ duration_ms 10261.846458
+    ca ON3-AC-4 bản tin thật mốc lùi 46′ (2 trang) và chiều đỏ bản tin trong ngưỡng: ok
+    ℹ duration_ms 18364.703083
 
 - eval: E5
-  run_id: minted-o-kpi-chi-do-local-E5-r1
+  run_id: minted-o-kpi-chi-do-local-E5-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npm test
-    ℹ duration_ms 10261.846458
+    ca ON3-AC-5 /ops/review cloud (N thẻ đang chờ, đếm theo item_type) và chiều đỏ đổi khuôn byType: ok
+    ℹ duration_ms 18364.703083
 
 - eval: E6
-  run_id: minted-o-kpi-chi-do-local-E6-r1
+  run_id: minted-o-kpi-chi-do-local-E6-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npm test
-    ℹ duration_ms 10261.846458
+    ca ON3-AC-6 ma trận khối lỗi do bên ghi thật (freshness, records24h, reviewQueue): ok
+    ℹ duration_ms 18364.703083
 
 - eval: E7
-  run_id: minted-o-kpi-chi-do-local-E7-r1
+  run_id: minted-o-kpi-chi-do-local-E7-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npm test
-    ℹ duration_ms 10261.846458
+    ca ON3-AC-7 DB local đủ bảng, không truy vấn ops_heartbeat: ok
+    ℹ duration_ms 18364.703083
 
 - eval: E8
   judged_by: judge panel đề xuất (3 lens, fresh context)
   verdict: UNCERTAIN
-  rationale: Hội đồng đề xuất FAIL (hai lens FAIL, một lens UNCERTAIN); người quyết ở Cổng 2. Khung chữ Số đo lúc … từ máy local và Máy local không đẩy số từ … khớp ADR-0014, các ô không đo được hiện «—» và «Chưa có số», không số 0, không badge xanh, không câu trấn an. Nhưng nhánh số cũ (stale) lệch ADR-0014 hàng «Cũ» (số cũ phải mờ, không badge xanh) ở một số chỗ, và ba tệp (format.ts, freshness.ts, ba page.tsx) nằm ngoài danh sách input nên chưa xác nhận được nguyên văn «HH:MM (giờ VN)» và «Chỉ đo ở máy local».
+  rationale: Hội đồng đề xuất UNCERTAIN (một lens PASS, hai lens UNCERTAIN); người quyết ở Cổng 2. Chữ khớp ADR-0014 và bảng trạng thái ở các tệp được đọc, nhưng hai chỗ trên /ops/collections chưa kết luận được vì nguồn của chúng nằm ngoài danh sách input: ô «Cổng S03 hôm nay» được coi là đã đo khi state khác none, và danh sách «cần chú ý» nhận lớp lockdown chưa ép về «chưa đo».
   votes:
-    - domain-correctness: UNCERTAIN — Khung chữ FactsStamp và FactsStaleAlert khớp ADR-0014; các ô không đo được không còn số 0, badge xanh hay câu trấn an. Phần «HH:MM (giờ VN)» do fmtVnDateTime tạo ra và chữ «Chỉ đo ở máy local» do LOCAL_ONLY_TEXT quyết định, cả hai nằm ngoài năm tệp đầu vào nên không xác nhận được nguyên văn.
-    - operational-feasibility: FAIL — Trong review-content.tsx, khi state là stale, số «N thẻ đang chờ» vẫn là font-semibold không có text-muted-foreground, trái ADR-0014 §Ngưỡng trễ (hàng Cũ) và mục 4 của design. Ở overview-tiles.tsx nhánh stale vẫn hiện câu trấn an «Mọi nguồn có snapshot đều trong hạn» và «Mọi nguồn đã có snapshot» khi không còn đo được hiện tại. Nhánh không có số (UnmeasuredTiles, Bản ghi 24h, Sức khoẻ nguồn, Cổng S03) thì sạch.
-    - spec-alignment: FAIL — Chữ stamp và chữ Alert trong facts-status.tsx khớp bảng trạng thái, các ô không đo được hiện «—» và «Chưa có số». Nhưng ADR-0014 hàng «Cũ» đòi số cũ hiện mờ, không badge xanh: review-content.tsx dòng 36-38 vẽ «N thẻ đang chờ» đậm bình thường ở mọi state kể cả stale; ở collections-tiles.tsx, SegmentBar Sức khoẻ nguồn và Cổng S03 vẫn giữ tông bg-success khi stale (dòng 62-65, 88-94).
+    - domain-correctness: UNCERTAIN — Chữ khớp bảng trạng thái và ADR-0014. FactsStamp ra «Số đo lúc {fmtVnDateTime} từ máy local» và FactsStaleAlert ra «Máy local không đẩy số từ {fmtVnDateTime}», giờ có dạng «YYYY-MM-DD HH:MM (GMT+7)». Chữ chỉ-local đúng nguyên văn: «Chỉ đo ở máy local» ở /ops và /ops/collections, «Hàng chờ duyệt chỉ có ở máy local» ở /ops/review. Ô không đo được hiện «—» và «Chưa có số», không badge và không số 0. Hai chỗ vẫn có thể còn câu trấn an hoặc số 0, và nguồn của chúng nằm ngoài danh sách input nên không phân xử được. Chỗ thứ nhất: ô «Bản ghi 24h» có thể hiện «Chưa có bản ghi trong 24 giờ» dù đã có số. Chỗ thứ hai: ô «Cổng S03 hôm nay» có thể hiện số 0 và «0 tin bị cổng chặn» khi facts tươi hoặc cũ.
+    - operational-feasibility: PASS — Chữ trong code khớp bảng trạng thái và ngưỡng ADR-0014. FactsStamp ra «Số đo lúc {fmtVnDateTime} từ máy local», tức dạng «YYYY-MM-DD HH:MM (GMT+7)». FactsStaleAlert ra «Máy local không đẩy số từ …» với Alert warning khi state là stale. Khi state là none, /ops và /ops/collections có đúng một LocalOnlyAlert «Chỉ đo ở máy local», còn /ops/review có đúng một Alert «Hàng chờ duyệt chỉ có ở máy local». Ô không đo được hiện «—» kèm «Chưa có số», không badge và không số 0. Khi stale, các ô trong phạm vi các tệp được giao đều mờ và không badge xanh. Hai điểm không thể đối chiếu trong phạm vi này và không tính là lệch: dạng giờ «YYYY-MM-DD HH:MM (GMT+7)» khác chữ giữ chỗ «HH:MM (giờ VN)» của ADR (design nêu ON8, sổ d-13 là căn cứ), và ô «Cổng S03 hôm nay» được coi là đã đo khi state khác none.
+    - spec-alignment: UNCERTAIN — Chữ khớp ADR-0014 và bảng trạng thái. FactsStamp ra «Số đo lúc {fmtVnDateTime} từ máy local», FactsStaleAlert ra «Máy local không đẩy số từ {fmtVnDateTime}», và fmtVnDateTime ra «YYYY-MM-DD HH:MM (GMT+7)». Chữ chỉ-local khớp từng trang: «Chỉ đo ở máy local» ở /ops và /ops/collections, «Hàng chờ duyệt chỉ có ở máy local» ở /ops/review. Ô không đo được ở /ops («—», «Chưa có số») và ở review («—») không có câu trấn an. Hai chỗ trên Thu thập chưa kết luận được trong các tệp được phép đọc: (1) ô «Cổng S03 hôm nay» coi là đã đo khi `funnelMeasured: cloud.state !== "none"`, trong khi design không liệt kê khối funnel nào trong facts, nên có thể hiện «0 / 0» và «0 tin bị cổng chặn»; (2) `issuesOf` nhận `lockdown.layers` nguyên bản, còn ô Lockdown và LockdownGrid đã ép `ok: null`, nên danh sách «cần chú ý» có thể vẫn đỏ giả.
   required_evidence:
-    - review-content.tsx nhánh cloud (dòng 36-38): số «N thẻ đang chờ» và Badge theo loại mờ (text-muted-foreground) khi cloud.state là stale; lấy bằng đọc lại tệp sau sửa hoặc test render state stale của /ops/review.
-    - collections-tiles.tsx: khi cloud.stale thì SegmentBar của «Sức khoẻ nguồn» và «Cổng S03» không tô bg-success; lấy bằng đọc lại tệp sau sửa hoặc test render ST-collections-stale.
-    - overview-tiles.tsx khi stale là true: chân ô «Quá hạn» và «Chưa có snapshot» không còn câu «Mọi nguồn có snapshot đều trong hạn» hay «Mọi nguồn đã có snapshot», hoặc một dòng trong design ghi rõ số đo cuối được phép giữ câu này.
-    - Đầu ra thật của fmtVnDateTime (app/src/lib/format.ts) dạng «HH:MM (giờ VN)»; chữ LOCAL_ONLY_TEXT (app/src/lib/freshness.ts) là «Chỉ đo ở máy local»; ba page.tsx (/ops, /ops/collections, /ops/review) render FactsStamp, FactsStaleAlert, LocalOnlyAlert đúng một lần. Muốn xét thì thêm các tệp này vào inputs của E8.
+    - app/src/lib/ops-cloud.ts (getCloudOpsView) và app/src/app/ops/collections/page.tsx: tham số `feedHealth` của CollectionsView trên cloud có thành [] khi `cloud.feeds` null không, trong khi `cloud.records24h` vẫn có số (khối freshness lỗi, khối records24h tốt). Nếu có thì ô «Bản ghi 24h» hiện giá trị thật kèm chú thích sai «Chưa có bản ghi trong 24 giờ» (collections-tiles.tsx dòng 75) và verdict đổi thành FAIL. Nếu không thì bằng chứng này chặn được lỗi đó.
+    - Nguồn của `funnel` (GateFunnel) mà trang /ops/collections truyền cho CollectionsTiles khi chạy trên cloud, tức app/src/app/ops/collections/page.tsx và app/src/lib/collections-queries.ts. Cần biết `funnelMeasured: cloud.state !== "none"` có đúng không khi facts fresh hoặc stale mà ON22 không có khối funnel. Nếu funnel trên cloud là 0 giả thì ô hiện «0/0» và «0 tin bị cổng chặn» là câu trấn an và verdict đổi thành FAIL. Nếu funnel đọc từ payload heartbeat thật thì phần này đạt.
+    - app/src/lib/ops-facts.ts (FACTS_STALE_MS và kiểu của measuredAt): xác nhận ngưỡng là 45′ và measuredAt luôn mang múi giờ, để fmtVnDateTime không trả «—» làm dòng mốc thành «Số đo lúc — từ máy local».
+    - Nguồn lens spec-alignment đề nghị thêm: hành vi của `issuesOf` trong app/src/components/ops/collections/attention-list.tsx khi nhận `lockdown.layers` có ok=false do probe chạy trên Vercel; chữ thật của app/src/components/ops/overview/objectives-grid.tsx và feeds-grid.tsx với prop `stale` và trạng thái không có số.
   human_override:  # chi nguoi ghi
 
 - eval: E9
-  run_id: minted-o-kpi-chi-do-local-E9-r1
+  run_id: minted-o-kpi-chi-do-local-E9-r2
   exit_code: 0
   baseline: red
   verifier: config:executors.test.app
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   output: |
     cd app && npx tsc --noEmit && npm run lint
     tsc sạch, lint sạch
 
 - eval: E10
-  run_id: E10-bold-bassi-0e7f42
-  exit_code: 1
+  run_id: E10-reverify-r2-20261024
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.ui_check
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
   screenshot: evidence/E10-ST-ops-none.png   # 12 khung khác cùng thư mục evidence/, danh sách ở dưới
   observed: |
-    Đã mở từng khung bằng Read. /ops (none, fresh, stale), /ops/review (none, count) và khung 390px của /ops, review khớp bảng trạng thái, không tràn ngang.
-    Cả ba khung ST-collections-{none,fresh,stale}, khung tối và khung 390px của collections đều chỉ là Alert đỏ «Không tải được dữ liệu» + nút Thử lại + toast «2 Issues», không có ô KPI, dòng mốc đo hay Alert vàng 45′. Mâu thuẫn expected ở ba dòng ST-collections.
-  network_observed: n-a (driver)
+    Đã mở và đọc 12 ảnh:
+    - E10-ST-ops-none.png (/ops, none): 4 ô KPI toàn «—» với dòng «Chưa có số», 1 Alert info tím «Chỉ đo ở máy local», bảng Độ tươi theo nguồn trống «Chưa có dữ liệu», 0 mục mỗi tab. Khớp ST-ops-none.
+    - E10-ST-collections-none.png (/ops/collections, none): trang hiện đầy đủ (không còn Alert lỗi): ô Sức khoẻ nguồn, Bản ghi 24h, Cổng S03 đều «—» «Chưa có số», Lockdown «—» + nhãn «Chưa kiểm được trên cloud», 1 Alert info «Chỉ đo ở máy local». Khớp ST-collections-none (có thêm mục «Cần chú ý» 2 việc, xem ghi chú).
+    - E10-ST-review-none.png (/ops/review, none): «Review Queue», dòng «— thẻ đang chờ», Alert info «Hàng chờ duyệt chỉ có ở máy local». Khớp ST-review-none.
+    - E10-ST-ops-fresh.png (/ops, fresh): dòng «Số đo lúc 2026-10-24 22:28 (GMT+7) từ máy local»; ô: 4/4 nguồn đạt SLO, Quá hạn 0 (badge xanh «Không có»), Chưa có snapshot 0, Snapshot mới nhất 2026-10-24; bảng 7 dòng toàn badge xanh «Đạt». Khớp ST-ops-fresh.
+    - E10-ST-collections-fresh.png (/ops/collections, fresh): dòng mốc đo 22:28 (GMT+7), Sức khoẻ nguồn 4/4 + thanh xanh, Bản ghi 24h 1.060 «Nhiều nhất: S03 (529)», Cổng S03 0/0, Lockdown «—» «Chưa kiểm được trên cloud». Khớp ST-collections-fresh.
+    - E10-ST-review-count.png (/ops/review, fresh): «15 thẻ đang chờ», theo loại agent_output: 4 · entity_match: 11, dòng «Số đo lúc 22:28», Alert info «Hàng chờ duyệt chỉ có ở máy local». Khớp ST-review-count.
+    - E10-ST-ops-stale.png (/ops, stale): mốc đo 21:42, Alert VÀNG «Máy local không đẩy số từ 2026-10-24 21:42 (GMT+7)» + «kiểm cloud-sync ở máy thu»; số trong 4 ô màu xám mờ, chấm «4 Đạt» xám, badge «Đạt» trong bảng viền xám, 0 badge xanh. Khớp ST-ops-stale.
+    - E10-ST-collections-stale.png (/ops/collections, stale): cùng Alert vàng 21:42; số 4/4, 1.060, 0/0 xám mờ, thanh tiến độ xám, các chấm xám, 0 badge/thanh xanh. Khớp ST-collections-stale.
+    - E10-dark-ST-collections-stale.png: nền tối, đúng trang /ops/collections và đúng trạng thái stale (Alert vàng viền/nền vàng tối, số mờ, chữ đọc được).
+    - E10-narrow-ST-ops-stale.png (390px): /ops stale, Alert vàng, ba ô KPI xếp dọc, số mờ, không tràn ngang.
+    - E10-narrow-ST-collections-stale.png (390px): /ops/collections stale, Alert vàng, ô Sức khoẻ nguồn/Bản ghi 24h xếp dọc, số mờ, không tràn ngang.
+    - E10-narrow-ST-review-count.png (390px): /ops/review fresh, 15 thẻ, hai nhãn loại, Alert info, vừa khung.
+    Tám dòng ST đều có khung mang đúng tên và khớp mô tả; khung tối và 390px đúng trang/trạng thái; không thanh cuộn ngang ở ba trang (scrollWidth == innerWidth).
+  network_observed: no-app-traffic
   output: |
-    Kết quả assertion do bộ chụp trả:
-    [PASS] Dựng lược đồ ops_cloud_proto 3 mode (none/fresh/stale); đăng nhập tài khoản ops thử (POST /login 303, cookie oi_session); 13 tệp lưu trong evidence/.
-    [DEVIATION] Cổng :3460 đang có server của worktree khác (u1-compare-saved), không phải của vòng này nên không tắt và không dùng; chạy dev server của worktree này ở :3461 với DATABASE_URL của lược đồ; đã tắt :3461 và drop lược đồ khi xong.
-    [PASS] /ops: ST-ops-none (4 ô dash, Alert info), ST-ops-fresh (4/4 SLO, 7 dòng), ST-ops-stale (Alert vàng, số mờ, 0 badge xanh ở ô KPI).
-    [PASS] /ops/review: ST-review-none và ST-review-count (15 thẻ, agent_output 4, entity_match 11).
-    [FAIL] /ops/collections: cả 3 trạng thái, kèm khung tối và khung 390px, đều hiện Alert đỏ «Không tải được dữ liệu», mã lỗi 869050949. Log dev server: 5 lần «relation airbnb_snapshots does not exist» tại getFlowDays (app/src/lib/collections-queries.ts:101), gọi từ CollectionsPage (page.tsx:28); lược đồ proto như cloud thật không có bảng airbnb_snapshots.
-    [PASS] Không thanh cuộn ngang ở ba trang tại 390px và 1280px.
-    [NOTE] Khung E10-narrow-ST-review-count.png chụp lúc mode stale theo đúng thứ tự bước, tên khung nói count. [NOTE] Mốc đo hiện «GMT+7», spec ghi «giờ VN». [NOTE] Dev server tự sinh app/AGENTS.md và sửa app/next-env.d.ts, không phải code kiểm.
-    Khung: evidence/E10-ST-{ops,collections,review}-none.png, E10-ST-{ops,collections}-fresh.png, E10-ST-review-count.png, E10-ST-{ops,collections}-stale.png, E10-dark-ST-collections-stale.png, E10-narrow-ST-{ops,collections}-stale.png, E10-narrow-ST-review-count.png, E10-network.txt.
+    Khung đã lưu (_acceptance/o-kpi-chi-do-local/evidence/): E10-ST-ops-none.png, E10-ST-collections-none.png, E10-ST-review-none.png, E10-ST-ops-fresh.png, E10-ST-collections-fresh.png, E10-ST-review-count.png, E10-ST-ops-stale.png, E10-ST-collections-stale.png, E10-dark-ST-collections-stale.png, E10-narrow-ST-ops-stale.png, E10-narrow-ST-collections-stale.png, E10-narrow-ST-review-count.png, E10-network.txt.
+    Ghi chú (không làm đỏ eval): (1) Khung narrow-ST-review-count chụp lần này đúng ở mode fresh (báo cáo vòng 1 ghi nhầm mode stale). (2) Ảnh 1280 lẫn 390 chỉ chụp phần nhìn thấy (900/844px cao) vì vùng cuộn nằm trong khung chính; phần dưới trang (bảng Sức khoẻ nguồn, ô còn lại ở 390px) không có trong khung. (3) Mode none ở /ops/collections vẫn hiện mục «Cần chú ý 2 việc»: «Lớp L4 Hỏng» và «3 nhóm S03 im > 72h» dù không có bản tin nào (bảng ST-collections-none chỉ nêu 3 ô «—» + 1 Alert info) — người duyệt cân nhắc có khẳng định «Hỏng» khi chưa đo được hay không; điều này trùng với lỗi trong hợp đồng ghi ở review-findings.md. (4) Mốc hiện «GMT+7», đặc tả viết «giờ VN». (5) network: playwright-cli requests không liệt kê XHR/fetch nào ngoài tài nguyên tĩnh nên khai no-app-traffic; số liệu phía server nằm ở dòng log. Dọn: tắt server :3461 của tôi, drop lược đồ ops_cloud_proto, hoàn tác app/next-env.d.ts, xoá app/AGENTS.md do dev server sinh; server :3460 của worktree khác giữ nguyên.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-o-kpi-chi-do-local-SUITE-npm_test__bb6271-r1
+  run_id: minted-o-kpi-chi-do-local-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-o-kpi-chi-do-local-SUITE-npm_test__13563d-r1
-  exit_code: 1
-  verified_at: 2026-10-24T14:33:13Z
-  # 128/129 test đạt. Một ca đỏ: pipeline/scripts/entrypoint-symlink.test.mjs:134 «AC-3 không còn khuôn cũ», báo «AC-3 còn lối vào khuôn cũ: scripts/ops-cloud-proto.mjs». Lệnh này không gắn eval nào của vòng; ca đỏ nêu đúng tệp scripts/ops-cloud-proto.mjs mà E10 dùng để dựng lược đồ proto, người đọc kiểm tệp này có phải của vòng không.
+  run_id: minted-o-kpi-chi-do-local-SUITE-npm_test__13563d-r2
+  exit_code: 0
+  verified_at: 2026-10-24T15:26:26Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-o-kpi-chi-do-local-SUITE-test_lint_rules-r1
+  run_id: minted-o-kpi-chi-do-local-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-o-kpi-chi-do-local-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-o-kpi-chi-do-local-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-24T14:33:13Z
+  verified_at: 2026-10-24T15:26:26Z
 
 ## Known limits
 
@@ -189,4 +200,5 @@ none — mọi eval chạy một lần, không eval nào ngẫu nhiên.
 ## Iterations
 
 Round 1: E10 failed — /ops/collections hiện Alert lỗi ở cả ba trạng thái vì getFlowDays truy vấn airbnb_snapshots không điều kiện mà lược đồ cloud không có bảng này (collections-queries.ts:101); ba dòng ST-collections-* không có khung đúng. Lệnh suite pipeline npm test cũng đỏ một ca (entrypoint-symlink.test.mjs:134). Returned to implementation.
+Round 2: mọi eval máy và mọi lệnh suite đều xanh, E10 chụp lại đủ 12 khung, /ops/collections không còn Alert lỗi. REJECT vì rà soát tìm ra ba lỗi trong hợp đồng (RotationPanel câu «mọi thị trường đều tươi» khi không đo được, mục «Hỏng» giả của lockdown trong «Cần chú ý» trên cloud, hai badge xanh còn lại ở stale) mà test hiện tại không bắt được. Returned to implementation.
 

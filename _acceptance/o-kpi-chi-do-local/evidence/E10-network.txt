@@ -1,2 +1,4 @@
-network: driver playwright-cli (khong co read_network_requests) -> n-a (driver)
-server log: 5x relation "airbnb_snapshots" does not exist @ getFlowDays (collections-queries.ts:101) <- CollectionsPage, moi lan mo /ops/collections
+network: driver playwright-cli (requests + console) — server=worktree bold-bassi-0e7f42, cong 3461 (3460 do worktree u1-compare-saved chiem, khong dung/khong tat), VERCEL=1 + search_path=ops_cloud_proto
+playwright-cli requests (khong tinh static): 0 XHR/fetch toi app-origin o 14 lan mo trang; trang SSR.
+console error: 0 tren moi lan mo (12 lan 'Errors: 0')
+server log: GET /ops 200 x5, /ops/collections 200 x5, /ops/review 200 x3, POST /login 303 x13; khong dong 4xx/5xx, khong 'does not exist', khong loi
