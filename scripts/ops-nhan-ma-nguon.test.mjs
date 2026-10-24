@@ -67,6 +67,7 @@ describe("ON7-AC-3 cây sao", () => {
     ["tên thật trong tiêu đề", (s) => s.replace('title="Thị trường S02 · Hiệu chuẩn"', `title="Thị trường ${NAME}"`)],
     ["tên thật trong template literal render qua {…}", (s) => s.replace("{`Rotation S02 · Hiệu chuẩn", `{\`Rotation ${NAME}`)],
     ["tên thật ở khoá đối tượng ngoài danh sách", (s) => s.replace('detail: "Đối chiếu S02"', `note: "Đối chiếu ${NAME}"`)],
+    ["tên thật trong nhánh ternary bên trong ${…} của template", (s) => s.replace('Hiệu chuẩn ${n}`}', 'Hiệu chuẩn ${n ? "' + NAME + '" : ""}`}')],
   ]) {
     test(`ON7-AC-3 chiều đỏ: ${label} → thoát 1, báo mã S0x + tệp:dòng, không in tên`, () => {
       const bad = mutate(CLEAN);

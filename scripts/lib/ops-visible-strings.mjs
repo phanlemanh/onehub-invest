@@ -76,7 +76,9 @@ export function scanSource(file, content, entries) {
       const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
       for (const h of findSourceNames(txt, entries)) hits.push({ code: h.code, file, line });
     }
-    if (!ts.isTemplateExpression(n)) ts.forEachChild(n, visit);
+    // luôn đi vào con — kể cả template: chuỗi trong ${…} (vd nhánh ternary) được displayContext xét riêng;
+    // khúc tĩnh của template (TemplateHead/Middle/Tail) không khớp isLiteral nên không đếm trùng.
+    ts.forEachChild(n, visit);
   };
   visit(sf);
   return hits;

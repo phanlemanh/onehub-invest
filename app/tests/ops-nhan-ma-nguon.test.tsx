@@ -53,6 +53,34 @@ function anchorProblems(h: string): string[] {
   return out
 }
 
+/** Khối phần tử (cân thẻ div) bắt đầu ở mỗi `data-slot="alert"`; trả khối đầu tiên chứa `marker`, hoặc null. */
+function alertBlock(h: string, marker: string): string | null {
+  for (const m of h.matchAll(/<div[^>]*data-slot="alert"[^>]*>/g)) {
+    let depth = 0
+    const re = /<\/?div\b[^>]*>/g
+    re.lastIndex = m.index!
+    for (let t = re.exec(h); t; t = re.exec(h)) {
+      depth += t[0].startsWith("</") ? -1 : 1
+      if (depth === 0) {
+        const block = h.slice(m.index!, re.lastIndex)
+        if (block.includes(marker)) return block
+        break
+      }
+    }
+  }
+  return null
+}
+
+// Bảng nhánh viết trước của issuesOf (attention-list.tsx): 9 nhánh, mỗi nhánh một tiêu đề phải hiện ở lượt «canh-bao».
+const ISSUE_TITLES = [
+  "Agent-turn hôm nay", "Lớp L1", "Kênh S03 · Cộng đồng đứt", "Máy thu có thể offline", "S05 trễ SLO",
+  "S06 chưa có dữ liệu", "Ống S03 · Cộng đồng im 24h", "Allowlist lệch membership", "1 nhóm S03 · Cộng đồng im > 72h",
+]
+const feed = (code: string, freshness: "stale" | "none"): import("../src/lib/ops-queries").SourceFeedHealth => ({
+  code, labelVi: code, status: "active", note: null, lastRunAt: null, lastRunSource: null, items24h: 0, stgRows: 0,
+  offers: null, freshnessHrs: freshness === "stale" ? 99 : null, sloHours: 26, freshness,
+})
+
 const NOW = Date.parse("2026-10-24T10:00:00+07:00")
 async function collections(variant: "canh-bao" | "lanh"): Promise<string> {
   const React = await import("react")
@@ -65,15 +93,15 @@ async function collections(variant: "canh-bao" | "lanh"): Promise<string> {
     React.createElement(CollectionsView, {
       days: [{ day: "2026-10-24", airdnaMarkets: 6, airdnaListings: 120, airbnbListingsSeen: 40, airbnbSnapshots: 3, zaloPosts: 9, zaloOffers: 4 }],
       funnel: { lastEventAt: "2026-10-24T09:00:00+07:00", today: { ...zero, messages: 5, passed: 3, skipped: 2 }, last7: zero },
-      jobs: await readSchedulerStatus(),
+      jobs: [...(await readSchedulerStatus()), { id: "cloud-sync", label: "Sync Supabase + ops facts", schedule: "mỗi 15 phút", alive: "unknown" as const, lastLogAt: null, lastLine: null }],
       rotation: { updatedAt: "2026-10-24T19:05:00", cursor: 2, total: 6, next: [{ id: "1", name: "Hà Nội", lastCapturedAt: null }] },
       zaloGroups: [{ name: "Nhóm thử A", isMockOnly: false, realPosts7d: 2, mockPosts7d: 0, lastSeenAt: bad ? "2026-10-20T00:00:00Z" : "2026-10-24T02:00:00Z", seen: 1, passed: 1, skipped: 0, accepted: 1, lastEventAt: null, ownerAccount: null }],
       zaloAllowlist: [{ groupId: "group:123456789", enabled: true }],
       zaloHealth: bad
         ? { connected: false, uptime24h: 0.5, heartbeatAgeMin: 45, lastHeartbeatAt: null, lastPostAt: "2026-10-23T00:00:00Z", silentAlert24h: true, driftAlert24h: true }
         : { connected: true, uptime24h: 1, heartbeatAgeMin: 5, lastHeartbeatAt: null, lastPostAt: "2026-10-24T02:00:00Z", silentAlert24h: false, driftAlert24h: false },
-      factsPushedAt: null,
-      feedHealth: [],
+      factsPushedAt: bad ? new Date(NOW - 90 * 60_000).toISOString() : null,
+      feedHealth: bad ? [feed("S05", "stale"), feed("S06", "none")] : [],
       lockdown: { layers: bad ? [{ layer: "L1", desc: "bindings", ok: false }] : [], lastWatchdogAt: null, agentTurnsToday: bad ? 1 : 0, openClawUp: true, kevUp: true, collectorUp: true },
       nowMs: NOW,
       roles: await getSourceRoles(),
@@ -86,7 +114,14 @@ describe("ON7-AC-1 /ops/collections", () => {
     const h = await collections("canh-bao")
     assert.deepEqual(leaks(h), [], "HTML còn tên nguồn thật")
     for (const want of ["S03 · Cộng đồng", "S02 · Hiệu chuẩn", "Kênh S03 · Cộng đồng đứt", "Ống S03 · Cộng đồng im 24h"]) assert.ok(h.includes(want), `thiếu «${want}»`)
-    assert.ok(h.includes('href="/ops/sources"'), "cảnh báo kênh đứt phải dẫn tới /ops/sources")
+    const text = readable(h)
+    const missing = ISSUE_TITLES.filter((t) => !text.some((x) => x.includes(t)))
+    assert.deepEqual(missing, [], `fixture phải bật đủ ${ISSUE_TITLES.length} nhánh cảnh báo viết trước`)
+    const jobRows = [...h.matchAll(/data-row-id="([^"]+)"/g)].map((m) => m[1]).filter((id) => /^(s0\d-|collector-api|kev|cloud-sync)/.test(id))
+    assert.equal(new Set(jobRows).size, 6, `lưới job phải đủ 6 job: ${jobRows.join(", ")}`)
+    const down = alertBlock(h, "Kênh S03 · Cộng đồng đứt")
+    assert.ok(down, "phải có khối cảnh báo «Kênh S03 · Cộng đồng đứt»")
+    assert.ok(down.includes('href="/ops/sources"'), "liên kết /ops/sources phải nằm TRONG cảnh báo kênh đứt")
     assert.ok(!/channels login/.test(h), "không được in lệnh đăng nhập kênh")
   })
   test("ON7-AC-1 collections: mọi thứ lành (trạng thái rỗng) → 0 tên nguồn thật", async () => {
@@ -106,6 +141,14 @@ describe("ON7-AC-1 /ops/collections", () => {
     assert.equal(got.length, 1, "bộ quét phải bắt đúng một chỗ")
     assert.match(got[0], /^S03 @mảnh \d+$/)
     assert.deepEqual(findSourceNames(got.join(" "), ENTRIES), [], "thông điệp không được chứa tên")
+  })
+  test("ON7-AC-1 chiều đỏ: cảnh báo kênh đứt mất liên kết (liên kết vẫn còn chỗ khác trong trang) → bị bắt", async () => {
+    const h = await collections("canh-bao")
+    const down = alertBlock(h, "Kênh S03 · Cộng đồng đứt")!
+    const broken = h.replace(down, down.replace(/<a [^>]*href="\/ops\/sources"[^>]*>[\s\S]*?<\/a>/, "Đăng nhập lại ở Nguồn dữ liệu"))
+    assert.notEqual(broken, h, "khuôn đột biến không khớp HTML")
+    assert.ok(broken.includes('href="/ops/sources"'), "tiền đề: trang vẫn còn liên kết /ops/sources ở chỗ khác")
+    assert.ok(!alertBlock(broken, "Kênh S03 · Cộng đồng đứt")!.includes('href="/ops/sources"'), "phép đo phải thấy cảnh báo kênh đứt mất liên kết")
   })
   test("ON7-AC-1 chiều đỏ: id neo đổi → ca nêu tên neo", async () => {
     const h = (await collections("canh-bao")).replace('id="nhom-s03"', 'id="nhom-khac"')
