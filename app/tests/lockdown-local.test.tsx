@@ -79,7 +79,7 @@ describe("LD-AC-6 readSchedulerStatus nhánh local", () => {
     process.chdir(path.join(dir, "app"))
     try {
       const { readSchedulerStatus } = await import("../src/lib/collections-queries")
-      const job = (await readSchedulerStatus()).find((j) => j.id === "airdna-daily")!
+      const job = (await readSchedulerStatus()).find((j) => j.id === "s02-daily")! // id trung tính từ ON7 ops-nhan-ma-nguon
       assert.equal(job.lastLine, sync)
     } finally {
       process.chdir(ORIG_CWD)

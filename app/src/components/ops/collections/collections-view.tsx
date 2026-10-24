@@ -24,6 +24,7 @@ import type {
 import { fmtInt } from "@/lib/format"
 import { sloSummaryKey, sloSummaryText } from "@/lib/freshness"
 import type { getLockdownStatus, SourceFeedHealth } from "@/lib/ops-queries"
+import type { SourceRoles } from "@/lib/source-labels"
 
 export type CollectionsData = {
   days: FlowDay[]
@@ -40,6 +41,8 @@ export type CollectionsData = {
   nowMs: number
   /** Cloud: không có bảng nguồn/bảng nạp — độ tươi chỉ đo ở máy local. */
   localOnly?: boolean
+  /** Vai trò nguồn cho nhãn «S0x · vai trò» (ON7, lib/source-roles.ts); vắng → mã trần. */
+  roles?: SourceRoles
 }
 
 /**
@@ -48,10 +51,10 @@ export type CollectionsData = {
  * chạy không. Khung theo @reui/solution-dev-ops-6 (thẻ số · luồng + cần chú ý · lưới nguồn) và lưới job của
  * @reui/solution-dev-ops-1.
  */
-export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, localOnly = false }: CollectionsData) {
+export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, localOnly = false, roles = {} }: CollectionsData) {
   const factsAgeMin = factsPushedAt ? Math.round((nowMs - new Date(factsPushedAt).getTime()) / 60_000) : null
   const lastPostHours = zaloHealth.lastPostAt ? Math.round((nowMs - new Date(zaloHealth.lastPostAt).getTime()) / 3_600_000) : null
-  const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin, nowMs })
+  const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin, nowMs, roles })
   // Cùng một con số với /ops (AU6): x/y nguồn đạt SLO.
   const slo = feedSloSummary(feedHealth)
 
@@ -75,20 +78,20 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
           <AlertDescription>Dữ liệu máy thu cập nhật {fmtInt(factsAgeMin)} phút trước.</AlertDescription>
         </Alert>
       ) : null}
-      <CollectionsTiles feeds={feedHealth} funnel={funnel} layers={lockdown.layers} agentTurnsToday={lockdown.agentTurnsToday} />
+      <CollectionsTiles feeds={feedHealth} funnel={funnel} layers={lockdown.layers} agentTurnsToday={lockdown.agentTurnsToday} roles={roles} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <SyncActivity days={days} className="min-w-0 lg:col-span-2" />
-        <AttentionList issues={issues} className="min-w-0" />
+        <SyncActivity days={days} roles={roles} className="min-w-0 lg:col-span-2" />
+        <AttentionList issues={issues} roles={roles} className="min-w-0" />
       </div>
       <FeedsGrid feeds={feedHealth} />
       <LockdownGrid layers={lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ZaloPipePanel zalo={zaloHealth} funnel={funnel} lastPostHours={lastPostHours} />
-        <RotationPanel rotation={rotation} />
+        <ZaloPipePanel zalo={zaloHealth} funnel={funnel} lastPostHours={lastPostHours} roles={roles} />
+        <RotationPanel rotation={rotation} roles={roles} />
       </div>
-      <FlowTable days={days} />
-      <div id="nhom-zalo" className="scroll-mt-4">
-        <ZaloGroupsTable rows={zaloGroups} allowlist={zaloAllowlist} />
+      <FlowTable days={days} roles={roles} />
+      <div id="nhom-s03" className="scroll-mt-4">
+        <ZaloGroupsTable rows={zaloGroups} allowlist={zaloAllowlist} roles={roles} />
       </div>
       <JobsGrid jobs={jobs} />
     </div>

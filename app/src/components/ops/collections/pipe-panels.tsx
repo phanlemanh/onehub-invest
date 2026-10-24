@@ -1,22 +1,25 @@
-// Hai khung trạng thái hạ tầng (Ống Zalo, Rotation AirDNA) theo dải đầu vùng của
+// Hai khung trạng thái hạ tầng (ống S03, rotation S02) theo dải đầu vùng của
 // solution-dev-ops-6; trạng thái là Badge, sự cố có câu giải thích là Alert.
 import { CircleAlertIcon } from "lucide-react"
+import Link from "next/link"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { Badge } from "@/components/reui/badge"
 import { Frame, FramePanel } from "@/components/reui/frame"
 import type { GateFunnel, RotationPreview, ZaloHealth } from "@/lib/collections-queries"
 import { fmtInt, fmtPct } from "@/lib/format"
+import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 import { SectionHeader } from "./section"
 
-export function ZaloPipePanel({ zalo, funnel, lastPostHours }: { zalo: ZaloHealth; funnel: GateFunnel; lastPostHours: number | null }) {
+export function ZaloPipePanel({ zalo, funnel, lastPostHours, roles = {} }: { zalo: ZaloHealth; funnel: GateFunnel; lastPostHours: number | null; roles?: SourceRoles }) {
+  const s03 = sourceLabel("S03", roles)
   const status =
     zalo.connected === null ? <Badge variant="outline">Chưa có heartbeat</Badge> : zalo.connected ? <Badge variant="success-light">Kênh kết nối</Badge> : <Badge variant="destructive-light">Kênh đứt</Badge>
   return (
     <Frame spacing="default" className="min-w-0">
       <SectionHeader
-        title="Ống Zalo"
+        title={`Ống ${s03}`}
         description={`Heartbeat 15′ cuối ${zalo.heartbeatAgeMin === null ? "—" : `${fmtInt(zalo.heartbeatAgeMin)}′ trước`} · tin cuối qua cổng ${lastPostHours === null ? "chưa có" : `${fmtInt(lastPostHours)}h trước`}`}
       >
         <div className="flex flex-wrap items-center gap-2">
@@ -28,9 +31,11 @@ export function ZaloPipePanel({ zalo, funnel, lastPostHours }: { zalo: ZaloHealt
         {zalo.connected === false ? (
           <Alert variant="destructive">
             <CircleAlertIcon aria-hidden="true" />
-            <AlertTitle>Kênh Zalo đứt</AlertTitle>
+            <AlertTitle>Kênh {s03} đứt</AlertTitle>
             <AlertDescription>
-              Đăng nhập lại: <code className="font-mono text-xs">openclaw channels login --channel zalouser</code>
+              <Link prefetch={false} href="/ops/sources" className="font-medium underline">
+                Đăng nhập lại ở Nguồn dữ liệu
+              </Link>
             </AlertDescription>
           </Alert>
         ) : null}
@@ -38,7 +43,12 @@ export function ZaloPipePanel({ zalo, funnel, lastPostHours }: { zalo: ZaloHealt
           <Alert variant="warning">
             <CircleAlertIcon aria-hidden="true" />
             <AlertTitle>Probe trễ</AlertTitle>
-            <AlertDescription>Kiểm tra launchd zalo-heartbeat.</AlertDescription>
+            <AlertDescription>
+              Kiểm tra job heartbeat của kênh {s03} —{" "}
+              <Link prefetch={false} href="/ops/sources" className="font-medium underline">
+                Nguồn dữ liệu
+              </Link>
+            </AlertDescription>
           </Alert>
         ) : null}
         <div className="flex flex-wrap gap-2">
@@ -55,11 +65,11 @@ export function ZaloPipePanel({ zalo, funnel, lastPostHours }: { zalo: ZaloHealt
   )
 }
 
-export function RotationPanel({ rotation }: { rotation: RotationPreview }) {
+export function RotationPanel({ rotation, roles = {} }: { rotation: RotationPreview; roles?: SourceRoles }) {
   return (
     <Frame spacing="default" className="min-w-0">
       <SectionHeader
-        title="Rotation AirDNA kế tiếp"
+        title={`Rotation ${sourceLabel("S02", roles)} kế tiếp`}
         description={`${fmtInt(rotation.total)} market · con trỏ ${fmtInt(rotation.cursor)} · ${rotation.updatedAt ? `cập nhật ${rotation.updatedAt.slice(0, 16).replace("T", " ")}` : "chưa chạy đêm nào"}`}
       />
       <FramePanel className="flex flex-col gap-3">

@@ -69,7 +69,7 @@ const BLOCKS: BlockRow[] = [
   { block: "solution-dev-ops-5", route: "/ops", use: "Ô KPI + lưới mục tiêu độ tươi", preview: "https://reui.io/preview/base/solution-dev-ops-5" },
   { block: "solution-dev-ops-6", route: "/ops/collections, /ops/sources", use: "Thẻ số, luồng, cần chú ý, lưới kết nối", preview: "https://reui.io/preview/base/solution-dev-ops-6" },
   { block: "solution-dev-ops-1", route: "/ops/collections", use: "Lưới job theo lịch", preview: "https://reui.io/preview/base/solution-dev-ops-1" },
-  { block: "solution-ai-ops-2", route: "/ops/sources", use: "Hàng tài khoản Zalo + hộp kết nối QR", preview: "https://reui.io/preview/base/solution-ai-ops-2" },
+  { block: "solution-ai-ops-2", route: "/ops/sources", use: "Hàng tài khoản S03 + hộp kết nối QR", preview: "https://reui.io/preview/base/solution-ai-ops-2" },
   { block: "solution-agents-5", route: "/ops/review (vòng sau)", use: "Dự kiến: hàng chờ duyệt + sheet chi tiết — chưa áp dụng", preview: "https://reui.io/preview/base/solution-agents-5" },
 ]
 const BLOCK_COLUMNS: InsightColumn<BlockRow>[] = [

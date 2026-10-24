@@ -33,6 +33,22 @@ const check = (ok, msg) => {
   if (!ok) fails.push(msg);
 };
 
+const { checkOpsTierA } = await import("./check-ops-tier-a.mjs");
+function opsTierA(r) {
+  const { files, hits, positive } = checkOpsTierA({ root: r });
+  for (const h of hits) check(false, `ops ngoài /ops/sources: tên nguồn thật (${h.code}) ở chữ hiển thị ${h.file}:${h.line}`);
+  check(hits.length === 0, `ops ngoài /ops/sources: chữ hiển thị chỉ mã S0x (${hits.length} chỗ trúng trong ${files.length} tệp)`);
+  check(positive >= 1, `đối chứng dương: bộ quét thấy tên thật ở components/ops/sources/ (${positive} chỗ)`);
+}
+// `--only ops-tier-a --root <dir>`: chỉ chạy mục 12 trên một cây khác (ca chiều đỏ của scripts/ops-nhan-ma-nguon.test.mjs).
+const [flag, only, ...rest] = process.argv.slice(2);
+if (flag === "--only" && only === "ops-tier-a") {
+  const i = rest.indexOf("--root");
+  opsTierA(i >= 0 ? path.resolve(rest[i + 1]) : root);
+  console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
+  process.exit(fails.length === 0 ? 0 : 1);
+}
+
 // 1. Route: không còn /deals trong Invest; /ops/deals tồn tại.
 check(!existsSync(app("src/app/(app)/deals")), "không còn route Invest src/app/(app)/deals");
 check(existsSync(app("src/app/ops/deals/page.tsx")), "có route src/app/ops/deals/page.tsx");
@@ -149,6 +165,9 @@ const { checkApiSurface, loadEntries, loadFiles } = await import("./check-api-su
 const surface = checkApiSurface({ entries: await loadEntries(), files: loadFiles() });
 for (const v of surface.violations) check(false, `sổ bề mặt API: ${v}`);
 check(surface.violations.length === 0, `sổ bề mặt API: ${surface.routes}/${surface.declared} route khớp sổ (đường + phương thức)`);
+
+// 12. Ops ngoài /ops/sources chỉ dùng mã S0x trong chữ hiển thị (ops-nhan-ma-nguon, ON7).
+opsTierA(root);
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);
