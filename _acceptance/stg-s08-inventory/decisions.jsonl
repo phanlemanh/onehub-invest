@@ -1,0 +1,1 @@
+{"id":"d-20261024T000000Z-s08a","type":"descope","stage":"S1","at":"2026-10-24T12:00:00Z","decision":"bỏ Cổng 1 và gap-probe — phiên do phiên điều phối liên làn giao, code (3e92834) có trước hợp đồng; 5 AC toàn eval máy, không hội đồng judge","impact":"không có duyệt tiêu chí trước thi công và không có phản biện context sạch; bù bằng phiên VERIFY tươi + chữ ký Cổng 2 của Mạnh"}

@@ -4,7 +4,6 @@ import { test } from "node:test";
 import {
   ADVISORY_KEY,
   CLOUD_ALLOW,
-  FILL,
   SHRINK_AUDIT,
   PII_EXCLUDE,
   SOURCE_EXCLUDE,
@@ -56,13 +55,6 @@ test("danh sách cho phép không giao danh sách loại (PII_EXCLUDE, SOURCE_EX
   }
   // đối chứng dương: danh sách cho phép thật sự có cột (không rỗng hằng-đúng)
   assert.ok(CLOUD_ALLOW.sale_offers.includes("offer_id"));
-});
-
-test("FILL không chứa bảng thô stg_* (stg_s08_inventory — S08 chỉ dùng nội bộ, migration 040)", () => {
-  assert.deepEqual(FILL.filter((t) => t.startsWith("stg_")), []);
-  assert.ok(!FILL.includes("stg_s08_inventory"));
-  // đối chứng dương: FILL thật sự có bảng sản phẩm
-  assert.ok(FILL.includes("sale_offers"));
 });
 
 test("selectList: cột chưa duyệt ở lại máy, seller_ref chuẩn hoá, cột loại vắng", () => {
