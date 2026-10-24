@@ -1,0 +1,48 @@
+schema_version: 1
+feature_slug: dq-moi-nhat-moi-kiem
+# Ca test «DQ-AC-n» ở app/tests/dq-moi-nhat.test.tsx: dqLatestSql() chạy trên fixture trong BEGIN…ROLLBACK (khoá 33033),
+# DqChecksTable vẽ trong jsdom.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-checks.ts, app/tests/dq-moi-nhat.test.tsx]
+    expected: "exit 0; ca 'DQ-AC-1 mới nhất theo cặp' trên fixture (bảng gạt dòng thật trong giao dịch): kiểm A đối tượng x có 3 lần (−3 ngày pass, −2 ngày fail, −1 ngày warn) + kiểm A đối tượng y 1 lần + kiểm A đối tượng z chỉ có lần −8 ngày → kết quả có đúng 2 dòng của A: (A,x,warn) và (A,y); không có z; chiều đỏ trên cùng fixture: câu cũ ORDER BY checked_at DESC LIMIT 20 trả 4 dòng của A (có lặp x)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-checks.ts, app/tests/dq-moi-nhat.test.tsx]
+    expected: "exit 0; ca 'DQ-AC-2 kiểm dày không đè kiểm thưa' : 25 đối tượng của kiểm D (mới nhất) + 1 dòng kiểm E cũ hơn → kết quả có cả D (25 dòng) và E (1 dòng); chiều đỏ: câu cũ LIMIT 20 không có E"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-checks.ts, app/src/app/ops/quality/page.tsx, app/tests/dq-moi-nhat.test.tsx]
+    expected: "exit 0; ca 'DQ-AC-3 trang lấy bảng và số qua loadDqChecks' : loadDqChecks(client giao dịch) trên fixture E2 trả rows có cả D (25) và E (1) và stats {checks: 2, entities: 26} với nhãn đúng nguyên văn ['2 kiểm', '26 đối tượng']; chiều đỏ: thay câu trong hàm bằng câu cũ LIMIT 20 thì rows thiếu E; quét page.tsx: không còn chuỗi 'dq_check_results' nào (trang không tự truy vấn), có gọi loadDqChecks và đưa stats vào PageHeader"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-checks.ts, app/src/components/ops/quality/dq-checks-table.tsx, app/tests/dq-moi-nhat.test.tsx]
+    expected: "exit 0; ca 'DQ-AC-4 nhãn kết quả' ma trận viết trước 10 dòng = 10 assert trên dqResult: (truthful-coverage,pass)→'Có số tham chiếu' info-light; (truthful-coverage,fail)→'Thiếu số tham chiếu' warning-light; (truthful-coverage,warn)→'Cảnh báo' warning-light; (truthful-coverage,skip)→'Bỏ qua' outline; (truthful-coverage,xyz)→'xyz' destructive-light; (freshness,pass)→'Đạt' success-light; (freshness,warn)→'Cảnh báo' warning-light; (freshness,fail)→'Không đạt' destructive-light; (freshness,skip)→'Bỏ qua' outline; (freshness,xyz)→'xyz' destructive-light; và với mọi trạng thái của truthful-coverage: nhãn ≠ 'Đạt', variant ≠ success-light; ca 'DQ-AC-4 bảng vẽ' vẽ DqChecksTable trong jsdom với một dòng truthful-coverage pass (detail coverage=0.00%) và một dòng freshness pass: badge hàng truthful-coverage có chữ 'Có số tham chiếu' và class KHÁC class của Badge success-light (vẽ đối chiếu), badge hàng freshness có 'Đạt' và class BẰNG class Badge success-light (đối chứng dương)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.dq_moi_nhat_do
+    paths: [scripts/dq-moi-nhat-do.mjs, app/src/lib/dq-checks.ts]
+    expected: "exit 0; chạy bằng tsx của app, import loadDqChecks + dqResult (không chép câu SQL hay bảng nhãn), trên DB local chỉ đọc: dòng '<n> kiểm · <m> đối tượng'; 'ok từ hai loại kiểm trở lên'; 'ok mỗi (kiểm, đối tượng) một dòng'; 'ok số kiểm = số loại kiểm'; 'ok có <k> dòng kiểm độ phủ tham chiếu' (k = 0 → FAIL, exit 1); 'ok không dòng kiểm độ phủ tham chiếu nào mang «Đạt» hay success-light'; đối chứng cùng lượt: câu cũ LIMIT 20 cho ít loại kiểm hơn → 'ok đối chứng: câu cũ chỉ <j> loại kiểm'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: judgment
+    inputs: [CONTEXT.md]
+    paths: [CONTEXT.md]
+    question: "CONTEXT.md có mục thuật ngữ cho «Kiểm chất lượng» và cho nhãn «Có số tham chiếu» — mỗi mục đủ nhãn, tên trong code, định nghĩa và từ tránh dùng — và mục «Có số tham chiếu» nói rõ nhãn này KHÔNG có nghĩa là độ phủ đạt không?"
+    expected: "Có đủ hai mục, mỗi mục bốn phần; mục «Có số tham chiếu» nói rõ không phải độ phủ đạt."
+    evidence_required: [run_id, verdict, judges]
