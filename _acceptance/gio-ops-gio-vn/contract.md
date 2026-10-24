@@ -5,7 +5,7 @@ slug: gio-ops-gio-vn
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình T2; chạm pipeline/push-ops-facts.mjs (t3_paths) theo Hỏi-2 lối khuyến nghị
 surfaces: [ui, cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-gio-ops-gio-vn-design.md
