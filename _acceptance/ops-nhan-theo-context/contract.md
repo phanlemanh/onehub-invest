@@ -5,7 +5,7 @@ slug: ops-nhan-theo-context
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-ops-nhan-theo-context-design.md
@@ -112,3 +112,8 @@ ngày, khuôn lạ, mã thị trường lạ, giá trị enum lạ, âm tiết t
 - Chữ tiếng Anh trong `<code>`/`<kbd>` (tên tệp, khoá cấu hình, tên component ở `/ops/design`, dòng nhật ký) không tính ở
   luật (b); luật _Avoid_, tên kiểm và dấu dự phòng vẫn soi bên trong — chữ tiếng Anh cũ thành `_Avoid_` qua AC-9 nên bọc
   `<code>` không lách được.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: nhãn «Giá trị khác» kèm mã gốc ở lưới nguồn của trang Thu thập đang đúng nhưng chưa có phép đo giữ nó.
+  - Ngoài-2: khi DB local không có vòng thu S02 thật, phép đo tên Việt của vòng thu chạy trên vòng dựng từ 6 thị trường S02 thật.
+  - Ngoài-3: trên máy chủ, lưới «Máy móc» ở trang Thu thập còn nhãn tác vụ tiếng Anh cũ vì bản sao nhãn trong push-ops-facts.mjs chưa đổi.
+  - Ngoài-5: khi truy vấn tên khu vực lỗi, các trang Ops hiện tên thị trường «chưa có tên Việt» mà không báo lỗi riêng.

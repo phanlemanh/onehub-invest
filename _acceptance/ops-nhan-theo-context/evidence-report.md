@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 68f64cbb004607e0a73273777e4696e1b81e20e0
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: ops-nhan-theo-context
