@@ -149,43 +149,55 @@ export async function getSourceFeedHealth(): Promise<SourceFeedHealth[]> {
 
 export type LockdownLayer = { layer: string; desc: string; ok: boolean | null };
 
+/** Watchdog ghi `<ISO> ok — …` mỗi 5′ (launchd StartInterval 300) và KHÔNG ghi `ok` khi thấy sự cố; dòng `ok` cũ hơn
+ * 3 chu kỳ = watchdog đã dừng hoặc đang báo sự cố (ON2 Hỏi-1 = A, Mạnh 24/10). */
+const WATCHDOG_FRESH_MS = 15 * 60_000;
+
 /** Trạng thái 7 lớp lockdown Zalo + hạ tầng thu (H3-P2). Đọc watchdog log
- * (đã có cấu trúc) + check sống thực tại chỗ. null = không kiểm được. */
-export async function getLockdownStatus(): Promise<{
+ * (đã có cấu trúc) + check sống thực tại chỗ. null = không kiểm được — không bao giờ «Ổn» cho lớp không kiểm (ON2).
+ * `root`/`agentLogDir`/`now` chỉ để phép đo trỏ thư mục tạm; mặc định suy từ cwd như collections-queries. */
+export async function getLockdownStatus(
+  opts: { root?: string; agentLogDir?: string; now?: Date } = {},
+): Promise<{
   layers: LockdownLayer[];
   lastWatchdogAt: string | null;
-  agentTurnsToday: number;
+  agentTurnsToday: number | null;
   openClawUp: boolean;
   kevUp: boolean;
   collectorUp: boolean;
 }> {
   const { readFile } = await import("node:fs/promises");
+  const path = await import("node:path");
   const { execFile } = await import("node:child_process");
   const promisify = (await import("node:util")).promisify;
   const run = promisify(execFile);
+  const now = opts.now ?? new Date();
+  // Next chạy ở app/ — log nằm ở gốc kho (cùng cách suy ROOT với collections-queries), suy mỗi lần gọi.
+  const root = opts.root ?? (process.cwd().endsWith("/app") ? path.resolve(process.cwd(), "..") : process.cwd());
 
   let lastWd: string | null = null;
-  let wdOk = false;
+  let wdFresh = false; // tệp vắng, dòng cuối không ok, hoặc ok cũ → watchdog không chứng được nó đang canh
   try {
-    const log = await readFile("pipeline/logs/zalo-watchdog.log", "utf8");
+    const log = await readFile(path.join(root, "pipeline/logs/zalo-watchdog.log"), "utf8");
     const lines = log.trim().split("\n");
     const last = lines[lines.length - 1] ?? "";
     lastWd = last.slice(0, 25);
-    wdOk = last.includes(" ok ");
+    const at = Date.parse(lastWd);
+    wdFresh = last.includes(" ok ") && Number.isFinite(at) && now.getTime() - at <= WATCHDOG_FRESH_MS;
   } catch {
-    /* chưa có log */
+    /* chưa có log — watchdog không chạy */
   }
 
-  let turns = 0;
+  // L4b: tệp log gateway của NGÀY GIỜ MÁY (gateway và watchdog đặt tên bằng `date +%Y-%m-%d`). Đọc được → đếm dấu;
+  // không đọc được → null («Chưa kiểm được»), KHÔNG coi là 0.
+  const p2 = (n: number) => String(n).padStart(2, "0");
+  const day = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}`;
+  let turns: number | null = null;
   try {
-    const { stdout } = await run("grep", [
-      "-c",
-      "auto-reply/agent-turn-timing",
-      `/tmp/openclaw/openclaw-${new Date().toISOString().slice(0, 10)}.log`,
-    ]);
-    turns = Number(stdout.trim()) || 0;
+    const text = await readFile(path.join(opts.agentLogDir ?? "/tmp/openclaw", `openclaw-${day}.log`), "utf8");
+    turns = text.split("\n").filter((l) => l.includes("auto-reply/agent-turn-timing")).length;
   } catch {
-    /* grep exit 1 khi 0 match hoặc file không tồn tại */
+    /* tệp vắng hoặc không đọc được */
   }
 
   const probe = async (url: string) => {
@@ -203,11 +215,11 @@ export async function getLockdownStatus(): Promise<{
   ]);
 
   const layers: LockdownLayer[] = [
-    { layer: "L1", desc: "Hook read-only (không API gửi tin)", ok: wdOk ? true : null },
-    { layer: "L2", desc: "Bindings = [] (agent không bị kích từ kênh)", ok: wdOk ? true : null },
-    { layer: "L3", desc: "Kênh bot OA tắt + mọi nhóm requireMention", ok: wdOk ? true : null },
-    { layer: "L4", desc: "Watchdog 5′ đang canh", ok: wdOk },
-    { layer: "L4b", desc: "Agent-turn hôm nay = 0", ok: turns === 0 },
+    { layer: "L1", desc: "Hook read-only (không API gửi tin)", ok: wdFresh ? true : null },
+    { layer: "L2", desc: "Bindings = [] (agent không bị kích từ kênh)", ok: wdFresh ? true : null },
+    { layer: "L3", desc: "Kênh bot OA tắt + mọi nhóm requireMention", ok: wdFresh ? true : null },
+    { layer: "L4", desc: "Watchdog 5′ đang canh", ok: wdFresh },
+    { layer: "L4b", desc: "Agent-turn hôm nay = 0", ok: turns === null ? null : turns === 0 },
     { layer: "Hạ tầng", desc: "OpenClaw chạy", ok: openClawUp },
     { layer: "Hạ tầng", desc: "Kev gate :8009", ok: kevUp },
     { layer: "Hạ tầng", desc: "Collector :9210", ok: collectorUp },

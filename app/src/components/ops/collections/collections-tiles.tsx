@@ -24,7 +24,8 @@ export function CollectionsTiles({
   feeds: SourceFeedHealth[]
   funnel: GateFunnel
   layers: LockdownLayer[]
-  agentTurnsToday: number
+  /** null = chưa kiểm được log agent-turn hôm nay (ON2). */
+  agentTurnsToday: number | null
 }) {
   const states = feeds.map(feedState)
   const count = (s: ReturnType<typeof feedState>) => states.filter((x) => x === s).length
@@ -86,8 +87,14 @@ export function CollectionsTiles({
         period="Bây giờ"
         value={fmtInt(layersOk)}
         total={fmtInt(layers.length)}
-        badge={agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
-        basis={agentTurnsToday > 0 ? "Có agent-turn hôm nay — kiểm ngay" : "Không có agent-turn hôm nay"}
+        badge={agentTurnsToday !== null && agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
+        basis={
+          agentTurnsToday === null
+            ? "Chưa kiểm được agent-turn hôm nay"
+            : agentTurnsToday > 0
+              ? "Có agent-turn hôm nay — kiểm ngay"
+              : "Không có agent-turn hôm nay"
+        }
         action={{ label: "Xem các lớp", href: "#lockdown" }}
       >
         <SegmentBar

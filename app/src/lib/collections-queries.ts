@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 import { pool } from "./db";
+import { lastMeaningfulLine } from "./last-log-line";
 import {
   directoryCacheIsFresh,
   listZaloAccounts,
@@ -168,9 +169,9 @@ const LOGS = path.join(ROOT, "pipeline/logs");
 async function tailFile(file: string): Promise<{ mtime: string | null; lastLine: string | null }> {
   try {
     const st = await stat(file);
-    const text = await readFile(file, "utf8");
-    const lines = text.split("\n").filter((l) => l.trim());
-    return { mtime: st.mtime.toISOString(), lastLine: lines.at(-1)?.slice(0, 140) ?? null };
+    // Dòng có nghĩa cuối — bỏ cảnh báo Node in sau dòng kết quả (OPS-19).
+    const line = lastMeaningfulLine(await readFile(file, "utf8"));
+    return { mtime: st.mtime.toISOString(), lastLine: line?.slice(0, 140) ?? null };
   } catch {
     return { mtime: null, lastLine: null };
   }
