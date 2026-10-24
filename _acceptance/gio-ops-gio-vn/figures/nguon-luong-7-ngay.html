@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nguồn Luồng 7 ngày</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1080px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 920px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · gio-ops-gio-vn · nguon-luong-7-ngay</p>
+    <h1>Luồng 7 ngày: hai nơi đọc, một chỗ rẽ ở số đẩy lên cloud</h1>
+    <p class="sub">/ops/collections · Hỏi-2 có sửa luôn push-ops-facts.mjs không · AC-4 bên đọc local · AC-6 bên ghi số đẩy lên</p>
+
+    <svg viewBox="0 0 1040 656" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Làn + vạch chia ============ -->
+      <text x="40" y="60" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">MÁY LOCAL</text>
+      <text x="40" y="76" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">DB local · múi UTC</text>
+      <line x1="40" y1="328" x2="1000" y2="328" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="356" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CLOUD (VERCEL)</text>
+      <text x="40" y="372" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">máy chủ · múi UTC</text>
+
+      <!-- ============ Mũi tên (vẽ trước, nằm dưới nút) ============ -->
+      <!-- Local: DB local → gom ngày → bảng -->
+      <line x1="384" y1="144" x2="478" y2="144" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="672" y1="144" x2="774" y2="144" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Local: DB local → push-ops-facts (2 cột Zalo) -->
+      <line x1="280" y1="216" x2="280" y2="238" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Hỏi-2: hai lối từ push-ops-facts xuống ops_heartbeat -->
+      <line x1="240" y1="288" x2="240" y2="366" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <line x1="320" y1="288" x2="320" y2="366" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow-accent)"/>
+
+      <!-- Cloud: ops_heartbeat → gom ngày (cửa trên) -->
+      <path d="M384 392 H420 Q428 392 428 400 V428 Q428 436 436 436 H478" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Cloud: DB cloud → gom ngày (cửa dưới) -->
+      <path d="M384 496 H436 Q444 496 444 488 V460 Q444 452 452 452 H478" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Cloud: gom ngày → bảng -->
+      <line x1="672" y1="444" x2="774" y2="444" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- ============ Nhãn mũi tên (có mặt nạ, cách đường ≥6px) ============ -->
+      <rect x="404" y="120" width="56" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="432" y="132" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">6 CỘT</text>
+
+      <rect x="96" y="292" width="136" height="30" rx="2" fill="#f5f5f5"/>
+      <text x="228" y="303" fill="#2d3142" font-size="9" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.08em">LỐI A · NGÀY VN</text>
+      <text x="228" y="317" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="end">khuyến nghị · thành T3</text>
+
+      <rect x="328" y="292" width="136" height="30" rx="2" fill="#f5f5f5"/>
+      <text x="332" y="303" fill="#2d3142" font-size="9" font-weight="600" font-family="'Geist Mono', monospace" letter-spacing="0.08em">LỐI B · NGÀY UTC</text>
+      <text x="332" y="317" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">giữ T2 · không sửa tệp này</text>
+
+      <!-- ============ Chú thích ============ -->
+      <text x="576" y="196" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="middle">từ hàng này gom theo ngày VN</text>
+      <text x="576" y="212" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">AT TIME ZONE 'Asia/Ho_Chi_Minh' · AC-4</text>
+
+      <text x="576" y="496" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="middle">cùng hàm, gom ngày VN như local</text>
+
+      <!-- Hệ quả hai lối, đọc ở bảng cloud -->
+      <text x="776" y="496" fill="#2d3142" font-size="9" font-weight="600" font-family="'Geist Mono', monospace" letter-spacing="0.08em">LỐI A</text>
+      <text x="820" y="496" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">mọi cột cùng một ngày VN</text>
+      <text x="776" y="520" fill="#2d3142" font-size="9" font-weight="600" font-family="'Geist Mono', monospace" letter-spacing="0.08em">LỐI B</text>
+      <text x="820" y="520" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">2 cột Zalo lệch 1 ngày với</text>
+      <text x="820" y="536" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">tin lúc 0h–7h giờ VN</text>
+
+      <!-- ============ Làn MÁY LOCAL ============ -->
+      <!-- DB local -->
+      <rect x="176" y="72" width="208" height="144" rx="6" fill="#f5f5f5"/>
+      <rect x="176" y="72" width="208" height="144" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="280" y="96" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">DB local</text>
+      <text x="280" y="112" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Postgres :5433</text>
+      <line x1="192" y1="124" x2="368" y2="124" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="192" y="140" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">4 CỘT THU</text>
+      <text x="192" y="154" fill="#2d3142" font-size="9" font-family="'Geist', sans-serif">AirDNA market · AirDNA listing</text>
+      <text x="192" y="168" fill="#2d3142" font-size="9" font-family="'Geist', sans-serif">listing thấy · snapshot Airbnb</text>
+      <text x="192" y="188" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">2 CỘT ZALO</text>
+      <text x="192" y="202" fill="#2d3142" font-size="9" font-family="'Geist', sans-serif">tin Zalo · tin rao</text>
+
+      <!-- Gom ngày (local) -->
+      <rect x="480" y="120" width="192" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="480" y="120" width="192" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="576" y="140" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Gom 7 ngày</text>
+      <text x="576" y="156" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">getFlowDays(7)</text>
+
+      <!-- Bảng local -->
+      <rect x="776" y="120" width="224" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="776" y="120" width="224" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="888" y="140" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Bảng «Luồng 7 ngày»</text>
+      <text x="888" y="156" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/ops/collections · local</text>
+
+      <!-- push-ops-facts (tiêu điểm) -->
+      <rect x="176" y="240" width="208" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="176" y="240" width="208" height="48" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="280" y="260" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đẩy số lên cloud</text>
+      <text x="280" y="276" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">push-ops-facts.mjs · AC-6</text>
+
+      <!-- ============ Làn CLOUD ============ -->
+      <!-- ops_heartbeat -->
+      <rect x="176" y="368" width="208" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="176" y="368" width="208" height="48" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="280" y="388" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Số đã đẩy lên</text>
+      <text x="280" y="404" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ops_heartbeat · 2 cột Zalo</text>
+
+      <!-- DB cloud -->
+      <rect x="176" y="464" width="208" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="176" y="464" width="208" height="64" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="280" y="488" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">DB cloud</text>
+      <text x="280" y="504" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Supabase · 4 cột thu</text>
+      <text x="280" y="518" fill="#4f5d75" font-size="8" font-family="'Geist', sans-serif" text-anchor="middle">AirDNA ×2 · listing thấy · snapshot</text>
+
+      <!-- Gom ngày (cloud) -->
+      <rect x="480" y="420" width="192" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="480" y="420" width="192" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="576" y="440" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Gom 7 ngày</text>
+      <text x="576" y="456" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">getFlowDays(7)</text>
+
+      <!-- Bảng cloud -->
+      <rect x="776" y="420" width="224" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="776" y="420" width="224" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="888" y="440" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Bảng «Luồng 7 ngày»</text>
+      <text x="888" y="456" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/ops/collections · cloud</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="40" y1="576" x2="1000" y2="576" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="596" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="612" width="24" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="72" y="622" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nơi lưu số</text>
+
+      <rect x="160" y="612" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="192" y="622" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước xử lý</text>
+
+      <rect x="280" y="612" width="24" height="12" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="312" y="622" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Chỗ người vận hành đọc</text>
+
+      <rect x="452" y="612" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="484" y="622" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Chỗ rẽ Hỏi-2</text>
+
+      <line x1="584" y1="618" x2="616" y2="618" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="624" y="622" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lối A · đẩy theo ngày VN</text>
+
+      <line x1="760" y1="618" x2="792" y2="618" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <text x="800" y="622" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lối B · vẫn ngày UTC</text>
+    </svg>
+  </div>
+</body>
+</html>

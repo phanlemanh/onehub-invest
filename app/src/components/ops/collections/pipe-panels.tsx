@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { Badge } from "@/components/reui/badge"
 import { Frame, FramePanel } from "@/components/reui/frame"
 import type { GateFunnel, RotationPreview, ZaloHealth } from "@/lib/collections-queries"
-import { fmtInt, fmtPct } from "@/lib/format"
+import { fmtInt, fmtPct, fmtVnDateTime } from "@/lib/format"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 import { SectionHeader } from "./section"
@@ -57,7 +57,7 @@ export function ZaloPipePanel({ zalo, funnel, lastPostHours, roles = {} }: { zal
           {!zalo.silentAlert24h && !zalo.driftAlert24h ? <span className="text-muted-foreground text-xs">Không có cảnh báo im lặng hay lệch allowlist trong 24 giờ.</span> : null}
         </div>
         <p className="text-muted-foreground text-xs">
-          Cổng Kev: sự kiện cuối {funnel.lastEventAt ?? "—"}. 7 ngày qua: {fmtInt(funnel.last7.messages)} tin thấy → {fmtInt(funnel.last7.passed)} qua cổng → {fmtInt(funnel.last7.accepted)} nhận vào raw
+          Cổng Kev: sự kiện cuối {fmtVnDateTime(funnel.lastEventAt)}. 7 ngày qua: {fmtInt(funnel.last7.messages)} tin thấy → {fmtInt(funnel.last7.passed)} qua cổng → {fmtInt(funnel.last7.accepted)} nhận vào raw
           {funnel.last7.media > 0 ? ` · ${fmtInt(funnel.last7.media)} chỉ có ảnh` : ""}.
         </p>
       </FramePanel>
@@ -70,7 +70,7 @@ export function RotationPanel({ rotation, roles = {} }: { rotation: RotationPrev
     <Frame spacing="default" className="min-w-0">
       <SectionHeader
         title={`Rotation ${sourceLabel("S02", roles)} kế tiếp`}
-        description={`${fmtInt(rotation.total)} market · con trỏ ${fmtInt(rotation.cursor)} · ${rotation.updatedAt ? `cập nhật ${rotation.updatedAt.slice(0, 16).replace("T", " ")}` : "chưa chạy đêm nào"}`}
+        description={`${fmtInt(rotation.total)} market · con trỏ ${fmtInt(rotation.cursor)} · ${rotation.updatedAt ? `cập nhật ${fmtVnDateTime(rotation.updatedAt)}` : "chưa chạy đêm nào"}`}
       />
       <FramePanel className="flex flex-col gap-3">
         {rotation.next.length > 0 ? (

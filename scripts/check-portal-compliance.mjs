@@ -68,9 +68,12 @@ check(
   "next.config redirect /deals → /ops/deals",
 );
 
-// 4. /ops/deals: liên hệ + nội dung + ảnh tin chỉ khi showContact = isAdmin(user).
-const deals = code(read("src/app/ops/deals/page.tsx"));
-check(/const showContact = isAdmin\(user\)/.test(deals), "ops/deals tính showContact từ isAdmin(user)");
+// 4. /ops/deals: liên hệ + nội dung + ảnh tin chỉ khi showContact = isAdmin(user). Thẻ tách ở
+//    components/ops/deal-card.tsx (ON11) — trang phải truyền đúng showContact xuống thẻ, và đo trên cả hai tệp.
+const dealsPage = code(read("src/app/ops/deals/page.tsx"));
+const deals = `${dealsPage}\n${code(read("src/components/ops/deal-card.tsx"))}`;
+check(/const showContact = isAdmin\(user\)/.test(dealsPage), "ops/deals tính showContact từ isAdmin(user)");
+check(/<DealCard\b[^>]*\bshowContact=\{showContact\}/.test(dealsPage), "ops/deals truyền showContact xuống DealCard");
 for (const [label, re] of [
   ["khối SĐT/tên người bán", /\{showContact && \(d\.sellerPhone \|\| d\.sellerName\)/],
   ["nội dung tin", /\{showContact && d\.postText/],

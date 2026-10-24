@@ -8,6 +8,7 @@ import { Badge, type BadgeProps } from "@/components/reui/badge"
 import type { LockdownLayer } from "@/lib/ops-queries"
 
 import { StatusGrid, type StatusTab } from "./status-grid"
+import { fmtVnDateTime } from "@/lib/format"
 
 type LayerState = "ok" | "bad" | "unknown"
 const stateOf = (l: LockdownLayer): LayerState => (l.ok === true ? "ok" : l.ok === false ? "bad" : "unknown")
@@ -36,7 +37,7 @@ export function LockdownGrid({ layers, lastWatchdogAt }: { layers: LockdownLayer
     <StatusGrid
       id="lockdown"
       title="Lockdown & hạ tầng thu"
-      description={`Watchdog chạy cuối: ${lastWatchdogAt ?? "—"}`}
+      description={`Watchdog chạy cuối: ${fmtVnDateTime(lastWatchdogAt)}`}
       data={layers}
       columns={columns}
       tabs={TABS}

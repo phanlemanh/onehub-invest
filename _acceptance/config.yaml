@@ -139,6 +139,8 @@ executors:
     mcp_tools_mutation: "node scripts/check-mcp-tools.mjs mutation"
     mcp_tools_historic: "node scripts/check-mcp-tools.mjs historic"
     deals_smoke_local_guard: "node scripts/check-smoke-guard.mjs"
+    # deals-loai-tin-phi-ly (ON11) — đo Căn giá tốt trên DB local :5433 trong BEGIN…ROLLBACK (cần tsx của app)
+    deals_phi_ly_do: "cd app && node --import tsx ../scripts/deals-phi-ly-do.mjs"
     api_matrix_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs"     # ma trận hành vi khách/bearer — cần app chạy TỪ worktree đang kiểm
     api_matrix_tu_thu: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs --tu-thu"
     # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
