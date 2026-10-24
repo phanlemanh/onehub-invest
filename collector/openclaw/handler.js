@@ -10,7 +10,7 @@
  * cũng không ảnh hưởng hook). Tên file spool là HASH RIÊNG (không tự đoán
  * sourceId của server — server tự dedup khi gửi lại).
  */
-import { appendFile, readFile, writeFile, mkdir, readdir, rm } from "node:fs/promises";
+import { appendFile, readFile, writeFile, mkdir, readdir, rename, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -52,6 +52,9 @@ async function spoolPut(group, message) {
   });
 }
 
+// Trả {status, body, ok} — body 60 ký tự đầu cho KHUÔN LOG CŨ
+// 'post <status> <body> group=…' (vòng 3: 5 nơi đọc ' post 202' + '"accepted":'
+// gồm push-ops-facts, collections-queries silent-gate, audit-all, harness kev-nhan).
 async function postOne(key, group, message) {
   try {
     const r = await fetch(`${API}/agent-report`, {
@@ -60,29 +63,53 @@ async function postOne(key, group, message) {
       body: JSON.stringify({ agent_id: "openclaw-hook", group, messages: [message] }),
       signal: AbortSignal.timeout(8_000),
     });
-    return r.ok;
+    const body = (await r.text()).slice(0, 60);
+    return { status: r.status, body, ok: r.ok };
   } catch {
-    return false;
+    return { status: 0, body: "", ok: false }; // status 0 = mạng/timeout
   }
 }
 
-/** Xả spool: gửi lại từng file, xoá khi collector nhận (2xx). */
+/**
+ * Xả spool (vòng 3 claudedp-2310-5):
+ * - DỪNG ở file hỏng ĐẦU TIÊN (collector treo → mỗi file hết 8s; chờ tuần tự
+ *   cả hàng làm gateway chờ theo) và CAP SPOOL_DRAIN_MAX file mỗi lượt (50).
+ * - Lỗi 4xx (trừ 408/429 — tạm thời) gửi lại KHÔNG BAO GIỜ được: chuyển file
+ *   sang spool/rejected/ + log status — không chặn hàng, không gửi lại vĩnh viễn.
+ * - Mạng/timeout/5xx (status 0/5xx/408/429): giữ lại đợi lượt sau.
+ */
+const SPOOL_DRAIN_MAX = 50;
+const SPOOL_REJECTED = join(SPOOL_DIR, "rejected");
 async function drainSpool(key) {
   let files = [];
   try {
-    files = (await readdir(SPOOL_DIR)).filter((f) => f.endsWith(".json"));
+    files = (await readdir(SPOOL_DIR)).filter((f) => f.endsWith(".json")).sort();
   } catch {
     return; // chưa có spool
   }
-  for (const f of files) {
+  let sent = 0;
+  for (const f of files.slice(0, SPOOL_DRAIN_MAX)) {
+    let rec;
     try {
-      const rec = JSON.parse(await readFile(join(SPOOL_DIR, f), "utf8"));
-      if (await postOne(key, rec.group, rec.message)) {
-        await rm(join(SPOOL_DIR, f)).catch(() => {});
-      }
+      rec = JSON.parse(await readFile(join(SPOOL_DIR, f), "utf8"));
     } catch {
-      // file hỏng — giữ đợi lượt sau
+      continue; // file hỏng định dạng — bỏ qua file này, không tính là 'hỏng đầu'
     }
+    const r = await postOne(key, rec.group, rec.message);
+    if (r.ok) {
+      await rm(join(SPOOL_DIR, f)).catch(() => {});
+      sent++;
+      continue;
+    }
+    if (r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429) {
+      // 4xx vĩnh viễn — chuyển rejected, KHÔNG chặn hàng
+      await mkdir(SPOOL_REJECTED, { recursive: true }).catch(() => {});
+      await rename(join(SPOOL_DIR, f), join(SPOOL_REJECTED, f)).catch(() => {});
+      await log(`spool-rejected ${r.status} ${r.body.slice(0, 40)} file=${f}`);
+      continue;
+    }
+    // collector treo/lỗi tạm thời — DỪNG ở file hỏng đầu, đợi lượt sau
+    return;
   }
 }
 
@@ -193,13 +220,14 @@ export default async function (context) {
     const key = (await readFile(KEY_FILE, "utf8")).trim();
     // drain spool cũ trước, rồi đẩy tin mới; fail thì vào spool (ZC6)
     await drainSpool(key);
-    const ok = await postOne(key, group, message);
-    if (!ok) {
+    const r = await postOne(key, group, message);
+    if (!r.ok) {
       await spoolPut(group, message);
       await log(`spool +1 group=${group} account=${account}`);
       return;
     }
-    await log(`post group=${group} p=${p === null ? "null" : p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
+    // KHUÔN LOG CŨ — 'post <status> <body60>' (5 nơi đọc chuỗi này, vòng 3)
+    await log(`post ${r.status} ${r.body} group=${group} p=${p === null ? "null" : p.toFixed(2)} account=${account} by=${ev.metadata?.senderName ?? "?"}${hasMedia ? ` media=${mediaFacts.length}` : ""}`);
   } catch (e) {
     // bất kỳ lỗi ngoài (đọc key/đĩa) — cố spool lại để không mất tin ở nguồn
     try {

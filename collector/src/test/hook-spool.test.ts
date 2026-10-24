@@ -3,9 +3,11 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { copyFileSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
+
+const thisDir = fileURLToPath(new URL(".", import.meta.url));
 
 /**
  * ZC6 (claudedp-2310-5 mở lại): handler TỰ CHỨA spool/kev — chạy được từ
@@ -41,6 +43,90 @@ test.before(async () => {
 test.after(() => {
   Object.assign(process.env, oldEnv);
   rmSync(root, { recursive: true, force: true });
+});
+
+test("ZC6 vòng 3: khuôn log cũ ' post 202 '; drain dừng ở file hỏng đầu; 4xx → rejected không gửi lại", async () => {
+  const root3 = join(tmpdir(), `zc6v3-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const home = join(root3, "home");
+  mkdirSync(join(home, ".openclaw", "credentials"), { recursive: true });
+  writeFileSync(join(home, ".openclaw", "credentials", "oneinvest-agent.key"), "k1");
+  const spoolDir = join(root3, "spool");
+  const logFile = join(home, ".openclaw", "logs", "oneinvest-zalo-pipe.log");
+  mkdirSync(join(home, ".openclaw", "logs"), { recursive: true });
+  const mkHook = async () => {
+    const d = join(root3, `hook${Math.random().toString(36).slice(2, 6)}`);
+    mkdirSync(d, { recursive: true });
+    copyFileSync(join(thisDir, "../../openclaw/handler.js"), join(d, "handler.js"));
+    return ((await import(pathToFileURL(join(d, "handler.js")).href)).default) as (ctx: unknown) => Promise<void>;
+  };
+
+  const sink: Msg[] = [];
+  const collector = createServer((req, res) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (c: Buffer) => chunks.push(c));
+    req.on("end", () => {
+      const bodyTxt = Buffer.concat(chunks).toString();
+      const which = (JSON.parse(bodyTxt) as { messages: Msg[] }).messages[0].text;
+      if (which === "spB") {
+        res.writeHead(400, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "bad" }));
+        return;
+      }
+      if (which === "spF") {
+        res.socket?.destroy(); // treo
+        return;
+      }
+      sink.push(...(JSON.parse(bodyTxt) as { messages: Msg[] }).messages);
+      res.writeHead(202, { "content-type": "application/json" });
+      res.end(JSON.stringify({ accepted: 1, duplicates: 0 }));
+    });
+  });
+  await new Promise<void>((d) => collector.listen(0, "127.0.0.1", d));
+  const port = (collector.address() as AddressInfo).port;
+  const kevStuck = createServer(() => {});
+  await new Promise<void>((d) => kevStuck.listen(0, "127.0.0.1", d));
+
+  const oldEnv = { ...process.env };
+  process.env.HOME = home;
+  process.env.ONEINVEST_API_URL = `http://127.0.0.1:${port}`;
+  process.env.ONEINVEST_KEV_URL = `http://127.0.0.1:${(kevStuck.address() as AddressInfo).port}`;
+  process.env.ONEINVEST_HOOK_SPOOL = spoolDir;
+  const h = await mkHook();
+
+  // (1) tin A đi thẳng → log phải giữ KHUÔN CŨ 'post 202 {"accepted":…'
+  await h({ event: { channelId: "zalouser", content: "tin A", timestamp: Date.parse("2026-10-24T03:00:00Z"), metadata: { channelName: "g3" } } });
+  const logTxt = readFileSync(logFile, "utf8");
+  assert.match(logTxt, / post 202 /, "log có ' post 202 ' (khuôn cũ)");
+  assert.match(logTxt, /"accepted":1/, "log có body accepted");
+
+  // (3) B=400 → rejected; C ok — ghi trực tiếp file spool theo khuôn handler
+  mkdirSync(spoolDir, { recursive: true }); // tin A đi thẳng nên spool chưa được mkdir
+  for (const [f, text] of [["B.json", "spB"], ["C.json", "spC"]] as const) {
+    writeFileSync(join(spoolDir, f), JSON.stringify({ group: "g3", message: { text, ts: "2026-10-24T03:0" + (f === "B.json" ? "1" : "2") + ":00Z" } }));
+  }
+  await h({ event: { channelId: "zalouser", content: "tin D", timestamp: Date.parse("2026-10-24T03:05:00Z"), metadata: { channelName: "g3" } } });
+  assert.ok(existsSync(join(spoolDir, "rejected", "B.json")), "B (400) chuyển rejected/");
+  assert.ok(!existsSync(join(spoolDir, "B.json")), "B rời spool chính");
+  assert.ok(!existsSync(join(spoolDir, "C.json")), "C ok → gửi và xoá");
+  assert.ok(sink.some((m) => m.text === "spC"), "C được gửi lại");
+  assert.ok(sink.some((m) => m.text === "tin D"), "tin mới đi thẳng");
+
+  // (2) E ok, F treo, G ok → drain DỪNG ở F; G KHÔNG bị gửi
+  for (const [f, text] of [["E.json", "spE"], ["F.json", "spF"], ["G.json", "spG"]] as const) {
+    writeFileSync(join(spoolDir, f), JSON.stringify({ group: "g3", message: { text, ts: "2026-10-24T03:1" + text.slice(-1) + ":00Z" } }));
+  }
+  await h({ event: { channelId: "zalouser", content: "tin H", timestamp: Date.parse("2026-10-24T03:15:00Z"), metadata: { channelName: "g3" } } });
+  assert.ok(!existsSync(join(spoolDir, "E.json")), "E (trước F) đã gửi");
+  assert.ok(existsSync(join(spoolDir, "F.json")), "F treo — giữ lại đợi lượt sau");
+  assert.ok(existsSync(join(spoolDir, "G.json")), "G sau file hỏng đầu — KHÔNG được gửi");
+  assert.ok(!sink.some((m) => m.text === "spG"), "G không tới collector (drain dừng ở F)");
+
+  collector.closeAllConnections?.();
+  collector.close();
+  kevStuck.closeAllConnections?.();
+  kevStuck.close();
+  rmSync(root3, { recursive: true, force: true });
+  Object.assign(process.env, oldEnv);
 });
 
 test("ZC6 tự chứa: từ thư mục NGOÀI repo — collector chết 2 tin → spool 2; sống → drain đủ, không trùng; kev treo → p=null", async () => {
