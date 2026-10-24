@@ -23,6 +23,10 @@ test("FILL không chứa stg_zalo_posts (media, media_files = ảnh PII tầng A
   assert.ok(!FILL.includes("stg_zalo_posts"));
 });
 
+test("FILL không chứa stg_s08_inventory (S08 chỉ dùng nội bộ — AGENTS.md luật 5, migration 040)", () => {
+  assert.ok(!FILL.includes("stg_s08_inventory"));
+});
+
 test("FILL không chứa raw/registry tầng A", () => {
   for (const t of ["airbnb_snapshots", "source_registry"]) assert.ok(!FILL.includes(t), t);
 });
