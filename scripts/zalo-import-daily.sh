@@ -15,8 +15,6 @@ export PATH="$HOME/.local/node-v24.21.0/bin:$PATH"
 export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest}"
 
 STATE="$ROOT/pipeline/logs/apify-daily.state"  # dùng chung state — không nạp lại
-LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
-MAXTS="$LAST"
 
 # Nạp 1 snapshot; ECONNREFUSED (DB container đang lên lại) thì retry
 # tối đa 5 lần cách 20s. Trả 0 khi đã vào stg.
@@ -36,8 +34,18 @@ import_one() {
   cat "$log"; rm -f "$log"; return 1
 }
 
+# Sort theo MỐC THỜI GIAN basename + khoá state chung với apify-facebook-daily
+# (mở lại 2310-8 R1/a — hai job cùng 00:00 đụng apify-daily.state)
+LOCK_DIR="$STATE.lock"
+i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+  i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }
+  sleep 5
+done
+trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
+LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
+MAXTS="$LAST"
 FAILED=0
-for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | sort); do
+for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do echo "$(basename "$d" | sed 's/.*__//') $d"; done | sort | while read -r _ d; do echo "$d"; done); do
   TS=$(basename "$SNAP" | sed 's/.*__//')
   if [[ "$TS" > "$LAST" ]]; then
     if ! import_one "$SNAP"; then
