@@ -5,9 +5,9 @@ slug: gio-ops-gio-vn
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình T2; chạm pipeline/push-ops-facts.mjs (t3_paths) theo Hỏi-2 lối khuyến nghị
 surfaces: [ui, cli]
-status: verified
-approved_by: Mạnh
-approved_at: 2026-10-24
+status: draft
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-10-24-gio-ops-gio-vn-design.md
 lo_trinh_ma: ON8
 ---
@@ -32,12 +32,13 @@ là cố định; «giờ VN» = `Asia/Ho_Chi_Minh` (GMT+7, không giờ mùa h�
 - AC-7: Given ma trận tuổi/SLO viết trước — (8,4 ngày; 8 ngày) → «trễ 9 giờ», (SLO + 30 giây; SLO) → «trễ 1 phút», (SLO + 59 phút) → «trễ 59 phút», (SLO + 60 phút) → «trễ 1 giờ», (SLO + 47 giờ 59 phút) → «trễ 47 giờ», (SLO + 48 giờ) → «trễ 2 ngày», (SLO + 3 ngày 5 giờ) → «trễ 3 ngày», (30 giờ; 24 giờ) → «trễ 6 giờ», (tuổi = SLO) → `null`, (7 ngày; 8 ngày) → `null`, (tuổi `null`) → `null` —, When gọi `fmtOverdue`, Then đúng 11 giá trị viết trước.
 - AC-8: Given nguồn trễ 8,4 ngày với SLO 8 ngày, nguồn có tuổi đúng bằng SLO, và nguồn 7 ngày với SLO 8 ngày, When render thật bảng mục tiêu, bảng nguồn thu và ô «Nguồn cũ nhất» của tổng quan, Then nguồn trễ hiện «trễ 9 giờ» cạnh tuổi; nguồn nào mang trạng thái quá hạn (`status: "stale"`) thì có chữ «trễ», nguồn không quá hạn thì không — không còn cặp «8 ngày / 8 ngày» không kèm mức trễ.
 - AC-9: Given vùng «Luồng 7 ngày», When render, Then mô tả nói ngày theo giờ VN («ngày theo giờ VN»), không còn «(giờ máy)».
+- AC-10: Given tệp log cổng Kev có một dòng mốc hỏng (`2026-10-23T99:99:99.000Z post 202 …`) và một dòng cắt cụt chỉ còn tiền tố ngày (`2026-10-23T`), xen giữa hai dòng hợp lệ của AC-5, When gọi `parseLog` bản pipeline (bên ghi số đẩy lên cloud) và `readGateFunnel` bản app với cùng `now`, Then cả hai không ném lỗi, bỏ qua dòng hỏng và đếm đúng như AC-5 (hôm nay 1, 7 ngày 2); chiều đỏ: bản sao `ops-flow.mjs` bỏ bước chặn mốc không hợp lệ → `parseLog` ném lỗi và ca đỏ nêu «mốc hỏng». (Bổ sung ở Cổng Bằng chứng 24/10 — Ngoài-1, Mạnh chọn nâng phạm vi sửa ngay.)
 
 ## Coverage
 
 Bỏ quét hình thái — xem dòng `bỏ coverage-scan` trong sổ. Trục: {định dạng mốc (AC-1), mọi chỗ hiện mốc (AC-2 + thước
 AC-3)} · {gom ngày: luồng 7 ngày local (AC-4), funnel hôm nay (AC-5), số đẩy lên cloud (AC-6)} · {mức trễ: hàm (AC-7),
-chỗ hiện (AC-8)} · nhãn múi (AC-9). Biên giờ: 16:59Z/17:00Z (nửa đêm VN), 00:10 VN ngày cũ nhất, chuỗi có `+07:00`, chuỗi không ghi múi;
+chỗ hiện (AC-8)} · nhãn múi (AC-9) · dòng log hỏng ở bên ghi và bên đọc funnel (AC-10). Biên giờ: 16:59Z/17:00Z (nửa đêm VN), 00:10 VN ngày cũ nhất, chuỗi có `+07:00`, chuỗi không ghi múi;
 biên trễ: 30 giây, 59/60 phút, 47 giờ 59 phút/48 giờ, trên 3 ngày, tuổi bằng SLO, chưa trễ, không có tuổi.
 
 ## Đường đo
@@ -60,3 +61,5 @@ biên trễ: 30 giây, 59/60 phút, 47 giờ 59 phút/48 giờ, trên 3 ngày, t
 
 - Phép đo DB chỉ tạo/xoá lược đồ tạm riêng của test; không ghi bảng thật trên DB local dùng chung.
 - Phép đo funnel đọc log giả trong `HOME` tạm; không đọc `~/.openclaw` thật.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-2: ca mức trễ dùng tuổi và trạng thái nhập tay, chưa đi qua bước tính độ tươi thật; nếu sau này đổi cách làm tròn hay cách xét quá hạn mà nhãn «trễ» sai thì phép đo không báo.

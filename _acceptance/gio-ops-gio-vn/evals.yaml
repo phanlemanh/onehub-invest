@@ -66,3 +66,17 @@ evals:
     paths: [app/src/components/ops/collections/sync-activity.tsx, app/tests/gio-ops-gio-vn.test.tsx]
     expected: "exit 0; ca 'GV-AC-9 luồng 7 ngày nói ngày theo giờ VN' — markup có «ngày theo giờ VN», không có «(giờ máy)» ok"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/ops-flow.mjs, pipeline/lib/vn-day.mjs, pipeline/scripts/vn-day.test.mjs]
+    expected: "exit 0; ca 'GV-AC-10 parseLog bản pipeline bỏ qua dòng mốc hỏng' (dòng 99:99:99 và dòng cắt cụt xen giữa hai dòng hợp lệ → không ném, hôm nay 1, 7 ngày 2) và chiều đỏ 'GV-AC-10 bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/collections-queries.ts, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-10 readGateFunnel bản app bỏ qua dòng mốc hỏng' (cùng tệp log của bản pipeline → không ném, hôm nay 1, 7 ngày 2) ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
