@@ -29,7 +29,13 @@ const freshnessClient: QueryClient = {
  * 2026-10-21; cùng lý do với getMarketFreshness ở lib/queries). Khi vắng, hai hàm độ tươi trả rỗng thay vì 500
  * (sự cố prod 24/10) và trang nói rõ «Độ tươi chỉ đo ở máy local». */
 export async function freshnessLocalOnly(): Promise<boolean> {
-  const { rows } = await pool.query<{ r: string | null }>(`SELECT to_regclass('source_registry')::text AS r`);
+  return localOnlyTable("source_registry");
+}
+
+/** Bảng tầng A (source_registry, review_queue, stg_*…) chỉ có ở máy local — leak gate giữ nó khỏi cloud. True khi
+ * bảng vắng ở DB đang nối: trang dùng nó dừng sớm bằng LocalOnlyAlert thay vì ném 42P01 (sự cố prod 24/10). */
+export async function localOnlyTable(table: string): Promise<boolean> {
+  const { rows } = await pool.query<{ r: string | null }>(`SELECT to_regclass($1)::text AS r`, [table]);
   return rows[0]?.r == null;
 }
 
