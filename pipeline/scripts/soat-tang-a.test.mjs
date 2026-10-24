@@ -92,6 +92,7 @@ describe("NT2-AC-1…AC-5 push-ops-facts qua bộ soát", () => {
     { key: "zaloGroups", code: "payload.zaloGroups.unshift({ name: \"nhóm thử\", ownerAccount: N });", path: "zaloGroups[0].ownerAccount" },
     { key: "zaloFlow", code: "payload.zaloFlow[\"2026-10-24\"] = { ghi: N };", path: "zaloFlow.2026-10-24.ghi" },
     { key: "zaloAccounts", code: "payload.zaloAccounts.unshift({ accountId: \"x\", name: null, profile: N });", path: "zaloAccounts[0].profile" },
+    { key: "blocks", code: "payload.blocks.cay = N;", path: "blocks.cay" }, // ON22: năm khối số tổng hợp
     { key: null, code: "payload.rotation.next = [{ id: \"1\", meta: { tags: [\"a\", N] } }];", path: "rotation.next[0].meta.tags[1]" },
   ];
   test("NT2-AC-3 ma trận viết trước: mỗi khoá cấp một + một chuỗi lồng sâu + trường anh em cạnh đường miễn → mỗi bản thoát ≠0, 0 POST, dòng chặn nêu đúng đường JSON viết trước", async () => {
