@@ -1,0 +1,72 @@
+schema_version: 1
+feature_slug: hook-zalo-spool
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc6_spool_replay
+    expected: "exit 0; stdout có 'SPOOL-REPLAY PASS'; lúc collector chết: đúng 2 tệp spool cho 3 lần nhận (1 trùng), log 'spool +1', should-NOT-fire không có ' post 202'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.zc6_spool_replay
+    expected: "exit 0; collector sống lại nhận A, B, D; A đúng một lần; spool rỗng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.zc6_spool_replay
+    expected: "exit 0; dòng log của tin mới khớp ' post 202 {\"accepted\":1' và có group="
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.zc6_reject_4xx
+    expected: "exit 0; stdout có 'REJECT-4XX PASS'; tin 400 sang rejected/, tin lành vẫn gửi; should-NOT-fire: tin 400 không gửi lại, 503 giữ lại spool"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc6_hang_stop
+    expected: "exit 0; stdout có 'HANG-STOP PASS'; collector treo: đúng 2 lượt gửi (should-NOT-fire: tệp spool thứ 2 và 3 KHÔNG được gửi), lượt hook < 25 giây, 4 tệp còn trong spool"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc6_cap_50
+    expected: "exit 0; stdout có 'CAP-50 PASS'; 55 tệp → lượt đầu gửi 51 (50 + tin mới), còn 5, lượt kế xả hết"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.zc6_kev_hang
+    expected: "exit 0; stdout có 'KEV-HANG PASS'; kev.p = null, lượt hook 4–12 giây, log 'kev null'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.zc6_self_contained
+    expected: "exit 0; stdout có 'SELF-CONTAINED PASS'; chỉ import node:, không trỏ dist/src của collector, chạy từ ngoài kho vẫn spool"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.zc6_l1_grep
+    expected: "exit 0; stdout có 'L1-GREP PASS'; 0 dòng khớp biểu thức L1; watchdog trỏ đúng handler"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.collector
+    expected: "exit 0; toàn bộ test collector pass, 0 fail (gồm hook-spool.test.ts)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

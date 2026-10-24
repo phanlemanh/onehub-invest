@@ -163,6 +163,14 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # hook-zalo-spool (ZC6, T3) — handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
+    zc6_spool_replay: "node scripts/hook-zalo-spool/acceptance.mjs spool-replay"
+    zc6_reject_4xx: "node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"
+    zc6_hang_stop: "node scripts/hook-zalo-spool/acceptance.mjs hang-stop"
+    zc6_cap_50: "node scripts/hook-zalo-spool/acceptance.mjs cap-50"
+    zc6_kev_hang: "node scripts/hook-zalo-spool/acceptance.mjs kev-hang"
+    zc6_self_contained: "node scripts/hook-zalo-spool/acceptance.mjs self-contained"
+    zc6_l1_grep: "node scripts/hook-zalo-spool/acceptance.mjs l1-grep"
     # watchdog-l4b-cuoi-ngay (ZC3 nối tiếp) — scan_new_lines trích nguyên văn + watchdog bản chép, HOME giả, stub launchctl/pkill (luật 8)
     zc3b_scan: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"
     zc3b_rotate: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"
