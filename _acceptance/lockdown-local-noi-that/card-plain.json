@@ -1,25 +1,4 @@
 {
   "feature_plain": "Ô Lockdown trên /ops/collections ở máy local thôi báo «Ổn» cho lớp máy chưa kiểm được, và cột «Dòng log cuối» của các job hiện dòng kết quả thật thay vì dòng cảnh báo của Node.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ hiện lớp «Agent-turn hôm nay» là «Chưa kiểm được» khi máy không đọc được log của gateway hôm nay, thay vì «Ổn» xanh như bây giờ."},
-    {"id": "AC-2", "p": "Sẽ hiện «Ổn» khi log hôm nay có 0 lượt agent, và «Hỏng» kèm số lượt khi có lượt agent."},
-    {"id": "AC-3", "p": "Sẽ đọc đúng tệp log của ngày theo giờ Việt Nam, kể cả trong khoảng 0h–7h sáng, khi ngày UTC vẫn còn là hôm trước."},
-    {"id": "AC-6", "p": "Sẽ hiện ở cột «Dòng log cuối» của các job dòng kết quả cuối cùng (ví dụ «sync xong …»), bỏ qua dòng cảnh báo của Node, ở cả số máy local đẩy lên lẫn trang chạy ở máy local."}
-  ],
-  "wont_do": [
-    {"id": "AC-4", "p": "Chặn «Ổn» xanh cho bốn lớp L1–L4 khi watchdog không chứng được nó đang canh: log vắng, dòng cuối báo sự cố, hoặc dòng «ok» cuối cũ hơn 15 phút đều làm L4 hiện «Hỏng» và L1–L3 «Chưa kiểm được» (theo Hỏi-1, lối A). Kết quả như nhau dù app chạy từ thư mục app/ hay từ gốc kho."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG ghi «Không có agent-turn hôm nay» và không thêm mục «Khẩn» khi máy chưa kiểm được; khi có lượt agent thì mục «Khẩn» vẫn hiện như cũ."},
-    {"id": "OOS-1", "p": "KHÔNG đổi cách ô Lockdown hiện trên cloud và không đổi số lockdown đẩy lên cloud — việc đó thuộc ON23."},
-    {"id": "OOS-2", "p": "KHÔNG đổi phần dò hạ tầng (OpenClaw chạy, cổng :8009, :9210) và không sửa script watchdog."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Đã phủ đủ bốn trục: lớp agent-turn (log vắng, 0 lượt, 2 lượt, đêm khuya giờ VN), watchdog (vắng, ok mới, báo sự cố, ok cũ) × ba cách chạy app, chữ trên ô khi chưa kiểm, và dòng log cuối (5 mẫu, trong đó có mẫu log thật hôm nay) ở cả hai nơi đọc."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Phản biện thấy máy đã tự quyết một việc lẽ ra người phải quyết: khi watchdog không có log, ô nên báo đỏ «Hỏng» hay xám «Chưa kiểm được». Dòng «ok» cũ từ hôm qua cũng sẽ vẫn hiện «Ổn». Đã chuyển thành Hỏi-1 cho anh, máy khuyên lối A."},
-    {"i": 1, "p": "Phép đo cũ không thử đúng ca gây lỗi gốc, là app chạy từ thư mục app/. Đã thêm ca này và ca chạy từ gốc kho."},
-    {"i": 2, "p": "Phép đo «đúng ngày giờ máy» cũ không ghim kết quả và sẽ đỏ oan trên máy để giờ UTC. Đã ghim múi giờ VN, ghim kết quả, và thêm chiều đỏ."},
-    {"i": 3, "p": "Phép đo ô Lockdown cũ dùng dữ liệu tự dựng và bỏ sót vế «nằm trong nhóm Chưa kiểm được». Đã đổi sang dùng đầu ra thật của hàm và đo đủ ba vế."},
-    {"i": 4, "p": "Phép đo dòng log cũ chỉ ghim 2 trên 5 kết quả và chỉ xem hàm có được nhắc tới không. Đã ghim đủ 10 kết quả và đo đường đọc thật ở cả hai nơi."}
-  ]
+  "scope_plain": "Phần ô Lockdown hiện trên cloud bằng số máy local đẩy lên vẫn để ON23; riêng L4b trên cloud đổi sang «Chưa kiểm được» như anh đã nhận ở Gate 1.5."
 }
