@@ -202,7 +202,7 @@ async function main() {
   if (!token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
   const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(() => "");
   const { funnel, health, groups } = parseLog(logText);
-  const client = new pg.Client({ connectionString: LOCAL_URL });
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
     scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
