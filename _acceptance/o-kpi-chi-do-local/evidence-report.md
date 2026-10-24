@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 12e4d7874da733569512bc40a3368c396c6b9c3a
+verified_commit: 82c3c83865da1a326abfec8fe0c9ba52deb07963
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -206,3 +206,7 @@ Round 1: E10 failed — /ops/collections hiện Alert lỗi ở cả ba trạng 
 Round 2: mọi eval máy và mọi lệnh suite đều xanh, E10 chụp lại đủ 12 khung, /ops/collections không còn Alert lỗi. REJECT vì rà soát tìm ra ba lỗi trong hợp đồng (RotationPanel câu «mọi thị trường đều tươi» khi không đo được, mục «Hỏng» giả của lockdown trong «Cần chú ý» trên cloud, hai badge xanh còn lại ở stale) mà test hiện tại không bắt được. Returned to implementation.
 Round 3 (lối ra ON3, đổi khuôn): mọi eval máy (E1-E7, E9, E10) và bốn lệnh suite đều xanh, E10 chụp lại đủ 12 khung; rà soát không có finding trong hợp đồng. PENDING-JUDGMENT vì E8 còn hai lens UNCERTAIN (nguồn số phễu ô «Cổng S03 hôm nay» trên cloud; số Alert info của /ops/collections khi không có số) — người quyết ở Cổng 2.
 
+
+### Re-pin lần 1 — 2026-10-24, do ghim lại sau gộp main có ON12 (đổi chữ máy thu/máy chủ)
+run_id: repin-20261024T234416Z-12233
+sha: 82c3c83865da1a326abfec8fe0c9ba52deb07963 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E8, E10 (E10 không khai paths) · diff chạm vật đo ngoài làn máy: E8 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-8, AC-10
