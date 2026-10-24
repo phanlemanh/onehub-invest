@@ -8,14 +8,14 @@ evals:
     executor: test
     cmd: config:executors.test.pipeline
     paths: [pipeline/lib/deal-plausibility.mjs, pipeline/scripts/deals-phi-ly.test.mjs]
-    expected: "exit 0; ca 'DP-AC-1 ma trận lý do' với bảng viết trước 12 dòng = 12 assert (diện tích null/0 → thieu-dien-tich; 9 và 1001 → dien-tich-ngoai-khoang; 10 m² 0PN và 1000 m² 3PN → null; 11 PN → phong-ngu-ngoai-khoang; 36 m² 3PN, 37 m² 2PN, 19 m² 1PN → phong-qua-nho; 40 m² 2PN, 60 m² 3PN, 80 m² null PN → null); thứ tự xét được ghim bằng ca 0 m² 11PN → thieu-dien-tich"
+    expected: "exit 0; ca 'DP-AC-1 ma trận lý do' với bảng viết trước 13 dòng = 13 assert (diện tích null/0 → thieu-dien-tich; 9 và 1001 → dien-tich-ngoai-khoang; 10 m² 0PN và 1000 m² 3PN → null; 300 m² 11 PN → phong-ngu-ngoai-khoang; 36 m² 3PN, 37 m² 2PN, 19 m² 1PN → phong-qua-nho; 40 m² 2PN, 60 m² 3PN, 80 m² null PN → null); thứ tự xét được ghim bằng ca 0 m² 11PN → thieu-dien-tich"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.pipeline
     paths: [pipeline/refresh-bait-gap.mjs, pipeline/lib/deal-plausibility.mjs, pipeline/scripts/deals-phi-ly.test.mjs]
-    expected: "exit 0; ca 'DP-AC-2 loaiTinPhiLy' trên fixture trong BEGIN…ROLLBACK (phường lấy từ v_ruler_p2_area, không có phường nào → ca FAIL có tên, không skip; 4 tin P1 của một người bán fixture: hợp lý, 36 m² 3PN, thiếu diện tích, 5000 m²): (a) gọi loaiTinPhiLy với đúng 4 tin → tin hợp lý giữ bait_gap_pct, ba tin kia NULL, ops_audit thêm ĐÚNG 1 dòng action 'bait-gap:loai-phi-ly' với total = 3, by_reason bằng {thieu-dien-tich:1, dien-tich-ngoai-khoang:1, phong-qua-nho:1}, offer_ids bằng tập 3 mã fixture; (b) chiều âm cùng fixture: gọi với chỉ tin hợp lý → số dòng ops_audit trước = sau; ca 'DP-AC-2 refreshBaitGap giữ registry người bán' : chạy refreshBaitGap trên fixture → ba tin phi lý NULL, còn sellers.flags median_gap_pct và n_good_deals của người bán fixture bằng giá trị tính tay trên CẢ 4 tin (luật chạy sau bước người bán); chiều đỏ: bản sao gọi luật trước bước người bán cho median khác"
+    expected: "exit 0; ca 'DP-AC-2 loaiTinPhiLy' trên fixture trong BEGIN…ROLLBACK (phường lấy từ v_ruler_p2_area, không có phường nào → ca FAIL có tên, không skip; 4 tin P1 của một người bán fixture: hợp lý, 36 m² 3PN, thiếu diện tích, 5000 m²): (a) gọi loaiTinPhiLy với đúng 4 tin → tin hợp lý giữ bait_gap_pct, ba tin kia NULL, ops_audit thêm ĐÚNG 1 dòng action 'bait-gap:loai-phi-ly' với total = 3, by_reason bằng {thieu-dien-tich:1, dien-tich-ngoai-khoang:1, phong-qua-nho:1}, offer_ids bằng tập 3 mã fixture; (b) chiều âm cùng fixture: gọi với chỉ tin hợp lý → số dòng ops_audit trước = sau; ca 'DP-AC-2 refreshBaitGap giữ registry người bán' : chạy refreshBaitGap trên fixture → ba tin phi lý NULL, còn sellers.flags median_gap_pct và n_good_deals của người bán fixture bằng giá trị tính tay trên CẢ 4 tin (luật chạy sau bước người bán); đối chứng: trung vị tính trên cột bait_gap_pct SAU luật (chỉ tin hợp lý, = 10) khác registry (= 25) — luật chạy trước bước người bán thì registry mang số ấy"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
