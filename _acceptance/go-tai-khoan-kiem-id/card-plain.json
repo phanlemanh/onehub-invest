@@ -1,0 +1,3 @@
+{
+  "feature_plain": "Nút «Gỡ tài khoản thu» trên trang quản lý nguồn chỉ đăng xuất được đúng tài khoản có trong danh sách; gửi mã rỗng, mã có khoảng trắng hay mã lạ thì bị từ chối trước khi đụng tới phần mềm thu Zalo."
+}
