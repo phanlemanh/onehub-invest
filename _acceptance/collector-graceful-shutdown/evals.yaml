@@ -1,0 +1,86 @@
+schema_version: 1
+feature_slug: collector-graceful-shutdown
+evals:
+  - id: E1
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.collector_check
+    expected: "exit 0; tsc --noEmit không lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.script.collector_test_clean
+    expected: "exit 0; 0 fail, 0 skip; các ca graceful-shutdown (đơn vị + tích hợp) đều chạy và xanh, gồm ca tích hợp 'SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot' và ca tích hợp host ảnh treo vĩnh viễn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_deadline
+    expected: "exit 0; stdout có 'DEADLINE PASS'; deadline 45000ms, ngưỡng ảnh 10000ms, plist ExitTimeOut 60; main.ts không ghi đè deadlineMs; should-NOT-fire: luật đỏ khi deadline = 60s, 75s hoặc ngưỡng ảnh = deadline"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_skip_media
+    expected: "exit 0; stdout có 'SKIP-MEDIA PASS'; skipMedia=true với host ảnh treo: tin vào snapshot, gọi host ảnh 0 lần, 0 tệp ảnh, flush < 2000ms; đối chứng skipMedia=false: có tải ảnh (≥1 lần gọi, ≥1 tệp ảnh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_process
+    expected: "exit 0; stdout có 'PROCESS PASS'; SIGTERM trên main.js thật: 202 qua keep-alive, keep-alive rảnh bị server đóng, exit code 0 signal null, tin đã ack có trong snapshot, log đóng HTTP đứng trước flushed; SIGINT buffer rỗng: exit 0, should-NOT-fire 0 snapshot và không có dòng flushed"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.collector_plist_lint
+    expected: "exit 0; stdout '<đường dẫn plist>: OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_hang_default
+    expected: "exit 0; stdout có 'HANG-DEFAULT PASS'; deadline MẶC ĐỊNH 45s (không ghi đè) + 24 ảnh trên host treo: exit 0 trước 45000ms, tin có trong snapshot, buffer rỗng; should-NOT-fire: không có dòng 'flush quá deadline'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_inflight
+    expected: "exit 0; stdout có 'INFLIGHT PASS'; main.js thật: POST đã gửi header + nửa body lúc SIGTERM được làm nốt (202), tin có trong snapshot, exit code 0; should-NOT-fire: connection mới sau SIGTERM bị từ chối"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.shutdown_lost_exit
+    expected: "exit 0; stdout có 'LOST-EXIT PASS'; quá deadline còn 3 tin → exit khác 0 + 'MẤT 3 tin'; tín hiệu lần 2 còn 2 tin → exit khác 0 + 'MẤT 2 tin'; should-NOT-fire: buffer rỗng → exit 0, không có dòng MẤT"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.shutdown_periodic_hang
+    expected: "exit 0; stdout có 'PERIODIC-HANG PASS'; lượt flush định kỳ (không deadline) đang tải 24 ảnh treo, SIGTERM 2s sau: exit 0 trước 45000ms, tin có trong snapshot, buffer rỗng; should-NOT-fire: không 'quá deadline', không 'MẤT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_stalled_post
+    expected: "exit 0; stdout có 'STALLED-POST PASS'; main.js thật: tin A ack 202, POST B treo nửa body, SIGTERM → exit code 0 signal null sau < 10000ms, tin A có trong snapshot; should-NOT-fire: không 'MẤT', không 'quá deadline'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.shutdown_p3_repeat
+    expected: "exit 0; stdout có 'P3x10 PASS' và 10 dòng 'P3 lần N xanh' — ca tích hợp POST treo nửa body xanh 10/10 lần liên tiếp (vòng 3 đỏ 4/5)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

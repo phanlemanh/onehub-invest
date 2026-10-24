@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 
 import { createAgentServer } from "./server.js";
+import { installGracefulShutdown } from "./graceful.js";
 
 /**
  * main — Collector API daemon (ADR-0006): localhost:9210.
@@ -37,3 +38,39 @@ setInterval(() => {
     .then((m) => m && console.log(`flush → ${m.snapshotId}`))
     .catch((err) => console.error("flush failed (giữ buffer, thử lại sau 60s):", err.message));
 }, 60_000).unref();
+
+// launchd gửi SIGTERM khi bootout/restart; tay Ctrl-C là SIGINT. Đóng HTTP
+// trước (không nhận POST mới), rồi LẶP flush buffer thành snapshot tới khi
+// hết buffer mới thoát — tin đã ack 202 không được mất âm thầm. Deadline 45s
+// nằm trong ExitTimeOut 60s của plist — không đua SIGKILL. Ảnh đang tải bị
+// huỷ theo deadline (còn 10s) — tin quan trọng hơn ảnh; buffer còn tin lúc
+// thoát → exit(1) cho giám sát thấy (claudedp-2310-3).
+installGracefulShutdown(
+  {
+    on: (sig, fn) => process.on(sig, fn),
+    off: (sig, fn) => process.off(sig, fn),
+    exit: (code) => process.exit(code),
+    log: (line) => console.log(line),
+  },
+  {
+    flush: (flushOpts) => agent.flush(flushOpts),
+    close: () => {
+      // P3 (claudedp-2310-3 vòng 3): POST gửi nửa body rồi im → server.close
+      // callback KHÔNG BAO GIỜ tới nếu chờ connection treo → mất cả buffer
+      // vì deadline cạn lúc còn await close(). Race với 3s: hết giờ thì bỏ
+      // chờ, flush ngay — request dở không ack thì hook ZC6 spool gửi lại
+      // (collector/openclaw/handler.js + core/agent-delivery.ts), không phụ thuộc agent.
+      const giveUp = new Promise<void>((r) => setTimeout(r, 3_000).unref?.());
+      const closing = new Promise<void>((resolve) => {
+        server.close(() => resolve()); // resolve khi mọi request đang chạy xong
+        // close() chỉ chặn connection MỚI; closeIdleConnections cắt nốt các
+        // keep-alive RẢNH nhưng KHÔNG giết request đang đọc body (chưa ack
+        // 202) — khác closeAllConnections (2310-3b): POST đang chạy được làm
+        // nốt trong deadline rồi mới tới lượt flush.
+        if (typeof server.closeIdleConnections === "function") server.closeIdleConnections();
+      });
+      return Promise.race([closing, giveUp]);
+    },
+    pendingCount: () => agent.stats().buffered,
+  },
+);

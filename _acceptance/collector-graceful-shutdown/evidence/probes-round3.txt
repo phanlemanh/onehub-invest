@@ -1,0 +1,36 @@
+# Probe vòng 3 — verifier, verified_commit 29050d4; collector/dist build từ cây này. Mọi probe luôn exit 0, đọc dòng số liệu.
+## P1 (tệp probe vòng 1, không sửa) — node _acceptance/collector-graceful-shutdown/evidence/P1-deadline-probe.mjs $PWD 24 · 2026-10-23T09:27:49Z
+ack=202 images=24 · exit sau 35004ms · code 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35003ms shutdown: flushed hanoi__zalo-agent__2026-10-23T092749746
+  log: 35003ms shutdown: flush xong — thoát
+## P2 — node _acceptance/collector-graceful-shutdown/evidence/P2-inflight-periodic-probe.mjs $PWD 24 2000 · 2026-10-23T09:28:29Z
+N=24 D=2000ms: ack=202 · SIGTERM sau 2004ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 35007ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35007ms shutdown: flushed hanoi__zalo-agent__2026-10-23T092829054
+  log: 35007ms shutdown: flush xong — thoát
+## P2 đối chứng — node .../P2-inflight-periodic-probe.mjs $PWD 24 20000 · 2026-10-23T09:29:06Z
+N=24 D=20000ms: ack=202 · SIGTERM sau 20005ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 35004ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 24
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35004ms shutdown: flushed hanoi__zalo-agent__2026-10-23T092906116
+  log: 35004ms shutdown: flush xong — thoát
+## P3 stall — node .../P3-stalled-post-probe.mjs $PWD stall (main.js thật) · 2026-10-23T09:30:08Z
+stall: tin A trả 202 trước SIGTERM · POST treo (nửa body) · thoát sau 3010ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+  log: shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: shutdown: flushed hanoi__zalo-agent__2026-10-23T093012234
+  log: shutdown: flush xong — thoát
+## P3 ka — node .../P3-stalled-post-probe.mjs $PWD ka (main.js thật) · 2026-10-23T09:30:12Z
+ka: POST keep-alive dở lúc SIGTERM trả 202 (header connection: keep-alive) sau 313ms · socket server đóng chưa · thoát sau 3013ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+## P3 reuse — node .../P3-stalled-post-probe.mjs $PWD reuse (main.js thật) · 2026-10-23T09:30:15Z
+reuse: POST 1 (dở lúc SIGTERM) trả 202 · POST 2 trên cùng socket, 1,3s sau SIGTERM, trả 202 · thoát sau 3011ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+## P4 (mới, verifier) — auto-flush trong handle() đang tải 24 ảnh treo, POST kích còn chờ 202; SIGTERM 2s sau · node .../P4-autoflush-probe.mjs $PWD · 2026-10-23T09:30:44Z
+P4 auto-flush: SIGTERM 2s sau POST kích auto-flush · thoát sau 35004ms · mã 0 · snapshot 1 · tin có trong snapshot true · buffered 0 · POST kích nhận HTTP 202 · gọi host ảnh 16
+## P5 (mới, verifier) — tin A 24 ảnh treo; POST B gửi nốt body 5s sau SIGTERM (sau mốc bỏ chờ close 3s) · node .../P5-late-post-probe.mjs $PWD 5000 · 2026-10-23T09:31:43Z
+P5 late-post (B gửi nốt ở 5000ms sau SIGTERM): thoát sau 35005ms · mã 0 · snapshot 2 · A trong snapshot true · B trong snapshot true · B nhận HTTP/1.1 202 Accepted · buffered 0
+  log: 35005ms shutdown: flushed hanoi__zalo-agent__2026-10-23T093146259
+  log: 35005ms shutdown: flushed hanoi__zalo-agent__2026-10-23T093218263 (bỏ media — sát deadline)
+## Tái hiện E2 đỏ — ca «P3: POST gửi NỬA body rồi im» trong collector/src/test/graceful-shutdown-integration.test.ts
+## cd collector && node --test --test-name-pattern=P3 dist/test/graceful-shutdown-integration.test.js
+repo worktree: 3/3 lần đỏ, «Error: read ECONNRESET» sau khoảng 6ms (cộng lượt npm test chính thức = 4/4)
+bản chép dist trong scratchpad, test nguyên văn: 2/10 xanh, 8/10 đỏ (cùng ECONNRESET)
+bản chép, chỉ chèn `await sleep(200)` sau sock.write và trước SIGTERM: 5/5 xanh (khoảng 3040ms mỗi lần)
