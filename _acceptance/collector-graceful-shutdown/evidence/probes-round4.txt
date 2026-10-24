@@ -1,0 +1,84 @@
+# Probe vòng 4 — verifier, verified_commit 9df28ce; collector/dist build từ cây này (lệnh E12, 15:49Z). Mọi probe luôn exit 0, đọc dòng số liệu.
+## P1 — node _acceptance/collector-graceful-shutdown/evidence/P1-deadline-probe.mjs $PWD 24 · 2026-10-23T15:52:11Z
+ack=202 images=24 · exit sau 35005ms · code 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35005ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155211038
+  log: 35005ms shutdown: flush xong — thoát
+## P2 — node _acceptance/collector-graceful-shutdown/evidence/P2-inflight-periodic-probe.mjs $PWD 24 2000 · 2026-10-23T15:52:46Z
+N=24 D=2000ms: ack=202 · SIGTERM sau 2006ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 35010ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35010ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155246088
+  log: 35010ms shutdown: flush xong — thoát
+## P2 đối chứng — node .../P2-inflight-periodic-probe.mjs $PWD 24 20000 · 2026-10-23T15:53:23Z
+N=24 D=20000ms: ack=202 · SIGTERM sau 20006ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 35008ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 24
+  log: 1ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35008ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155323163
+  log: 35008ms shutdown: flush xong — thoát
+## P3 stall — node .../P3-stalled-post-probe.mjs $PWD stall (main.js thật) · 2026-10-23T15:54:26Z
+stall: tin A trả 202 trước SIGTERM · POST treo (nửa body) · thoát sau 3014ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+  log: collector api :55415 (city=hanoi, 1 key(s)) — POST /agent-report
+  log: shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: shutdown: flushed hanoi__zalo-agent__2026-10-23T155429336
+  log: shutdown: flush xong — thoát
+## P3 ka — node .../P3-stalled-post-probe.mjs $PWD ka (main.js thật) · 2026-10-23T15:54:29Z
+ka: POST keep-alive dở lúc SIGTERM trả 202 (header connection: keep-alive) sau 313ms · socket server đóng chưa · thoát sau 3017ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+  log: collector api :55418 (city=hanoi, 1 key(s)) — POST /agent-report
+  log: shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: shutdown: flushed hanoi__zalo-agent__2026-10-23T155432657
+  log: shutdown: flush xong — thoát
+## P3 reuse — node .../P3-stalled-post-probe.mjs $PWD reuse (main.js thật) · 2026-10-23T15:54:32Z
+reuse: POST 1 (dở lúc SIGTERM) trả 202 · POST 2 trên cùng socket, 1,3s sau SIGTERM, trả 202 · thoát sau 3012ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+  log: collector api :55425 (city=hanoi, 1 key(s)) — POST /agent-report
+  log: shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: shutdown: flushed hanoi__zalo-agent__2026-10-23T155435984
+  log: shutdown: flush xong — thoát
+## P4 — node .../P4-autoflush-probe.mjs $PWD · 2026-10-23T15:54:36Z
+P4 auto-flush: SIGTERM 2s sau POST kích auto-flush · thoát sau 35011ms · mã 0 · snapshot 1 · tin có trong snapshot true · buffered 0 · POST kích nhận HTTP 202 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35011ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155436046
+  log: 35011ms shutdown: flush xong — thoát
+## P5 — node .../P5-late-post-probe.mjs $PWD 5000 · 2026-10-23T15:55:13Z
+P5 late-post (B gửi nốt ở 5000ms sau SIGTERM): thoát sau 35011ms · mã 0 · snapshot 2 · A trong snapshot true · B trong snapshot true · B nhận HTTP/1.1 202 Accepted · buffered 0
+  log: 1ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35009ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155516382
+  log: 35011ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155548388 (bỏ media — sát deadline)
+  log: 35011ms shutdown: flush xong — thoát
+## P6 (mới, verifier vòng 4) — PL4 kev + ZC1 tin chỉ ảnh qua shutdown; host ảnh treo, deadlineMs 15000; giữa flush ingest I3 + lặp I1 · node .../P6-kev-zc1-probe.mjs $PWD · 2026-10-23T15:56:54Z
+P6 kev+ZC1: POST đầu 202 {"accepted":3,"duplicates":0} · giữa flush: I3 {"status":202,"body":{"accepted":1,"duplicates":0}} · lặp I1 {"status":202,"body":{"accepted":0,"duplicates":1}}
+P6 kev+ZC1: thoát sau 5013ms · mã 0 · snapshot 2 · schemaVersion 3,3 · tin trong snapshot 4 (sourceId khác nhau 4) · T 1 · I1 1 · I2 1 · I3 1 · T.meta.kev {"p":0.12,"model":"probe","threshold":0.5,"at":"2026-10-23T15:56:54.737Z"} · buffered 0 · gọi host ảnh 2
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 15000ms)
+  log: 5012ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155654742
+  log: 5013ms shutdown: flushed hanoi__zalo-agent__2026-10-23T155659753 (bỏ media — sát deadline)
+  log: 5013ms shutdown: flush xong — thoát
+## P3 lặp thêm (ngoài E12) — cd collector && node --test --test-name-pattern=P3 dist/test/graceful-shutdown-integration.test.js
+2026-10-23T15:50:39Z
+extra 1 xanh pass=1 fail=0 3026.799541ms
+extra 2 xanh pass=1 fail=0 3025.311834ms
+extra 3 xanh pass=1 fail=0 3024.468875ms
+extra 4 xanh pass=1 fail=0 3027.065792ms
+extra 5 xanh pass=1 fail=0 3023.785084ms
+extra 6 xanh pass=1 fail=0 3025.539ms
+extra 7 xanh pass=1 fail=0 3025.478375ms
+extra 8 xanh pass=1 fail=0 3037.30825ms
+extra 9 xanh pass=1 fail=0 3025.994833ms
+extra 10 xanh pass=1 fail=0 3028.427333ms
+extra 11 xanh pass=1 fail=0 3039.484167ms
+extra 12 xanh pass=1 fail=0 3036.860041ms
+extra 13 xanh pass=1 fail=0 3058.463958ms
+extra 14 xanh pass=1 fail=0 3046.478958ms
+extra 15 xanh pass=1 fail=0 3046.57375ms
+2026-10-23T15:51:26Z
+load: 18 busy loops
+load 1 xanh pass=1 3057.167291ms
+load 2 xanh pass=1 3022.402875ms
+load 3 xanh pass=1 3028.342334ms
+load 4 xanh pass=1 3051.652583ms
+load 5 xanh pass=1 3013.641459ms
+tổng P3 vòng 4: 1 (suite E2) + 10 (E12) + 15 (lặp thường) + 5 (dưới tải 18 vòng bận CPU) = 31 xanh / 0 đỏ
+## Đối chứng E12 — bản chép collector trong scratchpad (src HEAD, node_modules symlink), chỉ thay test P3 bằng bản d6d9abe (vòng 3), build tsc · 2026-10-23T15:57:45Z
+test vòng 3 (d6d9abe) trên mã HEAD: xanh 0/10, đỏ 10/10 — E12 phân biệt được test cũ với test mới
+## Diff mã sản phẩm vòng 3 ↔ vòng 4
+git diff --stat d6d9abe 0d22845 -- collector/src/api collector/src/core → chỉ collector/src/api/main.ts (2 thêm, 1 bớt; chú thích dòng 61–62)
+git diff --stat 0d22845 HEAD -- collector/src → rỗng
+patch tính năng (merge-base..306f386 so với merge-base..0d22845, chỉ dòng +/-, api+core): 254 vs 255 dòng, khác duy nhất dòng chú thích main.ts
+29050d4 → d6d9abe (api+core): server.ts (+AgentKevFact, meta.kev, sourceIdOf ZC1), storage.ts + types.ts (schemaVersion 3) = PL4/ZC1 từ main

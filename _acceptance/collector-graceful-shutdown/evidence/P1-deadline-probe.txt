@@ -1,0 +1,10 @@
+# P1 — verifier probe, round 1, verified_commit 863c15b; lệnh: node _acceptance/collector-graceful-shutdown/evidence/P1-deadline-probe.mjs $PWD <N> (cần collector/dist đã build)
+## N=24 ảnh, host treo, số mặc định (deadline 45s, timeout ảnh 10s, concurrency 4)
+ack=202 images=24 · exit sau 45001ms · code 0 · snapshot hoàn tất 0 · buffered 1 · gọi host ảnh 20
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 45001ms shutdown: flush quá deadline — thoát
+## Đối chứng N=8
+ack=202 images=8 · exit sau 20010ms · code 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 8
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 20010ms shutdown: flushed hanoi__zalo-agent__2026-10-23T014932050
+  log: 20010ms shutdown: flush xong — thoát

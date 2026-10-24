@@ -112,7 +112,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 | S02 | AirDNA | active (19:05; rotation 34 tỉnh) | hiệu chuẩn |
 | S03 | Zalo | active (hook liên tục; lockdown 7 lớp + watchdog) | media CHỜ tin ảnh (dbg-media) |
 | S04 | OSM | completed (one-time) | |
-| S05 | Facebook | paused (credit cạn; reset 7/11 — chờ đánh giá) | 118 offers giữ |
+| S05 | Facebook | paused — Mạnh chốt 24/10: Apify trả 402 hết credit từ ~21/10, chờ credit reset 7/11; `source_registry.status=paused` nên check-freshness không đo | 118 offers giữ |
 | S06 | Chợ Tốt | active (05:30; ruler 150 phường) | phone reveal chưa làm |
 | S07 | Batdongsan | rejected-Apify | tự build nếu cần |
 
@@ -196,6 +196,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 16. **Ops trên cloud đọc số tổng hợp do máy local tính sẵn** (24/10, «Chọn A», ADR-0014): `push-ops-facts.mjs` đẩy
    độ tươi/SLO, job, lockdown, bản ghi 24h, số thẻ chờ (chỉ tổng hợp + mã `S0x`, qua bộ soát tầng A), mỗi khối có mốc
    đo; trang cloud chỉ đọc bảng đó, facts cũ > 45′ báo «máy local không đẩy số». Loại sync bản gọt và tunnel.
+17. **Kiến trúc dữ liệu «tin → căn» theo RESO DD 2.1** (23/10, **ADR-0013**): căn = UPI + `Building`, tin = `Property`;
+   toà = `BuildingName`, phân khu = `ComplexName`, trục = extension `Stack`; UPI kiểu VN `urn:onehub:upi`; phường/xã →
+   `City`; mọi giá trị máy/người ghi `FieldAssertion`; trạng thái chỉ theo bằng chứng. Mọi việc chạm dữ liệu tin/căn
+   kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -236,7 +240,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | # | Việc | Trạng thái |
 |---|---|---|
 | N1 | media Zalo: đọc dbg-media khi tin ảnh về → map → bỏ debug | ⏳ chờ dữ liệu |
-| N2 | FB: user quyết định mua Apify Starter — ĐÃ CHỐT 22/10, S05 active | ✅ |
+| N2 | FB: Apify Starter (chốt 22/10) chưa có hiệu lực — vẫn 402 hết credit; S05 TẠM DỪNG từ 24/10 tới khi credit reset 7/11 (bật lại: `status=active` khi lượt thu chạy được) | ⏸ |
 | N3 | AirDNA rotation (passive) | 🔄 sống |
 | N4 | S06 phone reveal per-ad (cap 50/ngày, top-deals) | ⬜ |
 
