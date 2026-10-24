@@ -5,7 +5,7 @@ slug: ops-review-sources-500-tren-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T2      # hai trang Ops + component nội dung + lib/ops-queries + test; không đụng t3_paths
 surfaces: [ui]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-24T01:48:00Z
 approved_by:
@@ -43,3 +43,8 @@ Bỏ quét hình thái — sự cố hai trang × bảng vắng/có, xem dòng `
 ## Notes
 
 - Đo prod sau deploy (ego lite còn phiên ops, chỉ đọc) — làm sau khi gộp, kết quả báo giám sát; không phải eval máy.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: trên cloud, trang Nguồn dữ liệu chỉ hiện thông báo chỉ-quản-trị-ở-máy-local, không hiện khung tài khoản Zalo chỉ-đọc.
+  - Ngoài-2: thông báo trên cloud không nhắc rằng khung tài khoản Zalo đã vắng.
+  - Ngoài-3: ở máy local, lỗi thật khi đọc nhóm thu vẫn bị nuốt và trang hiện «0 nhóm thu».
