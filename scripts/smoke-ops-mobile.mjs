@@ -218,12 +218,13 @@ if (!tim) {
 console.log(`playwright-core: ${tim.tu}`)
 
 mkdirSync(ANH, { recursive: true })
-const db = new pg.Client({ connectionString: dbUrl() })
-await db.connect()
-const phien = await phienAdminTam(db, "mob")
-const app = await batApp(ROOT)
-let browser
+// Mọi thứ tạo ra (phiên tạm, next dev, trình duyệt) nằm trong try để finally dọn được cả khi app không lên.
+let db, phien, app, browser
 try {
+  db = new pg.Client({ connectionString: dbUrl() })
+  await db.connect()
+  phien = await phienAdminTam(db, "mob")
+  app = await batApp(ROOT)
   browser = await batTrinhDuyet(tim.pw.chromium)
 
   // ---- 390×844 (AC-3) ----
@@ -361,10 +362,10 @@ try {
 } catch (e) {
   check(false, `smoke dừng giữa chừng: ${e.message}`)
 } finally {
-  await browser?.close()
-  await app.tat()
-  const con = await phien.xoa()
-  await db.end()
+  await browser?.close().catch(() => {})
+  await app?.tat()
+  const con = phien ? await phien.xoa() : 0
+  await db?.end().catch(() => {})
   console.log(`dọn: ${con} phiên tạm còn lại`)
 }
 

@@ -42,6 +42,8 @@ export async function batApp(root, { log = console.log } = {}) {
     detached: true,
   })
   let out = ""
+  let loiSpawn = null
+  child.on("error", (e) => (loiSpawn = e))
   child.stdout.on("data", (d) => (out += d))
   child.stderr.on("data", (d) => (out += d))
   const tat = async () => {
@@ -58,6 +60,10 @@ export async function batApp(root, { log = console.log } = {}) {
   }
   const het = Date.now() + 180_000
   while (Date.now() < het) {
+    if (loiSpawn) {
+      await tat()
+      throw new Error(`không bật được next dev: ${loiSpawn.message}`)
+    }
     if (child.exitCode !== null) {
       await tat()
       throw new Error(`next dev thoát sớm (mã ${child.exitCode}):\n${out.slice(-2000)}`)
@@ -77,7 +83,8 @@ export async function batApp(root, { log = console.log } = {}) {
   throw new Error(`next dev không lên trong 180 giây:\n${out.slice(-2000)}`)
 }
 
-/** User admin tạm + phiên tạm; `xoa()` dọn cả hai và trả số phiên tạm còn lại. */
+/** User admin tạm + phiên tạm; `xoa()` dọn cả hai và trả số dòng tạm (user + phiên) còn lại. Phiên không tạo được thì
+ *  xoá luôn user vừa tạo trước khi ném lỗi. */
 export async function phienAdminTam(db, tag) {
   const nonce = randomBytes(6).toString("hex")
   const userId = `verify-${tag}-${nonce}`
@@ -86,13 +93,22 @@ export async function phienAdminTam(db, tag) {
     userId,
     `${nonce}-${tag}@smoke.verify.test`,
   ])
-  await db.query(`INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, now() + interval '30 minutes')`, [token, userId])
+  try {
+    await db.query(`INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, now() + interval '30 minutes')`, [token, userId])
+  } catch (e) {
+    await db.query(`DELETE FROM users WHERE id = $1`, [userId])
+    throw e
+  }
   return {
     token,
     xoa: async () => {
       await db.query(`DELETE FROM sessions WHERE token = $1`, [token])
       await db.query(`DELETE FROM users WHERE id = $1`, [userId])
-      return (await db.query(`SELECT count(*)::int n FROM sessions WHERE token = $1`, [token])).rows[0].n
+      const { rows } = await db.query(
+        `SELECT (SELECT count(*) FROM sessions WHERE token = $1)::int + (SELECT count(*) FROM users WHERE id = $2)::int AS n`,
+        [token, userId],
+      )
+      return rows[0].n
     },
   }
 }
