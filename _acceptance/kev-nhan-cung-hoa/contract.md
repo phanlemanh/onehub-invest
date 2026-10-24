@@ -29,6 +29,7 @@ Source input: lời giao `claudedp-2310-6` và lời MỞ LẠI cùng mã (24/10
 - AC-6: Given một tin có chữ (kể cả có khoảng trắng hay xuống dòng ở hai đầu, kèm hoặc không kèm ảnh), When tính `sourceId`, Then id bằng `sha256(group|ts|text nguyên bản)` cắt 32 ký tự; `' abc '` và `'abc'` ra hai id khác nhau.
 - AC-7: Given tin có text toàn khoảng trắng kèm ảnh, When ingest, Then tin được xử như tin chỉ ảnh: id theo sender + URL (không theo công thức tin chữ), hai sender khác nhau ra hai id, và gửi lại với khoảng trắng khác thì bị khử trùng.
 - AC-8: Given một lô có tin mang `text` không phải chuỗi (`null`, số, object, thiếu), When ingest, Then trả 400 kèm thông điệp, không ném lỗi, và lô hợp lệ kế tiếp vẫn được nhận.
+- AC-10: Given tin chỉ ảnh có phần tử media mang `url` không phải chuỗi (số, object, null) hoặc `url` rỗng nhưng `path` là chuỗi, When ingest, Then tin được nhận (202), không ném lỗi, id băm theo `path`; hai tin cùng nhóm, ts, sender chỉ khác `path` ra hai tin riêng, và gửi lại y hệt thì bị khử trùng. (thêm ở vòng 2 — lỗi ngoài hợp đồng vòng 1: `{url: 5, path}` làm ingest ném, HTTP trả 500 cả lô)
 - AC-9: Given nhánh đã gộp `origin/main`, When chạy toàn bộ test của collector, Then tất cả xanh.
 
 ## Coverage
@@ -52,3 +53,4 @@ Source input: lời giao `claudedp-2310-6` và lời MỞ LẠI cùng mã (24/10
 - Harness `scripts/kev-nhan-cung-hoa/acceptance.mjs` gọi thẳng `createAgentServer()` của bản build: không mở cổng, không chạm :9210, không ghi DB. URL ảnh giả dùng host `.invalid` và `flush({ skipMedia: true })`, nên không có lượt GET nào ra mạng.
 - Kiểm harness biết đỏ (trước verify): trên `origin/main` đỏ ở media-junk, payload-intact, dedup-norm, legacy-id; trên bản vòng 1 bị trả lại (b0ca837) đỏ ở payload-intact và legacy-id — đúng các lỗi lời MỞ LẠI đã nêu.
 - Text toàn khoảng trắng KHÔNG kèm ảnh: id đổi so với công thức cũ (băm như tin chỉ ảnh với sender). Ca này hiếm; ghi vào Known limits khi verify.
+- Vòng 1 (c4ad48a, kiểm trên 664d587): PASS 9/9, nhưng người chấm tìm ra lỗi ngoài hợp đồng — `{url: 5, path: "/a.jpg"}` làm `ingest()` ném (`s.trim is not a function`), HTTP trả 500 cả lô; và `url: ""` làm `path` bị bỏ khi băm nên hai ảnh khác bị gộp. Điều phối liên làn tái hiện được và MỞ LẠI `claudedp-2310-6`. Thêm AC-10 + E10; harness `url-path` đỏ 3 mục trên 8043a63.

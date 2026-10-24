@@ -153,6 +153,7 @@ executors:
     zc1b_dedup_norm: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs dedup-norm"
     zc1b_legacy_id: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs legacy-id"
     zc1b_bad_text: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs bad-text"
+    zc1b_url_path: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs url-path"   # vòng 2 (lỗi ngoài hợp đồng vòng 1)
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"

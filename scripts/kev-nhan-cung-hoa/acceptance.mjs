@@ -2,7 +2,7 @@
 /**
  * Eval máy cho hồ sơ kev-nhan-cung-hoa (ZC1 nối tiếp — cứng hoá ingest của collector API).
  *
- *   node scripts/kev-nhan-cung-hoa/acceptance.mjs <media-junk|payload-intact|dedup-norm|legacy-id|bad-text>
+ *   node scripts/kev-nhan-cung-hoa/acceptance.mjs <media-junk|payload-intact|dedup-norm|legacy-id|bad-text|url-path>
  *
  * AN TOÀN: gọi thẳng createAgentServer() của bản build (collector/dist) với thư mục snapshot tạm —
  * không mở cổng, không chạm :9210, không ghi DB. URL ảnh giả dùng host `.invalid` (ngoài allowlist)
@@ -193,7 +193,36 @@ async function modeBadText() {
   finish("BAD-TEXT");
 }
 
+// AC-10 (vòng 2): url không phải chuỗi / rỗng thì băm theo path, không ném, không gộp nhầm
+async function modeUrlPath() {
+  await withServer(async ({ post }) => {
+    const g = "acc-urlpath";
+    for (const [name, ts, media] of [
+      ["url là số, path là chuỗi", "t1", [{ url: 5, path: "/a.jpg" }]],
+      ["url là object, path là chuỗi", "t2", [{ url: {}, path: "/a.jpg" }]],
+      ["url null, path là chuỗi", "t3", [{ url: null, path: "/a.jpg" }]],
+    ]) {
+      let thrown = null;
+      let r;
+      try {
+        r = post(g, [{ text: "", ts, senderId: "f1", media }]);
+      } catch (e) {
+        thrown = e;
+      }
+      check(thrown === null && r?.status === 202 && r.body.accepted === 1, `${name} → 202 accepted 1, không ném${thrown ? ` (ném: ${thrown.message})` : ""}`);
+    }
+    const a = post(g, [{ text: "", ts: "t4", senderId: "f2", media: [{ url: "", path: "/a.jpg" }] }]);
+    const b = post(g, [{ text: "", ts: "t4", senderId: "f2", media: [{ url: "", path: "/b.jpg" }] }]);
+    check(a.body.accepted === 1, "url rỗng + path A được nhận");
+    check(b.body.accepted === 1 && b.body.duplicates === 0, `should-NOT-fire: url rỗng + path B (cùng nhóm, ts, sender) là tin riêng, được ${JSON.stringify(b.body)}`);
+    const again = post(g, [{ text: "", ts: "t4", senderId: "f2", media: [{ url: "", path: "/a.jpg" }] }]);
+    check(again.body.duplicates === 1, "url rỗng + path A gửi lại → trùng");
+  });
+  finish("URL-PATH");
+}
+
 const modes = {
+  "url-path": modeUrlPath,
   "media-junk": modeMediaJunk,
   "payload-intact": modePayloadIntact,
   "dedup-norm": modeDedupNorm,

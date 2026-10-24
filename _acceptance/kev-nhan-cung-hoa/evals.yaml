@@ -63,3 +63,10 @@ evals:
     cmd: config:executors.test.collector
     expected: "exit 0; toàn bộ test collector pass, 0 fail (gồm kev-nhan-cung-hoa.test.ts của ZCode)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.zc1b_url_path
+    expected: "exit 0; stdout có 'URL-PATH PASS'; url số/object/null + path chuỗi đều 202 accepted 1 không ném; should-NOT-fire: url rỗng + path khác nhau là 2 tin; gửi lại y hệt duplicates 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
