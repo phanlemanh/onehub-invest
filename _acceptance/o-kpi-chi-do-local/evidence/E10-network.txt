@@ -1,0 +1,2 @@
+network: driver playwright-cli (khong co read_network_requests) -> n-a (driver)
+server log: 5x relation "airbnb_snapshots" does not exist @ getFlowDays (collections-queries.ts:101) <- CollectionsPage, moi lan mo /ops/collections
