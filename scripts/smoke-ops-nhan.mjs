@@ -8,7 +8,7 @@
 // smoke-portal-compliance.mjs) — không đụng dữ liệu khác. Chạy: node scripts/smoke-ops-nhan.mjs
 import { spawn } from "node:child_process"
 import { randomBytes } from "node:crypto"
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import net from "node:net"
 import path from "node:path"
@@ -83,6 +83,16 @@ async function batApp() {
   if (process.env.BASE_URL) return { base: process.env.BASE_URL.replace(/\/$/, ""), tat: async () => {} }
   const port = await conTrong()
   const base = `http://localhost:${port}`
+  // `next dev` tự ghi app/next-env.d.ts và tạo app/AGENTS.md — chụp lại rồi trả về đúng như cũ khi tắt, để lượt chấm
+  // không làm đổi cây (lưới «cây đổi trong lượt chấm»).
+  const SINH = ["app/next-env.d.ts", "app/AGENTS.md"].map((t) => path.join(ROOT, t))
+  const truoc = new Map(SINH.map((t) => [t, existsSync(t) ? readFileSync(t) : null]))
+  const traLai = () => {
+    for (const [t, noi] of truoc) {
+      if (noi === null) rmSync(t, { force: true })
+      else if (!existsSync(t) || !readFileSync(t).equals(noi)) writeFileSync(t, noi)
+    }
+  }
   const child = spawn("npx", ["next", "dev", "-p", String(port)], {
     cwd: path.join(ROOT, "app"),
     env: { ...process.env, DATABASE_URL: DB, NEXT_TELEMETRY_DISABLED: "1" },
@@ -98,6 +108,8 @@ async function batApp() {
     } catch {
       /* đã thoát */
     }
+    await new Promise((r) => setTimeout(r, 1500))
+    traLai()
   }
   const het = Date.now() + 180_000
   while (Date.now() < het) {
