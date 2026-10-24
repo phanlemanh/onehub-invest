@@ -5,3 +5,10 @@
 {"ts":"2026-10-24T09:29:19Z","round":1,"evalId":"E5","run_id":"stg-s08-inventory-E5-20261024T162919","exit_code":0,"cmd":"cd pipeline && node scripts/check-s08-inventory.mjs local-only"}
 {"ts":"2026-10-24T09:29:23Z","round":1,"evalId":"E6","run_id":"stg-s08-inventory-E6-20261024T162923","exit_code":0,"cmd":"cd pipeline && node scripts/check-s08-inventory.mjs real-name"}
 {"ts":"2026-10-24T09:29:31Z","round":1,"evalId":"E7","run_id":"stg-s08-inventory-E7-20261024T162931","exit_code":0,"cmd":"cd pipeline && node scripts/check-s08-inventory.mjs reso"}
+{"ts":"2026-10-24T09:32:02Z","round":2,"evalId":"E1","run_id":"stg-s08-inventory-E1-20261024T163202","exit_code":0,"cmd":"bash db/check-idempotent.sh db/migrations/040_stg_s08_inventory.sql stg_s08_inventory"}
+{"ts":"2026-10-24T09:32:02Z","round":2,"evalId":"E2","run_id":"stg-s08-inventory-E2-20261024T163202","exit_code":0,"cmd":"bash db/check-idempotent.selftest.sh"}
+{"ts":"2026-10-24T09:32:03Z","round":2,"evalId":"E3","run_id":"stg-s08-inventory-E3-20261024T163203","exit_code":0,"cmd":"cd pipeline && node scripts/check-s08-inventory.mjs shape"}
+{"ts":"2026-10-24T09:32:08Z","round":2,"evalId":"E4","run_id":"stg-s08-inventory-E4-20261024T163208","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-24T09:32:20Z","round":2,"evalId":"E5","run_id":"stg-s08-inventory-E5-20261024T163220","exit_code":0,"cmd":"cd pipeline && node scripts/check-s08-inventory.mjs local-only"}
+{"ts":"2026-10-24T09:32:20Z","round":2,"evalId":"E6","run_id":"stg-s08-inventory-E6-20261024T163220","exit_code":0,"cmd":"cd pipeline && node scripts/check-s08-inventory.mjs real-name"}
+{"ts":"2026-10-24T09:32:20Z","round":2,"evalId":"E7","run_id":"stg-s08-inventory-E7-20261024T163220","exit_code":0,"cmd":"cd pipeline && node scripts/check-s08-inventory.mjs reso"}
