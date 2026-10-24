@@ -29,7 +29,8 @@ export function issuesOf({
 }: {
   feeds: SourceFeedHealth[]
   layers: LockdownLayer[]
-  agentTurnsToday: number
+  /** null = chưa kiểm được — không phải mục «Khẩn» (ON2). */
+  agentTurnsToday: number | null
   zalo: ZaloHealth
   groups: ZaloGroupRow[]
   factsAgeMin: number | null
@@ -37,7 +38,7 @@ export function issuesOf({
   nowMs: number
 }): Issue[] {
   const out: Issue[] = []
-  if (agentTurnsToday > 0)
+  if (agentTurnsToday !== null && agentTurnsToday > 0)
     out.push({ key: "agent", title: "Agent-turn hôm nay", detail: `${fmtInt(agentTurnsToday)} lượt — lockdown phải giữ 0`, label: "Khẩn", variant: "destructive-light", rank: 0 })
   for (const l of layers.filter((x) => x.ok === false))
     out.push({ key: `layer-${l.layer}-${l.desc}`, title: `Lớp ${l.layer}`, detail: l.desc, label: "Hỏng", variant: "destructive-light", rank: 1 })
