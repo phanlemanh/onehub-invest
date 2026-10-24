@@ -72,8 +72,14 @@ async function importDir(client, dir) {
          size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
          ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
          seller = EXCLUDED.seller, images = EXCLUDED.images,
-         payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id,
-         captured_at = stg_chotot_ads.captured_at -- 2410-1: GIU mốc thu đầu`,
+         payload = EXCLUDED.payload,
+         -- 2410-1 v2 (luật claudedp): bảng đi theo snapshot MỚI — snapshot_id VÀ captured_at
+         -- cùng tiến CHỈ KHI EXCLUDED.captured_at > cũ; nạp snapshot cũ hơn sau thì giữ nguyên
+         -- cả hai (không lùi, hai cột không lệch nhau).
+         snapshot_id = CASE WHEN EXCLUDED.captured_at > stg_chotot_ads.captured_at
+                       THEN EXCLUDED.snapshot_id ELSE stg_chotot_ads.snapshot_id END,
+         captured_at = CASE WHEN EXCLUDED.captured_at > stg_chotot_ads.captured_at
+                       THEN EXCLUDED.captured_at ELSE stg_chotot_ads.captured_at END`,
       [
         a.list_id, a.region_v2 ?? it.meta?.region_v2, it.meta?.city ?? a.region_name,
         a.category ?? it.meta?.cg, a.type ?? it.meta?.st, a.subject ?? null,
@@ -84,7 +90,7 @@ async function importDir(client, dir) {
         a.list_time ? new Date(a.list_time).toISOString() : null,
         JSON.stringify({ full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) }),
         JSON.stringify({ images: a.images ?? [], thumbnails: a.image_thumbnails ?? [] }),
-        JSON.stringify(a), manifest.snapshotId, it.fetchedAt,
+        JSON.stringify(a), manifest.snapshotId, manifest.finishedAt, // 2410-1 v2: giờ thu snapshot (airbnb_snapshots.collected_at) — không dùng giờ nạp/giờ từng item
       ],
     );
     n++;

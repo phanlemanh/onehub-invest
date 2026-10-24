@@ -97,10 +97,14 @@ async function main() {
         await client.query(
           `INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, author_hash, posted_at, text,
                                        sender_name, sender_id, conversation_id, media, agent_id,
-                                       media_files)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12::jsonb)
+                                       media_files, captured_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12::jsonb,$13)
            ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text,
-             captured_at = stg_zalo_posts.captured_at, -- 2410-1: GIU mốc thu đầu — nạp lại không đặt lại độ tươi
+             -- 2410-1 v2 (luật claudedp): captured_at = GIỜ THU snapshot (manifest.finishedAt
+             -- = airbnb_snapshots.collected_at), không bao giờ now(). Bảng giữ snapshot ĐẦU
+             -- (snapshot_id không đổi) → mốc = LEAST(cũ, EXCLUDED): nạp snapshot cũ hơn sau
+             -- vẫn hội tụ về mốc thu đầu, nạp lại không lệch thứ tự.
+             captured_at = LEAST(stg_zalo_posts.captured_at, EXCLUDED.captured_at),
 
              sender_name = COALESCE(EXCLUDED.sender_name, stg_zalo_posts.sender_name),
              sender_id = COALESCE(EXCLUDED.sender_id, stg_zalo_posts.sender_id),
@@ -121,6 +125,7 @@ async function main() {
             JSON.stringify(it.payload?.media ?? null),
             it.payload?.agent_id ?? null,
             mediaFiles ? JSON.stringify(mediaFiles) : null,
+            manifest.finishedAt, // 2410-1 v2: giờ thu snapshot — không rơi DEFAULT now()
           ],
         );
         zalo++;
