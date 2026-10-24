@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9df28ce34bf9b222db178a45eb9a83b4d7958a43
+verified_commit: 27f1077fab3fa1b4a8fb4d87c879cc50e95edd3c
 human_signoff: Mạnh 2026-10-24
 ---
 
@@ -409,3 +409,7 @@ Round 1: E4 failed (cấp tiêu chí). Probe P1 cho thấy lượt flush đầu 
 Round 2: E7 failed (cấp tiêu chí). Lượt flush định kỳ đang chạy lúc SIGTERM không nhận deadline, ảnh treo không bị huỷ, tin mất (P2). Thêm rủi ro POST treo nửa body giữ close() tới deadline (P3). Returned to implementation.
 Round 3: sản phẩm sửa đúng P2 (flushAbort) và P3 (race close 3s), E1 và E3–E11 đạt. E2 failed vì ca tích hợp mới «P3» có race trong test (SIGTERM trước khi server parse header, socket thô thiếu listener error). Returned to implementation (sửa test, làn ZCode), escalate tới user.
 Round 4: E1–E12 đạt. Test P3 đã sửa (15f6bd0) xanh 31/31, test cũ đỏ 10/10 trên cùng mã. Mã sản phẩm chỉ khác vòng 3 ở chú thích main.ts. PL4/ZC1 rebase vào không tương tác xấu với shutdown (P6). P1/P2/P3/P4/P5 không mất tin. Verdict PASS, chờ chữ ký Cổng 2. Còn ràng buộc ZC6 → ZC4 ở Known limits.
+
+### Re-pin lần 1 — 2026-10-24, do hoá cũ do merge origin/main 460e61a+ vào nhánh
+run_id: repin-20261024T075630Z-17705
+sha: 27f1077fab3fa1b4a8fb4d87c879cc50e95edd3c · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
