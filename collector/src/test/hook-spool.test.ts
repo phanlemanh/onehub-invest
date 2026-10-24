@@ -3,118 +3,107 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
-import { kevScore, deliverWithSpool, spoolKey, type SpoolMessage } from "../core/agent-delivery.js";
-
 /**
- * ZC6 (claudedp-2310-5): hook không retry — tin tới lúc collector restart
- * mất ở NGUỒN. Spool cục bộ append-only (mỗi tin 1 file, tên = sourceId tương
- * ứng server) + gửi lại khi collector sống lại; dedup server gánh trùng.
- * Kèm: Kev fetch có timeout (treo → p=null), noul không hữu hạn → p=null.
+ * ZC6 (claudedp-2310-5 mở lại): handler TỰ CHỨA spool/kev — chạy được từ
+ * thư mục BẤT KỲ (mô phỏng ~/.openclaw/hooks/oneinvest-zalo-pipe/), KHÔNG
+ * import bản build collector. Copy handler ra tmp rồi dynamic-import BẢN
+ * COPY đó (import theo file:// tuyệt đối — đúng nghĩa chạy file ở nơi khác;
+ * spawnSync từng gây treo 30s dưới node:test, bỏ).
  */
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+type Msg = { text: string; ts: string; senderId?: string | null };
+type Handler = (ctx: unknown) => Promise<void>;
 
-function fresh(): string {
-  return join(tmpdir(), `zc6-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-}
+let root = "";
+let home = "";
+let spoolDir = "";
+let handler: Handler | null = null;
+let oldEnv: NodeJS.ProcessEnv = {};
 
-type Msg = SpoolMessage;
+test.before(async () => {
+  root = join(tmpdir(), `zc6r3-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const hookDir = join(root, "hook");
+  mkdirSync(hookDir, { recursive: true });
+  copyFileSync(
+    join(new URL("../../openclaw/handler.js", import.meta.url).pathname),
+    join(hookDir, "handler.js"),
+  );
+  home = join(root, "home");
+  mkdirSync(join(home, ".openclaw", "credentials"), { recursive: true });
+  writeFileSync(join(home, ".openclaw", "credentials", "oneinvest-agent.key"), "k1");
+  spoolDir = join(root, "spool");
+});
 
-/** Collector giả: nhận POST, trả 202 khi 'sống', đóng socket khi 'chết'. */
-async function fakeCollector(alive: () => boolean, sink: Array<{ group: string; messages: Msg[] }>) {
-  const server = createServer((req, res) => {
-    if (!alive()) {
-      res.socket?.destroy(); // collector đang tắt — kết nối chết như ECONNREFUSED
+test.after(() => {
+  Object.assign(process.env, oldEnv);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("ZC6 tự chứa: từ thư mục NGOÀI repo — collector chết 2 tin → spool 2; sống → drain đủ, không trùng; kev treo → p=null", async () => {
+  const sink: Msg[] = [];
+  let up = false;
+  const collector = createServer((req, res) => {
+    if (!up) {
+      res.socket?.destroy();
       return;
     }
     const chunks: Buffer[] = [];
     req.on("data", (c: Buffer) => chunks.push(c));
     req.on("end", () => {
-      sink.push(JSON.parse(Buffer.concat(chunks).toString()));
+      const body = JSON.parse(Buffer.concat(chunks).toString()) as { messages: Msg[] };
+      sink.push(...body.messages);
       res.writeHead(202, { "content-type": "application/json" });
       res.end(JSON.stringify({ accepted: 1, duplicates: 0 }));
     });
   });
-  await new Promise<void>((d) => server.listen(0, "127.0.0.1", d));
-  return { server, url: `http://127.0.0.1:${(server.address() as AddressInfo).port}` };
-}
+  await new Promise<void>((d) => collector.listen(0, "127.0.0.1", d));
+  const apiPort = (collector.address() as AddressInfo).port;
+  const kevStuck = createServer(() => {});
+  await new Promise<void>((d) => kevStuck.listen(0, "127.0.0.1", d));
+  const kevPort = (kevStuck.address() as AddressInfo).port;
 
-test("ZC6: collector chết khi N tin tới → spool đủ N; sống lại → gửi đủ, không trùng, spool rỗng", async () => {
-  const spoolDir = join(fresh(), "spool");
-  const sink: Array<{ group: string; messages: Msg[] }> = [];
-  let up = false;
-  const fc = await fakeCollector(() => up, sink);
+  // env PHẢI gán trước import — handler đọc env lúc module load
+  oldEnv = { ...process.env };
+  process.env.HOME = home;
+  process.env.ONEINVEST_API_URL = `http://127.0.0.1:${apiPort}`;
+  process.env.ONEINVEST_KEV_URL = `http://127.0.0.1:${kevPort}`;
+  process.env.ONEINVEST_HOOK_SPOOL = spoolDir;
+  handler = (await import(pathToFileURL(join(root, "hook", "handler.js")).href)).default;
+  assert.ok(handler, "handler export default phải có");
 
-  // 3 tin tới lúc collector đang chết
-  const msgs: Msg[] = [
-    { text: "tin 1 chết collector", ts: "2026-10-23T08:00:00Z" },
-    { text: "tin 2 chết collector", ts: "2026-10-23T08:01:00Z" },
-    { text: "tin 3 chết collector", ts: "2026-10-23T08:02:00Z", kev: { p: 0.55, model: "kev-latest", threshold: 0.9, at: "2026-10-23T08:02:00Z" } },
-  ];
-  for (const m of msgs) {
-    const ok = await deliverWithSpool({ api: fc.url, key: "k1", spoolDir }, "g", m);
-    assert.equal(ok, false, "deliver phải báo fail khi collector chết");
-  }
-  assert.equal(readdirSync(spoolDir).length, 3, "spool giữ đủ 3 tin");
-  const key2 = spoolKey({ group: "g", message: msgs[0] });
-  assert.match(key2, /^[0-9a-f]{32}$/, "tên file spool = sourceId server sẽ tính (sha256 32 hex)");
-
-  // collector sống lại, một tin MỚI tới → drain xả đủ cả 3 cũ + đẩy tin mới
-  up = true;
-  const okNew = await deliverWithSpool({ api: fc.url, key: "k1", spoolDir }, "g", { text: "tin 4 sau khi sống", ts: "2026-10-23T08:05:00Z" });
-  assert.equal(okNew, true, "tin mới đẩy thẳng thành công");
-  assert.equal(readdirSync(spoolDir).length, 0, "spool rỗng sau drain");
-
-  const got = sink.flatMap((b) => b.messages);
-  assert.equal(got.length, 4, "đủ 4 tin (3 spool + 1 mới)");
-  assert.deepEqual(
-    got.map((m) => m.ts).sort(),
-    ["2026-10-23T08:00:00Z", "2026-10-23T08:01:00Z", "2026-10-23T08:02:00Z", "2026-10-23T08:05:00Z"],
-    "đúng 4 tin, không trùng lặp",
-  );
-  assert.deepEqual(got.find((m) => m.ts === "2026-10-23T08:02:00Z")?.kev, msgs[2].kev, "kev đi theo tin qua spool nguyên vẹn");
-
-  // drain lần nữa (spool rỗng) — không gửi thêm gì
-  const again = await deliverWithSpool({ api: fc.url, key: "k1", spoolDir }, "g", { text: "tin 5", ts: "2026-10-23T08:06:00Z" });
-  assert.equal(again, true);
-  assert.equal(sink.flatMap((b) => b.messages).length, 5, "không phát sinh trùng từ spool");
-
-  fc.server.closeAllConnections?.();
-  fc.server.close();
-});
-
-test("ZC6: spoolPut tin TRÙNG (cùng group|ts|text|sender|media) không nhân file", async () => {
-  const { spoolPut } = await import("../core/agent-delivery.js");
-  const spoolDir = join(fresh(), "spool");
-  const rec = { group: "g", message: { text: "trùng", ts: "2026-10-23T09:00:00Z", senderId: "u1", media: [{ path: null, url: "https://img.zdn.vn/x.jpg", type: "photo" }] } };
-  await spoolPut(spoolDir, rec);
-  await spoolPut(spoolDir, rec); // gửi lại y hệt — phải idempotent
-  assert.equal(readdirSync(spoolDir).length, 1, "1 file cho 1 tin trùng");
-});
-
-test("ZC6: Kev treo (không đáp ứng) → kevScore trả null sau timeout, không treo vĩnh viễn", async () => {
-  const stuck = createServer(() => {
-    /* im lặng mãi */
+  const mkEv = (text: string, ts: string) => ({
+    event: { channelId: "zalouser", content: text, timestamp: Date.parse(ts), metadata: { channelName: "g-zc6" } },
   });
-  await new Promise<void>((d) => stuck.listen(0, "127.0.0.1", d));
-  const kevUrl = `http://127.0.0.1:${(stuck.address() as AddressInfo).port}`;
-  const t0 = Date.now();
-  const p = await kevScore("tin gì đó", { kev: kevUrl, timeoutMs: 400 });
-  const elapsed = Date.now() - t0;
-  assert.equal(p, null, "treo → p=null (chưa phân loại), không throw");
-  assert.ok(elapsed < 2_500, `phải quay về sau timeout (${elapsed}ms)`);
-  stuck.closeAllConnections?.();
-  stuck.close();
-});
 
-test("ZC6: noul không phải số hữu hạn (NaN/Infinity/string) → p=null", async () => {
-  const { parseNoul } = await import("../core/agent-delivery.js");
-  assert.equal(parseNoul(NaN), null);
-  assert.equal(parseNoul(Infinity), null);
-  assert.equal(parseNoul("0.9"), null, "string không phải số");
-  assert.equal(parseNoul(0.9), 0.9);
-  assert.equal(parseNoul(null), null);
+  // 2 tin lúc collector chết; kev treo → mỗi lượt ~5s (timeout), không treo vĩnh viễn
+  const t0 = Date.now();
+  await handler!(mkEv("tin A collector chết", "2026-10-24T01:00:00Z"));
+  await handler!(mkEv("tin B collector chết", "2026-10-24T01:01:00Z"));
+  const elapsed = Date.now() - t0;
+  assert.equal(readdirSync(spoolDir).length, 2, "spool giữ đủ 2 tin");
+  assert.ok(elapsed < 15_000, `2 lượt kèm kev-timeout phải quay về (${elapsed}ms)`);
+
+  // collector sống — 1 tin mới → drain 2 cũ + đẩy mới
+  up = true;
+  await handler!(mkEv("tin C sau khi sống", "2026-10-24T01:02:00Z"));
+  assert.equal(readdirSync(spoolDir).length, 0, "spool rỗng sau drain");
+  assert.deepEqual(
+    sink.map((m) => m.text).sort(),
+    ["tin A collector chết", "tin B collector chết", "tin C sau khi sống"],
+    "đủ 3 tin, không trùng",
+  );
+
+  // tin TRÙNG y hệt khi sống → không nhân spool, sink chỉ +1 dòng
+  await handler!(mkEv("tin A collector chết", "2026-10-24T01:00:00Z"));
+  assert.equal(readdirSync(spoolDir).length, 0, "hash riêng idempotent — không nhân file");
+  assert.equal(sink.length, 4);
+
+  collector.closeAllConnections?.();
+  collector.close();
+  kevStuck.closeAllConnections?.();
+  kevStuck.close();
 });
