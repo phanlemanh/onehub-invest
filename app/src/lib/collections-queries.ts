@@ -255,7 +255,7 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
   const jobs: JobStatus[] = [
     {
       id: "s02-daily",
-      label: `${sourceLabel("S02", roles)} — toàn quốc (rotation 6 market)`,
+      label: `${sourceLabel("S02", roles)} — toàn quốc (vòng 6 thị trường)`,
       schedule: "19:05 hằng ngày",
       alive: "unknown",
       lastLogAt: airdnaLog.mtime,
@@ -263,15 +263,15 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
     },
     {
       id: "s01-weekly",
-      label: `${sourceLabel("S01", roles)} — Hà Nội (discovery + listing + finalize)`,
-      schedule: "Chủ nhật 19:30 +jitter ≤30′",
+      label: `${sourceLabel("S01", roles)} — Hà Nội (dò + listing + chốt số)`,
+      schedule: "Chủ nhật 19:30, lệch ngẫu nhiên ≤30′",
       alive: "unknown",
       lastLogAt: weeklyTail.mtime,
       lastLine: weeklyTail.lastLine,
     },
     {
       id: "s01-smoke",
-      label: `Smoke ${sourceLabel("S01", roles)} (detect đổi markup)`,
+      label: `Thử nhanh ${sourceLabel("S01", roles)} (phát hiện đổi khuôn trang)`,
       schedule: "20:00 hằng ngày",
       alive: "unknown",
       lastLogAt: smokeLog.mtime,
@@ -279,16 +279,16 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
     },
     {
       id: "collector-api",
-      label: "Agent ingest :9210",
-      schedule: "KeepAlive — chạy liên tục",
+      label: "Cổng nhận tin :9210",
+      schedule: "Chạy liên tục",
       alive: apiAlive,
       lastLogAt: apiLog.mtime,
       lastLine: apiLog.lastLine,
     },
     {
       id: "kev",
-      label: "Kev gate :8009",
-      schedule: "KeepAlive — chạy liên tục",
+      label: "Cổng Kev :8009",
+      schedule: "Chạy liên tục",
       alive: kevAlive,
       lastLogAt: null,
       lastLine: null,

@@ -62,7 +62,7 @@ export function DealCard({ d, showContact }: { d: DealRow; showContact: boolean 
         </Link>
         <span className="text-muted-foreground">
           thước {d.medianPerm2 ? `${fmtInt(d.medianPerm2 / 1e6)}tr/m²` : "—"}
-          {d.rulerN ? ` (n=${d.rulerN})` : ""}
+          {d.rulerN ? ` (${d.rulerN} tin)` : ""}
         </span>
         {confBadge(d.confidence)}
         {d.suspect && <Badge variant="warning-light">cần xác minh</Badge>}
@@ -80,17 +80,17 @@ export function DealCard({ d, showContact }: { d: DealRow; showContact: boolean 
         <div className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-2 py-1.5 text-xs">
           <div className="flex min-w-0 flex-col">
             <span className="truncate font-medium">
-              {d.sellerName ?? "Người đăng"}
+              {d.sellerName ? <span translate="no">{d.sellerName}</span> : "Người đăng"}
               {d.brokerNAds && d.brokerNAds > 1 && (
                 <span className="text-muted-foreground font-normal">
                   {" "}· {d.brokerNAds} tin
                   {d.brokerMedianGap !== null
-                    ? ` · gap giữa ${d.brokerMedianGap.toFixed(0)}%`
+                    ? ` · chênh giữa ${d.brokerMedianGap.toFixed(0)}%`
                     : ""}
                 </span>
               )}
             </span>
-            <span className="text-muted-foreground truncate">
+            <span className="text-muted-foreground truncate" translate="no">
               {d.groupName}
             </span>
           </div>
@@ -106,7 +106,7 @@ export function DealCard({ d, showContact }: { d: DealRow; showContact: boolean 
         </div>
       )}
       {showContact && d.postText && (
-        <p className="text-muted-foreground line-clamp-2 text-xs">{d.postText}</p>
+        <p className="text-muted-foreground line-clamp-2 text-xs" translate="no">{d.postText}</p>
       )}
       <DealSeenNote firstSeen={d.firstSeen} nReposts={d.nReposts} />
     </div>

@@ -87,7 +87,7 @@ test("DQ-AC-3 trang lấy bảng và số qua loadDqChecks", { timeout: 120_000 
   assert.equal((code.match(/loadDqChecks\(/g) ?? []).length, 1, "DQ-AC-3 page.tsx gọi loadDqChecks không đúng một lần");
   assert.match(code, /const dq = dqSection\(dqRaw,/, "DQ-AC-3 page.tsx không dựng bảng + số qua dqSection");
   assert.match(code, /stats=\{\[\.\.\.dq\.stats\.labels/, "DQ-AC-3 PageHeader không nhận số từ dqSection");
-  assert.match(code, /<DqChecksTable rows=\{dq\.rows\} \/>/, "DQ-AC-3 bảng không nhận dòng từ cùng dqSection");
+  assert.match(code, /<DqChecksTable rows=\{dq\.rows\}[^>]*\/>/, "DQ-AC-3 bảng không nhận dòng từ cùng dqSection");
 });
 
 test("DQ-AC-3 số đầu trang đếm trên chính dòng bảng", { timeout: 120_000 }, async () => {
@@ -156,6 +156,10 @@ test("DQ-AC-4 bảng vẽ", async () => {
   const { createRoot } = await import("react-dom/client");
   const { DqChecksTable } = await import("../src/components/ops/quality/dq-checks-table");
   const { Badge } = await import("../src/components/reui/badge");
+  // Tên kiểm trên bảng là chữ đã diễn giải (ON12) — tìm hàng bằng đúng chữ bộ nhãn sinh ra.
+  const { dqCheckName } = await import("../src/lib/dq-labels");
+  const tenThamChieu = dqCheckName("truthful-coverage").text;
+  const tenDoTuoi = dqCheckName("freshness").text;
   document.body.innerHTML = "<div id=root></div><div id=ref></div>";
   const root = createRoot(document.getElementById("root")!);
   const ref = createRoot(document.getElementById("ref")!);
@@ -171,17 +175,19 @@ test("DQ-AC-4 bảng vẽ", async () => {
     ref.render(<Badge variant="success-light">mốc</Badge>);
   });
   const green = document.querySelector("#ref > *")!.className;
-  const badgeIn = (needle: string) => {
+  // Badge = phần tử lá có chữ ĐÚNG BẰNG nhãn kết quả (tên kiểm đã dịch cũng chứa «tham chiếu» nên không dò theo mẫu).
+  const badgeIn = (needle: string, label: string) => {
     const row = [...document.querySelectorAll("#root tr")].find((tr) => tr.textContent?.includes(needle));
     assert.ok(row, `DQ-AC-4 không thấy hàng ${needle}`);
-    const cell = [...row.querySelectorAll("span, div")].find((el) => /Đạt|tham chiếu/.test(el.textContent ?? "") && el.children.length <= 1);
-    return { row: row.textContent ?? "", cls: (cell as HTMLElement | undefined)?.className ?? "" };
+    const cell = [...row.querySelectorAll("*")].find((el) => el.children.length === 0 && el.textContent?.trim() === label);
+    assert.ok(cell, `DQ-AC-4 hàng ${needle} không có badge «${label}»`);
+    return { row: row.textContent ?? "", cls: (cell as HTMLElement).className };
   };
-  const ref1 = badgeIn("truthful-coverage");
+  const ref1 = badgeIn(tenThamChieu, "Có số tham chiếu");
   assert.match(ref1.row, /Có số tham chiếu/, "DQ-AC-4 hàng số tham chiếu thiếu nhãn");
-  assert.doesNotMatch(ref1.row, /Đạt/, "DQ-AC-4 hàng số tham chiếu mang «Đạt»");
+  assert.doesNotMatch(ref1.row.replace(tenThamChieu, ""), /Đạt/, "DQ-AC-4 hàng số tham chiếu mang «Đạt»");
   assert.notEqual(ref1.cls, green, "DQ-AC-4 hàng số tham chiếu mang màu xanh lá");
-  const fr = badgeIn("freshness");
+  const fr = badgeIn(tenDoTuoi, "Đạt");
   assert.match(fr.row, /Đạt/, "DQ-AC-4 hàng freshness thiếu «Đạt»");
   assert.equal(fr.cls, green, "DQ-AC-4 đối chứng: hàng freshness không mang màu xanh lá");
   await React.act(async () => {

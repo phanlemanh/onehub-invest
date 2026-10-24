@@ -36,8 +36,8 @@ export function LockdownGrid({ layers, lastWatchdogAt }: { layers: LockdownLayer
   return (
     <StatusGrid
       id="lockdown"
-      title="Lockdown & hạ tầng thu"
-      description={`Watchdog chạy cuối: ${fmtVnDateTime(lastWatchdogAt)}`}
+      title="Khoá an toàn & hạ tầng thu"
+      description={`Bộ canh chạy cuối: ${fmtVnDateTime(lastWatchdogAt)}`}
       data={layers}
       columns={columns}
       tabs={TABS}

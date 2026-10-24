@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
+import { aiSuggestionLabel, propertyTypeLabel } from "@/lib/ops-labels";
+import { RawLabel } from "./raw-label";
 import type { ReviewMedia } from "@/lib/ops/review-media";
 
 import { ReviewPhotos } from "./review-photos";
@@ -115,15 +117,15 @@ function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
         )}
         <div>
           <p className="text-muted-foreground text-[10px]">Loại</p>
-          <p className="font-medium">{offer.property_type ?? "?"}</p>
+          <p className="font-medium">{offer.property_type === null ? "—" : <RawLabel n={propertyTypeLabel(offer.property_type)} raw={offer.property_type} />}</p>
         </div>
         <div className="col-span-2">
           <p className="text-muted-foreground text-[10px]">Địa chỉ</p>
-          <p className="truncate font-medium">{((offer as unknown) as Record<string, string | null>).street ?? "—"}</p>
+          <p className="truncate font-medium" translate="no">{((offer as unknown) as Record<string, string | null>).street ?? "—"}</p>
         </div>
       </div>
       {(() => { const desc = (offer as Record<string, string | null>).text ?? (offer as Record<string, string | null>).subject; return desc ? (
-        <p className="text-muted-foreground mt-2 line-clamp-2 border-t pt-2 text-[11px]">{desc}</p>
+        <p className="text-muted-foreground mt-2 line-clamp-2 border-t pt-2 text-[11px]" translate="no">{desc}</p>
       ) : null; })()}
     </div>
   );
@@ -160,7 +162,7 @@ function useDecide(id: number) {
 }
 
 function DoneBadge({ item }: { item: ReviewItem }) {
-  const label = DONE_LABEL[item.item_type]?.[item.status] ?? item.status;
+  const label = DONE_LABEL[item.item_type]?.[item.status] ?? "Đã quyết";
   return <Badge variant={item.status === "approved" ? "success-light" : "outline"}>{label}</Badge>;
 }
 
@@ -169,26 +171,31 @@ export function ReviewCard({ item, media }: { item: ReviewItem; media?: ReviewMe
   if (item.item_type === "agent_output") return <AgentOutputCard item={item} media={media} />;
   return (
     <div className="flex flex-col gap-1 rounded-xl border p-4">
-      <h3 className="text-sm font-medium">{item.title}</h3>
+      <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
       <p className="text-muted-foreground text-xs">
-        Loại «{item.item_type}» chưa có giao diện duyệt.
+        Loại thẻ khác (<code>{item.item_type}</code>) chưa có giao diện duyệt.
       </p>
     </div>
   );
 }
 
 const FIELD_LABEL: Record<string, string> = {
-  property_type: "Loại BĐS",
+  property_type: "Loại hình",
   bedrooms: "Phòng ngủ",
   bathrooms: "WC",
   street_raw: "Đường",
   block_raw: "Toà",
 };
 
-const SOURCE_LABEL: Record<string, string> = { e1_rule: "Theo luật", e2_llm: "Theo LLM" };
-const CHOICE_LABEL: Record<string, string> = { e1_rule: "Chọn luật", e2_llm: "Chọn LLM" };
+const SOURCE_LABEL: Record<string, string> = { e1_rule: "Theo luật", e2_llm: "Theo AI" };
+const CHOICE_LABEL: Record<string, string> = { e1_rule: "Chọn luật", e2_llm: "Chọn AI" };
 /** Giá trị ToggleGroup cho «Bỏ cả hai». */
 const NONE = "none";
+
+/** Giá trị đề xuất hiện bằng nhãn tiếng Việt khi là mã loại hình (ON12); trường khác giữ nguyên. */
+function fieldValue(field: string, value: string) {
+  return field === "property_type" && propertyTypeLabel(value).known ? propertyTypeLabel(value).label : value;
+}
 
 function fmtConfidence(c: number | null) {
   return c === null ? null : `AI tự tin ${Math.round(c * 100)}%`;
@@ -205,8 +212,8 @@ function ConflictField({ options, value, onChange, disabled }: {
   return (
     <div role="listitem" className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">{FIELD_LABEL[field] ?? field}</span>
-        <Badge variant="warning-light">Luật và LLM khác nhau — chọn một bên</Badge>
+        <span className="text-sm font-medium">{FIELD_LABEL[field] ?? <>Trường khác <code>{field}</code></>}</span>
+        <Badge variant="warning-light">Luật và AI khác nhau — chọn một bên</Badge>
       </div>
       {options.map((o) => (
         <Item key={o.proposal_id} variant="outline" size="xs">
@@ -215,7 +222,7 @@ function ConflictField({ options, value, onChange, disabled }: {
               <Badge variant={o.source === "e1_rule" ? "info-light" : "primary-light"}>
                 {SOURCE_LABEL[o.source ?? ""] ?? o.source}
               </Badge>
-              {o.value}
+              {fieldValue(field, o.value)}
             </ItemTitle>
             {o.basis && <ItemDescription>{o.basis}</ItemDescription>}
           </ItemContent>
@@ -255,11 +262,11 @@ function AgentOutputCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
   return (
     <div className="flex flex-col gap-3 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium">{item.title}</h3>
+        <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
         <Badge variant="outline">Bổ sung dữ liệu tin</Badge>
       </div>
       {ev.text && (
-        <p className="text-muted-foreground line-clamp-3 text-xs">
+        <p className="text-muted-foreground line-clamp-3 text-xs" translate="no">
           {ev.group_name ? `${ev.group_name} · ` : ""}
           {ev.text}
         </p>
@@ -282,8 +289,8 @@ function AgentOutputCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
             {fields.filter((f) => !f.conflict).map((f) => (
               <Item key={f.proposal_id} size="xs" role="listitem">
                 <ItemContent>
-                  <ItemDescription>{FIELD_LABEL[f.field] ?? f.field}</ItemDescription>
-                  <ItemTitle>{f.value}</ItemTitle>
+                  <ItemDescription>{FIELD_LABEL[f.field] ?? <>Trường khác <code>{f.field}</code></>}</ItemDescription>
+                  <ItemTitle>{fieldValue(f.field, f.value)}</ItemTitle>
                 </ItemContent>
                 {fmtConfidence(f.confidence) && (
                   <span className="text-muted-foreground text-xs tabular-nums">{fmtConfidence(f.confidence)}</span>
@@ -320,18 +327,18 @@ function EntityMatchCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
   return (
     <div className="flex flex-col gap-2 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium">{item.title}</h3>
+        <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
         <div className="flex items-center gap-2">
           {item.ai_suggestion && (
             <Badge variant={item.ai_suggestion === "yes" ? "success-light" : "outline"}>
-              AI: {item.ai_suggestion} {item.ai_confidence ? `(${Math.round(item.ai_confidence * 100)}%)` : ""}
+              AI: <RawLabel n={aiSuggestionLabel(item.ai_suggestion)} raw={item.ai_suggestion} /> {item.ai_confidence ? `(${Math.round(item.ai_confidence * 100)}%)` : ""}
             </Badge>
           )}
-          <Badge variant="outline">B: {ev.stage_b_score}</Badge>
+          <Badge variant="outline">Điểm B: {ev.stage_b_score}</Badge>
         </div>
       </div>
       {item.ai_reasoning && (
-        <p className="text-muted-foreground rounded-md bg-muted/30 px-2 py-1 text-[11px]">
+        <p className="text-muted-foreground rounded-md bg-muted/30 px-2 py-1 text-[11px]" translate="no">
           🤖 {item.ai_reasoning}
         </p>
       )}

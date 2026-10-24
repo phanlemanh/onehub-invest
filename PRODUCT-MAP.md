@@ -6,13 +6,13 @@
 
 ```mermaid
 flowchart TD
-  A["Đang cân nhắc cơ hội<br/>chưa có"] --> GD{"Cổng Đáng"}
+  A["Đang cân nhắc cơ hội<br/>1 việc"] --> GD{"Cổng Đáng"}
   GD --> B["Sắp mở vòng<br/>7 việc"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>1 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>32 việc"]
+  GB --> DG["Đã giao<br/>33 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>19 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
@@ -21,6 +21,10 @@ flowchart TD
 > **Cổng Đáng** việc này có đáng làm không · **Cổng Phạm vi** bộ tiêu chí
 > đã đủ và đúng chưa · **Cổng Bằng chứng** đã làm đúng thứ đã hứa chưa ·
 > **Cổng Giá trị** thứ đã giao có ăn thua không.
+
+## Đang cân nhắc cơ hội
+
+- Người vận hành mở «Hiệu chuẩn» trên /ops/quality thấy mỗi thị trường một bộ số nhất quán giữa các bảng, định nghĩa «tự thu» ghi rõ ở từng bảng, mẫu mỏng có cờ, và thị trường chưa có số gộp thành một dòng (`hieu-chuan-mot-bo-so`)
 
 ## Sắp mở vòng
 
@@ -78,6 +82,7 @@ flowchart TD
 - Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
 - Siết quyền — cổng Ops đóng mặc định, /api/zalo-media chỉ ảnh staging (`ops-access-hardening`)
 - Đổi URL cloud cứng từ project Vercel cũ sang prod mới onehub-invest.vercel.app (`ops-ingest-url-onehub-invest`)
+- Người vận hành đọc cổng Ops thấy nhãn theo CONTEXT.md, không chữ tiếng Anh hay mã thô, chi tiết kiểm chất lượng diễn giải tiếng Việt, tên thị trường có dấu đầy đủ (`ops-nhan-theo-context`)
 - /ops và /ops/collections trên cloud không còn vỡ khi thiếu source_registry — nói rõ độ tươi chỉ đo ở máy local (`ops-prod-sap-source-registry`)
 - /ops/review và /ops/sources trên cloud không còn 500 khi thiếu bảng tầng A — nói rõ chỉ có ở máy local (`ops-review-sources-500-tren-cloud`)
 - Vá ranh giới cổng — Căn giá tốt sang Ops, gỡ AirDNA khỏi Mô phỏng đầu tư (`portal-deals-airdna`)

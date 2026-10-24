@@ -53,7 +53,8 @@ function Panel({ head, legend, subject }: { head: ReactNode; legend?: ReactNode;
   )
 }
 
-export function OverviewTiles({ rows, localOnly = false }: { rows: CoverageRow[]; localOnly?: boolean }) {
+export function OverviewTiles({ rows, localOnly = false, areaNames = {} }: { rows: CoverageRow[]; localOnly?: boolean; areaNames?: Record<string, string> }) {
+  const names = new Map(Object.entries(areaNames))
   // Ô «Đạt SLO» đếm NGUỒN (Hỏi-1 AU6): nguồn đạt khi mọi thị trường có dữ liệu của nó đạt — cùng luật với
   // ô «Sức khoẻ nguồn» của /ops/collections (lib/freshness). Các ô còn lại vẫn kể từng cặp nguồn × thị trường.
   const sources = bySource(rows)
@@ -96,7 +97,7 @@ export function OverviewTiles({ rows, localOnly = false }: { rows: CoverageRow[]
             stale[0] ? (
               <>
                 <ToneDot tone={FRESHNESS.stale.tick} />
-                <span className="truncate">Lâu nhất: {where(stale[0])}</span>
+                <span className="truncate">Lâu nhất: {where(stale[0], names)}</span>
                 <span className="text-foreground ms-auto shrink-0 font-medium tabular-nums">
                   {fmtAge(stale[0].ageHours)} · {fmtOverdue(stale[0].ageHours, stale[0].sloHours) ?? `SLO ${fmtAge(stale[0].sloHours)}`}
                 </span>
@@ -111,14 +112,14 @@ export function OverviewTiles({ rows, localOnly = false }: { rows: CoverageRow[]
       <KpiTile icon={<CircleOffIcon aria-hidden="true" />} title="Chưa có snapshot" detail="Nguồn chưa thu lần nào ở thị trường">
         <Panel
           head={<KpiValue value={fmtInt(none.length)} />}
-          subject={<span className="truncate">{none.length ? none.map(where).join(", ") : "Mọi nguồn đã có snapshot"}</span>}
+          subject={<span className="truncate">{none.length ? none.map((r) => where(r, names)).join(", ") : "Mọi nguồn đã có snapshot"}</span>}
         />
       </KpiTile>
 
       <KpiTile icon={<CalendarClockIcon aria-hidden="true" />} title="Snapshot mới nhất" detail="Lần thu gần nhất của mọi nguồn">
         <Panel
           head={<KpiValue value={fmtVnDate(newest?.lastSnapshotAt ?? null)} />}
-          subject={<span className="truncate">{newest ? where(newest) : "Chưa có snapshot nào"}</span>}
+          subject={<span className="truncate">{newest ? where(newest, names) : "Chưa có snapshot nào"}</span>}
         />
       </KpiTile>
     </div>

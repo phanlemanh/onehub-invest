@@ -99,14 +99,14 @@ export async function readLockdown({ root, agentLogDir = "/tmp/openclaw", now = 
     probe("http://127.0.0.1:9210/agent-report"),
   ]);
   const layers = [
-    { layer: "L1", desc: "Hook read-only (không API gửi tin)", ok: wdFresh ? true : null },
-    { layer: "L2", desc: "Bindings = [] (agent không bị kích từ kênh)", ok: wdFresh ? true : null },
-    { layer: "L3", desc: "Kênh bot OA tắt + mọi nhóm requireMention", ok: wdFresh ? true : null },
-    { layer: "L4", desc: "Watchdog 5′ đang canh", ok: wdFresh },
-    { layer: "L4b", desc: "Agent-turn hôm nay = 0", ok: turns === null ? null : turns === 0 },
-    { layer: "Hạ tầng", desc: "OpenClaw chạy", ok: openClawUp },
-    { layer: "Hạ tầng", desc: "Kev gate :8009", ok: kevUp },
-    { layer: "Hạ tầng", desc: "Collector :9210", ok: collectorUp },
+    { layer: "L1", desc: "Chỉ đọc — không có API gửi tin", ok: wdFresh ? true : null },
+    { layer: "L2", desc: "Không gắn máy trả lời vào kênh nào", ok: wdFresh ? true : null },
+    { layer: "L3", desc: "Tắt kênh tài khoản chính thức, nhóm phải nhắc tên mới trả lời", ok: wdFresh ? true : null },
+    { layer: "L4", desc: "Bộ canh 5′ đang chạy", ok: wdFresh },
+    { layer: "L4b", desc: "Lượt máy tự trả lời hôm nay = 0", ok: turns === null ? null : turns === 0 },
+    { layer: "Hạ tầng", desc: "OpenClaw đang chạy", ok: openClawUp },
+    { layer: "Hạ tầng", desc: "Cổng Kev :8009", ok: kevUp },
+    { layer: "Hạ tầng", desc: "Cổng nhận tin :9210", ok: collectorUp },
   ];
   return { layers, lastWatchdogAt: lastWd, agentTurnsToday: turns };
 }

@@ -25,7 +25,7 @@ function Sample({ title, component, description, children }: { title: string; co
           <FrameDescription>{description}</FrameDescription>
         </div>
         <Badge variant="outline" className="font-mono">
-          {component}
+          <code>{component}</code>
         </Badge>
       </FrameHeader>
       <FramePanel className="flex flex-col gap-3">{children}</FramePanel>
@@ -43,7 +43,7 @@ function BareSample({ title, component, description, children }: { title: string
           <p className="text-muted-foreground text-xs">{description}</p>
         </div>
         <Badge variant="outline" className="font-mono">
-          {component}
+          <code>{component}</code>
         </Badge>
       </div>
       {children}
@@ -60,7 +60,7 @@ const DEMO_ROWS: DemoRow[] = [
 const DEMO_COLUMNS: InsightColumn<DemoRow>[] = [
   { id: "area", accessorKey: "area", header: "Khu vực", size: 180 },
   { id: "adr", accessorKey: "adr", header: "ADR", size: 140 },
-  { id: "occ", accessorKey: "occupancy", header: "Occupancy", size: 120 },
+  { id: "occ", accessorKey: "occupancy", header: "Công suất", size: 120 },
 ]
 
 type BlockRow = { block: string; route: string; use: string; preview: string }
@@ -68,13 +68,13 @@ const BLOCKS: BlockRow[] = [
   { block: "app-shell-36", route: "/ops/**", use: "Khung cổng Ops: thanh bên nhóm", preview: "https://reui.io/preview/base/app-shell-36" },
   { block: "solution-dev-ops-5", route: "/ops", use: "Ô KPI + lưới mục tiêu độ tươi", preview: "https://reui.io/preview/base/solution-dev-ops-5" },
   { block: "solution-dev-ops-6", route: "/ops/collections, /ops/sources", use: "Thẻ số, luồng, cần chú ý, lưới kết nối", preview: "https://reui.io/preview/base/solution-dev-ops-6" },
-  { block: "solution-dev-ops-1", route: "/ops/collections", use: "Lưới job theo lịch", preview: "https://reui.io/preview/base/solution-dev-ops-1" },
+  { block: "solution-dev-ops-1", route: "/ops/collections", use: "Lưới tác vụ theo lịch", preview: "https://reui.io/preview/base/solution-dev-ops-1" },
   { block: "solution-ai-ops-2", route: "/ops/sources", use: "Hàng tài khoản S03 + hộp kết nối QR", preview: "https://reui.io/preview/base/solution-ai-ops-2" },
-  { block: "solution-agents-5", route: "/ops/review (vòng sau)", use: "Dự kiến: hàng chờ duyệt + sheet chi tiết — chưa áp dụng", preview: "https://reui.io/preview/base/solution-agents-5" },
+  { block: "solution-agents-5", route: "/ops/review", use: "Dự kiến (vòng sau): hàng duyệt + ngăn chi tiết — chưa áp dụng", preview: "https://reui.io/preview/base/solution-agents-5" },
 ]
 const BLOCK_COLUMNS: InsightColumn<BlockRow>[] = [
-  { id: "block", accessorKey: "block", header: "Mẫu", cell: ({ row }) => <span className="font-mono">{row.original.block}</span>, size: 180 },
-  { id: "route", accessorKey: "route", header: "Trang", size: 200 },
+  { id: "block", accessorKey: "block", header: "Mẫu", cell: ({ row }) => <code className="font-mono">{row.original.block}</code>, size: 180 },
+  { id: "route", accessorKey: "route", header: "Trang", cell: ({ row }) => <code className="font-mono">{row.original.route}</code>, size: 200 },
   { id: "use", accessorKey: "use", header: "Dùng cho", size: 280 },
   {
     id: "preview",
@@ -95,19 +95,19 @@ export function CatalogSamples() {
         <p className="text-muted-foreground text-sm">Mọi trang vận hành và đầu tư mở bằng đầu trang này; không tự viết tiêu đề bằng thẻ chữ lớn.</p>
       </Sample>
 
-      <BareSample title="Ô KPI" component="StatTiles" description="Hàng số chính, bậc so nhóm so sánh nằm ở Badge">
+      <BareSample title="Ô KPI" component="StatTiles" description="Hàng số chính, bậc so nhóm so sánh nằm ở nhãn trạng thái">
         <StatTiles
           items={[
             { title: "ADR trung vị", value: "1.150.000 ₫", tier: { label: "Khá", variant: "info-light" }, footer: "Số minh hoạ" },
-            { title: "Occupancy", value: "58,2%", tier: { label: "Nhóm đầu", variant: "success-light" }, footer: "Số minh hoạ" },
+            { title: "Công suất", value: "58,2%", tier: { label: "Nhóm đầu", variant: "success-light" }, footer: "Số minh hoạ" },
             { title: "Listing", value: "257", footer: "Số minh hoạ" },
           ]}
         />
       </BareSample>
 
-      <InsightGrid title="Bảng" description="InsightGrid — Frame + lưới dữ liệu, sắp xếp, phân trang, nhãn tiếng Việt" data={DEMO_ROWS} columns={DEMO_COLUMNS} getRowId={(r) => r.area} />
+      <InsightGrid title="Bảng" description="Khung + lưới dữ liệu, sắp xếp, phân trang, nhãn tiếng Việt" data={DEMO_ROWS} columns={DEMO_COLUMNS} getRowId={(r) => r.area} />
 
-      <Sample title="Trạng thái" component="Badge" description="Trạng thái luôn qua Badge dạng nhạt; một Badge trạng thái mỗi hàng">
+      <Sample title="Trạng thái" component="Badge" description="Trạng thái luôn qua nhãn dạng nhạt; một nhãn trạng thái mỗi hàng">
         <div className="flex flex-wrap gap-2">
           <Badge variant="success-light">Đạt</Badge>
           <Badge variant="info-light">Đang xem</Badge>
