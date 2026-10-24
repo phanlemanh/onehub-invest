@@ -5,9 +5,9 @@ slug: login-kiem-id
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm app/src/app/api/v1/ops/** (t3_paths)
 surfaces: [api]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-login-kiem-id-design.md
 ---
 
