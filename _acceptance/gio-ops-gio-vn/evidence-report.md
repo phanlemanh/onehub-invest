@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2f657dfd2b8cf94348090bbdd370c5ef955ac258
+verified_commit: 2806cd0b7b488f8c3f9205c0cadd6994d81cef86
 human_signoff: Mạnh 2026-10-24
 ---
 
@@ -181,3 +181,7 @@ none — every multi-run eval is uniform
 Round 1: mọi eval đạt, hai phát hiện ngoài hợp đồng (ghi known-limits). Quay lại để làm phụ lục Task 5 (AC-10: parseLog bỏ qua dòng mốc hỏng).
 Round 2: E1–E11 đạt trên cây 2f657df; thêm E10, E11 cho AC-10.
 
+
+### Re-pin lần 1 — 2026-10-24, do gộp main c622ee9 (PR #68) sau chữ ký
+run_id: repin-20261024T134635Z-18122
+sha: 2806cd0b7b488f8c3f9205c0cadd6994d81cef86 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
