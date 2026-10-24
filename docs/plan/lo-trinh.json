@@ -1333,7 +1333,7 @@
         "YC9b",
         "YC10"
       ],
-      "ghi_chu": "Tên tài khoản thu chưa chốt (BOI-CANH §2) — giữ data-tier-a ở zalo-accounts.tsx; source-groups.tsx giữ vì group_key có thể chứa tên miền nguồn thật."
+      "ghi_chu": "Tên tài khoản thu chưa chốt (BOI-CANH §2) — giữ data-tier-a ở zalo-accounts.tsx; source-groups.tsx giữ vì group_key có thể chứa tên miền nguồn thật. Dưới mục tiêu cỡ: hàng chép chốt T1, giao ngay trong PR cắt lượt."
     },
     {
       "ma": "ON2",
@@ -1417,7 +1417,7 @@
       "phu": [
         "OPS-14"
       ],
-      "ghi_chu": "Chung sync-activity.tsx và components/ops/collections/* với ON5, ON7 — không song song. Mở rộng scripts/check-portal-compliance.mjs (luật 5) nếu cần."
+      "ghi_chu": "Chung sync-activity.tsx và components/ops/collections/* với ON5, ON7 — không song song. Mở rộng scripts/check-portal-compliance.mjs (luật 5) nếu cần. Dưới mục tiêu cỡ: một luật (luật 5) trên một trang; không gộp với ON7 vì ON7 là T3 (push-ops-facts) — gộp kéo hàng T2 lên T3."
     },
     {
       "ma": "ON7",
@@ -1466,7 +1466,7 @@
       "phu": [
         "OPS-10"
       ],
-      "ghi_chu": "Nếu đổi tên/kết quả check trong pipeline/dq-truthful-coverage.mjs: chung tệp với NT7 — chạy liền. Diễn giải «Chi tiết» DQ sang tiếng Việt là của ON12 (cùng bảng, chạy liền)."
+      "ghi_chu": "Nếu đổi tên/kết quả check trong pipeline/dq-truthful-coverage.mjs: chung tệp với NT7 — chạy liền. Diễn giải «Chi tiết» DQ sang tiếng Việt là của ON12 (cùng bảng, chạy liền). Dưới mục tiêu cỡ: một bảng; không gộp với ON10 (vùng Hiệu chuẩn, đã 10 tiêu chí)."
     },
     {
       "ma": "ON10",
@@ -1579,7 +1579,7 @@
       "phu": [
         "YC5"
       ],
-      "ghi_chu": "Slug giữ đúng tên hàng phát sinh đã đặt ở dot0. Chung scripts/audit-all.sh với PL33 và app/src/lib/ops-queries.ts với ON2 — chạy liền."
+      "ghi_chu": "Slug giữ đúng tên hàng phát sinh đã đặt ở dot0. Chung scripts/audit-all.sh với PL33 và app/src/lib/ops-queries.ts với ON2 — chạy liền. Dưới mục tiêu cỡ: không gộp với ON17 — hai kết quả khác (đường log vs mốc lần thu), ON17 còn chờ ZC7 làn ZCode."
     },
     {
       "ma": "ON17",
@@ -1598,7 +1598,7 @@
       "phu": [
         "YC8b"
       ],
-      "ghi_chu": "Giữ khớp định nghĩa với /ops (scripts/freshness-parity.test.mjs của AU6)."
+      "ghi_chu": "Giữ khớp định nghĩa với /ops (scripts/freshness-parity.test.mjs của AU6). Dưới mục tiêu cỡ: phía đọc của ZC7; không gộp với ON16 (kết quả khác) hay ZC7 (khác làn)."
     },
     {
       "ma": "ZC7",
@@ -1609,12 +1609,12 @@
       "hang": "T2",
       "slug": "tin-hieu-lan-thu",
       "bat_khi": "Một lượt thu không bài mới: tín hiệu có mốc lần thu mới, stg_* không đổi; DATA-CONTRACT ghi trường mới",
-      "nhom": "giam-sat",
+      "nhom": "collector",
       "dot": "ops-noi-that-2410",
       "phu": [
         "YC8a"
       ],
-      "ghi_chu": "Giao qua phiên điều phối liên làn (tin GIAO). Thành T3 nếu chạm collector/openclaw/**. Nếu tín hiệu là bảng mới: migration làn Claude — cần số NNN, xin ở sổ SO-MIGRATION qua phiên liên làn."
+      "ghi_chu": "Giao qua phiên điều phối liên làn (tin GIAO). Thành T3 nếu chạm collector/openclaw/**. Nếu tín hiệu là bảng mới: migration làn Claude — cần số NNN, xin ở sổ SO-MIGRATION qua phiên liên làn. Dưới mục tiêu cỡ: một tín hiệu; phía đọc là ON17 (làn Claude)."
     },
     {
       "ma": "ON18",
@@ -1630,7 +1630,7 @@
       "phu": [
         "YC9a"
       ],
-      "ghi_chu": "Dùng /new-migration (RESO-first ADR-0011: inventory_unit). Cấp «dãy» (phân khu → dãy → lô) chưa có trong ADR-0013 — hỏi ở Cổng Phạm vi. Áp lên DB local sau merge là việc của phiên liên làn (BOI-CANH §5)."
+      "ghi_chu": "Dùng /new-migration (RESO-first ADR-0011: inventory_unit). Cấp «dãy» (phân khu → dãy → lô) chưa có trong ADR-0013 — hỏi ở Cổng Phạm vi. Áp lên DB local sau merge là việc của phiên liên làn (BOI-CANH §5). Dưới mục tiêu cỡ: một migration; không gộp với ZC8 (khác làn)."
     },
     {
       "ma": "ZC8",
@@ -1645,12 +1645,12 @@
         "PL10"
       ],
       "bat_khi": "Nạp cùng snapshot hai lần: số dòng stg_s08_inventory không đổi; snapshot thử bị bỏ qua",
-      "nhom": "s08",
+      "nhom": "collector",
       "dot": "ops-noi-that-2410",
       "phu": [
         "YC9d"
       ],
-      "ghi_chu": "Giao qua phiên điều phối liên làn sau khi ON18 merge và 040 đã áp ở DB local. Gọi nguồn bằng mã S08, không ghi tên miền thật."
+      "ghi_chu": "Giao qua phiên điều phối liên làn sau khi ON18 merge và 040 đã áp ở DB local. Gọi nguồn bằng mã S08, không ghi tên miền thật. Dưới mục tiêu cỡ: một importer; bảng đích là ON18 (làn Claude)."
     },
     {
       "ma": "ON19",
@@ -1667,7 +1667,7 @@
       "nhom": "so-nhom",
       "dot": "ops-noi-that-2410",
       "phu": [],
-      "ghi_chu": "Cần số migration NNN — xin ở sổ SO-MIGRATION qua phiên liên làn, không tự lấy số. Đứng trên PL12 (sổ nhóm một nơi) để thêm trường vào đúng một sổ; nếu Mạnh muốn sớm hơn PL12 thì gộp hai trường vào PL12 ở Cổng Phạm vi của PL12. Tên nhóm là tầng C (ON1) nên tiêu đề, mô tả được lên cloud."
+      "ghi_chu": "Cần số migration NNN — xin ở sổ SO-MIGRATION qua phiên liên làn, không tự lấy số. Đứng trên PL12 (sổ nhóm một nơi) để thêm trường vào đúng một sổ; nếu Mạnh muốn sớm hơn PL12 thì gộp hai trường vào PL12 ở Cổng Phạm vi của PL12. Tên nhóm là tầng C (ON1) nên tiêu đề, mô tả được lên cloud. Dưới mục tiêu cỡ: hàng nền tách khỏi màn sửa (ON20) theo luật 3 — lớp dữ liệu + quyền ghi ở hàng T3 riêng, màn sửa ở T2."
     },
     {
       "ma": "ON20",
@@ -1706,7 +1706,7 @@
       "phu": [
         "QD1c"
       ],
-      "ghi_chu": "Còn chờ RV-M2 (review §0.4): gửi tiêu đề/mô tả cho model cloud hay chỉ luật local — hỏi ở Cổng Phạm vi. Chung agent/src/agents/context-resolver.ts với PL18 (E1/E2 theo lớp) — chạy liền."
+      "ghi_chu": "Còn chờ RV-M2 (review §0.4): gửi tiêu đề/mô tả cho model cloud hay chỉ luật local — hỏi ở Cổng Phạm vi. Chung agent/src/agents/context-resolver.ts với PL18 (E1/E2 theo lớp) — chạy liền. Dưới mục tiêu cỡ: một đường đọc của agent; không gộp với ON20 (màn sửa của người, khác kết quả)."
     }
   ],
   "chan_troi": [
