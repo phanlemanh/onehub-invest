@@ -5,7 +5,7 @@ slug: ops-mobile-cot-trang-thai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-ops-mobile-cot-trang-thai-design.md
@@ -64,3 +64,7 @@ vẫn trong ma trận; khung InsightGrid hẹp hơn StatusGrid 32px; nhãn trạ
 
 - Ngân sách khung đo ở 390×844 trên Chromium; khung đổi (padding Frame) thì phải đo lại và sửa ngân sách trong thước.
 - Phiên admin tạm của smoke chỉ tạo trên DB local (từ chối DATABASE_URL không phải localhost).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: smoke điện thoại vẫn báo đạt khi bước dọn tài khoản admin tạm không xoá hết; số dòng còn lại chỉ in ra log.
+  - Ngoài-2: ở 390px smoke chỉ đo các hàng trang đầu của mỗi bảng; nhãn trạng thái ở trang 2 trở đi chưa được đo tự động.
+  - Ngoài-3: smoke chỉ đo những nhãn trạng thái đang có trong dữ liệu DB local; một trạng thái hiếm có nhãn dài chưa được đo trước.

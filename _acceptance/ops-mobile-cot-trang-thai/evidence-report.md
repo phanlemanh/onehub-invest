@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 88ec8fa497fc712b2252b7154e68dd461a9f047e
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: ops-mobile-cot-trang-thai
