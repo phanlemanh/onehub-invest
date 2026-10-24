@@ -12,6 +12,7 @@ import {
   getZaloGroups,
 } from "@/lib/collections-queries";
 import { freshnessLocalOnly, getSourceFeedHealth, getLockdownStatus } from "@/lib/ops-queries";
+import { getCloudOpsView } from "@/lib/ops-cloud";
 import { getSourceRoles } from "@/lib/source-roles";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,8 @@ export default async function CollectionsPage() {
     freshnessLocalOnly(),
     getSourceRoles(),
   ]);
+  // Cloud (bảng tầng A vắng): ô số đọc từ bản tin máy local (ON3, ADR-0014).
+  const cloud = localOnly ? await getCloudOpsView() : null;
   return (
     <CollectionsView
       days={days}
@@ -48,10 +51,10 @@ export default async function CollectionsPage() {
       zaloAllowlist={zaloAllowlist}
       zaloHealth={zaloHealth}
       factsPushedAt={factsPushedAt}
-      feedHealth={feedHealth}
+      feedHealth={cloud ? (cloud.feeds ?? []) : feedHealth}
       lockdown={lockdown}
       nowMs={requestTime()}
-      localOnly={localOnly}
+      cloud={cloud}
       roles={roles}
     />
   );

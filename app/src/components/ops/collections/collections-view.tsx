@@ -1,5 +1,4 @@
-import { CircleAlertIcon } from "lucide-react"
-
+import { FactsStaleAlert, FactsStamp } from "@/components/ops/facts-status"
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
 import { AttentionList, issuesOf } from "@/components/ops/collections/attention-list"
 import { CollectionsTiles } from "@/components/ops/collections/collections-tiles"
@@ -11,7 +10,6 @@ import { RotationPanel, ZaloPipePanel } from "@/components/ops/collections/pipe-
 import { SyncActivity } from "@/components/ops/collections/sync-activity"
 import { FlowTable, ZaloGroupsTable } from "@/components/ops/collections-tables"
 import { PageHeader } from "@/components/page/page-header"
-import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import type {
   FlowDay,
   GateFunnel,
@@ -24,6 +22,7 @@ import type {
 import { fmtInt } from "@/lib/format"
 import { sloSummaryKey, sloSummaryText } from "@/lib/freshness"
 import type { getLockdownStatus, SourceFeedHealth } from "@/lib/ops-queries"
+import type { CloudOpsView } from "@/lib/ops-cloud"
 import type { SourceRoles } from "@/lib/source-labels"
 
 export type CollectionsData = {
@@ -39,10 +38,10 @@ export type CollectionsData = {
   lockdown: Awaited<ReturnType<typeof getLockdownStatus>>
   /** Mốc "bây giờ" của request (trang force-dynamic đọc một lần, truyền xuống các vùng). */
   nowMs: number
-  /** Cloud: không có bảng nguồn/bảng nạp — độ tươi chỉ đo ở máy local. */
-  localOnly?: boolean
   /** Vai trò nguồn cho nhãn «S0x · vai trò» (ON7, lib/source-roles.ts); vắng → mã trần. */
   roles?: SourceRoles
+  /** Cloud (ON3): số của ô đọc từ bản tin máy local (`getCloudOpsView`); vắng = máy local. */
+  cloud?: CloudOpsView | null
 }
 
 /**
@@ -51,7 +50,7 @@ export type CollectionsData = {
  * chạy không. Khung theo @reui/solution-dev-ops-6 (thẻ số · luồng + cần chú ý · lưới nguồn) và lưới job của
  * @reui/solution-dev-ops-1.
  */
-export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, localOnly = false, roles = {} }: CollectionsData) {
+export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, roles = {}, cloud = null }: CollectionsData) {
   const factsAgeMin = factsPushedAt ? Math.round((nowMs - new Date(factsPushedAt).getTime()) / 60_000) : null
   const lastPostHours = zaloHealth.lastPostAt ? Math.round((nowMs - new Date(zaloHealth.lastPostAt).getTime()) / 3_600_000) : null
   const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin, nowMs, roles })
@@ -64,21 +63,27 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
         crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Thu thập" }]}
         title="Thu thập"
         stats={[
-          sloSummaryText(slo, localOnly),
+          ...(cloud && !cloud.feeds ? [] : [sloSummaryText(slo)]),
           `Hôm nay ${days[0]?.day ?? "—"}`,
-          ...(factsAgeMin !== null ? [`Máy thu ${fmtInt(factsAgeMin)}′ trước`] : []),
+          ...(!cloud && factsAgeMin !== null ? [`Máy thu ${fmtInt(factsAgeMin)}′ trước`] : []),
         ]}
         description="Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở log tay."
       />
-      {localOnly ? <LocalOnlyAlert /> : null}
-      {factsAgeMin !== null && factsAgeMin > 30 ? (
-        <Alert variant="warning">
-          <CircleAlertIcon aria-hidden="true" />
-          <AlertTitle>Máy thu có thể offline</AlertTitle>
-          <AlertDescription>Dữ liệu máy thu cập nhật {fmtInt(factsAgeMin)} phút trước.</AlertDescription>
-        </Alert>
+      {cloud ? <FactsStamp state={cloud.state} measuredAt={cloud.measuredAt} /> : null}
+      {cloud ? <FactsStaleAlert state={cloud.state} measuredAt={cloud.measuredAt} /> : null}
+      {cloud?.state === "none" ? (
+        <LocalOnlyAlert title="Chỉ đo ở máy local">
+          Máy local chưa đẩy số tổng hợp lên cloud. Kiểm cloud-sync ở máy thu, hoặc xem Ops trên máy thu.
+        </LocalOnlyAlert>
       ) : null}
-      <CollectionsTiles feeds={feedHealth} funnel={funnel} layers={lockdown.layers} agentTurnsToday={lockdown.agentTurnsToday} roles={roles} />
+      <CollectionsTiles
+        feeds={feedHealth}
+        funnel={funnel}
+        layers={lockdown.layers}
+        agentTurnsToday={lockdown.agentTurnsToday}
+        roles={roles}
+        cloud={cloud ? { feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale: cloud.state === "stale" } : undefined}
+      />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SyncActivity days={days} roles={roles} className="min-w-0 lg:col-span-2" />
         <AttentionList issues={issues} roles={roles} className="min-w-0" />
