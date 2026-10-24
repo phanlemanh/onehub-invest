@@ -1,0 +1,51 @@
+schema_version: 1
+feature_slug: cloud-sync-bao-loi-that
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; ca 'AC-3 cloud-sync · chập chờn (sync-cloud hỏng, push-ops-facts lành)' ok (không còn # TODO): ≠0, đúng một dòng 'JOB FAIL [cloud-sync] bước sync-cloud mã 1', dãy lời gọi [sync-cloud, push-ops-facts]; ca 'AU13 cloud-sync: gọi kiểu launchd (qua symlink, cwd khác) → cùng kết quả' ok"
+    paths: [scripts/cloud-sync.sh, scripts/lib/job-step.sh, scripts/job-exit.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; ca 'AU13 cloud-sync: push-ops-facts hỏng → ≠0, dòng ghim, bước sau vẫn chạy' ok; ca 'AU13 cloud-sync: hai bước hỏng (3, 5) → thoát 3, hai dòng ghim đúng thứ tự' ok; ca ma trận 'AC-3 cloud-sync · lành' ok: thoát 0, dãy đủ hai bước"
+    paths: [scripts/cloud-sync.sh, scripts/lib/job-step.sh, scripts/job-exit.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; hai ca 'AU13 cloud-sync: bản đột biến bỏ job_run ở <bước> → bị bắt' ok (sync-cloud, push-ops-facts) — bản đột biến khác bản gốc đúng ở bước đó (khẳng định trước), phép đo báo lỗi gọi tên bước"
+    paths: [scripts/cloud-sync.sh, scripts/job-exit.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; ca 'AC-5 bước thật push-ops-facts → ≠0, cổng canh thấy lần nối, hộp cát không chặn gì' ok; ca đếm 'AC-5 đủ 11 bước' ok; không còn ca # TODO P3-3 trong đầu ra"
+    paths: [pipeline/push-ops-facts.mjs, scripts/job-exit.test.mjs, scripts/lib/job-exit-sandbox.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; ca 'AC-5 chiều đỏ: bản sao push-ops-facts viết cứng localhost:5433 → hộp cát chặn, cổng canh không thấy, bị bắt' ok; ca 'AC-5 push-ops-facts vắng DATABASE_URL → hộp cát chặn :5433 (mặc định cũ còn)' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/job-exit.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: judgment
+    inputs: ["docs/ops/runtime-map.md", "scripts/cloud-sync.sh", "scripts/lib/job-step.sh", "pipeline/push-ops-facts.mjs"]
+    question: "Trong docs/ops/runtime-map.md, mục job đêm có nói đủ và đúng không, đối chiếu với scripts/cloud-sync.sh, scripts/lib/job-step.sh (job_run) và pipeline/push-ops-facts.mjs: (1) cloud-sync nay thoát khác 0 khi bất kỳ bước nào hỏng, kèm dòng 'JOB FAIL [cloud-sync] bước <nhãn> mã <n>' để tìm trong log; (2) hai bước vẫn chạy cả hai (push-ops-facts chạy kể cả khi sync-cloud hỏng); (3) push-ops-facts đọc DATABASE_URL, vắng thì dùng chuỗi kết nối cũ; (4) P3-3 không còn được ghi là việc đang chờ? Tài liệu nói khác hai tệp kia thì FAIL."
+    expected: "đủ bốn điều, khớp hai tệp"
+    paths: ["docs/ops/runtime-map.md", "scripts/cloud-sync.sh", "scripts/lib/job-step.sh", "pipeline/push-ops-facts.mjs"]
+    evidence_required: [run_id, verdict, judges, verified_at]

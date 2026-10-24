@@ -109,6 +109,35 @@ Không ghi bí mật ở đây. Giá trị gốc nằm ở `~/.oneinvest/cloud.e
   `public` của Supabase, chừa ba quan hệ PostGIS. Dòng log và cách gỡ: `docs/ops/supabase-lock-anon-rls.md` mục
   «Leak gate kiểm anon». Soi prod chỉ đọc: `node pipeline/sync-cloud.mjs --kiem-anon`.
 
+## Một bộ soát tầng A cho mọi đường lên cloud (chốt 2026-10-24, `_acceptance/soat-tang-a-moi-duong-len-cloud/`)
+
+Hai đường đưa dữ liệu rời máy — `pipeline/sync-cloud.mjs` (bảng → Supabase) và `pipeline/push-ops-facts.mjs` (bản tin
+`ops_heartbeat`) — đi qua MỘT bộ soát tầng A: `pipeline/lib/tier-a-guard.mjs` (`guardValues`, lõi khớp tên dùng chung với
+bộ che `mask-source-names` của ON7). Danh sách tên đọc từ `source_registry` local và không rời máy; mọi dòng báo chỉ
+nêu đường + mã `S0x`, không bao giờ in tên.
+
+- **`push-ops-facts` chặn bản tin còn tên thật.** Dựng xong bản tin → soát mọi giá trị chuỗi (trừ `zaloGroups[i].name`
+  — tên nhóm S03 là tầng C). Trúng thì KHÔNG gửi, thoát 1, stderr mỗi chỗ một dòng
+  `FACTS CHẶN [tầng A] <đường JSON> <S0x>` (vd `FACTS CHẶN [tầng A] jobs[0].lastLine S02`); không đọc được danh sách tên thì
+  chặn luôn với dòng `FACTS CHẶN [tầng A] không có danh sách tên để soát (source_registry) — không gửi`. Tìm:
+  `grep 'FACTS CHẶN' pipeline/logs/cloud-sync.log` (đi kèm `JOB FAIL [cloud-sync] bước push-ops-facts mã 1`).
+  Việc phải làm: đường JSON chỉ chỗ đổ tên — sửa bên ghi cho chỗ đó (che bằng `maskSourceNames`, đổi sang mã `S0x`, hay
+  bỏ trường); không nới bộ soát. Dòng «không có danh sách tên» → kiểm DB local và bảng `source_registry`. Soi khô (không
+  gửi, không cần token): `node pipeline/push-ops-facts.mjs --kho` → `ops-facts khô: sạch, 0 chỗ chặn` hoặc các dòng chặn.
+- **Tên tài khoản thu là tầng A (Hỏi-1 = A, Mạnh chốt 24/10).** Bản tin gửi `zaloAccounts[i].name = null`; bộ soát chặn
+  bản tin còn tên với dòng `FACTS CHẶN [tầng A] zaloAccounts[<i>].name tên tài khoản thu`. `/ops/sources` trên cloud hiện
+  mã tài khoản (`accountId`); tên chỉ thấy ở máy thu.
+- **Leak gate của `sync-cloud` thêm hai phép soát** (`piiColumnLeaks`, chạy cả TRƯỚC khi gửi — pha `gate`, trước khi
+  đọc local và tráo — lẫn sau tráo): (1) cột của `sale_offers`, `sellers`, `properties` trên cloud phải nằm trong
+  `CLOUD_ALLOW` — lệch thì `cột ngoài danh sách cho phép: <bảng>.<cột>`, kể cả cột đang rỗng; (2) `user_events`,
+  `user_profile`, `review_queue` có ở cloud thì phải rỗng — có dòng thì `bảng tầng A có dòng: <bảng>=<n>`. Dòng log:
+  `SYNC FAIL [gate] … LEAK GATE FAIL (trước khi gửi): …`; lượt dừng, cloud giữ số cũ. Phạm vi cột theo Hỏi-2 = A: chỉ ba
+  bảng có `CLOUD_ALLOW` — các bảng sync khác không có danh sách cột (PROXY). Gỡ: cột thừa trên cloud → Mạnh `ALTER TABLE
+  … DROP COLUMN` trên Supabase (luật 2: agent không sửa DB prod), hoặc thêm cột vào `CLOUD_ALLOW` nếu đó là cột được
+  duyệt lên cloud; bảng tầng A có dòng → điều tra ai ghi, xoá dòng trên cloud. Soi prod chỉ đọc:
+  `node pipeline/sync-cloud.mjs --kiem-cot` (mã 1 khi có vi phạm) — **chạy trước khi merge NT2**: schema cloud dựng tay,
+  còn cột thừa (vd `properties.photos`, `sale_offers.seller_phone`) thì mọi lượt sync dừng ở pha gate.
+
 ## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
 
 Sự cố gốc (audit L7): tối 22/10 colima khởi động lại, `one-invest-db` không có restart policy nên nằm chết
@@ -167,19 +196,21 @@ giữa chuỗi) thì launchd thấy 0.
 | `com.oneinvest.apify-facebook` (`scripts/apify-facebook-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | như trên |
 | `com.oneinvest.airdna-daily` (`scripts/airdna-daily.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
 | `com.oneinvest.collector` (→ `pipeline/finalize-hanoi.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
-| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | DB tắt hẳn: thoát ≠ 0 · DB chập chờn: **có thể 0** | còn lỗ — xem dưới |
+| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | hai bước luôn chạy cả hai: `push-ops-facts` (nhịp tim `/ops`) vẫn chạy khi `sync-cloud` hỏng (AU13) |
 
-- **Tìm nguyên nhân trong log:** chotot/apify in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr cho mỗi
-  bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`). Bộ chạy bước: `scripts/lib/job-step.sh`.
+- **Tìm nguyên nhân trong log:** chotot/apify/cloud-sync in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr
+  cho mỗi bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`; cloud-sync: `JOB FAIL [cloud-sync] bước sync-cloud mã 1`
+  hoặc `… bước push-ops-facts …` — `grep 'JOB FAIL' pipeline/logs/cloud-sync.log`). Bộ chạy bước:
+  `scripts/lib/job-step.sh` (`job_run` — chạy tiếp, giữ mã hỏng đầu tiên).
 - **Còn nuốt lỗi, đang chờ:**
   - Đoạn **nạp** của `chotot-daily.sh` (`import-chotot` không kiểm mã) và `apify-facebook-daily.sh`
     (`import-airbnb … || true`, state vẫn nhảy qua snapshot hỏng) — làn ZCode, yêu cầu `P3-1` của đợt
     `dot0-cam-mau`. Bản vá cùng loại cho `zalo-import-daily.sh` (P1.5) nằm trên nhánh `zcode/audit-p1-resilience`.
-  - `cloud-sync.sh`: khi DB chập chờn (rớt lúc `sync-cloud`, lên lại trước `push-ops-facts`) job vẫn thoát 0;
-    `push-ops-facts.mjs` viết cứng chuỗi kết nối, bỏ qua `DATABASE_URL`. Hai tệp thuộc `t3_paths` — hàng T3 riêng
-    `P3-3` (Mạnh chọn ở Cổng Phạm vi AU3).
+- **Đã vá (P3-3, AU13 `cloud-sync-bao-loi-that`, 24/10):** `cloud-sync.sh` trước đây thoát 0 khi DB chập chờn
+  (`sync-cloud` hỏng, `push-ops-facts` lành). `push-ops-facts.mjs` nay nối DB theo `DATABASE_URL`, vắng biến (như plist
+  hiện nay) thì dùng chuỗi kết nối cũ tới `localhost:5433`.
 - **Cảnh báo khi DB sập** không đến từ job: đó là lớp L5b của `scripts/zalo-watchdog.sh` (ZC3, làn ZCode, nhánh
   `zcode/audit-p1-resilience`, chờ Mạnh ký). Job chỉ nói thật bằng mã thoát.
 - **Kiểm:** `node --test scripts/job-exit.test.mjs` — không tắt DB chung; tệp chạy job chạy trong cây tạm với
   `node`/`docker` giả, bước thật chạy trong hộp cát (`scripts/lib/job-exit-sandbox.mjs`) chặn mọi kết nối trừ một
-  cổng canh. Hai ca `todo` (mã `P3-3`) là lỗ cloud-sync — hiện trong đầu ra cho tới khi hàng T3 vá.
+  cổng canh (11 bước, gồm `push-ops-facts`). Không còn ca `todo` — hai ca `P3-3` đã thành ca thật ở AU13.

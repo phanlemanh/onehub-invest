@@ -1,0 +1,26 @@
+# Probe vòng 2 — verifier, verified_commit dfaa45b; collector/dist build từ cây này. Mọi probe luôn exit 0, đọc dòng số liệu.
+## P1 (tệp probe vòng 1, không sửa) — node _acceptance/collector-graceful-shutdown/evidence/P1-deadline-probe.mjs $PWD 24 · 2026-10-23T05:43:25Z
+ack=202 images=24 · exit sau 35011ms · code 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35010ms shutdown: flushed hanoi__zalo-agent__2026-10-23T054326255
+  log: 35010ms shutdown: flush xong — thoát
+## P2 — lượt flush định kỳ (không tham số, như setInterval của main.ts) đang tải 24 ảnh treo lúc SIGTERM · 2026-10-23T05:44:31Z
+## node _acceptance/collector-graceful-shutdown/evidence/P2-inflight-periodic-probe.mjs $PWD 24 2000
+N=24 D=2000ms: ack=202 · SIGTERM sau 2005ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 45002ms kể từ SIGTERM · mã khác 0 · snapshot hoàn tất 0 · buffered 1 · gọi host ảnh 20
+  log: 1ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 45002ms shutdown: flush quá deadline — thoát
+  log: 45002ms shutdown: MẤT 1 tin đã ack chưa kịp flush — thoát mã 1 để giám sát thấy
+## P2 đối chứng — node .../P2-inflight-periodic-probe.mjs $PWD 24 20000
+N=24 D=20000ms: ack=202 · SIGTERM sau 20005ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 40015ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 24
+  log: 1ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 40015ms shutdown: flushed hanoi__zalo-agent__2026-10-23T054519038
+  log: 40015ms shutdown: flush xong — thoát
+## P3 ka — main.js thật: POST keep-alive dở lúc SIGTERM, gửi nốt · 2026-10-23T05:46:56Z
+ka: POST keep-alive dở lúc SIGTERM trả 202 (header connection: keep-alive) sau 313ms · socket server đóng 5998ms sau phản hồi · thoát sau 6320ms kể từ SIGTERM · mã 0 signal null · snapshot 1
+## P3 stall — main.js thật: tin A ack 202, rồi một POST gửi header + nửa body và im
+stall: tin A trả 202 trước SIGTERM · POST treo (nửa body) · thoát sau 45009ms kể từ SIGTERM · mã khác 0 signal null · snapshot 0
+  log: shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: shutdown: flush quá deadline — thoát
+  log: shutdown: MẤT 1 tin đã ack chưa kịp flush — thoát mã 1 để giám sát thấy
+## P3 reuse — main.js thật: POST thứ hai trên CÙNG socket keep-alive sau SIGTERM · 2026-10-23T05:48:07Z
+reuse: POST 1 (dở lúc SIGTERM) trả 202 · POST 2 trên cùng socket, 1,3s sau SIGTERM, trả 202 · thoát sau 7333ms kể từ SIGTERM · mã 0 signal null · snapshot 1

@@ -60,7 +60,14 @@ function mediaUrlsOf(item: RawItem): string[] {
 
 async function downloadOne(
   url: string,
-  opts: { maxBytes: number; timeoutMs: number; userAgent: string; allowedHostSuffixes: string[] },
+  opts: {
+    maxBytes: number;
+    timeoutMs: number;
+    userAgent: string;
+    allowedHostSuffixes: string[];
+    /** Huỷ từ ngoài (vd deadline shutdown) — ảnh đang tải buộc dừng, tin chảy. */
+    signal?: AbortSignal;
+  },
 ): Promise<{ bytes: Buffer; error?: string }> {
   const controller = new AbortController();
   let timedOut = false;
@@ -68,9 +75,13 @@ async function downloadOne(
     timedOut = true;
     controller.abort();
   }, opts.timeoutMs);
+  // hợp nhất timeout nội bộ với tín hiệu huỷ ngoài (deadline shutdown)
+  const signal = opts.signal
+    ? AbortSignal.any([controller.signal, opts.signal])
+    : controller.signal;
   try {
     const res = await fetch(url, {
-      signal: controller.signal,
+      signal,
       redirect: "follow",
       headers: { "user-agent": opts.userAgent },
     });
@@ -102,7 +113,7 @@ async function downloadOne(
     }
     return { bytes: Buffer.concat(chunks) };
   } catch {
-    return { bytes: Buffer.alloc(0), error: timedOut ? "timeout" : "network" };
+    return { bytes: Buffer.alloc(0), error: opts.signal?.aborted ? "deadline-abort" : timedOut ? "timeout" : "network" };
   } finally {
     clearTimeout(timer);
   }
@@ -113,6 +124,8 @@ export async function fetchMessageMedia(params: {
   /** Ghi file vào snapshot; trả null nếu tên đã ghi (dedup URL trong 1 flush). */
   putFile: (name: string, bytes: Buffer) => Promise<{ sha256: string; bytes: number } | null>;
   options?: MediaFetchOptions;
+  /** Huỷ tải ảnh từ ngoài (deadline shutdown — claudedp-2310-3). */
+  signal?: AbortSignal;
 }): Promise<{ fetched: number; failed: number }> {
   const opts = { ...DEFAULTS, ...(params.options ?? {}) };
 
@@ -158,7 +171,7 @@ export async function fetchMessageMedia(params: {
       const ext = m ? `.${m[1].toLowerCase().replace("jpeg", "jpg")}` : ".jpg";
       // Tên theo băm URL: cùng URL (repost) = cùng file, ổn định giữa các item
       const name = `media/${createHash("sha256").update(url).digest("hex").slice(0, 16)}${ext}`;
-      const dl = await downloadOne(url, opts);
+      const dl = await downloadOne(url, { ...opts, signal: params.signal });
       if (dl.error) {
         entries.set(url, { url, error: dl.error });
         continue;

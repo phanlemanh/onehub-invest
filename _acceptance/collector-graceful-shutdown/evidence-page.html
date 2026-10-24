@@ -1,0 +1,284 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · collector-graceful-shutdown</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Collector API :9210 tắt êm — SIGTERM/SIGINT flush hết buffer rồi mới thoát</h1><div class="sub">Trang hồ sơ · <span class="mono">collector-graceful-shutdown</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Collector API :9210 tắt êm — SIGTERM/SIGINT flush hết buffer rồi mới thoát</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Collector API :9210 (ADR-0006) giữ tin Zalo đã ack 202 trong buffer bộ nhớ và chỉ flush thành raw snapshot mỗi 60s. Khi bị dừng (launchd bootout/restart, Ctrl-C) mà chưa flush thì tin đã ack mất âm thầm…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">5 mục để ngoài phạm vi · 9 giới hạn đã biết (Notes còn chỗ nhắc giới hạn sai khuôn)</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>5</b></span><span data-k="phep_do">Phép đo <b>12</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>4</b></span><span data-k="quyet_dinh_nguoi">người <b>0</b></span><span data-k="ma">Mã <b>9df28ce</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Collector API :9210 (ADR-0006) giữ tin Zalo đã ack 202 trong buffer bộ nhớ và chỉ flush thành raw snapshot mỗi 60s. Khi bị dừng (launchd bootout/restart, Ctrl-C) mà chưa flush thì tin đã ack mất âm thầm. ZCode thêm collector/src/api/graceful.ts (bắt SIGTERM/SIGINT, đóng HTTP, lặp flush tới hết buffer, deadline 45s, bỏ ảnh sát deadline) và plist launchd com.oneinvest.collector-api.plist (ExitTimeOut 60) để chuẩn bị chuyển API từ chạy tay sang launchd. Bốn tiêu chí do phiên điều phối liên làn chốt (23/10/2026), chọn «nghiệm thu gọn».</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given Collector API (`dist/api/main.js`) đang chạy, có tin trong buffer, một connection keep-alive đang rảnh và một POST ingest đang dở (đã gửi header, body chưa xong), When tiến trình nhận SIGTERM hoặc SIGINT, Then server ngừng nhận connection mới, cắt connection keep-alive đang rảnh, làm nốt POST đang dở (ack 202, tin vào snapshot) rồi mới lặp flush tới khi buffer rỗng, và tự `exit(0)` (không bị giết bằng tín hiệu); một POST treo (gửi nửa body rồi im) không giữ shutdown quá vài giây — tin đã ack trước đó vẫn vào snapshot; buffer rỗng thì thoát mà không ghi snapshot rỗng.</li><li data-ac="AC-2"><b>AC-2</b> — Given một lượt flush đang chạy (tải ảnh chậm) và một POST ingest tới giữa chừng được ack 202, When SIGTERM tới lúc đó, Then trước khi `exit(0)` cả tin của lượt flush đầu lẫn tin của POST giữa chừng đều có trong snapshot.</li><li data-ac="AC-3"><b>AC-3</b> — Given deadline shutdown mặc định và `ExitTimeOut` của plist, When shutdown chạy, Then deadline 45s nhỏ hơn `ExitTimeOut` 60; còn dưới 10s tới deadline thì flush bỏ tải ảnh (không gọi host ảnh) nhưng tin vẫn ghi vào snapshot, còn dư thời gian thì không bỏ ảnh; một lượt flush ĐANG tải ảnh treo (vd 24 ảnh, số mặc định thật) — kể cả lượt định kỳ 60s đã bắt đầu từ trước SIGTERM, không mang deadline — bị huỷ tải ảnh ở mốc còn 10s và tin vẫn vào snapshot trước deadline; flush treo quá deadline vẫn tự exit; tín hiệu lần 2 thoát ngay.</li><li data-ac="AC-4"><b>AC-4</b> — Given `pipeline/cron/com.oneinvest.collector-api.plist` và mã collector của nhánh, When chạy `plutil -lint` và `npm run check`, Then plist hợp lệ (OK) và collector biên dịch sạch — tiền đề để launchd chạy `dist/api/main.js`.</li><li data-ac="AC-5"><b>AC-5</b> — Given shutdown phải thoát vì quá deadline hoặc vì tín hiệu lần 2, When lúc thoát buffer vẫn còn tin đã ack chưa flush, Then tiến trình exit mã khác 0 và log số tin mất («MẤT N tin»); buffer rỗng thì exit 0, không có dòng MẤT.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 4</button><button class="btn" data-loc="may" aria-pressed="false">Máy 4</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 0</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261023T014204Z-1"><b>2026-10-23</b> · Máy · descope · S1 — bỏ gap-probe — nghiệm thu gọn theo brief phiên điều phối liên làn (23/10): 4 AC chốt sẵn, toàn eval máy, không hội đồng judge<div class="note">đổi lại không có phản biện context sạch trước duyệt; bù một phần bằng phiên VERIFY tươi và mục Known limits</div></li><li data-loai="may" data-id="d-20261023T053649Z-2"><b>2026-10-23</b> · Máy · revisit · S4 — vòng 2 sau REJECT vòng 1: AC-1 đổi thành cắt keep-alive RẢNH + làm nốt POST đang dở (closeIdleConnections); AC-3 thêm ca lượt flush đang tải ảnh treo với deadline mặc định (probe P1 thành E7); thêm AC-5 exit khác 0 khi mất tin; thêm E7–E9<div class="note">điều phối liên làn mở lại cho ZCode (claudedp-2310-3, c6044e3) và yêu cầu kiểm hai điểm phụ của verifier vòng 1</div></li><li data-loai="may" data-id="d-20261023T091705Z-3"><b>2026-10-23</b> · Máy · revisit · S4 — vòng 3 sau REJECT vòng 2: AC-1 thêm ca POST treo nửa body (P3), AC-3 thêm ca lượt flush định kỳ đang chạy (P2); probe P2/P3 thành E10–E11<div class="note">ZCode sửa P2 (flushAbort) + P3 (race close 3s) ở 306f386; P3 chỉ có test đặc tả nên cần eval trên main.js thật</div></li><li data-loai="may" data-id="d-20261023T154202Z-4"><b>2026-10-23</b> · Máy · revisit · S4 — vòng 4 sau REJECT vòng 3 (test P3 chập chờn): thêm E12 chạy ca P3 ×10; E2 đổi sang collector_test_clean; mọi lệnh shutdown_* xoá dist trước khi build; ghi ràng buộc ZC6 (hook chưa spool) và đính chính d-3<div class="note">ZCode sửa test ở 15f6bd0 + chú thích 0d22845; điều phối liên làn yêu cầu chứng hết chập chờn và ghi ràng buộc ZC6 → ZC4</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E1-20261023T154430</td><td class="mono">2026-10-23T15:44:30Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E2-20261023T154436</td><td class="mono">2026-10-23T15:44:36Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E3-20261023T154430</td><td class="mono">2026-10-23T15:44:30Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E4-20261023T154527</td><td class="mono">2026-10-23T15:45:27Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E5-20261023T154528</td><td class="mono">2026-10-23T15:45:28Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E6-20261023T154430</td><td class="mono">2026-10-23T15:44:30Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E7-20261023T154614</td><td class="mono">2026-10-23T15:46:14Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E8-20261023T154544</td><td class="mono">2026-10-23T15:45:44Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E9-20261023T154732</td><td class="mono">2026-10-23T15:47:32Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E10-20261023T154649</td><td class="mono">2026-10-23T15:46:49Z</td></tr>
+<tr><td><a href="#E11">E11</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E11-20261023T154833</td><td class="mono">2026-10-23T15:48:33Z</td></tr>
+<tr><td><a href="#E12">E12</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-graceful-shutdown-E12-20261023T154944</td><td class="mono">2026-10-23T15:49:44Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-4: Given `pipeline/cron/com.oneinvest.collector-api.plist` và mã collector của nhánh, When chạy `plutil -lint` và `npm run check`, Then plist hợp lệ (OK) và collector biên dịch sạch — tiền đề để launchd chạy `dist/api/main.js`.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E1-20261023T154430</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.collector_check</b></span><span>verified_at <b>2026-10-23T15:44:30Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">&gt; one-invest-collector@0.1.0 check
+&gt; tsc -p tsconfig.json --noEmit
+(không có dòng lỗi nào; tsc im lặng = biên dịch sạch)</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · test</h3><p class="crit">AC-2: Given một lượt flush đang chạy (tải ảnh chậm) và một POST ingest tới giữa chừng được ack 202, When SIGTERM tới lúc đó, Then trước khi `exit(0)` cả tin của lượt flush đầu lẫn tin của POST giữa chừng đều có trong snapshot.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E2-20261023T154436</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.collector_test_clean</b></span><span>verified_at <b>2026-10-23T15:44:36Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">✔ SIGTERM giữa lúc flush chậm + POST giữa chừng → cả hai tin vào snapshot (63.806833ms)
+✔ deadline huỷ tải ảnh treo giữa chừng — tin vẫn vào snapshot, không chờ ảnh (claudedp-2310-3) (2023.175791ms)
+✔ P2: SIGTERM tới khi lượt flush ĐỊNH KỲ (không deadline) đang tải ảnh treo — vẫn phải huỷ được (claudedp-2310-3 vòng 3) (3542.069458ms)
+✔ P3: POST gửi NỬA body rồi im — shutdown không chờ close() treo, buffer vẫn được flush (claudedp-2310-3 vòng 3) (3019.4865ms)
+✔ kev-nhãn: flush tin có kev → manifest khai schemaVersion 3 (PL4, claudedp-2310-11 mở lại) (1.273958ms)
+✔ ZC1: hai tin CHỈ ẢNH cùng nhóm cùng ts → 2 RawItem; tin chữ giữ nguyên sourceId cũ (87.600291ms)
+✔ flush chạy chồng khi ảnh chậm: single-flight — 1 snapshot, không trùng, tin giữa chừng nằm lại (406.123459ms)
+ℹ tests 39 · pass 39 · fail 0 · cancelled 0 · skipped 0 · todo 0 · duration_ms 45092.918291</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given deadline shutdown mặc định và `ExitTimeOut` của plist, When shutdown chạy, Then deadline 45s nhỏ hơn `ExitTimeOut` 60; còn dưới 10s tới deadline thì flush bỏ tải ảnh (không gọi host ảnh) nhưng tin vẫn ghi vào snapshot, còn dư thời gian thì không bỏ ảnh; một lượt flush ĐANG tải ảnh treo (vd 24 ảnh, số mặc định thật) — kể cả lượt định kỳ 60s đã bắt đầu từ trước SIGTERM, không mang deadline — bị huỷ tải ảnh ở mốc còn 10s và tin vẫn vào snapshot trước deadline; flush treo quá deadline vẫn tự exit; tín hiệu lần 2 thoát ngay.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E3-20261023T154430</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_deadline</b></span><span>verified_at <b>2026-10-23T15:44:30Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">graceful.ts: DEFAULT_DEADLINE_MS=45000 · MEDIA_CUTOFF_MS=10000 · plist ExitTimeOut=60s
+ok   deadline mặc định = 45000ms
+ok   ngưỡng bỏ ảnh = 10000ms
+ok   plist ExitTimeOut = 60
+ok   45s &lt; 60s, dư 15000ms trước SIGKILL
+ok   main.ts không ghi đè deadlineMs (dùng mặc định 45s)
+ok   main.ts cắt connection keep-alive rảnh (closeIdleConnections) trong close()
+ok   main.ts không gọi closeAllConnections (không giết POST đang dở)
+ok   main.ts nối pendingCount (exit khác 0 khi còn tin)
+ok   should-NOT-fire: deadline 60s = ExitTimeOut 60 → luật đỏ
+ok   should-NOT-fire: deadline 75s &gt; ExitTimeOut 60 → luật đỏ
+ok   should-NOT-fire: ngưỡng ảnh = deadline → luật đỏ
+DEADLINE PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-3: Given deadline shutdown mặc định và `ExitTimeOut` của plist, When shutdown chạy, Then deadline 45s nhỏ hơn `ExitTimeOut` 60; còn dưới 10s tới deadline thì flush bỏ tải ảnh (không gọi host ảnh) nhưng tin vẫn ghi vào snapshot, còn dư thời gian thì không bỏ ảnh; một lượt flush ĐANG tải ảnh treo (vd 24 ảnh, số mặc định thật) — kể cả lượt định kỳ 60s đã bắt đầu từ trước SIGTERM, không mang deadline — bị huỷ tải ảnh ở mốc còn 10s và tin vẫn vào snapshot trước deadline; flush treo quá deadline vẫn tự exit; tín hiệu lần 2 thoát ngay.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E4-20261023T154527</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_skip_media</b></span><span>verified_at <b>2026-10-23T15:45:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">skipMedia=true, host ảnh treo: flush 1ms · gọi host ảnh 0 lần · tệp ảnh 0
+ok   tin ack 202 và flush trả snapshotId
+ok   tin có trong snapshot dù bỏ ảnh
+ok   should-NOT-fire: không gọi host ảnh lần nào
+ok   should-NOT-fire: không có tệp ảnh trong snapshot
+ok   flush không chờ host ảnh treo (&lt; 2000ms; timeout ảnh 5000ms)
+đối chứng skipMedia=false: gọi host ảnh 1 lần · tệp ảnh 1
+ok   đối chứng: tin có trong snapshot
+ok   đối chứng: flush thường CÓ tải ảnh — skipMedia mới là thứ chặn
+SKIP-MEDIA PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-1: Given Collector API (`dist/api/main.js`) đang chạy, có tin trong buffer, một connection keep-alive đang rảnh và một POST ingest đang dở (đã gửi header, body chưa xong), When tiến trình nhận SIGTERM hoặc SIGINT, Then server ngừng nhận connection mới, cắt connection keep-alive đang rảnh, làm nốt POST đang dở (ack 202, tin vào snapshot) rồi mới lặp flush tới khi buffer rỗng, và tự `exit(0)` (không bị giết bằng tín hiệu); một POST treo (gửi nửa body rồi im) không giữ shutdown quá vài giây — tin đã ack trước đó vẫn vào snapshot; buffer rỗng thì thoát mà không ghi snapshot rỗng.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E5-20261023T154528</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_process</b></span><span>verified_at <b>2026-10-23T15:45:28Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   SIGTERM: connection keep-alive còn mở sau 202 (header connection: keep-alive)
+SIGTERM, 1 tin trong buffer: mã thoát 0, signal null · snapshot 1
+ok   SIGTERM: POST ingest qua keep-alive được ack 202
+ok   SIGTERM: tiến trình tự exit(0), không bị giết bằng tín hiệu
+ok   SIGTERM: connection keep-alive bị server đóng
+ok   SIGTERM: tin đã ack có trong snapshot
+ok   SIGTERM: log có đủ ba dòng shutdown → flushed → flush xong
+ok   SIGTERM: dòng báo đóng HTTP đứng trước dòng flushed
+SIGINT, buffer rỗng: mã thoát 0, signal null · snapshot 0
+ok   SIGINT: tiến trình tự exit(0)
+ok   should-NOT-fire: buffer rỗng → không ghi snapshot rỗng
+ok   should-NOT-fire: buffer rỗng → không có dòng flushed
+PROCESS PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-4: Given `pipeline/cron/com.oneinvest.collector-api.plist` và mã collector của nhánh, When chạy `plutil -lint` và `npm run check`, Then plist hợp lệ (OK) và collector biên dịch sạch — tiền đề để launchd chạy `dist/api/main.js`.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E6-20261023T154430</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.collector_plist_lint</b></span><span>verified_at <b>2026-10-23T15:44:30Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">pipeline/cron/com.oneinvest.collector-api.plist: OK</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-3: Given deadline shutdown mặc định và `ExitTimeOut` của plist, When shutdown chạy, Then deadline 45s nhỏ hơn `ExitTimeOut` 60; còn dưới 10s tới deadline thì flush bỏ tải ảnh (không gọi host ảnh) nhưng tin vẫn ghi vào snapshot, còn dư thời gian thì không bỏ ảnh; một lượt flush ĐANG tải ảnh treo (vd 24 ảnh, số mặc định thật) — kể cả lượt định kỳ 60s đã bắt đầu từ trước SIGTERM, không mang deadline — bị huỷ tải ảnh ở mốc còn 10s và tin vẫn vào snapshot trước deadline; flush treo quá deadline vẫn tự exit; tín hiệu lần 2 thoát ngay.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E7-20261023T154614</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_hang_default</b></span><span>verified_at <b>2026-10-23T15:46:14Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">24 ảnh treo, deadline mặc định: mã thoát 0 sau 35013ms · snapshot 1 · buffer còn 0 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35013ms shutdown: flushed hanoi__zalo-agent__2026-10-23T154614752
+  log: 35013ms shutdown: flush xong — thoát
+ok   tin ack 202
+ok   exit 0 (không mất tin)
+ok   tin đã ack có trong snapshot
+ok   buffer rỗng lúc thoát
+ok   thoát trước deadline 45s (ảnh treo bị huỷ, không chạy tới mốc deadline)
+ok   should-NOT-fire: không có dòng &#39;flush quá deadline&#39;
+HANG-DEFAULT PASS</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-1: Given Collector API (`dist/api/main.js`) đang chạy, có tin trong buffer, một connection keep-alive đang rảnh và một POST ingest đang dở (đã gửi header, body chưa xong), When tiến trình nhận SIGTERM hoặc SIGINT, Then server ngừng nhận connection mới, cắt connection keep-alive đang rảnh, làm nốt POST đang dở (ack 202, tin vào snapshot) rồi mới lặp flush tới khi buffer rỗng, và tự `exit(0)` (không bị giết bằng tín hiệu); một POST treo (gửi nửa body rồi im) không giữ shutdown quá vài giây — tin đã ack trước đó vẫn vào snapshot; buffer rỗng thì thoát mà không ghi snapshot rỗng.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E8-20261023T154544</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_inflight</b></span><span>verified_at <b>2026-10-23T15:45:44Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">POST dở lúc SIGTERM: trả 202 · connection mới sau SIGTERM: ECONNREFUSED · mã thoát 0, signal null · snapshot 1
+ok   POST đang dở được làm nốt và ack 202 (không bị cắt)
+ok   should-NOT-fire: connection mới sau SIGTERM bị từ chối
+ok   tiến trình tự exit(0)
+ok   tin của POST dở có trong snapshot
+INFLIGHT PASS</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-5: Given shutdown phải thoát vì quá deadline hoặc vì tín hiệu lần 2, When lúc thoát buffer vẫn còn tin đã ack chưa flush, Then tiến trình exit mã khác 0 và log số tin mất («MẤT N tin»); buffer rỗng thì exit 0, không có dòng MẤT.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E9-20261023T154732</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_lost_exit</b></span><span>verified_at <b>2026-10-23T15:47:32Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">flush treo quá deadline, còn 3 tin: mã thoát khác 0 · shutdown: MẤT 3 tin đã ack chưa kịp flush — (log)
+ok   quá deadline mà còn tin → exit khác 0
+ok   log ghi số tin mất (MẤT 3 tin)
+tín hiệu lần 2, còn 2 tin: mã thoát khác 0 · shutdown: MẤT 2 tin đã ack chưa kịp flush — (log)
+ok   tín hiệu lần 2 mà còn tin → exit khác 0
+ok   log ghi số tin mất (MẤT 2 tin)
+quá deadline, buffer rỗng: mã thoát 0
+ok   should-NOT-fire: buffer rỗng → exit 0
+ok   should-NOT-fire: buffer rỗng → không có dòng MẤT
+LOST-EXIT PASS</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · script</h3><p class="crit">AC-3: Given deadline shutdown mặc định và `ExitTimeOut` của plist, When shutdown chạy, Then deadline 45s nhỏ hơn `ExitTimeOut` 60; còn dưới 10s tới deadline thì flush bỏ tải ảnh (không gọi host ảnh) nhưng tin vẫn ghi vào snapshot, còn dư thời gian thì không bỏ ảnh; một lượt flush ĐANG tải ảnh treo (vd 24 ảnh, số mặc định thật) — kể cả lượt định kỳ 60s đã bắt đầu từ trước SIGTERM, không mang deadline — bị huỷ tải ảnh ở mốc còn 10s và tin vẫn vào snapshot trước deadline; flush treo quá deadline vẫn tự exit; tín hiệu lần 2 thoát ngay.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E10-20261023T154649</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_periodic_hang</b></span><span>verified_at <b>2026-10-23T15:46:49Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">SIGTERM 2s sau khi lượt định kỳ bắt đầu, 24 ảnh treo: exit 0 sau 35011ms · snapshot 1 · buffer còn 0 · gọi host ảnh 16
+  log: 0ms shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: 35011ms shutdown: flushed hanoi__zalo-agent__2026-10-23T154650376
+  log: 35011ms shutdown: flush xong — thoát
+ok   exit 0 (không mất tin)
+ok   tin đã ack có trong snapshot
+ok   buffer rỗng lúc thoát
+ok   thoát trước deadline 45s — ảnh của lượt ĐANG CHẠY bị huỷ
+ok   should-NOT-fire: không có dòng &#39;quá deadline&#39; hay &#39;MẤT&#39;
+PERIODIC-HANG PASS</pre>
+</div>
+<div class="card eval" id="E11"><h3><span class="badge pass">PASS</span> &nbsp;E11 · script</h3><p class="crit">AC-1: Given Collector API (`dist/api/main.js`) đang chạy, có tin trong buffer, một connection keep-alive đang rảnh và một POST ingest đang dở (đã gửi header, body chưa xong), When tiến trình nhận SIGTERM hoặc SIGINT, Then server ngừng nhận connection mới, cắt connection keep-alive đang rảnh, làm nốt POST đang dở (ack 202, tin vào snapshot) rồi mới lặp flush tới khi buffer rỗng, và tự `exit(0)` (không bị giết bằng tín hiệu); một POST treo (gửi nửa body rồi im) không giữ shutdown quá vài giây — tin đã ack trước đó vẫn vào snapshot; buffer rỗng thì thoát mà không ghi snapshot rỗng.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E11-20261023T154833</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_stalled_post</b></span><span>verified_at <b>2026-10-23T15:48:33Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">tin A ack 202, POST B treo nửa body: mã thoát 0, signal null sau 3012ms · snapshot 1
+  log: shutdown: SIGTERM — đóng HTTP, flush buffer rồi thoát (tối đa 45000ms)
+  log: shutdown: flushed hanoi__zalo-agent__2026-10-23T154837283
+  log: shutdown: flush xong — thoát
+ok   tin A được ack 202 trước SIGTERM
+ok   tiến trình tự exit(0)
+ok   tin A có trong snapshot dù còn POST treo
+ok   thoát sau &lt; 10s — không chờ POST treo tới deadline 45s
+ok   should-NOT-fire: không có dòng &#39;MẤT&#39; hay &#39;quá deadline&#39;
+STALLED-POST PASS</pre>
+</div>
+<div class="card eval" id="E12"><h3><span class="badge pass">PASS</span> &nbsp;E12 · script</h3><p class="crit">AC-1: Given Collector API (`dist/api/main.js`) đang chạy, có tin trong buffer, một connection keep-alive đang rảnh và một POST ingest đang dở (đã gửi header, body chưa xong), When tiến trình nhận SIGTERM hoặc SIGINT, Then server ngừng nhận connection mới, cắt connection keep-alive đang rảnh, làm nốt POST đang dở (ack 202, tin vào snapshot) rồi mới lặp flush tới khi buffer rỗng, và tự `exit(0)` (không bị giết bằng tín hiệu); một POST treo (gửi nửa body rồi im) không giữ shutdown quá vài giây — tin đã ack trước đó vẫn vào snapshot; buffer rỗng thì thoát mà không ghi snapshot rỗng.</p>
+<div class="kv"><span>run_id <b>collector-graceful-shutdown-E12-20261023T154944</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.shutdown_p3_repeat</b></span><span>verified_at <b>2026-10-23T15:49:44Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">P3 lần 1 xanh
+P3 lần 2 xanh
+P3 lần 3 xanh
+P3 lần 4 xanh
+P3 lần 5 xanh
+P3 lần 6 xanh
+P3 lần 7 xanh
+P3 lần 8 xanh
+P3 lần 9 xanh
+P3 lần 10 xanh
+P3x10 PASS</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals: none. Vòng này không chạy baseline diffBase, nên mọi khối ghi `baseline: n-a`
+(lý do ở «Baseline khong do»). Hai đối chứng ngoài baseline:
+- E12 phân biệt test P3 mới với test P3 vòng 3. Verifier dựng một bản chép collector trong scratchpad, với
+  src ở HEAD và `node_modules` là symlink, rồi chỉ thay `graceful-shutdown-integration.test.ts` bằng bản
+  d6d9abe và build lại bằng tsc. Kết quả: test cũ chạy trên mã HEAD xanh 0/10, đỏ 10/10 (15:57:45Z). Bản
+  chép đã xoá sau khi chạy.
+- E10 và E11 đã được vòng 3 đối chứng là đỏ trên mã vòng 2 (dfaa45b). E7, E8, E9 đã được vòng 2 đối chứng
+  với mã vòng 1.
+**Số lần chạy ca P3: 31 xanh / 0 đỏ.** Nguyên văn ở `evidence/probes-round4.txt`. Gồm:
+- 1 lần trong suite E2 (3019ms);
+- 10 lần của E12;
+- 15 lần lặp thường, mỗi lần «pass 1 fail 0», 3023–3058ms;
+- 5 lần dưới tải 18 tiến trình node bận CPU, 3013–3057ms.
+Thời gian luôn quanh 3s, nghĩa là ca đi đúng nhánh race close 3s, không phải nhánh connection rảnh bị cắt.
+**Diff mã sản phẩm vòng 3 ↔ vòng 4:**
+- `git diff --stat d6d9abe 0d22845 -- collector/src/api collector/src/core` chỉ ra `collector/src/api/main.ts`
+  (2 thêm, 1 bớt), là chú thích dòng 61–62. Không có dòng mã thực thi nào đổi.
+- Ngoài api/core chỉ có `collector/src/test/graceful-shutdown-integration.test.ts` khác (+9: listener
+  `error`, chờ `server.once(&quot;request&quot;)`). Đây là tệp test, được phép khác.
+- `git diff 0d22845 HEAD -- collector/src` rỗng.
+- So patch tính năng trước và sau rebase, chỉ lấy dòng +/- ở api và core:
+  - `merge-base(306f386, main)..306f386` cho 254 dòng;
+  - `merge-base(0d22845, main)..0d22845` cho 255 dòng;
+  - khác nhau DUY NHẤT ở dòng chú thích main.ts.
+- `29050d4 → d6d9abe` (api, core) là PL4/ZC1 từ main:
+  - server.ts: `AgentKevFact`, `meta.kev`, `sourceIdOf` ZC1;
+  - storage.ts và types.ts: schemaVersion 3.
+- `git diff origin/main HEAD` không chạm storage.ts và types.ts.
+Kết luận: phần rebase không làm đổi mã tính năng.
+**Probe P1/P2/P3 chạy lại.** Collector build từ 9df28ce, nguyên văn ở `evidence/probes-round4.txt`:
+    P1 (15:52:11Z): ack=202 images=24 · exit sau 35005ms · code 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+    P2 D=2000 (15:52:46Z): SIGTERM sau 2006ms kể từ lúc lượt định kỳ bắt đầu · thoát sau 35010ms · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 16
+    P2 đối chứng D=20000 (15:53:23Z): thoát sau 35008ms kể từ SIGTERM · mã 0 · snapshot hoàn tất 1 · buffered 0 · gọi host ảnh 24
+    P3 stall (main.js thật, 15:54:26Z): tin A trả 202 trước SIGTERM · POST treo (nửa body) · thoát sau 3014ms · mã 0 signal null · snapshot 1
+    P3 ka (15:54:29Z): POST keep-alive dở lúc SIGTERM trả 202 sau 313ms · thoát sau 3017ms · mã 0 signal null · snapshot 1
+    P3 reuse (15:54:32Z): POST 1 (dở lúc SIGTERM) trả 202 · POST 2 trên cùng socket 1,3s sau SIGTERM trả 202 · thoát sau 3012ms · mã 0 signal null · snapshot 1
+    P4 auto-flush (15:54:36Z): thoát sau 35011ms · mã 0 · snapshot 1 · tin có trong snapshot true · buffered 0 · POST kích nhận HTTP 202
+    P5 late-post 5000ms (15:55:13Z): thoát sau 35011ms · mã 0 · snapshot 2 · A true · B true · B nhận 202 · buffered 0
+    P6 kev+ZC1 (mới): thoát sau 5013ms · mã 0 · snapshot 2 · schemaVersion 3,3 · 4 tin / 4 sourceId · T 1 · I1 1 · I2 1 · I3 1 · meta.kev nguyên · buffered 0
+Cả ba probe bắt buộc đều đạt: snapshot đủ, buffered 0, mã 0, không dòng MẤT. Số liệu trùng vòng 3 (sai
+khác dưới 15ms). Tệp probe mới: `evidence/P6-kev-zc1-probe.mjs`.
+**Không đụng runtime thật.** Tiến trình nghe 127.0.0.1:9210 là PID 63069 trước (15:43:03Z) và sau mọi lần
+chạy, cùng PID với vòng 3. Trong `~/dev/onehub-invest/collector/snapshots/hanoi` có thêm 6 snapshot
+`zalo-agent` từ 15:43Z. Cả 6 có tên rơi đúng giây :54 (interval 60s của API đang chạy), và không item nào
+chứa chuỗi đánh dấu của eval hay probe (đã grep gzcat). Worktree không phát sinh `collector/snapshots`.
+Không còn thư mục tạm `acc-*` hay `probe-*` nào từ phiên này. Thay đổi trong repo gồm:
+- `run-log.jsonl`, nối thêm 12 dòng round 4;
+- báo cáo này;
+- `evidence/probes-round4.txt`, `evidence/P6-kev-zc1-probe.mjs`;
+- `collector/dist` do build.
+Không có `network_observed`, vì không eval nào là ui-check (Network truth không áp dụng).
+Baseline khong do:
+- Vòng này không chạy lane baseline diffBase. Vòng 2 đã đo E2 là red trên diffBase cba11e4 (19/19 xanh
+  nhưng 0 ca graceful-shutdown).
+- E1: `collector/src/api/graceful.ts` chưa tồn tại trên diffBase.
+- E3: `scripts/collector-shutdown/acceptance.mjs`, `collector/src/api/graceful.ts` và plist chưa tồn tại
+  trên diffBase.
+- E4, E5, E7, E8, E9, E10, E11: `scripts/collector-shutdown/acceptance.mjs` chưa tồn tại trên diffBase.
+- E6: plist chưa tồn tại trên diffBase.
+- E12: `collector/src/test/graceful-shutdown-integration.test.ts` chưa tồn tại trên diffBase. Đối chứng với
+  test vòng 3 đã làm như trên.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E4 failed (cấp tiêu chí). Probe P1 cho thấy lượt flush đầu khi shutdown không huỷ ảnh sát deadline; tin đã ack mất mà vẫn thoát mã 0. Returned to implementation.</li><li>Round 2: E7 failed (cấp tiêu chí). Lượt flush định kỳ đang chạy lúc SIGTERM không nhận deadline, ảnh treo không bị huỷ, tin mất (P2). Thêm rủi ro POST treo nửa body giữ close() tới deadline (P3). Returned to implementation.</li><li>Round 3: sản phẩm sửa đúng P2 (flushAbort) và P3 (race close 3s), E1 và E3–E11 đạt. E2 failed vì ca tích hợp mới «P3» có race trong test (SIGTERM trước khi server parse header, socket thô thiếu listener error). Returned to implementation (sửa test, làn ZCode), escalate tới user.</li><li>Round 4: E1–E12 đạt. Test P3 đã sửa (15f6bd0) xanh 31/31, test cũ đỏ 10/10 trên cùng mã. Mã sản phẩm chỉ khác vòng 3 ở chú thích main.ts. PL4/ZC1 rebase vào không tương tác xấu với shutdown (P6). P1/P2/P3/P4/P5 không mất tin. Verdict PASS, chờ chữ ký Cổng 2. Còn ràng buộc ZC6 → ZC4 ở Known limits.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Cài plist vào `~/Library/LaunchAgents`, `launchctl bootstrap`/`bootout`, restart Collector API đang chạy tay — triển khai sau merge, ZCode làm qua kênh tin.</li><li data-loai="ngoai">Khôi phục tin khi tiến trình bị SIGKILL hoặc mất điện (buffer chỉ ở bộ nhớ) — không có journal đĩa trong vòng này.</li><li data-loai="ngoai">Tải bù ảnh đã bỏ lúc shutdown sát deadline — URL zdn.vn có hạn, ảnh bỏ là mất.</li><li data-loai="ngoai">Hành vi thu của OpenClaw (`collector/openclaw/**`) và watchdog Zalo — không đổi.</li><li data-loai="ngoai">Đổi DATA-CONTRACT / schemaVersion của snapshot — shutdown dùng đúng đường flush cũ.</li><li data-loai="gioi-han">**Ràng buộc ZC6.** Hook Zalo `collector/openclaw/handler.js` ở HEAD chưa có spool và không gửi lại. POST lỗi chỉ ghi `post-error …` (dòng 135) rồi bỏ tin. Vì vậy tin hook gửi tới đúng lúc :9210 đang restart vẫn MẤT Ở NGUỒN cho tới khi ZC6 (spool + gửi lại, hiện ở nhánh chưa merge `zcode/hook-zalo-spool-gui-lai`, 371f43e) merge. Ba dạng: - POST còn dở ở mốc bỏ chờ 3s của close(), mà vòng flush xong trước khi nó hoàn tất; - connection đã gửi header nhưng server chưa parse lúc SIGTERM, bị `closeIdleConnections()` cắt như connection rảnh; - POST tới khi cổng đang tắt hoặc tiến trình chưa lên lại (ECONNREFUSED). Các tin này CHƯA được ack 202, nên không phạm AC-1 hay AC-5. Nhưng đó vẫn là mất dữ liệu nguồn. Thứ tự triển khai bắt buộc: **ZC4 (chuyển :9210 sang launchd, restart thật) phải đi SAU ZC6.**</li><li data-loai="gioi-han">Ca P3 xanh 31/31 lần trong vòng này, cộng thêm 10/10 lần đối chứng đỏ của test cũ. Bằng chứng mạnh rằng hết chập chờn. Nhưng nó không loại trừ tuyệt đối một chập chờn với tỉ lệ rất thấp (ghi ở cost_if_wrong của d-4). Về cơ chế, test giờ chờ `server.once(&quot;request&quot;)` trước SIGTERM và có listener `error` trên socket thô. Hai thay đổi này khử đúng race mà vòng 3 tìm ra, chứ không chỉ nới thời gian.</li><li data-loai="gioi-han">Ca tích hợp P3 trong E2 và E12 vẫn chép tay thân `close()` của main.ts vào test, nên đó là đặc tả, không phải main.ts. Bằng chứng P3 cho main.js thật là E11 và probe P3 (stall, ka, reuse).</li><li data-loai="gioi-han">E10 và probe P2, P4, P5, P6 chạy trong tiến trình harness, không phải main.js thật. Harness dùng createAgentServer, installGracefulShutdown và close race 3s nối dây như main.ts, nhưng tín hiệu và exit là giả. Allowlist ảnh của main.js cố định `zdn.vn`, nên không trỏ được vào host treo cục bộ.</li><li data-loai="gioi-han">AC-2 chỉ được chứng bằng ca tích hợp trong E2, với tín hiệu và exit giả. Ở đó «POST giữa chừng» là lời gọi thẳng `s.ingest()`. Probe P5 phủ thêm ca POST qua HTTP thật hoàn tất giữa lúc flush dài.</li><li data-loai="gioi-han">AC-1 «đóng HTTP trước khi flush»: close() chỉ chờ tối đa 3s rồi flush luôn, nên flush CÓ THỂ chạy khi request cũ chưa xong. Đây là chủ ý của sửa P3. Vòng lặp flush gom tin tới muộn (P5).</li><li data-loai="gioi-han">AC-3 «tín hiệu lần 2 thoát ngay» và AC-5 chỉ có test đơn vị và harness với flush giả (E2, E9). E3 là kiểm tĩnh (regex hằng số trong `graceful.ts`, `plutil -extract` plist) và không đọc hằng `MEDIA_CUTOFF_MS` thứ hai trong `server.ts`.</li><li data-loai="gioi-han">AC-4: `plutil -lint` chỉ kiểm cú pháp. Plist còn placeholder `__ROOT__` và chưa từng được launchd nạp. Hai hành vi thật của launchd không được đo: SIGTERM rồi SIGKILL sau `ExitTimeOut` 60, và cách KeepAlive xử lý mã thoát khác 0.</li><li data-loai="gioi-han">E5, E8, E11 và probe P3 chạy bản chép `collector/dist` trong thư mục tạm, với `node_modules` là symlink. Mã giống runtime thật, chỉ đường dẫn snapshot và state khác.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">9df28ce34bf9b222db178a45eb9a83b4d7958a43</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>

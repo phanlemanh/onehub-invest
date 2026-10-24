@@ -8,8 +8,8 @@ Cách đọc — mỗi khối một thuật ngữ:
 
 - Dòng in đậm là **nhãn tiếng Việt chuẩn** — chữ dùng trên UI, trong văn xuôi và trong tiêu chí
   `_acceptance/*/contract.md`. Tên code/API/route đặt trong `backtick` (máy đọc bỏ qua code span).
-- `Code` là tên tiếng Anh trong code; `RESO` là field/resource Data Dictionary 2.0 tương ứng
-  (ADR-0011, `pipeline/mappings.yaml`).
+- `Code` là tên tiếng Anh trong code; `RESO` là field/resource Data Dictionary tương ứng — bản tra chuẩn **DD 2.1**
+  (ADR-0011, ADR-0013, `pipeline/mappings.yaml`).
 - `Slug URL` là đoạn URL tiếng Anh của trang. Test `app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs`
   đòi mọi đoạn tĩnh của route nằm trong các dòng này. Tên riêng địa lý (`hanoi`, `vn-hanoi-tay-ho`) và mã quốc gia (`vn`) là slug động — không cần tiếng Anh.
 - `Neo URL` (đoạn `#…`) và `Tham số URL` (`?…=`) cũng tiếng Anh; tham số camelCase theo tên code.
@@ -32,7 +32,7 @@ _Avoid_: nước
 _Avoid_: tỉnh thành, thành phố, city, province
 
 **Phường**: Đơn vị hành chính cấp xã (phường, xã, đặc khu) — cấp `areas.region_type = submarket`, con trực tiếp của thị trường. Trang hiện tên riêng ("Xã Bát Tràng"), nhãn chung ghi "Phường".
-- Code: `submarket` · RESO: không có cấp phường — gần City (mappings.yaml)
+- Code: `submarket` · RESO: City (địa chỉ VN từ 07/2025 chỉ còn phường/xã + tỉnh — ADR-0013 §4)
 - Ghi chú: Cấp huyện đã bỏ từ 07/2025: "quận" chỉ còn trong dữ liệu thô (`district_raw`).
 _Avoid_: quận, quận/huyện, huyện, ward, tiểu thị trường
 
@@ -47,17 +47,21 @@ _Avoid_: địa bàn, region
 _Avoid_: dự án, đại đô thị
 
 **Phân khu**: Một phần/phase trong khu đô thị (Sapphire, The Rainbow) — `node_type = subzone`. Tên phân khu trùng giữa các khu đô thị nên chỉ resolve qua matcher 2 tầng.
-- Code: `subzone` · RESO: không có — local extension (ADR-0011)
+- Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
 _Avoid_: dự án con, phase
 
 **Tòa nhà**: Một tòa chung cư (S1.03, BE02) — `node_type = building`; mã tòa thô trong tin nằm ở `block_raw`.
-- Code: `building` · RESO: ComplexName
+- Code: `building` · RESO: BuildingName + Building.BuildingKey (ADR-0013 §2)
 _Avoid_: block, chung cư
+
+**Trục căn**: Các căn cùng toà, cùng vị trí trên mặt bằng, khác tầng (cùng diện tích, số phòng). Môi giới thường lộ toà + trục mà che tầng («LD2xx11»), nên tin nhiều khi chỉ gắn được tới trục.
+- Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
+_Avoid_: line căn, dòng căn
 
 ## Tài sản & tin
 
 **Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều tin rao từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
-- Code: `property` · RESO: resource Property
+- Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
@@ -66,8 +70,8 @@ _Avoid_: tài sản, bất động sản, BĐS, asset
 - Slug URL: `listings` · `listing`
 _Avoid_: chỗ ở, phòng cho thuê
 
-**Tin rao**: Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng `sale_offers`, khoá `offer_id` = hash nguồn + id gốc). Loại tin ở cột `kind`.
-- Code: `sale_offer` · RESO: Property + ListPrice; bán/thuê qua PropertyType
+**Tin rao**: Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng `sale_offers`). Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14. Loại tin ở cột `kind`.
+- Code: `sale_offer` · RESO: resource Property (một bản ghi = một tin) + ListPrice; bán/thuê qua PropertyType
 _Avoid_: tin đăng, offer, rao vặt, sale offer
 
 **Tin bán**: Tin rao có `kind = sale`.
@@ -116,7 +120,7 @@ _Avoid_: giá thật
 _Avoid_: giá vải
 
 **Giá/m²**: Giá rao ÷ diện tích (`price_vnd / area_m2`).
-- Code: `price_perm2` · RESO: không có — tự tính
+- Code: `price_perm2` · RESO: SalePricePerArea / LeasePricePerArea + PricePerAreaUnit (DD 2.1) — vẫn tự tính
 _Avoid_: đơn giá
 
 **Thước giá**: Trung vị giá/m² giá công khai (P2) cùng phường × loại hình, cần n ≥ 5 (view `v_ruler_p2_*`). Thước để đo căn giá tốt.
@@ -250,6 +254,10 @@ _Avoid_: freshness
 
 **Tầng C**: Nhãn công khai ("Tự thu", "Hiệu chuẩn") — thứ duy nhất về nguồn hiện trên cổng Invest.
 - Code: `SPL tier C` · RESO: —
+
+**Nhãn nguồn**: Cách Ops gọi một nguồn ngoài `/ops/sources` — mã `S0x` kèm vai trò, dạng «S02 · Hiệu chuẩn»; vắng vai trò thì mã trần «S02». Vai trò là `label_vi` đọc từ `source_registry` ở local, từ `facts.sourceRuns` ở cloud. Tên nguồn thật chỉ hiện ở `/ops/sources`.
+- Code: `sourceLabel(code, roles)` (`app/src/lib/source-labels.ts`) · RESO: — · Slug URL: —
+_Avoid_: tên nguồn thật ở mọi trang Ops ngoài `/ops/sources`, kể cả nhãn job và dòng log cuối
 
 **Tự thu**: Số tính từ dữ liệu nền tảng tự thu (không phải AirDNA) — nhãn tầng C trên cổng Invest.
 - Code: `self-collected` · RESO: —

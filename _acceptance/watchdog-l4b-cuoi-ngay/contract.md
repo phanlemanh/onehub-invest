@@ -33,7 +33,6 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 - AC-3: Given đã quét xong (kể cả đuôi file cũ), When chạy lại không có dòng mới hoặc chỉ nối thêm vào file hôm nay, Then không in gì, hoặc chỉ in phần mới; dòng của file cũ không bị báo lại.
 - AC-4: Given file cũ đã bị xoá, hoặc đường dẫn cũ bị tái dùng bởi một file khác (inode khác), When lượt quét đổi sang file mới, Then không lỗi và không quét nhầm file lạ; chỉ file mới được quét.
 - AC-5: Given cùng một file bị truncate (cùng inode, ít dòng hơn), When quét, Then quét lại từ dòng 1; marker số cũ (`4211`) vẫn quét toàn file hôm nay mà không lỗi; các ca L4b/gateway của ZC3 không hồi quy.
-
 - AC-6: Given marker của log /tmp theo ngày hỏng trường số (inode hoặc số dòng không phải số — kể cả khi file hôm qua còn và inode trong marker đúng), When lượt quét chạy, Then watchdog không chết dưới `set -u`, quét file hôm nay từ dòng 1 (turn ở dòng 1 bị bắt, alert KILL), ghi một dòng WARN về marker hỏng vào alert log, và ghi lại marker đúng dạng `đường_dẫn:inode:số_dòng`. (thêm ở vòng 2)
 - AC-7: Given `gateway.log` còn dòng agent-turn của sự cố cũ và marker của nó hỏng trường số, When lượt quét chạy, Then watchdog KHÔNG kill gateway vì quá khứ (exit 0, không bootout/pkill), ghi WARN, khởi tạo lại marker ở số dòng hiện tại; và một turn MỚI ghi vào `gateway.log` sau đó vẫn bị bắt ở lượt kế. (thêm ở vòng 2)
 

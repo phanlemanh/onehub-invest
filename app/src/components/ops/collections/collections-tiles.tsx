@@ -9,8 +9,11 @@ import { Badge } from "@/components/reui/badge"
 import type { GateFunnel } from "@/lib/collections-queries"
 import { fmtInt } from "@/lib/format"
 import type { LockdownLayer, SourceFeedHealth } from "@/lib/ops-queries"
+import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
-import { FEED_STATE, feedState } from "./feed-status"
+import { sloSummaryKey } from "@/lib/freshness"
+
+import { FEED_STATE, feedSloSummary, feedState } from "./feed-status"
 import { SegmentBar, StatCard } from "./section"
 
 export function CollectionsTiles({
@@ -18,14 +21,21 @@ export function CollectionsTiles({
   funnel,
   layers,
   agentTurnsToday,
+  roles = {},
 }: {
   feeds: SourceFeedHealth[]
   funnel: GateFunnel
   layers: LockdownLayer[]
-  agentTurnsToday: number
+  /** null = chưa kiểm được log agent-turn hôm nay (ON2). */
+  agentTurnsToday: number | null
+  /** Vai trò nguồn cho nhãn «S0x · vai trò» (ON7). */
+  roles?: SourceRoles
 }) {
+  const s03 = sourceLabel("S03", roles)
   const states = feeds.map(feedState)
   const count = (s: ReturnType<typeof feedState>) => states.filter((x) => x === s).length
+  // Cùng con số với ô «Đạt SLO» của /ops (AU6): nguồn đạt khi mọi thị trường đạt; y = nguồn active có SLO.
+  const slo = feedSloSummary(feeds)
   const items24h = feeds.reduce((sum, f) => sum + (f.items24h || 0), 0)
   const busiest = [...feeds].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
   const layersOk = layers.filter((l) => l.ok === true).length
@@ -37,14 +47,15 @@ export function CollectionsTiles({
         icon={<PlugIcon aria-hidden="true" />}
         title="Sức khoẻ nguồn"
         period="Bây giờ"
-        value={fmtInt(count("ok"))}
-        total={fmtInt(feeds.length)}
-        basis="Nguồn còn trong SLO độ tươi"
+        value={fmtInt(slo.ok)}
+        total={fmtInt(slo.total)}
+        basis="Đạt khi mọi thị trường đạt"
+        sloSummary={sloSummaryKey(slo)}
         action={{ label: "Xem từng nguồn", href: "#nguon" }}
       >
         <SegmentBar
           label="Nguồn theo sức khoẻ"
-          segments={(["ok", "late", "stopped"] as const).map((s) => ({ key: s, label: FEED_STATE[s].label, count: count(s), tone: FEED_STATE[s].tone }))}
+          segments={(["ok", "late", "nodata", "noslo", "stopped"] as const).map((s) => ({ key: s, label: FEED_STATE[s].label, count: count(s), tone: FEED_STATE[s].tone }))}
         />
       </StatCard>
 
@@ -59,15 +70,15 @@ export function CollectionsTiles({
 
       <StatCard
         icon={<MessageSquareIcon aria-hidden="true" />}
-        title="Cổng Zalo hôm nay"
+        title={`Cổng ${s03} hôm nay`}
         period="Hôm nay"
         value={fmtInt(funnel.today.passed)}
         total={fmtInt(funnel.today.messages)}
         basis={`${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
-        action={{ label: "Xem nhóm Zalo", href: "#nhom-zalo" }}
+        action={{ label: `Xem nhóm ${s03}`, href: "#nhom-s03" }}
       >
         <SegmentBar
-          label="Tin Zalo hôm nay"
+          label={`Tin ${s03} hôm nay`}
           segments={[
             { key: "passed", label: "Qua cổng", count: funnel.today.passed, tone: "bg-success" },
             { key: "skipped", label: "Bị chặn", count: funnel.today.skipped, tone: "bg-muted-foreground/40" },
@@ -81,8 +92,14 @@ export function CollectionsTiles({
         period="Bây giờ"
         value={fmtInt(layersOk)}
         total={fmtInt(layers.length)}
-        badge={agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
-        basis={agentTurnsToday > 0 ? "Có agent-turn hôm nay — kiểm ngay" : "Không có agent-turn hôm nay"}
+        badge={agentTurnsToday !== null && agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
+        basis={
+          agentTurnsToday === null
+            ? "Chưa kiểm được agent-turn hôm nay"
+            : agentTurnsToday > 0
+              ? "Có agent-turn hôm nay — kiểm ngay"
+              : "Không có agent-turn hôm nay"
+        }
         action={{ label: "Xem các lớp", href: "#lockdown" }}
       >
         <SegmentBar

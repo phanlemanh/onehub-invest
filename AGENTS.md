@@ -101,14 +101,22 @@ phải tên thư mục (script thu của S02/S05/S06 nằm trong `pipeline/`).
    migration đã commit, không sửa tay DB production.
 3. **RESO-first (ADR-0011)**: field/enum mới phải tra RESO Data Dictionary trước; chỉ tạo
    mới khi là đặc trưng VN và khai đủ 6 điều kiện trong `pipeline/mappings.yaml`.
+   **Kiến trúc dữ liệu tin → căn (ADR-0013)**: căn = UPI + `Building`, tin = `Property`, tra **DD 2.1**; việc chạm
+   dữ liệu tin/căn kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013; khung mục đích ở `docs/product/FRAMING.md`.
 4. **DATA-CONTRACT** (`collector/docs/DATA-CONTRACT.md`) là giao diện collector↔pipeline;
    thêm field phải tăng `schemaVersion`.
 5. **AirDNA chỉ để hiệu chuẩn** (ToS) — không đưa số AirDNA lên Invest Portal; chỉ ở `/ops/quality`.
+   **S08 (danh mục dự án) cùng chính sách** (Mạnh duyệt 2026-10-24): chỉ đọc, thu tối đa một lần mỗi tuần, chỉ
+   dùng nội bộ (dựng danh mục căn, hiệu chuẩn); không tái xuất nguyên văn lên cổng Invest hay API công khai;
+   `stg_s08_inventory` chỉ ở local. Tên miền thật của S08 chỉ ở `source_registry` local.
 6. **SPL (ADR-0007)**: nguồn gọi bằng mã `S0x`. Tầng A (tên nguồn thật, hồ sơ người dùng app,
    `user_events/user_profile`, `review_queue`) KHÔNG rời máy local — cloud chỉ nhận hash + aggregate.
    **Định danh người bán trên tin rao (tên, SĐT, ID tài khoản) là tầng C — công khai, KHÔNG tính là
    lộ danh tính**: người đăng rao bán đang làm hoạt động bán hàng/môi giới (Mạnh chốt 2026-10-23,
    sửa đổi ADR-0007 mục 9). `sale_offers` được lên cloud; vẫn loại mọi cột lộ tên nguồn thật.
+   **Tên nhóm cộng đồng mà S03 thu cũng là tầng C** (Mạnh chốt 2026-10-24, sửa đổi ADR-0007): được hiện trên
+   `/ops/**` ở cloud và đi qua `ops_heartbeat`; không đánh `data-tier-a`. Tên nguồn thật vẫn tầng A — ngoài
+   `/ops/sources` chỉ mã `S0x` kèm vai trò; tên tài khoản thu chưa chốt, giữ như tầng A.
 7. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract kèm audit + evidence; quyết định
    ghi dữ liệu đi qua người (`/ops/review`) hoặc luật xác định.
 8. **An toàn Zalo**: agent KHÔNG BAO GIỜ gửi tin vào nhóm xã hội (lockdown 7 lớp + watchdog;
@@ -198,7 +206,7 @@ bash scripts/dev-ops-login-check.sh       # đăng nhập đầu-cuối bằng t
 
 ## Tài liệu nền
 
-ROADMAP v4 · ADR 0001–0012 (`docs/adr/`) · `docs/architecture/portals.md` ·
+ROADMAP v4 · ADR 0001–0014 (`docs/adr/`) · `docs/architecture/portals.md` ·
 `docs/architecture/invest-portal-ia.md` · `docs/ops/runtime-map.md` ·
 `docs/research/reso-standards.md` · `docs/research/property-master-record.md`.
 Điều tra web: kết quả thô để ở `research-local/` (gitignored), chưng cất vào `docs/research/`.
