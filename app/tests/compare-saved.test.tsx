@@ -38,14 +38,27 @@ dom.window.HTMLElement.prototype.scrollIntoView = () => {};
 (dom.window.Element.prototype as unknown as { getAnimations: () => unknown[] }).getAnimations = () => [];
 Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true });
 
+/** Root React đang gắn — gỡ trước khi thay body, không thì portal (hộp lệnh, dialog) của root cũ mồ côi
+ *  và React ném «The node to be removed is not a child of this node» (đo S4-r2). */
+let currentRoot: { unmount: () => void } | null = null;
+async function unmountPrevious() {
+  if (!currentRoot) return;
+  const React = await import("react");
+  const r = currentRoot;
+  currentRoot = null;
+  await React.act(async () => r.unmount());
+}
+
 async function render(node: ReactNode) {
   const React = await import("react");
   Object.assign(globalThis, { React });
   const { createRoot } = await import("react-dom/client");
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
   const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} };
+  await unmountPrevious();
   document.body.innerHTML = "<div id=root></div>";
   const root = createRoot(document.getElementById("root")!);
+  currentRoot = root;
   // Lỗi ném trong cây là CHỦ ĐÍCH ở ca CS-AC-6 — React vẫn in ra console.error, tắt cho gọn.
   const err = console.error;
   console.error = () => {};
@@ -324,8 +337,10 @@ async function renderWithRouter(node: ReactNode, router: Router) {
   const { createRoot } = await import("react-dom/client");
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
   const { PathnameContext } = await import("next/dist/shared/lib/hooks-client-context.shared-runtime");
+  await unmountPrevious();
   document.body.innerHTML = "<div id=root></div>";
   const root = createRoot(document.getElementById("root")!);
+  currentRoot = root;
   await React.act(async () => {
     root.render(
       <AppRouterContext.Provider value={router as never}>
