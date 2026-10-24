@@ -1,0 +1,82 @@
+schema_version: 1
+feature_slug: gio-ops-gio-vn
+# Eval máy đọc ca mang tiền tố «GV-AC-n» trong TAP: app/tests/gio-ops-gio-vn.test.tsx (AC-1…AC-5, AC-7…AC-9) và
+# pipeline/scripts/vn-day.test.mjs (AC-6).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/format.ts, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-1 fmtVnDateTime/fmtVnDate ma trận viết trước dưới TZ=UTC và TZ=America/New_York' — 11 đầu vào × 2 hàm × 2 múi máy = 44 assert giá trị viết trước (chuỗi +07:00 đọc đúng; chuỗi không ghi múi, null, rác → «—») ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/format.ts, app/src/components/ops/**/*.tsx, app/src/app/ops/**/*.tsx, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-2 <tên chỗ> render mốc theo giờ VN' cho đủ 11 chỗ của danh sách viết trước, mỗi chỗ 2 assert (có chuỗi VN mong đợi, không có 12:13 hay 2026-10-23T) ok; số ca bằng đúng danh sách"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/**/*.tsx, app/src/app/ops/**/*.tsx, app/src/lib/ops-queries.ts, app/src/lib/collections-queries.ts, app/src/lib/freshness.ts, app/src/lib/deals.ts, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-3 không còn mốc cắt chuỗi hay ngày theo múi máy ngoài danh sách miễn' (quét src/components/ops, src/app/ops, 4 tệp src/lib; danh sách miễn viết trước kèm lý do) và ba chiều đỏ 'GV-AC-3 bản sao jobs-grid cắt lại lastLogAt', 'GV-AC-3 bản sao thêm toLocaleString không múi', 'GV-AC-3 bản sao collections-queries dùng ::date' — mỗi bản thước báo đúng tệp ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/collections-queries.ts, app/src/lib/format.ts, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-4 getFlowDays gom ngày theo giờ VN trên lược đồ tạm' — kết quả deepEqual bản đồ 7 khoá × 6 cột viết trước (kể cả ô 0), search_path chỉ lược đồ tạm; chiều đỏ 'GV-AC-4 thiếu bảng tạm thì đỏ nêu tên bảng' ok; DB local :5433 không tới được → ca đỏ có tên (không bỏ qua lặng)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/collections-queries.ts, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-5 readGateFunnel đếm hôm nay theo ngày VN' dưới TZ=UTC và TZ=America/New_York — fixture sinh bằng new Date(t).toISOString() như hook; today.messages = 1 (dòng 17:30Z) ở cả hai múi ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/vn-day.mjs, pipeline/lib/*.mjs, pipeline/push-ops-facts.mjs, pipeline/scripts/vn-day.test.mjs]
+    expected: "exit 0; ca 'GV-AC-6 hàm dựng zaloFlow/funnel bản pipeline trên lược đồ tạm' (khoá và số đếm viết trước), 'GV-AC-6 vnDayKey bản pipeline cùng ma trận khoá ngày', 'GV-AC-6 push-ops-facts dùng hàm lib, không còn ::date/date_trunc/to_char thiếu AT TIME ZONE' và chiều đỏ 'GV-AC-6 bản sao push-ops-facts dùng captured_at::date::text → thước báo' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-7 fmtOverdue ma trận viết trước' — 11 dòng = 11 assert giá trị ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/src/components/ops/overview/objectives-grid.tsx, app/src/components/ops/overview/overview-tiles.tsx, app/src/components/ops/collections/feeds-grid.tsx, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-8 <chỗ> hiện mức trễ' cho 3 chỗ — nguồn 8,4 ngày/SLO 8 ngày có «trễ 9 giờ»; mọi nguồn status stale có «trễ», nguồn tuổi = SLO và 7 ngày/SLO 8 ngày không có «trễ» ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/sync-activity.tsx, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-9 luồng 7 ngày nói ngày theo giờ VN' — markup có «ngày theo giờ VN», không có «(giờ máy)» ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/ops-flow.mjs, pipeline/lib/vn-day.mjs, pipeline/scripts/vn-day.test.mjs]
+    expected: "exit 0; ca 'GV-AC-10 parseLog bản pipeline bỏ qua dòng mốc hỏng' (dòng 99:99:99 và dòng cắt cụt xen giữa hai dòng hợp lệ → không ném, hôm nay 1, 7 ngày 2) và chiều đỏ 'GV-AC-10 bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/collections-queries.ts, app/tests/gio-ops-gio-vn.test.tsx]
+    expected: "exit 0; ca 'GV-AC-10 readGateFunnel bản app bỏ qua dòng mốc hỏng' (cùng tệp log của bản pipeline → không ném, hôm nay 1, 7 ngày 2) ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

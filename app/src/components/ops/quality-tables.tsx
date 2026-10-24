@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
-import { fmtInt, fmtMoney, fmtPct } from "@/lib/format"
+import { fmtInt, fmtMoney, fmtPct, fmtVnDate } from "@/lib/format"
 import type { AirdnaComparison, AirdnaMarketRow, TruthfulCoverageRow } from "@/lib/queries"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
@@ -119,7 +119,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
         accessorFn: (r) => r.capturedAt ?? "",
         header: ({ column }) => <DataGridColumnHeader title="Cập nhật" column={column} />,
         cell: ({ row }) =>
-          row.original.capturedAt ? row.original.capturedAt.slice(0, 10) : "—",
+          fmtVnDate(row.original.capturedAt),
         size: 110,
         enableSorting: true,
       },
@@ -186,7 +186,7 @@ export function CalibrationTable({
       }
       badge={
         data.capturedAt ? (
-          <Badge variant="outline">Thu {data.capturedAt.slice(0, 10)}</Badge>
+          <Badge variant="outline">Thu {fmtVnDate(data.capturedAt)}</Badge>
         ) : undefined
       }
       data={data.metrics}

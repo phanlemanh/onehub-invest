@@ -11,6 +11,7 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import type { JobStatus } from "@/lib/collections-queries"
 
 import { StatusGrid, type StatusTab } from "./status-grid"
+import { fmtVnDateTime } from "@/lib/format"
 
 const ALIVE: Record<JobStatus["alive"], { label: string; variant: BadgeProps["variant"]; tone: string }> = {
   yes: { label: "Sống", variant: "success-light", tone: "bg-success" },
@@ -34,7 +35,7 @@ export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
         id: "last",
         accessorFn: (j) => j.lastLogAt ?? "",
         header: ({ column }) => <DataGridColumnHeader title="Chạy cuối" column={column} />,
-        cell: ({ row }) => (row.original.lastLogAt ? row.original.lastLogAt.slice(0, 16).replace("T", " ") : "—"),
+        cell: ({ row }) => fmtVnDateTime(row.original.lastLogAt),
         size: 150,
         enableSorting: true,
       },

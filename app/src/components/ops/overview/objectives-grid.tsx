@@ -18,8 +18,8 @@ import { DataGridTable } from "@/components/reui/data-grid/data-grid-table"
 import { FrameFooter, FramePanel } from "@/components/reui/frame"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { fmtInt } from "@/lib/format"
-import { fmtAge } from "@/lib/freshness"
+import { fmtInt, fmtVnDate } from "@/lib/format"
+import { fmtAge, fmtOverdue } from "@/lib/freshness"
 import type { CoverageRow } from "@/lib/ops-queries"
 import { sourceTierLabel } from "@/lib/source-labels"
 import { cn } from "@/lib/utils"
@@ -88,8 +88,8 @@ export function ObjectivesGrid({ rows }: { rows: CoverageRow[] }) {
       { id: "code", accessorKey: "code", header: ({ column }) => <DataGridColumnHeader title="Mã" column={column} />, cell: ({ row }) => <span className="font-mono">{row.original.code}</span>, size: 80, enableSorting: true },
       { id: "role", accessorFn: (r) => sourceTierLabel(r.code).vi, header: "Vai trò", size: 130 },
       { id: "city", accessorKey: "city", header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />, cell: ({ row }) => row.original.city ?? "—", size: 160, enableSorting: true },
-      { id: "last", accessorFn: (r) => r.lastSnapshotAt ?? "", header: ({ column }) => <DataGridColumnHeader title="Snapshot cuối" column={column} />, cell: ({ row }) => row.original.lastSnapshotAt?.slice(0, 10) ?? "—", size: 130, enableSorting: true },
-      { id: "age", accessorFn: (r) => r.ageHours ?? Number.POSITIVE_INFINITY, header: ({ column }) => <DataGridColumnHeader title="Tuổi" column={column} />, cell: ({ row }) => fmtAge(row.original.ageHours), size: 120, meta: NUM, enableSorting: true },
+      { id: "last", accessorFn: (r) => r.lastSnapshotAt ?? "", header: ({ column }) => <DataGridColumnHeader title="Snapshot cuối" column={column} />, cell: ({ row }) => fmtVnDate(row.original.lastSnapshotAt), size: 130, enableSorting: true },
+      { id: "age", accessorFn: (r) => r.ageHours ?? Number.POSITIVE_INFINITY, header: ({ column }) => <DataGridColumnHeader title="Tuổi" column={column} />, cell: ({ row }) => [fmtAge(row.original.ageHours), fmtOverdue(row.original.ageHours, row.original.sloHours)].filter(Boolean).join(" · "), size: 120, meta: NUM, enableSorting: true },
       { id: "slo", accessorKey: "sloHours", header: "SLO", cell: ({ row }) => fmtAge(row.original.sloHours), size: 110, meta: NUM },
       { id: "status", accessorKey: "status", header: "Trạng thái", cell: ({ row }) => <Badge variant={FRESHNESS[row.original.status].variant}>{FRESHNESS[row.original.status].label}</Badge>, size: 120 },
     ],

@@ -5,6 +5,7 @@ import { useMemo } from "react"
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { Badge, type BadgeProps } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
+import { fmtVnDateTime } from "@/lib/format"
 
 export type DqCheckRow = {
   check_name: string
@@ -54,7 +55,7 @@ export function DqChecksTable({ rows }: { rows: DqCheckRow[] }) {
         id: "at",
         accessorKey: "checked_at",
         header: ({ column }) => <DataGridColumnHeader title="Lúc kiểm" column={column} />,
-        cell: ({ row }) => row.original.checked_at.slice(0, 16).replace("T", " "),
+        cell: ({ row }) => fmtVnDateTime(row.original.checked_at),
         size: 150,
         enableSorting: true,
       },
