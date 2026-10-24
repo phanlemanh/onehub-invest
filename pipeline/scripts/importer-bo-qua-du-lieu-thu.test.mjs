@@ -13,3 +13,8 @@ test("isTestSnapshot: nhận diện zalo-mock / e2e / TEST; nguồn thật khôn
   // chữ "test" nằm LÕI trong tên nguồn thật không tính — chỉ khớp nguyên segment
   assert.equal(isTestSnapshot("danang__airbnb-listing__2026-10-23T032239565"), false);
 });
+
+test("isTestSnapshot: đường dẫn có dấu / cuối vẫn nhận ra (basename không rỗng)", () => {
+  assert.equal(isTestSnapshot("hanoi/hanoi__zalo-mock__2026-10-18T034152/"), true);
+  assert.equal(isTestSnapshot("/abs/path/hcmc__e2e__x/"), true);
+});
