@@ -43,7 +43,8 @@ ghim nguyên văn; `CONTEXT.md` thêm «Listing tự thu», «Mẫu mỏng», «
   bảng/thẻ vẽ trong jsdom.
 - Dữ liệu thật: `scripts/hieu-chuan-do.mjs` (tsx của app, chỉ đọc) — mỗi khu vực «tự thu» bằng nhau ở ba bảng, chạy hai lần
   ra cùng số, đếm hiệu chuẩn = số thị trường có số, in danh sách mẫu mỏng.
-- `ui-check` trên app đang chạy (cổng 3462, phiên ops thử) — chụp vùng Hiệu chuẩn: có dòng «Chưa có số», có nhãn «mẫu mỏng».
+- Ảnh chụp trang đang chạy: theo Hỏi-1 — khuyến nghị bỏ ở vòng này (bước chụp hiện không đăng nhập được `/ops`) và mở
+  việc phụ «chụp /ops có phiên ops»; lối khác dựng bước chụp có phiên ngay trong vòng (+1 tiêu chí, +1 eval ui-check).
 
 ## Không làm
 
