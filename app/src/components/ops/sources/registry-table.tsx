@@ -6,6 +6,7 @@ import { InsightGrid, type InsightColumn } from "@/components/insight/insight-gr
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { sourceStatusLabel } from "@/lib/ops-labels"
+import { RawLabel } from "@/components/ops/raw-label"
 
 export type RegistryRow = {
   code: string
@@ -37,7 +38,7 @@ export function RegistryTable({ rows }: { rows: RegistryRow[] }) {
         id: "status",
         accessorKey: "status",
         header: "Trạng thái",
-        cell: ({ row }) => <Badge variant={row.original.status === "active" ? "success-light" : "outline"}>{sourceStatusLabel(row.original.status).label}</Badge>,
+        cell: ({ row }) => <Badge variant={row.original.status === "active" ? "success-light" : "outline"}><RawLabel n={sourceStatusLabel(row.original.status)} raw={row.original.status} /></Badge>,
         size: 120,
       },
       { id: "since", accessorKey: "since", header: "Từ", size: 120 },

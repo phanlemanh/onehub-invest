@@ -42,6 +42,7 @@ export const SCAN_FILES = [
   "src/components/ops/overview/status.ts",
   "src/components/ops/quality-tables.tsx",
   "src/components/ops/quality/dq-checks-table.tsx",
+  "src/components/ops/raw-label.tsx",
   "src/components/ops/review-card.tsx",
   "src/components/ops/review-content.tsx",
   "src/components/ops/review-photos.tsx",

@@ -10,6 +10,7 @@ import { fmtInt, fmtVnDateTime } from "@/lib/format"
 import { fmtAge, fmtOverdue } from "@/lib/freshness"
 import type { SourceFeedHealth } from "@/lib/ops-queries"
 import { sourceStatusLabel } from "@/lib/ops-labels"
+import { RawLabel } from "@/components/ops/raw-label"
 
 import { FEED_STATE, feedState } from "./feed-status"
 import { StatusGrid, type StatusTab } from "./status-grid"
@@ -44,7 +45,7 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
         header: "Trạng thái",
         cell: ({ row }) => {
           const s = FEED_STATE[feedState(row.original)]
-          return <Badge variant={s.variant}>{row.original.status !== "active" ? sourceStatusLabel(row.original.status).label : s.label}</Badge>
+          return <Badge variant={s.variant}>{row.original.status !== "active" ? <RawLabel n={sourceStatusLabel(row.original.status)} raw={row.original.status} /> : s.label}</Badge>
         },
         size: 120,
       },

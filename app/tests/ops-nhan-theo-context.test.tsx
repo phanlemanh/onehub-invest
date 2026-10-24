@@ -307,23 +307,51 @@ test("ON12-AC-4 bản sao 450_dq_checks.sql đổi 'vi phạm: ' → ca đỏ n�
 
 // ---------- AC-5: bảng kiểm chất lượng trên DB local, qua trang thật ----------
 
+/** Cắt mảng thành từng khúc — bảng phân trang chỉ dựng trang đầu, nên phép đo dựng TỪNG khúc để mọi dòng đều được soi. */
+const khuc = <T,>(a: T[], n: number): T[][] => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n))
+const soDongThan = (html: string) => (html.slice(html.indexOf("<tbody"), html.indexOf("</tbody>")).match(/<tr[\s>]/g) ?? []).length
+
 test("ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ", async () => {
   const c = await canDb()
+  let rows: { check_name: string; entity: string; status: string; detail: string | null; checked_at: string }[]
   try {
-    const { rows } = await c.query<{ n: string; k: string }>(
-      `SELECT count(*)::text n, count(DISTINCT check_name)::text k FROM dq_check_results WHERE checked_at > now() - interval '7 days'`,
-    )
-    console.log(`# ON12-AC-5 DB local: ${rows[0].n} dòng, ${rows[0].k} loại kiểm trong 7 ngày`)
-    assert.ok(Number(rows[0].k) >= 2, "DB local cần ≥ 2 loại kiểm trong 7 ngày để phép đo có nghĩa")
+    // Cùng cột, cùng cửa sổ 7 ngày với trang /ops/quality — nhưng KHÔNG LIMIT: lời hứa là MỌI dòng kiểm được diễn giải.
+    rows = (
+      await c.query(
+        `SELECT check_name, entity, status, detail, checked_at::text FROM dq_check_results
+         WHERE checked_at > now() - interval '7 days' ORDER BY checked_at DESC`,
+      )
+    ).rows
   } finally {
     await c.end()
   }
+  const { getAreaNames } = await import("../src/lib/ops-queries")
+  const { getSourceNameEntries } = await import("../src/lib/source-roles")
+  const { maskSourceNames } = await import("../src/lib/mask-source-names")
+  const { DqChecksTable } = await import("../src/components/ops/quality/dq-checks-table")
+  const { dqCheckName, dqDetail, dqEntityLabel } = await import("../src/lib/dq-labels")
+  const [areaNames, names] = await Promise.all([getAreaNames(), getSourceNameEntries()])
+  const shown = rows.map((r) => ({ ...r, detail: r.detail === null ? null : maskSourceNames(r.detail, names) }))
+  const loai = new Set(shown.map((r) => r.check_name))
+  console.log(`# ON12-AC-5 DB local: ${shown.length} dòng, ${loai.size} loại kiểm trong 7 ngày — soi trọn từng dòng`)
+  assert.ok(loai.size >= 2, "DB local cần ≥ 2 loại kiểm trong 7 ngày để phép đo có nghĩa")
+  const map = new Map(Object.entries(areaNames))
+  const chuaDien = shown.flatMap((r) => [dqCheckName(r.check_name), dqEntityLabel(r.entity, map), dqDetail(r.check_name, r.detail)].filter((t) => !t.known).map((t) => `${r.check_name} · ${t.code}`))
+  assert.deepEqual([...new Set(chuaDien)], [], "dòng kiểm chưa diễn giải")
+  let daDung = 0
+  const loi = []
+  for (const k of khuc(shown, 10)) {
+    const html = await render(<DqChecksTable rows={k} areaNames={areaNames} />)
+    daDung += soDongThan(html)
+    loi.push(...soiHtml(html))
+  }
+  assert.equal(daDung, shown.length, "phải dựng đủ mọi dòng kiểm")
+  assert.deepEqual(loi, [], `bảng kiểm chất lượng còn chữ chưa diễn giải:\n${inSoi(loi)}`)
+  // Trang thật (đúng hàm nạp của /ops/quality) cũng sạch.
   const { default: QualityPage } = await import("../src/app/ops/quality/page")
-  const html = await render(await QualityPage())
-  const i = html.indexOf("Kiểm chất lượng (7 ngày)")
-  assert.ok(i > 0, "trang không có bảng kiểm chất lượng")
-  const loi = soiHtml(html)
-  assert.deepEqual(loi, [], `trang /ops/quality còn chữ chưa diễn giải:\n${inSoi(loi)}`)
+  const page = await render(await QualityPage())
+  assert.ok(page.includes("Kiểm chất lượng (7 ngày)"), "trang không có bảng kiểm chất lượng")
+  assert.deepEqual(soiHtml(page), [], `trang /ops/quality còn chữ chưa diễn giải:\n${inSoi(soiHtml(page))}`)
 })
 
 // ---------- AC-6: tên thị trường S02 ----------
@@ -352,20 +380,49 @@ test("ON12-AC-6 mọi thị trường S02 trên DB local có tên Việt", async
   assert.deepEqual(thieu, [], `thị trường S02 chưa có tên Việt: ${thieu.join(", ")}`)
 })
 
+const reEsc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
 test("ON12-AC-6 render bảng thị trường S02 và vòng thu từ hàm nạp thật", async () => {
   const { getAirdnaMarkets } = await import("../src/lib/queries")
   const { getAreaNames } = await import("../src/lib/ops-queries")
   const { readRotationPreview } = await import("../src/lib/collections-queries")
+  const { s02MarketName } = await import("../src/lib/market-names")
   const { AirdnaMarketsTable } = await import("../src/components/ops/quality-tables")
   const { RotationPanel } = await import("../src/components/ops/collections/pipe-panels")
   const [rows, areaNames, rotation] = await Promise.all([getAirdnaMarkets(), getAreaNames(), readRotationPreview()])
-  const bang = await render(<AirdnaMarketsTable rows={rows} areaNames={areaNames} />)
-  for (const goc of ["Quang Tr", "Binh Thu", "Phan RangaThap Cham", "Hanoi", "Ho Chi Minh City"]) assert.ok(!bang.includes(`>${goc}<`), `còn tên gốc «${goc}»`)
-  assert.doesNotMatch(bang, />vn-[a-z0-9-]+</, "cột «Khu vực của ta» còn mã vn-… làm chữ link")
-  assert.match(bang, /href="\/vn\/[a-z0-9-]+"/, "link khu vực phải giữ nguyên")
-  const vong = await render(<RotationPanel rotation={rotation} />)
+  let duong = 0
+  let noi = 0
+  for (const k of khuc(rows, 25)) {
+    const html = await render(<AirdnaMarketsTable rows={k} areaNames={areaNames} />)
+    assert.equal(soDongThan(html), k.length, "phải dựng đủ mọi thị trường S02 của khúc")
+    for (const r of k) {
+      const vi = s02MarketName(r.airdnaId, r.name).name
+      // Chiều dương: tên Việt của ĐÚNG thị trường có mặt; chiều âm: tên gốc khác tên Việt thì không còn.
+      assert.ok(html.includes(`>${vi}<`), `thiếu tên Việt «${vi}» của ${r.airdnaId}`)
+      if (r.name !== vi) assert.ok(!html.includes(`>${r.name}<`), `còn tên gốc «${r.name}» của ${r.airdnaId}`)
+      duong++
+      if (r.ourAreaId) {
+        // Quan hệ mã khu vực → tên: chữ link là tên của CHÍNH ourAreaId, href trỏ đúng mã đó.
+        const [cc, ...rest] = r.ourAreaId.split("-")
+        const ten = areaNames[r.ourAreaId]
+        assert.ok(ten, `bảng tên khu vực thiếu ${r.ourAreaId}`)
+        assert.match(html, new RegExp(`href="/${cc}/${reEsc(rest.join("-"))}"[^>]*>${reEsc(ten)}</a>`), `link ${r.ourAreaId} phải mang chữ «${ten}»`)
+        noi++
+      }
+    }
+    assert.doesNotMatch(html, />vn-[a-z0-9-]+</, "cột «Khu vực của ta» còn mã vn-… làm chữ link")
+    assert.deepEqual(soiHtml(html), [], inSoi(soiHtml(html)))
+  }
+  console.log(`# ON12-AC-6 render: ${duong} thị trường S02 có tên Việt, ${noi} link khu vực đúng tên`)
+  assert.equal(duong, rows.length)
+  // Vòng thu: dùng vòng thật; vòng thật rỗng (mọi thị trường đã tươi) thì dựng vòng từ 6 thị trường S02 thật để vẫn có chiều dương.
+  const vongThat = rotation.next.length > 0
+  const next = vongThat ? rotation.next : rows.slice(0, 6).map((r) => ({ id: r.airdnaId, name: r.name, lastCapturedAt: null }))
+  console.log(`# ON12-AC-6 vòng thu: ${vongThat ? "vòng thật" : "vòng thật rỗng — dựng từ 6 thị trường S02"} (${next.length} thị trường)`)
+  const vong = await render(<RotationPanel rotation={{ ...rotation, next }} />)
+  for (const m of next) assert.ok(vong.includes(s02MarketName(m.id, m.name).name), `vòng thu thiếu tên Việt của ${m.id}`)
   assert.doesNotMatch(vong, /#\d+/, "vòng thu còn in #<mã S02>")
-  assert.deepEqual(soiHtml(bang + vong), [], inSoi(soiHtml(bang + vong)))
+  assert.deepEqual(soiHtml(vong), [], inSoi(soiHtml(vong)))
 })
 
 // ---------- AC-7: giá trị thô khác ----------
@@ -422,6 +479,14 @@ test("ON12-AC-7 render danh mục nguồn, thẻ duyệt, cột thị trường 
   assert.match(the, /AI: cùng căn/)
   assert.doesNotMatch(the, />(apartment|house)</)
   assert.doesNotMatch(the, /AI: yes/)
+  // Giá trị chưa có nhãn: nhãn chung KÈM mã gốc trong <code> (người duyệt vẫn thấy giá trị thật).
+  const regLa = await render(<RegistryTable rows={[{ code: "S09", real_name: "z", label_vi: "Mới", status: "deprecated", since: "2026-01-01", retired_at: null }]} />)
+  assert.match(regLa, /Giá trị khác <code[^>]*>deprecated<\/code>/)
+  const theLa = await render(
+    <AppRouterContext.Provider value={router as never}><ReviewCard item={{ id: 2, item_type: "entity_match", title: "x", evidence: { offer_a: { ...offer, property_type: "villa" }, offer_b: offer, stage_b_score: 0.5 }, ai_suggestion: "maybe", ai_reasoning: null, ai_confidence: null, status: "pending" } as never} /></AppRouterContext.Provider>,
+  )
+  assert.match(theLa, /Giá trị khác <code[^>]*>villa<\/code>/)
+  assert.match(theLa, /AI: Giá trị khác <code[^>]*>maybe<\/code>/)
 })
 
 test("ON12-AC-7 mọi giá trị đang có trên DB local có nhãn", async () => {

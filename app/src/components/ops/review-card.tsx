@@ -9,6 +9,7 @@ import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/comp
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
 import { aiSuggestionLabel, propertyTypeLabel } from "@/lib/ops-labels";
+import { RawLabel } from "./raw-label";
 import type { ReviewMedia } from "@/lib/ops/review-media";
 
 import { ReviewPhotos } from "./review-photos";
@@ -116,7 +117,7 @@ function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
         )}
         <div>
           <p className="text-muted-foreground text-[10px]">Loại</p>
-          <p className="font-medium">{offer.property_type === null ? "—" : propertyTypeLabel(offer.property_type).label}</p>
+          <p className="font-medium">{offer.property_type === null ? "—" : <RawLabel n={propertyTypeLabel(offer.property_type)} raw={offer.property_type} />}</p>
         </div>
         <div className="col-span-2">
           <p className="text-muted-foreground text-[10px]">Địa chỉ</p>
@@ -330,7 +331,7 @@ function EntityMatchCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
         <div className="flex items-center gap-2">
           {item.ai_suggestion && (
             <Badge variant={item.ai_suggestion === "yes" ? "success-light" : "outline"}>
-              AI: {aiSuggestionLabel(item.ai_suggestion).label} {item.ai_confidence ? `(${Math.round(item.ai_confidence * 100)}%)` : ""}
+              AI: <RawLabel n={aiSuggestionLabel(item.ai_suggestion)} raw={item.ai_suggestion} /> {item.ai_confidence ? `(${Math.round(item.ai_confidence * 100)}%)` : ""}
             </Badge>
           )}
           <Badge variant="outline">Điểm B: {ev.stage_b_score}</Badge>
