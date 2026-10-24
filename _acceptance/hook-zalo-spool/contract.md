@@ -53,4 +53,5 @@ Hạng T3 vì chạm `collector/openclaw/**` (an toàn Zalo). Source input: lờ
 - Hợp đồng dựng SAU khi ZCode code xong, nên `gate1_skipped: true`. Phiên điều phối liên làn dựng hồ sơ, không viết code sản phẩm.
 - Harness `scripts/hook-zalo-spool/acceptance.mjs`: chép handler ra thư mục tạm, HOME giả, collector và Kev giả trên cổng ngẫu nhiên. Không chạm `~/.openclaw`, :9210, :8009, gateway hay launchctl.
 - Kiểm harness biết đỏ (trước verify): trên bd51084 (vòng 2) đỏ ở spool-replay (khuôn log), reject-4xx, hang-stop, cap-50; trên handler của `origin/main` đỏ ở cả 6 chế độ chạy handler.
-- Vòng 1 BLOCKED: E10 vớt phải `collector/dist/test/kev-nhan-cung-hoa.test.js` do lượt build ZC1 trước đó để lại trong worktree (tsc không xoá test cũ). Vòng 2: E10 đổi sang `executors.test.collector_test_clean` (xoá dist trước khi build).
+- Vòng 1 BLOCKED: E10 vớt phải `collector/dist/test/kev-nhan-cung-hoa.test.js` do lượt build ZC1 trước đó để lại trong worktree (tsc không xoá test cũ). Vòng 2: E10 đổi sang `executors.script.collector_test_clean` (xoá dist trước khi build).
+- Vòng 2 BLOCKED: E10 khai sai khoá (`executors.test.…` thay vì `executors.script.collector_test_clean`); lệnh thật xanh 41/41. Vòng 3 sửa khoá.

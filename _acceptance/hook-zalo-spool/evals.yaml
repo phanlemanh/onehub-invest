@@ -67,6 +67,6 @@ evals:
   - id: E10
     criterion: AC-10
     executor: test
-    cmd: config:executors.test.collector_test_clean
+    cmd: config:executors.script.collector_test_clean
     expected: "exit 0; toàn bộ test collector pass, 0 fail (gồm hook-spool.test.ts)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
