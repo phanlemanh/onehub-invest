@@ -33,8 +33,8 @@ const configOf = (roles: SourceRoles) =>
   ({
     airbnbListingsSeen: { label: `${sourceLabel("S01", roles)} — listing tươi`, theme: themeOf("opsVolume") },
     airdnaListings: { label: `${sourceLabel("S02", roles)} — listing chạm`, theme: themeOf("opsVolumeRaw") },
-    zaloOffers: { label: `${sourceLabel("S03", roles)} — offer vào DB`, theme: themeOf("opsVolume") },
-    zaloPosts: { label: `${sourceLabel("S03", roles)} — post raw`, theme: themeOf("opsVolumeRaw") },
+    zaloOffers: { label: `${sourceLabel("S03", roles)} — tin rao vào kho`, theme: themeOf("opsVolume") },
+    zaloPosts: { label: `${sourceLabel("S03", roles)} — bài thô`, theme: themeOf("opsVolumeRaw") },
   }) satisfies ChartConfig
 
 export function SyncActivity({ days, roles = {}, className }: { days: FlowDay[]; roles?: SourceRoles; className?: string }) {

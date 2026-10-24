@@ -8,6 +8,7 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { fmtInt, fmtMoney, fmtPct, fmtVnDate } from "@/lib/format"
 import type { AirdnaComparison, AirdnaMarketRow, TruthfulCoverageRow } from "@/lib/queries"
+import { marketNameOf, s02MarketName, shortAreaName } from "@/lib/market-names"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 const NUM = { headerClassName: "text-end", cellClassName: "text-end tabular-nums" }
@@ -53,7 +54,8 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
     () => [
       {
         id: "name",
-        accessorKey: "name",
+        accessorFn: (r) => shortAreaName(r.name),
+        cell: ({ row }) => shortAreaName(row.original.name),
         header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />,
         size: 180,
         enableSorting: true,
@@ -71,11 +73,11 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
         id: "airdna",
         accessorFn: (r) => r.airdnaActive,
         header: ({ column }) => (
-          <DataGridColumnHeader title={`${s02} — active`} column={column} />
+          <DataGridColumnHeader title={`${s02} — đang hoạt động`} column={column} />
         ),
         cell: ({ row }) =>
           row.original.airdnaActive
-            ? `${fmtInt(row.original.airdnaActive)}${row.original.airdnaPeriod ? ` · ${row.original.airdnaPeriod}` : ""}${row.original.nMarkets > 1 ? ` · ${row.original.nMarkets} market` : ""}`
+            ? `${fmtInt(row.original.airdnaActive)}${row.original.airdnaPeriod ? ` · ${row.original.airdnaPeriod}` : ""}${row.original.nMarkets > 1 ? ` · ${row.original.nMarkets} thị trường` : ""}`
             : "—",
         size: 170,
         meta: NUM,
@@ -85,7 +87,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
         id: "universe",
         accessorFn: (r) => r.airdnaUniverse,
         header: ({ column }) => (
-          <DataGridColumnHeader title="Universe đã mua" column={column} />
+          <DataGridColumnHeader title="Số đã mua" column={column} />
         ),
         cell: ({ row }) => fmtInt(row.original.airdnaUniverse),
         size: 130,
@@ -129,11 +131,11 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
   return (
     <InsightGrid
       title="Độ phủ trung thực"
-      description={`Listing tự thu ÷ listing active ${s02} cùng thị trường (crosswalk S02)`}
+      description={`Listing tự thu ÷ listing đang hoạt động ${s02} cùng thị trường (theo bảng nối S02)`}
       data={rows}
       columns={columns}
       getRowId={(r) => r.areaId}
-      footnote={`Tự thu là mẫu discovery phục vụ hiệu chuẩn (ADR/công suất lệch <20%) — tỉ lệ thấp là đúng thiết kế, không phải thiếu dữ liệu. Universe đã mua = map_listings ${s02} (LTM đầy đủ); lịch sử = timeseries tháng đang lưu (36 tháng nguồn cung + 12 tháng ADR/occupancy/revenue/RevPAR).`}
+      footnote={`Tự thu là mẫu dò phục vụ hiệu chuẩn (ADR/công suất lệch <20%) — tỉ lệ thấp là đúng thiết kế, không phải thiếu dữ liệu. Số đã mua = số listing ${s02} trong bản đã mua (đủ 12 tháng qua); lịch sử = chuỗi tháng đang lưu (36 tháng nguồn cung + 12 tháng ADR, công suất, doanh thu, RevPAR).`}
     />
   )
 }
@@ -181,8 +183,8 @@ export function CalibrationTable({
       title={`Hiệu chuẩn — ${marketName}`}
       description={
         score
-          ? `Điểm thị trường ${s02} ${score.total} · nhu cầu ${score.rentalDemand} · tăng trưởng ${score.revenueGrowth} · mùa vụ ${score.seasonality} · quy định ${score.regulation}`
-          : "Chưa có Market Score"
+          ? `Điểm ${s02} ${score.total} · nhu cầu ${score.rentalDemand} · tăng trưởng ${score.revenueGrowth} · mùa vụ ${score.seasonality} · quy định ${score.regulation}`
+          : `Chưa có điểm ${s02}`
       }
       badge={
         data.capturedAt ? (
@@ -197,13 +199,14 @@ export function CalibrationTable({
   )
 }
 
-export function AirdnaMarketsTable({ rows, roles = {} }: { rows: AirdnaMarketRow[]; roles?: SourceRoles }) {
+export function AirdnaMarketsTable({ rows, roles = {}, areaNames = {} }: { rows: AirdnaMarketRow[]; roles?: SourceRoles; areaNames?: Record<string, string> }) {
   const s02 = sourceLabel("S02", roles)
+  const names = useMemo(() => new Map(Object.entries(areaNames)), [areaNames])
   const columns = useMemo<InsightColumn<AirdnaMarketRow>[]>(
     () => [
       {
         id: "name",
-        accessorKey: "name",
+        accessorFn: (r) => s02MarketName(r.airdnaId, r.name).name,
         header: ({ column }) => <DataGridColumnHeader title={`Thị trường ${s02}`} column={column} />,
         size: 200,
         enableSorting: true,
@@ -211,7 +214,7 @@ export function AirdnaMarketsTable({ rows, roles = {} }: { rows: AirdnaMarketRow
       {
         id: "score",
         accessorFn: (r) => r.score ?? -Infinity,
-        header: ({ column }) => <DataGridColumnHeader title="Market Score" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`Điểm ${s02}`} column={column} />,
         cell: ({ row }) => (row.original.score === null ? "—" : row.original.score),
         size: 130,
         meta: NUM,
@@ -227,7 +230,7 @@ export function AirdnaMarketsTable({ rows, roles = {} }: { rows: AirdnaMarketRow
           const [cc, ...rest] = id.split("-")
           return (
             <Link prefetch={false} href={`/${cc}/${rest.join("-")}`} className="font-medium hover:underline">
-              {id}
+              {marketNameOf(id, names).name}
             </Link>
           )
         },
@@ -244,12 +247,12 @@ export function AirdnaMarketsTable({ rows, roles = {} }: { rows: AirdnaMarketRow
         enableSorting: true,
       },
     ],
-    [s02]
+    [s02, names]
   )
   return (
     <InsightGrid
       title={`Thị trường ${s02} toàn quốc`}
-      description="Dùng để chọn thành phố tự thu tiếp theo (G3) và kiểm tra crosswalk"
+      description="Dùng để chọn thị trường tự thu tiếp theo (G3) và kiểm tra bảng nối"
       data={rows}
       columns={columns}
       getRowId={(r) => r.airdnaId}

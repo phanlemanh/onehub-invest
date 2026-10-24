@@ -29,7 +29,7 @@ export type GroupRow = {
   fb_posts: number
 }
 
-const TITLE: Record<string, string> = { S05: "Nhóm Facebook (Apify)", S06: "Tỉnh/TP Chợ Tốt" }
+const TITLE: Record<string, string> = { S05: "Nhóm Facebook", S06: "Thị trường Chợ Tốt" }
 const TABS: StatusTab<GroupRow>[] = [
   { value: "on", label: "Đang thu", tone: "bg-success", match: (g) => g.enabled },
   { value: "off", label: "Tắt", tone: "bg-muted-foreground/40", match: (g) => !g.enabled },
@@ -101,8 +101,8 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
         header: "Nhóm",
         cell: ({ row }) => (
           <span data-tier-a className="flex min-w-0 flex-col">
-            <span id={`nhom-${row.original.id}`} className="truncate font-medium">{row.original.name}</span>
-            <span className="text-muted-foreground truncate text-xs">{row.original.group_key}</span>
+            <span id={`nhom-${row.original.id}`} className="truncate font-medium" translate="no">{row.original.name}</span>
+            <span className="text-muted-foreground truncate text-xs" translate="no">{row.original.group_key}</span>
           </span>
         ),
         size: 360,

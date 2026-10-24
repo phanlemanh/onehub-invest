@@ -39,7 +39,7 @@ export function NewGroupSheet({
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Thêm nhóm thu</SheetTitle>
-          <SheetDescription>Hiệu lực từ chu kỳ thu kế tiếp, không cần sửa code.</SheetDescription>
+          <SheetDescription>Hiệu lực từ chu kỳ thu kế tiếp, không cần sửa mã.</SheetDescription>
         </SheetHeader>
         <form
           className="contents"
@@ -74,15 +74,17 @@ export function NewGroupSheet({
               </Select>
             </Field>
             <Field>
-              <FieldLabel htmlFor={`${id}-key`}>{draft.sourceCode === "S05" ? "URL nhóm" : "Mã tỉnh/TP"}</FieldLabel>
+              <FieldLabel htmlFor={`${id}-key`}>{draft.sourceCode === "S05" ? "URL nhóm" : "Mã thị trường"}</FieldLabel>
               <Input
                 id={`${id}-key`}
                 value={draft.groupKey}
                 onChange={(e) => onDraftChange({ ...draft, groupKey: e.target.value })}
-                placeholder={draft.sourceCode === "S05" ? "https://www.facebook.com/groups/…" : "vd danang"}
+                placeholder={draft.sourceCode === "S05" ? "https://www.facebook.com/groups/…" : "ví dụ: mã thị trường trên Chợ Tốt"}
               />
               {draft.sourceCode === "S06" ? (
-                <FieldDescription>Chợ Tốt cần thêm tham số vùng (region_v2, cityCode) — tạm thêm bằng SQL; giao diện đầy đủ cho S06 ở vòng sau.</FieldDescription>
+                <FieldDescription>
+                  Chợ Tốt cần thêm tham số vùng của nguồn — tạm thêm thẳng vào cơ sở dữ liệu; giao diện đầy đủ cho S06 ở vòng sau.
+                </FieldDescription>
               ) : null}
             </Field>
             <Field>

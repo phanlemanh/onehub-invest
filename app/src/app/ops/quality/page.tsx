@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 
 import { AirdnaMarketsTable, CalibrationTable, TruthfulCoverageTable } from "@/components/ops/quality-tables";
-import { DqChecksTable, type DqCheckRow } from "@/components/ops/quality/dq-checks-table";
+import { DqChecksTable } from "@/components/ops/quality/dq-checks-table";
 import { PageHeader } from "@/components/page/page-header";
 import { StatTiles } from "@/components/page/stat-tiles";
 import type { StatTile } from "@/components/page/tiers";
 import { fmtInt } from "@/lib/format";
-import { getRulerHealth } from "@/lib/ops-queries";
+import { dqSection, loadDqChecks } from "@/lib/dq-checks";
+import { getAreaNames, getRulerHealth } from "@/lib/ops-queries";
+import { shortAreaName } from "@/lib/market-names";
 import { pool } from "@/lib/db";
 import { getAirdnaComparison, getAirdnaMarkets, getTruthfulCoverage } from "@/lib/queries";
 import { sourceLabel } from "@/lib/source-labels";
 import { maskSourceNames } from "@/lib/mask-source-names";
+import { priceTierLabel } from "@/lib/ops-labels";
 import { getSourceNameEntries, getSourceRoles } from "@/lib/source-roles";
 
 export const dynamic = "force-dynamic";
@@ -22,14 +25,12 @@ export const metadata: Metadata = { title: "Chất lượng dữ liệu" };
  */
 export default async function QualityPage() {
   const ruler = await getRulerHealth();
-  const { rows: dq } = await pool.query<DqCheckRow>(
-    `SELECT check_name, entity, status, detail, checked_at::text FROM dq_check_results
-     WHERE checked_at > now() - interval '7 days' ORDER BY checked_at DESC LIMIT 20`,
-  );
+  // ON9: bản mới nhất theo (kiểm, đối tượng) — bảng và số đầu trang cùng một nguồn (dqSection bên dưới).
+  const { rows: dqRaw } = await loadDqChecks(pool);
   const { rows: markets } = await pool.query<{ id: string; name: string }>(
     `SELECT id, name FROM areas WHERE region_type = 'market' ORDER BY name`,
   );
-  const [comparisons, airdnaMarkets, truthful, roles, names] = await Promise.all([
+  const [comparisons, airdnaMarkets, truthful, roles, names, areaNames] = await Promise.all([
     Promise.all(
       markets.map(async (m) => ({ market: m, data: await getAirdnaComparison(m.id) })),
     ),
@@ -37,9 +38,10 @@ export default async function QualityPage() {
     getTruthfulCoverage(),
     getSourceRoles(),
     getSourceNameEntries(),
+    getAreaNames(),
   ]);
   // ON7: chi tiết DQ là chữ do pipeline ghi — che tên nguồn thật (dòng cũ trong DB); không đọc được tên → ẩn (đóng chặt).
-  const dqShown = dq.map((r) => ({ ...r, detail: r.detail === null ? null : maskSourceNames(r.detail, names) }));
+  const dq = dqSection(dqRaw, (d) => maskSourceNames(d, names));
   const calibrated = comparisons.filter((c) => c.data !== null);
 
   const tiles: StatTile[] = [
@@ -49,14 +51,14 @@ export default async function QualityPage() {
       footer: "Thước giá P2 cần n ≥ 5 tin",
     },
     ...ruler.offersByTier.map((t) => ({
-      title: `Offers tầng ${t.tier}`,
+      title: `Tin rao ${priceTierLabel(t.tier).known ? priceTierLabel(t.tier).label : t.tier}`,
       value: fmtInt(t.offers),
-      footer: "Kiến trúc 3 tầng giá",
+      footer: "Ba bậc giá",
     })),
     {
       title: "Người bán",
       value: fmtInt(ruler.sellers),
-      footer: `${fmtInt(ruler.gapOffers)} offers có bait_gap`,
+      footer: `${fmtInt(ruler.gapOffers)} tin có chênh giá câu`,
     },
   ];
 
@@ -65,18 +67,18 @@ export default async function QualityPage() {
       <PageHeader
         crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Chất lượng dữ liệu" }]}
         title="Chất lượng dữ liệu"
-        stats={[`${fmtInt(dq.length)} kiểm`, `${fmtInt(calibrated.length)} thị trường hiệu chuẩn`]}
+        stats={[...dq.stats.labels, `${fmtInt(calibrated.length)} thị trường hiệu chuẩn`]}
         description={`Đối chiếu số tự thu với ${sourceLabel("S02", roles)} — chỉ nội bộ, không hiện cho nhà đầu tư.`}
       />
       {/* H3-P3: chất lượng thước P2 + phân bố tier (kiến trúc 3 tầng giá) */}
       <StatTiles items={tiles} />
-      {/* G-1 Lô 2: kết quả DQ checks gần nhất (enum-vocab + các check khác) */}
-      <DqChecksTable rows={dqShown} />
+      {/* ON9: bản mới nhất của mỗi kiểm theo từng đối tượng (7 ngày) — chữ kiểm/đối tượng/chi tiết theo ON12 */}
+      <DqChecksTable rows={dq.rows} areaNames={areaNames} />
       <TruthfulCoverageTable rows={truthful} roles={roles} />
       {calibrated.map(({ market, data }) => (
-        <CalibrationTable key={market.id} marketName={market.name} data={data!} roles={roles} />
+        <CalibrationTable key={market.id} marketName={shortAreaName(market.name)} data={data!} roles={roles} />
       ))}
-      <AirdnaMarketsTable rows={airdnaMarkets} roles={roles} />
+      <AirdnaMarketsTable rows={airdnaMarkets} roles={roles} areaNames={areaNames} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { BadgeProps } from "@/components/reui/badge"
+import { marketNameOf } from "@/lib/market-names"
 import type { CoverageRow } from "@/lib/ops-queries"
 
 export type Freshness = CoverageRow["status"]
@@ -15,5 +16,6 @@ export const FRESHNESS_ORDER: Freshness[] = ["stale", "none", "fresh"]
 /** Tuổi chia SLO (theo giờ): >1 là quá hạn; null khi chưa có dữ liệu. */
 export const ageRatio = (r: CoverageRow) => (r.ageHours === null ? null : r.ageHours / r.sloHours)
 
-/** Ô nguồn × thị trường; mã chưa có dữ liệu không có thị trường. */
-export const where = (r: CoverageRow) => (r.city ? `${r.code} · ${r.city}` : r.code)
+/** Ô nguồn × thị trường; mã chưa có dữ liệu không có thị trường. Thị trường hiện bằng tên khu vực (ON12), không mã thô. */
+export const where = (r: CoverageRow, areaNames: ReadonlyMap<string, string>) =>
+  r.city ? `${r.code} · ${marketNameOf(r.city, areaNames).name}` : r.code

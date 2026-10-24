@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bf958933ec7d4b30b0421fad483e93b6fed70c01
+verified_commit: a9d304f69b5d3fe09c958ecc991ba9e4697a6f82
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -280,3 +280,7 @@ Round 3: chạy lại `cd app && npm test` cùng các lệnh suite ở HEAD b0e3
 ### Re-pin lần 1 — 2026-10-24, do hoá cũ do gộp main #69 (tệp ON8, không chạm UI4)
 run_id: repin-20261024T222910Z-82698
 sha: bf958933ec7d4b30b0421fad483e93b6fed70c01 · suites: 6 lệnh exit 0 · evals: 18/18 eval máy đạt kỳ vọng · ngoài làn máy: E13, E14
+
+### Re-pin lần 2 — 2026-10-24, do hoá cũ do gộp main #70 #71
+run_id: repin-20261024T230049Z-65414
+sha: a9d304f69b5d3fe09c958ecc991ba9e4697a6f82 · suites: 6 lệnh exit 0 · evals: 18/18 eval máy đạt kỳ vọng · ngoài làn máy: E13, E14 · diff chạm vật đo ngoài làn máy: E13 — chưa chứng lại, đi vòng S4 delta
