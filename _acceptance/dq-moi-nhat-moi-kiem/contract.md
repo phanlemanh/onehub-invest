@@ -5,10 +5,10 @@ slug: dq-moi-nhat-moi-kiem
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-24-dq-moi-nhat-moi-kiem-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-24T14:44:11Z
 ---
 
 # Acceptance Contract: dq-moi-nhat-moi-kiem
