@@ -2,7 +2,7 @@
 // đo ON7 `ops-nhan-ma-nguon` (pipeline/scripts/ops-nhan-ma-nguon.test.mjs, app/tests/ops-nhan-ma-nguon-cloud.test.tsx).
 // HOME và ONEINVEST_ROOT là cây tạm (log job do người gọi đưa vào); DATABASE_URL mặc định là DB local (chỉ đọc).
 import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -11,6 +11,18 @@ import { findSourceNames } from "../lib/mask-source-names.mjs";
 
 export const PUSH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "push-ops-facts.mjs");
 
+/** Bản sao push-ops-facts đã qua `fn` (đột biến cho chiều đỏ) trong thư mục tạm, lib + node_modules trỏ về bản thật.
+ *  `fn` không đổi gì → ném lỗi (khuôn đột biến lệch mã nguồn thì phép đo không được xanh oan). */
+export function mutantPush(file, fn) {
+  const dir = realpathSync(mkdtempSync(path.join(tmpdir(), "ops-facts-mut-")));
+  for (const d of ["node_modules", "lib"]) if (!existsSync(path.join(dir, d))) symlinkSync(path.join(path.dirname(PUSH), d), path.join(dir, d));
+  const src = readFileSync(PUSH, "utf8");
+  const out = fn(src);
+  if (out === src) throw new Error(`khuôn đột biến ${file} không khớp mã nguồn push-ops-facts`);
+  writeFileSync(path.join(dir, file), out);
+  return path.join(dir, file);
+}
+
 /** Chuỗi kết nối DB local dựng bằng URL — literal có user bị hook bí mật bắt nhầm. */
 export function localDbUrl() {
   const u = new URL("postgres://placeholder/oneinvest");
@@ -18,24 +30,31 @@ export function localDbUrl() {
   return u.toString();
 }
 
-/** logs: { "<tên tệp trong pipeline/logs>": "<nội dung>" }. Trả { code, stderr, payload }. */
-export async function captureOpsFacts({ script = PUSH, logs = {}, env = {} } = {}) {
+/** logs: { "<tên tệp trong pipeline/logs>": "<nội dung>" }. Trả { code, stdout, stderr, payload, posts } — posts = số POST máy chủ thu nhận. */
+/** home: { "<đường tương đối HOME tạm>": "<nội dung>" } — vd cấu hình tài khoản `.openclaw/openclaw.json`. */
+export async function captureOpsFacts({ script = PUSH, logs = {}, env = {}, args = [], home: homeFiles = {} } = {}) {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), "ops-facts-")));
   const home = path.join(root, ".home");
   mkdirSync(path.join(home, ".oneinvest"), { recursive: true });
   writeFileSync(path.join(home, ".oneinvest/cloud.env"), "CLOUD_OPS_API_TOKEN=gia\n");
   mkdirSync(path.join(root, "pipeline/logs"), { recursive: true });
   for (const [name, text] of Object.entries(logs)) writeFileSync(path.join(root, "pipeline/logs", name), text);
+  for (const [rel, text] of Object.entries(homeFiles)) {
+    mkdirSync(path.dirname(path.join(home, rel)), { recursive: true });
+    writeFileSync(path.join(home, rel), text);
+  }
 
   let body = "";
+  let posts = 0;
   const server = http.createServer((req, res) => {
+    if (req.method === "POST") posts++;
     req.on("data", (d) => { body += d; });
     req.on("end", () => { res.writeHead(200, { "content-type": "application/json" }); res.end("{}"); });
   });
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   try {
-    const { code, stderr } = await new Promise((resolve) => {
-      const c = spawn(process.execPath, [script], {
+    const { code, stdout, stderr } = await new Promise((resolve) => {
+      const c = spawn(process.execPath, [script, ...args], {
         cwd: path.dirname(script),
         env: {
           PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin`,
@@ -47,11 +66,12 @@ export async function captureOpsFacts({ script = PUSH, logs = {}, env = {} } = {
         },
       });
       let err = "";
+      let out = "";
       c.stderr.on("data", (d) => { err += d; });
-      c.stdout.resume();
-      c.on("close", (code) => resolve({ code, stderr: err }));
+      c.stdout.on("data", (d) => { out += d; });
+      c.on("close", (code) => resolve({ code, stdout: out, stderr: err }));
     });
-    return { code, stderr, payload: body ? JSON.parse(body) : null };
+    return { code, stdout, stderr, payload: body ? JSON.parse(body) : null, posts };
   } finally {
     server.close();
     rmSync(root, { recursive: true, force: true });

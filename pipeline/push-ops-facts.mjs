@@ -210,8 +210,10 @@ export function factsChan(payload, names) {
 }
 
 async function main() {
-  const { token } = await env();
-  if (!token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
+  // --kho: chế độ khô — dựng bản tin, soát tầng A, in đường JSON + mã; không cần token, không gửi.
+  const kho = process.argv.includes("--kho");
+  const { token } = kho ? {} : await env();
+  if (!kho && !token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
   const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(() => "");
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
@@ -254,7 +256,7 @@ async function main() {
   };
   // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
   const chan = factsChan(payload, REG.names);
-  if (process.argv.includes("--kho")) {
+  if (kho) {
     for (const l of chan) console.error(l);
     console.log(chan.length ? `ops-facts khô: ${chan.length} chỗ chặn` : "ops-facts khô: sạch, 0 chỗ chặn");
     process.exitCode = chan.length ? 1 : 0;
