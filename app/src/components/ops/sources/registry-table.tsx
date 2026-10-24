@@ -5,6 +5,7 @@ import { useMemo } from "react"
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
+import { sourceStatusLabel } from "@/lib/ops-labels"
 
 export type RegistryRow = {
   code: string
@@ -36,7 +37,7 @@ export function RegistryTable({ rows }: { rows: RegistryRow[] }) {
         id: "status",
         accessorKey: "status",
         header: "Trạng thái",
-        cell: ({ row }) => <Badge variant={row.original.status === "active" ? "success-light" : "outline"}>{row.original.status}</Badge>,
+        cell: ({ row }) => <Badge variant={row.original.status === "active" ? "success-light" : "outline"}>{sourceStatusLabel(row.original.status).label}</Badge>,
         size: 120,
       },
       { id: "since", accessorKey: "since", header: "Từ", size: 120 },
@@ -46,8 +47,8 @@ export function RegistryTable({ rows }: { rows: RegistryRow[] }) {
   )
   return (
     <InsightGrid
-      title="Registry mã nguồn"
-      description="Mã retired không tái sử dụng; đổi nhãn công khai phải qua mini-ADR"
+      title="Danh mục mã nguồn"
+      description="Mã đã ngừng không tái sử dụng; đổi nhãn công khai phải có quyết định kiến trúc"
       data={rows}
       columns={columns}
       getRowId={(r) => r.code}

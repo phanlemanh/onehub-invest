@@ -91,7 +91,7 @@ export function ZaloGroupsGrid({
   return (
     <DataGrid table={table} recordCount={rows.length} i18n={DATA_GRID_VI} emptyMessage="Chưa thấy nhóm nào — đăng nhập QR cho tài khoản này rồi tải lại.">
       <Frame spacing="default" className="w-full min-w-0">
-        <SectionHeader title={`Nhóm của ${account}`} description={groups ? `${fmtInt(groups.length)} nhóm membership · ${fmtInt(groups.filter((g) => g.enabled).length)} đang bật` : "Đang tải nhóm từ Zalo"}>
+        <SectionHeader title={`Nhóm của ${account}`} description={groups ? `${fmtInt(groups.length)} nhóm đang tham gia · ${fmtInt(groups.filter((g) => g.enabled).length)} đang bật` : "Đang tải nhóm từ Zalo"}>
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <InputGroup className="w-full sm:w-56">
               <InputGroupAddon>
@@ -133,7 +133,7 @@ export function ZaloGroupsGrid({
         <FrameFooter className="flex flex-col items-stretch gap-2">
           {rows.length > pagination.pageSize ? <DataGridPagination sizes={[25, 50, 100]} /> : null}
           <p className="text-muted-foreground text-xs">
-            Bất biến 1 nhóm – 1 tài khoản (API chặn 409, công tắc khoá). Cấu hình ghi tại ~/.openclaw/openclaw.json (có .bak); thay đổi không có hiệu lực sau khoảng 1 phút thì chạy lại gateway OpenClaw.
+            Bất biến 1 nhóm – 1 tài khoản (API chặn 409, công tắc khoá). Cấu hình ghi tại <code>~/.openclaw/openclaw.json</code> (có bản sao lưu); thay đổi không có hiệu lực sau khoảng 1 phút thì khởi động lại cổng nối OpenClaw.
           </p>
         </FrameFooter>
       </Frame>

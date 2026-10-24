@@ -84,7 +84,7 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
   test("OP-AC-2 trang /ops và Thu thập render được, nói «Độ tươi chỉ đo ở máy local»", async () => {
     needDb()
     const [ops, col] = await renderBoth()
-    const TEXT = "Độ tươi chỉ đo ở máy local"
+    const TEXT = "Độ tươi chỉ đo ở máy thu" // ON12 đổi «máy local» → «máy thu» (nhãn theo CONTEXT.md)
     for (const [name, h, title] of [["/ops", ops, "Tổng quan"], ["/ops/collections", col, "Thu thập"]] as const) {
       // Vị trí 1 — thông báo có tên: đúng MỘT tiêu đề Alert mang câu này.
       const alerts = [...h.matchAll(/data-slot="alert-title"[^>]*>([^<]*)</g)].map((m) => m[1])
@@ -105,7 +105,7 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
       assert.equal(await freshnessLocalOnly(), false)
       const [ops, col] = await renderBoth()
       for (const h of [ops, col]) {
-        assert.ok(!h.includes("Độ tươi chỉ đo ở máy local"))
+        assert.ok(!h.includes("Độ tươi chỉ đo ở máy thu"))
         assert.ok(h.includes("Chưa có nguồn nào"))
       }
     } finally {

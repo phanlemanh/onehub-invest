@@ -253,7 +253,7 @@ function LocalAccounts() {
     const b = await r.json()
     setRemoving(null)
     if (!r.ok) toast.error("Không gỡ được tài khoản", { description: b.error })
-    else toast.success("Đã gỡ tài khoản", { description: `${accountId} — session đã đăng xuất` })
+    else toast.success("Đã gỡ tài khoản", { description: `${accountId} — phiên đăng nhập đã thoát` })
     await loadAccounts()
   }
 
@@ -284,7 +284,7 @@ function LocalAccounts() {
           }}
         >
           <ButtonGroup className="w-full sm:w-auto">
-            <Input value={newId} onChange={(e) => setNewId(e.target.value)} placeholder="id mới, vd acc2" aria-label="Id tài khoản mới" className="sm:w-40" />
+            <Input value={newId} onChange={(e) => setNewId(e.target.value)} placeholder="mã mới, ví dụ acc2" aria-label="Mã tài khoản mới" className="sm:w-40" />
             <Button type="submit" variant="outline" disabled={!newId.trim()}>
               <PlusIcon data-icon="inline-start" aria-hidden="true" />
               Thêm
@@ -328,7 +328,7 @@ function LocalAccounts() {
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
         title="Gỡ tài khoản Zalo?"
-        description={<>Gỡ «<span data-tier-a>{removing ?? ""}</span>»: session Zalo bị đăng xuất và cấu hình bị xoá (tệp .bak vẫn giữ để hoàn nguyên).</>}
+        description={<>Gỡ «<span data-tier-a>{removing ?? ""}</span>»: phiên đăng nhập Zalo bị thoát và cấu hình bị xoá (tệp sao lưu <code>.bak</code> vẫn giữ để hoàn nguyên).</>}
         confirmLabel="Gỡ tài khoản"
         onConfirm={() => removing && removeAccount(removing)}
       />

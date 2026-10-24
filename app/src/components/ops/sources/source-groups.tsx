@@ -29,7 +29,7 @@ export type GroupRow = {
   fb_posts: number
 }
 
-const TITLE: Record<string, string> = { S05: "Nhóm Facebook (Apify)", S06: "Tỉnh/TP Chợ Tốt" }
+const TITLE: Record<string, string> = { S05: "Nhóm Facebook", S06: "Thị trường Chợ Tốt" }
 const TABS: StatusTab<GroupRow>[] = [
   { value: "on", label: "Đang thu", tone: "bg-success", match: (g) => g.enabled },
   { value: "off", label: "Tắt", tone: "bg-muted-foreground/40", match: (g) => !g.enabled },

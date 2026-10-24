@@ -28,7 +28,7 @@ const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown"] as const).map((a)
 export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
   const columns = useMemo<InsightColumn<JobStatus>[]>(
     () => [
-      { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Job" column={column} />, size: 280, enableSorting: true },
+      { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Tác vụ" column={column} />, size: 280, enableSorting: true },
       { id: "schedule", accessorKey: "schedule", header: "Lịch", size: 180 },
       { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
       {
@@ -42,8 +42,8 @@ export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
       {
         id: "line",
         accessorKey: "lastLine",
-        header: "Dòng log cuối",
-        cell: ({ row }) => <span className="text-muted-foreground font-mono text-xs">{row.original.lastLine ?? "—"}</span>,
+        header: "Dòng nhật ký cuối",
+        cell: ({ row }) => <code className="text-muted-foreground font-mono text-xs">{row.original.lastLine ?? "—"}</code>,
         size: 340,
       },
     ],
@@ -52,8 +52,8 @@ export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
   return (
     <StatusGrid
       id="may-moc"
-      title="Máy móc (launchd)"
-      description="Agent tự chạy — log lần cuối và probe dịch vụ KeepAlive"
+      title="Máy móc"
+      description="Tác vụ tự chạy theo lịch — nhật ký lần cuối và dò dịch vụ chạy liên tục"
       data={jobs}
       columns={columns}
       tabs={TABS}

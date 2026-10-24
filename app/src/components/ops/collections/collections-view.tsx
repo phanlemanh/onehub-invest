@@ -68,13 +68,13 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
           `Hôm nay ${days[0]?.day ?? "—"}`,
           ...(factsAgeMin !== null ? [`Máy thu ${fmtInt(factsAgeMin)}′ trước`] : []),
         ]}
-        description="Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở log tay."
+        description="Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở nhật ký tay."
       />
       {localOnly ? <LocalOnlyAlert /> : null}
       {factsAgeMin !== null && factsAgeMin > 30 ? (
         <Alert variant="warning">
           <CircleAlertIcon aria-hidden="true" />
-          <AlertTitle>Máy thu có thể offline</AlertTitle>
+          <AlertTitle>Máy thu có thể mất kết nối</AlertTitle>
           <AlertDescription>Dữ liệu máy thu cập nhật {fmtInt(factsAgeMin)} phút trước.</AlertDescription>
         </Alert>
       ) : null}
