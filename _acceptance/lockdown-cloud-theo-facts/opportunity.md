@@ -3,10 +3,10 @@ schema_version: 1
 slug: lockdown-cloud-theo-facts
 feature: Người vận hành mở /ops/collections trên cloud thấy Lockdown và Máy móc đọc từ số máy local đẩy lên (ADR-0014) kèm mốc đo; lớp không có kết quả hiện «Chỉ kiểm ở máy local», không lớp nào xanh khi không kiểm
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build           # Mạnh gõ ở phiên P2 25/10: «Cổng Đáng ON23 lockdown-cloud-theo-facts: build»
+decided_by: Mạnh
+decided_at: 2026-10-24T23:57:00Z
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
