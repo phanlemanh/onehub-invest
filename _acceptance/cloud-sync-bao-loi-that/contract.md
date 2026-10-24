@@ -5,7 +5,7 @@ slug: cloud-sync-bao-loi-that
 owner: phanlemanh@gmail.com
 risk_tier: T3      # scripts/cloud-sync.sh + pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [pipeline, docs]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-24-cloud-sync-bao-loi-that-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24
@@ -73,3 +73,9 @@ Bỏ quét morphological đầy đủ — bài toán hẹp, AU3 đã quét và �
 ## Notes
 
 - `pipeline/push-ops-facts.mjs` chung với ON2 (dãy P3, hàm `scheduler()`) — diff giữ một dòng, gộp main trước khi xin merge.
+- Dòng đổi ở `push-ops-facts.mjs` là chỗ dựng `pg.Client` (`connectionString: process.env.DATABASE_URL ?? LOCAL_URL`),
+  không phải dòng khai `LOCAL_URL` như kế hoạch viết: cùng nghĩa, nhưng dòng khai mang chuỗi kết nối có mật khẩu mà
+  hook bí mật chặn commit.
+- Hồ sơ AU3 `job-bao-loi-that` (đã ký) giữ nguyên: `expected` E5 của nó tả ca `todo` «AC-5 push-ops-facts» và ca đếm
+  «đủ 10 bước + 1 todo» trước vòng này; nay hai ca ấy thành «AC-5 bước thật push-ops-facts …» và «AC-5 đủ 11 bước».
+  E3 bên đó đã cho phép ca «chập chờn» là ok khi vá. Mã thoát của lệnh kiểm vẫn 0.
