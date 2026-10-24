@@ -28,13 +28,25 @@ export function mediaFilesOf(item, snapshotId) {
   return mf.map((m) => ({ ...m, snapshotId }));
 }
 
-// PL1 (claudedp-2310-4): snapshot THỬ — dữ liệu giả sinh ra khi bench parser/
-// e2e/verify tay (nguồn zalo-mock, e2e, TEST…) — KHÔNG BAO GIỜ được vào stg_*.
-// Nhận diện theo SEGMENT tên nguồn (giữa cặp __), không khớp chữ lõi trong
-// tên nguồn thật. Export để test.
-const TEST_SNAPSHOT_RE = /__(?:zalo-mock|e2e|test)(?:__|$)/i;
+// PL1 (claudedp-2310-4 mở lại lần 2): ALLOWLIST nguồn thật thay denylist
+// nguồn thử — denylist không bắt được nguồn lạ mới (vd 'example' có thật trên
+// đĩa). Mỗi importer chỉ nhận DANH SÁCH TRẮNG nguồn nó phụ trách; nguồn khác
+// bị bỏ CÓ LOG (bảo vệ hai chiều: chặn dữ liệu thử VÀ chặn nhầm nguồn vào
+// sai bảng). Export để test.
+const AIRBNB_IMPORTER_SOURCES = new Set([
+  "zalo-agent", // stg_zalo_posts (nhánh chính)
+  "airbnb-listing",
+  "airbnb-discovery",
+  "airdna-research",
+  "osm-boundaries",
+]);
+export function isAllowedSource(source) {
+  return AIRBNB_IMPORTER_SOURCES.has(String(source));
+}
+/** @deprecated giữ cho test cũ — nghĩa mới: NGOÀI allowlist = không nạp */
 export function isTestSnapshot(name) {
-  return TEST_SNAPSHOT_RE.test(name);
+  const m = String(name).match(/__([^_]+)__/);
+  return m ? !isAllowedSource(m[1]) : true;
 }
 
 async function main() {
@@ -46,8 +58,9 @@ async function main() {
   // Snapshot thử → bỏ qua CÓ LOG (exit 0 để vòng nạp hằng đêm không gãy,
   // nhưng stderr nói rõ đã skip cái gì cho auditable). basename() tự bỏ
   // dấu / cuối — split('/').pop() trả rỗng khi path kết thúc / (mở lại 2310-4).
-  if (isTestSnapshot(basename(dir))) {
-    console.warn(`bỏ qua snapshot THỬ (không nạp stg): ${dir}`);
+  const dirSource = basename(dir).match(/__([^_]+)__/)?.[1] ?? "";
+  if (!isAllowedSource(dirSource)) {
+    console.warn(`bỏ qua snapshot nguồn ngoài ALLOWLIST '${dirSource}' (không nạp stg): ${dir}`);
     process.exit(0);
   }
   // Orphan: crash giữa write items và finalize → dir không có manifest.
@@ -63,8 +76,8 @@ async function main() {
   }
   // Lớp thứ hai nhận diện snapshot thử (mở lại 2310-4): chỉ nhìn TÊN THƯ MỤC
   // có thể bị đổi tên — manifest.source là lời khai của chính snapshot.
-  if (isTestSnapshot(`x__${manifest.source}__x`)) {
-    console.warn(`bỏ qua snapshot THỬ theo manifest.source=${manifest.source}: ${dir}`);
+  if (!isAllowedSource(manifest.source)) {
+    console.warn(`bỏ qua snapshot nguồn ngoài ALLOWLIST theo manifest.source=${manifest.source}: ${dir}`);
     process.exit(0);
   }
 
@@ -86,10 +99,10 @@ async function main() {
   // từng item có source thuộc nhóm thử, đếm để log (mở lại 2310-4).
   const before = items.length;
   for (let i = items.length - 1; i >= 0; i--) {
-    if (isTestSnapshot(`x__${items[i].source ?? ""}__x`)) items.splice(i, 1);
+    if (!isAllowedSource(items[i].source ?? "")) items.splice(i, 1);
   }
   if (items.length < before) {
-    console.warn(`bỏ ${before - items.length} item THỬ lẫn trong snapshot thật: ${manifest.snapshotId}`);
+    console.warn(`bỏ ${before - items.length} item nguồn ngoài ALLOWLIST lẫn trong snapshot thật: ${manifest.snapshotId}`);
   }
 
   // mediaFiles trỏ tới file không khai trong manifest = lệch hợp đồng → cảnh báo

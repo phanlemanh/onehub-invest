@@ -35,6 +35,11 @@ async function latestSnapshotDir() {
 async function readSnapshot(dir) {
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
   if (manifest.schemaVersion !== 1) throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
+  // Lớp 2 (mở lại 2310-4 lần 2): manifest.source là lời khai của chính snapshot
+  if (manifest.source !== "chotot-ads") {
+    console.warn(`bỏ qua theo manifest.source=${manifest.source} (không phải chotot-ads): ${dir}`);
+    process.exit(0);
+  }
   for (const f of manifest.files) {
     const buf = await readFile(join(dir, f.name));
     const sha = createHash("sha256").update(buf).digest("hex");
@@ -97,11 +102,12 @@ async function main() {
   await client.connect();
   try {
     let dirs = process.argv[2] === "--latest" ? await latestSnapshotDir() : [process.argv[2]];
-    // PL1: snapshot THỬ không bao giờ vào stg (đồng bộ luật import-airbnb)
-    const testRe = /__(?:zalo-mock|e2e|test)(?:__|$)/i;
+    // PL1 (mở lại lần 2): ALLOWLIST — chotot importer chỉ nhận 'chotot-ads'
+    const allowed = new Set(["chotot-ads"]);
+    const srcOf = (d) => basename(d).match(/__([^_]+)__/)?.[1] ?? "";
     dirs = dirs.filter((d) => {
-      if (testRe.test(basename(d))) {
-        console.warn(`bỏ qua snapshot THỬ (không nạp stg): ${d}`);
+      if (!allowed.has(srcOf(d))) {
+        console.warn(`bỏ qua snapshot nguồn ngoài ALLOWLIST '${srcOf(d)}' (không nạp stg): ${d}`);
         return false;
       }
       return true;
