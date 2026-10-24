@@ -7,7 +7,8 @@
 //   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
 //     so theo đoạn đường dẫn + realpath;
 //   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm;
-//   - /api/v1/deals đang tạm đóng: cổng ops chạy trước truy vấn (check-deals-api.mjs).
+//   - /api/v1/deals đang tạm đóng: cổng ops chạy trước truy vấn (check-deals-api.mjs);
+//   - mọi route API khớp sổ bề mặt app/src/lib/api-surface.ts (check-api-surface.mjs).
 // Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -31,6 +32,22 @@ const check = (ok, msg) => {
   console.log(`${ok ? "ok  " : "FAIL"} ${msg}`);
   if (!ok) fails.push(msg);
 };
+
+const { checkOpsTierA } = await import("./check-ops-tier-a.mjs");
+function opsTierA(r) {
+  const { files, hits, positive } = checkOpsTierA({ root: r });
+  for (const h of hits) check(false, `ops ngoài /ops/sources: tên nguồn thật (${h.code}) ở chữ hiển thị ${h.file}:${h.line}`);
+  check(hits.length === 0, `ops ngoài /ops/sources: chữ hiển thị chỉ mã S0x (${hits.length} chỗ trúng trong ${files.length} tệp)`);
+  check(positive >= 1, `đối chứng dương: bộ quét thấy tên thật ở components/ops/sources/ (${positive} chỗ)`);
+}
+// `--only ops-tier-a --root <dir>`: chỉ chạy mục 12 trên một cây khác (ca chiều đỏ của scripts/ops-nhan-ma-nguon.test.mjs).
+const [flag, only, ...rest] = process.argv.slice(2);
+if (flag === "--only" && only === "ops-tier-a") {
+  const i = rest.indexOf("--root");
+  opsTierA(i >= 0 ? path.resolve(rest[i + 1]) : root);
+  console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
+  process.exit(fails.length === 0 ? 0 : 1);
+}
 
 // 1. Route: không còn /deals trong Invest; /ops/deals tồn tại.
 check(!existsSync(app("src/app/(app)/deals")), "không còn route Invest src/app/(app)/deals");
@@ -142,6 +159,15 @@ for (const [env, user, want, label] of [
 const { checkDealsRoute } = await import("./check-deals-api.mjs");
 const dealsApi = checkDealsRoute(read("src/app/api/v1/deals/route.ts"));
 check(dealsApi.ok, dealsApi.msg);
+
+// 11. Sổ bề mặt API (so-be-mat-api): mọi route khai đúng một dòng, cổng khớp chế độ, route public không đọc sale_offers.
+const { checkApiSurface, loadEntries, loadFiles } = await import("./check-api-surface.mjs");
+const surface = checkApiSurface({ entries: await loadEntries(), files: loadFiles() });
+for (const v of surface.violations) check(false, `sổ bề mặt API: ${v}`);
+check(surface.violations.length === 0, `sổ bề mặt API: ${surface.routes}/${surface.declared} route khớp sổ (đường + phương thức)`);
+
+// 12. Ops ngoài /ops/sources chỉ dùng mã S0x trong chữ hiển thị (ops-nhan-ma-nguon, ON7).
+opsTierA(root);
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);

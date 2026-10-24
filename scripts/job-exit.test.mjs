@@ -80,14 +80,15 @@ function makeTree(name, { copy = [], dirs = [], files = {} }) {
   return root;
 }
 
-/** Chạy tệp bọc trong cây tạm. HOME tạm để tệp bọc không chèn node thật ($HOME/.local/node-…) lên trước. */
-function runJob(root, script, env = {}) {
+/** Chạy tệp bọc trong cây tạm. HOME tạm để tệp bọc không chèn node thật ($HOME/.local/node-…) lên trước.
+ *  `via` = {scriptPath, cwd}: gọi kiểu launchd (đường qua symlink, thư mục chạy khác gốc cây). */
+function runJob(root, script, env = {}, via = {}) {
   const calls = path.join(root, `.calls-${Math.random().toString(36).slice(2)}`);
   writeFileSync(calls, "");
   // apify-facebook-daily ghi mốc snapshot đã nạp — xoá để mỗi lượt thấy cùng một dãy bước
   rmSync(path.join(root, "pipeline/logs/apify-daily.state"), { force: true });
-  const r = spawnSync("/bin/bash", [path.join(root, script), ...(JOBS_ARGS[script] ?? [])], {
-    cwd: root,
+  const r = spawnSync("/bin/bash", [via.scriptPath ?? path.join(root, script), ...(JOBS_ARGS[script] ?? [])], {
+    cwd: via.cwd ?? root,
     env: {
       PATH: `${path.join(root, ".shim-bin")}:/usr/bin:/bin`,
       HOME: path.join(root, ".home"),
@@ -138,7 +139,7 @@ const JOBS = {
   },
   "cloud-sync": {
     script: "scripts/cloud-sync.sh",
-    tree: { copy: ["scripts/cloud-sync.sh"] },
+    tree: { copy: ["scripts/cloud-sync.sh", "scripts/lib/job-step.sh"] },
     seq: ["sync-cloud", "push-ops-facts"],
   },
   "collector-tuan": {
@@ -269,12 +270,52 @@ describe("AC-3 ma trận năm job × hai trạng thái DB", () => {
     assert.equal(MATRIX.length, 10, "ma trận viết trước phải có 5 job × 2 trạng thái");
     assert.equal(matrixRan, 10, `chỉ ${matrixRan}/10 ca ma trận đã chạy tới cuối`);
   });
-  // Hỏi-1 = A (Mạnh, Cổng Phạm vi 23/10): lỗ này vá ở hàng T3 riêng — ca để lỗ hiện trong đầu ra.
-  test("AC-3 cloud-sync · chập chờn (sync-cloud hỏng, push-ops-facts lành)", { todo: "P3-3 — hàng T3 cloud-sync (Hỏi-1 A)" }, () => {
+  // Hỏi-1 = A (Mạnh, Cổng Phạm vi 23/10): lỗ vá ở hàng T3 riêng AU13 `cloud-sync-bao-loi-that` (P3-3).
+  test("AC-3 cloud-sync · chập chờn (sync-cloud hỏng, push-ops-facts lành)", () => {
     const J = JOBS["cloud-sync"];
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "sync-cloud" });
-    assert.notEqual(r.code, 0, "cloud-sync thoát 0 khi sync-cloud hỏng mà push-ops-facts lành");
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "sync-cloud", J.seq), [], r.stderr);
   });
+});
+
+// ------------------------------------------------- AU13 cloud-sync (P3-3) --
+describe("AU13 cloud-sync", () => {
+  const J = JOBS["cloud-sync"];
+  test("AU13 cloud-sync: push-ops-facts hỏng → ≠0, dòng ghim, bước sau vẫn chạy", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "push-ops-facts" });
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "push-ops-facts", J.seq), [], r.stderr);
+  });
+  test("AU13 cloud-sync: hai bước hỏng (3, 5) → thoát 3, hai dòng ghim đúng thứ tự", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "sync-cloud:3,push-ops-facts:5" });
+    assert.equal(r.code, 3, "mã thoát phải là mã của bước hỏng ĐẦU TIÊN");
+    const ghim = r.stderr.split("\n").filter((l) => l.startsWith("JOB FAIL"));
+    assert.deepEqual(ghim, [failLine("cloud-sync", "sync-cloud", 3), failLine("cloud-sync", "push-ops-facts", 5)]);
+    assert.deepEqual(r.calls, J.seq);
+  });
+  test("AU13 cloud-sync: gọi kiểu launchd (qua symlink, cwd khác) → cùng kết quả", () => {
+    // plist gọi ~/dev/one-invest/scripts/cloud-sync.sh — one-invest là symlink tới gốc kho
+    const link = path.join(SCRATCH, `one-invest-${Math.random().toString(36).slice(2)}`);
+    symlinkSync(J.root(), link);
+    const via = { scriptPath: path.join(link, J.script), cwd: "/" };
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "sync-cloud" }, via);
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "sync-cloud", J.seq), [], r.stderr);
+    const ok = runJob(J.root(), J.script, {}, via);
+    assert.equal(ok.code, 0, ok.stderr);
+    assert.deepEqual(ok.calls, J.seq);
+  });
+  for (const step of J.seq) {
+    test(`AU13 cloud-sync: bản đột biến bỏ job_run ở ${step} → bị bắt`, () => {
+      const mut = mutateDropGuard(J.root(), J.script, "cloud-sync", step);
+      const goc = readFileSync(path.join(J.root(), J.script), "utf8");
+      const dot = readFileSync(path.join(mut, J.script), "utf8");
+      assert.notEqual(dot, goc, `bản đột biến ở ${step} phải khác bản gốc`);
+      assert.ok(!dot.includes(`job_run cloud-sync ${step} node`), `bản đột biến vẫn còn job_run ở ${step}`);
+      const r = runJob(mut, J.script, { FAIL_STEPS: step });
+      const p = problemsContinueOnFail(r, "cloud-sync", step, J.seq);
+      assert.ok(p.length > 0, `hàm kiểm không bắt được bản đột biến của bước ${step}`);
+      assert.ok(p.every((m) => m.includes(step)), `thông điệp phải nêu tên bước ${step}: ${p.join(" | ")}`);
+    });
+  }
 });
 
 // ------------------------------------------------------------------ AC-4 --
@@ -307,7 +348,7 @@ mkdirSync(EMPTY_SNAP);
 const STEPS = [
   ["transform-chotot"], ["refresh-bait-gap"], ["resolve-properties"], ["transform-fb"],
   ["transform-airdna", EMPTY_SNAP], ["dq-truthful-coverage"], ["reassign-areas", "hanoi"],
-  ["transform-airbnb", "hanoi"], ["transform-zalo"], ["sync-cloud"],
+  ["transform-airbnb", "hanoi"], ["transform-zalo"], ["sync-cloud"], ["push-ops-facts"],
 ];
 
 let sentinel; let hits = 0;
@@ -316,8 +357,8 @@ mkdirSync(path.join(SENT_HOME, ".oneinvest"), { recursive: true });
 // token giả — hộp cát chặn mọi fetch, và bước hỏng ở connect() local trước mọi lời gọi cloud
 writeFileSync(path.join(SENT_HOME, ".oneinvest/cloud.env"), "SUPABASE_MGMT_TOKEN=gia\nCLOUD_OPS_API_TOKEN=gia\n");
 
-/** Chạy một tệp .mjs trong hộp cát, DATABASE_URL trỏ cổng canh. Trả {code, hits, blocked, stderr}. */
-function runStep(file, args = [], cwd = PIPE) {
+/** Chạy một tệp .mjs trong hộp cát, DATABASE_URL trỏ cổng canh (`noDb` → không đặt biến). Trả {code, hits, blocked, stderr}. */
+function runStep(file, args = [], cwd = PIPE, { noDb = false } = {}) {
   const port = sentinel.address().port;
   const db = new URL("postgres://placeholder/oneinvest");   // dựng bằng URL — literal có user bị hook bí mật bắt nhầm
   db.hostname = "127.0.0.1"; db.port = String(port); db.username = "u";
@@ -330,7 +371,7 @@ function runStep(file, args = [], cwd = PIPE) {
       env: {
         PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin`,
         HOME: SENT_HOME,
-        DATABASE_URL: db.toString(),
+        ...(noDb ? {} : { DATABASE_URL: db.toString() }),
         PGHOST: "127.0.0.1",
         PGPORT: String(port),
         JOB_EXIT_SENTINEL_PORT: String(port),
@@ -370,21 +411,26 @@ describe("AC-5 bước thật trên cổng canh", () => {
       ran++;
     });
   }
-  test("AC-5 push-ops-facts", { todo: "P3-3 — chuỗi kết nối viết cứng localhost:5433, không được chạy" }, () => {
-    const src = readFileSync(path.join(PIPE, "push-ops-facts.mjs"), "utf8");
-    assert.ok(/LOCAL_URL\s*=\s*process\.env\.DATABASE_URL/.test(src), "push-ops-facts chưa đọc DATABASE_URL");
+  test("AC-5 đủ 11 bước", () => {
+    assert.equal(STEPS.length, 11, "danh sách bước viết trước phải có 11 bước (AU13 thêm push-ops-facts)");
+    assert.equal(ran, 11, `chỉ ${ran}/11 bước đã chạy tới cuối`);
   });
-  test("AC-5 đủ 10 bước + 1 todo", () => {
-    assert.equal(STEPS.length, 10, "danh sách bước viết trước phải có 10 bước");
-    assert.equal(ran, 10, `chỉ ${ran}/10 bước đã chạy tới cuối`);
+  test("AC-5 push-ops-facts vắng DATABASE_URL → hộp cát chặn :5433 (mặc định cũ còn)", async () => {
+    const r = await runStep("push-ops-facts.mjs", [], PIPE, { noDb: true });
+    assert.notEqual(r.code, 0, "DB không tới mà bước thoát 0");
+    assert.equal(r.hits, 0, "vắng DATABASE_URL mà cổng canh vẫn thấy lần nối");
+    assert.ok(r.blocked.some((b) => b.includes("5433")), `hộp cát phải chặn đúng :5433: ${r.blocked.join(" | ")}`);
   });
 
   // chiều đỏ: bản sao refresh-bait-gap (không import tệp cục bộ) đặt cạnh node_modules thật
   const mutDir = path.join(SCRATCH, "pipeline-mut");
-  const mutate = (file, fn) => {
+  const mutate = (file, fn, src = "refresh-bait-gap.mjs") => {
     mkdirSync(mutDir, { recursive: true });
-    if (!existsSync(path.join(mutDir, "node_modules"))) symlinkSync(path.join(PIPE, "node_modules"), path.join(mutDir, "node_modules"));
-    const s = readFileSync(path.join(PIPE, "refresh-bait-gap.mjs"), "utf8");
+    // bản sao đặt cạnh node_modules + lib thật (push-ops-facts import ./lib/last-log-line.mjs từ PR #55)
+    for (const d of ["node_modules", "lib"]) {
+      if (!existsSync(path.join(mutDir, d))) symlinkSync(path.join(PIPE, d), path.join(mutDir, d));
+    }
+    const s = readFileSync(path.join(PIPE, src), "utf8");
     const m = fn(s);
     assert.notEqual(m, s, `khuôn đột biến ${file} không khớp mã nguồn`);
     writeFileSync(path.join(mutDir, file), m);
@@ -403,6 +449,14 @@ describe("AC-5 bước thật trên cổng canh", () => {
     const f = mutate("viet-cung.mjs", (s) => s.replace(/process\.env\.DATABASE_URL \?\? /, `"${live}" ?? `));
     const r = await runStep(f, [], mutDir);
     const p = stepProblems("viet-cung", r);
+    assert.ok(p.some((m) => m.includes("cổng canh không thấy")), `không bắt được bản viết cứng: ${p.join(" | ")}`);
+    assert.ok(r.blocked.some((b) => b.includes("5433")), "hộp cát phải chặn kết nối tới :5433");
+  });
+  test("AC-5 chiều đỏ: bản sao push-ops-facts viết cứng localhost:5433 → hộp cát chặn, cổng canh không thấy, bị bắt", async () => {
+    // bản trước AU13: Client nối thẳng LOCAL_URL, bỏ qua DATABASE_URL
+    const f = mutate("ops-viet-cung.mjs", (s) => s.replace("process.env.DATABASE_URL ?? LOCAL_URL", "LOCAL_URL"), "push-ops-facts.mjs");
+    const r = await runStep(f, [], mutDir);
+    const p = stepProblems("ops-viet-cung", r);
     assert.ok(p.some((m) => m.includes("cổng canh không thấy")), `không bắt được bản viết cứng: ${p.join(" | ")}`);
     assert.ok(r.blocked.some((b) => b.includes("5433")), "hộp cát phải chặn kết nối tới :5433");
   });

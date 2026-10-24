@@ -4,7 +4,8 @@
 // Stage A: S06 clusters → match existing properties qua stable_key,
 //          tạo NEW (pending) nếu chưa có, enrich existing nếu match.
 // Stage B: cặp ứng viên P1↔P2 (giữ nguyên logic cũ).
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const DB_URL =
@@ -128,5 +129,5 @@ async function main() {
 }
 
 const isMain =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+  process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) main().catch((e) => { console.error(e); process.exit(1); });

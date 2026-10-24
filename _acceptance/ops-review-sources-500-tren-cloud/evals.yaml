@@ -1,0 +1,25 @@
+schema_version: 1
+feature_slug: ops-review-sources-500-tren-cloud
+# Eval máy đọc ca mang tiền tố «RS-AC-n» trong TAP; cần DB local :5433.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review-content.tsx, app/src/app/ops/review/page.tsx, app/src/lib/ops-queries.ts, app/src/components/ops/local-only-alert.tsx, app/tests/ops-review-sources-cloud.test.tsx]
+    expected: "exit 0; ca 'RS-AC-1 lược đồ vắng review_queue → /ops/review render, đúng một thông báo «Hàng chờ duyệt chỉ có ở máy local»' ok (đối chứng phá: bỏ chốt → ca đỏ mã 42P01, đã chạy tay lúc dựng phép đo)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/sources/sources-content.tsx, app/src/app/ops/sources/page.tsx, app/src/lib/ops-queries.ts, app/src/components/ops/local-only-alert.tsx, app/tests/ops-review-sources-cloud.test.tsx]
+    expected: "exit 0; ca 'RS-AC-2 lược đồ vắng source_registry → /ops/sources render, đúng một thông báo «Nguồn dữ liệu chỉ quản trị ở máy local», không bảng giải mã' ok (đối chứng phá: bỏ chốt → ca đỏ mã 42P01)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/sources/sources-content.tsx, app/tests/ops-review-sources-cloud.test.tsx, app/tests/ops-cloud-khong-bang-nap.test.tsx, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'RS-AC-3 đối chứng: có review_queue + source_registry (bảng rỗng) → không thông báo, trang chạy đường cũ' ok và mọi ca OP-AC-/SL-AC- sẵn có ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

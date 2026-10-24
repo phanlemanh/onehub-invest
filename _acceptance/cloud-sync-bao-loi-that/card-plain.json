@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Lượt đồng bộ lên cloud mỗi 15 phút nay báo lỗi thật khi bước nào hỏng, thay vì ghi «xong»; số Ops vẫn được đẩy lên kể cả khi bước đồng bộ hỏng.",
+  "decisions": [
+    {"id": "E6", "q": "Sổ vận hành tả đúng cách đọc lỗi cloud-sync chưa?", "why": "Ba giám khảo đọc runtime-map đối chiếu ba tệp code, đều thấy đủ bốn điều."}
+  ],
+  "analyst_plain": "Lệnh kiểm chung cũng xanh trên bản cũ vì lúc đó các ca mới chưa tồn tại. Phá thử ở S3 cho thấy đặt lại bản cũ thì đúng các ca mới đỏ."
+}

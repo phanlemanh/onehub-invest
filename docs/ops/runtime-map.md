@@ -167,19 +167,21 @@ giữa chuỗi) thì launchd thấy 0.
 | `com.oneinvest.apify-facebook` (`scripts/apify-facebook-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | như trên |
 | `com.oneinvest.airdna-daily` (`scripts/airdna-daily.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
 | `com.oneinvest.collector` (→ `pipeline/finalize-hanoi.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
-| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | DB tắt hẳn: thoát ≠ 0 · DB chập chờn: **có thể 0** | còn lỗ — xem dưới |
+| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | hai bước luôn chạy cả hai: `push-ops-facts` (nhịp tim `/ops`) vẫn chạy khi `sync-cloud` hỏng (AU13) |
 
-- **Tìm nguyên nhân trong log:** chotot/apify in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr cho mỗi
-  bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`). Bộ chạy bước: `scripts/lib/job-step.sh`.
+- **Tìm nguyên nhân trong log:** chotot/apify/cloud-sync in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr
+  cho mỗi bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`; cloud-sync: `JOB FAIL [cloud-sync] bước sync-cloud mã 1`
+  hoặc `… bước push-ops-facts …` — `grep 'JOB FAIL' pipeline/logs/cloud-sync.log`). Bộ chạy bước:
+  `scripts/lib/job-step.sh` (`job_run` — chạy tiếp, giữ mã hỏng đầu tiên).
 - **Còn nuốt lỗi, đang chờ:**
   - Đoạn **nạp** của `chotot-daily.sh` (`import-chotot` không kiểm mã) và `apify-facebook-daily.sh`
     (`import-airbnb … || true`, state vẫn nhảy qua snapshot hỏng) — làn ZCode, yêu cầu `P3-1` của đợt
     `dot0-cam-mau`. Bản vá cùng loại cho `zalo-import-daily.sh` (P1.5) nằm trên nhánh `zcode/audit-p1-resilience`.
-  - `cloud-sync.sh`: khi DB chập chờn (rớt lúc `sync-cloud`, lên lại trước `push-ops-facts`) job vẫn thoát 0;
-    `push-ops-facts.mjs` viết cứng chuỗi kết nối, bỏ qua `DATABASE_URL`. Hai tệp thuộc `t3_paths` — hàng T3 riêng
-    `P3-3` (Mạnh chọn ở Cổng Phạm vi AU3).
+- **Đã vá (P3-3, AU13 `cloud-sync-bao-loi-that`, 24/10):** `cloud-sync.sh` trước đây thoát 0 khi DB chập chờn
+  (`sync-cloud` hỏng, `push-ops-facts` lành). `push-ops-facts.mjs` nay nối DB theo `DATABASE_URL`, vắng biến (như plist
+  hiện nay) thì dùng chuỗi kết nối cũ tới `localhost:5433`.
 - **Cảnh báo khi DB sập** không đến từ job: đó là lớp L5b của `scripts/zalo-watchdog.sh` (ZC3, làn ZCode, nhánh
   `zcode/audit-p1-resilience`, chờ Mạnh ký). Job chỉ nói thật bằng mã thoát.
 - **Kiểm:** `node --test scripts/job-exit.test.mjs` — không tắt DB chung; tệp chạy job chạy trong cây tạm với
   `node`/`docker` giả, bước thật chạy trong hộp cát (`scripts/lib/job-exit-sandbox.mjs`) chặn mọi kết nối trừ một
-  cổng canh. Hai ca `todo` (mã `P3-3`) là lỗ cloud-sync — hiện trong đầu ra cho tới khi hàng T3 vá.
+  cổng canh (11 bước, gồm `push-ops-facts`). Không còn ca `todo` — hai ca `P3-3` đã thành ca thật ở AU13.

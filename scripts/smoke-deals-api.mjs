@@ -9,6 +9,8 @@
 //
 // --chi-doc: chỉ ca khách + bearer, không mở DB, không ghi gì — đo prod sau deploy:
 //   BASE_URL=https://onehub-invest.vercel.app OPS_API_TOKEN=… node scripts/smoke-deals-api.mjs --chi-doc
+// Không --chi-doc thì DATABASE_URL phải là Postgres local (assertLocalDatabaseUrl) — kiểm TRƯỚC mọi HTTP/DB, để
+// không bao giờ tạo tài khoản ops thử trên DB cloud (vá Ngoài-1 của hồ sơ, so-be-mat-api AC-7).
 // Dùng: BASE_URL=http://localhost:3456 node scripts/smoke-deals-api.mjs
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -16,10 +18,20 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { assertLocalDatabaseUrl, DEFAULT_DATABASE_URL } from "./dev-ops-account.mjs";
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = (process.env.BASE_URL ?? "http://localhost:3456").replace(/\/$/, "");
-const DB = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const CHI_DOC = process.argv.includes("--chi-doc");
+let DB = "";
+if (!CHI_DOC) {
+  try {
+    DB = String(assertLocalDatabaseUrl(process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL));
+  } catch (e) {
+    console.error(`FAIL rào DB local: ${e.message}`);
+    process.exit(2);
+  }
+}
 const nonce = randomBytes(6).toString("hex");
 
 const fails = [];

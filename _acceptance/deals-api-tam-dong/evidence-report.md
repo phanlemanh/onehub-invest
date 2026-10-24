@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d780ab37a1cc253ff682380d7e794808172c46aa
+verified_commit: 5707f2859cb45d92760d48a82cd59d72f8a3bae2
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -192,3 +192,15 @@ Round 1: E1-E10 đều đạt, E11 (judgment) hội đồng đề xuất PASS v�
 ### Re-pin lần 1 — 2026-10-23, do gộp origin/main (PR #31, #32) và chép khuôn opportunity-template sau chữ ký
 run_id: repin-20261023T103011Z-64016
 sha: d780ab37a1cc253ff682380d7e794808172c46aa · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 2 — 2026-10-23, do gộp origin/main (PR #34–#43) sau chữ ký NT4
+run_id: repin-20261023T153007Z-19028
+sha: 2fd4f70c8f7478bfa3621e91c63a1d12113be3f8 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 3 — 2026-10-23, do gộp origin/main (PR #44) — giải xung đột bản đồ
+run_id: repin-20261023T153400Z-61531
+sha: 3d4d488a29461ac1852be7782ec16f8adfb73360 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 4 — 2026-10-23, do gộp origin/main (PR #45 audit-all) trước merge
+run_id: repin-20261023T153759Z-67252
+sha: 5707f2859cb45d92760d48a82cd59d72f8a3bae2 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E11 (E11 không khai paths) · AC không có chốt máy: AC-6

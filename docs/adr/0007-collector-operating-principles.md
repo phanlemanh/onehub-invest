@@ -177,3 +177,20 @@ quyết định có đưa liên hệ người bán trở lại cổng Invest cô
 Rủi ro đã nêu khi chốt: trong người bán có cả chủ nhà cá nhân; Nghị định 13/2023 coi SĐT cá nhân là
 dữ liệu cá nhân.
 
+
+## Sửa đổi 2026-10-24 — tên nhóm thu là công khai
+
+Mạnh chốt (24/10, khi duyệt audit cổng Ops trên prod, mục OPS-6): **tên nhóm cộng đồng mà nguồn S03 thu (tên nhóm
+như người dùng nền tảng thấy) là tầng C**, không phải tầng A. Tên nhóm được hiện trên `/ops/**` ở cloud, được đi qua
+`ops_heartbeat` (payload của `pipeline/push-ops-facts.mjs`), và được làm ngữ cảnh cho agent. Dấu `data-tier-a` (che
+khi chụp màn hình) bỏ khỏi cột tên nhóm.
+
+Không đổi:
+- **Tên nguồn thật vẫn là tầng A** (Mạnh giữ luật, cùng ngày): mọi bề mặt ngoài `/ops/sources` gọi nguồn bằng mã
+  `S0x` kèm vai trò; nhãn job, nhãn ô KPI, tiêu đề bảng không mang tên thật. Giá trị nào trong tên hay khoá nhóm
+  lộ tên nguồn thật (vd khoá nhóm là URL có tên miền nguồn) vẫn là tầng A.
+- **Tên tài khoản thu** (tài khoản dùng để thu ở máy local) chưa chốt — vẫn xử như tầng A cho tới khi Mạnh quyết.
+- Hồ sơ người dùng app, `user_events/user_profile`, `review_queue` vẫn là tầng A.
+
+Hệ quả cần làm (việc riêng, ở lộ trình đợt `ops-noi-that-2410`): đặt/sửa tiêu đề chuẩn hoá và mô tả đặc trưng cho
+từng nhóm trên `/ops`, agent đọc làm ngữ cảnh bậc H5 (ON19–ON21); bộ soát tầng A của NT2 cho phép tên nhóm.

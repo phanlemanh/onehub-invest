@@ -207,8 +207,21 @@ type LoginHandle = { child: import("node:child_process").ChildProcess; startedAt
 const logins = new Map<string, LoginHandle>();
 let statusCache = { at: 0, text: "" as string };
 
+/** Tiền tố tên ảnh QR đăng nhập — NGUỒN DUY NHẤT: qrFile() ghi theo nó, /api/zalo-media chặn theo nó (so-be-mat-api). */
+export const LOGIN_QR_PREFIX = "openclaw-zalouser-qr-";
+
+/** Đường ảnh QR đăng nhập của một tài khoản thu. */
+export function loginQrPath(accountId: string): string {
+  return path.join(QR_DIR, `${LOGIN_QR_PREFIX}${accountId === "default" ? "default" : accountId}.png`);
+}
+
+/** Tệp có phải ảnh QR đăng nhập không — so tên (không phân biệt hoa thường), không so thư mục. */
+export function isLoginQrFile(p: string): boolean {
+  return path.basename(p).toLowerCase().startsWith(LOGIN_QR_PREFIX);
+}
+
 function qrFile(accountId: string): string {
-  return path.join(QR_DIR, `openclaw-zalouser-qr-${accountId === "default" ? "default" : accountId}.png`);
+  return loginQrPath(accountId);
 }
 
 export async function startZaloLogin(

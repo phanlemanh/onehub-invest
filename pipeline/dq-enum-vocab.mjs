@@ -2,8 +2,9 @@
 // vocabulary khai trong mappings.yaml (ADR-0011 Qđ 3.6 — field không có
 // DQ check coi như chưa hoàn thành). Đổ kết quả vào dq_check_results,
 // /ops/quality hiển thị cùng các trụ DQ khác.
+import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const DB_URL =
@@ -67,5 +68,5 @@ async function main() {
 }
 
 const isMain =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+  process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) main().catch((e) => { console.error(e); process.exit(1); });

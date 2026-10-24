@@ -99,6 +99,8 @@ executors:
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
+    # backfill-zalo-media-v3 (PL32) — chỉ đọc DB local :5433, snapshot v3 giả trong thư mục tạm
+    zalo_media_v3_check: "cd pipeline && node scripts/backfill-v3-check.mjs"
     # review-media-backend — AC-8 cần DB local :5433 (docker one-invest-db); mọi dòng tạo trong giao dịch rồi ROLLBACK
     review_media_roundtrip: "cd app && node --import tsx scripts/review-media-roundtrip.ts"
     review_media_no_cloud: "node scripts/check-review-media-local-only.mjs"
@@ -122,6 +124,12 @@ executors:
     # deals-api-tam-dong (AU2) — /api/v1/deals chỉ ops; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433
     deals_api_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-deals-api.mjs"
     deals_api_mutation: "node scripts/check-deals-api.mjs mutation"
+    # so-be-mat-api (NT4) — sổ bề mặt API; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433 + một user admin
+    api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
+    api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
+    deals_smoke_local_guard: "node scripts/check-smoke-guard.mjs"
+    api_matrix_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs"     # ma trận hành vi khách/bearer — cần app chạy TỪ worktree đang kiểm
+    api_matrix_tu_thu: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs --tu-thu"
     # audit-p1-resilience (ZC3) — watchdog chạy BẢN CHÉP trong thư mục tạm, HOME giả, launchctl/pkill/osascript là stub (luật 8)
     zc3_l4b_scan: "node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"
     zc3_gateway: "node scripts/audit-p1-resilience/acceptance.mjs gateway"

@@ -8,6 +8,7 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { fmtInt, fmtMoney, fmtPct } from "@/lib/format"
 import type { AirdnaComparison, AirdnaMarketRow, TruthfulCoverageRow } from "@/lib/queries"
+import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 const NUM = { headerClassName: "text-end", cellClassName: "text-end tabular-nums" }
 
@@ -46,7 +47,8 @@ function coverageBadge(ratio: number | null) {
   )
 }
 
-export function TruthfulCoverageTable({ rows }: { rows: TruthfulCoverageRow[] }) {
+export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCoverageRow[]; roles?: SourceRoles }) {
+  const s02 = sourceLabel("S02", roles)
   const columns = useMemo<InsightColumn<TruthfulCoverageRow>[]>(
     () => [
       {
@@ -69,7 +71,7 @@ export function TruthfulCoverageTable({ rows }: { rows: TruthfulCoverageRow[] })
         id: "airdna",
         accessorFn: (r) => r.airdnaActive,
         header: ({ column }) => (
-          <DataGridColumnHeader title="AirDNA active" column={column} />
+          <DataGridColumnHeader title={`${s02} — active`} column={column} />
         ),
         cell: ({ row }) =>
           row.original.airdnaActive
@@ -105,7 +107,7 @@ export function TruthfulCoverageTable({ rows }: { rows: TruthfulCoverageRow[] })
         id: "history",
         accessorFn: (r) => r.historyMonths,
         header: ({ column }) => (
-          <DataGridColumnHeader title="Lịch sử AirDNA" column={column} />
+          <DataGridColumnHeader title={`Lịch sử ${s02}`} column={column} />
         ),
         cell: ({ row }) => (row.original.historyMonths ? `${row.original.historyMonths} tháng` : "—"),
         size: 130,
@@ -122,16 +124,16 @@ export function TruthfulCoverageTable({ rows }: { rows: TruthfulCoverageRow[] })
         enableSorting: true,
       },
     ],
-    []
+    [s02]
   )
   return (
     <InsightGrid
       title="Độ phủ trung thực"
-      description="Listing tự thu ÷ listing active AirDNA cùng thị trường (crosswalk S02)"
+      description={`Listing tự thu ÷ listing active ${s02} cùng thị trường (crosswalk S02)`}
       data={rows}
       columns={columns}
       getRowId={(r) => r.areaId}
-      footnote="Tự thu là mẫu discovery phục vụ hiệu chuẩn (ADR/công suất lệch <20%) — tỉ lệ thấp là đúng thiết kế, không phải thiếu dữ liệu. Universe đã mua = map_listings AirDNA (LTM đầy đủ); lịch sử = timeseries tháng đang lưu (36 tháng nguồn cung + 12 tháng ADR/occupancy/revenue/RevPAR)."
+      footnote={`Tự thu là mẫu discovery phục vụ hiệu chuẩn (ADR/công suất lệch <20%) — tỉ lệ thấp là đúng thiết kế, không phải thiếu dữ liệu. Universe đã mua = map_listings ${s02} (LTM đầy đủ); lịch sử = timeseries tháng đang lưu (36 tháng nguồn cung + 12 tháng ADR/occupancy/revenue/RevPAR).`}
     />
   )
 }
@@ -139,10 +141,13 @@ export function TruthfulCoverageTable({ rows }: { rows: TruthfulCoverageRow[] })
 export function CalibrationTable({
   marketName,
   data,
+  roles = {},
 }: {
   marketName: string
   data: AirdnaComparison
+  roles?: SourceRoles
 }) {
+  const s02 = sourceLabel("S02", roles)
   const columns = useMemo<InsightColumn<CompareRow>[]>(
     () => [
       { id: "metric", accessorKey: "metric", header: "Chỉ số", size: 120 },
@@ -155,7 +160,7 @@ export function CalibrationTable({
       },
       {
         id: "airdna",
-        header: "AirDNA (12 tháng qua)",
+        header: `${s02} (12 tháng qua)`,
         cell: ({ row }) => valueOf(row.original.airdnaValue, row.original.airdnaUnit),
         size: 170,
         meta: NUM,
@@ -168,7 +173,7 @@ export function CalibrationTable({
         meta: NUM,
       },
     ],
-    []
+    [s02]
   )
   const score = data.marketScore
   return (
@@ -176,7 +181,7 @@ export function CalibrationTable({
       title={`Hiệu chuẩn — ${marketName}`}
       description={
         score
-          ? `AirDNA Market Score ${score.total} · nhu cầu ${score.rentalDemand} · tăng trưởng ${score.revenueGrowth} · mùa vụ ${score.seasonality} · quy định ${score.regulation}`
+          ? `Điểm thị trường ${s02} ${score.total} · nhu cầu ${score.rentalDemand} · tăng trưởng ${score.revenueGrowth} · mùa vụ ${score.seasonality} · quy định ${score.regulation}`
           : "Chưa có Market Score"
       }
       badge={
@@ -187,18 +192,19 @@ export function CalibrationTable({
       data={data.metrics}
       columns={columns}
       getRowId={(r) => r.metric}
-      footnote="Tự thu = cả cửa sổ lịch đặt tương lai (bình quân theo đêm); AirDNA = 12 tháng đã qua. Hai phương pháp khác nhau — tỉ lệ để phát hiện lệch lớn, không để thay số."
+      footnote={`Tự thu = cả cửa sổ lịch đặt tương lai (bình quân theo đêm); ${s02} = 12 tháng đã qua. Hai phương pháp khác nhau — tỉ lệ để phát hiện lệch lớn, không để thay số.`}
     />
   )
 }
 
-export function AirdnaMarketsTable({ rows }: { rows: AirdnaMarketRow[] }) {
+export function AirdnaMarketsTable({ rows, roles = {} }: { rows: AirdnaMarketRow[]; roles?: SourceRoles }) {
+  const s02 = sourceLabel("S02", roles)
   const columns = useMemo<InsightColumn<AirdnaMarketRow>[]>(
     () => [
       {
         id: "name",
         accessorKey: "name",
-        header: ({ column }) => <DataGridColumnHeader title="Thị trường AirDNA" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`Thị trường ${s02}`} column={column} />,
         size: 200,
         enableSorting: true,
       },
@@ -238,11 +244,11 @@ export function AirdnaMarketsTable({ rows }: { rows: AirdnaMarketRow[] }) {
         enableSorting: true,
       },
     ],
-    []
+    [s02]
   )
   return (
     <InsightGrid
-      title="Thị trường AirDNA toàn quốc"
+      title={`Thị trường ${s02} toàn quốc`}
       description="Dùng để chọn thành phố tự thu tiếp theo (G3) và kiểm tra crosswalk"
       data={rows}
       columns={columns}

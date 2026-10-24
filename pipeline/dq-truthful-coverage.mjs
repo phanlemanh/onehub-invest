@@ -79,7 +79,7 @@ try {
     const ok = r.airdna_active !== null && ageDays !== null && ageDays <= STALE_DAYS;
     const ratio = r.airdna_active ? (r.our_listings / Number(r.airdna_active)) * 100 : null;
     const detail =
-      `our=${r.our_listings} airdna_active=${r.airdna_active}(${r.airdna_period}) ` +
+      `our=${r.our_listings} s02_active=${r.airdna_active}(${r.airdna_period}) ` +
       `universe=${r.airdna_universe} history=${r.history_months}m ` +
       `coverage=${ratio === null ? "n/a" : ratio.toFixed(2) + "%"} ` +
       `captured_age=${ageDays ?? "n/a"}d`;

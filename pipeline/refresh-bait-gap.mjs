@@ -10,7 +10,8 @@
 //            tổng hợp (n_ads, sources, first/last_seen, flags) — transform
 //            chỉ ghi offers; tránh bug n_ads cộng dồn mỗi lần transform
 //            chạy lại.
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const DB_URL =
@@ -101,5 +102,5 @@ async function main() {
 }
 
 const isMain =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+  process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) main().catch((e) => { console.error(e); process.exit(1); });

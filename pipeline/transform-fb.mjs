@@ -7,8 +7,9 @@
 //     "HÀ NỘI"/"TPHCM"…), nhóm mơ hồ thì thử cả hai
 //   - offer_id hash có prefix S05 để không đụng dedup key của S03
 // Kiến trúc: FB = tín hiệu riêng P1 như Zalo (tin môi giới, SĐT trong text).
+import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { parsePost, matchPhuong } from "./transform-zalo.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
@@ -154,5 +155,5 @@ async function main() {
 }
 
 const isMain =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+  process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) main().catch((e) => { console.error(e); process.exit(1); });
