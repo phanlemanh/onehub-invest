@@ -163,6 +163,24 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 - Bản tin đi qua bộ soát tầng A (mục trên): tên nguồn thật trong khối nào cũng làm lượt đẩy dừng (`FACTS CHẶN … blocks.<khối>…`).
 - Bảng snapshot đọc không được thì `sourceRuns` cũ vẫn gửi vai trò từng mã, số lần chạy để `null` (chưa đo).
 
+### Ba trang Ops trên cloud đọc gì (ON3 `o-kpi-chi-do-local`, 24/10)
+
+`getCloudOpsView()` (`app/src/lib/ops-cloud.ts`) gói `readOpsFacts()` thành dữ liệu trang; chỉ chạy khi `isLocalOnlyView()`.
+
+| Trang | Ô / vùng | Nguồn trên cloud | Khi không có số |
+|---|---|---|---|
+| `/ops` | bốn ô độ phủ + lưới «Độ tươi theo nguồn» | khối `freshness` | ô «—» + «Chưa có số», lưới rỗng |
+| `/ops/collections` | Sức khoẻ nguồn, lưới nguồn | `freshness` + `sourceRuns` | «—» |
+| `/ops/collections` | Bản ghi 24h | `records24h` | «—» |
+| `/ops/collections` | Lockdown | (ON23 sẽ đọc khối `lockdown`) | «—» + «Chưa kiểm được trên cloud» |
+| `/ops/review` | số thẻ chờ theo loại | `reviewQueue` (chỉ số đếm) | «—»; thẻ chi tiết vẫn chỉ ở máy local |
+
+- Dòng «Số đo lúc <giờ VN> (GMT+7) từ máy local» dưới tiêu đề khi có bản tin (`FactsStamp`, `components/ops/facts-status.tsx`).
+- Bản tin cũ quá 45′: Alert vàng «Máy local không đẩy số từ …», ô số mờ, không badge xanh nào (`FactsStaleAlert`).
+- Chưa có bản tin (hoặc bảng `ops_heartbeat` chưa có): một Alert «Chỉ đo ở máy local», mọi ô «—» — không bao giờ 0 hay «Ổn».
+- Thử ở máy local như cloud: `node scripts/ops-cloud-proto.mjs --mode none|fresh|stale` in `DATABASE_URL` (lược đồ
+  `ops_cloud_proto`, không có bảng tầng A) để chạy dev server cổng khác; dọn bằng `--drop`.
+
 ## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
 
 Sự cố gốc (audit L7): tối 22/10 colima khởi động lại, `one-invest-db` không có restart policy nên nằm chết
