@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-10-24T15:26:26Z",
-  "generated_sha": "e30f7a81b36ff5413e06443d9b5b5a165ed11801",
+  "generated_at": "2026-10-24T22:31:06Z",
+  "generated_sha": "12e4d7874da733569512bc40a3368c396c6b9c3a",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "o-kpi-chi-do-local",
-  "round": 2,
+  "round": 3,
   "riskTier": "T2",
   "evals": [
     {
@@ -201,7 +201,7 @@
         "judges",
         "verified_at"
       ],
-      "inputsHash": "c60c53c7ab084beab050c33198dc638e425cc9b3638846a7fd31b8b4abcfc7c9"
+      "inputsHash": "9adfb0b75d3beca8cc3bc9d682eaba3907f7e437bdae01654ab57c1a28a9eb29"
     },
     {
       "id": "E9",
@@ -260,14 +260,15 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/bold-bassi-0e7f42/_acceptance/o-kpi-chi-do-local/contract.md",
-  "invokedAt": "2026-10-24T15:26:26Z",
-  "invokedSha": "e30f7a81b36ff5413e06443d9b5b5a165ed11801",
+  "invokedAt": "2026-10-24T22:31:06Z",
+  "invokedSha": "12e4d7874da733569512bc40a3368c396c6b9c3a",
   "vungVat": [
     ".claude/skills/onehub-ui/routes.md",
     "_acceptance/o-kpi-chi-do-local/card-plain.json",
     "_acceptance/o-kpi-chi-do-local/card.html",
     "_acceptance/o-kpi-chi-do-local/du-bao.json",
     "_acceptance/o-kpi-chi-do-local/evals.yaml",
+    "_acceptance/o-kpi-chi-do-local/evidence-page.html",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-fresh.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-none.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-stale.png",
@@ -297,7 +298,6 @@
     "app/src/components/ops/overview/objectives-grid.tsx",
     "app/src/components/ops/overview/overview-tiles.tsx",
     "app/src/components/ops/review-content.tsx",
-    "app/src/lib/collections-queries.ts",
     "app/src/lib/ops-cloud.ts",
     "app/src/lib/ops-queries.ts",
     "app/tests/o-kpi-chi-do-local.test.tsx",
@@ -347,6 +347,7 @@
     "_acceptance/o-kpi-chi-do-local/du-bao.json",
     "_acceptance/o-kpi-chi-do-local/duong-nen.md",
     "_acceptance/o-kpi-chi-do-local/evals.yaml",
+    "_acceptance/o-kpi-chi-do-local/evidence-page.html",
     "_acceptance/o-kpi-chi-do-local/evidence-report.md",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-fresh.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-none.png",
@@ -383,7 +384,6 @@
     "app/src/components/ops/overview/objectives-grid.tsx",
     "app/src/components/ops/overview/overview-tiles.tsx",
     "app/src/components/ops/review-content.tsx",
-    "app/src/lib/collections-queries.ts",
     "app/src/lib/ops-cloud.ts",
     "app/src/lib/ops-queries.ts",
     "app/tests/o-kpi-chi-do-local.test.tsx",
@@ -399,6 +399,7 @@
     "_acceptance/o-kpi-chi-do-local/card.html",
     "_acceptance/o-kpi-chi-do-local/du-bao.json",
     "_acceptance/o-kpi-chi-do-local/evals.yaml",
+    "_acceptance/o-kpi-chi-do-local/evidence-page.html",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-fresh.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-none.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-stale.png",
@@ -451,8 +452,95 @@
   ],
   "coEvalPaths": true,
   "evalsHash": "c878fed2d1dec0ecffeb7800429ffb8c55e037b7982a517b4bc173d11b2081fd",
-  "runBaseline": true,
+  "runBaseline": false,
+  "carriedAnalyst": {
+    "fromRound": 2,
+    "nonDiscriminating": [
+      {
+        "cmd": "cd app && npm test",
+        "evals": [
+          "E1",
+          "E2",
+          "E3",
+          "E4",
+          "E5",
+          "E6",
+          "E7"
+        ]
+      }
+    ]
+  },
   "carriedFindings": [
+    {
+      "file": "app/src/lib/collections-queries.ts",
+      "title": "queryRawTable bọc cả listings và sale_offers (bảng canonical có trên cloud), nuốt 42P01 trái với chính docstring",
+      "severity": "low",
+      "plain": "Nếu hai bảng tin rao chính bị mất trên cloud, trang sẽ im lặng hiện số 0 thay vì báo lỗi. Hiện chúng vẫn có mặt nên người dùng chưa gặp.",
+      "can_cu": "Chỉ xảy ra khi hạ tầng cloud đã hỏng nặng, hậu quả nhẹ và hiếm, ghi lại là đủ.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": true
+    },
+    {
+      "file": "scripts/ops-cloud-proto.mjs",
+      "title": "ops-cloud-proto chưa dựng đúng lược đồ như cloud: giữ tên airdna_* (cloud là ref_calib_*) và chép mọi bảng public dưới dạng rỗng",
+      "severity": "low",
+      "plain": "Ảnh chụp thử dùng làm bằng chứng có thể không giống hệt trang trên cloud thật ở vài bảng, nên một số lỗi chỉ lộ ra khi lên cloud.",
+      "can_cu": "Không ảnh hưởng người dùng trực tiếp, chỉ làm bằng chứng kém sát thực tế, sửa sau không tốn kém.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "app/src/lib/collections-queries.ts",
+      "title": "queryRawTable coi bảng vắng trên cloud là «không có dòng», nên số chưa đo hiện thành 0 đo thật ở Luồng 7 ngày và Rotation",
+      "severity": "medium",
+      "plain": "Bảng luồng 7 ngày trên cloud hiện toàn số 0 cho các nguồn Airbnb và AirDNA, dễ làm người xem tưởng nguồn không chạy dù thực tế chưa đo được.",
+      "can_cu": "Gây hiểu nhầm nhưng chỉ ở bảng phụ, không mất dữ liệu, và đã có việc riêng dự kiến cho phần luồng trên cloud.",
+      "proposal": "new-contract",
+      "fromRound": 2,
+      "tepDoi": true
+    },
+    {
+      "file": "app/tests/o-kpi-chi-do-local.test.tsx",
+      "title": "Hình dạng 4 (âm tính một mình, nhánh fixture không chạm tới): AC-4 «không câu trấn an trên số cũ» là doesNotMatch trên câu mà fixture không bao giờ sinh ra",
+      "severity": "medium",
+      "plain": "Bài kiểm tra tự động có thể báo xanh dù câu trấn an trên số cũ có quay lại, nên lỗi sau này khó bị bắt sớm.",
+      "can_cu": "Không ảnh hưởng người dùng hiện tại, chỉ giảm độ chắc của kiểm tra về sau, bổ sung sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": true
+    },
+    {
+      "file": "_acceptance/o-kpi-chi-do-local/evals.yaml",
+      "title": "Hình dạng 5 (ma trận khai trong eval lệch với các ca có thật): evals.yaml nêu tên ca không tồn tại và nêu sai số ca",
+      "severity": "medium",
+      "plain": "Danh sách bài kiểm tra ghi trong hồ sơ nghiệm thu không khớp tên với bài chạy thật, người duyệt khó đối chiếu.",
+      "can_cu": "Không đụng tới người dùng cuối, chỉ gây phiền cho người duyệt, sửa chữ rất rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": false
+    },
+    {
+      "file": "app/tests/o-kpi-chi-do-local.test.tsx",
+      "title": "Hình dạng 4 (đối chứng đỏ không dùng cùng phép đo với ca xanh): chiều đỏ AC-1 đo trên cả trang trong khi ca xanh nay chỉ đo vùng ô KPI",
+      "severity": "low",
+      "plain": "Bài kiểm tra đối chứng có thể xanh dễ hơn cần thiết, nên khả năng bắt lỗi của nó kém hơn vẻ ngoài.",
+      "can_cu": "Người dùng không thấy gì, rủi ro rất nhỏ, chi phí sửa không đáng so với lợi ích.",
+      "proposal": "wont-fix",
+      "fromRound": 2,
+      "tepDoi": true
+    },
+    {
+      "file": "app/tests/o-kpi-chi-do-local.test.tsx",
+      "title": "Hình dạng 4 (âm tính một mình, không đối chứng dương): AC-7 «không truy vấn ops_heartbeat» dựa vào spy chưa từng được chứng minh là bắt được truy vấn ấy",
+      "severity": "low",
+      "plain": "Bài kiểm tra có thể không phát hiện nếu trang chạy local lại đọc nhầm bản tin đẩy lên, nên lỗi này nếu xảy ra sẽ khó bị bắt.",
+      "can_cu": "Chưa có lỗi thật, chỉ thiếu lưới an toàn; người dùng không bị ảnh hưởng và thêm đối chứng sau không tốn kém.",
+      "proposal": "known-limits",
+      "fromRound": 2,
+      "tepDoi": true
+    },
     {
       "file": "app/src/lib/ops-cloud.ts",
       "title": "getCloudOpsView ép kiểu jsonb từ ops_heartbeat mà không kiểm từng phần tử (thiếu validation ở ranh giới hệ thống)",
@@ -531,39 +619,35 @@
       "can_cu": "Chỉ là sai lệch ghi chép, không ảnh hưởng người dùng, sửa lại tên là xong.",
       "proposal": "known-limits",
       "fromRound": 1,
-      "tepDoi": true
+      "tepDoi": false
     }
   ],
   "deltaFiles": [
-    "_acceptance/o-kpi-chi-do-local/evals.yaml",
+    "_acceptance/o-kpi-chi-do-local/card-plain.json",
+    "_acceptance/o-kpi-chi-do-local/card.html",
+    "_acceptance/o-kpi-chi-do-local/evidence-page.html",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-fresh.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-none.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-collections-stale.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-ops-fresh.png",
-    "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-ops-none.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-ops-stale.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-review-count.png",
-    "_acceptance/o-kpi-chi-do-local/evidence/E10-ST-review-none.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-dark-ST-collections-stale.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-narrow-ST-collections-stale.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-narrow-ST-ops-stale.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-narrow-ST-review-count.png",
     "_acceptance/o-kpi-chi-do-local/evidence/E10-network.txt",
     "_acceptance/o-kpi-chi-do-local/s4-args.json",
+    "app/src/app/ops/collections/page.tsx",
     "app/src/components/ops/collections/collections-tiles.tsx",
     "app/src/components/ops/collections/collections-view.tsx",
-    "app/src/components/ops/collections/jobs-grid.tsx",
-    "app/src/components/ops/overview/overview-tiles.tsx",
-    "app/src/components/ops/review-content.tsx",
     "app/src/lib/collections-queries.ts",
-    "app/tests/o-kpi-chi-do-local.test.tsx",
-    "docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md",
-    "scripts/ops-cloud-proto.mjs"
+    "app/tests/o-kpi-chi-do-local.test.tsx"
   ],
   "thuocChup": {
-    "sha": "e30f7a81b36ff5413e06443d9b5b5a165ed11801",
+    "sha": "12e4d7874da733569512bc40a3368c396c6b9c3a",
     "n": 72,
-    "digest": "89b92b3535a2ae07b5c980be066a488a280853b6f3ca4bb3b1bbb6804a3565cf",
+    "digest": "970925a2aac5b68bc996b0206c16bfdb6b0df78d6bf377ec2d23f4d398abba93",
     "tep": {
       "_acceptance/config.yaml": "5d4e8c74f9c86686675994a2431d864787ddbef69c6a88ee9576546a1145ce6d",
       "_acceptance/o-kpi-chi-do-local/evals.yaml": "c878fed2d1dec0ecffeb7800429ffb8c55e037b7982a517b4bc173d11b2081fd",
@@ -596,7 +680,7 @@
       "app/tests/go-tai-khoan-kiem-id.test.tsx": "4e499959144ae63676e610ad3253f47a6f87b9e276452db846513c70bc3e7afd",
       "app/tests/lockdown-local.test.tsx": "2f5776719eded1ff70525ef4be20eb8411ad0def68500ec342015998e5b4a33d",
       "app/tests/login-kiem-id.test.tsx": "5240a19d06e8934a66a878847e8768d7029a7e0ada964341ba13e1b1e75a0f0b",
-      "app/tests/o-kpi-chi-do-local.test.tsx": "23d3f2aa65fff10fe70b6d667dbfc6a903a1a2a937a4ef82dd75c113aa801a44",
+      "app/tests/o-kpi-chi-do-local.test.tsx": "52235ea4bcb499ecf89fdb9eb13ee7d45e580bccddae0f3f24c783c4bcc66467",
       "app/tests/ops-cloud-khong-bang-nap.test.tsx": "79935f3f92cf2f70e7927104f94ce1349b0c502608832b761030beb4a216d7b7",
       "app/tests/ops-facts-so-tong-hop.test.tsx": "3cbba30ed11b06387550db55ef309073bad054e577708f11e9f2bc79aff61b89",
       "app/tests/ops-nhan-ma-nguon-cloud.test.tsx": "a78dfc6caa4dea053595217bd53260183fae581696fef01bbcb964fb211264a8",
@@ -640,7 +724,7 @@
     }
   },
   "cayChup": {
-    "sha": "e30f7a81b36ff5413e06443d9b5b5a165ed11801",
+    "sha": "12e4d7874da733569512bc40a3368c396c6b9c3a",
     "ban": {},
     "chuaTheoDoi": []
   }

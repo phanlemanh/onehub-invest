@@ -1,75 +1,91 @@
-# Review findings: o-kpi-chi-do-local (round 2)
+# Review findings: o-kpi-chi-do-local (vòng 3)
 
 ## Trong hợp đồng
 
-- **Bảng thô vắng trên cloud bị đọc thành rỗng nên RotationPanel hiện câu trấn an «mọi thị trường đều tươi» khi không đo được**
-  AC: AC-8
-  file: `app/src/lib/collections-queries.ts:337`
-  severity: medium
-  source: conventions
-  detail: Trên cloud ở trạng thái none (ops_heartbeat không có bản tin), getLocalFacts() trả null. Khi đó readRotationPreview rơi xuống queryRawTable(airdna_markets). Trên cloud bảng này vắng (sync-cloud đổi tên airdna_* thành ref_calib_*), nên lỗi 42P01 bị nuốt thành { rows: [] }. Hệ quả là total=0, next=[] và pipe-panels.tsx:89 vẽ «Không còn market nào cần thu — mọi thị trường đều tươi trong 24h.», kèm mô tả «0 market · con trỏ 0 · chưa chạy đêm nào». Đây đúng loại câu trấn an khi không đo được mà ON3 cấm (design §4, bat_khi «0 … số 0 trên ba trang», gốc G2). Trước r1 trang báo lỗi, giờ nó báo «ổn» sai. Luồng 7 ngày cũng vậy: getFlowDays dựng 7 ngày toàn 0 cho airdna_*/airbnb_snapshots trên cloud ở mọi trạng thái, vì facts chỉ phủ zalo. Design có hoãn phần luồng/nhóm S03 sang ON4/ON5, nhưng việc nuốt lỗi thành số 0/câu «tươi» là do chính commit này thêm vào. Nên trả về «không đo được» (null) để panel hiện «—»/Chưa có số, thay vì rows rỗng.
-
-- **«Cần chú ý» trên cloud vẫn tính lớp lockdown từ máy đang chạy trang, nên báo «Hỏng» trong khi lưới và ô Lockdown ghi «Chưa kiểm được»**
-  AC: AC-3
-  file: `app/src/components/ops/collections/collections-view.tsx:56`
-  severity: high
-  source: bugs
-  detail: Vòng r1 chỉ ép `ok: null` cho LockdownGrid (dòng 93). Hàm `issuesOf` ở dòng 56 vẫn nhận `lockdown.layers` thô do `getLockdownStatus()` đo trên chính máy chạy trang (ops-queries.ts:222-231). Trên Vercel không có `pipeline/logs/zalo-watchdog.log`, `pgrep openclaw` không thấy gì, còn 127.0.0.1:8009 và :9210 không trả lời. Vì vậy L4 «Watchdog 5′ đang canh», «OpenClaw chạy», «Kev gate :8009», «Collector :9210» đều ra `ok === false`, và attention-list.tsx:48 đẩy ra bốn mục `destructive-light` «Hỏng». Ngay bên dưới, LockdownGrid lại ghi «Chưa kiểm được», ô Lockdown ghi «Chưa kiểm được trên cloud». Báo động giả này hiện ở cả ba trạng thái none/fresh/stale trên cloud. Bản proto (VERCEL=1 trên máy Mac) không lộ ra lỗi này vì các probe localhost ở đó vẫn sống. Cách sửa: đưa đúng mảng layers đã ép null (và agentTurnsToday = null) vào issuesOf khi `cloud` có giá trị.
-
-- **Trạng thái stale trên /ops/collections vẫn có badge xanh «Kênh kết nối» và «Hoạt động» từ bản tin cũ; test không phát hiện vì fixture không có log Zalo**
-  AC: AC-4
-  file: `app/src/components/ops/collections/collections-view.tsx:95`
-  severity: medium
-  source: bugs
-  detail: Đặc tả ST-collections-stale và contract yêu cầu «0 badge xanh» khi số đã cũ. Vòng r1 đã làm mờ màu ở JobsGrid, FeedsGrid và SegmentBar, nhưng ZaloPipePanel (pipe-panels.tsx:18: `zalo.connected ? <Badge variant="success-light">Kênh kết nối</Badge>`) và ZaloGroupsTable (collections-tables.tsx:97: `hours <= 24` → `success-light` «Hoạt động») vẫn không nhận cờ stale. Trên cloud thật, khi máy thu ngừng đẩy hơn 45′ mà bản tin cuối có `health.connected = true` và nhóm có tin trong 24h, hai badge xanh vẫn hiện. Test ON3-AC-4 (`successBadges(col) === 0`) vẫn xanh chỉ vì capture-ops-facts.mjs chạy push-ops-facts với HOME tạm, không có `.openclaw/logs/oneinvest-zalo-pipe.log`, nên `connected = null` và `zaloGroups = []`. Phép đo vì thế không bao giờ chạm tới hai nhánh này.
+Không có finding nào nằm trong hợp đồng ở vòng này.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **queryRawTable bọc cả listings và sale_offers (bảng canonical có trên cloud), nuốt 42P01 trái với chính docstring**
+- **Lưới job trên cloud đọc khoá `jobs` kiểu cũ của payload, không đọc khối `blocks.jobs` của ADR-0014 như comment và quyết định d-17 nói**
+  Người dùng thấy gì: Trên trang Thu thập của bản cloud, lưới máy móc (launchd) có thể vẫn hiện «Hoạt động» xanh dù lần đo job gần nhất bị lỗi hoặc đã cũ. Trong vài giây sau bản tin đầu tiên hoặc khi truy vấn lỗi, lưới còn có thể hiện job «Hỏng» giả.
+  Căn cứ: Chỉ làm người xem tin nhầm trạng thái job trong chốc lát, không mất dữ liệu, tải lại là thấy lại; và phần này vốn thuộc việc ON4/ON5 nên sửa chung ở đó rẻ hơn.
+  file: `app/src/app/ops/collections/page.tsx`
+  severity: medium
+  Đề xuất: new-contract
+
+- **Commit `docs(acceptance)` có kèm thay đổi code ở app/src/lib/collections-queries.ts**
+  Người dùng thấy gì: Lịch sử commit ghi nhầm loại: một thay đổi hành vi của trang nằm trong commit ghi là tài liệu. Người dùng cuối không thấy gì khác; chỉ người đọc lịch sử hoặc hoàn tác theo commit dễ nhầm.
+  Căn cứ: Không ảnh hưởng người dùng và không mất dữ liệu; viết lại lịch sử đã đẩy tốn hơn nhiều so với lợi ích.
+  file: `app/src/lib/collections-queries.ts`
+  severity: low
+  Đề xuất: wont-fix
+
+- **Ô «Cổng S03 hôm nay» trên cloud coi số phễu là đã đo theo trạng thái bản tin, nhưng số lại lấy từ một đường đọc khác có catch nuốt lỗi và rơi về số 0**
+  Người dùng thấy gì: Trên bản cloud, ô «Cổng S03 hôm nay» đôi khi có thể hiện «0/0 · 0 tin bị cổng chặn» như một số đo thật trong khi thực ra chưa đo được. Người xem có thể tưởng cổng không có hoạt động nào.
+  Căn cứ: Số sai chỉ xuất hiện ở một ô phụ, trong một số tình huống ngắn và tải lại thường hết; không mất dữ liệu, nhưng nên sửa trong việc làm phần S03 trên cloud (ON4/ON5).
+  file: `app/src/components/ops/collections/collections-view.tsx`
+  severity: medium
+  Đề xuất: new-contract
+
+- **Lưới job trên cloud đọc mảng `jobs` cũ ở cấp ngoài bản tin chứ không đọc khối `blocks.jobs`, nên lỗi đo của khối job bị bỏ qua**
+  Người dùng thấy gì: Khi máy thu không đo được trạng thái job, lưới «Máy móc (launchd)» trên bản cloud vẫn hiện đủ job như bình thường, không báo lỗi đo. Đôi lúc lưới còn hiện job «Không phản hồi» không do máy thu nào đo.
+  Căn cứ: Chỉ gây hiểu nhầm trạng thái ở một lưới phụ, không mất dữ liệu và tải lại thường hết; sửa gọn hơn khi làm cùng việc ON4/ON5.
+  file: `app/src/app/ops/collections/page.tsx`
+  severity: low
+  Đề xuất: new-contract
+
+- **Hình dạng 4 (assert âm tính đứng một mình): regex «không trạng thái giả» không có chiều đỏ nào chạy qua**
+  Người dùng thấy gì: Bài test kiểm «không có chữ trạng thái giả» chưa được thử với trường hợp có chữ giả thật, nên về sau nếu chữ nguồn đổi thì test có thể vẫn xanh mà không bắt được lỗi. Người dùng hiện tại không bị ảnh hưởng.
+  Căn cứ: Không ảnh hưởng người dùng lúc này, chỉ làm giảm độ tin cậy của rào kiểm về sau; thêm ca đối chứng sau này rẻ và không gấp.
+  file: `app/tests/o-kpi-chi-do-local.test.tsx`
+  severity: low
+  Đề xuất: known-limits
+
+- **queryRawTable bọc cả listings và sale_offers (bảng canonical có trên cloud), nuốt 42P01 trái với chính docstring (r2 · tệp đã đổi)**
   Người dùng thấy gì: Nếu hai bảng tin rao chính bị mất trên cloud, trang sẽ im lặng hiện số 0 thay vì báo lỗi. Hiện chúng vẫn có mặt nên người dùng chưa gặp.
   Căn cứ: Chỉ xảy ra khi hạ tầng cloud đã hỏng nặng, hậu quả nhẹ và hiếm, ghi lại là đủ.
   file: `app/src/lib/collections-queries.ts`
   severity: low
   Đề xuất: known-limits
 
-- **ops-cloud-proto chưa dựng đúng lược đồ như cloud: giữ tên airdna_* (cloud là ref_calib_*) và chép mọi bảng public dưới dạng rỗng**
+- **ops-cloud-proto chưa dựng đúng lược đồ như cloud: giữ tên airdna_* (cloud là ref_calib_*) và chép mọi bảng public dưới dạng rỗng (r2)**
   Người dùng thấy gì: Ảnh chụp thử dùng làm bằng chứng có thể không giống hệt trang trên cloud thật ở vài bảng, nên một số lỗi chỉ lộ ra khi lên cloud.
   Căn cứ: Không ảnh hưởng người dùng trực tiếp, chỉ làm bằng chứng kém sát thực tế, sửa sau không tốn kém.
   file: `scripts/ops-cloud-proto.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **queryRawTable coi bảng vắng trên cloud là «không có dòng», nên số chưa đo hiện thành 0 đo thật ở Luồng 7 ngày và Rotation**
+- **queryRawTable coi bảng vắng trên cloud là «không có dòng», nên số chưa đo hiện thành 0 đo thật ở Luồng 7 ngày và Rotation (r2 · tệp đã đổi)**
   Người dùng thấy gì: Bảng luồng 7 ngày trên cloud hiện toàn số 0 cho các nguồn Airbnb và AirDNA, dễ làm người xem tưởng nguồn không chạy dù thực tế chưa đo được.
   Căn cứ: Gây hiểu nhầm nhưng chỉ ở bảng phụ, không mất dữ liệu, và đã có việc riêng dự kiến cho phần luồng trên cloud.
   file: `app/src/lib/collections-queries.ts`
   severity: medium
   Đề xuất: new-contract
 
-- **Hình dạng 4 (âm tính một mình, nhánh fixture không chạm tới): AC-4 «không câu trấn an trên số cũ» là doesNotMatch trên câu mà fixture không bao giờ sinh ra**
+- **Hình dạng 4 (âm tính một mình, nhánh fixture không chạm tới): AC-4 «không câu trấn an trên số cũ» là doesNotMatch trên câu mà fixture không bao giờ sinh ra (r2 · tệp đã đổi)**
   Người dùng thấy gì: Bài kiểm tra tự động có thể báo xanh dù câu trấn an trên số cũ có quay lại, nên lỗi sau này khó bị bắt sớm.
   Căn cứ: Không ảnh hưởng người dùng hiện tại, chỉ giảm độ chắc của kiểm tra về sau, bổ sung sau rẻ.
   file: `app/tests/o-kpi-chi-do-local.test.tsx`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 5 (ma trận khai trong eval lệch với các ca có thật): evals.yaml nêu tên ca không tồn tại và nêu sai số ca**
+- **Hình dạng 5 (ma trận khai trong eval lệch với các ca có thật): evals.yaml nêu tên ca không tồn tại và nêu sai số ca (r2)**
   Người dùng thấy gì: Danh sách bài kiểm tra ghi trong hồ sơ nghiệm thu không khớp tên với bài chạy thật, người duyệt khó đối chiếu.
   Căn cứ: Không đụng tới người dùng cuối, chỉ gây phiền cho người duyệt, sửa chữ rất rẻ.
   file: `_acceptance/o-kpi-chi-do-local/evals.yaml`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 (đối chứng đỏ không dùng cùng phép đo với ca xanh): chiều đỏ AC-1 đo trên cả trang trong khi ca xanh nay chỉ đo vùng ô KPI**
+- **Hình dạng 4 (đối chứng đỏ không dùng cùng phép đo với ca xanh): chiều đỏ AC-1 đo trên cả trang trong khi ca xanh nay chỉ đo vùng ô KPI (r2 · tệp đã đổi)**
   Người dùng thấy gì: Bài kiểm tra đối chứng có thể xanh dễ hơn cần thiết, nên khả năng bắt lỗi của nó kém hơn vẻ ngoài.
   Căn cứ: Người dùng không thấy gì, rủi ro rất nhỏ, chi phí sửa không đáng so với lợi ích.
   file: `app/tests/o-kpi-chi-do-local.test.tsx`
   severity: low
   Đề xuất: wont-fix
 
-- **Hình dạng 4 (âm tính một mình, không đối chứng dương): AC-7 «không truy vấn ops_heartbeat» dựa vào spy chưa từng được chứng minh là bắt được truy vấn ấy**
+- **Hình dạng 4 (âm tính một mình, không đối chứng dương): AC-7 «không truy vấn ops_heartbeat» dựa vào spy chưa từng được chứng minh là bắt được truy vấn ấy (r2 · tệp đã đổi)**
   Người dùng thấy gì: Bài kiểm tra có thể không phát hiện nếu trang chạy local lại đọc nhầm bản tin đẩy lên, nên lỗi này nếu xảy ra sẽ khó bị bắt.
   Căn cứ: Chưa có lỗi thật, chỉ thiếu lưới an toàn; người dùng không bị ảnh hưởng và thêm đối chứng sau không tốn kém.
   file: `app/tests/o-kpi-chi-do-local.test.tsx`
@@ -125,12 +141,12 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 5 (eval tuyên ca không tồn tại): E5 nêu ca «ON3-AC-5 không số → «—»», E1 nêu hai ca đỏ riêng, trong khi test không có hoặc gộp (r1 · tệp đã đổi)**
+- **Hình dạng 5 (eval tuyên ca không tồn tại): E5 nêu ca «ON3-AC-5 không số → «—»», E1 nêu hai ca đỏ riêng, trong khi test không có hoặc gộp (r1)**
   Người dùng thấy gì: Danh sách ca kiểm ghi trong hồ sơ nghiệm thu không khớp từng tên với các ca kiểm thật, nên người đối chiếu khó thấy ca nào đã chạy.
   Căn cứ: Chỉ là sai lệch ghi chép, không ảnh hưởng người dùng, sửa lại tên là xong.
   file: `_acceptance/o-kpi-chi-do-local/evals.yaml`
   severity: low
   Đề xuất: known-limits
 
-⚠ Cụm ngoài vùng phủ: 5/10 lỗi rơi vào file không bộ đo nào phủ (app/src/lib/collections-queries.ts, scripts/ops-cloud-proto.mjs, _acceptance/o-kpi-chi-do-local/evals.yaml) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
 

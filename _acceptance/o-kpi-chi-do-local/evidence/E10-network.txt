@@ -1,4 +1,40 @@
-network: driver playwright-cli (requests + console) — server=worktree bold-bassi-0e7f42, cong 3461 (3460 do worktree u1-compare-saved chiem, khong dung/khong tat), VERCEL=1 + search_path=ops_cloud_proto
-playwright-cli requests (khong tinh static): 0 XHR/fetch toi app-origin o 14 lan mo trang; trang SSR.
-console error: 0 tren moi lan mo (12 lan 'Errors: 0')
-server log: GET /ops 200 x5, /ops/collections 200 x5, /ops/review 200 x3, POST /login 303 x13; khong dong 4xx/5xx, khong 'does not exist', khong loi
+driver: playwright-cli (requests + console), server=worktree bold-bassi-0e7f42 cong 3461 (3460 do worktree u1-compare-saved chiem, khong dung/khong tat), VERCEL=1 + search_path=ops_cloud_proto, lan cuoi mode none
+--- /ops requests
+### Result
+
+Note: 34 static requests not shown, run with --static option to see them.
+--- /ops console
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+--- /ops/collections requests
+### Result
+
+Note: 41 static requests not shown, run with --static option to see them.
+--- /ops/collections console
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+--- /ops/review requests
+### Result
+
+Note: 34 static requests not shown, run with --static option to see them.
+--- /ops/review console
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+--- server log (all modes)
+  10  GET /ops 200
+   8  GET /ops/collections 200
+   2  GET /ops/collections 307
+   5  GET /ops/review 200
+   1  GET /ops/review 307
+   3  POST /login 200
+   3 [browser] Uncaught error: function st_simplifypreservetopology(public.geometry, unknown) does not exist
+   3 ⨯ error: function st_simplifypreservetopology(public.geometry, unknown) does not exist
