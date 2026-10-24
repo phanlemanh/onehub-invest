@@ -6,7 +6,7 @@ owner: phanlemanh@gmail.com
 stage: decided              # discovery | decided | archived
 decision: build           # Mạnh gõ ở phiên P2 24/10: «Cổng Đáng ON3 o-kpi-chi-do-local: build»
 decided_by: Mạnh
-decided_at: 2026-10-24T12:30:00Z
+decided_at: 2026-10-24T12:58:00Z
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
