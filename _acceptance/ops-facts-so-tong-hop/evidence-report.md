@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 14d25999cec2493041bdd38cb893710daa437e89
+verified_commit: 522dcce9c5fd0401acda939946cae33c5b6ea857
 human_signoff:
 ---
 
@@ -203,3 +203,7 @@ none — mọi eval chạy một lần, xác định, kết quả đồng nhất
 
 Round 1: E1 đến E10 đều qua, các lệnh suite đều xanh. Verdict PASS, kèm 2 finding đo trong hợp đồng (AC-6, AC-7) về độ chặt của bộ test.
 Round 2: hai finding trong hợp đồng đã được sửa ở bộ test (commit a640135); chạy lại E1, E2, E4, E6, E7, E8, E10 và 5 lệnh suite, tất cả qua; E3, E5, E9 carry-forward từ round 1 vì delta không chạm paths của chúng. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-24, do gộp main dbd3d52 (PR #65, #66) sau S4 round 2
+run_id: repin-20261024T115400Z-47498
+sha: 522dcce9c5fd0401acda939946cae33c5b6ea857 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
