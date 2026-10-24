@@ -5,7 +5,7 @@ slug: mcp-tools-theo-so-be-mat
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-mcp-tools-theo-so-be-mat-design.md
 veto_state: mo
 veto_opened_at: 2026-10-24T10:47:00Z
@@ -79,3 +79,6 @@ Phía đổi: bản khai đổi (MT1–MT6, MT8–MT10) · sổ đổi (MT7 «ch
 - Mở lại `/api/v1/offers` công khai — việc sau PL2, không thuộc hàng.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: khi phép kiểm bản cũ gặp sự cố git khác (vd đường dẫn không có ở bản cũ), nó vẫn báo đỏ đúng nhưng thông điệp chỉ nói chung là thiếu lịch sử, nên người bảo trì có thể tìm sai hướng.
