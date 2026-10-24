@@ -4,6 +4,8 @@ import path from "node:path";
 
 import { pool } from "./db";
 import { lastMeaningfulLine } from "./last-log-line";
+import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
+import { sourceLabel, type SourceRoles } from "./source-labels";
 import {
   directoryCacheIsFresh,
   listZaloAccounts,
@@ -210,12 +212,29 @@ async function probe(url: string): Promise<"yes" | "no"> {
   }
 }
 
+/** Local: vai trò (cho nhãn) + tên thật (chỉ để che dòng log, không rời hàm) từ source_registry; DB lỗi → rỗng. */
+async function registryForJobs(): Promise<{ roles: SourceRoles; names: SourceNameEntry[] }> {
+  try {
+    const { rows } = await pool.query<{ code: string; label_vi: string | null; real_name: string | null }>(
+      "SELECT code, label_vi, real_name FROM source_registry",
+    );
+    return {
+      roles: Object.fromEntries(rows.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi as string])),
+      names: rows.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name as string })),
+    };
+  } catch {
+    return { roles: {}, names: [] };
+  }
+}
+
 /** Trạng thái 5 launchd agent + 2 dịch vụ KeepAlive. */
 export async function readSchedulerStatus(): Promise<JobStatus[]> {
   {
     const f = await getLocalFacts();
     if (f) return f.jobs;
   }
+  // ON7: nhãn «S0x · vai trò», dòng log cuối che tên thật; danh sách tên rỗng (DB lỗi) → lastLine null (đóng chặt).
+  const { roles, names } = await registryForJobs();
   const weekly = await latestWeeklyLog();
   const [kevAlive, apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
     probe("http://127.0.0.1:8009/"),
@@ -225,26 +244,26 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
     tailFile(path.join(LOGS, "launchd-collector-api.log")),
     weekly ? tailFile(weekly) : Promise.resolve({ mtime: null, lastLine: null }),
   ]);
-  return [
+  const jobs: JobStatus[] = [
     {
-      id: "airdna-daily",
-      label: "AirDNA toàn quốc (rotation 6 market)",
+      id: "s02-daily",
+      label: `${sourceLabel("S02", roles)} — toàn quốc (rotation 6 market)`,
       schedule: "19:05 hằng ngày",
       alive: "unknown",
       lastLogAt: airdnaLog.mtime,
       lastLine: airdnaLog.lastLine,
     },
     {
-      id: "collector",
-      label: "Airbnb tự thu Hà Nội (discovery + listing + finalize)",
+      id: "s01-weekly",
+      label: `${sourceLabel("S01", roles)} — Hà Nội (discovery + listing + finalize)`,
       schedule: "Chủ nhật 19:30 +jitter ≤30′",
       alive: "unknown",
       lastLogAt: weeklyTail.mtime,
       lastLine: weeklyTail.lastLine,
     },
     {
-      id: "smoke",
-      label: "Smoke Airbnb (detect đổi markup)",
+      id: "s01-smoke",
+      label: `Smoke ${sourceLabel("S01", roles)} (detect đổi markup)`,
       schedule: "20:00 hằng ngày",
       alive: "unknown",
       lastLogAt: smokeLog.mtime,
@@ -267,6 +286,7 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
       lastLine: null,
     },
   ];
+  return jobs.map((j) => ({ ...j, lastLine: maskSourceNames(j.lastLine, names) }));
 }
 
 export type RotationPreview = {
