@@ -74,6 +74,7 @@ async function localOnly() {
     try {
       for (const f of ["sync-cloud.mjs", "sync-pii.test.mjs", "import-airbnb.mjs"]) copyFileSync(join(PIPE, f), join(dir, f));
       symlinkSync(join(PIPE, "node_modules"), join(dir, "node_modules"));
+      symlinkSync(join(PIPE, "lib"), join(dir, "lib")); // sync-cloud.mjs nhập lib/tier-a-guard.mjs
       if (mutate) {
         const p = join(dir, "sync-cloud.mjs");
         const src = readFileSync(p, "utf8");
@@ -96,6 +97,7 @@ async function localOnly() {
   // leakGate với cloud giả: chỉ có stg_s08_inventory, n dòng.
   const fakeCloud = (n) => async (sql) => {
     if (sql.includes("table_name LIKE 'stg_%'")) return [{ table_name: "stg_s08_inventory" }];
+    if (sql.includes("information_schema.columns")) return []; // piiColumnLeaks: bảng người bán vắng ở cloud giả
     if (sql.includes("to_regclass")) return [{ r: sql.includes("stg_s08_inventory") ? "stg_s08_inventory" : null }];
     if (sql.includes('FROM public."stg_s08_inventory"')) return [{ n }];
     if (sql.includes("FROM pg_roles WHERE rolname = 'anon'")) return [{ n: 1 }];
