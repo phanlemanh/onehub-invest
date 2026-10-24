@@ -134,6 +134,10 @@ executors:
     # so-be-mat-api (NT4) — sổ bề mặt API; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433 + một user admin
     api_surface_mutation: "node scripts/check-api-surface.mjs mutation"
     api_surface_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-surface.mjs"
+    # mcp-tools-theo-so-be-mat (ON15) — bản khai công cụ MCP theo sổ bề mặt; historic cần lịch sử git có 1c6389b
+    mcp_tools_static: "node scripts/check-mcp-tools.mjs static"
+    mcp_tools_mutation: "node scripts/check-mcp-tools.mjs mutation"
+    mcp_tools_historic: "node scripts/check-mcp-tools.mjs historic"
     deals_smoke_local_guard: "node scripts/check-smoke-guard.mjs"
     # deals-loai-tin-phi-ly (ON11) — đo Căn giá tốt trên DB local :5433 trong BEGIN…ROLLBACK (cần tsx của app)
     deals_phi_ly_do: "cd app && node --import tsx ../scripts/deals-phi-ly-do.mjs"

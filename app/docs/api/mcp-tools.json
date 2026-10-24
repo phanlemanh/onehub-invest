@@ -21,11 +21,12 @@
         ]
       },
       "endpoint": "/api/v1/asset-stats",
-      "method": "GET"
+      "method": "GET",
+      "auth": "public"
     },
     {
       "name": "oneinvest_get_offers",
-      "description": "Danh sách tin bán/cho thuê BĐS gần đây, lọc theo phường/loại/thời gian. Kèm confidence + source code SPL.",
+      "description": "Danh sách tin bán/cho thuê BĐS gần đây, lọc theo phường/loại/thời gian. Kèm confidence + source code SPL. Đang tạm đóng cho ops — cần header Authorization: Bearer <OPS_API_TOKEN>.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -36,11 +37,12 @@
         }
       },
       "endpoint": "/api/v1/offers",
-      "method": "GET"
+      "method": "GET",
+      "auth": "ops"
     }
   ],
   "base_url": "http://localhost:3000",
   "cloud_base_url": "https://onehub-invest.vercel.app",
-  "auth": "public (đã pseudonymize theo SPL ADR-0007)",
-  "updated": "2026-10-20"
+  "auth": "theo từng công cụ — khoá auth của mỗi công cụ là chế độ trong sổ bề mặt app/src/lib/api-surface.ts; ops = header Authorization: Bearer <OPS_API_TOKEN> hoặc phiên ops. Dữ liệu đã pseudonymize theo SPL ADR-0007.",
+  "updated": "2026-10-24"
 }

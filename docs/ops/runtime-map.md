@@ -138,6 +138,31 @@ nêu đường + mã `S0x`, không bao giờ in tên.
   `node pipeline/sync-cloud.mjs --kiem-cot` (mã 1 khi có vi phạm) — **chạy trước khi merge NT2**: schema cloud dựng tay,
   còn cột thừa (vd `properties.photos`, `sale_offers.seller_phone`) thì mọi lượt sync dừng ở pha gate.
 
+## Số tổng hợp Ops lên cloud (chốt 2026-10-24, `_acceptance/ops-facts-so-tong-hop/`, ADR-0014)
+
+Mỗi lượt `scripts/cloud-sync.sh` (15′), `pipeline/push-ops-facts.mjs` đẩy thêm khoá `blocks` gồm năm khối số tính ở máy
+local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của bản tin giữ nguyên.
+
+| Khối | Nội dung | Định nghĩa |
+|---|---|---|
+| `freshness` | `rows`: mã, thành phố, tuổi, SLO, trạng thái | `scripts/lib/freshness.mjs` — đúng số `check-freshness` in |
+| `jobs` | `items`: mọi job launchd khai trong `pipeline/cron/` có mặt trong `launchctl list` — `id` (nhãn đã che S0x), `pid`, `lastExit`, `running`, `lastLogAt` (mốc ghi tệp log plist khai) | `scripts/lib/ops-local.mjs` `readLaunchdJobs` |
+| `lockdown` | `layers` (bảy lớp, `ok` true/false/null), `lastWatchdogAt`, `agentTurnsToday` | `readLockdown` — bản .mjs của `getLockdownStatus` (ON2) |
+| `records24h` | `bySource`: số snapshot 24 giờ theo mã | `readRecords24h` — bản .mjs của `items24h` trong `getSourceFeedHealth` |
+| `reviewQueue` | `byType` (thẻ `pending` theo `item_type`), `total` — chỉ số đếm | `readReviewQueue` |
+
+- **Đo không được thì nói ra**: khối hỏng là `{measured_at, error: "không đo được: …"}`, không bao giờ 0, mảng rỗng hay
+  «Ổn»; các khối khác vẫn gửi. Lớp lockdown không kiểm được là `null` từng lớp. Soi khô ở máy thu:
+  `node pipeline/push-ops-facts.mjs --kho` → dòng `khối: freshness đo được · jobs … · …` + `ops-facts khô: sạch, 0 chỗ chặn`.
+- **Hai bản khớp**: `ops-local.mjs` (bên ghi) và hàm app (`app/src/lib/ops-queries.ts`) giữ khớp bằng
+  `app/tests/ops-facts-so-tong-hop.test.tsx` — sửa định nghĩa ở một bên thì sửa cả bên kia.
+- **Đọc trên cloud**: `readOpsFacts()` (`app/src/lib/ops-facts.ts`) trả `state` `none` (chưa có dòng) · `fresh` (≤ 45′) ·
+  `stale` (> 45′, kèm `measuredAt` lần đẩy cuối); từng khối có `state` riêng theo `measured_at` của khối, khối lỗi là
+  `error`. Hằng `FACTS_STALE_MS` (45′ = 3 lượt cloud-sync) chỉ ở tệp này — đổi chu kỳ cloud-sync thì đổi hằng.
+  Trang hiện số: ON3 (/ops, /ops/collections), ON23 (lockdown), AU12 (độ phủ).
+- Bản tin đi qua bộ soát tầng A (mục trên): tên nguồn thật trong khối nào cũng làm lượt đẩy dừng (`FACTS CHẶN … blocks.<khối>…`).
+- Bảng snapshot đọc không được thì `sourceRuns` cũ vẫn gửi vai trò từng mã, số lần chạy để `null` (chưa đo).
+
 ## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
 
 Sự cố gốc (audit L7): tối 22/10 colima khởi động lại, `one-invest-db` không có restart policy nên nằm chết

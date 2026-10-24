@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
-import { cancelZaloLogin, startZaloLogin, zaloLoginStatus } from "@/lib/zalo-admin";
+import { AccountIdError, cancelZaloLogin, startZaloLogin, zaloLoginStatus } from "@/lib/zalo-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +22,17 @@ async function auth(req: Request): Promise<boolean> {
 
 export async function POST(req: Request) {
   if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const { accountId } = (await req.json().catch(() => ({}))) as { accountId?: string };
-  if (!accountId) return NextResponse.json({ error: "thiếu accountId" }, { status: 400 });
+  const body: unknown = await req.json().catch(() => null);
+  // Không cắt khoảng trắng: id đệm khoảng trắng là id lạ (bước kiểm trong startZaloLogin trả 400).
+  const raw = body && typeof body === "object" ? (body as { accountId?: unknown }).accountId : undefined;
+  const accountId = typeof raw === "string" ? raw : "";
   try {
     const r = await startZaloLogin(accountId);
     return NextResponse.json(r);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "lỗi bắt đầu login" },
-      { status: 500 },
+      { status: e instanceof AccountIdError ? 400 : 500 },
     );
   }
 }
