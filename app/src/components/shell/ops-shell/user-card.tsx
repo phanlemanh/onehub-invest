@@ -30,7 +30,7 @@ export function UserCard({ user, collapsed = false, interactive = true }: { user
   const [pending, startTransition] = useTransition()
   const avatar = (
     <Avatar className="size-6">
-      <AvatarFallback className="text-xs">{initialsOf(user.email)}</AvatarFallback>
+      <AvatarFallback className="text-xs" translate="no">{initialsOf(user.email)}</AvatarFallback>
     </Avatar>
   )
   const face = collapsed ? (
@@ -39,13 +39,13 @@ export function UserCard({ user, collapsed = false, interactive = true }: { user
     <>
       {avatar}
       <span className={CARD_TEXT}>
-        <span className={CARD_NAME}>{user.email}</span>
+        <span className={CARD_NAME} translate="no">{user.email}</span>
         <span className={CARD_META}>{ROLE_VI[user.role]}</span>
       </span>
       <ChevronsUpDownIcon aria-hidden="true" className="text-muted-foreground" />
     </>
   )
-  const label = `Tài khoản ${user.email}`
+  const label = "Tài khoản đang đăng nhập"
 
   if (!interactive) {
     return collapsed ? (
@@ -73,7 +73,7 @@ export function UserCard({ user, collapsed = false, interactive = true }: { user
       <DropdownMenuContent side={collapsed ? "right" : "top"} align="start" sideOffset={collapsed ? 8 : 6} className="w-64">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
-            <span className="text-foreground truncate text-sm font-medium">{user.email}</span>
+            <span className="text-foreground truncate text-sm font-medium" translate="no">{user.email}</span>
             <span className="text-muted-foreground text-xs">{ROLE_VI[user.role]}</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

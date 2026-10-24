@@ -37,7 +37,7 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-2">
       <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-3">
-        <Breadcrumb>
+        <Breadcrumb aria-label="Đường dẫn trang">
           <BreadcrumbList>
             {crumbs.map((crumb, index) => (
               <BreadcrumbItemGroup key={crumb.label} crumb={crumb} last={index === crumbs.length - 1} />

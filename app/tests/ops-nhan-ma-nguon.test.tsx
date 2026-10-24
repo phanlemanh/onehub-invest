@@ -73,8 +73,8 @@ function alertBlock(h: string, marker: string): string | null {
 
 // Bảng nhánh viết trước của issuesOf (attention-list.tsx): 9 nhánh, mỗi nhánh một tiêu đề phải hiện ở lượt «canh-bao».
 const ISSUE_TITLES = [
-  "Agent-turn hôm nay", "Lớp L1", "Kênh S03 · Cộng đồng đứt", "Máy thu có thể offline", "S05 trễ SLO",
-  "S06 chưa có dữ liệu", "Ống S03 · Cộng đồng im 24h", "Allowlist lệch membership", "1 nhóm S03 · Cộng đồng im > 72h",
+  "Lượt máy tự trả lời hôm nay", "Lớp L1", "Kênh S03 · Cộng đồng đứt", "Máy thu có thể mất kết nối", "S05 trễ SLO", // ON12: nhãn theo CONTEXT.md
+  "S06 chưa có dữ liệu", "Ống S03 · Cộng đồng im 24h", "Danh sách cho phép lệch nhóm tham gia", "1 nhóm S03 · Cộng đồng im > 72h",
 ]
 const feed = (code: string, freshness: "stale" | "none"): import("../src/lib/ops-queries").SourceFeedHealth => ({
   code, labelVi: code, status: "active", note: null, lastRunAt: null, lastRunSource: null, items24h: 0, stgRows: 0,

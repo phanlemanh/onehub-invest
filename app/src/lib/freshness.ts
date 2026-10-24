@@ -144,7 +144,7 @@ export const summarizeFreshness = (rows: SourceInput[]): SloSummary => summarize
 
 /** Giá trị thuộc tính `data-slo-summary` và chữ hiện cho người — một chỗ sinh cho cả hai trang. */
 export const sloSummaryKey = (s: SloSummary) => `${s.ok}/${s.total}`
-export const LOCAL_ONLY_TEXT = "Độ tươi chỉ đo ở máy local"
+export const LOCAL_ONLY_TEXT = "Độ tươi chỉ đo ở máy thu"
 export const sloSummaryText = (s: SloSummary, localOnly = false) =>
   localOnly ? LOCAL_ONLY_TEXT : s.total === 0 ? "Chưa có nguồn nào" : `${s.ok}/${s.total} nguồn đạt SLO`
 

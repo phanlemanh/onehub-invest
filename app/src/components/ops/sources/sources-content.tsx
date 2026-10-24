@@ -18,9 +18,9 @@ export async function SourcesContent() {
   if (await localOnlyTable("source_registry")) {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader crumbs={crumbs} title="Nguồn dữ liệu" stats={["Chỉ quản trị ở máy local"]} description="Quản trị nguồn: tài khoản Zalo, nhóm thu — chỉ admin, không sync cloud." />
-        <LocalOnlyAlert title="Nguồn dữ liệu chỉ quản trị ở máy local">
-          Bảng giải mã mã nguồn và nhóm thu là tầng A nên không lên cloud. Quản trị ở Ops trên máy thu.
+        <PageHeader crumbs={crumbs} title="Nguồn dữ liệu" stats={["Chỉ quản trị ở máy thu"]} description="Quản trị nguồn: tài khoản Zalo, nhóm thu — chỉ quyền quản trị, không đồng bộ lên máy chủ." />
+        <LocalOnlyAlert title="Nguồn dữ liệu chỉ quản trị ở máy thu">
+          Bảng giải mã mã nguồn và nhóm thu là tầng A nên không lên máy chủ. Quản trị ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
     );
@@ -47,7 +47,7 @@ export async function SourcesContent() {
         crumbs={crumbs}
         title="Nguồn dữ liệu"
         stats={[`${rows.length} mã nguồn`, `${groupRows.length} nhóm thu`]}
-        description="Quản trị nguồn: tài khoản Zalo, nhóm thu — chỉ admin, không sync cloud."
+        description="Quản trị nguồn: tài khoản Zalo, nhóm thu — chỉ quyền quản trị, không đồng bộ lên máy chủ."
         actions={
           <Link prefetch={false} href="/ops/collections" className="text-muted-foreground hover:text-foreground text-sm underline transition-colors">
             Xem luồng ở Thu thập

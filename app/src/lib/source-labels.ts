@@ -3,9 +3,9 @@
  * Tên nguồn thật KHÔNG bao giờ xuất hiện ở tầng serving/UI — chỉ mã + nhãn.
  */
 const LABELS: Record<string, { vi: string; hint: string }> = {
-  S01: { vi: "Tự thu", hint: "Thu thập trực tiếp từ nguồn công khai, tính metric riêng" },
+  S01: { vi: "Tự thu", hint: "Thu thập trực tiếp từ nguồn công khai, tính chỉ số riêng" },
   S02: { vi: "Hiệu chuẩn", hint: "Nguồn tham chiếu trả phí để đối chiếu, không trộn số" },
-  S03: { vi: "Cộng đồng", hint: "Tin rao từ nhóm môi giới — parser tự trích xuất" },
+  S03: { vi: "Cộng đồng", hint: "Tin rao từ nhóm môi giới — bộ đọc tự trích xuất" },
   S04: { vi: "Địa giới mở", hint: "Dữ liệu ranh giới hành chính mở" },
 };
 

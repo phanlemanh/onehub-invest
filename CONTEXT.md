@@ -18,7 +18,7 @@ Cách đọc — mỗi khối một thuật ngữ:
 - `_Avoid_` liệt tên lệch đã loại. Kit nghiệm thu đọc dòng này: lint W6 cảnh báo khi tiêu chí của
   hợp đồng dùng tên bị loại. Thêm thuật ngữ mới: thêm khối ở đây cùng commit với nhãn/route mới.
 
-_Allow_: phạm vi dự án, entry dự án, thông tin đăng nhập, thông tin đăng ký, điện nước, nước ngoài, thành phố trực thuộc trung ương, thành phố thuộc tỉnh
+_Allow_: phạm vi dự án, entry dự án, thông tin đăng nhập, thông tin đăng ký, điện nước, nước ngoài, thành phố trực thuộc trung ương, thành phố thuộc tỉnh, rao vặt công khai, danh mục dự án
 
 ## Địa lý
 
@@ -84,6 +84,15 @@ _Avoid_: tin đăng, offer, rao vặt, sale offer
 - Code: `deal` · RESO: không có — chỉ số nội bộ
 - Slug URL: `deals`
 _Avoid_: deal tốt, kèo
+
+**Kiểm chất lượng**: Một phép kiểm dữ liệu chạy định kỳ ở pipeline (độ tươi, từ vựng enum, số tham chiếu…), ghi kết quả theo từng đối tượng (bảng, nguồn, thị trường). Bảng «Kiểm chất lượng» trên `/ops/quality` hiện bản mới nhất của mỗi kiểm cho từng đối tượng trong 7 ngày; đầu trang đếm «n kiểm» (loại kiểm) và «m đối tượng» (dòng).
+- Code: `dq_check_results` · `check_name` · `entity` · RESO: không có — chỉ số nội bộ
+- Nhãn kết quả: «Đạt» · «Cảnh báo» · «Không đạt» · «Bỏ qua»
+_Avoid_: DQ check, test dữ liệu
+
+**Có số tham chiếu**: Nhãn kết quả của kiểm độ phủ tham chiếu (`truthful-coverage`) khi thị trường có số tham chiếu tươi để đối chiếu. KHÔNG có nghĩa là độ phủ đạt — độ phủ thật đọc ở cột «Chi tiết». Khi thiếu số tham chiếu (hoặc số cũ) nhãn là «Thiếu số tham chiếu». Kiểm này không bao giờ mang «Đạt» xanh lá.
+- Code: `dqResult("truthful-coverage", "pass")` (`app/src/lib/dq-checks.ts`) · RESO: không có — chỉ số nội bộ
+_Avoid_: «Đạt» (cho kiểm này), độ phủ đạt
 
 **Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, thẻ mang nhãn «cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
 - Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals.ts`) · RESO: không có — chỉ số nội bộ
@@ -274,8 +283,48 @@ _Avoid_: calibration
 **Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent (entity_match, source_decision, agent_output) — LLM không ghi dữ liệu trực tiếp (luật 7).
 - Code: `review_queue` · RESO: —
 - Slug URL: `review`
-- Ghi chú: Tiêu đề trang `/ops/review` đang là "Review Queue" — đổi khi dọn B1.
+- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10).
 _Avoid_: Review Queue, hàng chờ
+
+## Vận hành (cổng Ops)
+
+Nhãn cổng Ops cho máy móc thu thập và an toàn kênh — thêm ở ON12 `ops-nhan-theo-context` (24/10). Chữ tiếng Anh cũ trên
+cổng Ops nằm ở dòng `_Avoid_` để thước chữ hiển thị giữ nó không quay lại.
+
+**Máy thu**: Máy local chạy collector, pipeline và DB local — nơi duy nhất giữ dữ liệu tầng A.
+- Code: `local` · RESO: —
+
+**Máy chủ**: Bản cổng chạy trên cloud (Vercel + Supabase) — chỉ nhận số tổng hợp và dữ liệu đã lọc tầng A.
+- Code: `cloud` · RESO: —
+_Avoid_: bản cloud, lên cloud
+
+**Tác vụ**: Một việc launchd chạy theo lịch hoặc chạy liên tục trên máy thu (thu S02 hằng ngày, thu S01 hằng tuần, cổng nhận tin…).
+- Code: `job (JobStatus)` · RESO: —
+_Avoid_: Job
+
+**Khoá an toàn**: Bảy lớp chặn agent gửi tin vào nhóm Zalo (luật 8) cộng hạ tầng thu; mỗi lớp «Ổn», «Hỏng» hoặc «Chưa kiểm được».
+- Code: `lockdown (LockdownLayer)` · RESO: —
+_Avoid_: Lockdown
+
+**Bộ canh**: Tác vụ kiểm khoá an toàn mỗi 5 phút và ghi `ok` khi không thấy sự cố (`zalo-watchdog.sh`).
+- Code: `watchdog` · RESO: —
+_Avoid_: Watchdog
+
+**Lượt máy tự trả lời**: Số lượt agent tự trả lời trong kênh trong ngày — khoá an toàn đòi bằng 0.
+- Code: `agentTurnsToday` · RESO: —
+_Avoid_: Agent-turn, agent turn
+
+**Tín hiệu sống**: Nhịp kênh S03 tự báo còn kết nối (mỗi 15 phút); quá hạn thì kênh coi như đứt.
+- Code: `heartbeat (heartbeatAgeMin)` · RESO: —
+_Avoid_: Heartbeat
+
+**Danh sách cho phép**: Các nhóm S03 được phép thu; lệch với nhóm tài khoản đang tham gia thì báo «lệch».
+- Code: `allowlist` · RESO: —
+_Avoid_: Allowlist, membership
+
+**Bài**: Một bài đăng thô trong nhóm cộng đồng trước khi đọc thành tin rao; «bài thử» là bài từ nhóm thử.
+- Code: `post (stg_zalo_posts)` · RESO: —
+_Avoid_: post raw, post mock, bài post
 
 ## Cổng & tính năng
 
