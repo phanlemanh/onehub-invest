@@ -1,15 +1,28 @@
 // gio-ops-gio-vn.test.tsx — cổng Ops đọc mốc theo giờ Việt Nam (OPS-7) và nguồn quá hạn hiện mức trễ (YC4).
 // Hồ sơ nghiệm thu: _acceptance/gio-ops-gio-vn (AC-1…AC-5, AC-7…AC-9; AC-6 ở pipeline/scripts/vn-day.test.mjs).
 // Tên ca mở đầu bằng mã AC (GV-AC-n).
-import { test } from "node:test"
+import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import pg from "pg"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
 import { fmtOverdue } from "../src/lib/freshness"
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
+
+// Lược đồ tạm cho AC-4: pool của app (src/lib/db) đọc DATABASE_URL lúc nạp — đặt TRƯỚC mọi import động, search_path
+// CHỈ lược đồ tạm (không rơi về bảng thật của DB local dùng chung).
+const SCHEMA = `gio_vn_test_${process.pid}`
+const BASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
+{
+  const u = new URL(BASE_URL)
+  u.searchParams.set("options", `-c search_path=${SCHEMA}`)
+  process.env.DATABASE_URL = u.toString()
+}
 const MUI_MAY = ["UTC", "America/New_York"] as const
 
 /**
@@ -169,4 +182,159 @@ test("GV-AC-9 luồng 7 ngày nói ngày theo giờ VN", async () => {
   const out = await h("../src/components/ops/collections/sync-activity", "SyncActivity", { days })
   assert.match(out, /ngày theo giờ VN/)
   assert.doesNotMatch(out, /\(giờ máy\)/)
+})
+
+// ---------- AC-4: luồng 7 ngày gom theo ngày VN (lược đồ tạm trong DB local) ----------
+
+const BANG = ["airdna_markets", "airdna_listings", "listings", "airbnb_snapshots", "stg_zalo_posts", "sale_offers"] as const
+const COT: Record<(typeof BANG)[number], string> = {
+  airdna_markets: "captured_at", airdna_listings: "captured_at", listings: "last_seen",
+  airbnb_snapshots: "collected_at", stg_zalo_posts: "captured_at", sale_offers: "first_seen",
+}
+const NOW = Date.parse("2026-10-24T05:00:00Z") // 12:00 VN ngày 24 → 7 ngày VN 18…24
+const admin = new pg.Client({ connectionString: BASE_URL })
+let dbErr: string | null = null
+
+before(async () => {
+  try {
+    await admin.connect()
+    await admin.query(`CREATE SCHEMA "${SCHEMA}"`)
+    for (const b of BANG) await admin.query(`CREATE TABLE "${SCHEMA}".${b} AS SELECT * FROM public.${b} WITH NO DATA`)
+    const tz = ["2026-10-23T16:30:00Z", "2026-10-23T17:30:00Z"] // 23:30 VN ngày 23 · 00:30 VN ngày 24
+    for (const b of BANG) {
+      const vals = b === "listings" ? ["2026-10-23", "2026-10-24"] : tz
+      for (const v of vals) await admin.query(`INSERT INTO "${SCHEMA}".${b} (${COT[b]}) VALUES ($1)`, [v])
+    }
+    // 00:10 VN ngày cũ nhất (18) được đếm; 23:50 VN ngày 17 nằm ngoài cửa sổ.
+    for (const v of ["2026-10-17T17:10:00Z", "2026-10-17T16:50:00Z"]) await admin.query(`INSERT INTO "${SCHEMA}".stg_zalo_posts (captured_at) VALUES ($1)`, [v])
+  } catch (e) {
+    dbErr = (e as Error).message
+  }
+})
+after(async () => {
+  await admin.query(`DROP SCHEMA IF EXISTS "${SCHEMA}" CASCADE`).catch(() => {})
+  await admin.end().catch(() => {})
+  const { pool } = await import("../src/lib/db")
+  await pool.end().catch(() => {})
+})
+const canDb = () => assert.equal(dbErr, null, `DB local :5433 không tới được — eval đòi chạy thật: ${dbErr}`)
+
+test("GV-AC-4 getFlowDays gom ngày theo giờ VN trên lược đồ tạm", async () => {
+  canDb()
+  const { getFlowDays } = await import("../src/lib/collections-queries")
+  const ngay = (day: string, n: number, zalo = n) => ({ day, airdnaMarkets: n, airdnaListings: n, airbnbListingsSeen: n, airbnbSnapshots: n, zaloPosts: zalo, zaloOffers: n })
+  const mong = [
+    ngay("2026-10-24", 1), ngay("2026-10-23", 1), ngay("2026-10-22", 0), ngay("2026-10-21", 0),
+    ngay("2026-10-20", 0), ngay("2026-10-19", 0), ngay("2026-10-18", 0, 1),
+  ]
+  assert.deepEqual(await getFlowDays(7, { now: NOW }), mong)
+})
+
+test("GV-AC-4 thiếu bảng tạm thì đỏ nêu tên bảng", async () => {
+  canDb()
+  const { getFlowDays } = await import("../src/lib/collections-queries")
+  await admin.query(`ALTER TABLE "${SCHEMA}".stg_zalo_posts RENAME TO stg_zalo_posts_tam`)
+  try {
+    await assert.rejects(getFlowDays(7, { now: NOW }), /stg_zalo_posts/)
+  } finally {
+    await admin.query(`ALTER TABLE "${SCHEMA}".stg_zalo_posts_tam RENAME TO stg_zalo_posts`)
+  }
+})
+
+// ---------- AC-5: funnel «hôm nay» theo ngày VN, dưới hai múi máy ----------
+
+test("GV-AC-5 readGateFunnel đếm hôm nay theo ngày VN", () => {
+  const home = mkdtempSync(join(tmpdir(), "gio-vn-home-"))
+  try {
+    mkdirSync(join(home, ".openclaw", "logs"), { recursive: true })
+    // Khuôn dòng của hook: `${new Date().toISOString()} ${line}` (collector/openclaw/handler.js:18).
+    const dong = (t: string) => `${new Date(t).toISOString()} post 202 group=nhom-thu {"accepted":1}`
+    writeFileSync(join(home, ".openclaw", "logs", "oneinvest-zalo-pipe.log"), [dong("2026-10-23T16:30:00Z"), dong("2026-10-23T17:30:00Z"), ""].join("\n"))
+    const code = `const m = await import(${JSON.stringify(pathToFileURL(join(APP, "src/lib/collections-queries.ts")).href)});
+const f = await m.readGateFunnel({ now: ${NOW} }); process.stdout.write(JSON.stringify(f)); process.exit(0)`
+    for (const mui of MUI_MAY) {
+      const env: NodeJS.ProcessEnv = { ...process.env, TZ: mui, HOME: home }
+      delete env.VERCEL // chạy nhánh local của readGateFunnel
+      const out = execFileSync(process.execPath, ["--import", "tsx", "--input-type=module", "-e", code], { cwd: APP, env, encoding: "utf8" })
+      const f = JSON.parse(out) as { today: { messages: number }; last7: { messages: number } }
+      assert.equal(f.today.messages, 1, `TZ=${mui}: hôm nay (ngày VN 24) chỉ có dòng 17:30Z`)
+      assert.equal(f.last7.messages, 2, `TZ=${mui}: 7 ngày có cả hai dòng`)
+    }
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
+})
+
+// ---------- AC-3: thước tĩnh — không còn mốc cắt chuỗi hay ngày theo múi máy ----------
+
+const MAU: [string, RegExp][] = [
+  ["cắt chuỗi mốc", /\.slice\(0, ?1[06]\)/],
+  ["toISOString cắt", /toISOString\(\)\.slice/],
+  ["toLocale không múi", /toLocale(Date|Time)?String\((?![^)]*timeZone)/],
+  ["giờ/ngày theo máy", /\.get(Hours|Date)\(/],
+  ["SQL ::date thiếu AT TIME ZONE", /\b[a-z_]+::date\b/],
+  ["SQL date_trunc/to_char thiếu AT TIME ZONE", /\b(date_trunc|to_char)\((?![^)]*AT TIME ZONE)/],
+]
+/** Danh sách miễn viết trước: tệp · mẫu · ĐÚNG đoạn khớp · lý do (miễn theo đoạn, không theo cả tệp). */
+const MIEN: { tep: string; mau: string; khop: string; ly_do: string }[] = [
+  { tep: "src/lib/ops-queries.ts", mau: "giờ/ngày theo máy", khop: ".getDate(", ly_do: "tên tệp log gateway theo ngày giờ MÁY (gateway và watchdog đặt tên bằng date +%Y-%m-%d) — ON2" },
+  { tep: "src/lib/collections-queries.ts", mau: "SQL ::date thiếu AT TIME ZONE", khop: "last_seen::date", ly_do: "listings.last_seen là cột kiểu date, không có múi" },
+]
+const LIB_OPS = ["src/lib/ops-queries.ts", "src/lib/collections-queries.ts", "src/lib/freshness.ts", "src/lib/deals.ts"]
+const boComment = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1")
+
+function quetMoc(files: { path: string; text: string }[]): { path: string; mau: string }[] {
+  const out: { path: string; mau: string }[] = []
+  for (const f of files) {
+    const text = boComment(f.text)
+    for (const [mau, re] of MAU) {
+      const khops = [...text.matchAll(new RegExp(re.source, "g"))].map((m) => m[0])
+      if (khops.some((k) => !MIEN.some((m) => m.tep === f.path && m.mau === mau && m.khop === k))) out.push({ path: f.path, mau })
+    }
+  }
+  return out
+}
+function tepOps(): { path: string; text: string }[] {
+  const out: { path: string; text: string }[] = []
+  const di = (dir: string) => {
+    for (const e of readdirSync(join(APP, dir), { withFileTypes: true })) {
+      const rel = join(dir, e.name)
+      if (e.isDirectory()) di(rel)
+      else if (/\.tsx?$/.test(e.name)) out.push({ path: rel, text: readFileSync(join(APP, rel), "utf8") })
+    }
+  }
+  di("src/components/ops")
+  di("src/app/ops")
+  for (const f of LIB_OPS) out.push({ path: f, text: readFileSync(join(APP, f), "utf8") })
+  return out
+}
+
+test("GV-AC-3 không còn mốc cắt chuỗi hay ngày theo múi máy ngoài danh sách miễn", () => {
+  const files = tepOps()
+  assert.ok(files.length > 40, "thước phải quét được cây Ops (không quét rỗng)")
+  assert.deepEqual(quetMoc(files), [])
+})
+
+test("GV-AC-3 bản sao jobs-grid cắt lại lastLogAt", () => {
+  const p = "src/components/ops/collections/jobs-grid.tsx"
+  const goc = readFileSync(join(APP, p), "utf8")
+  const sao = goc.replace("fmtVnDateTime(row.original.lastLogAt)", 'row.original.lastLogAt?.slice(0, 16).replace("T", " ")')
+  assert.notEqual(sao, goc)
+  assert.deepEqual(quetMoc([{ path: p, text: sao }]), [{ path: p, mau: "cắt chuỗi mốc" }])
+})
+
+test("GV-AC-3 bản sao thêm toLocaleString không múi", () => {
+  const p = "src/components/ops/collections/lockdown-grid.tsx"
+  const goc = readFileSync(join(APP, p), "utf8")
+  const sao = goc.replace("fmtVnDateTime(lastWatchdogAt)", 'new Date(lastWatchdogAt ?? 0).toLocaleString("vi-VN")')
+  assert.notEqual(sao, goc)
+  assert.deepEqual(quetMoc([{ path: p, text: sao }]), [{ path: p, mau: "toLocale không múi" }])
+})
+
+test("GV-AC-3 bản sao collections-queries dùng ::date", () => {
+  const p = "src/lib/collections-queries.ts"
+  const goc = readFileSync(join(APP, p), "utf8")
+  const sao = goc.replace('${vnDay("first_seen")}', "first_seen::date::text")
+  assert.notEqual(sao, goc)
+  assert.deepEqual(quetMoc([{ path: p, text: sao }]).map((v) => v.path), [p])
 })
