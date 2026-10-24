@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent (vai feature-loop:cham-lenh)
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bc506189c1c0f617ca21b89c90413c714f09647b
+verified_commit: 0d5f666f362ecf3084535ae5b93bb003a3565a0b
 human_signoff: Mạnh 2026-10-24
 ---
 
@@ -317,3 +317,7 @@ Round 2: ZCode sửa ở 163c2c3 và 0446251 (marker hỏng: /tmp quét lại, g
 AC-6/AC-7 và E10–E12. E1–E12 đều đạt.
 - Phản biện ghi một lỗ có sẵn trên main ở «Ngoài hợp đồng»: nhánh đổi file/truncate của gateway.log vẫn quét quá khứ khi marker
   số hợp lệ nhưng sai đường dẫn, inode hoặc số dòng.
+
+### Re-pin lần 1 — 2026-10-24, do gộp origin/main 263a989 trước merge
+run_id: repin-20261024T100201Z-33684
+sha: 0d5f666f362ecf3084535ae5b93bb003a3565a0b · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
