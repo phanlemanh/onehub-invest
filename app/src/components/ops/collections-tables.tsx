@@ -111,8 +111,8 @@ export function ZaloGroupsTable({
         id: "name",
         accessorKey: "name",
         header: ({ column }) => <DataGridColumnHeader title="Nhóm" column={column} />,
-        // Tên nhóm Zalo là tầng A: đánh dấu để bước chụp che chữ.
-        cell: ({ row }) => <span data-tier-a className="truncate">{row.original.name}</span>,
+        // Tên nhóm là tầng C (Mạnh chốt 24/10, sửa đổi ADR-0007) — không đánh data-tier-a.
+        cell: ({ row }) => <span className="truncate">{row.original.name}</span>,
         size: 260,
         enableSorting: false,
       },

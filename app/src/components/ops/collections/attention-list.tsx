@@ -9,6 +9,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
 import type { ZaloGroupRow, ZaloHealth } from "@/lib/collections-queries"
 import { fmtInt } from "@/lib/format"
+import { fmtAge } from "@/lib/freshness"
 import type { LockdownLayer, SourceFeedHealth } from "@/lib/ops-queries"
 
 import { feedState } from "./feed-status"
@@ -28,7 +29,8 @@ export function issuesOf({
 }: {
   feeds: SourceFeedHealth[]
   layers: LockdownLayer[]
-  agentTurnsToday: number
+  /** null = chưa kiểm được — không phải mục «Khẩn» (ON2). */
+  agentTurnsToday: number | null
   zalo: ZaloHealth
   groups: ZaloGroupRow[]
   factsAgeMin: number | null
@@ -36,7 +38,7 @@ export function issuesOf({
   nowMs: number
 }): Issue[] {
   const out: Issue[] = []
-  if (agentTurnsToday > 0)
+  if (agentTurnsToday !== null && agentTurnsToday > 0)
     out.push({ key: "agent", title: "Agent-turn hôm nay", detail: `${fmtInt(agentTurnsToday)} lượt — lockdown phải giữ 0`, label: "Khẩn", variant: "destructive-light", rank: 0 })
   for (const l of layers.filter((x) => x.ok === false))
     out.push({ key: `layer-${l.layer}-${l.desc}`, title: `Lớp ${l.layer}`, detail: l.desc, label: "Hỏng", variant: "destructive-light", rank: 1 })
@@ -45,7 +47,9 @@ export function issuesOf({
   if (factsAgeMin !== null && factsAgeMin > 30)
     out.push({ key: "facts", title: "Máy thu có thể offline", detail: `Dữ liệu máy thu cập nhật ${fmtInt(factsAgeMin)} phút trước`, label: "Trễ", variant: "warning-light", rank: 2 })
   for (const f of feeds.filter((x) => feedState(x) === "late"))
-    out.push({ key: `feed-${f.code}`, title: `${f.code} trễ SLO`, detail: `Độ tươi ${fmtInt(f.freshnessHrs)}h / SLO ${fmtInt(f.sloHours)}h`, label: "Trễ SLO", variant: "warning-light", rank: 2 })
+    out.push({ key: `feed-${f.code}`, title: `${f.code} trễ SLO`, detail: `Độ tươi ${fmtAge(f.freshnessHrs)} / SLO ${fmtAge(f.sloHours)}`, label: "Trễ SLO", variant: "warning-light", rank: 2 })
+  for (const f of feeds.filter((x) => feedState(x) === "nodata"))
+    out.push({ key: `feed-${f.code}`, title: `${f.code} chưa có dữ liệu`, detail: "Bảng nạp của nguồn chưa có bản ghi nào", label: "Chưa có dữ liệu", variant: "destructive-light", rank: 2 })
   if (zalo.silentAlert24h) out.push({ key: "silent", title: "Ống Zalo im 24h", detail: "Không có tin qua cổng trong 24 giờ", label: "Im lặng", variant: "warning-light", rank: 3 })
   if (zalo.driftAlert24h) out.push({ key: "drift", title: "Allowlist lệch membership", detail: "Đối chiếu lại ở Nguồn dữ liệu", label: "Lệch", variant: "warning-light", rank: 3 })
   const silentGroups = groups.filter((g) => !g.isMockOnly && g.lastSeenAt && nowMs - Date.parse(g.lastSeenAt) > 72 * 3_600_000)

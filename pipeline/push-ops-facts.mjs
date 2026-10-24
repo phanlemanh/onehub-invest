@@ -8,6 +8,8 @@ import { homedir } from "node:os";
 import path from "node:path";
 import pg from "pg";
 
+import { tailLog } from "./lib/last-log-line.mjs";
+
 const ROOT = "/Users/manhphan/dev/one-invest";
 const INGEST_URL = process.env.INGEST_URL ?? "https://onehub-invest.vercel.app/api/v1/ops/ingest";
 const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -78,16 +80,6 @@ function parseLog(text) {
 }
 
 // ---- 2. Máy móc: launchd logs + probe ----
-async function tailFile(f) {
-  try {
-    const st = await stat(f);
-    const text = await readFile(f, "utf8");
-    const lines = text.split("\n").filter((l) => l.trim());
-    return { lastLogAt: st.mtime.toISOString(), lastLine: lines.at(-1)?.slice(0, 140) ?? null };
-  } catch {
-    return { mtime: null, lastLine: null };
-  }
-}
 async function probe(url) {
   try {
     const c = new AbortController();
@@ -109,10 +101,10 @@ async function scheduler() {
   const [kevAlive, apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
     probe("http://127.0.0.1:8009/"),
     probe("http://127.0.0.1:9210/"),
-    tailFile(path.join(LOGS, "airdna-daily.log")),
-    tailFile(path.join(LOGS, "launchd-smoke.log")),
-    tailFile(path.join(LOGS, "launchd-collector-api.log")),
-    weekly ? tailFile(weekly) : Promise.resolve({ mtime: null, lastLine: null }),
+    tailLog(path.join(LOGS, "airdna-daily.log")),
+    tailLog(path.join(LOGS, "launchd-smoke.log")),
+    tailLog(path.join(LOGS, "launchd-collector-api.log")),
+    weekly ? tailLog(weekly) : Promise.resolve({ lastLogAt: null, lastLine: null }),
   ]);
   return [
     { id: "airdna-daily", label: "AirDNA toàn quốc (rotation 6 market)", schedule: "19:05 hằng ngày", alive: "unknown", ...airdnaLog },
@@ -120,7 +112,7 @@ async function scheduler() {
     { id: "smoke", label: "Smoke Airbnb", schedule: "20:00 hằng ngày", alive: "unknown", ...smokeLog },
     { id: "collector-api", label: "Agent ingest :9210", schedule: "KeepAlive", alive: apiAlive, ...apiLog },
     { id: "kev", label: "Kev gate :8009", schedule: "KeepAlive", alive: kevAlive, lastLogAt: null, lastLine: null },
-    { id: "cloud-sync", label: "Sync Supabase + ops facts", schedule: "mỗi 15 phút", alive: "unknown", ...(await tailFile(path.join(LOGS, "cloud-sync.log"))) },
+    { id: "cloud-sync", label: "Sync Supabase + ops facts", schedule: "mỗi 15 phút", alive: "unknown", ...(await tailLog(path.join(LOGS, "cloud-sync.log"))) },
   ];
 }
 
@@ -202,7 +194,7 @@ async function main() {
   if (!token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
   const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(() => "");
   const { funnel, health, groups } = parseLog(logText);
-  const client = new pg.Client({ connectionString: LOCAL_URL });
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
     scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),

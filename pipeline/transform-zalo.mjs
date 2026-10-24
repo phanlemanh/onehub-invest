@@ -3,8 +3,9 @@
 // Parser đo coverage: % tin có đủ (giá + diện tích + phường) cho confidence=high.
 // Export parsePost/matchPhuong cho bench-extraction dùng chung (C2) — nguồn
 // chân lý của parser là một, bench và transform không được fork logic.
+import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
@@ -246,5 +247,5 @@ async function main() {
 }
 
 const isMain =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+  process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) main().catch((e) => { console.error(e); process.exit(1); });

@@ -1,0 +1,34 @@
+schema_version: 1
+feature_slug: loi-vao-script-chay-qua-symlink
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-1 mười hai lối vào chạy qua symlink' trong pipeline/scripts/entrypoint-symlink.test.mjs xanh với MA TRẬN viết trước 12 tệp × 3 cách gọi (số ô = 36): symlink tạm <tmp>/repo → gốc kho, đường thật tuyệt đối, đường tương đối với cwd là thư mục của tệp; 8 tệp DB (transform-zalo, transform-fb, transform-chotot, refresh-bait-gap, resolve-properties, dq-enum-vocab, test-data-residue, dev-ops-account) chạy với DATABASE_URL=postgres://127.0.0.1:9/x → mã ≠ 0 và đầu ra chứa 'ECONNREFUSED'; check-api-surface static và check-deals-api static → đầu ra có dòng bắt đầu 'ok' hoặc 'FAIL'; smoke-api-matrix với BASE_URL=http://127.0.0.1:9 và OPS_API_TOKEN=gia → đầu ra khớp /fetch failed|ECONNREFUSED/; agent/scripts/enrich-revert.ts qua tsx của agent → mã ≠ 0 và đầu ra chứa '--actor'. Thông điệp ghim mỗi ô 'AC-1 lối vào câm (<cách gọi>): <tệp>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/scripts/entrypoint-symlink.test.mjs, pipeline/*.mjs, pipeline/scripts/test-data-residue.mjs, scripts/*.mjs, agent/scripts/enrich-revert.ts]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-2 khuôn cũ câm, khuôn mới chạy' xanh: ba tệp mẫu sinh trong thư mục tạm (khuôn pathToFileURL, khuôn path.resolve, khuôn realpathSync — mỗi tệp console.log('CHAY') trong nhánh lối vào), gọi qua symlink tạm tới thư mục đó → hai khuôn cũ: mã 0 và đầu ra rỗng; khuôn mới: đầu ra 'CHAY'. Đây là đối chứng đỏ của E1: cùng cách gọi, khuôn cũ cho đúng triệu chứng đêm 24/10. Ghim 'AC-2 khuôn cũ không câm — phép đo không phân biệt'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/scripts/entrypoint-symlink.test.mjs]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-3 không còn khuôn cũ' xanh: duyệt mọi .mjs/.ts trong pipeline/, scripts/, agent/, collector/src, data-api/src, tools/ (bỏ node_modules, .next, dist) — tập tệp mà phần mã (bỏ chú thích) nhắc cả 'argv[1]' và 'import.meta.url' nhưng không có 'realpathSync(process.argv[1])' hoặc 'realpathSync(path.resolve(process.argv[1]))' phải RỖNG (tính theo tệp); bộ quét đọc > 50 tệp. Chiều đỏ với MA TRẬN mẫu 6 ô: pathToFileURL một dòng · path.resolve một dòng · tách dòng qua biến trung gian · endsWith(basename(argv[1])) · realpathSync bọc nhầm vế import.meta.url → cả 5 bị trả; khuôn đúng → không trả. Ghim 'AC-3 còn lối vào khuôn cũ: <tệp>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/scripts/entrypoint-symlink.test.mjs, pipeline/**/*.mjs, scripts/**/*.mjs, agent/**/*.ts]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'AC-4 nhập như mô-đun không chạy main' xanh: một tệp chạy tạm (runner.mjs trong thư mục tạm, argv[1] là chính nó) nhập transform-zalo, transform-fb, transform-chotot, refresh-bait-gap, resolve-properties, dq-enum-vocab, test-data-residue, dev-ops-account rồi in 'NHAP_XONG'; runner gọi qua symlink và qua đường thật với DATABASE_URL trỏ 127.0.0.1:9 → mã 0, có 'NHAP_XONG', không 'ECONNREFUSED'. Đối chứng cùng runner: biến thể runner gọi thêm measureResidue với client trỏ cổng chết → đầu ra có 'ECONNREFUSED'. Ghim 'AC-4 nhập mô-đun kích hoạt main: <tệp>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/scripts/entrypoint-symlink.test.mjs, pipeline/*.mjs, pipeline/scripts/test-data-residue.mjs, scripts/dev-ops-account.mjs]

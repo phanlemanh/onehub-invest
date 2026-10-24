@@ -14,10 +14,10 @@
 // `users` không nằm trong FILL của pipeline/sync-cloud.mjs → tài khoản này không lên cloud.
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 export const DEFAULT_EMAIL = "ops-test@local.test";
 export const DEFAULT_DATABASE_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -194,7 +194,7 @@ async function main() {
   console.log(`role admin → vào được mọi trang /ops (cổng Ops mở cho role admin/ops, không cần OPS_EMAILS).`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((err) => {
     console.error(`dev-ops-account: ${err.message}`);
     process.exit(2);

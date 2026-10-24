@@ -5,8 +5,9 @@
 // tiên ward_name_v3 (tên phường mới 2025, khớp OSM đã migrate), fallback
 // match tên từ subject như transform-zalo. Upsert KHÔNG xóa cũ — fabric
 // tích luỹ theo thời gian phục vụ trend.
+import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { matchPhuong } from "./transform-zalo.mjs";
 
@@ -105,5 +106,5 @@ async function main() {
 }
 
 const isMain =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+  process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) main().catch((e) => { console.error(e); process.exit(1); });

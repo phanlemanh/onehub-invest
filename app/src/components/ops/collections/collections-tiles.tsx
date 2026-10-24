@@ -10,7 +10,9 @@ import type { GateFunnel } from "@/lib/collections-queries"
 import { fmtInt } from "@/lib/format"
 import type { LockdownLayer, SourceFeedHealth } from "@/lib/ops-queries"
 
-import { FEED_STATE, feedState } from "./feed-status"
+import { sloSummaryKey } from "@/lib/freshness"
+
+import { FEED_STATE, feedSloSummary, feedState } from "./feed-status"
 import { SegmentBar, StatCard } from "./section"
 
 export function CollectionsTiles({
@@ -22,10 +24,13 @@ export function CollectionsTiles({
   feeds: SourceFeedHealth[]
   funnel: GateFunnel
   layers: LockdownLayer[]
-  agentTurnsToday: number
+  /** null = chưa kiểm được log agent-turn hôm nay (ON2). */
+  agentTurnsToday: number | null
 }) {
   const states = feeds.map(feedState)
   const count = (s: ReturnType<typeof feedState>) => states.filter((x) => x === s).length
+  // Cùng con số với ô «Đạt SLO» của /ops (AU6): nguồn đạt khi mọi thị trường đạt; y = nguồn active có SLO.
+  const slo = feedSloSummary(feeds)
   const items24h = feeds.reduce((sum, f) => sum + (f.items24h || 0), 0)
   const busiest = [...feeds].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
   const layersOk = layers.filter((l) => l.ok === true).length
@@ -37,14 +42,15 @@ export function CollectionsTiles({
         icon={<PlugIcon aria-hidden="true" />}
         title="Sức khoẻ nguồn"
         period="Bây giờ"
-        value={fmtInt(count("ok"))}
-        total={fmtInt(feeds.length)}
-        basis="Nguồn còn trong SLO độ tươi"
+        value={fmtInt(slo.ok)}
+        total={fmtInt(slo.total)}
+        basis="Đạt khi mọi thị trường đạt"
+        sloSummary={sloSummaryKey(slo)}
         action={{ label: "Xem từng nguồn", href: "#nguon" }}
       >
         <SegmentBar
           label="Nguồn theo sức khoẻ"
-          segments={(["ok", "late", "stopped"] as const).map((s) => ({ key: s, label: FEED_STATE[s].label, count: count(s), tone: FEED_STATE[s].tone }))}
+          segments={(["ok", "late", "nodata", "noslo", "stopped"] as const).map((s) => ({ key: s, label: FEED_STATE[s].label, count: count(s), tone: FEED_STATE[s].tone }))}
         />
       </StatCard>
 
@@ -81,8 +87,14 @@ export function CollectionsTiles({
         period="Bây giờ"
         value={fmtInt(layersOk)}
         total={fmtInt(layers.length)}
-        badge={agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
-        basis={agentTurnsToday > 0 ? "Có agent-turn hôm nay — kiểm ngay" : "Không có agent-turn hôm nay"}
+        badge={agentTurnsToday !== null && agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
+        basis={
+          agentTurnsToday === null
+            ? "Chưa kiểm được agent-turn hôm nay"
+            : agentTurnsToday > 0
+              ? "Có agent-turn hôm nay — kiểm ngay"
+              : "Không có agent-turn hôm nay"
+        }
         action={{ label: "Xem các lớp", href: "#lockdown" }}
       >
         <SegmentBar
