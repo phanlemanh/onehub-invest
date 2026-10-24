@@ -43,6 +43,18 @@ const text = (html) =>
     .replace(/&quot;/g, '"')
     .replace(/&#x27;/g, "'")
     .replace(/\s+/g, " ");
+/** Chữ của badge đầu tiên đứng sau <h1> — stat của PageHeader (không lẫn chữ của nút hay bảng). */
+const headerStat = (html) => {
+  const h = html.search(/<h1[\s>]/);
+  const m = h < 0 ? null : html.slice(h).match(/data-slot="badge"[^>]*>([\s\S]*?)<\/span>/);
+  return m ? text(m[1]).trim() : null;
+};
+/** Khối Empty đầu tiên: từ data-slot="empty" tới hết khối empty-content (nút hành động nằm trong đó). */
+const emptyBlock = (html) => {
+  const from = html.indexOf('data-slot="empty"');
+  const content = html.indexOf('data-slot="empty-content"', from);
+  return from < 0 || content < 0 ? "" : html.slice(from, html.indexOf("</div>", content) + 6);
+};
 const h1s = (html) => [...html.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/g)].map((m) => text(m[1]).trim());
 /** Đường dẫn tương đối của Location (Next trả URL tuyệt đối). */
 const rel = (loc) => (loc ? decodeURIComponent(loc.replace(/^https?:\/\/[^/]+/, "")) : loc);
@@ -84,10 +96,13 @@ async function main() {
   const ch = h1s(c.html);
   check(ch.length === 1 && ch[0] === "So sánh khu vực", `đúng một <h1> «So sánh khu vực» (thấy ${JSON.stringify(ch)})`);
   check(/data-slot="breadcrumb"/.test(c.html) && /Việt Nam\s*(?:›|>)?\s*So sánh/.test(ct), "breadcrumb Việt Nam › So sánh");
-  check(ct.includes("2/4 khu vực"), "stat 2/4 khu vực");
+  check(headerStat(c.html) === "2/4 khu vực", `stat PageHeader = 2/4 khu vực (thấy ${JSON.stringify(headerStat(c.html))})`);
   check(ct.includes("Thêm khu vực"), "nút Thêm khu vực");
   check(ct.includes(a.name) && ct.includes(b.name), `tên hai khu vực trong bảng (${a.name}, ${b.name})`);
-  check(ct.includes("Lợi suất ngắn hạn") || !ct.includes("Lợi suất (căn"), "hàng Lợi suất ngắn hạn/dài hạn khi có nhóm lợi suất");
+  check(
+    ct.includes("Lợi suất (căn 60 m²)") && ct.includes("Lợi suất ngắn hạn") && ct.includes("Lợi suất dài hạn"),
+    "nhóm lợi suất có hàng Lợi suất ngắn hạn VÀ Lợi suất dài hạn (thị trường mẫu phải có số lợi suất)",
+  );
   check(!ct.includes("Yield ngắn hạn") && !ct.includes("Yield dài hạn"), "không còn «Yield ngắn hạn/dài hạn»");
   check(ct.includes("Ô xanh"), "đối chứng: có cột thì có chú thích Ô xanh");
   const bad = await get(`/compare?areas=khong-co-ma-nay`);
@@ -96,7 +111,12 @@ async function main() {
   // AC-7 — So sánh trống.
   const e = await get(`/compare`);
   const et = text(e.html);
-  check(et.includes("Chưa chọn khu vực nào") && /href="\/vn"/.test(e.html), "Empty Chưa chọn khu vực nào + link /vn");
+  const eb = emptyBlock(e.html);
+  const ebActions = [...eb.matchAll(/<(a|button)\b[^>]*>/g)].map((m) => m[0]);
+  check(
+    text(eb).includes("Chưa chọn khu vực nào") && ebActions.length === 1 && /href="\/vn"/.test(ebActions[0]),
+    `Empty Chưa chọn khu vực nào + đúng một link /vn TRONG khối trống (thấy ${ebActions.length} nút/link)`,
+  );
   check(!et.includes("Ô xanh"), "không chú thích Ô xanh khi trống");
 
   // AC-4 — chưa đăng nhập vẫn 307.
@@ -114,13 +134,10 @@ async function main() {
     const s0 = await get(`/saved`, token);
     const s0t = text(s0.html);
     check(s0.status === 200 && s0t.includes("Chưa lưu khu vực nào"), `/saved trống: Chưa lưu khu vực nào (HTTP ${s0.status})`);
-    // Vùng trống = từ data-slot="empty" tới hết khối empty-content (nút hành động nằm trong đó).
-    const from = s0.html.indexOf('data-slot="empty"');
-    const content = s0.html.indexOf('data-slot="empty-content"', from);
-    const emptyBlock = from < 0 || content < 0 ? "" : s0.html.slice(from, s0.html.indexOf("</div>", content) + 6);
-    const actions = [...emptyBlock.matchAll(/<(a|button)\b[^>]*>/g)].map((m) => m[0]);
+    const sb = emptyBlock(s0.html);
+    const actions = [...sb.matchAll(/<(a|button)\b[^>]*>/g)].map((m) => m[0]);
     check(
-      actions.length === 1 && /href="\/vn"/.test(actions[0]) && text(emptyBlock).includes("Tìm thị trường"),
+      actions.length === 1 && /href="\/vn"/.test(actions[0]) && text(sb).includes("Tìm thị trường"),
       `đúng một nút/link trong vùng trống, trỏ /vn, chữ Tìm thị trường (thấy ${actions.length})`,
     );
     check(!/role="tab"/.test(s0.html), "không có role=tab khi trống");
@@ -141,7 +158,7 @@ async function main() {
     const sh = h1s(s3.html);
     check(sh.length === 1 && sh[0] === "Đã lưu", `đúng một <h1> «Đã lưu» (thấy ${JSON.stringify(sh)})`);
     check(/Việt Nam\s*(?:›|>)?\s*Đã lưu/.test(s3t), "breadcrumb Việt Nam › Đã lưu");
-    check(s3t.includes("3 khu vực"), "stat 3 khu vực");
+    check(headerStat(s3.html) === "3 khu vực", `stat PageHeader = 3 khu vực (thấy ${JSON.stringify(headerStat(s3.html))})`);
     const cmp = decode(s3.html.match(/href="(\/compare\?areas=[^"]*)"/)?.[1] ?? "");
     check(
       cmp === `/compare?areas=${expectIds.join(",")}` && s3t.includes("So sánh 3 khu vực"),

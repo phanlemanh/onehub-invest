@@ -265,7 +265,15 @@ test("CS-AC-7 c-empty-11: bookmark, tiêu đề, đúng một link outline sang 
   assert.equal(actions.length, 1, "vùng trống phải có đúng một hành động");
   assert.equal(actions[0].getAttribute("href"), "/vn");
   assert.equal(actions[0].textContent?.trim(), "Tìm thị trường");
-  assert.match(actions[0].className, /border/, "nút phải là variant outline");
+  // Variant là quan hệ với chuỗi class của chính variant ấy (buttonVariants), không phải chuỗi con "border".
+  // Button tự gộp class bằng cn(buttonVariants(...)) — so tập class với đúng chuỗi ấy của từng variant.
+  const { buttonVariants } = await import("../src/components/ui/button");
+  const { cn } = await import("cn");
+  const set = (v: string) => new Set(v.split(/\s+/).filter(Boolean));
+  const same = (a: string, b: string) => { const A = set(a), B = set(b); return A.size === B.size && [...A].every((c) => B.has(c)); };
+  const cls = actions[0].className;
+  assert.ok(same(cls, cn(buttonVariants({ variant: "outline", size: "sm" }))), "nút phải đúng variant outline cỡ sm");
+  assert.ok(!same(cls, cn(buttonVariants({ variant: "default", size: "sm" }))), "đối chứng: không phải variant default");
 });
 
 test("CS-AC-7 chú thích Ô xanh chỉ hiện khi có cột", async () => {
@@ -328,6 +336,14 @@ async function renderWithRouter(node: ReactNode, router: Router) {
   return React.act;
 }
 
+/** Thước của CS-AC-3: đúng một replace sang ?areas=a,b,c và không push; trả thông điệp lỗi hoặc null. */
+const addCheck = (c: { replace: string[]; push: string[] }) =>
+  c.push.length > 0
+    ? "không đổi ?areas= bằng router.replace (thấy push)"
+    : JSON.stringify(c.replace) !== JSON.stringify(["/compare?areas=a,b,c"])
+      ? `không đổi ?areas= (replace: ${JSON.stringify(c.replace)})`
+      : null;
+
 /** Bấm «Thêm khu vực», chọn mục có data-value cho trước; trả các lần router.replace/push và các mục được liệt. */
 async function addArea(ids: string[], pick: string) {
   const { CompareAddArea } = await import("../src/components/compare/compare-add-area");
@@ -350,9 +366,22 @@ test("CS-AC-3 thêm cột: chọn c → replace ?areas=a,b,c, không push; mã �
   assert.deepEqual(calls.replace, ["/compare?areas=a,b,c"]);
   assert.deepEqual(calls.push, []);
 
-  // Chiều đỏ cùng fixture: chọn mã đã có (a) → không có mục để bấm, không đổi ?areas=.
-  const again = await addArea(["a", "b"], "a");
-  assert.deepEqual(again.calls.replace, [], "mã đã có không được thêm lại");
+  assert.equal(addCheck(calls), null);
+
+  // Chiều đỏ cùng fixture: bản sao đổi URL bằng push (không replace) → thước báo, ghim thông điệp.
+  const React = await import("react");
+  const { useRouter } = await import("next/navigation");
+  const { AddAreaCommand } = await import("../src/components/compare/add-area-command");
+  function PushCopy({ ids }: { ids: string[] }) {
+    const router = useRouter();
+    return <AddAreaCommand entries={[ENTRY("a", "market"), ENTRY("b", "submarket"), ENTRY("c", "submarket")] as never} exclude={ids} disabled={false} onAdd={(id) => router.push(`/compare?areas=${[...ids, id].join(",")}`)} />;
+  }
+  const red = { replace: [] as string[], push: [] as string[] };
+  const act = await renderWithRouter(<PushCopy ids={["a", "b"]} />, { ...noopRouter(), replace: (u: unknown) => red.replace.push(String(u)), push: (u: unknown) => red.push.push(String(u)) });
+  await act(async () => [...document.querySelectorAll("button")].find((b) => b.textContent?.includes("Thêm khu vực"))!.click());
+  await act(async () => (document.querySelector('[data-slot="command-item"][data-value="c"]') as HTMLElement).click());
+  assert.equal(addCheck(red), "không đổi ?areas= bằng router.replace (thấy push)");
+  void React;
 
   const { CompareAddArea } = await import("../src/components/compare/compare-add-area");
   await renderWithRouter(<CompareAddArea entries={[]} ids={["a", "b", "c", "d"]} />, noopRouter());
