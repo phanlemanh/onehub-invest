@@ -1,0 +1,65 @@
+schema_version: 1
+feature_slug: kev-nhan-cung-hoa
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.zc1b_media_junk
+    expected: "exit 0; stdout có 'MEDIA-JUNK PASS'; lô có media chuỗi/null/object trả 202, accepted đủ 6 (gồm tin lành), flush ghi đủ 6 item, ingest không ném"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.zc1b_media_junk
+    expected: "exit 0; tin có mảng media chứa null / số / chuỗi / phần tử thiếu url được nhận trong cùng lô 202"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.zc1b_payload_intact
+    expected: "exit 0; stdout có 'PAYLOAD-INTACT PASS'; payload.text và payload.media của 3 tin giống hệt giá trị gửi (kể cả '  xyz  ', '   ', media rác)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.zc1b_dedup_norm
+    expected: "exit 0; stdout có 'DEDUP-NORM PASS'; 4 biến thể (đảo thứ tự, khoảng trắng, ?/# thừa, thêm rác) đều duplicates 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.zc1b_dedup_norm
+    expected: "exit 0; should-NOT-fire: khác một URL / thiếu một ảnh / query thật khác đều accepted 1, duplicates 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc1b_legacy_id
+    expected: "exit 0; stdout có 'LEGACY-ID PASS'; ' abc ', 'abc', tin chữ kèm ảnh có xuống dòng cuối đều mang id sha256(group|ts|text nguyên bản)[0:32]; should-NOT-fire: ' abc ' và 'abc' không gộp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.zc1b_legacy_id
+    expected: "exit 0; text toàn khoảng trắng + ảnh băm như tin chỉ ảnh; 2 sender khác → 2 id; gửi lại với khoảng trắng khác → duplicates 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.zc1b_bad_text
+    expected: "exit 0; stdout có 'BAD-TEXT PASS'; text null/số/object/thiếu đều 400 có error, không ném; lô hợp lệ sau đó 202 accepted 1; snapshot chỉ có 1 item"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.collector
+    expected: "exit 0; toàn bộ test collector pass, 0 fail (gồm kev-nhan-cung-hoa.test.ts của ZCode)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

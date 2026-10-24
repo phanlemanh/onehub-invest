@@ -147,6 +147,12 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # kev-nhan-cung-hoa (ZC1 nối tiếp) — không mở cổng, không ghi DB, URL ảnh giả host .invalid
+    zc1b_media_junk: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs media-junk"
+    zc1b_payload_intact: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs payload-intact"
+    zc1b_dedup_norm: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs dedup-norm"
+    zc1b_legacy_id: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs legacy-id"
+    zc1b_bad_text: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs bad-text"
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"
