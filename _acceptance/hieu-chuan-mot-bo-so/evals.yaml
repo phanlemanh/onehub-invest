@@ -15,21 +15,21 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/src/lib/queries.ts, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-2 một số tự thu' trên fixture (khu vực cha + phường con có listing): gọi ĐÚNG ba hàm truy vấn nuôi ba bảng (getAirdnaComparison, getTruthfulCoverage, getAirdnaMarkets), vẽ ba bảng trong jsdom và so SỐ ĐÃ VẼ của dòng tự thu khu vực ấy — bằng nhau và bằng số listing fixture trong cây (theo Hỏi-3); chiều đỏ: định nghĩa cũ của thẻ (max listing_count market_metrics) vẽ ra số khác trên cùng fixture"
+    expected: "exit 0; ca 'HC-AC-2 một số tự thu' trên fixture (khu vực cha + phường con có listing): gọi ĐÚNG ba hàm truy vấn nuôi ba bảng (getAirdnaComparison, getTruthfulCoverage, getAirdnaMarkets), vẽ ba bảng trong jsdom và so SỐ ĐÃ VẼ của dòng tự thu khu vực ấy — bằng nhau và bằng số listing fixture trong cây (theo câu hỏi «một định nghĩa tự thu»); chiều đỏ: định nghĩa cũ của thẻ (max listing_count market_metrics) vẽ ra số khác trên cùng fixture"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/ops/quality-tables.tsx, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-3 định nghĩa tự thu' vẽ ba bảng (thẻ hiệu chuẩn, Độ phủ, toàn quốc) trong jsdom: mỗi bảng có dòng mô tả chứa đúng câu định nghĩa TU_THU_DINH_NGHIA export từ calibration.ts, và hằng ấy bằng nguyên văn chữ người chốt ở Hỏi-4 (mặc định 'Listing tự thu: số listing đang theo dõi trong cả khu vực (gồm phường con)')"
+    expected: "exit 0; ca 'HC-AC-3 định nghĩa tự thu' vẽ ba bảng (thẻ hiệu chuẩn, Độ phủ, toàn quốc) trong jsdom: mỗi bảng có dòng mô tả chứa đúng câu định nghĩa TU_THU_DINH_NGHIA export từ calibration.ts, và hằng ấy bằng nguyên văn chữ người chốt ở câu hỏi «bộ chữ nhãn» (mặc định 'Listing tự thu: số listing đang theo dõi trong cả khu vực (gồm phường con)')"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/src/components/ops/quality-tables.tsx, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-4 mẫu mỏng' ma trận viết trước isThin trên cỡ mẫu metrics 5 dòng (0, 1, 4 → mỏng; 5, 6 → không — ngưỡng theo Hỏi-2); ca fixture: khu vực cây 6 listing nhưng metrics 1 listing → thẻ vẽ có Badge chữ nguyên văn 'mẫu mỏng'; khu vực metrics 5 → không có; chiều đỏ: cờ tính trên số listing trong cây bỏ sót ca cây 6 / metrics 1"
+    expected: "exit 0; ca 'HC-AC-4 mẫu mỏng' ma trận viết trước isThin trên cỡ mẫu metrics 5 dòng (0, 1, 4 → mỏng; 5, 6 → không — ngưỡng theo câu hỏi «ngưỡng mẫu mỏng»); ca fixture: khu vực cây 6 listing nhưng metrics 1 listing → thẻ vẽ có Badge chữ nguyên văn 'mẫu mỏng'; khu vực metrics 5 → không có; chiều đỏ: cờ tính trên số listing trong cây bỏ sót ca cây 6 / metrics 1"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -50,13 +50,32 @@ evals:
     executor: script
     cmd: config:executors.script.hieu_chuan_do
     paths: [scripts/hieu-chuan-do.mjs, app/src/lib/calibration.ts, app/src/lib/queries.ts]
-    expected: "exit 0; tsx của app, import hàm thật, DB local chỉ đọc: 'ok tự thu bằng nhau ở ba nguồn cho <n> khu vực' (so số ba hàm truy vấn trả, không qua hàm trợ giúp chung); 'ok chọn market đại diện hai lần cùng kết quả (<k> khu vực nhiều market)' k ≥ 1 (k = 0 → FAIL); số thị trường có số đếm bằng một câu SQL ĐỘC LẬP (không gọi splitCalibrated) rồi so với splitCalibrated → 'ok số thị trường hiệu chuẩn = <m>'; dòng 'mẫu mỏng: …' theo cỡ mẫu Hỏi-2; đối chứng: định nghĩa cũ cho ít nhất một khu vực lệch → 'ok đối chứng: cũ lệch ở <j> khu vực'"
+    expected: "exit 0; tsx của app, import hàm thật, DB local chỉ đọc: 'ok tự thu bằng nhau ở ba nguồn cho <n> khu vực' (so số ba hàm truy vấn trả, không qua hàm trợ giúp chung); 'ok chọn market đại diện hai lần cùng kết quả (<k> khu vực nhiều market)' k ≥ 1 (k = 0 → FAIL); số thị trường có số đếm bằng một câu SQL ĐỘC LẬP (không gọi splitCalibrated) rồi so với splitCalibrated → 'ok số thị trường hiệu chuẩn = <m>'; dòng 'mẫu mỏng: …' theo cỡ mẫu đã chốt; đối chứng: định nghĩa cũ cho ít nhất một khu vực lệch → 'ok đối chứng: cũ lệch ở <j> khu vực'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
     executor: judgment
     inputs: [CONTEXT.md]
     paths: [CONTEXT.md]
-    question: "CONTEXT.md có mục thuật ngữ cho «Listing tự thu», «Mẫu mỏng» và «Thị trường hiệu chuẩn» — mỗi mục đủ nhãn, tên trong code, định nghĩa và từ tránh dùng — với nghĩa khớp chữ trên trang theo Hỏi-2/3/4 («Listing tự thu» = listing đang theo dõi trong cả cây khu vực; «Mẫu mỏng» = cỡ mẫu sinh ADR/công suất dưới ngưỡng đã chốt; «Thị trường hiệu chuẩn» = thị trường có ít nhất một số, thị trường còn lại gộp ở dòng «Chưa có số»)?"
+    question: "CONTEXT.md có mục thuật ngữ cho «Listing tự thu», «Mẫu mỏng» và «Thị trường hiệu chuẩn» — mỗi mục đủ nhãn, tên trong code, định nghĩa và từ tránh dùng — với nghĩa khớp chữ trên trang theo ba câu hỏi đã chốt ở Cổng Phạm vi («Listing tự thu» = listing đang theo dõi trong cả cây khu vực; «Mẫu mỏng» = cỡ mẫu sinh ADR/công suất dưới ngưỡng đã chốt; «Thị trường hiệu chuẩn» = thị trường có ít nhất một số, thị trường còn lại gộp ở dòng «Chưa có số»)?"
     expected: "Có đủ ba mục, mỗi mục bốn phần, nghĩa khớp chữ đã chốt."
     evidence_required: [run_id, verdict, judges]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/ui-capture.sh, scripts/ui-capture-login.mjs, scripts/ui-capture-login.test.mjs]
+    expected: "exit 0; ca 'UC-AC-9' trên máy chủ giả (node:http, khuôn form đăng nhập server action giống /login: trường ẩn $ACTION_ID_…, POST trả 303 + Set-Cookie oi_session HttpOnly): (a) URL /ops/x → tệp trạng thái phiên có cookie oi_session, quyền 600, bị xoá sau lần chạy; (b) mật khẩu và giá trị cookie KHÔNG xuất hiện trong stdout/stderr gộp; (c) mật khẩu sai → máy chủ giả trả 200 trang đăng nhập → thoát khác 0, lời có chữ 'không đăng nhập được', không có ảnh; (d) URL /vn/hanoi → không gọi /login; (e) bộ che tầng A báo còn lộ → thoát khác 0, không có ảnh; chiều đỏ: bản cũ của ui-capture.sh (không đăng nhập) với URL /ops/x đi tới trang đăng nhập"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:dev_server.start
+    paths: [app/src/app/ops/quality/page.tsx, app/src/components/ops/quality-tables.tsx, scripts/ui-capture.sh]
+    steps:
+      - "App dev chạy ở http://localhost:3456 (bận thì cổng khác, ghi cổng vào outputTail). Chụp BẰNG bước chụp của kho: bash scripts/ui-capture.sh <url> <out.png> — tự đăng nhập tài khoản ops thử và tự che tầng A; KHÔNG tự đăng nhập bằng công cụ khác, KHÔNG đọc hay in mật khẩu"
+      - "Chụp http://localhost:3456/ops/quality ở sáng 1440×900 → evidence/E10-sang-1440.png; tối 1440×900 → evidence/E10-toi-1440.png; sáng 390×844 → evidence/E10-sang-390.png (chế độ qua biến môi trường của ui-capture.sh mà S3 khai trong đầu tệp)"
+      - "Mở từng ảnh: vùng «Hiệu chuẩn» thấy câu định nghĩa «Listing tự thu: …», đầu trang «<n> thị trường hiệu chuẩn», dòng «Chưa có số: …» (dữ liệu local có thị trường trống), nhãn «mẫu mỏng» trên ít nhất một thẻ (dữ liệu local có Đồng Nai cỡ mẫu 1); không có trang đăng nhập"
+    expected: "Ba frame evidence/E10-sang-1440.png, E10-toi-1440.png, E10-sang-390.png do scripts/ui-capture.sh chụp (đã đăng nhập, không phải trang /login): mỗi frame thấy vùng Hiệu chuẩn có câu định nghĩa «Listing tự thu», đầu trang «<n> thị trường hiệu chuẩn», một dòng «Chưa có số: …», ít nhất một nhãn «mẫu mỏng»; ở 390 không cuộn ngang; ở tối chữ đọc được; không chữ/khối đè nhau; ui-capture.sh báo tầng A đã che, không lộ."
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]

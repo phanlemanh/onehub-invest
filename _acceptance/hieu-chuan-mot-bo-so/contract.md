@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-feature: "Người vận hành mở «Hiệu chuẩn» trên /ops/quality thấy mỗi thị trường một bộ số nhất quán giữa các bảng, định nghĩa «tự thu» ghi rõ ở từng bảng, mẫu mỏng có cờ, và thị trường chưa có số gộp thành một dòng"
+feature: "Người vận hành mở «Hiệu chuẩn» trên /ops/quality thấy mỗi thị trường một bộ số nhất quán giữa các bảng, định nghĩa «tự thu» ghi rõ ở từng bảng, mẫu mỏng có cờ, và thị trường chưa có số gộp thành một dòng; bước chụp trang của kho chụp được /ops đã đăng nhập"
 slug: hieu-chuan-mot-bo-so
 owner: phanlemanh@gmail.com
 risk_tier: T2
-surfaces: [ui]
+surfaces: [ui, script]
 status: draft
 design_doc: docs/superpowers/specs/2026-10-25-hieu-chuan-mot-bo-so-design.md
 approved_by:
@@ -30,12 +30,12 @@ Source input: `_acceptance/hieu-chuan-mot-bo-so/opportunity.md` · hàng ON10 c�
 - AC-1: Given một khu vực có từ hai market S02, When trang lấy thẻ hiệu chuẩn hai lần, Then cả hai lần chọn cùng một
   market đại diện — market có nhiều listing S02 nhất, hoà thì mã nhỏ nhất — và thẻ ghi số market S02 mà nó đại diện.
 - AC-2: Given một khu vực, When thẻ hiệu chuẩn, bảng Độ phủ và bảng toàn quốc hiện «listing tự thu» của khu vực ấy, Then
-  ba chỗ ra cùng một số (số listing tự thu đang theo dõi trong cả cây khu vực — định nghĩa theo Hỏi-3).
+  ba chỗ ra cùng một số (số listing tự thu đang theo dõi trong cả cây khu vực — định nghĩa chốt ở Cổng Phạm vi, câu hỏi «một định nghĩa tự thu»).
 - AC-3: Given mỗi bảng của vùng Hiệu chuẩn, When người vận hành đọc bảng, Then bảng có một dòng mô tả nói «tự thu» ở bảng
   ấy nghĩa là gì.
 - AC-4: Given khu vực mà số listing đứng sau ADR/công suất tự thu của thẻ (cỡ mẫu metrics) dưới 5, When thẻ hiệu chuẩn vẽ,
-  Then thẻ mang nhãn «mẫu mỏng» cạnh số ấy; cỡ mẫu từ 5 trở lên không mang nhãn (ngưỡng và cơ sở theo Hỏi-2).
-- AC-5: Given thị trường mà mọi số (cả hai phía và điểm thị trường) đều trống, When trang vẽ vùng Hiệu chuẩn, Then không có
+  Then thẻ mang nhãn «mẫu mỏng» cạnh số ấy; cỡ mẫu từ 5 trở lên không mang nhãn (ngưỡng và cơ sở chốt ở Cổng Phạm vi, câu hỏi «ngưỡng mẫu mỏng»).
+- AC-5: Given thị trường mà mọi số (cả hai phía và điểm S02) đều trống, When trang vẽ vùng Hiệu chuẩn, Then không có
   thẻ nào cho thị trường ấy; chúng gộp thành đúng một dòng «Chưa có số: …» liệt tên; thị trường có ít nhất một số vẫn có thẻ.
 - AC-6: Given vùng Hiệu chuẩn đã chia, When đầu trang ghi số thị trường hiệu chuẩn, Then số ấy bằng số thẻ được vẽ (chỉ thị
   trường có số).
@@ -43,7 +43,14 @@ Source input: `_acceptance/hieu-chuan-mot-bo-so/opportunity.md` · hàng ON10 c�
   nguồn, chạy chọn market đại diện hai lần ra cùng kết quả, số thị trường hiệu chuẩn bằng số thị trường có số, và danh sách
   mẫu mỏng được in ra.
 - AC-8: Given người đọc từ điển sản phẩm, When tra «Listing tự thu», «Mẫu mỏng» và «Thị trường hiệu chuẩn», Then
-  `CONTEXT.md` có mục cho cả ba (nhãn · code · định nghĩa · tránh dùng), khớp chữ trên trang đã chốt ở Hỏi-4. (judgment)
+  `CONTEXT.md` có mục cho cả ba (nhãn · code · định nghĩa · tránh dùng), khớp chữ trên trang đã chốt ở Cổng Phạm vi (câu hỏi «bộ chữ nhãn»). (judgment)
+- AC-9: Given app dev đang chạy và DB local có tài khoản ops thử, When bước chụp trang của kho (`capture.ui`) chụp một URL
+  `/ops/**`, Then nó tự đăng nhập bằng tài khoản thử rồi chụp đúng trang đích (không phải trang đăng nhập); mật khẩu và cookie
+  phiên không ra stdout/stderr, tệp phiên quyền 600 và bị xoá khi xong; đăng nhập hỏng thì thoát mã khác 0 kèm lời rõ và
+  không ghi ảnh; chữ tầng A được che trước khi chụp, còn lộ thì không ghi ảnh; URL ngoài `/ops` chụp như cũ, không đăng nhập.
+- AC-10: Given app dev đang chạy, When chụp vùng «Hiệu chuẩn» của `/ops/quality` bằng bước chụp ấy ở sáng 1440, tối 1440 và
+  sáng 390, Then mỗi ảnh là trang đã đăng nhập, thấy câu định nghĩa «Listing tự thu», dòng «Chưa có số: …» khi có thị
+  trường trống, nhãn «mẫu mỏng» khi có thẻ mẫu mỏng, đầu trang «n thị trường hiệu chuẩn», không chữ đè và không cuộn ngang.
 
 ## Coverage
 
@@ -54,8 +61,9 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Trục C — độ dày mẫu: < 5 · ≥ 5 → AC-4
 - Trục D — đếm và gộp: thị trường có số · không số → AC-5, AC-6
 - Trục E — dữ liệu thật + từ điển → AC-7, AC-8
+- Trục F — bước chụp: URL /ops · URL ngoài /ops · phiên hỏng · tầng A lộ → AC-9; ảnh vùng ở ba chế độ → AC-10
 - Later: đổi vùng thẻ sang một data-grid (OPS-15 «cân nhắc»).
-- Never: cộng điểm thị trường của nhiều market S02.
+- Never: cộng điểm S02 của nhiều market S02.
 
 ## Đường đo
 
