@@ -1,31 +1,3 @@
 {
-  "feature_plain": "Trên cổng Ops, mọi mốc giờ hiện theo giờ Việt Nam có ghi «(GMT+7)», bảng «Luồng 7 ngày» và số «hôm nay» gom theo ngày Việt Nam, và nguồn quá hạn nói rõ trễ bao lâu thay vì «8 ngày / 8 ngày».",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ hiện mốc giờ theo giờ Việt Nam kèm «(GMT+7)» (vd 12:13 UTC thành «19:13 (GMT+7)»), giống nhau dù máy chủ đặt múi nào; chuỗi không rõ múi hiện «—» thay vì đoán."},
-    {"id": "AC-2", "p": "Sẽ đổi đủ 11 chỗ hiện mốc trên cổng Ops (bảng kiểm tra, job, nguồn thu, vòng xoay, sự kiện cổng Kev, watchdog, snapshot cuối, ngày thu, tin rao thấy lần đầu)."},
-    {"id": "AC-3", "p": "Sẽ có phép kiểm tĩnh chặn ai đó quay lại cắt chuỗi giờ UTC hay dùng giờ theo máy ở cổng Ops."},
-    {"id": "AC-4", "p": "Sẽ gom bảng «Luồng 7 ngày» theo ngày Việt Nam ở mọi cột — tin lúc 23:30 giờ VN vào đúng ngày đó, tin 00:30 vào ngày hôm sau — và ngày cũ nhất đủ trọn ngày."},
-    {"id": "AC-5", "p": "Sẽ đếm số tin «hôm nay» của cổng Kev theo ngày Việt Nam."},
-    {"id": "AC-6", "p": "Sẽ đẩy số Zalo theo ngày Việt Nam lên cloud, để cột Zalo trên cloud cùng ngày với các cột khác."},
-    {"id": "AC-7", "p": "Sẽ tính mức trễ của nguồn quá hạn theo phút, giờ hoặc ngày tuỳ độ lớn (vd «trễ 9 giờ», «trễ 2 ngày»)."},
-    {"id": "AC-8", "p": "Sẽ hiện mức trễ cạnh tuổi ở mọi chỗ báo nguồn quá hạn; nguồn còn trong hạn không có chữ «trễ»."},
-    {"id": "AC-9", "p": "Sẽ ghi rõ bảng «Luồng 7 ngày» tính ngày theo giờ Việt Nam."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG đổi cổng Invest — hàng này chỉ cổng Ops."},
-    {"id": "OOS-2", "p": "KHÔNG làm ô số chỉ-đo-local và dòng «Số đo lúc … » trên cloud — đó là ON3."},
-    {"id": "OOS-3", "p": "KHÔNG đổi múi giờ của DB hay máy chủ, và không đổi các mốc vốn chỉ là ngày (ngày bắt đầu, ngày ngừng dùng nguồn)."},
-    {"id": "OOS-4", "p": "KHÔNG đo đầu-cuối số Zalo từ lúc đẩy lên tới bảng trên cloud — hai đầu được đo riêng trên cùng ma trận ngày."}
-  ],
-  "scope_plain": "Bốn việc gần kề cố ý để ngoài lượt này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Phủ ba mảng: cách hiện mốc giờ (AC-1) ở mọi chỗ (AC-2, có phép kiểm tĩnh AC-3); gom ngày theo giờ Việt Nam ở bảng luồng (AC-4), số hôm nay (AC-5) và số đẩy lên cloud (AC-6); mức trễ (AC-7, AC-8) — cộng nhãn múi (AC-9), với các biên nửa đêm, chuỗi có/không ghi múi, và trễ từ 30 giây tới hơn 3 ngày."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Phép đo luồng 7 ngày ban đầu chỉ có tin Zalo và có thể vô tình đọc dữ liệu thật — đã đo mọi cột, so trọn bảng 7 ngày, và buộc chỉ đọc vùng dữ liệu tạm."},
-    {"i": 1, "p": "Chưa chạy chính phần đẩy số lên cloud — đã tách phần đó ra để đo được trên dữ liệu tạm; phần đo đầu-cuối trên cloud ghi thành hạn chế."},
-    {"i": 2, "p": "Mức trễ thiếu các biên (dưới 1 phút, đúng 48 giờ, hơn 3 ngày, tuổi đúng bằng hạn) — đã thêm, và buộc «nhãn quá hạn ⇔ có chữ trễ»."},
-    {"i": 3, "p": "Phép kiểm tĩnh quá hẹp — đã mở rộng sang các cách hiện giờ theo máy và câu truy vấn gom ngày."},
-    {"i": 4, "p": "Dữ liệu thử viết tay — đã sinh theo đúng khuôn của nơi ghi thật, và thêm chuỗi có «+07:00» và chuỗi không ghi múi."}
-  ]
+  "feature_plain": "Trên cổng Ops, mọi mốc giờ hiện theo giờ Việt Nam có ghi «(GMT+7)», bảng «Luồng 7 ngày» và số «hôm nay» gom theo ngày Việt Nam, và nguồn quá hạn nói rõ trễ bao lâu thay vì «8 ngày / 8 ngày»."
 }
