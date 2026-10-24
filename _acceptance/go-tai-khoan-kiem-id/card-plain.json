@@ -1,27 +1,3 @@
 {
-  "feature_plain": "Nút «Gỡ tài khoản thu» trên trang quản lý nguồn chỉ đăng xuất được đúng tài khoản có trong danh sách; gửi mã rỗng, mã có khoảng trắng hay mã lạ thì bị từ chối trước khi đụng tới phần mềm thu Zalo.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ từ chối (400) khi mã tài khoản bị bỏ trống, rỗng hoặc không phải chữ — phần mềm thu Zalo không nhận lệnh nào, cấu hình giữ nguyên."},
-    {"id": "AC-2", "p": "Sẽ từ chối mã có khoảng trắng (kể cả khoảng trắng bao quanh một mã thật) thay vì tự cắt rồi gỡ."},
-    {"id": "AC-3", "p": "Sẽ từ chối mã không có trong danh sách, tài khoản chính «default» và mã trông như một tuỳ chọn dòng lệnh, mỗi loại kèm lời báo riêng."},
-    {"id": "AC-4", "p": "Sẽ gỡ đúng tài khoản có thật (kể cả tài khoản đặt tên ngoài khuôn thường): đăng xuất đúng một lần, xoá khỏi cấu hình, giữ bản sao lưu."},
-    {"id": "AC-5", "p": "Sẽ có phép kiểm tĩnh bảo đảm mọi chỗ trong mã ra lệnh đăng xuất đều đứng sau bước kiểm mã tài khoản."},
-    {"id": "AC-6", "p": "Sẽ cho chính bộ kiểm tự dừng trước mọi ca nếu nó lỡ trỏ vào máy thu thật thay vì bản giả trong thư mục tạm."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG sửa đường đăng nhập QR (nhận mã tài khoản tuỳ ý) — cùng loại lỗ, đã ghi làm ý cho đợt sau."},
-    {"id": "OOS-2", "p": "KHÔNG đổi đường bật/tắt nhóm và KHÔNG đổi giao diện trang quản lý nguồn — lỗi hiện qua thông báo sẵn có."},
-    {"id": "OOS-3", "p": "KHÔNG kiểm nhánh đăng nhập bằng phiên trình duyệt — phép đo đi đường khoá máy, phần quyền không đổi."}
-  ],
-  "scope_plain": "Ba việc gần kề cố ý để ngoài lượt này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Mọi kiểu mã tài khoản gửi lên đã được liệt trước và mỗi kiểu có tiêu chí riêng: bỏ trống (AC-1), có khoảng trắng (AC-2), mã lạ hoặc không được gỡ (AC-3), mã thật (AC-4); thêm thứ tự trong mã nguồn (AC-5) và độ an toàn của chính bộ kiểm (AC-6)."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Nặng nhất: bộ kiểm có thể vô tình chạy lệnh đăng xuất THẬT nếu chưa trỏ được sang bản giả — đã thêm AC-6: kiểm trước mọi ca, sai là dừng cả tệp."},
-    {"i": 1, "p": "Luật «tên phải đúng khuôn thường» sẽ khoá mất đường gỡ cho tài khoản thật đặt tên khác khuôn — đã bỏ luật đó, chỉ chặn mã rỗng, có khoảng trắng, mở đầu bằng gạch ngang, «default» và mã không có trong danh sách."},
-    {"i": 2, "p": "Bộ thử cũ không có tài khoản nào mang tên dạng tuỳ chọn dòng lệnh nên không chứng được lớp chặn đó — đã thêm tên như vậy vào cấu hình giả và ghim lời báo của từng loại."},
-    {"i": 3, "p": "Phép kiểm tĩnh chỉ đòi «ít nhất một chỗ» — đã ghi trước danh sách chỗ đăng xuất (đúng một) và thêm ca bắt lệnh đăng xuất dựng riêng."},
-    {"i": 4, "p": "Một mục chỉ chạy kiểm kiểu/định dạng mà gắn vào tiêu chí gỡ thật — đã bỏ, vì kiểm kiểu và định dạng vốn chạy mỗi lượt."}
-  ]
+  "feature_plain": "Nút «Gỡ tài khoản thu» trên trang quản lý nguồn chỉ đăng xuất được đúng tài khoản có trong danh sách; gửi mã rỗng, mã có khoảng trắng hay mã lạ thì bị từ chối trước khi đụng tới phần mềm thu Zalo."
 }
