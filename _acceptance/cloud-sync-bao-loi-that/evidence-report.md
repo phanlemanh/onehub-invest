@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b773b36851528eac88da901326119f5e7db9bb4c
+verified_commit: cfa4e41f93921d384d98e088a36a00ed3ed1f742
 human_signoff: Mạnh 2026-10-24
 ---
 
@@ -135,3 +135,7 @@ none — mọi eval nhiều lần chạy đều đồng nhất (E1 đến E5 ch�
 
 Round 1: E1 đến E5 xanh, sáu lệnh suite xanh, không finding trong hay ngoài hợp đồng; E6 (judgment) panel đề xuất PASS nhưng chờ người điền human_override ở Cổng 2, nên verdict tổng là PENDING-JUDGMENT.
 
+
+### Re-pin lần 1 — 2026-10-24, do gộp main 8d88aa6 (PR #55 đổi push-ops-facts) + sửa bản sao đột biến thấy pipeline/lib
+run_id: repin-20261024T064458Z-87944
+sha: cfa4e41f93921d384d98e088a36a00ed3ed1f742 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng · ngoài làn máy: E6 · diff chạm vật đo ngoài làn máy: E6 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-6
