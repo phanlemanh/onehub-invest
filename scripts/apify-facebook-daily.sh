@@ -24,25 +24,39 @@ node "$ROOT/pipeline/apify-facebook-collector.mjs"
 # ECONNREFUSED 5×20s; còn lỗi thì dừng chuỗi TẠI ĐÓ, state giữ ở snapshot
 # thành công cuối, exit ≠0 và KHÔNG transform trên dữ liệu thiếu.
 STATE="$ROOT/pipeline/logs/apify-daily.state"
+import_one() {
+  local snap="$1" try
+  TMPLOG=$(mktemp)
+  for try in 1 2 3 4 5; do
+    if node "$ROOT/pipeline/import-airbnb.mjs" "$snap" >"$TMPLOG" 2>&1; then
+      cat "$TMPLOG"; return 0
+    fi
+    if ! grep -q "ECONNREFUSED" "$TMPLOG"; then
+      cat "$TMPLOG"; return 1 # lỗi khác DB — retry vô ích
+    fi
+    if [ "$try" -lt 5 ]; then
+      echo "ECONNREFUSED (lần $try/5) — DB chưa lên? chờ 20s rồi nạp lại $snap"
+      sleep 20 # bỏ sleep sau lần cuối (mở lại 2310-8 b)
+    fi
+  done
+  cat "$TMPLOG"; return 1
+}
+# Sort theo MỐC THỜI GIAN ở basename (mở lại 2310-8 R1): sort đường dẫn xếp
+# THEO CITY trước — hanoi T13 nạp xong, hcmc T07 lỗi ⇒ state=T13, lượt sau
+# BỎ QUA hcmc T07 vĩnh viễn. Sort TS toàn cục để nạp đúng thứ tự thời gian.
+# Khoá quanh đọc-nạp-ghi state (mở lại 2310-8 a): zalo-import-daily.sh chạy
+# 00:00 trên CHUNG state này — hai job đụng state là mất/sót snapshot.
+LOCK_DIR="$STATE.lock"
+i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+  i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }
+  sleep 5
+done
+trap 'rmdir "$LOCK_DIR" 2>/dev/null; [ -n "${TMPLOG:-}" ] && rm -f "$TMPLOG"' EXIT
+# đọc state SAU khi có khoá — hai job 00:00 không đọc-ghi chéo nhau
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
 MAXTS="$LAST"
-import_one() {
-  local snap="$1" log try
-  log=$(mktemp)
-  for try in 1 2 3 4 5; do
-    if node "$ROOT/pipeline/import-airbnb.mjs" "$snap" >"$log" 2>&1; then
-      cat "$log"; rm -f "$log"; return 0
-    fi
-    if ! grep -q "ECONNREFUSED" "$log"; then
-      cat "$log"; rm -f "$log"; return 1 # lỗi khác DB — retry vô ích
-    fi
-    echo "ECONNREFUSED (lần $try/5) — DB chưa lên? chờ 20s rồi nạp lại $snap"
-    sleep 20
-  done
-  cat "$log"; rm -f "$log"; return 1
-}
 NAP_FAILED=0
-for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | sort); do
+for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do echo "$(basename "$d" | sed 's/.*__//') $d"; done | sort | while read -r _ d; do echo "$d"; done); do
   TS=$(basename "$SNAP" | sed 's/.*__//')  # yyyymmddThhmmss — sort chuỗi = thời gian
   if [[ "$TS" > "$LAST" ]]; then
     if ! import_one "$SNAP"; then
