@@ -1,0 +1,29 @@
+{
+  "feature_plain": "Lượt đồng bộ cloud 15 phút sẽ báo lỗi thật khi bất kỳ bước nào hỏng — không còn cảnh launchd ghi «xong» trong khi dữ liệu không lên cloud.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ báo job hỏng khi bước đồng bộ dữ liệu hỏng, dù bước đẩy số Ops vẫn chạy — kể cả khi launchd gọi job như thật."},
+    {"id": "AC-2", "p": "Sẽ báo job hỏng khi bước đẩy số Ops hỏng; hai bước cùng hỏng thì giữ mã của bước hỏng trước và ghi cả hai."},
+    {"id": "AC-3", "p": "Sẽ có phép thử bắt được nếu ai đó gỡ bộ báo lỗi khỏi một bước."},
+    {"id": "AC-4", "p": "Sẽ cho bước đẩy số Ops nối DB theo cấu hình (DATABASE_URL) như mọi bước khác, để đo được khi DB chết."},
+    {"id": "AC-5", "p": "Sẽ KHÔNG đổi cách chạy hiện tại: launchd không đặt cấu hình nên bước đẩy số vẫn nối DB local như cũ."},
+    {"id": "AC-6", "p": "Sẽ ghi vào sổ vận hành cách đọc dòng báo lỗi của cloud-sync và việc P3-3 đã xong."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không sửa lịch launchd (làn ZCode)."},
+    {"id": "OOS-2", "p": "Không đẩy cảnh báo lên trang Ops hay watchdog (việc ON22/ON23, ZC3)."},
+    {"id": "OOS-3", "p": "Không sửa hồ sơ AU3 đã ký."},
+    {"id": "OOS-4", "p": "Không chạy đồng bộ thật hay chạm DB chung khi đo."}
+  ],
+  "scope_plain": "Phần cắt hoặc để việc khác:",
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi kiểu bước hỏng: bước đồng bộ (AC-1), bước đẩy số, cả hai, cả hai lành (AC-2), DB tắt hẳn (ma trận cũ của AU3)."},
+    {"i": 1, "p": "Cách chứng: chạy job với lệnh giả, bản cố tình gỡ bộ báo lỗi, chạy bước đẩy số thật trong hộp cát, bản viết cứng chuỗi kết nối, và sổ vận hành."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Người chấm sổ vận hành thiếu tệp để đối chiếu dòng báo lỗi — đã đưa tệp vào."},
+    {"i": 1, "p": "Ngưỡng nói «leak gate đỏ» mà phép thử chỉ giả lỗi — đã ghi rõ là đo thay, mắt còn lại đã chứng ở hồ sơ AU1."},
+    {"i": 2, "p": "Chưa thử job khi launchd gọi (qua symlink, thư mục khác) — đã thêm ca."},
+    {"i": 3, "p": "Chưa thử «giữ mã của bước hỏng trước» — đã thêm ca hai mã khác nhau."},
+    {"i": 4, "p": "Phép thử gỡ bộ báo lỗi có thể chạy rỗng — đã đòi bản gỡ phải khác bản gốc."}
+  ]
+}
