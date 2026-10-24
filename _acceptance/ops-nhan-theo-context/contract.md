@@ -5,9 +5,9 @@ slug: ops-nhan-theo-context
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-ops-nhan-theo-context-design.md
 lo_trinh_ma: ON12
 ---
