@@ -17,8 +17,8 @@ const BASE_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@loc
   process.env.DATABASE_URL = u.toString()
 }
 const ADMIN: User = { id: "1", email: "ops-test@local.test", plan: "free", role: "admin" }
-const REVIEW_TITLE = "Hàng chờ duyệt chỉ có ở máy local"
-const SOURCES_TITLE = "Nguồn dữ liệu chỉ quản trị ở máy local"
+const REVIEW_TITLE = "Hàng duyệt chỉ có ở máy thu" // ON12: «Hàng duyệt» theo CONTEXT.md, «máy thu» thay «máy local»
+const SOURCES_TITLE = "Nguồn dữ liệu chỉ quản trị ở máy thu" // ON12
 
 const admin = new pg.Client({ connectionString: BASE_URL })
 let dbErr: string | null = null
@@ -80,7 +80,7 @@ describe("/ops/review và /ops/sources trên cloud không có bảng tầng A (a
     try {
       const [review, sources] = [await renderReview(), await renderSources()]
       assert.deepEqual(alertTitles(review), [])
-      assert.ok(review.includes("Queue trống"), "hàng chờ rỗng hiện trạng thái trống như cũ")
+      assert.ok(review.includes("Hàng duyệt trống"), "hàng chờ rỗng hiện trạng thái trống như cũ") // ON12: «Hàng duyệt trống»
       assert.deepEqual(alertTitles(sources), [])
       assert.ok(sources.includes("0 mã nguồn"), "trang Nguồn dữ liệu chạy truy vấn registry như cũ")
     } finally {

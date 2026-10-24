@@ -24,8 +24,8 @@ export function ZaloQrDialog({
     <Dialog open={qr !== null} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Đăng nhập {qr?.accountId}</DialogTitle>
-          <DialogDescription>Mở app Zalo trên điện thoại của số dùng cho tài khoản này rồi quét mã. Mã hết hạn sau khoảng 2 phút.</DialogDescription>
+          <DialogTitle>Đăng nhập <span translate="no">{qr?.accountId}</span></DialogTitle>
+          <DialogDescription>Mở ứng dụng Zalo trên điện thoại của số dùng cho tài khoản này rồi quét mã. Mã hết hạn sau khoảng 2 phút.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-3">
           {qr?.base64 ? (

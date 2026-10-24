@@ -26,10 +26,10 @@ export async function ReviewContent({ user }: { user: User }) {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-xl font-medium">Review Queue</h1>
+          <h1 className="text-xl font-medium">Hàng duyệt</h1>
         </div>
-        <LocalOnlyAlert title="Hàng chờ duyệt chỉ có ở máy local">
-          Hàng chờ duyệt giữ bằng chứng thô của nguồn (tầng A) nên không lên cloud. Duyệt ở Ops trên máy thu.
+        <LocalOnlyAlert title="Hàng duyệt chỉ có ở máy thu">
+          Hàng duyệt giữ bằng chứng thô của nguồn (tầng A) nên không lên máy chủ. Duyệt ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
     );
@@ -63,14 +63,14 @@ export async function ReviewContent({ user }: { user: User }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-xl font-medium">Review Queue</h1>
+        <h1 className="text-xl font-medium">Hàng duyệt</h1>
         <p className="text-muted-foreground text-xs">
-          Phán quyết con người (HITL) — AI/hệ thống đề xuất, bạn quyết định.
-          Mọi quyết định ghi audit.
+          Người phán quyết — máy đề xuất, bạn quyết định.
+          Mọi quyết định được ghi nhật ký.
         </p>
         <div className="flex items-center gap-2">
           <Badge variant={pending.length > 0 ? "warning-light" : "success-light"}>
-            {pending.length} chờ review
+            {pending.length} chờ duyệt
           </Badge>
           {approved > 0 && <Badge variant="success-light">✓ {approved} đã duyệt</Badge>}
           {rejected > 0 && <Badge variant="outline">✗ {rejected} từ chối</Badge>}
@@ -79,7 +79,7 @@ export async function ReviewContent({ user }: { user: User }) {
 
       {pending.length === 0 && decided.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          Queue trống — không có item chờ phán quyết.
+          Hàng duyệt trống — không có thẻ chờ phán quyết.
         </p>
       ) : (
         <>

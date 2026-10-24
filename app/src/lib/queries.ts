@@ -1043,7 +1043,7 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
       ratio: null as number | null,
     },
     {
-      metric: "Occupancy",
+      metric: "Công suất",
       ourValue: ours.occupancy !== null && ours.occupancy !== undefined ? Number(ours.occupancy) : null,
       ourUnit: "%",
       airdnaValue: byMetric.get("occupancy") ?? null,
@@ -1051,7 +1051,7 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
       ratio: null as number | null,
     },
     {
-      metric: "Listings",
+      metric: "Listing",
       ourValue: ours.listing_count ? Number(ours.listing_count) : null,
       ourUnit: "",
       airdnaValue: byMetric.get("listing_count") ?? null,

@@ -27,15 +27,15 @@ export default async function DealsPage() {
       <div className="flex flex-col gap-1.5">
         <h1 className="text-xl font-medium">Căn giá tốt</h1>
         <p className="text-muted-foreground text-xs">
-          Tin nội bộ (S03/S05) rẻ hơn median rao công khai cùng phường
+          Tin nội bộ (S03/S05) rẻ hơn trung vị giá công khai cùng phường
           (thước S06, ≥5 tin/phường, 45 ngày gần nhất). {hasContact
-            ? "SĐT người đăng hiện sẵn — gọi xác minh giá thật."
-            : "Thông tin người đăng chỉ có ở máy thu (local), cho admin."}
+            ? "SĐT người đăng hiện sẵn — gọi xác minh giá giao dịch."
+            : "Thông tin người đăng chỉ có ở máy thu, cho quyền quản trị."}
         </p>
       </div>
       {rows.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          Chưa có căn nào dưới ngưỡng 5% so với thước phường — vải công khai
+          Chưa có căn nào dưới ngưỡng 5% so với thước phường — giá công khai
           đang tích luỹ (quét 05:30 hằng ngày).
         </p>
       ) : (

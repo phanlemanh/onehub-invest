@@ -51,12 +51,12 @@ export function ZaloAccountRow({
       </ItemMedia>
       <ItemContent className="min-w-0 gap-1">
         <ItemTitle className="min-w-0 gap-2">
-          <span className="min-w-0 truncate font-mono">{account.accountId}</span>
+          <span className="min-w-0 truncate font-mono" translate="no">{account.accountId}</span>
           {selected ? <Badge variant="info-light">Đang xem nhóm</Badge> : null}
           <Badge variant="outline">{fmtInt(account.enabledGroups.length)} nhóm bật</Badge>
         </ItemTitle>
         <ItemDescription className="min-w-0 truncate">
-          {account.name ?? "Chưa có tên hiển thị"} · hồ sơ {account.profile}
+          {account.name ? <span translate="no">{account.name}</span> : "Chưa có tên hiển thị"} · hồ sơ <span translate="no">{account.profile}</span>
         </ItemDescription>
       </ItemContent>
       <ItemActions className="basis-full justify-end gap-2 pt-2 sm:basis-auto sm:self-center sm:pt-0">
@@ -69,7 +69,7 @@ export function ZaloAccountRow({
           Đăng nhập QR
         </Button>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button size="icon-sm" variant="ghost" aria-label={`Thao tác tài khoản ${account.accountId}`} />}>
+          <DropdownMenuTrigger render={<Button size="icon-sm" variant="ghost" aria-label="Thao tác tài khoản" />}>
             <EllipsisVerticalIcon aria-hidden="true" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">

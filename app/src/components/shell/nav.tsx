@@ -87,7 +87,7 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
     },
     {
       id: "review",
-      label: "Hàng chờ duyệt",
+      label: "Hàng duyệt",
       href: "/ops/review",
       icon: glyph(InboxIcon),
       match: (p) => p.startsWith("/ops/review"),

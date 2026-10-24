@@ -14,8 +14,8 @@ export function LocalOnlyAlert({ title = LOCAL_ONLY_TEXT, children }: { title?: 
       <AlertDescription>
         {children ?? (
           <>
-            Bản cloud không giữ bảng nguồn và bảng nạp thô, nên số «nguồn đạt SLO» chỉ có trên Ops ở máy thu. Kiểm ở đó
-            hoặc chạy node scripts/check-freshness.mjs.
+            Máy chủ không giữ bảng nguồn và bảng nạp thô, nên số «nguồn đạt SLO» chỉ có trên cổng Ops ở máy thu. Kiểm ở
+            đó hoặc chạy lệnh kiểm độ tươi trên máy thu.
           </>
         )}
       </AlertDescription>
