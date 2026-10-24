@@ -45,8 +45,16 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.pipeline
-    expected: "exit 0; ca 'NT2-AC-6 bảng ca ON7 qua scanSourceNames và guardValues → cùng kết quả từng ca' ok (≥ 10 ca); ca 'NT2-AC-6 sync-cloud danh sách tên rỗng → dừng trước khi đẩy bảng' ok, đối chứng dương có token → không dừng"
+    expected: "exit 0; ca 'NT2-AC-6 bảng ca ON7 qua scanSourceNames và guardValues → cùng kết quả từng ca' ok (≥ 10 ca)"
     paths: [pipeline/sync-cloud.mjs, pipeline/lib/tier-a-guard.mjs, pipeline/lib/mask-source-names.mjs, pipeline/scripts/soat-tang-a.test.mjs, pipeline/scripts/mask-source-names.cases.json]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6b
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.cloud_sync_allow
+    expected: "exit 0; dòng PASS 'ĐỎ-ĐÚNG fail-closed: source_registry rỗng → dừng pha scan, không gửi'; dòng PASS 'ĐỎ-ĐÚNG ten-nguon (token dài)' và '(token ngắn)' — đối chứng: bộ soát chung bắt tên trong payload bảng người bán"
+    paths: [pipeline/sync-cloud.mjs, pipeline/lib/tier-a-guard.mjs, pipeline/lib/mask-source-names.mjs, pipeline/scripts/check-cloud-sync.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E7

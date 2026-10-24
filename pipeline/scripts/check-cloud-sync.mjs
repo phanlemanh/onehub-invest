@@ -738,6 +738,7 @@ async function casePii() {
   try {
     copyFileSync(path.join(PIPE, "sync-cloud.mjs"), path.join(dir, "sync-cloud.mjs"));
     symlinkSync(path.join(PIPE, "node_modules"), path.join(dir, "node_modules"));
+    symlinkSync(path.join(PIPE, "lib"), path.join(dir, "lib")); // sync-cloud import ./lib/tier-a-guard.mjs (NT2)
     const p = path.join(dir, "sync-cloud.mjs");
     const src = readFileSync(p, "utf8");
     // bỏ cả hai lớp chặn cho đủ ba cột của ba bảng
@@ -845,6 +846,7 @@ async function loadMutant() {
   lines.splice(at, 1);
   writeFileSync(path.join(dir, "sync-cloud.mjs"), lines.join("\n"));
   symlinkSync(path.join(PIPE, "node_modules"), path.join(dir, "node_modules"));
+  symlinkSync(path.join(PIPE, "lib"), path.join(dir, "lib")); // sync-cloud import ./lib/tier-a-guard.mjs (NT2)
   return { mod: await import(pathToFileURL(path.join(dir, "sync-cloud.mjs")).href), dir };
 }
 

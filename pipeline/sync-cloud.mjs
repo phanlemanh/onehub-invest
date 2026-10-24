@@ -38,6 +38,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { entriesFromTokens, guardValues } from "./lib/tier-a-guard.mjs";
 
 const REF = "smqpqiigzulwpmrsrhci";
 const MGMT = `https://api.supabase.com/v1/projects/${REF}/database/query`;
@@ -299,21 +300,11 @@ END $chk$;`);
   return lines.join("\n");
 }
 
-/** Token định danh nguồn đầu tiên xuất hiện trong text (không phân biệt hoa thường), hoặc null.
- * Token ngắn (< 4 ký tự, vd tên nguồn ba chữ) so theo ranh giới từ để không trúng nhầm giữa từ. */
+/** Token định danh nguồn đầu tiên xuất hiện trong text, hoặc null. Đi qua bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs,
+ * NT2) — cùng lõi khớp với push-ops-facts: gập dấu, bản viết liền, token ngắn (< 4 ký tự) chỉ trúng khi đứng riêng một từ. */
 export function scanSourceNames(text, tokens) {
-  const low = text.toLowerCase();
-  for (const t of tokens) {
-    if (!t) continue;
-    const k = t.toLowerCase();
-    if (k.length >= 4) {
-      if (low.includes(k)) return t;
-    } else {
-      const esc = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      if (new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(low)) return t;
-    }
-  }
-  return null;
+  const hit = guardValues(text, entriesFromTokens(tokens))[0];
+  return hit ? hit.code : null;
 }
 
 class PhaseError extends Error {
