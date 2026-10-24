@@ -100,6 +100,12 @@ executors:
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
     sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
+    # stg-s08-inventory — cần DB local :5433 (docker one-invest-db); reso cần research-local/reso/dd-2.1.json (env DD_JSON)
+    migration_040: "bash db/check-idempotent.sh db/migrations/040_stg_s08_inventory.sql stg_s08_inventory"
+    s08_shape: "cd pipeline && node scripts/check-s08-inventory.mjs shape"
+    s08_local_only: "cd pipeline && node scripts/check-s08-inventory.mjs local-only"
+    s08_real_name: "cd pipeline && node scripts/check-s08-inventory.mjs real-name"
+    s08_reso: "cd pipeline && node scripts/check-s08-inventory.mjs reso"
     # backfill-zalo-media-v3 (PL32) — chỉ đọc DB local :5433, snapshot v3 giả trong thư mục tạm
     zalo_media_v3_check: "cd pipeline && node scripts/backfill-v3-check.mjs"
     # review-media-backend — AC-8 cần DB local :5433 (docker one-invest-db); mọi dòng tạo trong giao dịch rồi ROLLBACK
