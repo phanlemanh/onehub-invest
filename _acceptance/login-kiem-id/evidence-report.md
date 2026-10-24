@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 418f0bacbf69ec4a9ee96f7c5b2c62a26a4572d0
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: login-kiem-id
