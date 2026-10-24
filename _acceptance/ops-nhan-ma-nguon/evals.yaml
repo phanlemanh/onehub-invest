@@ -1,0 +1,75 @@
+schema_version: 1
+feature_slug: ops-nhan-ma-nguon
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON7-AC-1 collections: mọi nhánh cảnh báo → 0 tên nguồn thật, có «S03 · Cộng đồng», «S02 · Hiệu chuẩn», kênh đứt trỏ /ops/sources, không lệnh đăng nhập kênh' ok; ca 'ON7-AC-1 neo: mỗi href=\"#…\" có đúng một id trong HTML' ok, chiều đỏ 'ON7-AC-1 chiều đỏ: id neo đổi → ca nêu tên neo' ok; ca 'ON7-AC-1 collections: mọi thứ lành (trạng thái rỗng) → 0 tên nguồn thật' ok; chiều đỏ cùng fixture: ca 'ON7-AC-1 chiều đỏ: HTML chèn một tên thật → bộ quét bắt, thông điệp nêu mã S0x' ok"
+    paths: [app/src/components/ops/collections/**, app/src/components/ops/collections-tables.tsx, app/src/lib/source-labels.ts, app/tests/ops-nhan-ma-nguon.test.tsx, scripts/lib/tier-a-source-names.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON7-AC-2 /ops/quality thật trên DB local → 0 tên nguồn thật, có «S02 · Hiệu chuẩn»' ok; ca 'ON7-AC-2 /ops/collections cloud với payload do push-ops-facts thật đẩy → 0 tên nguồn thật, có «S03 · Cộng đồng»' ok (payload bắt từ bước thật trong cùng ca, không tự dựng); DB local không tới được → ca đỏ có tên, không bỏ qua"
+    paths: [app/src/app/ops/quality/**, app/src/app/ops/collections/**, app/src/components/ops/quality-tables.tsx, app/src/lib/source-labels.ts, app/src/lib/collections-queries.ts, pipeline/push-ops-facts.mjs, app/tests/ops-nhan-ma-nguon.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.portal_static
+    expected: "exit 0; dòng PASS 'ops ngoài /ops/sources: chữ hiển thị chỉ mã S0x (0 chỗ trúng trong N tệp)' với N ≥ 20; dòng PASS 'đối chứng dương: bộ quét thấy tên thật ở components/ops/sources/ (≥ 1 chỗ)'; đầu ra không chứa tên nguồn thật nào"
+    paths: [scripts/check-portal-compliance.mjs, scripts/lib/tier-a-source-names.mjs, app/src/components/ops/**, app/src/app/ops/quality/**, app/src/app/ops/collections/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3b
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; ca 'ON7-AC-3 ma trận: bộ quét trên tệp ở cây gốc 460e61a bắt đúng scripts/fixtures/ops-tier-a-matrix.json (không thiếu, không thừa)' ok; ba ca chiều đỏ trên cùng cây sao — 'tên thật trong tiêu đề', 'tên thật trong template literal render qua {…}', 'tên thật ở khoá đối tượng ngoài danh sách' — mỗi ca check-portal-compliance thoát 1, báo mã S0x + tệp:dòng, đầu ra không chứa tên; ca 'ON7-AC-3 cây lành → thoát 0' ok"
+    paths: [scripts/check-portal-compliance.mjs, scripts/lib/tier-a-source-names.mjs, scripts/ops-nhan-ma-nguon.test.mjs, scripts/fixtures/ops-tier-a-matrix.json]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON7-AC-4 push-ops-facts thật → payload bắt được: 6 job, 0 tên nguồn thật trong MỌI giá trị chuỗi (trừ zaloGroups[].name và zaloAccounts[]), id trung tính, dòng log cuối mang mã S0x' ok; hai ca chiều đỏ cùng cây tạm — 'bản sao bỏ bộ che → bắt dòng log cuối', 'bản sao thêm giá trị mang tên thật ngoài jobs → bắt, nêu đường JSON' — mỗi thông điệp nêu mã S0x, không in tên"
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/mask-source-names.mjs, pipeline/scripts/ops-nhan-ma-nguon.test.mjs, scripts/lib/tier-a-source-names.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON7-AC-5 readSchedulerStatus local → nhãn, id, lastLine không tên nguồn thật; lastLine mang mã S0x' ok; ca 'ON7-AC-5 DB không tới được → lastLine null, không dòng thô' ok (đối chứng dương: cùng cây log, DB lành → lastLine có mã S0x)"
+    paths: [app/src/lib/collections-queries.ts, app/src/lib/mask-source-names.ts, app/tests/ops-nhan-ma-nguon.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ba ca 'ON7-AC-6 vai trò: (a) source_registry → «S02 · Hiệu chuẩn»', '(b) cloud không source_registry, facts.sourceRuns lấy từ payload push-ops-facts thật → «S02 · Hiệu chuẩn»', '(c) không nguồn nào → «S02», không lỗi' ok"
+    paths: [app/src/lib/source-labels.ts, pipeline/push-ops-facts.mjs, app/tests/ops-nhan-ma-nguon.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON7-AC-7 bộ che: bảng ca dùng chung — bản pipeline và bản app đúng kết quả viết trước từng ca và giống hệt nhau' ok; ca 'ON7-AC-7 tên ba ký tự giữa một từ khác không bị thay' ok; ca 'ON7-AC-7 danh sách tên rỗng → cả hai bản trả null' ok"
+    paths: [pipeline/lib/mask-source-names.mjs, app/src/lib/mask-source-names.ts, pipeline/scripts/mask-source-names.cases.json, pipeline/scripts/ops-nhan-ma-nguon.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: judgment
+    inputs: ["CONTEXT.md", "app/src/lib/source-labels.ts"]
+    question: "Trong CONTEXT.md có thuật ngữ «Nhãn nguồn» đủ năm phần (nhãn · code · slug · định nghĩa · _Avoid_) không; định nghĩa có khớp đúng khuôn mà hàm sourceLabel trong app/src/lib/source-labels.ts sinh ra («S0x · vai trò», vắng vai trò thì mã trần) không; và có nói tên nguồn thật chỉ hiện ở /ops/sources không? Thiếu một phần hoặc định nghĩa nói khác hàm thì FAIL."
+    expected: "đủ năm phần, khớp hàm, nói rõ chỗ duy nhất hiện tên thật"
+    paths: ["CONTEXT.md", "app/src/lib/source-labels.ts"]
+    evidence_required: [run_id, verdict, judges, verified_at]

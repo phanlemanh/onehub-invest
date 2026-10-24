@@ -1,0 +1,21 @@
+{
+  "feature_plain": "Người vận hành đọc trang Thu thập và Chất lượng dữ liệu chỉ thấy mã nguồn kèm vai trò (vd «S02 · Hiệu chuẩn»), không thấy tên nguồn thật — kể cả nhãn job và dòng log cuối mà máy thu đẩy lên cloud.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ hiện trang Thu thập với mọi cảnh báo bật mà không có tên nguồn thật nào; kênh S03 đứt thì dẫn sang trang Nguồn dữ liệu để đăng nhập lại, neo cuộn trong trang vẫn trỏ đúng."},
+    {"id": "AC-2", "p": "Sẽ hiện trang Chất lượng dữ liệu (local) và trang Thu thập trên cloud với nhãn «S0x · vai trò», vai trò lấy từ chính dữ liệu máy thu đã đẩy."},
+    {"id": "AC-3", "p": "Sẽ có một phép soát tĩnh chữ hiển thị trong mọi component Ops (trừ Nguồn dữ liệu) chạy trong bộ kiểm cổng — bắt cả nhánh hiếm mà trang mẫu không bật."},
+    {"id": "AC-4", "p": "Sẽ gửi lên cloud bản tin máy thu không còn tên nguồn thật ở bất kỳ giá trị nào (trừ tên nhóm cộng đồng và tài khoản thu), dòng log cuối đã thay tên bằng mã."},
+    {"id": "AC-6", "p": "Sẽ hiện đúng vai trò ở cả local lẫn cloud; khi chưa có dữ liệu vai trò thì hiện mã trần, trang không vỡ."},
+    {"id": "AC-7", "p": "Sẽ che tên trong dòng log giống hệt nhau ở máy thu và ở app; không đọc được danh sách tên thì bỏ hẳn dòng log thay vì để lộ."},
+    {"id": "AC-8", "p": "Sẽ thêm thuật ngữ «Nhãn nguồn» vào từ điển dự án, khớp đúng cách hàm dựng nhãn."}
+  ],
+  "wont_do": [
+    {"id": "AC-5", "p": "Sẽ KHÔNG để bảng job ở local hiện tên nguồn thật trong nhãn hay dòng log; DB tắt thì dòng log trống chứ không hiện dòng thô."},
+    {"id": "OOS-1", "p": "Không đổi trang Nguồn dữ liệu — nơi duy nhất được hiện tên thật."},
+    {"id": "OOS-2", "p": "Không sửa trang Căn giá tốt ở vòng này."},
+    {"id": "OOS-3", "p": "Không đổi tên biến, tên bảng hay đường log trong mã — người vận hành không thấy chúng."},
+    {"id": "OOS-4", "p": "Không đổi tên trường trong bản tin máy thu (chờ anh chốt ở Hỏi-1)."},
+    {"id": "OOS-5", "p": "Không soát tên tài khoản thu và các đường lên cloud khác — việc của NT2."},
+    {"id": "OOS-6", "p": "Không che tên nhóm cộng đồng S03 — đã là thông tin công khai từ 24/10."}
+  ]
+}
