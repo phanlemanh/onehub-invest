@@ -10,7 +10,8 @@ import { getRulerHealth } from "@/lib/ops-queries";
 import { pool } from "@/lib/db";
 import { getAirdnaComparison, getAirdnaMarkets, getTruthfulCoverage } from "@/lib/queries";
 import { sourceLabel } from "@/lib/source-labels";
-import { getSourceRoles } from "@/lib/source-roles";
+import { maskSourceNames } from "@/lib/mask-source-names";
+import { getSourceNameEntries, getSourceRoles } from "@/lib/source-roles";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Chất lượng dữ liệu" };
@@ -28,14 +29,17 @@ export default async function QualityPage() {
   const { rows: markets } = await pool.query<{ id: string; name: string }>(
     `SELECT id, name FROM areas WHERE region_type = 'market' ORDER BY name`,
   );
-  const [comparisons, airdnaMarkets, truthful, roles] = await Promise.all([
+  const [comparisons, airdnaMarkets, truthful, roles, names] = await Promise.all([
     Promise.all(
       markets.map(async (m) => ({ market: m, data: await getAirdnaComparison(m.id) })),
     ),
     getAirdnaMarkets(),
     getTruthfulCoverage(),
     getSourceRoles(),
+    getSourceNameEntries(),
   ]);
+  // ON7: chi tiết DQ là chữ do pipeline ghi — che tên nguồn thật (dòng cũ trong DB); không đọc được tên → ẩn (đóng chặt).
+  const dqShown = dq.map((r) => ({ ...r, detail: r.detail === null ? null : maskSourceNames(r.detail, names) }));
   const calibrated = comparisons.filter((c) => c.data !== null);
 
   const tiles: StatTile[] = [
@@ -67,7 +71,7 @@ export default async function QualityPage() {
       {/* H3-P3: chất lượng thước P2 + phân bố tier (kiến trúc 3 tầng giá) */}
       <StatTiles items={tiles} />
       {/* G-1 Lô 2: kết quả DQ checks gần nhất (enum-vocab + các check khác) */}
-      <DqChecksTable rows={dq} />
+      <DqChecksTable rows={dqShown} />
       <TruthfulCoverageTable rows={truthful} roles={roles} />
       {calibrated.map(({ market, data }) => (
         <CalibrationTable key={market.id} marketName={market.name} data={data!} roles={roles} />
