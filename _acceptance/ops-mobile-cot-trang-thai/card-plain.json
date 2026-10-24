@@ -1,25 +1,4 @@
 {
-  "feature_plain": "Người trực mở bảng Ops trên điện thoại 390px thấy ngay cột trạng thái (Ổn/Hỏng) cạnh cột tên ở 6 bảng, không phải cuộn ngang.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ đưa cột trạng thái lên ngay sau cột tên ở 6 bảng: Sức khoẻ nguồn, Khoá an toàn, Nhóm S03, Máy móc (trang Thu thập); Kiểm chất lượng, Độ phủ trung thực (trang Chất lượng)."},
-    {"id": "AC-2", "p": "Sẽ thu bề rộng cột tên để tên + trạng thái vừa khung nhìn đo thật ở 390px (348px hoặc 316px tuỳ loại bảng)."},
-    {"id": "AC-3", "p": "Sẽ mở thật hai trang ở 390px trong trình duyệt: mọi ô trạng thái nằm trong khung, nhãn Ổn/Hỏng không tràn, tên nhóm không bị cắt, trang không phải cuộn ngang — có ảnh chụp."},
-    {"id": "AC-4", "p": "Sẽ giữ đủ mọi cột như trước ở màn hình rộng — chỉ đổi thứ tự."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG đổi các bảng khác của cổng Ops."},
-    {"id": "OOS-2", "p": "KHÔNG làm khổ nhỏ hơn 390px hay giao diện thẻ thay bảng trên điện thoại."},
-    {"id": "OOS-3", "p": "KHÔNG ghim cột khi cuộn ngang."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Phủ hai thuộc tính của 6 bảng (thứ tự cột AC-1, bề rộng AC-2) và hai khổ màn hình trên trang chạy thật (390px AC-3, 1280px AC-4); biên: bảng đã đạt sẵn, nhãn trạng thái dài nhất, bảng không có hàng, trang rộng hơn khung."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Cắt hay cho xuống dòng tên nhóm ở cột hẹp là chuyện người dùng đọc được hay không — đã tách thành câu hỏi cho anh (Hỏi-1) và thêm phép đo tên nhóm không bị cắt."},
-    {"i": 1, "p": "Mới đo mép ô hàng đầu, chưa đo nhãn Ổn/Hỏng có tràn không — đã sửa: đo mọi hàng, nhãn phải nằm trọn trong ô; rút nhãn «Im N ngày — kiểm tra…» còn «Im N ngày»."},
-    {"i": 2, "p": "Đếm số cột không bắt được trường hợp mất một cột mà trùng một cột — đã sửa: so tập cột với bản gốc ghim trước."},
-    {"i": 3, "p": "Bảng không có hàng thì không đo được ô — đã sửa: bảng 0 hàng thì báo lỗi có tên."},
-    {"i": 4, "p": "Mới so với khung cuộn của bảng, chưa so với màn hình — đã sửa: thêm vế trang không cuộn ngang và ô nằm trong 390px."}
-  ],
-  "scope_plain": "Ba thứ cắt ra khỏi vòng này:"
+  "feature_plain": "Mở trang Thu thập hay Chất lượng dữ liệu trên điện thoại, người trực thấy ngay Ổn hay Hỏng ở cột thứ hai của cả 6 bảng mà không phải vuốt ngang; trên máy tính các bảng vẫn đủ cột như cũ.",
+  "scope_plain": "Ba phần cố ý để ngoài đợt này, đã chốt ở Cổng Phạm vi:"
 }
