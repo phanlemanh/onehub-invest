@@ -1,33 +1,5 @@
 {
   "feature_plain": "Người vận hành mở «Kiểm chất lượng» thấy đủ mọi loại kiểm (mỗi kiểm một dòng mới nhất cho từng đối tượng), số kiểm ở đầu trang đúng, và kiểm độ phủ tham chiếu không còn hiện «Đạt» xanh khi độ phủ 0%.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ hiện đúng một dòng — lần kiểm mới nhất — cho mỗi kiểm trên mỗi đối tượng trong 7 ngày."},
-    {"id": "AC-2", "p": "Sẽ hiện mọi loại kiểm, kể cả khi một kiểm chạy rất dày."},
-    {"id": "AC-3", "p": "Sẽ ghi đầu trang «n kiểm» và «m đối tượng» đếm từ chính bảng đang hiện."},
-    {"id": "AC-4", "p": "Sẽ ghi «Có số tham chiếu» / «Thiếu số tham chiếu» cho kiểm độ phủ tham chiếu (không bao giờ «Đạt» xanh lá); kiểm khác ghi «Đạt», «Cảnh báo», «Không đạt», «Bỏ qua»."},
-    {"id": "AC-5", "p": "Sẽ đo trên dữ liệu thật ở máy local (chỉ đọc): đủ loại kiểm, mỗi cặp một dòng, có dòng độ phủ và không dòng nào của nó xanh lá."},
-    {"id": "AC-6", "p": "Sẽ thêm «Kiểm chất lượng» và «Có số tham chiếu» vào từ điển sản phẩm."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "Dịch cột «Chi tiết» sang tiếng Việt — để hàng ON12."},
-    {"id": "OOS-2", "p": "Vùng «Hiệu chuẩn» của trang — để hàng ON10."},
-    {"id": "OOS-3", "p": "Độ phủ, độ tươi trên cloud đọc số tổng hợp — để hàng AU12."},
-    {"id": "OOS-4", "p": "Đổi tên hay ý nghĩa kiểm độ phủ tham chiếu trong pipeline."}
-  ],
   "scope_plain": "Những việc cố ý để ngoài vòng này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Chọn dòng: nhiều lần cùng cặp, cặp khác đối tượng, quá 7 ngày, kiểm dày đè kiểm thưa — AC-1, AC-2."},
-    {"i": 1, "p": "Số đầu trang: số loại kiểm và số đối tượng — AC-3."},
-    {"i": 2, "p": "Nhãn kết quả: kiểm độ phủ tham chiếu ở mọi trạng thái, kiểm khác ở mọi trạng thái — AC-4."},
-    {"i": 3, "p": "Dữ liệu thật và từ điển — AC-5, AC-6."},
-    {"i": 4, "p": "Để sau: dịch cột Chi tiết (ON12)."},
-    {"i": 5, "p": "Không làm ở vòng này: đổi tên kiểm trong pipeline."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Chữ và màu nhãn kiểm độ phủ tham chiếu là nghĩa sản phẩm, máy không được tự chọn — đã chuyển thành câu Hỏi-1 cho anh."},
-    {"i": 1, "p": "Chữ đếm «đối tượng» và «thực thể» lệch — đã chốt «đối tượng» theo chữ cột có sẵn, ghim nguyên văn trong phép đo."},
-    {"i": 2, "p": "Chưa đo trang thật nối đúng nguồn mới — đã sửa: trang lấy bảng và số qua một hàm duy nhất mà test chạy thật."},
-    {"i": 3, "p": "Bảng vẽ chỉ kiểm chữ, chưa kiểm màu — đã sửa: so màu badge với màu «Đạt» xanh lá, phủ đủ mọi trạng thái."},
-    {"i": 4, "p": "Phép đo dữ liệu thật có thể đúng rỗng hoặc đo bản chép — đã sửa: dùng chính hàm của app, không có dòng độ phủ thì đỏ."}
-  ]
+  "analyst_plain": "Bộ kiểm chung của app cũng xanh trên bản trước vòng — vì các ca DQ-AC-* mới chưa có ở đó; phần phân biệt cũ/mới nằm ở chính các ca này và các lượt phá thử."
 }
