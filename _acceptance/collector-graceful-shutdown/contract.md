@@ -5,7 +5,7 @@ slug: collector-graceful-shutdown
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli, config]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9df28ce34bf9b222db178a45eb9a83b4d7958a43
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: collector-graceful-shutdown
