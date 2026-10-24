@@ -5,7 +5,9 @@ slug: lockdown-local-noi-that
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-lockdown-local-noi-that-design.md
 lo_trinh_ma: ON2
 ---
