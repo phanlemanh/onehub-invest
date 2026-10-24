@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 8ff69a1dae9aa55921c6ed4ae8628966a8b9cd65
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: lockdown-local-noi-that

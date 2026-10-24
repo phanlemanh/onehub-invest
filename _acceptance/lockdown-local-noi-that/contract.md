@@ -5,7 +5,7 @@ slug: lockdown-local-noi-that
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-lockdown-local-noi-that-design.md
@@ -43,3 +43,7 @@ báo, thường, [DEP], rỗng} × hai bản (AC-6).
 ## Notes
 
 - Phép đo chỉ đọc tệp trong thư mục tạm; không gọi lệnh `openclaw` nào, không đụng `~/.openclaw` (zalo-safety).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: thẻ Cổng Phạm vi còn ghi ô Lockdown trên cloud không đổi; thực tế lớp L4b trên cloud đổi như ghi ở Ngoài-3 (Mạnh đã nhận ở Gate 1.5).
+  - Ngoài-3: trên cloud, lớp «Agent-turn hôm nay» hiện «Chưa kiểm được» và ô ghi «Chưa kiểm được agent-turn hôm nay» thay vì «Ổn», tới khi ON23 thay ô bằng số máy local đẩy lên.
+  - Ngoài-4: dòng log cuối của các job trong số máy local đẩy lên cloud chỉ được kiểm bằng cách soi mã nguồn, chưa chạy thử đường đẩy thật.
