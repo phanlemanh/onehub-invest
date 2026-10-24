@@ -105,3 +105,36 @@ test("GIỮ id tin chữ cũ: text có nội dung băm đúng công thức legac
   const again = s.ingest({ agent_id: "a", group: "g", messages: [{ text: "tin chữ", ts: "2026-10-23T12:30:00Z" }] }, "Bearer k1");
   assert.equal(again.body.duplicates, 1, "khớp id legacy → dedup");
 });
+
+test("MỞ LẠI 2310-6: tin chữ ' abc ' (khoảng trắng 2 đầu) GIỮ id legacy; payload NGUYÊN VẸN; text không chuỗi không 500", async () => {
+  const { createHash } = await import("node:crypto");
+  const s = await createAgentServer({ snapshotRoot: fresh(), city: "hanoi", keys: ["k1"] });
+  // a) tin chữ có khoảng trắng: trim CHỈ để quyết định media-only — băm bằng text NGUYÊN BẢN
+  const r1 = s.ingest({ agent_id: "a", group: "g", messages: [{ text: "  abc  ", ts: "2026-10-24T01:00:00Z" }] }, "Bearer k1");
+  assert.equal(r1.status, 202);
+  const legacy = createHash("sha256").update("g|2026-10-24T01:00:00Z|  abc  ").digest("hex").slice(0, 32);
+  const again = s.ingest({ agent_id: "a", group: "g", messages: [{ text: "  abc  ", ts: "2026-10-24T01:00:00Z" }] }, "Bearer k1");
+  assert.equal(again.body.duplicates, 1, "khớp id legacy (băm text nguyên bản) → dedup");
+
+  // b) payload nguyên vẹn: media rác + text thừa khoảng trắng giữ đúng như gửi
+  const root = fresh();
+  const s2 = await createAgentServer({ snapshotRoot: root, city: "hanoi", keys: ["k1"] });
+  s2.ingest({ agent_id: "a", group: "g", messages: [{ text: "  xyz  ", ts: "2026-10-24T01:01:00Z", media: [null, 42, "rác"] }] }, "Bearer k1");
+  const m = await s2.flush();
+  assert.ok(m);
+  const { gunzipSync } = await import("node:zlib");
+  const { readFileSync, readdirSync } = await import("node:fs");
+  const { join: j } = await import("node:path");
+  const dir = j(root, "hanoi", m.snapshotId);
+  const itemsFile = readdirSync(dir).find((f) => f.startsWith("items-"))!;
+  const items = JSON.parse(gunzipSync(readFileSync(j(dir, itemsFile))).toString());
+  assert.equal(items[0].payload.text, "  xyz  ", "payload.text NGUYÊN BẢN (trim chỉ để quyết media-only)");
+  assert.deepEqual(items[0].payload.media, [null, 42, "rác"], "payload.media nguyên vẹn — chuẩn hoá chỉ nằm ở pipeline");
+  assert.equal(items[0].sourceId, createHash("sha256").update("g|2026-10-24T01:01:00Z|  xyz  ").digest("hex").slice(0, 32), "băm text nguyên bản");
+
+  // c) m.text không phải chuỗi (null/số) → không 500, không crash cả lô
+  const r3 = s.ingest({ agent_id: "a", group: "g", messages: [{ text: null, ts: "2026-10-24T01:02:00Z" }] } as never, "Bearer k1");
+  assert.equal(r3.status, 400, "text null → 400 rõ ràng, không 500");
+  const r4 = s.ingest({ agent_id: "a", group: "g", messages: [{ text: 123, ts: "2026-10-24T01:03:00Z" }] } as never, "Bearer k1");
+  assert.equal(r4.status, 400, "text số → 400, không 500");
+});
