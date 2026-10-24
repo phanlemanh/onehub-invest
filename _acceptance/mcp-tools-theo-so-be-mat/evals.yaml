@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: mcp-tools-theo-so-be-mat
+# Thước: scripts/check-mcp-tools.mjs (static = cây thật; mutation = bản nguyên ĐẠT + MT1–MT10 + W1, không cần git; historic = B0 cặp bản khai+sổ ở 1c6389b).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.mcp_tools_static
+    paths: [app/docs/api/mcp-tools.json, app/src/lib/api-surface.ts, scripts/check-mcp-tools.mjs, scripts/check-api-surface.mjs]
+    expected: "exit 0; đúng hai dòng ok theo từng công cụ: 'oneinvest_get_asset_stats → v1/asset-stats GET: public = sổ public' và 'oneinvest_get_offers → v1/offers GET: ops = sổ ops'; dòng 'khoá auth gốc: không khai chế độ chung'; dòng tổng 'mcp-tools: 2/2 công cụ khớp sổ'. Chiều đỏ ở E3 (MT1, MT3, MT9, MT10) dựng từ chính bản khai này."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.mcp_tools_historic
+    paths: [scripts/check-mcp-tools.mjs, scripts/check-api-surface.mjs]
+    expected: "exit 0; dòng 'ok B0 «bản khai + sổ ở 1c6389b (trước vòng)» TRƯỢT với «chế độ công cụ lệch sổ»' và vi phạm in ra nêu 'oneinvest_get_offers' (khai public, sổ ops); cả hai tệp đọc bằng git show 1c6389b (không chép tay); đối chứng dương cùng lượt: 'ok B0+ bản khai HEAD với sổ HEAD ĐẠT'; thiếu lịch sử 1c6389b → exit 1 với 'thiếu lịch sử git 1c6389b'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.mcp_tools_mutation
+    paths: [app/docs/api/mcp-tools.json, app/src/lib/api-surface.ts, scripts/check-mcp-tools.mjs, scripts/check-api-surface.mjs]
+    expected: "exit 0; dòng 'ok bản nguyên ĐẠT — mcp-tools: 2/2 công cụ khớp sổ'; mười dòng ok viết trước theo ma trận Coverage, đột biến dựng từ bản khai/sổ thật theo chế độ TƯƠNG ĐỐI (chế độ khác sổ hiện tại, không cố định ops/public): MT1 công cụ đổi auth «chế độ công cụ lệch sổ» · MT2 bỏ auth, gốc không khai «công cụ thiếu chế độ» · MT3 gốc khai chế độ khác sổ, mọi công cụ bỏ auth «chế độ công cụ lệch sổ» · MT4 gốc khai một chế độ, mọi công cụ giữ auth riêng khớp sổ → ĐẠT (0 vi phạm) · MT5 endpoint /api/v1/khong-co «công cụ trỏ route không có trong sổ» · MT6 method ngoài methods sổ «phương thức công cụ lệch sổ» · MT7 sổ đổi chế độ route của một công cụ, bản khai giữ «chế độ công cụ lệch sổ» · MT8 auth 'bearer' «chế độ công cụ không có trong sổ» · MT9 bỏ endpoint «công cụ trỏ route không có trong sổ» · MT10 bỏ method «phương thức công cụ lệch sổ»; đột biến không áp được → FAIL có tên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.mcp_tools_mutation
+    paths: [app/docs/api/mcp-tools.json, scripts/check-mcp-tools.mjs, scripts/check-portal-compliance.mjs]
+    expected: "exit 0; ca W1 hai chiều trên CÙNG bản chép cây ở thư mục tạm: 'ok W1 bản chép nguyên → portal-compliance exit 0' và 'ok W1 bản chép với bản khai MT1 → portal-compliance exit 1, dòng FAIL nhắc «công cụ MCP»'; tệp thật app/docs/api/mcp-tools.json không đổi byte sau lượt (so băm trước/sau)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [app/docs/api/mcp-tools.json, scripts/check-mcp-tools.mjs, scripts/check-portal-compliance.mjs]
+    expected: "exit 0; có dòng 'ok   công cụ MCP: 2/2 công cụ khớp sổ bề mặt' (mục 13 của check-portal-compliance) và dòng cuối 'portal-compliance: ĐẠT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: judgment
+    inputs: [app/src/lib/api-surface.ts, docs/architecture/portals.md]
+    paths: [app/src/lib/api-surface.ts, docs/architecture/portals.md]
+    question: "Một người sắp đổi chế độ của một route API (vd mở lại /api/v1/offers công khai) hoặc thêm một công cụ MCP mới, chỉ đọc hai tệp này: MỖI tệp có nêu đủ ba ý không — (a) phải sửa app/docs/api/mcp-tools.json cùng commit, cho cả ca đổi chế độ lẫn ca thêm công cụ; (b) khoá auth của mỗi công cụ là một trong năm chế độ sổ, bằng chế độ route nó gọi; (c) phép đo scripts/check-mcp-tools.mjs chạy trong làn portal_static?"
+    expected: "Mỗi tệp nêu đủ (a), (b), (c); hai tệp không mâu thuẫn nhau."
+    evidence_required: [run_id, verdict, judges]
