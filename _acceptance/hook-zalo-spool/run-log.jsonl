@@ -18,3 +18,13 @@
 {"ts":"2026-10-24T23:34:31Z","round":2,"evalId":"E8","run_id":"hook-zalo-spool-E8-r2-20261024T233431Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs self-contained"}
 {"ts":"2026-10-24T23:34:33Z","round":2,"evalId":"E9","run_id":"hook-zalo-spool-E9-r2-20261024T233433Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs l1-grep"}
 {"ts":"2026-10-24T23:35:25Z","round":2,"evalId":"E10","run_id":"hook-zalo-spool-E10-r2-20261024T233440Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}
+{"ts":"2026-10-24T23:38:44Z","round":3,"evalId":"E1","run_id":"hook-zalo-spool-E1-r3-20261024T233844Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:38:49Z","round":3,"evalId":"E2","run_id":"hook-zalo-spool-E2-r3-20261024T233849Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:38:54Z","round":3,"evalId":"E3","run_id":"hook-zalo-spool-E3-r3-20261024T233854Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:39:00Z","round":3,"evalId":"E4","run_id":"hook-zalo-spool-E4-r3-20261024T233859Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"}
+{"ts":"2026-10-24T23:39:21Z","round":3,"evalId":"E5","run_id":"hook-zalo-spool-E5-r3-20261024T233904Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs hang-stop"}
+{"ts":"2026-10-24T23:39:26Z","round":3,"evalId":"E6","run_id":"hook-zalo-spool-E6-r3-20261024T233926Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs cap-50"}
+{"ts":"2026-10-24T23:39:36Z","round":3,"evalId":"E7","run_id":"hook-zalo-spool-E7-r3-20261024T233931Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs kev-hang"}
+{"ts":"2026-10-24T23:39:42Z","round":3,"evalId":"E8","run_id":"hook-zalo-spool-E8-r3-20261024T233942Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs self-contained"}
+{"ts":"2026-10-24T23:39:47Z","round":3,"evalId":"E9","run_id":"hook-zalo-spool-E9-r3-20261024T233947Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs l1-grep"}
+{"ts":"2026-10-24T23:40:38Z","round":3,"evalId":"E10","run_id":"hook-zalo-spool-E10-r3-20261024T233952Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}

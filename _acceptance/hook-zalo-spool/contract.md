@@ -5,7 +5,7 @@ slug: hook-zalo-spool
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by:
 approved_at:
 gate1_skipped: true
