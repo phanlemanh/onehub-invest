@@ -5,7 +5,7 @@ slug: ops-review-sources-500-tren-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T2      # hai trang Ops + component nội dung + lib/ops-queries + test; không đụng t3_paths
 surfaces: [ui]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-24T01:48:00Z
 approved_by:
