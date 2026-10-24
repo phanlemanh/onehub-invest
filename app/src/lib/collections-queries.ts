@@ -47,18 +47,6 @@ export async function getZaloAccountsFromFacts(): Promise<LocalFacts["zaloAccoun
 
 const isCloud = () => process.env.VERCEL === "1";
 
-/** Truy vấn bảng thô chỉ có ở máy local (airbnb_snapshots, stg_*, airdna_* — leak gate giữ khỏi cloud, sự cố prod 24/10).
- * Trên cloud bảng vắng (42P01) = không dòng nào; ở máy local bảng vắng vẫn ném (lược đồ hỏng phải lộ ra, ON8 AC-4) —
- * lỗi khác luôn ném để trang hiện lỗi thật. */
-async function queryRawTable<R extends object>(sql: string, params: unknown[] = []): Promise<{ rows: R[] }> {
-  try {
-    return await pool.query<R>(sql, params);
-  } catch (e) {
-    if (isCloud() && (e as { code?: string }).code === "42P01") return { rows: [] };
-    throw e;
-  }
-}
-
 let factsCache: { at: number; facts: LocalFacts | null } | null = null;
 async function getLocalFacts(): Promise<LocalFacts | null> {
   if (!isCloud()) return null;
@@ -110,14 +98,13 @@ export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<F
   const oldest = vnDayKey(now - (n - 1) * 86400000);
   const since = vnDayStart(oldest);
   const vnDay = (col: string) => `(${col} AT TIME ZONE '${VN_TZ}')::date::text`;
-  const q = (sql: string, params: unknown[]) => queryRawTable<{ d: string; n: number }>(sql, params);
   const [mk, al, li, sn, zp, of] = await Promise.all([
-    q(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_markets WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    q(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    q(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`, [oldest]),
-    q(`SELECT ${vnDay("collected_at")} d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
-    q(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM stg_zalo_posts WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    q(`SELECT ${vnDay("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_markets WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`, [oldest]),
+    pool.query(`SELECT ${vnDay("collected_at")} d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM stg_zalo_posts WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 GROUP BY 1`, [since]),
   ]);
   const pick = (rows: { d: string; n: number }[]) => new Map(rows.map((r) => [r.d, r.n]));
   const [M, A, L, S, Z, O] = [pick(mk.rows), pick(al.rows), pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
@@ -334,7 +321,7 @@ export async function readRotationPreview(): Promise<RotationPreview> {
   } catch {
     /* chưa chạy đêm nào */
   }
-  const { rows } = await queryRawTable<{ airdna_id: string; name: string | null; captured_at: string | null }>(
+  const { rows } = await pool.query(
     `SELECT airdna_id, name, captured_at FROM airdna_markets
       WHERE country_code = 'vn' ORDER BY airdna_id::int`,
   );
@@ -436,7 +423,7 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
     if (f) return f.zaloGroups;
   }
   const [postRows, logText] = await Promise.all([
-    queryRawTable<{ group_name: string; real7: number; mock7: number; last_real: string | null; mock_only: boolean }>(
+    pool.query(
       `SELECT group_name,
               count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%'
                  AND captured_at >= now() - interval '7 days')::int AS real7,
