@@ -1,36 +1,5 @@
 {
-  "feature_plain": "Người vận hành mở «Căn giá tốt» chỉ thấy tin có diện tích và số phòng hợp lý, tin rẻ đáng gọi đứng đầu thay vì tin giảm sát trần, và thẻ ghi đúng «đăng 1 lần».",
-  "will_do": [
-    {"id": "AC-2", "p": "Sẽ gạt tin phi lý khỏi danh sách ở bước tính đêm, ghi một dòng nhật ký nêu lý do và mã tin; số tổng hợp của người bán giữ nguyên."},
-    {"id": "AC-3", "p": "Sẽ hiện đúng số giảm giá đã tính sẵn ở bước đêm — trang không tự tính lại."},
-    {"id": "AC-4", "p": "Sẽ xếp tin giảm đến 35% lên trước, tin giảm sâu hơn xuống cuối với nhãn «cần xác minh» — kể cả khi tin giảm sâu nhiều hơn số thẻ."},
-    {"id": "AC-6", "p": "Sẽ ghi «đăng 1 lần» / «đăng n lần» thay chữ «mới», và chỉ tin cần xác minh mới có nhãn «cần xác minh»."},
-    {"id": "AC-7", "p": "Sẽ đo trên dữ liệu thật ở máy local (không để lại thay đổi): bao nhiêu tin bị loại theo lý do và năm tin đầu giảm bao nhiêu."},
-    {"id": "AC-8", "p": "Sẽ thêm «tin cần xác minh» vào từ điển sản phẩm."}
-  ],
-  "wont_do": [
-    {"id": "AC-1", "p": "Chặn tin không có diện tích, diện tích ngoài 10–1000 m², quá 10 phòng ngủ, hoặc dưới 20 m² mỗi phòng ngủ."},
-    {"id": "AC-5", "p": "Chặn lỗi trang trên bản cloud: câu truy vấn bản cloud không đụng bảng tin Zalo hay cột người bán ở lại máy."},
-    {"id": "OOS-1", "p": "Thước theo phường và loại hình — để hàng PL26."},
-    {"id": "OOS-2", "p": "Khung trang, lọc, phân trang, đếm và câu chữ người bán — để hàng UI10."},
-    {"id": "OOS-3", "p": "Sửa bộ đọc diện tích/số phòng của tin S03 — việc làn trích xuất."},
-    {"id": "OOS-4", "p": "Đưa «Căn giá tốt» lên cổng Invest."}
-  ],
+  "feature_plain": "Người vận hành mở «Căn giá tốt» chỉ thấy tin có diện tích và số phòng hợp lý, tin rẻ đáng gọi đứng đầu thay vì tin giảm sát trần, và thẻ ghi đúng «đăng n lần».",
   "scope_plain": "Những việc cố ý để ngoài vòng này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Bốn kiểu tin phi lý (thiếu diện tích, diện tích lạ, quá nhiều phòng, phòng quá nhỏ) đều có ca đo — AC-1, AC-2."},
-    {"i": 1, "p": "Số giảm giá tính một chỗ ở bước đêm, trang và bản cloud chỉ đọc; số người bán không đổi — AC-2, AC-3, AC-5."},
-    {"i": 2, "p": "Thứ tự: tin thường trước, tin sát trần sau, ngưỡng 5%–50% giữ nguyên — AC-3, AC-4."},
-    {"i": 3, "p": "Chữ trên thẻ và từ điển khớp nhau — AC-6, AC-8."},
-    {"i": 4, "p": "Đo trên dữ liệu thật mà không để lại dòng nào — AC-7."},
-    {"i": 5, "p": "Để sau: khi có thước theo loại hình (PL26) thì ngưỡng có thể theo loại hình."},
-    {"i": 6, "p": "Không bao giờ: dùng model để loại tin."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Phép đo cũ không bắt lỗi sắp sau khi cắt 30 thẻ (trang vẫn toàn tin sát trần mà đo vẫn xanh) — đã sửa: sắp nằm trong truy vấn trước khi cắt, thêm ca nhiều tin hơn số thẻ, phép đo dữ liệu thật in năm tin đầu."},
-    {"i": 1, "p": "Vế «không loại gì thì không ghi nhật ký» chưa được đo — đã sửa: tách hàm loại tin, đo cả ca có và ca không có tin bị loại."},
-    {"i": 2, "p": "Bản cloud được thử trên lược đồ máy local đủ bảng nên không chứng gì — đã sửa: xoá bảng và cột như cloud trong giao dịch rồi mới chạy."},
-    {"i": 3, "p": "Đặt số giảm về rỗng trước khi tổng hợp người bán sẽ giấu tin mồi khỏi số người bán — đã sửa: luật chạy sau bước người bán, có đo số người bán giữ nguyên."},
-    {"i": 4, "p": "Nhãn «cần xác minh» được đo bằng tìm chữ trong mã — đã sửa: vẽ thẻ thật trong test, tin thường không được có nhãn."}
-  ]
+  "analyst_plain": "Hai bộ kiểm chung (pipeline, app) cũng xanh trên bản trước vòng — vì test mới của vòng này chưa có ở đó; phần phân biệt cũ/mới nằm ở chính các ca DP-AC-* và các lượt phá thử."
 }
