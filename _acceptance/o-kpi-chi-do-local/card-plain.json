@@ -1,2 +1,2 @@
-{"feature_plain":"Người trực mở Ops trên cloud thấy số do máy local đẩy lên kèm giờ đo; chưa có số thì «—» chứ không phải 0, số cũ quá 45 phút thì có cảnh báo vàng và không còn ô xanh.",
- "decisions":[{"id":"E8","q":"Chữ ba trang có đúng cách báo số tươi, số cũ, chưa có số không?","why":"Hội đồng chưa kết luận vì ô Cổng S03 và danh sách «Cần chú ý» lấy số từ chỗ nằm ngoài tệp được đọc."}]}
+{"feature_plain":"Người trực mở Ops trên cloud thấy số do máy local đẩy lên kèm giờ đo; chưa có số thì «—» chứ không phải 0, số cũ quá 45 phút thì có cảnh báo vàng và không còn ô xanh; trang Thu thập trên cloud chỉ hiện phần có số, phần chỉ đo được trên máy thu gom về một thông báo.",
+ "decisions":[{"id":"E8","q":"Chữ ba trang có đúng cách báo số tươi, số cũ, chưa có số không?","why":"Hội đồng còn hai chỗ chưa kết luận: ô Cổng S03 có thể hiện 0/0 khi chưa đo, và khi chưa có số trang Thu thập hiện hai thông báo thay vì một như bảng thiết kế."}]}
