@@ -22,6 +22,7 @@ export function parseLog(text, { now = Date.now() } = {}) {
     const ts = line.slice(0, 24);
     if (!/^\d{4}-\d{2}-\d{2}T/.test(ts)) continue;
     const t = new Date(ts).getTime();
+    if (!Number.isFinite(t)) continue; // mốc hỏng/cắt cụt: bỏ dòng, không làm hỏng cả lượt đẩy số (ON8 AC-10)
     if (line.includes(" heartbeat ")) {
       health.lastHeartbeatAt = ts;
       if (now - t <= 86400000) {

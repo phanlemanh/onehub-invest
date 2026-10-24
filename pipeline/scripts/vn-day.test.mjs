@@ -102,3 +102,36 @@ test("GV-AC-6 bản sao push-ops-facts dùng captured_at::date::text → thướ
   assert.notEqual(sao, goc);
   assert.deepEqual(quetFacts(sao), ["::date thiếu AT TIME ZONE"]);
 });
+
+// ---------- AC-10: dòng log mốc hỏng không làm hỏng lượt đếm (Ngoài-1 ở Cổng Bằng chứng 24/10) ----------
+
+const dongHook = (t) => `${new Date(t).toISOString()} post 202 group=nhom-thu {"accepted":1}`;
+const LOG_HONG = [
+  dongHook("2026-10-23T16:30:00Z"),
+  "2026-10-23T99:99:99.000Z post 202 group=nhom-thu",
+  "2026-10-23T",
+  dongHook("2026-10-23T17:30:00Z"),
+].join("\n");
+
+test("GV-AC-10 parseLog bản pipeline bỏ qua dòng mốc hỏng", () => {
+  const { funnel } = parseLog(LOG_HONG, { now: NOW });
+  assert.equal(funnel.today.messages, 1);
+  assert.equal(funnel.last7.messages, 2);
+});
+
+test("GV-AC-10 bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng", async () => {
+  const goc = readFileSync(path.join(PIPE, "lib/ops-flow.mjs"), "utf8");
+  const sao = goc.replace(/^[ \t]*if \(!Number\.isFinite\(t\)\) continue;.*\n/m, "");
+  assert.notEqual(sao, goc, "mốc hỏng: bản sao phải bỏ đúng dòng chặn");
+  const { mkdtempSync, writeFileSync, copyFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(path.join(tmpdir(), "ops-flow-sao-"));
+  try {
+    writeFileSync(path.join(dir, "ops-flow.mjs"), sao);
+    copyFileSync(path.join(PIPE, "lib/vn-day.mjs"), path.join(dir, "vn-day.mjs"));
+    const mut = await import(pathToFileURL(path.join(dir, "ops-flow.mjs")).href);
+    assert.throws(() => mut.parseLog(LOG_HONG, { now: NOW }), /Invalid time value/, "mốc hỏng: bản bỏ chặn phải ném");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -338,3 +338,24 @@ test("GV-AC-3 bản sao collections-queries dùng ::date", () => {
   assert.notEqual(sao, goc)
   assert.deepEqual(quetMoc([{ path: p, text: sao }]).map((v) => v.path), [p])
 })
+
+// ---------- AC-10: dòng log mốc hỏng — bản app (readGateFunnel) ----------
+
+test("GV-AC-10 readGateFunnel bản app bỏ qua dòng mốc hỏng", () => {
+  const home = mkdtempSync(join(tmpdir(), "gio-vn-hong-"))
+  try {
+    mkdirSync(join(home, ".openclaw", "logs"), { recursive: true })
+    const dong = (t: string) => `${new Date(t).toISOString()} post 202 group=nhom-thu {"accepted":1}`
+    const log = [dong("2026-10-23T16:30:00Z"), "2026-10-23T99:99:99.000Z post 202 group=nhom-thu", "2026-10-23T", dong("2026-10-23T17:30:00Z"), ""]
+    writeFileSync(join(home, ".openclaw", "logs", "oneinvest-zalo-pipe.log"), log.join("\n"))
+    const code = `const m = await import(${JSON.stringify(pathToFileURL(join(APP, "src/lib/collections-queries.ts")).href)});
+const f = await m.readGateFunnel({ now: ${NOW} }); process.stdout.write(JSON.stringify(f)); process.exit(0)`
+    const env: NodeJS.ProcessEnv = { ...process.env, TZ: "UTC", HOME: home }
+    delete env.VERCEL
+    const f = JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "--input-type=module", "-e", code], { cwd: APP, env, encoding: "utf8" })) as { today: { messages: number }; last7: { messages: number } }
+    assert.equal(f.today.messages, 1)
+    assert.equal(f.last7.messages, 2, "dòng mốc hỏng bị bỏ qua, 7 ngày chỉ hai dòng hợp lệ")
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
+})
