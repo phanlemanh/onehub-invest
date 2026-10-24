@@ -91,6 +91,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `bait-gap:sellers-orphan` ≤24h khớp số dòng — PL2); bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
   → `S0x:<số>`, soát tên nguồn trước khi gửi. Thước `pipeline/scripts/check-cloud-sync.mjs <ca>`,
   máy đo prod chỉ đọc `cloud-sync-watch.mjs`; triển khai: `docs/ops/cloud-sync-atomic.md`.
+  Tệp chạy `scripts/cloud-sync.sh` thoát ≠ 0 khi `sync-cloud` hay `push-ops-facts` hỏng (dòng `JOB FAIL [cloud-sync]`,
+  hai bước vẫn chạy cả hai); `push-ops-facts` theo `DATABASE_URL` — AU13 `cloud-sync-bao-loi-that` (24/10).
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
