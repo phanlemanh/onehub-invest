@@ -4,7 +4,7 @@ feature: Mọi đường dữ liệu rời máy (sync và ops-facts) qua cùng m
 slug: soat-tang-a-moi-duong-len-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs, pipeline/sync-cloud.mjs (t3_paths)
-surfaces: [pipeline, docs]
+surfaces: [pipeline, ui, docs]
 status: draft
 design_doc: docs/superpowers/specs/2026-10-24-soat-tang-a-moi-duong-len-cloud-design.md
 ---
@@ -30,21 +30,28 @@ docs/adr/0014-ops-cloud-doc-so-tong-hop.md (chuỗi AU13 → ON7 → NT2 → ON2
   lệnh thoát 0 và máy chủ thu nhận đúng một POST (đối chứng dương của bộ soát).
 - AC-2: Given bản sao `push-ops-facts` bỏ bộ che dòng log (tên thật còn trong `jobs[i].lastLine`), When chạy, Then lệnh thoát
   ≠ 0, máy chủ thu KHÔNG nhận POST nào, stderr có dòng `FACTS CHẶN [tầng A] jobs[<i>].lastLine <S0x>` và không chứa tên.
-- AC-3: Given bản sao `push-ops-facts` cấy tên thật vào một trường ngoài `jobs` (vd một khối số mới như ON22 sẽ thêm), When
-  chạy, Then chặn y như AC-2, dòng chặn nêu đúng đường JSON của trường đó.
+- AC-3: Given ma trận viết trước các bản sao `push-ops-facts` cấy tên thật vào: mỗi khoá cấp một của bản tin, một chuỗi lồng
+  sâu trong mảng đối tượng, và trường anh em cạnh đường miễn (`zaloGroups[0].<khác>`), When chạy từng bản, Then mỗi bản bị chặn
+  y như AC-2 và dòng chặn nêu đúng đường JSON viết trước; đối chứng dương: tên trong `zaloGroups[0].name` (tầng C) KHÔNG bị chặn.
 - AC-4: Given tên tài khoản thu theo Hỏi-1, When bản tin dựng từ cấu hình tài khoản có tên, Then (Hỏi-1 = A) bản tin gửi
   `zaloAccounts[i].name = null`, và bản sao gửi tên tài khoản thì bị chặn với dòng nêu `zaloAccounts[<i>].name`.
 - AC-5: Given `source_registry` không đọc được (danh sách tên rỗng), When `push-ops-facts` chạy tới bước gửi, Then chặn
   (thoát ≠ 0, không POST) với dòng nói không có danh sách tên để soát — đóng chặt.
 - AC-6: Given bảng ca tên dùng chung của ON7 (`pipeline/scripts/mask-source-names.cases.json`), When chạy qua
   `scanSourceNames` của `sync-cloud` và qua `guardValues` của bộ soát chung, Then hai đường cho cùng kết quả trúng/không trúng
-  từng ca — cùng một bộ soát.
-- AC-7: Given cloud mô phỏng (DB tạm như AU1), When (a) `sale_offers` ở cloud có thêm cột `seller_phone` ngoài `CLOUD_ALLOW`,
-  (b) cloud có bảng `user_events` với một dòng, Then leak gate đỏ và lượt sync dừng trước khi tráo, dòng đỏ nêu
-  `sale_offers.seller_phone` ở (a) và `user_events=1` ở (b); cloud sạch thì leak gate xanh (đối chứng dương).
+  từng ca — cùng một bộ soát; và `sync-cloud` với danh sách tên rỗng dừng trước khi đẩy bảng (đóng chặt, như AC-5).
+- AC-7: Given cloud mô phỏng (DB tạm như AU1), When (a) bảng người bán ở cloud có thêm cột ngoài danh sách cho phép (phạm vi
+  bảng theo Hỏi-2), (b) cột ấy có ở LOCAL rồi `sync-cloud` thật chạy (đi qua bên ghi), (c) cloud có bảng `user_events` với một
+  dòng, Then leak gate đỏ, lượt sync dừng trước khi tráo, bảng cloud không mang cột ấy sau lượt (b), dòng đỏ nêu `<bảng>.<cột>`
+  ở (a)(b) và `user_events=1` ở (c); cloud sạch thì leak gate xanh (đối chứng dương).
 - AC-8: Given `docs/ops/runtime-map.md` sau vòng, When người vận hành đọc mục cloud-sync, Then thấy: mọi đường lên cloud đi
   qua một bộ soát tầng A; dòng `FACTS CHẶN [tầng A] …` để tìm trong log và việc phải làm; leak gate nay đỏ khi có cột ngoài
   danh sách cho phép hoặc bảng tầng A có dòng; tên tài khoản thu theo Hỏi-1. (judgment)
+
+- AC-9: Given Hỏi-1 = A (tên tài khoản thu gửi `null`), When trang `/ops/sources` dựng ở chế độ cloud với facts có
+  `zaloAccounts[i].name = null`, Then hàng tài khoản hiện mã tài khoản thay tên, không lỗi, không chữ «null». (Hỏi-1 = C → bỏ AC.)
+- AC-10: Given bản tin dựng từ log và cấu hình THẬT của máy thu (chế độ khô, không gửi), When chạy bộ soát, Then 0 chỗ trúng —
+  bản tin hiện tại không bị chặn oan; đầu ra chỉ in đường JSON + mã S0x.
 
 ## Coverage
 
@@ -62,8 +69,9 @@ Quét hình thái (preset risk-premortem) — trục và thước CE:
 - Ngưỡng «Cấy tên nguồn thật vào payload ops-facts …: lệnh đẩy dừng trước khi gửi» ← `cd pipeline && npm test`
   (AC-2, AC-3; đối chứng AC-1).
 - Ngưỡng «… hoặc một cột: … leak gate đỏ khi cloud có cột PII ngoài danh sách cho phép» ← `cd pipeline && node
-  scripts/check-cloud-sync.mjs pii-cot` (AC-7). PROXY: «cột PII» đo bằng danh sách cho phép `CLOUD_ALLOW` của bảng người
-  bán (bảng duy nhất mang dữ liệu người) + bảng tầng A có tên; bảng khác không có danh sách cột.
+  scripts/check-cloud-sync.mjs pii-cot` (AC-7). Phạm vi «cột PII» theo Hỏi-2: (A) chỉ bảng có `CLOUD_ALLOW` (`sale_offers`,
+  `sellers`, `properties`) + bảng tầng A có tên — PROXY, các bảng sync khác không có danh sách cột; (B) danh sách cột cho mọi
+  bảng sync.
 
 ## Out of scope
 

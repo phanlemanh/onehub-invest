@@ -21,7 +21,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.pipeline
-    expected: "exit 0; ca 'NT2-AC-3 bản sao cấy tên vào trường ngoài jobs → thoát ≠0, 0 POST, dòng chặn nêu đúng đường JSON' ok"
+    expected: "exit 0; ca 'NT2-AC-3 ma trận viết trước: mỗi khoá cấp một + một chuỗi lồng sâu + trường anh em cạnh đường miễn → mỗi bản thoát ≠0, 0 POST, dòng chặn nêu đúng đường JSON viết trước' ok; đối chứng dương 'NT2-AC-3 tên trong zaloGroups[0].name (tầng C) → không chặn' ok"
     paths: [pipeline/push-ops-facts.mjs, pipeline/lib/tier-a-guard.mjs, pipeline/scripts/soat-tang-a.test.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -45,7 +45,7 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.pipeline
-    expected: "exit 0; ca 'NT2-AC-6 bảng ca ON7 qua scanSourceNames và guardValues → cùng kết quả từng ca' ok (≥ 10 ca)"
+    expected: "exit 0; ca 'NT2-AC-6 bảng ca ON7 qua scanSourceNames và guardValues → cùng kết quả từng ca' ok (≥ 10 ca); ca 'NT2-AC-6 sync-cloud danh sách tên rỗng → dừng trước khi đẩy bảng' ok, đối chứng dương có token → không dừng"
     paths: [pipeline/sync-cloud.mjs, pipeline/lib/tier-a-guard.mjs, pipeline/lib/mask-source-names.mjs, pipeline/scripts/soat-tang-a.test.mjs, pipeline/scripts/mask-source-names.cases.json]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -53,7 +53,7 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.cloud_sync_pii_cot
-    expected: "exit 0; dòng PASS 'cloud sạch → leak gate xanh' (đối chứng dương); dòng PASS 'ĐỎ-ĐÚNG cột ngoài danh sách: sale_offers.seller_phone'; dòng PASS 'ĐỎ-ĐÚNG bảng tầng A có dòng: user_events=1'; mỗi ca đỏ dừng trước khi tráo (cloud giữ số cũ)"
+    expected: "exit 0; dòng PASS 'cloud sạch → leak gate xanh' (đối chứng dương); dòng PASS 'ĐỎ-ĐÚNG cột ngoài danh sách: sale_offers.seller_phone'; dòng PASS 'ĐỎ-ĐÚNG qua bên ghi: cột local ngoài danh sách → gate đỏ, cloud không mang cột, giữ số cũ'; dòng PASS 'ĐỎ-ĐÚNG bảng tầng A có dòng: user_events=1'; mỗi ca đỏ dừng trước khi tráo"
     paths: [pipeline/sync-cloud.mjs, pipeline/scripts/check-cloud-sync.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -65,3 +65,19 @@ evals:
     expected: "đủ bốn điều, khớp code"
     paths: ["docs/ops/runtime-map.md", "pipeline/lib/tier-a-guard.mjs", "pipeline/push-ops-facts.mjs", "pipeline/sync-cloud.mjs"]
     evidence_required: [run_id, verdict, judges, verified_at]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'NT2-AC-9 /ops/sources cloud với zaloAccounts[i].name null → hiện mã tài khoản, không lỗi, không chữ null' ok; chiều đỏ 'NT2-AC-9 bản sao hiện name thô → ca bắt' ok"
+    paths: [app/src/components/ops/sources/**, app/src/app/ops/sources/**, app/src/lib/collections-queries.ts, app/tests/soat-tang-a.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'NT2-AC-10 bản tin dựng từ log và cấu hình thật (chế độ khô, không gửi) → 0 chỗ trúng' ok; đầu ra chỉ có đường JSON + mã S0x"
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/tier-a-guard.mjs, pipeline/scripts/soat-tang-a.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

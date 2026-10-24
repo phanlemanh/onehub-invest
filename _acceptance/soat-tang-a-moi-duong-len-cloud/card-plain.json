@@ -1,0 +1,21 @@
+{
+  "feature_plain": "Mọi dữ liệu rời máy lên cloud — đồng bộ bảng và bản tin vận hành — đi qua cùng một bộ soát: còn tên nguồn thật hay dữ liệu cá nhân ngoài danh sách cho phép thì dừng trước khi gửi.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ gửi bản tin vận hành bình thường khi nó sạch."},
+    {"id": "AC-2", "p": "Sẽ chặn bản tin còn tên nguồn thật trong dòng log, báo đúng chỗ bằng mã nguồn, không gửi gì."},
+    {"id": "AC-3", "p": "Sẽ chặn tên nguồn thật ở bất kỳ trường nào của bản tin, kể cả trường mới thêm sau này; tên nhóm cộng đồng vẫn được đi."},
+    {"id": "AC-4", "p": "Sẽ xử lý tên tài khoản thu theo câu anh chốt ở Hỏi-1."},
+    {"id": "AC-6", "p": "Sẽ dùng một bộ soát cho cả đồng bộ bảng lẫn bản tin, cho cùng kết quả trên cùng bảng ca."},
+    {"id": "AC-7", "p": "Sẽ báo đỏ và dừng đồng bộ khi cloud có cột dữ liệu người ngoài danh sách cho phép, hoặc có dữ liệu người dùng app."},
+    {"id": "AC-9", "p": "Sẽ hiện mã tài khoản thay tên ở trang Nguồn dữ liệu trên cloud nếu tên tài khoản là tầng A."},
+    {"id": "AC-10", "p": "Sẽ kiểm bản tin thật hiện nay không bị chặn oan trước khi bật bộ soát."},
+    {"id": "AC-8", "p": "Sẽ ghi vào sổ vận hành cách đọc dòng chặn và việc phải làm."}
+  ],
+  "wont_do": [
+    {"id": "AC-5", "p": "Sẽ KHÔNG gửi khi không đọc được danh sách tên để soát (đóng chặt)."},
+    {"id": "OOS-1", "p": "Không đổi tên trường trong bản tin (đã chốt ở ON7)."},
+    {"id": "OOS-2", "p": "Không soát số điện thoại, email trong chữ tự do — định danh người bán là công khai từ 23/10."},
+    {"id": "OOS-3", "p": "Không sửa tay cloud prod — bộ soát chạy ở lượt đồng bộ kế."},
+    {"id": "OOS-4", "p": "Không sửa lịch chạy máy thu (làn ZCode)."}
+  ]
+}
