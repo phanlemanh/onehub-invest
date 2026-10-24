@@ -332,5 +332,83 @@ test("LK-AC-9 bản sao mặc định os.tmpdir() ra khác, nêu QR mặc địn
   assert.notEqual(qrDirMacDinh(f), "/tmp/openclaw", "QR mặc định: bản sao dùng os.tmpdir() vẫn ra /tmp/openclaw")
 })
 
-// AC-7 (thước tĩnh) ở cuối tệp — Task 2.
-void readdirSync
+// ---------- AC-7: thước tĩnh — mọi lời gọi channels login đứng sau bước kiểm id ----------
+
+type ChoLogin = { path: string; fn: string | null; ok: boolean }
+
+/** Bỏ comment để chữ «channels login» trong chú thích không bị đếm là một chỗ gọi. */
+const boComment = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1")
+
+/**
+ * Mọi literal login trong tệp có chữ openclaw — "login", 'login', `login`, và chuỗi chứa «channels login» —;
+ * ok = trong cùng hàm (function gần nhất phía trước), lời gọi requireLoginAccount( đứng trước.
+ */
+function quetLogin(files: { path: string; text: string }[]): ChoLogin[] {
+  const kq: ChoLogin[] = []
+  for (const f of files) {
+    if (!/openclaw/i.test(f.text)) continue
+    const text = boComment(f.text)
+    const hams = [...text.matchAll(/function\s+(\w+)\s*[<(]/g)]
+    for (const m of text.matchAll(/(["'`])login\1|["'`][^"'`\n]*channels login[^"'`\n]*["'`]/g)) {
+      const i = m.index ?? 0
+      const ham = hams.filter((h) => (h.index ?? 0) < i).at(-1)
+      kq.push({ path: f.path, fn: ham?.[1] ?? null, ok: text.slice(ham?.index ?? 0, i).includes("requireLoginAccount(") })
+    }
+  }
+  return kq
+}
+const viPhamLogin = (kq: ChoLogin[]) => kq.filter((c) => !c.ok).map((c) => `${c.path}: login trước bước kiểm id`)
+
+function tepSrc(): { path: string; text: string }[] {
+  const out: { path: string; text: string }[] = []
+  const di = (dir: string) => {
+    for (const e of readdirSync(join(APP, dir), { withFileTypes: true })) {
+      const rel = join(dir, e.name)
+      if (e.isDirectory()) di(rel)
+      else if (/\.tsx?$/.test(e.name)) out.push({ path: rel, text: readFileSync(join(APP, rel), "utf8") })
+    }
+  }
+  di("src")
+  return out
+}
+const ADMIN_REL = "src/lib/zalo-admin.ts"
+const GUARD = "  requireLoginAccount(cfg, accountId);\n"
+const SAU_SPAWN = "  proc.unref();\n"
+
+test("LK-AC-7 chỗ login trong app/src bằng đúng danh sách viết trước [zalo-admin.ts · startZaloLogin] và đứng sau requireLoginAccount", () => {
+  const kq = quetLogin(tepSrc())
+  assert.deepEqual(
+    kq.map(({ path, fn }) => ({ path, fn })),
+    [{ path: ADMIN_REL, fn: "startZaloLogin" }],
+    "danh sách chỗ login lệch danh sách viết trước",
+  )
+  assert.deepEqual(viPhamLogin(kq), [], "login trước bước kiểm id")
+})
+
+test("LK-AC-7 bản sao spawn trước bước kiểm", () => {
+  const goc = readFileSync(ADMIN_SRC, "utf8")
+  const sao = goc.replace(GUARD, "").replace(SAU_SPAWN, SAU_SPAWN + GUARD)
+  assert.notEqual(sao, goc, "đột biến không đổi gì")
+  assert.ok(sao.indexOf(GUARD) > sao.indexOf('"login"'), "đột biến không đưa bước kiểm xuống sau spawn")
+  assert.deepEqual(viPhamLogin(quetLogin([{ path: ADMIN_REL, text: sao }])), [`${ADMIN_REL}: login trước bước kiểm id`])
+})
+
+test("LK-AC-7 bản sao thêm mảng argv nháy đơn", () => {
+  const sao =
+    readFileSync(ADMIN_SRC, "utf8") +
+    "\nexport function buildLoginArgs(id: string): string[] {\n  return ['channels', 'login', '--account', id];\n}\n"
+  const kq = quetLogin([{ path: ADMIN_REL, text: sao }])
+  assert.equal(kq.length, 2)
+  assert.deepEqual(kq.filter((c) => !c.ok).map(({ path, fn }) => ({ path, fn })), [{ path: ADMIN_REL, fn: "buildLoginArgs" }])
+  assert.deepEqual(viPhamLogin(kq), [`${ADMIN_REL}: login trước bước kiểm id`])
+})
+
+test("LK-AC-7 bản sao thêm chuỗi lệnh channels login", () => {
+  const sao =
+    readFileSync(ADMIN_SRC, "utf8") +
+    '\nexport function loginCmd(id: string): string {\n  return "openclaw channels login --account " + id;\n}\n'
+  const kq = quetLogin([{ path: ADMIN_REL, text: sao }])
+  assert.equal(kq.length, 2)
+  assert.deepEqual(kq.filter((c) => !c.ok).map(({ path, fn }) => ({ path, fn })), [{ path: ADMIN_REL, fn: "loginCmd" }])
+  assert.deepEqual(viPhamLogin(kq), [`${ADMIN_REL}: login trước bước kiểm id`])
+})
