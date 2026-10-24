@@ -1,3 +1,4 @@
+import { loadOurListings, pickRepresentative, type Queryable } from "./calibration";
 import { pool } from "./db";
 
 // Tiền tệ theo QUỐC GIA (tiền tố của area id): mọi thị trường VN là VND.
@@ -875,36 +876,31 @@ export type TruthfulCoverageRow = {
  * 48 + Bình Dương + Vũng Tàu + Côn Đảo). Địa lý các tỉnh cũ không giao nhau
  * nên mẫu số = TỔNG active listings của mọi market thành phần.
  */
-export async function getTruthfulCoverage(): Promise<TruthfulCoverageRow[]> {
-  const [xw, active, uni, hist, cap, ours] = await Promise.all([
-    pool.query(
+export async function getTruthfulCoverage(db: Queryable = pool): Promise<TruthfulCoverageRow[]> {
+  const [xw, active, uni, hist, cap, oursBy] = await Promise.all([
+    db.query(
       `SELECT x.area_id, a.name, x.source_area_key
          FROM area_sources x JOIN areas a ON a.id = x.area_id
         WHERE x.source = 'S02' ORDER BY a.name`,
     ),
-    pool.query(
+    db.query(
       `SELECT DISTINCT ON (airdna_id) airdna_id, value, period
          FROM airdna_market_metrics WHERE metric = 'listing_count'
         ORDER BY airdna_id, period DESC`,
     ),
-    pool.query(
+    db.query(
       `SELECT airdna_market_id, count(*)::int AS n FROM airdna_listings GROUP BY 1`,
     ),
-    pool.query(
+    db.query(
       `SELECT airdna_id, count(DISTINCT period)::int AS m FROM airdna_market_metrics GROUP BY 1`,
     ),
-    pool.query(`SELECT airdna_id, captured_at FROM airdna_markets`),
-    pool.query(
-      `SELECT coalesce(sa.parent_id, sa.id) AS market, count(*)::int AS n
-         FROM listings l JOIN areas sa ON sa.id = l.area_id
-        WHERE sa.id LIKE 'vn-%' GROUP BY 1`,
-    ),
+    db.query(`SELECT airdna_id, captured_at FROM airdna_markets`),
+    loadOurListings(db), // định nghĩa «listing tự thu» chung của vùng Hiệu chuẩn (ON10)
   ]);
   const activeBy = new Map(active.rows.map((r) => [r.airdna_id, r]));
   const uniBy = new Map(uni.rows.map((r) => [r.airdna_market_id, r.n]));
   const histBy = new Map(hist.rows.map((r) => [r.airdna_id, r.m]));
   const capBy = new Map(cap.rows.map((r) => [r.airdna_id, r.captured_at]));
-  const oursBy = new Map(ours.rows.map((r) => [r.market, r.n]));
 
   const byArea = new Map<string, { name: string; keys: string[] }>();
   for (const r of xw.rows) {
@@ -947,8 +943,10 @@ export type AirdnaMarketRow = {
 };
 
 /** Danh sách market AirDNA toàn quốc + crosswalk sang khu vực của ta (chỉ Ops). */
-export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
-  const { rows } = await pool.query(
+export async function getAirdnaMarkets(db: Queryable = pool): Promise<AirdnaMarketRow[]> {
+  // «Listing tự thu» = cùng định nghĩa thẻ hiệu chuẩn và bảng Độ phủ (ON10), không phải listing_count tháng cuối.
+  const ours = await loadOurListings(db);
+  const { rows } = await db.query(
     `SELECT am.airdna_id, am.name,
             s.total AS score,
             -- Crosswalk qua area_sources (chính xác), fallback fuzzy
@@ -962,16 +960,7 @@ export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
                    = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
                  )
                LIMIT 1)
-            ) AS our_area_id,
-            (SELECT mm.listing_count FROM market_metrics mm
-             WHERE mm.area_id = COALESCE(
-               (SELECT x.area_id FROM area_sources x
-                WHERE x.source = 'S02' AND x.source_area_key = am.airdna_id LIMIT 1),
-               (SELECT a.id FROM areas a WHERE a.country_code='vn' AND a.region_type='market'
-                 AND translate(lower(a.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                   = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                 LIMIT 1))
-             ORDER BY mm.month DESC LIMIT 1) AS our_listings
+            ) AS our_area_id
      FROM airdna_markets am
      LEFT JOIN airdna_scores s ON s.airdna_id = am.airdna_id
      ORDER BY s.total DESC NULLS LAST, am.name`,
@@ -981,7 +970,7 @@ export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
     name: r.name,
     score: r.score === null ? null : Number(r.score),
     ourAreaId: r.our_area_id,
-    ourListings: r.our_listings === null ? null : Number(r.our_listings),
+    ourListings: r.our_area_id ? (ours.get(r.our_area_id) ?? 0) : null,
   }));
 }
 
@@ -998,35 +987,51 @@ export type AirdnaComparison = {
   }[];
   submarketCount: number;
   capturedAt: string | null;
+  /** Market S02 đại diện cho khu vực và số market S02 khu vực gộp (ON10). */
+  representative: { airdnaId: string; ofMarkets: number };
+  /** «Listing tự thu» — định nghĩa chung của ba bảng (cả cây khu vực). */
+  ourListings: number;
+  /** Cỡ mẫu sinh ADR/công suất tự thu (max listing_count của market_metrics) — cơ sở cờ «mẫu mỏng». */
+  sampleListings: number | null;
 };
 
-export async function getAirdnaComparison(areaId: string): Promise<AirdnaComparison | null> {
-  // Crosswalk: areaId → airdna_id
-  const { rows: xw } = await pool.query(
-    `SELECT source_area_key FROM area_sources WHERE area_id = $1 AND source = 'S02' LIMIT 1`,
+export async function getAirdnaComparison(areaId: string, db: Queryable = pool): Promise<AirdnaComparison | null> {
+  // Crosswalk: areaId → MỌI market S02 của khu vực (sáp nhập tỉnh 2025) → market đại diện theo luật cố định (ON10):
+  // nhiều listing S02 kỳ mới nhất nhất, hoà thì mã nhỏ nhất — chạy hai lần ra cùng số.
+  const { rows: xw } = await db.query(
+    `SELECT x.source_area_key AS airdna_id, lc.value AS listing_count
+       FROM area_sources x
+       LEFT JOIN (SELECT DISTINCT ON (airdna_id) airdna_id, value FROM airdna_market_metrics
+                   WHERE metric = 'listing_count' ORDER BY airdna_id, period DESC) lc
+         ON lc.airdna_id = x.source_area_key
+      WHERE x.area_id = $1 AND x.source = 'S02'`,
     [areaId],
   );
-  const airdnaId = xw[0]?.source_area_key;
-  if (!airdnaId) return null;
+  const representative = pickRepresentative(
+    xw.map((r) => ({ airdnaId: r.airdna_id as string, listingCount: r.listing_count === null ? null : Number(r.listing_count) })),
+  );
+  if (!representative) return null;
+  const airdnaId = representative.airdnaId;
 
-  const { rows: scores } = await pool.query(
+  const { rows: scores } = await db.query(
     `SELECT * FROM airdna_scores WHERE airdna_id = $1`, [airdnaId],
   );
-  const { rows: airdnaMetrics } = await pool.query(
+  const { rows: airdnaMetrics } = await db.query(
     `SELECT metric, period, value FROM airdna_market_metrics
      WHERE airdna_id = $1 AND period = (SELECT max(period) FROM airdna_market_metrics WHERE airdna_id = $1 AND metric = 'adr')
      ORDER BY metric`, [airdnaId],
   );
   // Số tự thu gộp CẢ cửa sổ (có trọng số đêm), không lấy tháng cuối: dữ liệu là
   // lịch tương lai nên tháng xa nhất gần như chưa có booking.
-  const { rows: ourMetrics } = await pool.query(
+  const { rows: ourMetrics } = await db.query(
     `SELECT sum(revenue) / nullif(sum(booked_nights), 0) AS adr,
             sum(booked_nights)::numeric
               / nullif(sum(booked_nights) + sum(available_nights), 0) AS occupancy,
             max(listing_count) AS listing_count
      FROM market_metrics WHERE area_id = $1`, [areaId],
   );
-  const { rows: subCount } = await pool.query(
+  const ourListings = (await loadOurListings(db)).get(areaId) ?? 0;
+  const { rows: subCount } = await db.query(
     `SELECT count(*) n FROM airdna_submarket_metrics WHERE airdna_market_id = $1`, [airdnaId],
   );
 
@@ -1051,8 +1056,8 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
       ratio: null as number | null,
     },
     {
-      metric: "Listing",
-      ourValue: ours.listing_count ? Number(ours.listing_count) : null,
+      metric: "Listing tự thu",
+      ourValue: ourListings,
       ourUnit: "",
       airdnaValue: byMetric.get("listing_count") ?? null,
       airdnaUnit: "",
@@ -1085,6 +1090,9 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
     metrics,
     submarketCount: Number(subCount[0]?.n ?? 0),
     capturedAt: score?.captured_at?.toISOString?.() ?? null,
+    representative,
+    ourListings,
+    sampleListings: ours.listing_count === null || ours.listing_count === undefined ? null : Number(ours.listing_count),
   };
 }
 
