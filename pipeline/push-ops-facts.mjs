@@ -9,6 +9,7 @@ import path from "node:path";
 import pg from "pg";
 
 import { maskSourceNames } from "./lib/mask-source-names.mjs";
+import { guardValues } from "./lib/tier-a-guard.mjs";
 
 import { tailLog } from "./lib/last-log-line.mjs";
 
@@ -198,9 +199,21 @@ async function sourceRunsQ(client) {
   return rows;
 }
 
+/** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A. */
+export function factsChan(payload, names) {
+  if (!names?.length) return ["FACTS CHẶN [tầng A] không có danh sách tên để soát (source_registry) — không gửi"];
+  const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
+  (payload.zaloAccounts ?? []).forEach((a, i) => {
+    if (a?.name != null) out.push(`FACTS CHẶN [tầng A] zaloAccounts[${i}].name tên tài khoản thu`);
+  });
+  return out;
+}
+
 async function main() {
-  const { token } = await env();
-  if (!token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
+  // --kho: chế độ khô — dựng bản tin, soát tầng A, in đường JSON + mã; không cần token, không gửi.
+  const kho = process.argv.includes("--kho");
+  const { token } = kho ? {} : await env();
+  if (!kho && !token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
   const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(() => "");
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
@@ -228,7 +241,8 @@ async function main() {
         ? (z.accounts?.default?.groups ?? z.groups ?? {})
         : (acc?.groups ?? {});
       const enabled = Object.entries(groups).filter(([, v]) => v?.enabled !== false && v?.allow !== false).length;
-      return { accountId: id, name: acc?.name ?? null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
+      // NT2 Hỏi-1 = A: tên tài khoản thu là tầng A — không rời máy; cloud hiện mã tài khoản.
+      return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
     });
   } catch { /* config không đọc được */ }
 
@@ -240,6 +254,19 @@ async function main() {
     zaloFlow: zalo.flow,
     zaloAccounts,
   };
+  // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
+  const chan = factsChan(payload, REG.names);
+  if (kho) {
+    for (const l of chan) console.error(l);
+    console.log(chan.length ? `ops-facts khô: ${chan.length} chỗ chặn` : "ops-facts khô: sạch, 0 chỗ chặn");
+    process.exitCode = chan.length ? 1 : 0;
+    return;
+  }
+  if (chan.length) {
+    for (const l of chan) console.error(l);
+    process.exitCode = 1;
+    return;
+  }
   const res = await fetch(INGEST_URL, {
     method: "POST",
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },

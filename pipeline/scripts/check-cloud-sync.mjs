@@ -13,6 +13,7 @@
 //   overlap   hai lượt chồng nhau
 //   allow     cột cho phép, chuẩn hoá seller_ref, soát tên nguồn
 //   anon      leak gate kiểm quyền đọc công khai anon/authenticated (leak-gate-kiem-anon, AU1)
+//   pii-cot   leak gate đỏ khi bảng người bán ở cloud có cột ngoài CLOUD_ALLOW / bảng tầng A có dòng (NT2)
 import { execFileSync, spawn } from "node:child_process";
 import { copyFileSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -117,7 +118,7 @@ export function buildLocalSim(name = "local") {
   return db;
 }
 
-/** DB «cloud mô phỏng»: schema FILL theo tên cloud (RENAME), không cột properties.seller_name,
+/** DB «cloud mô phỏng»: schema FILL theo tên cloud (RENAME), bảng người bán chỉ mang cột trong CLOUD_ALLOW,
  * thêm users/saved_markets (FK ON DELETE CASCADE như 002_auth), role anon/authenticated +
  * default ACL như Supabase (đo 23/10: pg_default_acl cấp arwdDxtm cho anon/authenticated),
  * hai view ruler, rồi áp migration 038 (trừ khi migrate=false). `lock` (mặc định) áp thêm 037 — cloud như prod
@@ -141,8 +142,12 @@ export function buildCloudSim(name = "cloud", { roles = true, defaultAcl = true,
   // chỉ đổi TÊN BẢNG như cloud thật (cột airdna_id… giữ nguyên tên, đo 23/10)
   ddl = ddl.replace(/\bairdna_(markets|scores|market_metrics|sub_monthly|future_daily|listings|submarket_metrics)\b/g, "ref_calib_$1");
   psql(db, ddl);
-  psql(db, `ALTER TABLE properties DROP COLUMN IF EXISTS seller_name;
-    CREATE TABLE users (id bigserial PRIMARY KEY, email text);
+  // bảng người bán trên cloud chỉ mang cột trong CLOUD_ALLOW (trạng thái đích NT2 — leak gate đỏ khi có cột khác)
+  const extra = psql(db, `SELECT format('ALTER TABLE public.%I DROP COLUMN %I;', table_name, column_name)
+    FROM information_schema.columns WHERE table_schema = 'public' AND (${Object.entries(sync.CLOUD_ALLOW)
+      .map(([t, cols]) => `(table_name = '${t}' AND column_name <> ALL(ARRAY[${cols.map((c) => `'${c}'`).join(",")}]))`).join(" OR ")});`);
+  if (extra.trim()) psql(db, extra);
+  psql(db, `CREATE TABLE users (id bigserial PRIMARY KEY, email text);
     CREATE TABLE saved_markets (user_id bigint REFERENCES users(id) ON DELETE CASCADE,
       area_id text REFERENCES areas(id) ON DELETE CASCADE, PRIMARY KEY (user_id, area_id));`);
   const views = readFileSync(path.join(ROOT, "db/migrations/034_ruler_p2_views.sql"), "utf8");
@@ -738,6 +743,7 @@ async function casePii() {
   try {
     copyFileSync(path.join(PIPE, "sync-cloud.mjs"), path.join(dir, "sync-cloud.mjs"));
     symlinkSync(path.join(PIPE, "node_modules"), path.join(dir, "node_modules"));
+    symlinkSync(path.join(PIPE, "lib"), path.join(dir, "lib")); // sync-cloud import ./lib/tier-a-guard.mjs (NT2)
     const p = path.join(dir, "sync-cloud.mjs");
     const src = readFileSync(p, "utf8");
     // bỏ cả hai lớp chặn cho đủ ba cột của ba bảng
@@ -753,8 +759,8 @@ async function casePii() {
     writeFileSync(p, mut);
     const m = await import(pathToFileURL(p).href);
     const C2 = buildCloudSim("pii_red");
-    // cloud thật không có properties.seller_name (cố ý) — bản sao đỏ thêm cột để đột biến gửi được
-    await q1(C2, "ALTER TABLE properties ADD COLUMN seller_name text");
+    // cloud mô phỏng không có cột loại (cột bảng người bán ⊆ CLOUD_ALLOW) — bản sao đỏ thêm cột để đột biến gửi được
+    await q1(C2, "ALTER TABLE properties ADD COLUMN seller_name text; ALTER TABLE sale_offers ADD COLUMN seller_phone text; ALTER TABLE sellers ADD COLUMN name text");
     const red = [];
     const local = await client(L, { types: m.localTypes });
     try {
@@ -845,6 +851,7 @@ async function loadMutant() {
   lines.splice(at, 1);
   writeFileSync(path.join(dir, "sync-cloud.mjs"), lines.join("\n"));
   symlinkSync(path.join(PIPE, "node_modules"), path.join(dir, "node_modules"));
+  symlinkSync(path.join(PIPE, "lib"), path.join(dir, "lib")); // sync-cloud import ./lib/tier-a-guard.mjs (NT2)
   return { mod: await import(pathToFileURL(path.join(dir, "sync-cloud.mjs")).href), dir };
 }
 
@@ -1102,6 +1109,103 @@ async function caseAllow() {
   else fail(`leak gate không bắt seller_ref thô: ${JSON.stringify(leaks)}`);
 }
 
+/** Bản sao sync-cloud.mjs qua `fn` (đột biến) trong thư mục tạm; lib + node_modules trỏ về bản thật. */
+async function loadSyncMutant(tag, fn) {
+  const dir = mkdtempSync(path.join(tmpdir(), `${tag}-`));
+  const src = readFileSync(path.join(PIPE, "sync-cloud.mjs"), "utf8");
+  const out = fn(src);
+  if (out === src) throw new Error(`đột biến ${tag} không đổi gì — khuôn sync-cloud.mjs đổi?`);
+  writeFileSync(path.join(dir, "sync-cloud.mjs"), out);
+  symlinkSync(path.join(PIPE, "node_modules"), path.join(dir, "node_modules"));
+  symlinkSync(path.join(PIPE, "lib"), path.join(dir, "lib"));
+  return { mod: await import(pathToFileURL(path.join(dir, "sync-cloud.mjs")).href), dir };
+}
+
+// ─── ca pii-cot (NT2 soat-tang-a-moi-duong-len-cloud AC-7 / E7) ──────────
+// Phạm vi cột theo Hỏi-2 = A: ba bảng có CLOUD_ALLOW + bảng tầng A có tên (TIER_A_TABLES).
+async function casePiiCot() {
+  const L = buildLocalSim("piicot_local");
+  const C = buildCloudSim("piicot_cloud");
+  await runSync(L, C);
+  const clean = await sync.leakGate(cloudExec(C));
+  if (!clean.length) pass("cloud sạch → leak gate xanh (đối chứng dương: lượt sync thật đi trọn, gate không đỏ oan)");
+  else fail(`cloud sạch mà leak gate đỏ: ${clean.join(", ")}`);
+  await makeOldDiffer(C); // số cũ khác số local → «giữ số cũ» đo được
+  let before = await countsOf(C);
+
+  const redRun = async (label, wantMsg, after) => {
+    const r = await expectFail(runSync(L, C), "gate");
+    const st = await stagingCount(C);
+    const kept = sameMap(before, await countsOf(C));
+    const extra = after ? await after() : true;
+    if (r.ok && r.msg.includes("trước khi gửi") && r.msg.includes(wantMsg) && st === 0 && kept && extra) pass(label);
+    else fail(`${label} — lượt: ${r.msg}; staging ${st}; giữ số cũ ${kept}; vế riêng ${extra}`);
+  };
+
+  // (a) cột ngoài danh sách cấy thẳng trên cloud
+  await q1(C, "ALTER TABLE sale_offers ADD COLUMN seller_phone text");
+  const a = await sync.leakGate(cloudExec(C));
+  if (a.includes("cột ngoài danh sách cho phép: sale_offers.seller_phone")) pass("ĐỎ-ĐÚNG cột ngoài danh sách: sale_offers.seller_phone (leak gate nêu <bảng>.<cột>)");
+  else fail(`leak gate không bắt cột sale_offers.seller_phone: ${JSON.stringify(a)}`);
+  await redRun("ĐỎ-ĐÚNG cột ngoài danh sách: lượt sync dừng ở pha gate trước khi tráo, giữ số cũ", "sale_offers.seller_phone");
+  await q1(C, "ALTER TABLE sale_offers DROP COLUMN seller_phone");
+
+  // (b) cột có ở LOCAL (mang giá trị) và cloud. Ba lượt: (b1) code thật — chốt trước khi gửi dừng lượt; (b2) bản sao bỏ chốt
+  // ấy — lượt đi tới bên ghi: bên ghi không mang giá trị cột lên cloud, leak gate sau tráo vẫn đỏ; (b3) đối chứng của b2 —
+  // bản sao bỏ chốt VÀ cho phép cột: bên ghi mang giá trị lên, thước «0 giá trị» thấy được (không hằng đúng).
+  await q1(L, "ALTER TABLE sale_offers ADD COLUMN so_giay_to text DEFAULT 'B12345678'");
+  await q1(C, "ALTER TABLE sale_offers ADD COLUMN so_giay_to text");
+  const nonNull = async (db) => (await q1(db, "SELECT count(*)::int AS n FROM sale_offers WHERE so_giay_to IS NOT NULL"))[0].n;
+  const localN = await nonNull(L);
+  const b1 = await expectFail(runSync(L, C), "gate");
+  const b1ok = b1.ok && b1.msg.includes("trước khi gửi") && b1.msg.includes("sale_offers.so_giay_to")
+    && (await stagingCount(C)) === 0 && sameMap(before, await countsOf(C)) && (await nonNull(C)) === 0;
+  const viaMutant = async (tag, fn) => {
+    const { mod, dir } = await loadSyncMutant(tag, fn);
+    const local = await client(L, { types: mod.localTypes });
+    try {
+      return await expectFail(mod.syncOnce({ local, exec: cloudExec(C), log: () => {} }), "gate");
+    } finally {
+      await local.end();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+  const noPreGate = (src) => src.split("\n").filter((l) => !l.includes("await gatePii(exec); // NT2")).join("\n");
+  const b2 = await viaMutant("nt2-bo-chot", noPreGate);
+  const b2ok = b2.ok && b2.msg.includes("sau tráo") && b2.msg.includes("cột ngoài danh sách cho phép: sale_offers.so_giay_to") && (await nonNull(C)) === 0;
+  if (localN > 0 && b1ok && b2ok) {
+    pass("ĐỎ-ĐÚNG qua bên ghi: cột local ngoài danh sách → gate đỏ, cloud không mang cột, giữ số cũ"
+      + ` (local ${localN} giá trị; chốt trước khi gửi dừng lượt và giữ số cũ; bỏ chốt ấy thì bên ghi đưa 0 giá trị lên, leak gate sau tráo đỏ)`);
+  } else fail(`qua bên ghi — local ${localN} giá trị; b1 ${b1ok} (${b1.msg}); b2 ${b2ok} (${b2.msg})`);
+  const b3 = await viaMutant("nt2-cho-phep", (src) => {
+    const out = noPreGate(src).replace('"offer_id", "area_id",', '"offer_id", "so_giay_to", "area_id",');
+    if (!out.includes('"so_giay_to", "area_id"')) throw new Error("khuôn CLOUD_ALLOW của sale_offers đổi — đột biến b3 không dựng được");
+    return out;
+  });
+  const b3n = await nonNull(C);
+  if (b3n > 0) pass(`đối chứng bên ghi: bản sao cho phép cột → bên ghi mang ${b3n} giá trị so_giay_to lên cloud (thước «0 giá trị» của b2 đo thật)`);
+  else fail(`đối chứng bên ghi: bản sao cho phép cột mà cloud vẫn 0 giá trị — thước b2 có thể hằng đúng (${b3.msg})`);
+  await q1(C, "ALTER TABLE sale_offers DROP COLUMN so_giay_to");
+  await q1(L, "ALTER TABLE sale_offers DROP COLUMN so_giay_to");
+  // b2/b3 đã tráo — dựng lại nền «số cũ khác số local» cho ca (c)
+  await runSync(L, C);
+  await makeOldDiffer(C);
+  before = await countsOf(C);
+
+  // (c) bảng tầng A có dòng trên cloud
+  // thu quyền anon/authenticated như prod sau 037 — để chỉ vế bảng tầng A của gate được đo, không vế quyền đọc (AU1)
+  await q1(C, `CREATE TABLE user_events (id bigserial PRIMARY KEY, kind text); INSERT INTO user_events (kind) VALUES ('xem');
+    REVOKE ALL ON user_events FROM anon, authenticated, PUBLIC`);
+  const c = await sync.leakGate(cloudExec(C));
+  if (c.includes("bảng tầng A có dòng: user_events=1")) pass("ĐỎ-ĐÚNG bảng tầng A có dòng: user_events=1");
+  else fail(`leak gate không bắt user_events có dòng: ${JSON.stringify(c)}`);
+  await redRun("ĐỎ-ĐÚNG bảng tầng A: lượt sync dừng ở pha gate trước khi tráo, giữ số cũ", "user_events=1");
+  await q1(C, "DELETE FROM user_events");
+  const empty = await sync.leakGate(cloudExec(C));
+  if (!empty.length) pass("đối chứng: bảng tầng A có mặt nhưng rỗng → leak gate xanh");
+  else fail(`bảng tầng A rỗng mà gate đỏ: ${empty.join(", ")}`);
+}
+
 // tiến trình con cho ca fail (d): chạy một lượt có nạp chậm để bị kill -9 giữa chừng
 if (process.argv[2] === "__child") {
   const [, , , L, C, runId, ct, port] = process.argv;
@@ -1122,6 +1226,7 @@ const CASES = {
   overlap: caseOverlap,
   allow: caseAllow,
   anon: caseAnon,
+  "pii-cot": casePiiCot,
 };
 
 const which = process.argv[2];
