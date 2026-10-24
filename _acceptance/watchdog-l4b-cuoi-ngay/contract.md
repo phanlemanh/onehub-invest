@@ -5,7 +5,7 @@ slug: watchdog-l4b-cuoi-ngay
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -57,4 +57,4 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 - T3 vì `scripts/zalo-watchdog.sh` ∈ `t3_paths` (an toàn Zalo). Chữ ký Mạnh bắt buộc.
 - Hợp đồng dựng SAU khi code xong nên `gate1_skipped: true`.
 - Eval trích nguyên văn `scan_new_lines` từ watchdog, và chạy watchdog trọn vẹn trên bản chép đổi đúng 2 dòng (đường log /tmp và cổng :5433), với HOME giả và stub `launchctl`/`pkill`/`pgrep`/`osascript`/`curl`/`sleep` (kiểm stub thắng PATH, sai thì bỏ chạy).
-- Vòng 2 (24/10): ZCode sửa marker hỏng ở 163c2c3 nhưng quét lại từ dòng 1 cho cả `gateway.log`. Tệp đó còn turn của sự cố 20/10, nên marker hỏng làm watchdog KILL gateway vì quá khứ. Lỗi do lời MỞ LẠI lần 1 không tách hai loại log; MỞ LẠI lần 2 `claudedp-2310-7`. Thêm AC-6, AC-7 + E10–E12 (harness `marker-hong`: bản chép, HOME giả, stub). Kiểm harness biết đỏ: trên e109402 đỏ 6 mục (gồm (b2) chết dưới `set -u`), trên 163c2c3 đỏ đúng 1 mục (a).
+- Vòng 2 (24/10): ZCode sửa marker hỏng ở 163c2c3 nhưng quét lại từ dòng 1 cho cả `gateway.log`. Tệp đó còn turn của sự cố 20/10, nên marker hỏng làm watchdog KILL gateway vì quá khứ. (Đính chính sau vòng 2: hành vi KILL này đã có trên main — inode hỏng rơi vào nhánh «đổi file» — 163c2c3 không đưa nó vào, chỉ để nguyên. Lời MỞ LẠI lần 1 không tách hai loại log.) MỞ LẠI lần 2 `claudedp-2310-7`. Thêm AC-6, AC-7 + E10–E12 (harness `marker-hong`: bản chép, HOME giả, stub). Kiểm harness biết đỏ: trên e109402 đỏ 6 mục (gồm (b2) chết dưới `set -u`), trên 163c2c3 đỏ đúng 1 mục (a).

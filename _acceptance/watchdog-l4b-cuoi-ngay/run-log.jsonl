@@ -7,3 +7,15 @@
 {"ts":"2026-10-23T16:10:09Z","round":1,"evalId":"E7","run_id":"watchdog-l4b-cuoi-ngay-E7-20261023T161009","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"}
 {"ts":"2026-10-23T16:10:14Z","round":1,"evalId":"E8","run_id":"watchdog-l4b-cuoi-ngay-E8-20261023T161012","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs gateway"}
 {"ts":"2026-10-23T16:10:20Z","round":1,"evalId":"E9","run_id":"watchdog-l4b-cuoi-ngay-E9-20261023T161020","exit_code":0,"cmd":"bash -n scripts/zalo-watchdog.sh && bash -n scripts/zalo-import-daily.sh && node --check pipeline/collect-chotot.mjs && node --check pipeline/import-chotot.mjs && echo SYNTAX OK"}
+{"ts":"2026-10-24T09:43:50Z","round":2,"evalId":"E1","run_id":"watchdog-l4b-cuoi-ngay-E1-r2-20261024T094350Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-24T09:43:56Z","round":2,"evalId":"E2","run_id":"watchdog-l4b-cuoi-ngay-E2-r2-20261024T094354Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"}
+{"ts":"2026-10-24T09:44:08Z","round":2,"evalId":"E3","run_id":"watchdog-l4b-cuoi-ngay-E3-r2-20261024T094407Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-24T09:44:08Z","round":2,"evalId":"E4","run_id":"watchdog-l4b-cuoi-ngay-E4-r2-20261024T094408Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-24T09:44:09Z","round":2,"evalId":"E5","run_id":"watchdog-l4b-cuoi-ngay-E5-r2-20261024T094408Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-24T09:44:09Z","round":2,"evalId":"E6","run_id":"watchdog-l4b-cuoi-ngay-E6-r2-20261024T094409Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"}
+{"ts":"2026-10-24T09:44:19Z","round":2,"evalId":"E7","run_id":"watchdog-l4b-cuoi-ngay-E7-r2-20261024T094419Z","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs l4b-scan"}
+{"ts":"2026-10-24T09:44:21Z","round":2,"evalId":"E8","run_id":"watchdog-l4b-cuoi-ngay-E8-r2-20261024T094419Z","exit_code":0,"cmd":"node scripts/audit-p1-resilience/acceptance.mjs gateway"}
+{"ts":"2026-10-24T09:44:21Z","round":2,"evalId":"E9","run_id":"watchdog-l4b-cuoi-ngay-E9-r2-20261024T094421Z","exit_code":0,"cmd":"bash -n scripts/zalo-watchdog.sh && bash -n scripts/zalo-import-daily.sh && node --check pipeline/collect-chotot.mjs && node --check pipeline/import-chotot.mjs && echo SYNTAX OK"}
+{"ts":"2026-10-24T09:44:29Z","round":2,"evalId":"E10","run_id":"watchdog-l4b-cuoi-ngay-E10-r2-20261024T094427Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"}
+{"ts":"2026-10-24T09:44:35Z","round":2,"evalId":"E11","run_id":"watchdog-l4b-cuoi-ngay-E11-r2-20261024T094433Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"}
+{"ts":"2026-10-24T09:44:41Z","round":2,"evalId":"E12","run_id":"watchdog-l4b-cuoi-ngay-E12-r2-20261024T094440Z","exit_code":0,"cmd":"node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"}
