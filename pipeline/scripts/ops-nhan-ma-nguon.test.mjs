@@ -2,15 +2,14 @@
 // ON7 `ops-nhan-ma-nguon`: AC-7 bộ che tên nguồn thật (bản pipeline + bản app trên cùng bảng ca) và AC-4 payload facts
 // do push-ops-facts thật đẩy. Tên thật lấy lúc chạy từ db/migrations — tệp này không chứa tên. Tên ca mở đầu bằng mã AC.
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, test } from "node:test";
 import * as pipe from "../lib/mask-source-names.mjs";
 import * as app from "../../app/src/lib/mask-source-names.ts";
 import { sourceRegistrySeeds } from "../../scripts/lib/tier-a-source-names.mjs";
-import { EXEMPT, PUSH, captureOpsFacts, payloadLeaks } from "./capture-ops-facts.mjs";
+import { EXEMPT, PUSH, captureOpsFacts, payloadLeaks, writeMutant } from "./capture-ops-facts.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SEEDS = sourceRegistrySeeds();
@@ -62,16 +61,13 @@ const LOGS = () => ({
 });
 
 function mutantCopy(file, fn) {
-  const dir = realpathSync(mkdtempSync(path.join(tmpdir(), "ops-facts-mut-")));
-  for (const d of ["node_modules", "lib"]) if (!existsSync(path.join(dir, d))) symlinkSync(path.join(HERE, "..", d), path.join(dir, d));
   // NT2 chặn bản tin còn tên trước khi gửi — bản sao của thước ON7 gỡ bộ soát ấy để máy chủ thu nhận payload mà đo.
   const src = readFileSync(PUSH, "utf8");
   const noGuard = src.replace("const chan = factsChan(payload, REG.names);", "const chan = [];");
   assert.notEqual(noGuard, src, "khuôn gỡ bộ soát NT2 không khớp mã nguồn push-ops-facts");
   const out = fn(noGuard);
   assert.notEqual(out, noGuard, `khuôn đột biến ${file} không khớp mã nguồn push-ops-facts`);
-  writeFileSync(path.join(dir, file), out);
-  return path.join(dir, file);
+  return writeMutant(file, out); // cây tạm pipeline/ + scripts/ — bên ghi import ../scripts/lib (ON22)
 }
 
 describe("ON7-AC-4 payload facts", () => {

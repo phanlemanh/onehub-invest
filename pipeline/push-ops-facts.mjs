@@ -12,6 +12,8 @@ import { maskSourceNames } from "./lib/mask-source-names.mjs";
 import { guardValues } from "./lib/tier-a-guard.mjs";
 
 import { tailLog } from "./lib/last-log-line.mjs";
+import { readFreshness } from "../scripts/lib/freshness.mjs";
+import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue } from "../scripts/lib/ops-local.mjs";
 
 const ROOT = process.env.ONEINVEST_ROOT ?? "/Users/manhphan/dev/one-invest";
 const INGEST_URL = process.env.INGEST_URL ?? "https://onehub-invest.vercel.app/api/v1/ops/ingest";
@@ -184,7 +186,20 @@ async function zaloExtras(client, funnelGroups) {
 }
 
 async function sourceRunsQ(client) {
-  // H3: feed health per nguồn cho cloud /ops (mọi lần chạy ghi snapshot)
+  // H3: feed health per nguồn cho cloud /ops (mọi lần chạy ghi snapshot). ON22: bảng snapshot đọc không được thì vẫn
+  // trả vai trò từng mã, số lần chạy để null (chưa đo) — không 0, không làm sập cả bản tin (khối records24h báo lỗi).
+  try {
+    return await sourceRunsFull(client);
+  } catch {
+    const { rows } = await client.query(
+      `SELECT code, label_vi, status, NULL::timestamptz AS last_run, NULL::bigint AS items_24h, NULL::bigint AS offers
+       FROM source_registry ORDER BY code`,
+    );
+    return rows;
+  }
+}
+
+async function sourceRunsFull(client) {
   const { rows } = await client.query(`
     SELECT r.code, r.label_vi, r.status, s.last_run, s.items_24h,
            COALESCE(o.offers, 0) AS offers
@@ -197,6 +212,18 @@ async function sourceRunsQ(client) {
     LEFT JOIN (SELECT source, count(*) offers FROM sale_offers GROUP BY source) o ON o.source = r.code
     ORDER BY r.code`);
   return rows;
+}
+
+/** ON22 (ADR-0014): một khối số = `{measured_at, ...dữ liệu}`; đo không được → `{measured_at, error}` — không bao giờ
+ * thay bằng 0, mảng rỗng hay «Ổn». Thông điệp lỗi đi qua bộ che tên (rỗng/không che được → câu chung). */
+async function measure(fn) {
+  try {
+    const data = await fn();
+    return { measured_at: new Date().toISOString(), ...data };
+  } catch (e) {
+    const msg = maskSourceNames(String(e?.message ?? e).split("\n")[0].slice(0, 200), REG.names);
+    return { measured_at: new Date().toISOString(), error: msg ? `không đo được: ${msg}` : "không đo được" };
+  }
 }
 
 /** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A. */
@@ -224,7 +251,24 @@ async function main() {
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
     scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
   ]);
+  // ON22: năm khối số tổng hợp (ADR-0014). OPS_FACTS_NOW / OPENCLAW_LOG_DIR / ONEINVEST_CRON_DIR / LAUNCHCTL chỉ để
+  // phép đo trỏ mốc giờ và thư mục tạm — plist launchd không đặt chúng.
+  const now = process.env.OPS_FACTS_NOW ? new Date(process.env.OPS_FACTS_NOW) : new Date();
+  const freshnessBlock = await measure(async () => ({ rows: await readFreshness(client, { now }) }));
+  const records24hBlock = await measure(async () => ({ bySource: await readRecords24h(client) }));
+  const reviewQueueBlock = await measure(() => readReviewQueue(client));
   await client.end();
+  const [lockdownBlock, jobsBlock] = await Promise.all([
+    measure(() => readLockdown({ root: ROOT, agentLogDir: process.env.OPENCLAW_LOG_DIR ?? "/tmp/openclaw", now })),
+    measure(async () => ({
+      items: await readLaunchdJobs({
+        cronDir: process.env.ONEINVEST_CRON_DIR ?? path.join(ROOT, "pipeline/cron"),
+        root: ROOT,
+        names: REG.names,
+        launchctl: process.env.LAUNCHCTL ?? "launchctl",
+      }),
+    })),
+  ]);
 
   // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud)
   let zaloAccounts = [];
@@ -253,11 +297,19 @@ async function main() {
     zaloGroups: zalo.groups,
     zaloFlow: zalo.flow,
     zaloAccounts,
+    blocks: {
+      freshness: freshnessBlock,
+      jobs: jobsBlock,
+      lockdown: lockdownBlock,
+      records24h: records24hBlock,
+      reviewQueue: reviewQueueBlock,
+    },
   };
   // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
   const chan = factsChan(payload, REG.names);
   if (kho) {
     for (const l of chan) console.error(l);
+    console.log(`khối: ${Object.entries(payload.blocks).map(([k, b]) => `${k} ${b.error ? "không đo được" : "đo được"}`).join(" · ")}`);
     console.log(chan.length ? `ops-facts khô: ${chan.length} chỗ chặn` : "ops-facts khô: sạch, 0 chỗ chặn");
     process.exitCode = chan.length ? 1 : 0;
     return;
