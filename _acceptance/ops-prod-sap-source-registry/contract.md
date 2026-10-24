@@ -5,7 +5,7 @@ slug: ops-prod-sap-source-registry
 owner: phanlemanh@gmail.com
 risk_tier: T2      # app/src/lib/ops-queries.ts, lib/freshness.ts, hai trang Ops + test; không đụng t3_paths
 surfaces: [ui, api]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-23T23:42:19Z
 approved_by:
@@ -45,3 +45,7 @@ Bỏ quét hình thái — sự cố một chiều (bảng vắng/có), xem dòn
 ## Notes
 
 - Đo prod sau deploy (chỉ đọc, đăng nhập ops) theo lời giao — làm sau khi gộp, kết quả báo giám sát; không phải eval máy.
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: cờ chỉ-đo-ở-local dựa vào việc thiếu bảng, còn tuổi máy thu dựa vào môi trường Vercel — hiếm khi hai dòng trên trang Thu thập lệch nhau.
+  - Ngoài-4: phép đo dựng sẵn cờ cho phần hiển thị trang Thu thập; nếu trang quên truyền cờ thì bộ kiểm không bắt được.

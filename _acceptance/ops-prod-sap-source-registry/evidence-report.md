@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 5f514db7a520532628169f3bf646661f2b3e2fd1
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: ops-prod-sap-source-registry
