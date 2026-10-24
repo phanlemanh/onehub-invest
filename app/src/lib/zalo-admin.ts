@@ -24,7 +24,8 @@ export function isZaloAdminAvailable(): boolean {
 
 const CLOUD_ERR = "Quản lý nguồn Zalo chỉ có ở máy thu (cần ~/.openclaw CLI + config)";
 const CONFIG = path.join(homedir(), ".openclaw/openclaw.json");
-const QR_DIR = "/tmp/openclaw";
+// CLI thật ghi QR ở /tmp/openclaw; biến môi trường chỉ để phép đo trỏ sang thư mục tạm (zalo-safety).
+const QR_DIR = process.env.OPENCLAW_QR_DIR || "/tmp/openclaw";
 
 const run = promisify(execFile);
 const SLUG = /^[a-z0-9][a-z0-9-]{0,30}$/;
@@ -142,27 +143,53 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
   return list.find((a) => a.accountId === accountId)!;
 }
 
-/** Đường CLI + config mà module dùng — phép đo kiểm chúng nằm trong HOME giả trước khi chạy (zalo-safety). */
-export function zaloAdminPaths(): { openclaw: string; config: string } {
-  return { openclaw: OPENCLAW, config: CONFIG };
+/** Đường CLI, config, thư mục QR mà module dùng — phép đo kiểm chúng nằm trong thư mục giả trước khi chạy (zalo-safety). */
+export function zaloAdminPaths(): { openclaw: string; config: string; qrDir: string } {
+  return { openclaw: OPENCLAW, config: CONFIG, qrDir: QR_DIR };
 }
 
+/** Lỗi của bước kiểm id — route trả 400 (khác lỗi máy chủ). */
+export class AccountIdError extends Error {}
+
+type CfgAccounts = { channels?: { zalouser?: { accounts?: Record<string, unknown> } } };
+
 /**
- * Bước kiểm id trước MỌI lệnh openclaw của việc gỡ tài khoản (sự cố P1-7 23/10: logout --account "").
- * Không đòi khuôn SLUG — khoá thật sửa tay ngoài khuôn vẫn gỡ được; chỉ chặn id không thể là tài khoản
+ * Bước kiểm id trước MỌI lệnh openclaw nhận `--account` (sự cố P1-7 23/10: logout --account "").
+ * Không đòi khuôn SLUG — khoá thật sửa tay ngoài khuôn vẫn dùng được; chỉ chặn id không thể là tài khoản
  * hợp lệ và khoá dạng cờ (mở đầu "-") để nó không bao giờ vào argv của openclaw như một cờ.
+ * `default` luôn có trong danh sách (listZaloAccounts), kể cả layout cũ không ghi accounts.default.
  */
-export function requireDeletableAccount(
-  cfg: { channels?: { zalouser?: { accounts?: Record<string, unknown> } } },
-  accountId: unknown,
-): string {
+function requireAccountId(cfg: CfgAccounts, accountId: unknown, opts: { allowDefault: boolean }): string {
   if (typeof accountId !== "string" || accountId === "") throw new Error("id rỗng");
   if (/\s/.test(accountId)) throw new Error("id có khoảng trắng");
   if (accountId.startsWith("-")) throw new Error("id dạng cờ");
-  if (accountId === "default") throw new Error("không xoá được tài khoản default");
+  if (accountId === "default") {
+    if (opts.allowDefault) return accountId;
+    throw new Error("không xoá được tài khoản default");
+  }
   const accounts = cfg.channels?.zalouser?.accounts;
   if (!accounts || !Object.hasOwn(accounts, accountId)) throw new Error("không có trong danh sách tài khoản");
   return accountId;
+}
+
+const asAccountIdError = (e: unknown) => new AccountIdError(e instanceof Error ? e.message : String(e));
+
+/** Gỡ tài khoản: mọi tài khoản trong danh sách trừ default. */
+export function requireDeletableAccount(cfg: CfgAccounts, accountId: unknown): string {
+  try {
+    return requireAccountId(cfg, accountId, { allowDefault: false });
+  } catch (e) {
+    throw asAccountIdError(e);
+  }
+}
+
+/** Đăng nhập QR: mọi tài khoản trong danh sách, kể cả default. */
+export function requireLoginAccount(cfg: CfgAccounts, accountId: unknown): string {
+  try {
+    return requireAccountId(cfg, accountId, { allowDefault: true });
+  } catch (e) {
+    throw asAccountIdError(e);
+  }
 }
 
 export async function deleteZaloAccount(accountId: string): Promise<void> {
@@ -253,6 +280,8 @@ export async function startZaloLogin(
   accountId: string,
 ): Promise<{ qrBase64: string | null; startedAt: string }> {
   if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
+  const cfg = await readCfg();
+  requireLoginAccount(cfg, accountId);
   const existing = logins.get(accountId);
   if (existing && existing.child.exitCode === null) {
     const b64 = await readQr(accountId);
