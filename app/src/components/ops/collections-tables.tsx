@@ -8,10 +8,11 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { fmtInt } from "@/lib/format"
 import type { FlowDay } from "@/lib/collections-queries"
+import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 const NUM = { headerClassName: "text-end", cellClassName: "text-end tabular-nums" }
 
-export function FlowTable({ days }: { days: FlowDay[] }) {
+export function FlowTable({ days, roles = {} }: { days: FlowDay[]; roles?: SourceRoles }) {
   const columns = useMemo<InsightColumn<FlowDay>[]>(
     () => [
       {
@@ -24,7 +25,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airdnaMarkets",
         accessorFn: (r) => r.airdnaMarkets,
-        header: ({ column }) => <DataGridColumnHeader title="AirDNA market" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S02", roles)} — market`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airdnaMarkets),
         size: 130,
         meta: NUM,
@@ -33,7 +34,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airdnaListings",
         accessorFn: (r) => r.airdnaListings,
-        header: ({ column }) => <DataGridColumnHeader title="AirDNA listing (LTM)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S02", roles)} — listing (LTM)`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airdnaListings),
         size: 160,
         meta: NUM,
@@ -42,7 +43,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airbnbSeen",
         accessorFn: (r) => r.airbnbListingsSeen,
-        header: ({ column }) => <DataGridColumnHeader title="Airbnb listing tươi" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S01", roles)} — listing tươi`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airbnbListingsSeen),
         size: 150,
         meta: NUM,
@@ -51,7 +52,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airbnbSnapshots",
         accessorFn: (r) => r.airbnbSnapshots,
-        header: ({ column }) => <DataGridColumnHeader title="Airbnb snapshot" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S01", roles)} — snapshot`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airbnbSnapshots),
         size: 140,
         meta: NUM,
@@ -60,7 +61,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "zaloPosts",
         accessorFn: (r) => r.zaloPosts,
-        header: ({ column }) => <DataGridColumnHeader title="Zalo post (raw)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — post (raw)`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.zaloPosts),
         size: 130,
         meta: NUM,
@@ -69,14 +70,14 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "zaloOffers",
         accessorFn: (r) => r.zaloOffers,
-        header: ({ column }) => <DataGridColumnHeader title="Zalo offer (parse)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — offer (parse)`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.zaloOffers),
         size: 140,
         meta: NUM,
         enableSorting: true,
       },
     ],
-    []
+    [roles]
   )
   return (
     <InsightGrid
@@ -101,9 +102,11 @@ function groupStatusBadge(lastSeenAt: string | null) {
 export function ZaloGroupsTable({
   rows,
   allowlist,
+  roles = {},
 }: {
   rows: import("@/lib/collections-queries").ZaloGroupRow[]
   allowlist: import("@/lib/collections-queries").ZaloAllowlistEntry[]
+  roles?: SourceRoles
 }) {
   const columns = useMemo<InsightColumn<import("@/lib/collections-queries").ZaloGroupRow>[]>(
     () => [
@@ -184,7 +187,7 @@ export function ZaloGroupsTable({
   const rowKey = new Map(rows.map((r, i) => [r, `nhom-${i}`]))
   return (
     <InsightGrid
-      title="Nhóm Zalo"
+      title={`Nhóm ${sourceLabel("S03", roles)}`}
       description={`Danh mục nguồn cộng đồng — thật tách mock; allowlist đang bật ${enabled.length} nhóm`}
       data={rows}
       columns={columns}

@@ -12,6 +12,7 @@ import {
   getZaloGroups,
 } from "@/lib/collections-queries";
 import { freshnessLocalOnly, getSourceFeedHealth, getLockdownStatus } from "@/lib/ops-queries";
+import { getSourceRoles } from "@/lib/source-roles";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Thu thập" };
@@ -23,7 +24,7 @@ function requestTime(): number {
 
 /** /ops/collections "Thu Thập" (portals.md) — chỉ tải dữ liệu; phần hiển thị ở CollectionsView. */
 export default async function CollectionsPage() {
-  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, localOnly] = await Promise.all([
+  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, localOnly, roles] = await Promise.all([
     getFlowDays(7),
     readGateFunnel(),
     readSchedulerStatus(),
@@ -35,6 +36,7 @@ export default async function CollectionsPage() {
     getSourceFeedHealth(),
     getLockdownStatus(),
     freshnessLocalOnly(),
+    getSourceRoles(),
   ]);
   return (
     <CollectionsView
@@ -50,6 +52,7 @@ export default async function CollectionsPage() {
       lockdown={lockdown}
       nowMs={requestTime()}
       localOnly={localOnly}
+      roles={roles}
     />
   );
 }

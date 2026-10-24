@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Người vận hành đọc trang Thu thập và Chất lượng dữ liệu chỉ thấy mã nguồn kèm vai trò (vd «S02 · Hiệu chuẩn»), không thấy tên nguồn thật — kể cả nhãn job, dòng log cuối và chi tiết kiểm DQ, ở cả máy local lẫn cloud.",
+  "decisions": [
+    {"id": "E8", "q": "Thuật ngữ «Nhãn nguồn» trong từ điển dự án đã đủ và khớp cách trang hiện nhãn chưa?", "why": "Ba giám khảo đọc CONTEXT.md đối chiếu hàm dựng nhãn, đều đề xuất Đạt."}
+  ],
+  "analyst_plain": "Các lệnh kiểm chung cũng xanh trên bản cũ vì lúc đó các ca mới chưa có; mỗi phép đo mới đã có cặp phá thử đỏ đúng chỗ (bộ quét, liên kết trong cảnh báo, bộ che)."
+}

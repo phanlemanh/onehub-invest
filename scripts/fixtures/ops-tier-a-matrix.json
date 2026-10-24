@@ -1,0 +1,193 @@
+{
+ "base": "460e61a",
+ "note": "ON7 ops-nhan-ma-nguon — mọi chỗ CHỮ HIỂN THỊ mang tên nguồn thật ở cây gốc, soát tay từng dòng (S1). Chỉ mã S0x, không tên.",
+ "files": [
+  "app/src/app/ops/collections/page.tsx",
+  "app/src/app/ops/quality/page.tsx",
+  "app/src/components/ops/collections-tables.tsx",
+  "app/src/components/ops/collections/attention-list.tsx",
+  "app/src/components/ops/collections/collections-tiles.tsx",
+  "app/src/components/ops/collections/collections-view.tsx",
+  "app/src/components/ops/collections/feed-status.ts",
+  "app/src/components/ops/collections/feeds-grid.tsx",
+  "app/src/components/ops/collections/jobs-grid.tsx",
+  "app/src/components/ops/collections/lockdown-grid.tsx",
+  "app/src/components/ops/collections/pipe-panels.tsx",
+  "app/src/components/ops/collections/section.tsx",
+  "app/src/components/ops/collections/status-grid.tsx",
+  "app/src/components/ops/collections/sync-activity.tsx",
+  "app/src/components/ops/design/catalog-samples.tsx",
+  "app/src/components/ops/local-only-alert.tsx",
+  "app/src/components/ops/overview/objectives-grid.tsx",
+  "app/src/components/ops/overview/overview-tiles.tsx",
+  "app/src/components/ops/overview/section-lead.tsx",
+  "app/src/components/ops/overview/status.ts",
+  "app/src/components/ops/quality-tables.tsx",
+  "app/src/components/ops/quality/dq-checks-table.tsx",
+  "app/src/components/ops/review-card.tsx",
+  "app/src/components/ops/review-content.tsx",
+  "app/src/components/ops/review-photos.tsx"
+ ],
+ "hits": [
+  {
+   "code": "S02",
+   "file": "app/src/app/ops/quality/page.tsx",
+   "line": 62
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/collections-tables.tsx",
+   "line": 27
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/collections-tables.tsx",
+   "line": 36
+  },
+  {
+   "code": "S01",
+   "file": "app/src/components/ops/collections-tables.tsx",
+   "line": 45
+  },
+  {
+   "code": "S01",
+   "file": "app/src/components/ops/collections-tables.tsx",
+   "line": 54
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections-tables.tsx",
+   "line": 63
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections-tables.tsx",
+   "line": 72
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections-tables.tsx",
+   "line": 187
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/attention-list.tsx",
+   "line": 46
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/attention-list.tsx",
+   "line": 53
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/attention-list.tsx",
+   "line": 57
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/attention-list.tsx",
+   "line": 73
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/collections-tiles.tsx",
+   "line": 68
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/collections-tiles.tsx",
+   "line": 73
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/collections-tiles.tsx",
+   "line": 76
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/collections-view.tsx",
+   "line": 90
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/pipe-panels.tsx",
+   "line": 19
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/pipe-panels.tsx",
+   "line": 31
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/pipe-panels.tsx",
+   "line": 33
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/pipe-panels.tsx",
+   "line": 41
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/collections/pipe-panels.tsx",
+   "line": 62
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/collections/sync-activity.tsx",
+   "line": 23
+  },
+  {
+   "code": "S03",
+   "file": "app/src/components/ops/design/catalog-samples.tsx",
+   "line": 72
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 72
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 108
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 130
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 134
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 158
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 179
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 190
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 201
+  },
+  {
+   "code": "S02",
+   "file": "app/src/components/ops/quality-tables.tsx",
+   "line": 245
+  }
+ ]
+}

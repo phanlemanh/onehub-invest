@@ -9,6 +9,7 @@ import { Badge } from "@/components/reui/badge"
 import type { GateFunnel } from "@/lib/collections-queries"
 import { fmtInt } from "@/lib/format"
 import type { LockdownLayer, SourceFeedHealth } from "@/lib/ops-queries"
+import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 import { sloSummaryKey } from "@/lib/freshness"
 
@@ -20,13 +21,17 @@ export function CollectionsTiles({
   funnel,
   layers,
   agentTurnsToday,
+  roles = {},
 }: {
   feeds: SourceFeedHealth[]
   funnel: GateFunnel
   layers: LockdownLayer[]
   /** null = chưa kiểm được log agent-turn hôm nay (ON2). */
   agentTurnsToday: number | null
+  /** Vai trò nguồn cho nhãn «S0x · vai trò» (ON7). */
+  roles?: SourceRoles
 }) {
+  const s03 = sourceLabel("S03", roles)
   const states = feeds.map(feedState)
   const count = (s: ReturnType<typeof feedState>) => states.filter((x) => x === s).length
   // Cùng con số với ô «Đạt SLO» của /ops (AU6): nguồn đạt khi mọi thị trường đạt; y = nguồn active có SLO.
@@ -65,15 +70,15 @@ export function CollectionsTiles({
 
       <StatCard
         icon={<MessageSquareIcon aria-hidden="true" />}
-        title="Cổng Zalo hôm nay"
+        title={`Cổng ${s03} hôm nay`}
         period="Hôm nay"
         value={fmtInt(funnel.today.passed)}
         total={fmtInt(funnel.today.messages)}
         basis={`${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
-        action={{ label: "Xem nhóm Zalo", href: "#nhom-zalo" }}
+        action={{ label: `Xem nhóm ${s03}`, href: "#nhom-s03" }}
       >
         <SegmentBar
-          label="Tin Zalo hôm nay"
+          label={`Tin ${s03} hôm nay`}
           segments={[
             { key: "passed", label: "Qua cổng", count: funnel.today.passed, tone: "bg-success" },
             { key: "skipped", label: "Bị chặn", count: funnel.today.skipped, tone: "bg-muted-foreground/40" },

@@ -8,9 +8,11 @@ import { homedir } from "node:os";
 import path from "node:path";
 import pg from "pg";
 
+import { maskSourceNames } from "./lib/mask-source-names.mjs";
+
 import { tailLog } from "./lib/last-log-line.mjs";
 
-const ROOT = "/Users/manhphan/dev/one-invest";
+const ROOT = process.env.ONEINVEST_ROOT ?? "/Users/manhphan/dev/one-invest";
 const INGEST_URL = process.env.INGEST_URL ?? "https://onehub-invest.vercel.app/api/v1/ops/ingest";
 const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -91,6 +93,11 @@ async function probe(url) {
     return "no";
   }
 }
+// ON7: nhãn nguồn «S0x · vai trò» (CONTEXT.md «Nhãn nguồn») — tên thật không lên cloud. main() nạp REG từ
+// source_registry local trước khi gọi scheduler(); names chỉ dùng để che dòng log, không rời máy.
+const REG = { roles: {}, names: [] };
+const lab = (code) => (REG.roles[code] ? `${code} · ${REG.roles[code]}` : code);
+
 async function scheduler() {
   const LOGS = path.join(ROOT, "pipeline/logs");
   let weekly = null;
@@ -106,14 +113,16 @@ async function scheduler() {
     tailLog(path.join(LOGS, "launchd-collector-api.log")),
     weekly ? tailLog(weekly) : Promise.resolve({ lastLogAt: null, lastLine: null }),
   ]);
-  return [
-    { id: "airdna-daily", label: "AirDNA toàn quốc (rotation 6 market)", schedule: "19:05 hằng ngày", alive: "unknown", ...airdnaLog },
-    { id: "collector", label: "Airbnb tự thu Hà Nội", schedule: "Chủ nhật 19:30 +jitter", alive: "unknown", ...weeklyTail },
-    { id: "smoke", label: "Smoke Airbnb", schedule: "20:00 hằng ngày", alive: "unknown", ...smokeLog },
+  const jobs = [
+    { id: "s02-daily", label: `${lab("S02")} — toàn quốc (rotation 6 market)`, schedule: "19:05 hằng ngày", alive: "unknown", ...airdnaLog },
+    { id: "s01-weekly", label: `${lab("S01")} — Hà Nội`, schedule: "Chủ nhật 19:30 +jitter", alive: "unknown", ...weeklyTail },
+    { id: "s01-smoke", label: `Smoke ${lab("S01")}`, schedule: "20:00 hằng ngày", alive: "unknown", ...smokeLog },
     { id: "collector-api", label: "Agent ingest :9210", schedule: "KeepAlive", alive: apiAlive, ...apiLog },
     { id: "kev", label: "Kev gate :8009", schedule: "KeepAlive", alive: kevAlive, lastLogAt: null, lastLine: null },
     { id: "cloud-sync", label: "Sync Supabase + ops facts", schedule: "mỗi 15 phút", alive: "unknown", ...(await tailLog(path.join(LOGS, "cloud-sync.log"))) },
   ];
+  // dòng log cuối là dữ liệu chạy — che tên thật; danh sách tên rỗng → null (đóng chặt)
+  return jobs.map((j) => ({ ...j, lastLine: maskSourceNames(j.lastLine, REG.names) }));
 }
 
 // ---- 3. Rotation preview ----
@@ -196,6 +205,9 @@ async function main() {
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
+  const { rows: reg } = await client.query("SELECT code, label_vi, real_name FROM source_registry");
+  REG.roles = Object.fromEntries(reg.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi]));
+  REG.names = reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name }));
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
     scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
   ]);
