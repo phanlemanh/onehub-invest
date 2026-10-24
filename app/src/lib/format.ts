@@ -54,6 +54,64 @@ export function fmtInt(v: number | null): string {
   return new Intl.NumberFormat(LOCALE).format(Math.round(v));
 }
 
+// ---------- Mốc thời gian theo giờ Việt Nam (ON8) ----------
+// Múi ghi tường minh: máy local, Vercel (UTC) và trình duyệt cho cùng một chuỗi, không phụ thuộc múi máy.
+
+export const VN_TZ = "Asia/Ho_Chi_Minh";
+
+const VN_PARTS = new Intl.DateTimeFormat("en-CA", {
+  timeZone: VN_TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** Chuỗi phải mang múi (Z hoặc ±HH[:MM]) sau phần giờ; chuỗi không ghi múi không đoán theo múi máy. */
+const CO_MUI = /T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}(:?\d{2})?)$/i;
+
+function toInstant(v: string | Date | number | null | undefined): Date | null {
+  if (v === null || v === undefined) return null;
+  if (v instanceof Date) return Number.isNaN(v.getTime()) ? null : v;
+  if (typeof v === "number") return Number.isFinite(v) ? new Date(v) : null;
+  // `::text` của Postgres: "2026-10-23 12:13:45.123+00" → "2026-10-23T12:13:45.123+00:00"
+  const s = String(v).trim().replace(" ", "T");
+  if (!CO_MUI.test(s)) return null;
+  const t = Date.parse(s.replace(/([+-]\d{2})$/, "$1:00"));
+  return Number.isNaN(t) ? null : new Date(t);
+}
+
+function vnParts(d: Date): Record<string, string> {
+  return Object.fromEntries(VN_PARTS.formatToParts(d).map((p) => [p.type, p.value]));
+}
+
+/** Mốc giờ theo giờ VN: "2026-10-23 19:13 (GMT+7)"; không đọc được hoặc không ghi múi → "—". */
+export function fmtVnDateTime(v: string | Date | number | null | undefined): string {
+  const d = toInstant(v);
+  if (!d) return "—";
+  const p = vnParts(d);
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute} (GMT+7)`;
+}
+
+/** Mốc chỉ có ngày, theo ngày VN: "2026-10-24"; không đọc được → "—". */
+export function fmtVnDate(v: string | Date | number | null | undefined): string {
+  const d = toInstant(v);
+  return d ? vnDayKey(d) : "—";
+}
+
+/** Khoá ngày VN "YYYY-MM-DD" của một thời điểm — dùng gom số theo ngày. */
+export function vnDayKey(v: Date | number): string {
+  const p = vnParts(typeof v === "number" ? new Date(v) : v);
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+/** 00:00 giờ VN của ngày `key` (VN không có giờ mùa hè). */
+export function vnDayStart(key: string): Date {
+  return new Date(`${key}T00:00:00+07:00`);
+}
+
 /** "2026-10-01" → "T10/2026". */
 export function fmtMonth(iso: string): string {
   const [y, m] = iso.slice(0, 10).split("-");
