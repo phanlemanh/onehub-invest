@@ -5,10 +5,10 @@ slug: hieu-chuan-mot-bo-so
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, script]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-25-hieu-chuan-mot-bo-so-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-25
 ---
 
 # Acceptance Contract: hieu-chuan-mot-bo-so
