@@ -8,7 +8,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import pg from "pg";
 
 const DB_URL =
@@ -100,7 +100,7 @@ async function main() {
     // PL1: snapshot THỬ không bao giờ vào stg (đồng bộ luật import-airbnb)
     const testRe = /__(?:zalo-mock|e2e|test)(?:__|$)/i;
     dirs = dirs.filter((d) => {
-      if (testRe.test(d.split("/").pop() ?? d)) {
+      if (testRe.test(basename(d))) {
         console.warn(`bỏ qua snapshot THỬ (không nạp stg): ${d}`);
         return false;
       }

@@ -11,7 +11,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
@@ -44,8 +44,9 @@ async function main() {
     process.exit(1);
   }
   // Snapshot thử → bỏ qua CÓ LOG (exit 0 để vòng nạp hằng đêm không gãy,
-  // nhưng stderr nói rõ đã skip cái gì cho auditable).
-  if (isTestSnapshot(dir.split("/").pop() ?? dir)) {
+  // nhưng stderr nói rõ đã skip cái gì cho auditable). basename() tự bỏ
+  // dấu / cuối — split('/').pop() trả rỗng khi path kết thúc / (mở lại 2310-4).
+  if (isTestSnapshot(basename(dir))) {
     console.warn(`bỏ qua snapshot THỬ (không nạp stg): ${dir}`);
     process.exit(0);
   }
@@ -60,6 +61,12 @@ async function main() {
   if (![1, 2, 3].includes(manifest.schemaVersion)) {
     throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
   }
+  // Lớp thứ hai nhận diện snapshot thử (mở lại 2310-4): chỉ nhìn TÊN THƯ MỤC
+  // có thể bị đổi tên — manifest.source là lời khai của chính snapshot.
+  if (isTestSnapshot(`x__${manifest.source}__x`)) {
+    console.warn(`bỏ qua snapshot THỬ theo manifest.source=${manifest.source}: ${dir}`);
+    process.exit(0);
+  }
 
   // 1. Verify checksum từng file (quy tắc tiêu thụ #2 của DATA-CONTRACT)
   for (const f of manifest.files) {
@@ -73,6 +80,16 @@ async function main() {
   const items = [];
   for (const f of manifest.files.filter((f) => f.name.startsWith("items-"))) {
     items.push(...JSON.parse(gunzipSync(await readFile(join(dir, f.name))).toString("utf8")));
+  }
+
+  // Item thử lẫn trong snapshot THẬT (vd zalo-mock items hòa chung) — bỏ
+  // từng item có source thuộc nhóm thử, đếm để log (mở lại 2310-4).
+  const before = items.length;
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (isTestSnapshot(`x__${items[i].source ?? ""}__x`)) items.splice(i, 1);
+  }
+  if (items.length < before) {
+    console.warn(`bỏ ${before - items.length} item THỬ lẫn trong snapshot thật: ${manifest.snapshotId}`);
   }
 
   // mediaFiles trỏ tới file không khai trong manifest = lệch hợp đồng → cảnh báo
