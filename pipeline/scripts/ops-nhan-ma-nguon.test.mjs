@@ -64,9 +64,12 @@ const LOGS = () => ({
 function mutantCopy(file, fn) {
   const dir = realpathSync(mkdtempSync(path.join(tmpdir(), "ops-facts-mut-")));
   for (const d of ["node_modules", "lib"]) if (!existsSync(path.join(dir, d))) symlinkSync(path.join(HERE, "..", d), path.join(dir, d));
+  // NT2 chặn bản tin còn tên trước khi gửi — bản sao của thước ON7 gỡ bộ soát ấy để máy chủ thu nhận payload mà đo.
   const src = readFileSync(PUSH, "utf8");
-  const out = fn(src);
-  assert.notEqual(out, src, `khuôn đột biến ${file} không khớp mã nguồn push-ops-facts`);
+  const noGuard = src.replace("const chan = factsChan(payload, REG.names);", "const chan = [];");
+  assert.notEqual(noGuard, src, "khuôn gỡ bộ soát NT2 không khớp mã nguồn push-ops-facts");
+  const out = fn(noGuard);
+  assert.notEqual(out, noGuard, `khuôn đột biến ${file} không khớp mã nguồn push-ops-facts`);
   writeFileSync(path.join(dir, file), out);
   return path.join(dir, file);
 }

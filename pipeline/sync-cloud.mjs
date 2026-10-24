@@ -38,6 +38,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { entriesFromTokens, guardValues } from "./lib/tier-a-guard.mjs";
 
 const REF = "smqpqiigzulwpmrsrhci";
 const MGMT = `https://api.supabase.com/v1/projects/${REF}/database/query`;
@@ -299,21 +300,11 @@ END $chk$;`);
   return lines.join("\n");
 }
 
-/** Token định danh nguồn đầu tiên xuất hiện trong text (không phân biệt hoa thường), hoặc null.
- * Token ngắn (< 4 ký tự, vd tên nguồn ba chữ) so theo ranh giới từ để không trúng nhầm giữa từ. */
+/** Token định danh nguồn đầu tiên xuất hiện trong text, hoặc null. Đi qua bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs,
+ * NT2) — cùng lõi khớp với push-ops-facts: gập dấu, bản viết liền, token ngắn (< 4 ký tự) chỉ trúng khi đứng riêng một từ. */
 export function scanSourceNames(text, tokens) {
-  const low = text.toLowerCase();
-  for (const t of tokens) {
-    if (!t) continue;
-    const k = t.toLowerCase();
-    if (k.length >= 4) {
-      if (low.includes(k)) return t;
-    } else {
-      const esc = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      if (new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(low)) return t;
-    }
-  }
-  return null;
+  const hit = guardValues(text, entriesFromTokens(tokens))[0];
+  return hit ? hit.code : null;
 }
 
 class PhaseError extends Error {
@@ -367,7 +358,8 @@ export async function pool(items, n, fn) {
 }
 
 /** Leak gate — tầng A / thô phải vắng hoặc 0 dòng ở cloud; seller_ref chỉ dạng S0x;
- * anon/authenticated không vào được sync_stage. Trả danh sách vi phạm (rỗng = PASS). */
+ * anon/authenticated không vào được sync_stage; cột bảng người bán ⊆ CLOUD_ALLOW, bảng tầng A rỗng (NT2).
+ * Trả danh sách vi phạm (rỗng = PASS). */
 export async function leakGate(exec) {
   const leaks = [];
   const checks = ["source_registry", "airbnb_snapshots"];
@@ -394,7 +386,44 @@ export async function leakGate(exec) {
     WHERE r.rolname IN ('anon','authenticated') AND has_schema_privilege(r.rolname, 'sync_stage', 'USAGE')`);
   if (acl[0].n > 0) leaks.push("anon/authenticated có USAGE trên sync_stage");
   leaks.push(...(await anonReadable(exec)));
+  leaks.push(...(await piiColumnLeaks(exec)));
   return leaks;
+}
+
+/** Bảng tầng A (AGENTS.md luật 6: hồ sơ người dùng app, user_events/user_profile, review_queue) — có ở cloud thì phải 0 dòng. */
+export const TIER_A_TABLES = ["user_events", "user_profile", "review_queue"];
+
+/** NT2 (soat-tang-a-moi-duong-len-cloud): cột cloud của bảng người bán phải ⊆ CLOUD_ALLOW — cột ngoài danh sách (kể cả
+ * đang rỗng) là chỗ một bản ghi sau đổ PII lên được; bảng tầng A có ở cloud phải rỗng. Phạm vi cột theo Hỏi-2 = A: chỉ ba
+ * bảng có CLOUD_ALLOW (bảng sync khác không có danh sách cột — PROXY). Trả danh sách vi phạm (rỗng = sạch). */
+export async function piiColumnLeaks(exec) {
+  const leaks = [];
+  const tables = Object.keys(CLOUD_ALLOW);
+  const cols = await exec(`SELECT table_name AS t, column_name AS c FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = ANY(ARRAY[${tables.map((t) => lit(RENAME(t))).join(",")}])
+    ORDER BY table_name, ordinal_position`);
+  for (const { t, c } of cols) {
+    const allow = CLOUD_ALLOW[tables.find((x) => RENAME(x) === t)];
+    if (!allow.includes(c)) leaks.push(`cột ngoài danh sách cho phép: ${t}.${c}`);
+  }
+  for (const t of TIER_A_TABLES) {
+    const [ex] = await exec(`SELECT to_regclass(${lit(`public.${t}`)})::text AS r`);
+    if (!ex?.r) continue;
+    const [r] = await exec(`SELECT count(*)::int AS n FROM public.${q(t)}`);
+    if (r.n > 0) leaks.push(`bảng tầng A có dòng: ${t}=${r.n}`);
+  }
+  return leaks;
+}
+
+/** Chốt cột PII + bảng tầng A trước khi gửi (NT2) — vi phạm hay lỗi truy vấn đều dừng lượt ở pha gate, trước khi tráo. */
+async function gatePii(exec) {
+  let found;
+  try {
+    found = await piiColumnLeaks(exec);
+  } catch (e) {
+    throw new PhaseError("gate", e.message);
+  }
+  if (found.length) throw new PhaseError("gate", `LEAK GATE FAIL (trước khi gửi): ${found.join(", ")}`);
 }
 
 /** Ba quan hệ PostGIS anon vẫn đọc được trên prod sau 037 (Known limit: chủ là supabase_admin, postgres
@@ -519,6 +548,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
 
   // 1b. quyền đọc công khai — dừng TRƯỚC khi đọc local/gửi: không dòng nào lên một cloud anon đang đọc được
   await gateAnon(exec); // AU1:kiem-truoc-khi-gui
+  await gatePii(exec); // NT2: cột ngoài CLOUD_ALLOW / bảng tầng A có dòng → dừng trước khi đọc local và tráo
   lap("gate-pre");
 
   // 2. đọc local — một snapshot
@@ -668,6 +698,19 @@ export async function runKiemAnon({ exec, out = console.log }) {
   return 1;
 }
 
+/** `--kiem-cot`: chỉ ĐỌC catalog cloud, in từng cột ngoài CLOUD_ALLOW và bảng tầng A có dòng; mã 1 khi có. Mạnh chạy
+ * trên prod trước khi merge NT2 — cloud còn cột thừa thì mọi lượt sync dừng ở pha gate (docs/ops/runtime-map.md). */
+export async function runKiemCot({ exec, out = console.log }) {
+  const found = await piiColumnLeaks(exec);
+  if (!found.length) {
+    out(`kiem-cot: sạch — cột ${Object.keys(CLOUD_ALLOW).join(", ")} trên cloud đều trong CLOUD_ALLOW; ${TIER_A_TABLES.join(", ")} vắng hoặc rỗng`);
+    return 0;
+  }
+  for (const v of found) out(`kiem-cot: ${v}`);
+  out(`kiem-cot: ${found.length} vi phạm`);
+  return 1;
+}
+
 async function main() {
   const env = await readFile(path.join(homedir(), ".oneinvest/cloud.env"), "utf8");
   const token = process.env.SUPABASE_MGMT_TOKEN ?? env.match(/SUPABASE_MGMT_TOKEN=(\S+)/)?.[1];
@@ -675,6 +718,10 @@ async function main() {
   const exec = mgmtExec(token);
   if (process.argv.includes("--kiem-anon")) {
     process.exitCode = await runKiemAnon({ exec });
+    return;
+  }
+  if (process.argv.includes("--kiem-cot")) {
+    process.exitCode = await runKiemCot({ exec });
     return;
   }
   const local = new pg.Client({ connectionString: LOCAL_URL, types: localTypes });
