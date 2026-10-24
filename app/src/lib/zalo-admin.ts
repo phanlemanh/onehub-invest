@@ -142,9 +142,33 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
   return list.find((a) => a.accountId === accountId)!;
 }
 
+/** Đường CLI + config mà module dùng — phép đo kiểm chúng nằm trong HOME giả trước khi chạy (zalo-safety). */
+export function zaloAdminPaths(): { openclaw: string; config: string } {
+  return { openclaw: OPENCLAW, config: CONFIG };
+}
+
+/**
+ * Bước kiểm id trước MỌI lệnh openclaw của việc gỡ tài khoản (sự cố P1-7 23/10: logout --account "").
+ * Không đòi khuôn SLUG — khoá thật sửa tay ngoài khuôn vẫn gỡ được; chỉ chặn id không thể là tài khoản
+ * hợp lệ và khoá dạng cờ (mở đầu "-") để nó không bao giờ vào argv của openclaw như một cờ.
+ */
+export function requireDeletableAccount(
+  cfg: { channels?: { zalouser?: { accounts?: Record<string, unknown> } } },
+  accountId: unknown,
+): string {
+  if (typeof accountId !== "string" || accountId === "") throw new Error("id rỗng");
+  if (/\s/.test(accountId)) throw new Error("id có khoảng trắng");
+  if (accountId.startsWith("-")) throw new Error("id dạng cờ");
+  if (accountId === "default") throw new Error("không xoá được tài khoản default");
+  const accounts = cfg.channels?.zalouser?.accounts;
+  if (!accounts || !Object.hasOwn(accounts, accountId)) throw new Error("không có trong danh sách tài khoản");
+  return accountId;
+}
+
 export async function deleteZaloAccount(accountId: string): Promise<void> {
   if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
-  if (accountId === "default") throw new Error("không xoá được tài khoản default");
+  const cfg = await readCfg();
+  requireDeletableAccount(cfg, accountId);
   // logout session zca trước (best-effort) để không sót credential mồ côi
   try {
     await run(OPENCLAW, ["channels", "logout", "--channel", "zalouser", "--account", accountId], {
@@ -153,11 +177,12 @@ export async function deleteZaloAccount(accountId: string): Promise<void> {
   } catch {
     /* chưa login / CLI lỗi — vẫn gỡ config */
   }
-  const cfg = await readCfg();
-  const z = cfg.channels?.zalouser;
+  // Đọc lại sau logout: CLI có thể đã ghi config trong lúc chạy.
+  const fresh = await readCfg();
+  const z = fresh.channels?.zalouser;
   if (!z?.accounts?.[accountId]) return;
   delete z.accounts[accountId];
-  await writeCfg(cfg);
+  await writeCfg(fresh);
 }
 
 /**
