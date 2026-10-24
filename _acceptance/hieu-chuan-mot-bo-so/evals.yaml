@@ -8,14 +8,14 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-1 market đại diện' ma trận viết trước pickRepresentative 4 dòng (hai market 10/3 → market 10; hoà 5/5 → mã nhỏ hơn; một market 0 cạnh market 7 → market 7; danh sách rỗng → null) và trả kèm số market; ca fixture: khu vực có 2 market S02 (một rỗng) gọi hai lần → cùng airdna_id, là market có listing; chiều đỏ: câu cũ LIMIT 1 không ORDER BY trả market rỗng ít nhất một lần khi xếp bảng nghịch"
+    expected: "exit 0; ca 'HC-AC-1 market đại diện' ma trận viết trước pickRepresentative 4 dòng (hai market 10/3 → market 10; hoà 5/5 → mã nhỏ hơn; một market 0 cạnh market 7 → market 7; danh sách rỗng → null) kèm số market; ca fixture: khu vực có 2 market S02 (một rỗng) gọi hai lần → cùng airdna_id, là market có listing; vẽ thẻ trong jsdom → có chữ nguyên văn 'đại diện cho 2 market S02'; chiều đỏ: câu cũ LIMIT 1 không ORDER BY trả market rỗng khi xếp bảng nghịch"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/src/lib/queries.ts, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-2 một số tự thu' trên fixture (khu vực cha + phường con có listing): số listing tự thu của khu vực trả từ nguồn thẻ, nguồn Độ phủ và nguồn bảng toàn quốc bằng nhau và bằng số listing fixture trong cây; chiều đỏ: định nghĩa cũ của thẻ (max listing_count market_metrics) cho số khác trên cùng fixture"
+    expected: "exit 0; ca 'HC-AC-2 một số tự thu' trên fixture (khu vực cha + phường con có listing): gọi ĐÚNG ba hàm truy vấn nuôi ba bảng (getAirdnaComparison, getTruthfulCoverage, getAirdnaMarkets), vẽ ba bảng trong jsdom và so SỐ ĐÃ VẼ của dòng tự thu khu vực ấy — bằng nhau và bằng số listing fixture trong cây (theo Hỏi-3); chiều đỏ: định nghĩa cũ của thẻ (max listing_count market_metrics) vẽ ra số khác trên cùng fixture"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
@@ -36,7 +36,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/src/app/ops/quality/page.tsx, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-5 gộp thị trường chưa có số' : splitCalibrated trên 4 thị trường viết trước (đủ số; chỉ điểm; chỉ số tự thu; trống hết) → calibrated 3, empty ['trống hết']; vẽ dòng EmptyCalibration → đúng một dòng 'Chưa có số: …' liệt tên; chiều đỏ: bộ lọc cũ data !== null giữ cả 4"
+    expected: "exit 0; ca 'HC-AC-5 gộp thị trường chưa có số' : splitCalibrated trên 5 thị trường viết trước (đủ số; chỉ điểm; chỉ số tự thu; trống hết = null; toàn 0 = score 0, ADR 0, công suất 0, listing 0) → calibrated 3, empty ['trống hết', 'toàn 0'] (0 tính là chưa có số); vẽ dòng → đúng một dòng 'Chưa có số: …' liệt hai tên; chiều đỏ: bộ lọc cũ data !== null giữ cả 5"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
@@ -50,7 +50,7 @@ evals:
     executor: script
     cmd: config:executors.script.hieu_chuan_do
     paths: [scripts/hieu-chuan-do.mjs, app/src/lib/calibration.ts, app/src/lib/queries.ts]
-    expected: "exit 0; tsx của app, import hàm thật, DB local chỉ đọc: 'ok tự thu bằng nhau ở ba nguồn cho <n> khu vực'; 'ok chọn market đại diện hai lần cùng kết quả (<k> khu vực nhiều market)' với k ≥ 1 (k = 0 → FAIL); 'ok số thị trường hiệu chuẩn = số thị trường có số (<m>)'; dòng 'mẫu mỏng: …'; đối chứng: định nghĩa cũ ba nguồn cho ít nhất một khu vực lệch nhau → 'ok đối chứng: cũ lệch ở <j> khu vực'"
+    expected: "exit 0; tsx của app, import hàm thật, DB local chỉ đọc: 'ok tự thu bằng nhau ở ba nguồn cho <n> khu vực' (so số ba hàm truy vấn trả, không qua hàm trợ giúp chung); 'ok chọn market đại diện hai lần cùng kết quả (<k> khu vực nhiều market)' k ≥ 1 (k = 0 → FAIL); số thị trường có số đếm bằng một câu SQL ĐỘC LẬP (không gọi splitCalibrated) rồi so với splitCalibrated → 'ok số thị trường hiệu chuẩn = <m>'; dòng 'mẫu mỏng: …' theo cỡ mẫu Hỏi-2; đối chứng: định nghĩa cũ cho ít nhất một khu vực lệch → 'ok đối chứng: cũ lệch ở <j> khu vực'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
