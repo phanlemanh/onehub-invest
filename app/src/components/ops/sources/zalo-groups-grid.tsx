@@ -53,7 +53,7 @@ export function ZaloGroupsGrid({
   const conflictOf = (g: ZaloGroup) => !g.enabled && g.ownedBy !== null && g.ownedBy !== account
 
   const columns: InsightColumn<ZaloGroup>[] = [
-    { id: "name", accessorKey: "name", header: "Nhóm", cell: ({ row }) => <span id={`zalo-nhom-${row.original.groupId}`} data-tier-a className="block truncate">{row.original.name}</span>, size: 360 },
+    { id: "name", accessorKey: "name", header: "Nhóm", cell: ({ row }) => <span id={`zalo-nhom-${row.original.groupId}`} className="block truncate">{row.original.name}</span>, size: 360 },
     {
       id: "on",
       header: "Đang bật",
