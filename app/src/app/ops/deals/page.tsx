@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/reui/badge";
 import { getSessionUser } from "@/lib/auth";
 import { getDeals } from "@/lib/deals";
+import { DealSeenNote } from "@/components/ops/deal-seen-note";
 import { fmtInt } from "@/lib/format";
 import { isAdmin } from "@/lib/ops-access";
 
@@ -141,9 +142,7 @@ export default async function DealsPage() {
               {showContact && d.postText && (
                 <p className="text-muted-foreground line-clamp-2 text-xs">{d.postText}</p>
               )}
-              <p className="text-muted-foreground text-[10px]">
-                thấy {d.firstSeen.slice(0, 10)} · {d.nReposts > 1 ? `đăng ${d.nReposts} lần` : "mới"}
-              </p>
+              <DealSeenNote firstSeen={d.firstSeen} nReposts={d.nReposts} />
             </div>
           ))}
         </div>

@@ -1,8 +1,5 @@
 {
   "src/app/ops/deals/page.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 1
-    },
     "onehub-ui/no-emoji-icons": {
       "count": 1
     }
