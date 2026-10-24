@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: ops-nhan-ma-nguon
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 18a2a384864be0ad83e19b75a8133cc3b9987982
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: ops-nhan-ma-nguon
@@ -129,7 +129,7 @@ Hội đồng đề xuất cho E8 (rationale từng judge giữ nguyên, để `
     - spec-alignment: PASS — CONTEXT.md dòng 254-256 có đủ năm phần của thuật ngữ «Nhãn nguồn»: nhãn, code `sourceLabel(code, roles)`, Slug URL «—», định nghĩa và _Avoid_. Định nghĩa khớp hàm: «S02 · Hiệu chuẩn» ứng với `${code} · ${role}`, vắng vai trò thì mã trần «S02» ứng với `return code`. Định nghĩa cũng nói «Tên nguồn thật chỉ hiện ở `/ops/sources`», và _Avoid_ nhắc lại điều đó.
   required_evidence:
     - (judge không nêu bằng-chứng-thiếu)
-  human_override:        # T3: người tự kiểm và điền "<tên> <ngày>"
+  human_override: Mạnh 2026-10-24 — Đạt
 
 ### Lệnh suite (hồi quy)
 

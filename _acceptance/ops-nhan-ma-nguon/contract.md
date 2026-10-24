@@ -5,7 +5,7 @@ slug: ops-nhan-ma-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, pipeline, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-ops-nhan-ma-nguon-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24
@@ -101,3 +101,8 @@ Quét hình thái (preset test-matrix) ở S1 — trục và thước CE:
 
 - `pipeline/push-ops-facts.mjs` (t3_paths) chung với NT2, ON22, ON2, ON4, ON5 — chạy liền nhau, không song song.
 - Thước đọc tên từ `db/migrations/` (câu `INSERT INTO source_registry`); bộ che lúc chạy đọc `source_registry` local.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: Ca AC-1 «đủ 6 job» có một job đồng bộ cloud do chính test tự thêm; nhãn thật của job đó được ca cloud vòng kín đo.
+  - Ngoài-2: Ca «đủ 9 loại cảnh báo» tìm chữ trên cả trang, chưa riêng danh sách Cần chú ý; cảnh báo vẫn hiện ở chỗ khác.
+  - Ngoài-3: Cùng gốc Ngoài-1 — con số 6 job ở ca AC-1 chưa phản ánh đầu ra thật của bước đẩy dữ liệu.
+  - Ngoài-4: Trang Chất lượng dữ liệu gọi điểm thị trường của S02 bằng hai tên («Điểm thị trường», «Market Score»); «điểm thị trường» nằm trong _Avoid_ của CONTEXT.md.
