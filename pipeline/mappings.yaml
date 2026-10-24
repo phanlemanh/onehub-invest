@@ -184,6 +184,27 @@ sources:
       - "toilets → BathroomsTotalInteger"
       - "floornumber, unitnumber, block → dedup cấp căn (R4)"
       - "latitude, longitude (phủ 99.98%) → geo-polygon (R2)"
+  S08:
+    label: "danh mục dự án (quỹ căn chủ đầu tư — chỉ nội bộ, AGENTS.md luật 5)"
+    staging: stg_s08_inventory
+    transform: null  # chưa có — importer của ZCode (PL10 bước 1) nạp staging trước
+    method: "field cấu trúc trực tiếp (item inventory_unit, DATA-CONTRACT v4)"
+    policy: "không tái xuất nguyên văn lên cổng Invest / API công khai; chỉ dựng danh mục căn + hiệu chuẩn"
+    checked_on: "2026-10-24"  # tra research-local/reso/dd-2.1.json
+    fields:
+      product_code: "→ UnitNumber (mã căn; tầng/toà tách ở transform — ADR-0013 §2)"
+      subdivision_name: "→ Building.ComplexName (phân khu); high_rise lẫn toà → BuildingName"
+      apartment_type_name: "→ PropertySubType (chữ nguồn không đồng nhất — chuẩn hoá ở transform)"
+      land_area: "→ LotSizeArea (SquareMeters)"
+      construction_area: "→ BuildingAreaTotal (SquareMeters)"
+      base_direction_name: "→ DirectionFaces"
+      number_of_room: "→ BedroomsTotal"
+      number_of_wc: "→ BathroomsTotalInteger"
+      apartment_price: "→ ListPrice"
+      state: "notSold → StandardStatus Active · sold → Closed"
+    chua_dua_sang_canonical:
+      - "early_payment_price — DD không có tương đương; cần extension đủ 6 điều kiện nếu đưa lên"
+      - "row_code, state_line, delivery_standard_name, fund_groups_sell_code — giữ ở staging"
 
 # --------------------------------------------------------------------------
 # ENUM — controlled vocabulary (CHECK constraint theo ADR-0011 Qđ 3.4)
