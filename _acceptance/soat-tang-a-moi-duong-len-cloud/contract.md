@@ -5,7 +5,7 @@ slug: soat-tang-a-moi-duong-len-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs, pipeline/sync-cloud.mjs (t3_paths)
 surfaces: [pipeline, ui, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-soat-tang-a-moi-duong-len-cloud-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24
@@ -85,3 +85,7 @@ Quét hình thái (preset risk-premortem) — trục và thước CE:
 ## Notes
 
 - `pipeline/push-ops-facts.mjs` (t3_paths) chung với ON22, ON2, ON4, ON5, AU12 — chạy liền nhau, không song song.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-4: Phép thử ô tài khoản trên trang Nguồn dữ liệu dùng dữ liệu mẫu viết tay, nên nếu khâu gửi bản tin đổi tên trường thì phép thử vẫn xanh trong khi trang có thể hiện sai.
+  - Ngoài-5: Phép thử «một bộ soát» chỉ so hai đường soát với nhau, không so với đáp án từng ca, nên khó bắt lỗi khi cả hai cùng bỏ sót một tên.
+  - Ngoài-6: Phép thử bản tin thật ở chế độ khô chỉ có nghĩa trên máy thu của Mạnh; ở máy khác hay CI nó có thể xanh mà không kiểm được gì.

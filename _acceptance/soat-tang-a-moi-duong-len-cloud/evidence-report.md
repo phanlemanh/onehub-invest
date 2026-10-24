@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: soat-tang-a-moi-duong-len-cloud
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9ceec6e92d0f248937bdbb38abe5d26333760f85
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: soat-tang-a-moi-duong-len-cloud
@@ -137,7 +137,7 @@ Panel đề xuất cho E8 (đủ bốn điều, khớp code). Phiếu của hộ
   judged_by: judge-subagent (fresh context)
   verdict: PASS
   rationale: Hội đồng ba góc nhìn cùng đề xuất PASS, xem từng phiếu bên dưới.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-24 — Đạt
 
 - domain-correctness: PASS — Mục cloud-sync trong runtime-map.md khớp code ở cả bốn ý. (1) Cả sync-cloud (qua scanSourceNames/entriesFromTokens) và push-ops-facts (qua factsChan) đều gọi guardValues của tier-a-guard.mjs. (2) Dòng `FACTS CHẶN [tầng A] <đường> <S0x>` và dòng "không có danh sách tên" đúng từng chữ, ra stderr, thoát 1, `--kho` in đúng câu "ops-facts khô: sạch, 0 chỗ chặn". (3) piiColumnLeaks khớp CLOUD_ALLOW (3 bảng) và TIER_A_TABLES, chạy ở gatePii trước khi đọc local và ở leakGate sau tráo, với đúng chuỗi thông báo trong tài liệu. (4) `zaloAccounts[].name = null` và chặn khi name != null, đúng Hỏi-1 = A. Hai chỗ tài liệu hơi lược mà không sai: lượt dừng "sau tráo" có thông báo "(sau tráo)" riêng, và việc stderr được ghi vào cloud-sync.log do cloud-sync.sh quyết định, nằm ngoài các tệp được giao.
 - operational-feasibility: PASS — Mục runtime-map khớp code ở cả bốn điểm. (1) `sync-cloud.mjs` và `push-ops-facts.mjs` đều import `guardValues` từ `tier-a-guard.mjs`. (2) `factsChan` in đúng `FACTS CHẶN [tầng A] <đường> <S0x>`, dòng "không có danh sách tên" giống nguyên văn, thoát mã 1, và `--kho` đúng như tài liệu tả. (3) `piiColumnLeaks` chạy trong `gatePii` trước khi đọc local và trong `leakGate` sau khi tráo, với đúng hai thông điệp `cột ngoài danh sách cho phép` và `bảng tầng A có dòng`, cùng `--kiem-cot` trả mã 1. (4) Tên tài khoản thu: `zaloAccounts[i].name = null` và bộ soát chặn nếu `name` còn giá trị, khớp "Hỏi-1 = A" mà tài liệu và comment code đều ghi.
