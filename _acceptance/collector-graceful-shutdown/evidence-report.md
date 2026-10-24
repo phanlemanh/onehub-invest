@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 27f1077fab3fa1b4a8fb4d87c879cc50e95edd3c
+verified_commit: d29dc802e84405e0aec4f386135f421bdb4e01c0
 human_signoff: Mạnh 2026-10-24
 ---
 
@@ -413,3 +413,7 @@ Round 4: E1–E12 đạt. Test P3 đã sửa (15f6bd0) xanh 31/31, test cũ đ�
 ### Re-pin lần 1 — 2026-10-24, do hoá cũ do merge origin/main 460e61a+ vào nhánh
 run_id: repin-20261024T075630Z-17705
 sha: 27f1077fab3fa1b4a8fb4d87c879cc50e95edd3c · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-24, do hoá cũ do merge origin/main a4af936 (#57 ON7) vào nhánh
+run_id: repin-20261024T081758Z-49349
+sha: d29dc802e84405e0aec4f386135f421bdb4e01c0 · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
