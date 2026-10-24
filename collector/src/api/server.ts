@@ -148,11 +148,17 @@ export async function createAgentServer(opts: AgentServerOptions) {
     let accepted = 0;
     let duplicates = 0;
     for (const m of b.messages!) {
-      // ZC1 nối tiếp: media rác lọc làm lành; text trim — toàn khoảng trắng
-      // coi là media-only (đi nhánh băm media của sourceIdOf)
-      const text = m.text.trim();
-      const mediaClean = normMedia(m.media);
-      const sourceId = sourceIdOf(b.group!, m.ts, text, { senderId: m.senderId, media: mediaClean });
+      // ZC1 nối tiếp (mở lại 2310-6): trim CHỈ để quyết định media-only;
+      // băm tin chữ bằng text NGUYÊN BẢN (giữ id legacy), media làm lành
+      // CHỈ dùng cho băm — payload giữ nguyên vẹn như nhận (DATA-CONTRACT).
+      const textTrimmedEmpty = m.text.trim() === "";
+      const mediaForHash = textTrimmedEmpty ? normMedia(m.media) : undefined;
+      const sourceId = sourceIdOf(
+        b.group!,
+        m.ts,
+        textTrimmedEmpty ? "" : m.text,
+        { senderId: m.senderId, media: mediaForHash },
+      );
       if (seen.has(sourceId)) {
         duplicates++;
         continue;
@@ -165,7 +171,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
         kind: "post",
         fetchedAt: new Date().toISOString(),
         payload: {
-          text,
+          text: m.text,
           group: b.group,
           agent_id: b.agent_id,
           extracted: m.extracted,
@@ -173,7 +179,7 @@ export async function createAgentServer(opts: AgentServerOptions) {
           senderName: m.senderName ?? null,
           senderId: m.senderId ?? null,
           conversationId: m.conversationId ?? null,
-          media: mediaClean.length ? mediaClean : null,
+          media: m.media ?? null,
         },
         meta: {
           city,
