@@ -5,10 +5,10 @@ slug: deals-loai-tin-phi-ly
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api, ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-24-deals-loai-tin-phi-ly-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-24T12:02:57Z
 ---
 
 # Acceptance Contract: deals-loai-tin-phi-ly
@@ -30,10 +30,10 @@ Source input: `_acceptance/deals-loai-tin-phi-ly/opportunity.md` · hàng ON11 c
 - AC-1: Given một tin rao, When chấm bằng luật loại tin phi lý, Then trả đúng lý do theo ma trận viết trước — không có
   diện tích → «thieu-dien-tich»; diện tích ngoài 10–1000 m² → «dien-tich-ngoai-khoang»; quá 10 phòng ngủ →
   «phong-ngu-ngoai-khoang»; diện tích chia số phòng ngủ dưới 20 m² → «phong-qua-nho»; còn lại → không lý do.
-- AC-2: Given tin P1 phi lý và tin hợp lý cùng phường có thước, When bước tính giảm giá đêm chạy, Then tin phi lý mất số
+- AC-2: Given tin P1 phi lý và tin hợp lý cùng phường có thước, When bước đêm tính giảm giá chạy, Then tin phi lý mất số
   giảm giá (không còn là căn giá tốt), tin hợp lý giữ đúng số giảm, và có đúng một dòng audit `bait-gap:loai-phi-ly`
   nêu tổng, số theo từng lý do và mã các tin bị loại; một tập toàn tin hợp lý thì không ghi dòng nào; số tổng hợp của
-  người bán (trung vị giảm giá, số deal tốt) giữ y như khi chưa có luật loại.
+  người bán (trung vị giảm giá, số căn giá tốt của người bán) giữ y như khi chưa có luật loại.
 - AC-3: Given số giảm giá đã tính sẵn ở pipeline, When trang «Căn giá tốt» lấy danh sách, Then số giảm trên thẻ là đúng
   số đã tính sẵn (trang không tự tính lại), tin không có số giảm không lên danh sách, và ngưỡng 5%–50% vẫn áp.
 - AC-4: Given các tin đủ điều kiện có cả tin giảm ≤ 35% và tin giảm > 35% — kể cả khi tin > 35% nhiều hơn số thẻ trang
@@ -42,7 +42,7 @@ Source input: `_acceptance/deals-loai-tin-phi-ly/opportunity.md` · hàng ON11 c
 - AC-5: Given lược đồ như cloud — không có bảng tin Zalo, không có các cột người bán mà cấu hình sync giữ lại máy —,
   When trang lấy danh sách, Then câu truy vấn bản cloud chạy được và cho cùng dãy tin, cùng thứ tự với bản đầy đủ trên
   lược đồ local; và cột số giảm giá nằm trong danh sách cột được đưa lên cloud.
-- AC-6: Given thẻ một tin hiện trên trang, When thẻ được vẽ, Then tin đăng một lần ghi «đăng 1 lần», tin đăng n lần ghi
+- AC-6: Given thẻ một tin hiện trên trang, When thẻ được vẽ, Then tin rao đăng một lần ghi «đăng 1 lần», tin rao đăng n lần ghi
   «đăng n lần», không thẻ nào còn chữ «mới»; thẻ tin cần xác minh có nhãn «cần xác minh», thẻ tin thường không có.
 - AC-7: Given dữ liệu thật trên DB local, When chạy bước tính giảm giá rồi lấy danh sách trong giao dịch huỷ ngay sau
   đó, Then danh sách không còn tin thiếu diện tích hay phòng quá nhỏ, đầu danh sách không phải tin giảm > 35% khi DB còn
