@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { JSDOM } from "jsdom";
 import pg from "pg";
 
-import { dqLatestSql, dqResult, loadDqChecks } from "../src/lib/dq-checks";
+import { dqLatestSql, dqResult, dqSection, loadDqChecks } from "../src/lib/dq-checks";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const CU = `SELECT check_name, entity, status, detail, checked_at::text FROM dq_check_results
@@ -83,8 +83,23 @@ test("DQ-AC-3 trang lấy bảng và số qua loadDqChecks", { timeout: 120_000 
   });
   const page = readFileSync(new URL("../src/app/ops/quality/page.tsx", import.meta.url), "utf8");
   assert.equal(page.includes("dq_check_results"), false, "DQ-AC-3 page.tsx còn tự truy vấn dq_check_results");
-  assert.match(page, /await loadDqChecks\(pool\)/, "DQ-AC-3 page.tsx không lấy bảng qua loadDqChecks");
-  assert.match(page, /stats=\{\[\.\.\.dqStat\.labels/, "DQ-AC-3 PageHeader không nhận số từ loadDqChecks");
+  const code = page.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "").replace(/\/\/.*$/gm, "");
+  assert.equal((code.match(/loadDqChecks\(/g) ?? []).length, 1, "DQ-AC-3 page.tsx gọi loadDqChecks không đúng một lần");
+  assert.match(code, /const dq = dqSection\(dqRaw,/, "DQ-AC-3 page.tsx không dựng bảng + số qua dqSection");
+  assert.match(code, /stats=\{\[\.\.\.dq\.stats\.labels/, "DQ-AC-3 PageHeader không nhận số từ dqSection");
+  assert.match(code, /<DqChecksTable rows=\{dq\.rows\} \/>/, "DQ-AC-3 bảng không nhận dòng từ cùng dqSection");
+});
+
+test("DQ-AC-3 số đầu trang đếm trên chính dòng bảng", { timeout: 120_000 }, async () => {
+  await withTx(async (c) => {
+    await seed(c, DAY_DAC());
+    const { rows } = await loadDqChecks(c);
+    const dq = dqSection(rows, (d) => d.replaceAll("thử", "[che]"));
+    assert.ok(dq.rows.every((r) => r.detail === "[che]"), "DQ-AC-3 bảng không qua bộ che chi tiết");
+    assert.equal(dq.stats.entities, dq.rows.length, "DQ-AC-3 số đối tượng khác số dòng bảng");
+    assert.equal(dq.stats.checks, new Set(dq.rows.map((r) => r.check_name)).size, "DQ-AC-3 số kiểm khác số loại kiểm của bảng");
+    assert.deepEqual(dq.stats.labels, ["2 kiểm", "26 đối tượng"]);
+  });
 });
 
 test("DQ-AC-4 nhãn kết quả", () => {

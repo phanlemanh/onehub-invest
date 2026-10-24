@@ -39,6 +39,18 @@ export async function loadDqChecks(db: Queryable): Promise<{ rows: DqCheckRow[];
 }
 
 /**
+ * Bảng + số đầu trang của /ops/quality từ MỘT tập dòng (AC-3): `rows` là đúng các dòng bảng hiện (chi tiết đã qua bộ che
+ * tên nguồn), `stats` đếm trên CHÍNH các dòng ấy — trang dùng một biến cho cả hai nên số không lệch bảng.
+ */
+export function dqSection(
+  rows: DqCheckRow[],
+  maskDetail: (detail: string) => string | null, // null = không đọc được tên nguồn → ẩn chi tiết (ON7)
+): { rows: DqCheckRow[]; stats: DqStats } {
+  const shown = rows.map((r) => ({ ...r, detail: r.detail === null ? null : maskDetail(r.detail) }));
+  return { rows: shown, stats: dqStats(shown) };
+}
+
+/**
  * Kiểm có số tham chiếu (truthful-coverage): «pass» nghĩa là có số tham chiếu tươi, KHÔNG phải độ phủ đạt — nhãn riêng,
  * không bao giờ «Đạt» xanh lá (Mạnh chốt Hỏi-1 ở Cổng Phạm vi ON9, 24/10).
  */
