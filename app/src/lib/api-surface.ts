@@ -11,6 +11,12 @@
  *   session-or-noop — có phiên thì làm, khách nhận 204 và không có gì được ghi.
  * Sổ phải RỘNG BẰNG HOẶC HƠN mã: mã không bao giờ cho một người gọi mà sổ không cho (mã chặt hơn sổ thì được, ghi ở
  * `note`). Thêm route mới: thêm dòng ở đây cùng commit.
+ *
+ * Công cụ MCP (hồ sơ mcp-tools-theo-so-be-mat, ON15): `app/docs/api/mcp-tools.json` khai công cụ gọi các route này.
+ * Đổi chế độ một route có công cụ MCP, hoặc thêm công cụ MCP mới: sửa `mcp-tools.json` cùng commit. Khoá `auth` của mỗi
+ * công cụ là một trong năm chế độ trên, bằng chế độ của route nó gọi (khoá `auth` gốc của bản khai chỉ là mặc định, bản
+ * khai hiện tại không dùng). `scripts/check-mcp-tools.mjs` (chạy trong làn `portal_static`, tức
+ * `check-portal-compliance.mjs`) đỏ khi công cụ trỏ route ngoài sổ, phương thức hay chế độ lệch sổ.
  */
 export type ApiMode = "public" | "ops" | "ops-session" | "admin" | "session-or-noop";
 export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
