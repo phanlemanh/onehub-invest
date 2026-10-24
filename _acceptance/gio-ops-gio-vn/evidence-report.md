@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a43b532c121a5ab1983a49591f5e82e4d8bdf1e0
+verified_commit: 2f657dfd2b8cf94348090bbdd370c5ef955ac258
 human_signoff:
 ---
 
@@ -24,120 +24,142 @@ human_signoff:
 | E7 | AC-7 | test | PASS |
 | E8 | AC-8 | test | PASS |
 | E9 | AC-9 | test | PASS |
+| E10 | AC-10 | test | PASS |
+| E11 | AC-10 | test | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-gio-ops-gio-vn-E1-r1
+  run_id: minted-gio-ops-gio-vn-E1-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
   output: |
-    cd app && npm test (GV-AC-1 fmtVnDateTime/fmtVnDate, ma trận 11 đầu vào x 2 hàm x 2 múi máy)
-    ℹ duration_ms 10187.821292
+    cd app && npm test — ca 'GV-AC-1 fmtVnDateTime/fmtVnDate ma trận viết trước dưới TZ=UTC và TZ=America/New_York' (44 assert) ok
+    ℹ duration_ms 10193.831875
 
 - eval: E2
-  run_id: minted-gio-ops-gio-vn-E2-r1
+  run_id: minted-gio-ops-gio-vn-E2-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
   output: |
-    cd app && npm test (GV-AC-2 render mốc theo giờ VN cho 11 chỗ)
-    ℹ duration_ms 10187.821292
+    cd app && npm test — 11 ca 'GV-AC-2 <tên chỗ> render mốc theo giờ VN' ok
+    ℹ duration_ms 10193.831875
 
 - eval: E3
-  run_id: minted-gio-ops-gio-vn-E3-r1
+  run_id: minted-gio-ops-gio-vn-E3-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
   output: |
-    cd app && npm test (GV-AC-3 quét mốc cắt chuỗi/ngày theo múi máy và ba chiều đỏ của thước)
-    ℹ duration_ms 10187.821292
+    cd app && npm test — ca quét 'GV-AC-3 không còn mốc cắt chuỗi hay ngày theo múi máy ngoài danh sách miễn' và ba chiều đỏ bản sao thước báo đúng tệp ok
+    ℹ duration_ms 10193.831875
 
 - eval: E4
-  run_id: minted-gio-ops-gio-vn-E4-r1
+  run_id: minted-gio-ops-gio-vn-E4-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
   output: |
-    cd app && npm test (GV-AC-4 getFlowDays gom ngày theo giờ VN trên lược đồ tạm)
-    ℹ duration_ms 10187.821292
+    cd app && npm test — ca 'GV-AC-4 getFlowDays gom ngày theo giờ VN trên lược đồ tạm' và chiều đỏ thiếu bảng tạm ok
+    ℹ duration_ms 10193.831875
 
 - eval: E5
-  run_id: minted-gio-ops-gio-vn-E5-r1
+  run_id: minted-gio-ops-gio-vn-E5-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
   output: |
-    cd app && npm test (GV-AC-5 readGateFunnel đếm hôm nay theo ngày VN, hai múi máy)
-    ℹ duration_ms 10187.821292
+    cd app && npm test — ca 'GV-AC-5 readGateFunnel đếm hôm nay theo ngày VN' dưới hai múi máy ok
+    ℹ duration_ms 10193.831875
+
+- eval: E7
+  run_id: minted-gio-ops-gio-vn-E7-r2
+  exit_code: 0
+  baseline: green
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T13:36:36Z
+  output: |
+    cd app && npm test — ca 'GV-AC-7 fmtOverdue ma trận viết trước' (11 dòng) ok
+    ℹ duration_ms 10193.831875
+
+- eval: E8
+  run_id: minted-gio-ops-gio-vn-E8-r2
+  exit_code: 0
+  baseline: green
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T13:36:36Z
+  output: |
+    cd app && npm test — 3 ca 'GV-AC-8 <chỗ> hiện mức trễ' ok
+    ℹ duration_ms 10193.831875
+
+- eval: E9
+  run_id: minted-gio-ops-gio-vn-E9-r2
+  exit_code: 0
+  baseline: green
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T13:36:36Z
+  output: |
+    cd app && npm test — ca 'GV-AC-9 luồng 7 ngày nói ngày theo giờ VN' ok
+    ℹ duration_ms 10193.831875
+
+- eval: E11
+  run_id: minted-gio-ops-gio-vn-E11-r2
+  exit_code: 0
+  baseline: green
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T13:36:36Z
+  output: |
+    cd app && npm test — ca 'GV-AC-10 readGateFunnel bản app bỏ qua dòng mốc hỏng' ok
+    ℹ duration_ms 10193.831875
 
 - eval: E6
-  run_id: minted-gio-ops-gio-vn-E6-r1
+  run_id: minted-gio-ops-gio-vn-E6-r2
   exit_code: 0
   baseline: green
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
   output: |
-    cd pipeline && npm test (GV-AC-6 zaloFlow/funnel, vnDayKey, push-ops-facts dùng hàm lib, chiều đỏ của thước)
-    ℹ duration_ms 14177.285042
+    cd pipeline && npm test — các ca 'GV-AC-6' (zaloFlow/funnel, vnDayKey, push-ops-facts dùng hàm lib, chiều đỏ bản sao) ok
+    ℹ duration_ms 12321.086959
 
-- eval: E7
-  run_id: minted-gio-ops-gio-vn-E7-r1
+- eval: E10
+  run_id: minted-gio-ops-gio-vn-E10-r2
   exit_code: 0
   baseline: green
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-10-24T13:36:36Z
   output: |
-    cd app && npm test (GV-AC-7 fmtOverdue ma trận 11 dòng)
-    ℹ duration_ms 10187.821292
-
-- eval: E8
-  run_id: minted-gio-ops-gio-vn-E8-r1
-  exit_code: 0
-  baseline: green
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
-  output: |
-    cd app && npm test (GV-AC-8 mức trễ hiện ở 3 chỗ)
-    ℹ duration_ms 10187.821292
-
-- eval: E9
-  run_id: minted-gio-ops-gio-vn-E9-r1
-  exit_code: 0
-  baseline: green
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T13:03:11Z
-  output: |
-    cd app && npm test (GV-AC-9 luồng 7 ngày nói ngày theo giờ VN)
-    ℹ duration_ms 10187.821292
+    cd pipeline && npm test — ca 'GV-AC-10 parseLog bản pipeline bỏ qua dòng mốc hỏng' và chiều đỏ 'bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng' ok
+    ℹ duration_ms 12321.086959
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-gio-ops-gio-vn-SUITE-npm_test-r1
+  run_id: minted-gio-ops-gio-vn-SUITE-npm_test-r2
   exit_code: 0
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-gio-ops-gio-vn-SUITE-lint-r1
+  run_id: minted-gio-ops-gio-vn-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-gio-ops-gio-vn-SUITE-test_lint_rules-r1
+  run_id: minted-gio-ops-gio-vn-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-gio-ops-gio-vn-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-gio-ops-gio-vn-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-24T13:03:11Z
+  verified_at: 2026-10-24T13:36:36Z
 
 ## Known limits
 
@@ -145,7 +167,10 @@ human_signoff:
 
 ## Analyst
 
-Eval không phân biệt (xanh ở cả HEAD lẫn baseline diffBase): E1, E2, E3, E4, E5, E6, E7, E8, E9 (cd app && npm test cho E1-E5 và E7-E9; cd pipeline && npm test cho E6). Cần người xác nhận ở Cổng 2: hoặc đây là regression-guard có chủ ý, hoặc viết lại để assert hành vi mới và đỏ trên mã cũ.
+Eval không phân biệt (xanh ở cả HEAD lẫn baseline — chứng minh harness chứ chưa chứng minh tính năng; cần viết lại để assert hành vi mới, hoặc xác nhận là regression-guard có chủ ý):
+
+- `cd app && npm test`: E1, E2, E3, E4, E5, E7, E8, E9, E11
+- `cd pipeline && npm test`: E6, E10
 
 ## Variance
 
@@ -153,5 +178,6 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: mọi eval và lệnh suite đều xanh. Không có eval đỏ, không có mục judgment chờ người.
+Round 1: mọi eval đạt, hai phát hiện ngoài hợp đồng (ghi known-limits). Quay lại để làm phụ lục Task 5 (AC-10: parseLog bỏ qua dòng mốc hỏng).
+Round 2: E1–E11 đạt trên cây 2f657df; thêm E10, E11 cho AC-10.
 
