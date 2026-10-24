@@ -113,6 +113,27 @@ scan_new_lines() {
   # biệt được ngày mới DÀI HƠN ngày cũ (cur > last quét từ last+1 → sót dòng
   # đầu, claudedp-2310-5 mở lại). Khác path/inode = file mới (log xoay ngày);
   # cùng file mà ít dòng hơn = truncate — cả hai quét TOÀN BỘ từ dòng 1.
+  #
+  # CHẾ ĐỘ HISTORY (2410-15, gateway.log chứa turn của sự cố cũ): MỌI nhánh
+  # 'quét lại' đều nguy hiểm KILL-nhầm vì quá khứ — đổi file (kể cả marker
+  # số dòng lớn hơn thật), truncate, marker định dạng số cũ: KHÔNG quét gì,
+  # khởi tạo lại marker ở dòng HIỆN TẠI + WARN, giống nhánh marker hỏng.
+  # Chỉ nhánh 'cùng file + nhiều dòng hơn' (append — đường phổ thường) quét
+  # phần mới. Cửa sổ bỏ sót khi log xoay thật: những dòng đầu file MỚI ghi
+  # TRƯỚC lượt quét đầu tiên sau xoay (≤ một chu kỳ watchdog 5′) không được
+  # quét — đánh đổi có ý thức để không tự tắt gateway vì lịch sử.
+  if [ "$mode" = "history" ]; then
+    if [ "$prevPath" != "$f" ] || [ "$prevInode" != "$curInode" ] || [ "$curLines" -lt "$prevLines" ]; then
+      echo "$(date -Iseconds) WARN: L4b (history) '${1##*/}' đổi file/truncate/xoay — khởi tạo lại ở dòng $curLines, không quét quá khứ (cửa sổ bỏ sót ≤1 chu kỳ 5′)" >> "$ALERT_LOG"
+      echo "$f:$curInode:$curLines" > "$mk"
+      return 0
+    fi
+    if [ "$curLines" -gt "$prevLines" ]; then
+      tail -n +"$((prevLines + 1))" "$f"
+    fi
+    echo "$f:$curInode:$curLines" > "$mk"
+    return 0
+  fi
   if [ "$prevPath" != "$f" ] || [ "$prevInode" != "$curInode" ]; then
     # ĐỔI FILE: đuôi file CŨ viết SAU lượt quét cuối ngày (~23:55–00:00) chưa
     # ai quét — quét NỐT từ prevLines+1 TRƯỚC khi đổi sang file mới
