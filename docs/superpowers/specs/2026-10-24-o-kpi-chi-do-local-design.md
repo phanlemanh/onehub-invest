@@ -32,8 +32,8 @@ dùng bộ định dạng giờ VN của ON8 và chung `lib/freshness.ts`.
    - `stamp: {state, measuredAt}` của cả bản tin.
    Khối `error` hay vắng → phần đó `null` (trang hiện «—», không 0).
 3. **Một dòng mốc đo + một Alert số cũ, dựng một lần** (`app/src/components/ops/facts-status.tsx`), ON2/ON4/ON5 dùng lại:
-   - `FactsStamp`: «Số đo lúc HH:MM (giờ VN) từ máy local» — chữ `text-xs` dưới PageHeader, khi `state` = `fresh` hoặc `stale`.
-   - `FactsStaleAlert`: `Alert variant="warning"` «Máy local không đẩy số từ HH:MM (giờ VN)» + một dòng «Số dưới đây là lần
+   - `FactsStamp`: «Số đo lúc YYYY-MM-DD HH:MM (GMT+7) từ máy local» (bộ định dạng ON8, sổ d-13) — chữ `text-xs` dưới PageHeader, khi `state` = `fresh` hoặc `stale`.
+   - `FactsStaleAlert`: `Alert variant="warning"` «Máy local không đẩy số từ YYYY-MM-DD HH:MM (GMT+7)» + một dòng «Số dưới đây là lần
      đo cuối — kiểm cloud-sync ở máy thu.» khi `state` = `stale`.
    - `state` = `none`: không dòng mốc; `LocalOnlyAlert` (đã có) là chỗ DUY NHẤT mang chữ «Chỉ đo ở máy local» của trang.
    Giờ VN qua bộ định dạng của ON8.
@@ -58,7 +58,7 @@ dùng bộ định dạng giờ VN của ON8 và chung `lib/freshness.ts`.
 <!-- <<<UX-SPEC-TEMPLATE -->
 ### 1. Luồng
 
-- Suôn sẻ: người trực mở `/ops` trên cloud → thấy «Số đo lúc 19:45 (giờ VN) từ máy local» + ô số → bấm «Thu thập» / «Review»
+- Suôn sẻ: người trực mở `/ops` trên cloud → thấy «Số đo lúc 2026-10-24 19:45 (GMT+7) từ máy local» + ô số → bấm «Thu thập» / «Review»
   (điểm ra: trang con hoặc máy thu).
 - Biên: chưa từng có bản tin (cloud mới) → «—» + một Alert «Chỉ đo ở máy local»; một khối đo lỗi → ô của khối đó «—».
 - Lỗi & quay lại: máy local im > 45′ → Alert vàng nêu giờ đẩy cuối → người trực kiểm `cloud-sync` ở máy thu; lượt đẩy kế
@@ -78,8 +78,8 @@ dùng bộ định dạng giờ VN của ON8 và chung `lib/freshness.ts`.
 | Trạng thái | Màn | Hiển thị gì | Người làm gì tiếp |
 |---|---|---|---|
 | ST-ops-none | `/ops` | 4 ô «—», 1 Alert info «Chỉ đo ở máy local», lưới mục tiêu trống | mở Ops ở máy thu |
-| ST-ops-fresh | `/ops` | «Số đo lúc HH:MM (giờ VN) từ máy local», 4 ô số của khối độ tươi | đọc, bấm vào nguồn quá hạn |
-| ST-ops-stale | `/ops` | Alert vàng «Máy local không đẩy số từ HH:MM (giờ VN)», số mờ, 0 badge xanh | kiểm cloud-sync ở máy thu |
+| ST-ops-fresh | `/ops` | «Số đo lúc YYYY-MM-DD HH:MM (GMT+7) từ máy local» (bộ định dạng ON8, sổ d-13), 4 ô số của khối độ tươi | đọc, bấm vào nguồn quá hạn |
+| ST-ops-stale | `/ops` | Alert vàng «Máy local không đẩy số từ YYYY-MM-DD HH:MM (GMT+7)», số mờ, 0 badge xanh | kiểm cloud-sync ở máy thu |
 | ST-collections-none | `/ops/collections` | ô «Sức khoẻ nguồn», «Bản ghi 24h», «Lockdown» = «—», 1 Alert info | mở Ops ở máy thu |
 | ST-collections-fresh | `/ops/collections` | dòng mốc đo, «Bản ghi 24h» = tổng khối 24h, «Sức khoẻ nguồn» = x/y của khối độ tươi | đọc |
 | ST-collections-stale | `/ops/collections` | Alert vàng 45′ (thay Alert 30′ cũ), số mờ, 0 badge xanh | kiểm cloud-sync |

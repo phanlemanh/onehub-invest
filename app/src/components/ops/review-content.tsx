@@ -6,6 +6,7 @@ import { pool } from "@/lib/db";
 import { fmtInt } from "@/lib/format";
 import { getCloudOpsView } from "@/lib/ops-cloud";
 import { localOnlyTable } from "@/lib/ops-queries";
+import { cn } from "@/lib/utils";
 import { FactsStaleAlert, FactsStamp } from "@/components/ops/facts-status";
 import { loadReviewMedia, stripEvidenceImages } from "@/lib/ops/review-media";
 
@@ -29,17 +30,19 @@ export async function ReviewContent({ user }: { user: User }) {
     // Cloud: chỉ số đếm thẻ chờ từ bản tin máy local (ON3, ADR-0014 — nội dung thẻ là tầng A, không lên cloud).
     const cloud = await getCloudOpsView();
     const pending = cloud.pending;
+    // Số cũ quá 45′ (ADR-0014 hàng «Cũ»): số đếm hiện mờ — là lần đo cuối, không phải bây giờ.
+    const stale = cloud.state === "stale";
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-xl font-medium">Review Queue</h1>
           <p className="text-sm tabular-nums" data-pending-total={pending?.total ?? ""}>
-            <span className="font-semibold">{pending ? fmtInt(pending.total) : "—"}</span> thẻ đang chờ
+            <span className={cn("font-semibold", stale && "text-muted-foreground")}>{pending ? fmtInt(pending.total) : "—"}</span> thẻ đang chờ
           </p>
           {pending && pending.byType.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {pending.byType.map((t) => (
-                <Badge key={t.type} variant="outline" data-pending-type={t.type}>
+                <Badge key={t.type} variant="outline" className={cn(stale && "text-muted-foreground")} data-pending-type={t.type}>
                   {t.type}: {fmtInt(t.n)}
                 </Badge>
               ))}

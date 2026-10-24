@@ -42,6 +42,8 @@ export function CollectionsTiles({
   const slo = feedSloSummary(feeds)
   const items24h = cloud ? cloud.records24h : feeds.reduce((sum, f) => sum + (f.items24h || 0), 0)
   const muted = cloud?.stale ?? false
+  // Số cũ (ADR-0014 hàng «Cũ»): thanh phân đoạn cũng mờ, không tô màu trạng thái — số là lần đo cuối, không phải bây giờ.
+  const tone = (t: string) => (muted ? "bg-muted-foreground/40" : t)
   const busiest = [...feeds].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
   const layersOk = layers.filter((l) => l.ok === true).length
   const layersBad = layers.filter((l) => l.ok === false).length
@@ -61,7 +63,7 @@ export function CollectionsTiles({
       >
         {cloud && !cloud.feedsMeasured ? null : <SegmentBar
           label="Nguồn theo sức khoẻ"
-          segments={(["ok", "late", "nodata", "noslo", "stopped"] as const).map((s) => ({ key: s, label: FEED_STATE[s].label, count: count(s), tone: FEED_STATE[s].tone }))}
+          segments={(["ok", "late", "nodata", "noslo", "stopped"] as const).map((s) => ({ key: s, label: FEED_STATE[s].label, count: count(s), tone: tone(FEED_STATE[s].tone) }))}
         />}
       </StatCard>
 
@@ -88,7 +90,7 @@ export function CollectionsTiles({
         {cloud && !cloud.funnelMeasured ? null : <SegmentBar
           label={`Tin ${s03} hôm nay`}
           segments={[
-            { key: "passed", label: "Qua cổng", count: funnel.today.passed, tone: "bg-success" },
+            { key: "passed", label: "Qua cổng", count: funnel.today.passed, tone: tone("bg-success") },
             { key: "skipped", label: "Bị chặn", count: funnel.today.skipped, tone: "bg-muted-foreground/40" },
           ]}
         />}

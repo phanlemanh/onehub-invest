@@ -178,8 +178,10 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 - Dòng «Số đo lúc <giờ VN> (GMT+7) từ máy local» dưới tiêu đề khi có bản tin (`FactsStamp`, `components/ops/facts-status.tsx`).
 - Bản tin cũ quá 45′: Alert vàng «Máy local không đẩy số từ …», ô số mờ, không badge xanh nào (`FactsStaleAlert`).
 - Chưa có bản tin (hoặc bảng `ops_heartbeat` chưa có): một Alert «Chỉ đo ở máy local», mọi ô «—» — không bao giờ 0 hay «Ổn».
-- Thử ở máy local như cloud: `node scripts/ops-cloud-proto.mjs --mode none|fresh|stale` in `DATABASE_URL` (lược đồ
-  `ops_cloud_proto`, không có bảng tầng A) để chạy dev server cổng khác; dọn bằng `--drop`.
+- Thử ở máy local như cloud: `node scripts/ops-cloud-proto.mjs --mode none|fresh|stale` in `VERCEL=1 DATABASE_URL=…` (lược đồ
+  `ops_cloud_proto`, không có bảng tầng A/thô) để chạy dev server cổng khác; dọn bằng `--drop`.
+- Trên cloud (`VERCEL=1`) bảng thô vắng (`airbnb_snapshots`, `stg_*`, `airdna_*`) được đọc là rỗng ở /ops/collections
+  (`queryRawTable`); ở máy local bảng vắng vẫn báo lỗi.
 
 ## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
 

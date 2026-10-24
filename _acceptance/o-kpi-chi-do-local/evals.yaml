@@ -60,10 +60,10 @@ evals:
   - id: E8
     criterion: AC-8
     executor: judgment
-    inputs: ["docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md", "docs/adr/0014-ops-cloud-doc-so-tong-hop.md", "app/src/components/ops/facts-status.tsx", "app/src/components/ops/local-only-alert.tsx", "app/src/components/ops/overview/overview-tiles.tsx", "app/src/components/ops/collections/collections-tiles.tsx", "app/src/components/ops/review-content.tsx"]
-    question: "Đối chiếu bảng trạng thái của mục «Đặc tả UX» trong design (có chép ngưỡng bat_khi ON3) với chữ thật trong năm tệp component và với ADR-0014 §Ngưỡng trễ: chữ «Số đo lúc HH:MM (giờ VN) từ máy local» khi tươi, «Máy local không đẩy số từ HH:MM (giờ VN)» khi cũ, chữ chỉ-local đúng nguyên văn từng trang khi không có; ô không có số có câu trấn an nào («Không có», «Mọi nguồn …», số 0) khi không đo được không? Lệch ADR hay còn câu trấn an thì FAIL."
+    inputs: ["docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md", "docs/adr/0014-ops-cloud-doc-so-tong-hop.md", "app/src/components/ops/facts-status.tsx", "app/src/components/ops/local-only-alert.tsx", "app/src/components/ops/overview/overview-tiles.tsx", "app/src/components/ops/collections/collections-tiles.tsx", "app/src/components/ops/review-content.tsx", "app/src/lib/format.ts", "app/src/app/ops/page.tsx", "app/src/components/ops/collections/collections-view.tsx"]
+    question: "Đối chiếu bảng trạng thái của mục «Đặc tả UX» trong design (có chép ngưỡng bat_khi ON3) với chữ thật trong các tệp component (overview-tiles, collections-tiles, collections-view, review-content, facts-status, local-only-alert, trang /ops) và với ADR-0014 §Ngưỡng trễ: chữ «Số đo lúc YYYY-MM-DD HH:MM (GMT+7) từ máy local» khi tươi, «Máy local không đẩy số từ YYYY-MM-DD HH:MM (GMT+7)» khi cũ (giờ do fmtVnDateTime trong format.ts sinh), chữ chỉ-local đúng nguyên văn từng trang khi không có; ô không có số có câu trấn an nào («Không có», «Mọi nguồn …», số 0) khi không đo được không? Lệch ADR hay còn câu trấn an thì FAIL."
     expected: "chữ khớp ADR-0014 và bảng trạng thái, không câu trấn an"
-    paths: ["docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md", "app/src/components/ops/facts-status.tsx", "app/src/components/ops/local-only-alert.tsx", "app/src/components/ops/overview/overview-tiles.tsx", "app/src/components/ops/collections/collections-tiles.tsx", "app/src/components/ops/review-content.tsx"]
+    paths: ["docs/superpowers/specs/2026-10-24-o-kpi-chi-do-local-design.md", "app/src/components/ops/facts-status.tsx", "app/src/components/ops/local-only-alert.tsx", "app/src/components/ops/overview/overview-tiles.tsx", "app/src/components/ops/collections/collections-tiles.tsx", "app/src/components/ops/review-content.tsx", "app/src/lib/format.ts", "app/src/app/ops/page.tsx", "app/src/components/ops/collections/collections-view.tsx"]
     evidence_required: [run_id, verdict, judges, verified_at]
 
   - id: E9
@@ -79,7 +79,7 @@ evals:
     executor: ui-check
     layer: ui-observed
     steps:
-      - "Dựng lược đồ như cloud bằng `node scripts/ops-cloud-proto.mjs --mode <none|fresh|stale>` (in DATABASE_URL); chạy dev server của worktree đang kiểm ở cổng :3460 với DATABASE_URL đó; đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs)"
+      - "Dựng lược đồ như cloud bằng `node scripts/ops-cloud-proto.mjs --mode <none|fresh|stale>` (in VERCEL=1 và DATABASE_URL); chạy dev server của worktree đang kiểm ở cổng :3460 với đúng hai biến đó (VERCEL=1 = chế độ cloud); đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs)"
       - "--mode none: chụp evidence/E10-ST-ops-none.png (/ops), evidence/E10-ST-collections-none.png (/ops/collections), evidence/E10-ST-review-none.png (/ops/review)"
       - "--mode fresh: chụp evidence/E10-ST-ops-fresh.png, evidence/E10-ST-collections-fresh.png, evidence/E10-ST-review-count.png"
       - "--mode stale: chụp evidence/E10-ST-ops-stale.png, evidence/E10-ST-collections-stale.png"

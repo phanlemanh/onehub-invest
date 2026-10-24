@@ -53,7 +53,7 @@ export type CollectionsData = {
 export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, roles = {}, cloud = null }: CollectionsData) {
   const factsAgeMin = factsPushedAt ? Math.round((nowMs - new Date(factsPushedAt).getTime()) / 60_000) : null
   const lastPostHours = zaloHealth.lastPostAt ? Math.round((nowMs - new Date(zaloHealth.lastPostAt).getTime()) / 3_600_000) : null
-  const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin, nowMs, roles })
+  const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin: cloud ? null : factsAgeMin, nowMs, roles })
   // Cùng một con số với /ops (AU6): x/y nguồn đạt SLO.
   const slo = feedSloSummary(feedHealth)
 
@@ -89,7 +89,8 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
         <AttentionList issues={issues} roles={roles} className="min-w-0" />
       </div>
       <FeedsGrid feeds={feedHealth} stale={cloud?.state === "stale"} />
-      <LockdownGrid layers={lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
+      {/* Cloud: lớp lockdown chưa kiểm được ở đây tới ON23 (Hỏi-1 = A) — khớp ô Lockdown, không «Ổn» từ máy đang chạy trang. */}
+      <LockdownGrid layers={cloud ? lockdown.layers.map((l) => ({ ...l, ok: null })) : lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ZaloPipePanel zalo={zaloHealth} funnel={funnel} lastPostHours={lastPostHours} roles={roles} />
         <RotationPanel rotation={rotation} roles={roles} />
@@ -98,7 +99,7 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
       <div id="nhom-s03" className="scroll-mt-4">
         <ZaloGroupsTable rows={zaloGroups} allowlist={zaloAllowlist} roles={roles} />
       </div>
-      <JobsGrid jobs={jobs} />
+      <JobsGrid jobs={jobs} stale={cloud?.state === "stale"} />
     </div>
   )
 }

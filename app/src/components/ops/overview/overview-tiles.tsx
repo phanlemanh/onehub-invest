@@ -81,7 +81,8 @@ export function OverviewTiles({ rows, unmeasured = false, stale = false }: { row
                 .filter((c) => c.n > 0)
                 .map((c) => (
                   <span key={c.s} className="flex items-center gap-1 whitespace-nowrap tabular-nums">
-                    <ToneDot tone={FRESHNESS[c.s].tick} />
+                    {/* Số cũ: chấm «Đạt» không tô xanh — đó là lần đo cuối (ON3). */}
+                    <ToneDot tone={stale && c.s === "fresh" ? FRESHNESS.none.tick : FRESHNESS[c.s].tick} />
                     <span className="text-foreground">{fmtInt(c.n)}</span>
                     {FRESHNESS[c.s].label}
                   </span>
@@ -105,7 +106,7 @@ export function OverviewTiles({ rows, unmeasured = false, stale = false }: { row
                 </span>
               </>
             ) : (
-              <span>Mọi nguồn có snapshot đều trong hạn</span>
+              <span>{stale ? "Lần đo cuối: không cặp nào quá hạn" : "Mọi nguồn có snapshot đều trong hạn"}</span>
             )
           }
         />
@@ -114,7 +115,7 @@ export function OverviewTiles({ rows, unmeasured = false, stale = false }: { row
       <KpiTile icon={<CircleOffIcon aria-hidden="true" />} title="Chưa có snapshot" detail="Nguồn chưa thu lần nào ở thị trường">
         <Panel
           head={<KpiValue value={fmtInt(none.length)} muted={stale} />}
-          subject={<span className="truncate">{none.length ? none.map(where).join(", ") : "Mọi nguồn đã có snapshot"}</span>}
+          subject={<span className="truncate">{none.length ? none.map(where).join(", ") : stale ? "Lần đo cuối: mọi nguồn đã có snapshot" : "Mọi nguồn đã có snapshot"}</span>}
         />
       </KpiTile>
 

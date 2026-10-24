@@ -24,7 +24,7 @@ const OMIT: Record<string, string[]> = { freshness: ["stg_chotot_ads"], records2
 process.env.DATABASE_URL = schemaUrl(S_CLOUD) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
 process.env.OPS_API_TOKEN = "on3-thu"
 const ADMIN: User = { id: "1", email: "ops-test@local.test", plan: "free", role: "admin" }
-const RAW_LOCAL = ["source_registry", "review_queue", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "stg_abnb_listings", "sale_offers"]
+const RAW_LOCAL = ["source_registry", "review_queue", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "airdna_listings", "listings", "stg_abnb_listings", "sale_offers"]
 
 type Payload = Record<string, unknown> & { pushedAt: string; blocks: Record<string, Record<string, unknown>> }
 const admin = new pg.Client({ connectionString: localDbUrl() })
@@ -71,58 +71,94 @@ async function html(el: unknown): Promise<string> {
   return renderToStaticMarkup(el as React.ReactElement)
 }
 const renderOps = async (file = "../src/app/ops/page") => html(await (await import(file)).default())
-async function renderCollections(viewFile = "../src/components/ops/collections/collections-view") {
-  const React = await import("react")
-  const { CollectionsView } = await import(viewFile)
-  const { getCloudOpsView } = await import("../src/lib/ops-cloud")
-  const { freshnessLocalOnly, getSourceFeedHealth } = await import("../src/lib/ops-queries")
-  const cloud = (await freshnessLocalOnly()) ? await getCloudOpsView() : null
-  const zero = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 }
-  return html(
-    React.createElement(CollectionsView, {
-      days: [],
-      funnel: { lastEventAt: null, today: zero, last7: zero },
-      jobs: [],
-      rotation: { updatedAt: null, cursor: 0, total: 0, next: [] },
-      zaloGroups: [],
-      zaloAllowlist: [],
-      zaloHealth: { connected: null, uptime24h: null, heartbeatAgeMin: null, lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false },
-      factsPushedAt: null,
-      feedHealth: cloud ? (cloud.feeds ?? []) : await getSourceFeedHealth(),
-      lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: 0, openClawUp: false, kevUp: false, collectorUp: false },
-      nowMs: Date.now(),
-      cloud,
-    }),
-  )
+/** /ops/collections dựng bằng TRANG thật (mọi hàm tải dữ liệu chạy trên lược đồ đang nối). `cloud` bật nhánh Vercel
+ * (`VERCEL=1`): các hàm local-bound đọc bản tin ops_heartbeat như trên cloud thật — factsPushedAt là `pushedAt` thật. */
+async function renderCollections(pageFile = "../src/app/ops/collections/page", { cloud = true } = {}) {
+  const prev = process.env.VERCEL
+  if (cloud) process.env.VERCEL = "1"
+  else delete process.env.VERCEL
+  const { resetFactsCache } = await import("../src/lib/collections-queries")
+  resetFactsCache()
+  try {
+    return await html(await (await import(pageFile)).default())
+  } finally {
+    if (prev === undefined) delete process.env.VERCEL
+    else process.env.VERCEL = prev
+    resetFactsCache()
+  }
 }
 const renderReview = async () => html(await (await import("../src/components/ops/review-content")).ReviewContent({ user: ADMIN }))
 
 // ---- đọc HTML ----
 const localCount = (h: string) => (h.match(/chỉ (đo|có) ở (máy )?local/gi) ?? []).length
 const successBadges = (h: string) => (h.match(/bg-success\/10/g) ?? []).length
+/** Mọi tô màu «đạt» (badge bg-success/10 lẫn đoạn thanh bg-success). */
+const successTone = (h: string) => (h.match(/\bbg-success\b/g) ?? []).length
 const zeroValues = (h: string) => (h.match(/text-2xl[^>]*>0</g) ?? []).length
+/** Mọi giá trị text-2xl bắt đầu bằng chữ số: [lớp, giá trị]. */
+const numericValues = (h: string) => [...h.matchAll(/class="([^"]*text-2xl[^"]*)"[^>]*>(\d[^<]*)</g)].map((m) => [m[1], m[2]] as const)
 const alertTitles = (h: string) => [...h.matchAll(/data-slot="alert-title"[^>]*>([^<]*(?:<!-- -->[^<]*)*)</g)].map((m) => m[1].replace(/<!-- -->/g, ""))
-const tileValue = (h: string, title: string) => h.match(new RegExp(`${title}<[\\s\\S]*?text-2xl[^>]*>([^<]*)<`))?.[1]
+/** Giá trị ô đầu tiên (text-2xl) trong một vùng. */
+const kpiValue = (r: string) => r.match(/text-2xl[^>]*>([^<]*)</)?.[1]
+const tileValue = (h: string, title: string) => h.match(new RegExp(`>${title}<[\\s\\S]*?text-2xl[^>]*>([^<]*)<`))?.[1]
 const PART = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+const vnParts = (iso: string) => Object.fromEntries(PART.formatToParts(new Date(iso)).map((x) => [x.type, x.value]))
 const vnTime = (iso: string) => {
-  const p = Object.fromEntries(PART.formatToParts(new Date(iso)).map((x) => [x.type, x.value]))
+  const p = vnParts(iso)
   return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute} (GMT+7)`
 }
+const vnDate = (iso: string) => {
+  const p = vnParts(iso)
+  return `${p.year}-${p.month}-${p.day}`
+}
 const text = (h: string) => h.replace(/<!-- -->/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")
+/** HTML một ô: từ tiêu đề `from` tới tiêu đề ô kế `to` (ô cuối: tới mốc `to` bất kỳ sau nó). */
+function region(h: string, from: string, to: string) {
+  const i = h.indexOf(from)
+  assert.ok(i >= 0, `không thấy «${from}» trong trang`)
+  const j = h.indexOf(to, i + from.length)
+  assert.ok(j > i, `không thấy «${to}» sau «${from}»`)
+  return h.slice(i, j)
+}
+const OPS_TILES = [">Đạt SLO<", ">Quá hạn<", ">Chưa có snapshot<", ">Snapshot mới nhất<", ">Độ tươi theo nguồn<"]
+const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", ">Lockdown<", ">Luồng 7 ngày<"]
 
+/** Đạt SLO tính độc lập với bên đọc: nguồn đạt khi mọi hàng của nó tươi; mã có hàng chưa khai SLO không đếm. */
+function expectSlo(rows: { code: string; status: string }[]) {
+  const by = new Map<string, string[]>()
+  for (const r of rows) by.set(r.code, [...(by.get(r.code) ?? []), r.status])
+  const counted = [...by.values()].filter((st) => !st.includes("no-slo"))
+  return { ok: counted.filter((st) => st.every((x) => x === "fresh")).length, total: counted.length }
+}
+
+let mutantSeq = 0
 /** Chép một tệp nguồn của app cạnh bản thật qua `fn` (đột biến cho chiều đỏ), trả đường để import; xoá sau ca. */
 function mutantApp(rel: string, fn: (s: string) => string) {
   const p = join(import.meta.dirname, "..", rel)
   const src = readFileSync(p, "utf8")
   const out = fn(src)
   assert.notEqual(out, src, `khuôn đột biến ${rel} không khớp mã nguồn`)
-  const dst = p.replace(/\/([^/]+)\.tsx?$/, `/.on3-mut-${process.pid}-$1.tsx`)
+  // tên riêng mỗi lần: ESM giữ module theo đường dẫn, trùng tên thì lần sau nhận bản đột biến cũ
+  const dst = p.replace(/\/([^/]+)\.tsx?$/, `/.on3-mut-${process.pid}-${++mutantSeq}-$1.tsx`)
   writeFileSync(dst, out)
   return { path: dst.replace(/\.tsx$/, ""), done: () => rmSync(dst, { force: true }) }
 }
+/** Đột biến một component rồi dựng trang thật trỏ vào bản đột biến: `chain` từ lá lên trang, mỗi mắt thay chỗ import
+ * mắt dưới. Trả đường trang đột biến; `done()` xoá mọi bản chép. */
+function mutantChain(leaf: { rel: string; fn: (s: string) => string }, parents: { rel: string; spec: string }[]) {
+  const made = [mutantApp(leaf.rel, leaf.fn)]
+  for (const { rel, spec } of parents) {
+    const child = made[made.length - 1].path
+    made.push(mutantApp(rel, (s) => s.replace(`"${spec}"`, JSON.stringify(child))))
+  }
+  return { path: made[made.length - 1].path, done: () => made.forEach((m) => m.done()) }
+}
+const COL_PAGE = { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-view" }
+const COL_VIEW_TILES = { rel: "src/components/ops/collections/collections-view.tsx", spec: "@/components/ops/collections/collections-tiles" }
+const OPS_PAGE_TILES = { rel: "src/app/ops/page.tsx", spec: "@/components/ops/overview/overview-tiles" }
 
 describe("ON3-AC-1 chưa có bản tin", () => {
-  test("ON3-AC-1 không facts: mỗi trang đúng một chữ chỉ-local, 0 ô KPI số 0, 0 badge success, ô không số là «—»", async () => {
+  test("ON3-AC-1 không facts: mỗi trang đúng một chữ chỉ-local, 0 ô KPI số 0, 0 badge success, mọi ô KPI là «—»", async () => {
     ready()
     await clear()
     const PAGES: [string, () => Promise<string>, string][] = [
@@ -134,12 +170,18 @@ describe("ON3-AC-1 chưa có bản tin", () => {
       const h = await render()
       assert.equal(localCount(h), 1, `${name}: chữ chỉ-local phải đúng một lần`)
       assert.ok(alertTitles(h).includes(pinned), `${name}: nguyên văn «${pinned}»`)
-      assert.equal(zeroValues(h), 0, `${name}: không ô nào hiện số 0`)
-      assert.equal(successBadges(h), 0, `${name}: không badge xanh`)
+      const kpi = name === "/ops" ? region(h, OPS_TILES[0], OPS_TILES[4]) : name === "/ops/collections" ? region(h, COL_TILES[0], COL_TILES[4]) : h
+      assert.equal(zeroValues(kpi), 0, `${name}: không ô KPI nào hiện số 0`)
+      assert.equal(successBadges(kpi), 0, `${name}: không ô KPI nào có badge xanh`)
     }
     const ops = await renderOps()
-    assert.ok(ops.includes("data-kpi-unmeasured"), "/ops: bốn ô «—»")
-    assert.equal(tileValue(await renderCollections(), "Bản ghi 24h"), "—")
+    for (let i = 0; i < 4; i++) {
+      const r = region(ops, OPS_TILES[i], OPS_TILES[i + 1])
+      assert.equal(tileValue(r, OPS_TILES[i].slice(1, -1)), "—", `/ops ô ${OPS_TILES[i]} phải «—»`)
+      assert.match(text(r), /Chưa có số/, `/ops ô ${OPS_TILES[i]} phải «Chưa có số»`)
+    }
+    const col = await renderCollections()
+    for (let i = 0; i < 4; i++) assert.equal(kpiValue(region(col, COL_TILES[i], COL_TILES[i + 1])), "—", `/ops/collections ô ${COL_TILES[i]} phải «—»`)
     assert.match(text(await renderReview()), /— thẻ đang chờ/)
   })
   test("ON3-AC-1 bản sao còn «chỉ đo ở local» trong stats PageHeader và ô Quá hạn 0 kèm badge xanh → bắt", async () => {
@@ -155,6 +197,20 @@ describe("ON3-AC-1 chưa có bản tin", () => {
       m.done()
     }
   })
+  test("ON3-AC-1 bản sao ô Cổng S03 hiện số khi chưa có bản tin → bắt", async () => {
+    ready()
+    await clear()
+    const m = mutantChain(
+      { rel: "src/components/ops/collections/collections-tiles.tsx", fn: (s) => s.replace('value={cloud && !cloud.funnelMeasured ? "—" : fmtInt(funnel.today.passed)}', "value={fmtInt(funnel.today.passed)}") },
+      [COL_VIEW_TILES, COL_PAGE],
+    )
+    try {
+      const h = await renderCollections(m.path)
+      assert.notEqual(kpiValue(region(h, COL_TILES[2], COL_TILES[3])), "—", "phép đo phải thấy ô Cổng S03 có số")
+    } finally {
+      m.done()
+    }
+  })
 })
 
 describe("ON3-AC-2/AC-3 bản tin tươi", () => {
@@ -162,15 +218,34 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     ready()
     const p = await push()
     await ingest(p)
-    const { toCoverageRows } = await import("../src/lib/ops-queries")
-    const { summarizeFreshness, sloSummaryKey } = await import("../src/lib/freshness")
-    const rows = toCoverageRows(p.blocks.freshness.rows as never)
+    const raw = p.blocks.freshness.rows as { code: string; status: string; last: string | null }[]
+    const cov = raw.filter((r) => r.status !== "no-slo")
+    const slo = expectSlo(raw)
+    assert.ok(slo.total > 0 && cov.length > 0, "fixture phải có nguồn khai SLO")
+    const newest = cov.map((r) => r.last).filter((x): x is string => !!x).sort((a, b) => Date.parse(b) - Date.parse(a))[0]
+    assert.ok(newest, "fixture phải có snapshot")
     const h = await renderOps()
-    assert.ok(h.includes(`data-slo-summary="${sloSummaryKey(summarizeFreshness(rows))}"`), "ô Đạt SLO phải bằng khối freshness")
-    assert.equal(tileValue(h, "Quá hạn"), String(rows.filter((r) => r.status === "stale").length))
-    assert.equal(tileValue(h, "Chưa có snapshot"), String(rows.filter((r) => r.status === "none").length))
+    const tile = (i: number) => text(region(h, OPS_TILES[i], OPS_TILES[i + 1]))
+    assert.match(tile(0), new RegExp(`Đạt SLO [^\\d]*${slo.ok} / ${slo.total} nguồn`), "ô Đạt SLO = x / y nguồn của khối freshness")
+    assert.equal(tileValue(h, "Quá hạn"), String(cov.filter((r) => r.status === "stale").length))
+    assert.equal(tileValue(h, "Chưa có snapshot"), String(cov.filter((r) => r.status === "none").length))
+    assert.equal(tileValue(h, "Snapshot mới nhất"), vnDate(newest), "ô Snapshot mới nhất = ngày VN của snapshot mới nhất")
     assert.match(text(h), new RegExp(`Số đo lúc ${vnTime(p.pushedAt).replace(/[()+]/g, "\\$&")} từ máy local`))
     assert.equal(localCount(h), 0, "có số thì không còn chữ chỉ-local")
+  })
+  test("ON3-AC-2 bản sao ô Đạt SLO hiện tổng thay số đạt → bắt", async () => {
+    ready()
+    const p = await push()
+    await ingest(p)
+    const slo = expectSlo(p.blocks.freshness.rows as { code: string; status: string }[])
+    assert.notEqual(slo.ok, slo.total, "fixture phải có nguồn không đạt để chiều đỏ phân biệt")
+    const m = mutantChain({ rel: "src/components/ops/overview/overview-tiles.tsx", fn: (s) => s.replace("<KpiValue value={fmtInt(summary.ok)}", "<KpiValue value={fmtInt(summary.total)}") }, [OPS_PAGE_TILES])
+    try {
+      const h = await renderOps(m.path)
+      assert.doesNotMatch(text(region(h, OPS_TILES[0], OPS_TILES[1])), new RegExp(`${slo.ok} / ${slo.total} nguồn`))
+    } finally {
+      m.done()
+    }
   })
   test("ON3-AC-2 bản sao lệch giờ VN → bắt", async () => {
     ready()
@@ -190,10 +265,10 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     await ingest(p)
     const want = (p.blocks.records24h.bySource as { n: number }[]).reduce((a, r) => a + r.n, 0)
     assert.ok(want > 0, "fixture phải có bản ghi trong 24 giờ")
-    const { summarizeFreshness, sloSummaryKey } = await import("../src/lib/freshness")
+    const slo = expectSlo(p.blocks.freshness.rows as { code: string; status: string }[])
     const h = await renderCollections()
     assert.equal(tileValue(h, "Bản ghi 24h"), String(want))
-    assert.ok(h.includes(`data-slo-summary="${sloSummaryKey(summarizeFreshness(p.blocks.freshness.rows as never))}"`))
+    assert.match(text(region(h, COL_TILES[0], COL_TILES[1])), new RegExp(`Sức khoẻ nguồn \\D*${slo.ok} ?/ ?${slo.total}\\b`), "ô Sức khoẻ nguồn = x/y")
     assert.ok(h.includes("data-facts-stamp"), "dòng mốc đo")
     assert.equal(tileValue(h, "Lockdown"), "—")
     assert.match(text(h), /Chưa kiểm được trên cloud/)
@@ -202,7 +277,7 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     ready()
     const p = await push()
     await ingest(p)
-    const m = mutantApp("src/components/ops/collections/collections-view.tsx", (s) => s.replace("cloud.records24h.reduce((a, r) => a + r.n, 0)", "0"))
+    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("cloud.records24h.reduce((a, r) => a + r.n, 0)", "0") }, [COL_PAGE])
     try {
       const want = (p.blocks.records24h.bySource as { n: number }[]).reduce((a, r) => a + r.n, 0)
       assert.notEqual(tileValue(await renderCollections(m.path), "Bản ghi 24h"), String(want))
@@ -214,21 +289,59 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
 
 describe("ON3-AC-4 bản tin cũ", () => {
   const staleTitles = (h: string) => alertTitles(h).filter((t) => t.startsWith("Máy local không đẩy số từ"))
-  test("ON3-AC-4 bản tin thật qua handler ingest thật, mốc lùi 46′: mỗi trang đúng một Alert, số mờ, 0 badge success, không còn Alert 30′ cũ", async () => {
+  test("ON3-AC-4 bản tin thật qua handler ingest thật, mốc lùi 46′: mỗi trang đúng một Alert, mọi số mờ, không tô màu đạt, không câu trấn an, không còn cảnh báo 30′ cũ", async () => {
     ready()
     const p = shiftPayload(await push(), -46) as Payload
     await ingest(p)
-    for (const [name, h] of [["/ops", await renderOps()], ["/ops/collections", await renderCollections()]] as const) {
+    const ops = await renderOps()
+    const col = await renderCollections()
+    const rev = await renderReview()
+    for (const [name, h] of [["/ops", ops], ["/ops/collections", col], ["/ops/review", rev]] as const) {
       assert.deepEqual(staleTitles(h), [`Máy local không đẩy số từ ${vnTime(p.pushedAt)}`], `${name}: một Alert số cũ`)
       assert.equal(successBadges(h), 0, `${name}: không badge xanh`)
-      assert.ok(/text-2xl[^"]*text-muted-foreground/.test(h), `${name}: số mờ`)
-      assert.ok(!h.includes("Máy thu có thể offline"), `${name}: Alert 30′ cũ phải bỏ`)
+      assert.ok(!h.includes("Máy thu có thể offline"), `${name}: cảnh báo 30′ cũ phải bỏ`)
+    }
+    for (const [name, r] of [["/ops ô KPI", region(ops, OPS_TILES[0], OPS_TILES[4])], ["/ops/collections ô KPI", region(col, COL_TILES[0], COL_TILES[4])]] as const) {
+      const nums = numericValues(r)
+      assert.ok(nums.length >= 3, `${name}: phải có số để xét mờ (${nums.length})`)
+      assert.deepEqual(nums.filter(([cls]) => !cls.includes("text-muted-foreground")).map(([, v]) => v), [], `${name}: mọi số phải mờ`)
+      assert.equal(successTone(r), 0, `${name}: không tô màu đạt (badge hay thanh)`)
+    }
+    assert.doesNotMatch(text(ops), /Mọi nguồn có snapshot đều trong hạn|Mọi nguồn đã có snapshot(?! ở)/, "/ops: không câu trấn an trên số cũ")
+    assert.match(rev, /data-pending-total="\d+"><span class="[^"]*text-muted-foreground/, "/ops/review: số thẻ chờ mờ")
+  })
+  test("ON3-AC-4 bản tin 31′ và 44′ → không Alert số cũ, không cảnh báo «Máy thu có thể offline»", async () => {
+    ready()
+    for (const min of [31, 44]) {
+      await ingest(shiftPayload(await push(), -min) as Payload)
+      for (const h of [await renderOps(), await renderCollections()]) {
+        assert.deepEqual(staleTitles(h), [], `${min}′: không Alert số cũ`)
+        assert.ok(!h.includes("Máy thu có thể offline"), `${min}′: không cảnh báo 30′ cũ`)
+      }
     }
   })
-  test("ON3-AC-4 bản tin 44′ → không Alert", async () => {
+  test("ON3-AC-4 bản sao còn ngưỡng 30′ trên cloud → bắt", async () => {
     ready()
-    await ingest(shiftPayload(await push(), -44) as Payload)
-    for (const h of [await renderOps(), await renderCollections()]) assert.deepEqual(staleTitles(h), [])
+    await ingest(shiftPayload(await push(), -31) as Payload)
+    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("factsAgeMin: cloud ? null : factsAgeMin,", "factsAgeMin,") }, [COL_PAGE])
+    try {
+      assert.ok((await renderCollections(m.path)).includes("Máy thu có thể offline"), "phép đo phải thấy cảnh báo 30′ cũ")
+    } finally {
+      m.done()
+    }
+  })
+  test("ON3-AC-4 bản sao thanh phân đoạn giữ màu đạt khi số cũ → bắt", async () => {
+    ready()
+    await ingest(shiftPayload(await push(), -46) as Payload)
+    const m = mutantChain(
+      { rel: "src/components/ops/collections/collections-tiles.tsx", fn: (s) => s.replace('const tone = (t: string) => (muted ? "bg-muted-foreground/40" : t)', "const tone = (t: string) => t") },
+      [COL_VIEW_TILES, COL_PAGE],
+    )
+    try {
+      assert.ok(successTone(region(await renderCollections(m.path), COL_TILES[0], COL_TILES[4])) > 0, "phép đo phải thấy màu đạt trên số cũ")
+    } finally {
+      m.done()
+    }
   })
 })
 
@@ -263,22 +376,39 @@ describe("ON3-AC-5 thẻ chờ duyệt", () => {
 })
 
 describe("ON3-AC-6 khối lỗi do bên ghi thật", () => {
-  test("ON3-AC-6 ma trận khối lỗi (freshness, records24h, reviewQueue) → ô «—» + «Chưa có số», 0 số 0, 0 badge success", async () => {
+  // [khối, trang, HTML của đúng các ô đọc khối ấy] — ô khác của trang đọc khối khác nên không xét
+  const CASES: [string, string, () => Promise<string>, (h: string) => string[]][] = [
+    ["freshness", "/ops", () => renderOps(), (h) => [0, 1, 2, 3].map((i) => region(h, OPS_TILES[i], OPS_TILES[i + 1]))],
+    ["freshness", "/ops/collections", () => renderCollections(), (h) => [region(h, COL_TILES[0], COL_TILES[1])]],
+    ["records24h", "/ops/collections", () => renderCollections(), (h) => [region(h, COL_TILES[1], COL_TILES[2])]],
+    ["reviewQueue", "/ops/review", renderReview, (h) => [region(h, "data-pending-total", "thẻ đang chờ")]],
+  ]
+  test("ON3-AC-6 ma trận khối lỗi (freshness ở /ops và /ops/collections, records24h, reviewQueue) → ô «—» + «Chưa có số», 0 số 0, 0 badge success", async () => {
     ready()
-    // [khối, trang, vùng HTML của ô khối ấy, kiểm «—»] — chỉ xét ô đọc khối lỗi; ô khác của trang đọc khối khác
-    const CASES: [string, () => Promise<string>, (h: string) => string, (h: string) => boolean][] = [
-      ["freshness", () => renderOps(), (h) => h.slice(h.indexOf("data-kpi-unmeasured")), (h) => h.includes("data-kpi-unmeasured") && text(h).includes("Chưa có số")],
-      ["records24h", () => renderCollections(), (h) => `text-2xl>${tileValue(h, "Bản ghi 24h")}<`, (h) => tileValue(h, "Bản ghi 24h") === "—" && /Bản ghi 24h[\s\S]*?Chưa có số/.test(text(h))],
-      ["reviewQueue", renderReview, (h) => h, (h) => /— thẻ đang chờ/.test(text(h))],
-    ]
-    for (const [block, render, region, ok] of CASES) {
+    for (const [block, page, render, cells] of CASES) {
       const p = await push(LOCAL_ERR[block])
       assert.match(String(p.blocks[block].error ?? ""), /^không đo được/, `${block}: bên ghi phải ghi lỗi`)
       await ingest(p)
       const h = await render()
-      assert.ok(ok(h), `${block}: ô của khối lỗi phải «—» + «Chưa có số»`)
-      assert.equal(zeroValues(region(h)), 0, `${block}: ô của khối lỗi không số 0`)
-      assert.equal(successBadges(region(h)), 0, `${block}: ô của khối lỗi không badge xanh`)
+      for (const c of cells(h)) {
+        assert.match(text(c), /—/, `${block} ${page}: ô của khối lỗi phải «—»`)
+        if (block !== "reviewQueue") assert.match(text(c), /Chưa có số/, `${block} ${page}: ô của khối lỗi phải «Chưa có số»`)
+        assert.equal(zeroValues(c), 0, `${block} ${page}: ô của khối lỗi không số 0`)
+        assert.equal(successTone(c), 0, `${block} ${page}: ô của khối lỗi không tô màu đạt`)
+      }
+    }
+  })
+  test("ON3-AC-6 bản sao ô Bản ghi 24h hiện 0 khi khối lỗi → phép đo trên đúng ô ấy bắt", async () => {
+    ready()
+    await ingest(await push(LOCAL_ERR.records24h))
+    const m = mutantChain(
+      { rel: "src/components/ops/collections/collections-tiles.tsx", fn: (s) => s.replace('value={items24h === null ? "—" : fmtInt(items24h)}', "value={fmtInt(items24h ?? 0)}") },
+      [COL_VIEW_TILES, COL_PAGE],
+    )
+    try {
+      assert.ok(zeroValues(region(await renderCollections(m.path), COL_TILES[1], COL_TILES[2])) > 0, "phép đo phải thấy số 0 trong ô")
+    } finally {
+      m.done()
     }
   })
 })
@@ -295,7 +425,7 @@ describe("ON3-AC-7 máy local", () => {
       return (orig as (...a: unknown[]) => unknown)(sql, ...rest)
     }
     try {
-      for (const h of [await renderOps(), await renderCollections(), await renderReview()]) {
+      for (const h of [await renderOps(), await renderCollections(undefined, { cloud: false }), await renderReview()]) {
         assert.ok(!h.includes("data-facts-stamp"), "ở local không có dòng mốc đo")
         assert.ok(!h.includes("data-facts-stale"), "ở local không có Alert số cũ")
       }

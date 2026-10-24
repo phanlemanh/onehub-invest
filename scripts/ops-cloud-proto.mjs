@@ -6,11 +6,13 @@
  *   --mode none   không có bản tin
  *   --mode fresh  bản tin do push-ops-facts THẬT dựng trên DB local (máy chủ thu tạm, không gửi lên cloud)
  *   --mode stale  cùng bản tin, mọi mốc lùi 46′
- * In ra DATABASE_URL (search_path = lược đồ) để chạy dev server:  DATABASE_URL=<url> npm run dev -- -p 3460
+ * In ra biến môi trường để chạy dev server như cloud:  VERCEL=1 DATABASE_URL=<url> npm run dev -- -p 3460
+ * (`VERCEL=1` bật nhánh cloud của app: trang thu thập đọc bản tin ops_heartbeat, bảng thô vắng là rỗng).
  * Dọn: --drop. Chỉ DB local; không đụng cloud.
  */
+import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
-
+import { fileURLToPath } from "node:url";
 
 export const SCHEMA = "ops_cloud_proto";
 const KHONG_LEN_CLOUD = /^(source_registry|review_queue|airbnb_snapshots|stg_.*)$/;
@@ -53,13 +55,13 @@ async function main() {
     }
     const u = new URL(localDbUrl());
     u.searchParams.set("options", `-c search_path=${SCHEMA}`);
-    console.log(`ops-cloud-proto: ${mode} — DATABASE_URL=${u.toString()}`);
+    console.log(`ops-cloud-proto: ${mode} — VERCEL=1 DATABASE_URL=${u.toString()}`);
   } finally {
     await c.end();
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((e) => {
     console.error(`ops-cloud-proto: ${e.message}`);
     process.exit(1);
