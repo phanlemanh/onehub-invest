@@ -31,7 +31,7 @@ cách của data-grid (ReUI), không tự vẽ.
    | Khoá an toàn | 120 | 150 | 270 | 348 |
    | Nhóm S03 | 160 | 150 | 310 | 316 |
    | Máy móc | 200 | 140 | 340 | 348 |
-   | Kiểm chất lượng | 190 | 120 | 310 | 316 |
+   | Kiểm chất lượng | 150 | 160 | 310 | 316 |
    | Độ phủ trung thực | 160 | 150 | 310 | 316 |
 
    Ở desktop bảng `w-full` dàn đều phần thừa nên cột không hẹp đi rõ. Ô tên dài xuống dòng — kể cả ô Nhóm S03, bỏ `truncate`
