@@ -33,7 +33,9 @@
 tự; luật người bán trên tin rao = tầng C (PR #19, ADR-0007 sửa đổi); URL tiếng Anh toàn bộ; bản đồ đích Invest
 (PR #6: block đích, app-shell-30, `/dau-tu` → `/yield`, mapcn); làn merge (≤3–4 phiên, T1/T2 máy-thông merge không
 cần ký, T3 phải ký); branch protection main (gate + ui-lint); **tên nhóm S03 là tầng C, tên nguồn thật vẫn tầng A**
-(24/10, sửa đổi ADR-0007, ROADMAP §3 mục 14); **S08 chỉ nội bộ như nguồn hiệu chuẩn** (24/10, ROADMAP §3 mục 15).
+(24/10, sửa đổi ADR-0007, ROADMAP §3 mục 14); **S08 chỉ nội bộ như nguồn hiệu chuẩn** (24/10, ROADMAP §3 mục 15); **Ops trên cloud đọc số tổng hợp máy local tính
+sẵn** (24/10, «Chọn A» cho câu «dashboard Ops trên prod không có dữ liệu vì dữ liệu tính số chỉ ở local» — ADR-0014,
+ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 → ON2, ON3, ON4, ON5, AU12).
 
 **Còn chờ Mạnh** — và hàng nó chặn:
 
@@ -61,7 +63,7 @@ cần ký, T3 phải ký); branch protection main (gate + ui-lint); **tên nhóm
 | `zcode-2310` (ZC1–ZC5, ZH1–ZH2) | `pham-vi-zcode-2310.md` | `collector/AGENTS.md`, `collector/docs/DATA-CONTRACT.md`; `docs/ops/runtime-map.md`; `docs/superpowers/plans/2026-10-21-coverage-worklist.md`; BOARD `~/dev/onehub-coord/BOARD.md`; kênh issue #9 — lời giao qua phiên điều phối liên làn |
 | `san-pham-sau-2310` (SH1–SH14) | `pham-vi-san-pham-sau-2310.md` | ROADMAP §4 Track 1–4 (lịch sử); FRAMING §7 câu mở; review §4 Q8 |
 | `bo-sung-2310` (ZC6, AU13, PL32, PL33) | `pham-vi-bo-sung-2310.md` | ZC6: `collector/AGENTS.md`, `collector/openclaw/handler.js`, `_acceptance/collector-graceful-shutdown/` (d-3 sai), `.claude/rules/zalo-safety.md` · AU13: `_acceptance/job-bao-loi-that/` (`scripts/lib/job-step.sh`), `scripts/cloud-sync.sh`, `pipeline/push-ops-facts.mjs` · PL32/PL33: hồ sơ `kev-thanh-nhan` (nhánh `claude/acceptance-kev-nhan`), `pipeline/backfill-zalo-media.mjs`, `scripts/audit-all.sh` |
-| `ops-noi-that-2410` (ON1–ON21, ZC7, ZC8, OH1–OH3, OM1–OM2) | `pham-vi-ops-noi-that-2410.md` | Bản phạm vi (mỗi dòng `OPS-n` đã chép tệp:dòng của lỗi); báo cáo audit Ops prod 24/10 chỉ ở máy local của Mạnh (`side-session-notes/…/audit-ops-prod-2410/BAO-CAO.md` — có tên nguồn thật, ảnh trang Thu thập có tên nhóm: không chép, không gửi lên kênh); `_acceptance/ops-prod-sap-source-registry/` (khuôn `LocalOnlyAlert`, `freshnessLocalOnly()`, Ngoài-2/3); `_acceptance/slo-mot-nguon/` (Ngoài-3 fmtAge); `pipeline/push-ops-facts.mjs`; ADR-0007 sửa đổi 24/10; `.claude/rules/zalo-safety.md` (ON2, ON14); `docs/architecture/classification-enrich-review.md` §0.4 RV-M2, §4 RV-Q4 (ON21) |
+| `ops-noi-that-2410` (ON1–ON22, ZC7, ZC8, OH1–OH3, OM1–OM2) | `pham-vi-ops-noi-that-2410.md` | `docs/adr/0014-ops-cloud-doc-so-tong-hop.md` (bảng trang → nguồn số, ngưỡng trễ 45′ — ON2–ON5, ON22, AU12); bản phạm vi (mỗi dòng `OPS-n` đã chép tệp:dòng của lỗi); báo cáo audit Ops prod 24/10 chỉ ở máy local của Mạnh (`side-session-notes/…/audit-ops-prod-2410/BAO-CAO.md` — có tên nguồn thật, ảnh trang Thu thập có tên nhóm: không chép, không gửi lên kênh); `_acceptance/ops-prod-sap-source-registry/` (khuôn `LocalOnlyAlert`, `freshnessLocalOnly()`, Ngoài-2/3); `_acceptance/slo-mot-nguon/` (Ngoài-3 fmtAge); `pipeline/push-ops-facts.mjs`; ADR-0007 sửa đổi 24/10; `.claude/rules/zalo-safety.md` (ON2, ON14); `docs/architecture/classification-enrich-review.md` §0.4 RV-M2, §4 RV-Q4 (ON21) |
 
 ## 4. Ghi chú bổ sung khi mở vòng (khảo sát 23/10, chưa nằm trong câu giao)
 
@@ -86,8 +88,9 @@ cần ký, T3 phải ký); branch protection main (gate + ui-lint); **tên nhóm
 | PL5 | Thêm tiêu chí đo dung lượng + thời gian transform-zalo/sync khi Zalo phình ×3 (mục chờ KH-KV3) |
 | PL4 (`kev-thanh-nhan`) | Căn cứ bổ sung (hồ sơ đã ký chỉ ghi «Q1»): `classification-enrich-review.md` §4 RV-Q1, §2 RV-L06, §5 RV-Z1 + RV-C1.1 |
 | ZC1 (`sourceid-tin-anh`) | Căn cứ bổ sung (hồ sơ đã ký chỉ ghi «L20»): `classification-enrich-review.md` §6 RV-L20 |
-| ON2 ↔ ON4, ON5, ON7 ↔ AU12, NT2, AU13 | Bảy hàng T3 chung `pipeline/push-ops-facts.mjs` — chạy liền nhau, không song song. Thứ tự đề xuất: AU13 → ON2 (tín hiệu an toàn sai hai chiều) → ON4/ON5 → ON7 (nhãn job S0x) → NT2 (bộ soát tầng A đỏ ngay nếu nhãn còn tên thật) → AU12 |
-| ON7 ↔ ON3 | Chung `components/ops/collections/collections-tiles.tsx` (ô KPI) — ON7 sau ON3 hoặc chạy liền; ON7 còn chạm cùng tệp với ON5, ON6, ON8, ON9, ON10, ON12 |
+| ON22 → ON2, ON3, ON4, ON5, AU12 | **Ràng buộc (ADR-0014)**: hàng nền ON22 (push-ops-facts đẩy số tổng hợp) merge TRƯỚC mọi hàng trang đọc số trên cloud; ON22 đứng trên NT2 (số đi qua bộ soát tầng A). ON9, ON10 không đứng trên ON22 — `dq_check_results`, `area_sources`, `ref_calib_*` đã sync |
+| ON22, ON2, ON4, ON5, ON7 ↔ AU12, NT2, AU13 | Tám hàng T3 chung `pipeline/push-ops-facts.mjs` — chạy liền nhau, không song song. Thứ tự (từ ADR-0014): AU13 → ON7 (nhãn job S0x) → NT2 (bộ soát tầng A đỏ ngay nếu nhãn còn tên thật) → ON22 → ON2 (tín hiệu an toàn sai hai chiều) → ON4/ON5 → AU12 |
+| ON7 ↔ ON3 | Chung `components/ops/collections/collections-tiles.tsx` (ô KPI) — từ ADR-0014 ON7 đi trước ON3 (ON3 đứng trên ON22 → NT2 → ON7), chạy liền; ON7 còn chạm cùng tệp với ON5, ON6, ON8, ON9, ON10, ON12 |
 | ON2, ON3, ON5, ON6, ON8, ON13 ↔ UI11 | Cùng `components/ops/collections/*` và `overview-tiles.tsx` — không song song; UI11 (Skeleton/Empty) đứng sau AU6 và nên sau ON3 |
 | ON9, ON10, ON12, ON13 | Cùng `/ops/quality` (`quality-tables.tsx`, `lib/queries.ts`) — chạy liền; ON9 đổi `dq-truthful-coverage.mjs` thì chạy liền NT7 |
 | ON8 ↔ ON3, ON5 | ON8 đổi `lib/freshness.ts` (fmtAge) cùng ON3 và chia ngày VN mà ON5 cần — mở ON8 trước ON5 |
@@ -97,7 +100,8 @@ cần ký, T3 phải ký); branch protection main (gate + ui-lint); **tên nhóm
 | ON17 ↔ ZC7 | ON17 đọc tín hiệu lần thu của ZC7 (làn ZCode) — mở sau khi ZC7 merge |
 | ON18 → ZC8 | ZC8 (importer S08, làn ZCode) chỉ giao sau khi ON18 merge và 040 đã áp ở DB local (§5) |
 | ON19 ↔ PL12; ON21 ↔ PL18 | ON19 thêm trường vào sổ nhóm của PL12; ON21 chung `agent/src/agents/context-resolver.ts` với PL18 |
-| AU12 | Nhận thêm tiêu chí của OH3: thiếu facts thì `/api/v1/ops/coverage` trả cờ «chỉ đo ở local», không rows rỗng câm |
+| AU12 | Nhận thêm tiêu chí của OH3: thiếu facts thì `/api/v1/ops/coverage` trả cờ «chỉ đo ở local», không rows rỗng câm. Từ ADR-0014: route đọc khối độ tươi của ON22 (không sync bản registry gọt); facts cũ quá 45′ trả cờ stale |
+| ON3 ↔ ON2, ON4, ON5 | ON3 dựng một lần dòng «Số đo lúc HH:MM (giờ VN) từ máy local» và Alert «Máy local không đẩy số từ …» (ADR-0014); ON2, ON4, ON5 dùng lại. ON3 còn nhận «N thẻ đang chờ» trên `/ops/review` cloud (QD2a) |
 | Lint | Baseline 82 vi phạm / 19 tệp (đo 23/10); ROADMAP Track 6 còn ghi 85 — AU8 sửa |
 
 ## 5. Ra khỏi kho — việc của người (không thành hàng; luật kit 17/10, ADR 0026)
@@ -130,8 +134,9 @@ Giới hạn 3–4 phiên song song. Đường găng là việc gắn nhãn (§5
 5. **Phân loại theo lát**: đo (PL6–PL9) ∥ căn gốc OP1 (PL10–PL13) → nền bền (PL4, PL5, PL14–PL19) → người + hiển thị (PL3, PL20–PL23, PL27).
 6. **Sau AU9**: UI8, UI9, ZC5 → NT7.
 7. **Đóng sổ**: UI17 sau mọi hàng giao diện.
-8. **Ops nói thật** (`ops-noi-that-2410`, chen được vào bước 1): ON2 (lockdown) và ON14 (gỡ tài khoản) trước — tín hiệu
-   an toàn Zalo; rồi ON3 → ON8 → ON7 (ô KPI, giờ, nhãn S0x) theo §4; ON19 → ON20 → ON21 sau PL12.
+8. **Ops nói thật** (`ops-noi-that-2410`, chen được vào bước 1): ON14 (gỡ tài khoản) trước — tín hiệu an toàn Zalo;
+   chuỗi số trên cloud theo ADR-0014: AU13 → ON7 → NT2 → ON22 → ON2 (lockdown) → ON3 → ON4/ON5 → AU12, ON8 trước ON5
+   (§4); ON19 → ON20 → ON21 sau PL12.
 
 ## 7. Hoãn có chủ đích (không cắt)
 

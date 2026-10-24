@@ -20,6 +20,11 @@
 > Nguồn 3: quyết định của Mạnh 24/10 — Câu 1 «tên nhóm (S03) là tầng C» kèm việc mới về tiêu đề chuẩn hoá và mô tả
 > nhóm (`QD1*`); Câu 2 «giữ luật tên nguồn thật là tầng A» — chính là cách sửa của `OPS-13`, không thêm mã.
 >
+> Nguồn 4: quyết định của Mạnh 24/10, nguyên văn «Chọn A» (`QD2*`, ADR-0014): dashboard Ops trên prod không có số vì
+> dữ liệu để tính chỉ ở local → máy local tính sẵn số tổng hợp rồi đẩy lên cloud, trang Ops trên cloud chỉ đọc bảng số
+> đó. Đã loại B (sync bản gọt của bảng — chỉ chữa registry) và C (tunnel tới local). Đây là gốc chung của G1/G2:
+> các hàng trang ON2, ON3, ON4, ON5 và AU12 đứng trên hàng nền mới ON22.
+>
 > `OPS-1`, `OPS-2` đang sửa nóng trong đợt `dot0-cam-mau` (hàng phát sinh `ops-review-sources-500-tren-cloud`) —
 > không cắt lại; ghi ở mục chờ điều kiện để răng phủ.
 
@@ -27,7 +32,7 @@
 ```
 dot: ops-noi-that-2410
 dang: lan-va
-nguon: audit Ops prod 24/10 (OPS-1…OPS-20, máy local của Mạnh); sổ ý chờ dot0-cam-mau mốc khép; quyết định Mạnh 24/10 Câu 1 + Câu 2
+nguon: audit Ops prod 24/10 (OPS-1…OPS-20, máy local của Mạnh); sổ ý chờ dot0-cam-mau mốc khép; quyết định Mạnh 24/10 Câu 1 + Câu 2; quyết định Mạnh 24/10 «Chọn A» (ADR-0014)
 
 - `OPS-1` — /ops/review trên cloud trả 500 (bảng hàng chờ tầng A chỉ có ở local; app/src/app/ops/review/page.tsx:35 query thẳng) — đang sửa ở dot0
 - `OPS-2` — /ops/sources trên cloud trả 500 (query source_registry ở app/src/app/ops/sources/page.tsx:37-40 không bọc) — đang sửa ở dot0
@@ -53,6 +58,8 @@ nguon: audit Ops prod 24/10 (OPS-1…OPS-20, máy local của Mạnh); sổ ý c
 - `QD1a` — người vận hành điều chỉnh tiêu đề của từng nhóm trên /ops
 - `QD1b` — giúp tạo tiêu đề chuẩn hoá theo quy ước vận hành
 - `QD1c` — mô tả đặc trưng của nhóm, thông tin cung cấp ngữ cảnh quan trọng cho AI Agent
+- `QD2` — Ops trên cloud đọc số tổng hợp máy local tính sẵn (Mạnh 24/10 «Chọn A», ADR-0014): push-ops-facts đẩy độ tươi/SLO từng nguồn S0x, job đêm, lockdown/watchdog, bản ghi 24h, số thẻ chờ, mỗi khối có measured_at, qua bộ soát tầng A của NT2; tên nguồn thật không lên, tên nhóm được lên; facts cũ > 45′ là tín hiệu sức khoẻ
+- `QD2a` — /ops/review trên cloud chỉ hiện «N thẻ đang chờ» từ số đếm máy local đẩy lên; nội dung thẻ (tầng A) ở local
 - `YC1` — DELETE /api/v1/ops/zalo/accounts không kiểm id rỗng nên gọi openclaw logout với tài khoản rỗng (sự cố P1-7 23/10); route phải từ chối id rỗng/không có trong danh sách, test với openclaw giả
 - `YC2` — luật thường trực «phép đo không gọi phương thức ghi trên route zalo/openclaw» trong .claude/rules/zalo-safety.md
 - `YC3` — app/docs/api/mcp-tools.json khai oneinvest_get_offers công khai («auth: public») trái sổ bề mặt (NT4 Ngoài-6)

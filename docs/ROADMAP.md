@@ -183,6 +183,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    thật vẫn tầng A, ngoài `/ops/sources` chỉ mã `S0x` + vai trò. Tên tài khoản thu chưa chốt. Sửa đổi ADR-0007.
 15. **S08 như nguồn hiệu chuẩn** (24/10): chỉ đọc, ≤ 1 lần/tuần, chỉ nội bộ, không tái xuất lên cổng công khai
    (AGENTS.md cạnh luật 5).
+16. **Ops trên cloud đọc số tổng hợp do máy local tính sẵn** (24/10, «Chọn A», ADR-0014): `push-ops-facts.mjs` đẩy
+   độ tươi/SLO, job, lockdown, bản ghi 24h, số thẻ chờ (chỉ tổng hợp + mã `S0x`, qua bộ soát tầng A), mỗi khối có mốc
+   đo; trang cloud chỉ đọc bảng đó, facts cũ > 45′ báo «máy local không đẩy số». Loại sync bản gọt và tunnel.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -287,7 +290,8 @@ có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới �
 
 ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
-boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent.
+boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
+0014 Ops cloud đọc số tổng hợp (0013 ở PR #27).
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.

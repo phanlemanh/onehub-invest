@@ -771,7 +771,7 @@
     },
     {
       "ma": "AU12",
-      "cau_giao": "/api/v1/ops/coverage trên cloud trả số độ tươi từng nguồn từ bản registry đã gọt tầng A",
+      "cau_giao": "/api/v1/ops/coverage trên cloud trả độ tươi từng nguồn S0x từ khối độ tươi máy local đẩy lên (ADR-0014), không trường nào chứa tên nguồn thật",
       "vai": "nen",
       "tieu_chi": 8,
       "vi_sao": "Audit P2: coverage cloud 500 vì source_registry có cột tầng A.",
@@ -782,7 +782,11 @@
       "dot": "cam-mau-2310",
       "phu": [
         "A1.5"
-      ]
+      ],
+      "dung_tren": [
+        "ON22"
+      ],
+      "ghi_chu": "ADR-0014 (Mạnh chốt 24/10) loại phương án sync bản registry gọt (B): route đọc khối độ tươi của ON22; slug giữ tên cũ. Facts cũ quá 45′ trả cờ stale; thiếu facts trả cờ «chỉ đo ở local» (tiêu chí của OH3)."
     },
     {
       "ma": "AU13",
@@ -1120,7 +1124,7 @@
         "VH2",
         "TD3"
       ],
-      "ghi_chu": "Tên nhóm Zalo và tên tài khoản thu thuộc tầng A hay C: Mạnh xác nhận ở Cổng Phạm vi. Chung tệp với AU12 — chạy liền nhau."
+      "ghi_chu": "Tên nhóm Zalo và tên tài khoản thu thuộc tầng A hay C: Mạnh xác nhận ở Cổng Phạm vi. Chung tệp với AU12 — chạy liền nhau. ON22 (ADR-0014) đứng trên hàng này: mọi khối số tổng hợp Ops mới đi qua cùng bộ soát."
     },
     {
       "ma": "NT3",
@@ -1336,8 +1340,27 @@
       "ghi_chu": "Tên tài khoản thu chưa chốt (BOI-CANH §2) — giữ data-tier-a ở zalo-accounts.tsx; source-groups.tsx giữ vì group_key có thể chứa tên miền nguồn thật. Dưới mục tiêu cỡ: hàng chép chốt T1, giao ngay trong PR cắt lượt."
     },
     {
+      "ma": "ON22",
+      "cau_giao": "Sau mỗi lượt cloud-sync, máy local đẩy lên cloud số tổng hợp Ops — độ tươi/SLO từng nguồn S0x theo định nghĩa chung, trạng thái job đêm, lockdown/watchdog từng lớp, bản ghi 24h, số thẻ chờ duyệt — mỗi khối có mốc đo, qua bộ soát tầng A, và cloud có một hàm đọc chung báo số cũ quá 45′",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "ADR-0014 (Mạnh chốt 24/10, «Chọn A»): dashboard Ops trên prod không có số vì dữ liệu để tính chỉ ở local (audit G1/G2). push-ops-facts.mjs đã là đường đẩy duy nhất (ops_heartbeat, /ops/collections đọc qua getLocalFacts) nhưng chưa phủ độ tươi, lockdown, số đếm 24h, hàng chờ, chưa có mốc đo theo khối, chưa phân biệt «chưa có số» với «số cũ». Đã loại B (sync bản registry gọt) và C (tunnel tới local).",
+      "hang": "T3",
+      "slug": "ops-facts-so-tong-hop",
+      "dung_tren": [
+        "NT2"
+      ],
+      "bat_khi": "Một lượt cloud-sync ở local: ops_heartbeat có đủ năm khối, mỗi khối có measured_at; độ tươi từng nguồn trên cloud trùng check-freshness chạy cùng lúc ở local; cấy tên nguồn thật vào payload: lệnh dừng trước khi gửi, cloud không đổi; ngừng đẩy 46′: hàm đọc trả stale kèm mốc đo cuối",
+      "nhom": "ops-facts",
+      "dot": "ops-noi-that-2410",
+      "phu": [
+        "QD2"
+      ],
+      "ghi_chu": "Đường T3: pipeline/push-ops-facts.mjs và app/src/app/api/v1/ops/ingest (t3_paths). Đứng trên NT2 (Mạnh: số đi qua bộ soát tầng A của NT2); NT2 đứng sau ON7 (nhãn job S0x) theo BOI-CANH §4. Chung push-ops-facts.mjs với AU13, ON7, NT2, ON2, ON4, ON5, AU12 — chạy liền nhau, không song song. Độ tươi dùng scripts/lib/freshness.mjs (parity với app/src/lib/freshness.ts của AU6), không định nghĩa lại. Payload giữ trong ops_heartbeat.payload (jsonb) trừ khi Cổng Phạm vi chọn bảng riêng — khi đó xin số NNN ở SO-MIGRATION qua phiên liên làn. Phần hiện (dòng «Số đo lúc HH:MM (giờ VN) từ máy local», Alert «Máy local không đẩy số từ …») là của ON3, các hàng trang sau dùng lại; giờ VN theo formatter của ON8. Khối riêng của trang (allowlist + «Vào raw» theo nhóm, luồng 7 ngày) do ON4, ON5 thêm trên cùng đường. Trùng AU12: AU12 nay đọc khối độ tươi của hàng này (phương án B bị loại) — nối dung_tren, không cắt trùng."
+    },
+    {
       "ma": "ON2",
-      "cau_giao": "Người vận hành mở /ops/collections trên cloud thấy Lockdown và Máy móc theo kết quả máy thu đẩy lên; lớp không có kết quả hiện «Chỉ kiểm ở máy local», không lớp nào «Ổn» khi không kiểm, dòng log cuối là dòng có nghĩa",
+      "cau_giao": "Người vận hành mở /ops/collections trên cloud thấy Lockdown và Máy móc đọc từ số máy local đẩy lên (ADR-0014) kèm mốc đo; lớp không có kết quả hiện «Chỉ kiểm ở máy local», không lớp nào «Ổn» khi không kiểm, dòng log cuối là dòng có nghĩa",
       "vai": "Người vận hành",
       "tieu_chi": 10,
       "vi_sao": "OPS-3 (cao, an toàn Zalo): getLockdownStatus không có nhánh cloud — hạ tầng «Hỏng» giả, L4b «Ổn» giả có thể che một sự cố agent-turn thật; hai bảng cùng trang mâu thuẫn. OPS-19: tail log không lọc dòng cảnh báo Node. Gốc G1 + G2.",
@@ -1350,30 +1373,37 @@
         "OPS-3",
         "OPS-19"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở: phép đo không gọi lệnh ghi nào trên openclaw. Ưu tiên đầu của đợt (tín hiệu an toàn sai cả hai chiều). Chung app/src/lib/ops-queries.ts với ON16."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON22, ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở: phép đo không gọi lệnh ghi nào trên openclaw. Ưu tiên đầu của đợt (tín hiệu an toàn sai cả hai chiều) — từ ADR-0014 đứng trên ON22, nên chuỗi ON7 → NT2 → ON22 phải đi nhanh. Chung app/src/lib/ops-queries.ts với ON16. Phân việc với ON22: ON22 đẩy khối lockdown như máy local tính; ON2 sửa cách tính «không kiểm được ≠ Ổn» (cả local lẫn cloud), lọc dòng log (OPS-19) và hiện.",
+      "dung_tren": [
+        "ON22"
+      ]
     },
     {
       "ma": "ON3",
-      "cau_giao": "Người vận hành mở /ops và /ops/collections trên cloud thấy mọi ô số không đo được ghi «—» kèm «Chỉ đo ở máy local» đúng một lần, không badge xanh, không số 0 trấn an, bảng trống có hành động",
+      "cau_giao": "Người vận hành mở /ops, /ops/collections và /ops/review trên cloud thấy ô số đọc từ số máy local đẩy lên (ADR-0014) kèm «Số đo lúc HH:MM (giờ VN) từ máy local»; ô không có số ghi «—» kèm «Chỉ đo ở máy local» đúng một lần, số cũ quá 45′ báo «Máy local không đẩy số từ …», không badge xanh, không số 0 trấn an; /ops/review chỉ hiện «N thẻ đang chờ»",
       "vai": "Người vận hành",
-      "tieu_chi": 9,
+      "tieu_chi": 10,
       "vi_sao": "OPS-4, OPS-5 (cao): «Quá hạn 0» xanh, «Bản ghi 24h = 0» khi dữ liệu vẫn chảy — người trực tưởng pipeline chết hoặc tưởng mọi thứ ổn. YC6 (ops-prod-sap-source-registry Ngoài-2) cùng gốc. OPS-20: chữ chỉ-local lặp ba lần, bảng trống không hành động. Gốc G2.",
       "hang": "T2",
       "slug": "o-kpi-chi-do-local",
-      "bat_khi": "Lược đồ như cloud (vắng source_registry): 0 ô KPI xanh hay số 0 trên hai trang; câu «Chỉ đo ở máy local» xuất hiện một lần mỗi trang; lược đồ local đủ bảng: các ô như AU6",
+      "bat_khi": "Không facts (lược đồ như cloud): 0 ô KPI xanh hay số 0 trên ba trang, «Chỉ đo ở máy local» một lần mỗi trang; facts tươi: ô hiện đúng số của khối và mốc đo giờ VN; facts cũ 46′: Alert «Máy local không đẩy số từ …», 0 badge xanh; /ops/review cloud: «N thẻ đang chờ» bằng số đếm ở local",
       "nhom": "ops-kpi",
       "dot": "ops-noi-that-2410",
       "phu": [
         "OPS-4",
         "OPS-5",
         "OPS-20",
-        "YC6"
+        "YC6",
+        "QD2a"
       ],
-      "ghi_chu": "OPS-5: Cổng Phạm vi chọn lấy số 24h từ facts/getFlowDays hay ghi «Chỉ đo ở máy local». Chung collections-tiles.tsx với ON7 (nhãn S0x) và overview-tiles.tsx với UI11 — không song song. Khi AU12 giao, các ô có số thật từ registry gọt."
+      "ghi_chu": "OPS-5: số 24h lấy từ khối bản ghi 24h của ON22 (ADR-0014 đã chốt). Chung collections-tiles.tsx với ON7 (nhãn S0x) và overview-tiles.tsx với UI11 — không song song. Độ tươi/SLO đọc khối độ tươi của ON22, không chờ AU12. Dựng dòng mốc đo + Alert số cũ một lần, dùng chung cho ON2, ON4, ON5. /ops/review: giữ LocalOnlyAlert của PR #53 cho nội dung thẻ, thêm số đếm.",
+      "dung_tren": [
+        "ON22"
+      ]
     },
     {
       "ma": "ON4",
-      "cau_giao": "Người vận hành thấy bảng nhóm S03 trên cloud ghi đúng số nhóm allowlist đang bật và «Vào raw» theo nhóm như máy thu; thiếu facts thì «—», không 0",
+      "cau_giao": "Người vận hành thấy bảng nhóm S03 trên cloud ghi đúng số nhóm allowlist đang bật và «Vào raw» theo nhóm từ số máy local đẩy lên (ADR-0014); thiếu facts thì «—», không 0",
       "vai": "Người vận hành",
       "tieu_chi": 6,
       "vi_sao": "OPS-9: readZaloAllowlist đọc tệp cấu hình ngay trên Vercel, facts không có allowlist, accepted theo nhóm trong parseLog luôn 0 — «allowlist 0 nhóm», «Vào raw = 0» là số giả. Gốc G1.",
@@ -1385,11 +1415,14 @@
       "phu": [
         "OPS-9"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Dưới mục tiêu cỡ: một vùng hẹp; không gộp với ON5 vì ON5 là vùng khác (luồng theo ngày) và đã ở mục tiêu."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON22, ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Dưới mục tiêu cỡ: một vùng hẹp; không gộp với ON5 vì ON5 là vùng khác (luồng theo ngày) và đã ở mục tiêu. Khối allowlist + accepted theo nhóm do hàng này thêm vào payload của ON22 (cùng mốc đo, cùng bộ soát); tên nhóm là tầng C nên được lên.",
+      "dung_tren": [
+        "ON22"
+      ]
     },
     {
       "ma": "ON5",
-      "cau_giao": "Người vận hành đọc «Luồng 7 ngày qua» trên /ops/collections thấy mỗi cột đếm đúng thứ nhãn nói: tin rao đúng nguồn, đủ 7 ngày từ facts, cột không có dữ liệu trên cloud ghi «chỉ local»",
+      "cau_giao": "Người vận hành đọc «Luồng 7 ngày qua» trên /ops/collections thấy mỗi cột đếm đúng thứ nhãn nói: tin rao đúng nguồn, đủ 7 ngày từ số máy local đẩy lên (ADR-0014), cột không có dữ liệu trên cloud ghi «chỉ local»",
       "vai": "Người vận hành",
       "tieu_chi": 8,
       "vi_sao": "OPS-8: cột offer đếm sale_offers mọi nguồn (lớn hơn số post — vô lý), facts chỉ đẩy một ngày, bảng thô trên cloud 0 dòng nên cột luôn 0. Gốc G1 + G4.",
@@ -1401,7 +1434,10 @@
       "phu": [
         "OPS-8"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Chia ngày theo giờ VN là của ON8 — mở ON8 trước hoặc chạy liền. Chung collections-queries.ts:78-110 với ON6, ON8."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON22, ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Chia ngày theo giờ VN là của ON8 — mở ON8 trước hoặc chạy liền. Chung collections-queries.ts:78-110 với ON6, ON8. Khối luồng 7 ngày do hàng này thêm vào payload của ON22.",
+      "dung_tren": [
+        "ON22"
+      ]
     },
     {
       "ma": "ON6",
@@ -1433,7 +1469,7 @@
       "phu": [
         "OPS-13"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Đụng cùng tệp với ON3 (collections-tiles.tsx), ON5, ON6, ON8, ON9, ON10, ON12 — xếp ON7 sau ON3 hoặc chạy liền. Mở trước NT2: bộ soát tầng A của NT2 đỏ ngay nếu nhãn job còn tên thật. Đọc tên/vai trò từ source_registry (pii-spl.md: không hardcode literal nguồn)."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON22, ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Đụng cùng tệp với ON3 (collections-tiles.tsx), ON5, ON6, ON8, ON9, ON10, ON12 — xếp ON7 sau ON3 hoặc chạy liền. Mở trước NT2: bộ soát tầng A của NT2 đỏ ngay nếu nhãn job còn tên thật. Đọc tên/vai trò từ source_registry (pii-spl.md: không hardcode literal nguồn)."
     },
     {
       "ma": "ON8",
@@ -1466,7 +1502,7 @@
       "phu": [
         "OPS-10"
       ],
-      "ghi_chu": "Nếu đổi tên/kết quả check trong pipeline/dq-truthful-coverage.mjs: chung tệp với NT7 — chạy liền. Diễn giải «Chi tiết» DQ sang tiếng Việt là của ON12 (cùng bảng, chạy liền). Dưới mục tiêu cỡ: một bảng; không gộp với ON10 (vùng Hiệu chuẩn, đã 10 tiêu chí)."
+      "ghi_chu": "Nếu đổi tên/kết quả check trong pipeline/dq-truthful-coverage.mjs: chung tệp với NT7 — chạy liền. Diễn giải «Chi tiết» DQ sang tiếng Việt là của ON12 (cùng bảng, chạy liền). Dưới mục tiêu cỡ: một bảng; không gộp với ON10 (vùng Hiệu chuẩn, đã 10 tiêu chí). ADR-0014: bảng «Kiểm chất lượng» đọc dq_check_results đã sync (pipeline/sync-cloud.mjs FILL), không cần facts nên không đứng trên ON22; phần độ phủ/độ tươi của /ops/quality đọc facts qua AU12."
     },
     {
       "ma": "ON10",
@@ -2095,7 +2131,7 @@
       "ma": "OH3",
       "dot": "ops-noi-that-2410",
       "cau_giao": "/api/v1/ops/coverage trên cloud trả cờ «chỉ đo ở local» khi không có số",
-      "ly_do": "Cùng route, cùng hạng T3 với AU12 (coverage cloud từ registry gọt tầng A): khi AU12 giao, cloud có số thật; cờ cho lúc thiếu facts là một tiêu chí của AU12, tách thành hàng T3 riêng là thêm một chữ ký cho một dòng.",
+      "ly_do": "Cùng route, cùng hạng T3 với AU12 (coverage cloud đọc khối độ tươi của ON22, ADR-0014): khi AU12 giao, cloud có số thật; cờ cho lúc thiếu facts là một tiêu chí của AU12, tách thành hàng T3 riêng là thêm một chữ ký cho một dòng.",
       "phu": [
         "YC7"
       ],
