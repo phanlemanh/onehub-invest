@@ -154,6 +154,10 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # watchdog-l4b-cuoi-ngay (ZC3 nối tiếp) — scan_new_lines trích nguyên văn + watchdog bản chép, HOME giả, stub launchctl/pkill (luật 8)
+    zc3b_scan: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"
+    zc3b_rotate: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"
+    zc3b_marker_hong: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs marker-hong"   # vòng 2: bản chép + HOME giả + stub, như rotate
     # collector-graceful-shutdown — không chạm :9210 đang chạy (cổng ngẫu nhiên, snapshot vào thư mục tạm)
     collector_check: "cd collector && npm run check"
     collector_plist_lint: "plutil -lint pipeline/cron/com.oneinvest.collector-api.plist"

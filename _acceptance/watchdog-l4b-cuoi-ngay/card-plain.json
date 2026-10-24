@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Lớp canh an toàn Zalo bắt được cả tin bot tự trả lời rơi vào 5 phút cuối ngày, và khi sổ đánh dấu của nó bị hỏng thì vẫn canh tiếp thay vì mù — riêng log lịch sử của gateway thì khởi động lại sổ, không tắt Zalo vì sự cố cũ.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
+  "decisions_plain": [
+    {"id": "d-20261023T160801Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, hai phiên kiểm độc lập tự đi tìm lỗ: vòng 1 bắt lỗi sổ đánh dấu hỏng làm canh mù, vòng 2 bắt lỗ tắt nhầm gateway vì lịch sử."}
+  ]
+}
