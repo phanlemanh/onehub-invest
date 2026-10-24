@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 2f657dfd2b8cf94348090bbdd370c5ef955ac258
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: gio-ops-gio-vn

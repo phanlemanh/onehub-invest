@@ -5,7 +5,7 @@ slug: gio-ops-gio-vn
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình T2; chạm pipeline/push-ops-facts.mjs (t3_paths) theo Hỏi-2 lối khuyến nghị
 surfaces: [ui, cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-24
 design_doc: docs/superpowers/specs/2026-10-24-gio-ops-gio-vn-design.md
@@ -62,4 +62,5 @@ biên trễ: 30 giây, 59/60 phút, 47 giờ 59 phút/48 giờ, trên 3 ngày, t
 - Phép đo DB chỉ tạo/xoá lược đồ tạm riêng của test; không ghi bảng thật trên DB local dùng chung.
 - Phép đo funnel đọc log giả trong `HOME` tạm; không đọc `~/.openclaw` thật.
 - Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1 (lượt 2): khi dòng cuối của log cổng Kev bị cắt cụt, ô «sự kiện cuối» trên cổng Ops hiện «—» thay vì mốc hợp lệ gần nhất; số đếm vẫn đúng và tự hết khi có dòng log hợp lệ kế tiếp.
   - Ngoài-2: ca mức trễ dùng tuổi và trạng thái nhập tay, chưa đi qua bước tính độ tươi thật; nếu sau này đổi cách làm tròn hay cách xét quá hạn mà nhãn «trễ» sai thì phép đo không báo.
