@@ -5,7 +5,7 @@ slug: soat-tang-a-moi-duong-len-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs, pipeline/sync-cloud.mjs (t3_paths)
 surfaces: [pipeline, ui, docs]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-24-soat-tang-a-moi-duong-len-cloud-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24
