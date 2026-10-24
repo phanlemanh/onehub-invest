@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b0e3d44a1c979f62836270752ff449eea19e2fc6
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: compare-saved-trang-thai
@@ -185,7 +185,7 @@ human_signoff:
 - eval: E14
   run_id: minted-compare-saved-trang-thai-E14-r1
   exit_code: 0
-  verifier: scripts/verify-ui-check (executor ui-check, khung của lượt gốc round 1)
+  verifier: config:executors.design.ui_check
   verified_at: 2026-10-24T14:58:11Z
   carried_from_round: 1
   screenshot: evidence/E14-step1.png

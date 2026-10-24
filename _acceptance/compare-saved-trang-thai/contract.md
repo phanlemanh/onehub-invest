@@ -5,7 +5,7 @@ slug: compare-saved-trang-thai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, config]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-compare-saved-trang-thai-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24T14:45:10Z
@@ -98,6 +98,10 @@ Source input: `docs/plan/lo-trinh.json` hàng UI4; ô Cổng Đáng `_acceptance
 
 ## Notes
 
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Bộ kiểm khung chờ chỉ thử một cỡ (3 cột/thẻ); một lần sửa sau làm khung chờ sai số cột có thể không bị bắt.
+  - Ngoài-3: Cấu hình design-pass dùng chung ghim cổng 3460 của dãy U1; design-pass của dãy khác phải tự truyền bản chạy của mình.
+  - Ngoài-5: Khi bảng So sánh đã báo lỗi, đổi khu vực vẫn hiện lỗi cũ cho tới khi bấm «Thử lại».
 - Bản chạy cho bằng chứng: dev server cổng riêng **3460** (`.claude/launch.json` cấu hình `app-3460`) — 3456 dùng
   chung giữa các dãy (LUAT đợt dot0, mục «Dãy giao diện U1, U2»).
 - `/saved` cần đăng nhập: smoke tự tạo người dùng thử + session ghi thẳng DB local (mẫu `smoke-review-photos.mjs`),
