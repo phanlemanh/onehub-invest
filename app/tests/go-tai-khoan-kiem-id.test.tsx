@@ -256,3 +256,71 @@ test("GT-AC-4 id thật acc2 và Acc_5 → 200, mỗi lần đúng một lệnh 
   assert.equal(spy().length, 0)
   datLai()
 })
+
+// ---------- AC-5: thước tĩnh — mọi lời gọi logout đứng sau bước kiểm id ----------
+
+type ChoLogout = { path: string; fn: string | null; ok: boolean }
+
+/** Mọi literal "logout" trong tệp có chữ openclaw (bắt cả lời gọi lẫn mảng argv dựng riêng); ok = trong cùng hàm, bước kiểm đứng trước. */
+function quetLogout(files: { path: string; text: string }[]): ChoLogout[] {
+  const kq: ChoLogout[] = []
+  for (const { path, text } of files) {
+    if (!/openclaw/i.test(text)) continue
+    const hams = [...text.matchAll(/function\s+(\w+)\s*[<(]/g)]
+    for (const m of text.matchAll(/["']logout["']/g)) {
+      const i = m.index ?? 0
+      const ham = hams.filter((h) => (h.index ?? 0) < i).at(-1)
+      const dau = ham?.index ?? 0
+      kq.push({ path, fn: ham?.[1] ?? null, ok: text.slice(dau, i).includes("requireDeletableAccount(") })
+    }
+  }
+  return kq
+}
+const viPham = (kq: ChoLogout[]) => kq.filter((c) => !c.ok).map((c) => `${c.path}: logout trước bước kiểm id`)
+
+function tepSrc(): { path: string; text: string }[] {
+  const out: { path: string; text: string }[] = []
+  const di = (dir: string) => {
+    for (const e of readdirSync(join(APP, dir), { withFileTypes: true })) {
+      const rel = join(dir, e.name)
+      if (e.isDirectory()) di(rel)
+      else if (/\.tsx?$/.test(e.name)) out.push({ path: rel, text: readFileSync(join(APP, rel), "utf8") })
+    }
+  }
+  di("src")
+  return out
+}
+const ADMIN_REL = "src/lib/zalo-admin.ts"
+const GUARD = "  requireDeletableAccount(cfg, accountId);\n"
+const SAU_LOGOUT = "    /* chưa login / CLI lỗi — vẫn gỡ config */\n  }\n"
+
+test("GT-AC-5 chỗ logout trong app/src bằng đúng danh sách viết trước [zalo-admin.ts · deleteZaloAccount] và đứng sau requireDeletableAccount", () => {
+  const kq = quetLogout(tepSrc())
+  assert.deepEqual(
+    kq.map(({ path, fn }) => ({ path, fn })),
+    [{ path: ADMIN_REL, fn: "deleteZaloAccount" }],
+    "danh sách chỗ logout lệch danh sách viết trước",
+  )
+  assert.deepEqual(viPham(kq), [], "logout trước bước kiểm id")
+})
+
+test("GT-AC-5 bản sao logout trước bước kiểm → vi phạm nêu tệp và «logout trước bước kiểm id»", () => {
+  const goc = readFileSync(ADMIN_SRC, "utf8")
+  const sao = goc.replace(GUARD, "").replace(SAU_LOGOUT, SAU_LOGOUT + GUARD)
+  assert.notEqual(sao, goc, "đột biến không đổi gì")
+  assert.ok(sao.indexOf(GUARD) > sao.indexOf('"logout"'), "đột biến không đưa bước kiểm xuống sau logout")
+  assert.deepEqual(viPham(quetLogout([{ path: ADMIN_REL, text: sao }])), [`${ADMIN_REL}: logout trước bước kiểm id`])
+})
+
+test("GT-AC-5 bản sao thêm mảng argv logout không qua bước kiểm → thước bắt, nêu tệp", () => {
+  const goc = readFileSync(ADMIN_SRC, "utf8")
+  const sao =
+    goc + '\nexport function buildLogoutArgs(id: string): string[] {\n  return ["channels", "logout", "--account", id];\n}\n'
+  const kq = quetLogout([{ path: ADMIN_REL, text: sao }])
+  assert.equal(kq.length, 2)
+  assert.deepEqual(
+    kq.filter((c) => !c.ok).map(({ path, fn }) => ({ path, fn })),
+    [{ path: ADMIN_REL, fn: "buildLogoutArgs" }],
+  )
+  assert.deepEqual(viPham(kq), [`${ADMIN_REL}: logout trước bước kiểm id`])
+})
