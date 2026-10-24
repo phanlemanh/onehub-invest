@@ -1,0 +1,15 @@
+{
+  "note": "ON7 ops-nhan-ma-nguon AC-7 — bảng ca dùng chung cho bộ che bản pipeline và bản app. {Sxx:dạng} được thay LÚC CHẠY bằng tên thật của mã đó rút từ db/migrations (tệp này không chứa tên). Dạng: full (nguyên văn) · upper · fold (bỏ dấu, chữ thường) · joined (bỏ dấu, viết liền) · suffix (bỏ dấu, viết liền, dính hậu tố 'user'). Ca names: [] → kỳ vọng null.",
+  "cases": [
+    { "ten": "tên đủ", "in": "lỗi {S02:full} timeout", "out": "lỗi S02 timeout" },
+    { "ten": "khác hoa thường", "in": "fetch {S01:upper} 429", "out": "fetch S01 429" },
+    { "ten": "bỏ dấu", "in": "ads {S06:fold} ok", "out": "ads S06 ok" },
+    { "ten": "viết liền", "in": "nguồn {S06:joined}-ads xong", "out": "nguồn S06-ads xong" },
+    { "ten": "dính hậu tố", "in": "--channel {S03:suffix}", "out": "--channel S03user" },
+    { "ten": "từ đầu của tên nhiều từ", "in": "nhóm {S05:first} 3", "out": "nhóm S05 3" },
+    { "ten": "hai tên một dòng", "in": "{S01:full}/{S02:full} đối chiếu", "out": "S01/S02 đối chiếu" },
+    { "ten": "tên ba ký tự giữa một từ khác", "in": "x{S04:fold}y và {S04:full}", "out": "x{S04:fold}y và S04" },
+    { "ten": "không có tên", "in": "cloud-sync xong 12 bảng", "out": "cloud-sync xong 12 bảng" },
+    { "ten": "danh sách tên rỗng", "in": "lỗi {S02:full}", "out": null, "names": [] }
+  ]
+}
