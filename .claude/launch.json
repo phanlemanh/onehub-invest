@@ -8,6 +8,12 @@
       "port": 3456
     },
     {
+      "name": "app-3460",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "app", "run", "dev", "--", "-p", "3460"],
+      "port": 3460
+    },
+    {
       "name": "data-api",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "data-api", "run", "dev"],

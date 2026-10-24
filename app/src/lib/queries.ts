@@ -222,6 +222,49 @@ export async function getMarketGeoJson(
   };
 }
 
+// ---------- Ảnh đại diện khu vực (So sánh, Đã lưu) ----------
+
+/** Ảnh ứng viên theo thứ tự ưu tiên — ảnh chết trên CDN (≈1/4 ảnh đo 24/10) thì bên hiển thị lùi sang ảnh kế. */
+export type AreaThumbnail = { candidates: { src: string; listingName: string | null }[] };
+
+/**
+ * Ảnh đại diện của mỗi khu vực = ảnh chính của MỘT listing tự thu trong khu vực (thị trường:
+ * gồm phường con), ưu tiên listing đặt nhiều đêm nhất 90 ngày tới rồi nhiều đánh giá nhất. Chỉ ảnh
+ * tự thu (luật 5: không AirDNA). Mỗi khu vực lấy 3 ứng viên; xếp theo thứ tự `ids`, ảnh đã đứng
+ * đầu ở khu vực trước bị đẩy xuống cuối — thành phố và phường chứa listing đầu bảng không trùng ảnh
+ * trên cùng một trang. Khu vực không có listing nào có ảnh thì vắng khỏi map.
+ */
+export async function getAreaThumbnails(ids: string[]): Promise<Map<string, AreaThumbnail>> {
+  if (ids.length === 0) return new Map();
+  const { rows } = await pool.query(
+    `SELECT area_id, url, name FROM (
+       SELECT a.id AS area_id, l.photo_urls->>0 AS url, l.name,
+              row_number() OVER (PARTITION BY a.id
+                ORDER BY st.booked90 DESC NULLS LAST, l.review_count DESC NULLS LAST, l.id) AS rn
+       FROM areas a
+       JOIN listings l ON l.area_id = a.id OR l.area_id IN (SELECT s.id FROM areas s WHERE s.parent_id = a.id)
+       LEFT JOIN listing_stats st ON st.listing_id = l.id
+       WHERE a.id = ANY($1::text[])
+         AND jsonb_typeof(l.photo_urls) = 'array' AND jsonb_array_length(l.photo_urls) > 0
+     ) c WHERE rn <= 3 ORDER BY area_id, rn`,
+    [ids],
+  );
+  const byArea = new Map<string, { url: string; name: string | null }[]>();
+  for (const r of rows) byArea.set(r.area_id, [...(byArea.get(r.area_id) ?? []), { url: r.url, name: r.name ?? null }]);
+  const used = new Set<string>();
+  const out = new Map<string, AreaThumbnail>();
+  // URL trần còn sót trong DB thì thêm scheme (cùng luật trang Listing); im_w=480 cho ảnh nhỏ.
+  const src = (u: string) => `${u.startsWith("http") ? u : `https://${u}`}?im_w=480`;
+  for (const id of ids) {
+    const cands = byArea.get(id) ?? [];
+    if (cands.length === 0) continue;
+    const ordered = [...cands.filter((c) => !used.has(c.url)), ...cands.filter((c) => used.has(c.url))];
+    used.add(ordered[0].url);
+    out.set(id, { candidates: ordered.map((c) => ({ src: src(c.url), listingName: c.name })) });
+  }
+  return out;
+}
+
 // ---------- Finder (IA §3.2): xếp hạng + choropleth, chung cho Insight ----------
 
 export type FinderRow = {

@@ -53,6 +53,13 @@ cho UI2 (`/phuong-phap` → `/methodology`), UI3 (`/dau-tu` → `/yield`). 4 vi 
    «Lợi suất» ghi đổi khi dọn nhóm trang). Ô tốt nhất đổi `text-success` → `text-success-foreground
    dark:text-success` (luật màu ReUI: `text-success` làm chữ ở chế độ sáng chỉ đạt tương phản ~2,4).
 
+9. **Ảnh đại diện (góp ý Mạnh ở Cổng Phạm vi 24/10, Hỏi-4).** Kho chưa có ảnh khu vực; dùng ảnh chính của một listing
+   tự thu trong khu vực (`getAreaThumbnails`: thị trường gồm phường con, xếp theo đêm đặt 90 ngày tới rồi số đánh giá,
+   ≤ 3 ứng viên, ảnh đầu không trùng giữa các khu vực cùng trang). ~1/4 ảnh chính trên CDN đã chết (mẫu 25 ảnh: 6 trả
+   404) → `AreaThumbnail` lùi sang ứng viên kế khi lỗi, hết thì cha về ô số; `<img>` chỉ gắn sau hydrate vì lỗi ảnh xảy
+   ra giữa HTML server và hydrate bị mất. Thẻ Đã lưu: ảnh đứng đầu khung (nằm dưới nhãn loại + nút ✕), nhãn dùng Badge
+   nền đặc, RevPAR + công suất xuống dòng dưới tên. Chữ thay thế «Ảnh một listing ở …» để không hiểu nhầm là ảnh khu vực.
+
 <!-- <<<UX-SPEC-TEMPLATE -->
 ## Đặc tả UX
 
@@ -104,6 +111,7 @@ cho UI2 (`/phuong-phap` → `/methodology`), UI3 (`/dau-tu` → `/yield`). 4 vi 
 | comparison-1 (`compare/comparison.tsx`) | dùng (bỏ header tự vẽ) | block đích đã chốt, header chuyển lên PageHeader |
 | wishlist-2 (`saved/saved-list.tsx`) | dùng | block đích đã chốt; ô đếm thành Badge |
 | c-empty-11 (`saved/saved-empty.tsx`) | ghép | block trống đã chốt cho `/saved` (IA §3.4) |
+| AreaThumbnail (`page/area-thumbnail.tsx`) | tạo | chưa có ảnh khu vực; ảnh listing tự thu + đường lùi ảnh chết |
 | RegionError (`states/region-error.tsx`) | tạo | chưa có lỗi-tại-vùng; `catchError` của Next + c-alert-1 như PageError |
 | CompareSkeleton, SavedSkeleton | tạo | skeleton theo bố cục vùng (catalog «Đang tải») |
 | SavedFilterProvider | tạo | tab dùng chung giữa header ngoài Suspense và lưới thẻ |

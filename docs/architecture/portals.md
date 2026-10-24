@@ -116,6 +116,7 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | `/vn/[market]/[submarket]` | Insight phường/quận | drill-down |
 | `/listing/[id]` | Chi tiết listing | calendar + giá |
 | `/yield` | So sánh Yield | STR vs giá bán (G1→G4) |
+| `/compare` | So sánh | 2–4 khu vực cạnh nhau (`/so-sanh` → 301) |
 | `/saved` | Đã lưu | auth |
 | `/login` | Đăng nhập | auth |
 

@@ -177,7 +177,7 @@ _Avoid_: comps, listing tương tự
 **Lợi suất**: Thu nhập năm của một căn ÷ giá mua; luôn ghi rõ gộp hay ròng và ngắn hạn hay dài hạn.
 - Code: `yield` · RESO: không có
 - Slug URL: `yield`
-- Ghi chú: UI đang có "Yield ngắn hạn"/"Yield dài hạn" (`/so-sanh`) — đổi khi dọn nhóm trang.
+- Ghi chú: `/compare` ghi "Lợi suất ngắn hạn"/"Lợi suất dài hạn" kèm chú thích gộp (đổi từ "Yield …" khi dọn nhóm trang, hồ sơ `compare-saved-trang-thai`).
 _Avoid_: tỷ suất lợi nhuận, ROI, cap rate
 
 **Lợi suất gộp**: Doanh thu năm ÷ giá mua (trước chi phí).
@@ -316,6 +316,11 @@ _Avoid_: Rentalizer
 - Code: `compare` · RESO: —
 - Slug URL: `compare`
 - Slug cũ: `so-sanh` → `compare`
+
+**Ảnh đại diện**: Ảnh hiện thay mặt một khu vực trên So sánh và Đã lưu — là ảnh chính của MỘT listing tự thu trong khu vực (listing đặt nhiều đêm nhất 90 ngày tới), không phải ảnh chụp khu vực; chữ thay thế ghi «Ảnh một listing ở …». Ảnh hỏng thì đổi ảnh khác, hết ảnh thì hiện ô số RevPAR.
+- Code: `area thumbnail` (`getAreaThumbnails`, `AreaThumbnail`) · RESO: —
+- Slug URL: —
+_Avoid_: ảnh khu vực (gây hiểu là ảnh chụp phường/thành phố), ảnh AirDNA
 
 **Đã lưu**: Khu vực (sau này listing, báo cáo) người dùng đã lưu — cần đăng nhập.
 - Code: `saved` · RESO: —
