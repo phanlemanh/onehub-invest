@@ -426,7 +426,10 @@ describe("AC-5 bước thật trên cổng canh", () => {
   const mutDir = path.join(SCRATCH, "pipeline-mut");
   const mutate = (file, fn, src = "refresh-bait-gap.mjs") => {
     mkdirSync(mutDir, { recursive: true });
-    if (!existsSync(path.join(mutDir, "node_modules"))) symlinkSync(path.join(PIPE, "node_modules"), path.join(mutDir, "node_modules"));
+    // bản sao đặt cạnh node_modules + lib thật (push-ops-facts import ./lib/last-log-line.mjs từ PR #55)
+    for (const d of ["node_modules", "lib"]) {
+      if (!existsSync(path.join(mutDir, d))) symlinkSync(path.join(PIPE, d), path.join(mutDir, d));
+    }
     const s = readFileSync(path.join(PIPE, src), "utf8");
     const m = fn(s);
     assert.notEqual(m, s, `khuôn đột biến ${file} không khớp mã nguồn`);
