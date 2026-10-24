@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 858c45334aa2e733131727eaa6fd7bef11ed4c21
+verified_commit: f83a03547ff89707c073296485cf1d53e1c0a006
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -141,3 +141,7 @@ none — every multi-run eval is uniform
 
 Round 1: tất cả eval đạt nhưng có 1 finding trong hợp đồng (AC-3: bảng và số đầu trang chỉ đo bằng regex trên mã nguồn page.tsx). Returned to implementation.
 Round 2: E1 E2 E3 E4 E5 đạt, E6 hội đồng đề xuất PASS; không còn finding trong hợp đồng. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-24, do gộp main 4af4dd8 (ON12) — xung đột bảng Kiểm chất lượng
+run_id: repin-20261024T224112Z-46386
+sha: f83a03547ff89707c073296485cf1d53e1c0a006 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng · ngoài làn máy: E6 · diff chạm vật đo ngoài làn máy: E6 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-6
