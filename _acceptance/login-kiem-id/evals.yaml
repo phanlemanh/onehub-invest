@@ -1,0 +1,74 @@
+schema_version: 1
+feature_slug: login-kiem-id
+# Eval máy đọc ca mang tiền tố «LK-AC-n» trong TAP (app/tests/login-kiem-id.test.tsx, openclaw giả); AC-10 đọc «GT-AC-».
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/login/route.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-1 accountId rỗng/thiếu/không phải chuỗi → 400, openclaw giả 0 lệnh' với 7 thân viết trước (thiếu, '', '   ', 5, null, not-json, null JSON): mỗi thân mã 400 + 0 dòng nhật ký, 6 thân ghim error «id rỗng»; đối chứng dương cùng fixture acc2 → 1 dòng; chiều đỏ 'LK-AC-1 bản sao bỏ bước kiểm → openclaw giả nhận login với id rỗng' ok (assert bản sao khác bản gốc, rào chạy trên bản sao trước khi gọi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/login/route.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-2 accountId có khoảng trắng → 400, openclaw giả 0 lệnh' với 4 id viết trước (' acc2 ', 'acc2 ', 'acc 2', 'acc2\\n'), mỗi id 3 assert (mã, error «id có khoảng trắng», 0 dòng) ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/login/route.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-3 id lạ/khoá kế thừa/dạng cờ → 400 đúng thông điệp lớp, openclaw giả 0 lệnh' với 8 id viết trước ('khong-co', '../acc2', 'ACC2', 'constructor', '__proto__', 'toString', 'hasOwnProperty' → «không có trong danh sách tài khoản»; '--channel' → «id dạng cờ»), mỗi id 3 assert; chiều đỏ 'LK-AC-3 bản sao chỉ kiểm thành viên → login --account --channel lọt, nêu dạng cờ' và 'LK-AC-3 bản sao kiểm thành viên bằng in → login --account constructor lọt, nêu khoá kế thừa' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/login/route.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-4 id thật acc2 và Acc_5 → 200, qrBase64 của ảnh QR giả, đúng một lệnh login --account <id>' với 2 lượt, mỗi lượt 3 assert (mã, qrBase64 so base64 nội dung QR giả của id đó, nhật ký thêm đúng một dòng so nguyên argv) ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/login/route.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-5 default (có và vắng accounts.default) → 200, QR của default, đúng một lệnh login --account default' với 2 lượt, mỗi lượt 3 assert ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/login/route.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-6 đang có phiên acc3 dở → --channel và khong-co vẫn 400, không trả QR acc3, nhật ký vẫn 1 dòng' ok; ca huỷ tiến trình giả acc3 (cancelZaloLogin) ở cuối"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/**/*.ts, app/src/**/*.tsx, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-7 chỗ login trong app/src bằng đúng danh sách viết trước [zalo-admin.ts · startZaloLogin] và đứng sau requireLoginAccount'; chiều đỏ 'LK-AC-7 bản sao spawn trước bước kiểm', 'LK-AC-7 bản sao thêm mảng argv nháy đơn', 'LK-AC-7 bản sao thêm chuỗi lệnh channels login' — mỗi bản sao khác bản gốc và thước nêu tệp ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; tệp test không có import tĩnh của zalo-admin hay route; mọi bản sao đột biến đi qua hàm nạp chung gọi rào trên zaloAdminPaths() của chính bản sao trước khi trả nó; ca 'LK-AC-8 rào: homedir, openclaw, config, qrDir nằm dưới thư mục tạm' ok; chiều đỏ 'LK-AC-8 rào với HOME thật hoặc qrDir /tmp/openclaw trả vi phạm nêu đường lạc' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; ca 'LK-AC-9 không đặt OPENCLAW_QR_DIR → zaloAdminPaths().qrDir là /tmp/openclaw' (tiến trình con, HOME/PATH giả, xoá biến) và chiều đỏ 'LK-AC-9 bản sao mặc định os.tmpdir() ra khác, nêu QR mặc định' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/accounts/route.ts, app/tests/go-tai-khoan-kiem-id.test.tsx]
+    expected: "exit 0; đủ 11 ca 'GT-AC-1' … 'GT-AC-6' của app/tests/go-tai-khoan-kiem-id.test.tsx ok (không ca nào bị bỏ hay đổi tên)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
