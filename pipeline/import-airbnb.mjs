@@ -99,7 +99,9 @@ async function main() {
                                        sender_name, sender_id, conversation_id, media, agent_id,
                                        media_files)
            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12::jsonb)
-           ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text, captured_at = now(),
+           ON CONFLICT (post_id) DO UPDATE SET text = EXCLUDED.text,
+             captured_at = stg_zalo_posts.captured_at, -- 2410-1: GIU mốc thu đầu — nạp lại không đặt lại độ tươi
+
              sender_name = COALESCE(EXCLUDED.sender_name, stg_zalo_posts.sender_name),
              sender_id = COALESCE(EXCLUDED.sender_id, stg_zalo_posts.sender_id),
              conversation_id = COALESCE(EXCLUDED.conversation_id, stg_zalo_posts.conversation_id),

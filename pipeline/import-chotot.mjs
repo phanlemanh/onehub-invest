@@ -72,7 +72,8 @@ async function importDir(client, dir) {
          size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
          ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
          seller = EXCLUDED.seller, images = EXCLUDED.images,
-         payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id, captured_at = now()`,
+         payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id,
+         captured_at = stg_chotot_ads.captured_at -- 2410-1: GIU mốc thu đầu`,
       [
         a.list_id, a.region_v2 ?? it.meta?.region_v2, it.meta?.city ?? a.region_name,
         a.category ?? it.meta?.cg, a.type ?? it.meta?.st, a.subject ?? null,
