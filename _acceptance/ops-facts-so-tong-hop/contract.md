@@ -5,7 +5,7 @@ slug: ops-facts-so-tong-hop
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [pipeline, api, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-ops-facts-so-tong-hop-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24
@@ -98,3 +98,8 @@ sổ quyết định. Trục và thước lấy từ ADR:
 
 - `pipeline/push-ops-facts.mjs` (t3_paths) chung với ON2, ON4, ON5, AU12 — chạy liền nhau, không song song.
 - An toàn Zalo: lockdown chỉ đọc log + probe GET như ON2; không phương thức ghi nào lên OpenClaw hay route Zalo.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-24:
+  - Ngoài-1: Phép đo job chạy nền chưa tự kiểm rằng đủ ba job viết trước thật sự được soát — một job bị đổi tên hay gỡ có thể làm phép đo xanh mà không còn kiểm nó.
+  - Ngoài-2: Chiều đỏ «lỗi dây chuyền» chỉ đòi tập nhóm lỗi khác đáp án, chưa chỉ đích danh nhóm bị kéo theo.
+  - Ngoài-3: Danh sách luồng thu dùng để đếm bản ghi 24 giờ được viết cứng ở thêm một chỗ (bản sao từ trang local) — một nguồn đổi tên luồng thì số theo nguồn lệch mà không ai được báo.
+  - Ngoài-4: Truy vấn «lần chạy gần nhất» cũ của bản tin nuốt mọi lỗi mà không để lại dấu vết, chỉ gửi số trống.

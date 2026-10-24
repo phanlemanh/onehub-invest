@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 522dcce9c5fd0401acda939946cae33c5b6ea857
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: ops-facts-so-tong-hop
