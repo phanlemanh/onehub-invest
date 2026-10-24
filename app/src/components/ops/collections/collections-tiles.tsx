@@ -16,6 +16,9 @@ import { sloSummaryKey } from "@/lib/freshness"
 import { FEED_STATE, feedSloSummary, feedState } from "./feed-status"
 import { SegmentBar, StatCard } from "./section"
 
+/** Trên cloud các vùng luồng / nhóm S03 / lockdown không dựng — nút trỏ Alert «chưa có số trên cloud» (collections-view). */
+const CLOUD_ANCHOR = "#tren-may-thu"
+
 export function CollectionsTiles({
   feeds,
   funnel,
@@ -74,7 +77,7 @@ export function CollectionsTiles({
         value={items24h === null ? "—" : fmtInt(items24h)}
         basis={items24h === null ? "Chưa có số" : busiest && busiest.items24h ? `Nhiều nhất: ${busiest.code} (${fmtInt(busiest.items24h)})` : "Chưa có bản ghi trong 24 giờ"}
         muted={muted}
-        action={{ label: "Xem luồng 7 ngày", href: "#luong" }}
+        action={{ label: "Xem luồng 7 ngày", href: cloud ? CLOUD_ANCHOR : "#luong" }}
       />
 
       <StatCard
@@ -85,7 +88,7 @@ export function CollectionsTiles({
         total={cloud && !cloud.funnelMeasured ? undefined : fmtInt(funnel.today.messages)}
         basis={cloud && !cloud.funnelMeasured ? "Chưa có số" : `${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
         muted={muted}
-        action={{ label: `Xem nhóm ${s03}`, href: "#nhom-s03" }}
+        action={{ label: `Xem nhóm ${s03}`, href: cloud ? CLOUD_ANCHOR : "#nhom-s03" }}
       >
         {cloud && !cloud.funnelMeasured ? null : <SegmentBar
           label={`Tin ${s03} hôm nay`}
@@ -104,7 +107,7 @@ export function CollectionsTiles({
           value="—"
           badge={<Badge variant="warning-light">Chưa kiểm được trên cloud</Badge>}
           basis="Kiểm ở Ops trên máy thu"
-          action={{ label: "Xem các lớp", href: "#lockdown" }}
+          action={{ label: "Xem các lớp", href: CLOUD_ANCHOR }}
         />
       ) : (
         <StatCard

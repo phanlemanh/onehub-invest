@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { CollectionsView } from "@/components/ops/collections/collections-view";
+import { CollectionsView, type CollectionsData } from "@/components/ops/collections/collections-view";
 import {
   getFlowDays,
   getFactsPushedAt,
@@ -25,7 +25,26 @@ function requestTime(): number {
 
 /** /ops/collections "Thu Thập" (portals.md) — chỉ tải dữ liệu; phần hiển thị ở CollectionsView. */
 export default async function CollectionsPage() {
-  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, localOnly, roles] = await Promise.all([
+  // Cloud (bảng tầng A vắng): chỉ tải phần đọc bản tin máy local (ON3, ADR-0014) — các vùng đo trực tiếp trên máy thu
+  // (luồng 7 ngày, ống S03, xoay vòng, nhóm S03, lockdown) không dựng trên cloud nên không truy vấn bảng thô.
+  if (await freshnessLocalOnly()) {
+    const [cloud, funnel, factsPushedAt, roles] = await Promise.all([getCloudOpsView(), readGateFunnel(), getFactsPushedAt(), getSourceRoles()]);
+    // Lưới job đọc khối job của bản tin; chưa có bản tin thì không đọc (nhánh dò launchd chỉ có nghĩa trên máy thu).
+    const jobs = cloud.state === "none" ? [] : await readSchedulerStatus();
+    return (
+      <CollectionsView
+        {...CLOUD_EMPTY}
+        funnel={funnel}
+        jobs={jobs}
+        factsPushedAt={factsPushedAt}
+        feedHealth={cloud.feeds ?? []}
+        nowMs={requestTime()}
+        cloud={cloud}
+        roles={roles}
+      />
+    );
+  }
+  const [days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, roles] = await Promise.all([
     getFlowDays(7),
     readGateFunnel(),
     readSchedulerStatus(),
@@ -36,11 +55,8 @@ export default async function CollectionsPage() {
     getFactsPushedAt(),
     getSourceFeedHealth(),
     getLockdownStatus(),
-    freshnessLocalOnly(),
     getSourceRoles(),
   ]);
-  // Cloud (bảng tầng A vắng): ô số đọc từ bản tin máy local (ON3, ADR-0014).
-  const cloud = localOnly ? await getCloudOpsView() : null;
   return (
     <CollectionsView
       days={days}
@@ -51,11 +67,21 @@ export default async function CollectionsPage() {
       zaloAllowlist={zaloAllowlist}
       zaloHealth={zaloHealth}
       factsPushedAt={factsPushedAt}
-      feedHealth={cloud ? (cloud.feeds ?? []) : feedHealth}
+      feedHealth={feedHealth}
       lockdown={lockdown}
       nowMs={requestTime()}
-      cloud={cloud}
       roles={roles}
     />
   );
 }
+
+/** Props của các vùng không dựng trên cloud — giữ kiểu CollectionsData, không mang số nào. */
+const CLOUD_EMPTY = {
+  days: [],
+  jobs: [],
+  rotation: { updatedAt: null, cursor: 0, total: 0, next: [] },
+  zaloGroups: [],
+  zaloAllowlist: [],
+  zaloHealth: { connected: null, uptime24h: null, heartbeatAgeMin: null, lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false },
+  lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: null, openClawUp: false, kevUp: false, collectorUp: false },
+} satisfies Partial<CollectionsData>;

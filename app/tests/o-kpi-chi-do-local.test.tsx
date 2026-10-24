@@ -121,7 +121,11 @@ function region(h: string, from: string, to: string) {
   return h.slice(i, j)
 }
 const OPS_TILES = [">Đạt SLO<", ">Quá hạn<", ">Chưa có snapshot<", ">Snapshot mới nhất<", ">Độ tươi theo nguồn<"]
-const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", ">Lockdown<", ">Luồng 7 ngày<"]
+const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", ">Lockdown<", ">Sức khoẻ nguồn<"] // mốc cuối: tiêu đề lưới nguồn ngay dưới hàng ô
+const headings = (h: string) => [...h.matchAll(/role="heading"[^>]*>([^<]*)</g)].map((m) => m[1])
+/** Trên cloud chỉ dựng vùng đọc bản tin: hàng ô số + lưới sức khoẻ nguồn + lưới job khi có bản tin (khuôn đổi ở lượt 3, sổ d-16). */
+const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Máy móc (launchd)"]
+const NO_CLOUD_VIEW = { rel: "src/components/ops/collections/collections-view.tsx", fn: (s: string) => s.replace("if (props.cloud) return <CloudCollections", "if (false) return <CloudCollections") }
 
 /** Đạt SLO tính độc lập với bên đọc: nguồn đạt khi mọi hàng của nó tươi; mã có hàng chưa khai SLO không đếm. */
 function expectSlo(rows: { code: string; status: string }[]) {
@@ -323,7 +327,7 @@ describe("ON3-AC-4 bản tin cũ", () => {
   test("ON3-AC-4 bản sao còn ngưỡng 30′ trên cloud → bắt", async () => {
     ready()
     await ingest(shiftPayload(await push(), -31) as Payload)
-    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("factsAgeMin: cloud ? null : factsAgeMin,", "factsAgeMin,") }, [COL_PAGE])
+    const m = mutantChain(NO_CLOUD_VIEW, [COL_PAGE])
     try {
       assert.ok((await renderCollections(m.path)).includes("Máy thu có thể offline"), "phép đo phải thấy cảnh báo 30′ cũ")
     } finally {
@@ -339,6 +343,41 @@ describe("ON3-AC-4 bản tin cũ", () => {
     )
     try {
       assert.ok(successTone(region(await renderCollections(m.path), COL_TILES[0], COL_TILES[4])) > 0, "phép đo phải thấy màu đạt trên số cũ")
+    } finally {
+      m.done()
+    }
+  })
+})
+
+describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
+  const STATES: [string, () => Promise<unknown>][] = [
+    ["chưa có bản tin", () => clear()],
+    ["tươi", async () => ingest(await push())],
+    ["cũ 46′", async () => ingest(shiftPayload(await push(), -46) as Payload)],
+  ]
+  test("ON3-AC-4 ba trạng thái: /ops/collections chỉ có hàng ô số + lưới nguồn, một Alert «Phần còn lại…», nút ô trỏ #tren-may-thu, không «Hỏng» / «ổn» / «tươi» nào", async () => {
+    ready()
+    for (const [name, set] of STATES) {
+      await set()
+      const h = await renderCollections()
+      assert.deepEqual(headings(h).filter((x) => !CLOUD_HEADINGS.includes(x)), [], `${name}: vùng ngoài bản tin không được dựng`)
+      assert.equal(headings(h).includes("Máy móc (launchd)"), name !== "chưa có bản tin", `${name}: lưới job chỉ khi có bản tin`)
+      assert.equal(alertTitles(h).filter((t) => t === "Phần còn lại của trang chưa có số trên cloud").length, 1, `${name}: một Alert gom vùng trên máy thu`)
+      assert.equal(localCount(h), name === "chưa có bản tin" ? 1 : 0, `${name}: chữ chỉ-local đúng số lần`)
+      assert.doesNotMatch(text(h), /Hỏng|Mọi thứ ổn|đều tươi|Kênh kết nối|Hoạt động/, `${name}: không trạng thái giả của vùng không đo`)
+      const hrefs = [...region(h, COL_TILES[1], COL_TILES[4]).matchAll(/href="(#[^"]+)"/g)].map((m) => m[1])
+      assert.ok(hrefs.length >= 3 && hrefs.every((x) => x === "#tren-may-thu"), `${name}: nút ô luồng / nhóm S03 / lockdown trỏ Alert (${hrefs.join(", ")})`)
+      assert.ok(h.includes('id="tren-may-thu"'), `${name}: đích của nút có mặt`)
+    }
+  })
+  test("ON3-AC-4 bản sao dựng bố cục máy local trên cloud → bắt", async () => {
+    ready()
+    await ingest(shiftPayload(await push(), -46) as Payload)
+    const m = mutantChain(NO_CLOUD_VIEW, [COL_PAGE])
+    try {
+      const h = await renderCollections(m.path)
+      assert.ok(headings(h).some((x) => !CLOUD_HEADINGS.includes(x)), "phép đo phải thấy vùng ngoài bản tin")
+      assert.ok(!alertTitles(h).includes("Phần còn lại của trang chưa có số trên cloud"), "bản sao không có Alert gom")
     } finally {
       m.done()
     }

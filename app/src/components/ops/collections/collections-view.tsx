@@ -19,7 +19,7 @@ import type {
   ZaloGroupRow,
   ZaloHealth,
 } from "@/lib/collections-queries"
-import { fmtInt } from "@/lib/format"
+import { fmtInt, vnDayKey } from "@/lib/format"
 import { sloSummaryKey, sloSummaryText } from "@/lib/freshness"
 import type { getLockdownStatus, SourceFeedHealth } from "@/lib/ops-queries"
 import type { CloudOpsView } from "@/lib/ops-cloud"
@@ -50,47 +50,30 @@ export type CollectionsData = {
  * chạy không. Khung theo @reui/solution-dev-ops-6 (thẻ số · luồng + cần chú ý · lưới nguồn) và lưới job của
  * @reui/solution-dev-ops-1.
  */
-export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, roles = {}, cloud = null }: CollectionsData) {
+export function CollectionsView(props: CollectionsData) {
+  if (props.cloud) return <CloudCollections {...props} cloud={props.cloud} />
+  const { days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, roles = {} } = props
   const factsAgeMin = factsPushedAt ? Math.round((nowMs - new Date(factsPushedAt).getTime()) / 60_000) : null
   const lastPostHours = zaloHealth.lastPostAt ? Math.round((nowMs - new Date(zaloHealth.lastPostAt).getTime()) / 3_600_000) : null
-  const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin: cloud ? null : factsAgeMin, nowMs, roles })
+  const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin, nowMs, roles })
   // Cùng một con số với /ops (AU6): x/y nguồn đạt SLO.
   const slo = feedSloSummary(feedHealth)
 
   return (
     <div className="flex flex-col gap-6" data-slo-summary={sloSummaryKey(slo)}>
       <PageHeader
-        crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Thu thập" }]}
+        crumbs={CRUMBS}
         title="Thu thập"
-        stats={[
-          ...(cloud && !cloud.feeds ? [] : [sloSummaryText(slo)]),
-          `Hôm nay ${days[0]?.day ?? "—"}`,
-          ...(!cloud && factsAgeMin !== null ? [`Máy thu ${fmtInt(factsAgeMin)}′ trước`] : []),
-        ]}
-        description="Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở log tay."
+        stats={[sloSummaryText(slo), `Hôm nay ${days[0]?.day ?? "—"}`, ...(factsAgeMin !== null ? [`Máy thu ${fmtInt(factsAgeMin)}′ trước`] : [])]}
+        description={DESCRIPTION}
       />
-      {cloud ? <FactsStamp state={cloud.state} measuredAt={cloud.measuredAt} /> : null}
-      {cloud ? <FactsStaleAlert state={cloud.state} measuredAt={cloud.measuredAt} /> : null}
-      {cloud?.state === "none" ? (
-        <LocalOnlyAlert title="Chỉ đo ở máy local">
-          Máy local chưa đẩy số tổng hợp lên cloud. Kiểm cloud-sync ở máy thu, hoặc xem Ops trên máy thu.
-        </LocalOnlyAlert>
-      ) : null}
-      <CollectionsTiles
-        feeds={feedHealth}
-        funnel={funnel}
-        layers={lockdown.layers}
-        agentTurnsToday={lockdown.agentTurnsToday}
-        roles={roles}
-        cloud={cloud ? { feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale: cloud.state === "stale", funnelMeasured: cloud.state !== "none" } : undefined}
-      />
+      <CollectionsTiles feeds={feedHealth} funnel={funnel} layers={lockdown.layers} agentTurnsToday={lockdown.agentTurnsToday} roles={roles} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SyncActivity days={days} roles={roles} className="min-w-0 lg:col-span-2" />
         <AttentionList issues={issues} roles={roles} className="min-w-0" />
       </div>
-      <FeedsGrid feeds={feedHealth} stale={cloud?.state === "stale"} />
-      {/* Cloud: lớp lockdown chưa kiểm được ở đây tới ON23 (Hỏi-1 = A) — khớp ô Lockdown, không «Ổn» từ máy đang chạy trang. */}
-      <LockdownGrid layers={cloud ? lockdown.layers.map((l) => ({ ...l, ok: null })) : lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
+      <FeedsGrid feeds={feedHealth} />
+      <LockdownGrid layers={lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ZaloPipePanel zalo={zaloHealth} funnel={funnel} lastPostHours={lastPostHours} roles={roles} />
         <RotationPanel rotation={rotation} roles={roles} />
@@ -99,7 +82,52 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
       <div id="nhom-s03" className="scroll-mt-4">
         <ZaloGroupsTable rows={zaloGroups} allowlist={zaloAllowlist} roles={roles} />
       </div>
-      <JobsGrid jobs={jobs} stale={cloud?.state === "stale"} />
+      <JobsGrid jobs={jobs} />
+    </div>
+  )
+}
+
+const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Thu thập" }]
+const DESCRIPTION = "Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở log tay."
+/** Vùng đo trực tiếp trên máy thu — trên cloud không có nguồn số (ADR-0014); ON4/ON23 đưa dần lên bằng khối bản tin. */
+export const MACHINE_ONLY_REGIONS = ["Luồng 7 ngày", "Cần chú ý", "lớp lockdown", "ống S03", "xoay vòng", "nhóm S03"]
+
+/** Cloud (ON3, ADR-0014): chỉ dựng vùng đọc bản tin máy local — ô số, lưới sức khoẻ nguồn và lưới job (khối `jobs`, chỉ khi
+ * đã có bản tin). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0 hay màu đạt khi
+ * cloud không đo được nó. */
+function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud }: CollectionsData & { cloud: CloudOpsView }) {
+  const slo = feedSloSummary(feedHealth)
+  const stale = cloud.state === "stale"
+  return (
+    <div className="flex flex-col gap-6" data-slo-summary={sloSummaryKey(slo)}>
+      <PageHeader
+        crumbs={CRUMBS}
+        title="Thu thập"
+        stats={[...(cloud.feeds ? [sloSummaryText(slo)] : []), `Hôm nay ${vnDayKey(nowMs)}`]}
+        description={DESCRIPTION}
+      />
+      <FactsStamp state={cloud.state} measuredAt={cloud.measuredAt} />
+      <FactsStaleAlert state={cloud.state} measuredAt={cloud.measuredAt} />
+      {cloud.state === "none" ? (
+        <LocalOnlyAlert title="Chỉ đo ở máy local">
+          Máy local chưa đẩy số tổng hợp lên cloud. Kiểm cloud-sync ở máy thu, hoặc xem Ops trên máy thu.
+        </LocalOnlyAlert>
+      ) : null}
+      <CollectionsTiles
+        feeds={feedHealth}
+        funnel={funnel}
+        layers={[]}
+        agentTurnsToday={null}
+        roles={roles}
+        cloud={{ feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale, funnelMeasured: cloud.state !== "none" }}
+      />
+      <FeedsGrid feeds={feedHealth} stale={stale} />
+      <div id="tren-may-thu" className="scroll-mt-4">
+        <LocalOnlyAlert title="Phần còn lại của trang chưa có số trên cloud">
+          {[...MACHINE_ONLY_REGIONS, ...(cloud.state === "none" ? ["job"] : [])].join(", ")} đo trực tiếp trên máy thu — xem ở Ops trên máy thu.
+        </LocalOnlyAlert>
+      </div>
+      {cloud.state === "none" ? null : <JobsGrid jobs={jobs} stale={stale} />}
     </div>
   )
 }
