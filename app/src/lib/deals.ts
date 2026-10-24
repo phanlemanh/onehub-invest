@@ -42,6 +42,11 @@ export type DealRow = {
 /** Giảm hơn ngưỡng này so với thước → tin cần xác minh: vẫn hiện, đứng cuối (Mạnh chốt Hỏi-2, ON11 24/10). */
 export const NGHI_NGO_PCT = 35;
 
+/** Nguồn ảnh của thẻ: ảnh local đi qua route ảnh tin (chặn admin), ảnh CDN dùng thẳng url. */
+export function dealMediaSrc(d: Pick<DealRow, "mediaPath" | "mediaUrl">): string {
+  return d.mediaPath ? `/api/zalo-media?path=${encodeURIComponent(d.mediaPath)}` : (d.mediaUrl ?? "");
+}
+
 /** Nhãn số lần đăng trên thẻ — «mới» cũ thật ra nghĩa là «chưa đăng lại» (OPS-12). */
 export function repostLabel(n: number | null | undefined): string {
   return `đăng ${n && n > 1 ? n : 1} lần`;

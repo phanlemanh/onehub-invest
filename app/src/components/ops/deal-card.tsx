@@ -2,7 +2,7 @@ import { PhoneIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/reui/badge";
-import { type DealRow, repostLabel } from "@/lib/deals";
+import { type DealRow, dealMediaSrc, repostLabel } from "@/lib/deals";
 import { fmtInt } from "@/lib/format";
 
 function fmtPrice(v: number | null) {
@@ -67,13 +67,9 @@ export function DealCard({ d, showContact }: { d: DealRow; showContact: boolean 
         {d.suspect && <Badge variant="warning-light">cần xác minh</Badge>}
       </div>
       {showContact && (d.mediaPath || d.mediaUrl) && (
-        // eslint-disable-next-line @next/next/no-img-element -- Ảnh local (Zalo path) hoặc CDN (FB url)
+        // eslint-disable-next-line @next/next/no-img-element -- Ảnh local hoặc ảnh CDN của tin
         <img
-          src={
-            d.mediaPath
-              ? `/api/zalo-media?path=${encodeURIComponent(d.mediaPath)}`
-              : (d.mediaUrl ?? "")
-          }
+          src={dealMediaSrc(d)}
           alt={`Ảnh tin bán — ${d.phuong ?? ""}`}
           className="h-36 w-full rounded-md object-cover"
           loading="lazy"
