@@ -5,7 +5,7 @@ slug: trang-chu-methodology
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, config]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-25-trang-chu-methodology-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24T23:17:26Z
