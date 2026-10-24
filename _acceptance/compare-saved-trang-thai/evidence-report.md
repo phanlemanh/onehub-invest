@@ -1,13 +1,13 @@
 ---
 schema_version: 2
 feature_slug: compare-saved-trang-thai
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7a4018fc0d2a49c23390b8844999153928d54823
+verified_commit: b0e3d44a1c979f62836270752ff449eea19e2fc6
 human_signoff:
 ---
 
@@ -15,14 +15,14 @@ human_signoff:
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | script | PASS |
+| E1 | AC-1 | script | PASS (carry-forward từ round 2) |
 | E2 | AC-1 | test | PASS (carry-forward từ round 1) |
 | E3 | AC-2 | test | PASS |
-| E4 | AC-3 | script | PASS |
-| E5 | AC-4 | script | PASS |
+| E4 | AC-3 | script | PASS (carry-forward từ round 2) |
+| E5 | AC-4 | script | PASS (carry-forward từ round 2) |
 | E6 | AC-5 | test | PASS |
 | E7 | AC-6 | test | PASS |
-| E8 | AC-7 | script | PASS |
+| E8 | AC-7 | script | PASS (carry-forward từ round 2) |
 | E9 | AC-7 | test | PASS |
 | E10 | AC-8 | test | PASS (carry-forward từ round 1) |
 | E11 | AC-8 | test | PASS |
@@ -31,129 +31,102 @@ human_signoff:
 | E14 | AC-10 | ui-check | PASS (carry-forward từ round 1) |
 | E15 | AC-10 | script | PASS (carry-forward từ round 1) |
 | E16 | AC-10 | script | PASS (carry-forward từ round 1) |
-| E17 | AC-3 | test | PASS (lượt máy); phép đo bị finding trong hợp đồng nghi ngờ, xem Iterations |
+| E17 | AC-3 | test | PASS |
 | E18 | AC-4 | test | PASS |
 | E19 | AC-3 | test | PASS |
 | E20 | AC-4 | test | PASS |
 
 ## Evidence
 
+- eval: E3
+  run_id: minted-compare-saved-trang-thai-E3-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E6
+  run_id: minted-compare-saved-trang-thai-E6-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E7
+  run_id: minted-compare-saved-trang-thai-E7-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E9
+  run_id: minted-compare-saved-trang-thai-E9-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E11
+  run_id: minted-compare-saved-trang-thai-E11-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E17
+  run_id: minted-compare-saved-trang-thai-E17-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E18
+  run_id: minted-compare-saved-trang-thai-E18-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E19
+  run_id: minted-compare-saved-trang-thai-E19-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
+- eval: E20
+  run_id: minted-compare-saved-trang-thai-E20-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.app_ui
+  verified_at: 2026-10-24T15:21:53Z
+  output: |
+    ℹ duration_ms 10229.212
+
 - eval: E1
   run_id: minted-compare-saved-trang-thai-E1-r2
   exit_code: 0
-  baseline: n-a
   verifier: config:executors.script.compare_saved_smoke
   verified_at: 2026-10-24T15:14:03Z
+  carried_from_round: 2
   output: |
-    compare-saved smoke: ĐẠT
-
-- eval: E4
-  run_id: minted-compare-saved-trang-thai-E4-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.compare_saved_smoke
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    compare-saved smoke: ĐẠT
-
-- eval: E5
-  run_id: minted-compare-saved-trang-thai-E5-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.compare_saved_smoke
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    compare-saved smoke: ĐẠT
-
-- eval: E8
-  run_id: minted-compare-saved-trang-thai-E8-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.compare_saved_smoke
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    compare-saved smoke: ĐẠT
-
-- eval: E3
-  run_id: minted-compare-saved-trang-thai-E3-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E17
-  run_id: minted-compare-saved-trang-thai-E17-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E18
-  run_id: minted-compare-saved-trang-thai-E18-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E19
-  run_id: minted-compare-saved-trang-thai-E19-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E20
-  run_id: minted-compare-saved-trang-thai-E20-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E6
-  run_id: minted-compare-saved-trang-thai-E6-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E7
-  run_id: minted-compare-saved-trang-thai-E7-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E9
-  run_id: minted-compare-saved-trang-thai-E9-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
-
-- eval: E11
-  run_id: minted-compare-saved-trang-thai-E11-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.app_ui
-  verified_at: 2026-10-24T15:14:03Z
-  output: |
-    ℹ duration_ms 10149.31375
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-compare-saved-trang-thai-E2-r1
@@ -163,6 +136,33 @@ human_signoff:
   carried_from_round: 1
   output: |
     carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E4
+  run_id: minted-compare-saved-trang-thai-E4-r2
+  exit_code: 0
+  verifier: config:executors.script.compare_saved_smoke
+  verified_at: 2026-10-24T15:14:03Z
+  carried_from_round: 2
+  output: |
+    carry-forward tu round 2 — delta khong cham paths cua eval
+
+- eval: E5
+  run_id: minted-compare-saved-trang-thai-E5-r2
+  exit_code: 0
+  verifier: config:executors.script.compare_saved_smoke
+  verified_at: 2026-10-24T15:14:03Z
+  carried_from_round: 2
+  output: |
+    carry-forward tu round 2 — delta khong cham paths cua eval
+
+- eval: E8
+  run_id: minted-compare-saved-trang-thai-E8-r2
+  exit_code: 0
+  verifier: config:executors.script.compare_saved_smoke
+  verified_at: 2026-10-24T15:14:03Z
+  carried_from_round: 2
+  output: |
+    carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E10
   run_id: minted-compare-saved-trang-thai-E10-r1
@@ -222,37 +222,37 @@ human_signoff:
   verdict: PASS
   rationale: Ba lens cùng thấy năm tệp nhất quán.
   votes:
-    - domain-correctness: PASS — Năm tệp nhất quán, không có chỗ mâu thuẫn. routes.md ghi `/compare` và `/saved` đều «PageHeader (I5 xong)», tải trong Suspense (compare-skeleton, saved-skeleton), lỗi tại chỗ; Đã lưu trống dùng `c-empty-11` ở `saved/saved-empty.tsx`; `/so-sanh` chỉ xuất hiện như 301 hoặc slug cũ (routes.md dòng 53, CONTEXT.md dòng 318, architecture/portals.md dòng 119). catalog.md có cả PageError (cả trang) lẫn RegionError (một vùng), và cổng Invest trong `.claude/rules/portals.md` liệt `/compare`, không có `/so-sanh`. Các chữ «PageHeader chưa có» còn lại thuộc `/[country]` (I1) và `/ops/deals`, là trang khác nên không mâu thuẫn.
-    - operational-feasibility: PASS — Năm tệp khớp nhau và không còn chỗ nào cũ. routes.md dòng 53–54 ghi `/compare` và `/saved` «PageHeader (I5 xong)», có skeleton trong Suspense, lỗi tại chỗ, và Đã lưu trống dùng `c-empty-11` ở `saved/saved-empty.tsx`. catalog.md có `RegionError` bên cạnh `PageError`, còn `c-empty-11` trỏ đúng `saved-empty.tsx`. `/so-sanh` chỉ còn xuất hiện như slug cũ hoặc 301 (routes.md, CONTEXT.md, docs portals.md dòng 119), và cổng Invest ở `.claude/rules/portals.md` dòng 11 liệt `/compare`. Chữ «PageHeader chưa có» còn lại chỉ ở `/[country]` (I1) và `/ops/deals`, là các trang khác.
-    - spec-alignment: PASS — Năm tệp nói nhất quán: routes.md dòng 53 ghi /compare có PageHeader (I5 xong), /so-sanh → 301, bảng tải trong Suspense (compare-skeleton) và lỗi tại chỗ bằng region-error. Dòng 54 ghi /saved có PageHeader, c-empty-11 ở saved/saved-empty.tsx, Suspense và lỗi tại chỗ. catalog.md dòng 26 và 94 có PageError cho cả trang cùng RegionError cho một vùng. CONTEXT.md (slug cũ so-sanh → compare), docs/architecture/portals.md (dòng 119, /so-sanh → 301) và .claude/rules/portals.md (dòng 11, liệt /compare) đều khớp. Các chỗ còn ghi «PageHeader chưa có» chỉ ở /[country] (I1) và /ops/deals, là trang khác, không mâu thuẫn.
+    - domain-correctness: PASS — Năm tệp nói nhất quán. `routes.md` dòng 53 và 54 ghi `/compare` và `/saved` "PageHeader (I5 xong)", `/so-sanh` chỉ xuất hiện như redirect 301, Đã lưu trống dùng `c-empty-11` ở `saved/saved-empty.tsx`, và cả hai trang tải trong Suspense, lỗi tại chỗ. `catalog.md` dòng 26 và 94 có `page-error.tsx` cho cả trang cùng `RegionError` cho một vùng; `docs/architecture/portals.md` dòng 119 và `.claude/rules/portals.md` dòng 11 liệt `/compare` thay `/so-sanh`; `CONTEXT.md` ghi slug cũ `so-sanh` → `compare`. Không còn chỗ nào ghi "PageHeader chưa có, I5" hay coi `/so-sanh` là route sống.
+    - operational-feasibility: PASS — Cả năm tệp nhất quán. routes.md dòng 53–54 ghi /compare và /saved đã có PageHeader («I5 xong»), tải trong Suspense (skeleton), lỗi tại chỗ, và Đã lưu trống dùng c-empty-11 ở saved/saved-empty.tsx. catalog.md có cả PageError (dòng 26) lẫn RegionError (dòng 26, 94). CONTEXT.md đặt slug `compare` và ghi `so-sanh` là slug cũ. portals.md (docs, dòng 119) ghi /compare với /so-sanh → 301, rules/portals.md dòng 11 liệt /compare, và không tệp nào liệt /so-sanh là route sống. Các dòng «PageHeader chưa có» còn lại thuộc /[country] (I1) và /ops/deals, không liên quan hai trang này.
+    - spec-alignment: PASS — Năm tệp khớp nhau, không có chỗ nào mâu thuẫn. routes.md nói /compare giữ slug, có PageHeader (I5 xong), tải trong Suspense, lỗi tại chỗ bằng region-error, và /so-sanh chuyển 301. /saved dùng c-empty-11 ở saved/saved-empty.tsx (cả routes.md lẫn catalog.md đều ghi vậy). catalog.md liệt cả RegionError (một vùng) lẫn PageError (cả trang). portals.md và .claude/rules/portals.md đều liệt /compare cho cổng Invest và không còn /so-sanh là route sống; CONTEXT.md ghi slug cũ `so-sanh` → `compare`. Dòng «PageHeader (chưa có, I1)» của /[country] và /ops/deals thuộc trang khác nên không mâu thuẫn.
   human_override:  # chi nguoi ghi
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-compare-saved-trang-thai-SUITE-npm_test__bb6271-r2
+  run_id: minted-compare-saved-trang-thai-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-10-24T15:14:03Z
+  verified_at: 2026-10-24T15:21:53Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-compare-saved-trang-thai-SUITE-lint-r2
+  run_id: minted-compare-saved-trang-thai-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-10-24T15:14:03Z
+  verified_at: 2026-10-24T15:21:53Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-compare-saved-trang-thai-SUITE-npm_test__13563d-r2
+  run_id: minted-compare-saved-trang-thai-SUITE-npm_test__13563d-r3
   exit_code: 0
-  verified_at: 2026-10-24T15:14:03Z
+  verified_at: 2026-10-24T15:21:53Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-compare-saved-trang-thai-SUITE-test_lint_rules-r2
+  run_id: minted-compare-saved-trang-thai-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-10-24T15:14:03Z
+  verified_at: 2026-10-24T15:21:53Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-compare-saved-trang-thai-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-compare-saved-trang-thai-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-10-24T15:14:03Z
+  verified_at: 2026-10-24T15:21:53Z
 
 ## Known limits
 
@@ -263,10 +263,9 @@ human_signoff:
 baseline: BLOCKED ha tang — dau ra thieu dong __BL_XONG — lenh baseline khong chay het (bi dung, cho hop xin quyen, dau ra bi cat, hoac lenh eval vo cu phap shell)
 
 Baseline khong do:
-- BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-compare-saved.mjs: BLOCKED ha tang baseline: dau ra thieu dong __BL_XONG — lenh baseline khong chay het (bi dung, cho hop xin quyen, dau ra bi cat, hoac lenh eval vo cu phap shell)
 - cd app && npm test: BLOCKED ha tang baseline: dau ra thieu dong __BL_XONG — lenh baseline khong chay het (bi dung, cho hop xin quyen, dau ra bi cat, hoac lenh eval vo cu phap shell)
 
-Danh sách eval không-phân-biệt không đo được ở round này vì baseline bị chặn hạ tầng; mọi field baseline ghi n-a.
+none — danh sách eval không-phân-biệt không đo được ở round này vì baseline bị chặn hạ tầng; mọi field baseline ghi n-a.
 
 ## Variance
 
@@ -274,5 +273,6 @@ none — mọi eval chạy một lần, không có eval nhiều lượt.
 
 ## Iterations
 
-Round 1: E1–E12, E14–E20 chạy lượt gốc (commit 7a4018f ghi S4 r1 PASS); E2, E10, E12, E14, E15, E16 được giữ lại sang round 2 vì delta không chạm paths của chúng.
-Round 2: các lệnh máy cho kết quả xanh, nhưng người review chạy lại `cd app && npm test` ở HEAD 7a4018f và ca «CS-AC-3 thêm cột» (phép đo của E17, AC-3) đỏ lặp lại, kể cả khi chạy riêng (lỗi «The node to be removed is not a child of this node», do renderWithRouter ở dòng 380 ghi đè document.body.innerHTML khi root cũ còn portal cmdk). Finding trong hợp đồng, mức high, nên verdict là REJECT; chi tiết ở review-findings.md. Trả về cho khâu cài đặt sửa phép đo rồi kiểm lại.
+Round 1: E1–E12, E14–E20 chạy lượt gốc (commit 7a4018f ghi S4 r1 PASS kèm sửa 5 phép đo trong hợp đồng); E2, E10, E12, E14, E15, E16 được giữ lại sang round 2 vì delta không chạm paths của chúng.
+Round 2: các lệnh máy cho kết quả xanh, nhưng người review chạy lại `cd app && npm test` ở HEAD 7a4018f và ca «CS-AC-3 thêm cột» (phép đo của E17, AC-3) đỏ lặp lại do root React cũ còn portal cmdk khi renderWithRouter thay body. Finding trong hợp đồng, mức high, nên verdict là REJECT (commit b0e3d44). Trả về cho khâu cài đặt sửa phép đo.
+Round 3: chạy lại `cd app && npm test` cùng các lệnh suite ở HEAD b0e3d44; E3, E6, E7, E9, E11, E17, E18, E19, E20 xanh; E1, E4, E5, E8 giữ lại từ round 2 và E2, E10, E12, E14, E15, E16 giữ lại từ round 1 vì delta không chạm paths của chúng. Không còn eval nào đỏ.
