@@ -22,14 +22,14 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/ops/quality-tables.tsx, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-3 định nghĩa tự thu' vẽ ba bảng (thẻ hiệu chuẩn, Độ phủ, toàn quốc) trong jsdom: mỗi bảng có dòng mô tả chứa đúng câu định nghĩa TU_THU_DINH_NGHIA export từ calibration.ts"
+    expected: "exit 0; ca 'HC-AC-3 định nghĩa tự thu' vẽ ba bảng (thẻ hiệu chuẩn, Độ phủ, toàn quốc) trong jsdom: mỗi bảng có dòng mô tả chứa đúng câu định nghĩa TU_THU_DINH_NGHIA export từ calibration.ts, và hằng ấy bằng nguyên văn chữ người chốt ở Hỏi-4 (mặc định 'Listing tự thu: số listing đang theo dõi trong cả khu vực (gồm phường con)')"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/src/components/ops/quality-tables.tsx, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-4 mẫu mỏng' ma trận viết trước isThin 5 dòng (0, 1, 4 → mỏng; 5, 6 → không) và vẽ thẻ với 1 listing → có chữ 'mẫu mỏng', thẻ với 5 listing → không có"
+    expected: "exit 0; ca 'HC-AC-4 mẫu mỏng' ma trận viết trước isThin trên cỡ mẫu metrics 5 dòng (0, 1, 4 → mỏng; 5, 6 → không — ngưỡng theo Hỏi-2); ca fixture: khu vực cây 6 listing nhưng metrics 1 listing → thẻ vẽ có Badge chữ nguyên văn 'mẫu mỏng'; khu vực metrics 5 → không có; chiều đỏ: cờ tính trên số listing trong cây bỏ sót ca cây 6 / metrics 1"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -43,7 +43,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/calibration.ts, app/src/app/ops/quality/page.tsx, app/tests/hieu-chuan.test.tsx]
-    expected: "exit 0; ca 'HC-AC-6 đếm' : nhãn đầu trang từ splitCalibrated(fixture E5) là '3 thị trường hiệu chuẩn'; quét page.tsx (bỏ comment): số đầu trang và danh sách thẻ cùng lấy từ một biến kết quả splitCalibrated"
+    expected: "exit 0; ca 'HC-AC-6 đếm' : nhãn đầu trang từ splitCalibrated(fixture E5) là nguyên văn '3 thị trường hiệu chuẩn'; quét page.tsx (bỏ comment): số đầu trang và danh sách thẻ cùng lấy từ một biến kết quả splitCalibrated"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
@@ -57,6 +57,6 @@ evals:
     executor: judgment
     inputs: [CONTEXT.md]
     paths: [CONTEXT.md]
-    question: "CONTEXT.md có mục thuật ngữ cho «Listing tự thu» và «Mẫu mỏng» — mỗi mục đủ nhãn, tên trong code, định nghĩa và từ tránh dùng — và định nghĩa «Listing tự thu» là số listing đang theo dõi trong cả cây khu vực, «Mẫu mỏng» là dưới 5 listing không?"
-    expected: "Có đủ hai mục, mỗi mục bốn phần, nghĩa đúng như câu hỏi."
+    question: "CONTEXT.md có mục thuật ngữ cho «Listing tự thu», «Mẫu mỏng» và «Thị trường hiệu chuẩn» — mỗi mục đủ nhãn, tên trong code, định nghĩa và từ tránh dùng — với nghĩa khớp chữ trên trang theo Hỏi-2/3/4 («Listing tự thu» = listing đang theo dõi trong cả cây khu vực; «Mẫu mỏng» = cỡ mẫu sinh ADR/công suất dưới ngưỡng đã chốt; «Thị trường hiệu chuẩn» = thị trường có ít nhất một số, thị trường còn lại gộp ở dòng «Chưa có số»)?"
+    expected: "Có đủ ba mục, mỗi mục bốn phần, nghĩa khớp chữ đã chốt."
     evidence_required: [run_id, verdict, judges]

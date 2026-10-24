@@ -30,11 +30,11 @@ Source input: `_acceptance/hieu-chuan-mot-bo-so/opportunity.md` · hàng ON10 c�
 - AC-1: Given một khu vực có từ hai market S02, When trang lấy thẻ hiệu chuẩn hai lần, Then cả hai lần chọn cùng một
   market đại diện — market có nhiều listing S02 nhất, hoà thì mã nhỏ nhất — và thẻ ghi số market S02 mà nó đại diện.
 - AC-2: Given một khu vực, When thẻ hiệu chuẩn, bảng Độ phủ và bảng toàn quốc hiện «listing tự thu» của khu vực ấy, Then
-  ba chỗ ra cùng một số (số listing tự thu đang theo dõi trong cả cây khu vực).
+  ba chỗ ra cùng một số (số listing tự thu đang theo dõi trong cả cây khu vực — định nghĩa theo Hỏi-3).
 - AC-3: Given mỗi bảng của vùng Hiệu chuẩn, When người vận hành đọc bảng, Then bảng có một dòng mô tả nói «tự thu» ở bảng
   ấy nghĩa là gì.
-- AC-4: Given khu vực có dưới 5 listing tự thu, When thẻ hiệu chuẩn vẽ, Then thẻ mang nhãn «mẫu mỏng» cạnh số tự thu; khu
-  vực có từ 5 listing không mang nhãn.
+- AC-4: Given khu vực mà số listing đứng sau ADR/công suất tự thu của thẻ (cỡ mẫu metrics) dưới 5, When thẻ hiệu chuẩn vẽ,
+  Then thẻ mang nhãn «mẫu mỏng» cạnh số ấy; cỡ mẫu từ 5 trở lên không mang nhãn (ngưỡng và cơ sở theo Hỏi-2).
 - AC-5: Given thị trường mà mọi số (cả hai phía và điểm thị trường) đều trống, When trang vẽ vùng Hiệu chuẩn, Then không có
   thẻ nào cho thị trường ấy; chúng gộp thành đúng một dòng «Chưa có số: …» liệt tên; thị trường có ít nhất một số vẫn có thẻ.
 - AC-6: Given vùng Hiệu chuẩn đã chia, When đầu trang ghi số thị trường hiệu chuẩn, Then số ấy bằng số thẻ được vẽ (chỉ thị
@@ -42,8 +42,8 @@ Source input: `_acceptance/hieu-chuan-mot-bo-so/opportunity.md` · hàng ON10 c�
 - AC-7: Given dữ liệu thật trên DB local, When chạy phép đo chỉ đọc, Then với mọi khu vực «listing tự thu» bằng nhau ở ba
   nguồn, chạy chọn market đại diện hai lần ra cùng kết quả, số thị trường hiệu chuẩn bằng số thị trường có số, và danh sách
   mẫu mỏng được in ra.
-- AC-8: Given người đọc từ điển sản phẩm, When tra «Listing tự thu» và «Mẫu mỏng», Then `CONTEXT.md` có mục cho cả hai
-  (nhãn · code · định nghĩa · tránh dùng), khớp nghĩa trên trang. (judgment)
+- AC-8: Given người đọc từ điển sản phẩm, When tra «Listing tự thu», «Mẫu mỏng» và «Thị trường hiệu chuẩn», Then
+  `CONTEXT.md` có mục cho cả ba (nhãn · code · định nghĩa · tránh dùng), khớp chữ trên trang đã chốt ở Hỏi-4. (judgment)
 
 ## Coverage
 

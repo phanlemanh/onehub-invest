@@ -15,7 +15,7 @@ Vùng «Hiệu chuẩn» của `/ops/quality` (số S02 được phép ở đây
 
 ## Cách làm
 
-1. **Một bộ số «tự thu»**: hàm `ourListingCounts()` trong `app/src/lib/calibration.ts` = số listing tự thu đang có trong
+1. **Một bộ số «tự thu»** (Hỏi-3, khuyến nghị): hàm `ourListingCounts()` trong `app/src/lib/calibration.ts` = số listing tự thu đang có trong
    bảng `listings` của cả cây khu vực (đúng định nghĩa bảng Độ phủ đang dùng). Thẻ hiệu chuẩn, bảng Độ phủ và bảng toàn quốc
    cùng đọc số này cho dòng «Listing tự thu» → cùng một khu vực ra cùng một số ở mọi bảng. ADR và công suất tự thu của thẻ
    giữ nguồn `market_metrics` (cả cửa sổ) nhưng được ghi định nghĩa riêng.
@@ -23,12 +23,19 @@ Vùng «Hiệu chuẩn» của `/ops/quality` (số S02 được phép ở đây
    S02 nhất, hoà thì `airdna_id` nhỏ nhất (`ORDER BY`). Thẻ ghi «đại diện cho k market S02». Chạy hai lần ra cùng số.
 3. **Định nghĩa ghi rõ ở từng bảng**: mỗi bảng (thẻ hiệu chuẩn, Độ phủ, toàn quốc) có một dòng mô tả nói «tự thu» là gì
    (listing đang theo dõi trong cây khu vực; ADR/công suất trên cửa sổ lịch đã thu).
-4. **Mẫu mỏng**: khu vực có listing tự thu < 5 (ngưỡng n ≥ 5 như thước giá trong `CONTEXT.md`) → thẻ mang nhãn
-   «mẫu mỏng» (`Badge warning-light`) cạnh số tự thu; số vẫn hiện.
+4. **Mẫu mỏng** (Hỏi-2): cờ tính trên cỡ mẫu sinh ADR/công suất của thẻ (`listing_count` của `market_metrics`), không
+   trên số listing trong cây — ca Đồng Nai: cây ≥ 5 nhưng metrics 1. Khuyến nghị ngưỡng < 5 → thẻ mang nhãn «mẫu mỏng»
+   (`Badge warning-light`) cạnh số ấy; số vẫn hiện.
 5. **Thị trường chưa có số**: thị trường mà mọi số (cả hai phía và điểm thị trường) đều trống → không vẽ thẻ; gộp thành MỘT
    dòng «Chưa có số: A, B, …». Đầu trang đếm «n thị trường hiệu chuẩn» chỉ tính thị trường có số.
 6. Logic chọn/gộp nằm trong hàm thuần (`pickRepresentative`, `isEmptyComparison`, `splitCalibrated`) để test được; truy
    vấn trong `calibration.ts`, trang chỉ đọc.
+
+## Chữ trên trang (Hỏi-4)
+
+«Chưa có số: A, B, …» · «<n> thị trường hiệu chuẩn» · «đại diện cho <k> market S02» · Badge «mẫu mỏng» · câu định nghĩa
+«Listing tự thu: số listing đang theo dõi trong cả khu vực (gồm phường con)». Vùng gọi đối tượng là «thị trường». Evals
+ghim nguyên văn; `CONTEXT.md` thêm «Listing tự thu», «Mẫu mỏng», «Thị trường hiệu chuẩn».
 
 ## Phép đo
 
