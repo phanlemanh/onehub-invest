@@ -239,6 +239,13 @@ accounts/keys/billing từ Ops ra `/admin/**`. Ghi nhận ở đây để tránh
     `note`, vd `/api/v1/ops/audit` khai `ops` nhưng phiên phải là admin). Hôm nay tin rao (`/api/v1/offers`) và căn giá tốt (`/api/v1/deals`) ở chế
     độ `ops` (tạm đóng tới khi PL2 rút tin mock); mở lại là một quyết định riêng, đổi dòng sổ cùng commit.
 
+    **Công cụ MCP theo sổ** (2026-10-24, hồ sơ `mcp-tools-theo-so-be-mat`): `app/docs/api/mcp-tools.json` khai các công
+    cụ MCP gọi route ở trên. Đổi chế độ một route có công cụ MCP (vd mở lại `/api/v1/offers`), hoặc thêm công cụ MCP mới,
+    thì sửa `mcp-tools.json` cùng commit. Khoá `auth` của mỗi công cụ là một trong năm chế độ của bảng trên, bằng chế độ
+    của route nó gọi — hôm nay `oneinvest_get_asset_stats` là `public`, `oneinvest_get_offers` là `ops`; khoá `auth` gốc
+    chỉ là mặc định và bản khai không dùng. `scripts/check-mcp-tools.mjs` (chạy trong làn `portal_static` —
+    `check-portal-compliance.mjs`) đỏ khi công cụ trỏ route ngoài sổ, phương thức lệch sổ hoặc chế độ lệch sổ.
+
 ---
 
 ## 6. BẢNG ÁNH XẠ NHANH (tra khi đặt tên)
