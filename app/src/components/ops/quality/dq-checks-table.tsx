@@ -3,27 +3,13 @@
 import { useMemo } from "react"
 
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
-import { Badge, type BadgeProps } from "@/components/reui/badge"
+import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
+import { type DqCheckRow, dqResult } from "@/lib/dq-checks"
 import { dqCheckName, dqDetail, dqEntityLabel, type DqText } from "@/lib/dq-labels"
 import { fmtVnDateTime } from "@/lib/format"
 
-export type DqCheckRow = {
-  check_name: string
-  entity: string
-  status: string
-  detail: string | null
-  checked_at: string
-}
-
-/** Kết quả kiểm DQ → Badge trạng thái (không tô màu chữ tay). */
-const RESULT: Record<string, { label: string; variant: BadgeProps["variant"] }> = {
-  pass: { label: "Đạt", variant: "success-light" },
-  warn: { label: "Cảnh báo", variant: "warning-light" },
-  // ON12: «fail»/«skip» thô không được lên trang (smoke AC-8); nhãn trạng thái đầy đủ là phần của ON9.
-  fail: { label: "Không đạt", variant: "destructive-light" },
-  skip: { label: "Bỏ qua", variant: "outline" },
-}
+export type { DqCheckRow }
 
 /** Câu tiếng Việt + mã gốc trong <code> khi khuôn chưa diễn giải (ON12, lib/dq-labels). */
 function DqCell({ t, muted = false }: { t: DqText; muted?: boolean }) {
@@ -57,7 +43,8 @@ export function DqChecksTable({ rows, areaNames = {} }: { rows: DqCheckRow[]; ar
         accessorKey: "status",
         header: ({ column }) => <DataGridColumnHeader title="Kết quả" column={column} />,
         cell: ({ row }) => {
-          const r = RESULT[row.original.status] ?? { label: row.original.status, variant: "destructive-light" as const }
+          // Nhãn + màu theo nghĩa của từng kiểm (ON9): kiểm số tham chiếu không bao giờ «Đạt» xanh lá.
+          const r = dqResult(row.original.check_name, row.original.status)
           return <Badge variant={r.variant}>{r.label}</Badge>
         },
         size: 120,
@@ -85,7 +72,7 @@ export function DqChecksTable({ rows, areaNames = {} }: { rows: DqCheckRow[]; ar
   return (
     <InsightGrid
       title="Kiểm chất lượng (7 ngày)"
-      description="Kết quả kiểm chất lượng gần nhất — từ vựng giá trị và các kiểm khác"
+      description="Bản mới nhất của mỗi kiểm theo từng đối tượng, trong 7 ngày"
       data={rows}
       columns={columns}
       getRowId={(r) => `${r.check_name}|${r.entity}|${r.checked_at}`}

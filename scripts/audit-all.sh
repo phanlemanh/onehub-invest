@@ -109,7 +109,7 @@ GROUP_COUNT=$(curl -s -H "Authorization: Bearer $CTOKEN" "$CLOUD/api/v1/ops/coll
 
 echo ""
 echo "─── C. INVEST PORTAL ───"
-for page in "/" "/vn" "/vn/hanoi" "/listing/abnb_1143101959271074607" "/deals" "/yield" "/so-sanh" "/login"; do
+for page in "/" "/vn" "/vn/hanoi" "/listing/abnb_1143101959271074607" "/deals" "/yield" "/compare" "/login"; do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" "$CLOUD$page" 2>/dev/null)
   [ "$CODE" = "200" ] || [ "$CODE" = "307" ] && pass "$page → $CODE" || fail "$page → $CODE"
 done

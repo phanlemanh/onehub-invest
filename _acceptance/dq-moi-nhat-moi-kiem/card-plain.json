@@ -1,0 +1,5 @@
+{
+  "feature_plain": "Người vận hành mở «Kiểm chất lượng» thấy đủ mọi loại kiểm (mỗi kiểm một dòng mới nhất cho từng đối tượng), số kiểm ở đầu trang đúng, và kiểm độ phủ tham chiếu không còn hiện «Đạt» xanh khi độ phủ 0%.",
+  "scope_plain": "Những việc cố ý để ngoài vòng này:",
+  "analyst_plain": "Bộ kiểm chung của app cũng xanh trên bản trước vòng — vì các ca DQ-AC-* mới chưa có ở đó; phần phân biệt cũ/mới nằm ở chính các ca này và các lượt phá thử."
+}
