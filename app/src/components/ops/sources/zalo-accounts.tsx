@@ -79,7 +79,7 @@ function CloudAccounts() {
         ) : (
           accounts.map((a) => (
             <FramePanel key={a.accountId} className="flex items-center gap-2">
-              <span className="font-mono text-sm">{a.accountId}</span>
+              <span className="font-mono text-sm" translate="no">{a.accountId}</span>
               <Badge variant="outline">{fmtInt(a.enabledGroups.length)} nhóm bật</Badge>
             </FramePanel>
           ))

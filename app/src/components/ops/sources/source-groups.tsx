@@ -101,8 +101,8 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
         header: "Nhóm",
         cell: ({ row }) => (
           <span data-tier-a className="flex min-w-0 flex-col">
-            <span id={`nhom-${row.original.id}`} className="truncate font-medium">{row.original.name}</span>
-            <span className="text-muted-foreground truncate text-xs">{row.original.group_key}</span>
+            <span id={`nhom-${row.original.id}`} className="truncate font-medium" translate="no">{row.original.name}</span>
+            <span className="text-muted-foreground truncate text-xs" translate="no">{row.original.group_key}</span>
           </span>
         ),
         size: 360,

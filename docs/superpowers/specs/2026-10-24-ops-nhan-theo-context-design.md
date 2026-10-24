@@ -31,7 +31,7 @@ Dòng log cuối của tác vụ, tên nhóm Zalo/Facebook, email, mã lỗi (di
 2. **Danh sách giữ tiếng Anh (đóng).** Một từ ASCII trên chữ hiển thị được phép khi: (a) là từ trong nhãn in đậm của
    CONTEXT.md (máy rút: Listing, Snapshot, Staging, Canonical, ADR, RevPAR, Finder, Insight, Pipeline…); (b) là mã có khuôn:
    `S0x`, `P0–P2`, `L1–L4b`, cổng `:8009`; (c) nằm trong danh sách viết trước: viết tắt `SLO`, `KPI`, `QR`, `PN`, `WC`,
-   `VN`, `AI`, `F1`, `tr` (triệu) và tên riêng `Zalo`, `Facebook`, `OpenClaw`, `Kev`, `Ops` (trong «Cổng Ops»). Token một
+   `VN`, `AI`, `F1`, `tr` (triệu), `GMT` (múi giờ, ON8), `alt` (phím tắt thông báo) và tên riêng `Zalo`, `Facebook`, `OpenClaw`, `Kev`, `Ops` (trong «Cổng Ops»). Token một
    chữ cái (đơn vị `h` của «24h», `m` của «m²») không xét. Chữ tiếng Anh trong `<code>`/`<kbd>` (tên tệp, khoá cấu hình,
    tên component ở `/ops/design`, dòng nhật ký) không tính ở luật tiếng Anh — nhưng luật _Avoid_, tên kiểm và dấu dự phòng
    vẫn soi bên trong `<code>`; chữ tiếng Anh cũ thành `_Avoid_` (§2.1) nên bọc `<code>` không lách được.
@@ -66,8 +66,8 @@ Dòng log cuối của tác vụ, tên nhóm Zalo/Facebook, email, mã lỗi (di
 6. **Ba chỗ đổi cấu trúc nhỏ**: (a) `OpsHeader` thôi dùng `SidebarTrigger` — `Button` + `useSidebar().toggleSidebar` với
    `<span className="sr-only">Mở hoặc gập thanh bên</span>` (component đã cài ghép cứng chữ tiếng Anh, children không đè
    được; không sửa tệp vendor); (b) `PageHeader` truyền `aria-label="Đường dẫn trang"` cho `Breadcrumb`; (c) mô tả lớp
-   khoá an toàn (`readLockdown`) tách thành câu tiếng Việt + khoá cấu hình (`requireMention`, `bindings`) hiện trong
-   `<code>`.
+   khoá an toàn thành câu tiếng Việt ở cả bên đọc (`getLockdownStatus`) và bên ghi số đẩy lên cloud
+   (`scripts/lib/ops-local.mjs`) — S3: bỏ ý hiện khoá cấu hình trong `<code>` vì khuôn số đẩy lên cloud không có trường đó.
 7. Tiêu đề `/ops/review` thành «Hàng duyệt» (metadata + h1). Bố cục trang để UI1.
 
 ## 3. Phép đo
@@ -79,7 +79,8 @@ Dòng log cuối của tác vụ, tên nhóm Zalo/Facebook, email, mã lỗi (di
      `src/components/shell/nav.tsx`, `src/components/page/*`, `src/components/states/*`, `src/lib/dq-labels.ts`,
      `src/lib/market-names.ts`, `src/lib/ops-labels.ts`, `src/lib/source-labels.ts`, `src/lib/freshness.ts`;
    - một phần, ghim theo tên hàm: `collections-queries.ts` (`readSchedulerStatus`, `readRotationPreview`),
-     `ops-queries.ts` (`getLockdownStatus`), `queries.ts` (`getAirdnaComparison`). Chuỗi hiển thị = text JSX; giá
+     `ops-queries.ts` (`getLockdownStatus`), `queries.ts` (`getAirdnaComparison`), `freshness.ts` (`fmtOverdue`,
+     `fmtAge`, `sloSummaryText`, `LOCAL_ONLY_TEXT` — S3: tệp có SQL nên chỉ quét hàm dựng chữ). Chuỗi hiển thị = text JSX; giá
    trị chuỗi/template của thuộc tính `title`, `aria-label`, `alt`, `placeholder`, `label`, `description`, `footnote`,
    `header`; giá trị các khoá `title`, `label`, `description`, `footer`, `footnote`, `header`, `metric`, `desc`,
    `schedule`, `message` trong object; chuỗi trong biểu thức con JSX (`{"…"}`, `? :`, `??`, `||`); `metadata.title`. Trừ:
@@ -92,7 +93,9 @@ Dòng log cuối của tác vụ, tên nhóm Zalo/Facebook, email, mã lỗi (di
    `<code>`, `<kbd>` chỉ ở luật b) → (a) 0 _Avoid_, (b) 0 tiếng Anh ngoài danh sách giữ, (c) 0 tên kiểm của bên ghi và
    khuôn `\w+=\S`, (d) không «Toggle Sidebar», (e) 0 mã khu vực `vn-…`, `vn` thường đứng riêng, token snake_case, (f) 0 dấu
    dự phòng («(chưa diễn giải)», «(chưa có tên Việt)», «Loại thẻ khác», «Trường khác»); in danh sách chuỗi `<code>` từng
-   trang. Đây là phép đo đúng ngưỡng `bat_khi`.
+   trang. Đây là phép đo đúng ngưỡng `bat_khi`. Dữ liệu do người hay máy đặt (tên nhóm, nội dung tin, tên người bán,
+   email, mã tài khoản, tên nguồn thật ở `/ops/sources`, dòng nhật ký, lý do AI viết) nằm trong phần tử
+   `translate="no"` và smoke bỏ qua (§6, hợp đồng OOS-3); nhãn giao diện vẫn do thước tĩnh §3.1 soi.
 3. **Ma trận viết trước** cho `dq-labels.ts`, `market-names.ts`, bảng giá trị thô; khuôn bên ghi đo bằng cách tìm chuỗi
    khuôn trong chính tệp bên ghi (đổi khuôn ở pipeline → ca đỏ nêu tệp).
 4. **Trên DB local (chỉ đọc)**: mọi dòng `dq_check_results` 7 ngày qua có tên kiểm + chi tiết diễn giải được; mọi dòng

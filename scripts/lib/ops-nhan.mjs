@@ -43,7 +43,7 @@ export function boldAsciiWords(contextMd) {
 }
 
 /** Danh sách giữ viết trước (design doc §2.2c): viết tắt và tên riêng. */
-export const KEEP_EN = new Set(["slo", "kpi", "qr", "pn", "wc", "vn", "ai", "tr", "url", "api", "gmt", "zalo", "facebook", "openclaw", "kev", "ops"])
+export const KEEP_EN = new Set(["slo", "kpi", "qr", "pn", "wc", "vn", "ai", "tr", "url", "api", "gmt", "alt", "zalo", "facebook", "openclaw", "kev", "ops"])
 
 const DAU = "(?:b|c|ch|d|g|gh|gi|h|k|kh|l|m|n|ng|ngh|nh|p|ph|qu|r|s|t|th|tr|v|x)"
 const VAN =
@@ -106,10 +106,39 @@ const giai = (s) =>
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
 
+/** Bỏ trọn mọi phần tử mang `translate="no"` (kể cả phần tử con cùng tên lồng bên trong): đó là DỮ LIỆU do người hay máy
+ *  đặt — tên nhóm, nội dung tin, email, tên nguồn thật ở /ops/sources, dòng nhật ký — không phải chữ của cổng (hợp đồng
+ *  ON12 OOS-3). Chữ viết sẵn trong mã vẫn do thước tĩnh soi, nên đánh dấu này không lách được nhãn giao diện. */
+export function boDuLieu(html) {
+  let out = html
+  for (;;) {
+    const m = out.match(/<([a-zA-Z][\w-]*)\b[^>]*\btranslate="no"[^>]*>/)
+    if (!m) return out
+    const tag = m[1].toLowerCase()
+    const start = m.index
+    if (/\/>$/.test(m[0])) {
+      out = out.slice(0, start) + " " + out.slice(start + m[0].length)
+      continue
+    }
+    const re = new RegExp(`<(/?)${tag}\\b[^>]*>`, "gi")
+    re.lastIndex = start + m[0].length
+    let depth = 1
+    let end = out.length
+    for (let t; (t = re.exec(out)); ) {
+      depth += t[1] ? -1 : 1
+      if (depth === 0) {
+        end = t.index + t[0].length
+        break
+      }
+    }
+    out = out.slice(0, start) + " " + out.slice(end)
+  }
+}
+
 /** Chữ người đọc được của một trang HTML: text node (kể cả sr-only) + title/aria-label/alt/placeholder; chữ trong
- *  `<code>`/`<kbd>` tách riêng. Bỏ `<script>`, `<style>`, `<template>`. */
+ *  `<code>`/`<kbd>` tách riêng. Bỏ `<script>`, `<style>`, `<template>` và phần dữ liệu `translate="no"`. */
 export function htmlVisibleText(html) {
-  let body = html
+  let body = boDuLieu(html)
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<template[\s\S]*?<\/template>/gi, " ")

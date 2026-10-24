@@ -120,11 +120,11 @@ function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
         </div>
         <div className="col-span-2">
           <p className="text-muted-foreground text-[10px]">Địa chỉ</p>
-          <p className="truncate font-medium">{((offer as unknown) as Record<string, string | null>).street ?? "—"}</p>
+          <p className="truncate font-medium" translate="no">{((offer as unknown) as Record<string, string | null>).street ?? "—"}</p>
         </div>
       </div>
       {(() => { const desc = (offer as Record<string, string | null>).text ?? (offer as Record<string, string | null>).subject; return desc ? (
-        <p className="text-muted-foreground mt-2 line-clamp-2 border-t pt-2 text-[11px]">{desc}</p>
+        <p className="text-muted-foreground mt-2 line-clamp-2 border-t pt-2 text-[11px]" translate="no">{desc}</p>
       ) : null; })()}
     </div>
   );
@@ -170,7 +170,7 @@ export function ReviewCard({ item, media }: { item: ReviewItem; media?: ReviewMe
   if (item.item_type === "agent_output") return <AgentOutputCard item={item} media={media} />;
   return (
     <div className="flex flex-col gap-1 rounded-xl border p-4">
-      <h3 className="text-sm font-medium">{item.title}</h3>
+      <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
       <p className="text-muted-foreground text-xs">
         Loại thẻ khác (<code>{item.item_type}</code>) chưa có giao diện duyệt.
       </p>
@@ -261,11 +261,11 @@ function AgentOutputCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
   return (
     <div className="flex flex-col gap-3 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium">{item.title}</h3>
+        <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
         <Badge variant="outline">Bổ sung dữ liệu tin</Badge>
       </div>
       {ev.text && (
-        <p className="text-muted-foreground line-clamp-3 text-xs">
+        <p className="text-muted-foreground line-clamp-3 text-xs" translate="no">
           {ev.group_name ? `${ev.group_name} · ` : ""}
           {ev.text}
         </p>
@@ -326,7 +326,7 @@ function EntityMatchCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
   return (
     <div className="flex flex-col gap-2 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium">{item.title}</h3>
+        <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
         <div className="flex items-center gap-2">
           {item.ai_suggestion && (
             <Badge variant={item.ai_suggestion === "yes" ? "success-light" : "outline"}>
@@ -337,7 +337,7 @@ function EntityMatchCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
         </div>
       </div>
       {item.ai_reasoning && (
-        <p className="text-muted-foreground rounded-md bg-muted/30 px-2 py-1 text-[11px]">
+        <p className="text-muted-foreground rounded-md bg-muted/30 px-2 py-1 text-[11px]" translate="no">
           🤖 {item.ai_reasoning}
         </p>
       )}

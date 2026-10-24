@@ -26,7 +26,7 @@ export function RegistryTable({ rows }: { rows: RegistryRow[] }) {
         accessorKey: "real_name",
         header: "Tên thật (tầng A)",
         cell: ({ row }) => (
-          <span data-tier-a className="font-mono">
+          <span data-tier-a translate="no" className="font-mono">
             {row.original.real_name}
           </span>
         ),

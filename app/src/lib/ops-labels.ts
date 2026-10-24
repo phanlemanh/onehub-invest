@@ -33,7 +33,7 @@ export const offerKindLabel = nhan({ sale: "Bán", rent_lt: "Cho thuê" })
 export const confidenceLabel = nhan({ high: "cao", medium: "trung bình", low: "thấp" })
 
 /** Đề xuất của AI ở thẻ ghép tin (`ai_suggestion`). */
-export const aiSuggestionLabel = nhan({ yes: "cùng căn", no: "khác căn" })
+export const aiSuggestionLabel = nhan({ yes: "cùng căn", no: "khác căn", apply: "nên áp", unsure: "chưa chắc" })
 
 /** Bậc giá của tin rao (`price_tier`) — nhãn CONTEXT «Bậc giá» kèm mã. */
 export const priceTierLabel = nhan({

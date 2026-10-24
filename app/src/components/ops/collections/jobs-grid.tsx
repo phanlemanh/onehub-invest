@@ -43,7 +43,7 @@ export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
         id: "line",
         accessorKey: "lastLine",
         header: "Dòng nhật ký cuối",
-        cell: ({ row }) => <code className="text-muted-foreground font-mono text-xs">{row.original.lastLine ?? "—"}</code>,
+        cell: ({ row }) => <code className="text-muted-foreground font-mono text-xs" translate="no">{row.original.lastLine ?? "—"}</code>,
         size: 340,
       },
     ],
