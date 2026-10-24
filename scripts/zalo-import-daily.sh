@@ -45,7 +45,17 @@ trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
 MAXTS="$LAST"
 FAILED=0
-for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do echo "$(basename "$d" | sed 's/.*__//') $d"; done | sort | while read -r _ d; do echo "$d"; done); do
+# Chỉ nhận TS đúng dạng mốc thời gian yyyymmddThhmmss(Z) (BÁO 2410-2):
+# thư mục '…__zalo-agent__TEST' cho TS=TEST > mọi mốc 2026… → state nhảy,
+# mọi snapshot thật sau đó bị bỏ. Không khớp → bỏ thư mục + log.
+TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}(Z)?$'
+for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do
+    ts=$(basename "$d" | sed 's/.*__//')
+    if ! echo "$ts" | grep -qE "$TS_RE"; then
+      echo "bỏ qua thư mục TS không phải mốc thời gian: $d" >&2; continue
+    fi
+    echo "$ts $d"
+  done | sort | while read -r _ d; do echo "$d"; done); do
   TS=$(basename "$SNAP" | sed 's/.*__//')
   if [[ "$TS" > "$LAST" ]]; then
     if ! import_one "$SNAP"; then
