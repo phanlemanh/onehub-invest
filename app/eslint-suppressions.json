@@ -1,9 +1,4 @@
 {
-  "src/app/ops/deals/page.tsx": {
-    "onehub-ui/no-emoji-icons": {
-      "count": 1
-    }
-  },
   "src/components/auth/gradient-wave.tsx": {
     "onehub-ui/no-banned-motion": {
       "count": 4

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ngưỡng phòng quá nhỏ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1000px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 760px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · deals-loai-tin-phi-ly · Hỏi-1</p>
+    <h1>Phòng nhỏ tới đâu thì loại tin: 20 hay 15 m² mỗi phòng</h1>
+    <p class="sub">m²/phòng = diện tích chia số phòng ngủ · dưới ngưỡng thì loại · AC-1 · AC-7</p>
+
+    <svg viewBox="0 56 1000 512" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="56" width="1000" height="512" fill="#f5f5f5"/>
+
+      <!-- ===================== NỀN: hàng duy nhất hai nhánh khác nhau ===================== -->
+      <rect x="32" y="232" width="936" height="48" fill="rgba(45,49,66,0.04)"/>
+
+      <!-- ===================== CỘT NHÁNH MÁY KHUYÊN (focal 1) ===================== -->
+      <rect x="448" y="80" width="256" height="360" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+
+      <!-- ===================== KẺ BẢNG ===================== -->
+      <line x1="32" y1="80" x2="968" y2="80" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="32" y1="136" x2="968" y2="136" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="32" y1="184" x2="968" y2="184" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <line x1="32" y1="232" x2="968" y2="232" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <line x1="32" y1="280" x2="968" y2="280" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <line x1="32" y1="328" x2="968" y2="328" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <line x1="32" y1="376" x2="968" y2="376" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="32" y1="440" x2="968" y2="440" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="256" y1="80" x2="256" y2="440" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+
+      <!-- ranh ngưỡng của từng nhánh -->
+      <line x1="452" y1="280" x2="700" y2="280" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <line x1="708" y1="232" x2="964" y2="232" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4"/>
+
+      <!-- ===================== ĐẦU CỘT ===================== -->
+      <text x="48" y="124" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">TIN RAO</text>
+
+      <text x="352" y="112" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.18em">M² / PHÒNG</text>
+      <text x="352" y="126" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">diện tích ÷ số phòng ngủ</text>
+
+      <rect x="532" y="88" width="88" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.60)" stroke-width="0.8"/>
+      <text x="576" y="100" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MÁY KHUYÊN</text>
+      <text x="576" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Ngưỡng 20 m²/phòng</text>
+
+      <text x="836" y="100" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.18em">NHÁNH KHÁC</text>
+      <text x="836" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Ngưỡng 15 m²/phòng</text>
+
+      <!-- ===================== HÀNG 1 · 36 m² 3PN · 12 ===================== -->
+      <text x="48" y="164" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">36 m² · 3 phòng ngủ</text>
+      <text x="352" y="160" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">12</text>
+      <text x="352" y="174" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">36 ÷ 3</text>
+      <rect x="548" y="150" width="56" height="20" rx="4" fill="rgba(45,49,66,0.08)" stroke="#2d3142" stroke-width="1"/>
+      <text x="576" y="164" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">loại</text>
+      <rect x="808" y="150" width="56" height="20" rx="4" fill="rgba(45,49,66,0.08)" stroke="#2d3142" stroke-width="1"/>
+      <text x="836" y="164" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">loại</text>
+
+      <!-- ===================== HÀNG 2 · 41 m² 3PN · 13,7 ===================== -->
+      <text x="48" y="212" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">41 m² · 3 phòng ngủ</text>
+      <text x="352" y="208" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">≈ 13,7</text>
+      <text x="352" y="222" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">41 ÷ 3</text>
+      <rect x="548" y="198" width="56" height="20" rx="4" fill="rgba(45,49,66,0.08)" stroke="#2d3142" stroke-width="1"/>
+      <text x="576" y="212" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">loại</text>
+      <rect x="808" y="198" width="56" height="20" rx="4" fill="rgba(45,49,66,0.08)" stroke="#2d3142" stroke-width="1"/>
+      <text x="836" y="212" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">loại</text>
+
+      <!-- ===================== HÀNG 3 · 37 m² 2PN · 18,5 (hai nhánh khác nhau) ===================== -->
+      <text x="48" y="260" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">37 m² · 2 phòng ngủ</text>
+      <text x="352" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">18,5</text>
+      <text x="352" y="270" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">37 ÷ 2</text>
+      <rect x="548" y="246" width="56" height="20" rx="4" fill="rgba(45,49,66,0.08)" stroke="#2d3142" stroke-width="1"/>
+      <text x="576" y="260" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">loại</text>
+      <text x="836" y="260" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">giữ</text>
+
+      <!-- ===================== HÀNG 4 · 60 m² 3PN · 20 ===================== -->
+      <text x="48" y="308" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">60 m² · 3 phòng ngủ</text>
+      <text x="352" y="304" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">20</text>
+      <text x="352" y="318" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">60 ÷ 3</text>
+      <text x="576" y="302" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">giữ</text>
+      <text x="576" y="318" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">đúng 20, không dưới ngưỡng</text>
+      <text x="836" y="308" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">giữ</text>
+
+      <!-- ===================== HÀNG 5 · 45 m² 2PN · 22,5 ===================== -->
+      <text x="48" y="356" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">45 m² · 2 phòng ngủ</text>
+      <text x="352" y="352" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">22,5</text>
+      <text x="352" y="366" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">45 ÷ 2</text>
+      <text x="576" y="356" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">giữ</text>
+      <text x="836" y="356" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">giữ</text>
+
+      <!-- ===================== GIÁ CỦA NHÁNH ===================== -->
+      <text x="48" y="404" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Giá phải trả</text>
+      <text x="48" y="420" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">nếu chọn nhánh này</text>
+
+      <text x="576" y="404" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">Loại 73 tin trên DB local hôm nay,</text>
+      <text x="576" y="420" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">gồm nhà ngõ nhiều tầng nhỏ</text>
+
+      <text x="836" y="404" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">Giữ tin 37 m² 2PN</text>
+      <text x="836" y="420" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">mà audit gọi là phi lý</text>
+
+      <!-- ===================== GHI CHÚ (focal 2) ===================== -->
+      <text x="48" y="472" fill="#ba4513" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">Hai nhánh chỉ rẽ nhau ở một tin: 37 m² 2 phòng ngủ — 18,5 m²/phòng nằm giữa 15 và 20.</text>
+
+      <!-- ===================== CHÚ GIẢI ===================== -->
+      <line x1="32" y1="500" x2="968" y2="500" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="32" y="520" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="32" y="532" width="40" height="20" rx="4" fill="rgba(45,49,66,0.08)" stroke="#2d3142" stroke-width="1"/>
+      <text x="52" y="546" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">loại</text>
+      <text x="80" y="546" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">không lên «Căn giá tốt», có dòng audit lý do</text>
+
+      <text x="316" y="546" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">giữ</text>
+      <text x="340" y="546" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">vẫn lên danh sách</text>
+
+      <line x1="456" y1="542" x2="488" y2="542" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <text x="496" y="546" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">ranh ngưỡng: trên loại, dưới giữ</text>
+
+      <rect x="676" y="534" width="16" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="700" y="546" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">nhánh máy khuyên</text>
+    </svg>
+  </div>
+</body>
+</html>
