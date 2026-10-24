@@ -1,13 +1,13 @@
-export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 
-import type { Metadata } from "next";
-
-import { AreaComparison } from "@/components/compare/comparison";
-import { COMPARE_MAX, type CompareArea, type CompareGroup } from "@/components/compare/compare-types";
+import { PageHeader } from "@/components/page/page-header";
+import { RegionError } from "@/components/states/region-error";
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format";
-import { currencyFor, getFinderAreas, getSearchIndex, getYieldRows, type YieldRow } from "@/lib/queries";
-
-export const metadata: Metadata = { title: "So sánh khu vực" };
+import { currencyFor, getAreaThumbnails, getFinderAreas, getYieldRows, type SearchEntry, type YieldRow } from "@/lib/queries";
+import { CompareAddArea } from "./compare-add-area";
+import { CompareSkeleton } from "./compare-skeleton";
+import { AreaComparison } from "./comparison";
+import { COMPARE_MAX, type CompareArea, type CompareGroup } from "./compare-types";
 
 const GROUPS: CompareGroup[] = [
   {
@@ -28,24 +28,38 @@ const GROUPS: CompareGroup[] = [
     rows: [
       { id: "perm2", label: "Giá bán / m²", better: "low" },
       { id: "rentLt", label: "Thuê dài hạn / tháng", better: null },
-      { id: "yieldStr", label: "Yield ngắn hạn", hint: "Trước chi phí, theo một căn.", better: "high" },
-      { id: "yieldLt", label: "Yield dài hạn", hint: "Trước thuế.", better: "high" },
+      { id: "yieldStr", label: "Lợi suất ngắn hạn", hint: "Gộp: doanh thu thuê ngắn hạn một năm ÷ giá mua, trước chi phí, theo một căn.", better: "high" },
+      { id: "yieldLt", label: "Lợi suất dài hạn", hint: "Gộp: tiền thuê dài hạn một năm ÷ giá mua, trước thuế.", better: "high" },
     ],
   },
 ];
 
-/** So sánh tối đa 4 khu vực (IA §3.2) — comparison-1 chuyển thể, số cùng nguồn Finder. */
-export default async function ComparePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ areas?: string }>;
-}) {
-  const { areas: raw } = await searchParams;
-  const ids = [...new Set((raw ?? "").split(",").map((s) => s.trim()).filter(Boolean))].slice(0, COMPARE_MAX);
-  const [rows, entries] = await Promise.all([
-    getFinderAreas({ ids }, { geometry: false }),
-    getSearchIndex(),
-  ]);
+/**
+ * Thân trang So sánh (server). PageHeader đứng ngay với số cột đúng (mã đã lọc theo chỉ mục khu vực);
+ * bảng số (Finder + lợi suất từng thị trường) tải trong Suspense theo key cột, lỗi thì báo tại vùng
+ * (RegionError) có Thử lại — header vẫn đứng.
+ */
+export function CompareBody({ entries, ids }: { entries: SearchEntry[]; ids: string[] }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        crumbs={[{ label: "Việt Nam", href: "/vn" }, { label: "So sánh" }]}
+        title="So sánh khu vực"
+        stats={[`${ids.length}/${COMPARE_MAX} khu vực`]}
+        description={`Đặt cạnh nhau tối đa ${COMPARE_MAX} thị trường hoặc phường`}
+        actions={<CompareAddArea entries={entries} ids={ids} />}
+      />
+      <RegionError what="bảng so sánh">
+        <Suspense key={ids.join(",")} fallback={<CompareSkeleton columns={ids.length} />}>
+          <CompareTable ids={ids} />
+        </Suspense>
+      </RegionError>
+    </div>
+  );
+}
+
+export async function CompareTable({ ids }: { ids: string[] }) {
+  const [rows, thumbs] = await Promise.all([getFinderAreas({ ids }, { geometry: false }), getAreaThumbnails(ids)]);
   // Lợi suất theo phường của các thị trường liên quan.
   const marketIds = [...new Set(rows.map((r) => r.id.split("-").slice(0, 2).join("-")))];
   const yieldById = new Map<string, YieldRow>();
@@ -67,6 +81,7 @@ export default async function ComparePage({
         parentName: r.parentName,
         href: r.href,
         headline: r.revpar ? fmtMoney(r.revpar, currency) : "—",
+        thumbnail: thumbs.get(id) ?? null,
         values: {
           revpar: money(r.revpar),
           occupancy: pct(r.occupancy),
@@ -83,11 +98,5 @@ export default async function ComparePage({
   });
   const hasYield = areas.some((a) => a.values.yieldLt || a.values.yieldStr);
 
-  return (
-    <AreaComparison
-      areas={areas}
-      groups={hasYield ? GROUPS : GROUPS.filter((g) => g.id !== "yield")}
-      entries={entries}
-    />
-  );
+  return <AreaComparison areas={areas} groups={hasYield ? GROUPS : GROUPS.filter((g) => g.id !== "yield")} />;
 }

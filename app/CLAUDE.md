@@ -63,7 +63,7 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 - `/` — Trang chủ (marketing: navbar-12, hero-8, card-29, how-it-works-1, faq-6)
 - `/phuong-phap` — Phương pháp & thuật ngữ
 - `/login`, `/register` — nhóm `(auth)`, không shell; `?next=` đi qua `safeNext`
-- `/saved` — Đã lưu; `/so-sanh?areas=a,b` — So sánh tối đa 4 khu vực
+- `/saved` — Đã lưu; `/compare?areas=a,b` — So sánh tối đa 4 khu vực (`/so-sanh` → 301)
 - `/vn` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
 - `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
 - `/listing/[id]` — Chi tiết listing (KPI so phường, lịch 365 đêm, comps gần nhất)
