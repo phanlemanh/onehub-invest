@@ -5,6 +5,7 @@
 // app/tests/ops-facts-so-tong-hop.test.tsx.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { readFileSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -140,6 +141,36 @@ describe("ON22-AC-6 job launchd", () => {
     }
     assert.deepEqual(findSourceNames(JSON.stringify(r.payload.blocks.jobs), ENTRIES), []);
   });
+  // Bản liệt viết trước: nhãn ngoài cron, pid số, mã thoát khác 0, tệp log vắng (launchd-collector-api.log không tạo).
+  const LISTING = ["PID\tStatus\tLabel", "123\t0\tcom.oneinvest.collector-api", "-\t2\tcom.oneinvest.chotot",
+    "-\t0\tcom.oneinvest.smoke", "456\t0\tcom.apple.ngoai-cron", ""].join("\n");
+  const WANT = { "com.oneinvest.chotot": [null, 2, false, true], "com.oneinvest.collector-api": [123, 0, true, false], "com.oneinvest.smoke": [null, 0, false, true] };
+  const declared = () => readdirSync(path.join(HERE, "..", "cron")).filter((f) => f.endsWith(".plist")).sort()
+    .map((f) => readFileSync(path.join(HERE, "..", "cron", f), "utf8").match(/<key>Label<\/key>\s*<string>([^<]+)</)[1]);
+  const jobsProblems = (items) => {
+    const want = declared().filter((l) => l in WANT).map((l) => maskSourceNames(l, ENTRIES));
+    const out = [];
+    if (JSON.stringify(items.map((j) => j.id)) !== JSON.stringify(want)) out.push(`nhãn ${items.map((j) => j.id).join(",")} ≠ ${want.join(",")}`);
+    for (const [label, [pid, exit, running, hasLog]] of Object.entries(WANT)) {
+      const j = items.find((x) => x.id === maskSourceNames(label, ENTRIES));
+      if (!j) continue;
+      if (j.pid !== pid || j.lastExit !== exit || j.running !== running) out.push(`${j.id}: pid/lastExit/running`);
+      if ((j.lastLogAt !== null) !== hasLog) out.push(`${j.id}: lastLogAt`);
+    }
+    return out;
+  };
+  test("ON22-AC-6 bản liệt viết trước: đúng các nhãn cron có mặt, pid số, mã thoát, lastLogAt null khi tệp log vắng, nhãn ngoài cron bị loại", async () => {
+    const r = await run({ launchctl: LISTING });
+    assert.equal(r.code, 0, r.stderr.slice(0, 800));
+    assert.deepEqual(jobsProblems(r.payload.blocks.jobs.items), []);
+  });
+  test("ON22-AC-6 bản sao mất bộ lọc nhãn cron → bắt", async () => {
+    const f = mutantPush("mat-loc.mjs", (s) => s.replace("items: await readLaunchdJobs({",
+      "items: [{ id: \"com.apple.ngoai-cron\", pid: 456, lastExit: 0, running: true, lastLogAt: null }, ...await readLaunchdJobs({").replace(
+      "launchctl: process.env.LAUNCHCTL ?? \"launchctl\",\n      }),", "launchctl: process.env.LAUNCHCTL ?? \"launchctl\",\n      })],"));
+    const r = await run({ script: f, launchctl: LISTING });
+    assert.ok(jobsProblems(r.payload.blocks.jobs.items).some((p) => p.startsWith("nhãn ")), "phép đo phải thấy nhãn ngoài cron");
+  });
   test("ON22-AC-6 launchctl không chạy → error, 0 hàng", async () => {
     const r = await run({ launchctl: null });
     assert.equal(r.code, 0, r.stderr.slice(0, 800));
@@ -150,12 +181,14 @@ describe("ON22-AC-6 job launchd", () => {
 
 describe("ON22-AC-7 khối không đo được", () => {
   // ma trận viết trước: [khối, cách làm hỏng]
+  // [khối làm hỏng, cách làm hỏng, ĐÚNG tập khối được phép lỗi] — độ tươi cũng đọc airbnb_snapshots (S01/S03/S05/S06)
   const MATRIX = [
-    ["reviewQueue", { omit: ["review_queue"] }],
-    ["jobs", { launchctl: null }],
-    ["freshness", { omit: ["stg_chotot_ads"] }],
-    ["records24h", { omit: ["airbnb_snapshots"] }],
+    ["reviewQueue", { omit: ["review_queue"] }, ["reviewQueue"]],
+    ["jobs", { launchctl: null }, ["jobs"]],
+    ["freshness", { omit: ["stg_chotot_ads"] }, ["freshness"]],
+    ["records24h", { omit: ["airbnb_snapshots"] }, ["freshness", "records24h"]],
   ];
+  const errored = (payload) => BLOCKS.filter((b) => payload.blocks[b].error !== undefined);
   const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType" };
   const caseRun = async ([block, how], script) => {
     let schema = S;
@@ -176,8 +209,15 @@ describe("ON22-AC-7 khối không đo được", () => {
       assert.match(b.error ?? "", /^không đo được/, `${block}: phải ghi lỗi`);
       assert.ok(Number.isFinite(Date.parse(b.measured_at)), `${block}: lỗi vẫn có measured_at`);
       assert.equal(b[DATA[block]], undefined, `${block}: khối lỗi không được mang số`);
-      assert.equal(r.payload.blocks.lockdown.error, undefined, `${block}: khối lockdown vẫn đo`);
+      assert.deepEqual(errored(r.payload), c[2], `${block}: đúng tập khối lỗi viết trước — mọi khối khác vẫn đo`);
     }
+  });
+  test("ON22-AC-7 bản sao lỗi dây chuyền (độ tươi hỏng kéo khối khác) → bắt", async () => {
+    const f = mutantPush("day-chuyen.mjs", (s) => s.replace(
+      "const records24hBlock = await measure(",
+      "const records24hBlock = freshnessBlock.error ? { measured_at: new Date().toISOString(), error: \"không đo được: dây chuyền\" } : await measure("));
+    const r = await caseRun(MATRIX[2], f);
+    assert.notDeepEqual(errored(r.payload), MATRIX[2][2], "phép đo phải thấy khối records24h lỗi theo");
   });
   test("ON22-AC-7 bản sao thay lỗi bằng 0 → bắt", async () => {
     const f = mutantPush("loi-thanh-0.mjs", (s) => s.replace(
