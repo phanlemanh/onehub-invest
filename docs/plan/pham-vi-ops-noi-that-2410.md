@@ -53,6 +53,7 @@ nguon: audit Ops prod 24/10 (OPS-1…OPS-20, máy local của Mạnh); sổ ý c
 - `OPS-17` — nhãn lệch CONTEXT.md và tiếng Anh lọt: «Review Queue», «Occupancy», «Offers tầng P1/P2», mã thô DQ (bait_gap, truthful-coverage, our=0 …), «Toggle Sidebar», tên thị trường không dấu hoặc bị cắt
 - `OPS-18` — mobile 390px: cột Trạng thái của bảng Lockdown, Sức khoẻ nguồn, nhóm, Máy móc, DQ, Độ phủ nằm ngoài màn hình
 - `OPS-19` — «Dòng log cuối» của job sync là dòng cảnh báo rác của Node (scheduler() trong push-ops-facts.mjs lấy dòng cuối không lọc)
+- `QD3` — Mạnh 24/10 «Đồng ý theo khuyến nghị»: tách phần sửa lockdown ở máy local (không «Ổn» khi không kiểm, log có nghĩa) ra chạy trước chuỗi facts; phần hiện trên cloud chờ ON22
 - `OPS-20` — /ops lặp «Độ tươi chỉ đo ở máy local» ba lần; bảng «Độ tươi theo nguồn» trống không hành động, tab và ô tìm vẫn hiện
 - `QD1` — tên nhóm S03 là tầng C (Mạnh 24/10): sửa ADR-0007 (mục sửa đổi), AGENTS.md luật 6, bỏ data-tier-a ở cột tên nhóm
 - `QD1a` — người vận hành điều chỉnh tiêu đề của từng nhóm trên /ops
