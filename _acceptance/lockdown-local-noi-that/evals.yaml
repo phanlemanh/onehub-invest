@@ -1,0 +1,53 @@
+schema_version: 1
+feature_slug: lockdown-local-noi-that
+# Eval máy đọc ca mang tiền tố «LD-AC-n» trong TAP. E1–E5 ở app/tests (tsx), E6 ở pipeline/scripts.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/ops-queries.ts, app/tests/lockdown-local.test.tsx]
+    expected: "exit 0; ca 'LD-AC-1 tệp log hôm nay vắng → L4b null, agentTurnsToday null' và chiều đỏ 'LD-AC-1 bản sao nhánh cũ (lỗi đọc → 0) ra ok true, ca đỏ nêu L4b' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/ops-queries.ts, app/tests/lockdown-local.test.tsx]
+    expected: "exit 0; ca 'LD-AC-2 0 dấu → ok true/0; 2 dấu → ok false/2' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/ops-queries.ts, app/tests/lockdown-local.test.tsx]
+    expected: "exit 0; tệp test ghim process.env.TZ = 'Asia/Ho_Chi_Minh' trước mọi import; ca 'LD-AC-3 now 01:00 giờ máy → đọc openclaw-2026-10-24.log, ok false, agentTurnsToday 2' và chiều đỏ 'LD-AC-3 bản sao đặt tên theo ngày UTC ra ok null, ca đỏ nêu ngày UTC' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/ops-queries.ts, app/tests/lockdown-local.test.tsx]
+    expected: "exit 0; ma trận viết trước 4 ca watchdog (vắng → L4 false, L1–L3 null; ok 5′ → L1–L4 true; không ok → L4 false, L1–L3 null; ok cũ 16′ → L4 false, L1–L3 null) × 3 cách gọi (truyền root; không root với process.chdir(<tmp>/app); không root với cwd <tmp>) = 12 assert, ca 'LD-AC-4 …' ok; node --test chạy mỗi tệp trong tiến trình riêng nên chdir được, tệp khôi phục cwd ở after()"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/collections-tiles.tsx, app/src/components/ops/collections/attention-list.tsx, app/src/components/ops/collections/lockdown-grid.tsx, app/src/lib/ops-queries.ts, app/tests/lockdown-local.test.tsx]
+    expected: "exit 0; props lấy từ đầu ra THẬT của getLockdownStatus trên thư mục tạm của ca AC-1 và AC-2 (không props tự dựng); ca 'LD-AC-5 null → Chưa kiểm được agent-turn hôm nay, 0 mục Khẩn agent-turn, L4b trong nhóm Chưa kiểm được của lưới' và 'LD-AC-5 2 dấu → mục Khẩn Agent-turn hôm nay' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/last-log-line.mjs, app/src/lib/last-log-line.ts, pipeline/push-ops-facts.mjs, pipeline/scripts/last-log-line.test.mjs]
+    expected: "exit 0; ma trận viết trước 5 mẫu × 2 bản = 10 assert giá trị (không assert 'hai bản bằng nhau'); ca 'LD-AC-6 tailLog đọc tệp mẫu cloud-sync → lastLine sync xong …'; ca 'LD-AC-6 push-ops-facts.mjs import tailLog từ lib và không còn hàm tailFile / lines.at(-1) riêng'; chiều đỏ 'LD-AC-6 bản không lọc ra dòng (Use `node --trace-' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/collections-queries.ts, app/src/lib/last-log-line.ts, app/tests/lockdown-local.test.tsx]
+    expected: "exit 0; ca 'LD-AC-6 readSchedulerStatus nhánh local trên gốc tạm (cwd <tmp>/app, tệp airdna-daily.log = mẫu cloud-sync thật) → lastLine sync xong …' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

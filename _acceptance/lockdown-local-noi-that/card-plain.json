@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Ô Lockdown trên /ops/collections ở máy local thôi báo «Ổn» cho lớp máy chưa kiểm được, và cột «Dòng log cuối» của các job hiện dòng kết quả thật thay vì dòng cảnh báo của Node.",
+  "scope_plain": "Phần ô Lockdown hiện trên cloud bằng số máy local đẩy lên vẫn để ON23; riêng L4b trên cloud đổi sang «Chưa kiểm được» như anh đã nhận ở Gate 1.5."
+}
