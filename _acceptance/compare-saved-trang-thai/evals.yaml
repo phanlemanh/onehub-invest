@@ -1,0 +1,157 @@
+schema_version: 1
+feature_slug: compare-saved-trang-thai
+# Ca test mang tiền tố «CS-AC-n» trong app/tests/compare-saved.test.tsx (jsdom; CS-AC-5/6 đọc chỉ mục khu vực từ DB local :5433).
+# Smoke HTTP: scripts/smoke-compare-saved.mjs — cần app chạy TỪ worktree này (BASE_URL, mặc định :3460 của dãy U1) + DB local;
+# người dùng thử + session ghi thẳng DB, xoá ở finally.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.compare_saved_smoke
+    paths: [app/next.config.ts, scripts/smoke-compare-saved.mjs]
+    expected: "exit 0; dòng 'ok /so-sanh?areas=<a>,<b> → 301 /compare?areas=<a>,<b>' và 'ok /so-sanh → 301 /compare' (đọc res.status và header location với redirect: manual — 308 hay 307 là FAIL nêu mã thật); should-NOT-fire: /compare?areas=… KHÔNG bị chuyển hướng — 'ok /compare?areas=… 200' (redirect: manual, 3xx là FAIL)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    paths: [app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs, app/eslint-plugin-onehub-ui/lib/route-slugs.mjs, app/next.config.ts, app/src/app/**]
+    expected: "exit 0; ca 'mọi đoạn tĩnh nằm trong CONTEXT.md hoặc ngoại lệ còn hạn; slug cũ có redirect' xanh trên cây thật — cùng ca ấy đỏ với 'ngoại lệ \"so-sanh\" đã đổi xong — xoá khỏi danh sách ngoại lệ' nếu dòng so-sanh còn trong VIET_EXCEPTIONS, và đỏ với 'slug cũ \"so-sanh\" đã bỏ nhưng next.config.ts thiếu redirect vĩnh viễn' nếu thiếu redirect (hai chiều đỏ đã có ca riêng trong cùng tệp: dòng 72–84)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/**, scripts/audit-all.sh, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-2 không còn /so-sanh' quét mọi tệp .ts/.tsx dưới app/src cộng scripts/audit-all.sh → 0 chỗ chứa '/so-sanh'; app/next.config.ts có đúng một redirect source '/so-sanh'; ca 'CS-AC-2 nav' đọc NAV_SECTIONS.invest: mục id compare có href '/compare', match('/compare?x') true, match('/so-sanh') false; chiều đỏ cùng ca: bộ quét chạy trên một tệp tạm chứa \"href=\\\"/so-sanh?areas=x\\\"\" trả 1 chỗ kèm tên tệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.compare_saved_smoke
+    paths: [app/src/app/(app)/compare/**, app/src/components/compare/**, app/src/components/page/page-header.tsx, scripts/smoke-compare-saved.mjs]
+    expected: "exit 0; HTML /compare?areas=<thị trường>,<phường> (hai mã lấy từ DB local có số Finder): 'ok đúng một <h1> «So sánh khu vực»', 'ok breadcrumb Việt Nam › So sánh', 'ok stat 2/4 khu vực', 'ok nút Thêm khu vực', 'ok tên hai khu vực trong bảng', 'ok hàng Lợi suất ngắn hạn/dài hạn, không còn Yield ngắn hạn'; should-NOT-fire: /compare?areas=khong-co-ma-nay → 'ok mã lạ bị bỏ: 0/4 khu vực'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.compare_saved_smoke
+    paths: [app/src/app/(app)/saved/**, app/src/components/saved/**, scripts/smoke-compare-saved.mjs]
+    expected: "exit 0; người dùng thử có 3 dòng saved_markets (1 market, 2 submarket, created_at tăng dần): 'ok đúng một <h1> «Đã lưu»', 'ok breadcrumb Việt Nam › Đã lưu', 'ok stat 3 khu vực', 'ok So sánh 3 khu vực → /compare?areas=<3 mã theo thứ tự mới lưu trước>' (so với dãy lấy từ DB, không viết tay), 'ok tab Tất cả 3 · Thị trường 1 · Phường 2', 'ok 3 thẻ khu vực'; không cookie: 'ok /saved chưa đăng nhập → 307 /login?next=/saved' (200 là FAIL — dấu hiệu loading.tsx nuốt redirect)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E17
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/compare/compare-add-area.tsx, app/src/components/compare/add-area-command.tsx, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-3 thêm cột' vẽ CompareAddArea (router giả ghi lại replace/push) với ids [a,b] và chỉ mục [a,b,c]: bấm «Thêm khu vực», chọn c → replace đúng một lần với '/compare?areas=a,b,c', push 0 lần; hộp không liệt a, b; với ids 4 mã → nút «Thêm khu vực» disabled; chiều đỏ cùng ca: router giả không nhận replace (onAdd không gọi) thì ca báo 'không đổi ?areas='"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E18
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/saved/saved-filter.tsx, app/src/components/saved/saved-list.tsx, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-4 tab đổi nút So sánh' vẽ SavedFilterProvider gồm SavedCompareButton + SavedList với 3 khu vực (1 thị trường, 2 phường): tab Tất cả → link '/compare?areas=<3 mã>' chữ «So sánh 3 khu vực»; bấm tab Phường → link '/compare?areas=<2 phường>' chữ «So sánh 2 khu vực»; bấm tab Thị trường → không có link /compare; đối chứng cùng ca: SavedCompareButton đặt NGOÀI Provider thì ca báo lỗi useSavedFilter (không có state riêng âm thầm)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E19
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/queries.ts, app/src/components/page/area-thumbnail.tsx, app/src/components/compare/**, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-3 ảnh' trên DB local: getAreaThumbnails([vn-hanoi, vn-hanoi-hoan-kiem, vn-hanoi-ba-vi]) → ba-vi (không listing có ảnh) vắng; hai khu vực kia mỗi bên 1–3 ứng viên dạng https://…?im_w=480; ảnh đầu hai khu vực khác nhau; đối chứng cùng ca: gọi riêng từng khu vực mà ảnh đầu trùng thì bản gọi chung phải giữ ảnh đầu của khu vực đứng trước (chứng bước khử trùng có tác dụng); ca 'CS-AC-3 ảnh lùi' (jsdom): lỗi ảnh đầu → src đổi sang ứng viên 2, onBroken 0 lần; lỗi tiếp → onBroken đúng 1 lần"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E20
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/saved/saved-item.tsx, app/src/components/page/area-thumbnail.tsx, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-4 ảnh trên thẻ Đã lưu': thẻ có ảnh → <img> đứng TRƯỚC nhãn loại và nút «Bỏ lưu Ba Đình» trong DOM (phần tử absolute đứng sau vẽ đè lên), dòng 'RevPAR · Công suất' dưới tên; đối chứng cùng ca: thumbnail null → không <img>, panel số 'Công suất … · ADR …'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/compare/compare-body.tsx, app/src/components/saved/saved-body.tsx, app/src/components/compare/compare-skeleton.tsx, app/src/components/saved/saved-skeleton.tsx, app/src/app/(app)/compare/**, app/src/app/(app)/saved/**, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-5 So sánh' gọi CompareBody với 3 mã → cây phần tử: PageHeader đứng ngoài, RegionError > Suspense có key = 3 mã nối phẩy, fallback là CompareSkeleton columns=3, con là CompareTable; vẽ CompareSkeleton columns=3 trong jsdom → aria-busy và đúng 4 cột (nhãn + 3); ca 'CS-AC-5 Đã lưu' gọi SavedBody với 3 dòng lưu → fallback SavedSkeleton count=3, vẽ ra đúng 3 thẻ skeleton; không tồn tại loading.tsx dưới app/(app)/compare, app/(app)/saved; chiều đỏ cùng ca: bộ tìm vùng chạy trên bản sao cây đã thay Suspense bằng Fragment trả lỗi 'không có Suspense quanh vùng số liệu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/states/region-error.tsx, app/src/components/compare/compare-body.tsx, app/src/components/saved/saved-body.tsx, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-6 lỗi tại vùng' vẽ trong jsdom <h1>Đầu</h1> + RegionError what='bảng so sánh' bọc một con ném lỗi → còn <h1>Đầu</h1>, có role alert chứa 'Không tải được bảng so sánh' và nút 'Thử lại'; đối chứng cùng ca: con không ném → không có alert, có nội dung con; ca 'CS-AC-6 notFound không bị bắt' : con gọi notFound() → RegionError không hiện alert, lỗi đi lên ranh giới ngoài của ca (đúng mã NEXT_HTTP_ERROR_FALLBACK;404); ca 'CS-AC-6 ranh giới đúng vùng' trên cây CompareBody và SavedBody: RegionError là cha trực tiếp của Suspense vùng số liệu và PageHeader nằm ngoài RegionError; chiều đỏ: bản sao cây bọc RegionError quanh cả PageHeader → lỗi 'PageHeader nằm trong ranh giới lỗi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.compare_saved_smoke
+    paths: [app/src/components/compare/comparison.tsx, app/src/components/saved/saved-empty.tsx, app/src/components/saved/**, scripts/smoke-compare-saved.mjs]
+    expected: "exit 0; '/compare (không areas)': 'ok Empty Chưa chọn khu vực nào + link /vn', 'ok không chú thích Ô xanh khi trống'; người dùng thử 0 dòng lưu: 'ok /saved trống: Chưa lưu khu vực nào', 'ok đúng một nút/link trong vùng trống, trỏ /vn, chữ Tìm thị trường', 'ok không có role=tab'; đối chứng cùng lượt: /compare có 2 mã thì HTML CÓ chú thích Ô xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/saved/saved-empty.tsx, app/src/components/compare/comparison.tsx, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-7 c-empty-11' vẽ SavedEmpty trong jsdom: có svg lucide bookmark trong data-slot=empty-icon, tiêu đề 'Chưa lưu khu vực nào', đúng 1 phần tử a/button và nó là link href '/vn' mang data-variant='outline'; ca 'CS-AC-7 chú thích' vẽ AreaComparison areas=[] → không có chữ 'Ô xanh'; đối chứng cùng ca: areas có 1 khu vực → có 'Ô xanh'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0 (tsc --noEmit sạch, eslint + check-bare-disables 0 lỗi; 3 cảnh báo react-hooks có sẵn ngoài nhóm trang)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/eslint-suppressions.json, app/src/components/compare/comparison.tsx, app/tests/compare-saved.test.tsx]
+    expected: "exit 0; ca 'CS-AC-8 baseline' đọc app/eslint-suppressions.json → 0 khoá dưới src/components/compare/, src/components/saved/, src/app/(app)/compare/, src/app/(app)/saved/; chiều đỏ cùng hàm trên fixture có khoá 'src/components/saved/saved-list.tsx' → trả đúng khoá ấy; ca 'CS-AC-8 ngoại lệ bảng' : dòng ngay trước '<table' trong comparison.tsx khớp '// eslint-disable-next-line onehub-ui/no-raw-table -- ' theo sau là lý do không rỗng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/**, app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs]
+    expected: "exit 0; bảng routes.md khớp cây route (dòng (app)/compare/page.tsx có, (app)/so-sanh/page.tsx không), mọi dòng đủ cột Block đích + Slug đích"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: judgment
+    inputs: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, CONTEXT.md, docs/architecture/portals.md, .claude/rules/portals.md]
+    paths: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, CONTEXT.md, docs/architecture/portals.md, .claude/rules/portals.md]
+    question: "Năm tệp này có nói nhất quán rằng So sánh nay ở /compare (link /so-sanh chuyển 301), hai trang /compare và /saved đã có PageHeader cùng trạng thái tải (skeleton trong Suspense) và lỗi tại chỗ, Đã lưu trống dùng c-empty-11 ở saved/saved-empty.tsx, catalog có RegionError (lỗi tại một vùng) bên cạnh PageError (cả trang), và cổng Invest liệt /compare thay /so-sanh — không còn chỗ nào mâu thuẫn (vd vẫn ghi «PageHeader chưa có, I5» hay liệt /so-sanh là route sống) không?"
+    expected: "Nhất quán ở cả năm tệp; không còn ghi PageHeader chưa có cho hai trang; /so-sanh chỉ còn ở dạng slug cũ/redirect."
+    evidence_required: [run_id, verdict, judges]
+  - id: E14
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/app/(app)/compare/**, app/src/app/(app)/saved/**, app/src/components/compare/**, app/src/components/saved/**, app/src/components/states/region-error.tsx]
+    steps:
+      - "Bước 0: tệp state/compare-saved-trang-thai/u1-test-account.json phải có (tài khoản thử dãy U1, DB local, gitignored) — vắng thì FAIL với thông điệp 'thiếu tài khoản thử dãy U1'"
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json)"
+      - "1280 px sáng: /compare?areas=vn-hanoi,vn-hanoi-ba-dinh,vn-hanoi-hoan-kiem → evidence/E14-step1.png"
+      - "1280 px tối (prefers-color-scheme: dark): cùng URL → evidence/E14-step2.png"
+      - "375 px sáng: cùng URL → evidence/E14-step3.png; ghi document.documentElement.scrollWidth và clientWidth"
+      - "375 px sáng: /compare → evidence/E14-step4.png"
+      - "Đăng nhập ở /login bằng tài khoản trong tệp ở bước 0 (không đổi mật khẩu, không xoá tài khoản); tài khoản chưa lưu gì thì bấm «Lưu» trên /vn/hanoi, /vn/hanoi/ba-dinh, /vn/hanoi/hoan-kiem"
+      - "/saved có dữ liệu: 1280 sáng → evidence/E14-step5.png, 1280 tối → evidence/E14-step6.png, 375 sáng → evidence/E14-step7.png (ghi scrollWidth/clientWidth)"
+      - "Bấm ✕ «Bỏ lưu» tới khi hết; /saved trống: 1280 sáng → evidence/E14-step8.png, 1280 tối → evidence/E14-step9.png, 375 sáng → evidence/E14-step10.png; rồi bấm «Lưu» lại ba khu vực như trước"
+    expected: "PageHeader (breadcrumb, tiêu đề, số đếm, nút) đọc được và không bị cắt ở cả ba khổ; ở 375 px scrollWidth = clientWidth trên /compare và /saved; ô tốt nhất của bảng đọc rõ ở sáng lẫn tối; ô đầu cột So sánh và thẻ Đã lưu có ảnh đại diện (không trùng giữa các cột), nhãn Phường/Thị trường và nút ✕ đọc được trên ảnh; /compare trống và /saved trống (c-empty-11) mỗi vùng có đúng một nút hành động, c-empty-11 đọc được ở sáng và tối."
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot, observed]
+  - id: E15
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.compare_design_gate
+    paths: [app/src/components/compare/comparison.tsx]
+    expected: "exit 0; verdict PASS, p0_count 0 (sàn a11y/contrast của design-gate trên comparison.tsx, jsdom)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.saved_design_gate
+    paths: [app/src/components/saved/saved-list.tsx]
+    expected: "exit 0; verdict PASS, p0_count 0 (sàn a11y/contrast của design-gate trên saved-list.tsx, jsdom)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
