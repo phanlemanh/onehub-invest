@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b0e3d44a1c979f62836270752ff449eea19e2fc6
+verified_commit: bf958933ec7d4b30b0421fad483e93b6fed70c01
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -276,3 +276,7 @@ none — mọi eval chạy một lần, không có eval nhiều lượt.
 Round 1: E1–E12, E14–E20 chạy lượt gốc (commit 7a4018f ghi S4 r1 PASS kèm sửa 5 phép đo trong hợp đồng); E2, E10, E12, E14, E15, E16 được giữ lại sang round 2 vì delta không chạm paths của chúng.
 Round 2: các lệnh máy cho kết quả xanh, nhưng người review chạy lại `cd app && npm test` ở HEAD 7a4018f và ca «CS-AC-3 thêm cột» (phép đo của E17, AC-3) đỏ lặp lại do root React cũ còn portal cmdk khi renderWithRouter thay body. Finding trong hợp đồng, mức high, nên verdict là REJECT (commit b0e3d44). Trả về cho khâu cài đặt sửa phép đo.
 Round 3: chạy lại `cd app && npm test` cùng các lệnh suite ở HEAD b0e3d44; E3, E6, E7, E9, E11, E17, E18, E19, E20 xanh; E1, E4, E5, E8 giữ lại từ round 2 và E2, E10, E12, E14, E15, E16 giữ lại từ round 1 vì delta không chạm paths của chúng. Không còn eval nào đỏ.
+
+### Re-pin lần 1 — 2026-10-24, do hoá cũ do gộp main #69 (tệp ON8, không chạm UI4)
+run_id: repin-20261024T222910Z-82698
+sha: bf958933ec7d4b30b0421fad483e93b6fed70c01 · suites: 6 lệnh exit 0 · evals: 18/18 eval máy đạt kỳ vọng · ngoài làn máy: E13, E14
