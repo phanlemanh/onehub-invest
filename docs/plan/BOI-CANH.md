@@ -35,7 +35,7 @@ tự; luật người bán trên tin rao = tầng C (PR #19, ADR-0007 sửa đ�
 cần ký, T3 phải ký); branch protection main (gate + ui-lint); **tên nhóm S03 là tầng C, tên nguồn thật vẫn tầng A**
 (24/10, sửa đổi ADR-0007, ROADMAP §3 mục 14); **S08 chỉ nội bộ như nguồn hiệu chuẩn** (24/10, ROADMAP §3 mục 15); **Ops trên cloud đọc số tổng hợp máy local tính
 sẵn** (24/10, «Chọn A» cho câu «dashboard Ops trên prod không có dữ liệu vì dữ liệu tính số chỉ ở local» — ADR-0014,
-ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 → ON2, ON3, ON4, ON5, AU12).
+ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 → ON23, ON3, ON4, ON5, AU12; ON2 lockdown local tách ra chạy trước — Mạnh 24/10).
 
 **Còn chờ Mạnh** — và hàng nó chặn:
 
@@ -88,7 +88,7 @@ ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 �
 | PL5 | Thêm tiêu chí đo dung lượng + thời gian transform-zalo/sync khi Zalo phình ×3 (mục chờ KH-KV3) |
 | PL4 (`kev-thanh-nhan`) | Căn cứ bổ sung (hồ sơ đã ký chỉ ghi «Q1»): `classification-enrich-review.md` §4 RV-Q1, §2 RV-L06, §5 RV-Z1 + RV-C1.1 |
 | ZC1 (`sourceid-tin-anh`) | Căn cứ bổ sung (hồ sơ đã ký chỉ ghi «L20»): `classification-enrich-review.md` §6 RV-L20 |
-| ON22 → ON2, ON3, ON4, ON5, AU12 | **Ràng buộc (ADR-0014)**: hàng nền ON22 (push-ops-facts đẩy số tổng hợp) merge TRƯỚC mọi hàng trang đọc số trên cloud; ON22 đứng trên NT2 (số đi qua bộ soát tầng A). ON9, ON10 không đứng trên ON22 — `dq_check_results`, `area_sources`, `ref_calib_*` đã sync |
+| ON22 → ON23, ON3, ON4, ON5, AU12 · ON2 trước | **Ràng buộc (ADR-0014)**: hàng nền ON22 (push-ops-facts đẩy số tổng hợp) merge TRƯỚC mọi hàng trang đọc số trên cloud; ON22 đứng trên NT2 (số đi qua bộ soát tầng A). ON9, ON10 không đứng trên ON22 — `dq_check_results`, `area_sources`, `ref_calib_*` đã sync |
 | ON22, ON2, ON4, ON5, ON7 ↔ AU12, NT2, AU13 | Tám hàng T3 chung `pipeline/push-ops-facts.mjs` — chạy liền nhau, không song song. Thứ tự (từ ADR-0014): AU13 → ON7 (nhãn job S0x) → NT2 (bộ soát tầng A đỏ ngay nếu nhãn còn tên thật) → ON22 → ON2 (tín hiệu an toàn sai hai chiều) → ON4/ON5 → AU12 |
 | ON7 ↔ ON3 | Chung `components/ops/collections/collections-tiles.tsx` (ô KPI) — từ ADR-0014 ON7 đi trước ON3 (ON3 đứng trên ON22 → NT2 → ON7), chạy liền; ON7 còn chạm cùng tệp với ON5, ON6, ON8, ON9, ON10, ON12 |
 | ON2, ON3, ON5, ON6, ON8, ON13 ↔ UI11 | Cùng `components/ops/collections/*` và `overview-tiles.tsx` — không song song; UI11 (Skeleton/Empty) đứng sau AU6 và nên sau ON3 |
@@ -135,7 +135,7 @@ Giới hạn 3–4 phiên song song. Đường găng là việc gắn nhãn (§5
 6. **Sau AU9**: UI8, UI9, ZC5 → NT7.
 7. **Đóng sổ**: UI17 sau mọi hàng giao diện.
 8. **Ops nói thật** (`ops-noi-that-2410`, chen được vào bước 1): ON14 (gỡ tài khoản) trước — tín hiệu an toàn Zalo;
-   chuỗi số trên cloud theo ADR-0014: AU13 → ON7 → NT2 → ON22 → ON2 (lockdown) → ON3 → ON4/ON5 → AU12, ON8 trước ON5
+   chuỗi số trên cloud theo ADR-0014: ON2 (lockdown local, chạy trước) · AU13 → ON7 → NT2 → ON22 → ON23 (lockdown cloud) → ON3 → ON4/ON5 → AU12, ON8 trước ON5
    (§4); ON19 → ON20 → ON21 sau PL12.
 
 ## 7. Hoãn có chủ đích (không cắt)
