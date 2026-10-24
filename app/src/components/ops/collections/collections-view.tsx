@@ -1,5 +1,6 @@
 import { CircleAlertIcon } from "lucide-react"
 
+import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
 import { AttentionList, issuesOf } from "@/components/ops/collections/attention-list"
 import { CollectionsTiles } from "@/components/ops/collections/collections-tiles"
 import { feedSloSummary } from "@/components/ops/collections/feed-status"
@@ -37,6 +38,8 @@ export type CollectionsData = {
   lockdown: Awaited<ReturnType<typeof getLockdownStatus>>
   /** Mốc "bây giờ" của request (trang force-dynamic đọc một lần, truyền xuống các vùng). */
   nowMs: number
+  /** Cloud: không có bảng nguồn/bảng nạp — độ tươi chỉ đo ở máy local. */
+  localOnly?: boolean
 }
 
 /**
@@ -45,7 +48,7 @@ export type CollectionsData = {
  * chạy không. Khung theo @reui/solution-dev-ops-6 (thẻ số · luồng + cần chú ý · lưới nguồn) và lưới job của
  * @reui/solution-dev-ops-1.
  */
-export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs }: CollectionsData) {
+export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zaloAllowlist, zaloHealth, factsPushedAt, feedHealth, lockdown, nowMs, localOnly = false }: CollectionsData) {
   const factsAgeMin = factsPushedAt ? Math.round((nowMs - new Date(factsPushedAt).getTime()) / 60_000) : null
   const lastPostHours = zaloHealth.lastPostAt ? Math.round((nowMs - new Date(zaloHealth.lastPostAt).getTime()) / 3_600_000) : null
   const issues = issuesOf({ feeds: feedHealth, layers: lockdown.layers, agentTurnsToday: lockdown.agentTurnsToday, zalo: zaloHealth, groups: zaloGroups, factsAgeMin, nowMs })
@@ -58,12 +61,13 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
         crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Thu thập" }]}
         title="Thu thập"
         stats={[
-          sloSummaryText(slo),
+          sloSummaryText(slo, localOnly),
           `Hôm nay ${days[0]?.day ?? "—"}`,
           ...(factsAgeMin !== null ? [`Máy thu ${fmtInt(factsAgeMin)}′ trước`] : []),
         ]}
         description="Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở log tay."
       />
+      {localOnly ? <LocalOnlyAlert /> : null}
       {factsAgeMin !== null && factsAgeMin > 30 ? (
         <Alert variant="warning">
           <CircleAlertIcon aria-hidden="true" />

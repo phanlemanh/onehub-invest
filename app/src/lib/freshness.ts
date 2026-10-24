@@ -144,8 +144,9 @@ export const summarizeFreshness = (rows: SourceInput[]): SloSummary => summarize
 
 /** Giá trị thuộc tính `data-slo-summary` và chữ hiện cho người — một chỗ sinh cho cả hai trang. */
 export const sloSummaryKey = (s: SloSummary) => `${s.ok}/${s.total}`
-export const sloSummaryText = (s: SloSummary) =>
-  s.total === 0 ? "Chưa có nguồn nào" : `${s.ok}/${s.total} nguồn đạt SLO`
+export const LOCAL_ONLY_TEXT = "Độ tươi chỉ đo ở máy local"
+export const sloSummaryText = (s: SloSummary, localOnly = false) =>
+  localOnly ? LOCAL_ONLY_TEXT : s.total === 0 ? "Chưa có nguồn nào" : `${s.ok}/${s.total} nguồn đạt SLO`
 
 /** Tuổi/SLO một cách viết cho mọi bề mặt: dưới 48 giờ «N giờ», từ 48 giờ «N ngày» (làm tròn xuống). */
 export function fmtAge(hours: number | null): string {

@@ -53,7 +53,7 @@ function Panel({ head, legend, subject }: { head: ReactNode; legend?: ReactNode;
   )
 }
 
-export function OverviewTiles({ rows }: { rows: CoverageRow[] }) {
+export function OverviewTiles({ rows, localOnly = false }: { rows: CoverageRow[]; localOnly?: boolean }) {
   // Ô «Đạt SLO» đếm NGUỒN (Hỏi-1 AU6): nguồn đạt khi mọi thị trường có dữ liệu của nó đạt — cùng luật với
   // ô «Sức khoẻ nguồn» của /ops/collections (lib/freshness). Các ô còn lại vẫn kể từng cặp nguồn × thị trường.
   const sources = bySource(rows)
@@ -85,7 +85,7 @@ export function OverviewTiles({ rows }: { rows: CoverageRow[] }) {
                 ))}
             </div>
           }
-          subject={<span className="truncate">{slos.length ? `SLO: ${slos.map(([c, h]) => `${c} ≤ ${fmtAge(h)}`).join(", ")}` : sloSummaryText(summary)}</span>}
+          subject={<span className="truncate">{slos.length ? `SLO: ${slos.map(([c, h]) => `${c} ≤ ${fmtAge(h)}`).join(", ")}` : sloSummaryText(summary, localOnly)}</span>}
         />
       </KpiTile>
 
