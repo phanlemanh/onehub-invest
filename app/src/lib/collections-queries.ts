@@ -33,6 +33,7 @@ type LocalFacts = {
   zaloGroups: ZaloGroupRow[];
   zaloFlow: Record<string, { posts?: number; offers?: number }>;
   zaloAccounts?: { accountId: string; name: string | null; profile: string; enabledGroups: string[] }[];
+  sourceRuns?: { code: string; label_vi: string | null }[];
 };
 
 /** Cloud: danh sách tài khoản Zalo từ ops-heartbeat (read-only). */
@@ -56,6 +57,17 @@ async function getLocalFacts(): Promise<LocalFacts | null> {
     factsCache = { at: Date.now(), facts: null };
   }
   return factsCache.facts;
+}
+
+/** Cloud: vai trò nguồn (code, label_vi) máy thu đã đẩy — nguồn của nhãn «S0x · vai trò» khi không có source_registry. */
+export async function getFactsSourceRuns(): Promise<{ code: string; label_vi: string | null }[]> {
+  const f = await getLocalFacts();
+  return f?.sourceRuns ?? [];
+}
+
+/** Test: bỏ bộ nhớ đệm facts 30″ giữa các ca (lược đồ khác nhau trong cùng tiến trình). */
+export function resetFactsCache(): void {
+  factsCache = null;
 }
 
 export async function getFactsPushedAt(): Promise<string | null> {

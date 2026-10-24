@@ -54,7 +54,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     expected: "exit 0; ba ca 'ON7-AC-6 vai trò: (a) source_registry → «S02 · Hiệu chuẩn»', '(b) cloud không source_registry, facts.sourceRuns lấy từ payload push-ops-facts thật → «S02 · Hiệu chuẩn»', '(c) không nguồn nào → «S02», không lỗi' ok"
-    paths: [app/src/lib/source-labels.ts, pipeline/push-ops-facts.mjs, app/tests/ops-nhan-ma-nguon.test.tsx]
+    paths: [app/src/lib/source-labels.ts, app/src/lib/source-roles.ts, pipeline/push-ops-facts.mjs, app/tests/ops-nhan-ma-nguon.test.tsx]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E7

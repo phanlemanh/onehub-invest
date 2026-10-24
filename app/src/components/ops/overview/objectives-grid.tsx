@@ -21,7 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { fmtInt } from "@/lib/format"
 import { fmtAge } from "@/lib/freshness"
 import type { CoverageRow } from "@/lib/ops-queries"
-import { sourceLabel } from "@/lib/source-labels"
+import { sourceTierLabel } from "@/lib/source-labels"
 import { cn } from "@/lib/utils"
 
 import { DotSeparator, SectionFrame, SectionHead } from "./section-lead"
@@ -79,14 +79,14 @@ export function ObjectivesGrid({ rows }: { rows: CoverageRow[] }) {
   )
   const needle = search.trim().toLowerCase()
   const visible = useMemo(
-    () => rows.filter((r) => (tab === "all" || r.status === tab) && (!needle || `${r.code} ${r.city ?? ""} ${sourceLabel(r.code).vi}`.toLowerCase().includes(needle))),
+    () => rows.filter((r) => (tab === "all" || r.status === tab) && (!needle || `${r.code} ${r.city ?? ""} ${sourceTierLabel(r.code).vi}`.toLowerCase().includes(needle))),
     [rows, tab, needle]
   )
 
   const columns = useMemo<InsightColumn<CoverageRow>[]>(
     () => [
       { id: "code", accessorKey: "code", header: ({ column }) => <DataGridColumnHeader title="Mã" column={column} />, cell: ({ row }) => <span className="font-mono">{row.original.code}</span>, size: 80, enableSorting: true },
-      { id: "role", accessorFn: (r) => sourceLabel(r.code).vi, header: "Vai trò", size: 130 },
+      { id: "role", accessorFn: (r) => sourceTierLabel(r.code).vi, header: "Vai trò", size: 130 },
       { id: "city", accessorKey: "city", header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />, cell: ({ row }) => row.original.city ?? "—", size: 160, enableSorting: true },
       { id: "last", accessorFn: (r) => r.lastSnapshotAt ?? "", header: ({ column }) => <DataGridColumnHeader title="Snapshot cuối" column={column} />, cell: ({ row }) => row.original.lastSnapshotAt?.slice(0, 10) ?? "—", size: 130, enableSorting: true },
       { id: "age", accessorFn: (r) => r.ageHours ?? Number.POSITIVE_INFINITY, header: ({ column }) => <DataGridColumnHeader title="Tuổi" column={column} />, cell: ({ row }) => fmtAge(row.original.ageHours), size: 120, meta: NUM, enableSorting: true },
