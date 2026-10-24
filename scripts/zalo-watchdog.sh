@@ -88,6 +88,16 @@ scan_new_lines() {
   rest=${prev#*:}
   prevInode=${rest%%:*}
   prevLines=${rest#*:}
+  # Marker hỏng trường số dòng (vd 'abc') → ((prevLines + 1)) chết dưới
+  # set -u, hàm không in gì (kể cả turn của file MỚI) và không ghi lại marker
+  # → L4b mù tới khi file cũ biến mất. Coi như FILE MỚI: quét từ dòng 1 +
+  # WARN alert-log để thấy (mở lại 2310-7).
+  if ! [[ "$prevInode" =~ ^[0-9]+$ && "$prevLines" =~ ^[0-9]+$ ]]; then
+    echo "$(date -Iseconds) WARN: marker L4b hỏng '${prev:0:120}' — quét từ dòng 1" >> "$ALERT_LOG"
+    tail -n +1 "$f"
+    echo "$f:$curInode:$curLines" > "$mk"
+    return 0
+  fi
   # Marker ghi DANH TÍNH file 'đường_dẫn:inode:số_dòng': đếm dòng không phân
   # biệt được ngày mới DÀI HƠN ngày cũ (cur > last quét từ last+1 → sót dòng
   # đầu, claudedp-2310-5 mở lại). Khác path/inode = file mới (log xoay ngày);
