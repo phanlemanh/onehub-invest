@@ -5,10 +5,10 @@ slug: cloud-sync-bao-loi-that
 owner: phanlemanh@gmail.com
 risk_tier: T3      # scripts/cloud-sync.sh + pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [pipeline, docs]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-24-cloud-sync-bao-loi-that-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-24
 ---
 
 # Acceptance Contract: cloud-sync-bao-loi-that
