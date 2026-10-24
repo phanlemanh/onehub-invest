@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: cf7ea2b3fc6365e2ee5a5290118afdc11ff2d762
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: stg-s08-inventory

@@ -5,7 +5,7 @@ slug: stg-s08-inventory
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
