@@ -48,7 +48,7 @@
 ## Giao tiếp với Claude (luật tin của plugin dieu-phoi)
 
 Đầu mối duy nhất phía Claude là **điều phối liên làn** (`claudedp`). Mọi giao việc, hỏi, báo đi qua
-kênh issue `phanlemanh/onehub-invest#9` bằng lệnh bọc — không nhắn qua Mạnh, không sửa tay issue.
+kênh issue riêng tư `phanlemanh/onehub-coord#1` (kho onehub-invest đã công khai — đừng đăng gì về điều phối lên issue của kho này) bằng lệnh bọc — không nhắn qua Mạnh, không sửa tay issue.
 
 ```bash
 T=~/dev/onehub-coord/bin/tin

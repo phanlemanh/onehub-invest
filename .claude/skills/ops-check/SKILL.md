@@ -6,10 +6,26 @@ allowed-tools: Bash(node scripts/check-freshness.mjs) Bash(bash scripts/audit-al
 
 # /ops-check — chỉ đọc, không sửa gì
 
-1. **Độ tươi** — `node scripts/check-freshness.mjs` (exit 1 = có nguồn quá SLO:
-   S01 ≤ 8 ngày · S02 ≤ 35 · S03 ≤ 3 · S04 ≤ 90).
+1. **Độ tươi** — `node scripts/check-freshness.mjs` (exit 1 = có ô quá SLO, chưa có dữ liệu, hoặc nguồn
+   active chưa khai SLO; `--json` in từng ô `{code, city, last, ageHours, sloHours, status}`). Mỗi mã đo ở
+   bảng nạp thật của nó, chỉ ở thành phố nó có dữ liệu, và tính tuổi theo GIỜ THU (nạp lại bản cũ không làm
+   nguồn trông tươi): S01 ≤ 8 ngày · S03 ≤ 3 ngày · S05 ≤ 12 giờ · S06 ≤ 36 giờ — đều theo
+   `airbnb_snapshots.collected_at` (S03/S05 lấy snapshot chứa bài của mã trong `stg_zalo_posts`, tách theo
+   `agent_id`; S06 lấy snapshot chứa tin `stg_chotot_ads`) · S02 ≤ 35 ngày theo `airdna_markets.captured_at`
+   (giờ tải). S04 không đo — địa giới đã thu xong. Định nghĩa: `scripts/lib/freshness.mjs`.
+   Trang `/ops` và `/ops/collections` dùng CÙNG định nghĩa từng ô nguồn × thành phố này — bản của app ở
+   `app/src/lib/freshness.ts`, giữ khớp từng hằng và câu truy vấn bằng `scripts/freshness-parity.test.mjs`.
+   Hai trang cùng hiện con số «x/y nguồn đạt SLO»: một nguồn đạt khi MỌI thành phố có dữ liệu của nó đạt,
+   `y` = nguồn active có SLO (S04 xong rồi và nguồn chưa khai SLO không đếm). CLI không in x/y — nó liệt
+   từng ô; ô nào CLI báo lỗi thì trên trang nguồn đó không đạt.
 2. **Audit toàn hệ thống** — `bash scripts/audit-all.sh` (thu thập, DB + cloud sync, Invest,
-   Ops, public API). Tóm các dòng ❌ và ⚠️.
+   Ops, public API). Tóm các dòng ❌ và ⚠️. Đọc ba mục dễ hiểu nhầm:
+   - **Backup tuần**: chưa cài job, job lỗi, chưa đặt `BACKUP_DIR`, hay không có `db-*.sql.gz` trong
+     8 ngày đều là ❌ — chỉ ✅ khi thấy tệp sao lưu (tên tệp in kèm).
+   - **Trang `/ops`**: kiểm ở `OPS_BASE_URL` (mặc định `http://localhost:3456`, app dev). Audit chỉ
+     đọc, không đăng nhập: 307 là ⚠️ «chưa đăng nhập» — chỉ biết trang sống, chưa thấy nội dung.
+     Muốn kiểm trang thật sau đăng nhập: `bash scripts/dev-ops-login-check.sh`.
+   - **Membership nhóm S03**: ⚠️ «không kiểm được» khi không có CLI OpenClaw — không phải ✅.
 3. **An toàn Zalo** — `tail -20 pipeline/logs/zalo-watchdog-alerts.log` (thiếu file = chưa
    từng có cảnh báo). KHÔNG chạy `scripts/zalo-watchdog.sh`: script đó kill OpenClaw khi
    phát hiện vi phạm.

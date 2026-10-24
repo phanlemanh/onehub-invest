@@ -1,0 +1,12 @@
+--- P1 xoay ngày: turn ghi vào log NGÀY CŨ sau lượt quét cuối (23:55→00:00), lượt kế quét log ngày mới
+P1 kết quả: SÓT (in 1 dòng của ngày mới)
+--- P2 truncate rồi lớn lại VƯỢT số dòng cũ trong cùng 5′ (cùng inode)
+P2 inode giữ · kết quả: SÓT (in 2 dòng)
+--- P3 marker hỏng trường số dòng (cùng đường dẫn + inode)
+P3 'đường_dẫn:inode:' → SÓT; stderr: integer expression expected
+P3 marker sau lượt: p3.log:326780011:2
+P3 lượt kế (marker đã lành): không in gì — turn của lượt trước không bao giờ được quét
+--- P4 dòng cuối chưa có newline (đang ghi dở)
+P4 lượt dở: SÓT · lượt sau khi xong dòng: BẮT
+--- P5 L4a: grep -c khi 0 dòng drop
+P5 DROP_N='0' · so ngưỡng: không WARN, không lỗi

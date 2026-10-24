@@ -8,9 +8,22 @@
 ## 0. Cách dùng
 
 - Mọi phiên bắt đầu: đọc §1 nguyên tắc + §3 quyết định đã chốt (KHÔNG hỏi
-  lại user những gì đã chốt), §4 lộ trình để biết vị trí hiện tại.
-- Làm xong việc: cập nhật §2 as-built + §4 đánh dấu ✅.
-- Việc mới phải tra §3 xem đã chốt chưa; quyết mới → ghi §3/§4.
+  lại user những gì đã chốt), rồi **`LO-TRINH.html` / `docs/plan/lo-trinh.json`** để biết việc kế tiếp.
+- Làm xong việc: cập nhật §2 as-built; trạng thái việc máy tự suy từ `_acceptance/<slug>/` lên lộ trình.
+- Việc mới phải tra §3 xem đã chốt chưa; quyết mới → ghi §3.
+
+**Mỗi loại thông tin một chỗ** (Mạnh chốt 23/10):
+
+| Loại | Ở đâu | Ai cập nhật |
+|---|---|---|
+| Mục đích, mục tiêu, thước đo | `docs/product/FRAMING.md` | Mạnh duyệt, có nhật ký §9 |
+| Hiến pháp, quyết định đã chốt | §1, §3 của tệp này + `docs/adr/` | phiên làm việc, sau khi Mạnh chốt |
+| **Việc phát triển sắp làm + mốc** | **`docs/plan/lo-trinh.json`** (trang `LO-TRINH.html`) | thêm bằng cắt lượt (`/acceptance-gate:cat-luot`) từ một bản phạm vi `docs/plan/pham-vi-*.md`; mốc ở khối `moc` |
+| Trạng thái từng việc | máy suy từ `_acceptance/<slug>/`, hiện trên `LO-TRINH.html` | không ai ghi tay |
+| As-built + chỉ mục | §2, §4 của tệp này — §4 trỏ mã hàng của lộ trình, không chép danh sách việc | phiên làm xong việc |
+| Căn cứ (audit, review, nghiên cứu) | `docs/audit/`, `docs/architecture/`, `docs/research/` | đầu vào của cắt lượt, không phải danh sách việc |
+| Bối cảnh khi mở vòng một hàng (đọc gì cho hàng nào, quyết định còn chờ chặn hàng nào, việc của người) | `docs/plan/BOI-CANH.md` | phiên cắt lượt; cập nhật khi cắt đợt mới hoặc chốt quyết định |
+| Giao việc cho ZCode | kênh tin (issue #9) — **mỗi lời giao ghi mã hàng** của lộ trình | điều phối liên làn |
 
 ## 1. Nguyên tắc bất biến (hiến pháp)
 
@@ -49,13 +62,17 @@ agent/      onehub-ai-agent (kiến trúc chốt §3.5-3.6)
 pipeline/ db/ docs/ tools/sync-public (overlay sanitise)
 ```
 `~/dev/one-invest` = symlink → `~/dev/onehub-invest` (launchd cũ chạy được).
+DB local `one-invest-db` (PostGIS :5433 trên colima) tự chạy lại khi Docker/máy khởi động lại:
+`restart: unless-stopped` trong `db/docker-compose.yml` (2026-10-23, AU7) — kiểm `bash scripts/check-db-autostart.sh live`.
 Public mirrors LIVE: onehub-invest-app + onehub-data-api.
 
 ### 2.2 Pipeline dữ liệu 5 tầng
 ```
 thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 → stg_* → transform (parser VN + phone + RESO property_type; S03/S05 upsert + đối soát
-  offer cũ qua `writeOffers` — đề xuất enrich + thẻ duyệt sống qua nạp lại, 039)
+  offer cũ qua `writeOffers` — đề xuất enrich + thẻ duyệt sống qua nạp lại, 039;
+  gạt post thử ở đầu đọc qua `lib/test-posts.mjs` — snapshot giả/agent thử/nhóm TEST, audit
+  `transform:reject-test`, PL2)
 → enrichment_proposals (E1/E2 đề xuất → luật xác định / /ops/review;
   E1 trái LLM → thẻ đối chiếu, người chọn; E1 không suy land từ tên nhóm;
   hoàn tác có audit qua `revert_enrichment` (036) + CLI enrich-revert;
@@ -70,7 +87,8 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Cloud sync (15', `pipeline/sync-cloud.mjs`): nguyên tử từ cloud-sync-atomic (23/10) — nạp
   `sync_stage.rows` (migration 038, schema riêng, anon không đọc được) qua Management API rồi MỘT giao
   dịch DELETE+UPSERT+INSERT; không TRUNCATE (giữ `saved_markets`); đọc local `row_to_json` một snapshot
-  (ngày/micro-giây/số jsonb nguyên vẹn); chặn tụt 50%; bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
+  (ngày/micro-giây/số jsonb nguyên vẹn); chặn tụt 50% (`sellers` được co khi audit
+  `bait-gap:sellers-orphan` ≤24h khớp số dòng — PL2); bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
   → `S0x:<số>`, soát tên nguồn trước khi gửi. Thước `pipeline/scripts/check-cloud-sync.mjs <ca>`,
   máy đo prod chỉ đọc `cloud-sync-watch.mjs`; triển khai: `docs/ops/cloud-sync-atomic.md`.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
@@ -96,6 +114,9 @@ zalo-import · 05:30 chotot (collect→import→transform→refresh→resolve) �
 ### 2.5 Số liệu hôm nay
 > ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
 > sellers, bait gap dưới đây gồm cả tin giả. Xem `docs/architecture/classification-enrich-review.md` §0.3 (L19).
+> PL2 (`_acceptance/canonical-khong-tin-gia`): transform gạt post thử, lượt 00:00 đầu sau merge rút tin giả qua
+> đối soát + xoá người bán mồ côi; đo bằng `cd pipeline && node scripts/test-data-residue.mjs` (mô phỏng 23/10:
+> 1.023 tin giả · 153 bait gap · 988 người bán → 0).
 1.195 P1 + 8.647 P2 offers · 8.270 properties (gộp 375 repost) ·
 ruler 150/338 phường · 1.043 sellers · 237 candidates P1↔P2 ·
 506 listings (493 ảnh, tên host thật) · G3 live 2 thị trường.
@@ -157,12 +178,25 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    **Dữ liệu là nỗ lực liên tục, có cấp bậc**: thang căn B0–B5 (lời khai → đọc được → gắn căn → đã đo → xác
    minh → sống), năng lực phân khúc N0–N4; north star = phân bố căn theo bậc; bậc đích: căn hộ có danh mục B5,
    nhà phố B3, Chợ Tốt B3 (FRAMING §3.4).
-14. **Kiến trúc dữ liệu «tin → căn» theo RESO DD 2.1** (23/10, **ADR-0013**): căn = UPI + `Building`, tin = `Property`;
+14. **Tên nhóm là công khai, tên nguồn vẫn bí mật** (24/10, audit Ops prod OPS-6/OPS-13): tên nhóm cộng đồng
+   mà S03 thu là tầng C — hiện trên `/ops/**` ở cloud, đi qua `ops_heartbeat`, làm ngữ cảnh cho agent; tên nguồn
+   thật vẫn tầng A, ngoài `/ops/sources` chỉ mã `S0x` + vai trò. Tên tài khoản thu chưa chốt. Sửa đổi ADR-0007.
+15. **S08 như nguồn hiệu chuẩn** (24/10): chỉ đọc, ≤ 1 lần/tuần, chỉ nội bộ, không tái xuất lên cổng công khai
+   (AGENTS.md cạnh luật 5).
+16. **Ops trên cloud đọc số tổng hợp do máy local tính sẵn** (24/10, «Chọn A», ADR-0014): `push-ops-facts.mjs` đẩy
+   độ tươi/SLO, job, lockdown, bản ghi 24h, số thẻ chờ (chỉ tổng hợp + mã `S0x`, qua bộ soát tầng A), mỗi khối có mốc
+   đo; trang cloud chỉ đọc bảng đó, facts cũ > 45′ báo «máy local không đẩy số». Loại sync bản gọt và tunnel.
+17. **Kiến trúc dữ liệu «tin → căn» theo RESO DD 2.1** (23/10, **ADR-0013**): căn = UPI + `Building`, tin = `Property`;
    toà = `BuildingName`, phân khu = `ComplexName`, trục = extension `Stack`; UPI kiểu VN `urn:onehub:upi`; phường/xã →
    `City`; mọi giá trị máy/người ghi `FieldAssertion`; trạng thái chỉ theo bằng chứng. Mọi việc chạm dữ liệu tin/căn
    kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
+
+> Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
+> AU1–AU12; lượt cắt chung 23/10 thêm `giao-dien-2310` UI1–UI17, `nen-tang-2310` NT1–NT7, `zcode-2310` ZC1–ZC5,
+> `san-pham-sau-2310` chờ điều kiện SH1–SH14; bối cảnh `docs/plan/BOI-CANH.md`). Các bảng track dưới đây là chỉ mục
+> lịch sử; đồng bộ với lộ trình ở hàng AU8.
 
 ### Track 1 — AGENT (onehub-ai-agent) — chốt, sẵn sàng thực hiện
 | # | Việc | Trạng thái |
@@ -219,7 +253,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V5 | Tài khoản ops thử chỉ ở DB local (`scripts/dev-ops-account.mjs`) — máy tự đăng nhập dev để chụp/ui-check `/ops/**` | ✅ 2026-10-22 |
 | V6 | Giảm hỏi quyền ngoài cổng: bỏ luật ask rộng, rào push main = branch protection GitHub (ngang crm/kit) — `_acceptance/narrow-ask-rules` | ✅ Cổng 2 ký 23/10 — PR #23; branch protection main bật 23/10 |
 | V7 | Cloud sync nguyên tử — prod không còn cửa sổ trống, không xoá `saved_markets`, ngày đúng — `_acceptance/cloud-sync-atomic` | 🔄 PR #24 — Cổng 2 ký 23/10; migration 038 ĐÃ áp cloud 23/10; chờ merge |
+| V9 | Tạm đóng `/api/v1/deals` — chỉ bearer `OPS_API_TOKEN` hoặc phiên ops; người gọi khác nhận 401 trước khi truy vấn. Lý do: audit 23/10 P7 (29/30 căn giá tốt trả công khai là tin mock S03), Q3 «đóng ngay, yêu cầu token ops». Mở lại khi PL2 đã rút tin mock khỏi canonical — quyết riêng, hàng riêng — `_acceptance/deals-api-tam-dong` | ✅ Cổng 2 ký 23/10 — PR #33; prod đo 23/10: khách 401, token ops 200 (`do-prod.md`). Project Vercel cũ `app` (`app-lilac-one-49.vercel.app`, bản 22/10) Mạnh đã xoá 24/10 — audit Q2 đóng (404 `DEPLOYMENT_NOT_FOUND`) |
+| V10 | DB local tự khởi động lại sau khi Docker/máy khởi động lại — `restart: unless-stopped` trong `db/docker-compose.yml`, thước `scripts/check-db-autostart.sh` (AU7, audit L7) — `_acceptance/db-tu-khoi-dong` | 🔄 đợt 0 «Cầm máu»; xem `docs/ops/runtime-map.md` mục DB local tự khởi động |
+| V12 | Sổ bề mặt API — mọi route khai ở `app/src/lib/api-surface.ts`, CI đỏ khi lệch; đóng `/api/v1/offers` (chế độ `ops` như căn giá tốt), beacon khách 204, `/api/zalo-media` chặn ảnh QR đăng nhập Zalo — `_acceptance/so-be-mat-api` | 🔄 NT4, đợt 0 |
 | V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
+| V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI
 | # | Việc | Trạng thái |
@@ -256,7 +294,8 @@ có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới �
 
 ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
-boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent.
+boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
+0014 Ops cloud đọc số tổng hợp (0013 ở PR #27).
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.

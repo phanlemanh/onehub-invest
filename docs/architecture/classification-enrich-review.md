@@ -387,7 +387,7 @@ hình dự phòng và API số liệu cần kiểm khi làm.
 |---|---|---|
 | Nội dung tin rao, người bán (tên, SĐT, ID) | **Được** | Tầng C — ROADMAP §3.11 |
 | Tên nguồn thật, `source_registry`, nhãn nội bộ nguồn | **Không** — bỏ khỏi prompt | Tầng A — ADR-0007 |
-| Tên nhóm | **Chờ quyết** (M2) — tạm không gửi | Có thể lộ nguồn |
+| Tên nhóm | **Được** — Mạnh chốt 24/10 tên nhóm cộng đồng là tầng C (ROADMAP §3.14); M2 không còn treo | Tên nguồn thật vẫn tầng A — chỉ gửi mã S0x |
 | Hồ sơ, sự kiện, danh mục của nhà đầu tư (trợ lý) | **Chờ ADR riêng** | ADR-0007 xếp tầng A, không rời máy local — trái với trợ lý chạy cloud |
 
 ### Ước lượng (để có thứ tự độ lớn, không phải báo giá)
@@ -400,7 +400,7 @@ phụ thuộc model được chọn theo số đo — sổ cuộc gọi sẽ cho
 | # | Câu | Phương án | Khuyến nghị |
 |---|---|---|---|
 | **M1** | Sửa hiến pháp ROADMAP §1.6 «Local-first AI» | (a) **Thành «chọn model theo số đo (đúng × trễ × chi phí); local là một lựa chọn và là dự phòng»** · (b) Giữ local mặc định, cloud là ngoại lệ | **(a)** — đúng ý Mạnh và đúng nguyên lý gốc A4; local vẫn giữ vai cho dữ liệu không được ra ngoài |
-| **M2** | Tên nhóm có được gửi model cloud? | (a) Không — chỉ gửi nhãn dự án đã khai ở sổ nhóm · (b) Được | **(a)** — dự án đã khai mang đủ ngữ cảnh; tên nhóm có thể lộ nguồn |
+| **M2** | Tên nhóm có được gửi model cloud? | **Đã trả lời 24/10** (ROADMAP §3.14): tên nhóm là tầng C — được gửi; tên nguồn thật vẫn không | — |
 | **M3** | Cổng | (a) **Vercel AI Gateway + sổ cuộc gọi riêng** · (b) Tự dựng cổng (proxy tự host) · (c) Gọi thẳng từng nhà cung cấp | **(a)** — cùng hệ Vercel/AI SDK, không phí cộng thêm theo tài liệu; (c) mất chỗ đổi model và chỗ đo chi phí |
 | **M4** | Trợ lý nhà đầu tư tính tiền riêng | Ghi FRAMING D6 ngay; đo theo người dùng từ ngày đầu; ADR SPL riêng trước khi gửi hồ sơ nhà đầu tư lên cloud | Ghi ngay; ADR khi bắt đầu làm trợ lý |
 

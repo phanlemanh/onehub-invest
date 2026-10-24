@@ -1,0 +1,21 @@
+{
+  "dot": "dot0-cam-mau",
+  "day": [
+    { "id": "P1", "worktree": "/CHUA-CO-WORKTREE/P1" },
+    { "id": "P2", "worktree": "/CHUA-CO-WORKTREE/P2" },
+    { "id": "P3", "worktree": "/CHUA-CO-WORKTREE/P3" },
+    { "id": "P4", "worktree": "/CHUA-CO-WORKTREE/P4" }
+  ],
+  "hang": [
+    { "ma": "AU2", "tep": "docs/plan/lo-trinh.json", "day": "P1", "uu_tien": 1, "ranh_gioi": ["app/src/app/api/v1/deals/**"] },
+    { "ma": "NT4", "tep": "docs/plan/lo-trinh.json", "day": "P1", "uu_tien": 2, "sau": ["AU2"], "ranh_gioi": ["app/src/app/api/**"] },
+    { "ma": "AU7", "tep": "docs/plan/lo-trinh.json", "day": "P2", "uu_tien": 1, "ranh_gioi": ["db/docker-compose.yml"] },
+    { "ma": "AU1", "tep": "docs/plan/lo-trinh.json", "day": "P2", "uu_tien": 2, "ranh_gioi": ["pipeline/sync-cloud.mjs", "pipeline/sync-*.test.mjs"] },
+    { "ma": "AU3", "tep": "docs/plan/lo-trinh.json", "day": "P3", "uu_tien": 1 },
+    { "ma": "AU4", "tep": "docs/plan/lo-trinh.json", "day": "P3", "uu_tien": 2, "ranh_gioi": ["scripts/check-freshness.mjs"] },
+    { "ma": "AU5", "tep": "docs/plan/lo-trinh.json", "day": "P3", "uu_tien": 3, "ranh_gioi": ["scripts/audit-all.sh"] },
+    { "ma": "AU6", "tep": "docs/plan/lo-trinh.json", "day": "P3", "uu_tien": 4, "sau": ["AU4"] },
+    { "ma": "PL2", "tep": "docs/plan/lo-trinh.json", "day": "P4", "uu_tien": 1, "ranh_gioi": ["pipeline/sql/200_transform.sql"] }
+  ],
+  "ngoai_hang_merge": []
+}

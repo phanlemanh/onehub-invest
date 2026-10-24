@@ -6,7 +6,9 @@
 //   - /dau-tu không đọc bảng AirDNA, không hiện chữ AirDNA;
 //   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
 //     so theo đoạn đường dẫn + realpath;
-//   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm.
+//   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm;
+//   - /api/v1/deals đang tạm đóng: cổng ops chạy trước truy vấn (check-deals-api.mjs);
+//   - mọi route API khớp sổ bề mặt app/src/lib/api-surface.ts (check-api-surface.mjs).
 // Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -136,6 +138,17 @@ for (const [env, user, want, label] of [
   const got = withEnv(env, () => canAccessOps(user));
   check(got === want, `canAccessOps(${label}) = ${want}`);
 }
+
+// 10. /api/v1/deals tạm đóng (deals-api-tam-dong): cổng ops có await, trả 401, đứng trước pool.query.
+const { checkDealsRoute } = await import("./check-deals-api.mjs");
+const dealsApi = checkDealsRoute(read("src/app/api/v1/deals/route.ts"));
+check(dealsApi.ok, dealsApi.msg);
+
+// 11. Sổ bề mặt API (so-be-mat-api): mọi route khai đúng một dòng, cổng khớp chế độ, route public không đọc sale_offers.
+const { checkApiSurface, loadEntries, loadFiles } = await import("./check-api-surface.mjs");
+const surface = checkApiSurface({ entries: await loadEntries(), files: loadFiles() });
+for (const v of surface.violations) check(false, `sổ bề mặt API: ${v}`);
+check(surface.violations.length === 0, `sổ bề mặt API: ${surface.routes}/${surface.declared} route khớp sổ (đường + phương thức)`);
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);

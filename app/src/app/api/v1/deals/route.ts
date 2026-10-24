@@ -1,15 +1,23 @@
 import { NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { canCallOpsApi } from "@/lib/ops-access";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/v1/deals — căn giá tốt (public API, P4: thước P2).
+ * GET /api/v1/deals — căn giá tốt (P4: thước P2). TẠM ĐÓNG — chỉ bearer OPS_API_TOKEN hoặc
+ * phiên ops; người gọi khác nhận 401 trước khi truy vấn. Lý do: audit 23/10 P7 — 29/30 căn giá
+ * tốt trả công khai là tin mock S03 (Q3: đóng ngay, yêu cầu token ops). Mở lại khi PL2 đã rút tin mock
+ * khỏi canonical là quyết riêng, hàng riêng — hồ sơ _acceptance/deals-api-tam-dong.
  * Query: ?market=<id>&limit=30&min_discount=5
- * Thước = median price/m² phường từ vải Chợ Tốt (S06, n≥5); deals là tin
- * nội bộ P1 (S03/S05). Lưu ý: contact info (PII tầng A) KHÔNG trả về.
+ * Thước = median price/m² phường từ vải S06 (n≥5); căn giá tốt là tin rao nội bộ P1 (S03/S05).
+ * Lưu ý: contact info (PII tầng A) KHÔNG trả về.
  */
 export async function GET(req: Request) {
+  if (!(await canCallOpsApi(req, getSessionUser))) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
   const u = new URL(req.url);
   const market = u.searchParams.get("market");
   const limit = Math.min(100, Number(u.searchParams.get("limit") ?? 30) || 30);

@@ -7,6 +7,7 @@ import type { InsightColumn } from "@/components/insight/insight-grid"
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { fmtInt } from "@/lib/format"
+import { fmtAge } from "@/lib/freshness"
 import type { SourceFeedHealth } from "@/lib/ops-queries"
 
 import { FEED_STATE, feedState } from "./feed-status"
@@ -57,11 +58,11 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
       {
         id: "fresh",
         accessorFn: (f) => f.freshnessHrs ?? Number.POSITIVE_INFINITY,
-        header: ({ column }) => <DataGridColumnHeader title="Độ tươi (giờ)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Độ tươi" column={column} />,
         cell: ({ row }) => (
           <>
-            {fmtInt(row.original.freshnessHrs)}
-            {row.original.sloHours ? <span className="text-muted-foreground"> / {fmtInt(row.original.sloHours)}</span> : null}
+            {fmtAge(row.original.freshnessHrs)}
+            {row.original.sloHours ? <span className="text-muted-foreground"> / {fmtAge(row.original.sloHours)}</span> : null}
           </>
         ),
         size: 130,

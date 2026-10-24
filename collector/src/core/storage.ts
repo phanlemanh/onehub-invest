@@ -7,8 +7,9 @@ import type { CoverageReport, ManifestFile, RawItem, SnapshotManifest } from "./
 
 const BATCH = 1000;
 
-/** schemaVersion snapshot — v2 (2026-10-22): thêm file `media/*` + RawItem.meta.mediaFiles. */
-export const SNAPSHOT_SCHEMA_VERSION = 2;
+/** schemaVersion snapshot — v3 (2026-10-23): thêm RawItem.meta.kev (Kev-nhãn);
+ *  v2 (2026-10-22): thêm file `media/*` + RawItem.meta.mediaFiles. */
+export const SNAPSHOT_SCHEMA_VERSION = 3;
 
 /**
  * Ghi raw snapshots bất biến: snapshots/<city>/<snapshotId>/items-NNNN.json.gz

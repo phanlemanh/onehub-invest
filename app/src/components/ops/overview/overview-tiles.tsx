@@ -9,11 +9,12 @@ import { CalendarClockIcon, CircleOffIcon, ClockAlertIcon, TargetIcon } from "lu
 import { Badge } from "@/components/reui/badge"
 import { FramePanel } from "@/components/reui/frame"
 import { fmtInt } from "@/lib/format"
+import { bySource, fmtAge, sloSummaryKey, sloSummaryText, summarizeSources } from "@/lib/freshness"
 import type { CoverageRow } from "@/lib/ops-queries"
 import { cn } from "@/lib/utils"
 
 import { SectionFoot, SectionFrame, SectionHead } from "./section-lead"
-import { ageRatio, FRESHNESS, FRESHNESS_ORDER } from "./status"
+import { ageRatio, FRESHNESS, FRESHNESS_ORDER, where } from "./status"
 
 function KpiTile({ icon, title, detail, children }: { icon: ReactNode; title: string; detail: string; children: ReactNode }) {
   return (
@@ -24,9 +25,9 @@ function KpiTile({ icon, title, detail, children }: { icon: ReactNode; title: st
   )
 }
 
-function KpiValue({ value, unit, badge }: { value: ReactNode; unit?: string; badge?: ReactNode }) {
+function KpiValue({ value, unit, badge, sloSummary }: { value: ReactNode; unit?: string; badge?: ReactNode; sloSummary?: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2" data-slo-summary={sloSummary}>
       <span className="shrink-0 text-2xl font-semibold tracking-tight whitespace-nowrap tabular-nums">
         {value}
         {unit ? <span className="text-muted-foreground ms-1 text-sm font-normal">{unit}</span> : null}
@@ -52,24 +53,25 @@ function Panel({ head, legend, subject }: { head: ReactNode; legend?: ReactNode;
   )
 }
 
-const where = (r: CoverageRow) => `${r.code} · ${r.city}`
-
-export function OverviewTiles({ rows }: { rows: CoverageRow[] }) {
-  const counts = FRESHNESS_ORDER.map((s) => ({ s, n: rows.filter((r) => r.status === s).length }))
-  const fresh = rows.filter((r) => r.status === "fresh").length
+export function OverviewTiles({ rows, localOnly = false }: { rows: CoverageRow[]; localOnly?: boolean }) {
+  // Ô «Đạt SLO» đếm NGUỒN (Hỏi-1 AU6): nguồn đạt khi mọi thị trường có dữ liệu của nó đạt — cùng luật với
+  // ô «Sức khoẻ nguồn» của /ops/collections (lib/freshness). Các ô còn lại vẫn kể từng cặp nguồn × thị trường.
+  const sources = bySource(rows)
+  const summary = summarizeSources(sources)
+  const counts = FRESHNESS_ORDER.map((s) => ({ s, n: sources.filter((r) => r.status === s).length }))
   const stale = rows.filter((r) => r.status === "stale").sort((a, b) => (ageRatio(b) ?? 0) - (ageRatio(a) ?? 0))
   const none = rows.filter((r) => r.status === "none")
-  // SLO lấy từ chính dữ liệu (SLO_DAYS ở lib/ops-queries), không chép tay.
-  const slos = [...new Map(rows.filter((r) => Number.isFinite(r.sloDays)).map((r) => [r.code, r.sloDays])).entries()].sort(([a], [b]) => a.localeCompare(b))
+  // SLO lấy từ chính dữ liệu (SLO_HOURS ở lib/freshness), không chép tay.
+  const slos = [...new Map(rows.map((r) => [r.code, r.sloHours])).entries()].sort(([a], [b]) => a.localeCompare(b))
   const newest = rows
     .filter((r) => r.lastSnapshotAt)
     .sort((a, b) => (b.lastSnapshotAt ?? "").localeCompare(a.lastSnapshotAt ?? ""))[0]
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <KpiTile icon={<TargetIcon aria-hidden="true" />} title="Đạt SLO" detail="Nguồn × thị trường còn trong hạn">
+      <KpiTile icon={<TargetIcon aria-hidden="true" />} title="Đạt SLO" detail="Nguồn đạt khi mọi thị trường của nó đạt">
         <Panel
-          head={<KpiValue value={fmtInt(fresh)} unit={`/ ${fmtInt(rows.length)}`} />}
+          head={<KpiValue value={fmtInt(summary.ok)} unit={`/ ${fmtInt(summary.total)} nguồn`} sloSummary={sloSummaryKey(summary)} />}
           legend={
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium">
               {counts
@@ -83,11 +85,11 @@ export function OverviewTiles({ rows }: { rows: CoverageRow[] }) {
                 ))}
             </div>
           }
-          subject={<span className="truncate">{slos.length ? `SLO: ${slos.map(([c, d]) => `${c} ≤ ${d} ngày`).join(", ")}` : "Chưa có nguồn nào"}</span>}
+          subject={<span className="truncate">{slos.length ? `SLO: ${slos.map(([c, h]) => `${c} ≤ ${fmtAge(h)}`).join(", ")}` : sloSummaryText(summary, localOnly)}</span>}
         />
       </KpiTile>
 
-      <KpiTile icon={<ClockAlertIcon aria-hidden="true" />} title="Quá hạn" detail="Snapshot cũ hơn SLO">
+      <KpiTile icon={<ClockAlertIcon aria-hidden="true" />} title="Quá hạn" detail="Cặp nguồn × thị trường cũ hơn SLO">
         <Panel
           head={<KpiValue value={fmtInt(stale.length)} badge={stale.length ? <Badge variant="destructive-light">Cần thu lại</Badge> : <Badge variant="success-light">Không có</Badge>} />}
           subject={
@@ -96,7 +98,7 @@ export function OverviewTiles({ rows }: { rows: CoverageRow[] }) {
                 <ToneDot tone={FRESHNESS.stale.tick} />
                 <span className="truncate">Lâu nhất: {where(stale[0])}</span>
                 <span className="text-foreground ms-auto shrink-0 font-medium tabular-nums">
-                  {fmtInt(stale[0].ageDays)} / {fmtInt(Number.isFinite(stale[0].sloDays) ? stale[0].sloDays : null)} ngày
+                  {fmtAge(stale[0].ageHours)} / {fmtAge(stale[0].sloHours)}
                 </span>
               </>
             ) : (

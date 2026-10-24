@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Mọi tin Zalo có chữ giờ đều vào kho dữ liệu thô, mỗi tin mang kèm điểm «có phải tin rao BĐS» của Kev, thay vì bị bỏ khi điểm dưới 0,9; khi Kev chết, điểm để trống chứ không còn giả là 1,0.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
+  "decisions_plain": [
+    {"id": "d-20261023T094558Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, phiên kiểm độc lập được giao tự đi tìm lỗ và đã ghi 5 điểm ngoài phạm vi."}
+  ]
+}
