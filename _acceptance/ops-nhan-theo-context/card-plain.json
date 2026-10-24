@@ -1,33 +1,4 @@
 {
   "feature_plain": "Người vận hành đọc cổng Ops toàn bằng nhãn tiếng Việt theo CONTEXT.md: không còn chữ tiếng Anh, không còn mã thô từ dữ liệu, chi tiết kiểm chất lượng thành câu tiếng Việt, tên thị trường có dấu đầy đủ.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ không còn chữ nào trong danh sách «tránh dùng» của CONTEXT.md trên chữ viết sẵn của 7 trang Ops (kể cả chữ bọc trong ô mã) — máy quét đúng danh sách tệp đã kê, tệp mới chưa kê thì báo."},
-    {"id": "AC-2", "p": "Sẽ không còn từ tiếng Anh trên chữ viết sẵn, trừ danh sách giữ đã kê (nhãn tiếng Anh có sẵn trong CONTEXT.md như Listing, ADR; mã S0x; viết tắt QR, PN, SLO; tên riêng Zalo, Facebook)."},
-    {"id": "AC-3", "p": "Sẽ đổi chữ đọc màn hình của nút mở thanh bên thành «Mở hoặc gập thanh bên» và nhãn đường dẫn trang sang tiếng Việt."},
-    {"id": "AC-4", "p": "Sẽ diễn giải tên kiểm, đối tượng và chi tiết kiểm chất lượng thành câu tiếng Việt cho mọi khuôn mà pipeline đang ghi, kể cả khuôn cũ còn trong 7 ngày; khuôn lạ ghi rõ «chưa diễn giải»."},
-    {"id": "AC-5", "p": "Sẽ hiện mọi dòng kiểm chất lượng 7 ngày qua trên DB local bằng tiếng Việt, không còn mã thô."},
-    {"id": "AC-6", "p": "Sẽ hiện tên thị trường S02 có dấu đầy đủ (Quảng Trị, Bình Thuận, Phan Rang – Tháp Chàm, Hà Nội…), cột «Khu vực của ta» hiện tên thay mã."},
-    {"id": "AC-7", "p": "Sẽ đổi các giá trị thô từ dữ liệu sang nhãn tiếng Việt: trạng thái nguồn, loại hình, loại tin, độ tin, đề xuất AI, tên chỉ số, mã thị trường ở tổng quan («hanoi» → «Hà Nội»)."},
-    {"id": "AC-8", "p": "Sẽ chạy thật 7 trang Ops trên máy và đọc chữ hiển thị: 0 chữ tránh dùng, 0 tiếng Anh ngoài danh sách giữ, 0 mã kiểm chất lượng, 0 mã khu vực thô, không «Toggle Sidebar» — đúng ngưỡng của hàng."},
-    {"id": "AC-9", "p": "Sẽ thêm vào CONTEXT.md các thuật ngữ mới (Khoá an toàn, Lượt máy tự trả lời, Bộ canh, Tín hiệu sống, Danh sách cho phép, Tác vụ, Bài, Máy chủ) kèm chữ tiếng Anh cũ ở dòng «tránh dùng»."},
-    {"id": "AC-10", "p": "Sẽ cho tên thị trường và chi tiết kiểm chất lượng xuống dòng thay vì bị cắt «…»."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "KHÔNG đụng cổng Invest."},
-    {"id": "OOS-2", "p": "KHÔNG làm phần của hàng khác: chọn dòng và nhãn trạng thái bảng kiểm (ON9), số vùng Hiệu chuẩn (ON10), cột trạng thái trên điện thoại (ON13), bố cục hàng duyệt (UI1), số S02 ở trang Thu thập (ON6)."},
-    {"id": "OOS-3", "p": "KHÔNG dịch dữ liệu do máy hay người đặt: dòng nhật ký, tên nhóm, email, mã lỗi."},
-    {"id": "OOS-4", "p": "KHÔNG đổi tên kiểm hay khuôn chi tiết ở pipeline."},
-    {"id": "OOS-5", "p": "KHÔNG đo chữ từ dữ liệu chỉ có trên máy chủ cloud — chữ viết sẵn vẫn được quét."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Phủ ba nguồn chữ: chữ viết sẵn trong mã (AC-1, AC-2, AC-3), chữ đến từ dữ liệu (kiểm chất lượng AC-4/AC-5, tên thị trường AC-6, giá trị thô AC-7), và trang chạy thật 7 trang (AC-8); cộng từ vựng (AC-9) và chữ bị cắt (AC-10). Biên đã viết trước: khuôn cũ còn trong 7 ngày, khuôn lạ, mã thị trường lạ, chữ tiếng Việt không dấu trùng chữ tiếng Anh."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Giá trị mong đợi tự vướng luật đo («Thành phố Hà Nội» chứa chữ tránh dùng, «TP.», «24h», «m²») — đã sửa: tên thị trường bỏ tiền tố, đơn vị một chữ cái không xét, thêm các ca này vào ma trận."},
-    {"i": 1, "p": "Bọc chữ vào ô mã là lách được mọi thước — đã sửa: luật «tránh dùng», tên kiểm và dấu dự phòng vẫn soi bên trong ô mã; chữ tiếng Anh cũ thành chữ tránh dùng; có ca đỏ cho việc bọc."},
-    {"i": 2, "p": "Mã khu vực thô như «vn-tinh-an-giang» lọt luật âm tiết, và test có thể tự cấp tên thay vì đi qua hàm nạp thật — đã sửa: thêm luật mã khu vực trên trang thật, ba tiêu chí dữ liệu đo bằng đúng hàm nạp của trang."},
-    {"i": 3, "p": "Danh sách tệp quét chưa kê đủ — đã sửa: kê mẫu và tệp lib ghim theo tên hàm; tệp mới chưa kê thì báo đỏ."},
-    {"i": 4, "p": "Đo chữ bị cắt mới nhìn ô ngoài cùng trong khi bảng cắt ở phần tử bên trong — đã sửa: đo cả cây con của ô, có đối chứng cột khác vẫn cắt."}
-  ],
-  "scope_plain": "Năm thứ cắt ra khỏi vòng này:"
+  "scope_plain": "Năm thứ đã cắt ra khỏi vòng này ở Cổng Phạm vi:"
 }
