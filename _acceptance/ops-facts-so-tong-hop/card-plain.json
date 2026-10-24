@@ -1,36 +1,3 @@
 {
-  "feature_plain": "Sau mỗi lượt đồng bộ 15 phút, máy thu đẩy lên cloud năm nhóm số vận hành (độ tươi từng nguồn, job chạy nền, lớp khoá Zalo, bản ghi 24 giờ, số thẻ chờ duyệt), mỗi nhóm ghi giờ đo; cloud có một chỗ đọc chung biết số còn tươi hay đã cũ quá 45 phút.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ gửi đủ năm nhóm số trong mỗi bản tin, nhóm nào cũng có giờ đo, và không bỏ mục nào trang Thu thập đang đọc."},
-    {"id": "AC-2", "p": "Sẽ gửi độ tươi từng nguồn đúng bằng số lệnh kiểm độ tươi ở máy thu tính cùng lúc (cùng một định nghĩa)."},
-    {"id": "AC-3", "p": "Sẽ gửi số bản ghi 24 giờ từng nguồn đúng bằng con số trang Thu thập ở máy local đang hiện."},
-    {"id": "AC-4", "p": "Sẽ gửi số thẻ đang chờ duyệt theo từng loại — chỉ con số, không nội dung thẻ."},
-    {"id": "AC-5", "p": "Sẽ gửi trạng thái từng lớp khoá Zalo đúng như trang ở máy local: lớp kiểm thấy sự cố là đỏ, lớp không kiểm được là «chưa kiểm», không bao giờ «Ổn» thay."},
-    {"id": "AC-6", "p": "Sẽ gửi từng job chạy nền của máy thu kèm mã thoát lần chạy cuối và giờ ghi log cuối, tên job chỉ mang mã nguồn S0x."},
-    {"id": "AC-9", "p": "Sẽ cho cloud một chỗ đọc chung: chưa có số thì nói «chưa có», số đẩy trong 45 phút là tươi, quá 45 phút là cũ kèm giờ đo cuối — đo trọn đường từ máy thu qua cổng nhận trên cloud."},
-    {"id": "AC-10", "p": "Sẽ chạy thử khô trên dữ liệu thật của máy thu: đủ năm nhóm, độ tươi khớp lệnh kiểm, không bị bộ soát chặn oan."}
-  ],
-  "wont_do": [
-    {"id": "AC-7", "p": "Sẽ KHÔNG thay nhóm số đo không được bằng 0 hay «Ổn» — nhóm đó ghi rõ lỗi, các nhóm khác vẫn gửi."},
-    {"id": "AC-8", "p": "Chặn bản tin có tên nguồn thật ở bất kỳ nhóm số nào — không gửi gì lên cloud."},
-    {"id": "OOS-1", "p": "Chưa hiện số lên trang (dòng «Số đo lúc …», cảnh báo máy local im) — việc của ON3."},
-    {"id": "OOS-2", "p": "Chưa đổi trang khoá Zalo trên cloud (ON23) và trang độ phủ (AU12) — hai hàng đó đọc số của hàng này."},
-    {"id": "OOS-3", "p": "Không thêm bảng mới hay đổi cấu trúc cơ sở dữ liệu — số nằm trong bản tin sẵn có."},
-    {"id": "OOS-4", "p": "Không đưa nội dung thẻ chờ duyệt lên cloud."},
-    {"id": "OOS-5", "p": "Không gộp mã tính khoá Zalo và bản ghi 24h của trang local thành bản dùng chung trong vòng này."}
-  ],
-  "scope_plain": "Hàng này chỉ dựng đường số và chỗ đọc chung; các trang dùng số là những hàng đứng sau.",
-  "coverage_plain": [
-    {"i": 0, "p": "Đủ năm nhóm số mà quyết định kiến trúc ADR-0014 liệt kê, mỗi nhóm một tiêu chí (AC-2 độ tươi, AC-3 bản ghi 24h, AC-4 thẻ chờ, AC-5 khoá Zalo, AC-6 job)."},
-    {"i": 1, "p": "Mỗi nhóm đi qua ba tình huống: đo được (AC-1…AC-6), không đo được hay kiểm thấy sự cố (AC-7, AC-5), và còn tên nguồn thật thì bị chặn (AC-8)."},
-    {"i": 2, "p": "Bên đọc trên cloud phân biệt đủ ba mức trễ của ADR — chưa có, tươi, cũ — và trường hợp một nhóm cũ hay lỗi trong bản tin còn tươi (AC-9)."},
-    {"i": 3, "p": "Đo trên dữ liệu dựng tạm (AC-1…AC-9) và một lần trên dữ liệu thật của máy thu (AC-10)."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Thiếu một phép đo đi trọn đường từ máy thu qua cổng nhận trên cloud tới chỗ đọc — đã sửa: AC-9 nay chạy bản tin thật qua cổng nhận thật rồi đọc lại."},
-    {"i": 1, "p": "Lo bản chụp danh sách job đưa tên nguồn thật lên kho công khai — bác: tệp đã có trong kho từ vòng kiểm toàn hệ thống 23/10, tên job trùng tên tệp sẵn có; vòng không đưa thêm gì ra ngoài."},
-    {"i": 2, "p": "Phép thử trên máy thật có thể tự bỏ qua mà vẫn báo đạt — đã sửa: thiếu cơ sở dữ liệu hay công cụ launchd thì phép thử đỏ."},
-    {"i": 3, "p": "Thiếu tình huống canh gác Zalo báo sự cố (phải hiện đỏ, không phải «chưa kiểm») — đã sửa: thêm tình huống đó và tình huống có lượt agent trong ngày."},
-    {"i": 4, "p": "Bản ghi 24h có thể ra 0 khi bảng nguồn vắng mà không phép đo nào bắt — đã sửa: thêm tình huống bảng vắng, nhóm phải ghi lỗi."}
-  ]
+  "feature_plain": "Sau mỗi lượt đồng bộ 15 phút, máy thu đẩy lên cloud năm nhóm số vận hành có giờ đo (độ tươi từng nguồn, job chạy nền, lớp khoá Zalo, bản ghi 24 giờ, số thẻ chờ duyệt); nhóm đo không được thì ghi lỗi; cloud có một chỗ đọc chung biết số chưa có, còn tươi hay đã cũ quá 45 phút."
 }
