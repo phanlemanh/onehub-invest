@@ -1,0 +1,10 @@
+{"ts":"2026-10-24T23:25:54Z","round":1,"evalId":"E1","run_id":"hook-zalo-spool-E1-20261024T232554Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:26:01Z","round":1,"evalId":"E2","run_id":"hook-zalo-spool-E2-20261024T232601Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:26:06Z","round":1,"evalId":"E3","run_id":"hook-zalo-spool-E3-20261024T232606Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:26:16Z","round":1,"evalId":"E4","run_id":"hook-zalo-spool-E4-20261024T232615Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"}
+{"ts":"2026-10-24T23:26:37Z","round":1,"evalId":"E5","run_id":"hook-zalo-spool-E5-20261024T232621Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs hang-stop"}
+{"ts":"2026-10-24T23:26:44Z","round":1,"evalId":"E6","run_id":"hook-zalo-spool-E6-20261024T232644Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs cap-50"}
+{"ts":"2026-10-24T23:26:54Z","round":1,"evalId":"E7","run_id":"hook-zalo-spool-E7-20261024T232649Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs kev-hang"}
+{"ts":"2026-10-24T23:26:59Z","round":1,"evalId":"E8","run_id":"hook-zalo-spool-E8-20261024T232659Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs self-contained"}
+{"ts":"2026-10-24T23:27:05Z","round":1,"evalId":"E9","run_id":"hook-zalo-spool-E9-20261024T232705Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs l1-grep"}
+{"ts":"2026-10-24T23:28:17Z","round":1,"evalId":"E10","run_id":"hook-zalo-spool-E10-20261024T232731Z","exit_code":1,"cmd":"cd collector && npm test"}
