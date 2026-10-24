@@ -93,11 +93,12 @@ async function probe(url) {
     return "no";
   }
 }
-// ON7: nhãn nguồn «S0x · vai trò» (CONTEXT.md «Nhãn nguồn») — tên thật không lên cloud.
-const lab = (code, roles) => (roles[code] ? `${code} · ${roles[code]}` : code);
+// ON7: nhãn nguồn «S0x · vai trò» (CONTEXT.md «Nhãn nguồn») — tên thật không lên cloud. main() nạp REG từ
+// source_registry local trước khi gọi scheduler(); names chỉ dùng để che dòng log, không rời máy.
+const REG = { roles: {}, names: [] };
+const lab = (code) => (REG.roles[code] ? `${code} · ${REG.roles[code]}` : code);
 
-/** names = [{ code, realName }] từ source_registry local — chỉ dùng để che dòng log, không rời máy. */
-async function scheduler(roles, names) {
+async function scheduler() {
   const LOGS = path.join(ROOT, "pipeline/logs");
   let weekly = null;
   try {
@@ -113,15 +114,15 @@ async function scheduler(roles, names) {
     weekly ? tailLog(weekly) : Promise.resolve({ lastLogAt: null, lastLine: null }),
   ]);
   const jobs = [
-    { id: "s02-daily", label: `${lab("S02", roles)} — toàn quốc (rotation 6 market)`, schedule: "19:05 hằng ngày", alive: "unknown", ...airdnaLog },
-    { id: "s01-weekly", label: `${lab("S01", roles)} — Hà Nội`, schedule: "Chủ nhật 19:30 +jitter", alive: "unknown", ...weeklyTail },
-    { id: "s01-smoke", label: `Smoke ${lab("S01", roles)}`, schedule: "20:00 hằng ngày", alive: "unknown", ...smokeLog },
+    { id: "s02-daily", label: `${lab("S02")} — toàn quốc (rotation 6 market)`, schedule: "19:05 hằng ngày", alive: "unknown", ...airdnaLog },
+    { id: "s01-weekly", label: `${lab("S01")} — Hà Nội`, schedule: "Chủ nhật 19:30 +jitter", alive: "unknown", ...weeklyTail },
+    { id: "s01-smoke", label: `Smoke ${lab("S01")}`, schedule: "20:00 hằng ngày", alive: "unknown", ...smokeLog },
     { id: "collector-api", label: "Agent ingest :9210", schedule: "KeepAlive", alive: apiAlive, ...apiLog },
     { id: "kev", label: "Kev gate :8009", schedule: "KeepAlive", alive: kevAlive, lastLogAt: null, lastLine: null },
     { id: "cloud-sync", label: "Sync Supabase + ops facts", schedule: "mỗi 15 phút", alive: "unknown", ...(await tailLog(path.join(LOGS, "cloud-sync.log"))) },
   ];
   // dòng log cuối là dữ liệu chạy — che tên thật; danh sách tên rỗng → null (đóng chặt)
-  return jobs.map((j) => ({ ...j, lastLine: maskSourceNames(j.lastLine, names) }));
+  return jobs.map((j) => ({ ...j, lastLine: maskSourceNames(j.lastLine, REG.names) }));
 }
 
 // ---- 3. Rotation preview ----
@@ -205,10 +206,10 @@ async function main() {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
   const { rows: reg } = await client.query("SELECT code, label_vi, real_name FROM source_registry");
-  const roles = Object.fromEntries(reg.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi]));
-  const names = reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name }));
+  REG.roles = Object.fromEntries(reg.filter((r) => r.label_vi).map((r) => [r.code, r.label_vi]));
+  REG.names = reg.filter((r) => r.real_name).map((r) => ({ code: r.code, realName: r.real_name }));
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
-    scheduler(roles, names), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
+    scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
   ]);
   await client.end();
 

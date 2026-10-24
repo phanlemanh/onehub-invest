@@ -12,19 +12,12 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 
 import { findSourceNames, fold, sourceRegistrySeeds } from "../../scripts/lib/tier-a-source-names.mjs"
+import { readable } from "./ops-html"
 
 type Seed = { code: string; realName: string }
 const SEEDS: Seed[] = sourceRegistrySeeds()
 const ENTRIES = SEEDS.map(({ code, realName }) => ({ code, realName }))
 const nameOf = (code: string) => SEEDS.find((s) => s.code === code)!.realName
-/** Phần người đọc được của HTML (hợp đồng AC-1): chữ (bỏ <style>/<script>) + giá trị title/aria-label/href/alt/placeholder.
- *  Thuộc tính kỹ thuật (data-col-id, biến CSS của biểu đồ) mang khoá trường — định danh, không hiện. */
-export function readable(html: string): string[] {
-  const body = html.replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<script[\s\S]*?<\/script>/g, " ")
-  const attrs = [...body.matchAll(/\s(?:title|aria-label|href|alt|placeholder)="([^"]*)"/g)].map((m) => m[1])
-  const text = body.replace(/<[^>]*>/g, "\n").split("\n").map((t) => t.trim()).filter(Boolean)
-  return [...text, ...attrs].map((t) => t.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#x27;/g, "'"))
-}
 const leaks = (html: string): string[] =>
   readable(html).flatMap((t, i) => findSourceNames(t, ENTRIES).map((h: { code: string }) => `${h.code} @mảnh ${i}`))
 

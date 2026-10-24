@@ -14,7 +14,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     expected: "exit 0; ca 'ON7-AC-2 /ops/quality thật trên DB local → 0 tên nguồn thật, có «S02 · Hiệu chuẩn»' ok; ca 'ON7-AC-2 /ops/collections cloud với payload do push-ops-facts thật đẩy → 0 tên nguồn thật, có «S03 · Cộng đồng»' ok (payload bắt từ bước thật trong cùng ca, không tự dựng); DB local không tới được → ca đỏ có tên, không bỏ qua"
-    paths: [app/src/app/ops/quality/**, app/src/app/ops/collections/**, app/src/components/ops/quality-tables.tsx, app/src/lib/source-labels.ts, app/src/lib/collections-queries.ts, pipeline/push-ops-facts.mjs, app/tests/ops-nhan-ma-nguon.test.tsx]
+    paths: [app/src/app/ops/quality/**, app/src/app/ops/collections/**, app/src/components/ops/quality-tables.tsx, app/src/components/ops/quality/**, app/src/lib/source-labels.ts, app/src/lib/source-roles.ts, app/src/lib/collections-queries.ts, pipeline/push-ops-facts.mjs, pipeline/dq-truthful-coverage.mjs, app/tests/ops-nhan-ma-nguon.test.tsx, app/tests/ops-nhan-ma-nguon-cloud.test.tsx, app/tests/ops-html.ts]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E3
@@ -46,7 +46,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     expected: "exit 0; ca 'ON7-AC-5 readSchedulerStatus local → nhãn, id, lastLine không tên nguồn thật; lastLine mang mã S0x' ok; ca 'ON7-AC-5 DB không tới được → lastLine null, không dòng thô' ok (đối chứng dương: cùng cây log, DB lành → lastLine có mã S0x)"
-    paths: [app/src/lib/collections-queries.ts, app/src/lib/mask-source-names.ts, app/tests/ops-nhan-ma-nguon.test.tsx]
+    paths: [app/src/lib/collections-queries.ts, app/src/lib/mask-source-names.ts, app/tests/ops-nhan-ma-nguon.test.tsx, app/tests/ops-nhan-ma-nguon-db-chet.test.tsx]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E6

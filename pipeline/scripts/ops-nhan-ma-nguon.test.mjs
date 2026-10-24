@@ -87,7 +87,7 @@ describe("ON7-AC-4 payload facts", () => {
     assert.match(byId["s02-daily"].label, /^S02 · \S/, "nhãn job phải là «S02 · vai trò»");
   });
   test("ON7-AC-4 chiều đỏ: bản sao bỏ bộ che → bắt dòng log cuối, nêu mã S0x", async () => {
-    const f = mutantCopy("bo-che.mjs", (s) => s.replace("lastLine: maskSourceNames(j.lastLine, names)", "lastLine: j.lastLine"));
+    const f = mutantCopy("bo-che.mjs", (s) => s.replace("lastLine: maskSourceNames(j.lastLine, REG.names)", "lastLine: j.lastLine"));
     const r = await captureOpsFacts({ script: f, logs: LOGS() });
     assert.equal(r.code, 0, r.stderr.slice(0, 800));
     const leaks = payloadLeaks(r.payload, ENTRIES, EXEMPT);
@@ -95,7 +95,7 @@ describe("ON7-AC-4 payload facts", () => {
     assert.deepEqual(findLeakedNames(leaks), [], "thông điệp không được chứa tên");
   });
   test("ON7-AC-4 chiều đỏ: bản sao thêm giá trị mang tên thật ngoài jobs → bắt, nêu đường JSON", async () => {
-    const f = mutantCopy("them-truong.mjs", (s) => s.replace("pushedAt: new Date().toISOString(),", "pushedAt: new Date().toISOString(), debugSource: names[1]?.realName,"));
+    const f = mutantCopy("them-truong.mjs", (s) => s.replace("pushedAt: new Date().toISOString(),", "pushedAt: new Date().toISOString(), debugSource: REG.names[1]?.realName,"));
     const r = await captureOpsFacts({ script: f, logs: LOGS() });
     assert.equal(r.code, 0, r.stderr.slice(0, 800));
     const leaks = payloadLeaks(r.payload, ENTRIES, EXEMPT);

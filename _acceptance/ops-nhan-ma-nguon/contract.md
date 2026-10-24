@@ -5,7 +5,7 @@ slug: ops-nhan-ma-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T3      # pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, pipeline, docs]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-24-ops-nhan-ma-nguon-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24

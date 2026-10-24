@@ -41,10 +41,10 @@ function opsTierA(r) {
   check(positive >= 1, `đối chứng dương: bộ quét thấy tên thật ở components/ops/sources/ (${positive} chỗ)`);
 }
 // `--only ops-tier-a --root <dir>`: chỉ chạy mục 12 trên một cây khác (ca chiều đỏ của scripts/ops-nhan-ma-nguon.test.mjs).
-const argv = process.argv.slice(2);
-if (argv[0] === "--only" && argv[1] === "ops-tier-a") {
-  const i = argv.indexOf("--root");
-  opsTierA(i >= 0 ? path.resolve(argv[i + 1]) : root);
+const [flag, only, ...rest] = process.argv.slice(2);
+if (flag === "--only" && only === "ops-tier-a") {
+  const i = rest.indexOf("--root");
+  opsTierA(i >= 0 ? path.resolve(rest[i + 1]) : root);
   console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
   process.exit(fails.length === 0 ? 0 : 1);
 }
