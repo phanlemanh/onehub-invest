@@ -5,7 +5,7 @@ slug: ops-mobile-cot-trang-thai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-ops-mobile-cot-trang-thai-design.md
