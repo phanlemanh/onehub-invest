@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: cloud-sync-bao-loi-that
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b773b36851528eac88da901326119f5e7db9bb4c
-human_signoff:
+human_signoff: Mạnh 2026-10-24
 ---
 
 # Evidence Report: cloud-sync-bao-loi-that
@@ -85,7 +85,7 @@ human_signoff:
     - domain-correctness: PASS — Mục job đêm của runtime-map.md khớp ba tệp kia ở cả bốn ý. (1) `cloud-sync.sh` kết thúc bằng `exit "$JOB_RC"`, `job_run` giữ mã hỏng đầu tiên, và `job_step` in `JOB FAIL [<job>] bước <nhãn> mã <n>` ra stderr. (2) Hai lệnh `job_run` đứng liền nhau và `job_run` luôn trả 0, nên `push-ops-facts` chạy cả khi `sync-cloud` hỏng. (3) `push-ops-facts.mjs` dùng `process.env.DATABASE_URL ?? LOCAL_URL` với `LOCAL_URL` là localhost:5433. (4) P3-3 được ghi là "Đã vá", còn mục "đang chờ" chỉ liệt kê P3-1 và P1.5.
     - operational-feasibility: PASS — Mục job đêm của runtime-map khớp ba tệp nguồn ở cả bốn ý. (1) `cloud-sync.sh` gọi `job_run` hai lần rồi `exit "$JOB_RC"`, mã là mã hỏng đầu tiên, và `job_step` in `JOB FAIL [job] bước <nhãn> mã <n>` ra stderr. (2) `job_run` luôn trả 0 nên `push-ops-facts` vẫn chạy khi `sync-cloud` hỏng. (3) `push-ops-facts.mjs` dùng `process.env.DATABASE_URL ?? LOCAL_URL` với `LOCAL_URL` là localhost:5433. (4) P3-3 nằm ở mục «Đã vá», không còn trong danh sách «Còn nuốt lỗi, đang chờ».
     - spec-alignment: PASS — Mục job đêm trong runtime-map.md khớp ba tệp nguồn ở cả bốn ý. (1) cloud-sync.sh kết thúc bằng `exit "$JOB_RC"`, và job_step in `JOB FAIL [$job] bước $label mã $rc` khi bước hỏng. (2) job_run luôn trả 0 nên push-ops-facts chạy cả khi sync-cloud hỏng, còn JOB_RC giữ mã hỏng đầu tiên. (3) push-ops-facts.mjs dùng `process.env.DATABASE_URL ?? LOCAL_URL` với LOCAL_URL là localhost:5433. (4) P3-3 được ghi là "Đã vá" và "Không còn ca todo", không còn nằm trong danh sách "đang chờ".
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-24 — Đạt
 
 ### Lệnh suite (hồi quy)
 
