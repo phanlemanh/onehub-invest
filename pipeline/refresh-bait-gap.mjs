@@ -14,6 +14,8 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
+import { implausibleReason } from "./lib/deal-plausibility.mjs";
+
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
@@ -81,6 +83,13 @@ export async function refreshBaitGap(c) {
   }
   console.log(`sellers: xoá ${orphan.rowCount} người bán không còn tin, còn ${remaining}`);
 
+  // ---- 5. Loại tin phi lý khỏi Căn giá tốt (ON11) — SAU bước người bán: registry giữ tín hiệu rao mồi ----
+  const cand = await c.query(`
+    SELECT offer_id, area_m2, bedrooms FROM sale_offers
+    WHERE price_tier = 'P1' AND kind = 'sale' AND bait_gap_pct IS NOT NULL`);
+  const loai = await loaiTinPhiLy(c, cand.rows);
+  console.log(`loại tin phi lý: ${loai.total} tin ${JSON.stringify(loai.by_reason)}`);
+
   const top = await c.query(`
     SELECT name, n_ads, flags->>'median_gap_pct' med, flags->>'multi_channel' multi
     FROM sellers WHERE flags->>'median_gap_pct' IS NOT NULL
@@ -88,7 +97,39 @@ export async function refreshBaitGap(c) {
   for (const r of top.rows) {
     console.log(`  broker: ${r.name ?? "?"} — ${r.n_ads} tin, gap giữa ${r.med}%, đa kênh=${r.multi}`);
   }
-  return { gap: gap.rowCount, sellersUpdated: agg.rowCount, sellersDeleted: orphan.rowCount, sellersRemaining: remaining };
+  return {
+    gap: gap.rowCount,
+    sellersUpdated: agg.rowCount,
+    sellersDeleted: orphan.rowCount,
+    sellersRemaining: remaining,
+    loaiPhiLy: loai.total,
+  };
+}
+
+/**
+ * Chấm từng tin bằng implausibleReason; tin trượt mất bait_gap_pct (không còn là căn giá tốt) và cả lượt ghi
+ * MỘT dòng ops_audit nêu lý do. Không tin nào trượt thì không ghi gì.
+ * @param {import("pg").Client} c
+ * @param {{ offer_id: string, area_m2: unknown, bedrooms: unknown }[]} rows
+ * @returns {Promise<{ total: number, by_reason: Record<string, number>, offer_ids: string[] }>}
+ */
+export async function loaiTinPhiLy(c, rows) {
+  const by_reason = {};
+  const offer_ids = [];
+  for (const r of rows) {
+    const why = implausibleReason({ areaM2: r.area_m2, bedrooms: r.bedrooms });
+    if (!why) continue;
+    by_reason[why] = (by_reason[why] ?? 0) + 1;
+    offer_ids.push(r.offer_id);
+  }
+  if (offer_ids.length === 0) return { total: 0, by_reason, offer_ids };
+  await c.query(`UPDATE sale_offers SET bait_gap_pct = NULL WHERE offer_id = ANY($1::text[])`, [offer_ids]);
+  const detail = { total: offer_ids.length, by_reason, offer_ids };
+  await c.query(
+    `INSERT INTO ops_audit (actor, action, env, detail) VALUES ('refresh-bait-gap', 'bait-gap:loai-phi-ly', 'local', $1)`,
+    [detail],
+  );
+  return detail;
 }
 
 async function main() {

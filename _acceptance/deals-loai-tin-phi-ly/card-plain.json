@@ -1,0 +1,5 @@
+{
+  "feature_plain": "Người vận hành mở «Căn giá tốt» chỉ thấy tin có diện tích và số phòng hợp lý, tin rẻ đáng gọi đứng đầu thay vì tin giảm sát trần, và thẻ ghi đúng «đăng n lần».",
+  "scope_plain": "Những việc cố ý để ngoài vòng này:",
+  "analyst_plain": "Hai bộ kiểm chung (pipeline, app) cũng xanh trên bản trước vòng — vì test mới của vòng này chưa có ở đó; phần phân biệt cũ/mới nằm ở chính các ca DP-AC-* và các lượt phá thử."
+}
