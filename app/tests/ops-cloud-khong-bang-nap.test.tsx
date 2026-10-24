@@ -45,6 +45,8 @@ async function renderBoth(): Promise<[string, string]> {
   const { default: OpsOverviewPage } = await import("../src/app/ops/page")
   const { CollectionsView } = await import("../src/components/ops/collections/collections-view")
   const { getSourceFeedHealth, freshnessLocalOnly } = await import("../src/lib/ops-queries")
+  const { getCloudOpsView } = await import("../src/lib/ops-cloud")
+  const localOnly = await freshnessLocalOnly()
   const zero = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 }
   const col = React.createElement(CollectionsView, {
     days: [],
@@ -58,7 +60,7 @@ async function renderBoth(): Promise<[string, string]> {
     feedHealth: await getSourceFeedHealth(),
     lockdown: { layers: [], lastWatchdogAt: null, agentTurnsToday: 0, openClawUp: false, kevUp: false, collectorUp: false },
     nowMs: Date.now(),
-    localOnly: await freshnessLocalOnly(),
+    cloud: localOnly ? await getCloudOpsView() : null, // ON3: cloud đọc bản tin máy local (lược đồ này không có → «chưa có số»)
   })
   return [await html(await OpsOverviewPage()), await html(col)]
 }
@@ -81,20 +83,19 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
     delete process.env.OPS_API_TOKEN
   })
 
-  test("OP-AC-2 trang /ops và Thu thập render được, nói «Độ tươi chỉ đo ở máy local»", async () => {
+  // ON3 (o-kpi-chi-do-local) thay luật hai-vị-trí cũ bằng «đúng MỘT chỗ chữ chỉ-local mỗi trang» (OPS-20, YC6 — Ngoài-2
+  // của hồ sơ này): câu chỉ còn ở tiêu đề Alert, đầu trang không lặp lại.
+  test("OP-AC-2 trang /ops và Thu thập render được, nói «Chỉ đo ở máy thu» đúng một lần", async () => {
     needDb()
     const [ops, col] = await renderBoth()
-    const TEXT = "Độ tươi chỉ đo ở máy thu" // ON12 đổi «máy local» → «máy thu» (nhãn theo CONTEXT.md)
-    for (const [name, h, title] of [["/ops", ops, "Tổng quan"], ["/ops/collections", col, "Thu thập"]] as const) {
-      // Vị trí 1 — thông báo có tên: đúng MỘT tiêu đề Alert mang câu này.
+    const TEXT = "Chỉ đo ở máy thu" // ON12: «máy local» → «máy thu» (CONTEXT.md)
+    for (const [name, h] of [["/ops", ops], ["/ops/collections", col]] as const) {
       const alerts = [...h.matchAll(/data-slot="alert-title"[^>]*>([^<]*)</g)].map((m) => m[1])
       assert.deepEqual(alerts.filter((t) => t === TEXT), [TEXT], `${name} phải có đúng một thông báo «${TEXT}»`)
-      // Vị trí 2 — đầu trang: câu nằm giữa tiêu đề trang và thông báo (dòng thống kê của PageHeader).
-      const head = h.slice(h.indexOf(`>${title}<`), h.indexOf('data-slot="alert-title"'))
-      assert.ok(head.includes(TEXT), `${name}: đầu trang (trước thông báo) phải mang «${TEXT}»`)
+      assert.equal(h.match(/chỉ (đo|có) ở (máy )?(local|thu)/gi)?.length, 1, `${name}: câu chỉ-local chỉ được xuất hiện một lần`)
       assert.ok(!h.includes("Chưa có nguồn nào"), `${name} không được nói «Chưa có nguồn nào» khi chỉ là thiếu bảng`)
-      assert.deepEqual(summaries(h), ["0/0", "0/0"])
     }
+    assert.equal(summaries(ops)[0], summaries(col)[0], "hai trang cùng một con số x/y (AU6)")
   })
 
   test("OP-AC-2 đối chứng: có source_registry (bảng rỗng) → không hiện câu chỉ-đo-ở-local", async () => {
@@ -105,7 +106,7 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
       assert.equal(await freshnessLocalOnly(), false)
       const [ops, col] = await renderBoth()
       for (const h of [ops, col]) {
-        assert.ok(!h.includes("Độ tươi chỉ đo ở máy thu"))
+        assert.ok(!/chỉ (đo|có) ở (máy )?(local|thu)/i.test(h))
         assert.ok(h.includes("Chưa có nguồn nào"))
       }
     } finally {

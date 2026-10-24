@@ -25,12 +25,13 @@ const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown"] as const).map((a)
   match: (j) => j.alive === a,
 }))
 
-export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
+/** `stale`: trạng thái job là lần đo cuối của bản tin máy local cũ quá 45′ (ON3) — không badge xanh. */
+export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: boolean }) {
   const columns = useMemo<InsightColumn<JobStatus>[]>(
     () => [
       { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Tác vụ" column={column} />, size: 280, enableSorting: true },
       { id: "schedule", accessorKey: "schedule", header: "Lịch", size: 180 },
-      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
+      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={stale && row.original.alive === "yes" ? "outline" : ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
       {
         id: "last",
         accessorFn: (j) => j.lastLogAt ?? "",
@@ -47,7 +48,7 @@ export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
         size: 340,
       },
     ],
-    []
+    [stale]
   )
   return (
     <StatusGrid
