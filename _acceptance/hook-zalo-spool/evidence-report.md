@@ -3,11 +3,11 @@ schema_version: 2
 feature_slug: hook-zalo-spool
 verdict: BLOCKED
 failed_evals: []
-reason: "E10 không đo được cây đang kiểm — collector/dist/test/kev-nhan-cung-hoa.test.js là bản biên dịch CŨ (24/10 16:35) của nhánh zcode/kev-nhan-cung-hoa, không có nguồn src/test tương ứng trong cây b8e2a25; lệnh config executors.test.collector (cd collector && npm test) không xoá dist nên node --test chạy cả tệp lạ này; 3 test đỏ đều nằm trong tệp đó, 44 test của 8 tệp nguồn trong cây đều xanh (gồm hook-spool.test.ts). Cách chữa: chạy lại E10 với dist sạch (khoá có sẵn executors.test.collector_test_clean) hoặc đổi cmd của E10 sang khoá đó — không phải sửa code."
+reason: "E10 khai cmd config:executors.test.collector_test_clean nhưng _acceptance/config.yaml không có khoá này — collector_test_clean nằm dưới executors.script (dòng 158, cùng khối với zc6_*; hồ sơ collector-graceful-shutdown và kev-thanh-nhan gọi đúng executors.script.collector_test_clean). recheck-evidence báo L2 SUBSTANCE «config key not found». Lệnh người chấm chạy là chuỗi của khoá có thật (cd collector && rm -rf dist && npm test): 41/41 test collector xanh, dist sạch. E1–E9 đạt. Cách chữa: sửa evals.yaml E10 cmd thành config:executors.script.collector_test_clean (sửa hồ sơ, không sửa code) rồi chấm lại E10 — có thể chạy lại toàn bộ cho chắc pin."
 verified_by: "feature-loop:cham-lenh (fresh-context verification subagent)"
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b8e2a25eaaf86638518c53bed04a526479a05a7f
+verified_commit: 70e5bd8c01956f5b22d98724f9f69b149b4dc65d
 human_signoff:
 ---
 
@@ -24,16 +24,16 @@ human_signoff:
 | E7 | AC-7 | script | PASS |
 | E8 | AC-8 | script | PASS |
 | E9 | AC-9 | script | PASS |
-| E10 | AC-10 | test | BLOCKED (môi trường: dist bẩn) |
+| E10 | AC-10 | test | BLOCKED (cmd trỏ khoá config không tồn tại; lệnh thật xanh 41/41) |
 
 ## Evidence
 
 - eval: E1
-  run_id: hook-zalo-spool-E1-20261024T232554Z
+  run_id: hook-zalo-spool-E1-r2-20261024T233332Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_spool_replay
-  verified_at: 2026-10-24T23:25:54Z
+  verified_at: 2026-10-24T23:33:32Z
   output: |
     ok   lượt collector chết: hook thoát bình thường
     ok   spool có đúng 2 tệp (tin trùng không nhân tệp), được 2
@@ -45,11 +45,11 @@ human_signoff:
     SPOOL-REPLAY PASS
 
 - eval: E2
-  run_id: hook-zalo-spool-E2-20261024T232601Z
+  run_id: hook-zalo-spool-E2-r2-20261024T233338Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_spool_replay
-  verified_at: 2026-10-24T23:26:01Z
+  verified_at: 2026-10-24T23:33:38Z
   output: |
     ok   spool có đúng 2 tệp (tin trùng không nhân tệp), được 2
     ok   collector sống lại nhận đủ A, B (từ spool) và D (tin mới)
@@ -59,22 +59,22 @@ human_signoff:
     SPOOL-REPLAY PASS
 
 - eval: E3
-  run_id: hook-zalo-spool-E3-20261024T232606Z
+  run_id: hook-zalo-spool-E3-r2-20261024T233343Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_spool_replay
-  verified_at: 2026-10-24T23:26:06Z
+  verified_at: 2026-10-24T23:33:43Z
   output: |
     ok   dòng log tin mới đúng khuôn cũ ' post 202 {"accepted":1…} group=…' (được: post 202 {"accepted":1,"duplicates":0} group=acc-group p=0.90 account=acc by=acc)
     ok   tin gửi kèm meta kev.p là số khi Kev sống
     SPOOL-REPLAY PASS
 
 - eval: E4
-  run_id: hook-zalo-spool-E4-20261024T232615Z
+  run_id: hook-zalo-spool-E4-r2-20261024T233348Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_reject_4xx
-  verified_at: 2026-10-24T23:26:16Z
+  verified_at: 2026-10-24T23:33:48Z
   output: |
     ok   3 tin vào spool lúc chết, được 3
     ok   tin lành sau tin 400 vẫn được gửi (400 không chặn hàng)
@@ -85,11 +85,11 @@ human_signoff:
     REJECT-4XX PASS
 
 - eval: E5
-  run_id: hook-zalo-spool-E5-20261024T232621Z
+  run_id: hook-zalo-spool-E5-r2-20261024T233353Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_hang_stop
-  verified_at: 2026-10-24T23:26:37Z
+  verified_at: 2026-10-24T23:34:09Z
   output: |
     ok   3 tin vào spool lúc chết
     ok   collector treo: chỉ 2 lượt gửi (1 tệp spool đầu + tin mới) rồi dừng, được 2
@@ -98,11 +98,11 @@ human_signoff:
     HANG-STOP PASS
 
 - eval: E6
-  run_id: hook-zalo-spool-E6-20261024T232644Z
+  run_id: hook-zalo-spool-E6-r2-20261024T233414Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_cap_50
-  verified_at: 2026-10-24T23:26:44Z
+  verified_at: 2026-10-24T23:34:14Z
   output: |
     ok   55 tin vào spool, được 55
     ok   một lượt xả đúng 50 tệp + 1 tin mới = 51 lượt gửi, được 51
@@ -111,11 +111,11 @@ human_signoff:
     CAP-50 PASS
 
 - eval: E7
-  run_id: hook-zalo-spool-E7-20261024T232649Z
+  run_id: hook-zalo-spool-E7-r2-20261024T233419Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_kev_hang
-  verified_at: 2026-10-24T23:26:54Z
+  verified_at: 2026-10-24T23:34:24Z
   output: |
     ok   tin vẫn tới collector với kev.p = null (được null)
     ok   hook chờ Kev có trần (~5 giây), chạy 5 giây
@@ -123,11 +123,11 @@ human_signoff:
     KEV-HANG PASS
 
 - eval: E8
-  run_id: hook-zalo-spool-E8-20261024T232659Z
+  run_id: hook-zalo-spool-E8-r2-20261024T233431Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_self_contained
-  verified_at: 2026-10-24T23:26:59Z
+  verified_at: 2026-10-24T23:34:31Z
   output: |
     ok   handler chỉ import module node: (node:fs/promises, node:crypto, node:os, node:path)
     ok   handler không trỏ tới bản build/nguồn của collector
@@ -136,37 +136,32 @@ human_signoff:
     SELF-CONTAINED PASS
 
 - eval: E9
-  run_id: hook-zalo-spool-E9-20261024T232705Z
+  run_id: hook-zalo-spool-E9-r2-20261024T233433Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.zc6_l1_grep
-  verified_at: 2026-10-24T23:27:05Z
+  verified_at: 2026-10-24T23:34:33Z
   output: |
     ok   handler không khớp biểu thức L1 của watchdog (0 dòng khớp)
     ok   watchdog L1 vẫn trỏ đúng tệp handler duy nhất
     L1-GREP PASS
-  note: người chấm đối chiếu thêm (chỉ đọc) — biểu thức trong harness trùng nguyên văn dòng 65 của scripts/zalo-watchdog.sh (grep -qiE "send-?message|sendMessage|reply\(").
 
 - eval: E10
-  run_id: hook-zalo-spool-E10-20261024T232731Z
-  exit_code: 1
+  run_id: hook-zalo-spool-E10-r2-20261024T233440Z
+  exit_code: 0
   baseline: n-a
-  verifier: config:executors.test.collector
-  verified_at: 2026-10-24T23:28:17Z
+  verifier: config:executors.script.collector_test_clean
+  verified_at: 2026-10-24T23:35:25Z
   output: |
-    ✔ ZC6 vòng 3: khuôn log cũ ' post 202 '; drain dừng ở file hỏng đầu; 4xx → rejected không gửi lại (15046.9015ms)
-    ✔ ZC6 tự chứa: từ thư mục NGOÀI repo — collector chết 2 tin → spool 2; sống → drain đủ, không trùng; kev treo → p=null (20036.192166ms)
-    ℹ tests 47 · pass 44 · fail 3 · cancelled 0
-    test at dist/test/kev-nhan-cung-hoa.test.js:15:1  ✖ media hỏng (string/null/phần tử null) không làm 500 — TypeError: (extra.media ?? []).map is not a function
-    test at dist/test/kev-nhan-cung-hoa.test.js:33:1  ✖ sort URL trước băm: cùng tin gửi lại với media đảo thứ tự → dedup (1 id)
-    test at dist/test/kev-nhan-cung-hoa.test.js:49:1  ✖ chuẩn hoá url/path: query rác / slash cuối / whitespace không tạo id khác
-  diagnosis: |
-    collector/src/test/ của cây b8e2a25 có 8 tệp (api, conduct, graceful-shutdown-integration, graceful-shutdown,
-    hook-spool, kev-nhan, media-fetch, readbody); 8 bản .js tương ứng được tsc biên dịch lại lúc 06:27 và mọi test của
-    chúng xanh. dist/test/kev-nhan-cung-hoa.test.js mang dấu giờ 24/10 16:35, không có nguồn trong cây
-    (git ls-files rỗng); nguồn của nó chỉ có trên nhánh zcode/kev-nhan-cung-hoa (commit 62eaf38 và trước). Nó kiểm
-    phần cứng hoá sourceIdOf mà server.ts của cây này chưa có. tsc không xoá đầu ra mồ côi, glob 'dist/test/*.test.js'
-    vớt cả tệp đó. Vì vậy E10 không cho kết quả về cây đang kiểm → BLOCKED, không phải REJECT.
+    > tsc -p tsconfig.json && node --test 'dist/test/*.test.js'
+    ✔ ZC6 vòng 3: khuôn log cũ ' post 202 '; drain dừng ở file hỏng đầu; 4xx → rejected không gửi lại (15045.967875ms)
+    ✔ ZC6 tự chứa: từ thư mục NGOÀI repo — collector chết 2 tin → spool 2; sống → drain đủ, không trùng; kev treo → p=null (20032.773958ms)
+    ✔ readBody: ký tự Việt split giữa 2 chunk vẫn nguyên vẹn (1.092834ms)
+    ℹ tests 41
+    ℹ pass 41
+    ℹ fail 0
+    ℹ cancelled 0
+  note: evals.yaml khai config:executors.test.collector_test_clean — khoá đó KHÔNG có trong config.yaml; người chấm chạy chuỗi của khoá có thật executors.script.collector_test_clean (dòng run-log ghi đúng chuỗi đã chạy). Sau khi xoá dist, collector/dist/test còn đúng 8 tệp .js ứng với 8 tệp collector/src/test/*.ts trong cây (api, conduct, graceful-shutdown-integration, graceful-shutdown, hook-spool, kev-nhan, media-fetch, readbody); tệp mồ côi kev-nhan-cung-hoa.test.js của vòng 1 không còn.
 
 ## Known limits
 
@@ -250,14 +245,20 @@ kiểm harness biết đỏ trước verify (bd51084 đỏ ở spool-replay, rej
 Bất thường khác:
 - Chú thích AC trong scripts/hook-zalo-spool/acceptance.mjs lệch số so với contract (harness ghi «AC-3» cho 4xx,
   «AC-4» cho hang, «AC-5» cho cap-50); evals.yaml ánh xạ đúng — chỉ là chú thích.
-- E10 nên dùng khoá `executors.test.collector_test_clean` (config đã có, chú thích nói đúng lý do «tsc không xoá test
-  đã biên dịch của nhánh khác»).
+- Đính chính số đếm của vòng 1: vòng 1 ghi «44 test của 8 tệp nguồn đều xanh», nhưng 8 tệp nguồn có 41 test (vòng 2 đo);
+  47 − 41 = 6 test thuộc tệp mồ côi kev-nhan-cung-hoa.test.js (3 xanh, 3 đỏ). Kết luận BLOCKED vòng 1 không đổi.
+- Giữa vòng 1 và vòng 2 chỉ đổi tệp trong `_acceptance/hook-zalo-spool/` (git diff b8e2a25..70e5bd8 không chạm tệp
+  sản phẩm); collector/openclaw/handler.js giống hệt vòng 1, các dòng trích ở «Ngoài hợp đồng» vẫn đúng.
+- review-findings.md (vòng 2, chưa track) liệt kê ba mục ngoài hợp đồng (401/403/404 → rejected/, collector chậm-mà-sống,
+  quyền tệp spool), cả ba đã có ở «Ngoài hợp đồng» dưới đây từ vòng 1.
 
 ## Variance
 
-none — không eval nào khai runs > 1; E1–E3 chạy chung một lệnh ba lần riêng, cả ba cho kết quả giống nhau.
+none — không eval nào khai runs > 1; E1–E3 chạy chung một lệnh ba lần riêng, cả ba cho kết quả giống nhau (và giống vòng 1).
 
 ## Iterations
 
 Round 1: E1–E9 đạt; E10 BLOCKED — dist/test của collector còn bản biên dịch mồ côi của nhánh zcode/kev-nhan-cung-hoa,
 3 test đỏ từ tệp đó; chữa bằng chạy lại E10 với dist sạch, không trả về làn code.
+Round 2: E1–E9 đạt; E10 BLOCKED — cmd trỏ config:executors.test.collector_test_clean (khoá không tồn tại, khoá thật ở
+executors.script); chuỗi lệnh của khoá thật chạy xanh 41/41; chữa bằng sửa cmd của E10 trong evals.yaml, không trả về làn code.
