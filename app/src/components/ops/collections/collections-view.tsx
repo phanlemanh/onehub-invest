@@ -82,13 +82,13 @@ export function CollectionsView({ days, funnel, jobs, rotation, zaloGroups, zalo
         layers={lockdown.layers}
         agentTurnsToday={lockdown.agentTurnsToday}
         roles={roles}
-        cloud={cloud ? { feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale: cloud.state === "stale" } : undefined}
+        cloud={cloud ? { feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale: cloud.state === "stale", funnelMeasured: cloud.state !== "none" } : undefined}
       />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SyncActivity days={days} roles={roles} className="min-w-0 lg:col-span-2" />
         <AttentionList issues={issues} roles={roles} className="min-w-0" />
       </div>
-      <FeedsGrid feeds={feedHealth} />
+      <FeedsGrid feeds={feedHealth} stale={cloud?.state === "stale"} />
       <LockdownGrid layers={lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ZaloPipePanel zalo={zaloHealth} funnel={funnel} lastPostHours={lastPostHours} roles={roles} />

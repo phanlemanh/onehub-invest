@@ -11,9 +11,6 @@
  */
 import { createRequire } from "node:module";
 
-const require = createRequire(new URL("../app/package.json", import.meta.url));
-const pg = require("pg");
-const { captureOpsFacts, localDbUrl } = await import("../pipeline/scripts/capture-ops-facts.mjs");
 
 export const SCHEMA = "ops_cloud_proto";
 const KHONG_LEN_CLOUD = /^(source_registry|review_queue|airbnb_snapshots|stg_.*)$/;
@@ -29,6 +26,9 @@ export function shiftPayload(p, min) {
 }
 
 async function main() {
+  const require = createRequire(new URL("../app/package.json", import.meta.url));
+  const pg = require("pg");
+  const { captureOpsFacts, localDbUrl } = await import("../pipeline/scripts/capture-ops-facts.mjs");
   const args = process.argv.slice(2);
   const mode = args.includes("--drop") ? "drop" : (args[args.indexOf("--mode") + 1] ?? "none");
   if (!["none", "fresh", "stale", "drop"].includes(mode)) throw new Error(`--mode phải là none|fresh|stale (được ${mode})`);

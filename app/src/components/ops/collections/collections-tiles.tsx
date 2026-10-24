@@ -33,7 +33,7 @@ export function CollectionsTiles({
   roles?: SourceRoles
   /** Trên cloud (ON3): ô nào chưa có số thì «—»; `stale` = số là lần đo cuối, hiện mờ; Lockdown chưa có nguồn số trên
    * cloud tới ON23 → «—» kèm nhãn «Chưa kiểm được trên cloud» (Hỏi-1 = A). Vắng = máy local, đo trực tiếp. */
-  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean }
+  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean; funnelMeasured: boolean }
 }) {
   const s03 = sourceLabel("S03", roles)
   const states = feeds.map(feedState)
@@ -79,18 +79,19 @@ export function CollectionsTiles({
         icon={<MessageSquareIcon aria-hidden="true" />}
         title={`Cổng ${s03} hôm nay`}
         period="Hôm nay"
-        value={fmtInt(funnel.today.passed)}
-        total={fmtInt(funnel.today.messages)}
-        basis={`${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
+        value={cloud && !cloud.funnelMeasured ? "—" : fmtInt(funnel.today.passed)}
+        total={cloud && !cloud.funnelMeasured ? undefined : fmtInt(funnel.today.messages)}
+        basis={cloud && !cloud.funnelMeasured ? "Chưa có số" : `${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
+        muted={muted}
         action={{ label: `Xem nhóm ${s03}`, href: "#nhom-s03" }}
       >
-        <SegmentBar
+        {cloud && !cloud.funnelMeasured ? null : <SegmentBar
           label={`Tin ${s03} hôm nay`}
           segments={[
             { key: "passed", label: "Qua cổng", count: funnel.today.passed, tone: "bg-success" },
             { key: "skipped", label: "Bị chặn", count: funnel.today.skipped, tone: "bg-muted-foreground/40" },
           ]}
-        />
+        />}
       </StatCard>
 
       {cloud ? (

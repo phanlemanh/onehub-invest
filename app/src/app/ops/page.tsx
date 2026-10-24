@@ -42,7 +42,7 @@ export default async function OpsOverviewPage() {
         </LocalOnlyAlert>
       ) : null}
       <OverviewTiles rows={rows} unmeasured={unmeasured} stale={cloud?.state === "stale"} />
-      <ObjectivesGrid rows={rows} />
+      <ObjectivesGrid rows={rows} stale={cloud?.state === "stale"} />
     </div>
   );
 }
