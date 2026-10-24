@@ -172,17 +172,17 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 | `/ops` | bốn ô độ phủ + lưới «Độ tươi theo nguồn» | khối `freshness` | ô «—» + «Chưa có số», lưới rỗng |
 | `/ops/collections` | Sức khoẻ nguồn, lưới nguồn | `freshness` + `sourceRuns` | «—» |
 | `/ops/collections` | Bản ghi 24h | `records24h` | «—» |
-| `/ops/collections` | Lockdown | (ON23 sẽ đọc khối `lockdown`) | «—» + «Chưa kiểm được trên cloud» |
-| `/ops/collections` | vùng còn lại (luồng, Cần chú ý, Zalo, xoay vòng…) | — không dựng trên cloud | một Alert «Phần còn lại của trang chưa có số trên cloud» |
+| `/ops/collections` | Lockdown | (ON23 sẽ đọc khối `lockdown`) | «—» + «Chưa kiểm được trên máy chủ» |
+| `/ops/collections` | vùng còn lại (luồng, Cần chú ý, Zalo, xoay vòng…) | — không dựng trên cloud | một Alert «Phần còn lại của trang chưa có số trên máy chủ» |
 | `/ops/review` | số thẻ chờ theo loại | `reviewQueue` (chỉ số đếm) | «—»; thẻ chi tiết vẫn chỉ ở máy local |
 
-- Dòng «Số đo lúc <giờ VN> (GMT+7) từ máy local» dưới tiêu đề khi có bản tin (`FactsStamp`, `components/ops/facts-status.tsx`).
-- Bản tin cũ quá 45′: Alert vàng «Máy local không đẩy số từ …», ô số mờ, không badge xanh nào (`FactsStaleAlert`).
-- Chưa có bản tin (hoặc bảng `ops_heartbeat` chưa có): một Alert «Chỉ đo ở máy local», mọi ô «—» — không bao giờ 0 hay «Ổn».
+- Dòng «Số đo lúc <giờ VN> (GMT+7) từ máy thu» dưới tiêu đề khi có bản tin (`FactsStamp`, `components/ops/facts-status.tsx`).
+- Bản tin cũ quá 45′: Alert vàng «Máy thu không đẩy số từ …», ô số mờ, không badge xanh nào (`FactsStaleAlert`).
+- Chưa có bản tin (hoặc bảng `ops_heartbeat` chưa có): một Alert «Chỉ đo ở máy thu», mọi ô «—» — không bao giờ 0 hay «Ổn».
 - Thử ở máy local như cloud: `node scripts/ops-cloud-proto.mjs --mode none|fresh|stale` in `VERCEL=1 DATABASE_URL=…` (lược đồ
   `ops_cloud_proto`, không có bảng tầng A/thô) để chạy dev server cổng khác; dọn bằng `--drop`.
 - Trên cloud `/ops/collections` chỉ dựng vùng đọc bản tin (hàng ô số + lưới sức khoẻ nguồn + lưới job khi đã có bản tin);
-  luồng 7 ngày, Cần chú ý, lockdown, ống S03, xoay vòng, nhóm S03 gom về một Alert «Phần còn lại của trang chưa có số trên cloud» và trang không
+  luồng 7 ngày, Cần chú ý, lockdown, ống S03, xoay vòng, nhóm S03 gom về một Alert «Phần còn lại của trang chưa có số trên máy chủ» và trang không
   truy vấn bảng thô (`MACHINE_ONLY_REGIONS` trong `collections-view.tsx`). ON4/ON23 đưa dần các vùng ấy lên bằng khối bản tin.
 
 ## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)

@@ -11,6 +11,15 @@ feature_loop:
   suite_keys: [executors.test.agent, executors.test.app, executors.test.app_ui, executors.test.pipeline, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt — agent/app_ui/pipeline thêm từ vòng enrich-qua-de-xuat
 design_pass:
   ds_skill: onehub-ui
+  # Hàng giao diện sửa thẳng route THẬT trên nhánh của hàng (host-embedded), không dựng route proto riêng.
+  # Khuôn bắt có {slug}: mở trang chủ dev server của dãy, bề mặt cụ thể của hàng truyền bằng đối số design-pass.
+  # Cổng riêng mỗi dãy giao diện (3456 dùng chung): U1 = 3460, U2 = 3461 (LUAT đợt dot0, chốt U1-2 24/10).
+  proto_route: "http://localhost:3460/#design-pass={slug}"
+  dev_cmd: "cd app && npm run dev -- -p 3460"
+  host_embed:
+    guide: onehub-ui
+    route: "http://localhost:3460"
+    dev_flag: "không cần — route thật trên nhánh của hàng, dev server cổng riêng của dãy"
 executors:
   test:
     collector: "cd collector && npm test"            # suy từ: collector/package.json — 13/13 xanh
@@ -36,6 +45,7 @@ executors:
     product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
+    ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
     listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
@@ -139,6 +149,13 @@ executors:
     mcp_tools_mutation: "node scripts/check-mcp-tools.mjs mutation"
     mcp_tools_historic: "node scripts/check-mcp-tools.mjs historic"
     deals_smoke_local_guard: "node scripts/check-smoke-guard.mjs"
+    # compare-saved-trang-thai (UI4) — /compare (301 từ /so-sanh) + /saved; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433
+    # (mặc định :3460 — cổng riêng của dãy U1, 3456 dùng chung). Người dùng thử + session ghi thẳng DB, xoá ở finally.
+    compare_saved_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-compare-saved.mjs"
+    compare_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/compare/comparison.tsx"
+    saved_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/saved/saved-list.tsx"
+    # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
+    dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
     # deals-loai-tin-phi-ly (ON11) — đo Căn giá tốt trên DB local :5433 trong BEGIN…ROLLBACK (cần tsx của app)
     deals_phi_ly_do: "cd app && node --import tsx ../scripts/deals-phi-ly-do.mjs"
     api_matrix_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-api-matrix.mjs"     # ma trận hành vi khách/bearer — cần app chạy TỪ worktree đang kiểm

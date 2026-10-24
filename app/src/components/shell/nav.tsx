@@ -55,9 +55,9 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
     {
       id: "compare",
       label: "So sánh",
-      href: "/so-sanh",
+      href: "/compare",
       icon: icon(GitCompareIcon),
-      match: (p) => p.startsWith("/so-sanh"),
+      match: (p) => p.startsWith("/compare"),
     },
   ],
   ops: [
@@ -87,7 +87,7 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
     },
     {
       id: "review",
-      label: "Hàng chờ duyệt",
+      label: "Hàng duyệt",
       href: "/ops/review",
       icon: glyph(InboxIcon),
       match: (p) => p.startsWith("/ops/review"),

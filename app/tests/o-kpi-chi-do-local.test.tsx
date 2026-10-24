@@ -90,7 +90,7 @@ async function renderCollections(pageFile = "../src/app/ops/collections/page", {
 const renderReview = async () => html(await (await import("../src/components/ops/review-content")).ReviewContent({ user: ADMIN }))
 
 // ---- đọc HTML ----
-const localCount = (h: string) => (h.match(/chỉ (đo|có) ở (máy )?local/gi) ?? []).length
+const localCount = (h: string) => (h.match(/chỉ (đo|có) ở (máy )?(local|thu)/gi) ?? []).length
 const successBadges = (h: string) => (h.match(/bg-success\/10/g) ?? []).length
 /** Mọi tô màu «đạt» (badge bg-success/10 lẫn đoạn thanh bg-success). */
 const successTone = (h: string) => (h.match(/\bbg-success\b/g) ?? []).length
@@ -121,10 +121,10 @@ function region(h: string, from: string, to: string) {
   return h.slice(i, j)
 }
 const OPS_TILES = [">Đạt SLO<", ">Quá hạn<", ">Chưa có snapshot<", ">Snapshot mới nhất<", ">Độ tươi theo nguồn<"]
-const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", ">Lockdown<", ">Sức khoẻ nguồn<"] // mốc cuối: tiêu đề lưới nguồn ngay dưới hàng ô
+const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", ">Khoá an toàn<", ">Sức khoẻ nguồn<"] // mốc cuối: tiêu đề lưới nguồn ngay dưới hàng ô
 const headings = (h: string) => [...h.matchAll(/role="heading"[^>]*>([^<]*)</g)].map((m) => m[1])
 /** Trên cloud chỉ dựng vùng đọc bản tin: hàng ô số + lưới sức khoẻ nguồn + lưới job khi có bản tin (khuôn đổi ở lượt 3, sổ d-16). */
-const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Máy móc (launchd)"]
+const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Máy móc"]
 const NO_CLOUD_VIEW = { rel: "src/components/ops/collections/collections-view.tsx", fn: (s: string) => s.replace("if (props.cloud) return <CloudCollections", "if (false) return <CloudCollections") }
 
 /** Đạt SLO tính độc lập với bên đọc: nguồn đạt khi mọi hàng của nó tươi; mã có hàng chưa khai SLO không đếm. */
@@ -166,9 +166,9 @@ describe("ON3-AC-1 chưa có bản tin", () => {
     ready()
     await clear()
     const PAGES: [string, () => Promise<string>, string][] = [
-      ["/ops", () => renderOps(), "Chỉ đo ở máy local"],
-      ["/ops/collections", () => renderCollections(), "Chỉ đo ở máy local"],
-      ["/ops/review", renderReview, "Hàng chờ duyệt chỉ có ở máy local"],
+      ["/ops", () => renderOps(), "Chỉ đo ở máy thu"],
+      ["/ops/collections", () => renderCollections(), "Chỉ đo ở máy thu"],
+      ["/ops/review", renderReview, "Hàng duyệt chỉ có ở máy thu"],
     ]
     for (const [name, render, pinned] of PAGES) {
       const h = await render()
@@ -218,7 +218,7 @@ describe("ON3-AC-1 chưa có bản tin", () => {
 })
 
 describe("ON3-AC-2/AC-3 bản tin tươi", () => {
-  test("ON3-AC-2 /ops facts tươi: bốn ô bằng số tính từ khối freshness, dòng «Số đo lúc … từ máy local» đúng mốc đo theo giờ VN", async () => {
+  test("ON3-AC-2 /ops facts tươi: bốn ô bằng số tính từ khối freshness, dòng «Số đo lúc … từ máy thu» đúng mốc đo theo giờ VN", async () => {
     ready()
     const p = await push()
     await ingest(p)
@@ -234,7 +234,7 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     assert.equal(tileValue(h, "Quá hạn"), String(cov.filter((r) => r.status === "stale").length))
     assert.equal(tileValue(h, "Chưa có snapshot"), String(cov.filter((r) => r.status === "none").length))
     assert.equal(tileValue(h, "Snapshot mới nhất"), vnDate(newest), "ô Snapshot mới nhất = ngày VN của snapshot mới nhất")
-    assert.match(text(h), new RegExp(`Số đo lúc ${vnTime(p.pushedAt).replace(/[()+]/g, "\\$&")} từ máy local`))
+    assert.match(text(h), new RegExp(`Số đo lúc ${vnTime(p.pushedAt).replace(/[()+]/g, "\\$&")} từ máy thu`))
     assert.equal(localCount(h), 0, "có số thì không còn chữ chỉ-local")
   })
   test("ON3-AC-2 bản sao ô Đạt SLO hiện tổng thay số đạt → bắt", async () => {
@@ -263,7 +263,7 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
       m.done()
     }
   })
-  test("ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Lockdown «—»", async () => {
+  test("ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Khoá an toàn «—»", async () => {
     ready()
     const p = await push()
     await ingest(p)
@@ -274,8 +274,8 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     assert.equal(tileValue(h, "Bản ghi 24h"), String(want))
     assert.match(text(region(h, COL_TILES[0], COL_TILES[1])), new RegExp(`Sức khoẻ nguồn \\D*${slo.ok} ?/ ?${slo.total}\\b`), "ô Sức khoẻ nguồn = x/y")
     assert.ok(h.includes("data-facts-stamp"), "dòng mốc đo")
-    assert.equal(tileValue(h, "Lockdown"), "—")
-    assert.match(text(h), /Chưa kiểm được trên cloud/)
+    assert.equal(tileValue(h, "Khoá an toàn"), "—")
+    assert.match(text(h), /Chưa kiểm được trên máy chủ/)
   })
   test("ON3-AC-3 bản sao Bản ghi 24h đọc 0 → bắt", async () => {
     ready()
@@ -292,7 +292,7 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
 })
 
 describe("ON3-AC-4 bản tin cũ", () => {
-  const staleTitles = (h: string) => alertTitles(h).filter((t) => t.startsWith("Máy local không đẩy số từ"))
+  const staleTitles = (h: string) => alertTitles(h).filter((t) => t.startsWith("Máy thu không đẩy số từ"))
   test("ON3-AC-4 bản tin thật qua handler ingest thật, mốc lùi 46′: mỗi trang đúng một Alert, mọi số mờ, không tô màu đạt, không câu trấn an, không còn cảnh báo 30′ cũ", async () => {
     ready()
     const p = shiftPayload(await push(), -46) as Payload
@@ -301,9 +301,9 @@ describe("ON3-AC-4 bản tin cũ", () => {
     const col = await renderCollections()
     const rev = await renderReview()
     for (const [name, h] of [["/ops", ops], ["/ops/collections", col], ["/ops/review", rev]] as const) {
-      assert.deepEqual(staleTitles(h), [`Máy local không đẩy số từ ${vnTime(p.pushedAt)}`], `${name}: một Alert số cũ`)
+      assert.deepEqual(staleTitles(h), [`Máy thu không đẩy số từ ${vnTime(p.pushedAt)}`], `${name}: một Alert số cũ`)
       assert.equal(successBadges(h), 0, `${name}: không badge xanh`)
-      assert.ok(!h.includes("Máy thu có thể offline"), `${name}: cảnh báo 30′ cũ phải bỏ`)
+      assert.ok(!h.includes("Máy thu có thể mất kết nối"), `${name}: cảnh báo 30′ cũ phải bỏ`)
     }
     for (const [name, r] of [["/ops ô KPI", region(ops, OPS_TILES[0], OPS_TILES[4])], ["/ops/collections ô KPI", region(col, COL_TILES[0], COL_TILES[4])]] as const) {
       const nums = numericValues(r)
@@ -314,13 +314,13 @@ describe("ON3-AC-4 bản tin cũ", () => {
     assert.doesNotMatch(text(ops), /Mọi nguồn có snapshot đều trong hạn|Mọi nguồn đã có snapshot(?! ở)/, "/ops: không câu trấn an trên số cũ")
     assert.match(rev, /data-pending-total="\d+"><span class="[^"]*text-muted-foreground/, "/ops/review: số thẻ chờ mờ")
   })
-  test("ON3-AC-4 bản tin 31′ và 44′ → không Alert số cũ, không cảnh báo «Máy thu có thể offline»", async () => {
+  test("ON3-AC-4 bản tin 31′ và 44′ → không Alert số cũ, không cảnh báo «Máy thu có thể mất kết nối»", async () => {
     ready()
     for (const min of [31, 44]) {
       await ingest(shiftPayload(await push(), -min) as Payload)
       for (const h of [await renderOps(), await renderCollections()]) {
         assert.deepEqual(staleTitles(h), [], `${min}′: không Alert số cũ`)
-        assert.ok(!h.includes("Máy thu có thể offline"), `${min}′: không cảnh báo 30′ cũ`)
+        assert.ok(!h.includes("Máy thu có thể mất kết nối"), `${min}′: không cảnh báo 30′ cũ`)
       }
     }
   })
@@ -329,7 +329,7 @@ describe("ON3-AC-4 bản tin cũ", () => {
     await ingest(shiftPayload(await push(), -31) as Payload)
     const m = mutantChain(NO_CLOUD_VIEW, [COL_PAGE])
     try {
-      assert.ok((await renderCollections(m.path)).includes("Máy thu có thể offline"), "phép đo phải thấy cảnh báo 30′ cũ")
+      assert.ok((await renderCollections(m.path)).includes("Máy thu có thể mất kết nối"), "phép đo phải thấy cảnh báo 30′ cũ")
     } finally {
       m.done()
     }
@@ -361,8 +361,8 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
       await set()
       const h = await renderCollections()
       assert.deepEqual(headings(h).filter((x) => !CLOUD_HEADINGS.includes(x)), [], `${name}: vùng ngoài bản tin không được dựng`)
-      assert.equal(headings(h).includes("Máy móc (launchd)"), name !== "chưa có bản tin", `${name}: lưới job chỉ khi có bản tin`)
-      assert.equal(alertTitles(h).filter((t) => t === "Phần còn lại của trang chưa có số trên cloud").length, 1, `${name}: một Alert gom vùng trên máy thu`)
+      assert.equal(headings(h).includes("Máy móc"), name !== "chưa có bản tin", `${name}: lưới job chỉ khi có bản tin`)
+      assert.equal(alertTitles(h).filter((t) => t === "Phần còn lại của trang chưa có số trên máy chủ").length, 1, `${name}: một Alert gom vùng trên máy thu`)
       assert.equal(localCount(h), name === "chưa có bản tin" ? 1 : 0, `${name}: chữ chỉ-local đúng số lần`)
       assert.doesNotMatch(text(h), /Hỏng|Mọi thứ ổn|đều tươi|Kênh kết nối|Hoạt động/, `${name}: không trạng thái giả của vùng không đo`)
       const hrefs = [...region(h, COL_TILES[1], COL_TILES[4]).matchAll(/href="(#[^"]+)"/g)].map((m) => m[1])
@@ -377,7 +377,7 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
     try {
       const h = await renderCollections(m.path)
       assert.ok(headings(h).some((x) => !CLOUD_HEADINGS.includes(x)), "phép đo phải thấy vùng ngoài bản tin")
-      assert.ok(!alertTitles(h).includes("Phần còn lại của trang chưa có số trên cloud"), "bản sao không có Alert gom")
+      assert.ok(!alertTitles(h).includes("Phần còn lại của trang chưa có số trên máy chủ"), "bản sao không có Alert gom")
     } finally {
       m.done()
     }

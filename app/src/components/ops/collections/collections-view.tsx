@@ -88,9 +88,9 @@ export function CollectionsView(props: CollectionsData) {
 }
 
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Thu thập" }]
-const DESCRIPTION = "Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở log tay."
+const DESCRIPTION = "Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở nhật ký tay."
 /** Vùng đo trực tiếp trên máy thu — trên cloud không có nguồn số (ADR-0014); ON4/ON23 đưa dần lên bằng khối bản tin. */
-export const MACHINE_ONLY_REGIONS = ["Luồng 7 ngày", "Cần chú ý", "lớp lockdown", "ống S03", "xoay vòng", "nhóm S03"]
+export const MACHINE_ONLY_REGIONS = ["Luồng 7 ngày", "Cần chú ý", "lớp khoá an toàn", "ống S03", "xoay vòng", "nhóm S03"]
 
 /** Cloud (ON3, ADR-0014): chỉ dựng vùng đọc bản tin máy local — ô số, lưới sức khoẻ nguồn và lưới job (khối `jobs`, chỉ khi
  * đã có bản tin). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0 hay màu đạt khi
@@ -109,8 +109,8 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud }
       <FactsStamp state={cloud.state} measuredAt={cloud.measuredAt} />
       <FactsStaleAlert state={cloud.state} measuredAt={cloud.measuredAt} />
       {cloud.state === "none" ? (
-        <LocalOnlyAlert title="Chỉ đo ở máy local">
-          Máy local chưa đẩy số tổng hợp lên cloud. Kiểm cloud-sync ở máy thu, hoặc xem Ops trên máy thu.
+        <LocalOnlyAlert title="Chỉ đo ở máy thu">
+          Máy thu chưa đẩy số tổng hợp lên máy chủ. Kiểm tác vụ đồng bộ ở máy thu, hoặc xem cổng Ops trên máy thu.
         </LocalOnlyAlert>
       ) : null}
       <CollectionsTiles
@@ -123,8 +123,8 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud }
       />
       <FeedsGrid feeds={feedHealth} stale={stale} />
       <div id="tren-may-thu" className="scroll-mt-4">
-        <LocalOnlyAlert title="Phần còn lại của trang chưa có số trên cloud">
-          {[...MACHINE_ONLY_REGIONS, ...(cloud.state === "none" ? ["job"] : [])].join(", ")} đo trực tiếp trên máy thu — xem ở Ops trên máy thu.
+        <LocalOnlyAlert title="Phần còn lại của trang chưa có số trên máy chủ">
+          {[...MACHINE_ONLY_REGIONS, ...(cloud.state === "none" ? ["tác vụ"] : [])].join(", ")} đo trực tiếp trên máy thu — xem ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
       {cloud.state === "none" ? null : <JobsGrid jobs={jobs} stale={stale} />}

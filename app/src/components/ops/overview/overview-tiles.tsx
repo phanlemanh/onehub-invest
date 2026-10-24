@@ -53,10 +53,11 @@ function Panel({ head, legend, subject }: { head: ReactNode; legend?: ReactNode;
   )
 }
 
-/** `unmeasured`: trên cloud chưa có số độ tươi (chưa có bản tin hay khối lỗi) — mọi ô «—», không badge (ON3).
+/** `unmeasured`: trên máy chủ chưa có số độ tươi (chưa có bản tin hay khối lỗi) — mọi ô «—», không badge (ON3).
  * `stale`: số là lần đo cuối của bản tin cũ quá 45′ — số mờ, không badge xanh. */
-export function OverviewTiles({ rows, unmeasured = false, stale = false }: { rows: CoverageRow[]; unmeasured?: boolean; stale?: boolean }) {
+export function OverviewTiles({ rows, unmeasured = false, stale = false, areaNames = {} }: { rows: CoverageRow[]; unmeasured?: boolean; stale?: boolean; areaNames?: Record<string, string> }) {
   if (unmeasured) return <UnmeasuredTiles />
+  const names = new Map(Object.entries(areaNames))
   // Ô «Đạt SLO» đếm NGUỒN (Hỏi-1 AU6): nguồn đạt khi mọi thị trường có dữ liệu của nó đạt — cùng luật với
   // ô «Sức khoẻ nguồn» của /ops/collections (lib/freshness). Các ô còn lại vẫn kể từng cặp nguồn × thị trường.
   const sources = bySource(rows)
@@ -100,7 +101,7 @@ export function OverviewTiles({ rows, unmeasured = false, stale = false }: { row
             late[0] ? (
               <>
                 <ToneDot tone={FRESHNESS.stale.tick} />
-                <span className="truncate">Lâu nhất: {where(late[0])}</span>
+                <span className="truncate">Lâu nhất: {where(late[0], names)}</span>
                 <span className="text-foreground ms-auto shrink-0 font-medium tabular-nums">
                   {fmtAge(late[0].ageHours)} · {fmtOverdue(late[0].ageHours, late[0].sloHours) ?? `SLO ${fmtAge(late[0].sloHours)}`}
                 </span>
@@ -115,14 +116,14 @@ export function OverviewTiles({ rows, unmeasured = false, stale = false }: { row
       <KpiTile icon={<CircleOffIcon aria-hidden="true" />} title="Chưa có snapshot" detail="Nguồn chưa thu lần nào ở thị trường">
         <Panel
           head={<KpiValue value={fmtInt(none.length)} muted={stale} />}
-          subject={<span className="truncate">{none.length ? none.map(where).join(", ") : stale ? "Lần đo cuối: mọi nguồn đã có snapshot" : "Mọi nguồn đã có snapshot"}</span>}
+          subject={<span className="truncate">{none.length ? none.map((r) => where(r, names)).join(", ") : stale ? "Lần đo cuối: mọi nguồn đã có snapshot" : "Mọi nguồn đã có snapshot"}</span>}
         />
       </KpiTile>
 
       <KpiTile icon={<CalendarClockIcon aria-hidden="true" />} title="Snapshot mới nhất" detail="Lần thu gần nhất của mọi nguồn">
         <Panel
           head={<KpiValue value={fmtVnDate(newest?.lastSnapshotAt ?? null)} muted={stale} />}
-          subject={<span className="truncate">{newest ? where(newest) : "Chưa có snapshot nào"}</span>}
+          subject={<span className="truncate">{newest ? where(newest, names) : "Chưa có snapshot nào"}</span>}
         />
       </KpiTile>
     </div>

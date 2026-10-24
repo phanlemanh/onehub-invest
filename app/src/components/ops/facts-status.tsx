@@ -8,12 +8,12 @@ import type { FactsState } from "@/lib/ops-facts"
  * `measuredAt` là mốc đẩy cuối; giờ VN qua bộ định dạng chung của ON8. */
 export type FactsStatusProps = { state: FactsState; measuredAt: string | null }
 
-/** Dòng «Số đo lúc … từ máy local» dưới PageHeader khi đã có bản tin (tươi hay cũ). */
+/** Dòng «Số đo lúc … từ máy thu» dưới PageHeader khi đã có bản tin (tươi hay cũ). */
 export function FactsStamp({ state, measuredAt }: FactsStatusProps) {
   if (state === "none") return null
   return (
     <p className="text-muted-foreground text-xs tabular-nums" data-facts-stamp={state}>
-      Số đo lúc {fmtVnDateTime(measuredAt)} từ máy local
+      Số đo lúc {fmtVnDateTime(measuredAt)} từ máy thu
     </p>
   )
 }
@@ -24,8 +24,8 @@ export function FactsStaleAlert({ state, measuredAt }: FactsStatusProps) {
   return (
     <Alert variant="warning" data-facts-stale="">
       <CircleAlertIcon aria-hidden="true" />
-      <AlertTitle>Máy local không đẩy số từ {fmtVnDateTime(measuredAt)}</AlertTitle>
-      <AlertDescription>Số dưới đây là lần đo cuối — kiểm cloud-sync ở máy thu.</AlertDescription>
+      <AlertTitle>Máy thu không đẩy số từ {fmtVnDateTime(measuredAt)}</AlertTitle>
+      <AlertDescription>Số dưới đây là lần đo cuối — kiểm tác vụ đồng bộ ở máy thu.</AlertDescription>
     </Alert>
   )
 }

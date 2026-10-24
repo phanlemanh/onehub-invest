@@ -79,7 +79,7 @@ test("AC-9 thẻ agent_output", async () => {
   const r = await render(agentItem(ENRICH_EVIDENCE));
   const t = r.text();
   assert.ok(t.includes("Bán gấp căn 2pn LBV"), "thiếu đoạn tin");
-  assert.ok(t.includes("Loại BĐS") && t.includes("apartment"), "thiếu hàng loại BĐS");
+  assert.ok(t.includes("Loại hình") && t.includes("Căn hộ"), "thiếu hàng loại BĐS"); // ON12: «Loại hình», giá trị đọc qua nhãn
   assert.ok(t.includes("Phòng ngủ") && t.includes("85%"), "thiếu hàng phòng ngủ / độ tin cậy");
   for (const [label, status] of [["Áp dụng", "approved"], ["Bỏ", "rejected"], ["Để sau", "deferred"]] as const) {
     await r.click(label);
@@ -149,13 +149,16 @@ test("AC-11 thẻ xung đột: hai bên + căn cứ, chọn rồi mới áp", as
   const t = r.text();
   const e1 = fieldOf("e1_rule");
   const llm = fieldOf("e2_llm");
-  assert.ok(t.includes("Theo luật") && t.includes("Theo LLM"), "AC-11: thiếu nhãn nguồn hai bên");
-  assert.ok(t.includes(e1.value) && t.includes(llm.value), "AC-11: thiếu hai giá trị");
+  assert.ok(t.includes("Theo luật") && t.includes("Theo AI"), "AC-11: thiếu nhãn nguồn hai bên"); // ON12: «AI» thay «LLM»
+  // ON12: giá trị loại hình hiện bằng nhãn tiếng Việt (lib/ops-labels) — đo nhãn của đúng hai giá trị đề xuất.
+  const { propertyTypeLabel } = await import("../src/lib/ops-labels");
+  const nhan = (v: string) => (propertyTypeLabel(v).known ? propertyTypeLabel(v).label : v);
+  assert.ok(t.includes(nhan(e1.value)) && t.includes(nhan(llm.value)), "AC-11: thiếu hai giá trị");
   assert.ok(t.includes(e1.basis) && t.includes(llm.basis), "AC-11: thiếu căn cứ mỗi bên");
-  assert.ok(button("Chọn luật") && button("Chọn LLM") && button("Bỏ cả hai"), "AC-11: thiếu lựa chọn");
+  assert.ok(button("Chọn luật") && button("Chọn AI") && button("Bỏ cả hai"), "AC-11: thiếu lựa chọn");
   assert.ok(isDisabled(button("Áp dụng")), "AC-11: «Áp dụng» phải khoá khi chưa chọn");
 
-  await r.click("Chọn LLM");
+  await r.click("Chọn AI");
   assert.ok(!isDisabled(button("Áp dụng")), "AC-11: chọn xong «Áp dụng» phải bật");
   await r.click("Áp dụng");
   assert.deepEqual(

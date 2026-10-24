@@ -17,7 +17,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <TooltipProvider>
         {children}
-        <Toaster />
+        <Toaster containerAriaLabel="Thông báo" />
       </TooltipProvider>
     </ThemeProvider>
   )

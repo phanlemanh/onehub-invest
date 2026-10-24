@@ -61,10 +61,10 @@ test("NT2-AC-9 /ops/sources cloud với zaloAccounts[i].name null → hiện mã
 test("NT2-AC-9 bản sao hiện name thô → ca bắt", async () => {
   // bản sao đặt cạnh bản thật để import "@/…" và "./…" giải như cũ; xoá ngay sau khi render
   const src = readFileSync(join(DIR, "zalo-accounts.tsx"), "utf8")
-  const anchor = `<span className="font-mono text-sm">{a.accountId}</span>`
+  const anchor = `<span className="font-mono text-sm" translate="no">{a.accountId}</span>` // ON12: mã tài khoản là dữ liệu (translate="no")
   assert.ok(src.includes(anchor), "khuôn đột biến không khớp mã nguồn zalo-accounts.tsx")
   const file = `.nt2-mut-${process.pid}.tsx`
-  writeFileSync(join(DIR, file), src.replace(anchor, `<span className="font-mono text-sm">{String(a.name)}</span>`))
+  writeFileSync(join(DIR, file), src.replace(anchor, `<span className="font-mono text-sm" translate="no">{String(a.name)}</span>`))
   try {
     const r = await renderCloud(file)
     assert.throws(() => assertCodesShown(r), /mã tài khoản|null/, "thước không bắt bản sao hiện name thô")

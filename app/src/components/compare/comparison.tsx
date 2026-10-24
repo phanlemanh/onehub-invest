@@ -1,12 +1,13 @@
 "use client"
 
-import { Fragment, useTransition } from "react"
+import { Fragment, useCallback, useState, useTransition } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
 import { ArrowRightIcon, CircleHelpIcon, InfoIcon, MapPinIcon, XIcon } from "lucide-react"
 import { cn } from "cn"
 
+import { AreaThumbnail } from "@/components/page/area-thumbnail"
 import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,9 +19,7 @@ import {
 } from "@/components/ui/empty"
 import { ScrollBar } from "@/components/ui/scroll-area"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { SearchEntry } from "@/lib/queries"
-import { AddAreaCommand } from "./add-area-command"
-import { COMPARE_MAX, type CompareArea, type CompareGroup, type CompareRow } from "./compare-types"
+import { type CompareArea, type CompareGroup, type CompareRow } from "./compare-types"
 
 function RowHint({ label, hint }: { label: string; hint: string }) {
   return (
@@ -37,8 +36,11 @@ function RowHint({ label, hint }: { label: string; hint: string }) {
   )
 }
 
-/** Ô đầu cột — ProductHeaderCell của comparison-1, ảnh thay bằng ô RevPAR. */
+/** Ô đầu cột — ProductHeaderCell của comparison-1: ảnh một listing tự thu của khu vực; chưa có ảnh thì ô RevPAR. */
 function AreaHeaderCell({ area, onRemove }: { area: CompareArea; onRemove: (id: string) => void }) {
+  const [photoBroken, setPhotoBroken] = useState(false)
+  const onBroken = useCallback(() => setPhotoBroken(true), [])
+  const photo = area.thumbnail && !photoBroken ? area.thumbnail : null
   return (
     <div className="flex h-full min-w-0 flex-col gap-4 p-4">
       <div className="flex items-start justify-end">
@@ -53,10 +55,16 @@ function AreaHeaderCell({ area, onRemove }: { area: CompareArea; onRemove: (id: 
           <XIcon className="size-4" aria-hidden="true" />
         </Button>
       </div>
-      <div className="bg-muted flex h-20 w-full flex-col items-start justify-end gap-0.5 rounded-md p-3">
-        <span className="text-muted-foreground text-xs">RevPAR</span>
-        <span className="text-xl font-semibold tracking-tight tabular-nums">{area.headline}</span>
-      </div>
+      {photo ? (
+        <div className="bg-muted relative h-28 w-full overflow-hidden rounded-md">
+          <AreaThumbnail thumb={photo} areaName={area.name} onBroken={onBroken} />
+        </div>
+      ) : (
+        <div className="bg-muted flex h-28 w-full flex-col items-start justify-end gap-0.5 rounded-md p-3">
+          <span className="text-muted-foreground text-xs">RevPAR</span>
+          <span className="text-xl font-semibold tracking-tight tabular-nums">{area.headline}</span>
+        </div>
+      )}
       <div className="flex min-w-0 flex-col gap-1.5">
         <span className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs font-medium">
           <MapPinIcon className="size-3.5 shrink-0" aria-hidden="true" />
@@ -92,15 +100,7 @@ function bestOf(areas: CompareArea[], row: CompareRow) {
  * So sánh khu vực — chuyển thể Comparison của @reui/comparison-1: cột nhãn dính
  * trái, nhóm hàng, cột xoá được, cuộn ngang. Danh sách cột nằm trên URL.
  */
-export function AreaComparison({
-  areas,
-  groups,
-  entries,
-}: {
-  areas: CompareArea[]
-  groups: CompareGroup[]
-  entries: SearchEntry[]
-}) {
+export function AreaComparison({ areas, groups }: { areas: CompareArea[]; groups: CompareGroup[] }) {
   const router = useRouter()
   const pathname = usePathname()
   const [pending, startTransition] = useTransition()
@@ -113,35 +113,13 @@ export function AreaComparison({
 
   return (
     <TooltipProvider delay={150}>
-      <section className={cn("flex flex-col", pending && "opacity-60 transition-opacity")} aria-labelledby="compare-heading">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <h1 id="compare-heading" className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              So sánh khu vực
-            </h1>
-            <p className="text-muted-foreground mt-1 text-sm leading-5">
-              Đặt cạnh nhau tối đa {COMPARE_MAX} thị trường hoặc phường.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground text-sm">
-              {areas.length}/{COMPARE_MAX} khu vực
-            </span>
-            <AddAreaCommand
-              entries={entries}
-              exclude={ids}
-              disabled={areas.length >= COMPARE_MAX}
-              onAdd={(id) => go([...ids, id])}
-            />
-          </div>
-        </header>
-
+      <section className={cn("flex flex-col gap-6", pending && "opacity-60 transition-opacity")} aria-label="Bảng so sánh">
         {areas.length === 0 ? (
-          <Empty className="border-border bg-muted/30 mt-8 border border-dashed">
+          <Empty className="border-border bg-muted/30 border border-dashed">
             <EmptyHeader>
               <EmptyTitle>Chưa chọn khu vực nào</EmptyTitle>
               <EmptyDescription>
-                Bấm “Thêm khu vực”, hoặc mở một thị trường/phường và bấm “So sánh”.
+                Bấm “Thêm khu vực” ở trên, hoặc mở một thị trường/phường và bấm “So sánh”.
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
@@ -151,12 +129,13 @@ export function AreaComparison({
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="border-border mt-8 overflow-hidden rounded-md border">
+          <div className="border-border overflow-hidden rounded-md border">
             <ScrollAreaPrimitive.Root data-slot="scroll-area" className="relative">
               <ScrollAreaPrimitive.Viewport
                 data-slot="scroll-area-viewport"
                 className="size-full overflow-x-auto overflow-y-hidden rounded-lg"
               >
+                {/* eslint-disable-next-line onehub-ui/no-raw-table -- nguyên bản comparison-1 (routes.md: bảng so sánh không chuyển data-grid) */}
                 <table className="w-full table-fixed border-collapse text-sm">
                   <colgroup>
                     <col className="w-[12rem] sm:w-[14rem]" />
@@ -219,7 +198,7 @@ export function AreaComparison({
                                 return (
                                   <td key={area.id} className={cn("border-border px-4 py-2 align-middle", index > 0 && "border-l")}>
                                     {value ? (
-                                      <span className={cn("inline-flex items-center gap-1.5 text-sm tabular-nums", best === area.id && "text-success font-semibold")}>
+                                      <span className={cn("inline-flex items-center gap-1.5 text-sm tabular-nums", best === area.id && "text-success-foreground dark:text-success font-semibold")}>
                                         {value.text}
                                         {best === area.id && <span className="sr-only">(tốt nhất)</span>}
                                       </span>
@@ -243,13 +222,15 @@ export function AreaComparison({
           </div>
         )}
 
-        <p className="text-muted-foreground mt-6 flex items-start gap-2 text-xs">
-          <InfoIcon className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-          <span>
-            Số tự thu trên lịch đặt các tháng tới, bình quân theo đêm. Ô xanh là khu vực tốt nhất của hàng.
-            Giá bán và thuê dài hạn là dữ liệu mô phỏng.
-          </span>
-        </p>
+        {areas.length > 0 && (
+          <p className="text-muted-foreground flex items-start gap-2 text-xs">
+            <InfoIcon className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+            <span>
+              Số tự thu trên lịch đặt các tháng tới, bình quân theo đêm. Ô xanh là khu vực tốt nhất của hàng. Ảnh đầu cột là ảnh một listing tự thu trong khu vực.
+              Giá bán và thuê dài hạn là dữ liệu mô phỏng.
+            </span>
+          </p>
+        )}
       </section>
     </TooltipProvider>
   )

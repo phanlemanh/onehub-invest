@@ -30,7 +30,7 @@ export function NotFoundState() {
           Xem thị trường Việt Nam
         </Button>
         <EmptyDescription>
-          Trong portal, nhấn <Kbd>⌘K</Kbd> để tìm tỉnh hoặc phường.
+          Trong cổng, nhấn <Kbd>⌘K</Kbd> để tìm tỉnh hoặc phường.
         </EmptyDescription>
       </EmptyContent>
     </Empty>

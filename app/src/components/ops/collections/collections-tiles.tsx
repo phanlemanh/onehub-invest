@@ -102,32 +102,32 @@ export function CollectionsTiles({
       {cloud ? (
         <StatCard
           icon={<ShieldCheckIcon aria-hidden="true" />}
-          title="Lockdown"
+          title="Khoá an toàn"
           period="Bây giờ"
           value="—"
-          badge={<Badge variant="warning-light">Chưa kiểm được trên cloud</Badge>}
-          basis="Kiểm ở Ops trên máy thu"
+          badge={<Badge variant="warning-light">Chưa kiểm được trên máy chủ</Badge>}
+          basis="Kiểm ở cổng Ops trên máy thu"
           action={{ label: "Xem các lớp", href: CLOUD_ANCHOR }}
         />
       ) : (
         <StatCard
           icon={<ShieldCheckIcon aria-hidden="true" />}
-          title="Lockdown"
+          title="Khoá an toàn"
           period="Bây giờ"
           value={fmtInt(layersOk)}
           total={fmtInt(layers.length)}
-          badge={agentTurnsToday !== null && agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} agent-turn</Badge> : undefined}
+          badge={agentTurnsToday !== null && agentTurnsToday > 0 ? <Badge variant="destructive-light">{fmtInt(agentTurnsToday)} lượt tự trả lời</Badge> : undefined}
           basis={
             agentTurnsToday === null
-              ? "Chưa kiểm được agent-turn hôm nay"
+              ? "Chưa kiểm được lượt máy tự trả lời hôm nay"
               : agentTurnsToday > 0
-                ? "Có agent-turn hôm nay — kiểm ngay"
-                : "Không có agent-turn hôm nay"
+                ? "Có lượt máy tự trả lời hôm nay — kiểm ngay"
+                : "Không có lượt máy tự trả lời hôm nay"
           }
           action={{ label: "Xem các lớp", href: "#lockdown" }}
         >
           <SegmentBar
-            label="Lớp lockdown"
+            label="Lớp khoá an toàn"
             segments={[
               { key: "ok", label: "Ổn", count: layersOk, tone: "bg-success" },
               { key: "bad", label: "Hỏng", count: layersBad, tone: "bg-destructive" },

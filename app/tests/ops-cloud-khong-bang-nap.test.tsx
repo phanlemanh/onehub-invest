@@ -85,14 +85,14 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
 
   // ON3 (o-kpi-chi-do-local) thay luật hai-vị-trí cũ bằng «đúng MỘT chỗ chữ chỉ-local mỗi trang» (OPS-20, YC6 — Ngoài-2
   // của hồ sơ này): câu chỉ còn ở tiêu đề Alert, đầu trang không lặp lại.
-  test("OP-AC-2 trang /ops và Thu thập render được, nói «Chỉ đo ở máy local» đúng một lần", async () => {
+  test("OP-AC-2 trang /ops và Thu thập render được, nói «Chỉ đo ở máy thu» đúng một lần", async () => {
     needDb()
     const [ops, col] = await renderBoth()
-    const TEXT = "Chỉ đo ở máy local"
+    const TEXT = "Chỉ đo ở máy thu" // ON12: «máy local» → «máy thu» (CONTEXT.md)
     for (const [name, h] of [["/ops", ops], ["/ops/collections", col]] as const) {
       const alerts = [...h.matchAll(/data-slot="alert-title"[^>]*>([^<]*)</g)].map((m) => m[1])
       assert.deepEqual(alerts.filter((t) => t === TEXT), [TEXT], `${name} phải có đúng một thông báo «${TEXT}»`)
-      assert.equal(h.match(/chỉ (đo|có) ở (máy )?local/gi)?.length, 1, `${name}: câu chỉ-local chỉ được xuất hiện một lần`)
+      assert.equal(h.match(/chỉ (đo|có) ở (máy )?(local|thu)/gi)?.length, 1, `${name}: câu chỉ-local chỉ được xuất hiện một lần`)
       assert.ok(!h.includes("Chưa có nguồn nào"), `${name} không được nói «Chưa có nguồn nào» khi chỉ là thiếu bảng`)
     }
     assert.equal(summaries(ops)[0], summaries(col)[0], "hai trang cùng một con số x/y (AU6)")
@@ -106,7 +106,7 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
       assert.equal(await freshnessLocalOnly(), false)
       const [ops, col] = await renderBoth()
       for (const h of [ops, col]) {
-        assert.ok(!/chỉ (đo|có) ở (máy )?local/i.test(h))
+        assert.ok(!/chỉ (đo|có) ở (máy )?(local|thu)/i.test(h))
         assert.ok(h.includes("Chưa có nguồn nào"))
       }
     } finally {

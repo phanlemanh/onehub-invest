@@ -85,6 +85,9 @@ coverage-scan» trong sổ. Trục:
 
 - Chung `components/ops/collections/collections-tiles.tsx` với ON7, `overview-tiles.tsx` với UI11 — không song song.
 - Phụ thuộc ON8 (giờ VN, `lib/freshness.ts`): S1-D và S3 sau khi ON8 merge (P2-31).
+- Nhãn sau khi gộp main có ON12 (2026-10-25, giám sát quyết — sửa tích hợp, không đổi hành vi): chữ trong các AC đọc theo
+  `CONTEXT.md` — «máy local» là «máy thu», «cloud» là «máy chủ», «Lockdown» là «Khoá an toàn», «Hàng chờ duyệt chỉ có ở
+  máy local» là «Hàng duyệt chỉ có ở máy thu»; «kiểm cloud-sync» là «kiểm tác vụ đồng bộ». Test và tiêu chí ghim chữ mới.
 - Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
   - Ngoài-5: Phép đo «không chữ trạng thái giả» trên trang Thu thập ở cloud chưa có ca đối chứng có chữ giả thật.
   - Ngoài-6: Mục ghi về hàm đọc bảng thô vắng thành rỗng — hàm này đã gỡ ở lượt 3, giữ dòng để vết.

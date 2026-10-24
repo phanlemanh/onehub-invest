@@ -9,6 +9,8 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
 import { fmtAge, fmtOverdue } from "@/lib/freshness"
 import type { SourceFeedHealth } from "@/lib/ops-queries"
+import { sourceStatusLabel } from "@/lib/ops-labels"
+import { RawLabel } from "@/components/ops/raw-label"
 
 import { FEED_STATE, feedState } from "./feed-status"
 import { StatusGrid, type StatusTab } from "./status-grid"
@@ -44,7 +46,7 @@ export function FeedsGrid({ feeds, stale = false }: { feeds: SourceFeedHealth[];
         header: "Trạng thái",
         cell: ({ row }) => {
           const s = FEED_STATE[feedState(row.original)]
-          return <Badge variant={stale && s.variant === "success-light" ? "outline" : s.variant}>{row.original.status !== "active" ? row.original.status : s.label}</Badge>
+          return <Badge variant={stale && s.variant === "success-light" ? "outline" : s.variant}>{row.original.status !== "active" ? <RawLabel n={sourceStatusLabel(row.original.status)} raw={row.original.status} /> : s.label}</Badge>
         },
         size: 120,
       },
@@ -73,7 +75,7 @@ export function FeedsGrid({ feeds, stale = false }: { feeds: SourceFeedHealth[];
       },
       { id: "n24", accessorKey: "items24h", header: "24h", cell: ({ row }) => (row.original.items24h ? fmtInt(row.original.items24h) : "—"), size: 90, meta: NUM },
       { id: "stg", accessorKey: "stgRows", header: "Staging", cell: ({ row }) => (row.original.stgRows ? fmtInt(row.original.stgRows) : "—"), size: 100, meta: NUM },
-      { id: "offers", accessorFn: (f) => f.offers ?? -1, header: "Offers", cell: ({ row }) => fmtInt(row.original.offers), size: 100, meta: NUM },
+      { id: "offers", accessorFn: (f) => f.offers ?? -1, header: "Tin rao", cell: ({ row }) => fmtInt(row.original.offers), size: 100, meta: NUM },
     ],
     [stale]
   )
