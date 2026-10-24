@@ -76,3 +76,17 @@
 - [ ] Step 1: ca `GV-AC-6 hàm dựng zaloFlow/funnel bản pipeline trên lược đồ tạm` (stg_zalo_posts, sale_offers tạo như Task 3; khoá + số đếm viết trước), `GV-AC-6 vnDayKey bản pipeline cùng ma trận khoá ngày` (đối chiếu giá trị viết trước giống AC-1), `GV-AC-6 push-ops-facts dùng hàm lib, không còn ::date/date_trunc/to_char thiếu AT TIME ZONE` (đọc tệp, bỏ comment), chiều đỏ bản sao dùng `captured_at::date::text`.
 - [ ] Step 2: cài; `cd pipeline && npm test` xanh; `node --check push-ops-facts.mjs`.
 - [ ] Step 3: commit `fix(pipeline): số Zalo đẩy lên cloud gom theo ngày VN (ON8)`.
+
+---
+
+## Phụ lục 24/10 — sau Cổng Bằng chứng lượt 1 (Ngoài-1 → AC-10)
+
+### Task 5: Dòng log mốc hỏng không làm hỏng lượt đếm (AC-10)
+
+`independent: false` (sửa `pipeline/lib/ops-flow.mjs` và hai tệp test của Task 3, 4). Phục vụ E10, E11.
+
+**Files:** Modify `pipeline/lib/ops-flow.mjs` (`parseLog`: sau `const t = new Date(ts).getTime()` thêm `if (!Number.isFinite(t)) continue;` — bỏ qua dòng mốc hỏng trước mọi phép đếm); `pipeline/scripts/vn-day.test.mjs`; `app/tests/gio-ops-gio-vn.test.tsx`. Bản app (`readGateFunnel`) đã chặn bằng `Number.isFinite(Date.parse(iso))` — chỉ thêm ca đo, không đổi mã.
+
+- [ ] Step 1: ca `GV-AC-10 parseLog bản pipeline bỏ qua dòng mốc hỏng` (log = dòng 16:30Z hợp lệ, `2026-10-23T99:99:99.000Z post 202 group=x`, `2026-10-23T`, dòng 17:30Z hợp lệ; `now` như AC-5 → không ném, today 1, last7 2) — đỏ trên mã hiện tại (RangeError); chiều đỏ `GV-AC-10 bản sao ops-flow bỏ chặn mốc → ném, nêu mốc hỏng` (bản sao xoá dòng chặn, `assert.throws(/Invalid time value/)`, thông điệp «mốc hỏng»). Ca `GV-AC-10 readGateFunnel bản app bỏ qua dòng mốc hỏng` (cùng tệp log, tiến trình con như AC-5).
+- [ ] Step 2: thêm dòng chặn; `cd pipeline && npm test`, `cd app && node --import tsx --test tests/gio-ops-gio-vn.test.tsx` xanh; `node push-ops-facts.mjs --kho` với HOME tạm vẫn sạch.
+- [ ] Step 3: commit `fix(pipeline): parseLog bỏ qua dòng log mốc hỏng (ON8 AC-10)`.
