@@ -23,7 +23,7 @@
       "phu": [],
       "lap": false,
       "hang": [
-        "ON21"
+        "ON20"
       ]
     }
   ],
@@ -1317,40 +1317,26 @@
     },
     {
       "ma": "ON1",
-      "cau_giao": "Tài liệu và đánh dấu của kho coi tên nhóm S03 là tầng C: ADR-0007 có mục sửa đổi 24/10, AGENTS.md luật 6 ghi rõ, cột tên nhóm trên /ops không còn data-tier-a",
+      "cau_giao": "Tài liệu và đánh dấu của kho khớp các chốt 23–24/10: tên nhóm S03 là tầng C (ADR-0007 mục sửa đổi, AGENTS.md luật 6, cột tên nhóm hết data-tier-a), luật S08 chỉ dùng nội bộ, luật phép đo không gọi phương thức ghi trên route zalo/openclaw, ROADMAP V9 ghi project Vercel cũ đã xoá",
       "vai": "nen",
-      "tieu_chi": 4,
-      "vi_sao": "Mạnh chốt 24/10 (Câu 1): tên nhóm là tầng C. Audit OPS-6 thấy tên nhóm lên cloud qua ops_heartbeat trong khi code đánh dấu tầng A — sau quyết định, cái sai là chữ và dấu, không phải dữ liệu. Làm ngay trong PR cắt lượt (chép quyết định đã chốt).",
+      "tieu_chi": 7,
+      "vi_sao": "Mạnh chốt 24/10 (Câu 1): tên nhóm là tầng C — audit OPS-6 thấy tên nhóm lên cloud qua ops_heartbeat trong khi code đánh dấu tầng A; sau quyết định, cái sai là chữ và dấu, không phải dữ liệu. Cùng loại «chép chốt đã có»: luật phép đo sau sự cố P1-7 23/10, luật S08 (Mạnh duyệt 24/10), V9 (commit 572882d ngoài main). Làm ngay trong PR cắt lượt.",
       "hang": "T1",
-      "slug": "ten-nhom-tang-c",
-      "bat_khi": "ADR-0007 và AGENTS.md luật 6 có câu chốt 24/10; git grep data-tier-a ở hai cột tên nhóm (collections-tables.tsx, zalo-groups-grid.tsx) ra 0; tên tài khoản thu và tên nguồn thật vẫn tầng A",
+      "slug": "chep-chot-2410",
+      "bat_khi": "ADR-0007, AGENTS.md luật 6, ROADMAP §3 có câu chốt 24/10; git grep data-tier-a ở hai cột tên nhóm ra 0; zalo-safety.md có luật phép đo; AGENTS.md cạnh luật 5 và pii-spl.md có luật S08; ROADMAP V9 ghi đã xoá 24/10",
       "nhom": "chep-chot",
       "dot": "ops-noi-that-2410",
       "phu": [
         "OPS-6",
-        "QD1"
+        "QD1",
+        "YC2",
+        "YC9b",
+        "YC10"
       ],
       "ghi_chu": "Tên tài khoản thu chưa chốt (BOI-CANH §2) — giữ data-tier-a ở zalo-accounts.tsx; source-groups.tsx giữ vì group_key có thể chứa tên miền nguồn thật."
     },
     {
       "ma": "ON2",
-      "cau_giao": "Luật của kho ghi các chốt vận hành 23–24/10 của đợt dot0: phép đo không gọi phương thức ghi trên route zalo/openclaw, S08 chỉ dùng nội bộ, V9 ghi project Vercel cũ đã xoá",
-      "vai": "nen",
-      "tieu_chi": 3,
-      "vi_sao": "Sổ ý chờ dot0: sự cố P1-7 23/10 (ma trận phép đo gọi DELETE tài khoản) đề xuất luật thường trực làm cùng PR cắt lượt; Mạnh duyệt thu S08 theo chính sách như nguồn hiệu chuẩn 24/10; commit 572882d (V9) nằm trên nhánh ngoài main. Làm ngay trong PR cắt lượt.",
-      "hang": "T1",
-      "slug": "chep-chot-dot0",
-      "bat_khi": ".claude/rules/zalo-safety.md có luật phép đo; AGENTS.md cạnh luật 5 và .claude/rules/pii-spl.md có luật S08; ROADMAP V9 ghi đã xoá 24/10",
-      "nhom": "chep-chot",
-      "dot": "ops-noi-that-2410",
-      "phu": [
-        "YC2",
-        "YC9b",
-        "YC10"
-      ]
-    },
-    {
-      "ma": "ON3",
       "cau_giao": "Người vận hành mở /ops/collections trên cloud thấy Lockdown và Máy móc theo kết quả máy thu đẩy lên; lớp không có kết quả hiện «Chỉ kiểm ở máy local», không lớp nào «Ổn» khi không kiểm, dòng log cuối là dòng có nghĩa",
       "vai": "Người vận hành",
       "tieu_chi": 10,
@@ -1364,10 +1350,10 @@
         "OPS-3",
         "OPS-19"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON3, ON5, ON6, ON8 — chạy liền nhau, không song song (BOI-CANH §4). Đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở: phép đo không gọi lệnh ghi nào trên openclaw. Ưu tiên đầu của đợt (tín hiệu an toàn sai cả hai chiều). Chung app/src/lib/ops-queries.ts với ON17."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Đọc .claude/rules/zalo-safety.md và docs/ops/runtime-map.md trước khi mở: phép đo không gọi lệnh ghi nào trên openclaw. Ưu tiên đầu của đợt (tín hiệu an toàn sai cả hai chiều). Chung app/src/lib/ops-queries.ts với ON16."
     },
     {
-      "ma": "ON4",
+      "ma": "ON3",
       "cau_giao": "Người vận hành mở /ops và /ops/collections trên cloud thấy mọi ô số không đo được ghi «—» kèm «Chỉ đo ở máy local» đúng một lần, không badge xanh, không số 0 trấn an, bảng trống có hành động",
       "vai": "Người vận hành",
       "tieu_chi": 9,
@@ -1383,10 +1369,10 @@
         "OPS-20",
         "YC6"
       ],
-      "ghi_chu": "OPS-5: Cổng Phạm vi chọn lấy số 24h từ facts/getFlowDays hay ghi «Chỉ đo ở máy local». Chung collections-tiles.tsx với ON8 (nhãn S0x) và overview-tiles.tsx với UI11 — không song song. Khi AU12 giao, các ô có số thật từ registry gọt."
+      "ghi_chu": "OPS-5: Cổng Phạm vi chọn lấy số 24h từ facts/getFlowDays hay ghi «Chỉ đo ở máy local». Chung collections-tiles.tsx với ON7 (nhãn S0x) và overview-tiles.tsx với UI11 — không song song. Khi AU12 giao, các ô có số thật từ registry gọt."
     },
     {
-      "ma": "ON5",
+      "ma": "ON4",
       "cau_giao": "Người vận hành thấy bảng nhóm S03 trên cloud ghi đúng số nhóm allowlist đang bật và «Vào raw» theo nhóm như máy thu; thiếu facts thì «—», không 0",
       "vai": "Người vận hành",
       "tieu_chi": 6,
@@ -1399,10 +1385,10 @@
       "phu": [
         "OPS-9"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON3, ON5, ON6, ON8 — chạy liền nhau, không song song (BOI-CANH §4). Dưới mục tiêu cỡ: một vùng hẹp; không gộp với ON6 vì ON6 là vùng khác (luồng theo ngày) và đã ở mục tiêu."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Dưới mục tiêu cỡ: một vùng hẹp; không gộp với ON5 vì ON5 là vùng khác (luồng theo ngày) và đã ở mục tiêu."
     },
     {
-      "ma": "ON6",
+      "ma": "ON5",
       "cau_giao": "Người vận hành đọc «Luồng 7 ngày qua» trên /ops/collections thấy mỗi cột đếm đúng thứ nhãn nói: tin rao đúng nguồn, đủ 7 ngày từ facts, cột không có dữ liệu trên cloud ghi «chỉ local»",
       "vai": "Người vận hành",
       "tieu_chi": 8,
@@ -1415,10 +1401,10 @@
       "phu": [
         "OPS-8"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON3, ON5, ON6, ON8 — chạy liền nhau, không song song (BOI-CANH §4). Chia ngày theo giờ VN là của ON9 — mở ON9 trước hoặc chạy liền. Chung collections-queries.ts:78-110 với ON7, ON9."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Chia ngày theo giờ VN là của ON8 — mở ON8 trước hoặc chạy liền. Chung collections-queries.ts:78-110 với ON6, ON8."
     },
     {
-      "ma": "ON7",
+      "ma": "ON6",
       "cau_giao": "Người vận hành mở /ops/collections không thấy số S02 nào ở biểu đồ, bảng hay panel Rotation; số S02 chỉ ở /ops/quality và tiêu đề biểu đồ nói rõ đang đếm gì",
       "vai": "Người vận hành",
       "tieu_chi": 6,
@@ -1431,10 +1417,10 @@
       "phu": [
         "OPS-14"
       ],
-      "ghi_chu": "Chung sync-activity.tsx và components/ops/collections/* với ON6, ON8 — không song song. Mở rộng scripts/check-portal-compliance.mjs (luật 5) nếu cần."
+      "ghi_chu": "Chung sync-activity.tsx và components/ops/collections/* với ON5, ON7 — không song song. Mở rộng scripts/check-portal-compliance.mjs (luật 5) nếu cần."
     },
     {
-      "ma": "ON8",
+      "ma": "ON7",
       "cau_giao": "Người vận hành đọc /ops/collections và /ops/quality chỉ thấy mã S0x kèm vai trò, không tên nguồn thật — kể cả nhãn job đẩy từ máy thu",
       "vai": "Người vận hành",
       "tieu_chi": 8,
@@ -1447,10 +1433,10 @@
       "phu": [
         "OPS-13"
       ],
-      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON3, ON5, ON6, ON8 — chạy liền nhau, không song song (BOI-CANH §4). Đụng cùng tệp với ON4 (collections-tiles.tsx), ON6, ON7, ON9, ON10, ON11, ON13 — xếp ON8 sau ON4 hoặc chạy liền. Mở trước NT2: bộ soát tầng A của NT2 đỏ ngay nếu nhãn job còn tên thật. Đọc tên/vai trò từ source_registry (pii-spl.md: không hardcode literal nguồn)."
+      "ghi_chu": "push-ops-facts.mjs (t3_paths) chung với AU12, NT2, AU13 và các hàng ON2, ON4, ON5, ON7 — chạy liền nhau, không song song (BOI-CANH §4). Đụng cùng tệp với ON3 (collections-tiles.tsx), ON5, ON6, ON8, ON9, ON10, ON12 — xếp ON7 sau ON3 hoặc chạy liền. Mở trước NT2: bộ soát tầng A của NT2 đỏ ngay nếu nhãn job còn tên thật. Đọc tên/vai trò từ source_registry (pii-spl.md: không hardcode literal nguồn)."
     },
     {
-      "ma": "ON9",
+      "ma": "ON8",
       "cau_giao": "Người vận hành đọc mọi mốc giờ trên cổng Ops theo giờ Việt Nam có ghi múi, ngày gom theo giờ Việt Nam, và nguồn quá hạn hiện đúng mức trễ thay vì tuổi bằng SLO",
       "vai": "Người vận hành",
       "tieu_chi": 9,
@@ -1464,10 +1450,10 @@
         "OPS-7",
         "YC4"
       ],
-      "ghi_chu": "Một formatter chung trong app/src/lib/format.ts (timeZone Asia/Ho_Chi_Minh); SQL gom ngày AT TIME ZONE. fmtAge ở lib/freshness.ts chung với ON4 — chạy liền."
+      "ghi_chu": "Một formatter chung trong app/src/lib/format.ts (timeZone Asia/Ho_Chi_Minh); SQL gom ngày AT TIME ZONE. fmtAge ở lib/freshness.ts chung với ON3 — chạy liền."
     },
     {
-      "ma": "ON10",
+      "ma": "ON9",
       "cau_giao": "Người vận hành mở «Kiểm chất lượng» trên /ops/quality thấy bản mới nhất của mỗi kiểm theo từng thực thể, số kiểm đếm đúng, và kết quả độ phủ không ghi «Đạt» xanh khi độ phủ 0%",
       "vai": "Người vận hành",
       "tieu_chi": 7,
@@ -1480,10 +1466,10 @@
       "phu": [
         "OPS-10"
       ],
-      "ghi_chu": "Nếu đổi tên/kết quả check trong pipeline/dq-truthful-coverage.mjs: chung tệp với NT7 — chạy liền. Diễn giải «Chi tiết» DQ sang tiếng Việt là của ON13 (cùng bảng, chạy liền)."
+      "ghi_chu": "Nếu đổi tên/kết quả check trong pipeline/dq-truthful-coverage.mjs: chung tệp với NT7 — chạy liền. Diễn giải «Chi tiết» DQ sang tiếng Việt là của ON12 (cùng bảng, chạy liền)."
     },
     {
-      "ma": "ON11",
+      "ma": "ON10",
       "cau_giao": "Người vận hành mở «Hiệu chuẩn» trên /ops/quality thấy mỗi thị trường một bộ số nhất quán giữa các bảng, định nghĩa «tự thu» ghi rõ ở từng bảng, mẫu mỏng có cờ, và thị trường chưa có số gộp thành một dòng",
       "vai": "Người vận hành",
       "tieu_chi": 10,
@@ -1497,10 +1483,10 @@
         "OPS-11",
         "OPS-15"
       ],
-      "ghi_chu": "Số S02 được phép ở trang này (luật 5). Chung app/src/lib/queries.ts và quality-tables.tsx với ON10, ON13, ON14 — không song song. Cân nhắc data-grid một bảng thay 29 thẻ (OPS-15)."
+      "ghi_chu": "Số S02 được phép ở trang này (luật 5). Chung app/src/lib/queries.ts và quality-tables.tsx với ON9, ON12, ON13 — không song song. Cân nhắc data-grid một bảng thay 29 thẻ (OPS-15)."
     },
     {
-      "ma": "ON12",
+      "ma": "ON11",
       "cau_giao": "Người vận hành mở «Căn giá tốt» /ops/deals không thấy căn có diện tích hay số phòng phi lý, danh sách không dồn ở trần giảm giá, và thẻ ghi «đăng 1 lần» thay «mới»",
       "vai": "Người vận hành",
       "tieu_chi": 8,
@@ -1516,7 +1502,7 @@
       "ghi_chu": "Luật loại là luật xác định có audit (luật 7, LLM-off-data-path), tính ở pipeline nếu là chỉ số (luật 10). Thành T3 nếu phải đổi view bằng migration. Chung app/src/lib/deals.ts với PL26 và trang với UI10 — không song song."
     },
     {
-      "ma": "ON13",
+      "ma": "ON12",
       "cau_giao": "Người vận hành đọc cổng Ops thấy nhãn theo CONTEXT.md, không chữ tiếng Anh hay mã thô, chi tiết kiểm chất lượng diễn giải tiếng Việt, tên thị trường có dấu đầy đủ",
       "vai": "Người vận hành",
       "tieu_chi": 8,
@@ -1532,7 +1518,7 @@
       "ghi_chu": "Tiêu đề /ops/review: chạy sau hàng nóng ops-review-sources-500-tren-cloud của dot0 và phối với UI1 (cùng trang). «Toggle Sidebar» nằm ở components/ui/sidebar.tsx (component đã cài) — sửa qua prop/nhãn, không restyle. Từ mới nào chưa có thì thêm vào CONTEXT.md cùng commit."
     },
     {
-      "ma": "ON14",
+      "ma": "ON13",
       "cau_giao": "Người trực mở bảng Ops trên điện thoại 390px thấy cột Trạng thái ngay sau cột tên, không phải cuộn ngang mới thấy Hỏng hay Ổn",
       "vai": "Người trực",
       "tieu_chi": 6,
@@ -1545,10 +1531,10 @@
       "phu": [
         "OPS-18"
       ],
-      "ghi_chu": "Dùng column pinning/ẩn cột của data-grid (ReUI), không tự vẽ. Dưới mục tiêu cỡ: một kết quả hẹp; không gộp với ON13 vì ON13 là nhãn chữ, khác kết quả."
+      "ghi_chu": "Dùng column pinning/ẩn cột của data-grid (ReUI), không tự vẽ. Dưới mục tiêu cỡ: một kết quả hẹp; không gộp với ON12 vì ON12 là nhãn chữ, khác kết quả."
     },
     {
-      "ma": "ON15",
+      "ma": "ON14",
       "cau_giao": "Route gỡ tài khoản thu DELETE /api/v1/ops/zalo/accounts từ chối id rỗng hoặc không có trong danh sách tài khoản trước khi gọi openclaw",
       "vai": "nen",
       "tieu_chi": 5,
@@ -1561,10 +1547,10 @@
       "phu": [
         "YC1"
       ],
-      "ghi_chu": "Test dùng openclaw giả (PATH/HOME giả), không chạm ~/.openclaw hay tài khoản thật (zalo-safety.md, luật phép đo của ON2). Dưới mục tiêu cỡ: lỗ hẹp, hạng T3 vì app/src/app/api/v1/ops/**."
+      "ghi_chu": "Test dùng openclaw giả (PATH/HOME giả), không chạm ~/.openclaw hay tài khoản thật (zalo-safety.md, luật phép đo của ON1). Dưới mục tiêu cỡ: lỗ hẹp, hạng T3 vì app/src/app/api/v1/ops/**."
     },
     {
-      "ma": "ON16",
+      "ma": "ON15",
       "cau_giao": "Bản khai công cụ app/docs/api/mcp-tools.json khớp sổ bề mặt API: công cụ tin rao đòi bearer ops hoặc bị gỡ, không công cụ nào ghi «public» trái sổ",
       "vai": "nen",
       "tieu_chi": 4,
@@ -1580,7 +1566,7 @@
       "ghi_chu": "Đứng cạnh scripts/check-api-surface.mjs của NT4 (đã giao). Dưới mục tiêu cỡ: một tệp khai."
     },
     {
-      "ma": "ON17",
+      "ma": "ON16",
       "cau_giao": "audit-all.sh và trang Ops ở máy local đọc log job ở checkout chính dù chạy từ worktree, không báo LIMITED hay «Hỏng» giả vì thư mục log rỗng",
       "vai": "nen",
       "tieu_chi": 5,
@@ -1593,10 +1579,10 @@
       "phu": [
         "YC5"
       ],
-      "ghi_chu": "Slug giữ đúng tên hàng phát sinh đã đặt ở dot0. Chung scripts/audit-all.sh với PL33 và app/src/lib/ops-queries.ts với ON3 — chạy liền."
+      "ghi_chu": "Slug giữ đúng tên hàng phát sinh đã đặt ở dot0. Chung scripts/audit-all.sh với PL33 và app/src/lib/ops-queries.ts với ON2 — chạy liền."
     },
     {
-      "ma": "ON18",
+      "ma": "ON17",
       "cau_giao": "check-freshness lấy mốc S03 và S05 theo lần thu gần nhất của chính nguồn, không báo quá hạn giả khi nguồn vẫn chạy mà không có bài mới",
       "vai": "nen",
       "tieu_chi": 6,
@@ -1631,7 +1617,7 @@
       "ghi_chu": "Giao qua phiên điều phối liên làn (tin GIAO). Thành T3 nếu chạm collector/openclaw/**. Nếu tín hiệu là bảng mới: migration làn Claude — cần số NNN, xin ở sổ SO-MIGRATION qua phiên liên làn."
     },
     {
-      "ma": "ON19",
+      "ma": "ON18",
       "cau_giao": "DB local có bảng stg_s08_inventory theo migration 040, và bảng này không bao giờ lên cloud",
       "vai": "nen",
       "tieu_chi": 5,
@@ -1651,11 +1637,11 @@
       "cau_giao": "Importer S08 nạp snapshot S08 vào stg_s08_inventory, chạy lại không nhân dòng",
       "vai": "nen",
       "tieu_chi": 6,
-      "vi_sao": "Làn ZCode (pipeline/import-*). YC9d: importer bị chặn bởi migration 040 (ON19) và cần raw S08 từ PL10.",
+      "vi_sao": "Làn ZCode (pipeline/import-*). YC9d: importer bị chặn bởi migration 040 (ON18) và cần raw S08 từ PL10.",
       "hang": "T2",
       "slug": "import-s08",
       "dung_tren": [
-        "ON19",
+        "ON18",
         "PL10"
       ],
       "bat_khi": "Nạp cùng snapshot hai lần: số dòng stg_s08_inventory không đổi; snapshot thử bị bỏ qua",
@@ -1664,10 +1650,10 @@
       "phu": [
         "YC9d"
       ],
-      "ghi_chu": "Giao qua phiên điều phối liên làn sau khi ON19 merge và 040 đã áp ở DB local. Gọi nguồn bằng mã S08, không ghi tên miền thật."
+      "ghi_chu": "Giao qua phiên điều phối liên làn sau khi ON18 merge và 040 đã áp ở DB local. Gọi nguồn bằng mã S08, không ghi tên miền thật."
     },
     {
-      "ma": "ON20",
+      "ma": "ON19",
       "cau_giao": "Sổ nhóm lưu tiêu đề chuẩn hoá và mô tả đặc trưng của từng nhóm, ghi qua route ops có audit và giữ được bản trước",
       "vai": "nen",
       "tieu_chi": 7,
@@ -1684,7 +1670,7 @@
       "ghi_chu": "Cần số migration NNN — xin ở sổ SO-MIGRATION qua phiên liên làn, không tự lấy số. Đứng trên PL12 (sổ nhóm một nơi) để thêm trường vào đúng một sổ; nếu Mạnh muốn sớm hơn PL12 thì gộp hai trường vào PL12 ở Cổng Phạm vi của PL12. Tên nhóm là tầng C (ON1) nên tiêu đề, mô tả được lên cloud."
     },
     {
-      "ma": "ON21",
+      "ma": "ON20",
       "cau_giao": "Người vận hành mở sổ nhóm trên /ops, đặt hoặc sửa tiêu đề chuẩn hoá của một nhóm — bấm «Gợi ý» để máy dựng tiêu đề theo quy ước vận hành từ các trường đã khai — viết mô tả đặc trưng, và thấy tên gốc cạnh tiêu đề",
       "vai": "Người vận hành",
       "tieu_chi": 9,
@@ -1692,7 +1678,7 @@
       "hang": "T2",
       "slug": "so-nhom-sua-tieu-de",
       "dung_tren": [
-        "ON20"
+        "ON19"
       ],
       "bat_khi": "Gợi ý cho cùng các trường ra cùng một tiêu đề (luật xác định, không LLM); lưu xong tải lại vẫn thấy; trống/lỗi/tải có trạng thái riêng",
       "nhom": "so-nhom",
@@ -1704,7 +1690,7 @@
       "ghi_chu": "Quy ước tiêu đề chưa có văn bản: đề xuất ở Cổng Phạm vi (khu vực · dự án · loại · giao dịch…), Mạnh duyệt, ghi vào CONTEXT.md hoặc docs/ops. Gợi ý theo luật, người bấm lưu (luật 7). UI theo ReUI + onehub-ui."
     },
     {
-      "ma": "ON22",
+      "ma": "ON21",
       "cau_giao": "Agent phân loại đọc tiêu đề chuẩn và mô tả đặc trưng của nhóm làm ngữ cảnh bậc H5, ghi vào căn cứ của từng đề xuất, và không tự quyết chỉ vì ngữ cảnh",
       "vai": "nen",
       "tieu_chi": 7,
@@ -1712,7 +1698,7 @@
       "hang": "T2",
       "slug": "agent-doc-mo-ta-nhom",
       "dung_tren": [
-        "ON21"
+        "ON20"
       ],
       "bat_khi": "Tin im lặng về loại trong nhóm có mô tả: đề xuất ghi căn cứ H5 trích mô tả, không tự áp; xoá mô tả: căn cứ biến mất ở lượt sau",
       "nhom": "so-nhom",
