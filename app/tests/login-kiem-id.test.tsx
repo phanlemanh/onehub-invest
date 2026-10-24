@@ -124,7 +124,7 @@ function qrDirMacDinh(file: string): string {
   const code = `const m = await import(${JSON.stringify(pathToFileURL(file).href)}); process.stdout.write(m.zaloAdminPaths().qrDir)`
   return execFileSync(process.execPath, ["--import", "tsx", "--input-type=module", "-e", code], {
     cwd: APP,
-    env: { HOME: home, PATH: PATH_GOC, TMPDIR: join(tmp, "tmpdir") },
+    env: { NODE_ENV: "test", HOME: home, PATH: PATH_GOC, TMPDIR: join(tmp, "tmpdir") },
     encoding: "utf8",
   }).trim()
 }
