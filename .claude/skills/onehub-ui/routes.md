@@ -38,8 +38,8 @@ cột 2 với cây thư mục và đỏ khi lệch, và đỏ khi một dòng th
 
 | Route | File (từ `app/src/app`) | Slug đích | Bề mặt | Archetype | Họ khung | Block đích | Ghi chú |
 |---|---|---|---|---|---|---|---|
-| `/` | `(marketing)/page.tsx` | giữ | marketing | Marketing spine | Frame | `navbar-12` · `hero-8` · `card-29` · `how-it-works-1` · `faq-6` (giữ) | Không PageHeader: navbar-12 + hero-8 là đầu trang. Frame vì hero-8, card-29, faq-6 gốc dùng Frame (how-it-works-1 đã đổi Card → Frame). Đợt I6 |
-| `/phuong-phap` | `(marketing)/phuong-phap/page.tsx` | `/methodology` | marketing | Marketing spine | Frame | `faq-3` (thay `faq-6`) | Không PageHeader. Badge eyebrow + tiêu đề + các khối định nghĩa mở sẵn (không accordion). Đợt I6 |
+| `/` | `(marketing)/page.tsx` | giữ | marketing | Marketing spine | Frame | `navbar-12` · `hero-8` · `card-29` · `how-it-works-1` · `faq-6` (giữ) | Không PageHeader: navbar-12 + hero-8 là đầu trang. Frame vì hero-8, card-29, faq-6 gốc dùng Frame (how-it-works-1 đã đổi Card → Frame). Nền hero và dải diện tích card-29 dùng biến palette/cặp `dark:`, không hex (I6 xong, hồ sơ `trang-chu-methodology`); thẻ thị trường trống có `Empty`. Lỗi trang: `(marketing)/error.tsx` (navbar + chân trang vẫn đứng); layout hỏng: `global-error.tsx` |
+| `/methodology` | `(marketing)/methodology/page.tsx` | giữ | marketing | Marketing spine | Frame | `faq-3` (thay `faq-6`) | Không PageHeader. Badge eyebrow + tiêu đề + mục lục + ba lưới định nghĩa mở sẵn (`marketing/definition-grid.tsx`, không accordion; mỗi ô có id để ⓘ trỏ thẳng, vd `#revpar`) + hàng hai nút của faq-3. `/phuong-phap` → 301 trong `next.config.ts` (I6 xong, hồ sơ `trang-chu-methodology`) |
 | `/login` | `(auth)/login/page.tsx` | giữ | flow | Auth card | Frame | `auth-4` (giữ) | Không PageHeader. auth-4 gốc là Frame, giữ nguyên. `?mode=register` chuyển sang `/register`. Đợt I6 |
 | `/register` | `(auth)/register/page.tsx` | giữ | flow | Auth card | Frame | `auth-5` (giữ) | Không PageHeader. auth-5 (hero + form chia đôi), gốc là Frame. Đợt I6 |
 | `/[country]` | `(app)/[country]/page.tsx` | giữ | operational | Dashboard grid | Frame | `solution-analytics-1` (lưới + đầu Frame; bỏ panel sức khoẻ/xu hướng) + `@mapcn/choropleth` (thay `ChoroplethMap`) | khung trang: PageHeader (chưa có, I1). Cấp chưa tự thu dùng `empty-state-5` "đang thu thập". Đợt I1 |
@@ -75,4 +75,4 @@ B2 (khung & KPI) / B4 (trạng thái) / B5 (phần còn lại) theo loại compo
 | I3 Listing | `/listing/[id]`, `/[country]/[market]/listings` | không có biểu đồ chuỗi (heatmap lịch `form-5` giữ nguyên, tô theo trạng thái đêm) |
 | I4 Lợi suất | `/yield`, `/[country]/[market]/dau-tu` | `chart-36` (giữ, B3) |
 | I5 So sánh + Đã lưu | `/compare`, `/saved` | không |
-| I6 Trang chủ / Phương pháp / Auth | `/`, `/phuong-phap`, `/login`, `/register` | dải diện tích của `card-29` |
+| I6 Trang chủ / Phương pháp / Auth | `/`, `/methodology`, `/login`, `/register` | dải diện tích của `card-29` |

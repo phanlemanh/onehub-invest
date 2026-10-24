@@ -1,0 +1,139 @@
+schema_version: 1
+feature_slug: trang-chu-methodology
+# Ca test mang tiền tố «TCM-AC-n» trong app/tests/trang-chu-methodology.test.tsx (jsdom + renderToStaticMarkup, không cần DB).
+# Smoke HTTP: scripts/smoke-trang-chu-methodology.mjs — cần app chạy TỪ worktree này (BASE_URL, mặc định :3460 của dãy U1) + DB local
+# (trang chủ đọc số thật). Chỉ GET, không ghi gì.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.trang_chu_methodology_smoke
+    paths: [app/next.config.ts, app/src/app/(marketing)/methodology/**, scripts/smoke-trang-chu-methodology.mjs]
+    expected: "exit 0; dòng 'ok /phuong-phap → 301 /methodology' và 'ok /phuong-phap?x=1 → 301 /methodology?x=1' (fetch redirect: manual, đọc res.status + header location; 308/307/200 là FAIL nêu mã thật); 'ok /methodology 200'; should-NOT-fire: '/methodology' KHÔNG bị chuyển hướng (3xx là FAIL)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    paths: [app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs, app/eslint-plugin-onehub-ui/lib/route-slugs.mjs, app/next.config.ts, app/src/app/**]
+    expected: "exit 0; ca 'mọi đoạn tĩnh nằm trong CONTEXT.md hoặc ngoại lệ còn hạn; slug cũ có redirect' xanh trên cây thật — cùng ca đỏ với 'ngoại lệ \"phuong-phap\" đã đổi xong — xoá khỏi danh sách ngoại lệ' nếu dòng phuong-phap còn trong VIET_EXCEPTIONS, và đỏ với 'thiếu redirect' nếu next.config.ts mất dòng /phuong-phap (hai chiều đỏ có ca riêng cùng tệp)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/**, scripts/**, app/next.config.ts, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-2 không còn /phuong-phap' quét mọi tệp .ts/.tsx/.mjs/.sh dưới app/src và scripts/ → 0 chỗ chứa '/phuong-phap'; app/next.config.ts có đúng một redirect source '/phuong-phap' với destination '/methodology' và statusCode 301; chiều đỏ cùng ca: bộ quét chạy trên thư mục tạm có một tệp chứa \"href=\\\"/phuong-phap\\\"\" trả đúng 1 chỗ kèm tên tệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.trang_chu_methodology_smoke
+    paths: [app/src/app/(marketing)/**, app/src/components/marketing/**, app/src/components/shell/site-footer.tsx, app/src/components/auth/login-form.tsx, scripts/smoke-trang-chu-methodology.mjs]
+    expected: "exit 0; HTML server: 'ok / có href=\"/methodology\" (navbar + Cách dùng + hỏi đáp + chân trang ≥ 4 chỗ), 0 chỗ /phuong-phap'; 'ok /login có href=\"/methodology\", 0 chỗ /phuong-phap'; 'ok /methodology chân trang có href=\"/methodology\"'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/(marketing)/methodology/**, app/src/components/marketing/definition-grid.tsx, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-3 định nghĩa mở sẵn' renderToStaticMarkup(MethodologyPage()) → đúng 1 <h1>; 3 <section> id chi-so, loi-suat, nguon, mục lục có href #chi-so/#loi-suat/#nguon; 15 ô (7+4+4) mỗi ô có id riêng (gồm revpar, adr, mo-phong) và chứa NGUYÊN câu hỏi + đoạn đầu câu trả lời lấy từ chính mảng METRICS/YIELD/SOURCES của trang (không viết tay chuỗi mong đợi); 0 thuộc tính aria-expanded; ô mo-phong có chữ 'Mô phỏng' trong data-slot=badge; đối chứng cùng ca: FaqSection (faq-6) cùng dữ liệu vẽ ra CÓ aria-expanded — chứng phép đếm aria-expanded phân biệt được accordion"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.trang_chu_methodology_smoke
+    paths: [app/src/app/(marketing)/methodology/**, app/src/components/marketing/definition-grid.tsx, scripts/smoke-trang-chu-methodology.mjs]
+    expected: "exit 0; HTML server /methodology: 'ok 1 h1', 'ok id chi-so/loi-suat/nguon', 'ok 15 ô định nghĩa có id (revpar, adr, …)', 'ok 0 aria-expanded', 'ok câu trả lời RevPAR có trong HTML lúc tải' (đoạn 'Doanh thu ÷ tổng đêm khả dụng')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/marketing/definition-grid.tsx, app/src/app/(marketing)/methodology/**, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-4 lưới faq-3' vẽ DefinitionGrid 3 ô → khung lưới mang lớp 'grid' và 'md:grid-cols-2' (không có grid-cols-2 trần — màn hẹp một cột), ô chẵn có 'md:border-r', ô lẻ 'md:pl-8'; ca 'TCM-AC-4 hàng hai nút' trên MethodologyPage: đúng 2 link sau ô cuối, chữ 'Xem thị trường' → /vn và 'Ước tính lợi suất' → /yield"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/marketing/frame-backdrop.tsx, app/src/components/marketing/hero.tsx, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-5 nền hero' đọc frame-backdrop.tsx + hero.tsx → 0 chỗ khớp màu cứng (/#[0-9a-f]{3,8}\\b|rgba?\\(|hsla?\\(|oklch\\(/i, bỏ comment); vẽ FrameBackdrop → mọi stop/stroke lấy màu từ style dạng var(--color-<sắc>-<bậc>) (≥ 14 chỗ) và MỖI biến ấy có định nghĩa trong node_modules/tailwindcss/theme.css (quan hệ, không đo chuỗi-có-mặt); chiều đỏ cùng ca: bộ quét trên chuỗi '<stop stopColor=\"#005aee\" />' trả 1 chỗ, và biến bịa 'var(--color-blue-1234)' bị bộ đối chiếu theme báo thiếu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/marketing/market-cards.tsx, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-6 dải doanh thu' vẽ MarketCards với 2 thị trường series khác nhau → mỗi thẻ có clip-path polygon mà toạ độ y từng điểm = 100 − v/max·85 tính từ CHÍNH series của thẻ đó (2 thẻ khác nhau); mọi chuỗi className của tệp chứa lớp palette (from/via/to/bg-<sắc>-<bậc>) đều có lớp dark: trong cùng chuỗi; ca 'TCM-AC-6 trống' MarketCards markets=[] → data-slot=empty, tiêu đề 'Chưa có thị trường nào có số', đúng 1 phần tử a/button và nó trỏ '/methodology#nguon'; đối chứng cùng ca: markets có 1 phần tử → không có data-slot=empty"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/(marketing)/error.tsx, app/src/components/states/page-error.tsx, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-7 lỗi trang marketing': tệp app/src/app/(marketing)/error.tsx tồn tại cạnh (marketing)/layout.tsx (ranh giới nằm TRONG layout → navbar/chân trang đứng); vẽ default export trong jsdom với error có digest 'abc123', retry và reset là hàm đếm → role=alert chứa 'Không tải được dữ liệu' và 'Mã lỗi: abc123', bấm 'Thử lại' → retry 1 lần, reset 0 lần; chiều đỏ cùng ca: phiên bản truyền reset vào nút (bản sao tạm của tệp) làm phép đếm retry ra 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-8 lỗi toàn cục': renderToStaticMarkup(GlobalError) → bắt đầu bằng <html lang=\"vi\" và có <body>, chứa 'One Invest không mở được', 'Thử lại', link href=\"/\" chữ 'Về trang chủ'; vẽ AppCrash trong jsdom với digest 'xyz' → role=alert có 'Mã lỗi: xyz', bấm 'Thử lại' → retry 1 lần; global-error.tsx import './globals.css' (CSS của app có mặt khi layout gốc không chạy)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0 (tsc --noEmit sạch, eslint + check-bare-disables 0 lỗi; 3 cảnh báo react-hooks có sẵn ngoài nhóm trang)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/eslint-suppressions.json, app/src/components/marketing/marketing-navbar.tsx, app/tests/trang-chu-methodology.test.tsx]
+    expected: "exit 0; ca 'TCM-AC-9 baseline' đọc app/eslint-suppressions.json → 0 khoá dưới src/components/marketing/ và src/app/(marketing)/; chiều đỏ cùng hàm trên fixture có khoá 'src/components/marketing/frame-backdrop.tsx' → trả đúng khoá ấy; marketing-navbar.tsx không chứa lớp 'transition-all'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/**, app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs]
+    expected: "exit 0; bảng routes.md khớp cây route (dòng (marketing)/methodology/page.tsx có, (marketing)/phuong-phap/page.tsx không), mọi dòng đủ cột Block đích + Slug đích"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-10
+    executor: judgment
+    inputs: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, app/CLAUDE.md]
+    paths: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, app/CLAUDE.md]
+    question: "Ba tệp này có nói nhất quán rằng trang Phương pháp nay ở /methodology (link /phuong-phap chuyển 301), trình định nghĩa mở sẵn theo faq-3 (marketing/definition-grid.tsx) còn trang chủ giữ hỏi đáp faq-6, nền hero và thẻ thị trường không dùng hex/palette thiếu cặp tối, nhóm marketing có error.tsx và app có global-error (states/app-crash.tsx) — không còn chỗ nào mâu thuẫn (vd vẫn liệt /phuong-phap là route sống, hay ghi faq-6 cho trang Phương pháp) không?"
+    expected: "Nhất quán ở cả ba tệp; /phuong-phap chỉ còn ở dạng slug cũ/redirect; faq-6 chỉ còn gắn với trang chủ."
+    evidence_required: [run_id, verified_at, output]
+  - id: E16
+    criterion: AC-4
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/app/(marketing)/**, app/src/components/marketing/**, app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json)"
+      - "/methodology cả trang: 1280 px sáng → evidence/E16-step1.png, 1280 px tối (prefers-color-scheme: dark) → evidence/E16-step2.png, 375 px sáng → evidence/E16-step3.png; ghi document.documentElement.scrollWidth và clientWidth ở 375"
+      - "/methodology#revpar ở 1280 sáng → evidence/E16-step4.png (ô RevPAR nằm trong khung nhìn, không bị navbar che)"
+      - "/ ở 1280 sáng → evidence/E16-step5.png, 1280 tối → evidence/E16-step6.png, 375 sáng → evidence/E16-step7.png; cuộn tới 'Thị trường đang theo dõi' ở 1280 tối → evidence/E16-step8.png"
+      - "Lỗi: tạo TẠM app/src/app/(marketing)/design-pass-loi-trang/page.tsx và app/src/app/design-pass-loi-toan-cuc/page.tsx, mỗi tệp chỉ ném Error; mở /design-pass-loi-trang ở 1280 sáng → evidence/E16-step9.png, 375 sáng → evidence/E16-step10.png; /design-pass-loi-toan-cuc ở 1280 sáng → evidence/E16-step11.png, 1280 tối → evidence/E16-step12.png (Escape đóng lớp phủ lỗi của dev server nếu có); XOÁ hai tệp tạm ngay sau khi chụp và ghi lại rằng đã xoá"
+    expected: "/methodology: lưới hai cột kẻ mảnh ở 1280, một cột ở 375 và scrollWidth = clientWidth; mọi câu trả lời đọc được không cần bấm, ở sáng lẫn tối; #revpar đưa ô RevPAR vào tầm nhìn. Trang chủ: nền hero xanh có dải sáng như ảnh trước (evidence/design-pass/home-truoc--*), dải diện tích chàm đọc rõ ở sáng và tối. Lỗi trang: navbar + chân trang còn, Alert 'Không tải được dữ liệu' + 'Thử lại'. Lỗi toàn cục: Alert 'One Invest không mở được' + 'Thử lại' + 'Về trang chủ', đọc được ở sáng và tối."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E17
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.methodology_design_gate
+    paths: [app/src/components/marketing/definition-grid.tsx]
+    expected: "exit 0; verdict PASS, p0_count 0 (sàn a11y/contrast của design-gate trên definition-grid.tsx, jsdom)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E18
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.app_crash_design_gate
+    paths: [app/src/components/states/app-crash.tsx]
+    expected: "exit 0; verdict PASS, p0_count 0 (sàn a11y/contrast của design-gate trên app-crash.tsx, jsdom)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
