@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 70f180600dd7bc212079725f3b5d63d39b96dd27
+verified_commit: 9ceec6e92d0f248937bdbb38abe5d26333760f85
 human_signoff:
 ---
 
@@ -199,3 +199,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 
 Round 1: PENDING-JUDGMENT — 2 finding trong hợp đồng (ca pii-cot qua bên ghi, AC-7) → sửa ở commit 28d7b78; còn mục judgment E8 chờ người.
 Round 2: E6b, E7 và sáu lệnh suite chạy lại, đều xanh; E1–E6, E9, E10 carry-forward từ round 1 (delta không chạm paths của eval). Verdict PENDING-JUDGMENT: E8 chờ người chốt ở Cổng 2.
+
+### Re-pin lần 1 — 2026-10-24, do gộp main 91ac403 (PR #59, #27) sau S4 round 2
+run_id: repin-20261024T091610Z-41422
+sha: 9ceec6e92d0f248937bdbb38abe5d26333760f85 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8 · AC không có chốt máy: AC-8
