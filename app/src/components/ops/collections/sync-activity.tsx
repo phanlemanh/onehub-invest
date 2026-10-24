@@ -48,7 +48,7 @@ export function SyncActivity({ days, roles = {}, className }: { days: FlowDay[];
 
   return (
     <Frame id="luong" spacing="default" className={cn("scroll-mt-4", className)}>
-      <SectionHeader title="Luồng 7 ngày" description={`${fmtInt(total)} bản ghi trong 7 ngày (giờ máy)`}>
+      <SectionHeader title="Luồng 7 ngày" description={`${fmtInt(total)} bản ghi trong 7 ngày (ngày theo giờ VN)`}>
         <ToggleGroup
           multiple={false}
           value={[mode]}

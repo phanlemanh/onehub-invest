@@ -8,8 +8,8 @@ import { CalendarClockIcon, CircleOffIcon, ClockAlertIcon, TargetIcon } from "lu
 
 import { Badge } from "@/components/reui/badge"
 import { FramePanel } from "@/components/reui/frame"
-import { fmtInt } from "@/lib/format"
-import { bySource, fmtAge, sloSummaryKey, sloSummaryText, summarizeSources } from "@/lib/freshness"
+import { fmtInt, fmtVnDate } from "@/lib/format"
+import { bySource, fmtAge, fmtOverdue, sloSummaryKey, sloSummaryText, summarizeSources } from "@/lib/freshness"
 import type { CoverageRow } from "@/lib/ops-queries"
 import { cn } from "@/lib/utils"
 
@@ -98,7 +98,7 @@ export function OverviewTiles({ rows, localOnly = false }: { rows: CoverageRow[]
                 <ToneDot tone={FRESHNESS.stale.tick} />
                 <span className="truncate">Lâu nhất: {where(stale[0])}</span>
                 <span className="text-foreground ms-auto shrink-0 font-medium tabular-nums">
-                  {fmtAge(stale[0].ageHours)} / {fmtAge(stale[0].sloHours)}
+                  {fmtAge(stale[0].ageHours)} · {fmtOverdue(stale[0].ageHours, stale[0].sloHours) ?? `SLO ${fmtAge(stale[0].sloHours)}`}
                 </span>
               </>
             ) : (
@@ -117,7 +117,7 @@ export function OverviewTiles({ rows, localOnly = false }: { rows: CoverageRow[]
 
       <KpiTile icon={<CalendarClockIcon aria-hidden="true" />} title="Snapshot mới nhất" detail="Lần thu gần nhất của mọi nguồn">
         <Panel
-          head={<KpiValue value={newest?.lastSnapshotAt?.slice(0, 10) ?? "—"} />}
+          head={<KpiValue value={fmtVnDate(newest?.lastSnapshotAt ?? null)} />}
           subject={<span className="truncate">{newest ? where(newest) : "Chưa có snapshot nào"}</span>}
         />
       </KpiTile>

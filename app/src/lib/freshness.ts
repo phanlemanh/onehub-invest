@@ -148,6 +148,20 @@ export const LOCAL_ONLY_TEXT = "Độ tươi chỉ đo ở máy local"
 export const sloSummaryText = (s: SloSummary, localOnly = false) =>
   localOnly ? LOCAL_ONLY_TEXT : s.total === 0 ? "Chưa có nguồn nào" : `${s.ok}/${s.total} nguồn đạt SLO`
 
+/**
+ * Mức trễ so SLO (YC4 — «8 ngày / SLO 8 ngày» không nói nguồn trễ bao lâu). `null` khi chưa trễ, cùng vị từ với
+ * `status` ("fresh" khi tuổi ≤ SLO). Dưới 1 giờ tính phút, dưới 48 giờ tính giờ, còn lại tính ngày; làm tròn xuống,
+ * tối thiểu 1. Tính trên số giây nguyên để 59 phút không thành 58 vì sai số dấu phẩy động.
+ */
+export function fmtOverdue(ageHours: number | null, sloHours: number | null): string | null {
+  if (ageHours === null || sloHours === null || !Number.isFinite(ageHours) || !Number.isFinite(sloHours)) return null
+  if (ageHours <= sloHours) return null
+  const giay = Math.round((ageHours - sloHours) * 3600)
+  if (giay < 3600) return `trễ ${Math.max(1, Math.floor(giay / 60))} phút`
+  if (giay < 48 * 3600) return `trễ ${Math.floor(giay / 3600)} giờ`
+  return `trễ ${Math.floor(giay / 86400)} ngày`
+}
+
 /** Tuổi/SLO một cách viết cho mọi bề mặt: dưới 48 giờ «N giờ», từ 48 giờ «N ngày» (làm tròn xuống). */
 export function fmtAge(hours: number | null): string {
   if (hours === null || !Number.isFinite(hours)) return "—"

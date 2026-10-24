@@ -6,8 +6,8 @@ import { useMemo } from "react"
 import type { InsightColumn } from "@/components/insight/insight-grid"
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
-import { fmtInt } from "@/lib/format"
-import { fmtAge } from "@/lib/freshness"
+import { fmtInt, fmtVnDateTime } from "@/lib/format"
+import { fmtAge, fmtOverdue } from "@/lib/freshness"
 import type { SourceFeedHealth } from "@/lib/ops-queries"
 
 import { FEED_STATE, feedState } from "./feed-status"
@@ -51,7 +51,7 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
         id: "last",
         accessorFn: (f) => f.lastRunAt ?? "",
         header: ({ column }) => <DataGridColumnHeader title="Chạy cuối" column={column} />,
-        cell: ({ row }) => (row.original.lastRunAt ? row.original.lastRunAt.slice(0, 16).replace("T", " ") : "—"),
+        cell: ({ row }) => fmtVnDateTime(row.original.lastRunAt),
         size: 150,
         enableSorting: true,
       },
@@ -63,6 +63,7 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
           <>
             {fmtAge(row.original.freshnessHrs)}
             {row.original.sloHours ? <span className="text-muted-foreground"> / {fmtAge(row.original.sloHours)}</span> : null}
+            {fmtOverdue(row.original.freshnessHrs, row.original.sloHours) ? <span> · {fmtOverdue(row.original.freshnessHrs, row.original.sloHours)}</span> : null}
           </>
         ),
         size: 130,

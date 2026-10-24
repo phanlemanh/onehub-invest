@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 
 import { pool } from "./db";
+import { VN_TZ, vnDayKey, vnDayStart } from "./format";
 import { lastMeaningfulLine } from "./last-log-line";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { sourceLabel, type SourceRoles } from "./source-labels";
@@ -90,22 +91,27 @@ export type FlowDay = {
 /** Luồng N ngày gần nhất theo nguồn. Perf-audit: từng là 42 subquery
  * non-sargable (col::date = d, 250ms, tăng theo bảng) — nay mỗi nguồn MỘT
  * GROUP BY có lọc khoảng ngày, gộp bằng JS. */
-export async function getFlowDays(n = 7): Promise<FlowDay[]> {
-  const since = new Date(Date.now() - (n - 1) * 86400000);
+export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<FlowDay[]> {
+  // Ngày theo giờ VN (ON8): mốc `since` là 00:00 giờ VN của ngày cũ nhất; cột timestamptz gom bằng AT TIME ZONE
+  // (DB chạy UTC); listings.last_seen là kiểu date nên giữ nguyên.
+  const now = opts.now ?? Date.now();
+  const oldest = vnDayKey(now - (n - 1) * 86400000);
+  const since = vnDayStart(oldest);
+  const vnDay = (col: string) => `(${col} AT TIME ZONE '${VN_TZ}')::date::text`;
   const [mk, al, li, sn, zp, of] = await Promise.all([
-    pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM airdna_markets WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT collected_at::date::text d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT captured_at::date::text d, count(*)::int n FROM stg_zalo_posts WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT first_seen::date::text d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_markets WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`, [oldest]),
+    pool.query(`SELECT ${vnDay("collected_at")} d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM stg_zalo_posts WHERE captured_at >= $1 GROUP BY 1`, [since]),
+    pool.query(`SELECT ${vnDay("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 GROUP BY 1`, [since]),
   ]);
   const pick = (rows: { d: string; n: number }[]) => new Map(rows.map((r) => [r.d, r.n]));
   const [M, A, L, S, Z, O] = [pick(mk.rows), pick(al.rows), pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
   const facts = await getLocalFacts();
   const days: FlowDay[] = [];
   for (let i = 0; i < n; i++) {
-    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    const d = vnDayKey(now - i * 86400000);
     const z = facts?.zaloFlow?.[d]; // cloud: stg không sync — số zalo từ facts
     days.push({
       day: d,
@@ -129,7 +135,7 @@ export type GateFunnel = {
 const EMPTY = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 };
 
 /** Funnel cổng Kev từ hook log (~/.openclaw/logs/oneinvest-zalo-pipe.log). */
-export async function readGateFunnel(): Promise<GateFunnel> {
+export async function readGateFunnel(opts: { now?: number } = {}): Promise<GateFunnel> {
   {
     const f = await getLocalFacts();
     if (f) return f.funnel;
@@ -142,8 +148,10 @@ export async function readGateFunnel(): Promise<GateFunnel> {
     return { lastEventAt: null, today: { ...EMPTY }, last7: { ...EMPTY } };
   }
   const lines = text.split("\n").filter(Boolean);
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const cutoff = Date.now() - 7 * 86400000;
+  // «Hôm nay» theo ngày VN (ON8) — hook ghi mốc ISO «Z» (collector/openclaw/handler.js).
+  const now = opts.now ?? Date.now();
+  const todayKey = vnDayKey(now);
+  const cutoff = now - 7 * 86400000;
   const today = { ...EMPTY };
   const last7 = { ...EMPTY };
   let lastEventAt: string | null = null;
@@ -152,7 +160,7 @@ export async function readGateFunnel(): Promise<GateFunnel> {
     const ts = line.slice(0, 24);
     const iso = /^\d{4}-\d{2}-\d{2}T/.test(ts) ? ts : null;
     const in7 = iso ? new Date(iso).getTime() >= cutoff : true; // dòng không timestamp: đếm vào 7 ngày
-    const day = iso ? iso.slice(0, 10) : null;
+    const day = iso && Number.isFinite(Date.parse(iso)) ? vnDayKey(Date.parse(iso)) : null;
     for (const bucket of [in7 ? last7 : null, day === todayKey ? today : null]) {
       if (!bucket) continue;
       bucket.messages++;

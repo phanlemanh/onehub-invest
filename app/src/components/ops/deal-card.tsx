@@ -2,7 +2,8 @@ import { PhoneIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/reui/badge";
-import { type DealRow, dealMediaSrc, repostLabel } from "@/lib/deals";
+import { DealSeenNote } from "@/components/ops/deal-seen-note";
+import { type DealRow, dealMediaSrc } from "@/lib/deals";
 import { fmtInt } from "@/lib/format";
 
 function fmtPrice(v: number | null) {
@@ -107,9 +108,7 @@ export function DealCard({ d, showContact }: { d: DealRow; showContact: boolean 
       {showContact && d.postText && (
         <p className="text-muted-foreground line-clamp-2 text-xs">{d.postText}</p>
       )}
-      <p className="text-muted-foreground text-xs">
-        thấy {d.firstSeen.slice(0, 10)} · {repostLabel(d.nReposts)}
-      </p>
+      <DealSeenNote firstSeen={d.firstSeen} nReposts={d.nReposts} />
     </div>
   );
 }
