@@ -5,7 +5,7 @@ slug: dq-moi-nhat-moi-kiem
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-24-dq-moi-nhat-moi-kiem-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24T14:44:11Z
@@ -67,3 +67,9 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Đổi tên hay ý nghĩa kiểm độ phủ tham chiếu trong pipeline (chung tệp với NT7).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: trong mã còn một đoạn tính số thừa và lời chú thích cũ gọi nó là nguồn duy nhất, dễ làm người sửa sau dùng nhầm.
+  - Ngoài-2: thư viện dữ liệu bảng lấy kiểu từ một thành phần giao diện — lệch quy ước nội bộ, người dùng không thấy gì khác.
+  - Ngoài-3: phép thử nhãn kết quả mới thử một loại kiểm khác (độ tươi), chưa thử từng loại còn lại.
+  - Ngoài-4: phép đo trên dữ liệu thật chưa xác nhận các kiểm khác vẫn hiện xanh khi đạt.

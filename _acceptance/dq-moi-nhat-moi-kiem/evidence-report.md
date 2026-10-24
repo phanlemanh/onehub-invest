@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 858c45334aa2e733131727eaa6fd7bef11ed4c21
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: dq-moi-nhat-moi-kiem
