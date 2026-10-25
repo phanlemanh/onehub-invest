@@ -208,7 +208,9 @@ bash scripts/dev-ops-login-check.sh       # đăng nhập đầu-cuối bằng t
 
 ROADMAP v4 · ADR 0001–0014 (`docs/adr/`) · `docs/architecture/portals.md` ·
 `docs/architecture/invest-portal-ia.md` · `docs/ops/runtime-map.md` ·
-`docs/research/reso-standards.md` · `docs/research/property-master-record.md`.
+`docs/research/reso-standards.md` · `docs/research/property-master-record.md` ·
+`docs/product/FRAMING.md` · `docs/architecture/classification-enrich-review.md` (review phân loại + enrich, trạng
+thái quyết định §7.0) · `docs/architecture/reso-khung-phan-loai.md` (bảng field RESO của ADR-0013).
 Điều tra web: kết quả thô để ở `research-local/` (gitignored), chưng cất vào `docs/research/`.
 
 <!-- BEGIN:reui-agent-rules -->
