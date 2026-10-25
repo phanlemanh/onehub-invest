@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b52fa1fc4beb34073e43250e228b48c30ea1403e
+verified_commit: b11b73acbbd2d1acdb87f7597ba993171daa6de0
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -257,3 +257,7 @@ none — every multi-run eval is uniform
 
 Round 1: E16 failed — ảnh ui-check cho thấy số âm không đọc được ở nền tối và thị trường chưa có giá bán/thuê hiện số của Hà Nội. Returned to implementation (sửa S4-r1).
 Round 2: mọi eval PASS trên commit b52fa1fc4beb34073e43250e228b48c30ea1403e; E18 mang từ round 1 (delta không chạm paths của eval).
+
+### Re-pin lần 1 — 2026-10-25, do ghim lại sau gộp main 717f155
+run_id: repin-20261025T023743Z-14846
+sha: b11b73acbbd2d1acdb87f7597ba993171daa6de0 · suites: 6 lệnh exit 0 · evals: 16/16 eval máy đạt kỳ vọng · ngoài làn máy: E15, E16, E17 · diff chạm vật đo ngoài làn máy: E15 — chưa chứng lại, đi vòng S4 delta
