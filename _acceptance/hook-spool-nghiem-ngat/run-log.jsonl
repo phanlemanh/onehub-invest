@@ -1,0 +1,11 @@
+{"ts":"2026-10-25T07:04:43Z","round":1,"evalId":"E1","run_id":"hook-spool-nghiem-ngat-E1-r1-20261025T070443Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"}
+{"ts":"2026-10-25T07:04:44Z","round":1,"evalId":"E2","run_id":"hook-spool-nghiem-ngat-E2-r1-20261025T070444Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"}
+{"ts":"2026-10-25T07:04:45Z","round":1,"evalId":"E3","run_id":"hook-spool-nghiem-ngat-E3-r1-20261025T070445Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"}
+{"ts":"2026-10-25T07:05:09Z","round":1,"evalId":"E4","run_id":"hook-spool-nghiem-ngat-E4-r1-20261025T070509Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs held-then-hang"}
+{"ts":"2026-10-25T07:05:14Z","round":1,"evalId":"E5","run_id":"hook-spool-nghiem-ngat-E5-r1-20261025T070514Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs reject-perm"}
+{"ts":"2026-10-25T07:05:16Z","round":1,"evalId":"E6","run_id":"hook-spool-nghiem-ngat-E6-r1-20261025T070516Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs tam-thoi"}
+{"ts":"2026-10-25T07:06:37Z","round":1,"evalId":"E7","run_id":"hook-spool-nghiem-ngat-E7-r1-20261025T070637Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs budget"}
+{"ts":"2026-10-25T07:06:42Z","round":1,"evalId":"E8","run_id":"hook-spool-nghiem-ngat-E8-r1-20261025T070642Z","exit_code":0,"cmd":"node scripts/hook-spool-nghiem-ngat/acceptance.mjs budget-env"}
+{"ts":"2026-10-25T07:07:11Z","round":1,"evalId":"E9","run_id":"hook-spool-nghiem-ngat-E9-r1-20261025T070711Z","exit_code":0,"cmd":"for m in spool-replay reject-4xx hang-stop cap-50 kev-hang self-contained; do out=$(node scripts/hook-zalo-spool/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"}
+{"ts":"2026-10-25T07:07:12Z","round":1,"evalId":"E10","run_id":"hook-spool-nghiem-ngat-E10-r1-20261025T070712Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs l1-grep && node --check collector/openclaw/handler.js && echo SYNTAX OK"}
+{"ts":"2026-10-25T07:09:19Z","round":1,"evalId":"E11","run_id":"hook-spool-nghiem-ngat-E11-r1-20261025T070919Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}
