@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 13becc43a6b7770059e63ff787b5ab7c23a60690
+verified_commit: d99268bef5615a39c15310b4c8c2dc8afaaa3d50
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -163,3 +163,7 @@ none — không eval nào khai `runs` > 1; mỗi eval xác định chạy một 
 
 Round 1: E1–E5 đều PASS ở 253908e (ZCode 1670ed4). Mạnh chọn MỞ LẠI claudedp-2510-2 để sửa hai lỗi ngoài hợp đồng: (1) tệp state do bản cũ để lại có id trùng làm `seen` và `seenOrder` lệch nhau nên mất khử trùng; (2) POST thân `null` trả 500 thay vì 400. Hai lỗi này thành AC-6 và AC-7.
 Round 2: E1–E7 đều PASS ở 13becc4 (ZCode 7b5ccfb, đã rebase main). E6 và E7 đỏ trên bản vòng 1 và xanh trên bản vòng 2. Có 1 mục Ngoài hợp đồng mới, mức low, đề xuất ghi Known limits.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main 169b8c6 sau ký Cổng 2
+run_id: repin-20261025T231102Z-75737
+sha: d99268bef5615a39c15310b4c8c2dc8afaaa3d50 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
