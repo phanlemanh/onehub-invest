@@ -15,7 +15,7 @@ ReUI block → shadcn/ui → custom (LAST RESORT); danh mục ở `onehub-ui/cat
 ```
 app/src/
 ├── app/
-│   ├── (marketing)/      # Invest Portal — trang chủ, /phuong-phap (navbar-12 + footer)
+│   ├── (marketing)/      # Invest Portal — trang chủ, /methodology (navbar-12 + footer)
 │   ├── (auth)/           # /login, /register — toàn màn hình (auth-4, auth-5)
 │   ├── (app)/            # Invest Portal — /vn, /[country]/[market]/…, /listing, /saved, /login
 │   ├── ops/              # Ops Portal — bắt buộc đăng nhập (proxy.ts + ops/layout.tsx)
@@ -61,15 +61,14 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 
 ## Routes
 - `/` — Trang chủ (marketing: navbar-12, hero-8, card-29, how-it-works-1, faq-6)
-- `/phuong-phap` — Phương pháp & thuật ngữ
+- `/methodology` — Phương pháp & thuật ngữ (`/phuong-phap` → 301; định nghĩa mở sẵn theo faq-3)
 - `/login`, `/register` — nhóm `(auth)`, không shell; `?next=` đi qua `safeNext`
 - `/saved` — Đã lưu; `/compare?areas=a,b` — So sánh tối đa 4 khu vực (`/so-sanh` → 301)
 - `/vn` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)
 - `/vn/hanoi`, `/vn/hanoi/<phường>` — Insight thị trường / phường
 - `/listing/[id]` — Chi tiết listing (KPI so phường, lịch 365 đêm, comps gần nhất)
 - `/vn/hanoi/listings` — Duyệt listing (`/[country]/[market]/listings`: thẻ + bản đồ nhãn giá)
-- `/yield` — Ước tính lợi suất một căn (`?area&pn&m2&price&mgmt&platform&tax&fixed&setup`; mô hình ở `lib/yield.ts`)
-- `/vn/<market>/dau-tu` — Mô phỏng đầu tư (G3; ADR/công suất = listing tự thu — KHÔNG dùng AirDNA trên Invest)
+- `/yield` — Ước tính lợi suất một căn (`?area&pn&m2&price&mgmt&platform&tax&fixed&setup&eq&rate&term`; mô hình ở `lib/yield.ts`, vốn vay ở `lib/financing.ts`); mục «Dòng tiền vốn vay» `#financing` nhận phần Mô phỏng đầu tư cũ — `/vn/<market>/dau-tu` → 301 `/yield?area=<market>#financing`
 - `/ops`, `/ops/collections`, `/ops/sources` (admin), `/ops/deals`, `/ops/quality`, `/ops/review`, `/ops/design` — Ops Portal (đóng mặc định: `role` `ops`/`admin`, hoặc email trong `OPS_EMAILS`; tự đăng ký = `role=user` → 404). Cấp quyền: `UPDATE users SET role = 'ops' WHERE email = …`
 - `/ops/deals` — Căn giá tốt (P1 dưới thước P2); liên hệ/nội dung/ảnh tin (SPL tầng A) chỉ `role=admin`, chỉ có ở DB local. `/deals` redirect sang đây
 

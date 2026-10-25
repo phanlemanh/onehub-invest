@@ -42,7 +42,6 @@ export function LockdownGrid({
   const columns = useMemo<InsightColumn<LockdownLayer>[]>(
     () => [
       { id: "layer", accessorKey: "layer", header: "Lớp", size: 120 },
-      { id: "desc", accessorKey: "desc", header: "Kiểm", size: 420 },
       {
         id: "state",
         accessorFn: (l) => (machineOnly ? "machine" : stateOf(l)),
@@ -53,6 +52,7 @@ export function LockdownGrid({
         },
         size: 150,
       },
+      { id: "desc", accessorKey: "desc", header: "Kiểm", size: 420 },
     ],
     [stale, machineOnly]
   )

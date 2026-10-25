@@ -1,0 +1,7 @@
+E17 network truth (ego-browser, task space 7, http://localhost:3460/yield?area=vn-hanoi#financing)
+Driver: ego-browser nodejs. No read_network_requests tool; used in-page PerformanceResourceTiming + page.events().
+fetch/XHR resource entries in page: [] (none)
+resources with responseStatus >= 400 or failed same-origin: [] (none)
+page.events(): Page.frameResized, same-document fragment navigation only; no Network.loadingFailed, no console error events captured.
+Dev server :3460 was already running (PID 62973, worktree u1-compare-saved); shared, not started and not stopped by this run.
+Verdict: no app XHR/fetch traffic observed (no-app-traffic).

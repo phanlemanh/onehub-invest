@@ -32,38 +32,12 @@
       "count": 1
     }
   },
-  "src/components/invest/investment-simulator.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 9
-    },
-    "onehub-ui/no-raw-controls": {
-      "count": 1
-    },
-    "onehub-ui/no-raw-palette": {
-      "count": 2
-    }
-  },
   "src/components/listing/booking-heatmap.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
       "count": 1
     },
     "onehub-ui/no-raw-controls": {
       "count": 2
-    }
-  },
-  "src/components/marketing/frame-backdrop.tsx": {
-    "onehub-ui/no-hardcoded-color": {
-      "count": 13
-    }
-  },
-  "src/components/marketing/market-cards.tsx": {
-    "onehub-ui/no-raw-palette": {
-      "count": 4
-    }
-  },
-  "src/components/marketing/marketing-navbar.tsx": {
-    "onehub-ui/no-banned-motion": {
-      "count": 1
     }
   },
   "src/components/ops/review-card.tsx": {
@@ -87,14 +61,6 @@
   },
   "src/components/shell/site-footer.tsx": {
     "onehub-ui/no-emoji-icons": {
-      "count": 1
-    }
-  },
-  "src/components/yield/yield-form.tsx": {
-    "onehub-ui/no-hardcoded-color": {
-      "count": 3
-    },
-    "onehub-ui/no-raw-controls": {
       "count": 1
     }
   }
