@@ -1,0 +1,148 @@
+name: ci-test
+
+# Kiểm kiểu + test từng module trên mọi PR (AU11 `ci-test-module`). Mỗi module một job tên của nó: lỗi ở module nào thì
+# đúng job đó đỏ. DB cho test: service PostGIS cùng ảnh local, dựng trống từ db/migrations bằng scripts/ci-db-init.mjs —
+# không trỏ DB thật, không secret nào. Ca cần dữ liệu thật của DB local hay công cụ chỉ có trên máy (launchctl,
+# playwright-cli) bỏ qua theo danh sách viết sẵn scripts/ci-bo-qua.json (Hỏi-2); ở máy local các ca đó vẫn chạy.
+# Nhánh ci-probe/** chỉ để chứng «đỏ đúng job» trên CI thật (Hỏi-3) — đẩy lên rồi xoá.
+# PR: chạy trên MỌI PR (không lọc paths) — như ui-lint, để check không treo «Expected — waiting».
+on:
+  pull_request:
+  push:
+    branches: [main, "ci-probe/**"]
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: kartoza/postgis:17-3.5
+        env: { POSTGRES_USER: oneinvest, POSTGRES_PASS: oneinvest, POSTGRES_DB: oneinvest }
+        ports: ["5433:5432"]
+        options: --health-cmd "pg_isready -h localhost -U oneinvest -d oneinvest" --health-interval 3s --health-timeout 3s --health-retries 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # test rút mã của commit cũ bằng git show (đối chứng dương)
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: cài phụ thuộc
+        working-directory: app
+        run: npm ci
+      - name: typecheck
+        working-directory: app
+        run: npx next typegen && npx tsc --noEmit
+      - name: dựng DB trống từ migration
+        run: node scripts/ci-db-init.mjs
+      - name: test
+        working-directory: app
+        run: NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs app)" npm test
+
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: kartoza/postgis:17-3.5
+        env: { POSTGRES_USER: oneinvest, POSTGRES_PASS: oneinvest, POSTGRES_DB: oneinvest }
+        ports: ["5433:5432"]
+        options: --health-cmd "pg_isready -h localhost -U oneinvest -d oneinvest" --health-interval 3s --health-timeout 3s --health-retries 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            pipeline/package-lock.json
+            app/package-lock.json
+      - name: cài phụ thuộc
+        run: (cd pipeline && npm ci) && (cd app && npm ci)
+      - name: kiểm cú pháp .mjs
+        run: find pipeline -name '*.mjs' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+      - name: dựng DB trống từ migration
+        run: node scripts/ci-db-init.mjs
+      - name: test
+        working-directory: pipeline
+        run: NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs pipeline)" npm test
+
+  agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: kartoza/postgis:17-3.5
+        env: { POSTGRES_USER: oneinvest, POSTGRES_PASS: oneinvest, POSTGRES_DB: oneinvest }
+        ports: ["5433:5432"]
+        options: --health-cmd "pg_isready -h localhost -U oneinvest -d oneinvest" --health-interval 3s --health-timeout 3s --health-retries 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            agent/package-lock.json
+            app/package-lock.json
+      - name: cài phụ thuộc
+        run: (cd agent && npm ci) && (cd app && npm ci)
+      - name: typecheck
+        working-directory: agent
+        run: npx tsc --noEmit
+      - name: dựng DB trống từ migration
+        run: node scripts/ci-db-init.mjs
+      - name: test
+        working-directory: agent
+        run: NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs agent)" npm test
+
+  data-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: data-api/package-lock.json
+      - name: cài phụ thuộc
+        working-directory: data-api
+        run: npm ci
+      - name: typecheck
+        working-directory: data-api
+        run: npm run typecheck
+
+  scripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: kartoza/postgis:17-3.5
+        env: { POSTGRES_USER: oneinvest, POSTGRES_PASS: oneinvest, POSTGRES_DB: oneinvest }
+        ports: ["5433:5432"]
+        options: --health-cmd "pg_isready -h localhost -U oneinvest -d oneinvest" --health-interval 3s --health-timeout 3s --health-retries 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            pipeline/package-lock.json
+      - name: cài phụ thuộc
+        run: (cd app && npm ci) && (cd pipeline && npm ci)
+      - name: kiểm cú pháp .mjs
+        run: find scripts -name '*.mjs' -print0 | xargs -0 -n1 node --check
+      - name: dựng DB trống từ migration
+        run: node scripts/ci-db-init.mjs
+      - name: test
+        run: NODE_OPTIONS="$(node scripts/lib/ci-can-du-lieu.mjs scripts)" node --test scripts/*.test.mjs
