@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 25b497892d873b6e9db1396d920e256fc0cd7c10
+verified_commit: 4ff48020ca7cf232af79acedb47db07833610d00
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -287,3 +287,7 @@ Round 2: không eval nào đỏ. Smoke E19 đã lấy cổng trống do hệ đi
 ### Re-pin lần 1 — 2026-10-25, do hoá cũ do gộp main #75
 run_id: repin-20261025T004528Z-64975
 sha: 25b497892d873b6e9db1396d920e256fc0cd7c10 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E15, E16, E20 · diff chạm vật đo ngoài làn máy: E15 — chưa chứng lại, đi vòng S4 delta
+
+### Re-pin lần 2 — 2026-10-25, do hoá cũ do gộp main #74 #76
+run_id: repin-20261025T005608Z-97823
+sha: 4ff48020ca7cf232af79acedb47db07833610d00 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E15, E16, E20
