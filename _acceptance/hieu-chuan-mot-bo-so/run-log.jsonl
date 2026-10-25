@@ -87,3 +87,4 @@
 {"ts":"2026-10-25T00:23:29Z","sha":"2cf2cd328ee393995c2c8c39b9ffdd05ea29e210","round":3,"kind":"baseline","evals_hash":"55da8dcc2d1ce7ae6d15223582f325bfe5d84a366285f7de0a993f72e1ed328c","non_discriminating":[]}
 {"ts":"2026-10-25T00:23:29Z","sha":"2cf2cd328ee393995c2c8c39b9ffdd05ea29e210","round":3,"kind":"round-tally","verdict":"REJECT","expected":8,"returned":8,"blocked":0}
 {"ts":"2026-10-25T00:23:29Z","sha":"2cf2cd328ee393995c2c8c39b9ffdd05ea29e210","round":3,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":1,"bypass_ack":0,"verified_at":8}
+{"kind":"thuoc-vat","ts":"2026-10-25T00:30:09Z","round":3,"san":"53c06f0f2feb4099af4a60fbdef73d4b29eed3d0","vat":[16,8],"thuoc":[3,2],"ho_so":[389,0],"nhat":0,"lan":2,"tep_thuoc":["_acceptance/config.yaml","_acceptance/hieu-chuan-mot-bo-so/evals.yaml"]}
