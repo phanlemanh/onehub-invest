@@ -38,6 +38,15 @@ export function pickRepresentative(
   return { airdnaId: best.airdnaId, ofMarkets: ms.length };
 }
 
+/**
+ * Mẫu số chung của dòng «Listing» (thẻ hiệu chuẩn) và bảng Độ phủ trung thực: tổng listing S02 kỳ mới nhất của mọi
+ * market thành phần, bỏ market chưa có số; không market nào có số → null (ON10 Ngoài-13).
+ */
+export function tongListingS02(counts: (number | null)[]): number | null {
+  const co = counts.filter((n): n is number => n !== null);
+  return co.length === 0 ? null : co.reduce((a, n) => a + n, 0);
+}
+
 const coSo = (v: number | null | undefined) => v !== null && v !== undefined && v !== 0;
 
 /** Chưa có số: không thẻ, hoặc mọi số hai phía và điểm S02 đều trống hay bằng 0. */
