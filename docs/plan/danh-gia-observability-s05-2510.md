@@ -173,4 +173,9 @@ S03 đang nằm ở chân trời (PH2, chờ tập nhãn). Số yield của scor
 | Hỏi-4 | Ngày 7/12 quyết A/B/C dựa trên: tin mới hiện trên «Căn giá tốt» mỗi tuần, USD/tin hiện, tách theo nhóm. Không đặt ngưỡng trước, quyết khi có số | Đồng ý ba số, không đặt ngưỡng trước | `Hỏi-4: đồng ý ba số, quyết khi có số` |
 | Hỏi-5 | Ngày 7/11 ai bật 2 nhóm S05: Mạnh tự tick trên `/ops/sources` (2 click, quyền admin), hay cho phiên liên làn đổi `source_groups.enabled` ở DB local? | Mạnh tick — thao tác cấu hình có quyền admin, để lại audit | `Hỏi-5: tôi tự tick ngày 7/11` |
 
-Mạnh có thể trả lời gọn: `Hỏi-1..5: theo khuyến nghị`.
+**Mạnh trả lời 25/10: «Hỏi-1..5: theo khuyến nghị».** Hệ quả:
+- Hỏi-1: giữ ngưỡng ruler 50% phường; scorecard thêm số chẩn đoán «% tin P1 có phường», không ngưỡng (C2).
+- Hỏi-2: coverage theo định nghĩa NT7 (listing khớp / listing_count tháng gần nhất), đo từng thị trường (C2, C4).
+- Hỏi-3: Claude kiểm kỹ thuật yaml FIELD_TARGET, Mạnh duyệt TARGET + trọng số (G3).
+- Hỏi-4: quyết A/B/C ngày 7/12 bằng ba số ở §5, không đặt ngưỡng trước.
+- Hỏi-5: ngày 7/11 Mạnh tự bật hai nhóm S05 trên `/ops/sources` (bước 2 §5).
