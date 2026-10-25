@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5e9146a81f3083ab8ac40111e2a3ae46e6e31c51
+verified_commit: 86329ac188d9daef2604ba2f6263a93ecaf60087
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -140,3 +140,7 @@ Round 2: E1, E2, E3, E6 chạy lại trên 8109b9683ac614700e76889b48d3b4915f7b3
 ### Re-pin lần 1 — 2026-10-25, do gộp main 3e91907 (#98, #100) sau chữ ký
 run_id: repin-20261025T073702Z-22057
 sha: 5e9146a81f3083ab8ac40111e2a3ae46e6e31c51 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp main 12b8942 (#101) sau chữ ký
+run_id: repin-20261025T073935Z-75813
+sha: 86329ac188d9daef2604ba2f6263a93ecaf60087 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
