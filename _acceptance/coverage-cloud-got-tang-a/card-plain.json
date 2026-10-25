@@ -1,0 +1,29 @@
+{"feature_plain":"Máy đọc (audit, giám sát) gọi /api/v1/ops/coverage trên máy chủ nhận độ tươi thật từng nguồn từ số máy thu đẩy lên, kèm cờ tươi / cũ / chỉ đo ở máy thu — không còn danh sách rỗng như thể không có nguồn nào, và không lộ tên nguồn thật.",
+ "will_do":[
+  {"id":"AC-2","p":"Sẽ kiểm mọi khoá và giá trị của phản hồi không chứa tên nguồn thật nào, bằng danh sách tên đọc từ máy thu."},
+  {"id":"AC-3","p":"Sẽ báo cờ «cũ» khi số độ tươi máy thu đẩy lên đã quá 45 phút, vẫn giữ số cũ."},
+  {"id":"AC-6","p":"Sẽ giữ nguyên cách đo trực tiếp ở máy thu, chỉ thêm cờ «đo trực tiếp»."},
+  {"id":"AC-8","p":"Sẽ giữ tsc và lint sạch."}
+ ],
+ "wont_do":[
+  {"id":"AC-1","p":"Sẽ KHÔNG trả danh sách rỗng khi máy chủ có số: phản hồi mang đúng các hàng độ tươi máy thu đã đo."},
+  {"id":"AC-4","p":"Sẽ KHÔNG trả danh sách rỗng hay lỗi 500 khi máy chủ chưa có số, số hỏng hay sai khuôn — chỉ cờ «Chỉ đo ở máy thu»."},
+  {"id":"AC-5","p":"Chặn người không có token ops hay phiên Ops (401)."},
+  {"id":"OOS-1","p":"KHÔNG đồng bộ bản gọt của danh mục nguồn lên máy chủ — ADR-0014 đã loại."},
+  {"id":"OOS-2","p":"KHÔNG đổi trang /ops hay /ops/quality — đã đọc số máy thu từ ON3."},
+  {"id":"OOS-3","p":"KHÔNG thêm khối số mới cho bản tin."}
+ ],
+ "coverage_plain":[
+  {"i":0,"p":"Bảy trạng thái số trên máy chủ — tươi, tươi mà rỗng thật, cũ, không bản tin, khối lỗi, khối vắng, sai khuôn — đều có tiêu chí."},
+  {"i":1,"p":"Mọi khoá và giá trị của phản hồi ở ba trạng thái được quét tên nguồn thật (AC-2)."},
+  {"i":2,"p":"Ba cách gọi — không token, token sai, token đúng — đều được đo (AC-5)."},
+  {"i":3,"p":"Cả máy chủ và máy thu đều được đo."},
+  {"i":4,"p":"Đo ở ba lớp: route thật, chữ, tsc/lint."}
+ ],
+ "gap_probe_plain":[
+  {"i":0,"p":"Máy đã tự chọn đổi kiểu danh sách thành «không có» khi máy chủ chưa có số, mà chưa hỏi anh có máy đọc nào ngoài kho — nay thành Hỏi-2."},
+  {"i":1,"p":"Thiếu ca khối số vắng, sai khuôn và ca tươi mà rỗng thật — đã thêm, đòi không bao giờ lỗi 500."},
+  {"i":2,"p":"Danh sách tên dùng để soát chưa ghim với danh mục bên ghi và chưa quét khoá — đã ghim, in số tên, quét cả khoá."},
+  {"i":3,"p":"Phép chấm chữ chưa theo dõi hai tệp mã nó đọc — đã thêm."},
+  {"i":4,"p":"Chưa ghim việc không giả lập chế độ máy chủ / máy thu, và hiện trạng ghi lệch — đã ghim và ghi đúng."}
+ ]}
