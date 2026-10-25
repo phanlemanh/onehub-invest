@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: c4511d1ac45be63c226bffbef7220ad8f5516d95
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: khoa-nap-s05-paused

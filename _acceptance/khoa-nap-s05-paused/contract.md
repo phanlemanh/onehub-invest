@@ -5,7 +5,7 @@ slug: khoa-nap-s05-paused
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T09:24:28Z
 approved_by:
@@ -62,3 +62,12 @@ ZCode d60b8e6 gộp `origin/main` 08afadf, rồi gộp a92ed3f.
   `source_registry`), HOME giả, fetch bị thay bằng bản đếm lời gọi; xoá DB tạm khi xong. Không ghi DB oneinvest.
 - Harness AU3 (`scripts/au3-nap-bao-loi/acceptance.mjs`) do ZCode mở rộng trong cùng nhánh (lock thêm 6 ca, apify thêm ca e);
   lượt chấm đối chứng chúng trên handler/tệp bọc của main để chắc chúng biết đỏ.
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: mở hợp đồng mới
+  - Ngoài-2: mở hợp đồng mới
+  - Ngoài-3: mở hợp đồng mới
+  - Ngoài-4: ghi Known limits
+  - Ngoài-5: mở hợp đồng mới
+  - Ngoài-6: mở hợp đồng mới
+- Known limits:
+  - Ngoài-4: Trap `rm -rf` không kiểm chủ khoá: tác vụ bị lấy khoá sau 2 giờ, khi kết thúc, xoá khoá của tác vụ mới
