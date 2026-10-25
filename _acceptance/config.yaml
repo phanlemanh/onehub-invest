@@ -161,7 +161,10 @@ executors:
     # trang-chu-methodology (UI2) — / + /methodology (301 từ /phuong-phap); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
     trang_chu_methodology_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-trang-chu-methodology.mjs"
     trang_chu_loi_db_smoke: "cd app && npx next build && cd .. && node scripts/smoke-trang-chu-loi-db.mjs"   # bản build + next start ở cổng trống (hoặc SMOKE_PORT) với DATABASE_URL trỏ cổng chết; trang lỗi đo bằng trình duyệt thật (playwright-cli); đối chứng dương ở dev :3460
-    methodology_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
+    # yield-dong-tien-von-vay (UI3) — /yield + mục «Dòng tiền vốn vay» (/dau-tu cũ → 301); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
+    yield_dong_tien_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-yield-dong-tien.mjs"
+    financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
+    methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
     app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
     # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
     dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
@@ -188,6 +191,13 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # kev-nhan-cung-hoa (ZC1 nối tiếp) — không mở cổng, không ghi DB, URL ảnh giả host .invalid
+    zc1b_media_junk: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs media-junk"
+    zc1b_payload_intact: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs payload-intact"
+    zc1b_dedup_norm: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs dedup-norm"
+    zc1b_legacy_id: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs legacy-id"
+    zc1b_bad_text: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs bad-text"
+    zc1b_url_path: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs url-path"   # vòng 2 (lỗi ngoài hợp đồng vòng 1)
     # hook-zalo-spool (ZC6, T3) — handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
     zc6_spool_replay: "node scripts/hook-zalo-spool/acceptance.mjs spool-replay"
     zc6_reject_4xx: "node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"

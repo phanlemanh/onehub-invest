@@ -3,7 +3,7 @@
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
 //   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
 //   - /api/zalo-media chặn admin trước khi đọc file;
-//   - /dau-tu không đọc bảng AirDNA, không hiện chữ AirDNA;
+//   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của bộ Mô phỏng đầu tư cũ) không hiện chữ AirDNA/tên nguồn thật;
 //   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
 //     so theo đoạn đường dẫn + realpath;
 //   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm;
@@ -104,18 +104,20 @@ check(
   "zalo-media: isAdmin chặn trước stat/readFile",
 );
 
-// 7. /dau-tu: không bảng AirDNA, không chữ AirDNA/tên nguồn thật ở Invest.
-const invest = code(read("src/lib/invest.ts"));
-check(!/airdna_|area_sources/i.test(invest), "lib/invest.ts không đọc airdna_* / crosswalk S02");
+// 7. /yield + mục «Dòng tiền vốn vay» (Mô phỏng đầu tư cũ gộp vào, UI3): không chữ AirDNA/tên nguồn thật trong mã render;
+//    mô hình vốn vay là hàm thuần, không truy vấn DB (số đầu vào đến từ ước tính lợi suất, listing tự thu).
+const financing = code(read("src/lib/financing.ts"));
+check(!/pool\.query|from "\.\/db"|airdna_/i.test(financing), "lib/financing.ts là hàm thuần, không truy vấn DB / AirDNA");
 for (const f of [
-  "src/app/(app)/[country]/[market]/dau-tu/page.tsx",
-  "src/components/invest/investment-simulator.tsx",
-  "src/lib/invest.ts",
+  "src/app/(app)/yield/page.tsx",
+  "src/components/yield/yield-form.tsx",
+  "src/components/yield/financing/financing-grid.tsx",
+  "src/components/yield/financing/financing-cells.tsx",
+  "src/lib/financing.ts",
 ]) {
   const leaks = code(read(f)).split("\n").filter((l) => realNames.test(l));
   check(leaks.length === 0, `${f}: không tên AirDNA/nguồn thật trong mã render (${leaks.length} dòng)`);
 }
-check(/listing_stats/.test(invest) && /booked90/.test(invest), "lib/invest.ts lấy STR từ listing_stats (90 đêm)");
 
 // 8. /api/zalo-media: chế độ path chỉ hai gốc staging ảnh, không cả ~/.openclaw; gốc raw
 //    snapshots chỉ qua chế độ snapshot+file và chỉ thư mục media/; không so tiền tố chuỗi.
