@@ -1,13 +1,47 @@
-# E9 network (playwright-cli) - reload /ops/collections (mode fresh, 390px), origin http://localhost:3461 (cong 3461 vi :3460 do worktree u1-compare-saved chiem)
-## requests
+# E9 network (playwright-cli) - origin http://localhost:3461 (cong 3461 vi :3460 do worktree u1-compare-saved chiem, khong phai server cua toi)
+## mode none: requests
 ### Result
 
-Note: 123 static requests not shown, run with --static option to see them.
-## console (error+)
+Note: 39 static requests not shown, run with --static option to see them.
+## mode none: console error
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
+## mode fresh: requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+## mode fresh: console error
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
+## mode mixed: requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+## mode mixed: console error
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
+## mode stale: requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+## mode stale: console error
 ### Result
 Total messages: 2 (Errors: 0, Warnings: 0)
 Returning 0 messages for level "error"
 
 ## dev server log: non-2xx/3xx request lines
-## dev server log: errors (st_simplifypreservetopology, xuat hien o GET / sau dang nhap - trang chu/ban do, ngoai /ops/collections; do search_path cua luoc do proto khong co postgis)
-12
+-- none
+-- fresh
+-- mixed
+-- stale
+## dev server log: error lines
+-- none
+-- fresh
+-- mixed
+-- stale

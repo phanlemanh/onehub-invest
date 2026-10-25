@@ -1,26 +1,12 @@
-# Review findings — lockdown-cloud-theo-facts (round 2)
+# Review findings: lockdown-cloud-theo-facts (round 2)
 
 ## Trong hợp đồng
 
-(không có)
+Không có finding nào.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
-
-- **Ảnh E9 chế độ stale chụp trước bản sửa E7 nên vẫn thấy chấm tab «Sống» xanh, không khớp code ở HEAD**
-  Người dùng thấy gì: Ảnh minh hoạ trạng thái số cũ trong hồ sơ nghiệm thu còn cho thấy chấm «Sống» màu xanh, dù màn hình thật sau bản sửa đã đổi sang xám. Người duyệt xem ảnh có thể tưởng lỗi cũ vẫn còn, nhưng người dùng cuối không bị ảnh hưởng.
-  Căn cứ: Chỉ là ảnh trong hồ sơ duyệt lệch so với màn hình thật, người dùng không mất dữ liệu hay thấy sai trạng thái an toàn; chỉ cần ghi chú cho người duyệt, hoặc chụp lại sau cho rẻ.
-  file: `_acceptance/lockdown-cloud-theo-facts/evidence/E9-ST-lockdown-stale.png`
-  severity: low
-  Đề xuất: known-limits
-
-- **Ảnh bằng chứng E9 chụp trước bản sửa E7, nên vẫn cho thấy chấm tab «Sống» màu xanh khi số cũ**
-  Người dùng thấy gì: Ảnh trạng thái số cũ trong hồ sơ nghiệm thu vẫn hiện chấm «Sống» xanh trong lưới Máy móc, mâu thuẫn với màn hình đã sửa. Người dùng cuối không gặp lỗi này, chỉ người duyệt hồ sơ có thể bị nhầm.
-  Căn cứ: Hậu quả nhẹ và chỉ nằm ở hồ sơ duyệt, không ảnh hưởng người dùng thật hay dữ liệu; sai lệch tự lộ khi người duyệt mở màn hình thật, và chụp lại rất rẻ.
-  file: `_acceptance/lockdown-cloud-theo-facts/evidence/E9-ST-lockdown-stale.png`
-  severity: low
-  Đề xuất: known-limits
 
 - **Thêm trạng thái mới «Chỉ kiểm ở máy thu» cho Khoá an toàn mà không cập nhật CONTEXT.md (r1)**
   Người dùng thấy gì: Màn hình Khoá an toàn hiện đúng chữ và đúng màu, nhưng bảng thuật ngữ chung vẫn chỉ nêu ba trạng thái, chưa nêu trạng thái «Chỉ kiểm ở máy thu». Người đọc tài liệu có thể thấy chữ trên màn hình mà không tra được nghĩa.
@@ -50,5 +36,5 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: wont-fix
 
-⚠ Cụm ngoài vùng phủ: 2/2 lỗi rơi vào file không bộ đo nào phủ (_acceptance/lockdown-cloud-theo-facts/evidence/E9-ST-lockdown-stale.png) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
 
