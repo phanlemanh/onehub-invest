@@ -32,7 +32,8 @@ export type CollectionsData = {
   jobs: JobStatus[]
   rotation: RotationPreview
   zaloGroups: ZaloGroupRow[]
-  zaloAllowlist: ZaloAllowlistEntry[]
+  /** null = cấu hình OpenClaw không đọc được (ON4) — bảng ghi «—», không «0 nhóm». */
+  zaloAllowlist: ZaloAllowlistEntry[] | null
   zaloHealth: ZaloHealth
   factsPushedAt: string | null
   feedHealth: SourceFeedHealth[]

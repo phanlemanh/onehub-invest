@@ -177,7 +177,8 @@ export function ZaloGroupsTable({
   cloud,
 }: {
   rows: import("@/lib/collections-queries").ZaloGroupRow[]
-  allowlist: import("@/lib/collections-queries").ZaloAllowlistEntry[]
+  /** null = cấu hình OpenClaw không đọc được (ON4) — mô tả ghi «—», không «0 nhóm». */
+  allowlist: import("@/lib/collections-queries").ZaloAllowlistEntry[] | null
   roles?: SourceRoles
   /** Máy chủ (ON4): N nhóm bật và cờ cũ của khối `s03`; không có mã nhóm (Hỏi-1 = A). Vắng = máy thu, đo trực tiếp. */
   cloud?: { allowlistEnabled: number; stale: boolean }
@@ -209,18 +210,18 @@ export function ZaloGroupsTable({
       },
       {
         id: "seen",
-        accessorFn: (r) => r.seen,
+        accessorFn: (r) => r.seen ?? -1,
         header: ({ column }) => <DataGridColumnHeader title="Thấy (nhật ký)" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.seen),
+        cell: ({ row }) => cloudCount(row.original.seen, stale),
         size: 100,
         meta: NUM,
         enableSorting: true,
       },
       {
         id: "passed",
-        accessorFn: (r) => r.passed,
+        accessorFn: (r) => r.passed ?? -1,
         header: ({ column }) => <DataGridColumnHeader title="Qua cổng" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.passed),
+        cell: ({ row }) => cloudCount(row.original.passed, stale),
         size: 100,
         meta: NUM,
         enableSorting: true,
@@ -229,8 +230,8 @@ export function ZaloGroupsTable({
         id: "accepted",
         accessorFn: (r) => r.accepted ?? -1,
         header: ({ column }) => <DataGridColumnHeader title="Vào bảng thô" column={column} />,
-        // null = đã qua cổng mà không biết số tin vào (ON4) — «—», không 0.
-        cell: ({ row }) => (row.original.accepted == null ? "—" : fmtInt(row.original.accepted)),
+        // null = đã qua cổng mà không biết số tin vào, hay nhật ký không đọc được (ON4) — «—», không 0.
+        cell: ({ row }) => cloudCount(row.original.accepted, stale),
         size: 100,
         meta: NUM,
         enableSorting: true,
@@ -247,7 +248,7 @@ export function ZaloGroupsTable({
         id: "real7",
         accessorFn: (r) => r.realPosts7d,
         header: ({ column }) => <DataGridColumnHeader title="Bài thật 7 ngày" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.realPosts7d),
+        cell: ({ row }) => cloudCount(row.original.realPosts7d, stale),
         size: 140,
         meta: NUM,
         enableSorting: true,
@@ -256,7 +257,7 @@ export function ZaloGroupsTable({
         id: "mock7",
         accessorFn: (r) => r.mockPosts7d,
         header: ({ column }) => <DataGridColumnHeader title="Bài thử" column={column} />,
-        cell: ({ row }) => (row.original.mockPosts7d ? fmtInt(row.original.mockPosts7d) : "—"),
+        cell: ({ row }) => (row.original.mockPosts7d ? cloudCount(row.original.mockPosts7d, stale) : "—"),
         size: 100,
         meta: NUM,
         enableSorting: true,
@@ -264,13 +265,15 @@ export function ZaloGroupsTable({
     ],
     [stale]
   )
-  const enabled = allowlist.filter((a) => a.enabled)
+  const enabled = allowlist?.filter((a) => a.enabled) ?? null
+  // Số cũ trên máy chủ (ADR-0014): mọi ô số mờ, badge không xanh; không đọc được → «—».
+  const nEnabled = cloud ? cloud.allowlistEnabled : enabled?.length ?? null
   // Khoá hàng theo vị trí, không theo tên nhóm: tên là tầng A, khoá hàng lọt vào thuộc tính DOM (data-row-id).
   const rowKey = new Map(rows.map((r, i) => [r, `nhom-${i}`]))
   return (
     <InsightGrid
       title={`Nhóm ${sourceLabel("S03", roles)}`}
-      description={`Danh mục nguồn cộng đồng — bài thật tách bài thử; danh sách cho phép đang bật ${cloud?.allowlistEnabled ?? enabled.length} nhóm`}
+      description={`Danh mục nguồn cộng đồng — bài thật tách bài thử; ${nEnabled === null ? "danh sách cho phép: — (chưa đọc được cấu hình ở máy thu)" : `danh sách cho phép đang bật ${nEnabled} nhóm`}`}
       data={rows}
       columns={columns}
       getRowId={(r) => rowKey.get(r) ?? ""}
@@ -283,7 +286,7 @@ export function ZaloGroupsTable({
           ) : (
             <>
               Danh sách cho phép (mã nhóm, chưa ghép tên):{" "}
-              {enabled.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}.
+              {enabled?.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}.
             </>
           )}{" "}
           Nhóm im quá 72h: kiểm tra bị mời ra hoặc đổi tên;

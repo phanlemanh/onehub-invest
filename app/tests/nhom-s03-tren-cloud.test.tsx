@@ -119,9 +119,9 @@ function stalePayload(p: Payload): Payload {
   return q
 }
 /** HOME tạm cho hàm app đọc cấu hình / nhật ký ở máy thu (os.homedir() đọc $HOME lúc gọi). */
-async function withHome<T>(fn: () => Promise<T>): Promise<T> {
+async function withHome<T>(fn: () => Promise<T>, { cfg = CFG as unknown, log = true } = {}): Promise<T> {
   const home = mkdtempSync(join(tmpdir(), "on4-home-"))
-  for (const [rel, text] of Object.entries(HOME_FILES())) {
+  for (const [rel, text] of Object.entries(HOME_FILES(cfg, { log }))) {
     mkdirSync(join(home, rel, ".."), { recursive: true })
     writeFileSync(join(home, rel), text)
   }
@@ -157,13 +157,6 @@ async function renderCollections(pageFile = "../src/app/ops/collections/page", {
   }
 }
 const text = (h: string) => h.replace(/<!-- -->/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")
-function region(h: string, from: string, to: string) {
-  const i = h.indexOf(from)
-  assert.ok(i >= 0, `không thấy «${from}» trong trang`)
-  const j = h.indexOf(to, i + from.length)
-  assert.ok(j > i, `không thấy «${to}» sau «${from}»`)
-  return h.slice(i, j)
-}
 /** Bảng nhóm S03: từ khung `#nhom-s03` tới vùng kế (Alert gom trên máy chủ, hết trang ở máy thu). */
 const table = (h: string) => {
   const i = h.indexOf('id="nhom-s03"')
@@ -279,6 +272,7 @@ describe("ON4-AC-2 một định nghĩa «nhóm bật»", () => {
     assert.equal(p.blocks.s03.allowlistEnabled, N, "khối s03")
     const { readZaloAllowlist } = await import("../src/lib/collections-queries")
     const local = await withHome(() => readZaloAllowlist())
+    assert.ok(local, "cấu hình tạm đọc được")
     assert.deepEqual(local.filter((a) => a.enabled).map((a) => a.groupId).sort(), [...UNION].sort(), "trang máy thu")
     assert.equal(local.filter((a) => a.enabled).length, N)
   })
@@ -437,6 +431,50 @@ describe("ON4-AC-5 khối cũ", () => {
   })
 })
 
+describe("ON4-AC-5 số cũ mờ (đổi khuôn sau lượt 2)", () => {
+  /** Ô «Vào bảng thô» của một nhóm (HTML thô của ô). */
+  const cellHtml = (t: string, name: string, col = 4) => {
+    for (const m of t.matchAll(/data-row-id="[^"]+"([\s\S]*?)<\/tr>/g)) {
+      const cells = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((c) => c[1])
+      if (text(cells[0]).trim() === name) return cells[col]
+    }
+    return ""
+  }
+  test("ON4-AC-5 khối s03 cũ: mọi ô số của bảng nhóm mờ (text-muted-foreground), bản tin tươi thì không", async () => {
+    ready()
+    const p = await push()
+    await ingest(p)
+    assert.ok(!cellHtml(table(await renderCollections()), "Nhóm A").includes("text-muted-foreground"), "đối chứng: số tươi không mờ")
+    await ingest(stalePayload(p))
+    const t = table(await renderCollections())
+    for (const col of [2, 3, 4]) assert.ok(cellHtml(t, "Nhóm A", col).includes("text-muted-foreground"), `cột ${col} của Nhóm A phải mờ khi số cũ`)
+  })
+  test("ON4-AC-5 bản sao bảng không làm mờ số cũ → bắt", async () => {
+    ready()
+    await ingest(stalePayload(await push()))
+    const m = mutantChain({ rel: "src/components/ops/collections-tables.tsx", fn: (s) => s.replace("cloudCount(row.original.accepted, stale)", "cloudCount(row.original.accepted, false)") }, [COL_VIEW_TABLES, COL_PAGE])
+    try {
+      assert.ok(!cellHtml(table(await renderCollections(m.path)), "Nhóm A").includes("text-muted-foreground"), "bản sao không mờ — phép đo phải bắt")
+    } finally {
+      m.done()
+    }
+  })
+  test("ON4-AC-5 bên ghi đo «Bài thử» 7 ngày thật: khối s03 mang số bài thử của DB, không gán 0", async () => {
+    ready()
+    const ins = (snap: string, i: number) =>
+      admin.query(`INSERT INTO "${S_LOCAL}".stg_zalo_posts (post_id, snapshot_id, text, group_name, captured_at) VALUES ($1, $2, 'x', 'Nhóm A', now() - interval '1 hour')`, [`on4-${snap}-${i}`, snap])
+    await ins("zalo-mock-on4", 1)
+    await ins("zalo-mock-on4", 2)
+    await ins("zalo-agent-on4", 3)
+    try {
+      const a = (await push()).blocks.s03.groups!.find((g) => g.name === "Nhóm A") as Group & { realPosts7d: number; mockPosts7d: number }
+      assert.deepEqual([a.realPosts7d, a.mockPosts7d], [1, 2], "bài thật / bài thử 7 ngày")
+    } finally {
+      await admin.query(`DELETE FROM "${S_LOCAL}".stg_zalo_posts WHERE post_id LIKE 'on4-%'`)
+    }
+  })
+})
+
 describe("ON4-AC-6 máy thu", () => {
   async function spyHeartbeat(render: () => Promise<string>) {
     const { pool } = await import("../src/lib/db")
@@ -470,6 +508,59 @@ describe("ON4-AC-6 máy thu", () => {
       assert.ok(text(t).includes("Danh sách cho phép (mã nhóm, chưa ghép tên)") && text(t).includes("000005"), "chân bảng liệt mã rút gọn")
       assert.equal(n, 0, "máy thu không đọc ops_heartbeat")
     } finally {
+      for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
+    }
+  })
+  test("ON4-AC-6 máy thu không đọc được cấu hình OpenClaw → mô tả «—», không «0 nhóm»", async () => {
+    ready()
+    for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    try {
+      const h = await withHome(() => renderCollections(undefined, { cloud: false }), { cfg: null })
+      const t = text(table(h))
+      assert.ok(t.includes("chưa đọc được cấu hình ở máy thu"), "mô tả ghi chưa đọc được")
+      assert.ok(!/\b0 nhóm\b/.test(t), "không «0 nhóm»")
+    } finally {
+      for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
+    }
+  })
+  test("ON4-AC-6 bản sao đọc cấu hình hỏng thành danh sách rỗng → bắt («0 nhóm»)", async () => {
+    ready()
+    for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    const m = mutantChain({ rel: "src/lib/collections-queries.ts", fn: (s) => s.replace("enabled: true }));\n  } catch {\n    return null;", "enabled: true }));\n  } catch {\n    return [];") }, [{ rel: "src/app/ops/collections/page.tsx", spec: "@/lib/collections-queries" }])
+    try {
+      const h = await withHome(() => renderCollections(m.path, { cloud: false }), { cfg: null })
+      assert.ok(/\b0 nhóm\b/.test(text(table(h))), "bản sao hiện «0 nhóm» — phép đo phải bắt")
+    } finally {
+      m.done()
+      for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
+    }
+  })
+  test("ON4-AC-6 máy thu không đọc được nhật ký cổng → cột đọc từ nhật ký «—», cột từ DB vẫn có số", async () => {
+    ready()
+    for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    await admin.query(`INSERT INTO "${S_CLOUD}".stg_zalo_posts (post_id, snapshot_id, text, group_name, captured_at) VALUES ('on4-d', 'zalo-agent-on4', 'x', 'Nhóm D', now() - interval '1 hour')`)
+    try {
+      const h = await withHome(() => renderCollections(undefined, { cloud: false }), { log: false })
+      const t = table(h)
+      assert.equal(acceptedByName(t).get("Nhóm D"), "—", "«Vào bảng thô» không biết")
+      for (const m of t.matchAll(/data-row-id="[^"]+"([\s\S]*?)<\/tr>/g)) {
+        const cells = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((c) => text(c[1]).trim())
+        if (cells[0] === "Nhóm D") assert.deepEqual([cells[2], cells[3], cells[6]], ["—", "—", "1"], "thấy / qua cổng «—», bài thật 7 ngày = 1 từ DB")
+      }
+    } finally {
+      for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
+    }
+  })
+  test("ON4-AC-6 bản sao đọc nhật ký hỏng thành rỗng → bắt (số 0)", async () => {
+    ready()
+    for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    await admin.query(`INSERT INTO "${S_CLOUD}".stg_zalo_posts (post_id, snapshot_id, text, group_name, captured_at) VALUES ('on4-d', 'zalo-agent-on4', 'x', 'Nhóm D', now() - interval '1 hour')`)
+    const m = mutantChain({ rel: "src/lib/collections-queries.ts", fn: (s) => s.replace('"utf8").catch(\n      () => null,\n    ),', '"utf8").catch(\n      () => "",\n    ),') }, [{ rel: "src/app/ops/collections/page.tsx", spec: "@/lib/collections-queries" }])
+    try {
+      const h = await withHome(() => renderCollections(m.path, { cloud: false }), { log: false })
+      assert.equal(acceptedByName(table(h)).get("Nhóm D"), "0", "bản sao ghi 0 — phép đo phải bắt")
+    } finally {
+      m.done()
       for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
     }
   })

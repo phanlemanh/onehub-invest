@@ -95,14 +95,15 @@ async function rotation(client) {
 async function zaloExtras(client, funnelGroups) {
   const [postRows] = await Promise.all([
     client.query(
-      "SELECT group_name, count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%' AND captured_at >= now() - interval '7 days')::int real7, max(captured_at) FILTER (WHERE snapshot_id LIKE '%zalo-agent%') last_real, bool_and(snapshot_id NOT LIKE '%zalo-agent%') mock_only FROM stg_zalo_posts WHERE group_name IS NOT NULL GROUP BY 1",
+      "SELECT group_name, count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%' AND captured_at >= now() - interval '7 days')::int real7, count(*) FILTER (WHERE snapshot_id NOT LIKE '%zalo-agent%' AND captured_at >= now() - interval '7 days')::int mock7, max(captured_at) FILTER (WHERE snapshot_id LIKE '%zalo-agent%') last_real, bool_and(snapshot_id NOT LIKE '%zalo-agent%') mock_only FROM stg_zalo_posts WHERE group_name IS NOT NULL GROUP BY 1",
     ),
   ]);
   // gộp: nhóm từ DB + nhóm chỉ có trong funnel log
   const byName = new Map();
   for (const r of postRows.rows) {
     byName.set(r.group_name, {
-      name: r.group_name, isMockOnly: r.mock_only, realPosts7d: r.real7, mockPosts7d: 0,
+      // ON4: bài thử 7 ngày đo thật (cùng câu với getZaloGroups của app) — không gán 0.
+      name: r.group_name, isMockOnly: r.mock_only, realPosts7d: r.real7, mockPosts7d: r.mock7,
       lastSeenAt: r.last_real ? new Date(r.last_real).toISOString() : null,
       seen: 0, passed: 0, skipped: 0, accepted: 0, lastEventAt: null, ownerAccount: null,
     });
