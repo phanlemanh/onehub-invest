@@ -192,8 +192,8 @@ describe("ON22-AC-7 khối không đo được", () => {
     // ON4: cấu hình OpenClaw không đọc được → chỉ khối s03 lỗi.
     ["s03", { noCfg: true }, ["s03"]],
   ];
-  /** Cấu hình OpenClaw tối thiểu ở HOME tạm để khối s03 đo được (ON4) — ca `noCfg` bỏ nó. */
-  const CFG_HOME = { ".openclaw/openclaw.json": JSON.stringify({ channels: { zalouser: { groups: {} } } }) };
+  /** Cấu hình OpenClaw tối thiểu + nhật ký cổng rỗng ở HOME tạm để khối s03 đo được (ON4) — ca `noCfg` bỏ cả hai. */
+  const CFG_HOME = { ".openclaw/openclaw.json": JSON.stringify({ channels: { zalouser: { groups: {} } } }), ".openclaw/logs/oneinvest-zalo-pipe.log": "" };
   const errored = (payload) => BLOCKS.filter((b) => payload.blocks[b].error !== undefined);
   const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType", s03: "groups" };
   const caseRun = async ([block, how], script) => {

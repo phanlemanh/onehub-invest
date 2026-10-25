@@ -58,8 +58,8 @@ function gateLog(): string {
     `${t(6)} post 202 {"accepted":1,"duplicates":0} group=${C_ID} p=0.93 account=default`,
   ].join("\n") + "\n"
 }
-const HOME_FILES = (cfg: unknown = CFG) => ({
-  ".openclaw/logs/oneinvest-zalo-pipe.log": gateLog(),
+const HOME_FILES = (cfg: unknown = CFG, { log = true } = {}) => ({
+  ...(log ? { ".openclaw/logs/oneinvest-zalo-pipe.log": gateLog() } : {}),
   ...(cfg === null ? {} : { ".openclaw/openclaw.json": typeof cfg === "string" ? cfg : JSON.stringify(cfg) }),
 })
 
@@ -96,11 +96,11 @@ after(async () => {
 const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm không được — eval đòi chạy thật: ${setupErr}`)
 
 // ---- bên ghi thật → handler ingest thật ----
-async function push({ script, cfg }: { script?: string; cfg?: unknown } = {}): Promise<Payload> {
+async function push({ script, cfg, log = true }: { script?: string; cfg?: unknown; log?: boolean } = {}): Promise<Payload> {
   const r = (await captureOpsFacts({
     ...(script ? { script } : {}),
     env: { DATABASE_URL: schemaUrl(S_LOCAL) },
-    home: HOME_FILES(cfg),
+    home: HOME_FILES(cfg, { log }),
   })) as { code: number; stderr: string; payload: Payload }
   assert.equal(r.code, 0, r.stderr.slice(0, 600))
   return r.payload
@@ -382,6 +382,22 @@ describe("ON4-AC-4 chưa có khối s03", () => {
     assert.ok(alertText(h).includes("nhóm S03"))
     assert.ok(!/\b0 nhóm\b/.test(text(h)), "không chữ «0 nhóm»")
     assert.ok(h.includes('id="luong"'), "vùng đọc khối khác vẫn dựng")
+  })
+  test("ON4-AC-4 nhật ký cổng không đọc được ở bên ghi thật → khối s03 lỗi, không bảng số 0", async () => {
+    ready()
+    const p = await push({ log: false })
+    assert.match(String(p.blocks.s03.error), /nhật ký cổng không đọc được/, "bên ghi thật phải báo lỗi khối s03")
+    assert.equal(p.blocks.s03.groups, undefined, "khối lỗi không mang hàng nhóm")
+    await ingest(p)
+    const h = await renderCollections()
+    assert.ok(!h.includes('id="nhom-s03"'), "không bảng nhóm")
+    assert.ok(alertText(h).includes("nhóm S03"), "Alert gom liệt «nhóm S03»")
+  })
+  test("ON4-AC-4 bản sao bên ghi nuốt lỗi đọc nhật ký → bắt (khối báo đo được)", async () => {
+    ready()
+    const script = mutantPush("push-ops-facts.mjs", (s: string) => s.replace("    if (logErr) throw new Error(", "    if (false) throw new Error("))
+    const p = await push({ script, log: false })
+    assert.equal(p.blocks.s03.error, undefined, "bản sao phải báo đo được — phép đo phải bắt")
   })
   test("ON4-AC-4 bản sao đọc khối lỗi như danh sách rỗng → bắt («0 nhóm»)", async () => {
     ready()

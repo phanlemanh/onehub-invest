@@ -53,7 +53,7 @@ evals:
   - id: E7
     criterion: AC-7
     executor: judgment
-    inputs: ["docs/superpowers/specs/2026-10-25-nhom-s03-tren-cloud-design.md", "docs/adr/0014-ops-cloud-doc-so-tong-hop.md", "CONTEXT.md", "AGENTS.md", "app/src/components/ops/collections-tables.tsx", "app/src/components/ops/collections/collections-view.tsx", "app/src/lib/ops-cloud.ts", "pipeline/push-ops-facts.mjs", "pipeline/lib/ops-flow.mjs", "scripts/lib/ops-local.mjs"]
+    inputs: ["docs/superpowers/specs/2026-10-25-nhom-s03-tren-cloud-design.md", "docs/adr/0014-ops-cloud-doc-so-tong-hop.md", "CONTEXT.md", "AGENTS.md", "app/src/components/ops/collections-tables.tsx", "app/src/components/ops/collections/collections-view.tsx", "app/src/lib/ops-cloud.ts", "pipeline/push-ops-facts.mjs", "pipeline/lib/ops-flow.mjs", "scripts/lib/ops-local.mjs", "app/src/components/ops/facts-status.tsx", "app/src/lib/collections-queries.ts", "app/src/app/ops/collections/page.tsx"]
     question: "Đối chiếu bảng trạng thái (ST-s03-*) của đặc tả UX với chữ thật của bảng nhóm S03 ở máy chủ và máy thu, cùng ADR-0014 §Ngưỡng trễ, nhãn trong CONTEXT.md (máy thu, máy chủ, «Vào bảng thô») và AGENTS.md luật 6 (tên nhóm cộng đồng tầng C; mã nhóm và tên tài khoản thu giữ như tầng A): có chỗ nào hiện «0 nhóm» hay «0» khi không có số, bảng máy chủ hay khối s03 bên ghi có mang mã nhóm hoặc tên tài khoản thu, khối cũ có còn badge xanh, có chữ «cloud»/«local» sót trên giao diện không? Lệch hay lộ định danh thì FAIL."
     expected: "chữ khớp bảng trạng thái, ADR-0014, CONTEXT.md; không «0 nhóm» trấn an; máy chủ không thấy mã nhóm hay tên tài khoản thu"
     paths: ["docs/superpowers/specs/2026-10-25-nhom-s03-tren-cloud-design.md", "app/src/components/ops/collections-tables.tsx", "app/src/components/ops/collections/collections-view.tsx", "pipeline/push-ops-facts.mjs"]
@@ -85,7 +85,7 @@ evals:
       - "--mode fresh: chụp evidence/E9-ST-s03-fresh.png (bảng nhóm S03, thấy mô tả «đang bật N nhóm», cột «Vào bảng thô» và chân bảng)"
       - "--mode stale: chụp evidence/E9-ST-s03-stale.png (bảng nhóm, «Hoạt động» viền xám)"
       - "Tối: chụp evidence/E9-dark-ST-s03-fresh.png; 390px: chụp evidence/E9-narrow-ST-s03-fresh.png, kiểm document.documentElement.scrollWidth <= innerWidth"
-      - "Máy thu: chạy dev server của worktree ở cổng :3461 với DATABASE_URL DB local (không VERCEL); chụp evidence/E9-ST-s03-local.png (bảng nhóm S03, mô tả «đang bật N nhóm», cột «Vào bảng thô», chân bảng mã rút gọn)"
+      - "Máy thu: `node scripts/ops-cloud-proto.mjs --mode local` (in HOME=… và DATABASE_URL=… của lược đồ máy thu rỗng, tên nhóm giả); chạy dev server của worktree ở cổng :3461 với đúng hai biến đó, KHÔNG đặt VERCEL; chụp evidence/E9-ST-s03-local.png (bảng nhóm S03, mô tả «đang bật N nhóm», cột «Vào bảng thô», chân bảng mã rút gọn)"
       - "Tắt dev server rồi trả cây về như trước khi chấm: `git checkout -- app/next-env.d.ts` và xoá `app/AGENTS.md` nếu dev server vừa sinh ra — lượt chấm không được để lại thay đổi nào ngoài evidence/"
     expected: "mỗi dòng ST-s03-* (ba trạng thái máy chủ và máy thu) có khung mang đúng tên, khớp mô tả; khung tối và 390px đúng trạng thái; không thanh cuộn ngang"
     paths: [app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/**, app/src/lib/ops-cloud.ts, scripts/ops-cloud-proto.mjs]

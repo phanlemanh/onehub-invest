@@ -173,7 +173,12 @@ async function main() {
   const kho = process.argv.includes("--kho");
   const { token } = kho ? {} : await env();
   if (!kho && !token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
-  const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(() => "");
+  // ON4: giữ lỗi đọc nhật ký cổng — khối s03 báo lỗi thay vì đẩy số 0 (funnel cũ vẫn đọc "" như trước).
+  let logErr = null;
+  const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch((e) => {
+    logErr = e;
+    return "";
+  });
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
@@ -224,6 +229,7 @@ async function main() {
   const s03Block = await measure(async () => {
     const z = zaloCfg?.channels?.zalouser;
     if (!z) throw new Error("cấu hình OpenClaw không đọc được hoặc thiếu channels.zalouser");
+    if (logErr) throw new Error(`nhật ký cổng không đọc được (${logErr.code ?? "lỗi đọc"})`);
     const { union } = readS03Allowlist(z);
     const ids = new Set(union.map((k) => k.replace(/^group:/, "")));
     const isId = (name) => /^\d{15,}$/.test(name) || ids.has(name) || name.startsWith("group:");
