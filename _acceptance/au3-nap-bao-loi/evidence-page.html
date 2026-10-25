@@ -1,0 +1,214 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · au3-nap-bao-loi</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>AU3 phần nạp — tác vụ Chợ Tốt và Facebook báo lỗi rõ khi nạp hỏng, không nhảy qua snapshot lỗi</h1><div class="sub">Trang hồ sơ · <span class="mono">au3-nap-bao-loi</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">AU3 phần nạp — tác vụ Chợ Tốt và Facebook báo lỗi rõ khi nạp hỏng, không nhảy qua snapshot lỗi</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Đêm 22/10, DB local chết, nhưng hai job hằng ngày vẫn thoát 0. chotot-daily.sh gọi import trần, nên lỗi import trôi qua và transform vẫn chạy trên dữ liệu thiếu. apify-facebook-daily.sh dùng || true, và state vẫn nhảy qua snapshot hỏng, nên snapshot đó không bao giờ được nạp lại.</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">4 mục để ngoài phạm vi · 6 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>7</b></span><span data-k="phep_do">Phép đo <b>11</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>1</b></span><span data-k="quyet_dinh_nguoi">người <b>0</b></span><span data-k="ma">Mã <b>5cae57f</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Đêm 22/10, DB local chết, nhưng hai job hằng ngày vẫn thoát 0. chotot-daily.sh gọi import trần, nên lỗi import trôi qua và transform vẫn chạy trên dữ liệu thiếu. apify-facebook-daily.sh dùng || true, và state vẫn nhảy qua snapshot hỏng, nên snapshot đó không bao giờ được nạp lại.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given DB không tới được (cổng không ai nghe), When `chotot-daily.sh` hoặc `apify-facebook-daily.sh` tới bước nạp, Then lỗi thật của bước import được nhận là ECONNREFUSED, được thử 5 lần (chờ 20s giữa các lần), rồi tác vụ exit khác 0 và KHÔNG chạy transform hay các bước sau.</li><li data-ac="AC-2"><b>AC-2</b> — Given `apify-facebook-daily.sh` có nhiều snapshot mới hơn state và một snapshot ở giữa nạp lỗi, When chạy lượt 1 rồi lượt 2 khi DB đã lành, Then:</li><li data-ac="AC-3"><b>AC-3</b> — Given bước import hỏng vì lỗi không phải ECONNREFUSED, When tác vụ chạy, Then import chỉ thử 1 lần, không chờ, tác vụ exit khác 0 và không transform; còn ECONNREFUSED tạm thời (DB lên lại sau vài lần) thì tác vụ đi tiếp và exit 0.</li><li data-ac="AC-4"><b>AC-4</b> — Given DB sống, When tác vụ chạy, Then hành vi như cũ:</li><li data-ac="AC-5"><b>AC-5</b> — Given `apify-facebook-daily.sh` có snapshot mới ở hai thị trường (hanoi mốc muộn nạp được, hcmc mốc sớm hơn nạp lỗi), When chạy lượt 1 rồi lượt 2 khi DB đã lành, Then lượt 2 nạp lại đúng snapshot hcmc lỗi — thứ tự nạp và state theo MỐC THỜI GIAN, không theo đường dẫn. (thêm ở vòng 2 — R1 của vòng 1)</li><li data-ac="AC-6"><b>AC-6</b> — Given thư mục snapshot mang mốc 6 chữ số giây, 9 chữ số (mili-giây) và có hậu tố `-n`, cùng thư mục tên rác (`TEST`, thiếu giờ, đuôi lạ), When chạy `apify-facebook-daily.sh` hoặc `zalo-import-daily.sh`, Then ba khuôn tên thật đều được nạp đúng thứ tự thời gian, tên rác không được nạp, và state tới mốc thật mới nhất. (thêm ở vòng 3 — collector trên main đặt tên có mili-giây)</li><li data-ac="AC-7"><b>AC-7</b> — Given khoá `apify-daily.state.lock` đang do tác vụ khác giữ, When một trong hai script chạy, Then nó không nạp gì, không đổi state, thoát khác 0, không gỡ khoá của tác vụ khác; chạy xong bình thường thì tự gỡ khoá của mình. (thêm ở vòng 3)</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 1</button><button class="btn" data-loc="may" aria-pressed="false">Máy 1</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 0</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261023T161759Z-1"><b>2026-10-23</b> · Máy · descope · S1 — bỏ gap-probe — nghiệm thu gọn theo brief phiên điều phối liên làn (23/10): 4 AC chốt sẵn, toàn eval máy trong sandbox, không hội đồng judge<div class="note">không có phản biện context sạch trước duyệt; bù bằng phiên VERIFY tươi được giao tự đi tìm lỗ</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>feature-loop:cham-lenh</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E1-r2-20261025T043753Z</td><td class="mono">2026-10-25T04:37:55Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E2-r2-20261025T043759Z</td><td class="mono">2026-10-25T04:38:01Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E3-r2-20261025T043808Z</td><td class="mono">2026-10-25T04:38:09Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E4-r2-20261025T043810Z</td><td class="mono">2026-10-25T04:38:11Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E5-r2-20261025T043817Z</td><td class="mono">2026-10-25T04:38:19Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E6-r2-20261025T043824Z</td><td class="mono">2026-10-25T04:38:25Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E7-r2-20261025T043830Z</td><td class="mono">2026-10-25T04:38:32Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E8-r2-20261025T043837Z</td><td class="mono">2026-10-25T04:38:37Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-5</td><td>script</td><td><span class="badge neutral">PASS (LỆNH SỬA SAU LƯỢT ĐẦU, CHẠY LẠI R2B)</span></td><td class="mono">au3-nap-bao-loi-E9-r2b-20261025T044734Z</td><td class="mono">2026-10-25T04:47:35Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E10-r2-20261025T043852Z</td><td class="mono">2026-10-25T04:38:53Z</td></tr>
+<tr><td><a href="#E11">E11</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">au3-nap-bao-loi-E11-r2-20261025T043858Z</td><td class="mono">2026-10-25T04:38:59Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given DB không tới được (cổng không ai nghe), When `chotot-daily.sh` hoặc `apify-facebook-daily.sh` tới bước nạp, Then lỗi thật của bước import được nhận là ECONNREFUSED, được thử 5 lần (chờ 20s giữa các lần), rồi tác vụ exit khác 0 và KHÔNG chạy transform hay các bước sau.</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E1-r2-20261025T043753Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_chotot</b></span><span>verified_at <b>2026-10-25T04:37:55Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">(a) DB chết thật: thoát khác 0 · 10 dòng retry · sleep 10× [sleep 20] · transform false
+ok   (a) exit khác 0
+ok   (a) lỗi thật của import-chotot được nhận là ECONNREFUSED: mỗi thành phố thử 5 lần, chờ 20s giữa các lần
+ok   (a) KHÔNG chạy transform / refresh / resolve
+ok   (a) log báo dừng trước transform
+CHOTOT PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-1: Given DB không tới được (cổng không ai nghe), When `chotot-daily.sh` hoặc `apify-facebook-daily.sh` tới bước nạp, Then lỗi thật của bước import được nhận là ECONNREFUSED, được thử 5 lần (chờ 20s giữa các lần), rồi tác vụ exit khác 0 và KHÔNG chạy transform hay các bước sau.</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E2-r2-20261025T043759Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_apify</b></span><span>verified_at <b>2026-10-25T04:38:01Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">(a) DB chết thật: thoát khác 0 · 5 dòng retry · sleep 5 · state 2026-10-22T120000000 · transform false
+ok   (a) lỗi thật được nhận là ECONNREFUSED: thử 5 lần, chờ 20s, exit khác 0
+ok   (a) state giữ nguyên (chưa nạp được snapshot nào)
+ok   (a) dừng chuỗi ngay ở snapshot đầu, không thử các snapshot sau
+ok   (a) không transform / refresh
+APIFY PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-2: Given `apify-facebook-daily.sh` có nhiều snapshot mới hơn state và một snapshot ở giữa nạp lỗi, When chạy lượt 1 rồi lượt 2 khi DB đã lành, Then:</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E3-r2-20261025T043808Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_apify</b></span><span>verified_at <b>2026-10-25T04:38:09Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">(b) lượt 1, 2026-10-23T070000000 lỗi: thoát khác 0 · state 2026-10-23T010000000 · nạp [import 2026-10-23T010000000 #1, import 2026-10-23T070000000 #1]
+ok   (b) lượt 1: exit khác 0, state giữ ở snapshot thành công cuối
+ok   (b) lượt 1: snapshot sau không nạp, không transform
+ok   should-NOT-fire: snapshot cũ hơn state không nạp lại
+(b) lượt 2, DB lành: thoát 0 · state 2026-10-23T130000000 · nạp [import 2026-10-23T070000000 #2, import 2026-10-23T130000000 #1]
+ok   (b) lượt 2: nạp lại đúng snapshot lỗi rồi snapshot sau, không nạp lại snapshot đã thành công
+ok   (b) lượt 2: state tới snapshot cuối, transform + refresh chạy
+APIFY PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-3: Given bước import hỏng vì lỗi không phải ECONNREFUSED, When tác vụ chạy, Then import chỉ thử 1 lần, không chờ, tác vụ exit khác 0 và không transform; còn ECONNREFUSED tạm thời (DB lên lại sau vài lần) thì tác vụ đi tiếp và exit 0.</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E4-r2-20261025T043810Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_chotot</b></span><span>verified_at <b>2026-10-25T04:38:11Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">(c) lỗi khác DB: thoát khác 0 · thử hanoi 1 lần · sleep 0
+ok   (c) lỗi khác ECONNREFUSED → thử 1 lần, không chờ, exit khác 0
+ok   (c) không transform
+DB lên lại sau 2 lần: thoát 0 · thử hanoi 3 lần · sleep 2
+ok   ECONNREFUSED 2 lần rồi lên → thử 3 lần, chờ 2×20s, đi tiếp transform, exit 0
+CHOTOT PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-3: Given bước import hỏng vì lỗi không phải ECONNREFUSED, When tác vụ chạy, Then import chỉ thử 1 lần, không chờ, tác vụ exit khác 0 và không transform; còn ECONNREFUSED tạm thời (DB lên lại sau vài lần) thì tác vụ đi tiếp và exit 0.</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E5-r2-20261025T043817Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_apify</b></span><span>verified_at <b>2026-10-25T04:38:19Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   (c) lỗi khác ECONNREFUSED → thử 1 lần, không chờ
+ok   ECONNREFUSED 3 lần rồi lên → thử 4 lần, chờ 3×20s, nạp hết, exit 0
+APIFY PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-4: Given DB sống, When tác vụ chạy, Then hành vi như cũ:</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E6-r2-20261025T043824Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_chotot</b></span><span>verified_at <b>2026-10-25T04:38:25Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">(d) DB sống: thoát 0 · nạp [hanoi__chotot-ads__20261023T053000, hcmc__chotot-ads__20261023T053000] · bước [transform-chotot, refresh-bait-gap, resolve-properties]
+ok   (d) DB sống → exit 0, không chờ
+ok   (d) should-NOT-fire: chỉ nạp snapshot MỚI NHẤT mỗi thành phố, bản 22/10 không nạp
+ok   (d) đủ 3 bước transform → refresh → resolve
+ok   (d) transform hỏng → refresh + resolve vẫn chạy, exit 3, dòng JOB FAIL
+CHOTOT PASS</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-4: Given DB sống, When tác vụ chạy, Then hành vi như cũ:</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E7-r2-20261025T043830Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_apify</b></span><span>verified_at <b>2026-10-25T04:38:32Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   (d) DB sống, transform-fb hỏng → refresh vẫn chạy, exit 4, dòng JOB FAIL, state tới cuối
+APIFY PASS</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-4: Given DB sống, When tác vụ chạy, Then hành vi như cũ:</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E8-r2-20261025T043837Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_syntax</b></span><span>verified_at <b>2026-10-25T04:38:37Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">SYNTAX OK</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge neutral">PASS (LỆNH SỬA SAU LƯỢT ĐẦU, CHẠY LẠI R2B)</span> &nbsp;E9 · script</h3><p class="crit">AC-5: Given `apify-facebook-daily.sh` có snapshot mới ở hai thị trường (hanoi mốc muộn nạp được, hcmc mốc sớm hơn nạp lỗi), When chạy lượt 1 rồi lượt 2 khi DB đã lành, Then lượt 2 nạp lại đúng snapshot hcmc lỗi — thứ tự nạp và state theo MỐC THỜI GIAN, không theo đường dẫn. (thêm ở vòng 2 — R1 của vòng 1)</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E9-r2b-20261025T044734Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_r1_probe</b></span><span>verified_at <b>2026-10-25T04:47:35Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">stub sleep thắng PATH: ok
+--- lượt 1: hcmc T07 nạp lỗi
+JSON hỏng (lỗi giả)
+❌ nạp fail tại &lt;tmp&gt;/repo/collector/snapshots/hcmc/hcmc__zalo-agent__2026-10-23T070000000 — giữ state ở 2026-10-22T120000000, dừng chuỗi (lần chạy sau nạp tiếp)
+lượt 1 thoát khác 0 · state 2026-10-22T120000000
+  gọi: apify-facebook-collector
+  gọi: import hcmc/hcmc__zalo-agent__2026-10-23T070000000
+--- lượt 2: DB lành
+lượt 2 thoát 0 · state 2026-10-23T130000000
+  gọi: apify-facebook-collector
+  gọi: import hcmc/hcmc__zalo-agent__2026-10-23T070000000
+  gọi: import hanoi/hanoi__zalo-agent__2026-10-23T130000000
+  gọi: transform-fb
+  gọi: refresh-bait-gap
+R1: hcmc T07 được nạp lại
+R1 OK</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · script</h3><p class="crit">AC-6: Given thư mục snapshot mang mốc 6 chữ số giây, 9 chữ số (mili-giây) và có hậu tố `-n`, cùng thư mục tên rác (`TEST`, thiếu giờ, đuôi lạ), When chạy `apify-facebook-daily.sh` hoặc `zalo-import-daily.sh`, Then ba khuôn tên thật đều được nạp đúng thứ tự thời gian, tên rác không được nạp, và state tới mốc thật mới nhất. (thêm ở vòng 3 — collector trên main đặt tên có mili-giây)</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E10-r2-20261025T043852Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_ts_format</b></span><span>verified_at <b>2026-10-25T04:38:53Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">apify-facebook-daily.sh: thoát 0 · nạp theo thứ tự [2026-10-24T090755, 2026-10-24T090800123, 2026-10-24T090800123-1] · state 2026-10-24T090800123-1
+ok   apify-facebook-daily.sh: nạp đủ ba khuôn tên thật (6 chữ số, 9 chữ số, có -1) đúng thứ tự thời gian
+ok   apify-facebook-daily.sh: should-NOT-fire: tên rác (TEST, thiếu giờ, đuôi lạ) không được nạp
+ok   apify-facebook-daily.sh: state tới mốc thật mới nhất, không nhảy theo tên rác (được 2026-10-24T090800123-1)
+zalo-import-daily.sh: thoát 0 · nạp theo thứ tự [2026-10-24T090755, 2026-10-24T090800123, 2026-10-24T090800123-1] · state 2026-10-24T090800123-1
+ok   zalo-import-daily.sh: nạp đủ ba khuôn tên thật (6 chữ số, 9 chữ số, có -1) đúng thứ tự thời gian
+ok   zalo-import-daily.sh: should-NOT-fire: tên rác (TEST, thiếu giờ, đuôi lạ) không được nạp
+ok   zalo-import-daily.sh: state tới mốc thật mới nhất, không nhảy theo tên rác (được 2026-10-24T090800123-1)
+TS-FORMAT PASS</pre>
+</div>
+<div class="card eval" id="E11"><h3><span class="badge pass">PASS</span> &nbsp;E11 · script</h3><p class="crit">AC-7: Given khoá `apify-daily.state.lock` đang do tác vụ khác giữ, When một trong hai script chạy, Then nó không nạp gì, không đổi state, thoát khác 0, không gỡ khoá của tác vụ khác; chạy xong bình thường thì tự gỡ khoá của mình. (thêm ở vòng 3)</p>
+<div class="kv"><span>run_id <b>au3-nap-bao-loi-E11-r2-20261025T043858Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.au3_lock</b></span><span>verified_at <b>2026-10-25T04:38:59Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">apify-facebook-daily.sh: thoát khác 0 · import 0 · sleep 59
+ok   apify-facebook-daily.sh: khoá đang bị giữ → không nạp gì, thoát khác 0
+ok   apify-facebook-daily.sh: should-NOT-fire: state không đổi khi không lấy được khoá
+ok   apify-facebook-daily.sh: không gỡ khoá của job khác
+ok   apify-facebook-daily.sh: chạy xong tự gỡ khoá của mình (trap)
+zalo-import-daily.sh: thoát khác 0 · import 0 · sleep 59
+ok   zalo-import-daily.sh: khoá đang bị giữ → không nạp gì, thoát khác 0
+ok   zalo-import-daily.sh: should-NOT-fire: state không đổi khi không lấy được khoá
+ok   zalo-import-daily.sh: không gỡ khoá của job khác
+ok   zalo-import-daily.sh: chạy xong tự gỡ khoá của mình (trap)
+LOCK PASS</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals:
+- **E9 (`au3_r1_probe`): lệnh đã sửa trong vòng này, nay phân biệt được.**
+  - Ở lượt đầu, lệnh cũ (`grep -q &#39;được nạp lại&#39;`) xanh trên cả `9e3bb9f` (main) lẫn `983f47e` (code
+    vòng 1), dù cả hai in dòng thất bại «R1: hcmc T07 KHÔNG BAO GIỜ được nạp lại». Lý do: grep khớp chuỗi
+    con của chính dòng đó, và phép thử luôn thoát 0.
+  - Điều phối đã đổi lệnh thành `grep -qx &#39;R1: hcmc T07 được nạp lại&#39;`.
+  - Đo lại bằng lệnh mới: đỏ trên cả hai baseline (không có dòng `R1 OK`, dòng R1 là «KHÔNG BAO GIỜ»),
+    và xanh trên HEAD (lượt r2b).
+- E8 (`au3_syntax`) xanh trên cả hai baseline: đây là guard cú pháp có chủ ý.
+- E11: hai mục «không gỡ khoá của job khác» và «tự gỡ khoá (trap)» xanh trên baseline theo kiểu rỗng, vì
+  bản cũ không có khoá. Hai mục phân biệt được là «không nạp gì, thoát khác 0» và «state không đổi».
+- Các mục (d) của E6/E7 và should-NOT-fire «snapshot cũ hơn state» của E3 là guard hồi quy có chủ ý
+  (AC-4 «như cũ»), như vòng 1.
+Baseline đo bằng `git archive` hai cây ra scratchpad, chép harness và phép thử hiện hành vào, symlink
+`pipeline/node_modules`, chạy xong thì xoá. Repo không bị đụng tới.
+- `9e3bb9f` (gốc so sánh = merge-base với main): chotot 7 mục đỏ, apify 8, ts-format 6, lock 4. Cú pháp xanh.
+  Phép thử R1 in dòng «KHÔNG BAO GIỜ», và lệnh E9 mới đỏ.
+- `983f47e` (code vòng 1): chotot và apify xanh, đúng như vòng 1. ts-format 6 mục đỏ: thư mục `TEST` được
+  nạp và state nhảy tới `TEST`. lock 4 mục đỏ: nạp 5 snapshot dù khoá đang bị giữ. Phép thử R1 in dòng
+  «KHÔNG BAO GIỜ», và lệnh E9 mới đỏ.
+Kiểm thêm, không phải eval:
+- Thứ tự `sort` của đường ống `&quot;$ts $d&quot;` và phép so `[[ &gt; ]]` (bash 3.2) khớp nhau ở cả `C`, `en_US.UTF-8`
+  và `vi_VN.UTF-8`. Mốc 6 chữ số xếp trước mốc 9 chữ số cùng giây, và mốc gốc xếp trước `-1`. Vì vậy
+  launchd (thường là locale C) và một lượt chạy tay từ terminal UTF-8 cho cùng kết quả.
+- SIGTERM giữa lúc nạp: trap gỡ khoá, state giữ nguyên.
+- Phía collector, tên thật của zalo-agent là `YYYY-MM-DDThhmmssmmm` cộng `-n` khi trùng (`storage.ts:29-34`).
+  TS_RE khớp tên này. Chotot đặt tên `YYYY-MM-DDThhmmss` (`collect-chotot.mjs:99`).</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: cả tám lệnh eval đều xanh, nhưng phản biện tìm ra R1: AC-2 vỡ khi snapshot zalo-agent nằm ở hai</li><li>thị trường, vì state nhảy qua snapshot lỗi. REJECT [E3], trả làn ZCode (`tin MỞ LẠI`).</li><li>Round 2: 11/11 eval xanh trên `5cae57f` (ZCode `903fc80` + main). R1 đã sửa (E9). Lệnh E9 sửa trong vòng vì grep</li><li>khớp chuỗi con, rồi chạy lại riêng (r2b): đỏ trên baseline, xanh trên HEAD. TS_RE nhận 6/9 chữ số và `-n`</li><li>(E10), khoá state chung (E11). PASS nhưng không xanh-sạch: «Ngoài hợp đồng» có một ca mất dữ liệu lặng lẽ</li><li>mức high (snapshot đang tải media), chờ Mạnh quyết mở hợp đồng mới hay ghi nhận.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Gọi `collect-chotot.mjs` hay Apify thật (mạng, API trả phí): eval chạy từ bước import trở đi; bước thu là bản giả trong bản chép.</li><li data-loai="ngoai">Phần làn Claude của AU3 (`job-step.sh`, `job-bao-loi-that`): đã nghiệm thu riêng; ở đây chỉ kiểm nó vẫn được gọi như cũ.</li><li data-loai="ngoai">Cảnh báo watchdog khi DB sập (L5b): đã có ở ZC3.</li><li data-loai="ngoai">Chạy tác vụ thật dưới launchd.</li><li data-loai="gioi-han">**Bước thu S05 và trạng thái paused không thuộc hồ sơ này** (lời giao riêng claudedp-2510-4), nên không tính là lỗi vòng này. Hiện trạng: `apify-facebook-daily.sh:17` vẫn gọi `node …/apify-facebook-collector.mjs` mà không kiểm mã thoát. Bước thu này chạy TRƯỚC khoá state, nên Apify vẫn bị gọi (tốn tiền) cả khi khoá đang kẹt hoặc lượt nạp sau đó bỏ cuộc.</li><li data-loai="gioi-han">Retry chỉ bắt chuỗi `ECONNREFUSED`. Các lỗi tạm khác khi DB đang lên lại (`57P03`, `Connection terminated unexpectedly`) fail ngay ở lần đầu. AC-3 chốt đúng điều này. Dữ liệu không mất: apify giữ state, chotot dừng trước transform. `grep -q` khớp chuỗi con ở bất kỳ đâu trong log; điều này còn y như vòng 1.</li><li data-loai="gioi-han">Chotot chỉ nạp snapshot mới nhất mỗi thị trường (AC-4 «như cũ»). Nếu snapshot của một ngày nạp hỏng thì ngày đó vắng khỏi `stg_chotot_ads`, dù raw snapshot vẫn còn.</li><li data-loai="gioi-han">Hậu tố `-n` từ 10 trở lên xếp theo chuỗi (`-10` đứng trước `-2`). `sort` và `[[ &gt; ]]` dùng cùng một thứ tự, nên không snapshot nào bị bỏ, chỉ là thứ tự nạp lệch khỏi thời gian thật. Ca này cần ≥10 lần trùng mili-giây nên gần như không xảy ra.</li><li data-loai="gioi-han">`mktemp` của macOS BỎ QUA `TMPDIR` và ghi vào thư mục tạm của user (`getconf DARWIN_USER_TEMP_DIR`). Vì thế mỗi lượt chạy harness apify để lại tệp `tmp.*` rỗng ở đó. Phiên chấm đã xoá 42 tệp do chính mình sinh ra, và còn những tệp có từ trước phiên này. Nguồn rò nằm trong script, xem «Ngoài hợp đồng».</li><li data-loai="gioi-han">Eval chạy bản chép trong sandbox, chưa có lượt chạy thật dưới launchd. Hợp đồng để điều này ngoài phạm vi.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">5cae57fe8c2352480b7ee25eca5361af12ed9bf0</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
