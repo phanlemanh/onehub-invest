@@ -78,7 +78,7 @@ before(async () => {
 });
 after(() => {
   server?.kill(); // before() ném khi thiếu playwright-cli thì server chưa có — đừng để hook dọn dẹp tự đỏ (AU11)
-  rmSync(dir, { recursive: true, force: true });
+  if (dir) rmSync(dir, { recursive: true, force: true });
 });
 
 let n = 0;
