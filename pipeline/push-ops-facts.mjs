@@ -14,7 +14,7 @@ import { guardValues } from "./lib/tier-a-guard.mjs";
 import { tailLog } from "./lib/last-log-line.mjs";
 import { luong7, parseLog, zaloFlow } from "./lib/ops-flow.mjs";
 import { readFreshness } from "../scripts/lib/freshness.mjs";
-import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue } from "../scripts/lib/ops-local.mjs";
+import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue, readS03Allowlist } from "../scripts/lib/ops-local.mjs";
 
 const ROOT = process.env.ONEINVEST_ROOT ?? "/Users/manhphan/dev/one-invest";
 const INGEST_URL = process.env.INGEST_URL ?? "https://onehub-invest.vercel.app/api/v1/ops/ingest";
@@ -95,14 +95,15 @@ async function rotation(client) {
 async function zaloExtras(client, funnelGroups) {
   const [postRows] = await Promise.all([
     client.query(
-      "SELECT group_name, count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%' AND captured_at >= now() - interval '7 days')::int real7, max(captured_at) FILTER (WHERE snapshot_id LIKE '%zalo-agent%') last_real, bool_and(snapshot_id NOT LIKE '%zalo-agent%') mock_only FROM stg_zalo_posts WHERE group_name IS NOT NULL GROUP BY 1",
+      "SELECT group_name, count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%' AND captured_at >= now() - interval '7 days')::int real7, count(*) FILTER (WHERE snapshot_id NOT LIKE '%zalo-agent%' AND captured_at >= now() - interval '7 days')::int mock7, max(captured_at) FILTER (WHERE snapshot_id LIKE '%zalo-agent%') last_real, bool_and(snapshot_id NOT LIKE '%zalo-agent%') mock_only FROM stg_zalo_posts WHERE group_name IS NOT NULL GROUP BY 1",
     ),
   ]);
   // gộp: nhóm từ DB + nhóm chỉ có trong funnel log
   const byName = new Map();
   for (const r of postRows.rows) {
     byName.set(r.group_name, {
-      name: r.group_name, isMockOnly: r.mock_only, realPosts7d: r.real7, mockPosts7d: 0,
+      // ON4: bài thử 7 ngày đo thật (cùng câu với getZaloGroups của app) — không gán 0.
+      name: r.group_name, isMockOnly: r.mock_only, realPosts7d: r.real7, mockPosts7d: r.mock7,
       lastSeenAt: r.last_real ? new Date(r.last_real).toISOString() : null,
       seen: 0, passed: 0, skipped: 0, accepted: 0, lastEventAt: null, ownerAccount: null,
     });
@@ -161,7 +162,7 @@ async function measure(fn) {
 /** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A. */
 export function factsChan(payload, names) {
   if (!names?.length) return ["FACTS CHẶN [tầng A] không có danh sách tên để soát (source_registry) — không gửi"];
-  const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
+  const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/, /^blocks\.s03\.groups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
   (payload.zaloAccounts ?? []).forEach((a, i) => {
     if (a?.name != null) out.push(`FACTS CHẶN [tầng A] zaloAccounts[${i}].name tên tài khoản thu`);
   });
@@ -173,7 +174,12 @@ async function main() {
   const kho = process.argv.includes("--kho");
   const { token } = kho ? {} : await env();
   if (!kho && !token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
-  const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(() => "");
+  // ON4: giữ lỗi đọc nhật ký cổng — khối s03 báo lỗi thay vì đẩy số 0 (funnel cũ vẫn đọc "" như trước).
+  let logErr = null;
+  const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch((e) => {
+    logErr = e;
+    return "";
+  });
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
   await client.connect();
@@ -204,25 +210,40 @@ async function main() {
     })),
   ]);
 
-  // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud)
+  // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud). ON4 (Hỏi-2 = A): nhóm bật từng tài khoản theo
+  // cùng một định nghĩa với trang Thu thập và khối s03 (`readS03Allowlist`) — kế thừa cấp ngoài, bỏ allow:false.
   let zaloAccounts = [];
+  let zaloCfg = null;
   try {
-    const zcfg = JSON.parse(await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"));
-    const z = zcfg?.channels?.zalouser ?? {};
-    const ids = new Set(["default"]);
-    for (const id of Object.keys(z.accounts ?? {})) ids.add(id);
-    zaloAccounts = [...ids].map((id) => {
+    zaloCfg = JSON.parse(await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"));
+    const z = zaloCfg?.channels?.zalouser ?? {};
+    const { byAccount } = readS03Allowlist(z);
+    zaloAccounts = [...byAccount].map(([id, enabledGroups]) => {
       const acc = id === "default" ? undefined : z.accounts?.[id];
-      // Sau multi-account fix, default groups nằm ở accounts.default.groups
-      // (top-level z.groups là bản cũ 4 nhóm — thiếu Duy Ka Masteri)
-      const groups = id === "default"
-        ? (z.accounts?.default?.groups ?? z.groups ?? {})
-        : (acc?.groups ?? {});
-      const enabled = Object.entries(groups).filter(([, v]) => v?.enabled !== false && v?.allow !== false).length;
       // NT2 Hỏi-1 = A: tên tài khoản thu là tầng A — không rời máy; cloud hiện mã tài khoản.
-      return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
+      return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups };
     });
   } catch { /* config không đọc được */ }
+
+  // ON4 (ADR-0014, Hỏi-1 = A): khối s03 — N nhóm bật theo `readS03Allowlist` và số đếm từng nhóm; CHỈ tên nhóm (tầng C),
+  // không mã nhóm, không tài khoản. Handler thiếu tên kênh thì ghi mã nhóm vào group= → tên ấy thành null.
+  const s03Block = await measure(async () => {
+    const z = zaloCfg?.channels?.zalouser;
+    if (!z) throw new Error("cấu hình OpenClaw không đọc được hoặc thiếu channels.zalouser");
+    if (logErr) throw new Error(`nhật ký cổng không đọc được (${logErr.code ?? "lỗi đọc"})`);
+    const { union } = readS03Allowlist(z);
+    const ids = new Set(union.map((k) => k.replace(/^group:/, "")));
+    const isId = (name) => /^\d{15,}$/.test(name) || ids.has(name) || name.startsWith("group:");
+    return {
+      allowlistEnabled: union.length,
+      groups: zalo.groups.map((g) => ({
+        name: g.name && !isId(g.name) ? g.name : null,
+        seen: g.seen, passed: g.passed, skipped: g.skipped, accepted: g.accepted,
+        realPosts7d: g.realPosts7d, mockPosts7d: g.mockPosts7d, isMockOnly: g.isMockOnly,
+        lastSeenAt: g.lastSeenAt, lastEventAt: g.lastEventAt,
+      })),
+    };
+  });
 
   const payload = {
     pushedAt: new Date().toISOString(),
@@ -238,6 +259,7 @@ async function main() {
       records24h: records24hBlock,
       reviewQueue: reviewQueueBlock,
       luong7: luong7Block,
+      s03: s03Block,
     },
   };
   // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.

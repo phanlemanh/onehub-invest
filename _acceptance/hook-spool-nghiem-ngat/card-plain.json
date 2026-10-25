@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Khi khoá giữa hook Zalo và collector bị sai, tin nhóm không còn bị bỏ vĩnh viễn mà nằm chờ và tự gửi lại khi khoá được sửa; khi collector chậm, mỗi lượt hook dừng xả sau khoảng 10 giây để gateway Zalo không phải chờ theo nhiều phút.",
+  "scope_plain": "Những việc cố ý để ngoài vòng này:"
+}

@@ -1,0 +1,3 @@
+{"feature_plain":"Người trực mở trang Thu thập thấy bảng nhóm S03 ghi đúng số nhóm đang bật và số tin từng nhóm vào bảng thô — máy thu đo thẳng, máy chủ đọc số máy thu đẩy lên; không đọc được thì ghi «—», số cũ thì mờ, không bao giờ «0 nhóm» trấn an.",
+ "decisions":[{"id":"E7","q":"Chữ bảng nhóm S03 có tránh được «0» khi không có số không?","why":"Sau lượt đổi khuôn, cả ba giám khảo cho Đạt: máy thu ghi «chưa đọc được cấu hình», số cũ trên máy chủ mờ, máy chủ không lộ mã nhóm."}],
+ "analyst_plain":"Các phép đo app chạy chung một lệnh nên xanh cả trên bản trước khi sửa — từng hành vi mới được bảo đảm bởi các bản sao đỏ trong chính bộ test, không bởi đối chứng baseline."}

@@ -1,0 +1,79 @@
+schema_version: 1
+feature_slug: hook-spool-nghiem-ngat
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.hsn_auth_held
+    expected: "exit 0; stdout có 'AUTH-HELD PASS'; với mỗi mã 401/403/404: should-NOT-fire 0 tệp rejected/ và không có 'spool-rejected <mã>'; 3 tin cũ còn trong spool sau hai lượt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.hsn_auth_held
+    expected: "exit 0; với mỗi mã: collector trả 202 trở lại → 3 tin cũ tự được gửi lại, spool rỗng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.hsn_auth_held
+    expected: "exit 0; với mỗi mã: đúng 2 dòng 'spool-held <mã>' cho 2 lượt (một dòng mỗi lượt, không phải mỗi tệp)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.hsn_held_then_hang
+    expected: "exit 0; stdout có 'HELD-THEN-HANG PASS'; lượt dừng giữa chừng vì collector treo vẫn ra đúng 1 dòng 'spool-held 401'; lượt < 25 giây; should-NOT-fire 0 tệp rejected/"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.hsn_reject_perm
+    expected: "exit 0; stdout có 'REJECT-PERM PASS'; 400/413/422 sang rejected/, tin lành sau vẫn gửi, log 'spool-rejected <mã>'; should-NOT-fire không có 'spool-held <mã>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.hsn_tam_thoi
+    expected: "exit 0; stdout có 'TAM-THOI PASS'; 409/410 giữ lại + một dòng 'spool-held'; should-NOT-fire 408/429/503 không sang rejected/; collector lành → xả hết"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.hsn_budget
+    expected: "exit 0; stdout có 'BUDGET PASS'; lượt đầu < 20 giây; should-NOT-fire còn tệp chờ lượt sau (không xả hết trong một lượt); cuối cùng mọi tin tới đúng một lần, spool rỗng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.hsn_budget_env
+    expected: "exit 0; stdout có 'BUDGET-ENV PASS'; trần 2 giây xả 1–3 tệp, lượt < 10 giây, còn ≥ 7 tệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.hsn_zc6_regress
+    expected: "exit 0; sáu dòng PASS: SPOOL-REPLAY, REJECT-4XX, HANG-STOP, CAP-50, KEV-HANG, SELF-CONTAINED"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.hsn_l1_syntax
+    expected: "exit 0; 'L1-GREP PASS' (0 dòng khớp API gửi tin, watchdog trỏ đúng handler); node --check sạch, in 'SYNTAX OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    expected: "exit 0; toàn bộ test collector xanh trên dist build lại sạch, gồm hook-spool.test (3 ca)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

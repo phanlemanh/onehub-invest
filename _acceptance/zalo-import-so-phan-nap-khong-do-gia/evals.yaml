@@ -1,0 +1,35 @@
+schema_version: 1
+feature_slug: zalo-import-so-phan-nap-khong-do-gia
+# Ca «ZL-AC-n» ở scripts/zalo-import-job-lan.test.mjs (worktree git tạm từ HEAD, chỉ sửa cây làm việc tạm — không commit,
+# không đụng cây thật); ca ZJ-AC-5 ở scripts/zalo-import-job.test.mjs.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-1': trong cây tạm, xoá scripts/zalo-import-daily.sh ở cây làm việc rồi chạy node --test --test-name-pattern=ZJ-AC-5 → mã 0, 'ℹ pass 1', 'ℹ skipped 0' (ca không đọc cây làm việc); thân ca ZJ-AC-5 không chứa 'merge-base'; ca ZJ-AC-5 tự assert mốc có ở cả e962e78^1 và e962e78, phần cắt chứa 'for try in 1 2 3 4 5'"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-2': worktree tạm từ HEAD, thay 'for try in 1 2 3 4 5; do' bằng 'for try in 1 2 3 4 5; do # sửa của ZCode' trong phần nạp của scripts/zalo-import-daily.sh ở cây tạm (assert tệp đã đổi), chạy node --test scripts/zalo-import-job.test.mjs của cây tạm → mã 0"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-3': cùng cây tạm, chép bản 'git show 12b8942:scripts/zalo-import-job.test.mjs' vào cây tạm rồi chạy → mã khác 0 và đầu ra chứa 'ZJ-AC-5 phần nạp của tệp bọc đã đổi'"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-4' ba dòng: (a) ca ZJ-AC-5 tự chạy đối chứng cặp giả (bản e962e78^1 và bản đó sửa 'for try in 1 2 3 4 5' → 'for try in 1 2 3 4') và thông điệp lệch chứa 'ZJ-AC-5', 'scripts/zalo-import-daily.sh' và rev; (b) bản sao tệp test trỏ rev '0000000' → mã khác 0, đầu ra chứa 'thiếu lịch sử git'; (c) git clone --depth 1 file://<kho> vào thư mục tạm, chép tệp test hiện tại vào, chạy --test-name-pattern=ZJ-AC-5 → mã khác 0, đầu ra chứa 'thiếu lịch sử git'"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; mọi ca ZJ-AC-* xanh, 'ℹ skipped 0'"
