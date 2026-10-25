@@ -490,3 +490,21 @@ máy thu sau khi #77 merge · chủ tài khoản thu quét QR khi mất phiên.
 5. Phiên này chạy `/acceptance-gate:cat-luot` trên chính PR #79 (tài liệu + bản phạm vi + hàng lộ trình cùng một
    PR); trước khi cắt, gửi các hàng làn ZCode (TV2b, TV3b, TV7, TV14 phần hook, TVN2) cho phiên liên làn xem chỗ giáp
    DATA-CONTRACT/`schemaVersion` (ZC7 đang lấy v5, S08 lấy v4). Merge khi CI xanh và Mạnh ký câu giao đã sửa.
+
+### 5.6 Kết quả lượt cắt (25/10)
+
+Đợt `tu-van-hanh-2510` đã vào `docs/plan/lo-trinh.json`: 23 hàng `TV*`, một mục chờ điều kiện (TV17 — sổ tay, mở lại
+khi TV6, TV7, TV13 giao), ba mốc `phat-hanh` TVM1–TVM3 (không ngày: nhịp của kho chưa đủ số để suy). Sửa câu giao
+PL12 (sổ đơn vị thu, bỏ tên nguồn thật khỏi câu giao cũ) và ON20 (màn trên cloud, ghi qua lệnh). Răng phủ: 27/27 mã
+ở đúng một chỗ.
+
+Điều chỉnh theo phiên liên làn (25/10), so với §4:
+- TV16 (S08 ≤ 1 lần/tuần) **gộp thành preset của TV7**, không gộp vào ZC8 (importer).
+- TV3b đứng sau ON2 và nhánh watchdog đang chờ nghiệm thu (lời giao 2410-15) — ZC3 đã merge.
+- TV2b đứng sau AU3 và PL1 (cùng ba tệp daily), nuốt lời giao `claudedp-2510-4` làm bước đầu.
+- TV9 đứng sau ZC4 (ảnh S03 cần collector API chạy thật; ZC4 chờ AU3).
+- TV14: nếu raw ghi `meta.rule_version` thì gộp vào bản tăng `SNAPSHOT_SCHEMA_VERSION` kế tiếp (v5 cùng ZC7 nếu kịp);
+  hằng này chung cho mọi nguồn.
+- `job_runs` theo định nghĩa «lần thu» của ZC7 — chưa chốt cho S03, không khoá trước.
+- Hàng thêm khi cắt (tách kết quả): TV4b (tạm dừng/bật nguồn từ cloud), TV13b (sinh thẻ ghép căn định kỳ), TV13c
+  (đề xuất nhóm mới qua hàng duyệt). Gộp: TVN3 → TV1, TVN5 → TV4, TVN6 → TV7, TVN7 → TV0, TVN1 + TVN4 → TVN1.
