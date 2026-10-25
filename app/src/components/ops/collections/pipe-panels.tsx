@@ -8,7 +8,6 @@ import { Badge } from "@/components/reui/badge"
 import { Frame, FramePanel } from "@/components/reui/frame"
 import type { GateFunnel, RotationPreview, ZaloHealth } from "@/lib/collections-queries"
 import { fmtInt, fmtPct, fmtVnDateTime } from "@/lib/format"
-import { s02MarketName } from "@/lib/market-names"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 import { SectionHeader } from "./section"
@@ -66,27 +65,20 @@ export function ZaloPipePanel({ zalo, funnel, lastPostHours, roles = {} }: { zal
   )
 }
 
+/** Vòng thu S02 (ON6, luật 5 — Hỏi-2): chỉ lịch tác vụ, số lượt thu mỗi đêm và giờ cập nhật. Không số thị trường, không
+ * con trỏ, không tên thị trường — số S02 chỉ ở /ops/quality. */
 export function RotationPanel({ rotation, roles = {} }: { rotation: RotationPreview; roles?: SourceRoles }) {
   return (
     <Frame spacing="default" className="min-w-0">
       <SectionHeader
-        title={`Vòng thu ${sourceLabel("S02", roles)} kế tiếp`}
-        description={`${fmtInt(rotation.total)} thị trường · con trỏ ${fmtInt(rotation.cursor)} · ${rotation.updatedAt ? `cập nhật ${fmtVnDateTime(rotation.updatedAt)}` : "chưa chạy đêm nào"}`}
+        title={`Vòng thu ${sourceLabel("S02", roles)}`}
+        description={rotation.updatedAt ? `Cập nhật ${fmtVnDateTime(rotation.updatedAt)}` : "Chưa chạy đêm nào"}
       />
       <FramePanel className="flex flex-col gap-3">
-        {rotation.next.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {rotation.next.map((m) => (
-              <Badge key={m.id} variant="outline">
-                {s02MarketName(m.id, m.name).name}
-                {m.lastCapturedAt ? null : <span className="text-muted-foreground">· chưa thu</span>}
-              </Badge>
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-sm">Không còn thị trường nào cần thu — mọi thị trường đều tươi trong 24h.</p>
-        )}
-        <p className="text-muted-foreground text-xs">6 thị trường/đêm lúc 19:05, bỏ qua thị trường đã thu trong 24h — một vòng toàn quốc khoảng 6–7 đêm.</p>
+        <p className="text-sm">6 lượt thu mỗi đêm lúc 19:05, bỏ qua thị trường đã thu trong 24 giờ.</p>
+        <p className="text-muted-foreground text-xs">
+          Số liệu S02 ở <Link href="/ops/quality" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">Chất lượng dữ liệu</Link>.
+        </p>
       </FramePanel>
     </Frame>
   )

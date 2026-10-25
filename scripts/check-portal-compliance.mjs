@@ -11,7 +11,7 @@
 //   - mọi route API khớp sổ bề mặt app/src/lib/api-surface.ts (check-api-surface.mjs).
 //   - bản khai công cụ MCP app/docs/api/mcp-tools.json khớp chế độ sổ bề mặt (check-mcp-tools.mjs).
 // Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -180,6 +180,22 @@ const { checkMcpTools, loadManifest } = await import("./check-mcp-tools.mjs");
 const mcp = checkMcpTools({ entries: await loadEntries(), manifest: loadManifest(root) });
 for (const v of mcp.violations) check(false, `công cụ MCP: ${v}`);
 check(mcp.violations.length === 0 && mcp.tools > 0, `công cụ MCP: ${mcp.lines.length}/${mcp.tools} công cụ khớp sổ bề mặt`);
+
+// 14. Trang Thu thập không có số S02 (ON6 collections-khong-so-s02, luật 5): mã render của trang không đọc trường S02
+//     (`airdna*`) — số AirDNA chỉ ở /ops/quality. Chiều đỏ trên bản sao viết trước có `airdnaListings`.
+const S02_FIELD = /airdna/i;
+const s02Leaks = (src) => code(src).split("\n").filter((l) => S02_FIELD.test(l));
+const COLLECTIONS_RENDER = [
+  "src/app/ops/collections/page.tsx",
+  "src/components/ops/collections-tables.tsx",
+  ...readdirSync(app("src/components/ops/collections")).filter((f) => /\.tsx?$/.test(f)).map((f) => `src/components/ops/collections/${f}`),
+];
+const s02Hits = COLLECTIONS_RENDER.filter((f) => s02Leaks(read(f)).length > 0);
+check(s02Hits.length === 0, `trang Thu thập không đọc trường S02 (${COLLECTIONS_RENDER.length} tệp)${s02Hits.length ? `: ${s02Hits.join(", ")}` : ""}`);
+{
+  const sao = read("src/components/ops/collections/sync-activity.tsx").replace('listings: ["airbnbListingsSeen"]', 'listings: ["airbnbListingsSeen", "airdnaListings"]');
+  check(s02Leaks(sao).length > 0, "chiều đỏ luật S02: bản sao sync-activity.tsx có airdnaListings → báo sync-activity.tsx");
+}
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);

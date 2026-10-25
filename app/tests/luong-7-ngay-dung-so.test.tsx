@@ -118,7 +118,8 @@ describe("ON5-AC-2 bài thô S03", () => {
 
 // ---------- AC-7: trang máy thu ----------
 
-const COT_MAY_THU = ["day", "airdnaMarkets", "airdnaListings", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers"]
+// ON6 (collections-khong-so-s02, luật 5) bỏ hai cột S02 khỏi bảng ở máy thu.
+const COT_MAY_THU = ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers"]
 
 async function render(el: unknown): Promise<string> {
   const { renderToStaticMarkup } = await import("react-dom/server")
@@ -126,10 +127,10 @@ async function render(el: unknown): Promise<string> {
 }
 const thIds = (html: string) => [...html.slice(html.indexOf("<thead"), html.indexOf("</thead>")).matchAll(/<th[^>]*data-col-id="([^"]+)"/g)].map((m) => m[1])
 const thieuCot = (ids: string[]) => COT_MAY_THU.filter((c) => !ids.includes(c))
-const MAU = DAYS.map((day) => ({ day, airdnaMarkets: 1, airdnaListings: 2, airbnbListingsSeen: 3, airbnbSnapshots: 4, zaloPosts: 5, zaloOffers: 6 }))
+const MAU = DAYS.map((day) => ({ day, airbnbListingsSeen: 3, airbnbSnapshots: 4, zaloPosts: 5, zaloOffers: 6 }))
 
 describe("ON5-AC-7 trang máy thu", () => {
-  test("ON5-AC-7 máy thu đủ 7 cột như main, mô tả nói giờ VN và ngày đăng bài", async () => {
+  test("ON5-AC-7 máy thu đủ cột như main (trừ hai cột S02 ON6 gỡ), mô tả nói giờ VN và ngày đăng bài", async () => {
     const { FlowTable } = await import("../src/components/ops/collections-tables")
     const html = await render(<FlowTable days={MAU} />)
     assert.deepEqual(thIds(html), COT_MAY_THU)
