@@ -1,0 +1,3 @@
+{"ts":"2026-10-25T12:18:09Z","round":1,"evalId":"E1","run_id":"test-anh-mau-co-manifest-E1-r1-20261025T121809Z","exit_code":0,"cmd":"node --test scripts/*.test.mjs"}
+{"ts":"2026-10-25T12:18:41Z","round":1,"evalId":"E2","run_id":"test-anh-mau-co-manifest-E2-r1-20261025T121841Z","exit_code":0,"cmd":"bash _acceptance/test-anh-mau-co-manifest/probes/khong-noi.sh \"$PWD\""}
+{"ts":"2026-10-25T12:18:41Z","round":1,"evalId":"E3","run_id":"test-anh-mau-co-manifest-E3-r1-20261025T121841Z","exit_code":0,"cmd":"bash _acceptance/test-anh-mau-co-manifest/probes/khong-noi.sh \"$PWD\""}

@@ -14,7 +14,13 @@ export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:54
 AGENT_KEY=$(cat $HOME/.openclaw/credentials/oneinvest-agent.key 2>/dev/null | tr -d '
 ')
 export AGENT_API_KEYS="$AGENT_KEY"
-node "$ROOT/pipeline/apify-facebook-collector.mjs"
+THU_RC=0
+node "$ROOT/pipeline/apify-facebook-collector.mjs" || THU_RC=$?
+# 2510-4: KHÔNG nuốt mã thoát của bước thu — S05 active mà thu hỏng (vd 402)
+# thì vẫn nạp snapshot sẵn có + transform, nhưng trả mã ≠0 ở CUỐI lượt.
+if [ "$THU_RC" != 0 ]; then
+  echo "⚠️ bước thu thoát mã $THU_RC — vẫn nạp snapshot sẵn có + transform; mã giữ lại trả cuối lượt"
+fi
 
 # Posts FB/Zalo flush vào snapshot zalo-agent khi buffer đủ 50 — nạp MỌI
 # snapshot mới hơn lần chạy trước (state-file; idempotent nhờ ON CONFLICT
@@ -45,11 +51,27 @@ import_one() {
 # Khoá quanh đọc-nạp-ghi state (mở lại 2310-8 a): zalo-import-daily.sh chạy
 # 00:00 trên CHUNG state này — hai job đụng state là mất/sót snapshot.
 LOCK_DIR="$STATE.lock"
+# 2510-9: khoá nằm trong pipeline/logs sống qua kill -9/mất điện — ghi PID +
+# giờ lấy khoá; PID chết hoặc khoá >2h thì gỡ lấy lại, đỡ kẹt tới khi gỡ tay.
+go_khoa_cu() {
+  local pid="" luc=""
+  [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
+  [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
+  if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+    echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; rm -rf "$LOCK_DIR"; return 0
+  fi
+  if [ -n "$luc" ] && [ $(( $(date +%s) - luc )) -gt 7200 ]; then
+    echo "gỡ khoá cũ hơn 2h (PID ${pid:-?}, lấy lúc $luc)"; rm -rf "$LOCK_DIR"; return 0
+  fi
+  return 1
+}
 i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+  go_khoa_cu && continue
   i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }
   sleep 5
 done
-trap 'rmdir "$LOCK_DIR" 2>/dev/null; [ -n "${TMPLOG:-}" ] && rm -f "$TMPLOG"' EXIT
+echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
+trap 'rm -rf "$LOCK_DIR" 2>/dev/null; [ -n "${TMPLOG:-}" ] && rm -f "$TMPLOG"' EXIT
 # đọc state SAU khi có khoá — hai job 00:00 không đọc-ghi chéo nhau
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
 MAXTS="$LAST"
@@ -63,6 +85,7 @@ NAP_FAILED=0
 # GIỐNG HỆT zalo-import-daily.sh — hai bản phải không lệch nhau (BÁO 2510-5).
 TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$'
 for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do
+    b=${d##*/}; [ "${b#.}" != "$b" ] && continue # 2510-8: dir '.<id>.partial' đang ghi — bỏ
     ts=$(basename "$d" | sed 's/.*__//')
     if ! echo "$ts" | grep -qE "$TS_RE"; then
       echo "bỏ qua thư mục TS không phải mốc thời gian: $d" >&2; continue
@@ -71,6 +94,18 @@ for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null 
   done | sort | while read -r _ d; do echo "$d"; done); do
   TS=$(basename "$SNAP" | sed 's/.*__//')  # yyyymmddThhmmss — sort chuỗi = thời gian
   if [[ "$TS" > "$LAST" ]]; then
+    # 2510-8: thiếu manifest = snapshot CHƯA xong (bản mới ghi '.partial' rồi
+    # rename; bản cũ crash giữa chừng) — KHÔNG được coi là đã nạp.
+    if [ ! -f "$SNAP/manifest.json" ]; then
+      if [ -n "$(find "$SNAP" -maxdepth 0 -mmin -30 2>/dev/null)" ]; then
+        echo "⏸ snapshot chưa xong (thiếu manifest, <30′): $SNAP — giữ state, dừng chuỗi, lượt sau thử lại"
+        NAP_FAILED=1
+        break
+      fi
+      echo "⚠️ snapshot mồ côi (thiếu manifest, ≥30′) — bỏ qua, đi tiếp: $SNAP"
+      [[ "$TS" > "$MAXTS" ]] && MAXTS="$TS"
+      continue
+    fi
     if ! import_one "$SNAP"; then
       echo "❌ nạp fail tại $SNAP — giữ state ở $MAXTS, dừng chuỗi (lần chạy sau nạp tiếp)"
       NAP_FAILED=1
@@ -89,4 +124,7 @@ fi
 . "$ROOT/scripts/lib/job-step.sh"
 job_run apify-facebook-daily transform-fb node "$ROOT/pipeline/transform-fb.mjs"
 job_run apify-facebook-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+# 2510-4: bước thu hỏng (đã log ở đầu) — nạp + transform vẫn chạy xong ở trên,
+# giờ trả mã thu giữ lại để launchd thấy lượt có lỗi thu.
+if [ "$THU_RC" != 0 ]; then exit "$THU_RC"; fi
 exit "$JOB_RC"

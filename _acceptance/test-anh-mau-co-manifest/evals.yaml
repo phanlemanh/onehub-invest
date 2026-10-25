@@ -1,0 +1,21 @@
+schema_version: 1
+feature_slug: test-anh-mau-co-manifest
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; 'ℹ fail 0' và 'ℹ skipped 0' (178 ca)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.tam_khong_noi
+    expected: "exit 0; 'KHONG-NOI OK'; should-NOT-fire: 0 dòng assert bị xoá/sửa, không dòng thêm nào ngoài ghi manifest"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.tam_khong_noi
+    expected: "exit 0; mọi tệp đổi đều 'ok'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

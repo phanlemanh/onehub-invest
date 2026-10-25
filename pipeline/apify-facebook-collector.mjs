@@ -14,12 +14,34 @@
 //
 // Danh sách nhóm ĐỌC TỪ DB (source_groups, quản trị qua /ops/sources admin)
 // — thêm/xoá nhóm không cần sửa code. Fallback danh sách cũ nếu DB không lên.
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 const FALLBACK_GROUPS = [
   "https://www.facebook.com/groups/1642453779410701", // Bình Thạch TPHCM
   "https://www.facebook.com/groups/151411010405738",  // CHCC Hà Nội
   "https://www.facebook.com/groups/285736614961804",  // BĐS Hà Nội
   "https://www.facebook.com/groups/1573989412657228",
 ];
+
+// 2510-4 (claudedp): đọc status S05 từ source_registry THEO MÃ (code='S05',
+// không literal tên nguồn) — khác 'active' thì bỏ qua thu, KHÔNG gọi mạng,
+// exit 0: đang pause mà vẫn gọi Apify chỉ nhận 402 và đốt lượt.
+export const s05Skip = (status) => status !== "active";
+export async function s05Status() {
+  const pg = (await import("pg")).default;
+  const c = new pg.Client({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+  });
+  try {
+    await c.connect();
+    const { rows } = await c.query(`SELECT status FROM source_registry WHERE code = 'S05'`);
+    return rows[0]?.status ?? null;
+  } finally {
+    await c.end().catch(() => {});
+  }
+}
 
 async function loadGroups() {
   try {
@@ -55,13 +77,32 @@ async function creds() {
 }
 
 // ─── 1. Khởi động actor run ───
-async function startRun(token, groups) {
-  const input = {
+// 2510-14 v2 (MỞ LẠI): trần + cửa sổ bài mới đều qua env, NaN-safe, tách hàm
+// thuần để test không gọi Apify.
+// - resultsLimit là trần của actor trên CẢ LƯỢT (tổng mọi startUrls) theo
+//   khuôn Apify — với 2 nhóm bật tức tối đa ~50 tin/nhóm mỗi lượt.
+// - onlyPostsNewerThan mặc định '4 days': phủ khoảng cách lượt dài nhất của
+//   lịch Thứ Ba→Thứ Sáu→Thứ Ba (3–4 ngày) + đệm — '12 hours' cũ chỉ hợp với
+//   lịch 4 lượt/ngày, lịch mới sẽ bỏ ~85–90% bài giữa hai lượt.
+export const S05_NEWER_THAN_MAC_DINH = "4 days";
+export function s05ResultsLimit() {
+  const n = Number(process.env.S05_RESULTS_LIMIT);
+  return Number.isFinite(n) && n > 0 ? n : 100;
+}
+export function s05NewerThan() {
+  return process.env.S05_NEWER_THAN ?? S05_NEWER_THAN_MAC_DINH;
+}
+export function buildRunInput(groups) {
+  return {
     startUrls: groups.map((url) => ({ url })),
-    resultsLimit: 100, // 100 posts/run — đủ cho 4h/lần
+    resultsLimit: s05ResultsLimit(),
     viewOption: "CHRONOLOGICAL", // newest first
-    onlyPostsNewerThan: "12 hours",
+    onlyPostsNewerThan: s05NewerThan(),
   };
+}
+
+async function startRun(token, groups) {
+  const input = buildRunInput(groups);
 
   const res = await fetch(
     `${APIFY_API}/acts/apify~facebook-groups-scraper/runs?token=${token}`,
@@ -202,6 +243,18 @@ async function pushToCollector(posts) {
 
 // ─── Main ───
 async function main() {
+  // 2510-4: pause theo source_registry — kiểm TRƯỚC khi đọc creds/gọi Apify.
+  // DB không lên thì coi như active (fail-open) — thu vẫn chạy như trước.
+  let status = "active";
+  try {
+    status = await s05Status();
+  } catch (e) {
+    console.warn(`⚠ source_registry DB fail (${e.message}) — coi như active, thu bình thường`);
+  }
+  if (s05Skip(status)) {
+    console.log(`S05 paused — bỏ qua thu (status='${status}')`);
+    return;
+  }
   const { token } = await creds();
   const GROUPS = await loadGroups();
   console.log(`nhóm thu (source_groups): ${GROUPS.length}`);
@@ -241,7 +294,11 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error("❌", e.message);
-  process.exit(1);
-});
+// Chỉ chạy main() khi được gọi trực tiếp (khuôn import-airbnb/import-chotot)
+// — test import s05Status/s05Skip từ file này không làm collector chạy theo.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => {
+    console.error("❌", e.message);
+    process.exit(1);
+  });
+}
