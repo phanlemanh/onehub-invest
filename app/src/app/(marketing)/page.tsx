@@ -93,7 +93,7 @@ export default async function HomePage() {
             title: "Muốn biết chi tiết công thức?",
             text: "Mọi chỉ số, mô hình lợi suất và giới hạn dữ liệu đều ở trang Phương pháp.",
             actions: (
-              <Button size="sm" nativeButton={false} render={<Link href="/phuong-phap" />}>
+              <Button size="sm" nativeButton={false} render={<Link href="/methodology" />}>
                 Đọc phương pháp
               </Button>
             ),

@@ -15,7 +15,7 @@ ReUI block → shadcn/ui → custom (LAST RESORT); danh mục ở `onehub-ui/cat
 ```
 app/src/
 ├── app/
-│   ├── (marketing)/      # Invest Portal — trang chủ, /phuong-phap (navbar-12 + footer)
+│   ├── (marketing)/      # Invest Portal — trang chủ, /methodology (navbar-12 + footer)
 │   ├── (auth)/           # /login, /register — toàn màn hình (auth-4, auth-5)
 │   ├── (app)/            # Invest Portal — /vn, /[country]/[market]/…, /listing, /saved, /login
 │   ├── ops/              # Ops Portal — bắt buộc đăng nhập (proxy.ts + ops/layout.tsx)
@@ -61,7 +61,7 @@ cổng (`docs/architecture/portals.md`) và thêm mục vào `components/shell/n
 
 ## Routes
 - `/` — Trang chủ (marketing: navbar-12, hero-8, card-29, how-it-works-1, faq-6)
-- `/phuong-phap` — Phương pháp & thuật ngữ
+- `/methodology` — Phương pháp & thuật ngữ (`/phuong-phap` → 301; định nghĩa mở sẵn theo faq-3)
 - `/login`, `/register` — nhóm `(auth)`, không shell; `?next=` đi qua `safeNext`
 - `/saved` — Đã lưu; `/compare?areas=a,b` — So sánh tối đa 4 khu vực (`/so-sanh` → 301)
 - `/vn` — Finder (`/[country]`: bảng xếp hạng + bản đồ; `?level&market&metric&view`)

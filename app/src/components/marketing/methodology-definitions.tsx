@@ -1,17 +1,13 @@
-import type { Metadata } from "next";
-
-import { FaqSection, type FaqItem } from "@/components/marketing/faq-section";
 import { Badge } from "@/components/reui/badge";
 import { COST_DEFAULTS, LT_TAX_PCT } from "@/lib/yield";
+import type { Definition } from "./definition-grid";
 
-export const metadata: Metadata = {
-  title: "Phương pháp & thuật ngữ",
-  description: "Cách One Invest thu thập dữ liệu Airbnb và tính công suất, ADR, RevPAR, lợi suất.",
-};
+// Nội dung trang Phương pháp (/methodology) — tách khỏi page.tsx để test đọc đúng mảng trang hiển thị
+// (page.tsx chỉ được export metadata + default).
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
-const METRICS: FaqItem[] = [
+export const METRICS: Definition[] = [
   {
     id: "lich-tuong-lai",
     question: "Số liệu tính trên khoảng thời gian nào?",
@@ -53,7 +49,7 @@ const METRICS: FaqItem[] = [
   },
 ];
 
-const YIELD: FaqItem[] = [
+export const YIELD: Definition[] = [
   {
     id: "doanh-thu-mot-can",
     question: "Doanh thu ngắn hạn của một căn được ước tính thế nào?",
@@ -78,7 +74,7 @@ const YIELD: FaqItem[] = [
   },
 ];
 
-const SOURCES: FaqItem[] = [
+export const SOURCES: Definition[] = [
   {
     id: "airbnb",
     question: "Airbnb (tự thu thập)",
@@ -108,37 +104,3 @@ const SOURCES: FaqItem[] = [
       "Chỉ nội bộ, để đối chiếu và hiệu chuẩn phương pháp. Số liệu AirDNA không hiển thị trên các trang dành cho nhà đầu tư.",
   },
 ];
-
-/** Phương pháp & thuật ngữ (IA L8, L11) — mọi ⓘ định nghĩa trong portal trỏ về đây. */
-export default function MethodologyPage() {
-  return (
-    <div className="flex flex-col gap-14 px-4 py-12 sm:px-6 sm:py-16">
-      <header className="mx-auto flex w-full max-w-3xl flex-col gap-3">
-        <Badge variant="outline" size="xl" radius="full" className="text-foreground h-7 w-fit">
-          Phương pháp
-        </Badge>
-        <h1 className="text-foreground text-4xl font-semibold tracking-tight text-balance">
-          Số liệu đến từ đâu, và được tính thế nào
-        </h1>
-        <p className="text-muted-foreground text-base leading-7 text-pretty">
-          Định nghĩa từng chỉ số, mô hình ước tính lợi suất và các nguồn dữ liệu — kể cả những giới hạn hiện tại.
-        </p>
-        <nav aria-label="Mục lục" className="flex flex-wrap gap-2 pt-2">
-          {[
-            ["chi-so", "Chỉ số"],
-            ["loi-suat", "Lợi suất"],
-            ["nguon", "Nguồn dữ liệu"],
-          ].map(([id, label]) => (
-            <Badge key={id} variant="outline" render={<a href={`#${id}`} />} className="hover:bg-accent transition-colors">
-              {label}
-            </Badge>
-          ))}
-        </nav>
-      </header>
-
-      <FaqSection id="chi-so" title="Chỉ số" items={METRICS} defaultOpen="lich-tuong-lai" />
-      <FaqSection id="loi-suat" title="Mô hình lợi suất" items={YIELD} />
-      <FaqSection id="nguon" title="Nguồn dữ liệu" items={SOURCES} />
-    </div>
-  );
-}

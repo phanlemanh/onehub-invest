@@ -326,6 +326,18 @@ _Avoid_: Allowlist, membership
 - Code: `post (stg_zalo_posts)` · RESO: —
 _Avoid_: post raw, post mock, bài post
 
+**Listing tự thu**: Số listing đang theo dõi trong cả khu vực (gồm phường con) — một định nghĩa dùng chung cho thẻ hiệu chuẩn, bảng Độ phủ trung thực và bảng thị trường S02 toàn quốc trên `/ops/quality` (ON10, Mạnh chốt 25/10).
+- Code: `ourListings (loadOurListings)` · RESO: —
+_Avoid_: tự thu (trơn, không nói đếm gì), listing tháng cuối, max listing_count
+
+**Mẫu mỏng**: Thẻ hiệu chuẩn có ADR/công suất tự thu tính từ dưới 5 listing (cỡ mẫu của market_metrics) — số vẫn hiện, kèm nhãn «mẫu mỏng».
+- Code: `isThin (sampleListings, MAU_MONG_DUOI)` · RESO: —
+_Avoid_: ít dữ liệu, thin sample
+
+**Thị trường hiệu chuẩn**: Thị trường có ít nhất một số để đối chiếu với S02 (điểm S02, ADR, công suất hoặc listing) — mỗi thị trường một thẻ; thị trường không có số nào gộp vào một dòng «Chưa có số: …». Khu vực gộp nhiều market S02 dùng market đại diện (nhiều listing nhất), thẻ ghi «đại diện cho k thị trường S02».
+- Code: `splitCalibrated (calibrated, empty)` · RESO: —
+_Avoid_: khu vực hiệu chuẩn, market hiệu chuẩn
+
 ## Cổng & tính năng
 
 **Cổng Invest**: Cổng công khai, chỉ đọc, cho nhà đầu tư (`docs/architecture/portals.md`).
