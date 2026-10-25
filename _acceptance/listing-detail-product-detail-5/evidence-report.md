@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 575e3bf7947f87487370756883a9dbbd70c1c7fc
+verified_commit: 804b165a4b5f583ee92864633604a8da4d9c4487
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -300,3 +300,7 @@ none — every multi-run eval is uniform
 
 Round 1: không eval máy nào đỏ, nhưng ba finding TRONG hợp đồng chưa được chứng: bậc Công suất của AC-8 lấy kỳ vọng từ chính đầu ra (E14), nhãn đêm của AC-5 chỉ ghim một trong ba trạng thái và «nhận focus bằng Tab» chỉ là một thuộc tính vắng mặt. Returned to implementation.
 Round 2: commit 575e3bf7 siết phép đo AC-5/AC-8 (bậc công suất, nhãn 10 đêm, focus và Tab thật); E1-E7, E9-E14, E16, E21 và năm lệnh suite chạy lại và xanh; E8, E15, E18, E19, E20 mang sang từ round 1. verified_at của round 2 lấy từ mốc generated_at của s4-args-r2.json.
+
+### Re-pin lần 1 — 2026-10-25, do hoá cũ do gộp main f0de162 sau chữ ký
+run_id: repin-20261025T233341Z-68212
+sha: 804b165a4b5f583ee92864633604a8da4d9c4487 · suites: 6 lệnh exit 0 · evals: 19/19 eval máy đạt kỳ vọng · ngoài làn máy: E17, E19
