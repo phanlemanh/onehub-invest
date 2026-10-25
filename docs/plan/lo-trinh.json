@@ -25,6 +25,52 @@
       "hang": [
         "ON20"
       ]
+    },
+    {
+      "ma": "TVM1",
+      "ten": "Đội vận hành tạm dừng/bật nguồn và quản nhóm S05/S06 từ cloud, có nhật ký người thật",
+      "loai": "phat-hanh",
+      "dot": "tu-van-hanh-2510",
+      "hang": [
+        "TV0",
+        "TV1",
+        "TV2a",
+        "TV2b",
+        "TV4",
+        "TV4b",
+        "TV5",
+        "PL12",
+        "ON19"
+      ]
+    },
+    {
+      "ma": "TVM2",
+      "ten": "Đội vận hành xem tin bằng mắt và độ phủ 34 thị trường trên cloud",
+      "loai": "phat-hanh",
+      "dot": "tu-van-hanh-2510",
+      "hang": [
+        "TV9",
+        "TV10",
+        "TV11",
+        "TV12"
+      ]
+    },
+    {
+      "ma": "TVM3",
+      "ten": "Đội vận hành quản nhóm S03, lịch, SLO, quy định cho AI và duyệt từ xa",
+      "loai": "phat-hanh",
+      "dot": "tu-van-hanh-2510",
+      "hang": [
+        "TV3a",
+        "TV3b",
+        "TV6",
+        "TV7",
+        "TV8",
+        "TV13",
+        "TV14",
+        "ON20",
+        "ON21"
+      ]
     }
   ],
   "hang": [
@@ -211,7 +257,7 @@
     },
     {
       "ma": "PL12",
-      "cau_giao": "Người vận hành khai mọi nhóm Zalo, FB, Chợ Tốt trong một sổ nhóm trên /ops, kèm dự án nhóm chuyên",
+      "cau_giao": "Người vận hành khai mọi đơn vị thu (nhóm S03, nhóm S05, vùng S06, market S02) trong một sổ trên /ops, mỗi đơn vị có mã ổn định dạng S03-N012, thị trường, dự án nhóm chuyên và trạng thái vòng đời",
       "vai": "Người vận hành",
       "tieu_chi": 9,
       "vi_sao": "F1: nhóm Zalo đang ở sổ riêng (zalo.group.toggle), nhóm khác ở source_groups.",
@@ -221,7 +267,11 @@
       "dot": "phan-loai-2310",
       "phu": [
         "SN"
-      ]
+      ],
+      "dung_tren": [
+        "TV2a"
+      ],
+      "ghi_chu": "Sửa 25/10 (phiên Điều phối, docs/research/ops-tu-van-hanh-nguon-saas.md §5.1 X1): mở rộng thành sổ đơn vị thu của đợt tu-van-hanh-2510 — thêm market S02, market_codes, mã đơn vị ổn định (§4.8 #7), vòng đời của TV2a; câu giao cũ nêu tên nguồn thật, nay dùng mã. Hàng TV5, TV11 đứng trên."
     },
     {
       "ma": "PL13",
@@ -1738,14 +1788,15 @@
     },
     {
       "ma": "ON20",
-      "cau_giao": "Người vận hành mở sổ nhóm trên /ops, đặt hoặc sửa tiêu đề chuẩn hoá của một nhóm — bấm «Gợi ý» để máy dựng tiêu đề theo quy ước vận hành từ các trường đã khai — viết mô tả đặc trưng, và thấy tên gốc cạnh tiêu đề",
+      "cau_giao": "Người vận hành mở sổ nhóm trên /ops ở cloud, đặt hoặc sửa tiêu đề chuẩn hoá của một nhóm — bấm «Gợi ý» để máy dựng tiêu đề theo quy ước vận hành từ các trường đã khai — viết mô tả đặc trưng, thấy tên gốc cạnh tiêu đề, và thay đổi được máy thu áp qua lệnh",
       "vai": "Người vận hành",
       "tieu_chi": 9,
       "vi_sao": "QD1a + QD1b (Mạnh 24/10): cho điều chỉnh tiêu đề nhóm, giúp tạo tiêu đề chuẩn hoá theo quy ước vận hành, mô tả đặc trưng của nhóm.",
       "hang": "T2",
       "slug": "so-nhom-sua-tieu-de",
       "dung_tren": [
-        "ON19"
+        "ON19",
+        "TV4"
       ],
       "bat_khi": "Gợi ý cho cùng các trường ra cùng một tiêu đề (luật xác định, không LLM); lưu xong tải lại vẫn thấy; trống/lỗi/tải có trạng thái riêng",
       "nhom": "so-nhom",
@@ -1754,7 +1805,7 @@
         "QD1a",
         "QD1b"
       ],
-      "ghi_chu": "Quy ước tiêu đề chưa có văn bản: đề xuất ở Cổng Phạm vi (khu vực · dự án · loại · giao dịch…), Mạnh duyệt, ghi vào CONTEXT.md hoặc docs/ops. Gợi ý theo luật, người bấm lưu (luật 7). UI theo ReUI + onehub-ui."
+      "ghi_chu": "Quy ước tiêu đề chưa có văn bản: đề xuất ở Cổng Phạm vi (khu vực · dự án · loại · giao dịch…), Mạnh duyệt, ghi vào CONTEXT.md hoặc docs/ops. Gợi ý theo luật, người bấm lưu (luật 7). UI theo ReUI + onehub-ui. Sửa 25/10 (phiên Điều phối, docs/research/ops-tu-van-hanh-nguon-saas.md §5.1 X2): Mạnh chốt đội vận hành làm từ xa — màn chuyển lên cloud, ghi qua lệnh unit.update_meta (TV4) thay vì trang chỉ chạy ở máy thu."
     },
     {
       "ma": "ON21",
@@ -1774,6 +1825,442 @@
         "QD1c"
       ],
       "ghi_chu": "Còn chờ RV-M2 (review §0.4): gửi tiêu đề/mô tả cho model cloud hay chỉ luật local — hỏi ở Cổng Phạm vi. Chung agent/src/agents/context-resolver.ts với PL18 (E1/E2 theo lớp) — chạy liền. Dưới mục tiêu cỡ: một đường đọc của agent; không gộp với ON20 (màn sửa của người, khác kết quả)."
+    },
+    {
+      "ma": "TV0",
+      "cau_giao": "ADR-0015 «đường lệnh kéo một chiều cloud → máy thu» và bản sửa đổi ADR-0007 (nội dung bài, ảnh tin, thẻ duyệt lên cloud cho vai ops; tên nguồn thật chỉ ở máy thu) được duyệt, kèm thuật ngữ mới và ROADMAP §2.3–2.4 khớp thực tế",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Mạnh chốt 25/10 «làm từ xa qua cloud» và «nội dung/ảnh/thẻ duyệt lên cloud» (docs/research/ops-tu-van-hanh-nguon-saas.md §3.1, §3.7) — trái ADR-0014 (cloud không điều khiển máy thu) và luật 6 hiện hành; phải thành luật trước khi hàng nào code.",
+      "hang": "T1",
+      "slug": "adr-duong-lenh-keo",
+      "bat_khi": "ADR-0015 trạng thái accepted; CONTEXT.md có Đơn vị thu, Lệnh, Quy định ngữ cảnh, Mục tiêu phủ (nhãn · code · slug); ROADMAP §2.3–2.4 khớp launchctl và airdna_markets",
+      "nhom": "tv-luat",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV0",
+        "TVN7"
+      ]
+    },
+    {
+      "ma": "TV1",
+      "cau_giao": "Mọi route ghi /api/v1/ops/** kiểm vai theo một bảng bốn vai (viewer, ops, admin, owner) ở một chỗ, và mỗi thao tác ghi đúng một dòng ops_audit mang id người thật trong cùng transaction",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "Audit 25/10 (docs/research/ops-tu-van-hanh-nguon-saas.md §2.4 G3): API quản trị (zalo/**, source-groups) chỉ cần vai ops hoặc một bearer chung — trái portals.md; ops_audit.actor là hằng «ops-user»/«api:zalo-admin»; audit ghi ngoài transaction.",
+      "hang": "T3",
+      "slug": "quyen-bon-vai-mot-cho",
+      "dung_tren": [
+        "NT4",
+        "TV0"
+      ],
+      "bat_khi": "Route quản trị gọi bằng vai ops hoặc bearer chung: 403; thao tác thành công: đúng một dòng audit có user id và trước/sau; transaction hỏng: 0 dòng audit; GET source-groups kiểm bearer trên request thật",
+      "nhom": "tv-luat",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV1",
+        "TVN3"
+      ],
+      "ghi_chu": "Sau NT4 (cùng ranh giới app/src/app/api/**). users.role thêm CHECK — migration xin số qua SO-MIGRATION."
+    },
+    {
+      "ma": "TV2a",
+      "cau_giao": "source_registry và sổ nhóm có vòng đời năm trạng thái kiểm bằng CHECK kèm lý do và điều kiện bật lại, và một hàm isRunnable trả quyết định chạy cho từng nguồn và đơn vị thu",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "vi_sao": "G1 (docs/research/ops-tu-van-hanh-nguon-saas.md §2.4): status không CHECK, «paused» chỉ tắt đo độ tươi — không script thu nào tuân.",
+      "hang": "T2",
+      "slug": "vong-doi-nguon",
+      "dung_tren": [
+        "TV0"
+      ],
+      "bat_khi": "Trạng thái ngoài draft/active/paused/retired/completed: DB từ chối; isRunnable đúng trên đủ ma trận trạng thái nguồn × đơn vị; paused thiếu reason: từ chối",
+      "nhom": "tv-cong-tac",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV2a"
+      ]
+    },
+    {
+      "ma": "TV2b",
+      "cau_giao": "Script thu S01, S02, S05, S06 không gọi nhà cung cấp nào khi isRunnable từ chối, không còn danh sách nhóm hay vùng viết cứng, và S06 nạp đủ mọi vùng đang bật",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "G1: S05 paused vẫn bắn 4 lần/ngày khi hết credit; tắt hết nhóm thì apify-facebook-collector.mjs và collect-chotot.mjs rơi về danh sách cứng; chotot-daily.sh cứng «for CITY in hanoi hcmc».",
+      "hang": "T3",
+      "slug": "cong-tac-that",
+      "dung_tren": [
+        "TV2a",
+        "AU3",
+        "PL1"
+      ],
+      "bat_khi": "S05 paused: 0 lời gọi nhà cung cấp trong một ngày; tắt hết nhóm S05: 0 lượt thu (không rơi về fallback); thêm một vùng S06: lượt kế tiếp thu và nạp vùng đó",
+      "nhom": "tv-cong-tac",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV2b"
+      ],
+      "ghi_chu": "Làn ZCode (collect-*, apify-*, *-daily.sh) — giao qua phiên liên làn. Sau AU3 (zcode/au3-nap-bao-loi) và PL1 (zcode/importer-bo-qua-du-lieu-thu) vì cùng ba tệp daily. Nuốt lời giao claudedp-2510-4 (collector S05 bỏ qua khi paused, giữ mã thoát bước thu) làm bước đầu — liên làn 25/10."
+    },
+    {
+      "ma": "TVN2",
+      "cau_giao": "Nạp S03 và S05 dùng hai tệp con trỏ riêng và nạp S05 hỏng thì con trỏ không nhảy qua snapshot hỏng",
+      "vai": "nen",
+      "tieu_chi": 5,
+      "vi_sao": "Audit 25/10 §2.6 #2: apify-facebook-daily.sh và zalo-import-daily.sh cùng ghi pipeline/logs/apify-daily.state lúc 00:00; bên S05 còn «|| true» — snapshot S03 có thể bị bỏ qua vĩnh viễn.",
+      "hang": "T2",
+      "slug": "con-tro-nap-rieng",
+      "dung_tren": [
+        "AU3"
+      ],
+      "bat_khi": "Hai job chạy cùng 00:00 không ghi chung tệp; một snapshot S05 hỏng: con trỏ đứng yên, mã thoát ≠ 0",
+      "nhom": "tv-cong-tac",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TVN2"
+      ],
+      "ghi_chu": "Làn ZCode. Tách tệp con trỏ trên nền khoá mkdir quanh apify-daily.state mà AU3 đã thêm (liên làn 25/10). Dưới mục tiêu cỡ: kết quả riêng (con trỏ nạp) khác TV2b (công tắc thu)."
+    },
+    {
+      "ma": "TV3a",
+      "cau_giao": "Bộ ghi cấu hình gateway Zalo từ chối mọi cấu hình vi phạm bất biến trước khi ghi, ghi nguyên tử và giữ bản trước có số phiên bản",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "G6: gateway nạp nóng cấu hình < 1 giây, watchdog kiểm sau ≤ 5′; watchdog bỏ sót 7 khoá; hoàn tác chỉ dựa 21 tệp .bak không xoay.",
+      "hang": "T3",
+      "slug": "bat-bien-zalo-truoc-khi-ghi",
+      "dung_tren": [
+        "ON24"
+      ],
+      "bat_khi": "Mỗi khoá cấm (bindings, channels.zalo, plugins.entries.zalo, agents, talk, commands, hooks.internal, pluginHooks, groupPolicy, groupAllowFrom, requireMention mọi cấp) một ca đỏ, tệp không đổi; ngắt giữa lúc ghi: tệp cũ nguyên; bản trước đọc lại được theo số",
+      "nhom": "zalo-an-toan",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV3a"
+      ]
+    },
+    {
+      "ma": "TV3b",
+      "cau_giao": "Watchdog Zalo kiểm cùng bất biến với bộ ghi cấu hình, và watchdog, trang Ops, ops-facts dùng chung một danh sách lớp lockdown",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "«Bảy lớp» không có định nghĩa chuẩn: watchdog tự gọi 5 lớp, UI vẽ 8 dòng (L1–L3 chỉ chép «watchdog còn tươi»), tài liệu nói 7.",
+      "hang": "T3",
+      "slug": "watchdog-cung-bat-bien",
+      "dung_tren": [
+        "TV3a",
+        "ON2"
+      ],
+      "bat_khi": "Đặt sai từng khoá cấm: watchdog báo đúng lớp trong một lượt; số và tên lớp ở watchdog, /ops/collections và khối lockdown của facts trùng nhau",
+      "nhom": "zalo-an-toan",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV3b"
+      ],
+      "ghi_chu": "Làn ZCode (scripts/zalo-*.sh) — giao qua liên làn. Sau nhánh zcode/watchdog-l4b-history (lời giao 2410-15, chờ nghiệm thu T3 — cùng tệp watchdog) và ON2. ZC3 đã merge (#31, #63)."
+    },
+    {
+      "ma": "TV4",
+      "cau_giao": "Lệnh có khuôn đã duyệt trên cloud được máy thu kéo về bằng token máy riêng, áp đúng một lần và báo kết quả cùng giá trị trước/sau lên cloud",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "G4: không có đường nào từ cloud xuống máy thu — mọi thao tác ghi chỉ chạy khi ngồi máy thu; Mạnh chốt 25/10 đội làm từ xa. UH7 /ops/console (chân trời) mở lại bằng hàng này.",
+      "hang": "T3",
+      "slug": "so-lenh-bo-ap",
+      "dung_tren": [
+        "TV1",
+        "TV2a"
+      ],
+      "bat_khi": "Lệnh đã duyệt: áp trong ≤ 5′; mười lượt kéo lặp: áp đúng một lần; máy thu tắt: lệnh nằm chờ, cloud hiện mốc lần kéo cuối; token chung hoặc thiếu scope ops:pull: từ chối; ops_heartbeat có migration",
+      "nhom": "tv-lenh",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV4",
+        "TVN5"
+      ],
+      "ghi_chu": "Cần ADR-0015 (TV0). push-ops-facts.mjs (t3_paths) — vào chuỗi «chạy liền nhau» BOI-CANH §4. Bảng change_requests: số migration qua SO-MIGRATION."
+    },
+    {
+      "ma": "TV4b",
+      "cau_giao": "Người vận hành bấm tạm dừng hoặc bật lại một nguồn trên /ops ở cloud, ghi lý do, và thấy lệnh đi tới «đã áp lúc HH:MM» kèm trạng thái trước và sau",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "Ca thật 21–24/10: S05 hết credit, chỉ Mạnh tạm dừng được bằng UPDATE tay. Mốc TVM1.",
+      "hang": "T2",
+      "slug": "tam-dung-nguon-tu-cloud",
+      "dung_tren": [
+        "TV4",
+        "TV2b"
+      ],
+      "bat_khi": "Tạm dừng S05 từ cloud: lượt thu kế tiếp không chạy; bật lại: lượt kế tiếp chạy; thiếu lý do: không gửi được",
+      "nhom": "tv-lenh",
+      "dot": "tu-van-hanh-2510",
+      "phu": []
+    },
+    {
+      "ma": "TV5",
+      "cau_giao": "Người vận hành thêm, bật, tắt, sửa hay ngừng một nhóm S05 hoặc một vùng S06 trên /ops ở cloud và lượt thu kế tiếp làm đúng theo sổ",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "vi_sao": "Hôm nay source-groups ghi thẳng ở máy thu, xoá kèm purge cứng stg_zalo_posts (làn ZCode), UI không nhập được mã vùng S06.",
+      "hang": "T3",
+      "slug": "don-vi-thu-s05-s06-tu-cloud",
+      "dung_tren": [
+        "TV4b",
+        "PL12"
+      ],
+      "bat_khi": "Thêm nhóm S05 từ cloud: lượt kế có nhóm đó; ngừng một nhóm: dữ liệu cũ giữ nguyên (không purge); vùng S06 chọn từ 34 thị trường, máy tự điền mã vùng",
+      "nhom": "tv-lenh",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV5"
+      ]
+    },
+    {
+      "ma": "TV6",
+      "cau_giao": "Admin bật hay tắt một nhóm S03 trên /ops ở cloud, người thứ hai duyệt, và máy thu áp mà không lúc nào gateway nạp một cấu hình vi phạm bất biến",
+      "vai": "Admin",
+      "tieu_chi": 10,
+      "vi_sao": "S03 đã có hai sự cố gửi tin; quyết định Mạnh 25/10 §4.8 #1: mọi lệnh chạm S03 cần người thứ hai duyệt.",
+      "hang": "T3",
+      "slug": "nhom-s03-tu-cloud",
+      "dung_tren": [
+        "TV4",
+        "TV3a",
+        "TV3b"
+      ],
+      "bat_khi": "Lệnh chưa có người thứ hai duyệt: không áp; sau áp 10′: agent 0 turn và tin của nhóm vẫn chảy; kiểm sau áp hỏng: tự về bản trước và báo",
+      "nhom": "zalo-an-toan",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV6"
+      ]
+    },
+    {
+      "ma": "TV7",
+      "cau_giao": "Admin chọn lịch chạy theo preset của loại nguồn hoặc bấm chạy lại một job trên /ops ở cloud, và thấy máy thu nạp lịch mới hoặc có lượt chạy mới",
+      "vai": "Admin",
+      "tieu_chi": 10,
+      "vi_sao": "Đổi lịch hay chạy lại job hôm nay là sửa plist + launchctl — chỉ Mạnh làm.",
+      "hang": "T3",
+      "slug": "lich-va-chay-lai-tu-cloud",
+      "dung_tren": [
+        "TV4",
+        "ZC4",
+        "ZC5",
+        "ZC7"
+      ],
+      "bat_khi": "Đổi preset: launchctl thấy lịch mới, plist sinh từ khuôn pipeline/cron/; preset S08 tối đa một lần mỗi tuần — lịch dày hơn bị từ chối (luật 5); chạy lại: một lượt mới trong job_runs; ops-facts đếm đủ job chotot, apify-facebook, zalo-import",
+      "nhom": "tv-lenh",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV7",
+        "TVN6",
+        "TV16"
+      ],
+      "ghi_chu": "Bộ chuyển plist + nạp lại là làn ZCode (cron/*.plist, install-*); lệnh và trang là làn Claude. Sau ZC4 (collector-api plist) và ZC5 (zcode/airbnb-worklist, cùng thư mục plist). TV16 (S08 ≤ 1 lần/tuần) gộp thành preset của hàng này theo liên làn 25/10 — không gộp vào ZC8 (importer). Định nghĩa «lần thu» của S03 theo ZC7 — chưa chốt, đừng khoá trước."
+    },
+    {
+      "ma": "TV8",
+      "cau_giao": "Admin đổi ngưỡng SLO của một nguồn trên /ops ở cloud và độ tươi ở máy thu lẫn cloud tính theo ngưỡng mới",
+      "vai": "Admin",
+      "tieu_chi": 7,
+      "vi_sao": "SLO hôm nay viết cứng trong scripts/lib/freshness.mjs và app/src/lib/freshness.ts.",
+      "hang": "T2",
+      "slug": "slo-tu-cloud",
+      "dung_tren": [
+        "TV4"
+      ],
+      "bat_khi": "Đổi SLO: check-freshness và /ops dùng số mới ở lượt kế; test parity freshness.mjs ↔ freshness.ts vẫn xanh",
+      "nhom": "tv-lenh",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV8"
+      ]
+    },
+    {
+      "ma": "TV9",
+      "cau_giao": "Nội dung bài gốc và ảnh thu nhỏ của tin lên cloud chỉ cho vai ops trở lên, không còn tên nguồn thật",
+      "vai": "nen",
+      "tieu_chi": 11,
+      "vi_sao": "Mạnh chốt 25/10: nội dung/ảnh tin lên cloud cho đội vận hành, tên nguồn thật chỉ ở máy thu (§3.7, §4.8 #3). Điều kiện: xác nhận 037 bằng sync-cloud --kiem-anon sạch.",
+      "hang": "T3",
+      "slug": "bai-goc-anh-len-cloud",
+      "dung_tren": [
+        "AU1",
+        "TV0",
+        "ZC4"
+      ],
+      "bat_khi": "anon đọc 0 dòng 0 ảnh; vai user 403; soát tên nguồn thật trên toàn bộ bài đã lên: 0 trúng; ảnh của tin mất quá 90 ngày bị xoá; dung lượng vượt 80% của 5 GB có cảnh báo",
+      "nhom": "tv-xem-tin",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV9"
+      ],
+      "ghi_chu": "11 tiêu chí: luật leak gate (CLOUD_ALLOW) và dữ liệu đi lên phải đổi cùng một hàng, không tách được mà giữ nghĩa. Cần ZC4 triển khai thật để media_files S03 có dòng; ZC4 chờ AU3 merge (snapshot Zalo có mili-giây) — liên làn 25/10."
+    },
+    {
+      "ma": "TV10",
+      "cau_giao": "Người vận hành mở một tin trên /ops ở cloud và thấy tin chuẩn, các bài gốc kèm ảnh, snapshot và căn của nó, và trang «Tin mới nhất» lọc theo nguồn, đơn vị thu, thị trường",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "vi_sao": "G5: không trang nào xem một tin xuyên tầng; S06 không lưu khoá nối ngược (post_ids rỗng). Mạnh muốn «xem bằng mắt các tin mới nhất».",
+      "hang": "T2",
+      "slug": "ho-so-tin",
+      "dung_tren": [
+        "TV9"
+      ],
+      "bat_khi": "Mở một tin S03, S05, S06: thấy đủ bốn tầng; S06 có khoá nối ngược; trống/lỗi/tải có trạng thái riêng",
+      "nhom": "tv-xem-tin",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV10"
+      ]
+    },
+    {
+      "ma": "TV11",
+      "cau_giao": "Người vận hành mở trang độ phủ trên /ops và thấy 34 thị trường, mỗi thị trường số đơn vị đang thu, tin 7 ngày, tỉ lệ gắn được phường và căn theo nguồn, kèm một dòng tin chưa gắn thị trường",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "vi_sao": "Độ phủ hôm nay là độ tươi nguồn × thành phố; 228/232 tin S03 thiếu area_id bị đếm hụt im lặng. Số tính sẵn ở pipeline (luật 10).",
+      "hang": "T2",
+      "slug": "do-phu-thi-truong",
+      "dung_tren": [
+        "PL12"
+      ],
+      "bat_khi": "34 thị trường đều có dòng (kể cả 0); số khớp SELECT tay; tin thiếu area_id hiện thành dòng riêng",
+      "nhom": "tv-do-phu",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV11"
+      ]
+    },
+    {
+      "ma": "TV12",
+      "cau_giao": "Admin đặt mục tiêu phủ cho một thị trường trên /ops và thấy thị trường dưới mục tiêu được cảnh báo",
+      "vai": "Admin",
+      "tieu_chi": 6,
+      "vi_sao": "Chưa có khái niệm mục tiêu phủ ở đâu trong code.",
+      "hang": "T2",
+      "slug": "muc-tieu-phu",
+      "dung_tren": [
+        "TV11",
+        "TV4"
+      ],
+      "bat_khi": "Đặt mục tiêu: lượt tính kế so số với mục tiêu; dưới mục tiêu: cảnh báo, không badge xanh",
+      "nhom": "tv-do-phu",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV12"
+      ]
+    },
+    {
+      "ma": "TV13",
+      "cau_giao": "Người vận hành duyệt một thẻ trên /ops ở cloud kèm lý do và thấy quyết định được áp ở máy thu",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "vi_sao": "Mạnh chốt 25/10: thẻ duyệt lên cloud cho đội vận hành (§3.7). OH1 (chân trời) đóng khi hàng này giao.",
+      "hang": "T3",
+      "slug": "duyet-tren-cloud",
+      "dung_tren": [
+        "PL3",
+        "TV4",
+        "TV9"
+      ],
+      "bat_khi": "Duyệt trên cloud: áp ở local ≤ 5′ qua lệnh review.decide; thiếu lý do: không gửi được; leak gate đổi luật «review_queue trên cloud phải rỗng» cùng hàng",
+      "nhom": "tv-duyet",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV13"
+      ]
+    },
+    {
+      "ma": "TV13b",
+      "cau_giao": "Thẻ ghép căn được sinh định kỳ từ property_candidates cần người, không còn chỉ seed một lần",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Audit 25/10: thẻ entity_match chỉ seed một lần ở migration 029; 37 cặp needs_llm, 11 thẻ chờ.",
+      "hang": "T2",
+      "slug": "sinh-the-ghep-can",
+      "dung_tren": [
+        "TV13"
+      ],
+      "bat_khi": "37 cặp needs_llm hiện có thành thẻ; lượt kế không nhân đôi thẻ",
+      "nhom": "tv-duyet",
+      "dot": "tu-van-hanh-2510",
+      "phu": []
+    },
+    {
+      "ma": "TV13c",
+      "cau_giao": "Admin thấy nhóm mới do người vận hành đề xuất trong hàng duyệt, duyệt thì nhóm vào sổ ở trạng thái đang thu",
+      "vai": "Admin",
+      "tieu_chi": 7,
+      "vi_sao": "Hôm nay thêm nhóm có hiệu lực ngay, không qua thẻ (audit D).",
+      "hang": "T2",
+      "slug": "de-xuat-nhom-moi",
+      "dung_tren": [
+        "TV13",
+        "TV5"
+      ],
+      "bat_khi": "Ops đề xuất: thẻ unit_proposal ở draft; admin duyệt: lệnh unit.create áp; từ chối: nhóm không vào sổ",
+      "nhom": "tv-duyet",
+      "dot": "tu-van-hanh-2510",
+      "phu": []
+    },
+    {
+      "ma": "TV14",
+      "cau_giao": "Admin viết một quy định ngữ cảnh cho một nhóm, chạy thử trên tin gần đây để thấy bao nhiêu nhãn và đề xuất đổi, rồi bật, và agent ghi căn cứ trích quy định ở lượt sau",
+      "vai": "Admin",
+      "tieu_chi": 10,
+      "vi_sao": "Mạnh 25/10: «viết quy định context cho AI agent đọc để hiệu quả hơn»; prompt Kev hôm nay viết cứng, không có chỗ cho quy định theo nhóm. §4.8 #6: model local.",
+      "hang": "T3",
+      "slug": "quy-dinh-ngu-canh",
+      "dung_tren": [
+        "ON21",
+        "TV4"
+      ],
+      "bat_khi": "Chạy thử: không áp dữ liệu, báo số nhãn đổi; bật: lượt kế đề xuất có căn cứ trích quy định; tắt: căn cứ biến mất; model local",
+      "nhom": "so-nhom",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV14"
+      ],
+      "ghi_chu": "Phần hook/Kev đọc quy định theo nhóm là làn ZCode, sau lời giao claudedp-2410-23 (handler.js) và bước cài hook lên máy thu. Nếu raw ghi meta.rule_version thì tăng SNAPSHOT_SCHEMA_VERSION — gộp vào bản tăng kế tiếp chưa merge (v5 cùng ZC7 nếu kịp), không tăng riêng (liên làn 25/10)."
+    },
+    {
+      "ma": "TV15",
+      "cau_giao": "Nguồn S05 tự chuyển tạm dừng có lý do khi chạm trần chi phí ngày hoặc nhà cung cấp báo hết credit, và chỉ chạy lại khi admin bấm bật",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "vi_sao": "§4.8 #4 (Mạnh 25/10). S05 402 từ ~21/10 vẫn gọi 4 lần/ngày.",
+      "hang": "T2",
+      "slug": "tran-chi-phi-s05",
+      "dung_tren": [
+        "TV2b",
+        "TV4b"
+      ],
+      "bat_khi": "Giả 402: paused trong một lượt, lượt sau 0 lời gọi; giả chạm trần: như trên; không tự bật lại",
+      "nhom": "tv-tu-chu",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TV15"
+      ]
+    },
+    {
+      "ma": "TVN1",
+      "cau_giao": "Người vận hành mở /ops/collections thấy đúng danh sách nhóm S03 đang thu theo cấp tài khoản, và thao tác Zalo trên cloud báo rõ «chỉ làm ở máy thu» thay vì thành công giả",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "vi_sao": "Audit 25/10 §2.6 #1, #4: readZaloAllowlist đọc khoá cấp kênh cũ; setZaloGroupEnabled trên cloud trả thành công không làm gì mà vẫn ghi audit.",
+      "hang": "T2",
+      "slug": "allowlist-dung-cap",
+      "bat_khi": "Số nhóm trên trang = số nhóm bật ở cấp tài khoản; toggle trên cloud: lỗi rõ, 0 dòng audit",
+      "nhom": "zalo-an-toan",
+      "dot": "tu-van-hanh-2510",
+      "phu": [
+        "TVN1",
+        "TVN4"
+      ]
     }
   ],
   "chan_troi": [
@@ -2167,6 +2654,16 @@
         "YC7"
       ],
       "mo_lai_khi": "AU12 mở vòng: thêm tiêu chí ở Cổng Phạm vi; AU12 bị hoãn qua đợt này thì cắt hàng T3 riêng"
+    },
+    {
+      "dot": "tu-van-hanh-2510",
+      "ma": "TV17",
+      "cau_giao": "Sổ tay đội vận hành và checklist 19 thao tác làm thước tiêu chí «100% thao tác vận hành trên /ops»",
+      "ly_do": "Phạm vi sổ tay chỉ biết khi các lệnh của mốc TVM1–TVM3 đã có thật; viết trước là tả công cụ chưa có",
+      "phu": [
+        "TV17"
+      ],
+      "mo_lai_khi": "TV6, TV7 và TV13 giao xong"
     }
   ],
   "da_bac": []
