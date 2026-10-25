@@ -1,0 +1,34 @@
+{
+  "feature_plain": "Người trực mở trang Thu thập trên máy chủ thấy ô và lưới Khoá an toàn đọc từ số máy thu đẩy lên; chưa có số thì cả 8 lớp ghi «Chỉ kiểm ở máy thu», không lớp nào xanh; Kev gate và collector API ở Máy móc luôn cùng trạng thái với Khoá an toàn.",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ hiện 8 lớp «Chỉ kiểm ở máy thu» (theo Hỏi-4) khi máy thu báo không đọc được khoá an toàn, các ô khác vẫn có số."},
+    {"id": "AC-3", "p": "Sẽ hiện đúng từng lớp Ổn / Hỏng / Chưa kiểm được như máy thu đo, số trên từng tab khớp, ô ghi x/8 kèm số lượt máy tự trả lời."},
+    {"id": "AC-4", "p": "Sẽ làm mờ số và bỏ màu xanh ở ô, lưới và hai hàng Kev / collector khi số đã cũ quá 45 phút."},
+    {"id": "AC-5", "p": "Sẽ cho Kev gate và collector API ở Máy móc cùng một trạng thái với lớp tương ứng của Khoá an toàn, kể cả khi hai cổng khác trạng thái nhau."},
+    {"id": "AC-6", "p": "Sẽ giữ nguyên trang ở máy thu: đo trực tiếp như trước, không chữ «Chỉ kiểm ở máy thu»."},
+    {"id": "AC-9", "p": "Sẽ có ảnh chụp trang ở bốn trạng thái, kèm bản tối và bản điện thoại."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Sẽ KHÔNG để lớp nào hiện «Ổn» hay màu xanh khi máy chủ chưa có số khoá an toàn — 8/8 lớp ghi «Chỉ kiểm ở máy thu»."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG thêm màu thô hay chữ nhỏ dưới mức cho phép — lint giao diện sạch."},
+    {"id": "OOS-1", "p": "KHÔNG chuyển cả lưới Máy móc sang số launchd ở vòng này — để hợp đồng mới đã mở ở ON3."},
+    {"id": "OOS-2", "p": "KHÔNG dựng lại «Cần chú ý», luồng 7 ngày, nhóm S03, xoay vòng trên máy chủ — việc của ON4/ON5."},
+    {"id": "OOS-3", "p": "KHÔNG sửa cách máy thu dò cổng — trên máy chủ đã chỉ còn một nguồn; ở máy thu là việc riêng."},
+    {"id": "OOS-4", "p": "KHÔNG đổi cách tính lớp ở máy thu và lọc dòng nhật ký — ON2 đã ký."}
+  ],
+  "scope_plain": "Bốn việc gần kề nhưng để vòng khác:",
+  "coverage_plain": [
+    {"i": 0, "p": "Trạng thái số: không bản tin (AC-1), khối lỗi (AC-2), tươi (AC-3, AC-5), cũ quá 45 phút (AC-4) — đủ ba mức của ADR-0014 cộng khối lỗi."},
+    {"i": 1, "p": "Giá trị từng lớp: Ổn, Hỏng, chưa kiểm được (AC-3, AC-5) — lớp không kiểm được không bao giờ thành «Ổn» (ON2)."},
+    {"i": 2, "p": "Vùng trên trang: lưới và ô Khoá an toàn (AC-1…AC-4), hai hàng Kev / collector ở Máy móc (AC-4 khi cũ, AC-5 khi tươi và khi không có khối)."},
+    {"i": 3, "p": "Môi trường: máy chủ (AC-1…AC-5, AC-9) và máy thu không đổi (AC-6)."},
+    {"i": 4, "p": "Lớp đo: trang thật dựng ra HTML (AC-1…AC-6), chữ (AC-7), lint (AC-8), ảnh sáng / tối / điện thoại (AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Màu của 8 hàng «Chỉ kiểm ở máy thu» chưa ai duyệt (câu giao chỉ quyết chữ), trong khi ô cùng trạng thái đã màu vàng — chuyển thành Hỏi-3 cho anh."},
+    {"i": 1, "p": "Khi máy thu cũng không đọc được khoá an toàn, gộp với «không có số» hay dùng nhãn riêng chưa có căn cứ — chuyển thành Hỏi-4; đã ghi rõ 8 nhãn hàng không vi phạm luật «một lần mỗi trang»."},
+    {"i": 2, "p": "Thiếu trường hợp số cũ cho hai hàng Kev / collector ở Máy móc — đã thêm vào tiêu chí số cũ."},
+    {"i": 3, "p": "Không phép đo nào kiểm số trên từng tab, và ảnh trạng thái «hỗn hợp» được phép thiếu giá trị — đã thêm phép đếm tab và chế độ dựng đủ ba giá trị."},
+    {"i": 4, "p": "Phép đo không bắt được lỗi tráo Kev với collector — đã thêm ca chéo và chiều đỏ tráo ánh xạ."}
+  ]
+}
