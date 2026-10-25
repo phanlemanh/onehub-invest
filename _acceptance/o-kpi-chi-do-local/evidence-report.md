@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 82c3c83865da1a326abfec8fe0c9ba52deb07963
+verified_commit: b7faa555f09ea1c9c2bbace536c71f61d4474017
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -210,3 +210,15 @@ Round 3 (lối ra ON3, đổi khuôn): mọi eval máy (E1-E7, E9, E10) và bố
 ### Re-pin lần 1 — 2026-10-24, do ghim lại sau gộp main có ON12 (đổi chữ máy thu/máy chủ)
 run_id: repin-20261024T234416Z-12233
 sha: 82c3c83865da1a326abfec8fe0c9ba52deb07963 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E8, E10 (E10 không khai paths) · diff chạm vật đo ngoài làn máy: E8 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-8, AC-10
+
+### Re-pin lần 2 — 2026-10-25, do ghim lại trên nhánh ON23 — ON23 đổi tệp trong paths của ON3 (hai ca test «tới khi ON23», lưới khoá an toàn)
+run_id: repin-20261025T032923Z-31932
+sha: 0a5494f913e5560e5a63fcc6136bd29f480c795f · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E8, E10 (E10 không khai paths) · diff chạm vật đo ngoài làn máy: E8 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-8, AC-10
+
+### Re-pin lần 3 — 2026-10-25, do ghim lại sau gộp main (PR #84)
+run_id: repin-20261025T033221Z-12070
+sha: 09d2cd2cbf0500006c61a3a0a7acbb8343430c1d · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E8, E10 (E10 không khai paths) · AC không có chốt máy: AC-8, AC-10
+
+### Re-pin lần 4 — 2026-10-25, do ghim lại sau gộp main (PR #85)
+run_id: repin-20261025T035252Z-48333
+sha: b7faa555f09ea1c9c2bbace536c71f61d4474017 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E8, E10 (E10 không khai paths) · diff chạm vật đo ngoài làn máy: E8 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-8, AC-10

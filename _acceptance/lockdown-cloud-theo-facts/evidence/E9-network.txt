@@ -1,0 +1,47 @@
+# E9 network (playwright-cli) - origin http://localhost:3461 (cong 3461 vi :3460 do worktree u1-compare-saved chiem, khong phai server cua toi)
+## mode none: requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+## mode none: console error
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
+## mode fresh: requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+## mode fresh: console error
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
+## mode mixed: requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+## mode mixed: console error
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
+## mode stale: requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+## mode stale: console error
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
+## dev server log: non-2xx/3xx request lines
+-- none
+-- fresh
+-- mixed
+-- stale
+## dev server log: error lines
+-- none
+-- fresh
+-- mixed
+-- stale
