@@ -132,7 +132,7 @@ try {
       check(!t.trong && t.tenTinh.length > 0 && lac.length > 0, "trạng thái trước đỏ đúng chỗ (đối chứng dương: extent vượt + có con tên tỉnh)");
 
       const tam = { log() {}, warn() {} };
-      const r = await runReassign(c, ["hanoi", "hcmc"], { log: tam });
+      const r = await runReassign(c, ["hanoi", "hcmc"], { log: tam, xoaKhuVucLac: true });
       for (const f of ["300_metrics.sql", "400_breakdowns.sql"])
         await c.query(readFileSync(path.join(ROOT, "pipeline/sql", f), "utf8"));
       console.log(`— áp thử: gỡ ${r.removed.length} khu vực, giữ ${r.kept.length} (có saved_markets), bỏ ${r.dropped.length} listing ngoài mọi phường`);

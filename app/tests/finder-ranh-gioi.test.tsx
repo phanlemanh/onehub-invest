@@ -64,7 +64,7 @@ test("AU9-AC-8 Finder Hà Nội: trước khi áp có khu vực vượt bbox, sa
       assert.ok(vuot(box, truoc).length > 0, "đối chứng: khu vực lạc mồi phải làm Finder vượt bbox Hà Nội")
     })
 
-    await runReassign(c, ["hanoi", "hcmc"], { log: { log() {}, warn() {} } })
+    await runReassign(c, ["hanoi", "hcmc"], { log: { log() {}, warn() {} }, xoaKhuVucLac: true })
     await c.query(readFileSync(join(ROOT, "pipeline/sql/300_metrics.sql"), "utf8"))
     const sau = await getFinderAreas({ marketId: "vn-hanoi" }, { db: c })
     await t.test("AU9-AC-8 Finder Hà Nội sau khi áp: mọi khu vực trong bbox vn-hanoi", () => {

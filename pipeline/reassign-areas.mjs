@@ -18,6 +18,8 @@
 // Idempotent. Chạy xong cần rerun 300_metrics + 400_breakdowns.
 //   node reassign-areas.mjs            # mọi city có OSM staging
 //   node reassign-areas.mjs hanoi      # một city
+//   node reassign-areas.mjs hanoi --xoa-khu-vuc-lac   # kèm xoá khu vực lạc (chỉ gọi tay, sau khi đếm
+//                                                      saved_markets trên cloud — lượt theo lịch KHÔNG mang cờ)
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -126,9 +128,12 @@ async function upsertPhuong(client, city, log) {
  * BEGIN…ROLLBACK). Ném lỗi khi snapshot hỏng (tập phường hợp lệ teo) TRƯỚC khi xoá gì.
  * @param {import("pg").Client} client
  * @param {string[]} [cities]
- * @param {{ log?: { log: (...a: unknown[]) => void, warn: (...a: unknown[]) => void } }} [opts]
+ * @param {{ log?: { log: (...a: unknown[]) => void, warn: (...a: unknown[]) => void }, xoaKhuVucLac?: boolean }} [opts]
+ *   xoaKhuVucLac — chỉ khi true mới xoá khu vực lạc (bước 5). Mặc định false: lượt theo lịch hằng tuần
+ *   (weekly-collect → finalize-hanoi) không xoá gì, vì rào saved_markets chỉ thấy DB local còn thị trường
+ *   người dùng lưu nằm trên cloud (AU9 AC-10).
  */
-export async function runReassign(client, cities = Object.keys(MARKETS), { log = console } = {}) {
+export async function runReassign(client, cities = Object.keys(MARKETS), { log = console, xoaKhuVucLac = false } = {}) {
   for (const c of cities) if (!MARKETS[c]) throw new Error(`city không hỗ trợ: ${c}`);
 
   // ---- 1. Phường OSM ----
@@ -237,6 +242,14 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
      FROM unnest($1::text[]) AS a(id)`,
     [stale],
   );
+  if (!xoaKhuVucLac) {
+    if (stale.length) {
+      log.warn(`  ! ${stale.length} khu vực lạc — KHÔNG xoá ở lượt này (không có cờ --xoa-khu-vuc-lac):`);
+      for (const g of giu) log.warn(`    · ${g.id} — ${g.saved} saved_markets, ${g.properties} properties`);
+      log.warn(`    dọn sau khi đếm saved_markets trên cloud: node reassign-areas.mjs <city> --xoa-khu-vuc-lac`);
+    }
+    return { moves, dropped, removed: removedOld, kept: [], stale, valid, ...out };
+  }
   const kept = giu.filter((r) => r.saved > 0 || r.properties > 0);
   for (const k of kept)
     log.warn(`  ! giữ khu vực lạc ${k.id} — ${k.saved} saved_markets, ${k.properties} properties trỏ vào`);
@@ -258,14 +271,16 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
 }
 
 async function main() {
-  const arg = process.argv[2];
+  const args = process.argv.slice(2);
+  const xoaKhuVucLac = args.includes("--xoa-khu-vuc-lac");
+  const arg = args.find((a) => !a.startsWith("--"));
   const cities = arg ? [arg] : Object.keys(MARKETS);
 
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
     await client.query("BEGIN");
-    const r = await runReassign(client, cities);
+    const r = await runReassign(client, cities, { xoaKhuVucLac });
     await client.query("COMMIT");
 
     const active = cities.map((c) => MARKETS[c].id);

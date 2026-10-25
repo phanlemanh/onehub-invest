@@ -161,7 +161,7 @@ test("AU9-AC-3 dọn khu vực lạc", async (t) => {
   await withTx(t, async (c) => {
     await mocLac(c);
     const { log } = ghiLog();
-    const r = await runReassign(c, ["hanoi"], { log });
+    const r = await runReassign(c, ["hanoi"], { log, xoaKhuVucLac: true });
     assert.ok(r.stale.includes("vn-hanoi-tinh-moi-au9"));
     // listing trong Hà Nội → một phường hợp lệ có ST_Covers điểm
     assert.equal(
@@ -187,7 +187,7 @@ test("AU9-AC-3 khu vực lạc có saved_markets thì giữ", async (t) => {
     await c.query(`INSERT INTO users (id, email, password_hash) VALUES ('au9-moi', 'au9-moi@local.test', 'x')`);
     await c.query(`INSERT INTO saved_markets (user_id, area_id) VALUES ('au9-moi', 'vn-hanoi-tinh-moi-au9')`);
     const { dong, log } = ghiLog();
-    const r = await runReassign(c, ["hanoi"], { log });
+    const r = await runReassign(c, ["hanoi"], { log, xoaKhuVucLac: true });
     assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 1, "khu vực còn");
     assert.equal(await dem(c, `SELECT count(*) n FROM saved_markets WHERE user_id = 'au9-moi'`), 1, "saved_markets còn nguyên");
     assert.deepEqual(r.kept, [{ id: "vn-hanoi-tinh-moi-au9", saved: 1, properties: 0 }]);
@@ -199,7 +199,7 @@ test("AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là
   await withTx(t, async (c) => {
     await mocLac(c);
     await c.query(`INSERT INTO market_asset_stats (area_id, kind) VALUES ('vn-hanoi-tinh-moi-au9', 'sale')`);
-    const r1 = await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    const r1 = await runReassign(c, ["hanoi"], { log: ghiLog().log, xoaKhuVucLac: true });
     assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 0, "asset_stats không giữ khu vực");
     assert.equal(await dem(c, `SELECT count(*) n FROM market_asset_stats WHERE area_id = 'vn-hanoi-tinh-moi-au9'`), 0);
     assert.ok(r1.removed.some((x) => x.id === "vn-hanoi-tinh-moi-au9"));
@@ -208,7 +208,7 @@ test("AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là
     await mocLac(c);
     await c.query(`INSERT INTO properties (area_id) VALUES ('vn-hanoi-tinh-moi-au9')`);
     const { dong, log } = ghiLog();
-    const r = await runReassign(c, ["hanoi"], { log });
+    const r = await runReassign(c, ["hanoi"], { log, xoaKhuVucLac: true });
     assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 1, "properties giữ khu vực");
     assert.deepEqual(r.kept, [{ id: "vn-hanoi-tinh-moi-au9", saved: 0, properties: 1 }]);
     assert.ok(dong.some((d) => d.includes("vn-hanoi-tinh-moi-au9") && d.includes("1 properties")), dong.join("\n"));
@@ -218,11 +218,11 @@ test("AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là
 test("AU9-AC-4 chạy lần hai không đổi gì", async (t) => {
   await withTx(t, async (c) => {
     await mocLac(c);
-    const r1 = await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    const r1 = await runReassign(c, ["hanoi"], { log: ghiLog().log, xoaKhuVucLac: true });
     // đối chứng dương: lần một có việc thật (gỡ khu vực lạc mồi, bỏ listing ngoài)
     assert.ok(r1.removed.some((x) => x.id === "vn-hanoi-tinh-moi-au9"), "lần một phải gỡ khu vực lạc mồi");
     assert.ok(r1.dropped.some((d) => d.id === "au9-moi-ngoai"), "lần một phải bỏ listing ngoài");
-    const r2 = await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    const r2 = await runReassign(c, ["hanoi"], { log: ghiLog().log, xoaKhuVucLac: true });
     assert.deepEqual(r2.moves.filter((m) => m.old_id !== m.new_id), [], "không listing nào đổi khu vực");
     assert.deepEqual(r2.dropped, []);
     assert.deepEqual(r2.removed, []);
@@ -238,7 +238,7 @@ async function dungKhongXoa(c, re) {
     await dem(c, `SELECT count(*) n FROM sale_offers WHERE area_id IS NULL`),
   ];
   const truoc = await dem3();
-  await assert.rejects(runReassign(c, ["hanoi"], { log: ghiLog().log }), re);
+  await assert.rejects(runReassign(c, ["hanoi"], { log: ghiLog().log, xoaKhuVucLac: true }), re);
   assert.deepEqual(await dem3(), truoc, "không xoá/đổi dòng nào trước khi dừng");
 }
 
@@ -282,7 +282,7 @@ test("AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha", async (t) => 
 test("AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch", async (t) => {
   assert.ok(DQ_SQL, "450_dq_checks.sql thiếu khối giữa marker");
   await withTx(t, async (c) => {
-    await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    await runReassign(c, ["hanoi"], { log: ghiLog().log, xoaKhuVucLac: true });
     await c.query(DQ_SQL);
     const { rows } = await c.query(
       `SELECT status FROM dq_check_results WHERE check_name = 'area_con_ngoai_cha' AND entity = 'vn-hanoi'
@@ -290,4 +290,40 @@ test("AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch", async (t) =
     );
     assert.equal(rows[0]?.status, "pass");
   });
+});
+
+test("AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại", async (t) => {
+  await withTx(t, async (c) => {
+    await mocLac(c);
+    const { dong, log } = ghiLog();
+    const r = await runReassign(c, ["hanoi"], { log });
+    assert.ok(r.stale.includes("vn-hanoi-tinh-moi-au9"));
+    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 1, "khu vực lạc còn");
+    for (const tb of ["market_metrics", "area_breakdowns"])
+      assert.equal(await dem(c, `SELECT count(*) n FROM ${tb} WHERE area_id = 'vn-hanoi-tinh-moi-au9'`), 1, `${tb} còn`);
+    assert.equal(await dem(c, `SELECT count(*) n FROM sale_offers WHERE offer_id = 'au9-moi' AND area_id = 'vn-hanoi-tinh-moi-au9'`), 1, "tin bán giữ nhãn");
+    assert.equal(
+      await dem(c, `SELECT count(*) n FROM listings l JOIN areas a ON a.id = l.area_id
+                    WHERE l.id = 'au9-moi-trong' AND a.meta->>'source' = 'osm-phuong' AND a.id <> 'vn-hanoi-tinh-moi-au9'`),
+      1,
+      "listing trong Hà Nội vẫn sang phường hợp lệ",
+    );
+    assert.ok(dong.some((d) => d.includes("--xoa-khu-vuc-lac")), dong.join("\n"));
+    assert.ok(!r.removed.some((x) => x.id === "vn-hanoi-tinh-moi-au9"));
+  });
+});
+
+test("AU9-AC-10 có cờ: khu vực lạc bị xoá", async (t) => {
+  await withTx(t, async (c) => {
+    await mocLac(c);
+    const r = await runReassign(c, ["hanoi"], { log: ghiLog().log, xoaKhuVucLac: true });
+    assert.ok(r.removed.some((x) => x.id === "vn-hanoi-tinh-moi-au9"));
+    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 0);
+  });
+});
+
+test("AU9-AC-10 finalize-hanoi.sh không mang cờ xoá", () => {
+  const sh = readFileSync(join(ROOT, "pipeline/finalize-hanoi.sh"), "utf8");
+  assert.match(sh, /node reassign-areas\.mjs\b/, "lượt theo lịch có gọi reassign-areas");
+  assert.doesNotMatch(sh, /--xoa-khu-vuc-lac/, "lượt theo lịch không được mang cờ xoá khu vực lạc");
 });
