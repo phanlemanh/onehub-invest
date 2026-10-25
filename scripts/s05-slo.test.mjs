@@ -105,9 +105,16 @@ test("S5-AC-3 biên 96 giờ / 96 giờ 59 phút → fresh, 97 giờ → stale �
 });
 
 // ---- AC-6: không nơi thứ ba ghi SLO S05 ----
-const GOC_QUET = ["app/src", "scripts", "pipeline", "data-api/src", "agent/src"];
-const DUOI = /\.(ts|tsx|mjs|js|sql)$/;
-const MAU = /S05["']?\s*:\s*\d+/g;
+const GOC_QUET = ["app/src", "scripts", "pipeline", "data-api/src", "agent/src", ".claude/skills"];
+const DUOI = /\.(ts|tsx|mjs|js|sql|md)$/;
+/** Ma trận viết trước các dạng ghi SLO S05 có trong kho: khoá đối tượng «S05: N», chữ «S05 ≤ N giờ/ngày», bộ đôi
+ *  «["S05", N]», SQL «WHEN 'S05' THEN N». Mỗi dạng có một mẫu đối chứng ở ca S5-AC-6. */
+const DANG = [
+  ["khoá", /S05["']?\s*:\s*(\d+)\b(?!\s*\/)/g, (n) => Number(n)],
+  ["chữ", /S05\s*≤\s*(\d+)\s*(giờ|ngày)/g, (n, dv) => (dv === "ngày" ? Number(n) * 24 : Number(n))],
+  ["bộ đôi", /\[\s*["']S05["']\s*,\s*(\d+)\s*\]/g, (n) => Number(n)],
+  ["sql", /WHEN\s+'S05'\s+THEN\s+(\d+)/g, (n) => Number(n)],
+];
 
 function tepQuet() {
   const out = [];
@@ -128,20 +135,25 @@ function tepQuet() {
   GOC_QUET.forEach(di);
   return out;
 }
-const khop = (tep) => tep.flatMap(({ rel, text }) => [...text.matchAll(MAU)].map((m) => ({ rel, m: m[0].replace(/["'\s]/g, "") })));
+const khop = (tep) =>
+  tep.flatMap(({ rel, text }) =>
+    DANG.flatMap(([dang, re, chuan]) => [...text.matchAll(re)].map((m) => ({ rel, dang, gio: chuan(m[1], m[2]) }))),
+  );
 
 test("S5-AC-6 chỉ hai bản chép ghi SLO S05 (= 96); cloud /ops lấy readFreshness của bản CLI", () => {
   const tep = tepQuet();
   const k = khop(tep);
-  assert.deepEqual(
-    [...new Set(k.map((x) => x.rel))].sort(),
-    ["app/src/lib/freshness.ts", "scripts/lib/freshness.mjs"],
-    `S5-AC-6 nơi ghi SLO S05: ${JSON.stringify(k)}`,
-  );
-  assert.ok(k.every((x) => x.m === "S05:96"), `S5-AC-6 còn chỗ ghi SLO S05 khác 96: ${JSON.stringify(k)}`);
+  // Mọi chỗ ghi SLO S05 (bất kể dạng) đều bằng 96 giờ; hai bản chép có mặt ở dạng khoá.
+  assert.ok(k.length > 0 && k.every((x) => x.gio === 96), `S5-AC-6 còn chỗ ghi SLO S05 khác 96 giờ: ${JSON.stringify(k.filter((x) => x.gio !== 96))}`);
+  for (const rel of ["app/src/lib/freshness.ts", "scripts/lib/freshness.mjs"])
+    assert.ok(k.some((x) => x.rel === rel && x.dang === "khoá"), `S5-AC-6 thiếu bản chép ${rel}`);
   const push = readFileSync(path.join(REPO, "pipeline/push-ops-facts.mjs"), "utf8");
   assert.match(push, /import \{[^}]*\breadFreshness\b[^}]*\} from "\.\.\/scripts\/lib\/freshness\.mjs"/, "S5-AC-6 push-ops-facts không lấy readFreshness của bản CLI");
-  // Đối chứng: một tệp thứ ba ghi «S05: 12» thì bộ quét bắt được.
-  const gia = khop([...tep, { rel: "pipeline/gia.mjs", text: "const X = { S05: 12 };" }]);
-  assert.ok(gia.some((x) => x.rel === "pipeline/gia.mjs" && x.m === "S05:12"), "đối chứng: bộ quét không bắt tệp thứ ba");
+  // Đối chứng: mỗi dạng của ma trận, ghi giá trị cũ ở một tệp giả, đều bị bắt (4 dạng = 4 lần bắt).
+  const MAU_GIA = ["const X = { S05: 12 };", " *   S05 ≤ 12 giờ   ghi chú", 'const T = [["S05", 12]];', "CASE code WHEN 'S05' THEN 12 END"];
+  for (const [i, text] of MAU_GIA.entries()) {
+    const bat = khop([{ rel: `gia-${i}`, text }]);
+    assert.deepEqual(bat.map((x) => [x.dang, x.gio]), [[DANG[i][0], 12]], `đối chứng dạng «${DANG[i][0]}» không bị bắt: ${text}`);
+  }
+  assert.equal(MAU_GIA.length, DANG.length, "mỗi dạng một mẫu đối chứng");
 });

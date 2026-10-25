@@ -261,6 +261,16 @@ describe("AU6 slo-mot-nguon", () => {
       assert.ok(!h.includes("(ngày)") && !h.includes("(giờ)"), `${name} còn tiêu đề cột theo đơn vị cũ`)
     }
     assert.ok(col.includes("Độ tươi 8 ngày / SLO 8 ngày"), "mục «Cần chú ý» của S01 dùng cùng cách viết")
+    // SLO của CHÍNH hàng S05 (s05-slo-theo-lich): 96 giờ → «4 ngày», không còn «12 giờ».
+    const hang = (h: string, id: string) => {
+      const m = h.match(new RegExp(`data-row-id="${id}"[\\s\\S]*?</tr>`))
+      assert.ok(m, `không thấy hàng ${id}`)
+      return m[0].replace(/<[^>]+>/g, "|")
+    }
+    for (const [name, r] of [["/ops", hang(ops, "S05-hanoi")], ["/ops/collections", hang(col, "S05")]] as const) {
+      assert.ok(r.includes("4 ngày"), `${name}: hàng S05 phải ghi SLO «4 ngày» — ${r}`)
+      assert.ok(!r.includes("12 giờ"), `${name}: hàng S05 còn SLO «12 giờ» — ${r}`)
+    }
   })
 
   test("SL-AC-7 /api/v1/ops/coverage trả hàng /ops kèm ageHours/sloHours, giữ ageDays/sloDays", async () => {
