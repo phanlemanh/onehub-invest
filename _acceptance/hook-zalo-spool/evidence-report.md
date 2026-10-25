@@ -7,7 +7,7 @@ reason:
 verified_by: "feature-loop:cham-lenh (fresh-context verification subagent)"
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3b34af16e0b410121ecc12d0012a0505fd146baf
+verified_commit: 067d81a57bf3e34898d715cad489997c08cb9e41
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -269,3 +269,7 @@ không đổi so với vòng 1–2.
 ### Re-pin lần 1 — 2026-10-25, do gộp origin/main 33adaa4 trước merge (sau next typegen)
 run_id: repin-20261025T003551Z-82841
 sha: 3b34af16e0b410121ecc12d0012a0505fd146baf · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp origin/main 8731f81 (sau #74)
+run_id: repin-20261025T004657Z-58384
+sha: 067d81a57bf3e34898d715cad489997c08cb9e41 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
