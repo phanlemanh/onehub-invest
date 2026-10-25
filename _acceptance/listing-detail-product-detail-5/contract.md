@@ -5,10 +5,10 @@ slug: listing-detail-product-detail-5
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-25-listing-detail-product-detail-5-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-25T10:40:01Z
 ---
 
 # Acceptance Contract: listing-detail-product-detail-5
