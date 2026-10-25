@@ -5,7 +5,9 @@ slug: yield-dong-tien-von-vay
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, config]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-yield-dong-tien-von-vay-design.md
 ---
 
