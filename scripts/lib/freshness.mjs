@@ -14,8 +14,9 @@
  * Thành phố = nơi mã đó có dữ liệu (không ghép chéo). Mã `completed` (S04) không đo.
  */
 
-/** SLO theo giờ. S01/S02/S03 = 8/35/3 ngày (ADR-0007; Mạnh chốt Hỏi-1 AU4 23/10); S05/S06 theo nhịp thu. */
-export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 12, S06: 36 };
+/** SLO theo giờ. S01/S02/S03 = 8/35/3 ngày (ADR-0007; Mạnh chốt Hỏi-1 AU4 23/10); S05/S06 theo nhịp thu —
+ * S05 = 96 giờ: từ 7/11 thu 2 lượt/tuần (thứ Ba + thứ Sáu), khoảng dài nhất thứ Sáu → thứ Ba (s05-slo-theo-lich). */
+export const SLO_HOURS = { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36 };
 
 /** Cột thời gian (giờ thu) mà probe của từng mã lấy max — phép đo đối chiếu khai báo này với SQL thật. */
 export const TIME_SOURCE = {

@@ -1,0 +1,208 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · hook-spool-nghiem-ngat</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả</h1><div class="sub">Trang hồ sơ · <span class="mono">hook-spool-nghiem-ngat</span> · tier T3</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">ZC6 nối tiếp — hook Zalo giữ tin lại hàng đợi khi khoá collector sai (401/403/404) và có trần thời gian cho cả lượt xả</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Ở Cổng Bằng chứng của hook-zalo-spool (ZC6, PR #76, 25/10) Mạnh ký và tách hai lỗi ngoài hợp đồng thành việc riêng, PHẢI xong trước khi cài hook lên máy thật: (Ngoài-1) collector trả 401/403/404 — vd khoá agent sai sau khi xoay — thì hook đẩy tin sang spool/rejected/ vĩnh viễn, sửa khoá xong không tự gửi lại; (Ngoài-2) collector chậm mà vẫn trả lời (gần 8 giây mỗi yêu cầu) làm một lượt hook kéo…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra"><span class="vang">chưa có — decisions.jsonl</span></div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">5 mục để ngoài phạm vi · 2 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>10</b></span><span data-k="phep_do">Phép đo <b>11</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="quyet_dinh_nguoi">người <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="ma">Mã <b>303df76</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Ở Cổng Bằng chứng của hook-zalo-spool (ZC6, PR #76, 25/10) Mạnh ký và tách hai lỗi ngoài hợp đồng thành việc riêng, PHẢI xong trước khi cài hook lên máy thật: (Ngoài-1) collector trả 401/403/404 — vd khoá agent sai sau khi xoay — thì hook đẩy tin sang spool/rejected/ vĩnh viễn, sửa khoá xong không tự gửi lại; (Ngoài-2) collector chậm mà vẫn trả lời (gần 8 giây mỗi yêu cầu) làm một lượt hook kéo tới vài phút, gateway Zalo chờ theo. Lời giao claudedp-2410-23; ZCode XONG ở nhánh zcode/hook-spool-nghiem-ngat @ 02d4834 (chỉ đổi collector/openclaw/handler.js + test).</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given spool có tin và collector trả 401, 403 hoặc 404 cho mọi yêu cầu, When hai lượt hook chạy, Then không tệp nào sang `rejected/`, mọi tin cũ còn trong spool, và không có dòng `spool-rejected &lt;mã&gt;`.</li><li data-ac="AC-2"><b>AC-2</b> — Given các tin đã bị giữ vì 401/403/404, When collector trả 202 trở lại (khoá đã sửa), Then lượt hook kế gửi lại mọi tin đó và spool rỗng.</li><li data-ac="AC-3"><b>AC-3</b> — Given một lượt xả có tệp bị giữ vì 4xx tạm thời, When lượt kết thúc — kể cả khi dừng giữa chừng vì collector treo — Then log có đúng MỘT dòng `spool-held &lt;mã&gt;` cho mỗi mã trong lượt đó.</li><li data-ac="AC-4"><b>AC-4</b> — Given collector trả 400, 413 hoặc 422 cho một tệp spool, When xả, Then tệp đó sang `rejected/` kèm log `spool-rejected &lt;mã&gt;`, tệp sau vẫn được gửi, và không có dòng `spool-held` cho mã đó.</li><li data-ac="AC-5"><b>AC-5</b> — Given collector trả 4xx khác (vd 409, 410), When xả, Then tin ở lại spool kèm một dòng `spool-held &lt;mã&gt;`; còn 408, 429, 5xx thì tin ở lại spool, KHÔNG sang `rejected/`, và được xả hết khi collector lành.</li><li data-ac="AC-6"><b>AC-6</b> — Given spool có 20 tệp và collector trả lời chậm 3 giây mỗi yêu cầu, When một lượt hook chạy, Then lượt đó kết thúc dưới 20 giây và còn tệp chờ lượt sau; qua vài lượt mọi tin tới collector đúng một lần, spool rỗng.</li><li data-ac="AC-7"><b>AC-7</b> — Given biến `ONEINVEST_HOOK_DRAIN_BUDGET_MS=2000`, When lượt xả chạy với collector chậm 1,5 giây mỗi yêu cầu, Then lượt chỉ xả 1–3 tệp và kết thúc dưới 10 giây.</li><li data-ac="AC-8"><b>AC-8</b> — Given handler mới, When chạy lại toàn bộ eval của ZC6 (spool-replay, reject-4xx, hang-stop, cap-50, kev-hang, self-contained), Then tất cả vẫn đạt.</li><li data-ac="AC-9"><b>AC-9</b> — Given lớp L1 của bộ canh Zalo, When grep handler mới và chạy `node --check` trên nó, Then không khớp API gửi tin nào, cú pháp sạch, bộ canh vẫn trỏ đúng tệp handler.</li><li data-ac="AC-10"><b>AC-10</b> — Given nhánh đã gộp `origin/main`, When chạy toàn bộ test collector trên bản build sạch, Then tất cả xanh.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><span class="vang">chưa có — decisions.jsonl</span></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>feature-loop:cham-lenh</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E1-r1-20261025T070443Z</td><td class="mono">2026-10-25T07:04:43Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E2-r1-20261025T070444Z</td><td class="mono">2026-10-25T07:04:44Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E3-r1-20261025T070445Z</td><td class="mono">2026-10-25T07:04:45Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E4-r1-20261025T070509Z</td><td class="mono">2026-10-25T07:05:09Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E5-r1-20261025T070514Z</td><td class="mono">2026-10-25T07:05:14Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E6-r1-20261025T070516Z</td><td class="mono">2026-10-25T07:05:16Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E7-r1-20261025T070637Z</td><td class="mono">2026-10-25T07:06:37Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E8-r1-20261025T070642Z</td><td class="mono">2026-10-25T07:06:42Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E9-r1-20261025T070711Z</td><td class="mono">2026-10-25T07:07:11Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-9</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E10-r1-20261025T070712Z</td><td class="mono">2026-10-25T07:07:12Z</td></tr>
+<tr><td><a href="#E11">E11</a></td><td>AC-10</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-spool-nghiem-ngat-E11-r1-20261025T070919Z</td><td class="mono">2026-10-25T07:09:19Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given spool có tin và collector trả 401, 403 hoặc 404 cho mọi yêu cầu, When hai lượt hook chạy, Then không tệp nào sang `rejected/`, mọi tin cũ còn trong spool, và không có dòng `spool-rejected &lt;mã&gt;`.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E1-r1-20261025T070443Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_auth_held</b></span><span>verified_at <b>2026-10-25T07:04:43Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   401: should-NOT-fire — không tệp nào sang rejected/ (được 0)
+ok   401: 3 tin cũ vẫn ở spool sau hai lượt bị 401 (spool=5)
+ok   401: should-NOT-fire — không có dòng &#39;spool-rejected 401&#39;
+ok   403: should-NOT-fire — không tệp nào sang rejected/ (được 0)
+ok   403: should-NOT-fire — không có dòng &#39;spool-rejected 403&#39;
+ok   404: should-NOT-fire — không tệp nào sang rejected/ (được 0)
+ok   404: 3 tin cũ vẫn ở spool sau hai lượt bị 404 (spool=5)
+ok   404: should-NOT-fire — không có dòng &#39;spool-rejected 404&#39;
+AUTH-HELD PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given các tin đã bị giữ vì 401/403/404, When collector trả 202 trở lại (khoá đã sửa), Then lượt hook kế gửi lại mọi tin đó và spool rỗng.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E2-r1-20261025T070444Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_auth_held</b></span><span>verified_at <b>2026-10-25T07:04:44Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   401: sửa khoá xong (collector trả 202) → 3 tin cũ tự được gửi lại
+ok   401: spool rỗng sau lượt collector lành, còn 0
+ok   403: sửa khoá xong (collector trả 202) → 3 tin cũ tự được gửi lại
+ok   403: spool rỗng sau lượt collector lành, còn 0
+ok   404: sửa khoá xong (collector trả 202) → 3 tin cũ tự được gửi lại
+ok   404: spool rỗng sau lượt collector lành, còn 0
+AUTH-HELD PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given một lượt xả có tệp bị giữ vì 4xx tạm thời, When lượt kết thúc — kể cả khi dừng giữa chừng vì collector treo — Then log có đúng MỘT dòng `spool-held &lt;mã&gt;` cho mỗi mã trong lượt đó.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E3-r1-20261025T070445Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_auth_held</b></span><span>verified_at <b>2026-10-25T07:04:45Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   401: đúng MỘT dòng &#39;spool-held 401&#39; mỗi lượt xả — 2 lượt = 2 dòng (được 2)
+ok   403: đúng MỘT dòng &#39;spool-held 403&#39; mỗi lượt xả — 2 lượt = 2 dòng (được 2)
+ok   404: đúng MỘT dòng &#39;spool-held 404&#39; mỗi lượt xả — 2 lượt = 2 dòng (được 2)
+AUTH-HELD PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-3: Given một lượt xả có tệp bị giữ vì 4xx tạm thời, When lượt kết thúc — kể cả khi dừng giữa chừng vì collector treo — Then log có đúng MỘT dòng `spool-held &lt;mã&gt;` cho mỗi mã trong lượt đó.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E4-r1-20261025T070509Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_held_then_hang</b></span><span>verified_at <b>2026-10-25T07:05:09Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   lượt kết thúc trong 16 giây (&lt; 25)
+ok   dòng &#39;spool-held 401&#39; vẫn ra dù lượt dừng giữa chừng vì collector treo (được 1)
+ok   should-NOT-fire: không tệp nào sang rejected/
+HELD-THEN-HANG PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-4: Given collector trả 400, 413 hoặc 422 cho một tệp spool, When xả, Then tệp đó sang `rejected/` kèm log `spool-rejected &lt;mã&gt;`, tệp sau vẫn được gửi, và không có dòng `spool-held` cho mã đó.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E5-r1-20261025T070514Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_reject_perm</b></span><span>verified_at <b>2026-10-25T07:05:14Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">ok   400: tin 400 sang rejected/, hàng không kẹt (rejected=1, spool=0)
+ok   400: tin lành sau tin 400 vẫn được gửi
+ok   400: log có &#39;spool-rejected 400&#39;
+ok   400: should-NOT-fire — không có dòng &#39;spool-held 400&#39;
+ok   413: tin 413 sang rejected/, hàng không kẹt (rejected=1, spool=0)
+ok   413: should-NOT-fire — không có dòng &#39;spool-held 413&#39;
+ok   422: tin 422 sang rejected/, hàng không kẹt (rejected=1, spool=0)
+ok   422: should-NOT-fire — không có dòng &#39;spool-held 422&#39;
+REJECT-PERM PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-5: Given collector trả 4xx khác (vd 409, 410), When xả, Then tin ở lại spool kèm một dòng `spool-held &lt;mã&gt;`; còn 408, 429, 5xx thì tin ở lại spool, KHÔNG sang `rejected/`, và được xả hết khi collector lành.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E6-r1-20261025T070516Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_tam_thoi</b></span><span>verified_at <b>2026-10-25T07:05:16Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   409: giữ lại spool, không rejected (spool=2, rejected=0)
+ok   409: một dòng &#39;spool-held 409&#39; (được 1)
+ok   410: giữ lại spool, không rejected (spool=2, rejected=0)
+ok   410: một dòng &#39;spool-held 410&#39; (được 1)
+ok   408: should-NOT-fire — tin ở lại spool, không sang rejected/ (spool=3, rejected=0)
+ok   408: collector lành lại → xả hết, còn 0
+ok   429: should-NOT-fire — tin ở lại spool, không sang rejected/ (spool=3, rejected=0)
+ok   503: collector lành lại → xả hết, còn 0
+TAM-THOI PASS</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-6: Given spool có 20 tệp và collector trả lời chậm 3 giây mỗi yêu cầu, When một lượt hook chạy, Then lượt đó kết thúc dưới 20 giây và còn tệp chờ lượt sau; qua vài lượt mọi tin tới collector đúng một lần, spool rỗng.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E7-r1-20261025T070637Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_budget</b></span><span>verified_at <b>2026-10-25T07:06:37Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   20 tin vào spool, được 20
+ok   lượt hook đầu kết thúc trong 15 giây (&lt; 20; trước vòng này ~63 giây)
+ok   lượt đầu chỉ gửi vài tệp trong trần 10 giây rồi dừng (được 5 lượt gửi)
+ok   should-NOT-fire: hết trần thì DỪNG — còn 16 tệp chờ lượt sau
+ok   sau vài lượt mọi tin đều tới collector (không mất tin)
+ok   không tin nào tới collector hai lần
+ok   spool rỗng cuối cùng, còn 0
+BUDGET PASS</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-7: Given biến `ONEINVEST_HOOK_DRAIN_BUDGET_MS=2000`, When lượt xả chạy với collector chậm 1,5 giây mỗi yêu cầu, Then lượt chỉ xả 1–3 tệp và kết thúc dưới 10 giây.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E8-r1-20261025T070642Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_budget_env</b></span><span>verified_at <b>2026-10-25T07:06:42Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   trần 2 giây × 1,5 giây mỗi yêu cầu: xả 1–3 tệp spool (được 2)
+ok   lượt kết thúc trong 5 giây (&lt; 10)
+ok   còn ≥ 7 tệp chờ lượt sau, được 8
+BUDGET-ENV PASS</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-8: Given handler mới, When chạy lại toàn bộ eval của ZC6 (spool-replay, reject-4xx, hang-stop, cap-50, kev-hang, self-contained), Then tất cả vẫn đạt.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E9-r1-20261025T070711Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_zc6_regress</b></span><span>verified_at <b>2026-10-25T07:07:11Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">SPOOL-REPLAY PASS
+REJECT-4XX PASS
+HANG-STOP PASS
+CAP-50 PASS
+KEV-HANG PASS
+SELF-CONTAINED PASS</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · script</h3><p class="crit">AC-9: Given lớp L1 của bộ canh Zalo, When grep handler mới và chạy `node --check` trên nó, Then không khớp API gửi tin nào, cú pháp sạch, bộ canh vẫn trỏ đúng tệp handler.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E10-r1-20261025T070712Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.hsn_l1_syntax</b></span><span>verified_at <b>2026-10-25T07:07:12Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">ok   handler không khớp biểu thức L1 của watchdog (0 dòng khớp)
+ok   watchdog L1 vẫn trỏ đúng tệp handler duy nhất
+L1-GREP PASS
+SYNTAX OK</pre>
+</div>
+<div class="card eval" id="E11"><h3><span class="badge pass">PASS</span> &nbsp;E11 · script</h3><p class="crit">AC-10: Given nhánh đã gộp `origin/main`, When chạy toàn bộ test collector trên bản build sạch, Then tất cả xanh.</p>
+<div class="kv"><span>run_id <b>hook-spool-nghiem-ngat-E11-r1-20261025T070919Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.collector_test_clean</b></span><span>verified_at <b>2026-10-25T07:09:19Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">&gt; tsc -p tsconfig.json &amp;&amp; node --test &#39;dist/test/*.test.js&#39;
+✔ ZC6 vòng 3: khuôn log cũ &#39; post 202 &#39;; drain dừng ở file hỏng đầu; 4xx vĩnh viễn (400/413/422) → rejected không gửi lại (15051.836458ms)
+✔ ZC6 tự chứa: từ thư mục NGOÀI repo — collector chết 2 tin → spool 2; sống → drain đủ, không trùng; kev treo → p=null (20033.816666ms)
+✔ 2410-23: 401 giữ lại spool (log &#39;spool-held &lt;status&gt;&#39; MỘT dòng mỗi lượt), collector sống lại thì gửi được; collector chậm 3s/file → trần 10s CẢ LƯỢT, phần còn lại xả lượt sau (75101.091959ms)
+ℹ tests 49
+ℹ pass 49
+ℹ fail 0
+ℹ cancelled 0</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals:
+- E5 (reject-perm) xanh trên baseline — chốt hồi quy có chủ ý: hợp đồng Notes khai hành vi 400/413/422 không đổi.
+- E9, E10, E11 xanh trên baseline — chốt hồi quy (ZC6, L1, test collector), dự kiến xanh cả hai cây.
+- E1, E2, E3, E4, E6, E7, E8 đỏ trên baseline (phân biệt được). Riêng E2: lệnh chung auth-held đỏ trên baseline nhờ các
+  dòng của E1/E3, còn hai dòng riêng của E2 («3 tin cũ tự được gửi lại», «spool rỗng») XANH cả trên baseline — vì
+  `state.posts` còn chứa các lần gửi bị 401 trước khi sửa khoá, và trên baseline tệp đã sang rejected/ nên spool cũng
+  rỗng. Kết luận AC-2 vẫn đứng nhờ chuỗi E1 (tệp còn spool, 0 rejected) + E2 (spool rỗng sau lượt 202) và phép thử bổ
+  sung đếm yêu cầu sau khi sửa khoá; đề nghị lần sửa harness sau đếm `posts` từ mốc setMode(&quot;ok&quot;).
+Baseline (làn A/B, chạy tay bởi người chấm):
+- Cây baseline: bản chép trong thư mục tạm gồm scripts/hook-spool-nghiem-ngat/acceptance.mjs của nhánh +
+  `git show origin/main:` của collector/openclaw/handler.js, scripts/hook-zalo-spool/acceptance.mjs,
+  scripts/zalo-watchdog.sh. origin/main lúc chấm là e6d5d02 (đã tiến sau merge-base 10c26e0), nhưng ba tệp đó giống
+  hệt giữa 10c26e0 và e6d5d02 nên baseline tương đương diffBase.
+- Kết quả baseline: auth-held đỏ (12 mục: 4 tệp sang rejected/, 0 dòng spool-held, có dòng spool-rejected cho cả
+  401/403/404); held-then-hang đỏ (0 dòng spool-held 401, có tệp sang rejected/); tam-thoi đỏ ở 409/410 (sang
+  rejected/, không spool-held), xanh ở 408/429/503; budget đỏ (lượt đầu 63 giây, 21 lần gửi, 0 tệp còn lại);
+  budget-env đỏ (xả 10 tệp, 17 giây); reject-perm xanh; hồi quy ZC6 sáu chế độ xanh; L1 + node --check xanh.
+- E11 baseline: `git archive 10c26e0 collector` ra thư mục tạm, mượn node_modules, `rm -rf dist &amp;&amp; npm test` → 48/48
+  xanh (nhánh 49/49: thêm đúng một ca 2410-23).
+Bất thường khác:
+- run-log: E1/E2/E3 chung một lần chạy auth-held, mỗi eval một dòng run-log riêng (mã cách nhau một giây).
+- Nhánh vẫn đứng trên merge-base 10c26e0; origin/main đã có thêm #96, #99, #100 (không chạm collector/), cần gộp
+  main + ghim lại trước merge theo nếp của làn merge.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1–E11 đạt; baseline đỏ ở E1–E4, E6–E8, xanh ở E5, E9–E11 (chốt hồi quy); hai mục ngoài hợp đồng mức thấp</li><li>(408/429 không log spool-held trái chú thích; biến trần rỗng/0/âm làm spool đứng) để người quyết ở Cổng 2.</li><li>run_id: repin-20261025T071733Z-12499</li><li>sha: 303df76c41751100ef0e81ebe96500f54dbad81f · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Cài bản này vào `~/.openclaw` và restart gateway — lời GIAO triển khai riêng theo `docs/ops/runbook-openclaw-hook.md`, sau merge.</li><li data-loai="ngoai">ZC4 (collector :9210 chạy bằng launchd) — vòng riêng, đứng sau 2510-8.</li><li data-loai="ngoai">Lỗi khoá sai làm MỌI tệp trong lượt đều gọi collector một lần (không dừng ở 401 đầu) — số yêu cầu bị chặn bởi trần thời gian, chấp nhận.</li><li data-loai="ngoai">Một yêu cầu đang dở khi chạm trần vẫn chờ hết timeout của nó (≤ 8 giây) — trần kiểm trước mỗi tệp.</li><li data-loai="ngoai">Hai mục Known limits của ZC6 (quyền đọc tệp spool; tệp JSON null) giữ nguyên.</li><li data-loai="gioi-han">Trần 10 giây chỉ bao vòng xả spool, không bao cả lượt hook: tệp cuối bắt đầu ngay dưới trần vẫn chờ hết timeout 8 giây của nó (hợp đồng khai ở Out of scope), rồi tin mới của lượt còn một lần gửi 8 giây và Kev tối đa 5 giây. Phép thử của người chấm: collector chậm-mà-sống 7,5 giây mỗi yêu cầu → một lượt hook 22,6 giây, 3 yêu cầu (2 tệp spool + tin mới); trần lý thuyết khoảng 10 + 8 + 8 + 5 ≈ 31 giây. Trước vòng này cùng tình huống là tới vài phút.</li><li data-loai="gioi-han">Tệp bị giữ vì 4xx «khác» (409/410…) ở lại spool vô hạn và bị gửi lại mỗi lượt, chiếm chỗ trong trần 50; collector hiện chỉ trả 202/400/401/404 (`collector/src/api/server.ts`) nên chưa có đường thật nào sinh ra tệp như vậy.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">303df76c41751100ef0e81ebe96500f54dbad81f</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note"></p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
