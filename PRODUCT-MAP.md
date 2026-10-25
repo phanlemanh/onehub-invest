@@ -15,6 +15,7 @@ flowchart TD
   GB --> DG["Đã giao<br/>37 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>25 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
+  HS["Hồ sơ hỏng<br/>1 việc"]
 ```
 
 > **Bốn cổng người** — mỗi cổng là một câu hỏi chỉ người trả lời được:
@@ -100,3 +101,7 @@ flowchart TD
 - Chuẩn UI ReUI — đợt B3 thống nhất biểu đồ (bảng màu chuỗi chung, gom code chép trùng, tách file > 200 dòng) (`ui-clean-b3-charts`)
 - Bộ chuẩn UI/UX ReUI — Phần A (setup: skill + MCP ReUI, skill onehub-ui, lint chặn tự vẽ tay, cắm vào kit) (`ui-standards-reui`)
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
+
+## Hồ sơ hỏng
+
+- `nhom-s03-tren-cloud` — không đọc được hồ sơ (`(workspace)`): không có contract.md lẫn opportunity.md
