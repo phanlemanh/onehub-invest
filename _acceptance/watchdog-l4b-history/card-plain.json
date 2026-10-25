@@ -1,0 +1,4 @@
+{
+ "feature_plain": "Bộ canh Zalo không còn tắt nhầm gateway vì đọc lại các lượt agent cũ trong tệp log gateway khi tệp đó bị coi là «tệp mới»; lượt agent mới sau đó vẫn bị bắt và tắt như cũ.",
+ "scope_plain": "Những việc cố ý để ngoài vòng này:"
+}
