@@ -5,7 +5,7 @@ slug: audit-all-doc-log-o-checkout
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-audit-all-doc-log-o-checkout-design.md
@@ -72,3 +72,10 @@ biên; AC-4 lockdown; AC-5 lưới Máy móc từng loại log + luật tĩnh; A
 ## Notes
 
 - Hỏi git thay vì tự đọc tệp `.git`: git hiểu mọi khuôn worktree, kể cả đường tương đối; phía app nhớ kết quả trong tiến trình.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: smoke đổi HOME nhưng giữ PATH thật, nên lượt audit-all trong smoke vẫn gọi CLI OpenClaw thật (chỉ đọc danh sách nhóm, không gửi tin).
+  - Ngoài-2: panel vòng thu S02 vẫn đọc trạng thái vòng thu ở cây đang chạy, nên app chạy từ worktree báo như chưa chạy đêm nào.
+  - Ngoài-3: smoke lệnh thật vẫn xanh khi log AirDNA ở checkout chính vắng, vì chỉ so hai bên giống nhau.
+  - Ngoài-4: chiều đỏ của smoke trang Thu thập không ghim lệch ở từng mục (bộ canh, nhãn lớp 1–4, giờ S02).
+  - Ngoài-5: luật tĩnh chỉ quét hai tệp đọc log và chỉ so chuỗi `pipeline/logs` nguyên văn.
+  - Ngoài-6: phía app chưa kiểm ca `.git` hỏng, checkout chính đã dời và kho trần.

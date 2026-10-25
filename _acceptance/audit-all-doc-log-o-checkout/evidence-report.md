@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f86be55adb7564d9370dd71ffda9306f72502f35
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: audit-all-doc-log-o-checkout
