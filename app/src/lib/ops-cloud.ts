@@ -9,6 +9,9 @@ import { toCoverageRows, type CoverageRow, type SourceFeedHealth } from "./ops-q
 
 export type PendingCount = { byType: { type: string; n: number }[]; total: number }
 
+/** Một ngày của khối `luong7` (ON5): hai cột S03 máy thu đếm sẵn — bài S03 thật theo ngày đăng, tin rao nguồn S03. */
+export type Luong7Day = { day: string; s03Posts: number; s03Offers: number }
+
 export type CloudOpsView = {
   state: FactsState
   /** `pushedAt` của lần đẩy cuối (null khi chưa có bản tin). */
@@ -19,13 +22,15 @@ export type CloudOpsView = {
   feeds: SourceFeedHealth[] | null
   records24h: { code: string; n: number }[] | null
   pending: PendingCount | null
+  /** Khối `luong7` (ON5): 7 ngày VN; vắng hoặc lỗi → null (ô S03 hiện «—», không 0). */
+  luong7: Luong7Day[] | null
 }
 
 type SourceRun = { code: string; label_vi?: string | null; status?: string | null }
 
 /** Đọc bản tin máy local và dựng số cho ba trang. `now` chỉ để phép đo trỏ mốc giờ. */
 export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<CloudOpsView> {
-  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null }
+  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null, luong7: null }
   let f: Awaited<ReturnType<typeof readOpsFacts>>
   try {
     f = await readOpsFacts({ now })
@@ -44,6 +49,9 @@ export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<Clo
   const rq = f.blocks.reviewQueue
   const pending = rq?.state !== "error" ? (rq?.data as PendingCount | null | undefined) : undefined
 
+  const l7 = f.blocks.luong7
+  const l7Days = l7?.state !== "error" ? (l7?.data?.days as Luong7Day[] | undefined) : undefined
+  if (Array.isArray(l7Days)) view.luong7 = l7Days
   if (Array.isArray(rows)) view.coverage = toCoverageRows(rows)
   if (Array.isArray(recRows)) view.records24h = recRows
   if (pending && Array.isArray(pending.byType) && typeof pending.total === "number") {

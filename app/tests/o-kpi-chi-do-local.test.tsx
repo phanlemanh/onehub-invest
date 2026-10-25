@@ -25,6 +25,8 @@ process.env.DATABASE_URL = schemaUrl(S_CLOUD) // pool của app đọc lúc impo
 process.env.OPS_API_TOKEN = "on3-thu"
 const ADMIN: User = { id: "1", email: "ops-test@local.test", plan: "free", role: "admin" }
 const RAW_LOCAL = ["source_registry", "review_queue", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "airdna_listings", "listings", "stg_abnb_listings", "sale_offers"]
+/** Bảng đã đồng bộ lên máy chủ mà trang cloud đọc (ON5: «Luồng 7 ngày» đếm listing tươi trên `listings` — sync-cloud FILL). */
+const CLOUD_SYNCED = ["listings"]
 
 type Payload = Record<string, unknown> & { pushedAt: string; blocks: Record<string, Record<string, unknown>> }
 const admin = new pg.Client({ connectionString: localDbUrl() })
@@ -36,6 +38,7 @@ before(async () => {
     await admin.query(`CREATE SCHEMA "${S_CLOUD}"`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_audit (LIKE public.ops_audit INCLUDING ALL)`)
+    for (const t of CLOUD_SYNCED) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     await makeOpsSchema(admin, S_LOCAL)
     for (const [k, s] of Object.entries(LOCAL_ERR)) await makeOpsSchema(admin, s, { omit: OMIT[k] })
   } catch (e) {
@@ -360,13 +363,19 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
     for (const [name, set] of STATES) {
       await set()
       const h = await renderCollections()
-      assert.deepEqual(headings(h).filter((x) => !CLOUD_HEADINGS.includes(x)), [], `${name}: vùng ngoài bản tin không được dựng`)
+      // ON5 (luong-7-ngay-dung-so): bảng «Luồng 7 ngày qua» dựng trên cloud khi đã có bản tin (khối luong7), như lưới job.
+      const choPhep = name === "chưa có bản tin" ? CLOUD_HEADINGS : [...CLOUD_HEADINGS, "Luồng 7 ngày qua"]
+      assert.deepEqual(headings(h).filter((x) => !choPhep.includes(x)), [], `${name}: vùng ngoài bản tin không được dựng`)
+      assert.equal(headings(h).includes("Luồng 7 ngày qua"), name !== "chưa có bản tin", `${name}: bảng luồng chỉ khi có bản tin`)
       assert.equal(headings(h).includes("Máy móc"), name !== "chưa có bản tin", `${name}: lưới job chỉ khi có bản tin`)
       assert.equal(alertTitles(h).filter((t) => t === "Phần còn lại của trang chưa có số trên máy chủ").length, 1, `${name}: một Alert gom vùng trên máy thu`)
       assert.equal(localCount(h), name === "chưa có bản tin" ? 1 : 0, `${name}: chữ chỉ-local đúng số lần`)
       assert.doesNotMatch(text(h), /Hỏng|Mọi thứ ổn|đều tươi|Kênh kết nối|Hoạt động/, `${name}: không trạng thái giả của vùng không đo`)
       const hrefs = [...region(h, COL_TILES[1], COL_TILES[4]).matchAll(/href="(#[^"]+)"/g)].map((m) => m[1])
-      assert.ok(hrefs.length >= 3 && hrefs.every((x) => x === "#tren-may-thu"), `${name}: nút ô luồng / nhóm S03 / lockdown trỏ Alert (${hrefs.join(", ")})`)
+      // ON5: khi đã có bản tin, nút ô luồng trỏ bảng #luong; nhóm S03 / lockdown vẫn trỏ Alert.
+      const luong = name === "chưa có bản tin" ? "#tren-may-thu" : "#luong"
+      assert.ok(hrefs.length >= 3 && hrefs.includes(luong) && hrefs.filter((x) => x !== luong).every((x) => x === "#tren-may-thu"), `${name}: nút ô luồng trỏ ${luong}, nhóm S03 / lockdown trỏ Alert (${hrefs.join(", ")})`)
+      if (luong === "#luong") assert.ok(h.includes('id="luong"'), `${name}: đích #luong có mặt`)
       assert.ok(h.includes('id="tren-may-thu"'), `${name}: đích của nút có mặt`)
     }
   })
@@ -455,7 +464,7 @@ describe("ON3-AC-6 khối lỗi do bên ghi thật", () => {
 describe("ON3-AC-7 máy local", () => {
   test("ON3-AC-7 DB local đủ bảng: ba trang không dòng mốc đo, không Alert số cũ, không truy vấn ops_heartbeat", async () => {
     ready()
-    for (const t of RAW_LOCAL) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     const { pool } = await import("../src/lib/db")
     const seen: string[] = []
     const orig = pool.query.bind(pool)
@@ -471,7 +480,7 @@ describe("ON3-AC-7 máy local", () => {
       assert.deepEqual(seen.filter((q) => q.includes("ops_heartbeat")), [], "ở local không đọc ops_heartbeat")
     } finally {
       ;(pool as unknown as { query: unknown }).query = orig
-      for (const t of RAW_LOCAL) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
+      for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
     }
   })
 })

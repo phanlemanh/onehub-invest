@@ -8,9 +8,10 @@ import { JobsGrid } from "@/components/ops/collections/jobs-grid"
 import { LockdownGrid } from "@/components/ops/collections/lockdown-grid"
 import { RotationPanel, ZaloPipePanel } from "@/components/ops/collections/pipe-panels"
 import { SyncActivity } from "@/components/ops/collections/sync-activity"
-import { FlowTable, ZaloGroupsTable } from "@/components/ops/collections-tables"
+import { CloudFlowTable, FlowTable, ZaloGroupsTable } from "@/components/ops/collections-tables"
 import { PageHeader } from "@/components/page/page-header"
 import type {
+  CloudFlowDay,
   FlowDay,
   GateFunnel,
   JobStatus,
@@ -42,6 +43,8 @@ export type CollectionsData = {
   roles?: SourceRoles
   /** Cloud (ON3): số của ô đọc từ bản tin máy local (`getCloudOpsView`); vắng = máy local. */
   cloud?: CloudOpsView | null
+  /** Cloud (ON5): «Luồng 7 ngày» dựng từ khối `luong7` (`getCloudFlowDays`); rỗng khi chưa có bản tin. */
+  cloudDays?: CloudFlowDay[]
 }
 
 /**
@@ -90,12 +93,14 @@ export function CollectionsView(props: CollectionsData) {
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Thu thập" }]
 const DESCRIPTION = "Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở nhật ký tay."
 /** Vùng đo trực tiếp trên máy thu — trên cloud không có nguồn số (ADR-0014); ON4/ON23 đưa dần lên bằng khối bản tin. */
-export const MACHINE_ONLY_REGIONS = ["Luồng 7 ngày", "Cần chú ý", "lớp khoá an toàn", "ống S03", "xoay vòng", "nhóm S03"]
+export const MACHINE_ONLY_REGIONS = ["Cần chú ý", "lớp khoá an toàn", "ống S03", "xoay vòng", "nhóm S03"]
+/** Vùng chỉ dựng trên cloud khi đã có bản tin (ON5 «Luồng 7 ngày», lưới «tác vụ») — chưa có thì vào Alert. */
+const NEEDS_FACTS_REGIONS = ["Luồng 7 ngày", "tác vụ"]
 
 /** Cloud (ON3, ADR-0014): chỉ dựng vùng đọc bản tin máy local — ô số, lưới sức khoẻ nguồn và lưới job (khối `jobs`, chỉ khi
  * đã có bản tin). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0 hay màu đạt khi
  * cloud không đo được nó. */
-function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud }: CollectionsData & { cloud: CloudOpsView }) {
+function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, cloudDays = [] }: CollectionsData & { cloud: CloudOpsView }) {
   const slo = feedSloSummary(feedHealth)
   const stale = cloud.state === "stale"
   return (
@@ -119,12 +124,17 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud }
         layers={[]}
         agentTurnsToday={null}
         roles={roles}
-        cloud={{ feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale, funnelMeasured: cloud.state !== "none" }}
+        cloud={{ feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale, funnelMeasured: cloud.state !== "none", flowShown: cloud.state !== "none" }}
       />
       <FeedsGrid feeds={feedHealth} stale={stale} />
+      {cloud.state === "none" ? null : (
+        <div id="luong" className="scroll-mt-4">
+          <CloudFlowTable days={cloudDays} stale={stale} roles={roles} />
+        </div>
+      )}
       <div id="tren-may-thu" className="scroll-mt-4">
         <LocalOnlyAlert title="Phần còn lại của trang chưa có số trên máy chủ">
-          {[...MACHINE_ONLY_REGIONS, ...(cloud.state === "none" ? ["tác vụ"] : [])].join(", ")} đo trực tiếp trên máy thu — xem ở cổng Ops trên máy thu.
+          {[...MACHINE_ONLY_REGIONS, ...(cloud.state === "none" ? NEEDS_FACTS_REGIONS : [])].join(", ")} đo trực tiếp trên máy thu — xem ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
       {cloud.state === "none" ? null : <JobsGrid jobs={jobs} stale={stale} />}
