@@ -1,0 +1,77 @@
+{
+  "feature_plain": "Tick bật một nhóm Zalo trên trang Nguồn (Ops) sẽ luôn ghi nhóm ở chế độ «chỉ phản ứng khi được nhắc tên» — đúng điều bộ canh đòi — và phần mềm thu Zalo sẽ không bao giờ nhận một bản cấu hình phạm luật an toàn từ trang Ops, vì app tự kiểm trước khi ghi.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ ghi nhóm mới vừa tick bật với «chỉ phản ứng khi được nhắc tên» ở mọi kiểu tài khoản thu, và không tài khoản nào mất nhóm đang thu hay nhận nhầm nhóm của tài khoản khác (sửa luôn lỗ tài khoản chính mất nhóm kế thừa khi tick nhóm đầu tiên)."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ ép «chỉ phản ứng khi được nhắc tên» khi bật lại một nhóm đã có, kể cả nhóm đang để tắt chế độ này hoặc chưa ghi gì, và giữ nguyên các thiết lập khác của nhóm."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ cho tắt đúng nhóm đang phạm luật — đó là đường thoát của người vận hành; tắt nhóm sạch hay nhóm chưa có cũng ghi bình thường."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ có một hàm kiểm riêng gọi tên từng chỗ phạm: liên kết trả lời tự động, kênh bot, nhóm đang bật (kể cả ghi lửng, thiếu khoá, ghi sai kiểu) mà không «chỉ khi nhắc tên», chính sách nhóm khác danh sách cho phép, và cấu hình méo dạng."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ đối chiếu hàm kiểm với chính đoạn kiểm của bộ canh trên toàn bộ cấu hình mẫu: chỗ nào bộ canh coi là phạm thì hàm kiểm cũng phải coi là phạm; bộ canh đổi chữ thì phép đo đỏ để soát lại."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ từ chối mọi lần ghi (bật hay tắt nhóm khác) khi cấu hình đang phạm ở chỗ khác, báo lỗi nêu chỗ phạm, tệp giữ nguyên từng byte — và chứng minh bước kiểm tự chặn được cả khi chính đoạn dựng nhóm bị viết sai."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ cho mọi đường ghi cấu hình của trang Ops đi qua đúng một cửa có kiểm, không có lối tắt bỏ kiểm; phép thử tĩnh đỏ khi ai thêm đường ghi vòng qua cửa đó."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ chạy mọi phép đo trên cấu hình giả trong thư mục tạm, có rào chặn trước khi chạm cấu hình thật, phần mềm thu thật, cơ sở dữ liệu thật, hay lệnh tắt gateway của bộ canh."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ xanh các phép đo cũ của nút gỡ tài khoản và nút đăng nhập QR, cùng kiểm kiểu và lint."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "Không thêm kiểm cho các khoá cấu hình mà bộ canh cũng chưa kiểm — để hàng riêng."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không sửa bộ canh — chỉ đọc nó để đối chiếu."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không sửa quyền và nhật ký của các route Zalo, cũng không sửa chỗ đọc danh sách nhóm kiểu cũ — để hàng riêng."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không đổi giao diện trang Nguồn; lỗi hiện qua thông báo lỗi có sẵn."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Không sửa tay cấu hình đang chạy, không kiểm phần mềm thu thật."
+    },
+    {
+      "id": "OOS-6",
+      "p": "Không đo tài khoản phụ đang kế thừa danh sách nhóm của tài khoản chính — bố cục đó đã phá luật một nhóm một tài khoản, trang Ops không bao giờ tạo nó."
+    },
+    {
+      "id": "OOS-7",
+      "p": "Không đổi cấu hình bộ nghiệm thu để tệp này tự thành hạng cao nhất — hạng cao nhất ở đây khai tay."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Đã liệt trước mọi kiểu tài khoản × mọi thao tác bật/tắt (AC-1…AC-3), ba trạng thái cấu hình trước khi ghi (AC-3, AC-6), bốn lớp luật an toàn cả chiều phạm lẫn sát ranh không phạm (AC-4), đối chiếu với bộ canh (AC-5), mọi đường ghi (AC-7), an toàn phép đo (AC-8), hồi quy (AC-9)."
+    }
+  ]
+}
