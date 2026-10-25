@@ -5,7 +5,7 @@ slug: snapshot-nguyen-tu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T09:44:32Z
 approved_by:
@@ -52,3 +52,10 @@ ZCode XONG ở `zcode/snapshot-nguyen-tu` @ 7b6494f sau hai lần MỞ LẠI (ch
   - vòng 2 dd1ea44c: ten-that-co-san đỏ + trung-ms ENOTEMPTY (bỏ mất kiểm tên thật).
   - vòng 3 7b6494f: cả ba xanh.
 - Cổng tệp bọc (AC-4, AC-5) đo bằng chế độ `mo-coi` của harness AU3, do ZCode thêm trong cùng nhánh; lượt chấm đối chứng nó trên tệp bọc của main.
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: mở hợp đồng mới
+  - Ngoài-2: ghi Known limits
+  - Ngoài-3: ghi Known limits
+- Known limits:
+  - Ngoài-2: Cổng 30′ đo mtime của chính thư mục, nên snapshot kiểu cũ đang tải ảnh lâu có thể bị coi là mồ côi
+  - Ngoài-3: Đua giữa kiểm tên thật và chiếm `.partial`: hai writer có thể chung sid, writer sau kẹt ở ENOTEMPTY

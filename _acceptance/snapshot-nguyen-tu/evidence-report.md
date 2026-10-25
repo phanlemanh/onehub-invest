@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e0a8505be8d687c7652a940cbfc17d154aea2382
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: snapshot-nguyen-tu
