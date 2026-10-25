@@ -14,13 +14,13 @@ evals:
     executor: test
     cmd: config:executors.test.s05_slo
     paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/s05-slo.test.mjs]
-    expected: "exit 0; ca 'S5-AC-2': lịch lượt thu thứ Ba + thứ Sáu 06:00, quét mỗi giờ từ lượt đầu tới hết 14 ngày (337 giờ) — readFreshness cả hai bản trả S05 'fresh' ở mọi giờ (số giờ đã quét = 337, tuổi lớn nhất gặp = 96); đối chứng: bản sao freshness.mjs đột biến S05 96 → 12 (assert bản sao khác gốc và SLO_HOURS.S05 === 12 sau nạp) trả 'stale' ở ≥ 169 giờ trong cùng lượt quét"
+    expected: "exit 0; ca 'S5-AC-2': lịch lượt thu thứ Ba + thứ Sáu 06:00, quét mỗi giờ h = 1…336 sau lượt đầu, giờ trùng một lượt thu được đánh giá TRƯỚC khi tính lượt đó (lượt trước = lượt có mốc < now) — readFreshness cả hai bản trả S05 'fresh' ở mọi giờ (số giờ đã quét = 336, tuổi lớn nhất gặp = 96, gặp ở h = 168 và 336); đối chứng: bản sao freshness.mjs đột biến S05 96 → 12 (assert bản sao khác gốc và SLO_HOURS.S05 === 12 sau nạp) trả 'stale' ở ≥ 168 giờ trong cùng lượt quét"
   - id: E3
     criterion: AC-3
     executor: test
     cmd: config:executors.test.s05_slo
     paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/s05-slo.test.mjs]
-    expected: "exit 0; ca 'S5-AC-3': tuổi 96 → 'fresh', 97 → 'stale' ở cả hai bản; describe() của hàng 97 giờ chứa 'SLO 96 giờ'"
+    expected: "exit 0; ca 'S5-AC-3': mốc thu cách now 96 giờ, 96 giờ 59 phút, 97 giờ → 'fresh', 'fresh', 'stale' ở cả hai bản; CLI describe(hàng 97 giờ) === 'S05/hanoi: quá hạn — 97 giờ (SLO 96 giờ)'; app fmtOverdue(97, hàng.sloHours) === 'trễ 1 giờ' và fmtAge(hàng.sloHours) === '4 ngày'; đối chứng: bản sao CLI SLO 12 cho describe chứa 'SLO 12 giờ'"
   - id: E4
     criterion: AC-4
     executor: test
@@ -33,3 +33,9 @@ evals:
     cmd: config:executors.test.check_freshness
     paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
     expected: "exit 0; ca 'AC-5 bảng SLO đúng năm giá trị giờ' ghim S05: 96; 10 ca GT-AC-4 chạy tới cuối gồm 'GT-AC-4 S05 tuổi = SLO → fresh' và 'GT-AC-4 S05 tuổi = SLO+1 → stale' (không ca nào bị bỏ qua vì thiếu DB)"
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.s05_slo
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, pipeline/push-ops-facts.mjs, scripts/s05-slo.test.mjs]
+    expected: "exit 0; ca 'S5-AC-6': quét mọi tệp .ts/.tsx/.mjs/.js/.sql dưới app/src, scripts, pipeline, data-api/src, agent/src (trừ *.test.* và node_modules) tìm /S05[\"']?\\s*:\\s*\\d+/ — danh sách khớp BẰNG đúng [app/src/lib/freshness.ts, scripts/lib/freshness.mjs] và mỗi chỗ là 'S05: 96'; pipeline/push-ops-facts.mjs import readFreshness từ '../scripts/lib/freshness.mjs'; đối chứng: chuỗi giả 'S05: 12' thêm vào danh sách tệp quét (trong bộ nhớ) thì bộ quét bắt được"
