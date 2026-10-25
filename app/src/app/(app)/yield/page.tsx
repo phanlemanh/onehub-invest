@@ -1,14 +1,17 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { CompsTable } from "@/components/listing/listing-tables";
 import { PageHeader } from "@/components/page/page-header";
 import { StatTiles } from "@/components/page/stat-tiles";
 import type { StatTile } from "@/components/page/tiers";
 import { Badge } from "@/components/reui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
@@ -18,7 +21,7 @@ import { PnlChart } from "@/components/yield/pnl/chart";
 import { YieldConfidence } from "@/components/yield/yield-confidence";
 import { YieldForm } from "@/components/yield/yield-form";
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format";
-import { currencyFor, getYieldAreas, getYieldComps, getYieldMarkets } from "@/lib/queries";
+import { currencyFor, getArea, getYieldAreas, getYieldComps, getYieldMarkets } from "@/lib/queries";
 import { FINANCING_HORIZON, financingPlan, LOAN_DEFAULTS, type LoanInputs } from "@/lib/financing";
 import { COST_DEFAULTS, estimateYield, monthlyPnl, type YieldInputs } from "@/lib/yield";
 
@@ -55,7 +58,30 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
   // chỉ cần `area` để mở đúng thị trường.
   const marketOfArea = markets.find((m) => m.id === sp.area);
   const marketOfWard = markets.find((m) => sp.area?.startsWith(`${m.id}-`));
-  const market = marketOfArea ?? markets.find((m) => m.id === sp.market) ?? marketOfWard ?? markets[0];
+  const picked = marketOfArea ?? markets.find((m) => m.id === sp.market) ?? marketOfWard;
+  // Khu vực có thật (Insight hiện mọi thị trường) mà thị trường của nó chưa có giá bán/thuê: nói rõ, không lặng lẽ
+  // dựng báo cáo của thành phố khác. Mã không có trong `areas` vẫn rơi về thị trường mặc định.
+  const unsupported = !picked && sp.area ? await getArea(sp.area) : null;
+  if (unsupported) {
+    const name = unsupported.regionType === "market" ? unsupported.name : (unsupported.parentName ?? unsupported.name);
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyTitle>Chưa có giá bán/thuê ở {name}</EmptyTitle>
+          <EmptyDescription>
+            Ước tính lợi suất và dòng tiền vốn vay cần giá bán và giá thuê của thị trường. Hiện mới có{" "}
+            {markets.map((m) => m.name).join(", ")}.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/yield?area=${markets[0].id}#financing`} />}>
+            Ước tính ở {markets[0].name}
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
+  }
+  const market = picked ?? markets[0];
   const currency = currencyFor(market.id);
   const areas = await getYieldAreas(market.id);
 

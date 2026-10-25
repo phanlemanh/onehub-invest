@@ -47,13 +47,14 @@ export function LabelCell({ row }: { row: LineRow }) {
 }
 
 function Figure({ line, value, currency }: { line: FinancingLine; value: number; currency: string }) {
+  // Số âm chỉ mang màu đỏ — không kèm sắc mục hay lớp `dark:` (lớp `dark:` thắng `text-destructive` ở nền tối).
+  const loss = line.signed && negative(value)
   return (
     <span
       className={cn(
-        FIGURE,
+        loss ? "text-destructive tabular-nums" : FIGURE,
         line.level === "section" && "font-semibold",
-        line.level === "section" && SECTION_TEXT[line.section],
-        line.signed && negative(value) && "text-destructive",
+        line.level === "section" && !loss && SECTION_TEXT[line.section],
       )}
     >
       {money(value, currency)}
