@@ -59,7 +59,7 @@ evals:
     executor: ui-check
     layer: ui-observed
     steps:
-      - "Chạy app theo config dev_server (DB local :5433) từ worktree đang kiểm — KHÔNG lưu chế độ nào lên DB local (bốn trạng thái đã đo ở E7 trong jsdom)"
+      - "Chạy app TỪ worktree đang kiểm trên cổng riêng còn trống (`cd app && npm run dev -- -p 3461`, DB local :5433) và dùng http://localhost:3461 cho mọi bước dưới — :3456 của dev_server có thể đang là bản của worktree khác; KHÔNG lưu chế độ nào lên DB local (bốn trạng thái đã đo ở E7 trong jsdom); xong thì dừng server"
       - "Chụp /ops/sources bằng scripts/ui-capture.sh ở sáng, tối (UI_CAPTURE_SCHEME=dark) và 390 (UI_CAPTURE_SIZE=390x844) → evidence/E8-{sang,toi,390}.png"
       - "Trên trình duyệt có phiên ops thử: bấm «Đổi chế độ thu» ở một điểm S06, chọn Bùng; TRƯỚC khi chụp chạy scripts/ui-standards/mask-tier-a.js trong trang (window.__TIER_A_NAMES rỗng — chỉ che [data-tier-a] của bảng phía sau) và chỉ chụp khi mọi phần tử [data-tier-a] đã mang data-tier-a-masked; chụp evidence/E8-hop-thoai.png (sáng và tối), rồi bấm Huỷ — không bấm Lưu"
     expected: "cột «Chế độ» có mặt và đọc được ở cả sáng và tối (dòng chưa đặt hiện «Chưa đặt»); ở 390 px không cuộn ngang ngoài khung bảng; hộp thoại có ô «Hạn bùng» kèm câu tối đa 14 đêm, nút Lưu khoá khi chưa nhập hạn; tầng A bị che ở cả ảnh trang (bước chụp thoát 0) lẫn ảnh hộp thoại (mọi [data-tier-a] mang data-tier-a-masked lúc chụp; hộp thoại chỉ ghi mã nguồn + id); số dòng ops_audit trước/sau bằng nhau"
