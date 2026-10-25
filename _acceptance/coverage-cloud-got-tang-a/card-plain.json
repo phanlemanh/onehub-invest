@@ -1,0 +1,3 @@
+{"feature_plain":"Máy đọc gọi /api/v1/ops/coverage trên máy chủ nhận độ tươi thật từng nguồn từ số máy thu đẩy lên, kèm cờ tươi / cũ / chỉ đo ở máy thu — không còn danh sách rỗng như thể không có nguồn nào, không lộ tên nguồn thật.",
+ "decisions":[{"id":"E7","q":"Route có tránh được danh sách rỗng hay số giả khi máy chủ không có số không?","why":"Cả ba giám khảo cho Đạt: mọi nhánh không có số đều trả state none, rows null; cờ cũ theo mốc của chính khối; phản hồi chỉ mang trường độ tươi."}],
+ "analyst_plain":"Các phép đo app chạy chung một lệnh nên xanh cả trên bản trước khi sửa — từng hành vi mới được bảo đảm bởi các bản sao đỏ trong chính bộ test, không bởi đối chứng baseline."}
