@@ -187,11 +187,11 @@ describe("AC-3 S03/S05", () => {
     assert.equal(s03.last, ago(1), "S03/hanoi đọc hàng mới của S03, không lẫn hàng S05");
     assert.equal(s03.status, "fresh", "hàng mock 5 ngày không được làm S03 quá hạn");
   });
-  test("AC-3 chiều đỏ: S05 13 giờ → stale, S03 vẫn fresh", async (t) => {
+  test("AC-3 chiều đỏ: S05 97 giờ → stale, S03 vẫn fresh", async (t) => {
     if (needDb(t)) return;
-    const f = ageSnapshot(baseFixture(), "hanoi__s05agent__1", ago(13));
+    const f = ageSnapshot(baseFixture(), "hanoi__s05agent__1", ago(97));
     const rows = await freshnessOf(f);
-    assert.equal(one(rows, "S05", "hanoi").status, "stale", "S05/hanoi phải stale ở 13 giờ (SLO 12)");
+    assert.equal(one(rows, "S05", "hanoi").status, "stale", "S05/hanoi phải stale ở 97 giờ (SLO 96)");
     assert.equal(one(rows, "S03", "hanoi").status, "fresh", "S03/hanoi không bị kéo theo S05");
   });
 });
@@ -217,7 +217,7 @@ describe("AC-5 SLO", () => {
     assert.deepEqual(rows.filter((r) => r.code === "S07").map((r) => r.status), ["no-slo"], "mã active chưa khai SLO phải ra đúng một no-slo");
   });
   test("AC-5 bảng SLO đúng năm giá trị giờ", () => {
-    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 12, S06: 36 });
+    assert.deepEqual(SLO_HOURS, { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36 });
   });
 });
 
@@ -264,7 +264,7 @@ function cli(schema, args = [], env = {}) {
     c.on("close", (code) => resolve({ code, stdout, stderr }));
   });
 }
-const s05Stale = () => ageSnapshot(baseFixture(), "hanoi__s05agent__1", ago(13));
+const s05Stale = () => ageSnapshot(baseFixture(), "hanoi__s05agent__1", ago(97));
 
 describe("AC-7 CLI", () => {
   test("AC-7 CLI mọi hàng fresh → thoát 0", async (t) => {
@@ -273,15 +273,15 @@ describe("AC-7 CLI", () => {
     assert.equal(r.code, 0, `CLI phải thoát 0 khi mọi ô tươi\n${r.stderr}`);
     assert.match(r.stdout, /freshness OK/);
   });
-  test("AC-7 CLI S05 13 giờ → thoát 1, dòng ghi 13 giờ / SLO 12, --json cùng hàng ageHours 13 sloHours 12 stale", async (t) => {
+  test("AC-7 CLI S05 97 giờ → thoát 1, dòng ghi 97 giờ / SLO 96, --json cùng hàng ageHours 97 sloHours 96 stale", async (t) => {
     if (needDb(t)) return;
     const [txt, js] = await withSchema(s05Stale(), async (s) => [await cli(s), await cli(s, ["--json"])]);
     assert.equal(txt.code, 1, "CLI chữ phải thoát 1 khi S05 quá hạn");
     assert.equal(js.code, 1, "CLI --json phải thoát 1 khi S05 quá hạn");
-    assert.ok(txt.stderr.split("\n").includes("S05/hanoi: quá hạn — 13 giờ (SLO 12 giờ)"), `dòng S05/hanoi phải mang tuổi/SLO của chính nó:\n${txt.stderr}`);
+    assert.ok(txt.stderr.split("\n").includes("S05/hanoi: quá hạn — 97 giờ (SLO 96 giờ)"), `dòng S05/hanoi phải mang tuổi/SLO của chính nó:\n${txt.stderr}`);
     const rows = JSON.parse(js.stdout);
     const s05 = rows.filter((r) => r.code === "S05" && r.city === "hanoi");
-    assert.deepEqual(s05.map((r) => [r.ageHours, r.sloHours, r.status]), [[13, 12, "stale"]]);
+    assert.deepEqual(s05.map((r) => [r.ageHours, r.sloHours, r.status]), [[97, 96, "stale"]]);
     assert.deepEqual(Object.keys(rows[0]).sort(), ["ageHours", "city", "code", "last", "sloHours", "status"]);
   });
   test("AC-7 CLI none/no-slo → thoát 1", async (t) => {
@@ -452,8 +452,8 @@ describe("GT-AC-2 S03/S05 nạp lại", () => {
   };
   test("GT-AC-2 S03/S05 nạp lại snapshot cũ → stale, last = collected_at", async (t) => {
     if (needDb(t)) return;
-    const rows = await freshnessOf(reimported(ago(80), ago(13)));
-    for (const [code, h] of [["S03", 80], ["S05", 13]]) {
+    const rows = await freshnessOf(reimported(ago(80), ago(97)));
+    for (const [code, h] of [["S03", 80], ["S05", 97]]) {
       const r = one(rows, code, "hanoi");
       assert.equal(r.status, "stale", `${code}/hanoi: bài nạp lại 1 giờ nhưng snapshot thu ${h} giờ phải quá hạn`);
       assert.equal(r.last, ago(h), `${code}/hanoi: last = collected_at của snapshot`);
@@ -482,7 +482,7 @@ describe("GT-AC-3 S03/S05 không kéo nhau", () => {
   });
   test("GT-AC-3 chiều ngược: S03 mới + S05 cũ → S03 fresh, S05 stale", async (t) => {
     if (needDb(t)) return;
-    const rows = await freshnessOf(two(ago(1), ago(13)));
+    const rows = await freshnessOf(two(ago(1), ago(97)));
     assert.equal(one(rows, "S03", "hanoi").status, "fresh");
     assert.equal(one(rows, "S05", "hanoi").status, "stale", "S03 mới không được làm S05 trông tươi");
   });
