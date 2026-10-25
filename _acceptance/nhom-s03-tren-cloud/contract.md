@@ -5,7 +5,7 @@ slug: nhom-s03-tren-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-25-nhom-s03-tren-cloud-design.md
 approved_by: Mạnh
 approved_at: 2026-10-25
