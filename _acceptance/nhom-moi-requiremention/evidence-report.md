@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: nhom-moi-requiremention
