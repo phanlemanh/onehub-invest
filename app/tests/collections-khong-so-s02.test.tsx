@@ -6,7 +6,7 @@
 import { after, before, describe, test } from "node:test"
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import pg from "pg"
 
@@ -55,6 +55,11 @@ async function render(el: unknown): Promise<string> {
   return renderToStaticMarkup(el as React.ReactElement)
 }
 
+/** Tệp mở đầu bằng chỉ thị "use client" (sau các dòng chú thích) — ranh giới server→client của Next. */
+function laClientSrc(src: string): boolean {
+  return /^(\s*(\/\/[^\n]*|\/\*[\s\S]*?\*\/))*\s*["']use client["']/.test(src)
+}
+
 // ---------- lược đồ tạm + bản sao mã main ----------
 const admin = new pg.Client({ connectionString: localDbUrl() })
 let setupErr: string | null = null
@@ -76,7 +81,9 @@ before(async () => {
     files.push("src/components/ops/collections-tables.tsx")
     for (const f of files) {
       // vùng của trang (collections/*, collections-tables) trỏ vào bản sao main; mọi thứ khác trỏ mã hiện tại
-      const src = execFileSync("git", ["-C", APP, "show", `${MAIN}:app/${f}`], { encoding: "utf8" })
+      const raw = execFileSync("git", ["-C", APP, "show", `${MAIN}:app/${f}`], { encoding: "utf8" })
+      if (laClientSrc(raw)) MAIN_CLIENT.add(path.join(MAIN_DIR, path.basename(f)))
+      const src = raw
         .replaceAll('from "@/components/ops/collections/', `from "${MAIN_DIR}/`)
         .replaceAll('from "@/components/ops/collections-tables"', `from "${MAIN_DIR}/collections-tables"`)
         .replaceAll('from "@/', `from "${path.join(APP, "src")}/`)
@@ -94,6 +101,7 @@ after(async () => {
   const { pool } = await import("../src/lib/db")
   await pool.end()
 })
+const MAIN_CLIENT = new Set<string>()
 const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm / bản sao main không được — eval đòi chạy thật: ${setupErr}`)
 const mainMod = (f: string) => import(path.join(MAIN_DIR, f))
 
@@ -347,6 +355,113 @@ describe("ON6-AC-6 toàn trang", () => {
       console.log(`# ON6-AC-6 hàng ${so} ${noi} ${truong}: ${sauTen} lần (bản sao gỡ ẩn: ${truocTen} lần)`)
       if (sauTen !== 0) loi.push(`hàng ${so} ${truong}: còn ${sauTen} lần`)
       if (truocTen < 1) loi.push(`hàng ${so} ${truong}: đối chứng dương 0 lần — phép đếm không thấy dạng in`)
+    }
+    assert.deepEqual(loi, [])
+  })
+})
+
+// ---------- AC-6 (lượt 2): ranh giới server→client — props mà component client nhận ----------
+// Next tuần tự hoá props của component "use client" vào luồng RSC trong HTML trang, kể cả trường component không in ra.
+// renderToStaticMarkup không thấy luồng đó, nên đo thẳng props: đi cây phần tử từ CollectionsView, mở mọi component
+// server, ghi props của mỗi component client (và của component không mở được — coi như ranh giới, chiều an toàn).
+
+/** Giải một đặc tả import thành tệp nguồn (alias @/, tương đối, tuyệt đối); gói npm → null. */
+function giaiImport(spec: string, dir: string): string | null {
+  const base = spec.startsWith("@/") ? path.join(APP, "src", spec.slice(2)) : spec.startsWith(".") ? path.resolve(dir, spec) : spec.startsWith("/") ? spec : null
+  if (!base) return null
+  for (const ext of ["", ".tsx", ".ts", "/index.tsx", "/index.ts"]) if (existsSync(base + ext) && statSync(base + ext).isFile()) return base + ext
+  return null
+}
+
+/** Mọi export của các tệp client mà các tệp server của trang import. */
+async function bienClient(serverFiles: string[], laClient: (f: string) => boolean): Promise<Set<unknown>> {
+  const set = new Set<unknown>()
+  for (const f of serverFiles)
+    for (const [, spec] of readFileSync(f, "utf8").matchAll(/from "([^"]+)"/g)) {
+      const file = giaiImport(spec, path.dirname(f))
+      if (!file || !laClient(file)) continue
+      for (const v of Object.values(await import(file))) if (v) set.add(v)
+    }
+  return set
+}
+
+const boKhoaRieng = (k: string, v: unknown) => (k.startsWith("_") ? undefined : v)
+
+/** JSON props của mọi component client (hoặc không mở được) trong cây dựng từ `el`. */
+async function propsClient(el: unknown, client: Set<unknown>): Promise<string> {
+  const out: string[] = []
+  const ghi = (props: unknown) => {
+    out.push(JSON.stringify(props, boKhoaRieng) ?? "")
+  }
+  async function di(n: unknown): Promise<void> {
+    if (n instanceof Promise) return di(await n)
+    if (Array.isArray(n)) {
+      for (const c of n) await di(c)
+      return
+    }
+    if (n == null || typeof n !== "object" || !("props" in n) || !("type" in n)) return
+    const { type, props } = n as { type: unknown; props: Record<string, unknown> }
+    if (client.has(type)) return ghi(props)
+    const fn = typeof type === "function" ? type : (type as { render?: unknown } | null)?.render
+    if (typeof fn === "function") {
+      let r: unknown
+      try {
+        r = (fn as (p: unknown) => unknown)(props)
+      } catch {
+        return ghi(props) // hook ngoài lượt render → component client không khai trong bộ đọc: coi là ranh giới
+      }
+      return di(r)
+    }
+    return di(props.children) // thẻ HTML, Fragment, Provider
+  }
+  const err = console.error
+  console.error = () => {} // React báo «Invalid hook call» cho mỗi component client gọi thử — đã bắt ở catch
+  try {
+    await di(el)
+  } finally {
+    console.error = err
+  }
+  return out.join("\n")
+}
+
+const SERVER_FILES = ["collections-view.tsx", "pipe-panels.tsx", "attention-list.tsx", "section.tsx"]
+
+describe("ON6-AC-6 ranh giới server→client", () => {
+  test("ON6-AC-6 props component client (luồng RSC) không mang lính canh S02 hàng 1–3 và 7", async () => {
+    ready()
+    const dirNay = path.join(APP, "src/components/ops/collections")
+    const laClientNay = (f: string) => laClientSrc(readFileSync(f, "utf8"))
+    const clientNay = await bienClient(SERVER_FILES.map((f) => path.join(dirNay, f)), laClientNay)
+    const clientMain = await bienClient(
+      SERVER_FILES.map((f) => path.join(MAIN_DIR, f)),
+      (f) => MAIN_CLIENT.has(f) || (!f.startsWith(MAIN_DIR) && laClientNay(f)),
+    )
+    const { CollectionsView } = await import("../src/components/ops/collections/collections-view")
+    const oldView = (await mainMod("collections-view.tsx")).CollectionsView
+    const localNay = await propsClient(<CollectionsView {...BASE} feedHealth={FEEDS} />, clientNay)
+    const localMain = await propsClient(oldView({ ...BASE, feedHealth: FEEDS }), clientMain)
+    const p = (await push()).payload
+    const by = (p.blocks.records24h.bySource as { code: string; n: number }[]).filter((x) => x.code !== "S02")
+    p.blocks.records24h.bySource = [...by, { code: "S02", n: LINH_CANH.cloudS02 }]
+    await ghiBanTin(p)
+    const { getCloudOpsView } = await import("../src/lib/ops-cloud")
+    const cloud = await getCloudOpsView({ now: new Date() })
+    const cloudProps = { ...BASE, feedHealth: cloud.feeds ?? [], cloud, cloudDays: [] }
+    const cloudNay = await propsClient(<CollectionsView {...(cloudProps as Parameters<typeof CollectionsView>[0])} />, clientNay)
+    const cloudMain = await propsClient(oldView(cloudProps), clientMain)
+    const HANG: [string, string, number, string, string][] = [
+      ["1", "lưới nguồn S02 · items24h", LINH_CANH.s02Items24h, localNay, localMain],
+      ["2", "lưới nguồn S02 · stgRows", LINH_CANH.s02Stg, localNay, localMain],
+      ["3", "lưới nguồn S02 · offers", LINH_CANH.s02Offers, localNay, localMain],
+      ["7", "records24h S02 · n (máy chủ)", LINH_CANH.cloudS02, cloudNay, cloudMain],
+    ]
+    const loi: string[] = []
+    console.log(`# ON6-AC-6 ranh giới: ${clientNay.size} export client ở mã hiện tại, ${clientMain.size} ở bản sao main`)
+    for (const [so, truong, v, nay, main] of HANG) {
+      const [sau, truoc] = [dem(nay, v), dem(main, v)]
+      console.log(`# ON6-AC-6 ranh giới hàng ${so} ${truong}: ${sau} lần trong props client (bản sao main: ${truoc} lần)`)
+      if (sau !== 0) loi.push(`hàng ${so} ${truong}: còn ${sau} lần trong props client`)
+      if (truoc < 1) loi.push(`hàng ${so} ${truong}: đối chứng dương 0 lần — bộ đi cây không thấy props client`)
     }
     assert.deepEqual(loi, [])
   })
