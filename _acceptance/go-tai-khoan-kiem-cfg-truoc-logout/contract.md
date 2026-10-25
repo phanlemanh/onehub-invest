@@ -5,7 +5,7 @@ slug: go-tai-khoan-kiem-cfg-truoc-logout
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T03:41:08Z
 design_doc: docs/superpowers/specs/2026-10-25-go-tai-khoan-kiem-cfg-truoc-logout-design.md
@@ -66,3 +66,6 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Giao diện `/ops/sources`.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Nếu sau này bộ kiểm cấu hình Zalo có thêm một loại vi phạm mới, phép đo hiện tại không tự báo thiếu ca cho loại đó; năm loại đã biết vẫn được bảo vệ đầy đủ.
