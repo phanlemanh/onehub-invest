@@ -24,10 +24,12 @@ const BO_CHUYEN = `const n=require("net");n.createServer(c=>{const s=n.connect(5
 /** Lỗi cấy theo module (Hỏi-4): TS → lỗi kiểu ở bước typecheck; JS → lỗi kiểu thật trong tệp có test phủ, bước test bắt. */
 export const CAY = {
   app: { tep: "app/src/lib/log-root.ts", loai: "lỗi kiểu TS", buoc: "typecheck", sua: (s) => `${s}\nexport const __ciCay: number = "lỗi cấy";\n` },
-  pipeline: { tep: "pipeline/lib/vn-day.mjs", loai: "gọi hàm không tồn tại (formatToPart)", buoc: "test", sua: (s) => s.replace("PARTS.formatToParts(", "PARTS.formatToPart(") },
+  // JS: tệp chỉ test của chính module dùng — vn-day.mjs, freshness.mjs… được test của app/pipeline/scripts dùng chung, cấy vào
+  // đó thì nhiều job cùng đỏ (đúng hành vi CI, nhưng không đo được «đỏ đúng job»).
+  pipeline: { tep: "pipeline/lib/write-offers.mjs", loai: "gọi hàm không tồn tại (Object.key)", buoc: "test", sua: (s) => s.replace("const cols = Object.keys(row);", "const cols = Object.key(row);") },
   agent: { tep: "agent/src/runtime/models.ts", loai: "lỗi kiểu TS", buoc: "typecheck", sua: (s) => `${s}\nexport const __ciCay: number = "lỗi cấy";\n` },
   "data-api": { tep: "data-api/src/index.ts", loai: "lỗi kiểu TS", buoc: "typecheck", sua: (s) => `${s}\nexport const __ciCay: number = "lỗi cấy";\n` },
-  scripts: { tep: "scripts/lib/freshness.mjs", loai: "gọi hàm không tồn tại (toISOStrin)", buoc: "test", sua: (s) => s.replace("last.toISOString()", "last.toISOStrin()") },
+  scripts: { tep: "scripts/lib/ops-visible-strings.mjs", loai: "gọi hàm không tồn tại (createSourceFil)", buoc: "test", sua: (s) => s.replace("ts.createSourceFile(file,", "ts.createSourceFil(file,") },
 };
 
 const sh = (cmd, args, opts = {}) => spawnSync(cmd, args, { encoding: "utf8", maxBuffer: 1 << 28, ...opts });
