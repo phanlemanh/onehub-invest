@@ -5,7 +5,7 @@ slug: transform-zalo-boc-job-run
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T05:45:23Z
 design_doc: docs/superpowers/specs/2026-10-25-transform-zalo-boc-job-run-design.md
@@ -70,3 +70,7 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Plist launchd và cảnh báo khi job đỏ.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Sổ vận hành chưa nói rằng khi bước nạp hỏng (kể cả đêm DB sập) job thoát 1 và không in dòng JOB FAIL — dấu hiệu là dòng «nạp fail tại …» trong log.
+  - Ngoài-2: Sổ vận hành còn ghi bản vá P1.5 của phần nạp nằm trên nhánh ZCode, trong khi bản vá đã vào main.

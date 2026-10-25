@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: d8ca12a11f39a860a9b7ec2bc190f343ae2d2088
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: transform-zalo-boc-job-run
