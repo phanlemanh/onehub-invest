@@ -3,6 +3,11 @@
 # Mỗi mục: PASS / FAIL / LIMITED + chi tiết
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"   # suy từ vị trí script (chạy đúng cây đang đứng, kể cả worktree)
+# Gốc log (ON16): job launchd ghi pipeline/logs ở checkout chính — chạy từ worktree thì đọc log ở đó. git báo thư mục git
+# chung <X>/.git → gốc log <X>; git lỗi (không phải kho, .git hỏng, checkout chính đã dời) hay kho trần → chính cây.
+LOG_ROOT="$ROOT"
+GIT_CHUNG=$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || GIT_CHUNG=""
+if [ "$(basename "${GIT_CHUNG:-x}")" = ".git" ] && [ -d "$(dirname "$GIT_CHUNG")" ]; then LOG_ROOT="$(dirname "$GIT_CHUNG")"; fi
 DB="docker exec -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -tAc"
 CLOUD="https://onehub-invest.vercel.app"
 CTOKEN=$(grep CLOUD_OPS_API_TOKEN ~/.oneinvest/cloud.env 2>/dev/null | cut -d= -f2)
@@ -40,8 +45,9 @@ N_LISTINGS_AL=$($DB "SELECT count(*) FROM airdna_listings;" 2>/dev/null)
 N_PHOTOS_AL=$($DB "SELECT count(*) FROM airdna_listings WHERE photo_urls IS NOT NULL;" 2>/dev/null)
 [ "$N_MARKETS" -gt 0 ] 2>/dev/null && pass "AirDNA: $N_MARKETS markets có metrics, $N_LISTINGS_AL listings, $N_PHOTOS_AL có ảnh" || fail "AirDNA: không có metrics"
 [ "$N_PHOTOS_AL" -lt "$N_LISTINGS_AL" ] 2>/dev/null && limit "AirDNA ảnh: $N_PHOTOS_AL/$N_LISTINGS_AL (chỉ top-50/submarket)" "rotation chưa quét hết; sẽ đầy hơn theo đêm"
-LOG_AIRDNA=$(tail -5 $ROOT/pipeline/logs/airdna-daily.log 2>/dev/null | head -1)
-[ -n "$LOG_AIRDNA" ] && pass "AirDNA nightly log: có activity" || limit "AirDNA nightly log trống" "chưa chạy đêm nào hoặc rotation mới cài"
+LOG_AIRDNA_F="$LOG_ROOT/pipeline/logs/airdna-daily.log"
+LOG_AIRDNA=$(tail -5 "$LOG_AIRDNA_F" 2>/dev/null | head -1)
+[ -n "$LOG_AIRDNA" ] && pass "AirDNA nightly log: có activity" || limit "AirDNA nightly log trống — đọc $LOG_AIRDNA_F" "chưa chạy đêm nào hoặc rotation mới cài"
 
 echo "A2. Airbnb tự thu"
 N_LISTINGS=$($DB "SELECT count(*) FROM listings;" 2>/dev/null)
