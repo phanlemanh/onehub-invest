@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6bbcf8402450d5ac9d41824c9e0129b7ba4ea57b
+verified_commit: 9a84b372ba2ae737995902204012b0c177cc308c
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -159,3 +159,7 @@ Round 2: E1 đến E7 đều đạt ở commit d8ca12a, các lệnh suite hồi 
 ### Re-pin lần 1 — 2026-10-25, do gộp main e0bfe55 sau chữ ký
 run_id: repin-20261025T064203Z-62438
 sha: 6bbcf8402450d5ac9d41824c9e0129b7ba4ea57b · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp main 7cef730 (#95) sau chữ ký
+run_id: repin-20261025T065418Z-38864
+sha: 9a84b372ba2ae737995902204012b0c177cc308c · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
