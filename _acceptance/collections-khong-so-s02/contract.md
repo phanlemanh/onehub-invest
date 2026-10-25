@@ -5,7 +5,7 @@ slug: collections-khong-so-s02
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-collections-khong-so-s02-design.md
@@ -89,3 +89,10 @@ trang thật. Biên: S02 là nguồn nhiều bản ghi nhất (AC-5); tab không
 ## Notes
 
 - Độ tươi/trạng thái S02 giữ để «x/y nguồn đạt SLO» trùng `/ops` (AU6).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: phép kiểm dữ liệu trang gửi xuống trình duyệt chưa tự chứng nó thấy đúng hai phần giao diện nhận hàng S02, nên «0 lần» chưa tách được «đã bỏ số» với «không nhìn thấy».
+  - Ngoài-4: vài dòng mô tả trên trang Thu thập gọi nguồn bằng mã trần (S01, S03) trong khi chỗ khác gọi kèm vai trò.
+  - Ngoài-5: smoke trang Thu thập vẫn báo «ảnh chụp đã lưu» khi một lần chụp ảnh lỗi.
+  - Ngoài-6: luật tĩnh chỉ bắt số S02 quay lại trang bằng tên `airdna*`, không bắt tên khác.
+  - Ngoài-7: tổng ở mô tả tab Zalo của biểu đồ chưa có bài kiểm so đúng con số.
+  - Ngoài-8: bài kiểm phụ về tên thị trường S02 ở vòng thu chỉ bắt một cách in hẹp, không có đối chứng dương.

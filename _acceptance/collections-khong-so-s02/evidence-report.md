@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 50a6c8e0ab9ccf02ef2e080bda33bbc44dff2a50
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: collections-khong-so-s02
