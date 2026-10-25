@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
-  chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, utimesSync, writeFileSync,
+  chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, utimesSync, writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -68,7 +68,7 @@ function plist(env) {
 function runAudit(opts = {}) {
   const root = mkdtempSync(path.join(realpathSync(tmpdir()), "audit-all-"));
   roots.push(root);
-  const tree = path.join(root, "tree");
+  const tree = opts.treeDir ?? path.join(root, "tree");
   const home = path.join(root, "home");
   const bin = path.join(root, "bin");
   const log = path.join(root, "calls.log");
@@ -277,5 +277,127 @@ describe("audit-all nói thật (AU5)", () => {
     const src = readFileSync(SCRIPT, "utf8");
     assert.doesNotMatch(src, /\/usr\/(local\/)?bin\/(curl|docker|openclaw|security)|\/bin\/launchctl/);
     assert.doesNotMatch(src, /ROOT="\/Users\//, "ROOT còn viết cứng");
+  });
+});
+
+// ---------- ON16 `audit-all-doc-log-o-checkout`: gốc log ở checkout chính khi chạy từ worktree ----------
+// Hai cây tạm dựng bằng git THẬT (git init + git worktree add) — tệp .git của worktree do git viết, không viết tay.
+// «Checkout chính» tạm có pipeline/logs/airdna-daily.log (gitignore, như kho thật); worktree tạm không có log.
+
+const MAIN_SHA = "9e3bb9f"; // main trước ON16 — đối chứng dương: script suy log từ chính cây
+const SCRIPT_MAIN = spawnSync("git", ["-C", REPO, "show", `${MAIN_SHA}:scripts/audit-all.sh`], { encoding: "utf8" }).stdout;
+const LOG_S02 = "2026-10-24 19:05 vòng S02 xong: 6 thị trường\n";
+
+function git(cwd, ...args) {
+  const r = spawnSync("git", ["-c", "user.name=on16", "-c", "user.email=on16@local.test", "-C", cwd, ...args], { encoding: "utf8" });
+  assert.equal(r.status, 0, `git ${args.join(" ")}: ${r.stderr}`);
+  return r.stdout.trim();
+}
+
+/** Checkout chính tạm (git init, một commit chứa script) + worktree tạm; log S02 chỉ ở checkout chính. */
+function haiCay() {
+  const root = realpathSync(mkdtempSync(path.join(realpathSync(tmpdir()), "on16-")));
+  roots.push(root);
+  const main = path.join(root, "chinh");
+  mkdirSync(path.join(main, "scripts"), { recursive: true });
+  copyFileSync(SCRIPT, path.join(main, "scripts/audit-all.sh"));
+  writeFileSync(path.join(main, ".gitignore"), "pipeline/logs/\n");
+  git(main, "init", "-q", "-b", "main");
+  git(main, "add", ".");
+  git(main, "commit", "-q", "-m", "cay chinh");
+  mkdirSync(path.join(main, "pipeline/logs"), { recursive: true });
+  writeFileSync(path.join(main, "pipeline/logs/airdna-daily.log"), LOG_S02);
+  const wt = path.join(root, "wt");
+  git(main, "worktree", "add", "-q", "-b", "wt", wt);
+  return { root, main, wt };
+}
+
+const dongA1 = (out) => lineOf(out, /AirDNA nightly log/) ?? "(không có dòng A1)";
+
+describe("ON16 audit-all đọc log ở checkout chính", () => {
+  test("ON16-AC-1 audit-all từ worktree đọc log ở checkout chính", () => {
+    const { main, wt } = haiCay();
+    assert.ok(readFileSync(path.join(wt, ".git"), "utf8").startsWith("gitdir: "), "worktree tạm phải có tệp .git do git viết");
+    const r = runAudit({ treeDir: wt });
+    assert.equal(r.status, 0, r.stderr);
+    console.log(`# ON16-AC-1 worktree ${wt} · log chỉ ở ${main}/pipeline/logs · dòng A1: ${dongA1(r.out).trim()}`);
+    assert.match(dongA1(r.out), /^ {2}✅ AirDNA nightly log: có activity$/);
+  });
+
+  test("ON16-AC-1 script main từ worktree → LIMITED trống", () => {
+    const { wt } = haiCay();
+    const r = runAudit({ treeDir: wt, scriptText: SCRIPT_MAIN });
+    console.log(`# ON16-AC-1 chiều đỏ (main ${MAIN_SHA}): ${dongA1(r.out).trim()}`);
+    assert.match(dongA1(r.out), /^ {2}⚠️ {2}AirDNA nightly log trống/, "script main phải báo LIMITED trống từ worktree");
+  });
+
+  test("ON16-AC-2 kết quả từ worktree trùng lần chạy ở checkout chính", () => {
+    const { main, wt } = haiCay();
+    const a = runAudit({ treeDir: wt, openclaw: "has" });
+    const b = runAudit({ treeDir: main, openclaw: "has" });
+    const la = a.out.split("\n");
+    const lb = b.out.split("\n");
+    const khac = la.map((l, i) => [i, l, lb[i]]).filter(([, x, y]) => x !== y);
+    console.log(`# ON16-AC-2 đã so ${Math.max(la.length, lb.length)} dòng · khác ${khac.length + Math.abs(la.length - lb.length)}`);
+    assert.equal(la.length, lb.length, "số dòng khác nhau");
+    assert.deepEqual(khac, []);
+  });
+
+  test("ON16-AC-2 script main từ worktree → khác ở mục A1", () => {
+    const { main, wt } = haiCay();
+    const a = runAudit({ treeDir: wt, openclaw: "has", scriptText: SCRIPT_MAIN });
+    const b = runAudit({ treeDir: main, openclaw: "has", scriptText: SCRIPT_MAIN });
+    const lb = b.out.split("\n");
+    const khac = a.out.split("\n").filter((l, i) => l !== lb[i]);
+    console.log(`# ON16-AC-2 chiều đỏ: ${khac.length} dòng khác — ${khac.map((l) => l.trim()).join(" | ")}`);
+    assert.ok(khac.length > 0 && khac.every((l) => /AirDNA nightly log|TỔNG KẾT/.test(l)), `phải khác đúng ở A1 (và tổng kết), được: ${khac.join(" | ")}`);
+  });
+
+  // Ca biên: không tìm được checkout chính → đọc log của chính cây; mục log trống thì dòng LIMITED ghi đường đã đọc (Hỏi-1).
+  function caBien(scriptText) {
+    const out = {};
+    // checkout chính chạy chính nó
+    {
+      const { main } = haiCay();
+      out["checkout chính"] = { r: runAudit({ treeDir: main, scriptText }), want: "pass" };
+    }
+    // thư mục không phải kho git, có log riêng
+    out["không git"] = { r: runAudit({ airdnaLog: LOG_S02, scriptText }), want: "pass" };
+    // tệp .git hỏng — git lỗi; cây có log riêng
+    {
+      const { wt } = haiCay();
+      writeFileSync(path.join(wt, ".git"), "gitdir: /khong/co/dau\n");
+      mkdirSync(path.join(wt, "pipeline/logs"), { recursive: true });
+      writeFileSync(path.join(wt, "pipeline/logs/airdna-daily.log"), LOG_S02);
+      out[".git hỏng"] = { r: runAudit({ treeDir: wt, scriptText }), want: "pass" };
+    }
+    // checkout chính đã dời — git lỗi; cây không log → LIMITED ghi đường của chính cây
+    {
+      const { main, wt, root } = haiCay();
+      renameSync(main, path.join(root, "chinh-da-doi"));
+      out["checkout chính đã dời"] = { r: runAudit({ treeDir: wt, scriptText }), want: `đọc ${wt}/pipeline/logs/airdna-daily.log` };
+    }
+    return out;
+  }
+  const loiCaBien = (cases) =>
+    Object.entries(cases).flatMap(([ten, { r, want }]) => {
+      const l = dongA1(r.out);
+      const tong = /TỔNG KẾT: \d+ PASS/.test(r.out);
+      console.log(`# ON16-AC-3 ${ten}: ${l.trim()}${tong ? "" : " · THIẾU TỔNG KẾT"}`);
+      if (!tong || r.status !== 0) return [`${ten}: không chạy hết (mã ${r.status})`];
+      if (want === "pass") return /^ {2}✅ AirDNA nightly log: có activity$/.test(l) ? [] : [`${ten}: không đọc log của chính cây — «${l.trim()}»`];
+      return /^ {2}⚠️ {2}AirDNA nightly log trống — /.test(l) && l.includes(want) ? [] : [`${ten}: dòng LIMITED không ghi «${want}» — «${l.trim()}»`];
+    });
+
+  test("ON16-AC-3 cây không tìm được checkout chính đọc log của chính cây", () => {
+    assert.deepEqual(loiCaBien(caBien()), []);
+  });
+
+  test("ON16-AC-3 bản đột biến gốc log rỗng khi git lỗi → báo đường đọc sai", () => {
+    const src = readFileSync(SCRIPT, "utf8");
+    assert.ok(src.includes('LOG_ROOT="$ROOT"\n'), "khuôn đột biến không còn khớp script");
+    const loi = loiCaBien(caBien(src.replace('LOG_ROOT="$ROOT"\n', 'LOG_ROOT=""\n')));
+    console.log(`# ON16-AC-3 chiều đỏ: ${loi.join(" | ")}`);
+    assert.ok(loi.some((x) => x.startsWith("checkout chính đã dời")) && loi.some((x) => x.startsWith(".git hỏng")), `đột biến phải bị bắt: ${loi.join(" | ")}`);
   });
 });
