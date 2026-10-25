@@ -79,6 +79,36 @@ try {
   }
   check(lech.length === 0 && soSanh > 0, `tự thu bằng nhau ở ba nguồn cho ${soSanh} khu vực${lech.length ? ` — lệch: ${lech.join("; ")}` : ""}`);
 
+  // Tỉ lệ «Listing»: thẻ (đầu ra thật của getAirdnaComparison) = bảng Độ phủ (getTruthfulCoverage) — hồ sơ
+  // ty-le-listing-khu-vuc-gop. Một bên trống còn bên kia có số là lệch.
+  const covBy = new Map(cov.map((r) => [r.areaId, r]));
+  let soTiLe = 0;
+  let soGop = 0;
+  const lechTiLe = [];
+  for (const { market, data } of comparisons) {
+    const r = covBy.get(market.id);
+    if (!data || !r) continue;
+    const a = data.metrics.find((m) => m.metric === "Listing")?.ratio ?? null;
+    const b = r.ratio;
+    soTiLe++;
+    if (data.representative.ofMarkets > 1) soGop++;
+    if ((a === null) !== (b === null) || (a !== null && Math.abs(a - b) > 1e-12)) lechTiLe.push(`${market.id} thẻ=${a} Độ phủ=${b}`);
+  }
+  check(lechTiLe.length === 0 && soTiLe > 0 && soGop > 0, `tỉ lệ Listing thẻ = Độ phủ cho ${soTiLe} khu vực (${soGop} gộp nhiều market)${lechTiLe.length ? ` — lệch: ${lechTiLe.join("; ")}` : ""}`);
+  // Đối chứng: tỉ lệ kiểu cũ (tự thu ÷ listing S02 của riêng market đại diện) lệch Độ phủ ở ít nhất một khu vực.
+  const lcBy = new Map(
+    (await c.query(`SELECT DISTINCT ON (airdna_id) airdna_id, value FROM airdna_market_metrics
+                     WHERE metric = 'listing_count' ORDER BY airdna_id, period DESC`)).rows.map((r) => [r.airdna_id, Number(r.value)]),
+  );
+  let lechCuTiLe = 0;
+  for (const { market, data } of comparisons) {
+    const r = covBy.get(market.id);
+    const lc = data ? lcBy.get(data.representative.airdnaId) : undefined;
+    if (!data || !r || r.ratio === null || !lc) continue;
+    if (Math.abs(data.ourListings / lc - r.ratio) > 1e-12) lechCuTiLe++;
+  }
+  check(lechCuTiLe >= 1, `đối chứng: tỉ lệ chia cho market đại diện lệch ở ${lechCuTiLe} khu vực`);
+
   // Đếm thị trường hiệu chuẩn: SQL độc lập so với splitCalibrated.
   const cal = splitCalibrated(comparisons);
   const coSo = new Set((await c.query(CO_SO_SQL)).rows.map((r) => r.area_id));
