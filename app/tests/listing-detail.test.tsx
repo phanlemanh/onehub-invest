@@ -326,8 +326,32 @@ test("LD-AC-6 lịch: không <button> tay, không cỡ chữ tự đặt; baseli
   const host = await render(<BookingHeatmap nights={LISTING.calendar} currency="VND" lastSeen="2026-10-17" />);
   const nightButtons = [...host.querySelectorAll("button")].filter((b) => /2026: /.test(b.getAttribute("aria-label") ?? ""));
   assert.equal(nightButtons.length, 10, "mỗi đêm một nút có nhãn");
-  assert.ok(nightButtons.every((b) => b.getAttribute("tabindex") !== "-1"), "nút đêm phải nhận focus bằng Tab");
-  assert.match(nightButtons[0].getAttribute("aria-label")!, /^Thứ 3, 20\/10\/2026: Đã có khách đặt$/);
+  // Nhãn trọn khuôn «<Thứ>, <ngày>: <trạng thái>» cho cả 10 đêm — đủ ba trạng thái và bảy thứ, viết trước.
+  assert.deepEqual(
+    nightButtons.map((b) => b.getAttribute("aria-label")),
+    [
+      "Thứ 3, 20/10/2026: Đã có khách đặt",
+      "Thứ 4, 21/10/2026: Còn trống",
+      "Thứ 5, 22/10/2026: Chưa rõ",
+      "Thứ 6, 23/10/2026: Đã có khách đặt",
+      "Thứ 7, 24/10/2026: Còn trống",
+      "Chủ nhật, 25/10/2026: Chưa rõ",
+      "Thứ 2, 26/10/2026: Đã có khách đặt",
+      "Thứ 3, 27/10/2026: Còn trống",
+      "Thứ 4, 28/10/2026: Chưa rõ",
+      "Thứ 5, 29/10/2026: Đã có khách đặt",
+    ],
+  );
+  // Nhận focus thật (đối chứng dương, không chỉ «thiếu tabindex=-1»): focus() đưa activeElement về đúng nút, nút không disabled.
+  for (const b of [nightButtons[0], nightButtons[9]]) {
+    (b as HTMLButtonElement).focus();
+    assert.equal(document.activeElement, b, `nút ${b.getAttribute("aria-label")} không nhận focus`);
+    assert.equal((b as HTMLButtonElement).disabled, false);
+  }
+  // Chiều đỏ của phép focus: cùng nút bị disabled thì focus() không đưa activeElement về nó.
+  (nightButtons[1] as HTMLButtonElement).disabled = true;
+  (nightButtons[1] as HTMLButtonElement).focus();
+  assert.notEqual(document.activeElement, nightButtons[1], "nút disabled vẫn nhận focus — phép đo focus không phân biệt được");
   const summary = [...host.querySelectorAll("button")].filter((b) => /Công suất|số đêm của tháng|collector/.test(b.getAttribute("aria-label") ?? ""));
   assert.equal(summary.length, 3, "ba mục tóm tắt vẫn mở tooltip bằng bàn phím");
 });
@@ -483,11 +507,15 @@ test("LD-AC-9 bốn ô KPI giữ công thức cũ: bậc giá theo p30/p60/p90, 
     t.map((x) => [x.title, x.value, x.tier?.label ?? null, x.footer]),
     [
       ["Giá niêm yết", fmtMoney(1_000_000, "VND"), "Trên trung vị", `Trung vị 12 listing cùng phường: ${fmtMoney(900_000, "VND")}`],
-      ["Công suất", fmtPct(0.4), t[1].tier?.label ?? null, `Trung vị 12 listing cùng phường: ${fmtPct(0.35)}`],
+      ["Công suất", fmtPct(0.4), "Khá", `Trung vị 12 listing cùng phường: ${fmtPct(0.35)}`],
       ["Đêm đã đặt", `${fmtInt(4)}/${fmtInt(10)}`, null, `Trong ${fmtInt(10)} đêm tới của lịch`],
       ["Doanh thu ước tính", fmtMoneyCompact(4_000_000, "VND"), null, "Tổng giá các đêm đã đặt trong lịch tới"],
     ],
   );
+  // Ngưỡng bậc công suất (tierOf, cao = tốt): ≥p90 Nhóm đầu, ≥p60 Khá, ≥p30 Trung bình, dưới Thấp — kỳ vọng viết trước.
+  const occTier = (occupancy: number) =>
+    listingTiles({ ...LISTING, stats: { ...LISTING.stats, occupancy } }, peers)[1].tier?.label;
+  assert.deepEqual([0.6, 0.35, 0.2, 0.19].map(occTier), ["Nhóm đầu", "Khá", "Trung bình", "Thấp"]);
   // Ngưỡng bậc giá: ≥p90 Cao cấp, ≥p60 Trên trung vị, ≥p30 Tầm trung, dưới Giá thấp.
   const tier = (price: number) => listingTiles({ ...LISTING, priceListed: price }, peers)[0].tier?.label;
   assert.deepEqual([1_500_000, 900_000, 500_000, 499_999].map(tier), ["Cao cấp", "Trên trung vị", "Tầm trung", "Giá thấp"]);

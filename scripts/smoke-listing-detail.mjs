@@ -262,6 +262,15 @@ try {
             .waitFor({ state: "visible", timeout: 3000 })
             .then(() => true, () => false)
           check(tip, "tooltip «Công suất …» của lịch mở khi nút tóm tắt nhận focus bằng Tab")
+          // Tab thật từ nút tóm tắt cuối vào lưới đêm: tối đa 3 lần Tab phải tới một nút đêm «<Thứ>, <ngày>: <trạng thái>».
+          await page.locator('button[aria-label^="Lần gần nhất collector"]').focus()
+          let toiDem = null
+          for (let k = 1; k <= 3 && !toiDem; k++) {
+            await page.keyboard.press("Tab")
+            const nhan = await page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? "")
+            if (/^(Thứ [2-7]|Chủ nhật), \d{1,2}\/\d{1,2}\/\d{4}: (Đã có khách đặt|Còn trống|Chưa rõ)$/.test(nhan)) toiDem = { k, nhan }
+          }
+          check(Boolean(toiDem), `Tab từ tóm tắt lịch vào ô đêm sau ${toiDem?.k ?? "—"} lần: «${toiDem?.nhan ?? "không tới"}»`)
         }
         await page.close()
 

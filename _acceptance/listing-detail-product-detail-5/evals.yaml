@@ -66,7 +66,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/listing/booking-heatmap.tsx, app/eslint-suppressions.json, app/tests/listing-detail.test.tsx]
-    expected: "exit 0; ca 'LD-AC-6 lịch' xanh: booking-heatmap.tsx không khớp /<button\\b/ và /text-\\[\\d/; listingSuppressionKeys(eslint-suppressions.json) = []; chiều đỏ cùng ca: fixture có khoá 'src/components/listing/booking-heatmap.tsx' → trả đúng khoá ấy; render 10 đêm → 10 nút aria-label khớp '2026: ', không nút nào tabindex=-1, nút đầu 'Thứ 3, 20/10/2026: Đã có khách đặt'; 3 nút tóm tắt. Chiều đỏ đã chạy ở S1: trả text-[9px] → ca đỏ 'booking-heatmap.tsx còn cỡ chữ tự đặt'"
+    expected: "exit 0; ca 'LD-AC-6 lịch' xanh: booking-heatmap.tsx không khớp /<button\\b/ và /text-\\[\\d/; listingSuppressionKeys(eslint-suppressions.json) = []; chiều đỏ cùng ca: fixture có khoá 'src/components/listing/booking-heatmap.tsx' → trả đúng khoá ấy; render 10 đêm → nhãn 10 nút đúng TRỌN danh sách viết trước ('Thứ 3, 20/10/2026: Đã có khách đặt', 'Thứ 4, 21/10/2026: Còn trống', 'Thứ 5, 22/10/2026: Chưa rõ', … 'Chủ nhật, 25/10/2026: Chưa rõ', … 'Thứ 5, 29/10/2026: Đã có khách đặt' — đủ ba trạng thái, bảy thứ); focus() đưa document.activeElement về nút đêm đầu và cuối, cả hai không disabled; chiều đỏ cùng ca: nút bị disabled thì focus() không đưa activeElement về nó; 3 nút tóm tắt. Chiều đỏ đã chạy ở S1: trả text-[9px] → ca đỏ 'booking-heatmap.tsx còn cỡ chữ tự đặt'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-6
@@ -101,7 +101,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/listing/listing-sections.tsx, app/tests/listing-detail.test.tsx]
-    expected: "exit 0; ca 'LD-AC-9 bốn ô KPI' xanh: listingTiles với peers {area, n 12, price [5e5, 9e5, 1.5e6], occ [0.2, 0.35, 0.6]} → bốn bộ [tiêu đề, giá trị, bậc, footer] đúng như ca ghim (Giá niêm yết 'Trên trung vị', footer 'Trung vị 12 listing cùng phường: …'); bậc giá theo 1.5e6/9e5/5e5/499999 = Cao cấp/Trên trung vị/Tầm trung/Giá thấp; giá null → footer công suất 'Listing chưa báo giá — …', không peers → 'Giá một đêm trên Airbnb', doanh thu 0 → '—'; peers scope market → footer chứa 'cùng thị trường'"
+    expected: "exit 0; ca 'LD-AC-9 bốn ô KPI' xanh: listingTiles với peers {area, n 12, price [5e5, 9e5, 1.5e6], occ [0.2, 0.35, 0.6]} → bốn bộ [tiêu đề, giá trị, bậc, footer] đúng như ca ghim, bậc viết trước (Giá niêm yết 'Trên trung vị', Công suất 'Khá', footer 'Trung vị 12 listing cùng phường: …'); bậc công suất theo 0.6/0.35/0.2/0.19 = Nhóm đầu/Khá/Trung bình/Thấp (phá-thử S4-r1: dùng ngưỡng giá cho công suất → ca đỏ); bậc giá theo 1.5e6/9e5/5e5/499999 = Cao cấp/Trên trung vị/Tầm trung/Giá thấp; giá null → footer công suất 'Listing chưa báo giá — …', không peers → 'Giá một đêm trên Airbnb', doanh thu 0 → '—'; peers scope market → footer chứa 'cùng thị trường'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E15
     criterion: AC-8
@@ -159,5 +159,5 @@ evals:
     executor: script
     cmd: config:executors.script.listing_detail_smoke
     paths: [app/src/components/listing/booking-heatmap.tsx, scripts/smoke-listing-detail.mjs]
-    expected: "exit 0; dòng 'ok   tooltip «Công suất …» của lịch mở khi nút tóm tắt nhận focus bằng Tab' — Chromium thật: Shift+Tab rồi Tab về nút tóm tắt đầu, tooltip-content chữ bắt đầu 'Công suất ' hiện trong 3 giây"
+    expected: "exit 0; dòng 'ok   tooltip «Công suất …» của lịch mở khi nút tóm tắt nhận focus bằng Tab' — Chromium thật: Shift+Tab rồi Tab về nút tóm tắt đầu, tooltip-content chữ bắt đầu 'Công suất ' hiện trong 3 giây; và dòng 'ok   Tab từ tóm tắt lịch vào ô đêm sau <k> lần: «<Thứ>, <ngày>: <trạng thái>»' với k ≤ 3 — phím Tab thật của Chromium từ nút tóm tắt cuối tới một nút đêm"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
