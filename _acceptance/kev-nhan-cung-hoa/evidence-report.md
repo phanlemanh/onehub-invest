@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7f8a60db7beb46e4310799b0f0d6f26339501431
+verified_commit: 1968b9718cb15e1237146136f216bac45a6f3873
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -231,3 +231,7 @@ Round 2: E1–E10 đạt (10/10) trên 7e99360 (main + 62eaf38). Lỗi ngoài h�
 ### Re-pin lần 1 — 2026-10-25, do gộp origin/main trước merge
 run_id: repin-20261025T015636Z-21976
 sha: 7f8a60db7beb46e4310799b0f0d6f26339501431 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp origin/main 717f155 (xung đột #81)
+run_id: repin-20261025T021153Z-15626
+sha: 1968b9718cb15e1237146136f216bac45a6f3873 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
