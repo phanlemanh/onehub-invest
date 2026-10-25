@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4a396178365f75190e9ddac8319c6f04fceb4e9b
+verified_commit: 68f5ec49be50979b0544614a7e2949fcd670e407
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -157,3 +157,7 @@ Round 1: E1-E8 đều xanh, các lệnh suite xanh. Verdict PASS.
 ### Re-pin lần 1 — 2026-10-25, do gộp main 47afb91 sau chữ ký
 run_id: repin-20261025T053314Z-12052
 sha: 4a396178365f75190e9ddac8319c6f04fceb4e9b · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp main 146eca2 (#90) sau chữ ký
+run_id: repin-20261025T053531Z-24689
+sha: 68f5ec49be50979b0544614a7e2949fcd670e407 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
