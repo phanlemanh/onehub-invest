@@ -261,9 +261,14 @@ executors:
     hsn_budget_env: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs budget-env"
     hsn_zc6_regress: "for m in spool-replay reject-4xx hang-stop cap-50 kev-hang self-contained; do out=$(node scripts/hook-zalo-spool/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
     hsn_l1_syntax: "node scripts/hook-zalo-spool/acceptance.mjs l1-grep && node --check collector/openclaw/handler.js && echo SYNTAX OK"
+    # snapshot-nguyen-tu (2510-8) — SnapshotWriter của collector/dist trên thư mục gốc tạm; cổng tệp bọc qua harness AU3 (bản chép, sleep stub)
+    snt_dang_ghi: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs dang-ghi"
+    snt_trung_ms: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs trung-ms"
+    snt_ten_that_co_san: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs ten-that-co-san"
+    snt_mo_coi: "node scripts/au3-nap-bao-loi/acceptance.mjs mo-coi"
+    kns_au3_regress: "for m in ts-format apify chotot lock; do out=$(node scripts/au3-nap-bao-loi/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
     # khoa-nap-s05-paused (2510-4 + 2510-9) — DB tạm acc_s05_* (pg_dump -s source_registry), HOME giả, fetch bị chặn; không gọi Apify, không ghi DB oneinvest
     kns_s05_gate: "node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"
-    kns_au3_regress: "for m in ts-format apify chotot lock; do out=$(node scripts/au3-nap-bao-loi/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
     kns_scope: "bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""
     kns_lich_s05: "node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"   # G1 2510-14: plist + buildRunInput, không gọi Apify
   design:                                            # app/ là web UI
