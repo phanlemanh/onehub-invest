@@ -26,8 +26,8 @@ Source input: `docs/plan/lo-trinh.json` hàng UI5; ô Cổng Đáng `_acceptance
 ## Criteria
 
 - AC-1: Given listing có ≥ 2 ảnh tự thu (`listings.photo_urls`), When mở `/listing/<id>` ở 1280 px, Then dưới
-  PageHeader là đầu trang hai cột — trái gallery (ảnh chính khung 4:3 bản lớn `?aki_policy=x_large` + dải thumbnail
-  ≤ 10 ảnh bản `?im_w=480`, ảnh 1 chọn sẵn), phải hộp «Đặc điểm»; dải thumbnail luôn là MỘT hàng trượt ngang (thấy 5
+  PageHeader là đầu trang hai cột — trái gallery (ảnh chính khung 3:2 bản lớn `?aki_policy=x_large` — ảnh ngang phủ kín, ảnh dọc/vuông (rộng/cao < 1,2) hiện trọn trên nền không cắt — + dải thumbnail
+  ≤ 10 ảnh bản `?im_w=480`, ảnh 1 chọn sẵn), phải hộp «Đặc điểm»; dải thumbnail luôn là MỘT hàng trượt ngang ô vuông 1:1 (thấy 5
   ảnh vừa khung, nhiều hơn thì cuộn ngang trong khung, không xuống dòng — Mạnh sửa ở Cổng Phạm vi); bấm thumbnail thứ
   k hay dùng phím mũi tên trong nhóm thumbnail thì ảnh chính đổi sang ảnh đó (alt «Ảnh k/N — <tên>»), đúng một
   thumbnail mang `aria-checked=true`, và dải tự trượt để thumbnail đang chọn nằm trọn trong khung mà trang không cuộn
@@ -93,6 +93,7 @@ Source input: `docs/plan/lo-trinh.json` hàng UI5; ô Cổng Đáng `_acceptance
 - Giá theo đêm trong hộp Đặc điểm — giữ ở ô KPI «Giá niêm yết» (Hỏi-1).
 - Hiển thị `propertyType` (chuỗi tiếng Anh thô của Airbnb, chưa có bảng dịch).
 - Trạng thái tải/lỗi riêng cho lịch (đi cùng bản ghi listing).
+- Áp quy định khung ảnh (3:2 + 1:1) cho Đã lưu, So sánh, thẻ deal Ops — theo dần ở hàng của từng trang (Mạnh 25/10); UI5 chỉ ghi luật vào catalog và áp cho gallery listing.
 
 ## Notes
 

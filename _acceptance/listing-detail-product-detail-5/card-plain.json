@@ -3,7 +3,7 @@
  "will_do": [
   {
    "id": "AC-1",
-   "p": "Sẽ đặt ảnh lớn của căn bên trái, bảng đặc điểm bên phải; ảnh nhỏ nằm trên MỘT hàng trượt ngang (thấy 5 ảnh, nhiều hơn thì trượt, không xuống dòng); bấm ảnh nhỏ hay dùng phím mũi tên để đổi ảnh lớn, hàng tự trượt theo; trên điện thoại hai khối xếp dọc."
+   "p": "Sẽ đặt ảnh lớn của căn bên trái (khung 3:2; ảnh dọc hiện trọn trên nền, không cắt), bảng đặc điểm bên phải; ảnh nhỏ là ô vuông trên MỘT hàng trượt ngang (thấy 5, nhiều hơn thì trượt); bấm ảnh nhỏ hay dùng phím mũi tên để đổi ảnh lớn, hàng tự trượt theo; trên điện thoại hai khối xếp dọc."
   },
   {
    "id": "AC-3",
@@ -62,6 +62,10 @@
   {
    "id": "OOS-5",
    "p": "KHÔNG làm trạng thái chờ/lỗi riêng cho lịch — lịch đến cùng lúc với dữ liệu căn."
+  },
+  {
+   "id": "OOS-6",
+   "p": "KHÔNG đổi khung ảnh ở Đã lưu, So sánh, thẻ deal Ops trong vòng này — các trang đó theo quy định khung ảnh ở hàng của chúng."
   }
  ],
  "scope_plain": "Những phần cố ý để ngoài vòng này:",

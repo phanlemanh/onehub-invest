@@ -18,8 +18,7 @@ liệu có Skeleton và Empty». Ô Cổng Đáng: Mạnh quyết build 23/10.
 1. **Đầu trang product-detail-5** (`listing/listing-hero.tsx`): lưới hai cột ở `lg` (3fr gallery dính khi cuộn ·
    2fr hộp Đặc điểm), xếp dọc dưới `lg`. PageHeader giữ breadcrumb, tiêu đề, mô tả (mã Airbnb · quét gần nhất) và
    một badge loại phòng; các badge còn lại dời vào hộp Đặc điểm (không lặp hai chỗ — Hỏi-3).
-2. **Gallery** (`listing/listing-gallery.tsx`, chuyển thể `product-gallery` của block): ảnh chính 4:3 (ảnh Airbnb
-   nằm ngang — khung vuông của block cắt mất phòng) + dải thumbnail MỘT hàng trượt ngang (≤ 10 ảnh; thấy 5 ảnh vừa
+2. **Gallery** (`listing/listing-gallery.tsx`, chuyển thể `product-gallery` của block): ảnh chính khung 3:2 + dải thumbnail MỘT hàng trượt ngang (≤ 10 ảnh; thấy 5 ảnh vừa
    khung, còn lại cuộn trong khung ScrollArea có snap — Mạnh sửa ở Cổng Phạm vi 25/10 để listing nhiều ảnh không đẩy cao
    bố cục; trước đó là lưới 5 cột xuống hai hàng). Thumbnail là `Radio` của Base
    UI bọc `Item` — nhóm radio có sẵn phím mũi tên/Home/End và roving focus, thay cho nút role=radio dựng tay của block
@@ -33,7 +32,7 @@ liệu có Skeleton và Empty». Ô Cổng Đáng: Mạnh quyết build 23/10.
 5. **Hộp Đặc điểm**: bảng khoá–giá (khuôn «Specs» của block): Loại phòng · Phòng ngủ · Phòng tắm · Sức chứa · Đặt
    tối thiểu · Đánh giá · Phường (link Insight) · Thị trường (link) — trường null thì không có dòng. Một nút outline
    «Mở trên Airbnb» (chỉ khi id dạng `abnb_<số>`). Bỏ giá/biến thể/giỏ/số lượng/yêu thích của block: giá đã ở ô KPI
-   ngay dưới (Hỏi-1). Ảnh chính khung 4:3 thay khung vuông của block (Hỏi-2).
+   ngay dưới (Hỏi-1). Khung ảnh theo quy định chung Mạnh chốt ở Cổng Phạm vi (thay Hỏi-2): ảnh chính 3:2 — ảnh ngang phủ kín, ảnh dọc/vuông hiện trọn trên nền; thumbnail 1:1. Căn cứ đo 25/10 trên 469 ảnh tự thu (150 listing): ngang 65% (3:2 là 42%), dọc 33%, vuông 2%; khung 3:2 cắt TB 4% ảnh ngang (4:3 cắt 10%), ảnh dọc phủ kín khung ngang mất ~52%; ô 1:1 cắt ~30% cả hai loại, hợp dải ảnh trộn ngang/dọc (64/135 listing trộn). 19% ảnh mẫu chết trên CDN (mọi cỡ đều 404), 15/150 listing chết hết ảnh.
 
    Luồng ảnh chết: `_acceptance/listing-detail-product-detail-5/figures/anh-chet.png`.
 6. **Lịch form-5**: trigger tooltip là nút của `TooltipTrigger` (Base UI tự vẽ `<button>`), nhãn thứ `text-xs`. Lịch
@@ -73,7 +72,7 @@ liệu có Skeleton và Empty». Ô Cổng Đáng: Mạnh quyết build 23/10.
 <!-- <<<UX-STATE-TABLE -->
 | Trạng thái | Màn | Hiển thị gì | Người làm gì tiếp |
 |---|---|---|---|
-| ST-listing-co-anh | Chi tiết listing | Gallery (ảnh chính 4:3 + thumbnail) trái, Đặc điểm phải | Chọn ảnh, đọc đặc điểm, mở Airbnb |
+| ST-listing-co-anh | Chi tiết listing | Gallery (ảnh chính 3:2, ảnh dọc hiện trọn trên nền + một hàng thumbnail 1:1 trượt ngang) trái, Đặc điểm phải | Chọn ảnh, đọc đặc điểm, mở Airbnb |
 | ST-listing-khong-anh | Chi tiết listing | Không gallery; Đặc điểm trải ngang hai cột | Đọc đặc điểm, mở Airbnb |
 | ST-listing-anh-chet | Chi tiết listing | Ảnh chết rời gallery; hết ảnh → như khong-anh | Như trên |
 | ST-listing-kpi-tai | Chi tiết listing | 4 ô skeleton đúng khung StatTiles | Chờ |

@@ -217,6 +217,28 @@ try {
               `dải trượt theo phím: ${theo?.nhan} trong khung (${theo?.trong}), cuộn ngang ${theo?.x}px, trang dọc ${y0}→${theo?.y}`,
             )
           }
+          // Quy định khung ảnh: khung ảnh chính 3:2; mỗi ảnh (bấm lần lượt) phủ kín khi rộng/cao ≥ 1,2, hiện trọn khi < 1,2.
+          const khung = []
+          for (let k = 0; k < n; k++) {
+            await page.locator('[role="radio"]').nth(k).click()
+            await page.waitForFunction(() => {
+              const m = document.querySelector('section[aria-label="Thông tin listing"] img[data-fit]')
+              return m && m.complete && m.naturalWidth > 0
+            }, null, { timeout: 8000 }).catch(() => {})
+            khung.push(await page.evaluate(() => {
+              const m = document.querySelector('section[aria-label="Thông tin listing"] img[data-fit]')
+              const f = m.parentElement.getBoundingClientRect()
+              const r = m.naturalWidth / m.naturalHeight
+              return { r, fit: m.dataset.fit, frame: f.width / f.height, muon: r < 1.2 ? "contain" : "cover", nap: m.naturalWidth > 0 }
+            }))
+          }
+          const sai = khung.filter((x) => x.nap && x.fit !== x.muon)
+          const doc = khung.filter((x) => x.nap && x.muon === "contain").length
+          check(
+            khung.every((x) => Math.abs(x.frame - 1.5) < 0.02) && sai.length === 0 && khung.filter((x) => x.nap).length === n,
+            `khung ảnh 3:2, ${n}/${n} ảnh đúng luật phủ kín/hiện trọn (${doc} ảnh dọc/vuông hiện trọn, ${sai.length} sai)`,
+          )
+          await page.locator('[role="radio"]').nth(0).click()
           const kpi = await page.locator("h3", { hasText: /^(Giá niêm yết|Công suất|Đêm đã đặt|Doanh thu ước tính)$/ }).count()
           check(kpi === 4, `bốn ô KPI sau khi vùng tải xong (${kpi})`)
           // Vùng comps phân giải ra bảng thật (không Alert, không Empty) trên listing có comps.

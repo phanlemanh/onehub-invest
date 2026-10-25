@@ -217,6 +217,35 @@ test("LD-AC-4 ảnh lỗi TRƯỚC hydrate (complete + naturalWidth 0, không c�
   }
 });
 
+test("LD-AC-1 quy định khung ảnh: ảnh chính 3:2; rộng/cao < 1,2 hiện trọn (contain), còn lại phủ kín; thumbnail 1:1", async () => {
+  const { ListingGallery, photoFit } = await import("../src/components/listing/listing-gallery");
+  // Ma trận ngưỡng viết trước: 16:9, 3:2, 4:3, 5:4 phủ kín; ngay dưới 1,2, vuông, 3:4, 2:3, 9:16 hiện trọn.
+  const cases: [number, number, "cover" | "contain"][] = [
+    [1920, 1080, "cover"], [1500, 1000, "cover"], [1024, 768, "cover"], [1250, 1000, "cover"], [1200, 1000, "cover"],
+    [1199, 1000, "contain"], [1000, 1000, "contain"], [768, 1024, "contain"], [1000, 1500, "contain"], [1080, 1920, "contain"],
+  ];
+  assert.deepEqual(cases.map(([w, h]) => photoFit(w, h)), cases.map((c) => c[2]));
+
+  const host = await render(<ListingGallery urls={URLS} name="Căn thử" />);
+  const main = () => host.querySelector<HTMLImageElement>("img[data-fit]")!;
+  assert.match(main().parentElement!.className, /aspect-\[3\/2\]/, "khung ảnh chính phải là 3:2");
+  assert.ok([...host.querySelectorAll('[role="radio"]')].every((r) => /\baspect-square\b/.test(r.className)), "thumbnail phải vuông 1:1");
+  assert.equal(main().dataset.fit, "cover", "chưa biết kích thước → phủ kín mặc định");
+  const loadAs = async (w: number, h: number) => {
+    const img = main();
+    Object.defineProperty(img, "naturalWidth", { configurable: true, value: w });
+    Object.defineProperty(img, "naturalHeight", { configurable: true, value: h });
+    await act(() => img.dispatchEvent(new dom.window.Event("load")));
+  };
+  await loadAs(480, 640); // ảnh dọc 3:4
+  assert.equal(main().dataset.fit, "contain");
+  assert.match(main().className, /\bobject-contain\b/);
+  assert.doesNotMatch(main().className, /\bobject-cover\b/);
+  await loadAs(720, 480); // đối chứng: ảnh ngang 3:2 trên cùng phần tử
+  assert.equal(main().dataset.fit, "cover");
+  assert.match(main().className, /\bobject-cover\b/);
+});
+
 // ── LD-AC-5: hộp Đặc điểm ──────────────────────────────────────────────────────────────────────────
 
 test("LD-AC-5 Đặc điểm: dòng theo trường có giá trị, null thì không có dòng; link Phường/Thị trường; nút Airbnb khi có link", async () => {
