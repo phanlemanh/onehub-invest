@@ -31,7 +31,7 @@ test("isTestSnapshot (nghĩa mới = ngoài allowlist): theo segment nguồn c�
 // trong allowlist nên lọt lớp nguồn rồi vào DB. Luật khuôn tên dùng chung
 // cho cả hai importer: '<city>__<nguồn>__<mốc thời gian>' với mốc khớp
 // TS_RE (giây 6 số / mili-giây 9 số / hậu tố -n khi trùng ms — BÁO 2510-5).
-import { TS_RE, parseSnapshotDirName } from "../lib/snapshot-name.mjs";
+import { parseSnapshotDirName } from "../import-airbnb.mjs";
 
 test("khuôn tên: thư mục segment thử (TEST/e2e) bị bỏ dù nguồn hợp lệ", () => {
   assert.equal(parseSnapshotDirName("hanoi__zalo-agent__TEST"), null);
@@ -62,13 +62,20 @@ test("khuôn tên: thiếu/thừa segment hoặc mốc rác → bỏ", () => {
   assert.equal(parseSnapshotDirName(""), null);
 });
 
-test("TS_RE importer phải identical chuỗi TS_RE trong 2 daily script (BÁO 2510-5)", async () => {
+test("TS_RE bốn bản (2 importer + 2 daily script) phải identical (BÁO 2510-5)", async () => {
   const { readFile } = await import("node:fs/promises");
-  for (const f of ["apify-facebook-daily.sh", "zalo-import-daily.sh"]) {
-    const src = await readFile(new URL(`../../scripts/${f}`, import.meta.url), "utf8");
-    const m = src.match(/^TS_RE='(.*)'$/m);
-    assert.ok(m, `${f} phải có TS_RE=`);
-    // innerText của bash literal == nguồn regex của module (cùng chuỗi ký tự)
-    assert.equal(m[1], TS_RE.source, `${f} và importer phải dùng cùng một TS_RE`);
+  const files = [
+    ["pipeline/import-airbnb.mjs", /^const SNAPSHOT_TS_RE = \/(.*)\/;$/m],
+    ["pipeline/import-chotot.mjs", /^const SNAPSHOT_TS_RE = \/(.*)\/;$/m],
+    ["scripts/apify-facebook-daily.sh", /^TS_RE='(.*)'$/m],
+    ["scripts/zalo-import-daily.sh", /^TS_RE='(.*)'$/m],
+  ];
+  const found = [];
+  for (const [f, re] of files) {
+    const text = await readFile(new URL(`../../${f}`, import.meta.url), "utf8");
+    const m = text.match(re);
+    assert.ok(m, `${f} phải khai báo regex khuôn tên`);
+    found.push(m[1]);
   }
+  assert.equal(new Set(found).size, 1, `bốn bản phải cùng một regex: ${found}`);
 });

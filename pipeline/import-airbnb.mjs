@@ -14,7 +14,27 @@ import { gunzipSync } from "node:zlib";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { parseSnapshotDirName } from "./lib/snapshot-name.mjs";
+
+// Luật khuôn tên thư mục dùng chung cho cả hai importer (PL1 mở lại vòng 4,
+// claudedp-2310-4 + BÁO claudedp-2510-5): '<city>__<nguồn>__<mốc thời gian>'
+// với mốc khớp SNAPSHOT_TS_RE — chuỗi GIỐNG HỆT literal TS_RE trong
+// scripts/apify-facebook-daily.sh, scripts/zalo-import-daily.sh (AU3
+// 2310-8 vòng 3) và import-chotot.mjs; test đối chiếu bốn bản không lệch.
+// Inline (không import-file riêng): harness nghiệm thu chép MỖI file
+// importer sang cây tạm, module kèm theo sẽ làm ERR_MODULE_NOT_FOUND.
+// Mốc nhận giây (6 số), mili-giây (9 số, storage.ts b0898fe) và hậu tố
+// '-n' khi trùng ms; '__TEST'/'__e2e' không phải mốc → bỏ cả thư mục.
+const SNAPSHOT_TS_RE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$/;
+
+/** Tách '<city>__<nguồn>__<mốc>' — null nếu sai khuôn hoặc mốc không phải
+ *  thời gian (segment thử như TEST/e2e). Export để test. */
+export function parseSnapshotDirName(name) {
+  const parts = String(name).split("__");
+  if (parts.length !== 3) return null;
+  const [city, source, ts] = parts;
+  if (!city || !source || !SNAPSHOT_TS_RE.test(ts)) return null;
+  return { city, source, ts };
+}
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";

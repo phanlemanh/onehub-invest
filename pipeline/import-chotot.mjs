@@ -10,7 +10,20 @@ import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { basename, join } from "node:path";
 import pg from "pg";
-import { parseSnapshotDirName } from "./lib/snapshot-name.mjs";
+
+// Luật khuôn tên thư mục — BẢN SAO GIỐNG HỆT import-airbnb.mjs (PL1 mở lại
+// vòng 4, claudedp-2310-4 + BÁO 2510-5): inline vì harness nghiệm thu chép
+// mỗi importer là một file lẻ; chuỗi phải đồng bộ với import-airbnb.mjs và
+// TS_RE của hai daily script (AU3 2310-8 vòng 3) — test đối chiếu cả bốn.
+const SNAPSHOT_TS_RE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$/;
+
+function parseSnapshotDirName(name) {
+  const parts = String(name).split("__");
+  if (parts.length !== 3) return null;
+  const [city, source, ts] = parts;
+  if (!city || !source || !SNAPSHOT_TS_RE.test(ts)) return null;
+  return { city, source, ts };
+}
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
