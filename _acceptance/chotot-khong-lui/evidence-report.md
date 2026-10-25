@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 71322cd081738d65375a11f63fa0c9e98947c217
+verified_commit: 2daec52c127ee645c4505724af8603e8847af355
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -228,3 +228,7 @@ none — 8 eval tất định, mỗi lệnh chạy một lần trên HEAD. E1 v�
 Round 1: 8/8 eval đạt trên `71322cd`. Baseline đỏ ở E1 (giá lùi về 1000000000). E2–E5 và E7 xanh trên baseline, là
 guard có chủ ý. E6 và E8 không đo baseline. Guard `main()` qua đường symlink của launchd được kiểm thật và vẫn nạp.
 «Ngoài hợp đồng» có 3 mục low, người quyết. PASS.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main 169b8c6 sau ký Cổng 2
+run_id: repin-20261025T232719Z-15688
+sha: 2daec52c127ee645c4505724af8603e8847af355 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng

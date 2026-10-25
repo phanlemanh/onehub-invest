@@ -6,3 +6,4 @@
 {"ts":"2026-10-25T12:34:34Z","round":1,"evalId":"E6","run_id":"chotot-khong-lui-E6-r1-20261025T123434Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"}
 {"ts":"2026-10-25T12:34:38Z","round":1,"evalId":"E7","run_id":"chotot-khong-lui-E7-r1-20261025T123438Z","exit_code":0,"cmd":"node --test scripts/*.test.mjs"}
 {"ts":"2026-10-25T12:35:08Z","round":1,"evalId":"E8","run_id":"chotot-khong-lui-E8-r1-20261025T123508Z","exit_code":0,"cmd":"bash _acceptance/chotot-khong-lui/probes/scope.sh \"$PWD\""}
+{"ts":"2026-10-25T23:28:26Z","kind":"repin","run_id":"repin-20261025T232719Z-15688","sha":"2daec52c127ee645c4505724af8603e8847af355","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0},"wall_s":67.2,"so_lenh":13,"tong_ket":{"ket_cuc":"xanh","phut":1.1,"so_lenh":13,"model_goi":0,"model_carry":0,"chap_chon":0}}
