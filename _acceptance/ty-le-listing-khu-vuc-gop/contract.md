@@ -5,7 +5,7 @@ slug: ty-le-listing-khu-vuc-gop
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, script]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-25-ty-le-listing-khu-vuc-gop-design.md
 approved_by: Mạnh
 approved_at: 2026-10-25
@@ -70,3 +70,7 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Bảng thị trường S02 toàn quốc (không có cột tỉ lệ).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Ở khu vực gộp có thị trường chưa có số listing, câu chú thích vẫn ghi «cộng cả k thị trường» tính cả thị trường ấy, trong khi ô S02 chỉ cộng thị trường có số.
+  - Ngoài-2: Phép đếm «số thị trường hiệu chuẩn» của công cụ đo nội bộ vẫn theo định nghĩa cũ, nên có thể báo lệch ở khu vực có số listing lệch kỳ; trang không bị ảnh hưởng.

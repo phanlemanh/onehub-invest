@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: bbdfc58bdd9a84e436e24ff20d722ce47b7f70a0
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: ty-le-listing-khu-vuc-gop
