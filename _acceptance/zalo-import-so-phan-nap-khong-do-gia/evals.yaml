@@ -8,7 +8,7 @@ evals:
     executor: test
     cmd: config:executors.test.zalo_import_job_lan
     paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
-    expected: "exit 0; ca 'ZL-AC-1': mã nguồn ca ZJ-AC-5 gọi banO('ec71694^') và banO('ec71694'), không gọi merge-base, không đọc readFileSync(path.join(REPO, SCRIPT)) trong thân ca; phanNap của hai bản bằng nhau"
+    expected: "exit 0; ca 'ZL-AC-1': trong cây tạm, xoá scripts/zalo-import-daily.sh ở cây làm việc rồi chạy node --test --test-name-pattern=ZJ-AC-5 → mã 0, 'ℹ pass 1', 'ℹ skipped 0' (ca không đọc cây làm việc); thân ca ZJ-AC-5 không chứa 'merge-base'; ca ZJ-AC-5 tự assert mốc có ở cả e962e78^1 và e962e78, phần cắt chứa 'for try in 1 2 3 4 5'"
   - id: E2
     criterion: AC-2
     executor: test
@@ -26,7 +26,7 @@ evals:
     executor: test
     cmd: config:executors.test.zalo_import_job_lan
     paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
-    expected: "exit 0; ca 'ZL-AC-4': hàm so phần nạp (export hoặc chép nguyên văn từ tệp test) với cặp giả bản ec71694^ và bản đó sửa 'for try in 1 2 3 4 5' → 'for try in 1 2 3 4' báo lệch; ZJ-AC-5 với rev không có trong lịch sử → assert.fail chứa 'thiếu lịch sử git'"
+    expected: "exit 0; ca 'ZL-AC-4' ba dòng: (a) ca ZJ-AC-5 tự chạy đối chứng cặp giả (bản e962e78^1 và bản đó sửa 'for try in 1 2 3 4 5' → 'for try in 1 2 3 4') và thông điệp lệch chứa 'ZJ-AC-5', 'scripts/zalo-import-daily.sh' và rev; (b) bản sao tệp test trỏ rev '0000000' → mã khác 0, đầu ra chứa 'thiếu lịch sử git'; (c) git clone --depth 1 file://<kho> vào thư mục tạm, chép tệp test hiện tại vào, chạy --test-name-pattern=ZJ-AC-5 → mã khác 0, đầu ra chứa 'thiếu lịch sử git'"
   - id: E5
     criterion: AC-5
     executor: test

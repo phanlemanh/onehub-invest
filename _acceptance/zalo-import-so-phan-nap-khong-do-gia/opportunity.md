@@ -23,7 +23,7 @@ này đỏ — bộ `scripts/*.test.mjs` chung báo đỏ oan và cản việc g
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] nhánh sửa hợp lệ phần nạp có còn làm tệp test job Zalo đỏ không, và phép so có còn bắt được một vòng làn Claude lỡ sửa phần nạp không?
-- Kết quả nào là SỐNG: [đề xuất] cây có phần nạp đã sửa → tệp test xanh; cặp commit giả có phần nạp đổi → phép so đỏ, nêu tên
+- Câu hỏi phép đo trả lời: [đề xuất] nhánh sửa hợp lệ phần nạp có còn làm tệp test job Zalo đỏ không, và phép so còn chứng được rằng PR #96 không đổi phần nạp không?
+- Kết quả nào là SỐNG: [đề xuất] cây có phần nạp đã sửa → tệp test xanh; cặp giả có phần nạp đổi → phép so đỏ, nêu ZJ-AC-5, tệp bọc và rev
 - Kết quả nào là CHẾT: [đề xuất] còn một cây sửa hợp lệ phần nạp mà tệp test đỏ, khi hết timebox
 - Timebox: …
