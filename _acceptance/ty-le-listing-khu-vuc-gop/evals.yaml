@@ -20,7 +20,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/queries.ts, app/tests/ty-le-listing-gop.test.tsx]
-    expected: "exit 0; ca 'TL-AC-3': cùng fixture TL-AC-2 → ratio dòng Listing của thẻ === ratio dòng khu vực ở getTruthfulCoverage, và airdnaValue dòng Listing === airdnaActive của dòng Độ phủ"
+    expected: "exit 0; ca 'TL-AC-3': cùng fixture TL-AC-2 → ratio dòng Listing của thẻ === ratio dòng khu vực ở getTruthfulCoverage, và airdnaValue dòng Listing === airdnaActive của dòng Độ phủ; thêm khu vực 'lệch kỳ' (market không đại diện chỉ có listing_count kỳ 2026-08 = 2, market đại diện kỳ 2026-09 = 9, kỳ cũ hơn của market đại diện = 1000) → airdnaValue 11 === airdnaActive, ratio thẻ === ratio Độ phủ, thông điệp ghim 'TL-AC-3 lệch kỳ'"
   - id: E4
     criterion: AC-4
     executor: test
@@ -32,19 +32,19 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/queries.ts, app/tests/ty-le-listing-gop.test.tsx]
-    expected: "exit 0; ca 'TL-AC-5': khu vực hai market đều không có listing_count → dòng Listing airdnaValue null, ratio null (không NaN/Infinity); khu vực một market listing 6 → airdnaValue 6"
+    expected: "exit 0; ca 'TL-AC-5': khu vực hai market đều không có listing_count → dòng Listing airdnaValue null, ratio null (không NaN/Infinity), Độ phủ không có dòng; khu vực hai market một null một 5 → airdnaValue 5, ratio === ratio Độ phủ; khu vực một market listing 6 → airdnaValue 6, ratio === ratio Độ phủ"
   - id: E6
     criterion: AC-6
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/ops/quality-tables.tsx, app/tests/ty-le-listing-gop.test.tsx]
-    expected: "exit 0; ca 'TL-AC-6': vẽ CalibrationTable trong jsdom từ kết quả thật của fixture TL-AC-2 → textContent chứa đúng câu 'Dòng Listing: S02 cộng cả 2 thị trường; ADR, công suất và điểm lấy thị trường đại diện.'; đối chứng: cùng dữ liệu với representative.ofMarkets = 1 → không có 'Dòng Listing:'"
+    expected: "exit 0; ca 'TL-AC-6': vẽ CalibrationTable trong jsdom từ kết quả thật của fixture TL-AC-2 → textContent chứa đúng câu 'Dòng Listing: S02 cộng cả 2 thị trường; ADR, công suất và điểm lấy thị trường đại diện.'; khu vực ba market thật của fixture → câu với 'cộng cả 3 thị trường'; đối chứng: vẽ kết quả thật getAirdnaComparison của khu vực một market → không có 'Dòng Listing:'"
   - id: E7
     criterion: AC-7
     executor: script
     cmd: config:executors.script.hieu_chuan_do
     paths: [scripts/hieu-chuan-do.mjs, app/src/lib/queries.ts, app/src/lib/calibration.ts]
-    expected: "exit 0; dòng 'ok   tỉ lệ Listing thẻ = Độ phủ cho N khu vực (M gộp nhiều market)' với N ≥ 1, M ≥ 1, so bằng |a-b| ≤ 1e-12; dòng 'ok   đối chứng: tỉ lệ chia cho market đại diện lệch ở K khu vực' với K ≥ 1; các dòng ok cũ của ON10 vẫn ok"
+    expected: "exit 0; tỉ lệ thẻ lấy từ getAirdnaComparison (cùng hàm của trang, không SQL tự cộng), tỉ lệ Độ phủ từ getTruthfulCoverage; dòng 'ok   tỉ lệ Listing thẻ = Độ phủ cho N khu vực (M gộp nhiều market)' với N ≥ 1, M ≥ 1, so bằng |a-b| ≤ 1e-12, khu vực một bên null một bên có số tính là lệch và được liệt tên trong dòng FAIL; dòng 'ok   đối chứng: tỉ lệ chia cho market đại diện lệch ở K khu vực' với K ≥ 1; các dòng ok cũ của ON10 vẫn ok"
   - id: E8
     criterion: AC-8
     executor: test

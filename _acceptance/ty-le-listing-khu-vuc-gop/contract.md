@@ -28,17 +28,22 @@ Source input: `_acceptance/ty-le-listing-khu-vuc-gop/opportunity.md`.
   quả là tổng các số không trống; mọi số đều trống hoặc danh sách rỗng thì kết quả trống.
 - AC-2: Given khu vực gộp hai market S02 có listing 4 và 9, When lấy thẻ hiệu chuẩn, Then ô S02 của dòng «Listing» là 13
   và tỉ lệ dòng ấy bằng số tự thu ÷ 13 — không phải ÷ 9 của market đại diện.
-- AC-3: Given cùng khu vực ấy, When lấy thẻ và bảng Độ phủ, Then tỉ lệ «Listing» của thẻ bằng tỉ lệ dòng cùng khu vực ở
-  bảng Độ phủ, và ô S02 của thẻ bằng số listing S02 đang hoạt động của bảng Độ phủ.
+- AC-3: Given khu vực gộp nhiều market — kể cả khi các market có số listing ở những kỳ khác nhau —, When lấy thẻ và bảng
+  Độ phủ, Then tỉ lệ «Listing» của thẻ bằng tỉ lệ dòng cùng khu vực ở bảng Độ phủ, và ô S02 của thẻ bằng số listing S02
+  đang hoạt động của bảng Độ phủ (mỗi market lấy kỳ mới nhất của chính nó, như bảng Độ phủ).
 - AC-4: Given khu vực gộp nhiều market, When lấy thẻ, Then ADR, công suất, điểm S02 và số tiểu thị trường vẫn lấy từ
   market đại diện (không cộng).
-- AC-5: Given khu vực mà mọi market thành phần chưa có số listing S02, When lấy thẻ, Then ô S02 và tỉ lệ dòng «Listing»
-  trống (không chia cho 0); khu vực chỉ một market có số thì ô S02 bằng số của market ấy.
+- AC-5: Given ba dạng khu vực — mọi market thành phần chưa có số listing S02; hai market mà một market chưa có số; chỉ
+  một market —, When lấy thẻ, Then ca thứ nhất ô S02 và tỉ lệ dòng «Listing» trống (không chia cho 0); ca thứ hai ô S02
+  bằng số của market có số và tỉ lệ bằng bảng Độ phủ; ca thứ ba ô S02 bằng số của market ấy.
 - AC-6: Given thẻ của khu vực gộp nhiều market, When vẽ thẻ, Then chú thích có câu «Dòng Listing: S02 cộng cả k thị
-  trường; ADR, công suất và điểm lấy thị trường đại diện.» với k là số market; thẻ của khu vực một market không có câu ấy.
+  trường; ADR, công suất và điểm lấy thị trường đại diện.» với k là số market S02 của khu vực (cả market chưa có số);
+  thẻ của khu vực một market không có câu ấy. (Dạng ô S02 và nguyên văn câu chờ người chọn ở Cổng Phạm vi — câu hỏi
+  «ô S02 của dòng Listing hiện số nào»; hợp đồng soạn theo khuyến nghị.)
 - AC-7: Given dữ liệu thật trên DB local, When chạy phép đo chỉ đọc, Then với mọi khu vực có cả thẻ và dòng Độ phủ, hai
-  tỉ lệ «Listing» bằng nhau, có ít nhất một khu vực gộp nhiều market được so, và tỉ lệ kiểu cũ (chia cho market đại
-  diện) lệch ở ít nhất một khu vực.
+  tỉ lệ «Listing» bằng nhau — tỉ lệ thẻ lấy từ đầu ra thật của hàm dựng thẻ, một bên trống còn bên kia có số tính là
+  lệch —, có ít nhất một khu vực gộp nhiều market được so, và tỉ lệ kiểu cũ (chia cho market đại diện) lệch ở ít nhất
+  một khu vực.
 - AC-8: Given các ca của `hieu-chuan.test.tsx` (ON10) và các test app khác, When chạy lại, Then vẫn xanh.
 
 ## Coverage
