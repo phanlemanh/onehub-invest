@@ -1,0 +1,5 @@
+{"ts":"2026-10-25T05:37:37Z","round":1,"evalId":"E1","run_id":"collector-seen-cap-E1-20261025T053736Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs flush-6000"}
+{"ts":"2026-10-25T05:37:44Z","round":1,"evalId":"E2","run_id":"collector-seen-cap-E2-20261025T053743Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs hai-luot"}
+{"ts":"2026-10-25T05:37:51Z","round":1,"evalId":"E3","run_id":"collector-seen-cap-E3-20261025T053751Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs khoi-dong-lai"}
+{"ts":"2026-10-25T05:37:59Z","round":1,"evalId":"E4","run_id":"collector-seen-cap-E4-20261025T053758Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs tran-lo"}
+{"ts":"2026-10-25T05:38:51Z","round":1,"evalId":"E5","run_id":"collector-seen-cap-E5-20261025T053805Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}

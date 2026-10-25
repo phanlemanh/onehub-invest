@@ -1,0 +1,120 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · collector-seen-cap</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>2510-2 — collector API không còn treo cứng khi một lượt flush có hơn 5000 tin mới; bộ nhớ khử trùng giữ đúng 5000 id mới nhất; lô HTTP có trần</h1><div class="sub">Trang hồ sơ · <span class="mono">collector-seen-cap</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">2510-2 — collector API không còn treo cứng khi một lượt flush có hơn 5000 tin mới; bộ nhớ khử trùng giữ đúng 5000 id mới nhất; lô HTTP có trần</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Ngoài-2 của hồ sơ kev-nhan-cung-hoa (Mạnh ký 25/10). Trong flush() của collector API (collector/src/api/server.ts), vòng while (seen.size + newIds.length &gt; 5000 &amp;&amp; newIds.length &gt; 0) đếm trùng id mới (đã nằm trong seen từ lúc ingest), và thân vòng chỉ xoá seen…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra"><span class="vang">chưa có — decisions.jsonl</span></div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">3 mục để ngoài phạm vi · 4 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>5</b></span><span data-k="phep_do">Phép đo <b>5</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="quyet_dinh_nguoi">người <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="ma">Mã <b>253908e</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Ngoài-2 của hồ sơ kev-nhan-cung-hoa (Mạnh ký 25/10). Trong flush() của collector API (collector/src/api/server.ts), vòng while (seen.size + newIds.length &gt; 5000 &amp;&amp; newIds.length &gt; 0) đếm trùng id mới (đã nằm trong seen từ lúc ingest), và thân vòng chỉ xoá seen. Một lượt flush có hơn 5000 id mới làm vòng xoá seen tới rỗng rồi lặp mãi: event loop bị chặn, SIGTERM không chạy, launchd không tự khởi động lại vì tiến trình vẫn sống.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given một lượt flush có 6000 id mới, When flush, Then flush kết thúc dưới 5 giây, tệp state giữ đúng 5000 id không trùng, 5000 id mới nhất gửi lại đều bị khử trùng, và 1000 id cũ nhất được nhận lại.</li><li data-ac="AC-2"><b>AC-2</b> — Given hai lượt flush 4000 rồi 2000 id mới, When flush lần lượt, Then sau lượt 1 state giữ đủ 4000 id; sau lượt 2 state đúng 5000 id; id trong cửa sổ 5000 mới nhất vẫn bị khử trùng.</li><li data-ac="AC-3"><b>AC-3</b> — Given collector khởi động lại từ tệp state, When gửi lại các tin đã thấy, Then 5000 id mới nhất vẫn bị khử trùng; tin mới được nhận và state vẫn đúng 5000 id.</li><li data-ac="AC-4"><b>AC-4</b> — Given một lô HTTP POST `/agent-report`, When lô có 1001 tin, Then trả 413 kèm số tin và trần, không tin nào vào bộ đệm; lô đúng 1000 tin vẫn 202 và được nhận đủ.</li><li data-ac="AC-5"><b>AC-5</b> — Given nhánh đã gộp `origin/main`, When chạy toàn bộ test collector (build sạch), Then tất cả xanh.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><span class="vang">chưa có — decisions.jsonl</span></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>feature-loop:cham-lenh</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-seen-cap-E1-20261025T053736Z</td><td class="mono">2026-10-25T05:37:37Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-seen-cap-E2-20261025T053743Z</td><td class="mono">2026-10-25T05:37:44Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-seen-cap-E3-20261025T053751Z</td><td class="mono">2026-10-25T05:37:51Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-seen-cap-E4-20261025T053758Z</td><td class="mono">2026-10-25T05:37:59Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">collector-seen-cap-E5-20261025T053805Z</td><td class="mono">2026-10-25T05:38:51Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given một lượt flush có 6000 id mới, When flush, Then flush kết thúc dưới 5 giây, tệp state giữ đúng 5000 id không trùng, 5000 id mới nhất gửi lại đều bị khử trùng, và 1000 id cũ nhất được nhận lại.</p>
+<div class="kv"><span>run_id <b>collector-seen-cap-E1-20261025T053736Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.seen_flush_6000</b></span><span>verified_at <b>2026-10-25T05:37:37Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   nhận đủ 6000 tin mới, được 6000/0
+ok   flush 6000 id kết thúc trong 147 ms (&lt; 5000)
+ok   tệp state giữ đúng 5000 id, được 5000
+ok   should-NOT-fire: state không có id trùng
+ok   5000 tin mới nhất gửi lại → đều trùng, được dup 5000
+ok   1000 tin cũ nhất đã bị đẩy khỏi bộ nhớ khử trùng → nhận lại (FIFO), được 1000
+FLUSH-6000 PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given hai lượt flush 4000 rồi 2000 id mới, When flush lần lượt, Then sau lượt 1 state giữ đủ 4000 id; sau lượt 2 state đúng 5000 id; id trong cửa sổ 5000 mới nhất vẫn bị khử trùng.</p>
+<div class="kv"><span>run_id <b>collector-seen-cap-E2-20261025T053743Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.seen_hai_luot</b></span><span>verified_at <b>2026-10-25T05:37:44Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   sau lượt 1 (4000): state 4000 id, không bị xoá bớt
+ok   sau lượt 2 (+2000): state đúng 5000 id, được 5000
+ok   id 1001–6000 vẫn trùng, được 5000
+ok   should-NOT-fire: id 4000 (ngay trong cửa sổ 5000) vẫn bị khử trùng
+HAI-LUOT PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given collector khởi động lại từ tệp state, When gửi lại các tin đã thấy, Then 5000 id mới nhất vẫn bị khử trùng; tin mới được nhận và state vẫn đúng 5000 id.</p>
+<div class="kv"><span>run_id <b>collector-seen-cap-E3-20261025T053751Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.seen_khoi_dong_lai</b></span><span>verified_at <b>2026-10-25T05:37:51Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   sau khởi động lại: 5000 id mới nhất vẫn trùng, được 5000
+ok   tin mới sau restart được nhận, state vẫn đúng 5000 id
+KHOI-DONG-LAI PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-4: Given một lô HTTP POST `/agent-report`, When lô có 1001 tin, Then trả 413 kèm số tin và trần, không tin nào vào bộ đệm; lô đúng 1000 tin vẫn 202 và được nhận đủ.</p>
+<div class="kv"><span>run_id <b>collector-seen-cap-E4-20261025T053758Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.seen_tran_lo</b></span><span>verified_at <b>2026-10-25T05:37:59Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   1001 tin → 413 kèm số và trần (413 {&quot;error&quot;:&quot;lô quá lớn: 1001 tin vượt trần 1000 tin mỗi lô — chia nhỏ rồi gửi lại&quot;)
+ok   lô bị từ chối không vào bộ đệm
+ok   should-NOT-fire: đúng 1000 tin → 202, được 202
+ok   1000 tin được nhận (có thể đã tự flush), được 1000
+TRAN-LO PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-5: Given nhánh đã gộp `origin/main`, When chạy toàn bộ test collector (build sạch), Then tất cả xanh.</p>
+<div class="kv"><span>run_id <b>collector-seen-cap-E5-20261025T053805Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.collector_test_clean</b></span><span>verified_at <b>2026-10-25T05:38:51Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">&gt; tsc -p tsconfig.json &amp;&amp; node --test &#39;dist/test/*.test.js&#39;
+✔ flush 6000 id mới: kết thúc &lt;1s, state giữ đúng 5000 id MỚI NHẤT (167.152125ms)
+✔ 4000 + 2000 qua hai lượt flush: dedup vẫn đúng với id gần nhất (105.69075ms)
+✔ HTTP trần lô: &gt;1000 tin/lô → 413 rõ ràng; đúng 1000 → 202 (14.318958ms)
+ℹ tests 51
+ℹ pass 51
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals: không xác định được. Người chấm vòng này không chạy baseline, nên mọi eval ghi baseline n-a.
+Baseline khong do: lượt chấm độc lập này chỉ được phép chạy các lệnh `config:` của evals trên cây đang nghiệm thu, không dựng cây diffBase. Hợp đồng (mục Notes) ghi người dựng hồ sơ đã kiểm harness biết đỏ trên `server.ts` của `origin/main`: `flush-6000` bị giết sau 60 giây, `tran-lo` đỏ 2 mục. Người chấm KHÔNG tự đo lại điều này.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1–E5 đều PASS ở 253908e. Có 3 mục Ngoài hợp đồng (1 medium, 2 low) và 4 mục Known limits chờ Mạnh quyết ở Cổng 2.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Collector chạy không có `stateDir` (chỉ gặp trong test): bộ nhớ khử trùng không được cắt và lớn dần.</li><li data-loai="ngoai">Bên gửi lô lớn hơn 1000 tin (vd một nhóm Facebook trả hơn 1000 bài một lượt) nhận 413 và phải tự chia nhỏ; collector Facebook hiện chưa chia nhỏ.</li><li data-loai="ngoai">Triển khai bản collector mới lên :9210 — gói trong ZC4.</li><li data-loai="gioi-han">Bộ nhớ khử trùng và bộ đệm chỉ bị chặn theo từng lô, không có trần tổng giữa hai lượt flush. `maxBatchItems` (1000) giới hạn số tin của MỘT POST, không giới hạn số POST. Lượt flush đang tải ảnh có thể kéo dài từ vài chục giây tới vài phút (`server.ts` dòng 307–311). Trong lúc đó các POST mới vẫn được `ingest` thêm vào `buffer`, `seen` và `seenOrder`; `flush()` chỉ trả lại promise đang chạy. Việc cắt về 5000 chỉ làm sau một lượt flush GHI THÀNH CÔNG (dòng 297). Vì vậy lượng bộ nhớ tăng theo tốc độ tin đổ vào nhân với thời gian flush, không theo một hằng số. Câu comment ở dòng 193–195 («Bộ nhớ tự giới hạn…») nói quá so với thực tế. Nếu flush lỗi liên tục (đĩa đầy, snapshot root không ghi được) thì `seenOrder` tăng không giới hạn cho tới lượt flush thành công kế tiếp. Với lưu lượng hiện tại (OpenClaw gửi 1 tin mỗi POST, Facebook tối đa khoảng 100 tin mỗi nhóm mỗi lượt 4 giờ) thì chưa chạm ngưỡng nguy hiểm.</li><li data-loai="gioi-han">Trần 413 chỉ đếm số tin, không đếm byte. `readBody` đọc trọn thân request vào bộ nhớ, sau đó `JSON.parse`, rồi mới so `msgCount` (dòng 349–358). Lô 1001 tin rất nặng vẫn được nạp đủ vào RAM trước khi bị từ chối. Phép kiểm 413 cũng chạy TRƯỚC phép kiểm khoá, nên bên gọi không có khoá gửi lô lớn sẽ nhận 413 thay vì 401. Tác động thấp vì API chỉ nghe ở 127.0.0.1.</li><li data-loai="gioi-han">Hiện chưa bên gửi thật nào gặp 413. `collector/openclaw/handler.js` gửi đúng 1 tin mỗi POST (dòng 63). `pipeline/apify-facebook-collector.mjs` gom bài theo `groupTitle`, mỗi nhóm một POST, `resultsLimit: 100`, nên mỗi lô khoảng 100 tin trở xuống. Tuy vậy, collector Facebook xử lý MỌI phản hồi không 2xx (kể cả 413) bằng cách in `❌` ra stderr rồi bỏ cả nhóm: không thử lại, không chia nhỏ, tiến trình vẫn kết thúc bình thường (dòng 191–197). Có một trường hợp có thể vượt trần: bài thiếu `groupTitle` đều rơi vào chung xô `&quot;Facebook&quot;` (dòng 143 và 166). Nếu `resultsLimit` tính theo từng nhóm và nhiều nhóm cùng thiếu `groupTitle`, xô này có thể vượt 1000 tin. Khi đó cả xô bị 413 và mất trong lượt đó, chỉ để lại dấu vết trong log. Người chấm chưa kiểm ngữ nghĩa `resultsLimit` của actor. Mục này khớp phần Out of scope của hợp đồng, ghi lại để có căn cứ.</li><li data-loai="gioi-han">Khi `writeFile(stateFile)` lỗi SAU KHI snapshot đã finalize và `buffer` đã lọc (dòng 288–301), bộ nhớ đã cắt nhưng tệp state trên đĩa vẫn là bản cũ. Sau khi khởi động lại, các id ingest kể từ lần ghi state thành công gần nhất không còn trong bộ nhớ khử trùng, nên tin gửi lại sẽ được nhận lại và lặp trong snapshot mới. Lỗi này hiếm.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">253908e53d593bf9cd35d8788f98974e4fc32c54</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note"></p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>

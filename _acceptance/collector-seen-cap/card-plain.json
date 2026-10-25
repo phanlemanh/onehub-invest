@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Collector nhận tin không còn treo cứng khi một lượt có hơn 5000 tin mới; bộ nhớ khử trùng giữ đúng 5000 tin gần nhất kể cả sau khi khởi động lại, và một lô quá 1000 tin bị từ chối rõ ràng để bên gửi chia nhỏ.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:"
+}
