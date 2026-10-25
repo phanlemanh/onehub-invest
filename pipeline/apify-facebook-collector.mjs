@@ -80,7 +80,8 @@ async function creds() {
 async function startRun(token, groups) {
   const input = {
     startUrls: groups.map((url) => ({ url })),
-    resultsLimit: 100, // 100 posts/run — đủ cho 4h/lần
+    // 2510-14 (G1): trần tin mỗi lượt — tham số từ env (plist khai), mặc định 100
+    resultsLimit: Number(process.env.S05_RESULTS_LIMIT ?? 100),
     viewOption: "CHRONOLOGICAL", // newest first
     onlyPostsNewerThan: "12 hours",
   };
