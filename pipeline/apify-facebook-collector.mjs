@@ -77,14 +77,32 @@ async function creds() {
 }
 
 // ─── 1. Khởi động actor run ───
-async function startRun(token, groups) {
-  const input = {
+// 2510-14 v2 (MỞ LẠI): trần + cửa sổ bài mới đều qua env, NaN-safe, tách hàm
+// thuần để test không gọi Apify.
+// - resultsLimit là trần của actor trên CẢ LƯỢT (tổng mọi startUrls) theo
+//   khuôn Apify — với 2 nhóm bật tức tối đa ~50 tin/nhóm mỗi lượt.
+// - onlyPostsNewerThan mặc định '4 days': phủ khoảng cách lượt dài nhất của
+//   lịch Thứ Ba→Thứ Sáu→Thứ Ba (3–4 ngày) + đệm — '12 hours' cũ chỉ hợp với
+//   lịch 4 lượt/ngày, lịch mới sẽ bỏ ~85–90% bài giữa hai lượt.
+export const S05_NEWER_THAN_MAC_DINH = "4 days";
+export function s05ResultsLimit() {
+  const n = Number(process.env.S05_RESULTS_LIMIT);
+  return Number.isFinite(n) && n > 0 ? n : 100;
+}
+export function s05NewerThan() {
+  return process.env.S05_NEWER_THAN ?? S05_NEWER_THAN_MAC_DINH;
+}
+export function buildRunInput(groups) {
+  return {
     startUrls: groups.map((url) => ({ url })),
-    // 2510-14 (G1): trần tin mỗi lượt — tham số từ env (plist khai), mặc định 100
-    resultsLimit: Number(process.env.S05_RESULTS_LIMIT ?? 100),
+    resultsLimit: s05ResultsLimit(),
     viewOption: "CHRONOLOGICAL", // newest first
-    onlyPostsNewerThan: "12 hours",
+    onlyPostsNewerThan: s05NewerThan(),
   };
+}
+
+async function startRun(token, groups) {
+  const input = buildRunInput(groups);
 
   const res = await fetch(
     `${APIFY_API}/acts/apify~facebook-groups-scraper/runs?token=${token}`,
