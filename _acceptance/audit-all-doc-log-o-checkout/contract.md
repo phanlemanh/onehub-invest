@@ -5,7 +5,9 @@ slug: audit-all-doc-log-o-checkout
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script, ui]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-audit-all-doc-log-o-checkout-design.md
 lo_trinh_ma: ON16
 ---
