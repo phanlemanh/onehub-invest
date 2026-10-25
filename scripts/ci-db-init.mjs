@@ -33,7 +33,8 @@ await db.connect();
 let code = 0;
 try {
   const { rows } = await db.query(
-    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name <> 'spatial_ref_sys' ORDER BY 1 LIMIT 5",
+    // Chỉ bảng thật: ảnh PostGIS cài sẵn extension vào DB mặc định (view geometry_columns…, bảng spatial_ref_sys).
+    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name <> 'spatial_ref_sys' ORDER BY 1 LIMIT 5",
   );
   if (rows.length) {
     console.log(`ci-db-init: TỪ CHỐI — DB đích đã có bảng ở public (${rows.map((r) => r.table_name).join(", ")}…); chỉ chạy trên DB trống dùng một lần`);

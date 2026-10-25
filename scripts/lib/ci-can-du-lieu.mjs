@@ -32,7 +32,8 @@ export function loiDanhSach(list, root = ROOT) {
 /** Giá trị NODE_OPTIONS lọc các ca của module (chuỗi rỗng khi không CI). */
 export function nodeOptions(list, ci = process.env.CI === "true") {
   if (!ci) return "";
-  return list.map((m) => `"--test-skip-pattern=^${escape(m.ca)}$"`).join(" ");
+  // NODE_OPTIONS đọc `\\` và `"` trong nháy kép là ký tự thoát — thoát thêm một lớp cho regex.
+  return list.map((m) => `"--test-skip-pattern=^${escape(m.ca).replace(/[\\"]/g, "\\$&")}$"`).join(" ");
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
