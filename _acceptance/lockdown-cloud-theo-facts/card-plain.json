@@ -1,2 +1,2 @@
-{"feature_plain":"Người trực mở trang Thu thập trên máy chủ thấy ô và lưới Khoá an toàn đọc từ số máy thu đẩy lên; chưa có số thì cả 8 lớp ghi «Chỉ kiểm ở máy thu», không lớp nào xanh; Kev gate và collector API ở Máy móc luôn cùng trạng thái với Khoá an toàn.",
- "decisions":[{"id":"E7","q":"Chữ và màu Khoá an toàn, Máy móc có đúng khi không có số hay số cũ không?","why":"Hai giám khảo cho Đạt; một giám khảo cho Chưa đạt vì chấm màu tab «Sống» của lưới Máy móc vẫn xanh khi số đã cũ."}]}
+{"feature_plain":"Người trực mở trang Thu thập trên máy chủ thấy ô và lưới Khoá an toàn đọc từ số máy thu đẩy lên; chưa có số thì cả 8 lớp ghi «Chỉ kiểm ở máy thu», không lớp nào xanh; Kev gate và collector API ở Máy móc luôn cùng trạng thái với Khoá an toàn; số cũ thì không chỗ nào còn màu xanh.",
+ "decisions":[{"id":"E7","q":"Chữ và màu Khoá an toàn, Máy móc có đúng khi không có số hay số cũ không?","why":"Sau bản sửa chấm tab «Sống», cả ba giám khảo cho Đạt."}]}
