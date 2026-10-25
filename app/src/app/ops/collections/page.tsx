@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CollectionsView, type CollectionsData } from "@/components/ops/collections/collections-view";
 import {
+  getCloudFlowDays,
   getFlowDays,
   getFactsPushedAt,
   readGateFunnel,
@@ -31,6 +32,9 @@ export default async function CollectionsPage() {
     const [cloud, funnel, factsPushedAt, roles] = await Promise.all([getCloudOpsView(), readGateFunnel(), getFactsPushedAt(), getSourceRoles()]);
     // Lưới job đọc khối job của bản tin; chưa có bản tin thì không đọc (nhánh dò launchd chỉ có nghĩa trên máy thu).
     const jobs = cloud.state === "none" ? [] : await readSchedulerStatus();
+    // «Luồng 7 ngày» (ON5): hai cột S03 từ khối luong7, listing tươi từ bảng đã đồng bộ; chưa có bản tin thì không dựng.
+    const nowMs = requestTime();
+    const cloudDays = cloud.state === "none" ? [] : await getCloudFlowDays(cloud.luong7, { now: nowMs });
     return (
       <CollectionsView
         {...CLOUD_EMPTY}
@@ -38,8 +42,9 @@ export default async function CollectionsPage() {
         jobs={jobs}
         factsPushedAt={factsPushedAt}
         feedHealth={cloud.feeds ?? []}
-        nowMs={requestTime()}
+        nowMs={nowMs}
         cloud={cloud}
+        cloudDays={cloudDays}
         roles={roles}
       />
     );

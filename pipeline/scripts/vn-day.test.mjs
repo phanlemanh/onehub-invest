@@ -91,7 +91,8 @@ function quetFacts(text) {
 test("GV-AC-6 push-ops-facts dùng hàm lib, không còn ::date/date_trunc/to_char thiếu AT TIME ZONE", () => {
   const facts = readFileSync(path.join(PIPE, "push-ops-facts.mjs"), "utf8");
   assert.deepEqual(quetFacts(facts), []);
-  assert.match(facts, /import \{ parseLog, zaloFlow \} from "\.\/lib\/ops-flow\.mjs"/, "push-ops-facts phải gọi hàm lib");
+  // ON5 (luong-7-ngay-dung-so) nhập thêm luong7 từ cùng lib
+  assert.match(facts, /import \{ (luong7, )?parseLog, zaloFlow \} from "\.\/lib\/ops-flow\.mjs"/, "push-ops-facts phải gọi hàm lib");
   assert.doesNotMatch(facts, /function parseLog\(/, "không còn bản parseLog riêng trong push-ops-facts");
   assert.deepEqual(quetFacts(readFileSync(path.join(PIPE, "lib/ops-flow.mjs"), "utf8")), []);
 });

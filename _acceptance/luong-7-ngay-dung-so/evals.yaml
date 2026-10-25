@@ -1,0 +1,69 @@
+schema_version: 1
+feature_slug: luong-7-ngay-dung-so
+# Eval máy đọc ca mang tiền tố «ON5-AC-n» trong TAP: app/tests/luong-7-ngay-dung-so.test.tsx (AC-1…AC-7, lược đồ tạm
+# từ pipeline/scripts/ops-facts-fixture.mjs, bên ghi thật qua capture-ops-facts) và scripts/luong-7-ngay-do.mjs (AC-8,
+# DB local thật).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/collections-queries.ts, pipeline/lib/ops-flow.mjs, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; ca 'ON5-AC-1 tin rao chỉ đếm nguồn S03 theo ngày first_seen' ok với số viết trước cho từng ngày (tin S06 cùng ngày không tính, 23:59/00:01 giờ VN rơi đúng ngày), và chiều đỏ 'ON5-AC-1 bản sao đếm mọi nguồn → báo ngày và hai số' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/collections-queries.ts, pipeline/lib/ops-flow.mjs, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; ca 'ON5-AC-2 bài thô đếm bài S03 thật theo ngày posted_at' ok (bài mock không tính, bài 22:49 nạp sau nửa đêm thuộc ngày đăng), và chiều đỏ 'ON5-AC-2 bản sao đếm theo captured_at → báo ngày và hai số' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/ops-flow.mjs, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; ca 'ON5-AC-3 khối luong7 có measured_at và đúng 7 khoá ngày VN liên tiếp' ok (ngày rỗng = 0, bộ soát tầng A không chặn), ca 'ON5-AC-3 bảng vắng → khối mang error, khối khác vẫn đi' ok, hai chiều đỏ 'ON5-AC-3 bên ghi bỏ một ngày → báo ngày thiếu' và 'ON5-AC-3 bên ghi bỏ measured_at → báo tên khối' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/ops-flow.mjs, app/src/lib/collections-queries.ts, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; ca 'ON5-AC-4 khối luong7 bằng hai cột S03 của getFlowDays trên cùng lược đồ' ok (in số từng ngày), chiều đỏ 'ON5-AC-4 bên ghi đếm mọi nguồn → báo ngày lệch' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/collections-view.tsx, app/src/components/ops/collections-tables.tsx, app/src/lib/collections-queries.ts, app/src/lib/ops-cloud.ts, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; ca 'ON5-AC-5 vòng trọn: bản tin bên ghi thật qua readOpsFacts → 14 ô S03 bằng số viết trước, không ô nào mờ' ok (in số từng ô), ca 'ON5-AC-5 máy chủ tươi: 7 ô snapshot «Chỉ ở máy thu», không cột S02, Alert bỏ «Luồng 7 ngày»' ok; bốn chiều đỏ 'ON5-AC-5 bên ghi đổi tên khoá → báo tên khoá và ô «—»', 'ON5-AC-5 bản sao ô snapshot là 0 → báo', 'ON5-AC-5 bản sao còn cột S02 → báo', 'ON5-AC-5 bản sao luôn mờ ô S03 → báo tên ô' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/collections-view.tsx, app/src/components/ops/collections-tables.tsx, app/src/lib/collections-queries.ts, app/src/lib/ops-cloud.ts, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; ba ca 'ON5-AC-6 thiếu khối → 14 ô S03 «—», không 0', 'ON5-AC-6 bản tin cũ → cả 14 ô S03 mờ (đọc từng ô)', 'ON5-AC-6 chưa có bản tin → không bảng, Alert còn «Luồng 7 ngày»' ok; hai chiều đỏ 'ON5-AC-6 bản sao hiện 0 khi khối vắng → báo' và 'ON5-AC-6 bản sao không mờ khi bản tin cũ → báo tên ô' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/collections-view.tsx, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; ca 'ON5-AC-7 máy thu đủ 7 cột như main, mô tả nói giờ VN và ngày đăng bài' ok; chiều đỏ 'ON5-AC-7 bản sao thiếu một cột → báo cột thiếu' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.luong7_do
+    paths: [scripts/luong-7-ngay-do.mjs, pipeline/lib/ops-flow.mjs]
+    expected: "exit 0; 7 dòng 'ok   <ngày>: tin rao S03 <n> = đường độc lập <n> ≤ bài thô <m>', dòng 'ok   <k> ngày có tin S03' với k ≥ 1 (k = 0 → exit ≠ 0 'không có ngày nào có tin S03 trong 7 ngày'), chiều đỏ 'ok   chiều đỏ: số đếm mọi nguồn → báo <ngày>' (chỉ được thay bằng dòng 'bỏ chiều đỏ: 0 tin nguồn khác S03 trong 7 ngày' kèm con số đếm), DB không phải localhost → exit ≠ 0 có tên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.luong7_smoke
+    paths: [scripts/smoke-luong-7-ngay.mjs, scripts/lib/ops-app.mjs, app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/collections-view.tsx, app/src/lib/collections-queries.ts]
+    expected: "exit 0; với mỗi trạng thái tươi · cũ · thiếu khối và mỗi khổ 1280 · 390: dòng 'ok   <trạng thái> <khổ>: 14 ô S03 <đúng số | «—»> · <mờ | không mờ> · 7 ô «Chỉ ở máy thu» canh phải · trang rộng ≤ <khổ>', dòng ảnh chụp đã lưu, hai chiều đỏ 'ok   chiều đỏ: ô «Chỉ ở máy thu» canh trái → báo' và 'ok   chiều đỏ: phần tử 500px → báo trang', 'ops_heartbeat thật không đổi', 'dọn: 0 phiên tạm còn lại'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -16,7 +16,8 @@ import { sloSummaryKey } from "@/lib/freshness"
 import { FEED_STATE, feedSloSummary, feedState } from "./feed-status"
 import { SegmentBar, StatCard } from "./section"
 
-/** Trên cloud các vùng luồng / nhóm S03 / lockdown không dựng — nút trỏ Alert «chưa có số trên cloud» (collections-view). */
+/** Trên cloud các vùng nhóm S03 / lockdown không dựng — nút trỏ Alert «chưa có số trên cloud» (collections-view). Bảng
+ * luồng 7 ngày dựng trên cloud khi đã có bản tin (ON5, `flowShown`) — nút luồng trỏ về bảng. */
 const CLOUD_ANCHOR = "#tren-may-thu"
 
 export function CollectionsTiles({
@@ -36,7 +37,7 @@ export function CollectionsTiles({
   roles?: SourceRoles
   /** Trên cloud (ON3): ô nào chưa có số thì «—»; `stale` = số là lần đo cuối, hiện mờ; Lockdown chưa có nguồn số trên
    * cloud tới ON23 → «—» kèm nhãn «Chưa kiểm được trên cloud» (Hỏi-1 = A). Vắng = máy local, đo trực tiếp. */
-  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean; funnelMeasured: boolean }
+  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean; funnelMeasured: boolean; flowShown?: boolean }
 }) {
   const s03 = sourceLabel("S03", roles)
   const states = feeds.map(feedState)
@@ -77,7 +78,7 @@ export function CollectionsTiles({
         value={items24h === null ? "—" : fmtInt(items24h)}
         basis={items24h === null ? "Chưa có số" : busiest && busiest.items24h ? `Nhiều nhất: ${busiest.code} (${fmtInt(busiest.items24h)})` : "Chưa có bản ghi trong 24 giờ"}
         muted={muted}
-        action={{ label: "Xem luồng 7 ngày", href: cloud ? CLOUD_ANCHOR : "#luong" }}
+        action={{ label: "Xem luồng 7 ngày", href: cloud && !cloud.flowShown ? CLOUD_ANCHOR : "#luong" }}
       />
 
       <StatCard
