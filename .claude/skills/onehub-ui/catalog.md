@@ -62,6 +62,7 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | `@reui/how-it-works-1` | blocks/how-it-works-1/ → marketing/how-it-works.tsx | 3 bước dùng sản phẩm | Card → Frame (trang chủ họ Frame) | https://reui.io/preview/base/how-it-works-1 |
 | `@reui/faq-6` | blocks/faq-6/ → marketing/faq-section.tsx | Hỏi đáp trang chủ (accordion) | Dữ liệu qua props | https://reui.io/preview/base/faq-6 |
 | `@reui/faq-3` | blocks/faq-3/ → marketing/definition-grid.tsx + hàng hai nút ở (marketing)/methodology/page.tsx | Định nghĩa trang Phương pháp, mở sẵn | Tiêu đề mục là h2 có id (mục lục); mỗi ô mang id riêng (đích của ⓘ); câu trả lời nhận ReactNode; hàng hỗ trợ → Xem thị trường / Ước tính lợi suất (không có bàn hỗ trợ) | https://reui.io/preview/base/faq-3 |
+| `@reui/data-grid-advanced-7` | (không giữ bản gốc trong blocks/ — bản gốc không qua tsc với data-grid đang cài) → yield/financing/financing-grid.tsx + financing-cells.tsx, mô hình lib/financing.ts | Dòng tiền vốn vay ở /yield | Chỉ đọc: tham số vay sửa ở form-11 (URL, chia sẻ được); không thêm/sửa/xoá dòng, không chọn ô; mục Doanh thu · Chi phí vận hành · Thu nhập ròng · Trả nợ vay (lãi/gốc) · Dòng tiền sau nợ · So với thuê dài hạn; cột Hằng tháng + Năm 1…5; dòng tổng ghim = lợi nhuận / tiền mặt bỏ ra | https://reui.io/preview/base/data-grid-advanced-7 |
 
 ## Cổng Ops — block Solutions (B1, cài 2026-10-23)
 

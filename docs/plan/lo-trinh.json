@@ -1603,6 +1603,20 @@
       "ghi_chu": "Test dùng openclaw giả (PATH/HOME giả), không chạm ~/.openclaw hay tài khoản thật (zalo-safety.md, luật phép đo của ON1). Dưới mục tiêu cỡ: lỗ hẹp, hạng T3 vì app/src/app/api/v1/ops/**."
     },
     {
+      "ma": "ON24",
+      "cau_giao": "Tick bật nhóm trên /ops/sources luôn ghi requireMention true, và bộ ghi cấu hình OpenClaw từ chối mọi bản cấu hình phạm bất biến bộ canh trước khi ghi",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Audit «Ops tự vận hành nguồn kiểu SaaS» 25/10, phát hiện §1: setZaloGroupEnabled dựng nhóm mới requireMention:false; gateway nạp nóng < 1 giây, bộ canh L3b chỉ bắt sau ≤ 5′ rồi KILL gateway — khớp chuỗi sự cố 22/10 (runtime-map «Fix ĐÃ LÀM» ý 3). Không hàng nào theo dõi lỗi này.",
+      "hang": "T3",
+      "slug": "nhom-moi-requiremention",
+      "bat_khi": "Nhóm mới hay bật lại ở mọi bố cục tài khoản: requireMention true; cấu hình phạm L2/L3/L3b/groupPolicy: không ghi, route 400, tệp nguyên byte; bộ canh phán phạm ⇒ hàm kiểm phán phạm",
+      "nhom": "zalo-an-toan",
+      "dot": "ops-noi-that-2410",
+      "phu": [],
+      "ghi_chu": "Test dùng cấu hình chép trong thư mục tạm và openclaw giả (zalo-safety.md), không chạm ~/.openclaw. Hạng T3 khai tay: zalo-admin.ts chưa nằm trong risk_tiers.t3_paths. Ngoài phạm vi: khoá bộ canh chưa kiểm, quyền/audit route zalo, readZaloAllowlist (phát hiện §2, §3)."
+    },
+    {
       "ma": "ON15",
       "cau_giao": "Bản khai công cụ app/docs/api/mcp-tools.json khớp sổ bề mặt API: công cụ tin rao đòi bearer ops hoặc bị gỡ, không công cụ nào ghi «public» trái sổ",
       "vai": "nen",

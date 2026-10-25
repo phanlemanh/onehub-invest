@@ -1,0 +1,74 @@
+schema_version: 1
+feature_slug: nhom-moi-requiremention
+# Eval máy đọc ca mang tiền tố «NM-AC-n» trong TAP (app/tests/nhom-moi-requiremention.test.tsx, cấu hình + openclaw giả).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; ca 'NM-AC-1 nhóm mới ở 4 bố cục → {enabled:true, requireMention:true} đúng chỗ' (default có groups riêng, default kế thừa channel, layout cũ, acc2), mỗi bố cục so deepEqual mục nhóm trong tệp giả VÀ so enabledGroups của mọi tài khoản trước/sau: KHÔNG tài khoản nào mất nhóm, KHÔNG tài khoản khác nhận group:moi; chiều đỏ 'NM-AC-1 bản sao dựng nhóm mới requireMention false, gỡ kiểm → tệp nhận false' ok (bản sao khác bản gốc, rào chạy trên bản sao)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; ca 'NM-AC-2 bật lại nhóm false/thiếu khoá/có khoá khác ở default và acc2 → enabled:true + requireMention:true, khoá khác giữ nguyên' ok; chiều đỏ 'NM-AC-2 bản sao bật lại chỉ đặt enabled → giữ false' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; ca 'NM-AC-3 tắt nhóm có sẵn, nhóm chưa có, và đúng nhóm đang phạm → ghi thành công, KHÔNG bị chặn' ok: requireMention giữ true, nhóm chưa có thành {enabled:false, requireMention:true}, hàm kiểm trả [] trên tệp sau khi tắt X; mỗi lần ghi đúng một tệp .bak- mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; ca 'NM-AC-4 cấu hình sạch → []', 'NM-AC-4 ma trận vi phạm → có vi phạm đúng nhãn lớp' (L2 ×4, L3 ×1, L3b ×11 gồm enabled vắng/null/0/chuỗi, allow false, channel khi mọi tài khoản có groups riêng, accounts.<id>.groups; groupPolicy ×2; hỏng ×5; L3b nêu id nhóm; hàm không ném), 'NM-AC-4 sát ranh KHÔNG phạm → []' (nhóm tắt có false, bindings vắng, bindings [], groupPolicy vắng) ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, scripts/zalo-watchdog.sh, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; ca 'NM-AC-5 bộ canh phán vi phạm ⇒ hàm kiểm phán vi phạm trên mọi tệp của ma trận AC-4' ok (python thoát khác 0 hay có traceback tính là vi phạm; đoạn trích lấy lúc chạy giữa << 'EOF' và EOF); ca 'NM-AC-5 sát ranh: cả hai KHÔNG phán vi phạm' ok trên 4 cấu hình sát ranh của AC-4; ca 'NM-AC-5 băm đoạn trích bằng băm ghim' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/groups/route.ts, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; ca 'NM-AC-6 cấu hình phạm ở chỗ khác → bật và tắt nhóm khác đều bị từ chối: hàm ném + route 400 nêu lớp, tệp nguyên byte, không .bak mới' với 4 cấu hình viết trước, mỗi cấu hình cả đường hàm lẫn handler POST thật với bearer ops; chiều đỏ 'NM-AC-6 bản sao gỡ lời gọi kiểm → tệp bị ghi' và 'NM-AC-6 bản sao giữ kiểm, dựng nhóm false → L3b nêu group:moi ở 4 bố cục, tệp nguyên byte' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; ca 'NM-AC-7 thước tĩnh: một hàm ghi cấu hình writeCfg một tham số, câu đầu là bước kiểm, mọi lời gọi ghi nằm trong nó' và 'NM-AC-7 createZaloAccount/deleteZaloAccount trên cấu hình phạm → từ chối, tệp nguyên byte' ok; chiều đỏ 'NM-AC-7 bản sao kiểm sau writeFile', 'NM-AC-7 bản sao thêm writeFile(CONFIG) ngoài writeCfg', 'NM-AC-7 bản sao thêm tham số bỏ kiểm' — thước nêu tệp và lớp ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, scripts/zalo-watchdog.sh, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; tệp test không import tĩnh zalo-admin hay route; ca 'NM-AC-8 rào: homedir, openclaw, config, tệp python dưới thư mục tạm; DATABASE_URL cổng đóng' ok; mọi bản sao đột biến nạp qua một hàm chạy rào trên bản sao, mọi lượt python qua một hàm chạy rào trên đoạn trích; ca 'NM-AC-8 bật/tắt nhóm không gọi openclaw → nhật ký giả rỗng' ok; chiều đỏ 'NM-AC-8 rào với HOME thật / đoạn trích có pkill trả vi phạm nêu đường lạc' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-id.test.tsx, app/tests/login-kiem-id.test.tsx]
+    expected: "exit 0; đủ ca 'GT-AC-*' và 'LK-AC-*' ok (không ca nào bị bỏ hay đổi tên)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/lib/zalo-admin.ts]
+    expected: "exit 0; tsc --noEmit 0 lỗi, lint 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
