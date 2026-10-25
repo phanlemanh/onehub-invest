@@ -257,7 +257,7 @@ describe("AU12-AC-4 máy chủ không có số", () => {
     const p = await push()
     for (const [ca, fn] of [
       ["rows không phải mảng", (b: Block) => (b.rows = { x: 1 })],
-      ["hàng thiếu code", (b: Block) => (b.rows = (b.rows as Record<string, unknown>[]).map(({ code: _c, ...r }) => r))],
+      ["hàng thiếu code", (b: Block) => (b.rows = (b.rows as Record<string, unknown>[]).map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => k !== "code"))))],
     ] as const) {
       await ingest(withBlock(p, fn))
       const { status, body } = await call()
