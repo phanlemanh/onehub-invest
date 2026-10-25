@@ -186,7 +186,8 @@ describe("LD-AC-5 hiển thị khi chưa kiểm được", () => {
   const rowState = (grid: string, desc: string) => {
     const row = [...grid.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) => m[1]).find((r) => r.includes(desc))
     assert.ok(row, `có hàng «${desc}» trong lưới`)
-    return row!.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).at(-1)
+    // ON13: cột Trạng thái đứng ngay sau cột Lớp — đọc nhãn trạng thái (Badge) của hàng, không đọc ô cuối.
+    return row!.match(/data-slot="badge"[^>]*>([^<]+)</)?.[1]
   }
 
   test("LD-AC-5 null → Chưa kiểm được agent-turn hôm nay, 0 mục Khẩn agent-turn, L4b trong nhóm Chưa kiểm được của lưới", async () => {

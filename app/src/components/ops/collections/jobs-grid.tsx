@@ -29,9 +29,9 @@ const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown"] as const).map((a)
 export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: boolean }) {
   const columns = useMemo<InsightColumn<JobStatus>[]>(
     () => [
-      { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Tác vụ" column={column} />, size: 280, enableSorting: true },
-      { id: "schedule", accessorKey: "schedule", header: "Lịch", size: 180 },
+      { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Tác vụ" column={column} />, size: 200, enableSorting: true },
       { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={stale && row.original.alive === "yes" ? "outline" : ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
+      { id: "schedule", accessorKey: "schedule", header: "Lịch", size: 180 },
       {
         id: "last",
         accessorFn: (j) => j.lastLogAt ?? "",
