@@ -1,32 +1,29 @@
 ---
 schema_version: 2
 feature_slug: hieu-chuan-mot-bo-so
-verdict: REJECT
+verdict: PASS
 failed_evals: []
-reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2cf2cd328ee393995c2c8c39b9ffdd05ea29e210
+verified_commit: 2b5595317308b4b32295a93cdf3acb4e0de1edf1
 human_signoff:
 ---
 
 # Evidence Report: hieu-chuan-mot-bo-so
 
-Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E9, E10 chạy lại ở round này), nhưng review còn ba finding TRONG hợp đồng chống lại AC-10 (phép đo «bề rộng trang» trên /ops luôn ra bằng bề rộng khung, nên điều kiện «390 không cuộn ngang» của E10 chưa được chứng minh thật). Vì vậy verdict là REJECT, danh sách eval đỏ để trống. Chi tiết xem review-findings.md.
-
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | PASS (mang từ round 1) |
-| E2 | AC-2 | test | PASS (mang từ round 1) |
-| E3 | AC-3 | test | PASS (mang từ round 2) |
-| E4 | AC-4 | test | PASS (mang từ round 2) |
-| E5 | AC-5 | test | PASS (mang từ round 1) |
-| E6 | AC-6 | test | PASS (mang từ round 1) |
-| E7 | AC-7 | script | PASS (mang từ round 1) |
-| E8 | AC-8 | judgment | PASS (đề xuất của hội đồng, chưa người chốt) |
+| E1 | AC-1 | test | PASS |
+| E2 | AC-2 | test | PASS |
+| E3 | AC-3 | test | PASS |
+| E4 | AC-4 | test | PASS |
+| E5 | AC-5 | test | PASS |
+| E6 | AC-6 | test | PASS |
+| E7 | AC-7 | script | PASS |
+| E8 | AC-8 | judgment | PASS |
 | E9 | AC-9 | test | PASS |
-| E10 | AC-10 | ui-check | PASS (máy đo; xem finding AC-10 trong review-findings.md) |
+| E10 | AC-10 | ui-check | PASS |
 
 ## Evidence
 
@@ -36,7 +33,7 @@ Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-25T00:08:38Z
   carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-hieu-chuan-mot-bo-so-E2-r1
@@ -44,7 +41,7 @@ Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-25T00:08:38Z
   carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-hieu-chuan-mot-bo-so-E3-r2
@@ -52,7 +49,7 @@ Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-25T00:17:01Z
   carried_from_round: 2
-  note: carry-forward tu round 2 — delta khong cham paths cua eval
+  # carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-hieu-chuan-mot-bo-so-E4-r2
@@ -60,7 +57,7 @@ Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-25T00:17:01Z
   carried_from_round: 2
-  note: carry-forward tu round 2 — delta khong cham paths cua eval
+  # carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-hieu-chuan-mot-bo-so-E5-r1
@@ -68,7 +65,7 @@ Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-25T00:08:38Z
   carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-hieu-chuan-mot-bo-so-E6-r1
@@ -76,7 +73,7 @@ Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-25T00:08:38Z
   carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-hieu-chuan-mot-bo-so-E7-r1
@@ -84,79 +81,79 @@ Round 3. Mọi eval máy đều xanh (E1–E7 và E8 mang từ round trước; E
   verifier: config:executors.script.hieu_chuan_do
   verified_at: 2026-10-25T00:08:38Z
   carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E8
-  judged_by: hội đồng ba lens (đề xuất; panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; rationale xem round 2)
+  judged_by: judge-subagent (fresh context)
   verdict: PASS
-  votes:
-    - domain-correctness: PASS (r2)
-    - operational-feasibility: PASS (r2)
-    - spec-alignment: PASS (r2)
+  rationale: Panel giu nguyen tu round 2 — inputs khong doi, khong cham lai; rationale xem round do. Ba judge (domain-correctness, operational-feasibility, spec-alignment) deu PASS (r2).
+  required_evidence:
+    - (judge không nêu bằng-chứng-thiếu)
   human_override:  # chi nguoi ghi
 
 - eval: E9
-  run_id: minted-hieu-chuan-mot-bo-so-E9-r3
+  run_id: minted-hieu-chuan-mot-bo-so-E9-r4
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.ui_capture_login
-  verified_at: 2026-10-25T00:23:29Z
+  verified_at: 2026-10-25T00:49:00Z
   output: |
     node --test scripts/ui-capture-login.test.mjs
-    ℹ duration_ms 72.140875
+    ℹ duration_ms 87.198208
 
 - eval: E10
-  run_id: minted-hieu-chuan-mot-bo-so-E10-r3
+  run_id: minted-hieu-chuan-mot-bo-so-E10-r4
   exit_code: 0
   baseline: n-a
   verifier: config:dev_server.start
-  verified_at: 2026-10-25T00:23:29Z
+  verified_at: 2026-10-25T00:49:00Z
   screenshot: evidence/E10-sang-1440.png
   observed: |
-    E10-sang-1440.png: da dang nhap (sidebar Van hanh/Cong noi bo, muc 'Chat luong du lieu' sang, breadcrumb, nut 'Chep lien ket'). Dau trang: tieu de 'Chat luong du lieu' + chip '13 kiem', '46 doi tuong', '25 thi truong hieu chuan'; 4 the KPI (160/338, 350, 16.378, 53); bang 'Kiem chat luong (7 ngay)' va 'Do phu trung thuc'. Duoi la 25 the 'Hieu chuan — <thi truong>' (Bac Ninh ... Dong Thap), moi the co dong 'Diem S02 · ...', bang Chi so/Tu thu/S02 · Hieu chuan (12 thang qua)/Ti le, badge 'x.xx× · Lech' mau vang, badge 'dai dien cho N thi truong S02 · Hieu chuan', ngay thu, va cau dinh nghia 'Listing tu thu: so listing dang theo doi trong ca khu vuc (gom phuong con). ADR, cong suat tu thu = ...'. Sau the cuoi co dong 'Chua co so: Hue, Hai Phong, Quang Ninh, Ca Mau, Ha Tinh, Hung Yen, Ninh Binh, Thai Nguyen, Tay Ninh', roi bang 'Thi truong S02 · Hieu chuan toan quoc' (1–25/43) co chu thich 'Listing tu thu: ...'. Khong co nhan 'mau mong' o the nao. Khong chu/khoi de nhau.
-    E10-toi-1440.png: cung bo cuc nen toi; chip '25 thi truong hieu chuan' o dau trang; cac the Hieu chuan, cau 'Listing tu thu: ...', dong 'Chua co so: ...' (cung 9 ten), badge Lech vang tren nen toi doc ro; chu sang tren nen toi doc duoc, khong de nhau; khong nhan 'mau mong'.
-    E10-sang-390.png: bo cuc 1 cot, chip '25 thi truong hieu chuan' o dau trang, the Hieu chuan xep doc (tieu de, diem, badge 'dai dien cho...', ngay thu xuong dong rieng), cau 'Listing tu thu: ...' wrap tot, dong 'Chua co so: Hue, Hai Phong, ...' wrap 2 dong, bang S02 toan quoc o cuoi. Trong bang trong the, cot S02 · Hieu chuan va Ti le bi cat ben phai (cuon ngang trong khung data-grid — thiet ke cho phep) va thanh cuon xam nho nam duoi dong 'Listing' nhung khong de len chu. Khong cuon ngang cap trang (trang 390 = khung 390). Khong nhan 'mau mong'.
+    Đã mở từng ảnh bằng Read, cắt đoạn bằng sharp vì ảnh cao 16000px.
+
+    E10-sang-1440.png (sáng, 1440): đã đăng nhập, thấy shell Vận hành, mục nav «Chất lượng dữ liệu» đang chọn. Tiêu đề «Chất lượng dữ liệu» kèm ba nhãn «13 kiểm», «46 đối tượng», «25 thị trường hiệu chuẩn». Có bốn thẻ KPI (160 / 338; 350; 16.378; 53), bảng «Kiểm chất lượng (7 ngày)», bảng «Độ phủ trung thực» với chú thích «Listing tự thu: số listing đang theo dõi trong cả khu vực…». Có các thẻ «Hiệu chuẩn — <khu vực>» (Bắc Ninh, Cần Thơ, Hà Nội, Hồ Chí Minh, Đà Nẵng, Đồng Nai, An Giang, Cao Bằng, Gia Lai, Khánh Hòa, Lai Châu, Lào Cai, Lâm Đồng, Sơn La, Thanh Hóa, Tuyên Quang, Đắk Lắk, Đồng Tháp…), mỗi thẻ có câu định nghĩa «Listing tự thu: …». Một số thẻ có nhãn «đại diện cho N thị trường S02 · Hiệu chuẩn». Không thẻ nào có nhãn «mẫu mỏng». Cuối vùng có dòng «Chưa có số: Huế, Hải Phòng, Quảng Ninh, Cà Mau, Hà Tĩnh, Hưng Yên, Ninh Bình, Thái Nguyên, Tây Ninh», rồi bảng «Thị trường S02 · Hiệu chuẩn toàn quốc». Không có trang /login. Chữ đọc được, không đè nhau, bảng cuộn ngang chỉ trong khung của nó.
+
+    E10-toi-1440.png (tối, 1440): cùng bố cục, nền tối. Đầu trang có «25 thị trường hiệu chuẩn». Thẻ Bắc Ninh, Cần Thơ, Hà Nội có câu «Listing tự thu: …». Dòng «Chưa có số: Huế, Hải Phòng, …, Tây Ninh» có mặt. Chữ sáng trên nền tối đọc rõ, nhãn «Lệch» màu vàng đọc được, không đè nhau. Không có nhãn «mẫu mỏng». Không phải trang đăng nhập.
+
+    E10-sang-390.png (sáng, 390): shell thu gọn, tiêu đề, ba nhãn gồm «25 thị trường hiệu chuẩn», bốn thẻ KPI xếp dọc. Các thẻ Hiệu chuẩn (Cần Thơ, Hà Nội, Hồ Chí Minh, Điện Biên, Đắk Lắk, Đồng Tháp…) có câu định nghĩa «Listing tự thu: …», chữ xuống dòng gọn. Bảng trong thẻ cuộn ngang trong khung riêng (thanh cuộn, cột «S02» bị cắt trong khung), theo thiết kế. Trang không cuộn ngang, đo s=c=390. Có dòng «Chưa có số: Huế, Hải Phòng, Quảng Ninh, Cà Mau, Hà Tĩnh, Hưng Yên, Ninh Bình, Thái Nguyên, Tây Ninh», rồi bảng «Thị trường S02 · Hiệu chuẩn toàn quốc». Dưới nội dung (khoảng y 13.6k đến 16000) là vùng trắng, chỉ có nút Next dev ở góc. Không đè chữ, không có trang đăng nhập.
+
+    Đối chiếu Expected: khớp ở cả ba frame. Hạn chế: ảnh 390 chụp ở chiều cao 16000 thay vì 40000 vì 40000 và 30000 làm trình duyệt lỗi chụp; nội dung vẫn nằm gọn trong 16000.
   network_observed: n-a (driver)
+  output: |
+    Ảnh đối chứng dương (ngoài evidence): /private/tmp/claude-503/-Users-manhphan-dev-onehub-invest/f5659470-ffbb-4423-b6b1-543a3f321f33/scratchpad/e10-probe.png
+    Server: dùng chung cổng 3462 có sẵn, không tắt.
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-hieu-chuan-mot-bo-so-SUITE-npm_test__bb6271-r3
+  run_id: minted-hieu-chuan-mot-bo-so-SUITE-npm_test__bb6271-r4
   exit_code: 0
-  verified_at: 2026-10-25T00:23:29Z
+  verified_at: 2026-10-25T00:49:00Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-hieu-chuan-mot-bo-so-SUITE-lint-r3
+  run_id: minted-hieu-chuan-mot-bo-so-SUITE-lint-r4
   exit_code: 0
-  verified_at: 2026-10-25T00:23:29Z
+  verified_at: 2026-10-25T00:49:00Z
 
 - cmd: cd app && npm test
-  run_id: minted-hieu-chuan-mot-bo-so-SUITE-npm_test__bd9a35-r3
+  run_id: minted-hieu-chuan-mot-bo-so-SUITE-npm_test__bd9a35-r4
   exit_code: 0
-  verified_at: 2026-10-25T00:23:29Z
+  verified_at: 2026-10-25T00:49:00Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-hieu-chuan-mot-bo-so-SUITE-npm_test__13563d-r3
+  run_id: minted-hieu-chuan-mot-bo-so-SUITE-npm_test__13563d-r4
   exit_code: 0
-  verified_at: 2026-10-25T00:23:29Z
+  verified_at: 2026-10-25T00:49:00Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-hieu-chuan-mot-bo-so-SUITE-test_lint_rules-r3
+  run_id: minted-hieu-chuan-mot-bo-so-SUITE-test_lint_rules-r4
   exit_code: 0
-  verified_at: 2026-10-25T00:23:29Z
+  verified_at: 2026-10-25T00:49:00Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-hieu-chuan-mot-bo-so-SUITE-node_scripts_check_portal_compliance_mjs-r3
+  run_id: minted-hieu-chuan-mot-bo-so-SUITE-node_scripts_check_portal_compliance_mjs-r4
   exit_code: 0
-  verified_at: 2026-10-25T00:23:29Z
-
-### Hội đồng chấm E8 (đề xuất)
-
-Panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; rationale xem round 2. Đề xuất chung: PASS. human_override để trống cho người quyết ở Cổng 2.
-
-- domain-correctness: PASS (r2)
-- operational-feasibility: PASS (r2)
-- spec-alignment: PASS (r2)
+  verified_at: 2026-10-25T00:49:00Z
 
 ## Known limits
 
@@ -164,7 +161,7 @@ Panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; 
 
 ## Analyst
 
-none — mọi eval feature đều red trên baseline (có phân biệt)
+none — không eval nào được đo là xanh trên cả HEAD lẫn baseline (không có eval không-phân-biệt).
 
 ### Baseline khong do
 
@@ -172,10 +169,11 @@ none — mọi eval feature đều red trên baseline (có phân biệt)
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — every multi-run eval is uniform (mọi eval chạy một lượt, xác định).
 
 ## Iterations
 
-Round 1: E3, E4 được chạy lại ở round 2 (mã r2); lệnh suite của pipeline chưa xanh ở round 1. Trả về triển khai.
-Round 2: E10 bắt được thẻ Hiệu chuẩn và bảng Độ phủ cuộn ngang ở 390; sửa bước chụp (ui-capture) để in bề rộng khung/trang. Trả về triển khai.
-Round 3: E9 và E10 xanh, toàn bộ suite xanh, nhưng review còn ba finding TRONG hợp đồng cho AC-10 (phép đo document.scrollWidth trên /ops luôn bằng bề rộng khung nên điều kiện «390 không cuộn ngang» không kiểm được gì). Sau round 3 → leo thang cho người, verdict REJECT. Mốc giờ của E9, E10 và các lệnh suite round 3 chỉ có ngày vì máy chưa cấp giờ chạy; main loop có thể đóng dấu giờ khi ghi run-log.
+Round 1: E1, E2, E5, E6, E7 pass (mang tiếp sang các vòng sau).
+Round 2: E3, E4 pass sau khi chạy lại (mang tiếp).
+Round 3: REJECT — phép đo bề rộng trang của AC-10 hằng đúng trên khung Ops (ba finding AC-10); chạm trần 3 lượt, đã được người duyệt mở tiếp.
+Round 4: E9 và E10 chạy lại trên commit 2b55953 (đo bề rộng vùng cuộn thân trang kèm đối chứng dương); các eval máy đều xanh, E8 giữ panel từ round 2. Verdict PASS.

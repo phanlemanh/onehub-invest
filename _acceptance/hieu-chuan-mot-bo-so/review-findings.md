@@ -1,41 +1,61 @@
 ## Trong hợp đồng
 
-- **Phép đo «bề rộng trang» luôn ra sw = khung trên /ops nên tiêu chí 390 «không cuộn ngang» của E10 không kiểm được gì**
-  AC: AC-10
-  file: `scripts/ui-capture-login.mjs:107`
-  severity: medium
-  source: conventions
-  detail: Lượt này thêm phép đo `document.documentElement.scrollWidth` (ui-capture-login.mjs:107). evals.yaml:80 lấy luôn dòng 'bề rộng: khung 390, trang <sw>' với sw ≤ 390 làm bằng chứng rằng ở 390 trang không cuộn ngang. Tuy vậy, khung Ops không cuộn ở cấp document. Gốc của OpsShell là `SidebarProvider className="... h-svh min-h-0 overflow-hidden"` (app/src/components/shell/ops-shell/ops-shell.tsx:122). Thân trang là `<div className="@container flex min-h-0 flex-1 flex-col overflow-y-auto ...">` (ops-shell.tsx:104). Theo CSS, `overflow-y-auto` làm `overflow-x` của div này đổi từ visible sang auto. Vì vậy khi nội dung trang /ops/quality tràn ngang, phần tràn cuộn bên trong div thân trang và bị gốc overflow-hidden cắt. Kết quả là documentElement.scrollWidth luôn bằng innerWidth với mọi trang /ops. Nếu bố cục 390 có lỗi tràn ngang thật, dòng 'trang 390' vẫn in ra và E10 vẫn qua. Ảnh `screenshot --full-page` cũng không thấy phần bị cắt, nên ba ảnh E10-*.png không thay được phép đo này. Mặt khác, chú thích 'bảng cuộn trong khung của nó không tính' muốn tách tràn của data-grid khỏi tràn cấp trang, nhưng document.scrollWidth không tách được hai loại này trong khung shell. Hướng đúng: đo scrollWidth so với clientWidth của chính vùng cuộn thân trang, tức là phần tử cuộn của OpsShell, không đo document. Sau đó sửa câu expected ở evals.yaml:80 cho khớp. Test UC-AC-9 chỉ giả lập {w:390, sw:390}, nên test không bắt được lỗi này.
-  rationale: AC-10 đòi ảnh chụp ở 390 «không cuộn ngang» bằng bước chụp của kho; nếu phép đo bề rộng luôn đậu trên /ops thì điều kiện này không được chứng minh, và nó không nằm trong Out of scope.
-
-- **Phép đo «bề rộng trang» luôn bằng bề rộng khung trên /ops nên E10 «390 không cuộn ngang» đậu dù trang có tràn**
-  AC: AC-10
-  file: `scripts/ui-capture-login.mjs:107`
-  severity: high
-  source: bugs
-  detail: Dòng 107 đo `document.documentElement.scrollWidth`. Trên /ops, OpsShell (app/src/components/shell/ops-shell/ops-shell.tsx:122) bọc gốc bằng `h-svh overflow-hidden`. Thân trang nằm trong `<div className="@container ... overflow-y-auto">` (dòng 104). Theo CSS, khi overflow-y là auto thì overflow-x đang `visible` sẽ được tính thành `auto`. Vì vậy nội dung tràn ngang bị cắt ở gốc hoặc cuộn bên trong div thân trang, và không bao giờ làm documentElement.scrollWidth lớn hơn innerWidth. Kết quả là dòng `bề rộng: khung 390, trang 390` in ra trong mọi trường hợp, kể cả khi vùng Hiệu chuẩn tràn ngang ở 390px. Thế mà evals.yaml (E10 expected) dùng đúng điều kiện `sw ≤ 390` làm bằng chứng «trang không cuộn ngang», nên tiêu chí này là kiểm suông và có thể cho kết quả đậu sai. Test UC-AC-9 chỉ kiểm chuỗi do fake trả về (`{w:390, sw:390}`), nên không phát hiện được. Cách sửa: đo scrollWidth so với clientWidth của vùng cuộn thân trang (phần tử overflow-y-auto trong SidebarInset), hoặc đo phần tử con rộng nhất của main, chứ không đo documentElement.
-  rationale: Cùng gốc với finding đầu: tiêu chí «không cuộn ngang» ở sáng 390 của AC-10 có thể đậu sai vì phép đo không bao giờ thấy phần tràn.
-
-- **Hình dạng 4 (assertion âm tính đứng một mình, không có đối chứng dương): ở E10, phép đo 'sw ≤ 390' luôn đạt trên /ops vì khung shell không bao giờ làm trang tràn ngang**
-  AC: AC-10
-  file: `_acceptance/hieu-chuan-mot-bo-so/evals.yaml:81`
-  severity: high
-  source: measurement
-  detail: Expected mới của E10 lấy phép đo 'không cuộn ngang' từ dòng 'bề rộng: khung 390, trang <sw>', và đòi sw ≤ 390. sw lấy từ document.documentElement.scrollWidth (scripts/ui-capture-login.mjs:107). Trên /ops, gốc shell là `h-svh min-h-0 overflow-hidden` (app/src/components/shell/ops-shell/ops-shell.tsx:122). Thân trang là `overflow-y-auto` (dòng 104); theo CSS, overflow-y khác visible thì overflow-x cũng thành auto. Vậy mọi nội dung tràn ngang bị giữ trong hộp cuộn của thân trang hoặc bị cắt ở gốc, nên documentElement.scrollWidth luôn bằng innerWidth, dù bố cục có tràn hay không. Phép kiểm vì thế không thể ra FAIL. Không có đối chứng dương nào cho thấy đầu dò này từng báo sw > w trên shell này, ví dụ chèn một khối rộng 2000px rồi chụp. Đúng lỗi mà round 2 bắt được (thẻ và bảng Độ phủ cuộn ngang ở 390, cột S02/Tỉ lệ bị cắt) cũng sẽ đi qua đầu dò mới mà không bị phát hiện. Chính bước 2 của E10 cũng ghi 'vùng thân trang cuộn trong shell'.
-  rationale: Eval E10 là bằng chứng của AC-10 cho điều kiện «không cuộn ngang» ở 390; điều kiện sw ≤ 390 luôn đúng nên AC-10 không được kiểm thật.
+(không có)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Không đo được bề rộng thì bỏ qua lặng lẽ, không báo lỗi**
+- **Chạy đối chứng dương in dòng bề rộng y hệt lần đo thường, không gắn nhãn, và vẫn ghi ảnh ra `out`, thoát 0**
+  Người dùng thấy gì: Khi chạy thử kiểm chứng phép đo, dòng kết quả trông giống hệt lần chụp thật và vẫn ghi ảnh ra, nên người chấm dễ nhầm lần thử với lần chụp hợp lệ.
+  Căn cứ: Chỉ gây nhầm lẫn cho người vận hành nội bộ khi chấm, không làm mất hay lộ dữ liệu, và người chấm chạy lại được; sửa sau cũng rẻ.
+  file: `scripts/ui-capture-login.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Test `widthProbe` chỉ so khớp chữ trong mã sinh ra, không chạy hàm đo lần nào**
+  Người dùng thấy gì: Bộ kiểm tự động cho phép đo bề rộng trang có thể vẫn báo xanh dù phép đo đo sai, nên việc phát hiện trang bị cuộn ngang phải dựa vào lần chạy thật.
+  Căn cứ: Không ảnh hưởng người dùng cuối vì đây là công cụ nội bộ; rủi ro là bỏ sót lỗi cuộn ngang, nhưng lỗi này nhìn ra được ở ảnh chụp và sửa sau không đắt.
+  file: `scripts/ui-capture-login.test.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Thẻ Cổng 2 ghi sai E1–E7 là «chưa đạt», trái với run-log và evidence-report**
+  Người dùng thấy gì: Thẻ trình người ký hiển thị nhầm tám mục kiểm là chưa đạt trong khi thực tế chỉ còn một vấn đề, nên người ký có thể chọn hướng xử lý sai.
+  Căn cứ: Không ảnh hưởng người dùng sản phẩm và người ký đối chiếu được với báo cáo bằng chứng; sinh lại thẻ là xong, nếu lỗi do bộ công cụ thì chuyển cho bộ công cụ.
+  file: `_acceptance/hieu-chuan-mot-bo-so/card.html`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 3 (kèm 1): test widthProbe soi chữ trong mã nguồn thay vì kiểm quan hệ nội dung > vùng cuộn khi chạy thật**
+  Người dùng thấy gì: Phép kiểm tự động chưa chạy thử phép đo trên một trang mô phỏng, nên nếu phép đo hỏng thì bộ kiểm vẫn không báo đỏ.
+  Căn cứ: Chỉ làm giảm độ tin cậy của công cụ chụp nội bộ, không làm mất hay lộ dữ liệu người dùng; có thể bổ sung sau với chi phí thấp.
+  file: `scripts/ui-capture-login.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 2: runner giả trả {w,c,s} viết tay đúng khuôn bên đọc, không lấy từ đầu ra của widthProbe; cờ UI_CAPTURE_PROBE_WIDE không được kiểm**
+  Người dùng thấy gì: Bộ kiểm dùng số liệu viết sẵn nên không bắt được trường hợp công cụ chụp đọc sai kết quả đo; khi đó lúc chạy thật chỉ báo không đo được.
+  Căn cứ: Hậu quả chỉ là công cụ nội bộ báo lỗi hoặc thiếu số đo, người dùng cuối không thấy, và chạy lại là biết ngay.
+  file: `scripts/ui-capture-login.test.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 4: đối chứng dương của phép đo bề rộng đúng theo cách dựng, vì khối 2000px chèn thẳng vào chính phần tử đang đo**
+  Người dùng thấy gì: Bước thử xác nhận phép đo gần như luôn qua, nên nó chưa chứng minh được phép đo bắt được lỗi trang tràn ngang thật nằm sâu trong nội dung.
+  Căn cứ: Rủi ro là bỏ sót một trang bị cuộn ngang ở màn hình hẹp, nhưng người vận hành tự thấy khi mở trang và sửa sau không gây mất dữ liệu.
+  file: `scripts/ui-capture-login.mjs`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Không đo được bề rộng thì bỏ qua lặng lẽ, không báo lỗi (r3 · tệp đã đổi)**
   Người dùng thấy gì: Khi công cụ chụp trang không đo được bề rộng, nó vẫn chụp và báo thành công mà không nói gì, nên người xem có thể tưởng trang đã được kiểm bề rộng trong khi thật ra chưa.
   Căn cứ: Hậu quả nhẹ vì chỉ ảnh hưởng người vận hành khi nghiệm thu, không mất hay lộ dữ liệu, chạy lại là thấy, và việc bổ sung cảnh báo có thể làm sau với chi phí thấp.
   file: `scripts/ui-capture-login.mjs`
   severity: low
   Đề xuất: known-limits
 
-- **Hình dạng 3 (assert 'chuỗi có mặt' trong khi lời hứa là quan hệ giữa các giá trị): test bề rộng dùng fixture w = sw nên không bắt được việc tráo khung/trang**
+- **Hình dạng 3 (assert 'chuỗi có mặt' trong khi lời hứa là quan hệ giữa các giá trị): test bề rộng dùng fixture w = sw nên không bắt được việc tráo khung/trang (r3 · tệp đã đổi)**
   Người dùng thấy gì: Nếu sau này dòng bề rộng bị in nhầm chỗ khung và trang, bài test hiện tại vẫn báo xanh, nên người vận hành có thể đọc ngược hai con số trong báo cáo chụp trang.
   Căn cứ: Hậu quả nhẹ và chỉ xảy ra khi có người sửa công cụ chụp sau này, không ảnh hưởng dữ liệu hay người dùng cuối, và thêm một ca thử khác nhau là việc rẻ để làm sau.
   file: `scripts/ui-capture-login.test.mjs`
