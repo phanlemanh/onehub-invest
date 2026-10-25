@@ -5,7 +5,7 @@ slug: test-anh-mau-co-manifest
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-10-25T12:17:08Z
 approved_by:
