@@ -130,6 +130,53 @@ const CASES = {
       rmSync(T, { recursive: true, force: true });
     }
   },
+  // AC-6 (vòng 2): tệp state cũ có id trùng → nạp bỏ trùng, khử trùng không lệch qua các lượt cắt
+  async "state-trung"() {
+    const T = mkdtempSync(join(tmpdir(), "acc-seen-"));
+    try {
+      const { mkdirSync, writeFileSync } = await import("node:fs");
+      const { createHash } = await import("node:crypto");
+      mkdirSync(join(T, "state"), { recursive: true });
+      // id thật = sourceId do collector tính cho msgs(); dựng state cũ: 4990 id + 10 id lặp ở cuối (giống bản cũ ghi trùng)
+      const s0 = await server(join(T, "snap0"), join(T, "state0"));
+      ingest(s0, msgs(1, 4990));
+      await s0.flush({ skipMedia: true });
+      const base = JSON.parse(readFileSync(join(T, "state0", "agent-seen.json"), "utf8"));
+      const dupState = [...base, ...base.slice(-10)];
+      writeFileSync(join(T, "state", "agent-seen.json"), JSON.stringify(dupState));
+      const s = await server(join(T, "snap"), join(T, "state"));
+      // đẩy qua nhiều lượt cắt: thêm 20 id mới mỗi lượt, 3 lượt
+      for (const [a, b] of [[10001, 10020], [10021, 10040], [10041, 10060]]) {
+        ingest(s, msgs(a, b));
+        await s.flush({ skipMedia: true });
+      }
+      const ids = stateIds(join(T, "state"));
+      check(new Set(ids).size === ids.length, `state sau các lượt cắt không còn id trùng (${ids.length} phần tử, ${new Set(ids).size} id)`);
+      const lastTen = ingest(s, msgs(4981, 4990));
+      check(lastTen.dup === 10, `10 id từng bị trùng trong state cũ vẫn bị khử trùng khi gửi lại, được dup ${lastTen.dup}`);
+    } finally {
+      rmSync(T, { recursive: true, force: true });
+    }
+  },
+  // AC-7 (vòng 2): thân null / không phải object → 400, không 500
+  async "body-null"() {
+    const T = mkdtempSync(join(tmpdir(), "acc-seen-"));
+    const s = await server(join(T, "snap"), join(T, "state"));
+    const http = createServer((req, res) => s.handle(req, res).catch(() => { res.writeHead(500); res.end("{}"); }));
+    await new Promise((d) => http.listen(0, "127.0.0.1", d));
+    const port = http.address().port;
+    try {
+      for (const [name, raw] of [["null", "null"], ["số", "42"], ["chuỗi", "\"x\""], ["mảng", "[]"]]) {
+        const r = await fetch(`http://127.0.0.1:${port}/agent-report`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer k" }, body: raw });
+        check(r.status === 400, `thân ${name} → 400, được ${r.status}`);
+      }
+      const ok = await fetch(`http://127.0.0.1:${port}/agent-report`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer k" }, body: JSON.stringify({ agent_id: "acc", group: "g", messages: msgs(1, 1) }) });
+      check(ok.status === 202, "should-NOT-fire: thân hợp lệ vẫn 202");
+    } finally {
+      http.close();
+      rmSync(T, { recursive: true, force: true });
+    }
+  },
 };
 
 const mode = process.argv[2];

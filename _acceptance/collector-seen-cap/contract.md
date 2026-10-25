@@ -5,7 +5,7 @@ slug: collector-seen-cap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: implemented
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -26,6 +26,8 @@ ZCode thay bằng một mảng thứ tự duy nhất `seenOrder`, cắt ở flus
 - AC-3: Given collector khởi động lại từ tệp state, When gửi lại các tin đã thấy, Then 5000 id mới nhất vẫn bị khử trùng; tin mới được nhận và state vẫn đúng 5000 id.
 - AC-4: Given một lô HTTP POST `/agent-report`, When lô có 1001 tin, Then trả 413 kèm số tin và trần, không tin nào vào bộ đệm; lô đúng 1000 tin vẫn 202 và được nhận đủ.
 - AC-5: Given nhánh đã gộp `origin/main`, When chạy toàn bộ test collector (build sạch), Then tất cả xanh.
+- AC-6: Given tệp state do bản cũ để lại có id trùng, When collector nạp state rồi cắt về 5000 qua nhiều lượt flush, Then mỗi id chỉ còn một bản (số id trong bộ nhớ bằng độ dài danh sách thứ tự), và id từng bị trùng vẫn bị khử trùng khi gửi lại. (thêm ở vòng 2 — state thật có 5000 phần tử, 4991 id)
+- AC-7: Given POST `/agent-report` với thân JSON `null` hay không phải object, When collector xử lý, Then trả 400 kèm thông điệp, không ném lỗi thành 500. (thêm ở vòng 2 — hồi quy của đoạn kiểm trần lô)
 
 ## Coverage
 
@@ -47,3 +49,5 @@ ZCode thay bằng một mảng thứ tự duy nhất `seenOrder`, cắt ở flus
 - Harness `scripts/collector-seen-cap/acceptance.mjs` chạy mỗi ca trong tiến trình con có timeout 60 giây, nên lỗi lặp vô hạn thành FAIL rõ ràng thay vì treo lượt chấm. Thư mục tạm, cổng ngẫu nhiên, không chạm :9210, không ghi DB.
 - Kiểm harness biết đỏ: với `server.ts` của `origin/main`, `flush-6000` bị giết sau 60 giây (treo), `tran-lo` đỏ 2 mục.
 - Nhánh nghiệm thu dựng từ `origin/main` rồi gộp nhánh zcode (chiều ngược bị hook git-secrets chặn nhầm vì hunk chứa URL DB local của daily script).
+- Vòng 1 PASS 5/5 @ 253908e nhưng Mạnh chọn trả lại để sửa hai lỗi ngoài hợp đồng trong vòng này (MỞ LẠI claudedp-2510-2). Thêm AC-6, AC-7.
+- Kiểm harness biết đỏ (vòng 2): trên 1670ed4, `state-trung` đỏ (5000 phần tử, 4990 id) và `body-null` đỏ (thân null → 500).

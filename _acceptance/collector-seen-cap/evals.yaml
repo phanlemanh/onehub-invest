@@ -35,3 +35,17 @@ evals:
     cmd: config:executors.script.collector_test_clean
     expected: "exit 0; toàn bộ test collector pass, 0 fail (gồm agent-seen-cap.test.ts)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.seen_state_trung
+    expected: "exit 0; stdout có 'STATE-TRUNG PASS'; state sau các lượt cắt không còn id trùng; should-NOT-fire: 10 id từng trùng vẫn bị khử trùng khi gửi lại"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.seen_body_null
+    expected: "exit 0; stdout có 'BODY-NULL PASS'; thân null/số/chuỗi/mảng → 400; should-NOT-fire: thân hợp lệ vẫn 202"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
