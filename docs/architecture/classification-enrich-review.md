@@ -1,6 +1,7 @@
 # Review kiến trúc phân loại + enrich — từ lúc tin vào tới lúc thành căn nhà
 
-> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** — cái gì đã chốt, cái gì còn chờ: **§7.0**. Đối chiếu audit 23/10: §7.1 · Phạm vi: Kev-4B gate →
+> Ngày 2026-10-23 · Trạng thái: **chờ Mạnh duyệt** — cái gì đã chốt, cái gì còn chờ: **§7.0**. Đối chiếu audit 23/10: §7.1
+> Khung RESO cụ thể (field, resource, extension, quyết định R1–R5): `docs/architecture/reso-khung-phan-loai.md`. · Phạm vi: Kev-4B gate →
 > parser `transform-*` → E1/E2/định tuyến → `/ops/review` → `resolve-properties`.
 > Cách làm: chỉ đọc code (HEAD `b446637`, đã gồm PR #14, #16, #21), DB local :5433 (SELECT) và log.
 > Không sửa code, không ghi DB. Bản xem trên điện thoại (riêng tư): https://claude.ai/artifact/RSzE1VKhUjbw7jVMyorGHd
@@ -386,7 +387,7 @@ hình dự phòng và API số liệu cần kiểm khi làm.
 |---|---|---|
 | Nội dung tin rao, người bán (tên, SĐT, ID) | **Được** | Tầng C — ROADMAP §3.11 |
 | Tên nguồn thật, `source_registry`, nhãn nội bộ nguồn | **Không** — bỏ khỏi prompt | Tầng A — ADR-0007 |
-| Tên nhóm | **Chờ quyết** (M2) — tạm không gửi | Có thể lộ nguồn |
+| Tên nhóm | **Được** — Mạnh chốt 24/10 tên nhóm cộng đồng là tầng C (ROADMAP §3.14); M2 không còn treo | Tên nguồn thật vẫn tầng A — chỉ gửi mã S0x |
 | Hồ sơ, sự kiện, danh mục của nhà đầu tư (trợ lý) | **Chờ ADR riêng** | ADR-0007 xếp tầng A, không rời máy local — trái với trợ lý chạy cloud |
 
 ### Ước lượng (để có thứ tự độ lớn, không phải báo giá)
@@ -399,7 +400,7 @@ phụ thuộc model được chọn theo số đo — sổ cuộc gọi sẽ cho
 | # | Câu | Phương án | Khuyến nghị |
 |---|---|---|---|
 | **M1** | Sửa hiến pháp ROADMAP §1.6 «Local-first AI» | (a) **Thành «chọn model theo số đo (đúng × trễ × chi phí); local là một lựa chọn và là dự phòng»** · (b) Giữ local mặc định, cloud là ngoại lệ | **(a)** — đúng ý Mạnh và đúng nguyên lý gốc A4; local vẫn giữ vai cho dữ liệu không được ra ngoài |
-| **M2** | Tên nhóm có được gửi model cloud? | (a) Không — chỉ gửi nhãn dự án đã khai ở sổ nhóm · (b) Được | **(a)** — dự án đã khai mang đủ ngữ cảnh; tên nhóm có thể lộ nguồn |
+| **M2** | Tên nhóm có được gửi model cloud? | **Đã trả lời 24/10** (ROADMAP §3.14): tên nhóm là tầng C — được gửi; tên nguồn thật vẫn không | — |
 | **M3** | Cổng | (a) **Vercel AI Gateway + sổ cuộc gọi riêng** · (b) Tự dựng cổng (proxy tự host) · (c) Gọi thẳng từng nhà cung cấp | **(a)** — cùng hệ Vercel/AI SDK, không phí cộng thêm theo tài liệu; (c) mất chỗ đổi model và chỗ đo chi phí |
 | **M4** | Trợ lý nhà đầu tư tính tiền riêng | Ghi FRAMING D6 ngay; đo theo người dùng từ ngày đầu; ADR SPL riêng trước khi gửi hồ sơ nhà đầu tư lên cloud | Ghi ngay; ADR khi bắt đầu làm trợ lý |
 
@@ -908,6 +909,7 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | Sự thật 8 + thang bậc B0–B5, N0–N4 + bậc đích | FRAMING §3.4 |
 | F2 (danh mục từ nhiều nguồn + từ tin), F5 (Mạnh và đội gắn nhãn) | §0.3 |
 | F3 ngưỡng theo cận dưới Wilson (A 0,95 · B 0,90 · C 0,80); F6 thứ tự dọn (mỗi bước ghi DB vẫn chờ Mạnh gật) | §0.3 |
+| R1–R5 khung RESO → **ADR-0013** (căn = UPI + Building, tin = Property; toà = `BuildingName`, phân khu = `ComplexName`; UPI kiểu VN; phường → `City`; DD 2.1) | `docs/adr/0013-…`, `reso-khung-phan-loai.md` |
 
 | **Còn chờ Mạnh** | Nơi ghi |
 |---|---|
@@ -952,6 +954,8 @@ Lưu ý tên: audit đánh số câu hỏi Q1–Q8 **riêng**, không trùng Q1�
 | Tạm đóng `/api/v1/deals` công khai | không có | 0.5, Q3-audit | Review ủng hộ: đến khi PL2 xong, API công khai đang phát tin giả |
 
 ### 7.2 Nguồn
+
+- Khung RESO cụ thể hoá: `docs/architecture/reso-khung-phan-loai.md` (tra `dd-2.0.json`, `dd-2.1.json` ngày 23/10).
 
 
 - Code: `collector/openclaw/handler.js` · `pipeline/transform-{zalo,fb,chotot,airbnb}.mjs` ·

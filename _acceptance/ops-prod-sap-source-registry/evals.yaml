@@ -1,0 +1,32 @@
+schema_version: 1
+feature_slug: ops-prod-sap-source-registry
+# Eval máy đọc ca mang tiền tố «OP-AC-n» (tệp mới) và «SL-AC-n» (AU6) trong TAP; cần DB local :5433.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/ops-queries.ts, app/src/app/api/v1/ops/coverage/route.ts, app/tests/ops-cloud-khong-bang-nap.test.tsx]
+    expected: "exit 0; ca 'OP-AC-1 lược đồ vắng source_registry + bảng nạp → hai hàm và route trả rỗng, không 42P01' ok (đối chứng phá: bỏ chốt freshnessLocalOnly → ca đỏ mã 42P01, đã chạy tay lúc dựng phép đo)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/src/app/ops/page.tsx, app/src/app/ops/collections/page.tsx, app/src/components/ops/collections/collections-view.tsx, app/src/components/ops/overview/overview-tiles.tsx, app/src/components/ops/local-only-alert.tsx, app/tests/ops-cloud-khong-bang-nap.test.tsx]
+    expected: "exit 0; ca 'OP-AC-2 trang /ops và Thu thập render được, nói «Độ tươi chỉ đo ở máy local»' và đối chứng 'OP-AC-2 đối chứng: có source_registry (bảng rỗng) → không hiện câu chỉ-đo-ở-local' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/ops-queries.ts, app/src/lib/freshness.ts, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; mọi ca 'SL-AC-' của app/tests/slo-mot-nguon.test.tsx ok (hành vi local AU6 không đổi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [app/src/lib/freshness.ts, scripts/freshness-parity.test.mjs]
+    expected: "exit 0; ba ca 'SL-AC-1' của scripts/freshness-parity.test.mjs ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

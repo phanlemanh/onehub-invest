@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 178eb2602540e11abe5838dbd6608c3625af2c22
+verified_commit: 2c06ee674f8fca86782bf1589c8db146e9c45ce1
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -137,3 +137,7 @@ sha: 9855e15ad47f96627622fa06823a4ec9e354b005 · suites: 2 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-23, do hoá cũ do merge origin/main 021b48e (PR #12 biểu đồ dùng chung) vào nhánh
 run_id: repin-20261023T011336Z-48491
 sha: 178eb2602540e11abe5838dbd6608c3625af2c22 · suites: 3 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-24, do sync-pii-mutation symlink lib/ + chỉ tính đỏ khi đúng ca gác FILL (hỏng sau PR #60)
+run_id: repin-20261024T095233Z-46291
+sha: 2c06ee674f8fca86782bf1589c8db146e9c45ce1 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng

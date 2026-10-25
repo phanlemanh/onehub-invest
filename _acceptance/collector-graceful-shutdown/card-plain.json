@@ -1,0 +1,7 @@
+{
+  "feature_plain": "Khi Collector API :9210 bị dừng (khởi động lại, tắt máy, Ctrl-C), mọi tin Zalo đã nhận trước đó đều được ghi vào kho dữ liệu thô rồi mới thoát; ảnh treo bị bỏ sát hạn để giữ tin, và nếu vẫn mất tin thì tiến trình báo lỗi thay vì im lặng.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
+  "decisions_plain": [
+    {"id": "d-20261023T014204Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, bốn vòng kiểm độc lập tự đi tìm lỗ và đã bắt ba lỗi mất tin trước khi tới vòng này."}
+  ]
+}

@@ -42,10 +42,13 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const body = (await req.json().catch(() => ({}))) as { id?: string };
+  const body: unknown = await req.json().catch(() => null);
+  // Không cắt khoảng trắng: id đệm khoảng trắng là id lạ (bước kiểm trong deleteZaloAccount trả 400).
+  const raw = body && typeof body === "object" ? (body as { id?: unknown }).id : undefined;
+  const id = typeof raw === "string" ? raw : "";
   try {
-    await deleteZaloAccount((body.id ?? "").trim());
-    auditOpsWrite("api:zalo-admin", "zalo.account.delete", { accountId: (body.id ?? "").trim() });
+    await deleteZaloAccount(id);
+    auditOpsWrite("api:zalo-admin", "zalo.account.delete", { accountId: id });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(

@@ -8,8 +8,8 @@ Cách đọc — mỗi khối một thuật ngữ:
 
 - Dòng in đậm là **nhãn tiếng Việt chuẩn** — chữ dùng trên UI, trong văn xuôi và trong tiêu chí
   `_acceptance/*/contract.md`. Tên code/API/route đặt trong `backtick` (máy đọc bỏ qua code span).
-- `Code` là tên tiếng Anh trong code; `RESO` là field/resource Data Dictionary 2.0 tương ứng
-  (ADR-0011, `pipeline/mappings.yaml`).
+- `Code` là tên tiếng Anh trong code; `RESO` là field/resource Data Dictionary tương ứng — bản tra chuẩn **DD 2.1**
+  (ADR-0011, ADR-0013, `pipeline/mappings.yaml`).
 - `Slug URL` là đoạn URL tiếng Anh của trang. Test `app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs`
   đòi mọi đoạn tĩnh của route nằm trong các dòng này. Tên riêng địa lý (`hanoi`, `vn-hanoi-tay-ho`) và mã quốc gia (`vn`) là slug động — không cần tiếng Anh.
 - `Neo URL` (đoạn `#…`) và `Tham số URL` (`?…=`) cũng tiếng Anh; tham số camelCase theo tên code.
@@ -18,7 +18,7 @@ Cách đọc — mỗi khối một thuật ngữ:
 - `_Avoid_` liệt tên lệch đã loại. Kit nghiệm thu đọc dòng này: lint W6 cảnh báo khi tiêu chí của
   hợp đồng dùng tên bị loại. Thêm thuật ngữ mới: thêm khối ở đây cùng commit với nhãn/route mới.
 
-_Allow_: phạm vi dự án, entry dự án, thông tin đăng nhập, thông tin đăng ký, điện nước, nước ngoài, thành phố trực thuộc trung ương, thành phố thuộc tỉnh
+_Allow_: phạm vi dự án, entry dự án, thông tin đăng nhập, thông tin đăng ký, điện nước, nước ngoài, thành phố trực thuộc trung ương, thành phố thuộc tỉnh, rao vặt công khai, danh mục dự án
 
 ## Địa lý
 
@@ -32,7 +32,7 @@ _Avoid_: nước
 _Avoid_: tỉnh thành, thành phố, city, province
 
 **Phường**: Đơn vị hành chính cấp xã (phường, xã, đặc khu) — cấp `areas.region_type = submarket`, con trực tiếp của thị trường. Trang hiện tên riêng ("Xã Bát Tràng"), nhãn chung ghi "Phường".
-- Code: `submarket` · RESO: không có cấp phường — gần City (mappings.yaml)
+- Code: `submarket` · RESO: City (địa chỉ VN từ 07/2025 chỉ còn phường/xã + tỉnh — ADR-0013 §4)
 - Ghi chú: Cấp huyện đã bỏ từ 07/2025: "quận" chỉ còn trong dữ liệu thô (`district_raw`).
 _Avoid_: quận, quận/huyện, huyện, ward, tiểu thị trường
 
@@ -47,17 +47,21 @@ _Avoid_: địa bàn, region
 _Avoid_: dự án, đại đô thị
 
 **Phân khu**: Một phần/phase trong khu đô thị (Sapphire, The Rainbow) — `node_type = subzone`. Tên phân khu trùng giữa các khu đô thị nên chỉ resolve qua matcher 2 tầng.
-- Code: `subzone` · RESO: không có — local extension (ADR-0011)
+- Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
 _Avoid_: dự án con, phase
 
 **Tòa nhà**: Một tòa chung cư (S1.03, BE02) — `node_type = building`; mã tòa thô trong tin nằm ở `block_raw`.
-- Code: `building` · RESO: ComplexName
+- Code: `building` · RESO: BuildingName + Building.BuildingKey (ADR-0013 §2)
 _Avoid_: block, chung cư
+
+**Trục căn**: Các căn cùng toà, cùng vị trí trên mặt bằng, khác tầng (cùng diện tích, số phòng). Môi giới thường lộ toà + trục mà che tầng («LD2xx11»), nên tin nhiều khi chỉ gắn được tới trục.
+- Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
+_Avoid_: line căn, dòng căn
 
 ## Tài sản & tin
 
 **Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều tin rao từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
-- Code: `property` · RESO: resource Property
+- Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
@@ -66,8 +70,8 @@ _Avoid_: tài sản, bất động sản, BĐS, asset
 - Slug URL: `listings` · `listing`
 _Avoid_: chỗ ở, phòng cho thuê
 
-**Tin rao**: Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng `sale_offers`, khoá `offer_id` = hash nguồn + id gốc). Loại tin ở cột `kind`.
-- Code: `sale_offer` · RESO: Property + ListPrice; bán/thuê qua PropertyType
+**Tin rao**: Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng `sale_offers`). Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14. Loại tin ở cột `kind`.
+- Code: `sale_offer` · RESO: resource Property (một bản ghi = một tin) + ListPrice; bán/thuê qua PropertyType
 _Avoid_: tin đăng, offer, rao vặt, sale offer
 
 **Tin bán**: Tin rao có `kind = sale`.
@@ -80,6 +84,20 @@ _Avoid_: tin đăng, offer, rao vặt, sale offer
 - Code: `deal` · RESO: không có — chỉ số nội bộ
 - Slug URL: `deals`
 _Avoid_: deal tốt, kèo
+
+**Kiểm chất lượng**: Một phép kiểm dữ liệu chạy định kỳ ở pipeline (độ tươi, từ vựng enum, số tham chiếu…), ghi kết quả theo từng đối tượng (bảng, nguồn, thị trường). Bảng «Kiểm chất lượng» trên `/ops/quality` hiện bản mới nhất của mỗi kiểm cho từng đối tượng trong 7 ngày; đầu trang đếm «n kiểm» (loại kiểm) và «m đối tượng» (dòng).
+- Code: `dq_check_results` · `check_name` · `entity` · RESO: không có — chỉ số nội bộ
+- Nhãn kết quả: «Đạt» · «Cảnh báo» · «Không đạt» · «Bỏ qua»
+_Avoid_: DQ check, test dữ liệu
+
+**Có số tham chiếu**: Nhãn kết quả của kiểm độ phủ tham chiếu (`truthful-coverage`) khi thị trường có số tham chiếu tươi để đối chiếu. KHÔNG có nghĩa là độ phủ đạt — độ phủ thật đọc ở cột «Chi tiết». Khi thiếu số tham chiếu (hoặc số cũ) nhãn là «Thiếu số tham chiếu». Kiểm này không bao giờ mang «Đạt» xanh lá.
+- Code: `dqResult("truthful-coverage", "pass")` (`app/src/lib/dq-checks.ts`) · RESO: không có — chỉ số nội bộ
+_Avoid_: «Đạt» (cho kiểm này), độ phủ đạt
+
+**Tin cần xác minh**: Căn giá tốt rẻ hơn thước giá quá 35% — vẫn hiện trên danh sách nhưng đứng sau mọi căn giảm đến 35%, thẻ mang nhãn «cần xác minh». Giảm sâu như vậy thường là so lệch loại hình (thước còn theo phường) hơn là căn rẻ thật; người vận hành gọi xác minh trước khi tin số. Tin rao có diện tích hay số phòng phi lý không phải tin cần xác minh: chúng bị loại khỏi danh sách, có dòng audit lý do.
+- Code: `suspect` · `NGHI_NGO_PCT = 35` (`app/src/lib/deals.ts`) · RESO: không có — chỉ số nội bộ
+- Nhãn số lần đăng trên thẻ: «đăng 1 lần», «đăng n lần» (`repostLabel`)
+_Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại)
 
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
@@ -116,7 +134,7 @@ _Avoid_: giá thật
 _Avoid_: giá vải
 
 **Giá/m²**: Giá rao ÷ diện tích (`price_vnd / area_m2`).
-- Code: `price_perm2` · RESO: không có — tự tính
+- Code: `price_perm2` · RESO: SalePricePerArea / LeasePricePerArea + PricePerAreaUnit (DD 2.1) — vẫn tự tính
 _Avoid_: đơn giá
 
 **Thước giá**: Trung vị giá/m² giá công khai (P2) cùng phường × loại hình, cần n ≥ 5 (view `v_ruler_p2_*`). Thước để đo căn giá tốt.
@@ -168,7 +186,7 @@ _Avoid_: comps, listing tương tự
 **Lợi suất**: Thu nhập năm của một căn ÷ giá mua; luôn ghi rõ gộp hay ròng và ngắn hạn hay dài hạn.
 - Code: `yield` · RESO: không có
 - Slug URL: `yield`
-- Ghi chú: UI đang có "Yield ngắn hạn"/"Yield dài hạn" (`/so-sanh`) — đổi khi dọn nhóm trang.
+- Ghi chú: `/compare` ghi "Lợi suất ngắn hạn"/"Lợi suất dài hạn" kèm chú thích gộp (đổi từ "Yield …" khi dọn nhóm trang, hồ sơ `compare-saved-trang-thai`).
 _Avoid_: tỷ suất lợi nhuận, ROI, cap rate
 
 **Lợi suất gộp**: Doanh thu năm ÷ giá mua (trước chi phí).
@@ -251,6 +269,10 @@ _Avoid_: freshness
 **Tầng C**: Nhãn công khai ("Tự thu", "Hiệu chuẩn") — thứ duy nhất về nguồn hiện trên cổng Invest.
 - Code: `SPL tier C` · RESO: —
 
+**Nhãn nguồn**: Cách Ops gọi một nguồn ngoài `/ops/sources` — mã `S0x` kèm vai trò, dạng «S02 · Hiệu chuẩn»; vắng vai trò thì mã trần «S02». Vai trò là `label_vi` đọc từ `source_registry` ở local, từ `facts.sourceRuns` ở cloud. Tên nguồn thật chỉ hiện ở `/ops/sources`.
+- Code: `sourceLabel(code, roles)` (`app/src/lib/source-labels.ts`) · RESO: — · Slug URL: —
+_Avoid_: tên nguồn thật ở mọi trang Ops ngoài `/ops/sources`, kể cả nhãn job và dòng log cuối
+
 **Tự thu**: Số tính từ dữ liệu nền tảng tự thu (không phải AirDNA) — nhãn tầng C trên cổng Invest.
 - Code: `self-collected` · RESO: —
 
@@ -261,8 +283,60 @@ _Avoid_: calibration
 **Hàng duyệt**: Hàng chờ người phán quyết đề xuất của máy/agent (entity_match, source_decision, agent_output) — LLM không ghi dữ liệu trực tiếp (luật 7).
 - Code: `review_queue` · RESO: —
 - Slug URL: `review`
-- Ghi chú: Tiêu đề trang `/ops/review` đang là "Review Queue" — đổi khi dọn B1.
+- Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10).
 _Avoid_: Review Queue, hàng chờ
+
+## Vận hành (cổng Ops)
+
+Nhãn cổng Ops cho máy móc thu thập và an toàn kênh — thêm ở ON12 `ops-nhan-theo-context` (24/10). Chữ tiếng Anh cũ trên
+cổng Ops nằm ở dòng `_Avoid_` để thước chữ hiển thị giữ nó không quay lại.
+
+**Máy thu**: Máy local chạy collector, pipeline và DB local — nơi duy nhất giữ dữ liệu tầng A.
+- Code: `local` · RESO: —
+
+**Máy chủ**: Bản cổng chạy trên cloud (Vercel + Supabase) — chỉ nhận số tổng hợp và dữ liệu đã lọc tầng A.
+- Code: `cloud` · RESO: —
+_Avoid_: bản cloud, lên cloud
+
+**Tác vụ**: Một việc launchd chạy theo lịch hoặc chạy liên tục trên máy thu (thu S02 hằng ngày, thu S01 hằng tuần, cổng nhận tin…).
+- Code: `job (JobStatus)` · RESO: —
+_Avoid_: Job
+
+**Khoá an toàn**: Bảy lớp chặn agent gửi tin vào nhóm Zalo (luật 8) cộng hạ tầng thu; mỗi lớp «Ổn», «Hỏng» hoặc «Chưa kiểm được».
+- Code: `lockdown (LockdownLayer)` · RESO: —
+_Avoid_: Lockdown
+
+**Bộ canh**: Tác vụ kiểm khoá an toàn mỗi 5 phút và ghi `ok` khi không thấy sự cố (`zalo-watchdog.sh`).
+- Code: `watchdog` · RESO: —
+_Avoid_: Watchdog
+
+**Lượt máy tự trả lời**: Số lượt agent tự trả lời trong kênh trong ngày — khoá an toàn đòi bằng 0.
+- Code: `agentTurnsToday` · RESO: —
+_Avoid_: Agent-turn, agent turn
+
+**Tín hiệu sống**: Nhịp kênh S03 tự báo còn kết nối (mỗi 15 phút); quá hạn thì kênh coi như đứt.
+- Code: `heartbeat (heartbeatAgeMin)` · RESO: —
+_Avoid_: Heartbeat
+
+**Danh sách cho phép**: Các nhóm S03 được phép thu; lệch với nhóm tài khoản đang tham gia thì báo «lệch».
+- Code: `allowlist` · RESO: —
+_Avoid_: Allowlist, membership
+
+**Bài**: Một bài đăng thô trong nhóm cộng đồng trước khi đọc thành tin rao; «bài thử» là bài từ nhóm thử.
+- Code: `post (stg_zalo_posts)` · RESO: —
+_Avoid_: post raw, post mock, bài post
+
+**Listing tự thu**: Số listing đang theo dõi trong cả khu vực (gồm phường con) — một định nghĩa dùng chung cho thẻ hiệu chuẩn, bảng Độ phủ trung thực và bảng thị trường S02 toàn quốc trên `/ops/quality` (ON10, Mạnh chốt 25/10).
+- Code: `ourListings (loadOurListings)` · RESO: —
+_Avoid_: tự thu (trơn, không nói đếm gì), listing tháng cuối, max listing_count
+
+**Mẫu mỏng**: Thẻ hiệu chuẩn có ADR/công suất tự thu tính từ dưới 5 listing (cỡ mẫu của market_metrics) — số vẫn hiện, kèm nhãn «mẫu mỏng».
+- Code: `isThin (sampleListings, MAU_MONG_DUOI)` · RESO: —
+_Avoid_: ít dữ liệu, thin sample
+
+**Thị trường hiệu chuẩn**: Thị trường có ít nhất một số để đối chiếu với S02 (điểm S02, ADR, công suất hoặc listing) — mỗi thị trường một thẻ; thị trường không có số nào gộp vào một dòng «Chưa có số: …». Khu vực gộp nhiều market S02 dùng market đại diện (nhiều listing nhất), thẻ ghi «đại diện cho k thị trường S02».
+- Code: `splitCalibrated (calibrated, empty)` · RESO: —
+_Avoid_: khu vực hiệu chuẩn, market hiệu chuẩn
 
 ## Cổng & tính năng
 
@@ -303,6 +377,11 @@ _Avoid_: Rentalizer
 - Code: `compare` · RESO: —
 - Slug URL: `compare`
 - Slug cũ: `so-sanh` → `compare`
+
+**Ảnh đại diện**: Ảnh hiện thay mặt một khu vực trên So sánh và Đã lưu — là ảnh chính của MỘT listing tự thu trong khu vực (listing đặt nhiều đêm nhất 90 ngày tới), không phải ảnh chụp khu vực; chữ thay thế ghi «Ảnh một listing ở …». Ảnh hỏng thì đổi ảnh khác, hết ảnh thì hiện ô số RevPAR.
+- Code: `area thumbnail` (`getAreaThumbnails`, `AreaThumbnail`) · RESO: —
+- Slug URL: —
+_Avoid_: ảnh khu vực (gây hiểu là ảnh chụp phường/thành phố), ảnh AirDNA
 
 **Đã lưu**: Khu vực (sau này listing, báo cáo) người dùng đã lưu — cần đăng nhập.
 - Code: `saved` · RESO: —

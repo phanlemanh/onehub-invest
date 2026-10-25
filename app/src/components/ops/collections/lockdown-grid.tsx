@@ -8,6 +8,7 @@ import { Badge, type BadgeProps } from "@/components/reui/badge"
 import type { LockdownLayer } from "@/lib/ops-queries"
 
 import { StatusGrid, type StatusTab } from "./status-grid"
+import { fmtVnDateTime } from "@/lib/format"
 
 type LayerState = "ok" | "bad" | "unknown"
 const stateOf = (l: LockdownLayer): LayerState => (l.ok === true ? "ok" : l.ok === false ? "bad" : "unknown")
@@ -27,16 +28,16 @@ export function LockdownGrid({ layers, lastWatchdogAt }: { layers: LockdownLayer
   const columns = useMemo<InsightColumn<LockdownLayer>[]>(
     () => [
       { id: "layer", accessorKey: "layer", header: "Lớp", size: 120 },
-      { id: "desc", accessorKey: "desc", header: "Kiểm", size: 420 },
       { id: "state", accessorFn: stateOf, header: "Trạng thái", cell: ({ row }) => <Badge variant={LAYER[stateOf(row.original)].variant}>{LAYER[stateOf(row.original)].label}</Badge>, size: 150 },
+      { id: "desc", accessorKey: "desc", header: "Kiểm", size: 420 },
     ],
     []
   )
   return (
     <StatusGrid
       id="lockdown"
-      title="Lockdown & hạ tầng thu"
-      description={`Watchdog chạy cuối: ${lastWatchdogAt ?? "—"}`}
+      title="Khoá an toàn & hạ tầng thu"
+      description={`Bộ canh chạy cuối: ${fmtVnDateTime(lastWatchdogAt)}`}
       data={layers}
       columns={columns}
       tabs={TABS}

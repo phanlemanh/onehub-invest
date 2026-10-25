@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Ghi danh sách tên tầng A (tên nguồn thật, tên/khoá nhóm thu, tên nhóm Zalo) từ DB LOCAL ra
+// Ghi danh sách tên tầng A (tên nguồn thật, tên/khoá nhóm thu ở source_groups) từ DB LOCAL ra
 // một tệp tạm quyền 600 để mask-tier-a.js tự kiểm ảnh chụp. KHÔNG in tên ra stdout —
 // chỉ in đường dẫn tệp và số lượng (tên thật không được rời máy, kể cả vào transcript).
 // Dùng: node scripts/ui-standards/tier-a-names.mjs [--out <tệp>]
@@ -33,7 +33,7 @@ const names = [
   ...(await q("SELECT real_name FROM source_registry")),
   ...(await q("SELECT name FROM source_groups")),
   ...(await q("SELECT group_key FROM source_groups")),
-  ...(await q("SELECT DISTINCT group_name FROM stg_zalo_posts WHERE group_name IS NOT NULL")),
+  // Tên nhóm S03 (stg_zalo_posts.group_name) là tầng C từ 24/10 (sửa đổi ADR-0007) — không còn trong danh sách che.
 ]
 await db.end()
 // Tên đã có sẵn trong mã nguồn/tài liệu đã commit (vd tên nguồn hiệu chuẩn hiện ở /ops/quality)

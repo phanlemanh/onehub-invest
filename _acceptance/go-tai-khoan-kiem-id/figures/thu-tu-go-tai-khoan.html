@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thứ tự gỡ tài khoản</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1040px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 880px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · go-tai-khoan-kiem-id · thu-tu-go-tai-khoan</p>
+    <h1>Gỡ tài khoản thu: kiểm id trước, logout sau</h1>
+    <p class="sub">DELETE /api/v1/ops/zalo/accounts · AC-1 id rỗng / thiếu · AC-2 khoảng trắng · AC-3 id lạ · AC-4 id thật · AC-5 thước tĩnh</p>
+
+    <svg viewBox="0 0 960 684" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Đầu cột + vạch chia ============ -->
+      <text x="100" y="44" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">TRƯỚC · MÃ HIỆN TẠI</text>
+      <text x="480" y="44" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">SAU · THIẾT KẾ ON14</text>
+      <line x1="440" y1="32" x2="440" y2="596" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+
+      <!-- ============ Mũi tên (vẽ trước, nằm dưới nút) ============ -->
+      <!-- Trước: nhận id → logout → đọc config -->
+      <line x1="220" y1="120" x2="220" y2="150" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="220" y1="200" x2="220" y2="246" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Sau: nhận id → đọc config → bước kiểm -->
+      <line x1="600" y1="120" x2="600" y2="150" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="600" y1="200" x2="600" y2="230" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Bước kiểm SAI → 400 -->
+      <path d="M736 312 H832 Q840 312 840 320 V418" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Bước kiểm ĐÚNG → logout -->
+      <line x1="600" y1="392" x2="600" y2="426" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- logout → gỡ config -->
+      <line x1="600" y1="476" x2="600" y2="506" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Dời chỗ logout: Trước (vị trí 2) → Sau (sau bước kiểm) -->
+      <path d="M340 176 H392 Q400 176 400 184 V444 Q400 452 408 452 H478" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+      <!-- ============ Nhãn mũi tên (có mặt nạ, cách đường ≥6px) ============ -->
+      <rect x="772" y="288" width="32" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="788" y="300" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">SAI</text>
+
+      <rect x="608" y="396" width="40" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="612" y="408" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ĐÚNG</text>
+
+      <rect x="412" y="428" width="60" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="442" y="440" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">DỜI CHỖ</text>
+
+      <text x="388" y="408" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="end">logout dời xuống sau bước kiểm</text>
+      <text x="388" y="424" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="end">AC-5 · thước tĩnh giữ thứ tự này</text>
+
+      <!-- ============ Cột TRƯỚC ============ -->
+      <!-- Nhận id -->
+      <rect x="100" y="72" width="240" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="100" y="72" width="240" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="220" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nhận id, cắt khoảng trắng</text>
+      <text x="220" y="108" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">trim() · chỉ chặn &quot;default&quot;</text>
+
+      <!-- Logout trước khi kiểm (tiêu điểm 1) -->
+      <rect x="100" y="152" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="100" y="152" width="240" height="48" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="220" y="172" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chạy openclaw logout</text>
+      <text x="220" y="188" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">--account &lt;id&gt; · chưa kiểm id</text>
+
+      <!-- Đọc config sau, bỏ qua lặng -->
+      <rect x="100" y="248" width="240" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="100" y="248" width="240" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="220" y="268" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đọc config, bỏ qua lặng</text>
+      <text x="220" y="284" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">id không có → 200 ok</text>
+
+      <text x="220" y="324" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="middle">id rỗng, id lạ, dạng cờ đều tới openclaw</text>
+      <text x="220" y="340" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="middle">sự cố P1-7: logout --account &quot;&quot;</text>
+
+      <!-- ============ Cột SAU ============ -->
+      <!-- Nhận id nguyên văn -->
+      <rect x="480" y="72" width="240" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="480" y="72" width="240" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="600" y="92" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nhận id nguyên văn</text>
+      <text x="600" y="108" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">không trim · không phải chuỗi → &quot;&quot;</text>
+
+      <!-- Đọc openclaw.json -->
+      <rect x="480" y="152" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="480" y="152" width="240" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="600" y="172" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đọc openclaw.json</text>
+      <text x="600" y="188" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">channels.zalouser.accounts</text>
+
+      <!-- Bước kiểm id -->
+      <polygon points="600,232 736,312 600,392 464,312" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="600" y="280" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Bước kiểm id</text>
+      <text x="600" y="296" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">không rỗng · không khoảng trắng</text>
+      <text x="600" y="310" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">không mở đầu bằng «-»</text>
+      <text x="600" y="324" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">khác default · có trong danh sách</text>
+      <text x="600" y="344" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">requireDeletableAccount()</text>
+
+      <!-- 400: openclaw không được gọi -->
+      <rect x="760" y="420" width="160" height="64" rx="32" fill="#f5f5f5"/>
+      <rect x="760" y="420" width="160" height="64" rx="32" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="840" y="448" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Trả 400 kèm lý do</text>
+      <text x="840" y="464" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">openclaw: 0 lệnh</text>
+      <text x="840" y="508" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="middle">config giữ nguyên từng byte</text>
+      <text x="840" y="524" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="middle">AC-1 · AC-2 · AC-3</text>
+
+      <!-- Logout sau bước kiểm (tiêu điểm 2) -->
+      <rect x="480" y="428" width="240" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="480" y="428" width="240" height="48" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="600" y="448" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chạy openclaw logout</text>
+      <text x="600" y="464" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">best-effort như cũ</text>
+
+      <!-- Gỡ config + sao lưu → 200 -->
+      <rect x="480" y="508" width="240" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="480" y="508" width="240" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="600" y="528" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Gỡ khỏi config, sao lưu .bak</text>
+      <text x="600" y="544" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">200 {ok: true}</text>
+      <text x="600" y="580" fill="#636b80" font-size="12" font-style="italic" font-family="'Instrument Serif', 'Lora', serif" text-anchor="middle">AC-4 · đúng một dòng logout</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="40" y1="616" x2="920" y2="616" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="632" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI · HÌNH DẠNG MANG LOẠI NÚT</text>
+
+      <rect x="40" y="648" width="24" height="12" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="72" y="658" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bắt đầu / kết thúc</text>
+
+      <rect x="200" y="648" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="232" y="658" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước</text>
+
+      <polygon points="300,654 312,648 324,654 312,660" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="336" y="658" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước kiểm (rẽ nhánh)</text>
+
+      <rect x="476" y="648" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="508" y="658" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lệnh openclaw logout — chỗ đổi vị trí</text>
+
+      <line x1="720" y1="656" x2="748" y2="656" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <text x="756" y="658" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Logout dời chỗ</text>
+    </svg>
+  </div>
+</body>
+</html>

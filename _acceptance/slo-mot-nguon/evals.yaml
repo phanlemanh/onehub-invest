@@ -1,0 +1,66 @@
+schema_version: 1
+feature_slug: slo-mot-nguon
+# Eval máy đọc ca mang tiền tố «SL-AC-n» trong TAP. E1 ở scripts/ (Node nạp tệp TS thuần), E2–E7 ở app/tests (tsx, cần DB local :5433).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [app/src/lib/freshness.ts, scripts/lib/freshness.mjs, scripts/freshness-parity.test.mjs]
+    expected: "exit 0; ca 'SL-AC-1 hằng + SQL hai bản bằng nhau', 'SL-AC-1 readFreshness hai bản ra cùng hàng trên client giả (ma trận 5 mã × 3 + mã không SLO)' ok; chiều đỏ 'SL-AC-1 bản sao TS đổi SLO S03 → ca đỏ nêu S03' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/src/lib/ops-queries.ts, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'SL-AC-2 getCoverageOverview khớp readFreshness trên lược đồ tạm — bảng mong đợi từng hàng viết trước, thấy thành phố canh, S05 12 giờ, không S04, không mã chưa khai SLO' và chiều đỏ 'SL-AC-2 bản nạp lại collected_at cũ vẫn quá hạn' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/src/lib/ops-queries.ts, app/src/components/ops/collections/feed-status.ts, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'SL-AC-3 getSourceFeedHealth: tuổi lớn nhất theo thành phố, Trễ SLO, Chưa có dữ liệu thay Ổn, Chưa khai SLO ngoài y, S04 Ngừng, thấy thành phố canh' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'SL-AC-4 summarizeFreshness ma trận 5 ca, hai trang cùng {x,y}' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/src/app/ops/page.tsx, app/src/app/ops/collections/page.tsx, app/src/components/ops/collections/collections-view.tsx, app/src/components/ops/overview/overview-tiles.tsx, app/src/components/ops/collections/collections-tiles.tsx, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'SL-AC-5 trọn trang /ops và trọn CollectionsView mang cùng data-slo-summary ở ô và đầu trang' và chiều đỏ 'SL-AC-5 S01 quá hạn một thành phố → hai ô cùng giảm 1' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/src/components/ops/overview/objectives-grid.tsx, app/src/components/ops/collections/feeds-grid.tsx, app/src/components/ops/collections/attention-list.tsx, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'SL-AC-6 fmtAge 12/72/840 giờ → 12 giờ/3 ngày/35 ngày, hai trang cùng chữ' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/api/v1/ops/coverage/route.ts, app/src/lib/ops-queries.ts, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'SL-AC-7 /api/v1/ops/coverage trả hàng /ops kèm ageHours/sloHours, giữ ageDays/sloDays' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: judgment
+    inputs: [.claude/skills/ops-check/SKILL.md, _acceptance/slo-mot-nguon/contract.md]
+    question: "Đọc .claude/skills/ops-check/SKILL.md: người vận hành có biết /ops, /ops/collections và check-freshness.mjs dùng cùng định nghĩa từng hàng nguồn × thành phố (app/src/lib/freshness.ts, giữ khớp scripts/lib/freshness.mjs bằng test), con số «x/y nguồn đạt SLO» chỉ có trên hai trang, và nguồn đạt nghĩa là mọi thành phố của nó đạt không? Có câu nào lệch phạm vi contract.md không?"
+    evidence_required: [judged_by, verdict, rationale]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/freshness.ts, app/src/lib/ops-queries.ts, app/src/app/api/v1/ops/coverage/route.ts, app/tests/slo-mot-nguon.test.tsx]
+    expected: "exit 0; ca 'SL-AC-9 lược đồ bảng thô 0 dòng như cloud → không lỗi, mảng rỗng, 0/0 Chưa có nguồn nào' và chiều đỏ 'SL-AC-9 một mã active, bảng nạp rỗng → Chưa có dữ liệu, không lỗi' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

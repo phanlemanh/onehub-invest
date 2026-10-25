@@ -6,8 +6,9 @@
 //   node scripts/test-data-residue.mjs --simulate   BEGIN → transform S03 + bait gap → đo → ROLLBACK
 //
 // In JSON; mã thoát 1 khi còn dư lượng. --simulate không để lại dòng nào trên DB.
+import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
@@ -155,5 +156,5 @@ async function main() {
   }
 }
 
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) main().catch((e) => { console.error(e); process.exit(1); });

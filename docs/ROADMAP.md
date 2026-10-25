@@ -84,6 +84,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
+- S08 (danh mục căn, PL10): `stg_s08_inventory` (migration 040) — một dòng = một căn ở một snapshot
+  (khoá `source_id` + `snapshot_id`, `state` notSold/sold), chỉ local (test `sync-pii` + leak gate gác);
+  ánh xạ RESO ở `mappings.yaml` `sources.S08`. Chờ importer DATA-CONTRACT v4 của ZCode; chưa có transform.
 - Cloud sync (15', `pipeline/sync-cloud.mjs`): nguyên tử từ cloud-sync-atomic (23/10) — nạp
   `sync_stage.rows` (migration 038, schema riêng, anon không đọc được) qua Management API rồi MỘT giao
   dịch DELETE+UPSERT+INSERT; không TRUNCATE (giữ `saved_markets`); đọc local `row_to_json` một snapshot
@@ -91,6 +94,22 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `bait-gap:sellers-orphan` ≤24h khớp số dòng — PL2); bảng người bán theo `CLOUD_ALLOW`, `seller_ref`
   → `S0x:<số>`, soát tên nguồn trước khi gửi. Thước `pipeline/scripts/check-cloud-sync.mjs <ca>`,
   máy đo prod chỉ đọc `cloud-sync-watch.mjs`; triển khai: `docs/ops/cloud-sync-atomic.md`.
+  Tệp chạy `scripts/cloud-sync.sh` thoát ≠ 0 khi `sync-cloud` hay `push-ops-facts` hỏng (dòng `JOB FAIL [cloud-sync]`,
+  hai bước vẫn chạy cả hai); `push-ops-facts` theo `DATABASE_URL` — AU13 `cloud-sync-bao-loi-that` (24/10).
+- Nhãn nguồn ở Ops (ON7 `ops-nhan-ma-nguon`, 24/10): ngoài `/ops/sources`, chữ hiển thị chỉ «S0x · vai trò»
+  (`sourceLabel` trong `app/src/lib/source-labels.ts`, vai trò từ `source_registry` / `facts.sourceRuns`); nhãn, id và
+  dòng log cuối của job (local lẫn payload facts) không còn tên thật — bộ che `mask-source-names` đóng chặt khi không đọc
+  được tên. Thước: mục 12 `check-portal-compliance` (quét chữ hiển thị + ma trận viết trước) và HTML/payload thật.
+- Một bộ soát tầng A cho mọi đường lên cloud (NT2 `soat-tang-a-moi-duong-len-cloud`, 24/10): `pipeline/lib/tier-a-guard.mjs`
+  dùng chung cho `sync-cloud` và `push-ops-facts`; bản tin còn tên thật thì không gửi (`FACTS CHẶN [tầng A] <đường> <S0x>`,
+  soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
+  bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
+- Số tổng hợp Ops lên cloud (ON22 `ops-facts-so-tong-hop`, 24/10, ADR-0014): `push-ops-facts` đẩy thêm năm khối có
+  `measured_at` — độ tươi, job launchd, lockdown từng lớp, bản ghi 24h, số thẻ chờ (`scripts/lib/ops-local.mjs`, khớp hàm
+  app bằng phép đo đối chiếu); khối đo không được ghi `error`; cloud đọc qua `readOpsFacts()` (none/fresh/stale, 45′).
+- Ô KPI Ops trên cloud (ON3 `o-kpi-chi-do-local`, 24/10): `/ops`, `/ops/collections`, `/ops/review` trên cloud đọc số
+  máy local đẩy (`getCloudOpsView`), kèm «Số đo lúc … (GMT+7) từ máy local»; số cũ quá 45′ có Alert vàng và không badge
+  xanh; chưa có bản tin thì «—» + một Alert «Chỉ đo ở máy local». Lockdown trên cloud chờ ON23.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
@@ -102,7 +121,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 | S02 | AirDNA | active (19:05; rotation 34 tỉnh) | hiệu chuẩn |
 | S03 | Zalo | active (hook liên tục; lockdown 7 lớp + watchdog) | media CHỜ tin ảnh (dbg-media) |
 | S04 | OSM | completed (one-time) | |
-| S05 | Facebook | paused (credit cạn; reset 7/11 — chờ đánh giá) | 118 offers giữ |
+| S05 | Facebook | paused — Mạnh chốt 24/10: Apify trả 402 hết credit từ ~21/10, chờ credit reset 7/11; `source_registry.status=paused` nên check-freshness không đo | 118 offers giữ |
 | S06 | Chợ Tốt | active (05:30; ruler 150 phường) | phone reveal chưa làm |
 | S07 | Batdongsan | rejected-Apify | tự build nếu cần |
 
@@ -178,6 +197,18 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    **Dữ liệu là nỗ lực liên tục, có cấp bậc**: thang căn B0–B5 (lời khai → đọc được → gắn căn → đã đo → xác
    minh → sống), năng lực phân khúc N0–N4; north star = phân bố căn theo bậc; bậc đích: căn hộ có danh mục B5,
    nhà phố B3, Chợ Tốt B3 (FRAMING §3.4).
+14. **Tên nhóm là công khai, tên nguồn vẫn bí mật** (24/10, audit Ops prod OPS-6/OPS-13): tên nhóm cộng đồng
+   mà S03 thu là tầng C — hiện trên `/ops/**` ở cloud, đi qua `ops_heartbeat`, làm ngữ cảnh cho agent; tên nguồn
+   thật vẫn tầng A, ngoài `/ops/sources` chỉ mã `S0x` + vai trò. Tên tài khoản thu chưa chốt. Sửa đổi ADR-0007.
+15. **S08 như nguồn hiệu chuẩn** (24/10): chỉ đọc, ≤ 1 lần/tuần, chỉ nội bộ, không tái xuất lên cổng công khai
+   (AGENTS.md cạnh luật 5).
+16. **Ops trên cloud đọc số tổng hợp do máy local tính sẵn** (24/10, «Chọn A», ADR-0014): `push-ops-facts.mjs` đẩy
+   độ tươi/SLO, job, lockdown, bản ghi 24h, số thẻ chờ (chỉ tổng hợp + mã `S0x`, qua bộ soát tầng A), mỗi khối có mốc
+   đo; trang cloud chỉ đọc bảng đó, facts cũ > 45′ báo «máy local không đẩy số». Loại sync bản gọt và tunnel.
+17. **Kiến trúc dữ liệu «tin → căn» theo RESO DD 2.1** (23/10, **ADR-0013**): căn = UPI + `Building`, tin = `Property`;
+   toà = `BuildingName`, phân khu = `ComplexName`, trục = extension `Stack`; UPI kiểu VN `urn:onehub:upi`; phường/xã →
+   `City`; mọi giá trị máy/người ghi `FieldAssertion`; trạng thái chỉ theo bằng chứng. Mọi việc chạm dữ liệu tin/căn
+   kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -218,7 +249,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | # | Việc | Trạng thái |
 |---|---|---|
 | N1 | media Zalo: đọc dbg-media khi tin ảnh về → map → bỏ debug | ⏳ chờ dữ liệu |
-| N2 | FB: user quyết định mua Apify Starter — ĐÃ CHỐT 22/10, S05 active | ✅ |
+| N2 | FB: Apify Starter (chốt 22/10) chưa có hiệu lực — vẫn 402 hết credit; S05 TẠM DỪNG từ 24/10 tới khi credit reset 7/11 (bật lại: `status=active` khi lượt thu chạy được) | ⏸ |
 | N3 | AirDNA rotation (passive) | 🔄 sống |
 | N4 | S06 phone reveal per-ad (cap 50/ngày, top-deals) | ⬜ |
 
@@ -241,7 +272,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V5 | Tài khoản ops thử chỉ ở DB local (`scripts/dev-ops-account.mjs`) — máy tự đăng nhập dev để chụp/ui-check `/ops/**` | ✅ 2026-10-22 |
 | V6 | Giảm hỏi quyền ngoài cổng: bỏ luật ask rộng, rào push main = branch protection GitHub (ngang crm/kit) — `_acceptance/narrow-ask-rules` | ✅ Cổng 2 ký 23/10 — PR #23; branch protection main bật 23/10 |
 | V7 | Cloud sync nguyên tử — prod không còn cửa sổ trống, không xoá `saved_markets`, ngày đúng — `_acceptance/cloud-sync-atomic` | 🔄 PR #24 — Cổng 2 ký 23/10; migration 038 ĐÃ áp cloud 23/10; chờ merge |
-| V9 | Tạm đóng `/api/v1/deals` — chỉ bearer `OPS_API_TOKEN` hoặc phiên ops; người gọi khác nhận 401 trước khi truy vấn. Lý do: audit 23/10 P7 (29/30 căn giá tốt trả công khai là tin mock S03), Q3 «đóng ngay, yêu cầu token ops». Mở lại khi PL2 đã rút tin mock khỏi canonical — quyết riêng, hàng riêng — `_acceptance/deals-api-tam-dong` | ✅ Cổng 2 ký 23/10 — PR #33; prod đo 23/10: khách 401, token ops 200 (`do-prod.md`). Project Vercel cũ `app` vẫn mở bản 22/10 — audit Q2, Mạnh xoá |
+| V9 | Tạm đóng `/api/v1/deals` — chỉ bearer `OPS_API_TOKEN` hoặc phiên ops; người gọi khác nhận 401 trước khi truy vấn. Lý do: audit 23/10 P7 (29/30 căn giá tốt trả công khai là tin mock S03), Q3 «đóng ngay, yêu cầu token ops». Mở lại khi PL2 đã rút tin mock khỏi canonical — quyết riêng, hàng riêng — `_acceptance/deals-api-tam-dong` | ✅ Cổng 2 ký 23/10 — PR #33; prod đo 23/10: khách 401, token ops 200 (`do-prod.md`). Project Vercel cũ `app` (`app-lilac-one-49.vercel.app`, bản 22/10) Mạnh đã xoá 24/10 — audit Q2 đóng (404 `DEPLOYMENT_NOT_FOUND`) |
 | V10 | DB local tự khởi động lại sau khi Docker/máy khởi động lại — `restart: unless-stopped` trong `db/docker-compose.yml`, thước `scripts/check-db-autostart.sh` (AU7, audit L7) — `_acceptance/db-tu-khoi-dong` | 🔄 đợt 0 «Cầm máu»; xem `docs/ops/runtime-map.md` mục DB local tự khởi động |
 | V12 | Sổ bề mặt API — mọi route khai ở `app/src/lib/api-surface.ts`, CI đỏ khi lệch; đóng `/api/v1/offers` (chế độ `ops` như căn giá tốt), beacon khách 204, `/api/zalo-media` chặn ảnh QR đăng nhập Zalo — `_acceptance/so-be-mat-api` | 🔄 NT4, đợt 0 |
 | V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
@@ -259,7 +290,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | ⏳ sau khi gỡ ảnh AirDNA khỏi listing |
 | I4 | Lợi suất: `/yield` form-11 + `data-grid-advanced-7` (chi phí + dòng tiền vốn vay), `/dau-tu` → chuyển hướng `/yield` | ⏳ |
 | I5 | So sánh + Đã lưu: giữ comparison-1 / wishlist-2, thêm PageHeader + trạng thái; `/so-sanh` → `/compare` (301) | ⏳ |
-| I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | ⏳ |
+| I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | 🟡 trang chủ + Phương pháp: hồ sơ `trang-chu-methodology` (UI2) — `/methodology` faq-3 mở sẵn, nền hero/thẻ thị trường không màu cứng, `(marketing)/error.tsx` + `global-error.tsx`, baseline −18; auth giữ nguyên |
 | B5 | Ops còn lại (`/ops/deals`) + gỡ baseline (phải rỗng) | ⏳ |
 
 Cắt lại 23/10: B2 (khung & KPI) và B4 (trạng thái) không còn là đợt riêng — phần Invest của chúng đi
@@ -282,7 +313,8 @@ có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới �
 
 ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
-boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent.
+boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
+0014 Ops cloud đọc số tổng hợp (0013 ở PR #27).
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.

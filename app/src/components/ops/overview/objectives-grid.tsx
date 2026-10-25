@@ -18,9 +18,11 @@ import { DataGridTable } from "@/components/reui/data-grid/data-grid-table"
 import { FrameFooter, FramePanel } from "@/components/reui/frame"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { fmtInt } from "@/lib/format"
+import { fmtInt, fmtVnDate } from "@/lib/format"
+import { fmtAge, fmtOverdue } from "@/lib/freshness"
+import { marketNameOf } from "@/lib/market-names"
 import type { CoverageRow } from "@/lib/ops-queries"
-import { sourceLabel } from "@/lib/source-labels"
+import { sourceTierLabel } from "@/lib/source-labels"
 import { cn } from "@/lib/utils"
 
 import { DotSeparator, SectionFrame, SectionHead } from "./section-lead"
@@ -66,7 +68,12 @@ function GridStrip({ tab, counts, onTabChange, children }: { tab: Tab; counts: R
   )
 }
 
-export function ObjectivesGrid({ rows }: { rows: CoverageRow[] }) {
+/** Thị trường của ô độ tươi bằng tên khu vực (ON12), không mã thô. */
+const cityOf = (r: CoverageRow, names: ReadonlyMap<string, string>) => (r.city ? marketNameOf(r.city, names).name : "—")
+
+/** `stale`: hàng là lần đo cuối của bản tin máy thu cũ quá 45′ (ON3) — không badge trạng thái xanh. */
+export function ObjectivesGrid({ rows, stale = false, areaNames = {} }: { rows: CoverageRow[]; stale?: boolean; areaNames?: Record<string, string> }) {
+  const names = useMemo(() => new Map(Object.entries(areaNames)), [areaNames])
   const [tab, setTab] = useState<Tab>("all")
   const [search, setSearch] = useState("")
   const [sorting, setSorting] = useState<SortingState>([{ id: "age", desc: true }])
@@ -78,21 +85,21 @@ export function ObjectivesGrid({ rows }: { rows: CoverageRow[] }) {
   )
   const needle = search.trim().toLowerCase()
   const visible = useMemo(
-    () => rows.filter((r) => (tab === "all" || r.status === tab) && (!needle || `${r.code} ${r.city} ${sourceLabel(r.code).vi}`.toLowerCase().includes(needle))),
-    [rows, tab, needle]
+    () => rows.filter((r) => (tab === "all" || r.status === tab) && (!needle || `${r.code} ${cityOf(r, names)} ${sourceTierLabel(r.code).vi}`.toLowerCase().includes(needle))),
+    [rows, tab, needle, names]
   )
 
   const columns = useMemo<InsightColumn<CoverageRow>[]>(
     () => [
       { id: "code", accessorKey: "code", header: ({ column }) => <DataGridColumnHeader title="Mã" column={column} />, cell: ({ row }) => <span className="font-mono">{row.original.code}</span>, size: 80, enableSorting: true },
-      { id: "role", accessorFn: (r) => sourceLabel(r.code).vi, header: "Vai trò", size: 130 },
-      { id: "city", accessorKey: "city", header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />, size: 160, enableSorting: true },
-      { id: "last", accessorFn: (r) => r.lastSnapshotAt ?? "", header: ({ column }) => <DataGridColumnHeader title="Snapshot cuối" column={column} />, cell: ({ row }) => row.original.lastSnapshotAt?.slice(0, 10) ?? "—", size: 130, enableSorting: true },
-      { id: "age", accessorFn: (r) => r.ageDays ?? Number.POSITIVE_INFINITY, header: ({ column }) => <DataGridColumnHeader title="Tuổi (ngày)" column={column} />, cell: ({ row }) => fmtInt(row.original.ageDays), size: 120, meta: NUM, enableSorting: true },
-      { id: "slo", accessorKey: "sloDays", header: "SLO (ngày)", cell: ({ row }) => fmtInt(Number.isFinite(row.original.sloDays) ? row.original.sloDays : null), size: 110, meta: NUM },
-      { id: "status", accessorKey: "status", header: "Trạng thái", cell: ({ row }) => <Badge variant={FRESHNESS[row.original.status].variant}>{FRESHNESS[row.original.status].label}</Badge>, size: 120 },
+      { id: "role", accessorFn: (r) => sourceTierLabel(r.code).vi, header: "Vai trò", size: 130 },
+      { id: "city", accessorFn: (r) => cityOf(r, names), header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />, cell: ({ row }) => cityOf(row.original, names), size: 160, enableSorting: true },
+      { id: "last", accessorFn: (r) => r.lastSnapshotAt ?? "", header: ({ column }) => <DataGridColumnHeader title="Snapshot cuối" column={column} />, cell: ({ row }) => fmtVnDate(row.original.lastSnapshotAt), size: 130, enableSorting: true },
+      { id: "age", accessorFn: (r) => r.ageHours ?? Number.POSITIVE_INFINITY, header: ({ column }) => <DataGridColumnHeader title="Tuổi" column={column} />, cell: ({ row }) => [fmtAge(row.original.ageHours), fmtOverdue(row.original.ageHours, row.original.sloHours)].filter(Boolean).join(" · "), size: 120, meta: NUM, enableSorting: true },
+      { id: "slo", accessorKey: "sloHours", header: "SLO", cell: ({ row }) => fmtAge(row.original.sloHours), size: 110, meta: NUM },
+      { id: "status", accessorKey: "status", header: "Trạng thái", cell: ({ row }) => <Badge variant={stale && row.original.status === "fresh" ? "outline" : FRESHNESS[row.original.status].variant}>{FRESHNESS[row.original.status].label}</Badge>, size: 120 },
     ],
-    []
+    [names, stale]
   )
 
   const table = useTable({

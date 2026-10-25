@@ -24,7 +24,8 @@ export function isZaloAdminAvailable(): boolean {
 
 const CLOUD_ERR = "Quản lý nguồn Zalo chỉ có ở máy thu (cần ~/.openclaw CLI + config)";
 const CONFIG = path.join(homedir(), ".openclaw/openclaw.json");
-const QR_DIR = "/tmp/openclaw";
+// CLI thật ghi QR ở /tmp/openclaw; biến môi trường chỉ để phép đo trỏ sang thư mục tạm (zalo-safety).
+const QR_DIR = process.env.OPENCLAW_QR_DIR || "/tmp/openclaw";
 
 const run = promisify(execFile);
 const SLUG = /^[a-z0-9][a-z0-9-]{0,30}$/;
@@ -53,7 +54,73 @@ async function readCfg(): Promise<Root> {
   return JSON.parse(await readFile(CONFIG, "utf8")) as Root;
 }
 
+const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+/**
+ * Bất biến an toàn của openclaw.json — cùng các lớp L2/L3/L3b của bộ canh (`scripts/zalo-watchdog.sh`), thêm
+ * `groupPolicy`. Trả danh sách vi phạm, mỗi dòng mở đầu bằng nhãn lớp; rỗng = sạch. Hàm thuần, không bao giờ ném.
+ *
+ * Gateway nạp nóng cấu hình < 1 giây, bộ canh chỉ bắt sau ≤ 5′ (chuỗi sự cố 22/10: nhóm mới requireMention:false →
+ * agent turn) — nên bộ ghi phải kiểm TRƯỚC khi ghi. Được chặt hơn bộ canh, không được lỏng hơn: cấu hình méo dạng
+ * (bộ canh sẽ crash = KILL) là vi phạm.
+ */
+export function zaloConfigViolations(cfg: unknown): string[] {
+  if (!isObj(cfg)) return ["hỏng: cấu hình không phải object"];
+  const out: string[] = [];
+  // L2 — bindings phải rỗng (vắng = rỗng)
+  if (Object.hasOwn(cfg, "bindings")) {
+    const b = cfg.bindings;
+    if (!Array.isArray(b)) out.push("L2: bindings không phải mảng (phải rỗng)");
+    else if (b.length > 0) out.push(`L2: bindings có ${b.length} entry (phải rỗng)`);
+  }
+  if (cfg.channels === undefined) return out;
+  if (!isObj(cfg.channels)) return [...out, "hỏng: channels không phải object"];
+  // L3 — kênh bot phải vắng
+  if (Object.hasOwn(cfg.channels, "zalo")) out.push("L3: channels.zalo (bot) có mặt");
+  const z = cfg.channels.zalouser;
+  if (z === undefined) return out;
+  if (!isObj(z)) return [...out, "hỏng: channels.zalouser không phải object"];
+
+  // groupPolicy vắng = mặc định "allowlist" của OpenClaw (zalouser accounts.ts); khai thì phải đúng allowlist
+  const policy = (p: unknown, where: string) => {
+    if (p !== undefined && p !== "allowlist") out.push(`groupPolicy: ${where}.groupPolicy = ${JSON.stringify(p)} (phải "allowlist")`);
+  };
+  // L3b — mọi nhóm chưa tắt phải requireMention=true TƯỜNG MINH (như bộ canh: chỉ enabled === false mới là tắt;
+  // không xét `allow`, không tin mặc định runtime)
+  const groups = (g: unknown, where: string) => {
+    if (g === undefined) return;
+    if (!isObj(g)) return void out.push(`hỏng: ${where} không phải object`);
+    for (const [id, e] of Object.entries(g)) {
+      if (!isObj(e)) out.push(`hỏng: nhóm ${id} (${where}) không phải object`);
+      else if (e.enabled !== false && e.requireMention !== true) out.push(`L3b: nhóm ${id} (${where}) requireMention phải true`);
+    }
+  };
+  policy(z.groupPolicy, "channels.zalouser");
+  groups(z.groups, "channels.zalouser.groups");
+  if (z.accounts !== undefined) {
+    if (!isObj(z.accounts)) return [...out, "hỏng: channels.zalouser.accounts không phải object"];
+    for (const [id, a] of Object.entries(z.accounts)) {
+      if (!isObj(a)) {
+        out.push(`hỏng: accounts.${id} không phải object`);
+        continue;
+      }
+      policy(a.groupPolicy, `accounts.${id}`);
+      groups(a.groups, `accounts.${id}.groups`);
+    }
+  }
+  return out;
+}
+
+/** Ném khi cấu hình phạm bất biến — không ghi gì (route trả 400 với thông điệp này). */
+export function assertZaloCfgSafe(cfg: unknown): void {
+  const v = zaloConfigViolations(cfg);
+  if (v.length > 0) throw new Error(`Cấu hình Zalo không an toàn, không ghi (luật 8): ${v.join("; ")}`);
+}
+
+/** Cửa ghi DUY NHẤT của openclaw.json — bước kiểm luôn đứng đầu, không tham số nào bỏ được nó. */
 async function writeCfg(cfg: Root): Promise<void> {
+  assertZaloCfgSafe(cfg);
   await copyFile(CONFIG, `${CONFIG}.bak-${Date.now()}`);
   await writeFile(CONFIG, JSON.stringify(cfg, null, 2));
 }
@@ -142,9 +209,59 @@ export async function createZaloAccount(accountId: string, name?: string): Promi
   return list.find((a) => a.accountId === accountId)!;
 }
 
+/** Đường CLI, config, thư mục QR mà module dùng — phép đo kiểm chúng nằm trong thư mục giả trước khi chạy (zalo-safety). */
+export function zaloAdminPaths(): { openclaw: string; config: string; qrDir: string } {
+  return { openclaw: OPENCLAW, config: CONFIG, qrDir: QR_DIR };
+}
+
+/** Lỗi của bước kiểm id — route trả 400 (khác lỗi máy chủ). */
+export class AccountIdError extends Error {}
+
+type CfgAccounts = { channels?: { zalouser?: { accounts?: Record<string, unknown> } } };
+
+/**
+ * Bước kiểm id trước MỌI lệnh openclaw nhận `--account` (sự cố P1-7 23/10: logout --account "").
+ * Không đòi khuôn SLUG — khoá thật sửa tay ngoài khuôn vẫn dùng được; chỉ chặn id không thể là tài khoản
+ * hợp lệ và khoá dạng cờ (mở đầu "-") để nó không bao giờ vào argv của openclaw như một cờ.
+ * `default` luôn có trong danh sách (listZaloAccounts), kể cả layout cũ không ghi accounts.default.
+ */
+function requireAccountId(cfg: CfgAccounts, accountId: unknown, opts: { allowDefault: boolean }): string {
+  if (typeof accountId !== "string" || accountId === "") throw new Error("id rỗng");
+  if (/\s/.test(accountId)) throw new Error("id có khoảng trắng");
+  if (accountId.startsWith("-")) throw new Error("id dạng cờ");
+  if (accountId === "default") {
+    if (opts.allowDefault) return accountId;
+    throw new Error("không xoá được tài khoản default");
+  }
+  const accounts = cfg.channels?.zalouser?.accounts;
+  if (!accounts || !Object.hasOwn(accounts, accountId)) throw new Error("không có trong danh sách tài khoản");
+  return accountId;
+}
+
+const asAccountIdError = (e: unknown) => new AccountIdError(e instanceof Error ? e.message : String(e));
+
+/** Gỡ tài khoản: mọi tài khoản trong danh sách trừ default. */
+export function requireDeletableAccount(cfg: CfgAccounts, accountId: unknown): string {
+  try {
+    return requireAccountId(cfg, accountId, { allowDefault: false });
+  } catch (e) {
+    throw asAccountIdError(e);
+  }
+}
+
+/** Đăng nhập QR: mọi tài khoản trong danh sách, kể cả default. */
+export function requireLoginAccount(cfg: CfgAccounts, accountId: unknown): string {
+  try {
+    return requireAccountId(cfg, accountId, { allowDefault: true });
+  } catch (e) {
+    throw asAccountIdError(e);
+  }
+}
+
 export async function deleteZaloAccount(accountId: string): Promise<void> {
   if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
-  if (accountId === "default") throw new Error("không xoá được tài khoản default");
+  const cfg = await readCfg();
+  requireDeletableAccount(cfg, accountId);
   // logout session zca trước (best-effort) để không sót credential mồ côi
   try {
     await run(OPENCLAW, ["channels", "logout", "--channel", "zalouser", "--account", accountId], {
@@ -153,11 +270,12 @@ export async function deleteZaloAccount(accountId: string): Promise<void> {
   } catch {
     /* chưa login / CLI lỗi — vẫn gỡ config */
   }
-  const cfg = await readCfg();
-  const z = cfg.channels?.zalouser;
+  // Đọc lại sau logout: CLI có thể đã ghi config trong lúc chạy.
+  const fresh = await readCfg();
+  const z = fresh.channels?.zalouser;
   if (!z?.accounts?.[accountId]) return;
   delete z.accounts[accountId];
-  await writeCfg(cfg);
+  await writeCfg(fresh);
 }
 
 /**
@@ -181,21 +299,31 @@ export async function setZaloGroupEnabled(
     );
     if (owner) return { conflictWith: owner.accountId };
   }
-  const newEntry = () => ({ enabled, requireMention: false }); // monitor: nhận cả tin không nhắc bot
+  // Nhóm do UI thêm hay bật lại LUÔN requireMention:true (luật 8, sự cố 22/10). Từ bản port pluginHooks 22/10
+  // hook nhận tin SAU admission, TRƯỚC mention gate — requireMention:true không làm mất tin thu.
+  const upsert = (groups: Record<string, GroupEntry>) => {
+    const g = groups[groupId];
+    if (!g) groups[groupId] = { enabled, requireMention: true };
+    else {
+      g.enabled = enabled;
+      if (enabled) g.requireMention = true;
+    }
+  };
   if (accountId === "default") {
-    const target = z.accounts?.default
-      ? ((z.accounts.default.groups ??= {}))
-      : ((z.groups ??= {}));
-    if (target[groupId]) target[groupId].enabled = enabled;
-    else target[groupId] = newEntry();
+    const d = z.accounts?.default;
+    if (d) {
+      // accounts.default chưa có groups riêng đang kế thừa groups cấp channel: chép (sâu) trước khi thêm,
+      // không thì tài khoản thu chính mất mọi nhóm đang thu
+      d.groups ??= Object.fromEntries(Object.entries(z.groups ?? {}).map(([k, v]) => [k, { ...v }]));
+      upsert(d.groups);
+    } else upsert((z.groups ??= {}));
   } else {
     const acc = (z.accounts ??= {})[accountId] ??= {
       enabled: true,
       profile: accountId,
       groupAllowFrom: ["*"],
     };
-    if (acc.groups?.[groupId]) acc.groups[groupId].enabled = enabled;
-    else ((acc.groups ??= {})[groupId] = newEntry());
+    upsert((acc.groups ??= {}));
   }
   await writeCfg(cfg);
   return { conflictWith: null };
@@ -228,6 +356,8 @@ export async function startZaloLogin(
   accountId: string,
 ): Promise<{ qrBase64: string | null; startedAt: string }> {
   if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
+  const cfg = await readCfg();
+  requireLoginAccount(cfg, accountId);
   const existing = logins.get(accountId);
   if (existing && existing.child.exitCode === null) {
     const b64 = await readQr(accountId);

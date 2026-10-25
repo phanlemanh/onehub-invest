@@ -8,10 +8,11 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import { InsightGrid, type InsightColumn } from "@/components/insight/insight-grid"
 import { fmtInt } from "@/lib/format"
 import type { FlowDay } from "@/lib/collections-queries"
+import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 const NUM = { headerClassName: "text-end", cellClassName: "text-end tabular-nums" }
 
-export function FlowTable({ days }: { days: FlowDay[] }) {
+export function FlowTable({ days, roles = {} }: { days: FlowDay[]; roles?: SourceRoles }) {
   const columns = useMemo<InsightColumn<FlowDay>[]>(
     () => [
       {
@@ -24,7 +25,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airdnaMarkets",
         accessorFn: (r) => r.airdnaMarkets,
-        header: ({ column }) => <DataGridColumnHeader title="AirDNA market" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S02", roles)} — thị trường`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airdnaMarkets),
         size: 130,
         meta: NUM,
@@ -33,7 +34,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airdnaListings",
         accessorFn: (r) => r.airdnaListings,
-        header: ({ column }) => <DataGridColumnHeader title="AirDNA listing (LTM)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S02", roles)} — listing (12 tháng qua)`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airdnaListings),
         size: 160,
         meta: NUM,
@@ -42,7 +43,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airbnbSeen",
         accessorFn: (r) => r.airbnbListingsSeen,
-        header: ({ column }) => <DataGridColumnHeader title="Airbnb listing tươi" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S01", roles)} — listing tươi`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airbnbListingsSeen),
         size: 150,
         meta: NUM,
@@ -51,7 +52,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "airbnbSnapshots",
         accessorFn: (r) => r.airbnbSnapshots,
-        header: ({ column }) => <DataGridColumnHeader title="Airbnb snapshot" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S01", roles)} — snapshot`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.airbnbSnapshots),
         size: 140,
         meta: NUM,
@@ -60,7 +61,7 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "zaloPosts",
         accessorFn: (r) => r.zaloPosts,
-        header: ({ column }) => <DataGridColumnHeader title="Zalo post (raw)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — bài thô`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.zaloPosts),
         size: 130,
         meta: NUM,
@@ -69,14 +70,14 @@ export function FlowTable({ days }: { days: FlowDay[] }) {
       {
         id: "zaloOffers",
         accessorFn: (r) => r.zaloOffers,
-        header: ({ column }) => <DataGridColumnHeader title="Zalo offer (parse)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin rao (đã đọc)`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.zaloOffers),
         size: 140,
         meta: NUM,
         enableSorting: true,
       },
     ],
-    []
+    [roles]
   )
   return (
     <InsightGrid
@@ -95,15 +96,17 @@ function groupStatusBadge(lastSeenAt: string | null) {
   const hours = (Date.now() - new Date(lastSeenAt).getTime()) / 3600000
   if (hours <= 24) return <Badge variant="success-light">Hoạt động</Badge>
   if (hours <= 72) return <Badge variant="warning-light">Im {Math.floor(hours)}h</Badge>
-  return <Badge variant="warning-light">Im {Math.floor(hours / 24)} ngày — kiểm tra kick/đổi tên</Badge>
+  return <Badge variant="warning-light">Im {Math.floor(hours / 24)} ngày</Badge>
 }
 
 export function ZaloGroupsTable({
   rows,
   allowlist,
+  roles = {},
 }: {
   rows: import("@/lib/collections-queries").ZaloGroupRow[]
   allowlist: import("@/lib/collections-queries").ZaloAllowlistEntry[]
+  roles?: SourceRoles
 }) {
   const columns = useMemo<InsightColumn<import("@/lib/collections-queries").ZaloGroupRow>[]>(
     () => [
@@ -111,9 +114,9 @@ export function ZaloGroupsTable({
         id: "name",
         accessorKey: "name",
         header: ({ column }) => <DataGridColumnHeader title="Nhóm" column={column} />,
-        // Tên nhóm Zalo là tầng A: đánh dấu để bước chụp che chữ.
-        cell: ({ row }) => <span data-tier-a className="truncate">{row.original.name}</span>,
-        size: 260,
+        // Tên nhóm là tầng C (Mạnh chốt 24/10, sửa đổi ADR-0007) — không đánh data-tier-a.
+        cell: ({ row }) => <span className="whitespace-normal break-words" translate="no">{row.original.name}</span>,
+        size: 160,
         enableSorting: false,
       },
       {
@@ -121,12 +124,12 @@ export function ZaloGroupsTable({
         accessorFn: (r) => r.lastSeenAt ?? "",
         header: "Trạng thái",
         cell: ({ row }) => groupStatusBadge(row.original.lastSeenAt),
-        size: 200,
+        size: 150,
       },
       {
         id: "seen",
         accessorFn: (r) => r.seen,
-        header: ({ column }) => <DataGridColumnHeader title="Thấy (log)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Thấy (nhật ký)" column={column} />,
         cell: ({ row }) => fmtInt(row.original.seen),
         size: 100,
         meta: NUM,
@@ -144,7 +147,7 @@ export function ZaloGroupsTable({
       {
         id: "accepted",
         accessorFn: (r) => r.accepted,
-        header: ({ column }) => <DataGridColumnHeader title="Vào raw" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Vào bảng thô" column={column} />,
         cell: ({ row }) => fmtInt(row.original.accepted),
         size: 100,
         meta: NUM,
@@ -161,7 +164,7 @@ export function ZaloGroupsTable({
       {
         id: "real7",
         accessorFn: (r) => r.realPosts7d,
-        header: ({ column }) => <DataGridColumnHeader title="Post thật 7 ngày" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Bài thật 7 ngày" column={column} />,
         cell: ({ row }) => fmtInt(row.original.realPosts7d),
         size: 140,
         meta: NUM,
@@ -170,7 +173,7 @@ export function ZaloGroupsTable({
       {
         id: "mock7",
         accessorFn: (r) => r.mockPosts7d,
-        header: ({ column }) => <DataGridColumnHeader title="Post mock" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Bài thử" column={column} />,
         cell: ({ row }) => (row.original.mockPosts7d ? fmtInt(row.original.mockPosts7d) : "—"),
         size: 100,
         meta: NUM,
@@ -184,21 +187,21 @@ export function ZaloGroupsTable({
   const rowKey = new Map(rows.map((r, i) => [r, `nhom-${i}`]))
   return (
     <InsightGrid
-      title="Nhóm Zalo"
-      description={`Danh mục nguồn cộng đồng — thật tách mock; allowlist đang bật ${enabled.length} nhóm`}
+      title={`Nhóm ${sourceLabel("S03", roles)}`}
+      description={`Danh mục nguồn cộng đồng — bài thật tách bài thử; danh sách cho phép đang bật ${enabled.length} nhóm`}
       data={rows}
       columns={columns}
       getRowId={(r) => rowKey.get(r) ?? ""}
       pageSize={10}
       footnote={
         <>
-          Qua cổng = gate Kev ≥ 0,9 (parse hook log). Allowlist (group id, chưa map tên — V2):{" "}
-          {enabled.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}. Nhóm im &gt; 72h: kiểm tra bị kick/đổi tên;
-          nhóm mock chỉ để so sánh. Thêm tài khoản, bật/tắt nhóm:{" "}
+          Qua cổng = cổng Kev ≥ 0,9 (đọc nhật ký cổng). Danh sách cho phép (mã nhóm, chưa ghép tên):{" "}
+          {enabled.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}. Nhóm im quá 72h: kiểm tra bị mời ra hoặc đổi tên;
+          nhóm thử chỉ để so sánh. Thêm tài khoản, bật/tắt nhóm:{" "}
           <Link prefetch={false} href="/ops/sources" className="font-medium underline">
             Nguồn dữ liệu
           </Link>{" "}
-          (admin, 1 nhóm – 1 tài khoản).
+          (quyền quản trị, 1 nhóm – 1 tài khoản).
         </>
       }
     />

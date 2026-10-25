@@ -35,6 +35,8 @@ export function StatCard({
   basis,
   children,
   action,
+  sloSummary,
+  muted = false,
 }: {
   icon: ReactNode
   title: string
@@ -45,9 +47,13 @@ export function StatCard({
   basis: string
   children?: ReactNode
   action: { label: string; href: string }
+  /** Giá trị `data-slo-summary` (AU6) — chỉ ô «Sức khoẻ nguồn» mang. */
+  sloSummary?: string
+  /** Số là lần đo cuối của bản tin cũ quá 45′ (ON3) — hiện mờ. */
+  muted?: boolean
 }) {
   return (
-    <Frame spacing="default" className="h-full min-w-0">
+    <Frame spacing="default" className="h-full min-w-0" data-slo-summary={sloSummary}>
       <FramePanel className="flex flex-col gap-3">
         <div className="text-muted-foreground flex min-w-0 items-center gap-2 [&_svg:not([class*=size-])]:size-4">
           {icon}
@@ -56,7 +62,7 @@ export function StatCard({
         </div>
         <div className="flex flex-col gap-0.5">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="text-2xl leading-8 font-semibold tracking-tight tabular-nums">
+            <span className={cn("text-2xl leading-8 font-semibold tracking-tight tabular-nums", muted && "text-muted-foreground")}>
               {value}
               {total === undefined ? null : <span className="text-muted-foreground text-base font-normal">/{total}</span>}
             </span>

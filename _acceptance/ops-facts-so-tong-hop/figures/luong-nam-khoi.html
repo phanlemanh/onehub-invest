@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luồng năm khối số</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1340px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub { font-size: 0.875rem; color: var(--color-muted); margin-bottom: 1.5rem; max-width: 60rem; line-height: 1.5; }
+    svg { width: 100%; min-width: 1100px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Luồng dữ liệu · ops-facts-so-tong-hop · AC-1 · AC-7 · AC-8 · AC-9</p>
+    <h1>Số tổng hợp Ops đi từ máy local lên cloud</h1>
+    <p class="sub">Sau mỗi lượt đồng bộ 15′, máy local đo năm khối số, soát tên nguồn thật rồi mới gửi. Trên cloud, một hàm đọc chung tự biết số chưa có, còn tươi hay đã cũ.</p>
+
+    <svg viewBox="0 0 1300 488" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Ranh giới máy local / cloud -->
+      <line x1="472" y1="56" x2="472" y2="396" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="456" y="68" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end" letter-spacing="0.18em">MÁY LOCAL</text>
+      <text x="488" y="68" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CLOUD</text>
+
+      <!-- Mũi tên (vẽ trước, nằm dưới nút) -->
+      <line x1="280" y1="212" x2="320" y2="212" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="448" y1="212" x2="496" y2="212" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="384" y1="260" x2="384" y2="328" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <line x1="656" y1="212" x2="704" y2="212" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="864" y1="212" x2="912" y2="212" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M1072 196 H1088 Q1096 196 1096 188 V120 Q1096 112 1104 112 H1120" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="1072" y1="212" x2="1120" y2="212" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M1072 228 H1088 Q1096 228 1096 236 V304 Q1096 312 1104 312 H1120" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Nhãn mũi tên -->
+      <rect x="452" y="190" width="40" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="472" y="202" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SẠCH</text>
+      <rect x="392" y="284" width="76" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="394" y="296" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CÒN TÊN THẬT</text>
+
+      <!-- 1. Máy local dựng năm khối -->
+      <rect x="40" y="96" width="240" height="248" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="96" width="240" height="248" rx="6" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <rect x="48" y="104" width="40" height="16" rx="2" fill="transparent" stroke="rgba(99,107,128,0.50)" stroke-width="0.8"/>
+      <text x="68" y="116" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AC-1</text>
+      <text x="160" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Máy local đo năm khối số</text>
+      <text x="160" y="152" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(push-ops-facts)</text>
+
+      <rect x="56" y="164" width="208" height="24" rx="4" fill="#ffffff" stroke="#bfc0c0" stroke-width="0.8"/>
+      <text x="64" y="180" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif">Độ tươi từng nguồn</text>
+      <text x="256" y="180" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="end">mốc đo</text>
+
+      <rect x="56" y="192" width="208" height="24" rx="4" fill="#ffffff" stroke="#bfc0c0" stroke-width="0.8"/>
+      <text x="64" y="208" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif">Job chạy nền</text>
+      <text x="256" y="208" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="end">mốc đo</text>
+
+      <rect x="56" y="220" width="208" height="24" rx="4" fill="#ffffff" stroke="#bfc0c0" stroke-width="0.8"/>
+      <text x="64" y="236" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif">Lockdown từng lớp</text>
+      <text x="256" y="236" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="end">mốc đo</text>
+
+      <rect x="56" y="248" width="208" height="24" rx="4" fill="#ffffff" stroke="#bfc0c0" stroke-width="0.8"/>
+      <text x="64" y="264" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif">Bản ghi 24 giờ theo S0x</text>
+      <text x="256" y="264" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="end">mốc đo</text>
+
+      <rect x="56" y="276" width="208" height="24" rx="4" fill="#ffffff" stroke="#bfc0c0" stroke-width="0.8"/>
+      <text x="64" y="292" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif">Số thẻ chờ duyệt</text>
+      <text x="256" y="292" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="end">mốc đo</text>
+
+      <text x="160" y="320" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">Khối không đo được → mang chữ lỗi,</text>
+      <text x="160" y="334" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">không bao giờ ghi 0 (AC-7)</text>
+
+      <!-- 2. Bộ soát tầng A -->
+      <polygon points="384,164 448,212 384,260 320,212" fill="#f5f5f5"/>
+      <polygon points="384,164 448,212 384,260 320,212" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="384" y="208" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Bộ soát</text>
+      <text x="384" y="224" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">tầng A</text>
+
+      <!-- Dừng, không gửi -->
+      <rect x="312" y="328" width="144" height="52" rx="26" fill="#f5f5f5"/>
+      <rect x="312" y="328" width="144" height="52" rx="26" fill="rgba(235,108,54,0.05)" stroke="rgba(235,108,54,0.50)" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="384" y="352" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Dừng, không gửi</text>
+      <text x="384" y="368" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">cloud không đổi · AC-8</text>
+
+      <!-- 3. Cloud nhận bản tin -->
+      <rect x="496" y="184" width="160" height="56" rx="6" fill="#f5f5f5"/>
+      <rect x="496" y="184" width="160" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="576" y="208" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Cloud nhận bản tin</text>
+      <text x="576" y="224" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(route ingest)</text>
+
+      <!-- 4. Lưu bản tin mới nhất -->
+      <rect x="704" y="184" width="160" height="56" rx="6" fill="#f5f5f5"/>
+      <rect x="704" y="184" width="160" height="56" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="784" y="208" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Lưu bản tin mới nhất</text>
+      <text x="784" y="224" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(bảng ops_heartbeat)</text>
+
+      <!-- 5. Hàm đọc chung (focal) -->
+      <rect x="912" y="172" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="912" y="172" width="160" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="992" y="200" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Hàm đọc chung</text>
+      <text x="992" y="216" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(readOpsFacts)</text>
+      <text x="992" y="236" fill="#ba4513" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">ngưỡng 45′ khai một chỗ · AC-9</text>
+
+      <!-- Ba trạng thái -->
+      <rect x="1120" y="88" width="140" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="1120" y="88" width="140" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="1190" y="110" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chưa có số</text>
+      <text x="1190" y="124" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">chưa đẩy lần nào</text>
+
+      <rect x="1120" y="188" width="140" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="1120" y="188" width="140" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="1190" y="210" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Số tươi</text>
+      <text x="1190" y="224" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">≤ 45′ từ lúc đo</text>
+
+      <rect x="1120" y="288" width="140" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="1120" y="288" width="140" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="1190" y="310" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Số cũ</text>
+      <text x="1190" y="324" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">&gt; 45′ · kèm mốc đo cuối</text>
+
+      <!-- Chú thích -->
+      <text x="1120" y="368" fill="#4f5d75" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">Xét cho cả bản tin</text>
+      <text x="1120" y="386" fill="#4f5d75" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">và cho từng khối riêng</text>
+
+      <!-- Chú giải -->
+      <line x1="40" y1="420" x2="1260" y2="420" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="440" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="452" width="24" height="12" rx="2" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <text x="72" y="462" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Máy local đo</text>
+
+      <polygon points="216,458 228,452 240,458 228,464" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="248" y="462" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Điểm soát</text>
+
+      <rect x="392" y="452" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="424" y="462" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước trên cloud</text>
+
+      <rect x="568" y="452" width="24" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="600" y="462" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nơi lưu</text>
+
+      <rect x="744" y="452" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="776" y="462" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Hàm đọc chung (trọng tâm)</text>
+
+      <rect x="920" y="452" width="24" height="12" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="952" y="462" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Kết quả / điểm dừng</text>
+
+      <line x1="1096" y1="458" x2="1124" y2="458" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="1132" y="462" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Ranh máy local / cloud</text>
+    </svg>
+  </div>
+</body>
+</html>

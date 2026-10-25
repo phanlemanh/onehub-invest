@@ -13,14 +13,15 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { FlowDay } from "@/lib/collections-queries"
 import { fmtCompact, fmtInt } from "@/lib/format"
+import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 import { cn } from "@/lib/utils"
 
 import { SectionHeader } from "./section"
 
 type Mode = "listings" | "zalo"
-const MODES: { value: Mode; label: string }[] = [
+const modesOf = (roles: SourceRoles): { value: Mode; label: string }[] => [
   { value: "listings", label: "Listing" },
-  { value: "zalo", label: "Tin Zalo" },
+  { value: "zalo", label: `Tin ${sourceLabel("S03", roles)}` },
 ]
 const SERIES: Record<Mode, (keyof FlowDay)[]> = {
   listings: ["airbnbListingsSeen", "airdnaListings"],
@@ -28,14 +29,17 @@ const SERIES: Record<Mode, (keyof FlowDay)[]> = {
 }
 // Chuỗi thứ nhất của mỗi chế độ là khối lượng đã vào kho (opsVolume), chuỗi thứ hai là bản ghi
 // thô/chạm (opsVolumeRaw) — khoá Ops trong palette.ts, xem data-color.md mục Ops.
-const CONFIG = {
-  airbnbListingsSeen: { label: "S01 listing tươi", theme: themeOf("opsVolume") },
-  airdnaListings: { label: "S02 listing chạm", theme: themeOf("opsVolumeRaw") },
-  zaloOffers: { label: "S03 offer vào DB", theme: themeOf("opsVolume") },
-  zaloPosts: { label: "S03 post raw", theme: themeOf("opsVolumeRaw") },
-} satisfies ChartConfig
+const configOf = (roles: SourceRoles) =>
+  ({
+    airbnbListingsSeen: { label: `${sourceLabel("S01", roles)} — listing tươi`, theme: themeOf("opsVolume") },
+    airdnaListings: { label: `${sourceLabel("S02", roles)} — listing chạm`, theme: themeOf("opsVolumeRaw") },
+    zaloOffers: { label: `${sourceLabel("S03", roles)} — tin rao vào kho`, theme: themeOf("opsVolume") },
+    zaloPosts: { label: `${sourceLabel("S03", roles)} — bài thô`, theme: themeOf("opsVolumeRaw") },
+  }) satisfies ChartConfig
 
-export function SyncActivity({ days, className }: { days: FlowDay[]; className?: string }) {
+export function SyncActivity({ days, roles = {}, className }: { days: FlowDay[]; roles?: SourceRoles; className?: string }) {
+  const modes = modesOf(roles)
+  const config = configOf(roles)
   const [mode, setMode] = useState<Mode>("listings")
   const series = SERIES[mode]
   // Truy vấn trả ngày mới nhất trước; biểu đồ đọc trái → phải theo thời gian.
@@ -44,12 +48,12 @@ export function SyncActivity({ days, className }: { days: FlowDay[]; className?:
 
   return (
     <Frame id="luong" spacing="default" className={cn("scroll-mt-4", className)}>
-      <SectionHeader title="Luồng 7 ngày" description={`${fmtInt(total)} bản ghi trong 7 ngày (giờ máy)`}>
+      <SectionHeader title="Luồng 7 ngày" description={`${fmtInt(total)} bản ghi trong 7 ngày (ngày theo giờ VN)`}>
         <ToggleGroup
           multiple={false}
           value={[mode]}
           onValueChange={(value: string[]) => {
-            const next = MODES.find((m) => m.value === value[0])
+            const next = modes.find((m) => m.value === value[0])
             if (next) setMode(next.value)
           }}
           variant="outline"
@@ -57,7 +61,7 @@ export function SyncActivity({ days, className }: { days: FlowDay[]; className?:
           spacing={0}
           aria-label="Chế độ biểu đồ"
         >
-          {MODES.map((m) => (
+          {modes.map((m) => (
             <ToggleGroupItem key={m.value} value={m.value} className="text-muted-foreground data-pressed:text-foreground">
               {m.label}
             </ToggleGroupItem>
@@ -73,7 +77,7 @@ export function SyncActivity({ days, className }: { days: FlowDay[]; className?:
             </EmptyHeader>
           </Empty>
         ) : (
-          <ChartContainer config={CONFIG} className="aspect-auto h-56 w-full min-w-0" initialDimension={{ width: 720, height: 224 }}>
+          <ChartContainer config={config} className="aspect-auto h-56 w-full min-w-0" initialDimension={{ width: 720, height: 224 }}>
             <BarChart data={data} accessibilityLayer barCategoryGap="20%" margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
               <XAxis dataKey="day" tickFormatter={(d: string) => d.slice(5).split("-").reverse().join("/")} tickLine={false} axisLine={false} tickMargin={8} height={26} />
               <YAxis allowDecimals={false} tickCount={4} tickFormatter={(v: number) => fmtCompact(v)} tickLine={false} axisLine={false} tickMargin={4} width="auto" />

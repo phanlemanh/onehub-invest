@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhãn kiểm độ phủ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1000px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 760px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · dq-moi-nhat-moi-kiem · Hỏi-1</p>
+    <h1>Kiểm độ phủ tham chiếu mang nhãn gì: theo nghĩa kiểm, hay theo số độ phủ</h1>
+    <p class="sub">Hôm nay dòng (a) và (b) đều mang «Đạt» xanh lá · nhánh A máy khuyên · AC-4</p>
+
+    <svg viewBox="0 56 1000 440" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="56" width="1000" height="440" fill="#f5f5f5"/>
+
+      <!-- ===================== CỘT NHÁNH MÁY KHUYÊN (focal 1) ===================== -->
+      <rect x="416" y="80" width="264" height="312" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+
+      <!-- ===================== KẺ BẢNG ===================== -->
+      <line x1="32" y1="80" x2="968" y2="80" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="32" y1="152" x2="968" y2="152" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="32" y1="208" x2="968" y2="208" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <line x1="32" y1="264" x2="968" y2="264" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <line x1="32" y1="320" x2="968" y2="320" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="32" y1="392" x2="968" y2="392" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="392" y1="80" x2="392" y2="392" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+
+      <!-- ===================== ĐẦU CỘT ===================== -->
+      <text x="48" y="124" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">DÒNG KIỂM MẪU</text>
+      <text x="48" y="140" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">kết quả máy kiểm · cột Chi tiết</text>
+
+      <rect x="504" y="88" width="88" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.60)" stroke-width="0.8"/>
+      <text x="548" y="100" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MÁY KHUYÊN</text>
+      <text x="548" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">A · Nhãn theo nghĩa kiểm</text>
+      <text x="548" y="140" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">kiểm này đo: có số tham chiếu hay chưa</text>
+
+      <text x="836" y="100" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.18em">NHÁNH KHÁC</text>
+      <text x="836" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">B · Nhãn theo số độ phủ</text>
+      <text x="836" y="140" fill="#636b80" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">đọc số độ phủ trong cột Chi tiết</text>
+
+      <!-- ===================== HÀNG (a) · đạt · coverage=0.00% ===================== -->
+      <text x="48" y="176" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">(a) Kiểm báo đạt</text>
+      <text x="48" y="192" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">Chi tiết: <tspan fill="#2d3142" font-family="'Geist Mono', monospace">coverage=0.00%</tspan></text>
+      <!-- A: Có số tham chiếu · xanh dương -->
+      <rect x="488" y="168" width="120" height="24" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+      <text x="548" y="184" fill="#1d4ed8" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có số tham chiếu</text>
+      <!-- B: Không đạt · đỏ -->
+      <rect x="796" y="168" width="80" height="24" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+      <text x="836" y="184" fill="#b91c1c" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Không đạt</text>
+
+      <!-- ===================== HÀNG (b) · đạt · coverage=62% ===================== -->
+      <text x="48" y="232" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">(b) Kiểm báo đạt</text>
+      <text x="48" y="248" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">Chi tiết: <tspan fill="#2d3142" font-family="'Geist Mono', monospace">coverage=62%</tspan></text>
+      <!-- A: Có số tham chiếu · xanh dương -->
+      <rect x="488" y="224" width="120" height="24" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+      <text x="548" y="240" fill="#1d4ed8" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có số tham chiếu</text>
+      <!-- B: Đạt · xanh lá -->
+      <rect x="812" y="224" width="48" height="24" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+      <text x="836" y="240" fill="#15803d" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đạt</text>
+
+      <!-- ===================== HÀNG (c) · không đạt · thiếu số tham chiếu ===================== -->
+      <text x="48" y="288" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">(c) Kiểm báo không đạt</text>
+      <text x="48" y="304" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">thiếu số tham chiếu</text>
+      <!-- A: Thiếu số tham chiếu · vàng -->
+      <rect x="480" y="280" width="136" height="24" rx="4" fill="#fefce8" stroke="#facc15" stroke-width="1"/>
+      <text x="548" y="296" fill="#a16207" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thiếu số tham chiếu</text>
+      <!-- B: Không đạt · đỏ -->
+      <rect x="796" y="280" width="80" height="24" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+      <text x="836" y="296" fill="#b91c1c" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Không đạt</text>
+
+      <!-- ===================== GIÁ CỦA NHÁNH ===================== -->
+      <text x="48" y="352" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Giá phải trả</text>
+      <text x="48" y="368" fill="#636b80" font-size="9" font-family="'Geist', sans-serif">nếu chọn nhánh này</text>
+
+      <text x="548" y="352" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">Người vận hành phải đọc cột</text>
+      <text x="548" y="368" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">Chi tiết để biết độ phủ</text>
+
+      <text x="836" y="352" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">App đọc chữ tự do pipeline viết;</text>
+      <text x="836" y="368" fill="#2d3142" font-size="11" font-family="'Geist', sans-serif" text-anchor="middle">đổi khuôn chữ là nhãn sai</text>
+
+      <!-- ===================== CHÚ GIẢI ===================== -->
+      <line x1="32" y1="420" x2="968" y2="420" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="32" y="440" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="32" y="456" width="16" height="16" rx="2" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+      <text x="56" y="468" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">xanh dương · thông tin</text>
+
+      <rect x="188" y="456" width="16" height="16" rx="2" fill="#fefce8" stroke="#facc15" stroke-width="1"/>
+      <text x="212" y="468" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">vàng · cảnh báo</text>
+
+      <rect x="316" y="456" width="16" height="16" rx="2" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+      <text x="340" y="468" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">đỏ · không đạt</text>
+
+      <rect x="440" y="456" width="16" height="16" rx="2" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+      <text x="464" y="468" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">xanh lá · đạt</text>
+
+      <rect x="560" y="456" width="16" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="584" y="468" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">nhánh máy khuyên</text>
+    </svg>
+  </div>
+</body>
+</html>

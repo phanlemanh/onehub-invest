@@ -6,8 +6,11 @@ import { useMemo } from "react"
 import type { InsightColumn } from "@/components/insight/insight-grid"
 import { Badge } from "@/components/reui/badge"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
-import { fmtInt } from "@/lib/format"
+import { fmtInt, fmtVnDateTime } from "@/lib/format"
+import { fmtAge, fmtOverdue } from "@/lib/freshness"
 import type { SourceFeedHealth } from "@/lib/ops-queries"
+import { sourceStatusLabel } from "@/lib/ops-labels"
+import { RawLabel } from "@/components/ops/raw-label"
 
 import { FEED_STATE, feedState } from "./feed-status"
 import { StatusGrid, type StatusTab } from "./status-grid"
@@ -20,7 +23,8 @@ const TABS: StatusTab<SourceFeedHealth>[] = (["late", "stopped", "ok"] as const)
   match: (f) => feedState(f) === s,
 }))
 
-export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
+/** `stale`: số là lần đo cuối của bản tin máy local cũ quá 45′ (ON3) — không badge trạng thái xanh. */
+export function FeedsGrid({ feeds, stale = false }: { feeds: SourceFeedHealth[]; stale?: boolean }) {
   const columns = useMemo<InsightColumn<SourceFeedHealth>[]>(
     () => [
       {
@@ -42,7 +46,7 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
         header: "Trạng thái",
         cell: ({ row }) => {
           const s = FEED_STATE[feedState(row.original)]
-          return <Badge variant={s.variant}>{row.original.status !== "active" ? row.original.status : s.label}</Badge>
+          return <Badge variant={stale && s.variant === "success-light" ? "outline" : s.variant}>{row.original.status !== "active" ? <RawLabel n={sourceStatusLabel(row.original.status)} raw={row.original.status} /> : s.label}</Badge>
         },
         size: 120,
       },
@@ -50,18 +54,19 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
         id: "last",
         accessorFn: (f) => f.lastRunAt ?? "",
         header: ({ column }) => <DataGridColumnHeader title="Chạy cuối" column={column} />,
-        cell: ({ row }) => (row.original.lastRunAt ? row.original.lastRunAt.slice(0, 16).replace("T", " ") : "—"),
+        cell: ({ row }) => fmtVnDateTime(row.original.lastRunAt),
         size: 150,
         enableSorting: true,
       },
       {
         id: "fresh",
         accessorFn: (f) => f.freshnessHrs ?? Number.POSITIVE_INFINITY,
-        header: ({ column }) => <DataGridColumnHeader title="Độ tươi (giờ)" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Độ tươi" column={column} />,
         cell: ({ row }) => (
           <>
-            {fmtInt(row.original.freshnessHrs)}
-            {row.original.sloHours ? <span className="text-muted-foreground"> / {fmtInt(row.original.sloHours)}</span> : null}
+            {fmtAge(row.original.freshnessHrs)}
+            {row.original.sloHours ? <span className="text-muted-foreground"> / {fmtAge(row.original.sloHours)}</span> : null}
+            {fmtOverdue(row.original.freshnessHrs, row.original.sloHours) ? <span> · {fmtOverdue(row.original.freshnessHrs, row.original.sloHours)}</span> : null}
           </>
         ),
         size: 130,
@@ -70,9 +75,9 @@ export function FeedsGrid({ feeds }: { feeds: SourceFeedHealth[] }) {
       },
       { id: "n24", accessorKey: "items24h", header: "24h", cell: ({ row }) => (row.original.items24h ? fmtInt(row.original.items24h) : "—"), size: 90, meta: NUM },
       { id: "stg", accessorKey: "stgRows", header: "Staging", cell: ({ row }) => (row.original.stgRows ? fmtInt(row.original.stgRows) : "—"), size: 100, meta: NUM },
-      { id: "offers", accessorFn: (f) => f.offers ?? -1, header: "Offers", cell: ({ row }) => fmtInt(row.original.offers), size: 100, meta: NUM },
+      { id: "offers", accessorFn: (f) => f.offers ?? -1, header: "Tin rao", cell: ({ row }) => fmtInt(row.original.offers), size: 100, meta: NUM },
     ],
-    []
+    [stale]
   )
   return (
     <StatusGrid

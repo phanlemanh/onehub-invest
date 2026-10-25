@@ -65,6 +65,9 @@ export async function readBody(req: { on: Function }): Promise<string> {
 
 const SEEN_CAP = 5000;
 
+/** Còn ít hơn ngưỡng này tới deadline shutdown → bỏ/huỷ bước media (tin > ảnh). */
+const MEDIA_CUTOFF_MS = 10_000;
+
 function keyOk(keys: string[], auth: string | null): boolean {
   if (keys.length === 0 || !auth) return false; // fail closed
   const given = Buffer.from(auth.replace(/^Bearer\s+/i, ""));
@@ -82,6 +85,9 @@ export async function createAgentServer(opts: AgentServerOptions) {
   const seen = new Set<string>();
   let writer: SnapshotWriter | null = null;
   let flushing: Promise<{ snapshotId: string } | null> | null = null;
+  /** AbortController của lượt flush ĐANG CHẠY (P2): caller muộn truyền
+   *  deadlineAt vẫn huỷ được ảnh của chính lượt đó qua flush(). */
+  let flushAbort: AbortController | null = null;
   let duplicatesTotal = 0;
   let acceptedTotal = 0;
   const newIds: string[] = []; // id mới từ lần flush trước — persist xuống state
@@ -99,6 +105,30 @@ export async function createAgentServer(opts: AgentServerOptions) {
   // cùng ts đụng nhau ở công thức cũ, tin sau bị bỏ ở dedup. Thêm sender +
   // danh sách URL/path media PHỤ SAU text rỗng để tách. Tin CÓ TEXT (dù kèm
   // ảnh) GIỮ NGUYÊN id cũ — không đổi id các tin đã có.
+  // ZC1 nối tiếp (claudedp-2310-6): media hỏng (không mảng / phần tử rác)
+  // bị LỌC làm lành thay vì làm 500 cả lô; url/path chuẩn hoá (trim + bỏ
+  // query/fragment rỗng) và SORT trước băm — thứ tự media không ổn định
+  // phải không tạo id mới. Tin CÓ TEXT giữ nguyên công thức legacy.
+  const normMedia = (media: unknown): AgentMediaFact[] => {
+    if (!Array.isArray(media)) return [];
+    return media.filter(
+      (m): m is AgentMediaFact =>
+        typeof m === "object" &&
+        m !== null &&
+        (typeof (m as AgentMediaFact).url === "string" || typeof (m as AgentMediaFact).path === "string"),
+    );
+  };
+  // An toàn kiểu (vòng 2 mở lại): đầu vào có thể là số/object từ media rác;
+  // chọn CHUỖI ĐẦU TIÊN — url string có nội dung (sau norm) thì dùng, không thì
+  // path string, không thì rỗng. Giải quyết {url:5} (5.trim() nổ) và
+  // {url:"",path:"/a"} vs {url:"",path:"/b"} (url rỗng che path → gộp nhầm).
+  const normRef = (x: unknown): string =>
+    typeof x === "string" ? x.trim().replace(/[?#]+$/, "") : "";
+  const mediaRefOf = (m: AgentMediaFact): string => {
+    const u = normRef(m.url);
+    if (u) return u;
+    return normRef(m.path);
+  };
   const sourceIdOf = (
     group: string,
     ts: string,
@@ -108,8 +138,9 @@ export async function createAgentServer(opts: AgentServerOptions) {
     const h = createHash("sha256").update(`${group}|${ts}|${text}`);
     if (!text && extra) {
       const urls = (extra.media ?? [])
-        .map((m) => m.url ?? m.path ?? "")
+        .map((m) => mediaRefOf(m))
         .filter(Boolean)
+        .sort()
         .join(",");
       h.update(`|${extra.senderId ?? ""}|${urls}`);
     }
@@ -133,7 +164,17 @@ export async function createAgentServer(opts: AgentServerOptions) {
     let accepted = 0;
     let duplicates = 0;
     for (const m of b.messages!) {
-      const sourceId = sourceIdOf(b.group!, m.ts, m.text, { senderId: m.senderId, media: m.media });
+      // ZC1 nối tiếp (mở lại 2310-6): trim CHỈ để quyết định media-only;
+      // băm tin chữ bằng text NGUYÊN BẢN (giữ id legacy), media làm lành
+      // CHỈ dùng cho băm — payload giữ nguyên vẹn như nhận (DATA-CONTRACT).
+      const textTrimmedEmpty = m.text.trim() === "";
+      const mediaForHash = textTrimmedEmpty ? normMedia(m.media) : undefined;
+      const sourceId = sourceIdOf(
+        b.group!,
+        m.ts,
+        textTrimmedEmpty ? "" : m.text,
+        { senderId: m.senderId, media: mediaForHash },
+      );
       if (seen.has(sourceId)) {
         duplicates++;
         continue;
@@ -173,7 +214,9 @@ export async function createAgentServer(opts: AgentServerOptions) {
     return { status: 202, body: { accepted, duplicates } };
   }
 
-  async function doFlush(): Promise<{ snapshotId: string } | null> {
+  async function doFlush(
+    flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
+  ): Promise<{ snapshotId: string } | null> {
     if (buffer.length === 0) return null; // không ghi snapshot rỗng (Review Focus #4)
     writer ??= new SnapshotWriter(snapshotRoot, city, "zalo-agent");
     // BẢN CHÉP mảng: tin ingest vào giữa chừng (đang tải ảnh) không lọt vào
@@ -182,20 +225,41 @@ export async function createAgentServer(opts: AgentServerOptions) {
     // N1 media: URL ảnh Zalo (zdn.vn) CÓ HẠN — tải về máy TRƯỚC khi gzip items
     // để meta.mediaFiles nằm trong items-*.json.gz. Fail-open: lỗi tải chỉ ghi
     // error trong meta; lỗi hệ thống bỏ qua bước media, tin vẫn phải chảy.
+    // Shutdown: sát deadline → skipMedia (không bắt đầu tải); ĐANG tải thì
+    // AbortSignal huỷ ở mốc còn MEDIA_CUTOFF tới deadlineAt — không để ảnh
+    // treo kéo flush vượt deadline (claudedp-2310-3).
+    // ac LUÔN được tạo (kể cả lượt không deadline — định kỳ/auto-flush) và
+    // exposures qua flushAbort để một caller muộn truyền deadlineAt vẫn huỷ
+    // được ảnh của CHÍNH lượt đang chạy (P2 vòng 3).
+    const ac = new AbortController();
+    flushAbort = ac;
     let mediaNote = "";
-    try {
-      const w = writer;
-      const stats = await fetchMessageMedia({
-        items,
-        putFile: (name, bytes) => w.addExtraFile(name, bytes),
-        options: opts.media,
-      });
-      if (stats.fetched > 0 || stats.failed > 0) {
-        mediaNote = `; media fetched=${stats.fetched} failed=${stats.failed}`;
+    if (flushOpts?.skipMedia) {
+      mediaNote = "; media skipped: sát deadline shutdown";
+    } else {
+      let abortT: ReturnType<typeof setTimeout> | undefined;
+      if (flushOpts?.deadlineAt) {
+        const inMs = flushOpts.deadlineAt - Date.now() - MEDIA_CUTOFF_MS;
+        abortT = setTimeout(() => ac.abort(), Math.max(0, inMs));
       }
-    } catch (err) {
-      mediaNote = `; media skipped: ${err instanceof Error ? err.message : String(err)}`;
+      try {
+        const w = writer;
+        const stats = await fetchMessageMedia({
+          items,
+          putFile: (name, bytes) => w.addExtraFile(name, bytes),
+          options: opts.media,
+          signal: ac.signal,
+        });
+        if (stats.fetched > 0 || stats.failed > 0) {
+          mediaNote = `; media fetched=${stats.fetched} failed=${stats.failed}`;
+        }
+      } catch (err) {
+        mediaNote = `; media skipped: ${err instanceof Error ? err.message : String(err)}`;
+      } finally {
+        if (abortT) clearTimeout(abortT);
+      }
     }
+    if (flushAbort === ac) flushAbort = null;
     const ids = items.map((i) => i.sourceId);
     // KHÔNG clear buffer trước khi ghi xong — flush fail giữ items cho lần
     // sau (đã ack 202 không được mất âm thầm — review I1a)
@@ -228,11 +292,29 @@ export async function createAgentServer(opts: AgentServerOptions) {
    * Single-flight: flush giờ chờ tải ảnh (vài chục giây tới vài phút) nên
    * hai nguồn kích — interval 60s và POST đủ flushAfterItems — có thể chồng
    * nhau. Đang có flush chạy thì caller sau chung đúng promise đó; không ghi
-   * đôi snapshot, không finalize manifest hai lần.
+   * đôi snapshot, không finalize manifest hai lần. (Lượt đang chạy không đổi
+   * theo flushOpts — shutdown sát deadline sẽ gọi lại lượt mới sau lượt này.)
    */
-  function flush(): Promise<{ snapshotId: string } | null> {
-    if (flushing) return flushing;
-    flushing = doFlush().finally(() => {
+  function flush(
+    flushOpts?: { skipMedia?: boolean; deadlineAt?: number },
+  ): Promise<{ snapshotId: string } | null> {
+    if (flushing) {
+      // P2 (claudedp-2310-3 vòng 3): lượt ĐANG CHẠY (định kỳ 60s hoặc
+      // auto-flush ≥50 tin) được bắt đầu KHÔNG deadline — shutdown tới muộn
+      // truyền deadlineAt thì single-flight trả đúng promise cũ. Gắn nốt hẹn
+      // giờ abort vào AbortController của chính lượt đó: còn < MEDIA_CUTOFF
+      // tới mốc thì ảnh đang tải bị huỷ, tin vẫn chảy.
+      if (flushOpts?.deadlineAt) {
+        const ac = flushAbort;
+        if (ac) {
+          const inMs = flushOpts.deadlineAt - Date.now() - MEDIA_CUTOFF_MS;
+          const t = setTimeout(() => ac.abort(), Math.max(0, inMs));
+          t.unref?.(); // không giữ process vì timer này
+        }
+      }
+      return flushing;
+    }
+    flushing = doFlush(flushOpts).finally(() => {
       flushing = null;
     });
     return flushing;

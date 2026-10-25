@@ -43,7 +43,7 @@ const PRODUCT: NavLink[] = [
   { title: "Thị trường", href: "/vn", description: "Xếp hạng phường theo RevPAR, công suất, giá — kèm bản đồ.", icon: icon(MapIcon) },
   { title: "Listing", href: "/vn/hanoi/listings", description: "Duyệt listing Airbnb trên lưới và bản đồ nhãn giá.", icon: icon(HouseIcon) },
   { title: "Lợi suất", href: "/yield", description: "Ước tính lợi suất một căn: ngắn hạn so với dài hạn.", icon: icon(CalculatorIcon) },
-  { title: "So sánh", href: "/so-sanh", description: "Đặt cạnh nhau tối đa 4 thị trường hoặc phường.", icon: icon(GitCompareIcon) },
+  { title: "So sánh", href: "/compare", description: "Đặt cạnh nhau tối đa 4 thị trường hoặc phường.", icon: icon(GitCompareIcon) },
 ]
 
 /**
@@ -87,7 +87,7 @@ export function MarketingNavbar({
               </NavigationMenuContent>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuLink render={<Link href="/phuong-phap" />} className={navigationMenuTriggerStyle()}>
+              <NavigationMenuLink render={<Link href="/methodology" />} className={navigationMenuTriggerStyle()}>
                 Phương pháp
               </NavigationMenuLink>
             </NavigationMenuItem>
@@ -107,7 +107,7 @@ export function MarketingNavbar({
                   {item.title}
                 </DropdownMenuItem>
               ))}
-              <DropdownMenuItem render={<Link href="/phuong-phap" />}>
+              <DropdownMenuItem render={<Link href="/methodology" />}>
                 <BookOpenIcon aria-hidden="true" />
                 Phương pháp
               </DropdownMenuItem>
@@ -124,12 +124,12 @@ export function MarketingNavbar({
           nativeButton={false}
           render={<Link href="/vn" />}
         >
-          <span className="inline-flex items-center transition-transform duration-300 group-hover/sliding:-translate-x-2">
+          <span className="inline-flex items-center transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/sliding:-translate-x-2 motion-reduce:transition-none motion-reduce:group-hover/sliding:translate-x-0">
             Bắt đầu
           </span>
           <ArrowRightIcon
             aria-hidden="true"
-            className="absolute right-2.5 translate-x-8 opacity-0 transition-all duration-300 group-hover/sliding:translate-x-0 group-hover/sliding:opacity-100"
+            className="absolute right-2.5 translate-x-8 opacity-0 transition-[translate,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/sliding:translate-x-0 group-hover/sliding:opacity-100 motion-reduce:translate-x-0 motion-reduce:transition-opacity"
           />
         </Button>
       </div>
