@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe
+verified_commit: 3f731580b0662fa0e935f5c486349ed313c8c78a
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -202,3 +202,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1 đến E10 đều đạt (một lượt `cd app && npm test` 252/252 ca, một lượt tsc + lint 0 lỗi); không eval nào hỏng,
 không có mục judgment. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-25, do hoá cũ do chính commit chữ ký
+run_id: repin-20261025T015433Z-89353
+sha: 3f731580b0662fa0e935f5c486349ed313c8c78a · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
