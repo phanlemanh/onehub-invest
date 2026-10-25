@@ -44,14 +44,14 @@ evals:
     executor: script
     cmd: config:executors.script.ranh_gioi_do
     paths: [pipeline/reassign-areas.mjs, scripts/kiem-ranh-gioi-khu-vuc.mjs]
-    expected: "exit 0; khối 'trước' in số và đỏ đúng hai dòng 'đỏ  extent con vn-hanoi vượt bbox' và 'đỏ  N con vn-hanoi tên Tỉnh…/Thành phố…' (N > 0); khối 'sau' in 'ok   extent con vn-hanoi trong bbox vn-hanoi', 'ok   0 con vn-hanoi tên Tỉnh…/Thành phố…', 'ok   0 con có tâm ngoài polygon cha (vn-hanoi, vn-hcmc)', 'ok   vn-hcmc số phường trước = sau (<số>)'; dòng cuối 'ROLLBACK — DB local không đổi'"
+    expected: "exit 0; dòng 'ok   trạng thái trước đỏ đúng chỗ (đối chứng dương: extent vượt + có con tên tỉnh)'; khối 'trước' in số và đỏ đúng hai dòng 'đỏ  extent con vn-hanoi vượt bbox' và 'đỏ  N con vn-hanoi tên Tỉnh…/Thành phố…' (N > 0); khối 'sau' in 'ok   extent con vn-hanoi trong bbox vn-hanoi', 'ok   0 con vn-hanoi tên Tỉnh…/Thành phố…', 'ok   0 con có tâm ngoài polygon cha (vn-hanoi, vn-hcmc)', 'ok   vn-hcmc số phường trước = sau (<số> → <số>)'; dòng 'ok   ROLLBACK — DB local không đổi (areas <n> → <n>)' và dòng cuối 'kiem-ranh-gioi: PASS'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
     executor: script
     cmd: config:executors.script.ranh_gioi_do
     paths: [pipeline/reassign-areas.mjs, pipeline/sql/300_metrics.sql, scripts/kiem-ranh-gioi-khu-vuc.mjs]
-    expected: "exit 0; dòng 'khu vực lạc (trước): <n> id' với n > 0; khối 'sau' in 'ok   0 dòng trỏ khu vực không còn hoặc khu vực lạc (listings, sale_offers, market_metrics, area_breakdowns, market_asset_stats)', 'ok   rollup vn-hanoi bằng tổng con mỗi tháng (<số> tháng)'; dòng cuối 'ROLLBACK — DB local không đổi'"
+    expected: "exit 0; dòng 'khu vực lạc (trước): <n> id' với n > 0; khối 'sau' in 'ok   0 dòng trỏ khu vực không còn hoặc khu vực lạc (listings, sale_offers, market_metrics, area_breakdowns, market_asset_stats)', 'ok   rollup vn-hanoi bằng tổng con mỗi tháng (<số> tháng, lệch 0)'; dòng 'ok   ROLLBACK — DB local không đổi (areas <n> → <n>)' và dòng cuối 'kiem-ranh-gioi: PASS'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
