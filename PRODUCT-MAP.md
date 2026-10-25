@@ -11,11 +11,10 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>1 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>37 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>26 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
-  HS["Hồ sơ hỏng<br/>1 việc"]
 ```
 
 > **Bốn cổng người** — mỗi cổng là một câu hỏi chỉ người trả lời được:
@@ -33,6 +32,10 @@ flowchart TD
 ## Chờ duyệt phạm vi
 
 - Tài liệu và đánh dấu của kho khớp các chốt 23–24/10 (tên nhóm S03 tầng C, luật S08, luật phép đo Zalo, ROADMAP V9) (`chep-chot-2410`)
+
+## Đang làm
+
+- Bảng nhóm S03 ghi đúng số nhóm đang bật trong danh sách cho phép và «Vào bảng thô» theo nhóm — ở máy thu đo trực tiếp, trên máy chủ đọc khối s03 máy thu đẩy lên; thiếu số thì «—», không 0 (`nhom-s03-tren-cloud`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
@@ -102,7 +105,3 @@ flowchart TD
 - Chuẩn UI ReUI — đợt B3 thống nhất biểu đồ (bảng màu chuỗi chung, gom code chép trùng, tách file > 200 dòng) (`ui-clean-b3-charts`)
 - Bộ chuẩn UI/UX ReUI — Phần A (setup: skill + MCP ReUI, skill onehub-ui, lint chặn tự vẽ tay, cắm vào kit) (`ui-standards-reui`)
 - ZC3 nối tiếp — watchdog Zalo quét nốt đuôi log ngày cũ khi xoay ngày (`watchdog-l4b-cuoi-ngay`)
-
-## Hồ sơ hỏng
-
-- `nhom-s03-tren-cloud` — không đọc được hồ sơ (`(workspace)`): không có contract.md lẫn opportunity.md
