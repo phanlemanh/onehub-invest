@@ -17,8 +17,9 @@ const ALIVE: Record<JobStatus["alive"], { label: string; variant: BadgeProps["va
   yes: { label: "Sống", variant: "success-light", tone: "bg-success" },
   no: { label: "Không phản hồi", variant: "warning-light", tone: "bg-warning" },
   unknown: { label: "Theo lịch", variant: "outline", tone: "bg-muted-foreground/40" },
+  unchecked: { label: "Chưa kiểm được", variant: "outline", tone: "bg-muted-foreground/40" },
 }
-const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown"] as const).map((a) => ({
+const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown", "unchecked"] as const).map((a) => ({
   value: a,
   label: ALIVE[a].label,
   tone: ALIVE[a].tone,
@@ -31,7 +32,7 @@ export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: b
     () => [
       { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Tác vụ" column={column} />, size: 280, enableSorting: true },
       { id: "schedule", accessorKey: "schedule", header: "Lịch", size: 180 },
-      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={stale && row.original.alive === "yes" ? "outline" : ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
+      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={(stale || row.original.stale) && row.original.alive === "yes" ? "outline" : ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
       {
         id: "last",
         accessorFn: (j) => j.lastLogAt ?? "",
