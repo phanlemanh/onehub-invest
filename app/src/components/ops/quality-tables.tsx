@@ -200,7 +200,7 @@ export function CalibrationTable({
       data={data.metrics}
       columns={columns}
       getRowId={(r) => r.metric}
-      footnote={`${TU_THU_DINH_NGHIA}. ADR, công suất tự thu = cả cửa sổ lịch đặt tương lai (bình quân theo đêm)${data.sampleListings != null ? `, từ ${fmtInt(data.sampleListings)} listing` : ""}; ${s02} = 12 tháng đã qua. Hai phương pháp khác nhau — tỉ lệ để phát hiện lệch lớn, không để thay số.`}
+      footnote={`${TU_THU_DINH_NGHIA}. ${(data.representative?.ofMarkets ?? 1) > 1 ? `Dòng Listing: ${s02} cộng cả ${data.representative.ofMarkets} thị trường; ADR, công suất và điểm lấy thị trường đại diện. ` : ""}ADR, công suất tự thu = cả cửa sổ lịch đặt tương lai (bình quân theo đêm)${data.sampleListings != null ? `, từ ${fmtInt(data.sampleListings)} listing` : ""}; ${s02} = 12 tháng đã qua. Hai phương pháp khác nhau — tỉ lệ để phát hiện lệch lớn, không để thay số.`}
     />
   )
 }

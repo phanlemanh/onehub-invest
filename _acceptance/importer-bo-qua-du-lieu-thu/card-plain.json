@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Importer không còn nạp dữ liệu thử (zalo-mock, e2e, TEST, nguồn lạ) vào kho dữ liệu; chỉ nguồn thật với tên snapshot đúng khuôn mới vào, nên số liệu trên Ops và cổng Invest không lẫn dữ liệu giả.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:"
+}

@@ -48,6 +48,12 @@ export type CollectionsData = {
   cloudDays?: CloudFlowDay[]
 }
 
+/** ON6 (luật 5): số bản ghi S02 không rời server — hàng S02 truyền xuống component client (FeedsGrid, CollectionsTiles,
+ * tuần tự hoá vào luồng RSC của HTML) đã bỏ số; trạng thái và độ tươi giữ. Ô của hàng hiện «Xem Chất lượng». */
+function anSoS02(feeds: SourceFeedHealth[]): SourceFeedHealth[] {
+  return feeds.map((f) => (f.code === "S02" ? { ...f, items24h: 0, stgRows: 0, offers: null } : f))
+}
+
 /**
  * Phần hiển thị của /ops/collections "Thu Thập" — trang chỉ tải dữ liệu rồi truyền vào đây (AU6: phép đo render
  * trọn view để thấy cùng «x/y nguồn đạt SLO» với /ops). Trả lời 3 câu: hôm nay chảy vào gì / qua cổng nào / máy có
@@ -71,12 +77,12 @@ export function CollectionsView(props: CollectionsData) {
         stats={[sloSummaryText(slo), `Hôm nay ${days[0]?.day ?? "—"}`, ...(factsAgeMin !== null ? [`Máy thu ${fmtInt(factsAgeMin)}′ trước`] : [])]}
         description={DESCRIPTION}
       />
-      <CollectionsTiles feeds={feedHealth} funnel={funnel} layers={lockdown.layers} agentTurnsToday={lockdown.agentTurnsToday} roles={roles} />
+      <CollectionsTiles feeds={anSoS02(feedHealth)} funnel={funnel} layers={lockdown.layers} agentTurnsToday={lockdown.agentTurnsToday} roles={roles} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SyncActivity days={days} roles={roles} className="min-w-0 lg:col-span-2" />
         <AttentionList issues={issues} roles={roles} className="min-w-0" />
       </div>
-      <FeedsGrid feeds={feedHealth} />
+      <FeedsGrid feeds={anSoS02(feedHealth)} />
       <LockdownGrid layers={lockdown.layers} lastWatchdogAt={lockdown.lastWatchdogAt} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ZaloPipePanel zalo={zaloHealth} funnel={funnel} lastPostHours={lastPostHours} roles={roles} />
@@ -124,14 +130,15 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
         </LocalOnlyAlert>
       ) : null}
       <CollectionsTiles
-        feeds={feedHealth}
+        feeds={anSoS02(feedHealth)}
         funnel={funnel}
         layers={lockdown?.layers ?? []}
         agentTurnsToday={lockdown?.agentTurnsToday ?? null}
         roles={roles}
         cloud={{
           feedsMeasured: cloud.feeds !== null,
-          records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null,
+          // ON6 (luật 5): «Bản ghi 24h» không tính S02.
+          records24h: cloud.records24h ? cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0) : null,
           stale,
           funnelMeasured: cloud.state !== "none",
           lockdown: lockdown ? { stale: lockdown.stale } : null,
@@ -139,7 +146,7 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
           s03Shown: s03 !== null,
         }}
       />
-      <FeedsGrid feeds={feedHealth} stale={stale} />
+      <FeedsGrid feeds={anSoS02(feedHealth)} stale={stale} />
       {cloud.state === "none" ? null : (
         <div id="luong" className="scroll-mt-4">
           <CloudFlowTable days={cloudDays} stale={stale} roles={roles} />

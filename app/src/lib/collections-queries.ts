@@ -81,8 +81,6 @@ export async function getFactsPushedAt(): Promise<string | null> {
 
 export type FlowDay = {
   day: string; // YYYY-MM-DD
-  airdnaMarkets: number;
-  airdnaListings: number;
   airbnbListingsSeen: number;
   airbnbSnapshots: number;
   zaloPosts: number;
@@ -105,23 +103,20 @@ export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<F
   const oldest = vnDayKey(now - (n - 1) * 86400000);
   const since = vnDayStart(oldest);
   const vnDay = (col: string) => `(${col} AT TIME ZONE '${VN_TZ}')::date::text`;
-  const [mk, al, li, sn, zp, of] = await Promise.all([
-    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_markets WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
+  // ON6 (luật 5): trang Thu thập không có số S02 — không đếm airdna_* ở đây; số S02 chỉ ở /ops/quality.
+  const [li, sn, zp, of] = await Promise.all([
     pool.query(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`, [oldest]),
     pool.query(`SELECT ${vnDay("collected_at")} d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
     pool.query(S03_POSTS_SQL, [since]),
     pool.query(S03_OFFERS_SQL, [since]),
   ]);
   const pick = (rows: { d: string; n: number }[]) => new Map(rows.map((r) => [r.d, r.n]));
-  const [M, A, L, S, Z, O] = [pick(mk.rows), pick(al.rows), pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
+  const [L, S, Z, O] = [pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
   const days: FlowDay[] = [];
   for (let i = 0; i < n; i++) {
     const d = vnDayKey(now - i * 86400000);
     days.push({
       day: d,
-      airdnaMarkets: M.get(d) ?? 0,
-      airdnaListings: A.get(d) ?? 0,
       airbnbListingsSeen: L.get(d) ?? 0,
       airbnbSnapshots: S.get(d) ?? 0,
       zaloPosts: Z.get(d) ?? 0,

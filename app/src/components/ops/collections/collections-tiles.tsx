@@ -45,11 +45,13 @@ export function CollectionsTiles({
   const count = (s: ReturnType<typeof feedState>) => states.filter((x) => x === s).length
   // Cùng con số với ô «Đạt SLO» của /ops (AU6): nguồn đạt khi mọi thị trường đạt; y = nguồn active có SLO.
   const slo = feedSloSummary(feeds)
-  const items24h = cloud ? cloud.records24h : feeds.reduce((sum, f) => sum + (f.items24h || 0), 0)
+  // ON6 (luật 5): «Bản ghi 24h» không tính S02 — số S02 chỉ ở /ops/quality (cloud: tổng đã lọc ở collections-view).
+  const counted = feeds.filter((f) => f.code !== "S02")
+  const items24h = cloud ? cloud.records24h : counted.reduce((sum, f) => sum + (f.items24h || 0), 0)
   const muted = cloud?.stale ?? false
   // Số cũ (ADR-0014 hàng «Cũ»): thanh phân đoạn cũng mờ, không tô màu trạng thái — số là lần đo cuối, không phải bây giờ.
   const tone = (t: string) => (muted ? "bg-muted-foreground/40" : t)
-  const busiest = [...feeds].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
+  const busiest = [...counted].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
   const layersOk = layers.filter((l) => l.ok === true).length
   // Khối khoá an toàn cũ quá 45′ (ON23): số mờ, đoạn «Ổn» không tô xanh.
   const lockMuted = cloud?.lockdown?.stale ?? false
@@ -79,7 +81,7 @@ export function CollectionsTiles({
         title="Bản ghi 24h"
         period="24 giờ"
         value={items24h === null ? "—" : fmtInt(items24h)}
-        basis={items24h === null ? "Chưa có số" : busiest && busiest.items24h ? `Nhiều nhất: ${busiest.code} (${fmtInt(busiest.items24h)})` : "Chưa có bản ghi trong 24 giờ"}
+        basis={items24h === null ? "Chưa có số" : `${busiest && busiest.items24h ? `Nhiều nhất: ${busiest.code} (${fmtInt(busiest.items24h)})` : "Chưa có bản ghi trong 24 giờ"} · không tính S02`}
         muted={muted}
         action={{ label: "Xem luồng 7 ngày", href: cloud && !cloud.flowShown ? CLOUD_ANCHOR : "#luong" }}
       />

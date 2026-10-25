@@ -271,10 +271,19 @@ export function requireLoginAccount(cfg: CfgAccounts, accountId: unknown): strin
   }
 }
 
+function withoutAccount(cfg: Root, accountId: string): Root {
+  const next = structuredClone(cfg);
+  delete next.channels?.zalouser?.accounts?.[accountId];
+  return next;
+}
+
 export async function deleteZaloAccount(accountId: string): Promise<void> {
   if (!isZaloAdminAvailable()) throw new Error(CLOUD_ERR);
   const cfg = await readCfg();
   requireDeletableAccount(cfg, accountId);
+  // Kiểm bản SẼ ghi (đã bỏ tài khoản) TRƯỚC logout: phạm bất biến thì dừng khi chưa đăng xuất phiên nào — không gỡ
+  // nửa chừng. Kiểm bản sau khi gỡ (không phải bản hiện tại) để tài khoản đang phạm vẫn gỡ được qua /ops.
+  assertZaloCfgSafe(withoutAccount(cfg, accountId));
   // logout session zca trước (best-effort) để không sót credential mồ côi
   try {
     await run(OPENCLAW, ["channels", "logout", "--channel", "zalouser", "--account", accountId], {

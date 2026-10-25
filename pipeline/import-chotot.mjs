@@ -8,8 +8,22 @@ import { readFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import pg from "pg";
+
+// Luật khuôn tên thư mục — BẢN SAO GIỐNG HỆT import-airbnb.mjs (PL1 mở lại
+// vòng 4, claudedp-2310-4 + BÁO 2510-5): inline vì harness nghiệm thu chép
+// mỗi importer là một file lẻ; chuỗi phải đồng bộ với import-airbnb.mjs và
+// TS_RE của hai daily script (AU3 2310-8 vòng 3) — test đối chiếu cả bốn.
+const SNAPSHOT_TS_RE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$/;
+
+function parseSnapshotDirName(name) {
+  const parts = String(name).split("__");
+  if (parts.length !== 3) return null;
+  const [city, source, ts] = parts;
+  if (!city || !source || !SNAPSHOT_TS_RE.test(ts)) return null;
+  return { city, source, ts };
+}
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -35,6 +49,11 @@ async function latestSnapshotDir() {
 async function readSnapshot(dir) {
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
   if (manifest.schemaVersion !== 1) throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
+  // Lớp 2 (mở lại 2310-4 lần 2): manifest.source là lời khai của chính snapshot
+  if (manifest.source !== "chotot-ads") {
+    console.warn(`bỏ qua theo manifest.source=${manifest.source} (không phải chotot-ads): ${dir}`);
+    process.exit(0);
+  }
   for (const f of manifest.files) {
     const buf = await readFile(join(dir, f.name));
     const sha = createHash("sha256").update(buf).digest("hex");
@@ -72,7 +91,14 @@ async function importDir(client, dir) {
          size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
          ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
          seller = EXCLUDED.seller, images = EXCLUDED.images,
-         payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id, captured_at = now()`,
+         payload = EXCLUDED.payload,
+         -- 2410-1 v2 (luật claudedp): bảng đi theo snapshot MỚI — snapshot_id VÀ captured_at
+         -- cùng tiến CHỈ KHI EXCLUDED.captured_at > cũ; nạp snapshot cũ hơn sau thì giữ nguyên
+         -- cả hai (không lùi, hai cột không lệch nhau).
+         snapshot_id = CASE WHEN EXCLUDED.captured_at > stg_chotot_ads.captured_at
+                       THEN EXCLUDED.snapshot_id ELSE stg_chotot_ads.snapshot_id END,
+         captured_at = CASE WHEN EXCLUDED.captured_at > stg_chotot_ads.captured_at
+                       THEN EXCLUDED.captured_at ELSE stg_chotot_ads.captured_at END`,
       [
         a.list_id, a.region_v2 ?? it.meta?.region_v2, it.meta?.city ?? a.region_name,
         a.category ?? it.meta?.cg, a.type ?? it.meta?.st, a.subject ?? null,
@@ -83,7 +109,7 @@ async function importDir(client, dir) {
         a.list_time ? new Date(a.list_time).toISOString() : null,
         JSON.stringify({ full_name: a.full_name ?? null, company_ad: a.company_ad ?? null, ...(a.seller_info ?? {}) }),
         JSON.stringify({ images: a.images ?? [], thumbnails: a.image_thumbnails ?? [] }),
-        JSON.stringify(a), manifest.snapshotId, it.fetchedAt,
+        JSON.stringify(a), manifest.snapshotId, manifest.finishedAt, // 2410-1 v2: giờ thu snapshot (airbnb_snapshots.collected_at) — không dùng giờ nạp/giờ từng item
       ],
     );
     n++;
@@ -96,7 +122,24 @@ async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
-    const dirs = process.argv[2] === "--latest" ? await latestSnapshotDir() : [process.argv[2]];
+    let dirs = process.argv[2] === "--latest" ? await latestSnapshotDir() : [process.argv[2]];
+    // PL1 (mở lại lần 2): ALLOWLIST — chotot importer chỉ nhận 'chotot-ads'.
+    // Lớp khuôn tên (mở lại 2310-4 vòng 4): '…__chotot-ads__TEST' có nguồn
+    // hợp lệ nhưng mốc không phải thời gian → bỏ cả thư mục, cùng luật
+    // '<city>__<nguồn>__<mốc>' với import-airbnb (BÁO 2510-5).
+    const allowed = new Set(["chotot-ads"]);
+    dirs = dirs.filter((d) => {
+      const parsed = parseSnapshotDirName(basename(d));
+      if (!parsed) {
+        console.warn(`bỏ qua thư mục không đúng khuôn <city>__<nguồn>__<mốc thời gian>: ${d}`);
+        return false;
+      }
+      if (!allowed.has(parsed.source)) {
+        console.warn(`bỏ qua snapshot nguồn ngoài ALLOWLIST '${parsed.source}' (không nạp stg): ${d}`);
+        return false;
+      }
+      return true;
+    });
     for (const d of dirs) await importDir(client, d);
   } finally {
     await client.end();
