@@ -236,3 +236,185 @@ describe("ON5-AC-4 khối bằng trang máy thu", () => {
     assert.deepEqual(await lechKhoi((await push({ script: f })).payload), ["2026-10-23: tin rao khối 3 ≠ trang 2"])
   })
 })
+
+// ---------- AC-5, AC-6: bảng trên máy chủ — bản tin bên ghi thật → ops_heartbeat → readOpsFacts → SSR ----------
+
+const S03_KEY = { zaloPosts: "s03Posts", zaloOffers: "s03Offers" } as const
+const WANT_KHOI: Record<"s03Posts" | "s03Offers", Record<string, number>> = { s03Posts: WANT_POSTS, s03Offers: WANT_OFFERS }
+
+async function ghiBanTin(payload: Payload | null) {
+  if (payload === null) return void (await admin.query(`DELETE FROM "${S}".ops_heartbeat`))
+  await admin.query(
+    `INSERT INTO "${S}".ops_heartbeat (id, payload, pushed_at) VALUES ('primary', $1, now())
+     ON CONFLICT (id) DO UPDATE SET payload = EXCLUDED.payload, pushed_at = EXCLUDED.pushed_at`,
+    [payload],
+  )
+}
+/** Trang Thu thập ở chế độ máy chủ dựng từ bản tin đang nằm trong ops_heartbeat của lược đồ tạm. */
+async function trangMayChu({ now = new Date(), staleTable }: { now?: Date; staleTable?: boolean } = {}) {
+  const { getCloudOpsView } = await import("../src/lib/ops-cloud")
+  const { getCloudFlowDays } = await import("../src/lib/collections-queries")
+  const { CollectionsView } = await import("../src/components/ops/collections/collections-view")
+  const cloud = await getCloudOpsView({ now })
+  const cloudDays = cloud.state === "none" ? [] : await getCloudFlowDays(cloud.luong7, { now: NOW })
+  const EMPTY = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 }
+  let html = await render(
+    <CollectionsView
+      days={[]}
+      funnel={{ lastEventAt: null, today: EMPTY, last7: EMPTY }}
+      jobs={[]}
+      rotation={{ updatedAt: null, cursor: 0, total: 0, next: [] }}
+      zaloGroups={[]}
+      zaloAllowlist={[]}
+      zaloHealth={{ connected: null, uptime24h: null, heartbeatAgeMin: null, lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false }}
+      factsPushedAt={null}
+      feedHealth={cloud.feeds ?? []}
+      lockdown={{ layers: [], lastWatchdogAt: null, agentTurnsToday: null, openClawUp: false, kevUp: false, collectorUp: false }}
+      nowMs={NOW}
+      cloud={cloud}
+      cloudDays={cloudDays}
+    />,
+  )
+  if (staleTable !== undefined) {
+    // bản sao: bảng luồng dựng lại với cờ mờ cố định (chiều đỏ «luôn mờ» / «không mờ»)
+    const { CloudFlowTable } = await import("../src/components/ops/collections-tables")
+    html = html.replace(bangLuong(html) ?? "\u0000", bangLuong(await render(<CloudFlowTable days={cloudDays} stale={staleTable} />)) ?? "")
+  }
+  return { cloud, html }
+}
+function bangLuong(html: string): string | null {
+  return [...html.matchAll(/<table[\s\S]*?<\/table>/g)].map((m) => m[0]).find((t) => t.includes('data-col-id="zaloOffers"')) ?? null
+}
+const chu = (td: string) => td.replace(/<[^>]+>/g, "").trim()
+const alertMayThu = (html: string) => html.match(/>([^<>]*) đo trực tiếp trên máy thu/)?.[1] ?? ""
+
+/** Lỗi của bảng «Luồng 7 ngày» trên máy chủ so với đáp án: số S03 (hoặc «—»), lớp mờ từng ô, ô snapshot, cột S02. */
+function loiBangMayChu(html: string, want: "so" | "gach", mo: boolean): string[] {
+  const t = bangLuong(html)
+  if (!t) return ["bảng Luồng 7 ngày vắng"]
+  const out: string[] = []
+  const ids = thIds(t)
+  for (const c of ["airdnaMarkets", "airdnaListings"]) if (ids.includes(c)) out.push(`cột S02 ${c} có mặt`)
+  const rows = [...t.slice(t.indexOf("<tbody")).matchAll(/<tr[\s\S]*?<\/tr>/g)]
+    .map((m) => [...m[0].matchAll(/<td[\s\S]*?<\/td>/g)].map((x) => x[0]))
+    .filter((r) => r.length === ids.length)
+  if (rows.length !== 7) out.push(`số hàng ${rows.length} ≠ 7`)
+  for (const r of rows) {
+    const day = chu(r[ids.indexOf("day")])
+    const snap = chu(r[ids.indexOf("airbnbSnapshots")] ?? "")
+    if (snap !== "Chỉ ở máy thu") out.push(`${day}: airbnbSnapshots «${snap}» ≠ «Chỉ ở máy thu»`)
+    for (const [col, key] of Object.entries(S03_KEY)) {
+      const td = r[ids.indexOf(col)] ?? ""
+      const exp = want === "gach" ? "—" : String(WANT_KHOI[key][day] ?? 0)
+      if (chu(td) !== exp) out.push(`${day}: ${key} «${chu(td)}» ≠ «${exp}»`)
+      if (want === "so" && td.includes("text-muted-foreground") !== mo) out.push(`${day}: ${key} ${mo ? "không mờ" : "mờ"}`)
+    }
+  }
+  return out
+}
+
+describe("ON5-AC-5 bảng trên máy chủ, bản tin tươi", () => {
+  test("ON5-AC-5 vòng trọn: bản tin bên ghi thật qua readOpsFacts → 14 ô S03 bằng số viết trước, không ô nào mờ", async () => {
+    ready()
+    const r = await push()
+    assert.equal(r.code, 0, r.stderr.slice(0, 800))
+    await ghiBanTin(r.payload)
+    const { cloud, html } = await trangMayChu()
+    assert.equal(cloud.state, "fresh")
+    assert.deepEqual(loiBangMayChu(html, "so", false), [])
+    const t = bangLuong(html)!
+    console.log(`# ON5-AC-5 cột ${thIds(t).join(",")} · Alert «${alertMayThu(html)}»`)
+  })
+  test("ON5-AC-5 máy chủ tươi: 7 ô snapshot «Chỉ ở máy thu», không cột S02, Alert bỏ «Luồng 7 ngày»", async () => {
+    ready()
+    await ghiBanTin((await push()).payload)
+    const { html } = await trangMayChu()
+    const t = bangLuong(html)!
+    assert.equal((t.match(/Chỉ ở máy thu/g) ?? []).length, 7)
+    assert.deepEqual(thIds(t), ["day", "airbnbSeen", "airbnbSnapshots", "zaloPosts", "zaloOffers"])
+    assert.ok(alertMayThu(html).length > 0, "Alert «Phần còn lại…» vắng")
+    assert.ok(!alertMayThu(html).includes("Luồng 7 ngày"), `Alert còn «Luồng 7 ngày»: ${alertMayThu(html)}`)
+  })
+  test("ON5-AC-5 bên ghi đổi tên khoá → báo tên khoá và ô «—»", async () => {
+    ready()
+    const f = mutantPush("on5-doi-khoa.mjs", (src: string) =>
+      src.replace(DAYS_SRC, `days: (await luong7(client, { now: now.getTime() })).map(({ s03Offers, ...x }) => ({ ...x, s03_offers: s03Offers }))`))
+    await ghiBanTin((await push({ script: f })).payload)
+    const loi = loiBangMayChu((await trangMayChu()).html, "so", false)
+    assert.ok(loi.includes("2026-10-23: s03Offers «—» ≠ «2»"), loi.join(" | "))
+    assert.ok(loi.every((l) => l.includes("s03Offers «—»")), loi.join(" | "))
+  })
+  test("ON5-AC-5 bản sao ô snapshot là 0 → báo", async () => {
+    ready()
+    await ghiBanTin((await push()).payload)
+    const { html } = await trangMayChu()
+    const t = bangLuong(html)!
+    assert.deepEqual(loiBangMayChu(html.replace(t, t.replace("Chỉ ở máy thu", "0")), "so", false), ["2026-10-25: airbnbSnapshots «0» ≠ «Chỉ ở máy thu»"])
+  })
+  test("ON5-AC-5 bản sao còn cột S02 → báo", async () => {
+    ready()
+    await ghiBanTin((await push()).payload)
+    const { html } = await trangMayChu()
+    const t = bangLuong(html)!
+    const sao = t.replace("<th ", '<th data-col-id="airdnaMarkets">S02</th><th ') // «<th » — không khớp nhầm «<thead»
+    assert.ok(loiBangMayChu(html.replace(t, sao), "so", false).includes("cột S02 airdnaMarkets có mặt"))
+  })
+  test("ON5-AC-5 bản sao luôn mờ ô S03 → báo tên ô", async () => {
+    ready()
+    await ghiBanTin((await push()).payload)
+    const loi = loiBangMayChu((await trangMayChu({ staleTable: true })).html, "so", false)
+    assert.equal(loi.length, 14, loi.join(" | "))
+    assert.ok(loi.includes("2026-10-23: s03Posts mờ"), loi.join(" | "))
+  })
+})
+
+describe("ON5-AC-6 bảng trên máy chủ, ba trạng thái", () => {
+  test("ON5-AC-6 thiếu khối → 14 ô S03 «—», không 0", async () => {
+    ready()
+    const p = (await push()).payload
+    for (const khoi of [undefined, { measured_at: new Date().toISOString(), error: "không đo được: thử" }]) {
+      const sao = structuredClone(p)
+      if (khoi) sao.blocks.luong7 = khoi
+      else delete sao.blocks.luong7
+      await ghiBanTin(sao)
+      const { cloud, html } = await trangMayChu()
+      assert.equal(cloud.luong7, null)
+      assert.deepEqual(loiBangMayChu(html, "gach", false), [], khoi ? "khối lỗi" : "khối vắng")
+    }
+  })
+  test("ON5-AC-6 bản tin cũ → cả 14 ô S03 mờ (đọc từng ô)", async () => {
+    ready()
+    const p = (await push()).payload
+    await ghiBanTin(p)
+    const { cloud, html } = await trangMayChu({ now: new Date(Date.parse(p.pushedAt) + 46 * 60_000) })
+    assert.equal(cloud.state, "stale")
+    assert.deepEqual(loiBangMayChu(html, "so", true), [])
+  })
+  test("ON5-AC-6 chưa có bản tin → không bảng, Alert còn «Luồng 7 ngày»", async () => {
+    ready()
+    await ghiBanTin(null)
+    const { cloud, html } = await trangMayChu()
+    assert.equal(cloud.state, "none")
+    assert.equal(bangLuong(html), null, "chưa có bản tin mà vẫn dựng bảng")
+    assert.ok(alertMayThu(html).includes("Luồng 7 ngày"), `Alert thiếu «Luồng 7 ngày»: ${alertMayThu(html)}`)
+  })
+  test("ON5-AC-6 bản sao hiện 0 khi khối vắng → báo", async () => {
+    ready()
+    const p = structuredClone((await push()).payload)
+    delete p.blocks.luong7
+    await ghiBanTin(p)
+    const { html } = await trangMayChu()
+    const t = bangLuong(html)!
+    const loi = loiBangMayChu(html.replace(t, t.replaceAll(">—<", ">0<")), "gach", false)
+    assert.equal(loi.length, 14, loi.join(" | "))
+    assert.ok(loi.includes("2026-10-25: s03Posts «0» ≠ «—»"), loi.join(" | "))
+  })
+  test("ON5-AC-6 bản sao không mờ khi bản tin cũ → báo tên ô", async () => {
+    ready()
+    const p = (await push()).payload
+    await ghiBanTin(p)
+    const loi = loiBangMayChu((await trangMayChu({ now: new Date(Date.parse(p.pushedAt) + 46 * 60_000), staleTable: false })).html, "so", true)
+    assert.equal(loi.length, 14, loi.join(" | "))
+    assert.ok(loi.includes("2026-10-24: s03Offers không mờ"), loi.join(" | "))
+  })
+})

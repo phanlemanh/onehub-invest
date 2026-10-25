@@ -130,6 +130,34 @@ export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<F
   return days; // từ mốc `since` trở đi; đủ n ngày gần nhất
 }
 
+/** Một ngày của «Luồng 7 ngày» trên máy chủ (ON5): S03 từ khối `luong7` của bản tin (null = khối vắng/lỗi hoặc ngày
+ * ngoài khối), listing tươi S01 từ bảng `listings` đã đồng bộ. Snapshot S01 (bảng thô) và S02 (luật 5) không có ở đây. */
+export type CloudFlowDay = { day: string; airbnbListingsSeen: number; zaloPosts: number | null; zaloOffers: number | null };
+
+/** «Luồng 7 ngày» trên máy chủ: 7 ngày VN tới `now`, mới → cũ như `getFlowDays`. Không đọc bảng nào chỉ có ở máy thu
+ * (ADR-0014 §4) — `listings` là bảng đã đồng bộ. */
+export async function getCloudFlowDays(
+  luong7: { day: string; s03Posts: number; s03Offers: number }[] | null,
+  opts: { now?: number; n?: number } = {},
+): Promise<CloudFlowDay[]> {
+  const now = opts.now ?? Date.now();
+  const n = opts.n ?? 7;
+  const oldest = vnDayKey(now - (n - 1) * 86400000);
+  const { rows } = await pool.query<{ d: string; n: number }>(
+    `SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`,
+    [oldest],
+  );
+  const L = new Map(rows.map((r) => [r.d, r.n]));
+  const B = new Map((luong7 ?? []).map((d) => [d.day, d]));
+  const days: CloudFlowDay[] = [];
+  for (let i = 0; i < n; i++) {
+    const d = vnDayKey(now - i * 86400000);
+    const b = B.get(d);
+    days.push({ day: d, airbnbListingsSeen: L.get(d) ?? 0, zaloPosts: b?.s03Posts ?? null, zaloOffers: b?.s03Offers ?? null });
+  }
+  return days;
+}
+
 export type GateFunnel = {
   lastEventAt: string | null;
   today: { messages: number; passed: number; skipped: number; accepted: number; media: number };
