@@ -5,7 +5,7 @@ slug: go-tai-khoan-kiem-cfg-truoc-logout
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-25T03:41:08Z
 design_doc: docs/superpowers/specs/2026-10-25-go-tai-khoan-kiem-cfg-truoc-logout-design.md
