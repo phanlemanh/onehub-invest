@@ -113,6 +113,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Khoá an toàn trên máy chủ (ON23 `lockdown-cloud-theo-facts`, 25/10): ô và lưới «Khoá an toàn & hạ tầng thu» đọc khối
   `lockdown` máy thu đẩy lên; chưa có số (hay khối lỗi) thì 8/8 lớp «Chỉ kiểm ở máy thu», không lớp nào xanh; Kev gate và
   collector API ở Máy móc lấy trạng thái từ cùng khối nên luôn khớp Khoá an toàn (OPS-3).
+- Nhóm S03 trên máy chủ (ON4 `nhom-s03-tren-cloud`, 25/10): bản tin mang khối `s03` (N nhóm bật + số đếm từng nhóm, chỉ tên
+  nhóm); bảng nhóm S03 dựng trên máy chủ, cũ thì «Hoạt động» viền xám, chưa có khối thì ở lại Alert gom. «Vào bảng thô» theo
+  nhóm nay đúng ở bản tin (trước luôn 0); N đếm theo nhóm hiệu dụng mọi tài khoản (máy thu 7, không còn 4) — OPS-9.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
@@ -212,6 +215,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    toà = `BuildingName`, phân khu = `ComplexName`, trục = extension `Stack`; UPI kiểu VN `urn:onehub:upi`; phường/xã →
    `City`; mọi giá trị máy/người ghi `FieldAssertion`; trạng thái chỉ theo bằng chứng. Mọi việc chạm dữ liệu tin/căn
    kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013.
+18. **Ops tự vận hành nguồn kiểu SaaS** (25/10, `docs/research/ops-tu-van-hanh-nguon-saas.md`): đội vận hành làm **từ xa trên cổng Ops ở
+   cloud** — cloud ghi lệnh có khuôn, máy thu kéo về, kiểm bất biến, áp, tự hoàn tác (ADR-0015 cần viết, hàng TV0);
+   **nội dung bài, ảnh tin rao, thẻ duyệt lên cloud không che** cho vai ops trở lên, **tên nguồn thật chỉ ở máy thu**
+   (cloud `S08`, local `S08-<tên>`) — sửa đổi luật 6 chờ ADR (TV0); tám quyết định §4.8 (S03 cần người thứ hai duyệt ·
+   QR ở lại máy thu · ảnh thu nhỏ, trần 5 GB · S05 tự paused, admin bật lại · quy định AI chạy model local · mã đơn vị
+   `S03-N012` · tên thật trong migration cũ chấp nhận như lịch sử). Đợt lộ trình `tu-van-hanh-2510`.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

@@ -5,10 +5,12 @@ import path from "node:path";
 import { pool } from "./db";
 import { VN_TZ, vnDayKey, vnDayStart } from "./format";
 import { lastMeaningfulLine } from "./last-log-line";
+import { logsDir, treeRoot } from "./log-root";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { sourceLabel, type SourceRoles } from "./source-labels";
 import {
   directoryCacheIsFresh,
+  effectiveEnabledGroups,
   listZaloAccounts,
   readCachedDirectory,
   refreshZaloGroupDirectoryInBackground,
@@ -214,8 +216,6 @@ export type JobStatus = {
   stale?: boolean;
 };
 
-const ROOT = process.cwd().endsWith("/app") ? path.resolve(process.cwd(), "..") : process.cwd();
-const LOGS = path.join(ROOT, "pipeline/logs");
 
 async function tailFile(file: string): Promise<{ mtime: string | null; lastLine: string | null }> {
   try {
@@ -230,8 +230,9 @@ async function tailFile(file: string): Promise<{ mtime: string | null; lastLine:
 
 async function latestWeeklyLog(): Promise<string | null> {
   try {
-    const files = (await readdir(LOGS)).filter((f) => /^weekly-.*\.log$/.test(f)).sort();
-    return files.length ? path.join(LOGS, files.at(-1)!) : null;
+    const dir = logsDir();
+    const files = (await readdir(dir)).filter((f) => /^weekly-.*\.log$/.test(f)).sort();
+    return files.length ? path.join(dir, files.at(-1)!) : null;
   } catch {
     return null;
   }
@@ -273,12 +274,13 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
   // ON7: nhãn «S0x · vai trò», dòng log cuối che tên thật; danh sách tên rỗng (DB lỗi) → lastLine null (đóng chặt).
   const { roles, names } = await registryForJobs();
   const weekly = await latestWeeklyLog();
+  const logs = logsDir(); // ON16: log ở checkout chính khi app chạy từ worktree, tính khi gọi
   const [kevAlive, apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
     probe("http://127.0.0.1:8009/"),
     probe("http://127.0.0.1:9210/"),
-    tailFile(path.join(LOGS, "airdna-daily.log")),
-    tailFile(path.join(LOGS, "launchd-smoke.log")),
-    tailFile(path.join(LOGS, "launchd-collector-api.log")),
+    tailFile(path.join(logs, "airdna-daily.log")),
+    tailFile(path.join(logs, "launchd-smoke.log")),
+    tailFile(path.join(logs, "launchd-collector-api.log")),
     weekly ? tailFile(weekly) : Promise.resolve({ mtime: null, lastLine: null }),
   ]);
   const jobs: JobStatus[] = [
@@ -343,7 +345,7 @@ export async function readRotationPreview(): Promise<RotationPreview> {
   let updatedAt: string | null = null;
   try {
     const st = JSON.parse(
-      await readFile(path.join(ROOT, "collector/state/airdna-rotation.json"), "utf8"),
+      await readFile(path.join(treeRoot(), "collector/state/airdna-rotation.json"), "utf8"),
     );
     cursor = st.cursor ?? 0;
     updatedAt = st.updatedAt ?? null;
@@ -380,11 +382,12 @@ export type ZaloGroupRow = {
   realPosts7d: number;
   mockPosts7d: number;
   lastSeenAt: string | null;
-  // funnel từ hook log (chỉ nhóm thật)
-  seen: number;
-  passed: number;
-  skipped: number;
-  accepted: number;
+  // funnel từ hook log (chỉ nhóm thật); null = nhật ký cổng không đọc được (ON4)
+  seen: number | null;
+  passed: number | null;
+  skipped: number | null;
+  /** «Vào bảng thô»: null = nhóm đã qua cổng mà nhật ký không mang số tin vào, hoặc nhật ký không đọc được (ON4) — không 0. */
+  accepted: number | null;
   lastEventAt: string | null;
   ownerAccount: string | null; // account đang sở hữu nhóm (config/directory)
 };
@@ -392,27 +395,29 @@ export type ZaloGroupRow = {
 export type ZaloAllowlistEntry = { groupId: string; enabled: boolean };
 
 /** Allowlist đọc runtime từ ~/.openclaw/openclaw.json — KHÔNG commit id vào
- * repo/migration (SPL ADR-0007: định danh nguồn thật ở tầng A, máy local). */
-export async function readZaloAllowlist(): Promise<ZaloAllowlistEntry[]> {
+ * repo/migration (SPL ADR-0007: định danh nguồn thật ở tầng A, máy local). Nhóm bật = hợp nhóm bật hiệu dụng của mọi
+ * tài khoản (ON4, `effectiveEnabledGroups`) — không đọc khoá `groups` cấp ngoài cũ. */
+export async function readZaloAllowlist(): Promise<ZaloAllowlistEntry[] | null> {
+  // ON4: cấu hình không đọc được (vắng, hỏng, thiếu channels.zalouser) → null — trang ghi «—», không «0 nhóm».
   try {
     const cfg = JSON.parse(
       await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"),
     );
-    const groups = cfg?.channels?.zalouser?.groups ?? {};
-    return Object.entries(groups).map(([groupId, v]) => ({
-      groupId,
-      enabled: Boolean((v as { enabled?: boolean })?.enabled),
-    }));
+    const z = cfg?.channels?.zalouser;
+    if (!z) return null;
+    return effectiveEnabledGroups(z).union.map((groupId) => ({ groupId, enabled: true }));
   } catch {
-    return [];
+    return null;
   }
 }
 
 /** Funnel cổng Kev theo nhóm từ hook log (dòng có tag group=). */
-function gateByGroup(text: string): Map<string, ZaloGroupRow> {
+export function gateByGroup(text: string): Map<string, ZaloGroupRow> {
   const m = new Map<string, ZaloGroupRow>();
+  const acceptedSeen = new Set<string>();
   for (const line of text.split("\n")) {
-    const g = line.match(/group=(.+?)(?:\s+p=|$)/)?.[1];
+    // Cùng khuôn với parseLog của bên ghi: tên nhóm dừng ở p= hoặc account= (dòng skip thật không có p=).
+    const g = line.match(/group=(.+?)(?:\s+p=|\s+account=|$)/)?.[1];
     if (!g) continue;
     const row =
       m.get(g) ??
@@ -432,15 +437,20 @@ function gateByGroup(text: string): Map<string, ZaloGroupRow> {
     // dòng log mới có tag account= (handler ≥2026-10-20 chiều) — attribution chính xác
     const acc = line.match(/\baccount=([a-z0-9-]+)/)?.[1];
     if (acc && acc !== "?") row.ownerAccount = acc;
-    row.seen++;
+    row.seen = (row.seen ?? 0) + 1;
     if (line.includes(" post 202")) {
-      row.passed++;
-      row.accepted += Number(line.match(/"accepted":(\d+)/)?.[1] ?? 0);
-    } else if (/ skip /.test(line)) row.skipped++;
+      row.passed = (row.passed ?? 0) + 1;
+      const n = line.match(/"accepted":(\d+)/)?.[1];
+      if (n != null) {
+        row.accepted = (row.accepted ?? 0) + Number(n);
+        acceptedSeen.add(g);
+      }
+    } else if (/ skip /.test(line)) row.skipped = (row.skipped ?? 0) + 1;
     const ts = line.slice(0, 24);
     if (/^\d{4}-\d{2}-\d{2}T/.test(ts)) row.lastEventAt = ts;
     m.set(g, row);
   }
+  for (const [g, row] of m) if ((row.passed ?? 0) > 0 && !acceptedSeen.has(g)) row.accepted = null;
   return m;
 }
 
@@ -464,11 +474,14 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
         WHERE group_name IS NOT NULL
         GROUP BY group_name`,
     ),
+    // ON4: nhật ký cổng không đọc được → null (cột đọc từ nhật ký ghi «—»), khác nhật ký rỗng thật.
     readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(
-      () => "",
+      () => null,
     ),
   ]);
-  const byLog = gateByGroup(logText);
+  const byLog = gateByGroup(logText ?? "");
+  // Nhật ký đọc được mà nhóm không có dòng nào → 0 thật; không đọc được → null (không biết).
+  const fromLog = logText === null ? null : 0;
   const rows = new Map<string, ZaloGroupRow>();
   for (const r of postRows.rows) {
     rows.set(r.group_name, {
@@ -477,10 +490,10 @@ export async function getZaloGroups(): Promise<ZaloGroupRow[]> {
       realPosts7d: r.real7,
       mockPosts7d: r.mock7,
       lastSeenAt: r.last_real ? new Date(r.last_real).toISOString() : null,
-      seen: 0,
-      passed: 0,
-      skipped: 0,
-      accepted: 0,
+      seen: fromLog,
+      passed: fromLog,
+      skipped: fromLog,
+      accepted: fromLog,
       lastEventAt: null,
       ownerAccount: null,
     });
