@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1b3b28f3b14384ddea5a16710fb23733da364d1b
+verified_commit: 303df76c41751100ef0e81ebe96500f54dbad81f
 human_signoff:
 ---
 
@@ -252,3 +252,7 @@ none — không eval nào khai runs > 1; E1–E3 dùng chung một lần chạy 
 
 Round 1: E1–E11 đạt; baseline đỏ ở E1–E4, E6–E8, xanh ở E5, E9–E11 (chốt hồi quy); hai mục ngoài hợp đồng mức thấp
 (408/429 không log spool-held trái chú thích; biến trần rỗng/0/âm làm spool đứng) để người quyết ở Cổng 2.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main e6d5d02 trước khi trình Cổng 2
+run_id: repin-20261025T071733Z-12499
+sha: 303df76c41751100ef0e81ebe96500f54dbad81f · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
