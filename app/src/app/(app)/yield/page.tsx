@@ -13,11 +13,13 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { FinancingGrid } from "@/components/yield/financing/financing-grid";
 import { PnlChart } from "@/components/yield/pnl/chart";
 import { YieldConfidence } from "@/components/yield/yield-confidence";
 import { YieldForm } from "@/components/yield/yield-form";
 import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format";
 import { currencyFor, getYieldAreas, getYieldComps, getYieldMarkets } from "@/lib/queries";
+import { FINANCING_HORIZON, financingPlan, LOAN_DEFAULTS, type LoanInputs } from "@/lib/financing";
 import { COST_DEFAULTS, estimateYield, monthlyPnl, type YieldInputs } from "@/lib/yield";
 
 export const metadata: Metadata = { title: "Ước tính lợi suất" };
@@ -32,6 +34,8 @@ const num = (v: string | undefined, fallback: number, min: number, max: number) 
 /**
  * Ước tính lợi suất một căn (IA §3.2, "Rentalizer" VN). Báo cáo tính ở server
  * từ tham số URL → chia sẻ được. Giá bán/thuê dài hạn là dữ liệu MÔ PHỎNG (G1).
+ * Mục «Dòng tiền vốn vay» (#financing, tham số eq/rate/term) nhận phần của /dau-tu cũ;
+ * link cũ /<country>/<market>/dau-tu chuyển 301 về đây với `area=<mã thị trường>`.
  */
 export default async function YieldPage({ searchParams }: { searchParams: Search }) {
   const sp = await searchParams;
@@ -46,14 +50,17 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
       </Empty>
     );
   }
-  const market = markets.find((m) => m.id === sp.market) ?? markets[0];
+  // `area` có thể là mã thị trường (link cũ /dau-tu chuyển về /yield?area=<thị trường>): chọn thị trường ấy,
+  // phường để mặc định.
+  const marketOfArea = markets.find((m) => m.id === sp.area);
+  const market = marketOfArea ?? markets.find((m) => m.id === sp.market) ?? markets[0];
   const currency = currencyFor(market.id);
   const areas = await getYieldAreas(market.id);
 
   // Mặc định: phường có giá bán và nhiều listing nhất; căn 1 PN 60 m².
   const defaultArea =
     [...areas].filter((a) => a.medianPerm2).sort((a, b) => b.listings - a.listings)[0] ?? areas[0];
-  const area = areas.find((a) => a.id === sp.area) ?? defaultArea;
+  const area = (marketOfArea ? undefined : areas.find((a) => a.id === sp.area)) ?? defaultArea;
   const sqm = num(sp.m2, 60, 15, 400);
   const inputs: YieldInputs = {
     area: area.id,
@@ -65,6 +72,11 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
     taxPct: num(sp.tax, COST_DEFAULTS.taxPct, 0, 0.3),
     fixedMonthly: num(sp.fixed, COST_DEFAULTS.fixedMonthly, 0, 1e8),
     setupCost: num(sp.setup, COST_DEFAULTS.setupCost, 0, 2e9),
+  };
+  const loan: LoanInputs = {
+    equityPct: num(sp.eq, LOAN_DEFAULTS.equityPct, 0.1, 1),
+    ratePct: num(sp.rate, LOAN_DEFAULTS.ratePct, 0, 0.3),
+    termYears: num(sp.term, LOAN_DEFAULTS.termYears, 5, 35),
   };
 
   const comps = await getYieldComps(market.id, area.id, inputs.bedrooms);
@@ -137,13 +149,14 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
         actions={<Badge variant="warning-light">DỮ LIỆU MÔ PHỎNG</Badge>}
       />
 
-      <YieldForm key={JSON.stringify(inputs)} areas={areas} initial={inputs} currency={currency} />
+      <YieldForm key={JSON.stringify({ inputs, loan })} areas={areas} initial={inputs} initialLoan={loan} currency={currency} />
 
       {estimate ? (
         <>
           <p className="text-muted-foreground max-w-4xl text-sm">{summary}</p>
           <StatTiles items={tiles} />
           <YieldConfidence confidence={estimate.confidence} assumptions={assumptions} />
+          <FinancingGrid plan={financingPlan(estimate, inputs, loan)} currency={currency} horizon={FINANCING_HORIZON} />
           <PnlChart
             months={monthlyPnl(estimate, inputs, new Date())}
             currency={currency}

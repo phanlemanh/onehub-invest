@@ -36,6 +36,8 @@ import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
 import { fmtInt, fmtMoneyCompact } from "@/lib/format"
 import type { YieldArea } from "@/lib/queries"
+import { sendUserEvent } from "@/components/user-event-beacon"
+import { LOAN_DEFAULTS, type LoanInputs } from "@/lib/financing"
 import { COST_DEFAULTS, type YieldInputs } from "@/lib/yield"
 
 /**
@@ -141,9 +143,9 @@ function SummaryBanner({
   const perM2 = inputs.sqm > 0 ? inputs.price / inputs.sqm : 0
   const vsArea = area?.medianPerm2 ? perM2 / area.medianPerm2 - 1 : null
   return (
-    <div className="relative isolate overflow-hidden rounded-md bg-[linear-gradient(155deg,oklch(0.24_0.15_258)_0%,oklch(0.37_0.18_282)_36%,oklch(0.68_0.19_318)_67%,oklch(0.86_0.13_48)_100%)] p-4 text-white sm:p-5">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(100deg,oklch(0.18_0.15_252)_0%,transparent_48%),linear-gradient(28deg,oklch(0.91_0.11_42)_0%,transparent_45%)] opacity-90" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,oklch(0.87_0.14_330)_100%)] opacity-50" />
+    <div className="relative isolate overflow-hidden rounded-md bg-[linear-gradient(155deg,var(--color-blue-950)_0%,var(--color-indigo-800)_36%,var(--color-fuchsia-400)_67%,var(--color-orange-200)_100%)] p-4 text-white sm:p-5">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(100deg,var(--color-blue-950)_0%,transparent_48%),linear-gradient(28deg,var(--color-orange-200)_0%,transparent_45%)] opacity-90" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,var(--color-fuchsia-300)_100%)] opacity-50" />
       <div className="relative flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <Item className="flex size-10 shrink-0 items-center justify-center border border-white/20 bg-white/15 p-0">
@@ -183,16 +185,19 @@ function SummaryBanner({
 export function YieldForm({
   areas,
   initial,
+  initialLoan,
   currency,
 }: {
   areas: YieldArea[]
   initial: YieldInputs
+  initialLoan: LoanInputs
   currency: string
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const [pending, startTransition] = useTransition()
   const [inputs, setInputs] = useState<YieldInputs>(initial)
+  const [loan, setLoan] = useState<LoanInputs>(initialLoan)
   const area = areas.find((a) => a.id === inputs.area)
   const suggested = area?.medianPerm2 ? area.medianPerm2 * inputs.sqm : null
 
@@ -210,6 +215,17 @@ export function YieldForm({
       tax: String(inputs.taxPct),
       fixed: String(Math.round(inputs.fixedMonthly)),
       setup: String(Math.round(inputs.setupCost)),
+      eq: String(loan.equityPct),
+      rate: String(loan.ratePct),
+      term: String(loan.termYears),
+    })
+    // Hồ sơ tài chính của người dùng (tầng A, chỉ local) — giữ tên sự kiện của /dau-tu cũ cho bộ nhớ agent.
+    sendUserEvent("dau_tu_input", {
+      area: inputs.area,
+      price: Math.round(inputs.price),
+      equityPct: loan.equityPct,
+      ratePct: loan.ratePct,
+      termYears: loan.termYears,
     })
     startTransition(() => router.push(`${pathname}?${params}`, { scroll: false }))
   }
@@ -273,13 +289,14 @@ export function YieldForm({
                   suggested ? (
                     <>
                       Gợi ý theo giá/m² mô phỏng của phường:{" "}
-                      <button
+                      <Button
                         type="button"
-                        className="text-foreground underline underline-offset-4"
+                        variant="link"
+                        size="xs"
                         onClick={() => patch({ price: Math.round(suggested / 1e7) * 1e7 })}
                       >
                         {fmtMoneyCompact(suggested, currency)}
-                      </button>
+                      </Button>
                     </>
                   ) : (
                     "Phường chưa có dữ liệu giá bán."
@@ -330,6 +347,27 @@ export function YieldForm({
           </FieldSet>
         </FramePanel>
 
+        <FramePanel className="flex flex-col gap-0 p-0">
+          <FieldSet className="gap-0">
+            <FieldLegend className="px-5 pt-4 text-sm sm:px-6">
+              Vốn vay <Badge variant="outline" className="ms-1">Mặc định sửa được</Badge>
+            </FieldLegend>
+            <FieldGroup className="gap-0">
+              <FormRow title="Vốn tự có" description="Phần giá mua trả bằng tiền của mình; phần còn lại vay ngân hàng." htmlFor="yield-eq">
+                <Num id="yield-eq" value={Math.round(loan.equityPct * 100)} min={10} max={100} step={5} suffix="% giá mua" onChange={(v) => setLoan((l) => ({ ...l, equityPct: v / 100 }))} />
+              </FormRow>
+              <InsetSeparator />
+              <FormRow title="Lãi suất vay" description="Lãi danh nghĩa mỗi năm, trả góp đều hằng tháng." htmlFor="yield-rate">
+                <Num id="yield-rate" value={Math.round(loan.ratePct * 1000) / 10} min={0} max={30} step={0.5} suffix="%/năm" onChange={(v) => setLoan((l) => ({ ...l, ratePct: v / 100 }))} />
+              </FormRow>
+              <InsetSeparator />
+              <FormRow title="Kỳ hạn" description="Số năm trả hết khoản vay." htmlFor="yield-term">
+                <Num id="yield-term" value={loan.termYears} min={5} max={35} step={5} suffix="năm" onChange={(v) => setLoan((l) => ({ ...l, termYears: v }))} />
+              </FormRow>
+            </FieldGroup>
+          </FieldSet>
+        </FramePanel>
+
         <FrameFooter className="flex-row flex-wrap items-center justify-between gap-2">
           <span className="text-muted-foreground text-xs">
             * Giá bán, giá thuê dài hạn là dữ liệu mô phỏng (G1).
@@ -339,9 +377,12 @@ export function YieldForm({
               type="button"
               variant="outline"
               disabled={pending}
-              onClick={() => patch({ ...COST_DEFAULTS })}
+              onClick={() => {
+                patch({ ...COST_DEFAULTS })
+                setLoan(LOAN_DEFAULTS)
+              }}
             >
-              Chi phí mặc định
+              Về mặc định
             </Button>
             <Button type="submit" disabled={pending}>
               {pending ? (
