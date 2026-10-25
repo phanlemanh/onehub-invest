@@ -19,7 +19,7 @@
 | `/vn/hanoi` | Market Insight Hà Nội | nhà đầu tư |
 | `/th/bangkok/map` | Market Finder (choropleth) | nhà đầu tư (legacy) |
 | `/[country]/[market]/[submarket]` | Insight cấp phường | nhà đầu tư |
-| `/[country]/[market]/dau-tu` | Mô phỏng đầu tư (G3) | máy tính dòng tiền STR×LTR với vay; defaults từ vải P2 + listing tự thu (2026-10-22: gỡ AirDNA — luật 5; chờ quyết gộp vào `/yield`) | Invest | G3 |
+| `/[country]/[market]/dau-tu` | (đã gộp) | chuyển 301 về `/yield?area=<market>#financing` — mục «Dòng tiền vốn vay» của Ước tính lợi suất (UI3, 2026-10-25) |
 | `/listing/[id]` | Chi tiết listing | nhà đầu tư |
 | `/saved`, `/login` | Đăng nhập, thị trường đã lưu | nhà đầu tư |
 | `/design` | ReUI Gallery | **nội bộ/dev** — đang nằm chung không gian công khai |

@@ -37,7 +37,7 @@ export function InsightActions({
         size="sm"
         className="text-xs shadow-xs"
         nativeButton={false}
-        render={<Link href={`/${areaId.split("-")[0]}/${areaId.split("-").slice(1).join("-")}/dau-tu`} />}
+        render={<Link href={`/yield?area=${areaId}#financing`} />}
       >
         <CalculatorIcon data-icon="inline-start" aria-hidden="true" />
         Đầu tư
