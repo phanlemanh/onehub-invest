@@ -1,0 +1,30 @@
+{
+  "feature_plain": "Bảng «Luồng 7 ngày qua» ở trang Thu thập đếm đúng: tin rao chỉ của S03, bài và tin cùng tính theo ngày đăng nên tin không bao giờ nhiều hơn bài; trên máy chủ bảng hiện lại với số máy thu đẩy lên, cột không có số ghi «Chỉ ở máy thu».",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chỉ đếm tin rao nguồn S03 vào cột «S03 — tin rao», theo ngày đăng giờ VN (tin S06 cùng ngày không tính)."},
+    {"id": "AC-2", "p": "Sẽ chỉ đếm bài S03 thật (không bài mock) vào cột «S03 — bài thô», theo ngày đăng chứ không theo giờ nạp."},
+    {"id": "AC-3", "p": "Sẽ để máy thu đẩy kèm bản tin đủ 7 ngày gần nhất, có mốc đo, ngày không có bài ghi 0; đo hỏng thì báo lỗi, không ghi 0."},
+    {"id": "AC-4", "p": "Sẽ giữ số máy thu đẩy lên đúng bằng số trang ở máy thu đang hiện, từng ngày."},
+    {"id": "AC-5", "p": "Sẽ dựng lại bảng trên máy chủ: hai cột S03 lấy từ bản tin, cột snapshot ghi «Chỉ ở máy thu», không có cột S02 — đo bằng bản tin thật đi hết đường tới trang."},
+    {"id": "AC-7", "p": "Sẽ giữ đủ 7 cột ở trang máy thu; mô tả bảng nói rõ «giờ VN» và «theo ngày đăng bài»."},
+    {"id": "AC-8", "p": "Sẽ đo trên dữ liệu thật: mỗi ngày số tin rao S03 khớp một cách đếm độc lập và không vượt số bài; không có ngày nào có tin thì báo đỏ."},
+    {"id": "AC-9", "p": "Sẽ mở bảng trên trình duyệt thật ở chế độ máy chủ, ba trạng thái × máy tính và điện thoại, chụp ảnh cho người ký (theo khuyến nghị Hỏi-2)."}
+  ],
+  "wont_do": [
+    {"id": "AC-6", "p": "Sẽ KHÔNG hiện số 0 khi bản tin thiếu phần luồng 7 ngày (hiện «—»); bản tin cũ quá 45′ thì số mờ; chưa có bản tin thì không dựng bảng."},
+    {"id": "OOS-1", "p": "KHÔNG gỡ số S02 khỏi trang Thu thập ở máy thu, biểu đồ luồng hay panel Rotation — việc của ON6."},
+    {"id": "OOS-2", "p": "KHÔNG bỏ khoá cũ «zaloFlow» khỏi bản tin ở vòng này."},
+    {"id": "OOS-3", "p": "KHÔNG đụng lưới job, nhóm S03, khoá an toàn trên máy chủ — việc của ON4, ON23."}
+  ],
+  "scope_plain": "Ba phần cố ý để ngoài vòng này:",
+  "coverage_plain": [
+    {"i": 0, "p": "Đã soi đủ 6 cột × 5 nơi xem (máy thu, máy chủ tươi, cũ, thiếu số, chưa có bản tin) × các ca rìa dữ liệu (nguồn khác cùng ngày, bài mock, nạp sau nửa đêm, 23:59/00:01, ngày rỗng). Còn một chỗ chưa kiểm chứng: số listing tươi trên máy chủ có cùng số máy thu không."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chưa có phép đo nào cho bản tin thật đi hết đường từ máy thu tới trang máy chủ — đã thêm vào AC-5."},
+    {"i": 1, "p": "«Cột thô» trong ngưỡng không nói rõ là cột nào; cột duy nhất có chữ «thô» lại là «S03 — bài thô» — đưa thành Hỏi-1 cho anh."},
+    {"i": 2, "p": "Phép đo «số mờ khi bản tin cũ» thiếu chiều ngược và dễ xanh giả vì ô «Chỉ ở máy thu» vốn mờ — đã đổi sang soi từng ô, cả hai chiều."},
+    {"i": 3, "p": "Phép đo ngưỡng trên dữ liệu thật có thể xanh khi 7 ngày không có tin S03 nào — đã đòi ít nhất một ngày có tin."},
+    {"i": 4, "p": "Lý do bỏ phần nhìn trên trình duyệt không đứng: vẫn chạy được app chế độ máy chủ trên dữ liệu tạm — đưa thành Hỏi-2 cho anh."}
+  ]
+}
