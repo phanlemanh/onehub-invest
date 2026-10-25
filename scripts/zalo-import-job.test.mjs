@@ -79,6 +79,7 @@ function chay(root, failSteps = "", failMsg = "") {
   const r = spawnSync("/bin/bash", [path.join(root, SCRIPT)], { cwd: root, env, encoding: "utf8", timeout: 60_000 });
   const doc = (f) => readFileSync(f, "utf8").split("\n").filter(Boolean);
   return {
+    root,
     code: r.status,
     stderr: r.stderr,
     calls: doc(calls),
@@ -186,11 +187,18 @@ test("ZJ-AC-5 phần nạp (làn ZCode) giữ nguyên từng byte so với merge
 test("ZJ-AC-6 rào: node giả, HOME tạm không có node thật, DB cổng đóng, nhãn trong ba bước", () => {
   assert.ok(daChay.length >= 7, "các ca chạy phải đi trước");
   for (const r of daChay) {
-    assert.match(r.env.PATH, /\/\.shim-bin:\/usr\/bin:\/bin$/);
     assert.ok(r.env.HOME.startsWith(SCRATCH), "HOME ngoài thư mục tạm");
     assert.ok(!existsSync(path.join(r.env.HOME, ".local")), "HOME tạm có .local — node thật có thể chen lên đầu PATH");
+    assert.ok(r.envs.length > 0, "node giả không ghi môi trường nào");
     for (const e of r.envs) {
-      const [, home, db] = e.split("|");
+      // Đo PATH mà node giả THẬT SỰ thấy (tệp bọc chèn $HOME/.local/node-…/bin lên đầu): mọi thư mục có thật trên
+      // PATH ấy chỉ là node giả + /usr/bin + /bin.
+      const [seen, home, db] = e.split("|");
+      assert.deepEqual(
+        seen.split(":").filter((d) => d && existsSync(d)),
+        [path.join(r.root, ".shim-bin"), "/usr/bin", "/bin"],
+        `ZJ-AC-6 PATH node giả thấy có thư mục thật ngoài rào: ${seen}`,
+      );
       assert.equal(home, r.env.HOME);
       assert.equal(db, "postgres://127.0.0.1:9/khong-co");
     }
