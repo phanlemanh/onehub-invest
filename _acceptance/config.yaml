@@ -190,6 +190,10 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # giu-captured-at (2410-1) — DB TẠM acc_capt_* trong container one-invest-db (pg_dump -s), không ghi DB oneinvest
+    capt_zalo: "node scripts/giu-captured-at/acceptance.mjs zalo"
+    capt_chotot: "node scripts/giu-captured-at/acceptance.mjs chotot"
+    capt_restore: "node scripts/giu-captured-at/acceptance.mjs restore"
     # kev-nhan-cung-hoa (ZC1 nối tiếp) — không mở cổng, không ghi DB, URL ảnh giả host .invalid
     zc1b_media_junk: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs media-junk"
     zc1b_payload_intact: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs payload-intact"
