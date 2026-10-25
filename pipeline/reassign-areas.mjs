@@ -125,6 +125,8 @@ async function upsertPhuong(client, city, log) {
  * Thân reassign — người gọi giữ transaction (main bọc BEGIN…COMMIT; test và thước bọc
  * BEGIN…ROLLBACK). Ném lỗi khi snapshot hỏng (tập phường hợp lệ teo) TRƯỚC khi xoá gì.
  * @param {import("pg").Client} client
+ * @param {string[]} [cities]
+ * @param {{ log?: { log: (...a: unknown[]) => void, warn: (...a: unknown[]) => void } }} [opts]
  */
 export async function runReassign(client, cities = Object.keys(MARKETS), { log = console } = {}) {
   for (const c of cities) if (!MARKETS[c]) throw new Error(`city không hỗ trợ: ${c}`);
