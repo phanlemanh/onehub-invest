@@ -41,7 +41,9 @@ jobs:
         run: node scripts/ci-db-init.mjs
       - name: test
         working-directory: app
-        run: NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs app)" npm test
+        run: |
+          opts="$(node ../scripts/lib/ci-can-du-lieu.mjs app)"
+          NODE_OPTIONS="$opts" npm test
 
   pipeline:
     runs-on: ubuntu-latest
@@ -72,7 +74,9 @@ jobs:
         run: node scripts/ci-db-init.mjs
       - name: test
         working-directory: pipeline
-        run: NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs pipeline)" npm test
+        run: |
+          opts="$(node ../scripts/lib/ci-can-du-lieu.mjs pipeline)"
+          NODE_OPTIONS="$opts" npm test
 
   agent:
     runs-on: ubuntu-latest
@@ -101,7 +105,9 @@ jobs:
         run: node scripts/ci-db-init.mjs
       - name: test
         working-directory: agent
-        run: NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs agent)" npm test
+        run: |
+          opts="$(node ../scripts/lib/ci-can-du-lieu.mjs agent)"
+          NODE_OPTIONS="$opts" npm test
 
   data-api:
     runs-on: ubuntu-latest
@@ -148,4 +154,6 @@ jobs:
       - name: dựng DB trống từ migration
         run: node scripts/ci-db-init.mjs
       - name: test
-        run: NODE_OPTIONS="$(node scripts/lib/ci-can-du-lieu.mjs scripts)" node --test scripts/*.test.mjs
+        run: |
+          opts="$(node scripts/lib/ci-can-du-lieu.mjs scripts)"
+          NODE_OPTIONS="$opts" node --test scripts/*.test.mjs

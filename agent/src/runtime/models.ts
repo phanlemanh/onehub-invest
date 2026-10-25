@@ -27,7 +27,7 @@ export function getModel(name: ModelName) {
 
 /** MTPLX reasoning param — bẫy cũ: max_tokens ≥ 2000, reasoning low ~9s. */
 export const qwenParams = {
-  maxTokens: 4096,
+  maxOutputTokens: 4096,
   // MTPLX dùng OpenAI-compat; reasoning qua extra body nếu server hỗ trợ
   // (không set ở đây — tinh chỉnh khi gặp lỗi thực tế)
 } as const;

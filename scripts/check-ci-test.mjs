@@ -47,6 +47,8 @@ export function loiWorkflow(text) {
       if ("continue-on-error" in s) add("continue-on-error", `${job} · ${s.name}`);
       if (s.run && /\|\|\s*true/.test(s.run)) add("or-true", `${job} · ${s.name}`);
       if (s.if && /typecheck|test|cú pháp/.test(s.name ?? "")) add("if-buoc", `${job} · ${s.name}`);
+      // Thay lệnh trong tiền tố gán (`X="$(…)" cmd`) bị bash nuốt mã thoát — helper bỏ qua phải đứng riêng
+      if (s.run && /^[ \t]*\w+="\$\([^\n]*\)"[ \t]+\S/m.test(s.run)) add("helper-nuot", `${job} · ${s.name}`);
     }
     const dungDb = (j.steps ?? []).some((s) => /ci-db-init/.test(s.run ?? ""));
     if (dungDb) {
@@ -78,6 +80,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   check(!co("trigger").length && !co("pull-request-loc").length && !co("push-nhanh").length, "trigger đúng tập (pull_request không lọc paths, push main + ci-probe/**)");
   check(!co("secrets").length, "không secrets.");
   check(!co("continue-on-error").length && !co("or-true").length && !co("if-buoc").length, "không continue-on-error / || true / if: trên bước typecheck-test");
+  check(!co("helper-nuot").length, co("helper-nuot")[0]?.[1] ?? "helper danh sách bỏ qua đứng riêng — mã thoát của nó dừng bước (không nằm trong tiền tố gán)");
   check(!co("service-pg").length, co("service-pg")[0]?.[1] ?? "service PostGIS kartoza 17-3.5 5433:5432 + healthcheck ở mọi job gọi ci-db-init");
   const wf = yaml.load(text);
   for (const job of JOBS) {
@@ -85,7 +88,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
     const mo = (LENH[job] ?? []).map(([ten]) => `${ten}: ${wf.jobs[job]?.steps?.find((s) => s.name === ten)?.run?.trim().split("\n")[0] ?? "—"}`).join(" · ");
     check(!l.length, l.length ? l.map(([, c]) => c).join(" | ") : `${job}: ${mo}`);
   }
-  for (const x of loi) if (!["nam-job", "trigger", "pull-request-loc", "push-nhanh", "secrets", "continue-on-error", "or-true", "if-buoc", "service-pg", "lenh"].includes(x[0])) check(false, x.join(": "));
+  for (const x of loi) if (!["nam-job", "trigger", "pull-request-loc", "push-nhanh", "secrets", "continue-on-error", "or-true", "if-buoc", "helper-nuot", "service-pg", "lenh"].includes(x[0])) check(false, x.join(": "));
 
   // chiều đỏ: mỗi đột biến trên bản sao văn bản phải bị đúng luật gọi tên
   const dotBien = [
@@ -95,7 +98,8 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
     ["thêm secrets.X", "secrets", (t) => t.replace("run: npm run typecheck", "run: npm run typecheck\n        env:\n          K: ${{ secrets.X }}")],
     ["thêm continue-on-error", "continue-on-error", (t) => t.replace("      - name: test\n        working-directory: app", "      - name: test\n        continue-on-error: true\n        working-directory: app")],
     ["đổi cổng service", "service-pg", (t) => t.replace('ports: ["5433:5432"]', 'ports: ["5432:5432"]')],
-    ["lệnh test thành true", "lenh", (t) => t.replace('NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs agent)" npm test', "true")],
+    ["lệnh test thành true", "lenh", (t) => t.replace('ci-can-du-lieu.mjs agent)"\n          NODE_OPTIONS="$opts" npm test', 'ci-can-du-lieu.mjs agent)"\n          true')],
+    ["helper trong tiền tố gán", "helper-nuot", (t) => t.replace('run: |\n          opts="$(node ../scripts/lib/ci-can-du-lieu.mjs app)"\n          NODE_OPTIONS="$opts" npm test', 'run: NODE_OPTIONS="$(node ../scripts/lib/ci-can-du-lieu.mjs app)" npm test')],
   ];
   for (const [ten, luat, f] of dotBien) {
     const t2 = f(text);
