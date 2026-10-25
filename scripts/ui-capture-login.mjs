@@ -103,6 +103,9 @@ export async function capture({ url, out, env = process.env, run, ensureAccount,
       }
       err(`tầng A: đã che ${r.masked}`);
     }
+    // Bề rộng khung và trang: trang rộng hơn khung = cuộn ngang cấp trang (bảng cuộn trong khung của nó không tính).
+    const bw = evalResult(run(["eval", "() => ({ w: innerWidth, sw: document.documentElement.scrollWidth })"]));
+    if (bw) err(`bề rộng: khung ${bw.w}, trang ${bw.sw}`);
     run(["screenshot", "--full-page", "--filename", out]);
     log(out);
     return 0;

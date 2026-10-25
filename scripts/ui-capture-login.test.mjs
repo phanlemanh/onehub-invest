@@ -63,7 +63,9 @@ function fakeRun({ leaked = [] } = {}) {
     if (args[0] === "eval") {
       const out = args[1].includes("location.pathname")
         ? JSON.stringify(loaded ? "/ops/quality" : "/login")
-        : JSON.stringify({ masked: 2, checkedNames: 3, leaked, attrLeaked: [] });
+        : args[1].includes("scrollWidth")
+          ? JSON.stringify({ w: 390, sw: 390 })
+          : JSON.stringify({ masked: 2, checkedNames: 3, leaked, attrLeaked: [] });
       return `### Result\n${out}\n### Ran Playwright code\n`;
     }
     return "";
@@ -111,6 +113,7 @@ test("UC-AC-9 (a)(b) URL /ops đăng nhập, tệp phiên 600 rồi bị xoá, k
   const all = d.logs.join("\n");
   assert.ok(!all.includes(PASSWORD) && !all.includes(COOKIE), "mật khẩu/cookie ra stdout/stderr");
   assert.ok(all.includes("tầng A: đã che 2"), "thiếu dòng báo che tầng A");
+  assert.ok(all.includes("bề rộng: khung 390, trang 390"), "thiếu dòng đo bề rộng khung/trang");
 });
 
 test("UC-AC-9 (c) mật khẩu sai → không đăng nhập được, không ảnh", async () => {
