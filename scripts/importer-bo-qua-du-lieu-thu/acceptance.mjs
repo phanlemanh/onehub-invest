@@ -72,7 +72,7 @@ async function modeRealMock() {
     for (const d of dirs) {
       for (const p of [d, d + "/"]) {
         const r = runImport("import-airbnb.mjs", p);
-        if (r.status === 0 && /bỏ qua snapshot THỬ/.test(r.stderr) && !/đã nạp:/.test(r.stdout)) skipped++;
+        if (r.status === 0 && /bỏ qua (snapshot THỬ|snapshot nguồn ngoài ALLOWLIST|theo manifest\.source)/.test(r.stderr) && !/đã nạp:/.test(r.stdout)) skipped++;
       }
     }
     check(skipped === dirs.length * 2, `import-airbnb bỏ qua cả ${dirs.length} snapshot thử, có và không có «/» cuối (${skipped}/${dirs.length * 2} lần, exit 0, có log)`);
@@ -119,7 +119,7 @@ async function modeFixtures() {
     const d1 = writeSnap(S, ids.srcMock, { snapshotId: ids.srcMock, source: "zalo-mock", items: [post("zalo-mock", `${tag}-m0`, "tin thử 0")] });
     let r = runImport("import-airbnb.mjs", d1);
     const n1 = (await client.query("SELECT count(*)::int n FROM airbnb_snapshots WHERE snapshot_id = $1", [ids.srcMock])).rows[0].n;
-    check(r.status === 0 && /bỏ qua snapshot THỬ theo manifest\.source=zalo-mock/.test(r.stderr) && n1 === 0, "tên thật + manifest.source=zalo-mock → bỏ qua có log, 0 dòng");
+    check(r.status === 0 && /bỏ qua (snapshot THỬ theo|snapshot nguồn ngoài ALLOWLIST theo) manifest\.source=zalo-mock/.test(r.stderr) && n1 === 0, "tên thật + manifest.source=zalo-mock → bỏ qua có log, 0 dòng");
 
     // 2. snapshot thật lẫn item zalo-mock → item thử bị bỏ, item thật vào
     const items = [post("zalo-agent", `${tag}-a1`, "bán nhà 1"), post("zalo-mock", `${tag}-m1`, "tin thử 1"), post("zalo-agent", `${tag}-a2`, "bán nhà 2")];
@@ -127,7 +127,7 @@ async function modeFixtures() {
     r = runImport("import-airbnb.mjs", d2);
     const rows = (await client.query("SELECT post_id FROM stg_zalo_posts WHERE snapshot_id = $1 ORDER BY post_id", [ids.real])).rows.map((x) => x.post_id);
     console.log(`snapshot thật lẫn 1 item thử: exit ${r.status} · stg_zalo_posts [${rows.join(", ")}]`);
-    check(r.status === 0 && /bỏ 1 item THỬ lẫn trong snapshot thật/.test(r.stderr), "log báo bỏ 1 item thử lẫn");
+    check(r.status === 0 && /bỏ 1 item (THỬ|nguồn ngoài ALLOWLIST) lẫn trong snapshot thật/.test(r.stderr), "log báo bỏ 1 item thử lẫn");
     check(rows.length === 2 && rows.every((x) => !x.endsWith("-m1")), "2 item thật vào stg, item zalo-mock không vào");
 
     // 3. nạp lại → idempotent
@@ -139,7 +139,7 @@ async function modeFixtures() {
     const ce = join(S, `hanoi__e2e__${tag}`);
     mkdirSync(ce, { recursive: true });
     r = runImport("import-chotot.mjs", ce + "/");
-    check(r.status === 0 && /bỏ qua snapshot THỬ/.test(r.stderr), "import-chotot: snapshot thử tên e2e (có «/» cuối) → bỏ qua, exit 0");
+    check(r.status === 0 && /bỏ qua (snapshot THỬ|snapshot nguồn ngoài ALLOWLIST|theo manifest\.source)/.test(r.stderr), "import-chotot: snapshot thử tên e2e (có «/» cuối) → bỏ qua, exit 0");
     const ad = { source: "chotot-ads", sourceId: `${tag}-ad1`, kind: "ad", fetchedAt: "2026-10-24T00:00:00Z", payload: { list_id: 990000000 + (Date.now() % 9999999), subject: "acc", region_v2: 12000, category: 1010, type: "s" }, meta: { city: "vn-hanoi" } };
     const clashAd = (await client.query("SELECT count(*)::int n FROM stg_chotot_ads WHERE list_id = $1", [ad.payload.list_id])).rows[0].n;
     if (clashAd) {
