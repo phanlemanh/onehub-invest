@@ -1,0 +1,27 @@
+{
+  "feature_plain": "Người trực chạy lệnh kiểm toàn hệ thống hay mở trang Thu thập từ một bản sao làm việc vẫn thấy số chạy đêm thật của máy, không còn «trống» hay «Hỏng» giả vì bản sao không có thư mục log.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cho lệnh kiểm toàn hệ thống chạy từ bản sao làm việc đọc log chạy đêm S02 ở checkout chính và báo «có activity»."},
+    {"id": "AC-2", "p": "Sẽ cho kết quả lệnh kiểm từ bản sao làm việc trùng từng dòng với lần chạy ở checkout chính."},
+    {"id": "AC-4", "p": "Sẽ cho bốn lớp đầu của khoá an toàn Zalo trên trang Thu thập đọc nhịp bộ canh ở checkout chính, không báo «Hỏng» giả."},
+    {"id": "AC-5", "p": "Sẽ cho lưới «Máy móc» hiện giờ chạy cuối của cả bốn loại job (S02, smoke, collector API, job tuần) lấy từ log ở checkout chính."},
+    {"id": "AC-7", "p": "Sẽ kiểm trên trang thật chạy từ bản sao làm việc: giờ bộ canh, nhãn bốn lớp khoá và giờ chạy cuối S02 khớp log ở checkout chính, kèm ảnh chụp."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Sẽ KHÔNG dừng hay báo lỗi khi không tìm được checkout chính — đọc log của chính bản đang chạy và nói rõ đã đọc ở đâu (theo Hỏi-1)."},
+    {"id": "AC-6", "p": "Sẽ KHÔNG chấp nhận một dòng khác biệt nào giữa lần chạy thật từ bản sao làm việc và từ checkout chính."},
+    {"id": "OOS-1", "p": "KHÔNG đổi bên ghi bản tin cho máy chủ — nó chạy bằng lịch máy ở checkout chính nên đã đọc đúng log."},
+    {"id": "OOS-2", "p": "KHÔNG đụng các script ghi log (làn ZCode)."},
+    {"id": "OOS-3", "p": "KHÔNG sửa cách tính độ tươi theo lần thu của S03/S05 — việc riêng ON17."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Phủ ba chỗ đọc log (lệnh kiểm mục S02, khoá an toàn, lưới Máy móc với bốn loại log) trên năm kiểu cây (bản sao làm việc, checkout chính, thư mục không phải kho git, tệp git hỏng, checkout chính đã dời), đo cả trong hộp cây tạm dựng bằng git thật lẫn trên lệnh và trang thật (AC-1 tới AC-7)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Hai lựa chọn máy ghi là «chỉ một lối» nhưng thật ra còn lối khác sống; một bản sao làm việc kiểu mới có thể lặng lẽ báo «trống» giả như cũ. Đã đổi sang hỏi git để tìm checkout chính, và đưa cách hiện ca không tìm được lên thành Hỏi-1 cho anh."},
+    {"i": 1, "p": "Phép so trên lệnh thật sẽ đỏ oan vì một chú thích chỉ lượt bản sao in thêm. Đã bỏ chú thích (dòng kết quả không đổi chữ) và ghi rõ bản sao không có log riêng trước khi so."},
+    {"i": 2, "p": "Ngưỡng «kết quả trùng» mới đo một dòng. Đã đổi sang so toàn bộ đầu ra hai lượt chạy thật, và liệt sẵn mọi đường mà lệnh kiểm đọc theo vị trí cây (chỉ một đường)."},
+    {"i": 3, "p": "Lưới Máy móc đọc bốn loại log mà phép đo chỉ soi một. Đã đo từng loại và thêm luật chặn đường log viết rải rác trong mã."},
+    {"i": 4, "p": "Phép đo trang thật chỉ so giờ, không so nhãn «Ổn/Hỏng» của bốn lớp khoá. Đã thêm vế so nhãn và ghim cách quy đổi giờ (giờ VN, tới phút)."}
+  ]
+}
