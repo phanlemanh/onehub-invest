@@ -50,6 +50,9 @@ export type AgentServerOptions = {
   city: string;
   keys: string[];
   flushAfterItems?: number; // default 50
+  /** Trần số tin mỗi lô ở tầng HTTP — vượt thì 413 rõ ràng để agent chia nhỏ
+   *  gửi lại (claudedp-2510-2). ingest() nội bộ không bị trần này. */
+  maxBatchItems?: number; // default 1000
   /** Ghi đè tuỳ chọn tải media (mặc định: chỉ *.zdn.vn, ≤10MB, timeout 10s). */
   media?: MediaFetchOptions;
 };
@@ -80,9 +83,14 @@ function keyOk(keys: string[], auth: string | null): boolean {
 export async function createAgentServer(opts: AgentServerOptions) {
   const { snapshotRoot, city, keys } = opts;
   const flushAfterItems = opts.flushAfterItems ?? 50;
+  const maxBatchItems = opts.maxBatchItems ?? 1000;
 
   let buffer: RawItem[] = [];
   const seen = new Set<string>();
+  /** Mirror `seen` theo thứ tự recency (cũ → mới): id từ state load vào trước,
+   *  id ingest vào sau. Cap 5000 id MỚI NHẤT thực hiện ở flush — mỗi vòng xoá
+   *  đúng 1 phần tử nên luôn kết thúc (claudedp-2510-2). */
+  const seenOrder: string[] = [];
   let writer: SnapshotWriter | null = null;
   let flushing: Promise<{ snapshotId: string } | null> | null = null;
   /** AbortController của lượt flush ĐANG CHẠY (P2): caller muộn truyền
@@ -90,14 +98,16 @@ export async function createAgentServer(opts: AgentServerOptions) {
   let flushAbort: AbortController | null = null;
   let duplicatesTotal = 0;
   let acceptedTotal = 0;
-  const newIds: string[] = []; // id mới từ lần flush trước — persist xuống state
 
   // Dedup sống qua restart (review I3): nạp id đã thấy từ stateDir
   const stateFile = opts.stateDir ? join(opts.stateDir, "agent-seen.json") : null;
   if (stateFile) {
     try {
       const arr = JSON.parse(await readFile(stateFile, "utf8")) as string[];
-      for (const id of arr) seen.add(id);
+      for (const id of arr) {
+        seen.add(id);
+        seenOrder.push(id);
+      }
     } catch { /* chưa có file — lần đầu */ }
   }
 
@@ -179,8 +189,12 @@ export async function createAgentServer(opts: AgentServerOptions) {
         duplicates++;
         continue;
       }
+      // Không cap seen ở đây: cap tại ingest làm rối thứ tự recency (id chưa
+      // flush bị xoá sớm rồi phải thêm lại). Bộ nhớ tự gián: buffer flush ở
+      // flushAfterItems và lô HTTP bị trần maxBatchItems; seen chỉ vượt
+      // SEEN_CAP tạm thời tới lượt flush gần nhất, tại đó bị cap về 5000.
       seen.add(sourceId);
-      if (seen.size > SEEN_CAP) seen.delete(seen.values().next().value as string);
+      seenOrder.push(sourceId);
       buffer.push({
         source: "zalo-agent",
         sourceId,
@@ -274,16 +288,17 @@ export async function createAgentServer(opts: AgentServerOptions) {
     writer = null; // snapshot mới cho lần flush sau
     buffer = buffer.filter((i) => !ids.includes(i.sourceId));
     if (stateFile) {
-      newIds.push(...ids);
-      // FIFO cap 5000 — bỏ cũ, giữ mới
-      while (seen.size + newIds.length > 5000 && newIds.length > 0) {
-        seen.delete(seen.values().next().value as string);
+      // Cap 5000 id MỚI NHẤT (claudedp-2510-2). Vòng cũ đếm seen.size +
+      // newIds.length trong khi id mới ĐÃ nằm trong seen từ lúc ingest —
+      // đếm trùng, và thân vòng chỉ xoá seen nên lượt flush >5000 id mới
+      // xoá seen tới rỗng rồi quay mãi (chặn event loop, SIGTERM không chạy).
+      // Giờ: một mảng thứ tự duy nhất, mỗi vòng xoá đúng 1 phần tử khỏi mảng
+      // hữu hạn → luôn kết thúc; giữ đúng 5000 id mới nhất theo thứ tự ingest.
+      while (seenOrder.length > SEEN_CAP) {
+        seen.delete(seenOrder.shift() as string);
       }
-      const persist = [...seen, ...newIds].slice(-5000);
       await mkdir(dirname(stateFile), { recursive: true });
-      await writeFile(stateFile, JSON.stringify(persist));
-      for (const id of newIds) seen.add(id);
-      newIds.length = 0;
+      await writeFile(stateFile, JSON.stringify(seenOrder));
     }
     return { snapshotId: manifest.snapshotId };
   }
@@ -334,6 +349,16 @@ export async function createAgentServer(opts: AgentServerOptions) {
       body = JSON.parse(await readBody(req as unknown as { on: Function }));
     } catch {
       return json(400, { error: "JSON không hợp lệ" });
+    }
+    // Trần lô (claudedp-2510-2): chặn TRƯỚC ingest — lô khổng lồ không đầy
+    // buffer/seen; 413 kèm giới hạn để agent chia nhỏ gửi lại.
+    const msgCount = Array.isArray((body as Partial<AgentReportBody>).messages)
+      ? (body as Partial<AgentReportBody>).messages!.length
+      : 0;
+    if (msgCount > maxBatchItems) {
+      return json(413, {
+        error: `lô quá lớn: ${msgCount} tin vượt trần ${maxBatchItems} tin mỗi lô — chia nhỏ rồi gửi lại`,
+      });
     }
     const r = ingest(body, req.headers.authorization ?? null);
     if (r.status === 202 && buffer.length >= flushAfterItems) {
