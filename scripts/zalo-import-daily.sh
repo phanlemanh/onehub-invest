@@ -54,6 +54,7 @@ FAILED=0
 # GIỐNG HỆT apify-facebook-daily.sh — hai bản phải không lệch nhau (BÁO 2510-5).
 TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$'
 for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do
+    b=${d##*/}; [ "${b#.}" != "$b" ] && continue # 2510-8: dir '.<id>.partial' đang ghi — bỏ
     ts=$(basename "$d" | sed 's/.*__//')
     if ! echo "$ts" | grep -qE "$TS_RE"; then
       echo "bỏ qua thư mục TS không phải mốc thời gian: $d" >&2; continue
@@ -62,6 +63,18 @@ for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null 
   done | sort | while read -r _ d; do echo "$d"; done); do
   TS=$(basename "$SNAP" | sed 's/.*__//')
   if [[ "$TS" > "$LAST" ]]; then
+    # 2510-8: thiếu manifest = snapshot CHƯA xong (bản mới ghi '.partial' rồi
+    # rename; bản cũ crash giữa chừng) — KHÔNG được coi là đã nạp.
+    if [ ! -f "$SNAP/manifest.json" ]; then
+      if [ -n "$(find "$SNAP" -maxdepth 0 -mmin -30 2>/dev/null)" ]; then
+        echo "⏸ snapshot chưa xong (thiếu manifest, <30′): $SNAP — giữ state, dừng chuỗi, lượt sau thử lại"
+        FAILED=1
+        break
+      fi
+      echo "⚠️ snapshot mồ côi (thiếu manifest, ≥30′) — bỏ qua, đi tiếp: $SNAP"
+      [[ "$TS" > "$MAXTS" ]] && MAXTS="$TS"
+      continue
+    fi
     if ! import_one "$SNAP"; then
       echo "❌ nạp fail tại $SNAP — giữ state ở $MAXTS, dừng chuỗi (lần chạy sau nạp tiếp)"
       FAILED=1
