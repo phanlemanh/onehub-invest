@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 439f324f91f9560f0825bf7bebd7d6bc2cdccae3
+verified_commit: a9ec31dd0d5402bc993013bd98945e55459590b2
 human_signoff:
 ---
 
@@ -187,3 +187,7 @@ Round 1: 7/7 eval đạt trên `82f08b8`. Baseline đỏ ở E1–E4. E5 xanh su
 ### Re-pin lần 1 — 2026-10-25, do gộp main e962e78 sau khi PR #98 xung đột
 run_id: repin-20261025T065908Z-19092
 sha: 439f324f91f9560f0825bf7bebd7d6bc2cdccae3 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp main e6d5d02 sau khi #100 merge
+run_id: repin-20261025T071617Z-86152
+sha: a9ec31dd0d5402bc993013bd98945e55459590b2 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
