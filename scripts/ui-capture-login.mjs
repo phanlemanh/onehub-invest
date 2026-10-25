@@ -10,7 +10,7 @@
 // Không in mật khẩu, cookie hay tên thật. Biến môi trường: UI_CAPTURE_SCHEME=dark · UI_CAPTURE_SIZE=<rộng>x<cao>.
 // Mã thoát: 0 ảnh đã ghi · 2 lối gọi/chế độ sai · 3 thiếu playwright-cli · 4 phiên hỏng · 5 tầng A lộ · 6 không đăng nhập được.
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -116,7 +116,9 @@ export async function capture({ url, out, env = process.env, run, ensureAccount,
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Lối vào so qua realpath: launchd/người gọi có thể đi qua symlink ~/dev/one-invest (khuôn của scripts/check-api-surface.mjs).
+const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
   const [url, out] = process.argv.slice(2);
   if (!url || !out) {
     console.error("usage: ui-capture-login.mjs <url> <out.png>");

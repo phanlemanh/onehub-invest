@@ -58,7 +58,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
         accessorFn: (r) => shortAreaName(r.name),
         cell: ({ row }) => shortAreaName(row.original.name),
         header: ({ column }) => <DataGridColumnHeader title="Thị trường" column={column} />,
-        size: 180,
+        size: 160,
         enableSorting: true,
       },
       {
@@ -66,7 +66,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
         accessorFn: (r) => r.ourListings,
         header: ({ column }) => <DataGridColumnHeader title="Listing tự thu" column={column} />,
         cell: ({ row }) => fmtInt(row.original.ourListings),
-        size: 110,
+        size: 130,
         meta: NUM,
         enableSorting: true,
       },
@@ -80,7 +80,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
           row.original.airdnaActive
             ? `${fmtInt(row.original.airdnaActive)}${row.original.airdnaPeriod ? ` · ${row.original.airdnaPeriod}` : ""}${row.original.nMarkets > 1 ? ` · ${row.original.nMarkets} thị trường` : ""}`
             : "—",
-        size: 170,
+        size: 260, // tiêu đề «<nhãn S02> — đang hoạt động» dài: hẹp hơn thì đè cột kế (E10 ON10)
         meta: NUM,
         enableSorting: true,
       },
@@ -91,7 +91,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
           <DataGridColumnHeader title="Số đã mua" column={column} />
         ),
         cell: ({ row }) => fmtInt(row.original.airdnaUniverse),
-        size: 130,
+        size: 120,
         meta: NUM,
         enableSorting: true,
       },
@@ -113,7 +113,7 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
           <DataGridColumnHeader title={`Lịch sử ${s02}`} column={column} />
         ),
         cell: ({ row }) => (row.original.historyMonths ? `${row.original.historyMonths} tháng` : "—"),
-        size: 130,
+        size: 190, // «Lịch sử <nhãn S02>» — cùng lý do
         meta: NUM,
         enableSorting: true,
       },

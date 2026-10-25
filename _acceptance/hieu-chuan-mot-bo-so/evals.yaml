@@ -63,7 +63,7 @@ evals:
   - id: E9
     criterion: AC-9
     executor: test
-    cmd: config:executors.test.scripts
+    cmd: config:executors.test.ui_capture_login
     paths: [scripts/ui-capture.sh, scripts/ui-capture-login.mjs, scripts/ui-capture-login.test.mjs]
     expected: "exit 0; ca 'UC-AC-9' trên máy chủ giả (node:http, khuôn form đăng nhập server action giống /login: trường ẩn $ACTION_ID_…, POST trả 303 + Set-Cookie oi_session HttpOnly): (a) URL /ops/x → tệp trạng thái phiên có cookie oi_session, quyền 600, bị xoá sau lần chạy; (b) mật khẩu và giá trị cookie KHÔNG xuất hiện trong stdout/stderr gộp; (c) mật khẩu sai → máy chủ giả trả 200 trang đăng nhập → thoát khác 0, lời có chữ 'không đăng nhập được', không có ảnh; (d) URL /vn/hanoi → không gọi /login; (e) bộ che tầng A báo còn lộ → thoát khác 0, không có ảnh; chiều đỏ: bản cũ của ui-capture.sh (không đăng nhập) với URL /ops/x đi tới trang đăng nhập"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
