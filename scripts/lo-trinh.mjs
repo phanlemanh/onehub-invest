@@ -1110,7 +1110,8 @@ const giaTriYaml = v => { const t = String(v ?? '').replace(/\s+/g, ' ').trim();
 // Dựng ô cơ hội từ khuôn đọc LÚC CHẠY (khối OPP-FRONTMATTER-TEMPLATE + OPP-DE-XUAT-PREFIX): bên ghi và
 // bộ phân loại ngưỡng rút từ cùng một khuôn. Ngưỡng chỉ đề xuất từ dữ liệu của hàng: SỐNG = bat_khi,
 // Timebox = ngày mốc có ngày đầu tiên chứa hàng; thiếu căn cứ thì «…» — máy không bịa hạn.
-export function dungCoHoi({ khuon, hang, tep, tenLoTrinh, slug, owner, moc = [], khoDungMoc = false }) {
+// `dongNguon` (hồ sơ o-mo-viec-mang-nguon): dòng «Nguồn:» bên CLI dựng sẵn, chèn ngay sau dòng «Mở từ hàng …»; null → như cũ.
+export function dungCoHoi({ khuon, hang, tep, tenLoTrinh, slug, owner, moc = [], khoDungMoc = false, dongNguon = null }) {
   // Luật ô ngưỡng (tiêu đề section, nhãn bốn dòng, tiền tố đề xuất) chỉ sống ở lib — nạp LƯỜI ở
   // đây: bộ vẽ ở kho tiêu thụ chép mô-đun này mà không chép lib đó, và chỉ lối CLI dùng tới nó.
   const NG = require(path.join(__dirname, '..', 'lib', 'nguong-o-co-hoi.cjs'));
@@ -1138,6 +1139,7 @@ export function dungCoHoi({ khuon, hang, tep, tenLoTrinh, slug, owner, moc = [],
   const than = [
     '', '## Vấn đề & ai gặp', '',
     `Mở từ hàng ${chuoi(hang.ma)} của «${tenLoTrinh || 'lộ trình'}» (\`${tep}\`).`,
+    ...(dongNguon ? [dongNguon] : []),
     // moc-la-chien-dich AC-8: kho dùng mốc → một dòng mốc cho người đọc ô ở Cổng Đáng; kho không mốc → như cũ.
     ...(khoDungMoc ? [(() => { const mm = mocCuaHang(hang.ma, moc); return mm
       ? `Mốc: ${chuoi(mm.ten) || chuoi(mm.ngay)} — ${NGAY_RE.test(chuoi(mm.ngay)) ? ngayVN(mm.ngay) : chuoi(mm.ngay) || 'chưa có ngày'}.`
@@ -1808,8 +1810,25 @@ if (isMain) {
   if (existsSync(dich)) bail(`thư mục đã có: ${path.join('_acceptance', slug)} — không ghi`);
   let khuon;
   try { khuon = readFileSync(KHUON_OPP, 'utf8'); } catch { bail(`không đọc được khuôn ô cơ hội: ${KHUON_OPP}`); }
+  // Dòng «Nguồn:» (hồ sơ o-mo-viec-mang-nguon, TT3): CHỈ khi hàng có dot VÀ kho khai tri_thuc — thiếu một trong hai thì
+  // không nạp mô-đun tri thức nào, ô giống từng byte bộ máy trước vòng. Chọn trang lỗi không chặn mở việc.
+  let dongNguon = null;
+  if (chuoi(hang.dot)) {
+    const { docTriThuc } = require(path.join(__dirname, 'tri-thuc-khoa.cjs'));
+    const pCfg = path.join(root, '_acceptance', 'config.yaml');
+    const tt = docTriThuc(existsSync(pCfg) ? readFileSync(pCfg, 'utf8') : '');
+    if (tt) {
+      const TN = require(path.join(__dirname, 'tri-thuc-nguon.cjs'));
+      let tienTo; try { tienTo = TN.tienTo(khuon); } catch (e) { bail(e.message); }
+      try {
+        const TT = await import(pathToFileURL(path.join(__dirname, 'tri-thuc.mjs')).href);
+        const phu = (Array.isArray(hang.phu) ? hang.phu : []).map(chuoi).filter(Boolean);
+        dongNguon = TN.dungDongNguon({ tienTo, ...TT.chonTrang({ root, cfg: tt, dot: chuoi(hang.dot), phu }) });
+      } catch (e) { dongNguon = `${tienTo} không chọn được trang — ${e.message}`; }
+    }
+  }
   let noiDung;
-  try { noiDung = dungCoHoi({ khuon, hang, tep, tenLoTrinh: k.ten, slug, owner, moc: k.moc, khoDungMoc }); } catch (e) { bail(e.message); }
+  try { noiDung = dungCoHoi({ khuon, hang, tep, tenLoTrinh: k.ten, slug, owner, moc: k.moc, khoDungMoc, dongNguon }); } catch (e) { bail(e.message); }
   mkdirSync(dich, { recursive: true });
   writeFileSync(path.join(dich, 'opportunity.md'), noiDung);
   // Đóng băng dự báo (hồ sơ lo-trinh-gio-may): ước của hàng + dự báo của mốc chứa nó TẠI ngày mở, ghi một lần, không bao giờ
