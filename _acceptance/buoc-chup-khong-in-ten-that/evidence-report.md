@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 72d45ce6a5c4425250c673a0274d3859bf8c14c4
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: buoc-chup-khong-in-ten-that

@@ -5,7 +5,7 @@ slug: buoc-chup-khong-in-ten-that
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T01:47:00Z
 design_doc: docs/superpowers/specs/2026-10-25-buoc-chup-khong-in-ten-that-design.md
@@ -62,3 +62,13 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Sửa `scripts/ui-standards/mask-tier-a.js` (dùng chung với phép đo B1/B3).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Bản kê bằng chứng nói đã thử ca tên thật chỉ nằm trong phần mã ẩn của trang, nhưng chưa có phép thử nào cho ca này; sửa nhầm phần đó sẽ không ai được báo.
+  - Ngoài-2: Trên máy không cài công cụ điều khiển trình duyệt, bộ kiểm tra chung của thư mục scripts báo đỏ dù việc đang làm không liên quan.
+  - Ngoài-3: Nếu một trang sau này đặt tên thật vào ô nhập hoặc chú thích ảnh bên trong vùng đánh dấu nhạy cảm, ảnh vẫn được ghi kèm tên thật mà không bị báo; hiện app chưa có trang nào như vậy.
+  - Ngoài-4: Một ca thử ghi trong bản kê bằng chứng (tên chỉ trong phần mã ẩn) thực ra chưa được thử.
+  - Ngoài-6: Khi bước chuẩn bị tài khoản thử hỏng, bước chụp báo lỗi thô với mã khác thông lệ thay vì lời chung; không lộ thông tin nhạy cảm.
+  - Ngoài-7: Bản kê bằng chứng khai sáu ca của ma trận nhưng thực tế có năm, thiếu ca tên chỉ nằm trong phần mã ẩn.
+  - Ngoài-8: Phép thử chỉ xác nhận bước che tự báo đã che, chưa kiểm tận nơi chữ nhạy cảm trong ảnh đã thành khối đen.
+  - Ngoài-9: Phép thử dọn tệp tạm dùng nguồn danh sách tên giả; nếu nguồn thật ghi tệp ra chỗ khác, tệp danh sách tên có thể sót lại mà phép thử vẫn xanh.
