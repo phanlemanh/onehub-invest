@@ -230,4 +230,12 @@ không thay thế.
 | Hỏi-3 | Ai bật BÙNG: Mạnh duyệt từng lần bật (tăng tải), máy tự hạ về DUY TRÌ (giảm tải) có audit? | Đồng ý | `Hỏi-3: tôi duyệt bật, máy tự hạ` |
 | Hỏi-4 | Đà Nẵng: mở ngay việc nạp phường (C8) để sẵn cho đợt 3, hay để CHỜ tới khi TP.HCM và Hà Nội sang DUY TRÌ? | Để CHỜ — đo trước khi build; ĐN cần cả ngân sách S01 mà §2.2 cho thấy chưa có ở cap 600 | `Hỏi-4: ĐN chờ tới sau đợt 2` |
 
-Trả lời gọn: `Hỏi-1..4: theo khuyến nghị`.
+**Mạnh trả lời 25/10 (qua phiên giám sát): «Hỏi-1..4: theo khuyến nghị».** Hệ quả:
+- Hỏi-1: mốc chuyển BÙNG → DUY TRÌ như §3.1. S01: 70% phần còn sống. S06: cửa sổ ≥ 45 ngày và ruler ≥ 70% phường có cầu.
+  Thêm điều kiện bão hoà (< 5% tin mới, 3 lượt liền) và hạn 14 đêm. Mốc 80% chỉ là vạch tham chiếu.
+- Hỏi-2: một thành phố cho mọi nguồn. Đợt 1 TP.HCM, đợt 2 Hà Nội, Đà Nẵng CHỜ.
+- Hỏi-3: Mạnh duyệt từng lần bật BÙNG; máy tự hạ về DUY TRÌ, có ghi `ops_audit`.
+- Hỏi-4: C8 (phường Đà Nẵng) để CHỜ tới sau đợt 2.
+
+Phiên giám sát xếp hàng làn Claude: C7 `che-do-thu-tren-ops` vào dãy P4; chỉ số ⑦–⑩ ghi vào tiêu chí C2 khi hàng đó mở;
+C8 CHỜ.
