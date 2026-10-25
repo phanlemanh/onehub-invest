@@ -1,0 +1,8 @@
+{"ts":"2026-10-25T12:34:19Z","round":1,"evalId":"E1","run_id":"chotot-khong-lui-E1-r1-20261025T123419Z","exit_code":0,"cmd":"node scripts/chotot-khong-lui/acceptance.mjs khong-lui"}
+{"ts":"2026-10-25T12:34:19Z","round":1,"evalId":"E4","run_id":"chotot-khong-lui-E4-r1-20261025T123419Z","exit_code":0,"cmd":"node scripts/chotot-khong-lui/acceptance.mjs khong-lui"}
+{"ts":"2026-10-25T12:34:28Z","round":1,"evalId":"E2","run_id":"chotot-khong-lui-E2-r1-20261025T123428Z","exit_code":0,"cmd":"node scripts/chotot-khong-lui/acceptance.mjs tien"}
+{"ts":"2026-10-25T12:34:33Z","round":1,"evalId":"E3","run_id":"chotot-khong-lui-E3-r1-20261025T123433Z","exit_code":0,"cmd":"node scripts/chotot-khong-lui/acceptance.mjs idempotent"}
+{"ts":"2026-10-25T12:34:34Z","round":1,"evalId":"E5","run_id":"chotot-khong-lui-E5-r1-20261025T123434Z","exit_code":0,"cmd":"node scripts/giu-captured-at/acceptance.mjs chotot"}
+{"ts":"2026-10-25T12:34:34Z","round":1,"evalId":"E6","run_id":"chotot-khong-lui-E6-r1-20261025T123434Z","exit_code":0,"cmd":"node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"}
+{"ts":"2026-10-25T12:34:38Z","round":1,"evalId":"E7","run_id":"chotot-khong-lui-E7-r1-20261025T123438Z","exit_code":0,"cmd":"node --test scripts/*.test.mjs"}
+{"ts":"2026-10-25T12:35:08Z","round":1,"evalId":"E8","run_id":"chotot-khong-lui-E8-r1-20261025T123508Z","exit_code":0,"cmd":"bash _acceptance/chotot-khong-lui/probes/scope.sh \"$PWD\""}
