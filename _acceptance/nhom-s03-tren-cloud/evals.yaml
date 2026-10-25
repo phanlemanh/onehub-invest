@@ -13,7 +13,7 @@ evals:
     criterion: AC-2
     executor: test
     cmd: config:executors.test.app_ui
-    expected: "exit 0; ca 'ON4-AC-2 cấu hình tạm ở HOME giả theo ma trận hợp đồng: khối s03 do push-ops-facts THẬT dựng và readZaloAllowlist trang máy thu cùng ra N = 8' ok; ca 'ON4-AC-2 zaloAccounts[].enabledGroups của cùng bản tin: default 7, b {T1…T4}, c {D4}, hợp lại = 8 nhóm' ok; chiều đỏ 'ON4-AC-2 bản sao chỉ đọc groups cấp ngoài → bắt (4)' ok; chiều đỏ 'ON4-AC-2 bản sao không kế thừa → bắt (7)' ok; chiều đỏ 'ON4-AC-2 bản sao không khử trùng mã → bắt (9)' ok; chiều đỏ 'ON4-AC-2 bản sao bỏ qua allow:false → bắt (9)' ok; chiều đỏ 'ON4-AC-2 bản sao bỏ qua enabled:false → bắt (9)' ok"
+    expected: "exit 0; ca 'ON4-AC-2 cấu hình tạm ở HOME giả theo ma trận hợp đồng: khối s03 do push-ops-facts THẬT dựng và readZaloAllowlist trang máy thu cùng ra N = 8' ok; ca 'ON4-AC-2 zaloAccounts[].enabledGroups của cùng bản tin: default 7, b {T1…T4}, c {D4}, hợp lại = 8 nhóm' ok; chiều đỏ 'ON4-AC-2 bản sao chỉ đọc groups cấp ngoài → bắt (4)' ok; chiều đỏ 'ON4-AC-2 bản sao không kế thừa → bắt (7)' ok; chiều đỏ 'ON4-AC-2 bản sao không khử trùng mã → bắt (12)' ok; chiều đỏ 'ON4-AC-2 bản sao bỏ qua allow:false → bắt (9)' ok; chiều đỏ 'ON4-AC-2 bản sao bỏ qua enabled:false → bắt (9)' ok"
     paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, app/src/lib/zalo-admin.ts, app/src/lib/collections-queries.ts, app/tests/nhom-s03-tren-cloud.test.tsx]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

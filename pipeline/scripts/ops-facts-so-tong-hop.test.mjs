@@ -21,8 +21,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SEEDS = sourceRegistrySeeds();
 const ENTRIES = SEEDS.map(({ code, realName }) => ({ code, realName }));
 const name = (code) => SEEDS.find((s) => s.code === code).realName;
-// ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7` — cùng khuôn {measured_at, …} của ON22.
-const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7"];
+// ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7`, ON4 (nhom-s03-tren-cloud) khối thứ bảy `s03` — cùng khuôn
+// {measured_at, …} của ON22.
+const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7", "s03"];
 const OLD_KEYS = ["pushedAt", "funnel", "health", "jobs", "sourceRuns", "rotation", "zaloGroups", "zaloFlow", "zaloAccounts"];
 const S = `on22_pipe_${process.pid}`;
 const LOGS = () => ({
@@ -188,9 +189,13 @@ describe("ON22-AC-7 khối không đo được", () => {
     ["jobs", { launchctl: null }, ["jobs"]],
     ["freshness", { omit: ["stg_chotot_ads"] }, ["freshness"]],
     ["records24h", { omit: ["airbnb_snapshots"] }, ["freshness", "records24h"]],
+    // ON4: cấu hình OpenClaw không đọc được → chỉ khối s03 lỗi.
+    ["s03", { noCfg: true }, ["s03"]],
   ];
+  /** Cấu hình OpenClaw tối thiểu ở HOME tạm để khối s03 đo được (ON4) — ca `noCfg` bỏ nó. */
+  const CFG_HOME = { ".openclaw/openclaw.json": JSON.stringify({ channels: { zalouser: { groups: {} } } }) };
   const errored = (payload) => BLOCKS.filter((b) => payload.blocks[b].error !== undefined);
-  const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType" };
+  const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType", s03: "groups" };
   const caseRun = async ([block, how], script) => {
     let schema = S;
     if (how.omit) {
@@ -198,7 +203,7 @@ describe("ON22-AC-7 khối không đo được", () => {
       extra.push(schema);
       await makeOpsSchema(admin, schema, { omit: how.omit });
     }
-    return captureOpsFacts({ script, logs: LOGS(), ...(how.launchctl === null ? { launchctl: null } : {}), env: { DATABASE_URL: schemaUrl(schema) } });
+    return captureOpsFacts({ script, logs: LOGS(), home: how.noCfg ? {} : CFG_HOME, ...(how.launchctl === null ? { launchctl: null } : {}), env: { DATABASE_URL: schemaUrl(schema) } });
   };
   test("ON22-AC-7 ma trận khối không đo được → {measured_at, error}, khối khác vẫn đo, bản tin vẫn gửi", async () => {
     for (const c of MATRIX) {

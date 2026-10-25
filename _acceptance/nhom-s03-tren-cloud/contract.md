@@ -35,7 +35,7 @@ Ma trận viết trước dùng chung (mã giả, HOME tạm):
 - Cấu hình OpenClaw — cấp ngoài `groups`: T1, T2, T3, T4 (bật); `accounts.default.groups`: T1, T2, T3, D4, D5, D6, D7 (bật)
   và D8 (`enabled: false`); `accounts.b`: không khai `groups` (kế thừa cấp ngoài); `accounts.c.groups`: D4 (bật, trùng
   `default`) và X (`allow: false`, không bật ở tài khoản nào). Nhóm bật hiệu dụng = {T1, T2, T3, T4, D4, D5, D6, D7} → **N = 8**.
-  Bản sao sai cho số khác: chỉ đọc cấp ngoài → 4 · không kế thừa → 7 · không khử trùng → 9 · bỏ qua `allow:false` → 9 ·
+  Bản sao sai cho số khác: chỉ đọc cấp ngoài → 4 · không kế thừa → 7 · không khử trùng → 12 (7 + 4 + 1) · bỏ qua `allow:false` → 9 ·
   bỏ qua `enabled:false` → 9.
 
 - AC-1: Given nhật ký của ma trận, When chạy `parseLog` của bên ghi VÀ `gateByGroup` của trang máy thu trên cùng tệp, Then

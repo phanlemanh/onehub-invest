@@ -417,7 +417,8 @@ export function gateByGroup(text: string): Map<string, ZaloGroupRow> {
   const m = new Map<string, ZaloGroupRow>();
   const acceptedSeen = new Set<string>();
   for (const line of text.split("\n")) {
-    const g = line.match(/group=(.+?)(?:\s+p=|$)/)?.[1];
+    // Cùng khuôn với parseLog của bên ghi: tên nhóm dừng ở p= hoặc account= (dòng skip thật không có p=).
+    const g = line.match(/group=(.+?)(?:\s+p=|\s+account=|$)/)?.[1];
     if (!g) continue;
     const row =
       m.get(g) ??
