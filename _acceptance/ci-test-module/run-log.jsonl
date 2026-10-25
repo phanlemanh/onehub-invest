@@ -25,3 +25,4 @@
 "{\"ts\":\"2026-10-25T09:38:26Z\",\"sha\":\"1826a7ec1bd04899e1fcf723fb64980fb331bfc5\",\"round\":1,\"kind\":\"baseline\",\"evals_hash\":\"2e2fedf7b843a81e60ba72da4bca3bd8cbac12fb94cb8710770dd415147b5952\",\"non_discriminating\":[]}"
 "{\"ts\":\"2026-10-25T09:38:26Z\",\"sha\":\"1826a7ec1bd04899e1fcf723fb64980fb331bfc5\",\"round\":1,\"kind\":\"round-tally\",\"verdict\":\"REJECT\",\"expected\":12,\"returned\":12,\"blocked\":0}"
 "{\"ts\":\"2026-10-25T09:38:26Z\",\"sha\":\"1826a7ec1bd04899e1fcf723fb64980fb331bfc5\",\"round\":1,\"kind\":\"chot-truong-nguoi\",\"human_signoff\":0,\"human_override\":0,\"bypass_ack\":0,\"verified_at\":14}"
+{"kind":"thuoc-vat","ts":"2026-10-25T10:43:20Z","round":0,"san":"8f38b09222b8fb4a8f1993d7309db67031359200","vat":[31,13],"thuoc":[3,3],"ho_so":[276,0],"nhat":0,"lan":1,"tep_thuoc":["_acceptance/ci-test-module/evals.yaml"]}
