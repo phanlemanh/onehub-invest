@@ -1,0 +1,37 @@
+schema_version: 1
+feature_slug: collector-seen-cap
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.seen_flush_6000
+    expected: "exit 0; stdout có 'FLUSH-6000 PASS'; flush < 5000 ms; state 5000 id; should-NOT-fire: không id trùng; 5000 mới nhất trùng; 1000 cũ nhất nhận lại"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.seen_hai_luot
+    expected: "exit 0; stdout có 'HAI-LUOT PASS'; sau lượt 1 state 4000; sau lượt 2 state 5000; should-NOT-fire: id trong cửa sổ vẫn bị khử trùng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.seen_khoi_dong_lai
+    expected: "exit 0; stdout có 'KHOI-DONG-LAI PASS'; sau restart 5000 id trùng; tin mới nhận; state 5000"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.seen_tran_lo
+    expected: "exit 0; stdout có 'TRAN-LO PASS'; 1001 tin → 413 kèm 1001 và 1000, bộ đệm 0; should-NOT-fire: 1000 tin → 202, nhận đủ 1000"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    expected: "exit 0; toàn bộ test collector pass, 0 fail (gồm agent-seen-cap.test.ts)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
