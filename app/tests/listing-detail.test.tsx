@@ -246,6 +246,18 @@ test("LD-AC-1 quy định khung ảnh: ảnh chính 3:2; rộng/cao < 1,2 hiện
   assert.match(main().className, /\bobject-cover\b/);
 });
 
+test("LD-AC-1 dữ liệu ảnh bẩn: URL trùng bị khử, URL có query nối bằng &, tối đa 10 ảnh", async () => {
+  const { ListingGallery, photoSrc } = await import("../src/components/listing/listing-gallery");
+  assert.equal(photoSrc("https://a0.muscache.com/x.jpg?v=2", false), "https://a0.muscache.com/x.jpg?v=2&im_w=480");
+  assert.equal(photoSrc("a0.muscache.com/x.jpg", true), "https://a0.muscache.com/x.jpg?aki_policy=x_large");
+  let host = await render(<ListingGallery urls={[URLS[1], URLS[1], URLS[2]]} name="Căn thử" />);
+  assert.equal(host.querySelectorAll('[role="radio"]').length, 2, "URL trùng phải gộp thành một ảnh");
+  assert.equal(host.querySelector("img[data-fit]")?.getAttribute("alt"), "Ảnh 1/2 — Căn thử");
+  const twelve = Array.from({ length: 12 }, (_, i) => `https://a0.muscache.com/im/p/${i + 10}.jpeg`);
+  host = await render(<ListingGallery urls={twelve} name="Căn thử" />);
+  assert.equal(host.querySelectorAll('[role="radio"]').length, 10, "tối đa 10 ảnh");
+});
+
 // ── LD-AC-5: hộp Đặc điểm ──────────────────────────────────────────────────────────────────────────
 
 test("LD-AC-5 Đặc điểm: dòng theo trường có giá trị, null thì không có dòng; link Phường/Thị trường; nút Airbnb khi có link", async () => {

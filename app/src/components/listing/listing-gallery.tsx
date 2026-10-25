@@ -22,7 +22,8 @@ import { Item } from "@/components/ui/item";
 export function photoSrc(url: string, large: boolean) {
   const base = url.startsWith("http") ? url : `https://${url}`;
   // aki_policy=x_large ổn định cho ảnh lớn (im_w=1024 bị CDN 404 tuỳ ảnh); im_w=480 không 404 riêng — ảnh chết thì mọi cỡ đều 404 (đo 25/10).
-  return `${base}${large ? "?aki_policy=x_large" : "?im_w=480"}`;
+  // URL đã mang query (collector đổi khuôn) thì nối bằng & — «??» làm CDN trả 404.
+  return `${base}${base.includes("?") ? "&" : "?"}${large ? "aki_policy=x_large" : "im_w=480"}`;
 }
 
 /**
@@ -89,7 +90,8 @@ export function ListingGallery({
     );
   };
 
-  const photos = urls.filter((u) => !broken.has(u));
+  // Khử URL trùng (key + giá trị radio phải duy nhất), tối đa 10 ảnh như trang cũ.
+  const photos = [...new Set(urls)].slice(0, 10).filter((u) => !broken.has(u));
   const active = photos.includes(selected ?? "")
     ? (selected as string)
     : photos[0];
