@@ -420,3 +420,66 @@ Mạnh hỏi khuyến nghị rồi **chốt cả tám (25/10)**. Cột «Quyết
 | 6 | Quy định cho AI: model cloud hay local? | **Local** (đường Kev hiện có) làm mặc định; chỉ cân model cloud khi có số đo chất lượng cho thấy local không đủ | Nội dung bài lên cloud là cho *người* của đội; gửi cho nhà cung cấp model là thêm một bên thứ ba. Luật 7 + 11 |
 | 7 | Mã riêng cho đơn vị thu? | **Có**: mã ngắn ổn định `S03-N012` (N nhóm · V vùng · M market), máy sinh, không tái dùng, hiện ở cả cloud lẫn local | Tiêu đề nhóm sẽ sửa được (ON20) nên cần một tên không đổi cho lệnh, nhật ký và kênh với ZCode — không phải dùng ID thật |
 | 8 | Tên nguồn thật trong migration công khai? | **Chấp nhận như lịch sử**, không mở hàng dọn: từ nay migration và tài liệu mới không thêm tên thật (seed `real_name` bằng script local) | Tên đã có ở nhiều chỗ công khai (tên tệp, đường dẫn mã, AGENTS.md, CONTEXT.md); dọn văn xuôi không lấy lại được bí mật mà tốn công. Nếu Mạnh thấy vậy thì nên cân lại: tên nguồn thật có còn đáng là tầng A không |
+
+## 5. Tích hợp với lộ trình hiện có (25/10, chờ phiên Điều phối quyết)
+
+Mạnh giao: đưa phân tích + đề xuất vào lộ trình, cắt mốc đồng bộ với lộ trình hiện có để không rời rạc, không xung
+đột; phiên Điều phối quyết hướng hành động rồi trình Mạnh. Bản phạm vi cho lượt cắt:
+`docs/plan/pham-vi-tu-van-hanh-2510.md` (đợt `tu-van-hanh-2510`, dáng `chuoi`). Đối chiếu đo trên `lo-trinh.json`
+của `main` c03a6a9 (101 hàng, 39 mục chân trời) và hàng đợi `dot0-cam-mau`.
+
+### 5.1 Chồng lấn và xung đột với hàng đã có
+
+| # | Hàng có sẵn | Chồng/xung đột với | Đề xuất xử lý |
+|---|---|---|---|
+| X1 | **PL12** `so-nhom-mot-noi` (T3, chưa mở) — sổ nhóm S03/S05/S06 | TV «sổ đơn vị thu» (`collection_units`) | **Sửa câu giao PL12** thay vì hàng mới: thêm market S02, `market_codes[]`, mã đơn vị `S03-N012`, vòng đời. Hàng TV đứng trên PL12 |
+| X2 | **ON19/ON20** sổ nhóm tiêu đề + màn sửa (chưa mở) | quyết định «làm từ xa»: ON20 như đang viết là trang local (`/ops/sources` không lên cloud) | Giữ ON19 (lưu + audit). **ON20 đổi thành màn trên cloud** ghi qua lệnh `unit.update_meta` → đứng trên hàng đường lệnh; hoặc giữ ON20 local làm bước đệm và ghi rõ sẽ thay. Điều phối chọn |
+| X3 | **ON21** agent đọc mô tả nhóm | TV14 quy định ngữ cảnh có phiên bản | Giữ ON21; TV14 đứng trên ON21 (mở rộng, không thay) |
+| X4 | **UH7** `/ops/console` (chân trời, «mở lại khi C2») | TV4 đường lệnh = chính là bề mặt điều khiển | **Mở lại UH7 bằng hàng đường lệnh**; ghi `mo_lai_khi` đã thoả |
+| X5 | **UI13** trang `/ops/audit` (đứng trên PL3) | TV1 actor người thật | UI13 thêm `dung_tren` hàng quyền (TV1), không thì trang hiện actor hằng số |
+| X6 | **PL3/UI1/UI12** thẻ duyệt (local) | TV13 duyệt trên cloud | Giữ; TV13 đứng trên PL3. PL3 làm ở local trước vẫn đúng |
+| X7 | **OH1** (chân trời: review/sources trên cloud «nói rõ chỉ ở local») | quyết định 25/10: thẻ duyệt lên cloud | OH1 thành tạm thời; đóng khi TV13 giao. Ghi vào `ly_do` |
+| X8 | **NT2/AU1** leak gate: `review_queue` trên cloud phải rỗng; `CLOUD_ALLOW` loại `listing_url`, `seller_*`, `properties.photos` | TV9, TV13 (nội dung, ảnh, thẻ lên cloud) | **Đổi luật gate cùng hàng TV9/TV13** — không nới tay; mỗi cột mới vào `CLOUD_ALLOW` kèm soát tên nguồn. Thứ tự: sau AU1 |
+| X9 | **ZC3** watchdog (`zcode/audit-p1-resilience`, dở) · **ON2** lockdown local (dở) · **ON23** lockdown cloud | TV3b (watchdog dùng `checkZaloInvariants`, danh sách lớp chuẩn) | TV3b chạy **sau ZC3 merge và sau ON2**; danh sách lớp chuẩn nên là một tiêu chí của ON2/ON23 nếu chưa đóng hợp đồng |
+| X10 | **AU3** (dở) + P3-1 (ZCode) sửa `chotot-daily.sh`, `apify-facebook-daily.sh` | TV2b công tắc thật (cùng tệp) | TV2b sau AU3 và P3-1 |
+| X11 | **ZC7** tín hiệu lần thu + **ON17** | `job_runs` của TV | `job_runs` = tín hiệu của ZC7; `job.rerun` (TV7) đứng trên ZC7 |
+| X12 | **ZC4** collector API dưới launchd · ZC5 | TV7 bộ chuyển plist | TV7 sau ZC4 (cùng `install-*`/plist) |
+| X13 | **ZC8/ON18/PL10** S08 | TV16 trần ≤ 1 lần/tuần | Gộp TV16 vào tiêu chí của ZC8 nếu ZC8 chưa đóng hợp đồng; không thì TV16 đứng trên ZC8 |
+| X14 | **ON4** nhóm S03 trên cloud qua facts | sổ đơn vị thu lên cloud (PL12 mở rộng) | ON4 giữ (facts số đếm); danh sách nhóm trên cloud lấy từ sổ khi có — ghi chú ở ON4 |
+| X15 | **AU12/OH3** coverage cloud = độ tươi | TV11 độ phủ theo thị trường | Hai số khác nhau, giữ cả hai; TV11 không đổi route `coverage` |
+| X16 | `push-ops-facts.mjs` (t3_paths; ON22/ON2/ON4/ON5/ON7/AU12/NT2 đã phải chạy liền nhau) | TV4 đẩy kết quả lệnh qua đường này | Thêm TV4 vào chuỗi «chạy liền nhau» của BOI-CANH §4 |
+| X17 | **NT4** sổ bề mặt API (đợt 0, dãy P1, ranh giới `app/src/app/api/**`) | TV1 sửa mọi route ghi `api/v1/ops/**` | TV1 sau NT4 |
+
+### 5.2 Mốc đề xuất (theo luật kit: mốc chỉ là mốc phát triển; việc người ra khỏi kho)
+
+Không đặt ngày — ngày rơi ra từ nhịp của kho khi cắt (luật 5). Ba mốc `phat-hanh`, mỗi mốc là một bản đội vận hành
+dùng được thật:
+
+| Mốc | Tên (điều công cụ phải sẵn) | Hàng phải xong | Đứng sau trong lộ trình hiện có |
+|---|---|---|---|
+| **TVM1** | Đội vận hành tạm dừng/bật nguồn và quản nhóm S05/S06 từ cloud, có nhật ký người thật | TV0, TV1, TV2a, TV2b, TV4, TV5, PL12 (mở rộng), ON19 | đợt 0 «Cầm máu» khép (AU1, AU3, NT4); ON22 |
+| **TVM2** | Đội vận hành xem tin bằng mắt và độ phủ 34 thị trường trên cloud | TV9, TV10, TV11, TV12 | TVM1 cho TV12; TV9 cần việc người «áp 037» |
+| **TVM3** | Đội vận hành quản nhóm S03, lịch, SLO, quy định cho AI và duyệt từ xa | TV3a, TV3b, TV6, TV7, TV8, TV13, TV14, ON20, ON21 | ZC3, ON2, ZC4, ZC7, PL3; #77 đã merge |
+
+TV15–TV17 xếp sau TVM3 (TV17 là thước đo 30 ngày, đọc giá trị — vào `opportunity.md` của hàng nó đo, không thành
+hàng nếu luật 2b-3 áp dụng).
+
+### 5.3 Chỗ trong thứ tự BOI-CANH §6
+
+Đề xuất thêm bước **9. Tự vận hành** sau bước 1 (Cầm máu) và song song bước 2–5: TV0 chạy ngay (chỉ tài liệu);
+TVM1 sau đợt 0; TV11 song song TVM1; TV9 khi 037 đã áp; TVM3 sau chuỗi ON (ON2 → ON22 → ON23) và ZC3/ZC4. Giới hạn
+3–4 phiên song song giữ nguyên — TV không mở dãy thứ năm.
+
+### 5.4 Ra khỏi kho (việc của người — thêm vào BOI-CANH §5)
+
+Áp 037 lên Supabase (đã có dòng; nay mở khoá thêm TV9) · tạo bucket ảnh riêng tư · cấp token máy `ops:pull` ·
+tạo tài khoản vai `ops`/`admin` thật cho đội vận hành · Mạnh chỉ định trưởng vận hành · khởi động lại app Ops trên
+máy thu sau khi #77 merge · chủ tài khoản thu quét QR khi mất phiên.
+
+### 5.5 Quyết định cần phiên Điều phối
+
+1. Mở đợt mới `tu-van-hanh-2510` hay gộp vào `ops-noi-that-2410`?
+2. X1/X2: sửa câu giao PL12 và ON20 (hàng cũ) hay để nguyên và thêm hàng mới?
+3. Tiền tố mã hàng (đề xuất `TV`, trùng mã bản phạm vi để dễ dò `phu`).
+4. Ba mốc TVM1–TVM3 có đúng nhịp với đợt phân loại (PL) đang chờ không?
+5. Ai chạy lượt cắt (`/acceptance-gate:cat-luot`): phiên này hay phiên Điều phối?
