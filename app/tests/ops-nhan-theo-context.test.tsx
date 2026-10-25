@@ -420,7 +420,8 @@ test("ON12-AC-6 render bảng thị trường S02 và vòng thu từ hàm nạp 
   const next = vongThat ? rotation.next : rows.slice(0, 6).map((r) => ({ id: r.airdnaId, name: r.name, lastCapturedAt: null }))
   console.log(`# ON12-AC-6 vòng thu: ${vongThat ? "vòng thật" : "vòng thật rỗng — dựng từ 6 thị trường S02"} (${next.length} thị trường)`)
   const vong = await render(<RotationPanel rotation={{ ...rotation, next }} />)
-  for (const m of next) assert.ok(vong.includes(s02MarketName(m.id, m.name).name), `vòng thu thiếu tên Việt của ${m.id}`)
+  // ON6 (collections-khong-so-s02, luật 5 — Hỏi-2): vòng thu không còn tên thị trường S02 nào, kể cả tên Việt.
+  for (const m of next) assert.ok(!vong.includes(`>${s02MarketName(m.id, m.name).name}<`), `vòng thu còn tên thị trường của ${m.id}`)
   assert.doesNotMatch(vong, /#\d+/, "vòng thu còn in #<mã S02>")
   assert.deepEqual(soiHtml(vong), [], inSoi(soiHtml(vong)))
 })
