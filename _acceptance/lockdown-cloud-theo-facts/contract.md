@@ -5,8 +5,10 @@ slug: lockdown-cloud-theo-facts
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi T3 (an toàn Zalo); tệp dự kiến không khớp t3_paths — máy suy T2, Hỏi-2
 surfaces: [ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-25-lockdown-cloud-theo-facts-design.md
+approved_by: Mạnh
+approved_at: 2026-10-25
 lo_trinh_ma: ON23
 ---
 
