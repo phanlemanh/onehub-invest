@@ -1,0 +1,69 @@
+schema_version: 1
+feature_slug: ranh-gioi-khu-vuc-dung
+# Eval máy: pipeline/scripts/reassign-areas.test.mjs (AC-1…AC-5 — mồi tự chèn trong BEGIN…ROLLBACK trên DB local),
+# scripts/kiem-ranh-gioi-khu-vuc.mjs (AC-6, AC-7 — chỉ đọc DB local sau khi áp), app/tests/finder-ranh-gioi.test.tsx
+# (AC-8 — getFinderAreas trên DB local).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.reassign_areas
+    paths: [pipeline/reassign-areas.mjs, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca 'AU9-AC-1 chỉ ranh giới cấp 6 thành phường' ok (mồi cấp 6 chép payload từ một dòng thật của stg_osm_boundaries; phường mồi có trong areas dưới vn-hanoi; số «bỏ N dòng khác cấp» trong log bằng count(*) dòng admin_level khác '6' của snapshot trong cùng transaction), chiều đỏ 'AU9-AC-1 ranh giới cấp 4 bao Hà Nội không vào areas' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.reassign_areas
+    paths: [pipeline/reassign-areas.mjs, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca 'AU9-AC-2 phường cấp 6 nằm ngoài polygon market bị bỏ, in tên' ok, ca 'AU9-AC-2 market chưa có polygon → không chốt, in cảnh báo' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.reassign_areas
+    paths: [pipeline/reassign-areas.mjs, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca 'AU9-AC-3 dọn khu vực lạc' ok: listing mồi trong phường hợp lệ sang phường đó, listing mồi ngoài mọi phường bị bỏ khỏi canonical, tin bán mồi area_id NULL, market_metrics + area_breakdowns của khu vực lạc bị xoá, khu vực lạc không còn trong areas; ca 'AU9-AC-3 khu vực lạc có saved_markets thì giữ' ok (khu vực còn trong areas, saved_markets mồi còn nguyên, log in id kèm số dòng)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.reassign_areas
+    paths: [pipeline/reassign-areas.mjs, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca 'AU9-AC-4 chạy lần hai không đổi gì' ok (0 listing đổi khu vực, 0 bỏ, 0 khu vực xoá ở lần hai)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.reassign_areas
+    paths: [pipeline/sql/450_dq_checks.sql, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca 'AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha' ok (dòng fail kèm số), ca 'AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ranh_gioi_do
+    paths: [pipeline/reassign-areas.mjs, scripts/kiem-ranh-gioi-khu-vuc.mjs]
+    expected: "exit 0; khối 'trước' in số và đỏ đúng hai dòng 'đỏ  extent con vn-hanoi vượt bbox' và 'đỏ  N con vn-hanoi tên Tỉnh…/Thành phố…' (N > 0); khối 'sau' in 'ok   extent con vn-hanoi trong bbox vn-hanoi', 'ok   0 con vn-hanoi tên Tỉnh…/Thành phố…', 'ok   0 con có tâm ngoài polygon cha (vn-hanoi, vn-hcmc)', 'ok   vn-hcmc số phường trước = sau (<số>)'; dòng cuối 'ROLLBACK — DB local không đổi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ranh_gioi_do
+    paths: [pipeline/reassign-areas.mjs, pipeline/sql/300_metrics.sql, scripts/kiem-ranh-gioi-khu-vuc.mjs]
+    expected: "exit 0; dòng 'khu vực lạc (trước): <n> id' với n > 0; khối 'sau' in 'ok   0 dòng trỏ khu vực không còn hoặc khu vực lạc (listings, sale_offers, market_metrics, area_breakdowns, market_asset_stats)', 'ok   rollup vn-hanoi bằng tổng con mỗi tháng (<số> tháng)'; dòng cuối 'ROLLBACK — DB local không đổi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.finder_ranh_gioi
+    paths: [app/src/lib/queries.ts, app/tests/finder-ranh-gioi.test.tsx]
+    expected: "exit 0; ca 'AU9-AC-8 Finder Hà Nội trước khi áp có khu vực vượt bbox' ok (đối chứng), ca 'AU9-AC-8 Finder Hà Nội sau khi áp: mọi khu vực trong bbox vn-hanoi' ok với ít nhất một khu vực; cả hai trong một transaction rồi ROLLBACK"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.reassign_areas
+    paths: [pipeline/reassign-areas.mjs, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca 'AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì' ok (runReassign ném lỗi nêu tên market và hai con số; số dòng areas, listings, market_metrics trước = sau trong transaction)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
