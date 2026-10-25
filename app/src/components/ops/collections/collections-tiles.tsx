@@ -16,7 +16,8 @@ import { sloSummaryKey } from "@/lib/freshness"
 import { FEED_STATE, feedSloSummary, feedState } from "./feed-status"
 import { SegmentBar, StatCard } from "./section"
 
-/** Trên cloud các vùng luồng / nhóm S03 / lockdown không dựng — nút trỏ Alert «chưa có số trên cloud» (collections-view). */
+/** Trên máy chủ vùng nhóm S03 không dựng — nút trỏ Alert «chưa có số trên máy chủ» (collections-view). Bảng luồng 7 ngày
+ * dựng trên máy chủ khi đã có bản tin (ON5, `flowShown`) — nút luồng trỏ về bảng. */
 const CLOUD_ANCHOR = "#tren-may-thu"
 
 export function CollectionsTiles({
@@ -34,21 +35,26 @@ export function CollectionsTiles({
   agentTurnsToday: number | null
   /** Vai trò nguồn cho nhãn «S0x · vai trò» (ON7). */
   roles?: SourceRoles
-  /** Trên cloud (ON3): ô nào chưa có số thì «—»; `stale` = số là lần đo cuối, hiện mờ; Lockdown chưa có nguồn số trên
-   * cloud tới ON23 → «—» kèm nhãn «Chưa kiểm được trên cloud» (Hỏi-1 = A). Vắng = máy local, đo trực tiếp. */
-  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean; funnelMeasured: boolean }
+  /** Trên máy chủ (ON3): ô nào chưa có số thì «—»; `stale` = số là lần đo cuối, hiện mờ. Khoá an toàn đọc khối `lockdown`
+   * (ON23): có khối → như máy thu, `lockdown.stale` theo mốc đo của khối; không khối → «—» kèm «Chưa kiểm được trên máy
+   * chủ» (ON3 Hỏi-1 = A). Vắng = máy thu, đo trực tiếp. */
+  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean; funnelMeasured: boolean; lockdown: { stale: boolean } | null; flowShown?: boolean }
 }) {
   const s03 = sourceLabel("S03", roles)
   const states = feeds.map(feedState)
   const count = (s: ReturnType<typeof feedState>) => states.filter((x) => x === s).length
   // Cùng con số với ô «Đạt SLO» của /ops (AU6): nguồn đạt khi mọi thị trường đạt; y = nguồn active có SLO.
   const slo = feedSloSummary(feeds)
-  const items24h = cloud ? cloud.records24h : feeds.reduce((sum, f) => sum + (f.items24h || 0), 0)
+  // ON6 (luật 5): «Bản ghi 24h» không tính S02 — số S02 chỉ ở /ops/quality (cloud: tổng đã lọc ở collections-view).
+  const counted = feeds.filter((f) => f.code !== "S02")
+  const items24h = cloud ? cloud.records24h : counted.reduce((sum, f) => sum + (f.items24h || 0), 0)
   const muted = cloud?.stale ?? false
   // Số cũ (ADR-0014 hàng «Cũ»): thanh phân đoạn cũng mờ, không tô màu trạng thái — số là lần đo cuối, không phải bây giờ.
   const tone = (t: string) => (muted ? "bg-muted-foreground/40" : t)
-  const busiest = [...feeds].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
+  const busiest = [...counted].sort((a, b) => (b.items24h || 0) - (a.items24h || 0))[0]
   const layersOk = layers.filter((l) => l.ok === true).length
+  // Khối khoá an toàn cũ quá 45′ (ON23): số mờ, đoạn «Ổn» không tô xanh.
+  const lockMuted = cloud?.lockdown?.stale ?? false
   const layersBad = layers.filter((l) => l.ok === false).length
 
   return (
@@ -75,9 +81,9 @@ export function CollectionsTiles({
         title="Bản ghi 24h"
         period="24 giờ"
         value={items24h === null ? "—" : fmtInt(items24h)}
-        basis={items24h === null ? "Chưa có số" : busiest && busiest.items24h ? `Nhiều nhất: ${busiest.code} (${fmtInt(busiest.items24h)})` : "Chưa có bản ghi trong 24 giờ"}
+        basis={items24h === null ? "Chưa có số" : `${busiest && busiest.items24h ? `Nhiều nhất: ${busiest.code} (${fmtInt(busiest.items24h)})` : "Chưa có bản ghi trong 24 giờ"} · không tính S02`}
         muted={muted}
-        action={{ label: "Xem luồng 7 ngày", href: cloud ? CLOUD_ANCHOR : "#luong" }}
+        action={{ label: "Xem luồng 7 ngày", href: cloud && !cloud.flowShown ? CLOUD_ANCHOR : "#luong" }}
       />
 
       <StatCard
@@ -99,7 +105,7 @@ export function CollectionsTiles({
         />}
       </StatCard>
 
-      {cloud ? (
+      {cloud && !cloud.lockdown ? (
         <StatCard
           icon={<ShieldCheckIcon aria-hidden="true" />}
           title="Khoá an toàn"
@@ -107,7 +113,7 @@ export function CollectionsTiles({
           value="—"
           badge={<Badge variant="warning-light">Chưa kiểm được trên máy chủ</Badge>}
           basis="Kiểm ở cổng Ops trên máy thu"
-          action={{ label: "Xem các lớp", href: CLOUD_ANCHOR }}
+          action={{ label: "Xem các lớp", href: "#lockdown" }}
         />
       ) : (
         <StatCard
@@ -124,12 +130,13 @@ export function CollectionsTiles({
                 ? "Có lượt máy tự trả lời hôm nay — kiểm ngay"
                 : "Không có lượt máy tự trả lời hôm nay"
           }
+          muted={lockMuted}
           action={{ label: "Xem các lớp", href: "#lockdown" }}
         >
           <SegmentBar
             label="Lớp khoá an toàn"
             segments={[
-              { key: "ok", label: "Ổn", count: layersOk, tone: "bg-success" },
+              { key: "ok", label: "Ổn", count: layersOk, tone: lockMuted ? "bg-muted-foreground/40" : "bg-success" },
               { key: "bad", label: "Hỏng", count: layersBad, tone: "bg-destructive" },
               { key: "unknown", label: "Chưa kiểm được", count: layers.length - layersOk - layersBad, tone: "bg-muted-foreground/40" },
             ]}

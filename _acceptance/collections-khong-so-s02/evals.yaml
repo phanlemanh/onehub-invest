@@ -1,0 +1,62 @@
+schema_version: 1
+feature_slug: collections-khong-so-s02
+# Eval máy đọc ca mang tiền tố «ON6-AC-n» trong TAP: app/tests/collections-khong-so-s02.test.tsx (AC-1…AC-6, SSR với số
+# lính canh ở trường S02), scripts/check-portal-compliance.mjs (luật tĩnh, AC-6) và scripts/smoke-collections-khong-so-s02.mjs
+# (AC-7, trang chạy thật).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/sync-activity.tsx, app/tests/collections-khong-so-s02.test.tsx]
+    expected: "exit 0; ca 'ON6-AC-1 tab Listing chỉ chuỗi S01 listing tươi' ok (một chuỗi, chú giải không khoá S02, tổng chỉ cộng tự thu), chiều đỏ 'ON6-AC-1 bản sao thêm chuỗi airdnaListings → báo tên chuỗi' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/sync-activity.tsx, app/tests/collections-khong-so-s02.test.tsx]
+    expected: "exit 0; ca 'ON6-AC-2 mô tả biểu đồ nói đang đếm gì theo tab' ok (Listing tự thu S01 · Bài thô và tin rao S03 theo ngày đăng · tổng đúng tab · giờ VN), chiều đỏ 'ON6-AC-2 bản sao mô tả chung → báo tab' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections-tables.tsx, app/src/lib/collections-queries.ts, app/tests/collections-khong-so-s02.test.tsx]
+    expected: "exit 0; ca 'ON6-AC-3 bảng máy thu 5 cột, getFlowDays không đọc airdna' ok (ghi lại mọi câu SQL chạy trên pool thật, 0 câu chạm airdna_*), hai chiều đỏ 'ON6-AC-3 bản sao còn cột airdnaMarkets → báo cột' và 'ON6-AC-3 bản sao SQL còn airdna_listings → báo tên bảng' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/pipe-panels.tsx, app/tests/collections-khong-so-s02.test.tsx]
+    expected: "exit 0; ca 'ON6-AC-4 Rotation theo Hỏi-2: lịch, lượt thu mỗi đêm, giờ cập nhật — không số thị trường, con trỏ, tên' ok, hai chiều đỏ 'ON6-AC-4 bản sao liệt tên → báo tên' và 'ON6-AC-4 bản sao hiện số thị trường → báo lính canh' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/feeds-grid.tsx, app/src/components/ops/collections/collections-tiles.tsx, app/tests/collections-khong-so-s02.test.tsx]
+    expected: "exit 0; ca 'ON6-AC-5 hàng S02 lưới nguồn không số, trạng thái và độ tươi còn' ok, ca 'ON6-AC-5 máy chủ vòng trọn: bản tin bên ghi thật qua readOpsFacts, ô Bản ghi 24h = records24h trừ S02, Nhiều nhất không là S02' ok (S02 nhiều nhất trên lược đồ tạm), hai chiều đỏ 'ON6-AC-5 bản sao cộng cả S02 → báo tổng sai' và 'ON6-AC-5 bên ghi viết mã s02 thường → báo' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/**, app/src/components/ops/collections-tables.tsx, app/src/app/ops/collections/page.tsx, app/tests/collections-khong-so-s02.test.tsx]
+    expected: "exit 0; ca 'ON6-AC-6 toàn trang máy thu và máy chủ: 7 lính canh S02 xuất hiện 0 lần' ok, in đúng 7 dòng '# ON6-AC-6 <hàng>: 0 lần (bản sao gỡ ẩn: <k> lần)' với k ≥ 1 mỗi hàng (đối chứng dương, đếm mọi dạng thô/vi-VN/rút gọn); thiếu dòng nào là fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6b
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [scripts/check-portal-compliance.mjs, app/src/components/ops/collections/**, app/src/components/ops/collections-tables.tsx, app/src/app/ops/collections/page.tsx]
+    expected: "exit 0; dòng 'ok' của luật 'trang Thu thập không đọc trường S02' và chiều đỏ của luật trên bản sao có airdnaListings báo tệp; portal-compliance: ĐẠT"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s02_smoke
+    paths: [scripts/smoke-collections-khong-so-s02.mjs, scripts/lib/ops-app.mjs, app/src/components/ops/collections/**, app/src/components/ops/collections-tables.tsx]
+    expected: "exit 0; dòng 'ok   bảng luồng không cột S02', 'ok   tab Listing một mục chú giải', 'ok   Rotation không huy hiệu tên', 'ok   hàng S02 lưới nguồn theo Hỏi-1', dòng ảnh chụp đã lưu, chiều đỏ 'ok   chiều đỏ: chèn huy hiệu tên vào Rotation → báo', 'dọn: 0 phiên tạm còn lại'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

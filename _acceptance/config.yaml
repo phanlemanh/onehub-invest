@@ -33,6 +33,7 @@ executors:
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     ui_capture_login: "node --test scripts/ui-capture-login.test.mjs"   # ON10 — bước chụp /ops có phiên (máy chủ giả, không cần DB/app)
+    ui_capture_browser: "node --test scripts/ui-capture-browser.test.mjs"   # bước chụp trên trình duyệt thật (playwright-cli), máy chủ giả — không DB, không app
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -48,6 +49,9 @@ executors:
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
     ops_mobile_smoke: "node scripts/smoke-ops-mobile.mjs"   # ON13: cột trạng thái 6 bảng Ops ở 390px/1280px trên app chạy thật (Chromium không giao diện, playwright-core); cần DB local
+    luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
+    luong7_smoke: "node scripts/smoke-luong-7-ngay.mjs"     # ON5 AC-9 — bảng Luồng 7 ngày ở chế độ máy chủ trên trình duyệt (lược đồ tạm, Chromium)
+    s02_smoke: "node scripts/smoke-collections-khong-so-s02.mjs"     # ON6 AC-7 — trang Thu thập ở máy thu không số S02 (Chromium 1280, ảnh chụp)
     listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
@@ -159,7 +163,10 @@ executors:
     # trang-chu-methodology (UI2) — / + /methodology (301 từ /phuong-phap); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
     trang_chu_methodology_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-trang-chu-methodology.mjs"
     trang_chu_loi_db_smoke: "cd app && npx next build && cd .. && node scripts/smoke-trang-chu-loi-db.mjs"   # bản build + next start ở cổng trống (hoặc SMOKE_PORT) với DATABASE_URL trỏ cổng chết; trang lỗi đo bằng trình duyệt thật (playwright-cli); đối chứng dương ở dev :3460
-    methodology_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
+    # yield-dong-tien-von-vay (UI3) — /yield + mục «Dòng tiền vốn vay» (/dau-tu cũ → 301); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
+    yield_dong_tien_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-yield-dong-tien.mjs"
+    financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
+    methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
     app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
     # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
     dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
@@ -186,6 +193,17 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # au3-nap-bao-loi (AU3 phần nạp, làn ZCode) — bản chép script trong thư mục tạm: bước thu là bản giả, sleep là stub; ca DB chết dùng import thật trỏ cổng chết
+    au3_chotot: "node scripts/au3-nap-bao-loi/acceptance.mjs chotot"
+    au3_apify: "node scripts/au3-nap-bao-loi/acceptance.mjs apify"
+    au3_syntax: "bash -n scripts/chotot-daily.sh && bash -n scripts/apify-facebook-daily.sh && echo SYNTAX OK"
+    au3_r1_probe: "bash _acceptance/au3-nap-bao-loi/probes/r1-nhieu-thi-truong.sh \"$PWD\" && bash _acceptance/au3-nap-bao-loi/probes/r1-nhieu-thi-truong.sh \"$PWD\" | tail -1 | grep -qx 'R1: hcmc T07 được nạp lại' && echo R1 OK"   # vòng 2: R1 nhiều thị trường
+    au3_ts_format: "node scripts/au3-nap-bao-loi/acceptance.mjs ts-format"   # vòng 3: khuôn tên 6/9 chữ số + -n
+    au3_lock: "node scripts/au3-nap-bao-loi/acceptance.mjs lock"   # vòng 3: khoá state chung
+    # giu-captured-at (2410-1) — DB TẠM acc_capt_* trong container one-invest-db (pg_dump -s), không ghi DB oneinvest
+    capt_zalo: "node scripts/giu-captured-at/acceptance.mjs zalo"
+    capt_chotot: "node scripts/giu-captured-at/acceptance.mjs chotot"
+    capt_restore: "node scripts/giu-captured-at/acceptance.mjs restore"
     # kev-nhan-cung-hoa (ZC1 nối tiếp) — không mở cổng, không ghi DB, URL ảnh giả host .invalid
     zc1b_media_junk: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs media-junk"
     zc1b_payload_intact: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan-cung-hoa/acceptance.mjs payload-intact"

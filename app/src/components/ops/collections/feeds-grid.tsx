@@ -2,6 +2,7 @@
 
 // Lưới "All connections" của solution-dev-ops-6 cho sức khoẻ từng nguồn S0x.
 import { useMemo } from "react"
+import Link from "next/link"
 
 import type { InsightColumn } from "@/components/insight/insight-grid"
 import { Badge } from "@/components/reui/badge"
@@ -24,6 +25,16 @@ const TABS: StatusTab<SourceFeedHealth>[] = (["late", "stopped", "ok"] as const)
 }))
 
 /** `stale`: số là lần đo cuối của bản tin máy local cũ quá 45′ (ON3) — không badge trạng thái xanh. */
+/** ON6 (luật 5, Hỏi-1): số bản ghi S02 chỉ ở /ops/quality — ô số của hàng S02 trỏ sang đó, không hiện số. */
+const isS02 = (f: SourceFeedHealth) => f.code === "S02"
+function XemChatLuong() {
+  return (
+    <Link href="/ops/quality" className="text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline">
+      Xem Chất lượng
+    </Link>
+  )
+}
+
 export function FeedsGrid({ feeds, stale = false }: { feeds: SourceFeedHealth[]; stale?: boolean }) {
   const columns = useMemo<InsightColumn<SourceFeedHealth>[]>(
     () => [
@@ -73,9 +84,9 @@ export function FeedsGrid({ feeds, stale = false }: { feeds: SourceFeedHealth[];
         meta: NUM,
         enableSorting: true,
       },
-      { id: "n24", accessorKey: "items24h", header: "24h", cell: ({ row }) => (row.original.items24h ? fmtInt(row.original.items24h) : "—"), size: 90, meta: NUM },
-      { id: "stg", accessorKey: "stgRows", header: "Staging", cell: ({ row }) => (row.original.stgRows ? fmtInt(row.original.stgRows) : "—"), size: 100, meta: NUM },
-      { id: "offers", accessorFn: (f) => f.offers ?? -1, header: "Tin rao", cell: ({ row }) => fmtInt(row.original.offers), size: 100, meta: NUM },
+      { id: "n24", accessorKey: "items24h", header: "24h", cell: ({ row }) => (isS02(row.original) ? <XemChatLuong /> : row.original.items24h ? fmtInt(row.original.items24h) : "—"), size: 90, meta: NUM },
+      { id: "stg", accessorKey: "stgRows", header: "Staging", cell: ({ row }) => (isS02(row.original) ? <XemChatLuong /> : row.original.stgRows ? fmtInt(row.original.stgRows) : "—"), size: 100, meta: NUM },
+      { id: "offers", accessorFn: (f) => f.offers ?? -1, header: "Tin rao", cell: ({ row }) => (isS02(row.original) ? <XemChatLuong /> : fmtInt(row.original.offers)), size: 100, meta: NUM },
     ],
     [stale]
   )

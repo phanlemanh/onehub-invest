@@ -25,6 +25,8 @@ process.env.DATABASE_URL = schemaUrl(S_CLOUD) // pool của app đọc lúc impo
 process.env.OPS_API_TOKEN = "on3-thu"
 const ADMIN: User = { id: "1", email: "ops-test@local.test", plan: "free", role: "admin" }
 const RAW_LOCAL = ["source_registry", "review_queue", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "airdna_listings", "listings", "stg_abnb_listings", "sale_offers"]
+/** Bảng đã đồng bộ lên máy chủ mà trang cloud đọc (ON5: «Luồng 7 ngày» đếm listing tươi trên `listings` — sync-cloud FILL). */
+const CLOUD_SYNCED = ["listings"]
 
 type Payload = Record<string, unknown> & { pushedAt: string; blocks: Record<string, Record<string, unknown>> }
 const admin = new pg.Client({ connectionString: localDbUrl() })
@@ -36,6 +38,7 @@ before(async () => {
     await admin.query(`CREATE SCHEMA "${S_CLOUD}"`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_audit (LIKE public.ops_audit INCLUDING ALL)`)
+    for (const t of CLOUD_SYNCED) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     await makeOpsSchema(admin, S_LOCAL)
     for (const [k, s] of Object.entries(LOCAL_ERR)) await makeOpsSchema(admin, s, { omit: OMIT[k] })
   } catch (e) {
@@ -123,8 +126,9 @@ function region(h: string, from: string, to: string) {
 const OPS_TILES = [">Đạt SLO<", ">Quá hạn<", ">Chưa có snapshot<", ">Snapshot mới nhất<", ">Độ tươi theo nguồn<"]
 const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", ">Khoá an toàn<", ">Sức khoẻ nguồn<"] // mốc cuối: tiêu đề lưới nguồn ngay dưới hàng ô
 const headings = (h: string) => [...h.matchAll(/role="heading"[^>]*>([^<]*)</g)].map((m) => m[1])
-/** Trên cloud chỉ dựng vùng đọc bản tin: hàng ô số + lưới sức khoẻ nguồn + lưới job khi có bản tin (khuôn đổi ở lượt 3, sổ d-16). */
-const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Máy móc"]
+/** Trên cloud chỉ dựng vùng đọc bản tin: hàng ô số + lưới sức khoẻ nguồn + lưới khoá an toàn (ON23) + lưới job khi có bản
+ * tin (khuôn đổi ở lượt 3, sổ d-16). */
+const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Khoá an toàn &amp; hạ tầng thu", "Máy móc"]
 const NO_CLOUD_VIEW = { rel: "src/components/ops/collections/collections-view.tsx", fn: (s: string) => s.replace("if (props.cloud) return <CloudCollections", "if (false) return <CloudCollections") }
 
 /** Đạt SLO tính độc lập với bên đọc: nguồn đạt khi mọi hàng của nó tươi; mã có hàng chưa khai SLO không đếm. */
@@ -263,25 +267,28 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
       m.done()
     }
   })
-  test("ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Khoá an toàn «—»", async () => {
+  test("ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Khoá an toàn theo khối lockdown (ON23)", async () => {
     ready()
     const p = await push()
     await ingest(p)
-    const want = (p.blocks.records24h.bySource as { n: number }[]).reduce((a, r) => a + r.n, 0)
+    // ON6 (luật 5): ô «Bản ghi 24h» không tính S02.
+    const want = (p.blocks.records24h.bySource as { code: string; n: number }[]).filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0)
     assert.ok(want > 0, "fixture phải có bản ghi trong 24 giờ")
     const slo = expectSlo(p.blocks.freshness.rows as { code: string; status: string }[])
     const h = await renderCollections()
     assert.equal(tileValue(h, "Bản ghi 24h"), String(want))
     assert.match(text(region(h, COL_TILES[0], COL_TILES[1])), new RegExp(`Sức khoẻ nguồn \\D*${slo.ok} ?/ ?${slo.total}\\b`), "ô Sức khoẻ nguồn = x/y")
     assert.ok(h.includes("data-facts-stamp"), "dòng mốc đo")
-    assert.equal(tileValue(h, "Khoá an toàn"), "—")
-    assert.match(text(h), /Chưa kiểm được trên máy chủ/)
+    // ON3 Hỏi-1 = A giữ ô «—» «tới khi ON23 đọc khối lockdown»; từ ON23 ô = số lớp Ổn của khối (phép đo đầy đủ ở
+    // lockdown-cloud-theo-facts.test.tsx).
+    const layersOk = (p.blocks.lockdown.layers as { ok: boolean | null }[]).filter((l) => l.ok === true).length
+    assert.equal(tileValue(h, "Khoá an toàn"), String(layersOk))
   })
   test("ON3-AC-3 bản sao Bản ghi 24h đọc 0 → bắt", async () => {
     ready()
     const p = await push()
     await ingest(p)
-    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("cloud.records24h.reduce((a, r) => a + r.n, 0)", "0") }, [COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace('cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0)', "0") }, [COL_PAGE])
     try {
       const want = (p.blocks.records24h.bySource as { n: number }[]).reduce((a, r) => a + r.n, 0)
       assert.notEqual(tileValue(await renderCollections(m.path), "Bản ghi 24h"), String(want))
@@ -355,18 +362,26 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
     ["tươi", async () => ingest(await push())],
     ["cũ 46′", async () => ingest(shiftPayload(await push(), -46) as Payload)],
   ]
-  test("ON3-AC-4 ba trạng thái: /ops/collections chỉ có hàng ô số + lưới nguồn, một Alert «Phần còn lại…», nút ô trỏ #tren-may-thu, không «Hỏng» / «ổn» / «tươi» nào", async () => {
+  test("ON3-AC-4 ba trạng thái: /ops/collections chỉ có hàng ô số + lưới nguồn + lưới khoá an toàn, một Alert «Phần còn lại…», nút ô luồng / nhóm S03 trỏ #tren-may-thu, không «ổn» / «tươi» nào của vùng không đo", async () => {
     ready()
     for (const [name, set] of STATES) {
       await set()
       const h = await renderCollections()
-      assert.deepEqual(headings(h).filter((x) => !CLOUD_HEADINGS.includes(x)), [], `${name}: vùng ngoài bản tin không được dựng`)
+      // ON5 (luong-7-ngay-dung-so): bảng «Luồng 7 ngày qua» dựng trên cloud khi đã có bản tin (khối luong7), như lưới job.
+      const choPhep = name === "chưa có bản tin" ? CLOUD_HEADINGS : [...CLOUD_HEADINGS, "Luồng 7 ngày qua"]
+      assert.deepEqual(headings(h).filter((x) => !choPhep.includes(x)), [], `${name}: vùng ngoài bản tin không được dựng`)
+      assert.equal(headings(h).includes("Luồng 7 ngày qua"), name !== "chưa có bản tin", `${name}: bảng luồng chỉ khi có bản tin`)
       assert.equal(headings(h).includes("Máy móc"), name !== "chưa có bản tin", `${name}: lưới job chỉ khi có bản tin`)
       assert.equal(alertTitles(h).filter((t) => t === "Phần còn lại của trang chưa có số trên máy chủ").length, 1, `${name}: một Alert gom vùng trên máy thu`)
       assert.equal(localCount(h), name === "chưa có bản tin" ? 1 : 0, `${name}: chữ chỉ-local đúng số lần`)
-      assert.doesNotMatch(text(h), /Hỏng|Mọi thứ ổn|đều tươi|Kênh kết nối|Hoạt động/, `${name}: không trạng thái giả của vùng không đo`)
-      const hrefs = [...region(h, COL_TILES[1], COL_TILES[4]).matchAll(/href="(#[^"]+)"/g)].map((m) => m[1])
-      assert.ok(hrefs.length >= 3 && hrefs.every((x) => x === "#tren-may-thu"), `${name}: nút ô luồng / nhóm S03 / lockdown trỏ Alert (${hrefs.join(", ")})`)
+      // «Hỏng» nay là nhãn tab của lưới khoá an toàn đọc khối (ON23) — không còn là trạng thái giả của vùng không đo.
+      assert.doesNotMatch(text(h), /Mọi thứ ổn|đều tươi|Kênh kết nối|Hoạt động/, `${name}: không trạng thái giả của vùng không đo`)
+      const hrefs = [...region(h, COL_TILES[1], COL_TILES[3]).matchAll(/href="(#[^"]+)"/g)].map((m) => m[1])
+      // ON5: khi đã có bản tin, nút ô luồng trỏ bảng #luong; nhóm S03 vẫn trỏ Alert.
+      const luong = name === "chưa có bản tin" ? "#tren-may-thu" : "#luong"
+      assert.ok(hrefs.length >= 2 && hrefs.includes(luong) && hrefs.filter((x) => x !== luong).every((x) => x === "#tren-may-thu"), `${name}: nút ô luồng trỏ ${luong}, nhóm S03 trỏ Alert (${hrefs.join(", ")})`)
+      if (luong === "#luong") assert.ok(h.includes('id="luong"'), `${name}: đích #luong có mặt`)
+      assert.ok(region(h, COL_TILES[3], COL_TILES[4]).includes('href="#lockdown"'), `${name}: nút ô khoá an toàn trỏ lưới khoá an toàn (ON23)`)
       assert.ok(h.includes('id="tren-may-thu"'), `${name}: đích của nút có mặt`)
     }
   })
@@ -455,7 +470,7 @@ describe("ON3-AC-6 khối lỗi do bên ghi thật", () => {
 describe("ON3-AC-7 máy local", () => {
   test("ON3-AC-7 DB local đủ bảng: ba trang không dòng mốc đo, không Alert số cũ, không truy vấn ops_heartbeat", async () => {
     ready()
-    for (const t of RAW_LOCAL) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     const { pool } = await import("../src/lib/db")
     const seen: string[] = []
     const orig = pool.query.bind(pool)
@@ -471,7 +486,7 @@ describe("ON3-AC-7 máy local", () => {
       assert.deepEqual(seen.filter((q) => q.includes("ops_heartbeat")), [], "ở local không đọc ops_heartbeat")
     } finally {
       ;(pool as unknown as { query: unknown }).query = orig
-      for (const t of RAW_LOCAL) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
+      for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
     }
   })
 })

@@ -73,9 +73,10 @@ try {
   check(r.status === 404, "khách: /api/zalo-media trả 404 (không lộ có/không có file)");
 
   r = await get("/vn/hanoi/dau-tu");
-  check(r.status === 200, "khách: /vn/hanoi/dau-tu trả 200");
-  check(count(r.body, /airdna/gi) === 0, `khách: /dau-tu không chứa chữ AirDNA (${count(r.body, /airdna/gi)})`);
-  check(/tự thu/.test(r.body), "khách: /dau-tu ghi nguồn mặc định là dữ liệu tự thu");
+  check(r.status === 301 && /\/yield\?area=vn-hanoi#financing$/.test(r.location), "khách: /vn/hanoi/dau-tu chuyển 301 về /yield?area=vn-hanoi#financing");
+  r = await get("/yield?area=vn-hanoi");
+  check(r.status === 200, "khách: /yield trả 200");
+  check(count(r.body, /airdna/gi) === 0, `khách: /yield không chứa chữ AirDNA (${count(r.body, /airdna/gi)})`);
   r = await get("/vn");
   check(r.status === 200 && count(r.body, /href="\/deals"/g) === 0, "khách: nav Invest (/vn) không có link /deals");
 

@@ -3,7 +3,7 @@
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
 //   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
 //   - /api/zalo-media chặn admin trước khi đọc file;
-//   - /dau-tu không đọc bảng AirDNA, không hiện chữ AirDNA;
+//   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của bộ Mô phỏng đầu tư cũ) không hiện chữ AirDNA/tên nguồn thật;
 //   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
 //     so theo đoạn đường dẫn + realpath;
 //   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm;
@@ -11,7 +11,7 @@
 //   - mọi route API khớp sổ bề mặt app/src/lib/api-surface.ts (check-api-surface.mjs).
 //   - bản khai công cụ MCP app/docs/api/mcp-tools.json khớp chế độ sổ bề mặt (check-mcp-tools.mjs).
 // Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -104,18 +104,20 @@ check(
   "zalo-media: isAdmin chặn trước stat/readFile",
 );
 
-// 7. /dau-tu: không bảng AirDNA, không chữ AirDNA/tên nguồn thật ở Invest.
-const invest = code(read("src/lib/invest.ts"));
-check(!/airdna_|area_sources/i.test(invest), "lib/invest.ts không đọc airdna_* / crosswalk S02");
+// 7. /yield + mục «Dòng tiền vốn vay» (Mô phỏng đầu tư cũ gộp vào, UI3): không chữ AirDNA/tên nguồn thật trong mã render;
+//    mô hình vốn vay là hàm thuần, không truy vấn DB (số đầu vào đến từ ước tính lợi suất, listing tự thu).
+const financing = code(read("src/lib/financing.ts"));
+check(!/pool\.query|from "\.\/db"|airdna_/i.test(financing), "lib/financing.ts là hàm thuần, không truy vấn DB / AirDNA");
 for (const f of [
-  "src/app/(app)/[country]/[market]/dau-tu/page.tsx",
-  "src/components/invest/investment-simulator.tsx",
-  "src/lib/invest.ts",
+  "src/app/(app)/yield/page.tsx",
+  "src/components/yield/yield-form.tsx",
+  "src/components/yield/financing/financing-grid.tsx",
+  "src/components/yield/financing/financing-cells.tsx",
+  "src/lib/financing.ts",
 ]) {
   const leaks = code(read(f)).split("\n").filter((l) => realNames.test(l));
   check(leaks.length === 0, `${f}: không tên AirDNA/nguồn thật trong mã render (${leaks.length} dòng)`);
 }
-check(/listing_stats/.test(invest) && /booked90/.test(invest), "lib/invest.ts lấy STR từ listing_stats (90 đêm)");
 
 // 8. /api/zalo-media: chế độ path chỉ hai gốc staging ảnh, không cả ~/.openclaw; gốc raw
 //    snapshots chỉ qua chế độ snapshot+file và chỉ thư mục media/; không so tiền tố chuỗi.
@@ -178,6 +180,22 @@ const { checkMcpTools, loadManifest } = await import("./check-mcp-tools.mjs");
 const mcp = checkMcpTools({ entries: await loadEntries(), manifest: loadManifest(root) });
 for (const v of mcp.violations) check(false, `công cụ MCP: ${v}`);
 check(mcp.violations.length === 0 && mcp.tools > 0, `công cụ MCP: ${mcp.lines.length}/${mcp.tools} công cụ khớp sổ bề mặt`);
+
+// 14. Trang Thu thập không có số S02 (ON6 collections-khong-so-s02, luật 5): mã render của trang không đọc trường S02
+//     (`airdna*`) — số AirDNA chỉ ở /ops/quality. Chiều đỏ trên bản sao viết trước có `airdnaListings`.
+const S02_FIELD = /airdna/i;
+const s02Leaks = (src) => code(src).split("\n").filter((l) => S02_FIELD.test(l));
+const COLLECTIONS_RENDER = [
+  "src/app/ops/collections/page.tsx",
+  "src/components/ops/collections-tables.tsx",
+  ...readdirSync(app("src/components/ops/collections")).filter((f) => /\.tsx?$/.test(f)).map((f) => `src/components/ops/collections/${f}`),
+];
+const s02Hits = COLLECTIONS_RENDER.filter((f) => s02Leaks(read(f)).length > 0);
+check(s02Hits.length === 0, `trang Thu thập không đọc trường S02 (${COLLECTIONS_RENDER.length} tệp)${s02Hits.length ? `: ${s02Hits.join(", ")}` : ""}`);
+{
+  const sao = read("src/components/ops/collections/sync-activity.tsx").replace('listings: ["airbnbListingsSeen"]', 'listings: ["airbnbListingsSeen", "airdnaListings"]');
+  check(s02Leaks(sao).length > 0, "chiều đỏ luật S02: bản sao sync-activity.tsx có airdnaListings → báo sync-activity.tsx");
+}
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);
