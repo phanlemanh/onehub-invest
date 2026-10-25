@@ -1,0 +1,33 @@
+schema_version: 1
+feature_slug: ops-mobile-cot-trang-thai
+# Eval máy đọc ca mang tiền tố «ON13-AC-n» trong TAP: app/tests/ops-mobile-cot-trang-thai.test.tsx (AC-1, AC-2) và
+# scripts/smoke-ops-mobile.mjs (AC-3, AC-4: trang chạy thật + chiều đỏ chèn CSS).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/feeds-grid.tsx, app/src/components/ops/collections/lockdown-grid.tsx, app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/jobs-grid.tsx, app/src/components/ops/quality/dq-checks-table.tsx, app/src/components/ops/quality-tables.tsx, app/tests/ops-mobile-cot-trang-thai.test.tsx]
+    expected: "exit 0; ca 'ON13-AC-1 cột trạng thái ngay sau cột tên — <bảng>' cho đủ 6 bảng viết trước (số ca = 6), chiều đỏ 'ON13-AC-1 bản sao đặt trạng thái cuối bảng → báo tên bảng' và ca biên should-NOT-pass 'ON13-AC-1 bản sao chen một cột giữa tên và trạng thái → báo tên bảng' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/collections/feeds-grid.tsx, app/src/components/ops/collections/lockdown-grid.tsx, app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/jobs-grid.tsx, app/src/components/ops/quality/dq-checks-table.tsx, app/src/components/ops/quality-tables.tsx, app/tests/ops-mobile-cot-trang-thai.test.tsx]
+    expected: "exit 0; ca 'ON13-AC-2 tên + trạng thái ≤ ngân sách khung — <bảng>' cho đủ 6 bảng (in tổng px và ngân sách 348/316), ca biên 'ON13-AC-2 tổng đúng bằng ngân sách → không báo; vượt 1px → báo' (should-NOT-fire ở mức bằng), chiều đỏ 'ON13-AC-2 bản sao cột tên 400px → báo tên bảng và tổng' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ops_mobile_smoke
+    paths: [scripts/smoke-ops-mobile.mjs, scripts/lib/ops-app.mjs, app/src/components/ops/**, app/src/components/insight/insight-grid.tsx]
+    expected: "exit 0; dòng 'ok   chiều đỏ (a) cột đầu 400px → báo <bảng>', 'ok   chiều đỏ (b) ô trạng thái 60px → báo <bảng>', 'ok   chiều đỏ (c) phần tử 500px → báo trang', 6 dòng 'ok   390px <bảng>: <n> hàng · th trạng thái <trái>-<phải> · td xa nhất <phải> ≤ khung <phải> ≤ 390 · nhãn trọn trong ô · ngay sau tên · scrollLeft 0' (in số px đo thật của cả th lẫn td, n ≥ 1), dòng 'ok   tên Nhóm S03 không bị cắt', dòng 'ok   trang không cuộn ngang' cho 2 trang, dòng ảnh chụp đã lưu, 'dọn: 0 phiên tạm còn lại'; bảng 0 hàng, app không lên, DB không phải localhost hay không có trình duyệt → exit ≠ 0 có tên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ops_mobile_smoke
+    paths: [scripts/smoke-ops-mobile.mjs, scripts/lib/ops-app.mjs, app/src/components/ops/**]
+    expected: "exit 0; 6 dòng 'ok   1280px <bảng>: tập cột = tập gốc (<n> cột), trạng thái ngay sau tên' (tập gốc ghim trước từ 4af4dd8) và hai ca biên should-NOT-pass 'ok   chiều đỏ 1280px: gỡ một ô tiêu đề → báo <bảng> thiếu <cột>', 'ok   chiều đỏ 1280px: nhân đôi một cột, gỡ cột khác → báo <bảng>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

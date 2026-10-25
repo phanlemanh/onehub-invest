@@ -62,6 +62,17 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
         enableSorting: true,
       },
       {
+        id: "ratio",
+        accessorFn: (r) => r.ratio ?? -1,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Độ phủ trung thực" column={column} />
+        ),
+        cell: ({ row }) => coverageBadge(row.original.ratio),
+        size: 150,
+        meta: NUM,
+        enableSorting: true,
+      },
+      {
         id: "our",
         accessorFn: (r) => r.ourListings,
         header: ({ column }) => <DataGridColumnHeader title="Listing tự thu" column={column} />,
@@ -92,17 +103,6 @@ export function TruthfulCoverageTable({ rows, roles = {} }: { rows: TruthfulCove
         ),
         cell: ({ row }) => fmtInt(row.original.airdnaUniverse),
         size: 120,
-        meta: NUM,
-        enableSorting: true,
-      },
-      {
-        id: "ratio",
-        accessorFn: (r) => r.ratio ?? -1,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Độ phủ trung thực" column={column} />
-        ),
-        cell: ({ row }) => coverageBadge(row.original.ratio),
-        size: 150,
         meta: NUM,
         enableSorting: true,
       },

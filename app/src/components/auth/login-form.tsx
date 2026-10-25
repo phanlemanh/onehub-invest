@@ -19,7 +19,7 @@ import { PasswordField } from "./password-field"
 const FOOTER_LINKS = [
   { label: "Trang chủ", href: "/" },
   { label: "Thị trường", href: "/vn" },
-  { label: "Phương pháp", href: "/phuong-phap" },
+  { label: "Phương pháp", href: "/methodology" },
 ]
 
 /**

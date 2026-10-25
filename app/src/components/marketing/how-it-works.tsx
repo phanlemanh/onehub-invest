@@ -30,7 +30,7 @@ export function HowItWorks() {
                 variant="outline"
                 size="xl"
                 radius="full"
-                render={<Link href="/phuong-phap" />}
+                render={<Link href="/methodology" />}
                 className="text-foreground hover:bg-accent h-7 transition-colors [&_svg]:size-3.5!"
               >
                 <SparklesIcon aria-hidden="true" />
@@ -45,7 +45,7 @@ export function HowItWorks() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 @3xl:w-80 @3xl:justify-end">
-              <Button variant="outline" size="lg" nativeButton={false} render={<Link href="/phuong-phap" />}>
+              <Button variant="outline" size="lg" nativeButton={false} render={<Link href="/methodology" />}>
                 <BookOpenIcon data-icon="inline-start" aria-hidden="true" />
                 Phương pháp
               </Button>

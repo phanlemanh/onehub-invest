@@ -61,7 +61,7 @@ khi có thêm các module Pricing, Performance và Comps. Rail cùng menu phụ 
 INVEST PORTAL  (công khai, đọc là chính)
 │
 ├─ /                         Trang chủ                       [shell: marketing]
-├─ /phuong-phap              Phương pháp & thuật ngữ         [shell: marketing]  ← MỚI (L8, L11)
+├─ /methodology             Phương pháp & thuật ngữ         [shell: marketing]  ← MỚI (L8, L11; /phuong-phap → 301)
 │
 ├─ /vn                       Tìm thị trường (Finder)         [shell: app]
 │    ?view=list|map  ?level=market|submarket  ?metric=revpar  ?sort=…
@@ -142,7 +142,7 @@ Lý do chọn top nav, dù AirDNA đang đi theo hướng rail: AirDNA có 5 mod
 One Invest chỉ có 4 mục, đều thuộc nhóm Research. Cấu hình nav viết thành **một mảng
 khai báo** (`nav.config.ts`), nên đổi shell sau này không đụng tới IA.
 
-**Shell marketing** (`/`, `/phuong-phap`): `navbar-12` + footer tự ghép từ Separator, cột link và nút link (ReUI không có block footer).
+**Shell marketing** (`/`, `/methodology`): `navbar-12` + footer tự ghép từ Separator, cột link và nút link (ReUI không có block footer).
 
 **Bề mặt:** trang app dùng **Frame** (`stats-*`, `chart-*`, `data-grid-*` của Pro đều là Frame). Các `c-chart-*` miễn phí đã cài là Card thì chuyển phần thân vào `FramePanel`. Không lồng Card trong Frame.
 
@@ -235,7 +235,7 @@ Ghi chú P4:
 - Công suất 90 đêm đầu đọc cột `nights90`/`booked90` của `listing_stats` (migration 011, `410_listing_stats.sql`) — đã bỏ cache 1 giờ `lib/cached.ts`; `/yield`, `/so-sanh`, Insight thị trường luôn đọc số mới sau mỗi lần pipeline chạy.
 
 Ghi chú P5:
-- Trang chủ + `/phuong-phap` dùng layout marketing (navbar-12 + footer); `/login`, `/register` ở nhóm `(auth)` toàn màn hình (auth-4, auth-5); `/saved` (wishlist-2), `/so-sanh?areas=` (comparison-1, tối đa 4) ở shell app.
+- Trang chủ + `/methodology` (301 từ `/phuong-phap`, định nghĩa mở sẵn theo faq-3; lỗi trang ở `(marketing)/error.tsx`, layout hỏng ở `global-error.tsx`) dùng layout marketing (navbar-12 + footer); `/login`, `/register` ở nhóm `(auth)` toàn màn hình (auth-4, auth-5); `/saved` (wishlist-2), `/so-sanh?areas=` (comparison-1, tối đa 4) ở shell app.
 - Vá open redirect: `?next=` của `/login` đi qua `safeNext` (lib/safe-next.ts) — trước đây `redirect(next)` nhận cả `//evil.com`.
 - Giao diện mặc định theo hệ thống (sáng/tối) — mọi trang Invest đã dùng token ReUI.
 - Lối vào So sánh: nút trên Insight, nút trong Đã lưu, mục nav. Khay chọn nhiều dòng trong Finder: chưa làm.
