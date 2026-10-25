@@ -23,7 +23,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/**, scripts/**, app/next.config.ts, app/tests/yield-dong-tien-von-vay.test.tsx]
-    expected: "exit 0; ca 'YDT-AC-2 không còn /dau-tu': quét .ts/.tsx/.mjs/.sh dưới app/src và scripts/, loại ĐÚNG hai tệp đo redirect (scripts/smoke-yield-dong-tien.mjs, scripts/smoke-portal-compliance.mjs — ca đòi chúng có thật) → 0 chỗ chứa '/dau-tu'; next.config.ts có đúng một redirect source '/:country/:market/dau-tu' destination '/yield?area=:country-:market#financing' statusCode 301; insight-actions.tsx có href `/yield?area=${areaId}#financing`; chiều đỏ: thư mục tạm có 'href=\"/vn/hanoi/dau-tu\"' → 1 chỗ kèm tên tệp"
+    expected: "exit 0; ca 'YDT-AC-2 không còn /dau-tu': quét .ts/.tsx/.mjs/.sh dưới app/src và scripts/, loại ĐÚNG hai tệp đo redirect (scripts/smoke-yield-dong-tien.mjs, scripts/smoke-portal-compliance.mjs — ca đòi chúng có thật) → 0 chỗ chứa '/dau-tu'; next.config.ts có đúng một redirect source '/:country/:market/dau-tu' destination '/yield?area=:country-:market#financing' statusCode 301; vẽ InsightActions trong jsdom với areaId 'vn-hanoi' và một mã phường 'vn-hanoi-hoan-kiem' → link chữ 'Đầu tư' có href ĐÚNG BẰNG '/yield?area=vn-hanoi#financing' / '/yield?area=vn-hanoi-hoan-kiem#financing' (đầu ra thật, không grep chuỗi mẫu); chiều đỏ: thư mục tạm có 'href=\"/vn/hanoi/dau-tu\"' → 1 chỗ kèm tên tệp"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
@@ -57,8 +57,8 @@ evals:
     criterion: AC-6
     executor: script
     cmd: config:executors.script.yield_dong_tien_smoke
-    paths: [app/src/app/(app)/yield/**, app/src/lib/financing.ts, scripts/smoke-yield-dong-tien.mjs]
-    expected: "exit 0; server dùng và kẹp tham số: '/yield?area=vn-hanoi&eq=1 → Khoản vay 0 và Trả nợ 0/tháng'; '/yield?area=vn-hanoi&eq=5 → kẹp về 100%: Khoản vay 0'; '/yield?area=vn-hanoi&eq=0.01 → kẹp về 10%' (khoản vay = 90% giá mua đọc từ HTML); đối chứng: không tham số → khoản vay = 70% giá mua"
+    paths: [app/src/app/(app)/yield/**, app/src/lib/financing.ts, app/src/components/yield/financing/**, scripts/smoke-yield-dong-tien.mjs]
+    expected: "exit 0; server dùng và kẹp tham số: '/yield?area=vn-hanoi&eq=1 → Khoản vay 0 và Trả nợ 0/tháng'; '/yield?area=vn-hanoi&eq=5 → kẹp về 100%: Khoản vay 0'; '/yield?area=vn-hanoi&eq=0.01 → kẹp về 10%' (khoản vay = 90% giá mua đọc từ HTML); đối chứng: không tham số → khoản vay = 70% giá mua; rate/term (quan hệ trên HTML, không số viết tay): 'rate=0.12 → trả nợ/tháng lớn hơn ca không tham số', 'rate=0.5 → trả nợ bằng ca rate=0.3 (kẹp 30%)', 'term=100 → trả nợ bằng ca term=35', 'term=1 → trả nợ bằng ca term=5'; số lưới khớp ô KPI cùng trang, với HAI bộ tham số (mặc định, và mgmt=0.1&fixed=2000000): 'doanh thu năm 1 của lưới = ô Doanh thu ngắn hạn / năm', 'thu nhập ròng năm 1 của lưới = thu nhập ròng ghi ở ô Yield ròng ngắn hạn' (cùng định dạng tiền gọn); mỗi dòng FAIL ghim tên tham số/hàng và giá trị thật"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-7
@@ -66,6 +66,14 @@ evals:
     cmd: config:executors.test.app_ui
     paths: [app/src/components/yield/yield-form.tsx, app/src/app/api/v1/user-events/route.ts, agent/src/memory/store.ts, app/tests/yield-dong-tien-von-vay.test.tsx]
     expected: "exit 0; ca 'YDT-AC-7 sự kiện': gửi form → sendUserEvent nhận kind 'dau_tu_input' với payload có đủ khoá area, price, equityPct, ratePct, termYears (bắt qua fetch/sendBeacon giả, đọc body JSON); 'dau_tu_input' có trong danh sách loại của app/src/app/api/v1/user-events/route.ts và kiểu của agent/src/memory/store.ts"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E19
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yield_dong_tien_smoke
+    paths: [app/src/app/api/v1/user-events/route.ts, app/src/components/yield/yield-form.tsx, scripts/smoke-yield-dong-tien.mjs]
+    expected: "exit 0; với người dùng thử + phiên ghi thẳng DB local (tiền tố riêng mỗi lượt, xoá ở finally): POST /api/v1/user-events thân {kind:'dau_tu_input', payload:{area, price, equityPct, ratePct, termYears}} kèm cookie phiên → 'ok 200 {ok:true}' và 'ok user_events có đúng 1 dòng kind dau_tu_input của người thử với payload đủ 5 khoá'; đối chứng: không cookie → 204 và 0 dòng mới; kind lạ → 400"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-8

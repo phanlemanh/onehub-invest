@@ -55,13 +55,14 @@ cùng phần thay thế — tách ra thì có lúc mất chức năng dòng ti�
   (máy khuyên giữ — đơn giản, nói rõ ở chú thích lưới).
 - **Hỏi-2** — trạng thái tải của `/yield`: để hàng sau (máy khuyên) hay làm trong hàng này.
 - **Hỏi-3** — đường đo: bỏ cho hàng dọn giao diện (máy khuyên) hay khai thước sau ship.
+- **Hỏi-4** — doanh thu của lưới: chỉ số ước tính từ listing so sánh (máy khuyên) hay thêm ô ghi đè giá/đêm, công suất như
+  bộ mô phỏng cũ (giữ chức năng cũ, form dài thêm).
+- **Hỏi-5** — mặc định vay 30% · 9% · 20 năm như bộ cũ (máy khuyên) hay theo mặt bằng lãi khác.
 
 ## Phương án đã loại
 
 - **Giữ lưới sửa ô như bản gốc** (sửa số ngay trên lưới, thêm dòng chi phí): loại — `/yield` tính ở server từ URL để chia
   sẻ được; sửa trong lưới tạo nguồn sự thật thứ hai lệch với form.
-- **Giữ mô hình ADR × công suất của bộ mô phỏng** (người tự nhập giá đêm/công suất): loại — hai mô hình doanh thu trên một
-  trang cho hai số khác nhau; CONTEXT.md chốt gộp vào Ước tính lợi suất.
 - **Redirect `?market=`** (tham số `/yield` vốn có): loại — routes.md và CONTEXT.md đã chốt `?area=<market>`.
 
 <!-- <<<UX-SPEC-TEMPLATE -->

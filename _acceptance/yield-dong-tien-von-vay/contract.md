@@ -39,8 +39,8 @@ Cổng Đáng `_acceptance/yield-dong-tien-von-vay/opportunity.md` (Mạnh quy�
 - AC-6: Given form-11, When mở `/yield`, Then có nhóm «Vốn vay» với Vốn tự có 30%, Lãi suất 9%/năm, Kỳ hạn 20 năm; sửa rồi
   bấm «Ước tính» đẩy `eq`, `rate`, `term` lên URL và server dùng chúng (kẹp vốn tự có 10–100%, lãi 0–30%, kỳ hạn 5–35 năm);
   «Về mặc định» đặt lại cả chi phí lẫn vốn vay.
-- AC-7: Given người dùng bấm «Ước tính», When form gửi, Then sự kiện `dau_tu_input` vẫn phát (mang khu vực, giá mua, vốn tự
-  có, lãi, kỳ hạn) và loại sự kiện ấy vẫn có trong danh sách nhận của `/api/v1/user-events` và bộ nhớ agent.
+- AC-7 (cross-layer): Given người dùng bấm «Ước tính», When form gửi, Then sự kiện `dau_tu_input` vẫn phát (mang khu vực, giá mua, vốn tự
+  có, lãi, kỳ hạn) và `/api/v1/user-events` nhận sự kiện ấy (người có phiên → ghi một dòng `user_events` mang payload mới; khách → 204, không ghi); loại sự kiện vẫn có trong kiểu của bộ nhớ agent.
 - AC-8: Given lưới vốn vay, When bấm một hàng mục, Then mục mở/gập (mặc định mở Chi phí vận hành và Trả nợ vay); ở 375 px chỉ
   ghim nút mở + tên khoản mục, trang không cuộn ngang (lưới cuộn ngang trong khung).
 - AC-9: Given `npm run lint` + `tsc --noEmit` ở `app/`, When chạy, Then sạch; `eslint-suppressions.json` không còn khoá của
