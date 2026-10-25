@@ -31,6 +31,8 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
+    kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
     ui_capture_login: "node --test scripts/ui-capture-login.test.mjs"   # ON10 — bước chụp /ops có phiên (máy chủ giả, không cần DB/app)
@@ -265,6 +267,12 @@ executors:
     snt_ten_that_co_san: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs ten-that-co-san"
     snt_mo_coi: "node scripts/au3-nap-bao-loi/acceptance.mjs mo-coi"
     kns_au3_regress: "for m in ts-format apify chotot lock; do out=$(node scripts/au3-nap-bao-loi/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
+    # test-anh-mau-co-manifest — ảnh mẫu scripts/ có manifest sau cổng 2510-8
+    tam_khong_noi: "bash _acceptance/test-anh-mau-co-manifest/probes/khong-noi.sh \"$PWD\""
+    # khoa-nap-s05-paused (2510-4 + 2510-9) — DB tạm acc_s05_* (pg_dump -s source_registry), HOME giả, fetch bị chặn; không gọi Apify, không ghi DB oneinvest
+    kns_s05_gate: "node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"
+    kns_scope: "bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""
+    kns_lich_s05: "node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"   # G1 2510-14: plist + buildRunInput, không gọi Apify
     # collector-seen-cap (2510-2) — mỗi ca trong tiến trình con timeout 60s, thư mục tạm, cổng ngẫu nhiên; không chạm :9210
     seen_flush_6000: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs flush-6000"
     seen_hai_luot: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs hai-luot"
