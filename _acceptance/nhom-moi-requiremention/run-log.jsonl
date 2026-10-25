@@ -1,0 +1,10 @@
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E1","run_id":"nhom-moi-requiremention-E1-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E2","run_id":"nhom-moi-requiremention-E2-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E3","run_id":"nhom-moi-requiremention-E3-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E4","run_id":"nhom-moi-requiremention-E4-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E5","run_id":"nhom-moi-requiremention-E5-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E6","run_id":"nhom-moi-requiremention-E6-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E7","run_id":"nhom-moi-requiremention-E7-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E8","run_id":"nhom-moi-requiremention-E8-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:05Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E9","run_id":"nhom-moi-requiremention-E9-20261025T003405Z","exit_code":0,"cmd":"cd app && npm test"}
+{"ts":"2026-10-25T00:34:17Z","sha":"6f62fec74e6e30f3a15591281ad0c7bb0f3e2ffe","round":1,"evalId":"E10","run_id":"nhom-moi-requiremention-E10-20261025T003417Z","exit_code":0,"cmd":"cd app && npx tsc --noEmit && npm run lint"}

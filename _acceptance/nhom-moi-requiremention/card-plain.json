@@ -73,5 +73,6 @@
       "i": 0,
       "p": "Đã liệt trước mọi kiểu tài khoản × mọi thao tác bật/tắt (AC-1…AC-3), ba trạng thái cấu hình trước khi ghi (AC-3, AC-6), bốn lớp luật an toàn cả chiều phạm lẫn sát ranh không phạm (AC-4), đối chiếu với bộ canh (AC-5), mọi đường ghi (AC-7), an toàn phép đo (AC-8), hồi quy (AC-9)."
     }
-  ]
+  ],
+  "analyst_plain": "Không đo bản trước khi sửa; theo cấu trúc mã, các phép đo mới không thể xanh trên bản cũ vì hàm kiểm và tệp test chưa tồn tại."
 }
