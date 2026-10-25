@@ -316,7 +316,8 @@ hành. Riêng **tên nguồn thật vẫn chỉ ở máy thu**: cloud hiện mã
 
 - Bộ che `maskSourceNames` + bộ soát `tier-a-guard` chạy trên nội dung bài trước khi lên (thay tên/tên miền nguồn
   bằng mã); soát đỏ thì không gửi dòng đó.
-- **Điều kiện trước**: migration 037 (khoá anon + RLS) đã áp trên Supabase — ROADMAP V8 ghi *chưa áp*. Thiếu nó
+- **Điều kiện trước**: migration 037 (khoá anon + RLS) đã áp trên Supabase — ROADMAP V8 ghi *chưa áp*, nhưng leak
+  gate kiểm anon PASS mọi lượt sync từ 24/10 (AU1); xác nhận bằng `sync-cloud --kiem-anon` sạch. Thiếu nó
   thì nội dung tin đọc được bằng anon key công khai.
 - Ảnh cần chỗ lưu riêng tư trên cloud (bucket có khoá, URL ký ngắn hạn) — có chi phí lưu trữ.
 - `user_events`/`user_profile` vẫn tầng A, không đổi.
@@ -403,7 +404,7 @@ nhân bản. Làn theo AGENTS.md: ZCode giữ `collector/`, `collect-*`/`import-
 
 ### 4.7 Ra khỏi kho (việc của người, không phải hàng)
 
-Áp migration 037 lên Supabase (điều kiện của TV9) · tạo bucket ảnh riêng tư · cấp token máy `ops:pull` · đưa
+Xác nhận 037 trên Supabase bằng `sync-cloud --kiem-anon` (điều kiện của TV9) · tạo bucket ảnh riêng tư · cấp token máy `ops:pull` · đưa
 collector API vào launchd (triển khai ZC4) · tạo tài khoản vai `ops`/`admin` thật cho đội vận hành.
 
 ### 4.8 Quyết định của Mạnh
@@ -458,7 +459,7 @@ dùng được thật:
 | Mốc | Tên (điều công cụ phải sẵn) | Hàng phải xong | Đứng sau trong lộ trình hiện có |
 |---|---|---|---|
 | **TVM1** | Đội vận hành tạm dừng/bật nguồn và quản nhóm S05/S06 từ cloud, có nhật ký người thật | TV0, TV1, TV2a, TV2b, TV4, TV5, PL12 (mở rộng), ON19 | đợt 0 «Cầm máu» khép (AU1, AU3, NT4); ON22 |
-| **TVM2** | Đội vận hành xem tin bằng mắt và độ phủ 34 thị trường trên cloud | TV9, TV10, TV11, TV12 | TVM1 cho TV12; TV9 cần việc người «áp 037» |
+| **TVM2** | Đội vận hành xem tin bằng mắt và độ phủ 34 thị trường trên cloud | TV9, TV10, TV11, TV12 | TVM1 cho TV12; TV9 cần «xác nhận 037 bằng `sync-cloud --kiem-anon` sạch» |
 | **TVM3** | Đội vận hành quản nhóm S03, lịch, SLO, quy định cho AI và duyệt từ xa | TV3a, TV3b, TV6, TV7, TV8, TV13, TV14, ON20, ON21 | ZC3, ON2, ZC4, ZC7, PL3; #77 đã merge |
 
 TV15–TV17 xếp sau TVM3 (TV17 là thước đo 30 ngày, đọc giá trị — vào `opportunity.md` của hàng nó đo, không thành
@@ -467,19 +468,25 @@ hàng nếu luật 2b-3 áp dụng).
 ### 5.3 Chỗ trong thứ tự BOI-CANH §6
 
 Đề xuất thêm bước **9. Tự vận hành** sau bước 1 (Cầm máu) và song song bước 2–5: TV0 chạy ngay (chỉ tài liệu);
-TVM1 sau đợt 0; TV11 song song TVM1; TV9 khi 037 đã áp; TVM3 sau chuỗi ON (ON2 → ON22 → ON23) và ZC3/ZC4. Giới hạn
+TVM1 sau đợt 0; TV11 song song TVM1; TV9 khi `--kiem-anon` sạch; TVM3 sau chuỗi ON (ON2 → ON22 → ON23) và ZC3/ZC4. Giới hạn
 3–4 phiên song song giữ nguyên — TV không mở dãy thứ năm.
 
 ### 5.4 Ra khỏi kho (việc của người — thêm vào BOI-CANH §5)
 
-Áp 037 lên Supabase (đã có dòng; nay mở khoá thêm TV9) · tạo bucket ảnh riêng tư · cấp token máy `ops:pull` ·
+Xác nhận 037 bằng `sync-cloud --kiem-anon` sạch (mở khoá TV9) · tạo bucket ảnh riêng tư · cấp token máy `ops:pull` ·
 tạo tài khoản vai `ops`/`admin` thật cho đội vận hành · Mạnh chỉ định trưởng vận hành · khởi động lại app Ops trên
 máy thu sau khi #77 merge · chủ tài khoản thu quét QR khi mất phiên.
 
-### 5.5 Quyết định cần phiên Điều phối
+### 5.5 Quyết định của phiên Điều phối (25/10; Điều phối trình thẳng Mạnh)
 
-1. Mở đợt mới `tu-van-hanh-2510` hay gộp vào `ops-noi-that-2410`?
-2. X1/X2: sửa câu giao PL12 và ON20 (hàng cũ) hay để nguyên và thêm hàng mới?
-3. Tiền tố mã hàng (đề xuất `TV`, trùng mã bản phạm vi để dễ dò `phu`).
-4. Ba mốc TVM1–TVM3 có đúng nhịp với đợt phân loại (PL) đang chờ không?
-5. Ai chạy lượt cắt (`/acceptance-gate:cat-luot`): phiên này hay phiên Điều phối?
+1. **Đợt phạm vi mới `tu-van-hanh-2510`** (dáng `chuoi`) — là nhóm phạm vi trong `lo-trinh.json`; phần chạy đi qua
+   các dãy của đợt điều phối đang chạy, không mở đợt điều phối thứ hai song song.
+2. **Sửa câu giao PL12 và ON20** (cả hai chưa mở vòng), không thêm hàng trùng; lý do sửa ghi ở `ghi_chu` từng hàng.
+3. Tiền tố mã hàng **`TV`**.
+4. Mốc: TV0 chạy ngay. TVM1 sau các hàng đợt 0 còn dở (AU1, AU3, NT4); ON22 đã merge (#67) nên không còn chặn. Không
+   mở dãy thứ năm — hàng TV nối vào P2/P3/P4 khi chuỗi hiện tại hết. TVM2: điều kiện ghi là **«xác nhận 037 bằng
+   `sync-cloud --kiem-anon` sạch»** (leak gate kiểm anon PASS mọi lượt sync từ 24/10 — AU1), không ghi «chờ Mạnh áp».
+   TVM3 giữ như §5.2.
+5. Phiên này chạy `/acceptance-gate:cat-luot` trên chính PR #79 (tài liệu + bản phạm vi + hàng lộ trình cùng một
+   PR); trước khi cắt, gửi các hàng làn ZCode (TV2b, TV3b, TV7, TV14 phần hook, TVN2) cho phiên liên làn xem chỗ giáp
+   DATA-CONTRACT/`schemaVersion` (ZC7 đang lấy v5, S08 lấy v4). Merge khi CI xanh và Mạnh ký câu giao đã sửa.

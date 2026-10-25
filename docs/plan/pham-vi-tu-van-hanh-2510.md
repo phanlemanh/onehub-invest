@@ -7,7 +7,7 @@
 > Nguồn gọi bằng mã: S01 tự thu ngắn hạn · S02 hiệu chuẩn · S03 nhóm chat cộng đồng · S05 nhóm mạng xã hội ·
 > S06 rao vặt công khai · S08 danh mục dự án.
 >
-> Việc của người (áp 037 lên Supabase, bucket ảnh, token máy, tài khoản vai thật, chỉ định trưởng vận hành, khởi
+> Việc của người (bucket ảnh, token máy, tài khoản vai thật, chỉ định trưởng vận hành, khởi
 > động lại app Ops sau #77, quét QR khi mất phiên) KHÔNG nằm ở đây — liệt «Ra khỏi kho» ở mô tả PR (luật 17/10).
 > Chồng lấn với hàng có sẵn (PL12, ON19–ON21, UH7, UI13, PL3, OH1, NT2/AU1, ZC3/ON2, AU3, ZC7, ZC4, ZC8, ON4, AU12,
 > NT4): xử lý theo §5.1 của tài liệu, do phiên Điều phối quyết trước khi cắt.
