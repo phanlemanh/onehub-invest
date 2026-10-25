@@ -5,7 +5,7 @@ slug: lockdown-cloud-theo-facts
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi T3 (an toàn Zalo); tệp dự kiến không khớp t3_paths — máy suy T2, Hỏi-2
 surfaces: [ui]
-status: verified
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-25-lockdown-cloud-theo-facts-design.md
 approved_by: Mạnh
 approved_at: 2026-10-25
@@ -90,3 +90,7 @@ Quét không gian tiêu chí theo trục (bước mặc định CT-S, quét ngay
 - Chung `collections-view.tsx`, `collections-tiles.tsx`, `jobs-grid.tsx` với ON3 (đã merge) và ON4/ON5 — không song song.
 - Phép đo không gọi lệnh ghi nào trên OpenClaw (`.claude/rules/zalo-safety.md`): bản tin dựng từ thư mục tạm, cổng dò được
   thay bằng giá trị `ok` của bản tin thật.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Bảng thuật ngữ CONTEXT.md chưa nêu trạng thái «Chỉ kiểm ở máy thu» của Khoá an toàn và «Chưa kiểm được» của Tác vụ.
+  - Ngoài-2: Danh sách 8 lớp khoá an toàn nằm ở hai nơi (bên ghi và bên đọc); sửa chữ một nơi mà quên nơi kia thì màn hình lệch chữ.
+  - Ngoài-3: Phép đo chưa tự đếm độc lập đủ 8 lớp khoá an toàn — mất một lớp vẫn có thể xanh.
