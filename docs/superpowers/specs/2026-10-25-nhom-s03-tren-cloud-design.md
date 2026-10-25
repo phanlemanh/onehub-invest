@@ -21,7 +21,11 @@ thu có N nhóm bật và M tin vào raw của một nhóm: máy chủ hiện N 
 ## Cách làm
 
 1. **Bên ghi — đếm đúng «Vào bảng thô» theo nhóm**: `parseLog` cộng `"accepted":n` vào hàng của nhóm trên dòng `post 202`
-   (cùng luật với funnel tổng và với `gateByGroup` của trang máy thu); phép đo chạy cả hai trên cùng nhật ký.
+   (cùng luật với funnel tổng và với `gateByGroup` của trang máy thu); phép đo chạy cả hai trên cùng nhật ký. Nhóm đã có
+   `post 202` mà không dòng nào mang `accepted` (khuôn cũ của handler) → `accepted: null` ở cả hai bên — đã qua cổng mà
+   không biết số tin vào là thiếu số, không phải 0 (câu giao: «thiếu facts thì «—», không 0»).
+   - Handler thiếu tên kênh thì ghi mã nhóm vào thẻ `group=` (`collector/openclaw/handler.js`). Khối `s03` không mang mã:
+     hàng nào có tên là chuỗi số dài (mã nhóm) hay trùng một mã trong cấu hình → `name: null`, bảng ghi «Nhóm chưa có tên».
 2. **Một định nghĩa «nhóm bật»** = hợp các nhóm hiệu dụng bật (`enabled !== false && allow !== false`) của mọi tài khoản,
    theo đúng luật kế thừa của OpenClaw (`zalo-admin.ts` `effectiveGroups`); trùng mã giữa tài khoản đếm một lần.
    - app: tách `effectiveEnabledGroupIds(cfg)` khỏi `zalo-admin.ts`; `readZaloAllowlist` (máy thu) dùng nó;
@@ -42,10 +46,19 @@ thu có N nhóm bật và M tin vào raw của một nhóm: máy chủ hiện N 
    - trường thiếu trong khối (bản tin đời cũ không có `accepted`) → ô «—».
 5. **Máy thu**: bảng như cũ nhưng N và «Vào bảng thô» đúng theo 1–2.
 
+## Câu hỏi cho người
+
+- **Hỏi-1** — khối `s03` có mang mã nhóm không? Máy khuyên A: không mang; chân bảng máy chủ ghi «mã nhóm chỉ xem ở máy
+  thu». B: mang mã rút gọn để chân bảng giống máy thu.
+- **Hỏi-2** — «N nhóm bật» đếm thế nào? Máy khuyên A: hợp nhóm bật hiệu dụng của mọi tài khoản, trùng mã đếm một lần, và
+  badge «N nhóm bật» từng tài khoản ở `/ops/sources` (máy chủ) đếm theo cùng luật (tính nhóm kế thừa, bỏ `allow: false`).
+  B: bảng nhóm đếm hợp như A, badge `/ops/sources` giữ cách đếm cũ — hai chỗ trên máy chủ có thể nói hai số.
+
 ## Không làm
 
 - Ô «Cổng S03 hôm nay» (ON3 Ngoài-3, hợp đồng riêng). Luồng 7 ngày, xoay vòng trên máy chủ — ON5.
-- Quản trị danh sách cho phép (`/ops/sources`, admin) — không đổi; phép đo không gọi lệnh ghi nào trên OpenClaw.
+- Quản trị danh sách cho phép (`/ops/sources`, admin) — không đổi thao tác; chỉ badge «N nhóm bật» của từng tài khoản đếm
+  theo cùng định nghĩa nếu Hỏi-2 = A. Phép đo không gọi lệnh ghi nào trên OpenClaw.
 - Sửa khoá `groups` cũ trong `~/.openclaw/openclaw.json` (cấu hình làn ZCode/vận hành).
 
 ## Đặc tả UX
