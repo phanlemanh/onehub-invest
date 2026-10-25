@@ -5,6 +5,7 @@ import { RegistryTable, type RegistryRow } from "@/components/ops/sources/regist
 import { SourceGroups, type GroupRow } from "@/components/ops/sources/source-groups";
 import { ZaloAccounts } from "@/components/ops/sources/zalo-accounts";
 import { PageHeader } from "@/components/page/page-header";
+import { homNayVN } from "@/lib/che-do-thu-luat";
 import { pool } from "@/lib/db";
 import { localOnlyTable } from "@/lib/ops-queries";
 
@@ -31,6 +32,7 @@ export async function SourcesContent() {
   try {
     groupRows = await pool.query<GroupRow>(
       `SELECT g.id, g.source_code, g.group_key, g.name, g.enabled, g.note,
+              g.params->>'mode' AS mode, g.params->>'burst_until' AS burst_until, g.params->>'mode_since' AS mode_since,
               (SELECT count(*)::int FROM stg_zalo_posts z
                 WHERE z.agent_id = 'apify-facebook' AND z.group_name = g.name) AS fb_posts
        FROM source_groups g ORDER BY g.source_code, g.id`,
@@ -56,7 +58,7 @@ export async function SourcesContent() {
       />
       <RegistryTable rows={rows} />
       <ZaloAccounts isCloud={process.env.VERCEL === "1"} />
-      <SourceGroups initial={groupRows} />
+      <SourceGroups initial={groupRows} homNay={homNayVN(new Date())} />
     </div>
   );
 }

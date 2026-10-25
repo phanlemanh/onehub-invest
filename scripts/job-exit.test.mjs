@@ -143,7 +143,7 @@ const JOBS = {
   "cloud-sync": {
     script: "scripts/cloud-sync.sh",
     tree: { copy: ["scripts/cloud-sync.sh", "scripts/lib/job-step.sh"] },
-    seq: ["sync-cloud", "push-ops-facts"],
+    seq: ["ha-bung-het-han", "sync-cloud", "push-ops-facts"],
   },
   "collector-tuan": {
     // weekly-with-jitter → weekly-collect (set -e, exec) → finalize-hanoi.sh: khúc DB làn Claude nằm ở finalize
@@ -287,6 +287,12 @@ describe("AU13 cloud-sync", () => {
   test("AU13 cloud-sync: push-ops-facts hỏng → ≠0, dòng ghim, bước sau vẫn chạy", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "push-ops-facts" });
     assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "push-ops-facts", J.seq), [], r.stderr);
+  });
+  test("AU13 cloud-sync: ha-bung-het-han hỏng (che-do-thu-tren-ops) → ≠0, dòng ghim, sync-cloud và push-ops-facts vẫn chạy", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "ha-bung-het-han" });
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "ha-bung-het-han", J.seq), [], r.stderr);
+    assert.deepEqual(r.calls, J.seq, "hai bước sau bước hạ phải vẫn chạy");
+    assert.ok(r.stderr.split("\n").includes(failLine("cloud-sync", "ha-bung-het-han", 1)), r.stderr);
   });
   test("AU13 cloud-sync: hai bước hỏng (3, 5) → thoát 3, hai dòng ghim đúng thứ tự", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "sync-cloud:3,push-ops-facts:5" });
