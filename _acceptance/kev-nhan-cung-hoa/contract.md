@@ -5,7 +5,7 @@ slug: kev-nhan-cung-hoa
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by:
 approved_at:
 gate1_skipped: true
