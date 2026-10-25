@@ -176,7 +176,11 @@ function apifySandbox({ realImport = false } = {}) {
     const id = `hanoi__zalo-agent__${ts}`;
     const dir = join(sb.repo, "collector/snapshots/hanoi", id);
     if (realImport) realSnapshot(dir, id);
-    else mkdirSync(dir, { recursive: true });
+    else {
+      mkdirSync(dir, { recursive: true });
+      // 2510-8: daily có cổng manifest — fixture "lành" phải có manifest
+      writeFileSync(join(dir, "manifest.json"), JSON.stringify({ snapshotId: id, files: [] }));
+    }
   }
   if (realImport) {
     cpSync(join(ROOT, "pipeline/import-airbnb.mjs"), p("import-airbnb.mjs"));
@@ -250,7 +254,15 @@ function tsSandbox(script) {
   for (const [f, tag] of [["apify-facebook-collector.mjs", "apify"], ["transform-fb.mjs", "transform-fb"], ["transform-zalo.mjs", "transform-zalo"], ["refresh-bait-gap.mjs", "refresh-bait-gap"]]) writeFileSync(p(f), fakeModule(sb.calls, tag, JSON.stringify(tag)));
   writeFileSync(p("import-airbnb.mjs"), fakeModule(sb.calls, "import", 'process.argv[2].split("__").at(-1)'));
   const names = ["2026-10-24T090800123-1", "TEST", "2026-10-24T090755", "2026-10-24", "2026-10-24T090800123", "2026-10-24T090800123Z-x"];
-  for (const ts of names) mkdirSync(join(sb.repo, "collector/snapshots/hanoi", `hanoi__zalo-agent__${ts}`), { recursive: true });
+  for (const ts of names) {
+    const dir = join(sb.repo, "collector/snapshots/hanoi", `hanoi__zalo-agent__${ts}`);
+    mkdirSync(dir, { recursive: true });
+    // 2510-8: cổng manifest — fixture "lành" phải có manifest (tên rác vẫn
+    // KHÔNG có, bị chặn ở TS_RE như cũ)
+    if (ts !== "TEST" && ts !== "2026-10-24" && !ts.endsWith("-x")) {
+      writeFileSync(join(dir, "manifest.json"), JSON.stringify({ snapshotId: `hanoi__zalo-agent__${ts}`, files: [] }));
+    }
+  }
   writeFileSync(join(sb.repo, "pipeline/logs/apify-daily.state"), "2026-10-24T090000\n");
   return { ...sb, state: () => read(join(sb.repo, "pipeline/logs/apify-daily.state")).trim() };
 }
@@ -300,7 +312,62 @@ async function modeLock() {
   finish("LOCK");
 }
 
-const modes = { chotot: modeChotot, apify: modeApify, "ts-format": modeTsFormat, lock: modeLock };
+// ---------------------------------------------------------- mo-coi (2510-8)
+// Thiếu manifest = snapshot CHƯA xong: trẻ hơn 30′ → dừng chuỗi giữ state (lượt sau thử lại);
+// già hơn 30′ → log 'mồ côi' rồi đi tiếp. Dir '.<id>.partial' đang ghi bị bỏ hoàn toàn.
+async function modeMoCoi() {
+  for (const script of ["apify-facebook-daily.sh", "zalo-import-daily.sh"]) {
+    // (a) mồ côi TRẺ chen giữa hai snapshot lành → nạp đứa trước, DỪNG, giữ state
+    let sb = tsSandbox(script);
+    try {
+      const base = join(sb.repo, "collector/snapshots/hanoi");
+      mkdirSync(join(base, "hanoi__zalo-agent__2026-10-24T090759"), { recursive: true }); // không manifest, mtime=bây giờ
+      const r = run(sb, script, { DATABASE_URL: "acc-khong-ket-noi-db" });
+      const order = r.calls.filter((l) => l.startsWith("import ")).map((l) => l.split(" ")[1]);
+      console.log(`${script} (a) mồ côi trẻ: exit ${r.code} · nạp [${order.join(", ")}] · state ${sb.state()}`);
+      check(r.code !== 0, `${script} (a): exit khác 0 — chuỗi dừng, lượt sau thử lại`);
+      check(JSON.stringify(order) === JSON.stringify(["2026-10-24T090755"]), `${script} (a): nạp snapshot TRƯỚC mồ côi rồi dừng`);
+      check(/chưa xong \(thiếu manifest/.test(r.out), `${script} (a): log 'snapshot chưa xong'`);
+      check(sb.state() === "2026-10-24T090755", `${script} (a): state giữ ở snapshot thành công cuối`);
+    } finally {
+      sb.cleanup();
+    }
+    // (b) lượt sau, mồ côi giờ ≥30′ → cảnh báo + đi tiếp, nạp nốt phần sau
+    sb = tsSandbox(script);
+    try {
+      const base = join(sb.repo, "collector/snapshots/hanoi");
+      const orphan = join(base, "hanoi__zalo-agent__2026-10-24T090759");
+      mkdirSync(orphan, { recursive: true });
+      spawnSync("touch", ["-t", "202001010000", orphan]); // mtime cũ — vượt ngưỡng 30′
+      const r = run(sb, script, { DATABASE_URL: "acc-khong-ket-noi-db" });
+      const order = r.calls.filter((l) => l.startsWith("import ")).map((l) => l.split(" ")[1]);
+      console.log(`${script} (b) mồ côi già: exit ${r.code} · nạp [${order.join(", ")}] · state ${sb.state()}`);
+      check(r.code === 0, `${script} (b): exit 0 — cảnh báo rồi đi tiếp`);
+      check(/mồ côi/.test(r.out), `${script} (b): log 'snapshot mồ côi'`);
+      check(order.includes("2026-10-24T090800123-1"), `${script} (b): snapshot SAU mồ côi vẫn được nạp`);
+      check(sb.state() === "2026-10-24T090800123-1", `${script} (b): state tiến qua mồ côi đã bỏ`);
+    } finally {
+      sb.cleanup();
+    }
+    // (c) '.partial' đang ghi (mới hơn mọi snapshot) → vô hình: không nạp, không log, không chặn
+    sb = tsSandbox(script);
+    try {
+      const base = join(sb.repo, "collector/snapshots/hanoi");
+      mkdirSync(join(base, ".hanoi__zalo-agent__2026-10-24T100000000.partial"), { recursive: true });
+      const r = run(sb, script, { DATABASE_URL: "acc-khong-ket-noi-db" });
+      const order = r.calls.filter((l) => l.startsWith("import ")).map((l) => l.split(" ")[1]);
+      console.log(`${script} (c) .partial: exit ${r.code} · nạp [${order.join(", ")}] · state ${sb.state()}`);
+      check(r.code === 0 && !order.some((x) => x.includes("100000000")), `${script} (c): dir .partial không được nạp`);
+      check(!/chưa xong|mồ côi/.test(r.out), `${script} (c): .partial vô hình — không log, không chặn`);
+      check(sb.state() === "2026-10-24T090800123-1", `${script} (c): state không nhảy theo .partial`);
+    } finally {
+      sb.cleanup();
+    }
+  }
+  finish("MO-COI");
+}
+
+const modes = { chotot: modeChotot, apify: modeApify, "ts-format": modeTsFormat, lock: modeLock, "mo-coi": modeMoCoi };
 if (!modes[mode]) {
   console.error(`dùng: node scripts/au3-nap-bao-loi/acceptance.mjs <${Object.keys(modes).join("|")}>`);
   process.exit(2);

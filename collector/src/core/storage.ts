@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rename, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { CoverageReport, ManifestFile, RawItem, SnapshotManifest } from "./types.js";
@@ -18,6 +18,7 @@ export const SNAPSHOT_SCHEMA_VERSION = 3;
 export class SnapshotWriter {
   readonly snapshotId: string;
   private readonly dir: string;
+  private readonly partial: string;
   private readonly files: ManifestFile[] = [];
   private itemCount = 0;
   private itemFileCount = 0;
@@ -34,17 +35,23 @@ export class SnapshotWriter {
     while (existsSync(join(rootDir, city, sid))) sid = `${city}__${source}__${ts}-${n++}`;
     this.snapshotId = sid;
     this.dir = join(rootDir, city, this.snapshotId);
+    // 2510-8 (nguyên tử): ghi hết vào thư mục tạm CÙNG CHA '."<id>.partial'
+    // rồi rename ra tên thật ở finalize — thư mục mang tên thật LUÔN có
+    // manifest; importer/daily không bao giờ thấy snapshot nửa vời (đang
+    // tải media có thể kéo dài giữa write và finalize). Thư mục chấm bị
+    // daily script bỏ qua; crash giữa chừng để lại '.partial' là vô hình.
+    this.partial = join(rootDir, city, `.${this.snapshotId}.partial`);
   }
 
   async write(items: RawItem[]): Promise<void> {
-    await mkdir(this.dir, { recursive: true });
+    await mkdir(this.partial, { recursive: true });
     for (let i = 0; i < items.length; i += BATCH) {
       const batch = items.slice(i, i + BATCH);
       // Đánh số items bằng đếm riêng: file media (addExtraFile) có vào trước
       // cũng không làm lệch tên items-0001 (DATA-CONTRACT).
       const name = `items-${String(++this.itemFileCount).padStart(4, "0")}.json.gz`;
       const gz = gzipSync(JSON.stringify(batch));
-      await writeFile(join(this.dir, name), gz);
+      await writeFile(join(this.partial, name), gz);
       this.files.push({
         name,
         sha256: createHash("sha256").update(gz).digest("hex"),
@@ -60,7 +67,7 @@ export class SnapshotWriter {
    */
   async addExtraFile(name: string, bytes: Buffer): Promise<{ sha256: string; bytes: number } | null> {
     if (this.files.some((f) => f.name === name)) return null;
-    const target = join(this.dir, name);
+    const target = join(this.partial, name);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, bytes);
     const sha256 = createHash("sha256").update(bytes).digest("hex");
@@ -81,8 +88,11 @@ export class SnapshotWriter {
       files: this.files,
       ...(error ? { error } : {}),
     };
-    await mkdir(this.dir, { recursive: true });
-    await writeFile(join(this.dir, "manifest.json"), JSON.stringify(manifest, null, 2));
+    await mkdir(this.partial, { recursive: true });
+    await writeFile(join(this.partial, "manifest.json"), JSON.stringify(manifest, null, 2));
+    // 2510-8: manifest là file CUỐI — ghi xong mới rename tạm → tên thật
+    // (cùng filesystem vì cùng cha). Từ đây thư mục tên thật luôn trọn vẹn.
+    await rename(this.partial, this.dir);
     return manifest;
   }
 }
