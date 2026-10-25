@@ -1,4 +1,4 @@
 {
-  "feature_plain": "Collector nhận tin không còn treo cứng khi một lượt có hơn 5000 tin mới; bộ nhớ khử trùng giữ đúng 5000 tin gần nhất kể cả sau khi khởi động lại, và một lô quá 1000 tin bị từ chối rõ ràng để bên gửi chia nhỏ.",
-  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:"
+ "feature_plain": "Collector nhớ tối đa 5000 tin đã nhận để khử trùng, nên lượt ghi không còn chậm dần theo thời gian chạy; tệp nhớ cũ có id trùng được dọn khi nạp, và gói tin rỗng bị từ chối gọn thay vì làm hook gửi lại mãi.",
+ "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:"
 }

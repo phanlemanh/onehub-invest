@@ -5,7 +5,7 @@ slug: collector-seen-cap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -51,3 +51,11 @@ ZCode thay bằng một mảng thứ tự duy nhất `seenOrder`, cắt ở flus
 - Nhánh nghiệm thu dựng từ `origin/main` rồi gộp nhánh zcode (chiều ngược bị hook git-secrets chặn nhầm vì hunk chứa URL DB local của daily script).
 - Vòng 1 PASS 5/5 @ 253908e nhưng Mạnh chọn trả lại để sửa hai lỗi ngoài hợp đồng trong vòng này (MỞ LẠI claudedp-2510-2). Thêm AC-6, AC-7.
 - Kiểm harness biết đỏ (vòng 2): trên 1670ed4, `state-trung` đỏ (5000 phần tử, 4990 id) và `body-null` đỏ (thân null → 500).
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: nâng phạm vi sửa ngay
+  - Ngoài-2: nâng phạm vi sửa ngay
+  - Ngoài-3: ghi Known limits
+  - Ngoài-4: ghi Known limits
+- Known limits:
+  - Ngoài-3: Tin còn trong bộ đệm có thể mất khỏi bộ nhớ khử trùng khi một lượt flush chậm mà hơn 5000 tin đổ vào cùng lúc (r1 · đề xuất ghi Known limits, mã không đổi ở vòng 2)
+  - Ngoài-4: Sau một thời gian dài collector không ghi được snapshot, lượt ghi thành công đầu tiên có thể làm collector đứng hình nhiều giây

@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 13becc43a6b7770059e63ff787b5ab7c23a60690
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: collector-seen-cap
