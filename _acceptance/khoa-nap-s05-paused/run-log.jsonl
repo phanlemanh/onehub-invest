@@ -1,0 +1,13 @@
+{"ts":"2026-10-25T10:58:07Z","round":1,"evalId":"E1","run_id":"khoa-nap-s05-paused-E1-r1-20261025T105807Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs lock"}
+{"ts":"2026-10-25T10:58:07Z","round":1,"evalId":"E2","run_id":"khoa-nap-s05-paused-E2-r1-20261025T105807Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs lock"}
+{"ts":"2026-10-25T10:58:07Z","round":1,"evalId":"E3","run_id":"khoa-nap-s05-paused-E3-r1-20261025T105807Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs lock"}
+{"ts":"2026-10-25T10:58:14Z","round":1,"evalId":"E4","run_id":"khoa-nap-s05-paused-E4-r1-20261025T105814Z","exit_code":0,"cmd":"node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"}
+{"ts":"2026-10-25T10:58:14Z","round":1,"evalId":"E5","run_id":"khoa-nap-s05-paused-E5-r1-20261025T105814Z","exit_code":0,"cmd":"node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"}
+{"ts":"2026-10-25T10:58:23Z","round":1,"evalId":"E6","run_id":"khoa-nap-s05-paused-E6-r1-20261025T105823Z","exit_code":0,"cmd":"node --test pipeline/scripts/s05-paused.test.mjs"}
+{"ts":"2026-10-25T10:58:25Z","round":1,"evalId":"E7","run_id":"khoa-nap-s05-paused-E7-r1-20261025T105825Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs apify"}
+{"ts":"2026-10-25T10:58:25Z","round":1,"evalId":"E13","run_id":"khoa-nap-s05-paused-E13-r1-20261025T105825Z","exit_code":0,"cmd":"node --test pipeline/scripts/s05-b-lich.test.mjs"}
+{"ts":"2026-10-25T10:58:38Z","round":1,"evalId":"E8","run_id":"khoa-nap-s05-paused-E8-r1-20261025T105838Z","exit_code":0,"cmd":"for m in ts-format apify chotot lock; do out=$(node scripts/au3-nap-bao-loi/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"}
+{"ts":"2026-10-25T10:58:39Z","round":1,"evalId":"E10","run_id":"khoa-nap-s05-paused-E10-r1-20261025T105839Z","exit_code":0,"cmd":"bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""}
+{"ts":"2026-10-25T10:58:39Z","round":1,"evalId":"E11","run_id":"khoa-nap-s05-paused-E11-r1-20261025T105839Z","exit_code":0,"cmd":"node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"}
+{"ts":"2026-10-25T10:58:39Z","round":1,"evalId":"E12","run_id":"khoa-nap-s05-paused-E12-r1-20261025T105839Z","exit_code":0,"cmd":"node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"}
+{"ts":"2026-10-25T10:59:11Z","round":1,"evalId":"E9","run_id":"khoa-nap-s05-paused-E9-r1-20261025T105911Z","exit_code":0,"cmd":"node --test scripts/*.test.mjs"}
