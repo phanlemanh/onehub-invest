@@ -1,0 +1,92 @@
+schema_version: 1
+feature_slug: nhom-s03-tren-cloud
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON4-AC-1 ma trận nhật ký viết trước (A: post 202 accepted 3 + 2, skip mang accepted 4, post 500 mang accepted 7; B: post 202 không accepted; C ghi bằng mã: post 202 accepted 1): parseLog bên ghi cho A = 5, B = null, C = 1, funnel accepted = 6; gateByGroup trang máy thu ra cùng giá trị theo nhóm' ok; chiều đỏ 'ON4-AC-1 bản sao parseLog không cộng accepted vào hàng nhóm → bắt (A = 0)' ok; chiều đỏ 'ON4-AC-1 bản sao cộng accepted của dòng skip → bắt (A = 9)' ok; chiều đỏ 'ON4-AC-1 bản sao cộng accepted của mọi dòng post → bắt (A = 12)' ok; chiều đỏ 'ON4-AC-1 bản sao ghi 0 cho post 202 thiếu accepted → bắt (B = 0)' ok"
+    paths: [pipeline/lib/ops-flow.mjs, pipeline/push-ops-facts.mjs, app/src/lib/collections-queries.ts, app/tests/nhom-s03-tren-cloud.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON4-AC-2 cấu hình tạm ở HOME giả theo ma trận hợp đồng: khối s03 do push-ops-facts THẬT dựng và readZaloAllowlist trang máy thu cùng ra N = 8' ok; ca 'ON4-AC-2 zaloAccounts[].enabledGroups của cùng bản tin: default 7, b {T1…T4}, c {D4}, hợp lại = 8 nhóm' ok; chiều đỏ 'ON4-AC-2 bản sao chỉ đọc groups cấp ngoài → bắt (4)' ok; chiều đỏ 'ON4-AC-2 bản sao không kế thừa → bắt (7)' ok; chiều đỏ 'ON4-AC-2 bản sao không khử trùng mã → bắt (12)' ok; chiều đỏ 'ON4-AC-2 bản sao bỏ qua allow:false → bắt (9)' ok; chiều đỏ 'ON4-AC-2 bản sao bỏ qua enabled:false → bắt (9)' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, app/src/lib/zalo-admin.ts, app/src/lib/collections-queries.ts, app/tests/nhom-s03-tren-cloud.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    expected: "exit 0; ca 'ON4-AC-3 bản tin push-ops-facts THẬT (nhật ký + cấu hình của ma trận) qua handler ingest thật, trang /ops/collections THẬT chế độ máy chủ: bảng nhóm S03 có mặt, «đang bật 8 nhóm», A = 5, B = «—», C = 1 với ô tên «Nhóm chưa có tên», chân bảng «mã nhóm chỉ xem ở máy thu», Alert «Phần còn lại…» không còn «nhóm S03»' ok; ca 'ON4-AC-3 khối s03 của bản tin THẬT và HTML trang không chứa mã 9000000000000000003 hay mã nhóm nào của cấu hình tạm' ok (đối chứng dương: nhật ký tạm có mã ấy); chiều đỏ 'ON4-AC-3 bản sao bên ghi để mã làm tên nhóm → bắt' ok; chiều đỏ 'ON4-AC-3 bản sao bảng máy chủ in mã nhóm ở chân bảng → bắt' ok"
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/ops-flow.mjs, scripts/lib/ops-local.mjs, app/src/lib/ops-cloud.ts, app/src/app/ops/collections/page.tsx, app/src/components/ops/collections/**, app/src/components/ops/collections-tables.tsx, app/tests/nhom-s03-tren-cloud.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON4-AC-4 lược đồ như máy chủ không bản tin: không bảng nhóm S03, Alert liệt «nhóm S03», 0 chữ «0 nhóm»' ok; ca 'ON4-AC-4 khối s03 lỗi ở bên ghi thật (cấu hình tạm không đọc được): như không bản tin, các ô khác vẫn có số' ok; chiều đỏ 'ON4-AC-4 bản sao đọc khối lỗi như danh sách rỗng → bắt («0 nhóm»)' ok"
+    paths: [pipeline/push-ops-facts.mjs, app/src/lib/ops-cloud.ts, app/src/components/ops/collections/**, app/tests/nhom-s03-tren-cloud.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON4-AC-5 bản tin THẬT của AC-3, khối s03 lùi 46′: Alert vàng «Máy thu không đẩy số từ» có mặt, bảng giữ N = 8 và A = 5, 0 badge success-light trong bảng nhóm' ok; chiều đỏ 'ON4-AC-5 bản sao bảng không nhận cờ số cũ → bắt' ok"
+    paths: [app/src/lib/ops-cloud.ts, app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/**, app/tests/nhom-s03-tren-cloud.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON4-AC-6 DB máy thu đủ bảng: bảng nhóm đo trực tiếp, N theo readZaloAllowlist mới, B = «—», chân bảng liệt mã nhóm rút gọn, 0 truy vấn ops_heartbeat' ok; đối chứng dương 'ON4-AC-6 bộ bắt truy vấn thấy ops_heartbeat ở chế độ máy chủ' ok"
+    paths: [app/src/app/ops/collections/page.tsx, app/src/lib/collections-queries.ts, app/src/components/ops/collections-tables.tsx, app/tests/nhom-s03-tren-cloud.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: judgment
+    inputs: ["docs/superpowers/specs/2026-10-25-nhom-s03-tren-cloud-design.md", "docs/adr/0014-ops-cloud-doc-so-tong-hop.md", "CONTEXT.md", "AGENTS.md", "app/src/components/ops/collections-tables.tsx", "app/src/components/ops/collections/collections-view.tsx", "app/src/lib/ops-cloud.ts", "pipeline/push-ops-facts.mjs", "pipeline/lib/ops-flow.mjs", "scripts/lib/ops-local.mjs", "app/src/components/ops/facts-status.tsx", "app/src/lib/collections-queries.ts", "app/src/app/ops/collections/page.tsx"]
+    question: "Đối chiếu bảng trạng thái (ST-s03-*) của đặc tả UX với chữ thật của bảng nhóm S03 ở máy chủ và máy thu, cùng ADR-0014 §Ngưỡng trễ, nhãn trong CONTEXT.md (máy thu, máy chủ, «Vào bảng thô») và AGENTS.md luật 6 (tên nhóm cộng đồng tầng C; mã nhóm và tên tài khoản thu giữ như tầng A): có chỗ nào hiện «0 nhóm» hay «0» khi không có số, bảng máy chủ hay khối s03 bên ghi có mang mã nhóm hoặc tên tài khoản thu, khối cũ có còn badge xanh, có chữ «cloud»/«local» sót trên giao diện không? Lệch hay lộ định danh thì FAIL."
+    expected: "chữ khớp bảng trạng thái, ADR-0014, CONTEXT.md; không «0 nhóm» trấn an; máy chủ không thấy mã nhóm hay tên tài khoản thu"
+    paths: ["docs/superpowers/specs/2026-10-25-nhom-s03-tren-cloud-design.md", "app/src/components/ops/collections-tables.tsx", "app/src/components/ops/collections/collections-view.tsx", "pipeline/push-ops-facts.mjs"]
+    evidence_required: [run_id, verdict, judges, verified_at]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc sạch và npm run lint sạch — luật onehub-ui không bắt vi phạm nào ở tệp của vòng"
+    paths: [app/src/components/ops/**, app/src/app/ops/**, app/src/lib/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8b
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    expected: "exit 0; npm run test:lint-rules xanh"
+    paths: [app/src/components/ops/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Dựng lược đồ như máy chủ bằng `node scripts/ops-cloud-proto.mjs --mode <none|fresh|stale>` (in VERCEL=1 và DATABASE_URL; bản tin có khối s03 với tên nhóm giả); chạy dev server của worktree đang kiểm ở cổng :3460 với đúng hai biến đó; đăng nhập tài khoản ops thử (scripts/dev-ops-account.mjs)"
+      - "--mode none: chụp evidence/E9-ST-s03-none.png (/ops/collections, cuộn tới Alert «Phần còn lại…»)"
+      - "--mode fresh: chụp evidence/E9-ST-s03-fresh.png (bảng nhóm S03, thấy mô tả «đang bật N nhóm», cột «Vào bảng thô» và chân bảng)"
+      - "--mode stale: chụp evidence/E9-ST-s03-stale.png (bảng nhóm, «Hoạt động» viền xám)"
+      - "Tối: chụp evidence/E9-dark-ST-s03-fresh.png; 390px: chụp evidence/E9-narrow-ST-s03-fresh.png, kiểm document.documentElement.scrollWidth <= innerWidth"
+      - "Máy thu: `node scripts/ops-cloud-proto.mjs --mode local` (in HOME=… và DATABASE_URL=… của lược đồ máy thu rỗng, tên nhóm giả); chạy dev server của worktree ở cổng :3461 với đúng hai biến đó, KHÔNG đặt VERCEL; chụp evidence/E9-ST-s03-local.png (bảng nhóm S03, mô tả «đang bật N nhóm», cột «Vào bảng thô», chân bảng mã rút gọn)"
+      - "Tắt dev server rồi trả cây về như trước khi chấm: `git checkout -- app/next-env.d.ts` và xoá `app/AGENTS.md` nếu dev server vừa sinh ra — lượt chấm không được để lại thay đổi nào ngoài evidence/"
+    expected: "mỗi dòng ST-s03-* (ba trạng thái máy chủ và máy thu) có khung mang đúng tên, khớp mô tả; khung tối và 390px đúng trạng thái; không thanh cuộn ngang"
+    paths: [app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/**, app/src/lib/ops-cloud.ts, scripts/ops-cloud-proto.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot, observed]
