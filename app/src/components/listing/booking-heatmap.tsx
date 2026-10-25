@@ -15,6 +15,8 @@ import { fmtMoney, fmtPct } from "@/lib/format"
 /**
  * Lịch đặt phòng 12 tháng — chuyển thể activity heatmap của @reui/form-5: mỗi
  * cột một tuần (T2→CN), mỗi ô một đêm. Ba trạng thái thay cho 4 mức cường độ.
+ * Khác bản gốc: TooltipTrigger tự vẽ nút của Base UI (bản gốc truyền phần tử button tay qua
+ * `render`); nhãn thứ cỡ text-xs (bản gốc 9px).
  */
 type Night = { night: string; available: boolean | null; price: number | null }
 type Cell = Night & { weekday: number } // 0 = T2
@@ -70,13 +72,8 @@ function SummaryItem({
   return (
     <Tooltip>
       <TooltipTrigger
-        render={
-          <button
-            type="button"
-            className="focus-visible:ring-ring focus-visible:ring-offset-background inline-flex items-center rounded-sm align-middle focus-visible:ring-2 focus-visible:ring-offset-2"
-            aria-label={description}
-          />
-        }
+        className="focus-visible:ring-ring focus-visible:ring-offset-background inline-flex items-center rounded-sm align-middle outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        aria-label={description}
       >
         <Badge variant={variant}>{label}</Badge>
       </TooltipTrigger>
@@ -99,13 +96,8 @@ function NightCell({ cell, currency }: { cell: Cell; currency: string }) {
   return (
     <Tooltip>
       <TooltipTrigger
-        render={
-          <button
-            type="button"
-            className="focus-visible:ring-ring focus-visible:ring-offset-background inline-flex size-full rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            aria-label={`${WEEKDAY_LONG[cell.weekday]}, ${dateLabel(cell.night)}: ${status}`}
-          />
-        }
+        className="focus-visible:ring-ring focus-visible:ring-offset-background inline-flex size-full rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        aria-label={`${WEEKDAY_LONG[cell.weekday]}, ${dateLabel(cell.night)}: ${status}`}
       >
         <span className={cn("block size-full rounded-sm", TONE[state])} aria-hidden="true" />
       </TooltipTrigger>
@@ -133,9 +125,8 @@ export function BookingHeatmap({
   currency: string
   lastSeen: string | null
 }) {
-  if (nights.length === 0) {
-    return <p className="text-muted-foreground text-sm">Chưa có lịch cho listing này.</p>
-  }
+  // Lịch trống do trang lo (ListingCalendarEmpty — Empty có hành động); ở đây chỉ chặn chia cho 0.
+  if (nights.length === 0) return null
 
   // Thứ của đêm đầu (0 = T2) → số ô đệm trước để cột đầu bắt đầu từ T2.
   const weekdayOf = (iso: string) => (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7
@@ -192,7 +183,7 @@ export function BookingHeatmap({
       </div>
 
       <div className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-1.5">
-        <div className="text-muted-foreground grid grid-rows-[repeat(7,0.75rem)] gap-1 text-[9px] leading-none">
+        <div className="text-muted-foreground grid grid-rows-[repeat(7,0.75rem)] gap-1 text-xs leading-none">
           {WEEKDAYS.map((day, index) => (
             <span key={index} className="grid h-3 place-items-center">
               {day}

@@ -1,0 +1,163 @@
+schema_version: 1
+feature_slug: listing-detail-product-detail-5
+# Ca test mang tiền tố «LD-AC-n» trong app/tests/listing-detail.test.tsx (jsdom, không DB).
+# Smoke trình duyệt thật: scripts/smoke-listing-detail.mjs — cần app chạy TỪ worktree này (BASE_URL, mặc định :3460 của
+# dãy U1) + DB local; mẫu chọn từ DB (listing nhiều ảnh nhất có lịch, listing không ảnh có lịch, listing chưa có lịch);
+# ảnh chết dựng bằng chặn mạng (CDN trả 404), không sửa DB. Mỗi kiểm in «ok …»/«FAIL …», exit 0 = đạt.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-gallery.tsx, app/src/components/listing/listing-hero.tsx, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-2 gallery' xanh: 3 URL → 3 radio, radio 1 aria-checked=true, ảnh chính alt 'Ảnh 1/3 — Căn thử' src 'https://a0.muscache.com/im/p/1.jpeg?aki_policy=x_large' (URL trần được thêm scheme), thumbnail 'https://…/2.jpeg?im_w=480'; radiogroup nằm trong [data-slot=scroll-area-viewport], className có 'flex', không 'grid'/'flex-wrap', mọi radio mang w-[calc((100%-2rem)/5)] + shrink-0 (một hàng trượt — Mạnh sửa ở Cổng Phạm vi; phá-thử S1: trả 'grid grid-cols-5' → ca đỏ /\\bflex\\b/); bấm radio 2 → alt 'Ảnh 2/3 — Căn thử', radio 2 checked, radio 1 không; một URL → 0 radio; ca 'LD-AC-1 đầu trang' xanh: section aria-label 'Thông tin listing' mang lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)], 3 radio, có dl. Chiều đỏ (phá-thử S1): gỡ onError của ảnh chính làm LD-AC-4 đỏ với 'ảnh chết phải rời dải thumbnail'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.listing_detail_smoke
+    paths: [app/src/components/listing/**, app/src/app/(app)/listing/**, scripts/smoke-listing-detail.mjs]
+    expected: "exit 0 và dòng cuối 'listing-detail-smoke: ĐẠT'; có các dòng 'ok   [desktop-1280] co-anh: 10/10 thumbnail, đang chọn ảnh 1', 'ok   [desktop-1280] co-anh: ảnh chính alt «Ảnh 1/10 — …»', 'ok   [desktop-1280] co-anh: 2 cột', 'ok   [<khổ>] co-anh: dải thumbnail 1 hàng, 5/10 ô trong khung' ở cả ba khổ, 'ok   dải trượt theo phím: Xem ảnh 8/10 trong khung (true), cuộn ngang <x>px, trang dọc <y>→<y>' (x > 0, y không đổi), 'ok   bấm thumbnail 3 → ảnh chính «Ảnh 3/10 — …»', 'ok   phím → → ảnh chính «Ảnh 4/10 — …»' (phím thật của Chromium), 'ok   [mobile-375] co-anh: 1 cột'; mọi dòng bắt đầu 'ok' (không dòng FAIL). Số 10 lấy từ DB (min(số ảnh, 10)) — DB khác thì số khác, quan hệ giữ nguyên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-hero.tsx, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-3 không ảnh' xanh: với photoUrls null và [] → 0 <img>, 0 radio trong section, className section không có lg:grid-cols-, dl mang sm:grid-cols-2; đối chứng cùng ca: photoUrls 1 URL → đúng 1 <img>"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.listing_detail_smoke
+    paths: [app/src/components/listing/listing-hero.tsx, app/src/components/listing/listing-body.tsx, scripts/smoke-listing-detail.mjs]
+    expected: "exit 0; dòng 'ok   DB có listing không ảnh tự thu có lịch (<id>)' và ở cả ba khổ ([desktop-1280], [desktop-1280--dark], [mobile-375]): 'ok … khong-anh <id>: 200, không gallery, không ảnh giả', 'ok … khong-anh: hộp Đặc điểm trải ngang (<n> dòng) + nút Airbnb', 'ok … khong-anh: không cuộn ngang'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-gallery.tsx, app/src/components/listing/listing-hero.tsx, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-4 ảnh chết' xanh: sự kiện error trên ảnh chính → 2 radio, alt 'Ảnh 1/2 — Căn thử', không còn img src chứa '/1.jpeg'; error tiếp hai ảnh còn lại → 0 <img>, section không còn lg:grid-cols-, dl mang sm:grid-cols-2. ca 'LD-AC-4 ảnh lỗi TRƯỚC hydrate' xanh: HTMLImageElement có complete=true + naturalWidth=0 cho ảnh 2 ngay lúc gắn (không phát sự kiện error) → 2 radio, không img src chứa '/2.jpeg'. Chiều đỏ đã chạy ở S1: gỡ onError → ca đỏ 'ảnh chết phải rời dải thumbnail'; gỡ kiểm ref → ca đỏ 'ảnh lỗi trước hydrate phải rời gallery dù không có sự kiện error'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.listing_detail_smoke
+    paths: [app/src/components/listing/listing-gallery.tsx, app/src/components/listing/listing-hero.tsx, scripts/smoke-listing-detail.mjs]
+    expected: "exit 0; dòng 'ok   anh-chet-mot: còn <N-1>/<N-1> thumbnail, ảnh chính «Ảnh 1/<N-1> — …»', 'ok   anh-chet-mot: ảnh chết không còn trong gallery', 'ok   anh-chet-het: 0 ảnh, 1 cột', 'ok   anh-chet-het: hộp Đặc điểm + nút Airbnb vẫn đứng' — ảnh chết dựng bằng page.route trả 404 cho URL ảnh (gồm cả lỗi trước hydrate vì chặn từ lần tải đầu)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-hero.tsx, app/src/components/listing/listing-labels.ts, app/src/components/listing/listing-body.tsx, app/src/components/page/page-header.tsx, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-5 Đặc điểm' xanh: listingFacts đủ trường → đúng 8 dòng theo thứ tự 'Loại phòng: Nguyên căn' … 'Thị trường: Thành phố Hà Nội'; trường null (phòng tắm, tối thiểu, đánh giá, phường) không ra dòng, bedrooms 0 → 'Studio'; link trong dl là ['/vn/hanoi/tay-ho', '/vn/hanoi']; đúng 1 link 'Mở trên Airbnb' href 'https://www.airbnb.com/rooms/123'; airbnbUrl null → 0 link Airbnb; cây ListingBody: PageHeader stats = ['Nguyên căn'] (đúng một badge loại phòng), roomType null → stats []"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0 (tsc --noEmit sạch; eslint + check-bare-disables 0 lỗi; cảnh báo react-hooks có sẵn ngoài trang listing được phép)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/booking-heatmap.tsx, app/eslint-suppressions.json, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-6 lịch' xanh: booking-heatmap.tsx không khớp /<button\\b/ và /text-\\[\\d/; listingSuppressionKeys(eslint-suppressions.json) = []; chiều đỏ cùng ca: fixture có khoá 'src/components/listing/booking-heatmap.tsx' → trả đúng khoá ấy; render 10 đêm → 10 nút aria-label khớp '2026: ', không nút nào tabindex=-1, nút đầu 'Thứ 3, 20/10/2026: Đã có khách đặt'; 3 nút tóm tắt. Chiều đỏ đã chạy ở S1: trả text-[9px] → ca đỏ 'booking-heatmap.tsx còn cỡ chữ tự đặt'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-calendar-empty.tsx, app/src/components/listing/listing-body.tsx, app/src/components/listing/booking-heatmap.tsx, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-7 lịch trống' xanh: ListingCalendarEmpty có empty-title 'Chưa có lịch cho listing này', đúng 1 a/button href link Airbnb; airbnbUrl null → đúng 1 hành động href '/vn'; cây ListingBody với calendar [] chứa ListingCalendarEmpty và không chứa BookingHeatmap; đối chứng cùng ca: calendar 10 đêm → có BookingHeatmap, không ListingCalendarEmpty"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.listing_detail_smoke
+    paths: [app/src/components/listing/listing-calendar-empty.tsx, app/src/components/listing/listing-body.tsx, scripts/smoke-listing-detail.mjs]
+    expected: "exit 0; dòng 'ok   DB có listing chưa có lịch (<id>)' và ở ba khổ 'ok … khong-lich <id>: Empty «Chưa có lịch cho listing này» với đúng 1 hành động (1)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-body.tsx, app/src/components/listing/listing-sections.tsx, app/src/components/states/region-error.tsx, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-8 vùng' xanh: cây ListingBody có đúng hai RegionError > Suspense theo thứ tự {fallback ListingKpisSkeleton, con ListingKpis} rồi {fallback ListingCompsSkeleton, con ListingComps}, PageHeader và ListingHero không nằm trong ranh giới lỗi; chiều đỏ cùng ca: thay Suspense bằng Fragment → lỗi 'ranh giới lỗi không bọc trực tiếp Suspense'; ListingKpisSkeleton có aria-busy và 12 skeleton (4 ô × 3); ListingCompsSkeleton có aria-busy và chữ 'Listing tương tự'; prop what của hai RegionError theo thứ tự = ['chỉ số của listing', 'listing tương tự']; render vùng KPI ném lỗi cạnh vùng comps lành → đúng 1 role=alert chứa 'Không tải được chỉ số của listing', có nút 'Thử lại', section đầu trang và nội dung vùng comps vẫn còn; ca 'LD-AC-8 comps trống' xanh: đúng 1 hành động href '/vn/hanoi/listings' chữ 'Duyệt listing ở Thành phố Hà Nội'; thiếu thị trường → href '/vn'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.listing_detail_smoke
+    paths: [app/src/components/listing/listing-sections.tsx, scripts/smoke-listing-detail.mjs]
+    expected: "exit 0; dòng 'ok   bốn ô KPI sau khi vùng tải xong (4)' và 'ok   comps: <n> hàng trong bảng Listing tương tự, không lỗi' với n ≥ 1 — hai vùng Suspense phân giải ra nội dung thật trên Next chạy thật (listing mẫu nhiều ảnh nhất có comps trong DB local)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-sections.tsx, app/tests/listing-detail.test.tsx]
+    expected: "exit 0; ca 'LD-AC-9 bốn ô KPI' xanh: listingTiles với peers {area, n 12, price [5e5, 9e5, 1.5e6], occ [0.2, 0.35, 0.6]} → bốn bộ [tiêu đề, giá trị, bậc, footer] đúng như ca ghim (Giá niêm yết 'Trên trung vị', footer 'Trung vị 12 listing cùng phường: …'); bậc giá theo 1.5e6/9e5/5e5/499999 = Cao cấp/Trên trung vị/Tầm trung/Giá thấp; giá null → footer công suất 'Listing chưa báo giá — …', không peers → 'Giá một đêm trên Airbnb', doanh thu 0 → '—'; peers scope market → footer chứa 'cùng thị trường'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.listing_static
+    paths: [app/src/lib/queries.ts, app/src/app/(app)/listing/**, app/src/components/listing/**, scripts/check-listing-no-airdna.mjs]
+    expected: "exit 0 và dòng 'listing-no-airdna: ĐẠT' — getListingDetail không đọc airdna_*, mọi tệp route/components listing (kể cả listing-gallery, listing-hero, listing-body, listing-sections, listing-calendar-empty) không có AirDNA/photoSource trong mã render"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.listing_detail_smoke
+    paths: [app/src/components/listing/listing-gallery.tsx, scripts/smoke-listing-detail.mjs]
+    expected: "exit 0; ở ba khổ dòng 'ok … co-anh: <k> ảnh, tất cả thuộc photo_urls tự thu' (src mọi <img> trong đầu trang so với listings.photo_urls của chính listing, bỏ scheme/query)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E17
+    criterion: AC-9
+    executor: judgment
+    inputs: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, docs/superpowers/specs/2026-10-25-listing-detail-product-detail-5-design.md]
+    paths: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, docs/superpowers/specs/2026-10-25-listing-detail-product-detail-5-design.md]
+    question: "Ba tệp này có nói nhất quán rằng trang /listing/[id] đã có đầu trang product-detail-5 (gallery ở listing/listing-gallery.tsx, hộp Đặc điểm ở listing/listing-hero.tsx, ẩn gallery khi không ảnh tự thu hoặc mọi ảnh chết), KPI và Listing tương tự tải trong Suspense với lỗi tại chỗ, lịch trống và comps trống là Empty có hành động, catalog có dòng @reui/product-detail-5 kèm lý do không giữ bản gốc trong blocks/ và dòng form-5 ghi việc gỡ nút tay — không còn chỗ nào mâu thuẫn (vd routes.md vẫn coi đầu trang là việc chưa làm, hay catalog trỏ tới tệp không được nhắc trong design doc) không?"
+    expected: "Nhất quán ở cả ba tệp; tên tệp trong routes.md và catalog.md khớp design doc."
+    evidence_required: [run_id, verdict, judges]
+  - id: E18
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/**, app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs]
+    expected: "exit 0; bảng routes.md khớp cây route (dòng (app)/listing/[id]/page.tsx còn nguyên cột Block đích + Slug đích)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E19
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/listing/**, app/src/app/(app)/listing/**, app/src/components/page/page-header.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json); không chạy thì FAIL với 'bản chạy :3460 không lên'"
+      - "Lấy mẫu từ DB local :5433 (postgres://oneinvest:oneinvest@localhost:5433/oneinvest): listing nhiều ảnh nhất có lịch, listing không ảnh tự thu có lịch, listing chưa có lịch (cùng truy vấn với scripts/smoke-listing-detail.mjs)"
+      - "1280 px sáng: trang listing có ảnh → evidence/E19-step1.png; bấm thumbnail 3 → evidence/E19-step2.png"
+      - "1280 px tối (prefers-color-scheme: dark): cùng listing → evidence/E19-step3.png"
+      - "375 px sáng: cùng listing → evidence/E19-step4.png; ghi document.documentElement.scrollWidth và clientWidth"
+      - "1280 px sáng: listing không ảnh → evidence/E19-step5.png; 375 px → evidence/E19-step6.png"
+      - "1280 px sáng: listing chưa có lịch, cuộn tới khung lịch → evidence/E19-step7.png; 1280 tối → evidence/E19-step8.png"
+    expected: "Đầu trang đọc được ở cả ba khổ: ảnh chính không méo, thumbnail đang chọn có viền phân biệt rõ ở sáng lẫn tối, hộp Đặc điểm (nhãn trái, giá trị phải) và nút «Mở trên Airbnb» đọc được; 375 px scrollWidth = clientWidth; listing không ảnh không có khung ảnh trống, Đặc điểm trải ngang; Empty lịch có đúng một nút và đọc được ở sáng lẫn tối."
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot, observed]
+  - id: E20
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.listing_hero_design_gate
+    paths: [app/src/components/listing/listing-hero.tsx]
+    expected: "exit 0; verdict PASS, p0_count 0 (sàn a11y/contrast của design-gate trên listing-hero.tsx, jsdom)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E21
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.listing_detail_smoke
+    paths: [app/src/components/listing/booking-heatmap.tsx, scripts/smoke-listing-detail.mjs]
+    expected: "exit 0; dòng 'ok   tooltip «Công suất …» của lịch mở khi nút tóm tắt nhận focus bằng Tab' — Chromium thật: Shift+Tab rồi Tab về nút tóm tắt đầu, tooltip-content chữ bắt đầu 'Công suất ' hiện trong 3 giây"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

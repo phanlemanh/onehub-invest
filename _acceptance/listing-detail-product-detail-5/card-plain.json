@@ -1,0 +1,120 @@
+{
+ "feature_plain": "Nhà đầu tư mở trang một listing thấy ngay ảnh thật của căn (chọn được từng ảnh) cạnh bảng đặc điểm; căn chưa có ảnh thì không còn khung ảnh trống; mọi vùng số liệu có trạng thái chờ, trống và lỗi rõ ràng.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ đặt ảnh lớn của căn bên trái, bảng đặc điểm bên phải; ảnh nhỏ nằm trên MỘT hàng trượt ngang (thấy 5 ảnh, nhiều hơn thì trượt, không xuống dòng); bấm ảnh nhỏ hay dùng phím mũi tên để đổi ảnh lớn, hàng tự trượt theo; trên điện thoại hai khối xếp dọc."
+  },
+  {
+   "id": "AC-3",
+   "p": "Sẽ tự bỏ ảnh hỏng khỏi bộ ảnh (ảnh kế lên thay); hỏng hết thì trang về bố cục không ảnh."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ gom đặc điểm căn (loại phòng, phòng ngủ, phòng tắm, sức chứa, tối thiểu đêm, đánh giá, phường, thị trường) vào một bảng, kèm một nút Mở trên Airbnb; đầu trang chỉ còn nhãn loại phòng."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ giữ lịch 365 đêm như cũ nhưng hết ba vi phạm chuẩn giao diện; từng đêm và ba ô tóm tắt vẫn mở được bằng bàn phím."
+  },
+  {
+   "id": "AC-6",
+   "p": "Sẽ hiện một khung trống có nút Xem lịch trên Airbnb khi căn chưa có lịch, thay cho một dòng chữ."
+  },
+  {
+   "id": "AC-7",
+   "p": "Sẽ cho hàng chỉ số và bảng Listing tương tự tải riêng: lúc chờ có khung xám đúng chỗ, lỗi thì báo tại vùng đó kèm nút Thử lại, không có căn tương tự thì có nút sang trang Duyệt listing."
+  },
+  {
+   "id": "AC-8",
+   "p": "Sẽ giữ nguyên mọi con số của bốn ô chỉ số, và ảnh vẫn chỉ lấy từ nguồn tự thu (không ảnh AirDNA)."
+  },
+  {
+   "id": "AC-9",
+   "p": "Sẽ cập nhật bản đồ trang và danh mục giao diện cho đúng trang mới."
+  },
+  {
+   "id": "AC-10",
+   "p": "Sẽ được người chấm nhìn ở máy tính sáng, máy tính tối và điện thoại: đọc được, không trượt ngang."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-2",
+   "p": "Sẽ KHÔNG vẽ khung ảnh trống hay ảnh giả cho căn chưa có ảnh tự thu — bảng đặc điểm trải hết bề ngang."
+  },
+  {
+   "id": "OOS-1",
+   "p": "KHÔNG đụng trang Duyệt listing và thẻ listing (việc kế UI6)."
+  },
+  {
+   "id": "OOS-2",
+   "p": "KHÔNG thêm nút Chia sẻ hay Lưu listing (việc riêng sau)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "KHÔNG đặt giá theo đêm trong bảng đặc điểm — giá ở ô chỉ số ngay dưới (Hỏi-1)."
+  },
+  {
+   "id": "OOS-4",
+   "p": "KHÔNG hiện loại chỗ ở bằng chữ tiếng Anh của Airbnb (chưa có bản dịch)."
+  },
+  {
+   "id": "OOS-5",
+   "p": "KHÔNG làm trạng thái chờ/lỗi riêng cho lịch — lịch đến cùng lúc với dữ liệu căn."
+  }
+ ],
+ "scope_plain": "Những phần cố ý để ngoài vòng này:",
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Ảnh: phủ đủ năm tình huống — nhiều ảnh, một ảnh, không ảnh, một ảnh hỏng, hỏng hết (AC-1 bộ ảnh, AC-2 không ảnh, AC-3 ảnh hỏng)."
+  },
+  {
+   "i": 1,
+   "p": "Trạng thái vùng: chờ, trống, lỗi trên hàng chỉ số, lịch và bảng tương tự (AC-6 lịch trống, AC-7 vùng tải riêng)."
+  },
+  {
+   "i": 2,
+   "p": "Cách chọn ảnh: bằng chuột và bằng phím (AC-1, đo trên trình duyệt thật)."
+  },
+  {
+   "i": 3,
+   "p": "Khổ màn hình: máy tính sáng, máy tính tối, điện thoại (AC-10 người chấm nhìn)."
+  },
+  {
+   "i": 4,
+   "p": "Mỗi tình huống trên có đúng một tiêu chí giữ nó; đặc điểm, lint, số liệu và tài liệu có tiêu chí riêng (AC-4, AC-5, AC-8, AC-9)."
+  },
+  {
+   "i": 5,
+   "p": "Để sau: trạng thái chờ/lỗi riêng cho lịch; chế độ tối trên điện thoại không chụp riêng."
+  },
+  {
+   "i": 6,
+   "p": "Không làm: giữ nguyên bản gốc của khối giao diện trong kho (kéo theo một phần làm lint đỏ)."
+  }
+ ],
+ "gap_probe_plain": [
+  {
+   "i": 0,
+   "p": "Máy đã tự quyết việc gỡ các nhãn đặc điểm khỏi đầu trang mà không hỏi anh, và chưa có phép đo đếm nhãn — đã đổi thành câu hỏi Hỏi-3 và thêm phép đo đầu trang chỉ còn nhãn loại phòng."
+  },
+  {
+   "i": 1,
+   "p": "Lý do chọn kiểu nút chọn ảnh chưa loại hết các cách khác — đã ghi lại vì sao hai cách còn lại không dùng được."
+  },
+  {
+   "i": 2,
+   "p": "Lỗi tại từng vùng và bảng tương tự có dữ liệu chưa được đo trong chính hồ sơ này — đã thêm phép đo chữ lỗi từng vùng, nút Thử lại, và bảng tương tự có hàng thật trên trình duyệt."
+  },
+  {
+   "i": 3,
+   "p": "Ảnh hỏng ngay lúc trang vừa tải (trước khi trang chạy xong) chưa có phép đo chắc — đã thêm một ca giả lập đúng tình huống đó, và thử phá thì ca báo đỏ."
+  },
+  {
+   "i": 4,
+   "p": "Ô tóm tắt của lịch mở bằng bàn phím chưa được đo — đã thêm bước bấm Tab trên trình duyệt thật và chờ ô tóm tắt hiện ra."
+  }
+ ]
+}
