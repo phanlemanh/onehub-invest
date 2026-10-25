@@ -143,10 +143,11 @@ export function CloudFlowTable({ days, stale, roles = {} }: { days: CloudFlowDay
   )
 }
 
-function groupStatusBadge(lastSeenAt: string | null) {
+function groupStatusBadge(lastSeenAt: string | null, stale = false) {
   if (!lastSeenAt) return <Badge variant="outline">Chưa thấy tin</Badge>
   const hours = (Date.now() - new Date(lastSeenAt).getTime()) / 3600000
-  if (hours <= 24) return <Badge variant="success-light">Hoạt động</Badge>
+  // Số cũ trên máy chủ (ADR-0014): không badge trạng thái xanh.
+  if (hours <= 24) return <Badge variant={stale ? "outline" : "success-light"}>Hoạt động</Badge>
   if (hours <= 72) return <Badge variant="warning-light">Im {Math.floor(hours)}h</Badge>
   return <Badge variant="warning-light">Im {Math.floor(hours / 24)} ngày</Badge>
 }
@@ -155,11 +156,16 @@ export function ZaloGroupsTable({
   rows,
   allowlist,
   roles = {},
+  cloud,
 }: {
   rows: import("@/lib/collections-queries").ZaloGroupRow[]
-  allowlist: import("@/lib/collections-queries").ZaloAllowlistEntry[]
+  /** null = cấu hình OpenClaw không đọc được (ON4) — mô tả ghi «—», không «0 nhóm». */
+  allowlist: import("@/lib/collections-queries").ZaloAllowlistEntry[] | null
   roles?: SourceRoles
+  /** Máy chủ (ON4): N nhóm bật và cờ cũ của khối `s03`; không có mã nhóm (Hỏi-1 = A). Vắng = máy thu, đo trực tiếp. */
+  cloud?: { allowlistEnabled: number; stale: boolean }
 }) {
+  const stale = cloud?.stale ?? false
   const columns = useMemo<InsightColumn<import("@/lib/collections-queries").ZaloGroupRow>[]>(
     () => [
       {
@@ -167,7 +173,13 @@ export function ZaloGroupsTable({
         accessorKey: "name",
         header: ({ column }) => <DataGridColumnHeader title="Nhóm" column={column} />,
         // Tên nhóm là tầng C (Mạnh chốt 24/10, sửa đổi ADR-0007) — không đánh data-tier-a.
-        cell: ({ row }) => <span className="whitespace-normal break-words" translate="no">{row.original.name}</span>,
+        cell: ({ row }) =>
+          row.original.name ? (
+            <span className="whitespace-normal break-words" translate="no">{row.original.name}</span>
+          ) : (
+            // Bên ghi bỏ tên khi handler chỉ ghi được mã nhóm (ON4) — mã không lên máy chủ.
+            <span className="text-muted-foreground">Nhóm chưa có tên</span>
+          ),
         size: 160,
         enableSorting: false,
       },
@@ -175,32 +187,33 @@ export function ZaloGroupsTable({
         id: "status",
         accessorFn: (r) => r.lastSeenAt ?? "",
         header: "Trạng thái",
-        cell: ({ row }) => groupStatusBadge(row.original.lastSeenAt),
+        cell: ({ row }) => groupStatusBadge(row.original.lastSeenAt, stale),
         size: 150,
       },
       {
         id: "seen",
-        accessorFn: (r) => r.seen,
+        accessorFn: (r) => r.seen ?? -1,
         header: ({ column }) => <DataGridColumnHeader title="Thấy (nhật ký)" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.seen),
+        cell: ({ row }) => cloudCount(row.original.seen, stale),
         size: 100,
         meta: NUM,
         enableSorting: true,
       },
       {
         id: "passed",
-        accessorFn: (r) => r.passed,
+        accessorFn: (r) => r.passed ?? -1,
         header: ({ column }) => <DataGridColumnHeader title="Qua cổng" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.passed),
+        cell: ({ row }) => cloudCount(row.original.passed, stale),
         size: 100,
         meta: NUM,
         enableSorting: true,
       },
       {
         id: "accepted",
-        accessorFn: (r) => r.accepted,
+        accessorFn: (r) => r.accepted ?? -1,
         header: ({ column }) => <DataGridColumnHeader title="Vào bảng thô" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.accepted),
+        // null = đã qua cổng mà không biết số tin vào, hay nhật ký không đọc được (ON4) — «—», không 0.
+        cell: ({ row }) => cloudCount(row.original.accepted, stale),
         size: 100,
         meta: NUM,
         enableSorting: true,
@@ -217,7 +230,7 @@ export function ZaloGroupsTable({
         id: "real7",
         accessorFn: (r) => r.realPosts7d,
         header: ({ column }) => <DataGridColumnHeader title="Bài thật 7 ngày" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.realPosts7d),
+        cell: ({ row }) => cloudCount(row.original.realPosts7d, stale),
         size: 140,
         meta: NUM,
         enableSorting: true,
@@ -226,29 +239,39 @@ export function ZaloGroupsTable({
         id: "mock7",
         accessorFn: (r) => r.mockPosts7d,
         header: ({ column }) => <DataGridColumnHeader title="Bài thử" column={column} />,
-        cell: ({ row }) => (row.original.mockPosts7d ? fmtInt(row.original.mockPosts7d) : "—"),
+        cell: ({ row }) => (row.original.mockPosts7d ? cloudCount(row.original.mockPosts7d, stale) : "—"),
         size: 100,
         meta: NUM,
         enableSorting: true,
       },
     ],
-    []
+    [stale]
   )
-  const enabled = allowlist.filter((a) => a.enabled)
+  const enabled = allowlist?.filter((a) => a.enabled) ?? null
+  // Số cũ trên máy chủ (ADR-0014): mọi ô số mờ, badge không xanh; không đọc được → «—».
+  const nEnabled = cloud ? cloud.allowlistEnabled : enabled?.length ?? null
   // Khoá hàng theo vị trí, không theo tên nhóm: tên là tầng A, khoá hàng lọt vào thuộc tính DOM (data-row-id).
   const rowKey = new Map(rows.map((r, i) => [r, `nhom-${i}`]))
   return (
     <InsightGrid
       title={`Nhóm ${sourceLabel("S03", roles)}`}
-      description={`Danh mục nguồn cộng đồng — bài thật tách bài thử; danh sách cho phép đang bật ${enabled.length} nhóm`}
+      description={`Danh mục nguồn cộng đồng — bài thật tách bài thử; ${nEnabled === null ? "danh sách cho phép: — (chưa đọc được cấu hình ở máy thu)" : `danh sách cho phép đang bật ${nEnabled} nhóm`}`}
       data={rows}
       columns={columns}
       getRowId={(r) => rowKey.get(r) ?? ""}
       pageSize={10}
       footnote={
         <>
-          Qua cổng = cổng Kev ≥ 0,9 (đọc nhật ký cổng). Danh sách cho phép (mã nhóm, chưa ghép tên):{" "}
-          {enabled.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}. Nhóm im quá 72h: kiểm tra bị mời ra hoặc đổi tên;
+          Qua cổng = cổng Kev ≥ 0,9 (đọc nhật ký cổng).{" "}
+          {cloud ? (
+            <>Danh sách cho phép: mã nhóm chỉ xem ở máy thu.</>
+          ) : (
+            <>
+              Danh sách cho phép (mã nhóm, chưa ghép tên):{" "}
+              {enabled?.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}.
+            </>
+          )}{" "}
+          Nhóm im quá 72h: kiểm tra bị mời ra hoặc đổi tên;
           nhóm thử chỉ để so sánh. Thêm tài khoản, bật/tắt nhóm:{" "}
           <Link prefetch={false} href="/ops/sources" className="font-medium underline">
             Nguồn dữ liệu

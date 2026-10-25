@@ -75,5 +75,9 @@ echo "$MAXTS" > "$STATE"
 if [ "$FAILED" != "0" ]; then
   exit 1 # có lỗi — bỏ qua transform/refresh, để nguyên cho lần sau
 fi
-node "$ROOT/pipeline/transform-zalo.mjs"
-node "$ROOT/pipeline/refresh-bait-gap.mjs"
+# Từ đây trở xuống là làn Claude (AU3 Ngoài-3): chạy đủ các bước như cũ nhưng thoát bằng mã của bước
+# hỏng ĐẦU TIÊN để launchd thấy lỗi.
+. "$ROOT/scripts/lib/job-step.sh"
+job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
+job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+exit "$JOB_RC"

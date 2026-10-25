@@ -36,6 +36,7 @@ executors:
     ci_test_module: "node --test scripts/ci-test-module.test.mjs"   # AU11 AC-3/AC-4 — DB CI dựng từ migration (docker tạm) + helper bỏ qua ca cần dữ liệu thật
     ui_capture_login: "node --test scripts/ui-capture-login.test.mjs"   # ON10 — bước chụp /ops có phiên (máy chủ giả, không cần DB/app)
     ui_capture_browser: "node --test scripts/ui-capture-browser.test.mjs"   # bước chụp trên trình duyệt thật (playwright-cli), máy chủ giả — không DB, không app
+    zalo_import_job: "node --test scripts/zalo-import-job.test.mjs"
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -246,6 +247,11 @@ executors:
     shutdown_periodic_hang: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs periodic-hang"   # ~37s
     shutdown_stalled_post: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs stalled-post"
     shutdown_p3_repeat: "cd collector && rm -rf dist && npm run build && for i in 1 2 3 4 5 6 7 8 9 10; do node --test --test-name-pattern=P3 dist/test/graceful-shutdown-integration.test.js > /dev/null 2>&1 || { echo P3 đỏ ở lần $i; exit 1; }; echo P3 lần $i xanh; done && echo P3x10 PASS"   # ca tích hợp P3 chạy 10 lần liên tiếp — hết chập chờn (vòng 4)
+    # test-scripts-sau-87-90 — hai bộ test scripts/ (schema tạm của chính test trên :5433); đột biến chạy trên bản chép trong thư mục tạm
+    tsd_suites: "bash _acceptance/test-scripts-sau-87-90/probes/suites.sh \"$PWD\""
+    tsd_mut: "bash _acceptance/test-scripts-sau-87-90/probes/mut.sh \"$PWD\""
+    tsd_scope: "bash _acceptance/test-scripts-sau-87-90/probes/scope.sh \"$PWD\""
+    tsd_ac7: "bash _acceptance/test-scripts-sau-87-90/probes/ac7.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)

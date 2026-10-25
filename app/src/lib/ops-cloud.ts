@@ -3,7 +3,7 @@
  * trang không tự đo; số lấy từ các khối máy local đẩy lên (`readOpsFacts`, ON22). Một lần đọc mỗi request, dựng sẵn số cho
  * /ops, /ops/collections, /ops/review. Khối vắng hoặc mang lỗi → `null`: trang hiện «—», không bao giờ 0.
  */
-import type { JobStatus } from "./collections-queries"
+import type { JobStatus, ZaloGroupRow } from "./collections-queries"
 import { bySource, type FreshnessRow } from "./freshness"
 import { readOpsFacts, type FactsState } from "./ops-facts"
 import { toCoverageRows, type CoverageRow, type LockdownLayer, type SourceFeedHealth } from "./ops-queries"
@@ -12,6 +12,9 @@ export type PendingCount = { byType: { type: string; n: number }[]; total: numbe
 
 /** Khối khoá an toàn máy thu đẩy lên (ON23). `stale` theo `measured_at` CỦA KHỐI (ADR-0014 §Ngưỡng trễ). */
 export type CloudLockdown = { layers: LockdownLayer[]; lastWatchdogAt: string | null; agentTurnsToday: number | null; stale: boolean }
+/** Khối `s03` máy thu đẩy lên (ON4): N nhóm bật + hàng từng nhóm (chỉ tên — tầng C, Hỏi-1 = A). Tên `""` = nhóm chưa có
+ * tên (bên ghi bỏ mã nhóm); `accepted` null = không biết số tin vào. `stale` theo `measured_at` CỦA KHỐI. */
+export type CloudS03 = { allowlistEnabled: number; groups: ZaloGroupRow[]; stale: boolean }
 /** Một ngày của khối `luong7` (ON5): hai cột S03 máy thu đếm sẵn — bài S03 thật theo ngày đăng, tin rao nguồn S03. */
 export type Luong7Day = { day: string; s03Posts: number; s03Offers: number }
 
@@ -29,13 +32,15 @@ export type CloudOpsView = {
   lockdown: CloudLockdown | null
   /** Khối `luong7` (ON5): 7 ngày VN; vắng hoặc lỗi → null (ô S03 hiện «—», không 0). */
   luong7: Luong7Day[] | null
+  /** Khối `s03` (ON4); vắng, lỗi hay sai khuôn → null — bảng nhóm S03 không dựng, vùng ở lại Alert gom. */
+  s03: CloudS03 | null
 }
 
 type SourceRun = { code: string; label_vi?: string | null; status?: string | null }
 
 /** Đọc bản tin máy local và dựng số cho ba trang. `now` chỉ để phép đo trỏ mốc giờ. */
 export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<CloudOpsView> {
-  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null, lockdown: null, luong7: null }
+  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null, lockdown: null, luong7: null, s03: null }
   let f: Awaited<ReturnType<typeof readOpsFacts>>
   try {
     f = await readOpsFacts({ now })
@@ -59,6 +64,7 @@ export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<Clo
   if (Array.isArray(l7Days)) view.luong7 = l7Days
   if (Array.isArray(rows)) view.coverage = toCoverageRows(rows)
   view.lockdown = toCloudLockdown(f.blocks.lockdown)
+  view.s03 = toCloudS03(f.blocks.s03)
   if (Array.isArray(recRows)) view.records24h = recRows
   if (pending && Array.isArray(pending.byType) && typeof pending.total === "number") {
     view.pending = { byType: pending.byType, total: pending.total }
@@ -102,6 +108,35 @@ function toCloudLockdown(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["
     agentTurnsToday: typeof d.agentTurnsToday === "number" ? d.agentTurnsToday : null,
     stale: b.state === "stale",
   }
+}
+
+/** Khối `s03` → hàng bảng nhóm. Số đếm phải là số, tên là chữ hoặc null; sai một hàng là cả khối không dùng được — bảng
+ * không bao giờ hiện số đoán. Riêng `accepted` vắng hay null (bản tin đời cũ / không biết) → null, ô ghi «—». */
+function toCloudS03(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["s03"]): CloudS03 | null {
+  if (!b || b.state === "error" || !b.data) return null
+  const d = b.data as { allowlistEnabled?: unknown; groups?: unknown }
+  if (typeof d.allowlistEnabled !== "number" || !Array.isArray(d.groups)) return null
+  const num = (v: unknown) => typeof v === "number" && Number.isFinite(v)
+  const str = (v: unknown) => (typeof v === "string" ? v : null)
+  const groups: ZaloGroupRow[] = []
+  for (const g of d.groups as Record<string, unknown>[]) {
+    if (g?.name !== null && typeof g?.name !== "string") return null
+    if (!num(g.seen) || !num(g.passed) || !num(g.skipped) || !num(g.realPosts7d) || !num(g.mockPosts7d)) return null
+    groups.push({
+      name: (g.name as string | null) ?? "",
+      seen: g.seen as number,
+      passed: g.passed as number,
+      skipped: g.skipped as number,
+      accepted: num(g.accepted) ? (g.accepted as number) : null,
+      realPosts7d: g.realPosts7d as number,
+      mockPosts7d: g.mockPosts7d as number,
+      isMockOnly: g.isMockOnly === true,
+      lastSeenAt: str(g.lastSeenAt),
+      lastEventAt: str(g.lastEventAt),
+      ownerAccount: null,
+    })
+  }
+  return { allowlistEnabled: d.allowlistEnabled, groups, stale: b.state === "stale" }
 }
 
 /** Hai hàng cổng của lưới Máy móc ↔ lớp «Hạ tầng» cùng cổng trong khối khoá an toàn (ON23 Hỏi-1 = A): một lần đo nên hai

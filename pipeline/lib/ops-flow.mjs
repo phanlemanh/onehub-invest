@@ -47,10 +47,15 @@ export function parseLog(text, { now = Date.now() } = {}) {
     const g = line.match(/group=(.+?)(?:\s+p=|\s+account=|$)/)?.[1];
     const acc = line.match(/account=([a-z0-9-]+)/)?.[1];
     if (g) {
-      const r = groups.get(g) ?? { name: g, seen: 0, passed: 0, skipped: 0, accepted: 0, ownerAccount: acc ?? null, lastEventAt: ts };
+      const r = groups.get(g) ?? { name: g, seen: 0, passed: 0, skipped: 0, accepted: 0, acceptedSeen: false, ownerAccount: acc ?? null, lastEventAt: ts };
       r.seen++;
-      if (line.includes(" post 202")) { r.passed++; r.ownerAccount = r.ownerAccount ?? acc ?? null; }
-      else if (/ skip /.test(line)) r.skipped++;
+      if (line.includes(" post 202")) {
+        r.passed++;
+        r.ownerAccount = r.ownerAccount ?? acc ?? null;
+        // ON4: «Vào bảng thô» theo nhóm — cùng luật với funnel tổng và gateByGroup của trang máy thu.
+        const n = line.match(/"accepted":(\d+)/)?.[1];
+        if (n != null) { r.accepted += Number(n); r.acceptedSeen = true; }
+      } else if (/ skip /.test(line)) r.skipped++;
       r.lastEventAt = ts;
       groups.set(g, r);
     }
@@ -62,7 +67,9 @@ export function parseLog(text, { now = Date.now() } = {}) {
   health.heartbeatAgeMin = health.lastHeartbeatAt
     ? Math.round((now - new Date(health.lastHeartbeatAt).getTime()) / 60000)
     : null;
-  return { funnel, health, groups: [...groups.values()] };
+  // Nhóm đã qua cổng mà không dòng nào mang `accepted` (khuôn cũ của handler): không biết số tin vào → null, không 0.
+  const groupRows = [...groups.values()].map(({ acceptedSeen, ...r }) => ({ ...r, accepted: r.passed > 0 && !acceptedSeen ? null : r.accepted }));
+  return { funnel, health, groups: groupRows };
 }
 
 // ---- Luồng 7 ngày, hai cột S03 (ON5 `luong-7-ngay-dung-so`) ----
