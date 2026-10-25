@@ -5,7 +5,7 @@ slug: test-scripts-sau-87-90
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-10-25T06:25:01Z
 approved_by:
