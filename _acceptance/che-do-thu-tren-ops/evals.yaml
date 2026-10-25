@@ -1,0 +1,88 @@
+schema_version: 1
+feature_slug: che-do-thu-tren-ops
+# Ca «CD-AC-n» ở app/tests/che-do-thu.test.tsx: lược đồ tạm trên DB local (source_groups + ops_audit chép khuôn LIKE từ
+# public, dòng viết trước id tường minh); gọi datCheDo (app/src/lib/che-do-thu.ts) với người giả, haBungHetHan/haVeDuyTri
+# (pipeline/ha-bung-het-han.mjs) thật, vẽ SourceGroups trong jsdom. «H» = hôm nay giờ VN của mốc now cố định trong test:
+# now = 23:30Z ngày H−1 (06:30 ngày H giờ VN), tiến trình test chạy TZ=UTC — ngày UTC và ngày VN của now khác nhau.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [app/src/lib/che-do-thu.ts, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-1': điểm S06 params {region_v2: 13000, cityCode: 'hcmc'}; datCheDo admin {mode: 'bung', burstUntil: H+13} → 200; params deepEqual {region_v2: 13000, cityCode: 'hcmc', mode: 'bung', burst_until: H+13, mode_since: H}; ops_audit thêm đúng 1 dòng actor 'user:<id admin>', action 'source-group:mode', detail {id, source_code: 'S06', from: null, to: 'bung', burst_until: H+13, burst_until_cu: null}; JSON detail không chứa group_key lẫn name của điểm; datCheDo nhận { now } = 23:30Z ngày H−1 nên mode_since là H (không phải ngày UTC H−1); ca 'CD-AC-1b': thêm CHECK (action <> 'source-group:mode') vào ops_audit lược đồ tạm → datCheDo bật Bùng trả status 500, params deepEqual ảnh chụp trước, số dòng audit không đổi; đối chứng: gỡ CHECK, cùng lời gọi → 200 và đúng 1 dòng audit"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [app/src/lib/che-do-thu.ts, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-2' ma trận viết trước 7 dòng qua datCheDo admin: Bùng không burstUntil → 400; '2026/11/07' → 400; '2026-02-30' → 400; H−1 → 400 'hạn bùng đã qua'; H+14 → 400 chứa H+13 (cả bảy dòng với now = 23:30Z ngày H−1, nên H−1 là ngày UTC của now — bản tính ngày theo UTC nhận nhầm nó); mode 'turbo' → 400; id 999999 → 404; sau cả 7 dòng params mọi điểm không đổi (so ảnh chụp trước) và số dòng ops_audit không đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [app/src/lib/che-do-thu.ts, app/src/app/api/v1/ops/source-groups/route.ts, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-3': datCheDo hợp lệ (Bùng, hạn H+3) với getUser trả null và trả người role 'ops' → cả hai 403, params và số dòng audit không đổi; quét route.ts (bỏ comment): nhánh action 'set-mode' gọi datCheDo(…, getSessionUser); đối chứng: cùng thân gọi với người role 'admin' → 200; ca 'CD-AC-3b': gọi POST thật của route với Bearer OPS_API_TOKEN — action 'add' (S06, kèm mode 'bung', burstUntil, params {mode: 'bung', burst_until: '2027-12-31'}) và 'toggle' trên một điểm có params viết trước → params dòng mới chỉ có khoá region_v2/cityCode đã gửi, params dòng toggle deepEqual trước, không dòng ops_audit nào action 'source-group:mode'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [app/src/lib/che-do-thu.ts, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-4': điểm Bùng hạn H+5 mode_since H−3 → gia hạn H+10: burst_until H+10, mode_since vẫn H−3, audit detail burst_until H+10, burst_until_cu H+5; → duy_tri: không còn khoá burst_until, mode_since H; → cho: tương tự; đặt lại cho lần nữa → 200 unchanged, số dòng audit không tăng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [pipeline/ha-bung-het-han.mjs, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-5': now = 23:30Z ngày H−1 (06:30 ngày H giờ VN); 5 điểm viết trước — Bùng hạn H−1, Bùng hạn H, Bùng không hạn, Bùng hạn 'abc', Duy trì; haBungHetHan → hạ đúng 3 (H−1 lý do 'het-han'; không hạn và 'abc' lý do 'thieu-han'), mỗi điểm hạ: mode 'duy_tri', mode_since H, không khoá burst_until, một dòng audit actor 'machine:ha-bung-het-han' action 'source-group:mode-auto' detail {id, source_code, from: 'bung', to: 'duy_tri', ly_do, burst_until}; điểm hạn H và điểm Duy trì không đổi; lần chạy thứ hai trả [] và số dòng audit không tăng; haVeDuyTri(id điểm Bùng hạn H, 'bao-hoa') → true + một dòng audit ly_do 'bao-hoa'; haVeDuyTri trên điểm Duy trì → false, không dòng mới; ca 'CD-AC-5b': thêm CHECK (action <> 'source-group:mode-auto') vào ops_audit → haBungHetHan trên một điểm quá hạn ném lỗi, params mọi điểm deepEqual trước; gỡ CHECK → hạ được; ca 'CD-AC-5c': viết trước MỘT điểm Bùng hạn H−2 mới (group_key 'https://vi-du.invalid/nhom-cd5c', name 'Nhóm CD5C') rồi chạy CLI pipeline/ha-bung-het-han.mjs (DATABASE_URL lược đồ tạm, TZ=UTC) → exit 0, stdout đúng 1 dòng, dòng khớp /^hạ S0\\d#\\d+ bung→duy_tri \\(het-han, hạn \\d{4}-\\d{2}-\\d{2}\\)$/ và không chứa 'vi-du.invalid' lẫn 'Nhóm CD5C'; dòng ấy trên lược đồ tạm đã là duy_tri"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.job_exit
+    paths: [scripts/cloud-sync.sh, scripts/job-exit.test.mjs]
+    expected: "exit 0; JOBS['cloud-sync'].seq = ['ha-bung-het-han', 'sync-cloud', 'push-ops-facts']; mọi ca 'AU13 cloud-sync' xanh, gồm ca bước ha-bung-het-han hỏng → ≠0, dòng 'JOB FAIL [cloud-sync] bước ha-bung-het-han', hai bước sau vẫn chạy; bản đột biến bỏ job_run ở ha-bung-het-han bị bắt; mọi ca khác của job-exit.test.mjs xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [app/src/components/ops/sources/source-groups.tsx, app/src/components/ops/sources/mode-dialog.tsx, app/src/components/ops/sources/sources-content.tsx, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-7': vẽ SourceGroups trong jsdom với 4 dòng (cho; bung hạn 2026-11-07; duy_tri; mode null) → ô cột Chế độ từng dòng có chữ nguyên văn 'Chờ', 'Bùng · đến 07/11', 'Duy trì', 'Chưa đặt'; bấm nút 'Đổi chế độ thu' dòng chưa đặt → Dialog mở, tiêu đề chứa 'S06 · điểm #<id>' và Dialog không chứa name lẫn group_key của dòng; chọn Bùng → có input type=date nhãn 'Hạn bùng' với min = homNay truyền vào ('2026-10-26'), max = '2026-11-08' và nút 'Lưu' disabled (tiến trình TZ=UTC); nhập hạn → nút bật; fetch giả trả 400 {error: 'hạn bùng đã qua'} → chữ lỗi hiện trong Dialog; quét sources-content.tsx: câu SELECT nhóm đọc params->>'mode', 'burst_until', 'mode_since'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    steps:
+      - "Chạy app theo config dev_server (DB local :5433) từ worktree đang kiểm — KHÔNG lưu chế độ nào lên DB local (bốn trạng thái đã đo ở E7 trong jsdom)"
+      - "Chụp /ops/sources bằng scripts/ui-capture.sh ở sáng, tối (UI_CAPTURE_SCHEME=dark) và 390 (UI_CAPTURE_SIZE=390x844) → evidence/E8-{sang,toi,390}.png"
+      - "Trên trình duyệt có phiên ops thử: bấm «Đổi chế độ thu» ở một điểm S06, chọn Bùng; TRƯỚC khi chụp chạy scripts/ui-standards/mask-tier-a.js trong trang (window.__TIER_A_NAMES rỗng — chỉ che [data-tier-a] của bảng phía sau) và chỉ chụp khi mọi phần tử [data-tier-a] đã mang data-tier-a-masked; chụp evidence/E8-hop-thoai.png (sáng và tối), rồi bấm Huỷ — không bấm Lưu"
+    expected: "cột «Chế độ» có mặt và đọc được ở cả sáng và tối (dòng chưa đặt hiện «Chưa đặt»); ở 390 px không cuộn ngang ngoài khung bảng; hộp thoại có ô «Hạn bùng» kèm câu tối đa 14 đêm, nút Lưu khoá khi chưa nhập hạn; tầng A bị che ở cả ảnh trang (bước chụp thoát 0) lẫn ảnh hộp thoại (mọi [data-tier-a] mang data-tier-a-masked lúc chụp; hộp thoại chỉ ghi mã nguồn + id); số dòng ops_audit trước/sau bằng nhau"
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [CONTEXT.md, app/src/lib/che-do-thu.ts, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-8': CONTEXT.md có mục '**Chế độ thu**' với dòng Code chứa 'cho', 'bung', 'duy_tri' và mục '**Hạn bùng**' chứa 'burst_until'; NHAN_CHE_DO deepEqual {cho: 'Chờ', bung: 'Bùng', duy_tri: 'Duy trì'} và mỗi nhãn xuất hiện nguyên văn trong định nghĩa «Chế độ thu» của CONTEXT.md"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/components/ops/sources/source-groups.tsx, app/src/components/ops/sources/mode-dialog.tsx, app/src/lib/che-do-thu.ts]
+    expected: "exit 0; tsc --noEmit sạch và npm run lint 0 lỗi (luật onehub-ui trên tệp UI mới)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-7
+    executor: test
+    layer: cross-layer
+    cmd: config:executors.test.che_do_thu
+    paths: [app/src/components/ops/sources/source-groups.tsx, app/src/components/ops/sources/mode-dialog.tsx, app/src/lib/che-do-thu.ts, app/tests/che-do-thu.test.tsx]
+    expected: "exit 0; ca 'CD-AC-7b': vẽ SourceGroups trong jsdom trên một điểm thật của lược đồ tạm, fetch giả GHI LẠI thân request rồi chuyển cho datCheDo THẬT (người admin, now cố định) và trả đúng status/JSON của nó; chọn Bùng, nhập H+5, bấm Lưu → thân deepEqual {action: 'set-mode', id, mode: 'bung', burstUntil: H+5}; params trên lược đồ có mode 'bung', burst_until H+5; Dialog đóng và Badge hàng thành 'Bùng · đến dd/mm' của H+5; mở lại, chọn Duy trì, Lưu → thân không có khoá burstUntil, params mode 'duy_tri' không burst_until, Badge 'Duy trì'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
