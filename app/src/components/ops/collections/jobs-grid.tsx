@@ -25,6 +25,8 @@ const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown", "unchecked"] as c
   tone: ALIVE[a].tone,
   match: (j) => j.alive === a,
 }))
+// Số cũ: chấm tab «Sống» cũng thôi xanh — lần đo cuối, không phải bây giờ (ON23, như lưới khoá an toàn).
+const STALE_TABS = TABS.map((t) => (t.value === "yes" ? { ...t, tone: ALIVE.unknown.tone } : t))
 
 /** `stale`: trạng thái job là lần đo cuối của bản tin máy local cũ quá 45′ (ON3) — không badge xanh. */
 export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: boolean }) {
@@ -58,7 +60,7 @@ export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: b
       description="Tác vụ tự chạy theo lịch — nhật ký lần cuối và dò dịch vụ chạy liên tục"
       data={jobs}
       columns={columns}
-      tabs={TABS}
+      tabs={stale || jobs.some((j) => j.stale && j.alive === "yes") ? STALE_TABS : TABS}
       getRowId={(j) => j.id}
     />
   )

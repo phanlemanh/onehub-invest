@@ -29,7 +29,7 @@ evals:
     criterion: AC-4
     executor: test
     cmd: config:executors.test.app_ui
-    expected: "exit 0; ca 'ON23-AC-4 khối lùi 46′: nhãn hàng giữ nguyên, 0 success-light trong lưới, ô số mờ, 0 bg-success trong ô; hàng kev và collector-api của Máy móc giữ nhãn đọc từ khối, 0 success-light' ok; chiều đỏ 'ON23-AC-4 bản sao lưới không nhận cờ số cũ → bắt' ok; chiều đỏ 'ON23-AC-4 bản sao Máy móc bỏ qua cờ cũ của khối → bắt' ok"
+    expected: "exit 0; ca 'ON23-AC-4 khối lùi 46′: nhãn hàng giữ nguyên, 0 success-light trong lưới, ô số mờ, 0 bg-success trong ô; hàng kev và collector-api của Máy móc giữ nhãn đọc từ khối, 0 success-light, chấm tab «Sống» không xanh' ok; chiều đỏ 'ON23-AC-4 bản sao lưới không nhận cờ số cũ → bắt' ok; chiều đỏ 'ON23-AC-4 bản sao Máy móc bỏ qua cờ cũ của khối → bắt' ok; chiều đỏ 'ON23-AC-4 bản sao chấm tab «Sống» bỏ qua cờ cũ → bắt' ok"
     paths: [app/src/lib/ops-cloud.ts, app/src/components/ops/collections/**, app/tests/lockdown-cloud-theo-facts.test.tsx]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

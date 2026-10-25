@@ -131,6 +131,8 @@ function rows(r: string) {
 }
 const tabCount = (r: string, label: string) => Number(text(r.slice(0, r.indexOf("data-row-id"))).match(new RegExp(`${label} (\\d+)`))?.[1])
 const jobRow = (h: string, id: string) => rows(h).find(([k]) => k === id)
+/** Dải tab của lưới Máy móc: từ tiêu đề lưới tới hàng đầu tiên. */
+const jobsTabs = (h: string) => region(h, ">Máy móc<", "data-row-id")
 const PART = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
 const vnTime = (iso: string) => {
   const p = Object.fromEntries(PART.formatToParts(new Date(iso)).map((x) => [x.type, x.value]))
@@ -290,6 +292,7 @@ describe("ON23-AC-4 khối cũ", () => {
       assert.equal(r[1], "Sống", `${id}: nhãn đọc từ khối`)
       assert.ok(!r[2].includes("bg-success"), `${id}: không tô xanh`)
     }
+    assert.equal(successTone(jobsTabs(h)), 0, "Máy móc: chấm tab «Sống» không xanh khi số cũ (E7 lượt 1)")
   })
   test("ON23-AC-4 bản sao lưới không nhận cờ số cũ → bắt", async () => {
     ready()
@@ -311,6 +314,19 @@ describe("ON23-AC-4 khối cũ", () => {
     try {
       const r = jobRow(await renderCollections(m.path), "kev")
       assert.ok(r && r[2].includes("bg-success"), "phép đo phải thấy «Sống» xanh trên số cũ")
+    } finally {
+      m.done()
+    }
+  })
+  test("ON23-AC-4 bản sao chấm tab «Sống» bỏ qua cờ cũ → bắt", async () => {
+    ready()
+    await ingest(staleBlock(withOks(await push(), ALL_OK)))
+    const m = mutantChain(
+      { rel: "src/components/ops/collections/jobs-grid.tsx", fn: (s) => s.replace('tabs={stale || jobs.some((j) => j.stale && j.alive === "yes") ? STALE_TABS : TABS}', "tabs={TABS}") },
+      [COL_VIEW_JOBS, COL_PAGE],
+    )
+    try {
+      assert.ok(successTone(jobsTabs(await renderCollections(m.path))) > 0, "phép đo phải thấy chấm tab «Sống» xanh trên số cũ")
     } finally {
       m.done()
     }
