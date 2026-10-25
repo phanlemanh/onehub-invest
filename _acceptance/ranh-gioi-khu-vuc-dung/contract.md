@@ -5,7 +5,7 @@ slug: ranh-gioi-khu-vuc-dung
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [pipeline]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-ranh-gioi-khu-vuc-dung-design.md
@@ -85,3 +85,6 @@ DB local, test app}. Hà Nội là thị trường bị lỗi; TP.HCM là đối
   Cổng Bằng chứng, rồi chạy `kiem-ranh-gioi-khu-vuc.mjs` (chế độ chỉ đọc) làm bằng chứng sau áp. Trước khi áp thật,
   đếm (chỉ đọc) `saved_markets` trên cloud trỏ khu vực lạc theo Hỏi-3.
 - Bỏ listing khỏi canonical đảo được: staging giữ nguyên, chạy lại transform + reassign là nạp lại.
+- Test AU9 cần dữ liệu ranh giới thật (`pipeline/scripts/reassign-areas.test.mjs`, `app/tests/finder-ranh-gioi.test.tsx`)
+  tự bỏ qua có lý do khi `CI=true` mà DB không có dữ liệu thật; khi AU11 (`scripts/ci-bo-qua.json`) vào main thì chuyển
+  các ca này vào danh sách bỏ qua đó.
