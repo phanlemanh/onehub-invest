@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d8ca12a11f39a860a9b7ec2bc190f343ae2d2088
+verified_commit: 6bbcf8402450d5ac9d41824c9e0129b7ba4ea57b
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -155,3 +155,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1 đến E7 đều đạt, các lệnh suite hồi quy đều xanh. Không có eval hỏng; một finding trong hợp đồng (AC-6, đo PATH trên object env do test dựng) được ghi nhận để sửa.
 Round 2: E1 đến E7 đều đạt ở commit d8ca12a, các lệnh suite hồi quy đều xanh. Finding AC-6 của round 1 đã được sửa ở 2d47dff (ZJ-AC-6 đo PATH mà node giả thật sự thấy). Không có eval hỏng.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main e0bfe55 sau chữ ký
+run_id: repin-20261025T064203Z-62438
+sha: 6bbcf8402450d5ac9d41824c9e0129b7ba4ea57b · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
