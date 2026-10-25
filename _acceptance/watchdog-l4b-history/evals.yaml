@@ -1,0 +1,57 @@
+schema_version: 1
+feature_slug: watchdog-l4b-history
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.wdh_p1
+    expected: "exit 0; 'P1 PASS'; should-NOT-fire: không kill vì 2 turn cũ; có WARN; marker đúng dạng; turn mới sau đó → KILL"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.wdh_p2
+    expected: "exit 0; 'P2 PASS'; như E1 với marker trỏ đường dẫn khác"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.wdh_p3
+    expected: "exit 0; 'P3 PASS'; như E1 với inode mới, nội dung giữ nguyên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.wdh_p4
+    expected: "exit 0; 'P4 PASS'; như E1 với số dòng trong marker lớn hơn thật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.wdh_xoay_that
+    expected: "exit 0; 'XOAY-THAT PASS'; turn ghi sau lượt quét đầu sau xoay → KILL; dòng 'ghi nhận' về turn trước lượt quét đầu (cửa sổ đã khai) chỉ ghi nhận"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc3b_scan
+    expected: "exit 0; dòng PASS của chế độ scan"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc3b_rotate
+    expected: "exit 0; dòng PASS của chế độ rotate"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.zc3b_marker_hong
+    expected: "exit 0; dòng PASS của chế độ marker-hong"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.zc3_syntax
+    expected: "exit 0; 'SYNTAX OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

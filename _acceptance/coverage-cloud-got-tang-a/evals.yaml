@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: coverage-cloud-got-tang-a
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    layer: backend-effect
+    expected: "exit 0; chế độ suy từ lược đồ (không giả lập freshnessLocalOnly), in ra; ca 'AU12-AC-1 bản tin push-ops-facts THẬT qua ingest thật, GET route THẬT bằng token: 200, source facts, state fresh, measuredAt = measured_at khối freshness, rows = toCoverageRows(khối.rows) cùng tập (mã, thành phố) và trạng thái, không rỗng' ok; chiều đỏ 'AU12-AC-1 bản sao route trả getCoverageOverview như cũ → bắt (rows rỗng)' ok; chiều đỏ 'AU12-AC-1 bản sao lấy measuredAt của cả bản tin thay vì khối → bắt' ok"
+    paths: [app/src/app/api/v1/ops/coverage/route.ts, app/src/lib/ops-facts.ts, app/src/lib/ops-queries.ts, app/tests/coverage-cloud-got-tang-a.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AU12-AC-2 phản hồi tươi / cũ / không số: 0 khoá hay giá trị chuỗi chứa tên nguồn thật (real_name của source_registry local + registry bên ghi đã đọc; in số tên ≥ 1)' ok; đối chứng dương 'AU12-AC-2 cấy lần lượt từng tên vào bản sao phản hồi → bộ dò trúng đúng chỗ mỗi lần' ok; chiều đỏ 'AU12-AC-2 bản sao route chép nguyên bản tin vào phản hồi → bắt (có trường ngoài CoverageRow)' ok"
+    paths: [app/src/app/api/v1/ops/coverage/route.ts, app/tests/coverage-cloud-got-tang-a.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AU12-AC-3 khối freshness lùi 46′: 200, state stale, measuredAt là mốc cũ, rows vẫn có số' ok; chiều đỏ 'AU12-AC-3 bản sao bỏ qua trạng thái khối → bắt (state fresh)' ok"
+    paths: [app/src/app/api/v1/ops/coverage/route.ts, app/src/lib/ops-facts.ts, app/tests/coverage-cloud-got-tang-a.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AU12-AC-4 không bản tin: 200, state none, rows null, measuredAt null, note «Chỉ đo ở máy thu»' ok; ca 'AU12-AC-4 khối freshness lỗi ở bên ghi thật: như không bản tin' ok; ca 'AU12-AC-4 bản tin thật gỡ khối freshness: như không bản tin' ok; ca 'AU12-AC-4 khối sai khuôn (rows không phải mảng / hàng thiếu code): 200, như không bản tin, không 500' ok; ca 'AU12-AC-4 khối tươi mà rows rỗng thật: state fresh, rows []' ok; chiều đỏ 'AU12-AC-4 bản sao trả rows [] khi không có số → bắt' ok; chiều đỏ 'AU12-AC-4 bản sao không kiểm khuôn → bắt (500 hoặc rows sai)' ok"
+    paths: [app/src/app/api/v1/ops/coverage/route.ts, app/tests/coverage-cloud-got-tang-a.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'AU12-AC-5 không token, không phiên: 401, thân không có rows' ok; ca 'AU12-AC-5 token sai: 401' ok; đối chứng dương 'AU12-AC-5 token đúng: 200' ok"
+    paths: [app/src/app/api/v1/ops/coverage/route.ts, app/tests/coverage-cloud-got-tang-a.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; chế độ suy từ lược đồ (không giả lập freshnessLocalOnly); ca 'AU12-AC-6 DB máy thu đủ bảng: source local, state live, rows = getCoverageOverview, 0 truy vấn ops_heartbeat' ok; đối chứng dương 'AU12-AC-6 bộ bắt truy vấn thấy ops_heartbeat ở chế độ máy chủ' ok"
+    paths: [app/src/app/api/v1/ops/coverage/route.ts, app/src/lib/ops-queries.ts, app/tests/coverage-cloud-got-tang-a.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: judgment
+    inputs: ["docs/superpowers/specs/2026-10-25-coverage-cloud-got-tang-a-design.md", "docs/adr/0014-ops-cloud-doc-so-tong-hop.md", "AGENTS.md", "app/src/app/api/v1/ops/coverage/route.ts", "app/src/lib/ops-facts.ts", "app/src/lib/ops-queries.ts"]
+    question: "Đối chiếu route /api/v1/ops/coverage và thiết kế với ADR-0014 (§Ngưỡng trễ: tươi ≤ 45′ / cũ / không có; §Phương án đã loại B) và AGENTS.md luật 6: có đường nào trả danh sách rỗng hay số như thể đã đo khi máy chủ không có số không; cờ cũ có tính theo measured_at của chính khối freshness không; route trên máy chủ có đọc bảng tầng A, tệp cục bộ hay chép trường ngoài CoverageRow vào phản hồi không? Lệch thì FAIL."
+    expected: "không đường nào rỗng-như-đã-đo; cờ theo khối; không đọc tầng A trên máy chủ; phản hồi chỉ CoverageRow + cờ"
+    paths: ["docs/superpowers/specs/2026-10-25-coverage-cloud-got-tang-a-design.md", "app/src/app/api/v1/ops/coverage/route.ts", "app/src/lib/ops-facts.ts", "app/src/lib/ops-queries.ts"]
+    evidence_required: [run_id, verdict, judges, verified_at]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app
+    expected: "exit 0; tsc sạch và npm run lint sạch"
+    paths: [app/src/app/api/**, app/src/lib/**]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
