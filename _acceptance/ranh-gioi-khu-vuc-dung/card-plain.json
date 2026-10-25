@@ -1,30 +1,87 @@
 {
-  "feature_plain": "Bản đồ và số liệu Hà Nội chỉ còn tính trên phường/xã của Hà Nội: gỡ 34 «khu vực» cấp tỉnh đang bị gắn nhầm dưới Hà Nội (làm bản đồ Hà Nội phủ cả nước và kéo 19 tin cho thuê ngoài tỉnh vào), tính lại số liệu, và chặn lỗi này tái phát.",
+  "feature_plain": "Bản đồ và số liệu Hà Nội chỉ còn tính trên phường/xã của Hà Nội: bước gán phường chỉ nhận ranh giới cấp phường nằm trong thành phố, gỡ 34 khu vực cấp tỉnh đã lỡ nạp, tính lại số liệu và có phép kiểm chống tái phát — đã đo trên dữ liệu thật trong lượt thử hoàn lại.",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ chỉ nhận ranh giới cấp phường/xã khi nạp khu vực của một thành phố; ranh giới cấp tỉnh lẫn trong lượt thu bị bỏ qua và được đếm đúng số."},
-    {"id": "AC-2", "p": "Sẽ bỏ qua và nêu tên mọi «phường» có vị trí nằm ngoài thành phố."},
-    {"id": "AC-3", "p": "Sẽ gỡ các khu vực cấp tỉnh đã lỡ nạp: tin cho thuê trong Hà Nội về đúng phường, tin ngoài Hà Nội bị rút khỏi dữ liệu sản phẩm (theo Hỏi-2), tin bán gắn nhầm mất nhãn phường, số liệu tính sẵn của chúng bị xoá — trừ khu vực đang có người dùng lưu (theo Hỏi-3)."},
-    {"id": "AC-5", "p": "Sẽ thêm một phép kiểm chất lượng dữ liệu báo đỏ khi có khu vực con nằm ngoài khu vực cha."},
-    {"id": "AC-6", "p": "Sẽ đo trên dữ liệu thật của máy, trong một lượt thử rồi hoàn lại (theo Hỏi-4): trước khi sửa bản đồ Hà Nội phủ cả nước, sau khi sửa nằm gọn trong Hà Nội, không còn khu vực «Tỉnh…», TP.HCM không đổi."},
-    {"id": "AC-8", "p": "Sẽ chứng minh bản đồ xếp hạng khu vực Hà Nội (Finder) không còn phủ cả nước."},
-    {"id": "AC-9", "p": "Sẽ dừng hẳn, không xoá gì, nếu một lượt thu ranh giới bị hỏng đến mức gần như không còn phường hợp lệ."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ chỉ nhận ranh giới cấp phường/xã khi nạp khu vực của một thành phố; ranh giới cấp tỉnh lẫn trong lượt thu bị bỏ qua và được đếm đúng số."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ bỏ qua và nêu tên mọi «phường» có vị trí nằm ngoài thành phố."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ gỡ các khu vực cấp tỉnh đã lỡ nạp: tin cho thuê trong Hà Nội về đúng phường, tin ngoài Hà Nội bị rút khỏi dữ liệu sản phẩm (theo Hỏi-2), tin bán gắn nhầm mất nhãn phường, số liệu tính sẵn của chúng bị xoá — trừ khu vực đang có người dùng lưu (theo Hỏi-3)."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ thêm một phép kiểm chất lượng dữ liệu báo đỏ khi có khu vực con nằm ngoài khu vực cha."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ đo trên dữ liệu thật của máy, trong một lượt thử rồi hoàn lại (theo Hỏi-4): trước khi sửa bản đồ Hà Nội phủ cả nước, sau khi sửa nằm gọn trong Hà Nội, không còn khu vực «Tỉnh…», TP.HCM không đổi."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ chứng minh bản đồ xếp hạng khu vực Hà Nội (Finder) không còn phủ cả nước."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ dừng hẳn, không xoá gì, nếu một lượt thu ranh giới bị hỏng đến mức gần như không còn phường hợp lệ."
+    }
   ],
   "wont_do": [
-    {"id": "AC-4", "p": "Sẽ KHÔNG đổi gì thêm khi chạy lại lần hai trên cùng dữ liệu."},
-    {"id": "AC-7", "p": "Sẽ KHÔNG để sót dòng dữ liệu nào trỏ vào khu vực đã gỡ; số tổng Hà Nội bằng đúng tổng các phường."},
-    {"id": "OOS-1", "p": "KHÔNG nạp phường Đà Nẵng trong việc này (theo Hỏi-1) — chỉ gỡ khu vực «Thành phố Đà Nẵng» đang gắn nhầm dưới Hà Nội."},
-    {"id": "OOS-2", "p": "KHÔNG đụng 11 khu vực cũ cấp quận dưới Hà Nội (nằm trong Hà Nội, đang có dữ liệu trỏ vào)."},
-    {"id": "OOS-3", "p": "KHÔNG đổi nhãn lượt thu ranh giới tỉnh ở bên thu thập (làn ZCode) — bên dữ liệu đã không còn tin vào nhãn đó."},
-    {"id": "OOS-4", "p": "KHÔNG áp thật lên dữ liệu trước khi anh ký Cổng Bằng chứng (theo Hỏi-4) — áp thật là bước sau chữ ký vì cloud nhận thay đổi trong 15 phút."}
+    {
+      "id": "AC-4",
+      "p": "Sẽ KHÔNG đổi gì thêm khi chạy lại lần hai trên cùng dữ liệu."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ KHÔNG để sót dòng dữ liệu nào trỏ vào khu vực đã gỡ; số tổng Hà Nội bằng đúng tổng các phường."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG nạp phường Đà Nẵng trong việc này (theo Hỏi-1) — chỉ gỡ khu vực «Thành phố Đà Nẵng» đang gắn nhầm dưới Hà Nội."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG đụng 11 khu vực cũ cấp quận dưới Hà Nội (nằm trong Hà Nội, đang có dữ liệu trỏ vào)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đổi nhãn lượt thu ranh giới tỉnh ở bên thu thập (làn ZCode) — bên dữ liệu đã không còn tin vào nhãn đó."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG áp thật lên dữ liệu trước khi anh ký Cổng Bằng chứng (theo Hỏi-4) — áp thật là bước sau chữ ký vì cloud nhận thay đổi trong 15 phút."
+    }
   ],
   "coverage_plain": [
-    {"i": 0, "p": "Phủ đủ các lớp: nạp ranh giới (AC-1, AC-2), dọn dữ liệu đã sai (AC-3), chạy lặp (AC-4), phép kiểm chống tái phát (AC-5), chốt an toàn khi lượt thu hỏng (AC-9), dữ liệu thật đo trong lượt thử hoàn lại (AC-6, AC-7) và bản đồ người dùng thấy (AC-8); TP.HCM làm đối chứng không được đổi."}
+    {
+      "i": 0,
+      "p": "Phủ đủ các lớp: nạp ranh giới (AC-1, AC-2), dọn dữ liệu đã sai (AC-3), chạy lặp (AC-4), phép kiểm chống tái phát (AC-5), chốt an toàn khi lượt thu hỏng (AC-9), dữ liệu thật đo trong lượt thử hoàn lại (AC-6, AC-7) và bản đồ người dùng thấy (AC-8); TP.HCM làm đối chứng không được đổi."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Gỡ khu vực có thể kéo theo xoá «thị trường đã lưu» của người dùng trên cloud — máy không tự quyết, đưa thành Hỏi-3."},
-    {"i": 1, "p": "Áp lên dữ liệu máy là cloud nhận ngay trong 15 phút, tức ship trước chữ ký — đưa thành Hỏi-4 (khuyên đo bằng lượt thử hoàn lại, áp thật sau chữ ký); lo ngại lượt chạy đêm đảo lại thì không đúng, bước này không chạy đêm."},
-    {"i": 2, "p": "Phép đo dữ liệu thật thiếu mốc «trước khi sửa» — đã sửa: cùng một lượt chụp trước (phải đỏ) và sau, in số hai phía."},
-    {"i": 3, "p": "Dữ liệu mồi tự dựng, và chưa có chốt khi lượt thu hỏng — đã sửa: mồi chép từ dòng thật, thêm AC-9 dừng hẳn khi gần như không còn phường hợp lệ."},
-    {"i": 4, "p": "Hai phép đo chỉ thấy chữ có mặt trong log — đã sửa: so con số in ra với số đếm thật, và kiểm khu vực có người lưu được giữ nguyên."}
+    {
+      "i": 0,
+      "p": "Gỡ khu vực có thể kéo theo xoá «thị trường đã lưu» của người dùng trên cloud — máy không tự quyết, đưa thành Hỏi-3."
+    },
+    {
+      "i": 1,
+      "p": "Áp lên dữ liệu máy là cloud nhận ngay trong 15 phút, tức ship trước chữ ký — đưa thành Hỏi-4. ĐÍNH CHÍNH (lượt chấm r2): bước dọn CÓ chạy theo lịch hằng tuần (weekly-collect → finalize-hanoi → reassign-areas), nên merge là lượt tuần kế tự áp — xem Ngoài-1/Ngoài-4 ở Cổng Bằng chứng."
+    },
+    {
+      "i": 2,
+      "p": "Phép đo dữ liệu thật thiếu mốc «trước khi sửa» — đã sửa: cùng một lượt chụp trước (phải đỏ) và sau, in số hai phía."
+    },
+    {
+      "i": 3,
+      "p": "Dữ liệu mồi tự dựng, và chưa có chốt khi lượt thu hỏng — đã sửa: mồi chép từ dòng thật, thêm AC-9 dừng hẳn khi gần như không còn phường hợp lệ."
+    },
+    {
+      "i": 4,
+      "p": "Hai phép đo chỉ thấy chữ có mặt trong log — đã sửa: so con số in ra với số đếm thật, và kiểm khu vực có người lưu được giữ nguyên."
+    }
   ]
 }
