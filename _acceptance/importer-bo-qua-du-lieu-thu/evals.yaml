@@ -1,0 +1,86 @@
+schema_version: 1
+feature_slug: importer-bo-qua-du-lieu-thu
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.pl1_real_mock
+    expected: "exit 0; stdout có 'REAL-MOCK PASS'; có ≥ 1 snapshot thử thật; import-airbnb bỏ qua tất cả (có và không «/» cuối), exit 0, có log; 0 dòng stg mới mang snapshot_id thử"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; stdout có 'FIXTURES PASS'; import-chotot với snapshot thử tên e2e có «/» cuối → bỏ qua; nạp lại kèm «/» cuối vẫn đúng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; 0 fail; các ca unit 'allowlist: nguồn thật đi qua, mọi nguồn khác bị chặn (kể cả lạ)', 'khuôn tên: thư mục segment thử (TEST/e2e) bị bỏ dù nguồn hợp lệ' và 'khuôn tên: tên thật có mốc thời gian vẫn nạp (cả 3 dạng storage)' xanh (ca «/» cuối đã bỏ khỏi unit ở d9b9ace — hành vi «/» cuối do E2 chứng)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; dòng 'tên thật + manifest.source=zalo-mock → bỏ qua có log, 0 dòng' đạt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; log 'bỏ 1 item THỬ lẫn'; 2 item thật vào stg_zalo_posts; should-NOT-fire: item zalo-mock không vào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; nạp lại snapshot thật → vẫn 2 dòng, không nhân đôi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; tên e2e và TEST → bỏ qua, 0 dòng (should-NOT-fire tên nguồn thật chứa 'test' ở giữa: xem ca isTestSnapshot của E3)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; import-chotot bỏ qua snapshot thử; snapshot Chợ Tốt thật (v1) vẫn nạp 1 dòng; dọn còn 0 dòng giả"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.pl1_real_mock
+    expected: "exit 0; should-NOT-fire: số dòng stg thử cũ trước = sau (không xoá); in số đếm trước/sau từng bảng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; stdout có 'FIXTURES PASS'; import-chotot: tên thật + manifest.source=e2e → bỏ qua, 0 dòng; should-NOT-fire: snapshot chotot thật (manifest.source=chotot-ads) vẫn nạp 1 dòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; allowlist: nguồn 'example' → bỏ qua, 0 dòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-11
+    executor: script
+    cmd: config:executors.script.pl1_fixtures
+    expected: "exit 0; should-NOT-fire: mốc 6 chữ số và 9 chữ số + -n vẫn nạp; khuôn tên zalo-agent__e2e / zalo-agent__<chỉ ngày> / chotot-ads__TEST / zalo-agent__TEST → bỏ qua, 0 dòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
