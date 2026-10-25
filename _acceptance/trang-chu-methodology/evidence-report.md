@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: af67b7d8990d3e938f6fc7cabae4e015e5ec2e6b
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: trang-chu-methodology

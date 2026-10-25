@@ -5,7 +5,7 @@ slug: trang-chu-methodology
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, config]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-25-trang-chu-methodology-design.md
 approved_by: Mạnh
 approved_at: 2026-10-24T23:17:26Z
@@ -93,3 +93,11 @@ Quét hình thái (preset entity-feature, chân sản phẩm: routes.md/catalog.
   `next.config.ts` / `route-slugs.test.mjs`; khi UI4 vào main thì gộp main vào nhánh UI2 trước khi mở PR.
 - Đường nền đầu vòng đỏ hai dòng có sẵn, không do vòng này: bộ kiểm báo thiếu `executors.design.ui_check` (bản kit
   2.32.0) dù tệp có trên đĩa — chưa rõ nguyên do, không eval nào của hồ sơ này dùng khoá ấy; và lưới so với merge-base cũ thấy bằng chứng UI4 hoá cũ (so với `origin/main` thì sạch).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Chú thích của lệnh kiểm «DB sập» trong cấu hình còn ghi cổng cố định 3462 dù lệnh đã tự chọn cổng trống.
+  - Ngoài-2: Ảnh trang lỗi toàn cục (sáng/tối/375) nằm ở thư mục chạy máy, không nằm trong hồ sơ; chụp lại bằng lệnh kiểm E19.
+  - Ngoài-3: Tệp bằng chứng mạng của ảnh trang Phương pháp là bản tóm tắt tay, không phải output gốc của công cụ.
+  - Ngoài-4: Tệp cấu hình cổng nghiệm thu thiếu một dấu cách nên không còn là YAML chuẩn (bộ đọc của kit vẫn đọc đúng).
+  - Ngoài-5: Danh mục giao diện ghi luật «Thử lại tải lại từ máy chủ» cho mọi cổng, nhưng cổng app và Ops vẫn chỉ vẽ lại phía trình duyệt.
+  - Ngoài-6: Trùng Ngoài-4 (cùng một dấu cách thiếu trong tệp cấu hình).
+  - Ngoài-8: Thước kiểm lưới hai cột chỉ kiểm lớp viền có mặt, chưa kiểm lớp vắng ở ô còn lại.
