@@ -70,6 +70,7 @@ export const SCAN_FILES = [
   "src/components/shell/ops-shell/portal-switcher.tsx",
   "src/components/shell/ops-shell/sidebar-search.tsx",
   "src/components/shell/ops-shell/user-card.tsx",
+  "src/components/states/app-crash.tsx",
   "src/components/states/not-found-state.tsx",
   "src/components/states/page-error.tsx",
   "src/components/states/page-skeleton.tsx",
