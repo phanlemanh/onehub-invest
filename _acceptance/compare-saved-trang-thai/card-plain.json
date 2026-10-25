@@ -1,0 +1,120 @@
+{
+  "feature_plain": "Nhà đầu tư mở So sánh ở địa chỉ mới /compare (link cũ /so-sanh tự chuyển), và cả So sánh lẫn Đã lưu có đầu trang chuẩn, có khung chờ khi đang tải, có lời giải thích kèm một nút khi trống, và báo lỗi ngay tại vùng hỏng kèm nút Thử lại.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ chuyển mọi link cũ /so-sanh (kể cả khi có danh sách khu vực) sang /compare bằng chuyển hướng vĩnh viễn 301, giữ nguyên các khu vực đang so."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ cho trang So sánh một đầu trang chuẩn: đường dẫn «Việt Nam › So sánh», số cột «2/4 khu vực», nút «Thêm khu vực» (thêm thì đổi địa chỉ trang tại chỗ, đủ 4 cột thì tắt); mỗi cột có ảnh đại diện là ảnh một listing tự thu trong khu vực, không trùng giữa các cột, ảnh hỏng thì tự đổi ảnh khác hoặc về ô số; hàng lợi suất ghi «Lợi suất ngắn hạn/dài hạn»."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ cho trang Đã lưu một đầu trang chuẩn có số khu vực và nút «So sánh N khu vực» đổi theo tab đang chọn; mỗi thẻ có ảnh đại diện cùng luật với So sánh, nhãn loại và nút bỏ lưu vẫn đọc được trên ảnh; người chưa đăng nhập vẫn được đưa sang trang đăng nhập."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ giữ đầu trang đứng yên và hiện khung chờ đúng hình bảng/thẻ trong lúc số liệu đang tải."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ cho So sánh trống một lời giải thích kèm nút sang thị trường Việt Nam, và Đã lưu trống dùng khối trống «bookmark» (c-empty-11) với đúng một nút «Tìm thị trường»."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ gỡ 4 lỗi giao diện còn nợ của hai trang này khỏi danh sách nợ lint, chỉ giữ một ngoại lệ có ghi lý do cho bảng so sánh gốc."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ cập nhật bản đồ trang, danh mục khối và từ điển để mọi tài liệu nói cùng một điều về /compare và hai trạng thái mới."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ để người chấm nhìn hai trang ở màn rộng sáng, màn rộng tối và điện thoại 375 px: đầu trang đọc được, trang không cuộn ngang, ô tốt nhất đọc rõ, mỗi trạng thái trống đúng một nút."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-2",
+      "p": "Sẽ KHÔNG còn link nào trong sản phẩm trỏ địa chỉ cũ /so-sanh (chỉ còn đúng dòng chuyển hướng), và mục «So sánh» trên thanh điều hướng sáng khi ở /compare."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ KHÔNG để một lỗi số liệu xoá cả trang: chỉ vùng hỏng đổi thành ô báo lỗi kèm «Thử lại», đầu trang vẫn còn; trang «không tìm thấy» không bị nhầm thành lỗi vùng."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG làm khay So sánh từ bảng xếp hạng Finder, không thêm listing/báo cáo lợi suất vào Đã lưu, không làm nút Chia sẻ — đó là các việc riêng đã có mã."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG đổi chữ «Yield …» trên bảng của trang Insight — để nhóm trang Insight dọn."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG chuyển bảng so sánh sang dạng bảng dữ liệu lọc/sắp — bản đồ trang đã chốt giữ khối so sánh hiện tại."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG làm lỗi tại chỗ cho phần đọc nhẹ đầu trang (danh sách khu vực, danh sách đã lưu): hỏng ở đó vẫn hiện trang lỗi chung có Thử lại."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG dọn kiểu dáng các nút trên trang Insight — chỉ đổi đường dẫn của nút So sánh."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG làm ảnh đại diện ở các trang khác (Finder, Insight, Duyệt listing) hay cho dự án, tin đăng trong vòng này — đã đề xuất thành một hàng việc riêng; ảnh dự án không lấy được từ nguồn danh mục dự án vì nguồn đó không được lên cổng Invest."
+    }
+  ],
+  "scope_plain": "Những việc người duyệt có thể chờ đợi nhưng vòng này cố ý để lại:",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Đã soát mọi lối vào So sánh và Đã lưu (thanh điều hướng, nút trên Insight, menu trang chủ, nút trong Đã lưu, link cũ) — thước là bản đồ trang và một lượt tìm chữ /so-sanh trên toàn mã."
+    },
+    {
+      "i": 1,
+      "p": "Đã soát mọi trạng thái của mỗi vùng số liệu: có dữ liệu, đang tải, trống, trống theo tab, lỗi, chưa đăng nhập, mã khu vực lạ — thước là luật trạng thái của kho và nguyên tắc «trống phải nói lý do kèm một hành động» của Nielsen Norman Group."
+    },
+    {
+      "i": 2,
+      "p": "Đã soát ba khổ nhìn: màn rộng sáng, màn rộng tối, điện thoại — đúng ba khổ mà vòng làm việc giao diện của kho bắt chụp."
+    },
+    {
+      "i": 3,
+      "p": "Mỗi ô quan trọng đã có tiêu chí: chuyển hướng (AC-1, AC-2), So sánh có số (AC-3), Đã lưu có số và chưa đăng nhập (AC-4), tải (AC-5), lỗi (AC-6), trống (AC-7), ba khổ (AC-10); lint và tài liệu (AC-8, AC-9) áp chung."
+    },
+    {
+      "i": 4,
+      "p": "Để sau: trống theo tab của Đã lưu không có tiêu chí riêng (hành vi có sẵn, chỉ đổi ô đếm); màn tối ở khổ điện thoại không chụp riêng."
+    },
+    {
+      "i": 5,
+      "p": "Không bao giờ: khung chờ cấp cả trang (loading.tsx) — làm mất chuyển hướng sang đăng nhập của Đã lưu."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Phản biện chỉ ra hai lựa chọn người dùng nhìn thấy (gốc đường dẫn của Đã lưu, chỗ đặt nút So sánh) mà máy đã tự quyết với căn cứ yếu. Đã xử: gốc đường dẫn của Đã lưu thành câu Hỏi-1 cho anh; chỗ đặt nút So sánh dựa vào quy định đầu trang chuẩn có nút bên phải."
+    },
+    {
+      "i": 1,
+      "p": "Phản biện chỉ ra việc bỏ phép đo sau khi giao (không có ngưỡng sống/chết) là đánh đổi giá trị, máy không được tự bỏ. Đã xử: thành câu Hỏi-2 cho anh, máy khuyên đồng ý bỏ."
+    },
+    {
+      "i": 2,
+      "p": "Bài chấm giao diện chưa nhìn Đã lưu khi trống và ở màn tối, và tài khoản thử nằm ở chỗ chỉ một phiên đọc được. Đã sửa: thêm các khung trống sáng, tối, điện thoại; tài khoản thử dời vào thư mục riêng trong kho không bao giờ lên git."
+    },
+    {
+      "i": 3,
+      "p": "Lỗi tại vùng mới chỉ được máy chứng trên bản mô phỏng, chưa chứng trên máy chủ thật; và chưa ca nào chứng «không tìm thấy» không bị nhầm thành lỗi. Đã sửa phần sau bằng một ca kiểm; phần máy chủ thật thành câu Hỏi-3 cho anh."
+    },
+    {
+      "i": 4,
+      "p": "Hai nút vừa dời lên đầu trang (Thêm khu vực, So sánh theo tab) chưa ca nào bấm thử. Đã sửa: thêm hai ca kiểm bấm thật — chọn khu vực đổi địa chỉ trang, đổi tab đổi nút."
+    }
+  ]
+}

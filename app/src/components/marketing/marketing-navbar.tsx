@@ -43,7 +43,7 @@ const PRODUCT: NavLink[] = [
   { title: "Thị trường", href: "/vn", description: "Xếp hạng phường theo RevPAR, công suất, giá — kèm bản đồ.", icon: icon(MapIcon) },
   { title: "Listing", href: "/vn/hanoi/listings", description: "Duyệt listing Airbnb trên lưới và bản đồ nhãn giá.", icon: icon(HouseIcon) },
   { title: "Lợi suất", href: "/yield", description: "Ước tính lợi suất một căn: ngắn hạn so với dài hạn.", icon: icon(CalculatorIcon) },
-  { title: "So sánh", href: "/so-sanh", description: "Đặt cạnh nhau tối đa 4 thị trường hoặc phường.", icon: icon(GitCompareIcon) },
+  { title: "So sánh", href: "/compare", description: "Đặt cạnh nhau tối đa 4 thị trường hoặc phường.", icon: icon(GitCompareIcon) },
 ]
 
 /**
