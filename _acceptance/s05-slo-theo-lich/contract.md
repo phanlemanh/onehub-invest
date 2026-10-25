@@ -5,7 +5,7 @@ slug: s05-slo-theo-lich
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T07:04:29Z
 design_doc: docs/superpowers/specs/2026-10-25-s05-slo-theo-lich-design.md
@@ -70,3 +70,7 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - SLO đọc theo lịch động.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Phép quét «không nơi thứ ba ghi SLO S05» chưa bắt dạng chữ «S05 = N giờ» (và «<=», «12h»); hiện không có chỗ nào ghi sai.
+  - Ngoài-2: Nếu máy chấm không có DB local, phép đo check-freshness vẫn báo xanh mà các ca quanh mốc 96/97 giờ không chạy.

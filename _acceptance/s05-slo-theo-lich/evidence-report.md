@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 8109b9683ac614700e76889b48d3b4915f7b3d40
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: s05-slo-theo-lich
