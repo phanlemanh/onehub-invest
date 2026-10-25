@@ -88,6 +88,12 @@ export type FlowDay = {
   zaloOffers: number;
 };
 
+// Hai cột S03 (ON5): CHÉP NGUYÊN VĂN S03_POSTS_SQL / S03_OFFERS_SQL của pipeline/lib/ops-flow.mjs — bên ghi khối `luong7`
+// dùng bản đó; app/tests/luong-7-ngay-dung-so.test.tsx (ON5-AC-4) đối chiếu hai bên trên cùng lược đồ. Bài S03 thật
+// (`zalo-agent`, không mock) theo ngày đăng; tin rao chỉ nguồn S03 theo first_seen (= giờ đăng bài sớm nhất).
+const S03_POSTS_SQL = `SELECT (posted_at AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' GROUP BY 1`;
+const S03_OFFERS_SQL = `SELECT (first_seen AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
+
 /** Luồng N ngày gần nhất theo nguồn. Perf-audit: từng là 42 subquery
  * non-sargable (col::date = d, 250ms, tăng theo bảng) — nay mỗi nguồn MỘT
  * GROUP BY có lọc khoảng ngày, gộp bằng JS. */
@@ -103,27 +109,53 @@ export async function getFlowDays(n = 7, opts: { now?: number } = {}): Promise<F
     pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM airdna_listings WHERE captured_at >= $1 GROUP BY 1`, [since]),
     pool.query(`SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`, [oldest]),
     pool.query(`SELECT ${vnDay("collected_at")} d, count(*)::int n FROM airbnb_snapshots WHERE collected_at >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT ${vnDay("captured_at")} d, count(*)::int n FROM stg_zalo_posts WHERE captured_at >= $1 GROUP BY 1`, [since]),
-    pool.query(`SELECT ${vnDay("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 GROUP BY 1`, [since]),
+    pool.query(S03_POSTS_SQL, [since]),
+    pool.query(S03_OFFERS_SQL, [since]),
   ]);
   const pick = (rows: { d: string; n: number }[]) => new Map(rows.map((r) => [r.d, r.n]));
   const [M, A, L, S, Z, O] = [pick(mk.rows), pick(al.rows), pick(li.rows), pick(sn.rows), pick(zp.rows), pick(of.rows)];
-  const facts = await getLocalFacts();
   const days: FlowDay[] = [];
   for (let i = 0; i < n; i++) {
     const d = vnDayKey(now - i * 86400000);
-    const z = facts?.zaloFlow?.[d]; // cloud: stg không sync — số zalo từ facts
     days.push({
       day: d,
       airdnaMarkets: M.get(d) ?? 0,
       airdnaListings: A.get(d) ?? 0,
       airbnbListingsSeen: L.get(d) ?? 0,
       airbnbSnapshots: S.get(d) ?? 0,
-      zaloPosts: z?.posts ?? Z.get(d) ?? 0,
-      zaloOffers: z?.offers ?? O.get(d) ?? 0,
+      zaloPosts: Z.get(d) ?? 0,
+      zaloOffers: O.get(d) ?? 0,
     });
   }
   return days; // từ mốc `since` trở đi; đủ n ngày gần nhất
+}
+
+/** Một ngày của «Luồng 7 ngày» trên máy chủ (ON5): S03 từ khối `luong7` của bản tin (null = khối vắng/lỗi hoặc ngày
+ * ngoài khối), listing tươi S01 từ bảng `listings` đã đồng bộ. Snapshot S01 (bảng thô) và S02 (luật 5) không có ở đây. */
+export type CloudFlowDay = { day: string; airbnbListingsSeen: number; zaloPosts: number | null; zaloOffers: number | null };
+
+/** «Luồng 7 ngày» trên máy chủ: 7 ngày VN tới `now`, mới → cũ như `getFlowDays`. Không đọc bảng nào chỉ có ở máy thu
+ * (ADR-0014 §4) — `listings` là bảng đã đồng bộ. */
+export async function getCloudFlowDays(
+  luong7: { day: string; s03Posts: number; s03Offers: number }[] | null,
+  opts: { now?: number; n?: number } = {},
+): Promise<CloudFlowDay[]> {
+  const now = opts.now ?? Date.now();
+  const n = opts.n ?? 7;
+  const oldest = vnDayKey(now - (n - 1) * 86400000);
+  const { rows } = await pool.query<{ d: string; n: number }>(
+    `SELECT last_seen::date::text d, count(*)::int n FROM listings WHERE last_seen >= $1::date GROUP BY 1`,
+    [oldest],
+  );
+  const L = new Map(rows.map((r) => [r.d, r.n]));
+  const B = new Map((luong7 ?? []).map((d) => [d.day, d]));
+  const days: CloudFlowDay[] = [];
+  for (let i = 0; i < n; i++) {
+    const d = vnDayKey(now - i * 86400000);
+    const b = B.get(d);
+    days.push({ day: d, airbnbListingsSeen: L.get(d) ?? 0, zaloPosts: b?.s03Posts ?? null, zaloOffers: b?.s03Offers ?? null });
+  }
+  return days;
 }
 
 export type GateFunnel = {
@@ -180,9 +212,11 @@ export type JobStatus = {
   id: string;
   label: string;
   schedule: string;
-  alive: "yes" | "no" | "unknown"; // probe HTTP localhost
+  alive: "yes" | "no" | "unknown" | "unchecked"; // probe HTTP localhost; "unchecked" = máy chủ không có số cho cổng (ON23)
   lastLogAt: string | null;
   lastLine: string | null;
+  /** Máy chủ: trạng thái là lần đo cuối của khối cũ quá 45′ (ON23) — không tô xanh. */
+  stale?: boolean;
 };
 
 const ROOT = process.cwd().endsWith("/app") ? path.resolve(process.cwd(), "..") : process.cwd();

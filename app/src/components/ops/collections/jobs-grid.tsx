@@ -17,20 +17,23 @@ const ALIVE: Record<JobStatus["alive"], { label: string; variant: BadgeProps["va
   yes: { label: "Sống", variant: "success-light", tone: "bg-success" },
   no: { label: "Không phản hồi", variant: "warning-light", tone: "bg-warning" },
   unknown: { label: "Theo lịch", variant: "outline", tone: "bg-muted-foreground/40" },
+  unchecked: { label: "Chưa kiểm được", variant: "outline", tone: "bg-muted-foreground/40" },
 }
-const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown"] as const).map((a) => ({
+const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown", "unchecked"] as const).map((a) => ({
   value: a,
   label: ALIVE[a].label,
   tone: ALIVE[a].tone,
   match: (j) => j.alive === a,
 }))
+// Số cũ: chấm tab «Sống» cũng thôi xanh — lần đo cuối, không phải bây giờ (ON23, như lưới khoá an toàn).
+const STALE_TABS = TABS.map((t) => (t.value === "yes" ? { ...t, tone: ALIVE.unknown.tone } : t))
 
 /** `stale`: trạng thái job là lần đo cuối của bản tin máy local cũ quá 45′ (ON3) — không badge xanh. */
 export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: boolean }) {
   const columns = useMemo<InsightColumn<JobStatus>[]>(
     () => [
       { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Tác vụ" column={column} />, size: 200, enableSorting: true },
-      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={stale && row.original.alive === "yes" ? "outline" : ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
+      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={(stale || row.original.stale) && row.original.alive === "yes" ? "outline" : ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
       { id: "schedule", accessorKey: "schedule", header: "Lịch", size: 180 },
       {
         id: "last",
@@ -57,7 +60,7 @@ export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: b
       description="Tác vụ tự chạy theo lịch — nhật ký lần cuối và dò dịch vụ chạy liên tục"
       data={jobs}
       columns={columns}
-      tabs={TABS}
+      tabs={stale || jobs.some((j) => j.stale && j.alive === "yes") ? STALE_TABS : TABS}
       getRowId={(j) => j.id}
     />
   )

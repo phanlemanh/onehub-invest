@@ -189,7 +189,11 @@ test("GV-AC-9 luồng 7 ngày nói ngày theo giờ VN", async () => {
 const BANG = ["airdna_markets", "airdna_listings", "listings", "airbnb_snapshots", "stg_zalo_posts", "sale_offers"] as const
 const COT: Record<(typeof BANG)[number], string> = {
   airdna_markets: "captured_at", airdna_listings: "captured_at", listings: "last_seen",
-  airbnb_snapshots: "collected_at", stg_zalo_posts: "captured_at", sale_offers: "first_seen",
+  airbnb_snapshots: "collected_at", stg_zalo_posts: "posted_at", sale_offers: "first_seen",
+}
+// ON5 (luong-7-ngay-dung-so): hai cột S03 đếm bài S03 thật theo ngày đăng và tin nguồn S03 — dòng chèn mang đủ hai điều kiện.
+const THEM: Partial<Record<(typeof BANG)[number], [string, string]>> = {
+  stg_zalo_posts: ["snapshot_id", "hanoi__zalo-agent__gv"], sale_offers: ["source", "S03"],
 }
 const NOW = Date.parse("2026-10-24T05:00:00Z") // 12:00 VN ngày 24 → 7 ngày VN 18…24
 const admin = new pg.Client({ connectionString: BASE_URL })
@@ -203,10 +207,12 @@ before(async () => {
     const tz = ["2026-10-23T16:30:00Z", "2026-10-23T17:30:00Z"] // 23:30 VN ngày 23 · 00:30 VN ngày 24
     for (const b of BANG) {
       const vals = b === "listings" ? ["2026-10-23", "2026-10-24"] : tz
-      for (const v of vals) await admin.query(`INSERT INTO "${SCHEMA}".${b} (${COT[b]}) VALUES ($1)`, [v])
+      const [c, x] = THEM[b] ?? [null, null]
+      for (const v of vals)
+        await admin.query(`INSERT INTO "${SCHEMA}".${b} (${COT[b]}${c ? `, ${c}` : ""}) VALUES ($1${c ? ", $2" : ""})`, c ? [v, x] : [v])
     }
     // 00:10 VN ngày cũ nhất (18) được đếm; 23:50 VN ngày 17 nằm ngoài cửa sổ.
-    for (const v of ["2026-10-17T17:10:00Z", "2026-10-17T16:50:00Z"]) await admin.query(`INSERT INTO "${SCHEMA}".stg_zalo_posts (captured_at) VALUES ($1)`, [v])
+    for (const v of ["2026-10-17T17:10:00Z", "2026-10-17T16:50:00Z"]) await admin.query(`INSERT INTO "${SCHEMA}".stg_zalo_posts (posted_at, snapshot_id) VALUES ($1, 'hanoi__zalo-agent__gv')`, [v])
   } catch (e) {
     dbErr = (e as Error).message
   }
@@ -334,7 +340,7 @@ test("GV-AC-3 bản sao thêm toLocaleString không múi", () => {
 test("GV-AC-3 bản sao collections-queries dùng ::date", () => {
   const p = "src/lib/collections-queries.ts"
   const goc = readFileSync(join(APP, p), "utf8")
-  const sao = goc.replace('${vnDay("first_seen")}', "first_seen::date::text")
+  const sao = goc.replace("(first_seen AT TIME ZONE '${VN_TZ}')::date::text", "first_seen::date::text") // câu SQL tin rao S03 (ON5)
   assert.notEqual(sao, goc)
   assert.deepEqual(quetMoc([{ path: p, text: sao }]).map((v) => v.path), [p])
 })

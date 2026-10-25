@@ -368,8 +368,8 @@ _Avoid_: Market Insight
 - Slug URL: `yield`
 _Avoid_: Rentalizer
 
-**Mô phỏng đầu tư**: Máy tính dòng tiền cho thuê ngắn hạn × dài hạn kèm vay, mặc định từ số tự thu (giai đoạn 3). Gộp vào Ước tính lợi suất thành mục Vay vốn (`#financing`).
-- Code: `investment simulator` · RESO: —
+**Mô phỏng đầu tư**: Máy tính dòng tiền cho thuê ngắn hạn × dài hạn kèm vay, mặc định từ số tự thu (giai đoạn 3). Đã gộp vào Ước tính lợi suất thành mục «Dòng tiền vốn vay» (`#financing`).
+- Code: `financing` (`lib/financing.ts`, `FinancingGrid`; trước là `investment simulator`) · RESO: —
 - Slug cũ: `dau-tu` → `yield` (gộp vào /yield — redirect /yield?area=<market>#financing)
 - Ghi chú: Mạnh đã chốt gộp vào /yield (phiên invest-target-map, PR #6) — không còn là câu hỏi.
 

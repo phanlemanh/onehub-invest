@@ -6,6 +6,7 @@
  *   --mode none   không có bản tin
  *   --mode fresh  bản tin do push-ops-facts THẬT dựng trên DB local (máy chủ thu tạm, không gửi lên cloud)
  *   --mode stale  cùng bản tin, mọi mốc lùi 46′
+ *   --mode mixed  cùng bản tin tươi, khối lockdown đặt đủ ok true / false / null (ON23 ST-lockdown-mixed — chỉ đổi `ok`)
  * In ra biến môi trường để chạy dev server như cloud:  VERCEL=1 DATABASE_URL=<url> npm run dev -- -p 3460
  * (`VERCEL=1` bật nhánh cloud của app: trang thu thập đọc bản tin ops_heartbeat, bảng thô vắng là rỗng).
  * Dọn: --drop. Chỉ DB local; không đụng cloud.
@@ -18,6 +19,16 @@ export const SCHEMA = "ops_cloud_proto";
 const KHONG_LEN_CLOUD = /^(source_registry|review_queue|airbnb_snapshots|stg_.*)$/;
 
 const shift = (iso, min) => new Date(Date.parse(iso) + min * 60_000).toISOString();
+
+/** Khối lockdown mang đủ ba giá trị lớp — L1…L4b, OpenClaw, Kev, collector (ON23). Giữ lớp + mô tả của bên ghi. */
+export const MIXED_OKS = [true, null, true, true, false, null, true, false];
+export function mixedLockdown(p) {
+  const out = structuredClone(p);
+  const layers = out.blocks?.lockdown?.layers;
+  if (!Array.isArray(layers)) throw new Error("bản tin không có khối lockdown — không dựng được --mode mixed");
+  out.blocks.lockdown.layers = layers.map((l, i) => ({ ...l, ok: MIXED_OKS[i] ?? null }));
+  return out;
+}
 
 /** Lùi mọi mốc của bản tin `min` phút (pushedAt và measured_at từng khối). */
 export function shiftPayload(p, min) {
@@ -33,7 +44,7 @@ async function main() {
   const { captureOpsFacts, localDbUrl } = await import("../pipeline/scripts/capture-ops-facts.mjs");
   const args = process.argv.slice(2);
   const mode = args.includes("--drop") ? "drop" : (args[args.indexOf("--mode") + 1] ?? "none");
-  if (!["none", "fresh", "stale", "drop"].includes(mode)) throw new Error(`--mode phải là none|fresh|stale (được ${mode})`);
+  if (!["none", "fresh", "stale", "mixed", "drop"].includes(mode)) throw new Error(`--mode phải là none|fresh|stale|mixed (được ${mode})`);
   const c = new pg.Client({ connectionString: localDbUrl() });
   await c.connect();
   try {
@@ -50,7 +61,7 @@ async function main() {
     if (mode !== "none") {
       const r = await captureOpsFacts({ env: { DATABASE_URL: localDbUrl() } });
       if (r.code !== 0 || !r.payload) throw new Error(`push-ops-facts thoát ${r.code}: ${r.stderr.slice(0, 300)}`);
-      const p = mode === "stale" ? shiftPayload(r.payload, -46) : r.payload;
+      const p = mode === "stale" ? shiftPayload(r.payload, -46) : mode === "mixed" ? mixedLockdown(r.payload) : r.payload;
       await c.query(`INSERT INTO "${SCHEMA}".ops_heartbeat (id, payload, pushed_at) VALUES ('primary', $1, $2)`, [p, p.pushedAt]);
     }
     const u = new URL(localDbUrl());

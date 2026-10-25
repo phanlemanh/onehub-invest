@@ -3,11 +3,17 @@
  * trang không tự đo; số lấy từ các khối máy local đẩy lên (`readOpsFacts`, ON22). Một lần đọc mỗi request, dựng sẵn số cho
  * /ops, /ops/collections, /ops/review. Khối vắng hoặc mang lỗi → `null`: trang hiện «—», không bao giờ 0.
  */
+import type { JobStatus } from "./collections-queries"
 import { bySource, type FreshnessRow } from "./freshness"
 import { readOpsFacts, type FactsState } from "./ops-facts"
-import { toCoverageRows, type CoverageRow, type SourceFeedHealth } from "./ops-queries"
+import { toCoverageRows, type CoverageRow, type LockdownLayer, type SourceFeedHealth } from "./ops-queries"
 
 export type PendingCount = { byType: { type: string; n: number }[]; total: number }
+
+/** Khối khoá an toàn máy thu đẩy lên (ON23). `stale` theo `measured_at` CỦA KHỐI (ADR-0014 §Ngưỡng trễ). */
+export type CloudLockdown = { layers: LockdownLayer[]; lastWatchdogAt: string | null; agentTurnsToday: number | null; stale: boolean }
+/** Một ngày của khối `luong7` (ON5): hai cột S03 máy thu đếm sẵn — bài S03 thật theo ngày đăng, tin rao nguồn S03. */
+export type Luong7Day = { day: string; s03Posts: number; s03Offers: number }
 
 export type CloudOpsView = {
   state: FactsState
@@ -19,13 +25,17 @@ export type CloudOpsView = {
   feeds: SourceFeedHealth[] | null
   records24h: { code: string; n: number }[] | null
   pending: PendingCount | null
+  /** Khối `lockdown`; vắng, lỗi hay sai khuôn → null — trang hiện 8 lớp «Chỉ kiểm ở máy thu» (ON23 Hỏi-4 = A). */
+  lockdown: CloudLockdown | null
+  /** Khối `luong7` (ON5): 7 ngày VN; vắng hoặc lỗi → null (ô S03 hiện «—», không 0). */
+  luong7: Luong7Day[] | null
 }
 
 type SourceRun = { code: string; label_vi?: string | null; status?: string | null }
 
 /** Đọc bản tin máy local và dựng số cho ba trang. `now` chỉ để phép đo trỏ mốc giờ. */
 export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<CloudOpsView> {
-  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null }
+  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null, lockdown: null, luong7: null }
   let f: Awaited<ReturnType<typeof readOpsFacts>>
   try {
     f = await readOpsFacts({ now })
@@ -44,7 +54,11 @@ export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<Clo
   const rq = f.blocks.reviewQueue
   const pending = rq?.state !== "error" ? (rq?.data as PendingCount | null | undefined) : undefined
 
+  const l7 = f.blocks.luong7
+  const l7Days = l7?.state !== "error" ? (l7?.data?.days as Luong7Day[] | undefined) : undefined
+  if (Array.isArray(l7Days)) view.luong7 = l7Days
   if (Array.isArray(rows)) view.coverage = toCoverageRows(rows)
+  view.lockdown = toCloudLockdown(f.blocks.lockdown)
   if (Array.isArray(recRows)) view.records24h = recRows
   if (pending && Array.isArray(pending.byType) && typeof pending.total === "number") {
     view.pending = { byType: pending.byType, total: pending.total }
@@ -68,4 +82,39 @@ export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<Clo
     }))
   }
   return view
+}
+
+/** Khối `lockdown` → dữ liệu lưới; mọi hàng phải đúng khuôn (lớp, mô tả là chữ; `ok` là true / false / null), sai một hàng
+ * là cả khối không dùng được — không bao giờ đoán một lớp thành «Ổn». */
+function toCloudLockdown(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["lockdown"]): CloudLockdown | null {
+  if (!b || b.state === "error" || !b.data) return null
+  const d = b.data as { layers?: unknown; lastWatchdogAt?: unknown; agentTurnsToday?: unknown }
+  if (!Array.isArray(d.layers) || d.layers.length === 0) return null
+  const layers: LockdownLayer[] = []
+  for (const l of d.layers as Record<string, unknown>[]) {
+    if (typeof l?.layer !== "string" || typeof l?.desc !== "string") return null
+    if (l.ok !== true && l.ok !== false && l.ok !== null) return null
+    layers.push({ layer: l.layer, desc: l.desc, ok: l.ok })
+  }
+  return {
+    layers,
+    lastWatchdogAt: typeof d.lastWatchdogAt === "string" ? d.lastWatchdogAt : null,
+    agentTurnsToday: typeof d.agentTurnsToday === "number" ? d.agentTurnsToday : null,
+    stale: b.state === "stale",
+  }
+}
+
+/** Hai hàng cổng của lưới Máy móc ↔ lớp «Hạ tầng» cùng cổng trong khối khoá an toàn (ON23 Hỏi-1 = A): một lần đo nên hai
+ * bảng cùng trạng thái. Mỗi hàng đọc ĐÚNG lớp của cổng mình. */
+const GATE_LAYER: Record<string, string> = { kev: "Cổng Kev :8009", "collector-api": "Cổng nhận tin :9210" }
+
+/** Máy chủ: trạng thái hàng Kev gate / collector API lấy từ khối `lockdown` (true → Sống, false → Không phản hồi, null hay
+ * không khối → Chưa kiểm được), cờ cũ theo khối; các hàng khác giữ nguyên khoá `jobs` của bản tin. */
+export function withLockdownGates(jobs: JobStatus[], lockdown: CloudLockdown | null): JobStatus[] {
+  return jobs.map((j) => {
+    const desc = GATE_LAYER[j.id]
+    if (!desc) return j
+    const ok = lockdown?.layers.find((l) => l.layer === "Hạ tầng" && l.desc === desc)?.ok ?? null
+    return { ...j, alive: ok === true ? "yes" : ok === false ? "no" : "unchecked", stale: lockdown?.stale ?? false }
+  })
 }

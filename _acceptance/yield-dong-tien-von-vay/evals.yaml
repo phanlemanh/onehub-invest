@@ -1,0 +1,152 @@
+schema_version: 1
+feature_slug: yield-dong-tien-von-vay
+# Ca test mang tiền tố «YDT-AC-n» trong app/tests/yield-dong-tien-von-vay.test.tsx (jsdom + hàm thuần; không cần DB).
+# Smoke HTTP: scripts/smoke-yield-dong-tien.mjs — cần app chạy TỪ worktree này (BASE_URL, mặc định :3460 của dãy U1) + DB local.
+# Chỉ GET, không ghi gì. ui-check KHÔNG tạo tệp tạm trong cây (bài học UI2 r1: tệp tạm đua với suite chạy song song).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.yield_dong_tien_smoke
+    paths: [app/next.config.ts, scripts/smoke-yield-dong-tien.mjs]
+    expected: "exit 0; 'ok /vn/hanoi/dau-tu → 301 /yield?area=vn-hanoi#financing' và 'ok /vn/hcmc/dau-tu → 301 /yield?area=vn-hcmc#financing' (redirect: manual, so Location ĐÚNG BẰNG chuỗi; 308/307/200/404 là FAIL nêu mã thật); should-NOT-fire: 'ok /vn/hanoi 200, không chuyển hướng'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    paths: [app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs, app/eslint-plugin-onehub-ui/lib/route-slugs.mjs, app/next.config.ts, app/src/app/**]
+    expected: "exit 0; ca cây thật xanh — cùng ca đỏ với 'ngoại lệ \"dau-tu\" đã đổi xong' nếu dòng dau-tu còn trong VIET_EXCEPTIONS, đỏ với 'thiếu redirect' nếu next.config.ts mất dòng /:country/:market/dau-tu (hai chiều đỏ có ca riêng cùng tệp)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/**, scripts/**, app/next.config.ts, app/tests/yield-dong-tien-von-vay.test.tsx]
+    expected: "exit 0; ca 'YDT-AC-2 không còn /dau-tu': quét .ts/.tsx/.mjs/.sh dưới app/src và scripts/, loại ĐÚNG hai tệp đo redirect (scripts/smoke-yield-dong-tien.mjs, scripts/smoke-portal-compliance.mjs — ca đòi chúng có thật) → 0 chỗ chứa '/dau-tu'; next.config.ts có đúng một redirect source '/:country/:market/dau-tu' destination '/yield?area=:country-:market#financing' statusCode 301; vẽ InsightActions trong jsdom với areaId 'vn-hanoi' và một mã phường 'vn-hanoi-hoan-kiem' → link chữ 'Đầu tư' có href ĐÚNG BẰNG '/yield?area=vn-hanoi#financing' / '/yield?area=vn-hanoi-hoan-kiem#financing' (đầu ra thật, không grep chuỗi mẫu); chiều đỏ: thư mục tạm có 'href=\"/vn/hanoi/dau-tu\"' → 1 chỗ kèm tên tệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.yield_dong_tien_smoke
+    paths: [app/src/app/(app)/yield/**, scripts/smoke-yield-dong-tien.mjs]
+    expected: "exit 0; với MỖI thị trường của getYieldMarkets lấy từ DB local (không viết tay danh sách): '/yield?area=<mã thị trường> 200, breadcrumb mang tên thị trường ấy, có id=\"financing\"'; '/yield?area=<một mã phường của thị trường thứ hai> → breadcrumb mang tên thị trường thứ hai'; đối chứng: '/yield?area=khong-co-ma' → thị trường mặc định (thị trường đầu danh sách), không 500"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/financing.ts, app/src/components/yield/financing/**, app/tests/yield-dong-tien-von-vay.test.tsx]
+    expected: "exit 0; ca 'YDT-AC-4 khung lưới': financingPlan(estimate mẫu có lt) → hàng mục theo ĐÚNG thứ tự [section-revenue, section-expense, section-noi, section-debt, section-cash, section-lt], dòng con chi phí [Phí quản lý, Phí nền tảng, Thuế, Chi phí cố định], nợ [Lãi, Gốc]; năm 1 doanh thu = estimate.revenue.mid, từng chi phí = estimate.costs.<khoá>, thu nhập ròng = estimate.noi, dòng tiền = noi − (lãi + gốc) (quan hệ, không số viết tay); estimate.lt = null → không có section-lt; vẽ FinancingGrid trong jsdom → đầu cột 'Hằng tháng','Năm 1'…'Năm 5', có 'Lợi nhuận / tiền mặt bỏ ra' và 5 ô phần trăm ở dòng tổng; chiều đỏ: plan mà doanh thu lệch ước tính → bộ so quan hệ báo đúng hàng revenue"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/financing.ts, app/tests/yield-dong-tien-von-vay.test.tsx]
+    expected: "exit 0; ca 'YDT-AC-5 trả góp đều': monthlyPayment(1e9, 0.09, 20) khớp công thức đóng L·r/(1−(1+r)^−n) trong 1 ₫, và giá trị hiện tại của n kỳ trả (chiết khấu r) bằng khoản vay trong 1 ₫ (quan hệ); amortizeByYear trên TRỌN kỳ hạn: tổng gốc = khoản vay ± 1 ₫, năm 1 lãi + gốc = 12 × trả nợ ± 1 ₫, năm sau kỳ hạn = 0; equityPct 1 → loan 0, payment 0; rate 0 → payment = loan ÷ (12·term); cashInvested = price·eq + setupCost; chiều đỏ: một hàm trả góp sai (bỏ lũy thừa) bị phép kiểm giá trị hiện tại bắt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/yield/yield-form.tsx, app/src/lib/financing.ts, app/tests/yield-dong-tien-von-vay.test.tsx]
+    expected: "exit 0; ca 'YDT-AC-6 form vốn vay': vẽ YieldForm (initialLoan = LOAN_DEFAULTS) trong jsdom với router giả → ô yield-eq 30, yield-rate 9, yield-term 20; đổi qua nút tăng/giảm rồi gửi form → router.push nhận URL có eq/rate/term khớp giá trị mới cùng các tham số cũ (area, pn, m2, price…); bấm 'Về mặc định' sau khi đổi → ô trở về 30/9/20; chiều đỏ: gửi khi chưa đổi → eq=0.3&rate=0.09&term=20"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.yield_dong_tien_smoke
+    paths: [app/src/app/(app)/yield/**, app/src/lib/financing.ts, app/src/components/yield/financing/**, scripts/smoke-yield-dong-tien.mjs]
+    expected: "exit 0; server dùng và kẹp tham số: '/yield?area=vn-hanoi&eq=1 → Khoản vay 0 và Trả nợ 0/tháng'; '/yield?area=vn-hanoi&eq=5 → kẹp về 100%: Khoản vay 0'; '/yield?area=vn-hanoi&eq=0.01 → kẹp về 10%' (khoản vay = 90% giá mua đọc từ HTML); đối chứng: không tham số → khoản vay = 70% giá mua; rate/term (quan hệ trên HTML, không số viết tay): 'rate=0.12 → trả nợ/tháng lớn hơn ca không tham số', 'rate=0.5 → trả nợ bằng ca rate=0.3 (kẹp 30%)', 'term=100 → trả nợ bằng ca term=35', 'term=1 → trả nợ bằng ca term=5'; số lưới khớp ô KPI cùng trang, với HAI bộ tham số (mặc định, và mgmt=0.1&fixed=2000000): 'doanh thu năm 1 của lưới = ô Doanh thu ngắn hạn / năm', 'thu nhập ròng năm 1 của lưới = thu nhập ròng ghi ở ô Yield ròng ngắn hạn' (cùng định dạng tiền gọn); mỗi dòng FAIL ghim tên tham số/hàng và giá trị thật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/yield/yield-form.tsx, app/src/app/api/v1/user-events/route.ts, agent/src/memory/store.ts, app/tests/yield-dong-tien-von-vay.test.tsx]
+    expected: "exit 0; ca 'YDT-AC-7 sự kiện': gửi form → sendUserEvent nhận kind 'dau_tu_input' với payload có đủ khoá area, price, equityPct, ratePct, termYears (bắt qua fetch/sendBeacon giả, đọc body JSON); 'dau_tu_input' có trong danh sách loại của app/src/app/api/v1/user-events/route.ts và kiểu của agent/src/memory/store.ts"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E19
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yield_dong_tien_smoke
+    paths: [app/src/app/api/v1/user-events/route.ts, app/src/components/yield/yield-form.tsx, scripts/smoke-yield-dong-tien.mjs]
+    expected: "exit 0; với người dùng thử + phiên ghi thẳng DB local (tiền tố riêng mỗi lượt, xoá ở finally): POST /api/v1/user-events thân {kind:'dau_tu_input', payload:{area, price, equityPct, ratePct, termYears}} kèm cookie phiên → 'ok 200 {ok:true}' và 'ok user_events có đúng 1 dòng kind dau_tu_input của người thử với payload đủ 5 khoá'; đối chứng: không cookie → 204 và 0 dòng mới; kind lạ → 400"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/yield/financing/**, app/tests/yield-dong-tien-von-vay.test.tsx]
+    expected: "exit 0; ca 'YDT-AC-8 mở/gập': vẽ FinancingGrid → mặc định thấy 'Phí quản lý' và 'Lãi', không thấy 'Giá/đêm × công suất × 365'; bấm hàng 'Doanh thu ngắn hạn' → dòng ấy hiện; bấm lại → ẩn; matchMedia giả điện thoại → cột 'Hằng tháng' không thuộc nhóm ghim (data-pinned của th khác 'left'/'start'), máy tính → có"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0 (tsc --noEmit sạch, eslint + check-bare-disables 0 lỗi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/eslint-suppressions.json, app/src/**, app/tests/yield-dong-tien-von-vay.test.tsx]
+    expected: "exit 0; ca 'YDT-AC-9 baseline + gỡ': eslint-suppressions.json không có khoá src/components/invest/ hay src/components/yield/; chiều đỏ trên fixture có khoá 'src/components/yield/yield-form.tsx' → trả đúng khoá ấy; ba tệp app/src/app/(app)/[country]/[market]/dau-tu/page.tsx, app/src/components/invest/investment-simulator.tsx, app/src/lib/invest.ts không tồn tại"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [scripts/check-portal-compliance.mjs, app/src/app/(app)/yield/**, app/src/components/yield/**, app/src/lib/financing.ts]
+    expected: "exit 0; 'portal-compliance: ĐẠT' với dòng 'lib/financing.ts là hàm thuần, không truy vấn DB / AirDNA' và 5 dòng 'không tên AirDNA/nguồn thật' cho page/yield-form/financing-grid/financing-cells/financing; đối chứng dương có sẵn của script (bộ quét thấy tên thật ở components/ops/sources/)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-11
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/**, app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs]
+    expected: "exit 0; routes.md khớp cây route (không còn (app)/[country]/[market]/dau-tu/page.tsx), mọi dòng đủ cột Block đích + Slug đích"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-11
+    executor: judgment
+    inputs: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, CONTEXT.md, app/CLAUDE.md]
+    paths: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, CONTEXT.md, app/CLAUDE.md]
+    question: "Bốn tệp này có nói nhất quán rằng Mô phỏng đầu tư (/dau-tu) đã gộp vào Ước tính lợi suất thành mục «Dòng tiền vốn vay» (#financing) dựng bằng bản chuyển thể chỉ đọc của data-grid-advanced-7 ở yield/financing/, link /<country>/<market>/dau-tu chuyển 301 về /yield?area=<market>#financing, và /yield nhận tham số eq/rate/term — không còn chỗ nào liệt /dau-tu là route sống hay mô tả bộ mô phỏng cũ như đang chạy không?"
+    expected: "Nhất quán ở cả bốn tệp; /dau-tu chỉ còn ở dạng slug cũ/redirect."
+    evidence_required: [run_id, verified_at, output]
+  - id: E16
+    criterion: AC-4
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/app/(app)/yield/**, app/src/components/yield/**]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460. KHÔNG tạo hay sửa tệp nào trong cây."
+      - "/vn/hanoi/dau-tu ở 1280 px sáng: ghi URL sau chuyển hướng; chụp khung nhìn → evidence/E16-step1.png (lưới vốn vay trong tầm nhìn)"
+      - "Cùng trang 1280 px tối (prefers-color-scheme: dark) → evidence/E16-step2.png"
+      - "/yield?area=vn-hanoi cả trang 1280 sáng → evidence/E16-step3.png (form có nhóm Vốn vay)"
+      - "/yield?area=vn-hanoi&eq=1#financing ở 1280 sáng → evidence/E16-step4.png (khoản vay 0)"
+    expected: "Link cũ đưa tới /yield?area=vn-hanoi#financing và lưới «Dòng tiền vốn vay» trong tầm nhìn; lưới có dải màu từng mục, số âm đỏ, dòng tổng phần trăm, đọc được ở sáng và tối; form có nhóm Vốn vay 30% · 9 · 20; eq=1 → Khoản vay 0, Trả nợ 0."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E17
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/yield/financing/**]
+    steps:
+      - "Bản chạy: dev server :3460. KHÔNG tạo hay sửa tệp nào trong cây."
+      - "/yield?area=vn-hanoi#financing ở 375 px sáng → evidence/E17-step1.png; ghi document.documentElement.scrollWidth và clientWidth"
+      - "Cuộn ngang trong khung lưới tới cột Năm 1 → evidence/E17-step2.png"
+      - "Ở 1280 px: bấm hàng «Doanh thu ngắn hạn» → evidence/E17-step3.png (dòng con hiện); bấm lại → gập"
+    expected: "375 px: scrollWidth = clientWidth (trang không cuộn ngang), nút mở + tên khoản mục ghim, cột số cuộn trong khung; bấm hàng mục mở/gập đúng mục."
+    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
+  - id: E18
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.financing_design_gate
+    paths: [app/src/components/yield/financing/financing-grid.tsx]
+    expected: "exit 0; verdict PASS, p0_count 0 (sàn a11y/contrast của design-gate trên financing-grid.tsx, jsdom)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

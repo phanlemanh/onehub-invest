@@ -98,11 +98,12 @@ const PARTIAL_LIB = new Set(["src/lib/freshness.ts"])
 /** Khai triển các mẫu của design doc §3.1 trên cây hiện tại — so với SCAN_FILES để bắt tệp mới chưa kê. */
 export function expandPatterns(app: string): string[] {
   const walk = (d: string): string[] =>
-    readdirSync(join(app, d)).flatMap((f) => {
+    // Tệp ẩn (`.on3-mut-…`, `.on23-mut-…`) là bản đột biến tạm của test khác chạy song song — không phải tệp của trang.
+    readdirSync(join(app, d)).filter((f) => !f.startsWith(".")).flatMap((f) => {
       const p = join(d, f)
       return statSync(join(app, p)).isDirectory() ? walk(p) : /\.tsx?$/.test(f) ? [p] : []
     })
-  const flat = (d: string) => readdirSync(join(app, d)).filter((f) => /\.tsx?$/.test(f)).map((f) => join(d, f))
+  const flat = (d: string) => readdirSync(join(app, d)).filter((f) => !f.startsWith(".") && /\.tsx?$/.test(f)).map((f) => join(d, f))
   return [
     ...walk("src/app/ops"),
     ...walk("src/components/ops"),
