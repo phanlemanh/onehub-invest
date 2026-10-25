@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Đường đo AU9 `ranh-gioi-khu-vuc-dung` AC-6/AC-7 trên DB local THẬT: «ST_Extent các con của vn-hanoi nằm trong Hà Nội;
 // 0 khu vực tên «Tỉnh…» dưới vn-hanoi; metrics tính lại theo ranh giới đúng».
-//   --thu   một transaction: chụp trước (phải đỏ) → runReassign + 300_metrics + 400_breakdowns → chụp sau → ROLLBACK.
+//   --thu   một transaction: chèn khu vực lạc mồi → chụp trước (phải đỏ) → runReassign + 300_metrics + 400_breakdowns
+//           → chụp sau → ROLLBACK.
 //           Áp thật chỉ sau chữ ký Cổng Bằng chứng (Hỏi-4: cloud-sync đưa areas lên cloud 15 phút một lần).
 //   (mặc định) chỉ đọc trạng thái hiện tại — bằng chứng sau khi áp thật.
 // Từ chối DB không phải localhost. Chạy: node scripts/kiem-ranh-gioi-khu-vuc.mjs [--thu]
@@ -60,7 +61,7 @@ async function chup(c) {
 /** Dòng ở bảng tham chiếu trỏ id không còn trong areas, hoặc trỏ khu vực lạc (trừ khu vực được giữ). */
 async function tro(c, lac) {
   const out = {};
-  for (const tb of ["listings", "sale_offers", "market_metrics", "area_breakdowns", "market_asset_stats"]) {
+  for (const tb of ["listings", "sale_offers", "market_metrics", "area_breakdowns", "market_asset_stats", "properties"]) {
     const { rows } = await c.query(
       `SELECT count(*)::int n FROM ${tb} t
        WHERE t.area_id IS NOT NULL AND (NOT EXISTS (SELECT 1 FROM areas a WHERE a.id = t.area_id) OR t.area_id = ANY($1))`,
@@ -111,8 +112,17 @@ try {
     const areasNgoai = await soAreas();
     await c.query("BEGIN");
     try {
+      // Đối chứng dương không dựa vào việc DB thật còn hỏng (sau khi áp thật nó sạch): chèn một khu vực lạc
+      // mồi cấp tỉnh dưới vn-hanoi, ngoài polygon Hà Nội, kèm một dòng metrics — trong transaction này.
+      await c.query(
+        `INSERT INTO areas (id, parent_id, region_type, name, country_code, geom, meta)
+         VALUES ('vn-hanoi-tinh-moi-au9', 'vn-hanoi', 'submarket', 'Tỉnh Mồi AU9', 'vn',
+                 ST_Multi(ST_Buffer(ST_SetSRID(ST_MakePoint(106.05, 20.65), 4326), 0.05)),
+                 '{"source":"osm-phuong","osm_id":"au9-moi-lac"}'::jsonb)`,
+      );
+      await c.query(`INSERT INTO market_metrics (area_id, month) VALUES ('vn-hanoi-tinh-moi-au9', '2026-01-01')`);
       const t = await chup(c);
-      console.log("— trước (trạng thái hiện tại của DB local)");
+      console.log("— trước (DB local + một khu vực lạc mồi chèn trong transaction)");
       console.log(`${t.trong ? "ok  " : "đỏ "} extent con vn-hanoi ${t.trong ? "trong" : "vượt"} bbox — ${t.box}`);
       console.log(`${t.tenTinh.length ? "đỏ " : "ok  "} ${t.tenTinh.length} con vn-hanoi tên Tỉnh…/Thành phố…`);
       console.log(`     ${t.ngoai.length} con có tâm ngoài polygon cha · vn-hcmc ${t.hcmc} phường`);

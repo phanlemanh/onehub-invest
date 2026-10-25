@@ -12,8 +12,8 @@
 //     "Văn Giang"…) khi không còn gì tham chiếu.
 //  5. Dọn «khu vực lạc» — con osm-phuong của market mà osm_id không thuộc tập phường hợp lệ
 //     của lượt này: tin bán về area_id NULL, xoá metrics/breakdowns rồi xoá khu vực; khu vực
-//     còn saved_markets trỏ vào thì GIỮ (xoá ở local là sync-cloud xoá ở cloud, FK cascade
-//     xoá thị trường người dùng đã lưu — AU9 Hỏi-3).
+//     còn saved_markets (xoá ở local là sync-cloud xoá ở cloud, FK cascade xoá thị trường người
+//     dùng đã lưu — AU9 Hỏi-3) hoặc properties trỏ vào thì GIỮ.
 // Tập phường hợp lệ rỗng hoặc dưới một nửa số con hiện có → dừng, không xoá gì (snapshot hỏng).
 // Idempotent. Chạy xong cần rerun 300_metrics + 400_breakdowns.
 //   node reassign-areas.mjs            # mọi city có OSM staging
@@ -228,22 +228,30 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
   for (const k of keptOld) log.warn(`  ! còn area ngoài OSM (đang bị tham chiếu): ${k.id} ${k.name}`);
 
   // ---- 5. Khu vực lạc: con osm-phuong không thuộc tập phường hợp lệ của lượt này ----
-  const { rows: luu } = await client.query(
-    `SELECT area_id, count(*)::int AS n FROM saved_markets WHERE area_id = ANY($1) GROUP BY 1`,
+  // Giữ khu vực lạc còn dữ liệu không phải cache trỏ vào: saved_markets (thị trường người dùng lưu —
+  // xoá ở local là cloud cascade xoá theo) và properties (căn nhà đã dựng, FK không cascade).
+  const { rows: giu } = await client.query(
+    `SELECT a.id,
+            (SELECT count(*)::int FROM saved_markets s WHERE s.area_id = a.id) AS saved,
+            (SELECT count(*)::int FROM properties p WHERE p.area_id = a.id) AS properties
+     FROM unnest($1::text[]) AS a(id)`,
     [stale],
   );
-  const kept = luu.map((r) => ({ id: r.area_id, saved: r.n }));
-  for (const k of kept) log.warn(`  ! giữ khu vực lạc ${k.id} — ${k.saved} saved_markets trỏ vào`);
+  const kept = giu.filter((r) => r.saved > 0 || r.properties > 0);
+  for (const k of kept)
+    log.warn(`  ! giữ khu vực lạc ${k.id} — ${k.saved} saved_markets, ${k.properties} properties trỏ vào`);
   const xoa = stale.filter((id) => !kept.some((k) => k.id === id));
-  // listing/nights đã được bước 2–3 dời hoặc bỏ; tin bán chỉ khớp chữ nên mất nhãn phường
+  // listing/nights đã được bước 2–3 dời hoặc bỏ; tin bán chỉ khớp chữ nên mất nhãn phường;
+  // metrics/breakdowns/asset_stats là cache — 300/400/500 dựng lại
   await client.query(`UPDATE sale_offers SET area_id = NULL WHERE area_id = ANY($1)`, [xoa]);
   await client.query(`DELETE FROM market_metrics WHERE area_id = ANY($1)`, [xoa]);
   await client.query(`DELETE FROM area_breakdowns WHERE area_id = ANY($1)`, [xoa]);
+  await client.query(`DELETE FROM market_asset_stats WHERE area_id = ANY($1)`, [xoa]);
   const { rows: removed } = await client.query(
     `DELETE FROM areas WHERE id = ANY($1) RETURNING id, name`,
     [xoa],
   );
-  log.log(`khu vực lạc — xoá: ${removed.length} · giữ (có saved_markets): ${kept.length}`);
+  log.log(`khu vực lạc — xoá: ${removed.length} · giữ (có saved_markets/properties): ${kept.length}`);
   for (const r of removed) log.log(`  - ${r.id} ${r.name}`);
 
   return { moves, dropped, removed: [...removedOld, ...removed], kept, stale, valid, ...out };

@@ -1,7 +1,7 @@
 // finder-ranh-gioi.test.tsx — AU9 `ranh-gioi-khu-vuc-dung` AC-8: bản đồ Finder Hà Nội (getFinderAreas — đúng hàm
 // trang /vn dùng) chỉ còn khu vực nằm trong polygon Hà Nội. Áp thử runReassign + 300_metrics trong MỘT transaction
-// trên Postgres local rồi ROLLBACK (Hỏi-4: áp thật chỉ sau chữ ký Cổng Bằng chứng). Đối chứng: trước khi áp, trạng
-// thái hiện tại phải có khu vực vượt bbox. DB không có dữ liệu Hà Nội (CI dựng từ migration) → bỏ qua có lý do.
+// trên Postgres local rồi ROLLBACK (Hỏi-4: áp thật chỉ sau chữ ký Cổng Bằng chứng). Đối chứng: một khu vực lạc mồi
+// chèn trong transaction làm trạng thái trước có khu vực vượt bbox — không dựa vào việc DB thật còn hỏng. DB không có dữ liệu Hà Nội (CI dựng từ migration) → bỏ qua có lý do.
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
@@ -51,9 +51,17 @@ test("AU9-AC-8 Finder Hà Nội: trước khi áp có khu vực vượt bbox, sa
     }
     const box: Box = { x0: Number(rows[0].x0), y0: Number(rows[0].y0), x1: Number(rows[0].x1), y1: Number(rows[0].y1) }
 
+    // Đối chứng dương không dựa vào việc DB thật còn hỏng: khu vực lạc mồi ngoài Hà Nội, có metrics nên Finder trả nó
+    await c.query(
+      `INSERT INTO areas (id, parent_id, region_type, name, country_code, geom, meta)
+       VALUES ('vn-hanoi-tinh-moi-au9', 'vn-hanoi', 'submarket', 'Tỉnh Mồi AU9', 'vn',
+               ST_Multi(ST_Buffer(ST_SetSRID(ST_MakePoint(106.05, 20.65), 4326), 0.05)),
+               '{"source":"osm-phuong","osm_id":"au9-moi-lac"}'::jsonb)`,
+    )
+    await c.query(`INSERT INTO market_metrics (area_id, month, revenue) VALUES ('vn-hanoi-tinh-moi-au9', '2026-01-01', 0)`)
     const truoc = await getFinderAreas({ marketId: "vn-hanoi" }, { db: c })
     await t.test("AU9-AC-8 Finder Hà Nội trước khi áp có khu vực vượt bbox", () => {
-      assert.ok(vuot(box, truoc).length > 0, "đối chứng: trạng thái hiện tại phải có khu vực vượt bbox Hà Nội")
+      assert.ok(vuot(box, truoc).length > 0, "đối chứng: khu vực lạc mồi phải làm Finder vượt bbox Hà Nội")
     })
 
     await runReassign(c, ["hanoi", "hcmc"], { log: { log() {}, warn() {} } })

@@ -93,11 +93,19 @@ test("AU9-AC-1 chỉ ranh giới cấp 6 thành phường", async (t) => {
     const { dong, log } = ghiLog();
     await runReassign(c, ["hanoi"], { log });
     assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-moi-au9' AND parent_id = 'vn-hanoi'`), 1);
-    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE meta->>'osm_id' = 'au9-moi-4'`), 0, "ranh giới cấp 4 không được vào areas");
     const m = dong.join("\n").match(/bỏ (\d+) dòng khác cấp/);
     assert.ok(m, "log phải có dòng «bỏ N dòng khác cấp»");
     assert.equal(Number(m[1]), khacCap, "số in ra = số dòng khác cấp 6 của snapshot");
     assert.ok(khacCap >= 1);
+  });
+});
+
+test("AU9-AC-1 ranh giới cấp 4 bao Hà Nội không vào areas", async (t) => {
+  await withTx(t, async (c, that) => {
+    await nap(c, "au9-moi-4", chep(that, { name: "Tỉnh Mồi AU9", level: "4" }));
+    await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE meta->>'osm_id' = 'au9-moi-4'`), 0, "ranh giới cấp 4 không được vào areas");
+    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 0);
   });
 });
 
@@ -182,15 +190,38 @@ test("AU9-AC-3 khu vực lạc có saved_markets thì giữ", async (t) => {
     const r = await runReassign(c, ["hanoi"], { log });
     assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 1, "khu vực còn");
     assert.equal(await dem(c, `SELECT count(*) n FROM saved_markets WHERE user_id = 'au9-moi'`), 1, "saved_markets còn nguyên");
-    assert.deepEqual(r.kept, [{ id: "vn-hanoi-tinh-moi-au9", saved: 1 }]);
+    assert.deepEqual(r.kept, [{ id: "vn-hanoi-tinh-moi-au9", saved: 1, properties: 0 }]);
     assert.ok(dong.some((d) => d.includes("vn-hanoi-tinh-moi-au9") && d.includes("1 saved_markets")), dong.join("\n"));
+  });
+});
+
+test("AU9-AC-3 khu vực lạc có properties thì giữ; market_asset_stats là cache thì xoá cùng khu vực", async (t) => {
+  await withTx(t, async (c) => {
+    await mocLac(c);
+    await c.query(`INSERT INTO market_asset_stats (area_id, kind) VALUES ('vn-hanoi-tinh-moi-au9', 'sale')`);
+    const r1 = await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 0, "asset_stats không giữ khu vực");
+    assert.equal(await dem(c, `SELECT count(*) n FROM market_asset_stats WHERE area_id = 'vn-hanoi-tinh-moi-au9'`), 0);
+    assert.ok(r1.removed.some((x) => x.id === "vn-hanoi-tinh-moi-au9"));
+  });
+  await withTx(t, async (c) => {
+    await mocLac(c);
+    await c.query(`INSERT INTO properties (area_id) VALUES ('vn-hanoi-tinh-moi-au9')`);
+    const { dong, log } = ghiLog();
+    const r = await runReassign(c, ["hanoi"], { log });
+    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 1, "properties giữ khu vực");
+    assert.deepEqual(r.kept, [{ id: "vn-hanoi-tinh-moi-au9", saved: 0, properties: 1 }]);
+    assert.ok(dong.some((d) => d.includes("vn-hanoi-tinh-moi-au9") && d.includes("1 properties")), dong.join("\n"));
   });
 });
 
 test("AU9-AC-4 chạy lần hai không đổi gì", async (t) => {
   await withTx(t, async (c) => {
     await mocLac(c);
-    await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    const r1 = await runReassign(c, ["hanoi"], { log: ghiLog().log });
+    // đối chứng dương: lần một có việc thật (gỡ khu vực lạc mồi, bỏ listing ngoài)
+    assert.ok(r1.removed.some((x) => x.id === "vn-hanoi-tinh-moi-au9"), "lần một phải gỡ khu vực lạc mồi");
+    assert.ok(r1.dropped.some((d) => d.id === "au9-moi-ngoai"), "lần một phải bỏ listing ngoài");
     const r2 = await runReassign(c, ["hanoi"], { log: ghiLog().log });
     assert.deepEqual(r2.moves.filter((m) => m.old_id !== m.new_id), [], "không listing nào đổi khu vực");
     assert.deepEqual(r2.dropped, []);
@@ -198,20 +229,39 @@ test("AU9-AC-4 chạy lần hai không đổi gì", async (t) => {
   });
 });
 
+/** runReassign phải ném TRƯỚC mọi lệnh ghi: đếm ngay sau khi ném (lỗi JS, transaction chưa hỏng). */
+async function dungKhongXoa(c, re) {
+  const dem3 = async () => [
+    await dem(c, `SELECT count(*) n FROM areas`),
+    await dem(c, `SELECT count(*) n FROM listings`),
+    await dem(c, `SELECT count(*) n FROM market_metrics`),
+    await dem(c, `SELECT count(*) n FROM sale_offers WHERE area_id IS NULL`),
+  ];
+  const truoc = await dem3();
+  await assert.rejects(runReassign(c, ["hanoi"], { log: ghiLog().log }), re);
+  assert.deepEqual(await dem3(), truoc, "không xoá/đổi dòng nào trước khi dừng");
+}
+
 test("AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì", async (t) => {
   await withTx(t, async (c) => {
     await mocLac(c);
     await c.query(`UPDATE stg_osm_boundaries SET payload = payload #- '{tags,admin_level}' WHERE snapshot_id LIKE 'hanoi__%'`);
-    const dem3 = async () => [
-      await dem(c, `SELECT count(*) n FROM areas`),
-      await dem(c, `SELECT count(*) n FROM listings`),
-      await dem(c, `SELECT count(*) n FROM market_metrics`),
-    ];
-    const truoc = await dem3();
-    await c.query("SAVEPOINT au9");
-    await assert.rejects(runReassign(c, ["hanoi"], { log: ghiLog().log }), /vn-hanoi: chỉ 0 phường hợp lệ \/ \d+ con/);
-    await c.query("ROLLBACK TO SAVEPOINT au9");
-    assert.deepEqual(await dem3(), truoc);
+    await dungKhongXoa(c, /vn-hanoi: chỉ 0 phường hợp lệ \/ \d+ con/);
+  });
+});
+
+test("AU9-AC-9 snapshot còn dưới một nửa số phường → dừng, không xoá gì", async (t) => {
+  await withTx(t, async (c) => {
+    await mocLac(c);
+    // chỉ 10 ranh giới cấp 6 giữ tag, phần còn lại mất tag
+    await c.query(
+      `UPDATE stg_osm_boundaries SET payload = payload #- '{tags,admin_level}'
+       WHERE snapshot_id LIKE 'hanoi__%' AND osm_id NOT IN (
+         SELECT osm_id FROM stg_osm_boundaries WHERE snapshot_id LIKE 'hanoi__%'
+           AND payload->'tags'->>'admin_level' = $1 ORDER BY osm_id LIMIT 10)`,
+      [WARD_LEVEL],
+    );
+    await dungKhongXoa(c, /vn-hanoi: chỉ ([1-9]\d?) phường hợp lệ \/ \d+ con/);
   });
 });
 
