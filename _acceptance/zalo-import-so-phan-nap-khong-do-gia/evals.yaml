@@ -1,0 +1,35 @@
+schema_version: 1
+feature_slug: zalo-import-so-phan-nap-khong-do-gia
+# Ca «ZL-AC-n» ở scripts/zalo-import-job-lan.test.mjs (worktree git tạm từ HEAD, chỉ sửa cây làm việc tạm — không commit,
+# không đụng cây thật); ca ZJ-AC-5 ở scripts/zalo-import-job.test.mjs.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-1': mã nguồn ca ZJ-AC-5 gọi banO('ec71694^') và banO('ec71694'), không gọi merge-base, không đọc readFileSync(path.join(REPO, SCRIPT)) trong thân ca; phanNap của hai bản bằng nhau"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-2': worktree tạm từ HEAD, thay 'for try in 1 2 3 4 5; do' bằng 'for try in 1 2 3 4 5; do # sửa của ZCode' trong phần nạp của scripts/zalo-import-daily.sh ở cây tạm (assert tệp đã đổi), chạy node --test scripts/zalo-import-job.test.mjs của cây tạm → mã 0"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-3': cùng cây tạm, chép bản 'git show 12b8942:scripts/zalo-import-job.test.mjs' vào cây tạm rồi chạy → mã khác 0 và đầu ra chứa 'ZJ-AC-5 phần nạp của tệp bọc đã đổi'"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.zalo_import_job_lan
+    paths: [scripts/zalo-import-job.test.mjs, scripts/zalo-import-job-lan.test.mjs]
+    expected: "exit 0; ca 'ZL-AC-4': hàm so phần nạp (export hoặc chép nguyên văn từ tệp test) với cặp giả bản ec71694^ và bản đó sửa 'for try in 1 2 3 4 5' → 'for try in 1 2 3 4' báo lệch; ZJ-AC-5 với rev không có trong lịch sử → assert.fail chứa 'thiếu lịch sử git'"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; mọi ca ZJ-AC-* xanh, 'ℹ skipped 0'"
