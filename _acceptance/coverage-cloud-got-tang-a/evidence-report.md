@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1946b60f674c2ad12c602829148521436090ec3a
+verified_commit: 6ff7adfe41065036031da4ca474ac0df51b10ea2
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -159,3 +159,7 @@ none — mọi eval chạy một lần (runs 1), không có eval nhiều lần c
 ## Iterations
 
 Round 1: mọi eval máy đạt; E7 (judgment) chờ người ký ở Cổng 2 và có các mục ngoài hợp đồng cần người quyết (xem review-findings.md) nên verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-10-25, do ghim lại sau gộp main (sau chữ ký)
+run_id: repin-20261025T121213Z-24233
+sha: 6ff7adfe41065036031da4ca474ac0df51b10ea2 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · ngoài làn máy: E7 · AC không có chốt máy: AC-7
