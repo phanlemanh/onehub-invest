@@ -273,6 +273,12 @@ executors:
     kns_s05_gate: "node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"
     kns_scope: "bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""
     kns_lich_s05: "node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"   # G1 2510-14: plist + buildRunInput, không gọi Apify
+    # watchdog-l4b-history (2410-15, T3) — bản chép bộ canh + HOME giả + stub launchctl/pkill/pgrep/osascript/curl/sleep (luật 8)
+    wdh_p1: "node scripts/watchdog-l4b-history/acceptance.mjs p1-marker-so"
+    wdh_p2: "node scripts/watchdog-l4b-history/acceptance.mjs p2-duong-dan-khac"
+    wdh_p3: "node scripts/watchdog-l4b-history/acceptance.mjs p3-inode-moi"
+    wdh_p4: "node scripts/watchdog-l4b-history/acceptance.mjs p4-so-dong-lon"
+    wdh_xoay_that: "node scripts/watchdog-l4b-history/acceptance.mjs xoay-that"
     # collector-seen-cap (2510-2) — mỗi ca trong tiến trình con timeout 60s, thư mục tạm, cổng ngẫu nhiên; không chạm :9210
     seen_flush_6000: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs flush-6000"
     seen_hai_luot: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs hai-luot"
