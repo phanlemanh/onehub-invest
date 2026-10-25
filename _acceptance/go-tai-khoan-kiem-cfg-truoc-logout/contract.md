@@ -49,6 +49,14 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Later: CLI ghi cấu hình phạm trong lúc logout.
 - Never: phép đo gọi openclaw thật hay ghi `~/.openclaw`.
 
+## Đường đo
+
+- Thước: «cấu hình phạm (phần còn lại) → 400, openclaw giả 0 lệnh, cấu hình giữ nguyên» (SỐNG của ô cơ hội) · số từ:
+  ca GC-AC-1 (ma trận 5 lớp) + GC-AC-4 (đối chứng: bản sao không bước kiểm vẫn đăng xuất) · bảo đảm bởi: AC-1, AC-4
+- Thước: «cấu hình sạch → logout đúng một lần rồi gỡ» · số từ: ca GC-AC-2, GC-AC-3 · bảo đảm bởi: AC-2, AC-3
+- CHẾT = một dòng ma trận GC-AC-1 có spy.log từ 1 dòng trở lên ở lượt chấm cuối của vòng (timebox = vòng này, tối đa 3
+  lượt chấm S4).
+
 ## Out of scope
 
 - CLI tự ghi một cấu hình phạm trong lúc logout (`writeCfg` vẫn chặn sau khi phiên đã đăng xuất).

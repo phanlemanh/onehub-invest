@@ -8,7 +8,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-cfg.test.tsx]
-    expected: "exit 0; ca 'GC-AC-1' ma trận viết trước 5 dòng (L2 bindings 1 entry; L3 channels.zalo có mặt; groupPolicy 'open' ở accounts.default; L3b nhóm của default requireMention false; hỏng: accounts.acc3 là chuỗi) — mỗi dòng: DELETE acc2 → 400, error mở đầu 'Cấu hình Zalo không an toàn, không ghi (luật 8)' và chứa nhãn lớp của dòng (L2/L3/groupPolicy/L3b/hỏng), spy.log 0 dòng, cấu hình giữ nguyên byte, acc2 còn; số dòng ma trận = 5"
+    expected: "exit 0; ca 'GC-AC-1' ma trận viết trước 5 dòng (L2 bindings 1 entry; L3 channels.zalo có mặt; groupPolicy 'open' ở accounts.default; L3b nhóm của default requireMention false; hỏng: accounts.acc3 là chuỗi) — mỗi dòng: DELETE acc2 → 400, error mở đầu 'Cấu hình Zalo không an toàn, không ghi (luật 8)' và BẰNG đúng chuỗi '<mở đầu>: ' + zaloConfigViolations(bản cấu hình sau khi bỏ acc2).join('; ') (nhãn rút từ bộ kiểm thật, không viết tay), danh sách ấy có dòng mở đầu bằng nhãn lớp của dòng, spy.log 0 dòng, cấu hình giữ nguyên byte, acc2 còn; số dòng ma trận = 5; tập nhãn 5 dòng BẰNG tập nhãn lớp mà zaloConfigViolations trả cho một fixture gộp đủ năm vi phạm"
   - id: E2
     criterion: AC-2
     executor: test
@@ -26,7 +26,7 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-cfg.test.tsx]
-    expected: "exit 0; ca 'GC-AC-4': bản sao zalo-admin.ts bỏ dòng kiểm bản sau khi gỡ (đột biến phải đổi tệp — assert bản sao khác gốc), nạp từ thư mục tạm, chạy dòng L3b của ma trận AC-1 → spy.log có dòng logout acc2 (thông điệp ghim 'bản sao không bước kiểm vẫn đăng xuất'), rồi đặt lại cấu hình"
+    expected: "exit 0; ca 'GC-AC-4': bản sao zalo-admin.ts bỏ dòng kiểm bản sau khi gỡ (đột biến phải đổi tệp — assert bản sao khác gốc), nạp từ thư mục tạm, rào TRƯỚC khi gọi: zaloAdminPaths() của bản sao (realpath openclaw và config) nằm dưới thư mục tạm, chạy dòng L3b của ma trận AC-1 → spy.log có dòng logout acc2 (thông điệp ghim 'bản sao không bước kiểm vẫn đăng xuất'), rồi đặt lại cấu hình"
   - id: E5
     criterion: AC-5
     executor: test
