@@ -51,6 +51,7 @@ executors:
     ops_mobile_smoke: "node scripts/smoke-ops-mobile.mjs"   # ON13: cột trạng thái 6 bảng Ops ở 390px/1280px trên app chạy thật (Chromium không giao diện, playwright-core); cần DB local
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
     luong7_smoke: "node scripts/smoke-luong-7-ngay.mjs"     # ON5 AC-9 — bảng Luồng 7 ngày ở chế độ máy chủ trên trình duyệt (lược đồ tạm, Chromium)
+    log_root_smoke: "node scripts/smoke-doc-log-o-checkout.mjs"   # ON16 AC-6/AC-7 — audit-all thật ở worktree vs checkout chính (HOME tạm) + /ops/collections từ worktree; cần DB local
     listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"

@@ -1,0 +1,55 @@
+schema_version: 1
+feature_slug: audit-all-doc-log-o-checkout
+# Eval máy đọc ca mang tiền tố «ON16-AC-n»: scripts/audit-all.test.mjs (AC-1…AC-3, audit-all trong hộp hai cây tạm),
+# app/tests/doc-log-o-checkout.test.tsx (AC-4, AC-5, trang Ops local) và scripts/smoke-doc-log-o-checkout.mjs (AC-6, AC-7,
+# lệnh thật + trang thật).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; ca 'ON16-AC-1 audit-all từ worktree đọc log ở checkout chính' ok (hai cây tạm dựng bằng git init + git worktree add; dòng PASS «AirDNA nightly log: có activity»), chiều đỏ 'ON16-AC-1 script main từ worktree → LIMITED trống' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; ca 'ON16-AC-2 kết quả từ worktree trùng lần chạy ở checkout chính' ok (so TOÀN BỘ dòng đầu ra, in số dòng đã so), chiều đỏ 'ON16-AC-2 script main từ worktree → khác ở mục A1' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
+    expected: "exit 0; bốn ca 'ON16-AC-3 <checkout chính|không git|.git hỏng|checkout chính đã dời> đọc log của chính cây' ok (mỗi ca có log riêng của cây hoặc dòng LIMITED theo Hỏi-1, và in TỔNG KẾT), chiều đỏ 'ON16-AC-3 bản đột biến gốc log rỗng khi git lỗi → báo đường đọc sai' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/log-root.ts, app/src/lib/ops-queries.ts, app/tests/doc-log-o-checkout.test.tsx]
+    expected: "exit 0; ca 'ON16-AC-4 lockdown từ worktree đọc log watchdog ở checkout chính' ok (lớp 1–4 ok true, lastWatchdogAt = mốc dòng cuối log chính), chiều đỏ 'ON16-AC-4 ops-queries main từ worktree → lớp 4 không ok' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/log-root.ts, app/src/lib/collections-queries.ts, app/src/lib/ops-queries.ts, app/tests/doc-log-o-checkout.test.tsx]
+    expected: "exit 0; ca 'ON16-AC-5 lưới Máy móc từ worktree đọc 4 loại log ở checkout chính' ok (mỗi job lastLogAt = mtime tệp của nó: airdna-daily, launchd-smoke, launchd-collector-api, weekly-*), ca 'ON16-AC-5 checkout chính và cây không git đọc log của chính cây' ok, ca 'ON16-AC-5 luật tĩnh: không chuỗi pipeline/logs ngoài log-root.ts' ok, chiều đỏ 'ON16-AC-5 collections-queries main từ worktree → không giờ' và 'ON16-AC-5 bản sao có chuỗi pipeline/logs → luật gọi tên tệp' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.log_root_smoke
+    paths: [scripts/smoke-doc-log-o-checkout.mjs, scripts/audit-all.sh]
+    expected: "exit 0; dòng 'ok   worktree không có airdna-daily.log riêng', 'ok   audit-all worktree và checkout chính trùng toàn bộ đầu ra (<n> dòng)', chiều đỏ 'ok   chiều đỏ: script main ngoài checkout chính → báo lệch ở A1'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.log_root_smoke
+    paths: [scripts/smoke-doc-log-o-checkout.mjs, scripts/lib/ops-app.mjs, app/src/lib/log-root.ts, app/src/lib/ops-queries.ts, app/src/lib/collections-queries.ts]
+    expected: "exit 0; dòng 'ok   Bộ canh chạy cuối khớp log watchdog ở checkout chính', 'ok   nhãn lớp 1–4 khớp trạng thái suy từ log watchdog', 'ok   job S02 Chạy cuối khớp mtime airdna-daily.log ở checkout chính' (múi Asia/Ho_Chi_Minh, YYYY-MM-DD HH:mm (GMT+7)), dòng ảnh chụp đã lưu, chiều đỏ 'ok   chiều đỏ: kỳ vọng từ log worktree → báo lệch', 'dọn: 0 phiên tạm còn lại'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
