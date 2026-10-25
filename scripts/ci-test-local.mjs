@@ -64,9 +64,16 @@ export function chayJob(cfg, job, repo, { boCaiDat = false, them = "" } = {}) {
     sh("sleep", ["3"]);
     netArgs = ["--network", `container:${pgName}`];
   }
+  // Như Actions: mỗi `run:` ghi ra một tệp rồi chạy `bash -eo pipefail <tệp>` trong working-directory — lệnh không qua
+  // một lớp trích dẫn nào của shell ngoài (`$(…)`, nháy trong lệnh giữ nguyên nghĩa).
+  const thuMucBuoc = path.join(repo, ".ci-local");
+  mkdirSync(thuMucBuoc, { recursive: true });
   const buoc = cfg.steps
     .filter((s) => !(boCaiDat && s.name === "cài phụ thuộc"))
-    .map((s, i) => `echo "::buoc ${i} ${s.name}"; (cd ${JSON.stringify(s.wd)} && bash -eo pipefail -c ${JSON.stringify(s.run)}) || { echo "::do ${s.name}"; exit 1; }`)
+    .map((s, i) => {
+      writeFileSync(path.join(thuMucBuoc, `${job}-${i}.sh`), `${s.run}\n`);
+      return `echo "::buoc ${i} ${s.name}"; (cd ${JSON.stringify(s.wd)} && bash -eo pipefail /repo/.ci-local/${job}-${i}.sh) || { echo "::do ${s.name}"; exit 1; }`;
+    })
     .join("\n");
   const script = `set -u\ngit config --global --add safe.directory '*'\n${cfg.svc ? `node -e '${BO_CHUYEN}' &\nsleep 1\n` : ""}${them}\n${buoc}\necho "::xong"`;
   const envArgs = ["-e", "CI=true", "-e", "GITHUB_ACTIONS=true", ...Object.entries(cfg.env).flatMap(([k, v]) => ["-e", `${k}=${v}`])];
