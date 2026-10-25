@@ -143,13 +143,19 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   }
 
   if (mode === "cay") {
-    const base = path.join(WORK, "sach");
-    if (!existsSync(path.join(base, "app/node_modules"))) {
-      console.log("FAIL cần chạy bản sạch trước (node scripts/ci-test-local.mjs) — --cay tái dùng phụ thuộc đã cài ở đó");
-      process.exit(1);
+    // Bản gốc riêng (không dùng chung «sach» — chạy song song với chế độ sạch thì hai bên giẫm nhau): clone HEAD rồi chạy
+    // đúng bước «cài phụ thuộc» của từng job một lần; năm bản cấy chép từ đây (cp -c, APFS) và bỏ bước cài.
+    const base = path.join(WORK, "cay-base");
+    const head = clone(base);
+    for (const job of JOBS) {
+      const cfg = cauHinh(wf, job);
+      const r = chayJob({ ...cfg, svc: null, steps: cfg.steps.filter((x) => x.name === "cài phụ thuộc") }, job, base);
+      if (r.code !== 0) {
+        console.log(`FAIL cài phụ thuộc job ${job} cho bản gốc cấy lỗi: exit ${r.code}`);
+        process.exit(1);
+      }
     }
-    const head = execFileSync("git", ["-C", base, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-    console.log(`ma trận cấy lỗi trên ${head} (tái dùng phụ thuộc của bản sạch; bỏ bước «cài phụ thuộc»)`);
+    console.log(`ma trận cấy lỗi trên ${head} (bản gốc riêng đã cài phụ thuộc; bỏ bước «cài phụ thuộc» ở bản cấy)`);
     const bang = [];
     for (const m of JOBS) {
       const c = CAY[m];
