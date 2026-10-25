@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 7e99360438f1c9e86754f4f36085c5d3042067b4
+verified_commit: 7f8a60db7beb46e4310799b0f0d6f26339501431
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -227,3 +227,7 @@ none — mọi eval chạy một lần, tất định; E1/E2, E4/E5, E6/E7 dùng
 
 Round 1: E1–E9 đạt (9/9). Ngoài hợp đồng ghi một lỗi ném `TypeError` khi `url` không phải chuỗi mà `path` là chuỗi — để người ký quyết định xử lý trước hay sau merge.
 Round 2: E1–E10 đạt (10/10) trên 7e99360 (main + 62eaf38). Lỗi ngoài hợp đồng vòng 1 (nay là AC-10) đã sửa; suite collector 48/48 xanh sau khi xoá dist. Ngoài hợp đồng mới: hai đường khó gặp (`group`/`senderId` là object; lô hơn 5000 tin) — đều có từ trước diff này.
+
+### Re-pin lần 1 — 2026-10-25, do gộp origin/main trước merge
+run_id: repin-20261025T015636Z-21976
+sha: 7f8a60db7beb46e4310799b0f0d6f26339501431 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
