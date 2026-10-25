@@ -1,0 +1,9 @@
+{"ts":"2026-10-24T08:10:38Z","round":1,"evalId":"E1","run_id":"importer-bo-qua-du-lieu-thu-E1-20261024T081038","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs real-mock"}
+{"ts":"2026-10-24T08:10:46Z","round":1,"evalId":"E2","run_id":"importer-bo-qua-du-lieu-thu-E2-20261024T081045","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
+{"ts":"2026-10-24T08:11:06Z","round":1,"evalId":"E3","run_id":"importer-bo-qua-du-lieu-thu-E3-20261024T081059","exit_code":0,"cmd":"cd pipeline && npm test"}
+{"ts":"2026-10-24T08:11:13Z","round":1,"evalId":"E4","run_id":"importer-bo-qua-du-lieu-thu-E4-20261024T081112","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
+{"ts":"2026-10-24T08:11:15Z","round":1,"evalId":"E5","run_id":"importer-bo-qua-du-lieu-thu-E5-20261024T081115","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
+{"ts":"2026-10-24T08:11:18Z","round":1,"evalId":"E6","run_id":"importer-bo-qua-du-lieu-thu-E6-20261024T081118","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
+{"ts":"2026-10-24T08:11:21Z","round":1,"evalId":"E7","run_id":"importer-bo-qua-du-lieu-thu-E7-20261024T081120","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
+{"ts":"2026-10-24T08:11:24Z","round":1,"evalId":"E8","run_id":"importer-bo-qua-du-lieu-thu-E8-20261024T081123","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
+{"ts":"2026-10-24T08:11:26Z","round":1,"evalId":"E9","run_id":"importer-bo-qua-du-lieu-thu-E9-20261024T081126","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs real-mock"}

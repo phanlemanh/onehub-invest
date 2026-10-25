@@ -1,0 +1,172 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · importer-bo-qua-du-lieu-thu</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>PL1 — importer bỏ qua mọi snapshot thử (zalo-mock, e2e, TEST), không ghi chúng vào stg_*</h1><div class="sub">Trang hồ sơ · <span class="mono">importer-bo-qua-du-lieu-thu</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">PL1 — importer bỏ qua mọi snapshot thử (zalo-mock, e2e, TEST), không ghi chúng vào stg_*</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Dữ liệu giả sinh ra khi bench parser, e2e hoặc verify tay (nguồn zalo-mock, e2e, TEST) đã lọt vào stg_*. DB local hiện còn 1.260 dòng stg_zalo_posts và 3 dòng airbnb_snapshots mang snapshot_id thử.</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">3 mục để ngoài phạm vi · 5 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>8</b></span><span data-k="phep_do">Phép đo <b>9</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b>2</b></span><span data-k="quyet_dinh_nguoi">người <b>0</b></span><span data-k="ma">Mã <b>75994e0</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Dữ liệu giả sinh ra khi bench parser, e2e hoặc verify tay (nguồn zalo-mock, e2e, TEST) đã lọt vào stg_*. DB local hiện còn 1.260 dòng stg_zalo_posts và 3 dòng airbnb_snapshots mang snapshot_id thử.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given mọi snapshot thử đang có thật trên máy (`collector/snapshots/*/*__zalo-mock__*` …), When chạy `import-airbnb.mjs` trên từng cái, Then mỗi lần đều bỏ qua có log và exit 0, và số dòng stg mang snapshot_id thử không tăng thêm dòng nào.</li><li data-ac="AC-2"><b>AC-2</b> — Given đường dẫn snapshot thử kết thúc bằng «/», When chạy `import-airbnb.mjs` hoặc `import-chotot.mjs`, Then vẫn nhận ra là snapshot thử và bỏ qua.</li><li data-ac="AC-3"><b>AC-3</b> — Given thư mục mang tên nguồn thật nhưng `manifest.source = zalo-mock`, When chạy `import-airbnb.mjs`, Then bỏ qua theo `manifest.source`, có log, 0 dòng.</li><li data-ac="AC-4"><b>AC-4</b> — Given snapshot thật (`zalo-agent`) có lẫn item `zalo-mock`, When nạp, Then item thử bị bỏ (có log đếm), còn item thật vào `stg_zalo_posts`.</li><li data-ac="AC-5"><b>AC-5</b> — Given snapshot thật đã nạp, When nạp lại (kể cả đường dẫn có «/» cuối), Then số dòng không đổi (idempotent).</li><li data-ac="AC-6"><b>AC-6</b> — Given tên snapshot có segment `e2e` hoặc `TEST`, When nạp, Then bỏ qua; tên nguồn thật chỉ chứa chữ «test» ở giữa (không phải nguyên segment) thì không bị nhận nhầm.</li><li data-ac="AC-7"><b>AC-7</b> — Given `import-chotot.mjs`, When gặp snapshot thử, Then bỏ qua; snapshot Chợ Tốt thật vẫn nạp vào `stg_chotot_ads`.</li><li data-ac="AC-8"><b>AC-8</b> — Given DB đang có dòng stg thử cũ, When chạy importer, Then các dòng cũ KHÔNG bị xoá: số đếm trước và sau bằng nhau. Dọn rác cũ là việc của PL2.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 2</button><button class="btn" data-loc="may" aria-pressed="false">Máy 2</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 0</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261024T080722Z-1"><b>2026-10-24</b> · Máy · descope · S1 — bỏ gap-probe — nghiệm thu gọn theo brief phiên điều phối liên làn (24/10): AC theo hàng PL1, toàn eval máy, không hội đồng judge<div class="note">không có phản biện context sạch trước duyệt; bù bằng phiên VERIFY tươi được giao tự đi tìm lỗ</div></li><li data-loai="may" data-id="d-20261024T080722Z-2"><b>2026-10-24</b> · Máy · descope · S1 — KHÔNG chạy lại importer trên toàn bộ snapshot thật (bat_khi nghĩa đen) — upsert đặt captured_at = now() làm lệch độ tươi real7 của push-ops-facts; đo bằng mọi snapshot THỬ thật + fixture tiền tố riêng<div class="note">không chứng trên đủ 1.373 snapshot; snapshot thật chỉ được đọc</div></li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E1-20261024T081038</td><td class="mono">2026-10-24T08:10:38Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E2-20261024T081045</td><td class="mono">2026-10-24T08:10:46Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E3-20261024T081059</td><td class="mono">2026-10-24T08:11:06Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E4-20261024T081112</td><td class="mono">2026-10-24T08:11:13Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E5-20261024T081115</td><td class="mono">2026-10-24T08:11:15Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E6-20261024T081118</td><td class="mono">2026-10-24T08:11:18Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E7-20261024T081120</td><td class="mono">2026-10-24T08:11:21Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E8-20261024T081123</td><td class="mono">2026-10-24T08:11:24Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">importer-bo-qua-du-lieu-thu-E9-20261024T081126</td><td class="mono">2026-10-24T08:11:26Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given mọi snapshot thử đang có thật trên máy (`collector/snapshots/*/*__zalo-mock__*` …), When chạy `import-airbnb.mjs` trên từng cái, Then mỗi lần đều bỏ qua có log và exit 0, và số dòng stg mang snapshot_id thử không tăng thêm dòng nào.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E1-20261024T081038</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_real_mock</b></span><span>verified_at <b>2026-10-24T08:10:38Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">snapshot thử trên máy: 5 · dòng stg mang snapshot_id thử TRƯỚC: 1263 {&quot;airbnb_snapshots&quot;:3,&quot;stg_abnb_discovery&quot;:0,&quot;stg_abnb_listings&quot;:0,&quot;stg_abnb_nights&quot;:0,&quot;stg_chotot_ads&quot;:0,&quot;stg_osm_boundaries&quot;:0,&quot;stg_zalo_posts&quot;:1260}
+ok   có snapshot thử thật để thử (không đo rỗng)
+ok   import-airbnb bỏ qua cả 5 snapshot thử, có và không có «/» cuối (10/10 lần, exit 0, có log)
+dòng stg mang snapshot_id thử SAU: 1263 · stg_zalo_posts tổng 4092 → 4092
+ok   0 dòng stg mới mang snapshot_id thử
+ok   should-NOT-fire: dòng thử cũ KHÔNG bị xoá (PL2 lo) — số đếm giữ nguyên
+REAL-MOCK PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given đường dẫn snapshot thử kết thúc bằng «/», When chạy `import-airbnb.mjs` hoặc `import-chotot.mjs`, Then vẫn nhận ra là snapshot thử và bỏ qua.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E2-20261024T081045</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_fixtures</b></span><span>verified_at <b>2026-10-24T08:10:46Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   tên thật + manifest.source=zalo-mock → bỏ qua có log, 0 dòng
+snapshot thật lẫn 1 item thử: exit 0 · stg_zalo_posts [acc-pl1-1792829445988-a1, acc-pl1-1792829445988-a2]
+ok   nạp lại snapshot thật (kèm «/» cuối) → vẫn 2 dòng, không nhân đôi
+ok   import-chotot: snapshot thử tên e2e (có «/» cuối) → bỏ qua, exit 0
+ok   import-chotot: snapshot thật vẫn nạp (1 dòng)
+dọn: xoá 2 snapshot + 0 dòng chotot · còn 0 dòng giả
+ok   dọn sạch dữ liệu giả
+FIXTURES PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · test</h3><p class="crit">AC-2: Given đường dẫn snapshot thử kết thúc bằng «/», When chạy `import-airbnb.mjs` hoặc `import-chotot.mjs`, Then vẫn nhận ra là snapshot thử và bỏ qua.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E3-20261024T081059</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.pipeline</b></span><span>verified_at <b>2026-10-24T08:11:06Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">✔ isTestSnapshot: nhận diện zalo-mock / e2e / TEST; nguồn thật không dính (0.416459ms)
+✔ isTestSnapshot: đường dẫn có dấu / cuối vẫn nhận ra (basename không rỗng) (0.055792ms)
+ℹ tests 95
+ℹ suites 3
+ℹ pass 95
+ℹ fail 0
+ℹ cancelled 0</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-3: Given thư mục mang tên nguồn thật nhưng `manifest.source = zalo-mock`, When chạy `import-airbnb.mjs`, Then bỏ qua theo `manifest.source`, có log, 0 dòng.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E4-20261024T081112</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_fixtures</b></span><span>verified_at <b>2026-10-24T08:11:13Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   tên thật + manifest.source=zalo-mock → bỏ qua có log, 0 dòng
+ok   should-NOT-fire: sau mọi ca, số dòng stg mang snapshot_id thử không đổi
+dọn: xoá 2 snapshot + 0 dòng chotot · còn 0 dòng giả
+ok   dọn sạch dữ liệu giả
+FIXTURES PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-4: Given snapshot thật (`zalo-agent`) có lẫn item `zalo-mock`, When nạp, Then item thử bị bỏ (có log đếm), còn item thật vào `stg_zalo_posts`.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E5-20261024T081115</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_fixtures</b></span><span>verified_at <b>2026-10-24T08:11:15Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">snapshot thật lẫn 1 item thử: exit 0 · stg_zalo_posts [acc-pl1-1792829475546-a1, acc-pl1-1792829475546-a2]
+ok   log báo bỏ 1 item thử lẫn
+ok   2 item thật vào stg, item zalo-mock không vào
+dọn: xoá 2 snapshot + 0 dòng chotot · còn 0 dòng giả
+FIXTURES PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-5: Given snapshot thật đã nạp, When nạp lại (kể cả đường dẫn có «/» cuối), Then số dòng không đổi (idempotent).</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E6-20261024T081118</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_fixtures</b></span><span>verified_at <b>2026-10-24T08:11:18Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">snapshot thật lẫn 1 item thử: exit 0 · stg_zalo_posts [acc-pl1-1792829478298-a1, acc-pl1-1792829478298-a2]
+ok   2 item thật vào stg, item zalo-mock không vào
+ok   nạp lại snapshot thật (kèm «/» cuối) → vẫn 2 dòng, không nhân đôi
+dọn: xoá 2 snapshot + 0 dòng chotot · còn 0 dòng giả
+FIXTURES PASS</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-6: Given tên snapshot có segment `e2e` hoặc `TEST`, When nạp, Then bỏ qua; tên nguồn thật chỉ chứa chữ «test» ở giữa (không phải nguyên segment) thì không bị nhận nhầm.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E7-20261024T081120</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_fixtures</b></span><span>verified_at <b>2026-10-24T08:11:21Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   tên «e2e__acc-pl1-1792829481000» → bỏ qua, 0 dòng
+ok   tên «zalo-agent__TEST» → bỏ qua, 0 dòng
+ok   should-NOT-fire: sau mọi ca, số dòng stg mang snapshot_id thử không đổi
+dọn: xoá 2 snapshot + 0 dòng chotot · còn 0 dòng giả
+FIXTURES PASS</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-7: Given `import-chotot.mjs`, When gặp snapshot thử, Then bỏ qua; snapshot Chợ Tốt thật vẫn nạp vào `stg_chotot_ads`.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E8-20261024T081123</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_fixtures</b></span><span>verified_at <b>2026-10-24T08:11:24Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   import-chotot: snapshot thử tên e2e (có «/» cuối) → bỏ qua, exit 0
+ok   import-chotot: snapshot thật vẫn nạp (1 dòng)
+dọn: xoá 2 snapshot + 0 dòng chotot · còn 0 dòng giả
+ok   dọn sạch dữ liệu giả
+FIXTURES PASS</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-8: Given DB đang có dòng stg thử cũ, When chạy importer, Then các dòng cũ KHÔNG bị xoá: số đếm trước và sau bằng nhau. Dọn rác cũ là việc của PL2.</p>
+<div class="kv"><span>run_id <b>importer-bo-qua-du-lieu-thu-E9-20261024T081126</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.pl1_real_mock</b></span><span>verified_at <b>2026-10-24T08:11:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">snapshot thử trên máy: 5 · dòng stg mang snapshot_id thử TRƯỚC: 1263 {&quot;airbnb_snapshots&quot;:3,&quot;stg_abnb_discovery&quot;:0,&quot;stg_abnb_listings&quot;:0,&quot;stg_abnb_nights&quot;:0,&quot;stg_chotot_ads&quot;:0,&quot;stg_osm_boundaries&quot;:0,&quot;stg_zalo_posts&quot;:1260}
+ok   import-airbnb bỏ qua cả 5 snapshot thử, có và không có «/» cuối (10/10 lần, exit 0, có log)
+dòng stg mang snapshot_id thử SAU: 1263 · stg_zalo_posts tổng 4092 → 4092
+ok   0 dòng stg mới mang snapshot_id thử
+ok   should-NOT-fire: dòng thử cũ KHÔNG bị xoá (PL2 lo) — số đếm giữ nguyên
+REAL-MOCK PASS</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Non-discriminating evals:
+- Baseline chạy hai cây, xuất bằng `git archive` ra thư mục tạm ngoài repo, chép harness sang, symlink `pipeline/node_modules`. Chỉ chạy `fixtures` và test unit, KHÔNG chạy `real-mock`. Đã đọc code fixtures trước: mọi dòng nó có thể ghi trên code cũ đều mang tiền tố `acc-pl1-&lt;ms&gt;` (snapshot_id, post_id, snapshot_id Chợ Tốt) và được dọn hết (cascade từ `airbnb_snapshots`). Sau mỗi lượt: «còn 0 dòng giả».
+  - `6e84f96` (diffBase, chưa có PL1): `fixtures` đỏ ở 8 mục: manifest.source, item lẫn, nạp lại, chotot e2e «/», e2e, TEST, should-NOT-fire. Test unit mới đỏ vì module chưa export `isTestSnapshot`.
+  - `19b9eff` (bản PL1 đầu, dùng `split(&quot;/&quot;).pop()`): `fixtures` đỏ ở 5 mục: manifest.source, item lẫn, nạp lại, chotot e2e «/». Các mục tên e2e/TEST xanh, đúng như mong đợi vì bản đó đã có lớp tên.
+- E3, ca «đường dẫn có dấu / cuối»: XANH trên `19b9eff`, tức bản còn lỗi `split`. Test gọi `isTestSnapshot` trên CẢ đường dẫn, mà regex vẫn khớp `__zalo-mock__` ở giữa chuỗi, nên nó không chạm `basename()` hay `split()` trong `main()`. Ca này không bắt được lỗi mà nó mang tên. AC-2 thực chất do E2 gánh (chotot, đỏ trên `19b9eff`) và E1 gánh (`import-airbnb` với «/» trên snapshot thử thật; không đo baseline được).
+- E6 (idempotent): đỏ trên baseline chỉ vì item zalo-mock làm thành 3 dòng. Tính idempotent thì code cũ vẫn giữ (3 → 3 khi nạp lại). Vì vậy E6 không phân biệt được chính khẳng định của nó; nên coi là guard hồi quy.
+- E8, mục «snapshot Chợ Tốt thật vẫn nạp (1 dòng)»: xanh trên cả hai baseline. Đây là guard hồi quy có chủ ý; mục «bỏ qua e2e «/»» của E8 thì đỏ.
+- Lệnh `fixtures` là một lệnh chung cho E2 và E4–E8. Baseline từng eval ghi ở trên là trạng thái của dòng kiểm tương ứng với eval đó.
+Baseline khong do:
+- E1, E9: không chạy `real-mock` trên code cũ, vì nó sẽ ghi 5 snapshot thử thật vào stg và đặt lại `captured_at`.
+Đọc code (`git diff 6e84f96 b2f392d`):
+- Regex: áp lên 1.384 tên thư mục snapshot trên máy, chỉ khớp đúng 5 thư mục `hanoi__zalo-mock__…`. Không tên nguồn thật hay mốc thời gian nào bị nhận nhầm. Các nguồn có trên máy: airbnb-discovery, airbnb-listing, airdna-research, chotot-ads, example, osm-boundaries, zalo-agent, zalo-mock.
+- `isTestSnapshot(&quot;x__&quot; + source + &quot;__x&quot;)` với `source` null, undefined hay rỗng đều trả false, nên snapshot được nạp như thường. Đây là hành vi an toàn đúng hướng: không bỏ nhầm dữ liệu thật.
+- Hai vòng nạp đêm chỉ glob `*__zalo-agent__*` (và `chotot-ads`), nên snapshot tên `zalo-mock` không bao giờ được chọn. Một snapshot tên thật nhưng `manifest.source` là nguồn thử thì được bỏ qua với mã 0, và state nhảy qua nó. Đúng ý: dữ liệu thử không bao giờ cần nạp lại. Ngoại lệ là hình dạng tên `…__TEST`, xem «Ngoài hợp đồng».</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: 9/9 eval đạt; 3 phát hiện ngoài hợp đồng (import-chotot thiếu lớp manifest.source — có thể chạm AC-7 tuỳ cách đọc; state vòng đêm với tên `…__TEST`; thoát sớm trong harness bỏ dọn) — chuyển người xét ở Gate 2.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Xoá các dòng stg thử cũ (1.260 dòng `stg_zalo_posts` và 3 dòng `airbnb_snapshots`): PL2.</li><li data-loai="ngoai">Chạy lại importer trên TOÀN BỘ snapshot thật hiện có: upsert đặt `captured_at = now()`, nên sẽ làm lệch chỉ số độ tươi (real7) của `push-ops-facts`. Thay vào đó, AC-1 chạy importer trên mọi snapshot THỬ thật (phải bị bỏ qua), và các ca snapshot thật dùng fixture mang tiền tố riêng.</li><li data-loai="ngoai">Transform từ chối post thử nếu lọt vào: PL2.</li><li data-loai="gioi-han">Không chạy importer trên ~1.380 snapshot thật đang có (descope d-…-2): đường «snapshot thật vẫn nạp» chỉ được chứng bằng fixture tiền tố `acc-pl1-` (E5, E6, E8). Snapshot thật chỉ được đọc (`ls`, đọc manifest và item); quét 1.380 snapshot không phải thử: 0 cái lẫn item nguồn thử, nên lớp lọc item chưa từng gặp ca thật.</li><li data-loai="gioi-han">E1 và E9 không đo baseline: trên code cũ, `real-mock` sẽ ghi snapshot thử vào stg. 3 trong 5 snapshot thử đã có sẵn trong DB, nên với 3 cái đó, «0 dòng mới» cũng đúng trên code cũ (ON CONFLICT). Phần phân biệt nằm ở 2 snapshot chưa nạp (`…T072651`, `…T072717`) và ở điều kiện có dòng log bỏ qua.</li><li data-loai="gioi-han">Phép đếm của `real-mock` chỉ đếm dòng có snapshot_id khớp regex. Item thử lẫn trong snapshot thật mang snapshot_id thật, nên phép đếm này không thấy. Ca đó do E5 (fixture) phủ.</li><li data-loai="gioi-han">Regex là danh sách cố định ba loại (`zalo-mock`, `e2e`, `test`; không phân biệt hoa thường; khớp nguyên segment). Các biến thể không bị bắt: `zalo-mock-v2`, `zalo_mock`, `mock`, `e2e-run`, `example`. Trên máy có thật một snapshot `hanoi/hanoi__example__2026-10-17T153258` (`manifest.source=example`, 3 item nguồn `example`). Nó chưa có trong DB và nằm ngoài danh sách của hợp đồng.</li><li data-loai="gioi-han">DB :5433 dùng chung. Các lượt chạy rơi vào 15:10–15:20 (+07), không trùng job launchd nào có lịch (ngoại trừ cloud-sync và heartbeat 15 phút: không chạy importer hay transform). Khi chạy, không thấy biến động lạ trong số đếm.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">75994e074e46e79acf45d6c32addae1532fce7e0</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
