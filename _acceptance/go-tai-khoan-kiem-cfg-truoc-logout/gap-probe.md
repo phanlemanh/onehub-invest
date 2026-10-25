@@ -1,6 +1,6 @@
 ---
 slug: go-tai-khoan-kiem-cfg-truoc-logout
-at: 2026-10-25T03:58:00Z
+at: 2026-10-25T03:40:30Z
 verdict: findings
 p0: 0
 p1: 2
