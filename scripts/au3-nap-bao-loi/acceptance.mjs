@@ -237,6 +237,18 @@ async function modeApify() {
   r = run(sb, "apify-facebook-daily.sh", { ACC_PLAN: JSON.stringify({ "transform-fb": "exit:4" }) });
   check(r.code === 4 && r.ran("refresh-bait-gap") && /JOB FAIL \[apify-facebook-daily\] bước transform-fb mã 4/.test(r.out) && sb.state() === T3, "(d) DB sống, transform-fb hỏng → refresh vẫn chạy, exit 4, dòng JOB FAIL, state tới cuối");
   sb.cleanup();
+
+  // (e) 2510-4: BƯỚC THU hỏng (exit 1) — KHÔNG nuốt mã: vẫn nạp + transform,
+  // mã thu trả lại ở CUỐI lượt kèm một dòng log rõ
+  sb = apifySandbox();
+  r = run(sb, "apify-facebook-daily.sh", { ACC_PLAN: JSON.stringify({ apify: "exit:1" }) });
+  console.log(`(e) thu hỏng: exit ${r.code} · nạp ${r.calls.filter((l) => l.startsWith("import ")).length} · transform ${r.ran("transform-fb")}`);
+  check(/bước thu thoát mã 1/.test(r.out), "(e) một dòng log rõ về mã thu");
+  check(r.tries("import", T3) === 1, "(e) snapshot sẵn có vẫn được nạp đủ");
+  check(r.ran("transform-fb") && r.ran("refresh-bait-gap"), "(e) transform + refresh vẫn chạy");
+  check(r.code === 1, "(e) mã thoát cuối = mã bước thu (1)");
+  check(sb.state() === T3, "(e) state tới snapshot cuối");
+  sb.cleanup();
   finish("APIFY");
 }
 
@@ -295,6 +307,56 @@ async function modeLock() {
       check(!existsSync(join(sb2.repo, "pipeline/logs/apify-daily.state.lock")), `${script}: chạy xong tự gỡ khoá của mình (trap)`);
     } finally {
       sb2.cleanup();
+    }
+  }
+  // 2510-9: khoá sống qua kill -9/mất điện — PID chết hoặc khoá >2h được gỡ
+  // lấy lại; PID còn sống thì chờ như cũ.
+  for (const script of ["apify-facebook-daily.sh", "zalo-import-daily.sh"]) {
+    // (a) khoá của PID ĐÃ CHẾT (kill -9/mất điện) → gỡ, chạy bình thường
+    let sb = tsSandbox(script);
+    try {
+      const lock = join(sb.repo, "pipeline/logs/apify-daily.state.lock");
+      const dead = spawnSync("bash", ["-c", "exit 0"]); // tiến trình đã kết thúc — PID chắc chắn chết
+      mkdirSync(lock, { recursive: true });
+      writeFileSync(join(lock, "pid"), String(dead.pid));
+      writeFileSync(join(lock, "luc"), String(Math.floor(Date.now() / 1000)));
+      const r = run(sb, script, { DATABASE_URL: "acc-khong-ket-noi-db" });
+      const n = r.calls.filter((l) => l.startsWith("import ")).length;
+      console.log(`${script} khoá PID chết ${dead.pid}: exit ${r.code} · import ${n}`);
+      check(/gỡ khoá cũ của PID/.test(r.out) && r.out.includes(String(dead.pid)), `${script}: log 'gỡ khoá cũ của PID <n>'`);
+      check(r.code === 0 && n > 0, `${script}: khoá PID chết → gỡ lấy lại, nạp bình thường`);
+      check(!existsSync(lock), `${script}: khoá tự dọn sau lượt`);
+    } finally {
+      sb.cleanup();
+    }
+    // (b) khoá của PID CÒN SỐNG → chờ như cũ, không nạp
+    sb = tsSandbox(script);
+    try {
+      const lock = join(sb.repo, "pipeline/logs/apify-daily.state.lock");
+      mkdirSync(lock, { recursive: true });
+      writeFileSync(join(lock, "pid"), String(process.pid)); // harness đang chạy — sống
+      writeFileSync(join(lock, "luc"), String(Math.floor(Date.now() / 1000)));
+      const r = run(sb, script, { DATABASE_URL: "acc-khong-ket-noi-db" });
+      const n = r.calls.filter((l) => l.startsWith("import ")).length;
+      console.log(`${script} khoá PID sống ${process.pid}: exit ${r.code} · import ${n}`);
+      check(r.code !== 0 && n === 0, `${script}: PID sống → chờ hết lượt, thoát ≠0, KHÔNG nạp`);
+      check(existsSync(lock) && readFileSync(join(lock, "pid"), "utf8").trim() === String(process.pid), `${script}: không đụng khoá của PID sống`);
+    } finally {
+      sb.cleanup();
+    }
+    // (c) khoá GIÀ hơn 2h (dù PID còn sống) → gỡ lấy lại
+    sb = tsSandbox(script);
+    try {
+      const lock = join(sb.repo, "pipeline/logs/apify-daily.state.lock");
+      mkdirSync(lock, { recursive: true });
+      writeFileSync(join(lock, "pid"), String(process.pid));
+      writeFileSync(join(lock, "luc"), String(Math.floor(Date.now() / 1000) - 7201));
+      const r = run(sb, script, { DATABASE_URL: "acc-khong-ket-noi-db" });
+      const n = r.calls.filter((l) => l.startsWith("import ")).length;
+      console.log(`${script} khoá >2h: exit ${r.code} · import ${n}`);
+      check(/gỡ khoá cũ hơn 2h/.test(r.out) && r.code === 0 && n > 0, `${script}: khoá >2h → gỡ lấy lại, nạp bình thường`);
+    } finally {
+      sb.cleanup();
     }
   }
   finish("LOCK");
