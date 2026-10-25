@@ -1,1 +1,150 @@
-{"app":[],"pipeline":[],"agent":[],"scripts":[]}
+{
+  "app": [
+    {
+      "tep": "app/tests/compare-saved.test.tsx",
+      "ca": "CS-AC-3 ảnh: getAreaThumbnails trả ≤3 ứng viên https, ảnh đầu không trùng giữa các khu vực; khu vực không ảnh thì vắng",
+      "ly_do": "cần ảnh listing thật ở DB local (ứng viên ảnh khu vực)"
+    },
+    {
+      "tep": "app/tests/deals-phi-ly.test.tsx",
+      "ca": "DP-AC-3 trang đọc bait_gap_pct",
+      "ly_do": "cần thước P2 thật (v_ruler_p2_area rỗng trên DB trống)"
+    },
+    {
+      "tep": "app/tests/deals-phi-ly.test.tsx",
+      "ca": "DP-AC-4 sắp trước khi cắt",
+      "ly_do": "cần thước P2 thật (v_ruler_p2_area rỗng trên DB trống)"
+    },
+    {
+      "tep": "app/tests/deals-phi-ly.test.tsx",
+      "ca": "DP-AC-4 tin sát trần đứng sau",
+      "ly_do": "cần thước P2 thật (v_ruler_p2_area rỗng trên DB trống)"
+    },
+    {
+      "tep": "app/tests/deals-phi-ly.test.tsx",
+      "ca": "DP-AC-5 bản cloud",
+      "ly_do": "cần thước P2 thật (v_ruler_p2_area rỗng trên DB trống)"
+    },
+    {
+      "tep": "app/tests/ops-nhan-theo-context.test.tsx",
+      "ca": "ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ",
+      "ly_do": "cần dữ liệu thật ở DB local (kiểm chất lượng 7 ngày, thị trường S02)"
+    },
+    {
+      "tep": "app/tests/ops-nhan-theo-context.test.tsx",
+      "ca": "ON12-AC-6 mọi thị trường S02 trên DB local có tên Việt",
+      "ly_do": "cần dữ liệu thật ở DB local (kiểm chất lượng 7 ngày, thị trường S02)"
+    }
+  ],
+  "pipeline": [
+    {
+      "tep": "pipeline/scripts/test-posts.test.mjs",
+      "ca": "AC-3 transform S05 dùng cùng bộ lọc",
+      "ly_do": "cần tin nạp thật ở DB local (lượt nạp rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/test-posts.test.mjs",
+      "ca": "AC-4 rút offer giả qua đối soát",
+      "ly_do": "cần tin nạp thật ở DB local (lượt nạp rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/test-posts.test.mjs",
+      "ca": "AC-5 lượt sạch và lượt toàn thử",
+      "ly_do": "cần tin nạp thật ở DB local (lượt nạp rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/test-posts.test.mjs",
+      "ca": "AC-6 bait gap tính lại",
+      "ly_do": "cần tin nạp thật ở DB local (lượt nạp rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/test-posts.test.mjs",
+      "ca": "AC-8 thước dư lượng bắt được tin giả",
+      "ly_do": "cần tin nạp thật ở DB local (lượt nạp rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/test-posts.test.mjs",
+      "ca": "AC-9 stg không đổi",
+      "ly_do": "cần tin nạp thật ở DB local (lượt nạp rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/deals-phi-ly.test.mjs",
+      "ca": "DP-AC-2 loaiTinPhiLy",
+      "ly_do": "cần thước P2 thật (v_ruler_p2_area rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/deals-phi-ly.test.mjs",
+      "ca": "DP-AC-2 refreshBaitGap giữ registry người bán",
+      "ly_do": "cần thước P2 thật (v_ruler_p2_area rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/deals-phi-ly.test.mjs",
+      "ca": "DP-AC-2 tập toàn tin hợp lý không ghi audit",
+      "ly_do": "cần thước P2 thật (v_ruler_p2_area rỗng trên DB trống)"
+    },
+    {
+      "tep": "pipeline/scripts/ops-facts-so-tong-hop.test.mjs",
+      "ca": "ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái",
+      "ly_do": "chạy launchctl của máy thu (chỉ có trên macOS)"
+    }
+  ],
+  "agent": [
+    {
+      "tep": "agent/tests/context-resolver.test.ts",
+      "ca": "AC-9 chỉ kết quả land đổi trên tin thật của DB local",
+      "ly_do": "cần tin thật ở DB local (0 tin trên DB trống)"
+    }
+  ],
+  "scripts": [
+    {
+      "tep": "scripts/audit-all.test.mjs",
+      "ca": "AA-AC-1 backup (d) BACKUP_DIR không có bản 8 ngày → ❌",
+      "ly_do": "đọc plist bằng /usr/libexec/PlistBuddy (chỉ có trên macOS)"
+    },
+    {
+      "tep": "scripts/audit-all.test.mjs",
+      "ca": "AA-AC-1 backup (e) có bản 2 ngày → ✅ kèm tên tệp",
+      "ly_do": "đọc plist bằng /usr/libexec/PlistBuddy (chỉ có trên macOS)"
+    },
+    {
+      "tep": "scripts/ci-test-module.test.mjs",
+      "ca": "AU11-AC-3 DB mặc định của ảnh PostGIS (extension cài sẵn) vẫn tính là trống",
+      "ly_do": "cần docker để dựng PostGIS riêng — CI đo DB ở bước «dựng DB trống từ migration»"
+    },
+    {
+      "tep": "scripts/ci-test-module.test.mjs",
+      "ca": "AU11-AC-3 DB đã có bảng → từ chối, không áp gì",
+      "ly_do": "cần docker để dựng PostGIS riêng — CI đo DB ở bước «dựng DB trống từ migration»"
+    },
+    {
+      "tep": "scripts/ci-test-module.test.mjs",
+      "ca": "AU11-AC-3 ci-db-init dựng DB trống từ migration",
+      "ly_do": "cần docker để dựng PostGIS riêng — CI đo DB ở bước «dựng DB trống từ migration»"
+    },
+    {
+      "tep": "scripts/ci-test-module.test.mjs",
+      "ca": "AU11-AC-3 migration giả lỗi → thoát ≠ 0 gọi tên tệp",
+      "ly_do": "cần docker để dựng PostGIS riêng — CI đo DB ở bước «dựng DB trống từ migration»"
+    },
+    {
+      "tep": "scripts/ci-test-module.test.mjs",
+      "ca": "AU11-AC-3 migration trong danh sách đã khai mà áp xanh → danh sách cũ",
+      "ly_do": "cần docker để dựng PostGIS riêng — CI đo DB ở bước «dựng DB trống từ migration»"
+    },
+    {
+      "tep": "scripts/ui-capture-browser.test.mjs",
+      "ca": "UC-BR-3 tên chỉ trong [data-tier-a] (chữ + title) → được che, mã 0, có ảnh",
+      "ly_do": "cần playwright-cli và trình duyệt của máy"
+    },
+    {
+      "tep": "scripts/ui-capture-browser.test.mjs",
+      "ca": "UC-BR-6 tên lộ trong chữ hay thuộc tính → mã 5, không ảnh, đầu ra không có tên",
+      "ly_do": "cần playwright-cli và trình duyệt của máy"
+    },
+    {
+      "tep": "scripts/ui-capture-browser.test.mjs",
+      "ca": "UC-BR-6 đối chứng dương: trang không tên → mã 0, có ảnh",
+      "ly_do": "cần playwright-cli và trình duyệt của máy"
+    }
+  ]
+}

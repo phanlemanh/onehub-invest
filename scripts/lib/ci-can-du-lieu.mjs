@@ -5,7 +5,7 @@
 // CI) in chuỗi rỗng nên mọi ca vẫn chạy như cũ. Mục không còn tên ca trong tệp của nó, hay mục trỏ ca đỏ sẵn của main
 // (CAM) → thoát 1 gọi tên: danh sách không được phình hay mục.
 // Chạy: NODE_OPTIONS="$(node scripts/lib/ci-can-du-lieu.mjs <module>)" npm test
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -36,7 +36,7 @@ export function nodeOptions(list, ci = process.env.CI === "true") {
   return list.map((m) => `"--test-skip-pattern=^${escape(m.ca).replace(/[\\"]/g, "\\$&")}$"`).join(" ");
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const mod = process.argv[2];
   const all = JSON.parse(readFileSync(DANH_SACH, "utf8"));
   if (!mod || !(mod in all)) {

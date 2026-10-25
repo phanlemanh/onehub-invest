@@ -9,7 +9,7 @@
 //   node scripts/ci-test-local.mjs --cay           ma trận cấy lỗi 5×5 (AC-7)
 //   node scripts/ci-test-local.mjs --agent-types   agent cài sạch tsc + chiều đỏ thiếu @types/json-schema (AC-5)
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -96,7 +96,7 @@ const check = (ok, msg) => {
   if (!ok) fails.push(msg);
 };
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const wf = yaml.load(readFileSync(WF, "utf8"));
   mkdirSync(WORK, { recursive: true });
   const mode = process.argv.includes("--cay") ? "cay" : process.argv.includes("--agent-types") ? "types" : "sach";
@@ -105,13 +105,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (mode === "sach") {
     const repo = path.join(WORK, "sach");
     const sha = clone(repo);
+    const boQua = JSON.parse(readFileSync(path.join(repo, "scripts/ci-bo-qua.json"), "utf8"));
     console.log(`bản sạch: clone ${sha} → ${path.relative(ROOT, repo)}`);
     for (const job of chiJob ? [chiJob] : JOBS) {
       const cfg = cauHinh(wf, job);
       console.log(`     ${job}: node ${cfg.node} · service ${cfg.svc?.image ?? "—"} ${cfg.svc?.ports?.join(",") ?? ""} · ${cfg.steps.length} bước (${cfg.steps.map((s) => `${s.name}@${s.wd}`).join(" · ")})`);
       const r = chayJob(cfg, job, repo);
       writeFileSync(path.join(WORK, `sach-${job}.log`), r.log);
-      check(r.code === 0, `job ${job}: exit ${r.code}${r.buocDo ? ` (đỏ ở bước «${r.buocDo}»)` : ""} · ${r.giay}s · test ${r.pass ?? "—"}/${r.tests ?? "—"}${r.fail ? ` (fail ${r.fail})` : ""} · bỏ qua ${r.boQua}`);
+      check(r.code === 0, `job ${job}: exit ${r.code}${r.buocDo ? ` (đỏ ở bước «${r.buocDo}»)` : ""} · ${r.giay}s · test ${r.pass ?? "—"}/${r.tests ?? "—"}${r.fail ? ` (fail ${r.fail})` : ""} · bỏ qua ${r.boQua}`);      // tập ca bỏ qua thực tế = danh sách viết trước: mỗi ca của danh sách không có dòng ✔/✖ nào trong nhật ký job
+      const ds = boQua[job] ?? [];
+      const vanChay = ds.filter((m) => r.log.split("\n").some((l) => /^\s*[✔✖] /.test(l) && l.includes(m.ca)));
+      if (ds.length || r.boQua) check(r.boQua === ds.length && !vanChay.length, vanChay.length ? `job ${job}: ca trong danh sách vẫn chạy — ${vanChay.map((m) => m.ca).join(" | ")}` : `job ${job}: tập ca bỏ qua khớp scripts/ci-bo-qua.json (${ds.length} ca)`);
     }
   }
 

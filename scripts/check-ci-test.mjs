@@ -4,7 +4,7 @@
 // `if:` trên bước typecheck-test; job gọi ci-db-init có service PostGIS kartoza 17-3.5 cổng 5433:5432 + healthcheck;
 // mỗi job chạy đúng lệnh typecheck/test của module (bảng viết trước). Mỗi luật có chiều đỏ trên bản sao đột biến.
 // Chạy: node scripts/check-ci-test.mjs
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -65,7 +65,7 @@ export function loiWorkflow(text) {
   return out;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const text = readFileSync(WF, "utf8");
   const fails = [];
   const check = (ok, msg) => {
