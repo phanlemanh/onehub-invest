@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c4511d1ac45be63c226bffbef7220ad8f5516d95
+verified_commit: 95ec548281191e05ef901f0aa0e4d7bb5a30fea5
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -308,3 +308,7 @@ E11/E12). Harness lock và apify chạy lại trong E8 cho cùng kết quả.
 
 Round 1: 13/13 eval đạt trên `c4511d1`. Baseline đỏ ở E1, E3–E8 và E11–E13. E2 và E9 là guard xanh trên baseline. E10 không đo
 baseline. Có 6 phát hiện ngoài hợp đồng (1 medium, 5 low), đã chuyển cho người quyết. PASS.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main (#109 sửa ảnh mẫu manifest) — lượt trước đỏ E9
+run_id: repin-20261025T123047Z-75696
+sha: 95ec548281191e05ef901f0aa0e4d7bb5a30fea5 · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
