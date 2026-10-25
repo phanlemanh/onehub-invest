@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: nhom-s03-tren-cloud
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 0ea22f486b9225cd6d19870f8f97dc1a9bb0ec80
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: nhom-s03-tren-cloud
@@ -133,7 +133,7 @@ human_signoff:
   judged_by: hội đồng 3 lens (domain-correctness, operational-feasibility, spec-alignment), fresh context
   verdict: PASS
   rationale: Cả ba lens đề xuất PASS; T3 nên bước cuối là người xác nhận trực tiếp.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-25 — Đạt
 
   Phiếu từng lens:
   - domain-correctness: PASS — Bốn trạng thái ST-s03-* khớp với chữ thật của bảng nhóm S03 ở máy chủ và máy thu. Khối `s03` chỉ mang số đếm và tên nhóm (tầng C), không mang mã nhóm hay tên tài khoản thu. Chỗ nào không có số đều ra «—» thay vì 0, và không còn badge xanh khi số đã cũ. Giao diện không có chữ «cloud»/«local» sót lại. ST-s03-none: `toCloudS03` trả null khi khối vắng, lỗi hay sai khuôn; `CloudCollections` khi đó không dựng bảng, «nhóm S03» ở lại Alert gom, máy chủ không có đường nào ra «0 nhóm». ST-s03-fresh: mô tả bảng ghi «danh sách cho phép đang bật N nhóm» với N lấy từ khối; chân bảng ghi «mã nhóm chỉ xem ở máy thu» và không liệt kê mã nào; «Vào bảng thô» là null thì ra «—»; bên ghi gán `accepted: null` khi nhóm đã qua cổng mà nhật ký không có số tin vào, và khi nhật ký không đọc được thì cả khối báo lỗi. ST-s03-stale: `groupStatusBadge` dùng viền xám (`outline`) thay `success-light`, `cloudCount` làm mờ các ô số; Alert vàng 45′ do `FactsStaleAlert` hiện, đúng ADR-0014 §Ngưỡng trễ. ST-s03-local: `readZaloAllowlist` trả null khi cấu hình không đọc được (mô tả ghi «—»); khi đọc được nó dùng `effectiveEnabledGroups` (hợp các nhóm bật hiệu dụng của mọi tài khoản); `gateByGroup` và `parseLog` cùng quy tắc cộng `accepted`. Định danh: tên nhóm trông như mã (chuỗi số từ 15 chữ số, hoặc trùng mã trong cấu hình) bị đổi thành null và hiện «Nhóm chưa có tên»; `cloud.ts` đặt `ownerAccount: null` nên cột «Tài khoản» ra «—»; `factsChan` chỉ miễn soát tầng A cho đường dẫn `.name` của nhóm S03. Nhãn: chữ giao diện dùng «máy thu»/«máy chủ» đúng `CONTEXT.md`; «cloud»/«local» chỉ nằm trong comment và tên biến, «Vào bảng thô» giữ nguyên. Hai chỗ nằm ngoài phạm vi bảng máy chủ và khối `s03`, đã ghi nhận: `zaloAccounts[].enabledGroups` vẫn mang mã nhóm lên máy chủ như trước, và `zaloGroups[].ownerAccount` ở cấp ngoài của bản tin cũng vậy.

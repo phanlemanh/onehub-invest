@@ -5,7 +5,7 @@ slug: nhom-s03-tren-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3      # chạm pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-25-nhom-s03-tren-cloud-design.md
 approved_by: Mạnh
 approved_at: 2026-10-25
@@ -92,3 +92,9 @@ Quét không gian tiêu chí trong thiết kế theo các trục (dòng `approac
 - Chạm `pipeline/push-ops-facts.mjs`, `pipeline/lib/ops-flow.mjs`, `scripts/lib/ops-local.mjs` — chung với AU12 và các hàng
   ON — chạy liền, không song song. Nhánh cắt từ ON23 (PR #83 chưa gộp).
 - Phép đo không gọi lệnh ghi nào trên OpenClaw (`.claude/rules/zalo-safety.md`): cấu hình và nhật ký ở HOME tạm.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Khi máy thu không đọc được nhật ký cổng, đường API máy trên máy chủ (khoá zaloGroups cũ) vẫn báo 0 lượt thấy, qua cổng, vào bảng thô thay vì «không có số»; trang Ops không bị ảnh hưởng.
+  - Ngoài-2: Phép đo «số cũ mờ» mới kiểm ba cột Thấy, Qua cổng, Vào bảng thô; hai cột bài thật 7 ngày và bài thử chưa có phép kiểm.
+  - Ngoài-3: Phép đo «không đọc được cấu hình» mới kiểm ca tệp vắng; tệp JSON hỏng hay thiếu khai báo tài khoản Zalo chưa có ca đo.
+  - Ngoài-5: Phép kiểm «máy chủ không hiện mã nhóm» mới có đối chứng cho một mã; các mã của cấu hình chưa có đối chứng dương.
+  - Ngoài-6: Ma trận AC-2 chưa phủ cấu hình kiểu cũ khi tài khoản mặc định không khai nhóm riêng (rơi về nhóm cấp ngoài).
