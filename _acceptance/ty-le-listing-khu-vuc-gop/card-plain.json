@@ -1,0 +1,2 @@
+{"feature_plain":"Trên thẻ hiệu chuẩn của tỉnh gộp nhiều thị trường S02 (như TP.HCM, Cần Thơ), tỉ lệ «Listing» nay bằng đúng tỉ lệ ở bảng Độ phủ trung thực; ô S02 hiện tổng mọi thị trường, kèm một câu chú thích.",
+"analyst_plain":"Các phép kiểm mới cũng xanh khi chạy trên bản cũ vì bản cũ chưa có tệp kiểm này — chiều đỏ đã được chứng riêng: test mới đỏ trên bản cũ (0/3 qua) và phép đo dữ liệu thật báo lệch TP.HCM khi tạm đưa thẻ về cách tính cũ."}
