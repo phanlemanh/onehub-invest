@@ -1,19 +1,30 @@
 "use client"
 
 import Link from "next/link"
-import { MapIcon } from "lucide-react"
+import { DatabaseIcon, MapIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { Badge } from "@/components/reui/badge"
 import { Frame, FramePanel } from "@/components/reui/frame"
+import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { fmtInt, fmtMoney, fmtPct } from "@/lib/format"
 import type { FinderRow } from "@/lib/queries"
 
+// Doanh thu luôn là chàm (onehub-ui/data-color.md); nền tối lùi một bậc sáng hơn như chuỗi `revenue`
+// của charts/palette.ts (sáng 500 · tối 400). Cặp sáng/tối viết trong CÙNG một chuỗi.
 const GRADIENTS = [
-  "from-indigo-400 via-indigo-500 to-indigo-600",
-  "from-indigo-500 via-indigo-600 to-indigo-700",
-  "from-indigo-600 via-indigo-700 to-indigo-800",
-  "from-indigo-700 via-indigo-800 to-indigo-950",
+  "from-indigo-400 via-indigo-500 to-indigo-600 dark:from-indigo-300 dark:via-indigo-400 dark:to-indigo-500",
+  "from-indigo-500 via-indigo-600 to-indigo-700 dark:from-indigo-400 dark:via-indigo-500 dark:to-indigo-600",
+  "from-indigo-600 via-indigo-700 to-indigo-800 dark:from-indigo-500 dark:via-indigo-600 dark:to-indigo-700",
+  "from-indigo-700 via-indigo-800 to-indigo-950 dark:from-indigo-600 dark:via-indigo-700 dark:to-indigo-900",
 ] as const
 
 /**
@@ -41,6 +52,7 @@ export type MarketCard = FinderRow & { currency: string }
 /** Thị trường nổi bật — chuyển thể CardGrid/CardItem của @reui/card-29. */
 export function MarketCards({ markets }: { markets: MarketCard[] }) {
   const total = markets.length
+  if (total === 0) return <MarketCardsEmpty />
   return (
     <div className="@container w-full">
       <Frame className="w-full">
@@ -79,5 +91,25 @@ export function MarketCards({ markets }: { markets: MarketCard[] }) {
         </FramePanel>
       </Frame>
     </div>
+  )
+}
+
+/** Chưa thị trường nào có số (kho mới, hoặc lượt thu đầu chưa xong) — một hành động: đọc cách thu số. */
+function MarketCardsEmpty() {
+  return (
+    <Empty className="border py-16">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <DatabaseIcon aria-hidden="true" />
+        </EmptyMedia>
+        <EmptyTitle>Chưa có thị trường nào có số</EmptyTitle>
+        <EmptyDescription>Lịch đặt phòng đang được thu thập; thị trường sẽ hiện ở đây khi có số.</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/methodology#nguon" />}>
+          Cách thu thập số liệu
+        </Button>
+      </EmptyContent>
+    </Empty>
   )
 }

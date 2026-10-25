@@ -1,0 +1,33 @@
+{"ts":"2026-10-24T23:25:54Z","round":1,"evalId":"E1","run_id":"hook-zalo-spool-E1-20261024T232554Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:26:01Z","round":1,"evalId":"E2","run_id":"hook-zalo-spool-E2-20261024T232601Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:26:06Z","round":1,"evalId":"E3","run_id":"hook-zalo-spool-E3-20261024T232606Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:26:16Z","round":1,"evalId":"E4","run_id":"hook-zalo-spool-E4-20261024T232615Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"}
+{"ts":"2026-10-24T23:26:37Z","round":1,"evalId":"E5","run_id":"hook-zalo-spool-E5-20261024T232621Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs hang-stop"}
+{"ts":"2026-10-24T23:26:44Z","round":1,"evalId":"E6","run_id":"hook-zalo-spool-E6-20261024T232644Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs cap-50"}
+{"ts":"2026-10-24T23:26:54Z","round":1,"evalId":"E7","run_id":"hook-zalo-spool-E7-20261024T232649Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs kev-hang"}
+{"ts":"2026-10-24T23:26:59Z","round":1,"evalId":"E8","run_id":"hook-zalo-spool-E8-20261024T232659Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs self-contained"}
+{"ts":"2026-10-24T23:27:05Z","round":1,"evalId":"E9","run_id":"hook-zalo-spool-E9-20261024T232705Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs l1-grep"}
+{"ts":"2026-10-24T23:28:17Z","round":1,"evalId":"E10","run_id":"hook-zalo-spool-E10-20261024T232731Z","exit_code":1,"cmd":"cd collector && npm test"}
+{"ts":"2026-10-24T23:33:32Z","round":2,"evalId":"E1","run_id":"hook-zalo-spool-E1-r2-20261024T233332Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:33:38Z","round":2,"evalId":"E2","run_id":"hook-zalo-spool-E2-r2-20261024T233338Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:33:43Z","round":2,"evalId":"E3","run_id":"hook-zalo-spool-E3-r2-20261024T233343Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:33:48Z","round":2,"evalId":"E4","run_id":"hook-zalo-spool-E4-r2-20261024T233348Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"}
+{"ts":"2026-10-24T23:34:09Z","round":2,"evalId":"E5","run_id":"hook-zalo-spool-E5-r2-20261024T233353Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs hang-stop"}
+{"ts":"2026-10-24T23:34:14Z","round":2,"evalId":"E6","run_id":"hook-zalo-spool-E6-r2-20261024T233414Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs cap-50"}
+{"ts":"2026-10-24T23:34:24Z","round":2,"evalId":"E7","run_id":"hook-zalo-spool-E7-r2-20261024T233419Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs kev-hang"}
+{"ts":"2026-10-24T23:34:31Z","round":2,"evalId":"E8","run_id":"hook-zalo-spool-E8-r2-20261024T233431Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs self-contained"}
+{"ts":"2026-10-24T23:34:33Z","round":2,"evalId":"E9","run_id":"hook-zalo-spool-E9-r2-20261024T233433Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs l1-grep"}
+{"ts":"2026-10-24T23:35:25Z","round":2,"evalId":"E10","run_id":"hook-zalo-spool-E10-r2-20261024T233440Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}
+{"ts":"2026-10-24T23:38:44Z","round":3,"evalId":"E1","run_id":"hook-zalo-spool-E1-r3-20261024T233844Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:38:49Z","round":3,"evalId":"E2","run_id":"hook-zalo-spool-E2-r3-20261024T233849Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:38:54Z","round":3,"evalId":"E3","run_id":"hook-zalo-spool-E3-r3-20261024T233854Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs spool-replay"}
+{"ts":"2026-10-24T23:39:00Z","round":3,"evalId":"E4","run_id":"hook-zalo-spool-E4-r3-20261024T233859Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"}
+{"ts":"2026-10-24T23:39:21Z","round":3,"evalId":"E5","run_id":"hook-zalo-spool-E5-r3-20261024T233904Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs hang-stop"}
+{"ts":"2026-10-24T23:39:26Z","round":3,"evalId":"E6","run_id":"hook-zalo-spool-E6-r3-20261024T233926Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs cap-50"}
+{"ts":"2026-10-24T23:39:36Z","round":3,"evalId":"E7","run_id":"hook-zalo-spool-E7-r3-20261024T233931Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs kev-hang"}
+{"ts":"2026-10-24T23:39:42Z","round":3,"evalId":"E8","run_id":"hook-zalo-spool-E8-r3-20261024T233942Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs self-contained"}
+{"ts":"2026-10-24T23:39:47Z","round":3,"evalId":"E9","run_id":"hook-zalo-spool-E9-r3-20261024T233947Z","exit_code":0,"cmd":"node scripts/hook-zalo-spool/acceptance.mjs l1-grep"}
+{"ts":"2026-10-24T23:40:38Z","round":3,"evalId":"E10","run_id":"hook-zalo-spool-E10-r3-20261024T233952Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}
+{"ts":"2026-10-25T00:35:23Z","kind":"repin-do","lan_id":"repin-20261025T003340Z-90416","sha":"3b34af16e0b410121ecc12d0012a0505fd146baf","suites_exit":[0,2,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0},"lenh_do":[{"cmd":"cd app && npx tsc --noEmit && npm run lint","exit":2,"log":".acceptance-runs/hook-zalo-spool/repin-20261025T003340Z-90416/01-suite-2-6.log"}],"cham":[],"wall_s":102.8,"so_lenh":14,"tong_ket":{"ket_cuc":"do","phut":1.7,"so_lenh":14,"model_goi":0,"model_carry":0,"chap_chon":0},"tai":{"load1":5.35,"load5":6.3,"ncpu":18,"mem_free_mb":5402,"swap_used_mb":285,"nen":null}}
+{"ts":"2026-10-25T00:37:32Z","kind":"repin","run_id":"repin-20261025T003551Z-82841","sha":"3b34af16e0b410121ecc12d0012a0505fd146baf","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0},"wall_s":100.6,"so_lenh":14,"tong_ket":{"ket_cuc":"xanh","phut":1.7,"so_lenh":14,"model_goi":0,"model_carry":0,"chap_chon":0}}
+{"ts":"2026-10-25T00:48:41Z","kind":"repin","run_id":"repin-20261025T004657Z-58384","sha":"067d81a57bf3e34898d715cad489997c08cb9e41","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0,"E9":0,"E10":0},"wall_s":104.2,"so_lenh":14,"tong_ket":{"ket_cuc":"xanh","phut":1.7,"so_lenh":14,"model_goi":0,"model_carry":0,"chap_chon":0}}

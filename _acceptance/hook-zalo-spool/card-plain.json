@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Khi collector tạm chết hay khởi động lại, hook Zalo giữ tin trong hàng đợi trên máy rồi gửi lại ở lượt sau, nên tin không còn mất ở nguồn; collector treo hay Kev treo cũng không làm gateway chờ quá lâu.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:"
+}

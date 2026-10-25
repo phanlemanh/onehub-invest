@@ -35,10 +35,10 @@ export function DqChecksTable({ rows, areaNames = {} }: { rows: DqCheckRow[]; ar
         accessorFn: (r) => dqCheckName(r.check_name).text,
         header: ({ column }) => <DataGridColumnHeader title="Kiểm" column={column} />,
         cell: ({ row }) => <DqCell t={dqCheckName(row.original.check_name)} />,
-        size: 200,
+        // ON13: Kiểm 150 + Kết quả 160 ≤ khung 316px ở 390px; 160 đủ cho nhãn dài nhất «Thiếu số tham chiếu».
+        size: 150,
         enableSorting: true,
       },
-      { id: "entity", accessorFn: (r) => dqEntityLabel(r.entity, names).text, header: "Đối tượng", cell: ({ row }) => <DqCell t={dqEntityLabel(row.original.entity, names)} />, size: 160 },
       {
         id: "status",
         accessorKey: "status",
@@ -48,9 +48,10 @@ export function DqChecksTable({ rows, areaNames = {} }: { rows: DqCheckRow[]; ar
           const r = dqResult(row.original.check_name, row.original.status)
           return <Badge variant={r.variant}>{r.label}</Badge>
         },
-        size: 120,
+        size: 160,
         enableSorting: true,
       },
+      { id: "entity", accessorFn: (r) => dqEntityLabel(r.entity, names).text, header: "Đối tượng", cell: ({ row }) => <DqCell t={dqEntityLabel(row.original.entity, names)} />, size: 160 },
       {
         id: "detail",
         accessorKey: "detail",

@@ -46,6 +46,7 @@ executors:
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
+    ops_mobile_smoke: "node scripts/smoke-ops-mobile.mjs"   # ON13: cột trạng thái 6 bảng Ops ở 390px/1280px trên app chạy thật (Chromium không giao diện, playwright-core); cần DB local
     listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
@@ -154,6 +155,11 @@ executors:
     compare_saved_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-compare-saved.mjs"
     compare_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/compare/comparison.tsx"
     saved_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/saved/saved-list.tsx"
+    # trang-chu-methodology (UI2) — / + /methodology (301 từ /phuong-phap); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
+    trang_chu_methodology_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-trang-chu-methodology.mjs"
+    trang_chu_loi_db_smoke: "cd app && npx next build && cd .. && node scripts/smoke-trang-chu-loi-db.mjs"   # bản build + next start ở cổng trống (hoặc SMOKE_PORT) với DATABASE_URL trỏ cổng chết; trang lỗi đo bằng trình duyệt thật (playwright-cli); đối chứng dương ở dev :3460
+    methodology_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
+    app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
     # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
     dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
     # deals-loai-tin-phi-ly (ON11) — đo Căn giá tốt trên DB local :5433 trong BEGIN…ROLLBACK (cần tsx của app)
@@ -177,6 +183,14 @@ executors:
     kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
+    # hook-zalo-spool (ZC6, T3) — handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
+    zc6_spool_replay: "node scripts/hook-zalo-spool/acceptance.mjs spool-replay"
+    zc6_reject_4xx: "node scripts/hook-zalo-spool/acceptance.mjs reject-4xx"
+    zc6_hang_stop: "node scripts/hook-zalo-spool/acceptance.mjs hang-stop"
+    zc6_cap_50: "node scripts/hook-zalo-spool/acceptance.mjs cap-50"
+    zc6_kev_hang: "node scripts/hook-zalo-spool/acceptance.mjs kev-hang"
+    zc6_self_contained: "node scripts/hook-zalo-spool/acceptance.mjs self-contained"
+    zc6_l1_grep: "node scripts/hook-zalo-spool/acceptance.mjs l1-grep"
     # watchdog-l4b-cuoi-ngay (ZC3 nối tiếp) — scan_new_lines trích nguyên văn + watchdog bản chép, HOME giả, stub launchctl/pkill (luật 8)
     zc3b_scan: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs scan"
     zc3b_rotate: "node scripts/watchdog-l4b-cuoi-ngay/acceptance.mjs rotate"

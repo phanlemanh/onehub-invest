@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       // Đổi slug sang tiếng Anh (CONTEXT.md «Slug cũ»): 301 vĩnh viễn, query (?areas=…) đi theo.
       // `statusCode: 301` thay vì `permanent: true` (308) — link cũ và công cụ tìm kiếm hiểu 301.
       { source: "/so-sanh", destination: "/compare", statusCode: 301 },
+      { source: "/phuong-phap", destination: "/methodology", statusCode: 301 },
     ];
   },
   turbopack: {
