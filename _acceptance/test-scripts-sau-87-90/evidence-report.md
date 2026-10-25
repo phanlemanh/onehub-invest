@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 82f08b8fe0a09585b33b8cbe609ccdf161820dce
+verified_commit: 439f324f91f9560f0825bf7bebd7d6bc2cdccae3
 human_signoff:
 ---
 
@@ -183,3 +183,7 @@ E2/E4).
 
 Round 1: 7/7 eval đạt trên `82f08b8`. Baseline đỏ ở E1–E4. E5 xanh suông trên baseline, nhưng phép bỏ sleep giả cho
 103 giây nên eval phân biệt được. E6 không đo baseline, E7 là guard. «Ngoài hợp đồng» không có mục nào. PASS.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main e962e78 sau khi PR #98 xung đột
+run_id: repin-20261025T065908Z-19092
+sha: 439f324f91f9560f0825bf7bebd7d6bc2cdccae3 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
