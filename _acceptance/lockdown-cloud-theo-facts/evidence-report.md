@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b5ae62763bc48c2c28ea1c6cb2ecde228895db38
+verified_commit: 09d2cd2cbf0500006c61a3a0a7acbb8343430c1d
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -182,3 +182,7 @@ Round 2: mọi eval máy xanh (E1-E6, E8, E8b, E9) trên 66e2056; panel E7 giữ
 ### Re-pin lần 1 — 2026-10-25, do ghim lại sau gộp main (ON13 đổi thứ tự cột, PR #76–#82)
 run_id: repin-20261025T032149Z-15541
 sha: b5ae62763bc48c2c28ea1c6cb2ecde228895db38 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · diff chạm vật đo ngoài làn máy: E7, E9 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-7, AC-9
+
+### Re-pin lần 2 — 2026-10-25, do ghim lại sau gộp main (PR #84)
+run_id: repin-20261025T033221Z-12070
+sha: 09d2cd2cbf0500006c61a3a0a7acbb8343430c1d · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · AC không có chốt máy: AC-7, AC-9
