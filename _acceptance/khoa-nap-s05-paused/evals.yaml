@@ -1,0 +1,81 @@
+schema_version: 1
+feature_slug: khoa-nap-s05-paused
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.au3_lock
+    expected: "exit 0; 'LOCK PASS'; ca khoá PID chết ở cả hai tệp bọc: log 'gỡ khoá cũ của PID', nạp bình thường"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.au3_lock
+    expected: "exit 0; should-NOT-fire: khoá PID sống < 2 giờ → chờ, thoát khác 0, không nạp, khoá của người khác còn nguyên"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.au3_lock
+    expected: "exit 0; khoá > 2 giờ dù PID sống → gỡ và nạp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.kns_s05_gate
+    expected: "exit 0; 'S05-GATE PASS'; (a) paused → exit 0, log 'S05 paused — bỏ qua thu', should-NOT-fire 0 lời gọi mạng; (d) thiếu dòng S05 → như paused; DB tạm đã xoá"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.kns_s05_gate
+    expected: "exit 0; (b) active → should-NOT-fire không có dòng 'S05 paused', đi tới creds; (c) DB không tới → log 'coi như active', không coi là paused"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.kns_s05_unit
+    expected: "exit 0; s05-paused.test 2/2 (luật chỉ 'active' mới thu)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.au3_apify
+    expected: "exit 0; 'APIFY PASS'; ca e: collector giả thoát 1 → nạp đủ T1..T3, transform-fb + refresh chạy, thoát cuối 1, có một dòng log mã thu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.kns_au3_regress
+    expected: "exit 0; bốn dòng PASS: TS-FORMAT, APIFY, CHOTOT, LOCK"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; toàn bộ node --test scripts/*.test.mjs xanh, 0 fail (gồm job-exit apify-facebook-daily)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.kns_scope
+    expected: "exit 0; 'SCOPE OK' và 'SYNTAX OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.kns_lich_s05
+    expected: "exit 0; 'LICH-S05 PASS'; lịch đúng Ba + Sáu 06:00; should-NOT-fire không còn mốc hằng ngày; plist trần 100, cửa sổ ≥ 4 ngày"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.kns_lich_s05
+    expected: "exit 0; mặc định trần 100 + cửa sổ 4 ngày; should-NOT-fire không còn '12 hours'; trần rác/âm → 100"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.kns_lich_unit
+    expected: "exit 0; s05-b-lich.test 3/3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

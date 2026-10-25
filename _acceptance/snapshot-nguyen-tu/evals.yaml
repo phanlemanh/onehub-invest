@@ -1,0 +1,51 @@
+schema_version: 1
+feature_slug: snapshot-nguyen-tu
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.snt_dang_ghi
+    expected: "exit 0; 'DANG-GHI PASS'; should-NOT-fire: lúc đang ghi KHÔNG có thư mục tên thật, chỉ một '.<id>.partial', chưa manifest"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.snt_dang_ghi
+    expected: "exit 0; sau finalize chỉ còn thư mục tên thật trọn vẹn: manifest + items + media khớp sha256"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.snt_trung_ms
+    expected: "exit 0; 'TRUNG-MS PASS'; ba writer cùng ms (trước và sau finalize của A) ra ba id khác nhau, mỗi thư mục đúng item của nó, không còn '.partial'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.snt_ten_that_co_san
+    expected: "exit 0; 'TEN-THAT-CO-SAN PASS'; writer mới lấy hậu tố; should-NOT-fire thư mục cũ cùng tên không bị ghi vào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.snt_mo_coi
+    expected: "exit 0; dòng PASS của chế độ mo-coi: thiếu manifest < 30′ → dừng chuỗi, giữ state, thoát khác 0 (should-NOT-fire: KHÔNG coi là mồ côi, KHÔNG đẩy state khi chưa tới 30′); ≥ 30′ → log mồ côi, đi tiếp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.snt_mo_coi
+    expected: "exit 0; should-NOT-fire: thư mục '.<id>.partial' không được nạp, không đẩy state"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.kns_au3_regress
+    expected: "exit 0; bốn dòng PASS: TS-FORMAT, APIFY, CHOTOT, LOCK"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    expected: "exit 0; toàn bộ test collector xanh trên dist build lại sạch, gồm snapshot-nguyen-tu.test 3/3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
