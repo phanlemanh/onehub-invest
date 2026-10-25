@@ -5,7 +5,7 @@ slug: hook-spool-nghiem-ngat
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -57,3 +57,6 @@ Hạng T3 vì chạm `collector/openclaw/**` (an toàn Zalo).
 - Hợp đồng dựng SAU khi ZCode code xong (`gate1_skipped: true`), từ lời giao 2410-23 — có trước khi code. Phiên điều phối liên làn dựng hồ sơ, không viết code sản phẩm.
 - Harness `scripts/hook-spool-nghiem-ngat/acceptance.mjs`: cùng hộp cát với ZC6 (handler chép ra thư mục tạm, HOME giả, collector và Kev giả trên cổng ngẫu nhiên); collector giả thêm chế độ trả lời chậm và treo theo từng yêu cầu. Không chạm `~/.openclaw`, :9210, :8009, gateway hay launchctl.
 - Kiểm harness biết đỏ (trước verify): trên handler của `origin/main` đỏ ở auth-held, tam-thoi, budget, budget-env, held-then-hang; reject-perm xanh ở cả hai (hành vi 400/413/422 không đổi — đúng ý).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Khi collector trả 408/429, tin ở lại hàng đợi và lượt xả dừng, nhưng log không có dòng `spool-held` nêu mã — trái chú thích của hàm xả.
+  - Ngoài-2: Biến trần thời gian đặt rỗng, 0 hoặc âm làm hàng đợi không xả; đặt chữ thì mất trần. Biến hiện chưa được đặt ở đâu ngoài test.

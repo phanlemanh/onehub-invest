@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 303df76c41751100ef0e81ebe96500f54dbad81f
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: hook-spool-nghiem-ngat
