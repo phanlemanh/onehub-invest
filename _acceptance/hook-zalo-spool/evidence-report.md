@@ -8,7 +8,7 @@ verified_by: "feature-loop:cham-lenh (fresh-context verification subagent)"
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 83a1e969120d5b5271fc7ed9b4adaf2b96c6c15c
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: hook-zalo-spool

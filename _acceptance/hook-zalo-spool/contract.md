@@ -5,7 +5,7 @@ slug: hook-zalo-spool
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -55,3 +55,7 @@ Hạng T3 vì chạm `collector/openclaw/**` (an toàn Zalo). Source input: lờ
 - Kiểm harness biết đỏ (trước verify): trên bd51084 (vòng 2) đỏ ở spool-replay (khuôn log), reject-4xx, hang-stop, cap-50; trên handler của `origin/main` đỏ ở cả 6 chế độ chạy handler.
 - Vòng 1 BLOCKED: E10 vớt phải `collector/dist/test/kev-nhan-cung-hoa.test.js` do lượt build ZC1 trước đó để lại trong worktree (tsc không xoá test cũ). Vòng 2: E10 đổi sang `executors.script.collector_test_clean` (xoá dist trước khi build).
 - Vòng 2 BLOCKED: E10 khai sai khoá (`executors.test.…` thay vì `executors.script.collector_test_clean`); lệnh thật xanh 41/41. Vòng 3 sửa khoá.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-3: Tệp hàng đợi chứa chữ tin và người gửi có quyền đọc theo mặc định của máy (nằm trong home đã chặn tài khoản khác).
+  - Ngoài-4: Một tệp hàng đợi hỏng đúng kiểu JSON null làm ống ngừng giao tin tới khi có người xoá tệp; tin không mất.
+  - Ngoài-5: Sự kiện dị dạng từ gateway (nội dung không phải chữ, ảnh không phải danh sách, giờ hỏng) vẫn làm mất đúng tin đó; lỗi có sẵn trên main.
