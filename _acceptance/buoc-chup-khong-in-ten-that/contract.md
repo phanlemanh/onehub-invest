@@ -29,16 +29,17 @@ Source input: `_acceptance/buoc-chup-khong-in-ten-that/opportunity.md`.
   `playwright-cli` nó gọi chứa một tên trong danh sách.
 - AC-2: Given trang còn hiện một tên tầng A trong chữ hoặc trong một thuộc tính (ngoài `<script>`/`<style>`), When bước che
   chạy xong, Then bước chụp thoát mã 5, lời chỉ nêu số tên còn lộ, và không lệnh chụp ảnh nào được gọi.
-- AC-3: Given một tên chỉ nằm trong phần tử `[data-tier-a]`, When bước che chạy, Then phần tử ấy được che, bước chụp không
-  báo lộ và ảnh được ghi.
+- AC-3: Given một tên chỉ nằm trong phần tử `[data-tier-a]` (trong chữ và trong thuộc tính `title` của nó), When bước che
+  chạy, Then phần tử ấy được che, bước chụp không báo lộ và ảnh được ghi.
 - AC-4: Given một lệnh con của bước chụp lỗi (mở trang, nạp phiên, eval che, eval đọc chữ, đo bề rộng, chụp), When lỗi xảy
   ra, Then bước chụp thoát mã 7 với lời «bước chụp lỗi ở «<bước>»», không ảnh, và toàn bộ stdout + stderr không chứa tên
-  tầng A, mật khẩu hay giá trị cookie phiên nào — kể cả khi stderr của lệnh con lặp lại tên.
+  tầng A, mật khẩu hay giá trị cookie phiên nào — kể cả khi stderr của lệnh con lặp lại tên. Kết quả eval đọc chữ không đọc
+  được (thiếu khối kết quả, không parse được) cũng là lỗi bước «eval đọc chữ» → mã 7, không bao giờ là «không lộ».
 - AC-5: Given bước chụp kết thúc ở bất kỳ đường nào (thành công, lộ tầng A, lệnh con lỗi, nguồn danh sách tên lỗi), When
   tiến trình trả mã, Then không còn tệp tạm nào chứa danh sách tên hay phiên đăng nhập.
-- AC-6: Given trình duyệt thật (playwright-cli) và một trang `/ops/x` có tên giả trong chữ, trong thuộc tính, và trong
-  `[data-tier-a]`, When chạy bước chụp với danh sách tên qua `UI_CAPTURE_NAMES_FILE`, Then tên trong chữ/thuộc tính → mã 5
-  không ảnh; chỉ tên trong `[data-tier-a]` → mã 0 có ảnh; danh sách rỗng → mã 0 có ảnh.
+- AC-6: Given trình duyệt thật (playwright-cli) và một trang `/ops/x` có tên giả (có dấu, hoa-thường lẫn, có nháy) trong
+  chữ, trong thuộc tính, hoặc chỉ trong `[data-tier-a]`, When gọi bước chụp với nguồn tên tiêm qua tham số (không biến môi
+  trường nào đổi nguồn tên), Then tên trong chữ/thuộc tính → mã 5 không ảnh; chỉ trong `[data-tier-a]` → mã 0 có ảnh.
 - AC-7: Given các ca UC-AC-9/UC-AC-10 của ON10 (đăng nhập, phiên hỏng, chế độ, dòng bề rộng), When chạy lại, Then vẫn xanh.
 
 ## Coverage
@@ -50,7 +51,7 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Trục C — trạng thái trang: lộ trong chữ · lộ trong thuộc tính · chỉ trong `[data-tier-a]` · không tên → AC-2, AC-3, AC-6
 - Trục D — hồi quy ON10 → AC-7
 - Later: kiểm ảnh đã ghi ra tệp; giới hạn origin của đăng nhập.
-- Never: gửi danh sách tên vào trang hay qua argv.
+- Never: gửi danh sách tên vào trang hay qua argv; biến môi trường đổi nguồn danh sách tên.
 
 ## Out of scope
 

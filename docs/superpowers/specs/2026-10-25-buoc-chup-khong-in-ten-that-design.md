@@ -16,25 +16,28 @@ tầng A, không rời máy local); kho đã công khai (`repo-public`).
 
 ## Cách làm
 
-1. **Tên thật không rời tiến trình Node.** Bước che chỉ chạy `mask-tier-a.js` với danh sách rỗng (che mọi phần tử
-   `[data-tier-a]`), rồi một lệnh `eval` khác trả về chữ hiển thị (`document.body.innerText`) và giá trị thuộc tính của
-   trang (bỏ `<script>`/`<style>`, cùng quy ước của `mask-tier-a.js`). Node so tên với chữ ấy bằng hàm thuần
-   `tierALeaks(names, page) → { leaked: số, attrLeaked: số }` (không phân biệt hoa thường, tên ≥ 3 ký tự). Còn lộ → thoát 5,
-   lời chỉ có SỐ tên, không ảnh.
+1. **Tên thật không rời tiến trình Node.** Bước che chỉ chạy `mask-tier-a.js` với danh sách rỗng — nó thay chữ trong mọi
+   phần tử `[data-tier-a]` bằng `█` nhưng GIỮ thuộc tính của chúng — rồi một lệnh `eval` khác trả về chữ hiển thị và giá trị
+   thuộc tính của trang, **bỏ trọn cây con `[data-tier-a]`** (chữ lẫn thuộc tính: phần ấy đã được che, tooltip không lên
+   ảnh) và bỏ `<script>`/`<style>`. Node so tên bằng hàm thuần `tierALeaks(names, page) → { leaked, attrLeaked }` (không
+   phân biệt hoa thường, tên ≥ 3 ký tự). Còn lộ → thoát 5, lời chỉ có SỐ tên, không ảnh. Kết quả eval đọc chữ không có khối
+   «### Result» hoặc không parse được → coi là lỗi bước (mã 7), không bao giờ coi là «không lộ».
 2. **Mọi lệnh con đi qua một lớp bọc.** `step(name, args)` gọi `run(args)`; lỗi → ném `CaptureError` mang tên bước và mã
    thoát, lời ra ngoài là «bước chụp lỗi ở «<bước>» (mã <n>)» cộng tối đa một dòng stderr của playwright-cli đã **xoá tên
    thật** (thay bằng `███`) và không có argv. `capture()` bắt lỗi ấy → thoát 7, không ảnh.
 3. **Tệp tạm của danh sách tên luôn bị xoá**, cả khi `tier-a-names.mjs` lỗi hay lệnh con lỗi (dọn trong `finally`).
-4. **Nguồn danh sách tên cho phép đo thật:** biến `UI_CAPTURE_NAMES_FILE=<tệp json>` thay danh sách lấy từ DB local (để
-   chứng trên trình duyệt thật mà không cần tên thật). Vắng → như cũ (`tier-a-names.mjs`).
+4. **Không có biến môi trường nào đổi nguồn danh sách tên** trên đường chạy thật (phản biện S1: một biến như vậy là lối vòng
+   qua rào tầng A — danh sách rỗng thì không so gì mà vẫn ghi ảnh). Phép đo trình duyệt thật gọi thẳng `capture()` và tiêm
+   nguồn tên qua tham số `tierANames`.
 
 ## Phép đo
 
 - `scripts/ui-capture-login.test.mjs` (máy chủ giả + runner giả): argv của mọi lệnh con không chứa tên nào; tên còn trong
   chữ/thuộc tính trang → mã 5; lỗi lệnh con ở từng bước → mã 7, đầu ra không chứa tên/mật khẩu/cookie; tệp tạm bị xoá.
 - `scripts/ui-capture-browser.test.mjs` (trình duyệt THẬT qua playwright-cli, máy chủ `node:http` phục vụ `/login` +
-  `/ops/x` có tên giả trong chữ và trong thuộc tính): tên lộ → mã 5 không ảnh; tên trong `[data-tier-a]` → được che, có
-  ảnh; danh sách rỗng → có ảnh. Không cần DB, không cần app.
+  `/ops/x`; gọi `capture()` với runner thật và nguồn tên tiêm, dùng đúng bộ 3 tên giả của UC-TA-1 — có dấu, hoa-thường
+  lẫn, có nháy): tên lộ trong chữ hay thuộc tính → mã 5 không ảnh; tên chỉ trong `[data-tier-a]` (chữ + `title`) → được
+  che, có ảnh. Không cần DB, không cần app.
 
 ## Không làm
 
