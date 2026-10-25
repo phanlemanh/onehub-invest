@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5cae57fe8c2352480b7ee25eca5361af12ed9bf0
+verified_commit: 0477f69ccf36e74404d541eb4428962bf530c1fd
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -361,3 +361,7 @@ Round 2: 11/11 eval xanh trên `5cae57f` (ZCode `903fc80` + main). R1 đã sửa
 khớp chuỗi con, rồi chạy lại riêng (r2b): đỏ trên baseline, xanh trên HEAD. TS_RE nhận 6/9 chữ số và `-n`
 (E10), khoá state chung (E11). PASS nhưng không xanh-sạch: «Ngoài hợp đồng» có một ca mất dữ liệu lặng lẽ
 mức high (snapshot đang tải media), chờ Mạnh quyết mở hợp đồng mới hay ghi nhận.
+
+### Re-pin lần 1 — 2026-10-25, do gộp origin/main 7381e9a (sau #88)
+run_id: repin-20261025T051209Z-37560
+sha: 0477f69ccf36e74404d541eb4428962bf530c1fd · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
