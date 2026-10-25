@@ -52,3 +52,45 @@ wall: 368s
 - **claude-opus-5-5**: 3 agent · 59 calls · out 35,198 · in 118 · cache_read 3,164,596 · cache_create 230,092
 - **claude-haiku-5-5**: 12 agent · 24 calls · out 15,697 · in 48 · cache_read 238,857 · cache_create 219,323
 
+### S4 round 2 — wf_0ebeff75-54e (19 agent, 55,776 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| synthesize:report | claude-sonnet-5-5 | 9 | 14,795 | 18 | 442,241 | 101 |
+| review:conventions | claude-opus-5-5 | 13 | 7,811 | 26 | 496,604 | 106 |
+| review:bugs | claude-opus-5-5 | 17 | 7,724 | 34 | 822,047 | 124 |
+| review:measurement | claude-opus-5-5 | 7 | 5,261 | 14 | 241,170 | 70 |
+| baseline:diffBase | claude-sonnet-5-5 | 2 | 3,719 | 4 | 19,982 | 24 |
+| judge:E15:domain-correctness | claude-sonnet-5-5 | 3 | 2,346 | 8 | 56,909 | 19 |
+| triage | claude-sonnet-5-5 | 2 | 2,269 | 4 | 19,307 | 18 |
+| refute:evals.yaml | claude-sonnet-5-5 | 6 | 2,049 | 12 | 120,068 | 25 |
+| judge:E15:spec-alignment | claude-sonnet-5-5 | 3 | 2,036 | 6 | 44,747 | 15 |
+| judge:E15:operational-feasibility | claude-sonnet-5-5 | 2 | 1,503 | 4 | 20,460 | 13 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 1,089 | 4 | 20,097 | 12 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 747 | 4 | 20,078 | 14 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 718 | 4 | 20,074 | 7 |
+| machine:cd app && npx next build && cd .. && nod | claude-haiku-5-5 | 2 | 698 | 4 | 20,111 | 31 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 666 | 4 | 20,092 | 6 |
+| machine:BASE_URL=${BASE_URL:-http://localhost:34 | claude-haiku-5-5 | 2 | 662 | 4 | 20,128 | 6 |
+| capture:provenance | claude-sonnet-5-5 | 3 | 598 | 6 | 34,662 | 9 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 577 | 4 | 17,015 | 19 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 508 | 4 | 20,086 | 5 |
+
+
+wall: 287s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| baseline | 1 | 3,719 | 19,982 | 24 | 00:02:10 | 00:02:34 |
+| machine | 8 | 5,665 | 157,681 | 72 | 00:02:10 | 00:03:22 |
+| judge | 3 | 5,885 | 122,116 | 19 | 00:02:10 | 00:02:29 |
+| review | 3 | 20,796 | 1,559,821 | 126 | 00:02:10 | 00:04:16 |
+| triage | 1 | 2,269 | 19,307 | 18 | 00:04:18 | 00:04:37 |
+| refute | 1 | 2,049 | 120,068 | 25 | 00:04:39 | 00:05:03 |
+| capture | 1 | 598 | 34,662 | 9 | 00:05:05 | 00:05:14 |
+| synthesize | 1 | 14,795 | 442,241 | 101 | 00:05:16 | 00:06:57 |
+
+- **claude-sonnet-5-5**: 8 agent · 30 calls · out 29,315 · in 62 · cache_read 758,376 · cache_create 285,342
+- **claude-opus-5-5**: 3 agent · 37 calls · out 20,796 · in 74 · cache_read 1,559,821 · cache_create 176,298
+- **claude-haiku-5-5**: 8 agent · 16 calls · out 5,665 · in 32 · cache_read 157,681 · cache_create 148,769
+
