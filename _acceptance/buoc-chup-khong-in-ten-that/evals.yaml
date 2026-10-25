@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: buoc-chup-khong-in-ten-that
+# Ca «UC-TA-n» ở scripts/ui-capture-login.test.mjs (máy chủ giả + runner giả ghi lệnh) và «UC-BR-n» ở
+# scripts/ui-capture-browser.test.mjs (trình duyệt thật qua playwright-cli, máy chủ node:http, không DB, không app).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ui_capture_login
+    paths: [scripts/ui-capture-login.mjs, scripts/ui-capture-login.test.mjs]
+    expected: "exit 0; ca 'UC-TA-1 không tên trong argv': danh sách 3 tên giả viết trước (một tên có dấu, một tên hoa-thường lẫn, một tên chứa dấu nháy), chạy capture /ops/x với runner giả ghi mọi lệnh → không đối số nào chứa một tên (so không phân biệt hoa thường); chiều đỏ: bản cũ (nhúng tên vào eval) trên cùng fixture → assert bắt đúng lệnh eval chứa tên, thông điệp ghim 'tên tầng A trong argv của eval'"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ui_capture_login
+    paths: [scripts/ui-capture-login.mjs, scripts/ui-capture-login.test.mjs]
+    expected: "exit 0; ca 'UC-TA-2 lộ thì mã 5': ma trận viết trước tierALeaks 6 dòng (tên trong chữ → lộ 1; trong thuộc tính → attr 1; hoa-thường khác → vẫn lộ; tên 2 ký tự → bỏ qua; không tên → 0; chỉ trong script → 0); capture với trang trả chữ có tên → mã 5, lời có số tên và không có tên, không lệnh screenshot; chiều đỏ: trang trả chữ sạch → mã 0 có screenshot"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ui_capture_browser
+    paths: [scripts/ui-capture-login.mjs, scripts/ui-capture-browser.test.mjs]
+    expected: "exit 0; ca 'UC-BR-3 data-tier-a được che' trên trình duyệt thật: trang /ops/x chỉ có tên giả trong phần tử [data-tier-a] → mã 0, tệp ảnh tồn tại và lớn hơn 0 byte, dòng 'tầng A: đã che 1'"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ui_capture_login
+    paths: [scripts/ui-capture-login.mjs, scripts/ui-capture-login.test.mjs]
+    expected: "exit 0; ca 'UC-TA-4 lệnh con lỗi': ma trận viết trước 6 bước (goto, state-load, eval che, eval đọc chữ, eval bề rộng, screenshot) — runner giả ném lỗi kiểu execFileSync (message chứa argv, stderr chứa tên giả + mật khẩu + cookie) ở đúng bước ấy → mỗi dòng: mã 7, lời có 'bước chụp lỗi ở «<bước>»', stdout+stderr gộp không chứa tên/mật khẩu/cookie, không screenshot (trừ dòng screenshot); chiều đỏ: bản không bọc lỗi trên cùng fixture → ngoại lệ thô lọt ra (assert bắt, thông điệp ghim 'lỗi thô lọt khỏi capture')"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ui_capture_login
+    paths: [scripts/ui-capture-login.mjs, scripts/ui-capture-login.test.mjs]
+    expected: "exit 0; ca 'UC-TA-5 dọn tệp tạm': với mỗi đường kết thúc (thành công; lộ → 5; lệnh con lỗi → 7; nguồn danh sách tên ném lỗi) đếm thư mục ui-capture-* trong tmpdir trước/sau bằng nhau và tệp danh sách tên mà nguồn ghi ra không còn; chiều đỏ: nguồn danh sách tên ghi tệp rồi ném lỗi mà capture không dọn → assert bắt"
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ui_capture_browser
+    paths: [scripts/ui-capture-login.mjs, scripts/ui-capture-browser.test.mjs]
+    expected: "exit 0; ca 'UC-BR-6' trên trình duyệt thật (playwright-cli, máy chủ node:http phục vụ /login khuôn server action + /ops/x): tên giả trong chữ → mã 5, không tệp ảnh; tên giả trong thuộc tính title → mã 5, không ảnh; danh sách rỗng qua UI_CAPTURE_NAMES_FILE → mã 0, có ảnh > 0 byte; stdout+stderr không chứa tên giả"
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.ui_capture_login
+    paths: [scripts/ui-capture-login.mjs, scripts/ui-capture-login.test.mjs]
+    expected: "exit 0; các ca 'UC-AC-9' và 'UC-AC-10' của ON10 vẫn có mặt (đếm đúng 10 ca mang hai tiền tố ấy) và xanh"
