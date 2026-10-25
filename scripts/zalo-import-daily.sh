@@ -15,8 +15,6 @@ export PATH="$HOME/.local/node-v24.21.0/bin:$PATH"
 export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest}"
 
 STATE="$ROOT/pipeline/logs/apify-daily.state"  # dùng chung state — không nạp lại
-LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
-MAXTS="$LAST"
 
 # Nạp 1 snapshot; ECONNREFUSED (DB container đang lên lại) thì retry
 # tối đa 5 lần cách 20s. Trả 0 khi đã vào stg.
@@ -36,8 +34,28 @@ import_one() {
   cat "$log"; rm -f "$log"; return 1
 }
 
+# Sort theo MỐC THỜI GIAN basename + khoá state chung với apify-facebook-daily
+# (mở lại 2310-8 R1/a — hai job cùng 00:00 đụng apify-daily.state)
+LOCK_DIR="$STATE.lock"
+i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+  i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }
+  sleep 5
+done
+trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
+LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
+MAXTS="$LAST"
 FAILED=0
-for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | sort); do
+# Chỉ nhận TS đúng dạng mốc thời gian yyyymmddThhmmss(Z) (BÁO 2410-2):
+# thư mục '…__zalo-agent__TEST' cho TS=TEST > mọi mốc 2026… → state nhảy,
+# mọi snapshot thật sau đó bị bỏ. Không khớp → bỏ thư mục + log.
+TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}(Z)?$'
+for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do
+    ts=$(basename "$d" | sed 's/.*__//')
+    if ! echo "$ts" | grep -qE "$TS_RE"; then
+      echo "bỏ qua thư mục TS không phải mốc thời gian: $d" >&2; continue
+    fi
+    echo "$ts $d"
+  done | sort | while read -r _ d; do echo "$d"; done); do
   TS=$(basename "$SNAP" | sed 's/.*__//')
   if [[ "$TS" > "$LAST" ]]; then
     if ! import_one "$SNAP"; then
