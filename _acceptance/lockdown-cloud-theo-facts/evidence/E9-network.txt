@@ -1,0 +1,11 @@
+# E9 network (playwright-cli) - /ops/collections, mode fresh, origin http://localhost:3461 (cong 3461: :3460 do worktree u1-compare-saved chiem)
+## requests
+### Result
+
+Note: 39 static requests not shown, run with --static option to see them.
+
+## console (error+)
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+Returning 0 messages for level "error"
+
