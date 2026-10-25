@@ -5,7 +5,7 @@ slug: luong-7-ngay-dung-so
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-luong-7-ngay-dung-so-design.md
@@ -89,3 +89,12 @@ có phép đo riêng ngoài AC-5 [CE chưa kiểm chứng: bảng `listings` tr�
 
 - Nhãn «Chỉ ở máy thu» thay chữ «chỉ local» của câu giao: «Máy thu» là nhãn chuẩn trong `CONTEXT.md` (code `local`).
 - Máy chủ chỉ nhận số đếm theo ngày cho mã S03 — không tên nguồn, không nội dung bài (ADR-0007, luật 6).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: khối số «luồng 7 ngày» và các tên nội bộ đi kèm đang viết tiếng Việt (`luong7`), trái luật đặt tên tiếng Anh; đổi về sau phải giữ song song tên cũ.
+  - Ngoài-2: một ngày hỏng khuôn trong bản tin làm cả trang Thu thập trên máy chủ báo lỗi thay vì hiện «—» ở bảng.
+  - Ngoài-3: smoke trình duyệt bỏ qua cấu hình máy chủ khi người chạy tự đặt địa chỉ app, kết quả đỏ với lý do khó hiểu.
+  - Ngoài-4: một dòng chú thích trong mã trang Thu thập còn nói bảng luồng 7 ngày không dựng trên máy chủ.
+  - Ngoài-5: (cùng gốc Ngoài-3) smoke chạy nhầm app không ở chế độ máy chủ khi có địa chỉ app tự đặt.
+  - Ngoài-6: phép đo ô «—» khi khối lỗi dùng khối lỗi viết tay, không lấy từ bên đẩy tin thật.
+  - Ngoài-7: phép đo «khối khác vẫn đi» khi luồng 7 ngày đo hỏng chỉ soi một khối khác.
+  - Ngoài-8: phép đo trang máy chủ dựng lại phần tải dữ liệu thay vì đi qua chính trang; chỉ smoke trình duyệt đi qua trang thật.
