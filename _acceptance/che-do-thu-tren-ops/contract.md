@@ -5,7 +5,7 @@ slug: che-do-thu-tren-ops
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api, script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T09:15:02Z
 design_doc: docs/superpowers/specs/2026-10-25-che-do-thu-tren-ops-design.md
@@ -92,3 +92,9 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Đổi quyền của các action cũ (`toggle`/`add`/`delete`) đang mở cho phiên ops.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Chú thích cũ của scripts/cloud-sync.sh ngụ ý chế độ thu lên cloud; đã sửa ở lượt S4-r1, chế độ thu chỉ nằm ở máy thu.
+  - Ngoài-2: Máy hạ chỉ coi hạn là hỏng khi sai khuôn ngày; một hạn ngày-không-có-thật hoặc quá 14 đêm ghi bằng đường khác trang Ops sẽ không bị hạ sớm.
+  - Ngoài-3: Bước hạ trong cloud-sync chưa được thử bằng chính tệp thật khi DB mất kết nối — chỉ thử thứ tự và mã thoát bằng bước giả.
+  - Ngoài-4: Việc token máy bị chặn ở set-mode được đo tại hàm datCheDo và bằng soát mã route, chưa có lời gọi POST thật bằng token máy.
