@@ -5,7 +5,7 @@ slug: yield-dong-tien-von-vay
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, config]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-yield-dong-tien-von-vay-design.md
@@ -83,3 +83,12 @@ Quét hình thái (preset entity-feature, chân sản phẩm: routes.md/CONTEXT.
 - Nhánh chồng trên nhánh UI2; khi UI2 vào main thì gộp main trước khi mở PR.
 - Bản gốc `@reui/data-grid-advanced-7` không qua `tsc` với data-grid đang cài (lệch kiểu `cellSelection`) — chỉ giữ bản chuyển
   thể ở `components/yield/financing/`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Smoke chưa thử ca một phường thuộc thị trường chưa có giá bán/thuê (dữ liệu hiện chưa có phường nào như vậy).
+  - Ngoài-2: Nút mở/gập mục của lưới vốn vay đọc tiếng Anh với trình đọc màn hình.
+  - Ngoài-3: Nhãn «Tiền mặt bỏ ra», «Dòng tiền / tiền mặt năm 1», «Lợi nhuận / tiền mặt bỏ ra» chưa có trong bảng thuật ngữ, lệch «Lợi suất vốn tự có».
+  - Ngoài-4: Tham số URL eq/rate/term viết tắt, chưa theo quy ước camelCase và chưa ghi vào bảng thuật ngữ.
+  - Ngoài-5: Một dòng `_acceptance/config.yaml` mất dấu cách sau dấu hai chấm — công cụ YAML chuẩn báo lỗi, công cụ của cổng vẫn đọc được.
+  - Ngoài-6: Sự kiện dau_tu_input giữ tên cũ nhưng nay ghi tỉ lệ (0,3) thay vì phần trăm (30), không có trường phiên bản.
+  - Ngoài-7: Mục /yield của bộ kiểm cổng tĩnh chỉ còn phép kiểm âm — tệp bị đổi tên/xoá vẫn ra ĐẠT.
+  - Ngoài-8: Smoke kiểm việc kẹp lãi suất/kỳ hạn chỉ bằng phép so bằng, không ghim đúng ngưỡng.

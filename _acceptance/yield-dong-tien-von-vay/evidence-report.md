@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b52fa1fc4beb34073e43250e228b48c30ea1403e
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: yield-dong-tien-von-vay
@@ -186,7 +186,7 @@ human_signoff:
   run_id: minted-yield-dong-tien-von-vay-E16-r2
   exit_code: 0
   baseline: n-a
-  verifier: ui-check:E16
+  verifier: config:executors.design.ui_check
   verified_at: 2026-10-25T01:45:59Z
   screenshot: evidence/E16-step1.png
   observed: |
@@ -197,7 +197,7 @@ human_signoff:
   run_id: minted-yield-dong-tien-von-vay-E17-r2
   exit_code: 0
   baseline: n-a
-  verifier: ui-check:E17
+  verifier: config:executors.design.ui_check
   verified_at: 2026-10-25T01:45:59Z
   screenshot: evidence/E17-step1.png
   observed: |
