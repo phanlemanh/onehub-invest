@@ -84,9 +84,10 @@ Bình Thạnh cho 19/20 offer có độ lệch giá; nhóm chung cư Hà Nội c
 | Ngưỡng 50/70 và 30/60 | hằng trong `pipeline/dq-scorecard.mjs` | Claude | Đổi số = một commit, không cần migration. |
 
 **Số migration**: vòng 1 **không cần migration**. Số cao nhất trên origin/main và mọi nhánh local + origin là `040`.
-`SO-MIGRATION` ghi `041` trống, nhưng sổ vòng mở 24/10 ghi ZC7 và bảng catalog S08 cùng có thể cần 041. Nếu sau một tháng đo
-mà cần bảng riêng (vd yield theo trường quá nhiều dòng cho `dq_check_results`), việc đó sẽ xin số kế tiếp **khi đó** qua phiên
-liên làn. Dự kiến là `042`, đang chờ phiên liên làn xác nhận; đây không phải số đã cấp.
+Sổ SO-MIGRATION (phiên liên làn xác nhận 25/10): `041` giữ chỗ có điều kiện cho ZC7 (tín hiệu lần thu), `042` giữ chỗ có
+điều kiện cho catalog S08 → stg. Số trống kế tiếp là `043`, chưa giữ cho ai. Việc này không giữ số. Nếu đo xong một tháng
+mà cần bảng riêng (vd yield theo trường quá nhiều dòng cho `dq_check_results`), xin số ở SO-MIGRATION lúc đó; sổ cấp theo
+thứ tự.
 
 ## 5. Checklist S05-B (bắt đầu 7/11)
 
