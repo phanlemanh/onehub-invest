@@ -226,7 +226,7 @@ test("UC-TA-2 tierALeaks ma trận viết trước", () => {
     [{ text: `có Ng'uồn "Kép" trong chữ`, attrs: [`Ng'uồn "Kép"`] }, { leaked: 1, attrLeaked: 1 }, "tên có nháy"],
   ];
   for (const [page, want, nhan] of ca) assert.deepEqual(tierALeaks(TEN, page), want, nhan);
-  assert.deepEqual(tierALeaks(["ab", "x("], { text: "ab x( y", attrs: [] }), { leaked: 1, attrLeaked: 0 }, "tên 2 ký tự bỏ qua, ký tự regex không vỡ");
+  assert.deepEqual(tierALeaks(["ab", "x(y"], { text: "ab x(y z", attrs: [] }), { leaked: 1, attrLeaked: 0 }, "tên 2 ký tự bỏ qua, ký tự regex không vỡ");
 });
 
 test("UC-TA-2 lộ trong chữ → mã 5, lời chỉ có số, không ảnh; chữ sạch → mã 0 có ảnh", async () => {
