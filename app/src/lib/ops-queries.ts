@@ -1,4 +1,5 @@
 import { pool } from "./db";
+import { logsDir } from "./log-root";
 import { shortAreaName } from "./market-names";
 import { bySource as freshnessBySource, readFreshness, type FreshnessRow, type FreshnessStatus, type QueryClient } from "./freshness";
 
@@ -188,7 +189,7 @@ const WATCHDOG_FRESH_MS = 15 * 60_000;
 
 /** Trạng thái 7 lớp lockdown Zalo + hạ tầng thu (H3-P2). Đọc watchdog log
  * (đã có cấu trúc) + check sống thực tại chỗ. null = không kiểm được — không bao giờ «Ổn» cho lớp không kiểm (ON2).
- * `root`/`agentLogDir`/`now` chỉ để phép đo trỏ thư mục tạm; mặc định suy từ cwd như collections-queries. */
+ * `root`/`agentLogDir`/`now` chỉ để phép đo trỏ thư mục tạm; `root` là gốc cây, log đọc theo gốc log (lib/log-root). */
 export async function getLockdownStatus(
   opts: { root?: string; agentLogDir?: string; now?: Date } = {},
 ): Promise<{
@@ -205,13 +206,13 @@ export async function getLockdownStatus(
   const promisify = (await import("node:util")).promisify;
   const run = promisify(execFile);
   const now = opts.now ?? new Date();
-  // Next chạy ở app/ — log nằm ở gốc kho (cùng cách suy ROOT với collections-queries), suy mỗi lần gọi.
-  const root = opts.root ?? (process.cwd().endsWith("/app") ? path.resolve(process.cwd(), "..") : process.cwd());
+  // ON16: log job ở checkout chính khi app chạy từ worktree (lib/log-root), suy mỗi lần gọi.
+  const logs = logsDir(opts.root);
 
   let lastWd: string | null = null;
   let wdFresh = false; // tệp vắng, dòng cuối không ok, hoặc ok cũ → watchdog không chứng được nó đang canh
   try {
-    const log = await readFile(path.join(root, "pipeline/logs/zalo-watchdog.log"), "utf8");
+    const log = await readFile(path.join(logs, "zalo-watchdog.log"), "utf8");
     const lines = log.trim().split("\n");
     const last = lines[lines.length - 1] ?? "";
     lastWd = last.slice(0, 25);

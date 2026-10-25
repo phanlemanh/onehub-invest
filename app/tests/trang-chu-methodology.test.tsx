@@ -77,9 +77,10 @@ function findOldSlug(files: string[]) {
       .forEach((l, i) => l.includes("/phuong-phap") && hits.push({ file: relative(ROOT, f), line: i + 1 }));
   return hits;
 }
-// Tệp ẩn (`.on3-mut-…`, `.on4-mut-…`) là bản đột biến tạm của test khác chạy song song — có thể biến mất giữa lúc quét.
 const walk = (dir: string): string[] =>
-  readdirSync(dir).filter((n) => !n.startsWith(".")).flatMap((n) => {
+  readdirSync(dir).flatMap((n) => {
+    // Tệp ẩn (`.on3-mut-…`) là bản đột biến tạm của test khác chạy song song — có thể biến mất giữa readdir và stat (ENOENT).
+    if (n.startsWith(".")) return [];
     const p = join(dir, n);
     if (statSync(p).isDirectory()) return n === "node_modules" ? [] : walk(p);
     return /\.(ts|tsx|mjs|sh)$/.test(n) ? [p] : [];
