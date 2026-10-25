@@ -5,7 +5,9 @@ slug: luong-7-ngay-dung-so
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-luong-7-ngay-dung-so-design.md
 lo_trinh_ma: ON5
 ---
@@ -75,7 +77,7 @@ có phép đo riêng ngoài AC-5 [CE chưa kiểm chứng: bảng `listings` tr�
 - «cột tin rao bằng số tin S03 của ngày đó, không lớn hơn số post» — `scripts/luong-7-ngay-do.mjs` trên DB local · AC-8.
 - «facts có 7 khoá ngày» — bên ghi thật ở chế độ khô · AC-3.
 - «cột thô trên cloud ghi «chỉ local»» — SSR trang máy chủ đọc bản tin bên ghi thật · AC-5; trình duyệt thật · AC-9.
-  «Cột thô» hiểu là «S01 — snapshot» theo khuyến nghị của Hỏi-1 (chờ Mạnh).
+  «Cột thô» là «S01 — snapshot» (Hỏi-1, Mạnh duyệt theo khuyến nghị ở Cổng Phạm vi 2026-10-25).
 
 ## Out of scope
 
