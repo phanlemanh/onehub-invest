@@ -241,6 +241,11 @@ executors:
     shutdown_periodic_hang: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs periodic-hang"   # ~37s
     shutdown_stalled_post: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-shutdown/acceptance.mjs stalled-post"
     shutdown_p3_repeat: "cd collector && rm -rf dist && npm run build && for i in 1 2 3 4 5 6 7 8 9 10; do node --test --test-name-pattern=P3 dist/test/graceful-shutdown-integration.test.js > /dev/null 2>&1 || { echo P3 đỏ ở lần $i; exit 1; }; echo P3 lần $i xanh; done && echo P3x10 PASS"   # ca tích hợp P3 chạy 10 lần liên tiếp — hết chập chờn (vòng 4)
+    # test-scripts-sau-87-90 — hai bộ test scripts/ (schema tạm của chính test trên :5433); đột biến chạy trên bản chép trong thư mục tạm
+    tsd_suites: "bash _acceptance/test-scripts-sau-87-90/probes/suites.sh \"$PWD\""
+    tsd_mut: "bash _acceptance/test-scripts-sau-87-90/probes/mut.sh \"$PWD\""
+    tsd_scope: "bash _acceptance/test-scripts-sau-87-90/probes/scope.sh \"$PWD\""
+    tsd_ac7: "bash _acceptance/test-scripts-sau-87-90/probes/ac7.sh \"$PWD\""
     # hook-spool-nghiem-ngat (2410-23, ZC6 nối tiếp, T3) — cùng hộp cát ZC6: handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
     hsn_auth_held: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"
     hsn_held_then_hang: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs held-then-hang"
