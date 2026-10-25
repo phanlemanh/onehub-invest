@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
-import { AirdnaMarketsTable, CalibrationTable, TruthfulCoverageTable } from "@/components/ops/quality-tables";
+import { AirdnaMarketsTable, CalibrationEmptyLine, CalibrationTable, TruthfulCoverageTable } from "@/components/ops/quality-tables";
 import { DqChecksTable } from "@/components/ops/quality/dq-checks-table";
 import { PageHeader } from "@/components/page/page-header";
 import { StatTiles } from "@/components/page/stat-tiles";
 import type { StatTile } from "@/components/page/tiers";
+import { splitCalibrated } from "@/lib/calibration";
 import { fmtInt } from "@/lib/format";
 import { dqSection, loadDqChecks } from "@/lib/dq-checks";
 import { getAreaNames, getRulerHealth } from "@/lib/ops-queries";
@@ -42,7 +43,8 @@ export default async function QualityPage() {
   ]);
   // ON7: chi tiết DQ là chữ do pipeline ghi — che tên nguồn thật (dòng cũ trong DB); không đọc được tên → ẩn (đóng chặt).
   const dq = dqSection(dqRaw, (d) => maskSourceNames(d, names));
-  const calibrated = comparisons.filter((c) => c.data !== null);
+  // ON10: thẻ chỉ cho thị trường có số; header đếm đúng số thẻ; thị trường còn lại gộp một dòng.
+  const cal = splitCalibrated(comparisons);
 
   const tiles: StatTile[] = [
     {
@@ -67,7 +69,7 @@ export default async function QualityPage() {
       <PageHeader
         crumbs={[{ label: "Vận hành", href: "/ops" }, { label: "Chất lượng dữ liệu" }]}
         title="Chất lượng dữ liệu"
-        stats={[...dq.stats.labels, `${fmtInt(calibrated.length)} thị trường hiệu chuẩn`]}
+        stats={[...dq.stats.labels, cal.label]}
         description={`Đối chiếu số tự thu với ${sourceLabel("S02", roles)} — chỉ nội bộ, không hiện cho nhà đầu tư.`}
       />
       {/* H3-P3: chất lượng thước P2 + phân bố tier (kiến trúc 3 tầng giá) */}
@@ -75,9 +77,10 @@ export default async function QualityPage() {
       {/* ON9: bản mới nhất của mỗi kiểm theo từng đối tượng (7 ngày) — chữ kiểm/đối tượng/chi tiết theo ON12 */}
       <DqChecksTable rows={dq.rows} areaNames={areaNames} />
       <TruthfulCoverageTable rows={truthful} roles={roles} />
-      {calibrated.map(({ market, data }) => (
-        <CalibrationTable key={market.id} marketName={shortAreaName(market.name)} data={data!} roles={roles} />
+      {cal.calibrated.map(({ market, data }) => (
+        <CalibrationTable key={market.id} marketName={shortAreaName(market.name)} data={data} roles={roles} />
       ))}
+      <CalibrationEmptyLine names={cal.empty} />
       <AirdnaMarketsTable rows={airdnaMarkets} roles={roles} areaNames={areaNames} />
     </div>
   );
