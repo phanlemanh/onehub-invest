@@ -66,7 +66,7 @@ before(async () => {
   await admin.connect()
   await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`)
   await admin.query(`CREATE SCHEMA "${S}"`)
-  for (const t of ["source_groups", "ops_audit"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
+  for (const t of ["source_groups", "ops_audit", "stg_zalo_posts"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
   await sc.connect()
 })
 after(async () => {
@@ -238,11 +238,14 @@ test("CD-AC-5 máy hạ bùng quá hạn / thiếu hạn; giữ hạn H; chạy 
   for (const x of a) {
     assert.equal(x.actor, "machine:ha-bung-het-han")
     assert.equal(x.action, "source-group:mode-auto")
-    assert.deepEqual(Object.keys(x.detail).sort(), ["burst_until", "from", "id", "ly_do", "source_code", "to"])
-    assert.equal(x.detail.from, "bung")
-    assert.equal(x.detail.to, "duy_tri")
   }
-  assert.equal(a.find((x) => x.detail.id === 21).detail.burst_until, H_1)
+  // Mỗi điểm bị hạ đúng MỘT dòng, detail ghép đúng điểm đó (không chỉ đủ khoá).
+  const theoId = [...a].map((x) => x.detail).sort((p, q) => p.id - q.id)
+  assert.deepEqual(theoId, [
+    { id: 21, source_code: "S06", from: "bung", to: "duy_tri", ly_do: "het-han", burst_until: H_1 },
+    { id: 23, source_code: "S06", from: "bung", to: "duy_tri", ly_do: "thieu-han", burst_until: null },
+    { id: 24, source_code: "S06", from: "bung", to: "duy_tri", ly_do: "thieu-han", burst_until: "abc" },
+  ])
 
   assert.deepEqual(await haBungHetHan(sc, { now: NOW }), [], "chạy lần hai phải không đổi gì")
   assert.equal(await nAudit(), 3)
@@ -282,12 +285,14 @@ test("CD-AC-5c CLI in đúng một dòng mỗi điểm hạ, chỉ mã nguồn +
 })
 
 // ------------------------------------------------------------ AC-7 (jsdom) --
-type Grp = { id: number; source_code: string; group_key: string; name: string; enabled: boolean; note: null; fb_posts: number; mode: string | null; burst_until: string | null; mode_since: string | null }
-const grp = (id: number, mode: string | null, burst_until: string | null = null): Grp => ({
-  id, source_code: "S06", group_key: `khoa-ui-${id}`, name: `Tên UI ${id}`, enabled: true, note: null, fb_posts: 0, mode, burst_until, mode_since: mode ? "2026-10-20" : null,
+/** Điểm UI viết trước trong DB (không phải hàng dựng tay): lưới đọc chúng qua docNhomThu — cùng câu SELECT của trang. */
+const diemUi = (id: number, mode: string | null, burst_until: string | null = null): Row => ({
+  id, source_code: "S06", group_key: `khoa-ui-${id}`, name: `Tên UI ${id}`,
+  params: { region_v2: 13000, ...(mode ? { mode, mode_since: "2026-10-20" } : {}), ...(burst_until ? { burst_until } : {}) },
 })
+const docLuoi = async () => (await lib()).docNhomThu(sc as never)
 
-async function render(rows: Grp[], fetchImpl: (body: Record<string, unknown>) => Promise<{ status: number; body: unknown }>) {
+async function render(rows: unknown[], fetchImpl: (body: Record<string, unknown>) => Promise<{ status: number; body: unknown }>) {
   const React = await import("react")
   Object.assign(globalThis, { React })
   const { act } = React
@@ -337,7 +342,8 @@ async function render(rows: Grp[], fetchImpl: (body: Record<string, unknown>) =>
 }
 
 test("CD-AC-7 cột Chế độ bốn trạng thái; hộp thoại Bùng: ô hạn H…H+13, Lưu khoá khi thiếu hạn, lỗi máy chủ hiện trong hộp", async () => {
-  const u = await render([grp(1, "cho"), grp(2, "bung", "2026-11-07"), grp(3, "duy_tri"), grp(4, null)], async () => ({ status: 400, body: { error: "hạn bùng đã qua" } }))
+  await seed([diemUi(1, "cho"), diemUi(2, "bung", "2026-11-07"), diemUi(3, "duy_tri"), diemUi(4, null)])
+  const u = await render(await docLuoi(), async () => ({ status: 400, body: { error: "hạn bùng đã qua" } }))
   const MONG: [number, string][] = [[1, "Chờ"], [2, "Bùng · đến 07/11"], [3, "Duy trì"], [4, "Chưa đặt"]]
   for (const [id, nhan] of MONG) assert.ok(u.row(id)?.textContent?.includes(nhan), `hàng ${id} thiếu «${nhan}»: ${u.row(id)?.textContent}`)
   await u.openFor(4)
@@ -358,14 +364,16 @@ test("CD-AC-7 cột Chế độ bốn trạng thái; hộp thoại Bùng: ô h�
   await u.press(u.save(), "nút Lưu")
   assert.ok(u.dialog()?.textContent?.includes("hạn bùng đã qua"), "lỗi máy chủ không hiện trong hộp")
   await u.unmount()
-  const sql = readFileSync(join(APP, "src/components/ops/sources/sources-content.tsx"), "utf8")
-  for (const k of ["mode", "burst_until", "mode_since"]) assert.match(sql, new RegExp(`params->>'${k}'`), `sources-content thiếu params->>'${k}'`)
+  // Trang đọc lưới qua đúng hàm mà phép đo dùng (không câu SELECT thứ hai).
+  const trang = readFileSync(join(APP, "src/components/ops/sources/sources-content.tsx"), "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")
+  assert.match(trang, /groupRows = await docNhomThu\(\)/, "sources-content không đọc lưới qua docNhomThu")
+  assert.doesNotMatch(trang, /FROM source_groups/, "sources-content còn câu SELECT source_groups riêng")
 })
 
 test("CD-AC-7b hộp thoại → datCheDo thật: thân request, params, Badge (cross-layer)", async () => {
   const { datCheDo } = await lib()
-  await seed([{ id: 9, source_code: "S06", group_key: "khoa-ui-9", name: "Tên UI 9", params: { region_v2: 13000 } }])
-  const u = await render([grp(9, null)], async (b) => datCheDo(b, asAdmin, { now: NOW }))
+  await seed([diemUi(9, null)])
+  const u = await render(await docLuoi(), async (b) => datCheDo(b, asAdmin, { now: NOW }))
   await u.openFor(9)
   await u.choose("Bùng")
   await u.typeDate(ngay(5))

@@ -3,6 +3,8 @@
 // Detail audit chỉ mang id + mã nguồn: group_key của S05 là URL nhóm (tầng A). Máy hạ ở pipeline/ha-bung-het-han.mjs.
 import type { Pool } from "pg"
 
+import type { GroupRow } from "@/components/ops/sources/source-groups"
+
 import type { User } from "./auth"
 import { homNayVN, kiemCheDo } from "./che-do-thu-luat"
 import { pool } from "./db"
@@ -11,6 +13,19 @@ import { isAdmin } from "./ops-access"
 export * from "./che-do-thu-luat"
 
 type Ket = { status: number; body: Record<string, unknown> }
+
+/** Các điểm thu cho lưới /ops/sources — MỘT câu đọc dùng chung cho trang (sources-content) và phép đo (che-do-thu.test):
+ *  chế độ, hạn bùng, ngày vào chế độ rút từ params; id bigserial ép số cho khớp thân set-mode. */
+export async function docNhomThu(db: Pick<Pool, "query"> = pool): Promise<GroupRow[]> {
+  const { rows } = await db.query<GroupRow>(
+    `SELECT g.id::int AS id, g.source_code, g.group_key, g.name, g.enabled, g.note,
+            g.params->>'mode' AS mode, g.params->>'burst_until' AS burst_until, g.params->>'mode_since' AS mode_since,
+            (SELECT count(*)::int FROM stg_zalo_posts z
+              WHERE z.agent_id = 'apify-facebook' AND z.group_name = g.name) AS fb_posts
+     FROM source_groups g ORDER BY g.source_code, g.id`,
+  )
+  return rows
+}
 
 export async function datCheDo(
   body: Record<string, unknown>,

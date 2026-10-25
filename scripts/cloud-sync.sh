@@ -8,8 +8,8 @@ export PATH="$NODE_BIN:$PATH"
 
 # Ba bước luôn chạy cả ba (push-ops-facts là nhịp tim cho /ops, không tắt khi sync hỏng);
 # mã thoát là mã hỏng ĐẦU TIÊN, mỗi bước hỏng in `JOB FAIL [cloud-sync] bước <nhãn> mã <n>` (AU13).
-# Bước đầu: máy hạ chế độ thu Bùng quá hạn → Duy trì kèm ops_audit (C7 che-do-thu-tren-ops) — chạy trước sync để
-# lượt đẩy lên cloud thấy chế độ mới.
+# Bước đầu: máy hạ chế độ thu Bùng quá hạn → Duy trì kèm ops_audit (C7 che-do-thu-tren-ops). Chỉ ghi DB local:
+# source_groups là tầng A, KHÔNG lên cloud — đứng đầu chỉ để lượt 15′ nào cũng hạ trước khi làm việc khác.
 . "$ROOT/scripts/lib/job-step.sh"
 job_run cloud-sync ha-bung-het-han node "$ROOT/pipeline/ha-bung-het-han.mjs"
 job_run cloud-sync sync-cloud node "$ROOT/pipeline/sync-cloud.mjs"
