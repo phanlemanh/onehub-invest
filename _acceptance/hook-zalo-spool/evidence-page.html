@@ -1,0 +1,176 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · hook-zalo-spool</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway</h1><div class="sub">Trang hồ sơ · <span class="mono">hook-zalo-spool</span> · tier T3</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">ZC6 — hook Zalo giữ tin trong hàng đợi cục bộ khi collector chết rồi gửi lại, không làm treo gateway</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Hook OpenClaw oneinvest-zalo-pipe (collector/openclaw/handler.js) chạy trong tiến trình gateway Zalo, nhận mọi tin của nhóm thu rồi đẩy sang collector :9210. Trước ZC6, hook không gửi lại: collector chết hay khởi động lại (ZC4 sắp chuyển nó sang launchd) thì tin mất ở nguồn. ZC6 thêm hàng đợi cục bộ (spool) một-tin-một-tệp và xả lại ở lượt sau…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra"><span class="vang">chưa có — decisions.jsonl</span></div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">4 mục để ngoài phạm vi · 4 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>10</b></span><span data-k="phep_do">Phép đo <b>10</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="quyet_dinh_nguoi">người <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="ma">Mã <b>83a1e96</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Hook OpenClaw oneinvest-zalo-pipe (collector/openclaw/handler.js) chạy trong tiến trình gateway Zalo, nhận mọi tin của nhóm thu rồi đẩy sang collector :9210. Trước ZC6, hook không gửi lại: collector chết hay khởi động lại (ZC4 sắp chuyển nó sang launchd) thì tin mất ở nguồn. ZC6 thêm hàng đợi cục bộ (spool) một-tin-một-tệp và xả lại ở lượt sau. Vòng 2 làm handler tự chứa (không import bản build collector). Vòng 3 giữ khuôn log cũ, dừng xả ở lần hỏng đầu, có trần 50 tệp mỗi lượt và chuyển lỗi 4xx sang rejected/. ZC6 chặn ZC4.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given collector không nhận kết nối, When hook nhận tin (kể cả cùng một tin hai lần), Then mỗi tin khác nhau thành đúng một tệp spool, log ghi `spool +1`, không có dòng ` post 202`, hook thoát bình thường.</li><li data-ac="AC-2"><b>AC-2</b> — Given spool có tin và collector sống lại, When lượt hook kế chạy, Then mọi tin trong spool tới collector đúng một lần, tin mới cũng tới, spool rỗng.</li><li data-ac="AC-3"><b>AC-3</b> — Given tin mới gửi thành công, When hook ghi log, Then dòng log giữ khuôn cũ ` post 202 {&quot;accepted&quot;:N…} group=…` mà Ops và `audit-all.sh` đọc.</li><li data-ac="AC-4"><b>AC-4</b> — Given collector trả 4xx (trừ 408/429) cho một tệp spool, When xả, Then tệp đó sang `rejected/` kèm log `spool-rejected &lt;status&gt;`, các tệp sau vẫn được gửi, tệp bị từ chối không gửi lại; còn 5xx/429 thì giữ lại trong spool.</li><li data-ac="AC-5"><b>AC-5</b> — Given collector treo không trả lời, When lượt hook chạy với spool có nhiều tệp, Then xả dừng ở tệp đầu, lượt hook kết thúc trong 25 giây, tin mới vào spool.</li><li data-ac="AC-6"><b>AC-6</b> — Given spool có hơn 50 tệp, When một lượt xả, Then gửi đúng 50 tệp, phần còn lại xả ở lượt sau.</li><li data-ac="AC-7"><b>AC-7</b> — Given Kev :8009 treo, When hook xử lý tin, Then sau khoảng 5 giây tin vẫn được gửi với `kev.p = null` và log ghi `kev null`.</li><li data-ac="AC-8"><b>AC-8</b> — Given handler được chép ra thư mục ngoài kho (như khi cài vào `~/.openclaw/hooks/`), When chạy, Then nó chỉ import module `node:` và logic spool vẫn hoạt động.</li><li data-ac="AC-9"><b>AC-9</b> — Given lớp L1 của bộ canh Zalo grep handler tìm API gửi tin, When chạy biểu thức L1 trên handler, Then không khớp dòng nào, và bộ canh vẫn trỏ đúng tệp handler duy nhất.</li><li data-ac="AC-10"><b>AC-10</b> — Given nhánh đã gộp `origin/main`, When chạy toàn bộ test collector, Then tất cả xanh.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><span class="vang">chưa có — decisions.jsonl</span></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>&quot;feature-loop:cham-lenh (fresh-context verification subagent)&quot;</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E1-r3-20261024T233844Z</td><td class="mono">2026-10-24T23:38:44Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E2-r3-20261024T233849Z</td><td class="mono">2026-10-24T23:38:49Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E3-r3-20261024T233854Z</td><td class="mono">2026-10-24T23:38:54Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E4-r3-20261024T233859Z</td><td class="mono">2026-10-24T23:39:00Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E5-r3-20261024T233904Z</td><td class="mono">2026-10-24T23:39:21Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E6-r3-20261024T233926Z</td><td class="mono">2026-10-24T23:39:26Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E7-r3-20261024T233931Z</td><td class="mono">2026-10-24T23:39:36Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-8</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E8-r3-20261024T233942Z</td><td class="mono">2026-10-24T23:39:42Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-9</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E9-r3-20261024T233947Z</td><td class="mono">2026-10-24T23:39:47Z</td></tr>
+<tr><td><a href="#E10">E10</a></td><td>AC-10</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">hook-zalo-spool-E10-r3-20261024T233952Z</td><td class="mono">2026-10-24T23:40:38Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given collector không nhận kết nối, When hook nhận tin (kể cả cùng một tin hai lần), Then mỗi tin khác nhau thành đúng một tệp spool, log ghi `spool +1`, không có dòng ` post 202`, hook thoát bình thường.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E1-r3-20261024T233844Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_spool_replay</b></span><span>verified_at <b>2026-10-24T23:38:44Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   lượt collector chết: hook thoát bình thường
+ok   spool có đúng 2 tệp (tin trùng không nhân tệp), được 2
+ok   log có dòng &#39;spool +1&#39; cho tin vào spool
+ok   should-NOT-fire: lúc collector chết không có dòng &#39; post 202&#39;
+ok   collector sống lại nhận đủ A, B (từ spool) và D (tin mới)
+ok   A chỉ tới collector MỘT lần dù hook nhận hai lần
+ok   spool rỗng sau khi xả, còn 0
+SPOOL-REPLAY PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given spool có tin và collector sống lại, When lượt hook kế chạy, Then mọi tin trong spool tới collector đúng một lần, tin mới cũng tới, spool rỗng.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E2-r3-20261024T233849Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_spool_replay</b></span><span>verified_at <b>2026-10-24T23:38:49Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   spool có đúng 2 tệp (tin trùng không nhân tệp), được 2
+ok   collector sống lại nhận đủ A, B (từ spool) và D (tin mới)
+ok   A chỉ tới collector MỘT lần dù hook nhận hai lần
+ok   spool rỗng sau khi xả, còn 0
+ok   tin gửi kèm meta kev.p là số khi Kev sống
+SPOOL-REPLAY PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given tin mới gửi thành công, When hook ghi log, Then dòng log giữ khuôn cũ ` post 202 {&quot;accepted&quot;:N…} group=…` mà Ops và `audit-all.sh` đọc.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E3-r3-20261024T233854Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_spool_replay</b></span><span>verified_at <b>2026-10-24T23:38:54Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   dòng log tin mới đúng khuôn cũ &#39; post 202 {&quot;accepted&quot;:1…} group=…&#39; (được: post 202 {&quot;accepted&quot;:1,&quot;duplicates&quot;:0} group=acc-group p=0.90 account=acc by=acc)
+ok   tin gửi kèm meta kev.p là số khi Kev sống
+SPOOL-REPLAY PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-4: Given collector trả 4xx (trừ 408/429) cho một tệp spool, When xả, Then tệp đó sang `rejected/` kèm log `spool-rejected &lt;status&gt;`, các tệp sau vẫn được gửi, tệp bị từ chối không gửi lại; còn 5xx/429 thì giữ lại trong spool.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E4-r3-20261024T233859Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_reject_4xx</b></span><span>verified_at <b>2026-10-24T23:39:00Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   3 tin vào spool lúc chết, được 3
+ok   tin lành sau tin 400 vẫn được gửi (400 không chặn hàng)
+ok   tin 400 chuyển sang rejected/ (rejected=1, spool=0)
+ok   log có &#39;spool-rejected 400&#39;
+ok   should-NOT-fire: tin 400 không bị gửi lại ở lượt sau
+ok   should-NOT-fire: 503 là lỗi tạm — tin ở lại spool, không sang rejected/
+REJECT-4XX PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-5: Given collector treo không trả lời, When lượt hook chạy với spool có nhiều tệp, Then xả dừng ở tệp đầu, lượt hook kết thúc trong 25 giây, tin mới vào spool.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E5-r3-20261024T233904Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_hang_stop</b></span><span>verified_at <b>2026-10-24T23:39:21Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   3 tin vào spool lúc chết
+ok   collector treo: chỉ 2 lượt gửi (1 tệp spool đầu + tin mới) rồi dừng, được 2
+ok   lượt hook kết thúc trong 16 giây (&lt; 25)
+ok   4 tệp còn trong spool (3 cũ + tin mới), được 4
+HANG-STOP PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-6: Given spool có hơn 50 tệp, When một lượt xả, Then gửi đúng 50 tệp, phần còn lại xả ở lượt sau.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E6-r3-20261024T233926Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_cap_50</b></span><span>verified_at <b>2026-10-24T23:39:26Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   55 tin vào spool, được 55
+ok   một lượt xả đúng 50 tệp + 1 tin mới = 51 lượt gửi, được 51
+ok   còn 5 tệp chờ lượt sau, được 5
+ok   lượt kế xả nốt 5 tệp
+CAP-50 PASS</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-7: Given Kev :8009 treo, When hook xử lý tin, Then sau khoảng 5 giây tin vẫn được gửi với `kev.p = null` và log ghi `kev null`.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E7-r3-20261024T233931Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_kev_hang</b></span><span>verified_at <b>2026-10-24T23:39:36Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   tin vẫn tới collector với kev.p = null (được null)
+ok   hook chờ Kev có trần (~5 giây), chạy 5 giây
+ok   log ghi &#39;kev null&#39;
+KEV-HANG PASS</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-8: Given handler được chép ra thư mục ngoài kho (như khi cài vào `~/.openclaw/hooks/`), When chạy, Then nó chỉ import module `node:` và logic spool vẫn hoạt động.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E8-r3-20261024T233942Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_self_contained</b></span><span>verified_at <b>2026-10-24T23:39:42Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   handler chỉ import module node: (node:fs/promises, node:crypto, node:os, node:path)
+ok   handler không trỏ tới bản build/nguồn của collector
+ok   bản chép handler nằm ngoài kho
+ok   chạy từ ngoài kho: collector chết → tin vào spool (logic spool có mặt)
+SELF-CONTAINED PASS</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-9: Given lớp L1 của bộ canh Zalo grep handler tìm API gửi tin, When chạy biểu thức L1 trên handler, Then không khớp dòng nào, và bộ canh vẫn trỏ đúng tệp handler duy nhất.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E9-r3-20261024T233947Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc6_l1_grep</b></span><span>verified_at <b>2026-10-24T23:39:47Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">ok   handler không khớp biểu thức L1 của watchdog (0 dòng khớp)
+ok   watchdog L1 vẫn trỏ đúng tệp handler duy nhất
+L1-GREP PASS</pre>
+</div>
+<div class="card eval" id="E10"><h3><span class="badge pass">PASS</span> &nbsp;E10 · test</h3><p class="crit">AC-10: Given nhánh đã gộp `origin/main`, When chạy toàn bộ test collector, Then tất cả xanh.</p>
+<div class="kv"><span>run_id <b>hook-zalo-spool-E10-r3-20261024T233952Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.collector_test_clean</b></span><span>verified_at <b>2026-10-24T23:40:38Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">&gt; tsc -p tsconfig.json &amp;&amp; node --test &#39;dist/test/*.test.js&#39;
+✔ ZC6 vòng 3: khuôn log cũ &#39; post 202 &#39;; drain dừng ở file hỏng đầu; 4xx → rejected không gửi lại (15045.85275ms)
+✔ ZC6 tự chứa: từ thư mục NGOÀI repo — collector chết 2 tin → spool 2; sống → drain đủ, không trùng; kev treo → p=null (20034.630416ms)
+✔ readBody: ký tự Việt split giữa 2 chunk vẫn nguyên vẹn (1.001375ms)
+ℹ tests 41
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Baseline khong do: người chấm không chạy làn baseline (diffBase) ở vòng này; theo Notes của hợp đồng, tác giả hồ sơ đã
+kiểm harness biết đỏ trước verify (bd51084 đỏ ở spool-replay, reject-4xx, hang-stop, cap-50; handler origin/main đỏ ở cả
+6 chế độ chạy handler). l1-grep (E9) và E10 là chốt hồi quy, dự kiến xanh trên cả hai cây.
+Bất thường khác:
+- Chú thích AC trong scripts/hook-zalo-spool/acceptance.mjs lệch số so với contract (harness ghi «AC-3» cho 4xx,
+  «AC-4» cho hang, «AC-5» cho cap-50); evals.yaml ánh xạ đúng — chỉ là chú thích.
+- Đính chính số đếm của vòng 1: vòng 1 ghi «44 test của 8 tệp nguồn đều xanh», nhưng 8 tệp nguồn có 41 test (vòng 2 đo);
+  47 − 41 = 6 test thuộc tệp mồ côi kev-nhan-cung-hoa.test.js (3 xanh, 3 đỏ). Kết luận BLOCKED vòng 1 không đổi.
+- Giữa vòng 1 và vòng 3 chỉ đổi tệp trong `_acceptance/hook-zalo-spool/` (git diff b8e2a25..83a1e96 không chạm tệp
+  sản phẩm, harness hay config.yaml); collector/openclaw/handler.js giống hệt vòng 1, các dòng trích ở «Ngoài hợp đồng»
+  vẫn đúng.
+- review-findings.md (vòng 2) liệt kê ba mục ngoài hợp đồng (401/403/404 → rejected/, collector chậm-mà-sống,
+  quyền tệp spool), cả ba đã có ở «Ngoài hợp đồng» dưới đây từ vòng 1.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1–E9 đạt; E10 BLOCKED — dist/test của collector còn bản biên dịch mồ côi của nhánh zcode/kev-nhan-cung-hoa,</li><li>3 test đỏ từ tệp đó; chữa bằng chạy lại E10 với dist sạch, không trả về làn code.</li><li>Round 2: E1–E9 đạt; E10 BLOCKED — cmd trỏ config:executors.test.collector_test_clean (khoá không tồn tại, khoá thật ở</li><li>executors.script); chuỗi lệnh của khoá thật chạy xanh 41/41; chữa bằng sửa cmd của E10 trong evals.yaml, không trả về làn code.</li><li>Round 3: E1–E10 đạt — E10 trỏ đúng executors.script.collector_test_clean, 41/41 test collector xanh; code sản phẩm</li><li>không đổi so với vòng 1–2.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Cài bản này vào `~/.openclaw` và restart gateway — lời GIAO triển khai riêng theo `docs/ops/runbook-openclaw-hook.md`, sau merge.</li><li data-loai="ngoai">ZC4 (collector :9210 chạy bằng launchd) — vòng riêng, chờ ZC6 merge.</li><li data-loai="ngoai">Tin gửi lại từ spool không ghi dòng ` post 202` riêng, nên phễu Ops đếm thiếu đúng số tin đã qua spool.</li><li data-loai="ngoai">Tệp spool hỏng định dạng JSON nằm lại spool mãi (bị bỏ qua, không chặn hàng) và vẫn tính vào trần 50 tệp.</li><li data-loai="gioi-han">Hai giới hạn khai ở Out of scope được xác nhận ĐÚNG khi đọc collector/openclaw/handler.js: - Tin gửi lại từ spool không ghi dòng ` post 202`: nhánh r.ok trong drainSpool (dòng 99–102) chỉ rm tệp và tăng biến `sent`, không log gì (biến `sent` còn không được dùng) → phễu Ops đếm thiếu đúng số tin đi qua spool, và cũng không có dòng nào cho biết một lượt đã xả bao nhiêu tệp. - Tệp JSON hỏng nằm lại mãi: JSON.parse lỗi → `continue` (dòng 93–97) bên trong vòng `files.slice(0, 50)` → tệp không bị xoá/chuyển, vẫn chiếm một chỗ trong trần 50. Hệ quả thêm: nếu ≥50 tệp hỏng đứng đầu thứ tự tên, các tệp lành phía sau không bao giờ được xả (tin mới vẫn gửi thẳng được).</li><li data-loai="gioi-han">Thứ tự xả theo tên băm (sort chuỗi hex), không theo thời gian — tin cũ không chắc đi trước; không mất dữ liệu vì ts nằm trong payload.</li><li data-loai="gioi-han">Spool đặt tên theo băm (group, ts, text, senderId, url ảnh): hai tin khác nhau trùng đủ năm trường (cùng người, cùng nhóm, cùng chữ, cùng mốc ms) gộp làm một tệp — tương đương dedup của server, chấp nhận được.</li><li data-loai="gioi-han">Các eval chưa phủ: 408/429 (AC-4 nhắc, harness chỉ thử 503); tổ hợp Kev treo CÙNG collector treo (trần lý thuyết ~5 + 8 + 8 = 21 giây, vẫn dưới 25 nhưng không đo); lượt hook chạy song song.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">83a1e969120d5b5271fc7ed9b4adaf2b96c6c15c</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note"></p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
