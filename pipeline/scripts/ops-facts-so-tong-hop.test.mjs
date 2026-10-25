@@ -21,7 +21,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SEEDS = sourceRegistrySeeds();
 const ENTRIES = SEEDS.map(({ code, realName }) => ({ code, realName }));
 const name = (code) => SEEDS.find((s) => s.code === code).realName;
-const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue"];
+// ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7` — cùng khuôn {measured_at, …} của ON22.
+const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7"];
 const OLD_KEYS = ["pushedAt", "funnel", "health", "jobs", "sourceRuns", "rotation", "zaloGroups", "zaloFlow", "zaloAccounts"];
 const S = `on22_pipe_${process.pid}`;
 const LOGS = () => ({

@@ -21,7 +21,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.app_ui
-    expected: "exit 0; ca 'ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Khoá an toàn «—»' ok; chiều đỏ 'ON3-AC-3 bản sao Bản ghi 24h đọc 0 → bắt' ok"
+    expected: "exit 0; ca 'ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Khoá an toàn theo khối lockdown (ON23)' ok; chiều đỏ 'ON3-AC-3 bản sao Bản ghi 24h đọc 0 → bắt' ok"
     paths: [app/src/app/ops/collections/page.tsx, app/src/components/ops/collections/**, app/src/lib/ops-cloud.ts, app/tests/o-kpi-chi-do-local.test.tsx]
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

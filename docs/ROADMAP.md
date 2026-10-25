@@ -110,6 +110,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Ô KPI Ops trên cloud (ON3 `o-kpi-chi-do-local`, 24/10): `/ops`, `/ops/collections`, `/ops/review` trên cloud đọc số
   máy local đẩy (`getCloudOpsView`), kèm «Số đo lúc … (GMT+7) từ máy local»; số cũ quá 45′ có Alert vàng và không badge
   xanh; chưa có bản tin thì «—» + một Alert «Chỉ đo ở máy local». Lockdown trên cloud chờ ON23.
+- Khoá an toàn trên máy chủ (ON23 `lockdown-cloud-theo-facts`, 25/10): ô và lưới «Khoá an toàn & hạ tầng thu» đọc khối
+  `lockdown` máy thu đẩy lên; chưa có số (hay khối lỗi) thì 8/8 lớp «Chỉ kiểm ở máy thu», không lớp nào xanh; Kev gate và
+  collector API ở Máy móc lấy trạng thái từ cùng khối nên luôn khớp Khoá an toàn (OPS-3).
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
