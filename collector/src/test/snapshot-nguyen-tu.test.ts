@@ -58,3 +58,49 @@ test("2510-8: đang ghi chỉ có '.partial'; finalize rename ra tên thật tr�
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("2510-8 vòng 2 (MỞ LẠI): hai writer cùng city/source cùng mili-giây — hai sid riêng, không chung .partial, cả hai finalize trọn vẹn", async () => {
+  const root = mkdtempSync(join(tmpdir(), "snap-trung-ms-"));
+  try {
+    // ghim Date về CÙNG một mili-giây cho cả hai constructor (kịch bản MỞ LẠI:
+    // hai writer sinh trong cùng ms TRƯỚC khi cái đầu finalize)
+    const Thuc = Date;
+    const GHIM = Thuc.parse("2026-10-25T07:00:00.000Z");
+    const DateGhim = class extends Thuc {
+      constructor(...args: ConstructorParameters<DateConstructor>) {
+        super(args.length > 0 ? args[0] : GHIM);
+      }
+    };
+    globalThis.Date = DateGhim as unknown as DateConstructor;
+    let A: SnapshotWriter;
+    let B: SnapshotWriter;
+    try {
+      A = new SnapshotWriter(root, "hanoi", "zalo-agent");
+      await A.write([
+        { source: "zalo-agent", sourceId: "b1", kind: "post", fetchedAt: "2026-10-25T07:00:00Z", payload: { text: "tin A" } },
+      ]);
+      B = new SnapshotWriter(root, "hanoi", "zalo-agent"); // cùng ms, A CHƯA finalize
+    } finally {
+      globalThis.Date = Thuc;
+    }
+    assert.notEqual(B.snapshotId, A.snapshotId, "B phải lấy sid khác (hậu tố -1) — hết chung .partial");
+    const cityDir = join(root, "hanoi");
+    assert.ok(existsSync(join(cityDir, `.${A.snapshotId}.partial`)), "A có .partial riêng");
+    assert.ok(existsSync(join(cityDir, `.${B.snapshotId}.partial`)), "B có .partial riêng");
+    const coverage: CoverageReport = { discovered: 1, captured: 1, failed: 0, methods: {} };
+    await A.finalize(coverage);
+    await B.finalize(coverage);
+    for (const w of [A, B]) {
+      const real = join(cityDir, w.snapshotId);
+      assert.ok(existsSync(join(real, "manifest.json")), `${w.snapshotId}: tên thật có manifest`);
+      assert.ok(!existsSync(join(cityDir, `.${w.snapshotId}.partial`)), `${w.snapshotId}: hết .partial sau rename`);
+    }
+    // items của A không bị B đè: đọc lại từ thư mục thật
+    const mB: SnapshotManifest = JSON.parse(readFileSync(join(cityDir, `${A.snapshotId}/manifest.json`), "utf8"));
+    const itemFile = mB.files.find((f) => f.name.startsWith("items-"));
+    assert.ok(itemFile, "items của A còn nguyên trong snapshot A (không bị writer B ghi đè)");
+    assert.equal(JSON.parse(gunzipSync(readFileSync(join(cityDir, A.snapshotId, itemFile.name))).toString()).length, 1);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

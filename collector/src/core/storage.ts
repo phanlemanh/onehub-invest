@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { mkdir, rename, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { CoverageReport, ManifestFile, RawItem, SnapshotManifest } from "./types.js";
 
@@ -28,23 +28,39 @@ export class SnapshotWriter {
     // Giữ cả mili-giây: hai flush liên tiếp (single-flight dồn sát nhau) cùng
     // giây phải ra hai snapshot khác nhau — id theo giây sẽ đè nhau.
     const ts = new Date().toISOString().replace(/[:.]/g, "").slice(0, 20); // yyyymmddThhmmssmmm
+    // Bảo hiểm cuối (đâm trùng ms) tăng hậu tố — và từ 2510-8 vòng 2 chiếm '."<sid>.partial' NGUYÊN TỮ ngay trong
+    // constructor (mkdirSync thường — EEXIST = writer khác cùng mili-giây đã
+    // chiếm). Chốt cũ chỉ nhìn TÊN THẬT, mà từ vòng 1 tên thật chỉ xuất hiện
+    // ở finalize → hai writer cùng ms lấy chung một '.partial' (items ghi đè
+    // nhau mất tin) rồi rename thứ hai ENOTEMPTY.
     let sid = `${city}__${source}__${ts}`;
     let n = 1;
-    // Bảo hiểm cuối: dir đã có (đâm trùng ms) thì tăng hậu tố — snapshot ghi
-    // mới, không bao giờ ghi đè.
-    while (existsSync(join(rootDir, city, sid))) sid = `${city}__${source}__${ts}-${n++}`;
+    for (;;) {
+      try {
+        mkdirSync(join(rootDir, city, `.${sid}.partial`));
+        break;
+      } catch (e) {
+        const err = e as NodeJS.ErrnoException;
+        if (err?.code === "EEXIST") {
+          sid = `${city}__${source}__${ts}-${n++}`;
+          continue;
+        }
+        if (err?.code === "ENOENT") {
+          // thư mục city chưa có — tạo rồi THỬ LẠI cùng sid
+          mkdirSync(join(rootDir, city), { recursive: true });
+          continue;
+        }
+        throw e;
+      }
+    }
     this.snapshotId = sid;
     this.dir = join(rootDir, city, this.snapshotId);
-    // 2510-8 (nguyên tử): ghi hết vào thư mục tạm CÙNG CHA '."<id>.partial'
-    // rồi rename ra tên thật ở finalize — thư mục mang tên thật LUÔN có
-    // manifest; importer/daily không bao giờ thấy snapshot nửa vời (đang
-    // tải media có thể kéo dài giữa write và finalize). Thư mục chấm bị
-    // daily script bỏ qua; crash giữa chừng để lại '.partial' là vô hình.
+    // (2510-8 vòng 1) ghi hết vào '.partial' rồi rename ra tên thật ở
+    // finalize — thư mục mang tên thật LUÔN có manifest.
     this.partial = join(rootDir, city, `.${this.snapshotId}.partial`);
   }
 
   async write(items: RawItem[]): Promise<void> {
-    await mkdir(this.partial, { recursive: true });
     for (let i = 0; i < items.length; i += BATCH) {
       const batch = items.slice(i, i + BATCH);
       // Đánh số items bằng đếm riêng: file media (addExtraFile) có vào trước
@@ -88,7 +104,6 @@ export class SnapshotWriter {
       files: this.files,
       ...(error ? { error } : {}),
     };
-    await mkdir(this.partial, { recursive: true });
     await writeFile(join(this.partial, "manifest.json"), JSON.stringify(manifest, null, 2));
     // 2510-8: manifest là file CUỐI — ghi xong mới rename tạm → tên thật
     // (cùng filesystem vì cùng cha). Từ đây thư mục tên thật luôn trọn vẹn.
