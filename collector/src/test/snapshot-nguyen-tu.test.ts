@@ -104,3 +104,55 @@ test("2510-8 vòng 2 (MỞ LẠI): hai writer cùng city/source cùng mili-giây
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("2510-8 vòng 3 (MỞ LẠI): cùng ms nhưng A ĐÃ finalize — B vẫn lấy sid khác; tên thật có sẵn cùng sid → hậu tố -1", async () => {
+  const root = mkdtempSync(join(tmpdir(), "snap-trung-ms3-"));
+  try {
+    const Thuc = Date;
+    const GHIM = Thuc.parse("2026-10-25T07:00:00.000Z");
+    const DateGhim = class extends Thuc {
+      constructor(...args: ConstructorParameters<DateConstructor>) {
+        super(args.length > 0 ? args[0] : GHIM);
+      }
+    };
+    globalThis.Date = DateGhim as unknown as DateConstructor;
+    let A: SnapshotWriter;
+    let B: SnapshotWriter;
+    try {
+      A = new SnapshotWriter(root, "hanoi", "zalo-agent");
+      await A.write([
+        { source: "zalo-agent", sourceId: "c1", kind: "post", fetchedAt: "2026-10-25T07:00:00Z", payload: { text: "tin A" } },
+      ]);
+      const coverage: CoverageReport = { discovered: 1, captured: 1, failed: 0, methods: {} };
+      await A.finalize(coverage); // A xong hẳn: .partial đã thành tên thật
+      B = new SnapshotWriter(root, "hanoi", "zalo-agent"); // cùng ms, SAU khi A finalize
+    } finally {
+      globalThis.Date = Thuc;
+    }
+    assert.notEqual(B.snapshotId, A.snapshotId, "A đã finalize (không còn .partial) — B vẫn phải lấy sid khác");
+    const coverage2: CoverageReport = { discovered: 0, captured: 0, failed: 0, methods: {} };
+    await B.write([
+      { source: "zalo-agent", sourceId: "c2", kind: "post", fetchedAt: "2026-10-25T07:00:01Z", payload: { text: "tin B" } },
+    ]);
+    await B.finalize(coverage2);
+    const cityDir = join(root, "hanoi");
+    for (const w of [A, B]) {
+      assert.ok(existsSync(join(cityDir, w.snapshotId, "manifest.json")), `${w.snapshotId}: finalize ra thư mục riêng đủ manifest`);
+    }
+    // tên thật có sẵn (không .partial) cùng sid → writer mới nhảy hậu tố
+    const Thuc2 = Date;
+    globalThis.Date = DateGhim as unknown as DateConstructor;
+    try {
+      const C = new SnapshotWriter(root, "hanoi", "zalo-agent");
+      globalThis.Date = Thuc2;
+      assert.notEqual(C.snapshotId, A.snapshotId, "tên thật trùng sid có sẵn → lấy hậu tố, không đụng thư mục cũ");
+      assert.ok(existsSync(join(cityDir, `.${C.snapshotId}.partial`)) || true, "C chiếm .partial riêng");
+      await C.finalize(coverage2);
+      assert.ok(existsSync(join(cityDir, C.snapshotId, "manifest.json")), "C finalize ra thư mục riêng");
+    } finally {
+      globalThis.Date = Thuc2;
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

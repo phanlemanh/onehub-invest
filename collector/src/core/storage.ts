@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { mkdir, rename, writeFile } from "node:fs/promises";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { CoverageReport, ManifestFile, RawItem, SnapshotManifest } from "./types.js";
 
@@ -36,6 +36,13 @@ export class SnapshotWriter {
     let sid = `${city}__${source}__${ts}`;
     let n = 1;
     for (;;) {
+      // 2510-8 vòng 3: vẫn phải kiểm TÊN THẬT — writer khác cùng ms đã
+      // finalize (rename .partial → tên thật) thì .partial không còn nhưng
+      // sid đã dùng; tên thật cũ của bản trước vòng này cũng vậy.
+      if (existsSync(join(rootDir, city, sid))) {
+        sid = `${city}__${source}__${ts}-${n++}`;
+        continue;
+      }
       try {
         mkdirSync(join(rootDir, city, `.${sid}.partial`));
         break;
