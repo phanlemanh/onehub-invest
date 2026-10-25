@@ -155,6 +155,11 @@ executors:
     compare_saved_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-compare-saved.mjs"
     compare_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/compare/comparison.tsx"
     saved_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/saved/saved-list.tsx"
+    # trang-chu-methodology (UI2) — / + /methodology (301 từ /phuong-phap); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
+    trang_chu_methodology_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-trang-chu-methodology.mjs"
+    trang_chu_loi_db_smoke: "cd app && npx next build && cd .. && node scripts/smoke-trang-chu-loi-db.mjs"   # bản build + next start ở cổng trống (hoặc SMOKE_PORT) với DATABASE_URL trỏ cổng chết; trang lỗi đo bằng trình duyệt thật (playwright-cli); đối chứng dương ở dev :3460
+    methodology_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
+    app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
     # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
     dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
     # deals-loai-tin-phi-ly (ON11) — đo Căn giá tốt trên DB local :5433 trong BEGIN…ROLLBACK (cần tsx của app)

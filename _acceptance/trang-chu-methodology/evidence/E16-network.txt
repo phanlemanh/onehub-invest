@@ -1,0 +1,4 @@
+E16 network/console dump (playwright-cli session e16v, http://localhost:3460/methodology)
+console: total 4, errors 0, warnings 2 (next/font preload unused x2), INFO React DevTools, LOG HMR connected
+requests non-static: none listed (no fetch/XHR); 1 static request not shown
+failed requests: none

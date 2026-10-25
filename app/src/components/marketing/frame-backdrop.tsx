@@ -1,25 +1,29 @@
 import { useId } from "react"
 import { cn } from "cn"
 
+// Màu là biến palette của Tailwind (gần nhất với bản vẽ gốc của hero-8), viết nguyên văn
+// `var(--color-…)` để Tailwind giữ biến trong CSS. SVG không đọc var() ở thuộc tính trình bày
+// (stopColor=…, stroke=…) nên màu đi qua `style`.
+
 /** Bottom edge: navy at the right corner, back to the field by x = 200. */
 const BOTTOM_BLOOM = [
-  { offset: "0%", color: "#022092", opacity: 1 },
-  { offset: "16%", color: "#0532cc", opacity: 1 },
-  { offset: "32%", color: "#0638cd", opacity: 1 },
-  { offset: "50%", color: "#084ad6", opacity: 1 },
-  { offset: "68%", color: "#0850dd", opacity: 1 },
-  { offset: "85%", color: "#0057ec", opacity: 0.5 },
-  { offset: "100%", color: "#0057ec", opacity: 0 },
+  { offset: "0%", color: "var(--color-blue-900)", opacity: 1 },
+  { offset: "16%", color: "var(--color-blue-800)", opacity: 1 },
+  { offset: "32%", color: "var(--color-blue-800)", opacity: 1 },
+  { offset: "50%", color: "var(--color-blue-700)", opacity: 1 },
+  { offset: "68%", color: "var(--color-blue-700)", opacity: 1 },
+  { offset: "85%", color: "var(--color-blue-700)", opacity: 0.5 },
+  { offset: "100%", color: "var(--color-blue-700)", opacity: 0 },
 ]
 
 /** Right edge: the field holds down to y = 500, then falls away inside 300 units. */
 const RIGHT_BLOOM = [
-  { offset: "0%", color: "#011d8b", opacity: 1 },
-  { offset: "30%", color: "#02218e", opacity: 1 },
-  { offset: "55%", color: "#022b93", opacity: 0.92 },
-  { offset: "75%", color: "#0440b4", opacity: 0.55 },
-  { offset: "95%", color: "#0850dd", opacity: 0.1 },
-  { offset: "100%", color: "#0850dd", opacity: 0 },
+  { offset: "0%", color: "var(--color-blue-900)", opacity: 1 },
+  { offset: "30%", color: "var(--color-blue-900)", opacity: 1 },
+  { offset: "55%", color: "var(--color-blue-900)", opacity: 0.92 },
+  { offset: "75%", color: "var(--color-blue-800)", opacity: 0.55 },
+  { offset: "95%", color: "var(--color-blue-700)", opacity: 0.1 },
+  { offset: "100%", color: "var(--color-blue-700)", opacity: 0 },
 ]
 
 // Light ribbons sweeping the deep half. Only the visible edge crossings matter;
@@ -79,8 +83,8 @@ export function FrameBackdrop({ className }: { className?: string }) {
       <defs>
         {/* The field itself barely moves: four units of blue across 1600. */}
         <linearGradient id={fieldId} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#005aee" />
-          <stop offset="100%" stopColor="#0054ea" />
+          <stop offset="0%" style={{ stopColor: "var(--color-blue-600)" }} />
+          <stop offset="100%" style={{ stopColor: "var(--color-blue-700)" }} />
         </linearGradient>
 
         {/* Unit circles placed by transform, so each radius reads as the ellipse
@@ -97,7 +101,7 @@ export function FrameBackdrop({ className }: { className?: string }) {
             <stop
               key={stop.offset}
               offset={stop.offset}
-              stopColor={stop.color}
+              style={{ stopColor: stop.color }}
               stopOpacity={stop.opacity}
             />
           ))}
@@ -115,7 +119,7 @@ export function FrameBackdrop({ className }: { className?: string }) {
             <stop
               key={stop.offset}
               offset={stop.offset}
-              stopColor={stop.color}
+              style={{ stopColor: stop.color }}
               stopOpacity={stop.opacity}
             />
           ))}
@@ -139,7 +143,7 @@ export function FrameBackdrop({ className }: { className?: string }) {
       <rect width="1600" height="1200" fill={`url(#${bottomId})`} />
       <rect width="1600" height="1200" fill={`url(#${rightId})`} />
 
-      <g fill="none" stroke="#12a6f4" strokeLinecap="round">
+      <g fill="none" strokeLinecap="round" style={{ stroke: "var(--color-sky-500)" }}>
         <g filter={`url(#${softId})`} opacity={0.34}>
           {RIBBONS.filter((ribbon) => ribbon.soft).map((ribbon) => (
             <path
