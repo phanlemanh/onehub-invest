@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Mốc thu của tin Zalo và Chợ Tốt không còn bị đặt lại mỗi khi nạp lại snapshot, nên biểu đồ «Luồng 7 ngày» trên Ops sẽ đúng; kèm một lệnh khôi phục có sao lưu để sửa các dòng đã sai.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:"
+}

@@ -126,8 +126,9 @@ function region(h: string, from: string, to: string) {
 const OPS_TILES = [">Đạt SLO<", ">Quá hạn<", ">Chưa có snapshot<", ">Snapshot mới nhất<", ">Độ tươi theo nguồn<"]
 const COL_TILES = [">Sức khoẻ nguồn<", ">Bản ghi 24h<", ">Cổng S03", ">Khoá an toàn<", ">Sức khoẻ nguồn<"] // mốc cuối: tiêu đề lưới nguồn ngay dưới hàng ô
 const headings = (h: string) => [...h.matchAll(/role="heading"[^>]*>([^<]*)</g)].map((m) => m[1])
-/** Trên cloud chỉ dựng vùng đọc bản tin: hàng ô số + lưới sức khoẻ nguồn + lưới job khi có bản tin (khuôn đổi ở lượt 3, sổ d-16). */
-const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Máy móc"]
+/** Trên cloud chỉ dựng vùng đọc bản tin: hàng ô số + lưới sức khoẻ nguồn + lưới khoá an toàn (ON23) + lưới job khi có bản
+ * tin (khuôn đổi ở lượt 3, sổ d-16). */
+const CLOUD_HEADINGS = ["Sức khoẻ nguồn", "Khoá an toàn &amp; hạ tầng thu", "Máy móc"]
 const NO_CLOUD_VIEW = { rel: "src/components/ops/collections/collections-view.tsx", fn: (s: string) => s.replace("if (props.cloud) return <CloudCollections", "if (false) return <CloudCollections") }
 
 /** Đạt SLO tính độc lập với bên đọc: nguồn đạt khi mọi hàng của nó tươi; mã có hàng chưa khai SLO không đếm. */
@@ -266,7 +267,7 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
       m.done()
     }
   })
-  test("ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Khoá an toàn «—»", async () => {
+  test("ON3-AC-3 /ops/collections facts tươi: Bản ghi 24h = tổng records24h, Sức khoẻ nguồn = x/y freshness, dòng mốc đo, ô Khoá an toàn theo khối lockdown (ON23)", async () => {
     ready()
     const p = await push()
     await ingest(p)
@@ -278,8 +279,10 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     assert.equal(tileValue(h, "Bản ghi 24h"), String(want))
     assert.match(text(region(h, COL_TILES[0], COL_TILES[1])), new RegExp(`Sức khoẻ nguồn \\D*${slo.ok} ?/ ?${slo.total}\\b`), "ô Sức khoẻ nguồn = x/y")
     assert.ok(h.includes("data-facts-stamp"), "dòng mốc đo")
-    assert.equal(tileValue(h, "Khoá an toàn"), "—")
-    assert.match(text(h), /Chưa kiểm được trên máy chủ/)
+    // ON3 Hỏi-1 = A giữ ô «—» «tới khi ON23 đọc khối lockdown»; từ ON23 ô = số lớp Ổn của khối (phép đo đầy đủ ở
+    // lockdown-cloud-theo-facts.test.tsx).
+    const layersOk = (p.blocks.lockdown.layers as { ok: boolean | null }[]).filter((l) => l.ok === true).length
+    assert.equal(tileValue(h, "Khoá an toàn"), String(layersOk))
   })
   test("ON3-AC-3 bản sao Bản ghi 24h đọc 0 → bắt", async () => {
     ready()
@@ -359,7 +362,7 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
     ["tươi", async () => ingest(await push())],
     ["cũ 46′", async () => ingest(shiftPayload(await push(), -46) as Payload)],
   ]
-  test("ON3-AC-4 ba trạng thái: /ops/collections chỉ có hàng ô số + lưới nguồn, một Alert «Phần còn lại…», nút ô trỏ #tren-may-thu, không «Hỏng» / «ổn» / «tươi» nào", async () => {
+  test("ON3-AC-4 ba trạng thái: /ops/collections chỉ có hàng ô số + lưới nguồn + lưới khoá an toàn, một Alert «Phần còn lại…», nút ô luồng / nhóm S03 trỏ #tren-may-thu, không «ổn» / «tươi» nào của vùng không đo", async () => {
     ready()
     for (const [name, set] of STATES) {
       await set()
@@ -371,12 +374,14 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
       assert.equal(headings(h).includes("Máy móc"), name !== "chưa có bản tin", `${name}: lưới job chỉ khi có bản tin`)
       assert.equal(alertTitles(h).filter((t) => t === "Phần còn lại của trang chưa có số trên máy chủ").length, 1, `${name}: một Alert gom vùng trên máy thu`)
       assert.equal(localCount(h), name === "chưa có bản tin" ? 1 : 0, `${name}: chữ chỉ-local đúng số lần`)
-      assert.doesNotMatch(text(h), /Hỏng|Mọi thứ ổn|đều tươi|Kênh kết nối|Hoạt động/, `${name}: không trạng thái giả của vùng không đo`)
-      const hrefs = [...region(h, COL_TILES[1], COL_TILES[4]).matchAll(/href="(#[^"]+)"/g)].map((m) => m[1])
-      // ON5: khi đã có bản tin, nút ô luồng trỏ bảng #luong; nhóm S03 / lockdown vẫn trỏ Alert.
+      // «Hỏng» nay là nhãn tab của lưới khoá an toàn đọc khối (ON23) — không còn là trạng thái giả của vùng không đo.
+      assert.doesNotMatch(text(h), /Mọi thứ ổn|đều tươi|Kênh kết nối|Hoạt động/, `${name}: không trạng thái giả của vùng không đo`)
+      const hrefs = [...region(h, COL_TILES[1], COL_TILES[3]).matchAll(/href="(#[^"]+)"/g)].map((m) => m[1])
+      // ON5: khi đã có bản tin, nút ô luồng trỏ bảng #luong; nhóm S03 vẫn trỏ Alert.
       const luong = name === "chưa có bản tin" ? "#tren-may-thu" : "#luong"
-      assert.ok(hrefs.length >= 3 && hrefs.includes(luong) && hrefs.filter((x) => x !== luong).every((x) => x === "#tren-may-thu"), `${name}: nút ô luồng trỏ ${luong}, nhóm S03 / lockdown trỏ Alert (${hrefs.join(", ")})`)
+      assert.ok(hrefs.length >= 2 && hrefs.includes(luong) && hrefs.filter((x) => x !== luong).every((x) => x === "#tren-may-thu"), `${name}: nút ô luồng trỏ ${luong}, nhóm S03 trỏ Alert (${hrefs.join(", ")})`)
       if (luong === "#luong") assert.ok(h.includes('id="luong"'), `${name}: đích #luong có mặt`)
+      assert.ok(region(h, COL_TILES[3], COL_TILES[4]).includes('href="#lockdown"'), `${name}: nút ô khoá an toàn trỏ lưới khoá an toàn (ON23)`)
       assert.ok(h.includes('id="tren-may-thu"'), `${name}: đích của nút có mặt`)
     }
   })

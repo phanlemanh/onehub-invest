@@ -169,6 +169,19 @@ export async function getSourceFeedHealth(): Promise<SourceFeedHealth[]> {
 
 export type LockdownLayer = { layer: string; desc: string; ok: boolean | null };
 
+/** Tám lớp khoá an toàn theo thứ tự hiện — một chỗ cho máy thu (`getLockdownStatus`) và máy chủ khi chưa có khối
+ * `lockdown` (ON23 hiện đủ 8 lớp «Chỉ kiểm ở máy thu»). Bản .mjs bên ghi: `scripts/lib/ops-local.mjs` `readLockdown`. */
+export const LOCKDOWN_LAYERS: readonly { layer: string; desc: string }[] = [
+  { layer: "L1", desc: "Chỉ đọc — không có API gửi tin" },
+  { layer: "L2", desc: "Không gắn máy trả lời vào kênh nào" },
+  { layer: "L3", desc: "Tắt kênh tài khoản chính thức, nhóm phải nhắc tên mới trả lời" },
+  { layer: "L4", desc: "Bộ canh 5′ đang chạy" },
+  { layer: "L4b", desc: "Lượt máy tự trả lời hôm nay = 0" },
+  { layer: "Hạ tầng", desc: "OpenClaw đang chạy" },
+  { layer: "Hạ tầng", desc: "Cổng Kev :8009" },
+  { layer: "Hạ tầng", desc: "Cổng nhận tin :9210" },
+];
+
 /** Watchdog ghi `<ISO> ok — …` mỗi 5′ (launchd StartInterval 300) và KHÔNG ghi `ok` khi thấy sự cố; dòng `ok` cũ hơn
  * 3 chu kỳ = watchdog đã dừng hoặc đang báo sự cố (ON2 Hỏi-1 = A, Mạnh 24/10). */
 const WATCHDOG_FRESH_MS = 15 * 60_000;
@@ -234,16 +247,17 @@ export async function getLockdownStatus(
     probe("http://127.0.0.1:9210/agent-report"),
   ]);
 
-  const layers: LockdownLayer[] = [
-    { layer: "L1", desc: "Chỉ đọc — không có API gửi tin", ok: wdFresh ? true : null },
-    { layer: "L2", desc: "Không gắn máy trả lời vào kênh nào", ok: wdFresh ? true : null },
-    { layer: "L3", desc: "Tắt kênh tài khoản chính thức, nhóm phải nhắc tên mới trả lời", ok: wdFresh ? true : null },
-    { layer: "L4", desc: "Bộ canh 5′ đang chạy", ok: wdFresh },
-    { layer: "L4b", desc: "Lượt máy tự trả lời hôm nay = 0", ok: turns === null ? null : turns === 0 },
-    { layer: "Hạ tầng", desc: "OpenClaw đang chạy", ok: openClawUp },
-    { layer: "Hạ tầng", desc: "Cổng Kev :8009", ok: kevUp },
-    { layer: "Hạ tầng", desc: "Cổng nhận tin :9210", ok: collectorUp },
+  const oks: (boolean | null)[] = [
+    wdFresh ? true : null,
+    wdFresh ? true : null,
+    wdFresh ? true : null,
+    wdFresh,
+    turns === null ? null : turns === 0,
+    openClawUp,
+    kevUp,
+    collectorUp,
   ];
+  const layers: LockdownLayer[] = LOCKDOWN_LAYERS.map((l, i) => ({ ...l, ok: oks[i] }));
   return { layers, lastWatchdogAt: lastWd, agentTurnsToday: turns, openClawUp, kevUp, collectorUp };
 }
 

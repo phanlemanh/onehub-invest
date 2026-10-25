@@ -22,7 +22,7 @@ import type {
 } from "@/lib/collections-queries"
 import { fmtInt, vnDayKey } from "@/lib/format"
 import { sloSummaryKey, sloSummaryText } from "@/lib/freshness"
-import type { getLockdownStatus, SourceFeedHealth } from "@/lib/ops-queries"
+import { LOCKDOWN_LAYERS, type getLockdownStatus, type SourceFeedHealth } from "@/lib/ops-queries"
 import type { CloudOpsView } from "@/lib/ops-cloud"
 import type { SourceRoles } from "@/lib/source-labels"
 
@@ -93,16 +93,18 @@ export function CollectionsView(props: CollectionsData) {
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Thu thập" }]
 const DESCRIPTION = "Dữ liệu chảy vào theo nguồn và theo ngày — không phải mở nhật ký tay."
 /** Vùng đo trực tiếp trên máy thu — trên cloud không có nguồn số (ADR-0014); ON4/ON23 đưa dần lên bằng khối bản tin. */
-export const MACHINE_ONLY_REGIONS = ["Cần chú ý", "lớp khoá an toàn", "ống S03", "xoay vòng", "nhóm S03"]
-/** Vùng chỉ dựng trên cloud khi đã có bản tin (ON5 «Luồng 7 ngày», lưới «tác vụ») — chưa có thì vào Alert. */
+export const MACHINE_ONLY_REGIONS = ["Cần chú ý", "ống S03", "xoay vòng", "nhóm S03"]
+/** Vùng chỉ dựng trên máy chủ khi đã có bản tin (ON5 «Luồng 7 ngày», lưới «tác vụ») — chưa có thì vào Alert. */
 const NEEDS_FACTS_REGIONS = ["Luồng 7 ngày", "tác vụ"]
 
-/** Cloud (ON3, ADR-0014): chỉ dựng vùng đọc bản tin máy local — ô số, lưới sức khoẻ nguồn và lưới job (khối `jobs`, chỉ khi
- * đã có bản tin). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0 hay màu đạt khi
- * cloud không đo được nó. */
+/** Cloud (ON3, ADR-0014): chỉ dựng vùng đọc bản tin máy thu — ô số, lưới sức khoẻ nguồn, lưới khoá an toàn (khối
+ * `lockdown`, ON23; chưa có khối thì 8 lớp «Chỉ kiểm ở máy thu»), bảng luồng 7 ngày (khối `luong7`, ON5) và lưới job (hai
+ * vùng sau chỉ khi đã có bản tin). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0
+ * hay màu đạt khi máy chủ không đo được nó. */
 function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, cloudDays = [] }: CollectionsData & { cloud: CloudOpsView }) {
   const slo = feedSloSummary(feedHealth)
   const stale = cloud.state === "stale"
+  const lockdown = cloud.lockdown
   return (
     <div className="flex flex-col gap-6" data-slo-summary={sloSummaryKey(slo)}>
       <PageHeader
@@ -121,10 +123,18 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
       <CollectionsTiles
         feeds={feedHealth}
         funnel={funnel}
-        layers={[]}
-        agentTurnsToday={null}
+        layers={lockdown?.layers ?? []}
+        agentTurnsToday={lockdown?.agentTurnsToday ?? null}
         roles={roles}
-        cloud={{ feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0) : null, stale, funnelMeasured: cloud.state !== "none", flowShown: cloud.state !== "none" }}
+        cloud={{
+          feedsMeasured: cloud.feeds !== null,
+          // ON6 (luật 5): «Bản ghi 24h» không tính S02.
+          records24h: cloud.records24h ? cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0) : null,
+          stale,
+          funnelMeasured: cloud.state !== "none",
+          lockdown: lockdown ? { stale: lockdown.stale } : null,
+          flowShown: cloud.state !== "none",
+        }}
       />
       <FeedsGrid feeds={feedHealth} stale={stale} />
       {cloud.state === "none" ? null : (
@@ -132,6 +142,12 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
           <CloudFlowTable days={cloudDays} stale={stale} roles={roles} />
         </div>
       )}
+      <LockdownGrid
+        layers={lockdown?.layers ?? LOCKDOWN_LAYERS.map((l) => ({ ...l, ok: null }))}
+        lastWatchdogAt={lockdown?.lastWatchdogAt ?? null}
+        stale={lockdown?.stale ?? false}
+        machineOnly={!lockdown}
+      />
       <div id="tren-may-thu" className="scroll-mt-4">
         <LocalOnlyAlert title="Phần còn lại của trang chưa có số trên máy chủ">
           {[...MACHINE_ONLY_REGIONS, ...(cloud.state === "none" ? NEEDS_FACTS_REGIONS : [])].join(", ")} đo trực tiếp trên máy thu — xem ở cổng Ops trên máy thu.

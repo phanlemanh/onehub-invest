@@ -1,0 +1,41 @@
+schema_version: 1
+feature_slug: go-tai-khoan-kiem-cfg-truoc-logout
+# Ca «GC-AC-n» ở app/tests/go-tai-khoan-kiem-cfg.test.tsx: HOME/PATH tạm, openclaw giả ghi argv vào spy.log, cấu hình chép
+# trong thư mục tạm, DATABASE_URL cổng đóng, route DELETE thật (luật zalo-safety: phép đo không chạm openclaw thật).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-cfg.test.tsx]
+    expected: "exit 0; ca 'GC-AC-1' ma trận viết trước 5 dòng (L2 bindings 1 entry; L3 channels.zalo có mặt; groupPolicy 'open' ở accounts.default; L3b nhóm của default requireMention false; hỏng: accounts.acc3 là chuỗi) — mỗi dòng: DELETE acc2 → 400, error mở đầu 'Cấu hình Zalo không an toàn, không ghi (luật 8)' và BẰNG đúng chuỗi '<mở đầu>: ' + zaloConfigViolations(bản cấu hình sau khi bỏ acc2).join('; ') (nhãn rút từ bộ kiểm thật, không viết tay), danh sách ấy có dòng mở đầu bằng nhãn lớp của dòng, spy.log 0 dòng, cấu hình giữ nguyên byte, acc2 còn; số dòng ma trận = 5; tập nhãn 5 dòng BẰNG tập nhãn lớp mà zaloConfigViolations trả cho một fixture gộp đủ năm vi phạm"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-cfg.test.tsx]
+    expected: "exit 0; ca 'GC-AC-2': cấu hình sạch → DELETE acc2 → 200; spy.log đúng 1 dòng bằng 'channels\\tlogout\\t--channel\\tzalouser\\t--account\\tacc2\\t'; cấu hình sau không còn acc2, zaloConfigViolations rỗng; có tệp openclaw.json.bak-*"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-cfg.test.tsx]
+    expected: "exit 0; ca 'GC-AC-3': nhóm của acc2 requireMention false (cấu hình hiện tại phạm L3b chỉ ở acc2) → DELETE acc2 → 200, spy.log đúng 1 dòng logout acc2, cấu hình sau sạch; đối chứng cùng fixture: zaloConfigViolations của cấu hình TRƯỚC khi gỡ khác rỗng (ca thật sự xuất phát từ cấu hình phạm)"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-cfg.test.tsx]
+    expected: "exit 0; ca 'GC-AC-4': bản sao zalo-admin.ts bỏ dòng kiểm bản sau khi gỡ (đột biến phải đổi tệp — assert bản sao khác gốc), nạp từ thư mục tạm, rào TRƯỚC khi gọi: zaloAdminPaths() của bản sao (realpath openclaw và config) nằm dưới thư mục tạm, chạy dòng L3b của ma trận AC-1 → spy.log có dòng logout acc2 (thông điệp ghim 'bản sao không bước kiểm vẫn đăng xuất'), rồi đặt lại cấu hình"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/go-tai-khoan-kiem-cfg.test.tsx]
+    expected: "exit 0; ca 'GC-AC-5 rào': zaloAdminPaths().openclaw và .config (realpath) và homedir() nằm dưới thư mục tạm; DATABASE_URL khớp cổng 9; mã nguồn tệp test không có import tĩnh '../src/lib/zalo-admin' hay '../src/app/api'; đối chứng: rào với HOME thật ném lỗi nêu 'HOME thật'"
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-id.test.tsx, app/tests/nhom-moi-requiremention.test.tsx]
+    expected: "exit 0; toàn bộ app npm test xanh, gồm các ca GT-AC-* (go-tai-khoan-kiem-id) và NM-AC-* (nhom-moi-requiremention)"

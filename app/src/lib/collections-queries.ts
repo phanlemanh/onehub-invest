@@ -207,9 +207,11 @@ export type JobStatus = {
   id: string;
   label: string;
   schedule: string;
-  alive: "yes" | "no" | "unknown"; // probe HTTP localhost
+  alive: "yes" | "no" | "unknown" | "unchecked"; // probe HTTP localhost; "unchecked" = máy chủ không có số cho cổng (ON23)
   lastLogAt: string | null;
   lastLine: string | null;
+  /** Máy chủ: trạng thái là lần đo cuối của khối cũ quá 45′ (ON23) — không tô xanh. */
+  stale?: boolean;
 };
 
 const ROOT = process.cwd().endsWith("/app") ? path.resolve(process.cwd(), "..") : process.cwd();

@@ -172,7 +172,8 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 | `/ops` | bốn ô độ phủ + lưới «Độ tươi theo nguồn» | khối `freshness` | ô «—» + «Chưa có số», lưới rỗng |
 | `/ops/collections` | Sức khoẻ nguồn, lưới nguồn | `freshness` + `sourceRuns` | «—» |
 | `/ops/collections` | Bản ghi 24h | `records24h` | «—» |
-| `/ops/collections` | Lockdown | (ON23 sẽ đọc khối `lockdown`) | «—» + «Chưa kiểm được trên máy chủ» |
+| `/ops/collections` | Khoá an toàn (ô + lưới) | `lockdown` (ON23; tươi/cũ theo chính khối) | ô «—» + «Chưa kiểm được trên máy chủ», lưới 8/8 «Chỉ kiểm ở máy thu» (vàng) — khối lỗi cũng vậy |
+| `/ops/collections` | Máy móc: Kev gate, collector API | lớp «Cổng Kev :8009» / «Cổng nhận tin :9210» của `lockdown` (ON23) — cùng trạng thái với Khoá an toàn | «Chưa kiểm được» |
 | `/ops/collections` | vùng còn lại (luồng, Cần chú ý, Zalo, xoay vòng…) | — không dựng trên cloud | một Alert «Phần còn lại của trang chưa có số trên máy chủ» |
 | `/ops/review` | số thẻ chờ theo loại | `reviewQueue` (chỉ số đếm) | «—»; thẻ chi tiết vẫn chỉ ở máy local |
 
@@ -181,9 +182,11 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 - Chưa có bản tin (hoặc bảng `ops_heartbeat` chưa có): một Alert «Chỉ đo ở máy thu», mọi ô «—» — không bao giờ 0 hay «Ổn».
 - Thử ở máy local như cloud: `node scripts/ops-cloud-proto.mjs --mode none|fresh|stale` in `VERCEL=1 DATABASE_URL=…` (lược đồ
   `ops_cloud_proto`, không có bảng tầng A/thô) để chạy dev server cổng khác; dọn bằng `--drop`.
-- Trên cloud `/ops/collections` chỉ dựng vùng đọc bản tin (hàng ô số + lưới sức khoẻ nguồn + lưới job khi đã có bản tin);
-  luồng 7 ngày, Cần chú ý, lockdown, ống S03, xoay vòng, nhóm S03 gom về một Alert «Phần còn lại của trang chưa có số trên máy chủ» và trang không
-  truy vấn bảng thô (`MACHINE_ONLY_REGIONS` trong `collections-view.tsx`). ON4/ON23 đưa dần các vùng ấy lên bằng khối bản tin.
+- Trên cloud `/ops/collections` chỉ dựng vùng đọc bản tin (hàng ô số + lưới sức khoẻ nguồn + lưới khoá an toàn + lưới job khi
+  đã có bản tin); luồng 7 ngày, Cần chú ý, ống S03, xoay vòng, nhóm S03 gom về một Alert «Phần còn lại của trang chưa có số trên máy chủ» và trang không
+  truy vấn bảng thô (`MACHINE_ONLY_REGIONS` trong `collections-view.tsx`). ON4/ON5 đưa dần các vùng ấy lên bằng khối bản tin.
+- Danh sách 8 lớp khoá an toàn một chỗ: `LOCKDOWN_LAYERS` (`app/src/lib/ops-queries.ts`) — bên ghi `readLockdown` (`scripts/lib/ops-local.mjs`)
+  phải giữ đúng thứ tự và chữ; `--mode mixed` của `ops-cloud-proto.mjs` dựng khối đủ true / false / null để chụp ảnh.
 
 ## DB local tự khởi động (chốt 2026-10-23, `_acceptance/db-tu-khoi-dong/`)
 
