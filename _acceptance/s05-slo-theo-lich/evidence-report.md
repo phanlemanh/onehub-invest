@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 8109b9683ac614700e76889b48d3b4915f7b3d40
+verified_commit: 5e9146a81f3083ab8ac40111e2a3ae46e6e31c51
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -136,3 +136,7 @@ none — every multi-run eval is uniform
 
 Round 1: E1, E2, E3, E4, E5, E6 đều xanh; không eval nào đỏ; 3 finding trong hợp đồng (AC-3, AC-6) được sửa ở các commit sau.
 Round 2: E1, E2, E3, E6 chạy lại trên 8109b9683ac614700e76889b48d3b4915f7b3d40 và xanh; E4, E5 carry-forward từ round 1 vì delta không chạm paths của chúng; 6 lệnh suite xanh.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main 3e91907 (#98, #100) sau chữ ký
+run_id: repin-20261025T073702Z-22057
+sha: 5e9146a81f3083ab8ac40111e2a3ae46e6e31c51 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
