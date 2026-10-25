@@ -19,7 +19,7 @@ evals:
     criterion: AC-2
     executor: test
     cmd: config:executors.test.pipeline
-    expected: "exit 0; 0 fail; ca 'isTestSnapshot: đường dẫn có dấu / cuối vẫn nhận ra' và 'nhận diện zalo-mock / e2e / TEST; nguồn thật không dính' xanh"
+    expected: "exit 0; 0 fail; các ca unit 'allowlist: nguồn thật đi qua, mọi nguồn khác bị chặn (kể cả lạ)', 'khuôn tên: thư mục segment thử (TEST/e2e) bị bỏ dù nguồn hợp lệ' và 'khuôn tên: tên thật có mốc thời gian vẫn nạp (cả 3 dạng storage)' xanh (ca «/» cuối đã bỏ khỏi unit ở d9b9ace — hành vi «/» cuối do E2 chứng)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E4

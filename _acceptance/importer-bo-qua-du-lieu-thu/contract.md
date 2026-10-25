@@ -66,3 +66,4 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 - `collect-chotot.mjs` tự ghi manifest `schemaVersion 1` (không qua `storage.ts` của collector), nên fixture Chợ Tốt dùng v1.
 - Hợp đồng dựng SAU khi code xong (ZCode) nên `gate1_skipped: true`.
 - Vòng 4 (25/10): ZCode thêm luật khuôn tên `<city>__<nguồn>__<mốc>` dùng chung hai importer (e5f9be9, nhánh đã rebase). Nhánh nghiệm thu dựng lại thành `claude/acceptance-importer-bo-qua-du-lieu-thu-r4` từ nhánh zcode + gộp `origin/main` 47afb91. Fixture của harness đổi sang tên khuôn thật, mốc năm 2001 mang nonce, dọn theo mốc. Thêm AC-9..11. Kiểm harness biết đỏ: importer vòng 3 (d9b9ace) đỏ 4 ca khuôn tên.
+- Vòng 2 chấm: REJECT ở E3 vì `expected` trích tên hai ca unit đã đổi/bỏ ở d9b9ace (bộ test pipeline 135/135 xanh). Sửa `expected` của E3 sang tên ca hiện có; hành vi «/» cuối do E2 (fixtures) chứng.
