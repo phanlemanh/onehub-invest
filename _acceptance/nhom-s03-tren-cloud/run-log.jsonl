@@ -39,3 +39,4 @@
 {"ts":"2026-10-25T04:58:53Z","sha":"1541f1d37e81f364b48a6d6e12e3fd55cb5c749a","round":2,"kind":"baseline","evals_hash":"3fcce091f9aa19a99a8cf1aed10644b1f7ccd3e900db55ebd294b0c51de90aa5","non_discriminating":[{"cmd":"cd app && npm test","evals":["E1","E2","E3","E4","E5","E6"]}]}
 {"ts":"2026-10-25T04:58:53Z","sha":"1541f1d37e81f364b48a6d6e12e3fd55cb5c749a","round":2,"kind":"round-tally","verdict":"REJECT","expected":7,"returned":7,"blocked":0}
 {"ts":"2026-10-25T04:58:53Z","sha":"1541f1d37e81f364b48a6d6e12e3fd55cb5c749a","round":2,"kind":"chot-truong-nguoi","human_signoff":0,"human_override":0,"bypass_ack":0,"verified_at":12}
+{"kind":"thuoc-vat","ts":"2026-10-25T05:04:17Z","round":2,"san":"1c02ea19cbce833926ae6f1aa11dfe2e13a1cc32","vat":[73,11],"thuoc":[2,2],"ho_so":[278,0],"nhat":0,"lan":1,"tep_thuoc":["_acceptance/nhom-s03-tren-cloud/evals.yaml"]}
