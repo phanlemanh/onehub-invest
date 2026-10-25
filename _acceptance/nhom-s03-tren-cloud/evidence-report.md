@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0ea22f486b9225cd6d19870f8f97dc1a9bb0ec80
+verified_commit: 75355d549db705183345d5c9fa002ba22f9eb8c6
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -178,3 +178,7 @@ none — every multi-run eval is uniform
 Round 1: E9 không đạt — công cụ chụp từ chối chụp trang có khối nhóm S03 nên chỉ có khung ST-s03-none; khối s03 còn nuốt lỗi đọc nhật ký cổng. Trả về triển khai (khối s03 báo lỗi khi không đọc được nhật ký cổng; E9 chụp trên tên nhóm giả).
 Round 2: E1–E6 và E9 đạt; tổng vẫn REJECT vì lệnh suite `cd pipeline && npm test` trượt (DB local đổi giữa lượt) và hội đồng E7 đề xuất không đạt (máy thu ghi «đang bật 0 nhóm» khi không đọc được cấu hình; bảng nhóm chưa làm mờ số khi khối cũ). Trả về triển khai (đổi khuôn: mọi đường đọc của bảng nhóm S03 không đọc được thì «—», số cũ mờ).
 Round 3: toàn bộ eval máy và ba lệnh suite đạt; E9 đủ sáu khung; hội đồng E7 đề xuất PASS ở cả ba lens. T3 nên mọi mục judgment chờ người xác nhận trực tiếp ở Cổng 2 — verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-10-25, do ghim lại sau gộp main e0bfe55 (PR #86–#94)
+run_id: repin-20261025T065235Z-49459
+sha: 75355d549db705183345d5c9fa002ba22f9eb8c6 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · diff chạm vật đo ngoài làn máy: E7, E9 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-7, AC-9
