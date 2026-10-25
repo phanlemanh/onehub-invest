@@ -5,7 +5,9 @@ slug: transform-zalo-boc-job-run
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-10-25T05:45:23Z
 design_doc: docs/superpowers/specs/2026-10-25-transform-zalo-boc-job-run-design.md
 approved_by:
 approved_at:
@@ -25,29 +27,31 @@ Source input: `_acceptance/transform-zalo-boc-job-run/opportunity.md`.
 ## Criteria
 
 - AC-1: Given cây tạm có một snapshot Zalo mới và mọi bước lành, When chạy tệp bọc thật, Then job thoát 0, gọi đúng thứ
-  tự import-airbnb → transform-zalo → refresh-bait-gap, và stderr không có dòng «JOB FAIL».
+  tự import-airbnb → transform-zalo → refresh-bait-gap, stderr không có dòng «JOB FAIL», và tệp state mà tệp bọc ghi
+  chuyển sang mốc của snapshot mới.
 - AC-2: Given ma trận viết trước ba tổ hợp hỏng — chỉ transform-zalo (mã 3), chỉ refresh-bait-gap (mã 4), cả hai (3 và 5)
   —, When chạy tệp bọc, Then job thoát bằng mã của bước hỏng đầu (3, 4, 3), cả hai bước đều được gọi, và stderr có đúng
   một dòng «JOB FAIL [zalo-import-daily] bước <nhãn> mã <n>» cho mỗi bước hỏng, không dòng nào cho bước lành.
-- AC-3: Given bước nạp import-airbnb hỏng (lỗi không phải ECONNREFUSED), When chạy tệp bọc, Then job thoát 1 như trước
-  vòng, transform-zalo và refresh-bait-gap không được gọi, không có dòng «JOB FAIL», và tệp state không nhảy qua snapshot
-  hỏng.
+- AC-3: Given bước nạp import-airbnb hỏng — lỗi thường, hoặc ECONNREFUSED mọi lần thử (DB chưa lên) —, When chạy tệp
+  bọc, Then job thoát 1 như trước vòng, transform-zalo và refresh-bait-gap không được gọi, không có dòng «JOB FAIL», tệp
+  state giữ mốc cũ; ca ECONNREFUSED gọi import-airbnb đúng 5 lần.
 - AC-4: Given bản tệp bọc ở main trước vòng (146eca2), When chỉ transform-zalo hỏng (mã 3), Then bản ấy thoát 0 — đối
   chứng: phép đo AC-2 biết báo đỏ trên lỗi cũ.
-- AC-5: Given bản tệp bọc sau vòng, When so với bản ở main trước vòng, Then mọi dòng từ đầu tệp tới hết khối «nạp hỏng thì
-  thoát 1» giữ nguyên từng byte (phần nạp làn ZCode không đổi).
+- AC-5: Given nhánh của vòng chưa vào main, When so tệp bọc với bản ở merge-base của nhánh với main, Then mọi dòng từ đầu
+  tệp tới hết khối «nạp hỏng thì thoát 1» giữ nguyên từng byte (vòng không đổi phần nạp làn ZCode, kể cả khi bản vá P1.5
+  của ZCode đã vào main trước).
 - AC-6: Given phép đo chạy, When dựng cây tạm, Then PATH chỉ gồm node giả và /usr/bin:/bin, HOME là thư mục tạm,
   DATABASE_URL trỏ cổng đóng, và mọi lời gọi node giả đều nằm trong ba nhãn import-airbnb/transform-zalo/refresh-bait-gap.
 - AC-7: Given người vận hành đọc `docs/ops/runtime-map.md`, When tra bảng «Job đêm báo lỗi thật», Then có dòng
-  `com.oneinvest.zalo-import` (`scripts/zalo-import-daily.sh`) ghi «thoát ≠ 0 (mã của bước hỏng đầu)» và cách grep dòng
-  JOB FAIL trong log của job.
+  `com.oneinvest.zalo-import` (`scripts/zalo-import-daily.sh`) ghi «thoát ≠ 0 (mã của bước hỏng đầu)», và lệnh grep dòng
+  JOB FAIL trỏ đúng tệp log mà plist của job ghi stderr vào.
 
 ## Coverage
 
 Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» trong `decisions.jsonl`. Trục liệt tay:
 
 - Trục A — trạng thái hai bước làn Claude: lành · chỉ transform hỏng · chỉ refresh hỏng · cả hai hỏng → AC-1, AC-2
-- Trục B — bước nạp hỏng → AC-3
+- Trục B — bước nạp hỏng: lỗi thường · DB chưa lên (ECONNREFUSED) → AC-3
 - Trục C — bản cũ (đối chứng) · bản mới · phần nạp không đổi → AC-4, AC-5
 - Trục D — rào phép đo, tài liệu vận hành → AC-6, AC-7
 - Later: cảnh báo chủ động khi job đỏ.
