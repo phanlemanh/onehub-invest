@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: be318a8e1da026a0582d5f52e89d101c716535f4
+verified_commit: da2b2edd05357d1fff79169042246ee41ffed271
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -161,3 +161,7 @@ none — mọi eval chạy một lần, tất định. E1 và E2 dùng chung l�
 ## Iterations
 
 Round 1: E1–E5 đạt. Ghi 4 phát hiện ngoài hợp đồng (1 medium, 3 low), không phát hiện nào chặn AC.
+
+### Re-pin lần 1 — 2026-10-25, do gộp origin/main 3f09055 trước merge (lần 2)
+run_id: repin-20261025T041224Z-69848
+sha: da2b2edd05357d1fff79169042246ee41ffed271 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
