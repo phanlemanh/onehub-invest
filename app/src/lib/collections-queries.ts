@@ -5,6 +5,7 @@ import path from "node:path";
 import { pool } from "./db";
 import { VN_TZ, vnDayKey, vnDayStart } from "./format";
 import { lastMeaningfulLine } from "./last-log-line";
+import { logsDir, treeRoot } from "./log-root";
 import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { sourceLabel, type SourceRoles } from "./source-labels";
 import {
@@ -214,8 +215,6 @@ export type JobStatus = {
   stale?: boolean;
 };
 
-const ROOT = process.cwd().endsWith("/app") ? path.resolve(process.cwd(), "..") : process.cwd();
-const LOGS = path.join(ROOT, "pipeline/logs");
 
 async function tailFile(file: string): Promise<{ mtime: string | null; lastLine: string | null }> {
   try {
@@ -230,8 +229,9 @@ async function tailFile(file: string): Promise<{ mtime: string | null; lastLine:
 
 async function latestWeeklyLog(): Promise<string | null> {
   try {
-    const files = (await readdir(LOGS)).filter((f) => /^weekly-.*\.log$/.test(f)).sort();
-    return files.length ? path.join(LOGS, files.at(-1)!) : null;
+    const dir = logsDir();
+    const files = (await readdir(dir)).filter((f) => /^weekly-.*\.log$/.test(f)).sort();
+    return files.length ? path.join(dir, files.at(-1)!) : null;
   } catch {
     return null;
   }
@@ -273,12 +273,13 @@ export async function readSchedulerStatus(): Promise<JobStatus[]> {
   // ON7: nhãn «S0x · vai trò», dòng log cuối che tên thật; danh sách tên rỗng (DB lỗi) → lastLine null (đóng chặt).
   const { roles, names } = await registryForJobs();
   const weekly = await latestWeeklyLog();
+  const logs = logsDir(); // ON16: log ở checkout chính khi app chạy từ worktree, tính khi gọi
   const [kevAlive, apiAlive, airdnaLog, smokeLog, apiLog, weeklyTail] = await Promise.all([
     probe("http://127.0.0.1:8009/"),
     probe("http://127.0.0.1:9210/"),
-    tailFile(path.join(LOGS, "airdna-daily.log")),
-    tailFile(path.join(LOGS, "launchd-smoke.log")),
-    tailFile(path.join(LOGS, "launchd-collector-api.log")),
+    tailFile(path.join(logs, "airdna-daily.log")),
+    tailFile(path.join(logs, "launchd-smoke.log")),
+    tailFile(path.join(logs, "launchd-collector-api.log")),
     weekly ? tailFile(weekly) : Promise.resolve({ mtime: null, lastLine: null }),
   ]);
   const jobs: JobStatus[] = [
@@ -343,7 +344,7 @@ export async function readRotationPreview(): Promise<RotationPreview> {
   let updatedAt: string | null = null;
   try {
     const st = JSON.parse(
-      await readFile(path.join(ROOT, "collector/state/airdna-rotation.json"), "utf8"),
+      await readFile(path.join(treeRoot(), "collector/state/airdna-rotation.json"), "utf8"),
     );
     cursor = st.cursor ?? 0;
     updatedAt = st.updatedAt ?? null;

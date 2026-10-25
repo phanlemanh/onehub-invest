@@ -7,21 +7,21 @@ evals:
   - id: E1
     criterion: AC-1
     executor: test
-    cmd: config:executors.test.scripts
+    cmd: config:executors.test.audit_all
     paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
     expected: "exit 0; ca 'ON16-AC-1 audit-all từ worktree đọc log ở checkout chính' ok (hai cây tạm dựng bằng git init + git worktree add; dòng PASS «AirDNA nightly log: có activity»), chiều đỏ 'ON16-AC-1 script main từ worktree → LIMITED trống' ok"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: test
-    cmd: config:executors.test.scripts
+    cmd: config:executors.test.audit_all
     paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
     expected: "exit 0; ca 'ON16-AC-2 kết quả từ worktree trùng lần chạy ở checkout chính' ok (so TOÀN BỘ dòng đầu ra, in số dòng đã so), chiều đỏ 'ON16-AC-2 script main từ worktree → khác ở mục A1' ok"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: test
-    cmd: config:executors.test.scripts
+    cmd: config:executors.test.audit_all
     paths: [scripts/audit-all.sh, scripts/audit-all.test.mjs]
     expected: "exit 0; bốn ca 'ON16-AC-3 <checkout chính|không git|.git hỏng|checkout chính đã dời> đọc log của chính cây' ok (mỗi ca có log riêng của cây hoặc dòng LIMITED theo Hỏi-1, và in TỔNG KẾT), chiều đỏ 'ON16-AC-3 bản đột biến gốc log rỗng khi git lỗi → báo đường đọc sai' ok"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
