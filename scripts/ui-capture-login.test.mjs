@@ -6,7 +6,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { after, before, test } from "node:test";
 
-import { capture, loginState } from "./ui-capture-login.mjs";
+import { capture, loginState, widthProbe } from "./ui-capture-login.mjs";
 
 const EMAIL = "ops-test@local.test";
 const PASSWORD = "mat-khau-thu-Zq81";
@@ -49,7 +49,7 @@ after(() => server.close());
  * Runner giả: ghi lệnh; `eval` trả pathname (`/login` khi chưa nạp phiên) hoặc kết quả che tầng A theo `leaked`.
  * Trạng thái tệp phiên được chụp lại đúng lúc `state-load` thấy nó.
  */
-function fakeRun({ leaked = [] } = {}) {
+function fakeRun({ leaked = [], width = { w: 390, c: 358, s: 358 } } = {}) {
   const calls = [];
   let loaded = false;
   let seen = null;
@@ -64,7 +64,7 @@ function fakeRun({ leaked = [] } = {}) {
       const out = args[1].includes("location.pathname")
         ? JSON.stringify(loaded ? "/ops/quality" : "/login")
         : args[1].includes("scrollWidth")
-          ? JSON.stringify({ w: 390, sw: 390 })
+          ? width === null ? "undefined" : JSON.stringify(width)
           : JSON.stringify({ masked: 2, checkedNames: 3, leaked, attrLeaked: [] });
       return `### Result\n${out}\n### Ran Playwright code\n`;
     }
@@ -113,7 +113,7 @@ test("UC-AC-9 (a)(b) URL /ops đăng nhập, tệp phiên 600 rồi bị xoá, k
   const all = d.logs.join("\n");
   assert.ok(!all.includes(PASSWORD) && !all.includes(COOKIE), "mật khẩu/cookie ra stdout/stderr");
   assert.ok(all.includes("tầng A: đã che 2"), "thiếu dòng báo che tầng A");
-  assert.ok(all.includes("bề rộng: khung 390, trang 390"), "thiếu dòng đo bề rộng khung/trang");
+  assert.ok(all.includes("bề rộng: khung 390, vùng cuộn 358, nội dung 358"), "thiếu dòng đo bề rộng vùng cuộn");
 });
 
 test("UC-AC-9 (c) mật khẩu sai → không đăng nhập được, không ảnh", async () => {
@@ -162,4 +162,21 @@ test("UC-AC-9 chế độ tối 390", async () => {
   assert.equal(await capture({ url: `${base}/ops/x`, out: "/tmp/khong-ghi.png", ...d.opts }), 0);
   assert.ok(d.fr.calls.some((a) => a.join(" ") === "set-color-scheme dark"));
   assert.ok(d.fr.calls.some((a) => a.join(" ") === "resize 390 844"));
+});
+
+test("UC-AC-10 dòng bề rộng: nội dung rộng hơn vùng cuộn thì in đúng hai số; không đo được thì nói ra", async () => {
+  const tran = deps({ width: { w: 390, c: 358, s: 2358 } });
+  assert.equal(await capture({ url: `${base}/ops/x`, out: "/tmp/khong-ghi.png", ...tran.opts }), 0);
+  assert.ok(tran.logs.join("\n").includes("bề rộng: khung 390, vùng cuộn 358, nội dung 2358"));
+  const mu = deps({ width: null }); // eval trả undefined
+  assert.equal(await capture({ url: `${base}/ops/x`, out: "/tmp/khong-ghi.png", ...mu.opts }), 0);
+  assert.ok(mu.logs.join("\n").includes("bề rộng: không đo được"), "đo hỏng phải nói ra, không im");
+});
+
+test("UC-AC-10 widthProbe: đo vùng cuộn (không đo document), đối chứng dương chèn rồi gỡ khối 2000px", () => {
+  const thuong = widthProbe(false);
+  assert.match(thuong, /overflowY/);
+  assert.doesNotMatch(thuong, /documentElement/);
+  assert.match(widthProbe(true), /if \(true\)[\s\S]*2000px[\s\S]*wide\.remove\(\)/);
+  assert.match(thuong, /if \(false\)/);
 });

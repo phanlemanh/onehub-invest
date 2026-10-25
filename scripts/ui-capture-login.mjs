@@ -7,7 +7,8 @@
 //      oi_session HttpOnly) → storage state của Playwright trong thư mục tạm 700, tệp 600, xoá khi thoát.
 //   2. playwright-cli state-load → goto; trang cuối là /login → thoát 4 (phiên hỏng), không ảnh.
 //   3. Che tầng A (scripts/ui-standards/mask-tier-a.js) trước khi chụp; còn lộ → thoát 5, không ảnh.
-// Không in mật khẩu, cookie hay tên thật. Biến môi trường: UI_CAPTURE_SCHEME=dark · UI_CAPTURE_SIZE=<rộng>x<cao>.
+// Không in mật khẩu, cookie hay tên thật. Biến môi trường: UI_CAPTURE_SCHEME=dark · UI_CAPTURE_SIZE=<rộng>x<cao> ·
+// UI_CAPTURE_PROBE_WIDE=1 (đối chứng dương cho dòng «bề rộng»).
 // Mã thoát: 0 ảnh đã ghi · 2 lối gọi/chế độ sai · 3 thiếu playwright-cli · 4 phiên hỏng · 5 tầng A lộ · 6 không đăng nhập được.
 import { execFileSync } from "node:child_process";
 import { chmodSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -40,6 +41,20 @@ export async function loginState({ base, email, password, fetchImpl = fetch }) {
     cookies: [{ name: "oi_session", value, domain: new URL(base).hostname, path: "/", expires: -1, httpOnly: true, secure: false, sameSite: "Lax" }],
     origins: [],
   };
+}
+
+/** Hàm trang đo vùng cuộn thân trang; `probe` chèn khối 2000px (đối chứng dương) rồi gỡ ngay sau khi đo. */
+export function widthProbe(probe) {
+  return `() => {
+    let el = document.querySelector("h1");
+    while (el && !/(auto|scroll)/.test(getComputedStyle(el).overflowY)) el = el.parentElement;
+    if (!el) return null;
+    let wide = null;
+    if (${probe ? "true" : "false"}) { wide = document.createElement("div"); wide.style.cssText = "width:2000px;height:1px"; el.appendChild(wide); }
+    const r = { w: innerWidth, c: el.clientWidth, s: el.scrollWidth };
+    if (wide) wide.remove();
+    return r;
+  }`;
 }
 
 /** Kết quả của `playwright-cli eval` nằm giữa dòng «### Result» và mục kế tiếp. */
@@ -103,9 +118,13 @@ export async function capture({ url, out, env = process.env, run, ensureAccount,
       }
       err(`tầng A: đã che ${r.masked}`);
     }
-    // Bề rộng khung và trang: trang rộng hơn khung = cuộn ngang cấp trang (bảng cuộn trong khung của nó không tính).
-    const bw = evalResult(run(["eval", "() => ({ w: innerWidth, sw: document.documentElement.scrollWidth })"]));
-    if (bw) err(`bề rộng: khung ${bw.w}, trang ${bw.sw}`);
+    // Bề rộng: đo VÙNG CUỘN của thân trang (cha gần nhất của h1 có overflow-y auto/scroll), không đo document —
+    // khung Ops cắt tràn ở gốc nên document.scrollWidth luôn bằng khung (S4 r3 ON10). Nội dung > vùng cuộn = trang cuộn
+    // ngang; bảng lưới cuộn trong khung riêng của nó không làm vùng này rộng ra. UI_CAPTURE_PROBE_WIDE=1 chèn một khối
+    // 2000px trước khi đo — đối chứng dương: phép đo phải báo nội dung > vùng cuộn.
+    const bw = evalResult(run(["eval", widthProbe(env.UI_CAPTURE_PROBE_WIDE === "1")]));
+    if (bw && Number.isFinite(bw.c) && Number.isFinite(bw.s)) err(`bề rộng: khung ${bw.w}, vùng cuộn ${bw.c}, nội dung ${bw.s}`);
+    else err("bề rộng: không đo được");
     run(["screenshot", "--full-page", "--filename", out]);
     log(out);
     return 0;
