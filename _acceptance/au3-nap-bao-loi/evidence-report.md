@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 5cae57fe8c2352480b7ee25eca5361af12ed9bf0
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: au3-nap-bao-loi

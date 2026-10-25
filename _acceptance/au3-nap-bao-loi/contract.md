@@ -5,7 +5,7 @@ slug: au3-nap-bao-loi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -67,3 +67,7 @@ Source input: prompt (brief phiên điều phối liên làn local_5d0e32a0…, 
 - Ca DB chết dùng `import-chotot.mjs` / `import-airbnb.mjs` THẬT trỏ cổng không ai nghe, để chứng minh lệnh grep `ECONNREFUSED` khớp đúng thông báo lỗi thật. Không ghi DB.
 - Hợp đồng dựng SAU khi code xong (ZCode) nên `gate1_skipped: true`.
 - Vòng 3 (25/10): ZCode sửa ở 903fc80 (TS_RE nhận 6/9 chữ số + hậu tố `-n`, sort theo mốc, khoá state chung, trap) và đã rebase. Nhánh nghiệm thu dựng lại thành `claude/acceptance-au3-nap-bao-loi-r3` TỪ nhánh zcode rồi gộp `origin/main` (gộp theo chiều ngược bị hook git-secrets chặn nhầm: dòng tiêu đề hunk cắt cụt URL DB local). Thêm AC-5 (probe R1 thành eval), AC-6 (khuôn tên), AC-7 (khoá). Kiểm harness biết đỏ: `ts-format` trên 5770d9e (regex 6 chữ số) đỏ 4 mục — chỉ nạp snapshot 6 chữ số, thoát 0.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-4: Job nạp Facebook để lại tệp tạm rỗng sau mỗi lượt.
+  - Ngoài-5: Snapshot tới muộn mang mốc cũ hơn mốc đã nạp bị bỏ qua vĩnh viễn (chỉ trong giai đoạn chuyển collector).
+  - Ngoài-6: Job Chợ Tốt có thể chọn nhầm thư mục rác làm snapshot mới nhất.
