@@ -40,6 +40,10 @@
       "p": "Sẽ KHÔNG để sót dòng dữ liệu nào trỏ vào khu vực đã gỡ; số tổng Hà Nội bằng đúng tổng các phường."
     },
     {
+      "id": "AC-10",
+      "p": "Sẽ KHÔNG xoá khu vực nào trong lượt chạy tự động hằng tuần — lượt đó chỉ gán lại tin cho thuê và báo danh sách khu vực sai; việc xoá chỉ chạy khi có người gọi lệnh có cờ, sau khi đã đếm thị trường người dùng lưu trên cloud."
+    },
+    {
       "id": "OOS-1",
       "p": "KHÔNG nạp phường Đà Nẵng trong việc này (theo Hỏi-1) — chỉ gỡ khu vực «Thành phố Đà Nẵng» đang gắn nhầm dưới Hà Nội."
     },

@@ -46,8 +46,9 @@ phường/xã của Hà Nội và Đà Nẵng có phường riêng; metrics tín
 5. **Thời điểm áp (Hỏi-4).** `scripts/cloud-sync.sh` đưa `areas` lên cloud 15 phút một lần, nên áp lên DB local là
    ship. Khuyến nghị: S3/S4 chỉ áp thử trong một transaction rồi ROLLBACK (`kiem-ranh-gioi-khu-vuc.mjs --thu`); áp
    thật `reassign-areas.mjs` + `300_metrics.sql` + `400_breakdowns.sql` (bẫy kỹ thuật #5) sau chữ ký Cổng Bằng chứng,
-   rồi chạy script ở chế độ chỉ đọc làm bằng chứng sau áp. `reassign-areas.mjs` không có trong lịch chạy đêm (chỉ
-   `pipeline/finalize-hanoi.sh` chạy tay).
+   rồi chạy script ở chế độ chỉ đọc làm bằng chứng sau áp. ĐÍNH CHÍNH 26/10 (lượt chấm r2): `reassign-areas.mjs`
+   CÓ chạy tự động hằng tuần (`pipeline/scripts/weekly-collect.sh` → `finalize-hanoi.sh`), nên bước xoá khu vực lạc
+   chỉ chạy khi gọi tay với cờ `--xoa-khu-vuc-lac` (AC-10); lượt theo lịch chỉ gán lại listing và báo khu vực lạc.
 6. Tách thân script thành hàm xuất `runReassign(client, cities)` (người gọi giữ transaction, cùng nếp
    `runTransformZalo`) để test chạy trong `BEGIN … ROLLBACK`.
 

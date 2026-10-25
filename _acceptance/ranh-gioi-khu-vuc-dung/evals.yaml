@@ -67,3 +67,10 @@ evals:
     paths: [pipeline/reassign-areas.mjs, pipeline/scripts/reassign-areas.test.mjs]
     expected: "exit 0; ca 'AU9-AC-9 snapshot mất tag admin_level → dừng, không xoá gì' ok (runReassign ném lỗi nêu tên market và hai con số; số dòng areas, listings, market_metrics trước = sau trong transaction)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.reassign_areas
+    paths: [pipeline/reassign-areas.mjs, pipeline/finalize-hanoi.sh, pipeline/scripts/reassign-areas.test.mjs]
+    expected: "exit 0; ca 'AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại' ok (khu vực lạc mồi, market_metrics, sale_offers.area_id của nó còn nguyên; listing mồi trong Hà Nội sang phường hợp lệ; log có dòng gợi ý lệnh --xoa-khu-vuc-lac), chiều đỏ 'AU9-AC-10 có cờ: khu vực lạc bị xoá' ok, ca 'AU9-AC-10 finalize-hanoi.sh không mang cờ xoá' ok (đọc tĩnh tệp, có dòng gọi reassign-areas.mjs và không có --xoa-khu-vuc-lac)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
