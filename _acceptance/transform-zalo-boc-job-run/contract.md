@@ -5,7 +5,7 @@ slug: transform-zalo-boc-job-run
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-25T05:45:23Z
 design_doc: docs/superpowers/specs/2026-10-25-transform-zalo-boc-job-run-design.md
