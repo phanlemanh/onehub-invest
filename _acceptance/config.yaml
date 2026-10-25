@@ -31,6 +31,7 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
     ui_capture_login: "node --test scripts/ui-capture-login.test.mjs"   # ON10 — bước chụp /ops có phiên (máy chủ giả, không cần DB/app)
@@ -259,6 +260,11 @@ executors:
     hsn_budget_env: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs budget-env"
     hsn_zc6_regress: "for m in spool-replay reject-4xx hang-stop cap-50 kev-hang self-contained; do out=$(node scripts/hook-zalo-spool/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
     hsn_l1_syntax: "node scripts/hook-zalo-spool/acceptance.mjs l1-grep && node --check collector/openclaw/handler.js && echo SYNTAX OK"
+    # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
+    ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
+    ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
+    ckl_idempotent: "node scripts/chotot-khong-lui/acceptance.mjs idempotent"
+    ckl_scope: "bash _acceptance/chotot-khong-lui/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
