@@ -1,0 +1,388 @@
+{
+  "generated_at": "2026-10-24T12:12:04Z",
+  "generated_sha": "d400714c56e9347eadd3fb6552bd2f37978b385e",
+  "mainBranchInfo": {
+    "branch": "main",
+    "source": "remote"
+  },
+  "slug": "deals-loai-tin-phi-ly",
+  "round": 1,
+  "riskTier": "T2",
+  "evals": [
+    {
+      "id": "E1",
+      "criterion": "AC-1",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'DP-AC-1 ma trận lý do' với bảng viết trước 13 dòng = 13 assert (diện tích null/0 → thieu-dien-tich; 9 và 1001 → dien-tich-ngoai-khoang; 10 m² 0PN và 1000 m² 3PN → null; 300 m² 11 PN → phong-ngu-ngoai-khoang; 36 m² 3PN, 37 m² 2PN, 19 m² 1PN → phong-qua-nho; 40 m² 2PN, 60 m² 3PN, 80 m² null PN → null); thứ tự xét được ghim bằng ca 0 m² 11PN → thieu-dien-tich\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/lib/deal-plausibility.mjs",
+        "pipeline/scripts/deals-phi-ly.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E2",
+      "criterion": "AC-2",
+      "cmd": "cd pipeline && npm test",
+      "expected": "\"exit 0; ca 'DP-AC-2 loaiTinPhiLy' trên fixture trong BEGIN…ROLLBACK (phường lấy từ v_ruler_p2_area, không có phường nào → ca FAIL có tên, không skip; 4 tin P1 của một người bán fixture: hợp lý, 36 m² 3PN, thiếu diện tích, 5000 m²): (a) gọi loaiTinPhiLy với đúng 4 tin → tin hợp lý giữ bait_gap_pct, ba tin kia NULL, ops_audit thêm ĐÚNG 1 dòng action 'bait-gap:loai-phi-ly' với total = 3, by_reason bằng {thieu-dien-tich:1, dien-tich-ngoai-khoang:1, phong-qua-nho:1}, offer_ids bằng tập 3 mã fixture; (b) chiều âm cùng fixture: gọi với chỉ tin hợp lý → số dòng ops_audit trước = sau; ca 'DP-AC-2 refreshBaitGap giữ registry người bán' : chạy refreshBaitGap trên fixture → ba tin phi lý NULL, còn sellers.flags median_gap_pct và n_good_deals của người bán fixture bằng giá trị tính tay trên CẢ 4 tin (luật chạy sau bước người bán); đối chứng: trung vị tính trên cột bait_gap_pct SAU luật (chỉ tin hợp lý, = 10) khác registry (= 25) — luật chạy trước bước người bán thì registry mang số ấy\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/lib/deal-plausibility.mjs",
+        "pipeline/scripts/deals-phi-ly.test.mjs"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.pipeline"
+    },
+    {
+      "id": "E3",
+      "criterion": "AC-3",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DP-AC-3 trang đọc bait_gap_pct' chạy dealsSql() trên fixture trong giao dịch: số giảm trả về = bait_gap_pct đã đặt tay khác công thức thước (chứng không tính lại), tin bait_gap_pct NULL không có trong kết quả, tin 4% và 51% không có, tin 5% và 50% có\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/deals.ts",
+        "app/tests/deals-phi-ly.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E4",
+      "criterion": "AC-4",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DP-AC-4 tin sát trần đứng sau' trên fixture giảm [48, 12, 36, 30, 49, 35]: thứ tự trả về đúng [35, 30, 12, 49, 48, 36], suspect đúng [false, false, false, true, true, true]; ca 'DP-AC-4 sắp trước khi cắt' : 31 tin giảm 36–50% cộng 1 tin 20%, gọi với limit 30 → phần tử đầu là tin 20% và có đúng 30 phần tử; chiều đỏ trên cùng fixture: câu sắp giảm dần rồi cắt 30 không chứa tin 20%\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/deals.ts",
+        "app/tests/deals-phi-ly.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E5",
+      "criterion": "AC-5",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DP-AC-5 bản cloud' trong BEGIN…ROLLBACK: chạy bản đầy đủ trên fixture lấy dãy offer_id, rồi DROP TABLE stg_zalo_posts và DROP COLUMN từng cột trong PII_EXCLUDE.sale_offers (import từ pipeline/sync-cloud.mjs, không viết tay), chạy dealsSql({cloud:true}) → không lỗi, cùng dãy offer_id cùng thứ tự; đối chứng: bản đầy đủ chạy trên lược đồ đã xoá thì lỗi (chứng phép xoá có tác dụng); CLOUD_ALLOW.sale_offers chứa 'bait_gap_pct'\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/lib/deals.ts",
+        "pipeline/sync-cloud.mjs",
+        "app/tests/deals-phi-ly.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E6",
+      "criterion": "AC-6",
+      "cmd": "cd app && npm test",
+      "expected": "\"exit 0; ca 'DP-AC-6 thẻ' vẽ DealCard trong jsdom: thẻ n_reposts 1 có 'đăng 1 lần', thẻ n_reposts 3 có 'đăng 3 lần', không thẻ nào có từ 'mới' đứng riêng; thẻ suspect=true có 'cần xác minh', thẻ suspect=false không có; page.tsx dùng DealCard cho mỗi dòng (import + JSX)\"",
+      "executor": "test",
+      "expectedExit": 0,
+      "paths": [
+        "app/src/components/ops/deal-card.tsx",
+        "app/src/app/ops/deals/page.tsx",
+        "app/tests/deals-phi-ly.test.tsx"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.test.app_ui"
+    },
+    {
+      "id": "E7",
+      "criterion": "AC-7",
+      "cmd": "cd app && node --import tsx ../scripts/deals-phi-ly-do.mjs",
+      "expected": "\"exit 0; trên DB local trong BEGIN…ROLLBACK: dòng 'loại: <n> tin' kèm số theo từng lý do; dòng '5 tin đầu: <giảm %…>'; 'ok không tin thiếu diện tích trong danh sách'; 'ok không tin phòng quá nhỏ trong danh sách'; 'ok đầu danh sách ≤ 35%' — lối thoát 'ok DB không còn tin đủ điều kiện ≤ 35%' CHỈ khi đếm trên toàn DB (sau luật) số tin P1 sale có giảm 5–35% bằng 0; 'ok DB không đổi' (đếm + băm bait_gap_pct trước/sau bằng nhau); chiều đỏ cùng lượt: danh sách lấy bằng bait_gap_pct trước luật có ít nhất một tin phi lý → 'ok đối chứng: bản chưa loại còn <k> tin phi lý'\"",
+      "executor": "script",
+      "expectedExit": 0,
+      "paths": [
+        "scripts/deals-phi-ly-do.mjs",
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/lib/deal-plausibility.mjs",
+        "app/src/lib/deals.ts"
+      ],
+      "evidence_required": [
+        "run_id",
+        "exit_code",
+        "verifier",
+        "verified_at",
+        "output"
+      ],
+      "ref": "config:executors.script.deals_phi_ly_do"
+    },
+    {
+      "id": "E8",
+      "criterion": "AC-8",
+      "expected": "\"Có mục đủ bốn phần, nghĩa khớp; không mâu thuẫn với mục Căn giá tốt.\"",
+      "question": "\"Trong CONTEXT.md, có mục thuật ngữ cho «tin cần xác minh» trên trang Căn giá tốt — đủ nhãn, tên trong code, định nghĩa (tin giảm sâu hơn ngưỡng nghi ngờ so với thước, vẫn hiện nhưng đứng sau) và từ tránh dùng — và mục «Căn giá tốt» không mâu thuẫn với nó không?\"",
+      "executor": "judgment",
+      "expectedExit": 0,
+      "inputs": [
+        "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a/CONTEXT.md"
+      ],
+      "paths": [
+        "CONTEXT.md"
+      ],
+      "evidence_required": [
+        "run_id",
+        "verdict",
+        "judges"
+      ]
+    }
+  ],
+  "suiteCommands": [
+    "cd agent && npm test",
+    "cd app && npx tsc --noEmit && npm run lint",
+    "cd app && npm test",
+    "cd pipeline && npm test",
+    "cd app && npm run test:lint-rules",
+    "node scripts/check-portal-compliance.mjs"
+  ],
+  "diffBase": "fcc26947a4f1798d9ad5d20778fd4707de00d28f",
+  "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a",
+  "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/judge-personas.md",
+  "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.33.1/skills/acceptance/references/evidence-report-template.md",
+  "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
+  "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/brave-northcutt-955c6a/_acceptance/deals-loai-tin-phi-ly/contract.md",
+  "invokedAt": "2026-10-24T12:12:04Z",
+  "invokedSha": "d400714c56e9347eadd3fb6552bd2f37978b385e",
+  "vungVat": [
+    "CONTEXT.md",
+    "_acceptance/config.yaml",
+    "_acceptance/deals-loai-tin-phi-ly/card-plain.json",
+    "_acceptance/deals-loai-tin-phi-ly/card.html",
+    "_acceptance/deals-loai-tin-phi-ly/du-bao.json",
+    "_acceptance/deals-loai-tin-phi-ly/evals.yaml",
+    "_acceptance/deals-loai-tin-phi-ly/figures/nguong-phong.html",
+    "_acceptance/deals-loai-tin-phi-ly/figures/nguong-phong.png",
+    "_acceptance/deals-loai-tin-phi-ly/figures/tin-sat-tran.html",
+    "_acceptance/deals-loai-tin-phi-ly/figures/tin-sat-tran.png",
+    "app/eslint-suppressions.json",
+    "app/src/app/ops/deals/page.tsx",
+    "app/src/components/ops/deal-card.tsx",
+    "app/src/lib/deals.ts",
+    "app/tests/deals-phi-ly.test.tsx",
+    "pipeline/lib/deal-plausibility.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/deals-phi-ly.test.mjs",
+    "scripts/check-portal-compliance.mjs",
+    "scripts/deals-phi-ly-do.mjs"
+  ],
+  "ngoaiVatGlobs": [
+    "docs/**",
+    "README.md",
+    "**/README.md",
+    "AGENTS.md",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
+    "CONTEXT.md",
+    ".claude/rules/**",
+    "PRODUCT-MAP.md",
+    "LO-TRINH.html",
+    "_acceptance/*/**/*.md",
+    "_acceptance/*/**/*.jsonl"
+  ],
+  "ngoaiVatFiles": [
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/deals-loai-tin-phi-ly/contract.md",
+    "_acceptance/deals-loai-tin-phi-ly/decisions.jsonl",
+    "_acceptance/deals-loai-tin-phi-ly/duong-nen.md",
+    "_acceptance/deals-loai-tin-phi-ly/figures/index.md",
+    "_acceptance/deals-loai-tin-phi-ly/gap-probe.md",
+    "_acceptance/deals-loai-tin-phi-ly/opportunity.md",
+    "docs/superpowers/plans/2026-10-24-deals-loai-tin-phi-ly.md",
+    "docs/superpowers/specs/2026-10-24-deals-loai-tin-phi-ly-design.md"
+  ],
+  "diffFiles": [
+    "CONTEXT.md",
+    "LO-TRINH.html",
+    "PRODUCT-MAP.md",
+    "_acceptance/config.yaml",
+    "_acceptance/deals-loai-tin-phi-ly/card-plain.json",
+    "_acceptance/deals-loai-tin-phi-ly/card.html",
+    "_acceptance/deals-loai-tin-phi-ly/contract.md",
+    "_acceptance/deals-loai-tin-phi-ly/decisions.jsonl",
+    "_acceptance/deals-loai-tin-phi-ly/du-bao.json",
+    "_acceptance/deals-loai-tin-phi-ly/duong-nen.md",
+    "_acceptance/deals-loai-tin-phi-ly/evals.yaml",
+    "_acceptance/deals-loai-tin-phi-ly/figures/index.md",
+    "_acceptance/deals-loai-tin-phi-ly/figures/nguong-phong.html",
+    "_acceptance/deals-loai-tin-phi-ly/figures/nguong-phong.png",
+    "_acceptance/deals-loai-tin-phi-ly/figures/tin-sat-tran.html",
+    "_acceptance/deals-loai-tin-phi-ly/figures/tin-sat-tran.png",
+    "_acceptance/deals-loai-tin-phi-ly/gap-probe.md",
+    "_acceptance/deals-loai-tin-phi-ly/opportunity.md",
+    "app/eslint-suppressions.json",
+    "app/src/app/ops/deals/page.tsx",
+    "app/src/components/ops/deal-card.tsx",
+    "app/src/lib/deals.ts",
+    "app/tests/deals-phi-ly.test.tsx",
+    "docs/superpowers/plans/2026-10-24-deals-loai-tin-phi-ly.md",
+    "docs/superpowers/specs/2026-10-24-deals-loai-tin-phi-ly-design.md",
+    "pipeline/lib/deal-plausibility.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/deals-phi-ly.test.mjs",
+    "scripts/check-portal-compliance.mjs",
+    "scripts/deals-phi-ly-do.mjs"
+  ],
+  "fileDoTrongDiff": [
+    "CONTEXT.md",
+    "_acceptance/config.yaml",
+    "_acceptance/deals-loai-tin-phi-ly/card-plain.json",
+    "_acceptance/deals-loai-tin-phi-ly/card.html",
+    "_acceptance/deals-loai-tin-phi-ly/du-bao.json",
+    "_acceptance/deals-loai-tin-phi-ly/evals.yaml",
+    "_acceptance/deals-loai-tin-phi-ly/figures/nguong-phong.html",
+    "_acceptance/deals-loai-tin-phi-ly/figures/nguong-phong.png",
+    "_acceptance/deals-loai-tin-phi-ly/figures/tin-sat-tran.html",
+    "_acceptance/deals-loai-tin-phi-ly/figures/tin-sat-tran.png",
+    "app/src/app/ops/deals/page.tsx",
+    "app/src/components/ops/deal-card.tsx",
+    "app/src/lib/deals.ts",
+    "app/tests/deals-phi-ly.test.tsx",
+    "pipeline/lib/deal-plausibility.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/deals-phi-ly.test.mjs",
+    "scripts/deals-phi-ly-do.mjs"
+  ],
+  "coverageFiles": [
+    "CONTEXT.md",
+    "app/src/app/ops/deals/page.tsx",
+    "app/src/components/ops/deal-card.tsx",
+    "app/src/lib/deals.ts",
+    "app/tests/deals-phi-ly.test.tsx",
+    "pipeline/lib/deal-plausibility.mjs",
+    "pipeline/refresh-bait-gap.mjs",
+    "pipeline/scripts/deals-phi-ly.test.mjs",
+    "scripts/deals-phi-ly-do.mjs"
+  ],
+  "coEvalPaths": true,
+  "evalsHash": "6c068dd58ee6d2fd993bea9afc4379aad7565177fe30608f3c69fd895c25a064",
+  "runBaseline": true,
+  "thuocChup": {
+    "sha": "d400714c56e9347eadd3fb6552bd2f37978b385e",
+    "n": 69,
+    "digest": "e9f855156f7844ecfd82bd3881caa517e606cd0a148f8bcbe79a7f709435436e",
+    "tep": {
+      "_acceptance/config.yaml": "5d4e8c74f9c86686675994a2431d864787ddbef69c6a88ee9576546a1145ce6d",
+      "_acceptance/deals-loai-tin-phi-ly/evals.yaml": "6c068dd58ee6d2fd993bea9afc4379aad7565177fe30608f3c69fd895c25a064",
+      "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
+      "agent/tests/enrich-apply.test.ts": "69407e7d1049ac4a8c7db6e61fb4326576773bed97070be691cf782d02993975",
+      "agent/tests/enrich-db.test.ts": "2d22af28021fc9a5109af57d04e5403ce3ac7012f4a4a9a8eebdfdd3070f8747",
+      "agent/tests/enrich-guard.test.ts": "d52db8d5b55a78405638a610d0c9da6db4a551d30f4aa1063e8276fe3bd35a18",
+      "agent/tests/enrich-revert.test.ts": "91393e322eddcc6da86fd66b6bb3ff7ec238c07ea939b44736e19f46d6aec5eb",
+      "agent/tests/enrich-route.test.ts": "e86943423a3477ea876f1cf65652c6ea5f8e278b1f071951000bc1cc3d8c410e",
+      "agent/tests/parsers.test.ts": "6cbc693314ab1d78d655056b3b641d430555dc3813d762923e504ab333f5e483",
+      "app/eslint-plugin-onehub-ui/tests/check-bare-disables.test.mjs": "f4d5a768000e10b0afcd865dda45027bfc374f5d448b365e71b5b22168264a43",
+      "app/eslint-plugin-onehub-ui/tests/check-baseline-growth.test.mjs": "7d3e9509b9a3e78e6f353df55f97625630b4f178d838a97c329509512222e547",
+      "app/eslint-plugin-onehub-ui/tests/index.test.mjs": "655e46d7c05ac26ed76d92ea3d9b19c5c22a59bb7ca198afa960362235771b08",
+      "app/eslint-plugin-onehub-ui/tests/no-arbitrary-text-size.test.mjs": "5ba51c96484865cb98cb413843375d2d88c552b7616e0586771df7287ce60f4d",
+      "app/eslint-plugin-onehub-ui/tests/no-aschild.test.mjs": "29033a30554d246c3404b9c9b442e1282f391c6eb90ed6b64e03271a666c0811",
+      "app/eslint-plugin-onehub-ui/tests/no-banned-motion.test.mjs": "74755fcdf27b99fdbf1a600cbcfc1bb472e98c18317cfd710b7249e3a770de53",
+      "app/eslint-plugin-onehub-ui/tests/no-emoji-icons.test.mjs": "8571b78c4733c9acf687690ce54745452bec6a4f3c7ba7f96ba76b4f87efeaa6",
+      "app/eslint-plugin-onehub-ui/tests/no-hardcoded-color.test.mjs": "ce68e4bd5a75a83233763bcdd435650faf8cc9e85e342e5d3a863c7692bedec9",
+      "app/eslint-plugin-onehub-ui/tests/no-native-dialogs.test.mjs": "deaf6a38eb19305c68d5e30f1417d8908f2036355aa4e02a2f5a47a326acc9cc",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-controls.test.mjs": "b48cbea63e4ca7f380cc27283deb79228375465545df85b91c9a8fcdac926b16",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-palette.test.mjs": "ed3843f2e6445fa54dd3e765f6d749a9d148f8dc4e0e0d239f13016c77db4e65",
+      "app/eslint-plugin-onehub-ui/tests/no-raw-table.test.mjs": "78446ffe3717c3c22e49b6d7787f9ab8bbe0d921d2469c7917f00fba265935f4",
+      "app/eslint-plugin-onehub-ui/tests/require-disable-reason.test.mjs": "6d87f7afd3f155f9f8be54e3eced84ea6c780593d78234f01e3a82d491f03fa5",
+      "app/eslint-plugin-onehub-ui/tests/route-slugs.test.mjs": "497e7eadcd4267cda43889626301b1491243cbd014028323e7223688111ed275",
+      "app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs": "2d3664f30a1155fe83fd6dbef3dd7264f6568e8483ae8fa1d1858bcc05be2a85",
+      "app/tests/deals-api-guard.test.tsx": "9de18791dfdf658a52655180e9e3fe9da8c92efe7573991c9f5a6dcb15c46e34",
+      "app/tests/deals-phi-ly.test.tsx": "7a48a57a5b974fea815d545f15f6e2d82e2751d9af2908dc120ddedbcbd15dfa",
+      "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
+      "app/tests/go-tai-khoan-kiem-id.test.tsx": "4e499959144ae63676e610ad3253f47a6f87b9e276452db846513c70bc3e7afd",
+      "app/tests/lockdown-local.test.tsx": "2f5776719eded1ff70525ef4be20eb8411ad0def68500ec342015998e5b4a33d",
+      "app/tests/login-kiem-id.test.tsx": "5240a19d06e8934a66a878847e8768d7029a7e0ada964341ba13e1b1e75a0f0b",
+      "app/tests/ops-cloud-khong-bang-nap.test.tsx": "c4595bb5bb1edf317551c657102fecd74e6199fcd8bf1f58bade1d45363ed623",
+      "app/tests/ops-facts-so-tong-hop.test.tsx": "3cbba30ed11b06387550db55ef309073bad054e577708f11e9f2bc79aff61b89",
+      "app/tests/ops-nhan-ma-nguon-cloud.test.tsx": "a78dfc6caa4dea053595217bd53260183fae581696fef01bbcb964fb211264a8",
+      "app/tests/ops-nhan-ma-nguon-db-chet.test.tsx": "d817ee9c0c71932aebd0e4982b1384d8d479d1aa2f1b63e4c3b51be81fb89187",
+      "app/tests/ops-nhan-ma-nguon.test.tsx": "84b1005acf8f48be094c21840488712ac3d71fecf1df970a797e9ecdfaafa6b1",
+      "app/tests/ops-review-sources-cloud.test.tsx": "a3aea84b1bb477998dfa81736f5489f76027461b39e8abd52375f854b7db9708",
+      "app/tests/review-card.test.tsx": "9b8f78071ef4958abc550436d5bf45d797f4c14e4c145b7acfc1762d790fbaea",
+      "app/tests/review-media.test.tsx": "f33efc12d931b647ef47b1fe8bf77225b676104dc9b36dd4f37137c4cdcff506",
+      "app/tests/review-photos.test.tsx": "517068b876d62f141c7d08a30ba14b8ae121d47f494e36bf3bcd18004882825a",
+      "app/tests/slo-mot-nguon.test.tsx": "a2bcf401bbb0651863163a33350c96cbf268b30a5cf984052b8df630c55f2952",
+      "app/tests/soat-tang-a.test.tsx": "bae54882e8631d3c2332e60ad980f3093e06620d2be6dd650df4349a07d12589",
+      "app/tests/zalo-media.test.tsx": "54cb449517798b04ce2d3d1772396cd1313424ee45424520d064de2c2ba785db",
+      "collector/src/test/api.test.ts": "725d0a3098a7e3273246cc652c5e7e161f377fb3aa2c2cdfdd62d32727d0b099",
+      "collector/src/test/conduct.test.ts": "c1492a433be26ec1393ebe2fe0875b163df35bc2e29c023abfaf2f100902e2b5",
+      "collector/src/test/graceful-shutdown-integration.test.ts": "fc45cfd1210b45e4a1ee397e7cc455b936080be0279ab9fb360dbe2c6877f188",
+      "collector/src/test/graceful-shutdown.test.ts": "e1cf620f4aba0c525b29453d8f16c2f9f985bcb5128490b33a05da8fffa8dac0",
+      "collector/src/test/kev-nhan.test.ts": "64eca8f8151369b3e105ebf816616cb07ead71df5d58aea8aea59c033bbe847e",
+      "collector/src/test/media-fetch.test.ts": "a342611d97218f01b6b3d9936351d1d45be52f928e0228463c72829bb7d8a7c6",
+      "collector/src/test/readbody.test.ts": "8fa6b9f5248f706affc8165d2b2343c29ff63dd7443337e1df8d2bfaae48384e",
+      "pipeline/parse.test.mjs": "74280de3602fe0d37b921c0ca2090544121656233d41980076ee4753edc6b0fb",
+      "pipeline/scripts/backfill-zalo-media.test.mjs": "4949a4141c51d6a443283af1b4026eadf506b177fcd43da9c57851a509413af3",
+      "pipeline/scripts/bait-gap-sellers.test.mjs": "578400b59d89c00a90c04f1b497c4d6fa8b745e5bfa4f2c558c817047171e919",
+      "pipeline/scripts/deals-phi-ly.test.mjs": "b8ba3222a1a7b5eaf33f5c4f419f2f380e53b47379872aa10b508c5410218e6c",
+      "pipeline/scripts/entrypoint-symlink.test.mjs": "ced4ad1c37f16bb8eb218425ed71dbcb180e364eb1c5fdd4e0a2de938b62939b",
+      "pipeline/scripts/last-log-line.test.mjs": "1f22f358521d221dbe7d3d7fc154f97f707e71c079a0c05bde3347c9df49e3ad",
+      "pipeline/scripts/ops-facts-so-tong-hop.test.mjs": "40b5ae33467fa63baa6b6741300ecc45cf422624bc0e1220765356fb35e06c69",
+      "pipeline/scripts/ops-nhan-ma-nguon.test.mjs": "8e970a715391886dbe193b880ce80a658b9c7a0417c928b69ea80413510a7e3a",
+      "pipeline/scripts/soat-tang-a.test.mjs": "6a157e25f1cc9b45f2b4c5b3539270a068888ef101202f73d8b631411e002741",
+      "pipeline/scripts/sync-cloud-pii.test.mjs": "e21fd87f0c9929f70bbf7e10f1a82025fdc637a6afa8426ba0531015dc7ba218",
+      "pipeline/scripts/test-posts.test.mjs": "3e8ab25cd3b06b427ee3a91db6e7a48ebe13cf4dd55c3498dc088f8bd13f36d3",
+      "pipeline/scripts/write-offers.test.mjs": "6c1162eecb20eeccaf085700b8264e9be758661957e8970d360a3e9418b95917",
+      "pipeline/sync-cloud.test.mjs": "8aa3d4cfa38686314c5548d8bf603b9055e344de701d248c4039a60c5f923b85",
+      "pipeline/sync-pii.test.mjs": "e3172447552ac5b6a4ffe766e3bcda029d4564a5b9b1bc3fafbb592b0768c8f8",
+      "scripts/audit-all.test.mjs": "6ce6e2e932614762575a382d47cfec4bb7d00eb01a7139c70f92ac699fa9aa68",
+      "scripts/check-freshness.test.mjs": "1e98b4e8a07e44a832ad244570de684ffbceef849b1fc9a46a0241fd4e19cdbc",
+      "scripts/dev-ops-account.test.mjs": "eaae93ef5b886eaae6563cfd040c364f0ccff637592bc0c5c5df584bf368e399",
+      "scripts/freshness-parity.test.mjs": "fe666329104ba61c5e386838da05a14fc3ae6572ed51103ee3bb9b2519dc66b9",
+      "scripts/job-exit.test.mjs": "df24c0de31d7f5b4737f2b073d53b2295579f7bef2976ced9347749f3f29fee8",
+      "scripts/ops-nhan-ma-nguon.test.mjs": "a94377b277038b0016e301fe993c6398bf4083286f868cbee2881862d8349c98"
+    }
+  },
+  "cayChup": {
+    "sha": "d400714c56e9347eadd3fb6552bd2f37978b385e",
+    "ban": {},
+    "chuaTheoDoi": []
+  }
+}

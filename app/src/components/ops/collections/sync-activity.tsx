@@ -33,8 +33,8 @@ const configOf = (roles: SourceRoles) =>
   ({
     airbnbListingsSeen: { label: `${sourceLabel("S01", roles)} — listing tươi`, theme: themeOf("opsVolume") },
     airdnaListings: { label: `${sourceLabel("S02", roles)} — listing chạm`, theme: themeOf("opsVolumeRaw") },
-    zaloOffers: { label: `${sourceLabel("S03", roles)} — offer vào DB`, theme: themeOf("opsVolume") },
-    zaloPosts: { label: `${sourceLabel("S03", roles)} — post raw`, theme: themeOf("opsVolumeRaw") },
+    zaloOffers: { label: `${sourceLabel("S03", roles)} — tin rao vào kho`, theme: themeOf("opsVolume") },
+    zaloPosts: { label: `${sourceLabel("S03", roles)} — bài thô`, theme: themeOf("opsVolumeRaw") },
   }) satisfies ChartConfig
 
 export function SyncActivity({ days, roles = {}, className }: { days: FlowDay[]; roles?: SourceRoles; className?: string }) {
@@ -48,7 +48,7 @@ export function SyncActivity({ days, roles = {}, className }: { days: FlowDay[];
 
   return (
     <Frame id="luong" spacing="default" className={cn("scroll-mt-4", className)}>
-      <SectionHeader title="Luồng 7 ngày" description={`${fmtInt(total)} bản ghi trong 7 ngày (giờ máy)`}>
+      <SectionHeader title="Luồng 7 ngày" description={`${fmtInt(total)} bản ghi trong 7 ngày (ngày theo giờ VN)`}>
         <ToggleGroup
           multiple={false}
           value={[mode]}

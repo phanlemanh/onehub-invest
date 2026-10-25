@@ -1,4 +1,5 @@
 import { pool } from "./db";
+import { shortAreaName } from "./market-names";
 import { bySource as freshnessBySource, readFreshness, type FreshnessRow, type FreshnessStatus, type QueryClient } from "./freshness";
 
 /**
@@ -39,11 +40,30 @@ export async function localOnlyTable(table: string): Promise<boolean> {
   return rows[0]?.r == null;
 }
 
+/** Tên ngắn của quốc gia và thị trường (`areas.name` bỏ tiền tố «Thành phố »/«Tỉnh ») theo mã khu vực — mọi trang Ops
+ * dùng chung để hiện tên thay mã thô (ON12). `areas` là dữ liệu công khai, có cả ở cloud; lỗi đọc → bảng rỗng (nơi
+ * hiện in «(chưa có tên Việt)»). */
+export async function getAreaNames(): Promise<Record<string, string>> {
+  try {
+    const { rows } = await pool.query<{ id: string; name: string }>(
+      `SELECT id, name FROM areas WHERE region_type IN ('country', 'market')`,
+    );
+    return Object.fromEntries(rows.map((r) => [r.id, shortAreaName(r.name)]));
+  } catch {
+    return {};
+  }
+}
+
 /** /ops (+ /api/v1/ops/coverage): từng ô nguồn × thành phố theo định nghĩa chung (lib/freshness, AU6).
  * Mã active chưa khai SLO không có ô — nó hiện ở /ops/collections là «Chưa khai SLO». */
 export async function getCoverageOverview(): Promise<CoverageRow[]> {
   if (await freshnessLocalOnly()) return [];
-  const rows = await readFreshness(freshnessClient);
+  return toCoverageRows(await readFreshness(freshnessClient));
+}
+
+/** Hàng độ tươi (readFreshness ở local, hoặc khối `freshness` máy local đẩy lên cloud — ON3) → ô /ops. Một phép chuyển
+ * cho cả hai đường để cloud và local ra cùng con số. */
+export function toCoverageRows(rows: FreshnessRow[]): CoverageRow[] {
   return rows
     .filter((r): r is FreshnessRow & { sloHours: number; status: CoverageRow["status"] } => r.status !== "no-slo")
     .map((r) => ({
@@ -215,14 +235,14 @@ export async function getLockdownStatus(
   ]);
 
   const layers: LockdownLayer[] = [
-    { layer: "L1", desc: "Hook read-only (không API gửi tin)", ok: wdFresh ? true : null },
-    { layer: "L2", desc: "Bindings = [] (agent không bị kích từ kênh)", ok: wdFresh ? true : null },
-    { layer: "L3", desc: "Kênh bot OA tắt + mọi nhóm requireMention", ok: wdFresh ? true : null },
-    { layer: "L4", desc: "Watchdog 5′ đang canh", ok: wdFresh },
-    { layer: "L4b", desc: "Agent-turn hôm nay = 0", ok: turns === null ? null : turns === 0 },
-    { layer: "Hạ tầng", desc: "OpenClaw chạy", ok: openClawUp },
-    { layer: "Hạ tầng", desc: "Kev gate :8009", ok: kevUp },
-    { layer: "Hạ tầng", desc: "Collector :9210", ok: collectorUp },
+    { layer: "L1", desc: "Chỉ đọc — không có API gửi tin", ok: wdFresh ? true : null },
+    { layer: "L2", desc: "Không gắn máy trả lời vào kênh nào", ok: wdFresh ? true : null },
+    { layer: "L3", desc: "Tắt kênh tài khoản chính thức, nhóm phải nhắc tên mới trả lời", ok: wdFresh ? true : null },
+    { layer: "L4", desc: "Bộ canh 5′ đang chạy", ok: wdFresh },
+    { layer: "L4b", desc: "Lượt máy tự trả lời hôm nay = 0", ok: turns === null ? null : turns === 0 },
+    { layer: "Hạ tầng", desc: "OpenClaw đang chạy", ok: openClawUp },
+    { layer: "Hạ tầng", desc: "Cổng Kev :8009", ok: kevUp },
+    { layer: "Hạ tầng", desc: "Cổng nhận tin :9210", ok: collectorUp },
   ];
   return { layers, lastWatchdogAt: lastWd, agentTurnsToday: turns, openClawUp, kevUp, collectorUp };
 }

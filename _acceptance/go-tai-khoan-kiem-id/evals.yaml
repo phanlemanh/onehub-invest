@@ -1,0 +1,46 @@
+schema_version: 1
+feature_slug: go-tai-khoan-kiem-id
+# Eval máy đọc ca mang tiền tố «GT-AC-n» trong TAP (app/tests/go-tai-khoan-kiem-id.test.tsx, openclaw giả).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/accounts/route.ts, app/tests/go-tai-khoan-kiem-id.test.tsx]
+    expected: "exit 0; ca 'GT-AC-1 id rỗng/thiếu/không phải chuỗi → 400, openclaw giả 0 lệnh, config giữ nguyên' với 5 thân viết trước = 5×3 assert (mã, số dòng nhật ký, byte config), đối chứng dương cùng fixture id acc2 → 1 dòng; chiều đỏ 'GT-AC-1 bản sao bỏ bước kiểm id → openclaw giả nhận logout với id rỗng' ok (assert bản sao thật sự khác bản gốc)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/accounts/route.ts, app/tests/go-tai-khoan-kiem-id.test.tsx]
+    expected: "exit 0; ca 'GT-AC-2 id có khoảng trắng → 400, openclaw giả 0 lệnh, acc2 còn trong config' với 4 id viết trước (' acc2 ', 'acc2 ', 'acc 2', 'acc2\\n') ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/accounts/route.ts, app/tests/go-tai-khoan-kiem-id.test.tsx]
+    expected: "exit 0; ca 'GT-AC-3 id lạ/default/dạng cờ → 400 đúng thông điệp lớp, openclaw giả 0 lệnh, config giữ nguyên' với 5 id viết trước ('khong-co', '../acc2', 'ACC2' → «không có trong danh sách tài khoản»; 'default' → «không xoá được tài khoản default»; '--channel' có trong fixture → «id dạng cờ») = 5×4 assert; chiều đỏ 'GT-AC-3 bản sao chỉ kiểm thành viên → openclaw giả nhận logout --account --channel, ca đỏ nêu dạng cờ' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/src/app/api/v1/ops/zalo/accounts/route.ts, app/tests/go-tai-khoan-kiem-id.test.tsx]
+    expected: "exit 0; ca 'GT-AC-4 id thật acc2 và Acc_5 → 200, mỗi lần đúng một lệnh logout --account <id> (argv so nguyên mảng), config mất id đó còn default và acc3, có bản .bak' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/**/*.ts, app/src/**/*.tsx, app/tests/go-tai-khoan-kiem-id.test.tsx]
+    expected: "exit 0; ca 'GT-AC-5 chỗ logout trong app/src bằng đúng danh sách viết trước [zalo-admin.ts · deleteZaloAccount] và đứng sau requireDeletableAccount'; chiều đỏ 'GT-AC-5 bản sao logout trước bước kiểm → vi phạm nêu tệp và «logout trước bước kiểm id»' và 'GT-AC-5 bản sao thêm mảng argv logout không qua bước kiểm → thước bắt, nêu tệp' ok (assert mỗi bản sao thật sự khác bản gốc)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/zalo-admin.ts, app/tests/go-tai-khoan-kiem-id.test.tsx]
+    expected: "exit 0; tệp test không có import tĩnh của zalo-admin hay route (chỉ import động sau khi đặt HOME/PATH); ca 'GT-AC-6 rào: homedir, realpath zaloAdminPaths().openclaw và .config nằm dưới thư mục tạm' ok; chiều đỏ 'GT-AC-6 rào với HOME thật trả vi phạm nêu HOME thật' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

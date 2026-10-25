@@ -23,7 +23,7 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | Bảng so sánh thuộc tính (cột = đối tượng) | `compare/comparison.tsx` (comparison-1; `<table>` là của block gốc → ngoại lệ có lý do, không chuyển data-grid) | data-grid cho bảng so sánh, bảng so sánh tự dựng |
 | Page header | `page/page-header.tsx` (`PageHeader`, slot `actions`) | `h1` + `p` tự viết |
 | Đang tải | `states/page-skeleton.tsx` (hoặc Skeleton theo đúng bố cục vùng) đặt trong `<Suspense>` | `loading.tsx` cấp segment (mất mã 404/307), spinner cả trang |
-| Lỗi | `states/page-error.tsx` (c-alert-1 + Thử lại) | chữ đỏ tự tô |
+| Lỗi | `states/page-error.tsx` (c-alert-1 + Thử lại) cho cả trang — trong `error.tsx` của mỗi nhóm cổng (truyền `retry`, không `reset`); `states/region-error.tsx` (`catchError` của `next/error`, cùng Alert) bọc MỘT vùng dữ liệu để PageHeader vẫn đứng; `states/app-crash.tsx` trong `app/global-error.tsx` khi layout hỏng (tự có `<html>`, CSS, ThemeProvider) | chữ đỏ tự tô, error boundary class tự viết |
 | Trống | `ui/empty` (`Empty`: tiêu đề, 1 dòng, 1 hành động) | `<p>` canh giữa |
 | Màu chuỗi biểu đồ | `charts/palette.ts` (`themeOf`, `swatchOf`; luật ở `data-color.md`) | màu block gốc chép vào từng biểu đồ, `--chart-1..5`, hex |
 | Phần chung của biểu đồ | `components/charts/` (menu "Thao tác khác", nút chuyển kỳ, hàng tooltip, chấm màu, tải CSV/sao chép, icon) | chép `use-trigger-tooltip`/`icons`/`value-faces` của block vào thư mục biểu đồ |
@@ -41,6 +41,7 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | `@reui/c-command-5` | examples/c-command-5.tsx → shell/search-command.tsx | ⌘K tìm tỉnh/phường | cmdk, tìm không dấu qua `keywords` | https://reui.io/preview/base/components/c-command-5 |
 | `@reui/c-alert-1` | examples/c-alert-1.tsx → states/page-error.tsx | Trạng thái lỗi + Thử lại | `error.tsx` | https://reui.io/preview/base/components/c-alert-1 |
 | `@reui/c-empty-3` | examples/c-empty-3.tsx → states/not-found-state.tsx | 404 | `not-found.tsx` | https://reui.io/preview/base/components/c-empty-3 |
+| `@reui/c-empty-11` | examples/c-empty-11.tsx → saved/saved-empty.tsx | Đã lưu trống | Chữ tiếng Việt, nút sang `/vn`, thêm `border` cho khớp các vùng trống khác | https://reui.io/preview/base/components/c-empty-11 |
 | `@reui/stats-1` | blocks/stats-1/ → insight/insight-stats.tsx | KPI Insight | Bỏ menu "…"; badge = vị trí so với phường anh em (p30/p60/p90) thay cho % tháng trước | https://reui.io/preview/base/stats-1 |
 | `@reui/chart-6` | blocks/chart-6/ → insight/performance/ | Hiệu suất theo tháng (4 ô chuyển 1 đường) | Theo THÁNG, dữ liệu qua props, bỏ lớp "kỳ trước" (lịch tương lai), mốc = Tết/30-4/Hè/2-9; màu từ `charts/palette.ts`, phần chép trùng dùng chung `components/charts/` (B3) | https://reui.io/preview/base/chart-6 |
 | `@reui/chart-13` | blocks/chart-13/ → insight/revenue-mix/ | Cơ cấu doanh thu theo loại phòng | Một cửa sổ (bỏ đổi kỳ); cột "thay đổi" → số listing; màu từ `charts/palette.ts`, phần chép trùng dùng chung `components/charts/` (B3) | https://reui.io/preview/base/chart-13 |
@@ -56,10 +57,11 @@ tài liệu (`docsUrl`) có dạng `https://reui.io/blocks/<nhóm>/<loại>/<tê
 | `@reui/wishlist-2` | blocks/wishlist-2/ → saved/ | Đã lưu | Tín hiệu giá → loại khu vực; ảnh → panel số RevPAR; ✕ = bỏ lưu thật; "Add all" → So sánh | https://reui.io/preview/base/wishlist-2 |
 | `@reui/comparison-1` | blocks/comparison-1/ → compare/ | So sánh tối đa 4 khu vực | Cột trên URL; ô tốt nhất mỗi hàng tô xanh; thêm cột bằng hộp c-command-5. Hằng số ở compare-types.ts (module thường) | https://reui.io/preview/base/comparison-1 |
 | `@reui/navbar-12` | blocks/navbar-12/ → marketing/marketing-navbar.tsx | Thanh điều hướng trang chủ/Phương pháp | Thêm ⌘K + tài khoản + menu ☰ cho màn hẹp (bản gốc không có) | https://reui.io/preview/base/navbar-12 |
-| `@reui/hero-8` | blocks/hero-8/ → marketing/hero.tsx | Hero trang chủ | Ô email → ô tìm khu vực; "console" giả → bản xem trước số thật | https://reui.io/preview/base/hero-8 |
-| `@reui/card-29` | blocks/card-29/ → marketing/market-cards.tsx | Thị trường đang theo dõi | Dải diện tích vẽ từ doanh thu theo tháng thật (bản gốc là hình cố định) | https://reui.io/preview/base/card-29 |
+| `@reui/hero-8` | blocks/hero-8/ → marketing/hero.tsx | Hero trang chủ | Ô email → ô tìm khu vực; "console" giả → bản xem trước số thật; nền vẽ (`frame-backdrop.tsx`) dùng biến palette `var(--color-blue-…/sky-500)` qua `style`, không hex | https://reui.io/preview/base/hero-8 |
+| `@reui/card-29` | blocks/card-29/ → marketing/market-cards.tsx | Thị trường đang theo dõi | Dải diện tích vẽ từ doanh thu theo tháng thật (bản gốc là hình cố định); thang chàm có cặp `dark:` (doanh thu = chàm); 0 thị trường → `Empty` | https://reui.io/preview/base/card-29 |
 | `@reui/how-it-works-1` | blocks/how-it-works-1/ → marketing/how-it-works.tsx | 3 bước dùng sản phẩm | Card → Frame (trang chủ họ Frame) | https://reui.io/preview/base/how-it-works-1 |
-| `@reui/faq-6` | blocks/faq-6/ → marketing/faq-section.tsx | Hỏi đáp trang chủ + định nghĩa trang Phương pháp | Dữ liệu qua props | https://reui.io/preview/base/faq-6 |
+| `@reui/faq-6` | blocks/faq-6/ → marketing/faq-section.tsx | Hỏi đáp trang chủ (accordion) | Dữ liệu qua props | https://reui.io/preview/base/faq-6 |
+| `@reui/faq-3` | blocks/faq-3/ → marketing/definition-grid.tsx + hàng hai nút ở (marketing)/methodology/page.tsx | Định nghĩa trang Phương pháp, mở sẵn | Tiêu đề mục là h2 có id (mục lục); mỗi ô mang id riêng (đích của ⓘ); câu trả lời nhận ReactNode; hàng hỗ trợ → Xem thị trường / Ước tính lợi suất (không có bàn hỗ trợ) | https://reui.io/preview/base/faq-3 |
 
 ## Cổng Ops — block Solutions (B1, cài 2026-10-23)
 
@@ -89,6 +91,8 @@ Ma trận trang → block máy kiểm: `scripts/ui-standards/b1-block-map.json`.
 | InsightNav | components/insight/insight-nav.tsx | Style view track của app-shell-30; tự theo dõi cuộn vì `@reui/scrollspy` với target document bám vào `scroll-area-viewport` đầu tiên trong trang (vùng cuộn DataGrid) và luôn báo nhầm mục cuối | https://reui.io/preview/base/app-shell-30 |
 | SiteFooter | components/shell/site-footer.tsx | ReUI không có block footer | |
 | charts/* | components/charts/ | Không phải component mới: phần ba block chart-6/13/36 chép trùng nhau (overflow-menu, segmented-toggle, tooltip-row, faces, halo-text, actions, icons, use-trigger-tooltip) gom lại ở B3, cộng `palette.ts` | https://reui.io/preview/base/chart-6 |
+| AreaThumbnail | components/page/area-thumbnail.tsx + `getAreaThumbnails` (lib/queries.ts) | Ảnh đại diện khu vực (So sánh, Đã lưu): ảnh chính của một listing tự thu, ≤ 3 ứng viên không trùng giữa các khu vực cùng trang, lỗi thì lùi ứng viên kế, hết thì cha hiện ô số; `<img>` chỉ gắn sau hydrate (lỗi ảnh lúc hydrate bị mất). Khung cha giữ kích thước + nền muted; trên ảnh dùng Badge nền đặc | |
+| RegionError | components/states/region-error.tsx | `catchError(fallback)` của Next 16 quanh một vùng (thường bọc `<Suspense>`): Alert destructive + Thử lại gọi `retry()` (tải lại vùng từ server); không bắt nhầm redirect()/notFound() | https://reui.io/preview/base/components/c-alert-1 |
 | PageSkeleton | components/states/page-skeleton.tsx | Ghép từ `ui/skeleton` theo bố cục Insight; dùng trong `<Suspense>`, KHÔNG làm `loading.tsx` cấp segment (mất mã 404/307) | |
 
 ## Bản đồ nền (mọi bản đồ MapLibre)

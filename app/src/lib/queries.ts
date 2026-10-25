@@ -1,3 +1,4 @@
+import { loadOurListings, pickRepresentative, type Queryable } from "./calibration";
 import { pool } from "./db";
 
 // Tiền tệ theo QUỐC GIA (tiền tố của area id): mọi thị trường VN là VND.
@@ -220,6 +221,49 @@ export async function getMarketGeoJson(
     lat: Number(anchor?.lat ?? 13.75),
     lng: Number(anchor?.lng ?? 100.5),
   };
+}
+
+// ---------- Ảnh đại diện khu vực (So sánh, Đã lưu) ----------
+
+/** Ảnh ứng viên theo thứ tự ưu tiên — ảnh chết trên CDN (≈1/4 ảnh đo 24/10) thì bên hiển thị lùi sang ảnh kế. */
+export type AreaThumbnail = { candidates: { src: string; listingName: string | null }[] };
+
+/**
+ * Ảnh đại diện của mỗi khu vực = ảnh chính của MỘT listing tự thu trong khu vực (thị trường:
+ * gồm phường con), ưu tiên listing đặt nhiều đêm nhất 90 ngày tới rồi nhiều đánh giá nhất. Chỉ ảnh
+ * tự thu (luật 5: không AirDNA). Mỗi khu vực lấy 3 ứng viên; xếp theo thứ tự `ids`, ảnh đã đứng
+ * đầu ở khu vực trước bị đẩy xuống cuối — thành phố và phường chứa listing đầu bảng không trùng ảnh
+ * trên cùng một trang. Khu vực không có listing nào có ảnh thì vắng khỏi map.
+ */
+export async function getAreaThumbnails(ids: string[]): Promise<Map<string, AreaThumbnail>> {
+  if (ids.length === 0) return new Map();
+  const { rows } = await pool.query(
+    `SELECT area_id, url, name FROM (
+       SELECT a.id AS area_id, l.photo_urls->>0 AS url, l.name,
+              row_number() OVER (PARTITION BY a.id
+                ORDER BY st.booked90 DESC NULLS LAST, l.review_count DESC NULLS LAST, l.id) AS rn
+       FROM areas a
+       JOIN listings l ON l.area_id = a.id OR l.area_id IN (SELECT s.id FROM areas s WHERE s.parent_id = a.id)
+       LEFT JOIN listing_stats st ON st.listing_id = l.id
+       WHERE a.id = ANY($1::text[])
+         AND jsonb_typeof(l.photo_urls) = 'array' AND jsonb_array_length(l.photo_urls) > 0
+     ) c WHERE rn <= 3 ORDER BY area_id, rn`,
+    [ids],
+  );
+  const byArea = new Map<string, { url: string; name: string | null }[]>();
+  for (const r of rows) byArea.set(r.area_id, [...(byArea.get(r.area_id) ?? []), { url: r.url, name: r.name ?? null }]);
+  const used = new Set<string>();
+  const out = new Map<string, AreaThumbnail>();
+  // URL trần còn sót trong DB thì thêm scheme (cùng luật trang Listing); im_w=480 cho ảnh nhỏ.
+  const src = (u: string) => `${u.startsWith("http") ? u : `https://${u}`}?im_w=480`;
+  for (const id of ids) {
+    const cands = byArea.get(id) ?? [];
+    if (cands.length === 0) continue;
+    const ordered = [...cands.filter((c) => !used.has(c.url)), ...cands.filter((c) => used.has(c.url))];
+    used.add(ordered[0].url);
+    out.set(id, { candidates: ordered.map((c) => ({ src: src(c.url), listingName: c.name })) });
+  }
+  return out;
 }
 
 // ---------- Finder (IA §3.2): xếp hạng + choropleth, chung cho Insight ----------
@@ -875,36 +919,31 @@ export type TruthfulCoverageRow = {
  * 48 + Bình Dương + Vũng Tàu + Côn Đảo). Địa lý các tỉnh cũ không giao nhau
  * nên mẫu số = TỔNG active listings của mọi market thành phần.
  */
-export async function getTruthfulCoverage(): Promise<TruthfulCoverageRow[]> {
-  const [xw, active, uni, hist, cap, ours] = await Promise.all([
-    pool.query(
+export async function getTruthfulCoverage(db: Queryable = pool): Promise<TruthfulCoverageRow[]> {
+  const [xw, active, uni, hist, cap, oursBy] = await Promise.all([
+    db.query(
       `SELECT x.area_id, a.name, x.source_area_key
          FROM area_sources x JOIN areas a ON a.id = x.area_id
         WHERE x.source = 'S02' ORDER BY a.name`,
     ),
-    pool.query(
+    db.query(
       `SELECT DISTINCT ON (airdna_id) airdna_id, value, period
          FROM airdna_market_metrics WHERE metric = 'listing_count'
         ORDER BY airdna_id, period DESC`,
     ),
-    pool.query(
+    db.query(
       `SELECT airdna_market_id, count(*)::int AS n FROM airdna_listings GROUP BY 1`,
     ),
-    pool.query(
+    db.query(
       `SELECT airdna_id, count(DISTINCT period)::int AS m FROM airdna_market_metrics GROUP BY 1`,
     ),
-    pool.query(`SELECT airdna_id, captured_at FROM airdna_markets`),
-    pool.query(
-      `SELECT coalesce(sa.parent_id, sa.id) AS market, count(*)::int AS n
-         FROM listings l JOIN areas sa ON sa.id = l.area_id
-        WHERE sa.id LIKE 'vn-%' GROUP BY 1`,
-    ),
+    db.query(`SELECT airdna_id, captured_at FROM airdna_markets`),
+    loadOurListings(db), // định nghĩa «listing tự thu» chung của vùng Hiệu chuẩn (ON10)
   ]);
   const activeBy = new Map(active.rows.map((r) => [r.airdna_id, r]));
   const uniBy = new Map(uni.rows.map((r) => [r.airdna_market_id, r.n]));
   const histBy = new Map(hist.rows.map((r) => [r.airdna_id, r.m]));
   const capBy = new Map(cap.rows.map((r) => [r.airdna_id, r.captured_at]));
-  const oursBy = new Map(ours.rows.map((r) => [r.market, r.n]));
 
   const byArea = new Map<string, { name: string; keys: string[] }>();
   for (const r of xw.rows) {
@@ -947,8 +986,10 @@ export type AirdnaMarketRow = {
 };
 
 /** Danh sách market AirDNA toàn quốc + crosswalk sang khu vực của ta (chỉ Ops). */
-export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
-  const { rows } = await pool.query(
+export async function getAirdnaMarkets(db: Queryable = pool): Promise<AirdnaMarketRow[]> {
+  // «Listing tự thu» = cùng định nghĩa thẻ hiệu chuẩn và bảng Độ phủ (ON10), không phải listing_count tháng cuối.
+  const ours = await loadOurListings(db);
+  const { rows } = await db.query(
     `SELECT am.airdna_id, am.name,
             s.total AS score,
             -- Crosswalk qua area_sources (chính xác), fallback fuzzy
@@ -962,16 +1003,7 @@ export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
                    = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
                  )
                LIMIT 1)
-            ) AS our_area_id,
-            (SELECT mm.listing_count FROM market_metrics mm
-             WHERE mm.area_id = COALESCE(
-               (SELECT x.area_id FROM area_sources x
-                WHERE x.source = 'S02' AND x.source_area_key = am.airdna_id LIMIT 1),
-               (SELECT a.id FROM areas a WHERE a.country_code='vn' AND a.region_type='market'
-                 AND translate(lower(a.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                   = translate(lower(am.name), 'àáảãạăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộùúủũụưừứửữựỳýỷỹỵđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooouuuuuuuuuuuuyyyyyd')
-                 LIMIT 1))
-             ORDER BY mm.month DESC LIMIT 1) AS our_listings
+            ) AS our_area_id
      FROM airdna_markets am
      LEFT JOIN airdna_scores s ON s.airdna_id = am.airdna_id
      ORDER BY s.total DESC NULLS LAST, am.name`,
@@ -981,7 +1013,7 @@ export async function getAirdnaMarkets(): Promise<AirdnaMarketRow[]> {
     name: r.name,
     score: r.score === null ? null : Number(r.score),
     ourAreaId: r.our_area_id,
-    ourListings: r.our_listings === null ? null : Number(r.our_listings),
+    ourListings: r.our_area_id ? (ours.get(r.our_area_id) ?? 0) : null,
   }));
 }
 
@@ -998,35 +1030,51 @@ export type AirdnaComparison = {
   }[];
   submarketCount: number;
   capturedAt: string | null;
+  /** Market S02 đại diện cho khu vực và số market S02 khu vực gộp (ON10). */
+  representative: { airdnaId: string; ofMarkets: number };
+  /** «Listing tự thu» — định nghĩa chung của ba bảng (cả cây khu vực). */
+  ourListings: number;
+  /** Cỡ mẫu sinh ADR/công suất tự thu (max listing_count của market_metrics) — cơ sở cờ «mẫu mỏng». */
+  sampleListings: number | null;
 };
 
-export async function getAirdnaComparison(areaId: string): Promise<AirdnaComparison | null> {
-  // Crosswalk: areaId → airdna_id
-  const { rows: xw } = await pool.query(
-    `SELECT source_area_key FROM area_sources WHERE area_id = $1 AND source = 'S02' LIMIT 1`,
+export async function getAirdnaComparison(areaId: string, db: Queryable = pool): Promise<AirdnaComparison | null> {
+  // Crosswalk: areaId → MỌI market S02 của khu vực (sáp nhập tỉnh 2025) → market đại diện theo luật cố định (ON10):
+  // nhiều listing S02 kỳ mới nhất nhất, hoà thì mã nhỏ nhất — chạy hai lần ra cùng số.
+  const { rows: xw } = await db.query(
+    `SELECT x.source_area_key AS airdna_id, lc.value AS listing_count
+       FROM area_sources x
+       LEFT JOIN (SELECT DISTINCT ON (airdna_id) airdna_id, value FROM airdna_market_metrics
+                   WHERE metric = 'listing_count' ORDER BY airdna_id, period DESC) lc
+         ON lc.airdna_id = x.source_area_key
+      WHERE x.area_id = $1 AND x.source = 'S02'`,
     [areaId],
   );
-  const airdnaId = xw[0]?.source_area_key;
-  if (!airdnaId) return null;
+  const representative = pickRepresentative(
+    xw.map((r) => ({ airdnaId: r.airdna_id as string, listingCount: r.listing_count === null ? null : Number(r.listing_count) })),
+  );
+  if (!representative) return null;
+  const airdnaId = representative.airdnaId;
 
-  const { rows: scores } = await pool.query(
+  const { rows: scores } = await db.query(
     `SELECT * FROM airdna_scores WHERE airdna_id = $1`, [airdnaId],
   );
-  const { rows: airdnaMetrics } = await pool.query(
+  const { rows: airdnaMetrics } = await db.query(
     `SELECT metric, period, value FROM airdna_market_metrics
      WHERE airdna_id = $1 AND period = (SELECT max(period) FROM airdna_market_metrics WHERE airdna_id = $1 AND metric = 'adr')
      ORDER BY metric`, [airdnaId],
   );
   // Số tự thu gộp CẢ cửa sổ (có trọng số đêm), không lấy tháng cuối: dữ liệu là
   // lịch tương lai nên tháng xa nhất gần như chưa có booking.
-  const { rows: ourMetrics } = await pool.query(
+  const { rows: ourMetrics } = await db.query(
     `SELECT sum(revenue) / nullif(sum(booked_nights), 0) AS adr,
             sum(booked_nights)::numeric
               / nullif(sum(booked_nights) + sum(available_nights), 0) AS occupancy,
             max(listing_count) AS listing_count
      FROM market_metrics WHERE area_id = $1`, [areaId],
   );
-  const { rows: subCount } = await pool.query(
+  const ourListings = (await loadOurListings(db)).get(areaId) ?? 0;
+  const { rows: subCount } = await db.query(
     `SELECT count(*) n FROM airdna_submarket_metrics WHERE airdna_market_id = $1`, [airdnaId],
   );
 
@@ -1043,7 +1091,7 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
       ratio: null as number | null,
     },
     {
-      metric: "Occupancy",
+      metric: "Công suất",
       ourValue: ours.occupancy !== null && ours.occupancy !== undefined ? Number(ours.occupancy) : null,
       ourUnit: "%",
       airdnaValue: byMetric.get("occupancy") ?? null,
@@ -1051,8 +1099,8 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
       ratio: null as number | null,
     },
     {
-      metric: "Listings",
-      ourValue: ours.listing_count ? Number(ours.listing_count) : null,
+      metric: "Listing",
+      ourValue: ourListings,
       ourUnit: "",
       airdnaValue: byMetric.get("listing_count") ?? null,
       airdnaUnit: "",
@@ -1085,6 +1133,9 @@ export async function getAirdnaComparison(areaId: string): Promise<AirdnaCompari
     metrics,
     submarketCount: Number(subCount[0]?.n ?? 0),
     capturedAt: score?.captured_at?.toISOString?.() ?? null,
+    representative,
+    ourListings,
+    sampleListings: ours.listing_count === null || ours.listing_count === undefined ? null : Number(ours.listing_count),
   };
 }
 

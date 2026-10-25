@@ -11,6 +11,7 @@ import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-colu
 import type { JobStatus } from "@/lib/collections-queries"
 
 import { StatusGrid, type StatusTab } from "./status-grid"
+import { fmtVnDateTime } from "@/lib/format"
 
 const ALIVE: Record<JobStatus["alive"], { label: string; variant: BadgeProps["variant"]; tone: string }> = {
   yes: { label: "Sống", variant: "success-light", tone: "bg-success" },
@@ -24,35 +25,36 @@ const TABS: StatusTab<JobStatus>[] = (["no", "yes", "unknown"] as const).map((a)
   match: (j) => j.alive === a,
 }))
 
-export function JobsGrid({ jobs }: { jobs: JobStatus[] }) {
+/** `stale`: trạng thái job là lần đo cuối của bản tin máy local cũ quá 45′ (ON3) — không badge xanh. */
+export function JobsGrid({ jobs, stale = false }: { jobs: JobStatus[]; stale?: boolean }) {
   const columns = useMemo<InsightColumn<JobStatus>[]>(
     () => [
-      { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Job" column={column} />, size: 280, enableSorting: true },
+      { id: "label", accessorKey: "label", header: ({ column }) => <DataGridColumnHeader title="Tác vụ" column={column} />, size: 200, enableSorting: true },
+      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={stale && row.original.alive === "yes" ? "outline" : ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
       { id: "schedule", accessorKey: "schedule", header: "Lịch", size: 180 },
-      { id: "alive", accessorKey: "alive", header: "Trạng thái", cell: ({ row }) => <Badge variant={ALIVE[row.original.alive].variant}>{ALIVE[row.original.alive].label}</Badge>, size: 140 },
       {
         id: "last",
         accessorFn: (j) => j.lastLogAt ?? "",
         header: ({ column }) => <DataGridColumnHeader title="Chạy cuối" column={column} />,
-        cell: ({ row }) => (row.original.lastLogAt ? row.original.lastLogAt.slice(0, 16).replace("T", " ") : "—"),
+        cell: ({ row }) => fmtVnDateTime(row.original.lastLogAt),
         size: 150,
         enableSorting: true,
       },
       {
         id: "line",
         accessorKey: "lastLine",
-        header: "Dòng log cuối",
-        cell: ({ row }) => <span className="text-muted-foreground font-mono text-xs">{row.original.lastLine ?? "—"}</span>,
+        header: "Dòng nhật ký cuối",
+        cell: ({ row }) => <code className="text-muted-foreground font-mono text-xs" translate="no">{row.original.lastLine ?? "—"}</code>,
         size: 340,
       },
     ],
-    []
+    [stale]
   )
   return (
     <StatusGrid
       id="may-moc"
-      title="Máy móc (launchd)"
-      description="Agent tự chạy — log lần cuối và probe dịch vụ KeepAlive"
+      title="Máy móc"
+      description="Tác vụ tự chạy theo lịch — nhật ký lần cuối và dò dịch vụ chạy liên tục"
       data={jobs}
       columns={columns}
       tabs={TABS}

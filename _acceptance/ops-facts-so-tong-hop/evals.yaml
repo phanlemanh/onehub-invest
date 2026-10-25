@@ -1,0 +1,83 @@
+schema_version: 1
+feature_slug: ops-facts-so-tong-hop
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON22-AC-1 bản tin có đúng năm khối, mỗi khối measured_at trong khoảng chạy, khoá cũ còn đủ' ok; chiều đỏ 'ON22-AC-1 bản sao bỏ measured_at một khối → ca bắt, nêu tên khối' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs, pipeline/scripts/capture-ops-facts.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON22-AC-2 khối freshness bằng từng hàng check-freshness --json cùng now' ok; chiều đỏ 'ON22-AC-2 bản sao đổi SLO một mã → phép so bắt đúng mã' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/freshness.mjs, scripts/check-freshness.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON22-AC-3 khối records24h bằng items24h của getSourceFeedHealth trên cùng lược đồ' ok; chiều đỏ 'ON22-AC-3 bản sao đếm cả ngoài 24 giờ → bắt' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, app/src/lib/ops-queries.ts, app/tests/ops-facts-so-tong-hop.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON22-AC-4 reviewQueue = số thẻ pending theo item_type, chỉ ba khoá' ok; chiều đỏ 'ON22-AC-4 bản sao đẩy tiêu đề thẻ → bắt' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON22-AC-5 ma trận cây log: khối lockdown bằng getLockdownStatus từng lớp' ok (7 ca viết trước: wd ok mới · wd ok cũ · wd báo sự cố · không wd · gateway 0 lượt · gateway có lượt · không gateway); ca 'ON22-AC-5 lớp không kiểm được là null, lớp thấy sự cố là false' ok; chiều đỏ 'ON22-AC-5 bản sao biến false thành null → bắt, nêu tên lớp' ok; chiều đỏ 'ON22-AC-5 bản sao mặc định ok=true khi thiếu log → bắt' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, app/src/lib/ops-queries.ts, app/tests/ops-facts-so-tong-hop.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON22-AC-6 khối jobs khớp bản chụp launchctl 23/10: mỗi nhãn của pipeline/cron có mặt, lastExit, pid, nhãn che S0x' ok; ca 'ON22-AC-6 launchctl không chạy → error, 0 hàng' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs, scripts/fixtures/launchctl-list-2026-10-23.txt]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON22-AC-7 ma trận khối không đo được → {measured_at, error}, khối khác vẫn đo, bản tin vẫn gửi' ok (4 ca viết trước: reviewQueue · jobs · freshness · records24h); chiều đỏ 'ON22-AC-7 bản sao thay lỗi bằng 0 → bắt' ok"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON22-AC-8 ma trận cấy tên vào năm khối → mỗi bản thoát ≠0, 0 POST, dòng chặn nêu blocks.<khối> viết trước' ok"
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/tier-a-guard.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.app_ui
+    expected: "exit 0; ca 'ON22-AC-9 bản tin thật qua handler ingest thật → readOpsFacts: none · 44′ fresh (năm khối, measuredAt khớp bên ghi, freshness bằng check-freshness) · 46′ stale kèm measuredAt · khối cũ trong bản tin tươi · khối lỗi' ok; ca 'ON22-AC-9 hằng 45′ khai một chỗ' ok; chiều đỏ 'ON22-AC-9 bản sao bên ghi đổi tên measured_at → đọc trên cloud đỏ' ok; chiều đỏ 'ON22-AC-9 bản sao ngưỡng 60′ → ca 46′ bắt' ok"
+    paths: [app/src/lib/ops-facts.ts, app/src/app/api/v1/ops/ingest/route.ts, pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, app/tests/ops-facts-so-tong-hop.test.tsx]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    expected: "exit 0; ca 'ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái' ok — ca không có nhánh skip: thiếu DB :5433 hay launchctl thì ca FAIL với thông điệp nêu thứ thiếu"
+    paths: [pipeline/push-ops-facts.mjs, scripts/lib/ops-local.mjs, pipeline/scripts/ops-facts-so-tong-hop.test.mjs]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

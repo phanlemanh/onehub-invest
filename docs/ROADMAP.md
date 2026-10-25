@@ -84,6 +84,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
+- S08 (danh mục căn, PL10): `stg_s08_inventory` (migration 040) — một dòng = một căn ở một snapshot
+  (khoá `source_id` + `snapshot_id`, `state` notSold/sold), chỉ local (test `sync-pii` + leak gate gác);
+  ánh xạ RESO ở `mappings.yaml` `sources.S08`. Chờ importer DATA-CONTRACT v4 của ZCode; chưa có transform.
 - Cloud sync (15', `pipeline/sync-cloud.mjs`): nguyên tử từ cloud-sync-atomic (23/10) — nạp
   `sync_stage.rows` (migration 038, schema riêng, anon không đọc được) qua Management API rồi MỘT giao
   dịch DELETE+UPSERT+INSERT; không TRUNCATE (giữ `saved_markets`); đọc local `row_to_json` một snapshot
@@ -97,6 +100,16 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (`sourceLabel` trong `app/src/lib/source-labels.ts`, vai trò từ `source_registry` / `facts.sourceRuns`); nhãn, id và
   dòng log cuối của job (local lẫn payload facts) không còn tên thật — bộ che `mask-source-names` đóng chặt khi không đọc
   được tên. Thước: mục 12 `check-portal-compliance` (quét chữ hiển thị + ma trận viết trước) và HTML/payload thật.
+- Một bộ soát tầng A cho mọi đường lên cloud (NT2 `soat-tang-a-moi-duong-len-cloud`, 24/10): `pipeline/lib/tier-a-guard.mjs`
+  dùng chung cho `sync-cloud` và `push-ops-facts`; bản tin còn tên thật thì không gửi (`FACTS CHẶN [tầng A] <đường> <S0x>`,
+  soi khô `--kho`), tên tài khoản thu gửi `null`; leak gate đỏ khi bảng người bán ở cloud có cột ngoài `CLOUD_ALLOW` hoặc
+  bảng tầng A có dòng (soi prod `sync-cloud.mjs --kiem-cot`). Vận hành: `docs/ops/runtime-map.md`.
+- Số tổng hợp Ops lên cloud (ON22 `ops-facts-so-tong-hop`, 24/10, ADR-0014): `push-ops-facts` đẩy thêm năm khối có
+  `measured_at` — độ tươi, job launchd, lockdown từng lớp, bản ghi 24h, số thẻ chờ (`scripts/lib/ops-local.mjs`, khớp hàm
+  app bằng phép đo đối chiếu); khối đo không được ghi `error`; cloud đọc qua `readOpsFacts()` (none/fresh/stale, 45′).
+- Ô KPI Ops trên cloud (ON3 `o-kpi-chi-do-local`, 24/10): `/ops`, `/ops/collections`, `/ops/review` trên cloud đọc số
+  máy local đẩy (`getCloudOpsView`), kèm «Số đo lúc … (GMT+7) từ máy local»; số cũ quá 45′ có Alert vàng và không badge
+  xanh; chưa có bản tin thì «—» + một Alert «Chỉ đo ở máy local». Lockdown trên cloud chờ ON23.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
@@ -108,7 +121,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 | S02 | AirDNA | active (19:05; rotation 34 tỉnh) | hiệu chuẩn |
 | S03 | Zalo | active (hook liên tục; lockdown 7 lớp + watchdog) | media CHỜ tin ảnh (dbg-media) |
 | S04 | OSM | completed (one-time) | |
-| S05 | Facebook | paused (credit cạn; reset 7/11 — chờ đánh giá) | 118 offers giữ |
+| S05 | Facebook | paused — Mạnh chốt 24/10: Apify trả 402 hết credit từ ~21/10, chờ credit reset 7/11; `source_registry.status=paused` nên check-freshness không đo | 118 offers giữ |
 | S06 | Chợ Tốt | active (05:30; ruler 150 phường) | phone reveal chưa làm |
 | S07 | Batdongsan | rejected-Apify | tự build nếu cần |
 
@@ -192,6 +205,10 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 16. **Ops trên cloud đọc số tổng hợp do máy local tính sẵn** (24/10, «Chọn A», ADR-0014): `push-ops-facts.mjs` đẩy
    độ tươi/SLO, job, lockdown, bản ghi 24h, số thẻ chờ (chỉ tổng hợp + mã `S0x`, qua bộ soát tầng A), mỗi khối có mốc
    đo; trang cloud chỉ đọc bảng đó, facts cũ > 45′ báo «máy local không đẩy số». Loại sync bản gọt và tunnel.
+17. **Kiến trúc dữ liệu «tin → căn» theo RESO DD 2.1** (23/10, **ADR-0013**): căn = UPI + `Building`, tin = `Property`;
+   toà = `BuildingName`, phân khu = `ComplexName`, trục = extension `Stack`; UPI kiểu VN `urn:onehub:upi`; phường/xã →
+   `City`; mọi giá trị máy/người ghi `FieldAssertion`; trạng thái chỉ theo bằng chứng. Mọi việc chạm dữ liệu tin/căn
+   kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -232,7 +249,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | # | Việc | Trạng thái |
 |---|---|---|
 | N1 | media Zalo: đọc dbg-media khi tin ảnh về → map → bỏ debug | ⏳ chờ dữ liệu |
-| N2 | FB: user quyết định mua Apify Starter — ĐÃ CHỐT 22/10, S05 active | ✅ |
+| N2 | FB: Apify Starter (chốt 22/10) chưa có hiệu lực — vẫn 402 hết credit; S05 TẠM DỪNG từ 24/10 tới khi credit reset 7/11 (bật lại: `status=active` khi lượt thu chạy được) | ⏸ |
 | N3 | AirDNA rotation (passive) | 🔄 sống |
 | N4 | S06 phone reveal per-ad (cap 50/ngày, top-deals) | ⬜ |
 
@@ -273,7 +290,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | ⏳ sau khi gỡ ảnh AirDNA khỏi listing |
 | I4 | Lợi suất: `/yield` form-11 + `data-grid-advanced-7` (chi phí + dòng tiền vốn vay), `/dau-tu` → chuyển hướng `/yield` | ⏳ |
 | I5 | So sánh + Đã lưu: giữ comparison-1 / wishlist-2, thêm PageHeader + trạng thái; `/so-sanh` → `/compare` (301) | ⏳ |
-| I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | ⏳ |
+| I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | 🟡 trang chủ + Phương pháp: hồ sơ `trang-chu-methodology` (UI2) — `/methodology` faq-3 mở sẵn, nền hero/thẻ thị trường không màu cứng, `(marketing)/error.tsx` + `global-error.tsx`, baseline −18; auth giữ nguyên |
 | B5 | Ops còn lại (`/ops/deals`) + gỡ baseline (phải rỗng) | ⏳ |
 
 Cắt lại 23/10: B2 (khung & KPI) và B4 (trạng thái) không còn là đợt riêng — phần Invest của chúng đi

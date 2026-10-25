@@ -5,10 +5,10 @@ import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Review Queue" };
+export const metadata: Metadata = { title: "Hàng duyệt" };
 
 /**
- * /ops/review — HITL Review Queue (hitl-review-queue.md).
+ * /ops/review — Hàng duyệt (hitl-review-queue.md).
  * Nơi con người phán quyết các đề xuất từ AI/Stage B.
  * Mọi loại phán quyết generic: entity_match, source_decision, agent_output.
  * Trang chỉ kiểm quyền; nội dung (kể cả dừng sớm khi review_queue vắng trên cloud) ở ReviewContent.

@@ -15,8 +15,6 @@ const CONTEXT_MD = join(APP, "..", "CONTEXT.md");
 // Route tiếng Việt còn chạy → slug đích. Đổi trong đợt dọn của nhóm trang, kèm redirect vĩnh viễn
 // trong app/next.config.ts, rồi xoá dòng ở đây. Không thêm dòng mới: route mới phải tiếng Anh.
 const VIET_EXCEPTIONS = [
-  { segment: "so-sanh", target: "compare", until: "2026-12-31" },
-  { segment: "phuong-phap", target: "methodology", until: "2026-12-31" },
   { segment: "dau-tu", target: "yield", until: "2026-12-31" },
 ];
 

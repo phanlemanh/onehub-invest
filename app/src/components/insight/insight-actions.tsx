@@ -27,7 +27,7 @@ export function InsightActions({
         size="sm"
         className="text-xs shadow-xs"
         nativeButton={false}
-        render={<Link href={`/so-sanh?areas=${areaId}`} />}
+        render={<Link href={`/compare?areas=${areaId}`} />}
       >
         <GitCompareIcon data-icon="inline-start" aria-hidden="true" />
         So sánh

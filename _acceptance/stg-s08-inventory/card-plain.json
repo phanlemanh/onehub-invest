@@ -1,0 +1,10 @@
+{
+  "feature_plain": "Máy có chỗ chứa danh mục căn của nguồn danh mục dự án (S08) trên máy local, để phiên thu của ZCode nạp vào và về sau dựng danh mục căn nội bộ — dữ liệu này không bao giờ lên cloud hay cổng công khai.",
+  "scope_plain": "Việc này chỉ dựng chỗ chứa; những phần sau để vòng khác:",
+  "decisions_plain": [
+    {"id": "d-20261024T000000Z-s08a", "p": "KHÔNG qua Cổng duyệt tiêu chí trước khi làm và không có vòng phản biện độc lập — vì bảng đã dựng trước khi viết tiêu chí; đổi lại, một phiên chấm tươi chạy cả 7 phép kiểm máy và anh là người duyệt duy nhất ở cổng này."}
+  ],
+  "decisions": [
+    {"id": "ký hay trả", "q": "Cho bảng danh mục căn S08 vào nhánh chính?", "why": "Bảy phép kiểm máy đều xanh: chạy lại không hỏng, chặn dữ liệu sai, không lên cloud, không lộ tên nguồn, tên trường theo RESO."}
+  ]
+}

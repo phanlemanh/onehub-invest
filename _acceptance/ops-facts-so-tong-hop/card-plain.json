@@ -1,0 +1,3 @@
+{
+  "feature_plain": "Sau mỗi lượt đồng bộ 15 phút, máy thu đẩy lên cloud năm nhóm số vận hành có giờ đo (độ tươi từng nguồn, job chạy nền, lớp khoá Zalo, bản ghi 24 giờ, số thẻ chờ duyệt); nhóm đo không được thì ghi lỗi; cloud có một chỗ đọc chung biết số chưa có, còn tươi hay đã cũ quá 45 phút."
+}

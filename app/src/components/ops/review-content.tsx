@@ -3,7 +3,11 @@ import { ReviewCard, type ReviewItem } from "@/components/ops/review-card";
 import { Badge } from "@/components/reui/badge";
 import type { User } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { fmtInt } from "@/lib/format";
+import { getCloudOpsView } from "@/lib/ops-cloud";
 import { localOnlyTable } from "@/lib/ops-queries";
+import { cn } from "@/lib/utils";
+import { FactsStaleAlert, FactsStamp } from "@/components/ops/facts-status";
 import { loadReviewMedia, stripEvidenceImages } from "@/lib/ops/review-media";
 
 type Row = {
@@ -23,13 +27,32 @@ type Row = {
  */
 export async function ReviewContent({ user }: { user: User }) {
   if (await localOnlyTable("review_queue")) {
+    // Cloud: chỉ số đếm thẻ chờ từ bản tin máy local (ON3, ADR-0014 — nội dung thẻ là tầng A, không lên cloud).
+    const cloud = await getCloudOpsView();
+    const pending = cloud.pending;
+    // Số cũ quá 45′ (ADR-0014 hàng «Cũ»): số đếm hiện mờ — là lần đo cuối, không phải bây giờ.
+    const stale = cloud.state === "stale";
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-xl font-medium">Review Queue</h1>
+          <h1 className="text-xl font-medium">Hàng duyệt</h1>
+          <p className="text-sm tabular-nums" data-pending-total={pending?.total ?? ""}>
+            <span className={cn("font-semibold", stale && "text-muted-foreground")}>{pending ? fmtInt(pending.total) : "—"}</span> thẻ đang chờ
+          </p>
+          {pending && pending.byType.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {pending.byType.map((t) => (
+                <Badge key={t.type} variant="outline" className={cn(stale && "text-muted-foreground")} data-pending-type={t.type}>
+                  {t.type}: {fmtInt(t.n)}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
+          <FactsStamp state={cloud.state} measuredAt={cloud.measuredAt} />
         </div>
-        <LocalOnlyAlert title="Hàng chờ duyệt chỉ có ở máy local">
-          Hàng chờ duyệt giữ bằng chứng thô của nguồn (tầng A) nên không lên cloud. Duyệt ở Ops trên máy thu.
+        <FactsStaleAlert state={cloud.state} measuredAt={cloud.measuredAt} />
+        <LocalOnlyAlert title="Hàng duyệt chỉ có ở máy thu">
+          Hàng duyệt giữ bằng chứng thô của nguồn (tầng A) nên không lên máy chủ. Duyệt ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
     );
@@ -63,14 +86,14 @@ export async function ReviewContent({ user }: { user: User }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-xl font-medium">Review Queue</h1>
+        <h1 className="text-xl font-medium">Hàng duyệt</h1>
         <p className="text-muted-foreground text-xs">
-          Phán quyết con người (HITL) — AI/hệ thống đề xuất, bạn quyết định.
-          Mọi quyết định ghi audit.
+          Người phán quyết — máy đề xuất, bạn quyết định.
+          Mọi quyết định được ghi nhật ký.
         </p>
         <div className="flex items-center gap-2">
           <Badge variant={pending.length > 0 ? "warning-light" : "success-light"}>
-            {pending.length} chờ review
+            {pending.length} chờ duyệt
           </Badge>
           {approved > 0 && <Badge variant="success-light">✓ {approved} đã duyệt</Badge>}
           {rejected > 0 && <Badge variant="outline">✗ {rejected} từ chối</Badge>}
@@ -79,7 +102,7 @@ export async function ReviewContent({ user }: { user: User }) {
 
       {pending.length === 0 && decided.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          Queue trống — không có item chờ phán quyết.
+          Hàng duyệt trống — không có thẻ chờ phán quyết.
         </p>
       ) : (
         <>

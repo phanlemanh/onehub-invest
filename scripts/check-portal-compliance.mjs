@@ -9,6 +9,7 @@
 //   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm;
 //   - /api/v1/deals đang tạm đóng: cổng ops chạy trước truy vấn (check-deals-api.mjs);
 //   - mọi route API khớp sổ bề mặt app/src/lib/api-surface.ts (check-api-surface.mjs).
+//   - bản khai công cụ MCP app/docs/api/mcp-tools.json khớp chế độ sổ bề mặt (check-mcp-tools.mjs).
 // Dùng: node scripts/check-portal-compliance.mjs  (exit 0 = đạt, 1 = vi phạm)
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -67,9 +68,12 @@ check(
   "next.config redirect /deals → /ops/deals",
 );
 
-// 4. /ops/deals: liên hệ + nội dung + ảnh tin chỉ khi showContact = isAdmin(user).
-const deals = code(read("src/app/ops/deals/page.tsx"));
-check(/const showContact = isAdmin\(user\)/.test(deals), "ops/deals tính showContact từ isAdmin(user)");
+// 4. /ops/deals: liên hệ + nội dung + ảnh tin chỉ khi showContact = isAdmin(user). Thẻ tách ở
+//    components/ops/deal-card.tsx (ON11) — trang phải truyền đúng showContact xuống thẻ, và đo trên cả hai tệp.
+const dealsPage = code(read("src/app/ops/deals/page.tsx"));
+const deals = `${dealsPage}\n${code(read("src/components/ops/deal-card.tsx"))}`;
+check(/const showContact = isAdmin\(user\)/.test(dealsPage), "ops/deals tính showContact từ isAdmin(user)");
+check(/<DealCard\b[^>]*\bshowContact=\{showContact\}/.test(dealsPage), "ops/deals truyền showContact xuống DealCard");
 for (const [label, re] of [
   ["khối SĐT/tên người bán", /\{showContact && \(d\.sellerPhone \|\| d\.sellerName\)/],
   ["nội dung tin", /\{showContact && d\.postText/],
@@ -168,6 +172,12 @@ check(surface.violations.length === 0, `sổ bề mặt API: ${surface.routes}/$
 
 // 12. Ops ngoài /ops/sources chỉ dùng mã S0x trong chữ hiển thị (ops-nhan-ma-nguon, ON7).
 opsTierA(root);
+
+// 13. Bản khai công cụ MCP (mcp-tools-theo-so-be-mat, ON15): mỗi công cụ trỏ route có trong sổ, chế độ khai = chế độ sổ.
+const { checkMcpTools, loadManifest } = await import("./check-mcp-tools.mjs");
+const mcp = checkMcpTools({ entries: await loadEntries(), manifest: loadManifest(root) });
+for (const v of mcp.violations) check(false, `công cụ MCP: ${v}`);
+check(mcp.violations.length === 0 && mcp.tools > 0, `công cụ MCP: ${mcp.lines.length}/${mcp.tools} công cụ khớp sổ bề mặt`);
 
 console.log(fails.length === 0 ? "\nportal-compliance: ĐẠT" : `\nportal-compliance: ${fails.length} vi phạm`);
 process.exit(fails.length === 0 ? 0 : 1);

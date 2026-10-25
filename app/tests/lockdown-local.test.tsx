@@ -186,17 +186,18 @@ describe("LD-AC-5 hiển thị khi chưa kiểm được", () => {
   const rowState = (grid: string, desc: string) => {
     const row = [...grid.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) => m[1]).find((r) => r.includes(desc))
     assert.ok(row, `có hàng «${desc}» trong lưới`)
-    return row!.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).at(-1)
+    // ON13: cột Trạng thái đứng ngay sau cột Lớp — đọc nhãn trạng thái (Badge) của hàng, không đọc ô cuối.
+    return row!.match(/data-slot="badge"[^>]*>([^<]+)</)?.[1]
   }
 
   test("LD-AC-5 null → Chưa kiểm được agent-turn hôm nay, 0 mục Khẩn agent-turn, L4b trong nhóm Chưa kiểm được của lưới", async () => {
     const { lk, tiles, grid, issues } = await view({})
     assert.equal(lk.agentTurnsToday, null)
-    assert.match(tiles, /Chưa kiểm được agent-turn hôm nay/)
-    assert.doesNotMatch(tiles, /Không có agent-turn hôm nay/)
+    assert.match(tiles, /Chưa kiểm được lượt máy tự trả lời hôm nay/) // ON12: «Lượt máy tự trả lời» thay «agent-turn»
+    assert.doesNotMatch(tiles, /Không có lượt máy tự trả lời hôm nay/)
     assert.equal(issues.filter((i) => i.key === "agent").length, 0)
     assert.equal(issues.filter((i) => i.label === "Khẩn").length, 0)
-    assert.equal(rowState(grid, "Agent-turn hôm nay = 0"), "Chưa kiểm được")
+    assert.equal(rowState(grid, "Lượt máy tự trả lời hôm nay = 0"), "Chưa kiểm được")
   })
 
   test("LD-AC-5 2 dấu → mục Khẩn Agent-turn hôm nay", async () => {
@@ -204,9 +205,9 @@ describe("LD-AC-5 hiển thị khi chưa kiểm được", () => {
     const agent = issues.find((i) => i.key === "agent")
     assert.ok(agent)
     assert.equal(agent.label, "Khẩn")
-    assert.equal(agent.title, "Agent-turn hôm nay")
-    assert.match(tiles, /Có agent-turn hôm nay — kiểm ngay/)
-    assert.equal(rowState(grid, "Agent-turn hôm nay = 0"), "Hỏng")
+    assert.equal(agent.title, "Lượt máy tự trả lời hôm nay")
+    assert.match(tiles, /Có lượt máy tự trả lời hôm nay — kiểm ngay/)
+    assert.equal(rowState(grid, "Lượt máy tự trả lời hôm nay = 0"), "Hỏng")
   })
 })
 

@@ -9,8 +9,12 @@ import path from "node:path";
 import pg from "pg";
 
 import { maskSourceNames } from "./lib/mask-source-names.mjs";
+import { guardValues } from "./lib/tier-a-guard.mjs";
 
 import { tailLog } from "./lib/last-log-line.mjs";
+import { parseLog, zaloFlow } from "./lib/ops-flow.mjs";
+import { readFreshness } from "../scripts/lib/freshness.mjs";
+import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue } from "../scripts/lib/ops-local.mjs";
 
 const ROOT = process.env.ONEINVEST_ROOT ?? "/Users/manhphan/dev/one-invest";
 const INGEST_URL = process.env.INGEST_URL ?? "https://onehub-invest.vercel.app/api/v1/ops/ingest";
@@ -19,66 +23,6 @@ const LOCAL_URL = "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 async function env() {
   const s = await readFile(path.join(homedir(), ".oneinvest/cloud.env"), "utf8");
   return { token: s.match(/CLOUD_OPS_API_TOKEN=(\S+)/)?.[1] };
-}
-
-const EMPTY = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 };
-
-// ---- 1. Funnel cổng + health từ hook log ----
-function parseLog(text) {
-  const lines = text.split("\n").filter(Boolean);
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const cutoff = Date.now() - 7 * 86400000;
-  const funnel = { today: { ...EMPTY }, last7: { ...EMPTY }, lastEventAt: null };
-  const health = {
-    connected: null, uptime24h: null, heartbeatAgeMin: null,
-    lastHeartbeatAt: null, lastPostAt: null, silentAlert24h: false, driftAlert24h: false,
-  };
-  const groups = new Map();
-  let up = 0, total = 0;
-  for (const line of lines) {
-    const ts = line.slice(0, 24);
-    if (!/^\d{4}-\d{2}-\d{2}T/.test(ts)) continue;
-    const t = new Date(ts).getTime();
-    if (line.includes(" heartbeat ")) {
-      health.lastHeartbeatAt = ts;
-      if (Date.now() - t <= 86400000) {
-        total++;
-        if (line.includes(" up ")) up++;
-      }
-    } else if (line.includes(" post 202")) {
-      health.lastPostAt = ts;
-    } else if (line.includes(" alert silent-gate") && Date.now() - t <= 86400000) health.silentAlert24h = true;
-    else if (line.includes(" alert drift") && Date.now() - t <= 86400000) health.driftAlert24h = true;
-    if (/ (heartbeat|alert) /.test(line)) continue;
-    funnel.lastEventAt = ts;
-    for (const b of [t >= cutoff ? funnel.last7 : null, ts.slice(0, 10) === todayKey ? funnel.today : null]) {
-      if (!b) continue;
-      b.messages++;
-      if (line.includes(" post 202")) {
-        b.passed++;
-        b.accepted += Number(line.match(/"accepted":(\d+)/)?.[1] ?? 0);
-      } else if (/ skip /.test(line)) b.skipped++;
-      if (/media/i.test(line)) b.media++;
-    }
-    const g = line.match(/group=(.+?)(?:\s+p=|\s+account=|$)/)?.[1];
-    const acc = line.match(/account=([a-z0-9-]+)/)?.[1];
-    if (g) {
-      const r = groups.get(g) ?? { name: g, seen: 0, passed: 0, skipped: 0, accepted: 0, ownerAccount: acc ?? null, lastEventAt: ts };
-      r.seen++;
-      if (line.includes(" post 202")) { r.passed++; r.ownerAccount = r.ownerAccount ?? acc ?? null; }
-      else if (/ skip /.test(line)) r.skipped++;
-      r.lastEventAt = ts;
-      groups.set(g, r);
-    }
-  }
-  health.uptime24h = total > 0 ? up / total : null;
-  health.connected = health.lastHeartbeatAt
-    ? lines.filter((l) => l.includes(" heartbeat ")).at(-1)?.includes(" up ") ?? false
-    : null;
-  health.heartbeatAgeMin = health.lastHeartbeatAt
-    ? Math.round((Date.now() - new Date(health.lastHeartbeatAt).getTime()) / 60000)
-    : null;
-  return { funnel, health, groups: [...groups.values()] };
 }
 
 // ---- 2. Máy móc: launchd logs + probe ----
@@ -149,15 +93,9 @@ async function rotation(client) {
 
 // ---- 4. Nhóm Zalo (stg thật/mock + funnel + owner) + flow ngày ----
 async function zaloExtras(client, funnelGroups) {
-  const [postRows, offerRows] = await Promise.all([
+  const [postRows] = await Promise.all([
     client.query(
       "SELECT group_name, count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%' AND captured_at >= now() - interval '7 days')::int real7, max(captured_at) FILTER (WHERE snapshot_id LIKE '%zalo-agent%') last_real, bool_and(snapshot_id NOT LIKE '%zalo-agent%') mock_only FROM stg_zalo_posts WHERE group_name IS NOT NULL GROUP BY 1",
-    ),
-    client.query(
-      "SELECT first_seen::date::text d, count(*)::int offers FROM sale_offers WHERE first_seen >= now() - interval '7 days' GROUP BY 1",
-    ),
-    client.query(
-      "SELECT captured_at::date::text d, count(*) FILTER (WHERE snapshot_id LIKE '%zalo-agent%')::int real_posts FROM stg_zalo_posts WHERE captured_at >= now() - interval '7 days' GROUP BY 1",
     ),
   ]);
   // gộp: nhóm từ DB + nhóm chỉ có trong funnel log
@@ -174,16 +112,26 @@ async function zaloExtras(client, funnelGroups) {
     Object.assign(row, { seen: g.seen, passed: g.passed, skipped: g.skipped, accepted: g.accepted, lastEventAt: g.lastEventAt, ownerAccount: g.ownerAccount ?? row.ownerAccount, lastSeenAt: row.lastSeenAt ?? g.lastEventAt });
     byName.set(g.name, row);
   }
-  const flow = {};
-  for (const r of offerRows.rows) flow[r.d] = { offers: r.offers };
-  for (const r of (await client.query("SELECT captured_at::date::text d, count(*)::int posts FROM stg_zalo_posts WHERE captured_at >= now() - interval '7 days' AND snapshot_id LIKE '%zalo-agent%' GROUP BY 1")).rows) {
-    flow[r.d] = { ...(flow[r.d] ?? {}), posts: r.posts };
-  }
+  // ON8: số Zalo theo ngày VN — cùng khoá ngày với các cột khác của «Luồng 7 ngày» trên cloud.
+  const flow = await zaloFlow(client);
   return { groups: [...byName.values()], flow };
 }
 
 async function sourceRunsQ(client) {
-  // H3: feed health per nguồn cho cloud /ops (mọi lần chạy ghi snapshot)
+  // H3: feed health per nguồn cho cloud /ops (mọi lần chạy ghi snapshot). ON22: bảng snapshot đọc không được thì vẫn
+  // trả vai trò từng mã, số lần chạy để null (chưa đo) — không 0, không làm sập cả bản tin (khối records24h báo lỗi).
+  try {
+    return await sourceRunsFull(client);
+  } catch {
+    const { rows } = await client.query(
+      `SELECT code, label_vi, status, NULL::timestamptz AS last_run, NULL::bigint AS items_24h, NULL::bigint AS offers
+       FROM source_registry ORDER BY code`,
+    );
+    return rows;
+  }
+}
+
+async function sourceRunsFull(client) {
   const { rows } = await client.query(`
     SELECT r.code, r.label_vi, r.status, s.last_run, s.items_24h,
            COALESCE(o.offers, 0) AS offers
@@ -198,9 +146,33 @@ async function sourceRunsQ(client) {
   return rows;
 }
 
+/** ON22 (ADR-0014): một khối số = `{measured_at, ...dữ liệu}`; đo không được → `{measured_at, error}` — không bao giờ
+ * thay bằng 0, mảng rỗng hay «Ổn». Thông điệp lỗi đi qua bộ che tên (rỗng/không che được → câu chung). */
+async function measure(fn) {
+  try {
+    const data = await fn();
+    return { measured_at: new Date().toISOString(), ...data };
+  } catch (e) {
+    const msg = maskSourceNames(String(e?.message ?? e).split("\n")[0].slice(0, 200), REG.names);
+    return { measured_at: new Date().toISOString(), error: msg ? `không đo được: ${msg}` : "không đo được" };
+  }
+}
+
+/** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A. */
+export function factsChan(payload, names) {
+  if (!names?.length) return ["FACTS CHẶN [tầng A] không có danh sách tên để soát (source_registry) — không gửi"];
+  const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
+  (payload.zaloAccounts ?? []).forEach((a, i) => {
+    if (a?.name != null) out.push(`FACTS CHẶN [tầng A] zaloAccounts[${i}].name tên tài khoản thu`);
+  });
+  return out;
+}
+
 async function main() {
-  const { token } = await env();
-  if (!token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
+  // --kho: chế độ khô — dựng bản tin, soát tầng A, in đường JSON + mã; không cần token, không gửi.
+  const kho = process.argv.includes("--kho");
+  const { token } = kho ? {} : await env();
+  if (!kho && !token) throw new Error("thiếu CLOUD_OPS_API_TOKEN trong ~/.oneinvest/cloud.env");
   const logText = await readFile(path.join(homedir(), ".openclaw/logs/oneinvest-zalo-pipe.log"), "utf8").catch(() => "");
   const { funnel, health, groups } = parseLog(logText);
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? LOCAL_URL });
@@ -211,7 +183,24 @@ async function main() {
   const [jobs, rot, zalo, sourceRuns] = await Promise.all([
     scheduler(), rotation(client), zaloExtras(client, groups), sourceRunsQ(client),
   ]);
+  // ON22: năm khối số tổng hợp (ADR-0014). OPS_FACTS_NOW / OPENCLAW_LOG_DIR / ONEINVEST_CRON_DIR / LAUNCHCTL chỉ để
+  // phép đo trỏ mốc giờ và thư mục tạm — plist launchd không đặt chúng.
+  const now = process.env.OPS_FACTS_NOW ? new Date(process.env.OPS_FACTS_NOW) : new Date();
+  const freshnessBlock = await measure(async () => ({ rows: await readFreshness(client, { now }) }));
+  const records24hBlock = await measure(async () => ({ bySource: await readRecords24h(client) }));
+  const reviewQueueBlock = await measure(() => readReviewQueue(client));
   await client.end();
+  const [lockdownBlock, jobsBlock] = await Promise.all([
+    measure(() => readLockdown({ root: ROOT, agentLogDir: process.env.OPENCLAW_LOG_DIR ?? "/tmp/openclaw", now })),
+    measure(async () => ({
+      items: await readLaunchdJobs({
+        cronDir: process.env.ONEINVEST_CRON_DIR ?? path.join(ROOT, "pipeline/cron"),
+        root: ROOT,
+        names: REG.names,
+        launchctl: process.env.LAUNCHCTL ?? "launchctl",
+      }),
+    })),
+  ]);
 
   // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud)
   let zaloAccounts = [];
@@ -228,7 +217,8 @@ async function main() {
         ? (z.accounts?.default?.groups ?? z.groups ?? {})
         : (acc?.groups ?? {});
       const enabled = Object.entries(groups).filter(([, v]) => v?.enabled !== false && v?.allow !== false).length;
-      return { accountId: id, name: acc?.name ?? null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
+      // NT2 Hỏi-1 = A: tên tài khoản thu là tầng A — không rời máy; cloud hiện mã tài khoản.
+      return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
     });
   } catch { /* config không đọc được */ }
 
@@ -239,7 +229,28 @@ async function main() {
     zaloGroups: zalo.groups,
     zaloFlow: zalo.flow,
     zaloAccounts,
+    blocks: {
+      freshness: freshnessBlock,
+      jobs: jobsBlock,
+      lockdown: lockdownBlock,
+      records24h: records24hBlock,
+      reviewQueue: reviewQueueBlock,
+    },
   };
+  // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
+  const chan = factsChan(payload, REG.names);
+  if (kho) {
+    for (const l of chan) console.error(l);
+    console.log(`khối: ${Object.entries(payload.blocks).map(([k, b]) => `${k} ${b.error ? "không đo được" : "đo được"}`).join(" · ")}`);
+    console.log(chan.length ? `ops-facts khô: ${chan.length} chỗ chặn` : "ops-facts khô: sạch, 0 chỗ chặn");
+    process.exitCode = chan.length ? 1 : 0;
+    return;
+  }
+  if (chan.length) {
+    for (const l of chan) console.error(l);
+    process.exitCode = 1;
+    return;
+  }
   const res = await fetch(INGEST_URL, {
     method: "POST",
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },

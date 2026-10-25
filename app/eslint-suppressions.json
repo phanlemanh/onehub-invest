@@ -1,12 +1,4 @@
 {
-  "src/app/ops/deals/page.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 1
-    },
-    "onehub-ui/no-emoji-icons": {
-      "count": 1
-    }
-  },
   "src/components/auth/gradient-wave.tsx": {
     "onehub-ui/no-banned-motion": {
       "count": 4
@@ -22,11 +14,6 @@
       "count": 1
     },
     "onehub-ui/no-raw-palette": {
-      "count": 1
-    }
-  },
-  "src/components/compare/comparison.tsx": {
-    "onehub-ui/no-raw-table": {
       "count": 1
     }
   },
@@ -64,21 +51,6 @@
       "count": 2
     }
   },
-  "src/components/marketing/frame-backdrop.tsx": {
-    "onehub-ui/no-hardcoded-color": {
-      "count": 13
-    }
-  },
-  "src/components/marketing/market-cards.tsx": {
-    "onehub-ui/no-raw-palette": {
-      "count": 4
-    }
-  },
-  "src/components/marketing/marketing-navbar.tsx": {
-    "onehub-ui/no-banned-motion": {
-      "count": 1
-    }
-  },
   "src/components/ops/review-card.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
       "count": 9
@@ -90,16 +62,6 @@
       "count": 3
     },
     "onehub-ui/no-raw-palette": {
-      "count": 2
-    }
-  },
-  "src/components/saved/saved-item.tsx": {
-    "onehub-ui/no-banned-motion": {
-      "count": 1
-    }
-  },
-  "src/components/saved/saved-list.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
       "count": 2
     }
   },
