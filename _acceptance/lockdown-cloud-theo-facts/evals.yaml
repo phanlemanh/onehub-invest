@@ -86,6 +86,7 @@ evals:
       - "--mode mixed (bản tin thật, đổi ok của khối lockdown thành đủ true/false/null): chụp evidence/E9-ST-lockdown-mixed.png — phải thấy cả ba nhãn và ba số trên tab"
       - "--mode stale: chụp evidence/E9-ST-lockdown-stale.png"
       - "Tối: chụp evidence/E9-dark-ST-lockdown-stale.png; 390px: chụp evidence/E9-narrow-ST-lockdown-none.png và evidence/E9-narrow-ST-lockdown-fresh.png, mỗi lần kiểm document.documentElement.scrollWidth <= innerWidth"
+      - "Tắt dev server rồi trả cây về như trước khi chấm: `git checkout -- app/next-env.d.ts` và xoá `app/AGENTS.md` nếu dev server vừa sinh ra (Next tự ghi hai tệp này khi chạy dev) — lượt chấm không được để lại thay đổi nào ngoài evidence/"
     expected: "mỗi dòng ST-lockdown-* có khung mang đúng tên, khớp mô tả; khung tối và 390px đúng trạng thái ghi trong tên; không thanh cuộn ngang"
     paths: [app/src/components/ops/collections/**, app/src/lib/ops-cloud.ts, scripts/ops-cloud-proto.mjs]
     evidence_required: [run_id, exit_code, verifier, verified_at, screenshot, observed]
