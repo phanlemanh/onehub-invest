@@ -1,0 +1,29 @@
+{
+  "feature_plain": "Mọi PR trên GitHub sẽ tự kiểm kiểu và chạy test của app, pipeline, agent, data-api và các script — một lỗi kiểu trong module nào làm đúng ô kiểm của module đó đỏ, thay vì lọt vào main như 25/10.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ có một quy trình CI mới với năm ô kiểm theo module, chạy trên mọi PR, không dùng khoá bí mật nào và không cho bước kiểm nào được phép đỏ mà vẫn qua."},
+    {"id": "AC-2", "p": "Sẽ cho mỗi ô kiểm chạy đúng lệnh kiểm kiểu và lệnh test của module đó."},
+    {"id": "AC-4", "p": "Sẽ cho các ca test cần dữ liệu thật của máy được bỏ qua trên CI theo đúng một danh sách viết sẵn (theo Hỏi-2), còn ở máy vẫn chạy như cũ."},
+    {"id": "AC-5", "p": "Sẽ cho agent kiểm kiểu xanh khi cài phụ thuộc từ đầu (thêm gói kiểu còn thiếu)."},
+    {"id": "AC-6", "p": "Sẽ chạy lại cả năm ô kiểm trên máy trong docker y như CI và thấy cả năm xanh."},
+    {"id": "AC-7", "p": "Sẽ cấy một lỗi vào từng module và thấy đúng ô kiểm của module đó đỏ, bốn ô còn lại xanh."},
+    {"id": "AC-8", "p": "Sẽ thấy năm ô kiểm xanh trên CI thật của GitHub, và (theo Hỏi-3) thấy đúng ô đỏ khi cấy lỗi trên CI thật."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Sẽ KHÔNG dựng DB của CI vào DB thật của máy: chỉ dựng trên DB trống dùng một lần, và báo đỏ khi một migration lỗi ngoài danh sách đã khai."},
+    {"id": "OOS-1", "p": "KHÔNG bật năm ô kiểm thành điều kiện bắt buộc để merge — đó là cài đặt GitHub của anh."},
+    {"id": "OOS-2", "p": "KHÔNG sửa các test đang đỏ sẵn trên main — liên làn đang sửa; vòng này merge sau bản sửa đó."},
+    {"id": "OOS-3", "p": "KHÔNG viết migration vá bảng thiếu trong vòng này (theo Hỏi-1)."},
+    {"id": "OOS-4", "p": "KHÔNG build hay deploy app trên CI."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Phủ năm module × ba bước (kiểm kiểu, test, DB) × bốn cách đo (đọc tĩnh, chạy lại trên máy, cấy lỗi, CI thật) — riêng khác biệt kiến trúc máy (Mac) và CI (Linux) chỉ CI thật đo được (AC-8)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Máy đã tự đổi nghĩa «lỗi kiểu» ở hai module viết bằng JS thành «lỗi cú pháp» mà không hỏi. Đã đưa lên thành Hỏi-4 cho anh chọn."},
+    {"i": 1, "p": "Bản chạy lại trên máy có thể khác CI thật (phiên bản node, biến môi trường, cách báo lỗi), nên có thể xanh ở máy mà đỏ trên CI hoặc ngược lại. Đã rút đủ cấu hình từ quy trình CI, cấm cho bước kiểm «được phép đỏ», và ghi rõ khác biệt Mac/Linux chỉ CI thật đo được."},
+    {"i": 2, "p": "Ca test được bỏ qua trên CI chưa có danh sách cố định, nên có thể phình ra nuốt cả lỗi thật. Đã ghim danh sách viết sẵn, cấm hai bộ test đang đỏ trên main vào danh sách, và đặt điều kiện chạy sau bản sửa của liên làn."},
+    {"i": 3, "p": "Phép đo dựng DB có thể chạy nhầm vào DB thật của máy. Đã buộc dùng DB docker dùng một lần, script từ chối DB đã có bảng, và báo khi danh sách migration lỗi đã khai không còn đúng."},
+    {"i": 4, "p": "Luật đọc tĩnh chưa khớp lựa chọn ở Hỏi-3 và chưa kiểm khối DB của CI. Đã viết trigger theo từng lựa chọn và kiểm khối DB."}
+  ]
+}
