@@ -5,7 +5,7 @@ slug: chotot-khong-lui
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T09:27:03Z
 approved_by:
@@ -47,3 +47,10 @@ sản phẩm hiện giá cũ mà mốc thu lại là mốc mới. Lời giao `cl
 
 - Harness `scripts/chotot-khong-lui/acceptance.mjs` dựng DB TẠM `acc_ckl_*` (pg_dump -s), fixture snapshot trong thư mục tạm,
   xoá khi xong; không ghi DB oneinvest. Trên importer của main: khong-lui đỏ (giá lùi về 1.000.000.000), tien và idempotent xanh.
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: mở hợp đồng mới
+  - Ngoài-2: ghi Known limits
+  - Ngoài-3: ghi Known limits
+- Known limits:
+  - Ngoài-2: Log «✅ N ads → stg_chotot_ads» đếm cả những tin mà WHERE đã chặn
+  - Ngoài-3: Guard `main()` im lặng không chạy khi node được gọi với `--preserve-symlinks-main`

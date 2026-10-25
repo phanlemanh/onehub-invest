@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 71322cd081738d65375a11f63fa0c9e98947c217
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: chotot-khong-lui
