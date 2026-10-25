@@ -85,7 +85,7 @@ const EXPECTED_BASE = [
   ["S01", "hcmc", 200, 192, "stale"],
   ["S02", "vn", 100, 840, "fresh"],
   ["S03", "hanoi", 1, 72, "fresh"],
-  ["S05", "hanoi", 2, 12, "fresh"],
+  ["S05", "hanoi", 2, 96, "fresh"],
   ["S06", "hanoi", 30, 36, "fresh"],
 ]
 
@@ -154,7 +154,7 @@ const rowKey = (r: { code: string; city: string | null; ageHours: number | null;
 
 // ------------------------------------------------------------------ ca đo --
 describe("AU6 slo-mot-nguon", () => {
-  test("SL-AC-2 getCoverageOverview khớp readFreshness trên lược đồ tạm — bảng mong đợi từng hàng viết trước, thấy thành phố canh, S05 12 giờ, không S04, không mã chưa khai SLO", async () => {
+  test("SL-AC-2 getCoverageOverview khớp readFreshness trên lược đồ tạm — bảng mong đợi từng hàng viết trước, thấy thành phố canh, S05 96 giờ, không S04, không mã chưa khai SLO", async () => {
     await seed(base())
     const { getCoverageOverview } = await import("../src/lib/ops-queries")
     const rows = await getCoverageOverview()
@@ -188,7 +188,7 @@ describe("AU6 slo-mot-nguon", () => {
       ["S02", 100, 840, "Đạt"],
       ["S03", 1, 72, "Đạt"],
       ["S04", null, null, "Ngừng"],
-      ["S05", 2, 12, "Đạt"],
+      ["S05", 2, 96, "Đạt"],
       ["S06", null, 36, "Chưa có dữ liệu"],
       ["S07", null, null, "Chưa khai SLO"],
     ])
@@ -257,10 +257,20 @@ describe("AU6 slo-mot-nguon", () => {
     await seed(base())
     const [ops, col] = [await renderOps(), await renderCollections()]
     for (const [name, h] of [["/ops", ops], ["/ops/collections", col]] as const) {
-      for (const want of ["12 giờ", "3 ngày", "35 ngày", "8 ngày"]) assert.ok(h.includes(want), `${name} thiếu «${want}»`)
+      for (const want of ["4 ngày", "3 ngày", "35 ngày", "8 ngày"]) assert.ok(h.includes(want), `${name} thiếu «${want}»`)
       assert.ok(!h.includes("(ngày)") && !h.includes("(giờ)"), `${name} còn tiêu đề cột theo đơn vị cũ`)
     }
     assert.ok(col.includes("Độ tươi 8 ngày / SLO 8 ngày"), "mục «Cần chú ý» của S01 dùng cùng cách viết")
+    // SLO của CHÍNH hàng S05 (s05-slo-theo-lich): 96 giờ → «4 ngày», không còn «12 giờ».
+    const hang = (h: string, id: string) => {
+      const m = h.match(new RegExp(`data-row-id="${id}"[\\s\\S]*?</tr>`))
+      assert.ok(m, `không thấy hàng ${id}`)
+      return m[0].replace(/<[^>]+>/g, "|")
+    }
+    for (const [name, r] of [["/ops", hang(ops, "S05-hanoi")], ["/ops/collections", hang(col, "S05")]] as const) {
+      assert.ok(r.includes("4 ngày"), `${name}: hàng S05 phải ghi SLO «4 ngày» — ${r}`)
+      assert.ok(!r.includes("12 giờ"), `${name}: hàng S05 còn SLO «12 giờ» — ${r}`)
+    }
   })
 
   test("SL-AC-7 /api/v1/ops/coverage trả hàng /ops kèm ageHours/sloHours, giữ ageDays/sloDays", async () => {
