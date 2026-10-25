@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f86be55adb7564d9370dd71ffda9306f72502f35
+verified_commit: 34d59edef0df0919ffede9ea082c51512a354534
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -151,3 +151,7 @@ none — every multi-run eval is uniform
 Round 1: E4, E5 failed — lệnh `cd app && npm test` kết thúc lỗi vì một ca ngoài ON16 (TCM-AC-2, ENOENT trên tệp tạm .on3-mut-*). Returned to implementation.
 Round 2: tất cả eval PASS — TCM-AC-2 đã bỏ qua tệp ẩn khi quét cây (commit dd02599), `cd app && npm test` chạy sạch; E1, E2, E3, E6, E7 mang từ vòng 1 vì delta không chạm đường dẫn của chúng.
 
+
+### Re-pin lần 1 — 2026-10-25, do ghim lại sau gộp main 0d4d19f
+run_id: repin-20261025T063847Z-20010
+sha: 34d59edef0df0919ffede9ea082c51512a354534 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
