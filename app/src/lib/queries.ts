@@ -1,4 +1,4 @@
-import { loadOurListings, pickRepresentative, type Queryable } from "./calibration";
+import { loadOurListings, pickRepresentative, tongListingS02, type Queryable } from "./calibration";
 import { pool } from "./db";
 
 // Tiền tệ theo QUỐC GIA (tiền tố của area id): mọi thị trường VN là VND.
@@ -955,7 +955,8 @@ export async function getTruthfulCoverage(db: Queryable = pool): Promise<Truthfu
   for (const [areaId, { name, keys }] of byArea) {
     const withData = keys.map((k) => activeBy.get(k)).filter(Boolean);
     if (withData.length === 0) continue; // chưa thu dữ liệu AirDNA → không có dòng
-    const activeTotal = withData.reduce((sum, r) => sum + Number(r.value), 0);
+    // Mẫu số chung với dòng «Listing» của thẻ hiệu chuẩn (tongListingS02).
+    const activeTotal = tongListingS02(withData.map((r) => Number(r.value))) ?? 0;
     rows.push({
       areaId,
       name,
@@ -1050,9 +1051,11 @@ export async function getAirdnaComparison(areaId: string, db: Queryable = pool):
       WHERE x.area_id = $1 AND x.source = 'S02'`,
     [areaId],
   );
-  const representative = pickRepresentative(
-    xw.map((r) => ({ airdnaId: r.airdna_id as string, listingCount: r.listing_count === null ? null : Number(r.listing_count) })),
-  );
+  const components = xw.map((r) => ({
+    airdnaId: r.airdna_id as string,
+    listingCount: r.listing_count === null ? null : Number(r.listing_count),
+  }));
+  const representative = pickRepresentative(components);
   if (!representative) return null;
   const airdnaId = representative.airdnaId;
 
@@ -1099,10 +1102,11 @@ export async function getAirdnaComparison(areaId: string, db: Queryable = pool):
       ratio: null as number | null,
     },
     {
+      // Mẫu số như bảng Độ phủ: cộng mọi market S02 của khu vực, không chỉ market đại diện (ON10 Ngoài-13).
       metric: "Listing",
       ourValue: ourListings,
       ourUnit: "",
-      airdnaValue: byMetric.get("listing_count") ?? null,
+      airdnaValue: tongListingS02(components.map((m) => m.listingCount)),
       airdnaUnit: "",
       ratio: null as number | null,
     },

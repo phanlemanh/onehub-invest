@@ -334,7 +334,7 @@ _Avoid_: tự thu (trơn, không nói đếm gì), listing tháng cuối, max li
 - Code: `isThin (sampleListings, MAU_MONG_DUOI)` · RESO: —
 _Avoid_: ít dữ liệu, thin sample
 
-**Thị trường hiệu chuẩn**: Thị trường có ít nhất một số để đối chiếu với S02 (điểm S02, ADR, công suất hoặc listing) — mỗi thị trường một thẻ; thị trường không có số nào gộp vào một dòng «Chưa có số: …». Khu vực gộp nhiều market S02 dùng market đại diện (nhiều listing nhất), thẻ ghi «đại diện cho k thị trường S02».
+**Thị trường hiệu chuẩn**: Thị trường có ít nhất một số để đối chiếu với S02 (điểm S02, ADR, công suất hoặc listing) — mỗi thị trường một thẻ; thị trường không có số nào gộp vào một dòng «Chưa có số: …». Khu vực gộp nhiều market S02 dùng market đại diện (nhiều listing nhất), thẻ ghi «đại diện cho k thị trường S02»; riêng dòng Listing cộng listing S02 của cả k thị trường, cùng mẫu số với bảng Độ phủ trung thực (Mạnh duyệt 25/10).
 - Code: `splitCalibrated (calibrated, empty)` · RESO: —
 _Avoid_: khu vực hiệu chuẩn, market hiệu chuẩn
 
