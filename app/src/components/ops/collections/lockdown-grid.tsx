@@ -28,8 +28,8 @@ export function LockdownGrid({ layers, lastWatchdogAt }: { layers: LockdownLayer
   const columns = useMemo<InsightColumn<LockdownLayer>[]>(
     () => [
       { id: "layer", accessorKey: "layer", header: "Lớp", size: 120 },
-      { id: "desc", accessorKey: "desc", header: "Kiểm", size: 420 },
       { id: "state", accessorFn: stateOf, header: "Trạng thái", cell: ({ row }) => <Badge variant={LAYER[stateOf(row.original)].variant}>{LAYER[stateOf(row.original)].label}</Badge>, size: 150 },
+      { id: "desc", accessorKey: "desc", header: "Kiểm", size: 420 },
     ],
     []
   )
