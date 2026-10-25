@@ -5,7 +5,7 @@ slug: hieu-chuan-mot-bo-so
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, script]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-25-hieu-chuan-mot-bo-so-design.md
 approved_by: Mạnh
 approved_at: 2026-10-25
@@ -82,3 +82,20 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Bảng «Kiểm chất lượng» (ON9, đã merge) và chữ tên thị trường (ON12, đã merge).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Khi chạy thử kiểm chứng phép đo, dòng kết quả trông giống hệt lần chụp thật và vẫn ghi ảnh ra, nên người chấm dễ nhầm lần thử với lần chụp hợp lệ.
+  - Ngoài-2: Bộ kiểm tự động cho phép đo bề rộng trang có thể vẫn báo xanh dù phép đo đo sai, nên việc phát hiện trang bị cuộn ngang phải dựa vào lần chạy thật.
+  - Ngoài-3: Thẻ trình người ký hiển thị nhầm tám mục kiểm là chưa đạt trong khi thực tế chỉ còn một vấn đề, nên người ký có thể chọn hướng xử lý sai.
+  - Ngoài-4: Phép kiểm tự động chưa chạy thử phép đo trên một trang mô phỏng, nên nếu phép đo hỏng thì bộ kiểm vẫn không báo đỏ.
+  - Ngoài-5: Bộ kiểm dùng số liệu viết sẵn nên không bắt được trường hợp công cụ chụp đọc sai kết quả đo; khi đó lúc chạy thật chỉ báo không đo được.
+  - Ngoài-6: Bước thử xác nhận phép đo gần như luôn qua, nên nó chưa chứng minh được phép đo bắt được lỗi trang tràn ngang thật nằm sâu trong nội dung.
+  - Ngoài-7: Khi công cụ chụp trang không đo được bề rộng, nó vẫn chụp và báo thành công mà không nói gì, nên người xem có thể tưởng trang đã được kiểm bề rộng trong khi thật ra chưa.
+  - Ngoài-8: Nếu sau này dòng bề rộng bị in nhầm chỗ khung và trang, bài test hiện tại vẫn báo xanh, nên người vận hành có thể đọc ngược hai con số trong báo cáo chụp trang.
+  - Ngoài-10: Trang Chất lượng có thể tải chậm hơn cần thiết vì cùng một phép đếm listing bị lặp lại cho từng thị trường; số hiển thị vẫn đúng.
+  - Ngoài-11: Hiếm khi bước chụp có thể báo thành công và in đường dẫn ảnh dù ảnh không hề được tạo, nên người nghiệm thu nhận bằng chứng rỗng mà không có cảnh báo.
+  - Ngoài-12: Nếu ai chụp nhầm một địa chỉ thật (bản chạy chính thức hay bản xem trước) có trang /ops, mật khẩu của tài khoản thử trên máy sẽ bị gửi ra ngoài máy.
+  - Ngoài-14: Bước chụp có thể báo xong và in đường dẫn dù ảnh không có thật, khiến hồ sơ nghiệm thu thiếu ảnh mà không ai được báo.
+  - Ngoài-15: Dòng báo «tự thu bằng nhau ở ba nguồn» luôn xanh nên không phát hiện được nếu cách đếm listing tự thu bị sai ở các khu vực nhiều tầng.
+  - Ngoài-16: Bài kiểm «số thị trường ở đầu trang bằng số thẻ vẽ» chỉ đọc mã nguồn, nên nếu sau này sửa trang làm hai con số lệch nhau thì bài kiểm vẫn có thể xanh.
+  - Ngoài-17: Bài kiểm «bản cũ không đăng nhập thì bị đưa về trang đăng nhập» dùng bản giả trả kết quả định sẵn, nên chưa đo hành vi thật của bản cũ; ảnh chụp thật là bằng chứng đăng nhập thành công.
