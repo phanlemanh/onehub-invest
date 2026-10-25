@@ -7,7 +7,7 @@ reason:
 verified_by: "feature-loop:cham-lenh (fresh-context verification subagent)"
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 83a1e969120d5b5271fc7ed9b4adaf2b96c6c15c
+verified_commit: 3b34af16e0b410121ecc12d0012a0505fd146baf
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -265,3 +265,7 @@ Round 2: E1–E9 đạt; E10 BLOCKED — cmd trỏ config:executors.test.collect
 executors.script); chuỗi lệnh của khoá thật chạy xanh 41/41; chữa bằng sửa cmd của E10 trong evals.yaml, không trả về làn code.
 Round 3: E1–E10 đạt — E10 trỏ đúng executors.script.collector_test_clean, 41/41 test collector xanh; code sản phẩm
 không đổi so với vòng 1–2.
+
+### Re-pin lần 1 — 2026-10-25, do gộp origin/main 33adaa4 trước merge (sau next typegen)
+run_id: repin-20261025T003551Z-82841
+sha: 3b34af16e0b410121ecc12d0012a0505fd146baf · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
