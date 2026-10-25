@@ -270,7 +270,8 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     ready()
     const p = await push()
     await ingest(p)
-    const want = (p.blocks.records24h.bySource as { n: number }[]).reduce((a, r) => a + r.n, 0)
+    // ON6 (luật 5): ô «Bản ghi 24h» không tính S02.
+    const want = (p.blocks.records24h.bySource as { code: string; n: number }[]).filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0)
     assert.ok(want > 0, "fixture phải có bản ghi trong 24 giờ")
     const slo = expectSlo(p.blocks.freshness.rows as { code: string; status: string }[])
     const h = await renderCollections()
@@ -284,7 +285,7 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     ready()
     const p = await push()
     await ingest(p)
-    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("cloud.records24h.reduce((a, r) => a + r.n, 0)", "0") }, [COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace('cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0)', "0") }, [COL_PAGE])
     try {
       const want = (p.blocks.records24h.bySource as { n: number }[]).reduce((a, r) => a + r.n, 0)
       assert.notEqual(tileValue(await renderCollections(m.path), "Bản ghi 24h"), String(want))

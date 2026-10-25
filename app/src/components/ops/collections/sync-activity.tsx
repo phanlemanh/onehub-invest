@@ -23,19 +23,26 @@ const modesOf = (roles: SourceRoles): { value: Mode; label: string }[] => [
   { value: "listings", label: "Listing" },
   { value: "zalo", label: `Tin ${sourceLabel("S03", roles)}` },
 ]
-const SERIES: Record<Mode, (keyof FlowDay)[]> = {
-  listings: ["airbnbListingsSeen", "airdnaListings"],
+// ON6 (luật 5): tab Listing chỉ đếm tự thu — không chuỗi S02.
+export const SERIES: Record<Mode, (keyof FlowDay)[]> = {
+  listings: ["airbnbListingsSeen"],
   zalo: ["zaloOffers", "zaloPosts"],
 }
 // Chuỗi thứ nhất của mỗi chế độ là khối lượng đã vào kho (opsVolume), chuỗi thứ hai là bản ghi
 // thô/chạm (opsVolumeRaw) — khoá Ops trong palette.ts, xem data-color.md mục Ops.
-const configOf = (roles: SourceRoles) =>
+export const configOf = (roles: SourceRoles) =>
   ({
     airbnbListingsSeen: { label: `${sourceLabel("S01", roles)} — listing tươi`, theme: themeOf("opsVolume") },
-    airdnaListings: { label: `${sourceLabel("S02", roles)} — listing chạm`, theme: themeOf("opsVolumeRaw") },
     zaloOffers: { label: `${sourceLabel("S03", roles)} — tin rao vào kho`, theme: themeOf("opsVolume") },
     zaloPosts: { label: `${sourceLabel("S03", roles)} — bài thô`, theme: themeOf("opsVolumeRaw") },
   }) satisfies ChartConfig
+
+/** Mô tả dưới tiêu đề: nói rõ tab đang đếm gì (ON6), kèm tổng của đúng tab. */
+export function describeMode(mode: Mode, total: number): string {
+  return mode === "listings"
+    ? `Listing tự thu (S01) thấy theo ngày — ${fmtInt(total)} listing trong 7 ngày, ngày theo giờ VN`
+    : `Bài thô và tin rao S03 theo ngày đăng — ${fmtInt(total)} bản ghi trong 7 ngày, ngày theo giờ VN`
+}
 
 export function SyncActivity({ days, roles = {}, className }: { days: FlowDay[]; roles?: SourceRoles; className?: string }) {
   const modes = modesOf(roles)
@@ -48,7 +55,7 @@ export function SyncActivity({ days, roles = {}, className }: { days: FlowDay[];
 
   return (
     <Frame id="luong" spacing="default" className={cn("scroll-mt-4", className)}>
-      <SectionHeader title="Luồng 7 ngày" description={`${fmtInt(total)} bản ghi trong 7 ngày (ngày theo giờ VN)`}>
+      <SectionHeader title="Luồng 7 ngày" description={describeMode(mode, total)}>
         <ToggleGroup
           multiple={false}
           value={[mode]}

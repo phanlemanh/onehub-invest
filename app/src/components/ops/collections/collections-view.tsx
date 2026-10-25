@@ -124,7 +124,7 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
         layers={[]}
         agentTurnsToday={null}
         roles={roles}
-        cloud={{ feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.reduce((a, r) => a + r.n, 0) : null, stale, funnelMeasured: cloud.state !== "none", flowShown: cloud.state !== "none" }}
+        cloud={{ feedsMeasured: cloud.feeds !== null, records24h: cloud.records24h ? cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0) : null, stale, funnelMeasured: cloud.state !== "none", flowShown: cloud.state !== "none" }}
       />
       <FeedsGrid feeds={feedHealth} stale={stale} />
       {cloud.state === "none" ? null : (
