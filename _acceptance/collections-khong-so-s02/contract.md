@@ -5,7 +5,7 @@ slug: collections-khong-so-s02
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-collections-khong-so-s02-design.md
