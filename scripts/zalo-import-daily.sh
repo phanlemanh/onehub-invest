@@ -45,10 +45,14 @@ trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
 MAXTS="$LAST"
 FAILED=0
-# Chỉ nhận TS đúng dạng mốc thời gian yyyymmddThhmmss(Z) (BÁO 2410-2):
+# Chỉ nhận TS đúng dạng mốc thời gian (BÁO 2410-2, mở lại 2310-8 vòng 3):
 # thư mục '…__zalo-agent__TEST' cho TS=TEST > mọi mốc 2026… → state nhảy,
 # mọi snapshot thật sau đó bị bỏ. Không khớp → bỏ thư mục + log.
-TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}(Z)?$'
+# Khuôn: giây (6 số, bản cũ) HOẶC mili-giây (9 số, storage.ts b0898fe trở đi)
+# HOẶC kèm hậu tố '-n' khi trùng mili-giây. Sort chuỗi vẫn đúng thứ tự vì
+# các khuôn chia sẻ tiền tố tới giây (state 6 số cũ giữ nguyên).
+# GIỐNG HỆT apify-facebook-daily.sh — hai bản phải không lệch nhau (BÁO 2510-5).
+TS_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$'
 for SNAP in $(ls -1d "$ROOT"/collector/snapshots/*/*__zalo-agent__* 2>/dev/null | while read -r d; do
     ts=$(basename "$d" | sed 's/.*__//')
     if ! echo "$ts" | grep -qE "$TS_RE"; then
