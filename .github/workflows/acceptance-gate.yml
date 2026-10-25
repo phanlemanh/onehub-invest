@@ -1,6 +1,6 @@
 name: acceptance-gate
 
-# Cổng nghiệm thu (Acceptance-Gate Kit 2.32.0, chép vào scripts/ + lib/).
+# Cổng nghiệm thu (Acceptance-Gate Kit 2.34.0, chép vào scripts/ + lib/).
 # Thiếu workflow này thì cổng chỉ chạy trên máy, không chặn được merge, và
 # miễn trừ PRODUCT-MAP.md trong t1_skip_globs không còn ai canh (ADR 0007 của kit).
 on:

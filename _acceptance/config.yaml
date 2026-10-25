@@ -260,6 +260,14 @@ executors:
     hsn_budget_env: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs budget-env"
     hsn_zc6_regress: "for m in spool-replay reject-4xx hang-stop cap-50 kev-hang self-contained; do out=$(node scripts/hook-zalo-spool/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
     hsn_l1_syntax: "node scripts/hook-zalo-spool/acceptance.mjs l1-grep && node --check collector/openclaw/handler.js && echo SYNTAX OK"
+    # snapshot-nguyen-tu (2510-8) — SnapshotWriter của collector/dist trên thư mục gốc tạm; cổng tệp bọc qua harness AU3 (bản chép, sleep stub)
+    snt_dang_ghi: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs dang-ghi"
+    snt_trung_ms: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs trung-ms"
+    snt_ten_that_co_san: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs ten-that-co-san"
+    snt_mo_coi: "node scripts/au3-nap-bao-loi/acceptance.mjs mo-coi"
+    kns_au3_regress: "for m in ts-format apify chotot lock; do out=$(node scripts/au3-nap-bao-loi/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
+    # test-anh-mau-co-manifest — ảnh mẫu scripts/ có manifest sau cổng 2510-8
+    tam_khong_noi: "bash _acceptance/test-anh-mau-co-manifest/probes/khong-noi.sh \"$PWD\""
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"

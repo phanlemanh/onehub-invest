@@ -6,7 +6,7 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # Bản kit mà 4 tệp lộ trình được chép từ (lo-trinh-khoi-tao 23/10). Lên kit mới: chép lại rồi đổi số này.
-KIT_VER="2.33.1"
+KIT_VER="2.34.0"
 AG="${AG:-$HOME/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/$KIT_VER}"
 AG="${AG%/}"
 LT="docs/plan/lo-trinh.json"
