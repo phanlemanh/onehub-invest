@@ -219,7 +219,7 @@ export function YieldForm({
       rate: String(loan.ratePct),
       term: String(loan.termYears),
     })
-    // Hồ sơ tài chính của người dùng (tầng A, chỉ local) — giữ tên sự kiện của /dau-tu cũ cho bộ nhớ agent.
+    // Hồ sơ tài chính của người dùng (tầng A, chỉ local) — giữ tên sự kiện của bộ Mô phỏng đầu tư cũ cho bộ nhớ agent.
     sendUserEvent("dau_tu_input", {
       area: inputs.area,
       price: Math.round(inputs.price),

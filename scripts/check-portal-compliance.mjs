@@ -3,7 +3,7 @@
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
 //   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
 //   - /api/zalo-media chặn admin trước khi đọc file;
-//   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của /dau-tu cũ) không hiện chữ AirDNA/tên nguồn thật;
+//   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của bộ Mô phỏng đầu tư cũ) không hiện chữ AirDNA/tên nguồn thật;
 //   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
 //     so theo đoạn đường dẫn + realpath;
 //   - canAccessOps đóng mặc định (role admin|ops hoặc OPS_EMAILS) — chạy thật hàm;
@@ -104,7 +104,7 @@ check(
   "zalo-media: isAdmin chặn trước stat/readFile",
 );
 
-// 7. /yield + mục «Dòng tiền vốn vay» (/dau-tu cũ gộp vào, UI3): không chữ AirDNA/tên nguồn thật trong mã render;
+// 7. /yield + mục «Dòng tiền vốn vay» (Mô phỏng đầu tư cũ gộp vào, UI3): không chữ AirDNA/tên nguồn thật trong mã render;
 //    mô hình vốn vay là hàm thuần, không truy vấn DB (số đầu vào đến từ ước tính lợi suất, listing tự thu).
 const financing = code(read("src/lib/financing.ts"));
 check(!/pool\.query|from "\.\/db"|airdna_/i.test(financing), "lib/financing.ts là hàm thuần, không truy vấn DB / AirDNA");

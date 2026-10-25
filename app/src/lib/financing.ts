@@ -1,5 +1,5 @@
 /**
- * Dòng tiền vốn vay của một căn (mục «Dòng tiền vốn vay» ở /yield, nhận phần của /dau-tu cũ — CONTEXT.md
+ * Dòng tiền vốn vay của một căn (mục «Dòng tiền vốn vay» ở /yield, nhận phần của bộ Mô phỏng đầu tư cũ — CONTEXT.md
  * «Mô phỏng đầu tư»). Hàm thuần, server và test cùng dùng. Doanh thu, chi phí vận hành và thu nhập ròng lấy
  * từ ước tính lợi suất (cùng mô hình với phần trên của trang); phần mới là khoản vay trả góp đều (annuity),
  * tách gốc/lãi theo từng năm. Mọi tham số vay là MẶC ĐỊNH SỬA ĐƯỢC trên form, không phải số đo.
@@ -14,7 +14,7 @@ export type LoanInputs = {
   termYears: number
 }
 
-/** Mặc định của bộ mô phỏng /dau-tu cũ: vốn tự có 30%, lãi 9%/năm, 20 năm. */
+/** Mặc định của bộ Mô phỏng đầu tư cũ: vốn tự có 30%, lãi 9%/năm, 20 năm. */
 export const LOAN_DEFAULTS: LoanInputs = { equityPct: 0.3, ratePct: 0.09, termYears: 20 }
 
 /** Số năm hiện trên lưới (cột Năm 1…5). */
