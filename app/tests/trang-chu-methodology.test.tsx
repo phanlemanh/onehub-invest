@@ -79,6 +79,8 @@ function findOldSlug(files: string[]) {
 }
 const walk = (dir: string): string[] =>
   readdirSync(dir).flatMap((n) => {
+    // Tệp ẩn (`.on3-mut-…`) là bản đột biến tạm của test khác chạy song song — có thể biến mất giữa readdir và stat (ENOENT).
+    if (n.startsWith(".")) return [];
     const p = join(dir, n);
     if (statSync(p).isDirectory()) return n === "node_modules" ? [] : walk(p);
     return /\.(ts|tsx|mjs|sh)$/.test(n) ? [p] : [];
