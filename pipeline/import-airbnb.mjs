@@ -14,6 +14,7 @@ import { gunzipSync } from "node:zlib";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { parseSnapshotDirName } from "./lib/snapshot-name.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -58,9 +59,16 @@ async function main() {
   // Snapshot thử → bỏ qua CÓ LOG (exit 0 để vòng nạp hằng đêm không gãy,
   // nhưng stderr nói rõ đã skip cái gì cho auditable). basename() tự bỏ
   // dấu / cuối — split('/').pop() trả rỗng khi path kết thúc / (mở lại 2310-4).
-  const dirSource = basename(dir).match(/__([^_]+)__/)?.[1] ?? "";
-  if (!isAllowedSource(dirSource)) {
-    console.warn(`bỏ qua snapshot nguồn ngoài ALLOWLIST '${dirSource}' (không nạp stg): ${dir}`);
+  // Lớp khuôn tên (mở lại 2310-4 vòng 4, hồi quy AC-6): '…__zalo-agent__TEST'
+  // có nguồn nằm trong allowlist nên lọt qua lớp nguồn — cả thư mục phải đúng
+  // '<city>__<nguồn>__<mốc thời gian>' với mốc khớp TS_RE (BÁO 2510-5).
+  const parsed = parseSnapshotDirName(basename(dir));
+  if (!parsed) {
+    console.warn(`bỏ qua thư mục không đúng khuôn <city>__<nguồn>__<mốc thời gian>: ${dir}`);
+    process.exit(0);
+  }
+  if (!isAllowedSource(parsed.source)) {
+    console.warn(`bỏ qua snapshot nguồn ngoài ALLOWLIST '${parsed.source}' (không nạp stg): ${dir}`);
     process.exit(0);
   }
   // Orphan: crash giữa write items và finalize → dir không có manifest.

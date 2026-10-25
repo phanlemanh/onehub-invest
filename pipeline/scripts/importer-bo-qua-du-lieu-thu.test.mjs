@@ -26,3 +26,49 @@ test("isTestSnapshot (nghĩa mới = ngoài allowlist): theo segment nguồn c�
   assert.equal(isTestSnapshot("hanoi__zalo-agent__2026-10-23T012853"), false);
   assert.equal(isTestSnapshot("hanoi__airbnb-listing__2026-10-19T232601"), false);
 });
+
+// Mở lại 2310-4 vòng 4 (hồi quy AC-6): '…__zalo-agent__TEST' có nguồn nằm
+// trong allowlist nên lọt lớp nguồn rồi vào DB. Luật khuôn tên dùng chung
+// cho cả hai importer: '<city>__<nguồn>__<mốc thời gian>' với mốc khớp
+// TS_RE (giây 6 số / mili-giây 9 số / hậu tố -n khi trùng ms — BÁO 2510-5).
+import { TS_RE, parseSnapshotDirName } from "../lib/snapshot-name.mjs";
+
+test("khuôn tên: thư mục segment thử (TEST/e2e) bị bỏ dù nguồn hợp lệ", () => {
+  assert.equal(parseSnapshotDirName("hanoi__zalo-agent__TEST"), null);
+  assert.equal(parseSnapshotDirName("hanoi__zalo-agent__e2e"), null);
+  assert.equal(parseSnapshotDirName("hanoi__chotot-ads__TEST"), null);
+});
+
+test("khuôn tên: tên thật có mốc thời gian vẫn nạp (cả 3 dạng storage)", () => {
+  assert.deepEqual(parseSnapshotDirName("hanoi__zalo-agent__2026-10-23T012853"), {
+    city: "hanoi", source: "zalo-agent", ts: "2026-10-23T012853",
+  });
+  assert.deepEqual(parseSnapshotDirName("hanoi__zalo-agent__2026-10-25T021827756"), {
+    city: "hanoi", source: "zalo-agent", ts: "2026-10-25T021827756",
+  });
+  assert.deepEqual(parseSnapshotDirName("hanoi__zalo-agent__2026-10-25T021827756-1"), {
+    city: "hanoi", source: "zalo-agent", ts: "2026-10-25T021827756-1",
+  });
+  assert.deepEqual(parseSnapshotDirName("hanoi__chotot-ads__2026-10-23T070000Z"), {
+    city: "hanoi", source: "chotot-ads", ts: "2026-10-23T070000Z",
+  });
+});
+
+test("khuôn tên: thiếu/thừa segment hoặc mốc rác → bỏ", () => {
+  assert.equal(parseSnapshotDirName("hanoi__zalo-agent"), null); // 2 phần
+  assert.equal(parseSnapshotDirName("hanoi__zalo-agent__"), null); // mốc rỗng
+  assert.equal(parseSnapshotDirName("a__b__c__d"), null); // 4 phần
+  assert.equal(parseSnapshotDirName("hanoi__zalo-agent__20261023T070000"), null); // khuôn không gạch
+  assert.equal(parseSnapshotDirName(""), null);
+});
+
+test("TS_RE importer phải identical chuỗi TS_RE trong 2 daily script (BÁO 2510-5)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  for (const f of ["apify-facebook-daily.sh", "zalo-import-daily.sh"]) {
+    const src = await readFile(new URL(`../../scripts/${f}`, import.meta.url), "utf8");
+    const m = src.match(/^TS_RE='(.*)'$/m);
+    assert.ok(m, `${f} phải có TS_RE=`);
+    // innerText của bash literal == nguồn regex của module (cùng chuỗi ký tự)
+    assert.equal(m[1], TS_RE.source, `${f} và importer phải dùng cùng một TS_RE`);
+  }
+});
