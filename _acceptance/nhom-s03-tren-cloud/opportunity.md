@@ -3,10 +3,10 @@ schema_version: 1
 slug: nhom-s03-tren-cloud
 feature: Người vận hành thấy bảng nhóm S03 trên cloud ghi đúng số nhóm allowlist đang bật và «Vào raw» theo nhóm từ số máy local đẩy lên (ADR-0014); thiếu facts thì «—», không 0
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build           # Mạnh gõ ở phiên P2 25/10: «Cổng Đáng ON4 nhom-s03-tren-cloud: build»
+decided_by: Mạnh
+decided_at: 2026-10-25T03:24:22Z
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
