@@ -267,6 +267,8 @@ executors:
     snt_ten_that_co_san: "cd collector && rm -rf dist && npm run build >/dev/null && cd .. && node scripts/snapshot-nguyen-tu/acceptance.mjs ten-that-co-san"
     snt_mo_coi: "node scripts/au3-nap-bao-loi/acceptance.mjs mo-coi"
     kns_au3_regress: "for m in ts-format apify chotot lock; do out=$(node scripts/au3-nap-bao-loi/acceptance.mjs $m) || { echo \"$out\"; exit 1; }; echo \"$out\" | tail -1; done"
+    # test-anh-mau-co-manifest — ảnh mẫu scripts/ có manifest sau cổng 2510-8
+    tam_khong_noi: "bash _acceptance/test-anh-mau-co-manifest/probes/khong-noi.sh \"$PWD\""
     # khoa-nap-s05-paused (2510-4 + 2510-9) — DB tạm acc_s05_* (pg_dump -s source_registry), HOME giả, fetch bị chặn; không gọi Apify, không ghi DB oneinvest
     kns_s05_gate: "node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"
     kns_scope: "bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""
