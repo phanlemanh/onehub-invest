@@ -1,0 +1,8 @@
+# server log 3460 (VERCEL=1)
+   7  GET /login 200
+   6  GET /ops/collections 200
+   6  POST /login 303
+# server log 3461 (local)
+   2  GET /login 200
+   1  GET /ops/collections 200
+   1  POST /login 303
