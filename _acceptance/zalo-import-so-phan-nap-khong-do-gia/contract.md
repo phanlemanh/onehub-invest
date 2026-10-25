@@ -5,7 +5,7 @@ slug: zalo-import-so-phan-nap-khong-do-gia
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-25T07:46:46Z
 design_doc: docs/superpowers/specs/2026-10-25-zalo-import-so-phan-nap-khong-do-gia-design.md
