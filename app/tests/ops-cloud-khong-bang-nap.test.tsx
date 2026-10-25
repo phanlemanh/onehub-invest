@@ -79,7 +79,9 @@ describe("Ops trên cloud không có bảng nạp (sự cố prod 24/10)", () =>
     const { GET } = await import("../src/app/api/v1/ops/coverage/route")
     const res = await GET(new Request("http://localhost:3456/api/v1/ops/coverage", { headers: { authorization: "Bearer test-token-cloud" } }))
     assert.equal(res.status, 200)
-    assert.deepEqual(((await res.json()) as { rows: unknown[] }).rows, [])
+    // AU12 (coverage-cloud-got-tang-a, Hỏi-2 = A): máy chủ không có số thì rows null + state none, không [] như thể đã đo.
+    const body = (await res.json()) as { rows: unknown[] | null; state: string }
+    assert.deepEqual([body.rows, body.state], [null, "none"])
     delete process.env.OPS_API_TOKEN
   })
 
