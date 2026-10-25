@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 908ce73ec9033eaf2be8d60e65437231fb39d515
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: importer-bo-qua-du-lieu-thu
