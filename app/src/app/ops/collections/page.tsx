@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CollectionsView, type CollectionsData } from "@/components/ops/collections/collections-view";
 import {
+  getCloudFlowDays,
   getFlowDays,
   getFactsPushedAt,
   readGateFunnel,
@@ -32,6 +33,9 @@ export default async function CollectionsPage() {
     // Lưới job đọc khối job của bản tin; chưa có bản tin thì không đọc (nhánh dò launchd chỉ có nghĩa trên máy thu).
     // Kev gate / collector API cùng trạng thái với khối khoá an toàn (ON23).
     const jobs = cloud.state === "none" ? [] : withLockdownGates(await readSchedulerStatus(), cloud.lockdown);
+    // «Luồng 7 ngày» (ON5): hai cột S03 từ khối luong7, listing tươi từ bảng đã đồng bộ; chưa có bản tin thì không dựng.
+    const nowMs = requestTime();
+    const cloudDays = cloud.state === "none" ? [] : await getCloudFlowDays(cloud.luong7, { now: nowMs });
     return (
       <CollectionsView
         {...CLOUD_EMPTY}
@@ -39,8 +43,9 @@ export default async function CollectionsPage() {
         jobs={jobs}
         factsPushedAt={factsPushedAt}
         feedHealth={cloud.feeds ?? []}
-        nowMs={requestTime()}
+        nowMs={nowMs}
         cloud={cloud}
+        cloudDays={cloudDays}
         roles={roles}
       />
     );

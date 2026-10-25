@@ -65,7 +65,31 @@ export function parseLog(text, { now = Date.now() } = {}) {
   return { funnel, health, groups: [...groups.values()] };
 }
 
-/** Số Zalo theo ngày VN cho 7 ngày VN gần nhất (tính tới `now`): { "YYYY-MM-DD": { posts?, offers? } }. */
+// ---- Luồng 7 ngày, hai cột S03 (ON5 `luong-7-ngay-dung-so`) ----
+// MỘT định nghĩa cho bên ghi (khối `luong7` của bản tin) và `getFlowDays` của app ở máy thu — app chép nguyên văn hai câu
+// SQL này (app/src/lib/collections-queries.ts); app/tests/luong-7-ngay-dung-so.test.tsx (ON5-AC-4) giữ hai bên khớp.
+// Cùng đồng hồ «ngày đăng»: bài theo posted_at, tin theo first_seen (= giờ đăng bài sớm nhất) — tin không vượt bài.
+/** Bài S03 thật (tác tử thu `zalo-agent`, không mock) theo ngày VN của `posted_at`. $1 = mốc 00:00 giờ VN ngày cũ nhất. */
+export const S03_POSTS_SQL = `SELECT ${VN_DAY_SQL("posted_at")} d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' GROUP BY 1`;
+/** Tin rao nguồn S03 theo ngày VN của `first_seen`. $1 như trên. */
+export const S03_OFFERS_SQL = `SELECT ${VN_DAY_SQL("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
+
+/** Hai cột S03 cho `n` ngày VN tính tới `now`, cũ → mới, ngày không có dòng = 0: [{ day, s03Posts, s03Offers }]. */
+export async function luong7(client, { now = Date.now(), n = 7 } = {}) {
+  const since = vnDayStart(vnDayKey(now - (n - 1) * 86400000));
+  const [posts, offers] = await Promise.all([client.query(S03_POSTS_SQL, [since]), client.query(S03_OFFERS_SQL, [since])]);
+  const P = new Map(posts.rows.map((r) => [r.d, r.n]));
+  const O = new Map(offers.rows.map((r) => [r.d, r.n]));
+  const days = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const day = vnDayKey(now - i * 86400000);
+    days.push({ day, s03Posts: P.get(day) ?? 0, s03Offers: O.get(day) ?? 0 });
+  }
+  return days;
+}
+
+/** Số Zalo theo ngày VN cho 7 ngày VN gần nhất (tính tới `now`): { "YYYY-MM-DD": { posts?, offers? } }.
+ * Khoá cũ `zaloFlow` của bản tin — giữ cho bản app đang chạy; app từ ON5 đọc khối `luong7`. */
 export async function zaloFlow(client, { now = Date.now(), n = 7 } = {}) {
   const since = vnDayStart(vnDayKey(now - (n - 1) * 86400000));
   const [offerRows, postRows] = await Promise.all([
