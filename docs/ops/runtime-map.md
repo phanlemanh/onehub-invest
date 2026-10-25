@@ -244,13 +244,15 @@ giữa chuỗi) thì launchd thấy 0.
 |---|---|---|
 | `com.oneinvest.chotot` (`scripts/chotot-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | đoạn transform chạy đủ các bước như cũ rồi mới thoát |
 | `com.oneinvest.apify-facebook` (`scripts/apify-facebook-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | như trên |
+| `com.oneinvest.zalo-import` (`scripts/zalo-import-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | `transform-zalo` + `refresh-bait-gap` bọc `job_run` (hồ sơ `transform-zalo-boc-job-run`); đoạn nạp làn ZCode giữ nguyên |
 | `com.oneinvest.airdna-daily` (`scripts/airdna-daily.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
 | `com.oneinvest.collector` (→ `pipeline/finalize-hanoi.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
 | `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | hai bước luôn chạy cả hai: `push-ops-facts` (nhịp tim `/ops`) vẫn chạy khi `sync-cloud` hỏng (AU13) |
 
 - **Tìm nguyên nhân trong log:** chotot/apify/cloud-sync in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr
   cho mỗi bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`; cloud-sync: `JOB FAIL [cloud-sync] bước sync-cloud mã 1`
-  hoặc `… bước push-ops-facts …` — `grep 'JOB FAIL' pipeline/logs/cloud-sync.log`). Bộ chạy bước:
+  hoặc `… bước push-ops-facts …` — `grep 'JOB FAIL' pipeline/logs/cloud-sync.log`; zalo-import: `JOB FAIL [zalo-import-daily]
+  bước transform-zalo mã 1` — `grep 'JOB FAIL' pipeline/logs/zalo-import.log`). Bộ chạy bước:
   `scripts/lib/job-step.sh` (`job_run` — chạy tiếp, giữ mã hỏng đầu tiên).
 - **Còn nuốt lỗi, đang chờ:**
   - Đoạn **nạp** của `chotot-daily.sh` (`import-chotot` không kiểm mã) và `apify-facebook-daily.sh`
