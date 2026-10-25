@@ -17,6 +17,8 @@ const S_LOCAL = `on23_local_${process.pid}`
 process.env.DATABASE_URL = schemaUrl(S_CLOUD) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
 process.env.OPS_API_TOKEN = "on23-thu"
 const RAW_LOCAL = ["source_registry", "review_queue", "airbnb_snapshots", "stg_zalo_posts", "stg_chotot_ads", "airdna_markets", "airdna_listings", "listings", "stg_abnb_listings", "sale_offers"]
+/** Bảng đã đồng bộ lên máy chủ mà trang máy chủ đọc (ON5: «Luồng 7 ngày» đếm listing tươi trên `listings`). */
+const CLOUD_SYNCED = ["listings"]
 
 type Layer = { layer: string; desc: string; ok: boolean | null }
 type Payload = Record<string, unknown> & {
@@ -33,6 +35,7 @@ before(async () => {
     await admin.query(`CREATE SCHEMA "${S_CLOUD}"`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".ops_audit (LIKE public.ops_audit INCLUDING ALL)`)
+    for (const t of CLOUD_SYNCED) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     await makeOpsSchema(admin, S_LOCAL)
   } catch (e) {
     setupErr = (e as Error).message
@@ -421,7 +424,7 @@ describe("ON23-AC-6 máy thu", () => {
   })
   test("ON23-AC-6 DB máy thu đủ bảng: lưới từ getLockdownStatus, 0 chữ «Chỉ kiểm ở máy thu», 0 truy vấn ops_heartbeat", async () => {
     ready()
-    for (const t of RAW_LOCAL) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
+    for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     try {
       const { h, n } = await spyHeartbeat(() => renderCollections(undefined, { cloud: false }))
       assert.ok(h.includes('id="lockdown"'), "máy thu vẫn có lưới khoá an toàn")
@@ -429,7 +432,7 @@ describe("ON23-AC-6 máy thu", () => {
       assert.ok(!h.includes("Chỉ kiểm ở máy thu"), "máy thu không có chữ «Chỉ kiểm ở máy thu»")
       assert.equal(n, 0, "máy thu không đọc ops_heartbeat")
     } finally {
-      for (const t of RAW_LOCAL) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
+      for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".${t}`)
     }
   })
 })

@@ -12,6 +12,8 @@ export type PendingCount = { byType: { type: string; n: number }[]; total: numbe
 
 /** Khối khoá an toàn máy thu đẩy lên (ON23). `stale` theo `measured_at` CỦA KHỐI (ADR-0014 §Ngưỡng trễ). */
 export type CloudLockdown = { layers: LockdownLayer[]; lastWatchdogAt: string | null; agentTurnsToday: number | null; stale: boolean }
+/** Một ngày của khối `luong7` (ON5): hai cột S03 máy thu đếm sẵn — bài S03 thật theo ngày đăng, tin rao nguồn S03. */
+export type Luong7Day = { day: string; s03Posts: number; s03Offers: number }
 
 export type CloudOpsView = {
   state: FactsState
@@ -25,13 +27,15 @@ export type CloudOpsView = {
   pending: PendingCount | null
   /** Khối `lockdown`; vắng, lỗi hay sai khuôn → null — trang hiện 8 lớp «Chỉ kiểm ở máy thu» (ON23 Hỏi-4 = A). */
   lockdown: CloudLockdown | null
+  /** Khối `luong7` (ON5): 7 ngày VN; vắng hoặc lỗi → null (ô S03 hiện «—», không 0). */
+  luong7: Luong7Day[] | null
 }
 
 type SourceRun = { code: string; label_vi?: string | null; status?: string | null }
 
 /** Đọc bản tin máy local và dựng số cho ba trang. `now` chỉ để phép đo trỏ mốc giờ. */
 export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<CloudOpsView> {
-  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null, lockdown: null }
+  const empty: CloudOpsView = { state: "none", measuredAt: null, coverage: null, feeds: null, records24h: null, pending: null, lockdown: null, luong7: null }
   let f: Awaited<ReturnType<typeof readOpsFacts>>
   try {
     f = await readOpsFacts({ now })
@@ -50,6 +54,9 @@ export async function getCloudOpsView({ now }: { now?: Date } = {}): Promise<Clo
   const rq = f.blocks.reviewQueue
   const pending = rq?.state !== "error" ? (rq?.data as PendingCount | null | undefined) : undefined
 
+  const l7 = f.blocks.luong7
+  const l7Days = l7?.state !== "error" ? (l7?.data?.days as Luong7Day[] | undefined) : undefined
+  if (Array.isArray(l7Days)) view.luong7 = l7Days
   if (Array.isArray(rows)) view.coverage = toCoverageRows(rows)
   view.lockdown = toCloudLockdown(f.blocks.lockdown)
   if (Array.isArray(recRows)) view.records24h = recRows
