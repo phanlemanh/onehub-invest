@@ -8,14 +8,20 @@
     <string>/bin/bash</string>
     <string>__ROOT__/scripts/apify-facebook-daily.sh</string>
   </array>
-  <!-- 4 lần/ngày: 06:00, 12:00, 18:00, 00:00 -->
+  <!-- 2510-14 (G1, S05-B): 2 lần/tuần — Thứ Ba + Thứ Sáu 06:00 (~9 lượt/tháng
+       vừa credit miễn phí;cũ 4 lần/ngày = ~120 lượt/tháng) -->
   <key>StartCalendarInterval</key>
   <array>
-    <dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>0</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>6</integer><key>Minute</key><integer>0</integer></dict>
   </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>S05_RESULTS_LIMIT</key>
+    <string>100</string>
+    <key>S05_NEWER_THAN</key>
+    <string>4 days</string>
+  </dict>
   <key>StandardOutPath</key><string>__ROOT__/pipeline/logs/apify-facebook.log</string>
   <key>StandardErrorPath</key><string>__ROOT__/pipeline/logs/apify-facebook.log</string>
 </dict>

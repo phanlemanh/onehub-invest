@@ -37,11 +37,27 @@ import_one() {
 # Sort theo MỐC THỜI GIAN basename + khoá state chung với apify-facebook-daily
 # (mở lại 2310-8 R1/a — hai job cùng 00:00 đụng apify-daily.state)
 LOCK_DIR="$STATE.lock"
+# 2510-9: khoá nằm trong pipeline/logs sống qua kill -9/mất điện — ghi PID +
+# giờ lấy khoá; PID chết hoặc khoá >2h thì gỡ lấy lại, đỡ kẹt tới khi gỡ tay.
+go_khoa_cu() {
+  local pid="" luc=""
+  [ -f "$LOCK_DIR/pid" ] && read -r pid < "$LOCK_DIR/pid"
+  [ -f "$LOCK_DIR/luc" ] && read -r luc < "$LOCK_DIR/luc"
+  if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+    echo "gỡ khoá cũ của PID $pid (tiến trình đã chết)"; rm -rf "$LOCK_DIR"; return 0
+  fi
+  if [ -n "$luc" ] && [ $(( $(date +%s) - luc )) -gt 7200 ]; then
+    echo "gỡ khoá cũ hơn 2h (PID ${pid:-?}, lấy lúc $luc)"; rm -rf "$LOCK_DIR"; return 0
+  fi
+  return 1
+}
 i=0; until mkdir "$LOCK_DIR" 2>/dev/null; do
+  go_khoa_cu && continue
   i=$((i+1)); [ "$i" -ge 60 ] && { echo "❌ khoá $LOCK_DIR bận >5′ — job khác đang nạp?"; exit 1; }
   sleep 5
 done
-trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
+echo $$ > "$LOCK_DIR/pid"; date +%s > "$LOCK_DIR/luc"
+trap 'rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
 LAST=$(cat "$STATE" 2>/dev/null || echo "00000000T000000")
 MAXTS="$LAST"
 FAILED=0
