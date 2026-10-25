@@ -1,8 +1,4 @@
 {
-  "feature_plain": "Dữ liệu giả (zalo-mock, e2e, TEST) từ các lần thử parser hay kiểm tay không còn lọt vào kho staging: importer bỏ qua cả snapshot thử, snapshot khai nguồn thử, và từng tin thử lẫn trong snapshot thật, trong khi dữ liệu thật vẫn nạp bình thường.",
-  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:",
-  "decisions_plain": [
-    {"id": "d-20261024T080722Z-1", "p": "KHÔNG chạy bước phản biện riêng trước khi duyệt (nghiệm thu gọn theo lời giao) — đổi lại, phiên kiểm độc lập tự đi tìm lỗ và đã ghi 3 điểm ngoài phạm vi."},
-    {"id": "d-20261024T080722Z-2", "p": "KHÔNG nạp lại toàn bộ 1.373 snapshot thật để đo — làm vậy sẽ đặt lại thời điểm thu của mọi tin và làm lệch chỉ số độ tươi; thay bằng chạy trên mọi snapshot thử có thật và dữ liệu giả có tiền tố riêng."}
-  ]
+  "feature_plain": "Importer không còn nạp dữ liệu thử (zalo-mock, e2e, TEST, nguồn lạ) vào kho dữ liệu; chỉ nguồn thật với tên snapshot đúng khuôn mới vào, nên số liệu trên Ops và cổng Invest không lẫn dữ liệu giả.",
+  "scope_plain": "Những việc dưới đây cố ý để ngoài lần nghiệm thu này:"
 }

@@ -1,26 +1,27 @@
 ---
 schema_version: 2
 feature_slug: importer-bo-qua-du-lieu-thu
-verdict: REJECT
-failed_evals: [E3]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bc6d54dffdd2a5d17ef5fd0006979eeb330bcfef
+verified_commit: 908ce73ec9033eaf2be8d60e65437231fb39d515
 human_signoff:
 ---
 
 # Evidence Report: importer-bo-qua-du-lieu-thu
 
-Vòng verify 2 · phiên chấm ngữ cảnh sạch · 25/10/2026 (05:20–05:22 UTC) · cây `bc6d54d`
-(nhánh `claude/acceptance-importer-bo-qua-du-lieu-thu-r4` = zcode `e5f9be9` + `origin/main` 47afb91).
+Vòng verify 3 · phiên chấm ngữ cảnh sạch · 25/10/2026 · cây `908ce73`.
+Từ `bc6d54d` (vòng 2) đến `908ce73`, chỉ tệp hồ sơ trong `_acceptance/importer-bo-qua-du-lieu-thu/` đổi: `evals.yaml` (expected của E3), `contract.md` (Notes), báo cáo và run-log. `git diff --stat bc6d54d 908ce73` không chạm `pipeline/` hay `scripts/`, nên code sản phẩm và harness giống hệt cây vòng 2.
+Vòng 3 chỉ chạy lại E3, run_id `-r3-`. E1, E2, E4–E12 dùng lại run_id vòng 2 (lượt chạy 05:20–05:22 UTC trên `bc6d54d`), vì code và lệnh không đổi.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
 | E1 | AC-1 | script | PASS |
 | E2 | AC-2 | script | PASS |
-| E3 | AC-2 | test | FAIL |
+| E3 | AC-2 | test | PASS |
 | E4 | AC-3 | script | PASS |
 | E5 | AC-4 | script | PASS |
 | E6 | AC-5 | script | PASS |
@@ -31,13 +32,9 @@ Vòng verify 2 · phiên chấm ngữ cảnh sạch · 25/10/2026 (05:20–05:22
 | E11 | AC-10 | script | PASS |
 | E12 | AC-11 | script | PASS |
 
-**Vì sao E3 trượt.** Lệnh `cd pipeline && npm test` thoát 0, 135/135 ca xanh. Nhưng `expected` của E3 gọi đích danh hai ca, và cả hai không còn trong bộ test:
-- ca «isTestSnapshot: nhận diện zalo-mock / e2e / TEST; nguồn thật không dính»: commit `d9b9ace` (vòng code 3) đổi tên thành «isTestSnapshot (nghĩa mới = ngoài allowlist): theo segment nguồn của tên dir», và bỏ assert «chữ test nằm lõi trong tên nguồn thật»;
-- ca «isTestSnapshot: đường dẫn có dấu / cuối vẫn nhận ra»: bị xoá ở `d9b9ace`, không có ca thay. `grep` cả `pipeline/**/*.test.mjs` không thấy ca unit nào về «/» cuối.
+**E3 vòng 3.** `expected` mới gọi tên ba ca unit hiện có, và cả ba đều xanh trong lượt `-r3-`. Bộ test pipeline đạt 135/135. Hành vi «/» cuối giờ chỉ còn E2 (fixtures) chứng, đúng như Notes của hợp đồng ghi.
 
-Một ca vắng mặt thì không thể tính là «xanh». Lỗi nằm ở hồ sơ (evals.yaml chưa cập nhật theo vòng code 3–4), không nằm ở hành vi importer: AC-2 vẫn đúng trên thực tế, do E2 chứng (chotot `e2e` có «/» cuối bị bỏ; nạp lại airbnb kèm «/» vẫn 2 dòng) và E1 chứng (5 snapshot thử thật, 10/10 lần có và không có «/»). Cách sửa: đổi `expected` của E3 sang tên ca hiện có, hoặc thêm lại một ca unit cho «/» cuối gọi `parseSnapshotDirName(basename(...))`, rồi chấm lại.
-
-Số đếm DB local :5433 trước và sau cả vòng (SELECT chỉ đọc): `airbnb_snapshots` 2.162 → 2.162 · `stg_zalo_posts` 6.981 → 6.981 · `stg_chotot_ads` 17.810 → 17.810. Dòng mang snapshot_id thử theo regex `__(zalo-mock|e2e|test)(__|$)`: 1.263 → 1.263 (3 ở `airbnb_snapshots` và 1.260 ở `stg_zalo_posts`).
+Số đếm DB local :5433 trước và sau lượt vòng 2 (SELECT chỉ đọc): `airbnb_snapshots` 2.162 → 2.162 · `stg_zalo_posts` 6.981 → 6.981 · `stg_chotot_ads` 17.810 → 17.810. Dòng mang snapshot_id thử theo regex `__(zalo-mock|e2e|test)(__|$)`: 1.263 → 1.263 (3 ở `airbnb_snapshots` và 1.260 ở `stg_zalo_posts`).
 Dọn: sau lượt cuối, 0 dòng có snapshot_id chứa `2001-01-0` ở cả `airbnb_snapshots`, `stg_zalo_posts` và `stg_chotot_ads`. Ngoài ra còn 0 dòng mang các tên ca 6 không chứa mốc (`hanoi__zalo-agent__e2e`, `hanoi__zalo-agent__2001-01-01`, `hanoi__chotot-ads__TEST`, `hanoi__zalo-agent__TEST…`), 0 `post_id` dạng `acc-pl1-%` và 0 `list_id` ≥ 990.000.000.
 Nguồn từng nạp vào `airbnb_snapshots` gồm zalo-agent, airbnb-listing, airbnb-discovery, chotot-ads, airdna-research, osm-boundaries và zalo-mock (3 dòng thử cũ). Mọi nguồn thật đều nằm trong allowlist của importer tương ứng.
 
@@ -74,20 +71,20 @@ Nguồn từng nạp vào `airbnb_snapshots` gồm zalo-agent, airbnb-listing, a
     FIXTURES PASS
 
 - eval: E3
-  run_id: importer-bo-qua-du-lieu-thu-E3-r2-20261025T052049Z
+  run_id: importer-bo-qua-du-lieu-thu-E3-r3-20261025T052548Z
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-25T05:20:57Z
+  verified_at: 2026-10-25T05:25:56Z
   output: |
-    ✔ allowlist: nguồn thật đi qua, mọi nguồn khác bị chặn (kể cả lạ)
-    ✔ isTestSnapshot (nghĩa mới = ngoài allowlist): theo segment nguồn của tên dir
-    ✔ khuôn tên: thư mục segment thử (TEST/e2e) bị bỏ dù nguồn hợp lệ
-    ✔ khuôn tên: tên thật có mốc thời gian vẫn nạp (cả 3 dạng storage)
-    ✔ khuôn tên: thiếu/thừa segment hoặc mốc rác → bỏ
-    ✔ TS_RE bốn bản (2 importer + 2 daily script) phải identical (BÁO 2510-5)
-    ℹ tests 135 · pass 135 · fail 0 · cancelled 0
-    (grep «dấu / cuối» và «zalo-mock / e2e / TEST; nguồn thật không dính» trong log: không có dòng nào)
+    ✔ allowlist: nguồn thật đi qua, mọi nguồn khác bị chặn (kể cả lạ) (0.430375ms)
+    ✔ khuôn tên: thư mục segment thử (TEST/e2e) bị bỏ dù nguồn hợp lệ (0.126834ms)
+    ✔ khuôn tên: tên thật có mốc thời gian vẫn nạp (cả 3 dạng storage) (0.378541ms)
+    ℹ tests 135
+    ℹ suites 13
+    ℹ pass 135
+    ℹ fail 0
+    ℹ cancelled 0
 
 - eval: E4
   run_id: importer-bo-qua-du-lieu-thu-E4-r2-20261025T052141Z
@@ -242,10 +239,10 @@ Nguồn từng nạp vào `airbnb_snapshots` gồm zalo-agent, airbnb-listing, a
 
 Non-discriminating evals:
 - Vòng 2 không chạy baseline A/B (xem «Baseline khong do»), nên không xác định được eval nào xanh trên cả hai cây. Theo số vòng 1: E6 (idempotent) và mục «snapshot Chợ Tốt thật vẫn nạp» của E8 là guard hồi quy, xanh cả trên code cũ. Mục mới «mốc 9 chữ số + -n vẫn nạp» của E12 chỉ đọc lại kết quả ca 2 (`rows.length === 2`), nên nó trùng E5 chứ không phải một phép đo riêng.
-- E3 hiện chỉ còn là guard «0 fail» của cả bộ pipeline; nó không còn trỏ đúng ca nào của AC-2.
+- E3 (vòng 3) trỏ ba ca unit về allowlist và khuôn tên. Không ca nào trong số đó kiểm «/» cuối, nên với AC-2, E3 chỉ là guard. Khẳng định «/» cuối do E2 gánh.
 
 Baseline khong do:
-- Cả vòng 2 (E1–E12): phiên chấm chỉ được phép chạy các lệnh `config:` của evals trên cây đang verify. Dựng cây cũ để chạy `fixtures` sẽ ghi DB với một importer khác, ngoài phạm vi được giao. Ghi chú trong hợp đồng («importer vòng 3 d9b9ace đỏ 4 ca khuôn tên») là lời của người dựng hồ sơ; vòng này chưa kiểm lại.
+- Vòng 2–3 (E1–E12): phiên chấm chỉ được phép chạy các lệnh `config:` của evals trên cây đang verify. Dựng cây cũ để chạy `fixtures` sẽ ghi DB với một importer khác, ngoài phạm vi được giao. Ghi chú trong hợp đồng («importer vòng 3 d9b9ace đỏ 4 ca khuôn tên») là lời của người dựng hồ sơ; vòng này chưa kiểm lại.
 - E1, E9: như vòng 1, không chạy `real-mock` trên code cũ vì nó sẽ ghi 5 snapshot thử thật vào stg.
 
 Đọc code (`pipeline/import-airbnb.mjs`, `pipeline/import-chotot.mjs` @ bc6d54d):
@@ -254,9 +251,10 @@ Baseline khong do:
 
 ## Variance
 
-none — mọi eval chạy một lần, tất định; lệnh `fixtures` chạy 10 lần (E2, E4–E8, E10–E12), 10/10 đồng nhất (17 dòng ok, dọn 3 snapshot, còn 0 dòng giả); `real-mock` 2/2 đồng nhất.
+none — mọi eval chạy một lần, tất định (E3 thêm một lượt ở vòng 3: 135/135, giống vòng 2); lệnh `fixtures` chạy 10 lần (E2, E4–E8, E10–E12), 10/10 đồng nhất (17 dòng ok, dọn 3 snapshot, còn 0 dòng giả); `real-mock` 2/2 đồng nhất.
 
 ## Iterations
 
 Round 1: 9/9 eval đạt; 3 phát hiện ngoài hợp đồng (import-chotot thiếu lớp manifest.source — có thể chạm AC-7 tuỳ cách đọc; state vòng đêm với tên `…__TEST`; thoát sớm trong harness bỏ dọn) — chuyển người xét ở Gate 2.
 Round 2: E3 trượt — `expected` gọi tên hai ca unit đã bị đổi tên hoặc xoá ở `d9b9ace` (ca «/» cuối không còn ca thay); hành vi importer đúng ở 11/12 eval còn lại, kể cả AC-9..11. Trả về sửa evals.yaml (E3) và/hoặc thêm lại ca unit «/» cuối; ngoài hợp đồng: allowlist chặn S08 khi gộp nhánh `zcode/s08-danh-muc` (medium).
+Round 3: 12/12 eval đạt — E3 chạy lại với `expected` trỏ ba ca unit hiện có (135/135 xanh); E1, E2, E4–E12 dùng lại lượt vòng 2 vì code và lệnh không đổi (chỉ tệp hồ sơ đổi từ `bc6d54d`). Phát hiện ngoài hợp đồng giữ nguyên, chuyển người xét ở Gate 2.

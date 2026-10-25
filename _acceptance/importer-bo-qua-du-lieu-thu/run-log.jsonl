@@ -19,3 +19,4 @@
 {"ts":"2026-10-25T05:22:02Z","round":2,"evalId":"E10","run_id":"importer-bo-qua-du-lieu-thu-E10-r2-20261025T052202Z","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
 {"ts":"2026-10-25T05:22:04Z","round":2,"evalId":"E11","run_id":"importer-bo-qua-du-lieu-thu-E11-r2-20261025T052204Z","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
 {"ts":"2026-10-25T05:22:06Z","round":2,"evalId":"E12","run_id":"importer-bo-qua-du-lieu-thu-E12-r2-20261025T052205Z","exit_code":0,"cmd":"node scripts/importer-bo-qua-du-lieu-thu/acceptance.mjs fixtures"}
+{"ts":"2026-10-25T05:25:56Z","round":3,"evalId":"E3","run_id":"importer-bo-qua-du-lieu-thu-E3-r3-20261025T052548Z","exit_code":0,"cmd":"cd pipeline && npm test"}
