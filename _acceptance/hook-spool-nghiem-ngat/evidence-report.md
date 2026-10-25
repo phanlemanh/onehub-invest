@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 303df76c41751100ef0e81ebe96500f54dbad81f
+verified_commit: bf3b33cc3c4b739094a90d8f8f6a3bb8a17c915e
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -256,3 +256,7 @@ Round 1: E1–E11 đạt; baseline đỏ ở E1–E4, E6–E8, xanh ở E5, E9�
 ### Re-pin lần 1 — 2026-10-25, do gộp main e6d5d02 trước khi trình Cổng 2
 run_id: repin-20261025T071733Z-12499
 sha: 303df76c41751100ef0e81ebe96500f54dbad81f · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp main 3e91907 (#98) — xung đột LO-TRINH + config.yaml
+run_id: repin-20261025T073130Z-89887
+sha: bf3b33cc3c4b739094a90d8f8f6a3bb8a17c915e · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
