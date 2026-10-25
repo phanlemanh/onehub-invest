@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: be318a8e1da026a0582d5f52e89d101c716535f4
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: giu-captured-at

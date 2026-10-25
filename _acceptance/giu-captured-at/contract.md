@@ -5,7 +5,7 @@ slug: giu-captured-at
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -47,3 +47,7 @@ Source input: lời giao `claudedp-2410-1` (24/10) và lời MỞ LẠI cùng m�
 - Hợp đồng dựng SAU khi ZCode code xong, nên `gate1_skipped: true`. Phiên điều phối liên làn dựng hồ sơ, không viết code sản phẩm.
 - Harness `scripts/giu-captured-at/acceptance.mjs` dựng DB TẠM `acc_capt_<nonce>` trong container `one-invest-db` (pg_dump -s chỉ schema 3 bảng), nạp fixture rồi xoá DB. Không ghi vào DB `oneinvest` (luật 2410-7). Tệp sao lưu của `--apply` trên DB tạm ghi vào `state/` rồi harness xoá.
 - Kiểm harness biết đỏ: với importer của `origin/main`, chế độ zalo đỏ 6 mục, chotot đỏ 4 mục.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-2: Script khôi phục và importer Zalo dùng hai luật khác nhau khi một tin nằm ở hai snapshot nạp ngược thứ tự (hiện 0 dòng).
+  - Ngoài-3: Lượt khôi phục đổi mọi dòng lệch giờ thu, kể cả lệch vài giây và dữ liệu thử, nên số dòng lớn hơn số dòng của sự cố.
+  - Ngoài-4: Tệp sao lưu giữ tới mili-giây và không chép snapshot đang trỏ; hoàn tác lệch dưới 1 ms.
