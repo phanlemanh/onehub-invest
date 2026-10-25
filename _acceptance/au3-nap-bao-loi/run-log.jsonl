@@ -6,3 +6,15 @@
 {"ts":"2026-10-23T16:21:29Z","round":1,"evalId":"E6","run_id":"au3-nap-bao-loi-E6-20261023T162128","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs chotot"}
 {"ts":"2026-10-23T16:21:37Z","round":1,"evalId":"E7","run_id":"au3-nap-bao-loi-E7-20261023T162135","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs apify"}
 {"ts":"2026-10-23T16:21:42Z","round":1,"evalId":"E8","run_id":"au3-nap-bao-loi-E8-20261023T162142","exit_code":0,"cmd":"bash -n scripts/chotot-daily.sh && bash -n scripts/apify-facebook-daily.sh && echo SYNTAX OK"}
+{"ts":"2026-10-25T04:37:55Z","round":2,"evalId":"E1","run_id":"au3-nap-bao-loi-E1-r2-20261025T043753Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs chotot"}
+{"ts":"2026-10-25T04:38:01Z","round":2,"evalId":"E2","run_id":"au3-nap-bao-loi-E2-r2-20261025T043759Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs apify"}
+{"ts":"2026-10-25T04:38:09Z","round":2,"evalId":"E3","run_id":"au3-nap-bao-loi-E3-r2-20261025T043808Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs apify"}
+{"ts":"2026-10-25T04:38:11Z","round":2,"evalId":"E4","run_id":"au3-nap-bao-loi-E4-r2-20261025T043810Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs chotot"}
+{"ts":"2026-10-25T04:38:19Z","round":2,"evalId":"E5","run_id":"au3-nap-bao-loi-E5-r2-20261025T043817Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs apify"}
+{"ts":"2026-10-25T04:38:25Z","round":2,"evalId":"E6","run_id":"au3-nap-bao-loi-E6-r2-20261025T043824Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs chotot"}
+{"ts":"2026-10-25T04:38:32Z","round":2,"evalId":"E7","run_id":"au3-nap-bao-loi-E7-r2-20261025T043830Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs apify"}
+{"ts":"2026-10-25T04:38:37Z","round":2,"evalId":"E8","run_id":"au3-nap-bao-loi-E8-r2-20261025T043837Z","exit_code":0,"cmd":"bash -n scripts/chotot-daily.sh && bash -n scripts/apify-facebook-daily.sh && echo SYNTAX OK"}
+{"ts":"2026-10-25T04:38:44Z","round":2,"evalId":"E9","run_id":"au3-nap-bao-loi-E9-r2-20261025T043844Z","exit_code":0,"cmd":"bash _acceptance/au3-nap-bao-loi/probes/r1-nhieu-thi-truong.sh \"$PWD\" && bash _acceptance/au3-nap-bao-loi/probes/r1-nhieu-thi-truong.sh \"$PWD\" | tail -1 | grep -q 'được nạp lại' && echo R1 OK"}
+{"ts":"2026-10-25T04:38:53Z","round":2,"evalId":"E10","run_id":"au3-nap-bao-loi-E10-r2-20261025T043852Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs ts-format"}
+{"ts":"2026-10-25T04:38:59Z","round":2,"evalId":"E11","run_id":"au3-nap-bao-loi-E11-r2-20261025T043858Z","exit_code":0,"cmd":"node scripts/au3-nap-bao-loi/acceptance.mjs lock"}
+{"ts":"2026-10-25T04:47:35Z","round":2,"evalId":"E9","run_id":"au3-nap-bao-loi-E9-r2b-20261025T044734Z","exit_code":0,"cmd":"bash _acceptance/au3-nap-bao-loi/probes/r1-nhieu-thi-truong.sh \"$PWD\" && bash _acceptance/au3-nap-bao-loi/probes/r1-nhieu-thi-truong.sh \"$PWD\" | tail -1 | grep -qx 'R1: hcmc T07 được nạp lại' && echo R1 OK"}
