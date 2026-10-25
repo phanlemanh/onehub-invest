@@ -1,0 +1,35 @@
+schema_version: 1
+feature_slug: s05-slo-theo-lich
+# Ca «S5-AC-n» ở scripts/s05-slo.test.mjs: gọi readFreshness THẬT của scripts/lib/freshness.mjs và app/src/lib/freshness.ts
+# (Node 24 nạp thẳng TS) trên client giả — không DB.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.s05_slo
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/s05-slo.test.mjs]
+    expected: "exit 0; ca 'S5-AC-1': cli.SLO_HOURS và app.SLO_HOURS deepEqual { S01: 192, S02: 840, S03: 72, S05: 96, S06: 36 }"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.s05_slo
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/s05-slo.test.mjs]
+    expected: "exit 0; ca 'S5-AC-2': lịch lượt thu thứ Ba + thứ Sáu 06:00, quét mỗi giờ từ lượt đầu tới hết 14 ngày (337 giờ) — readFreshness cả hai bản trả S05 'fresh' ở mọi giờ (số giờ đã quét = 337, tuổi lớn nhất gặp = 96); đối chứng: bản sao freshness.mjs đột biến S05 96 → 12 (assert bản sao khác gốc và SLO_HOURS.S05 === 12 sau nạp) trả 'stale' ở ≥ 169 giờ trong cùng lượt quét"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.s05_slo
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/s05-slo.test.mjs]
+    expected: "exit 0; ca 'S5-AC-3': tuổi 96 → 'fresh', 97 → 'stale' ở cả hai bản; describe() của hàng 97 giờ chứa 'SLO 96 giờ'"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.freshness_parity
+    paths: [scripts/lib/freshness.mjs, app/src/lib/freshness.ts, scripts/freshness-parity.test.mjs]
+    expected: "exit 0; mọi ca SL-AC-1 của freshness-parity.test.mjs xanh"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.check_freshness
+    paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
+    expected: "exit 0; ca 'AC-5 bảng SLO đúng năm giá trị giờ' ghim S05: 96; 10 ca GT-AC-4 chạy tới cuối gồm 'GT-AC-4 S05 tuổi = SLO → fresh' và 'GT-AC-4 S05 tuổi = SLO+1 → stale' (không ca nào bị bỏ qua vì thiếu DB)"

@@ -36,6 +36,9 @@ executors:
     ui_capture_login: "node --test scripts/ui-capture-login.test.mjs"   # ON10 — bước chụp /ops có phiên (máy chủ giả, không cần DB/app)
     ui_capture_browser: "node --test scripts/ui-capture-browser.test.mjs"   # bước chụp trên trình duyệt thật (playwright-cli), máy chủ giả — không DB, không app
     zalo_import_job: "node --test scripts/zalo-import-job.test.mjs"
+    s05_slo: "node --test scripts/s05-slo.test.mjs"
+    freshness_parity: "node --test scripts/freshness-parity.test.mjs"
+    check_freshness: "node --test scripts/check-freshness.test.mjs"
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
