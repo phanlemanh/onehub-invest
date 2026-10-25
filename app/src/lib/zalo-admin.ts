@@ -54,7 +54,73 @@ async function readCfg(): Promise<Root> {
   return JSON.parse(await readFile(CONFIG, "utf8")) as Root;
 }
 
+const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+/**
+ * Bất biến an toàn của openclaw.json — cùng các lớp L2/L3/L3b của bộ canh (`scripts/zalo-watchdog.sh`), thêm
+ * `groupPolicy`. Trả danh sách vi phạm, mỗi dòng mở đầu bằng nhãn lớp; rỗng = sạch. Hàm thuần, không bao giờ ném.
+ *
+ * Gateway nạp nóng cấu hình < 1 giây, bộ canh chỉ bắt sau ≤ 5′ (chuỗi sự cố 22/10: nhóm mới requireMention:false →
+ * agent turn) — nên bộ ghi phải kiểm TRƯỚC khi ghi. Được chặt hơn bộ canh, không được lỏng hơn: cấu hình méo dạng
+ * (bộ canh sẽ crash = KILL) là vi phạm.
+ */
+export function zaloConfigViolations(cfg: unknown): string[] {
+  if (!isObj(cfg)) return ["hỏng: cấu hình không phải object"];
+  const out: string[] = [];
+  // L2 — bindings phải rỗng (vắng = rỗng)
+  if (Object.hasOwn(cfg, "bindings")) {
+    const b = cfg.bindings;
+    if (!Array.isArray(b)) out.push("L2: bindings không phải mảng (phải rỗng)");
+    else if (b.length > 0) out.push(`L2: bindings có ${b.length} entry (phải rỗng)`);
+  }
+  if (cfg.channels === undefined) return out;
+  if (!isObj(cfg.channels)) return [...out, "hỏng: channels không phải object"];
+  // L3 — kênh bot phải vắng
+  if (Object.hasOwn(cfg.channels, "zalo")) out.push("L3: channels.zalo (bot) có mặt");
+  const z = cfg.channels.zalouser;
+  if (z === undefined) return out;
+  if (!isObj(z)) return [...out, "hỏng: channels.zalouser không phải object"];
+
+  // groupPolicy vắng = mặc định "allowlist" của OpenClaw (zalouser accounts.ts); khai thì phải đúng allowlist
+  const policy = (p: unknown, where: string) => {
+    if (p !== undefined && p !== "allowlist") out.push(`groupPolicy: ${where}.groupPolicy = ${JSON.stringify(p)} (phải "allowlist")`);
+  };
+  // L3b — mọi nhóm chưa tắt phải requireMention=true TƯỜNG MINH (như bộ canh: chỉ enabled === false mới là tắt;
+  // không xét `allow`, không tin mặc định runtime)
+  const groups = (g: unknown, where: string) => {
+    if (g === undefined) return;
+    if (!isObj(g)) return void out.push(`hỏng: ${where} không phải object`);
+    for (const [id, e] of Object.entries(g)) {
+      if (!isObj(e)) out.push(`hỏng: nhóm ${id} (${where}) không phải object`);
+      else if (e.enabled !== false && e.requireMention !== true) out.push(`L3b: nhóm ${id} (${where}) requireMention phải true`);
+    }
+  };
+  policy(z.groupPolicy, "channels.zalouser");
+  groups(z.groups, "channels.zalouser.groups");
+  if (z.accounts !== undefined) {
+    if (!isObj(z.accounts)) return [...out, "hỏng: channels.zalouser.accounts không phải object"];
+    for (const [id, a] of Object.entries(z.accounts)) {
+      if (!isObj(a)) {
+        out.push(`hỏng: accounts.${id} không phải object`);
+        continue;
+      }
+      policy(a.groupPolicy, `accounts.${id}`);
+      groups(a.groups, `accounts.${id}.groups`);
+    }
+  }
+  return out;
+}
+
+/** Ném khi cấu hình phạm bất biến — không ghi gì (route trả 400 với thông điệp này). */
+export function assertZaloCfgSafe(cfg: unknown): void {
+  const v = zaloConfigViolations(cfg);
+  if (v.length > 0) throw new Error(`Cấu hình Zalo không an toàn, không ghi (luật 8): ${v.join("; ")}`);
+}
+
+/** Cửa ghi DUY NHẤT của openclaw.json — bước kiểm luôn đứng đầu, không tham số nào bỏ được nó. */
 async function writeCfg(cfg: Root): Promise<void> {
+  assertZaloCfgSafe(cfg);
   await copyFile(CONFIG, `${CONFIG}.bak-${Date.now()}`);
   await writeFile(CONFIG, JSON.stringify(cfg, null, 2));
 }
@@ -233,21 +299,31 @@ export async function setZaloGroupEnabled(
     );
     if (owner) return { conflictWith: owner.accountId };
   }
-  const newEntry = () => ({ enabled, requireMention: false }); // monitor: nhận cả tin không nhắc bot
+  // Nhóm do UI thêm hay bật lại LUÔN requireMention:true (luật 8, sự cố 22/10). Từ bản port pluginHooks 22/10
+  // hook nhận tin SAU admission, TRƯỚC mention gate — requireMention:true không làm mất tin thu.
+  const upsert = (groups: Record<string, GroupEntry>) => {
+    const g = groups[groupId];
+    if (!g) groups[groupId] = { enabled, requireMention: true };
+    else {
+      g.enabled = enabled;
+      if (enabled) g.requireMention = true;
+    }
+  };
   if (accountId === "default") {
-    const target = z.accounts?.default
-      ? ((z.accounts.default.groups ??= {}))
-      : ((z.groups ??= {}));
-    if (target[groupId]) target[groupId].enabled = enabled;
-    else target[groupId] = newEntry();
+    const d = z.accounts?.default;
+    if (d) {
+      // accounts.default chưa có groups riêng đang kế thừa groups cấp channel: chép (sâu) trước khi thêm,
+      // không thì tài khoản thu chính mất mọi nhóm đang thu
+      d.groups ??= Object.fromEntries(Object.entries(z.groups ?? {}).map(([k, v]) => [k, { ...v }]));
+      upsert(d.groups);
+    } else upsert((z.groups ??= {}));
   } else {
     const acc = (z.accounts ??= {})[accountId] ??= {
       enabled: true,
       profile: accountId,
       groupAllowFrom: ["*"],
     };
-    if (acc.groups?.[groupId]) acc.groups[groupId].enabled = enabled;
-    else ((acc.groups ??= {})[groupId] = newEntry());
+    upsert((acc.groups ??= {}));
   }
   await writeCfg(cfg);
   return { conflictWith: null };

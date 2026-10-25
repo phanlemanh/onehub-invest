@@ -5,7 +5,7 @@ slug: nhom-moi-requiremention
 owner: phanlemanh@gmail.com
 risk_tier: T3      # an toàn Zalo (luật 8): ghi ~/.openclaw/openclaw.json, gateway nạp nóng < 1 giây
 surfaces: [api]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-25
 ---
