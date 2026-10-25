@@ -28,6 +28,54 @@ const URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhos
 
 const sqlFiles = (dir) => readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
 
+/** Tách tệp SQL thành từng câu như psql (bỏ qua `;` trong chuỗi '…', "…", $tag$…$tag$ và chú thích). Gửi cả tệp một lượt
+ * thì pg chạy trong một giao dịch ngầm — một câu lỗi kéo đổ cả tệp, khác cách migration được áp ở máy (psql, từng câu). */
+export function tachCau(sql) {
+  const out = [];
+  let cur = "";
+  let i = 0;
+  while (i < sql.length) {
+    const c = sql[i];
+    const two = sql.slice(i, i + 2);
+    if (two === "--") {
+      const j = sql.indexOf("\n", i);
+      const end = j < 0 ? sql.length : j;
+      cur += sql.slice(i, end);
+      i = end;
+    } else if (two === "/*") {
+      const j = sql.indexOf("*/", i + 2);
+      const end = j < 0 ? sql.length : j + 2;
+      cur += sql.slice(i, end);
+      i = end;
+    } else if (c === "'" || c === '"') {
+      let j = i + 1;
+      while (j < sql.length && !(sql[j] === c && sql[j + 1] !== c)) j += sql[j] === c ? 2 : 1;
+      cur += sql.slice(i, j + 1);
+      i = j + 1;
+    } else if (c === "$") {
+      const m = sql.slice(i).match(/^\$[A-Za-z_]*\$/);
+      if (m) {
+        const j = sql.indexOf(m[0], i + m[0].length);
+        const end = j < 0 ? sql.length : j + m[0].length;
+        cur += sql.slice(i, end);
+        i = end;
+      } else {
+        cur += c;
+        i++;
+      }
+    } else if (c === ";") {
+      if (cur.trim()) out.push(cur.trim());
+      cur = "";
+      i++;
+    } else {
+      cur += c;
+      i++;
+    }
+  }
+  if (cur.replace(/--[^\n]*/g, "").trim()) out.push(cur.trim());
+  return out.filter((q) => q.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").trim());
+}
+
 const db = new pg.Client({ connectionString: URL });
 await db.connect();
 let code = 0;
@@ -46,13 +94,17 @@ try {
     }
     let ok = 0;
     for (const f of sqlFiles(MIG)) {
-      let err = null;
-      try {
-        await db.query(readFileSync(path.join(MIG, f), "utf8"));
-      } catch (e) {
-        err = e.message.split("\n")[0];
-      }
       const khai = LOI_DA_KHAI[f];
+      let err = null;
+      // Từng câu như psql: tệp ngoài danh sách dừng ở câu lỗi đầu; tệp đã khai chạy tiếp qua câu lỗi (như máy local).
+      for (const q of tachCau(readFileSync(path.join(MIG, f), "utf8"))) {
+        try {
+          await db.query(q);
+        } catch (e) {
+          err = err ?? e.message.split("\n")[0];
+          if (!khai) break;
+        }
+      }
       if (err && khai) console.log(`ci-db-init: ${f} còn lỗi thật (đã khai): ${err}`);
       else if (err) {
         console.log(`ci-db-init: LỖI ${f}: ${err}`);

@@ -67,8 +67,11 @@ describe("AU11-AC-3 ci-db-init", () => {
     const c = new pg.Client({ connectionString: url("ci_sach") });
     await c.connect();
     const { rows } = await c.query("SELECT to_regclass('public.area_sources') IS NOT NULL AS co");
+    // 031 lỗi một câu nhưng các câu ALTER của nó phải còn (áp từng câu như psql), không thì test đọc properties.bedrooms đỏ
+    const cot = await c.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'properties' AND column_name IN ('bedrooms','verification','stable_key') ORDER BY 1");
     await c.end();
     assert.equal(rows[0].co, true, "bảng area_sources phải có sau ci-db-init");
+    assert.deepEqual(cot.rows.map((r) => r.column_name), ["bedrooms", "stable_key", "verification"], "cột của 031 phải còn dù 031 lỗi một câu");
   });
 
   test("AU11-AC-3 DB mặc định của ảnh PostGIS (extension cài sẵn) vẫn tính là trống", async () => {

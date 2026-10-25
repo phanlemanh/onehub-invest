@@ -29,10 +29,11 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: app/package-lock.json
-      - name: cài phụ thuộc
-        working-directory: app
-        run: npm ci
+          cache-dependency-path: |
+            app/package-lock.json
+            pipeline/package-lock.json
+      - name: cài phụ thuộc # test của app chạy pipeline/push-ops-facts.mjs
+        run: (cd app && npm ci) && (cd pipeline && npm ci)
       - name: typecheck
         working-directory: app
         run: npx next typegen && npx tsc --noEmit
@@ -62,8 +63,9 @@ jobs:
           cache-dependency-path: |
             pipeline/package-lock.json
             app/package-lock.json
-      - name: cài phụ thuộc
-        run: (cd pipeline && npm ci) && (cd app && npm ci)
+            agent/package-lock.json
+      - name: cài phụ thuộc # test lối vào chạy cả agent/scripts/*.ts
+        run: (cd pipeline && npm ci) && (cd app && npm ci) && (cd agent && npm ci)
       - name: kiểm cú pháp .mjs
         run: find pipeline -name '*.mjs' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
       - name: dựng DB trống từ migration
@@ -138,8 +140,9 @@ jobs:
           cache-dependency-path: |
             app/package-lock.json
             pipeline/package-lock.json
+            agent/package-lock.json
       - name: cài phụ thuộc
-        run: (cd app && npm ci) && (cd pipeline && npm ci)
+        run: (cd app && npm ci) && (cd pipeline && npm ci) && (cd agent && npm ci)
       - name: kiểm cú pháp .mjs
         run: find scripts -name '*.mjs' -print0 | xargs -0 -n1 node --check
       - name: dựng DB trống từ migration

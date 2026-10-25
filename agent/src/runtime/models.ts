@@ -8,8 +8,7 @@ const MTPLX_URL = process.env.MTPLX_URL ?? "http://127.0.0.1:8000/v1";
 const mtplx = createOpenAI({
   baseURL: MTPLX_URL,
   apiKey: "none", // local server không cần key
-  compatibility: "compatible", // MTPLX chỉ có chat completions, không Responses API
-});
+}); // MTPLX chỉ có chat completions, không Responses API — getModel dùng mtplx.chat()
 
 export type ModelName = "qwen27b" | "kev4b" | "decisions";
 
