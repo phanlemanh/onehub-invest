@@ -6,11 +6,12 @@ import { after, before, describe, test } from "node:test"
 import assert from "node:assert/strict"
 import pg from "pg"
 
-import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
+import { captureOpsFacts, localDbUrl, mutantPush } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { dropOpsSchema, makeOpsSchema, schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
 import { S03_OFFERS_SQL, S03_POSTS_SQL } from "../../pipeline/lib/ops-flow.mjs"
 
 const S = `on5_app_${process.pid}`
+const S_ERR = `on5_app_err_${process.pid}`
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
 
 /** Mốc đo ghim 00:30 giờ VN ngày 25/10 (17:30 UTC ngày 24) — ngày cuối của cửa sổ là ngày VN, không ngày UTC. */
@@ -44,6 +45,10 @@ before(async () => {
   try {
     await admin.connect()
     await makeOpsSchema(admin, S)
+    // Đo hỏng chỉ ở khối luong7: khoá cũ zaloFlow (zaloExtras) đọc cùng hai bảng S03 nên vắng cả bảng thì cả lượt đẩy sập
+    // (có từ trước ON5) — vắng cột posted_at, cột chỉ luong7 đọc.
+    await makeOpsSchema(admin, S_ERR)
+    await admin.query(`ALTER TABLE "${S_ERR}".stg_zalo_posts DROP COLUMN posted_at`)
     for (const t of ["listings", "airdna_listings"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
     for (const [id, snap, posted, captured] of POSTS)
       await admin.query(`INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, text, posted_at, captured_at) VALUES ($1, $2, 'bài thử', $3, $4)`, [
@@ -57,6 +62,7 @@ before(async () => {
 })
 after(async () => {
   await dropOpsSchema(admin, S).catch(() => {})
+  await dropOpsSchema(admin, S_ERR).catch(() => {})
   await admin.end().catch(() => {})
   const { pool } = await import("../src/lib/db")
   await pool.end()
@@ -135,5 +141,98 @@ describe("ON5-AC-7 trang máy thu", () => {
     const { FlowTable } = await import("../src/components/ops/collections-tables")
     const html = (await render(<FlowTable days={MAU} />)).replace(/<th[^>]*data-col-id="airbnbSnapshots"[\s\S]*?<\/th>/, "")
     assert.deepEqual(thieuCot(thIds(html)), ["airbnbSnapshots"])
+  })
+})
+
+// ---------- AC-3, AC-4: khối `luong7` của bản tin (bên ghi thật) ----------
+
+type Day7 = { day: string; s03Posts: number; s03Offers: number }
+type Payload = Record<string, unknown> & { pushedAt: string; blocks: Record<string, Record<string, unknown>> }
+const push = (opts: Record<string, unknown> = {}, schema = S) =>
+  captureOpsFacts({
+    ...opts,
+    env: { DATABASE_URL: schemaUrl(schema), OPS_FACTS_NOW: new Date(NOW).toISOString(), ...((opts.env as object) ?? {}) },
+  }) as Promise<{ code: number; stderr: string; payload: Payload }>
+const DAYS_SRC = "days: await luong7(client, { now: now.getTime() })"
+
+/** Lỗi khuôn khối `luong7` so với 7 ngày VN viết trước: «luong7: …» — rỗng là đạt. */
+function loiKhoi(payload: Payload | undefined): string[] {
+  const b = payload?.blocks?.luong7
+  if (!b) return ["luong7: vắng"]
+  const out: string[] = []
+  if (typeof b.measured_at !== "string" || !Number.isFinite(Date.parse(b.measured_at))) out.push("luong7: thiếu measured_at")
+  const days = (b.days ?? []) as Day7[]
+  const keys = days.map((d) => d.day)
+  for (const d of DAYS) if (!keys.includes(d)) out.push(`luong7: thiếu ngày ${d}`)
+  for (const k of keys) if (!DAYS.includes(k)) out.push(`luong7: thừa ngày ${k}`)
+  if (keys.join() !== [...keys].sort().join() || new Set(keys).size !== keys.length) out.push("luong7: ngày không liên tiếp cũ → mới")
+  for (const d of days)
+    if (!Number.isInteger(d.s03Posts) || !Number.isInteger(d.s03Offers)) out.push(`luong7: ngày ${d.day} thiếu số`)
+  return out
+}
+
+describe("ON5-AC-3 khối luong7", () => {
+  test("ON5-AC-3 khối luong7 có measured_at và đúng 7 khoá ngày VN liên tiếp", async () => {
+    ready()
+    const r = await push()
+    assert.equal(r.code, 0, r.stderr.slice(0, 800))
+    assert.deepEqual(r.stderr.split("\n").filter((l) => l.startsWith("FACTS CHẶN")), [], "bộ soát tầng A chặn bản tin")
+    assert.deepEqual(loiKhoi(r.payload), [])
+    const days = r.payload.blocks.luong7.days as Day7[]
+    console.log(`# ON5-AC-3 ${days.map((d) => `${d.day}:${d.s03Posts}/${d.s03Offers}`).join(" ")}`)
+    assert.deepEqual(
+      days.filter((d) => !(d.day in WANT_POSTS) && !(d.day in WANT_OFFERS)).map((d) => d.s03Posts + d.s03Offers),
+      [0, 0, 0, 0],
+      "ngày rỗng phải ghi 0",
+    )
+  })
+  test("ON5-AC-3 bảng vắng (cột posted_at) → khối mang error, khối khác vẫn đi", async () => {
+    ready()
+    const r = await push({}, S_ERR)
+    assert.equal(r.code, 0, r.stderr.slice(0, 800))
+    const b = r.payload.blocks.luong7
+    assert.match(String(b.error ?? ""), /^không đo được/)
+    assert.equal(b.days, undefined, "khối lỗi không được mang số")
+    assert.equal(r.payload.blocks.reviewQueue.error, undefined, "khối khác phải vẫn đo được")
+  })
+  test("ON5-AC-3 bên ghi bỏ một ngày → báo ngày thiếu", async () => {
+    ready()
+    const f = mutantPush("on5-bo-ngay.mjs", (src: string) => src.replace(DAYS_SRC, `days: (await luong7(client, { now: now.getTime() })).slice(1)`))
+    assert.deepEqual(loiKhoi((await push({ script: f })).payload), ["luong7: thiếu ngày 2026-10-19"])
+  })
+  test("ON5-AC-3 bên ghi bỏ measured_at → báo tên khối", async () => {
+    ready()
+    const f = mutantPush("on5-bo-moc.mjs", (src: string) => src.replace("luong7: luong7Block,", "luong7: (({ measured_at, ...x }) => x)(luong7Block),"))
+    assert.deepEqual(loiKhoi((await push({ script: f })).payload), ["luong7: thiếu measured_at"])
+  })
+})
+
+/** Ngày lệch giữa khối và hai cột S03 của getFlowDays: «<ngày>: <cột> khối <a> ≠ trang <b>». */
+async function lechKhoi(payload: Payload): Promise<string[]> {
+  const page = new Map((await flow()).map((d) => [d.day, d]))
+  const out: string[] = []
+  for (const d of payload.blocks.luong7.days as Day7[]) {
+    const p = page.get(d.day)
+    if (p?.zaloPosts !== d.s03Posts) out.push(`${d.day}: bài thô khối ${d.s03Posts} ≠ trang ${p?.zaloPosts}`)
+    if (p?.zaloOffers !== d.s03Offers) out.push(`${d.day}: tin rao khối ${d.s03Offers} ≠ trang ${p?.zaloOffers}`)
+  }
+  return out
+}
+
+describe("ON5-AC-4 khối bằng trang máy thu", () => {
+  test("ON5-AC-4 khối luong7 bằng hai cột S03 của getFlowDays trên cùng lược đồ", async () => {
+    ready()
+    const r = await push()
+    assert.equal(r.code, 0, r.stderr.slice(0, 800))
+    assert.deepEqual(await lechKhoi(r.payload), [])
+  })
+  test("ON5-AC-4 bên ghi đếm mọi nguồn → báo ngày lệch", async () => {
+    ready()
+    const f = mutantPush("on5-moi-nguon.mjs", (src: string) =>
+      src.replace(
+        DAYS_SRC,
+        `days: await (async () => { const r = await luong7(client, { now: now.getTime() }); const { rows } = await client.query("SELECT (first_seen AT TIME ZONE 'Asia/Ho_Chi_Minh')::date::text d, count(*)::int n FROM sale_offers GROUP BY 1"); const m = new Map(rows.map((x) => [x.d, x.n])); return r.map((x) => ({ ...x, s03Offers: m.get(x.day) ?? 0 })); })()`,
+      ))
+    assert.deepEqual(await lechKhoi((await push({ script: f })).payload), ["2026-10-23: tin rao khối 3 ≠ trang 2"])
   })
 })

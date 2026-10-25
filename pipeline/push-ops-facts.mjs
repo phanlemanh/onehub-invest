@@ -12,7 +12,7 @@ import { maskSourceNames } from "./lib/mask-source-names.mjs";
 import { guardValues } from "./lib/tier-a-guard.mjs";
 
 import { tailLog } from "./lib/last-log-line.mjs";
-import { parseLog, zaloFlow } from "./lib/ops-flow.mjs";
+import { luong7, parseLog, zaloFlow } from "./lib/ops-flow.mjs";
 import { readFreshness } from "../scripts/lib/freshness.mjs";
 import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue } from "../scripts/lib/ops-local.mjs";
 
@@ -189,6 +189,8 @@ async function main() {
   const freshnessBlock = await measure(async () => ({ rows: await readFreshness(client, { now }) }));
   const records24hBlock = await measure(async () => ({ bySource: await readRecords24h(client) }));
   const reviewQueueBlock = await measure(() => readReviewQueue(client));
+  // ON5: hai cột S03 của «Luồng 7 ngày» — đúng 7 ngày VN tính tới mốc đo, ngày rỗng = 0 (định nghĩa ở lib/ops-flow.mjs).
+  const luong7Block = await measure(async () => ({ days: await luong7(client, { now: now.getTime() }) }));
   await client.end();
   const [lockdownBlock, jobsBlock] = await Promise.all([
     measure(() => readLockdown({ root: ROOT, agentLogDir: process.env.OPENCLAW_LOG_DIR ?? "/tmp/openclaw", now })),
@@ -235,6 +237,7 @@ async function main() {
       lockdown: lockdownBlock,
       records24h: records24hBlock,
       reviewQueue: reviewQueueBlock,
+      luong7: luong7Block,
     },
   };
   // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
