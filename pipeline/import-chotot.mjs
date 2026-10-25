@@ -8,8 +8,22 @@ import { readFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import pg from "pg";
+
+// Luật khuôn tên thư mục — BẢN SAO GIỐNG HỆT import-airbnb.mjs (PL1 mở lại
+// vòng 4, claudedp-2310-4 + BÁO 2510-5): inline vì harness nghiệm thu chép
+// mỗi importer là một file lẻ; chuỗi phải đồng bộ với import-airbnb.mjs và
+// TS_RE của hai daily script (AU3 2310-8 vòng 3) — test đối chiếu cả bốn.
+const SNAPSHOT_TS_RE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}([0-9]{3})?(-[0-9]+)?Z?$/;
+
+function parseSnapshotDirName(name) {
+  const parts = String(name).split("__");
+  if (parts.length !== 3) return null;
+  const [city, source, ts] = parts;
+  if (!city || !source || !SNAPSHOT_TS_RE.test(ts)) return null;
+  return { city, source, ts };
+}
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -35,6 +49,11 @@ async function latestSnapshotDir() {
 async function readSnapshot(dir) {
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
   if (manifest.schemaVersion !== 1) throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
+  // Lớp 2 (mở lại 2310-4 lần 2): manifest.source là lời khai của chính snapshot
+  if (manifest.source !== "chotot-ads") {
+    console.warn(`bỏ qua theo manifest.source=${manifest.source} (không phải chotot-ads): ${dir}`);
+    process.exit(0);
+  }
   for (const f of manifest.files) {
     const buf = await readFile(join(dir, f.name));
     const sha = createHash("sha256").update(buf).digest("hex");
@@ -103,7 +122,24 @@ async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
-    const dirs = process.argv[2] === "--latest" ? await latestSnapshotDir() : [process.argv[2]];
+    let dirs = process.argv[2] === "--latest" ? await latestSnapshotDir() : [process.argv[2]];
+    // PL1 (mở lại lần 2): ALLOWLIST — chotot importer chỉ nhận 'chotot-ads'.
+    // Lớp khuôn tên (mở lại 2310-4 vòng 4): '…__chotot-ads__TEST' có nguồn
+    // hợp lệ nhưng mốc không phải thời gian → bỏ cả thư mục, cùng luật
+    // '<city>__<nguồn>__<mốc>' với import-airbnb (BÁO 2510-5).
+    const allowed = new Set(["chotot-ads"]);
+    dirs = dirs.filter((d) => {
+      const parsed = parseSnapshotDirName(basename(d));
+      if (!parsed) {
+        console.warn(`bỏ qua thư mục không đúng khuôn <city>__<nguồn>__<mốc thời gian>: ${d}`);
+        return false;
+      }
+      if (!allowed.has(parsed.source)) {
+        console.warn(`bỏ qua snapshot nguồn ngoài ALLOWLIST '${parsed.source}' (không nạp stg): ${d}`);
+        return false;
+      }
+      return true;
+    });
     for (const d of dirs) await importDir(client, d);
   } finally {
     await client.end();
