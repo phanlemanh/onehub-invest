@@ -1,0 +1,53 @@
+schema_version: 1
+feature_slug: ty-le-listing-khu-vuc-gop
+# Ca «TL-AC-n» ở app/tests/ty-le-listing-gop.test.tsx: truy vấn chạy ĐÚNG getAirdnaComparison/getTruthfulCoverage trên
+# fixture trong BEGIN…ROLLBACK (Postgres local :5433, khoá 33033 — cùng khoá với hieu-chuan.test.tsx); thẻ vẽ trong jsdom.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/calibration.ts, app/tests/ty-le-listing-gop.test.tsx]
+    expected: "exit 0; ca 'TL-AC-1' ma trận viết trước 7 dòng tongListingS02: [] → null; [null] → null; [null, null] → null; [4, 9] → 13; [0, 9] → 9; [null, 5] → 5; [0] → 0; số dòng ma trận = 7, mỗi dòng ghim thông điệp nêu đầu vào"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/queries.ts, app/src/lib/calibration.ts, app/tests/ty-le-listing-gop.test.tsx]
+    expected: "exit 0; ca 'TL-AC-2': fixture khu vực gộp market zz3 (listing 4, chèn trước) và zz4 (listing 9) + 7 listing tự thu → thẻ: representative zz4, dòng Listing airdnaValue 13, ratio = 7/13; đối chứng cùng fixture: 7/9 khác ratio (thông điệp ghim 'chia cho market đại diện')"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/queries.ts, app/tests/ty-le-listing-gop.test.tsx]
+    expected: "exit 0; ca 'TL-AC-3': cùng fixture TL-AC-2 → ratio dòng Listing của thẻ === ratio dòng khu vực ở getTruthfulCoverage, và airdnaValue dòng Listing === airdnaActive của dòng Độ phủ"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/queries.ts, app/tests/ty-le-listing-gop.test.tsx]
+    expected: "exit 0; ca 'TL-AC-4': fixture có adr/occupancy/score/submarket riêng cho zz3 và zz4 (khác nhau) → ADR, Công suất airdnaValue, marketScore.total, submarketCount bằng số của zz4 (market đại diện), không bằng số của zz3 hay tổng"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/queries.ts, app/tests/ty-le-listing-gop.test.tsx]
+    expected: "exit 0; ca 'TL-AC-5': khu vực hai market đều không có listing_count → dòng Listing airdnaValue null, ratio null (không NaN/Infinity); khu vực một market listing 6 → airdnaValue 6"
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/quality-tables.tsx, app/tests/ty-le-listing-gop.test.tsx]
+    expected: "exit 0; ca 'TL-AC-6': vẽ CalibrationTable trong jsdom từ kết quả thật của fixture TL-AC-2 → textContent chứa đúng câu 'Dòng Listing: S02 cộng cả 2 thị trường; ADR, công suất và điểm lấy thị trường đại diện.'; đối chứng: cùng dữ liệu với representative.ofMarkets = 1 → không có 'Dòng Listing:'"
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.hieu_chuan_do
+    paths: [scripts/hieu-chuan-do.mjs, app/src/lib/queries.ts, app/src/lib/calibration.ts]
+    expected: "exit 0; dòng 'ok   tỉ lệ Listing thẻ = Độ phủ cho N khu vực (M gộp nhiều market)' với N ≥ 1, M ≥ 1, so bằng |a-b| ≤ 1e-12; dòng 'ok   đối chứng: tỉ lệ chia cho market đại diện lệch ở K khu vực' với K ≥ 1; các dòng ok cũ của ON10 vẫn ok"
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/queries.ts, app/src/components/ops/quality-tables.tsx, app/tests/hieu-chuan.test.tsx]
+    expected: "exit 0; toàn bộ app npm test xanh, gồm các ca HC-AC-* của hieu-chuan.test.tsx"
