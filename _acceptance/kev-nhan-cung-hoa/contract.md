@@ -5,7 +5,7 @@ slug: kev-nhan-cung-hoa
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -55,3 +55,5 @@ Source input: lời giao `claudedp-2310-6` và lời MỞ LẠI cùng mã (24/10
 - Text toàn khoảng trắng KHÔNG kèm ảnh: id đổi so với công thức cũ (băm như tin chỉ ảnh với sender). Ca này hiếm; ghi vào Known limits khi verify.
 - Vòng 1 (c4ad48a, kiểm trên 664d587): PASS 9/9, nhưng người chấm tìm ra lỗi ngoài hợp đồng — `{url: 5, path: "/a.jpg"}` làm `ingest()` ném (`s.trim is not a function`), HTTP trả 500 cả lô; và `url: ""` làm `path` bị bỏ khi băm nên hai ảnh khác bị gộp. Điều phối liên làn tái hiện được và MỞ LẠI `claudedp-2310-6`. Thêm AC-10 + E10; harness `url-path` đỏ 3 mục trên 8043a63.
 - Vòng 2 (25/10): ZCode sửa ở 62eaf38 (`mediaRefOf` chọn chuỗi đầu tiên: url chuỗi không rỗng, rồi path chuỗi), đã rebase nên nhánh nghiệm thu dựng lại thành `claude/acceptance-kev-nhan-cung-hoa-r2` từ `origin/main` + merge 62eaf38, mang hồ sơ và harness sang. E9 đổi sang `executors.script.collector_test_clean` (xoá dist cũ trước khi build).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Tên nhóm hay mã người gửi dạng object (không phải chữ) làm collector trả lỗi cả lô hoặc gộp nhầm tin hai nhóm; chỉ bên cầm khoá API gửi được, hook thật luôn gửi chữ.

@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 7e99360438f1c9e86754f4f36085c5d3042067b4
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: kev-nhan-cung-hoa
