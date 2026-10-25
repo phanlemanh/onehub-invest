@@ -82,7 +82,7 @@ export function FlowTable({ days, roles = {} }: { days: FlowDay[]; roles?: Sourc
   return (
     <InsightGrid
       title="Luồng 7 ngày qua"
-      description="Số bản ghi chảy vào theo nguồn, theo ngày (giờ máy)"
+      description="Số bản ghi theo nguồn, theo ngày (giờ VN); S03 tính theo ngày đăng bài"
       data={days}
       columns={columns}
       getRowId={(r) => r.day}
