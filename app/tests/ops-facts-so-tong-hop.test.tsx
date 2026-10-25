@@ -180,8 +180,9 @@ describe("ON22-AC-9 đọc trên cloud qua route ingest thật", () => {
     await ingest(r.payload)
     const fresh = await readOpsFacts({ now: at(r.payload.pushedAt, 44) })
     assert.equal(fresh.state, "fresh")
-    // ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7`
-    assert.deepEqual(blockStates(fresh), { freshness: "fresh", jobs: "fresh", lockdown: "fresh", records24h: "fresh", reviewQueue: "fresh", luong7: "fresh" })
+    // ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7`; ON4 (nhom-s03-tren-cloud) thêm khối thứ bảy `s03` — HOME tạm
+    // của phép đo này không có cấu hình OpenClaw nên khối ấy báo lỗi (không 0, không danh sách rỗng).
+    assert.deepEqual(blockStates(fresh), { freshness: "fresh", jobs: "fresh", lockdown: "fresh", records24h: "fresh", reviewQueue: "fresh", luong7: "fresh", s03: "error" })
     for (const [k, v] of Object.entries(fresh.blocks)) assert.equal(v!.measuredAt, r.payload.blocks[k].measured_at, `${k}: measuredAt khác bên ghi`)
     const c = new pg.Client({ connectionString: schemaUrl(S) })
     await c.connect()
