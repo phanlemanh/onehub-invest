@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 66e205669d75e818b03d558b726a33e4c8bedc18
+verified_commit: b5ae62763bc48c2c28ea1c6cb2ecde228895db38
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -178,3 +178,7 @@ none — every multi-run eval is uniform
 Round 1: mọi eval máy xanh (E1-E6, E8, E8b, E9); verdict PENDING-JUDGMENT vì E7 còn một phiếu bất đồng (spec-alignment, chấm tab «Sống» ở jobs-grid khi số cũ). Mạnh trả lại ở Cổng Bằng chứng lượt 1: E7 chưa đạt vì chấm tab «Sống» của lưới Máy móc vẫn xanh khi số cũ. Quay lại triển khai, sửa ở ec3d89e.
 Round 2: mọi eval máy xanh (E1-E6, E8, E8b, E9) trên 66e2056; panel E7 giữ nguyên từ round 2 (ba phiếu PASS, inputs không đổi). Verdict PENDING-JUDGMENT vì E7 (T3) cần người xác nhận trực tiếp ở Cổng 2.
 
+
+### Re-pin lần 1 — 2026-10-25, do ghim lại sau gộp main (ON13 đổi thứ tự cột, PR #76–#82)
+run_id: repin-20261025T032149Z-15541
+sha: b5ae62763bc48c2c28ea1c6cb2ecde228895db38 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · diff chạm vật đo ngoài làn máy: E7, E9 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-7, AC-9
