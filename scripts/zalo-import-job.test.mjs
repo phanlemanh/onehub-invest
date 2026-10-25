@@ -160,28 +160,23 @@ test("ZJ-AC-4 đối chứng: bản cũ nuốt lỗi transform, bản mới báo
 /** Phần nạp: từ đầu tệp tới hết khối «nạp hỏng thì thoát 1». */
 function phanNap(src) {
   const m = src.match(/if \[ "\$FAILED" != "0" \]; then\n[^\n]*\nfi\n/);
-  assert.ok(m, "không thấy khối 'if [ \"$FAILED\" != \"0\" ]' trong bản cũ");
+  assert.ok(m, "ZJ-AC-5 không thấy mốc 'if [ \"$FAILED\" != \"0\" ]' (nạp hỏng thì thoát 1)");
   return src.slice(0, m.index + m[0].length);
 }
 
-test("ZJ-AC-5 phần nạp (làn ZCode) giữ nguyên từng byte so với merge-base", (t) => {
-  let base;
-  try {
-    base = git("merge-base", "HEAD", "origin/main").trim();
-  } catch {
-    assert.fail("thiếu lịch sử git — không tính được merge-base HEAD origin/main (cần fetch origin/main)");
-  }
-  if (base === git("rev-parse", "HEAD").trim()) {
-    t.skip("nhánh đã nằm trên main — phép so làn chỉ có nghĩa trước khi gộp");
-    return;
-  }
-  const nap = phanNap(banO(base));
-  const moi = readFileSync(path.join(REPO, SCRIPT), "utf8");
-  assert.ok(moi.startsWith(nap), "ZJ-AC-5 phần nạp của tệp bọc đã đổi");
-  // Đối chứng: sửa một ký tự trong import_one → phép so báo lệch.
-  const sua = moi.replace("for try in 1 2 3 4 5", "for try in 1 2 3 4");
-  assert.notEqual(sua, moi);
-  assert.ok(!sua.startsWith(nap), "đối chứng: phép so không bắt được sửa trong import_one");
+test("ZJ-AC-5 vòng transform-zalo-boc-job-run (PR #96) không đổi phần nạp làn ZCode", () => {
+  // Lời hứa của MỘT vòng, chứng trên tác động ròng của PR #96 lên main (merge commit e962e78: cha 1 = main trước PR) —
+  // sự thật cố định, không đọc cây làm việc, không so với mốc trôi theo nhánh: ZCode sửa hợp lệ phần nạp sau này không làm ca đỏ.
+  const truoc = banO("e962e78^1");
+  const sau = banO("e962e78");
+  const napTruoc = phanNap(truoc);
+  assert.ok(napTruoc.includes("for try in 1 2 3 4 5"), "ZJ-AC-5 phần cắt của e962e78^1 không chứa vòng thử của import_one");
+  const thongDiep = (rev) => `ZJ-AC-5 PR #96 đổi phần nạp của ${SCRIPT} (e962e78^1 → ${rev})`;
+  assert.equal(phanNap(sau), napTruoc, thongDiep("e962e78"));
+  // Đối chứng: cặp giả sửa một ký tự trong import_one → phép so báo lệch, thông điệp nêu ca, tệp và rev.
+  const gia = truoc.replace("for try in 1 2 3 4 5", "for try in 1 2 3 4");
+  assert.notEqual(gia, truoc, "đột biến không đổi gì");
+  assert.throws(() => assert.equal(phanNap(gia), napTruoc, thongDiep("bản giả")), /ZJ-AC-5 PR #96 đổi phần nạp của scripts\/zalo-import-daily\.sh \(e962e78\^1 → bản giả\)/);
 });
 
 test("ZJ-AC-6 rào: node giả, HOME tạm không có node thật, DB cổng đóng, nhãn trong ba bước", () => {
