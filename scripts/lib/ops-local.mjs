@@ -6,6 +6,7 @@
  * log, đòi từng hàng bằng nhau) — sửa một bên thì sửa cả bên kia, như cặp freshness.mjs ↔ freshness.ts (AU6):
  *   readRecords24h  ↔ getSourceFeedHealth().items24h   (app/src/lib/ops-queries.ts)
  *   readLockdown    ↔ getLockdownStatus()               (app/src/lib/ops-queries.ts, ON2)
+ *   readS03Allowlist ↔ effectiveEnabledGroups()        (app/src/lib/zalo-admin.ts, ON4 — app/tests/nhom-s03-tren-cloud.test.tsx)
  * Mọi hàm nhận phụ thuộc qua tham số (client pg, thư mục, lệnh) và NÉM khi không đo được — bên gọi ghi `error`,
  * không bao giờ thay bằng 0 hay «Ổn». An toàn Zalo: chỉ đọc log và probe GET, không phương thức ghi nào.
  */
@@ -156,4 +157,19 @@ export async function readLaunchdJobs({ cronDir, root, names, launchctl = "launc
 async function defaultRun(cmd, args) {
   const { stdout } = await promisify(execFile)(cmd, args, { maxBuffer: 1 << 20 });
   return stdout;
+}
+
+/** «Nhóm bật» (ON4, Hỏi-2 = A) — bản .mjs của `effectiveEnabledGroups`: nhóm bật hiệu dụng từng tài khoản theo luật kế
+ * thừa của OpenClaw (`default` đọc `accounts.default.groups`, thiếu thì `groups` cấp ngoài; tài khoản không khai `groups`
+ * kế thừa cấp ngoài), bỏ `enabled: false` và `allow: false`; `union` = hợp, trùng mã đếm một lần. Nhận `channels.zalouser`. */
+export function readS03Allowlist(z) {
+  const ids = ["default", ...Object.keys(z?.accounts ?? {}).filter((id) => id !== "default")];
+  const groupsOf = (id) => {
+    if (!z) return {};
+    if (id === "default") return z.accounts?.default?.groups ?? z.groups ?? {};
+    return z.accounts?.[id]?.groups ?? z.groups ?? {};
+  };
+  const enabled = (groups) => Object.entries(groups).filter(([, v]) => v?.allow !== false && v?.enabled !== false).map(([k]) => k);
+  const byAccount = new Map(ids.map((id) => [id, enabled(groupsOf(id))]));
+  return { byAccount, union: [...new Set([...byAccount.values()].flat())] };
 }
