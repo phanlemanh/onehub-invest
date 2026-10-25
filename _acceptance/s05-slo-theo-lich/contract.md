@@ -5,7 +5,7 @@ slug: s05-slo-theo-lich
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-25T07:04:29Z
 design_doc: docs/superpowers/specs/2026-10-25-s05-slo-theo-lich-design.md
