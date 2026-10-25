@@ -61,3 +61,21 @@ evals:
     cmd: config:executors.script.kns_scope
     expected: "exit 0; 'SCOPE OK' và 'SYNTAX OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.kns_lich_s05
+    expected: "exit 0; 'LICH-S05 PASS'; lịch đúng Ba + Sáu 06:00; should-NOT-fire không còn mốc hằng ngày; plist trần 100, cửa sổ ≥ 4 ngày"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.kns_lich_s05
+    expected: "exit 0; mặc định trần 100 + cửa sổ 4 ngày; should-NOT-fire không còn '12 hours'; trần rác/âm → 100"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.kns_lich_unit
+    expected: "exit 0; s05-b-lich.test 3/3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

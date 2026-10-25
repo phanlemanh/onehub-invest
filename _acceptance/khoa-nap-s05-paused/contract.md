@@ -1,6 +1,6 @@
 ---
 schema_version: 1
-feature: khoá nạp Zalo tự gỡ khi tiến trình giữ khoá đã chết hoặc khoá quá 2 giờ, và S05 tạm dừng thì bước thu không gọi Apify
+feature: khoá nạp Zalo tự gỡ khi tiến trình giữ khoá đã chết hoặc khoá quá 2 giờ; S05 tạm dừng thì bước thu không gọi Apify; lịch S05 xuống 2 lượt/tuần
 slug: khoa-nap-s05-paused
 owner: phanlemanh@gmail.com
 risk_tier: T2
@@ -23,8 +23,12 @@ Hai lời giao làn ZCode cùng sửa `scripts/apify-facebook-daily.sh` nên g�
 - **2510-4 S05 tạm dừng.** S05 đang `paused` (credit hết, Mạnh chốt 24/10) nhưng bước thu vẫn gọi Apify mỗi lượt, nhận 402
   và đốt lượt. Đồng thời tệp bọc từng nuốt mã thoát của bước thu.
 
-Source input: lời giao `claudedp-2510-9` và `claudedp-2510-4` (25/10), có trước khi code. Nhánh nghiệm thu = ZCode d60b8e6
-gộp `origin/main` 08afadf.
+- **2510-14 (G1, S05-B)** chồng trên cùng nhánh (`zcode/s05-b-lich` @ a92ed3f, vòng 2 sau một MỞ LẠI): lịch thu S05 từ 4 lượt/ngày
+  xuống 2 lượt/tuần (Thứ Ba + Thứ Sáu 06:00), trần 100 tin cả lượt, cửa sổ bài 4 ngày phủ khoảng cách lượt — vừa credit miễn phí
+  (Mạnh chốt phương án B, đánh giá observability 25/10).
+
+Source input: lời giao `claudedp-2510-9`, `claudedp-2510-4`, `claudedp-2510-14` (25/10), có trước khi code. Nhánh nghiệm thu =
+ZCode d60b8e6 gộp `origin/main` 08afadf, rồi gộp a92ed3f.
 
 ## Criteria
 
@@ -35,7 +39,9 @@ gộp `origin/main` 08afadf.
 - AC-5: Given S05 `active`, When bước thu chạy, Then nó đi qua cổng tới bước đọc token như trước; và khi DB không tới thì coi như active (log cảnh báo), không tự coi là paused.
 - AC-6: Given bước thu S05 thoát lỗi, When `apify-facebook-daily` chạy, Then vẫn nạp snapshot sẵn có, chạy transform và refresh, rồi thoát bằng mã của bước thu ở cuối lượt.
 - AC-7: Given nhánh, When chạy lại toàn bộ harness AU3 (ts-format, apify, chotot, lock) và bộ test `scripts/`, Then tất cả xanh.
-- AC-8: Given nhánh so với main, When liệt kê tệp đổi, Then chỉ có tệp của hai lời giao (bước thu S05, hai tệp bọc nạp, test, harness AU3) cùng hồ sơ này — không tệp transform hay app nào; hai tệp bọc qua `bash -n`.
+- AC-8: Given nhánh so với main, When liệt kê tệp đổi, Then chỉ có tệp của ba lời giao (bước thu S05, plist S05, hai tệp bọc nạp, test, harness AU3) cùng hồ sơ này — không tệp transform hay app nào; hai tệp bọc qua `bash -n`.
+- AC-9: Given plist thu S05, When đọc lịch, Then chỉ có hai mốc Thứ Ba và Thứ Sáu 06:00, không còn mốc hằng ngày, và plist khai trần 100 tin cùng cửa sổ bài ≥ 4 ngày.
+- AC-10: Given bước thu S05 dựng yêu cầu gửi Apify, When không có biến môi trường, Then trần 100 và cửa sổ 4 ngày (không còn 12 giờ); trần sai dạng hay âm thì rơi về 100; mỗi nhóm là một địa chỉ bắt đầu.
 
 ## Coverage
 
@@ -46,7 +52,8 @@ gộp `origin/main` 08afadf.
 
 - Hai job cùng gặp một khoá cũ đúng lúc: cả hai có thể cùng gỡ, job sau xoá khoá vừa lấy của job trước (kẽ hở đọc-rồi-xoá). Hai job chạy 00:00 và theo lịch S05 nên hiếm trùng; chấp nhận.
 - Khoá cũ kiểu thư mục rỗng (từ trước vòng này, không có pid/luc) vẫn chờ như cũ — gỡ tay một lần.
-- Bootout/cài lại plist, đổi lịch S05 (vòng G1 `claudedp-2510-14`), bật lại S05 (G2 ngày 7/11).
+- Bootout/cài lại plist trên máy thật, bật lại S05 — lời giao triển khai G2 ngày 7/11.
+- Trần cứng MỖI NHÓM: trần của Apify tính trên cả lượt (≤ ~50 tin/nhóm với 2 nhóm); tách mỗi nhóm một lượt đắt hơn — ghi hạt giống.
 - Gọi Apify thật — mọi phép thử chặn mạng.
 
 ## Notes
