@@ -5,7 +5,7 @@ slug: zalo-import-so-phan-nap-khong-do-gia
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-25T07:46:46Z
 design_doc: docs/superpowers/specs/2026-10-25-zalo-import-so-phan-nap-khong-do-gia-design.md
@@ -63,3 +63,8 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
 - Rào làn cho vòng làn Claude tương lai sửa phần nạp — xem dòng `descope` «bỏ rào làn tương lai».
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-2: Hồ sơ transform-zalo-boc-job-run vẫn mô tả E5 theo cách so cũ (merge-base); ca ZJ-AC-5 nay so trên merge commit của PR #96.
+  - Ngoài-3: Test mô phỏng nhánh ZCode lấy tệp bọc ở HEAD; nếu ZCode sửa đúng dòng vòng thử của phần nạp thì test này đỏ oan cho tới khi được sửa.
+  - Ngoài-5: Vế «ZJ-AC-5 không dùng merge-base» chỉ được kiểm bằng tìm chữ trong thân ca, không có đối chứng.

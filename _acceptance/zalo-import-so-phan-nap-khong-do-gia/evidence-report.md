@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 6a36f396a43ec59c26a7593d45455a08cb534a8e
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: zalo-import-so-phan-nap-khong-do-gia
