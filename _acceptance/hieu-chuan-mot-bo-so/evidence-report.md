@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2b5595317308b4b32295a93cdf3acb4e0de1edf1
+verified_commit: 3e89ba9fa76d37c79124676ffa1492be362ba7f1
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -177,3 +177,7 @@ Round 1: E1, E2, E5, E6, E7 pass (mang tiếp sang các vòng sau).
 Round 2: E3, E4 pass sau khi chạy lại (mang tiếp).
 Round 3: REJECT — phép đo bề rộng trang của AC-10 hằng đúng trên khung Ops (ba finding AC-10); chạm trần 3 lượt, đã được người duyệt mở tiếp.
 Round 4: E9 và E10 chạy lại trên commit 2b55953 (đo bề rộng vùng cuộn thân trang kèm đối chứng dương); các eval máy đều xanh, E8 giữ panel từ round 2. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main 1de42b8 (ON13 đổi thứ tự cột bảng Độ phủ) sau chữ ký
+run_id: repin-20261025T012735Z-77544
+sha: 3e89ba9fa76d37c79124676ffa1492be362ba7f1 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E8, E10 · diff chạm vật đo ngoài làn máy: E10 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-8, AC-10
