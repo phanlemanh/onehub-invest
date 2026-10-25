@@ -76,6 +76,8 @@ function makeTree(name, { copy = [], dirs = [], files = {} }) {
   mkdirSync(bin);
   writeFileSync(path.join(bin, "node"), NODE_SHIM); chmodSync(path.join(bin, "node"), 0o755);
   writeFileSync(path.join(bin, "docker"), DOCKER_SHIM); chmodSync(path.join(bin, "docker"), 0o755);
+  // sleep giả: tệp bọc thử nạp lại ECONNREFUSED 5×20s — ca «DB tắt hẳn» không chờ thật
+  writeFileSync(path.join(bin, "sleep"), "#!/bin/bash\nexit 0\n"); chmodSync(path.join(bin, "sleep"), 0o755);
   mkdirSync(path.join(root, ".home"));
   return root;
 }
@@ -124,7 +126,8 @@ const JOBS = {
     script: "scripts/apify-facebook-daily.sh",
     tree: {
       copy: ["scripts/apify-facebook-daily.sh", "scripts/lib/job-step.sh"],
-      dirs: ["collector/snapshots/hanoi/hanoi__zalo-agent__20261023T000000", "pipeline/logs"],
+      // mốc đúng khuôn TS_RE của tệp bọc (có gạch ngang) — khuôn cũ không gạch bị bỏ qua, import-airbnb không được gọi
+      dirs: ["collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-23T000000", "pipeline/logs"],
     },
     seq: ["apify-facebook-collector", "import-airbnb", "transform-fb", "refresh-bait-gap"],
   },
@@ -423,13 +426,16 @@ describe("AC-5 bước thật trên cổng canh", () => {
   });
 
   // chiều đỏ: bản sao refresh-bait-gap (không import tệp cục bộ) đặt cạnh node_modules thật
-  const mutDir = path.join(SCRATCH, "pipeline-mut");
+  const mutDir = path.join(SCRATCH, "mut-root", "pipeline");
   const mutate = (file, fn, src = "refresh-bait-gap.mjs") => {
     mkdirSync(mutDir, { recursive: true });
     // bản sao đặt cạnh node_modules + lib thật (push-ops-facts import ./lib/last-log-line.mjs từ PR #55)
     for (const d of ["node_modules", "lib"]) {
       if (!existsSync(path.join(mutDir, d))) symlinkSync(path.join(PIPE, d), path.join(mutDir, d));
     }
+    // …và ../scripts/lib thật (push-ops-facts import ../scripts/lib/freshness.mjs, ops-local.mjs)
+    const scripts = path.join(mutDir, "..", "scripts");
+    if (!existsSync(scripts)) symlinkSync(path.join(REPO, "scripts"), scripts);
     const s = readFileSync(path.join(PIPE, src), "utf8");
     const m = fn(s);
     assert.notEqual(m, s, `khuôn đột biến ${file} không khớp mã nguồn`);

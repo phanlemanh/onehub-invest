@@ -360,12 +360,17 @@ test("AC-8 DB hiện tại (chẩn đoán, không chặn)", async (t) => {
 const PIPE = path.join(HERE, "..", "pipeline");
 const SCRATCH = mkdtempSync(path.join(realpathSync(tmpdir()), "freshness-gt-"));
 
-/** Snapshot S06 đúng DATA-CONTRACT cho importer thật: manifest + sha256 + items gzip. */
-function chototSnapshot(name, { city, finishedAt, listIds }) {
+// source_id của ống S06 mà importer thật lọc (tên thư mục, manifest.source, item.source — PL1 #90). Đây là
+// mã ống đã có trong tên importer, không phải real_name; chỉ GT-AC-1 dùng, AC-7 vẫn đo bằng IDS canh.
+const S06_PIPE = "chotot-ads";
+
+/** Snapshot S06 đúng DATA-CONTRACT cho importer thật: tên `<city>__<ống>__<mốc>`, manifest + sha256 + items gzip. */
+function chototSnapshot(ts, { city, finishedAt, listIds }) {
+  const name = `${city}__${S06_PIPE}__${ts}`;
   const dir = path.join(SCRATCH, name);
   mkdirSync(dir, { recursive: true });
   const items = listIds.map((id) => ({
-    source: "chotot-ads",   // importer lọc theo trường này
+    source: S06_PIPE,   // importer lọc theo trường này
     payload: { list_id: id, region_v2: 0, category: 0, type: "s" },
     meta: { city },
     fetchedAt: finishedAt,
@@ -373,7 +378,7 @@ function chototSnapshot(name, { city, finishedAt, listIds }) {
   const gz = gzipSync(Buffer.from(JSON.stringify(items)));
   writeFileSync(path.join(dir, "items-0001.json.gz"), gz);
   writeFileSync(path.join(dir, "manifest.json"), JSON.stringify({
-    schemaVersion: 1, snapshotId: name, city, source: IDS.S06[0], finishedAt,
+    schemaVersion: 1, snapshotId: name, city, source: S06_PIPE, finishedAt,
     files: [{ name: "items-0001.json.gz", sha256: createHash("sha256").update(gz).digest("hex") }],
   }));
   return dir;
@@ -396,13 +401,16 @@ const noS06 = () => {
   const f = baseFixture();
   f.snapshots = f.snapshots.filter((x) => !x.id.includes("s06"));
   f.ads = [];
+  // importer thật ghi airbnb_snapshots.source = manifest.source — registry S06 phải mang đúng mã ống đó
+  f.registry.find((r) => r.code === "S06").ids = [S06_PIPE];
   return f;
 };
 
+// mốc trong tên = finishedAt: ago(40) = 2026-10-21T20:00Z, ago(10) = 2026-10-23T02:00Z
 describe("GT-AC-1 S06 importer thật", () => {
   test("GT-AC-1 importer thật nạp lại snapshot S06 cũ → stale, last = finishedAt", async (t) => {
     if (needDb(t)) return;
-    const a = chototSnapshot("hcmc__s06gt__old", { city: "hcmc", finishedAt: ago(40), listIds: [9001, 9002] });
+    const a = chototSnapshot("2026-10-21T200000", { city: "hcmc", finishedAt: ago(40), listIds: [9001, 9002] });
     const r = await withSchema(noS06(), async (schema) => {
       for (const run of [1, 2]) {
         const x = await importChotot(schema, a);
@@ -412,16 +420,17 @@ describe("GT-AC-1 S06 importer thật", () => {
       await client.query(`SET search_path TO "${schema}"`);
       try { return { nap, rows: await readFreshness(client, { now: NOW }) }; } finally { await client.query("RESET search_path"); }
     });
-    // tiền đề của lỗi: lượt nạp lại đã làm giờ nạp thành mới (importer ghi now())
-    assert.ok(Date.now() - new Date(r.nap).getTime() < 10 * 60e3, `importer phải ghi captured_at = giờ nạp (thấy ${r.nap})`);
+    // từ giu-captured-at (#87) importer ghi captured_at = finishedAt (giờ thu) — nạp lại không làm nó thành mới
+    assert.ok(r.nap, "importer phải nạp được hàng vào stg_chotot_ads (null = snapshot bị bỏ qua)");
+    assert.equal(new Date(r.nap).toISOString(), ago(40), `importer phải ghi captured_at = finishedAt (thấy ${r.nap})`);
     const s06 = one(r.rows, "S06", "hcmc");
-    assert.equal(s06.status, "stale", "S06/hcmc: nạp lại snapshot 40 giờ phải báo quá hạn dù captured_at vừa mới");
+    assert.equal(s06.status, "stale", "S06/hcmc: nạp lại snapshot thu 40 giờ trước phải báo quá hạn");
     assert.equal(s06.last, ago(40), "S06/hcmc: last phải là finishedAt của snapshot (giờ thu)");
   });
   test("GT-AC-1 đối chứng: importer thật nạp snapshot thu 10 giờ → fresh", async (t) => {
     if (needDb(t)) return;
-    const a = chototSnapshot("hcmc__s06gt__old2", { city: "hcmc", finishedAt: ago(40), listIds: [9101] });
-    const b = chototSnapshot("hcmc__s06gt__new", { city: "hcmc", finishedAt: ago(10), listIds: [9101] });
+    const a = chototSnapshot("2026-10-21T200000001", { city: "hcmc", finishedAt: ago(40), listIds: [9101] });
+    const b = chototSnapshot("2026-10-23T020000", { city: "hcmc", finishedAt: ago(10), listIds: [9101] });
     const rows = await withSchema(noS06(), async (schema) => {
       for (const d of [a, b]) { const x = await importChotot(schema, d); assert.equal(x.code, 0, x.err.slice(0, 800)); }
       await client.query(`SET search_path TO "${schema}"`);
