@@ -1,0 +1,48 @@
+schema_version: 1
+feature_slug: transform-zalo-boc-job-run
+# Ca «ZJ-AC-n» ở scripts/zalo-import-job.test.mjs: chép NGUYÊN scripts/zalo-import-daily.sh + scripts/lib/job-step.sh vào
+# cây tạm, node giả đầu PATH (ghi nhãn bước, hỏng theo FAIL_STEPS), HOME tạm, DATABASE_URL cổng đóng — không node thật,
+# không DB, không OpenClaw (luật zalo-safety).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-1': mọi bước lành → mã 0, lời gọi === ['import-airbnb','transform-zalo','refresh-bait-gap'], stderr không chứa 'JOB FAIL'"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-2' ma trận viết trước 3 dòng (transform-zalo:3 → 3; refresh-bait-gap:4 → 4; transform-zalo:3,refresh-bait-gap:5 → 3) — mỗi dòng: mã thoát đúng, lời gọi chứa cả transform-zalo và refresh-bait-gap, các dòng stderr bắt đầu 'JOB FAIL' BẰNG đúng danh sách 'JOB FAIL [zalo-import-daily] bước <nhãn> mã <n>' của các bước hỏng theo thứ tự; số dòng ma trận = 3"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-3': import-airbnb hỏng (stderr 'Error: boom', không ECONNREFUSED) → mã 1, lời gọi === ['import-airbnb'], stderr không 'JOB FAIL', pipeline/logs/apify-daily.state bằng mốc cũ đã đặt trước (không nhảy qua snapshot)"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-4': bản tệp bọc lấy bằng 'git show 146eca2:scripts/zalo-import-daily.sh' (assert khác bản hiện tại), chạy với transform-zalo:3 → mã 0 (thông điệp ghim 'bản cũ nuốt lỗi transform'); cùng cây với bản mới → mã 3"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-5': tiền tố của tệp bọc tới hết dòng 'fi' đóng khối 'if [ \"$FAILED\" != \"0\" ]' bằng đúng từng byte tiền tố cùng mốc của bản 146eca2; đối chứng: bản sao sửa một ký tự trong import_one thì phép so báo lệch"
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-6 rào': env của lần chạy có PATH = '<cây>/.shim-bin:/usr/bin:/bin', HOME dưới thư mục tạm và không có .local/node-*, DATABASE_URL cổng 9; mọi nhãn trong lời gọi của ZJ-AC-1..4 thuộc {import-airbnb, transform-zalo, refresh-bait-gap}"
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [docs/ops/runtime-map.md, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-7': docs/ops/runtime-map.md có một dòng bảng chứa 'com.oneinvest.zalo-import', 'scripts/zalo-import-daily.sh' và 'thoát ≠ 0 (mã của bước hỏng đầu)', và chuỗi \"grep 'JOB FAIL' pipeline/logs/zalo-import\""
