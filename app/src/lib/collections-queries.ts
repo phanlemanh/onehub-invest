@@ -389,7 +389,8 @@ export type ZaloGroupRow = {
   seen: number;
   passed: number;
   skipped: number;
-  accepted: number;
+  /** «Vào bảng thô»: null = nhóm đã qua cổng mà nhật ký không mang số tin vào (ON4) — không 0. */
+  accepted: number | null;
   lastEventAt: string | null;
   ownerAccount: string | null; // account đang sở hữu nhóm (config/directory)
 };
@@ -414,8 +415,9 @@ export async function readZaloAllowlist(): Promise<ZaloAllowlistEntry[]> {
 }
 
 /** Funnel cổng Kev theo nhóm từ hook log (dòng có tag group=). */
-function gateByGroup(text: string): Map<string, ZaloGroupRow> {
+export function gateByGroup(text: string): Map<string, ZaloGroupRow> {
   const m = new Map<string, ZaloGroupRow>();
+  const acceptedSeen = new Set<string>();
   for (const line of text.split("\n")) {
     const g = line.match(/group=(.+?)(?:\s+p=|$)/)?.[1];
     if (!g) continue;
@@ -440,12 +442,17 @@ function gateByGroup(text: string): Map<string, ZaloGroupRow> {
     row.seen++;
     if (line.includes(" post 202")) {
       row.passed++;
-      row.accepted += Number(line.match(/"accepted":(\d+)/)?.[1] ?? 0);
+      const n = line.match(/"accepted":(\d+)/)?.[1];
+      if (n != null) {
+        row.accepted = (row.accepted ?? 0) + Number(n);
+        acceptedSeen.add(g);
+      }
     } else if (/ skip /.test(line)) row.skipped++;
     const ts = line.slice(0, 24);
     if (/^\d{4}-\d{2}-\d{2}T/.test(ts)) row.lastEventAt = ts;
     m.set(g, row);
   }
+  for (const [g, row] of m) if (row.passed > 0 && !acceptedSeen.has(g)) row.accepted = null;
   return m;
 }
 

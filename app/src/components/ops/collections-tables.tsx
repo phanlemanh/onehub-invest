@@ -216,9 +216,10 @@ export function ZaloGroupsTable({
       },
       {
         id: "accepted",
-        accessorFn: (r) => r.accepted,
+        accessorFn: (r) => r.accepted ?? -1,
         header: ({ column }) => <DataGridColumnHeader title="Vào bảng thô" column={column} />,
-        cell: ({ row }) => fmtInt(row.original.accepted),
+        // null = đã qua cổng mà không biết số tin vào (ON4) — «—», không 0.
+        cell: ({ row }) => (row.original.accepted == null ? "—" : fmtInt(row.original.accepted)),
         size: 100,
         meta: NUM,
         enableSorting: true,
