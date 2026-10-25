@@ -159,7 +159,7 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 - **Đọc trên cloud**: `readOpsFacts()` (`app/src/lib/ops-facts.ts`) trả `state` `none` (chưa có dòng) · `fresh` (≤ 45′) ·
   `stale` (> 45′, kèm `measuredAt` lần đẩy cuối); từng khối có `state` riêng theo `measured_at` của khối, khối lỗi là
   `error`. Hằng `FACTS_STALE_MS` (45′ = 3 lượt cloud-sync) chỉ ở tệp này — đổi chu kỳ cloud-sync thì đổi hằng.
-  Trang hiện số: ON3 (/ops, /ops/collections), ON23 (lockdown), AU12 (độ phủ).
+  Trang hiện số: ON3 (/ops, /ops/collections), ON23 (lockdown), ON5 (luồng 7 ngày), ON4 (nhóm S03), AU12 (độ phủ).
 - Bản tin đi qua bộ soát tầng A (mục trên): tên nguồn thật trong khối nào cũng làm lượt đẩy dừng (`FACTS CHẶN … blocks.<khối>…`).
 - Bảng snapshot đọc không được thì `sourceRuns` cũ vẫn gửi vai trò từng mã, số lần chạy để `null` (chưa đo).
 
@@ -174,6 +174,7 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 | `/ops/collections` | Bản ghi 24h | `records24h` | «—» |
 | `/ops/collections` | Khoá an toàn (ô + lưới) | `lockdown` (ON23; tươi/cũ theo chính khối) | ô «—» + «Chưa kiểm được trên máy chủ», lưới 8/8 «Chỉ kiểm ở máy thu» (vàng) — khối lỗi cũng vậy |
 | `/ops/collections` | Máy móc: Kev gate, collector API | lớp «Cổng Kev :8009» / «Cổng nhận tin :9210» của `lockdown` (ON23) — cùng trạng thái với Khoá an toàn | «Chưa kiểm được» |
+| `/ops/collections` | Bảng nhóm S03: «đang bật N nhóm», «Vào bảng thô» theo nhóm | `s03` (ON4; N = hợp nhóm bật hiệu dụng mọi tài khoản, chỉ tên nhóm — không mã nhóm) | bảng không dựng, «nhóm S03» ở lại Alert gom; nhóm thiếu số tin vào «—», thiếu tên «Nhóm chưa có tên» |
 | `/ops/collections` | vùng còn lại (luồng, Cần chú ý, Zalo, xoay vòng…) | — không dựng trên cloud | một Alert «Phần còn lại của trang chưa có số trên máy chủ» |
 | `/ops/review` | số thẻ chờ theo loại | `reviewQueue` (chỉ số đếm) | «—»; thẻ chi tiết vẫn chỉ ở máy local |
 
@@ -185,6 +186,9 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 - Trên cloud `/ops/collections` chỉ dựng vùng đọc bản tin (hàng ô số + lưới sức khoẻ nguồn + lưới khoá an toàn + lưới job khi
   đã có bản tin); luồng 7 ngày, Cần chú ý, ống S03, xoay vòng, nhóm S03 gom về một Alert «Phần còn lại của trang chưa có số trên máy chủ» và trang không
   truy vấn bảng thô (`MACHINE_ONLY_REGIONS` trong `collections-view.tsx`). ON4/ON5 đưa dần các vùng ấy lên bằng khối bản tin.
+- «Nhóm bật» một định nghĩa (ON4): `effectiveEnabledGroups` (`app/src/lib/zalo-admin.ts`) ↔ `readS03Allowlist`
+  (`scripts/lib/ops-local.mjs`) — kế thừa cấp ngoài khi tài khoản không khai `groups`, bỏ `enabled:false`/`allow:false`, hợp
+  mọi tài khoản; dùng cho trang Thu thập máy thu, khối `s03` và `zaloAccounts[].enabledGroups` (badge trang Nguồn).
 - Danh sách 8 lớp khoá an toàn một chỗ: `LOCKDOWN_LAYERS` (`app/src/lib/ops-queries.ts`) — bên ghi `readLockdown` (`scripts/lib/ops-local.mjs`)
   phải giữ đúng thứ tự và chữ; `--mode mixed` của `ops-cloud-proto.mjs` dựng khối đủ true / false / null để chụp ảnh.
 
