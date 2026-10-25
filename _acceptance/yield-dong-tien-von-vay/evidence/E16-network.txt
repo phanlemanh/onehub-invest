@@ -1,8 +1,4 @@
 ### Result
-
-Note: 40 static requests not shown, run with --static option to see them.
----CONSOLE---
-### Result
 Total messages: 3 (Errors: 0, Warnings: 1)
 
 [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
