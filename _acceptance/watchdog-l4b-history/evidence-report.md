@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: ee232434e925ded560528b1a3e72b4b6124dc130
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: watchdog-l4b-history

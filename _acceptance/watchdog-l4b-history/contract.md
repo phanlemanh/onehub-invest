@@ -5,7 +5,7 @@ slug: watchdog-l4b-history
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by:
 approved_at:
 gate1_skipped: true
@@ -52,3 +52,9 @@ Hạng T3 vì chạm `scripts/zalo-watchdog.sh` (an toàn Zalo).
   DB), HOME giả, `launchctl/pkill/pgrep/osascript/curl/sleep` là stub đứng đầu PATH (kiểm stub thắng trước khi chạy). Không đọc/ghi
   `~/.openclaw`, `~/Library/Logs/openclaw` hay `/tmp/openclaw` thật.
 - Kiểm harness biết đỏ (trước verify): trên bộ canh của main, P1–P4 đều đỏ (tắt nhầm vì turn cũ, không WARN); xoay-that xanh ở cả hai.
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: ghi Known limits
+  - Ngoài-2: ghi Known limits
+- Known limits:
+  - Ngoài-1: Kiểm «có dòng WARN» của harness tự đạt nhờ cảnh báo cơ sở dữ liệu, không chứng minh WARN của bản sửa
+  - Ngoài-2: Đường dẫn log gateway chứa dấu hai chấm làm bộ canh mù hẳn với log đó và ghi cảnh báo mỗi chu kỳ
