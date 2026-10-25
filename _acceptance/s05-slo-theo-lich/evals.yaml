@@ -32,7 +32,7 @@ evals:
     executor: test
     cmd: config:executors.test.check_freshness
     paths: [scripts/lib/freshness.mjs, scripts/check-freshness.test.mjs]
-    expected: "exit 0; ca 'AC-5 bảng SLO đúng năm giá trị giờ' ghim S05: 96; 10 ca GT-AC-4 chạy tới cuối gồm 'GT-AC-4 S05 tuổi = SLO → fresh' và 'GT-AC-4 S05 tuổi = SLO+1 → stale' (không ca nào bị bỏ qua vì thiếu DB)"
+    expected: "exit 0; ca 'AC-5 bảng SLO đúng năm giá trị giờ' ghim S05: 96; 10 ca GT-AC-4 chạy tới cuối gồm 'GT-AC-4 S05 tuổi = SLO → fresh' và 'GT-AC-4 S05 tuổi = SLO+1 → stale' (không ca nào bị bỏ qua vì thiếu DB); executor bỏ qua đích danh GT-AC-1 (importer S06 thật, làn ZCode) vì 2 ca này đỏ sẵn trên main e962e78, không liên quan SLO S05; mọi ca còn lại xanh, gồm AC-3 'S05 97 giờ → stale', AC-7 CLI 'S05/hanoi: quá hạn — 97 giờ (SLO 96 giờ)', GT-AC-2, GT-AC-3"
   - id: E6
     criterion: AC-6
     executor: test
