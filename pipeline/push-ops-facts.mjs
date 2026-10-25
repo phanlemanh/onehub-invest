@@ -14,7 +14,7 @@ import { guardValues } from "./lib/tier-a-guard.mjs";
 import { tailLog } from "./lib/last-log-line.mjs";
 import { luong7, parseLog, zaloFlow } from "./lib/ops-flow.mjs";
 import { readFreshness } from "../scripts/lib/freshness.mjs";
-import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue } from "../scripts/lib/ops-local.mjs";
+import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue, readS03Allowlist } from "../scripts/lib/ops-local.mjs";
 
 const ROOT = process.env.ONEINVEST_ROOT ?? "/Users/manhphan/dev/one-invest";
 const INGEST_URL = process.env.INGEST_URL ?? "https://onehub-invest.vercel.app/api/v1/ops/ingest";
@@ -204,23 +204,18 @@ async function main() {
     })),
   ]);
 
-  // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud)
+  // Đọc danh sách tài khoản zalo từ config local (read-only cho cloud). ON4 (Hỏi-2 = A): nhóm bật từng tài khoản theo
+  // cùng một định nghĩa với trang Thu thập và khối s03 (`readS03Allowlist`) — kế thừa cấp ngoài, bỏ allow:false.
   let zaloAccounts = [];
+  let zaloCfg = null;
   try {
-    const zcfg = JSON.parse(await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"));
-    const z = zcfg?.channels?.zalouser ?? {};
-    const ids = new Set(["default"]);
-    for (const id of Object.keys(z.accounts ?? {})) ids.add(id);
-    zaloAccounts = [...ids].map((id) => {
+    zaloCfg = JSON.parse(await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"));
+    const z = zaloCfg?.channels?.zalouser ?? {};
+    const { byAccount } = readS03Allowlist(z);
+    zaloAccounts = [...byAccount].map(([id, enabledGroups]) => {
       const acc = id === "default" ? undefined : z.accounts?.[id];
-      // Sau multi-account fix, default groups nằm ở accounts.default.groups
-      // (top-level z.groups là bản cũ 4 nhóm — thiếu Duy Ka Masteri)
-      const groups = id === "default"
-        ? (z.accounts?.default?.groups ?? z.groups ?? {})
-        : (acc?.groups ?? {});
-      const enabled = Object.entries(groups).filter(([, v]) => v?.enabled !== false && v?.allow !== false).length;
       // NT2 Hỏi-1 = A: tên tài khoản thu là tầng A — không rời máy; cloud hiện mã tài khoản.
-      return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups: Array.from(Object.keys(groups).filter((k) => groups[k]?.enabled !== false)) };
+      return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups };
     });
   } catch { /* config không đọc được */ }
 

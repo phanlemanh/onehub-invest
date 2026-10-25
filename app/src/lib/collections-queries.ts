@@ -9,6 +9,7 @@ import { maskSourceNames, type SourceNameEntry } from "./mask-source-names";
 import { sourceLabel, type SourceRoles } from "./source-labels";
 import {
   directoryCacheIsFresh,
+  effectiveEnabledGroups,
   listZaloAccounts,
   readCachedDirectory,
   refreshZaloGroupDirectoryInBackground,
@@ -398,17 +399,14 @@ export type ZaloGroupRow = {
 export type ZaloAllowlistEntry = { groupId: string; enabled: boolean };
 
 /** Allowlist đọc runtime từ ~/.openclaw/openclaw.json — KHÔNG commit id vào
- * repo/migration (SPL ADR-0007: định danh nguồn thật ở tầng A, máy local). */
+ * repo/migration (SPL ADR-0007: định danh nguồn thật ở tầng A, máy local). Nhóm bật = hợp nhóm bật hiệu dụng của mọi
+ * tài khoản (ON4, `effectiveEnabledGroups`) — không đọc khoá `groups` cấp ngoài cũ. */
 export async function readZaloAllowlist(): Promise<ZaloAllowlistEntry[]> {
   try {
     const cfg = JSON.parse(
       await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"),
     );
-    const groups = cfg?.channels?.zalouser?.groups ?? {};
-    return Object.entries(groups).map(([groupId, v]) => ({
-      groupId,
-      enabled: Boolean((v as { enabled?: boolean })?.enabled),
-    }));
+    return effectiveEnabledGroups(cfg?.channels?.zalouser).union.map((groupId) => ({ groupId, enabled: true }));
   } catch {
     return [];
   }

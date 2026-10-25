@@ -40,7 +40,7 @@ type AccountCfg = {
   requireMention?: boolean;
   groups?: Record<string, GroupEntry>;
 };
-type ZalouserCfg = {
+export type ZalouserCfg = {
   enabled?: boolean;
   defaultAccount?: string;
   groupPolicy?: string;
@@ -155,13 +155,26 @@ function enabledKeys(groups: Record<string, GroupEntry>): string[] {
     .map(([k]) => k);
 }
 
+/** Mã tài khoản theo thứ tự hiển thị: `default` trước, rồi các tài khoản khai trong `accounts`. */
+function accountIds(z: ZalouserCfg | undefined): string[] {
+  const ids = new Set<string>(["default"]);
+  for (const id of Object.keys(z?.accounts ?? {})) ids.add(id);
+  return [...ids];
+}
+
+/** «Nhóm bật» (ON4, Hỏi-2 = A): nhóm bật hiệu dụng của từng tài khoản và hợp của chúng, trùng mã đếm một lần — MỘT định
+ * nghĩa cho trang Thu thập, khối `s03` và badge «N nhóm bật». Bản .mjs của bên ghi: `scripts/lib/ops-local.mjs`
+ * `readS03Allowlist` — sửa một bên thì sửa cả bên kia (phép đo `app/tests/nhom-s03-tren-cloud.test.tsx` AC-2). */
+export function effectiveEnabledGroups(z: ZalouserCfg | undefined): { byAccount: Map<string, string[]>; union: string[] } {
+  const byAccount = new Map(accountIds(z).map((id) => [id, enabledKeys(effectiveGroups(z, id).groups)]));
+  return { byAccount, union: [...new Set([...byAccount.values()].flat())] };
+}
+
 export async function listZaloAccounts(): Promise<ZaloAccount[]> {
   if (!isZaloAdminAvailable()) return [];
   const cfg = await readCfg();
   const z = cfg.channels?.zalouser;
-  const ids = new Set<string>(["default"]);
-  for (const id of Object.keys(z?.accounts ?? {})) ids.add(id);
-  return [...ids].map((accountId) => {
+  return accountIds(z).map((accountId) => {
     const eff = effectiveGroups(z, accountId);
     const acc = accountId === "default" ? undefined : z?.accounts?.[accountId];
     return {
