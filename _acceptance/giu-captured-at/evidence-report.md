@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: da2b2edd05357d1fff79169042246ee41ffed271
+verified_commit: 7a69841eee375c494d60cf81bb6adad9ab632cf3
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -165,3 +165,7 @@ Round 1: E1–E5 đạt. Ghi 4 phát hiện ngoài hợp đồng (1 medium, 3 lo
 ### Re-pin lần 1 — 2026-10-25, do gộp origin/main 3f09055 trước merge (lần 2)
 run_id: repin-20261025T041224Z-69848
 sha: da2b2edd05357d1fff79169042246ee41ffed271 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-25, do gộp origin/main 7d59ecd (sau #86)
+run_id: repin-20261025T041535Z-94768
+sha: 7a69841eee375c494d60cf81bb6adad9ab632cf3 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
