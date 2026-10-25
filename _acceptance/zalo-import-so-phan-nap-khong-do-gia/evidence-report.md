@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6a36f396a43ec59c26a7593d45455a08cb534a8e
+verified_commit: 880221ff856b7235150b58dfec551914bf5bb743
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -123,3 +123,7 @@ none — mọi eval nhiều lần chạy đều đồng nhất (cả năm eval �
 ## Iterations
 
 Round 1: E1, E2, E3, E4, E5 đều đạt; không eval nào đỏ. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-25, do gộp main b0600b9 (#102) sau chữ ký
+run_id: repin-20261025T085819Z-17431
+sha: 880221ff856b7235150b58dfec551914bf5bb743 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
