@@ -161,7 +161,7 @@ async function measure(fn) {
 /** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A. */
 export function factsChan(payload, names) {
   if (!names?.length) return ["FACTS CHẶN [tầng A] không có danh sách tên để soát (source_registry) — không gửi"];
-  const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
+  const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/, /^blocks\.s03\.groups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
   (payload.zaloAccounts ?? []).forEach((a, i) => {
     if (a?.name != null) out.push(`FACTS CHẶN [tầng A] zaloAccounts[${i}].name tên tài khoản thu`);
   });
@@ -219,6 +219,25 @@ async function main() {
     });
   } catch { /* config không đọc được */ }
 
+  // ON4 (ADR-0014, Hỏi-1 = A): khối s03 — N nhóm bật theo `readS03Allowlist` và số đếm từng nhóm; CHỈ tên nhóm (tầng C),
+  // không mã nhóm, không tài khoản. Handler thiếu tên kênh thì ghi mã nhóm vào group= → tên ấy thành null.
+  const s03Block = await measure(async () => {
+    const z = zaloCfg?.channels?.zalouser;
+    if (!z) throw new Error("cấu hình OpenClaw không đọc được hoặc thiếu channels.zalouser");
+    const { union } = readS03Allowlist(z);
+    const ids = new Set(union.map((k) => k.replace(/^group:/, "")));
+    const isId = (name) => /^\d{15,}$/.test(name) || ids.has(name) || name.startsWith("group:");
+    return {
+      allowlistEnabled: union.length,
+      groups: zalo.groups.map((g) => ({
+        name: g.name && !isId(g.name) ? g.name : null,
+        seen: g.seen, passed: g.passed, skipped: g.skipped, accepted: g.accepted,
+        realPosts7d: g.realPosts7d, mockPosts7d: g.mockPosts7d, isMockOnly: g.isMockOnly,
+        lastSeenAt: g.lastSeenAt, lastEventAt: g.lastEventAt,
+      })),
+    };
+  });
+
   const payload = {
     pushedAt: new Date().toISOString(),
     funnel, health, jobs, sourceRuns,
@@ -233,6 +252,7 @@ async function main() {
       records24h: records24hBlock,
       reviewQueue: reviewQueueBlock,
       luong7: luong7Block,
+      s03: s03Block,
     },
   };
   // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
