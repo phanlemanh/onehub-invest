@@ -28,6 +28,14 @@ const markup = (html) => html.replace(/<script[\s\S]*?<\/script>/g, " ");
 /** Location tương đối, đã giải mã (%2C…). */
 const rel = (loc) => (loc ? decodeURIComponent(loc.replace(/^https?:\/\/[^/]+/, "")) : String(loc));
 const count = (s, re) => (s.match(re) ?? []).length;
+/** Đoạn HTML từ chỗ khớp `open` tới thẻ đóng `</tag>` đầu tiên sau đó (vùng không lồng cùng thẻ). */
+const region = (html, open, tag) => {
+  const i = html.search(open);
+  if (i < 0) return "";
+  const j = html.indexOf(`</${tag}>`, i);
+  return j < 0 ? "" : html.slice(i, j);
+};
+const M = /href="\/methodology"/g;
 
 // Id của 15 ô rút từ chính tệp nội dung trang (bên ghi), không viết tay.
 const defsSrc = readFileSync(path.join(root, "app/src/components/marketing/methodology-definitions.tsx"), "utf8");
@@ -56,17 +64,25 @@ try {
   const main = mk.slice(mk.indexOf("<main"), mk.indexOf("</main>"));
   check(main.length > 0 && count(main, /\saria-expanded="/g) === 0, `/methodology 0 aria-expanded trong <main> (thật: ${count(main, /\saria-expanded="/g)}; cả trang ${count(mk, /\saria-expanded="/g)} — của navbar)`);
   check(mk.includes("Doanh thu ÷ tổng đêm khả dụng"), "/methodology câu trả lời RevPAR có trong HTML lúc tải");
-  check(count(mk, /href="\/methodology"/g) >= 1, "/methodology chân trang có href=\"/methodology\"");
+  check(count(region(mk, /<footer[\s>]/, "footer"), M) >= 1, "/methodology chân trang có href=\"/methodology\"");
 
   // AC-2: link nội bộ trỏ /methodology, không còn /phuong-phap ở đâu trong HTML.
   const home = await get("/");
   check(home.status === 200, `/ 200 (thật: ${home.status})`);
-  const nHome = count(markup(home.html), /href="\/methodology"/g);
-  check(nHome >= 4, `/ có href="/methodology" ≥ 4 chỗ (navbar, Cách dùng, hỏi đáp, chân trang — thật: ${nHome})`);
+  // Ma trận viết trước: từng vùng một, không đếm tổng (một vùng mất link không được bù bằng vùng khác).
+  const hm = markup(home.html);
+  for (const [ten, vung, can] of [
+    ["navbar", region(hm, /<header[\s>]/, "header"), 1],
+    ["Cách dùng", region(hm, /<section[^>]*aria-labelledby="how-title"/, "section"), 2],
+    ["hỏi đáp", region(hm, /<section[^>]*id="hoi-dap"/, "section"), 1],
+    ["chân trang", region(hm, /<footer[\s>]/, "footer"), 1],
+  ]) {
+    check(vung.length > 0 && count(vung, M) >= can, `/ vùng ${ten} có href="/methodology" ≥ ${can} (thật: ${vung.length ? count(vung, M) : "không thấy vùng"})`);
+  }
   check(!home.html.includes("/phuong-phap"), "/ 0 chỗ /phuong-phap");
   const login = await get("/login");
   check(login.status === 200, `/login 200 (thật: ${login.status})`);
-  check(count(markup(login.html), /href="\/methodology"/g) >= 1, '/login có href="/methodology"');
+  check(count(markup(login.html), M) >= 1, '/login có href="/methodology"');
   check(!login.html.includes("/phuong-phap"), "/login 0 chỗ /phuong-phap");
   check(!m.html.includes("/phuong-phap"), "/methodology 0 chỗ /phuong-phap");
 } catch (e) {

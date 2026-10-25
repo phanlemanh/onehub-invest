@@ -189,7 +189,12 @@ test("TCM-AC-5 nền hero: 0 màu cứng; mọi màu là var(--color-<sắc>-<b�
   const { FrameBackdrop } = await import("../src/components/marketing/frame-backdrop");
   const out = await html(<FrameBackdrop />);
   const used = [...out.matchAll(/(?:stop-color|stroke):var\(--color-([a-z]+-\d+)\)/g)].map((m) => m[1]);
-  assert.ok(used.length >= 14, `chỉ thấy ${used.length} chỗ màu từ biến palette`);
+  // Ma trận viết trước: mỗi <stop> một màu + mỗi phần tử mang stroke một màu — tất cả phải là biến palette.
+  const stops = (out.match(/<stop\b/g) ?? []).length;
+  const strokes = (out.match(/style="[^"]*stroke:/g) ?? []).length;
+  assert.equal(stops, 15, `FrameBackdrop có 2 + 7 + 6 = 15 stop (thật: ${stops})`);
+  assert.equal(strokes, 1, `FrameBackdrop có 1 nhóm stroke (thật: ${strokes})`);
+  assert.equal(used.length, stops + strokes, `${stops + strokes} chỗ màu, chỉ ${used.length} chỗ là var(--color-…)`);
   assert.deepEqual(missingInTheme([...new Set(used)]), [], "biến palette không có trong theme Tailwind");
   assert.equal(hardColors(out).length, 0, "HTML vẽ ra vẫn có màu cứng");
 
@@ -201,14 +206,15 @@ test("TCM-AC-5 nền hero: 0 màu cứng; mọi màu là var(--color-<sắc>-<b�
 // ── TCM-AC-6: thẻ thị trường ───────────────────────────────────────────────────────────────────
 
 const PALETTE = /^(?:dark:)?(?:text|bg|border|from|via|to)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}(?:\/\S+)?$/;
-/** Chuỗi trong nháy kép có lớp palette mà thiếu lớp dark: — trả các chuỗi vi phạm. */
+/** Lớp palette sáng không có lớp dark: cùng tiện ích trong cùng chuỗi — trả `<chuỗi> ⟶ <lớp lẻ>`. */
 function unpairedPalette(src: string) {
-  return [...src.matchAll(/"([^"\n]*)"/g)]
-    .map((m) => m[1])
-    .filter((s) => {
-      const toks = s.split(/\s+/).filter((t) => PALETTE.test(t));
-      return toks.length > 0 && !toks.some((t) => t.startsWith("dark:"));
-    });
+  const out: string[] = [];
+  for (const m of src.matchAll(/"([^"\n]*)"/g)) {
+    const toks = m[1].split(/\s+/).filter((t) => PALETTE.test(t));
+    const darkUtils = new Set(toks.filter((t) => t.startsWith("dark:")).map((t) => t.slice(5).split("-")[0]));
+    for (const t of toks) if (!t.startsWith("dark:") && !darkUtils.has(t.split("-")[0])) out.push(`${m[1]} ⟶ ${t}`);
+  }
+  return out;
 }
 const market = (id: string, series: number[]) =>
   ({ id, name: id, href: `/vn/${id}`, revpar: 100000, occupancy: 0.2, listings: 10, series, currency: "VND" }) as never;
@@ -232,7 +238,14 @@ test("TCM-AC-6 dải doanh thu: clip-path vẽ từ series của chính thẻ; p
 
   const src = readFileSync(join(APP, "src/components/marketing/market-cards.tsx"), "utf8");
   assert.deepEqual(unpairedPalette(src), [], "chuỗi lớp palette thiếu cặp dark:");
-  assert.deepEqual(unpairedPalette('const G = "from-indigo-400 to-indigo-600"'), ["from-indigo-400 to-indigo-600"]);
+  assert.deepEqual(unpairedPalette('const G = "from-indigo-400 to-indigo-600"'), [
+    "from-indigo-400 to-indigo-600 ⟶ from-indigo-400",
+    "from-indigo-400 to-indigo-600 ⟶ to-indigo-600",
+  ]);
+  // Chuỗi có MỘT lớp dark: vẫn bị bắt nếu tiện ích khác thiếu cặp.
+  assert.deepEqual(unpairedPalette('"bg-indigo-100 text-indigo-700 dark:bg-indigo-950"'), [
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 ⟶ text-indigo-700",
+  ]);
 });
 
 test("TCM-AC-6 trống: 0 thị trường → Empty với đúng 1 hành động trỏ /methodology#nguon", async () => {

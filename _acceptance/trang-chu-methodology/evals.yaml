@@ -30,7 +30,7 @@ evals:
     executor: script
     cmd: config:executors.script.trang_chu_methodology_smoke
     paths: [app/src/app/(marketing)/**, app/src/components/marketing/**, app/src/components/shell/site-footer.tsx, app/src/components/auth/login-form.tsx, scripts/smoke-trang-chu-methodology.mjs]
-    expected: "exit 0; HTML server: 'ok / có href=\"/methodology\" (navbar + Cách dùng + hỏi đáp + chân trang ≥ 4 chỗ), 0 chỗ /phuong-phap'; 'ok /login có href=\"/methodology\", 0 chỗ /phuong-phap'; 'ok /methodology chân trang có href=\"/methodology\"'"
+    expected: "exit 0; HTML server, đếm TỪNG vùng (không đếm tổng): 'ok / vùng navbar có href=\"/methodology\" ≥ 1', 'ok / vùng Cách dùng … ≥ 2', 'ok / vùng hỏi đáp … ≥ 1', 'ok / vùng chân trang … ≥ 1', '/ 0 chỗ /phuong-phap'; chiều đỏ: một link Cách dùng đổi đích → 'FAIL / vùng Cách dùng … (thật: 1)'; 'ok /login có href=\"/methodology\", 0 chỗ /phuong-phap'; 'ok /methodology chân trang có href=\"/methodology\"'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-3
@@ -58,14 +58,14 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/marketing/frame-backdrop.tsx, app/src/components/marketing/hero.tsx, app/tests/trang-chu-methodology.test.tsx]
-    expected: "exit 0; ca 'TCM-AC-5 nền hero' đọc frame-backdrop.tsx + hero.tsx → 0 chỗ khớp màu cứng (/#[0-9a-f]{3,8}\\b|rgba?\\(|hsla?\\(|oklch\\(/i, bỏ comment); vẽ FrameBackdrop → mọi stop/stroke lấy màu từ style dạng var(--color-<sắc>-<bậc>) (≥ 14 chỗ) và MỖI biến ấy có định nghĩa trong node_modules/tailwindcss/theme.css (quan hệ, không đo chuỗi-có-mặt); chiều đỏ cùng ca: bộ quét trên chuỗi '<stop stopColor=\"#005aee\" />' trả 1 chỗ, và biến bịa 'var(--color-blue-1234)' bị bộ đối chiếu theme báo thiếu"
+    expected: "exit 0; ca 'TCM-AC-5 nền hero' đọc frame-backdrop.tsx + hero.tsx → 0 chỗ khớp màu cứng (/#[0-9a-f]{3,8}\\b|rgba?\\(|hsla?\\(|oklch\\(/i, bỏ comment); vẽ FrameBackdrop → đúng 15 <stop> + 1 nhóm stroke (ma trận viết trước) và số chỗ màu dạng var(--color-<sắc>-<bậc>) BẰNG 16, MỖI biến ấy có định nghĩa trong node_modules/tailwindcss/theme.css (quan hệ, không đo chuỗi-có-mặt); chiều đỏ cùng ca: bộ quét trên chuỗi '<stop stopColor=\"#005aee\" />' trả 1 chỗ, và biến bịa 'var(--color-blue-1234)' bị bộ đối chiếu theme báo thiếu"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-6
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/marketing/market-cards.tsx, app/tests/trang-chu-methodology.test.tsx]
-    expected: "exit 0; ca 'TCM-AC-6 dải doanh thu' vẽ MarketCards với 2 thị trường series khác nhau → mỗi thẻ có clip-path polygon mà toạ độ y từng điểm = 100 − v/max·85 tính từ CHÍNH series của thẻ đó (2 thẻ khác nhau); mọi chuỗi className của tệp chứa lớp palette (from/via/to/bg-<sắc>-<bậc>) đều có lớp dark: trong cùng chuỗi; ca 'TCM-AC-6 trống' MarketCards markets=[] → data-slot=empty, tiêu đề 'Chưa có thị trường nào có số', đúng 1 phần tử a/button và nó trỏ '/methodology#nguon'; đối chứng cùng ca: markets có 1 phần tử → không có data-slot=empty"
+    expected: "exit 0; ca 'TCM-AC-6 dải doanh thu' vẽ MarketCards với 2 thị trường series khác nhau → mỗi thẻ có clip-path polygon mà toạ độ y từng điểm = 100 − v/max·85 tính từ CHÍNH series của thẻ đó (2 thẻ khác nhau); MỖI lớp palette sáng (from/via/to/bg/text-<sắc>-<bậc>) có một lớp dark: cùng tiện ích trong cùng chuỗi (chiều đỏ: \"bg-indigo-100 text-indigo-700 dark:bg-indigo-950\" → báo text-indigo-700); ca 'TCM-AC-6 trống' MarketCards markets=[] → data-slot=empty, tiêu đề 'Chưa có thị trường nào có số', đúng 1 phần tử a/button và nó trỏ '/methodology#nguon'; đối chứng cùng ca: markets có 1 phần tử → không có data-slot=empty"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-7
@@ -133,36 +133,13 @@ evals:
       - "Đặt cạnh ảnh trước evidence/design-pass/home-truoc--desktop-1280--light.png và --dark.png"
     expected: "Nền hero vẫn là nền xanh có dải sáng như ảnh trước (khác biệt chỉ ở sắc, không mất dải, không đổi bố cục), ở sáng lẫn tối; dải diện tích chàm của thẻ thị trường đọc rõ trên nền sáng và tối; 375 px không cuộn ngang."
     evidence_required: [run_id, verifier, verified_at, observed, screenshot]
-  - id: E21
-    criterion: AC-7
-    executor: ui-check
-    layer: ui-observed
-    paths: [app/src/app/(marketing)/error.tsx, app/src/app/(marketing)/layout.tsx, app/src/components/states/page-error.tsx]
-    steps:
-      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460"
-      - "Tạo TẠM app/src/app/(marketing)/design-pass-loi-trang/page.tsx chỉ ném Error; mở /design-pass-loi-trang (Escape đóng lớp phủ lỗi của dev server nếu có): 1280 sáng → evidence/E21-step1.png, 1280 tối → evidence/E21-step2.png, 375 sáng → evidence/E21-step3.png"
-      - "Ghi thứ tự trong DOM: header (navbar) đứng trước role=alert, role=alert đứng trước footer"
-      - "XOÁ tệp tạm ngay sau khi chụp và ghi lại rằng đã xoá (git status không còn đường design-pass-loi-trang)"
-    expected: "Navbar ở trên và chân trang ở dưới vẫn hiện; giữa chúng là Alert 'Không tải được dữ liệu' kèm mã lỗi và nút 'Thử lại', đọc được ở sáng, tối và 375 px; thứ tự DOM header < alert < footer."
-    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
-  - id: E22
-    criterion: AC-8
-    executor: ui-check
-    layer: ui-observed
-    paths: [app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx]
-    steps:
-      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460"
-      - "Tạo TẠM app/src/app/design-pass-loi-toan-cuc/page.tsx chỉ ném Error (ngoài mọi nhóm, không error.tsx nào phía trên); mở nó (Escape đóng lớp phủ lỗi của dev server nếu có): 1280 sáng → evidence/E22-step1.png, 1280 tối → evidence/E22-step2.png, 375 sáng → evidence/E22-step3.png"
-      - "XOÁ tệp tạm ngay sau khi chụp và ghi lại rằng đã xoá"
-    expected: "Trang lỗi toàn cục: Alert 'One Invest không mở được' + mã lỗi + 'Thử lại' + 'Về trang chủ', không navbar, đọc được ở sáng, tối và 375 px (nền và chữ đổi theo giao diện tối)."
-    evidence_required: [run_id, verifier, verified_at, observed, screenshot]
   - id: E19
     criterion: AC-8
     executor: script
     layer: backend-effect
     cmd: config:executors.script.trang_chu_loi_db_smoke
     paths: [app/src/app/global-error.tsx, app/src/components/states/app-crash.tsx, app/src/app/(marketing)/layout.tsx, scripts/smoke-trang-chu-loi-db.mjs]
-    expected: "exit 0; bản build thật (next build) chạy next start ở cổng 3462 với DATABASE_URL trỏ cổng chết; với / và /methodology: 'ok … server trả 500 với tài liệu lỗi của Next, không phải chữ Internal Server Error trần' (vỏ <html id=\"__next_error__\">), rồi trong TRÌNH DUYỆT thật (playwright-cli): 'ok … <html lang=\"vi\">', 'ok … Alert «One Invest không mở được» kèm mã lỗi', 'ok … nút Thử lại + link Về trang chủ href=\"/\"', 'ok … trang lỗi toàn cục (không navbar, tiêu đề «Có lỗi · One Invest»)'; đối chứng dương cùng lượt: dev :3460 với DB sống → trình duyệt KHÔNG thấy «One Invest không mở được», có navbar; 'ok server tạm ở :3462 đã tắt'; chiều đỏ: chạy với SMOKE_DEAD_DATABASE_URL trỏ DB sống → FAIL «Alert … (thật: )»"
+    expected: "exit 0; bản build thật (next build) chạy next start ở một cổng trống (hệ điều hành cấp, hoặc SMOKE_PORT) với DATABASE_URL trỏ cổng chết; với / và /methodology: 'ok … server trả 500 với tài liệu lỗi của Next, không phải chữ Internal Server Error trần' (vỏ <html id=\"__next_error__\">), rồi trong TRÌNH DUYỆT thật (playwright-cli): 'ok … <html lang=\"vi\">', 'ok … Alert «One Invest không mở được» kèm mã lỗi', 'ok … nút Thử lại + link Về trang chủ href=\"/\"', 'ok … trang lỗi toàn cục (không navbar, tiêu đề «Có lỗi · One Invest»)'; đối chứng dương cùng lượt: dev :3460 với DB sống → trình duyệt KHÔNG thấy «One Invest không mở được», có navbar; ảnh global-error 1280 sáng, 1280 tối, 375 sáng ghi ở .acceptance-runs/trang-chu-methodology/e19/ (dòng 'ảnh: …'); 'ok server tạm ở :<cổng> đã tắt'; chiều đỏ: chạy với SMOKE_DEAD_DATABASE_URL trỏ DB sống → FAIL «Alert … (thật: )»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E17
     criterion: AC-4

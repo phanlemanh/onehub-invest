@@ -1,18 +1,33 @@
 #!/usr/bin/env node
 // smoke-trang-chu-loi-db.mjs — _acceptance/trang-chu-methodology (UI2, AC-8): DB sập thì khách thấy trang lỗi toàn cục tiếng Việt.
-// Chạy `next start` trên BẢN BUILD có sẵn (executor gọi `next build` ngay trước) ở cổng 3462 với DATABASE_URL trỏ một
+// Chạy `next start` trên BẢN BUILD có sẵn (executor gọi `next build` ngay trước) ở một cổng trống với DATABASE_URL trỏ một
 // cổng chết: layout marketing đọc DB (phiên + chỉ mục tìm kiếm) nên hỏng trước trang → app/global-error.tsx phải bắt.
 // Bản build trả tài liệu lỗi tối thiểu (<html id="__next_error__">, mã 500) rồi TRÌNH DUYỆT vẽ global-error (client
 // component) — nên phần nhìn thấy đo bằng trình duyệt thật (playwright-cli), không đo HTML server (đo S3 25/10).
 // Đối chứng dương: bản dev của dãy (BASE_URL, mặc định :3460, DB sống) KHÔNG hiện trang lỗi ấy. Chỉ đọc; server tạm tắt ở finally.
 // Dùng: (cd app && npx next build) && node scripts/smoke-trang-chu-loi-db.mjs  (exit 0 = đạt)
 import { execFileSync, spawn } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const APP = path.join(root, "app");
-const PORT = Number(process.env.SMOKE_PORT ?? 3462);
+// Cổng: SMOKE_PORT nếu khai, không thì một cổng trống do hệ điều hành cấp — cổng cố định từng trùng dev server của phiên
+// khác (3462, lượt chấm r1 25/10).
+const freePort = () =>
+  new Promise((res, rej) => {
+    const srv = createServer();
+    srv.once("error", rej);
+    srv.listen(0, () => {
+      const { port } = srv.address();
+      srv.close(() => res(port));
+    });
+  });
+const PORT = Number(process.env.SMOKE_PORT ?? (await freePort()));
+// Ảnh trang lỗi toàn cục (sáng/tối/375) cho người duyệt — thư mục tạo phẩm của lượt chạy, không ghi vào hồ sơ.
+const SHOTS = path.join(root, ".acceptance-runs/trang-chu-methodology/e19");
 const DEAD_DB = process.env.SMOKE_DEAD_DATABASE_URL ?? "postgres://127.0.0.1:1/x";
 const DEV = process.env.BASE_URL ?? "http://localhost:3460";
 const CRASH = "One Invest không mở được";
@@ -89,6 +104,19 @@ try {
     check(v.alert.includes(CRASH) && /Mã lỗi: \d+/.test(v.alert), `${p} → trình duyệt: Alert «${CRASH}» kèm mã lỗi (thật: ${v.alert.slice(0, 60)})`);
     check(v.retry && v.home === "/", `${p} → trình duyệt: nút Thử lại + link Về trang chủ href="/" (thật: retry=${v.retry} home=${v.home})`);
     check(!v.nav && v.title === "Có lỗi · One Invest", `${p} → trình duyệt: trang lỗi toàn cục (không navbar, tiêu đề «Có lỗi · One Invest» — thật: nav=${v.nav} «${v.title}»)`);
+  }
+  mkdirSync(SHOTS, { recursive: true });
+  for (const [ten, w, h, scheme] of [
+    ["1280-sang", 1280, 900, "light"],
+    ["1280-toi", 1280, 900, "dark"],
+    ["375-sang", 375, 812, "light"],
+  ]) {
+    cli("resize", String(w), String(h));
+    cli("set-color-scheme", scheme);
+    seen(`${base}/`);
+    const f = path.join(SHOTS, `global-error-${ten}.png`);
+    cli("screenshot", "--filename", f);
+    console.log(`ảnh: ${path.relative(root, f)}`);
   }
   // Đối chứng dương: DB sống → cùng phép đo trình duyệt KHÔNG thấy trang lỗi toàn cục.
   try {

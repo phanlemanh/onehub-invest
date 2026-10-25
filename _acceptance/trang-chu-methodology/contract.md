@@ -69,8 +69,9 @@ Quét hình thái (preset entity-feature, chân sản phẩm: routes.md/catalog.
   [thước CE: luật ReUI «mỗi vùng dữ liệu có trống/tải/lỗi» + bảng ST trong design doc] → AC-3, AC-6, AC-7, AC-8;
   trạng thái **tải** của trang chủ: Later (descope có tên).
 - Trục **khổ × giao diện**: 1280 sáng | 1280 tối | 375 sáng [thước CE: `onehub-ui/loop.md` bước nhìn] → AC-4, AC-5,
-  AC-7, AC-8 (mỗi AC một eval ui-check: E16, E20, E21, E22); Empty thẻ thị trường chỉ đo ở jsdom (E9) — DB local
-  luôn có thị trường nên không chụp được.
+  AC-8: E16 (Phương pháp), E20 (hero + thẻ thị trường) là ui-check; trang lỗi toàn cục chụp sáng/tối/375 trong E19 (bản
+  build riêng); lỗi trang marketing: ảnh design-pass S1 + vị trí ranh giới E10 (ui-check tạo route tạm trên cây dùng chung
+  đua với suite — bỏ ở S4-r1); Empty thẻ thị trường chỉ đo ở jsdom (E9) — DB local luôn có thị trường.
 - Trục **lớp đo**: HTTP (redirect, HTML server, bản build với DB chết) | cây mã (quét chuỗi, lint) | DOM jsdom (lỗi,
   Empty) | mắt (ảnh) → mỗi AC có ít nhất một lớp máy; AC-4/5/7/8 thêm lớp mắt; AC-8 thêm lớp backend-effect (E19).
 - Cross-cutting: luật cổng (Invest công khai, không số AirDNA, chỉ nhãn tầng C) — trang Phương pháp giữ nguyên câu
