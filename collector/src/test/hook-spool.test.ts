@@ -45,7 +45,7 @@ test.after(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-test("ZC6 vòng 3: khuôn log cũ ' post 202 '; drain dừng ở file hỏng đầu; 4xx → rejected không gửi lại", async () => {
+test("ZC6 vòng 3: khuôn log cũ ' post 202 '; drain dừng ở file hỏng đầu; 4xx vĩnh viễn (400/413/422) → rejected không gửi lại", async () => {
   const root3 = join(tmpdir(), `zc6v3-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const home = join(root3, "home");
   mkdirSync(join(home, ".openclaw", "credentials"), { recursive: true });
@@ -192,4 +192,107 @@ test("ZC6 tự chứa: từ thư mục NGOÀI repo — collector chết 2 tin �
   collector.close();
   kevStuck.closeAllConnections?.();
   kevStuck.close();
+});
+
+test("2410-23: 401 giữ lại spool (log 'spool-held <status>' MỘT dòng mỗi lượt), collector sống lại thì gửi được; collector chậm 3s/file → trần 10s CẢ LƯỢT, phần còn lại xả lượt sau", async () => {
+  const root4 = join(tmpdir(), `zc241023-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const home = join(root4, "home");
+  mkdirSync(join(home, ".openclaw", "credentials"), { recursive: true });
+  writeFileSync(join(home, ".openclaw", "credentials", "oneinvest-agent.key"), "k1");
+  const spoolDir = join(root4, "spool");
+  const logFile = join(home, ".openclaw", "logs", "oneinvest-zalo-pipe.log");
+  mkdirSync(join(home, ".openclaw", "logs"), { recursive: true });
+  const mkHook = async () => {
+    const d = join(root4, `hook${Math.random().toString(36).slice(2, 8)}`);
+    mkdirSync(d, { recursive: true });
+    copyFileSync(join(thisDir, "../../openclaw/handler.js"), join(d, "handler.js"));
+    return ((await import(pathToFileURL(join(d, "handler.js")).href)).default) as (ctx: unknown) => Promise<void>;
+  };
+
+  const sink: string[] = [];
+  let mode: "held" | "ok" | "slow" = "held";
+  const collector = createServer((req, res) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (c: Buffer) => chunks.push(c));
+    req.on("end", () => {
+      const which = (JSON.parse(Buffer.concat(chunks).toString()) as { messages: Msg[] }).messages[0].text;
+      if (mode === "held" && which.startsWith("held")) {
+        res.writeHead(401, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "unauthorized" }));
+        return;
+      }
+      const ok = () => {
+        sink.push(which);
+        res.writeHead(202, { "content-type": "application/json" });
+        res.end(JSON.stringify({ accepted: 1, duplicates: 0 }));
+      };
+      if (mode === "slow") setTimeout(ok, 3_000);
+      else ok();
+    });
+  });
+  await new Promise<void>((d) => collector.listen(0, "127.0.0.1", d));
+  const kevFast = createServer((req, res) => {
+    req.resume();
+    req.on("end", () => {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ answers: { is_bds: { noul: 0.5 } } }));
+    });
+  });
+  await new Promise<void>((d) => kevFast.listen(0, "127.0.0.1", d));
+
+  const oldEnv = { ...process.env };
+  process.env.HOME = home;
+  process.env.ONEINVEST_API_URL = `http://127.0.0.1:${(collector.address() as AddressInfo).port}`;
+  process.env.ONEINVEST_KEV_URL = `http://127.0.0.1:${(kevFast.address() as AddressInfo).port}`;
+  process.env.ONEINVEST_HOOK_SPOOL = spoolDir;
+  process.env.ONEINVEST_HOOK_DRAIN_BUDGET_MS = "10000";
+  const h = await mkHook();
+  const mkEv = (text: string, ts: string) => ({
+    event: { channelId: "zalouser", content: text, timestamp: Date.parse(ts), metadata: { channelName: "g-241023" } },
+  });
+  const spoolJsons = () => readdirSync(spoolDir).filter((f) => f.endsWith(".json"));
+
+  // (1) 2 file 401 → giữ lại spool (KHÔNG rejected/), log 'spool-held 401' đúng MỘT dòng
+  mkdirSync(spoolDir, { recursive: true });
+  for (const [f, text] of [["H1.json", "held-1"], ["H2.json", "held-2"]] as const) {
+    writeFileSync(join(spoolDir, f), JSON.stringify({ group: "g-241023", message: { text, ts: "2026-10-25T04:00:0" + (f === "H1.json" ? "1" : "2") + ":00Z" } }));
+  }
+  await h(mkEv("tin mới A", "2026-10-25T04:05:00Z"));
+  assert.equal(spoolJsons().length, 2, "2 file 401 vẫn ở spool");
+  assert.ok(!existsSync(join(spoolDir, "rejected")), "401 KHÔNG vào rejected/");
+  assert.ok(sink.some((t) => t === "tin mới A"), "tin mới vẫn đi thẳng");
+  const log1 = readFileSync(logFile, "utf8");
+  assert.equal((log1.match(/spool-held 401/g) ?? []).length, 1, "log 'spool-held 401' đúng MỘT dòng mỗi lượt (không mỗi tệp)");
+
+  // (2) collector hồi phục (202) → lượt sau gửi được file từng 401
+  mode = "ok";
+  await h(mkEv("tin B", "2026-10-25T04:10:00Z"));
+  assert.equal(spoolJsons().length, 0, "spool trống sau khi collector sống lại");
+  assert.ok(sink.some((t) => t === "held-1") && sink.some((t) => t === "held-2"), "2 file held được gửi ở lượt sau");
+
+  // (3) collector chậm 3s/file với 20 file → trần 10s CẢ LƯỢT: lượt < 20s, phần còn lại lượt sau
+  mode = "slow";
+  for (let i = 1; i <= 20; i++) {
+    const ten = String(i).padStart(2, "0");
+    writeFileSync(join(spoolDir, `S${ten}.json`), JSON.stringify({ group: "g-241023", message: { text: `sl-${ten}`, ts: `2026-10-25T04:2${Math.floor(i / 10)}:00:0${i % 10}Z` } }));
+  }
+  const t0 = Date.now();
+  await h(mkEv("tin C", "2026-10-25T04:30:00Z"));
+  const elapsed = Date.now() - t0;
+  const conLai = spoolJsons().length;
+  assert.ok(elapsed < 20_000, `lượt hook phải < 20 giây (được ${elapsed}ms)`);
+  assert.ok(conLai > 0 && conLai < 20, `trần lượt phải để lại một phần cho lượt sau (còn ${conLai})`);
+  // xả nốt qua các lượt sau — mỗi lượt cũng chịu trần
+  for (let round = 1; spoolJsons().length > 0 && round <= 8; round++) {
+    await h(mkEv(`round ${round}`, `2026-10-25T04:3${round}:00Z`));
+  }
+  assert.equal(spoolJsons().length, 0, "xả hết sau các lượt kế");
+  assert.equal(sink.filter((t) => t.startsWith("sl-")).length, 20, "đủ 20 file chậm tới collector");
+
+  collector.closeAllConnections?.();
+  collector.close();
+  kevFast.closeAllConnections?.();
+  kevFast.close();
+  rmSync(root4, { recursive: true, force: true });
+  Object.assign(process.env, oldEnv);
 });
