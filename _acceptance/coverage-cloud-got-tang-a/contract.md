@@ -5,8 +5,10 @@ slug: coverage-cloud-got-tang-a
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi hạng T3
 surfaces: [api]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-25-coverage-cloud-got-tang-a-design.md
+approved_by: Mạnh
+approved_at: 2026-10-25
 lo_trinh_ma: AU12
 ---
 
