@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 88ec8fa497fc712b2252b7154e68dd461a9f047e
+verified_commit: 6f152ccd2a4585947b9e4fe2e13b5fd5d1ce8ab4
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -117,3 +117,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 Round 1: E1, E2, E3, E4 đều PASS; hai finding trong hợp đồng ở AC-3 (smoke để sót user admin tạm và phiên khi app không lên) được trả về implementation.
 Round 2: sau nhát sửa dọn phiên tạm của smoke, E3 và E4 chạy lại và PASS cùng các lệnh suite hồi quy; E1 và E2 carry-forward từ round 1 vì delta không chạm paths của hai eval này.
 
+
+### Re-pin lần 1 — 2026-10-25, do gộp main #75 (ON3) chạm jobs-grid.tsx
+run_id: repin-20261025T003030Z-40154
+sha: 6f152ccd2a4585947b9e4fe2e13b5fd5d1ce8ab4 · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng
