@@ -71,14 +71,20 @@ async function postOne(key, group, message) {
 }
 
 /**
- * Xả spool (vòng 3 claudedp-2310-5):
+ * Xả spool (vòng 3 claudedp-2310-5; 2410-23 claudedp):
  * - DỪNG ở file hỏng ĐẦU TIÊN (collector treo → mỗi file hết 8s; chờ tuần tự
  *   cả hàng làm gateway chờ theo) và CAP SPOOL_DRAIN_MAX file mỗi lượt (50).
- * - Lỗi 4xx (trừ 408/429 — tạm thời) gửi lại KHÔNG BAO GIỜ được: chuyển file
- *   sang spool/rejected/ + log status — không chặn hàng, không gửi lại vĩnh viễn.
- * - Mạng/timeout/5xx (status 0/5xx/408/429): giữ lại đợi lượt sau.
+ * - 2410-23: chỉ 400/413/422 là 4xx VĨNH VIỄN → rejected/ (không chặn hàng,
+ *   không gửi lại). 401/403/404 và mọi 4xx khác (kể cả 408/429) là TẠM THỜI —
+ *   giữ lại spool thử lượt sau, log 'spool-held <status>' MỘT dòng mỗi lượt.
+ * - 2410-23: TRẦN THỜI GIAN cho CẢ LƯỢT xả (mặc định 10s từ đầu lượt,
+ *   ONEINVEST_HOOK_DRAIN_BUDGET_MS) — hết trần thì dừng xả, phần còn lại để
+ *   lượt sau; tin mới vẫn gửi một lần với timeout hiện có.
+ * - Mạng/timeout/5xx (status 0/5xx): giữ lại đợi lượt sau.
  */
 const SPOOL_DRAIN_MAX = 50;
+const SPOOL_DRAIN_BUDGET_MS = Number(process.env.ONEINVEST_HOOK_DRAIN_BUDGET_MS ?? 10_000);
+const REJECT_4XX = new Set([400, 413, 422]);
 const SPOOL_REJECTED = join(SPOOL_DIR, "rejected");
 async function drainSpool(key) {
   let files = [];
@@ -87,8 +93,10 @@ async function drainSpool(key) {
   } catch {
     return; // chưa có spool
   }
-  let sent = 0;
+  const batDau = Date.now();
+  const giuLai = new Set(); // log 'spool-held <status>' một dòng mỗi lượt
   for (const f of files.slice(0, SPOOL_DRAIN_MAX)) {
+    if (Date.now() - batDau >= SPOOL_DRAIN_BUDGET_MS) break; // hết trần lượt — phần còn lại để lượt sau
     let rec;
     try {
       rec = JSON.parse(await readFile(join(SPOOL_DIR, f), "utf8"));
@@ -98,18 +106,26 @@ async function drainSpool(key) {
     const r = await postOne(key, rec.group, rec.message);
     if (r.ok) {
       await rm(join(SPOOL_DIR, f)).catch(() => {});
-      sent++;
       continue;
     }
     if (r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429) {
-      // 4xx vĩnh viễn — chuyển rejected, KHÔNG chặn hàng
-      await mkdir(SPOOL_REJECTED, { recursive: true }).catch(() => {});
-      await rename(join(SPOOL_DIR, f), join(SPOOL_REJECTED, f)).catch(() => {});
-      await log(`spool-rejected ${r.status} ${r.body.slice(0, 40)} file=${f}`);
+      if (REJECT_4XX.has(r.status)) {
+        // vĩnh viễn — chuyển rejected, KHÔNG chặn hàng
+        await mkdir(SPOOL_REJECTED, { recursive: true }).catch(() => {});
+        await rename(join(SPOOL_DIR, f), join(SPOOL_REJECTED, f)).catch(() => {});
+        await log(`spool-rejected ${r.status} ${r.body.slice(0, 40)} file=${f}`);
+        continue;
+      }
+      // 401/403/404 + 4xx khác (2410-23): tạm thời — giữ file, không chặn hàng
+      giuLai.add(r.status);
       continue;
     }
     // collector treo/lỗi tạm thời — DỪNG ở file hỏng đầu, đợi lượt sau
-    return;
+    // (break, không return: log 'spool-held' đã thu trong lượt vẫn phải ra)
+    break;
+  }
+  for (const st of [...giuLai].sort((a, b) => a - b)) {
+    await log(`spool-held ${st}`);
   }
 }
 
