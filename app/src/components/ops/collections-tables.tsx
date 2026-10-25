@@ -96,7 +96,7 @@ function groupStatusBadge(lastSeenAt: string | null) {
   const hours = (Date.now() - new Date(lastSeenAt).getTime()) / 3600000
   if (hours <= 24) return <Badge variant="success-light">Hoạt động</Badge>
   if (hours <= 72) return <Badge variant="warning-light">Im {Math.floor(hours)}h</Badge>
-  return <Badge variant="warning-light">Im {Math.floor(hours / 24)} ngày — kiểm tra bị mời ra hoặc đổi tên</Badge>
+  return <Badge variant="warning-light">Im {Math.floor(hours / 24)} ngày</Badge>
 }
 
 export function ZaloGroupsTable({
@@ -115,8 +115,8 @@ export function ZaloGroupsTable({
         accessorKey: "name",
         header: ({ column }) => <DataGridColumnHeader title="Nhóm" column={column} />,
         // Tên nhóm là tầng C (Mạnh chốt 24/10, sửa đổi ADR-0007) — không đánh data-tier-a.
-        cell: ({ row }) => <span className="truncate" translate="no">{row.original.name}</span>,
-        size: 260,
+        cell: ({ row }) => <span className="whitespace-normal break-words" translate="no">{row.original.name}</span>,
+        size: 160,
         enableSorting: false,
       },
       {
@@ -124,7 +124,7 @@ export function ZaloGroupsTable({
         accessorFn: (r) => r.lastSeenAt ?? "",
         header: "Trạng thái",
         cell: ({ row }) => groupStatusBadge(row.original.lastSeenAt),
-        size: 200,
+        size: 150,
       },
       {
         id: "seen",
