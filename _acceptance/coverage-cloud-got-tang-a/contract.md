@@ -5,7 +5,7 @@ slug: coverage-cloud-got-tang-a
 owner: phanlemanh@gmail.com
 risk_tier: T3      # lộ trình ghi hạng T3
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-25-coverage-cloud-got-tang-a-design.md
 approved_by: Mạnh
 approved_at: 2026-10-25
@@ -75,3 +75,7 @@ Quét không gian tiêu chí ngay trong thiết kế theo các trục (dòng `ap
 ## Notes
 
 - Chạy sau ON4 trên nhánh cắt từ main e6d5d02 (đã có #100). Không chạm `pipeline/push-ops-facts.mjs`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-25:
+  - Ngoài-1: Route chỉ kiểm hàng độ tươi có mã nguồn; một hàng có mã mà mang trạng thái lạ hay thiếu số ngưỡng vẫn được trả ra như thể đã đo.
+  - Ngoài-2: Một hàng chỉ có mã mà thiếu các số còn lại vẫn trả kèm cờ «tươi» hoặc «cũ» với các ô trống, thay vì «Chỉ đo ở máy thu».
+  - Ngoài-4: Ca kiểm «bỏ kiểm khuôn bị bắt» gộp mọi lỗi thành 500 mà không ghim thông điệp — một bản sao không nạp được cũng làm ca này xanh.

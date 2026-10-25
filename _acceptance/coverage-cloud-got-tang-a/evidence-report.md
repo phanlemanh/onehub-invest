@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: coverage-cloud-got-tang-a
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 1946b60f674c2ad12c602829148521436090ec3a
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: coverage-cloud-got-tang-a
@@ -132,7 +132,7 @@ Hội đồng ĐỀ XUẤT PASS; phiếu bầu dưới đây chỉ có tính tha
   judged_by: judge-subagent (fresh context), đề xuất panel: domain-correctness, operational-feasibility, spec-alignment
   verdict: PASS
   rationale: Cả ba lens cùng thấy trên máy chủ mọi nhánh không có số đều trả state none, rows null, note «Chỉ đo ở máy thu»; cờ lấy từ measured_at của khối; phản hồi chỉ gồm CoverageRow và cờ.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-25 — Đạt
 
 Phiếu từng lens:
 
