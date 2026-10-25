@@ -98,13 +98,15 @@ export const MACHINE_ONLY_REGIONS = ["Cần chú ý", "ống S03", "xoay vòng",
 const NEEDS_FACTS_REGIONS = ["Luồng 7 ngày", "tác vụ"]
 
 /** Cloud (ON3, ADR-0014): chỉ dựng vùng đọc bản tin máy thu — ô số, lưới sức khoẻ nguồn, lưới khoá an toàn (khối
- * `lockdown`, ON23; chưa có khối thì 8 lớp «Chỉ kiểm ở máy thu»), bảng luồng 7 ngày (khối `luong7`, ON5) và lưới job (hai
- * vùng sau chỉ khi đã có bản tin). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0
+ * `lockdown`, ON23; chưa có khối thì 8 lớp «Chỉ kiểm ở máy thu»), bảng luồng 7 ngày (khối `luong7`, ON5), bảng nhóm S03
+ * (khối `s03`, ON4) và lưới job (luồng và job chỉ khi đã có bản tin, nhóm S03 chỉ khi có khối). Mọi vùng đo trực tiếp trên máy thu gộp về một Alert, để không vùng nào hiện «ổn», số 0
  * hay màu đạt khi máy chủ không đo được nó. */
 function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, cloudDays = [] }: CollectionsData & { cloud: CloudOpsView }) {
   const slo = feedSloSummary(feedHealth)
   const stale = cloud.state === "stale"
   const lockdown = cloud.lockdown
+  // Khối `s03` (ON4): có thì bảng nhóm dựng từ số máy thu đẩy lên; không có thì «nhóm S03» ở lại Alert gom.
+  const s03 = cloud.s03
   return (
     <div className="flex flex-col gap-6" data-slo-summary={sloSummaryKey(slo)}>
       <PageHeader
@@ -133,6 +135,7 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
           funnelMeasured: cloud.state !== "none",
           lockdown: lockdown ? { stale: lockdown.stale } : null,
           flowShown: cloud.state !== "none",
+          s03Shown: s03 !== null,
         }}
       />
       <FeedsGrid feeds={feedHealth} stale={stale} />
@@ -147,9 +150,18 @@ function CloudCollections({ funnel, jobs, feedHealth, nowMs, roles = {}, cloud, 
         stale={lockdown?.stale ?? false}
         machineOnly={!lockdown}
       />
+      {s03 ? (
+        <div id="nhom-s03" className="scroll-mt-4">
+          <ZaloGroupsTable rows={s03.groups} allowlist={[]} roles={roles} cloud={{ allowlistEnabled: s03.allowlistEnabled, stale: s03.stale }} />
+        </div>
+      ) : null}
       <div id="tren-may-thu" className="scroll-mt-4">
         <LocalOnlyAlert title="Phần còn lại của trang chưa có số trên máy chủ">
-          {[...MACHINE_ONLY_REGIONS, ...(cloud.state === "none" ? NEEDS_FACTS_REGIONS : [])].join(", ")} đo trực tiếp trên máy thu — xem ở cổng Ops trên máy thu.
+          {[
+            ...MACHINE_ONLY_REGIONS.filter((r) => !(s03 && r === "nhóm S03")),
+            ...(cloud.state === "none" ? NEEDS_FACTS_REGIONS : []),
+          ].join(", ")}{" "}
+          đo trực tiếp trên máy thu — xem ở cổng Ops trên máy thu.
         </LocalOnlyAlert>
       </div>
       {cloud.state === "none" ? null : <JobsGrid jobs={jobs} stale={stale} />}

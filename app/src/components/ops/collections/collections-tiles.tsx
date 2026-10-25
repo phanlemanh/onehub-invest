@@ -16,8 +16,8 @@ import { sloSummaryKey } from "@/lib/freshness"
 import { FEED_STATE, feedSloSummary, feedState } from "./feed-status"
 import { SegmentBar, StatCard } from "./section"
 
-/** Trên máy chủ vùng nhóm S03 không dựng — nút trỏ Alert «chưa có số trên máy chủ» (collections-view). Bảng luồng 7 ngày
- * dựng trên máy chủ khi đã có bản tin (ON5, `flowShown`) — nút luồng trỏ về bảng. */
+/** Trên máy chủ vùng chưa dựng thì nút trỏ Alert «chưa có số trên máy chủ» (collections-view). Bảng luồng 7 ngày dựng khi
+ * đã có bản tin (ON5, `flowShown`), bảng nhóm S03 khi có khối `s03` (ON4, `s03Shown`) — nút trỏ về bảng. */
 const CLOUD_ANCHOR = "#tren-may-thu"
 
 export function CollectionsTiles({
@@ -38,7 +38,7 @@ export function CollectionsTiles({
   /** Trên máy chủ (ON3): ô nào chưa có số thì «—»; `stale` = số là lần đo cuối, hiện mờ. Khoá an toàn đọc khối `lockdown`
    * (ON23): có khối → như máy thu, `lockdown.stale` theo mốc đo của khối; không khối → «—» kèm «Chưa kiểm được trên máy
    * chủ» (ON3 Hỏi-1 = A). Vắng = máy thu, đo trực tiếp. */
-  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean; funnelMeasured: boolean; lockdown: { stale: boolean } | null; flowShown?: boolean }
+  cloud?: { feedsMeasured: boolean; records24h: number | null; stale: boolean; funnelMeasured: boolean; lockdown: { stale: boolean } | null; flowShown?: boolean; s03Shown?: boolean }
 }) {
   const s03 = sourceLabel("S03", roles)
   const states = feeds.map(feedState)
@@ -92,7 +92,7 @@ export function CollectionsTiles({
         total={cloud && !cloud.funnelMeasured ? undefined : fmtInt(funnel.today.messages)}
         basis={cloud && !cloud.funnelMeasured ? "Chưa có số" : `${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
         muted={muted}
-        action={{ label: `Xem nhóm ${s03}`, href: cloud ? CLOUD_ANCHOR : "#nhom-s03" }}
+        action={{ label: `Xem nhóm ${s03}`, href: cloud && !cloud.s03Shown ? CLOUD_ANCHOR : "#nhom-s03" }}
       >
         {cloud && !cloud.funnelMeasured ? null : <SegmentBar
           label={`Tin ${s03} hôm nay`}
