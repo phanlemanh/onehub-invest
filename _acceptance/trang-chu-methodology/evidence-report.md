@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: af67b7d8990d3e938f6fc7cabae4e015e5ec2e6b
+verified_commit: 25b497892d873b6e9db1396d920e256fc0cd7c10
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -283,3 +283,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 
 Round 1: E19 BLOCKED — cổng 3462 bị tiến trình khác giữ nên smoke bản build DB chết không chạy được ca nào; không phải lỗi code. Suite test:lint-rules đỏ ở ca phủ route, nghi do hai thư mục route tạm của E21/E22 còn trên đĩa lúc chạy. Baseline bị chặn hạ tầng.
 Round 2: không eval nào đỏ. Smoke E19 đã lấy cổng trống do hệ điều hành cấp và chạy hết; suite test:lint-rules xanh sau khi bỏ route tạm. E21 và E22 bị xoá khỏi evals (ảnh lỗi toàn cục nay do smoke E19 ghi). E2, E12, E14, E16, E17, E18, E20 mang sang từ round 1 vì delta không chạm paths của chúng. Baseline vẫn bị chặn hạ tầng.
+
+### Re-pin lần 1 — 2026-10-25, do hoá cũ do gộp main #75
+run_id: repin-20261025T004528Z-64975
+sha: 25b497892d873b6e9db1396d920e256fc0cd7c10 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E15, E16, E20 · diff chạm vật đo ngoài làn máy: E15 — chưa chứng lại, đi vòng S4 delta
