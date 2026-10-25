@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 09d2cd2cbf0500006c61a3a0a7acbb8343430c1d
+verified_commit: b7faa555f09ea1c9c2bbace536c71f61d4474017
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -186,3 +186,7 @@ sha: b5ae62763bc48c2c28ea1c6cb2ecde228895db38 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-25, do ghim lại sau gộp main (PR #84)
 run_id: repin-20261025T033221Z-12070
 sha: 09d2cd2cbf0500006c61a3a0a7acbb8343430c1d · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · AC không có chốt máy: AC-7, AC-9
+
+### Re-pin lần 3 — 2026-10-25, do ghim lại sau gộp main (PR #85)
+run_id: repin-20261025T035252Z-48333
+sha: b7faa555f09ea1c9c2bbace536c71f61d4474017 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · diff chạm vật đo ngoài làn máy: E7, E9 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-7, AC-9
