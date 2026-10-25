@@ -1,9 +1,10 @@
 // backfill-zalo-media.mjs — nạp lại meta.mediaFiles (N1, DATA-CONTRACT v2) cho
 // snapshot zalo-agent v2+ có bài chưa mang stg_zalo_posts.media_files.
 //
-// CHỈ đụng snapshot v2+ còn thiếu: import lại upsert `captured_at = now()`, chạy
-// lại cả 299 snapshot v1 sẽ làm lệch số "bài thật 7 ngày" của push-ops-facts.
-// Raw bất biến, importer idempotent (ON CONFLICT post_id) → chạy lại an toàn.
+// CHỈ đụng snapshot v2+ còn thiếu: chạy lại cả 299 snapshot v1 tốn giờ vô ích.
+// 2410-1 v2: importer giờ upsert captured_at = LEAST(cũ, giờ thu snapshot) —
+// chạy lại KHÔNG còn đặt now(), độ tươi an toàn. Raw bất biến, importer
+// idempotent (ON CONFLICT post_id) → chạy lại an toàn.
 //
 // Dùng: node backfill-zalo-media.mjs [--check] [snapshots-dir]
 //   --check: chỉ đo, không ghi — exit 1 khi còn bài có ảnh chưa nạp.
