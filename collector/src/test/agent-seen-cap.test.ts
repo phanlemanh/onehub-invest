@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { createServer } from "node:http";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -152,6 +152,71 @@ test("HTTP trần lô: >1000 tin/lô → 413 rõ ràng; đúng 1000 → 202", as
     const body = (await ok.json()) as { accepted: number };
     assert.equal(body.accepted, 1000);
   } finally {
+    http.close();
+  }
+});
+
+test("2510-2 MỞ LẠI: nạp state CÓ ID TRÙNG (bản cũ [...seen, ...newIds]) — id vẫn khử trùng sau lần cắt cap, state ra không trùng", async () => {
+  const { root, state } = fresh();
+  // lấy sourceId THẬT của "tin đặc biệt" từ một server tạm
+  const tam = await createAgentServer({
+    snapshotRoot: root, stateDir: `${state}-goc`, city: "hanoi", keys: ["k1"], flushAfterItems: 10_000,
+  });
+  tam.ingest(one("tin đặc biệt"), "Bearer k1");
+  const mg = await tam.flush();
+  assert.ok(mg, "flush tạm phải ghi snapshot");
+  const [idX] = await snapshotIds(root, "hanoi", mg.snapshotId);
+  assert.ok(idX, "lấy được id của tin đặc biệt");
+
+  // state kiểu CŨ: idX xuất hiện 2 lần (bản cũ đầu hàng, bản mới cuối) —
+  // 5000 dòng, 4999 id duy nhất (đúng dạng file thật 24/10: 5000/4991)
+  mkdirSync(state, { recursive: true });
+  const gia = Array.from({ length: 4998 }, (_, i) => `gia-${i}`);
+  writeFileSync(join(state, "agent-seen.json"), JSON.stringify([idX, ...gia, idX]));
+
+  const s = await createAgentServer({
+    snapshotRoot: root, stateDir: state, city: "hanoi", keys: ["k1"], flushAfterItems: 10_000,
+  });
+  // 2 tin mới đẩy seenOrder vượt 5000 đúng 1 (sau bỏ trùng) → cắt đúng bản cũ nhất
+  s.ingest(one("tin mới A"), "Bearer k1");
+  s.ingest(one("tin mới B"), "Bearer k1");
+  await s.flush();
+
+  // bản sao MỚI của idX còn trong cửa sổ → gửi lại "tin đặc biệt" PHẢI bị khử trùng
+  const lai = s.ingest(one("tin đặc biệt"), "Bearer k1");
+  assert.equal(lai.body.duplicates, 1, "id từng trùng vẫn khử trùng sau lần cắt (bản mới còn trong cửa sổ)");
+  assert.equal(lai.body.accepted, 0);
+
+  const persisted = readState(state);
+  assert.equal(persisted.length, 5000, "state ghi về đúng 5000");
+  assert.equal(new Set(persisted).size, 5000, "state ghi ra KHÔNG còn id trùng");
+});
+
+test("2510-2 MỞ LẠI: HTTP thân null / chuỗi → 400 (hết 500 khiến hook spool gửi lại vĩnh viễn)", async () => {
+  const { root, state } = fresh();
+  const s = await createAgentServer({
+    snapshotRoot: root, stateDir: state, city: "hanoi", keys: ["k1"], flushAfterItems: 10_000,
+  });
+  const http = createServer((req, res) => {
+    s.handle(req, res).catch(() => {});
+  });
+  await new Promise<void>((done) => http.listen(0, "127.0.0.1", done));
+  const port = (http.address() as { port: number }).port;
+  const post = (raw: string) =>
+    fetch(`http://127.0.0.1:${port}/agent-report`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer k1" },
+      body: raw,
+    });
+  try {
+    const rNull = await post("null");
+    assert.equal(rNull.status, 400, "null là JSON hợp lệ — phải 400, không 500");
+    const rChuoi = await post('"một chuỗi"');
+    assert.equal(rChuoi.status, 400, "chuỗi không phải object — 400");
+    const rBinhThuong = await post(JSON.stringify(one("tin qua http")));
+    assert.equal(rBinhThuong.status, 202, "lô binh thường vẫn 202");
+  } finally {
+    http.closeAllConnections?.();
     http.close();
   }
 });

@@ -104,7 +104,14 @@ export async function createAgentServer(opts: AgentServerOptions) {
   if (stateFile) {
     try {
       const arr = JSON.parse(await readFile(stateFile, "utf8")) as string[];
-      for (const id of arr) {
+      // 2510-2 MỞ LẠI: bản state CŨ ghi [...seen, ...newIds] có id TRÙNG —
+      // nạp thô làm seenOrder dài hơn seen; khi cắt cap xoá MỘT bản thì id
+      // biến mất khỏi seen dù bản sao mới còn trong hàng → mất khử trùng,
+      // gửi lại được nhận thêm và tự lặp. Bỏ trùng lúc nạp, GIỮ LẦN CUỐI.
+      const lanCuoi = new Map<string, number>();
+      arr.forEach((id, i) => lanCuoi.set(id, i));
+      for (const [i, id] of arr.entries()) {
+        if (lanCuoi.get(id) !== i) continue;
         seen.add(id);
         seenOrder.push(id);
       }
@@ -349,6 +356,12 @@ export async function createAgentServer(opts: AgentServerOptions) {
       body = JSON.parse(await readBody(req as unknown as { on: Function }));
     } catch {
       return json(400, { error: "JSON không hợp lệ" });
+    }
+    // 2510-2 MỞ LẠI: null là JSON hợp lệ — đọc .messages trên null ném
+    // TypeError → 500, hook spool coi 5xx là tạm thời nên giữ tin gửi lại
+    // mãi. Thân không phải object → 400 ngay.
+    if (!body || typeof body !== "object") {
+      return json(400, { error: "thân yêu cầu phải là object JSON" });
     }
     // Trần lô (claudedp-2510-2): chặn TRƯỚC ingest — lô khổng lồ không đầy
     // buffer/seen; 413 kèm giới hạn để agent chia nhỏ gửi lại.
