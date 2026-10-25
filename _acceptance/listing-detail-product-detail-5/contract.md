@@ -5,7 +5,7 @@ slug: listing-detail-product-detail-5
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-25-listing-detail-product-detail-5-design.md
 approved_by: Mạnh
 approved_at: 2026-10-25T10:40:01Z
@@ -96,6 +96,13 @@ Source input: `docs/plan/lo-trinh.json` hàng UI5; ô Cổng Đáng `_acceptance
 - Áp quy định khung ảnh (3:2 + 1:1) cho Đã lưu, So sánh, thẻ deal Ops — theo dần ở hàng của từng trang (Mạnh 25/10); UI5 chỉ ghi luật vào catalog và áp cho gallery listing.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Bảng so sánh trên trang listing tên «Listing tương tự», từ điển sản phẩm gọi là «Listing so sánh» — hai tên cho một thứ tới khi đổi nhãn đồng loạt.
+  - Ngoài-2: Cùng trang viết số phòng ngủ hai kiểu: «2 phòng ngủ» ở hộp Đặc điểm, «2 PN» ở bảng so sánh.
+  - Ngoài-4: Rê chuột lên ảnh nhỏ thì ảnh sáng dần (mờ → rõ) thay vì đổi màu theo chuẩn hệ thiết kế.
+  - Ngoài-5: Smoke trình duyệt đo bản chạy ở cổng 3460 mà không kiểm đó có phải bản của nhánh này.
+  - Trong hợp đồng (S4-r2, AC-5): Test jsdom không bắt được nút đêm bị đưa ra khỏi thứ tự Tab; chỉ smoke Chromium chứng phím Tab vào được ô đêm (một ô).
 
 - Bản chạy cho bằng chứng: dev server cổng riêng **3460** của dãy U1 (`.claude/launch.json` cấu hình `app-3460`); smoke
   `scripts/smoke-listing-detail.mjs` mặc định `BASE_URL=http://localhost:3460`.
