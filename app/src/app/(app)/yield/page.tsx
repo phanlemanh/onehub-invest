@@ -34,8 +34,8 @@ const num = (v: string | undefined, fallback: number, min: number, max: number) 
 /**
  * Ước tính lợi suất một căn (IA §3.2, "Rentalizer" VN). Báo cáo tính ở server
  * từ tham số URL → chia sẻ được. Giá bán/thuê dài hạn là dữ liệu MÔ PHỎNG (G1).
- * Mục «Dòng tiền vốn vay» (#financing, tham số eq/rate/term) nhận phần của /dau-tu cũ;
- * link cũ /<country>/<market>/dau-tu chuyển 301 về đây với `area=<mã thị trường>`.
+ * Mục «Dòng tiền vốn vay» (#financing, tham số eq/rate/term) nhận phần của bộ Mô phỏng đầu tư cũ;
+ * link cũ của Mô phỏng đầu tư (slug dau-tu dưới mỗi thị trường) chuyển 301 về đây với `area=<mã thị trường>`.
  */
 export default async function YieldPage({ searchParams }: { searchParams: Search }) {
   const sp = await searchParams;
@@ -50,10 +50,12 @@ export default async function YieldPage({ searchParams }: { searchParams: Search
       </Empty>
     );
   }
-  // `area` có thể là mã thị trường (link cũ /dau-tu chuyển về /yield?area=<thị trường>): chọn thị trường ấy,
-  // phường để mặc định.
+  // `area` có thể là mã thị trường (link cũ dau-tu chuyển về /yield?area=<thị trường>): chọn thị trường ấy,
+  // phường để mặc định. Mã phường mang tiền tố mã thị trường (`vn-hcmc-…`) nên nút «Đầu tư» của Insight phường
+  // chỉ cần `area` để mở đúng thị trường.
   const marketOfArea = markets.find((m) => m.id === sp.area);
-  const market = marketOfArea ?? markets.find((m) => m.id === sp.market) ?? markets[0];
+  const marketOfWard = markets.find((m) => sp.area?.startsWith(`${m.id}-`));
+  const market = marketOfArea ?? markets.find((m) => m.id === sp.market) ?? marketOfWard ?? markets[0];
   const currency = currencyFor(market.id);
   const areas = await getYieldAreas(market.id);
 
