@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9d35ae4c172fb3fb566fbf024bff7b8c91e71355
+verified_commit: 3b52ca19931628767cbc2a889e4248020c70edb0
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -178,3 +178,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, tất �
 
 Round 1: mọi eval xanh; hai finding trong hợp đồng (AC-7 hàng SourceGroups dựng tay, AC-5 detail audit chỉ kiểm tập khoá) được sửa ở S4-r1 (lưới đọc qua docNhomThu dùng chung, phép đo AC-5 ghép audit theo điểm), bốn mục ngoài hợp đồng ghi nhận cho Gate 2.
 Round 2: mọi eval xanh trên cây 9d35ae4c; không còn finding trong hợp đồng.
+
+### Re-pin lần 1 — 2026-10-25, do ghim lại sau chữ ký + gộp main 169b8c6
+run_id: repin-20261025T232950Z-78712
+sha: 3b52ca19931628767cbc2a889e4248020c70edb0 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths)
