@@ -52,7 +52,10 @@ function buildTree(scriptName) {
 }
 
 function snapDir(t, name) {
-  mkdirSync(path.join(t.root, "collector", "snapshots", "hanoi", name), { recursive: true });
+  const d = path.join(t.root, "collector", "snapshots", "hanoi", name);
+  mkdirSync(d, { recursive: true });
+  // 2510-8: tệp bọc chỉ nạp thư mục đã có manifest (thiếu manifest < 30′ = đang ghi → dừng chuỗi)
+  writeFileSync(path.join(d, "manifest.json"), "{}\n");
 }
 
 function runScript(t, scriptName) {

@@ -67,7 +67,11 @@ function makeTree(name, { copy = [], dirs = [], files = {} }) {
     mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     copyFileSync(path.join(REPO, rel), path.join(root, rel));
   }
-  for (const d of dirs) mkdirSync(path.join(root, d), { recursive: true });
+  for (const d of dirs) {
+    mkdirSync(path.join(root, d), { recursive: true });
+    // 2510-8: tệp bọc chỉ nạp snapshot đã có manifest (thiếu manifest < 30′ = đang ghi → dừng chuỗi)
+    if (d.startsWith("collector/snapshots/")) writeFileSync(path.join(root, d, "manifest.json"), "{}\n");
+  }
   for (const [rel, body] of Object.entries(files)) {
     mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     writeFileSync(path.join(root, rel), body);

@@ -15,7 +15,8 @@
 6. **Dẫn nguồn** (Mạnh duyệt 24/10): contract của mọi hồ sơ có một dòng `Căn cứ:` ở `## Context` — đường dẫn tài
    liệu + mục + mã có tiền tố, ví dụ `Căn cứ: docs/architecture/classification-enrich-review.md §4 RV-Q1, §2 RV-L06`.
    Tiền tố: `RV-` = review phân loại + enrich (Q1–Q12, L01–L20, C/Z/M), `AU-` = audit 23/10 (Q1–Q8, mục 0.x/1.x),
-   `FR-` = FRAMING (D1–D6, F1–F7). Lý do: Q1 của review và Q1 của audit là hai câu khác nhau; mã trần không tra ngược được.
+   `FR-` = FRAMING (D1–D6, F1–F7). `TVD-` = tài liệu Ops tự vận hành `docs/research/ops-tu-van-hanh-nguon-saas.md` (G1–G6, X1–X17, quyết định
+   §4.8 #1–#8) — G1–G6 của tài liệu này khác G1–G6 của audit Ops 24/10. Lý do: Q1 của review và Q1 của audit là hai câu khác nhau; mã trần không tra ngược được.
 
 ## 1. Nền chung (mọi hàng)
 
@@ -35,7 +36,10 @@ tự; luật người bán trên tin rao = tầng C (PR #19, ADR-0007 sửa đ�
 cần ký, T3 phải ký); branch protection main (gate + ui-lint); **tên nhóm S03 là tầng C, tên nguồn thật vẫn tầng A**
 (24/10, sửa đổi ADR-0007, ROADMAP §3 mục 14); **S08 chỉ nội bộ như nguồn hiệu chuẩn** (24/10, ROADMAP §3 mục 15); **Ops trên cloud đọc số tổng hợp máy local tính
 sẵn** (24/10, «Chọn A» cho câu «dashboard Ops trên prod không có dữ liệu vì dữ liệu tính số chỉ ở local» — ADR-0014,
-ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 → ON23, ON3, ON4, ON5, AU12; ON2 lockdown local tách ra chạy trước — Mạnh 24/10).
+ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 → ON23, ON3, ON4, ON5, AU12; ON2 lockdown local tách ra chạy trước — Mạnh 24/10). **Ops tự vận hành kiểu SaaS** (25/10, ROADMAP §3 mục 18): đội làm từ xa
+qua cloud bằng lệnh kéo một chiều; nội dung bài/ảnh/thẻ duyệt lên cloud cho vai ops, tên nguồn thật chỉ ở máy thu;
+tám quyết định TVD-§4.8 (TV14 dùng model local — trả lời RV-M2 cho phần quy định ngữ cảnh; phần tiêu đề/mô tả của ON21
+vẫn theo dòng RV-M2 dưới).
 
 **Còn chờ Mạnh** — và hàng nó chặn:
 
@@ -64,6 +68,7 @@ ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 �
 | `san-pham-sau-2310` (SH1–SH14) | `pham-vi-san-pham-sau-2310.md` | ROADMAP §4 Track 1–4 (lịch sử); FRAMING §7 câu mở; review §4 Q8 |
 | `bo-sung-2310` (ZC6, AU13, PL32, PL33) | `pham-vi-bo-sung-2310.md` | ZC6: `collector/AGENTS.md`, `collector/openclaw/handler.js`, `_acceptance/collector-graceful-shutdown/` (d-3 sai), `.claude/rules/zalo-safety.md` · AU13: `_acceptance/job-bao-loi-that/` (`scripts/lib/job-step.sh`), `scripts/cloud-sync.sh`, `pipeline/push-ops-facts.mjs` · PL32/PL33: hồ sơ `kev-thanh-nhan` (nhánh `claude/acceptance-kev-nhan`), `pipeline/backfill-zalo-media.mjs`, `scripts/audit-all.sh` |
 | `ops-noi-that-2410` (ON1–ON22, ZC7, ZC8, OH1–OH3, OM1–OM2) | `pham-vi-ops-noi-that-2410.md` | `docs/adr/0014-ops-cloud-doc-so-tong-hop.md` (bảng trang → nguồn số, ngưỡng trễ 45′ — ON2–ON5, ON22, AU12); bản phạm vi (mỗi dòng `OPS-n` đã chép tệp:dòng của lỗi); báo cáo audit Ops prod 24/10 chỉ ở máy local của Mạnh (`side-session-notes/…/audit-ops-prod-2410/BAO-CAO.md` — có tên nguồn thật, ảnh trang Thu thập có tên nhóm: không chép, không gửi lên kênh); `_acceptance/ops-prod-sap-source-registry/` (khuôn `LocalOnlyAlert`, `freshnessLocalOnly()`, Ngoài-2/3); `_acceptance/slo-mot-nguon/` (Ngoài-3 fmtAge); `pipeline/push-ops-facts.mjs`; ADR-0007 sửa đổi 24/10; `.claude/rules/zalo-safety.md` (ON2, ON14); `docs/architecture/classification-enrich-review.md` §0.4 RV-M2, §4 RV-Q4 (ON21) |
+| `tu-van-hanh-2510` (TV0–TV15, TVN1, TVN2, TV17 chờ; mốc TVM1–TVM3) | `pham-vi-tu-van-hanh-2510.md` | **Chung mọi hàng**: `docs/research/ops-tu-van-hanh-nguon-saas.md` §1 (bài toán, tiêu chí), §3.1 (lệnh kéo một chiều), §3.7 (ranh giới tầng A), §4.8 (quyết định), §5 (đối chiếu X1–X17); ADR-0014; ADR-0007 + sửa đổi; `docs/ops/runtime-map.md`; `docs/architecture/portals.md` (clearance, IA Ops). **Theo hàng** — TV0: §3.1, §3.7, §5.5, `CONTEXT.md` · TV1: §2.3 (quyền, nhật ký), §2.4 G3, §3.5, `app/src/lib/ops-access.ts`, `app/src/lib/api-surface.ts`, `db/migrations/018_ops_audit.sql` · TV2a, TV2b, TVN2, TV15: §2.1, §2.4 G1, §3.3, §3.4, runtime-map «Job đêm báo lỗi thật», `collector/AGENTS.md` · TV3a, TV3b, TV6, TVN1: §2.4 G6, §3.6, `.claude/rules/zalo-safety.md`, `scripts/zalo-watchdog.sh`, `_acceptance/nhom-moi-requiremention/` · TV4, TV4b, TV5, TV7, TV8: §3.1–§3.5, ADR-0015 (khi TV0 xong), `pipeline/push-ops-facts.mjs`, `pipeline/cron/` · TV9, TV10: §3.7, §3.8, §4.8 #3, `pipeline/sync-cloud.mjs` (`CLOUD_ALLOW`, `piiColumnLeaks`), `pipeline/lib/tier-a-guard.mjs`, runtime-map hai mục leak gate · TV11, TV12: §2.3 (độ phủ), §3.2 `market_coverage`, `CONTEXT.md` «Thị trường» · TV13, TV13b, TV13c: §3.8, `docs/research/hitl-review-queue.md`, `db/migrations/029_review_queue.sql` · TV14: §1.2, §3.2 `context_rules`, `docs/architecture/classification-enrich-review.md` §0.4 RV-M2, §4 RV-Q4, `collector/openclaw/handler.js`. PL12, ON20 (câu giao đã sửa 25/10): TVD-X1, TVD-X2 |
 
 ## 4. Ghi chú bổ sung khi mở vòng (khảo sát 23/10, chưa nằm trong câu giao)
 
@@ -102,6 +107,17 @@ ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 �
 | ON19 ↔ PL12; ON21 ↔ PL18 | ON19 thêm trường vào sổ nhóm của PL12; ON21 chung `agent/src/agents/context-resolver.ts` với PL18 |
 | AU12 | Nhận thêm tiêu chí của OH3: thiếu facts thì `/api/v1/ops/coverage` trả cờ «chỉ đo ở local», không rows rỗng câm. Từ ADR-0014: route đọc khối độ tươi của ON22 (không sync bản registry gọt); facts cũ quá 45′ trả cờ stale |
 | ON3 ↔ ON2, ON4, ON5 | ON3 dựng một lần dòng «Số đo lúc HH:MM (giờ VN) từ máy local» và Alert «Máy local không đẩy số từ …» (ADR-0014); ON2, ON4, ON5 dùng lại. ON3 còn nhận «N thẻ đang chờ» trên `/ops/review` cloud (QD2a) |
+| TV2b ↔ AU3, PL1 | Cùng ba tệp `scripts/*-daily.sh` với `zcode/au3-nap-bao-loi` và `zcode/importer-bo-qua-du-lieu-thu` — mở sau khi cả hai merge; bước đầu của TV2b là lời giao `claudedp-2510-4` (S05 bỏ qua khi paused) — liên làn 25/10 |
+| TVN2 ↔ AU3 | Tách tệp con trỏ trên nền khoá mkdir quanh `apify-daily.state` mà AU3 thêm |
+| TV3b ↔ ON2 | Cùng `scripts/zalo-watchdog.sh` với nhánh `zcode/watchdog-l4b-history` (lời giao 2410-15) — mở sau khi nhánh đó merge; danh sách lớp chuẩn phải khớp bảng lockdown của ON2/ON23 |
+| TV4 ↔ ON22…AU13 | Thêm TV4 vào chuỗi «chạy liền nhau» của `pipeline/push-ops-facts.mjs` (t3_paths) |
+| TV7 ↔ ZC4, ZC5 | Cùng `pipeline/cron/*.plist` và `install-*`; TV16 (S08 ≤ 1 lần/tuần) là một preset của TV7, không thuộc ZC8 |
+| TV9 ↔ ZC4, AU3 | Ảnh S03 cần collector API chạy thật dưới launchd (ZC4); ZC4 chờ AU3 merge (snapshot Zalo có mili-giây). Đổi `CLOUD_ALLOW` và luật «bảng tầng A trên cloud phải rỗng» cùng hàng, không nới tay |
+| TV13 ↔ NT2 | Leak gate hiện chặn `review_queue` có dòng trên cloud — TV13 đổi luật đó trong cùng hàng; OH1 (chân trời) đóng khi TV13 giao |
+| TV14 ↔ ZC7 | Nếu raw ghi `meta.rule_version`: gộp vào lần tăng `SNAPSHOT_SCHEMA_VERSION` kế tiếp (hằng chung mọi nguồn; v4 = S08, v5 = ZC7) — không tăng riêng. Phần hook sau lời giao `claudedp-2410-23` |
+| TV7, ZC7 | `job_runs` theo định nghĩa «lần thu» của ZC7 — S03 chưa chốt (đẩy qua hook, không có lượt kéo); đừng khoá trước |
+| UH7 ↔ TV4 | `/ops/console` (chân trời) mở lại bằng TV4 — TVD-X4 |
+| UI13 ↔ TV1 | Trang `/ops/audit` nên mở sau TV1, không thì cột người làm là hằng số — TVD-X5 |
 | Lint | Baseline 82 vi phạm / 19 tệp (đo 23/10); ROADMAP Track 6 còn ghi 85 — AU8 sửa |
 
 ## 5. Ra khỏi kho — việc của người (không thành hàng; luật kit 17/10, ADR 0026)
@@ -122,6 +138,11 @@ ROADMAP §3 mục 16; loại B sync bản gọt và C tunnel; mở khoá ON22 �
 | Đăng ký S08 vào `source_registry` ở DB local — tên miền thật chỉ ở DB (mốc OM1) | phiên liên làn (Mạnh duyệt) | trước ZC8 |
 | Đặt tiêu đề chuẩn + viết mô tả cho các nhóm đang thu (mốc OM2) | Người vận hành (Mạnh) | sau ON20; trước khi ON21 có giá trị thật |
 | Đẩy nhánh `zcode/*` chỉ có ở local, dọn ~45 nhánh đã merge | ZCode + phiên làn merge | — |
+| Xác nhận 037 bằng `node pipeline/sync-cloud.mjs --kiem-anon` sạch | phiên làn merge / Mạnh | mở TV9 (mốc TVM2) |
+| Tạo bucket ảnh riêng tư trên Supabase; cấp token máy `ops:pull` | Mạnh | trước TV9; trước TV4 |
+| Tạo tài khoản vai `ops`/`admin` thật; chỉ định trưởng vận hành | Mạnh | trước mốc TVM1 |
+| Khởi động lại app Ops trên máy thu để #77 (`nhom-moi-requiremention`) có hiệu lực | Mạnh / phiên làn merge | ngay |
+| Chủ tài khoản thu quét QR tại máy thu khi mất phiên (QR không lên cloud — TVD-§4.8 #2) | chủ tài khoản | theo sự kiện |
 
 ## 6. Thứ tự đề xuất (không ràng buộc — Mạnh chọn khi mở vòng)
 
@@ -137,6 +158,10 @@ Giới hạn 3–4 phiên song song. Đường găng là việc gắn nhãn (§5
 8. **Ops nói thật** (`ops-noi-that-2410`, chen được vào bước 1): ON14 (gỡ tài khoản) trước — tín hiệu an toàn Zalo;
    chuỗi số trên cloud theo ADR-0014: ON2 (lockdown local, chạy trước) · AU13 → ON7 → NT2 → ON22 → ON23 (lockdown cloud) → ON3 → ON4/ON5 → AU12, ON8 trước ON5
    (§4); ON19 → ON20 → ON21 sau PL12.
+9. **Tự vận hành** (`tu-van-hanh-2510`, ROADMAP §3 mục 18): TV0 chạy ngay (chỉ tài liệu) · mốc TVM1 (TV1 sau NT4,
+   TV2a → TV2b sau AU3 + PL1, TV4 → TV4b → TV5 sau PL12) chen sau các hàng đợt 0 còn dở · TV11 song song TVM1 · TVM2
+   khi `--kiem-anon` sạch và ZC4 chạy thật · TVM3 sau ON2, ZC4, ZC5, ZC7, PL3. Không mở dãy thứ năm — hàng TV nối vào
+   P2/P3/P4 khi chuỗi hiện tại hết (phiên Điều phối 25/10).
 
 ## 7. Hoãn có chủ đích (không cắt)
 

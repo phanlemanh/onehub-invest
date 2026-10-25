@@ -176,6 +176,7 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 | `/ops/collections` | Máy móc: Kev gate, collector API | lớp «Cổng Kev :8009» / «Cổng nhận tin :9210» của `lockdown` (ON23) — cùng trạng thái với Khoá an toàn | «Chưa kiểm được» |
 | `/ops/collections` | Bảng nhóm S03: «đang bật N nhóm», «Vào bảng thô» theo nhóm | `s03` (ON4; N = hợp nhóm bật hiệu dụng mọi tài khoản, chỉ tên nhóm — không mã nhóm) | bảng không dựng, «nhóm S03» ở lại Alert gom; nhóm thiếu số tin vào «—», thiếu tên «Nhóm chưa có tên» |
 | `/ops/collections` | vùng còn lại (luồng, Cần chú ý, Zalo, xoay vòng…) | — không dựng trên cloud | một Alert «Phần còn lại của trang chưa có số trên máy chủ» |
+| `GET /api/v1/ops/coverage` | độ tươi từng nguồn × thành phố (máy đọc: audit-all, smoke) | khối `freshness` (AU12; `state` fresh/stale theo chính khối, `source: "facts"`; máy thu `source: "local"`, `state: "live"`) | `200`, `state: "none"`, `rows: null`, `note: «Chỉ đo ở máy thu»` — không `[]`, không 500 |
 | `/ops/review` | số thẻ chờ theo loại | `reviewQueue` (chỉ số đếm) | «—»; thẻ chi tiết vẫn chỉ ở máy local |
 
 - Dòng «Số đo lúc <giờ VN> (GMT+7) từ máy thu» dưới tiêu đề khi có bản tin (`FactsStamp`, `components/ops/facts-status.tsx`).

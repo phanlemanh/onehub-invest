@@ -29,7 +29,7 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/deals", methods: ["GET"], mode: "ops", note: "căn giá tốt — tạm đóng tới khi PL2 rút tin mock (deals-api-tam-dong)" },
   { route: "v1/offers", methods: ["GET"], mode: "ops", note: "tin rao — cùng chế độ tạm đóng với căn giá tốt (so-be-mat-api)" },
   { route: "v1/ops/collections", methods: ["GET"], mode: "ops", note: "sức khoẻ thu thập theo nguồn" },
-  { route: "v1/ops/coverage", methods: ["GET"], mode: "ops", note: "độ phủ thu thập" },
+  { route: "v1/ops/coverage", methods: ["GET"], mode: "ops", note: "độ phủ thu thập — máy chủ đọc khối freshness, cờ state fresh/stale/none (AU12)" },
   { route: "v1/ops/extraction-quality", methods: ["GET"], mode: "ops", note: "chất lượng trích xuất" },
   { route: "v1/ops/ingest", methods: ["POST"], mode: "ops", note: "nạp số ops từ máy local lên cloud" },
   { route: "v1/ops/truthful-coverage", methods: ["GET"], mode: "ops", note: "độ phủ nói thật" },

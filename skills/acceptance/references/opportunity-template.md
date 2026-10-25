@@ -123,7 +123,7 @@ prototype:
 
 ## Ký hiệu máy đọc (đừng xoá, đừng chép vào hồ sơ thật)
 
-> Hai chuỗi dưới đây là bản gốc DUY NHẤT; bộ quét, thẻ, `/approve` và phiên nghiệm thu rút
+> Các chuỗi dưới đây là bản gốc DUY NHẤT; bộ quét, thẻ, `/approve` và phiên nghiệm thu rút
 > từ đây lúc chạy. Đổi chuỗi ở một phía là phép đo round-trip đỏ. Mục này nằm NGOÀI mọi
 > section dữ liệu của ô — đặt nó trong section Ngưỡng thì khuôn trắng trông như đã khai.
 
@@ -134,3 +134,11 @@ prototype:
 <!-- <<<OPP-KHONG-DO-DUOC-PREFIX -->
 Không đo được —
 <!-- OPP-KHONG-DO-DUOC-PREFIX>>> -->
+
+> Tiền tố của dòng «Nguồn:» mà lệnh mở ô (`lo-trinh.mjs --mo-o`) ghi ngay sau dòng «Mở từ hàng …» khi kho khai
+> `tri_thuc` và hàng có `dot`: các đường trỏ băm tới trang nền, trang đợt và trang mang mã của hàng. Bên ghi và bên đọc
+> là `scripts/tri-thuc-nguon.cjs` (hồ sơ o-mo-viec-mang-nguon).
+
+<!-- <<<OPP-NGUON-PREFIX -->
+Nguồn:
+<!-- OPP-NGUON-PREFIX>>> -->
