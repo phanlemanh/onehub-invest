@@ -239,6 +239,28 @@ test("YDT-AC-4 FinancingGrid: đầu cột Hằng tháng + Năm 1…5, dòng t�
   assert.equal(pct.length, 5, `dòng tổng: ${foot!.textContent}`);
 });
 
+/** Ô số âm («−…») mà không đỏ, hoặc mang lớp `dark:` (lớp `dark:` thắng `text-destructive` ở nền tối). */
+const notRedNegatives = (root: Element) =>
+  [...root.querySelectorAll("tbody td span")]
+    .filter((s) => s.textContent?.startsWith("−"))
+    .filter((s) => !s.classList.contains("text-destructive") || /\bdark:text-/.test(s.className))
+    .map((s) => `${s.textContent} [${s.className}]`);
+
+test("YDT-AC-4 số âm đỏ ở cả nền sáng lẫn tối: ô âm chỉ mang text-destructive, không lớp dark:", async () => {
+  phone = false;
+  const { FinancingGrid } = await import("../src/components/yield/financing/financing-grid");
+  const plan = financingPlan(ESTIMATE, INPUTS, { ...LOAN_DEFAULTS, ratePct: 0.15 });
+  assert.ok(plan.rows.find((r) => r.id === "section-cash")!.years[0] < 0, "mẫu phải có dòng tiền âm");
+  const root = await render(<FinancingGrid plan={plan} currency="VND" horizon={5} />);
+  assert.ok(root.querySelectorAll("tbody td span.text-destructive").length > 0);
+  assert.deepEqual(notRedNegatives(root), []);
+});
+
+test("YDT-AC-4 chiều đỏ: ô âm mang sắc mục kèm dark: bị bắt", () => {
+  const dom2 = new JSDOM('<table><tbody><tr><td><span class="tabular-nums dark:text-foreground/80 text-orange-700 dark:text-orange-400 text-destructive">−36,3 tr ₫</span></td></tr></tbody></table>');
+  assert.equal(notRedNegatives(dom2.window.document.body).length, 1);
+});
+
 // ── YDT-AC-5: trả góp đều ──────────────────────────────────────────────────────────────────────
 
 /** Giá trị hiện tại của n kỳ trả `payment`, chiết khấu lãi tháng. */

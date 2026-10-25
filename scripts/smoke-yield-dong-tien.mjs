@@ -118,6 +118,27 @@ try {
     const r = await get(`/yield?area=${rows[0].id}`);
     check(crumbOf(r.html).includes(second.name), `/yield?area=${rows[0].id} → breadcrumb mang «${second.name}» (nhận «${crumbOf(r.html).trim()}»)`);
   }
+  // Thị trường có thật (Insight hiện nó) mà chưa có giá bán/thuê: trạng thái rỗng nêu tên, không dựng số của thị trường khác.
+  const { rows: bare } = await db.query(
+    `SELECT m.id, m.name, (SELECT w.id FROM areas w WHERE w.parent_id = m.id ORDER BY w.id LIMIT 1) AS ward
+     FROM areas m WHERE m.region_type = 'market' AND m.id <> ALL($1) ORDER BY m.id LIMIT 1`,
+    [markets.map((m) => m.id)],
+  );
+  if (bare[0]) {
+    for (const code of [bare[0].id, bare[0].ward].filter(Boolean)) {
+      const r = await get(`/yield?area=${code}`);
+      const t = text(r.html);
+      check(
+        r.status === 200 &&
+          t.includes(`Chưa có giá bán/thuê ở ${bare[0].name}`) &&
+          !financingHeader(r.html).present &&
+          markup(r.html).includes(`href="/yield?area=${markets[0].id}#financing"`),
+        `/yield?area=${code} (thị trường ${bare[0].id} chưa có số) → trạng thái rỗng nêu «${bare[0].name}», không lưới, nút sang ${markets[0].id} (nhận ${r.status}${financingHeader(r.html).present ? ", CÓ lưới" : ""})`,
+      );
+    }
+  } else {
+    check(true, "mọi thị trường trong areas đều có giá bán/thuê — bỏ qua ca thị trường chưa có số");
+  }
   const stray = await get("/yield?area=khong-co-ma");
   check(
     stray.status === 200 && crumbOf(stray.html).includes(markets[0].name),
