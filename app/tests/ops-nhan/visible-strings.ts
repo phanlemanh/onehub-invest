@@ -35,6 +35,7 @@ export const SCAN_FILES = [
   "src/components/ops/deal-card.tsx",
   "src/components/ops/deal-seen-note.tsx",
   "src/components/ops/design/catalog-samples.tsx",
+  "src/components/ops/facts-status.tsx",
   "src/components/ops/local-only-alert.tsx",
   "src/components/ops/overview/objectives-grid.tsx",
   "src/components/ops/overview/overview-tiles.tsx",

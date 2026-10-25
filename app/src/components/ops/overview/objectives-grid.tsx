@@ -71,7 +71,8 @@ function GridStrip({ tab, counts, onTabChange, children }: { tab: Tab; counts: R
 /** Thị trường của ô độ tươi bằng tên khu vực (ON12), không mã thô. */
 const cityOf = (r: CoverageRow, names: ReadonlyMap<string, string>) => (r.city ? marketNameOf(r.city, names).name : "—")
 
-export function ObjectivesGrid({ rows, areaNames = {} }: { rows: CoverageRow[]; areaNames?: Record<string, string> }) {
+/** `stale`: hàng là lần đo cuối của bản tin máy thu cũ quá 45′ (ON3) — không badge trạng thái xanh. */
+export function ObjectivesGrid({ rows, stale = false, areaNames = {} }: { rows: CoverageRow[]; stale?: boolean; areaNames?: Record<string, string> }) {
   const names = useMemo(() => new Map(Object.entries(areaNames)), [areaNames])
   const [tab, setTab] = useState<Tab>("all")
   const [search, setSearch] = useState("")
@@ -96,9 +97,9 @@ export function ObjectivesGrid({ rows, areaNames = {} }: { rows: CoverageRow[]; 
       { id: "last", accessorFn: (r) => r.lastSnapshotAt ?? "", header: ({ column }) => <DataGridColumnHeader title="Snapshot cuối" column={column} />, cell: ({ row }) => fmtVnDate(row.original.lastSnapshotAt), size: 130, enableSorting: true },
       { id: "age", accessorFn: (r) => r.ageHours ?? Number.POSITIVE_INFINITY, header: ({ column }) => <DataGridColumnHeader title="Tuổi" column={column} />, cell: ({ row }) => [fmtAge(row.original.ageHours), fmtOverdue(row.original.ageHours, row.original.sloHours)].filter(Boolean).join(" · "), size: 120, meta: NUM, enableSorting: true },
       { id: "slo", accessorKey: "sloHours", header: "SLO", cell: ({ row }) => fmtAge(row.original.sloHours), size: 110, meta: NUM },
-      { id: "status", accessorKey: "status", header: "Trạng thái", cell: ({ row }) => <Badge variant={FRESHNESS[row.original.status].variant}>{FRESHNESS[row.original.status].label}</Badge>, size: 120 },
+      { id: "status", accessorKey: "status", header: "Trạng thái", cell: ({ row }) => <Badge variant={stale && row.original.status === "fresh" ? "outline" : FRESHNESS[row.original.status].variant}>{FRESHNESS[row.original.status].label}</Badge>, size: 120 },
     ],
-    [names]
+    [names, stale]
   )
 
   const table = useTable({
