@@ -1,14 +1,2 @@
-{"feature_plain":"Trên thẻ hiệu chuẩn của tỉnh gộp nhiều thị trường S02 (như Cần Thơ), tỉ lệ «Listing» sẽ bằng đúng tỉ lệ ở bảng Độ phủ trung thực, không còn bị thổi lên vì chỉ chia cho một thị trường.",
-"will_do":[
-{"id":"AC-1","p":"Sẽ có một cách cộng số listing S02 dùng chung cho thẻ và bảng Độ phủ; thị trường chưa có số thì bỏ qua, không có số nào thì để trống."},
-{"id":"AC-2","p":"Sẽ chia số listing tự thu của cả tỉnh cho tổng listing S02 của mọi thị trường trong tỉnh (vd 7 ÷ 13), không chia cho riêng thị trường đại diện (7 ÷ 9)."},
-{"id":"AC-3","p":"Sẽ cho thẻ và bảng Độ phủ ra cùng một tỉ lệ và cùng số listing S02, kể cả khi các thị trường có số ở các tháng khác nhau."},
-{"id":"AC-4","p":"Sẽ giữ ADR, công suất, điểm S02 và số tiểu thị trường theo thị trường đại diện như hiện nay."},
-{"id":"AC-5","p":"Sẽ để trống ô S02 và tỉ lệ khi không thị trường nào có số; tỉnh có một thị trường trống thì chỉ cộng thị trường có số."},
-{"id":"AC-6","p":"Sẽ thêm một câu chú thích trên thẻ tỉnh gộp nói dòng Listing cộng cả k thị trường, các số khác lấy thị trường đại diện; tỉnh một thị trường không có câu này."},
-{"id":"AC-7","p":"Sẽ đo trên dữ liệu thật ở máy: mọi tỉnh có cả hai chỗ ra cùng tỉ lệ, và cách tính cũ lệch ở ít nhất một tỉnh."},
-{"id":"AC-8","p":"Sẽ giữ xanh các phép kiểm cũ của vùng Hiệu chuẩn (ON10)."}],
-"wont_do":[
-{"id":"OOS-1","p":"Không đổi ngưỡng «Khớp/Lệch» 0,8–1,2× của dòng Listing."},
-{"id":"OOS-2","p":"Không cộng ADR, công suất, điểm của nhiều thị trường S02."},
-{"id":"OOS-3","p":"Không đụng bảng thị trường S02 toàn quốc."}]}
+{"feature_plain":"Trên thẻ hiệu chuẩn của tỉnh gộp nhiều thị trường S02 (như TP.HCM, Cần Thơ), tỉ lệ «Listing» nay bằng đúng tỉ lệ ở bảng Độ phủ trung thực; ô S02 hiện tổng mọi thị trường, kèm một câu chú thích.",
+"analyst_plain":"Các phép kiểm mới cũng xanh khi chạy trên bản cũ vì bản cũ chưa có tệp kiểm này — chiều đỏ đã được chứng riêng: test mới đỏ trên bản cũ (0/3 qua) và phép đo dữ liệu thật báo lệch TP.HCM khi tạm đưa thẻ về cách tính cũ."}
