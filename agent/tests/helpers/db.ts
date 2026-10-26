@@ -1,6 +1,6 @@
 // db.ts — tiện ích test DB: mọi ca chạy trong BEGIN…ROLLBACK trên Postgres local,
-// nạp lại migration 033 (+ 036, 039 của vòng enrich-hau-ky) trong transaction (idempotent)
-// để test không phụ thuộc DB đã áp hay chưa. Không để lại dữ liệu.
+// nạp lại migration 033 (+ 036, 039 của vòng enrich-hau-ky, 044 của nap-lai-khong-xoa) trong transaction
+// (idempotent) để test không phụ thuộc DB đã áp hay chưa. Không để lại dữ liệu.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import pg from "pg";
@@ -13,10 +13,15 @@ export const MIGRATIONS: string[] = [
   "033_enrichment_proposals.sql",
   "036_revert_enrichment.sql",
   "039_enrichment_proposals_retain.sql",
+  "044_nap_lai_khong_xoa.sql",
 ]
   .map((f) => join(MIGRATIONS_DIR, f))
   .filter((p) => existsSync(p));
-const MIGRATION = MIGRATIONS.map((p) => readFileSync(p, "utf8")).join("\n");
+// DB đã áp 044 (sale_offers là VIEW): bỏ cả 039 (khoá ngoại của nó trỏ BẢNG sale_offers) lẫn 044 (đã có; áp lại là DDL
+// khoá độc quyền trên bảng dùng chung, dễ deadlock với phiên khác đang đọc). DB chưa áp: nạp đủ 033+036+039+044.
+const sql = (da044: boolean) =>
+  MIGRATIONS.filter((p) => !(da044 && /\/(039|044)_/.test(p)))
+    .map((p) => readFileSync(p, "utf8")).join("\n");
 
 export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   const c = new pg.Client({ connectionString: DB_URL });
@@ -26,7 +31,8 @@ export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
     // node --test chạy các tệp song song; nạp migration (CREATE OR REPLACE FUNCTION) trong
     // hai transaction cùng lúc là deadlock → mọi ca DB xếp hàng sau một advisory lock.
     await c.query("SELECT pg_advisory_xact_lock(33033)");
-    await c.query(MIGRATION);
+    const { rows } = await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`);
+    await c.query(sql(rows[0].ok));
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});

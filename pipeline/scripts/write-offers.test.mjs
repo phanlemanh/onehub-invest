@@ -1,6 +1,8 @@
 // write-offers.test.mjs — vòng enrich-hau-ky AC-1…AC-5: nạp lại S03/S05 không xoá đề xuất.
-// Mọi ca chạy trong BEGIN…ROLLBACK trên Postgres local, nạp 033+036+039 trong transaction (không
+// Mọi ca chạy trong BEGIN…ROLLBACK trên Postgres local, nạp 033+036+039+044 trong transaction (không
 // áp migration thật), nguồn thử 'TST' để đối soát không đụng offer S03/S05 thật.
+// Từ PL14 (044, nap-lai-khong-xoa): offer vắng lượt NGHỈ thay vì bị xoá; offer không có kế giữ nguyên đề xuất
+// (AC-4 cũ «xoá có ảnh chụp» được thay bằng «nghỉ, giữ nguyên» — ND-AC-3 của PL14).
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -13,9 +15,10 @@ import { scanDeleteAll, writeOffers } from "../lib/write-offers.mjs";
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const ROOT = join(import.meta.dirname, "../..");
-const MIGRATION = ["033_enrichment_proposals.sql", "036_revert_enrichment.sql", "039_enrichment_proposals_retain.sql"]
-  .map((f) => readFileSync(join(ROOT, "db/migrations", f), "utf8"))
-  .join("\n");
+const mig = (f) => readFileSync(join(ROOT, "db/migrations", f), "utf8");
+// 039 dựng khoá ngoại tới bảng sale_offers — DB đã áp 044 (sale_offers là VIEW) thì bỏ 039, 044 dựng lại khoá ấy.
+const MIG_TRUOC_044 = [mig("033_enrichment_proposals.sql"), mig("036_revert_enrichment.sql"), mig("039_enrichment_proposals_retain.sql")];
+const MIG_044 = mig("044_nap_lai_khong_xoa.sql");
 const SRC = "TST";
 
 async function withTx(fn) {
@@ -25,7 +28,8 @@ async function withTx(fn) {
     await c.query("BEGIN");
     // Cùng khoá với agent/tests/helpers/db.ts — hai bộ test nạp CREATE OR REPLACE FUNCTION song song là deadlock.
     await c.query("SELECT pg_advisory_xact_lock(33033)");
-    await c.query(MIGRATION);
+    const da044 = (await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok;
+    await c.query((da044 ? MIG_TRUOC_044.filter((_, i) => i !== 2) : MIG_TRUOC_044).concat(MIG_044).join("\n"));
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
@@ -65,6 +69,7 @@ async function card(c, offerId) {
 const props = async (c, offerId) =>
   (await c.query(`SELECT * FROM enrichment_proposals WHERE offer_id = $1 ORDER BY id`, [offerId])).rows;
 const offer = async (c, id) => (await c.query(`SELECT * FROM sale_offers WHERE offer_id = $1`, [id])).rows[0];
+const record = async (c, id) => (await c.query(`SELECT * FROM sale_offer_records WHERE offer_id = $1`, [id])).rows[0];
 const snap = (rows) => rows.map((p) => [Number(p.id), p.status, p.decided_by, p.review_id === null ? null : Number(p.review_id)]);
 
 /** Khối ghi CŨ của transform (trước vòng này): DELETE toàn nguồn rồi INSERT. */
@@ -132,7 +137,10 @@ test("AC-2 offer kế nhận đề xuất, áp lại, thẻ trỏ sang", async (
 
     const { reconcile } = await writeOffers(c, SRC, [row(y, ["p1"], { price_vnd: 6_500_000_000 })]);
 
-    assert.equal(await offer(c, x), undefined, "AC-2 offer cũ phải bị xoá");
+    assert.equal(await offer(c, x), undefined, "AC-2 offer cũ phải rời view sống");
+    const rx = await record(c, x);
+    assert.ok(rx, "AC-2 offer cũ không được xoá (044)");
+    assert.deepEqual([rx.retired_reason, rx.superseded_by], ["doi_khoa", y], "khoá thử không phải khoá mới → doi_khoa");
     const ps = await props(c, y);
     assert.equal(ps.length, 3, "AC-2 đề xuất phải nằm ở offer kế");
     for (const p of ps) {
@@ -144,9 +152,9 @@ test("AC-2 offer kế nhận đề xuất, áp lại, thẻ trỏ sang", async (
     assert.equal(ps.find((p) => Number(p.id) === ids.applied).status, "applied");
     const k = (await c.query(`SELECT status, item_id, evidence FROM review_queue WHERE id = $1`, [cardId])).rows[0];
     assert.deepEqual([k.status, k.item_id, k.evidence.offer_id], ["pending", `enrich:${y}`, y]);
-    assert.deepEqual(reconcile.pairs, [{ from: x, to: y }]);
+    assert.deepEqual(reconcile.pairs, [{ from: x, to: y, reason: "doi_khoa" }]);
     const audit = (await c.query(`SELECT detail FROM ops_audit WHERE action = 'enrich:reconcile' ORDER BY id DESC LIMIT 1`)).rows[0];
-    assert.deepEqual(audit.detail.pairs, [{ from: x, to: y }]);
+    assert.deepEqual(audit.detail.pairs, [{ from: x, to: y, reason: "doi_khoa" }]);
     assert.equal(audit.detail.moved, 3);
   });
 });
@@ -241,39 +249,35 @@ test("AC-3 hai offer cũ cùng đổ về một offer kế", async () => {
   });
 });
 
-// ── AC-4 ─────────────────────────────────────────────────────────────────────────────────
-test("AC-4 offer không kế: xoá có ảnh chụp, khôi phục được khi tin quay lại", async () => {
+// ── AC-4 (bản 044) ──────────────────────────────────────────────────────────────────────
+test("AC-4 offer không kế: nghỉ, giữ nguyên đề xuất, ảnh chụp không PII; tin quay lại thì sống lại", async () => {
   await withTx(async (c) => {
     const x = uid("x"); const z = uid("z");
-    await c.query(`SELECT 1`);
     const { cardId } = await enrichedOffer(c, x, ["p1"]);
     await c.query(`UPDATE sale_offers SET seller_phone = '0900000000', seller_name = 'Tên Thử' WHERE offer_id = $1`, [x]);
-    const before = await props(c, x);
+    const before = snap(await props(c, x));
 
     await writeOffers(c, SRC, [row(z, ["p7"])]);
 
-    assert.equal(await offer(c, x), undefined);
-    assert.equal((await props(c, x)).length, 0);
-    const k = (await c.query(`SELECT status, decision_note FROM review_queue WHERE id = $1`, [cardId])).rows[0];
-    assert.equal(k.status, "rejected");
-    assert.match(k.decision_note, /enrich:retire/);
-    const audit = (await c.query(`SELECT detail FROM ops_audit WHERE action = 'enrich:retire' ORDER BY id DESC LIMIT 1`)).rows[0].detail;
+    assert.equal(await offer(c, x), undefined, "AC-4 offer nghỉ phải rời view sống");
+    const rx = await record(c, x);
+    assert.ok(rx?.retired_at, "AC-4 offer không kế phải nghỉ, không bị xoá");
+    assert.equal(rx.superseded_by, null);
+    assert.deepEqual(snap(await props(c, x)), before, "AC-4 đề xuất của offer nghỉ phải giữ nguyên");
+    const k = (await c.query(`SELECT status FROM review_queue WHERE id = $1`, [cardId])).rows[0];
+    assert.equal(k.status, "deferred");
+    const audit = (await c.query(`SELECT detail FROM ops_audit WHERE action = 'offer:retire' ORDER BY id DESC LIMIT 1`)).rows[0].detail;
     const raw = JSON.stringify(audit);
     assert.ok(!raw.includes("đoạn tin gốc"), "AC-4 audit mang đoạn tin gốc");
     assert.ok(!/seller|0900000000|Tên Thử/.test(raw), "AC-4 audit mang thông tin người bán");
-    assert.deepEqual(audit.offers, [{ offer_id: x, enriched: {
-      property_type: "house", bedrooms: null, bathrooms: 2, street_raw: "Quang Trung", block_raw: null } }]);
+    assert.deepEqual(audit.offers.map((o) => [o.offer_id, o.proposals, o.enriched.street_raw]), [[x, 3, "Quang Trung"]]);
 
-    // Tin quay lại (băm cũ) → X sinh lại → chèn lại đề xuất từ ảnh chụp, qua khoá ngoại RESTRICT.
+    // Tin quay lại cùng khoá → sống lại, đề xuất vẫn ở đó (không cần khôi phục từ ảnh chụp).
     await writeOffers(c, SRC, [row(x, ["p1"])]);
-    await c.query(
-      `INSERT INTO enrichment_proposals SELECT * FROM jsonb_populate_recordset(NULL::enrichment_proposals, $1::jsonb)`,
-      [JSON.stringify(audit.proposals)],
-    );
-    const after = await props(c, x);
-    const strip = (p) => ({ ...p, evidence: { ...p.evidence, text: undefined } });
-    assert.deepEqual(after.map(strip).map((p) => JSON.stringify(p)), before.map(strip).map((p) => JSON.stringify(p)),
-      "AC-4 ảnh chụp không đủ để khôi phục");
+    const back = await offer(c, x);
+    assert.ok(back, "AC-4 tin quay lại phải sống lại");
+    assert.deepEqual([back.retired_at, back.retired_reason], [null, null]);
+    assert.deepEqual(snap(await props(c, x)), before);
   });
 });
 
@@ -304,11 +308,11 @@ test("AC-5 transform không DELETE toàn nguồn", () => {
     ["mau.mjs:2"]);
 });
 
-test("AC-5 thiếu migration 039 thì dừng trước khi ghi", async () => {
+test("AC-5 thiếu migration 044 thì dừng trước khi ghi", async () => {
   await withTx(async (c) => {
     await c.query(`DROP FUNCTION reconcile_stale_offers(text, text[], text)`);
     const x = uid("x");
-    await assert.rejects(writeOffers(c, SRC, [row(x, ["p1"])]), /chưa áp migration 039/);
+    await assert.rejects(writeOffers(c, SRC, [row(x, ["p1"])]), /chưa áp migration 044/);
     assert.equal(await offer(c, x), undefined, "writeOffers đã ghi trước khi kiểm migration");
   });
 });
