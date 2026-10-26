@@ -300,11 +300,14 @@ async function render(rows: unknown[], fetchImpl: (body: Record<string, unknown>
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
   const { SourceGroups } = await import("../src/components/ops/sources/source-groups")
   const sent: Record<string, unknown>[] = []
-  globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+  // Request đang bay: fetchImpl ghi DB thật, có thể lâu hơn một nhịp 20ms trên CI — luuXong() chờ chúng.
+  const inflight: Promise<unknown>[] = []
+  globalThis.fetch = ((_url: string, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body ?? "null"))
     sent.push(body)
-    const r = await fetchImpl(body)
-    return new Response(JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } })
+    const p = fetchImpl(body).then((r) => new Response(JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } }))
+    inflight.push(p.catch(() => undefined))
+    return p
   }) as unknown as typeof fetch
   const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} }
   document.body.innerHTML = "<div id=root></div>"
@@ -338,7 +341,12 @@ async function render(rows: unknown[], fetchImpl: (body: Record<string, unknown>
     await tick()
   }
   const save = () => [...(dialog()?.querySelectorAll("button") ?? [])].find((b) => b.textContent?.trim() === "Lưu") as HTMLButtonElement | undefined
-  return { sent, row, dialog, openFor, choose, dateInput, typeDate, save, press, unmount: () => act(async () => root.unmount()) }
+  /** Chờ mọi request lưu ghi xong rồi tới khi hộp thoại đóng (tối đa ~2 giây) — không đọc DB khi request còn bay. */
+  const luuXong = async () => {
+    while (inflight.length) await act(async () => { await inflight.shift() })
+    for (let i = 0; i < 100 && dialog(); i++) await tick()
+  }
+  return { sent, row, dialog, openFor, choose, dateInput, typeDate, save, press, luuXong, unmount: () => act(async () => root.unmount()) }
 }
 
 test("CD-AC-7 cột Chế độ bốn trạng thái; hộp thoại Bùng: ô hạn H…H+13, Lưu khoá khi thiếu hạn, lỗi máy chủ hiện trong hộp", async () => {
@@ -378,6 +386,7 @@ test("CD-AC-7b hộp thoại → datCheDo thật: thân request, params, Badge (
   await u.choose("Bùng")
   await u.typeDate(ngay(5))
   await u.press(u.save(), "nút Lưu")
+  await u.luuXong()
   assert.deepEqual(u.sent.at(-1), { action: "set-mode", id: 9, mode: "bung", burstUntil: ngay(5) })
   assert.deepEqual(await params(9), { region_v2: 13000, mode: "bung", burst_until: ngay(5), mode_since: H })
   assert.equal(u.dialog(), null, "lưu xong hộp phải đóng")
@@ -387,6 +396,7 @@ test("CD-AC-7b hộp thoại → datCheDo thật: thân request, params, Badge (
   await u.choose("Duy trì")
   assert.equal(u.dateInput(), null, "rời Bùng thì ô hạn phải ẩn")
   await u.press(u.save(), "nút Lưu")
+  await u.luuXong()
   assert.deepEqual(u.sent.at(-1), { action: "set-mode", id: 9, mode: "duy_tri" })
   assert.deepEqual(await params(9), { region_v2: 13000, mode: "duy_tri", mode_since: H })
   assert.ok(u.row(9)?.textContent?.includes("Duy trì"))
