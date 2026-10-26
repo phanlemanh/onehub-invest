@@ -1,0 +1,4 @@
+{
+ "feature_plain": "Có sẵn một script cài collector nhận tin Zalo dưới launchd: kiểm đủ điều kiện chạy trước rồi mới ghi cấu hình, và không tự khởi động — việc khởi động là bước triển khai riêng có bằng chứng.",
+ "scope_plain": "Những việc cố ý để ngoài vòng này:"
+}

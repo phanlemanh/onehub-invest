@@ -899,7 +899,7 @@ nên bắt đầu C1.3 sớm nhất có thể.
 
 ## 7. Tham chiếu
 
-### 7.0 Trạng thái quyết định (23/10) — đọc trước khi dựa vào tài liệu này
+### 7.0 Trạng thái quyết định (23/10, cập nhật 26/10) — đọc trước khi dựa vào tài liệu này
 
 | Đã chốt (Mạnh) | Nơi ghi |
 |---|---|
@@ -911,13 +911,25 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | F3 ngưỡng theo cận dưới Wilson (A 0,95 · B 0,90 · C 0,80); F6 thứ tự dọn (mỗi bước ghi DB vẫn chờ Mạnh gật) | §0.3 |
 | R1–R5 khung RESO → **ADR-0013** (căn = UPI + Building, tin = Property; toà = `BuildingName`, phân khu = `ComplexName`; UPI kiểu VN; phường → `City`; DD 2.1) | `docs/adr/0013-…`, `reso-khung-phan-loai.md` |
 
+| **Đã chốt 26/10** — Mạnh duyệt gói lát OCP1 (`lat-ocp1-huong-tiep-can-2610`, nguyên văn: «Hỏi-1..7: theo khuyến nghị.») | Nơi ghi |
+|---|---|
+| Hỏi-1: **Q2, Q3, Q5, Q11 theo §0.2 F** — khoá tin gốc và phát biểu `căn` (T4); bảng phát biểu + phân xử (T3+T7); chỉ tự áp ô đã đo (T6); đo trong lát dọc | §0.2 F |
+| Hỏi-2: **lát đầu = Vinhomes Ocean Park 1**, một dự án (F1) | §0.3 F1 |
+| Hỏi-3: **Q4, Q9** — ngữ cảnh nhóm chỉ là suy luận, không tự quyết; thẻ duyệt **không hiện độ tự tin** (áp ngay cho UI1) | §0.2 F |
+| Hỏi-4: **M1 = local mặc định**, chỉ dùng model cloud khi số đo cho thấy local không đủ (khớp §4.8 #6 của ROADMAP §3.18 — thay khuyến nghị (a) ở §0.4); **M3 (cổng / AI Gateway) hoãn tới PH4**; PL29 (sổ cuộc gọi AI) làm trước mọi bộ đọc LLM | §0.4 |
+| Hỏi-5: **Mạnh và đội gắn nhãn lát** (~200 tin + ~100 cặp, 20% gắn trùng), bắt đầu khi PL7 xong (F5) | §0.3 F5 |
+| Hỏi-6: **chạy F6** — hoàn tác 639/644, bác thẻ 159/161, duyệt lại review 24 (làn Claude, DB local, có audit, từng lệnh chờ Mạnh gõ đồng ý); xoá 1.260 post mock ở stg là làn ZCode (raw giữ nguyên) | §0.3 F6 |
+| Hỏi-7: **L0 theo thứ tự ZC6 → ZC4 → hook Kev nhãn v3**, ZCode làm theo lời GIAO; cửa sổ khởi động lại gateway (an toàn Zalo) ghi trong lời GIAO | lát OCP1 §3 |
+| **PL3 gộp vào PL23** (`/ops/review` dựng lại một lần, sau PL15; TV13 đứng sau PL23) | lát OCP1 §2 X1 |
+| **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất** — PL6 sinh mọi thứ từ đó, FIELD_TARGET G3 của ZCode khoá theo tên trường trong `mappings.yaml` | lát OCP1 §2 X2 |
+| C2–C4 cắt cùng lúc vào lộ trình; **phần UI của PL9 gộp vào C4** (chạy tuần tự trên `/ops/quality`) | lát OCP1 §2 X3 |
+
 | **Còn chờ Mạnh** | Nơi ghi |
 |---|---|
-| Q2–Q12 của §4. §0.2 F *đề xuất* trả lời Q2, Q3, Q4, Q5, Q9, Q11 từ nguyên lý gốc — **chưa được duyệt**; Q7 (subtype), Q8 (tìm mua/thuê), Q10 (thước «Căn giá tốt» tạm) chưa bàn | §4, §0.2 F |
-| F1: chọn **Vinhomes Ocean Park 1** làm lát đầu (đề xuất của review, Mạnh chỉ nói «dữ liệu đã có dự án và nhóm») | §0.3 |
-| F4: độ tươi p50 ≤ 10′, p95 ≤ 30′; cửa sổ hiệu lực 14/7 ngày (đề xuất) | §0.3 |
+| Q6, Q12 của §4 chưa bàn; Q7 (subtype) → PH5; Q8 đã nằm trong PL5; Q10 đã nằm trong PL26 | §4, lát OCP1 §4 |
+| F4: độ tươi p50 ≤ 10′, p95 ≤ 30′; cửa sổ hiệu lực 14/7 ngày — giữ làm vạch tham chiếu, không chặn | §0.3 |
 | F7: số giờ công/tuần giữ bậc | §0.2 F |
-| M1–M4 lớp model (sửa luật Local-first, tên nhóm không gửi cloud, Vercel AI Gateway, ADR trợ lý) | §0.4 |
+| M4 (ADR trợ lý nhà đầu tư) — khi bắt đầu làm trợ lý | §0.4 |
 | Thang căn cứ 3 lớp, ghép căn là phát biểu, lát dọc thay đợt ngang (§0.2 D) — đề xuất, chưa duyệt riêng | §0.2 D |
 
 **Cắt lượt**: bản phạm vi `phan-loai-2310` và lộ trình 31 hàng (PL1–PL31) + 6 mục chờ (PH1–PH6), kèm việc bật gói
