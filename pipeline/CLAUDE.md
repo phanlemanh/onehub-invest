@@ -14,6 +14,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
+| vocab.mjs | Sổ từ vựng một nguồn (PL6): `--write` sinh hằng từ `mappings.yaml` `enums:` · `--check` · `--lint` (enum viết tay) · `--check-db` (ref_* + CHECK) · `--check-field-targets` |
 | reassign-areas.mjs | Upsert phường OSM (areas + polygon), point-in-polygon mọi listing VN, bỏ listing ngoài tỉnh, xoá area không phải phường OSM |
 | finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 
