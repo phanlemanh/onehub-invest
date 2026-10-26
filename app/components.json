@@ -24,6 +24,9 @@
       "headers": {
         "Authorization": "Bearer ${REUI_LICENSE_KEY}"
       }
+    },
+    "@mapcn": {
+      "url": "https://mapcn.dev/r/{name}.json"
     }
   }
 }
