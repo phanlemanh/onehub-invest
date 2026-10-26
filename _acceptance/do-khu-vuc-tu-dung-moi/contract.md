@@ -5,7 +5,7 @@ slug: do-khu-vuc-tu-dung-moi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T12:55:00Z
 design_doc: docs/superpowers/specs/2026-10-26-do-khu-vuc-tu-dung-moi-design.md
@@ -71,3 +71,9 @@ vết: sáu bảng ghi, ops_audit, khu vực mồi} (AC-4) và {thay eval hồ s
   (`scripts/ci-bo-qua.json`). Ca đọc tĩnh AC-5 và ca thuần của hàm so băm chạy cả ở CI.
 - Băm bảng đọc ngoài transaction trên DB dùng chung: một tác vụ khác ghi đúng các bảng ấy trong lúc đo (lượt đêm, phiên
   khác) làm dòng ROLLBACK đỏ oan — đỏ ồn, chạy lại là hết.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: gọi phép đo qua đường symlink từng thoát 0 mà không đo gì; đã sửa ở lượt chấm 2 (gác main bằng realpathSync).
+  - Ngoài-2: gõ `--pha` thiếu giá trị (hoặc `--pha` mà thiếu `--thu`) thì phép đo lặng lẽ chạy chiều xanh.
+  - Ngoài-3: ở chiều `--pha mo-loc`, transform hỏng giữa chừng thì thông báo lỗi bị thay bằng câu chung «transaction aborted».
+  - Ngoài-4: trùng Ngoài-2 — cờ chọn chiều đỏ gõ thiếu thì rơi về chiều thường không báo.
+  - Ngoài-5: chiều đỏ của AC-4 chỉ chứng hàm so băm; hàm tính băm thật hỏng (luôn cùng giá trị) thì dòng ROLLBACK vẫn xanh.
