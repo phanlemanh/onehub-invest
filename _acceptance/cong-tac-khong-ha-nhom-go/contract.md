@@ -5,7 +5,7 @@ slug: cong-tac-khong-ha-nhom-go
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/app/api/v1/ops/** (t3_paths)
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-cong-tac-khong-ha-nhom-go-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -47,3 +47,6 @@ Quét bằng morphological-scan, preset test-matrix:
 ## Notes
 
 - Giao diện không đổi: lưới nhóm thu đã hoàn công tắc và hiện chữ lỗi máy chủ khi route trả 4xx.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-2: Chữ mô tả đối chứng của E1 lệch cách ca thử chạy thật (chép route cũ nguyên bản, nhãn không dấu).
+  - Ngoài-5: Nhánh «hai lệnh đồng thời» của CT-AC-2 không có đối chứng dương.
