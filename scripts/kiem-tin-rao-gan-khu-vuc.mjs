@@ -8,6 +8,7 @@
 //   --pha khong-sua | mo-loc   chiều đỏ cho test: bỏ lượt đo | sáu khu vực mồi mang meta phường hợp lệ trong lượt đo.
 //   (mặc định) chỉ đọc: in số tin đang trỏ khu vực không hợp lệ theo nguồn.
 // Từ chối DB không phải localhost. Chạy: node scripts/kiem-tin-rao-gan-khu-vuc.mjs [--thu [--pha <chiều>]]
+import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -215,4 +216,4 @@ async function main() {
   process.exit(fails.length === 0 ? 0 : 1);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
