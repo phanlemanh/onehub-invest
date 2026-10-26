@@ -23,3 +23,48 @@ export function isRunnable(source, unit) {
   if (unit.status !== "active") return { run: false, ly_do: `don-vi-${unit.status}` };
   return { run: true, ly_do: "chay" };
 }
+
+/**
+ * Đọc trạng thái theo MÃ (không theo tên nguồn) rồi quyết định chạy.
+ * @param {{query: Function}} client  pg client đã kết nối
+ * @param {string} code  mã nguồn S0x
+ * @param {string} [unitKey]  group_key của đơn vị trong source_groups; vắng = không hỏi đơn vị
+ */
+export async function docTrangThai(client, code, unitKey) {
+  const src = (await client.query(`SELECT code, status FROM source_registry WHERE code = $1`, [code])).rows[0] ?? null;
+  if (unitKey === undefined) return isRunnable(src);
+  const unit = (await client.query(`SELECT status FROM source_groups WHERE source_code = $1 AND group_key = $2`, [code, unitKey])).rows[0] ?? null;
+  return isRunnable(src, unit);
+}
+
+// CLI cho script bash (TV2b): node pipeline/lib/vong-doi.mjs <mã> [--unit <group_key>]
+// In đúng một dòng JSON {code, run, ly_do} — không in group_key hay reason (có thể mang tầng A).
+// Thoát 0 = chạy · 3 = không chạy · 2 = lỗi (đối số, DB).
+async function main(argv) {
+  const [code, ...rest] = argv;
+  const i = rest.indexOf("--unit");
+  const unitKey = i >= 0 ? rest[i + 1] : undefined;
+  if (!code || code.startsWith("-") || (i >= 0 && unitKey === undefined)) {
+    console.error("cách dùng: node pipeline/lib/vong-doi.mjs <mã> [--unit <group_key>]");
+    return 2;
+  }
+  const pg = (await import("pg")).default;
+  const client = new pg.Client({
+    connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+  });
+  try {
+    await client.connect();
+    const kq = await docTrangThai(client, code, unitKey);
+    console.log(JSON.stringify({ code, run: kq.run, ly_do: kq.ly_do }));
+    return kq.run ? 0 : 3;
+  } catch (e) {
+    console.error(`vong-doi: không đọc được trạng thái (${e.code ?? e.message})`);
+    return 2;
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
+if (process.argv[1] && import.meta.url === (await import("node:url")).pathToFileURL(process.argv[1]).href) {
+  process.exitCode = await main(process.argv.slice(2));
+}

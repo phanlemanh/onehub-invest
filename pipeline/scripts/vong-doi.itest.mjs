@@ -261,4 +261,81 @@ test("VD-AC-10 đường ghi cũ và mới giữ enabled khớp status; không b
   assert.match(m ?? "", /source_groups_enabled_khop_chk/);
 });
 
-export { LIB, ROOT, admin, dong, execFileSync, loi, moLuocDo, nguon };
+
+// ---------------------------------------------------------------- AC-5 --
+test("VD-AC-5 CLI: thoát 0/3/2 đúng lý do, một dòng JSON, không lộ khoá nhóm hay lý do", async () => {
+  const { S, c } = await moLuocDo("ac5");
+  await nguon(c, "S0A");
+  await nguon(c, "S0B");
+  await c.query(`INSERT INTO source_groups (source_code, group_key, name) VALUES ('S0A', 'https://vi-du.invalid/nhom-a', 'a'),
+    ('S0A', 'https://vi-du.invalid/nhom-b', 'b'), ('S0A', 'https://vi-du.invalid/nhom a?x=1&y=2', 'c')`);
+  await chay047(c);
+  await c.query(`UPDATE source_groups SET status = 'paused', reason = 'LY-DO-BI-MAT' WHERE group_key = 'https://vi-du.invalid/nhom-b'`);
+  await c.query(`UPDATE source_registry SET status = 'paused', reason = 'LY-DO-BI-MAT' WHERE code = 'S0B'`);
+  const chay = (args, url = schemaUrl(S)) => {
+    try {
+      return { ma: 0, out: execFileSync(process.execPath, [LIB, ...args], { env: { ...process.env, DATABASE_URL: url }, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }) };
+    } catch (e) {
+      return { ma: e.status, out: e.stdout ?? "" };
+    }
+  };
+  const CA = [
+    [["S0A"], 0, { code: "S0A", run: true, ly_do: "chay" }],
+    [["S0A", "--unit", "https://vi-du.invalid/nhom-a"], 0, { code: "S0A", run: true, ly_do: "chay" }],
+    [["S0A", "--unit", "https://vi-du.invalid/nhom a?x=1&y=2"], 0, { code: "S0A", run: true, ly_do: "chay" }],
+    [["S0A", "--unit", "https://vi-du.invalid/nhom-b"], 3, { code: "S0A", run: false, ly_do: "don-vi-paused" }],
+    [["S0B"], 3, { code: "S0B", run: false, ly_do: "nguon-paused" }],
+    [["S0Z"], 3, { code: "S0Z", run: false, ly_do: "nguon-khong-co" }],
+    [["S0A", "--unit", "https://vi-du.invalid/khong-co"], 3, { code: "S0A", run: false, ly_do: "don-vi-khong-co" }],
+  ];
+  for (const [args, ma, json] of CA) {
+    const r = chay(args);
+    assert.equal(r.ma, ma, `${args.join(" ")}: mã thoát`);
+    const dongs = r.out.trim().split("\n");
+    assert.equal(dongs.length, 1, `${args.join(" ")}: đúng một dòng`);
+    assert.deepEqual(JSON.parse(dongs[0]), json, args.join(" "));
+    assert.ok(!r.out.includes("vi-du.invalid") && !r.out.includes("LY-DO-BI-MAT"), `${args.join(" ")}: stdout lộ khoá nhóm hay lý do`);
+  }
+  assert.equal(chay([]).ma, 2, "không đối số → 2");
+  const chet = new URL(schemaUrl(S));
+  chet.port = "1";
+  assert.equal(chay(["S0A"], chet.toString()).ma, 2, "DB không tới được → 2");
+});
+
+// ---------------------------------------------------------------- AC-7 --
+const rutSelect = (tep, mau) => {
+  const src = readFileSync(path.join(ROOT, tep), "utf8");
+  const cau = [...src.matchAll(/[`"](SELECT[^`"]*?FROM source_groups[^`"]*)[`"]/g)].map((m) => m[1]).filter((q) => mau.test(q));
+  assert.equal(cau.length, 1, `${tep}: phải rút được đúng một câu đọc nhóm khớp ${mau}`);
+  return cau[0];
+};
+
+test("VD-AC-7 câu đọc nhóm của script thu (rút nguyên văn) trả đúng nhóm đang thu", async () => {
+  const { c } = await moLuocDo("ac7");
+  for (const code of ["S05", "S06"]) await nguon(c, code);
+  await c.query(`INSERT INTO source_groups (source_code, group_key, name) VALUES
+    ('S05', '${DAU}-a', 'a'), ('S05', '${DAU}-b', 'b'), ('S05', '${DAU}-c', 'c'), ('S05', '${DAU}-d', 'd'),
+    ('S06', '${DAU}-e', 'e'), ('S06', '${DAU}-f', 'f')`);
+  await chay047(c);
+  await c.query(`UPDATE source_groups SET status = 'paused', reason = 'x' WHERE group_key IN ('${DAU}-b', '${DAU}-f')`);
+  await c.query(`UPDATE source_groups SET status = 'retired' WHERE group_key = '${DAU}-c'`);
+  await c.query(`UPDATE source_groups SET status = 'draft' WHERE group_key = '${DAU}-d'`);
+  const s05 = rutSelect("pipeline/apify-facebook-collector.mjs", /enabled/);
+  const s06 = rutSelect("pipeline/collect-chotot.mjs", /enabled/);
+  assert.deepEqual((await dong(c, s05)).map((r) => r.group_key), [`${DAU}-a`]);
+  assert.deepEqual((await dong(c, s06)).map((r) => r.group_key), [`${DAU}-e`]);
+});
+
+test("VD-AC-7b câu đọc lưới của trang nguồn và GET route (rút nguyên văn) đọc đủ dòng, enabled đúng", async () => {
+  const { S, c } = await moLuocDo("ac7b");
+  await admin.query(`CREATE TABLE "${S}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING ALL)`);
+  await nguon(c, "S06");
+  await c.query(`INSERT INTO source_groups (source_code, group_key, name) VALUES ('S06', '${DAU}-a', 'a'), ('S06', '${DAU}-b', 'b')`);
+  await chay047(c);
+  await c.query(`UPDATE source_groups SET status = 'paused', reason = 'x' WHERE group_key = '${DAU}-b'`);
+  for (const tep of ["app/src/lib/che-do-thu.ts", "app/src/app/api/v1/ops/source-groups/route.ts"]) {
+    const q = rutSelect(tep, /g\.enabled/);
+    const rows = await dong(c, q);
+    assert.deepEqual(rows.map((r) => [r.group_key, r.enabled]), [[`${DAU}-a`, true], [`${DAU}-b`, false]], tep);
+  }
+});
