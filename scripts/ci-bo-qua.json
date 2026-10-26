@@ -86,6 +86,11 @@
       "tep": "pipeline/scripts/ops-facts-so-tong-hop.test.mjs",
       "ca": "ON22-AC-10 máy thu thật, chế độ khô: năm khối có measured_at, freshness bằng check-freshness, 0 chỗ chặn, đầu ra chỉ tên khối + trạng thái",
       "ly_do": "chạy launchctl của máy thu (chỉ có trên macOS)"
+    },
+    {
+      "tep": "pipeline/scripts/install-collector-api.test.mjs",
+      "ca": "cài thật: ghi plist vào LaunchAgents của HOME giả, plutil sạch, chmod 600, chỉ IN lệnh launchctl",
+      "ly_do": "cần plutil (công cụ chỉ có trên macOS) — runner CI là Ubuntu"
     }
   ],
   "agent": [
