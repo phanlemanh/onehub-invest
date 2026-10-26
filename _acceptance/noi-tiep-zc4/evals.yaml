@@ -1,0 +1,39 @@
+schema_version: 1
+feature_slug: noi-tiep-zc4
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.nz4_logs_tmp
+    expected: "exit 0; 'LOGS-TMP OK'; clone mới: pipeline/logs được tạo"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.nz4_logs_tmp
+    expected: "exit 0; sed lỗi → should-NOT-fire: plist cũ KHÔNG bị đè, không gọi launchctl"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    expected: "exit 0; toàn bộ test collector xanh trên dist build sạch, gồm snapshot-skip-khong-rac 3/3 (skip cửa sổ → root trống; skip cap → root trống; lượt thật đủ manifest, không .partial)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.cal_cai_dat
+    expected: "exit 0; 'CAI-DAT PASS' (kiểm của collector-api-launchd vẫn đạt)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.cal_unit
+    expected: "exit 0; install-collector-api.test xanh (gồm ca mới của 2610-5)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.nz4_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
