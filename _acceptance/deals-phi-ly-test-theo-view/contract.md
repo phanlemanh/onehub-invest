@@ -52,3 +52,7 @@ Giám sát đợt dot0-cam-mau xếp hàng `deals-phi-ly-test-theo-view` vào P2
 
 - Quét 26/10: ngoài DP-AC-5 không test nào trong app/agent/pipeline ALTER/DROP/TRUNCATE trên `sale_offers`/`listings`;
   `check-cloud-sync.mjs` chỉ đụng DB mô phỏng và đã vẽ lại hình trước 044 (#132).
+- Giám sát chuyển thêm (U2, 26/10): agent `enrich-revert`, pipeline `write-offers`, app CD-AC-3b đỏ trên DB có 044. Đo trên
+  nhánh này, DB local đã áp 044: ba bộ chạy tuần tự (agent 63/63, pipeline 220/220, app 487/487) và chạy SONG SONG hai lần
+  đều 0 đỏ. DP-AC-5 đỏ tất định (42809); các ca còn lại là deadlock do `write-offers.test.mjs` áp lại 044 khi chạy chồng —
+  cùng bản sửa AC-2. Helper DB của agent đã thôi áp lại 044 từ #132.
