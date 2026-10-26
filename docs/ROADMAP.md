@@ -77,10 +77,17 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   E1 trái LLM → thẻ đối chiếu, người chọn; E1 không suy land từ tên nhóm;
   hoàn tác có audit qua `revert_enrichment` (036) + CLI enrich-revert;
   không UPDATE thẳng canonical, không lên cloud)
-→ sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
+→ sale_offers (canonical; price_tier P0/P1/P2; CHECK enums VALIDATE ở 043)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
 → sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
 ```
+- Sổ từ vựng một nguồn (PL6, `_acceptance/so-tu-vung-mot-nguon`): khối `enums:` của `pipeline/mappings.yaml` — 9 trục
+  (kind, property_type, confidence, price_tier, enrich_field, listing_intent, offer_status, data_level, capability_level)
+  theo khuôn RESO Lookup. `node pipeline/vocab.mjs --write` sinh hằng `pipeline/lib/vocab.generated.mjs`,
+  `agent/src/vocab.generated.ts`, `app/src/lib/vocab.generated.ts` + khối «Từ vựng dữ liệu» của CONTEXT.md; `--lint` đỏ khi
+  có enum viết tay ngoài sổ (8 ngoại lệ có lý do ở `enums_lint_allow`); `--check-db` so `ref_lookup`/`ref_field_lookup`
+  (migration 043, chỉ local) và CHECK với sổ; `--check-field-targets` khoá tên trường FIELD_TARGET (G3) theo
+  `canonical.fields`.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
@@ -224,6 +231,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    (cloud `S08`, local `S08-<tên>`) — sửa đổi luật 6 chờ ADR (TV0); tám quyết định §4.8 (S03 cần người thứ hai duyệt ·
    QR ở lại máy thu · ảnh thu nhỏ, trần 5 GB · S05 tự paused, admin bật lại · quy định AI chạy model local · mã đơn vị
    `S03-N012` · tên thật trong migration cũ chấp nhận như lịch sử). Đợt lộ trình `tu-van-hanh-2510`.
+19. **Lát dọc Ocean Park 1** (26/10, Mạnh duyệt gói lát OCP1 «Hỏi-1..7: theo khuyến nghị», `classification-enrich-review.md`
+   §7.0): Q2/Q3/Q5/Q11 theo §0.2 F (khoá tin gốc + phát biểu `căn`; bảng phát biểu + phân xử; chỉ tự áp ô đã đo; đo trong
+   lát dọc) · lát đầu = OCP1 · Q4/Q9 (ngữ cảnh nhóm chỉ suy luận; thẻ duyệt không hiện độ tự tin) · M1 = model local mặc
+   định, cloud khi số đo cho thấy local không đủ; M3 hoãn tới PH4 · Mạnh và đội gắn nhãn khi PL7 xong · chạy F6 · L0 theo thứ
+   tự ZC6 → ZC4 → hook Kev v3. Kèm: **PL3 gộp vào PL23**; **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất**;
+   C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -257,6 +270,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | G-1 | property_type + DQ + asset_nodes R1 | ✅ 3313a9c |
 | G-2 | properties + ruler dedup + candidates | ✅ 50005b7 |
 | G-2.5 | pHash ảnh — khi ảnh P1 nhiều hơn | ⬜ |
+| PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | 🔶 vòng S4 (migration 043 đã áp local, chưa đẩy Supabase) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
@@ -302,7 +316,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | BĐ | Bản đồ đích cổng Invest: block đích cho mọi route Invest (cột "Block đích" ở `onehub-ui/routes.md`, test chặn dòng thiếu), shell giữ `app-shell-30`, `/dau-tu` gộp vào `/yield`, slug đích tiếng Anh (cột "Slug đích"), bản đồ nguồn `mapcn`, bước tra Mobbin trong `loop.md` — `_acceptance/invest-target-map` | ✅ Mạnh chọn 23/10 (theo khuyến nghị) — chờ ký PR |
 | I1 | Finder `/[country]`: `solution-analytics-1` + `@mapcn/choropleth`, PageHeader, trạng thái "đang thu thập" | ⏳ |
 | I2 | Insight thị trường + phường: khung `solution-analytics-8`, giữ chart-6/chart-13/InsightGrid, bản đồ `@mapcn/map`, neo mục lục tiếng Anh | ⏳ |
-| I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | ⏳ sau khi gỡ ảnh AirDNA khỏi listing |
+| I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | ✅ `/listing/[id]`: hồ sơ `listing-detail-product-detail-5` (UI5) — đầu trang gallery ảnh tự thu (khung 3:2, ảnh dọc hiện trọn; một hàng ảnh nhỏ 1:1 trượt ngang; ảnh chết rời gallery) + hộp Đặc điểm, lịch form-5 hết nút tay/cỡ chữ 9px (baseline −3), KPI và Listing tương tự tải trong Suspense + lỗi tại vùng + Empty; quy định khung ảnh chung ghi ở `onehub-ui/catalog.md` «Ảnh (khung)» (Mạnh 25/10). `/listings`: hồ sơ `listings-filters-store-locator` (UI6) — một cây lọc cho thanh chip `@reui/filters` (màn rộng) và ngăn `filter-sidebar-5` (màn hẹp; điều kiện ngăn không chỉnh được giữ nguyên + báo), bốn trường Phường · Loại phòng · Phòng ngủ · Giá/đêm (Hỏi-5); bản đồ `@mapcn/map` theo khuôn store-locator (cụm + nhãn giá, popup «Xem listing», lọc lưới theo khung chỉ khi người dùng di chuyển); thẻ có ảnh tự thu 3:2; vùng Suspense + lỗi tại chỗ; registry `@mapcn` khai trong `components.json` |
 | I4 | Lợi suất: `/yield` form-11 + `data-grid-advanced-7` (chi phí + dòng tiền vốn vay), `/dau-tu` → chuyển hướng `/yield` | 🟡 hồ sơ `yield-dong-tien-von-vay` (UI3) — mục «Dòng tiền vốn vay» `#financing` (chuyển thể chỉ đọc ở `yield/financing/`, mô hình trả góp đều `lib/financing.ts`), nhóm Vốn vay `eq`/`rate`/`term` trên form-11, `/<country>/<market>/dau-tu` → 301 `/yield?area=<market>#financing`, `/yield` suy thị trường từ mã phường; gỡ bộ mô phỏng cũ, baseline −16 |
 | I5 | So sánh + Đã lưu: giữ comparison-1 / wishlist-2, thêm PageHeader + trạng thái; `/so-sanh` → `/compare` (301) | ⏳ |
 | I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | 🟡 trang chủ + Phương pháp: hồ sơ `trang-chu-methodology` (UI2) — `/methodology` faq-3 mở sẵn, nền hero/thẻ thị trường không màu cứng, `(marketing)/error.tsx` + `global-error.tsx`, baseline −18; auth giữ nguyên |

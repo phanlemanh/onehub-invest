@@ -48,23 +48,27 @@ export function PageHeader({
           {/* The counts wrap under the title before they ever squeeze it. */}
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
             <h1 className="text-xl font-medium">{title}</h1>
-            <Separator
-              orientation="vertical"
-              className="hidden h-3 data-vertical:self-center sm:block"
-            />
-            <div className="flex flex-wrap items-center gap-1.5">
-              {stats.map((stat) => (
-                <Badge
-                  key={stat}
-                  variant="outline"
-                  size="sm"
-                  radius="full"
-                  className="dark:bg-background px-1.5"
-                >
-                  {stat}
-                </Badge>
-              ))}
-            </div>
+            {stats.length > 0 && (
+              <>
+                <Separator
+                  orientation="vertical"
+                  className="hidden h-3 data-vertical:self-center sm:block"
+                />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {stats.map((stat) => (
+                    <Badge
+                      key={stat}
+                      variant="outline"
+                      size="sm"
+                      radius="full"
+                      className="dark:bg-background px-1.5"
+                    >
+                      {stat}
+                    </Badge>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
           <p className="text-muted-foreground text-xs">{description}</p>
         </div>

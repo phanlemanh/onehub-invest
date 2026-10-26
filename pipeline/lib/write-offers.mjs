@@ -6,8 +6,11 @@
 // Cột đã enrich KHÔNG bị lượt nạp ghi đè; đề xuất + thẻ duyệt sống qua lần nạp lại.
 // Người gọi giữ transaction (BEGIN…COMMIT) — hàm này không tự mở/đóng.
 
-/** Cột do enrich điền (033) — lượt nạp không ghi đè khi offer đã tồn tại. */
-export const ENRICH_COLS = ["property_type", "street_raw", "block_raw", "bathrooms"];
+import { ENRICH_FIELD, VOCAB } from "./vocab.generated.mjs";
+
+/** Cột do enrich điền (033) — lượt nạp không ghi đè khi offer đã tồn tại. Từ sổ (trục enrich_field), trừ bedrooms:
+ *  parser vẫn ghi bedrooms ở mỗi lượt nạp. */
+export const ENRICH_COLS = VOCAB.enrich_field.filter((c) => c !== ENRICH_FIELD.bedrooms);
 
 const COLUMN = /^[a-z_][a-z0-9_]*$/;
 

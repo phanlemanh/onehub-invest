@@ -5,6 +5,8 @@ import { RegistryTable, type RegistryRow } from "@/components/ops/sources/regist
 import { SourceGroups, type GroupRow } from "@/components/ops/sources/source-groups";
 import { ZaloAccounts } from "@/components/ops/sources/zalo-accounts";
 import { PageHeader } from "@/components/page/page-header";
+import { docNhomThu } from "@/lib/che-do-thu";
+import { homNayVN } from "@/lib/che-do-thu-luat";
 import { pool } from "@/lib/db";
 import { localOnlyTable } from "@/lib/ops-queries";
 
@@ -29,12 +31,7 @@ export async function SourcesContent() {
   // cloud không có source_groups/stg (tier A local-only) — render rỗng
   let groupRows: GroupRow[] = [];
   try {
-    groupRows = await pool.query<GroupRow>(
-      `SELECT g.id, g.source_code, g.group_key, g.name, g.enabled, g.note,
-              (SELECT count(*)::int FROM stg_zalo_posts z
-                WHERE z.agent_id = 'apify-facebook' AND z.group_name = g.name) AS fb_posts
-       FROM source_groups g ORDER BY g.source_code, g.id`,
-    ).then((r) => r.rows);
+    groupRows = await docNhomThu();
   } catch { /* cloud: bảng vắng — đúng thiết kế PII */ }
   const { rows } = await pool.query<RegistryRow>(
     `SELECT code, real_name, label_vi, status, since::text, retired_at::text
@@ -56,7 +53,7 @@ export async function SourcesContent() {
       />
       <RegistryTable rows={rows} />
       <ZaloAccounts isCloud={process.env.VERCEL === "1"} />
-      <SourceGroups initial={groupRows} />
+      <SourceGroups initial={groupRows} homNay={homNayVN(new Date())} />
     </div>
   );
 }

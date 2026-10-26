@@ -33,6 +33,7 @@ executors:
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
+    cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
@@ -43,6 +44,10 @@ executors:
     freshness_parity: "node --test scripts/freshness-parity.test.mjs"
     check_freshness: "node --test --test-skip-pattern=GT-AC-1 scripts/check-freshness.test.mjs"   # GT-AC-1 (importer S06, làn ZCode) đỏ sẵn trên main e962e78 — xem sổ s05-slo-theo-lich
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
+    vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
+    vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
+    che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"
+    job_exit: "node --test scripts/job-exit.test.mjs"
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -58,11 +63,16 @@ executors:
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
     ops_mobile_smoke: "node scripts/smoke-ops-mobile.mjs"   # ON13: cột trạng thái 6 bảng Ops ở 390px/1280px trên app chạy thật (Chromium không giao diện, playwright-core); cần DB local
+    vocab_check: "node pipeline/vocab.mjs --check"   # PL6: tệp sinh khớp sổ mappings.yaml — đo trạng thái cây
+    vocab_lint: "node pipeline/vocab.mjs --lint"     # PL6: 0 enum viết tay ngoài sổ — đo trạng thái cây
+    vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
     luong7_smoke: "node scripts/smoke-luong-7-ngay.mjs"     # ON5 AC-9 — bảng Luồng 7 ngày ở chế độ máy chủ trên trình duyệt (lược đồ tạm, Chromium)
     s02_smoke: "node scripts/smoke-collections-khong-so-s02.mjs"     # ON6 AC-7 — trang Thu thập ở máy thu không số S02 (Chromium 1280, ảnh chụp)
     log_root_smoke: "node scripts/smoke-doc-log-o-checkout.mjs"   # ON16 AC-6/AC-7 — audit-all thật ở worktree vs checkout chính (HOME tạm) + /ops/collections từ worktree; cần DB local
     listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
+    listing_detail_smoke: "node scripts/smoke-listing-detail.mjs"   # UI5: /listing/[id] trên Chromium (gallery, ảnh chết qua chặn mạng, không ảnh, lịch trống, 375 px) — app chạy từ worktree đang kiểm (BASE_URL, mặc định :3460 dãy U1) + DB local
+    listing_hero_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/listing/listing-hero.tsx"   # UI5: design gate ghim đầu trang listing
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
     ui_kit_sockets: "node scripts/ui-standards/acceptance.mjs kit-sockets"
@@ -175,6 +185,8 @@ executors:
     trang_chu_loi_db_smoke: "cd app && npx next build && cd .. && node scripts/smoke-trang-chu-loi-db.mjs"   # bản build + next start ở cổng trống (hoặc SMOKE_PORT) với DATABASE_URL trỏ cổng chết; trang lỗi đo bằng trình duyệt thật (playwright-cli); đối chứng dương ở dev :3460
     # yield-dong-tien-von-vay (UI3) — /yield + mục «Dòng tiền vốn vay» (/dau-tu cũ → 301); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
     yield_dong_tien_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-yield-dong-tien.mjs"
+    # listings-filters-store-locator (UI6) — Duyệt listing: thanh chip filters, ngăn filter-sidebar-5, bản đồ @mapcn (cụm, nhãn giá, popup, lọc vùng), ảnh thẻ; chỉ GET, cần app DEV chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
+    listings_browse_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-listings-browse.mjs"
     financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
     methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
     app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
@@ -274,6 +286,25 @@ executors:
     kns_s05_gate: "node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"
     kns_scope: "bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""
     kns_lich_s05: "node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"   # G1 2510-14: plist + buildRunInput, không gọi Apify
+    # watchdog-l4b-history (2410-15, T3) — bản chép bộ canh + HOME giả + stub launchctl/pkill/pgrep/osascript/curl/sleep (luật 8)
+    wdh_p1: "node scripts/watchdog-l4b-history/acceptance.mjs p1-marker-so"
+    wdh_p2: "node scripts/watchdog-l4b-history/acceptance.mjs p2-duong-dan-khac"
+    wdh_p3: "node scripts/watchdog-l4b-history/acceptance.mjs p3-inode-moi"
+    wdh_p4: "node scripts/watchdog-l4b-history/acceptance.mjs p4-so-dong-lon"
+    wdh_xoay_that: "node scripts/watchdog-l4b-history/acceptance.mjs xoay-that"
+    # collector-seen-cap (2510-2) — mỗi ca trong tiến trình con timeout 60s, thư mục tạm, cổng ngẫu nhiên; không chạm :9210
+    seen_flush_6000: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs flush-6000"
+    seen_hai_luot: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs hai-luot"
+    seen_khoi_dong_lai: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs khoi-dong-lai"
+    seen_tran_lo: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs tran-lo"
+    seen_state_trung: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs state-trung"   # vòng 2
+    seen_body_null: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs body-null"   # vòng 2
+    # collector-api-launchd (ZC4 2510-33) — script cài trên bản chép tạm + HOME giả, launchctl giả; không đụng :9210
+    cal_cai_dat: "bash _acceptance/collector-api-launchd/probes/cai-dat.sh \"$PWD\""
+    cal_scope: "bash _acceptance/collector-api-launchd/probes/scope.sh \"$PWD\""
+    agent_ba_lan: "bash _acceptance/enrich-db-test-khoanh-tin/probes/ba-lan.sh"
+    enrich_ac6_tam_lan: "bash _acceptance/enrich-db-test-khoanh-tin/probes/tam-lan.sh"
+    enrich_pham_vi: "bash _acceptance/enrich-db-test-khoanh-tin/probes/pham-vi.sh"
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"

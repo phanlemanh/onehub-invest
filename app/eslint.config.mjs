@@ -46,6 +46,14 @@ const eslintConfig = defineConfig([
     files: MAP_FILES,
     rules: { "onehub-ui/no-hardcoded-color": "off" },
   },
+  // ui/map.tsx: bản cài nguyên văn của @mapcn/map (registry @mapcn, hồ sơ listings-filters-store-locator).
+  // Mã gốc gán ref trong render (giữ callback mới nhất) và reset state trong effect dọn — hai luật React
+  // Compiler dưới đây báo 14 chỗ. Sửa tay thì mất đường cập nhật từ mapcn; chỉ tắt đúng hai luật cho đúng
+  // tệp này, mọi luật Next khác vẫn chạy.
+  {
+    files: ["src/components/ui/map.tsx"],
+    rules: { "react-hooks/refs": "off", "react-hooks/set-state-in-effect": "off" },
+  },
   // Plugin cục bộ: export default dạng object-literal là chuẩn của ESLint plugin, không phải lỗi.
   {
     files: ["eslint-plugin-onehub-ui/**/*.mjs"],

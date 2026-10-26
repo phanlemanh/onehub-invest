@@ -10,6 +10,7 @@ import pg from "pg";
 
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
+import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -163,9 +164,9 @@ export async function runTransformZalo(client) {
     const hasPrice = pr.priceVnd !== null || pr.pricePerm2Vnd !== null;
     const hasArea = pr.areaM2 !== null;
     const hasPhuong = pr.phuong !== null;
-    pr.confidence = hasPrice && hasArea && hasPhuong ? "high" : hasPrice ? "medium" : "low";
-    if (pr.confidence === "high") nFull++;
-    else if (pr.confidence !== "low") nPartial++;
+    pr.confidence = hasPrice && hasArea && hasPhuong ? CONFIDENCE.high : hasPrice ? CONFIDENCE.medium : CONFIDENCE.low;
+    if (pr.confidence === CONFIDENCE.high) nFull++;
+    else if (pr.confidence !== CONFIDENCE.low) nPartial++;
     else if (hasPrice) nPartial++;
     parsed.push({ ...pr, post: p });
   }

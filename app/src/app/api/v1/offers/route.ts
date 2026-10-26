@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { pool } from "@/lib/db";
 import { canCallOpsApi } from "@/lib/ops-access";
+import { KIND } from "@/lib/vocab.generated";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const u = new URL(req.url);
-  const kind = u.searchParams.get("kind") === "rent_lt" ? "rent_lt" : "sale";
+  const kind = u.searchParams.get("kind") === KIND.rent_lt ? KIND.rent_lt : KIND.sale;
   const area = u.searchParams.get("area");
   const limit = Math.min(200, Math.max(1, Number(u.searchParams.get("limit") ?? 50) || 50));
   const sinceDays = Math.min(365, Math.max(1, Number(u.searchParams.get("since_days") ?? 30) || 30));
