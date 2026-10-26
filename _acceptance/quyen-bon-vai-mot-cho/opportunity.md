@@ -3,10 +3,10 @@ schema_version: 1
 slug: quyen-bon-vai-mot-cho
 feature: Mọi route ghi /api/v1/ops/** kiểm vai theo một bảng bốn vai (viewer, ops, admin, owner) ở một chỗ, và mỗi thao tác ghi đúng một dòng ops_audit mang id người thật trong cùng transaction
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided                # discovery | decided | archived
+decision: build         # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: giám sát đợt dot0-cam-mau theo Mạnh 26/10 — bốn mốc Ops tự vận hành (P1 TV0 → TV1); trả lời P1-33
+decided_at: 2026-10-26T23:29:56Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
