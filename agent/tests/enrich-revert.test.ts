@@ -315,10 +315,12 @@ const COUNTS = `SELECT (SELECT count(*) FROM enrichment_proposals) || '/' || (SE
   || '/' || (SELECT count(*) FROM review_queue) || '/' || (SELECT count(*) FROM ops_audit) AS n`;
 
 test("AC-10 migration idempotent", async () => {
-  const files = MIGRATIONS.filter((p) => /\/(036|039)_/.test(p));
-  assert.equal(files.length, 2, "phải thấy đủ 036 và 039");
+  // 044 (nap-lai-khong-xoa) thay phần khoá ngoại + hàm đối soát của 039 và biến sale_offers thành VIEW, nên sau 044
+  // không áp lại 039 được (khoá ngoại của nó trỏ BẢNG sale_offers) — chuỗi áp lại là 036 + 044.
+  const files = MIGRATIONS.filter((p) => /\/(036|044)_/.test(p));
+  assert.equal(files.length, 2, "phải thấy đủ 036 và 044");
   await withTx(async (c) => {
-    // withTx đã áp 033+036+039 một lần; áp 036+039 thêm hai lần nữa.
+    // withTx đã áp 033+036(+039)+044 một lần; áp 036+044 thêm hai lần nữa.
     const s1 = (await c.query(SHAPE)).rows[0].h;
     const n1 = (await c.query(COUNTS)).rows[0].n;
     for (const round of [2, 3]) {

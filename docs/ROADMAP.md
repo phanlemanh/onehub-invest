@@ -91,6 +91,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   có enum viết tay ngoài sổ (8 ngoại lệ có lý do ở `enums_lint_allow`); `--check-db` so `ref_lookup`/`ref_field_lookup`
   (migration 043, chỉ local) và CHECK với sổ; `--check-field-targets` khoá tên trường FIELD_TARGET (G3) theo
   `canonical.fields`.
+- Nạp lại không xoá (PL14, `_acceptance/nap-lai-khong-xoa`, migration 044): `sale_offers`/`listings` là VIEW sống
+  (`retired_at IS NULL`) trên bảng bản ghi `sale_offer_records`/`listing_records` — chỗ đọc không đổi, chỉ đường ghi biết
+  bảng bản ghi. Tin vắng lượt nghỉ (`het_trong_luot`/`doi_khoa`), listing ngoài phường nghỉ (`ngoai_phuong`); không câu
+  DELETE/TRUNCATE nào nhắm hai bảng (bộ quét `pipeline/lib/scan-delete.mjs`). `reconcile_stale_offers` bản 044 chuyển đề
+  xuất enrich, thẻ `enrich:`/`pair:`, `property_offers`, ứng viên ghép đã quyết sang tin kế (`superseded_by`); 6 khoá ngoại
+  tới hai bảng là RESTRICT. Khoá S03/S05 «dính» (`pipeline/lib/offer-key.mjs`): nhóm repost thừa kế `offer_id` của tin
+  chung nhiều post nhất, nhóm mới băm `'<S0x>|<post neo>'`; `originating_system_key` (RESO) cho S03/S05/S06 và listing.
+  Thước `pipeline/scripts/nap-lai-ba-luot.mjs` (ba lượt, ma trận 7×2, đối chứng 039 / không chuyển). sync-cloud chép view
+  sống, bảng con chỉ dòng có cha sống; cột mới ở lại máy.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
@@ -134,7 +143,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
-Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Văn xuôi gọi nguồn bằng mã + vai trò,
+Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
+`draft · active · paused · retired · completed` (CHECK từ 047, TV2a); script thu hỏi «có được thu» qua `isRunnable` (TV2b).
+Văn xuôi gọi nguồn bằng mã + vai trò,
 không thêm tên nguồn thật (ADR-0007 sửa đổi 26/10); nhãn job, tên bảng, tên tệp giữ nguyên như trong kho. Bảng giải mã
 ở `/ops/sources` của máy thu.
 
@@ -288,7 +299,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | G-1 | property_type + DQ + asset_nodes R1 | ✅ 3313a9c |
 | G-2 | properties + ruler dedup + candidates | ✅ 50005b7 |
 | G-2.5 | pHash ảnh — khi ảnh P1 nhiều hơn | ⬜ |
-| PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | 🔶 vòng S4 (migration 043 đã áp local, chưa đẩy Supabase) |
+| PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | ✅ PR #120 (migration 043 đã áp local; Supabase đã áp 26/10 — `docs/ops/cloud-schema-catchup-2026-10-26-043.sql`) |
+| PL14 | Nạp lại không xoá: bảng bản ghi + view sống (lối A, 044), khoá dính S03/S05, tin/listing nghỉ (`retired_at`) thay DELETE, 6 khoá ngoại RESTRICT, đối soát chuyển quyết định sang tin kế — `_acceptance/nap-lai-khong-xoa` | 🔶 vòng S4; sau merge: áp 044 lên DB local NGAY (launchd chạy code main); cloud không đổi lược đồ (`docs/ops/cloud-schema-catchup-2026-10-26.md`) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
@@ -325,6 +337,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
 | V13 | Luật tự vận hành từ xa: ADR-0015 đường lệnh kéo một chiều cloud → máy thu + ADR-0007 sửa đổi 26/10 (bài, ảnh, thẻ duyệt lên cloud cho vai ops; tầng A còn bốn thứ) + thuật ngữ Đơn vị thu, Lệnh, Quy định ngữ cảnh, Mục tiêu phủ — TV0 `_acceptance/adr-duong-lenh-keo` (T1) | ✅ Mạnh duyệt ADR 26/10; chờ gộp PR — cửa của TV1–TV14 |
 | V14 | Tầng tri thức (kit 2.34.0): kho riêng `onehub-invest-tri-thuc` (12 raw, 2 trang nền, 10 trang đợt), `nguon` của 10 bản phạm vi là đường trỏ băm, 7 tệp kit `[only-if-declared: tri_thuc]` đã chép — `_acceptance/kho-tri-thuc-invest` (T2) | 🔄 chờ Cổng 2 |
+| V15 | Vòng đời nguồn: `source_registry` + `source_groups` năm trạng thái có CHECK (paused bắt buộc lý do), `enabled` thành bản soi do trigger giữ khớp; `isRunnable` + CLI `pipeline/lib/vong-doi.mjs` cho TV2b — migration 047, TV2a `_acceptance/vong-doi-nguon` (T3) | 🔄 Cổng 2 Mạnh ký 26/10 — PR #129; 047 áp DB local SAU gộp |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI
