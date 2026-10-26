@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1ddb7345b586660f07ced706e1ff0d98385fbc35
+verified_commit: f21b1ba608a156328803be3e5693a95ee932a651
 human_signoff:
 ---
 
@@ -22,27 +22,27 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-E1-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.doi_phuong
-  verified_at: 2026-10-26T10:41:20Z
-  cmd: node --test scripts/lib/doi-phuong.test.mjs
+  verified_at: 2026-10-26T10:58:02Z
   output: |
-    ca 'DP-AC-1 ma trận mười ca lechTheoBai' ok (mười ca a…j, assert số ca = 10)
-    ℹ duration_ms 2146.643792
+    node --test scripts/lib/doi-phuong.test.mjs
+    DP-AC-1 ma trận mười ca lechTheoBai: ok (mười ca a…j, assert số ca = 10)
+    ℹ duration_ms 1026.60575
 
 - eval: E2
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-E2-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.doi_phuong
-  verified_at: 2026-10-26T10:41:20Z
-  cmd: node --test scripts/lib/doi-phuong.test.mjs
+  verified_at: 2026-10-26T10:58:02Z
   output: |
-    ca 'DP-AC-2 bài mồi S03 và S05 mất phường qua hai lượt transform → lechTheoBai bắt' ok
-    chiều đỏ 'DP-AC-2 thước cũ nối theo offer_id không thấy' ok
-    ℹ duration_ms 2146.643792
+    node --test scripts/lib/doi-phuong.test.mjs
+    DP-AC-2 bài mồi S03 và S05 mất phường qua hai lượt transform → lechTheoBai bắt: ok
+    DP-AC-2 thước cũ nối theo offer_id không thấy: ok (chiều đỏ chạy trên cùng hai lần chụp có đối chứng dương)
+    ℹ duration_ms 1026.60575
 
 - eval: E3
   run_id: minted-tin-rao-doi-phuong-noi-post-ids-E3-r1
@@ -50,41 +50,40 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.tin_rao_gan_do
   verified_at: 2026-10-26T10:41:20Z
-  cmd: node scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu
-  output: |
-    kiem-tin-rao-gan: PASS
+  carried_from_round: 1
+  # carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-npm_test__bb6271-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-26T10:41:20Z
+  verified_at: 2026-10-26T10:58:02Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-lint-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-26T10:41:20Z
+  verified_at: 2026-10-26T10:58:02Z
 
 - cmd: cd app && npm test
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-npm_test__bd9a35-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-26T10:41:20Z
+  verified_at: 2026-10-26T10:58:02Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-npm_test__13563d-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-26T10:41:20Z
+  verified_at: 2026-10-26T10:58:02Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-test_lint_rules-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-26T10:41:20Z
+  verified_at: 2026-10-26T10:58:02Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-tin-rao-doi-phuong-noi-post-ids-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-26T10:41:20Z
+  verified_at: 2026-10-26T10:58:02Z
 
 ## Known limits
 
@@ -96,14 +95,14 @@ baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi
 
 Baseline khong do:
 - node --test scripts/lib/doi-phuong.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
-- node scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
 
-Eval không-phân-biệt: không có eval nào bị xác định là không-phân-biệt; lưu ý baseline không đo được ở round này nên danh sách này chưa phản ánh việc eval có đỏ trên code cũ hay không.
+Eval khong-phan-biet (green tren ca HEAD lan baseline): none — danh sach nay khong do duoc o round nay vi baseline BLOCKED ha tang (moi field baseline la n-a).
 
 ## Variance
 
-none — mọi eval đều xác định (runs: 1), không có eval ngẫu nhiên và không có eval chập chờn.
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E1, E2, E3 đều đạt; không có eval thất bại, không có mục judgment chờ người. Verdict PASS.
+Round 1: E1, E2, E3 deu dat; 1 finding trong hop dong (AC-2, chieu do cua E2 thieu doi chung duong tren chinh hai lan chup) — sua o f21b1ba6.
+Round 2: E1, E2 chay lai tren f21b1ba6, dat; E3 carry-forward tu round 1 (delta khong cham paths cua eval); cac lenh suite xanh.
