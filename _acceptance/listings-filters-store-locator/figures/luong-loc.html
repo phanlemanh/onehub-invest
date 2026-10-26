@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luồng lọc listing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1400px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 1040px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · listings-filters-store-locator · luong-loc</p>
+    <h1>Một cây lọc, hai lối ghi, một bản đồ lọc theo khung</h1>
+    <p class="sub">Hai điểm chờ người chọn (Hỏi-2 · Hỏi-3) · AC-4 ngăn Bộ lọc · AC-5 bản đồ + popup · AC-6 lọc theo khung nhìn</p>
+
+    <svg viewBox="0 96 1400 600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+
+      <rect x="0" y="96" width="1400" height="600" fill="#f5f5f5"/>
+
+      <!-- ===================== ARROWS (vẽ trước hộp) ===================== -->
+
+      <!-- Thanh chip → Một cây lọc (ghi thẳng) -->
+      <path d="M184,140 H616 Q624,140 624,148 V224" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="360" y="120" width="80" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="400" y="130" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">GHI THẲNG</text>
+
+      <!-- Ngăn → kiểm điều kiện -->
+      <line x1="184" y1="380" x2="224" y2="380" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- D1 có → facet -->
+      <line x1="320" y1="380" x2="352" y2="380" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="324" y="356" width="24" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="336" y="365" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÓ</text>
+
+      <!-- D1 không → giữ nguyên -->
+      <path d="M272,416 V452 Q272,460 280,460 H352" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="292" y="440" width="44" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="314" y="449" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KHÔNG</text>
+
+      <!-- facet → cây (áp) -->
+      <path d="M496,380 H576 Q584,380 584,372 V296" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="512" y="360" width="48" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="536" y="369" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ÁP</text>
+
+      <!-- giữ nguyên → cây -->
+      <path d="M496,460 H632 Q640,460 640,452 V296" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="508" y="440" width="96" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="556" y="449" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VẪN TRONG CÂY</text>
+
+      <!-- cây → Lưới thẻ -->
+      <path d="M704,236 H736 Q744,236 744,228 V148 Q744,140 752,140 H768" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- cây → Bản đồ -->
+      <path d="M704,284 H736 Q744,284 744,292 V308 Q744,316 752,316 H768" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- cây → Đang lọc vùng? (bộ lọc mới) -->
+      <path d="M680,296 V476 Q680,484 688,484 H792" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="700" y="460" width="76" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="738" y="469" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BỘ LỌC MỚI</text>
+
+      <!-- Bản đồ → Người di chuyển khung -->
+      <path d="M896,284 V220 Q896,212 904,212 H1008" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- Người → Lưới thẻ (lọc theo khung) -->
+      <path d="M1088,184 V148 Q1088,140 1080,140 H928" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="964" y="120" width="96" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="1012" y="129" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">LỌC THEO KHUNG</text>
+
+      <!-- Bản đồ → Popup (bấm nhãn giá) -->
+      <line x1="928" y1="292" x2="1008" y2="292" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <rect x="932" y="270" width="72" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="968" y="279" fill="#ba4513" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BẤM NHÃN GIÁ</text>
+
+      <!-- Popup → Xem listing -->
+      <line x1="1168" y1="292" x2="1240" y2="292" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="1172" y="270" width="64" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="1204" y="279" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">XEM LISTING</text>
+
+      <!-- D3 không → Máy canh khung -->
+      <line x1="904" y1="484" x2="1008" y2="484" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="936" y="462" width="44" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="958" y="471" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KHÔNG</text>
+
+      <!-- D3 có → Giữ khung -->
+      <line x1="848" y1="520" x2="848" y2="560" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="856" y="532" width="24" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="868" y="541" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÓ</text>
+
+      <!-- Máy canh khung → Bản đồ -->
+      <path d="M1040,456 V344 Q1040,336 1032,336 H928" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <rect x="1048" y="392" width="68" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="1052" y="401" fill="#636b80" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CANH KHUNG</text>
+
+      <!-- ===================== NODES ===================== -->
+
+      <!-- Thanh chip (≥ lg) -->
+      <rect x="40" y="112" width="144" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="112" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thanh chip (≥ lg)</text>
+      <text x="112" y="152" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">bốn trường · là / không phải</text>
+
+      <!-- Ngăn Bộ lọc (< lg) -->
+      <rect x="40" y="352" width="144" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="112" y="376" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Ngăn Bộ lọc (&lt; lg)</text>
+      <text x="112" y="392" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">nháp → «Xem N listing»</text>
+
+      <!-- D1: điều kiện ngăn biểu diễn được? -->
+      <text x="272" y="332" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.12em">MỖI ĐIỀU KIỆN CỦA CÂY</text>
+      <polygon points="224,380 272,344 320,380 272,416" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="272" y="378" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Biểu diễn</text>
+      <text x="272" y="392" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">được?</text>
+
+      <!-- Kết quả: thành facet -->
+      <rect x="352" y="360" width="144" height="40" rx="16" fill="#ececec" stroke="#4f5d75" stroke-width="1"/>
+      <text x="424" y="377" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thành facet</text>
+      <text x="424" y="391" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">tích / chọn được trong ngăn</text>
+
+      <!-- Kết quả: giữ nguyên + dòng báo -->
+      <rect x="352" y="436" width="144" height="48" rx="16" fill="#ececec" stroke="#4f5d75" stroke-width="1"/>
+      <text x="424" y="456" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Giữ nguyên + dòng báo</text>
+      <text x="424" y="472" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">«Còn N điều kiện từ thanh…»</text>
+
+      <!-- Một cây lọc -->
+      <rect x="544" y="224" width="160" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.6"/>
+      <text x="624" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Một cây lọc</text>
+      <text x="624" y="272" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">FilterQuery</text>
+
+      <!-- Lưới thẻ -->
+      <rect x="768" y="112" width="160" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="848" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Lưới thẻ</text>
+      <text x="848" y="152" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">bộ lọc thuộc tính AND khung</text>
+
+      <!-- Bản đồ -->
+      <rect x="768" y="284" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="848" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Bản đồ</text>
+      <text x="848" y="328" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">mọi listing khớp bộ lọc</text>
+
+      <!-- Người di chuyển khung -->
+      <rect x="1008" y="184" width="160" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1088" y="208" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Người di chuyển khung</text>
+      <text x="1088" y="224" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">kéo · zoom · bấm cụm · nút ±</text>
+
+      <!-- Popup listing (Hỏi-2) -->
+      <rect x="1008" y="268" width="160" height="48" rx="6" fill="#ffffff"/>
+      <rect x="1008" y="268" width="160" height="48" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="1016" y="252" width="40" height="12" rx="2" fill="#f5f5f5" stroke="#eb6c36" stroke-width="0.8"/>
+      <text x="1036" y="261" fill="#ba4513" font-size="8" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HỎI-2</text>
+      <text x="1088" y="288" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Popup listing</text>
+      <text x="1088" y="304" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">tên · giá/đêm · công suất</text>
+
+      <!-- Xem listing (đích ra) -->
+      <rect x="1240" y="268" width="120" height="48" rx="20" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1300" y="288" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Xem listing</text>
+      <text x="1300" y="304" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/listing/&lt;id&gt;</text>
+
+      <!-- D3: Đang lọc vùng? (Hỏi-3) -->
+      <rect x="880" y="428" width="40" height="12" rx="2" fill="#f5f5f5" stroke="#eb6c36" stroke-width="0.8"/>
+      <text x="900" y="437" fill="#ba4513" font-size="8" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HỎI-3</text>
+      <polygon points="792,484 848,448 904,484 848,520" fill="#ffffff"/>
+      <polygon points="792,484 848,448 904,484 848,520" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="848" y="482" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đang lọc</text>
+      <text x="848" y="496" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">vùng?</text>
+
+      <!-- Kết quả: giữ khung -->
+      <rect x="776" y="560" width="144" height="40" rx="16" fill="#ececec" stroke="#4f5d75" stroke-width="1"/>
+      <text x="848" y="577" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Giữ khung nhìn</text>
+      <text x="848" y="591" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">lưới vẫn lọc theo vùng</text>
+
+      <!-- Máy canh khung -->
+      <rect x="1008" y="456" width="160" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1088" y="476" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Máy canh khung</text>
+      <text x="1088" y="492" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">lúc tải · bộ lọc mới · Bỏ lọc</text>
+      <text x="1088" y="504" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">→ không lọc lưới</text>
+
+      <!-- ===================== LEGEND ===================== -->
+      <line x1="40" y1="632" x2="1360" y2="632" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="656" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="668" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="64" y="678" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Màn / vùng / tác nhân</text>
+
+      <polygon points="200,674 208,668 216,674 208,680" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="224" y="678" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Rẽ nhánh</text>
+
+      <rect x="304" y="668" width="16" height="12" rx="6" fill="#ececec" stroke="#4f5d75" stroke-width="1"/>
+      <text x="328" y="678" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Kết quả của nhánh</text>
+
+      <rect x="440" y="668" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="464" y="678" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Điểm chờ người chọn (Hỏi-2 · Hỏi-3)</text>
+
+      <rect x="664" y="668" width="24" height="12" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="696" y="678" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Điểm ra khỏi trang</text>
+
+      <line x1="808" y1="674" x2="840" y2="674" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <text x="848" y="678" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Máy dời khung, không bật lọc vùng</text>
+    </svg>
+  </div>
+</body>
+</html>
