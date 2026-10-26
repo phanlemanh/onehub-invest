@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert";
 import { RegistryTable, type RegistryRow } from "@/components/ops/sources/registry-table";
+import { SoDonVi } from "@/components/ops/sources/so-don-vi";
 import { SourceGroups, type GroupRow } from "@/components/ops/sources/source-groups";
 import { ZaloAccounts } from "@/components/ops/sources/zalo-accounts";
 import { PageHeader } from "@/components/page/page-header";
@@ -9,6 +10,7 @@ import { docNhomThu } from "@/lib/che-do-thu";
 import { homNayVN } from "@/lib/che-do-thu-luat";
 import { pool } from "@/lib/db";
 import { localOnlyTable } from "@/lib/ops-queries";
+import { docDanhMuc, docSoDonVi, type DanhMuc, type DonViRow } from "@/lib/so-don-vi";
 
 const crumbs = [{ label: "Vận hành", href: "/ops" }, { label: "Nguồn dữ liệu" }];
 
@@ -33,6 +35,16 @@ export async function SourcesContent() {
   try {
     groupRows = await docNhomThu();
   } catch { /* cloud: bảng vắng — đúng thiết kế PII */ }
+  // PL12 sổ đơn vị thu: chưa có bảng sổ (chưa áp 048) thì không vẽ khu sổ; DB lỗi thì vùng lỗi có Thử lại, trang vẫn đứng.
+  let soRows: DonViRow[] | null = null;
+  let danhMuc: DanhMuc = { markets: [], projects: [] };
+  let soLoi = false;
+  try {
+    soRows = await docSoDonVi();
+    if (soRows) danhMuc = await docDanhMuc();
+  } catch {
+    soLoi = true;
+  }
   const { rows } = await pool.query<RegistryRow>(
     `SELECT code, real_name, label_vi, status, since::text, retired_at::text
      FROM source_registry ORDER BY code`,
@@ -54,6 +66,7 @@ export async function SourcesContent() {
       <RegistryTable rows={rows} />
       <ZaloAccounts isCloud={process.env.VERCEL === "1"} />
       <SourceGroups initial={groupRows} homNay={homNayVN(new Date())} />
+      {soRows !== null || soLoi ? <SoDonVi rows={soRows ?? []} danhMuc={danhMuc} loi={soLoi} /> : null}
     </div>
   );
 }

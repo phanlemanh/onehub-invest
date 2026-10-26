@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2a4f9401e9c17d442d2e35503ed4498bfaebcfa9
+verified_commit: f5411aa8349eca5be7328f8de4a253a8e65e53b1
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -234,3 +234,7 @@ sha: 7617e4a21b697fb63ce8745f4da734c1affa8faf · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-23, do hoá cũ do merge origin/main 2ba6d4a (#34, #35, #37) vào nhánh
 run_id: repin-20261023T105354Z-32956
 sha: 2a4f9401e9c17d442d2e35503ed4498bfaebcfa9 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-26, do ghim lại sau sửa thước kev-nhan (PR #135) và gộp main 441e0405
+run_id: repin-20261026T131214Z-72593
+sha: f5411aa8349eca5be7328f8de4a253a8e65e53b1 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
