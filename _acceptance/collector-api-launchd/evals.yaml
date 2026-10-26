@@ -1,0 +1,33 @@
+schema_version: 1
+feature_slug: collector-api-launchd
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.cal_cai_dat
+    expected: "exit 0; 'CAI-DAT PASS'; (1) --dry thoát 0, plist in ra đã thế __ROOT__; should-NOT-fire: không ghi plist, 0 lời gọi launchctl"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.cal_cai_dat
+    expected: "exit 0; (2) plist 600, plutil sạch, không __ROOT__, in lệnh bootstrap; should-NOT-fire: script không tự gọi launchctl"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.cal_cai_dat
+    expected: "exit 0; (3a–3d) dist cũ / thiếu khoá / thiếu node / thiếu dist đều bị chặn, không ghi plist"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.cal_unit
+    expected: "exit 0; install-collector-api.test 3/3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.cal_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'; bash -n sạch"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
