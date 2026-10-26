@@ -3,6 +3,8 @@
 // các test pipeline) — không để lại dòng nào. Ca thẻ vẽ DealCard trong jsdom.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { JSDOM } from "jsdom";
 import pg from "pg";
 
@@ -10,6 +12,7 @@ import { dealsSql, repostLabel, toDealRow } from "../src/lib/deals";
 import { CLOUD_ALLOW, PII_EXCLUDE } from "../../pipeline/sync-cloud.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+const ROOT = join(import.meta.dirname, "../..");
 
 async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   const c = new pg.Client({ connectionString: DB_URL });
@@ -43,6 +46,20 @@ async function seed(c: pg.Client, gaps: (number | null)[]): Promise<string[]> {
     );
   }
   return ids;
+}
+
+/** Lược đồ cloud: sale_offers không có cột PII_EXCLUDE. Từ 044 (PL14) sale_offers là VIEW sống trên bảng bản ghi
+ *  sale_offer_records — xoá cột ở bảng thật; CASCADE kéo đổ view sống và hai view thước đọc qua nó, nên dựng lại đúng
+ *  như 044 (view `SELECT *` chỉ hàng sống) và 034 (thước). DB trước 044 thì xoá thẳng trên bảng sale_offers. */
+async function xoaCotPii(c: pg.Client) {
+  const view = (await c.query(`SELECT relkind FROM pg_class WHERE oid = to_regclass('sale_offers')`)).rows[0]?.relkind === "v";
+  const bang = view ? "sale_offer_records" : "sale_offers";
+  for (const col of PII_EXCLUDE.sale_offers as string[]) {
+    await c.query(`ALTER TABLE ${bang} DROP COLUMN ${col} CASCADE`);
+  }
+  if (!view) return;
+  await c.query(`CREATE OR REPLACE VIEW sale_offers AS SELECT * FROM sale_offer_records WHERE retired_at IS NULL`);
+  await c.query(readFileSync(join(ROOT, "db/migrations/034_ruler_p2_views.sql"), "utf8"));
 }
 
 const run = async (c: pg.Client, sql: string, limit = 30) => (await c.query(sql, [5, limit])).rows.map(toDealRow);
@@ -93,9 +110,7 @@ test("DP-AC-5 bản cloud", { timeout: 120_000 }, async () => {
     await seed(c, [30, 12, 40]);
     const full = (await run(c, dealsSql())).map((r) => r.offerId);
     await c.query(`DROP TABLE stg_zalo_posts CASCADE`);
-    for (const col of PII_EXCLUDE.sale_offers as string[]) {
-      await c.query(`ALTER TABLE sale_offers DROP COLUMN ${col} CASCADE`);
-    }
+    await xoaCotPii(c);
     const onCloud = (await run(c, cloud)).map((r) => r.offerId);
     assert.deepEqual(onCloud, full, "DP-AC-5 bản cloud khác dãy tin của bản đầy đủ");
     // Đối chứng: bản đầy đủ trên lược đồ đã xoá phải lỗi — chứng phép xoá có tác dụng.
