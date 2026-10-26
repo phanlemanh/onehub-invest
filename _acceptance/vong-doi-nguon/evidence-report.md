@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 232a500ee1fa028bd3ab868adf837676e181c902
+verified_commit: 2c5fe9c3b067a7b228b37c868caef967cfd8a0e2
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -250,3 +250,7 @@ Round 1: mọi eval máy đều xanh trên đỉnh nhánh; baseline không đo �
 ### Re-pin lần 1 — 2026-10-26, do gộp main 3ce47ba sau chữ ký Cổng 2
 run_id: repin-20261026T094421Z-39844
 sha: 232a500ee1fa028bd3ab868adf837676e181c902 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-26, do sửa 047 + route sau lỗi CI run 40302608712 (Mạnh duyệt sửa tại chỗ) — lượt 3
+run_id: repin-20261026T103506Z-36608
+sha: 2c5fe9c3b067a7b228b37c868caef967cfd8a0e2 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 4/6
