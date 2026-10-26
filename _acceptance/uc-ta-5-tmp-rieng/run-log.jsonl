@@ -1,3 +1,7 @@
 {"ts":"2026-10-26T04:33:04Z","round":1,"evalId":"E1","run_id":"uc-ta-5-tmp-rieng-E1-r1-20261026T043304Z","exit_code":1,"cmd":"bash _acceptance/uc-ta-5-tmp-rieng/probes/nam-luot.sh \"$PWD\""}
 {"ts":"2026-10-26T04:42:33Z","round":1,"evalId":"E2","run_id":"uc-ta-5-tmp-rieng-E2-r1-20261026T044233Z","exit_code":0,"cmd":"bash _acceptance/uc-ta-5-tmp-rieng/probes/dot-bien.sh \"$PWD\""}
 {"ts":"2026-10-26T04:42:34Z","round":1,"evalId":"E3","run_id":"uc-ta-5-tmp-rieng-E3-r1-20261026T044234Z","exit_code":0,"cmd":"bash _acceptance/uc-ta-5-tmp-rieng/probes/scope.sh \"$PWD\""}
+{"ts":"2026-10-26T05:01:18Z","round":2,"evalId":"E1","run_id":"uc-ta-5-tmp-rieng-E1-r2-20261026T050118Z","exit_code":0,"cmd":"bash _acceptance/uc-ta-5-tmp-rieng/probes/nam-luot.sh \"$PWD\""}
+{"ts":"2026-10-26T05:03:44Z","round":2,"evalId":"E2","run_id":"uc-ta-5-tmp-rieng-E2-r2-20261026T050344Z","exit_code":0,"cmd":"bash _acceptance/uc-ta-5-tmp-rieng/probes/dot-bien.sh \"$PWD\""}
+{"ts":"2026-10-26T05:03:44Z","round":2,"evalId":"E3","run_id":"uc-ta-5-tmp-rieng-E3-r2-20261026T050344Z","exit_code":0,"cmd":"bash _acceptance/uc-ta-5-tmp-rieng/probes/scope.sh \"$PWD\""}
+{"ts":"2026-10-26T05:03:44Z","round":2,"evalId":"E4","run_id":"uc-ta-5-tmp-rieng-E4-r2-20261026T050344Z","exit_code":0,"cmd":"bash _acceptance/uc-ta-5-tmp-rieng/probes/keepalive.sh \"$PWD\""}

@@ -5,7 +5,7 @@ slug: uc-ta-5-tmp-rieng
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-26T04:31:47Z
 approved_by:
