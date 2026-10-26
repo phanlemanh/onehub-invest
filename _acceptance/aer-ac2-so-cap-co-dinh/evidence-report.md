@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 33bf975a7e0eb394201d3d7d2868a49198c55af4
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: aer-ac2-so-cap-co-dinh

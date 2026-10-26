@@ -5,7 +5,7 @@ slug: aer-ac2-so-cap-co-dinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T13:55:00Z
 approved_by:
@@ -43,3 +43,6 @@ Bỏ quét không gian tiêu chí — xem dòng sổ `descope` «bỏ coverage-s
 ## Notes
 
 - Nhánh cắt từ đỉnh PR #137 (`010864a5`); PR này base main nên gồm cả #137 — giám sát merge #137 và bản sửa liền nhau.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-2: Nếu bộ đọc cấu hình của kit tự hỏng, ca so trước-sau báo «bỏ qua» và vẫn xanh, kèm lý do sai.
+- Mở hợp đồng mới (Ngoài-1): khai superseded_by cho phần so trước-sau trong ô E2 đã ký của auth-error-thu-lai-retry.
