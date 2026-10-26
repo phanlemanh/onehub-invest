@@ -59,6 +59,9 @@ executors:
     nap_lai_db: "cd pipeline && node --test scripts/nap-lai-db.itest.mjs"   # PL14: migration 044 + đối soát + đổi khoá + listing nghỉ + sync con, trong giao dịch ROLLBACK — cần DB local :5433
     che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"
     job_exit: "node --test scripts/job-exit.test.mjs"
+    dong_chay: "cd app && node --import tsx --test tests/ops-dong-chay.test.tsx tests/data-level.test.tsx"
+    luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
+    ops_nhan: "cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx"
     vong_doi_nguon: "cd pipeline && node --test scripts/vong-doi.test.mjs scripts/vong-doi.itest.mjs"   # TV2a: .test thuần (CI), .itest cần DB local :5433
     vong_doi_nguon_route: "cd app && node --import tsx --test tests/vong-doi-nguon.test.tsx"
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
@@ -159,7 +162,6 @@ executors:
     migration_035: "bash db/check-idempotent.sh db/migrations/035_stg_zalo_media_files.sql stg_zalo_posts"
     idempotent_selftest: "bash db/check-idempotent.selftest.sh"
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
-    sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
     # stg-s08-inventory — cần DB local :5433 (docker one-invest-db); reso cần research-local/reso/dd-2.1.json (env DD_JSON)
     migration_040: "bash db/check-idempotent.sh db/migrations/040_stg_s08_inventory.sql stg_s08_inventory"
@@ -220,7 +222,7 @@ executors:
     # auth-hop-chuan (UI7, Hỏi-3) — đăng ký đầu-cuối qua form /register bằng email dùng một lần, xoá tài khoản cuối lượt; chỉ DB local (exit 2 khi không phải localhost)
     auth_register_smoke: "node scripts/dev-register-check.mjs ${BASE_URL:-http://ui1.localhost:3460}"
     financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
-    methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
+    methodology_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
     app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
     # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
     dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
