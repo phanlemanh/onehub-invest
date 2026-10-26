@@ -10,7 +10,7 @@
 ```
 dot: san-pham-sau-2310
 dang: lan-va
-nguon: khảo sát tồn đọng & hậu kỳ lượt cắt chung 23/10 (ROADMAP §4, FRAMING §7, review §4, ADR-0007 sửa đổi), xem docs/plan/BOI-CANH.md
+nguon: onehub-invest-tri-thuc:wiki/dot/san-pham-sau-2310.md#39a179469ca5840cda1ee4ed7be257c7d24e70b7
 
 - `TD5` — nới PII_EXCLUDE cho cột người bán và đưa liên hệ người bán trở lại cổng Invest
 - `TD6` — gỡ hoặc đổi tên nguồn thật S01/S04/bộ dữ liệu mở trên cổng Invest
