@@ -5,7 +5,7 @@ slug: ops-dong-chay-df0
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-26-ops-dong-chay-du-lieu-ia-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26T11:18:05Z
