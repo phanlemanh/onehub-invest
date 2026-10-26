@@ -235,6 +235,11 @@
       "tep": "scripts/ui-capture-browser.test.mjs",
       "ca": "UC-BR-6 đối chứng dương: trang không tên → mã 0, có ảnh",
       "ly_do": "cần playwright-cli và trình duyệt của máy"
+    },
+    {
+      "tep": "scripts/kiem-tin-rao-gan-khu-vuc.test.mjs",
+      "ca": "KDM-AC-3 ba chiều trên cùng DB",
+      "ly_do": "cần bài stg thật của S03/S05/S06 ở DB local (tin mồi chọn từ kết quả lượt nền)"
     }
   ]
 }

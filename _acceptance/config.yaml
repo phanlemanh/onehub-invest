@@ -51,6 +51,7 @@ executors:
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
     reassign_areas: "cd pipeline && node --test scripts/reassign-areas.test.mjs"   # AU9 AC-1…AC-5 — nạp ranh giới cấp phường + dọn khu vực lạc + DQ, trong BEGIN…ROLLBACK trên DB local
     tin_rao_gan: "cd pipeline && node --test scripts/tin-rao-gan-khu-vuc.test.mjs"   # tin-rao-gan-khu-vuc-dung AC-1…AC-7 — bộ đọc phường hợp lệ + bốn bước gán, mồi trong BEGIN…ROLLBACK trên DB local; AC-7 đọc tĩnh
+    tin_rao_gan_do_test: "node --test scripts/kiem-tin-rao-gan-khu-vuc.test.mjs"   # do-khu-vuc-tu-dung-moi AC-3 ba chiều (DB local), AC-4 so băm, AC-5 E8 cũ thay bởi AC-2
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
     vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
@@ -64,6 +65,8 @@ executors:
     vong_doi_nguon: "cd pipeline && node --test scripts/vong-doi.test.mjs scripts/vong-doi.itest.mjs"   # TV2a: .test thuần (CI), .itest cần DB local :5433
     vong_doi_nguon_route: "cd app && node --import tsx --test tests/vong-doi-nguon.test.tsx"
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
+    so_nhom: "cd pipeline && node --test scripts/so-nhom.itest.mjs"
+    so_nhom_app: "cd app && node --import tsx --test tests/so-nhom.test.tsx"
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -80,7 +83,7 @@ executors:
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
     ops_mobile_smoke: "node scripts/smoke-ops-mobile.mjs"   # ON13: cột trạng thái 6 bảng Ops ở 390px/1280px trên app chạy thật (Chromium không giao diện, playwright-core); cần DB local
     ranh_gioi_do: "node scripts/kiem-ranh-gioi-khu-vuc.mjs --thu"   # AU9 AC-6/AC-7 — áp thử trong MỘT transaction trên DB local rồi ROLLBACK, so trước/sau
-    tin_rao_gan_do: "node scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu"   # tin-rao-gan-khu-vuc-dung AC-8 — ba transform tin rao trên dữ liệu thật trong MỘT transaction rồi ROLLBACK, so trước/sau
+    tin_rao_gan_do: "node scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu"   # do-khu-vuc-tu-dung-moi AC-1/2/4 (thay E8 của tin-rao-gan-khu-vuc-dung) — ba transform tin rao trên DB local trong MỘT transaction, tin mồi tự dựng, rồi ROLLBACK; băm bảng ghi trước/sau
     vocab_check: "node pipeline/vocab.mjs --check"   # PL6: tệp sinh khớp sổ mappings.yaml — đo trạng thái cây
     vocab_lint: "node pipeline/vocab.mjs --lint"     # PL6: 0 enum viết tay ngoài sổ — đo trạng thái cây
     vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
@@ -159,7 +162,6 @@ executors:
     migration_035: "bash db/check-idempotent.sh db/migrations/035_stg_zalo_media_files.sql stg_zalo_posts"
     idempotent_selftest: "bash db/check-idempotent.selftest.sh"
     zalo_media_roundtrip: "cd pipeline && node scripts/media-files-roundtrip.mjs"
-    sync_pii_mutation: "cd pipeline && node scripts/sync-pii-mutation.mjs"
     zalo_media_backfill: "cd pipeline && SNAPSHOTS_DIR=$HOME/dev/onehub-invest/collector/snapshots node backfill-zalo-media.mjs --check"
     # stg-s08-inventory — cần DB local :5433 (docker one-invest-db); reso cần research-local/reso/dd-2.1.json (env DD_JSON)
     migration_040: "bash db/check-idempotent.sh db/migrations/040_stg_s08_inventory.sql stg_s08_inventory"
@@ -220,7 +222,7 @@ executors:
     # auth-hop-chuan (UI7, Hỏi-3) — đăng ký đầu-cuối qua form /register bằng email dùng một lần, xoá tài khoản cuối lượt; chỉ DB local (exit 2 khi không phải localhost)
     auth_register_smoke: "node scripts/dev-register-check.mjs ${BASE_URL:-http://ui1.localhost:3460}"
     financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
-    methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
+    methodology_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
     app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
     # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
     dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
@@ -363,6 +365,10 @@ executors:
     # noi-tiep-zc4 (2610-5 + 2510-32) — bản chép tạm + HOME giả, launchctl giả
     nz4_logs_tmp: "bash _acceptance/noi-tiep-zc4/probes/logs-tmp.sh \"$PWD\""
     nz4_scope: "bash _acceptance/noi-tiep-zc4/probes/scope.sh \"$PWD\""
+    # kev-nhan-thuoc-sau-pl1 — thước kev-nhan đỏ sẵn trên main (PL1 khuôn tên, ZC6 chữ log); stg-roundtrip cần DB local :5433
+    ktp_doi_chung: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/doi-chung.sh \"$PWD\""
+    ktp_cac_mode_khac: "cd collector && rm -rf dist && npm run build && cd .. && for m in manifest-v3 watchdog-l1 sourceid stg-roundtrip; do node scripts/kev-nhan/acceptance.mjs $m || exit 1; done && grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
+    ktp_scope: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
