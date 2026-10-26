@@ -5,7 +5,7 @@ slug: vong-doi-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: chạm db/migrations/** và app/src/app/api/v1/ops/** (t3_paths); hàng lộ trình ghi T2
 surfaces: [api, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-vong-doi-nguon-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -71,3 +71,10 @@ Quét bằng morphological-scan, preset test-matrix (design doc mục «Không g
 - Áp 047 lên DB local :5433 dùng chung **chỉ sau khi gộp** (phiên liên làn dặn 26/10, cùng lúc cấp số). Bước triển khai
   sau gộp: áp bằng lệnh của `.claude/rules/migrations.md`, rồi chạy `executors.test.vong_doi_nguon` lần nữa.
 - Supabase: không áp, vì cloud không có hai bảng này (AC-8 chứng migration tự bỏ qua nếu lỡ chạy).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-2: Hiếm khi, nếu ghi nhật ký bị lỗi đúng lúc bật hoặc tắt nhóm, thao tác vẫn báo thành công nhưng không có dòng vết ghi ai đổi từ trạng thái nào sang trạng thái nào.
+  - Ngoài-4: Khi máy thiếu thư viện kết nối DB hoặc chuỗi kết nối sai, công cụ kiểm tra nguồn báo lỗi bằng mã lạ thay vì mã lỗi đã hẹn, nên script đêm gọi nó có thể xử lý nhầm.
+  - Ngoài-5: Đổi chế độ thu của một nhóm chưa được thử trên cấu trúc dữ liệu mới, nên nếu nó hỏng sau bản cập nhật thì bộ kiểm tra vẫn báo xanh.
+  - Ngoài-6: Bài kiểm tra dùng bảng mẫu tự viết, nên nếu bảng thật lệch khỏi mẫu ở giá trị mặc định hay ràng buộc thì bài kiểm vẫn báo xanh.
+  - Ngoài-7: Bài kiểm trên bản chép dữ liệu thật không xác nhận cơ chế tự giữ hai cột trạng thái khớp nhau đã được tạo, dù các ràng buộc khác đã được kiểm.
+  - Ngoài-8: Nếu bản chép bảng nhóm trống hoặc không có nhóm nào đang tắt, bài kiểm vẫn báo xanh mà chưa thật sự thử việc chuyển nhóm tắt sang tạm dừng.
