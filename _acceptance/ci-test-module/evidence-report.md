@@ -7,8 +7,8 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c7f4f4736f7e251cc165a0764dfa4c75aec53883
-human_signoff:
+verified_commit: 099e86ba692a009166f8be665f11adc23ea1f06e
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: ci-test-module
@@ -166,3 +166,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, xác đ
 Round 1: lệnh suite `cd app && npx tsc --noEmit && npm run lint` đỏ nên vòng bị REJECT theo run-log; trả về implementation, sửa ở các commit 1826a7ec, 61f1aced (sổ sửa 4dc2f0c3).
 Round 2: E1–E8 và sáu lệnh suite đều xanh trên commit c7f4f4736f7e251cc165a0764dfa4c75aec53883; verdict PASS.
 
+
+### Re-pin lần 1 — 2026-10-26, do gộp origin/main 169b8c6 (#109) trước chữ ký Cổng Bằng chứng
+run_id: repin-20261026T002030Z-68519
+sha: 099e86ba692a009166f8be665f11adc23ea1f06e · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng

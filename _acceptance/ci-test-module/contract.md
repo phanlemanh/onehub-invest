@@ -5,7 +5,7 @@ slug: ci-test-module
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-25
 design_doc: docs/superpowers/specs/2026-10-25-ci-test-module-design.md
@@ -80,3 +80,6 @@ lỗi 5×5 (loại lỗi JS theo Hỏi-4); AC-8 CI thật (gồm khác kiến tr
 
 - Không thêm secret nào vào workflow (điều phối 25/10, P3-70).
 - Chạy lại cục bộ chạy trên arm64 (máy local), CI thật trên amd64 — lệch gói native chỉ AC-8 bắt được.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-2: migration 031 đã khai là lỗi sẵn có thể che một lỗi mới nằm cùng tệp — CI vẫn xanh tới khi 031 được vá.
+  - Ngoài-3: ba luật phụ của thước tĩnh (thêm `|| true`, `if:` trên bước kiểm, đổi khoá kích hoạt) chưa có bản phá riêng để chứng là bắt được.
