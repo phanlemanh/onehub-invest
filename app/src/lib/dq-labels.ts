@@ -13,6 +13,7 @@ const TEN_KIEM: Record<string, string> = {
   "occupancy-domain": "Công suất trong khoảng 0–1",
   "not-null": "Không có dòng rỗng",
   "area-slug-valid": "Mã khu vực hợp lệ",
+  area_con_ngoai_cha: "Khu vực con nằm trong khu vực cha",
   "listing-volume": "Khối lượng listing",
   "adr-drift": "ADR không trôi",
   freshness: "Độ tươi",
@@ -89,6 +90,8 @@ export function dqDetail(check: string, detail: string | null): DqText {
   if ((m = d.match(/^vi phạm: (\d+)$/))) return { text: `${nguyen(m[1])} vi phạm`, known: true }
   if ((m = d.match(/^dòng toàn NULL: (\d+)$/))) return { text: `${nguyen(m[1])} dòng rỗng toàn bộ`, known: true }
   if ((m = d.match(/^slug rỗng\/lệch: (\d+)$/))) return { text: `${nguyen(m[1])} mã khu vực rỗng hoặc lệch`, known: true }
+  if ((m = d.match(/^(\d+) khu vực con có tâm ngoài polygon cha \/ (\d+) con$/)))
+    return { text: `${nguyen(m[1])}/${nguyen(m[2])} khu vực con nằm ngoài khu vực cha`, known: true }
   if ((m = d.match(/^7 ngày gần: (\d+) vs 7 ngày trước: (\d+)$/)))
     return { text: `7 ngày gần: ${nguyen(m[1])} · 7 ngày trước: ${nguyen(m[2])}`, known: true }
   if ((m = d.match(/^snapshot mới (\d+) vs trước (\d+) \(([+-]?\d+)\)$/)))
