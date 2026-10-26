@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5f01598c384ba2b74b801726e430e4240e386e6f
+verified_commit: aa8f3f525ac0d006036c2d2f751531da03f2e572
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -221,3 +221,7 @@ Round 2: cây mới nhận bản sửa S4-r1 (test app giữ khoá và nạp 044
 ### Re-pin lần 1 — 2026-10-26, do gộp main sau PR #130 (xung đột reassign-areas, transform-chotot, transform-fb)
 run_id: repin-20261026T105038Z-74887
 sha: 5f01598c384ba2b74b801726e430e4240e386e6f · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): nap-lai-khong-xoa E7
+
+### Re-pin lần 2 — 2026-10-26, do gộp main sau PR #131 (chỉ xung đột LO-TRINH.html máy sinh)
+run_id: repin-20261026T110521Z-27912
+sha: aa8f3f525ac0d006036c2d2f751531da03f2e572 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng
