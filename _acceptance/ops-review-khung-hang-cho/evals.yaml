@@ -47,6 +47,7 @@ evals:
     criterion: AC-4
     executor: script
     cmd: config:executors.script.review_queue_smoke
+    layer: backend-effect
     paths: [app/src/components/ops/review/**, app/src/lib/ops/review-media.ts, scripts/smoke-review-queue.mjs]
     expected: "exit 0; với tài khoản admin: 'ok   [desktop-1280] sheet thẻ <id>: dải ảnh <k> ảnh = loadReviewMedia (<k>)' cho mọi thẻ chờ mà loader trả ảnh (k đếm bằng cùng truy vấn với lib/ops/review-media.ts), hoặc 'ok   [desktop-1280] sheet thẻ <id>: «không có ảnh» khớp loader rỗng'; 'ok   [desktop-1280] bảng: 0 <img>'; với tài khoản ops không admin tạo trong lượt: 'ok   [ops] sheet thẻ <id>: 0 dải ảnh' và tài khoản thử bị xoá cuối lượt"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
