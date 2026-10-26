@@ -4,6 +4,8 @@
 //  - listings: pdpSections (lat/lng, capacity, roomType, giá VND) + ogTitle (bedrooms)
 //  - nights: stg_abnb_nights snapshot mới nhất per listing (price NULL — divergence
 //    cùng mô hình Bangkok: giá niêm yết từ price_listed; đêm cũ còn NULL được lấp lại)
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { phuongHopLe } from "./lib/osm.mjs";
@@ -97,6 +99,57 @@ function extractListing(payload) {
   };
 }
 
+/**
+ * Ghi một listing Airbnb vào bảng bản ghi (044). Ngoài mọi phường (hoặc thiếu toạ độ) → cho nghỉ
+ * `ngoai_phuong`, KHÔNG xoá: nights + listing_stats giữ nguyên (PL14). Trong phường → upsert và gỡ nghỉ.
+ * Người gọi giữ transaction. Trả true khi listing sống sau lượt ghi.
+ * @param {import("pg").Client} client
+ * @param {{ id: string, areaId: string | null, ex: ReturnType<typeof extractListing>, fetchedAt: string | Date }} l
+ */
+export async function ghiListing(client, { id, areaId, ex, fetchedAt }) {
+  if (!areaId) {
+    await client.query(
+      `UPDATE listing_records SET retired_at = now(), retired_reason = 'ngoai_phuong'
+       WHERE id = $1 AND retired_at IS NULL`,
+      [id],
+    );
+    return false;
+  }
+  await client.query(
+    `INSERT INTO listing_records (id, area_id, name, room_type, bedrooms, accommodates,
+                           price_listed, latitude, longitude, last_seen,
+                           photo_urls, review_count, originating_system_key)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+     ON CONFLICT (id) DO UPDATE SET
+       area_id = EXCLUDED.area_id,
+       name = EXCLUDED.name, room_type = EXCLUDED.room_type,
+       bedrooms = EXCLUDED.bedrooms, accommodates = EXCLUDED.accommodates,
+       price_listed = EXCLUDED.price_listed,
+       latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude,
+       last_seen = EXCLUDED.last_seen,
+       photo_urls = EXCLUDED.photo_urls,
+       review_count = EXCLUDED.review_count,
+       originating_system_key = EXCLUDED.originating_system_key,
+       retired_at = NULL, retired_reason = NULL`,
+    [
+      id,
+      areaId,
+      ex.name,
+      ex.roomType,
+      ex.bedrooms,
+      ex.personCapacity,
+      ex.priceListed,
+      ex.lat,
+      ex.lng,
+      new Date(fetchedAt).toISOString().slice(0, 10),
+      ex.photos.length ? JSON.stringify(ex.photos) : null,
+      ex.reviewCount,
+      id.replace(/^abnb_/, ""),
+    ],
+  );
+  return true;
+}
+
 async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
@@ -137,41 +190,10 @@ async function main() {
       if (!ex) continue;
       const id = `abnb_${r.listing_id}`;
       const areaId = await phuongOf(ex.lat, ex.lng);
-      if (!areaId) {
-        // ngoài mọi phường đã có polygon (ngoài tỉnh) / thiếu tọa độ → không vào canonical
-        await client.query(`DELETE FROM listings WHERE id = $1`, [id]);
+      if (!(await ghiListing(client, { id, areaId, ex, fetchedAt: r.fetched_at }))) {
         outside++;
         continue;
       }
-      await client.query(
-        `INSERT INTO listings (id, area_id, name, room_type, bedrooms, accommodates,
-                               price_listed, latitude, longitude, last_seen,
-                               photo_urls, review_count)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-         ON CONFLICT (id) DO UPDATE SET
-           area_id = EXCLUDED.area_id,
-           name = EXCLUDED.name, room_type = EXCLUDED.room_type,
-           bedrooms = EXCLUDED.bedrooms, accommodates = EXCLUDED.accommodates,
-           price_listed = EXCLUDED.price_listed,
-           latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude,
-           last_seen = EXCLUDED.last_seen,
-           photo_urls = EXCLUDED.photo_urls,
-           review_count = EXCLUDED.review_count`,
-        [
-          id,
-          areaId,
-          ex.name,
-          ex.roomType,
-          ex.bedrooms,
-          ex.personCapacity,
-          ex.priceListed,
-          ex.lat,
-          ex.lng,
-          new Date(r.fetched_at).toISOString().slice(0, 10),
-          ex.photos.length ? JSON.stringify(ex.photos) : null,
-          ex.reviewCount,
-        ],
-      );
       nListings++;
       const filled = [ex.name, ex.roomType, ex.personCapacity, ex.lat, ex.priceListed].filter(
         (x) => x !== null && x !== undefined,
@@ -179,7 +201,7 @@ async function main() {
       if (filled < 4) missingField++;
     }
     console.log(
-      `listings: ${nListings} chuẩn hoá (thiếu ≥2 trường chính: ${missingField}; ngoài mọi phường — bỏ: ${outside})`,
+      `listings: ${nListings} chuẩn hoá (thiếu ≥2 trường chính: ${missingField}; ngoài mọi phường — nghỉ: ${outside})`,
     );
 
     // ---- 3. Nights: snapshot mới nhất per listing → canonical nights ----
@@ -212,7 +234,11 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+const isMain =
+  process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

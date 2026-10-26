@@ -61,7 +61,8 @@ ON CONFLICT (id) DO UPDATE
 
 -- 3) Nights — giá lấy từ price_listed của listing (snapshot 2026 của Inside
 -- Airbnb đã bỏ price/adjusted_price khỏi calendar; xem divergence list)
-DELETE FROM nights;
+-- Chỉ thay đêm của listing SỐNG (view listings): đêm của listing đã nghỉ giữ nguyên (PL14, 044).
+DELETE FROM nights WHERE listing_id IN (SELECT id FROM listings);
 INSERT INTO nights (listing_id, night, available, price)
 SELECT 'abnb_' || c.listing_id,
        c.date::date,

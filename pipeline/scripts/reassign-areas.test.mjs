@@ -15,6 +15,7 @@ import { runReassign, WARD_LEVEL } from "../reassign-areas.mjs";
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const ROOT = join(import.meta.dirname, "../..");
+const MIG_044 = readFileSync(join(ROOT, "db/migrations/044_nap_lai_khong_xoa.sql"), "utf8");
 const HUNG_YEN = [106.05, 20.65]; // ngoài polygon Hà Nội, ngoài mọi phường Hà Nội/TP.HCM
 
 // Khối check DQ con-ngoài-cha, rút đúng đoạn giữa hai marker của 450 (đo chính SQL sẽ chạy)
@@ -38,6 +39,10 @@ async function withTx(t, fn) {
   await c.connect();
   try {
     await c.query("BEGIN");
+    // Cùng khoá với các test nạp 044 trong giao dịch (dựng lại khoá ngoại nights/listing_stats) — tránh deadlock.
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
+    // PL14: reassign ghi listing_records (044) — DB chưa áp thì nạp 044 trong giao dịch.
+    if (!(await c.query(`SELECT to_regclass('listing_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
     const { rows } = await c.query(
       `SELECT payload, snapshot_id FROM stg_osm_boundaries
        WHERE snapshot_id LIKE 'hanoi__%' AND payload->'tags'->>'admin_level' = $1
