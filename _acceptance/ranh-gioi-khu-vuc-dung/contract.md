@@ -5,7 +5,7 @@ slug: ranh-gioi-khu-vuc-dung
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [pipeline]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-26
 design_doc: docs/superpowers/specs/2026-10-25-ranh-gioi-khu-vuc-dung-design.md
@@ -99,3 +99,8 @@ DB local, test app}. Hà Nội là thị trường bị lỗi; TP.HCM là đối
 - Nâng phạm vi ở Cổng Bằng chứng 26/10 (Ngoài-1/4/5, AC-10): `reassign-areas.mjs` chạy tự động hằng tuần qua
   `pipeline/scripts/weekly-collect.sh` → `finalize-hanoi.sh`; rào `saved_markets` chỉ thấy DB local còn thị trường
   người dùng lưu nằm trên cloud, nên lượt theo lịch không được xoá khu vực — chỉ lượt gọi tay có cờ mới xoá.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-2: phép kiểm `area_con_ngoai_cha` và cờ `meta.lac` đặt tên tiếng Việt, lệch cách đặt tên của các phép kiểm và khoá meta khác.
+  - Ngoài-3: khu vực lạc được giữ lại ở lượt dọn có cờ (vì còn thị trường người dùng lưu) có thể tạm nhận tin Airbnb tới lượt chạy hằng tuần kế tiếp.
+  - Ngoài-4: nếu đổi câu ghi chi tiết của phép kiểm khu vực con, trang Ops có thể hiện «(chưa diễn giải)» mà bộ kiểm không báo đỏ.
+  - Ngoài-5: lời hứa «bước gán Airbnb không gán vào khu vực lạc» chỉ được đo bằng đọc mã nguồn, chưa chạy đường gán thật.
