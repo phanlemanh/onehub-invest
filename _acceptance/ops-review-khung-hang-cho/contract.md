@@ -5,7 +5,7 @@ slug: ops-review-khung-hang-cho
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-26-ops-review-khung-hang-cho-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26T04:18:14Z
