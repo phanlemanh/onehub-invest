@@ -68,6 +68,8 @@ executors:
     ci_local_agent_types: "node scripts/ci-test-local.mjs --agent-types"   # AU11 AC-5 — agent cài sạch tsc
     ci_github: "node scripts/ci-test-github.mjs"   # AU11 AC-8 — CI thật qua gh (theo Hỏi-3)
     listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
+    listing_detail_smoke: "node scripts/smoke-listing-detail.mjs"   # UI5: /listing/[id] trên Chromium (gallery, ảnh chết qua chặn mạng, không ảnh, lịch trống, 375 px) — app chạy từ worktree đang kiểm (BASE_URL, mặc định :3460 dãy U1) + DB local
+    listing_hero_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/listing/listing-hero.tsx"   # UI5: design gate ghim đầu trang listing
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
     ui_kit_sockets: "node scripts/ui-standards/acceptance.mjs kit-sockets"
@@ -279,6 +281,19 @@ executors:
     kns_s05_gate: "node _acceptance/khoa-nap-s05-paused/probes/s05-gate.mjs"
     kns_scope: "bash _acceptance/khoa-nap-s05-paused/probes/scope.sh \"$PWD\""
     kns_lich_s05: "node _acceptance/khoa-nap-s05-paused/probes/lich-s05.mjs"   # G1 2510-14: plist + buildRunInput, không gọi Apify
+    # watchdog-l4b-history (2410-15, T3) — bản chép bộ canh + HOME giả + stub launchctl/pkill/pgrep/osascript/curl/sleep (luật 8)
+    wdh_p1: "node scripts/watchdog-l4b-history/acceptance.mjs p1-marker-so"
+    wdh_p2: "node scripts/watchdog-l4b-history/acceptance.mjs p2-duong-dan-khac"
+    wdh_p3: "node scripts/watchdog-l4b-history/acceptance.mjs p3-inode-moi"
+    wdh_p4: "node scripts/watchdog-l4b-history/acceptance.mjs p4-so-dong-lon"
+    wdh_xoay_that: "node scripts/watchdog-l4b-history/acceptance.mjs xoay-that"
+    # collector-seen-cap (2510-2) — mỗi ca trong tiến trình con timeout 60s, thư mục tạm, cổng ngẫu nhiên; không chạm :9210
+    seen_flush_6000: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs flush-6000"
+    seen_hai_luot: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs hai-luot"
+    seen_khoi_dong_lai: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs khoi-dong-lai"
+    seen_tran_lo: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs tran-lo"
+    seen_state_trung: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs state-trung"   # vòng 2
+    seen_body_null: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/collector-seen-cap/acceptance.mjs body-null"   # vòng 2
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)

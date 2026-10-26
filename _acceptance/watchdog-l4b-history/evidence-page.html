@@ -1,0 +1,178 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · watchdog-l4b-history</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới»</h1><div class="sub">Trang hồ sơ · <span class="mono">watchdog-l4b-history</span> · tier T3</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">bộ canh Zalo không còn tắt nhầm gateway vì quét lại lịch sử khi tệp log gateway bị coi là «tệp mới»</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Ở Cổng Bằng chứng của watchdog-l4b-cuoi-ngay (ZC3 nối tiếp, PR #63), Mạnh tách Ngoài-1 thành việc riêng. Lỗi: tệp log gateway mang các dòng agent-turn của sự cố 20/10; khi bộ canh coi tệp đó là «tệp mới» (khác inode, số dòng trong marker lớn hơn thật, đường dẫn khác, marker định dạng số cũ), nó quét lại từ dòng 1, gặp turn cũ và tắt gateway Zalo — tin ngừng chảy tới khi có người bật lại…</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra"><span class="vang">chưa có — decisions.jsonl</span></div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">3 mục để ngoài phạm vi · 3 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>7</b></span><span data-k="phep_do">Phép đo <b>9</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="quyet_dinh_nguoi">người <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="ma">Mã <b>ee23243</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Ở Cổng Bằng chứng của watchdog-l4b-cuoi-ngay (ZC3 nối tiếp, PR #63), Mạnh tách Ngoài-1 thành việc riêng. Lỗi: tệp log gateway mang các dòng agent-turn của sự cố 20/10; khi bộ canh coi tệp đó là «tệp mới» (khác inode, số dòng trong marker lớn hơn thật, đường dẫn khác, marker định dạng số cũ), nó quét lại từ dòng 1, gặp turn cũ và tắt gateway Zalo — tin ngừng chảy tới khi có người bật lại. Lời giao claudedp-2410-15; ZCode XONG ở zcode/watchdog-l4b-history @ 71d1232: ở chế độ history, mọi nhánh «quét lại» đều khởi tạo marker ở dòng hiện tại + WARN thay vì quét quá khứ; chỉ nhánh append quét phần mới.</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given tệp log gateway mang 2 turn cũ và marker định dạng số cũ (chỉ số dòng), When bộ canh chạy lượt kế, Then KHÔNG tắt gateway, có một dòng WARN, marker ghi lại đúng dạng `đường_dẫn:inode:số_dòng`; và một turn MỚI ghi sau đó bị bắt ở lượt kế (tắt).</li><li data-ac="AC-2"><b>AC-2</b> — Given như AC-1 nhưng marker trỏ đường dẫn khác, When lượt kế, Then cùng kết quả: không tắt, WARN, marker đúng dạng, turn mới sau đó bị bắt.</li><li data-ac="AC-3"><b>AC-3</b> — Given tệp log gateway được ghi lại cùng tên (inode mới, nội dung giữ nguyên), When lượt kế, Then cùng kết quả như AC-1.</li><li data-ac="AC-4"><b>AC-4</b> — Given marker ghi số dòng lớn hơn số dòng thật của tệp, When lượt kế, Then cùng kết quả như AC-1.</li><li data-ac="AC-5"><b>AC-5</b> — Given log gateway xoay thật (tệp mới), When một turn ghi SAU lượt quét đầu tiên sau xoay, Then turn đó bị bắt (tắt); turn ghi trước lượt quét đầu sau xoay thuộc cửa sổ bỏ sót đã khai (≤ một chu kỳ 5′), chỉ ghi nhận.</li><li data-ac="AC-6"><b>AC-6</b> — Given nhánh, When chạy lại các kiểm của `watchdog-l4b-cuoi-ngay` (quét log OpenClaw cuối ngày, xoay log, marker hỏng), Then tất cả vẫn đạt.</li><li data-ac="AC-7"><b>AC-7</b> — Given nhánh, When kiểm cú pháp bộ canh và các script liên quan, Then sạch.</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><span class="vang">chưa có — decisions.jsonl</span></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>feature-loop:cham-lenh</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E1-r1-20261025T231623Z</td><td class="mono">2026-10-25T23:16:25Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E2-r1-20261025T231625Z</td><td class="mono">2026-10-25T23:16:26Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E3-r1-20261025T231627Z</td><td class="mono">2026-10-25T23:16:28Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E4-r1-20261025T231628Z</td><td class="mono">2026-10-25T23:16:30Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E5-r1-20261025T231630Z</td><td class="mono">2026-10-25T23:16:32Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E6-r1-20261025T231636Z</td><td class="mono">2026-10-25T23:16:36Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E7-r1-20261025T231636Z</td><td class="mono">2026-10-25T23:16:38Z</td></tr>
+<tr><td><a href="#E8">E8</a></td><td>AC-6</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E8-r1-20261025T231638Z</td><td class="mono">2026-10-25T23:16:40Z</td></tr>
+<tr><td><a href="#E9">E9</a></td><td>AC-7</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">watchdog-l4b-history-E9-r1-20261025T231640Z</td><td class="mono">2026-10-25T23:16:40Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · script</h3><p class="crit">AC-1: Given tệp log gateway mang 2 turn cũ và marker định dạng số cũ (chỉ số dòng), When bộ canh chạy lượt kế, Then KHÔNG tắt gateway, có một dòng WARN, marker ghi lại đúng dạng `đường_dẫn:inode:số_dòng`; và một turn MỚI ghi sau đó bị bắt ở lượt kế (tắt).</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E1-r1-20261025T231623Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.wdh_p1</b></span><span>verified_at <b>2026-10-25T23:16:25Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">an toàn: launchctl/pkill/pgrep/osascript/curl/sleep → stub trong thư mục tạm
+ok   P1 marker số cũ: khởi tạo — không kill
+P1 marker số cũ: exit 0 · stub: không
+ok   P1 marker số cũ: should-NOT-fire — KHÔNG kill gateway vì 2 turn cũ của lịch sử
+ok   P1 marker số cũ: có dòng WARN
+ok   P1 marker số cũ: marker ghi lại đúng dạng đường_dẫn:inode:số_dòng
+ok   P1 marker số cũ: sau đó 1 turn MỚI vào gateway.log → lượt kế bị bắt, KILL
+P1 PASS</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · script</h3><p class="crit">AC-2: Given như AC-1 nhưng marker trỏ đường dẫn khác, When lượt kế, Then cùng kết quả: không tắt, WARN, marker đúng dạng, turn mới sau đó bị bắt.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E2-r1-20261025T231625Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.wdh_p2</b></span><span>verified_at <b>2026-10-25T23:16:26Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   P2 đường dẫn khác: khởi tạo — không kill
+P2 đường dẫn khác: exit 0 · stub: không
+ok   P2 đường dẫn khác: should-NOT-fire — KHÔNG kill gateway vì 2 turn cũ của lịch sử
+ok   P2 đường dẫn khác: có dòng WARN
+ok   P2 đường dẫn khác: marker ghi lại đúng dạng đường_dẫn:inode:số_dòng
+ok   P2 đường dẫn khác: sau đó 1 turn MỚI vào gateway.log → lượt kế bị bắt, KILL
+P2 PASS</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given tệp log gateway được ghi lại cùng tên (inode mới, nội dung giữ nguyên), When lượt kế, Then cùng kết quả như AC-1.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E3-r1-20261025T231627Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.wdh_p3</b></span><span>verified_at <b>2026-10-25T23:16:28Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   P3 inode mới: khởi tạo — không kill
+P3 inode mới: exit 0 · stub: không
+ok   P3 inode mới: should-NOT-fire — KHÔNG kill gateway vì 2 turn cũ của lịch sử
+ok   P3 inode mới: có dòng WARN
+ok   P3 inode mới: marker ghi lại đúng dạng đường_dẫn:inode:số_dòng
+ok   P3 inode mới: sau đó 1 turn MỚI vào gateway.log → lượt kế bị bắt, KILL
+P3 PASS</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · script</h3><p class="crit">AC-4: Given marker ghi số dòng lớn hơn số dòng thật của tệp, When lượt kế, Then cùng kết quả như AC-1.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E4-r1-20261025T231628Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.wdh_p4</b></span><span>verified_at <b>2026-10-25T23:16:30Z</b></span><span>baseline <b>red</b></span></div>
+<pre class="out">ok   P4 số dòng lớn hơn: khởi tạo — không kill
+P4 số dòng lớn hơn: exit 0 · stub: không
+ok   P4 số dòng lớn hơn: should-NOT-fire — KHÔNG kill gateway vì 2 turn cũ của lịch sử
+ok   P4 số dòng lớn hơn: có dòng WARN
+ok   P4 số dòng lớn hơn: marker ghi lại đúng dạng đường_dẫn:inode:số_dòng
+ok   P4 số dòng lớn hơn: sau đó 1 turn MỚI vào gateway.log → lượt kế bị bắt, KILL
+P4 PASS</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-5: Given log gateway xoay thật (tệp mới), When một turn ghi SAU lượt quét đầu tiên sau xoay, Then turn đó bị bắt (tắt); turn ghi trước lượt quét đầu sau xoay thuộc cửa sổ bỏ sót đã khai (≤ một chu kỳ 5′), chỉ ghi nhận.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E5-r1-20261025T231630Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.wdh_xoay_that</b></span><span>verified_at <b>2026-10-25T23:16:32Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">an toàn: launchctl/pkill/pgrep/osascript/curl/sleep → stub trong thư mục tạm
+ghi nhận: turn ở đầu gateway.log vừa xoay KHÔNG bị bắt (cửa sổ bỏ sót đã khai)
+ok   turn MỚI ghi sau lượt quét đầu sau xoay → bị bắt
+XOAY-THAT PASS</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-6: Given nhánh, When chạy lại các kiểm của `watchdog-l4b-cuoi-ngay` (quét log OpenClaw cuối ngày, xoay log, marker hỏng), Then tất cả vẫn đạt.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E6-r1-20261025T231636Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc3b_scan</b></span><span>verified_at <b>2026-10-25T23:16:36Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">ok   (a) turn ở dòng cuối file hôm qua được bắt ở lượt đầu ngày mới
+ok   (b) turn ở dòng 1 của file hôm nay được bắt, quét đủ 5 dòng
+ok   (d) should-NOT-fire: không quét đuôi file lạ cùng tên, chỉ quét 2 dòng file mới
+ok   (e) truncate cùng inode 6 → 2 dòng: quét toàn bộ từ dòng 1
+ok   marker số cũ «4211» + cwd có tệp tên 4211: quét toàn bộ file hôm nay, không đọc nhầm tệp kia, không lỗi
+ok   gateway.log xoay cùng đường dẫn: quét toàn bộ file mới, không lỗi
+SCAN PASS</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · script</h3><p class="crit">AC-6: Given nhánh, When chạy lại các kiểm của `watchdog-l4b-cuoi-ngay` (quét log OpenClaw cuối ngày, xoay log, marker hỏng), Then tất cả vẫn đạt.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E7-r1-20261025T231636Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc3b_rotate</b></span><span>verified_at <b>2026-10-25T23:16:38Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">an toàn: launchctl/pkill/pgrep/osascript/curl/sleep → stub trong thư mục tạm
+ok   lượt quét cuối ngày: không có gì → exit 0, không kill
+lượt đầu ngày mới: [thoát khác 0 — đúng kỳ vọng] · stub gọi: launchctl bootout gui/503/ai.openclaw.gateway | pkill -9 -f openclaw
+ok   lượt đầu ngày mới: [thoát khác 0 — đúng kỳ vọng]
+ok   alert KILL ghi đúng lý do (turn từ kênh xã hội)
+ok   alert gọi launchctl bootout + pkill (STUB — không chạm OpenClaw thật)
+ROTATE PASS</pre>
+</div>
+<div class="card eval" id="E8"><h3><span class="badge pass">PASS</span> &nbsp;E8 · script</h3><p class="crit">AC-6: Given nhánh, When chạy lại các kiểm của `watchdog-l4b-cuoi-ngay` (quét log OpenClaw cuối ngày, xoay log, marker hỏng), Then tất cả vẫn đạt.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E8-r1-20261025T231638Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc3b_marker_hong</b></span><span>verified_at <b>2026-10-25T23:16:40Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">ok   (a) should-NOT-fire: gw-marker hỏng KHÔNG làm watchdog kill gateway vì turn của quá khứ
+ok   (a) có dòng WARN về marker hỏng trong alert log
+ok   (c) turn MỚI ghi vào gateway.log sau khi khởi tạo lại → bị bắt, alert KILL
+ok   (b) marker /tmp hỏng + turn ở dòng 1 → vẫn bị bắt, alert KILL
+ok   (b2) inode đúng + số dòng hỏng: không chết dưới set -u, turn dòng 1 file mới bị bắt
+ok   (b2) marker chuyển sang file mới đúng dạng
+MARKER-HONG PASS</pre>
+</div>
+<div class="card eval" id="E9"><h3><span class="badge pass">PASS</span> &nbsp;E9 · script</h3><p class="crit">AC-7: Given nhánh, When kiểm cú pháp bộ canh và các script liên quan, Then sạch.</p>
+<div class="kv"><span>run_id <b>watchdog-l4b-history-E9-r1-20261025T231640Z</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.zc3_syntax</b></span><span>verified_at <b>2026-10-25T23:16:40Z</b></span><span>baseline <b>green</b></span></div>
+<pre class="out">SYNTAX OK</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">Không có eval ui-check, nên không áp «Network truth».
+Cách đo baseline:
+- Chép `git show origin/main:scripts/zalo-watchdog.sh` (origin/main `169b8c6`) cùng harness của nhánh vào
+  `&lt;scratchpad&gt;/base/scripts/`, đúng cấu trúc. Thêm `zalo-import-daily.sh` và hai tệp `pipeline/*chotot.mjs` của main cho E9.
+- Harness `watchdog-l4b-cuoi-ngay` trùng main. Không tạo worktree.
+Kết quả baseline:
+- P1–P4 đỏ, mỗi ca 2 mục: should-NOT-fire (stub ghi `launchctl bootout` + `pkill`, tức là tắt nhầm vì 2 turn cũ) và «có dòng
+  WARN».
+- xoay-that, scan, rotate, marker-hong và cú pháp: xanh.
+Eval phân biệt code mới với code cũ: E1, E2, E3, E4 (red trên main, mục tắt nhầm là mục quyết định).
+Eval không phân biệt (xanh trên cả hai cây):
+- E5: trên main, turn ghi sau lượt quét đầu sau xoay cũng bị bắt. AC-5 là tiêu chí «không làm mù» nên đây là rào hồi quy có
+  chủ đích. Dòng «ghi nhận» thì đổi chiều («BỊ BẮT» trên main, «KHÔNG bị bắt» trên nhánh), đúng cửa sổ đã khai.
+- E6, E7, E8: rào hồi quy ZC3+ có chủ đích.
+- E9: rào cú pháp.
+Ghi chú về mục «có dòng WARN»: trên main mục này đỏ chỉ vì lượt bị KILL thoát trước bước kiểm Postgres. Vì vậy nó không phân
+biệt được bản sửa (xem «Ngoài hợp đồng»). Thăm dò riêng xác nhận WARN L4b có thật.</div>
+<h2>Variance (eval ngẫu nhiên)</h2><div class="flag fred">Không có: mọi eval tất định, mỗi eval chạy 1 lần.</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1–E9 đều đạt. Baseline P1–P4 đỏ, xoay-that xanh, khớp ghi chú harness. Phản biện ghi hai mục ngoài hợp đồng mức low:</li><li>WARN trong harness tự đạt nhờ cảnh báo Postgres, và đường dẫn có «:» làm chế độ history mù. Không sửa code. Hồ sơ chờ Mạnh</li><li>ký Gate 2 (T3).</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Cửa sổ bỏ sót sau khi log gateway xoay thật: turn ghi trước lượt quét đầu tiên sau xoay (≤ 5′) không bị bắt — đánh đổi có ý thức để bộ canh không tự tắt gateway vì lịch sử. Lớp L4a (log OpenClaw theo ngày) và L1–L3 vẫn chạy.</li><li data-loai="ngoai">Triển khai bộ canh lên launchd — lời GIAO triển khai riêng sau merge.</li><li data-loai="ngoai">Dọn các dòng turn cũ khỏi log gateway thật — không sửa log runtime.</li><li data-loai="gioi-han">Cửa sổ bỏ sót sau xoay thật đúng như Out of scope đã khai. Turn ghi vào gateway.log mới trước lượt quét đầu sau xoay không bị bắt, bất kể tệp mới dài bao nhiêu. Độ dài cửa sổ ≤ 300 s (`StartInterval` 300 của plist bộ canh). Trên main, turn đó bị bắt (baseline E5). Lớp bù là quét log /tmp theo ngày ở chế độ `daily`. Hợp đồng gọi lớp này là «L4a», còn mã gọi là «L4b trên log /tmp»: lệch tên, không lệch hành vi.</li><li data-loai="gioi-han">Copytruncate cùng inode rồi ghi nhiều dòng hơn marker cũ trước lượt quét kế thì bỏ sót các dòng đầu. Lỗ này có sẵn trên main, cùng loại với cửa sổ xoay.</li><li data-loai="gioi-han">Marker số quá lớn bị khởi tạo lại im lặng, không có WARN, kèm lỗi so sánh ra stderr. An toàn: không tắt nhầm, turn sau đó bị bắt.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">ee232434e925ded560528b1a3e72b4b6124dc130</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: chưa duyệt · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note"></p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
