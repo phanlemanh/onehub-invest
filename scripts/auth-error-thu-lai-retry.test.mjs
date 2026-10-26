@@ -14,8 +14,9 @@ const { resolveConfigKey } = require(path.join(REPO, "lib/evidence-core.cjs"));
 const { parseEvals } = require(path.join(REPO, "lib/eval-yaml.cjs"));
 
 const CONFIG = "_acceptance/config.yaml";
-// Bản trước vòng (đỉnh main lúc mở hàng) — mốc so «không lệnh nào đổi nghĩa».
-const BASELINE = "bc6e5120a8159346fcceceb6d3613d84c5bbaea6";
+// Commit sửa config.yaml của vòng: so bản CHA (giống từng byte bc6e5120, đỉnh main lúc mở hàng) với bản của nó — HEAD còn mang
+// khoá main thêm sau đó, nên so HEAD với mốc cố định sẽ đỏ vì việc của người khác.
+const FIX_COMMIT = "5e396cb2";
 const SUPERSEDE = "auth-error-thu-lai-retry#AC-1";
 
 /** `yaml` chỉ có ở pipeline/ — thử checkout này rồi checkout chính (worktree không có node_modules riêng). */
@@ -111,17 +112,20 @@ describe("AER-AC-2 bộ đọc kit khớp bộ đọc chuẩn", () => {
 });
 
 describe("AER-AC-2 không lệnh nào đổi nghĩa", () => {
-  test(`bộ đọc kit ra cùng giá trị cho mọi khoá ở ${BASELINE.slice(0, 8)} và HEAD`, (t) => {
-    let before;
+  test(`bộ đọc kit ra cùng giá trị cho mọi khoá trước và sau commit sửa ${FIX_COMMIT}`, (t) => {
+    let before, after;
     try {
-      before = execFileSync("git", ["show", `${BASELINE}:${CONFIG}`], { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+      const show = (rev) => execFileSync("git", ["show", `${rev}:${CONFIG}`], { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+      before = show(`${FIX_COMMIT}^`);
+      after = show(FIX_COMMIT);
     } catch {
-      return t.skip(`không đọc được ${BASELINE.slice(0, 8)}:${CONFIG} (clone nông?) — ca so trước-sau không chạy ở đây`);
+      return t.skip(`không đọc được ${FIX_COMMIT}^ / ${FIX_COMMIT} (clone nông?) — ca so trước-sau không chạy ở đây`);
     }
-    const { total, khac } = kitBeforeAfter(before, read(CONFIG));
+    assert.notEqual(before, after, `${FIX_COMMIT} không đổi ${CONFIG} — sai commit mốc`);
+    const { total, khac } = kitBeforeAfter(before, after);
     console.log(`so ${total} khoá trước-sau`);
     assert.ok(total > 100, `chỉ so được ${total} khoá — bộ liệt khoá hỏng?`);
-    assert.deepEqual(khac, [], `giá trị đổi so với ${BASELINE.slice(0, 8)}: ${khac.join(", ")}`);
+    assert.deepEqual(khac, [], `giá trị đổi qua commit ${FIX_COMMIT}: ${khac.join(", ")}`);
   });
   test("chiều đỏ: đổi giá trị một lệnh trên bản sao → bộ so gọi đúng khoá đó", () => {
     const text = read(CONFIG);
