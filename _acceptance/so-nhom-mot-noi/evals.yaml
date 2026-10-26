@@ -38,7 +38,7 @@ evals:
     executor: test
     cmd: config:executors.test.so_nhom
     paths: [db/migrations/048_so_nhom_mot_noi.sql, pipeline/scripts/so-nhom.itest.mjs]
-    expected: "exit 0; ca 'SN-AC-4' (lược đồ tạm có areas và asset_nodes chép LIKE public kèm vài dòng viết trước: một market, một submarket; một node project, một node building; loại node nhận theo Hỏi-2): market_codes ['vn-xyz-khong-co'] → lỗi; [<id submarket>] → lỗi; [<id market>] → nhận; project_node_ids [<id building>] → lỗi; [999999] → lỗi; [<id project>] → nhận; mọi lỗi nêu tên ràng buộc/trigger của vòng"
+    expected: "exit 0; ca 'SN-AC-4' (lược đồ tạm có areas và asset_nodes chép LIKE public kèm vài dòng viết trước: một market, một submarket; một node project, một node building; loại node nhận theo Hỏi-3): market_codes ['vn-xyz-khong-co'] → lỗi; [<id submarket>] → lỗi; [<id market>] → nhận; project_node_ids [<id building>] → lỗi; [999999] → lỗi; [<id project>] → nhận; mọi lỗi nêu tên ràng buộc/trigger của vòng"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-5

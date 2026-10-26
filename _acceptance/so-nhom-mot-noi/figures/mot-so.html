@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Một sổ đơn vị thu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1360px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · so-nhom-mot-noi · T3 · view gồm mọi dòng</p>
+    <h1>Một sổ: ba nơi khai về một bảng</h1>
+    <p class="sub">collection_units là sổ duy nhất · view source_groups giữ đường cũ · AC-1 · AC-2 · AC-5 · AC-6 · AC-8 · AC-10</p>
+
+    <svg viewBox="0 0 1360 856" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect x="0" y="0" width="1360" height="856" fill="#f5f5f5"/>
+
+      <!-- tiêu đề cột -->
+      <text x="36" y="44" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">BA NƠI KHAI HÔM NAY</text>
+      <text x="680" y="44" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">MỘT SỔ</text>
+      <text x="1096" y="44" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">BÊN ĐỌC MỚI</text>
+
+      <!-- ===================== ARROWS (trước hộp) ===================== -->
+      <!-- source_groups → collection_units: migration 048 (trọng tâm) -->
+      <line x1="316" y1="120" x2="676" y2="120" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <!-- gateway → sync -->
+      <path d="M316 248 H328 Q336 248 336 256 V280 Q336 288 344 288 H372" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- airdna → sync -->
+      <path d="M316 376 H328 Q336 376 336 368 V344 Q336 336 344 336 H372" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- sync → collection_units -->
+      <line x1="584" y1="312" x2="676" y2="312" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- collection_units → Sổ (đọc) -->
+      <line x1="1000" y1="112" x2="1092" y2="112" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Sổ → collection_units (set-meta) -->
+      <line x1="1096" y1="168" x2="1004" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- collection_units ⇢ cloud: không lên -->
+      <line x1="1000" y1="296" x2="1092" y2="296" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <!-- collection_units → view -->
+      <line x1="840" y1="344" x2="840" y2="420" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- view → bên cũ -->
+      <path d="M760 520 V644 Q760 652 752 652 H624" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- view → lưới nhóm thu cũ -->
+      <path d="M920 520 V644 Q920 652 928 652 H1092" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- arrow labels -->
+      <rect x="412" y="96" width="168" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="496" y="108" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">048 · ĐỔI TÊN, GIỮ DÒNG</text>
+      <rect x="600" y="288" width="60" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="630" y="300" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">UPSERT</text>
+      <rect x="1028" y="88" width="36" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="1046" y="100" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ĐỌC</text>
+      <rect x="1012" y="144" width="72" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="1048" y="156" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SET-META</text>
+      <rect x="1008" y="272" width="80" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="1048" y="284" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">KHÔNG LÊN</text>
+      <!-- dấu chặn trên đường đứt -->
+      <circle cx="1048" cy="296" r="6" fill="#f5f5f5" stroke="#4f5d75" stroke-width="1"/>
+      <line x1="1045" y1="293" x2="1051" y2="299" stroke="#4f5d75" stroke-width="1"/>
+      <line x1="1051" y1="293" x2="1045" y2="299" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="652" y="628" width="88" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="696" y="640" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ĐỌC · GHI</text>
+      <rect x="964" y="628" width="88" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="1008" y="640" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ĐỌC · GHI</text>
+
+      <!-- ===================== BA NƠI KHAI ===================== -->
+      <!-- A: bảng source_groups -->
+      <rect x="36" y="72" width="280" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="36" y="72" width="280" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="44" y="80" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="64" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">BẢNG</text>
+      <rect x="264" y="80" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="286" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-1</text>
+      <text x="176" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">bảng source_groups</text>
+      <text x="176" y="140" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">S05 nhóm · S06 vùng</text>
+
+      <!-- B: cấu hình gateway (máy thu, chỉ đọc) -->
+      <rect x="36" y="200" width="280" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="36" y="200" width="280" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="44" y="208" width="60" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="74" y="220" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MÁY THU</text>
+      <rect x="108" y="208" width="60" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="138" y="220" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CHỈ ĐỌC</text>
+      <rect x="264" y="208" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="286" y="220" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-5</text>
+      <text x="176" y="252" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">cấu hình gateway</text>
+      <text x="176" y="268" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">S03 nhóm · trên máy thu</text>
+
+      <!-- C: airdna_markets -->
+      <rect x="36" y="328" width="280" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="36" y="328" width="280" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="44" y="336" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="64" y="348" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">BẢNG</text>
+      <rect x="264" y="336" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="286" y="348" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-6</text>
+      <text x="176" y="380" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">airdna_markets</text>
+      <text x="176" y="396" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">S02 market</text>
+
+      <!-- D: script đồng bộ -->
+      <rect x="376" y="264" width="208" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="376" y="264" width="208" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="384" y="272" width="52" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="410" y="284" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SCRIPT</text>
+      <text x="480" y="316" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">sync-don-vi.mjs</text>
+      <text x="480" y="332" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">upsert S03 · S02 · chạy lại không đổi</text>
+      <text x="480" y="346" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">pipeline/</text>
+
+      <!-- ===================== MỘT SỔ (trọng tâm) ===================== -->
+      <rect x="680" y="72" width="320" height="272" rx="6" fill="#f5f5f5"/>
+      <rect x="680" y="72" width="320" height="272" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="688" y="80" width="40" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="708" y="92" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">BẢNG</text>
+      <rect x="732" y="80" width="32" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="748" y="92" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">048</text>
+      <rect x="948" y="80" width="44" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="970" y="92" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-1</text>
+      <text x="840" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">collection_units</text>
+      <text x="840" y="140" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">đổi tên từ source_groups · mọi nguồn một sổ</text>
+      <line x1="696" y1="156" x2="984" y2="156" stroke="rgba(235,108,54,0.30)" stroke-width="0.8"/>
+      <text x="704" y="176" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CỘT MỚI</text>
+      <text x="704" y="200" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace">unit_code</text>
+      <text x="848" y="200" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">S03-N012</text>
+      <text x="704" y="220" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace">unit_type</text>
+      <text x="848" y="220" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">nhom · vung · market</text>
+      <text x="704" y="240" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace">original_name</text>
+      <text x="848" y="240" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">tên gốc</text>
+      <text x="704" y="260" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace">market_codes</text>
+      <text x="848" y="260" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">thị trường</text>
+      <text x="704" y="280" fill="#2d3142" font-size="9" font-family="'Geist Mono', monospace">project_node_ids</text>
+      <text x="848" y="280" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">dự án</text>
+
+      <!-- ===================== VIEW ===================== -->
+      <rect x="680" y="424" width="320" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="680" y="424" width="320" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="688" y="432" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="708" y="444" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">VIEW</text>
+      <rect x="948" y="432" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="970" y="444" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-1</text>
+      <text x="840" y="476" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">view source_groups</text>
+      <text x="840" y="492" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">mọi dòng · tên cột cũ · ghi xuyên được</text>
+
+      <!-- ===================== BÊN CŨ QUA VIEW ===================== -->
+      <rect x="36" y="584" width="584" height="136" rx="6" fill="#f5f5f5"/>
+      <rect x="36" y="584" width="584" height="136" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="52" y="608" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">BÊN ĐỌC/GHI CŨ · KHÔNG PHẢI SỬA</text>
+      <rect x="568" y="596" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="590" y="608" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-2</text>
+
+      <rect x="52" y="624" width="128" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="116" y="656" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">script thu</text>
+      <text x="116" y="672" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">S05 · S06</text>
+      <text x="116" y="686" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">làn ZCode</text>
+
+      <rect x="192" y="624" width="128" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="256" y="668" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">che-do-thu</text>
+
+      <rect x="332" y="624" width="128" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="396" y="660" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">ha-bung-het-han</text>
+      <text x="396" y="676" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">mode = bung</text>
+
+      <rect x="472" y="624" width="128" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="536" y="660" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">isRunnable</text>
+      <text x="536" y="676" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">hỏi S03 qua tên cũ</text>
+
+      <!-- ===================== BÊN ĐỌC MỚI ===================== -->
+      <!-- F: Sổ đơn vị thu -->
+      <rect x="1096" y="72" width="228" height="128" rx="6" fill="#f5f5f5"/>
+      <rect x="1096" y="72" width="228" height="128" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="1104" y="80" width="28" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1118" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">UI</text>
+      <rect x="1272" y="80" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1294" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-8</text>
+      <text x="1210" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">khu «Sổ đơn vị thu»</text>
+      <text x="1210" y="140" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/ops/sources · admin</text>
+      <text x="1210" y="164" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">khai thị trường, dự án</text>
+      <text x="1210" y="178" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">→ ops_audit</text>
+
+      <!-- G: ranh cloud -->
+      <rect x="1096" y="248" width="228" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="1096" y="248" width="228" height="96" rx="6" fill="transparent" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4"/>
+      <rect x="1104" y="256" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1126" y="268" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLOUD</text>
+      <rect x="1272" y="256" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1294" y="268" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-10</text>
+      <text x="1210" y="300" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">sổ KHÔNG lên cloud</text>
+      <text x="1210" y="316" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">đi cùng TV4/TV11</text>
+
+      <!-- J: lưới nhóm thu cũ + route -->
+      <rect x="1096" y="584" width="228" height="136" rx="6" fill="#f5f5f5"/>
+      <rect x="1096" y="584" width="228" height="136" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="1104" y="592" width="32" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1120" y="604" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LỌC</text>
+      <rect x="1272" y="592" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1294" y="604" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-2</text>
+      <text x="1210" y="640" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">lưới nhóm thu cũ</text>
+      <text x="1210" y="656" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">+ route source-groups</text>
+      <text x="1210" y="680" fill="#2d3142" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">chỉ S05 · S06</text>
+      <text x="1210" y="694" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">mã khác → 400</text>
+
+      <!-- ghi chú -->
+      <text x="36" y="760" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">view không lọc nguồn: ha-bung-het-han cập nhật mọi nguồn mode = bung, isRunnable hỏi S03 qua tên cũ — lọc S05/S06 nằm ở lưới và route</text>
+
+      <!-- ===================== LEGEND ===================== -->
+      <line x1="36" y1="784" x2="1324" y2="784" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="36" y="804" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="36" y="816" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="60" y="826" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bảng · script · trang</text>
+
+      <rect x="184" y="816" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="208" y="826" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Trọng tâm: một sổ</text>
+
+      <rect x="324" y="816" width="16" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="348" y="826" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhóm bên cũ qua view</text>
+
+      <line x1="484" y1="822" x2="516" y2="822" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="528" y="826" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Dữ liệu đi</text>
+
+      <line x1="612" y1="822" x2="644" y2="822" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <text x="656" y="826" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Ranh cloud: không đi qua</text>
+
+      <rect x="800" y="814" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="820" y="826" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-n</text>
+      <text x="848" y="826" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Tiêu chí liên quan</text>
+    </svg>
+  </div>
+</body>
+</html>
