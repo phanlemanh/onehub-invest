@@ -134,7 +134,7 @@ function writeCredFile(file, data) {
 }
 
 // Root repo không có node_modules — mượn pg từ app/; worktree mới chưa cài thì mượn app/ của checkout chính.
-function loadPg() {
+export function loadPg() {
   const candidates = [path.join(REPO, "app/package.json")];
   try {
     const common = execFileSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], {
