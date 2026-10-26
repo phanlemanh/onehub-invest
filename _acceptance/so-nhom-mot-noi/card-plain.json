@@ -1,35 +1,3 @@
 {
- "feature_plain": "Người vận hành thấy mọi đơn vị thu của bốn nguồn (S02, S03, S05, S06) trong một sổ trên trang Nguồn của Ops, mỗi đơn vị có mã ổn định như S03-N012 và khai được thị trường, dự án.",
- "will_do": [
-  {"id":"AC-1","p":"Sẽ gộp nơi lưu nhóm thu thành một sổ chung mà không mất hay đổi dòng nào; chạy lại lần hai không đổi gì."},
-  {"id":"AC-2","p":"Sẽ giữ mọi script thu và trang cũ chạy y như trước qua tên cũ; lưới nhóm thu cũ vẫn chỉ hiện nhóm S05/S06."},
-  {"id":"AC-3","p":"Sẽ cấp cho mỗi đơn vị một mã dạng S03-N012, tăng dần theo nguồn, không bao giờ cấp lại và không sửa được."},
-  {"id":"AC-5","p":"Sẽ đưa nhóm S03 vào sổ bằng cách chỉ đọc cấu hình gateway: nhóm tắt hay biến mất thành tạm dừng có lý do, nhóm quay lại giữ mã cũ."},
-  {"id":"AC-6","p":"Sẽ đưa 43 market S02 vào sổ, tự gắn thị trường khi đã có ánh xạ khu vực."},
-  {"id":"AC-7","p":"Sẽ để luật «được chạy hay không» đọc trạng thái đơn vị từ sổ cho mọi nguồn."},
-  {"id":"AC-8","p":"Sẽ có khu «Sổ đơn vị thu» trên trang Nguồn: admin khai thị trường và dự án qua hộp thoại, mỗi lần lưu ghi nhật ký; có trạng thái trống, lỗi, lưu lỗi."}
- ],
- "wont_do": [
-  {"id":"AC-4","p":"Chặn khai một mã không phải thị trường, hoặc một dự án ngoài loại đã chốt ở câu hỏi Hỏi-3."},
-  {"id":"AC-9","p":"Chặn người không phải admin và tài khoản máy khai thị trường, dự án."},
-  {"id":"AC-10","p":"Sẽ KHÔNG đưa sổ lên cloud ở vòng này, và không có tên nguồn thật trong tệp mới."},
-  {"id":"OOS-1","p":"Không làm: đưa sổ lên cloud, lệnh điều khiển đơn vị từ xa, bật/tắt nhóm S03 từ sổ (các hàng TV4, TV5, TV6, TV11)."},
-  {"id":"OOS-2","p":"Không làm: tiêu đề chuẩn, mô tả nhóm (ON19) và màn sửa trên cloud (ON20)."},
-  {"id":"OOS-3","p":"Không làm: lỗi cũ «tắt nhóm đã gỡ bị hạ về tạm dừng» — đã tách thành việc riêng P1-18."}
- ],
- "coverage_plain": [
-  {"i":0,"p":"Bốn loại đơn vị (nhóm S03, nhóm S05, vùng S06, market S02) đều có tiêu chí đưa vào sổ — AC-1, AC-5, AC-6."},
-  {"i":1,"p":"Sáu thuộc tính (mã, loại, tên gốc, thị trường, dự án, trạng thái) đều có chỗ ghi và chỗ chặn sai — AC-3, AC-4, AC-8."},
-  {"i":2,"p":"Bốn đường ghi (nâng cấp DB, script đồng bộ, hộp khai, đường cũ qua tên cũ) đều có ca thử — AC-1, AC-2, AC-5, AC-8."},
-  {"i":3,"p":"Bốn bên đọc (script thu, trang Nguồn, luật được chạy, cloud) đều có ca — AC-2, AC-7, AC-8, AC-10."},
-  {"i":4,"p":"Ba điều cắt ngang: chạy lại không đổi gì, không ghi một byte vào gateway, không lộ tên nguồn thật — AC-1, AC-5, AC-10."}
- ],
- "gap_probe_plain": [
-  {"i":0,"p":"Thiếu phép đo test cũ của trang Chế độ thu sau khi gộp sổ — đã thêm: chạy nguyên văn test đó trên bản DB mô phỏng sau gộp, và đối chiếu danh sách mọi tệp nhắc tên cũ."},
-  {"i":1,"p":"Chưa ai quyết «dự án nhóm chuyên» gồm loại nào — đưa lên anh ở câu Hỏi-3."},
-  {"i":2,"p":"Chưa ai quyết nhóm S03 biến khỏi gateway thì thành gì, và thiếu ca nhóm quay lại hay tệp cấu hình hỏng — đưa lên anh ở câu Hỏi-4, đã thêm các ca thử."},
-  {"i":3,"p":"Bản đọc cấu hình gateway của script có thể lệch bản của app — đã thêm ca so khớp hai bản trên cùng bộ mẫu."},
-  {"i":4,"p":"Khu sổ chưa đo nhãn «theo gateway» và ba trạng thái trống, lỗi, lưu lỗi — đã thêm vào tiêu chí và ca thử."}
- ],
- "scope_plain": "Ba việc gần đề tài cố ý để cho hàng sau:"
+ "feature_plain": "Người vận hành thấy mọi đơn vị thu của bốn nguồn (S02, S03, S05, S06) trong một sổ trên trang Nguồn của Ops, mỗi đơn vị có mã ổn định như S03-N012 và khai được thị trường, khu đô thị."
 }
