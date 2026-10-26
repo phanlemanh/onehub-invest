@@ -473,12 +473,12 @@ test("AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin 
       `UPDATE enrichment_proposals SET status = 'skipped' WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
       [a],
     );
-    const hoan = await c.query(
-      `SELECT DISTINCT ep.offer_id FROM enrichment_proposals ep
-       WHERE ep.status = 'queued' AND ep.route = 'review'
-         AND NOT EXISTS (SELECT 1 FROM review_queue rq WHERE rq.id = ep.review_id AND rq.status = 'pending')`,
+    // Kiểm đúng điều bước khoanh làm ra (không chép luật xếp hàng của selectOffers): mọi đề xuất chờ duyệt còn lại là của tin ca.
+    const khac = await c.query(
+      `SELECT count(*)::int AS n FROM enrichment_proposals WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
+      [a],
     );
-    assert.deepEqual(hoan.rows.map((r) => r.offer_id), [a], "hàng ưu tiên của lượt backlog phải chỉ còn tin của ca");
+    assert.equal(khac.rows[0].n, 0, "còn đề xuất chờ duyệt của tin khác — lượt backlog chưa được khoanh");
 
     await runEnrich({
       client: c, runId: "test-ac6-backlog", dry: false, limit: 1,
