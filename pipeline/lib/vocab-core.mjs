@@ -422,3 +422,80 @@ export function lintTree(root, reg) {
   const allowStale = okAllow.filter((x) => !all.some((h) => match(h, x)));
   return { hits, allowed, allowBad, allowStale, collectorCount };
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// DB — bảng tra ref_lookup (RESO Lookup) + ref_field_lookup (RelatedLookup) và CHECK của các cột khai trong `columns`.
+
+const sqlStr = (v) => (v == null ? "NULL" : `'${String(v).replace(/'/g, "''")}'`);
+
+/** SQL nạp ref_* từ sổ (idempotent) — dán vào migration khi sổ đổi. */
+export function emitSeed(reg) {
+  const rows = reg.axes.flatMap((a) => a.values.map((v, i) =>
+    `  (${sqlStr(a.name)}, ${sqlStr(v.code)}, ${sqlStr(v.dd_lookup ?? null)}, ${sqlStr(v.label_vi)}, ${v.local ? "true" : "false"}, ${i + 1})`));
+  const rel = reg.axes.flatMap((a) => a.columns.map((col) => {
+    const [t, c] = col.split(".");
+    return `  (${sqlStr(t)}, ${sqlStr(c)}, ${sqlStr(a.name)})`;
+  }));
+  return [
+    "INSERT INTO ref_lookup (lookup_name, lookup_value, standard_lookup_value, label_vi, is_local, sort_order) VALUES",
+    rows.join(",\n"),
+    "ON CONFLICT (lookup_name, lookup_value) DO UPDATE SET standard_lookup_value = EXCLUDED.standard_lookup_value,",
+    "  label_vi = EXCLUDED.label_vi, is_local = EXCLUDED.is_local, sort_order = EXCLUDED.sort_order;",
+    "",
+    "INSERT INTO ref_field_lookup (table_name, column_name, lookup_name) VALUES",
+    rel.join(",\n"),
+    "ON CONFLICT (table_name, column_name) DO UPDATE SET lookup_name = EXCLUDED.lookup_name;",
+    "",
+  ].join("\n");
+}
+
+/** So DB với sổ; trả danh sách lệch {axis, value?, column?, msg}. Rỗng = khớp. */
+export async function checkDb(client, reg) {
+  const lech = [];
+  const can = "cần migration mới";
+  const coBang = (await client.query("SELECT to_regclass('ref_lookup') AS a, to_regclass('ref_field_lookup') AS b")).rows[0];
+  if (!coBang.a || !coBang.b) {
+    lech.push({ axis: null, msg: `thiếu bảng ref_lookup/ref_field_lookup — ${can} (043)` });
+  } else {
+    const rows = (await client.query("SELECT lookup_name, lookup_value, standard_lookup_value, label_vi, is_local FROM ref_lookup")).rows;
+    const key = (a, v) => `${a}|${v}`;
+    const db = new Map(rows.map((r) => [key(r.lookup_name, r.lookup_value), r]));
+    const so = new Set();
+    for (const a of reg.axes) for (const v of a.values) {
+      const k = key(a.name, v.code);
+      so.add(k);
+      const r = db.get(k);
+      if (!r) lech.push({ axis: a.name, value: v.code, msg: `ref_lookup thiếu ${a.name} · ${v.code} — ${can}` });
+      else if (r.label_vi !== v.label_vi || (r.standard_lookup_value ?? null) !== (v.dd_lookup ?? null) || r.is_local !== (v.local === true)) {
+        lech.push({ axis: a.name, value: v.code, msg: `ref_lookup lệch sổ ở ${a.name} · ${v.code} (nhãn/RESO/local) — ${can}` });
+      }
+    }
+    for (const r of rows) {
+      const k = key(r.lookup_name, r.lookup_value);
+      if (!so.has(k)) lech.push({ axis: r.lookup_name, value: r.lookup_value, msg: `ref_lookup thừa ${r.lookup_name} · ${r.lookup_value} (sổ không còn) — ${can}` });
+    }
+    const rel = new Map((await client.query("SELECT table_name, column_name, lookup_name FROM ref_field_lookup")).rows
+      .map((r) => [`${r.table_name}.${r.column_name}`, r.lookup_name]));
+    for (const a of reg.axes) for (const col of a.columns) {
+      if (rel.get(col) !== a.name) lech.push({ axis: a.name, column: col, msg: `ref_field_lookup thiếu/lệch ${col} → ${a.name} — ${can}` });
+    }
+  }
+  for (const a of reg.axes) for (const col of a.columns) {
+    const [t, cot] = col.split(".");
+    const defs = (await client.query(
+      `SELECT conname, convalidated, pg_get_constraintdef(oid) AS def FROM pg_constraint
+        WHERE contype = 'c' AND conrelid = to_regclass($1)`, [t])).rows
+      .filter((r) => new RegExp(`\\b${cot}\\b`).test(r.def) && /'[^']*'::text/.test(r.def));
+    if (!defs.length) { lech.push({ axis: a.name, column: col, msg: `${col}: thiếu CHECK theo trục ${a.name} — ${can}` }); continue; }
+    const r = defs[0];
+    const trongDb = new Set([...r.def.matchAll(/'([^']*)'::text/g)].map((m) => m[1]));
+    const trongSo = new Set(a.values.map((v) => v.code));
+    const thieu = [...trongSo].filter((x) => !trongDb.has(x));
+    const thua = [...trongDb].filter((x) => !trongSo.has(x));
+    if (thieu.length || thua.length) {
+      lech.push({ axis: a.name, column: col, msg: `${col} (${r.conname}): CHECK lệch sổ — thiếu [${thieu.join(", ")}] thừa [${thua.join(", ")}] — ${can}` });
+    }
+    if (!r.convalidated) lech.push({ axis: a.name, column: col, msg: `${col} (${r.conname}): CHECK chưa VALIDATE — ${can}` });
+  }
+  return lech;
+}

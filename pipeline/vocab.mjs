@@ -3,12 +3,15 @@
 //   --write                    sinh hằng pipeline/agent/app + khối CONTEXT.md
 //   --check                    tệp sinh khớp sổ chưa (lệch → thoát 1, nêu tệp)
 //   --lint                     danh sách enum viết tay ngoài sổ (đỏ → thoát 1)
+//   --check-db                 DB (ref_lookup, ref_field_lookup, CHECK của `columns`) khớp sổ (DATABASE_URL)
+//   --emit-seed                in SQL nạp ref_* — dán vào migration mới khi sổ đổi
 // Chung: --root <gốc kho> (mặc định suy từ vị trí tệp) · --mappings <tệp sổ>.
 // Mã thoát: 0 khớp · 1 lệch/đỏ · 2 dùng sai hoặc không chạy được.
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkTargets, lintTree, readMappings, renderTargets, spliceContext, VocabError } from "./lib/vocab-core.mjs";
+import pg from "pg";
+import { checkDb, checkTargets, emitSeed, lintTree, readMappings, renderTargets, spliceContext, VocabError } from "./lib/vocab-core.mjs";
 
 function args(argv) {
   const o = { root: resolve(dirname(fileURLToPath(import.meta.url)), ".."), mappings: null, cmd: null, rest: [] };
@@ -68,9 +71,36 @@ function lint(root, reg) {
   return red ? 1 : 0;
 }
 
+async function checkDbCmd(root, reg) {
+  const url = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+  const c = new pg.Client({ connectionString: url, connectionTimeoutMillis: 5000 });
+  try {
+    await c.connect();
+  } catch (e) {
+    console.error(`vocab --check-db: không kết nối được DB — ${e.code ?? e.message}`);
+    return 2;
+  }
+  try {
+    const lech = await checkDb(c, reg);
+    for (const x of lech) console.error(`vocab --check-db: ${x.msg}`);
+    const nCot = reg.axes.reduce((n, a) => n + a.columns.length, 0);
+    const nLookup = reg.axes.reduce((n, a) => n + a.values.length, 0);
+    if (lech.length) { console.error(`vocab --check-db: ${lech.length} lệch`); return 1; }
+    console.log(`vocab --check-db: ${nCot} cột · ${nLookup} lookup khớp sổ`);
+    return 0;
+  } finally {
+    await c.end();
+  }
+}
+
+function emitSeedCmd(root, reg) {
+  process.stdout.write(emitSeed(reg));
+  return 0;
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const o = args(argv);
-  const CMDS = { write, check, lint };
+  const CMDS = { write, check, lint, "check-db": checkDbCmd, "emit-seed": emitSeedCmd };
   if (!o.cmd || !CMDS[o.cmd]) {
     console.error(`dùng: vocab.mjs [--root <dir>] [--mappings <tệp>] --${Object.keys(CMDS).join("|--")}`);
     return 2;
