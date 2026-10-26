@@ -4,13 +4,13 @@ import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
 import { auditOpsWrite } from "@/lib/audit";
-import { datCheDo } from "@/lib/che-do-thu";
+import { LOI_NGOAI_NHOM, NHOM_TRANG_CU, datCheDo } from "@/lib/che-do-thu";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET  /api/v1/ops/source-groups — danh sách nhóm cấu hình (S05 FB, S06 Chợ
- * Tốt) kèm volume dữ liệu đã thu theo nhóm.
+ * GET  /api/v1/ops/source-groups — danh sách nhóm cấu hình S05, S06 kèm volume dữ liệu đã thu theo nhóm (đơn vị
+ * S02/S03 của sổ không lên đây — PL12; mã khác ở toggle/add/delete/set-mode → 400).
  * POST { action: "toggle" | "add" | "delete" | "set-mode", ... } — quản trị nhóm nguồn.
  *   toggle: { sourceCode, groupKey, enabled }
  *   add:    { sourceCode, groupKey, name, regionV2?, cityCode? } (Chợ Tốt)
@@ -98,7 +98,7 @@ export async function GET() {
             g.created_at::text, g.updated_at::text,
             (SELECT count(*)::int FROM stg_zalo_posts z
               WHERE z.agent_id = 'apify-facebook' AND z.group_name = g.name) AS fb_posts
-     FROM source_groups g ORDER BY g.source_code, g.id`,
+     FROM source_groups g WHERE g.source_code IN ('S05', 'S06') ORDER BY g.source_code, g.id`,
   );
   return NextResponse.json({ groups: rows });
 }
@@ -113,6 +113,10 @@ export async function POST(req: Request) {
   }
   const sourceCode = String(b.sourceCode ?? "");
   const groupKey = String(b.groupKey ?? "");
+  // PL12: đơn vị S02/S03 của sổ không quản ở đây (nhóm S03 là bản soi gateway — bật/tắt là việc của TV6).
+  if (["toggle", "add", "delete"].includes(String(b.action)) && sourceCode && !NHOM_TRANG_CU.includes(sourceCode)) {
+    return NextResponse.json({ error: LOI_NGOAI_NHOM }, { status: 400 });
+  }
 
   if (b.action === "toggle") {
     if (!sourceCode || !groupKey) {

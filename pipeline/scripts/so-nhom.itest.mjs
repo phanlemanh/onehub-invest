@@ -3,7 +3,8 @@
 // đó. Trước và sau cả tệp chụp public — 048 chỉ áp lên public sau gộp, ca nào chạm public là đỏ.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
@@ -320,7 +321,9 @@ test("SN-AC-2 câu đọc/ghi nguyên văn chạy y như trước qua view; tậ
   // docTrangThai hỏi S03 qua tên cũ được.
   await B.query(`INSERT INTO source_groups (source_code, group_key, name, params) VALUES ('S03', $1, 'nhóm S03', $2::jsonb),
     ('S02', $3, 'market S02', '{}')`, [K("S03", 1), JSON.stringify({ mode: "bung", burst_until: "2026-10-20" }), K("S02", 1)]);
-  for (const khoa of ["pipeline/apify-facebook-collector.mjs#0", "pipeline/collect-chotot.mjs#0"]) {
+  // docNhomThu (che-do-thu.ts#0) và GET route (route.ts#3) của trang nhóm thu cũ cũng chỉ thấy S05/S06.
+  for (const khoa of ["pipeline/apify-facebook-collector.mjs#0", "pipeline/collect-chotot.mjs#0", "app/src/lib/che-do-thu.ts#0",
+    "app/src/app/api/v1/ops/source-groups/route.ts#3"]) {
     const { sql } = cau.find((x) => x.khoa === khoa);
     assert.deepEqual((await B.query(sql)).rows, (await A.query(sql)).rows, `${khoa} thấy đơn vị ngoài nguồn của nó`);
   }
@@ -332,7 +335,7 @@ test("SN-AC-2 câu đọc/ghi nguyên văn chạy y như trước qua view; tậ
   const { docTrangThai } = await import("../lib/vong-doi.mjs");
   assert.deepEqual(await docTrangThai(B, "S03", K("S03", 1)), { run: true, ly_do: "chay" });
 
-  const tep = execFileSync("git", ["grep", "-l", "source_groups", "--", ".", ":(exclude)_acceptance", ":(exclude)docs",
+  const tep = execFileSync("git", ["grep", "--untracked", "-l", "source_groups", "--", ".", ":(exclude)_acceptance", ":(exclude)docs",
     ":(exclude)db/migrations"], { cwd: ROOT, encoding: "utf8" }).trim().split("\n").sort();
   assert.deepEqual(tep, TEP_NHAC_SOURCE_GROUPS);
 });
@@ -390,4 +393,44 @@ test("SN-AC-2d ca VD-KHUON của TV2a vẫn đúng sau gộp: cột view source_
   const cot = async (schema) => (await dong(admin, `SELECT column_name FROM information_schema.columns
     WHERE table_schema = $1 AND table_name = 'source_groups' ORDER BY 1`, [schema])).map((r) => r.column_name);
   assert.deepEqual((await cot(P)).filter((x) => !COT_047.source_groups.includes(x)), await cot(F));
+});
+
+test("SN-AC-2c danh sách tên che ảnh chụp chỉ lấy nhóm S05/S06 của sổ", async () => {
+  const S = tenLuocDo("ac2c");
+  await dungSauGop(admin, S);
+  const c = await moClient(S);
+  for (const code of ["S02", "S03", "S05", "S06"]) {
+    await c.query(`INSERT INTO source_groups (source_code, group_key, name) VALUES ($1, $2, $3)`,
+      [code, `${DAU_SN}-khoa-${code}`, `${DAU_SN}-ten-nhom-${code}`]);
+  }
+  const ra = path.join(mkdtempSync(path.join(tmpdir(), "sn-tier-a-")), "ten.json");
+  try {
+    execFileSync(process.execPath, [path.join(ROOT, "scripts", "ui-standards", "tier-a-names.mjs"), "--out", ra],
+      { cwd: ROOT, env: { ...process.env, DATABASE_URL: schemaUrl(S) }, stdio: "pipe" });
+    const chu = readFileSync(ra, "utf8");
+    for (const code of ["S05", "S06"]) {
+      assert.ok(chu.includes(`${DAU_SN}-ten-nhom-${code}`) && chu.includes(`${DAU_SN}-khoa-${code}`), `thiếu ${code}`);
+    }
+    for (const code of ["S02", "S03"]) {
+      assert.ok(!chu.includes(`${DAU_SN}-ten-nhom-${code}`) && !chu.includes(`${DAU_SN}-khoa-${code}`), `lọt ${code}`);
+    }
+  } finally {
+    rmSync(ra, { force: true });
+  }
+});
+
+// ------------------------------------------------------------ AC-7 --
+test("SN-AC-7 isRunnable đọc trạng thái đơn vị S03, S02 từ sổ", async () => {
+  const S = tenLuocDo("ac7");
+  await dungSauGop(admin, S);
+  const c = await moClient(S);
+  await c.query(`UPDATE source_registry SET status = 'active'`);
+  await c.query(`INSERT INTO source_groups (source_code, group_key, name, status, reason) VALUES
+    ('S03', 'vd-nhom-1', 'n1', 'active', NULL), ('S03', 'vd-nhom-2', 'n2', 'paused', 'tắt ở gateway'),
+    ('S02', '12345', 'm', 'retired', NULL), ('S05', $1, 'f', 'active', NULL)`, [`${DAU_SN}-s05`]);
+  const { docTrangThai } = await import("../lib/vong-doi.mjs");
+  assert.deepEqual(await docTrangThai(c, "S03", "vd-nhom-1"), { run: true, ly_do: "chay" });
+  assert.deepEqual(await docTrangThai(c, "S03", "vd-nhom-2"), { run: false, ly_do: "don-vi-paused" });
+  assert.deepEqual(await docTrangThai(c, "S02", "12345"), { run: false, ly_do: "don-vi-retired" });
+  assert.deepEqual(await docTrangThai(c, "S05", `${DAU_SN}-s05`), { run: true, ly_do: "chay" });
 });
