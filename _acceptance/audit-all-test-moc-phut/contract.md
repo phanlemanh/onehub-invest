@@ -5,7 +5,7 @@ slug: audit-all-test-moc-phut
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-26T15:36:40Z
 approved_by:
