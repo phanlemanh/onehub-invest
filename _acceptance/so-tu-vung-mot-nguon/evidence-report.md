@@ -1,19 +1,19 @@
 ---
 schema_version: 2
 feature_slug: so-tu-vung-mot-nguon
-verdict: REJECT
-failed_evals: [E6c]
+verdict: PASS
+failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 78ccc881d0c950605a02453a87272b0669541a71
+verified_commit: cc728fa315e2286edf2d180a4e9e73094df7f074
 human_signoff:
 ---
 
 # Evidence Report: so-tu-vung-mot-nguon
 
-Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
+Round 2. Cả 16 eval xanh: 7 eval chạy lại trên cây mới (E4, E5, E5b, E6b, E6c, E7, E8), 9 eval mang sang từ round 1 vì delta không chạm paths của chúng (E1, E2, E3, E3b, E6, E6d, E6e, E8b, E9). Bốn lệnh suite hồi quy chạy lại và xanh.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
 | E5b | AC-5 | test | PASS |
 | E6 | AC-6 | test | PASS |
 | E6b | AC-6 | test | PASS |
-| E6c | AC-6 | test | FAIL |
+| E6c | AC-6 | test | PASS |
 | E6d | AC-6 | test | PASS |
 | E6e | AC-6 | test | PASS |
 | E7 | AC-7 | test | PASS |
@@ -42,9 +42,8 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
   baseline: n-a
   verifier: config:executors.test.vocab
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
-    ℹ duration_ms 2718.539292
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-so-tu-vung-mot-nguon-E2-r1
@@ -52,9 +51,8 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
   baseline: n-a
   verifier: config:executors.test.vocab
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
-    ℹ duration_ms 2718.539292
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-so-tu-vung-mot-nguon-E3-r1
@@ -62,9 +60,8 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
   baseline: n-a
   verifier: config:executors.test.vocab
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
-    ℹ duration_ms 2718.539292
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3b
   run_id: minted-so-tu-vung-mot-nguon-E3b-r1
@@ -72,112 +69,105 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
   baseline: n-a
   verifier: config:executors.script.vocab_check
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    node pipeline/vocab.mjs --check
-    vocab --check: 4/4 đích khớp sổ
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
-  run_id: minted-so-tu-vung-mot-nguon-E4-r1
+  run_id: minted-so-tu-vung-mot-nguon-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.vocab
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
   output: |
     cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
-    ℹ duration_ms 2718.539292
+    ℹ duration_ms 1061.66875
 
 - eval: E5
-  run_id: minted-so-tu-vung-mot-nguon-E5-r1
+  run_id: minted-so-tu-vung-mot-nguon-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.vocab_lint
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
   output: |
     node pipeline/vocab.mjs --lint
     vocab --lint: 0 chỗ viết tay ngoài sổ · ngoại lệ 8
 
 - eval: E5b
-  run_id: minted-so-tu-vung-mot-nguon-E5b-r1
+  run_id: minted-so-tu-vung-mot-nguon-E5b-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.vocab
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
   output: |
     cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
-    ℹ duration_ms 2718.539292
+    ℹ duration_ms 1061.66875
 
 - eval: E6
   run_id: minted-so-tu-vung-mot-nguon-E6-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    cd app && npm test
-    ℹ duration_ms 36950.870333
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6b
-  run_id: minted-so-tu-vung-mot-nguon-E6b-r1
+  run_id: minted-so-tu-vung-mot-nguon-E6b-r2
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
   output: |
     cd pipeline && npm test
-    ℹ duration_ms 10768.546375
+    ℹ duration_ms 9316.013125
 
 - eval: E6c
-  run_id: minted-so-tu-vung-mot-nguon-E6c-r1
-  exit_code: 1
-  baseline: green
+  run_id: minted-so-tu-vung-mot-nguon-E6c-r2
+  exit_code: 0
+  baseline: n-a
   verifier: config:executors.test.agent
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
   output: |
     cd agent && npm test
-    ℹ tests 63 · pass 62 · fail 1
-    ✖ AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin ngoài bộ lọc thiếu field
-    AssertionError: AC-6 để sau không mở lại thẻ (0 !== 1)
-    tại agent/tests/enrich-db.test.ts:475
+    ℹ duration_ms 1309.305583
 
 - eval: E6d
   run_id: minted-so-tu-vung-mot-nguon-E6d-r1
   exit_code: 0
-  baseline: red
+  baseline: n-a
   verifier: config:executors.test.app
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    cd app && npx tsc --noEmit && npm run lint
-    (không có lỗi tsc, không có lỗi lint)
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6e
   run_id: minted-so-tu-vung-mot-nguon-E6e-r1
   exit_code: 0
-  baseline: green
+  baseline: n-a
   verifier: config:executors.test.ui_lint_rules
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    cd app && npm run test:lint-rules
-    ℹ duration_ms 192.558292
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
-  run_id: minted-so-tu-vung-mot-nguon-E7-r1
+  run_id: minted-so-tu-vung-mot-nguon-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.vocab_db
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
   output: |
     cd pipeline && node --test scripts/vocab-db.itest.mjs
-    ℹ duration_ms 1101.404458
+    ℹ duration_ms 908.704
 
 - eval: E8
-  run_id: minted-so-tu-vung-mot-nguon-E8-r1
+  run_id: minted-so-tu-vung-mot-nguon-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.vocab_db
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
   output: |
     cd pipeline && node --test scripts/vocab-db.itest.mjs
-    ℹ duration_ms 1101.404458
+    ℹ duration_ms 908.704
 
 - eval: E8b
   run_id: minted-so-tu-vung-mot-nguon-E8b-r1
@@ -185,9 +175,8 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
   baseline: n-a
   verifier: config:executors.script.vocab_db
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    node pipeline/vocab.mjs --check-db
-    vocab --check-db: 6 cột · 39 lookup khớp sổ
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E9
   run_id: minted-so-tu-vung-mot-nguon-E9-r1
@@ -195,16 +184,30 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
   baseline: n-a
   verifier: config:executors.test.vocab
   verified_at: 2026-10-26T02:21:18Z
-  output: |
-    cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
-    ℹ duration_ms 2718.539292
+  carried_from_round: 1
+  note: carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
-- cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-so-tu-vung-mot-nguon-SUITE-node_scripts_check_portal_compliance_mjs-r1
+- cmd: cd app && npx tsc --noEmit && npm run lint
+  run_id: minted-so-tu-vung-mot-nguon-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-26T02:21:18Z
+  verified_at: 2026-10-26T02:29:07Z
+
+- cmd: cd app && npm test
+  run_id: minted-so-tu-vung-mot-nguon-SUITE-npm_test-r2
+  exit_code: 0
+  verified_at: 2026-10-26T02:29:07Z
+
+- cmd: cd app && npm run test:lint-rules
+  run_id: minted-so-tu-vung-mot-nguon-SUITE-test_lint_rules-r2
+  exit_code: 0
+  verified_at: 2026-10-26T02:29:07Z
+
+- cmd: node scripts/check-portal-compliance.mjs
+  run_id: minted-so-tu-vung-mot-nguon-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  exit_code: 0
+  verified_at: 2026-10-26T02:29:07Z
 
 ## Known limits
 
@@ -212,19 +215,14 @@ Round 1. Có 1 eval đỏ (E6c); 15 eval còn lại xanh.
 
 ## Analyst
 
-Eval không-phân-biệt (xanh trên cả HEAD lẫn baseline, là regression-guard có chủ ý hoặc cần viết lại để assert hành vi mới):
+carried tu round 1 — baseline khong do lai round nay (evals.yaml khong doi tu lan baseline cuoi). Field baseline cua moi block eval ghi n-a vi round nay khong do.
+
+Eval không-phân-biệt (xanh trên cả HEAD lẫn baseline, đo ở round 1; là regression-guard có chủ ý hoặc cần viết lại để assert hành vi mới):
 - E6 (`cd app && npm test`)
 - E6b (`cd pipeline && npm test`)
 - E6e (`cd app && npm run test:lint-rules`)
 
-Hồi quy: E6c (`cd agent && npm test`) xanh trên baseline nhưng đỏ trên HEAD. Chỉ một test đỏ: «AC-6 để sau» trong `agent/tests/enrich-db.test.ts` (dòng 462–475), khẳng định lượt backlog sau mở lại thẻ nhưng nhận 0 thay vì 1. Nguyên nhân gốc chưa được chẩn đoán trong round này. Với E6c không có eval nào khai judgment, nên không có hội đồng judge nào được chấm cho báo cáo này.
-
-Baseline khong do:
-- cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs: bo qua baseline: tep pipeline/scripts/vocab.test.mjs co o cay dang kiem nhung chua co o merge-base 106cbd3edb83f087b3cde91d6e1c00582b3451a5 — eval moi, chay tren code cu khong phan biet gi
-- node pipeline/vocab.mjs --check: bo qua baseline: tep pipeline/vocab.mjs co o cay dang kiem nhung chua co o merge-base 106cbd3edb83f087b3cde91d6e1c00582b3451a5 — eval moi, chay tren code cu khong phan biet gi
-- node pipeline/vocab.mjs --lint: bo qua baseline: tep pipeline/vocab.mjs co o cay dang kiem nhung chua co o merge-base 106cbd3edb83f087b3cde91d6e1c00582b3451a5 — eval moi, chay tren code cu khong phan biet gi
-- cd pipeline && node --test scripts/vocab-db.itest.mjs: bo qua baseline: tep pipeline/scripts/vocab-db.itest.mjs co o cay dang kiem nhung chua co o merge-base 106cbd3edb83f087b3cde91d6e1c00582b3451a5 — eval moi, chay tren code cu khong phan biet gi
-- node pipeline/vocab.mjs --check-db: bo qua baseline: tep pipeline/vocab.mjs co o cay dang kiem nhung chua co o merge-base 106cbd3edb83f087b3cde91d6e1c00582b3451a5 — eval moi, chay tren code cu khong phan biet gi
+Không eval nào khai judgment, nên không có hội đồng judge nào được chấm cho báo cáo này: không có khai input, máy không có căn cứ chấm judge, không có mục nào chờ human_override.
 
 ## Variance
 
@@ -233,3 +231,4 @@ none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạ
 ## Iterations
 
 Round 1: E6c failed — bộ test agent có 1 test đỏ (AC-6 để sau, enrich-db.test.ts), xanh trên baseline. Returned to implementation.
+Round 2: cả 16 eval xanh. Bảy eval chạy lại trên cây mới, chín eval mang sang từ round 1 (delta không chạm paths của chúng); E6c xanh sau khi cô lập ca enrich-db AC-6. Verdict PASS.
