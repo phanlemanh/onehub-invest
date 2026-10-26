@@ -6,7 +6,8 @@ cd "$ROOT/app" || exit 2
 DEM=$(mktemp); export PATH="$P/pgrep-gia:$PATH" PGREP_GIA_DEM="$DEM"
 cu=tests/.zz-ops-doi-chung.test.tsx
 git -C "$ROOT" show aa928f30:app/tests/ops-facts-so-tong-hop.test.tsx > "$cu" || { echo "KHONG LAY DUOC BAN CU"; exit 2; }
-chay() { rm -f "$DEM"; env -u NODE_TEST_CONTEXT node --import tsx --test --test-name-pattern="ON22-AC-5 ma trận" "$1" 2>&1 | grep -q '^ℹ fail 0'; }
+# Ghi trọn đầu ra rồi mới tìm: với pipefail, «node … | grep -q» báo thất bại oan khi grep thoát sớm làm node nhận SIGPIPE.
+chay() { local out; rm -f "$DEM"; out=$(env -u NODE_TEST_CONTEXT node --import tsx --test --test-name-pattern="ON22-AC-5 ma trận" "$1" 2>&1); printf '%s\n' "$out" | grep -q '^ℹ fail 0'; }
 ds=0; for i in 1 2 3; do chay tests/ops-facts-so-tong-hop.test.tsx || ds=$((ds+1)); done
 goi=$(cat "$DEM" 2>/dev/null || echo 0)
 dc=0; for i in 1 2 3; do chay "$cu" || dc=$((dc+1)); done
