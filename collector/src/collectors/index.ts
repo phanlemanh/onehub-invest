@@ -5,6 +5,7 @@ import { airbnbListing } from "./airbnb-listing.js";
 import { osmBoundaries } from "./osm-boundaries.js";
 import { zaloMock } from "./zalo-mock.js";
 import { airdnaResearch } from "./airdna-research.js";
+import { s08DanhMuc } from "./s08-danh-muc.js";
 
 /** Registry plugin — thêm nguồn mới: tạo file + import ở đây, không sửa core. */
 export const COLLECTORS: Map<string, Collector> = new Map([
@@ -14,4 +15,5 @@ export const COLLECTORS: Map<string, Collector> = new Map([
   [osmBoundaries.id, osmBoundaries],
   [zaloMock.id, zaloMock],
   [airdnaResearch.id, airdnaResearch],
+  [s08DanhMuc.id, s08DanhMuc],
 ]);

@@ -1,0 +1,130 @@
+== requests 1280 toi (nap trang, loc, mo ho so tin; co chan zdn.vn gia lap o buoc 5c) ==
+### Result
+51. [GET] https://f64-zpg-r.zdn.vn/jpg/3048272212467945413/958f7683a9a829f670b9.jpg => [404] Not Found
+
+Note: 50 static requests not shown, run with --static option to see them.
+
+== console ==
+### Result
+Total messages: 6 (Errors: 1, Warnings: 3)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/ops/data-flow:0
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/ops/data-flow:0
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ https://f64-zpg-r.zdn.vn/jpg/3048272212467945413/958f7683a9a829f670b9.jpg:0
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/ops/data-flow:0
+
+== requests --static (tom tat: toan bo) ==
+### Result
+1. [GET] http://localhost:3462/ops/data-flow => [200] OK
+2. [GET] http://localhost:3462/_next/static/... => [200] OK
+3. [GET] http://localhost:3462/_next/static/... => [200] OK
+4. [GET] http://localhost:3462/_next/static/... => [200] OK
+5. [GET] http://localhost:3462/_next/static/... => [200] OK
+6. [GET] http://localhost:3462/_next/static/... => [200] OK
+7. [GET] http://localhost:3462/_next/static/... => [200] OK
+8. [GET] http://localhost:3462/_next/static/... => [200] OK
+9. [GET] http://localhost:3462/_next/static/... => [200] OK
+10. [GET] http://localhost:3462/_next/static/... => [200] OK
+11. [GET] http://localhost:3462/_next/static/... => [200] OK
+12. [GET] http://localhost:3462/_next/static/... => [200] OK
+13. [GET] http://localhost:3462/_next/static/... => [200] OK
+14. [GET] http://localhost:3462/_next/static/... => [200] OK
+15. [GET] http://localhost:3462/_next/static/... => [200] OK
+16. [GET] http://localhost:3462/_next/static/... => [200] OK
+17. [GET] http://localhost:3462/_next/static/... => [200] OK
+18. [GET] http://localhost:3462/_next/static/... => [200] OK
+19. [GET] http://localhost:3462/_next/static/... => [200] OK
+20. [GET] http://localhost:3462/_next/static/... => [200] OK
+21. [GET] http://localhost:3462/_next/static/... => [200] OK
+22. [GET] http://localhost:3462/_next/static/... => [200] OK
+23. [GET] http://localhost:3462/_next/static/... => [200] OK
+24. [GET] http://localhost:3462/_next/static/... => [200] OK
+25. [GET] http://localhost:3462/_next/static/... => [200] OK
+26. [GET] http://localhost:3462/_next/static/... => [200] OK
+27. [GET] http://localhost:3462/_next/static/... => [200] OK
+28. [GET] http://localhost:3462/_next/static/... => [200] OK
+29. [GET] http://localhost:3462/_next/static/... => [200] OK
+30. [GET] http://localhost:3462/_next/static/... => [200] OK
+31. [GET] http://localhost:3462/_next/static/... => [200] OK
+32. [GET] http://localhost:3462/_next/static/... => [200] OK
+33. [GET] http://localhost:3462/_next/static/... => [200] OK
+34. [GET] http://localhost:3462/_next/static/... => [200] OK
+35. [GET] http://localhost:3462/_next/static/... => [200] OK
+36. [GET] http://localhost:3462/_next/static/... => [200] OK
+37. [GET] http://localhost:3462/_next/static/... => [200] OK
+38. [GET] http://localhost:3462/_next/static/... => [200] OK
+39. [GET] http://localhost:3462/_next/static/... => [200] OK
+40. [GET] http://localhost:3462/_next/static/... => [200] OK
+41. [GET] http://localhost:3462/_next/static/... => [200] OK
+42. [GET] http://localhost:3462/_next/static/... => [200] OK
+43. [GET] http://localhost:3462/_next/static/... => [200] OK
+44. [GET] http://localhost:3462/_next/static/... => [200] OK
+45. [GET] http://localhost:3462/_next/static/... => [200] OK
+46. [GET] http://localhost:3462/_next/static/... => [200] OK
+47. [GET] http://localhost:3462/_next/static/... => [200] OK
+48. [GET] http://localhost:3462/_next/static/... => [200] OK
+49. [GET] http://localhost:3462/favicon.ico?favicon.117ezoe8m31dk.ico => [200] OK
+50. [GET] https://photo-stal-21.zdn.vn/gr/jpg/f26e67ccc7ee15b04cff/2aOboR82bSJ45InohNEY5gdJcYXOsNzt6Ssn92vY.jpg => [200] 
+51. [GET] https://f64-zpg-r.zdn.vn/jpg/3048272212467945413/958f7683a9a829f670b9.jpg => [404] Not Found
+
+== 390 sang: requests --static ==
+### Result
+1. [GET] http://localhost:3462/ops/data-flow => [200] OK
+2. [GET] http://localhost:3462/_next/static/... => [200] OK
+3. [GET] http://localhost:3462/_next/static/... => [200] OK
+4. [GET] http://localhost:3462/_next/static/... => [200] OK
+5. [GET] http://localhost:3462/_next/static/... => [200] OK
+6. [GET] http://localhost:3462/_next/static/... => [200] OK
+7. [GET] http://localhost:3462/_next/static/... => [200] OK
+8. [GET] http://localhost:3462/_next/static/... => [200] OK
+9. [GET] http://localhost:3462/_next/static/... => [200] OK
+10. [GET] http://localhost:3462/_next/static/... => [200] OK
+11. [GET] http://localhost:3462/_next/static/... => [200] OK
+12. [GET] http://localhost:3462/_next/static/... => [200] OK
+13. [GET] http://localhost:3462/_next/static/... => [200] OK
+14. [GET] http://localhost:3462/_next/static/... => [200] OK
+15. [GET] http://localhost:3462/_next/static/... => [200] OK
+16. [GET] http://localhost:3462/_next/static/... => [200] OK
+17. [GET] http://localhost:3462/_next/static/... => [200] OK
+18. [GET] http://localhost:3462/_next/static/... => [200] OK
+19. [GET] http://localhost:3462/_next/static/... => [200] OK
+20. [GET] http://localhost:3462/_next/static/... => [200] OK
+21. [GET] http://localhost:3462/_next/static/... => [200] OK
+22. [GET] http://localhost:3462/_next/static/... => [200] OK
+23. [GET] http://localhost:3462/_next/static/... => [200] OK
+24. [GET] http://localhost:3462/_next/static/... => [200] OK
+25. [GET] http://localhost:3462/_next/static/... => [200] OK
+26. [GET] http://localhost:3462/_next/static/... => [200] OK
+27. [GET] http://localhost:3462/_next/static/... => [200] OK
+28. [GET] http://localhost:3462/_next/static/... => [200] OK
+29. [GET] http://localhost:3462/_next/static/... => [200] OK
+30. [GET] http://localhost:3462/_next/static/... => [200] OK
+31. [GET] http://localhost:3462/_next/static/... => [200] OK
+32. [GET] http://localhost:3462/_next/static/... => [200] OK
+33. [GET] http://localhost:3462/_next/static/... => [200] OK
+34. [GET] http://localhost:3462/_next/static/... => [200] OK
+35. [GET] http://localhost:3462/_next/static/... => [200] OK
+36. [GET] http://localhost:3462/_next/static/... => [200] OK
+37. [GET] http://localhost:3462/_next/static/... => [200] OK
+38. [GET] http://localhost:3462/_next/static/... => [200] OK
+39. [GET] http://localhost:3462/_next/static/... => [200] OK
+40. [GET] http://localhost:3462/_next/static/... => [200] OK
+41. [GET] http://localhost:3462/_next/static/... => [200] OK
+42. [GET] http://localhost:3462/_next/static/... => [200] OK
+43. [GET] http://localhost:3462/_next/static/... => [200] OK
+44. [GET] http://localhost:3462/_next/static/... => [200] OK
+45. [GET] http://localhost:3462/_next/static/... => [200] OK
+46. [GET] http://localhost:3462/_next/static/... => [200] OK
+47. [GET] http://localhost:3462/_next/static/... => [200] OK
+48. [GET] http://localhost:3462/_next/static/... => [200] OK
+49. [GET] http://localhost:3462/favicon.ico?favicon.117ezoe8m31dk.ico => [200] OK
+
+== console 390 ==
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3462/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/ops/data-flow:0
