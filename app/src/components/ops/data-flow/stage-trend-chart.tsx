@@ -89,7 +89,7 @@ export function StageTrendChart({
                 ))}
               </defs>
               <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={10} minTickGap={16} tick={{ fontSize: 12 }} />
+              <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={10} minTickGap={16} interval="preserveStartEnd" tick={{ fontSize: 12 }} />
               <YAxis hide />
               <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
               {STAGES.map((s) => (
