@@ -5,10 +5,11 @@
 //
 // Dùng: node import-chotot.mjs <snapshot-dir> | node import-chotot.mjs --latest
 import { readFile, readdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { basename, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 // Luật khuôn tên thư mục — BẢN SAO GIỐNG HỆT import-airbnb.mjs (PL1 mở lại
@@ -66,6 +67,25 @@ async function readSnapshot(dir) {
   return { manifest, items: items.filter((i) => i.source === "chotot-ads") };
 }
 
+// 2510-6 (claudedp, Ngoài-1 của giu-captured-at): bảng đi theo snapshot MỚI và
+// KHÔNG LÙI NỘI DUNG — WHERE chặn CẢ lệnh update khi snapshot nạp vào cũ hơn
+// dòng hiện có (price/payload/snapshot_id/captured_at giữ nguyên bản mới);
+// bằng mốc (nạp lại cùng snapshot) thì cập nhật như cũ — idempotent.
+// 2410-1 v2: captured_at = giờ thu snapshot (airbnb_snapshots.collected_at).
+export const UPSERT_SQL = `INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, subject,
+                              price, price_string, size_m2, rooms, toilets, house_type,
+                              area_name, ward_name, ward_name_v3, latitude, longitude,
+                              list_time, seller, images, payload, snapshot_id, captured_at)
+ VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+ ON CONFLICT (list_id) DO UPDATE SET
+   price = EXCLUDED.price, price_string = EXCLUDED.price_string,
+   size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
+   ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
+   seller = EXCLUDED.seller, images = EXCLUDED.images,
+   payload = EXCLUDED.payload, snapshot_id = EXCLUDED.snapshot_id,
+   captured_at = EXCLUDED.captured_at
+ WHERE EXCLUDED.captured_at >= stg_chotot_ads.captured_at`;
+
 async function importDir(client, dir) {
   const { manifest, items } = await readSnapshot(dir);
   console.log(`manifest ok: ${manifest.snapshotId} — ${items.length} items`);
@@ -81,24 +101,7 @@ async function importDir(client, dir) {
   for (const it of items) {
     const a = it.payload;
     await client.query(
-      `INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, subject,
-                                    price, price_string, size_m2, rooms, toilets, house_type,
-                                    area_name, ward_name, ward_name_v3, latitude, longitude,
-                                    list_time, seller, images, payload, snapshot_id, captured_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
-       ON CONFLICT (list_id) DO UPDATE SET
-         price = EXCLUDED.price, price_string = EXCLUDED.price_string,
-         size_m2 = EXCLUDED.size_m2, subject = EXCLUDED.subject,
-         ward_name = EXCLUDED.ward_name, ward_name_v3 = EXCLUDED.ward_name_v3,
-         seller = EXCLUDED.seller, images = EXCLUDED.images,
-         payload = EXCLUDED.payload,
-         -- 2410-1 v2 (luật claudedp): bảng đi theo snapshot MỚI — snapshot_id VÀ captured_at
-         -- cùng tiến CHỈ KHI EXCLUDED.captured_at > cũ; nạp snapshot cũ hơn sau thì giữ nguyên
-         -- cả hai (không lùi, hai cột không lệch nhau).
-         snapshot_id = CASE WHEN EXCLUDED.captured_at > stg_chotot_ads.captured_at
-                       THEN EXCLUDED.snapshot_id ELSE stg_chotot_ads.snapshot_id END,
-         captured_at = CASE WHEN EXCLUDED.captured_at > stg_chotot_ads.captured_at
-                       THEN EXCLUDED.captured_at ELSE stg_chotot_ads.captured_at END`,
+      UPSERT_SQL,
       [
         a.list_id, a.region_v2 ?? it.meta?.region_v2, it.meta?.city ?? a.region_name,
         a.category ?? it.meta?.cg, a.type ?? it.meta?.st, a.subject ?? null,
@@ -157,4 +160,8 @@ const errDetail = (e) => {
   return parts.join(" — ");
 };
 
-main().catch((e) => { console.error("❌", errDetail(e)); process.exit(1); });
+// Chỉ chạy main() khi được gọi trực tiếp (khuôn import-airbnb) — test import
+// UPSERT_SQL từ file này không làm script nạp chạy theo.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => { console.error("❌", errDetail(e)); process.exit(1); });
+}
