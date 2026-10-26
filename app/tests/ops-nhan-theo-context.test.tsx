@@ -200,6 +200,7 @@ const MA_TRAN_CHI_TIET: [string, string, string, string?][] = [
   ["occupancy-domain", "vi phạm: 3", "3 vi phạm"],
   ["not-null", "dòng toàn NULL: 0", "0 dòng rỗng toàn bộ"],
   ["area-slug-valid", "slug rỗng/lệch: 2", "2 mã khu vực rỗng hoặc lệch"],
+  ["area_con_ngoai_cha", "34 khu vực con có tâm ngoài polygon cha / 171 con", "34/171 khu vực con nằm ngoài khu vực cha"],
   ["listing-volume", "7 ngày gần: 1200 vs 7 ngày trước: 980", "7 ngày gần: 1.200 · 7 ngày trước: 980"],
   ["listing-volume", "snapshot mới 17 vs trước 25 (-8)", "Snapshot mới 17 · trước 25 (-8)"],
   ["adr-drift", "median ADR 3865 vs 3679", "ADR trung vị 3.865 · kỳ trước 3.679"],
@@ -249,6 +250,7 @@ test("ON12-AC-4 dqCheckName và dqEntityLabel ma trận", async () => {
     ["occupancy-domain", "Công suất trong khoảng 0–1"],
     ["not-null", "Không có dòng rỗng"],
     ["area-slug-valid", "Mã khu vực hợp lệ"],
+    ["area_con_ngoai_cha", "Khu vực con nằm trong khu vực cha"],
     ["listing-volume", "Khối lượng listing"],
     ["adr-drift", "ADR không trôi"],
     ["freshness", "Độ tươi"],
@@ -287,7 +289,7 @@ test("ON12-AC-4 khuôn lạ → (chưa diễn giải)", async () => {
 
 /** Khuôn chi tiết của ma trận phải còn trong ĐÚNG tệp bên ghi — đổi khuôn ở pipeline thì ca này đỏ, nêu tệp. */
 const KHUON_BEN_GHI: [string, string[]][] = [
-  ["pipeline/sql/450_dq_checks.sql", ["'vi phạm: '", "'dòng toàn NULL: '", "'slug rỗng/lệch: '", "'7 ngày gần: '", "' vs 7 ngày trước: '", "'median ADR '", "'snapshot cuối '", "'chưa có snapshot'", "'occupancy-domain'", "'not-null'", "'area-slug-valid'", "'listing-volume'", "'adr-drift'", "'freshness'"]],
+  ["pipeline/sql/450_dq_checks.sql", ["'vi phạm: '", "'dòng toàn NULL: '", "'slug rỗng/lệch: '", "'7 ngày gần: '", "' vs 7 ngày trước: '", "'median ADR '", "'snapshot cuối '", "'chưa có snapshot'", "'occupancy-domain'", "'not-null'", "'area-slug-valid'", "' khu vực con có tâm ngoài polygon cha / '", "'area_con_ngoai_cha'", "'listing-volume'", "'adr-drift'", "'freshness'"]],
   ["pipeline/dq-truthful-coverage.mjs", ["`our=${", "s02_active=${", "universe=${", "history=${", "coverage=${", "captured_age=${", "'chưa có crosswalk S02 nào'", "'truthful-coverage'"]],
   ["pipeline/dq-enum-vocab.mjs", ["giá trị ngoài vocabulary (", "giá trị ngoài vocabulary, ví dụ: ", "offers có loại hình`", "`enum-vocab:${col}`", "'enum-vocab:property_type-coverage'"]],
   ["pipeline/scripts/bench-extraction.mjs", ['"samples=0"', "`samples=${", "avgF1=${", "'extraction-quality'"]],
