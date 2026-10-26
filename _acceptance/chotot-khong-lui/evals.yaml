@@ -1,0 +1,51 @@
+schema_version: 1
+feature_slug: chotot-khong-lui
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ckl_khong_lui
+    expected: "exit 0; 'KHONG-LUI PASS'; should-NOT-fire: nạp cũ sau mới không đổi md5 dòng (giá vẫn 1200000000, tiêu đề «bản mới»); snapshot_id + captured_at giữ bản mới"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ckl_tien
+    expected: "exit 0; 'TIEN PASS'; nội dung + snapshot_id + captured_at tiến theo bản mới; tin chỉ có ở bản mới được thêm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ckl_idempotent
+    expected: "exit 0; 'IDEMPOTENT PASS'; should-NOT-fire nạp lại cùng snapshot không nhân dòng, không đổi dòng; cùng mốc thu thì cập nhật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ckl_khong_lui
+    expected: "exit 0; dòng 'bất biến: captured_at = collected_at' ok ở cả ba chế độ (E1–E3 cùng in)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.capt_chotot
+    expected: "exit 0; 'CHOTOT PASS' (kiểm của giu-captured-at vẫn đạt)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.ckl_unit
+    expected: "exit 0; chotot-khong-lui-noi-dung.test 3/3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.scripts
+    expected: "exit 0; toàn bộ scripts/*.test.mjs xanh (gồm GT-AC-1 chạy import-chotot thật)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ckl_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
