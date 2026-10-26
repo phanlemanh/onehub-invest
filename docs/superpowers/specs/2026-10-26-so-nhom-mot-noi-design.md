@@ -62,7 +62,57 @@ TV6 qua bộ áp). Sổ ghi rõ điều đó cho người xem.
 Lưới hiện có thêm một khu «Sổ đơn vị thu»: mỗi dòng một đơn vị của mọi nguồn — mã đơn vị, nguồn (nhãn nguồn), tên gốc,
 thị trường, dự án, trạng thái. Admin sửa thị trường và dự án qua một hộp thoại (action `set-meta` của route
 `source-groups`, chỉ phiên admin, ghi `ops_audit` cùng giao dịch). Tên nhóm là tầng C; khoá nhóm (URL S05, id nhóm S03)
-không hiện. Chi tiết UX ở mục Đặc tả UX (điền khi chạy design-pass).
+không hiện. Chi tiết UX ở mục Đặc tả UX dưới.
+
+<!-- <<<UX-SPEC-TEMPLATE -->
+## Đặc tả UX
+
+### 1. Luồng
+
+- Suôn sẻ: admin mở `/ops/sources` → khu «Sổ đơn vị thu» → chọn tab nguồn → bấm «Khai thị trường, dự án» ở một dòng → chọn thị trường và khu đô thị → Lưu → dòng hiện thị trường, dự án mới (điểm ra: ở lại lưới).
+- Biên: nguồn chưa có đơn vị nào (S02 trước khi chạy script đồng bộ) → trạng thái trống; đơn vị S03 có trạng thái là bản soi gateway → nhãn phụ «theo gateway»; người không phải admin không thấy trang (cổng `/ops/sources` hiện có).
+- Lỗi & quay lại: Lưu lỗi (403, mã thị trường sai) → chữ lỗi hiện ngay trong hộp, hộp không đóng; Huỷ đóng hộp, dòng không đổi.
+
+### 2. Kiểm kê màn
+
+| Màn | MỘT việc của màn | Vào từ / ra tới |
+|---|---|---|
+| Khu «Sổ đơn vị thu» trên `/ops/sources` | Xem mọi đơn vị thu của mọi nguồn ở một chỗ | Thanh bên Ops → Nguồn / ở lại trang |
+| Hộp «Khai thị trường, dự án» | Gắn thị trường và khu đô thị cho một đơn vị | Nút ở dòng / đóng về lưới |
+
+### 3. Bảng trạng thái
+
+<!-- <<<UX-STATE-TABLE -->
+| Trạng thái | Màn | Hiển thị gì | Người làm gì tiếp |
+|---|---|---|---|
+| ST-so-loading | Khu sổ | Skeleton của lưới (trang tải phía máy chủ, chỉ khi chuyển tab) | chờ |
+| ST-so-empty | Khu sổ | «Chưa có đơn vị nào của nguồn này. Chạy đồng bộ sổ ở máy thu.» | chạy `node pipeline/sync-don-vi.mjs` |
+| ST-so-error | Khu sổ | Alert lỗi «Không đọc được sổ đơn vị thu» + nút Thử lại | Thử lại |
+| ST-so-ok | Khu sổ | Lưới: mã đơn vị · nguồn · tên gốc · thị trường · dự án · trạng thái (Badge) | bấm khai |
+| ST-hop-luu | Hộp khai | Nút Lưu khoá trong lúc gửi | chờ |
+| ST-hop-loi | Hộp khai | Chữ lỗi máy chủ trong hộp | sửa rồi Lưu lại, hoặc Huỷ |
+<!-- UX-STATE-TABLE>>> -->
+
+### 4. Hành vi
+
+- Thị trường chọn từ danh sách 34 thị trường (tên tiếng Việt), nhiều lựa chọn; khu đô thị chọn từ node `project` của `asset_nodes`, nhiều lựa chọn.
+- Không hiện khoá nhóm (URL S05, id nhóm S03) ở bất kỳ ô nào; tên gốc là tầng C.
+- Trạng thái chỉ đọc trong khu này (đổi trạng thái là việc của công tắc hiện có cho S05/S06 và của TV6 cho S03).
+
+### 5. Xuất xứ component
+
+| Component | Nấc (dùng / ghép / mở rộng / tạo) | Vì sao (1 dòng) |
+|---|---|---|
+| `StatusGrid` (collections) | dùng | lưới có tab theo nguồn đã dùng trên trang này |
+| `Badge` (reui) | dùng | trạng thái vòng đời theo biến thể `-light` |
+| `Dialog` + nút | ghép | cùng khuôn `ModeDialog` của C7 |
+| Ô chọn nhiều (thị trường, khu đô thị) | dùng | thành phần chọn của `components/ui` sẵn có (chọn ở S3 theo catalog onehub-ui) |
+
+### 6. Khuôn IA đã chọn + căn cứ
+
+Khuôn IA: danh-sách-chi-tiết (master-detail)
+Căn cứ: luồng hiển nhiên — lưới đơn vị là danh sách, hộp khai là chi tiết sửa một dòng; cùng khuôn với lưới nhóm thu và hộp «Chế độ thu» đang có trên trang.
+<!-- UX-SPEC-TEMPLATE>>> -->
 
 ## Ngoài phạm vi
 
