@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3c9c478fbaf81c980b5d4bf59b5d9cb2eb1ed04e
+verified_commit: 5f1a78160e1ca8981381ef44603a96e9ffc50932
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -143,3 +143,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 1: E1-E5 và sáu lệnh suite đều xanh, E6 được ba góc nhìn chấm PASS; baseline không đo được (chặn hạ tầng). Không có eval nào hỏng.
+
+### Re-pin lần 1 — 2026-10-26, do gộp origin/main (50813379) vào fix/df0-dem-de-xuat-lam-giau
+run_id: repin-20261026T232640Z-22591
+sha: 5f1a78160e1ca8981381ef44603a96e9ffc50932 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths) · AC không có chốt máy: AC-6
