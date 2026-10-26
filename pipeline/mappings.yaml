@@ -207,25 +207,138 @@ sources:
       - "row_code, state_line, delivery_standard_name, fund_groups_sell_code — giữ ở staging"
 
 # --------------------------------------------------------------------------
-# ENUM — controlled vocabulary (CHECK constraint theo ADR-0011 Qđ 3.4)
+# SỔ TỪ VỰNG — nguồn duy nhất của mọi enum dữ liệu (PL6, ADR-0013 §8: khuôn RESO Lookup / RelatedLookup)
+#   Sửa ở đây rồi chạy `node pipeline/vocab.mjs --write` — sinh hằng pipeline/agent/app + khối CONTEXT.md.
+#   `node pipeline/vocab.mjs --lint` đỏ khi có danh sách viết tay ngoài sổ; `--check-db` so DB (ref_*, CHECK).
+#   Mỗi trục: term_vi (thuật ngữ CONTEXT.md) · dd_field (field RESO DD 2.1, null = local) · columns (cột bị
+#   CHECK) · values: code + label_vi + (dd_lookup = StandardLookupValue gần nhất | local: true + rationale).
+#   Trục local cả khối khai local/rationale/checked_on ở cấp trục, giá trị kế thừa.
+#   Giá trị mới cho trục có columns → cần migration mới (ref_lookup + CHECK), --check-db nhắc.
 # --------------------------------------------------------------------------
 enums:
   kind:
-    values: [sale, rent_lt]
-    dd: PropertyType (Residential vs ResidentialLease — xem kind)
-    constraint: "CHECK sale_offers_kind_chk (migration 025)"
-  confidence:
-    values: [high, medium, low]
-    dd: null
-    constraint: "CHECK sale_offers_confidence_chk (migration 025)"
-  price_tier:
-    values: [P0, P1, P2]
-    dd: null
-    constraint: "CHECK sale_offers_price_tier_chk (migration 025); P0 = giá giao dịch thật (dự phòng)"
+    term_vi: Loại tin
+    dd_field: PropertyType
+    columns: [sale_offers.kind]
+    nullable: false
+    values:
+      - { code: sale, label_vi: Bán, dd_lookup: Residential }
+      - { code: rent_lt, label_vi: Cho thuê, dd_lookup: ResidentialLease }
+    note: "DD phân biệt bán/thuê qua chính PropertyType; rent_lt ≈ ResidentialLease + LeaseAmountFrequency=Monthly. rent_st (STR) chưa có."
+    checked_on: "2026-10-26"
   property_type:
-    values: [apartment, house, land, room, commercial, unknown]
-    dd: PropertyType (+room local extension)
-    constraint: "CHECK sale_offers_property_type_chk (migration 025)"
+    term_vi: Loại hình
+    dd_field: PropertySubType
+    columns: [sale_offers.property_type, properties.property_type]
+    nullable: true
+    values:
+      - { code: apartment, label_vi: Căn hộ, dd_lookup: Condominium }
+      - { code: house, label_vi: Nhà riêng, dd_lookup: Townhouse }
+      - { code: land, label_vi: Đất, dd_lookup: UnimprovedLand }
+      - { code: room, label_vi: Phòng, local: true, rationale: "phòng trọ — DD PropertySubType 31 giá trị không có (migration 025, category Chợ Tốt 1050)" }
+      - { code: commercial, label_vi: Mặt bằng, dd_lookup: "CommercialSale / CommercialLease (PropertyType)" }
+      - { code: unknown, label_vi: Chưa rõ, local: true, rationale: "«chưa biết» — chưa có phát biểu nào; không gửi ra API (ADR-0013 §8)" }
+    note: "reso-khung-phan-loai.md §7: apartment/house ở cấp PropertySubType, land/commercial ở cấp PropertyType."
+    checked_on: "2026-10-26"
+  confidence:
+    term_vi: Độ tin trích xuất
+    dd_field: null
+    local: true
+    rationale: "độ tin parser nội bộ — reso-khung §4: thay dần bằng *Source + FieldAssertion"
+    checked_on: "2026-10-22"
+    columns: [sale_offers.confidence]
+    nullable: false
+    values:
+      - { code: high, label_vi: cao }
+      - { code: medium, label_vi: trung bình }
+      - { code: low, label_vi: thấp }
+  price_tier:
+    term_vi: Bậc giá
+    dd_field: null
+    local: true
+    rationale: "đặc trưng VN — giá công khai ≠ giá giao dịch; P0 = giá giao dịch thật (dự phòng)"
+    checked_on: "2026-10-22"
+    columns: [sale_offers.price_tier]
+    nullable: true
+    values:
+      - { code: P0, label_vi: giá giao dịch (P0) }
+      - { code: P1, label_vi: giá nội bộ (P1) }
+      - { code: P2, label_vi: giá công khai (P2) }
+  enrich_field:
+    term_vi: Trường làm giàu
+    dd_field: null
+    local: true
+    rationale: "tên trường canonical nhận đề xuất enrich (migration 033); dd_lookup = tên field RESO của trường"
+    checked_on: "2026-10-26"
+    columns: [enrichment_proposals.field]
+    nullable: false
+    lint_keys: false
+    values:
+      - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
+      - { code: bedrooms, label_vi: Phòng ngủ, dd_lookup: BedroomsTotal }
+      - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
+      - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
+      - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+  listing_intent:
+    term_vi: Ý định tin
+    dd_field: null
+    local: true
+    rationale: "extension ListingIntent (ADR-0013 §9) — tin «tìm mua/thuê» không phải Property; gần nhất SavedSearch"
+    checked_on: "2026-10-23"
+    columns: []
+    nullable: false
+    values:
+      - { code: offer, label_vi: Tin rao }
+      - { code: wanted, label_vi: "Tin tìm mua, tìm thuê" }
+      - { code: not_listing, label_vi: Không phải tin rao }
+      - { code: unknown, label_vi: Chưa rõ }
+    note: "Cột đến ở PL5. Nhãn: Hỏi-1 của PL6 (Mạnh duyệt 26/10)."
+  offer_status:
+    term_vi: Trạng thái chào
+    dd_field: StandardStatus
+    columns: []
+    nullable: false
+    values:
+      - { code: active, label_vi: Đang chào, dd_lookup: Active }
+      - { code: active_under_contract, label_vi: Đã cọc, dd_lookup: ActiveUnderContract }
+      - { code: closed, label_vi: Đã bán, dd_lookup: Closed }
+      - { code: withdrawn, label_vi: Đã gỡ, dd_lookup: Withdrawn }
+      - { code: unknown, label_vi: Chưa rõ, local: true, rationale: "chưa có bằng chứng trạng thái; quá cửa sổ độ tươi KHÔNG thành Expired (reso-khung §6)" }
+    note: "Cột đến ở PL19; chỉ đổi theo bằng chứng (reso-khung-phan-loai.md §6). Nhãn: Hỏi-1 của PL6."
+    checked_on: "2026-10-26"
+  data_level:
+    term_vi: Bậc dữ liệu
+    dd_field: null
+    local: true
+    rationale: "extension DataLevel — thang bậc FRAMING §3.4 (Mạnh duyệt 23/10)"
+    checked_on: "2026-10-23"
+    columns: []
+    nullable: false
+    values:
+      - { code: B0, label_vi: Có lời khai }
+      - { code: B1, label_vi: Đọc được }
+      - { code: B2, label_vi: Gắn căn }
+      - { code: B3, label_vi: Đã đo }
+      - { code: B4, label_vi: Xác minh }
+      - { code: B5, label_vi: Sống }
+  capability_level:
+    term_vi: Bậc năng lực
+    dd_field: null
+    local: true
+    rationale: "extension CapabilityLevel — bậc năng lực phân khúc FRAMING §3.4"
+    checked_on: "2026-10-23"
+    columns: []
+    nullable: false
+    values:
+      - { code: N0, label_vi: Thu được }
+      - { code: N1, label_vi: Đọc được }
+      - { code: N2, label_vi: Đo được }
+      - { code: N3, label_vi: Tự động ở ngưỡng }
+      - { code: N4, label_vi: Tự duy trì }
   source:
     values_from: source_registry.code
-    note: "controlled vocabulary có sẵn từ migration 012 — không khai trùng ở đây"
+    note: "controlled vocabulary có sẵn từ migration 012 — không khai trùng ở đây (bộ đọc sổ bỏ qua khoá này)"
+
+# Ngoại lệ có chủ ý của `vocab.mjs --lint` — mỗi mục: path (tương đối gốc kho) · axis · reason. Mục thiếu reason
+# hoặc không còn khớp chỗ viết tay nào → lint đỏ. Tập này ghim ở hợp đồng PL6 AC-5; thêm mục là đổi phạm vi.
+enums_lint_allow: []
