@@ -5,7 +5,7 @@ slug: noi-tiep-zc4
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T06:15:11Z
 approved_by:
@@ -41,3 +41,7 @@ Nhánh nghiệm thu = origin/main 6b0afe7 gộp hai nhánh.
 ## Notes
 
 - Probe `_acceptance/noi-tiep-zc4/probes/logs-tmp.sh` chạy script cài trên bản chép tạm + HOME giả, launchctl giả.
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: ghi Known limits
+- Known limits:
+  - Ngoài-1: Lượt cài hỏng (sed hay plutil lỗi) để lại một tệp tạm rỗng trong thư mục tạm của user

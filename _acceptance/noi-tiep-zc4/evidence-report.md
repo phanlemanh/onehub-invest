@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b914cb0624538361442de90a8698ef8a8d7fb681
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: noi-tiep-zc4
