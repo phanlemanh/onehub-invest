@@ -16,13 +16,18 @@ type Ket = { status: number; body: Record<string, unknown> }
 
 /** Các điểm thu cho lưới /ops/sources — MỘT câu đọc dùng chung cho trang (sources-content) và phép đo (che-do-thu.test):
  *  chế độ, hạn bùng, ngày vào chế độ rút từ params; id bigserial ép số cho khớp thân set-mode. */
+/** PL12: source_groups là view gồm mọi đơn vị của sổ; trang nhóm thu cũ chỉ quản S05/S06 — đơn vị S02/S03 ở khu
+ *  «Sổ đơn vị thu», bật/tắt S03 là việc của TV6. */
+export const NHOM_TRANG_CU = ["S05", "S06"]
+export const LOI_NGOAI_NHOM = "chỉ quản nhóm S05/S06 ở đây"
+
 export async function docNhomThu(db: Pick<Pool, "query"> = pool): Promise<GroupRow[]> {
   const { rows } = await db.query<GroupRow>(
     `SELECT g.id::int AS id, g.source_code, g.group_key, g.name, g.enabled, g.note,
             g.params->>'mode' AS mode, g.params->>'burst_until' AS burst_until, g.params->>'mode_since' AS mode_since,
             (SELECT count(*)::int FROM stg_zalo_posts z
               WHERE z.agent_id = 'apify-facebook' AND z.group_name = g.name) AS fb_posts
-     FROM source_groups g ORDER BY g.source_code, g.id`,
+     FROM source_groups g WHERE g.source_code IN ('S05', 'S06') ORDER BY g.source_code, g.id`,
   )
   return rows
 }
@@ -50,6 +55,10 @@ export async function datCheDo(
     if (!rows[0]) {
       await c.query("ROLLBACK")
       return { status: 404, body: { error: "không có nhóm này" } }
+    }
+    if (!NHOM_TRANG_CU.includes(rows[0].source_code)) {
+      await c.query("ROLLBACK")
+      return { status: 400, body: { error: LOI_NGOAI_NHOM } }
     }
     const cu = rows[0].params ?? {}
     const from = typeof cu.mode === "string" ? cu.mode : null

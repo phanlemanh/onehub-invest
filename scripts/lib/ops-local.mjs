@@ -7,6 +7,7 @@
  *   readRecords24h  ↔ getSourceFeedHealth().items24h   (app/src/lib/ops-queries.ts)
  *   readLockdown    ↔ getLockdownStatus()               (app/src/lib/ops-queries.ts, ON2)
  *   readS03Allowlist ↔ effectiveEnabledGroups()        (app/src/lib/zalo-admin.ts, ON4 — app/tests/nhom-s03-tren-cloud.test.tsx)
+ *   readS03Groups ↔ effectiveEnabledGroups() (tập bật)   (PL12 — app/tests/so-nhom.test.tsx SN-AC-5b)
  * Mọi hàm nhận phụ thuộc qua tham số (client pg, thư mục, lệnh) và NÉM khi không đo được — bên gọi ghi `error`,
  * không bao giờ thay bằng 0 hay «Ổn». An toàn Zalo: chỉ đọc log và probe GET, không phương thức ghi nào.
  */
@@ -172,4 +173,23 @@ export function readS03Allowlist(z) {
   const enabled = (groups) => Object.entries(groups).filter(([, v]) => v?.allow !== false && v?.enabled !== false).map(([k]) => k);
   const byAccount = new Map(ids.map((id) => [id, enabled(groupsOf(id))]));
   return { byAccount, union: [...new Set([...byAccount.values()].flat())] };
+}
+
+/** PL12 sổ đơn vị thu — mọi nhóm S03 có hiệu lực ở ít nhất một tài khoản, cùng luật kế thừa với `readS03Allowlist`
+ * (`default` đọc `accounts.default.groups`, thiếu thì cấp ngoài; tài khoản không khai `groups` kế thừa cấp ngoài). Khoá
+ * bỏ tiền tố `group:` (một nhóm một đơn vị dù cấu hình viết hai kiểu); `enabled` = bật ở ít nhất một tài khoản; theo thứ
+ * tự khoá. Chỉ đọc đối tượng đã parse — không chạm tệp hay lệnh nào. Nhận `channels.zalouser`. Khớp tập bật với
+ * `effectiveEnabledGroups` của app đo ở app/tests/so-nhom.test.tsx (SN-AC-5b). */
+export function readS03Groups(z) {
+  if (!z) return [];
+  const taiKhoan = ["default", ...Object.keys(z.accounts ?? {}).filter((id) => id !== "default")];
+  const nhom = new Map();
+  for (const id of taiKhoan) {
+    const groups = (id === "default" ? z.accounts?.default?.groups : z.accounts?.[id]?.groups) ?? z.groups ?? {};
+    for (const [k, v] of Object.entries(groups)) {
+      const key = k.replace(/^group:/, "");
+      nhom.set(key, (nhom.get(key) ?? false) || (v?.allow !== false && v?.enabled !== false));
+    }
+  }
+  return [...nhom].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([key, enabled]) => ({ key, enabled }));
 }

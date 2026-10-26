@@ -1,0 +1,34 @@
+{
+  "ngay_tinh": "2026-10-26",
+  "hang": {
+    "ma": "PL12",
+    "gio_may": [
+      0.52,
+      2.49
+    ],
+    "phan_tram": 2.07
+  },
+  "moc": {
+    "ten": "Đội vận hành tạm dừng/bật nguồn và quản nhóm S05/S06 từ cloud, có nhật ký người thật",
+    "bat_dau": "2026-10-26",
+    "hoan_tat": "2026-10-27",
+    "gio_may": [
+      17.099999999999998,
+      39.6
+    ],
+    "gio_cho": 2.52,
+    "gio_cho_do": true,
+    "muc_tieu": null,
+    "hang": [
+      "TV0",
+      "TV1",
+      "TV2a",
+      "TV2b",
+      "TV4",
+      "TV4b",
+      "TV5",
+      "PL12",
+      "ON19"
+    ]
+  }
+}
