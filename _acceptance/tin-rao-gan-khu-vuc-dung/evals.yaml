@@ -50,7 +50,7 @@ evals:
     executor: test
     cmd: config:executors.test.tin_rao_gan
     paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/transform-hcmc-simple.mjs, pipeline/lib/osm.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
-    expected: "exit 0; ca 'TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước' ok (11 tệp, nhãn dùng-bộ-chung/miễn), ca 'TRG-AC-7 tệp dùng bộ chung không còn câu chọn riêng' ok ('osm-phuong' chỉ ở pipeline/lib/osm.mjs), chiều đỏ 'TRG-AC-7 bản sao thêm câu chọn riêng → báo tên tệp' ok và 'TRG-AC-7 tệp mới khớp mẫu ngoài ma trận → báo tệp' ok (thông điệp gọi đúng tệp)"
+    expected: "exit 0; ca 'TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước' ok (12 tệp theo design doc §5, nhãn dùng-bộ-chung/miễn), ca 'TRG-AC-7 tệp dùng bộ chung không còn câu chọn riêng' ok ('osm-phuong' chỉ ở pipeline/lib/osm.mjs), chiều đỏ 'TRG-AC-7 bản sao thêm câu chọn riêng → báo tên tệp' ok và 'TRG-AC-7 tệp mới khớp mẫu ngoài ma trận → báo tệp' ok (thông điệp gọi đúng tệp)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8

@@ -57,12 +57,12 @@ tin trỏ khu vực không hợp lệ (9 tin S05 «Quận …») — thước nh
 ## 5. Ma trận bước gán của `pipeline/` (viết trước, AC-7)
 
 Quét `pipeline/` (`.mjs`, `.sql`, trừ test) theo mẫu `region_type = 'submarket'` · `'osm-phuong'` ·
-`UPDATE listings|sale_offers … area_id` · `SET area_id`, 26/10:
+`UPDATE listings|sale_offers … area_id` · `SET area_id`, cùng lời gọi bộ chung (`docPhuongHopLe(`, `ganPhuongTheoToaDo(`, `phuongHopLe(`), 26/10 — 12 tệp:
 
 | Tệp | Nhãn |
 |---|---|
-| `lib/osm.mjs` | nguồn của điều kiện — nơi duy nhất mang `'osm-phuong'` |
-| `reassign-areas.mjs` | dùng bộ chung (AU9) |
+| `lib/osm.mjs` | nguồn của điều kiện và hằng `NGUON_PHUONG` — nơi duy nhất mang `'osm-phuong'` |
+| `reassign-areas.mjs` | dùng bộ chung (AU9); nhãn nguồn đọc từ `NGUON_PHUONG` (vòng này) |
 | `transform-airbnb.mjs` | dùng bộ chung (AU9) |
 | `transform-zalo.mjs` | dùng bộ chung (vòng này) |
 | `transform-fb.mjs` | dùng bộ chung (vòng này) |
@@ -72,3 +72,4 @@ Quét `pipeline/` (`.mjs`, `.sql`, trừ test) theo mẫu `region_type = 'submar
 | `sql/200_transform.sql` | miễn: lượt cũ đặt `area_id` theo tên; reassign-areas chạy sau mọi transform VN gán lại theo PIP với `phuongHopLe` (`pipeline/CLAUDE.md`) |
 | `sql/300_metrics.sql` | miễn: chỉ đọc khu vực để gộp số |
 | `sql/450_dq_checks.sql` | miễn: chỉ đọc để kiểm chất lượng |
+| `refresh-bait-gap.mjs` | miễn: chỉ ghi `bait_gap_pct`, đọc `area_id` để so thước |
