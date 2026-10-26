@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 3c9c478fbaf81c980b5d4bf59b5d9cb2eb1ed04e
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: df0-dem-de-xuat-lam-giau

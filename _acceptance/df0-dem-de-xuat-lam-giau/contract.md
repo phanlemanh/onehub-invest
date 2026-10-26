@@ -5,7 +5,7 @@ slug: df0-dem-de-xuat-lam-giau
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-df0-dem-de-xuat-lam-giau-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26T23:09:00Z
@@ -46,3 +46,6 @@ Bỏ quét không gian AC — xem dòng `descope` «bỏ coverage-scan» (bản 
 ## Notes
 
 - Tệp test riêng `app/tests/df0-dem-de-xuat.test.tsx`; không chạm tệp test của `ops-dong-chay-df0`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: thẻ và hình Hỏi-1 ghi «ba tuyến» nhưng đề xuất có bốn tuyến; số «đề xuất làm giàu» tính cả đề xuất đang chờ ở tuyến bị thay thế.
+  - Ngoài-2: cùng chuyện với Ngoài-1 (rà soát thứ hai bắt cùng chỗ) — lời mô tả trên thẻ đã ký thiếu tuyến bị thay thế.
