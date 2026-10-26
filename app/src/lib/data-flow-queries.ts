@@ -129,6 +129,9 @@ const POSTS_CTE = `
 export const COMPLETE_SQL = `o.kind IS NOT NULL AND o.property_type IS NOT NULL AND o.property_type <> 'unknown' AND o.price_vnd > 0
   AND o.area_m2 > 0 AND o.area_id IS NOT NULL`;
 
+/** Đề xuất làm giàu đang chờ: `queued` là trạng thái mặc định của đề xuất mới (migration 033), mọi tuyến — Hỏi-1 26/10. */
+export const ENRICH_PENDING_SQL = `SELECT count(*) FROM enrichment_proposals WHERE status = 'queued'`;
+
 /** S06 chưa nối bài → tin: «đọc được» ước lượng bằng số tin, không vượt số quảng cáo. */
 export const s06Readable = (offers: number, received: number) => Math.min(offers, received);
 
@@ -228,7 +231,7 @@ export async function getDataFlow(
       [totalsStart],
     ),
     q(
-      `SELECT (SELECT count(*) FROM enrichment_proposals WHERE status = 'pending') AS enrich,
+      `SELECT (${ENRICH_PENDING_SQL}) AS enrich,
               (SELECT count(*) FROM review_queue WHERE status = 'pending') AS review`,
     ),
   ]);
