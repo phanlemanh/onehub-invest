@@ -269,6 +269,9 @@ bởi §5 ở trên; DF1–DF5 cắt vào lộ trình ở một PR riêng.
 | ST-dongchay-cloud | Dòng chảy | LocalOnlyAlert «Chỉ xem ở máy thu» | mở cổng Ops trên máy thu |
 | ST-hoso-b0 | Sheet hồ sơ tin | Badge «B0 · Có lời khai», «Trường lõi x/5» với badge ✓/– từng trường, câu «Lên B1 cần đủ năm trường lõi — còn thiếu …» | đọc bài gốc, đóng |
 | ST-hoso-b2 | Sheet hồ sơ tin | Badge «B2 · Gắn căn», «Trường lõi 5/5», câu «Lên B3 cần số đo trên nhãn …» | đóng |
+| ST-hoso-anh | Sheet hồ sơ tin | (admin) Dải ảnh của tin — ảnh đã tải trước, rồi đường dẫn gốc, tối đa 12; ảnh hết hạn «Ảnh hỏng»; bấm mở hộp phóng to | xem ảnh, đóng |
+| ST-hoso-khong-anh | Sheet hồ sơ tin | (admin) «Ảnh tin: không có ảnh» khi các bài của tin không mang ảnh | đóng |
+| ST-hoso-s06-anh | Sheet hồ sơ tin | «Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10).» | đóng |
 <!-- UX-STATE-TABLE>>> -->
 
 ### 4. Hành vi
@@ -285,6 +288,7 @@ bởi §5 ở trên; DF1–DF5 cắt vào lộ trình ở một PR riêng.
 | `@reui/chart-49` → `flow-sankey`, `flow-journey` | mở rộng | Thêm nhánh «gộp trùng» màu trung tính, bỏ nút 0, chú thích «Gắn căn» đỏ khi dưới 80% |
 | `@reui/solution-analytics-3` → `stage-trend-chart`, `kind-mix-chart`, `quality-grid`, `records-grid` | ghép | Chặng không chồng (bỏ stackId), Risk → «Nút thắt», bánh ba loại giao dịch |
 | `@reui/filters`, `Sheet` (khuôn solution-agents-5) | dùng | Một loại UI một cách làm — cùng thanh chip Duyệt listing, cùng sheet Hàng duyệt |
+| `ReviewPhotos` (chuyển thể `c-attachment-3`) + `buildOfferImages` của Hàng duyệt | dùng | Một loại UI một cách làm — cùng dải ảnh, cùng luật ghép ảnh và luật chỉ admin (Mạnh sửa ở Cổng Phạm vi 26/10) |
 
 ### 6. Khuôn IA đã chọn + căn cứ
 

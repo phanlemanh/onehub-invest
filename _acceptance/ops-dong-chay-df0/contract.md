@@ -18,7 +18,8 @@ Hồ sơ cho hai commit đã dựng ở nhánh `feat/ops-data-flow`: `c9794e3d` 
 nhất + sheet hồ sơ tin chuyển thể `@reui/solution-analytics-3`) và `8a54fcdc` (DF0 — bậc nghiêm theo năm trường lõi ở
 `app/src/lib/data-level.ts`; `S03_POSTS_SQL` của `pipeline/lib/ops-flow.mjs` + bản chép ở
 `app/src/lib/collections-queries.ts` loại bài tác tử S05, tác tử thử, nhóm TEST). Mạnh giao trực tiếp ở phiên
-local_c87bc280 và duyệt 5 khuyến nghị §5 của design doc ngày 26/10; giám sát xếp hàng vào dãy U2.
+local_c87bc280 và duyệt 5 khuyến nghị §5 của design doc ngày 26/10; giám sát xếp hàng vào dãy U2. Ở Cổng Phạm vi
+lần một Mạnh sửa: thêm ảnh tin vào vòng này (AC-10), dùng lại bộ ghép ảnh và dải ảnh của Hàng duyệt, chỉ admin, chỉ máy thu.
 
 Căn cứ: `opportunity.md` (Cổng Đáng = build) · design doc §0–§5 + Phụ lục (Đặc tả UX) · `docs/product/FRAMING.md` §3.4
 (FR-§3.4 thang bậc) · `docs/architecture/classification-enrich-review.md` §0.2 B (RV-T1…T8) · ADR-0014 (số Ops trên
@@ -37,6 +38,7 @@ Source input: docs/superpowers/specs/2026-10-26-ops-dong-chay-du-lieu-ia-design.
 - AC-7: Given máy thu có DB local thật và dev server của worktree dãy U2, When người vận hành (tài khoản thử admin) mở `/ops/data-flow` ở 1280 px sáng, tối và 390 px, chọn nguồn S03 trên đường ống và mở hồ sơ một tin S03, Then thấy năm vùng theo thứ tự Đường ống → Chất lượng từng chặng → Chặng theo ngày + Loại giao dịch → Tin mới nhất, đường ống S03 cho «Gắn căn 0,0%» tô đỏ, lưới hiện S03 «Kẹt · đọc» và cột «Đủ trường lõi» 0%, hồ sơ tin S03 ở B0 với trường thiếu; ở 390 px trang không cuộn ngang.
 - AC-8: Given vùng dữ liệu của trang, When khoảng không có bài / bộ lọc ra 0 tin / đang tải / truy vấn lỗi / chạy trên máy chủ không có bảng nạp thô, Then lần lượt: đường ống hiện Empty «Chưa có bài trong khoảng này» với đúng một hành động «Xem tất cả nguồn»; bảng tin hiện «Không có tin nào khớp bộ lọc»; Skeleton theo bố cục trang; RegionError «Không tải được dòng chảy dữ liệu» kèm «Thử lại»; LocalOnlyAlert «Chỉ xem ở máy thu» thay cho trang, không truy vấn bảng nạp thô.
 - AC-9: Given các tệp của vòng, When chạy kiểm máy, Then `tsc` sạch, lint 0 lỗi; route `/ops/data-flow` có slug `data-flow` trong `CONTEXT.md`, dòng trong `routes.md`, mục «Dòng chảy dữ liệu» nhóm Giám sát trong nav; quét chữ hiển thị Ops (ON12) phủ mọi tệp data-flow và 0 chữ tiếng Anh / từ `_Avoid_`; lint từ vựng 0 enum viết tay; kiểm cổng tĩnh (luật 5/6/9) xanh.
+- AC-10: Given tin S03/S05 mà bài gốc có ảnh (đã tải về máy thu, hoặc chỉ còn đường dẫn ở máy chủ ảnh của nguồn) và tin S06, When người vận hành mở hồ sơ tin, Then với tài khoản admin hồ sơ có dải ảnh của đúng tin đó — ảnh ghép từ các bài trong `post_ids` qua cùng bộ ghép ảnh của Hàng duyệt (`buildOfferImages`: ảnh đã tải trước, rồi đường dẫn gốc, không trùng, tối đa 12), ảnh không tải được hiện «Ảnh hỏng», bấm ảnh mở hộp phóng to — tin có bài mà không ảnh nào ghi «không có ảnh»; tin S06 ghi rõ chưa gắn được ảnh vì S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10); tài khoản không phải admin không thấy dải ảnh và dữ liệu ảnh không được gửi xuống trình duyệt; bảng «Tin mới nhất» không tải ảnh; trên máy chủ không có đường ảnh nào. (cross-layer)
 
 ## Coverage
 
@@ -48,8 +50,9 @@ Bỏ quét `morphological-scan` — phạm vi đã chốt bởi design doc §5 M
 - Trục C — Bậc: B0 · B1 · B2 (B3+ chưa có số đo) [thước CE: FRAMING §3.4]
 - Trục D — Bề mặt × môi trường: máy thu 1280 sáng/tối · máy thu 390 · máy chủ [thước CE: `localOnlyTable`]
 - Trục E — Khoảng: 7 ngày · 30 ngày · Toàn kho [thước CE: `parseFlowWindow`]
+- Trục F — Ảnh tin × quyền: ảnh đã tải · chỉ đường dẫn gốc · không ảnh · S06 chưa nối × admin · không admin [thước CE: DB local 26/10 — 4.290/9.310 bài S03 có ảnh, 7 bài đã tải; `isAdmin`]
 
-Core → AC-1…AC-9 (A×B qua AC-1/2; C qua AC-3/6; «bài thô» qua AC-4; nút thắt qua AC-5; D qua AC-7/8; E qua AC-2).
+Core → AC-1…AC-10 (A×B qua AC-1/2; C qua AC-3/6; «bài thô» qua AC-4; nút thắt qua AC-5; D qua AC-7/8; E qua AC-2; ảnh tin theo nguồn × quyền qua AC-10).
 Later: DF1–DF5 (một định nghĩa số ở pipeline/sql + bản tin cloud, thẻ điểm tin + ảnh, bảng chặn bậc, lăng kính T1–T8,
 dọn IA Thu thập ↔ Dòng chảy) — cắt vào lộ trình ở PR riêng.
 Never: ghi hay sửa dữ liệu từ trang (quan sát ≠ quản trị) · kéo thả đổi bậc · hiện độ tự tin.
@@ -63,7 +66,7 @@ Never: ghi hay sửa dữ liệu từ trang (quan sát ≠ quản trị) · kéo
 - DF1–DF5 của design doc §3.4 (cắt lộ trình ở PR riêng, theo xếp của giám sát).
 - Lỗi gộp trùng quá tay của `transform-zalo.mjs` (khoá `offer_id` thiếu phường/diện tích) — thẻ đề xuất riêng, chưa làm.
 - Số dòng chảy trên máy chủ (cloud chỉ hiện LocalOnlyAlert tới khi DF1 đẩy khối bản tin) và nội dung/ảnh tin trên máy chủ (TV9).
-- Ảnh từng tin, thẻ điểm tin đầy đủ (độ chắc H0–H5, lượng bằng chứng, cờ phi lý) — DF2.
+- Thẻ điểm tin đầy đủ (độ chắc H0–H5, lượng bằng chứng, cờ phi lý) — DF2; ảnh tin S06 (cần khoá nối của TV10) và ảnh trên máy chủ (TV9).
 
 ## Notes
 

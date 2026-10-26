@@ -56,9 +56,9 @@ evals:
     steps:
       - "Bản chạy: dev server của worktree dãy U2 ở http://localhost:3461 (cấu hình app-3461 của .claude/launch.json, chạy từ .claude/worktrees/dieu-phoi-lo-trinh-2310-092607), đăng nhập bằng tài khoản thử admin của scripts/dev-ops-account.mjs (mật khẩu trong .claude/ops-test-account.json, không in); không chạy thì FAIL với 'bản chạy :3461 không lên'"
       - "1280 px sáng: /ops/data-flow → evidence/E7-step1.png (đầu trang + đường ống «Tất cả»); bấm nút «S03» trên đường ống → evidence/E7-step2.png; cuộn tới «Chất lượng từng chặng» → evidence/E7-step3.png"
-      - "1280 px tối (prefers-color-scheme: dark): cùng trang → evidence/E7-step4.png; bảng «Tin mới nhất» lọc Nguồn là S03, bấm hàng đầu → evidence/E7-step5.png (sheet hồ sơ tin)"
+      - "1280 px tối (prefers-color-scheme: dark): cùng trang → evidence/E7-step4.png; bảng «Tin mới nhất» lọc Nguồn là S03, bấm hàng đầu → evidence/E7-step5.png (sheet hồ sơ tin); mở hồ sơ một tin S03 có dải ảnh (tin có bài mang ảnh đã tải hoặc URL còn sống), cuộn tới dải ảnh → evidence/E7-step5b.png"
       - "390 px sáng: /ops/data-flow → evidence/E7-step6.png; ghi document.documentElement.scrollWidth và clientWidth"
-    expected: "Thứ tự vùng: Đường ống → Chất lượng từng chặng → Chặng theo ngày + Loại giao dịch → Tin mới nhất; đường ống S03: chú thích «Gắn căn» = tỉ lệ gắn căn hiện trên chính đường ống, tô đỏ khi dưới 80%, có nhánh «Không đọc được» và «Gộp vào tin đã có»; lưới: nhãn «Nút thắt» của hàng S03 khớp luật AC-5 khi áp vào các tỉ lệ đọc được / đủ trường lõi / có phường / gắn căn hiện trên chính hàng đó (đọc từ ảnh, không so với số viết tay); sheet hồ sơ tin S03 có badge «B0 · Có lời khai», «Trường lõi x/5» với badge thiếu, câu «Lên B1 cần đủ năm trường lõi — còn thiếu …» và bài gốc; chữ đọc được ở cả hai chế độ; 390 px: scrollWidth = clientWidth."
+    expected: "Thứ tự vùng: Đường ống → Chất lượng từng chặng → Chặng theo ngày + Loại giao dịch → Tin mới nhất; đường ống S03: chú thích «Gắn căn» = tỉ lệ gắn căn hiện trên chính đường ống, tô đỏ khi dưới 80%, có nhánh «Không đọc được» và «Gộp vào tin đã có»; lưới: nhãn «Nút thắt» của hàng S03 khớp luật AC-5 khi áp vào các tỉ lệ đọc được / đủ trường lõi / có phường / gắn căn hiện trên chính hàng đó (đọc từ ảnh, không so với số viết tay); sheet hồ sơ tin S03 có badge «B0 · Có lời khai», «Trường lõi x/5» với badge thiếu, câu «Lên B1 cần đủ năm trường lõi — còn thiếu …» và bài gốc; hồ sơ tin có ảnh: dải ảnh nằm trong sheet, ô ảnh không méo, ảnh hỏng hiện «Ảnh hỏng» thay vì ô trống; chữ đọc được ở cả hai chế độ; 390 px: scrollWidth = clientWidth."
     evidence_required: [run_id, verdict, screenshot, observed]
   - id: E8
     criterion: AC-8
@@ -109,4 +109,19 @@ evals:
     cmd: config:executors.script.portal_static
     paths: [app/src/app/ops/data-flow/**, app/src/components/ops/data-flow/**, app/src/components/shell/nav.tsx]
     expected: "exit 0; dòng cuối 'portal-compliance: ĐẠT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.dong_chay
+    layer: backend-effect
+    paths: [app/src/lib/data-flow-queries.ts, app/src/app/ops/data-flow/**, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DF-AC-10 nạp ảnh theo quyền' xanh trên lược đồ tạm (cần DB local): tin S03 gộp 2 bài (bài 1 media_files 1 tệp đã tải + media 2 URL zdn, bài 2 media 1 URL trùng bài 1), tin S03 có bài mà không ảnh, tin S05 1 bài 1 URL fbcdn, tin S06 — với người dùng admin, bộ nạp ảnh của dòng chảy trả cho mỗi tin ĐÚNG mảng mà buildOfferImages (lib/ops/review-media.ts) trả trên cùng các dòng bài theo thứ tự post_ids (so TRỌN src + origin + expiring; ảnh đã tải đứng đầu, URL trùng chỉ một lần), tin không ảnh → [], tin S06 → vắng khoá (không truy vấn ảnh cho S06); với người dùng role 'ops' (không admin) và với khách → {} và 0 truy vấn tới stg_zalo_posts (đếm bằng query giả); bảng nạp ảnh vắng (42P01) → {} không ném. Chiều đỏ cùng ca: đột biến bỏ kiểm isAdmin → ca đỏ 'người không phải admin không được nhận ảnh'; đột biến ghép ảnh theo thứ tự ngược post_ids → ca đỏ tên tin gộp 2 bài"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/components/ops/data-flow/record-sheet.tsx, app/src/components/ops/data-flow/records-grid.tsx, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DF-AC-10 dải ảnh trong hồ sơ tin' xanh (jsdom): RecordsGrid với media {tin A: 2 ảnh, tin B: []} → bảng 0 <img>; mở hồ sơ tin A → group aria-label bắt đầu 'Ảnh' có đúng 2 <img> với src đúng media mẫu, bấm ảnh 1 → hộp phóng to mở; mở hồ sơ tin B → chữ 'không có ảnh', 0 <img>; mở hồ sơ tin S06 → đúng câu 'Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10).'; media vắng (người không phải admin) → hồ sơ tin A 0 group ảnh, 0 <img> và không có chữ 'không có ảnh'. Chiều đỏ cùng ca: hồ sơ đọc media của tin đầu bảng thay vì tin đang mở → ca đỏ 'ảnh phải thuộc đúng tin đang mở'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
