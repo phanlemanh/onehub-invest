@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: fe8dcf4f5b058e68b9a2e48f8e19a7ed4c9dd6f5
+verified_commit: 3ab327583b6101cf4d76ce0d27d61b94f91d181f
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -258,3 +258,7 @@ sha: 2c5fe9c3b067a7b228b37c868caef967cfd8a0e2 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 3 — 2026-10-26, do gộp main fdfb657 (#130)
 run_id: repin-20261026T104806Z-73970
 sha: fe8dcf4f5b058e68b9a2e48f8e19a7ed4c9dd6f5 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
+
+### Re-pin lần 4 — 2026-10-26, do gộp main bc6e512 (#131) — chốt dưới khoá merge
+run_id: repin-20261026T110318Z-77585
+sha: 3ab327583b6101cf4d76ce0d27d61b94f91d181f · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng
