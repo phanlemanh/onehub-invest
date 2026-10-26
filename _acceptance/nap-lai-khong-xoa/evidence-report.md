@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: aa8f3f525ac0d006036c2d2f751531da03f2e572
+verified_commit: e3afab7678bc79fba6dcdafa8192d6f1497ac933
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -225,3 +225,7 @@ sha: 5f01598c384ba2b74b801726e430e4240e386e6f · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-26, do gộp main sau PR #131 (chỉ xung đột LO-TRINH.html máy sinh)
 run_id: repin-20261026T110521Z-27912
 sha: aa8f3f525ac0d006036c2d2f751531da03f2e572 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-26, do gộp main sau PR #129 (047 vòng đời nguồn; chỉ xung đột LO-TRINH.html máy sinh)
+run_id: repin-20261026T111546Z-95898
+sha: e3afab7678bc79fba6dcdafa8192d6f1497ac933 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng
