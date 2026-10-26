@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 402b397af9d3325e2de5d562a7941ba7eae3002d
+verified_commit: 225c9445c677a76fafe3bc9352398b1115979380
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -138,3 +138,7 @@ none — mọi eval chạy một lần (tất định), không eval nào có pas
 ## Iterations
 
 Round 1: E1, E2, E3, E4, E5, E6 đều đạt; sáu lệnh suite hồi quy đều đạt. Baseline không đo được (BLOCKED hạ tầng).
+
+### Re-pin lần 1 — 2026-10-26, do PR cong-tac-test-ghim-ban-cu đổi tệp ca thử (đối chứng đọc fixture ghim) và cấu hình eslint
+run_id: repin-20261026T163930Z-40579
+sha: 225c9445c677a76fafe3bc9352398b1115979380 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
