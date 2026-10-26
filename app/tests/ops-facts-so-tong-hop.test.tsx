@@ -109,13 +109,20 @@ describe("ON22-AC-5 lockdown một định nghĩa", () => {
   const layerDiff = (got: Layer[], want: Layer[]) =>
     want.filter((w, i) => got[i]?.ok !== w.ok || got[i]?.layer !== w.layer).map((w) => w.layer)
 
+  // Năm lớp đầu (L1–L4b) suy từ tệp log + NOW nên tất định — so khớp từng lớp. Ba lớp «Hạ tầng» là ảnh chụp tiến trình và
+  // cổng của máy lúc đo (pgrep -f openclaw khớp cả tiến trình của tệp test chạy song song; :8009/:9210 bật tắt theo máy):
+  // hai phía đo ở hai thời điểm nên không so giá trị — chỉ đòi cùng tên lớp và cả hai phía kiểm được (boolean, không null).
+  const LOP_LOG = 5
   test("ON22-AC-5 ma trận cây log: khối lockdown bằng getLockdownStatus từng lớp", async () => {
     ready()
     for (const [label, wd, gw] of MATRIX) {
       const app = await appSide(wd, gw)
       const r = await writerSide(wd, gw)
       const b = r.payload.blocks.lockdown as { layers: Layer[]; lastWatchdogAt: string | null; agentTurnsToday: number | null }
-      assert.deepEqual(layerDiff(b.layers, app.layers), [], `${label}: lớp lệch`)
+      assert.deepEqual(b.layers.map((l) => l.layer), app.layers.map((l) => l.layer), `${label}: danh sách lớp lệch`)
+      assert.deepEqual(layerDiff(b.layers.slice(0, LOP_LOG), app.layers.slice(0, LOP_LOG)), [], `${label}: lớp lệch`)
+      for (const side of [b.layers, app.layers])
+        assert.ok(side.slice(LOP_LOG).every((l) => typeof l.ok === "boolean"), `${label}: lớp hạ tầng không kiểm được`)
       assert.equal(b.lastWatchdogAt, app.lastWatchdogAt, `${label}: lastWatchdogAt`)
       assert.equal(b.agentTurnsToday, app.agentTurnsToday, `${label}: agentTurnsToday`)
     }

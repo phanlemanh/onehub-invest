@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: on-dinh-test-app-chap-chon
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.odt_ops_lap
+    paths: [app/tests/ops-facts-so-tong-hop.test.tsx]
+    expected: "exit 0; mười hai dòng 'lan <n>: pass 10 fail 0', cuối 'OPS 12 LAN XANH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.odt_ops_doi_chung
+    paths: [app/tests/ops-facts-so-tong-hop.test.tsx]
+    expected: "exit 0; 'ban sua: do 0/3' và 'ban cu aa928f3: do <k>/3' với k ≥ 1 (pgrep giả luân phiên trên PATH); dòng 'pgrep gia duoc goi: <m>' với m > 0 (chứng pgrep giả thật sự được hai phía gọi); cuối 'DOI CHUNG LD OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.odt_lb_lap
+    paths: [app/tests/listings-browse.test.tsx]
+    expected: "exit 0; mười hai dòng 'lan <n>: tests 11 pass 11 fail 0 (<s>s)' với s ≤ 60, cuối 'LB 12 LAN XANH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.odt_pham_vi
+    paths: [app/tests/ops-facts-so-tong-hop.test.tsx, app/tests/listings-browse.test.tsx]
+    expected: "exit 0; hai tệp test có trong diff so với merge-base của origin/main; mọi tệp đổi 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: không dòng 'NGOAI PHAM VI', 'THIEU TEP TEST'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
