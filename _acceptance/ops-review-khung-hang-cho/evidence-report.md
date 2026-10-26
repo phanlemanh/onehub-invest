@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2088f2966c1f86dd843d8843ab7d51729711065c
+verified_commit: edc4daa6f42534b5b5e2f6028e5f50d2f69f1861
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -265,3 +265,7 @@ none — every multi-run eval is uniform
 Round 1: E2, E6, E9, E10, E19 failed — một lệnh smoke dùng chung bị đỏ vì DB local không có thẻ bổ sung tin chờ để đo ma trận nút của sheet bổ sung tin (E19); ngoài ra ba finding trong hợp đồng (AC-6) cho rằng giá trị độ tự tin vẫn tới trình duyệt qua evidence.fields. Returned to implementation.
 Round 2: BLOCKED vì DB local :5433 không chạy (app test, smoke, agent/pipeline test, E13 không đo được); ba finding AC-6 còn lại (độ tự tin lọt qua `basis`). Returned to implementation (S4-r2).
 Round 3: toàn bộ eval đo được đều xanh trên commit 2088f296 (smoke, app test, tsc + lint, E13 bốn khung sáng/tối/di động); E15, E16, E17 carry-forward từ round 1, E18 giữ panel round 2. Chờ người ký ở Cổng 2.
+
+### Re-pin lần 1 — 2026-10-26, do gộp origin/main (3 lần, tới a9f0…/edc4daa6) sau chữ ký
+run_id: repin-20261026T085851Z-32942
+sha: edc4daa6f42534b5b5e2f6028e5f50d2f69f1861 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E13, E18
