@@ -5,7 +5,7 @@ slug: so-tu-vung-mot-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-so-tu-vung-mot-nguon-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -157,3 +157,10 @@ Source input: `_acceptance/so-tu-vung-mot-nguon/opportunity.md` (hàng PL6 của
   lệch. Bước đẩy cloud của Mạnh chạy `--check-db` trước.
 - Nhãn mới (`listing_intent`, `offer_status`) là nháp, chờ Hỏi-1 ở Cổng Phạm vi. Nhãn bậc lấy nguyên văn FRAMING §3.4.
 - Gói `yaml` thêm vào `devDependencies` của pipeline: chỉ bộ sinh và test dùng, runtime đọc tệp sinh.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Ca kiểm emitSeed ↔ 043 chạy sau ca canh «DB thật không đổi», nên lớp canh không bao ca đó (DB vẫn nguyên nhờ ROLLBACK).
+  - Ngoài-2: Lời chú thích «DB thật không đổi sau mọi ca» rộng hơn phạm vi thực của ca canh — cùng gốc Ngoài-1.
+  - Ngoài-3: Bộ báo đỏ từ vựng quét cả tệp thu/nạp của ZCode nằm trong pipeline/ và scripts/; hiện chưa tệp nào có danh sách viết tay.
+  - Ngoài-4: Giá trị chuẩn RESO của «nhà riêng» (Townhouse) và «thương mại» chưa khớp hẳn nghĩa theo reso-khung §7; nhãn hiển thị vẫn đúng.
+  - Ngoài-5: Bài kiểm khối thuật ngữ CONTEXT.md chỉ kiểm nhãn có mặt, chưa kiểm nhãn nằm đúng dòng trục.
+  - Ngoài-6: Chưa có ca test chứng minh thư mục scripts/ thật sự được quét (chỉ có đo trên cây thật).
