@@ -1,0 +1,38 @@
+{
+  "feature_plain": "Mỗi nguồn và mỗi nhóm thu có một trạng thái rõ ràng (nháp, đang thu, tạm dừng kèm lý do, đã gỡ, đã xong), và mọi script thu sau này hỏi đúng một chỗ «có được thu không».",
+  "scope_plain": "Những việc dưới đây cố ý để cho hàng sau, không làm trong vòng này:",
+  "will_do": [
+    {"id": "AC-4", "p": "Sẽ trả lời «được thu hay không» đúng cho cả 49 tổ hợp trạng thái nguồn × nhóm: chỉ thu khi nguồn đang thu và nhóm (nếu có) cũng đang thu."},
+    {"id": "AC-5", "p": "Sẽ có một lệnh hỏi nhanh cho script đêm: trả «được thu», «không được thu kèm lý do» hoặc «lỗi đọc», và không in URL nhóm hay lý do nội bộ ra màn hình."},
+    {"id": "AC-6", "p": "Sẽ cho công tắc trên trang nguồn tắt nhóm thành «tạm dừng» có lý do, bật lại thì xoá lý do, không bật lại được nhóm đã gỡ, và ghi nhật ký trạng thái trước–sau."},
+    {"id": "AC-7", "p": "Sẽ giữ nguyên cách script thu đêm, trang nguồn và phép đo độ tươi đang đọc dữ liệu — không bên nào phải sửa."},
+    {"id": "AC-9", "p": "Sẽ chạy thử trên bản chép dữ liệu thật của máy thu: số nguồn mỗi trạng thái giữ nguyên, nhóm đang bật vẫn bật, không tên nguồn thật nào lọt vào tệp công khai."},
+    {"id": "AC-10", "p": "Sẽ giữ cột bật/tắt cũ luôn khớp trạng thái mới, kể cả khi một nhánh cũ hay lệnh tay chỉ ghi cột bật/tắt."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Chặn mọi trạng thái ngoài năm trạng thái đã định — dữ liệu không nhận chữ lạ."},
+    {"id": "AC-2", "p": "Chặn việc tạm dừng mà không ghi lý do."},
+    {"id": "AC-3", "p": "Sẽ KHÔNG đổi trạng thái của nguồn hay nhóm nào khi nâng cấp: nguồn đang tạm dừng giữ lý do cũ, nhóm đang bật vẫn đang thu."},
+    {"id": "AC-8", "p": "Sẽ KHÔNG chạm gì trên cloud nếu lỡ chạy bản nâng cấp ở đó."},
+    {"id": "OOS-1", "p": "Chưa bắt script thu đêm hỏi «có được thu không» — đó là việc của TV2b (làn ZCode)."},
+    {"id": "OOS-2", "p": "Chưa đưa nhóm S03 và market S02 vào sổ — đi cùng sổ đơn vị thu PL12."},
+    {"id": "OOS-3", "p": "Chưa đổi giao diện: chưa có nhãn «Nháp», chưa có ô nhập lý do khi tắt."},
+    {"id": "OOS-4", "p": "Chưa có bản dùng trong app web của phép hỏi «có được thu không» — TV4 cần thì làm."},
+    {"id": "OOS-5", "p": "Chưa bắt nhóm đã gỡ phải có ngày gỡ, chưa có lệnh tạm dừng/bật lại từ cloud (TV4)."},
+    {"id": "OOS-6", "p": "Không áp lên Supabase — cloud không có hai bảng này."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đã xét đủ 7 khả năng của nguồn (5 trạng thái, chữ lạ, mã không có) — thước: dữ liệu chặn chữ lạ và hai ca biên (AC-1, AC-4)."},
+    {"i": 1, "p": "Đã xét đủ 7 khả năng của nhóm (không hỏi nhóm, 5 trạng thái, chữ lạ) — thước như trên (AC-4)."},
+    {"i": 2, "p": "Đã xét mọi đường ghi vào hai bảng: bản nâng cấp, công tắc bật/tắt, thêm nhóm, lệnh tay — dò bằng tìm mọi chỗ ghi trong mã (AC-3, AC-6, AC-10)."},
+    {"i": 3, "p": "Đã xét mọi bên đọc: phép hỏi mới, script thu đêm, phép đo độ tươi, trang nguồn — dò bằng tìm mọi chỗ đọc trong mã (AC-5, AC-7)."},
+    {"i": 4, "p": "Đã xét máy thu lẫn cloud, chạy nâng cấp hai lần, và không chạm dữ liệu dùng chung trước khi gộp (AC-3, AC-8, AC-9)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bản nâng cấp dồn mọi nguồn/nhóm không thu về «tạm dừng», trong khi chỉ anh biết cái nào thật ra đã gỡ hẳn hay chưa bật bao giờ — đã đưa thành Hỏi-3 cho anh; đo hôm nay không nhóm nào đang tắt."},
+    {"i": 1, "p": "Chưa nói rõ chuyện gì xảy ra khi ai đó bật lại một nhóm đã gỡ bằng đường ghi cũ — đã chốt bảng luật 5 trạng thái × bật/tắt, bật lại nhóm đã gỡ hay đã xong bị từ chối."},
+    {"i": 2, "p": "Phép thử có thể lỡ ghi vào dữ liệu dùng chung trước khi gộp mà không ai biết — đã bắt mọi ca chụp dữ liệu dùng chung trước/sau và soát bản nâng cấp không trỏ thẳng vào đó."},
+    {"i": 3, "p": "Trang nguồn và các thao tác xoá, đổi chế độ thu chưa được thử sau nâng cấp — đã thêm ca chạy đúng câu đọc của trang và hai thao tác ấy, cùng bộ test app và pipeline."},
+    {"i": 4, "p": "Phép thử «làm hỏng để thấy đỏ» đòi đúng một ô lệch trong khi thực tế lệch bảy ô — đã ghim cách làm hỏng và danh sách bảy ô."}
+  ]
+}
