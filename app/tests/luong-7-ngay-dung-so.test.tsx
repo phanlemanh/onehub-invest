@@ -27,6 +27,13 @@ const POSTS: [string, string, string, string][] = [
   ["p4", "hanoi__zalo-agent__2026-10-25T001000", "2026-10-25T00:10:00", "2026-10-25T00:11:00"],
   ["m1", "hanoi__zalo-mock__2026-10-23T110000", "2026-10-23T11:00:00", "2026-10-23T11:00:00"],
 ]
+// DF0 (26/10): bài đi chung ống snapshot `zalo-agent` nhưng không phải bài S03 thật — một bài S05 (tác tử FB), một bài
+// nhóm TEST, một bài tác tử e2e. [post_id, snapshot_id, posted_at, captured_at, agent_id, group_name]; không bài nào được đếm.
+const NOT_S03: [string, string, string, string, string, string][] = [
+  ["f1", "hanoi__zalo-agent__2026-10-23T120000", "2026-10-23T12:00:00", "2026-10-23T12:01:00", "apify-facebook", "Nhóm FB"],
+  ["t1", "hanoi__zalo-agent__2026-10-24T080000", "2026-10-24T08:00:00", "2026-10-24T08:01:00", "openclaw-hook", "TEST-G1"],
+  ["e1", "hanoi__zalo-agent__2026-10-24T083000", "2026-10-24T08:30:00", "2026-10-24T08:31:00", "e2e-agent", "Nhóm A"],
+]
 // [offer_id, source, first_seen (giờ VN)] — 23:59 và 00:01 hai bên nửa đêm, một tin S06 cùng ngày.
 const OFFERS: [string, string, string][] = [
   ["o1", "S03", "2026-10-23T23:59:00"],
@@ -54,6 +61,11 @@ before(async () => {
       await admin.query(`INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, text, posted_at, captured_at) VALUES ($1, $2, 'bài thử', $3, $4)`, [
         id, snap, vn(posted), vn(captured),
       ])
+    for (const [id, snap, posted, captured, agent, group] of NOT_S03)
+      await admin.query(
+        `INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, text, posted_at, captured_at, agent_id, group_name) VALUES ($1, $2, 'bài thử', $3, $4, $5, $6)`,
+        [id, snap, vn(posted), vn(captured), agent, group],
+      )
     for (const [id, source, seen] of OFFERS)
       await admin.query(`INSERT INTO "${S}".sale_offers (offer_id, kind, first_seen, last_seen, source) VALUES ($1, 'sale', $2, $2, $3)`, [id, vn(seen), source])
   } catch (e) {
@@ -108,6 +120,13 @@ describe("ON5-AC-2 bài thô S03", () => {
     const got = days.map((x) => [x.day, x.zaloPosts] as [string, number])
     console.log(`# ON5-AC-2 ${got.map(([d, n]) => `${d}=${n}`).join(" ")}`)
     assert.deepEqual(loiCot("bài thô", got, want(WANT_POSTS)), [])
+  })
+  test("DF0 bản sao lọc theo snapshot_id như cũ → đếm cả bài S05 và bài thử, báo ngày và hai số", async () => {
+    ready()
+    const cu = S03_POSTS_SQL.replace(/ AND coalesce\(agent_id[\s\S]*? GROUP BY/, " GROUP BY")
+    assert.notEqual(cu, S03_POSTS_SQL, "đột biến phải bỏ được ba điều kiện DF0")
+    const sai = await demSql(cu)
+    assert.deepEqual(loiCot("bài thô", sai, want(WANT_POSTS)), ["2026-10-23: bài thô 3 ≠ 2", "2026-10-24: bài thô 3 ≠ 1"])
   })
   test("ON5-AC-2 bản sao đếm theo captured_at → báo ngày và hai số", async () => {
     ready()
