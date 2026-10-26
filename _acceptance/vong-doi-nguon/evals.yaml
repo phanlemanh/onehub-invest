@@ -5,7 +5,9 @@ feature_slug: vong-doi-nguon
 # tạo hai bảng ở KHUÔN TRƯỚC migration (cột của 012 + 013 + 024; ca VD-KHUON đối chiếu danh sách cột ấy với
 # public.source_registry/source_groups trừ các cột migration thêm — fixture không được lệch khuôn thật), rồi chạy NGUYÊN
 # tệp db/migrations/047_vong_doi_nguon.sql bằng một lời gọi query của pg (giao thức simple: dừng ở lỗi đầu) với
-# search_path = lược đồ tạm (máy không có psql; docker exec chỉ dùng khi áp lên public). Ca VD-AC-6 ở
+# search_path = lược đồ tạm (máy không có psql; docker exec chỉ dùng khi áp lên public sau gộp).
+# MỌI ca của .itest (và ca VD-AC-6) chụp public trước/sau — cột của source_registry/source_groups, pg_proc, pg_trigger,
+# pg_constraint của lược đồ public, số dòng public.ops_audit — rồi deepEqual: 047 không được chạm public trước gộp. Ca VD-AC-6 ở
 # app/tests/vong-doi-nguon.test.tsx gọi POST thật của route trên lược đồ tạm đã migration.
 evals:
   - id: E1
@@ -34,7 +36,7 @@ evals:
     executor: test
     cmd: config:executors.test.vong_doi_nguon
     paths: [pipeline/lib/vong-doi.mjs, pipeline/scripts/vong-doi.test.mjs]
-    expected: "exit 0; ca 'VD-AC-4' bảng viết trước đúng 49 dòng (nguồn ∈ draft, active, paused, retired, completed, 'xyz', null × đơn vị ∈ vắng, draft, active, paused, retired, completed, 'xyz'), assert số dòng = 49 trước khi lặp; mỗi ô deepEqual {run, ly_do} kỳ vọng: (active, vắng) và (active, active) → {run: true, ly_do: 'chay'}; nguồn null → 'nguon-khong-co'; nguồn 'xyz' → 'trang-thai-la:nguon'; nguồn ∈ {draft, paused, retired, completed} → 'nguon-<trạng thái>' bất kể đơn vị; nguồn active + đơn vị 'xyz' → 'trang-thai-la:don-vi'; nguồn active + đơn vị ∈ {draft, paused, retired, completed} → 'don-vi-<trạng thái>'; đếm run true = 2; ca 'VD-AC-4b' bản đột biến của vong-doi.mjs (sao chép tệp, cho 'completed' chạy được) chạy cùng bảng → đúng ô (completed, vắng) lệch, thông điệp nêu 'completed'"
+    expected: "exit 0; ca 'VD-AC-4' bảng viết trước đúng 49 dòng (nguồn ∈ draft, active, paused, retired, completed, 'xyz', null × đơn vị ∈ vắng, draft, active, paused, retired, completed, 'xyz'), assert số dòng = 49 trước khi lặp; mỗi ô deepEqual {run, ly_do} kỳ vọng: (active, vắng) và (active, active) → {run: true, ly_do: 'chay'}; nguồn null → 'nguon-khong-co'; nguồn 'xyz' → 'trang-thai-la:nguon'; nguồn ∈ {draft, paused, retired, completed} → 'nguon-<trạng thái>' bất kể đơn vị; nguồn active + đơn vị 'xyz' → 'trang-thai-la:don-vi'; nguồn active + đơn vị ∈ {draft, paused, retired, completed} → 'don-vi-<trạng thái>'; đếm run true = 2; ca 'VD-AC-4b' bản đột biến ghim của vong-doi.mjs (sao chép tệp, thêm 'completed' vào tập trạng thái nguồn cho qua — như 'active') chạy cùng bảng → tập ô lệch deepEqual danh sách viết trước đúng 7 ô nguồn 'completed' × 7 đơn vị, thông điệp nêu 'completed'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -49,7 +51,7 @@ evals:
     cmd: config:executors.test.vong_doi_nguon_route
     layer: backend-effect
     paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/tests/vong-doi-nguon.test.tsx]
-    expected: "exit 0; ca 'VD-AC-6' gọi POST của route (Bearer OPS_API_TOKEN) trên lược đồ tạm đã migration: toggle tắt g1 không reason → 200, DB g1 status 'paused' reason 'tắt bằng công tắc /ops/sources' enabled false; toggle bật g1 → active, reason NULL, resume_when NULL, enabled true; toggle tắt g1 reason 'het credit' resumeWhen '7/11' → reason 'het credit' resume_when '7/11'; g9 status 'retired' → toggle bật trả 409, dòng deepEqual trước; add S06 'vi-du-moi' → status 'active' enabled true; ops_audit có đúng 3 dòng action 'source-group:toggle' với detail.from/to lần lượt active→paused, paused→active, active→paused; không dòng audit cho lần 409"
+    expected: "exit 0; ca 'VD-AC-6' gọi POST của route (Bearer OPS_API_TOKEN) với pool của app trỏ DATABASE_URL có search_path CHỈ gồm lược đồ tạm (lược đồ tạm có source_registry, source_groups đã chạy 047, ops_audit và stg_zalo_posts chép LIKE public … INCLUDING ALL): toggle tắt g1 không reason → 200, DB g1 status 'paused' reason 'tắt bằng công tắc /ops/sources' enabled false; toggle bật g1 → active, reason NULL, resume_when NULL, enabled true; toggle tắt g1 reason 'het credit' resumeWhen '7/11' → reason 'het credit' resume_when '7/11'; g9 status 'retired' → toggle bật trả 409, dòng deepEqual trước; add S06 'vi-du-moi' → status 'active' enabled true; ops_audit có đúng 3 dòng action 'source-group:toggle' với detail.from/to lần lượt active→paused, paused→active, active→paused; không dòng audit cho lần 409; action 'delete' (purge false) xoá nhóm g5 và 'set-mode' admin trên một nhóm S06 vẫn chạy được trên lược đồ đã migration; số dòng public.ops_audit trước/sau deepEqual"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
@@ -77,7 +79,7 @@ evals:
     executor: test
     cmd: config:executors.test.vong_doi_nguon
     paths: [db/migrations/047_vong_doi_nguon.sql, pipeline/scripts/vong-doi.itest.mjs]
-    expected: "exit 0; ca 'VD-AC-8' lược đồ tạm rỗng (không hai bảng): chạy migration → không ném lỗi; sau đó information_schema.tables của lược đồ có 0 bảng và pg_proc của lược đồ có 0 hàm; đối chứng: cùng lược đồ có hai bảng khuôn trước thì migration tạo cột status — chứng ca đọc đúng lược đồ"
+    expected: "exit 0; ca 'VD-AC-8' tệp 047 (bỏ comment) không chứa chuỗi 'public.' lẫn 'search_path' — có thì đỏ nêu dòng; lược đồ tạm rỗng (không hai bảng): chạy migration → không ném lỗi; sau đó information_schema.tables của lược đồ có 0 bảng và pg_proc của lược đồ có 0 hàm; đối chứng: cùng lược đồ có hai bảng khuôn trước thì migration tạo cột status — chứng ca đọc đúng lược đồ"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-9
@@ -92,5 +94,26 @@ evals:
     executor: test
     cmd: config:executors.test.vong_doi_nguon
     paths: [db/migrations/047_vong_doi_nguon.sql, pipeline/scripts/vong-doi.itest.mjs]
-    expected: "exit 0; ca 'VD-AC-10' ma trận viết trước 7 lệnh trên lược đồ đã migration, sau mỗi lệnh đọc lại dòng: INSERT chỉ enabled true → active; INSERT chỉ enabled false → paused, reason 'tắt qua cột enabled (đường ghi cũ)'; UPDATE enabled false trên dòng active → paused cùng reason ấy; UPDATE enabled true trên dòng paused có reason + resume_when → active, reason NULL, resume_when NULL; UPDATE status 'retired' → enabled false; UPDATE status 'paused' reason 'x' → enabled false; UPDATE status 'active', enabled false cùng lệnh → active, enabled true; mọi dòng sau mỗi lệnh enabled = (status = 'active'); đối chứng: trên bản sao gỡ trigger, UPDATE enabled false đơn lẻ trên dòng active ném lỗi chứa 'source_groups_enabled_khop_chk'"
+    expected: "exit 0; ca 'VD-AC-10' (a) đường cũ — ma trận viết trước 5 trạng thái cũ × 2 giá trị enabled = 10 lệnh UPDATE chỉ đổi enabled (assert số ô = 10 trước khi lặp), đọc lại dòng sau mỗi lệnh: active+true → active; active+false → paused, reason 'tắt qua cột enabled (đường ghi cũ)'; paused(reason 'x', resume_when 'y')+true → active, reason NULL, resume_when NULL; paused+false → paused, reason 'x'; draft+true → active; draft+false → draft; retired+true → lỗi chứa 'không bật được đơn vị retired qua cột enabled', dòng không đổi; retired+false → retired; completed+true → lỗi chứa 'completed', dòng không đổi; completed+false → completed; (b) INSERT chỉ enabled true → active; INSERT chỉ enabled false → paused, reason 'tắt qua cột enabled (đường ghi cũ)'; (c) đường mới — UPDATE status 'retired' → enabled false; UPDATE status 'paused' reason 'x' → enabled false; UPDATE status 'active', enabled false cùng lệnh → active, enabled true; sau mỗi lệnh mọi dòng enabled = (status = 'active'); đối chứng: trên bản sao gỡ trigger, UPDATE enabled false đơn lẻ trên dòng active ném lỗi chứa 'source_groups_enabled_khop_chk'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.vong_doi_nguon
+    paths: [app/src/lib/che-do-thu.ts, app/src/app/api/v1/ops/source-groups/route.ts, pipeline/scripts/vong-doi.itest.mjs]
+    expected: "exit 0; ca 'VD-AC-7b' rút NGUYÊN VĂN câu SELECT đọc lưới của docNhomThu (app/src/lib/che-do-thu.ts) và câu SELECT của GET route source-groups (regex trên mã nguồn; không rút được đúng một câu mỗi tệp thì đỏ nêu tệp), chạy trên lược đồ tạm đã migration có nhóm a active, b paused: mỗi câu trả cả hai dòng, cột enabled lần lượt true, false"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/**, app/tests/**]
+    expected: "exit 0 trên đỉnh nhánh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0 trên đỉnh nhánh (gồm vong-doi.test.mjs; các .itest nằm ngoài npm test)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
