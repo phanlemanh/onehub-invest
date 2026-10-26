@@ -44,7 +44,17 @@ async function coVongDoi(): Promise<boolean> {
 
 const LY_DO_MAC_DINH = "tắt bằng công tắc /ops/sources"; // Hỏi-1 Cổng Phạm vi TV2a: trang chưa có ô nhập lý do
 
-/** Bật/tắt theo vòng đời: tắt → paused kèm lý do; bật → active, xoá lý do; nhóm đã gỡ hay đã xong không bật lại (409). */
+/** Chữ 409 theo trạng thái cuối (hồ sơ cong-tac-khong-ha-nhom-go): nhóm đã gỡ hay đã xong — công tắc không đổi gì. */
+const CHU_KHONG_DOI: Record<string, { bat: string; tat: string }> = {
+  retired: { bat: "nhóm đã gỡ — không bật lại", tat: "nhóm đã gỡ — công tắc không đổi trạng thái" },
+  completed: { bat: "nhóm đã xong — không bật lại", tat: "nhóm đã xong — công tắc không đổi trạng thái" },
+};
+
+/**
+ * Bật/tắt theo ma trận 5 × 2 của TV2a (design cong-tac-khong-ha-nhom-go): bật → active (xoá lý do), trừ nhóm đã gỡ hay đã
+ * xong (409); tắt chỉ hạ nhóm đang thu (active → paused kèm lý do) — nhóm paused/draft giữ nguyên, nhóm đã gỡ hay đã xong
+ * trả 409 có chữ (Hỏi-1). Ô không đổi không ghi gì, kể cả nhật ký.
+ */
 async function toggleVongDoi(b: Record<string, unknown>, sourceCode: string, groupKey: string) {
   const bat = Boolean(b.enabled);
   const to = bat ? "active" : "paused";
@@ -64,11 +74,13 @@ async function toggleVongDoi(b: Record<string, unknown>, sourceCode: string, gro
       await c.query("ROLLBACK");
       return NextResponse.json({ ok: false });
     }
-    if (bat && (cu.status === "retired" || cu.status === "completed")) {
+    const chu = CHU_KHONG_DOI[cu.status];
+    if (chu) {
       await c.query("ROLLBACK");
-      return NextResponse.json({ error: "nhóm đã gỡ — không bật lại" }, { status: 409 });
+      return NextResponse.json({ error: bat ? chu.bat : chu.tat }, { status: 409 });
     }
-    if (cu.status === to) {
+    // Tắt chỉ hạ nhóm đang thu; nhóm paused/draft giữ nguyên (TV2a: «không đổi»).
+    if (cu.status === to || (!bat && cu.status !== "active")) {
       await c.query("ROLLBACK");
       return NextResponse.json({ ok: true, unchanged: true });
     }
