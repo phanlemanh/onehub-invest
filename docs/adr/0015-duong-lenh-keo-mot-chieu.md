@@ -1,6 +1,6 @@
 # ADR-0015: Đường lệnh kéo một chiều cloud → máy thu
 
-Ngày: 2026-10-26 · Trạng thái: proposed (chờ Mạnh duyệt) · Bổ sung ADR-0014 (không thay) · Đi cùng sửa đổi ADR-0007
+Ngày: 2026-10-26 · Trạng thái: accepted (Mạnh duyệt 26/10 — «duyệt TV0») · Bổ sung ADR-0014 (không thay) · Đi cùng sửa đổi ADR-0007
 ngày 26/10 · Nguồn: `docs/research/ops-tu-van-hanh-nguon-saas.md` §3, §4.8 (PR #79), hàng TV0 của
 `docs/plan/lo-trinh.json`
 

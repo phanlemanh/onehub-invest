@@ -200,7 +200,9 @@ từng nhóm trên `/ops`, agent đọc làm ngữ cảnh bậc H5 (ON19–ON21)
 Mạnh chốt (25/10, `docs/research/ops-tu-van-hanh-nguon-saas.md` §3.7, PR #79) khi chọn để đội vận hành làm từ xa
 trên cổng Ops ở cloud (ADR-0015). **Nội dung bài gốc, ảnh tin rao và thẻ duyệt `review_queue` lên cloud, không che,
 cho vai `ops` trở lên.** **Tên nguồn thật vẫn chỉ ở máy thu.** Cloud hiện mã nguồn (vd `S08`, hoặc nhãn nguồn
-«S08 · Danh mục dự án»). Máy thu hiện mã kèm tên thật (`S08-<tên thật>`).
+«S08 · Danh mục dự án»). Ở máy thu, dạng mã kèm tên thật (`S08-<tên thật>`) **chỉ hiện ở `/ops/sources`**; mọi trang
+Ops khác, ở máy thu cũng như trên cloud, gọi nguồn bằng mã kèm vai trò (Mạnh chốt 26/10, giữ luật 24/10: ảnh chụp
+màn hình local hay bị chia sẻ).
 
 **Tầng A, sau sửa đổi này, chỉ còn bốn thứ** (đây là danh sách đầy đủ):
 1. tên nguồn thật, gồm `real_name`, `source_ids`, tên miền nguồn, và mọi giá trị mang chúng (khoá nhóm là URL có tên

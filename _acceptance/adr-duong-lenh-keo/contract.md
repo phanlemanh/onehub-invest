@@ -28,6 +28,7 @@ Hồ sơ này chỉ có contract, theo tiền lệ `_acceptance/nang-kit-2-34-0/
 - AC-4: Given ROADMAP §2.3–2.4, When so với `launchctl list` và `airdna_markets` đo ngày 26/10, Then S01 là thu tuần (CN 19:30) và 20:00 là smoke; S02 là 43 market; mọi nhãn `com.oneinvest.*` đang nạp đều có trong §2.4; cột nguồn của §2.3 chỉ gọi bằng mã + vai trò.
 - AC-5: Given các dòng PR thêm vào, When soát bằng `guardValues` của `pipeline/lib/tier-a-guard.mjs` với `real_name` và `source_ids` từ `source_registry` local, Then mọi chỗ trúng chỉ là tên hạ tầng Zalo hay nhãn job, tên bảng đã có trong kho. Không thêm tên nguồn thật nào vào văn xuôi.
 - AC-6: Given đỉnh PR, When chạy `bash scripts/pre-merge-check.sh . --base origin/main` và `node scripts/product-map.mjs --root . --check`, Then cả hai sạch.
+- AC-7: Given `AGENTS.md` luật 6, When đọc, Then tầng A liệt đúng bốn thứ như sửa đổi ADR-0007 26/10, nói rõ nội dung bài, ảnh tin và thẻ duyệt lên cloud cho vai ops, và dạng `S08-<tên thật>` chỉ ở `/ops/sources` của máy thu (Mạnh duyệt 26/10: «Hỏi-1: có · Hỏi-2: chỉ /ops/sources»).
 
 ## Out of scope
 
