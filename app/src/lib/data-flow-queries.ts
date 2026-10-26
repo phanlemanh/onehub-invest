@@ -1,5 +1,8 @@
+import type { User } from "./auth";
 import { pool } from "./db";
 import { VN_TZ, vnDayKey, vnDayStart } from "./format";
+import { isAdmin } from "./ops-access";
+import { buildOfferImages, type PostMediaRow, type ReviewImage } from "./ops/review-media";
 
 /**
  * Số cho /ops/data-flow «Dòng chảy dữ liệu» (proto 26/10): một tin đi từ bài nhận → đọc được → tin rao → gắn căn,
@@ -102,7 +105,8 @@ function windowStart(n: number, now: number): Date {
 }
 
 // Dấu bài thử — cùng ba dấu của pipeline/lib/test-posts.mjs (snapshot thử, tác tử thử, nhóm TEST).
-const IS_TEST = `(split_part(snapshot_id, '__', 2) ~* '(mock|test|e2e)' OR split_part(snapshot_id, '__', 2) = 'example'
+/** Vế «bài thử» trên một dòng stg_zalo_posts (xuất cho phép đo). */
+export const IS_TEST_SQL = `(split_part(snapshot_id, '__', 2) ~* '(mock|test|e2e)' OR split_part(snapshot_id, '__', 2) = 'example'
   OR coalesce(agent_id, '') ~* '^(e2e|test|mock)' OR btrim(coalesce(group_name, '')) ~* '^test($|[^[:alpha:]])')`;
 
 const POSTS_CTE = `
@@ -114,12 +118,19 @@ const POSTS_CTE = `
   t AS (
     SELECT post_id, posted_at, group_name,
            CASE WHEN agent_id = 'apify-facebook' THEN 'S05' ELSE 'S03' END AS src,
-           ${IS_TEST} AS is_test
+           ${IS_TEST_SQL} AS is_test
     FROM p WHERE posted_at >= $1
   ),
   used AS (
     SELECT DISTINCT unnest(post_ids) AS post_id, source FROM sale_offers WHERE source IN ('S03', 'S05')
   )`;
+
+/** Năm trường lõi của bậc B1 trên một dòng sale_offers `o` — cùng điều kiện với lib/data-level.ts (xuất cho phép đo). */
+export const COMPLETE_SQL = `o.kind IS NOT NULL AND o.property_type IS NOT NULL AND o.property_type <> 'unknown' AND o.price_vnd > 0
+  AND o.area_m2 > 0 AND o.area_id IS NOT NULL`;
+
+/** S06 chưa nối bài → tin: «đọc được» ước lượng bằng số tin, không vượt số quảng cáo. */
+export const s06Readable = (offers: number, received: number) => Math.min(offers, received);
 
 const DAY = (col: string) => `(${col} AT TIME ZONE '${VN_TZ}')::date::text`;
 
@@ -158,9 +169,7 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
               count(*) FILTER (WHERE o.property_type <> 'unknown') AS with_type,
               count(*) FILTER (WHERE o.price_vnd IS NOT NULL AND o.area_m2 IS NOT NULL) AS with_price_area,
               count(*) FILTER (WHERE o.confidence = 'high') AS high_conf,
-              -- Năm trường lõi của bậc B1 — cùng điều kiện với lib/data-level.ts.
-              count(*) FILTER (WHERE o.kind IS NOT NULL AND o.property_type <> 'unknown' AND o.price_vnd > 0
-                AND o.area_m2 > 0 AND o.area_id IS NOT NULL) AS complete,
+              count(*) FILTER (WHERE ${COMPLETE_SQL}) AS complete,
               count(*) FILTER (WHERE o.kind = 'sale') AS sale,
               count(*) FILTER (WHERE o.kind = 'rent_lt') AS rent_lt
        FROM sale_offers o LEFT JOIN (SELECT DISTINCT offer_id FROM property_offers) po USING (offer_id)
@@ -282,8 +291,8 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
   }
   // S06: không có khoá nối ngược → «đọc được» ước lượng bằng số tin, không vượt số bài.
   const s06Flow = bySource.get("S06")!;
-  s06Flow.readable = Math.min(s06Flow.offers, s06Flow.received);
-  for (const d of dayMap.values()) if (d.source === "S06") d.readable = Math.min(d.offers, d.received);
+  s06Flow.readable = s06Readable(s06Flow.offers, s06Flow.received);
+  for (const d of dayMap.values()) if (d.source === "S06") d.readable = s06Readable(d.offers, d.received);
 
   const ss = shortStay.rows[0] ?? {};
   mix.shortStay = num(ss.stored);
@@ -329,4 +338,41 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
 export function parseFlowWindow(v: string | string[] | undefined): FlowWindow {
   const s = Array.isArray(v) ? v[0] : v;
   return (FLOW_WINDOWS as readonly string[]).includes(s ?? "") ? (s as FlowWindow) : "7d";
+}
+
+// ---- Ảnh tin của hồ sơ tin (AC-10, Mạnh sửa ở Cổng Phạm vi 26/10) ----
+// Cùng luật với Hàng duyệt: ảnh tin chỉ cho admin, chỉ ở máy thu; ghép bằng chính buildOfferImages (ảnh đã tải trước,
+// rồi URL gốc, không trùng, tối đa 12). Không sửa lib/ops/review-media.ts — tệp nằm trong hồ sơ đã ký của Hàng duyệt.
+// S06 chưa có khoá nối tin → quảng cáo (TV10) nên không truy vấn ảnh cho S06.
+
+const MEDIA_SQL = `
+  SELECT o.offer_id, p.snapshot_id, p.media, p.media_files
+  FROM sale_offers o
+  CROSS JOIN LATERAL unnest(o.post_ids) WITH ORDINALITY AS u(post_id, ord)
+  JOIN stg_zalo_posts p ON p.post_id = u.post_id
+  WHERE o.offer_id = ANY($1::text[])
+  ORDER BY o.offer_id, u.ord`;
+
+export type MediaQuery = (text: string, values: unknown[]) => Promise<{ rows: PostMediaRow[] }>;
+const defaultMediaQuery: MediaQuery = (text, values) => pool.query<PostMediaRow>(text, values);
+
+/** Ảnh từng tin S03/S05, khoá theo offer_id. Không phải admin → `{}` không chạm DB; cloud (42P01) → `{}`. */
+export async function loadFlowMedia(
+  records: Pick<FlowRecord, "offerId" | "source">[],
+  user: User | null,
+  query: MediaQuery = defaultMediaQuery,
+): Promise<Record<string, ReviewImage[]>> {
+  if (!isAdmin(user)) return {};
+  const ids = [...new Set(records.filter((r) => r.source === "S03" || r.source === "S05").map((r) => r.offerId))];
+  if (ids.length === 0) return {};
+  let rows: PostMediaRow[];
+  try {
+    ({ rows } = await query(MEDIA_SQL, [ids]));
+  } catch (err) {
+    if ((err as { code?: string }).code === "42P01") return {};
+    throw err;
+  }
+  const posts = new Map<string, PostMediaRow[]>();
+  for (const r of rows) posts.set(r.offer_id, [...(posts.get(r.offer_id) ?? []), r]);
+  return Object.fromEntries(ids.map((id) => [id, buildOfferImages(posts.get(id) ?? [])]));
 }

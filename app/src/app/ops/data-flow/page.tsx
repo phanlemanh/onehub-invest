@@ -5,7 +5,9 @@ import { DataFlowSkeleton } from "@/components/ops/data-flow/data-flow-skeleton"
 import { DataFlowView } from "@/components/ops/data-flow/data-flow-view";
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert";
 import { RegionError } from "@/components/states/region-error";
-import { getDataFlow, parseFlowWindow, type FlowWindow } from "@/lib/data-flow-queries";
+import { getSessionUser } from "@/lib/auth";
+import { getDataFlow, loadFlowMedia, parseFlowWindow, type FlowWindow } from "@/lib/data-flow-queries";
+import { isAdmin } from "@/lib/ops-access";
 import { localOnlyTable } from "@/lib/ops-queries";
 import { getSourceRoles } from "@/lib/source-roles";
 
@@ -41,6 +43,8 @@ async function DataFlowContent({ window }: { window: FlowWindow }) {
     );
   }
   const nowMs = requestTime();
-  const [flow, roles] = await Promise.all([getDataFlow(window, { now: nowMs }), getSourceRoles()]);
-  return <DataFlowView flow={flow} roles={roles} nowMs={nowMs} />;
+  const [flow, roles, user] = await Promise.all([getDataFlow(window, { now: nowMs }), getSourceRoles(), getSessionUser()]);
+  // Ảnh tin chỉ cho admin (cùng luật Hàng duyệt): người khác nhận `undefined` — không dữ liệu ảnh nào xuống trình duyệt.
+  const media = isAdmin(user) ? await loadFlowMedia(flow.records, user) : undefined;
+  return <DataFlowView flow={flow} roles={roles} nowMs={nowMs} media={media} />;
 }

@@ -17,6 +17,7 @@ import type { FilterQuery } from "@/components/reui/filters/filters-types"
 import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import type { FlowRecord } from "@/lib/data-flow-queries"
+import type { ReviewImage } from "@/lib/ops/review-media"
 import { coreFields, levelLabel, levelOf } from "@/lib/data-level"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
 import type { SourceRoles } from "@/lib/source-labels"
@@ -30,22 +31,16 @@ import { LEVEL_VARIANT, compileRecordFilter, recordFilterFields } from "./record
  * @reui/filters ở đầu khung; bấm một hàng mở hồ sơ tin. Hiện tối đa 150 tin mới nhất mỗi nguồn trong khoảng đang chọn.
  */
 
-const columnsOf = (onOpen: (r: FlowRecord) => void): ColumnDef<DataGridFeatures, FlowRecord>[] => [
+const COLUMNS: ColumnDef<DataGridFeatures, FlowRecord>[] = [
   {
     id: "title",
     accessorFn: (r) => recordTitle(r),
     header: ({ column }) => <DataGridColumnHeader title="Tin" column={column} />,
     cell: ({ row }) => (
       <div className="flex min-w-0 flex-col items-start gap-0.5">
-        <Button
-          variant="link"
-          size="xs"
-          className="max-w-full justify-start"
-          onClick={(e) => {
-            e.stopPropagation()
-            onOpen(row.original)
-          }}
-        >
+        {/* Không tự mở sheet ở đây: cú bấm (chuột, hoặc Enter/Space trên nút) đi lên onRowClick của hàng. Nút tự mở rồi
+            chặn lan thì Sheet nhận chính cú bấm đó là bấm ra ngoài và đóng ngay (thấy trên bản chạy 26/10). */}
+        <Button variant="link" size="xs" className="max-w-full justify-start">
           <span className="truncate">{recordTitle(row.original)}</span>
         </Button>
         <span className="text-muted-foreground truncate ps-2 text-xs">
@@ -111,17 +106,24 @@ const columnsOf = (onOpen: (r: FlowRecord) => void): ColumnDef<DataGridFeatures,
   },
 ]
 
-export function RecordsGrid({ records, roles }: { records: FlowRecord[]; roles: SourceRoles }) {
+export function RecordsGrid({
+  records,
+  roles,
+  media,
+}: {
+  records: FlowRecord[]
+  roles: SourceRoles
+  media?: Record<string, ReviewImage[]>
+}) {
   const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery())
   const [open, setOpen] = useState<FlowRecord | null>(null)
   const [sorting, setSorting] = useState<SortingState>([{ id: "firstSeen", desc: true }])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
   const fields = useMemo(() => recordFilterFields(records, roles), [records, roles])
   const data = useMemo(() => records.filter(compileRecordFilter(query)), [records, query])
-  const columns = useMemo(() => columnsOf(setOpen), [])
   const table = useTable({
     features: dataGridFeatures,
-    columns,
+    columns: COLUMNS,
     data,
     state: { pagination, sorting },
     onPaginationChange: setPagination,
@@ -168,7 +170,7 @@ export function RecordsGrid({ records, roles }: { records: FlowRecord[]; roles: 
           </FrameFooter>
         </Frame>
       </DataGrid>
-      <RecordSheet record={open} roles={roles} onOpenChange={(o) => !o && setOpen(null)} />
+      <RecordSheet record={open} roles={roles} media={media} onOpenChange={(o) => !o && setOpen(null)} />
     </>
   )
 }

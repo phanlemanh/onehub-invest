@@ -26,14 +26,19 @@ export type QualityRow = {
 
 const HOUR = 3600000
 
-function healthOf(r: Omit<QualityRow, "health">, nowMs: number): Health {
+type Check = { name: string; num: (r: Omit<QualityRow, "health">) => number | null; den: (r: Omit<QualityRow, "health">) => number; stuck: number; watch: number }
+
+/** Luật nút thắt, theo thứ tự đường ống: chặng đầu tiên chạm ngưỡng là nút thắt (xuất cho phép đo). */
+export const NUT_THAT_CHECKS: readonly Check[] = [
+  { name: "đọc", num: (r) => r.readable, den: (r) => r.received, stuck: 0.3, watch: 0.6 },
+  { name: "trường lõi", num: (r) => r.complete, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
+  { name: "phường", num: (r) => r.withWard, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
+  { name: "gắn căn", num: (r) => r.linked, den: (r) => r.offers, stuck: 0.5, watch: 0.8 },
+]
+
+export function healthOf(r: Omit<QualityRow, "health">, nowMs: number, rules: readonly Check[] = NUT_THAT_CHECKS): Health {
   const rate = (a: number | null, b: number) => (a === null || b === 0 ? null : a / b)
-  const checks: { name: string; value: number | null; stuck: number; watch: number }[] = [
-    { name: "đọc", value: rate(r.readable, r.received), stuck: 0.3, watch: 0.6 },
-    { name: "trường lõi", value: rate(r.complete, r.offers), stuck: 0.5, watch: 0.8 },
-    { name: "phường", value: rate(r.withWard, r.offers), stuck: 0.5, watch: 0.8 },
-    { name: "gắn căn", value: rate(r.linked, r.offers), stuck: 0.5, watch: 0.8 },
-  ]
+  const checks = rules.map((c) => ({ ...c, value: rate(c.num(r), c.den(r)) }))
   const stuck = checks.find((c) => c.value !== null && c.value < c.stuck)
   if (stuck) return { tone: "destructive", label: `Kẹt · ${stuck.name}` }
   const ageH = r.latestAt ? (nowMs - Date.parse(r.latestAt.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00"))) / HOUR : null

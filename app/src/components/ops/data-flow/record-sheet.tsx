@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { ReviewPhotos } from "@/components/ops/review-photos"
 import type { FlowRecord } from "@/lib/data-flow-queries"
+import type { ReviewImage } from "@/lib/ops/review-media"
 import { coreFields, levelLabel, levelOf } from "@/lib/data-level"
 import { fmtInt, fmtMoneyCompact, fmtVnDateTime } from "@/lib/format"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
@@ -76,7 +78,18 @@ export const recordTitle = (r: FlowRecord) =>
     .filter(Boolean)
     .join(" · ")
 
-export function RecordSheet({ record, roles, onOpenChange }: { record: FlowRecord | null; roles: SourceRoles; onOpenChange: (open: boolean) => void }) {
+export function RecordSheet({
+  record,
+  roles,
+  media,
+  onOpenChange,
+}: {
+  record: FlowRecord | null
+  roles: SourceRoles
+  /** Ảnh tin theo offer_id (chỉ admin); vắng → không hiện dải ảnh. */
+  media?: Record<string, ReviewImage[]>
+  onOpenChange: (open: boolean) => void
+}) {
   return (
     <Sheet open={record !== null} onOpenChange={onOpenChange}>
       <SheetContent side="right" showCloseButton={false} className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-xl">
@@ -126,6 +139,16 @@ export function RecordSheet({ record, roles, onOpenChange }: { record: FlowRecor
                     <Row label="Số bài gộp vào tin" value={fmtInt(record.nPosts)} />
                     <Row label="Lần cuối thấy" value={fmtVnDateTime(record.lastSeen)} />
                   </dl>
+                </Section>
+                <Separator />
+                <Section title="Ảnh tin">
+                  {record.source === "S06" ? (
+                    <p className="text-muted-foreground text-sm">Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10).</p>
+                  ) : media ? (
+                    <ReviewPhotos label="Tin" images={media[record.offerId] ?? []} />
+                  ) : (
+                    <p className="text-muted-foreground text-sm">Ảnh tin chỉ hiện cho quản trị viên.</p>
+                  )}
                 </Section>
                 <Separator />
                 <Section title="Bài gốc">

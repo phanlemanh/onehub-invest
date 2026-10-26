@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page/page-header"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import type { DataFlow, FlowWindow } from "@/lib/data-flow-queries"
+import type { ReviewImage } from "@/lib/ops/review-media"
 import { fmtInt } from "@/lib/format"
 import type { SourceRoles } from "@/lib/source-labels"
 
@@ -26,7 +27,18 @@ const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Dòng chảy d
 const DESCRIPTION = "Một tin đi từ bài nhận tới căn: chặng nào đang chảy, chặng nào rơi, vì sao."
 
 /** /ops/data-flow «Dòng chảy dữ liệu» (proto 26/10) — Dashboard grid trong khung Frame, chỉ đọc. */
-export function DataFlowView({ flow, roles, nowMs }: { flow: DataFlow; roles: SourceRoles; nowMs: number }) {
+export function DataFlowView({
+  flow,
+  roles,
+  nowMs,
+  media,
+}: {
+  flow: DataFlow
+  roles: SourceRoles
+  nowMs: number
+  /** Ảnh tin theo offer_id — chỉ có khi người xem là admin. */
+  media?: Record<string, ReviewImage[]>
+}) {
   const windowDays = flow.window === "7d" ? 7 : 30
   const received = flow.sources.reduce((a, s) => a + s.received, 0)
   return (
@@ -63,7 +75,7 @@ export function DataFlowView({ flow, roles, nowMs }: { flow: DataFlow; roles: So
           <KindMixChart mix={flow.mix} />
         </div>
       </div>
-      <RecordsGrid records={flow.records} roles={roles} />
+      <RecordsGrid records={flow.records} roles={roles} media={media} />
     </div>
   )
 }
