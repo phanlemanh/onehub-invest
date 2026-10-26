@@ -5,7 +5,7 @@ slug: cong-tac-test-ghim-ban-cu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: app/tests/** không thuộc t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T16:22:46Z
 design_doc: docs/superpowers/specs/2026-10-26-cong-tac-test-ghim-ban-cu-design.md
@@ -40,3 +40,5 @@ bỏ coverage-scan — xem dòng sổ «bỏ coverage-scan» (một chiều: m�
 ## Notes
 
 - Vòng sửa tệp ca thử của hồ sơ `cong-tac-khong-ha-nhom-go` nên hồ sơ ấy được ghim lại cùng PR này (làn máy).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: Chữ mô tả kết quả mong đợi của E1 ở hồ sơ cong-tac-khong-ha-nhom-go nêu «retired+tắt» mà đầu ra thật không in dòng đó.
