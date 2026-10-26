@@ -61,6 +61,9 @@ const s = http.createServer((req, res) => {
   }
   res.writeHead(404); res.end();
 });
+// Tiến trình test bị execFileSync(playwright-cli) chặn nhiều giây giữa hai lần fetch; mặc định Node đóng kết nối giữ sống
+// sau 5 giây → fetch kế dùng lại socket đã đóng và hỏng («GET /login không trả 200» chập chờn khi máy tải nặng).
+s.keepAliveTimeout = 120000; s.headersTimeout = 121000;
 s.listen(0, "127.0.0.1", () => console.log(s.address().port));
 `;
 before(async () => {

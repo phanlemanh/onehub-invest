@@ -305,6 +305,11 @@ executors:
     agent_ba_lan: "bash _acceptance/enrich-db-test-khoanh-tin/probes/ba-lan.sh"
     enrich_ac6_tam_lan: "bash _acceptance/enrich-db-test-khoanh-tin/probes/tam-lan.sh"
     enrich_pham_vi: "bash _acceptance/enrich-db-test-khoanh-tin/probes/pham-vi.sh"
+    # uc-ta-5-tmp-rieng — UC-TA-5 dùng TMPDIR riêng (hết đua với ui-capture-browser.test)
+    uct_nam_luot: "bash _acceptance/uc-ta-5-tmp-rieng/probes/nam-luot.sh \"$PWD\""
+    uct_dot_bien: "bash _acceptance/uc-ta-5-tmp-rieng/probes/dot-bien.sh \"$PWD\""
+    uct_scope: "bash _acceptance/uc-ta-5-tmp-rieng/probes/scope.sh \"$PWD\""
+    uct_keepalive: "bash _acceptance/uc-ta-5-tmp-rieng/probes/keepalive.sh \"$PWD\""
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
