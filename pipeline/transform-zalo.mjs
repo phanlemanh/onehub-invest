@@ -10,6 +10,7 @@ import pg from "pg";
 
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
+import { assignStickyIds } from "./lib/offer-key.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
@@ -172,7 +173,7 @@ export async function runTransformZalo(client) {
   }
   console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${(nFull / posts.length * 100).toFixed(1)}%`);
 
-  // ---- Bước 4: dedup — hash(kind + phường + price + area + bedrooms) ----
+  // ---- Bước 4: gom repost theo nội dung — hash(kind + phường + price + area + bedrooms); offer_id cấp ở bước 5 ----
   const dedup = new Map();
   for (const pr of parsed) {
     if (pr.confidence === "low") continue;
@@ -186,13 +187,14 @@ export async function runTransformZalo(client) {
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id],
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
         phone: pr.phone, authorHash: pr.post.author_hash,
       });
     } else {
       const o = dedup.get(offerId);
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -204,12 +206,17 @@ export async function runTransformZalo(client) {
   // đề xuất enrich + thẻ duyệt sống qua lần nạp lại (_acceptance/enrich-hau-ky).
   const sellerAgg = new Map(); // phone_hash → {n, first, last}
   const rows = [];
-  for (const o of dedup.values()) {
+  // Khoá dính (PL14, migration 044): nhóm theo nội dung chỉ để gom repost; offer_id lấy theo post — nhóm thừa kế khoá
+  // của tin có chung nhiều post nhất, nhóm mới băm 'S03|<post neo>'. Đổi giá/DT/PN/parser không đổi offer_id.
+  const nhom = [...dedup.values()];
+  const khoa = await assignStickyIds(client, "S03", nhom.map((o) => ({ posts: o.posts })));
+  nhom.forEach((o, i) => { o.offerId = khoa[i].offer_id; o.osk = khoa[i].originating_system_key; });
+  for (const o of nhom) {
     const phoneHash = o.phone
       ? createHash("sha256").update(o.phone).digest("hex").slice(0, 32)
       : null;
     rows.push({
-      offer_id: o.offerId, area_id: o.areaId, kind: o.kind, price_vnd: o.priceVnd,
+      offer_id: o.offerId, originating_system_key: o.osk, area_id: o.areaId, kind: o.kind, price_vnd: o.priceVnd,
       area_m2: o.areaM2, price_perm2: o.pricePerm2, bedrooms: o.bedrooms, phuong_raw: o.phuongRaw,
       confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
       n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_phone: o.phone,

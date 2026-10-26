@@ -5,7 +5,7 @@
 //   - nguồn lọc theo agent_id='apify-facebook' trong stg_zalo_posts
 //   - phường match theo THÀNH PHỐ suy từ tên nhóm (nhóm FB mang chữ
 //     "HÀ NỘI"/"TPHCM"…), nhóm mơ hồ thì thử cả hai
-//   - offer_id hash có prefix S05 để không đụng dedup key của S03
+//   - offer_id băm 'S05|<post neo>' (khoá dính PL14) — không đụng khoá S03
 // Kiến trúc: FB = tín hiệu riêng P1 như Zalo (tin môi giới, SĐT trong text).
 import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -15,6 +15,7 @@ import { parsePost, matchPhuong } from "./transform-zalo.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
+import { assignStickyIds } from "./lib/offer-key.mjs";
 
 /** Nhóm Facebook "MUA BÁN…" mặc định là rao BÁN: môi giới không lặp chữ
  * "bán" trong body. Khi parser không thấy keyword, suy kind từ tín hiệu
@@ -82,7 +83,7 @@ export async function runTransformFb(client) {
   }
   console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${posts.length ? ((nFull / posts.length) * 100).toFixed(1) : 0}%`);
 
-  // dedup — cùng công thức zalo nhưng prefix S05 (không đụng offer S03)
+  // gom repost — cùng công thức zalo nhưng prefix S05; offer_id cấp theo khoá dính ở dưới
   const dedup = new Map();
   for (const pr of parsed) {
     if (pr.confidence === "low") continue;
@@ -97,13 +98,14 @@ export async function runTransformFb(client) {
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
-        postIds: [pr.post.post_id],
+        postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
         phone: pr.phone, senderName: pr.post.sender_name, authorHash: pr.post.author_hash,
       });
     } else {
       const o = dedup.get(offerId);
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
+      o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
     }
@@ -114,12 +116,17 @@ export async function runTransformFb(client) {
   // đề xuất enrich + thẻ duyệt sống qua lần nạp lại (_acceptance/enrich-hau-ky).
   const sellerAgg = new Map();
   const rows = [];
-  for (const o of dedup.values()) {
+  // Khoá dính (PL14, migration 044): nhóm theo nội dung chỉ để gom repost; offer_id lấy theo post — nhóm thừa kế khoá
+  // của tin có chung nhiều post nhất, nhóm mới băm 'S05|<post neo>'. Đổi giá/DT/PN/parser không đổi offer_id.
+  const nhom = [...dedup.values()];
+  const khoa = await assignStickyIds(client, "S05", nhom.map((o) => ({ posts: o.posts })));
+  nhom.forEach((o, i) => { o.offerId = khoa[i].offer_id; o.osk = khoa[i].originating_system_key; });
+  for (const o of nhom) {
     const phoneHash = o.phone
       ? createHash("sha256").update(o.phone).digest("hex").slice(0, 32)
       : null;
     rows.push({
-      offer_id: o.offerId, area_id: o.areaId, kind: o.kind, price_vnd: o.priceVnd,
+      offer_id: o.offerId, originating_system_key: o.osk, area_id: o.areaId, kind: o.kind, price_vnd: o.priceVnd,
       area_m2: o.areaM2, price_perm2: o.pricePerm2, bedrooms: o.bedrooms, phuong_raw: o.phuongRaw,
       confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
       n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_name: o.senderName,
