@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 800eb77c791f30738527f95df485fb87bbd62ec8
+verified_commit: f5411aa8349eca5be7328f8de4a253a8e65e53b1
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -169,3 +169,7 @@ none — 6 eval tất định, mỗi lệnh chạy một lần trên HEAD.
 
 Round 1: 6/6 eval đạt trên `800eb77c`. Baseline đỏ ở E1, E2; E4, E5 là rào hồi quy; E3, E6 không đo baseline. «Ngoài hợp đồng» có 1
 mục mức low (log handler không phân biệt nguyên nhân Kev hỏng); người quyết. PASS.
+
+### Re-pin lần 1 — 2026-10-26, do ghim lại sau sửa thước kev-nhan (PR #135) và gộp main 441e0405
+run_id: repin-20261026T131455Z-88598
+sha: f5411aa8349eca5be7328f8de4a253a8e65e53b1 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
