@@ -35,7 +35,6 @@ export async function runCollector(opts: RunOptions): Promise<void> {
   const { city, collector, snapshotRoot, stateDir } = opts;
   const log = (...a: unknown[]) => console.log(`[${collector.id}/${city.id}]`, ...a);
   const checkpoint = await Checkpoint.load(`${stateDir}/${city.id}__${collector.id}.json`);
-  const writer = new SnapshotWriter(snapshotRoot, city.id, collector.id);
   const rateLimit = new TokenBucket(collector.requestsPerSecond);
 
   if (!inActivityWindow(new Date(), WINDOW)) {
@@ -49,6 +48,10 @@ export async function runCollector(opts: RunOptions): Promise<void> {
     return;
   }
 
+  // 2510-32: writer chiếm '.<id>.partial' ngay trong constructor (2510-8 v3)
+  // nên phải tạo SAU hai chỗ dừng sớm — không thì mỗi lượt skip để lại một
+  // thư mục '.partial' rỗng vĩnh viễn.
+  const writer = new SnapshotWriter(snapshotRoot, city.id, collector.id);
   log("start");
   try {
     const { items, coverage } = await collector.collect({
