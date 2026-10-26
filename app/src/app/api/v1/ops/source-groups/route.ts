@@ -27,6 +27,68 @@ async function auth(req: Request): Promise<boolean> {
   return canAccessOps(await getSessionUser());
 }
 
+/**
+ * TV2a `vong-doi-nguon`: đã áp migration 047 chưa (source_groups có cột status)? Hỏi mỗi lần ghi, không cache — tiến trình
+ * app mở trước lúc áp 047 phải tự sang đường mới. Chưa áp → route chạy như trước (ghi enabled). Nhánh cũ bỏ ở TV5.
+ */
+async function coVongDoi(): Promise<boolean> {
+  const { rows } = await pool.query(
+    `SELECT 1 FROM information_schema.columns
+      WHERE table_schema = current_schema() AND table_name = 'source_groups' AND column_name = 'status'`,
+  );
+  return rows.length > 0;
+}
+
+const LY_DO_MAC_DINH = "tắt bằng công tắc /ops/sources"; // Hỏi-1 Cổng Phạm vi TV2a: trang chưa có ô nhập lý do
+
+/** Bật/tắt theo vòng đời: tắt → paused kèm lý do; bật → active, xoá lý do; nhóm đã gỡ hay đã xong không bật lại (409). */
+async function toggleVongDoi(b: Record<string, unknown>, sourceCode: string, groupKey: string) {
+  const bat = Boolean(b.enabled);
+  const to = bat ? "active" : "paused";
+  const reason = typeof b.reason === "string" && b.reason.trim() ? b.reason.trim() : LY_DO_MAC_DINH;
+  const resumeWhen = typeof b.resumeWhen === "string" && b.resumeWhen.trim() ? b.resumeWhen.trim() : null;
+  const c = await pool.connect();
+  let from: string;
+  try {
+    await c.query("BEGIN");
+    const cu = (
+      await c.query<{ status: string }>(
+        "SELECT status FROM source_groups WHERE source_code = $1 AND group_key = $2 FOR UPDATE",
+        [sourceCode, groupKey],
+      )
+    ).rows[0];
+    if (!cu) {
+      await c.query("ROLLBACK");
+      return NextResponse.json({ ok: false });
+    }
+    if (bat && (cu.status === "retired" || cu.status === "completed")) {
+      await c.query("ROLLBACK");
+      return NextResponse.json({ error: "nhóm đã gỡ — không bật lại" }, { status: 409 });
+    }
+    if (cu.status === to) {
+      await c.query("ROLLBACK");
+      return NextResponse.json({ ok: true, unchanged: true });
+    }
+    await c.query(
+      bat
+        ? `UPDATE source_groups SET status = 'active', reason = NULL, resume_when = NULL, updated_at = now()
+           WHERE source_code = $1 AND group_key = $2`
+        : `UPDATE source_groups SET status = 'paused', reason = $3, resume_when = $4, updated_at = now()
+           WHERE source_code = $1 AND group_key = $2`,
+      bat ? [sourceCode, groupKey] : [sourceCode, groupKey, reason, resumeWhen],
+    );
+    await c.query("COMMIT");
+    from = cu.status;
+  } catch (e) {
+    await c.query("ROLLBACK").catch(() => {});
+    throw e;
+  } finally {
+    c.release();
+  }
+  await auditOpsWrite("ops-user", "source-group:toggle", { sourceCode, groupKey, enabled: bat, from, to });
+  return NextResponse.json({ ok: true });
+}
+
 export async function GET() {
   if (!(await auth(new Request("http://x")))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -56,6 +118,7 @@ export async function POST(req: Request) {
     if (!sourceCode || !groupKey) {
       return NextResponse.json({ error: "thiếu sourceCode/groupKey" }, { status: 400 });
     }
+    if (await coVongDoi()) return toggleVongDoi(b, sourceCode, groupKey);
     const { rowCount } = await pool.query(
       `UPDATE source_groups SET enabled = $1, updated_at = now()
        WHERE source_code = $2 AND group_key = $3`,
@@ -78,8 +141,11 @@ export async function POST(req: Request) {
     if (b.cityCode) params.cityCode = String(b.cityCode);
     try {
       await pool.query(
-        `INSERT INTO source_groups (source_code, group_key, name, enabled, params)
-         VALUES ($1, $2, $3, true, $4::jsonb)`,
+        (await coVongDoi())
+          ? `INSERT INTO source_groups (source_code, group_key, name, status, params)
+             VALUES ($1, $2, $3, 'active', $4::jsonb)`
+          : `INSERT INTO source_groups (source_code, group_key, name, enabled, params)
+             VALUES ($1, $2, $3, true, $4::jsonb)`,
         [sourceCode, groupKey, name, JSON.stringify(params)],
       );
     } catch (e) {
