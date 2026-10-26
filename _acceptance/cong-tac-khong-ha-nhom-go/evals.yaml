@@ -1,0 +1,52 @@
+schema_version: 1
+feature_slug: cong-tac-khong-ha-nhom-go
+# Ca «CT-AC-n» ở app/tests/cong-tac-nhom-go.test.tsx (cần DB local :5433): mỗi ca dựng lược đồ tạm ở khuôn sau 047 + 048
+# bằng pipeline/scripts/so-nhom-fixture.mjs, gọi POST thật của route source-groups bằng Bearer; chụp public trước/sau.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.cong_tac
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/tests/cong-tac-nhom-go.test.tsx]
+    expected: "exit 0; ca 'CT-AC-1': bảng 10 ô viết trước (assert BANG.length === 10 trước khi lặp), mỗi ô một lược đồ tạm mới có đúng một nhóm S05 ở trạng thái cũ (paused có lý do 'x', resume_when 'y'): active+tắt → 200, paused, lý do 'tắt bằng công tắc /ops/sources', enabled false, 1 audit; active+bật → 200 unchanged, dòng deepEqual trước, 0 audit; paused+bật → active, reason/resume_when null, 1 audit; paused+tắt → 200 unchanged, 0 audit; draft+bật → active, 1 audit; draft+tắt → 200 unchanged, vẫn draft, 0 audit; retired/completed × bật/tắt → 409, dòng deepEqual trước (kể cả updated_at), 0 audit; đối chứng: trên bản chép của route bỏ nhánh chặn tắt nhóm không active, ca retired+tắt đỏ nêu 'retired+tắt'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.cong_tac
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/tests/cong-tac-nhom-go.test.tsx]
+    expected: "exit 0; ca 'CT-AC-2': nhóm retired và nhóm completed: tắt rồi bật (hai POST nối tiếp) → vẫn trạng thái cũ, enabled false, 0 audit mới; tắt và bật đồng thời (Promise.all, hai kết nối) → vẫn trạng thái cũ; mọi phản hồi 409; đối chứng (CHỈ nhánh nối tiếp, kết quả tất định): cùng chuỗi trên bản chép route cũ (chưa sửa) → nhóm thành active, ca đỏ nêu 'hồi sinh'; nhánh đồng thời là đo thêm, không có đối chứng vì thứ tự hai lệnh không cố định"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.cong_tac
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/tests/cong-tac-nhom-go.test.tsx]
+    expected: "exit 0; ca 'CT-AC-3': thân 409 deepEqual viết trước — retired+bật {error:'nhóm đã gỡ — không bật lại'}, retired+tắt {error:'nhóm đã gỡ — công tắc không đổi trạng thái'}, completed+bật {error:'nhóm đã xong — không bật lại'}, completed+tắt {error:'nhóm đã xong — công tắc không đổi trạng thái'}"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.cong_tac
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, db/migrations/047_vong_doi_nguon.sql, app/tests/cong-tac-nhom-go.test.tsx]
+    expected: "exit 0; ca 'CT-AC-4': với mỗi ô của 10 ô, lược đồ A ghi bằng UPDATE source_groups SET enabled = <giá trị> (đường cũ), lược đồ B gọi route; status cuối của A bằng của B; ô A ném lỗi check_violation đúng ở các ô B trả 409 bật (retired, completed); ô A 'không đổi' ứng với B unchanged hoặc 409 tắt; riêng ô retired+tắt và completed+tắt: A không ném lỗi, status giữ nguyên, B trả 409"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.vong_doi_nguon_route
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/tests/vong-doi-nguon.test.tsx]
+    expected: "exit 0 trên đỉnh nhánh (test công tắc của TV2a không sửa, hoặc chỉ sửa chữ 409 theo AC-3 kèm dòng sổ)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.cong_tac
+    layer: backend-effect
+    paths: [app/src/components/ops/sources/source-groups.tsx, app/tests/cong-tac-nhom-go.test.tsx]
+    expected: "exit 0; ca 'CT-AC-5': vẽ SourceGroups (jsdom, AppRouterContext giả, Toaster của sonner) với một nhóm S05 enabled true; fetch giả trả 409 {error:'nhóm đã gỡ — công tắc không đổi trạng thái'}; bấm công tắc → sau khi phản hồi về, công tắc aria-checked 'true' (về giá trị trước khi bấm) và văn bản trang chứa nguyên văn chữ lỗi; đối chứng: fetch giả trả 200 {ok:true} → công tắc aria-checked 'false'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
