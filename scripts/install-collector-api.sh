@@ -37,10 +37,16 @@ if [ "$DRY" = 1 ]; then
   exit 0
 fi
 
-mkdir -p "$DEST"
-sed "s|__ROOT__|$ROOT|g" "$SRC_PLIST" > "$OUT"
-chmod 600 "$OUT"
-plutil -lint "$OUT" >/dev/null
+# 2610-5: khuôn install-*.sh — launchd cần thư mục log tồn tại (clone mới
+# không có pipeline/logs thì job không mở được StandardOutPath, không lên).
+mkdir -p "$DEST" "$ROOT/pipeline/logs"
+# 2610-5: ghi qua tệp tạm rồi mv — sed lỗi giữa chừng không để lại plist
+# RỖNG đè bản cũ đang chạy tốt.
+TMP_OUT="$(mktemp)"
+sed "s|__ROOT__|$ROOT|g" "$SRC_PLIST" > "$TMP_OUT"
+chmod 600 "$TMP_OUT"
+plutil -lint "$TMP_OUT" >/dev/null
+mv "$TMP_OUT" "$OUT"
 echo "đã ghi: $OUT (plutil -lint OK)"
 echo "— TRIỂN KHAI (chạy tay — KHÔNG thuộc script này):"
 echo "    launchctl bootout gui/$(id -u)/com.oneinvest.collector-api 2>/dev/null || true"
