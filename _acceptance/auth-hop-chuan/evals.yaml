@@ -43,7 +43,6 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.auth_login_smoke
-    # Hỏi-3 ở Cổng Phạm vi: Mạnh chọn thêm smoke đăng ký đầu-cuối thì S3 thêm E10 (layer backend-effect) cùng khuôn.
     paths: [app/src/components/auth/**, app/src/app/(auth)/**, scripts/dev-ops-login-check.sh]
     expected: "exit 0; dòng 'POST /login: 303, có cookie oi_session HttpOnly', '/ops/sources: có cookie 200, không cookie bị chặn', 'OK: tài khoản ops thử đăng nhập được <BASE_URL>' — đăng nhập đầu-cuối qua form server action trên bản chạy của worktree (dev :3460)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
@@ -75,3 +74,12 @@ evals:
       - "1280 px sáng + tối: /login?error=Sai%20m%E1%BA%ADt%20kh%E1%BA%A9u → evidence/E9-step7.png, E9-step8.png (cảnh báo lỗi trong form đọc được)"
     expected: "Hai trang đọc được ở cả sáng lẫn tối; không mảng màu trôi hay chữ tô gradient; tiêu đề đăng ký dùng cỡ chữ thường của kho, không tràn dòng xấu; form và nút chính rõ; scrollWidth = clientWidth ở 390 px cho cả hai trang."
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  # E10 sinh từ Hỏi-3 = A (Mạnh duyệt Cổng Phạm vi 26/10): đăng ký đầu-cuối bằng email dùng một lần, xoá tài khoản cuối lượt.
+  - id: E10
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.auth_register_smoke
+    paths: [app/src/components/auth/**, app/src/app/(auth)/**, app/src/app/actions.ts, scripts/dev-register-check.mjs]
+    expected: "exit 0; các dòng 'POST /register: 303 về /saved, có cookie oi_session HttpOnly', 'DB: 1 tài khoản role user, có phiên', '/ops/sources với phiên vừa đăng ký: <mã ≠ 200>, không vào được Ops', 'POST /register lần hai cùng email: về /register?error=, không tạo phiên', 'OK: đăng ký đầu-cuối qua form /register được <BASE_URL>', 'dọn: đã xoá tài khoản thử' — trên bản chạy của worktree (dev :3460), chỉ DB local; sau lượt không còn dòng users nào có email tiền tố register-smoke-"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
