@@ -6,9 +6,13 @@ set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; P="$ROOT/_acceptance/on-dinh-test-app-chap-chon/probes"
 cd "$ROOT/app" || exit 2
 DEM=$(mktemp); export PATH="$P/pgrep-gia:$PATH" PGREP_GIA_DEM="$DEM"
-cu=tests/.zz-ops-doi-chung.test.tsx
-trap 'rm -f "$cu" "$DEM"' EXIT
-git -C "$ROOT" show aa928f30:app/tests/ops-facts-so-tong-hop.test.tsx > "$cu" || { echo "KHONG LAY DUOC BAN CU"; exit 2; }
+# Bản cũ đặt trong app/node_modules/ (ESLint và tsc bỏ qua): đặt trong app/tests thì bộ suite lint chạy song song quét phải
+# tệp tạm rồi gặp nó bị xoá — ENOENT, đỏ oan cả lượt chấm. Đường import tương đối đổi sang tuyệt đối.
+TAM="$ROOT/app/node_modules/.odt-doi-chung"; mkdir -p "$TAM"; cu="$TAM/ops-cu.test.tsx"
+trap 'rm -rf "$TAM" "$DEM"' EXIT
+git -C "$ROOT" show aa928f30:app/tests/ops-facts-so-tong-hop.test.tsx \
+  | sed -e "s#\"\.\./\.\./#\"$ROOT/#g" -e "s#\"\.\./src/#\"$ROOT/app/src/#g" -e "s#import\.meta\.dirname#\"$ROOT/app/tests\"#g" > "$cu" \
+  || { echo "KHONG LAY DUOC BAN CU"; exit 2; }
 # Ghi trọn đầu ra rồi mới tìm: với pipefail, «node … | grep -q» báo thất bại oan khi grep thoát sớm làm node nhận SIGPIPE.
 OUT=""
 chay() { rm -f "$DEM"; OUT=$(env -u NODE_TEST_CONTEXT node --import tsx --test --test-name-pattern="ON22-AC-5 ma trận" "$1" 2>&1); printf '%s\n' "$OUT" | grep -q '^ℹ fail 0'; }
