@@ -87,3 +87,29 @@ test("kiểm trước chặn: dist cũ hơn src / thiếu khoá / node không c�
     }
   }
 });
+
+test("2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ", () => {
+  // (a) logs được tạo khi cài thật
+  const fx = fixture();
+  try {
+    const r = chay(fx);
+    assert.equal(r.code, 0, `cài exit 0 (out: ${r.out})`);
+    assert.ok(existsSync(join(fx.root, "pipeline/logs")), "thư mục pipeline/logs được tạo");
+  } finally {
+    fx.cleanup();
+  }
+  // (b) sed lỗi (template không đọc được) → plist CŨ còn nguyên
+  const fx2 = fixture();
+  try {
+    const destDir = join(fx2.home, "Library/LaunchAgents");
+    mkdirSync(destDir, { recursive: true });
+    const out = join(destDir, "com.oneinvest.collector-api.plist");
+    writeFileSync(out, "<!-- plist cũ còn tốt -->");
+    chmodSync(join(fx2.root, "pipeline/cron/com.oneinvest.collector-api.plist"), 0o000);
+    const r = chay(fx2);
+    assert.notEqual(r.code, 0, "sed lỗi → exit ≠0");
+    assert.equal(readFileSync(out, "utf8"), "<!-- plist cũ còn tốt -->", "plist cũ NGUYÊN VẸN không bị đè");
+  } finally {
+    fx2.cleanup();
+  }
+});
