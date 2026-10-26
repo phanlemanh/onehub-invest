@@ -1,0 +1,24 @@
+schema_version: 1
+feature_slug: enrich-db-test-khoanh-tin
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.agent_ba_lan
+    paths: [agent/tests/enrich-db.test.ts]
+    expected: "exit 0; ba dòng 'lan <n>: pass 61 fail 0' (n = 1, 2, 3), cuối 'BA LAN XANH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.enrich_ac6_tam_lan
+    paths: [agent/tests/enrich-db.test.ts]
+    expected: "exit 0; tám dòng 'lan <n>: xanh', cuối 'TAM LAN XANH'; đối chứng trong cùng lệnh: bản tệp test GHIM ở 106cbd3 chạy tám lần — khi dòng 'tin hoan khac tren DB: <m>' có m > 0 thì bản cũ đỏ ít nhất một lần ('DOI CHUNG: ban cu do <k>/8', k ≥ 1), m = 0 thì in 'DOI CHUNG KHONG AP DUNG'; mọi khối 'await runEnrich({ … });' trong ca (bỏ chú thích; gồm lượt backlog runId test-ac6-backlog và năm lượt dry hỏi bộ chọn tin) không có 'offerIds' — dòng 'LOI GOI BACKLOG KHONG offerIds'; trong ca, năm lượt dry limit 1 không offerIds đều bốc đúng nhóm của tin ca (đi qua selectOffers thật; bỏ câu UPDATE khoanh thì ca đỏ 'lượt backlog bốc tin khác tin của ca')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.enrich_pham_vi
+    paths: [agent/tests/enrich-db.test.ts]
+    expected: "exit 0; so với merge-base của origin/main: tệp test có trong diff, 'tep test: them <n> xoa 0' với n > 0 (đếm bằng git diff --numstat), 'doi chung bo dem xoa: 2/2' (tệp tạm có một dòng trống và một dòng mở đầu bằng '-' bị xoá), cuối 'PHAM-VI OK'; should-NOT-fire: không dòng 'NGOAI PHAM VI', 'XOA DONG', 'KHONG THAY TEP TEST TRONG DIFF'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
