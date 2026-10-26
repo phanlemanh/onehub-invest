@@ -87,7 +87,7 @@ export function KindMixChart({ mix }: { mix: KindMix }) {
 
         <div className="text-muted-foreground mt-auto flex items-start gap-2 px-2 text-xs">
           <InfoIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-          <span>Ngắn hạn là listing S01, chưa ghép vào căn (FRAMING §8).</span>
+          <span>Ngắn hạn là listing S01, chưa ghép vào căn.</span>
         </div>
       </FramePanel>
     </Frame>

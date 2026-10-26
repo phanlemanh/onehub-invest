@@ -1,6 +1,6 @@
 "use client"
 
-import { XIcon } from "lucide-react"
+import { CheckIcon, MinusIcon, XIcon } from "lucide-react"
 
 import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,11 +8,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import type { FlowRecord } from "@/lib/data-flow-queries"
+import { coreFields, levelLabel, levelOf } from "@/lib/data-level"
 import { fmtInt, fmtMoneyCompact, fmtVnDateTime } from "@/lib/format"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
-import { LABELS_VI } from "@/lib/vocab.generated"
+import { DATA_LEVEL, LABELS_VI } from "@/lib/vocab.generated"
 
-import { levelOf } from "./records-filter"
+import { LEVEL_VARIANT } from "./records-filter"
 
 /**
  * Hồ sơ một tin (xem trước TV10) — cùng khuôn sheet chi tiết của @reui/solution-agents-5 như /ops/review: đầu = tên +
@@ -34,6 +35,35 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
       {children}
     </section>
+  )
+}
+
+/** Điều kiện lên bậc kế (bản DF0: năm trường lõi cho B1, gắn căn cho B2; loại thiếu tin/hệ thống ở DF2). */
+function LevelGate({ record }: { record: FlowRecord }) {
+  const fields = coreFields(record)
+  const missing = fields.filter((f) => !f.ok)
+  const level = levelOf(record)
+  const next =
+    level === DATA_LEVEL.B0
+      ? `Lên B1 cần đủ năm trường lõi — còn thiếu ${missing.map((f) => f.label.toLowerCase()).join(", ")}.`
+      : level === DATA_LEVEL.B1
+        ? "Lên B2 cần gắn được tin về một căn."
+        : "Lên B3 cần số đo trên nhãn cho các trường lõi (PL7, PL9)."
+  return (
+    <Section title={`Trường lõi ${fields.length - missing.length}/5`}>
+      <ul className="flex flex-wrap gap-1.5">
+        {fields.map((f) => (
+          <li key={f.key}>
+            <Badge variant={f.ok ? "success-light" : "outline"}>
+              {f.ok ? <CheckIcon aria-hidden="true" /> : <MinusIcon aria-hidden="true" />}
+              {f.label}
+              <span className="sr-only">{f.ok ? "có" : "thiếu"}</span>
+            </Badge>
+          </li>
+        ))}
+      </ul>
+      <p className="text-muted-foreground text-sm text-pretty">{next}</p>
+    </Section>
   )
 }
 
@@ -63,14 +93,14 @@ export function RecordSheet({ record, roles, onOpenChange }: { record: FlowRecor
                 {sourceLabel(record.source, roles)} · lần đầu {fmtVnDateTime(record.firstSeen)}
               </SheetDescription>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={record.linked ? "success-light" : "info-light"}>
-                  {levelOf(record)} · {LABELS_VI.data_level[levelOf(record)]}
-                </Badge>
+                <Badge variant={LEVEL_VARIANT[levelOf(record)]}>{levelLabel(levelOf(record))}</Badge>
                 <Badge variant="outline">Độ tin trích xuất {LABELS_VI.confidence[record.confidence as keyof typeof LABELS_VI.confidence] ?? record.confidence}</Badge>
               </div>
             </SheetHeader>
             <ScrollArea className="min-h-0 flex-1">
               <div className="flex flex-col gap-6 p-4">
+                <LevelGate record={record} />
+                <Separator />
                 <Section title="Phân loại">
                   <dl className="flex flex-col gap-2">
                     <Row label="Loại tin" value={LABELS_VI.kind[record.kind as keyof typeof LABELS_VI.kind] ?? record.kind} />
@@ -92,7 +122,7 @@ export function RecordSheet({ record, roles, onOpenChange }: { record: FlowRecor
                 <Section title="Làm giàu và căn">
                   <dl className="flex flex-col gap-2">
                     <Row label="Đề xuất làm giàu" value="Chưa có · NT6" muted />
-                    <Row label="Căn" value={record.linked ? "Đã gắn (B2)" : "Chưa gắn"} muted={!record.linked} />
+                    <Row label="Căn" value={record.linked ? "Đã gắn" : "Chưa gắn"} muted={!record.linked} />
                     <Row label="Số bài gộp vào tin" value={fmtInt(record.nPosts)} />
                     <Row label="Lần cuối thấy" value={fmtVnDateTime(record.lastSeen)} />
                   </dl>

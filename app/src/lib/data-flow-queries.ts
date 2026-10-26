@@ -36,6 +36,8 @@ export type SourceFlow = StageCounts & {
   withWard: number;
   withType: number;
   withPriceArea: number;
+  /** Tin đủ năm trường lõi (= bậc B1 trở lên, lib/data-level.ts). */
+  complete: number;
   highConfidence: number;
   latestAt: string | null;
   approx: boolean;
@@ -156,6 +158,9 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
               count(*) FILTER (WHERE o.property_type <> 'unknown') AS with_type,
               count(*) FILTER (WHERE o.price_vnd IS NOT NULL AND o.area_m2 IS NOT NULL) AS with_price_area,
               count(*) FILTER (WHERE o.confidence = 'high') AS high_conf,
+              -- Năm trường lõi của bậc B1 — cùng điều kiện với lib/data-level.ts.
+              count(*) FILTER (WHERE o.kind IS NOT NULL AND o.property_type <> 'unknown' AND o.price_vnd > 0
+                AND o.area_m2 > 0 AND o.area_id IS NOT NULL) AS complete,
               count(*) FILTER (WHERE o.kind = 'sale') AS sale,
               count(*) FILTER (WHERE o.kind = 'rent_lt') AS rent_lt
        FROM sale_offers o LEFT JOIN (SELECT DISTINCT offer_id FROM property_offers) po USING (offer_id)
@@ -219,7 +224,7 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
     FLOW_SOURCES.map((s) => [
       s,
       { source: s, received: 0, readable: 0, offers: 0, linked: 0, testRejected: 0, withWard: 0, withType: 0,
-        withPriceArea: 0, highConfidence: 0, latestAt: null, approx: s === "S06" },
+        withPriceArea: 0, complete: 0, highConfidence: 0, latestAt: null, approx: s === "S06" },
     ]),
   );
   const dayMap = new Map<string, FlowDay>();
@@ -265,6 +270,7 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
       t.withType += num(r.with_type);
       t.withPriceArea += num(r.with_price_area);
       t.highConfidence += num(r.high_conf);
+      t.complete += num(r.complete);
       mix.sale += num(r.sale);
       mix.rentLt += num(r.rent_lt);
     }

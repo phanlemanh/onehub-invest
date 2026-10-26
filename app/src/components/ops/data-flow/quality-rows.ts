@@ -2,8 +2,8 @@ import type { DataFlow } from "@/lib/data-flow-queries"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
 
 /**
- * Hàng của lưới «Chất lượng từng chặng» và luật chấm nút thắt. Ngưỡng là đề xuất của proto (chưa duyệt):
- * đọc được < 30% hay phường/gắn căn < 50% là «Kẹt»; dưới 60% / 80% là «Theo dõi»; im quá 48 giờ là «Im».
+ * Hàng của lưới «Chất lượng từng chặng» và luật chấm nút thắt. Ngưỡng tạm (Mạnh duyệt dùng tới khi PL9 có số đo, 26/10):
+ * đọc được < 30% hay trường lõi/phường/gắn căn < 50% là «Kẹt»; dưới 60% / 80% là «Theo dõi»; im quá 48 giờ là «Im».
  */
 
 export type Health = { tone: "success" | "warning" | "destructive"; label: string }
@@ -16,6 +16,7 @@ export type QualityRow = {
   readable: number
   offers: number
   /** null = không áp dụng cho hàng này (nhóm thu, listing ngắn hạn). */
+  complete: number | null
   withWard: number | null
   linked: number | null
   latestAt: string | null
@@ -29,6 +30,7 @@ function healthOf(r: Omit<QualityRow, "health">, nowMs: number): Health {
   const rate = (a: number | null, b: number) => (a === null || b === 0 ? null : a / b)
   const checks: { name: string; value: number | null; stuck: number; watch: number }[] = [
     { name: "đọc", value: rate(r.readable, r.received), stuck: 0.3, watch: 0.6 },
+    { name: "trường lõi", value: rate(r.complete, r.offers), stuck: 0.5, watch: 0.8 },
     { name: "phường", value: rate(r.withWard, r.offers), stuck: 0.5, watch: 0.8 },
     { name: "gắn căn", value: rate(r.linked, r.offers), stuck: 0.5, watch: 0.8 },
   ]
@@ -51,6 +53,7 @@ export function sourceRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Q
       received: s.received,
       readable: s.readable,
       offers: s.offers,
+      complete: s.complete,
       withWard: s.withWard,
       linked: s.linked,
       latestAt: s.latestAt,
@@ -65,6 +68,7 @@ export function sourceRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Q
       received: ss.received,
       readable: ss.stored,
       offers: ss.stored,
+      complete: null,
       withWard: ss.withWard,
       linked: null,
       latestAt: ss.latestAt ? `${ss.latestAt}T00:00:00+07:00` : null,
@@ -83,6 +87,7 @@ export function groupRows(flow: DataFlow, roles: SourceRoles, nowMs: number): Qu
       received: g.received,
       readable: g.readable,
       offers: g.offers,
+      complete: null,
       withWard: null,
       linked: null,
       latestAt: g.latestAt,

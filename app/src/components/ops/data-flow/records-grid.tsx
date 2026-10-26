@@ -17,12 +17,13 @@ import type { FilterQuery } from "@/components/reui/filters/filters-types"
 import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Button } from "@/components/ui/button"
 import type { FlowRecord } from "@/lib/data-flow-queries"
+import { coreFields, levelLabel, levelOf } from "@/lib/data-level"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
 import type { SourceRoles } from "@/lib/source-labels"
 import { LABELS_VI } from "@/lib/vocab.generated"
 
 import { RecordSheet, recordTitle } from "./record-sheet"
-import { compileRecordFilter, levelOf, recordFilterFields } from "./records-filter"
+import { LEVEL_VARIANT, compileRecordFilter, recordFilterFields } from "./records-filter"
 
 /**
  * «Tin mới nhất» — cùng khuôn lưới của @reui/solution-analytics-3 (Frame + data-grid + phân trang) với thanh chip
@@ -80,11 +81,14 @@ const columnsOf = (onOpen: (r: FlowRecord) => void): ColumnDef<DataGridFeatures,
     accessorFn: (r) => levelOf(r),
     header: ({ column }) => <DataGridColumnHeader title="Bậc" column={column} />,
     cell: ({ row }) => (
-      <Badge variant={row.original.linked ? "success-light" : "info-light"}>
-        {levelOf(row.original)} · {LABELS_VI.data_level[levelOf(row.original)]}
-      </Badge>
+      <div className="flex min-w-0 flex-col items-start gap-0.5">
+        <Badge variant={LEVEL_VARIANT[levelOf(row.original)]}>{levelLabel(levelOf(row.original))}</Badge>
+        <span className="text-muted-foreground text-xs tabular-nums">
+          {coreFields(row.original).filter((f) => f.ok).length}/5 trường lõi
+        </span>
+      </div>
     ),
-    size: 140,
+    size: 150,
     enableSorting: true,
   },
   {

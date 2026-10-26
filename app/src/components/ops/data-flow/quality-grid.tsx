@@ -99,6 +99,15 @@ const columns: ColumnDef<DataGridFeatures, QualityRow>[] = [
     meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" },
   },
   {
+    accessorFn: (r) => r.complete ?? -1,
+    id: "complete",
+    header: ({ column }) => <DataGridColumnHeader title="Đủ trường lõi" column={column} />,
+    cell: ({ row }) => <StageCell value={row.original.complete} of={row.original.offers} />,
+    size: 130,
+    enableSorting: true,
+    meta: { headerClassName: "hidden md:table-cell", cellClassName: "hidden md:table-cell" },
+  },
+  {
     accessorFn: (r) => r.withWard ?? -1,
     id: "withWard",
     header: ({ column }) => <DataGridColumnHeader title="Có phường" column={column} />,
@@ -154,7 +163,7 @@ export function QualityGrid({ bySource, byGroup }: { bySource: QualityRow[]; byG
           <div className="flex min-w-0 flex-col gap-0.5">
             <FrameTitle>Chất lượng từng chặng</FrameTitle>
             <FrameDescription className="text-xs text-pretty">
-              Nút thắt là chặng yếu nhất của hàng: đọc được, có phường hoặc gắn căn
+              Nút thắt là chặng yếu nhất của hàng: đọc được, đủ trường lõi (bậc B1), có phường hoặc gắn căn
             </FrameDescription>
           </div>
           <Select

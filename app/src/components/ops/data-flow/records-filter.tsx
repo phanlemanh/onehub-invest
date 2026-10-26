@@ -4,18 +4,16 @@ import { FILTER_OPERATORS_VI } from "@/components/listing/listings-filter-bar"
 import { flattenFilterConditions } from "@/components/reui/filters/filters-query"
 import type { FilterField, FilterQuery } from "@/components/reui/filters/filters-types"
 import type { FlowRecord } from "@/lib/data-flow-queries"
+import { levelLabel, levelOf, type TinLevel } from "@/lib/data-level"
 import { fmtInt } from "@/lib/format"
 import { sourceLabel, type SourceRoles } from "@/lib/source-labels"
-import { LABELS_VI } from "@/lib/vocab.generated"
+import { DATA_LEVEL, LABELS_VI } from "@/lib/vocab.generated"
 
 /**
  * Bộ lọc bảng «Tin mới nhất» (@reui/filters, cùng khuôn thanh chip của Duyệt listing): năm trường chọn, mỗi lựa
  * chọn lấy từ chính các tin đã tải kèm số tin. Lọc phía trình duyệt trên ≤ 150 tin mới nhất mỗi nguồn.
  */
 
-export type DataLevel = "B1" | "B2"
-/** Bậc của tin theo thang FRAMING §3.4: đã đọc thành tin = B1, đã gắn căn = B2 (B3+ chưa có số đo). */
-export const levelOf = (r: FlowRecord): DataLevel => (r.linked ? "B2" : "B1")
 
 const FIELDS = {
   source: (r: FlowRecord) => r.source,
@@ -54,7 +52,7 @@ export function recordFilterFields(records: FlowRecord[], roles: SourceRoles): F
       id: "level",
       label: "Bậc",
       icon: <GaugeIcon className={ICON} aria-hidden="true" />,
-      options: counted("level", (v) => `${v} · ${LABELS_VI.data_level[v as DataLevel]}`),
+      options: counted("level", (v) => levelLabel(v as TinLevel)),
     },
   ]
 }
@@ -72,4 +70,11 @@ export function compileRecordFilter(query: FilterQuery): (r: FlowRecord) => bool
     })
     return any ? hits.some(Boolean) : hits.every(Boolean)
   }
+}
+
+/** B2 tới đích hiện tại (xanh), B1 đang chảy (lam), B0 mới có lời khai (viền). */
+export const LEVEL_VARIANT: Record<TinLevel, "outline" | "info-light" | "success-light"> = {
+  [DATA_LEVEL.B0]: "outline",
+  [DATA_LEVEL.B1]: "info-light",
+  [DATA_LEVEL.B2]: "success-light",
 }

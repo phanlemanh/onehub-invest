@@ -201,7 +201,7 @@ Không thêm màu mới ngoài thang `flow*` của proto.
 
 | Mã tạm | Giao gì | Tầng | Dựa trên | Ghi chú |
 |---|---|---|---|---|
-| DF0 | Commit proto + sửa bậc nghiêm (B theo 5 trường lõi) + sửa `S03_POSTS_SQL` lọc theo `agent_id` | T2 | — | gỡ ngay lỗi «bài thô lẫn S05» |
+| DF0 | Commit proto + sửa bậc nghiêm (B theo 5 trường lõi) + sửa `S03_POSTS_SQL` lọc theo `agent_id` | T2 | — | **xong 26/10** (`lib/data-level.ts`; «Bài thô» S03 ngày 21/10: 182 → 82, ngày 20/10 và 22/10 bớt mỗi ngày 1 bài nhóm TEST) |
 | DF1 | Một định nghĩa số chặng + bậc ở `pipeline/sql` (luật 10), Thu thập và Dòng chảy cùng đọc; khối bản tin cho cloud | T2 | DF0 | xoá chồng chéo số |
 | DF2 | Thẻ điểm tin + điều kiện lên bậc (luật thuần trong `lib/`, có test) + ảnh tin ở máy thu | T2 | DF0 | ảnh cloud chờ TV9 |
 | DF3 | Bảng chặn bậc + tin mẫu của nút thắt | T2 | DF2 | thước ưu tiên lộ trình |
