@@ -322,6 +322,14 @@ _Avoid_: Heartbeat
 - Code: `allowlist` · RESO: —
 _Avoid_: Allowlist, membership
 
+**Chế độ thu**: Nhịp thu của một điểm thu (một dòng nhóm thu trên `/ops/sources`): «Chờ» (chưa thu sâu), «Bùng» (dồn tải có hạn để lấp kho) hoặc «Duy trì» (giữ tươi); dòng chưa có chế độ hiện «Chưa đặt». Chỉ quản trị viên đổi; bật Bùng phải có hạn bùng; máy tự hạ Bùng về Duy trì kèm `ops_audit` (hồ sơ `che-do-thu-tren-ops`).
+- Code: `mode (source_groups.params.mode: cho | bung | duy_tri)` · RESO: —
+_Avoid_: mode, burst, chế độ cào
+
+**Hạn bùng**: Ngày cuối (giờ Việt Nam) của một đợt Bùng, tối đa 14 đêm kể từ hôm bật; qua ngày này máy hạ điểm về Duy trì.
+- Code: `burst_until` · RESO: —
+_Avoid_: deadline, hạn burst
+
 **Bài**: Một bài đăng thô trong nhóm cộng đồng trước khi đọc thành tin rao; «bài thử» là bài từ nhóm thử.
 - Code: `post (stg_zalo_posts)` · RESO: —
 _Avoid_: post raw, post mock, bài post
