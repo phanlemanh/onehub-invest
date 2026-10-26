@@ -1,0 +1,6 @@
+{"ts":"2026-10-26T06:16:25Z","round":1,"evalId":"E1","run_id":"noi-tiep-zc4-E1-r1-20261026T061625Z","exit_code":0,"cmd":"bash _acceptance/noi-tiep-zc4/probes/logs-tmp.sh \"$PWD\""}
+{"ts":"2026-10-26T06:16:25Z","round":1,"evalId":"E2","run_id":"noi-tiep-zc4-E2-r1-20261026T061625Z","exit_code":0,"cmd":"bash _acceptance/noi-tiep-zc4/probes/logs-tmp.sh \"$PWD\""}
+{"ts":"2026-10-26T06:16:43Z","round":1,"evalId":"E3","run_id":"noi-tiep-zc4-E3-r1-20261026T061643Z","exit_code":0,"cmd":"cd collector && rm -rf dist && npm test"}
+{"ts":"2026-10-26T06:18:49Z","round":1,"evalId":"E4","run_id":"noi-tiep-zc4-E4-r1-20261026T061849Z","exit_code":0,"cmd":"bash _acceptance/collector-api-launchd/probes/cai-dat.sh \"$PWD\""}
+{"ts":"2026-10-26T06:18:58Z","round":1,"evalId":"E5","run_id":"noi-tiep-zc4-E5-r1-20261026T061858Z","exit_code":0,"cmd":"node --test pipeline/scripts/install-collector-api.test.mjs"}
+{"ts":"2026-10-26T06:18:58Z","round":1,"evalId":"E6","run_id":"noi-tiep-zc4-E6-r1-20261026T061858Z","exit_code":0,"cmd":"bash _acceptance/noi-tiep-zc4/probes/scope.sh \"$PWD\""}

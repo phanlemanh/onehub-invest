@@ -5,7 +5,7 @@ slug: noi-tiep-zc4
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-26T06:15:11Z
 approved_by:
