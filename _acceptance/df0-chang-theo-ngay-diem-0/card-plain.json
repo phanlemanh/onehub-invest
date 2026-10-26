@@ -1,0 +1,28 @@
+{
+  "feature_plain": "Biểu đồ «Chặng theo ngày» vẽ đủ mọi ngày của cửa sổ, ngày nguồn im là điểm 0, thay vì lấy ngày cũ lấp chỗ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ vẽ đúng 7 ngày liên tiếp tính tới hôm nay (giờ VN); ngày không có bài là 0 ở cả bốn chặng, ngày có bài cộng mọi nguồn."},
+    {"id": "AC-2", "p": "Sẽ không cho ngày cũ hơn cửa sổ lọt vào biểu đồ — chính lỗi làm biểu đồ trông bình thường khi nguồn đã im."},
+    {"id": "AC-3", "p": "Sẽ đổi sang ngày mới đúng lúc 0 giờ giờ VN, không theo giờ quốc tế."},
+    {"id": "AC-4", "p": "Sẽ vẽ đúng 7 điểm cho cửa sổ 7 ngày và 30 điểm cho cửa sổ 30 ngày."},
+    {"id": "AC-5", "p": "Sẽ giữ câu «Chưa có số theo ngày trong khoảng này.» khi cả cửa sổ không có bài nào (theo khuyến nghị Hỏi-1)."},
+    {"id": "AC-6", "p": "Sẽ để biểu đồ dùng cùng một mốc «bây giờ» với các ô số của trang (người chấm đọc ba tệp mã)."},
+    {"id": "AC-7", "p": "Sẽ chụp trang thật ở cửa sổ 30 ngày: trục bắt đầu 29 ngày trước hôm nay, ngày im nằm sát trục."},
+    {"id": "AC-8", "p": "Sẽ cho cửa sổ «Tất cả» vẽ 30 ngày gần nhất, đo qua mọi giá trị cửa sổ mà trang nhận."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG đổi các ô số phía trên ở cửa sổ «Tất cả» (cộng mọi ngày, trong khi biểu đồ chỉ 30 ngày)."},
+    {"id": "OOS-2", "p": "KHÔNG chuyển chuỗi ngày sang tính sẵn ở đường ống — để DF1."},
+    {"id": "OOS-3", "p": "KHÔNG đổi kiểu biểu đồ, màu hay các ô số."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Bỏ bước quét không gian tiêu chí: đầu vào chỉ là danh sách ngày, mốc và độ dài cửa sổ; các mẫu ngày, ranh giới giờ VN và mọi giá trị cửa sổ đều có ma trận viết trước ở AC-1 tới AC-4 và AC-8."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Căn cứ ban đầu không quyết được trục kết thúc ở hôm nay. Đã sửa: căn cứ mới là chính lời Ngoài-8 («ngày cũ hơn lấp chỗ, che mất việc nguồn đã im»)."},
+    {"i": 1, "p": "Máy tự quyết cách hiện khi nguồn im trọn cửa sổ — đó là câu của anh. Đã chuyển thành Hỏi-1, có hình hai nhánh."},
+    {"i": 2, "p": "Cửa sổ «Tất cả» chưa có bài kiểm, có thể ra 0 điểm hoặc treo trang. Đã thêm AC-8 đo mọi giá trị cửa sổ."},
+    {"i": 3, "p": "Bước chụp trang ghim sai cổng và phụ thuộc dữ liệu. Đã sửa: đọc cổng thật, chỉ chấm ngày im quan sát được, không có thì ghi rõ."},
+    {"i": 4, "p": "Câu hỏi cho người chấm thiếu tệp trang nên không trả lời được vế «cùng mốc». Đã thêm tệp trang và hỏi đúng «một biến mốc»."}
+  ]
+}
