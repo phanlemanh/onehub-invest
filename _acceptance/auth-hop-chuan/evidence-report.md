@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 11d47d6f44dc8b4a3168bb3b717d92c5b38dffcf
+verified_commit: 649a6d119bbdf9acc4667949541e49b041adcbda
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -188,3 +188,7 @@ Round 2: E1..E6 và E10 chạy lại trên cây 3e1b4649 sau bản sửa S4-r1 (
 ### Re-pin lần 1 — 2026-10-26, do ô E4 thay bởi auth-error-thu-lai-retry#AC-1 (superseded_by)
 run_id: repin-20261026T132451Z-32748
 sha: 11d47d6f44dc8b4a3168bb3b717d92c5b38dffcf · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E4 · thay bởi hồ sơ đã ký: E4→auth-error-thu-lai-retry#AC-1 · ngoài làn máy: E9 · diff chạm vật đo ngoài làn máy: E9 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-4, AC-7
+
+### Re-pin lần 2 — 2026-10-26, do gộp main + sửa AER-AC-2 so cặp commit cố định (aer-ac2-so-cap-co-dinh)
+run_id: repin-20261026T143917Z-34922
+sha: 649a6d119bbdf9acc4667949541e49b041adcbda · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E4 · thay bởi hồ sơ đã ký: E4→auth-error-thu-lai-retry#AC-1 · ngoài làn máy: E9 · AC không có chốt máy: AC-4, AC-7

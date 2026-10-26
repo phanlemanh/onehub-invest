@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 685e577aa7075a8c16b948d551799397e8608564
+verified_commit: 649a6d119bbdf9acc4667949541e49b041adcbda
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -126,3 +126,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 
 Round 1: E1-E5 đều PASS; bốn finding đo bằng máy, ba mục trong hợp đồng (AC-2, AC-4) được sửa ở commit 685e577a.
 Round 2: E2, E5 chạy lại sau bản sửa (so trước-sau trên hợp tập khoá và cây đang kiểm, bộ khớp ca AH-AC-4 có đối chứng dương) — PASS; E1, E3, E4 carry-forward từ round 1.
+
+### Re-pin lần 1 — 2026-10-26, do gộp main + sửa AER-AC-2 so cặp commit cố định (aer-ac2-so-cap-co-dinh)
+run_id: repin-20261026T143917Z-34922
+sha: 649a6d119bbdf9acc4667949541e49b041adcbda · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
