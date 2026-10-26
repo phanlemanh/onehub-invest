@@ -77,10 +77,17 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   E1 trái LLM → thẻ đối chiếu, người chọn; E1 không suy land từ tên nhóm;
   hoàn tác có audit qua `revert_enrichment` (036) + CLI enrich-revert;
   không UPDATE thẳng canonical, không lên cloud)
-→ sale_offers (canonical; price_tier P0/P1/P2; CHECK enums)
+→ sale_offers (canonical; price_tier P0/P1/P2; CHECK enums VALIDATE ở 043)
 → properties (entity "Một Căn Nhà", Stage A/B) → ruler v_ruler_p2_*
 → sản phẩm: Deals v2 ở /ops/deals (bait_gap; SĐT chỉ admin, local) · G3 calculator (STR tự thu) · /ops panels
 ```
+- Sổ từ vựng một nguồn (PL6, `_acceptance/so-tu-vung-mot-nguon`): khối `enums:` của `pipeline/mappings.yaml` — 9 trục
+  (kind, property_type, confidence, price_tier, enrich_field, listing_intent, offer_status, data_level, capability_level)
+  theo khuôn RESO Lookup. `node pipeline/vocab.mjs --write` sinh hằng `pipeline/lib/vocab.generated.mjs`,
+  `agent/src/vocab.generated.ts`, `app/src/lib/vocab.generated.ts` + khối «Từ vựng dữ liệu» của CONTEXT.md; `--lint` đỏ khi
+  có enum viết tay ngoài sổ (8 ngoại lệ có lý do ở `enums_lint_allow`); `--check-db` so `ref_lookup`/`ref_field_lookup`
+  (migration 043, chỉ local) và CHECK với sổ; `--check-field-targets` khoá tên trường FIELD_TARGET (G3) theo
+  `canonical.fields`.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
@@ -263,6 +270,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | G-1 | property_type + DQ + asset_nodes R1 | ✅ 3313a9c |
 | G-2 | properties + ruler dedup + candidates | ✅ 50005b7 |
 | G-2.5 | pHash ảnh — khi ảnh P1 nhiều hơn | ⬜ |
+| PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | 🔶 vòng S4 (migration 043 đã áp local, chưa đẩy Supabase) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
