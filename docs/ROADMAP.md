@@ -224,6 +224,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    (cloud `S08`, local `S08-<tên>`) — sửa đổi luật 6 chờ ADR (TV0); tám quyết định §4.8 (S03 cần người thứ hai duyệt ·
    QR ở lại máy thu · ảnh thu nhỏ, trần 5 GB · S05 tự paused, admin bật lại · quy định AI chạy model local · mã đơn vị
    `S03-N012` · tên thật trong migration cũ chấp nhận như lịch sử). Đợt lộ trình `tu-van-hanh-2510`.
+19. **Lát dọc Ocean Park 1** (26/10, Mạnh duyệt gói lát OCP1 «Hỏi-1..7: theo khuyến nghị», `classification-enrich-review.md`
+   §7.0): Q2/Q3/Q5/Q11 theo §0.2 F (khoá tin gốc + phát biểu `căn`; bảng phát biểu + phân xử; chỉ tự áp ô đã đo; đo trong
+   lát dọc) · lát đầu = OCP1 · Q4/Q9 (ngữ cảnh nhóm chỉ suy luận; thẻ duyệt không hiện độ tự tin) · M1 = model local mặc
+   định, cloud khi số đo cho thấy local không đủ; M3 hoãn tới PH4 · Mạnh và đội gắn nhãn khi PL7 xong · chạy F6 · L0 theo thứ
+   tự ZC6 → ZC4 → hook Kev v3. Kèm: **PL3 gộp vào PL23**; **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất**;
+   C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
