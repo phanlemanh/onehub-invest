@@ -57,6 +57,7 @@ async function tienDe() {
 
 async function trongGiaoDich(fn) {
   await c.query("BEGIN");
+  await c.query("SELECT pg_advisory_xact_lock(33033)"); // cùng khoá với các test nạp 044 trong giao dịch
   try { await fn(); } finally { await c.query("ROLLBACK"); }
 }
 

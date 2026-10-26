@@ -8,6 +8,11 @@ import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { writeOffers } from "../lib/write-offers.mjs";
+import { mintOfferId } from "../lib/offer-key.mjs";
+import { chupMaTran, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
+import { runTransformZalo } from "../transform-zalo.mjs";
+import { runTransformFb } from "../transform-fb.mjs";
 
 const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(PIPE, "..");
@@ -20,6 +25,8 @@ after(async () => { await c.end(); });
 
 export async function trongGiaoDich(client, fn) {
   await client.query("BEGIN");
+  // Cùng khoá với write-offers.test.mjs / test-posts / agent tests: nạp 044 (DDL + CREATE OR REPLACE) song song là deadlock.
+  await client.query("SELECT pg_advisory_xact_lock(33033)");
   try { return await fn(); } finally { await client.query("ROLLBACK"); }
 }
 const one = async (sql, p = []) => (await c.query(sql, p)).rows[0];
@@ -115,6 +122,122 @@ test("ND-AC-2 view sống trả đúng tập khoá như bảng trước 044; đ�
     await c.query("UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'het_trong_luot' WHERE offer_id = $1", [k]);
     assert.equal((await one("SELECT count(*)::int AS n FROM sale_offers WHERE offer_id = $1", [k])).n, 0);
     assert.equal((await one("SELECT count(*)::int AS n FROM sale_offer_records WHERE offer_id = $1", [k])).n, 1);
+  });
+});
+
+// ND-AC-3: nguồn thử 'TST' để đối soát không đụng tin S03/S05 thật (hàm tham số theo nguồn, khoá mới = băm 'TST|<post>').
+const TST = "TST";
+const tst = (osk, posts) => ({
+  offer_id: mintOfferId(TST, osk), originating_system_key: osk, kind: "sale", confidence: "high",
+  first_seen: new Date("2026-10-20T00:00:00Z"), last_seen: new Date("2026-10-20T00:00:00Z"),
+  n_reposts: posts.length, post_ids: posts, price_tier: "P1", property_type: "unknown", area_m2: 50, price_perm2: 100_000_000,
+});
+async function canThu() {
+  return Number((await one(`INSERT INTO properties (kind, cluster_key, resolved_by) VALUES ('sale', 'nd-ac-3-' || gen_random_uuid(), 'test') RETURNING id`)).id);
+}
+async function deXuat(offerId, field, status) {
+  return Number((await one(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, status, decided_by, evidence)
+    VALUES ('nd-ac-3', $1, $2, 'v', 'v', 'e2_llm', 'review', $3, 'hitl:manh', '{}'::jsonb) RETURNING id`, [offerId, field, status])).id);
+}
+
+test("ND-AC-3 tin vắng lượt nghỉ (không xoá); dòng con chuyển sang tin kế; không kế thì giữ nguyên; quay lại thì sống lại", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query(MIG);
+    const x = tst("p1", ["p1", "p2"]); const u = tst("u1", ["u1"]); const w = tst("w1", ["w1"]);
+    await writeOffers(c, TST, [x, u, w]);
+    const P = await canThu(); const P2 = await canThu();
+    const dx = await deXuat(x.offer_id, "street_raw", "rejected");
+    const du = await deXuat(u.offer_id, "block_raw", "rejected");
+    await c.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2), ($3, $4)`, [P, x.offer_id, P2, u.offer_id]);
+    const cand = Number((await one(`INSERT INTO property_candidates (offer_a, offer_b, score, status, decided_by)
+      VALUES ($1, $2, 0.9, 'merged', 'hitl:manh') RETURNING id`, [x.offer_id, w.offer_id])).id);
+    const the = Number((await one(`INSERT INTO review_queue (item_type, item_id, title, evidence, status, decided_by, decided_at)
+      VALUES ('entity_match', $1, 'cặp thử', '{}'::jsonb, 'approved', 'hitl:manh', now()) RETURNING id`, [`pair:${x.offer_id}|${w.offer_id}`])).id);
+
+    // Lượt 2: x vắng (nhóm đổi, tin kế y chung p2), u vắng không kế, w còn.
+    const y = tst("p2", ["p2", "p3"]);
+    await writeOffers(c, TST, [y, w]);
+
+    const rx = await one(`SELECT * FROM sale_offer_records WHERE offer_id = $1`, [x.offer_id]);
+    assert.ok(rx, "tin cũ bị xoá");
+    assert.ok(rx.retired_at);
+    assert.deepEqual([rx.retired_reason, rx.superseded_by], ["het_trong_luot", y.offer_id]);
+    assert.equal((await one(`SELECT count(*)::int AS n FROM sale_offer_records WHERE offer_id = $1`, [x.offer_id])).n, 1);
+    assert.equal((await one(`SELECT offer_id FROM enrichment_proposals WHERE id = $1`, [dx])).offer_id, y.offer_id, "đề xuất chưa chuyển");
+    assert.deepEqual((await c.query(`SELECT offer_id FROM property_offers WHERE property_id = $1`, [P])).rows.map((r) => r.offer_id), [y.offer_id]);
+    const pc = await one(`SELECT offer_a, offer_b, status FROM property_candidates WHERE id = $1`, [cand]);
+    assert.deepEqual([pc.offer_a, pc.offer_b, pc.status], [y.offer_id, w.offer_id, "merged"]);
+    assert.equal((await one(`SELECT item_id FROM review_queue WHERE id = $1`, [the])).item_id, `pair:${y.offer_id}|${w.offer_id}`);
+
+    const ru = await one(`SELECT * FROM sale_offer_records WHERE offer_id = $1`, [u.offer_id]);
+    assert.ok(ru.retired_at, "tin không kế phải nghỉ");
+    assert.deepEqual([ru.retired_reason, ru.superseded_by], ["het_trong_luot", null]);
+    assert.equal((await one(`SELECT offer_id FROM enrichment_proposals WHERE id = $1`, [du])).offer_id, u.offer_id);
+    assert.deepEqual((await c.query(`SELECT offer_id FROM property_offers WHERE property_id = $1`, [P2])).rows.map((r) => r.offer_id), [u.offer_id]);
+    const audit = (await one(`SELECT detail FROM ops_audit WHERE action = 'offer:retire' ORDER BY id DESC LIMIT 1`)).detail;
+    assert.deepEqual(audit.offers.map((o) => [o.offer_id, o.property_ids]), [[u.offer_id, [P2]]]);
+
+    // Lượt 3: u quay lại → sống lại.
+    await writeOffers(c, TST, [y, w, u]);
+    const ru2 = await one(`SELECT retired_at, retired_reason FROM sale_offers WHERE offer_id = $1`, [u.offer_id]);
+    assert.deepEqual([ru2?.retired_at, ru2?.retired_reason], [null, null], "tin quay lại phải sống lại");
+  });
+});
+
+test("ND-AC-3 tin khoá cũ (băm nội dung) vắng lượt → lý do doi_khoa", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query(MIG);
+    const cu = { ...tst("q1", ["q1"]), offer_id: "offer_00000000deadbeef", originating_system_key: "q1" };
+    await writeOffers(c, TST, [cu]);
+    await writeOffers(c, TST, [tst("q1", ["q1"])]);
+    const r = await one(`SELECT retired_reason, superseded_by FROM sale_offer_records WHERE offer_id = $1`, [cu.offer_id]);
+    assert.deepEqual([r.retired_reason, r.superseded_by], ["doi_khoa", mintOfferId(TST, "q1")]);
+  });
+});
+
+/** Gắn quyết định thử lên tin thật của nguồn: đề xuất đã quyết + thẻ enrich đã duyệt, ứng viên merged + thẻ pair. */
+export async function gieoQuyetDinh(client, source) {
+  const { rows } = await client.query(
+    `SELECT offer_id FROM sale_offers WHERE source = $1 AND cardinality(post_ids) > 0 ORDER BY offer_id LIMIT 2`, [source]);
+  if (rows.length < 2) return 0;
+  const [a, b] = rows.map((r) => r.offer_id);
+  await client.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, status, decided_by, evidence)
+    VALUES ('nap-lai', $1, 'block_raw', 'thu', 'thu', 'e2_llm', 'review', 'rejected', 'hitl:manh', '{}'::jsonb)`, [a]);
+  await client.query(`INSERT INTO review_queue (item_type, item_id, title, evidence, status, decided_by, decided_at)
+    VALUES ('agent_output', $1, 'thẻ thử', '{}'::jsonb, 'approved', 'hitl:manh', now())`, [`enrich:${a}`]);
+  await client.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status, decided_by)
+    VALUES ($1, $2, 0.9, 'merged', 'hitl:manh') ON CONFLICT (offer_a, offer_b) DO UPDATE SET status = 'merged'`, [a, b]);
+  await client.query(`INSERT INTO review_queue (item_type, item_id, title, evidence, status, decided_by, decided_at)
+    VALUES ('entity_match', $1, 'cặp thử', '{}'::jsonb, 'approved', 'hitl:manh', now())`, [`pair:${a}|${b}`]);
+  return 2;
+}
+
+test("ND-AC-5 lượt nạp đầu sau 044 đổi khoá S03/S05: khoá cũ nghỉ 'doi_khoa', ma trận quyết định/liên kết không mất", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query(MIG);
+    for (const s of ["S03", "S05"]) await gieoQuyetDinh(c, s);
+    const khoaCu = async (s) => (await c.query(
+      `SELECT offer_id FROM sale_offers WHERE source = $1 AND (originating_system_key IS NULL OR offer_id <>
+         'offer_' || substr(encode(digest($1 || '|' || originating_system_key, 'sha256'), 'hex'), 1, 16))`, [s])).rows.map((r) => r.offer_id);
+    const cu = { S03: await khoaCu("S03"), S05: await khoaCu("S05") };
+    const truoc = await chupMaTran(c);
+
+    await runTransformZalo(c);
+    await runTransformFb(c);
+
+    for (const s of ["S03", "S05"]) {
+      if (cu[s].length === 0) continue;
+      const r = (await c.query(`SELECT offer_id, retired_reason, superseded_by,
+          EXISTS (SELECT 1 FROM sale_offer_records l WHERE l.source = o.source AND l.retired_at IS NULL AND l.post_ids && o.post_ids) AS co_post_chung
+        FROM sale_offer_records o WHERE offer_id = ANY ($1)`, [cu[s]])).rows;
+      assert.equal(r.length, cu[s].length, `${s}: tin khoá cũ bị xoá`);
+      const sai = r.filter((x) => x.retired_reason !== "doi_khoa");
+      assert.deepEqual(sai.map((x) => x.offer_id), [], `${s}: tin khoá cũ phải nghỉ 'doi_khoa'`);
+      const treo = r.filter((x) => x.co_post_chung && x.superseded_by == null);
+      assert.deepEqual(treo.map((x) => x.offer_id), [], `${s}: tin khoá cũ có post chung phải có superseded_by`);
+    }
+    const sau = await chupMaTran(c);
+    assert.deepEqual(soMaTran(truoc, sau), [], `ma trận mất:\n${inMaTran(truoc, sau)}`);
   });
 });
 

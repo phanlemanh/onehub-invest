@@ -38,6 +38,8 @@ async function withTx(t, fn) {
   await c.connect();
   try {
     await c.query("BEGIN");
+    // Cùng khoá với các test nạp 044 trong giao dịch (dựng lại khoá ngoại nights/listing_stats) — tránh deadlock.
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
     const { rows } = await c.query(
       `SELECT payload, snapshot_id FROM stg_osm_boundaries
        WHERE snapshot_id LIKE 'hanoi__%' AND payload->'tags'->>'admin_level' = $1

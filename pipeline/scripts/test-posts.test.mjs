@@ -20,6 +20,7 @@ const DB_URL =
 
 // Snapshot fixture (năm 2099 — không trùng snapshot thật).
 const ROOT = join(import.meta.dirname, "../..");
+const MIG_044 = readFileSync(join(ROOT, "db/migrations/044_nap_lai_khong_xoa.sql"), "utf8");
 const AGENT_SNAP = "hanoi__zalo-agent__2099-01-01T000000";
 const MOCK_SNAP = "hanoi__zalo-mock__2099-01-01T000000";
 
@@ -31,6 +32,8 @@ async function withTx(fn) {
     // Cùng khoá với write-offers.test.mjs / agent tests: bộ đó nạp lại hàm 039 trong giao dịch —
     // chạy song song với một lượt đối soát là deadlock.
     await c.query("SELECT pg_advisory_xact_lock(33033)");
+    // PL14: transform ghi vào bảng bản ghi của 044 — DB chưa áp thì nạp 044 trong giao dịch.
+    if (!(await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
     // stg_zalo_posts.snapshot_id có khoá ngoại tới airbnb_snapshots — đăng ký hai snapshot fixture.
     for (const [id, source] of [[AGENT_SNAP, "zalo-agent"], [MOCK_SNAP, "zalo-mock"]]) {
       await c.query(
@@ -164,7 +167,8 @@ test("AC-4 rút offer giả qua đối soát", { timeout: 300_000 }, async () =>
     const left = await c.query(`SELECT 1 FROM sale_offers WHERE offer_id = $1`, [o.offer_id]);
     assert.equal(left.rowCount, 0, `AC-4 offer giả không bị rút: ${o.offer_id}`);
     const card = (await c.query(`SELECT status, decision_note FROM review_queue WHERE id = $1`, [k[0].id])).rows[0];
-    assert.equal(card.status, "rejected", "AC-4 thẻ chờ trên tin giả không được đóng");
+    // PL14 (044): tin không kế nghỉ thay vì bị xoá; thẻ chờ của nó rời hàng chờ ('deferred'), không còn 'rejected'.
+    assert.notEqual(card.status, "pending", "AC-4 thẻ chờ trên tin giả không được đóng");
     assert.ok(card.decision_note, "AC-4 thẻ đóng thiếu ghi chú");
 
     const rec = await auditSince(c, minId, "enrich:reconcile");
@@ -207,13 +211,13 @@ test("AC-5 lượt sạch và lượt toàn thử", { timeout: 300_000 }, async 
     await assert.rejects(runTransformZalo(c), /lượt nạp rỗng/, "AC-5 lượt toàn thử không dừng");
     assert.equal(await s03(), before, "AC-5 lượt toàn thử xoá nguồn");
     assert.equal((await auditSince(c, minRec, "enrich:reconcile")).length, 0, "AC-5 lượt toàn thử vẫn đối soát");
-    // Đối chứng cùng phép đếm: xoá thật một offer S03 (không đề xuất) trong savepoint con → đếm lệch.
+    // Đối chứng cùng phép đếm: cho nghỉ một offer S03 trong savepoint con → view sống đếm lệch (PL14: không xoá tin).
     await c.query("SAVEPOINT probe");
     await c.query(
-      `DELETE FROM sale_offers WHERE offer_id = (SELECT o.offer_id FROM sale_offers o WHERE o.source = 'S03'
-         AND NOT EXISTS (SELECT 1 FROM enrichment_proposals e WHERE e.offer_id = o.offer_id) LIMIT 1)`,
+      `UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'het_trong_luot'
+        WHERE offer_id = (SELECT min(offer_id) FROM sale_offers WHERE source = 'S03')`,
     );
-    assert.equal(await s03(), before - 1, "AC-5 phép đếm không nhạy với một offer bị xoá");
+    assert.equal(await s03(), before - 1, "AC-5 phép đếm không nhạy với một offer rời view sống");
     await c.query("ROLLBACK TO SAVEPOINT probe");
     await c.query("ROLLBACK TO SAVEPOINT allTest");
   });
