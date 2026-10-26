@@ -8,8 +8,7 @@ const MTPLX_URL = process.env.MTPLX_URL ?? "http://127.0.0.1:8000/v1";
 const mtplx = createOpenAI({
   baseURL: MTPLX_URL,
   apiKey: "none", // local server không cần key
-  compatibility: "compatible", // MTPLX chỉ có chat completions, không Responses API
-});
+}); // MTPLX chỉ có chat completions, không Responses API — getModel dùng mtplx.chat()
 
 export type ModelName = "qwen27b" | "kev4b" | "decisions";
 
@@ -28,7 +27,7 @@ export function getModel(name: ModelName) {
 
 /** MTPLX reasoning param — bẫy cũ: max_tokens ≥ 2000, reasoning low ~9s. */
 export const qwenParams = {
-  maxTokens: 4096,
+  maxOutputTokens: 4096,
   // MTPLX dùng OpenAI-compat; reasoning qua extra body nếu server hỗ trợ
   // (không set ở đây — tinh chỉnh khi gặp lỗi thực tế)
 } as const;
