@@ -42,6 +42,7 @@ evals:
     criterion: AC-5
     executor: test
     cmd: config:executors.test.vong_doi_nguon
+    layer: backend-effect
     paths: [pipeline/lib/vong-doi.mjs, pipeline/scripts/vong-doi.itest.mjs]
     expected: "exit 0; ca 'VD-AC-5' lược đồ tạm đã migration với S0A active (nhóm 'https://vi-du.invalid/nhom-a' active, 'https://vi-du.invalid/nhom-b' paused reason 'LY-DO-BI-MAT'), S0B paused reason 'LY-DO-BI-MAT'; CLI chạy với DATABASE_URL lược đồ tạm: 'S0A' → exit 0, stdout một dòng JSON deepEqual {code:'S0A', run:true, ly_do:'chay'}; 'S0A --unit https://vi-du.invalid/nhom-b' → exit 3, ly_do 'don-vi-paused'; 'S0B' → exit 3 'nguon-paused'; 'S0Z' → exit 3 'nguon-khong-co'; 'S0A --unit https://vi-du.invalid/khong-co' → exit 3 'don-vi-khong-co'; không đối số → exit 2; DATABASE_URL trỏ cổng chết → exit 2; mọi stdout không chứa 'vi-du.invalid' lẫn 'LY-DO-BI-MAT' và có đúng 1 dòng"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
