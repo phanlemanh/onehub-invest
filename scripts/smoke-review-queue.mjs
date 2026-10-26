@@ -114,19 +114,26 @@ async function taoPhien() {
   return tokens
 }
 
-/** Thẻ Bổ sung tin thử: evidence cùng dạng agent/src/enrich/run.ts ghi (fields[].confidence, ai_confidence = max). */
+/** Độ tự tin của thẻ thử — số lẻ riêng để dò GIÁ TRỊ trong trang không trùng số khác (Điểm B, giá…). */
+const CONF = [0.7731, 0.6142]
+const pct = (c) => Math.round(c * 100)
+
+/** Thẻ Bổ sung tin thử: evidence cùng dạng agent/src/enrich/run.ts ghi (fields[].confidence, basis, ai_confidence = max). */
 async function taoTheThu() {
   const evidence = {
     offer_id: `offer_${nonce}`,
     text: `Tin thử smoke UI1 ${nonce}`,
     fields: [
-      { proposal_id: -1, field: "bedrooms", value: "2", confidence: 0.77, source: "e2_llm", basis: null, conflict: false },
-      { proposal_id: -2, field: "bathrooms", value: "1", confidence: 0.61, source: "e2_llm", basis: null, conflict: false },
+      // basis theo ĐÚNG khuôn basisOf (agent/src/enrich/run.ts): «LLM <model> · tự tin NN% · trace <tệp>» (S4-r2).
+      { proposal_id: -1, field: "bedrooms", value: "2", confidence: CONF[0], source: "e2_llm", basis: `LLM qwen27b · tự tin ${pct(CONF[0])}% · trace smoke-${nonce}.jsonl` },
+      { proposal_id: -2, field: "bathrooms", value: "1", confidence: CONF[1], source: "e2_llm", basis: `LLM qwen27b · tự tin ${pct(CONF[1])}% · trace smoke-${nonce}.jsonl` },
     ],
+    run_id: `smoke-${nonce}`,
+    model: "qwen27b",
   }
   const { rows } = await pool.query(
     `INSERT INTO review_queue (item_type, item_id, title, evidence, ai_suggestion, ai_confidence, status)
-     VALUES ('agent_output', $1, $2, $3, 'apply', 0.77, 'pending') RETURNING id`,
+     VALUES ('agent_output', $1, $2, $3, 'apply', ${Math.max(...CONF)}, 'pending') RETURNING id`,
     [`enrich:offer_${nonce}`, `Bổ sung dữ liệu: ${nonce} (thẻ thử smoke)`, JSON.stringify(evidence)],
   )
   return Number(rows[0].id)
@@ -217,6 +224,12 @@ async function main() {
       // RSC nhúng trong HTML dạng chuỗi thoát nên khớp cả "confidence": lẫn \"confidence\":.
       const khoa = html.match(/\\?"(?:ai_)?confidence\\?"\s*:/g) ?? []
       check(conf[0].m >= 1 && khoa.length === 0, `[desktop-1280] HTML + RSC của /ops/review không chứa khoá ai_confidence hay fields[].confidence (DB có ${conf[0].m} thẻ mang ai_confidence; thấy ${khoa.length} khoá)`)
+      // Đo theo GIÁ TRỊ (S4-r2): độ tự tin của thẻ thử — số (0.7731) hay vế «tự tin NN%» trong căn cứ — không có trong trang;
+      // đối chứng: DB của thẻ thử mang cả hai (evidence vừa ghi ở taoTheThu).
+      const { rows: ev } = await pool.query(`SELECT evidence::text AS e FROM review_queue WHERE id = $1`, [theThu])
+      const coTrongDb = CONF.every((c) => ev[0]?.e.includes(String(c))) && ev[0]?.e.includes("tự tin")
+      const lo = [...CONF.map(String), ...CONF.map((c) => `tự tin ${pct(c)}%`), "tự tin"].filter((f) => html.includes(f))
+      check(coTrongDb && lo.length === 0, `[desktop-1280] HTML + RSC không chứa giá trị độ tự tin của thẻ thử (số hay «tự tin NN%» trong căn cứ; DB có: ${coTrongDb ? "có" : "KHÔNG"}; lộ: ${lo.join(", ") || "0"})`)
 
       let sach = 0
       for (const t of cho) {

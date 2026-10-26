@@ -30,9 +30,18 @@ export type ReviewItem = {
   created_at: string | null;
 };
 
+/** Vế độ tự tin trong căn cứ LLM: basisOf (agent/src/enrich/run.ts) ghi «LLM <model> · tự tin NN% · trace …». */
+const BASIS_CONFIDENCE = /\s*·\s*tự tin\s*\d+(?:[.,]\d+)?\s*%/gu;
+
+/** Căn cứ hiện cho người duyệt, bỏ vế độ tự tin (Q9); phần còn lại (model, trace, luật) giữ nguyên văn. */
+export function basisWithoutConfidence(basis: string): string {
+  return basis.replace(BASIS_CONFIDENCE, "");
+}
+
 /**
  * Bỏ độ tự tin khỏi `evidence` (Q9): thẻ bổ sung tin mang `fields[].confidence` — `review_queue.ai_confidence` chính là
- * số lớn nhất trong đó (agent/src/enrich/run.ts), nên chỉ bỏ cột thôi thì số vẫn tới trình duyệt.
+ * số lớn nhất trong đó (agent/src/enrich/run.ts) — và chép chính số đó vào `fields[].basis` («tự tin NN%»). Bỏ cột
+ * thôi thì số vẫn tới trình duyệt, nên gọt cả hai kênh ở đây (lớp dữ liệu của /ops/review; thẻ không đổi).
  */
 export function stripEvidenceConfidence(evidence: Record<string, unknown>): Record<string, unknown> {
   if (!Array.isArray(evidence.fields)) return evidence;
@@ -42,7 +51,7 @@ export function stripEvidenceConfidence(evidence: Record<string, unknown>): Reco
       if (!f || typeof f !== "object" || Array.isArray(f)) return f;
       const { confidence: _c, ...rest } = f as Record<string, unknown>;
       void _c;
-      return rest;
+      return typeof rest.basis === "string" ? { ...rest, basis: basisWithoutConfidence(rest.basis) } : rest;
     }),
   };
 }

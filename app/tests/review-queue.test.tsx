@@ -9,7 +9,7 @@ import { JSDOM } from "jsdom";
 import { Fragment, isValidElement, Suspense, type ReactElement, type ReactNode } from "react";
 
 import type { ReviewMedia } from "../src/lib/ops/review-media";
-import type { ReviewItem } from "../src/lib/ops/review-queue";
+import { toReviewItem, type ReviewItem } from "../src/lib/ops/review-queue";
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -131,14 +131,17 @@ const entity = (id: number, status: string, created_at: string, extra: Partial<R
 const ENRICH = {
   offer_id: "offer_abc", text: "Bán gấp căn 2pn LBV view hồ bơi, sẵn sổ", group_name: "Nhóm mẫu", run_id: "r1", model: "m",
   fields: [
-    { proposal_id: 11, field: "property_type", value: "apartment", confidence: 0.85 },
-    { proposal_id: 12, field: "bedrooms", value: "2", confidence: 0.85 },
+    // basis theo đúng khuôn basisOf của agent/src/enrich/run.ts (S4-r2: kênh lộ độ tự tin thứ hai).
+    { proposal_id: 11, field: "property_type", value: "apartment", confidence: 0.85, source: "e2_llm", basis: "LLM qwen27b · tự tin 85% · trace t.jsonl" },
+    { proposal_id: 12, field: "bedrooms", value: "2", confidence: 0.85, source: "e2_llm", basis: "LLM qwen27b · tự tin 85% · trace t.jsonl" },
   ],
 };
-const enrich = (id: number, status: string, created_at: string, evidence: Record<string, unknown> = ENRICH): ReviewItem => ({
-  id, item_type: "agent_output", title: `Bổ sung dữ liệu: mẫu ${id}`, evidence,
-  ai_suggestion: "apply", ai_reasoning: null, status, created_at,
-});
+// Thẻ bổ sung tin đi qua ĐÚNG bước máy chủ của trang (toReviewItem — gọt độ tự tin), như dòng review_queue thật.
+const enrich = (id: number, status: string, created_at: string, evidence: Record<string, unknown> = ENRICH): ReviewItem =>
+  toReviewItem(
+    { id, item_type: "agent_output", title: `Bổ sung dữ liệu: mẫu ${id}`, evidence, ai_suggestion: "apply", ai_reasoning: null, status, created_at },
+    evidence,
+  );
 const ITEMS: ReviewItem[] = [
   entity(11, "pending", "2026-10-22T08:00:00.000Z", { ai_reasoning: "Giá/m² chênh 5.3%, cùng phường" }),
   entity(12, "pending", "2026-10-22T09:00:00.000Z"),
@@ -244,7 +247,11 @@ test("RQ-AC-3 sheet", async () => {
   const c = dialog()!.textContent ?? "";
   const basis = (src: string) => (CONFLICT.evidence.fields as { source: string; field: string; basis: string }[]).find((f) => f.field === "property_type" && f.source === src)!.basis;
   assert.ok(c.includes("Theo luật") && c.includes("Theo AI"), "thẻ xung đột phải hiện hai bên");
-  assert.ok(c.includes(basis("e1_rule")) && c.includes(basis("e2_llm")), "thẻ xung đột phải hiện căn cứ nguyên văn mỗi bên");
+  const { basisWithoutConfidence } = await import("../src/lib/ops/review-queue");
+  assert.ok(c.includes(basis("e1_rule")), "thẻ xung đột phải hiện căn cứ nguyên văn bên luật");
+  // Bên AI: căn cứ nguyên văn TRỪ vế «tự tin NN%» (Q9, S4-r2) — model và trace vẫn hiện.
+  assert.ok(basis("e2_llm").includes("tự tin") && c.includes(basisWithoutConfidence(basis("e2_llm"))), "thẻ xung đột phải hiện căn cứ bên AI (bỏ vế độ tự tin)");
+  assert.ok(!c.includes(basis("e2_llm")), "căn cứ bên AI không được còn vế độ tự tin (Q9)");
   await closeSheet();
 
   await openRow(14);
@@ -323,7 +330,6 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
 });
 
 test("RQ-AC-6 không độ tự tin", async () => {
-  const { toReviewItem } = await import("../src/lib/ops/review-queue");
   const row = { id: 1, item_type: "entity_match", title: "x", evidence: {}, ai_suggestion: "yes", ai_reasoning: null, ai_confidence: "0.85", status: "pending", created_at: new Date("2026-10-22T00:00:00Z") };
   const item = toReviewItem(row as never, {});
   assert.deepEqual(Object.keys(item), ["id", "item_type", "title", "evidence", "ai_suggestion", "ai_reasoning", "status", "created_at"], "thẻ gửi xuống client không được mang ai_confidence (Q9)");
@@ -340,6 +346,12 @@ test("RQ-AC-6 không độ tự tin", async () => {
     const out = toReviewItem({ ...row, item_type: "agent_output", evidence: ev } as never, ev);
     assert.deepEqual(confidenceKeys(out), [], "giá trị độ tự tin không được tới trình duyệt (Q9) — còn khoá confidence trong thẻ");
     assert.equal(JSON.stringify(out.evidence.fields).match(/"value":"[^"]*"/g)?.length, (ev.fields as unknown[]).length, "gọt độ tự tin không được làm mất trường đề xuất");
+    // Đo theo GIÁ TRỊ (S4-r2): mỗi độ tự tin c của evidence — dạng số (0.82) hay phần trăm (82%) — không có trong thẻ.
+    const values = [...new Set((ev.fields as { confidence: number | null }[]).map((f) => f.confidence).filter((c): c is number => c !== null))];
+    const forms = values.flatMap((c) => [String(c), `${Math.round(c * 100)}%`, `${Math.round(c * 100)} %`]);
+    assert.ok(forms.some((f) => JSON.stringify(ev).includes(f)), "đối chứng: evidence mẫu phải mang giá trị độ tự tin trước khi gọt");
+    const leak = forms.filter((f) => JSON.stringify(out).includes(f));
+    assert.deepEqual(leak, [], "giá trị độ tự tin không được tới trình duyệt (Q9) — còn giá trị trong thẻ");
   }
 
   const withoutQuotes = (el: Element) => {
@@ -358,6 +370,8 @@ test("RQ-AC-6 không độ tự tin", async () => {
     const t = withoutQuotes(dialog()!);
     assert.doesNotMatch(t, /\d+\s*%/, `thẻ không được hiện độ tự tin (Q9) — sheet #${id}`);
     assert.ok(!t.includes("tự tin"), `thẻ không được hiện độ tự tin (Q9) — sheet #${id}`);
+    // Căn cứ LLM nằm trong đoạn trích nhưng vế «tự tin» đã bị gọt — kiểm cả chữ TRONG đoạn trích (S4-r2).
+    assert.ok(!(dialog()!.textContent ?? "").includes("tự tin"), `thẻ không được hiện độ tự tin (Q9) — đoạn trích sheet #${id}`);
     if (id === 11) {
       const q = [...dialog()!.querySelectorAll("[data-review-quote]")].map((n) => n.textContent);
       assert.ok(q.some((s) => s?.includes("Giá/m² chênh 5.3%")), "đối chứng: lý do của máy vẫn hiện nguyên văn trong đoạn trích");
