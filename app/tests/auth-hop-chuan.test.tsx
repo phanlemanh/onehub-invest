@@ -151,23 +151,7 @@ test("AH-AC-3 cỡ chữ", async () => {
   assert.deepEqual(offenders(files, ARBITRARY, planted), ["src/components/auth/auth-error.tsx"], "bộ quét cỡ chữ tuỳ ý phải bắt tệp cấy");
 });
 
-test("AH-AC-4 error.tsx", async () => {
-  const p = join(APP, "src/app/(auth)/error.tsx");
-  assert.ok(existsSync(p), "nhóm (auth) phải có error.tsx");
-  assert.equal(readFileSync(p, "utf8").split("\n")[0].trim(), '"use client";', "error.tsx phải là client component");
-  const { default: AuthGroupError } = await import("../src/app/(auth)/error");
-  let resets = 0;
-  const root = await render(<AuthGroupError error={new Error("vỡ") as Error & { digest?: string }} reset={() => resets++} />);
-  const alerts = root.querySelectorAll('[role="alert"]');
-  assert.equal(alerts.length, 1, "phải hiện đúng một cảnh báo lỗi");
-  assert.ok(alerts[0].textContent?.includes("Không tải được dữ liệu"));
-  const retry = [...root.querySelectorAll("button")].filter((b) => b.textContent?.trim() === "Thử lại");
-  assert.equal(retry.length, 1, "phải có đúng một nút Thử lại");
-  const React = await import("react");
-  await React.act(async () => (retry[0] as HTMLButtonElement).click());
-  assert.equal(resets, 1, "Thử lại phải gọi reset đúng một lần");
-  assert.equal(root.querySelectorAll("nav, aside").length, 0, "lỗi nhóm (auth) không có vỏ cổng");
-});
+// AH-AC-4 (error.tsx) chuyển sang AER-AC-1 của hồ sơ auth-error-thu-lai-retry (ô E4 khai superseded_by).
 
 test("AH-AC-5 form giữ hành vi", async () => {
   const { LoginForm } = await import("../src/components/auth/login-form");
