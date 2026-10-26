@@ -1,6 +1,6 @@
 "use client"
 
-// Hộp «Khai thị trường, dự án» của một đơn vị thu (PL12 so-nhom-mot-noi): cùng khuôn hộp «Chế độ thu» (mode-dialog);
+// Hộp «Khai thị trường, khu đô thị» của một đơn vị thu (PL12 so-nhom-mot-noi): cùng khuôn hộp «Chế độ thu» (mode-dialog);
 // hai ô chọn nhiều theo @reui/c-combobox-12 (chip + ô gõ lọc). Thị trường là vùng cấp market; dự án là khu đô thị
 // (Hỏi-3). Máy chủ kiểm lại tham chiếu (trigger 048); lỗi của nó hiện ngay trong hộp, hộp không đóng.
 import { Fragment, useId, useState } from "react"
@@ -137,7 +137,7 @@ function KhaiForm({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Khai thị trường, dự án</DialogTitle>
+        <DialogTitle>Khai thị trường, khu đô thị</DialogTitle>
         <DialogDescription>
           {target.unit_code} · {target.original_name}. Để trống một ô là xoá khai báo của ô đó.
         </DialogDescription>
@@ -154,8 +154,8 @@ function KhaiForm({
         />
         <ChonNhieu
           id={`${id}-du-an`}
-          label="Dự án"
-          description="Khu đô thị mà nhóm chuyên về — bỏ trống nếu nhóm không chuyên một dự án."
+          label="Khu đô thị"
+          description="Khu đô thị mà nhóm chuyên về — bỏ trống nếu nhóm không chuyên một khu đô thị."
           items={danhMuc.projects.map((p) => ({ id: String(p.id), name: p.name }))}
           value={projects}
           onChange={setProjects}

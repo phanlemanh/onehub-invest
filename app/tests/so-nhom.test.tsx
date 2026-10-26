@@ -195,7 +195,7 @@ async function renderSo(props: Record<string, unknown>, fetchImpl: (b: Record<st
     await act(async () => { (el as HTMLElement).click() })
     await tick()
   }
-  const openFor = (code: string) => press(row(code)?.querySelector('[aria-label="Khai thị trường, dự án"]'), `nút khai hàng ${code}`)
+  const openFor = (code: string) => press(row(code)?.querySelector('[aria-label="Khai thị trường, khu đô thị"]'), `nút khai hàng ${code}`)
   /** Mở ô chọn có nhãn `label` trong hộp rồi bấm mục có chữ `ten`. */
   const pick = async (label: string, ten: string) => {
     const lbl = [...(dialog()?.querySelectorAll("label") ?? [])].find((l) => l.textContent?.trim() === label)
@@ -214,9 +214,9 @@ async function renderSo(props: Record<string, unknown>, fetchImpl: (b: Record<st
   return { sent, row, dialog, openFor, pick, save, press, lamMoi: () => lamMoi, unmount: () => act(async () => root.unmount()) }
 }
 
-test("SN-AC-8 khu sổ: mọi đơn vị bốn nguồn, không khoá nhóm, nhãn theo gateway; khai qua hộp → set-meta, sổ và audit cùng giao dịch (cross-layer)", async () => {
+test("SN-AC-8 khu sổ: mọi đơn vị bốn nguồn, không khoá nhóm, nhãn theo cổng S03; khai qua hộp → set-meta, sổ và audit cùng giao dịch (cross-layer)", async () => {
   const { docSoDonVi, docDanhMuc, khaiDonVi } = await lib()
-  const rows = await docSoDonVi()
+  const rows = (await docSoDonVi())!
   const danhMuc = await docDanhMuc()
   const u = await renderSo({ rows, danhMuc, loi: false }, async (b) => khaiDonVi(b, async () => ADMIN))
   for (const code of ["S02", "S03", "S05", "S06"]) {
@@ -229,14 +229,14 @@ test("SN-AC-8 khu sổ: mọi đơn vị bốn nguồn, không khoá nhóm, nhã
   for (const code of ["S02", "S03", "S05", "S06"]) assert.ok(!html.includes(K(code)), `lộ khoá nhóm ${code}`)
   const s03 = await donVi("S03")
   const s05 = await donVi("S05")
-  assert.ok(u.row(s03.unit_code)?.textContent?.includes("theo gateway"))
-  assert.ok(!u.row(s05.unit_code)?.textContent?.includes("theo gateway"), "đối chứng: dòng S05 không mang nhãn gateway")
+  assert.ok(u.row(s03.unit_code)?.textContent?.includes("theo cổng S03"))
+  assert.ok(!u.row(s05.unit_code)?.textContent?.includes("theo cổng S03"), "đối chứng: dòng S05 không mang nhãn gateway")
 
   const truoc = (await auditMeta()).length
   await u.openFor(s05.unit_code)
   assert.ok(u.dialog()?.textContent?.includes(s05.unit_code))
   await u.pick("Thị trường", "Thị trường thử")
-  await u.pick("Dự án", "Khu đô thị thử")
+  await u.pick("Khu đô thị", "Khu đô thị thử")
   await u.press(u.save(), "nút Lưu")
   assert.deepEqual(u.sent.at(-1), { action: "set-meta", unitCode: s05.unit_code, marketCodes: [THAM_CHIEU.market], projectNodeIds: [THAM_CHIEU.project] })
   assert.deepEqual(await donVi("S05"), { unit_code: s05.unit_code, market_codes: [THAM_CHIEU.market], project_node_ids: [THAM_CHIEU.project] })
@@ -276,8 +276,10 @@ test("SN-AC-8 khu sổ: mọi đơn vị bốn nguồn, không khoá nhóm, nhã
   // Hàm đọc ném → trang chuyển cờ lỗi; vùng lỗi có Thử lại gọi làm mới.
   await assert.rejects(docSoDonVi({ query: async () => { throw new Error("relation \"collection_units\" does not exist") } } as never))
   const trang = readFileSync(join(import.meta.dirname, "..", "src/components/ops/sources/sources-content.tsx"), "utf8")
-  assert.match(trang, /\[soRows, danhMuc\] = await Promise\.all\(\[docSoDonVi\(\), docDanhMuc\(\)\]\);\s*\} catch \{\s*soLoi = true;/)
-  assert.match(trang, /<SoDonVi rows=\{soRows\} danhMuc=\{danhMuc\} loi=\{soLoi\} \/>/)
+  assert.match(trang, /soRows = await docSoDonVi\(\);\s*if \(soRows\) danhMuc = await docDanhMuc\(\);\s*\} catch \{\s*soLoi = true;/)
+  assert.match(trang, /\{soRows !== null \|\| soLoi \? <SoDonVi rows=\{soRows \?\? \[\]\} danhMuc=\{danhMuc\} loi=\{soLoi\} \/> : null\}/)
+  // Chưa có bảng sổ (chưa áp 048, cloud) → null: trang không vẽ khu sổ, không cảnh báo (RS-AC-3).
+  assert.equal(await docSoDonVi({ query: async () => ({ rows: [{ co: false }] }) } as never), null)
   const l = await renderSo({ rows: [], danhMuc, loi: true }, async () => ({ status: 200, body: {} }))
   const thuLai = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Thử lại")
   assert.ok(document.body.textContent?.includes("Không đọc được sổ đơn vị thu"))

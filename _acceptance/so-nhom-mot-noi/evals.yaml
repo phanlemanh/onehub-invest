@@ -68,7 +68,7 @@ evals:
     cmd: config:executors.test.so_nhom_app
     layer: backend-effect
     paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/src/components/ops/sources/**, app/src/lib/che-do-thu.ts, app/tests/so-nhom.test.tsx]
-    expected: "exit 0; ca 'SN-AC-8': lược đồ tạm đã migration có một đơn vị mỗi nguồn S02, S03, S05, S06; vẽ khu sổ trong jsdom bằng hàm đọc thật của trang: 4 dòng, mỗi dòng có mã đơn vị, nhãn nguồn, tên gốc, thị trường, dự án, trạng thái; HTML không chứa URL nhóm S05 lẫn id nhóm S03; dòng S03 có chữ 'theo gateway', dòng S05 không có (đối chứng); hộp thoại khai thị trường + dự án gửi action set-meta (phiên admin) → 200, dòng đổi, ops_audit thêm đúng 1 dòng action 'source-group:set-meta' trong cùng giao dịch (đối chứng: thêm CHECK chặn action ấy vào ops_audit → 500 và dòng không đổi); fetch giả trả 400 {error} → hộp còn mở, chữ lỗi hiện, dòng không đổi; tab S02 rỗng → Empty chứa 'node pipeline/sync-don-vi.mjs'; hàm đọc ném lỗi → vùng lỗi có nút 'Thử lại'"
+    expected: "exit 0; ca 'SN-AC-8': lược đồ tạm đã migration có một đơn vị mỗi nguồn S02, S03, S05, S06; vẽ khu sổ trong jsdom bằng hàm đọc thật của trang: 4 dòng, mỗi dòng có mã đơn vị, nhãn nguồn, tên gốc, thị trường, dự án, trạng thái; HTML không chứa URL nhóm S05 lẫn id nhóm S03; dòng S03 có chữ 'theo cổng S03', dòng S05 không có (đối chứng); hộp thoại khai thị trường + dự án gửi action set-meta (phiên admin) → 200, dòng đổi, ops_audit thêm đúng 1 dòng action 'source-group:set-meta' trong cùng giao dịch (đối chứng: thêm CHECK chặn action ấy vào ops_audit → 500 và dòng không đổi); fetch giả trả 400 {error} → hộp còn mở, chữ lỗi hiện, dòng không đổi; tab S02 rỗng → Empty chứa 'node pipeline/sync-don-vi.mjs'; hàm đọc ném lỗi → vùng lỗi có nút 'Thử lại'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-8
@@ -78,11 +78,11 @@ evals:
     steps:
       - "Bản chạy: dev http://localhost:3457 (cấu hình preview app-sn-ui-3457 — DATABASE_URL search_path=sn_ui,public; sổ giả: S02 rỗng, S03 ba nhóm, S05 và S06 hai đơn vị); khung trình duyệt đã đăng nhập tài khoản ops thử role admin. Không lên thì FAIL 'bản chạy :3457 không lên'; bị đẩy về /login thì đăng nhập bằng .claude/ops-test-account.json (không in mật khẩu)"
       - "1280 px sáng: /ops/sources, cuộn tới khu «Sổ đơn vị thu · Market S02» (trạng thái trống có lệnh node pipeline/sync-don-vi.mjs và nút Sao chép lệnh) → evidence/E10-step1.png"
-      - "1280 px sáng: khu «Sổ đơn vị thu · Nhóm S03» (cột Mã, Tên gốc, Thị trường, Dự án, Trạng thái; chữ «theo gateway» dưới trạng thái) → evidence/E10-step2.png"
+      - "1280 px sáng: khu «Sổ đơn vị thu · Nhóm S03» (cột Mã, Tên gốc, Thị trường, Khu đô thị, Trạng thái; chữ «theo cổng S03» dưới trạng thái) → evidence/E10-step2.png"
       - "1280 px tối (prefers-color-scheme: dark): cùng khu S03 → evidence/E10-step3.png; ghi getComputedStyle(document.body).backgroundColor khác step2"
       - "390 px sáng: cùng khu S03 → evidence/E10-step4.png; ghi document.documentElement.scrollWidth và clientWidth (lưới được cuộn ngang trong khung, trang thì không)"
-      - "1280 px sáng: bấm nút «Khai thị trường, dự án» ở dòng S03-N002 → evidence/E10-step5.png (hộp có hai ô Thị trường, Dự án); chọn một thị trường, bấm Lưu → dòng S03-N002 hiện tên thị trường → evidence/E10-step6.png"
-    expected: "Trang /ops/sources (public chưa áp 048 trước gộp, nên dùng dev :3457 với DATABASE_URL search_path=sn_ui,public — lược đồ sn_ui dựng bằng dungSauGop + nhóm S05/S06 giả + sync-don-vi trên cấu hình gateway giả; tài khoản ops thử role admin) hiện khu «Sổ đơn vị thu» với các cột mã, nguồn, tên gốc, thị trường, dự án, trạng thái; hộp thoại khai thị trường và dự án mở được và lưu; dòng S03 có nhãn «theo gateway»; ảnh sáng, tối, khổ hẹp, tab trống"
+      - "1280 px sáng: bấm nút «Khai thị trường, khu đô thị» ở dòng S03-N002 → evidence/E10-step5.png (hộp có hai ô Thị trường, Khu đô thị); chọn một thị trường, bấm Lưu → dòng S03-N002 hiện tên thị trường → evidence/E10-step6.png"
+    expected: "Trang /ops/sources (public chưa áp 048 trước gộp, nên dùng dev :3457 với DATABASE_URL search_path=sn_ui,public — lược đồ sn_ui dựng bằng dungSauGop + nhóm S05/S06 giả + sync-don-vi trên cấu hình gateway giả; tài khoản ops thử role admin) hiện khu «Sổ đơn vị thu» với các cột mã, nguồn, tên gốc, thị trường, dự án, trạng thái; hộp thoại khai thị trường và dự án mở được và lưu; dòng S03 có nhãn «theo cổng S03»; ảnh sáng, tối, khổ hẹp, tab trống"
     evidence_required: [run_id, screenshot, observed]
   - id: E11
     criterion: AC-9

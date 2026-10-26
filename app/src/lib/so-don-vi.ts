@@ -21,8 +21,11 @@ export type DonViRow = {
 export type DanhMuc = { markets: { id: string; name: string }[]; projects: { id: number; name: string }[] }
 type Ket = { status: number; body: Record<string, unknown> }
 
-/** Mọi đơn vị của sổ, theo nguồn rồi mã. Ném khi sổ chưa có (048 chưa áp) hay DB lỗi — bên gọi hiện vùng lỗi. */
-export async function docSoDonVi(db: Pick<Pool, "query"> = pool): Promise<DonViRow[]> {
+/** Mọi đơn vị của sổ, theo nguồn rồi mã; null khi chưa có bảng sổ. Ném khi DB lỗi — bên gọi hiện vùng lỗi. */
+export async function docSoDonVi(db: Pick<Pool, "query"> = pool): Promise<DonViRow[] | null> {
+  // Chưa có sổ (máy chưa áp 048, hay cloud — sổ là tầng A): null = không vẽ khu sổ, như các vùng chỉ có ở máy thu khác.
+  const { rows: co } = await db.query<{ co: boolean }>(`SELECT to_regclass('collection_units') IS NOT NULL AS co`)
+  if (!co[0]?.co) return null
   const { rows } = await db.query<DonViRow>(
     `SELECT unit_code, source_code, unit_type, original_name, market_codes, project_node_ids::int[] AS project_node_ids,
             status, reason

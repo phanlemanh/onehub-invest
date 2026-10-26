@@ -35,12 +35,13 @@ export async function SourcesContent() {
   try {
     groupRows = await docNhomThu();
   } catch { /* cloud: bảng vắng — đúng thiết kế PII */ }
-  // PL12 sổ đơn vị thu: chưa áp 048 (hoặc DB lỗi) thì khu sổ hiện vùng lỗi có Thử lại, phần còn lại của trang vẫn đứng.
-  let soRows: DonViRow[] = [];
+  // PL12 sổ đơn vị thu: chưa có bảng sổ (chưa áp 048) thì không vẽ khu sổ; DB lỗi thì vùng lỗi có Thử lại, trang vẫn đứng.
+  let soRows: DonViRow[] | null = null;
   let danhMuc: DanhMuc = { markets: [], projects: [] };
   let soLoi = false;
   try {
-    [soRows, danhMuc] = await Promise.all([docSoDonVi(), docDanhMuc()]);
+    soRows = await docSoDonVi();
+    if (soRows) danhMuc = await docDanhMuc();
   } catch {
     soLoi = true;
   }
@@ -65,7 +66,7 @@ export async function SourcesContent() {
       <RegistryTable rows={rows} />
       <ZaloAccounts isCloud={process.env.VERCEL === "1"} />
       <SourceGroups initial={groupRows} homNay={homNayVN(new Date())} />
-      <SoDonVi rows={soRows} danhMuc={danhMuc} loi={soLoi} />
+      {soRows !== null || soLoi ? <SoDonVi rows={soRows ?? []} danhMuc={danhMuc} loi={soLoi} /> : null}
     </div>
   );
 }

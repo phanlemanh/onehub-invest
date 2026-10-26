@@ -375,7 +375,7 @@ Nhãn tự vận hành từ xa — thêm ở TV0 `adr-duong-lenh-keo` (26/10, AD
 **Đơn vị thu**: Một thứ mà một nguồn thu theo nó và người vận hành bật/tắt được: nhóm S03 hay S05, vùng S06, market S02. Mỗi đơn vị có một mã ngắn do máy sinh, ổn định, không tái dùng, dạng `S03-N012` (N nhóm · V vùng · M market), hiện ở cả máy chủ lẫn máy thu. Tiêu đề sửa được, mã thì không. Sổ đơn vị thu là một bảng chung cho mọi nguồn (PL12).
 - Code: `collection_unit (collection_units: unit_code, unit_type nhom|vung|market, group_key = khoá theo nguồn, market_codes, project_node_ids)` · RESO: —
 - Slug URL: `units`
-- Ghi chú: «Nhóm thu» vẫn là nhãn của một đơn vị loại nhóm (S03, S05) trên `/ops/sources`; «Đơn vị thu» là nhãn chung khi câu nói về mọi loại. Khu «Sổ đơn vị thu» trên `/ops/sources` hiện mọi đơn vị; «Khai thị trường, dự án» gắn thị trường và khu đô thị nhóm chuyên về (PL12).
+- Ghi chú: «Nhóm thu» vẫn là nhãn của một đơn vị loại nhóm (S03, S05) trên `/ops/sources`; «Đơn vị thu» là nhãn chung khi câu nói về mọi loại. Khu «Sổ đơn vị thu» trên `/ops/sources` hiện mọi đơn vị; «Khai thị trường, khu đô thị» gắn thị trường và khu đô thị nhóm chuyên về (PL12).
 _Avoid_: collection unit, source group
 
 **Lệnh**: Một ý muốn ghi có khuôn mà người vận hành gửi trên máy chủ (tạm dừng nguồn, bật một đơn vị thu, đổi lịch…). Máy thu kéo lệnh đã duyệt về, kiểm bất biến, áp, rồi báo kết quả. Lệnh đi theo vòng nháp → đã gửi → đã duyệt → chờ áp → đang áp → đã áp; nhánh phụ là bị từ chối, hoặc lỗi rồi tự hoàn tác. Hoàn tác là một lệnh đảo mới. Không có lệnh tự do (ADR-0015).

@@ -89,7 +89,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
           us.map((x) => (x.unit_code === u.unit_code ? { ...x, market_codes: data.market_codes, project_node_ids: data.project_node_ids } : x)),
         )
         setEditing(null)
-        toast.success("Đã khai thị trường, dự án")
+        toast.success("Đã khai thị trường, khu đô thị")
       } catch {
         setError("Lỗi mạng")
       }
@@ -124,7 +124,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
       size: 200,
     },
     { id: "markets", header: "Thị trường", cell: ({ row }) => danhSach(row.original.market_codes, tenThiTruong as Map<string | number, string>), size: 160 },
-    { id: "projects", header: "Dự án", cell: ({ row }) => danhSach(row.original.project_node_ids, tenDuAn as Map<string | number, string>), size: 160 },
+    { id: "projects", header: "Khu đô thị", cell: ({ row }) => danhSach(row.original.project_node_ids, tenDuAn as Map<string | number, string>), size: 160 },
     {
       id: "status",
       accessorKey: "status",
@@ -132,7 +132,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
       cell: ({ row }) => (
         <span className="flex flex-col items-start gap-0.5">
           <Badge variant={VARIANT[row.original.status as keyof typeof VARIANT] ?? "outline"}>{NHAN[row.original.status] ?? row.original.status}</Badge>
-          {row.original.source_code === "S03" ? <span className="text-muted-foreground text-xs">theo gateway</span> : null}
+          {row.original.source_code === "S03" ? <span className="text-muted-foreground text-xs">theo cổng S03</span> : null}
         </span>
       ),
       size: 120,
@@ -145,7 +145,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label="Khai thị trường, dự án"
+            aria-label="Khai thị trường, khu đô thị"
             aria-describedby={`don-vi-${row.original.unit_code}`}
             onClick={() => {
               setError(null)
@@ -172,7 +172,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
             key={code}
             id={`so-${code.toLowerCase()}`}
             title={title}
-            description={code === "S03" ? `${moTa} · trạng thái theo gateway` : moTa}
+            description={code === "S03" ? `${moTa} · trạng thái theo cổng S03` : moTa}
             data={list}
             columns={columns}
             tabs={TABS}
