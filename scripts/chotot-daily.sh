@@ -29,7 +29,21 @@ import_one() {
   cat "$log"; rm -f "$log"; return 1
 }
 IMPORT_FAILED=0
-for CITY in hanoi hcmc; do
+# 2610-13 (TV2b): vùng nạp theo DB qua luật vong-doi — hết 'hanoi hcmc' cứng;
+# vùng mới bật ở /ops/sources sẽ được nạp lượt kế. DB lỗi → dừng (fail-closed).
+CITIES="$(cd "$ROOT/pipeline" && node --input-type=module -e '
+  const pg = (await import("pg")).default;
+  const { isRunnable } = await import("./lib/vong-doi.mjs");
+  const c = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  try {
+    await c.connect();
+    const src = (await c.query("SELECT code, status FROM source_registry WHERE code = $1", ["S06"])).rows[0] ?? null;
+    const { rows } = await c.query("SELECT group_key, status FROM source_groups WHERE source_code = $1 ORDER BY id", ["S06"]);
+    await c.end();
+    console.log(rows.filter((r) => isRunnable(src, { status: r.status }).run).map((r) => r.group_key).join(" "));
+  } catch (e) { console.error("S06 vung-doc-loi: " + e.message); process.exit(1); }
+')" || { echo "❌ đọc vùng S06 từ DB fail — dừng (fail-closed)"; exit 1; }
+for CITY in $CITIES; do
   LATEST=$(ls -1d "$ROOT"/collector/snapshots/$CITY/${CITY}__chotot-ads__* 2>/dev/null | sort | tail -1)
   if [ -n "$LATEST" ]; then
     import_one "$LATEST" || IMPORT_FAILED=1
