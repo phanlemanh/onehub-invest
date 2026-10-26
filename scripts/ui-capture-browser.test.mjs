@@ -80,8 +80,8 @@ before(async () => {
   base = `http://127.0.0.1:${port}`;
 });
 after(() => {
-  server.kill();
-  rmSync(dir, { recursive: true, force: true });
+  server?.kill(); // before() ném khi thiếu playwright-cli thì server chưa có — đừng để hook dọn dẹp tự đỏ (AU11)
+  if (dir) rmSync(dir, { recursive: true, force: true });
 });
 
 let n = 0;
