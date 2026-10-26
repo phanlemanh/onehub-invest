@@ -5,7 +5,7 @@ slug: tin-rao-doi-phuong-noi-post-ids
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-26T10:30:00Z
 design_doc: docs/superpowers/specs/2026-10-26-tin-rao-doi-phuong-noi-post-ids-design.md
