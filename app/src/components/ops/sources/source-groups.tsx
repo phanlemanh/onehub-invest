@@ -3,20 +3,23 @@
 // chuyển thể từ @reui/solution-dev-ops-6 (data-grid-view.tsx, columns.tsx, connection-group.tsx):
 // lưới "All connections" nhóm theo nguồn — mỗi nhóm thu là một kết nối có công tắc thu,
 // xoá qua AlertDialog, thêm qua sheet. Mọi thao tác qua /api/v1/ops/source-groups (audit
-// ops:write); bật/tắt lạc quan, lỗi thì hoàn giá trị cũ + báo lỗi.
+// ops:write); bật/tắt lạc quan, lỗi thì hoàn giá trị cũ + báo lỗi. Cột «Chế độ» + hộp «Chế độ thu» (hồ sơ
+// che-do-thu-tren-ops): lưu xong mới đổi hàng, theo đúng giá trị máy chủ đã ghi.
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { PlusIcon, Trash2Icon } from "lucide-react"
+import { GaugeIcon, PlusIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
 import type { InsightColumn } from "@/components/insight/insight-grid"
 import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { nhanCheDo } from "@/lib/che-do-thu-luat"
 import { fmtInt } from "@/lib/format"
 
 import { StatusGrid, type StatusTab } from "../collections/status-grid"
 import { ConfirmDelete } from "./confirm-delete"
+import { ModeDialog, type ModeChoice } from "./mode-dialog"
 import { NewGroupSheet, type GroupDraft } from "./new-group-sheet"
 
 export type GroupRow = {
@@ -27,7 +30,12 @@ export type GroupRow = {
   enabled: boolean
   note: string | null
   fb_posts: number
+  mode: string | null
+  burst_until: string | null
+  mode_since: string | null
 }
+
+const MODE_VARIANT = { cho: "outline", bung: "warning-light", duy_tri: "success-light" } as const
 
 const TITLE: Record<string, string> = { S05: "Nhóm Facebook", S06: "Thị trường Chợ Tốt" }
 const TABS: StatusTab<GroupRow>[] = [
@@ -36,13 +44,16 @@ const TABS: StatusTab<GroupRow>[] = [
 ]
 const EMPTY_DRAFT: GroupDraft = { sourceCode: "S05", groupKey: "", name: "" }
 
-export function SourceGroups({ initial }: { initial: GroupRow[] }) {
+/** `homNay` = hôm nay giờ VN do máy chủ tính (sources-content) — biên ô «Hạn bùng» không theo múi giờ trình duyệt. */
+export function SourceGroups({ initial, homNay }: { initial: GroupRow[]; homNay: string }) {
   const router = useRouter()
   const [groups, setGroups] = useState(initial)
   const [pending, start] = useTransition()
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState<GroupDraft>({ sourceCode: "S05", groupKey: "", name: "" })
   const [deleting, setDeleting] = useState<GroupRow | null>(null)
+  const [editing, setEditing] = useState<GroupRow | null>(null)
+  const [modeError, setModeError] = useState<string | null>(null)
 
   const call = (body: Record<string, unknown>) =>
     fetch("/api/v1/ops/source-groups", {
@@ -93,6 +104,33 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
     })
   }
 
+  const openMode = (g: GroupRow) => {
+    setModeError(null)
+    setEditing(g)
+  }
+
+  const saveMode = (g: GroupRow, choice: ModeChoice) => {
+    setModeError(null)
+    start(async () => {
+      const body: Record<string, unknown> = { action: "set-mode", id: g.id, mode: choice.mode }
+      if (choice.mode === "bung") body.burstUntil = choice.burstUntil
+      try {
+        const { ok, data } = await call(body)
+        if (!ok) {
+          setModeError(data.error ?? "Lỗi máy chủ")
+          return
+        }
+        setGroups((gs) =>
+          gs.map((x) => (x.id === g.id ? { ...x, mode: data.mode ?? null, burst_until: data.burst_until ?? null, mode_since: data.mode_since ?? null } : x)),
+        )
+        setEditing(null)
+        toast.success(data.unchanged ? "Không có gì thay đổi" : "Đã đổi chế độ thu")
+      } catch {
+        setModeError("Lỗi mạng")
+      }
+    })
+  }
+
   // Dựng lại mỗi render: toggle đọc state qua setter dạng hàm, cột rẻ.
   const columns: InsightColumn<GroupRow>[] = [
       {
@@ -108,19 +146,33 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
         size: 360,
       },
       { id: "posts", accessorKey: "fb_posts", header: "Bài", cell: ({ row }) => (row.original.fb_posts ? fmtInt(row.original.fb_posts) : "—"), size: 80, meta: { headerClassName: "text-end", cellClassName: "text-end tabular-nums" } },
+      {
+        id: "mode",
+        accessorKey: "mode",
+        header: "Chế độ",
+        cell: ({ row }) => {
+          const nhan = nhanCheDo(row.original.mode, row.original.burst_until)
+          const mode = row.original.mode as keyof typeof MODE_VARIANT
+          return nhan ? <Badge variant={MODE_VARIANT[mode]}>{nhan}</Badge> : <span className="text-muted-foreground text-xs">Chưa đặt</span>
+        },
+        size: 150,
+      },
       { id: "state", accessorKey: "enabled", header: "Trạng thái", cell: ({ row }) => <Badge variant={row.original.enabled ? "success-light" : "outline"}>{row.original.enabled ? "Đang thu" : "Tắt"}</Badge>, size: 110 },
       {
         id: "actions",
         header: "",
         cell: ({ row }) => (
           <span className="flex items-center justify-end gap-2">
+            <Button size="icon-sm" variant="ghost" aria-label="Đổi chế độ thu" aria-describedby={`nhom-${row.original.id}`} onClick={() => openMode(row.original)}>
+              <GaugeIcon aria-hidden="true" />
+            </Button>
             <Switch size="sm" checked={row.original.enabled} onCheckedChange={() => toggle(row.original)} aria-label="Bật/tắt thu nhóm" aria-describedby={`nhom-${row.original.id}`} />
             <Button size="icon-sm" variant="ghost" aria-label="Xoá nhóm" aria-describedby={`nhom-${row.original.id}`} onClick={() => setDeleting(row.original)}>
               <Trash2Icon aria-hidden="true" />
             </Button>
           </span>
         ),
-        size: 110,
+        size: 150,
       },
   ]
 
@@ -155,6 +207,14 @@ export function SourceGroups({ initial }: { initial: GroupRow[] }) {
         )
       })}
       <NewGroupSheet open={adding} onOpenChange={setAdding} draft={form} onDraftChange={setForm} pending={pending} onSubmit={add} />
+      <ModeDialog
+        target={editing}
+        homNay={homNay}
+        pending={pending}
+        error={modeError}
+        onOpenChange={(open) => !open && setEditing(null)}
+        onSubmit={(choice) => editing && saveMode(editing, choice)}
+      />
       <ConfirmDelete
         open={deleting !== null}
         onOpenChange={(open) => !open && setDeleting(null)}
