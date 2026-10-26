@@ -75,7 +75,7 @@ evals:
     executor: ui-check
     layer: ui-observed
     paths: [app/src/components/ops/sources/**]
-    expected: "Trang /ops/sources (dev :3456, tài khoản ops thử role admin) hiện khu «Sổ đơn vị thu» với các cột mã, nguồn, tên gốc, thị trường, dự án, trạng thái; hộp thoại khai thị trường và dự án mở được và lưu; dòng S03 có nhãn «theo gateway»; ảnh sáng, tối, khổ hẹp, tab trống"
+    expected: "Trang /ops/sources (public chưa áp 048 trước gộp, nên dùng dev :3457 với DATABASE_URL search_path=sn_ui,public — lược đồ sn_ui dựng bằng dungSauGop + nhóm S05/S06 giả + sync-don-vi trên cấu hình gateway giả; tài khoản ops thử role admin) hiện khu «Sổ đơn vị thu» với các cột mã, nguồn, tên gốc, thị trường, dự án, trạng thái; hộp thoại khai thị trường và dự án mở được và lưu; dòng S03 có nhãn «theo gateway»; ảnh sáng, tối, khổ hẹp, tab trống"
     evidence_required: [run_id, screenshot, observed]
   - id: E11
     criterion: AC-9
