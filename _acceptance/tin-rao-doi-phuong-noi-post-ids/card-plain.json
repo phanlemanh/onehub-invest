@@ -1,0 +1,22 @@
+{
+  "feature_plain": "Phép đo tin rao bắt được tin Zalo/FB bị mất hay đổi phường kể cả khi mã tin đổi, bằng cách nối tin trước và sau qua từng bài đăng.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ có một hàm so tin trước/sau theo từng bài, đúng mười ca viết trước (gồm tin nhiều bài tách đôi và tin Chợ Tốt không có bài)."},
+    {"id": "AC-2", "p": "Sẽ chứng bằng hai bài mồi Zalo và FB chạy qua bước nạp thật hai lượt: hàm mới bắt được cả hai bài mất phường, thước cũ không thấy."},
+    {"id": "AC-3", "p": "Sẽ đo trên dữ liệu thật trong transaction rồi hoàn lại: 0 tin thật mất hay đổi phường, đối chứng qua cùng hàm đúng hai bài mồi, và báo đỏ nếu bài còn trong stg mà không nối được."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG dùng khoá tin bền của PL14 — chưa có; đổi sang khi PL14 xong."},
+    {"id": "OOS-2", "p": "KHÔNG sửa đối chứng «trạng thái trước có tin sai» của phép đo (đã ghi hạn chế ở hàng trước)."},
+    {"id": "OOS-3", "p": "KHÔNG đổi bước nạp hay cách băm mã tin."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Phủ ba cách nối × ba kết cục × có/không bài đăng bằng mười ca viết trước, cộng mồi qua bước nạp thật và chặn «nối hỏng» trên dữ liệu thật."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bỏ sót tin có nhiều bài — đã đổi sang so từng bài, thêm ca tin tách đôi."},
+    {"i": 1, "p": "Tin giữ mã nhưng một phần bài đổi phường không được so — đã so mọi bài."},
+    {"i": 2, "p": "Bài «không còn» không bị chặn và chưa có mồi Zalo — đã chặn khi bài còn trong stg, thêm mồi Zalo."},
+    {"i": 3, "p": "Dòng chính và đối chứng có thể đi hai đường khác nhau — nay cả hai đi qua cùng một hàm trên cùng các lần chụp."}
+  ]
+}

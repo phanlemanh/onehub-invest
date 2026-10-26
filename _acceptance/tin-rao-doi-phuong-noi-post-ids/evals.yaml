@@ -1,0 +1,26 @@
+schema_version: 1
+feature_slug: tin-rao-doi-phuong-noi-post-ids
+# Eval máy: scripts/lib/doi-phuong.test.mjs (AC-1 — hàm thuần, không DB; AC-2 — mồi qua runTransformFb trong BEGIN…ROLLBACK),
+# scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu (AC-3 — dữ liệu thật trong một transaction rồi ROLLBACK).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.doi_phuong
+    paths: [scripts/lib/doi-phuong.mjs, scripts/lib/doi-phuong.test.mjs]
+    expected: "exit 0; ca 'DP-AC-1 ma trận mười ca lechTheoBai' ok (mỗi ca a…j ra đúng kết quả viết trước, assert số ca = 10)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.doi_phuong
+    paths: [scripts/lib/doi-phuong.mjs, scripts/lib/doi-phuong.test.mjs]
+    expected: "exit 0; ca 'DP-AC-2 bài mồi S03 và S05 mất phường qua hai lượt transform → lechTheoBai bắt' ok (đúng hai lệch loại mat-phuong gọi hai post_id mồi), chiều đỏ 'DP-AC-2 thước cũ nối theo offer_id không thấy' ok (lech cũ trả rỗng trên cùng hai lần chụp)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.tin_rao_gan_do
+    paths: [scripts/lib/doi-phuong.mjs, scripts/kiem-tin-rao-gan-khu-vuc.mjs]
+    expected: "exit 0 khi trạng thái trước còn tin trỏ khu vực không hợp lệ; dòng 'ok   0 tin có phường hợp lệ trước lượt bị gỡ hay đổi khu vực (nối theo bài cho S03/S05, theo offer_id cho S06)'; dòng 'ok   đối chứng qua cùng hàm: 2 bài mồi mất phường, 0 tin thật'; dòng 'ok   0 bài «không còn sau lượt» còn trong stg (không nối hỏng)'; mỗi nguồn S03, S05, S06 một dòng '<nguồn>: <n> không còn sau lượt'; dòng 'ok   ROLLBACK — sale_offers <n> → <n>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
