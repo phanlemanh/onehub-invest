@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0bd96d4bc9882650e8a03abc31927ff9611f603f
+verified_commit: d221c044c2d88a1c8f2f28d4390e31021c7d8d7f
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -236,3 +236,7 @@ sha: 2daec52c127ee645c4505724af8603e8847af355 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-26, do gộp main e70e148 (#123 sửa test chập chờn) trước merge
 run_id: repin-20261026T061149Z-44302
 sha: 0bd96d4bc9882650e8a03abc31927ff9611f603f · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-26, do gộp main 6b0afe7 (#122 AU9)
+run_id: repin-20261026T072323Z-70333
+sha: d221c044c2d88a1c8f2f28d4390e31021c7d8d7f · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
