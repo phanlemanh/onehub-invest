@@ -1,0 +1,25 @@
+{
+  "feature_plain": "Khách mở trang đăng nhập hoặc đăng ký thấy trang yên, một màu theo chuẩn giao diện của kho — không còn mảng màu trôi lặp mãi, chữ tô gradient hay cỡ chữ tự đặt — và nếu trang lỗi khi dựng thì hiện cảnh báo kèm nút Thử lại.",
+  "will_do": [
+    {"id": "AC-3", "p": "Sẽ đưa tiêu đề trang đăng ký về thang chữ sẵn có của kho và giữ tiêu đề hai form ở cỡ mặc định."},
+    {"id": "AC-4", "p": "Sẽ hiện cảnh báo lỗi chuẩn kèm nút Thử lại khi trang đăng nhập/đăng ký lỗi lúc dựng."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên cách đăng nhập và đăng ký: cùng trường, cùng đường xử lý, giữ trang đích sau đăng nhập, vẫn báo lỗi sai mật khẩu hay email trùng."},
+    {"id": "AC-6", "p": "Sẽ dọn sạch 7 lỗi chuẩn giao diện của nhóm trang đăng nhập/đăng ký."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Sẽ KHÔNG còn chuyển động nền lặp mãi trên trang đăng ký hay đăng nhập."},
+    {"id": "AC-2", "p": "Sẽ KHÔNG còn màu tự chọn hay chữ tô gradient — màu đi theo chuẩn sáng/tối của kho."},
+    {"id": "OOS-1", "p": "KHÔNG thêm đăng nhập mạng xã hội hay «Quên mật khẩu» (chưa có hệ thống)."},
+    {"id": "OOS-2", "p": "KHÔNG đổi logic đăng nhập, phiên hay mật khẩu."},
+    {"id": "OOS-3", "p": "KHÔNG viết lại nội dung trang đăng ký (chữ và số đếm giữ nguyên)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Không quét không gian tiêu chí: câu giao đã liệt đủ bốn việc (chuyển động, gradient, cỡ chữ, trang lỗi) cộng giữ nguyên hành vi."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Luồng đăng ký chỉ được kiểm bằng giả lập — nếu form đăng ký hỏng trên trang công khai, máy không biết. Đã thêm kiểm form gắn đúng đường xử lý và báo lỗi; việc chạy thử đăng ký thật thành Hỏi-3 cho anh."},
+    {"i": 1, "p": "Cỡ chữ đích là gu nhìn, không phải luật. Đã tách: tiêu đề form theo luật kho (không đổi cỡ); cỡ tiêu đề trang đăng ký thành Hỏi-2 cho anh."},
+    {"i": 2, "p": "Kiểm cỡ chữ chỉ soi tiêu đề. Đã mở rộng: quét mọi tệp của nhóm và kiểm không còn lỗi chuẩn giao diện nào của nhóm."},
+    {"i": 3, "p": "Kiểm cỡ tiêu đề form ghim một giá trị viết tay; ảnh chế độ tối chưa có bằng chứng thật đã tối. Đã sửa: so với tiêu đề trần, ghi màu nền lúc chụp tối, chụp thêm trang đăng nhập khi báo lỗi."}
+  ]
+}
