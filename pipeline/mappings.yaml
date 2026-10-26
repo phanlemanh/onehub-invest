@@ -272,7 +272,6 @@ enums:
     checked_on: "2026-10-26"
     columns: [enrichment_proposals.field]
     nullable: false
-    lint_keys: false
     values:
       - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
       - { code: bedrooms, label_vi: Phòng ngủ, dd_lookup: BedroomsTotal }

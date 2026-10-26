@@ -2,12 +2,13 @@
 // vocab.mjs — CLI của sổ từ vựng một nguồn (PL6). Sổ: khối `enums:` của pipeline/mappings.yaml.
 //   --write                    sinh hằng pipeline/agent/app + khối CONTEXT.md
 //   --check                    tệp sinh khớp sổ chưa (lệch → thoát 1, nêu tệp)
+//   --lint                     danh sách enum viết tay ngoài sổ (đỏ → thoát 1)
 // Chung: --root <gốc kho> (mặc định suy từ vị trí tệp) · --mappings <tệp sổ>.
 // Mã thoát: 0 khớp · 1 lệch/đỏ · 2 dùng sai hoặc không chạy được.
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkTargets, readMappings, renderTargets, spliceContext, VocabError } from "./lib/vocab-core.mjs";
+import { checkTargets, lintTree, readMappings, renderTargets, spliceContext, VocabError } from "./lib/vocab-core.mjs";
 
 function args(argv) {
   const o = { root: resolve(dirname(fileURLToPath(import.meta.url)), ".."), mappings: null, cmd: null, rest: [] };
@@ -49,9 +50,27 @@ function check(root, reg) {
   return 0;
 }
 
+function lint(root, reg) {
+  const kq = lintTree(root, reg);
+  const dong = (h) => `${h.path}:${h.line} · ${h.axis} · ${h.codes.join(",")}`;
+  for (const h of kq.hits) console.error(`vocab --lint: viết tay ngoài sổ — ${dong(h)}`);
+  for (const x of kq.allowBad) console.error(`vocab --lint: enums_lint_allow thiếu reason — ${x.path} · ${x.axis}`);
+  for (const x of kq.allowStale) console.error(`vocab --lint: ngoại lệ không còn khớp — ${x.path} · ${x.axis}`);
+  for (const h of kq.allowed) {
+    const x = reg.allow.find((a) => a.path === h.path && a.axis === h.axis);
+    console.log(`vocab --lint: ngoại lệ — ${dong(h)} — ${x.reason}`);
+  }
+  if (kq.collectorCount) console.log(`vocab --lint: collector: ${kq.collectorCount} chỗ (không quét đỏ — làn ZCode)`);
+  const nAllow = new Set(kq.allowed.map((h) => `${h.path}|${h.axis}`)).size;
+  const msg = `vocab --lint: ${kq.hits.length} chỗ viết tay ngoài sổ · ngoại lệ ${nAllow}`;
+  const red = kq.hits.length + kq.allowBad.length + kq.allowStale.length;
+  (red ? console.error : console.log)(msg);
+  return red ? 1 : 0;
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const o = args(argv);
-  const CMDS = { write, check };
+  const CMDS = { write, check, lint };
   if (!o.cmd || !CMDS[o.cmd]) {
     console.error(`dùng: vocab.mjs [--root <dir>] [--mappings <tệp>] --${Object.keys(CMDS).join("|--")}`);
     return 2;

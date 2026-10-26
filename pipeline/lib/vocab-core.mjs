@@ -1,7 +1,7 @@
 // vocab-core.mjs — PL6 sổ từ vựng một nguồn (phần thuần: đọc sổ, kiểm khuôn).
 // Sổ = khối `enums:` của pipeline/mappings.yaml theo khuôn RESO Lookup/RelatedLookup (ADR-0013 §8).
 // Không I/O ở đây ngoài readMappings; CLI là pipeline/vocab.mjs.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 
@@ -30,7 +30,6 @@ export function loadRegister(yamlText) {
       dd_field: a?.dd_field ?? null,
       columns: Array.isArray(a?.columns) ? a.columns : a?.columns,
       nullable: a?.nullable === true,
-      lint_keys: a?.lint_keys !== false,
       local: axisLocal,
       rationale: a?.rationale,
       checked_on: a?.checked_on,
@@ -189,4 +188,237 @@ export function checkTargets(root, reg, read = (p) => readFileSync(join(root, p)
     } else if (cur !== t.content) lech.push(t.path);
   }
   return lech;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Lint — tìm danh sách enum viết tay ngoài sổ. Một «chỗ viết tay» = một nhóm literal chứa ≥2 code khác nhau của
+// cùng một trục. Nhóm: cặp ngoặc trong cùng ([] () và {} của object); literal trong khối lệnh `{…}` hoặc ngoài mọi ngoặc
+// gom theo dòng. Trong nội dung một literal: chuỗi nối `a|b` và danh sách SQL `('a','b')` / `ARRAY['a','b']` là nhóm
+// riêng. Khoá object chưa nháy chỉ tính khi object là map nhãn (mọi giá trị là chuỗi literal). Comment bị bỏ.
+// Nhóm mà quá nửa phần tử chuỗi KHÔNG phải code của trục (danh sách cột, dữ liệu mẫu) không phải danh sách của trục.
+
+const PIPE_SEQ = /[A-Za-z0-9_]+(?:\|[A-Za-z0-9_]+)+/g;
+const QUOTED_PIPE = /(["'])[A-Za-z0-9_]+\1(?:\s*\|\s*(["'])[A-Za-z0-9_]+\2)+/g;
+const SQL_LIST = /[([]\s*'[^'\n]*'(?:\s*(?:::\s*[a-z]+)?\s*,\s*'[^'\n]*')+/g;
+const REGEX_PREV = new Set(["(", ",", "=", ":", "[", "!", "&", "|", "?", "{", "}", ";", "return", "typeof", "=>", "+", "-", "*", "%", "<", ">", "~", "^"]);
+const BLOCK_PREV = new Set([")", "=>", "{", "}", ";", "else", "try", "finally", "do", null]);
+
+/** Tách token JS/TS: {t:'str'|'id'|'p', v, line}. Comment bỏ; template literal → một token str (phần tĩnh). */
+function tokenizeJs(src) {
+  const out = [];
+  let i = 0;
+  let line = 1;
+  const n = src.length;
+  const prevSig = () => (out.length ? out[out.length - 1] : null);
+  while (i < n) {
+    const c = src[i];
+    if (c === "\n") { line++; i++; continue; }
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === "/" && src[i + 1] === "/") { while (i < n && src[i] !== "\n") i++; continue; }
+    if (c === "/" && src[i + 1] === "*") {
+      i += 2;
+      while (i < n && !(src[i] === "*" && src[i + 1] === "/")) { if (src[i] === "\n") line++; i++; }
+      i += 2;
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      const start = line;
+      let v = "";
+      i++;
+      while (i < n && src[i] !== c && src[i] !== "\n") { if (src[i] === "\\") { v += src[i + 1] ?? ""; i += 2; } else v += src[i++]; }
+      i++;
+      out.push({ t: "str", v, line: start });
+      continue;
+    }
+    if (c === "`") {
+      const start = line;
+      let v = "";
+      i++;
+      let depth = 0;
+      while (i < n) {
+        const ch = src[i];
+        if (depth === 0 && ch === "`") { i++; break; }
+        if (ch === "\n") line++;
+        if (depth === 0 && ch === "\\") { v += src[i + 1] ?? ""; i += 2; continue; }
+        if (depth === 0 && ch === "$" && src[i + 1] === "{") { depth = 1; v += "\u0000"; i += 2; continue; }
+        if (depth > 0) {
+          if (ch === "{") depth++;
+          else if (ch === "}") depth--;
+          i++;
+          continue;
+        }
+        v += ch;
+        i++;
+      }
+      out.push({ t: "str", v, line: start });
+      continue;
+    }
+    if (c === "/") {
+      const p = prevSig();
+      const isRegex = !p || (p.t === "p" && REGEX_PREV.has(p.v)) || (p.t === "id" && REGEX_PREV.has(p.v));
+      if (isRegex) {
+        i++;
+        let inClass = false;
+        while (i < n && src[i] !== "\n") {
+          const ch = src[i];
+          if (ch === "\\") { i += 2; continue; }
+          if (ch === "[") inClass = true;
+          else if (ch === "]") inClass = false;
+          else if (ch === "/" && !inClass) { i++; break; }
+          i++;
+        }
+        while (i < n && /[a-z]/i.test(src[i])) i++;
+        out.push({ t: "p", v: "regex", line });
+        continue;
+      }
+    }
+    if (/[A-Za-z_$]/.test(c)) {
+      let v = "";
+      while (i < n && /[A-Za-z0-9_$]/.test(src[i])) v += src[i++];
+      out.push({ t: "id", v, line });
+      continue;
+    }
+    if (c === "=" && src[i + 1] === ">") { out.push({ t: "p", v: "=>", line }); i += 2; continue; }
+    out.push({ t: "p", v: c, line });
+    i++;
+  }
+  return out;
+}
+
+// SQL: bỏ comment «--» và khối comment, giữ số dòng.
+function stripSqlComments(src) {
+  return src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " ")).replace(/--[^\n]*/g, "");
+}
+
+function codeIndex(reg) {
+  const m = new Map();
+  for (const a of reg.axes) for (const v of a.values) {
+    if (!m.has(v.code)) m.set(v.code, []);
+    m.get(v.code).push(a.name);
+  }
+  return m;
+}
+
+/** Danh sách nhóm con trong nội dung một literal: chuỗi nối `a|b`, danh sách SQL. */
+function subGroups(content) {
+  const gs = [];
+  for (const m of content.matchAll(PIPE_SEQ)) gs.push(m[0].split("|"));
+  for (const m of content.matchAll(QUOTED_PIPE)) gs.push([...m[0].matchAll(/["']([A-Za-z0-9_]+)["']/g)].map((x) => x[1]));
+  for (const m of content.matchAll(SQL_LIST)) gs.push([...m[0].matchAll(/'([^'\n]*)'/g)].map((x) => x[1]));
+  return gs;
+}
+
+/** Chỗ viết tay trong một văn bản. */
+export function scanText(text, path, reg) {
+  const idx = codeIndex(reg);
+  const groups = []; // {line, items: [{code, line}]}
+  const addSub = (content, line) => {
+    for (const g of subGroups(content)) groups.push({ n: g.length, items: g.map((code) => ({ code, line })) });
+  };
+  if (path.endsWith(".sql")) {
+    const src = stripSqlComments(text);
+    let line = 1;
+    for (const m of src.matchAll(SQL_LIST)) {
+      line = src.slice(0, m.index).split("\n").length + (m[0].slice(0, m[0].indexOf("'")).split("\n").length - 1);
+      const items = [...m[0].matchAll(/'([^'\n]*)'/g)].map((x) => ({ code: x[1], line }));
+      groups.push({ n: items.length, items });
+    }
+  } else {
+    const toks = tokenizeJs(text);
+    const stack = []; // {kind, block, items, keys, labelMap}
+    const lineGroups = new Map();
+    const lineGroup = (l) => { if (!lineGroups.has(l)) lineGroups.set(l, { n: 0, items: [] }); return lineGroups.get(l); };
+    const finalize = (g) => {
+      if (g.kind === "{" && !g.block && g.labelMap && g.keys.length) { g.items.push(...g.keys); g.n += g.keys.length; }
+      groups.push(g);
+    };
+    for (let k = 0; k < toks.length; k++) {
+      const tk = toks[k];
+      const prev = toks[k - 1] ?? null;
+      const next = toks[k + 1] ?? null;
+      const top = stack[stack.length - 1];
+      if (tk.t === "p" && (tk.v === "(" || tk.v === "[" || tk.v === "{")) {
+        const block = tk.v === "{" && (prev == null || BLOCK_PREV.has(prev.v) || (prev.t === "id" && ["else", "try", "finally", "do"].includes(prev.v)));
+        stack.push({ kind: tk.v, block, n: 0, items: [], keys: [], labelMap: true });
+        continue;
+      }
+      if (tk.t === "p" && (tk.v === ")" || tk.v === "]" || tk.v === "}")) {
+        const g = stack.pop();
+        if (g) finalize(g);
+        continue;
+      }
+      const isKey = top && top.kind === "{" && !top.block && next && next.t === "p" && next.v === ":" && prev && prev.t === "p" && (prev.v === "{" || prev.v === ",");
+      if (isKey && (tk.t === "id" || tk.t === "str")) {
+        const val = toks[k + 2];
+        if (!val || val.t !== "str") top.labelMap = false;
+        top.keys.push({ code: tk.v, line: tk.line });
+        k++; // bỏ dấu ':'
+        if (val && val.t === "str") {
+          // giá trị là nhãn → không tính phần tử; giá trị là code ({s: 'sale'}) → phần tử của nhóm
+          addSub(val.v, val.line);
+          if (idx.has(val.v)) { top.items.push({ code: val.v, line: val.line }); top.n++; }
+          k++;
+        }
+        continue;
+      }
+      if (tk.t !== "str") continue;
+      addSub(tk.v, tk.line);
+      const target = !top || top.block ? lineGroup(tk.line) : top;
+      target.items.push({ code: tk.v, line: tk.line });
+      target.n++;
+    }
+    while (stack.length) finalize(stack.pop());
+    groups.push(...lineGroups.values());
+  }
+  const hits = [];
+  for (const g of groups) {
+    const perAxis = new Map();
+    for (const it of g.items) {
+      for (const axis of idx.get(it.code) ?? []) {
+        if (!perAxis.has(axis)) perAxis.set(axis, []);
+        const arr = perAxis.get(axis);
+        if (!arr.some((x) => x.code === it.code)) arr.push(it);
+      }
+    }
+    for (const [axis, arr] of perAxis) {
+      const soCode = g.items.filter((it) => (idx.get(it.code) ?? []).includes(axis)).length;
+      if (arr.length >= 2 && soCode * 2 >= g.n) hits.push({ path, line: Math.min(...arr.map((x) => x.line)), axis, codes: arr.map((x) => x.code) });
+    }
+  }
+  const key = (h) => `${h.path}:${h.line}:${h.axis}:${h.codes.join(",")}`;
+  const seen = new Set();
+  return hits.filter((h) => (seen.has(key(h)) ? false : (seen.add(key(h)), true))).sort((a, b) => a.line - b.line || a.axis.localeCompare(b.axis));
+}
+
+export const LINT_DIRS = ["pipeline", "agent/src", "app/src", "data-api/src", "scripts"];
+export const LINT_SKIP_FILES = new Set(["scripts/pre-merge-check.sh", "scripts/product-map.mjs", "scripts/check-lo-trinh.sh"]);
+const LINT_EXT = /\.(mjs|js|ts|tsx|sql)$/;
+const SKIP_DIR = new Set(["node_modules", ".next", "dist", "tests", "__fixtures__", "fixtures"]);
+// Mã cài từ registry (shadcn/ReUI) — không sửa tay (AGENTS.md khối ReUI), cùng nếp tệp chép từ kit.
+export const LINT_SKIP_DIRS = new Set(["app/src/components/ui", "app/src/components/reui", "app/src/components/blocks"]);
+const SKIP_FILE = /\.generated\.|\.test\.|\.itest\./;
+
+function* walkFiles(root, rel) {
+  let entries;
+  try { entries = readdirSync(join(root, rel), { withFileTypes: true }); } catch { return; }
+  for (const e of entries) {
+    const p = rel ? `${rel}/${e.name}` : e.name;
+    if (e.isDirectory()) { if (!SKIP_DIR.has(e.name) && !LINT_SKIP_DIRS.has(p)) yield* walkFiles(root, p); }
+    else if (LINT_EXT.test(e.name) && !SKIP_FILE.test(e.name) && !LINT_SKIP_FILES.has(p)) yield p;
+  }
+}
+
+/** Lint cả cây: hits đỏ, allowed (khớp ngoại lệ), allowBad (thiếu reason), allowStale (không còn khớp). */
+export function lintTree(root, reg) {
+  const all = [];
+  for (const d of LINT_DIRS) for (const p of walkFiles(root, d)) all.push(...scanText(readFileSync(join(root, p), "utf8"), p, reg));
+  let collectorCount = 0;
+  for (const p of walkFiles(root, "collector")) collectorCount += scanText(readFileSync(join(root, p), "utf8"), p, reg).length;
+  const allowBad = reg.allow.filter((x) => !x.reason || !String(x.reason).trim());
+  const okAllow = reg.allow.filter((x) => !allowBad.includes(x));
+  const match = (h, x) => h.path === x.path && h.axis === x.axis;
+  const allowed = all.filter((h) => okAllow.some((x) => match(h, x)));
+  const hits = all.filter((h) => !okAllow.some((x) => match(h, x)));
+  const allowStale = okAllow.filter((x) => !all.some((h) => match(h, x)));
+  return { hits, allowed, allowBad, allowStale, collectorCount };
 }
