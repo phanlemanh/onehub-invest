@@ -14,7 +14,7 @@
 ```
 dot: giao-dien-2310
 dang: lan-va
-nguon: khảo sát giao diện lượt cắt chung 23/10 (routes.md, spec chuẩn UI Phần B, invest-portal-ia, portals.md), xem docs/plan/BOI-CANH.md
+nguon: onehub-invest-tri-thuc:wiki/dot/giao-dien-2310.md#f830f50fb600a2c51b8d9e3550ad75932690cfa4
 
 - `GD1` — Finder /[country]: solution-analytics-1 + @mapcn/choropleth, PageHeader, trạng thái «đang thu thập», đủ tải/trống/lỗi
 - `GD2` — Insight thị trường + phường: khung solution-analytics-8, KPI của block, @mapcn/map, neo mục lục tiếng Anh, mục trống không bị ẩn
