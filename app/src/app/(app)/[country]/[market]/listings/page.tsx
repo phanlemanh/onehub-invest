@@ -1,12 +1,9 @@
 export const dynamic = "force-dynamic";
 
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ListingsRegion, ListingsRegionSkeleton } from "@/components/listing/listings-region";
-import { PageHeader } from "@/components/page/page-header";
-import { RegionError } from "@/components/states/region-error";
+import { ListingsPageBody } from "@/components/listing/listings-page-body";
 import { currencyFor, getArea } from "@/lib/queries";
 
 type Params = Promise<{ country: string; market: string }>;
@@ -19,39 +16,20 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return { title: area ? `Listing tại ${area.name}` : "Không tìm thấy" };
 }
 
-/**
- * Duyệt listing của một thị trường (IA §3.2): bộ lọc | lưới thẻ | bản đồ nhãn giá. PageHeader đứng ngay;
- * listing tải trong RegionError > Suspense (skeleton đúng bố cục, lỗi tại chỗ có Thử lại).
- */
+/** Duyệt listing của một thị trường (IA §3.2) — thân trang ở `listing/listings-page-body.tsx`. */
 export default async function MarketListingsPage({ params }: { params: Params }) {
   const { country, market } = await params;
   const marketId = `${country}-${market}`;
   const area = await getArea(marketId);
   if (!area || area.regionType !== "market") notFound();
-  const marketPath = `/${country}/${market}`;
-
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        crumbs={[
-          { label: COUNTRY_VI[country] ?? country.toUpperCase(), href: `/${country}` },
-          { label: area.name, href: marketPath },
-          { label: "Listing" },
-        ]}
-        title={`Listing tại ${area.name}`}
-        stats={[]}
-        description="Airbnb tự thu thập · công suất và doanh thu tính trên lịch đặt các tháng tới"
-      />
-      <RegionError what="listing của thị trường">
-        <Suspense fallback={<ListingsRegionSkeleton />}>
-          <ListingsRegion
-            marketId={marketId}
-            marketName={area.name}
-            marketPath={marketPath}
-            currency={currencyFor(marketId)}
-          />
-        </Suspense>
-      </RegionError>
-    </div>
+    <ListingsPageBody
+      country={country}
+      countryName={COUNTRY_VI[country] ?? country.toUpperCase()}
+      marketId={marketId}
+      marketName={area.name}
+      marketPath={`/${country}/${market}`}
+      currency={currencyFor(marketId)}
+    />
   );
 }

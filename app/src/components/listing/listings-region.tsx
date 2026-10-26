@@ -5,30 +5,37 @@ import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fmtInt } from "@/lib/format"
-import { getMarketListings } from "@/lib/queries"
+import { getMarketListings, type ListingCardRow } from "@/lib/queries"
 import { ListingsExplorer } from "./listings-explorer"
 
 /** Số listing gửi xuống trình duyệt (nhãn bản đồ + thẻ) — xếp theo doanh thu. */
 export const LISTINGS_LIMIT = 300
 
 /**
- * Vùng dữ liệu của trang Duyệt listing — tải trong `RegionError > Suspense` để PageHeader đứng trước. Thị
- * trường chưa có listing tự thu → Empty «đang thu thập» (khác «bộ lọc ra 0», copy-vi.md); quá giới hạn tải
- * → dòng ghi chú nói rõ chỉ hiện các listing doanh thu cao nhất.
+ * Vùng dữ liệu của trang Duyệt listing — tải trong `RegionError > Suspense` để PageHeader đứng trước.
  */
-export async function ListingsRegion({
-  marketId,
+export async function ListingsRegion(props: { marketId: string; marketName: string; marketPath: string; currency: string }) {
+  const { rows, total } = await getMarketListings(props.marketId, { limit: LISTINGS_LIMIT })
+  return <ListingsRegionView {...props} rows={rows} total={total} />
+}
+
+/**
+ * Vùng theo dữ liệu đã tải (đồng bộ, test dựng thẳng). Thị trường chưa có listing tự thu → Empty «đang thu
+ * thập» (khác «bộ lọc ra 0», copy-vi.md); quá giới hạn tải → dòng ghi chú nói rõ chỉ hiện listing doanh thu cao nhất.
+ */
+export function ListingsRegionView({
   marketName,
   marketPath,
   currency,
+  rows,
+  total,
 }: {
-  marketId: string
   marketName: string
   marketPath: string
   currency: string
+  rows: ListingCardRow[]
+  total: number
 }) {
-  const { rows, total } = await getMarketListings(marketId, { limit: LISTINGS_LIMIT })
-
   if (rows.length === 0) {
     return (
       <Empty className="border">

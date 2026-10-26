@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react"
 import { FilterIcon, XIcon } from "lucide-react"
+import { cn } from "cn"
 
 import { Badge } from "@/components/reui/badge"
-import type { FilterQuery } from "@/components/reui/filters/filters-types"
+import type { FilterQuery, FilterRule } from "@/components/reui/filters/filters-types"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -78,10 +79,16 @@ function CheckList({
     <ul className="flex flex-col gap-2.5">
       {options.map((option) => {
         const id = `listing-filter-${name}-${option.value}`
+        const checked = selected.includes(option.value)
+        // Chọn thêm sẽ ra 0 listing với các lựa chọn khác — tắt (vẫn bỏ chọn được nếu đang chọn).
+        const dead = option.count === 0 && !checked
         return (
           <li key={option.value} className="flex items-center gap-2.5">
-            <Checkbox id={id} checked={selected.includes(option.value)} onCheckedChange={() => onToggle(option.value)} />
-            <Label htmlFor={id} className="text-foreground flex min-w-0 flex-1 justify-between gap-3 text-sm font-normal">
+            <Checkbox id={id} checked={checked} disabled={dead} onCheckedChange={() => onToggle(option.value)} />
+            <Label
+              htmlFor={id}
+              className={cn("text-foreground flex min-w-0 flex-1 justify-between gap-3 text-sm font-normal", dead && "text-muted-foreground")}
+            >
               <span className="truncate">{option.label}</span>
               <span className="text-muted-foreground tabular-nums">{fmtInt(option.count)}</span>
             </Label>
@@ -99,7 +106,8 @@ const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) =
  * có đầu và chân ghim, thân cuộn. Khác bản gốc: bốn mục của listing (Loại phòng, Phòng ngủ tối thiểu, Giá/đêm,
  * Phường — danh sách dài nhất xếp cuối) thay cho mục thời trang; số cạnh mỗi lựa chọn đếm sống trên listing đã tải (bản gốc là số cố định);
  * chip đang chọn là Badge + nút bỏ (bản gốc tự dựng nút tròn); chọn trong ngăn là NHÁP, «Xem N listing» mới
- * ghi vào cây lọc chung với thanh chip. Mở ngăn → nháp đọc lại từ cây hiện tại.
+ * ghi vào cây lọc chung với thanh chip. Mở ngăn → nháp đọc lại từ cây hiện tại; điều kiện thanh chip mà ngăn
+ * không biểu diễn được giữ nguyên khi áp (có dòng báo), «Xoá hết»/«Đặt lại» mới bỏ chúng.
  */
 export function ListingsFilterSheet({
   listings,
@@ -114,11 +122,11 @@ export function ListingsFilterSheet({
 }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<Facets>(EMPTY_FACETS)
-  const [lossy, setLossy] = useState(false)
+  const [rest, setRest] = useState<FilterRule[]>([])
   const bounds = useMemo(() => priceBounds(listings), [listings])
 
-  const areaCounts = useMemo(() => facetCounts(listings, draft, FIELD.area), [listings, draft])
-  const roomCounts = useMemo(() => facetCounts(listings, draft, FIELD.roomType), [listings, draft])
+  const areaCounts = useMemo(() => facetCounts(listings, draft, FIELD.area, rest), [listings, draft, rest])
+  const roomCounts = useMemo(() => facetCounts(listings, draft, FIELD.roomType, rest), [listings, draft, rest])
   const allAreas = useMemo(
     () => [...new Set(listings.map((l) => l.areaName).filter((a): a is string => Boolean(a)))].sort((a, b) => a.localeCompare(b, "vi")),
     [listings]
@@ -127,14 +135,19 @@ export function ListingsFilterSheet({
     () => [...new Set(listings.map((l) => l.roomType).filter((r): r is string => Boolean(r)))],
     [listings]
   )
-  const matching = useMemo(() => listings.filter(compileListingFilter(queryFromFacets(draft))).length, [listings, draft])
+  const matching = useMemo(() => listings.filter(compileListingFilter(queryFromFacets(draft, rest))).length, [listings, draft, rest])
   const applied = activeFilterCount(query)
+
+  function clearAll() {
+    setDraft(EMPTY_FACETS)
+    setRest([])
+  }
 
   function onOpenChange(next: boolean) {
     if (next) {
       const read = facetsFromQuery(query)
       setDraft(read.facets)
-      setLossy(read.lossy)
+      setRest(read.rest)
     }
     setOpen(next)
   }
@@ -187,12 +200,12 @@ export function ListingsFilterSheet({
             <SheetDescription className="sr-only">Lọc listing theo phường, loại phòng, số phòng ngủ và giá một đêm.</SheetDescription>
           </div>
           <div className="flex items-center gap-1">
-            {chips.length > 0 ? (
+            {chips.length > 0 || rest.length > 0 ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setDraft(EMPTY_FACETS)}
+                onClick={clearAll}
                 className="text-muted-foreground hover:text-foreground"
               >
                 Xoá hết
@@ -218,9 +231,9 @@ export function ListingsFilterSheet({
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex flex-col py-5">
-            {lossy && (
+            {rest.length > 0 && (
               <p className="text-muted-foreground px-5 pb-4 text-xs">
-                Một số điều kiện dựng ở thanh lọc màn rộng không hiện ở đây; «Xem listing» sẽ thay chúng.
+                Còn {fmtInt(rest.length)} điều kiện từ thanh lọc màn rộng không chỉnh được ở đây — vẫn được áp; «Xoá hết» bỏ cả chúng.
               </p>
             )}
             {chips.length > 0 ? (
@@ -340,7 +353,7 @@ export function ListingsFilterSheet({
             size="sm"
             className="flex-1"
             onClick={() => {
-              onQueryChange(queryFromFacets(draft))
+              onQueryChange(queryFromFacets(draft, rest))
               setOpen(false)
             }}
           >
@@ -350,8 +363,8 @@ export function ListingsFilterSheet({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setDraft(EMPTY_FACETS)}
-            disabled={chips.length === 0}
+            onClick={clearAll}
+            disabled={chips.length === 0 && rest.length === 0}
             className="text-muted-foreground hover:text-foreground"
           >
             Đặt lại

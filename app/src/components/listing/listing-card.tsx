@@ -83,6 +83,8 @@ export function ListingCard({
       variant="default"
       spacing="default"
       dense={false}
+      data-listing-id={listing.id}
+      data-active={active || undefined}
       className={cn("group/card min-w-0 transition-colors", active && "ring-ring/50 ring-2")}
       onMouseEnter={() => onHover(listing.id)}
       onMouseLeave={() => onHover(null)}

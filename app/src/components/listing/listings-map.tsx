@@ -8,6 +8,7 @@ import "maplibre-gl/dist/maplibre-gl.css"
 import "@/lib/map-worker"
 
 import { Badge } from "@/components/reui/badge"
+import { Button } from "@/components/ui/button"
 import { Map as MapCanvas, MapControls, MapPopup, useMap } from "@/components/ui/map"
 import { fmtCompact, fmtMoney, fmtPct } from "@/lib/format"
 import { MAP_FONT, MAP_OPTIONS, addAttribution, basemapUrl, denseBounds, prepareBasemap } from "@/lib/map-style"
@@ -139,19 +140,32 @@ function ListingLayers({ listings, activeId, dark, onHover, onSelect, onViewport
 
   // Ghi nguồn thu gọn + cửa «người dùng di chuyển» — một lần cho mỗi bản đồ.
   const userMoveRef = useRef(false)
+  /** Đang chạy một lần canh khung của máy: di chuyển này không bao giờ tính là người dùng (kể cả trong cửa 1 giây). */
+  const machineMoveRef = useRef(false)
   useEffect(() => {
     if (!map) return
+    // Móc đo cho smoke trình duyệt (scripts/smoke-listings-browse.mjs) — chỉ ở dev, bản build không có.
+    if (process.env.NODE_ENV !== "production") (window as { __listingsMap?: unknown }).__listingsMap = map
     // Effect chạy lại (StrictMode, dựng lại cây) không gắn thêm nút ghi nguồn thứ hai.
     if (!map.getContainer().querySelector(".maplibregl-ctrl-attrib")) addAttribution(map)
     let lastInput = 0
-    const markInput = () => (lastInput = Date.now())
+    const markInput = () => {
+      lastInput = Date.now()
+      // Người dùng chạm vào giữa lúc máy canh khung: MapLibre dừng hoạt cảnh, cử chỉ sau đó là của người.
+      machineMoveRef.current = false
+    }
     const container = map.getContainer()
     const inputs = ["pointerdown", "wheel", "keydown", "touchstart"] as const
     for (const ev of inputs) container.addEventListener(ev, markInput, { capture: true, passive: true })
     const onMoveStart = (e: { originalEvent?: unknown }) => {
+      if (machineMoveRef.current) return
       if (e.originalEvent || Date.now() - lastInput < USER_INPUT_WINDOW_MS) userMoveRef.current = true
     }
     const onMoveEnd = () => {
+      if (machineMoveRef.current) {
+        machineMoveRef.current = false
+        return
+      }
       if (!userMoveRef.current) return
       userMoveRef.current = false
       const b = map.getBounds()
@@ -263,26 +277,32 @@ function ListingLayers({ listings, activeId, dark, onHover, onSelect, onViewport
 
     // Rê chuột / bấm: nhãn hoặc chấm của listing lẻ. Bấm mở popup (khuôn store-locator), không nhảy trang.
     const offs: (() => void)[] = []
-    const on = (type: keyof MapLayerEventType, layer: string, fn: (e: never) => void) => {
-      map.on(type as "click", layer, fn as never)
-      offs.push(() => map.off(type as "click", layer, fn as never))
+    const on = (type: keyof MapLayerEventType, layer: string | string[], fn: (e: never) => void) => {
+      const ids = typeof layer === "string" ? [layer] : layer
+      map.on(type as "click", ids, fn as never)
+      offs.push(() => map.off(type as "click", ids, fn as never))
     }
-    for (const layer of [L.pills, L.dots, L.pillActive]) {
-      on("mousemove", layer, (e: { features?: { properties?: { id?: unknown } }[] }) => {
-        const id = e.features?.[0]?.properties?.id
-        if (typeof id !== "string") return
-        map.getCanvas().style.cursor = "pointer"
-        live.current.onHover(id)
-      })
-      on("mouseleave", layer, () => {
-        map.getCanvas().style.cursor = ""
-        live.current.onHover(null)
-      })
-      on("click", layer, (e: { features?: { properties?: { id?: unknown } }[] }) => {
-        const id = e.features?.[0]?.properties?.id
-        if (typeof id === "string") live.current.onSelect(id)
-      })
+    // Một bộ nghe cho cả ba lớp (thứ tự vẽ: trên cùng trước) — nhãn và chấm của hai listing chồng nhau thì lấy
+    // phần tử trên cùng, không để lớp dưới ghi đè lựa chọn.
+    const POINT_LAYERS = [L.pillActive, L.pills, L.dots]
+    const topId = (e: { features?: { properties?: { id?: unknown } }[] }) => {
+      const id = e.features?.[0]?.properties?.id
+      return typeof id === "string" ? id : null
     }
+    on("mousemove", POINT_LAYERS, (e: { features?: { properties?: { id?: unknown } }[] }) => {
+      const id = topId(e)
+      if (!id) return
+      map.getCanvas().style.cursor = "pointer"
+      live.current.onHover(id)
+    })
+    on("mouseleave", POINT_LAYERS, () => {
+      map.getCanvas().style.cursor = ""
+      live.current.onHover(null)
+    })
+    on("click", POINT_LAYERS, (e: { features?: { properties?: { id?: unknown } }[] }) => {
+      const id = topId(e)
+      if (id) live.current.onSelect(id)
+    })
     // Bấm cụm: phóng tới mức tách cụm — tính là người dùng di chuyển (lọc danh sách).
     on("click", L.clusters, async (e: { features?: { properties: { cluster_id: number }; geometry: GeoJSON.Geometry }[] }) => {
       const f = e.features?.[0]
@@ -306,6 +326,14 @@ function ListingLayers({ listings, activeId, dark, onHover, onSelect, onViewport
     }
   }, [map, isLoaded, dark])
 
+  /** Canh khung của máy: chặn cửa «người dùng» cho đúng lần di chuyển này; không di chuyển thì mở chặn ngay. */
+  const machineFit = (m: NonNullable<typeof map>, bounds: ReturnType<typeof denseBounds>, duration?: number) => {
+    userMoveRef.current = false
+    machineMoveRef.current = true
+    m.fitBounds(bounds, { padding: 40, maxZoom: 15, ...(duration === undefined ? {} : { duration }) })
+    if (!m.isMoving()) machineMoveRef.current = false
+  }
+
   // Tập listing đổi (bộ lọc thuộc tính): thay dữ liệu, không dựng lại lớp. Không đang lọc theo vùng
   // thì canh khung theo tập mới — di chuyển của máy, không lọc danh sách.
   const firstData = useRef(true)
@@ -318,8 +346,7 @@ function ListingLayers({ listings, activeId, dark, onHover, onSelect, onViewport
     }
     if (holdView || listings.length === 0) return
     const bounds = denseBounds(listings.map((l) => [l.lng, l.lat]))
-    userMoveRef.current = false
-    map.fitBounds(bounds, { padding: 40, maxZoom: 15, duration: 300 })
+    machineFit(map, bounds, 300)
     // holdView đọc theo lúc dữ liệu đổi; đổi holdView một mình không canh khung.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi tập listing đổi
   }, [map, isLoaded, data])
@@ -327,8 +354,7 @@ function ListingLayers({ listings, activeId, dark, onHover, onSelect, onViewport
   // "Bỏ lọc": canh khung lại toàn bộ.
   useEffect(() => {
     if (!map || resetKey === 0 || listings.length === 0) return
-    userMoveRef.current = false
-    map.fitBounds(denseBounds(listings.map((l) => [l.lng, l.lat])), { padding: 40, maxZoom: 15 })
+    machineFit(map, denseBounds(listings.map((l) => [l.lng, l.lat])))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi bấm «Bỏ lọc»
   }, [resetKey])
 
@@ -438,13 +464,15 @@ export function ListingsMap({
                     <dd className="text-popover-foreground font-semibold tabular-nums">{fmtPct(selected.occupancy)}</dd>
                   </div>
                 </dl>
-                <Link
-                  prefetch={false}
-                  href={`/listing/${selected.id}`}
-                  className="text-primary w-fit text-xs font-medium hover:underline focus-visible:ring-ring rounded-sm outline-none focus-visible:ring-2"
+                <Button
+                  variant="outline"
+                  size="xs"
+                  className="w-fit"
+                  nativeButton={false}
+                  render={<Link prefetch={false} href={`/listing/${selected.id}`} />}
                 >
                   Xem listing
-                </Link>
+                </Button>
               </div>
             </MapPopup>
           )}

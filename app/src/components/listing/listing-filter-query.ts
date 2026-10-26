@@ -3,15 +3,17 @@
  *
  * Trạng thái DUY NHẤT là cây `FilterQuery` của @reui/filters: thanh chip (màn rộng) sửa nó trực tiếp,
  * ngăn lọc filter-sidebar-5 (màn hẹp) đọc cây thành `Facets`, người chỉnh rồi «Xem N listing» ghi
- * ngược bằng `queryFromFacets`. Lọc chạy trên các listing đã tải (≤ LIMIT của trang) — không gọi lại server.
+ * ngược bằng `queryFromFacets` (điều kiện ngăn không biểu diễn được giữ nguyên). Lọc chạy trên các listing đã tải (≤ LIMIT của trang) — không gọi lại server.
  */
 import {
   createFilterQuery,
   createFilterRule,
   flattenFilterConditions,
+  flattenFilterRules,
+  isFilterRuleComplete,
   type FilterCondition,
 } from "@/components/reui/filters/filters-query"
-import type { FilterNode, FilterQuery } from "@/components/reui/filters/filters-types"
+import type { FilterNode, FilterQuery, FilterRule } from "@/components/reui/filters/filters-types"
 import type { ListingCardRow } from "@/lib/queries"
 
 /** Id trường lọc = khoá trên rule.path[0]. */
@@ -157,35 +159,39 @@ export type Facets = {
 export const EMPTY_FACETS: Facets = { areas: [], roomTypes: [], minBedrooms: null, price: [null, null] }
 
 /**
- * Đọc cây thành facet. Chỉ hiểu dạng ngăn lọc tự ghi (phường/loại phòng `is_any_of`, phòng ngủ `gte`,
- * giá `between`); điều kiện khác dựng ở thanh chip (vd «không thuộc», «bằng») trả `lossy: true` để ngăn
- * lọc báo rằng áp dụng sẽ thay chúng.
+ * Đọc cây thành facet. Chỉ hiểu dạng ngăn lọc tự ghi (phường/loại phòng `is_any_of`/`is`, phòng ngủ `gte`,
+ * giá `between`); điều kiện khác dựng ở thanh chip (vd «không phải», «bằng») về `rest` NGUYÊN VẸN — ngăn hiện
+ * dòng báo và `queryFromFacets` nối lại chúng khi áp, không xoá im lặng điều kiện người đã nhập. Điều kiện soạn
+ * dở bị bỏ (không lọc gì). Gốc «hoặc» (thanh basic không dựng được) → mọi điều kiện về `rest`.
  */
-export function facetsFromQuery(query: FilterQuery): { facets: Facets; lossy: boolean } {
+export function facetsFromQuery(query: FilterQuery): { facets: Facets; rest: FilterRule[] } {
   const facets: Facets = { ...EMPTY_FACETS, price: [null, null] }
-  let lossy = query.combinator === "or" && flattenFilterConditions(query).length > 1
-  for (const c of flattenFilterConditions(query)) {
-    if (c.negated) {
-      lossy = true
+  const rules = flattenFilterRules(query).filter(isFilterRuleComplete)
+  if (query.combinator === "or" && rules.length > 1) return { facets, rest: rules }
+  const rest: FilterRule[] = []
+  for (const rule of rules) {
+    const [c] = flattenFilterConditions(createFilterQuery([rule], "and"))
+    if (!c || c.negated) {
+      if (c) rest.push(rule)
       continue
     }
     if ((c.field === FIELD.area || c.field === FIELD.roomType) && (c.operator === "is_any_of" || c.operator === "is")) {
       const list = c.values.filter((v): v is string => typeof v === "string")
       if (c.field === FIELD.area) facets.areas = [...new Set([...facets.areas, ...list])]
       else facets.roomTypes = [...new Set([...facets.roomTypes, ...list])]
-    } else if (c.field === FIELD.bedrooms && c.operator === "gte" && isNum(c.values[0])) {
+    } else if (c.field === FIELD.bedrooms && c.operator === "gte" && isNum(c.values[0]) && facets.minBedrooms === null) {
       facets.minBedrooms = c.values[0]
-    } else if (c.field === FIELD.price && c.operator === "between") {
+    } else if (c.field === FIELD.price && c.operator === "between" && facets.price[0] === null && facets.price[1] === null) {
       facets.price = [isNum(c.values[0]) ? c.values[0] : null, isNum(c.values[1]) ? c.values[1] : null]
     } else {
-      lossy = true
+      rest.push(rule)
     }
   }
-  return { facets, lossy }
+  return { facets, rest }
 }
 
 /** Ghi facet thành cây phẳng «và» (thứ tự trường cố định để chip không nhảy chỗ; id cố định theo trường — không sinh ngẫu nhiên, khỏi lệch hydrate). */
-export function queryFromFacets(f: Facets): FilterQuery {
+export function queryFromFacets(f: Facets, rest: FilterRule[] = []): FilterQuery {
   const rules: FilterNode[] = []
   if (f.areas.length > 0)
     rules.push(createFilterRule({ id: "facet-area", path: [FIELD.area], operator: "is_any_of", value: f.areas }))
@@ -195,6 +201,8 @@ export function queryFromFacets(f: Facets): FilterQuery {
     rules.push(createFilterRule({ id: "facet-bedrooms", path: [FIELD.bedrooms], operator: "gte", value: f.minBedrooms }))
   if (f.price[0] !== null || f.price[1] !== null)
     rules.push(createFilterRule({ id: "facet-price", path: [FIELD.price], operator: "between", value: [f.price[0] ?? undefined, f.price[1] ?? undefined] }))
+  // Điều kiện ngăn không biểu diễn được đi tiếp nguyên vẹn (cùng id — chip của thanh không nhảy).
+  rules.push(...rest)
   return createFilterQuery(rules, "and")
 }
 
@@ -205,9 +213,10 @@ export function queryFromFacets(f: Facets): FilterQuery {
 export function facetCounts(
   rows: ListingFilterRow[],
   f: Facets,
-  field: typeof FIELD.area | typeof FIELD.roomType
+  field: typeof FIELD.area | typeof FIELD.roomType,
+  rest: FilterRule[] = []
 ): Map<string, number> {
-  const others = compileListingFilter(queryFromFacets(field === FIELD.area ? { ...f, areas: [] } : { ...f, roomTypes: [] }))
+  const others = compileListingFilter(queryFromFacets(field === FIELD.area ? { ...f, areas: [] } : { ...f, roomTypes: [] }, rest))
   const counts = new Map<string, number>()
   for (const row of rows) {
     if (!others(row)) continue
