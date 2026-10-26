@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 2daec52c127ee645c4505724af8603e8847af355
+verified_commit: 0bd96d4bc9882650e8a03abc31927ff9611f603f
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -232,3 +232,7 @@ guard có chủ ý. E6 và E8 không đo baseline. Guard `main()` qua đường 
 ### Re-pin lần 1 — 2026-10-25, do gộp main 169b8c6 sau ký Cổng 2
 run_id: repin-20261025T232719Z-15688
 sha: 2daec52c127ee645c4505724af8603e8847af355 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-26, do gộp main e70e148 (#123 sửa test chập chờn) trước merge
+run_id: repin-20261026T061149Z-44302
+sha: 0bd96d4bc9882650e8a03abc31927ff9611f603f · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
