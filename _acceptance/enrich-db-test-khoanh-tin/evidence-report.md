@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e582817583085e00989e2a869da839fac9afb534
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: enrich-db-test-khoanh-tin
