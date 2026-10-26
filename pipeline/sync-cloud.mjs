@@ -181,6 +181,25 @@ export function selectList(table, localCols, geoCols = []) {
   return { sql, cols, unapproved };
 }
 
+/** PL14 (044): sale_offers/listings ở local là VIEW chỉ gồm dòng sống; bảng con chỉ chép dòng có cha còn sống — cloud
+ * giữ lược đồ cũ (khoá ngoại tới hai bảng ấy) nên dòng trỏ cha đã nghỉ không được lên. Bảng → [cột con, view cha, khoá]. */
+export const CHILD_OF_LIVE = {
+  nights: ["listing_id", "listings", "id"],
+  listing_stats: ["listing_id", "listings", "id"],
+  property_offers: ["offer_id", "sale_offers", "offer_id"],
+};
+
+/** Mệnh đề WHERE lọc bảng con theo cha sống (rỗng với bảng khác). */
+export function childFilterSql(table) {
+  const p = CHILD_OF_LIVE[table];
+  return p ? ` WHERE ${q(p[0])} IN (SELECT ${q(p[2])} FROM ${q(p[1])})` : "";
+}
+
+/** Câu đọc local của một bảng sync: danh sách cột đã lọc + lọc cha sống. */
+export function localReadSql(table, list) {
+  return `SELECT row_to_json(x)::text AS j FROM (SELECT ${list || "1 AS _"} FROM ${q(table)}${childFilterSql(table)}) x`;
+}
+
 /** Kế hoạch tráo trên tên cloud: thứ tự INSERT cha trước con, DELETE ngược lại; `keep` =
  * bảng FILL bị một bảng NGOÀI FILL tham chiếu → UPSERT theo khoá chính + xoá dòng thừa. */
 export function planTables({ fill, fks, pks }) {
@@ -601,7 +620,7 @@ export async function syncOnce({ local, exec, log = console.log, runId = newRunI
       // Dòng dạng JSON do Postgres sinh: số thập phân trong jsonb, micro-giây, ngày giữ
       // nguyên (JSON.parse của node-pg làm tròn số jsonb về double).
       const list = selectList(t, send, geo.get(t) ?? []).sql;
-      const { rows } = await local.query(`SELECT row_to_json(x)::text AS j FROM (SELECT ${list || "1 AS _"} FROM ${q(t)}) x`);
+      const { rows } = await local.query(localReadSql(t, list));
       data.set(ct, send.length ? rows.map((r) => r.j) : []);
     }
     await local.query("COMMIT");

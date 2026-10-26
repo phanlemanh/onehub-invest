@@ -6,9 +6,9 @@
 // match tên từ subject như transform-zalo. Upsert KHÔNG xóa cũ — fabric
 // tích luỹ theo thời gian phục vụ trend.
 import { realpathSync } from "node:fs";
-import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { mintOfferId } from "./lib/offer-key.mjs";
 import { matchPhuong } from "./transform-zalo.mjs";
 import { docPhuongHopLe } from "./lib/osm.mjs";
 import { CONFIDENCE, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
@@ -20,7 +20,7 @@ const norm = (s) =>
   (s ?? "").normalize("NFC").toLowerCase().replace(/^(phường|xã|thị trấn|thị xã)\s+/i, "").trim();
 
 /**
- * Thân transform S06 — main chạy không bọc transaction như trước; test và phép đo bọc BEGIN…ROLLBACK.
+ * Thân transform S06 — main chạy không bọc transaction như trước; test và phép đo (thước nap-lai-ba-luot) bọc BEGIN…ROLLBACK.
  * @param {import("pg").Client} client
  */
 export async function runTransformChotot(client) {
@@ -75,26 +75,29 @@ export async function runTransformChotot(client) {
     const pricePerm2 = payload.price_million_per_m2
       ? Math.round(payload.price_million_per_m2 * 1e6)
       : Math.round(Number(ad.price) / Number(ad.size_m2));
-    const offerId = `offer_${createHash("sha256").update(`S06|${ad.list_id}`).digest("hex").slice(0, 16)}`;
+    // Khoá gốc S06 = list_id (RESO OriginatingSystemKey); offer_id = mintOfferId — cùng công thức trước PL14.
+    const osk = String(ad.list_id);
+    const offerId = mintOfferId("S06", osk);
     const seller = ad.seller ?? {};
     const seen = ad.list_time ?? ad.captured_at;
 
     await client.query(
-      `INSERT INTO sale_offers (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
+      `INSERT INTO sale_offer_records (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
                                  bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
-                                 price_tier, district_raw, seller_name, seller_ref, property_type)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,1,ARRAY[]::text[],'S06','P2',$11,$12,$13,$14)
+                                 price_tier, district_raw, seller_name, seller_ref, property_type, originating_system_key)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,1,ARRAY[]::text[],'S06','P2',$11,$12,$13,$14,$15)
        ON CONFLICT (offer_id) DO UPDATE SET
          last_seen = EXCLUDED.last_seen, price_vnd = EXCLUDED.price_vnd,
          price_perm2 = EXCLUDED.price_perm2, confidence = EXCLUDED.confidence,
-         area_id = COALESCE(EXCLUDED.area_id, sale_offers.area_id),
-         phuong_raw = COALESCE(EXCLUDED.phuong_raw, sale_offers.phuong_raw),
-         property_type = EXCLUDED.property_type`,
+         area_id = COALESCE(EXCLUDED.area_id, sale_offer_records.area_id),
+         phuong_raw = COALESCE(EXCLUDED.phuong_raw, sale_offer_records.phuong_raw),
+         property_type = EXCLUDED.property_type,
+         originating_system_key = EXCLUDED.originating_system_key`,
       [
         offerId, areaId, kind, Number(ad.price), Number(ad.size_m2), pricePerm2,
         ad.rooms, phuongRaw, confidence, seen,
         ad.area_name, seller.full_name ?? null,
-        payload.account_id ? `ct:${payload.account_id}` : null, propertyType,
+        payload.account_id ? `ct:${payload.account_id}` : null, propertyType, osk,
       ],
     );
   }

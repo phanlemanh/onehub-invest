@@ -54,6 +54,8 @@ executors:
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
     vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
+    nap_lai: "cd pipeline && node --test scripts/nap-lai.test.mjs"   # PL14: khoá tin bền, đối soát không xoá, quét DELETE — không cần DB
+    nap_lai_db: "cd pipeline && node --test scripts/nap-lai-db.itest.mjs"   # PL14: migration 044 + đối soát + đổi khoá + listing nghỉ + sync con, trong giao dịch ROLLBACK — cần DB local :5433
     che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"
     job_exit: "node --test scripts/job-exit.test.mjs"
     vong_doi_nguon: "cd pipeline && node --test scripts/vong-doi.test.mjs scripts/vong-doi.itest.mjs"   # TV2a: .test thuần (CI), .itest cần DB local :5433
@@ -81,6 +83,8 @@ executors:
     vocab_check: "node pipeline/vocab.mjs --check"   # PL6: tệp sinh khớp sổ mappings.yaml — đo trạng thái cây
     vocab_lint: "node pipeline/vocab.mjs --lint"     # PL6: 0 enum viết tay ngoài sổ — đo trạng thái cây
     vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
+    nap_lai_ba_luot: "node pipeline/scripts/nap-lai-ba-luot.mjs"   # PL14 thước bật: 3 lượt nạp lại trong giao dịch ROLLBACK, 0 quyết định/liên kết mất — cần DB local :5433
+    cloud_catchup_static: "node scripts/check-cloud-catchup.mjs nap-lai-khong-xoa"   # PL14 AC-10: tệp SQL bắt kịp 043/044 có phần đo trước + áp — đo trạng thái cây
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
     luong7_smoke: "node scripts/smoke-luong-7-ngay.mjs"     # ON5 AC-9 — bảng Luồng 7 ngày ở chế độ máy chủ trên trình duyệt (lược đồ tạm, Chromium)
     s02_smoke: "node scripts/smoke-collections-khong-so-s02.mjs"     # ON6 AC-7 — trang Thu thập ở máy thu không số S02 (Chromium 1280, ảnh chụp)

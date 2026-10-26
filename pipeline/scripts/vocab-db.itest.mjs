@@ -14,7 +14,10 @@ import { checkDb, emitSeed, loadRegister, readMappings, validateRegister } from 
 
 const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(PIPE, "..");
-const MIG = readFileSync(join(ROOT, "db/migrations/043_ref_vocabulary.sql"), "utf8");
+const MIG_GOC = readFileSync(join(ROOT, "db/migrations/043_ref_vocabulary.sql"), "utf8");
+// PL14 (044) đổi sale_offers thành VIEW sống: áp lại 043 trên DB đã có 044 thì nhắm bảng bản ghi (dựng DB mới vẫn chạy
+// 043 nguyên văn theo thứ tự). MIG được gán trong before() khi đã biết trạng thái DB.
+let MIG = MIG_GOC;
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const REG = readMappings(ROOT);
 const CHK = ["sale_offers_kind_chk", "sale_offers_confidence_chk", "sale_offers_price_tier_chk", "sale_offers_property_type_chk", "properties_property_type_chk"];
@@ -27,23 +30,34 @@ const CHK_025 = {
 };
 
 let c;
-before(async () => { c = new pg.Client({ connectionString: DB_URL }); await c.connect(); });
+before(async () => {
+  c = new pg.Client({ connectionString: DB_URL });
+  await c.connect();
+  if ((await c.query("SELECT to_regclass('sale_offer_records') AS r")).rows[0].r) {
+    MIG = MIG_GOC.replaceAll("ALTER TABLE sale_offers VALIDATE", "ALTER TABLE sale_offer_records VALIDATE");
+  }
+});
 after(async () => { await c.end(); });
 
 const trangThai = async () => Object.fromEntries((await c.query(
   `SELECT conname, convalidated FROM pg_constraint WHERE conname = ANY($1)`, [CHK])).rows.map((r) => [r.conname, r.convalidated]));
 
+// PL14: sau 044 `sale_offers` là VIEW sống, CHECK nằm ở bảng bản ghi.
+const tinThat = async () => ((await c.query("SELECT to_regclass('sale_offer_records') AS r")).rows[0].r ? "sale_offer_records" : "sale_offers");
+
 async function tienDe() {
+  const T = await tinThat();
   await c.query("DROP TABLE IF EXISTS ref_field_lookup, ref_lookup");
   await c.query("ALTER TABLE properties DROP CONSTRAINT IF EXISTS properties_property_type_chk");
   for (const [ten, def] of Object.entries(CHK_025)) {
-    await c.query(`ALTER TABLE sale_offers DROP CONSTRAINT IF EXISTS ${ten}`);
-    await c.query(`ALTER TABLE sale_offers ADD CONSTRAINT ${ten} ${def} NOT VALID`);
+    await c.query(`ALTER TABLE ${T} DROP CONSTRAINT IF EXISTS ${ten}`);
+    await c.query(`ALTER TABLE ${T} ADD CONSTRAINT ${ten} ${def} NOT VALID`);
   }
 }
 
 async function trongGiaoDich(fn) {
   await c.query("BEGIN");
+  await c.query("SELECT pg_advisory_xact_lock(33033)"); // cùng khoá với các test nạp 044 trong giao dịch
   try { await fn(); } finally { await c.query("ROLLBACK"); }
 }
 
@@ -82,9 +96,10 @@ test("VD-AC-7 áp 043 trên tiền đề lần đầu: ref_* đúng sổ, năm C
 test("VD-AC-7 đối chứng: có dòng property_type ngoài sổ thì 043 lỗi, nêu tên ràng buộc", async () => {
   await trongGiaoDich(async () => {
     await tienDe();
-    await c.query("ALTER TABLE sale_offers DROP CONSTRAINT sale_offers_property_type_chk");
-    await c.query("UPDATE sale_offers SET property_type = 'khong_co' WHERE offer_id = (SELECT min(offer_id) FROM sale_offers)");
-    await c.query(`ALTER TABLE sale_offers ADD CONSTRAINT sale_offers_property_type_chk ${CHK_025.sale_offers_property_type_chk} NOT VALID`);
+    const T = await tinThat();
+    await c.query(`ALTER TABLE ${T} DROP CONSTRAINT sale_offers_property_type_chk`);
+    await c.query(`UPDATE ${T} SET property_type = 'khong_co' WHERE offer_id = (SELECT min(offer_id) FROM ${T})`);
+    await c.query(`ALTER TABLE ${T} ADD CONSTRAINT sale_offers_property_type_chk ${CHK_025.sale_offers_property_type_chk} NOT VALID`);
     await assert.rejects(c.query(MIG), (e) => {
       assert.match(e.message, /sale_offers_property_type_chk/);
       return true;
