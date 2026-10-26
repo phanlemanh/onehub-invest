@@ -15,6 +15,7 @@ import { runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
 import { MARKETS, runReassign } from "../reassign-areas.mjs";
 import { ghiListing } from "../transform-airbnb.mjs";
+import { localReadSql } from "../sync-cloud.mjs";
 
 const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(PIPE, "..");
@@ -297,6 +298,32 @@ test("ND-AC-6 transform-airbnb (ghiListing) và 200_transform: nghỉ thay xoá,
     assert.deepEqual([ve.rec.retired_at, ve.song, ve.stats], [null, 1, truoc.stats]);
     assert.equal((await one(`SELECT originating_system_key FROM listing_records WHERE id = $1`, [l.id])).originating_system_key,
       l.id.replace(/^abnb_/, ""));
+  });
+});
+
+test("ND-AC-9 sync-cloud: tập chép không có tin/listing đã nghỉ, bảng con không có dòng trỏ cha đã nghỉ; gỡ nghỉ thì có lại", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query(MIG);
+    const l = await listingCoDem();
+    const o = await one(`SELECT offer_id FROM sale_offers o WHERE EXISTS (SELECT 1 FROM property_offers p WHERE p.offer_id = o.offer_id)
+      ORDER BY offer_id LIMIT 1`);
+    assert.ok(l && o, "fixture: cần listing có đêm/thống kê và tin có liên kết căn");
+    const tap = async (t, col) => new Set((await c.query(localReadSql(t, `"${col}"`))).rows.map((r) => Object.values(JSON.parse(r.j))[0]));
+    const chup = async () => ({
+      listings: (await tap("listings", "id")).has(l.id),
+      nights: (await tap("nights", "listing_id")).has(l.id),
+      listing_stats: (await tap("listing_stats", "listing_id")).has(l.id),
+      sale_offers: (await tap("sale_offers", "offer_id")).has(o.offer_id),
+      property_offers: (await tap("property_offers", "offer_id")).has(o.offer_id),
+    });
+    const tatCa = (v) => ({ listings: v, nights: v, listing_stats: v, sale_offers: v, property_offers: v });
+    assert.deepEqual(await chup(), tatCa(true));
+    await c.query(`UPDATE listing_records SET retired_at = now(), retired_reason = 'ngoai_phuong' WHERE id = $1`, [l.id]);
+    await c.query(`UPDATE sale_offer_records SET retired_at = now(), retired_reason = 'het_trong_luot' WHERE offer_id = $1`, [o.offer_id]);
+    assert.deepEqual(await chup(), tatCa(false), "dòng của cha đã nghỉ lọt vào tập chép");
+    await c.query(`UPDATE listing_records SET retired_at = NULL, retired_reason = NULL WHERE id = $1`, [l.id]);
+    await c.query(`UPDATE sale_offer_records SET retired_at = NULL, retired_reason = NULL WHERE offer_id = $1`, [o.offer_id]);
+    assert.deepEqual(await chup(), tatCa(true), "đối chứng: gỡ nghỉ thì dòng phải có lại");
   });
 });
 

@@ -2,7 +2,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { anchorPost, assignOfferIds, isNewScheme, mintOfferId } from "../lib/offer-key.mjs";
+import { codeTree, scanDeleteRecords } from "../lib/scan-delete.mjs";
 
 const P = (post_id, posted_at) => ({ post_id, posted_at });
 // Lượt 1: hai nhóm repost. Lượt 2 đổi một biến; nhóm dựng lại theo khoá nội dung (giá/DT/PN/parser) như transform.
@@ -69,4 +74,25 @@ test("NL-AC-4 hoà số post chung: tin còn sống thắng tin đã nghỉ; k�
   const g = [{ posts: [P("b", "2026-10-21")] }];
   assert.equal(assignOfferIds("S03", g, [nghi, song])[0].offer_id, song.offer_id);
   assert.equal(assignOfferIds("S03", g, [song, nghi])[0].offer_id, song.offer_id);
+});
+
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
+
+test("NL-AC-8 cây pipeline/ không còn DELETE FROM / TRUNCATE nhắm bảng tin hay listing", () => {
+  const files = codeTree(ROOT, "pipeline");
+  assert.ok(files.length > 50, "bộ quét đọc quá ít tệp — đường dẫn hỏng");
+  assert.ok(files.some((f) => f.path === "pipeline/reassign-areas.mjs"));
+  assert.deepEqual(scanDeleteRecords(files), []);
+});
+
+test("NL-AC-8 đối chứng: cây giả cấy một câu DELETE → đỏ nêu đường:dòng; chú thích và dấu bỏ qua không tính", () => {
+  const goc = mkdtempSync(join(tmpdir(), "nap-lai-"));
+  mkdirSync(join(goc, "pipeline", "lib"), { recursive: true });
+  writeFileSync(join(goc, "pipeline", "a.mjs"), "const x = 1;\nawait c.query(`DELETE FROM listings WHERE x`);\n");
+  writeFileSync(join(goc, "pipeline", "lib", "b.sql"), "-- DELETE FROM sale_offers\nTRUNCATE areas, listing_records CASCADE;\n");
+  writeFileSync(join(goc, "pipeline", "c.mjs"), "// DELETE FROM listings\nawait c.query('DELETE FROM listings_x');\nDELETE FROM sale_offers; // quet-xoa:bo-qua\n");
+  writeFileSync(join(goc, "pipeline", "d.test.mjs"), "DELETE FROM listings;\n");
+  assert.deepEqual(scanDeleteRecords(codeTree(goc, "pipeline")).sort(), ["pipeline/a.mjs:2", "pipeline/lib/b.sql:2"]);
+  assert.deepEqual(scanDeleteRecords([{ path: "x.mjs", text: 'DELETE FROM "public"."sale_offer_records" WHERE 1' }]), ["x.mjs:1"]);
 });
