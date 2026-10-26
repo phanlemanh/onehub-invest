@@ -1,0 +1,34 @@
+{
+  "feature_plain": "Người vận hành mở trang «Dòng chảy dữ liệu» ở máy thu để thấy bài đã thu đi tới đâu, rơi ở chặng nào, và từng tin đang ở bậc nào; cột «bài thô» S03 thôi lẫn bài S05 và bài thử.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ vẽ đường ống không rò số: mỗi chặng bằng đúng tổng các nhánh đi ra, chặng trống không hiện, «Gắn căn» tô đỏ khi dưới 80%."},
+    {"id": "AC-2", "p": "Sẽ đếm đúng từng chặng của S03, S05, S06 (bài thử đã gạt, S06 ghi rõ là ước lượng) — đo trên dữ liệu mẫu viết đáp án trước."},
+    {"id": "AC-3", "p": "Sẽ xếp bậc nghiêm: tin chỉ lên B1 khi đủ năm trường lõi, B2 khi thêm gắn căn; con số «đủ trường lõi» trên trang khớp đúng phép xếp bậc."},
+    {"id": "AC-4", "p": "Sẽ đếm «bài thô» S03 chỉ bằng bài S03 thật, giống nhau ở bản tin gửi máy chủ và ở trang Thu thập máy thu."},
+    {"id": "AC-5", "p": "Sẽ gắn nhãn nút thắt cho mỗi nguồn và nhóm thu theo luật đã khai (Kẹt · Im · Theo dõi · Khoẻ)."},
+    {"id": "AC-7", "p": "Sẽ cho người vận hành thấy trang thật ở cả sáng, tối và màn điện thoại: đường ống S03, nút thắt, hồ sơ tin S03 ở bậc B0."},
+    {"id": "AC-8", "p": "Sẽ có trạng thái riêng khi trống, đang tải, lỗi, và khi mở trên máy chủ (chỉ báo «Chỉ xem ở máy thu»)."},
+    {"id": "AC-9", "p": "Sẽ qua đủ kiểm máy: kiểu, lint, khai báo đường dẫn và mục thanh bên, chữ hiển thị tiếng Việt, từ vựng một sổ, ranh giới cổng."}
+  ],
+  "wont_do": [
+    {"id": "AC-6", "p": "Chặn việc bảng tin và hồ sơ tin nói sai bậc: lọc theo nguồn, loại, thị trường, bậc ra đúng tin; hồ sơ tin mở và ở lại, nói rõ thiếu trường nào để lên bậc kế."},
+    {"id": "OOS-1", "p": "Sẽ KHÔNG làm DF1–DF5 trong vòng này — chúng vào lộ trình ở một PR riêng."},
+    {"id": "OOS-2", "p": "Sẽ KHÔNG sửa lỗi gộp trùng quá tay của bộ đọc tin S03 — để thẻ đề xuất riêng."},
+    {"id": "OOS-3", "p": "Sẽ KHÔNG đưa số dòng chảy hay nội dung, ảnh tin lên máy chủ — chờ DF1 và TV9."},
+    {"id": "OOS-4", "p": "Sẽ KHÔNG làm ảnh từng tin và thẻ điểm tin đầy đủ — đó là DF2."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đủ bốn nguồn có tin (S03, S05, S06, S01 ngắn hạn) — kiểm bằng số thật trên DB local 26/10 (AC-2, AC-7)."},
+    {"i": 1, "p": "Đủ các chặng và nhánh rơi của đường ống — kiểm bằng phép bảo toàn số (AC-1)."},
+    {"i": 2, "p": "Đủ ba bậc tin đạt được hôm nay (B0, B1, B2) — kiểm bằng ma trận trường thiếu (AC-3, AC-6)."},
+    {"i": 3, "p": "Đủ ba mặt nhìn: máy thu màn rộng sáng/tối, màn điện thoại, máy chủ (AC-7, AC-8)."},
+    {"i": 4, "p": "Đủ ba khoảng thời gian 7 ngày, 30 ngày, toàn kho (AC-2)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phép chụp trang ghi sẵn chữ «Kẹt · đọc» trong khi số thay đổi mỗi đêm — đã sửa: nay so nhãn với chính số đang hiện trên trang."},
+    {"i": 1, "p": "Phép so «đủ trường lõi» với xếp bậc chỉ thử ít ca — đã sửa: thêm bảng 12 ca thiếu từng trường và một lượt so trên toàn bộ tin thật."},
+    {"i": 2, "p": "Việc đổi số «bài thô» trên prod bị máy tự quyết — đã đưa lên thành câu hỏi Hỏi-1 cho anh ở cổng này."},
+    {"i": 3, "p": "Ca S06 có nhiều tin hơn quảng cáo chưa được thử — đã sửa: thêm ca và phép phá thử."},
+    {"i": 4, "p": "Phần hồ sơ tin mới của DF0 chưa được nhìn trước cổng — đã sửa: kèm ảnh chụp hồ sơ tin S03 bậc B0 ở sáng và tối."}
+  ]
+}

@@ -1,0 +1,112 @@
+schema_version: 1
+feature_slug: ops-dong-chay-df0
+# Ca test mang tiền tố «DF-AC-n» trong app/tests/ops-dong-chay.test.tsx (thuần + jsdom + lược đồ tạm DB local
+# `df0_<pid>` dựng LIKE public.*, xoá cuối lượt) và app/tests/data-level.test.tsx. Ca «bài thô» S03 nằm trong
+# app/tests/luong-7-ngay-dung-so.test.tsx (tiền tố ON5-AC-2 / DF0). Mỗi chiều đỏ là một ca đột biến trong cùng tệp,
+# cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/components/ops/data-flow/flow-sankey-data.ts, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DF-AC-1 bảo toàn' xanh: ma trận viết trước 4 bộ số (ba nguồn đủ chặng; một nguồn không tin nào gắn căn; một nguồn đọc được = 0; một nguồn mọi tin gắn căn) — với mỗi bộ, mỗi nút giữa có tổng giá trị cạnh ra = amount của nút, mỗi cạnh nguồn → «Bài nhận» = received của nguồn, tập id nút so TRỌN với danh sách viết trước (nút 0 vắng, không cạnh nào trỏ tới nó); chú thích «Gắn căn»: bộ 1 có value = fmtPct(linked/offers) và weak theo ngưỡng 0,8, bộ 2 đứng trên khoá 'unlinked' với value '0,0%' và weak = true. Chiều đỏ cùng ca: buildFlow đột biến cho cạnh received → readable mang amount của received → ca đỏ 'nút Bài nhận không bảo toàn'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/lib/data-flow-queries.ts, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DF-AC-2 số chặng theo nguồn' xanh trên lược đồ tạm (cần DB local :5433): bài S03 thật ×6 (2 ngoài 7 ngày), bài thử ×3 (snapshot zalo-mock, tác tử e2e-agent, nhóm 'TEST-G1'), bài S05 ×2; tin S03 ×2 (một tin gộp 3 bài, một tin 1 bài, một tin đủ năm trường lõi + gắn căn), tin S05 ×1 (1 bài), quảng cáo S06 ×4 và tin S06 ×3 (một gắn căn); listing S01 ×2 — getDataFlow('all') ra đúng bảng viết trước {S03: received 6, testRejected 3, readable 4, offers 2, complete 1, withWard 1, linked 1; S05: received 2, readable 1, offers 1; S06: received 4, readable 3, offers 3, linked 1, approx true} và getDataFlow('7d') chỉ đếm bài/tin trong 7 ngày (S03 received 4); đối chứng: bài thử vẫn nằm trong bảng nạp; ca 'DF-AC-2 S06 min' xanh: lược đồ thứ hai có tin S06 ×5 mà quảng cáo S06 ×2 trong khoảng → S06 readable 2 (= min), không phải 5. Chiều đỏ cùng ca: bỏ điều kiện NOT is_test → ca đỏ 'S03 received 9 ≠ 6'; đột biến readable = offers → ca đỏ 'S06 readable 5 ≠ 2'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/lib/data-level.ts, app/src/lib/data-flow-queries.ts, app/tests/data-level.test.tsx, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; data-level.test.tsx 4 ca xanh (đủ năm → B1; đủ + gắn căn → B2; thiếu từng trường trong 7 bộ viết trước → B0 kể cả đã gắn căn; tin S03 điển hình thiếu đúng ['propertyType','ward']); ca 'DF-AC-3 SQL khớp levelOf' xanh: lược đồ tạm có ma trận viết trước 1 tin đủ năm trường + 11 tin mỗi tin thiếu đúng một ô theo dạng bên ghi thật sinh ra (kind NULL; property_type NULL và 'unknown'; price_vnd NULL và 0; area_m2 NULL và 0; area_id NULL; cộng 3 ô đủ trường có/không gắn căn) — số complete từ getDataFlow = số tin levelOf (đọc từng hàng sale_offers + property_offers) xếp B1/B2, và từng ô so riêng; ca 'DF-AC-3 DB thật' xanh: trên toàn bộ sale_offers của DB local (chỉ SELECT), complete theo nguồn = đếm levelOf theo nguồn. Chiều đỏ cùng ca: câu complete bỏ lần lượt từng vế (5 đột biến) → mỗi đột biến đỏ với tên vế"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.luong7
+    layer: backend-effect
+    paths: [pipeline/lib/ops-flow.mjs, app/src/lib/collections-queries.ts, app/tests/luong-7-ngay-dung-so.test.tsx]
+    expected: "exit 0; trong luong-7-ngay-dung-so.test.tsx: ca 'ON5-AC-2 bài thô đếm bài S03 thật theo ngày posted_at' xanh với lược đồ có thêm ba bài không phải S03 (f1 tác tử apify-facebook ngày 23/10, t1 nhóm 'TEST-G1' và e1 tác tử e2e-agent ngày 24/10) — số theo ngày đúng đáp án viết trước {23/10: 2, 24/10: 1, 25/10: 1}; ca 'DF0 bản sao lọc theo snapshot_id như cũ' xanh — bản đột biến bỏ ba điều kiện bị bắt với đúng ['2026-10-23: bài thô 3 ≠ 2', '2026-10-24: bài thô 3 ≠ 1']; ca 'ON5-AC-4 khối luong7 bằng hai cột S03 của getFlowDays trên cùng lược đồ' xanh (bên ghi bản tin = trang Thu thập máy thu)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/components/ops/data-flow/quality-rows.ts, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DF-AC-5 nút thắt' xanh: ma trận viết trước 9 hàng → nhãn so TRỌN: đọc 26% → 'Kẹt · đọc'; đọc 96%, trường lõi 0% → 'Kẹt · trường lõi'; đọc 70%, trường lõi 90%, phường 40% → 'Kẹt · phường'; đủ, gắn căn 10% → 'Kẹt · gắn căn'; đọc 26% và im 3 ngày → 'Kẹt · đọc' (kẹt thắng im); không kẹt, bài mới nhất 72 giờ trước → 'Im 3 ngày'; đọc 55% → 'Theo dõi · đọc'; mọi tỉ lệ ≥ ngưỡng → 'Khoẻ'; hàng nhóm thu (complete/withWard/linked null) với đọc 90% → 'Khoẻ'. Chiều đỏ cùng ca: đổi thứ tự kiểm (gắn căn trước đọc) → ca đỏ tên hàng 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/components/ops/data-flow/records-filter.tsx, app/src/components/ops/data-flow/records-grid.tsx, app/src/components/ops/data-flow/record-sheet.tsx, app/src/lib/data-level.ts, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DF-AC-6 bộ lọc' xanh: 6 tin mẫu viết trước × 8 câu lọc (Nguồn là S03; Nguồn không phải S06; Loại tin là Cho thuê; Loại hình là Căn hộ; Thị trường là Hồ Chí Minh; Bậc là B0; Bậc là B2; Nguồn là S03 VÀ Bậc là B0) → danh sách offerId so TRỌN với bảng viết trước; ca 'DF-AC-6 hàng bảng' xanh (jsdom RecordsGrid): hàng tin B0 đọc 'B0 · Có lời khai' và '3/5 trường lõi'; ca 'DF-AC-6 hồ sơ tin' xanh (jsdom RecordSheet): tin S03 B0 thiếu loại hình + phường → tiêu đề 'Trường lõi 3/5', câu đúng 'Lên B1 cần đủ năm trường lõi — còn thiếu loại hình, phường.', blockquote chứa bài gốc mẫu; tin S06 B2 → 'Trường lõi 5/5', câu 'Lên B3 cần số đo trên nhãn cho các trường lõi (PL7, PL9).' và đúng câu 'S06 chưa lưu khoá nối ngược tin → bài (TV10).'; tin B1 → 'Lên B2 cần gắn được tin về một căn.'. ca 'DF-AC-6 bấm nút tiêu đề' xanh (jsdom RecordsGrid + RecordSheet): bấm nút tiêu đề của một hàng → đúng 1 role=dialog và vẫn còn sau một nhịp (lỗi thấy trên bản chạy 26/10: sheet mở rồi tự đóng khi bấm nút tiêu đề), bấm ô khác của hàng → 1 dialog. Chiều đỏ cùng ca: compileRecordFilter bỏ đảo is_none_of → ca đỏ 'Nguồn không phải S06'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/data-flow/**, app/src/app/ops/data-flow/**, app/src/lib/data-flow-queries.ts, app/src/lib/data-level.ts]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U2 ở http://localhost:3461 (cấu hình app-3461 của .claude/launch.json, chạy từ .claude/worktrees/dieu-phoi-lo-trinh-2310-092607), đăng nhập bằng tài khoản thử admin của scripts/dev-ops-account.mjs (mật khẩu trong .claude/ops-test-account.json, không in); không chạy thì FAIL với 'bản chạy :3461 không lên'"
+      - "1280 px sáng: /ops/data-flow → evidence/E7-step1.png (đầu trang + đường ống «Tất cả»); bấm nút «S03» trên đường ống → evidence/E7-step2.png; cuộn tới «Chất lượng từng chặng» → evidence/E7-step3.png"
+      - "1280 px tối (prefers-color-scheme: dark): cùng trang → evidence/E7-step4.png; bảng «Tin mới nhất» lọc Nguồn là S03, bấm hàng đầu → evidence/E7-step5.png (sheet hồ sơ tin)"
+      - "390 px sáng: /ops/data-flow → evidence/E7-step6.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Thứ tự vùng: Đường ống → Chất lượng từng chặng → Chặng theo ngày + Loại giao dịch → Tin mới nhất; đường ống S03: chú thích «Gắn căn» = tỉ lệ gắn căn hiện trên chính đường ống, tô đỏ khi dưới 80%, có nhánh «Không đọc được» và «Gộp vào tin đã có»; lưới: nhãn «Nút thắt» của hàng S03 khớp luật AC-5 khi áp vào các tỉ lệ đọc được / đủ trường lõi / có phường / gắn căn hiện trên chính hàng đó (đọc từ ảnh, không so với số viết tay); sheet hồ sơ tin S03 có badge «B0 · Có lời khai», «Trường lõi x/5» với badge thiếu, câu «Lên B1 cần đủ năm trường lõi — còn thiếu …» và bài gốc; chữ đọc được ở cả hai chế độ; 390 px: scrollWidth = clientWidth."
+    evidence_required: [run_id, verdict, screenshot, observed]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/components/ops/data-flow/flow-sankey.tsx, app/src/components/ops/data-flow/records-grid.tsx, app/src/components/ops/data-flow/quality-grid.tsx, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DF-AC-8 trống' xanh (jsdom): FlowSankey với mọi nguồn received 0 → đúng chữ 'Chưa có bài trong khoảng này' và đúng 1 nút 'Xem tất cả nguồn'; đối chứng dương: một nguồn received > 0 → 0 chữ đó, có role=img aria-label bắt đầu 'Đường ống:'; RecordsGrid với records [] → chữ 'Không có tin nào khớp bộ lọc'; QualityGrid với hai danh sách rỗng → chữ 'Chưa có nguồn nào có bài trong khoảng này'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: judgment
+    inputs: [app/src/app/ops/data-flow/page.tsx, app/src/components/ops/data-flow/data-flow-skeleton.tsx, app/src/components/states/region-error.tsx, app/src/components/ops/local-only-alert.tsx]
+    paths: [app/src/app/ops/data-flow/page.tsx, app/src/components/ops/data-flow/data-flow-skeleton.tsx]
+    question: "Trong page.tsx, trang có bọc nội dung bằng RegionError (chữ «dòng chảy dữ liệu») > Suspense với fallback là DataFlowSkeleton, và có dừng sớm bằng LocalOnlyAlert tiêu đề «Chỉ xem ở máy thu» khi bảng stg_zalo_posts vắng TRƯỚC mọi lời gọi getDataFlow không? DataFlowSkeleton có dựng theo bố cục trang (đầu trang, khung đường ống, hai biểu đồ, hai lưới) chứ không phải một spinner cả trang không?"
+    expected: "Có cả ba: RegionError > Suspense(DataFlowSkeleton); nhánh localOnlyTable('stg_zalo_posts') trả LocalOnlyAlert trước getDataFlow; skeleton theo bố cục năm vùng."
+    evidence_required: [run_id, verdict, judges]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/components/ops/data-flow/**, app/src/app/ops/data-flow/**, app/src/lib/data-flow-queries.ts, app/src/lib/data-level.ts, app/src/components/charts/palette.ts, app/src/components/shell/nav.tsx]
+    expected: "exit 0; tsc --noEmit không lỗi; npm run lint '0 errors'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_lint_rules
+    paths: [CONTEXT.md, .claude/skills/onehub-ui/routes.md, app/src/app/ops/data-flow/**]
+    expected: "exit 0; ca 'slug URL của cây route thật' xanh (đoạn data-flow có trong Slug URL của CONTEXT.md) và ca routes.md của skill onehub-ui xanh (dòng /ops/data-flow đủ cột Block đích + Slug đích «giữ»)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ops_nhan
+    paths: [app/src/components/ops/data-flow/**, app/src/app/ops/data-flow/**, app/tests/ops-nhan/visible-strings.ts]
+    expected: "exit 0; ca 'ON12-AC-1 danh sách tệp quét bằng đúng danh sách viết trước' xanh (SCAN_FILES có page.tsx + 14 tệp data-flow); 'ON12-AC-1 0 từ _Avoid_' và 'ON12-AC-2 0 từ tiếng Anh ngoài danh sách giữ' xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.vocab
+    paths: [app/src/lib/data-level.ts, app/src/components/ops/data-flow/**]
+    expected: "exit 0; ca 'VL-AC-5 ma trận kiểm kê' xanh — cây thật không còn chỗ viết tay data_level B0/B1/B2 ngoài sổ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [app/src/app/ops/data-flow/**, app/src/components/ops/data-flow/**, app/src/components/shell/nav.tsx]
+    expected: "exit 0; dòng cuối 'portal-compliance: ĐẠT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
