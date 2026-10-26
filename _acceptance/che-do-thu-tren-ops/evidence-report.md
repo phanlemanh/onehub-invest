@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3b52ca19931628767cbc2a889e4248020c70edb0
+verified_commit: 402336b1cebb8a8eb761a732ff2cab2c973654dd
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -182,3 +182,7 @@ Round 2: mọi eval xanh trên cây 9d35ae4c; không còn finding trong hợp đ
 ### Re-pin lần 1 — 2026-10-25, do ghim lại sau chữ ký + gộp main 169b8c6
 run_id: repin-20261025T232950Z-78712
 sha: 3b52ca19931628767cbc2a889e4248020c70edb0 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths)
+
+### Re-pin lần 2 — 2026-10-26, do ghim lại sau gộp main c0c5a97 (#111, #114)
+run_id: repin-20261026T001911Z-71919
+sha: 402336b1cebb8a8eb761a732ff2cab2c973654dd · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths)
