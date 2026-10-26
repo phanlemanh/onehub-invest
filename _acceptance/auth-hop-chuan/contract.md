@@ -5,7 +5,7 @@ slug: auth-hop-chuan
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-auth-hop-chuan-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -53,3 +53,11 @@ error.tsx) cộng hành vi giữ nguyên; xem dòng `descope` «bỏ coverage-sc
 ## Notes
 
 - Block `@reui/auth-5` gốc tự mang dải gradient chuyển động và chữ gradient; luật ReUI của kho thắng block (AGENTS.md).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Smoke đăng ký in «không tạo phiên» khi đăng ký trùng email nhưng không đếm phiên hay cookie để chứng điều đó.
+  - Ngoài-2: Bước kiểm người mới đăng ký không vào được Ops chấp nhận mọi mã khác 200, nên không phân biệt bị từ chối quyền với phiên hỏng.
+  - Ngoài-3: Test trang lỗi (auth) kiểm không có thanh điều hướng mà không có đối chứng dương, nên không tự đỏ nếu vỏ cổng lọt vào sau này.
+  - Ngoài-4: Smoke đăng ký chỉ rào DB local; trỏ nhầm địa chỉ app sang máy khác sẽ để lại một tài khoản thử ở đó.
+  - Ngoài-6: Cùng gốc Ngoài-2 (bản ghi ở lượt chấm 1): smoke có thể xanh nhầm khi phiên vừa đăng ký không dùng được hoặc /ops lỗi.
+  - Ngoài-7: Cùng gốc Ngoài-1 (bản ghi ở lượt chấm 1): dòng «không tạo phiên» chưa có phép đo.
+- Mở hợp đồng mới (Ngoài-5): «Thử lại» ở `(auth)/error.tsx` gọi `reset()`; đổi sang `retry()` theo mẫu `(marketing)/error.tsx` cần sửa AC-4 và ca AH-AC-4 — việc riêng.

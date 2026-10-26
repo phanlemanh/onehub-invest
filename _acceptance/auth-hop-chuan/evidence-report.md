@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 3e1b4649bfa7f2fe88da66dcd4e4655f9524573a
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: auth-hop-chuan
