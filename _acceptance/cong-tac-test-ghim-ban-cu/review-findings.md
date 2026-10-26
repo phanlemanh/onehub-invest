@@ -1,20 +1,22 @@
+# Review findings: cong-tac-test-ghim-ban-cu (round 2)
+
 ## Trong hợp đồng
 
-Không có finding.
+Không có.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Hình dạng 4 (âm tính không ghim thông điệp): đối chứng GB-AC-2 chỉ đòi bản ca thử cũ đỏ và nêu tên CT-AC-1/2, không ghim lý do đỏ**
-  Người dùng thấy gì: Phép kiểm chứng rằng bản ca thử cũ đã bị chặn có thể xanh giả: nếu bản cũ đỏ vì một lý do khác chứ không phải vì đọc nhánh chính, hồ sơ vẫn báo đã chứng minh được. Người dùng cuối không bị ảnh hưởng, chỉ độ chắc của bằng chứng nghiệm thu giảm chút.
-  Căn cứ: Hậu quả nhẹ và chỉ nằm ở bằng chứng nội bộ, không ảnh hưởng người dùng hay dữ liệu; lần chạy dương cùng lúc đã cho thấy môi trường ổn nên rủi ro đỏ nhầm lý do thấp, và siết lại sau này rẻ nếu cần.
-  file: `scripts/cong-tac-ghim.itest.mjs`
+- **Eval E1 tìm chuỗi 'retired+tắt' trong đầu ra, nhưng ca thử đặt tên ô là 'retired+tat' và đối chứng không in gì ra**
+  Người dùng thấy gì: Phần mô tả bằng chữ của hồ sơ kiểm cũ nói người chấm sẽ thấy dòng 'retired+tắt' khi đối chứng chạy, nhưng thực tế màn hình không in dòng đó. Phép kiểm vẫn chạy đúng và bắt được lỗi; chỉ có người đối chiếu theo từng chữ mới thấy lệch.
+  Căn cứ: Nhẹ: chỉ lệch câu chữ trong hồ sơ, phép kiểm vẫn đúng, người dùng cuối không bị ảnh hưởng và không mất dữ liệu; ghi lại là đủ, sửa chữ sau cũng rẻ.
+  file: `_acceptance/cong-tac-khong-ha-nhom-go/evals.yaml`
   severity: low
   Đề xuất: known-limits
 
 ## Chưa adversarial-verify (refuter chết)
 
-Không có mục.
+Không có.
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
