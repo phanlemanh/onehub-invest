@@ -36,8 +36,10 @@
 2. **LLM-off-data-path**: LLM/agent chỉ gate/judge/extract có audit +
    evidence; KHÔNG bao giờ sửa dữ liệu trực tiếp. Regex/structured là
    đường chính.
-3. **SPL**: mã nguồn S0x (ADR-0007); tier A (tên thật, SĐT, hồ sơ cá nhân
-   user) KHÔNG bao giờ rời máy local — cloud chỉ hash + aggregate.
+3. **SPL**: mã nguồn S0x (ADR-0007); tầng A (tên nguồn thật, hồ sơ người dùng app,
+   định danh tài khoản thu, phiên/khoá) KHÔNG bao giờ rời máy thu. Người bán, tên nhóm
+   thu là tầng C; nội dung bài, ảnh tin, thẻ duyệt lên cloud cho vai ops (ADR-0007
+   sửa đổi 23/10, 24/10, 26/10).
 4. **Observability là điều kiện ra quyết định**: nguồn mới phải hiện trên
    /ops ngay (feed health), hành vi thu phải đo được (CCP/DQO).
 5. **An toàn social**: agent LLM không bao giờ gửi tin vào nhóm xã hội
@@ -131,20 +133,29 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
-| Mã | Nguồn | Trạng thái | Ghi chú |
+Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Văn xuôi gọi nguồn bằng mã + vai trò,
+không thêm tên nguồn thật (ADR-0007 sửa đổi 26/10); nhãn job, tên bảng, tên tệp giữ nguyên như trong kho. Bảng giải mã
+ở `/ops/sources` của máy thu.
+
+| Mã · vai trò | Trạng thái (`source_registry`) | Lịch thật | Ghi chú |
 |---|---|---|---|
-| S01 | Airbnb | active (20:00 discovery; PDP tuần) | |
-| S02 | AirDNA | active (19:05; rotation 34 tỉnh) | hiệu chuẩn |
-| S03 | Zalo | active (hook liên tục; lockdown 7 lớp + watchdog) | media CHỜ tin ảnh (dbg-media) |
-| S04 | OSM | completed (one-time) | |
-| S05 | Facebook | paused — Mạnh chốt 24/10: Apify trả 402 hết credit từ ~21/10, chờ credit reset 7/11; `source_registry.status=paused` nên check-freshness không đo | 118 offers giữ |
-| S06 | Chợ Tốt | active (05:30; ruler 150 phường) | phone reveal chưa làm |
-| S07 | Batdongsan | rejected-Apify | tự build nếu cần |
+| S01 · Tự thu ngắn hạn | active | thu **tuần**: CN 19:30 (`collector`, có jitter); 20:00 hằng ngày chỉ là **smoke** (1 trang kiểm selector, `smoke`) — không phải discovery | |
+| S02 · Hiệu chuẩn | active | 19:05 hằng ngày (`airdna-daily`), xoay vòng **43 market** trong `airdna_markets` (transform tự thêm market mới) — không phải «34 tỉnh» | chỉ `/ops/quality` (luật 5) |
+| S03 · Cộng đồng | active | gateway nhận liên tục; nạp 00:00 (`zalo-import`); tín hiệu sống 15′; bộ canh 5′ | media CHỜ tin ảnh (dbg-media) |
+| S04 · Địa giới mở | completed | một lần, chạy tay | |
+| S05 · Mạng xã hội | paused | job vẫn chạy 00/06/12/18h (`apify-facebook`) — `paused` hôm nay chỉ tắt đo độ tươi, chưa script nào tuân (G1, TV2b) | Mạnh chốt 24/10: nhà cung cấp trả 402 hết credit từ ~21/10, chờ reset 7/11; 118 offers giữ |
+| S06 · Rao vặt công khai | active | 05:30 (`chotot`: collect → import → transform → refresh → resolve) | ruler 150 phường; phone reveal chưa làm |
+| S07 · Cổng rao | không có dòng | — | chưa có collector; tự build nếu cần |
+| S08 · Danh mục dự án | paused | — | chưa có collector, `stg_s08_inventory` 0 dòng; ≤ 1 lần/tuần, chỉ nội bộ (luật 5) |
 
 ### 2.4 Chạy đêm (launchd)
-19:05 AirDNA · 19:30 Airbnb tuần · 20:00 smoke+discovery · 00:00
-zalo-import · 05:30 chotot (collect→import→transform→refresh→resolve) ·
-15′ cloud-sync + ops-facts · 5′ zalo-watchdog · KeepAlive kev-gate.
+Đo `launchctl list` 26/10 — 12 nhãn đang nạp.
+- **Theo giờ**: 19:05 S02 (`airdna-daily`) · CN 19:30 S01 tuần (`collector`) · 20:00 smoke S01 (`smoke`) · 00:00 nạp S03
+  (`zalo-import`) · 00/06/12/18h S05 (`apify-facebook`) · 05:30 S06 (`chotot`).
+- **Theo nhịp**: 15′ cloud-sync + ops-facts (`cloud-sync`) · 15′ tín hiệu sống S03 (`zalo-heartbeat`) · 5′ bộ canh
+  (`zalo-watchdog`).
+- **Chạy liên tục** (KeepAlive): `kev-gate` :8009 · `collector-api` (đã chạy dưới launchd) · gateway OpenClaw.
+- **Không chạy dưới launchd**: backup (V1); `com.oneinvest.kev.plist` có tệp nhưng không nạp (`kev-gate` thay).
 
 ### 2.5 Số liệu hôm nay
 > ⚠ 23/10: 1.020/1.102 tin S03 trong `sale_offers` sinh từ snapshot giả `zalo-mock` (chỉ 82 tin thật) — số P1,
@@ -226,9 +237,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    `City`; mọi giá trị máy/người ghi `FieldAssertion`; trạng thái chỉ theo bằng chứng. Mọi việc chạm dữ liệu tin/căn
    kiểm 8 câu «Luật cho mọi việc sau» của ADR-0013.
 18. **Ops tự vận hành nguồn kiểu SaaS** (25/10, `docs/research/ops-tu-van-hanh-nguon-saas.md`): đội vận hành làm **từ xa trên cổng Ops ở
-   cloud** — cloud ghi lệnh có khuôn, máy thu kéo về, kiểm bất biến, áp, tự hoàn tác (ADR-0015 cần viết, hàng TV0);
+   cloud** — cloud ghi lệnh có khuôn, máy thu kéo về, kiểm bất biến, áp, tự hoàn tác (**ADR-0015**, 26/10);
    **nội dung bài, ảnh tin rao, thẻ duyệt lên cloud không che** cho vai ops trở lên, **tên nguồn thật chỉ ở máy thu**
-   (cloud `S08`, local `S08-<tên>`) — sửa đổi luật 6 chờ ADR (TV0); tám quyết định §4.8 (S03 cần người thứ hai duyệt ·
+   (cloud `S08`, local `S08-<tên>`) — **ADR-0007 sửa đổi 26/10** (luật 6); tám quyết định §4.8 (S03 cần người thứ hai duyệt ·
    QR ở lại máy thu · ảnh thu nhỏ, trần 5 GB · S05 tự paused, admin bật lại · quy định AI chạy model local · mã đơn vị
    `S03-N012` · tên thật trong migration cũ chấp nhận như lịch sử). Đợt lộ trình `tu-van-hanh-2510`.
 19. **Lát dọc Ocean Park 1** (26/10, Mạnh duyệt gói lát OCP1 «Hỏi-1..7: theo khuyến nghị», `classification-enrich-review.md`
@@ -305,6 +316,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V10 | DB local tự khởi động lại sau khi Docker/máy khởi động lại — `restart: unless-stopped` trong `db/docker-compose.yml`, thước `scripts/check-db-autostart.sh` (AU7, audit L7) — `_acceptance/db-tu-khoi-dong` | 🔄 đợt 0 «Cầm máu»; xem `docs/ops/runtime-map.md` mục DB local tự khởi động |
 | V12 | Sổ bề mặt API — mọi route khai ở `app/src/lib/api-surface.ts`, CI đỏ khi lệch; đóng `/api/v1/offers` (chế độ `ops` như căn giá tốt), beacon khách 204, `/api/zalo-media` chặn ảnh QR đăng nhập Zalo — `_acceptance/so-be-mat-api` | 🔄 NT4, đợt 0 |
 | V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
+| V13 | Luật tự vận hành từ xa: ADR-0015 đường lệnh kéo một chiều cloud → máy thu + ADR-0007 sửa đổi 26/10 (bài, ảnh, thẻ duyệt lên cloud cho vai ops; tầng A còn bốn thứ) + thuật ngữ Đơn vị thu, Lệnh, Quy định ngữ cảnh, Mục tiêu phủ — TV0 `_acceptance/adr-duong-lenh-keo` (T1) | 🔄 chờ Mạnh duyệt ADR; cửa của TV1–TV14 |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI
@@ -343,7 +355,7 @@ có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới �
 ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
 boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
-0014 Ops cloud đọc số tổng hợp (0013 ở PR #27).
+0013 tin → căn RESO · 0014 Ops cloud đọc số tổng hợp · 0015 đường lệnh kéo một chiều.
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.

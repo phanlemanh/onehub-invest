@@ -194,3 +194,44 @@ Không đổi:
 
 Hệ quả cần làm (việc riêng, ở lộ trình đợt `ops-noi-that-2410`): đặt/sửa tiêu đề chuẩn hoá và mô tả đặc trưng cho
 từng nhóm trên `/ops`, agent đọc làm ngữ cảnh bậc H5 (ON19–ON21); bộ soát tầng A của NT2 cho phép tên nhóm.
+
+## Sửa đổi 2026-10-26 — nội dung tin, ảnh và thẻ duyệt lên cloud cho vai ops
+
+Mạnh chốt (25/10, `docs/research/ops-tu-van-hanh-nguon-saas.md` §3.7, PR #79) khi chọn để đội vận hành làm từ xa
+trên cổng Ops ở cloud (ADR-0015). **Nội dung bài gốc, ảnh tin rao và thẻ duyệt `review_queue` lên cloud, không che,
+cho vai `ops` trở lên.** **Tên nguồn thật vẫn chỉ ở máy thu.** Cloud hiện mã nguồn (vd `S08`, hoặc nhãn nguồn
+«S08 · Danh mục dự án»). Máy thu hiện mã kèm tên thật (`S08-<tên thật>`).
+
+**Tầng A, sau sửa đổi này, chỉ còn bốn thứ** (đây là danh sách đầy đủ):
+1. tên nguồn thật, gồm `real_name`, `source_ids`, tên miền nguồn, và mọi giá trị mang chúng (khoá nhóm là URL có tên
+   miền nguồn, `seller_ref`, `listing_url` chưa che…);
+2. hồ sơ người dùng app: `users`/`sessions`, `user_events`, `user_profile`;
+3. định danh tài khoản thu (trước đây «chưa chốt, xử như tầng A»; nay chốt là tầng A);
+4. phiên đăng nhập, khoá API, ảnh QR, profile trình duyệt.
+
+`review_queue` ra khỏi tầng A. Câu «`review_queue` vẫn là tầng A» trong hai sửa đổi 23/10 và 24/10 ở trên hết hiệu lực.
+
+Ràng buộc đi kèm:
+- **Chỉ vai `ops` trở lên đọc.** Anon và người dùng thường đọc 0 dòng (RLS cùng cổng route). Điều kiện trước: migration
+  037 đã áp trên Supabase, xác nhận bằng `sync-cloud --kiem-anon` sạch. Thiếu điều kiện này thì không bảng nào của
+  sửa đổi này lên cloud.
+- **Che tên nguồn trước khi lên.** Nội dung bài đi qua bộ che `maskSourceNames` và bộ soát `pipeline/lib/tier-a-guard.mjs`
+  (tên và tên miền nguồn đổi thành mã). Dòng nào soát đỏ thì không gửi.
+- **Ảnh**: chỉ ảnh thu nhỏ (cạnh dài khoảng 800px, webp) vào bucket riêng tư, đọc bằng URL ký ngắn hạn. Ảnh gốc ở máy
+  thu. Giữ ảnh của tin còn sống cộng 90 ngày. Trần khởi điểm 5 GB, cảnh báo ở 80% (§4.8 #3).
+- **Chỉ ở `/ops/**`.** Nội dung bài, ảnh tin và thẻ duyệt không lên cổng Invest hay API công khai. Luật 5 giữ nguyên.
+- **Leak gate không nới tay.** Cột hay bảng mới vào `CLOUD_ALLOW` đổi cùng hàng mang nó: TV9 cho bài và ảnh, TV13 cho
+  thẻ duyệt. Mỗi lần đổi kèm soát tên nguồn. Tới lúc đó, luật gate hôm nay giữ nguyên: `review_queue` trên cloud phải
+  rỗng; loại `listing_url`, `seller_*`, `properties.photos`.
+- **Đường lên** chỉ qua `sync-cloud`/`push-ops-facts` có bộ soát (ADR-0014). Không dựng đường mới.
+- **Tên nguồn thật đã có trong migration và tài liệu cũ** (012/014/021/022, ROADMAP, `docs/research/*`): chấp nhận như
+  lịch sử, không mở hàng dọn (§4.8 #8). **Từ nay migration và tài liệu mới không thêm tên thật.** Seed `real_name`
+  bằng script chạy ở máy thu.
+
+Không đổi: ba tầng A/B/C và mã `S0x`; `/ops/sources` ở máy thu vẫn là bảng giải mã duy nhất (role admin); định danh
+người bán trên tin rao và tên nhóm thu vẫn là tầng C (sửa đổi 23/10, 24/10). Threat model: đội vận hành (vai `ops`
+trở lên) nay thấy cả nội dung tin và thẻ duyệt, ngoài mã B và tầng C; bên thứ ba khi cloud bị lộ cũng thấy chúng,
+nhưng không thấy tên nguồn thật.
+
+Hệ quả cần làm (hàng riêng, đợt `tu-van-hanh-2510`): TV9 (bài và ảnh lên cloud), TV10 (hồ sơ tin), TV13 (thẻ duyệt lên
+cloud, quyết định đi xuống bằng lệnh `review.decide`).
