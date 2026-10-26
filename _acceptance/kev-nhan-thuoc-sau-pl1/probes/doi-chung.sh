@@ -2,7 +2,8 @@
 # Đối chứng: chạy bản harness CŨ (ở merge-base với main) cho hai mode — phải ĐỎ đúng hai ca gốc,
 # để chứng rằng bản sửa chữa đúng chỗ đỏ thật chứ không nới thước. Bản cũ chép tạm cạnh bản mới (ROOT tính theo đường dẫn), xoá khi thoát.
 set -uo pipefail
-cd "${1:?gốc kho}"; base=$(git merge-base origin/main HEAD); cu="scripts/kev-nhan/.cu-$$.mjs"
+# Gốc đối chứng CỐ ĐỊNH = main 432d7ca7 trước PR #135 (merge-base hết nghĩa sau khi bản sửa đã vào main).
+cd "${1:?gốc kho}"; base=432d7ca7; cu="scripts/kev-nhan/.cu-$$.mjs"
 trap 'rm -f "$cu"' EXIT
 git show "$base:scripts/kev-nhan/acceptance.mjs" > "$cu"
 iv=$(node "$cu" import-versions 2>&1); hl=$(node "$cu" handler-label 2>&1); ok=1
