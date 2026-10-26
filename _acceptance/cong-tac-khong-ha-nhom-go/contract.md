@@ -5,10 +5,10 @@ slug: cong-tac-khong-ha-nhom-go
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/app/api/v1/ops/** (t3_paths)
 surfaces: [api]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-26-cong-tac-khong-ha-nhom-go-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-26
 ---
 
 # Acceptance Contract: cong-tac-khong-ha-nhom-go
