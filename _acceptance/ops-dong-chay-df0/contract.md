@@ -5,7 +5,7 @@ slug: ops-dong-chay-df0
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-ops-dong-chay-du-lieu-ia-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26T11:18:05Z
@@ -78,3 +78,7 @@ Never: ghi hay sửa dữ liệu từ trang (quan sát ≠ quản trị) · kéo
 - Số trang tính lúc tải (không precompute ở `pipeline/sql` — luật 10): chấp nhận cho proto, DF1 chuyển.
 - Chặng «Đọc được» của S06 là ước lượng (S06 chưa có khoá nối ngược bài → tin, TV10).
 - Ngưỡng nút thắt là ngưỡng tạm Mạnh duyệt dùng tới khi PL9 có số đo (design doc §5 câu 4).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-2: nếu dải ảnh lấy nhầm tin, bài kiểm DF-AC-10 vẫn đỏ nhưng thông điệp ghim lệch chỗ, nên khó tìm nguyên nhân hơn.
+  - Ngoài-3: bài thử đặt tên lạ (nhóm có dấu hoặc khoảng trắng đầu) có thể làm số bài thô trên trang lệch nhẹ so với bản tin mà không bài kiểm nào báo.
+  - Ngoài-6: `app/next-env.d.ts` đang mang đường dẫn chế độ dev; hoàn về bản chính ở lần sửa kế.
