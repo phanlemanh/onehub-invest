@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 9d0acca23ae82b68a3cb5635f150fa9012df39af
+verified_commit: 43e941bc7a38c9d41921b00f5e6f1ac9d6cf7404
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -113,3 +113,7 @@ none — mọi eval đều xác định (một lần chạy), không có eval ng
 Round 1: bốn eval và sáu lệnh suite đều xanh; có sáu mục ngoài hợp đồng được ghi nhận ở review-findings.md.
 Round 2: lệnh suite `cd app && npx tsc --noEmit && npm run lint` đỏ (sổ sửa S4-r2: bản chép đối chứng E2 đặt trong app/tests bị lint song song quét); E1, E2, E4 và năm lệnh suite còn lại xanh, E3 giữ kết quả round 1. Trả về thực thi.
 Round 3: bốn eval và sáu lệnh suite đều xanh sau khi chuyển bản chép đối chứng E2 ra app/node_modules.
+
+### Re-pin lần 1 — 2026-10-26, do ghim lại sau gộp main 31d80ff (#112, #122, #124)
+run_id: repin-20261026T073737Z-51706
+sha: 43e941bc7a38c9d41921b00f5e6f1ac9d6cf7404 · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng
