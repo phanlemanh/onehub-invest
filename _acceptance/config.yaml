@@ -38,6 +38,7 @@ executors:
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
+    ctt_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # TV2b cong-tac-that — nhà cung cấp giả + DB tạm
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
@@ -369,6 +370,10 @@ executors:
     ktp_doi_chung: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/doi-chung.sh \"$PWD\""
     ktp_cac_mode_khac: "cd collector && rm -rf dist && npm run build && cd .. && for m in manifest-v3 watchdog-l1 sourceid stg-roundtrip; do node scripts/kev-nhan/acceptance.mjs $m || exit 1; done && grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     ktp_scope: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/scope.sh \"$PWD\""
+    # cong-tac-that (TV2b, T3) — cổng vòng đời trên bản chép tạm, không chạm máy thật
+    ctt_cong_launchd: "bash _acceptance/cong-tac-that/probes/cong-launchd.sh \"$PWD\""
+    ctt_khong_cung: "bash _acceptance/cong-tac-that/probes/khong-cung.sh \"$PWD\""
+    ctt_scope: "bash _acceptance/cong-tac-that/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
