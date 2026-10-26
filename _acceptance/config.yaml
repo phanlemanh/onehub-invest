@@ -50,6 +50,7 @@ executors:
     check_freshness: "node --test --test-skip-pattern=GT-AC-1 scripts/check-freshness.test.mjs"   # GT-AC-1 (importer S06, làn ZCode) đỏ sẵn trên main e962e78 — xem sổ s05-slo-theo-lich
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
     reassign_areas: "cd pipeline && node --test scripts/reassign-areas.test.mjs"   # AU9 AC-1…AC-5 — nạp ranh giới cấp phường + dọn khu vực lạc + DQ, trong BEGIN…ROLLBACK trên DB local
+    tin_rao_gan: "cd pipeline && node --test scripts/tin-rao-gan-khu-vuc.test.mjs"   # tin-rao-gan-khu-vuc-dung AC-1…AC-7 — bộ đọc phường hợp lệ + bốn bước gán, mồi trong BEGIN…ROLLBACK trên DB local; AC-7 đọc tĩnh
     finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
     vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
     vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
@@ -71,6 +72,7 @@ executors:
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
     ops_mobile_smoke: "node scripts/smoke-ops-mobile.mjs"   # ON13: cột trạng thái 6 bảng Ops ở 390px/1280px trên app chạy thật (Chromium không giao diện, playwright-core); cần DB local
     ranh_gioi_do: "node scripts/kiem-ranh-gioi-khu-vuc.mjs --thu"   # AU9 AC-6/AC-7 — áp thử trong MỘT transaction trên DB local rồi ROLLBACK, so trước/sau
+    tin_rao_gan_do: "node scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu"   # tin-rao-gan-khu-vuc-dung AC-8 — ba transform tin rao trên dữ liệu thật trong MỘT transaction rồi ROLLBACK, so trước/sau
     vocab_check: "node pipeline/vocab.mjs --check"   # PL6: tệp sinh khớp sổ mappings.yaml — đo trạng thái cây
     vocab_lint: "node pipeline/vocab.mjs --lint"     # PL6: 0 enum viết tay ngoài sổ — đo trạng thái cây
     vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
@@ -203,6 +205,10 @@ executors:
     # ops-review-khung-hang-cho (UI1) — /ops/review hàng chờ + sheet: số dòng = DB, ảnh trong sheet = loader, không độ tự tin, 390 px, bấm quyết định với route decide BỊ CHẶN (page.route, DB không đổi); cần app DEV chạy TỪ worktree đang kiểm + DB local :5433 (mặc định ui1.localhost:3460 — 127.0.0.1 không hydrate trên dev Next 16); chạy qua tsx để số ảnh kỳ vọng dùng đúng loadReviewMedia
     review_queue_smoke: "cd app && BASE_URL=${BASE_URL:-http://ui1.localhost:3460} node --import tsx ../scripts/smoke-review-queue.mjs"
     review_queue_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review/review-queue.tsx"
+    # auth-hop-chuan (UI7) — đăng nhập đầu-cuối qua form server action bằng tài khoản ops thử (DB local), trên dev của worktree đang kiểm (mặc định ui1.localhost:3460)
+    auth_login_smoke: "bash scripts/dev-ops-login-check.sh ${BASE_URL:-http://ui1.localhost:3460}"
+    # auth-hop-chuan (UI7, Hỏi-3) — đăng ký đầu-cuối qua form /register bằng email dùng một lần, xoá tài khoản cuối lượt; chỉ DB local (exit 2 khi không phải localhost)
+    auth_register_smoke: "node scripts/dev-register-check.mjs ${BASE_URL:-http://ui1.localhost:3460}"
     financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
     methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
     app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"

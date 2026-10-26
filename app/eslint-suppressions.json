@@ -1,22 +1,4 @@
 {
-  "src/components/auth/gradient-wave.tsx": {
-    "onehub-ui/no-banned-motion": {
-      "count": 4
-    }
-  },
-  "src/components/auth/login-form.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 1
-    }
-  },
-  "src/components/auth/register-form.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 1
-    },
-    "onehub-ui/no-raw-palette": {
-      "count": 1
-    }
-  },
   "src/components/finder/bins.ts": {
     "onehub-ui/no-raw-palette": {
       "count": 8

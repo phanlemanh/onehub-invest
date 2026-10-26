@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
+import { docPhuongHopLe } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 
@@ -137,9 +138,7 @@ export function matchPhuong(text, phuongSlugs) {
  */
 export async function runTransformZalo(client) {
   // Load phường list (tên + area_id)
-  const { rows: areas } = await client.query(
-    `SELECT id, name FROM areas WHERE parent_id = 'vn-hanoi' AND region_type = 'submarket'`,
-  );
+  const areas = await docPhuongHopLe(client, ["vn-hanoi"]);
   const phuongSlugs = areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.name]);
   const areaBySlug = new Map(areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.id]));
 

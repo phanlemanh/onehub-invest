@@ -1,0 +1,29 @@
+{
+  "feature_plain": "Tin rao bán từ ba nguồn tự thu và bước gán listing TP.HCM chỉ gắn vào phường hợp lệ — không bao giờ vào khu vực lạc mà lượt hằng tuần đã đánh dấu, hay khu vực không phải phường OSM.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ có một bộ đọc chung trả đúng các phường hợp lệ, bỏ khu vực lạc và khu vực không phải phường OSM; gỡ dấu lạc thì khu vực trở lại danh sách."},
+    {"id": "AC-2", "p": "Sẽ gắn tin rao S03 vào đúng phường hợp lệ được nhắc tên, không vào khu vực lạc, và không lấy nhầm phường TP.HCM trùng tên."},
+    {"id": "AC-4", "p": "Sẽ gắn tin S06 theo tên phường của tin vào đúng phường hợp lệ, không vào khu vực lạc cùng tên."},
+    {"id": "AC-5", "p": "Sẽ không gắn tin S05 chỉ ghi tên quận cũ vào khu vực «Quận …» cũ (tuỳ Hỏi-1)."},
+    {"id": "AC-6", "p": "Sẽ gán listing TP.HCM theo toạ độ chỉ vào phường hợp lệ, listing nằm trong khu vực lạc giữ nguyên ở cấp thành phố."},
+    {"id": "AC-7", "p": "Sẽ có một bảng viết trước liệt kê mọi chỗ gán khu vực trong pipeline; thêm chỗ gán mới hay câu chọn riêng là bộ kiểm báo đỏ đúng tên tệp."},
+    {"id": "AC-8", "p": "Sẽ chạy thử ba bước nạp tin trên dữ liệu thật rồi hoàn lại: 0 tin vào khu vực sai, 0 tin đang có phường đúng bị mất nhãn, in rõ số tin đang gắn sai đi đâu."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Chặn tin rao S05 ở Hà Nội và TP.HCM gắn vào khu vực lạc; tin nhắc phường hợp lệ vẫn gắn đúng."},
+    {"id": "OOS-1", "p": "KHÔNG gỡ nhãn phường của tin S06 đã gắn sai từ trước (hiện không có tin nào như vậy)."},
+    {"id": "OOS-2", "p": "KHÔNG xoá 11 khu vực «Quận …» cũ — chúng vẫn còn, chỉ không được chọn khi gắn tin."},
+    {"id": "OOS-3", "p": "KHÔNG đổi cách đọc tên phường trong chữ tin rao (độ phủ thấp của S03 là việc riêng)."},
+    {"id": "OOS-4", "p": "KHÔNG chạy tay các bước nạp trên dữ liệu thật trước khi ký — lượt nạp hằng ngày tự áp sau khi merge."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Phủ đủ bốn bước gán (S03, S05, S06, toạ độ TP.HCM) × hai loại khu vực sai (lạc, «Quận …» cũ), đo bằng ca có mồi trong transaction, bảng viết trước mọi chỗ gán (AC-7) và một lượt chạy thử trên dữ liệu thật nối theo từng tin (AC-8)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Loại khu vực «Quận …» cũ đổi số liệu người dùng thấy mà máy đã tự quyết — nay đưa thành Hỏi-1 cho anh, kèm số đếm."},
+    {"i": 1, "p": "Bộ kiểm cũ chỉ soi bốn tệp đã biết nên sót được chỗ gán thứ năm — đã đổi thành bảng viết trước mọi chỗ gán trong pipeline, có chiều đỏ."},
+    {"i": 2, "p": "Phép đo trên dữ liệu thật chỉ so tổng nên tin mới có thể che tin bị mất nhãn — đã đổi sang so từng tin."},
+    {"i": 3, "p": "Chưa có cách thấy 9 tin S05 đang gắn «Quận …» sẽ đi đâu — phép đo nay in riêng số tin sang phường và số tin mất nhãn."},
+    {"i": 4, "p": "Chưa ghim mỗi bước đọc phường của thành phố nào — đã ghim, và thêm ca chặn lấy nhầm phường TP.HCM trùng tên."}
+  ]
+}

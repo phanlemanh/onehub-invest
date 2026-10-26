@@ -1,0 +1,213 @@
+===== s1 size=1280 800 scheme=light path=/login
+### Result
+"{\"path\":\"/login\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light\",\"bodyBg\":\"lab(100 0 0)\",\"bodyColor\":\"lab(2.75381 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":false,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[],\"alert\":null,\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://ui1.localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://ui1.localhost:3460/login:0
+### Page
+- Page URL: http://ui1.localhost:3460/login
+- Page Title: Đăng nhập · One Invest
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-26T10-02-04-605Z.log#L3
+===== s2 size=1280 800 scheme=light path=/register
+### Result
+"{\"path\":\"/register\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light\",\"bodyBg\":\"lab(100 0 0)\",\"bodyColor\":\"lab(2.75381 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":false,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[\"H1:48px:Đầu tư cho thuê ngắn hạn bằng \"],\"alert\":null,\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+### Page
+- Page URL: http://ui1.localhost:3460/register
+- Page Title: Đăng ký · One Invest
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-26T10-02-09-171Z.log#L3
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://ui1.localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://ui1.localhost:3460/register:0
+===== s3 size=1280 800 scheme=dark path=/login
+### Result
+"{\"path\":\"/login\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark\",\"bodyBg\":\"lab(2.75381 0 0)\",\"bodyColor\":\"lab(98.26 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":true,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[],\"alert\":null,\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+### Page
+- Page URL: http://ui1.localhost:3460/login
+- Page Title: Đăng nhập · One Invest
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-26T10-02-15-107Z.log#L3
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://ui1.localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://ui1.localhost:3460/login:0
+===== s4 size=1280 800 scheme=dark path=/register
+### Result
+"{\"path\":\"/register\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark\",\"bodyBg\":\"lab(2.75381 0 0)\",\"bodyColor\":\"lab(98.26 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":true,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[\"H1:48px:Đầu tư cho thuê ngắn hạn bằng \"],\"alert\":null,\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+### Page
+- Page URL: http://ui1.localhost:3460/register
+- Page Title: Đăng ký · One Invest
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-26T10-02-21-641Z.log#L3
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://ui1.localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://ui1.localhost:3460/register:0
+===== s5 size=390 844 scheme=light path=/login
+### Result
+"{\"path\":\"/login\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light\",\"bodyBg\":\"lab(100 0 0)\",\"bodyColor\":\"lab(2.75381 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":false,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[],\"alert\":null,\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://ui1.localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://ui1.localhost:3460/login:0
+### Page
+- Page URL: http://ui1.localhost:3460/login
+- Page Title: Đăng nhập · One Invest
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-26T10-02-27-564Z.log#L3
+===== s6 size=390 844 scheme=light path=/register
+### Result
+"{\"path\":\"/register\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light\",\"bodyBg\":\"lab(100 0 0)\",\"bodyColor\":\"lab(2.75381 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":false,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[\"H1:48px:Đầu tư cho thuê ngắn hạn bằng \"],\"alert\":null,\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+### Page
+- Page URL: http://ui1.localhost:3460/register
+- Page Title: Đăng ký · One Invest
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-26T10-02-32-906Z.log#L3
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://ui1.localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://ui1.localhost:3460/register:0
+===== s7 size=1280 800 scheme=light path=/login?error=Sai%20m%E1%BA%ADt%20kh%E1%BA%A9u
+### Result
+"{\"path\":\"/login?error=Sai%20m%E1%BA%ADt%20kh%E1%BA%A9u\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased light\",\"bodyBg\":\"lab(100 0 0)\",\"bodyColor\":\"lab(2.75381 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":false,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[],\"alert\":\"Sai mật khẩu\",\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+--- console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://ui1.localhost:3460/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://ui1.localhost:3460/login?error=Sai%20m%E1%BA%ADt%20kh%E1%BA%A9u:0
+### Page
+- Page URL: http://ui1.localhost:3460/login?error=Sai%20m%E1%BA%ADt%20kh%E1%BA%A9u
+- Page Title: Đăng nhập · One Invest
+- Console: 0 errors, 1 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-26T10-02-38-848Z.log#L3
+===== s8 size=1280 800 scheme=dark path=/login?error=Sai%20m%E1%BA%ADt%20kh%E1%BA%A9u
+### Result
+"{\"path\":\"/login?error=Sai%20m%E1%BA%ADt%20kh%E1%BA%A9u\",\"htmlClass\":\"geist_c888a7ee-module__FNB6Gq__variable geist_mono_3ab45382-module__Zw3KfG__variable h-full antialiased dark\",\"bodyBg\":\"lab(2.75381 0 0)\",\"bodyColor\":\"lab(98.26 0 0)\",\"scrollWidth\":1280,\"clientWidth\":1280,\"innerWidth\":1280,\"mq_dark\":true,\"textClipGradient\":0,\"gradientEls\":[],\"headings\":[],\"alert\":\"Sai mật khẩu\",\"hasSubmit\":true}"
+### Ran Playwright code
+```js
+await page.evaluate('() => { const d=document.documentElement; const els=[...document.querySelectorAll("body *")]; const clip=els.filter(e=>{const s=getComputedStyle(e);return (s.webkitBackgroundClip==="text"||s.backgroundClip==="text")&&s.backgroundImage!=="none"}).length; const grad=els.filter(e=>/gradient/.test(getComputedStyle(e).backgroundImage)).map(e=>e.tagName+"."+(e.className+"").slice(0,60)); const h=document.querySelector("h1,h2"); const hs=h?getComputedStyle(h):null; const hh=[...document.querySelectorAll("h1,h2,h3,[data-slot=card-title]")].map(e=>e.tagName+":"+getComputedStyle(e).fontSize+":"+e.textContent.trim().slice(0,30)); const alert=document.querySelector("[role=alert]"); return JSON.stringify({path:location.pathname+location.search,htmlClass:d.className,bodyBg:getComputedStyle(document.body).backgroundColor,bodyColor:getComputedStyle(document.body).color,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,innerWidth:innerWidth,mq_dark:matchMedia("(prefers-color-scheme: dark)").matches,textClipGradient:clip,gradientEls:grad,headings:hh,alert:alert?alert.textContent.trim():null,hasSubmit:!!document.querySelector("button[type=submit]")}) }');
+```
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+--- console
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+===== 390x844 light /login
+### Result
+"{\"path\":\"/login\",\"htmlClass\":\"light\",\"bodyBg\":\"lab(100 0 0)\",\"scrollWidth\":390,\"clientWidth\":390,\"innerWidth\":390,\"h1FontSize\":null,\"h1LineHeight\":null,\"h1Lines\":null,\"overflowEls\":[]}"
+### Ran Playwright code
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+--- console
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+===== 390x844 light /register
+### Result
+"{\"path\":\"/register\",\"htmlClass\":\"light\",\"bodyBg\":\"lab(100 0 0)\",\"scrollWidth\":390,\"clientWidth\":390,\"innerWidth\":390,\"h1FontSize\":\"36px\",\"h1LineHeight\":\"40px\",\"h1Lines\":4,\"overflowEls\":[]}"
+### Ran Playwright code
+--- requests
+### Result
+
+Note: 31 static requests not shown, run with --static option to see them.
+--- console
+### Result
+Total messages: 2 (Errors: 0, Warnings: 0)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://ui1.localhost:3460/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
