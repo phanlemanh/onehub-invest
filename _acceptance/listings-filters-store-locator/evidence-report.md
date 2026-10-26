@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 2dd61ebaa54b4130ae14d8115c0a691890a4ea5b
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: listings-filters-store-locator

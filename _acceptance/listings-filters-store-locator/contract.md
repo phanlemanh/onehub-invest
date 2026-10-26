@@ -5,7 +5,7 @@ slug: listings-filters-store-locator
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-listings-filters-store-locator-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26T01:27:12Z
@@ -114,5 +114,13 @@ Căn cứ: `docs/plan/lo-trinh.json` hàng UI6 (GD4) · `.claude/skills/onehub-u
 
 ## Notes
 
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-2: Dựng hai chip cùng loại (vd hai điều kiện Phường) ở màn rộng rồi áp từ ngăn lọc màn hẹp thì kết quả có thể rộng hơn bộ lọc ban đầu mà không báo.
+  - Ngoài-3: Đổi kiểu sắp xếp lưới có thể đổi nhãn giá nào được ưu tiên hiện khi chồng nhau trên bản đồ (có từ bản cũ).
+  - Ngoài-4: Smoke kiểm chip giá chỉ tìm chữ «1 tr ₫» trên cả trang, chưa đọc trong đúng chip Giá/đêm.
+  - Ngoài-5: Smoke đổi sáng/tối chưa có đối chứng rằng nền bản đồ thật sự đổi.
+  - Ngoài-6: Smoke «thêm chip → bản đồ canh khung» chỉ kiểm không bật lọc vùng, chưa kiểm khung đã canh theo tập mới.
+  - Ngoài-7: Smoke kiểm viền thẻ khi rê nhãn vẫn qua khi không tìm thấy thẻ.
+  - Ngoài-8: Smoke «mở lại ngăn giữ 3 lựa chọn» mới kiểm 2 (chưa kiểm khoảng giá).
 - Bản chạy cho bằng chứng: dev server cổng riêng **3460** của dãy U1 (`.claude/launch.json` cấu hình `app-3460`).
 - Bản đồ cần WebGL: smoke chạy Chromium headless-shell (SwiftShader); khung bản đồ chờ `load` của MapLibre trước khi đo.
