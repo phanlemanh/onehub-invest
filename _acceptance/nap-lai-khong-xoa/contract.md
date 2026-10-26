@@ -38,8 +38,8 @@ Source input: `_acceptance/nap-lai-khong-xoa/opportunity.md` (hàng PL14 của `
   - Đúng 6 khoá ngoại trỏ hai bảng bản ghi đều là RESTRICT (`nights`, `listing_stats`, `property_offers`,
     `property_candidates` ×2, `enrichment_proposals`).
   - `v_ruler_p2` và `v_ruler_p2_area` còn chạy.
-  - Tập view/matview phụ thuộc bảng bản ghi (pg_depend) bằng đúng {`sale_offers`, `listings`, `v_ruler_p2`,
-    `v_ruler_p2_area`}; view phụ nào khác trỏ thẳng bảng bản ghi thì đỏ, nêu tên view.
+  - Tập view/matview đọc thẳng bảng bản ghi (pg_depend) bằng đúng {`sale_offers`, `listings`}; `v_ruler_p2*` đọc qua
+    view sống; view phụ nào khác trỏ thẳng bảng bản ghi thì đỏ, nêu tên view.
   - Lần áp thứ hai không lỗi, không đổi số dòng.
 - AC-2: Given 044 đã áp, When đếm hàng trước và sau trên cùng DB, Then `sale_offers` (view) và `listings` (view) trả đúng
   số dòng và tập khoá như hai bảng trước 044; người dùng app/data-api thấy cùng dữ liệu.

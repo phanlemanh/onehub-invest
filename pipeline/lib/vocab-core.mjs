@@ -449,6 +449,18 @@ export function emitSeed(reg) {
   ].join("\n");
 }
 
+/** Bảng thật mang CHECK của một tên: tên là VIEW sống (PL14: sale_offers → sale_offer_records) thì lấy bảng gốc. */
+async function bangGoc(client, ten) {
+  const r = (await client.query("SELECT relkind FROM pg_class WHERE oid = to_regclass($1)", [ten])).rows[0];
+  if (!r || r.relkind !== "v") return ten;
+  const { rows } = await client.query(
+    `SELECT DISTINCT d.refobjid::regclass::text AS goc FROM pg_rewrite rw
+       JOIN pg_depend d ON d.objid = rw.oid AND d.classid = 'pg_rewrite'::regclass
+       JOIN pg_class c ON c.oid = d.refobjid AND c.relkind = 'r'
+      WHERE rw.ev_class = to_regclass($1)`, [ten]);
+  return rows.length === 1 ? rows[0].goc : ten;
+}
+
 /** So DB với sổ; trả danh sách lệch {axis, value?, column?, msg}. Rỗng = khớp. */
 export async function checkDb(client, reg) {
   const lech = [];
@@ -484,7 +496,7 @@ export async function checkDb(client, reg) {
     const [t, cot] = col.split(".");
     const defs = (await client.query(
       `SELECT conname, convalidated, pg_get_constraintdef(oid) AS def FROM pg_constraint
-        WHERE contype = 'c' AND conrelid = to_regclass($1)`, [t])).rows
+        WHERE contype = 'c' AND conrelid = to_regclass($1)`, [await bangGoc(client, t)])).rows
       .filter((r) => new RegExp(`\\b${cot}\\b`).test(r.def) && /'[^']*'::text/.test(r.def));
     if (!defs.length) { lech.push({ axis: a.name, column: col, msg: `${col}: thiếu CHECK theo trục ${a.name} — ${can}` }); continue; }
     const r = defs[0];
