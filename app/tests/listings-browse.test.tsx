@@ -293,6 +293,15 @@ const control = (root: ParentNode, text: string) => {
 };
 const countOf = (root: ParentNode, text: string) => labelFor(root, text)?.querySelectorAll("span")[1]?.textContent?.trim();
 const xemBtn = (root: ParentNode) => byText(root, "button", /^Xem [\d.]+ listing$/)!;
+/** Ngăn Bộ lọc đóng qua nhịp hẹn giờ của Base UI (requestAnimationFrame ở đây là setTimeout 0), có lúc chạy SAU act của cú
+ *  bấm — xả nhịp trong act tới khi hết [role="dialog"], tối đa 50 nhịp. Trả boolean: đưa phần tử jsdom vào assert.equal
+ *  thì lúc đỏ assert inspect cả cây DOM, chặn tiến trình hàng phút và chết cả tệp không báo ca nào. */
+async function hopDaDong(): Promise<boolean> {
+  for (let i = 0; i < 50 && document.querySelector('[role="dialog"]'); i++) {
+    await act(() => new Promise<void>((r) => setTimeout(r, 0)));
+  }
+  return document.querySelector('[role="dialog"]') === null;
+}
 
 test("LB-AC-3 explorer: áp «Nguyên căn» → dòng tổng kết «4 listing khớp bộ lọc», 4 thẻ", async () => {
   const { ListingsExplorer } = await import("../src/components/listing/listings-explorer");
@@ -327,7 +336,7 @@ test("LB-AC-4 ngăn lọc: mục, đếm sống, Xem N listing ghi cây, mở l�
     ["roomType", "is_any_of", [E]],
     ["bedrooms", "gte", [2]],
   ]);
-  assert.equal(document.querySelector('[role="dialog"]'), null, "ngăn phải đóng sau khi áp");
+  assert.ok(await hopDaDong(), "ngăn phải đóng sau khi áp");
 
   // Mở lại với cây đã áp: nháp đọc lại đúng lựa chọn.
   await render(<ListingsFilterSheet listings={ROWS} currency="VND" query={tree} onQueryChange={onQueryChange} />);
@@ -391,7 +400,7 @@ test("LB-AC-8 ảnh thẻ: khung 3:2 object-cover, lùi ảnh kế khi lỗi (c�
   await act(() => fireError(imgs()[0]));
   await act(() => fireError(imgs()[0]));
   assert.equal(imgs().length, 0);
-  assert.equal(host.querySelector('[class*="aspect-[3/2]"]'), null, "hết ảnh thì không còn panel");
+  assert.ok(host.querySelector('[class*="aspect-[3/2]"]') === null, "hết ảnh thì không còn panel");
 
   host = await render(card([]));
   assert.equal(imgs().length, 0);
