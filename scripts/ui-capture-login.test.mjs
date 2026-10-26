@@ -2,7 +2,7 @@
 // Hồ sơ hieu-chuan-mot-bo-so (ON10, AC-9): bước chụp của kho đăng nhập /ops bằng tài khoản ops thử. Chạy kín: máy chủ giả
 // bằng node:http theo khuôn form đăng nhập server action của /login, và runner playwright-cli giả ghi lại lệnh.
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer } from "node:http";
@@ -262,7 +262,12 @@ test("UC-TA-4 lệnh con lỗi ở từng bước → mã 7, lời chung, đầu
 });
 
 const demTmp = () => readdirSync(tmpdir()).filter((f) => f.startsWith("ui-capture-")).length;
-test("UC-TA-5 dọn tệp tạm ở mọi đường kết thúc", async () => {
+test("UC-TA-5 dọn tệp tạm ở mọi đường kết thúc", async (t) => {
+  // TMPDIR riêng của ca này: node --test chạy các tệp song song, ui-capture-browser.test cũng tạo/xoá
+  // thư mục «ui-capture-*» trong tmpdir chung → đếm chung là đua (đỏ chập chờn). capture() đọc tmpdir() mỗi lần gọi.
+  const cu = process.env.TMPDIR;
+  process.env.TMPDIR = mkdtempSync(path.join(tmpdir(), "uc-ta-5-"));
+  t.after(() => { rmSync(process.env.TMPDIR, { recursive: true, force: true }); if (cu === undefined) delete process.env.TMPDIR; else process.env.TMPDIR = cu; });
   const daGhi = [];
   const nguon = (nem) => (dir) => {
     const f = path.join(dir, "names.json");
