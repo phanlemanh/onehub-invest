@@ -134,7 +134,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
 
 ### 2.3 Nguồn (source_registry + /ops/collections feed health)
-Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Văn xuôi gọi nguồn bằng mã + vai trò,
+Đo 26/10 trên máy thu (`source_registry`, `launchctl list`, `airdna_markets`). Trạng thái theo vòng đời năm giá trị
+`draft · active · paused · retired · completed` (CHECK từ 047, TV2a); script thu hỏi «có được thu» qua `isRunnable` (TV2b).
+Văn xuôi gọi nguồn bằng mã + vai trò,
 không thêm tên nguồn thật (ADR-0007 sửa đổi 26/10); nhãn job, tên bảng, tên tệp giữ nguyên như trong kho. Bảng giải mã
 ở `/ops/sources` của máy thu.
 
@@ -325,6 +327,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
 | V13 | Luật tự vận hành từ xa: ADR-0015 đường lệnh kéo một chiều cloud → máy thu + ADR-0007 sửa đổi 26/10 (bài, ảnh, thẻ duyệt lên cloud cho vai ops; tầng A còn bốn thứ) + thuật ngữ Đơn vị thu, Lệnh, Quy định ngữ cảnh, Mục tiêu phủ — TV0 `_acceptance/adr-duong-lenh-keo` (T1) | ✅ Mạnh duyệt ADR 26/10; chờ gộp PR — cửa của TV1–TV14 |
 | V14 | Tầng tri thức (kit 2.34.0): kho riêng `onehub-invest-tri-thuc` (12 raw, 2 trang nền, 10 trang đợt), `nguon` của 10 bản phạm vi là đường trỏ băm, 7 tệp kit `[only-if-declared: tri_thuc]` đã chép — `_acceptance/kho-tri-thuc-invest` (T2) | 🔄 chờ Cổng 2 |
+| V15 | Vòng đời nguồn: `source_registry` + `source_groups` năm trạng thái có CHECK (paused bắt buộc lý do), `enabled` thành bản soi do trigger giữ khớp; `isRunnable` + CLI `pipeline/lib/vong-doi.mjs` cho TV2b — migration 047, TV2a `_acceptance/vong-doi-nguon` (T3) | 🔄 Cổng 2 Mạnh ký 26/10 — PR #129; 047 áp DB local SAU gộp |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI
