@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { CheckIcon, CircleHelpIcon, XIcon } from "lucide-react";
 
 import { Badge } from "@/components/reui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,19 +10,23 @@ import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/comp
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
 import { aiSuggestionLabel, propertyTypeLabel } from "@/lib/ops-labels";
+import type { ReviewItem } from "@/lib/ops/review-queue";
 import { RawLabel } from "./raw-label";
 import type { ReviewMedia } from "@/lib/ops/review-media";
 
 import { ReviewPhotos } from "./review-photos";
 
+export type { ReviewItem } from "@/lib/ops/review-queue";
+
 /**
- * HITL Review Card — rẽ nhánh theo item_type:
- * - entity_match: 2 offers side-by-side + AI suggestion + 3 nút quyết định.
+ * Nội dung một thẻ hàng duyệt — rẽ nhánh theo item_type:
+ * - entity_match: 2 tin cạnh nhau (xếp chồng ở màn hẹp) + gợi ý máy + 3 nút quyết định.
  * - agent_output (enrich:<offer_id>): đoạn tin + danh sách giá trị đề xuất;
  *   «Áp dụng» → route decide → decide_enrichment_review (migration 033). Field luật E1 trái
  *   LLM (conflict) hiện hai bên kèm căn cứ; người chọn một bên trước khi áp (AC-11).
  * - loại khác: một dòng báo, không làm sập trang.
- * Ảnh tin (`media`, từ loadReviewMedia — chỉ admin) hiện dưới mỗi tin; vắng thì không có vùng ảnh.
+ * Không hiện độ tự tin (Q9). Ảnh tin (`media`, từ loadReviewMedia — chỉ admin) hiện dưới mỗi tin.
+ * `children` nhận { body, actions } để sheet chi tiết (UI1) đặt nút quyết định ở chân; vắng thì xếp chồng.
  * Click → POST API → router.refresh() để cập nhật danh sách.
  */
 export type ReviewEvidence = {
@@ -57,22 +62,12 @@ export type EnrichField = {
   proposal_id: number;
   field: string;
   value: string;
-  confidence: number | null;
   source?: string;
   basis?: string | null;
   conflict?: boolean;
 };
 
-export type ReviewItem = {
-  id: number;
-  item_type: string;
-  title: string;
-  evidence: Record<string, unknown>;
-  ai_suggestion: string | null;
-  ai_reasoning: string | null;
-  ai_confidence: number | null;
-  status: string;
-};
+export type ReviewCardParts = { body: ReactNode; actions: ReactNode };
 
 function fmtPrice(v: number | null) {
   if (v === null) return "—";
@@ -84,50 +79,47 @@ function fmtPerm2(v: number | null) {
   return `${Math.round(v / 1e6)}tr/m²`;
 }
 
+function Fact({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
+  return (
+    <div className={className}>
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="truncate font-medium">{children}</p>
+    </div>
+  );
+}
+
 type OfferData = ReviewEvidence["offer_a"] | ReviewEvidence["offer_b"];
 function OfferCard({ label, offer }: { label: string; offer: OfferData }) {
+  const desc = "text" in offer ? offer.text : offer.subject;
   return (
-    <div className="flex-1 rounded-lg border p-3 text-xs">
-      <div className="mb-2 flex items-center justify-between">
-        <Badge variant="outline">{label}</Badge>
-        <span className="text-muted-foreground">{offer.source}</span>
-      </div>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-        <div>
-          <p className="text-muted-foreground text-[10px]">Giá</p>
-          <p className="tabular-nums font-medium">{fmtPrice(offer.price_vnd)}</p>
+    <Item variant="outline" size="sm">
+      <ItemContent className="min-w-0 gap-2 text-xs">
+        <div className="flex items-center justify-between gap-2">
+          <Badge variant="outline">{label}</Badge>
+          <span className="text-muted-foreground">{offer.source}</span>
         </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Diện tích</p>
-          <p className="tabular-nums font-medium">{offer.area_m2 ?? "—"} m²</p>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+          <Fact label="Giá"><span className="tabular-nums">{fmtPrice(offer.price_vnd)}</span></Fact>
+          <Fact label="Diện tích"><span className="tabular-nums">{offer.area_m2 ?? "—"} m²</span></Fact>
+          <Fact label="Giá/m²"><span className="tabular-nums">{fmtPerm2(offer.price_perm2)}</span></Fact>
+          <Fact label="Phường">{offer.phuong ?? "—"}</Fact>
+          {offer.bedrooms !== null && (
+            <Fact label="PN/WC">
+              {offer.bedrooms}PN{offer.bathrooms ? `/${offer.bathrooms}WC` : ""}
+            </Fact>
+          )}
+          <Fact label="Loại">
+            {offer.property_type === null ? "—" : <RawLabel n={propertyTypeLabel(offer.property_type)} raw={offer.property_type} />}
+          </Fact>
+          <Fact label="Địa chỉ" className="col-span-2">
+            <span translate="no">{offer.street ?? "—"}</span>
+          </Fact>
         </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Giá/m²</p>
-          <p className="tabular-nums font-medium">{fmtPerm2(offer.price_perm2)}</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground text-[10px]">Phường</p>
-          <p className="truncate font-medium">{offer.phuong ?? "—"}</p>
-        </div>
-        {offer.bedrooms !== null && (
-          <div>
-            <p className="text-muted-foreground text-[10px]">PN/WC</p>
-            <p className="font-medium">{offer.bedrooms}PN{"bathrooms" in offer && ((offer as unknown) as Record<string, number | null>).bathrooms ? `/${((offer as unknown) as Record<string, number | null>).bathrooms}WC` : ""}</p>
-          </div>
-        )}
-        <div>
-          <p className="text-muted-foreground text-[10px]">Loại</p>
-          <p className="font-medium">{offer.property_type === null ? "—" : <RawLabel n={propertyTypeLabel(offer.property_type)} raw={offer.property_type} />}</p>
-        </div>
-        <div className="col-span-2">
-          <p className="text-muted-foreground text-[10px]">Địa chỉ</p>
-          <p className="truncate font-medium" translate="no">{((offer as unknown) as Record<string, string | null>).street ?? "—"}</p>
-        </div>
-      </div>
-      {(() => { const desc = (offer as Record<string, string | null>).text ?? (offer as Record<string, string | null>).subject; return desc ? (
-        <p className="text-muted-foreground mt-2 line-clamp-2 border-t pt-2 text-[11px]" translate="no">{desc}</p>
-      ) : null; })()}
-    </div>
+        {desc ? (
+          <p className="text-muted-foreground line-clamp-2 border-t pt-2" translate="no" data-review-quote>{desc}</p>
+        ) : null}
+      </ItemContent>
+    </Item>
   );
 }
 
@@ -151,10 +143,10 @@ function useDecide(id: number) {
         body: JSON.stringify(choices ? { status, choices } : { status }),
       });
       if (res.ok) {
-        setMsg(status === "approved" ? "✓ Đã duyệt" : status === "rejected" ? "✓ Đã từ chối" : "⏸ Hoãn");
+        setMsg(status === "approved" ? "Đã duyệt" : status === "rejected" ? "Đã từ chối" : "Đã hoãn");
         router.refresh();
       } else {
-        setMsg(`❌ ${(await res.json().catch(() => ({}))).error ?? "lỗi"}`);
+        setMsg(`Lỗi: ${(await res.json().catch(() => ({}))).error ?? "không rõ"}`);
       }
     });
   };
@@ -166,17 +158,29 @@ function DoneBadge({ item }: { item: ReviewItem }) {
   return <Badge variant={item.status === "approved" ? "success-light" : "outline"}>{label}</Badge>;
 }
 
-export function ReviewCard({ item, media }: { item: ReviewItem; media?: ReviewMedia }) {
-  if (item.item_type === "entity_match") return <EntityMatchCard item={item} media={media} />;
-  if (item.item_type === "agent_output") return <AgentOutputCard item={item} media={media} />;
-  return (
-    <div className="flex flex-col gap-1 rounded-xl border p-4">
-      <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
+/** Xếp chồng thân + nút khi không có `children` (dáng thẻ đứng riêng, dùng trong test và nơi khác). */
+const stacked = ({ body, actions }: ReviewCardParts) => (
+  <div className="flex flex-col gap-3">
+    {body}
+    {actions}
+  </div>
+);
+
+export function ReviewCard({ item, media, children = stacked }: {
+  item: ReviewItem;
+  media?: ReviewMedia;
+  children?: (parts: ReviewCardParts) => ReactNode;
+}) {
+  if (item.item_type === "entity_match") return <EntityMatchCard item={item} media={media} render={children} />;
+  if (item.item_type === "agent_output") return <AgentOutputCard item={item} media={media} render={children} />;
+  return children({
+    body: (
       <p className="text-muted-foreground text-xs">
         Loại thẻ khác (<code>{item.item_type}</code>) chưa có giao diện duyệt.
       </p>
-    </div>
-  );
+    ),
+    actions: null,
+  });
 }
 
 const FIELD_LABEL: Record<string, string> = {
@@ -197,10 +201,6 @@ function fieldValue(field: string, value: string) {
   return field === "property_type" && propertyTypeLabel(value).known ? propertyTypeLabel(value).label : value;
 }
 
-function fmtConfidence(c: number | null) {
-  return c === null ? null : `AI tự tin ${Math.round(c * 100)}%`;
-}
-
 /** Field có từ hai đề xuất chờ (luật E1 trái LLM): hai bên kèm căn cứ + ô chọn một bên. */
 function ConflictField({ options, value, onChange, disabled }: {
   options: EnrichField[];
@@ -211,7 +211,7 @@ function ConflictField({ options, value, onChange, disabled }: {
   const field = options[0].field;
   return (
     <div role="listitem" className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium">{FIELD_LABEL[field] ?? <>Trường khác <code>{field}</code></>}</span>
         <Badge variant="warning-light">Luật và AI khác nhau — chọn một bên</Badge>
       </div>
@@ -224,7 +224,7 @@ function ConflictField({ options, value, onChange, disabled }: {
               </Badge>
               {fieldValue(field, o.value)}
             </ItemTitle>
-            {o.basis && <ItemDescription>{o.basis}</ItemDescription>}
+            {o.basis && <ItemDescription data-review-quote>{o.basis}</ItemDescription>}
           </ItemContent>
         </Item>
       ))}
@@ -246,7 +246,9 @@ function ConflictField({ options, value, onChange, disabled }: {
   );
 }
 
-function AgentOutputCard({ item, media }: { item: ReviewItem; media?: ReviewMedia }) {
+type CardProps = { item: ReviewItem; media?: ReviewMedia; render: (parts: ReviewCardParts) => ReactNode };
+
+function AgentOutputCard({ item, media, render }: CardProps) {
   const { pending, msg, decide } = useDecide(item.id);
   const [picked, setPicked] = useState<Record<string, string | undefined>>({});
   const ev = item.evidence as EnrichEvidence;
@@ -259,14 +261,10 @@ function AgentOutputCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
     for (const f of conflictFields) choices[f] = picked[f] === NONE ? null : Number(picked[f]);
     decide("approved", choices);
   };
-  return (
-    <div className="flex flex-col gap-3 rounded-xl border p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
-        <Badge variant="outline">Bổ sung dữ liệu tin</Badge>
-      </div>
+  const body = (
+    <div className="flex flex-col gap-3">
       {ev.text && (
-        <p className="text-muted-foreground line-clamp-3 text-xs" translate="no">
+        <p className="text-muted-foreground text-xs" translate="no" data-review-quote>
           {ev.group_name ? `${ev.group_name} · ` : ""}
           {ev.text}
         </p>
@@ -275,111 +273,94 @@ function AgentOutputCard({ item, media }: { item: ReviewItem; media?: ReviewMedi
       {fields.length === 0 ? (
         <p className="text-muted-foreground text-xs">Thẻ thiếu dữ liệu đề xuất.</p>
       ) : (
-        <>
-          <ItemGroup>
-            {conflictFields.map((f) => (
-              <ConflictField
-                key={f}
-                options={fields.filter((x) => x.field === f)}
-                value={picked[f]}
-                onChange={(v) => setPicked((p) => ({ ...p, [f]: v }))}
-                disabled={item.status !== "pending" || pending}
-              />
-            ))}
-            {fields.filter((f) => !f.conflict).map((f) => (
-              <Item key={f.proposal_id} size="xs" role="listitem">
-                <ItemContent>
-                  <ItemDescription>{FIELD_LABEL[f.field] ?? <>Trường khác <code>{f.field}</code></>}</ItemDescription>
-                  <ItemTitle>{fieldValue(f.field, f.value)}</ItemTitle>
-                </ItemContent>
-                {fmtConfidence(f.confidence) && (
-                  <span className="text-muted-foreground text-xs tabular-nums">{fmtConfidence(f.confidence)}</span>
-                )}
-              </Item>
-            ))}
-          </ItemGroup>
-          {item.status === "pending" ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" onClick={approve} disabled={pending || !ready}>
-                Áp dụng
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => decide("rejected")} disabled={pending}>
-                Bỏ
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => decide("deferred")} disabled={pending}>
-                Để sau
-              </Button>
-              {!ready && <span className="text-muted-foreground text-xs">Chọn một bên cho trường xung đột trước khi áp.</span>}
-              {msg && <span className="text-muted-foreground text-xs">{msg}</span>}
-            </div>
-          ) : (
-            <DoneBadge item={item} />
-          )}
-        </>
+        <ItemGroup>
+          {conflictFields.map((f) => (
+            <ConflictField
+              key={f}
+              options={fields.filter((x) => x.field === f)}
+              value={picked[f]}
+              onChange={(v) => setPicked((p) => ({ ...p, [f]: v }))}
+              disabled={item.status !== "pending" || pending}
+            />
+          ))}
+          {fields.filter((f) => !f.conflict).map((f) => (
+            <Item key={f.proposal_id} size="xs" role="listitem">
+              <ItemContent>
+                <ItemDescription>{FIELD_LABEL[f.field] ?? <>Trường khác <code>{f.field}</code></>}</ItemDescription>
+                <ItemTitle>{fieldValue(f.field, f.value)}</ItemTitle>
+              </ItemContent>
+            </Item>
+          ))}
+        </ItemGroup>
       )}
     </div>
   );
+  const actions = fields.length === 0 ? null : item.status === "pending" ? (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button size="sm" onClick={approve} disabled={pending || !ready}>
+        Áp dụng
+      </Button>
+      <Button size="sm" variant="destructive" onClick={() => decide("rejected")} disabled={pending}>
+        Bỏ
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => decide("deferred")} disabled={pending}>
+        Để sau
+      </Button>
+      {!ready && <span className="text-muted-foreground text-xs">Chọn một bên cho trường xung đột trước khi áp.</span>}
+      {msg && <span className="text-muted-foreground text-xs" role="status">{msg}</span>}
+    </div>
+  ) : (
+    <DoneBadge item={item} />
+  );
+  return render({ body, actions });
 }
 
-function EntityMatchCard({ item, media }: { item: ReviewItem; media?: ReviewMedia }) {
+function EntityMatchCard({ item, media, render }: CardProps) {
   const { pending, msg, decide } = useDecide(item.id);
   const ev = item.evidence as ReviewEvidence;
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium" translate="no">{item.title}</h3>
-        <div className="flex items-center gap-2">
-          {item.ai_suggestion && (
-            <Badge variant={item.ai_suggestion === "yes" ? "success-light" : "outline"}>
-              AI: <RawLabel n={aiSuggestionLabel(item.ai_suggestion)} raw={item.ai_suggestion} /> {item.ai_confidence ? `(${Math.round(item.ai_confidence * 100)}%)` : ""}
-            </Badge>
-          )}
-          <Badge variant="outline">Điểm B: {ev.stage_b_score}</Badge>
-        </div>
+  const body = (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {item.ai_suggestion && (
+          <Badge variant="outline">
+            AI: <RawLabel n={aiSuggestionLabel(item.ai_suggestion)} raw={item.ai_suggestion} />
+          </Badge>
+        )}
+        <Badge variant="outline">Điểm B: {ev.stage_b_score}</Badge>
       </div>
       {item.ai_reasoning && (
-        <p className="text-muted-foreground rounded-md bg-muted/30 px-2 py-1 text-[11px]" translate="no">
-          🤖 {item.ai_reasoning}
-        </p>
+        <p className="text-muted-foreground text-xs" translate="no" data-review-quote>{item.ai_reasoning}</p>
       )}
-      <div className="flex gap-2">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <OfferCard label="Tin A" offer={ev.offer_a} />
           <ReviewPhotos label="Tin A" images={media?.offer_a} />
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <OfferCard label="Tin B" offer={ev.offer_b} />
           <ReviewPhotos label="Tin B" images={media?.offer_b} />
         </div>
       </div>
-      {item.status === "pending" ? (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => decide("approved")}
-            disabled={pending}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            ✅ Cùng căn
-          </button>
-          <button
-            onClick={() => decide("rejected")}
-            disabled={pending}
-            className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
-          >
-            ❌ Khác căn
-          </button>
-          <button
-            onClick={() => decide("deferred")}
-            disabled={pending}
-            className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted/50 disabled:opacity-50"
-          >
-            ⏸ Không chắc
-          </button>
-          {msg && <span className="text-muted-foreground text-xs">{msg}</span>}
-        </div>
-      ) : (
-        <DoneBadge item={item} />
-      )}
     </div>
   );
+  const actions = item.status === "pending" ? (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button size="sm" onClick={() => decide("approved")} disabled={pending}>
+        <CheckIcon data-icon="inline-start" aria-hidden />
+        Cùng căn
+      </Button>
+      <Button size="sm" variant="destructive" onClick={() => decide("rejected")} disabled={pending}>
+        <XIcon data-icon="inline-start" aria-hidden />
+        Khác căn
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => decide("deferred")} disabled={pending}>
+        <CircleHelpIcon data-icon="inline-start" aria-hidden />
+        Không chắc
+      </Button>
+      {msg && <span className="text-muted-foreground text-xs" role="status">{msg}</span>}
+    </div>
+  ) : (
+    <DoneBadge item={item} />
+  );
+  return render({ body, actions });
 }

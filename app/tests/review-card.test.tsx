@@ -80,7 +80,9 @@ test("AC-9 thẻ agent_output", async () => {
   const t = r.text();
   assert.ok(t.includes("Bán gấp căn 2pn LBV"), "thiếu đoạn tin");
   assert.ok(t.includes("Loại hình") && t.includes("Căn hộ"), "thiếu hàng loại BĐS"); // ON12: «Loại hình», giá trị đọc qua nhãn
-  assert.ok(t.includes("Phòng ngủ") && t.includes("85%"), "thiếu hàng phòng ngủ / độ tin cậy");
+  assert.ok(t.includes("Phòng ngủ"), "thiếu hàng phòng ngủ");
+  // Q9 (Mạnh 26/10, UI1 Hỏi-1 duyệt): thẻ duyệt KHÔNG hiện độ tự tin — vế «độ tin cậy» cũ của AC-9 đổi thành kiểm vắng.
+  assert.ok(!t.includes("85%") && !t.includes("tự tin"), "thẻ không được hiện độ tự tin (Q9)");
   for (const [label, status] of [["Áp dụng", "approved"], ["Bỏ", "rejected"], ["Để sau", "deferred"]] as const) {
     await r.click(label);
     const last = r.sent.at(-1)!;
@@ -103,7 +105,7 @@ test("AC-9 entity_match không đổi", async () => {
   const t = r.text();
   assert.ok(t.includes("Tin A") && t.includes("Tin B"));
   assert.ok(t.includes("Cùng căn"));
-  await r.click("❌ Khác căn");
+  await r.click("Khác căn"); // UI1: nhãn nút bỏ emoji (luật onehub-ui no-emoji-icons)
   assert.deepEqual(r.sent.at(-1)!.body, { status: "rejected" });
   await r.unmount();
 });
