@@ -68,7 +68,7 @@ async function bonNhomSau047(ca) {
   await dungKhuonTruoc(admin, S);
   await nguonMau(admin, S);
   const c = await moClient(S);
-  for (const [code, k] of [["S05", 1], ["S05", 2], ["S06", 1], ["S06", 2]]) {
+  for (const [k, code] of [[1, "S05"], [2, "S05"], [1, "S06"], [2, "S06"]]) {
     await c.query(`INSERT INTO source_groups (source_code, group_key, name, params) VALUES ($1, $2, $3, $4::jsonb)`,
       [code, `${DAU_SN}-${code}-${k}`, `${DAU_SN} nhóm ${code} ${k}`, JSON.stringify({ k })]);
   }
