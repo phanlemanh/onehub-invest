@@ -7,6 +7,10 @@
 
 ## 0. Cách dùng khi mở vòng hàng `<mã>`
 
+> Từ 26/10 nguồn của mỗi bản phạm vi là trang đợt trong kho tri thức riêng `onehub-invest-tri-thuc` (khoá `nguon` = đường
+> trỏ băm; ô mở việc tự ghi dòng «Nguồn:»). Bảng §3 dưới giữ làm chỉ mục đọc nhanh; nội dung tóm và tài liệu thô ghim băm
+> ở kho riêng — máy không có bản clone thì `git clone https://github.com/phanlemanh/onehub-invest-tri-thuc.git ~/dev/onehub-invest-tri-thuc`.
+
 1. Đọc §1 (nền chung, 5 tệp) — một lần mỗi phiên.
 2. Tra hàng ở §3 theo đợt (`dot` của hàng) → đọc đúng các mục nguồn liệt ở đó.
 3. Tra §4 xem hàng có ghi chú bổ sung (tiêu chí khảo sát đã tìm ra mà chưa nằm trong câu giao).

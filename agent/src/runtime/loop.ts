@@ -87,30 +87,33 @@ export async function runAgent(
       tools: config.tools,
       stopWhen: stepCountIs(budget),
       ...qwenParams,
-      onStepFinish: ({ stepType, toolName, toolArgs, toolResult, text }) => {
+      // AI SDK 7: mỗi bước mang cả mảng toolCalls / toolResults (không còn stepType/toolName/toolArgs của bản cũ).
+      onStepFinish: ({ toolCalls: calls, toolResults }) => {
         const stepNum = trace.filter((t) => t.type === "model").length;
 
-        if (stepType === "tool-call") {
+        for (const tc of calls ?? []) {
+          const args = (tc.input ?? {}) as Record<string, unknown>;
           trace.push({
             t: new Date().toISOString(),
             step: stepNum,
             type: "tool-call",
-            data: { name: toolName, args: toolArgs as Record<string, unknown> },
+            data: { name: tc.toolName, args },
           });
-          toolCalls.push({ name: toolName ?? "?", args: toolArgs as Record<string, unknown> });
-          hooks.onToolCall?.(toolName ?? "?", toolArgs as Record<string, unknown>);
-        } else if (stepType === "tool-result") {
+          toolCalls.push({ name: tc.toolName ?? "?", args });
+          hooks.onToolCall?.(tc.toolName ?? "?", args);
+        }
+        for (const tr of toolResults ?? []) {
           trace.push({
             t: new Date().toISOString(),
             step: stepNum,
             type: "tool-result",
             data: {
-              name: toolName,
+              name: tr.toolName,
               // offload: giữ head/tail trong trace (chuẩn T2)
-              result: offload(typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)),
+              result: offload(typeof tr.output === "string" ? tr.output : JSON.stringify(tr.output)),
             },
           });
-          hooks.onToolResult?.(toolName ?? "?", toolResult);
+          hooks.onToolResult?.(tr.toolName ?? "?", tr.output);
         }
 
         hooks.onStep?.(stepNum);
@@ -124,7 +127,7 @@ export async function runAgent(
           t: new Date().toISOString(),
           step: trace.length,
           type: "tool-call",
-          data: { name: tc.toolName, args: tc.input ?? tc.args },
+          data: { name: tc.toolName, args: (tc.input ?? {}) as Record<string, unknown> },
         });
       }
     }
@@ -144,7 +147,7 @@ export async function runAgent(
     // dùng result.toolCalls (AI SDK aggregate) thay vì local tracking
     const finalToolCalls = (result.toolCalls ?? []).map((tc) => ({
       name: tc.toolName,
-      args: (tc.input ?? tc.args ?? {}) as Record<string, unknown>,
+      args: (tc.input ?? {}) as Record<string, unknown>,
     }));
     return {
       output: result.text,

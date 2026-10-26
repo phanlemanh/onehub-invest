@@ -23,6 +23,7 @@
 | As-built + chỉ mục | §2, §4 của tệp này — §4 trỏ mã hàng của lộ trình, không chép danh sách việc | phiên làm xong việc |
 | Căn cứ (audit, review, nghiên cứu) | `docs/audit/`, `docs/architecture/`, `docs/research/` | đầu vào của cắt lượt, không phải danh sách việc |
 | Bối cảnh khi mở vòng một hàng (đọc gì cho hàng nào, quyết định còn chờ chặn hàng nào, việc của người) | `docs/plan/BOI-CANH.md` | phiên cắt lượt; cập nhật khi cắt đợt mới hoặc chốt quyết định |
+| Nguồn của bản phạm vi — nghiên cứu, thảo luận, quyết định đã chưng cất (tầng tri thức, kit 2.34.0) | kho RIÊNG TƯ `phanlemanh/onehub-invest-tri-thuc` (`~/dev/onehub-invest-tri-thuc`, khai `tri_thuc` trong `_acceptance/config.yaml`): `raw/` bất biến + `wiki/nen`, `wiki/dot`; khoá `nguon` của bản phạm vi là đường trỏ băm `onehub-invest-tri-thuc:wiki/dot/<đợt>.md#<băm>` | ghi bằng `/tri-thuc:ghi`, kiểm `/tri-thuc:kiem`; tầng A không vào cả kho riêng |
 | Giao việc cho ZCode | kênh tin (issue #9) — **mỗi lời giao ghi mã hàng** của lộ trình | điều phối liên làn |
 
 ## 1. Nguyên tắc bất biến (hiến pháp)
@@ -251,6 +252,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    tự ZC6 → ZC4 → hook Kev v3. Kèm: **PL3 gộp vào PL23**; **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất**;
    C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4.
 
+20. **Kho tri thức riêng tư đi kèm** (26/10, Mạnh duyệt «đặt tên là onehub-invest-tri-thuc để phân biệt với các kho khác
+   và duyệt theo khuyến nghị»): `phanlemanh/onehub-invest-tri-thuc` chỉ phục vụ onehub-invest; khai `tri_thuc` với
+   `cong_khai: true` và `kho` — tài liệu thô và trang tóm đều ở kho riêng, kho công khai chỉ giữ đường trỏ băm. Kho riêng
+   vẫn nằm trên GitHub nên tầng A (luật 6) không vào; nguồn ngoài kho công khai được che tên nguồn bằng mã S0x trước khi
+   ghi. Gói `tri-thuc` cài scope local (không chạm `.claude/settings.json`). Đủ 10 bản phạm vi đổi `nguon` sang trang đợt.
+
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
 > Từ 23/10 việc sắp làm và mốc nằm ở `docs/plan/lo-trinh.json` (đợt `phan-loai-2310` PL1–PL31, `cam-mau-2310`
@@ -319,7 +326,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V12 | Sổ bề mặt API — mọi route khai ở `app/src/lib/api-surface.ts`, CI đỏ khi lệch; đóng `/api/v1/offers` (chế độ `ops` như căn giá tốt), beacon khách 204, `/api/zalo-media` chặn ảnh QR đăng nhập Zalo — `_acceptance/so-be-mat-api` | 🔄 NT4, đợt 0 |
 | V8 | Khoá anon + bật RLS trên Supabase (037) — đóng lỗ PostgREST đọc được `users`/`sessions`/`sale_offers` bằng anon key — `_acceptance/supabase-lock-anon-rls` | ✅ merge PR #20 (ce4ad81); ⏳ CHƯA áp cloud — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md` |
 | V13 | Luật tự vận hành từ xa: ADR-0015 đường lệnh kéo một chiều cloud → máy thu + ADR-0007 sửa đổi 26/10 (bài, ảnh, thẻ duyệt lên cloud cho vai ops; tầng A còn bốn thứ) + thuật ngữ Đơn vị thu, Lệnh, Quy định ngữ cảnh, Mục tiêu phủ — TV0 `_acceptance/adr-duong-lenh-keo` (T1) | ✅ Mạnh duyệt ADR 26/10; chờ gộp PR — cửa của TV1–TV14 |
-| V14 | Vòng đời nguồn: `source_registry` + `source_groups` năm trạng thái có CHECK (paused bắt buộc lý do), `enabled` thành bản soi do trigger giữ khớp; `isRunnable` + CLI `pipeline/lib/vong-doi.mjs` cho TV2b — migration 047, TV2a `_acceptance/vong-doi-nguon` (T3) | 🔄 Cổng Phạm vi + Gate 1.5 Mạnh duyệt 26/10; 047 áp DB local SAU gộp |
+| V14 | Tầng tri thức (kit 2.34.0): kho riêng `onehub-invest-tri-thuc` (12 raw, 2 trang nền, 10 trang đợt), `nguon` của 10 bản phạm vi là đường trỏ băm, 7 tệp kit `[only-if-declared: tri_thuc]` đã chép — `_acceptance/kho-tri-thuc-invest` (T2) | 🔄 chờ Cổng 2 |
+| V15 | Vòng đời nguồn: `source_registry` + `source_groups` năm trạng thái có CHECK (paused bắt buộc lý do), `enabled` thành bản soi do trigger giữ khớp; `isRunnable` + CLI `pipeline/lib/vong-doi.mjs` cho TV2b — migration 047, TV2a `_acceptance/vong-doi-nguon` (T3) | 🔄 Cổng 2 Mạnh ký 26/10 — PR #129; 047 áp DB local SAU gộp |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI

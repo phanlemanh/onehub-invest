@@ -1,0 +1,51 @@
+schema_version: 1
+feature_slug: kho-tri-thuc-invest
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ktt_khai
+    expected: "exit 0; 'KHAI OK'; cong_khai true, kho đúng, không noi, 0 lỗi; gốc cạnh checkout chính; PRIVATE"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ktt_ban_chep
+    expected: "exit 0; 'BAN-CHEP OK'; 7 tệp tri_thuc trùng byte bản cài 2.34.0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ktt_lint
+    expected: "exit 0; 'LINT OK'; dòng 'tri thức: 12 trang, 12 raw, 0 lỗi'; kho riêng sạch, đã đẩy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ktt_rang_phu
+    expected: "exit 0; 'RANG-PHU OK'; 10 bản, 0 lỗi nguồn; ops-noi-that đúng 3 lỗi có từ trước"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ktt_dot_bien
+    expected: "exit 0; 'DOT-BIEN OK'; should-fire: M1–M5 đỏ đúng mã; should-NOT-fire: N1 không có kho riêng → rc 0 + cảnh báo, lint thoát 3"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ktt_rieng_tu
+    expected: "exit 0; 'RIENG-TU OK'; should-NOT-fire: không dòng 'có tên nguồn thật' hay 'kho công khai có tệp tri thức'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ktt_khong_cham
+    expected: "exit 0; 'KHONG-CHAM OK'; settings.json không đổi; tri-thuc scope local"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.ktt_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'; product-map khớp; không FAIL mới ở check-lo-trinh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
