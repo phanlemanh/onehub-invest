@@ -1,0 +1,18 @@
+schema_version: 1
+feature_slug: aer-ac2-so-cap-co-dinh
+# Ca «AER-AC-2 …» trong scripts/auth-error-thu-lai-retry.test.mjs (không DB).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/auth-error-thu-lai-retry.test.mjs]
+    expected: "exit 0; ca 'PR khác thêm hay sửa khoá ở cây đang kiểm không làm ca này đỏ (ca so không đọc cây đang kiểm)' xanh: soCapCoDinh chỉ nhận blob qua bộ đọc git show (5e396cb2^, 5e396cb2) → khac = []; đối chứng dương cùng bộ so: kitBeforeAfter(blob 5e396cb2, cây đang kiểm có thêm khoá pr_khac_them_khoa) → báo đúng executors.script.pr_khac_them_khoa (bộ so nhạy, chỉ là không đọc cây); phá-thử S3 (tay, ghi sổ): thêm khoá vào config.yaml thật → bản cũ (so merge-base) đỏ 'giá trị đổi so với merge-base origin/main: executors.script.pr_khac_them_khoa', bản mới 9/9 xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [scripts/auth-error-thu-lai-retry.test.mjs, lib/evidence-core.cjs]
+    expected: "exit 0; ca 'bộ đọc kit ra cùng giá trị cho mọi khoá trước và sau commit sửa 5e396cb2 (hợp tập khoá)' xanh: 5e396cb2 có đổi config.yaml, so >100 khoá (in số), khac = []; ca chiều đỏ xanh: bản «sau» đổi giá trị app_ui → ['executors.test.app_ui'], xoá dòng app_ui → ['executors.test.app_ui']; không đọc được hai blob (clone nông) → ca bỏ qua kèm lý do in ra"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

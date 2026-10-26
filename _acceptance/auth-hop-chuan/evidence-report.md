@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 3e1b4649bfa7f2fe88da66dcd4e4655f9524573a
+verified_commit: 649a6d119bbdf9acc4667949541e49b041adcbda
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -184,3 +184,11 @@ none — không eval nào chạy nhiều lần (mọi eval runs 1), không có p
 
 Round 1: E1, E2, E3, E4, E5 failed — lệnh chung `cd app && npm test` hỏng 1 trong 485 ca: CD-AC-7b ở `app/tests/che-do-thu.test.tsx` dòng 392 (assert hàng 9 chứa «Duy trì»), nằm ngoài tệp kiểm của tính năng này; log đuôi không cho thấy riêng ca AH-AC-1..AH-AC-5. E6, E7, E8, E9, E10 đạt; bốn lệnh suite hồi quy đạt. Returned to implementation.
 Round 2: E1..E6 và E10 chạy lại trên cây 3e1b4649 sau bản sửa S4-r1 (so action với đúng hàm, quét <style> cả document có đối chứng dương, đo safeNext trên trang thật) — tất cả đạt; năm lệnh suite hồi quy đạt. E7, E8, E9 mang sang từ round 1 (delta không chạm paths của chúng).
+
+### Re-pin lần 1 — 2026-10-26, do ô E4 thay bởi auth-error-thu-lai-retry#AC-1 (superseded_by)
+run_id: repin-20261026T132451Z-32748
+sha: 11d47d6f44dc8b4a3168bb3b717d92c5b38dffcf · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E4 · thay bởi hồ sơ đã ký: E4→auth-error-thu-lai-retry#AC-1 · ngoài làn máy: E9 · diff chạm vật đo ngoài làn máy: E9 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-4, AC-7
+
+### Re-pin lần 2 — 2026-10-26, do gộp main + sửa AER-AC-2 so cặp commit cố định (aer-ac2-so-cap-co-dinh)
+run_id: repin-20261026T143917Z-34922
+sha: 649a6d119bbdf9acc4667949541e49b041adcbda · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E4 · thay bởi hồ sơ đã ký: E4→auth-error-thu-lai-retry#AC-1 · ngoài làn máy: E9 · AC không có chốt máy: AC-4, AC-7

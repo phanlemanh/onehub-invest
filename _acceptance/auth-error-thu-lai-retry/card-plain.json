@@ -1,0 +1,24 @@
+{
+  "feature_plain": "Khi trang đăng nhập hoặc đăng ký lỗi lúc dựng (thường do dữ liệu tạm thời), bấm «Thử lại» sẽ tải lại trang từ server nên khách hết lỗi mà không phải tự tải lại cả trang; kèm sửa tệp cấu hình nghiệm thu cho đúng chuẩn YAML.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cho nút «Thử lại» trên trang lỗi đăng nhập/đăng ký tải lại phần trang từ server (đo qua đúng ranh giới lỗi của Next), giữ nguyên cảnh báo, mã lỗi và bố cục."},
+    {"id": "AC-3", "p": "Sẽ giữ app sạch kiểu và lint, không thêm miễn trừ lint nào cho nhóm trang đăng nhập/đăng ký."},
+    {"id": "AC-4", "p": "Sẽ chuyển phép đo cũ của nút «Thử lại» ở hồ sơ UI7 sang hồ sơ này bằng cơ chế thay thế của kit, không sửa chữ hồ sơ đã ký."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Sẽ KHÔNG còn lỗi cú pháp YAML chuẩn trong tệp cấu hình nghiệm thu, và KHÔNG lệnh kiểm nào đổi nghĩa so với trước vòng."},
+    {"id": "OOS-1", "p": "KHÔNG sửa nút «Thử lại» ở trang lỗi Invest và Ops (vẫn chỉ vẽ lại phía client) — ngoài câu giao, để hàng riêng."},
+    {"id": "OOS-2", "p": "KHÔNG đổi giao diện trang lỗi."},
+    {"id": "OOS-3", "p": "KHÔNG đổi giá trị lệnh kiểm nào trong tệp cấu hình — chỉ sửa cú pháp."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Không quét không gian tiêu chí: câu giao chỉ có hai việc (nút Thử lại, YAML chuẩn) cộng giữ nguyên giao diện."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Lý do bỏ việc nhìn trên bản chạy không đứng (tiền lệ của kho từng chọn chỉnh tạm có ảnh). Đã đổi phép đo sang ranh giới lỗi thật của Next, và việc có thêm phép đo trên bản chạy hay không thành Hỏi-1 cho anh."},
+    {"i": 1, "p": "Phép đo cũ tự đặt tên tham số nên có thể cùng sai với Next mà vẫn xanh. Đã sửa: đo qua chính thành phần của Next, và căn cứ trỏ đúng câu giao Ngoài-5."},
+    {"i": 2, "p": "Chưa có gì kiểm việc chuyển phép đo khỏi hồ sơ UI7 và thứ tự ký → ghim lại → đẩy. Đã thêm AC-4 và khai thứ tự trong hợp đồng."},
+    {"i": 3, "p": "«Không lệnh nào đổi nghĩa» cần so trước-sau, không chỉ so hai bộ đọc trên bản sau. Đã thêm phép so bản trước vòng với bản mới cho mọi khoá."},
+    {"i": 4, "p": "Lời hứa không thêm miễn trừ lint chưa có phép đo. Đã tách thành một phép đếm riêng có chiều đỏ."}
+  ]
+}
