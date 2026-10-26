@@ -29,7 +29,9 @@ async function withTx(fn) {
     // Cùng khoá với agent/tests/helpers/db.ts — hai bộ test nạp CREATE OR REPLACE FUNCTION song song là deadlock.
     await c.query("SELECT pg_advisory_xact_lock(33033)");
     const da044 = (await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok;
-    await c.query((da044 ? MIG_TRUOC_044.filter((_, i) => i !== 2) : MIG_TRUOC_044).concat(MIG_044).join("\n"));
+    // DB đã áp 044: chỉ nạp lại 033+036 (hàm). Không nạp 039 (khoá ngoại của nó trỏ BẢNG sale_offers) và không áp lại 044 —
+    // áp lại là DDL khoá độc quyền trên view sống, deadlock với phiên khác đang đọc DB dùng chung.
+    await c.query((da044 ? MIG_TRUOC_044.slice(0, 2) : MIG_TRUOC_044.concat(MIG_044)).join("\n"));
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});

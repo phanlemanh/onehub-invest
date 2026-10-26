@@ -130,7 +130,8 @@ export async function chayBaLuot(client, { doiChung = null, out = console.log } 
   await client.query("BEGIN");
   try {
     await client.query("SELECT pg_advisory_xact_lock(33033)");
-    await client.query(MIG_044);
+    // DB chưa áp 044 (trước triển khai) thì nạp trong giao dịch; đã áp thì không áp lại — DDL khoá độc quyền trên view sống.
+    if (!(await client.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await client.query(MIG_044);
     if (doiChung) await client.query(DOI_CHUNG[doiChung]);
     const can = (dk, loi) => { if (!dk) throw new Error(`nap-lai-ba-luot: điều kiện dương không đạt — ${loi}`); };
     const tinCu = [];
