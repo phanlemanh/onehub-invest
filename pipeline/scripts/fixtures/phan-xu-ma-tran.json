@@ -1,0 +1,117 @@
+{
+  "_ghi_chu": "Ma trận phân xử viết trước (PL15 AC-3, E5). Mỗi ca: số post của tin mồi (0 = chỉ post neo), phát biểu chèn (post = chỉ số post, 'la' = chủ thể ngoài tin; rut = rút sau khi ghi), và kỳ vọng từng trường có kỳ vọng: v (giá trị cột; null = mặc định), tier/method/conflict/lower_disagree (mục nguồn gốc), goi_y (số gợi ý khi chỉ có suy luận), prov=false (không có mục nguồn gốc).",
+  "ca": [
+    {
+      "ten": "khong-phat-bieu", "posts": 1, "phat_bieu": [],
+      "ky_vong": {
+        "property_type": { "v": "unknown", "prov": false },
+        "bedrooms": { "v": null, "prov": false }
+      }
+    },
+    {
+      "ten": "fact-trai-observed", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "property_type", "value": "house", "tier": "fact", "method": "source_field", "rule_id": "category:1020" },
+        { "post": 0, "field": "property_type", "value": "apartment", "tier": "observed", "method": "e1_rule" }
+      ],
+      "ky_vong": { "property_type": { "v": "house", "tier": "fact", "method": "source_field", "conflict": false, "lower_disagree": true } }
+    },
+    {
+      "ten": "hitl-trai-source-field", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "property_type", "value": "house", "tier": "fact", "method": "source_field", "rule_id": "category:1020" },
+        { "post": 0, "field": "property_type", "value": "land", "tier": "fact", "method": "hitl" }
+      ],
+      "ky_vong": { "property_type": { "v": "land", "tier": "fact", "method": "hitl", "conflict": true, "lower_disagree": false } }
+    },
+    {
+      "ten": "cung-lop-dong-thuan", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "bedrooms", "value": "2", "tier": "observed", "method": "parser" },
+        { "post": 0, "field": "bedrooms", "value": "2", "tier": "observed", "method": "e1_rule" }
+      ],
+      "ky_vong": { "bedrooms": { "v": 2, "tier": "observed", "method": "parser", "conflict": false, "lower_disagree": false } }
+    },
+    {
+      "ten": "cung-lop-bat-dong", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "street_raw", "value": "Đội Cấn", "tier": "observed", "method": "e2_llm" },
+        { "post": 0, "field": "street_raw", "value": "Kim Mã", "tier": "observed", "method": "e1_rule" }
+      ],
+      "ky_vong": { "street_raw": { "v": "Kim Mã", "tier": "observed", "method": "e1_rule", "conflict": true, "lower_disagree": false } }
+    },
+    {
+      "ten": "legacy-thua-parser", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "bathrooms", "value": "3", "tier": "observed", "method": "legacy" },
+        { "post": 0, "field": "bathrooms", "value": "2", "tier": "observed", "method": "parser" }
+      ],
+      "ky_vong": { "bathrooms": { "v": 2, "tier": "observed", "method": "parser", "conflict": true, "lower_disagree": false } }
+    },
+    {
+      "ten": "chi-inferred", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "block_raw", "value": "A1", "tier": "inferred", "method": "e2_llm" }
+      ],
+      "ky_vong": { "block_raw": { "v": null, "goi_y": 1 } }
+    },
+    {
+      "ten": "da-rut", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "bedrooms", "value": "3", "tier": "observed", "method": "parser", "rut": true },
+        { "post": 0, "field": "bedrooms", "value": "4", "tier": "observed", "method": "e1_rule" }
+      ],
+      "ky_vong": { "bedrooms": { "v": 4, "tier": "observed", "method": "e1_rule", "conflict": false, "lower_disagree": false } }
+    },
+    {
+      "ten": "hai-post-hop", "posts": 2,
+      "phat_bieu": [
+        { "post": 0, "field": "bedrooms", "value": "2", "tier": "observed", "method": "parser" },
+        { "post": 1, "field": "street_raw", "value": "Láng", "tier": "observed", "method": "e1_rule" }
+      ],
+      "ky_vong": {
+        "bedrooms": { "v": 2, "tier": "observed", "method": "parser", "conflict": false, "lower_disagree": false },
+        "street_raw": { "v": "Láng", "tier": "observed", "method": "e1_rule", "conflict": false, "lower_disagree": false }
+      }
+    },
+    {
+      "ten": "hai-post-bat-dong", "posts": 3,
+      "phat_bieu": [
+        { "post": 0, "field": "bedrooms", "value": "2", "tier": "observed", "method": "parser" },
+        { "post": 1, "field": "bedrooms", "value": "3", "tier": "observed", "method": "parser" },
+        { "post": 2, "field": "bedrooms", "value": "3", "tier": "observed", "method": "parser" }
+      ],
+      "ky_vong": { "bedrooms": { "v": 3, "tier": "observed", "method": "parser", "conflict": true, "lower_disagree": false } }
+    },
+    {
+      "ten": "so-chuan-hoa", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "bedrooms", "value": "02", "tier": "observed", "method": "parser" },
+        { "post": 0, "field": "bedrooms", "value": " 2 ", "tier": "observed", "method": "e1_rule" }
+      ],
+      "ky_vong": { "bedrooms": { "v": 2, "tier": "observed", "method": "parser", "conflict": false, "lower_disagree": false } }
+    },
+    {
+      "ten": "chu-hoa-thuong", "posts": 1,
+      "phat_bieu": [
+        { "post": 0, "field": "street_raw", "value": "kim mã", "tier": "observed", "method": "e2_llm" },
+        { "post": 0, "field": "street_raw", "value": "Kim Mã", "tier": "observed", "method": "e1_rule" }
+      ],
+      "ky_vong": { "street_raw": { "v": "Kim Mã", "tier": "observed", "method": "e1_rule", "conflict": false, "lower_disagree": false } }
+    },
+    {
+      "ten": "post-ids-rong", "posts": 0,
+      "phat_bieu": [
+        { "post": 0, "field": "bedrooms", "value": "1", "tier": "observed", "method": "parser" }
+      ],
+      "ky_vong": { "bedrooms": { "v": 1, "tier": "observed", "method": "parser", "conflict": false, "lower_disagree": false } }
+    },
+    {
+      "ten": "chu-the-la", "posts": 1,
+      "phat_bieu": [
+        { "post": "la", "field": "bedrooms", "value": "5", "tier": "observed", "method": "parser" }
+      ],
+      "ky_vong": { "bedrooms": { "v": null, "prov": false } }
+    }
+  ]
+}
