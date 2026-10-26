@@ -1,0 +1,7 @@
+{"ts":"2026-10-26T14:31:46Z","round":1,"evalId":"E1","run_id":"import-s08-E1-20261026T143146Z","exit_code":0,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"}
+{"ts":"2026-10-26T14:31:46Z","round":1,"evalId":"E2","run_id":"import-s08-E2-20261026T143146Z","exit_code":0,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"}
+{"ts":"2026-10-26T14:31:46Z","round":1,"evalId":"E3","run_id":"import-s08-E3-20261026T143146Z","exit_code":0,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"}
+{"ts":"2026-10-26T14:31:46Z","round":1,"evalId":"E4","run_id":"import-s08-E4-20261026T143146Z","exit_code":0,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"}
+{"ts":"2026-10-26T14:31:46Z","round":1,"evalId":"E7","run_id":"import-s08-E7-20261026T143146Z","exit_code":0,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"}
+{"ts":"2026-10-26T14:31:53Z","round":1,"evalId":"E5","run_id":"import-s08-E5-20261026T143153Z","exit_code":0,"cmd":"node scripts/s08-danh-muc/acceptance.mjs nguon-duy-nhat"}
+{"ts":"2026-10-26T14:31:54Z","round":1,"evalId":"E6","run_id":"import-s08-E6-20261026T143154Z","exit_code":0,"cmd":"node --test pipeline/scripts/import-s08-row.test.mjs"}
