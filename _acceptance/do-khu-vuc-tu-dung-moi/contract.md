@@ -5,7 +5,7 @@ slug: do-khu-vuc-tu-dung-moi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-26T12:55:00Z
 design_doc: docs/superpowers/specs/2026-10-26-do-khu-vuc-tu-dung-moi-design.md
