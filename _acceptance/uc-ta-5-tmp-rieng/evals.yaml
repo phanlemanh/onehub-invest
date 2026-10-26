@@ -1,0 +1,21 @@
+schema_version: 1
+feature_slug: uc-ta-5-tmp-rieng
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.uct_nam_luot
+    expected: "exit 0; 'NAM-LUOT OK'; năm lượt đều 'ℹ fail 0' và 'ℹ skipped 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.uct_dot_bien
+    expected: "exit 0; 'DOT-BIEN OK'; bản thật xanh; should-fire: đột biến bỏ dọn thư mục tạm → UC-TA-5 đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.uct_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
