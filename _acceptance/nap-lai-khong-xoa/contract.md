@@ -5,7 +5,7 @@ slug: nap-lai-khong-xoa
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-26-nap-lai-khong-xoa-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
