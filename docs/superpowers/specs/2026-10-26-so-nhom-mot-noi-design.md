@@ -40,7 +40,7 @@ hai nguồn sự thật (đúng G2 của tài liệu nguồn).
 | `unit_type` | text NOT NULL CHECK | `nhom` (N) · `vung` (V) · `market` (M); dòng cũ: S05 → `nhom`, S06 → `vung` |
 | `original_name` | text | tên như nguồn hiện (tầng C — tên nhóm); dòng cũ chép từ `name` |
 | `market_codes` | text[] NOT NULL DEFAULT '{}' | mỗi phần tử là `areas.id` có `region_type = 'market'` (trigger kiểm, sai thì từ chối) |
-| `project_node_ids` | bigint[] NOT NULL DEFAULT '{}' | mỗi phần tử là `asset_nodes.id` có `node_type = 'project'` (khu đô thị) — «dự án nhóm chuyên» |
+| `project_node_ids` | bigint[] NOT NULL DEFAULT '{}' | mỗi phần tử là `asset_nodes.id` có `node_type = 'project'` (khu đô thị) — «dự án nhóm chuyên»; loại node chốt ở Hỏi-2 |
 
 Không thêm `display_title`/`description` ở đây: đó là ON19. Cột `name` cũ giữ nguyên (view còn đọc nó).
 
@@ -54,7 +54,9 @@ chèn; backfill dòng cũ theo thứ tự `id`. Xoá dòng (route `delete` cũ) 
 - **S03**: đọc cấu hình gateway CHỈ ĐỌC qua hàm sẵn có `effectiveEnabledGroups` (bản .mjs tương đương bên máy thu), lấy
   id nhóm và cờ bật; tên nhóm lấy từ bộ nhớ đệm danh bạ nhóm nếu có. Upsert `unit_type = 'nhom'`, `unit_key = id nhóm`;
   bật ở gateway → `active`, có trong cấu hình nhưng tắt → `paused` lý do «tắt ở gateway». Không ghi một byte nào vào
-  cấu hình gateway (luật 8; ca thử băm tệp trước/sau). Nhóm biến khỏi cấu hình → `retired`, không xoá dòng.
+  cấu hình gateway (luật 8; ca thử băm tệp trước/sau). Nhóm biến khỏi cấu hình → `paused` lý do «không còn ở gateway» (Hỏi-3), không xoá dòng; quay lại → cùng dòng,
+  cùng mã, `active`. Tệp cấu hình thiếu hay hỏng → thoát lỗi, sổ không đổi. Bản .mjs của hàm đọc nhóm có ca so khớp với
+  bản TS (fixture sinh bằng hàm ghi thật).
 - **S02**: đọc `airdna_markets` (43 market); upsert `unit_type = 'market'`, `unit_key = airdna_id`; `market_codes` lấy từ
   `area_sources` (nguồn S02) khi có ánh xạ.
 - Chạy lại hai lần không đổi gì. Script không in id nhóm S03 hay tên nguồn thật ra stdout.

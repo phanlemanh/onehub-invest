@@ -17,14 +17,14 @@ evals:
     executor: test
     cmd: config:executors.test.so_nhom
     paths: [pipeline/apify-facebook-collector.mjs, pipeline/collect-chotot.mjs, pipeline/ha-bung-het-han.mjs, app/src/lib/che-do-thu.ts, app/src/app/api/v1/ops/source-groups/route.ts, pipeline/scripts/so-nhom.itest.mjs]
-    expected: "exit 0; ca 'SN-AC-2' rút NGUYÊN VĂN mọi câu SQL chạm source_groups trong năm tệp (regex trên mã nguồn; số câu rút được mỗi tệp viết trước, lệch thì đỏ nêu tệp), chạy từng câu trên lược đồ đã migration với tham số của ca: câu đọc trả cùng tập dòng như trên khuôn trước migration (so hai lược đồ song song); câu ghi (INSERT, UPDATE, DELETE, SELECT … FOR UPDATE) chạy được và dòng ở collection_units đổi đúng; đơn vị S03, S02 chèn thêm không lọt vào kết quả câu đọc của script thu (lọc theo mã) và của docNhomThu, GET route (lọc S05/S06); UPDATE … FOR UPDATE của ha-bung-het-han chạy trên dòng S03 có mode bung; docTrangThai('S03', <khoá>) đọc qua tên cũ được; route toggle với sourceCode 'S03' → 400, dòng không đổi"
+    expected: "exit 0; ca 'SN-AC-2' rút NGUYÊN VĂN mọi câu SQL chạm source_groups trong năm tệp (regex trên mã nguồn; số câu rút được mỗi tệp viết trước, lệch thì đỏ nêu tệp), tập tệp git grep -l source_groups (ngoài _acceptance/, docs/, db/migrations/0*) trên đỉnh nhánh deepEqual danh sách viết trước — tệp lạ thì đỏ nêu tên; chạy từng câu trên lược đồ đã migration với tham số của ca: câu đọc trả cùng tập dòng như trên khuôn trước migration (so hai lược đồ song song); câu ghi (INSERT, UPDATE, DELETE, SELECT … FOR UPDATE) chạy được và dòng ở collection_units đổi đúng; đơn vị S03, S02 chèn thêm không lọt vào kết quả câu đọc của script thu (lọc theo mã) và của docNhomThu, GET route (lọc S05/S06); UPDATE … FOR UPDATE của ha-bung-het-han chạy trên dòng S03 có mode bung; docTrangThai('S03', <khoá>) đọc qua tên cũ được; route toggle với sourceCode 'S03' → 400, dòng không đổi"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-2
     executor: test
-    cmd: config:executors.test.che_do_thu
-    paths: [app/tests/che-do-thu.test.tsx]
-    expected: "exit 0 trên đỉnh nhánh (test không sửa)"
+    cmd: config:executors.test.so_nhom
+    paths: [app/tests/che-do-thu.test.tsx, db/migrations/048_so_nhom_mot_noi.sql, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-2b' (trong so-nhom.itest.mjs): dựng lược đồ tạm P mô phỏng public sau gộp (khuôn trước 047 + 047 + 048: bảng collection_units, view source_groups), chép NGUYÊN VĂN app/tests/che-do-thu.test.tsx sang app/tests/.sn-che-do-thu-<pid>.test.tsx với mọi chuỗi 'public.' thay bằng 'P.' (số chỗ thay viết trước, lệch thì đỏ), chạy nó bằng node --import tsx --test, rồi xoá tệp chép: exit 0; đối chứng: trên P không có cột status trong view thì bản chép đỏ"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-3
@@ -38,7 +38,7 @@ evals:
     executor: test
     cmd: config:executors.test.so_nhom
     paths: [db/migrations/048_so_nhom_mot_noi.sql, pipeline/scripts/so-nhom.itest.mjs]
-    expected: "exit 0; ca 'SN-AC-4' (lược đồ tạm có areas và asset_nodes chép LIKE public kèm vài dòng viết trước: một market, một submarket; một node project, một node building): market_codes ['vn-xyz-khong-co'] → lỗi; [<id submarket>] → lỗi; [<id market>] → nhận; project_node_ids [<id building>] → lỗi; [999999] → lỗi; [<id project>] → nhận; mọi lỗi nêu tên ràng buộc/trigger của vòng"
+    expected: "exit 0; ca 'SN-AC-4' (lược đồ tạm có areas và asset_nodes chép LIKE public kèm vài dòng viết trước: một market, một submarket; một node project, một node building; loại node nhận theo Hỏi-2): market_codes ['vn-xyz-khong-co'] → lỗi; [<id submarket>] → lỗi; [<id market>] → nhận; project_node_ids [<id building>] → lỗi; [999999] → lỗi; [<id project>] → nhận; mọi lỗi nêu tên ràng buộc/trigger của vòng"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-5
@@ -46,7 +46,7 @@ evals:
     cmd: config:executors.test.so_nhom
     layer: backend-effect
     paths: [pipeline/sync-don-vi.mjs, pipeline/scripts/so-nhom.itest.mjs]
-    expected: "exit 0; ca 'SN-AC-5': tệp cấu hình gateway mẫu trong thư mục tạm (khuôn rút từ app/src/lib/zalo-admin.ts — tài khoản có groups riêng, ba nhóm id giả 'vd-nhom-1' bật, 'vd-nhom-2' tắt, 'vd-nhom-3'); chạy script lần 1 (DATABASE_URL lược đồ tạm, đường cấu hình qua biến môi trường); xoá 'vd-nhom-3' khỏi tệp; chạy lần 2 và lần 3: sổ có đúng 3 đơn vị S03 — vd-nhom-1 active, vd-nhom-2 paused lý do 'tắt ở gateway', vd-nhom-3 retired; lần 3 không đổi gì; sha256 tệp cấu hình trước/sau mỗi lần bằng nhau; stdout không chứa 'vd-nhom-'"
+    expected: "exit 0; ca 'SN-AC-5': tệp cấu hình gateway mẫu trong thư mục tạm (khuôn rút từ app/src/lib/zalo-admin.ts), ba nhóm id giả 'vd-nhom-1' bật, 'vd-nhom-2' tắt, 'vd-nhom-3' bật; DATABASE_URL lược đồ tạm, đường cấu hình qua biến môi trường; lần 1 → 3 đơn vị; xoá vd-nhom-3, lần 2 → vd-nhom-3 paused lý do 'không còn ở gateway'; lần 3 không đổi gì; thêm lại vd-nhom-3, lần 4 → cùng dòng, cùng unit_code, active, không có hai dòng S03 trùng unit_key; vd-nhom-1 active, vd-nhom-2 paused lý do 'tắt ở gateway'; tệp cấu hình vắng → thoát ≠ 0, ảnh chụp sổ không đổi; tệp JSON hỏng → thoát ≠ 0, sổ không đổi; sha256 tệp cấu hình trước/sau mỗi lần bằng nhau; stdout không chứa 'vd-nhom-'; ca 'SN-AC-5b': ma trận fixture viết trước (groups cấp channel, cấp tài khoản, ghi đè theo tài khoản, nhóm enabled false, tài khoản không groups) — gọi effectiveEnabledGroups của app/src/lib/zalo-admin.ts và bản .mjs của script trên từng fixture, deepEqual; ít nhất một fixture sinh bằng hàm ghi setZaloGroupEnabled trên tệp tạm (không viết tay)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-6
@@ -68,14 +68,14 @@ evals:
     cmd: config:executors.test.so_nhom_app
     layer: backend-effect
     paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/src/components/ops/sources/**, app/src/lib/che-do-thu.ts, app/tests/so-nhom.test.tsx]
-    expected: "exit 0; ca 'SN-AC-8': lược đồ tạm đã migration có một đơn vị mỗi nguồn S02, S03, S05, S06; vẽ khu sổ trong jsdom bằng hàm đọc thật của trang: 4 dòng, mỗi dòng có mã đơn vị, nhãn nguồn, tên gốc, thị trường, dự án, trạng thái; HTML không chứa URL nhóm S05 lẫn id nhóm S03; hộp thoại khai thị trường + dự án gửi action set-meta (phiên admin) → 200, dòng đổi, ops_audit thêm đúng 1 dòng action 'source-group:set-meta' trong cùng giao dịch (đối chứng: thêm CHECK chặn action ấy vào ops_audit → 500 và dòng không đổi)"
+    expected: "exit 0; ca 'SN-AC-8': lược đồ tạm đã migration có một đơn vị mỗi nguồn S02, S03, S05, S06; vẽ khu sổ trong jsdom bằng hàm đọc thật của trang: 4 dòng, mỗi dòng có mã đơn vị, nhãn nguồn, tên gốc, thị trường, dự án, trạng thái; HTML không chứa URL nhóm S05 lẫn id nhóm S03; dòng S03 có chữ 'theo gateway', dòng S05 không có (đối chứng); hộp thoại khai thị trường + dự án gửi action set-meta (phiên admin) → 200, dòng đổi, ops_audit thêm đúng 1 dòng action 'source-group:set-meta' trong cùng giao dịch (đối chứng: thêm CHECK chặn action ấy vào ops_audit → 500 và dòng không đổi); fetch giả trả 400 {error} → hộp còn mở, chữ lỗi hiện, dòng không đổi; tab S02 rỗng → Empty chứa 'node pipeline/sync-don-vi.mjs'; hàm đọc ném lỗi → vùng lỗi có nút 'Thử lại'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-8
     executor: ui-check
     layer: ui-observed
     paths: [app/src/components/ops/sources/**]
-    expected: "Trang /ops/sources (dev :3456, tài khoản ops thử role admin) hiện khu «Sổ đơn vị thu» với các cột mã, nguồn, tên gốc, thị trường, dự án, trạng thái; hộp thoại khai thị trường và dự án mở được và lưu; ảnh sáng, tối và khổ hẹp"
+    expected: "Trang /ops/sources (dev :3456, tài khoản ops thử role admin) hiện khu «Sổ đơn vị thu» với các cột mã, nguồn, tên gốc, thị trường, dự án, trạng thái; hộp thoại khai thị trường và dự án mở được và lưu; dòng S03 có nhãn «theo gateway»; ảnh sáng, tối, khổ hẹp, tab trống"
     evidence_required: [run_id, screenshot, observed]
   - id: E11
     criterion: AC-9
@@ -90,4 +90,11 @@ evals:
     cmd: config:executors.test.so_nhom
     paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, db/migrations/048_so_nhom_mot_noi.sql, pipeline/sync-don-vi.mjs, pipeline/scripts/so-nhom.itest.mjs]
     expected: "exit 0; ca 'SN-AC-10': danh sách bảng sync-cloud (đọc từ chính module) không có collection_units lẫn source_groups; payload push-ops-facts dựng trên lược đồ tạm có sổ không chứa unit_key nào; guardValues với real_name + source_ids của public.source_registry trên tệp migration và sync-don-vi.mjs → 0 chỗ trúng, đối chứng chuỗi chứa real_name đầu tiên → ≥ 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.vong_doi_nguon
+    paths: [pipeline/scripts/vong-doi-fixture.mjs, pipeline/scripts/vong-doi.itest.mjs, pipeline/scripts/vong-doi.test.mjs]
+    expected: "exit 0 trên đỉnh nhánh, với fixture vòng đời đã cập nhật theo khuôn 048 (ca so khuôn đọc collection_units khi bảng có)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
