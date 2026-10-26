@@ -4,17 +4,20 @@ import { pool } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
 import { auditOpsWrite } from "@/lib/audit";
+import { datCheDo } from "@/lib/che-do-thu";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET  /api/v1/ops/source-groups — danh sách nhóm cấu hình (S05 FB, S06 Chợ
  * Tốt) kèm volume dữ liệu đã thu theo nhóm.
- * POST { action: "toggle" | "add" | "delete", ... } — quản trị nhóm nguồn.
+ * POST { action: "toggle" | "add" | "delete" | "set-mode", ... } — quản trị nhóm nguồn.
  *   toggle: { sourceCode, groupKey, enabled }
  *   add:    { sourceCode, groupKey, name, regionV2?, cityCode? } (Chợ Tốt)
  *   delete: { sourceCode, groupKey, purge: boolean } — purge=xoá cả posts
  *           stg_zalo_posts theo group_name (vô hiệu hóa với dữ liệu S06).
+ *   set-mode: { id, mode: "cho" | "bung" | "duy_tri", burstUntil? } — CHỈ phiên admin (Bearer máy không đủ: bật
+ *           Bùng là tăng tải, người duyệt từng lần); luật + giao dịch kèm audit ở lib/che-do-thu.ts.
  * Mọi action ghi ops_audit (actor, action, detail).
  */
 async function auth(req: Request): Promise<boolean> {
@@ -42,6 +45,10 @@ export async function POST(req: Request) {
   if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!b?.action) return NextResponse.json({ error: "thiếu action" }, { status: 400 });
+  if (b.action === "set-mode") {
+    const r = await datCheDo(b, getSessionUser);
+    return NextResponse.json(r.body, { status: r.status });
+  }
   const sourceCode = String(b.sourceCode ?? "");
   const groupKey = String(b.groupKey ?? "");
 

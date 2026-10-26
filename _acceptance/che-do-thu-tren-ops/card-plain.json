@@ -1,0 +1,28 @@
+{
+  "feature_plain": "Trên trang Nguồn dữ liệu, anh thấy mỗi điểm thu đang ở chế độ nào (Chờ, Bùng, Duy trì) và đổi được; bật Bùng bắt buộc có hạn tối đa 14 đêm, hết hạn máy tự về Duy trì, mọi lần đổi đều để lại dấu vết.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cho quản trị viên bật Bùng có hạn cho một điểm, giữ nguyên cấu hình vùng cũ, và ghi một dòng nhật ký nêu ai đổi, từ đâu sang đâu, hạn tới ngày nào — không ghi tên hay đường dẫn nhóm."},
+    {"id": "AC-2", "p": "Sẽ từ chối, kèm lý do tiếng Việt, mọi lần bật Bùng thiếu hạn, hạn sai, hạn đã qua hoặc dài quá 14 đêm — không đổi gì, không ghi nhật ký."},
+    {"id": "AC-3", "p": "Sẽ chặn mọi người không phải quản trị viên (kể cả token máy và tài khoản vận hành), và các thao tác cũ (thêm, bật/tắt nhóm) không lách được để ghi chế độ."},
+    {"id": "AC-4", "p": "Sẽ gỡ hạn khi rời Bùng, giữ ngày vào chế độ khi chỉ gia hạn, và không ghi gì khi đặt lại đúng chế độ đang có."},
+    {"id": "AC-5", "p": "Sẽ để máy tự hạ điểm Bùng quá hạn (hoặc thiếu hạn) về Duy trì, mỗi lần hạ một dòng nhật ký; nhật ký hỏng thì không hạ điểm nào."},
+    {"id": "AC-6", "p": "Sẽ chạy lượt máy hạ mỗi 15 phút trên máy thu, trước lượt đồng bộ; lượt hạ hỏng không chặn đồng bộ và nhịp tim /ops."},
+    {"id": "AC-7", "p": "Sẽ hiện cột Chế độ và hộp «Đổi chế độ thu» có ô hạn giới hạn 14 đêm; hộp chỉ ghi mã nguồn và số điểm, đọc được sáng/tối/điện thoại."},
+    {"id": "AC-8", "p": "Sẽ thêm hai thuật ngữ «Chế độ thu» và «Hạn bùng» vào từ vựng chuẩn, nhãn trên trang lấy đúng từ đó."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Chưa làm collector chạy theo chế độ — việc V1 của ZCode."},
+    {"id": "OOS-2", "p": "Chưa thêm điểm thu S01 vào danh sách."},
+    {"id": "OOS-3", "p": "Chưa sửa ngân sách bùng/duy trì trên trang."},
+    {"id": "OOS-4", "p": "Chưa hạ theo đạt kho, bão hoà hay vấp rào — chỉ mở sẵn cửa cho máy gọi."},
+    {"id": "OOS-5", "p": "Chưa hiện chế độ trên trang Thu thập và các chỉ số ⑧–⑩."},
+    {"id": "OOS-6", "p": "Không đổi quyền của các thao tác cũ (thêm, bật/tắt, xoá nhóm)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Thao tác cũ có thể lách để ghi chế độ — đã thêm phép đo gửi thẳng khoá chế độ qua token máy, chứng minh không ghi được."},
+    {"i": 1, "p": "Chưa chứng được «đổi mà không có nhật ký thì không đổi» — đã thêm ca làm hỏng nhật ký có chủ ý: dữ liệu phải giữ nguyên."},
+    {"i": 2, "p": "Lệch ngày giữa giờ Việt Nam và giờ quốc tế lúc sáng sớm — đã ghim phép đo ở 06:30 sáng giờ VN và cho máy chủ tính «hôm nay»."},
+    {"i": 3, "p": "Chưa có phép đo nút Lưu đi tới tận dữ liệu — đã thêm ca bấm Lưu thật, kiểm dữ liệu ghi và nhãn hàng đổi theo."},
+    {"i": 4, "p": "Ảnh hộp thoại có thể lộ tên nhóm — hộp nay chỉ ghi mã nguồn + số điểm, ảnh chụp che tên; dòng in của máy có đối chứng đếm."}
+  ]
+}
