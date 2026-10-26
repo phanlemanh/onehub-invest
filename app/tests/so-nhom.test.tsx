@@ -183,7 +183,7 @@ async function renderSo(props: Record<string, unknown>, fetchImpl: (b: Record<st
   await act(async () => {
     root.render(
       <AppRouterContext.Provider value={router as never}>
-        <SoDonVi {...(props as never)} />
+        <SoDonVi {...(props as Parameters<typeof SoDonVi>[0])} />
       </AppRouterContext.Provider>,
     )
   })

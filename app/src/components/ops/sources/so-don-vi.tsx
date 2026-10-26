@@ -24,6 +24,7 @@ import { SoDonViDialog, type KhaiChoice } from "./so-don-vi-dialog"
 
 export const LENH_DONG_BO = "node pipeline/sync-don-vi.mjs"
 const NGUON = ["S02", "S03", "S05", "S06"] as const
+const NGUON_CHE = ["S05", "S06"]
 const TITLE: Record<string, string> = { S02: "Market S02", S03: "Nhóm S03", S05: "Nhóm S05", S06: "Vùng S06" }
 const LOAI: Record<string, string> = { nhom: "nhóm", vung: "vùng", market: "market" }
 const NHAN: Record<string, string> = {
@@ -110,9 +111,20 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
       ),
       size: 130,
     },
-    { id: "name", accessorKey: "original_name", header: "Tên gốc", cell: ({ row }) => <span className="truncate">{row.original.original_name}</span>, size: 240 },
-    { id: "markets", header: "Thị trường", cell: ({ row }) => danhSach(row.original.market_codes, tenThiTruong as Map<string | number, string>), size: 180 },
-    { id: "projects", header: "Dự án", cell: ({ row }) => danhSach(row.original.project_node_ids, tenDuAn as Map<string | number, string>), size: 180 },
+    {
+      id: "name",
+      accessorKey: "original_name",
+      header: "Tên gốc",
+      // Tên nhóm S05/S06 che khi chụp ảnh như lưới nhóm thu (data-tier-a); tên nhóm S03 và market S02 là tầng C.
+      cell: ({ row }) => (
+        <span className="truncate" data-tier-a={NGUON_CHE.includes(row.original.source_code) ? "" : undefined}>
+          {row.original.original_name}
+        </span>
+      ),
+      size: 200,
+    },
+    { id: "markets", header: "Thị trường", cell: ({ row }) => danhSach(row.original.market_codes, tenThiTruong as Map<string | number, string>), size: 160 },
+    { id: "projects", header: "Dự án", cell: ({ row }) => danhSach(row.original.project_node_ids, tenDuAn as Map<string | number, string>), size: 160 },
     {
       id: "status",
       accessorKey: "status",
@@ -123,7 +135,7 @@ export function SoDonVi({ rows, danhMuc, loi }: { rows: DonViRow[]; danhMuc: Dan
           {row.original.source_code === "S03" ? <span className="text-muted-foreground text-xs">theo gateway</span> : null}
         </span>
       ),
-      size: 130,
+      size: 120,
     },
     {
       id: "actions",
