@@ -5,7 +5,7 @@ slug: nap-lai-khong-xoa
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-nap-lai-khong-xoa-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -123,3 +123,12 @@ Source input: `_acceptance/nap-lai-khong-xoa/opportunity.md` (hàng PL14 của `
   chỗ đọc — khó đảo), PL14-Hỏi-2 (đổi khoá S03/S05 một lần), PL14-Hỏi-3 (khoá neo sớm nhất hay khoá dính).
 - Cổng Phạm vi và Cổng Bằng chứng do Mạnh ký (T3); giám sát không ký thay.
 - Cột mới không lên cloud trừ khi thêm vào `CLOUD_ALLOW` (`sync-cloud.mjs`). Vòng này không thêm.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Thống kê theo listing của căn đã nghỉ vì ra ngoài phường bị dựng lại mất mỗi đêm; lịch đêm còn nguyên nên thống kê có lại khi căn quay lại phường.
+  - Ngoài-2: Trục lý do nghỉ (và bốn cột mới) chưa khai trong sổ từ vựng chung, mã viết bằng tiếng Việt; công cụ kiểm từ vựng chưa biết trục này.
+  - Ngoài-3: Căn đã nghỉ quay lại qua đường nạp HCMC/Bangkok được cập nhật nhưng còn ẩn tới bước gán phường kế tiếp.
+  - Ngoài-5: Cùng gốc Ngoài-1 — thống kê của căn đã nghỉ vắng sau lượt dựng thống kê đêm.
+  - Ngoài-6: Khu vực phụ ngoài bản đồ chuẩn còn căn đã nghỉ gắn vào thì không được dọn tự động.
+  - Ngoài-7: Phép kiểm tin thử chỉ chắc thẻ duyệt rời hàng chờ, chưa chắc nó sang đúng trạng thái «để sau».
+- Mở hợp đồng mới từ Cổng Bằng chứng 2026-10-26: Ngoài-4 — căn Airbnb bị cho nghỉ ngoài phường có thể được bước gán
+  phường cho sống lại bằng toạ độ cũ.
