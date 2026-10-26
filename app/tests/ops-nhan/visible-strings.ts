@@ -70,6 +70,8 @@ export const SCAN_FILES = [
   "src/components/ops/sources/mode-dialog.tsx",
   "src/components/ops/sources/new-group-sheet.tsx",
   "src/components/ops/sources/registry-table.tsx",
+  "src/components/ops/sources/so-don-vi-dialog.tsx",
+  "src/components/ops/sources/so-don-vi.tsx",
   "src/components/ops/sources/source-groups.tsx",
   "src/components/ops/sources/sources-content.tsx",
   "src/components/ops/sources/zalo-account-row.tsx",
