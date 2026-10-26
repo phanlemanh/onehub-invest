@@ -5,7 +5,7 @@ slug: aer-ac2-so-cap-co-dinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-26T13:55:00Z
 approved_by:
