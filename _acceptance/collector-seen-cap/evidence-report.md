@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d99268bef5615a39c15310b4c8c2dc8afaaa3d50
+verified_commit: da994279b29d109be68b0def5c281f52f0385900
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -167,3 +167,7 @@ Round 2: E1–E7 đều PASS ở 13becc4 (ZCode 7b5ccfb, đã rebase main). E6 v
 ### Re-pin lần 1 — 2026-10-25, do gộp main 169b8c6 sau ký Cổng 2
 run_id: repin-20261025T231102Z-75737
 sha: d99268bef5615a39c15310b4c8c2dc8afaaa3d50 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-26, do gộp main sau #111
+run_id: repin-20261026T001451Z-25729
+sha: da994279b29d109be68b0def5c281f52f0385900 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
