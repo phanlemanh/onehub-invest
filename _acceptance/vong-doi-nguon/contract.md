@@ -5,7 +5,7 @@ slug: vong-doi-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: chạm db/migrations/** và app/src/app/api/v1/ops/** (t3_paths); hàng lộ trình ghi T2
 surfaces: [api, cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-26-vong-doi-nguon-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
