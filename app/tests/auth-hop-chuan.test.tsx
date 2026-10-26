@@ -126,10 +126,17 @@ test("AH-AC-3 cỡ chữ", async () => {
   const log = await render(<LoginForm next="/" />);
   titles.push(...log.querySelectorAll("[data-slot=frame-panel-title]"));
   assert.equal(titles.length, 2, "mỗi form có đúng một FrameTitle");
-  for (const t of titles) {
-    const sizes = t.className.split(/\s+/).filter((c) => SIZE_CLASS.test(c));
-    assert.deepEqual(sizes, ["text-sm"], "FrameTitle không được đổi cỡ chữ");
-  }
+  // Đối chứng: tập lớp cỡ chữ của một FrameTitle trần (không ghim chuỗi cỡ mặc định).
+  const { FrameTitle } = await import("../src/components/reui/frame");
+  const bare = (await render(<FrameTitle>x</FrameTitle>)).querySelector("[data-slot=frame-panel-title]")!;
+  const sizesOf = (el: Element) => el.className.split(/\s+/).filter((c) => SIZE_CLASS.test(c)).sort();
+  for (const t of titles) assert.deepEqual(sizesOf(t), sizesOf(bare), "FrameTitle không được đổi cỡ chữ");
+  // Cỡ chữ tuỳ ý ở MỌI tệp của nhóm (không chỉ h1).
+  const ARBITRARY = /\b(text|leading|tracking)-\[/;
+  const files = scanFiles();
+  assert.deepEqual(offenders(files, ARBITRARY, readApp), [], "cỡ chữ tuỳ ý còn trong (auth)");
+  const planted = (f: string) => (f.endsWith("auth-error.tsx") ? readApp(f) + '\n<p className="text-[11px]" />' : readApp(f));
+  assert.deepEqual(offenders(files, ARBITRARY, planted), ["src/components/auth/auth-error.tsx"], "bộ quét cỡ chữ tuỳ ý phải bắt tệp cấy");
 });
 
 test("AH-AC-4 error.tsx", async () => {
@@ -161,12 +168,18 @@ test("AH-AC-5 form giữ hành vi", async () => {
   assert.equal(alerts.length, 1);
   assert.ok(alerts[0].textContent?.includes("Sai mật khẩu"), "?error= phải hiện trong cảnh báo");
   assert.ok([...log.querySelectorAll("a")].some((a) => a.getAttribute("href") === "/register?next=%2Fops%2Freview"), "liên kết sang đăng ký phải giữ next");
+  assert.ok(log.querySelector("form")?.getAttribute("action"), "form đăng nhập phải gắn server action");
 
   const reg = await render(<RegisterForm next="/saved" facts={["a", "b"]} />);
   assert.ok(reg.querySelector('input[name="email"]') && reg.querySelector('input[name="password"]'));
   assert.equal((reg.querySelector('input[type="hidden"][name="next"]') as HTMLInputElement)?.value, "/saved");
   assert.ok([...reg.querySelectorAll("a")].some((a) => a.getAttribute("href") === "/login?next=%2Fsaved"), "liên kết sang đăng nhập phải giữ next");
   assert.ok(reg.textContent?.includes("a · b"), "dải số đếm thật phải còn");
+  for (const root of [reg]) assert.ok(root.querySelector("form")?.getAttribute("action"), "form đăng ký phải gắn server action");
+  const regErr = await render(<RegisterForm next="/" facts={["a"]} error="Email đã tồn tại" />);
+  const regAlerts = regErr.querySelectorAll('[role="alert"]');
+  assert.equal(regAlerts.length, 1, "?error= ở đăng ký phải hiện đúng một cảnh báo");
+  assert.ok(regAlerts[0].textContent?.includes("Email đã tồn tại"));
 
   for (const f of ["src/app/(auth)/login/page.tsx", "src/app/(auth)/register/page.tsx"]) {
     assert.match(readApp(f), /safeNext\(rawNext\)/, `${relative(APP, join(APP, f))} phải đưa ?next= qua safeNext`);
