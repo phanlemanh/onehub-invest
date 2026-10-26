@@ -6,3 +6,11 @@
 {"ts":"2026-10-26T07:29:19Z","round":1,"evalId":"E6","run_id":"kho-tri-thuc-invest-E6-r1-20261026T072919Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/rieng-tu.sh \"$PWD\""}
 {"ts":"2026-10-26T07:30:24Z","round":1,"evalId":"E7","run_id":"kho-tri-thuc-invest-E7-r1-20261026T073024Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/khong-cham.sh \"$PWD\""}
 {"ts":"2026-10-26T07:30:35Z","round":1,"evalId":"E8","run_id":"kho-tri-thuc-invest-E8-r1-20261026T073035Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/scope.sh \"$PWD\""}
+{"ts":"2026-10-26T07:34:47Z","round":2,"evalId":"E1","run_id":"kho-tri-thuc-invest-E1-r2-20261026T073447Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/khai.sh \"$PWD\""}
+{"ts":"2026-10-26T07:34:48Z","round":2,"evalId":"E2","run_id":"kho-tri-thuc-invest-E2-r2-20261026T073448Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/ban-chep.sh \"$PWD\""}
+{"ts":"2026-10-26T07:34:48Z","round":2,"evalId":"E3","run_id":"kho-tri-thuc-invest-E3-r2-20261026T073448Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/lint.sh \"$PWD\""}
+{"ts":"2026-10-26T07:34:50Z","round":2,"evalId":"E4","run_id":"kho-tri-thuc-invest-E4-r2-20261026T073450Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/rang-phu.sh \"$PWD\""}
+{"ts":"2026-10-26T07:34:51Z","round":2,"evalId":"E5","run_id":"kho-tri-thuc-invest-E5-r2-20261026T073451Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/dot-bien.sh \"$PWD\""}
+{"ts":"2026-10-26T07:34:55Z","round":2,"evalId":"E6","run_id":"kho-tri-thuc-invest-E6-r2-20261026T073455Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/rieng-tu.sh \"$PWD\""}
+{"ts":"2026-10-26T07:35:00Z","round":2,"evalId":"E7","run_id":"kho-tri-thuc-invest-E7-r2-20261026T073500Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/khong-cham.sh \"$PWD\""}
+{"ts":"2026-10-26T07:35:01Z","round":2,"evalId":"E8","run_id":"kho-tri-thuc-invest-E8-r2-20261026T073501Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/scope.sh \"$PWD\""}
