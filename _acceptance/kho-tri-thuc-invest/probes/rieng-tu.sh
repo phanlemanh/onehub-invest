@@ -13,8 +13,9 @@ for d in "$GOC"/raw/*/; do
   if [ "$loai" = "tep-kho" ]; then
     goc="$(grep -m1 '^goc:' "$d/nguon.md" | sed 's/^goc: *//')"
     for f in $tep; do
-      h="$(git hash-object "$d/$f")"; p="$(echo "$goc" | tr ',' '\n' | sed 's/^ *//' | grep "/$f\$\|^$f\$" | head -1)"
-      if [ -n "$p" ] && git rev-list origin/main -- "$p" | while read -r c; do git rev-parse -q --verify "$c:$p" 2>/dev/null; done | grep -qx "$h"; then ok "$ten/$f: trùng một bản của $p trên origin/main"
+      h="$(git hash-object "$d/$f")"; p="$(echo "$goc" | tr ',' '\n' | sed 's/^ *//' | awk -v f="$f" '{n=split($0,a,"/"); if (a[n]==f) {print; exit}}')"
+      bam_cu="$([ -n "$p" ] && git log --format=%H origin/main -- "$p" | while read -r c; do git rev-parse -q --verify "$c:$p" 2>/dev/null; done)"
+      if [ -n "$p" ] && printf '%s\n' "$bam_cu" | grep -Fx "$h" >/dev/null; then ok "$ten/$f: trùng một bản của $p trên origin/main"
       else bad "$ten/$f: không trùng bản nào của «$p» trên origin/main"; fi
     done
   else
