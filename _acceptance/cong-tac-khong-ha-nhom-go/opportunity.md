@@ -20,6 +20,10 @@ hai lần bấm (kể cả bấm nhanh hai lần). Tắt nhóm `draft` cũng đ�
 `_acceptance/vong-doi-nguon/review-findings.md` («Toggle tắt nhóm retired/completed chuyển sang paused…», «Toggle tắt hạ
 nhóm retired/completed xuống paused…»), file `app/src/app/api/v1/ops/source-groups/route.ts`.
 
+Phạm vi (giám sát, trả lời P1-26): route `app/src/app/api/v1/ops/source-groups` toggle — tắt nhóm retired/completed giữ
+nguyên, không ghi, báo rõ; nhóm nháp không bị đổi thành tạm dừng khi tắt. Chạm /api/v1/ops → T3: Gate 1 + Gate 1.5
+trình Mạnh.
+
 ## Ngưỡng chết / ngưỡng UAT
 
 - Câu hỏi phép đo trả lời: còn đường nào qua công tắc làm một nhóm `retired`/`completed` đổi trạng thái hay `draft` thành `paused` không?
