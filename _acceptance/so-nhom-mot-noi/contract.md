@@ -5,10 +5,10 @@ slug: so-nhom-mot-noi
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/** và app/src/app/api/v1/ops/** (t3_paths); hàng lộ trình ghi T3
 surfaces: [ui, api, cli]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-26-so-nhom-mot-noi-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-26
 ---
 
 # Acceptance Contract: so-nhom-mot-noi
