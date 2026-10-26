@@ -15,12 +15,17 @@ sổ chung.
 ## Quyết định chính
 
 **Một bảng, không bảng thứ hai.** `source_groups` đổi tên thành `collection_units` (giữ nguyên dòng, id, trigger và
-CHECK của 047). Tên cũ thành một view tương thích, chỉ gồm S05 và S06:
+CHECK của 047), migration `048_so_nhom_mot_noi.sql` (số do phiên liên làn cấp). Tên cũ thành một view tương thích
+gồm **mọi dòng**, giữ đúng tên cột cũ:
 
 ```
-CREATE VIEW source_groups AS SELECT <đúng các cột cũ + status, reason, resume_when> FROM collection_units
-  WHERE source_code IN ('S05', 'S06');
+CREATE VIEW source_groups AS SELECT <đúng các cột cũ + status, reason, resume_when> FROM collection_units;
 ```
+
+Không lọc theo nguồn: `ha-bung-het-han` cập nhật mọi nguồn có `mode = bung`, `isRunnable` hỏi S03 qua tên cũ (phiên
+liên làn chỉ ra, 26/10). Bù lại, ba chỗ của trang nhóm thu cũ thôi nhận đơn vị S02/S03: `docNhomThu` và GET route
+`source-groups` lọc `source_code IN ('S05', 'S06')`; `toggle`, `add`, `delete`, `set-mode` của route từ chối mã khác
+(400) — nhóm S03 là bản soi gateway, bật/tắt nó là việc của TV6.
 
 View một bảng có lọc đơn giản thì PostgreSQL cho ghi xuyên qua (auto-updatable): `INSERT/UPDATE/DELETE` và `SELECT … FOR
 UPDATE` vào `source_groups` chạy y như hôm nay, trigger của 047 vẫn chạy trên bảng gốc. Script thu của làn ZCode, route
