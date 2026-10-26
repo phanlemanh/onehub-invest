@@ -3,10 +3,10 @@ schema_version: 1
 slug: nap-lai-khong-xoa
 feature: "Nạp lại mọi nguồn không xoá hàng: khoá tin bền, retired_at thay DELETE, mọi khoá ngoại tới sale_offers và listings là RESTRICT"
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build         # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: giám sát đợt dot0-cam-mau (P2-60) theo Mạnh 26/10 «Hỏi-1..7: theo khuyến nghị» (gói lát OCP1, làn A)
+decided_at: 2026-10-26T07:37:28Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
@@ -17,7 +17,7 @@ lo_trinh_tep: docs/plan/lo-trinh.json
 ## Vấn đề & ai gặp
 
 Mở từ hàng PL14 của «Lộ trình onehub-invest» (`docs/plan/lo-trinh.json`).
-Mốc: chưa gắn — việc này chưa thuộc mốc nào của kế hoạch; gắn nó vào một mốc, hoặc ghi vì sao chưa.
+Mốc: chưa gắn mốc trong `lo-trinh.json`; thuộc lát dọc OCP1, làn A, mốc L1 «Nền + đo» (nạp lại 3 lần, 0 quyết định người mất). Lưu ý giám sát: CASCADE → RESTRICT và DELETE → retired_at chạm cả sync-cloud và cloud — đo cloud trước, không tự áp.
 
 Nạp lại mọi nguồn không xoá hàng: khoá tin bền, retired_at thay DELETE, mọi khoá ngoại tới sale_offers và listings là RESTRICT
 
