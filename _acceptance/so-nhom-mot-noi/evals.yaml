@@ -89,7 +89,7 @@ evals:
     executor: test
     cmd: config:executors.test.so_nhom
     paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, db/migrations/048_so_nhom_mot_noi.sql, pipeline/sync-don-vi.mjs, pipeline/scripts/so-nhom.itest.mjs]
-    expected: "exit 0; ca 'SN-AC-10': danh sách bảng sync-cloud (đọc từ chính module) không có collection_units lẫn source_groups; payload push-ops-facts dựng trên lược đồ tạm có sổ không chứa unit_key nào; guardValues với real_name + source_ids của public.source_registry trên tệp migration và sync-don-vi.mjs → 0 chỗ trúng, đối chứng chuỗi chứa real_name đầu tiên → ≥ 1"
+    expected: "exit 0; ca 'SN-AC-10': danh sách bảng sync-cloud (đọc từ chính module) không có collection_units lẫn source_groups; payload push-ops-facts dựng trên lược đồ tạm có sổ không chứa unit_key nào; guardValues với real_name + source_ids của public.source_registry → 0 chỗ trúng trên (a) toàn văn tệp migration, (b) mọi giá trị sync-don-vi ghi vào sổ và in ra stdout trong ca SN-AC-5/SN-AC-6, (c) toàn văn sync-don-vi.mjs sau khi bỏ danh sách đóng viết trước gồm hai định danh có sẵn trên main (tên bảng market S02, khoá kênh gateway S03) — mỗi mục của danh sách có trong ≥ 3 tệp đã commit trên origin/main; đối chứng: bản chép của script cấy thêm chuỗi chứa real_name đầu tiên → ≥ 1 (Gate 1.5, Mạnh duyệt 26/10)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E13
     criterion: AC-2
