@@ -1,0 +1,23 @@
+{
+  "feature_plain": "Nạp lại dữ liệu không còn làm mất quyết định của người (ghép căn, duyệt đề xuất) hay lịch đêm: tin và listing cũ chỉ «nghỉ» chứ không bị xoá, tin Zalo/FB giữ một mã ổn định dù đổi giá.",
+  "scope_plain": "Vòng này chỉ đổi cách lưu và nạp; bảng phát biểu, hiệu lực tin Chợ Tốt và đẩy lên cloud để các hàng sau.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm cột «nghỉ» và lý do cho tin, listing; mọi liên kết tới tin và listing chuyển sang chế độ chặn xoá; không view nào khác vô tình thấy hàng đã nghỉ."},
+    {"id": "AC-2", "p": "Sẽ để app, API và báo cáo thấy đúng y dữ liệu như hôm nay."},
+    {"id": "AC-5", "p": "Sẽ đổi mã tin Zalo/FB sang mã bền một lần, mọi quyết định đi theo tin mới, không treo trên tin cũ."},
+    {"id": "AC-6", "p": "Sẽ cho listing ra ngoài phường «nghỉ» thay vì xoá, lịch đêm và số liệu của nó giữ nguyên; quay lại phường thì sống lại."},
+    {"id": "AC-7", "p": "Sẽ có thước chạy ba lượt nạp lại liên tiếp, đếm 7 loại quyết định và liên kết: phải mất 0."},
+    {"id": "AC-9", "p": "Sẽ cho bản đồng bộ lên cloud chỉ chép tin, listing còn sống và dữ liệu con của chúng."},
+    {"id": "AC-10", "p": "Sẽ soạn sẵn SQL bắt kịp cho cloud (043 đã áp, 044 mới) có phần đo trước — không tự áp."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Sẽ KHÔNG xoá tin vắng trong lượt nạp — tin nghỉ và trỏ tin kế; quyết định chuyển sang tin kế."},
+    {"id": "AC-4", "p": "Sẽ KHÔNG đổi mã tin khi tin đổi giá, diện tích, số phòng, khi sửa cách đọc, hay khi thu bù bài cũ."},
+    {"id": "AC-8", "p": "Chặn mọi câu xoá tin/listing còn sót trong mã nạp (bộ quét báo đỏ)."},
+    {"id": "OOS-1", "p": "KHÔNG làm bảng phát biểu và bộ phân xử — PL15."},
+    {"id": "OOS-2", "p": "KHÔNG xét hiệu lực tin Chợ Tốt — PL19; Chợ Tốt vẫn tích luỹ."},
+    {"id": "OOS-3", "p": "KHÔNG gỡ khoá các cột do AI làm giàu — đi cùng PL15."},
+    {"id": "OOS-4", "p": "KHÔNG áp 044 lên cloud — chỉ đo và soạn SQL cho anh duyệt."},
+    {"id": "OOS-5", "p": "KHÔNG sửa phần nạp của ZCode và đường dữ liệu Bangkok cũ ngoài việc thôi xoá."}
+  ]
+}
