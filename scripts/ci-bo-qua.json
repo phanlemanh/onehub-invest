@@ -166,6 +166,11 @@
       "tep": "pipeline/scripts/reassign-areas.test.mjs",
       "ca": "AU9-AC-10 có cờ: khu vực lạc bị xoá",
       "ly_do": "cần ranh giới cấp phường thật của Hà Nội (stg_osm_boundaries ở DB local) — DB CI dựng từ migration không có"
+    },
+    {
+      "tep": "pipeline/scripts/install-collector-api.test.mjs",
+      "ca": "2610-5: tạo thư mục pipeline/logs (khuôn install-*.sh) + sed lỗi không đè plist cũ",
+      "ly_do": "chạy install-collector-api.sh thật, cần plutil (công cụ chỉ có trên macOS) — runner CI là Ubuntu"
     }
   ],
   "agent": [
