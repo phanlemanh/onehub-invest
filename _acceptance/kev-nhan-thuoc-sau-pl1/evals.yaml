@@ -1,0 +1,44 @@
+schema_version: 1
+feature_slug: kev-nhan-thuoc-sau-pl1
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.kev_import_versions
+    paths: [scripts/kev-nhan/acceptance.mjs, pipeline/import-airbnb.mjs]
+    expected: "exit 0; 'IMPORT-VERSIONS PASS'; v1–v3 'được nhận'; should-NOT-fire: v4 'bị từ chối'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.kev_handler_label
+    paths: [scripts/kev-nhan/acceptance.mjs, collector/openclaw/handler.js]
+    expected: "exit 0; 'HANDLER-LABEL PASS'; dòng 'log ghi Kev không trả lời' ok; tin vẫn đẩy p = null"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.ktp_doi_chung
+    paths: [scripts/kev-nhan/acceptance.mjs]
+    expected: "exit 0; 'DOI-CHUNG OK'; hai dòng 'đỏ đúng gốc'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ktp_cac_mode_khac
+    paths: [scripts/kev-nhan/acceptance.mjs]
+    expected: "exit 0; MANIFEST-V3, WATCHDOG-L1, SOURCEID, STG-ROUNDTRIP đều PASS; 'CONTRACT-DOC OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    paths: [collector/src/**]
+    expected: "exit 0; fail 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ktp_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
