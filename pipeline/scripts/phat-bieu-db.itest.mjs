@@ -219,3 +219,90 @@ test("PD-AC-8 cổng resolve: chưa cắt chuyển thì phân xử từ chối, 
     assert.equal(typeof r.offers, "number");
   });
 });
+
+// ---------------------------------------------------------------------------------------------------------------------
+async function deXuat(offerId, field, value, source, route = "direct") {
+  return Number((await one(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, evidence)
+    VALUES ('pd-ac-6', $1, $2, $3, lower($3), $4, $5, '{}'::jsonb) RETURNING id`, [offerId, field, value, source, route])).id);
+}
+const trangThai = async (id) => (await one("SELECT status FROM enrichment_proposals WHERE id = $1", [id])).status;
+const phatBieuCua = async (id) => c.query(
+  "SELECT evidence_tier, method, changed_by, retracted_at, retract_reason FROM field_assertions WHERE evidence ->> 'proposal_id' = $1::text",
+  [id]).then((r) => r.rows);
+
+test("PD-AC-6 đường enrich qua phát biểu: E1/E2 quan sát, người sự thật; applied/skipped theo cột; hoàn tác về giá trị kế; thứ tự áp không đổi kết quả", async () => {
+  await trongGiaoDich(c, async () => {
+    await moCong(c);
+    const a = tinMoi("ac6a", 1); const b = tinMoi("ac6b", 1);
+    await writeOffers(c, TST, [a.row, b.row]);
+    const oa = a.row.offer_id; const subj = subjectKey(TST, a.row.originating_system_key);
+    // máy: E1 house → quan sát/e1_rule trên post neo, cột house
+    const p1 = await deXuat(oa, "property_type", "house", "e1_rule");
+    assert.equal(await one("SELECT apply_enrichment($1, 'enrich-run:pd') AS n", [[p1]]).then((r) => r.n), 1);
+    assert.deepEqual((await phatBieuCua(p1)).map((x) => [x.evidence_tier, x.method]), [["observed", "e1_rule"]]);
+    assert.equal((await one("SELECT subject_key FROM field_assertions WHERE evidence ->> 'proposal_id' = $1::text", [p1])).subject_key, subj);
+    assert.equal((await docTin(oa)).property_type, "house");
+    assert.equal(await trangThai(p1), "applied");
+    // máy: E2 Đội Cấn và E1 Kim Mã cùng ô đường → E1 thắng (thứ tự tạm), E2 skipped, cờ bất đồng
+    const p4 = await deXuat(oa, "street_raw", "Đội Cấn", "e2_llm");
+    const p5 = await deXuat(oa, "street_raw", "Kim Mã", "e1_rule");
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:pd')", [[p4]]);
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:pd')", [[p5]]);
+    let t = await docTin(oa);
+    assert.equal(t.street_raw, "Kim Mã");
+    assert.equal(t.field_provenance.street_raw.conflict, true);
+    assert.equal(await trangThai(p5), "applied");
+    // p4 đã chấm 'applied' lúc một mình nó (cột nhận Đội Cấn), nay cột đã sang Kim Mã — trạng thái đề xuất là lịch sử lúc áp
+    // đảo thứ tự trên tin b: E1 trước rồi E2 → cùng cột, cùng cờ; E2 lần này 'skipped'
+    const q5 = await deXuat(b.row.offer_id, "street_raw", "Kim Mã", "e1_rule");
+    const q4 = await deXuat(b.row.offer_id, "street_raw", "Đội Cấn", "e2_llm");
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:pd')", [[q5]]);
+    await c.query("SELECT apply_enrichment($1, 'enrich-run:pd')", [[q4]]);
+    const tb = await docTin(b.row.offer_id);
+    assert.equal(tb.street_raw, t.street_raw, "đảo thứ tự áp đổi cột");
+    assert.deepEqual(boIds(tb.field_provenance.street_raw), boIds(t.field_provenance.street_raw), "đảo thứ tự áp đổi nguồn gốc");
+    assert.equal(await trangThai(q4), "skipped");
+    // người duyệt thẻ: E2 land (route review) → sự thật/hitl, changed_by, cột land, applied
+    const p2 = await deXuat(oa, "property_type", "land", "e2_llm", "review");
+    await c.query("SELECT apply_enrichment($1, 'hitl:thu')", [[p2]]);
+    assert.deepEqual((await phatBieuCua(p2)).map((x) => [x.evidence_tier, x.method, x.changed_by]), [["fact", "hitl", "hitl:thu"]]);
+    assert.equal((await docTin(oa)).property_type, "land");
+    assert.equal(await trangThai(p2), "applied");
+    // hitl-cung-gia-tri: người khác duyệt cùng giá trị land → không thêm dòng hitl, không rút
+    const p7 = await deXuat(oa, "property_type", "land", "e1_rule", "review");
+    await c.query("SELECT apply_enrichment($1, 'hitl:thu2')", [[p7]]);
+    assert.equal((await one(`SELECT count(*)::int AS n FROM field_assertions WHERE subject_key = $1 AND field = 'property_type'
+      AND method = 'hitl' AND retracted_at IS NULL`, [subj])).n, 1);
+    // người đổi ý sang apartment → hitl land rút ('hitl-thay'), cột apartment
+    const p6 = await deXuat(oa, "property_type", "apartment", "e1_rule", "review");
+    await c.query("SELECT apply_enrichment($1, 'hitl:thu')", [[p6]]);
+    assert.equal((await phatBieuCua(p2))[0].retract_reason, "hitl-thay");
+    assert.equal((await docTin(oa)).property_type, "apartment");
+    // hoàn tác p6 → phát biểu rút 'hoan-tac:…', cột về giá trị kế có căn cứ (E1 house — hitl land đã rút trước đó)
+    assert.equal((await one("SELECT revert_enrichment($1, 'hitl:thu', 'thử') AS n", [[p6]])).n, 1);
+    assert.match((await phatBieuCua(p6))[0].retract_reason, /^hoan-tac:thử$/);
+    t = await docTin(oa);
+    assert.equal(t.property_type, "house");
+    assert.equal(t.field_provenance.property_type.method, "e1_rule");
+    assert.equal(await trangThai(p6), "reverted");
+    assert.ok((await one("SELECT count(*)::int AS n FROM ops_audit WHERE action = 'enrich:revert' AND detail ->> 'reason' = 'thử'")).n >= 1);
+  });
+});
+
+test("PD-AC-8 cổng apply/revert: chưa cắt chuyển thì từ chối, không ô nào đổi", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query("UPDATE ops_audit SET action = 'phat-bieu:cat-chuyen#an' WHERE action = 'phat-bieu:cat-chuyen'");
+    await c.query("SAVEPOINT m"); await moCong(c);
+    const t = tinMoi("ac8e", 1);
+    await writeOffers(c, TST, [t.row]);
+    const p = await deXuat(t.row.offer_id, "street_raw", "Láng", "e1_rule");
+    await c.query("UPDATE ops_audit SET action = 'phat-bieu:cat-chuyen#an' WHERE action = 'phat-bieu:cat-chuyen'");
+    const truoc = await bamTin();
+    for (const sql of ["SELECT apply_enrichment($1, 'enrich-run:pd')", "SELECT revert_enrichment($1, 'hitl:thu', 'thử')"]) {
+      await c.query("SAVEPOINT s");
+      await assert.rejects(c.query(sql, [[p]]), /phân xử: chưa cắt chuyển/, sql);
+      await c.query("ROLLBACK TO SAVEPOINT s");
+      assert.equal(await bamTin(), truoc, `${sql} đổi cột khi chưa cắt chuyển`);
+    }
+  });
+});

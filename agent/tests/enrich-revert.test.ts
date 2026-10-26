@@ -148,19 +148,21 @@ test("AC-6 căn giữ giá trị khi offer khác còn mang", async () => {
   }
 });
 
-test("AC-6 bỏ qua: đã đổi, chưa áp, không tồn tại", async () => {
+test("AC-6 bỏ qua: chưa áp, không tồn tại; giá trị người khác đã quyết giữ nguyên sau hoàn tác (PL15)", async () => {
   await withTx(async (c) => {
     const a = await offerWithPost(c);
     const changed = await applied(c, a, "street_raw", "Quang Trung");
-    await c.query(`UPDATE sale_offers SET street_raw = 'Lê Lợi' WHERE offer_id = $1`, [a]);
+    // người khác quyết đường khác (lớp sự thật) — PL15: sửa đi qua phát biểu, không UPDATE thẳng
+    const nguoi = await insertProposal(c, { offer_id: a, field: "street_raw", value: "Lê Lợi", source: "e2_llm" });
+    await c.query(`SELECT apply_enrichment($1, 'hitl:khac')`, [[nguoi]]);
     const queued = await insertProposal(c, { offer_id: a, field: "bathrooms", value: "2" });
-    assert.equal(await revert(c, [changed, queued, 0]), 0);
+    assert.equal(await revert(c, [changed, queued, 0]), 1, "AC-6 hoàn tác đề xuất máy đã áp phải được");
     assert.equal((await c.query(`SELECT street_raw FROM sale_offers WHERE offer_id = $1`, [a])).rows[0].street_raw,
-      "Lê Lợi", "AC-6 hoàn tác đè giá trị người khác đã sửa");
+      "Lê Lợi", "AC-6 hoàn tác đè giá trị người khác đã quyết");
     const why = (await lastAudit(c)).detail.skipped.map((s: { id: number; why: string }) => [s.id, s.why]);
-    assert.deepEqual(why, [[changed, "value-changed"], [queued, "not-applied"], [0, "not-found"]]);
+    assert.deepEqual(why, [[queued, "not-applied"], [0, "not-found"]]);
     const st = (await c.query(`SELECT status FROM enrichment_proposals WHERE id = ANY($1) ORDER BY id`, [[changed, queued]])).rows;
-    assert.deepEqual(st.map((r) => r.status), ["applied", "queued"]);
+    assert.deepEqual(st.map((r) => r.status), ["reverted", "queued"]);
   });
 });
 
@@ -316,11 +318,12 @@ const COUNTS = `SELECT (SELECT count(*) FROM enrichment_proposals) || '/' || (SE
 
 test("AC-10 migration idempotent", async () => {
   // 044 (nap-lai-khong-xoa) thay phần khoá ngoại + hàm đối soát của 039 và biến sale_offers thành VIEW, nên sau 044
-  // không áp lại 039 được (khoá ngoại của nó trỏ BẢNG sale_offers) — chuỗi áp lại là 036 + 044.
-  const files = MIGRATIONS.filter((p) => /\/(036|044)_/.test(p));
-  assert.equal(files.length, 2, "phải thấy đủ 036 và 044");
+  // không áp lại 039 được (khoá ngoại của nó trỏ BẢNG sale_offers) — chuỗi áp lại là 036 + 044 + 045 (045 thay
+  // revert_enrichment của 036 bằng bản đi qua phát biểu, nên áp 036 mà thiếu 045 là quay về hàm cũ).
+  const files = MIGRATIONS.filter((p) => /\/(036|044|045)_/.test(p));
+  assert.equal(files.length, 3, "phải thấy đủ 036, 044 và 045");
   await withTx(async (c) => {
-    // withTx đã áp 033+036(+039)+044 một lần; áp 036+044 thêm hai lần nữa.
+    // withTx đã áp 033+036(+039)+044+045 một lần; áp 036+044+045 thêm hai lần nữa.
     const s1 = (await c.query(SHAPE)).rows[0].h;
     const n1 = (await c.query(COUNTS)).rows[0].n;
     for (const round of [2, 3]) {

@@ -27,16 +27,26 @@ test("AC-5 apply điền ô trống + cascade", async () => {
   });
 });
 
-test("AC-5 apply skipped khi ô đã có", async () => {
+test("AC-5 theo thứ tự phương pháp (PL15): E2 thắng giá trị cũ (legacy), thua bộ đọc tin — skipped khi thua", async () => {
+  // PL15 gỡ fill-gap: ô «đã có» không còn tự thắng; thắng thua theo lớp + thứ tự tạm (parser › e1 › e2 › legacy).
   await withTx(async (c) => {
-    await insertOffer(c, { offer_id: "t_offer_a2", bedrooms: 3 });
+    await insertOffer(c, { offer_id: "t_offer_a2", bedrooms: 3 });   // 3 = phát biểu legacy
     const id = await insertProposal(c, { offer_id: "t_offer_a2", field: "bedrooms", value: "2" });
-
     const { rows: [{ n }] } = await c.query(`SELECT apply_enrichment($1, 't') AS n`, [[id]]);
-    assert.equal(n, 0, "AC-5 skipped: ô đã có giá trị thì không được tính là áp");
-    const { rows: [o] } = await c.query(`SELECT bedrooms FROM sale_offers WHERE offer_id='t_offer_a2'`);
-    assert.equal(o.bedrooms, 3, "AC-5 skipped: giá trị cũ phải thắng");
-    const { rows: [ep] } = await c.query(`SELECT status FROM enrichment_proposals WHERE id=$1`, [id]);
+    assert.equal(n, 1, "AC-5 E2 phải thắng giá trị legacy");
+    const { rows: [o] } = await c.query(`SELECT bedrooms, field_provenance FROM sale_offers WHERE offer_id='t_offer_a2'`);
+    assert.equal(o.bedrooms, 2);
+    assert.equal(o.field_provenance.bedrooms.conflict, true, "AC-5 E2 trái legacy phải gắn cờ bất đồng");
+
+    // chiều đỏ: bộ đọc tin (parser) đã nói 4 → E2 thua, đề xuất skipped, cột giữ 4
+    await insertOffer(c, { offer_id: "t_offer_a2b", post_ids: ["p_a2b"] });
+    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method)
+      VALUES ('S03:p_a2b', 'bedrooms', '4', 'observed', 'parser')`);
+    const id2 = await insertProposal(c, { offer_id: "t_offer_a2b", field: "bedrooms", value: "2" });
+    const { rows: [{ n: n2 }] } = await c.query(`SELECT apply_enrichment($1, 't') AS n`, [[id2]]);
+    assert.equal(n2, 0, "AC-5 skipped: E2 thua bộ đọc tin thì không được tính là áp");
+    assert.equal((await c.query(`SELECT bedrooms FROM sale_offers WHERE offer_id='t_offer_a2b'`)).rows[0].bedrooms, 4);
+    const { rows: [ep] } = await c.query(`SELECT status FROM enrichment_proposals WHERE id=$1`, [id2]);
     assert.equal(ep.status, "skipped");
   });
 });
