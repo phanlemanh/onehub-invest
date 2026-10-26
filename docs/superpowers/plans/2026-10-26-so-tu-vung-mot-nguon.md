@@ -202,8 +202,7 @@ phục vụ E5, E5b, E6, E6b–E6e · independent: false
   - `500_asset_stats.sql`, `resolve-properties.mjs` (confidence + property_type), `agent/src/enrich/run.ts`;
   - `compare-types.ts`.
 - Test: `pipeline/scripts/vocab-lint.test.mjs` (ca `VL-AC-5 ma trận kiểm kê`)
-- Test: `app/tests/vocab-labels.test.tsx` (glob app là `tests/*.test.tsx` — evals E6 ghi `.test.ts`; sửa đường ở evals,
-  ghi dòng sổ `fix`)
+- Test: `app/tests/vocab-labels.test.tsx` (glob app là `tests/*.test.tsx`)
 - Test: `agent/tests/enrich-route.test.ts` (thêm ca `unknown` bị bỏ, prompt giữ byte)
 
 **Interfaces:**
