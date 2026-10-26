@@ -9,7 +9,8 @@
 //   node scripts/ci-test-local.mjs --cay           ma trận cấy lỗi 5×5 (AC-7)
 //   node scripts/ci-test-local.mjs --agent-types   agent cài sạch tsc + chiều đỏ thiếu @types/json-schema (AC-5)
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -45,7 +46,11 @@ export function cauHinh(wf, job) {
 
 function clone(dir) {
   rmSync(dir, { recursive: true, force: true });
-  execFileSync("git", ["clone", "-q", "--no-hardlinks", ROOT, dir]);
+  // Template rỗng: máy này cài hook git-secrets qua init.templateDir (/etc/gitconfig); hook đó trỏ /opt/git-secrets
+  // vốn không có trong container node, nên mọi `git commit` của test trong bản clone bị chặn. Runner GitHub không có hook.
+  const rong = mkdtempSync(path.join(tmpdir(), "ci-local-tpl-"));
+  execFileSync("git", ["clone", "-q", "--no-hardlinks", `--template=${rong}`, ROOT, dir]);
+  rmSync(rong, { recursive: true, force: true });
   return execFileSync("git", ["-C", dir, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 }
 
