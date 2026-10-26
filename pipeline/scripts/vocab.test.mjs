@@ -173,3 +173,53 @@ test("VB-AC-3 --check: sạch thoát 0; sửa tay từng đích hoặc sửa s�
   for (const p of [...DICH_SINH, "CONTEXT.md"]) assert.ok(r5.stderr.includes(p), `(5) stderr thiếu ${p}`);
   assert.ok(!existsSync(join(d, "x")));
 });
+
+// ---------------------------------------------------------------------------------------------------------------------
+// VB-AC-9 — khoá tên trường FIELD_TARGET (G3) theo canonical.fields của mappings.yaml. Khuôn đọc: khoá cấp một là mã
+// nguồn S0x, dưới đó `fields:` là danh sách mục có `canonical`. Tệp thật của ZCode chưa có (revisit trong sổ).
+import { readdirSync, statSync } from "node:fs";
+
+function bamCay(dir) {
+  const h = createHash("sha256");
+  const walk = (d) => {
+    for (const e of readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const p = join(d, e.name);
+      if (e.isDirectory()) { if (e.name !== "node_modules" && e.name !== "dist") walk(p); }
+      else h.update(`${p}:${statSync(p).size}:${statSync(p).mtimeMs}`);
+    }
+  };
+  walk(dir);
+  return h.digest("hex");
+}
+
+test("VB-AC-9 --check-field-targets: khớp 0 · tên ngoài sổ 1 · tệp vắng 0 · khuôn lạ 1 · không ghi collector/", () => {
+  const reg = loadRegister(SO_THAT);
+  const d = mkdtempSync(join(tmpdir(), "vocab-ft-"));
+  const tep = join(d, "field-targets.yaml");
+  const muc = (c) => ({ canonical: c, raw_path: "$.x", ceiling: 1, target: 0.8, weight: 1 });
+  const hop = { S03: { fields: reg.canonicalFields.slice(0, 6).map(muc) }, S06: { fields: reg.canonicalFields.slice(6, 12).map(muc) } };
+  const truoc = bamCay(join(ROOT, "collector"));
+
+  writeFileSync(tep, YAML.stringify(hop));
+  const ra = chay(ROOT, "--check-field-targets", tep);
+  assert.equal(ra.status, 0, ra.stderr);
+
+  const sai = structuredClone(hop);
+  sai.S03.fields.push(muc("gia_khoang"));
+  writeFileSync(tep, YAML.stringify(sai));
+  const rb = chay(ROOT, "--check-field-targets", tep);
+  assert.equal(rb.status, 1);
+  assert.ok(rb.stderr.includes("S03") && rb.stderr.includes("gia_khoang"), rb.stderr);
+
+  const rc = chay(ROOT, "--check-field-targets", join(d, "khong-co.yaml"));
+  assert.equal(rc.status, 0);
+  assert.match(rc.stdout, /chưa có tệp/);
+
+  for (const la of [{ nguon: { S03: hop.S03 } }, { S03: { muc_tieu: [{ cot: "price_vnd" }] } }]) {
+    writeFileSync(tep, YAML.stringify(la));
+    const re = chay(ROOT, "--check-field-targets", tep);
+    assert.equal(re.status, 1, `khuôn lạ phải thoát 1: ${JSON.stringify(la).slice(0, 40)}`);
+    assert.match(re.stderr, /không nhận khuôn/);
+  }
+  assert.equal(bamCay(join(ROOT, "collector")), truoc, "lệnh đã ghi vào collector/");
+});

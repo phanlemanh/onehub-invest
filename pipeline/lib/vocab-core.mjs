@@ -499,3 +499,29 @@ export async function checkDb(client, reg) {
   }
   return lech;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Khoá tên trường FIELD_TARGET (G3, X2): mọi `canonical` phải là khoá của canonical.fields trong mappings.yaml.
+// Khuôn đọc: { S0x: { fields: [{ canonical, … }] } }. Khác khuôn → «không nhận khuôn» (không xanh giả).
+
+/** Kiểm tệp FIELD_TARGET; recognized = số mục canonical đọc được. */
+export function checkFieldTargets(yamlText, reg) {
+  let doc;
+  try { doc = YAML.parse(yamlText); } catch (e) { return { ok: false, recognized: 0, errors: [`không nhận khuôn — YAML hỏng: ${e.message}`] }; }
+  if (!doc || typeof doc !== "object" || Array.isArray(doc)) return { ok: false, recognized: 0, errors: ["không nhận khuôn — cấp một phải là map mã nguồn S0x"] };
+  const errors = [];
+  const ten = new Set(reg.canonicalFields);
+  let recognized = 0;
+  for (const [nguon, khoi] of Object.entries(doc)) {
+    if (!/^S0\d$/.test(nguon)) { errors.push(`không nhận khuôn — khoá cấp nguồn lạ «${nguon}» (cần S0x)`); continue; }
+    if (!khoi || !Array.isArray(khoi.fields)) { errors.push(`không nhận khuôn — ${nguon} thiếu danh sách fields`); continue; }
+    for (const m of khoi.fields) {
+      if (!m || typeof m !== "object" || !("canonical" in m)) continue;
+      if (m.canonical == null) continue; // trường chỉ có ở raw, chưa map canonical
+      recognized++;
+      if (!ten.has(m.canonical)) errors.push(`${nguon}: trường ${m.canonical} không có trong mappings.yaml (canonical.fields)`);
+    }
+  }
+  if (!recognized && !errors.length) errors.push("không nhận khuôn — đọc ra 0 mục canonical");
+  return { ok: errors.length === 0, recognized, errors };
+}

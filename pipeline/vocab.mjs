@@ -5,13 +5,14 @@
 //   --lint                     danh sách enum viết tay ngoài sổ (đỏ → thoát 1)
 //   --check-db                 DB (ref_lookup, ref_field_lookup, CHECK của `columns`) khớp sổ (DATABASE_URL)
 //   --emit-seed                in SQL nạp ref_* — dán vào migration mới khi sổ đổi
+//   --check-field-targets [tệp] tên trường FIELD_TARGET (G3) thuộc canonical.fields (mặc định collector/docs/field-targets.yaml; chỉ đọc)
 // Chung: --root <gốc kho> (mặc định suy từ vị trí tệp) · --mappings <tệp sổ>.
 // Mã thoát: 0 khớp · 1 lệch/đỏ · 2 dùng sai hoặc không chạy được.
-import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { checkDb, checkTargets, emitSeed, lintTree, readMappings, renderTargets, spliceContext, VocabError } from "./lib/vocab-core.mjs";
+import { checkDb, checkFieldTargets, checkTargets, emitSeed, lintTree, readMappings, renderTargets, spliceContext, VocabError } from "./lib/vocab-core.mjs";
 
 function args(argv) {
   const o = { root: resolve(dirname(fileURLToPath(import.meta.url)), ".."), mappings: null, cmd: null, rest: [] };
@@ -98,9 +99,22 @@ function emitSeedCmd(root, reg) {
   return 0;
 }
 
+function fieldTargetsCmd(root, reg, o) {
+  const tep = o.rest[0] ? resolve(o.rest[0]) : join(root, "collector", "docs", "field-targets.yaml");
+  if (!existsSync(tep)) {
+    console.log(`vocab --check-field-targets: chưa có tệp ${tep} — không có gì để kiểm`);
+    return 0;
+  }
+  const kq = checkFieldTargets(readFileSync(tep, "utf8"), reg);
+  for (const e of kq.errors) console.error(`vocab --check-field-targets: ${e}`);
+  if (!kq.ok) return 1;
+  console.log(`vocab --check-field-targets: ${kq.recognized} trường khớp mappings.yaml`);
+  return 0;
+}
+
 export async function main(argv = process.argv.slice(2)) {
   const o = args(argv);
-  const CMDS = { write, check, lint, "check-db": checkDbCmd, "emit-seed": emitSeedCmd };
+  const CMDS = { write, check, lint, "check-db": checkDbCmd, "emit-seed": emitSeedCmd, "check-field-targets": fieldTargetsCmd };
   if (!o.cmd || !CMDS[o.cmd]) {
     console.error(`dùng: vocab.mjs [--root <dir>] [--mappings <tệp>] --${Object.keys(CMDS).join("|--")}`);
     return 2;
