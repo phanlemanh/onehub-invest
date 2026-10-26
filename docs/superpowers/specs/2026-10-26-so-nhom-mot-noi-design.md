@@ -86,8 +86,8 @@ không hiện. Chi tiết UX ở mục Đặc tả UX dưới.
 | Trạng thái | Màn | Hiển thị gì | Người làm gì tiếp |
 |---|---|---|---|
 | ST-so-loading | Khu sổ | Skeleton của lưới (trang tải phía máy chủ, chỉ khi chuyển tab) | chờ |
-| ST-so-empty | Khu sổ | «Chưa có đơn vị nào của nguồn này. Chạy đồng bộ sổ ở máy thu.» | chạy `node pipeline/sync-don-vi.mjs` |
-| ST-so-error | Khu sổ | Alert lỗi «Không đọc được sổ đơn vị thu» + nút Thử lại | Thử lại |
+| ST-so-empty | Khu sổ | `Empty` (`ui/empty`): «Chưa có đơn vị nào» · «Chạy đồng bộ sổ ở máy thu để đưa đơn vị của nguồn này vào.» · một hành động sao chép lệnh | chạy `node pipeline/sync-don-vi.mjs` |
+| ST-so-error | Khu sổ | `states/region-error.tsx`: «Không đọc được sổ đơn vị thu» + Thử lại | Thử lại |
 | ST-so-ok | Khu sổ | Lưới: mã đơn vị · nguồn · tên gốc · thị trường · dự án · trạng thái (Badge) | bấm khai |
 | ST-hop-luu | Hộp khai | Nút Lưu khoá trong lúc gửi | chờ |
 | ST-hop-loi | Hộp khai | Chữ lỗi máy chủ trong hộp | sửa rồi Lưu lại, hoặc Huỷ |
@@ -106,7 +106,8 @@ không hiện. Chi tiết UX ở mục Đặc tả UX dưới.
 | `StatusGrid` (collections) | dùng | lưới có tab theo nguồn đã dùng trên trang này |
 | `Badge` (reui) | dùng | trạng thái vòng đời theo biến thể `-light` |
 | `Dialog` + nút | ghép | cùng khuôn `ModeDialog` của C7 |
-| Ô chọn nhiều (thị trường, khu đô thị) | dùng | thành phần chọn của `components/ui` sẵn có (chọn ở S3 theo catalog onehub-ui) |
+| `ui/combobox` (chọn nhiều) | dùng | chọn thị trường và khu đô thị; catalog onehub-ui không có mẫu chọn nhiều riêng |
+| `ui/empty`, `states/region-error.tsx` | dùng | trạng thái trống và lỗi vùng theo bảng «Một loại UI, một cách làm» |
 
 ### 6. Khuôn IA đã chọn + căn cứ
 
