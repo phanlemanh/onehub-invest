@@ -1,0 +1,4 @@
+{
+ "feature_plain": "Script cài collector tạo sẵn thư mục log và không đè cấu hình cũ bằng tệp rỗng khi lỗi; lượt thu bị bỏ qua không còn để lại thư mục ẩn rỗng trên đĩa.",
+ "scope_plain": "Những việc cố ý để ngoài vòng này:"
+}
