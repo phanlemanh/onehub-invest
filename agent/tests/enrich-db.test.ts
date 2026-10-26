@@ -462,18 +462,30 @@ test("AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin 
   await withTx(async (c) => {
     const a = await offerWithPost(c, { property_type: "apartment" });
     await c.query(`UPDATE sale_offers SET street_raw = 'Xuân La', bathrooms = 1, source = 'S05' WHERE offer_id = $1`, [a]);
+    const nhom = `Nhóm thử AC-6 khoanh ${a}`; // tên nhóm riêng để biết lượt dry bên dưới bốc tin nào
+    await c.query(`UPDATE stg_zalo_posts SET group_name = $2 WHERE post_id = $1`, [`p_${a}`, nhom]);
     const r1 = await run(c, [a], llmWith({ ...real(0), street: undefined }), resolveWith());
     assert.equal(r1.reviewIds.length, 1);
     await c.query(`SELECT decide_enrichment_review($1, 'deferred', 'hitl:test')`, [r1.reviewIds[0]]);
     await c.query(`UPDATE review_queue SET status='deferred' WHERE id=$1`, [r1.reviewIds[0]]);
-    // Cô lập khỏi DB local dùng chung: đề xuất «review» còn chờ của tin KHÁC (vd đề xuất mồ côi review_id NULL)
-    // cũng vào nhóm «hoãn đi trước» rồi tranh suất limit 1 bằng random() — ca đỏ chập chờn (đo 26/10, PL6 S4-r1).
-    // Trong giao dịch, ROLLBACK cuối ca trả lại nguyên trạng.
+    // Khoanh lượt backlog vào tin của ca: DB :5433 dùng chung có thể có sẵn tin «hoãn» khác (đề xuất chờ, thẻ không
+    // còn pending) — cùng hạng deferred_first, random() bốc nhầm khi limit 1. Trong giao dịch (rollback cuối ca) đẩy
+    // các đề xuất ấy khỏi hàng; lượt dưới vẫn KHÔNG chỉ định offerIds, đúng điều AC-6 đo.
     await c.query(
-      `UPDATE enrichment_proposals SET status = 'skipped'
-        WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
+      `UPDATE enrichment_proposals SET status = 'skipped' WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
       [a],
     );
+    // Hỏi chính bộ chọn tin (selectOffers, không chép luật của nó): năm lượt dry, limit 1, không offerIds — resolve ghi lại
+    // nhóm của tin được bốc; lượt nào cũng phải là tin của ca. Dry không gọi model, không ghi.
+    const boc: (string | null)[] = [];
+    const ghiNhom: ResolveFn = async (g) => {
+      boc.push(g);
+      return ctx();
+    };
+    for (let i = 0; i < 5; i++) {
+      await runEnrich({ client: c, runId: `test-ac6-dry-${i}`, dry: true, limit: 1, llm: llmWith(null), resolve: ghiNhom, buildings: [] });
+    }
+    assert.deepEqual(boc, Array(5).fill(nhom), "lượt backlog bốc tin khác tin của ca — hàng ưu tiên chưa được khoanh");
 
     await runEnrich({
       client: c, runId: "test-ac6-backlog", dry: false, limit: 1,
