@@ -98,3 +98,4 @@ Bỏ quét morphological-scan — xem dòng `descope` «bỏ coverage-scan» tro
   - Ngoài-2: Máy hạ chỉ coi hạn là hỏng khi sai khuôn ngày; một hạn ngày-không-có-thật hoặc quá 14 đêm ghi bằng đường khác trang Ops sẽ không bị hạ sớm.
   - Ngoài-3: Bước hạ trong cloud-sync chưa được thử bằng chính tệp thật khi DB mất kết nối — chỉ thử thứ tự và mã thoát bằng bước giả.
   - Ngoài-4: Việc token máy bị chặn ở set-mode được đo tại hàm datCheDo và bằng soát mã route, chưa có lời gọi POST thật bằng token máy.
+  - Ngoại lệ T3: vòng chạm t3_paths (route api/v1/ops/source-groups, scripts/cloud-sync.sh) nhưng giữ T2 — không có chữ duyệt tay Cổng Phạm vi và Cổng 1.5; Mạnh chấp nhận có tên ngày 2026-10-26.
