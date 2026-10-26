@@ -15,7 +15,7 @@
 ```
 dot: bo-sung-2310
 dang: lan-va
-nguon: onehub-invest-tri-thuc:wiki/dot/bo-sung-2310.md#61e9abdaa8f4e98ead081546c55b85edd59b0c12
+nguon: onehub-invest-tri-thuc:wiki/dot/bo-sung-2310.md#6c84d040297b608b170cdf4bbaa8f5f593d7dafa
 
 - `HK1` — hook Zalo ghi tin gửi lỗi tới collector API vào spool cục bộ append-only và gửi lại ở event kế hoặc theo nhịp, không mất tin khi :9210 khởi động lại
 - `CS1` — cloud-sync.sh thoát khác 0 khi sync-cloud hỏng dù push-ops-facts lành; push-ops-facts.mjs đọc DATABASE_URL thay chuỗi kết nối viết cứng

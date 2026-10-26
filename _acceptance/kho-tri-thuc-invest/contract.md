@@ -42,8 +42,8 @@ CHANGELOG 2.34.0 TT1–TT3 (giới hạn «răng phủ không có đường đ�
   trỏ raw thay trang · sửa một byte raw · trang đợt bỏ một mã), Then mỗi đột biến đỏ đúng mã lỗi; và khi máy không có kho
   riêng (như CI) răng phủ KHÔNG đỏ — cảnh báo «không đọc được ở đây», lint thoát 3.
 - AC-6: Given kho công khai và kho riêng, When soát, Then kho công khai không có tệp tri thức nào; mọi raw loại `phien`,
-  `issue`, `tep-may` có 0 tên nguồn thật (bộ quét lấy tên từ migrations + `source_registry` local); mọi raw loại `tep-kho`
-  trùng byte một bản đã có trên `origin/main` của kho công khai.
+  `issue`, `tep-may`, mọi trang wiki và `TRI-THUC.md` có 0 tên nguồn thật (bộ quét lấy tên từ migrations + `source_registry`
+  local); mọi raw loại `tep-kho` trùng byte một bản đã có trên `origin/main` của kho công khai.
 - AC-7: Given checkout chính, When soát cài gói, Then `tri-thuc@acceptance-gate-kit` có bản ghi scope local cho
   `~/dev/onehub-invest`, bật trong `.claude/settings.local.json` (gitignored); `.claude/settings.json` không đổi so với nền.
 - AC-8: Given nhánh so với main, When liệt kê tệp đổi, Then chỉ có config, 7 tệp kit, dòng `nguon` của 10 bản phạm vi,

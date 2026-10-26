@@ -12,7 +12,7 @@
 ```
 dot: zcode-2310
 dang: lan-va
-nguon: onehub-invest-tri-thuc:wiki/dot/zcode-2310.md#001d79dbd4f2818607295835e50ea01e1cd733e6
+nguon: onehub-invest-tri-thuc:wiki/dot/zcode-2310.md#10bd301ebaa60dee6d6d9cfe09f20459220ccaa8
 
 - `L20` — tin chỉ có ảnh không trùng sourceId, tin sau không bị bỏ lúc ingest
 - `VH7` — collector tắt êm: huỷ tải ảnh theo hạn, flush định kỳ có hạn chót, exit khác 0 khi mất tin, đóng kết nối rỗi

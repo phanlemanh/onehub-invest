@@ -1,0 +1,8 @@
+{"ts":"2026-10-26T07:28:35Z","round":1,"evalId":"E1","run_id":"kho-tri-thuc-invest-E1-r1-20261026T072835Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/khai.sh \"$PWD\""}
+{"ts":"2026-10-26T07:28:40Z","round":1,"evalId":"E2","run_id":"kho-tri-thuc-invest-E2-r1-20261026T072840Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/ban-chep.sh \"$PWD\""}
+{"ts":"2026-10-26T07:28:45Z","round":1,"evalId":"E3","run_id":"kho-tri-thuc-invest-E3-r1-20261026T072845Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/lint.sh \"$PWD\""}
+{"ts":"2026-10-26T07:28:51Z","round":1,"evalId":"E4","run_id":"kho-tri-thuc-invest-E4-r1-20261026T072851Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/rang-phu.sh \"$PWD\""}
+{"ts":"2026-10-26T07:29:00Z","round":1,"evalId":"E5","run_id":"kho-tri-thuc-invest-E5-r1-20261026T072900Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/dot-bien.sh \"$PWD\""}
+{"ts":"2026-10-26T07:29:19Z","round":1,"evalId":"E6","run_id":"kho-tri-thuc-invest-E6-r1-20261026T072919Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/rieng-tu.sh \"$PWD\""}
+{"ts":"2026-10-26T07:30:24Z","round":1,"evalId":"E7","run_id":"kho-tri-thuc-invest-E7-r1-20261026T073024Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/khong-cham.sh \"$PWD\""}
+{"ts":"2026-10-26T07:30:35Z","round":1,"evalId":"E8","run_id":"kho-tri-thuc-invest-E8-r1-20261026T073035Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/scope.sh \"$PWD\""}

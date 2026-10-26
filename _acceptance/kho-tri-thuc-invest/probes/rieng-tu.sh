@@ -24,4 +24,11 @@ for d in "$GOC"/raw/*/; do
     done
   fi
 done
+# Trang tóm và luật của kho riêng là chữ của phiên ghi — cũng phải 0 tên nguồn thật (phát hiện S4 vòng 1).
+for f in "$GOC/TRI-THUC.md" "$GOC"/wiki/*/*.md; do
+  r="${f#$GOC/}"
+  if node "$quet" "$ROOT" "$f" >/dev/null 2>&1; then ok "$r: 0 tên nguồn thật"; else bad "$r: có tên nguồn thật — $(node "$quet" "$ROOT" "$f" 2>/dev/null)"; fi
+done
+x2="$(git ls-files | grep -E '(^|/)(raw|wiki)/' || true)"
+[ -z "$x2" ] && ok "kho công khai: không đường nào dưới raw/ hay wiki/" || bad "kho công khai có raw/ hay wiki/: $x2"
 [ $fail -eq 0 ] && echo "RIENG-TU OK" || { echo "RIENG-TU FAIL"; exit 1; }
