@@ -466,6 +466,14 @@ test("AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin 
     assert.equal(r1.reviewIds.length, 1);
     await c.query(`SELECT decide_enrichment_review($1, 'deferred', 'hitl:test')`, [r1.reviewIds[0]]);
     await c.query(`UPDATE review_queue SET status='deferred' WHERE id=$1`, [r1.reviewIds[0]]);
+    // Cô lập khỏi DB local dùng chung: đề xuất «review» còn chờ của tin KHÁC (vd đề xuất mồ côi review_id NULL)
+    // cũng vào nhóm «hoãn đi trước» rồi tranh suất limit 1 bằng random() — ca đỏ chập chờn (đo 26/10, PL6 S4-r1).
+    // Trong giao dịch, ROLLBACK cuối ca trả lại nguyên trạng.
+    await c.query(
+      `UPDATE enrichment_proposals SET status = 'skipped'
+        WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
+      [a],
+    );
 
     await runEnrich({
       client: c, runId: "test-ac6-backlog", dry: false, limit: 1,

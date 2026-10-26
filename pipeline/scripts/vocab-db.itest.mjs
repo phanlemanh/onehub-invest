@@ -47,7 +47,7 @@ async function trongGiaoDich(fn) {
   try { await fn(); } finally { await c.query("ROLLBACK"); }
 }
 
-/** Dòng seed mà emitSeed sinh, đọc lại bằng chính DB (chạy seed vào bảng tạm) — so tập dòng, không so chữ. */
+/** Dòng mong đợi dựng thẳng từ sổ — so với dòng DB nạp (043 hoặc emitSeed). */
 const seedRows = (reg) => reg.axes.flatMap((a) => a.values.map((v, i) => [
   a.name, v.code, v.dd_lookup ?? null, v.label_vi, v.local === true, i + 1,
 ].join("|"))).sort();
@@ -136,8 +136,37 @@ test("VD-AC-7 DB thật không đổi sau các ca (pg_constraint đọc lại tr
   assert.deepEqual(await trangThai(), truoc);
 });
 
-test("emitSeed sinh đúng một câu INSERT cho mỗi bảng ref_*", () => {
-  const sql = emitSeed(REG);
-  assert.equal((sql.match(/INSERT INTO ref_lookup/g) ?? []).length, 1);
-  assert.equal((sql.match(/INSERT INTO ref_field_lookup/g) ?? []).length, 1);
+test("VD-AC-7 emitSeed(sổ) nạp ra ĐÚNG các dòng mà 043 nạp — đo quan hệ, không đếm chuỗi", async () => {
+  const relRows = async () => (await c.query("SELECT table_name, column_name, lookup_name FROM ref_field_lookup")).rows
+    .map((r) => `${r.table_name}.${r.column_name}|${r.lookup_name}`).sort();
+  let tuSeed;
+  await trongGiaoDich(async () => {
+    await tienDe();
+    // bảng rỗng bằng đúng DDL của 043 (phần trước câu INSERT đầu), rồi chạy SQL của emitSeed
+    await c.query(MIG.slice(0, MIG.indexOf("INSERT INTO ref_lookup")));
+    await c.query(emitSeed(REG));
+    tuSeed = { lookup: await dbRows(), rel: await relRows() };
+  });
+  let tuMig;
+  await trongGiaoDich(async () => {
+    await tienDe();
+    await c.query(MIG);
+    tuMig = { lookup: await dbRows(), rel: await relRows() };
+  });
+  assert.deepEqual(tuSeed.lookup, tuMig.lookup, "emitSeed và 043 nạp khác dòng ref_lookup");
+  assert.deepEqual(tuSeed.rel, tuMig.rel, "emitSeed và 043 nạp khác dòng ref_field_lookup");
+  assert.deepEqual(tuSeed.lookup, seedRows(REG), "emitSeed lệch sổ");
+  // đối chứng: sổ đổi một nhãn → emitSeed nạp khác 043
+  const doc = YAML.parse(readFileSync(join(PIPE, "mappings.yaml"), "utf8"));
+  doc.enums.kind.values[0].label_vi = "Bán ra";
+  const reg2 = loadRegister(YAML.stringify(doc));
+  let tuSeed2;
+  await trongGiaoDich(async () => {
+    await tienDe();
+    await c.query(MIG.slice(0, MIG.indexOf("INSERT INTO ref_lookup")));
+    await c.query(emitSeed(reg2));
+    tuSeed2 = await dbRows();
+  });
+  assert.notDeepEqual(tuSeed2, tuMig.lookup);
+  assert.ok(tuSeed2.includes("kind|sale|Residential|Bán ra|false|1"));
 });

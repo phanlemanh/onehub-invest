@@ -138,7 +138,6 @@ test("VL-AC-4 object ánh xạ sang code ({s: 'sale', u: 'rent_lt'}) → đỏ; 
 
 // ---------------------------------------------------------------------------------------------------------------------
 // VL-AC-5 — cây thật: ma trận kiểm kê viết trước (design doc §1/§2), mỗi chỗ một kết cục.
-import { execFileSync } from "node:child_process";
 const ROOT = join(PIPE, "..");
 const REG_THAT = loadRegister(SO_THAT);
 
@@ -176,8 +175,14 @@ test("VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại
 });
 
 test("VL-AC-5 đối chứng: bản trước vòng của dq-enum-vocab.mjs bị lint bắt", () => {
-  const base = execFileSync("git", ["-C", ROOT, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
-  const cu = execFileSync("git", ["-C", ROOT, "show", `${base}:pipeline/dq-enum-vocab.mjs`], { encoding: "utf8" });
-  const hits = scanText(cu, "pipeline/dq-enum-vocab.mjs", REG_THAT);
-  assert.ok(hits.some((h) => h.axis === "kind"), "bản cũ phải có chỗ trục kind");
+  // Bản cũ GHIM thành fixture (git show 106cbd3e:pipeline/dq-enum-vocab.mjs) — không suy từ merge-base/origin/main:
+  // sau merge, merge-base trỏ bản mới và phép đối chứng sẽ đỏ vĩnh viễn (S4-r1 t1/t7).
+  const cu = readFileSync(join(PIPE, "scripts", "fixtures", "dq-enum-vocab.truoc-pl6.mjs.txt"), "utf8");
+  const hits = scanText(cu, "pipeline/dq-enum-vocab.mjs", REG_THAT).map(dongDo);
+  assert.deepEqual(hits, [
+    "pipeline/dq-enum-vocab.mjs:14 · kind · sale,rent_lt",
+    "pipeline/dq-enum-vocab.mjs:15 · confidence · high,medium,low",
+    "pipeline/dq-enum-vocab.mjs:16 · price_tier · P0,P1,P2",
+    "pipeline/dq-enum-vocab.mjs:17 · property_type · apartment,house,land,room,commercial,unknown",
+  ]);
 });
