@@ -13,6 +13,8 @@ import { mintOfferId } from "../lib/offer-key.mjs";
 import { chupMaTran, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
 import { runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
+import { MARKETS, runReassign } from "../reassign-areas.mjs";
+import { ghiListing } from "../transform-airbnb.mjs";
 
 const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(PIPE, "..");
@@ -238,6 +240,63 @@ test("ND-AC-5 lượt nạp đầu sau 044 đổi khoá S03/S05: khoá cũ ngh�
     }
     const sau = await chupMaTran(c);
     assert.deepEqual(soMaTran(truoc, sau), [], `ma trận mất:\n${inMaTran(truoc, sau)}`);
+  });
+});
+
+// ND-AC-6: listing ra ngoài mọi phường thì nghỉ 'ngoai_phuong', nights + listing_stats còn nguyên; quay lại thì sống lại.
+const IM = { log: () => {}, warn: () => {} };
+async function listingCoDem() {
+  return one(`SELECT l.*, a.parent_id FROM listings l JOIN areas a ON a.id = l.area_id
+    WHERE EXISTS (SELECT 1 FROM nights n WHERE n.listing_id = l.id) AND EXISTS (SELECT 1 FROM listing_stats s WHERE s.listing_id = l.id)
+      AND a.parent_id = ANY ($1) ORDER BY l.id LIMIT 1`, [Object.values(MARKETS).map((m) => m.id)]);
+}
+const conLai = async (id) => ({
+  nights: (await one(`SELECT count(*)::int AS n FROM nights WHERE listing_id = $1`, [id])).n,
+  stats: (await one(`SELECT count(*)::int AS n FROM listing_stats WHERE listing_id = $1`, [id])).n,
+  song: (await one(`SELECT count(*)::int AS n FROM listings WHERE id = $1`, [id])).n,
+  rec: await one(`SELECT retired_at, retired_reason FROM listing_records WHERE id = $1`, [id]),
+});
+
+test("ND-AC-6 reassign-areas: listing ngoài mọi phường nghỉ 'ngoai_phuong', đêm + thống kê còn; quay lại phường thì sống lại", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query(MIG);
+    const l = await listingCoDem();
+    assert.ok(l, "fixture: cần một listing sống có nights và listing_stats");
+    const city = Object.keys(MARKETS).find((k) => MARKETS[k].id === l.parent_id);
+    const truoc = await conLai(l.id);
+    await c.query(`UPDATE listing_records SET latitude = 0, longitude = 0 WHERE id = $1`, [l.id]);
+    await runReassign(c, [city], { log: IM });
+    const ra = await conLai(l.id);
+    assert.equal(ra.rec?.retired_reason, "ngoai_phuong", "listing ngoài phường phải nghỉ, không bị xoá");
+    assert.ok(ra.rec.retired_at);
+    assert.deepEqual([ra.nights, ra.stats, ra.song], [truoc.nights, truoc.stats, 0]);
+    await c.query(`UPDATE listing_records SET latitude = $2, longitude = $3 WHERE id = $1`, [l.id, l.latitude, l.longitude]);
+    await runReassign(c, [city], { log: IM });
+    const ve = await conLai(l.id);
+    assert.deepEqual([ve.rec.retired_at, ve.rec.retired_reason, ve.song], [null, null, 1], "quay lại phường phải sống lại");
+    assert.deepEqual([ve.nights, ve.stats], [truoc.nights, truoc.stats]);
+  });
+});
+
+test("ND-AC-6 transform-airbnb (ghiListing) và 200_transform: nghỉ thay xoá, đêm của listing đã nghỉ còn nguyên", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query(MIG);
+    const l = await listingCoDem();
+    const truoc = await conLai(l.id);
+    const ex = { name: l.name, roomType: l.room_type, bedrooms: l.bedrooms, personCapacity: l.accommodates,
+      priceListed: l.price_listed, lat: l.latitude, lng: l.longitude, photos: [], reviewCount: l.review_count };
+    assert.equal(await ghiListing(c, { id: l.id, areaId: null, ex, fetchedAt: new Date() }), false);
+    const ra = await conLai(l.id);
+    assert.deepEqual([ra.rec?.retired_reason, ra.nights, ra.stats, ra.song], ["ngoai_phuong", truoc.nights, truoc.stats, 0]);
+    // Đoạn nights của 200_transform (Inside Airbnb): chỉ thay đêm của listing sống.
+    const sql200 = readFileSync(join(PIPE, "sql/200_transform.sql"), "utf8");
+    await c.query(sql200.slice(sql200.indexOf("-- 3) Nights")));
+    assert.equal((await conLai(l.id)).nights, truoc.nights, "200_transform xoá đêm của listing đã nghỉ");
+    assert.equal(await ghiListing(c, { id: l.id, areaId: l.area_id, ex, fetchedAt: new Date() }), true);
+    const ve = await conLai(l.id);
+    assert.deepEqual([ve.rec.retired_at, ve.song, ve.stats], [null, 1, truoc.stats]);
+    assert.equal((await one(`SELECT originating_system_key FROM listing_records WHERE id = $1`, [l.id])).originating_system_key,
+      l.id.replace(/^abnb_/, ""));
   });
 });
 

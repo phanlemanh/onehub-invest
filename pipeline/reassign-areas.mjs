@@ -167,22 +167,25 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
   // Listings thuộc phạm vi: đang nằm trong các market này (market hoặc con)
   const scope = `(l.area_id = ANY($1) OR l.area_id IN
                    (SELECT id FROM areas WHERE parent_id = ANY($1)))`;
+  // Listing được xét lại: sống, hoặc nghỉ vì ngoài phường (nghỉ vì lý do khác thì không đụng).
+  const xetLai = `(l.retired_at IS NULL OR l.retired_reason = 'ngoai_phuong')`;
   // Phường hợp lệ cho PIP: phường OSM VN trừ khu vực lạc của lượt này
   const phuong = `a.region_type = 'submarket' AND a.country_code = 'vn'
                   AND ${phuongHopLe("a.")} AND a.id <> ALL($2::text[])`;
 
   // ---- 2. Point-in-polygon — mọi phường VN, không chỉ tỉnh của snapshot ----
-  // ST_Covers để điểm nằm đúng trên ranh vẫn được gán; DISTINCT ON chốt 1 phường.
+  // ST_Covers để điểm nằm đúng trên ranh vẫn được gán; DISTINCT ON chốt 1 phường. Gồm cả listing đã nghỉ vì ngoài
+  // phường (PL14): toạ độ quay lại phường thì gỡ nghỉ.
   const { rows: moves } = await client.query(
     `WITH pip AS (
        SELECT DISTINCT ON (l.id) l.id, l.area_id AS old_id, a.id AS new_id
-       FROM listings l
+       FROM listing_records l
        JOIN areas a ON ${phuong} AND ST_Covers(a.geom, ${PT})
-       WHERE ${scope} AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL
+       WHERE ${scope} AND ${xetLai} AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL
        ORDER BY l.id, ST_Area(a.geom), a.id
      ), upd AS (
-       UPDATE listings l SET area_id = pip.new_id,
-              geom = ${PT}::geography
+       UPDATE listing_records l SET area_id = pip.new_id,
+              geom = ${PT}::geography, retired_at = NULL, retired_reason = NULL
        FROM pip WHERE l.id = pip.id
        RETURNING l.id
      )
@@ -194,17 +197,18 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
   const nAssigned = moves.reduce((s, m) => s + m.n, 0);
   log.log(`listings gán theo tọa độ: ${nAssigned} (đổi area: ${nChanged})`);
 
-  // ---- 3. Ngoài mọi phường hợp lệ (hoặc thiếu tọa độ) → bỏ khỏi canonical ----
+  // ---- 3. Ngoài mọi phường hợp lệ (hoặc thiếu tọa độ) → nghỉ 'ngoai_phuong', KHÔNG xoá (PL14) ----
+  // nights + listing_stats giữ nguyên (khoá ngoại RESTRICT); view listings không còn listing nghỉ.
   const { rows: dropped } = await client.query(
-    `DELETE FROM listings l
-     WHERE ${scope}
+    `UPDATE listing_records l SET retired_at = now(), retired_reason = 'ngoai_phuong'
+     WHERE ${scope} AND l.retired_at IS NULL
        AND NOT EXISTS (
          SELECT 1 FROM areas a
          WHERE ${phuong} AND l.latitude IS NOT NULL AND ST_Covers(a.geom, ${PT}))
      RETURNING l.id, l.area_id, l.latitude, l.longitude`,
     [active, stale],
   );
-  log.log(`listings ngoài mọi phường — bỏ: ${dropped.length}`);
+  log.log(`listings ngoài mọi phường — nghỉ: ${dropped.length}`);
   for (const d of dropped) log.log(`  - ${d.id} (${d.area_id}) @ ${d.latitude},${d.longitude}`);
 
   // ---- 4. Xoá submarket không phải phường OSM, không còn tham chiếu ----
@@ -212,8 +216,8 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
   const doomed = `SELECT a.id FROM areas a
      WHERE a.parent_id = ANY($1) AND a.region_type = 'submarket'
        AND a.meta->>'source' IS DISTINCT FROM 'osm-phuong'
-       AND NOT EXISTS (SELECT 1 FROM listings l WHERE l.area_id = a.id)
-       AND NOT EXISTS (SELECT 1 FROM sale_offers o WHERE o.area_id = a.id)
+       AND NOT EXISTS (SELECT 1 FROM listing_records l WHERE l.area_id = a.id)
+       AND NOT EXISTS (SELECT 1 FROM sale_offer_records o WHERE o.area_id = a.id)
        AND NOT EXISTS (SELECT 1 FROM market_asset_stats s WHERE s.area_id = a.id)
        AND NOT EXISTS (SELECT 1 FROM saved_markets s WHERE s.area_id = a.id)
        AND NOT EXISTS (SELECT 1 FROM areas c WHERE c.parent_id = a.id)`;
@@ -256,9 +260,15 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
   for (const k of kept)
     log.warn(`  ! giữ khu vực lạc ${k.id} — ${k.saved} saved_markets, ${k.properties} properties trỏ vào`);
   const xoa = stale.filter((id) => !kept.some((k) => k.id === id));
-  // listing/nights đã được bước 2–3 dời hoặc bỏ; tin bán chỉ khớp chữ nên mất nhãn phường;
+  // listing sống đã được bước 2 dời; listing đã nghỉ (bước 3) còn mang khu vực lạc mà area_id NOT NULL → dời về market
+  // cha (PL14: listing không bị xoá). Tin bán chỉ khớp chữ nên mất nhãn phường (cả tin đã nghỉ);
   // metrics/breakdowns/asset_stats là cache — 300/400/500 dựng lại
-  await client.query(`UPDATE sale_offers SET area_id = NULL WHERE area_id = ANY($1)`, [xoa]);
+  await client.query(
+    `UPDATE listing_records l SET area_id = a.parent_id FROM areas a
+     WHERE a.id = l.area_id AND l.area_id = ANY($1) AND l.retired_at IS NOT NULL`,
+    [xoa],
+  );
+  await client.query(`UPDATE sale_offer_records SET area_id = NULL WHERE area_id = ANY($1)`, [xoa]);
   await client.query(`DELETE FROM market_metrics WHERE area_id = ANY($1)`, [xoa]);
   await client.query(`DELETE FROM area_breakdowns WHERE area_id = ANY($1)`, [xoa]);
   await client.query(`DELETE FROM market_asset_stats WHERE area_id = ANY($1)`, [xoa]);
