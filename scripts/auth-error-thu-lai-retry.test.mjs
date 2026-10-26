@@ -14,9 +14,9 @@ const { resolveConfigKey } = require(path.join(REPO, "lib/evidence-core.cjs"));
 const { parseEvals } = require(path.join(REPO, "lib/eval-yaml.cjs"));
 
 const CONFIG = "_acceptance/config.yaml";
-// Commit sửa config.yaml của vòng: so bản CHA (giống từng byte bc6e5120, đỉnh main lúc mở hàng) với bản của nó — HEAD còn mang
-// khoá main thêm sau đó, nên so HEAD với mốc cố định sẽ đỏ vì việc của người khác.
-const FIX_COMMIT = "5e396cb2";
+// «Không lệnh nào đổi nghĩa»: so config.yaml của cây đang kiểm với bản ở merge-base của nhánh chính — nhánh đã gộp main nên
+// phần khác nhau đúng bằng phần vòng này đổi (khoá main thêm về sau có ở cả hai bên). Ở chính nhánh chính, hai bên trùng nhau.
+const MAIN_REF = "origin/main";
 const SUPERSEDE = "auth-error-thu-lai-retry#AC-1";
 
 /** `yaml` chỉ có ở pipeline/ — thử checkout này rồi checkout chính (worktree không có node_modules riêng). */
@@ -55,7 +55,8 @@ function leafKeys(obj, prefix = [], out = []) {
   }
   return out;
 }
-const loose = (text) => YAML.parse(text, { uniqueKeys: false });
+// Liệt khoá kể cả trên bản không chuẩn (bản trước vòng chính là bản hỏng) — giá trị so bằng bộ đọc kit, không lấy từ đây.
+const loose = (text) => YAML.parseDocument(text, { uniqueKeys: false }).toJS() ?? {};
 
 /** Khoá executors.<loại>.<tên> mà bộ đọc kit ra khác bộ đọc chuẩn. */
 export function kitVsStrict(text) {
@@ -63,9 +64,9 @@ export function kitVsStrict(text) {
   return { total: execs.length, lech: execs.filter(([k, v]) => resolveConfigKey(text, k) !== v).map(([k]) => k) };
 }
 
-/** Khoá lá (2–3 cấp) mà bộ đọc kit ra giá trị khác nhau giữa hai bản. */
+/** Khoá lá (2–3 cấp) — HỢP tập khoá của hai bản, để khoá bị xoá cũng được so — mà bộ đọc kit ra giá trị khác nhau. */
 export function kitBeforeAfter(oldText, newText) {
-  const keys = leafKeys(loose(newText)).map(([k]) => k);
+  const keys = [...new Set([...leafKeys(loose(oldText)), ...leafKeys(loose(newText))].map(([k]) => k))];
   return { total: keys.length, khac: keys.filter((k) => resolveConfigKey(oldText, k) !== resolveConfigKey(newText, k)) };
 }
 
@@ -112,26 +113,27 @@ describe("AER-AC-2 bộ đọc kit khớp bộ đọc chuẩn", () => {
 });
 
 describe("AER-AC-2 không lệnh nào đổi nghĩa", () => {
-  test(`bộ đọc kit ra cùng giá trị cho mọi khoá trước và sau commit sửa ${FIX_COMMIT}`, (t) => {
-    let before, after;
+  test(`bộ đọc kit ra cùng giá trị cho mọi khoá ở merge-base với ${MAIN_REF} và ở cây đang kiểm`, (t) => {
+    let before;
     try {
-      const show = (rev) => execFileSync("git", ["show", `${rev}:${CONFIG}`], { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
-      before = show(`${FIX_COMMIT}^`);
-      after = show(FIX_COMMIT);
+      const git = (...a) => execFileSync("git", a, { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+      before = git("show", `${git("merge-base", "HEAD", MAIN_REF)}:${CONFIG}`);
     } catch {
-      return t.skip(`không đọc được ${FIX_COMMIT}^ / ${FIX_COMMIT} (clone nông?) — ca so trước-sau không chạy ở đây`);
+      return t.skip(`không có ${MAIN_REF} hoặc merge-base (clone nông?) — ca so trước-sau không chạy ở đây`);
     }
-    assert.notEqual(before, after, `${FIX_COMMIT} không đổi ${CONFIG} — sai commit mốc`);
-    const { total, khac } = kitBeforeAfter(before, after);
+    const { total, khac } = kitBeforeAfter(before, read(CONFIG));
     console.log(`so ${total} khoá trước-sau`);
     assert.ok(total > 100, `chỉ so được ${total} khoá — bộ liệt khoá hỏng?`);
-    assert.deepEqual(khac, [], `giá trị đổi qua commit ${FIX_COMMIT}: ${khac.join(", ")}`);
+    assert.deepEqual(khac, [], `giá trị đổi so với merge-base ${MAIN_REF}: ${khac.join(", ")}`);
   });
-  test("chiều đỏ: đổi giá trị một lệnh trên bản sao → bộ so gọi đúng khoá đó", () => {
+  test("chiều đỏ: đổi giá trị một lệnh, hay xoá hẳn một khoá, trên bản sao → bộ so gọi đúng khoá đó", () => {
     const text = read(CONFIG);
-    const planted = text.replace(/^( {4}app_ui: )"[^"]*"/m, '$1"cd app && npm test -- --doi-nghia"');
-    assert.notEqual(planted, text, "không tìm thấy dòng app_ui để cấy");
-    assert.deepEqual(kitBeforeAfter(text, planted).khac, ["executors.test.app_ui"]);
+    const changed = text.replace(/^( {4}app_ui: )"[^"]*"/m, '$1"cd app && npm test -- --doi-nghia"');
+    assert.notEqual(changed, text, "không tìm thấy dòng app_ui để cấy");
+    assert.deepEqual(kitBeforeAfter(text, changed).khac, ["executors.test.app_ui"]);
+    const removed = text.replace(/^ {4}app_ui: .*\n/m, "");
+    assert.notEqual(removed, text, "không tìm thấy dòng app_ui để xoá");
+    assert.deepEqual(kitBeforeAfter(text, removed).khac, ["executors.test.app_ui"]);
   });
 });
 
@@ -140,7 +142,12 @@ describe("AER-AC-4 ô E4 của auth-hop-chuan được thay đúng", () => {
   test("E4 khai not-run + superseded_by đúng đích; AC-1 có ở hồ sơ thay; ca AH-AC-4 đã rời tệp test", () => {
     assert.deepEqual(checkE4Supersede(evals), []);
     assert.match(read("_acceptance/auth-error-thu-lai-retry/contract.md"), /^- AC-1:/m, "hồ sơ thay phải có AC-1");
-    assert.ok(!read("app/tests/auth-hop-chuan.test.tsx").includes('test("AH-AC-4'), "ca AH-AC-4 phải rời auth-hop-chuan.test.tsx");
+    // Bộ khớp ca test (mọi kiểu nháy) — đối chứng dương: nó bắt được ca AH-AC-5 còn trong tệp.
+    const caseRe = (id) => new RegExp(`\\btest\\s*\\(\\s*["'\`]${id}\\b`);
+    const ahc = read("app/tests/auth-hop-chuan.test.tsx");
+    assert.match(ahc, caseRe("AH-AC-5"), "bộ khớp ca test phải bắt được ca AH-AC-5");
+    assert.doesNotMatch(ahc, caseRe("AH-AC-4"), "ca AH-AC-4 phải rời auth-hop-chuan.test.tsx");
+    assert.match("test('AH-AC-4 x', () => {})", caseRe("AH-AC-4"), "bộ khớp ca test phải bắt cả nháy đơn");
   });
   test("chiều đỏ: sai đích, thiếu status → bộ kiểm gọi đúng lỗi", () => {
     const wrong = evals.replace(`superseded_by: ${SUPERSEDE}`, "superseded_by: auth-error-khac#AC-1");
