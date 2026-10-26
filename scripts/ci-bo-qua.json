@@ -39,6 +39,11 @@
       "tep": "app/tests/finder-ranh-gioi.test.tsx",
       "ca": "AU9-AC-8 Finder Hà Nội: trước khi áp có khu vực vượt bbox, sau khi áp mọi khu vực trong bbox vn-hanoi",
       "ly_do": "cần polygon vn-hanoi + dữ liệu Hà Nội thật (DB local) — DB CI dựng từ migration không có"
+    },
+    {
+      "tep": "app/tests/ops-dong-chay.test.tsx",
+      "ca": "DF-AC-3 DB thật — đủ trường lõi theo nguồn = levelOf",
+      "ly_do": "cần tin rao thật ở DB local (đối chứng đòi sale_offers có tin; DB CI dựng từ migration rỗng)"
     }
   ],
   "pipeline": [
