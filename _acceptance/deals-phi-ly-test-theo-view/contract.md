@@ -5,7 +5,7 @@ slug: deals-phi-ly-test-theo-view
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T11:57:18Z
 approved_by:
@@ -56,3 +56,5 @@ Giám sát đợt dot0-cam-mau xếp hàng `deals-phi-ly-test-theo-view` vào P2
   nhánh này, DB local đã áp 044: ba bộ chạy tuần tự (agent 63/63, pipeline 220/220, app 487/487) và chạy SONG SONG hai lần
   đều 0 đỏ. DP-AC-5 đỏ tất định (42809); các ca còn lại là deadlock do `write-offers.test.mjs` áp lại 044 khi chạy chồng —
   cùng bản sửa AC-2. Helper DB của agent đã thôi áp lại 044 từ #132.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Vế đối chứng của phép kiểm bản cloud không ghim mã lỗi, nên chưa chứng minh được cột người bán đã thật sự mất khỏi bản thử.

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e3db58d737f151461331d9ac51aac8a9d93ec343
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: deals-phi-ly-test-theo-view
