@@ -1,0 +1,90 @@
+schema_version: 1
+feature_slug: nap-lai-khong-xoa
+# Ca «NL-AC-n» ở pipeline/scripts/nap-lai.test.mjs (không DB), «ND-AC-n» ở nap-lai-db.itest.mjs (DB local, BEGIN … ROLLBACK).
+# Fixture tin dựng bằng chính transform thật (parsePost / writeOffers) trên dòng stg giả — không viết tay khuôn sale_offers.
+# Đường tính từ vị trí tệp test. Mọi ca DB đọc lại pg_constraint/đếm bảng trước-sau để chứng DB thật không đổi.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.nap_lai_db
+    paths: [db/migrations/044_nap_lai_khong_xoa.sql, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'ND-AC-1': trong giao dịch áp 044 hai lần → to_regclass('sale_offer_records'), to_regclass('listing_records') có; relkind của sale_offers và listings = 'v'; ma trận 6 khoá ngoại viết trước (nights.listing_id, listing_stats.listing_id, property_offers.offer_id, property_candidates.offer_a, property_candidates.offer_b, enrichment_proposals.offer_id) → confrelid là bảng bản ghi và confdeltype = 'r' từng dòng; CHECK retired_reason nhận het_trong_luot/ngoai_phuong/doi_khoa và từ chối 'khac' (đối chứng âm, thông điệp nêu tên ràng buộc); SELECT count(*) FROM v_ruler_p2 chạy được; lần áp hai không lỗi, đếm dòng bảng bản ghi không đổi"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.nap_lai_db
+    paths: [db/migrations/044_nap_lai_khong_xoa.sql, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'ND-AC-2': trước 044 lấy tập offer_id của sale_offers và id của listings (băm sha256 tập đã sắp) → áp 044 trong giao dịch → băm tập của view sale_offers và view listings bằng đúng băm trước; đối chứng: UPDATE một bản ghi retired_at = now() → view mất đúng khoá đó"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.nap_lai_db
+    paths: [db/migrations/044_nap_lai_khong_xoa.sql, pipeline/lib/write-offers.mjs, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'ND-AC-3' (giao dịch, sau 044): dựng hai offer S03 chung post + một offer không có kế, gắn cho offer cũ một đề xuất enrich đã quyết, một property_offers, một property_candidates merged, một thẻ pair:; writeOffers lượt thiếu offer cũ → offer cũ còn trong sale_offer_records với retired_at khác NULL, retired_reason 'het_trong_luot', superseded_by = offer kế; bốn dòng con đã trỏ offer kế; offer không có kế: dòng con vẫn trỏ nó, ops_audit có ảnh chụp; lượt sau có lại offer → retired_at NULL; đối chứng: SELECT count(*) FROM sale_offer_records WHERE offer_id = <cũ> = 1 (không bị xoá)"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.nap_lai
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/lib/offer-key.mjs, pipeline/scripts/nap-lai.test.mjs]
+    expected: "exit 0; ca 'NL-AC-4' ma trận 5 dòng cho S03 và S05 (đổi giá, đổi diện tích, đổi số phòng, đổi rule_id parser, thêm một repost muộn hơn) → offer_id trước bằng offer_id sau từng dòng; đối chứng: đổi post neo (post sớm nhất bị gỡ khỏi nhóm) → offer_id khác; offer_id = 'offer_' + sha256('S03|'+post neo)[:16] khớp tính tay; originating_system_key của S03/S05 = post neo, S06 = list_id"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.nap_lai_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, db/migrations/044_nap_lai_khong_xoa.sql, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'ND-AC-5' (giao dịch, DB local thật sau 044): đếm offer S03/S05 khoá cũ (n) + quyết định/liên kết theo khoá gốc (ma trận AC-7) → chạy transform-zalo và transform-fb đường hàm (không CLI) → n offer cũ có retired_reason 'doi_khoa'; mọi offer cũ có post chung với offer mới mang superseded_by khác NULL; ma trận quyết định/liên kết bằng trước"
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.nap_lai_db
+    paths: [pipeline/transform-airbnb.mjs, pipeline/reassign-areas.mjs, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'ND-AC-6' (giao dịch): chọn một listing có nights, dời toạ độ ra ngoài mọi phường → chạy bước loại-ngoài-phường của reassign-areas (hàm xuất khẩu, scope listing đó) → listing_records còn dòng, retired_reason 'ngoai_phuong', count nights và listing_stats của nó bằng trước; view listings không còn nó; dời lại vào phường → retired_at NULL, view có lại"
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.nap_lai_ba_luot
+    paths: [pipeline/scripts/nap-lai-ba-luot.mjs, pipeline/lib/write-offers.mjs, db/migrations/044_nap_lai_khong_xoa.sql]
+    expected: "exit 0; stdout có dòng 'nap-lai-ba-luot: 3 lượt · mất 0 quyết định · mất 0 liên kết' và bảng ma trận 5 dòng (de_xuat_da_quyet, the_review_da_quyet, ung_vien_merged_rejected, property_offers, the_pair) với cột trước/sau bằng nhau; cờ --doi-chung chạy cùng ba lượt với hàm đối soát giả lập 039 (DELETE + CASCADE) → exit 1 và dòng 'mất' nêu tên ít nhất một hàng ma trận"
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.nap_lai
+    paths: [pipeline/**, pipeline/scripts/nap-lai.test.mjs]
+    expected: "exit 0; ca 'NL-AC-8': quét cây thật pipeline/ (trừ node_modules, *.test.*, *.itest.*, sql cũ đã đánh dấu) → 0 câu DELETE FROM/TRUNCATE nhắm sale_offers, sale_offer_records, listings, listing_records (khớp không phân biệt hoa thường, cả trong chuỗi template); ca đối chứng trên cây giả: cấy 'DELETE FROM listings WHERE x' vào một .mjs → 1 dòng đỏ nêu đường:dòng"
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.nap_lai_db
+    paths: [pipeline/sync-cloud.mjs, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'ND-AC-9' (giao dịch): một listing nghỉ có nights và listing_stats, một offer nghỉ có property_offers → hàm dựng tập chép của sync-cloud (xuất khẩu, không kết nối cloud) → tập sale_offers/listings không có khoá đã nghỉ; tập nights/listing_stats/property_offers không có dòng trỏ cha đã nghỉ; đối chứng: gỡ retired_at → các dòng ấy có lại"
+  - id: E9b
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0 (cả bộ pipeline npm test, gồm sync-cloud.test.mjs, write-offers.test.mjs, vocab và nap-lai.test.mjs)"
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.cloud_catchup_static
+    paths: [docs/ops/**, scripts/check-cloud-catchup.mjs]
+    expected: "exit 0; trong docs/ops/ có cloud-schema-catchup-2026-10-26-043.sql (nội dung bằng byte tệp giám sát đã áp) và một tệp catch-up 044; mỗi tệp có hai khối mốc '-- ĐO TRƯỚC' (chỉ SELECT) và '-- ÁP' ; khối ĐO TRƯỚC không chứa ALTER/CREATE/DROP/INSERT/UPDATE/DELETE; đối chứng: bản sao chèn một ALTER vào khối ĐO TRƯỚC → exit 1 nêu tệp và dòng"
+  - id: E11
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/**]
+    expected: "exit 0 (tsc --noEmit + lint)"
+  - id: E12
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/**]
+    expected: "exit 0"
+  - id: E13
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/**]
+    expected: "exit 0"
