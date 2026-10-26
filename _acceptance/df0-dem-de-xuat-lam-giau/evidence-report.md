@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5f1a78160e1ca8981381ef44603a96e9ffc50932
+verified_commit: 929a83885bddcbf069b28eaab97389a2b1407f08
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -147,3 +147,7 @@ Round 1: E1-E5 và sáu lệnh suite đều xanh, E6 được ba góc nhìn ch�
 ### Re-pin lần 1 — 2026-10-26, do gộp origin/main (50813379) vào fix/df0-dem-de-xuat-lam-giau
 run_id: repin-20261026T232640Z-22591
 sha: 5f1a78160e1ca8981381ef44603a96e9ffc50932 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths) · AC không có chốt máy: AC-6
+
+### Re-pin lần 2 — 2026-10-26, do gộp origin/main (39c660ca) vào fix/df0-dem-de-xuat-lam-giau
+run_id: repin-20261026T235004Z-98910
+sha: 929a83885bddcbf069b28eaab97389a2b1407f08 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths) · AC không có chốt máy: AC-6
