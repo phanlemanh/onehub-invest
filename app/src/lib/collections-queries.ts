@@ -90,8 +90,9 @@ export type FlowDay = {
 
 // Hai cột S03 (ON5): CHÉP NGUYÊN VĂN S03_POSTS_SQL / S03_OFFERS_SQL của pipeline/lib/ops-flow.mjs — bên ghi khối `luong7`
 // dùng bản đó; app/tests/luong-7-ngay-dung-so.test.tsx (ON5-AC-4) đối chiếu hai bên trên cùng lược đồ. Bài S03 thật
-// (`zalo-agent`, không mock) theo ngày đăng; tin rao chỉ nguồn S03 theo first_seen (= giờ đăng bài sớm nhất).
-const S03_POSTS_SQL = `SELECT (posted_at AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' GROUP BY 1`;
+// (`zalo-agent`, không mock, không bài S05 `apify-facebook`, không bài thử) theo ngày đăng; tin rao chỉ
+// nguồn S03 theo first_seen (= giờ đăng bài sớm nhất).
+const S03_POSTS_SQL = `SELECT (posted_at AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' GROUP BY 1`;
 const S03_OFFERS_SQL = `SELECT (first_seen AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
 
 /** Luồng N ngày gần nhất theo nguồn. Perf-audit: từng là 42 subquery

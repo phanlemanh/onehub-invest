@@ -1,0 +1,40 @@
+schema_version: 1
+feature_slug: auth-error-thu-lai-retry
+# Ca «AER-AC-n»: app/tests/auth-error-thu-lai-retry.test.tsx (jsdom, không DB) và scripts/auth-error-thu-lai-retry.test.mjs.
+# Đường tệp suy từ vị trí tệp test, không hardcode ROOT.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/(auth)/error.tsx, app/src/components/states/page-error.tsx, app/tests/auth-error-thu-lai-retry.test.tsx]
+    expected: "exit 0; ca 'AER-AC-1 Thử lại về server qua ranh giới lỗi thật của Next' xanh: app/src/app/(auth)/error.tsx tồn tại, dòng đầu '\"use client\";'; render ErrorBoundaryHandler của next/dist/client/components/error-boundary (errorComponent = export default của error.tsx, pathname '/login') trong AppRouterContext có router.refresh đếm lần gọi, con của nó ném lỗi có digest 'abc123' → đúng 1 role=alert chứa 'Không tải được dữ liệu' và 'Mã lỗi: abc123', đúng 1 nút 'Thử lại'; bấm → router.refresh gọi đúng 1 lần; 0 phần tử nav/aside, kèm đối chứng dương cùng bộ chọn: render một <nav> + <aside> mẫu → bộ chọn đếm 2; chiều đỏ cùng ca trên bản sao tạm của error.tsx nối reset vào nút (thư mục tạm trong app/tests, xoá trong finally) → router.refresh gọi 0 lần, thông điệp ghim 'Thử lại phải gọi retry của Next (router.refresh), không reset'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [_acceptance/config.yaml, scripts/auth-error-thu-lai-retry.test.mjs, lib/evidence-core.cjs]
+    expected: "exit 0; ba ca xanh. 'AER-AC-2 YAML chuẩn': bộ đọc yaml (uniqueKeys) trên _acceptance/config.yaml → 0 lỗi; chiều đỏ trên bản sao chuỗi: chèn 'x:\"y\"' vào executors.script → MULTILINE_IMPLICIT_KEY, chèn lại một khoá đã có → DUPLICATE_KEY, thông điệp ghim '_acceptance/config.yaml không phải YAML chuẩn: <mã> dòng <n>'. 'AER-AC-2 bộ đọc kit khớp bộ đọc chuẩn': liệt MỌI khoá executors.<loại>.<tên> từ bộ đọc chuẩn (in số khoá), resolveConfigKey của lib/evidence-core.cjs ra đúng giá trị từng khoá → 0 khoá lệch; chiều đỏ: bản sao nối cuối executors.script một khoá đã có với giá trị khác → bộ so báo đúng khoá đó. 'AER-AC-2 không lệnh nào đổi nghĩa': resolveConfigKey trên _acceptance/config.yaml ở merge-base(HEAD, origin/main) và ở cây đang kiểm cho HỢP tập khoá lá tới ba cấp của hai bản (in số khoá) → 0 khoá khác giá trị; chiều đỏ trên bản sao: đổi giá trị một lệnh → báo đúng khoá đó, xoá hẳn một khoá → báo đúng khoá đó; không có origin/main hay merge-base (clone nông) → ca bỏ qua kèm lý do in ra, không xanh lặng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/tests/**]
+    expected: "exit 0 (tsc --noEmit sạch; eslint + check-bare-disables 0 lỗi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/eslint-suppressions.json, app/tests/auth-error-thu-lai-retry.test.tsx]
+    expected: "exit 0; ca 'AER-AC-3 không miễn lint cho (auth)' xanh: đọc app/eslint-suppressions.json → 0 khoá bắt đầu 'src/app/(auth)/'; chiều đỏ trên bản sao JSON: thêm khoá 'src/app/(auth)/error.tsx' → bộ đếm báo đúng khoá đó, thông điệp ghim 'eslint-suppressions.json còn khoá miễn lint cho (auth): <khoá>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [_acceptance/auth-hop-chuan/evals.yaml, _acceptance/auth-error-thu-lai-retry/contract.md, app/tests/auth-hop-chuan.test.tsx, scripts/auth-error-thu-lai-retry.test.mjs]
+    expected: "exit 0; ca 'AER-AC-4 ô E4 của auth-hop-chuan được thay đúng' xanh: đọc _acceptance/auth-hop-chuan/evals.yaml bằng lib/eval-yaml.cjs của kho → ô E4 có status 'not-run' và superseded_by 'auth-error-thu-lai-retry#AC-1'; AC-1 có trong _acceptance/auth-error-thu-lai-retry/contract.md; app/tests/auth-hop-chuan.test.tsx không còn ca test 'AH-AC-4' (bộ khớp test( + mọi kiểu nháy + mã ca; đối chứng dương: cùng bộ khớp bắt được ca 'AH-AC-5' trong tệp và ca 'AH-AC-4' viết nháy đơn); chiều đỏ trên bản sao chuỗi: đổi slug trong superseded_by → bộ kiểm báo 'superseded_by của auth-hop-chuan/E4 là <giá trị>, cần auth-error-thu-lai-retry#AC-1'; bỏ dòng status → báo 'auth-hop-chuan/E4 chưa khai status: not-run'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -1,0 +1,3 @@
+{
+  "feature_plain": "Sửa phép kiểm của hồ sơ trước để các thay đổi sau này trong tệp cấu hình nghiệm thu (thêm, sửa, xoá lệnh kiểm) không còn bị CI chặn nhầm, mà vẫn bắt được nếu lần sửa cú pháp của vòng trước làm đổi nghĩa một lệnh."
+}
