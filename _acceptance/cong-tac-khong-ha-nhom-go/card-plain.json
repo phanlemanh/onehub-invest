@@ -1,0 +1,30 @@
+{
+ "feature_plain": "Người vận hành bấm công tắc ở lưới nhóm thu không còn hồi sinh được nhóm đã gỡ hay đã xong, và tắt một nhóm nháp không đổi nó thành tạm dừng.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ cho công tắc đi đúng bảng 10 ô (5 trạng thái × bật/tắt); ô không đổi thì không ghi gì, kể cả nhật ký."},
+  {"id":"AC-2","p":"Sẽ giữ nguyên nhóm đã gỡ hay đã xong khi bấm tắt rồi bật, kể cả hai lệnh gửi cùng lúc."},
+  {"id":"AC-3","p":"Sẽ báo lỗi nêu đúng «nhóm đã gỡ» hay «nhóm đã xong» khi công tắc từ chối."},
+  {"id":"AC-4","p":"Sẽ cho công tắc và đường ghi cũ cùng một kết quả ở tám ô; hai ô tắt nhóm đã gỡ/đã xong thì công tắc báo lỗi còn đường cũ im lặng (Hỏi-1)."},
+  {"id":"AC-5","p":"Sẽ chứng lưới nhóm thu hoàn công tắc về như trước và hiện chữ lỗi khi máy chủ từ chối — không sửa giao diện."}
+ ],
+ "wont_do": [
+  {"id":"OOS-1","p":"Không làm: chặn ở tầng cơ sở dữ liệu việc đổi nhóm đã gỡ về tạm dừng — lệnh có chủ đích sau này (TV5/TV6) cần đường ấy."},
+  {"id":"OOS-2","p":"Không làm: nhãn «Đã gỡ», «Nháp» trên lưới nhóm thu (đi cùng giao diện vòng đời)."},
+  {"id":"OOS-3","p":"Không làm: công tắc nhóm S03 (việc của TV6)."}
+ ],
+ "coverage_plain": [
+  {"i":0,"p":"Đủ năm trạng thái của nhóm (đang thu, tạm dừng, nháp, đã gỡ, đã xong) — AC-1."},
+  {"i":1,"p":"Cả hai hành động bật và tắt — AC-1, AC-3."},
+  {"i":2,"p":"Cả hai đường ghi: công tắc mới và đường ghi cũ qua cột enabled — AC-4."},
+  {"i":3,"p":"Ba nhịp: một lệnh, hai lệnh nối tiếp, hai lệnh đồng thời — AC-1, AC-2."},
+  {"i":4,"p":"Không ghi nhật ký ở ô không đổi; chữ lỗi nêu đúng trạng thái — AC-1, AC-3."}
+ ],
+ "gap_probe_plain": [
+  {"i":0,"p":"Trả lỗi khi tắt nhóm đã gỡ là lựa chọn của người và lệch luật đường cũ — đưa lên anh ở Hỏi-1."},
+  {"i":1,"p":"Lời hứa «báo rõ» trên lưới chưa có gì đo — đã thêm AC-5 và ca thử vẽ lưới với lỗi giả."},
+  {"i":2,"p":"Lý do không chặn ở tầng cơ sở dữ liệu dựa trên tiền đề sai — đã đổi sang căn cứ phạm vi giám sát chốt."},
+  {"i":3,"p":"Câu Then của AC-4 sai ở hai ô tắt nhóm đã gỡ/đã xong — đã viết lại."},
+  {"i":4,"p":"Đối chứng của nhánh hai lệnh đồng thời không tất định — đã giới hạn vào nhánh nối tiếp."}
+ ],
+ "scope_plain": "Ba việc gần đề tài cố ý để cho hàng sau:"
+}
