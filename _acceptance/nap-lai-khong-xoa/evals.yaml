@@ -21,13 +21,13 @@ evals:
     executor: test
     cmd: config:executors.test.nap_lai_db
     paths: [db/migrations/044_nap_lai_khong_xoa.sql, pipeline/lib/write-offers.mjs, pipeline/scripts/nap-lai-db.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-3' (giao dịch, sau 044): dựng hai offer S03 chung post + một offer không có kế, gắn cho offer cũ một đề xuất enrich đã quyết, một property_offers, một property_candidates merged, một thẻ pair:; writeOffers lượt thiếu offer cũ → offer cũ còn trong sale_offer_records với retired_at khác NULL, retired_reason 'het_trong_luot', superseded_by = offer kế; bốn dòng con đã trỏ offer kế; offer không có kế: dòng con vẫn trỏ nó, ops_audit có ảnh chụp; lượt sau có lại offer → retired_at NULL; đối chứng: SELECT count(*) FROM sale_offer_records WHERE offer_id = <cũ> = 1 (không bị xoá)"
+    expected: "exit 0; ca 'ND-AC-3' (giao dịch, sau 044): dựng ở nguồn thử TST (khoá mới băm 'TST|<post>') hai offer chung post + một offer không có kế, gắn cho offer cũ một đề xuất enrich đã quyết, một property_offers, một property_candidates merged, một thẻ pair:; writeOffers lượt thiếu offer cũ → offer cũ còn trong sale_offer_records với retired_at khác NULL, retired_reason 'het_trong_luot', superseded_by = offer kế; bốn dòng con đã trỏ offer kế; offer không có kế: dòng con vẫn trỏ nó, ops_audit có ảnh chụp; lượt sau có lại offer → retired_at NULL; đối chứng: SELECT count(*) FROM sale_offer_records WHERE offer_id = <cũ> = 1 (không bị xoá)"
   - id: E4
     criterion: AC-4
     executor: test
     cmd: config:executors.test.nap_lai
     paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/lib/offer-key.mjs, pipeline/scripts/nap-lai.test.mjs]
-    expected: "exit 0; ca 'NL-AC-4' ma trận 6 dòng cho S03 và S05 (đổi giá, đổi diện tích, đổi số phòng, đổi rule_id parser, thêm một repost muộn hơn, thêm ở lượt sau một post có posted_at SỚM hơn post neo) → offer_id trước bằng offer_id sau từng dòng; đối chứng: đổi post neo (post sớm nhất bị gỡ khỏi nhóm) → offer_id khác; offer_id = 'offer_' + sha256('S03|'+post neo)[:16] khớp tính tay; originating_system_key của S03/S05 = post neo, S06 = list_id"
+    expected: "exit 0; ca 'NL-AC-4' ma trận 6 dòng cho S03 và S05 (đổi giá, đổi diện tích, đổi số phòng, đổi rule_id parser, thêm một repost muộn hơn, thêm ở lượt sau một post có posted_at SỚM hơn post neo) → offer_id trước bằng offer_id sau từng dòng; đối chứng: nhóm mới hoàn toàn (không post chung) → offer_id khác, tin khoá cũ băm nội dung không được thừa kế (đổi sang khoá mới); nhóm tách mà neo trùng khoá gốc tin cũ → không cấp trùng id; offer_id = 'offer_' + sha256('S03|'+post neo)[:16] khớp tính tay; originating_system_key của S03/S05 = post neo, S06 = list_id"
   - id: E5
     criterion: AC-5
     executor: test
@@ -69,7 +69,7 @@ evals:
     executor: script
     cmd: config:executors.script.cloud_catchup_static
     paths: [docs/ops/**, scripts/check-cloud-catchup.mjs]
-    expected: "exit 0; trong docs/ops/ có cloud-schema-catchup-2026-10-26-043.sql (nội dung bằng byte tệp giám sát đã áp) và một tệp catch-up 044; mỗi tệp có hai khối mốc '-- ĐO TRƯỚC' (chỉ SELECT) và '-- ÁP' ; khối ĐO TRƯỚC không chứa ALTER/CREATE/DROP/INSERT/UPDATE/DELETE; đối chứng: bản sao chèn một ALTER vào khối ĐO TRƯỚC → exit 1 nêu tệp và dòng"
+    expected: "exit 0; trong docs/ops/ có cloud-schema-catchup-2026-10-26-043.sql (khối ÁP bằng từng byte tệp giám sát đã áp — so sha256) và một tệp catch-up 044; mỗi tệp có hai khối mốc '-- ĐO TRƯỚC' (chỉ SELECT) và '-- ÁP' ; khối ĐO TRƯỚC không chứa ALTER/CREATE/DROP/INSERT/UPDATE/DELETE; đối chứng: bản sao chèn một ALTER vào khối ĐO TRƯỚC → exit 1 nêu tệp và dòng"
   - id: E11
     criterion: AC-2
     executor: test
