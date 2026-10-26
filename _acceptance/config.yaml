@@ -358,6 +358,12 @@ executors:
     odt_ops_doi_chung: "bash _acceptance/on-dinh-test-app-chap-chon/probes/ops-doi-chung.sh"
     odt_lb_lap: "bash _acceptance/on-dinh-test-app-chap-chon/probes/lb-lap.sh"
     odt_pham_vi: "bash _acceptance/on-dinh-test-app-chap-chon/probes/pham-vi.sh"
+    # test-khong-prune-worktree — kho git tạm cho phép đo gỡ worktree; soát tĩnh trên tệp đang theo dõi; không chạm DB
+    tkp_soat: "bash _acceptance/test-khong-prune-worktree/probes/soat-prune.sh"
+    tkp_bo_worktree: "bash _acceptance/test-khong-prune-worktree/probes/bo-worktree.sh"
+    tkp_lan: "bash _acceptance/test-khong-prune-worktree/probes/lan.sh"
+    tkp_pham_vi: "bash _acceptance/test-khong-prune-worktree/probes/pham-vi.sh"
+    tkp_selftest_cleanup: "bash _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh"
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
