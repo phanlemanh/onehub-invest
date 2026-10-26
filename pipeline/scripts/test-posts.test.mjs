@@ -259,7 +259,7 @@ function codeFiles(dirs, exts) {
       if (e.isDirectory()) {
         if (["node_modules", "tests", ".next", "dist"].includes(e.name)) continue;
         walk(full);
-      } else if (exts.some((x) => e.name.endsWith(x)) && !/\.test\./.test(e.name)) {
+      } else if (exts.some((x) => e.name.endsWith(x)) && !/\.i?test\./.test(e.name)) { // tệp test (kể cả *.itest.*) dựng fixture có chủ đích
         out.push({ path: relative(ROOT, full), text: readFileSync(full, "utf8") });
       }
     }

@@ -10,8 +10,8 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { writeOffers } from "../lib/write-offers.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
-import { chupMaTran, gieoQuyetDinh, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
-import { runTransformZalo } from "../transform-zalo.mjs";
+import { chupMaTran, gieoQuyetDinh, gieoTinKhoaCu, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
+import { parsePost, runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
 import { MARKETS, runReassign } from "../reassign-areas.mjs";
 import { ghiListing } from "../transform-airbnb.mjs";
@@ -201,18 +201,25 @@ test("ND-AC-3 tin khoá cũ (băm nội dung) vắng lượt → lý do doi_khoa
 test("ND-AC-5 lượt nạp đầu sau 044 đổi khoá S03/S05: khoá cũ nghỉ 'doi_khoa', ma trận quyết định/liên kết không mất", async () => {
   await trongGiaoDich(c, async () => {
     await c.query(MIG);
-    for (const s of ["S03", "S05"]) await gieoQuyetDinh(c, s);
+    // Đối chứng dương: chắc chắn có quyết định đã gieo và có tin khoá cũ ở mỗi nguồn — ca không được qua rỗng.
+    const fx = {};
+    for (const s of ["S03", "S05"]) {
+      assert.equal(await gieoQuyetDinh(c, s), 2, `${s}: fixture phải gieo được quyết định lên 2 tin`);
+      fx[s] = await gieoTinKhoaCu(c, s, "nd-ac-5");
+      assert.ok(fx[s], `${s}: fixture tin khoá cũ`);
+    }
     const khoaCu = async (s) => (await c.query(
       `SELECT offer_id FROM sale_offers WHERE source = $1 AND (originating_system_key IS NULL OR offer_id <>
          'offer_' || substr(encode(digest($1 || '|' || originating_system_key, 'sha256'), 'hex'), 1, 16))`, [s])).rows.map((r) => r.offer_id);
     const cu = { S03: await khoaCu("S03"), S05: await khoaCu("S05") };
+    for (const s of ["S03", "S05"]) assert.ok(cu[s].includes(fx[s].id), `${s}: tin khoá cũ cố định phải được đếm`);
     const truoc = await chupMaTran(c);
+    assert.ok(truoc.de_xuat_da_quyet.co_mat.size >= 4 && truoc.the_review_da_quyet.co_mat.size >= 4, "ma trận trước phải có quyết định đã gieo");
 
-    await runTransformZalo(c);
-    await runTransformFb(c);
+    await imLang(() => runTransformZalo(c));
+    await imLang(() => runTransformFb(c));
 
     for (const s of ["S03", "S05"]) {
-      if (cu[s].length === 0) continue;
       const r = (await c.query(`SELECT offer_id, retired_reason, superseded_by,
           EXISTS (SELECT 1 FROM sale_offer_records l WHERE l.source = o.source AND l.retired_at IS NULL AND l.post_ids && o.post_ids) AS co_post_chung
         FROM sale_offer_records o WHERE offer_id = ANY ($1)`, [cu[s]])).rows;
@@ -221,9 +228,19 @@ test("ND-AC-5 lượt nạp đầu sau 044 đổi khoá S03/S05: khoá cũ ngh�
       assert.deepEqual(sai.map((x) => x.offer_id), [], `${s}: tin khoá cũ phải nghỉ 'doi_khoa'`);
       const treo = r.filter((x) => x.co_post_chung && x.superseded_by == null);
       assert.deepEqual(treo.map((x) => x.offer_id), [], `${s}: tin khoá cũ có post chung phải có superseded_by`);
+      // Tin cố định: nghỉ doi_khoa, có tin kế sống, đề xuất + liên kết căn đã sang tin kế.
+      const t = r.find((x) => x.offer_id === fx[s].id);
+      assert.ok(t?.superseded_by, `${s}: tin khoá cũ cố định phải có tin kế`);
+      assert.equal((await one(`SELECT offer_id FROM enrichment_proposals WHERE id = $1`, [fx[s].de])).offer_id, t.superseded_by);
+      assert.deepEqual((await c.query(`SELECT offer_id FROM property_offers WHERE property_id = $1`, [fx[s].can])).rows.map((x) => x.offer_id), [t.superseded_by]);
     }
     const sau = await chupMaTran(c);
     assert.deepEqual(soMaTran(truoc, sau), [], `ma trận mất:\n${inMaTran(truoc, sau)}`);
+    // Đối chứng: xoá một đề xuất đã quyết → ma trận báo mất đúng hàng ấy.
+    await c.query("SAVEPOINT doi_chung");
+    await c.query(`DELETE FROM enrichment_proposals WHERE id = $1`, [fx.S03.de]);
+    assert.ok(soMaTran(truoc, await chupMaTran(c)).some((m) => m.hang === "de_xuat_da_quyet"), "đối chứng: ma trận phải thấy đề xuất mất");
+    await c.query("ROLLBACK TO SAVEPOINT doi_chung");
   });
 });
 
@@ -307,6 +324,88 @@ test("ND-AC-9 sync-cloud: tập chép không có tin/listing đã nghỉ, bảng
     await c.query(`UPDATE listing_records SET retired_at = NULL, retired_reason = NULL WHERE id = $1`, [l.id]);
     await c.query(`UPDATE sale_offer_records SET retired_at = NULL, retired_reason = NULL WHERE offer_id = $1`, [o.offer_id]);
     assert.deepEqual(await chup(), tatCa(true), "đối chứng: gỡ nghỉ thì dòng phải có lại");
+  });
+});
+
+// NL-AC-4 qua transform thật: post dựng trong stg_zalo_posts (giao dịch), nhóm do transform tự dựng theo nội dung.
+const SNAP_THU = "hanoi__zalo-agent__2099-01-01T000000";
+const NGUON = {
+  S03: { chay: (cl, o) => runTransformZalo(cl, o), agent: "openclaw-hook", nhom: "Nhóm thật X" },
+  S05: { chay: (cl, o) => runTransformFb(cl, o), agent: "apify-facebook", nhom: "MUA BÁN NHÀ ĐẤT HÀ NỘI" },
+};
+let soPost = 0;
+const tin = (dt, gia, pn) => `Bán căn hộ ${pn}PN ${dt}m2 Nghĩa Đô, giá ${gia} tỷ. LH 0912 000 7${String(soPost % 100).padStart(2, "0")}`;
+async function chenPost(src, text, postedAt) {
+  const id = `t_nl4_${src}_${process.pid}_${++soPost}`;
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, SNAP_THU, NGUON[src].agent, NGUON[src].nhom, text, postedAt]);
+  return id;
+}
+const tinCuaPost = async (postId) => one(`SELECT offer_id, originating_system_key, source FROM sale_offers WHERE $1 = ANY (post_ids)`, [postId]);
+const imLang = async (fn) => { const l = console.log; console.log = () => {}; try { return await fn(); } finally { console.log = l; } };
+
+// Ma trận viết trước: mỗi dòng = một biến đổi giữa hai lượt transform; kỳ vọng tin chứa p1 giữ nguyên offer_id.
+const MA_TRAN_NL4 = [
+  ["đổi giá", async (src, p) => { for (const x of [p.p1, p.p2]) await c.query(`UPDATE stg_zalo_posts SET text = $2 WHERE post_id = $1`, [x, tin("71.3", "4.05", 2)]); }],
+  ["đổi diện tích (một post — nhóm tách)", async (src, p) => { await c.query(`UPDATE stg_zalo_posts SET text = $2 WHERE post_id = $1`, [p.p2, tin("72.9", "3.95", 2)]); }],
+  ["đổi số phòng", async (src, p) => { for (const x of [p.p1, p.p2]) await c.query(`UPDATE stg_zalo_posts SET text = $2 WHERE post_id = $1`, [x, tin("71.3", "3.95", 3)]); }],
+  ["đổi rule parser (diện tích đọc khác)", async () => ({ parse: (t) => { const r = parsePost(t); return r.areaM2 ? { ...r, areaM2: r.areaM2 + 0.5 } : r; } })],
+  ["thêm repost muộn hơn", async (src, p) => { await chenPost(src, tin("71.3", "3.95", 2), "2026-10-25T08:00:00Z"); }],
+  ["thu bù post SỚM hơn neo", async (src, p) => { await chenPost(src, tin("71.3", "3.95", 2), "2026-10-01T08:00:00Z"); }],
+];
+
+for (const src of ["S03", "S05"]) {
+  test(`NL-AC-4 ${src} qua transform thật: 6 biến đổi giữ offer_id; khoá mới = băm '${src}|<post neo>'; đối chứng nhóm mới khác khoá`, async () => {
+    assert.equal(MA_TRAN_NL4.length, 6);
+    let o = 0;
+    for (const [ten, doi] of MA_TRAN_NL4) {
+      await trongGiaoDich(c, async () => {
+        await c.query(MIG);
+        await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT DO NOTHING`, [SNAP_THU]);
+        const p = { p1: await chenPost(src, tin("71.3", "3.95", 2), "2026-10-20T08:00:00Z") };
+        p.p2 = await chenPost(src, tin("71.3", "3.95", 2), "2026-10-21T08:00:00Z");
+        await imLang(() => NGUON[src].chay(c));
+        const truoc = await tinCuaPost(p.p1);
+        assert.ok(truoc, `${src} fixture: post phải thành tin`);
+        assert.equal(truoc.source, src);
+        assert.equal(truoc.offer_id, mintOfferId(src, p.p1), `${src}: khoá mới phải băm '${src}|<post neo>'`);
+        assert.equal(truoc.originating_system_key, p.p1);
+        const opts = (await doi(src, p)) ?? {};
+        await imLang(() => NGUON[src].chay(c, opts));
+        const sau = await tinCuaPost(p.p1);
+        assert.equal(sau?.offer_id, truoc.offer_id, `${src} ${ten}: offer_id đổi`);
+        o++;
+      });
+    }
+    assert.equal(o, MA_TRAN_NL4.length);
+    // Đối chứng: post mới hoàn toàn (không chung post với tin nào) → tin mới, khoá khác.
+    await trongGiaoDich(c, async () => {
+      await c.query(MIG);
+      await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}') ON CONFLICT DO NOTHING`, [SNAP_THU]);
+      const a = await chenPost(src, tin("71.3", "3.95", 2), "2026-10-20T08:00:00Z");
+      const b = await chenPost(src, tin("88.1", "5.15", 3), "2026-10-22T08:00:00Z");
+      await imLang(() => NGUON[src].chay(c));
+      const [ta, tb] = [await tinCuaPost(a), await tinCuaPost(b)];
+      assert.ok(ta && tb);
+      assert.notEqual(ta.offer_id, tb.offer_id, "đối chứng: nhóm mới phải có khoá khác");
+      assert.equal(tb.offer_id, mintOfferId(src, b));
+    });
+  });
+}
+
+test("NL-AC-4 S06: originating_system_key = list_id và offer_id = băm 'S06|<list_id>' cho mọi tin S06 (sau 044)", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query(MIG);
+    const r = await one(`SELECT count(*)::int AS n,
+        count(*) FILTER (WHERE originating_system_key IS NULL
+          OR offer_id <> 'offer_' || substr(encode(digest('S06|' || originating_system_key, 'sha256'), 'hex'), 1, 16))::int AS lech
+      FROM sale_offer_records WHERE source = 'S06'`);
+    assert.ok(r.n > 0, "fixture: DB local phải có tin S06");
+    assert.equal(r.lech, 0);
+    const mau = await one(`SELECT o.originating_system_key, a.list_id::text AS list_id FROM sale_offer_records o
+      JOIN stg_chotot_ads a ON o.offer_id = 'offer_' || substr(encode(digest('S06|' || a.list_id::text, 'sha256'), 'hex'), 1, 16)
+      WHERE o.source = 'S06' LIMIT 1`);
+    assert.equal(mau.originating_system_key, mau.list_id);
   });
 });
 

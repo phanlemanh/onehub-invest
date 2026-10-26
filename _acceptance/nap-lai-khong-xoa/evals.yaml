@@ -25,15 +25,15 @@ evals:
   - id: E4
     criterion: AC-4
     executor: test
-    cmd: config:executors.test.nap_lai
-    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/lib/offer-key.mjs, pipeline/scripts/nap-lai.test.mjs]
-    expected: "exit 0; ca 'NL-AC-4' ma trận 6 dòng cho S03 và S05 (đổi giá, đổi diện tích, đổi số phòng, đổi rule_id parser, thêm một repost muộn hơn, thêm ở lượt sau một post có posted_at SỚM hơn post neo) → offer_id trước bằng offer_id sau từng dòng; đối chứng: nhóm mới hoàn toàn (không post chung) → offer_id khác, tin khoá cũ băm nội dung không được thừa kế (đổi sang khoá mới); nhóm tách mà neo trùng khoá gốc tin cũ → không cấp trùng id; offer_id = 'offer_' + sha256('S03|'+post neo)[:16] khớp tính tay; originating_system_key của S03/S05 = post neo, S06 = list_id"
+    cmd: config:executors.test.nap_lai_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/lib/offer-key.mjs, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'NL-AC-4 S03 qua transform thật' và 'NL-AC-4 S05 qua transform thật': post chèn vào stg_zalo_posts trong giao dịch, nhóm do transform-zalo/transform-fb tự dựng; ma trận 6 dòng (đổi giá, đổi diện tích một post — nhóm tách, đổi số phòng, đổi rule parser — parse tiêm vào transform đọc diện tích khác, thêm repost muộn hơn, thêm post có posted_at SỚM hơn post neo) → offer_id của tin chứa post neo trước bằng sau từng dòng; offer_id lượt đầu = 'offer_' + sha256('<S0x>|'+post neo)[:16] và originating_system_key = post neo; đối chứng: post mới hoàn toàn → tin khoá khác; ca 'NL-AC-4 S06': mọi tin S06 có originating_system_key = list_id và offer_id = băm 'S06|<list_id>'; đột biến đã thử ở S4-r1 (bỏ tin đã có → dòng thu bù đỏ; quay lại khoá băm nội dung → khoá lượt đầu đỏ)"
   - id: E5
     criterion: AC-5
     executor: test
     cmd: config:executors.test.nap_lai_db
-    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, db/migrations/044_nap_lai_khong_xoa.sql, pipeline/scripts/nap-lai-db.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-5' (giao dịch, DB local thật sau 044): đếm offer S03/S05 khoá cũ (n) + quyết định/liên kết theo khoá gốc (ma trận AC-7) → chạy transform-zalo và transform-fb đường hàm (không CLI) → n offer cũ có retired_reason 'doi_khoa'; mọi offer cũ có post chung với offer mới mang superseded_by khác NULL; ma trận quyết định/liên kết bằng trước ở cả hai cột (có mặt theo khoá gốc; trỏ cha sống theo chuỗi superseded_by)"
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, db/migrations/044_nap_lai_khong_xoa.sql, pipeline/lib/nap-lai-matrix.mjs, pipeline/scripts/nap-lai-db.itest.mjs]
+    expected: "exit 0; ca 'ND-AC-5' (giao dịch, DB local thật sau 044): đối chứng dương — gieo quyết định lên 2 tin mỗi nguồn (trả 2) và một tin khoá cũ cố định mỗi nguồn (chép post_ids của tin sống, offer_id không thoả khoá mới, kèm đề xuất đã quyết + thẻ đã duyệt + căn chỉ liên kết với nó); ma trận trước có ≥ 4 đề xuất và ≥ 4 thẻ đã quyết → chạy transform-zalo và transform-fb đường hàm → mọi tin khoá cũ (gồm tin cố định) nghỉ 'doi_khoa'; tin có post chung mang superseded_by; đề xuất + liên kết căn của tin cố định đã sang tin kế; ma trận quyết định/liên kết bằng trước ở cả hai cột; đối chứng: xoá một đề xuất đã quyết trong savepoint → ma trận báo mất hàng de_xuat_da_quyet"
   - id: E6
     criterion: AC-6
     executor: test
@@ -44,8 +44,8 @@ evals:
     criterion: AC-7
     executor: script
     cmd: config:executors.script.nap_lai_ba_luot
-    paths: [pipeline/scripts/nap-lai-ba-luot.mjs, pipeline/lib/write-offers.mjs, db/migrations/044_nap_lai_khong_xoa.sql]
-    expected: "exit 0; stdout có dòng 'nap-lai-ba-luot: 3 lượt · mất 0 quyết định · mất 0 liên kết' và bảng ma trận 5 dòng (de_xuat_da_quyet, the_review_da_quyet, ung_vien_merged_rejected, property_offers, the_pair) ma trận 7 hàng (thêm nights, listing_stats) × hai cột (có mặt; trỏ cha sống theo superseded_by) với trước/sau bằng nhau; cờ --doi-chung=039 (DELETE + CASCADE) và --doi-chung=khong-chuyen (chỉ đặt retired_at, không chuyển dòng con) → mỗi cờ exit 1 và dòng 'mất' nêu tên ít nhất một hàng ma trận"
+    paths: [pipeline/scripts/nap-lai-ba-luot.mjs, pipeline/lib/nap-lai-matrix.mjs, pipeline/lib/write-offers.mjs, db/migrations/044_nap_lai_khong_xoa.sql]
+    expected: "exit 0; lệnh mặc định chạy ba lượt đo trên cùng fixture (mỗi lượt BEGIN … ROLLBACK): bản thật in 'nap-lai-ba-luot: 3 lượt · mất 0 quyết định · mất 0 liên kết' và ma trận 7 hàng (de_xuat_da_quyet, the_review_da_quyet, ung_vien_merged_rejected, property_offers, the_pair, nights, listing_stats) × hai cột (có mặt; trỏ cha sống theo superseded_by) trước = sau; đối chứng 039 (DELETE + CASCADE) và đối chứng khong-chuyen (chỉ đặt retired_at + superseded_by, không chuyển dòng con) mỗi cái in 'đối chứng <tên>: thấy mất (<hàng>…)'; dòng cuối 'nap-lai-ba-luot: ĐẠT'; điều kiện dương (gieo được 2 quyết định + 1 tin khoá cũ mỗi nguồn, mỗi lượt đổi được biến của nó, lượt 1 cho tin khoá cũ cố định nghỉ 'doi_khoa' có tin kế) không đạt → exit 2, không bao giờ 'mất 0' trên lượt không đo"
   - id: E8
     criterion: AC-8
     executor: test

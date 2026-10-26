@@ -7,18 +7,22 @@
 //   lượt 1 — giá một post S03 (nhóm theo nội dung đổi);
 //   lượt 2 — cách đọc số phòng của một post S03 (giả lập đổi rule parser: nhóm theo nội dung đổi);
 //   lượt 3 — một listing có đêm ra ngoài mọi phường.
-// Trước lượt 1 gieo quyết định thử (đề xuất đã quyết, thẻ đã duyệt, ứng viên merged + thẻ pair) lên tin S03/S05 thật.
-// Ma trận 7 hàng × 2 cột: lib/nap-lai-matrix.mjs. Exit 0 = không mất; exit 1 = có mất (in hàng); exit 2 = lỗi.
+// Trước lượt 1 gieo quyết định thử (đề xuất đã quyết, thẻ đã duyệt, ứng viên merged + thẻ pair, căn chỉ liên kết với tin)
+// lên tin S03/S05 thật, và một tin khoá cũ cố định mỗi nguồn (lượt 1 luôn phải đổi khoá nó, kể cả khi DB đã đổi khoá).
+// Điều kiện dương: gieo được, mỗi lượt đổi được đúng biến của nó, ma trận trước có quyết định — thiếu thì exit 2, không
+// bao giờ báo «mất 0» trên một lượt không đo gì. Ma trận 7 hàng × 2 cột: lib/nap-lai-matrix.mjs.
 //
-// Đối chứng (phải exit 1 và nêu hàng mất):
-//   --doi-chung=039          hàm đối soát kiểu 039: DELETE tin vắng lượt, khoá ngoại CASCADE
-//   --doi-chung=khong-chuyen hàm đối soát chỉ cho nghỉ (đặt retired_at + superseded_by), không chuyển dòng con
+// Lệnh mặc định chạy ba lượt đo: bản thật, rồi hai đối chứng (hàm đối soát thay thế, cùng fixture):
+//   039          DELETE tin vắng lượt, khoá ngoại CASCADE
+//   khong-chuyen chỉ cho nghỉ (đặt retired_at + superseded_by), không chuyển dòng con
+// Exit 0 = bản thật mất 0 VÀ mỗi đối chứng thấy mất ≥ 1 hàng; exit 1 = bản thật mất, hoặc một đối chứng không thấy mất;
+// exit 2 = lỗi / điều kiện dương không đạt. `--doi-chung=<tên>` chạy riêng một đối chứng (exit 1 khi thấy mất).
 import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
-import { chupMaTran, gieoQuyetDinh, HANG, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
+import { chupMaTran, gieoQuyetDinh, gieoTinKhoaCu, HANG, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
 import { runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
@@ -128,19 +132,34 @@ export async function chayBaLuot(client, { doiChung = null, out = console.log } 
     await client.query("SELECT pg_advisory_xact_lock(33033)");
     await client.query(MIG_044);
     if (doiChung) await client.query(DOI_CHUNG[doiChung]);
-    for (const s of ["S03", "S05"]) await gieoQuyetDinh(client, s);
+    const can = (dk, loi) => { if (!dk) throw new Error(`nap-lai-ba-luot: điều kiện dương không đạt — ${loi}`); };
+    const tinCu = [];
+    for (const s of ["S03", "S05"]) {
+      can((await gieoQuyetDinh(client, s)) === 2, `không gieo được quyết định lên tin ${s}`);
+      const t = await gieoTinKhoaCu(client, s, "nap-lai-ba-luot");
+      can(t, `không dựng được tin khoá cũ ${s}`);
+      tinCu.push(t.id);
+    }
     const truoc = await chupMaTran(client);
+    can(truoc.de_xuat_da_quyet.co_mat.size >= 4 && truoc.property_offers.co_mat.size > 0, "ma trận trước không có quyết định/liên kết đã gieo");
     const luot = [];
+    const daDoi = (x, loi) => { can(x, loi); return x; };
     const bien = [
-      async () => `giá post ${await doiPost(client, "gia")}`,
-      async () => `cách đọc số phòng post ${await doiPost(client, "phong")} (giả lập đổi rule parser)`,
-      async () => `listing ${await doiListing(client)} ra ngoài phường`,
+      async () => `giá post ${daDoi(await doiPost(client, "gia"), "không tìm được post S03 để đổi giá")}`,
+      async () => `cách đọc số phòng post ${daDoi(await doiPost(client, "phong"), "không tìm được post S03 để đổi số phòng")} (giả lập đổi rule parser)`,
+      async () => `listing ${daDoi(await doiListing(client), "không tìm được listing có đêm")} ra ngoài phường`,
     ];
     for (const [i, doi] of bien.entries()) {
       const mo = await doi();
       const r = await motLuot(client);
       luot.push(`lượt ${i + 1} (${mo}): nghỉ S03 ${r.S03} · S05 ${r.S05} · listing ngoài phường ${r.airbnb_nghi}`);
       out(luot.at(-1));
+      if (i === 0 && !doiChung) {
+        // Lượt 1 phải đổi khoá tin khoá cũ cố định (bản thật: nghỉ 'doi_khoa', có tin kế).
+        const { rows } = await client.query(`SELECT count(*)::int AS n FROM sale_offer_records
+          WHERE offer_id = ANY ($1) AND retired_reason = 'doi_khoa' AND superseded_by IS NOT NULL`, [tinCu]);
+        can(rows[0].n === tinCu.length, `lượt 1 không đổi khoá ${tinCu.length - rows[0].n} tin khoá cũ cố định`);
+      }
     }
     const sau = await chupMaTran(client);
     const mat = soMaTran(truoc, sau);
@@ -151,22 +170,42 @@ export async function chayBaLuot(client, { doiChung = null, out = console.log } 
   }
 }
 
+function inKetQua(r) {
+  console.log(r.bang);
+  console.log(`nap-lai-ba-luot: 3 lượt · mất ${r.matQuyetDinh} quyết định · mất ${r.matLienKet} liên kết`);
+  for (const m of r.mat) console.log(`mất: ${m.hang} (${m.cot}) ${m.truoc}→${m.sau}`);
+}
+
 async function main() {
   const arg = process.argv.find((a) => a.startsWith("--doi-chung="));
-  const doiChung = arg ? arg.split("=")[1] : null;
-  if (doiChung && !DOI_CHUNG[doiChung]) {
-    console.error(`--doi-chung không hợp lệ: ${doiChung} (039 | khong-chuyen)`);
+  const mot = arg ? arg.split("=")[1] : null;
+  if (mot && !DOI_CHUNG[mot]) {
+    console.error(`--doi-chung không hợp lệ: ${mot} (039 | khong-chuyen)`);
     process.exit(2);
   }
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
-    if (doiChung) console.log(`đối chứng: ${doiChung}`);
-    const r = await chayBaLuot(client, { doiChung });
-    console.log(r.bang);
-    console.log(`nap-lai-ba-luot: 3 lượt · mất ${r.matQuyetDinh} quyết định · mất ${r.matLienKet} liên kết`);
-    for (const m of r.mat) console.log(`mất: ${m.hang} (${m.cot}) ${m.truoc}→${m.sau}`);
-    process.exitCode = r.mat.length ? 1 : 0;
+    if (mot) {
+      console.log(`đối chứng: ${mot}`);
+      const r = await chayBaLuot(client, { doiChung: mot });
+      inKetQua(r);
+      process.exitCode = r.mat.length ? 1 : 0;
+      return;
+    }
+    const r = await chayBaLuot(client);
+    inKetQua(r);
+    let ok = r.mat.length === 0;
+    for (const dc of Object.keys(DOI_CHUNG)) {
+      console.log(`\nđối chứng: ${dc}`);
+      const d = await chayBaLuot(client, { doiChung: dc });
+      inKetQua(d);
+      const thay = d.mat.length > 0;
+      console.log(`đối chứng ${dc}: ${thay ? `thấy mất (${[...new Set(d.mat.map((m) => m.hang))].join(", ")})` : "KHÔNG thấy mất — thước không phân biệt"}`);
+      ok &&= thay;
+    }
+    console.log(`nap-lai-ba-luot: ${ok ? "ĐẠT" : "KHÔNG ĐẠT"} — bản thật mất ${r.mat.length} ô; đối chứng phải thấy mất`);
+    process.exitCode = ok ? 0 : 1;
   } finally {
     await client.end();
   }

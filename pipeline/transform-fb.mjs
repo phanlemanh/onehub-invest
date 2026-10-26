@@ -45,7 +45,8 @@ const CITY_OF_GROUP = (name) => {
  * Thân transform S05 — người gọi giữ transaction. Post thử bị gạt ở đầu đọc (lib/test-posts.mjs, PL2).
  * @param {import("pg").Client} client
  */
-export async function runTransformFb(client) {
+// `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
+export async function runTransformFb(client, { parse = parsePost } = {}) {
   const { rows: areas } = await client.query(
     `SELECT id, name, parent_id FROM areas WHERE region_type = 'submarket'
        AND parent_id IN ('vn-hanoi', 'vn-hcmc')`,
@@ -61,7 +62,7 @@ export async function runTransformFb(client) {
   const parsed = [];
   let nFull = 0, nPartial = 0, nFail = 0;
   for (const p of posts) {
-    const pr = parsePost(p.text);
+    const pr = parse(p.text);
     pr.kind = inferKind(p.text, pr);
     if (!pr.kind) { nFail++; continue; }
     const city = CITY_OF_GROUP(p.group_name);

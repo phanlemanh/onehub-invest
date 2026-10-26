@@ -17,12 +17,14 @@ const luot1 = (src) => {
   return ra.map((r, i) => ({ ...r, post_ids: groups[i].posts.map((p) => p.post_id) }));
 };
 
-// Ma trận viết trước: mỗi dòng = một biến đổi; kỳ vọng offer_id của tin p1/p2 giữ nguyên.
+// Ma trận hàm thuần viết trước: mỗi dòng = một HÌNH nhóm repost mà transform có thể dựng lại ở lượt sau (khi giá/DT/PN/
+// parser đổi khoá nội dung); kỳ vọng offer_id của tin p1/p2 giữ nguyên. Ma trận qua transform thật (đổi giá/DT/PN/parser
+// thật trong stg) ở nap-lai-db.itest.mjs «NL-AC-4 S0x qua transform thật».
 const MA_TRAN = [
-  ["đổi giá (p1,p2 sang nhóm nội dung khác)", [{ posts: [P("p1", "2026-10-20"), P("p2", "2026-10-21")] }]],
-  ["đổi diện tích (nhóm tách: p2 sang nhóm mới)", [{ posts: [P("p1", "2026-10-20")] }, { posts: [P("p2", "2026-10-21")] }]],
-  ["đổi số phòng (cả nhóm sang khoá nội dung mới)", [{ posts: [P("p2", "2026-10-21"), P("p1", "2026-10-20")] }]],
-  ["đổi rule_id parser (nhóm dựng lại, cùng post)", [{ posts: [P("p1", "2026-10-20"), P("p2", "2026-10-21")] }]],
+  ["nhóm dựng lại nguyên vẹn (cùng post)", [{ posts: [P("p1", "2026-10-20"), P("p2", "2026-10-21")] }]],
+  ["nhóm tách: p2 sang nhóm khác", [{ posts: [P("p1", "2026-10-20")] }, { posts: [P("p2", "2026-10-21")] }]],
+  ["nhóm dựng lại, thứ tự post đảo", [{ posts: [P("p2", "2026-10-21"), P("p1", "2026-10-20")] }]],
+  ["nhóm dựng lại khi tin cũ còn nhóm khác (q1) vắng", [{ posts: [P("p1", "2026-10-20"), P("p2", "2026-10-21")] }]],
   ["thêm repost muộn hơn", [{ posts: [P("p1", "2026-10-20"), P("p2", "2026-10-21"), P("p3", "2026-10-25")] }]],
   ["thu bù post SỚM hơn neo", [{ posts: [P("p0", "2026-10-01"), P("p1", "2026-10-20"), P("p2", "2026-10-21")] }]],
 ];

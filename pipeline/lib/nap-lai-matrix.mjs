@@ -2,7 +2,9 @@
 // Bảy hàng × hai cột, chụp trước và sau một lượt nạp rồi so:
 //   co_mat        — tập định danh dòng con còn có mặt (id của dòng; property_offers theo căn; nights/listing_stats đếm)
 //   tro_cha_song  — dòng con có cha sống, hoặc cha đã nghỉ HẲN (không tin kế); dòng nằm trên tin đã có tin kế = treo
-// Hàng nào sau ít hơn trước ở cột nào thì «mất». Chỉ đọc; người gọi giữ transaction.
+// Hàng nào sau ít hơn trước ở cột nào thì «mất». Chụp chỉ đọc; hai hàm gieo ghi fixture — người gọi giữ transaction
+// (ROLLBACK).
+import { createHash } from "node:crypto";
 
 /** Tên bảy hàng theo thứ tự in. */
 export const HANG = [
@@ -94,4 +96,25 @@ export async function gieoQuyetDinh(client, source) {
     `INSERT INTO properties (kind, cluster_key, resolved_by) VALUES ('sale', 'nap-lai-' || $1, 'test') RETURNING id`, [a]);
   await client.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)`, [p.id, a]);
   return 2;
+}
+
+/** Tin khoá cũ cố định: chép một tin sống của nguồn (cùng post_ids), offer_id kiểu băm nội dung (không thoả bất biến khoá
+ *  mới), gắn đề xuất đã quyết + thẻ đã duyệt + một căn chỉ liên kết với nó. Có mặt dù DB thật đã đổi khoá — lượt nạp
+ *  kế luôn phải cho nó nghỉ 'doi_khoa' và chuyển dòng con sang tin kế. Trả { id, de, can } hoặc null khi nguồn trống. */
+export async function gieoTinKhoaCu(client, source, tag) {
+  const { rows: [goc] } = await client.query(
+    `SELECT * FROM sale_offers WHERE source = $1 AND cardinality(post_ids) > 0 ORDER BY offer_id LIMIT 1`, [source]);
+  if (!goc) return null;
+  const id = "offer_" + createHash("sha256").update(`${tag}|${source}|${process.pid}`).digest("hex").slice(0, 16);
+  await client.query(`INSERT INTO sale_offer_records (offer_id, source, kind, confidence, first_seen, last_seen, n_reposts, post_ids, price_tier, area_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [id, source, goc.kind, goc.confidence, goc.first_seen, goc.last_seen, goc.n_reposts, goc.post_ids, goc.price_tier, goc.area_id]);
+  const { rows: [de] } = await client.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, status, decided_by, evidence)
+    VALUES ($1, $2, 'street_raw', 'thu', 'thu', 'e2_llm', 'review', 'rejected', 'hitl:manh', '{}'::jsonb) RETURNING id`, [tag, id]);
+  await client.query(`INSERT INTO review_queue (item_type, item_id, title, evidence, status, decided_by, decided_at)
+    VALUES ('agent_output', $1, 'thẻ thử', '{}'::jsonb, 'approved', 'hitl:manh', now())`, [`enrich:${id}`]);
+  const { rows: [can] } = await client.query(
+    `INSERT INTO properties (kind, cluster_key, resolved_by) VALUES ('sale', $1, 'test') RETURNING id`, [`${tag}-${id}`]);
+  await client.query(`INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)`, [can.id, id]);
+  return { id, de: Number(de.id), can: Number(can.id) };
 }

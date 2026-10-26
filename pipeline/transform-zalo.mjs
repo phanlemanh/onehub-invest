@@ -136,7 +136,8 @@ export function matchPhuong(text, phuongSlugs) {
  * lượng bọc BEGIN…ROLLBACK). Post thử bị gạt ở đầu đọc (lib/test-posts.mjs, PL2).
  * @param {import("pg").Client} client
  */
-export async function runTransformZalo(client) {
+// `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
+export async function runTransformZalo(client, { parse = parsePost } = {}) {
   // Load phường list (tên + area_id)
   const { rows: areas } = await client.query(
     `SELECT id, name FROM areas WHERE parent_id = 'vn-hanoi' AND region_type = 'submarket'`,
@@ -154,7 +155,7 @@ export async function runTransformZalo(client) {
   const parsed = [];
   let nFull = 0, nPartial = 0, nFail = 0;
   for (const p of posts) {
-    const pr = parsePost(p.text);
+    const pr = parse(p.text);
     if (!pr.kind) { nFail++; continue; }
     const ph = matchPhuong(p.text, phuongSlugs);
     if (ph) pr.phuong = ph.slug;
