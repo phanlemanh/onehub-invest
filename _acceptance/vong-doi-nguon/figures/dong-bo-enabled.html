@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đồng bộ enabled</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1360px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · vong-doi-nguon · d-…-1 · Hỏi-1</p>
+    <h1>Đồng bộ enabled: status là nguồn sự thật</h1>
+    <p class="sub">Một lệnh ghi vào source_groups đi tới đâu · enabled là bản soi do trigger giữ · AC-2 · AC-6 · AC-10</p>
+
+    <svg viewBox="0 0 1360 920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect x="0" y="0" width="1360" height="920" fill="#f5f5f5"/>
+
+      <text x="36" y="40" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LỆNH GHI VÀO source_groups</text>
+
+      <!-- ===================== ARROWS (trước hộp) ===================== -->
+      <!-- năm lệnh ghi → trigger (điểm gắn trải đều trên cạnh trên) -->
+      <path d="M152 152 V176 Q152 184 160 184 H512 Q520 184 520 192 V204" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M416 152 V160 Q416 168 424 168 H592 Q600 168 600 176 V204" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="680" y1="152" x2="680" y2="204" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M944 152 V160 Q944 168 936 168 H768 Q760 168 760 176 V204" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M1208 152 V176 Q1208 184 1200 184 H848 Q840 184 840 192 V204" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- trigger → rẽ -->
+      <line x1="680" y1="288" x2="680" y2="332" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- rẽ: có nêu status -->
+      <path d="M560 392 H368 Q360 392 360 400 V468" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- rẽ: chỉ đổi enabled -->
+      <path d="M800 392 H992 Q1000 392 1000 400 V436" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- hai nhánh gộp → CHECK -->
+      <path d="M360 592 V608 Q360 616 368 616 H676" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+      <path d="M1000 600 V608 Q1000 616 992 616 H684" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+      <line x1="680" y1="620" x2="680" y2="644" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- bật đơn vị retired/completed qua enabled → bị từ chối -->
+      <path d="M1180 556 H1212 Q1220 556 1220 564 V784 Q1220 792 1212 792 H248 Q240 792 240 784 V740" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- CHECK → kết cục -->
+      <line x1="500" y1="712" x2="324" y2="712" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="860" y1="712" x2="1036" y2="712" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- arrow labels -->
+      <rect x="440" y="368" width="40" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="460" y="380" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÓ</text>
+      <rect x="840" y="368" width="112" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="896" y="380" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CHỈ ĐỔI ENABLED</text>
+      <rect x="376" y="688" width="72" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="412" y="700" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VI PHẠM</text>
+      <rect x="788" y="768" width="344" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="960" y="780" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">không bật được đơn vị retired/completed qua cột enabled</text>
+      <rect x="924" y="688" width="48" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="948" y="700" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ĐẠT</text>
+
+      <!-- ===================== NĂM LỆNH GHI ===================== -->
+      <!-- 1 route toggle tắt (Hỏi-1) -->
+      <rect x="36" y="56" width="232" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="36" y="56" width="232" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="44" y="64" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="66" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ROUTE</text>
+      <rect x="92" y="64" width="44" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="114" y="76" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HỎI-1</text>
+      <rect x="216" y="64" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="238" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-6</text>
+      <text x="152" y="100" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">route toggle tắt</text>
+      <text x="152" y="116" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">status = 'paused'</text>
+      <text x="152" y="130" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">Hỏi-1: thân vắng lý do thì dùng mặc định</text>
+      <text x="152" y="144" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">'tắt bằng công tắc /ops/sources'</text>
+
+      <!-- 2 route toggle bật -->
+      <rect x="300" y="56" width="232" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="300" y="56" width="232" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="308" y="64" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="330" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ROUTE</text>
+      <rect x="480" y="64" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="502" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-6</text>
+      <text x="416" y="104" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">route toggle bật</text>
+      <text x="416" y="120" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">status = 'active'</text>
+      <text x="416" y="134" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">xoá reason, resume_when</text>
+
+      <!-- 3 route add -->
+      <rect x="564" y="56" width="232" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="564" y="56" width="232" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="572" y="64" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="594" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ROUTE</text>
+      <rect x="744" y="64" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="766" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-6</text>
+      <text x="680" y="104" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">route add</text>
+      <text x="680" y="120" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">INSERT status = 'active'</text>
+      <text x="680" y="134" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">nhóm thêm vào là thu ngay</text>
+
+      <!-- 4 SQL ghi status -->
+      <rect x="828" y="56" width="232" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="828" y="56" width="232" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="836" y="64" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="854" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SQL</text>
+      <text x="944" y="104" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">SQL ghi status</text>
+      <text x="944" y="120" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">INSERT / UPDATE … status</text>
+      <text x="944" y="134" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">người hay script</text>
+
+      <!-- 5 đường cũ: chỉ ghi enabled -->
+      <rect x="1092" y="56" width="232" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="1092" y="56" width="232" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="1100" y="64" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1118" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CŨ</text>
+      <rect x="1272" y="64" width="44" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1294" y="76" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-10</text>
+      <text x="1208" y="104" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">đường cũ: chỉ ghi enabled</text>
+      <text x="1208" y="120" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">INSERT / UPDATE enabled</text>
+      <text x="1208" y="134" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">test che-do-thu, nhánh chưa gộp</text>
+
+      <!-- ===================== TRIGGER (trọng tâm) ===================== -->
+      <rect x="440" y="208" width="480" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="440" y="208" width="480" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="448" y="216" width="64" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="480" y="228" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TRIGGER</text>
+      <rect x="868" y="216" width="44" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="890" y="228" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-10</text>
+      <text x="680" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Trigger giữ enabled khớp status</text>
+      <text x="680" y="272" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">source_groups_dong_bo_enabled · BEFORE INSERT OR UPDATE</text>
+
+      <!-- rẽ: có nêu status? -->
+      <polygon points="560,392 680,336 800,392 680,448" fill="#f5f5f5"/>
+      <polygon points="560,392 680,336 800,392 680,448" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="680" y="392" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">có nêu status?</text>
+      <text x="680" y="408" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">INSERT · UPDATE</text>
+
+      <!-- nhánh CÓ: enabled := (status = 'active') -->
+      <rect x="200" y="472" width="320" height="120" rx="6" fill="#f5f5f5"/>
+      <rect x="200" y="472" width="320" height="120" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="360" y="516" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">enabled := (status = 'active')</text>
+      <text x="360" y="536" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">INSERT có status · UPDATE đổi status</text>
+      <text x="360" y="552" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">đổi cả hai mà lệch nhau → status thắng</text>
+
+      <!-- nhánh CHỈ ĐỔI ENABLED: status suy từ enabled -->
+      <rect x="820" y="440" width="360" height="160" rx="6" fill="#f5f5f5"/>
+      <rect x="820" y="440" width="360" height="160" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1000" y="464" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">status suy từ enabled</text>
+      <text x="1000" y="480" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">INSERT không nêu status · UPDATE chỉ đổi enabled (theo trạng thái cũ)</text>
+      <line x1="836" y1="492" x2="1164" y2="492" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="1000" y="510" fill="#2d3142" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">active + tắt → paused + lý do</text>
+      <text x="1000" y="524" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">'tắt qua cột enabled (đường ghi cũ)'</text>
+      <text x="1000" y="542" fill="#2d3142" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">paused/draft + bật → active (xoá reason, resume_when)</text>
+      <text x="1000" y="560" fill="#2d3142" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">retired/completed + bật → <tspan fill="#ba4513" font-weight="600">TỪ CHỐI</tspan></text>
+      <text x="1000" y="580" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">các ô còn lại → không đổi</text>
+
+      <!-- điểm gộp -->
+      <circle cx="680" cy="616" r="4" fill="#2d3142"/>
+
+      <!-- CHECK -->
+      <polygon points="500,712 680,648 860,712 680,776" fill="#f5f5f5"/>
+      <polygon points="500,712 680,648 860,712 680,776" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="680" y="692" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.18em">CHECK</text>
+      <text x="680" y="712" fill="#2d3142" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">enabled = (status = 'active')</text>
+      <text x="680" y="728" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">paused phải có lý do</text>
+      <rect x="660" y="736" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="680" y="748" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-2</text>
+
+      <!-- kết cục -->
+      <rect x="160" y="688" width="160" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="160" y="688" width="160" height="48" rx="24" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="240" y="708" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">bị từ chối</text>
+      <text x="240" y="724" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">lỗi nêu tên *_chk</text>
+
+      <rect x="1040" y="688" width="160" height="48" rx="24" fill="#f5f5f5"/>
+      <rect x="1040" y="688" width="160" height="48" rx="24" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1120" y="716" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">ghi được</text>
+
+      <!-- ghi chú -->
+      <text x="36" y="836" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace">gỡ trigger trên bản sao → CHECK source_groups_enabled_khop_chk vẫn từ chối ghi lệch (AC-10)</text>
+
+      <!-- ===================== LEGEND ===================== -->
+      <line x1="36" y1="856" x2="1324" y2="856" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="36" y="876" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="36" y="888" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="60" y="898" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Lệnh ghi · bước</text>
+
+      <polygon points="160,894 168,888 176,894 168,900" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="184" y="898" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Rẽ</text>
+
+      <rect x="224" y="888" width="24" height="12" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="256" y="898" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Kết cục</text>
+
+      <circle cx="320" cy="894" r="4" fill="#2d3142"/>
+      <text x="332" y="898" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Hai nhánh gộp</text>
+
+      <rect x="420" y="888" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="444" y="898" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Trọng tâm: nguồn sự thật · Hỏi-1</text>
+
+      <rect x="620" y="886" width="40" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="640" y="898" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-n</text>
+      <text x="668" y="898" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Tiêu chí liên quan</text>
+    </svg>
+  </div>
+</body>
+</html>
