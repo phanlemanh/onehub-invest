@@ -167,7 +167,8 @@ async function modeHandlerLabel() {
   const k = down.posts[0]?.body.messages[0].kev;
   console.log(`gate chết (cổng đóng): POST ${down.posts.length} · p = ${k?.p}`);
   check(down.posts.length === 1 && k?.p === null, "Kev không nghe → tin vẫn đẩy, p = null");
-  check(/gate-down/.test(down.log), "log ghi gate-down");
+  // ZC6 (bd51084d) đổi chữ log khi Kev không trả lời từ «gate-down» thành «kev null (timeout/gate)» — cùng ý: log ghi Kev hỏng
+  check(/kev null \(timeout\/gate\)|gate-down/.test(down.log), "log ghi Kev không trả lời (kev null / gate-down)");
   finish("HANDLER-LABEL");
 }
 
@@ -195,7 +196,9 @@ async function modeManifestV3() {
 // ---------------------------------------------------------- import-versions
 /** Snapshot giả hợp lệ (sha256 đúng) với schemaVersion tuỳ ý — chỉ để đo bước kiểm phiên bản. */
 function fixtureSnapshot(root, version) {
-  const id = `hanoi__zalo-agent__acc-v${version}-${Date.now()}`;
+  // Mốc đúng khuôn SNAPSHOT_TS_RE: từ PL1 (c666c4b9) importer bỏ thư mục sai khuôn TRƯỚC bước kiểm phiên bản,
+  // tên cũ «acc-v<n>-<ms>» làm cả bốn ca rơi vào nhánh bỏ qua. Hậu tố -<v> giữ tên riêng từng bản.
+  const id = `hanoi__zalo-agent__2026-10-23T000000-${version}`;
   const dir = join(root, id);
   mkdirSync(dir, { recursive: true });
   const gz = gzipSync(Buffer.from(JSON.stringify([])));
