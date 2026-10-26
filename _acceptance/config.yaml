@@ -202,6 +202,9 @@ executors:
     yield_dong_tien_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-yield-dong-tien.mjs"
     # listings-filters-store-locator (UI6) — Duyệt listing: thanh chip filters, ngăn filter-sidebar-5, bản đồ @mapcn (cụm, nhãn giá, popup, lọc vùng), ảnh thẻ; chỉ GET, cần app DEV chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
     listings_browse_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-listings-browse.mjs"
+    # ops-review-khung-hang-cho (UI1) — /ops/review hàng chờ + sheet: số dòng = DB, ảnh trong sheet = loader, không độ tự tin, 390 px, bấm quyết định với route decide BỊ CHẶN (page.route, DB không đổi); cần app DEV chạy TỪ worktree đang kiểm + DB local :5433 (mặc định ui1.localhost:3460 — 127.0.0.1 không hydrate trên dev Next 16); chạy qua tsx để số ảnh kỳ vọng dùng đúng loadReviewMedia
+    review_queue_smoke: "cd app && BASE_URL=${BASE_URL:-http://ui1.localhost:3460} node --import tsx ../scripts/smoke-review-queue.mjs"
+    review_queue_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review/review-queue.tsx"
     financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
     methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
     app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"

@@ -1,0 +1,151 @@
+schema_version: 1
+feature_slug: ops-review-khung-hang-cho
+# Ca test mang tiền tố «RQ-AC-n» trong app/tests/review-queue.test.tsx (jsdom, không DB, fetch/router giả).
+# Smoke trình duyệt thật: scripts/smoke-review-queue.mjs — cần app chạy TỪ worktree này (BASE_URL, mặc định :3460 của
+# dãy U1) + DB local; đăng nhập bằng tài khoản thử của scripts/dev-ops-account.mjs (role admin) và một tài khoản ops thử
+# tạo/xoá trong lượt; số kỳ vọng tính từ DB (cùng truy vấn với trang). Nút quyết định chỉ bấm khi route
+# /api/v1/ops/review/*/decide đã bị chặn bằng page.route (phản hồi giả) — đếm review_queue/sale_offers trước và sau.
+# Mỗi lượt thêm một thẻ Bổ sung tin thử (tiền tố riêng) để luôn có cả hai loại thẻ chờ; N ở E2 tính SAU khi thêm.
+# Mỗi kiểm in «ok …»/«FAIL …», exit 0 = đạt.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/tests/review-queue.test.tsx]
+    expected: "exit 0; ca 'RQ-AC-1 bảng' xanh: render ReviewQueue với 6 thẻ mẫu viết trước (ghép căn chờ ×2, bổ sung tin chờ ×1, loại lạ 'source_decision' chờ ×1, ghép căn rejected ×1, bổ sung tin approved ×1; created_at khác nhau) → tiêu đề cột theo thứ tự ['Thẻ','Loại','Trạng thái','Tạo lúc']; mặc định đúng 4 dòng (chỉ chờ), thứ tự id theo created_at giảm dần so TRỌN với danh sách viết trước; đầu Frame đọc '4 thẻ'; ô Loại đọc 'Ghép căn' / 'Bổ sung tin' / 'source_decision'; ô Tạo lúc đọc đúng fmtVnDateTime của created_at mẫu (vd '2026-10-23 06:25 (GMT+7)'). Chiều đỏ (phá-thử S3): bỏ lọc mặc định 'pending' → ca đỏ 'mặc định phải chỉ thẻ chờ (4 dòng)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.review_queue_smoke
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/src/app/ops/review/**, scripts/smoke-review-queue.mjs]
+    expected: "exit 0; dòng 'ok   [desktop-1280] bảng hàng duyệt: <N> dòng chờ (DB: <N>)' với N đếm từ review_queue status='pending' của DB local; 'ok   [desktop-1280] đầu Frame «<N> thẻ»'; 'ok   [desktop-1280] cột Thẻ · Loại · Trạng thái · Tạo lúc'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/tests/review-queue.test.tsx]
+    expected: "exit 0; ca 'RQ-AC-2 ma trận lọc' xanh: 6 thẻ mẫu của E1 × 12 ô viết trước (4 loại × 3 trạng thái) — mỗi ô so TRỌN danh sách id hiện ra với bảng viết trước (vd Ghép căn × Đã quyết → [id ghép căn rejected]; Loại khác × Tất cả → [id source_decision]; Bổ sung tin × Chờ duyệt → [id bổ sung tin chờ]) và số ở đầu Frame = số dòng; ô ra 0 (Loại khác × Đã quyết) → đúng chữ 'Không có thẻ khớp bộ lọc' và đúng 1 nút 'Xoá lọc', bấm → về Mọi loại × Chờ duyệt (4 dòng); ca 'RQ-AC-2 chỉ còn thẻ đã quyết' xanh: items chỉ gồm thẻ ghép căn rejected + bổ sung tin approved → mặc định 0 dòng, đúng chữ 'Không còn thẻ chờ duyệt', đúng 1 nút 'Xem thẻ đã quyết' và KHÔNG có 'Hàng duyệt trống'; bấm → Trạng thái đọc 'Đã quyết', 2 dòng (chiều đỏ cùng ca: nút về mặc định → 0 dòng, ca đỏ 'lối thoát phải dẫn tới dòng có thật'). Chiều đỏ (phá-thử S3): 'Loại khác' khớp cả entity_match → ô Loại khác × Tất cả đỏ với tên ô"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/tests/review-queue.test.tsx]
+    expected: "exit 0; ca 'RQ-AC-3 sheet' xanh: bấm hàng thẻ ghép căn → đúng 1 role=dialog có tiêu đề = title thẻ, badge 'Ghép căn' + 'Chờ duyệt', chữ 'Tin A', 'Tin B', 'Giá', 'Diện tích', 'Giá/m²', 'Phường', 'Điểm B'; Escape → 0 dialog; focus tên thẻ trong hàng bổ sung tin + Enter → dialog có đoạn tin mẫu và 'Loại hình'; thẻ xung đột (fixture agent/tests/fixtures/e1-conflict-card.json, đi qua toReviewItem như trang thật) → hai bên 'Theo luật'/'Theo AI'; căn cứ bên luật nguyên văn, căn cứ bên AI nguyên văn TRỪ vế «tự tin NN%» (basisWithoutConfidence — Q9, S4-r2) và KHÔNG còn chuỗi căn cứ gốc; thẻ 'source_decision' → chữ 'chưa có giao diện duyệt' và 0 nút quyết định. Đối chứng dương: chưa bấm → 0 dialog"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-photos.tsx, app/tests/review-queue.test.tsx]
+    expected: "exit 0; ca 'RQ-AC-4 ảnh trong sheet' xanh: media {3: {offer_a: 2 ảnh, offer_b: 1 ảnh}} → bảng 0 <img>; mở sheet thẻ 3 → group aria-label 'Ảnh Tin A' có 2 <img>, 'Ảnh Tin B' có 1 <img>, src đúng media mẫu; bấm 'Phóng to Tin A ảnh 1' → hộp phóng to có tiêu đề 'Tin A · ảnh 1/2'; mở sheet thẻ không có khoá trong media (người không phải admin → media {}) → 0 group 'Ảnh …', 0 <img>. Chiều đỏ (phá-thử S3): sheet đọc media của thẻ đầu tiên thay vì id đang mở → ca đỏ 'ảnh phải thuộc đúng thẻ đang mở'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.review_queue_smoke
+    layer: backend-effect
+    paths: [app/src/components/ops/review/**, app/src/lib/ops/review-media.ts, scripts/smoke-review-queue.mjs]
+    expected: "exit 0; với tài khoản admin: 'ok   [desktop-1280] sheet thẻ <id>: dải ảnh <k> ảnh = loadReviewMedia (<k>)' cho mọi thẻ chờ mà loader trả ảnh (k đếm bằng cùng truy vấn với lib/ops/review-media.ts), hoặc 'ok   [desktop-1280] sheet thẻ <id>: «không có ảnh» khớp loader rỗng'; 'ok   [desktop-1280] bảng: 0 <img>'; với tài khoản ops không admin tạo trong lượt: 'ok   [ops] sheet thẻ <id>: 0 dải ảnh' và tài khoản thử bị xoá cuối lượt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/tests/review-queue.test.tsx, app/tests/review-card.test.tsx]
+    expected: "exit 0; ca 'RQ-AC-5 quyết định từ sheet' xanh: ma trận viết trước 6 nút × body — sheet ghép căn: 'Cùng căn' → {status:'approved'}, 'Khác căn' → {status:'rejected'}, 'Không chắc' → {status:'deferred'}; sheet bổ sung tin: 'Áp dụng' → {status:'approved'}, 'Bỏ' → {status:'rejected'}, 'Để sau' → {status:'deferred'}; url luôn '/api/v1/ops/review/<id>/decide'; thẻ xung đột: 'Áp dụng' disabled tới khi chọn, chọn 'Chọn AI' → body {status:'approved', choices:{property_type:<proposal_id e2_llm>}}; fetch trả ok → router.refresh gọi 1 lần; rerender ReviewQueue với items mới trong đó thẻ đang mở chuyển 'approved' → còn đúng 1 dialog, badge 'Đã duyệt', 0 nút quyết định, bảng mặc định không còn id đó (chiều đỏ cùng ca: sheet tra thẻ trong danh sách đã lọc → ca đỏ 'sheet phải giữ thẻ vừa quyết'); fetch trả {ok:false, error:'đã quyết'} → dòng chữ chứa 'đã quyết' trong sheet và nút còn bấm được; các ca AC-9/AC-11 cũ của review-card.test.tsx vẫn xanh (trừ vế độ tin cậy — xem E8)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review-content.tsx, app/src/lib/ops/review-queue.ts, app/tests/review-queue.test.tsx, app/tests/review-card.test.tsx]
+    expected: "exit 0; ca 'RQ-AC-6 không độ tự tin' xanh: hàm toReviewItem(row DB mẫu có ai_confidence 0.85) trả object KHÔNG có khoá ai_confidence (Object.keys so TRỌN danh sách khoá viết trước); quét đệ quy thẻ bổ sung tin (ENRICH và thẻ xung đột từ khuôn agent, đối chứng: evidence mẫu CÓ khoá confidence trước khi gọt) → 0 khoá khớp /confidence/i ở mọi tầng, số trường đề xuất giữ nguyên, và đo theo GIÁ TRỊ: mọi độ tự tin c của evidence ở dạng số (0.82) và phần trăm (82%, 82 %) không có trong JSON thẻ (đối chứng: có trong evidence trước khi gọt; S4-r2: basis của agent mang «tự tin NN%»; chiều đỏ: bỏ gọt basis → 'còn giá trị trong thẻ'); chữ của sheet thẻ xung đột kể cả trong [data-review-quote] không chứa 'tự tin' (S4-r1: ai_confidence = max(fields[].confidence) nên chỉ bỏ cột là chưa đủ; chiều đỏ: bỏ stripEvidenceConfidence → ca đỏ 'giá trị độ tự tin không được tới trình duyệt (Q9)'); render bảng + mở sheet từng loại thẻ mẫu (ghép căn có ai_suggestion 'yes', bổ sung tin có fields confidence 0.85, xung đột) → textContent của bảng và từng dialog, sau khi gỡ các phần tử [data-review-quote] (đoạn trích nguyên văn: lý do máy, đoạn tin, căn cứ), không khớp /\\d+\\s*%/ và không chứa 'tự tin'; đối chứng dương cùng ca: thẻ mẫu có ai_reasoning 'Giá/m² chênh 5.3%' → chuỗi đó vẫn hiện trong một [data-review-quote]; ca 'AC-9 thẻ agent_output' của review-card.test.tsx kiểm VẮNG '85%' (thay vế cũ). Chiều đỏ (phá-thử S3): trả lại dòng fmtConfidence → ca đỏ 'thẻ không được hiện độ tự tin (Q9)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.review_queue_smoke
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/src/lib/ops/review-queue.ts, scripts/smoke-review-queue.mjs]
+    expected: "exit 0; 'ok   [desktop-1280] HTML + RSC của /ops/review không chứa khoá ai_confidence hay fields[].confidence (DB có <m> thẻ mang ai_confidence; thấy 0 khoá)' — khớp cả dạng thoát của RSC; đối chứng dương: m ≥ 1 và thẻ Bổ sung tin thử của lượt mang fields[].confidence trong DB (S4-r1: chiều đỏ bỏ stripEvidenceConfidence → 'thấy <k> khoá', k > 0); 'ok   [desktop-1280] HTML + RSC không chứa giá trị độ tự tin của thẻ thử (số hay «tự tin NN%» trong căn cứ; DB có: có; lộ: 0)' — thẻ thử ghi basis đúng khuôn basisOf của agent (S4-r2: chiều đỏ bỏ gọt basis → 'lộ: tự tin 77%, …'); 'ok   [desktop-1280] <n> sheet đã mở: ngoài [data-review-quote] 0 chuỗi khớp /\\d+\\s*%/ hay «tự tin»' (n = số thẻ chờ)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.review_queue_smoke
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review-photos.tsx, scripts/smoke-review-queue.mjs]
+    expected: "exit 0; 'ok   [mobile-390] trang không cuộn ngang (scrollWidth = clientWidth)'; 'ok   [mobile-390] bảng cuộn trong Frame (scrollWidth vùng lưới > clientWidth hoặc vừa khít)'; 'ok   [mobile-390] sheet rộng <w> = viewport 390 ± 1'; 'ok   [mobile-390] Tin A nằm trên Tin B (top A + height A ≤ top B)'; 'ok   [mobile-390] sheet không cuộn ngang'; 'ok   [mobile-390] sheet thẻ <id>: ảnh 1 của <Tin A|Tin B> trong khung nhìn sau khi cuộn tới, đáy ảnh ≤ đỉnh chân sheet, bấm → hộp phóng to mở' với <id> = thẻ chờ đầu tiên mà loader trả ảnh; DB không có thẻ chờ nào có ảnh → 'FAIL [mobile-390] không có thẻ chờ nào có ảnh để đo vế ảnh AC-7' (không có nhánh ok thay thế)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/src/app/ops/review/page.tsx, app/src/components/states/region-error.tsx, app/tests/review-queue.test.tsx]
+    expected: "exit 0; ca 'RQ-AC-8 trống' xanh: ReviewQueue items [] → chữ 'Hàng duyệt trống' và đúng 1 link 'Xem thu thập' href '/ops/collections', 0 hàng lưới; ca 'RQ-AC-8 tải' xanh: ReviewPageSkeleton có tiêu đề 'Hàng duyệt' và ReviewQueueSkeleton aria-busy='true' với đúng 6 khối dòng; ca 'RQ-AC-8 vùng' xanh: cây ReviewPageBody (đồng bộ, không DB) là đúng một RegionError(what='hàng duyệt') > Suspense(fallback ReviewPageSkeleton) > ReviewContent — chiều đỏ cùng ca: thay Suspense bằng Fragment → 'ranh giới lỗi phải bọc trực tiếp Suspense'; ca 'RQ-AC-8 lỗi dựng thật' xanh: RegionError(what='hàng duyệt') bọc thành phần ném lỗi, đặt cạnh một phần tử vỏ giả → đúng 1 role=alert chứa 'Không tải được hàng duyệt' + nút 'Thử lại', phần tử vỏ còn; đối chứng dương: thành phần lành → 0 alert"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/review-content.tsx, app/src/app/ops/review/**, pipeline/sync-cloud.mjs, app/tests/review-queue.test.tsx, app/tests/ops-review-sources-cloud.test.tsx, app/tests/o-kpi-chi-do-local.test.tsx]
+    expected: "exit 0; các ca cloud có sẵn của ops-review-sources-cloud.test.tsx và o-kpi-chi-do-local.test.tsx xanh không sửa thước (localOnlyTable('review_queue') = true → không truy vấn review_queue, hiện số thẻ chờ theo loại + mốc đo + 'Hàng duyệt chỉ có ở máy thu'); ca 'RQ-AC-9 tầng A' xanh: đọc pipeline/sync-cloud.mjs → TIER_A_TABLES chứa 'review_queue' và mảng FILL không chứa 'review_queue' (chiều đỏ cùng ca trên bản sao chuỗi: chèn 'review_queue' vào FILL → 'review_queue không được lên cloud'); ảnh tin đo ở E15"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review-photos.tsx, app/src/app/ops/review/**]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json), đăng nhập bằng tài khoản thử admin của scripts/dev-ops-account.mjs; không chạy thì FAIL với 'bản chạy :3460 không lên'"
+      - "1280 px sáng: /ops/review → evidence/E13-step1.png; chọn Loại thẻ «Ghép căn» → evidence/E13-step2.png; bấm hàng đầu → evidence/E13-step3.png (sheet ghép căn, có dải ảnh nếu thẻ có ảnh)"
+      - "1280 px tối (prefers-color-scheme: dark): cùng trang, sheet thẻ bổ sung tin đang mở → evidence/E13-step4.png"
+      - "390 px sáng: /ops/review → evidence/E13-step5.png; mở sheet thẻ ghép căn, cuộn tới dải ảnh → evidence/E13-step6.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Bảng đọc được ở cả hai chế độ, badge loại/trạng thái tách màu rõ; sheet có đầu (tên thẻ + badge) và chân (nút quyết định) tách khỏi thân cuộn; tin A/B cạnh nhau ở 1280 px và xếp chồng ở 390 px; dải ảnh nằm trong sheet, ô ảnh không méo; không chỗ nào hiện '%' hay 'tự tin'; scrollWidth = clientWidth ở 390 px."
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E14
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0 (tsc --noEmit sạch; eslint + check-bare-disables 0 lỗi; eslint-suppressions.json không thêm khoá, số vi phạm ghi cho app/src/components/ops/review-card.tsx giảm về 0 hoặc khoá biến mất)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.review_media_no_cloud
+    paths: [app/src/lib/ops/review-media.ts, app/src/components/ops/review-content.tsx, app/src/components/ops/review/**, pipeline/sync-cloud.mjs, scripts/check-review-media-local-only.mjs]
+    expected: "exit 0 — kiểm tĩnh có sẵn của review-media-backend: data-api không nhắc media_files/zalo-media, FILL của pipeline/sync-cloud.mjs không có stg_zalo_posts, tự kiểm chuỗi cấy giả bị bắt (ảnh tin không rời máy local)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/**, app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs]
+    expected: "exit 0; bảng routes.md khớp cây route (dòng ops/review/page.tsx còn đủ cột)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E17
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.review_queue_design_gate
+    paths: [app/src/components/ops/review/review-queue.tsx]
+    expected: "exit 0; design gate không P0 trên review-queue.tsx"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E18
+    criterion: AC-10
+    executor: judgment
+    inputs: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, docs/superpowers/specs/2026-10-26-ops-review-khung-hang-cho-design.md]
+    paths: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, docs/superpowers/specs/2026-10-26-ops-review-khung-hang-cho-design.md]
+    question: "Ba tệp này có nói nhất quán rằng /ops/review đã dựng khung theo solution-agents-5 (Frame + data-grid + Sheet chi tiết, tệp ở components/ops/review/), lọc theo loại thẻ và trạng thái, lọc theo bậc thuộc PL23, không lọc hay hiện «độ tin», dải ảnh c-attachment-3 nằm trong sheet — không còn chỗ nào ghi solution-agents-5 là «(chờ)»/«vòng sau», hay còn «lọc theo loại thẻ + độ tin» không?"
+    expected: "Nhất quán ở cả ba tệp; tên tệp trong routes.md và catalog.md khớp design doc."
+    evidence_required: [run_id, verdict, judges]
+  - id: E19
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.review_queue_smoke
+    layer: backend-effect
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, scripts/smoke-review-queue.mjs]
+    expected: "exit 0; route '**/api/v1/ops/review/*/decide' bị chặn (page.route, không request nào tới server — đếm request thật tới decide = 0); ma trận viết trước 3 nút sheet ghép căn × body: 'ok   [desktop-1280] Cùng căn → POST /api/v1/ops/review/<id>/decide {\"status\":\"approved\"}', 'Khác căn → {\"status\":\"rejected\"}', 'Không chắc → {\"status\":\"deferred\"}' (mỗi lượt mở lại trang, phản hồi giả {ok:true}); 3 nút sheet bổ sung tin tương tự ('Áp dụng'/'Bỏ'/'Để sau') trên thẻ Bổ sung tin THỬ do smoke tạo đầu lượt (evidence cùng dạng agent ghi) và xoá cuối lượt ('ok   dọn thẻ thử: xoá 1 thẻ') — DB thật có thể không còn thẻ bổ sung tin chờ (S4-r1: job transform đã đóng hết); phản hồi giả 409 {error:'đã quyết'} → 'ok   [desktop-1280] lỗi route: dòng «Lỗi: đã quyết» trong sheet, nút còn bấm được'; 'ok   DB không đổi: review_queue <a>=<a>, sale_offers <b>=<b>' (đếm trước/sau, đối chứng: không có lượt ghi nào)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

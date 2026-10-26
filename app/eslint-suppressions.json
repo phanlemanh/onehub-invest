@@ -32,20 +32,6 @@
       "count": 1
     }
   },
-  "src/components/ops/review-card.tsx": {
-    "onehub-ui/no-arbitrary-text-size": {
-      "count": 9
-    },
-    "onehub-ui/no-emoji-icons": {
-      "count": 6
-    },
-    "onehub-ui/no-raw-controls": {
-      "count": 3
-    },
-    "onehub-ui/no-raw-palette": {
-      "count": 2
-    }
-  },
   "src/components/shell/account-menu.tsx": {
     "onehub-ui/no-arbitrary-text-size": {
       "count": 1

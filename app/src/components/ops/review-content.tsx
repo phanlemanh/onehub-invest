@@ -1,6 +1,10 @@
+import { Suspense } from "react";
+
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert";
-import { ReviewCard, type ReviewItem } from "@/components/ops/review-card";
+import { ReviewQueue } from "@/components/ops/review/review-queue";
+import { ReviewQueueSkeleton } from "@/components/ops/review/review-queue-skeleton";
 import { Badge } from "@/components/reui/badge";
+import { RegionError } from "@/components/states/region-error";
 import type { User } from "@/lib/auth";
 import { pool } from "@/lib/db";
 import { fmtInt } from "@/lib/format";
@@ -9,17 +13,7 @@ import { localOnlyTable } from "@/lib/ops-queries";
 import { cn } from "@/lib/utils";
 import { FactsStaleAlert, FactsStamp } from "@/components/ops/facts-status";
 import { loadReviewMedia, stripEvidenceImages } from "@/lib/ops/review-media";
-
-type Row = {
-  id: number;
-  item_type: string;
-  title: string;
-  evidence: Record<string, unknown>;
-  ai_suggestion: string | null;
-  ai_reasoning: string | null;
-  ai_confidence: string | null;
-  status: string;
-};
+import { toReviewItem, type ReviewQueueRow } from "@/lib/ops/review-queue";
 
 /**
  * Nội dung /ops/review sau bước kiểm quyền ops (page.tsx). review_queue là tầng A, chỉ có ở máy local: vắng bảng
@@ -58,69 +52,58 @@ export async function ReviewContent({ user }: { user: User }) {
     );
   }
 
-  const { rows } = await pool.query<Row>(
-    `SELECT id, item_type, title, evidence, ai_suggestion, ai_reasoning, ai_confidence::text, status
-     FROM review_queue ORDER BY status = 'pending' DESC, id`,
-  );
-
-  const items: ReviewItem[] = rows.map((r) => ({
-    id: r.id,
-    item_type: r.item_type,
-    title: r.title,
-    // URL ảnh không đi trong evidence — ảnh tới thẻ chỉ qua loadReviewMedia (admin).
-    evidence: stripEvidenceImages(r.evidence),
-    ai_suggestion: r.ai_suggestion,
-    ai_reasoning: r.ai_reasoning,
-    ai_confidence: r.ai_confidence ? Number(r.ai_confidence) : null,
-    status: r.status,
-  }));
-
-  // Ảnh tin (tầng A): {} khi không phải admin; một truy vấn cho cả hàng duyệt.
-  const media = await loadReviewMedia(rows, user);
-
-  const pending = items.filter((i) => i.status === "pending");
-  const decided = items.filter((i) => i.status !== "pending");
-  const approved = items.filter((i) => i.status === "approved").length;
-  const rejected = items.filter((i) => i.status === "rejected").length;
-
+  const { items, media } = await loadReviewQueue(user);
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <h1 className="text-xl font-medium">Hàng duyệt</h1>
-        <p className="text-muted-foreground text-xs">
-          Người phán quyết — máy đề xuất, bạn quyết định.
-          Mọi quyết định được ghi nhật ký.
-        </p>
-        <div className="flex items-center gap-2">
-          <Badge variant={pending.length > 0 ? "warning-light" : "success-light"}>
-            {pending.length} chờ duyệt
-          </Badge>
-          {approved > 0 && <Badge variant="success-light">✓ {approved} đã duyệt</Badge>}
-          {rejected > 0 && <Badge variant="outline">✗ {rejected} từ chối</Badge>}
-        </div>
-      </div>
-
-      {pending.length === 0 && decided.length === 0 ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          Hàng duyệt trống — không có thẻ chờ phán quyết.
-        </p>
-      ) : (
-        <>
-          {pending.map((item) => (
-            <ReviewCard key={item.id} item={item} media={media[item.id]} />
-          ))}
-          {decided.length > 0 && (
-            <>
-              <h2 className="text-muted-foreground mt-4 text-sm">
-                Đã quyết ({decided.length})
-              </h2>
-              {decided.map((item) => (
-                <ReviewCard key={item.id} item={item} media={media[item.id]} />
-              ))}
-            </>
-          )}
-        </>
-      )}
+      <ReviewTitle />
+      <ReviewQueue items={items} media={media} />
     </div>
   );
+}
+
+/**
+ * Thân trang /ops/review sau bước kiểm quyền (UI1): ReviewContent tải trong RegionError > Suspense — fallback giữ tiêu đề
+ * và khung bảng (không loading.tsx: PageSkeleton đã ghi lý do), lỗi tại chỗ có Thử lại, vỏ Ops vẫn đứng. Đồng bộ.
+ */
+export function ReviewPageBody({ user }: { user: User }) {
+  return (
+    <RegionError what="hàng duyệt">
+      <Suspense fallback={<ReviewPageSkeleton />}>
+        <ReviewContent user={user} />
+      </Suspense>
+    </RegionError>
+  );
+}
+
+function ReviewTitle() {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <h1 className="text-xl font-medium">Hàng duyệt</h1>
+      <p className="text-muted-foreground text-xs">
+        Máy đề xuất, bạn quyết định — mọi quyết định được ghi nhật ký.
+      </p>
+    </div>
+  );
+}
+
+export function ReviewPageSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <ReviewTitle />
+      <ReviewQueueSkeleton />
+    </div>
+  );
+}
+
+/** Đọc review_queue (tầng A, chỉ local). Không chọn ai_confidence — Q9: số không tới trình duyệt. */
+async function loadReviewQueue(user: User) {
+  const { rows } = await pool.query<ReviewQueueRow>(
+    `SELECT id, item_type, title, evidence, ai_suggestion, ai_reasoning, status, created_at
+     FROM review_queue ORDER BY created_at DESC, id DESC`,
+  );
+  // URL ảnh không đi trong evidence — ảnh tới thẻ chỉ qua loadReviewMedia (admin).
+  const items = rows.map((r) => toReviewItem(r, stripEvidenceImages(r.evidence)));
+  // Ảnh tin (tầng A): {} khi không phải admin; một truy vấn cho cả hàng duyệt.
+  const media = await loadReviewMedia(rows, user);
+  return { items, media };
 }
