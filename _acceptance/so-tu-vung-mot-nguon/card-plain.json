@@ -1,0 +1,43 @@
+{
+  "feature_plain": "Mọi nơi trong hệ thống — bộ đọc tin, AI làm giàu, trang Ops và DB — dùng chung một bộ từ vựng (loại tin, loại hình, trạng thái chào…) khai ở một chỗ; ai viết tay danh sách riêng thì bộ kiểm báo đỏ.",
+  "scope_plain": "Vòng này chỉ dựng sổ và các bản sinh từ sổ; cột mới, chữ hiển thị mới và việc đẩy lên cloud để các hàng sau.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ có một sổ từ vựng duy nhất (9 trục, mỗi giá trị có nhãn tiếng Việt và đối chiếu RESO), và sổ viết sai khuôn thì bộ đọc báo rõ trục nào, giá trị nào."},
+    {"id": "AC-2", "p": "Sẽ sinh từ sổ ra bản hằng cho bộ đọc tin, AI và trang Ops, cùng khối thuật ngữ trong từ điển sản phẩm; chạy lại ra y nguyên."},
+    {"id": "AC-3", "p": "Sẽ báo đỏ khi ai sửa tay bản sinh hoặc sửa sổ mà quên sinh lại."},
+    {"id": "AC-4", "p": "Sẽ báo đỏ khi có người viết tay danh sách giá trị ngoài sổ (sáu dạng viết), nhưng không báo oan với chữ trùng tình cờ."},
+    {"id": "AC-5", "p": "Sẽ chuyển các chỗ đang viết tay sang đọc từ sổ, giữ nguyên hành vi; chỗ cố ý khác sổ nằm trong danh sách ngoại lệ ghim sẵn, có lý do."},
+    {"id": "AC-6", "p": "Sẽ giữ nguyên từng chữ nhãn đang hiện trên trang Ops; mọi bộ kiểm hiện có vẫn xanh."},
+    {"id": "AC-7", "p": "Sẽ thêm bảng tra từ vựng vào DB và bật hẳn bốn ràng buộc giá trị của bảng tin (đang ở chế độ chỉ kiểm dòng mới); bật được vì dữ liệu local không có dòng lệch."},
+    {"id": "AC-8", "p": "Sẽ báo đỏ khi DB chậm hơn sổ (sổ có giá trị mới mà chưa có migration, hoặc thiếu ràng buộc)."},
+    {"id": "AC-9", "p": "Sẽ kiểm danh sách trường mục tiêu của ZCode (FIELD_TARGET) chỉ dùng tên trường có trong sổ, và báo đỏ khi tệp viết khác khuôn thay vì xanh giả."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG khai «nghĩa của giá» (thu về / NET / gồm phí) ở vòng này — để hàng bộ đọc PL13 định khi có tin thật để đo."},
+    {"id": "OOS-2", "p": "KHÔNG thêm cột mới vào bảng tin; ý định tin, trạng thái chào và bậc dữ liệu mới chỉ có trong sổ, cột đến ở PL5, PL19, PL16."},
+    {"id": "OOS-3", "p": "KHÔNG đẩy migration lên Supabase và không đồng bộ bảng tra lên cloud — bước đẩy cloud là của anh."},
+    {"id": "OOS-4", "p": "KHÔNG sửa các ô đối chiếu RESO còn trống của khối trường tin (việc riêng theo ADR-0013 §10)."},
+    {"id": "OOS-5", "p": "KHÔNG sửa mã làn ZCode và thẻ duyệt /ops/review (UI1 đang sửa, PL23 dựng lại); hai chỗ này nằm ngoài vùng báo đỏ hoặc trong ngoại lệ."},
+    {"id": "OOS-6", "p": "KHÔNG đổi chữ nào đang hiện trên cổng, kể cả nhãn độ tin ở thẻ căn giá tốt và mã tiếng Anh trên thẻ duyệt."},
+    {"id": "OOS-7", "p": "KHÔNG đưa vào sổ hai danh sách nhỏ của hàng đề xuất AI và loại tin thuê ngắn hạn (rent_st)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Đầu ra của sổ: đủ sáu nơi dùng — bộ đọc tin, AI (cả câu lệnh gửi model), trang Ops, từ điển sản phẩm, DB, và danh sách trường mục tiêu của ZCode."},
+    {"i": 1, "p": "Căn cứ «đủ»: tài liệu review §3.2 kê đúng năm nơi; nơi thứ sáu đến từ quyết định «một danh sách trường duy nhất» của gói OCP1."},
+    {"i": 2, "p": "Đo bởi AC-2 (sinh bản), AC-7 (bảng tra DB), AC-9 (trường mục tiêu)."},
+    {"i": 3, "p": "Trục từ vựng: năm trục đang dùng cộng bốn trục mới cho lát OCP1 (ý định tin, trạng thái chào, bậc dữ liệu, bậc năng lực)."},
+    {"i": 4, "p": "Căn cứ «đủ»: bảng kiểm kê 26/10 mọi chỗ viết tay, sổ extension của ADR-0013, và chuẩn RESO (Lookup, StandardStatus)."},
+    {"i": 5, "p": "«Nghĩa của giá» để sau; đo bởi AC-1 (sổ đủ trục)."},
+    {"i": 6, "p": "Các kiểu lệch: bản sinh cũ, danh sách viết tay mới, DB chậm hơn sổ, dữ liệu lệch ràng buộc, tên trường mục tiêu ngoài sổ, ngoại lệ hết hiệu lực."},
+    {"i": 7, "p": "Căn cứ «đủ»: mỗi kiểu là một chỗ sổ tách khỏi thứ nó sinh hoặc ràng — cùng khuôn «sổ → bản khai» của các bộ kiểm đang có trong kho."},
+    {"i": 8, "p": "Đo bởi AC-3, AC-4, AC-7, AC-8, AC-9."},
+    {"i": 9, "p": "Áp mọi nơi: chữ hiển thị không đổi (AC-6); không báo đỏ trong mã làn ZCode và migration cũ (AC-4)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Máy đã tự quyết thêm ràng buộc cho loại hình ở bảng căn mà không có căn cứ quyết định — chuyển thành Hỏi-2 cho anh, sửa lại số đếm (căn local dùng 5/6 giá trị)."},
+    {"i": 1, "p": "Nhãn tiếng Việt cho hai trục mới chưa được trình và chưa có phép đo nhãn — đã thêm mục Hỏi-1 trên thẻ và một bảng kiểm từng nhãn (39 dòng)."},
+    {"i": 2, "p": "Chưa ghim đủ các chỗ viết tay phải chuyển, và chưa nói rõ hành vi giữ nguyên — đã ghim danh sách đóng (6 chỗ chuyển, tập ngoại lệ cố định), giữ hành vi bỏ «chưa rõ» ở AI, thêm ca chữ trùng không báo oan."},
+    {"i": 3, "p": "Bộ kiểm trường mục tiêu có thể xanh giả nếu ZCode viết khuôn khác — đã thêm ca «không nhận khuôn» báo đỏ; kiểm với tệp thật để lại tới khi ZCode có bản đầu (gửi khuôn qua liên làn)."},
+    {"i": 4, "p": "Phép thử migration có thể chạy trên DB đã có sẵn kết quả — đã cho phép thử tự dựng lại trạng thái ban đầu trước khi áp."}
+  ]
+}
