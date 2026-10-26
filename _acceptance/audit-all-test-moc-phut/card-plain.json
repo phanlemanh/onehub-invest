@@ -1,0 +1,24 @@
+{
+  "feature_plain": "Bài kiểm tự động của lệnh kiểm toàn hệ thống thôi đỏ ngẫu nhiên khi hai lượt chạy rơi vào hai phút khác nhau — giờ trên dòng tiêu đề được ghim cố định trong hộp thử.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ ghim giờ ở dòng tiêu đề của mọi lượt kiểm trong hộp thử về một mốc cố định, có ca canh đỏ đúng câu khi bản ghim bị gỡ, bị làm sai hay thôi ghi nhật ký."},
+    {"id": "AC-2", "p": "Sẽ chứng bằng một đồng hồ giả nhảy phút: bản cũ đỏ đúng hai ca so đầu ra, bản sửa xanh và không hề đọc đồng hồ đó; đồng thời kiểm kê mọi chỗ script đọc giờ, chỗ mới chưa khai là đỏ."},
+    {"id": "AC-4", "p": "Sẽ chỉ sửa tệp bài kiểm; script kiểm toàn hệ thống giữ nguyên từng chữ."}
+  ],
+  "wont_do": [
+    {"id": "AC-3", "p": "Chặn bớt ca: chạy cả tệp 12 lần liền phải xanh cả 12 và đủ số ca của bản cũ cộng ca canh."},
+    {"id": "OOS-1", "p": "KHÔNG thêm biến ghim giờ vào script kiểm toàn hệ thống."},
+    {"id": "OOS-2", "p": "KHÔNG lọc bỏ dòng tiêu đề khi so hai lượt — làm vậy là bịt mắt bài kiểm."},
+    {"id": "OOS-3", "p": "KHÔNG ghim giờ cho mục sao lưu — các ca ở đó dùng tuổi tệp xa ngưỡng, không chập chờn."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Không quét không gian tiêu chí vì câu giao đã nêu đích danh hai ca; chỗ có thể sót — script đọc giờ ở chỗ khác — được đo bằng kiểm kê (AC-2). Đủ là: ghim có ca canh hai chiều (AC-1), qua ranh giới phút tất định (AC-2), lặp xanh (AC-3), không đổi sản phẩm (AC-4)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chưa chứng dòng tiêu đề là chỗ duy nhất đọc giờ thật — đã thêm kiểm kê mọi chỗ script đọc giờ, chỗ mới chưa khai là đỏ."},
+    {"i": 1, "p": "Hai vế của tiêu chí ghim giờ chưa có phép đo (giờ khác định dạng vẫn là giờ thật; có ghi nhật ký) — đã thêm vào ca canh và hai bản phá thử."},
+    {"i": 2, "p": "Lý do chọn ghim thay vì lọc chưa nêu ràng buộc thật — đã ghi lại: lọc phải sửa phép so của một hồ sơ đã ký."},
+    {"i": 3, "p": "Ngưỡng số ca viết tay, không kiểm cây sạch — nay đếm từ bản cũ cộng một và đòi cây sạch trước khi lặp."},
+    {"i": 4, "p": "Đầu dò lấy gốc kho theo chỗ đứng — nay suy từ vị trí của chính đầu dò và in gốc + mã commit."}
+  ]
+}
