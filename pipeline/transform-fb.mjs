@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { parsePost, matchPhuong } from "./transform-zalo.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
+import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 
 /** Nhóm Facebook "MUA BÁN…" mặc định là rao BÁN: môi giới không lặp chữ
@@ -74,9 +75,9 @@ export async function runTransformFb(client) {
     }
     const hasPrice = pr.priceVnd !== null || pr.pricePerm2Vnd !== null;
     pr.confidence =
-      hasPrice && pr.areaM2 && pr.phuong ? "high" : hasPrice ? "medium" : "low";
-    if (pr.confidence === "high") nFull++;
-    else if (pr.confidence !== "low") nPartial++;
+      hasPrice && pr.areaM2 && pr.phuong ? CONFIDENCE.high : hasPrice ? CONFIDENCE.medium : CONFIDENCE.low;
+    if (pr.confidence === CONFIDENCE.high) nFull++;
+    else if (pr.confidence !== CONFIDENCE.low) nPartial++;
     parsed.push({ ...pr, post: p });
   }
   console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${posts.length ? ((nFull / posts.length) * 100).toFixed(1) : 0}%`);
