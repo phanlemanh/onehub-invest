@@ -229,3 +229,66 @@ song được sau DF0.
 4. **Ngưỡng tạm** cho cờ (giá/m² > 500 triệu, DT < 10 m², gộp ≥ 20 bài) và nút thắt (30/60%, 50/80%) — dùng tạm tới
    khi PL9 có số đo. *Khuyến nghị: đồng ý tạm.*
 5. **Gạch `/ops/pipeline` (UH4)**, giao phần đó cho Dòng chảy. *Khuyến nghị: đồng ý.*
+
+---
+
+# Phụ lục — vòng `ops-dong-chay-df0` (proto + DF0)
+
+Vòng nghiệm thu cho hai commit đã dựng ở nhánh `feat/ops-data-flow` (`c9794e3d` proto, `8a54fcdc` DF0). Phạm vi chốt
+bởi §5 ở trên; DF1–DF5 cắt vào lộ trình ở một PR riêng.
+
+<!-- <<<UX-SPEC-TEMPLATE -->
+## Đặc tả UX
+
+### 1. Luồng
+
+- Suôn sẻ: thanh bên Ops nhóm Giám sát «Dòng chảy dữ liệu» → `/ops/data-flow` (mặc định 7 ngày) → đọc đường ống và
+  lưới nút thắt → chọn một nguồn trên đường ống hoặc lọc bảng tin → bấm một tin → sheet hồ sơ tin (điểm ra: đóng sheet,
+  hoặc nút khoảng «30 ngày» · «Toàn kho» đổi `?window=`).
+- Biên: khoảng không có bài nào → đường ống hiện Empty «Chưa có bài trong khoảng này» + «Xem tất cả nguồn»; bộ lọc ra
+  0 tin → «Không có tin nào khớp bộ lọc»; tin S06 không có bài gốc → câu «S06 chưa lưu khoá nối ngược tin → bài (TV10)».
+- Lỗi & quay lại: truy vấn lỗi → RegionError «Không tải được dòng chảy dữ liệu» + «Thử lại», vỏ Ops vẫn đứng; máy chủ
+  (bảng nạp thô vắng) → LocalOnlyAlert «Chỉ xem ở máy thu».
+
+### 2. Kiểm kê màn
+
+| Màn | MỘT việc của màn | Vào từ / ra tới |
+|---|---|---|
+| Dòng chảy dữ liệu `/ops/data-flow` | Cho thấy bài đã thu đi tới đâu, rơi ở chặng nào, nguồn nào kẹt | thanh bên Ops / sheet hồ sơ tin |
+| Sheet hồ sơ tin | Cho biết tin đang ở bậc nào, thiếu trường lõi nào để lên bậc kế, bài gốc nói gì | hàng bảng «Tin mới nhất» / về trang |
+
+### 3. Bảng trạng thái
+
+<!-- <<<UX-STATE-TABLE -->
+| Trạng thái | Màn | Hiển thị gì | Người làm gì tiếp |
+|---|---|---|---|
+| ST-dongchay-loading | Dòng chảy | DataFlowSkeleton theo bố cục: đầu trang, khung đường ống, hai biểu đồ, hai lưới | chờ |
+| ST-dongchay-ready | Dòng chảy | Đầu trang (số bài · thẻ chờ duyệt · đề xuất làm giàu) → Đường ống → Chất lượng từng chặng → Chặng theo ngày + Loại giao dịch → Tin mới nhất | đọc, chọn nguồn, lọc, bấm tin |
+| ST-dongchay-empty | Dòng chảy | Đường ống: Empty «Chưa có bài trong khoảng này» + «Xem tất cả nguồn»; lưới: «Chưa có nguồn nào có bài trong khoảng này» | đổi khoảng / nguồn |
+| ST-dongchay-error | Dòng chảy | RegionError «Không tải được dòng chảy dữ liệu» + «Thử lại» | thử lại |
+| ST-dongchay-cloud | Dòng chảy | LocalOnlyAlert «Chỉ xem ở máy thu» | mở cổng Ops trên máy thu |
+| ST-hoso-b0 | Sheet hồ sơ tin | Badge «B0 · Có lời khai», «Trường lõi x/5» với badge ✓/– từng trường, câu «Lên B1 cần đủ năm trường lõi — còn thiếu …» | đọc bài gốc, đóng |
+| ST-hoso-b2 | Sheet hồ sơ tin | Badge «B2 · Gắn căn», «Trường lõi 5/5», câu «Lên B3 cần số đo trên nhãn …» | đóng |
+<!-- UX-STATE-TABLE>>> -->
+
+### 4. Hành vi
+
+- Khoảng thời gian là trạng thái URL (`?window=7d|30d|all`, mặc định 7d); chọn nguồn trên đường ống và bộ lọc bảng
+  là trạng thái trình duyệt, không ghi URL.
+- 390 px: trang không cuộn ngang; đường ống cuộn ngang trong khung như block gốc; lưới ẩn bớt cột theo breakpoint.
+- Chuyển động: chỉ phần của chart-49 (quét vào, hạt chảy) — tắt khi giảm chuyển động; nút tạm dừng/phát lại.
+
+### 5. Xuất xứ component
+
+| Component | Nấc | Vì sao (1 dòng) |
+|---|---|---|
+| `@reui/chart-49` → `flow-sankey`, `flow-journey` | mở rộng | Thêm nhánh «gộp trùng» màu trung tính, bỏ nút 0, chú thích «Gắn căn» đỏ khi dưới 80% |
+| `@reui/solution-analytics-3` → `stage-trend-chart`, `kind-mix-chart`, `quality-grid`, `records-grid` | ghép | Chặng không chồng (bỏ stackId), Risk → «Nút thắt», bánh ba loại giao dịch |
+| `@reui/filters`, `Sheet` (khuôn solution-agents-5) | dùng | Một loại UI một cách làm — cùng thanh chip Duyệt listing, cùng sheet Hàng duyệt |
+
+### 6. Khuôn IA đã chọn + căn cứ
+
+Khuôn IA: bảng-điều-khiển (dashboard-first)
+Căn cứ: `.claude/skills/onehub-ui/routes.md` — các trang Giám sát của Ops (`/ops`, `/ops/collections`) đều Dashboard
+grid trong họ Frame; `compose_page` của ReUI cho cùng ý định trả khuôn dashboard (stats → chart → data-grid).
+<!-- UX-SPEC-TEMPLATE>>> -->
