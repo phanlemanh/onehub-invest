@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: eefdf71950d04bdceecf8f2448a2030c56872f8f
+verified_commit: ce744f4cf7679a4c6774f6252492af536241524a
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -231,3 +231,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, không 
 Round 1: cả 13 eval đạt, nhưng lệnh suite `cd app && npm test` thất bại ở tests/ops-nhan-theo-context.test.tsx và tests/ops-review-sources-cloud.test.tsx (không gắn eval nào) nên verdict là REJECT. Trả về cho khâu triển khai.
 Round 2: cả 13 eval đạt, nhưng lệnh suite `cd app && npm test` vẫn thất bại ở một ca khác, tests/deals-phi-ly.test.tsx «DP-AC-5 bản cloud» (DROP COLUMN trên sale_offers bị từ chối vì là view), không gắn eval nào nên verdict vẫn là REJECT. Trả về cho khâu triển khai.
 Round 3: cả 13 eval đạt và cả sáu lệnh suite hồi quy xanh sau khi nhánh gộp main (ca DP-AC-5 đã sửa ở main), nên verdict là PASS. Các phát hiện ngoài hợp đồng nằm ở review-findings.md để người quyết ở Gate 2.
+
+### Re-pin lần 1 — 2026-10-26, do ca thử SN-AC-1 đổi cách viết cặp để qua bộ quét SLO S05 (S5-AC-6)
+run_id: repin-20261026T133336Z-27370
+sha: ce744f4cf7679a4c6774f6252492af536241524a · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E10
