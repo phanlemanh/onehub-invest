@@ -28,6 +28,8 @@ evals:
     criterion: AC-4
     executor: test
     cmd: config:executors.test.app_ui
+    status: not-run
+    superseded_by: auth-error-thu-lai-retry#AC-1
     paths: [app/src/app/(auth)/error.tsx, app/src/components/states/page-error.tsx, app/tests/auth-hop-chuan.test.tsx]
     expected: "exit 0; ca 'AH-AC-4 error.tsx' xanh: tệp app/src/app/(auth)/error.tsx tồn tại, dòng đầu là '\"use client\"'; render export default với error giả + reset đếm lần gọi → đúng 1 role=alert chứa 'Không tải được dữ liệu', đúng 1 nút 'Thử lại', bấm → reset gọi đúng 1 lần; đối chứng: không phần tử nav/aside của vỏ cổng trong cây render"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
