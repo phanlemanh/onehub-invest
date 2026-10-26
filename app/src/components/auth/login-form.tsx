@@ -36,7 +36,7 @@ export function LoginForm({ next, error }: { next: string; error?: string }) {
               <div className="flex flex-col items-center gap-5 pt-3 text-center">
                 <BrandMark href="/" />
                 <div className="flex max-w-xs flex-col gap-1.5">
-                  <FrameTitle className="text-2xl tracking-tight sm:text-[1.75rem]">
+                  <FrameTitle>
                     Đăng nhập
                   </FrameTitle>
                   <FrameDescription className="text-sm text-pretty">

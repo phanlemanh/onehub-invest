@@ -1,0 +1,74 @@
+schema_version: 1
+feature_slug: auth-hop-chuan
+# Ca test mang tiền tố «AH-AC-n» trong app/tests/auth-hop-chuan.test.tsx (jsdom + đọc tệp từ đĩa, không DB).
+# Quét tĩnh đọc cây app/src/app/(auth) + app/src/components/auth (đường suy từ vị trí tệp test, không hardcode ROOT).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/(auth)/**, app/src/components/auth/**, app/tests/auth-hop-chuan.test.tsx]
+    expected: "exit 0; ca 'AH-AC-1 không chuyển động' xanh: quét MỌI tệp .ts/.tsx trong (auth) + components/auth (danh sách tệp in ra, so TRỌN với danh sách viết trước) → 0 dòng khớp /@keyframes|animation\\s*:|\\banimate-/; không tệp nào import gradient-wave; render RegisterForm và LoginForm trong jsdom → 0 phần tử <style> chứa @keyframes; chiều đỏ cùng ca trên bản sao chuỗi: chèn '@keyframes x {}' vào nội dung một tệp → bộ quét báo đúng tên tệp với thông điệp 'chuyển động lặp còn trong (auth): <tệp>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/(auth)/**, app/src/components/auth/**, app/tests/auth-hop-chuan.test.tsx]
+    expected: "exit 0; ca 'AH-AC-2 không màu tự chọn' xanh: cùng danh sách tệp của E1 → 0 dòng khớp /rgba?\\(|#[0-9a-fA-F]{3,8}\\b|\\b(orange|pink|violet|purple|fuchsia|rose|amber|blue|indigo|sky|cyan|teal|emerald|green|lime|yellow|red|slate|gray|zinc|neutral|stone)-[0-9]{2,3}\\b|bg-clip-text/; chiều đỏ cùng ca trên bản sao chuỗi: chèn 'from-orange-500' → thông điệp 'màu tự chọn còn trong (auth): <tệp>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/auth/**, app/tests/auth-hop-chuan.test.tsx]
+    expected: "exit 0; ca 'AH-AC-3 cỡ chữ' xanh: render RegisterForm → h1 có lớp 'text-4xl' và 'sm:text-5xl', className của h1 không chứa '[' ; render LoginForm và RegisterForm → đúng 2 phần tử [data-slot=frame-panel-title] (FrameTitle), mỗi phần tử có tập lớp cỡ chữ đúng bằng ['text-sm'] — cỡ mặc định của reui/frame, không lớp đổi cỡ nào (đổi cỡ thì tailwind-merge thay text-sm); chiều đỏ (phá-thử S3): trả lại 'lg:text-[56px]' → ca đỏ 'tiêu đề đăng ký không được dùng cỡ chữ tuỳ ý'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/(auth)/error.tsx, app/src/components/states/page-error.tsx, app/tests/auth-hop-chuan.test.tsx]
+    expected: "exit 0; ca 'AH-AC-4 error.tsx' xanh: tệp app/src/app/(auth)/error.tsx tồn tại, dòng đầu là '\"use client\"'; render export default với error giả + reset đếm lần gọi → đúng 1 role=alert chứa 'Không tải được dữ liệu', đúng 1 nút 'Thử lại', bấm → reset gọi đúng 1 lần; đối chứng: không phần tử nav/aside của vỏ cổng trong cây render"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/auth/**, app/src/app/(auth)/**, app/tests/auth-hop-chuan.test.tsx]
+    expected: "exit 0; ca 'AH-AC-5 form giữ hành vi' xanh: render LoginForm(next='/ops/review', error='Sai mật khẩu') → form có input name='email' type='email', input name='password', input hidden name='next' value='/ops/review', đúng 1 role=alert chứa 'Sai mật khẩu', liên kết sang đăng ký có href '/register?next=%2Fops%2Freview'; RegisterForm(next='/saved', facts=['a','b']) → input email/password/next value '/saved', liên kết đăng nhập href '/login?next=%2Fsaved', chữ 'a · b'; tệp (auth)/login/page.tsx và register/page.tsx vẫn gọi safeNext(rawNext) (đọc tệp, so chuỗi gọi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.auth_login_smoke
+    paths: [app/src/components/auth/**, app/src/app/(auth)/**, scripts/dev-ops-login-check.sh]
+    expected: "exit 0; dòng 'POST /login: 303, có cookie oi_session HttpOnly', '/ops/sources: có cookie 200, không cookie bị chặn', 'OK: tài khoản ops thử đăng nhập được <BASE_URL>' — đăng nhập đầu-cuối qua form server action trên bản chạy của worktree (dev :3460)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0 (tsc --noEmit sạch; eslint + check-bare-disables 0 lỗi; eslint-suppressions.json không còn khoá src/components/auth/gradient-wave.tsx, src/components/auth/login-form.tsx, src/components/auth/register-form.tsx)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/**, app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs]
+    expected: "exit 0; bảng routes.md khớp cây route (dòng /login, /register còn đủ cột)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/app/(auth)/**, app/src/components/auth/**]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://ui1.localhost:3460 (cấu hình app-3460 của .claude/launch.json); không chạy thì FAIL với 'bản chạy :3460 không lên'"
+      - "1280 px sáng: /login → evidence/E9-step1.png; /register → evidence/E9-step2.png"
+      - "1280 px tối (prefers-color-scheme: dark): /login → evidence/E9-step3.png; /register → evidence/E9-step4.png"
+      - "390 px sáng: /login → evidence/E9-step5.png; /register → evidence/E9-step6.png; ghi document.documentElement.scrollWidth và clientWidth của từng trang"
+    expected: "Hai trang đọc được ở cả sáng lẫn tối; không mảng màu trôi hay chữ tô gradient; tiêu đề đăng ký dùng cỡ chữ thường của kho, không tràn dòng xấu; form và nút chính rõ; scrollWidth = clientWidth ở 390 px cho cả hai trang."
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
