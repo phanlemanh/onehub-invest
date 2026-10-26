@@ -19,3 +19,9 @@ evals:
     cmd: config:executors.script.uct_scope
     expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.uct_keepalive
+    expected: "exit 0; 'KEEPALIVE OK'; máy chủ giả đặt keepAliveTimeout ≥ 120000; should-NOT-fire: diff của ui-capture-browser.test.mjs không xoá/sửa dòng assert nào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

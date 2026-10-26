@@ -34,7 +34,7 @@ flowchart TD
 
 ## Đang làm
 
-- ca test UC-TA-5 (bước chụp không để lại thư mục tạm) dùng thư mục tạm riêng, hết đỏ chập chờn khi bộ test scripts/ chạy song song (`uc-ta-5-tmp-rieng`)
+- hai ca test bước chụp (UC-TA-5, UC-BR) hết đỏ chập chờn khi bộ test scripts/ chạy song song (`uc-ta-5-tmp-rieng`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
