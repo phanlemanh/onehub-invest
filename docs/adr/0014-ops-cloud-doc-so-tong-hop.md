@@ -1,6 +1,6 @@
 # ADR-0014: Ops trên cloud đọc số tổng hợp do máy local tính sẵn
 
-Ngày: 2026-10-24 · Trạng thái: accepted (Mạnh chốt 24/10 — «Chọn A»)
+Ngày: 2026-10-24 · Trạng thái: accepted (Mạnh chốt 24/10 — «Chọn A») · Bổ sung: ADR-0015 (26/10, đường lệnh kéo một chiều)
 
 ## Bối cảnh
 

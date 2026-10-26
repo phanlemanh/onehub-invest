@@ -5,6 +5,7 @@
 // không ghi thẳng sale_offers/properties (ROADMAP §1 luật 2, vòng enrich-qua-de-xuat).
 import type { AgentConfig } from "../runtime/loop.js";
 import type { ContextResult } from "./context-resolver.js";
+import { promptEnum } from "../vocab.generated.js";
 
 export const enrichTextAgent: AgentConfig = {
   name: "enrich-text",
@@ -19,7 +20,7 @@ Nhiệm vụ: đọc tin đăng BĐS + bối cảnh nhóm, extract thông tin st
 
 QUAN TRỌNG: Chỉ trả JSON thuần:
 {
-  "property_type": "apartment|house|land|room|commercial|unknown",
+  "property_type": "${promptEnum("property_type")}",
   "bedrooms": số hoặc null,
   "bathrooms": số hoặc null,
   "street": "tên đường/phố" hoặc null,

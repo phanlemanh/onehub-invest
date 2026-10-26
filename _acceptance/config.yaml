@@ -9,6 +9,10 @@ recheck: strict              # CI re-check of COMMITTED evidence — repo mới,
 feature_loop:
   ui_standards_skill: onehub-ui
   suite_keys: [executors.test.agent, executors.test.app, executors.test.app_ui, executors.test.pipeline, executors.test.ui_lint_rules, executors.script.portal_static]   # làn ghim lại (repin) chạy mỗi lượt — agent/app_ui/pipeline thêm từ vòng enrich-qua-de-xuat
+  # Khoá làn ghim lại của kit (GUIDE §7.1; Mạnh duyệt 2026-10-26, hồ sơ kit-khoa-nhom-1).
+  repin_retry: 1               # lệnh đỏ chạy lại đúng một lần, một mình; xanh lần hai → dòng pin gọi tên ca chập chờn
+  repin_budget_min: 80         # trần mỗi lượt; vượt → thoát 4, không ghi pin, để lại repin-do «vuot-tran»
+  do_san_tren_nen: true        # vòng khác gặp đúng cái đỏ đã có dòng nền trên main vẫn ghim, kèm nhãn «đỏ sẵn trên nền», không in «ĐẠT»
 design_pass:
   ds_skill: onehub-ui
   # Hàng giao diện sửa thẳng route THẬT trên nhánh của hàng (host-embedded), không dựng route proto riêng.
@@ -34,6 +38,7 @@ executors:
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
+    ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
     ui_capture_login: "node --test scripts/ui-capture-login.test.mjs"   # ON10 — bước chụp /ops có phiên (máy chủ giả, không cần DB/app)
@@ -43,6 +48,12 @@ executors:
     freshness_parity: "node --test scripts/freshness-parity.test.mjs"
     check_freshness: "node --test --test-skip-pattern=GT-AC-1 scripts/check-freshness.test.mjs"   # GT-AC-1 (importer S06, làn ZCode) đỏ sẵn trên main e962e78 — xem sổ s05-slo-theo-lich
     zalo_import_job_lan: "node --test scripts/zalo-import-job-lan.test.mjs"
+    reassign_areas: "cd pipeline && node --test scripts/reassign-areas.test.mjs"   # AU9 AC-1…AC-5 — nạp ranh giới cấp phường + dọn khu vực lạc + DQ, trong BEGIN…ROLLBACK trên DB local
+    finder_ranh_gioi: "cd app && node --import tsx --test tests/finder-ranh-gioi.test.tsx"   # AU9 AC-8 — Finder Hà Nội trong polygon Hà Nội, đo trong transaction rồi ROLLBACK; cần DB local
+    vocab: "cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs"   # PL6 sổ từ vựng: bộ đọc, bộ sinh, kiểm lệch, lint, khoá tên trường G3 — không cần DB
+    vocab_db: "cd pipeline && node --test scripts/vocab-db.itest.mjs"   # PL6: migration 043 + --check-db trong giao dịch ROLLBACK — cần DB local :5433
+    che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"
+    job_exit: "node --test scripts/job-exit.test.mjs"
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -53,18 +64,22 @@ executors:
     ruler_views_cloudsim: "bash scripts/check-ruler-views.sh cloudsim"   # DB mô phỏng cloud + SQL catch-up
     portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
-    product_map: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/product-map.mjs --root . --check"
+    product_map: "node scripts/product-map.mjs --root . --check"
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
     listing_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-listing-no-airdna.mjs"   # cần app chạy TỪ worktree đang kiểm (mặc định :3456, đổi bằng env BASE_URL) + DB local
     ops_nhan_smoke: "node scripts/smoke-ops-nhan.mjs"   # ON12: chữ hiển thị 7 trang Ops — tự bật next dev từ worktree trên cổng trống (hoặc BASE_URL), cần DB local
     ops_mobile_smoke: "node scripts/smoke-ops-mobile.mjs"   # ON13: cột trạng thái 6 bảng Ops ở 390px/1280px trên app chạy thật (Chromium không giao diện, playwright-core); cần DB local
+    ranh_gioi_do: "node scripts/kiem-ranh-gioi-khu-vuc.mjs --thu"   # AU9 AC-6/AC-7 — áp thử trong MỘT transaction trên DB local rồi ROLLBACK, so trước/sau
+    vocab_check: "node pipeline/vocab.mjs --check"   # PL6: tệp sinh khớp sổ mappings.yaml — đo trạng thái cây
+    vocab_lint: "node pipeline/vocab.mjs --lint"     # PL6: 0 enum viết tay ngoài sổ — đo trạng thái cây
+    vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
     luong7_smoke: "node scripts/smoke-luong-7-ngay.mjs"     # ON5 AC-9 — bảng Luồng 7 ngày ở chế độ máy chủ trên trình duyệt (lược đồ tạm, Chromium)
     s02_smoke: "node scripts/smoke-collections-khong-so-s02.mjs"     # ON6 AC-7 — trang Thu thập ở máy thu không số S02 (Chromium 1280, ảnh chụp)
     log_root_smoke: "node scripts/smoke-doc-log-o-checkout.mjs"   # ON16 AC-6/AC-7 — audit-all thật ở worktree vs checkout chính (HOME tạm) + /ops/collections từ worktree; cần DB local
-    listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
+    listing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app 'app/src/app/(app)/listing/[id]/page.tsx'"   # design gate ghim file đích — làn ghim lại không tự nối paths: vào lệnh
     listing_detail_smoke: "node scripts/smoke-listing-detail.mjs"   # UI5: /listing/[id] trên Chromium (gallery, ảnh chết qua chặn mạng, không ảnh, lịch trống, 375 px) — app chạy từ worktree đang kiểm (BASE_URL, mặc định :3460 dãy U1) + DB local
-    listing_hero_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/listing/listing-hero.tsx"   # UI5: design gate ghim đầu trang listing
+    listing_hero_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/listing/listing-hero.tsx"   # UI5: design gate ghim đầu trang listing
     ui_mcp_config: "node scripts/ui-standards/acceptance.mjs mcp-config"            # chuẩn UI ReUI (ui-standards-reui)
     ui_mcp_connected: "node scripts/ui-standards/acceptance.mjs mcp-connected"
     ui_kit_sockets: "node scripts/ui-standards/acceptance.mjs kit-sockets"
@@ -140,8 +155,8 @@ executors:
     review_media_roundtrip: "cd app && node --import tsx scripts/review-media-roundtrip.ts"
     review_media_no_cloud: "node scripts/check-review-media-local-only.mjs"
     review_photos_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-review-photos.mjs"   # review-card-photos AC-7 — cần app chạy TỪ worktree đang kiểm + DB local; tài khoản thử tạo/xoá mỗi lần
-    review_photos_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx"   # design gate ghim MỘT file đích (design-gate chỉ nhận đối số cuối; làn ghim lại không nối paths:)
-    review_card_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-card.tsx"
+    review_photos_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-photos.tsx"   # design gate ghim MỘT file đích (design-gate chỉ nhận đối số cuối; làn ghim lại không nối paths:)
+    review_card_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review-card.tsx"
     ops_login: "bash scripts/dev-ops-login-check.sh"   # đăng nhập đầu-cuối tài khoản ops thử — cần dev server :3456 + DB local
     # supabase-lock-anon-rls — cần docker; sim: image supabase/postgres 17.6.1.158 + postgrest v14.16; local: kartoza/postgis 17-3.5 (container tạm, không chạm :5433)
     supabase_lock_static: "bash scripts/check-supabase-lock.sh static"
@@ -170,8 +185,8 @@ executors:
     # compare-saved-trang-thai (UI4) — /compare (301 từ /so-sanh) + /saved; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433
     # (mặc định :3460 — cổng riêng của dãy U1, 3456 dùng chung). Người dùng thử + session ghi thẳng DB, xoá ở finally.
     compare_saved_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-compare-saved.mjs"
-    compare_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/compare/comparison.tsx"
-    saved_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/saved/saved-list.tsx"
+    compare_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/compare/comparison.tsx"
+    saved_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/saved/saved-list.tsx"
     # trang-chu-methodology (UI2) — / + /methodology (301 từ /phuong-phap); smoke chỉ GET, cần app chạy TỪ worktree đang kiểm + DB local :5433 (mặc định :3460 của dãy U1)
     trang_chu_methodology_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-trang-chu-methodology.mjs"
     trang_chu_loi_db_smoke: "cd app && npx next build && cd .. && node scripts/smoke-trang-chu-loi-db.mjs"   # bản build + next start ở cổng trống (hoặc SMOKE_PORT) với DATABASE_URL trỏ cổng chết; trang lỗi đo bằng trình duyệt thật (playwright-cli); đối chứng dương ở dev :3460
@@ -181,10 +196,10 @@ executors:
     listings_browse_smoke: "BASE_URL=${BASE_URL:-http://localhost:3460} node scripts/smoke-listings-browse.mjs"
     # ops-review-khung-hang-cho (UI1) — /ops/review hàng chờ + sheet: số dòng = DB, ảnh trong sheet = loader, không độ tự tin, 390 px, bấm quyết định với route decide BỊ CHẶN (page.route, DB không đổi); cần app DEV chạy TỪ worktree đang kiểm + DB local :5433 (mặc định ui1.localhost:3460 — 127.0.0.1 không hydrate trên dev Next 16); chạy qua tsx để số ảnh kỳ vọng dùng đúng loadReviewMedia
     review_queue_smoke: "cd app && BASE_URL=${BASE_URL:-http://ui1.localhost:3460} node --import tsx ../scripts/smoke-review-queue.mjs"
-    review_queue_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review/review-queue.tsx"
-    financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
-    methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
-    app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
+    review_queue_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/ops/review/review-queue.tsx"
+    financing_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/yield/financing/financing-grid.tsx"
+    methodology_design_gate:"node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/marketing/definition-grid.tsx"
+    app_crash_design_gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app app/src/components/states/app-crash.tsx"
     # dq-moi-nhat-moi-kiem (ON9) — bảng Kiểm chất lượng trên DB local :5433, chỉ đọc (cần tsx của app)
     dq_moi_nhat_do: "cd app && node --import tsx ../scripts/dq-moi-nhat-do.mjs"
     # deals-loai-tin-phi-ly (ON11) — đo Căn giá tốt trên DB local :5433 trong BEGIN…ROLLBACK (cần tsx của app)
@@ -300,10 +315,27 @@ executors:
     agent_ba_lan: "bash _acceptance/enrich-db-test-khoanh-tin/probes/ba-lan.sh"
     enrich_ac6_tam_lan: "bash _acceptance/enrich-db-test-khoanh-tin/probes/tam-lan.sh"
     enrich_pham_vi: "bash _acceptance/enrich-db-test-khoanh-tin/probes/pham-vi.sh"
+    # uc-ta-5-tmp-rieng — UC-TA-5 dùng TMPDIR riêng (hết đua với ui-capture-browser.test)
+    uct_nam_luot: "bash _acceptance/uc-ta-5-tmp-rieng/probes/nam-luot.sh \"$PWD\""
+    uct_dot_bien: "bash _acceptance/uc-ta-5-tmp-rieng/probes/dot-bien.sh \"$PWD\""
+    uct_scope: "bash _acceptance/uc-ta-5-tmp-rieng/probes/scope.sh \"$PWD\""
+    uct_keepalive: "bash _acceptance/uc-ta-5-tmp-rieng/probes/keepalive.sh \"$PWD\""
+    odt_ops_lap: "bash _acceptance/on-dinh-test-app-chap-chon/probes/ops-lap.sh"
+    odt_ops_doi_chung: "bash _acceptance/on-dinh-test-app-chap-chon/probes/ops-doi-chung.sh"
+    odt_lb_lap: "bash _acceptance/on-dinh-test-app-chap-chon/probes/lb-lap.sh"
+    odt_pham_vi: "bash _acceptance/on-dinh-test-app-chap-chon/probes/pham-vi.sh"
+    # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
+    ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
+    ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
+    ckl_idempotent: "node scripts/chotot-khong-lui/acceptance.mjs idempotent"
+    ckl_scope: "bash _acceptance/chotot-khong-lui/probes/scope.sh \"$PWD\""
+    # noi-tiep-zc4 (2610-5 + 2510-32) — bản chép tạm + HOME giả, launchctl giả
+    nz4_logs_tmp: "bash _acceptance/noi-tiep-zc4/probes/logs-tmp.sh \"$PWD\""
+    nz4_scope: "bash _acceptance/noi-tiep-zc4/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
-    gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
-    ui_check: "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-scan.js"     # browser tier (authoritative P0)
+    gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
+    ui_check: "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-scan.js"     # browser tier (authoritative P0)
 risk_tiers:
   t1_skip_globs:
     - "docs/**"
@@ -338,6 +370,9 @@ risk_tiers:
     - "scripts/zalo-watchdog.sh"
     - ".claude/settings.json"                        # rào chắn máy
     - ".claude/hooks/**"
+  # Hồ sơ chỉ cũ khi diff chạm `paths` của eval trong nó (bộ lọc đóng mặc định, GUIDE §7.1). Hồ sơ có eval máy
+  # thiếu `paths` hay mục `paths` không chứng được thì giữ luật cũ. Chiến dịch ghim lại ở mốc kit chạy lưới với --stale-all.
+  stale_scope: paths
 signoff:
   required_for: [T2, T3]     # tiers that pre-merge-check requires signoff for
   approvers: ["Mạnh"]        # informational — gate không ép khoá này; chữ ký vẫn được kiểm

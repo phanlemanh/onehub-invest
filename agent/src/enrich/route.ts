@@ -10,19 +10,15 @@
 //   LLM không căn cứ                       → review
 // Confidence LLM KHÔNG BAO GIỜ là căn cứ. Field đã có giá trị → không đề xuất (fill-gap).
 import type { EnrichResult } from "../agents/enrich-text.js";
+import { PROPERTY_TYPE, VOCAB, type EnrichField } from "../vocab.generated.js";
 
-export type EnrichField = "property_type" | "bedrooms" | "bathrooms" | "street_raw" | "block_raw";
+export type { EnrichField };
 
-export const ENRICH_FIELDS: readonly EnrichField[] = [
-  "property_type",
-  "bedrooms",
-  "bathrooms",
-  "street_raw",
-  "block_raw",
-];
+/** Trường nhận đề xuất enrich — trục enrich_field của sổ từ vựng (CHECK migration 033). */
+export const ENRICH_FIELDS: readonly EnrichField[] = VOCAB.enrich_field;
 
 /** Tập CHECK của migration 025 ('unknown' coi như trống). */
-const PROPERTY_TYPES = new Set(["apartment", "house", "land", "room", "commercial"]);
+const PROPERTY_TYPES: ReadonlySet<string> = new Set(VOCAB.property_type.filter((c) => c !== PROPERTY_TYPE.unknown));
 
 export type Current = Partial<Record<EnrichField, string | number | null>>;
 

@@ -232,9 +232,32 @@ _Avoid_: homestay
 - Code: `investment pipeline (4 stages)` · RESO: —
 _Avoid_: phễu đầu tư
 
+## Từ vựng dữ liệu (máy sinh)
+
+Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai ở một chỗ duy nhất: khối `enums:` của
+`pipeline/mappings.yaml` (PL6, khuôn RESO Lookup — ADR-0013 §8). Bảng dưới sinh từ sổ; sửa sổ rồi chạy
+`node pipeline/vocab.mjs --write`. Nhãn UI của các giá trị lấy từ cột cuối.
+
+<!-- VOCAB:BEGIN -->
+<!-- MÁY SINH từ pipeline/mappings.yaml — sửa sổ rồi chạy node pipeline/vocab.mjs --write -->
+
+| Thuật ngữ | Code | RESO | Cột bị ràng | Giá trị (code «nhãn») |
+|---|---|---|---|---|
+| Loại tin | `kind` | PropertyType | `sale_offers.kind` | `sale` «Bán» · `rent_lt` «Cho thuê» |
+| Loại hình | `property_type` | PropertySubType | `sale_offers.property_type`, `properties.property_type` | `apartment` «Căn hộ» · `house` «Nhà riêng» · `land` «Đất» · `room` «Phòng» · `commercial` «Mặt bằng» · `unknown` «Chưa rõ» |
+| Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
+| Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
+| Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
+| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `wanted` «Tin tìm mua, tìm thuê» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
+| Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
+| Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
+| Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
+
+<!-- VOCAB:END -->
+
 ## Dữ liệu & nguồn
 
-**Nguồn**: Nơi dữ liệu đến, luôn gọi bằng mã S01–S07 (SPL, ADR-0007). Tên thật là tầng A.
+**Nguồn**: Nơi dữ liệu đến, luôn gọi bằng mã S01–S08 (SPL, ADR-0007). Tên thật là tầng A.
 - Code: `source (source_registry.code)` · RESO: OriginatingSystemName
 _Avoid_: kênh dữ liệu
 
@@ -260,7 +283,7 @@ _Avoid_: cào, crawl
 - Code: `freshness (SLO)` · RESO: ≈ ModificationTimestamp
 _Avoid_: freshness
 
-**Tầng A**: Tên nguồn thật, hồ sơ người dùng app — không rời máy local; cloud chỉ nhận hash + aggregate (luật 6). Định danh người bán trên tin rao KHÔNG thuộc tầng A (tầng C, 23/10).
+**Tầng A**: Bốn thứ không rời máy thu (luật 6, ADR-0007 sửa đổi 26/10): tên nguồn thật (kể cả tên miền và giá trị mang nó), hồ sơ người dùng app, định danh tài khoản thu, phiên/khoá/QR/profile trình duyệt. Định danh người bán trên tin rao và tên nhóm thu là tầng C; nội dung bài, ảnh tin và thẻ duyệt lên máy chủ cho vai ops trở lên, đã thay tên nguồn bằng mã.
 - Code: `SPL tier A` · RESO: —
 
 **Tầng B**: Mã nguồn S0x — dùng ở API và mọi trang Ops.
@@ -294,7 +317,7 @@ cổng Ops nằm ở dòng `_Avoid_` để thước chữ hiển thị giữ nó
 **Máy thu**: Máy local chạy collector, pipeline và DB local — nơi duy nhất giữ dữ liệu tầng A.
 - Code: `local` · RESO: —
 
-**Máy chủ**: Bản cổng chạy trên cloud (Vercel + Supabase) — chỉ nhận số tổng hợp và dữ liệu đã lọc tầng A.
+**Máy chủ**: Bản cổng chạy trên cloud (Vercel + Supabase) — nhận số tổng hợp và dữ liệu đã lọc tầng A, ghi lệnh cho máy thu kéo về; không bao giờ gọi vào máy thu (ADR-0015).
 - Code: `cloud` · RESO: —
 _Avoid_: bản cloud, lên cloud
 
@@ -322,6 +345,14 @@ _Avoid_: Heartbeat
 - Code: `allowlist` · RESO: —
 _Avoid_: Allowlist, membership
 
+**Chế độ thu**: Nhịp thu của một điểm thu (một dòng nhóm thu trên `/ops/sources`): «Chờ» (chưa thu sâu), «Bùng» (dồn tải có hạn để lấp kho) hoặc «Duy trì» (giữ tươi); dòng chưa có chế độ hiện «Chưa đặt». Chỉ quản trị viên đổi; bật Bùng phải có hạn bùng; máy tự hạ Bùng về Duy trì kèm `ops_audit` (hồ sơ `che-do-thu-tren-ops`).
+- Code: `mode (source_groups.params.mode: cho | bung | duy_tri)` · RESO: —
+_Avoid_: mode, burst, chế độ cào
+
+**Hạn bùng**: Ngày cuối (giờ Việt Nam) của một đợt Bùng, tối đa 14 đêm kể từ hôm bật; qua ngày này máy hạ điểm về Duy trì.
+- Code: `burst_until` · RESO: —
+_Avoid_: deadline, hạn burst
+
 **Bài**: Một bài đăng thô trong nhóm cộng đồng trước khi đọc thành tin rao; «bài thử» là bài từ nhóm thử.
 - Code: `post (stg_zalo_posts)` · RESO: —
 _Avoid_: post raw, post mock, bài post
@@ -337,6 +368,32 @@ _Avoid_: ít dữ liệu, thin sample
 **Thị trường hiệu chuẩn**: Thị trường có ít nhất một số để đối chiếu với S02 (điểm S02, ADR, công suất hoặc listing) — mỗi thị trường một thẻ; thị trường không có số nào gộp vào một dòng «Chưa có số: …». Khu vực gộp nhiều market S02 dùng market đại diện (nhiều listing nhất), thẻ ghi «đại diện cho k thị trường S02»; riêng dòng Listing cộng listing S02 của cả k thị trường, cùng mẫu số với bảng Độ phủ trung thực (Mạnh duyệt 25/10).
 - Code: `splitCalibrated (calibrated, empty)` · RESO: —
 _Avoid_: khu vực hiệu chuẩn, market hiệu chuẩn
+
+Nhãn tự vận hành từ xa — thêm ở TV0 `adr-duong-lenh-keo` (26/10, ADR-0015). Code là tên bảng đích của đợt
+`tu-van-hanh-2510`; bảng sinh ở hàng của nó (PL12, TV4, TV12, TV14).
+
+**Đơn vị thu**: Một thứ mà một nguồn thu theo nó và người vận hành bật/tắt được: nhóm S03 hay S05, vùng S06, market S02. Mỗi đơn vị có một mã ngắn do máy sinh, ổn định, không tái dùng, dạng `S03-N012` (N nhóm · V vùng · M market), hiện ở cả máy chủ lẫn máy thu. Tiêu đề sửa được, mã thì không. Sổ đơn vị thu là một bảng chung cho mọi nguồn (PL12).
+- Code: `collection_unit (collection_units, unit_key)` · RESO: —
+- Slug URL: `units`
+- Ghi chú: «Nhóm thu» vẫn là nhãn của một đơn vị loại nhóm (S03, S05) trên `/ops/sources`; «Đơn vị thu» là nhãn chung khi câu nói về mọi loại.
+_Avoid_: collection unit, source group
+
+**Lệnh**: Một ý muốn ghi có khuôn mà người vận hành gửi trên máy chủ (tạm dừng nguồn, bật một đơn vị thu, đổi lịch…). Máy thu kéo lệnh đã duyệt về, kiểm bất biến, áp, rồi báo kết quả. Lệnh đi theo vòng nháp → đã gửi → đã duyệt → chờ áp → đang áp → đã áp; nhánh phụ là bị từ chối, hoặc lỗi rồi tự hoàn tác. Hoàn tác là một lệnh đảo mới. Không có lệnh tự do (ADR-0015).
+- Code: `change_request (change_requests)` · RESO: —
+- Slug URL: `change-requests`
+_Avoid_: change request, yêu cầu thay đổi
+
+**Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách tin. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các tin gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
+- Code: `context_rule (context_rules)` · RESO: —
+- Slug URL: `context-rules`
+- Ghi chú: Khác mô tả nhóm (ON19): mô tả là dữ kiện về nhóm; quy định là cách đọc tin của nhóm.
+_Avoid_: quy tắc AI, context rule
+
+**Mục tiêu phủ**: Mức phủ mà đội vận hành đặt cho một thị trường theo một chỉ số độ phủ (đơn vị đang thu, tin 7 ngày, % tin gắn được phường, căn). Trang độ phủ thị trường so số đo với mục tiêu và cảnh báo thị trường dưới mục tiêu. Đặt bằng lệnh.
+- Code: `coverage_target (coverage_targets)` · RESO: —
+- Slug URL: `market-coverage`
+- Ghi chú: Số đo tính sẵn ở pipeline (`market_coverage`, luật 10). Khác «Độ tươi»: độ tươi đo thời gian từ lần thu cuối, độ phủ đo thị trường có đủ tin.
+_Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 
 ## Cổng & tính năng
 
