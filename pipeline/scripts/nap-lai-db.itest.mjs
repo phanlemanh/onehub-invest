@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { writeOffers } from "../lib/write-offers.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
-import { chupMaTran, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
+import { chupMaTran, gieoQuyetDinh, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
 import { runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
 import { MARKETS, runReassign } from "../reassign-areas.mjs";
@@ -197,23 +197,6 @@ test("ND-AC-3 tin khoá cũ (băm nội dung) vắng lượt → lý do doi_khoa
     assert.deepEqual([r.retired_reason, r.superseded_by], ["doi_khoa", mintOfferId(TST, "q1")]);
   });
 });
-
-/** Gắn quyết định thử lên tin thật của nguồn: đề xuất đã quyết + thẻ enrich đã duyệt, ứng viên merged + thẻ pair. */
-export async function gieoQuyetDinh(client, source) {
-  const { rows } = await client.query(
-    `SELECT offer_id FROM sale_offers WHERE source = $1 AND cardinality(post_ids) > 0 ORDER BY offer_id LIMIT 2`, [source]);
-  if (rows.length < 2) return 0;
-  const [a, b] = rows.map((r) => r.offer_id);
-  await client.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, status, decided_by, evidence)
-    VALUES ('nap-lai', $1, 'block_raw', 'thu', 'thu', 'e2_llm', 'review', 'rejected', 'hitl:manh', '{}'::jsonb)`, [a]);
-  await client.query(`INSERT INTO review_queue (item_type, item_id, title, evidence, status, decided_by, decided_at)
-    VALUES ('agent_output', $1, 'thẻ thử', '{}'::jsonb, 'approved', 'hitl:manh', now())`, [`enrich:${a}`]);
-  await client.query(`INSERT INTO property_candidates (offer_a, offer_b, score, status, decided_by)
-    VALUES ($1, $2, 0.9, 'merged', 'hitl:manh') ON CONFLICT (offer_a, offer_b) DO UPDATE SET status = 'merged'`, [a, b]);
-  await client.query(`INSERT INTO review_queue (item_type, item_id, title, evidence, status, decided_by, decided_at)
-    VALUES ('entity_match', $1, 'cặp thử', '{}'::jsonb, 'approved', 'hitl:manh', now())`, [`pair:${a}|${b}`]);
-  return 2;
-}
 
 test("ND-AC-5 lượt nạp đầu sau 044 đổi khoá S03/S05: khoá cũ nghỉ 'doi_khoa', ma trận quyết định/liên kết không mất", async () => {
   await trongGiaoDich(c, async () => {
