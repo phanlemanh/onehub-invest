@@ -51,8 +51,8 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.app_ui
-    paths: [app/src/lib/ops-labels.ts, app/src/lib/vocab.generated.ts, app/tests/vocab-labels.test.ts]
-    expected: "exit 0; ca 'VB-AC-6 nhãn giữ byte' (app/tests/vocab-labels.test.ts): bảng nhãn trước vòng ghim nguyên văn trong test (6 property_type, 2 kind, 3 confidence, 3 price_tier = 14 dòng) → mỗi dòng propertyTypeLabel/offerKindLabel/confidenceLabel/priceTierLabel(code).label === nhãn ghim và known === true; đối chứng: code 'khong_co' → known false, label 'Giá trị khác'"
+    paths: [app/src/lib/ops-labels.ts, app/src/lib/vocab.generated.ts, app/tests/vocab-labels.test.tsx]
+    expected: "exit 0; ca 'VB-AC-6 nhãn giữ byte' (app/tests/vocab-labels.test.tsx): bảng nhãn trước vòng ghim nguyên văn trong test (6 property_type, 2 kind, 3 confidence, 3 price_tier = 14 dòng) → mỗi dòng propertyTypeLabel/offerKindLabel/confidenceLabel/priceTierLabel(code).label === nhãn ghim và known === true; đối chứng: code 'khong_co' → known false, label 'Giá trị khác'"
   - id: E6b
     criterion: AC-6
     executor: test
