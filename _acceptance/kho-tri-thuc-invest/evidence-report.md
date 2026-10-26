@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b0b4c0ae8007ef605b5f530e8c8941878832e346
+verified_commit: d15635b83044086184d4923c790a09c68559b3cb
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -218,3 +218,7 @@ none — mọi eval là tất định và chạy một lượt mỗi vòng. Kế
 Round 1: E1–E8 đều đạt trên `fb54ee3`. Phát hiện ngoài hợp đồng: trang tóm của kho riêng còn tên nguồn thật. Mạnh
 quyết sửa và mở rộng AC-6 (`d-20261026T073327Z-1`).
 Round 2: E1–E8 đều đạt trên `b0b4c0a`, gồm cả AC-6 mở rộng (13 tệp trang và luật có 0 tên nguồn thật). PASS, chờ người ký.
+
+### Re-pin lần 1 — 2026-10-26, do hoá cũ do gộp main 933820e sau chữ ký
+run_id: repin-20261026T075908Z-21372
+sha: d15635b83044086184d4923c790a09c68559b3cb · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng

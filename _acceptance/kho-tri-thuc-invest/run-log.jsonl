@@ -14,3 +14,4 @@
 {"ts":"2026-10-26T07:34:55Z","round":2,"evalId":"E6","run_id":"kho-tri-thuc-invest-E6-r2-20261026T073455Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/rieng-tu.sh \"$PWD\""}
 {"ts":"2026-10-26T07:35:00Z","round":2,"evalId":"E7","run_id":"kho-tri-thuc-invest-E7-r2-20261026T073500Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/khong-cham.sh \"$PWD\""}
 {"ts":"2026-10-26T07:35:01Z","round":2,"evalId":"E8","run_id":"kho-tri-thuc-invest-E8-r2-20261026T073501Z","exit_code":0,"cmd":"bash _acceptance/kho-tri-thuc-invest/probes/scope.sh \"$PWD\""}
+{"ts":"2026-10-26T08:00:04Z","kind":"repin","run_id":"repin-20261026T075908Z-21372","sha":"d15635b83044086184d4923c790a09c68559b3cb","suites_exit":[0,0,0,0,0,0],"evals_exit":{"E1":0,"E2":0,"E3":0,"E4":0,"E5":0,"E6":0,"E7":0,"E8":0},"wall_s":55.9,"so_lenh":14,"tong_ket":{"ket_cuc":"xanh","phut":0.9,"so_lenh":14,"model_goi":0,"model_carry":0,"chap_chon":0}}
