@@ -5,7 +5,7 @@ slug: collector-api-launchd
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T00:32:01Z
 approved_by:
@@ -41,3 +41,10 @@ là lời GIAO riêng sau merge. Lời giao `claudedp-2510-33`; ZCode XONG ở `
 ## Notes
 
 - Probe `_acceptance/collector-api-launchd/probes/cai-dat.sh` chạy script trên bản chép tạm + HOME giả, launchctl là bản ghi lời gọi.
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: ghi Known limits
+  - Ngoài-2: mở hợp đồng mới
+  - Ngoài-3: ghi Known limits
+- Known limits:
+  - Ngoài-1: Script không từ chối chạy ngoài checkout chính — chạy từ worktree thì plist trỏ vào worktree
+  - Ngoài-3: `sed "s|__ROOT__|$ROOT|g"` hỏng khi đường gốc có `&` hoặc `|`; ca `|` còn để lại plist rỗng trong LaunchAgents
