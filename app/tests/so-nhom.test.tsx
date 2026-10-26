@@ -3,6 +3,9 @@
 // (chụp trước/sau).
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import pg from "pg"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
@@ -10,6 +13,10 @@ import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
 import { DAU_SN, dungSauGop } from "../../pipeline/scripts/so-nhom-fixture.mjs"
 import { chupPublic, xoaLuocDo } from "../../pipeline/scripts/vong-doi-fixture.mjs"
 
+// HOME giả cho CẢ tiến trình, đặt TRƯỚC mọi import động: zalo-admin.ts tính đường tệp cấu hình gateway theo HOME lúc
+// import — ca SN-AC-5b gọi hàm ghi thật của app trên tệp tạm, không bao giờ trên ~/.openclaw (luật 8, zalo-safety).
+const HOME_GIA = mkdtempSync(join(tmpdir(), "sn-home-"))
+process.env.HOME = HOME_GIA
 const S = `sn_app_${process.pid}`
 const TOKEN = "sn-thu-token"
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
@@ -39,6 +46,7 @@ after(async () => {
   await new Promise((r) => setTimeout(r, 200)) // auditOpsWrite ghi nền
   await pool.end().catch(() => {})
   await xoaLuocDo(admin, S).catch(() => {})
+  rmSync(HOME_GIA, { recursive: true, force: true })
   const publicSau = await chupPublic(admin)
   await admin.end().catch(() => {})
   assert.deepEqual(publicSau, publicTruoc, "public đã bị chạm")
@@ -84,4 +92,36 @@ test("SN-AC-2-route trang nhóm thu cũ chỉ quản S05/S06: docNhomThu lọc, 
   // Đối chứng: cùng thân với S05 thì route ghi được.
   const ok = await goi({ action: "toggle", sourceCode: "S05", groupKey: K("S05"), enabled: false })
   assert.equal(ok.status, 200)
+})
+
+test("SN-AC-5b bản .mjs đọc nhóm gateway (readS03Groups) khớp effectiveEnabledGroups của app trên mọi fixture", async () => {
+  const { effectiveEnabledGroups, setZaloGroupEnabled } = await import("../src/lib/zalo-admin")
+  const { readS03Groups } = await import("../../scripts/lib/ops-local.mjs")
+  const on = { enabled: true, requireMention: true }
+  const off = { enabled: false }
+  const FIXTURE: Record<string, unknown> = {
+    "groups cấp kênh": { groups: { "vd-a": on, "vd-b": off } },
+    "groups cấp tài khoản": { accounts: { default: { groups: { "vd-a": on } }, x: { groups: { "vd-c": on, "vd-d": { allow: false, requireMention: true } } } } },
+    "ghi đè theo tài khoản": { groups: { "vd-a": on, "vd-b": on }, accounts: { default: { groups: { "vd-a": on } }, y: { profile: "y" } } },
+    "nhóm enabled false": { accounts: { default: { groups: { "group:vd-e": off, "vd-f": on } } } },
+    "tài khoản không groups": { accounts: { z: { profile: "z" } } },
+  }
+  // Fixture thứ sáu sinh bằng hàm ghi THẬT của app trên tệp cấu hình tạm (HOME giả), không viết tay.
+  mkdirSync(join(HOME_GIA, ".openclaw"), { recursive: true })
+  const f = join(HOME_GIA, ".openclaw", "openclaw.json")
+  writeFileSync(f, JSON.stringify({ channels: { zalouser: FIXTURE["groups cấp tài khoản"] } }, null, 2))
+  await setZaloGroupEnabled("x", "vd-g", true)
+  await setZaloGroupEnabled("default", "vd-a", false)
+  FIXTURE["sinh bằng setZaloGroupEnabled"] = JSON.parse(readFileSync(f, "utf8")).channels.zalouser
+
+  const bo = (k: string) => k.replace(/^group:/, "")
+  for (const [ten, z] of Object.entries(FIXTURE)) {
+    const app = [...new Set(effectiveEnabledGroups(z as never).union.map(bo))].sort()
+    const mjs = (readS03Groups(z) as { key: string; enabled: boolean }[]).filter((g) => g.enabled).map((g) => g.key)
+    assert.deepEqual(mjs, app, ten)
+  }
+  assert.deepEqual(
+    (readS03Groups(FIXTURE["sinh bằng setZaloGroupEnabled"]) as { key: string; enabled: boolean }[]).map((g) => [g.key, g.enabled]),
+    [["vd-a", false], ["vd-c", true], ["vd-d", false], ["vd-g", true]],
+  )
 })

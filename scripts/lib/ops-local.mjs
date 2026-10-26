@@ -7,6 +7,7 @@
  *   readRecords24h  ↔ getSourceFeedHealth().items24h   (app/src/lib/ops-queries.ts)
  *   readLockdown    ↔ getLockdownStatus()               (app/src/lib/ops-queries.ts, ON2)
  *   readS03Allowlist ↔ effectiveEnabledGroups()        (app/src/lib/zalo-admin.ts, ON4 — app/tests/nhom-s03-tren-cloud.test.tsx)
+ *   readS03Groups ↔ effectiveEnabledGroups() (tập bật)   (PL12 — app/tests/so-nhom.test.tsx SN-AC-5b)
  * Mọi hàm nhận phụ thuộc qua tham số (client pg, thư mục, lệnh) và NÉM khi không đo được — bên gọi ghi `error`,
  * không bao giờ thay bằng 0 hay «Ổn». An toàn Zalo: chỉ đọc log và probe GET, không phương thức ghi nào.
  */
@@ -163,13 +164,29 @@ async function defaultRun(cmd, args) {
  * thừa của OpenClaw (`default` đọc `accounts.default.groups`, thiếu thì `groups` cấp ngoài; tài khoản không khai `groups`
  * kế thừa cấp ngoài), bỏ `enabled: false` và `allow: false`; `union` = hợp, trùng mã đếm một lần. Nhận `channels.zalouser`. */
 export function readS03Allowlist(z) {
-  const ids = ["default", ...Object.keys(z?.accounts ?? {}).filter((id) => id !== "default")];
-  const groupsOf = (id) => {
-    if (!z) return {};
-    if (id === "default") return z.accounts?.default?.groups ?? z.groups ?? {};
-    return z.accounts?.[id]?.groups ?? z.groups ?? {};
-  };
-  const enabled = (groups) => Object.entries(groups).filter(([, v]) => v?.allow !== false && v?.enabled !== false).map(([k]) => k);
-  const byAccount = new Map(ids.map((id) => [id, enabled(groupsOf(id))]));
+  const enabled = (groups) => Object.entries(groups).filter(([, v]) => batNhom(v)).map(([k]) => k);
+  const byAccount = new Map(s03AccountIds(z).map((id) => [id, enabled(s03GroupsOf(z, id))]));
   return { byAccount, union: [...new Set([...byAccount.values()].flat())] };
+}
+
+const s03AccountIds = (z) => ["default", ...Object.keys(z?.accounts ?? {}).filter((id) => id !== "default")];
+function s03GroupsOf(z, id) {
+  if (!z) return {};
+  if (id === "default") return z.accounts?.default?.groups ?? z.groups ?? {};
+  return z.accounts?.[id]?.groups ?? z.groups ?? {};
+}
+const batNhom = (v) => v?.allow !== false && v?.enabled !== false;
+
+/** PL12 sổ đơn vị thu — mọi nhóm S03 có hiệu lực ở ít nhất một tài khoản (cùng luật kế thừa với `readS03Allowlist`),
+ * khoá bỏ tiền tố `group:` (một nhóm một đơn vị dù cấu hình viết hai kiểu), `enabled` = bật ở ít nhất một tài khoản;
+ * theo thứ tự khoá. Chỉ đọc đối tượng đã parse — không chạm tệp hay lệnh nào. Nhận `channels.zalouser`. */
+export function readS03Groups(z) {
+  const nhom = new Map();
+  for (const id of s03AccountIds(z)) {
+    for (const [k, v] of Object.entries(s03GroupsOf(z, id))) {
+      const key = k.replace(/^group:/, "");
+      nhom.set(key, (nhom.get(key) ?? false) || batNhom(v));
+    }
+  }
+  return [...nhom].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([key, enabled]) => ({ key, enabled }));
 }

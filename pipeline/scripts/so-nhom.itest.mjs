@@ -3,6 +3,7 @@
 // đó. Trước và sau cả tệp chụp public — 048 chỉ áp lên public sau gộp, ca nào chạm public là đỏ.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -433,4 +434,115 @@ test("SN-AC-7 isRunnable đọc trạng thái đơn vị S03, S02 từ sổ", as
   assert.deepEqual(await docTrangThai(c, "S03", "vd-nhom-2"), { run: false, ly_do: "don-vi-paused" });
   assert.deepEqual(await docTrangThai(c, "S02", "12345"), { run: false, ly_do: "don-vi-retired" });
   assert.deepEqual(await docTrangThai(c, "S05", `${DAU_SN}-s05`), { run: true, ly_do: "chay" });
+});
+
+// ------------------------------------------------------- AC-5, AC-6 --
+const SYNC = path.join(ROOT, "pipeline", "sync-don-vi.mjs");
+/** Bảng nguồn của S02 tối giản (market, ánh xạ khu vực) cạnh bảng tham chiếu. */
+async function bangS02(S, markets, anhXa) {
+  await admin.query(`CREATE TABLE "${S}".airdna_markets (airdna_id text PRIMARY KEY, name text)`);
+  await admin.query(`CREATE TABLE "${S}".area_sources (area_id text NOT NULL, source text NOT NULL, source_area_key text NOT NULL)`);
+  for (const [k, ten] of markets) await admin.query(`INSERT INTO "${S}".airdna_markets VALUES ($1, $2)`, [k, ten]);
+  for (const [area, k] of anhXa) await admin.query(`INSERT INTO "${S}".area_sources VALUES ($1, 'S02', $2)`, [area, k]);
+}
+/** Chạy script thật; trả mã thoát + stdout. */
+function chaySync(S, cauHinh, args = []) {
+  try {
+    const out = execFileSync(process.execPath, [SYNC, ...args], {
+      cwd: ROOT, encoding: "utf8", stdio: "pipe",
+      env: { ...process.env, DATABASE_URL: schemaUrl(S), ONEHUB_GATEWAY_CONFIG: cauHinh },
+    });
+    return { code: 0, out };
+  } catch (e) {
+    return { code: e.status ?? 1, out: `${e.stdout ?? ""}${e.stderr ?? ""}` };
+  }
+}
+const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
+const anhDonVi = (c, code) => dong(c, `SELECT id::int, unit_code, group_key, status, reason, market_codes FROM collection_units
+  WHERE source_code = $1 ORDER BY id`, [code]);
+const cauHinhMau = (groups) => JSON.stringify({ channels: { zalouser: { accounts: { default: { groups } } } } }, null, 2);
+
+test("SN-AC-5 đồng bộ S03 chỉ đọc gateway: bật/tắt/biến mất/quay lại giữ mã; tệp vắng hay hỏng thì sổ không đổi", async () => {
+  const S = tenLuocDo("ac5");
+  await dungSauGop(admin, S, { thamChieu: true });
+  await bangS02(S, [], []);
+  const c = await moClient(S);
+  const thu = mkdtempSync(path.join(tmpdir(), "sn-gw-"));
+  const f = path.join(thu, "cau-hinh.json");
+  const on = { enabled: true, requireMention: true };
+  const lan = (groups) => {
+    if (groups) writeFileSync(f, cauHinhMau(groups));
+    const truoc = sha(f);
+    const r = chaySync(S, f);
+    assert.equal(sha(f), truoc, "script đổi tệp cấu hình gateway");
+    assert.ok(!r.out.includes("vd-nhom-"), "stdout lộ khoá nhóm");
+    return r;
+  };
+  try {
+    assert.equal(lan({ "vd-nhom-1": on, "vd-nhom-2": { enabled: false }, "vd-nhom-3": on }).code, 0);
+    const lan1 = await anhDonVi(c, "S03");
+    assert.deepEqual(lan1.map((r) => [r.group_key, r.status, r.reason]), [
+      ["vd-nhom-1", "active", null], ["vd-nhom-2", "paused", "tắt ở gateway"], ["vd-nhom-3", "active", null]]);
+
+    assert.equal(lan({ "vd-nhom-1": on, "vd-nhom-2": { enabled: false } }).code, 0);
+    const lan2 = await anhDonVi(c, "S03");
+    assert.deepEqual(lan2[2], { ...lan1[2], status: "paused", reason: "không còn ở gateway" });
+
+    const r3 = lan(null);
+    assert.equal(r3.code, 0);
+    assert.match(r3.out, /S03: thêm 0 · đổi 0 · giữ 3/);
+    assert.deepEqual(await anhDonVi(c, "S03"), lan2);
+
+    assert.equal(lan({ "vd-nhom-1": on, "vd-nhom-2": { enabled: false }, "vd-nhom-3": on }).code, 0);
+    assert.deepEqual(await anhDonVi(c, "S03"), lan1, "nhóm quay lại không về đúng dòng, đúng mã");
+    const [{ n }] = await dong(c, `SELECT count(*)::int AS n FROM collection_units WHERE source_code = 'S03'`);
+    assert.equal(n, 3);
+
+    const truocLoi = await anhDonVi(c, "S03");
+    const vang = chaySync(S, path.join(thu, "khong-co.json"));
+    assert.notEqual(vang.code, 0);
+    assert.deepEqual(await anhDonVi(c, "S03"), truocLoi);
+    writeFileSync(f, "{ hỏng");
+    const hong = lan(null);
+    assert.notEqual(hong.code, 0);
+    assert.deepEqual(await anhDonVi(c, "S03"), truocLoi);
+  } finally {
+    rmSync(thu, { recursive: true, force: true });
+  }
+});
+
+test("SN-AC-5c cùng nhóm ở hai tài khoản (viết group:<id> và <id>, bật một nơi) → một đơn vị active", async () => {
+  const { readS03Groups } = await import("../../scripts/lib/ops-local.mjs");
+  const z = { accounts: { default: { groups: { "group:vd-nhom-9": { enabled: true } } }, b: { groups: { "vd-nhom-9": { enabled: false } } } } };
+  assert.deepEqual(readS03Groups(z), [{ key: "vd-nhom-9", enabled: true }]);
+  const S = tenLuocDo("ac5c");
+  await dungSauGop(admin, S);
+  const c = await moClient(S);
+  await c.query("BEGIN");
+  const { dongBoS03 } = await import("../sync-don-vi.mjs");
+  await dongBoS03(c, readS03Groups(z));
+  await c.query("COMMIT");
+  assert.deepEqual((await anhDonVi(c, "S03")).map((r) => [r.group_key, r.status]), [["vd-nhom-9", "active"]]);
+});
+
+test("SN-AC-6 đồng bộ S02: mỗi market một đơn vị, thị trường theo ánh xạ khi có; chạy lại không đổi", async () => {
+  const S = tenLuocDo("ac6");
+  await dungSauGop(admin, S, { thamChieu: true });
+  await bangS02(S, [["111", "Market thử 1"], ["222", "Market thử 2"], ["333", null]], [[THAM_CHIEU.market, "222"], [THAM_CHIEU.submarket, "333"]]);
+  const c = await moClient(S);
+  const thu = mkdtempSync(path.join(tmpdir(), "sn-gw-"));
+  const f = path.join(thu, "cau-hinh.json");
+  writeFileSync(f, cauHinhMau({}));
+  try {
+    assert.equal(chaySync(S, f).code, 0);
+    const lan1 = await anhDonVi(c, "S02");
+    assert.deepEqual(lan1.map((r) => [r.unit_code, r.group_key, r.market_codes]), [
+      ["S02-M001", "111", []], ["S02-M002", "222", [THAM_CHIEU.market]], ["S02-M003", "333", []]]);
+    const r2 = chaySync(S, f);
+    assert.equal(r2.code, 0);
+    assert.match(r2.out, /S02: thêm 0 · đổi 0 · giữ 3/);
+    assert.deepEqual(await anhDonVi(c, "S02"), lan1);
+  } finally {
+    rmSync(thu, { recursive: true, force: true });
+  }
 });
