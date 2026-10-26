@@ -5,7 +5,7 @@ slug: so-nhom-mot-noi
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/** và app/src/app/api/v1/ops/** (t3_paths); hàng lộ trình ghi T3
 surfaces: [ui, api, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-so-nhom-mot-noi-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -59,3 +59,12 @@ Quét bằng morphological-scan, preset entity-feature (design doc):
 ## Notes
 
 - Migration chỉ áp DB local sau khi gộp (cùng luật TV2a); Supabase không có bảng này.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Sau khi đọc sổ lỗi rồi bấm «Thử lại», khu sổ có thể báo trống tới khi tải lại cả trang.
+  - Ngoài-4: Luật kế thừa nhóm S03 có ba bản (app, readS03Allowlist, readS03Groups); đổi luật phải sửa cả ba.
+  - Ngoài-5: Tab S05/S06 trống chỉ có dòng chỉ dẫn, chưa có nút tới lưới nhóm thu.
+  - Ngoài-6: Khu sổ không theo kịp thêm/xoá nhóm ở lưới nhóm thu tới khi tải lại trang; khai nhóm đã xoá báo không tìm thấy.
+  - Ngoài-8: Đường lỗi của trang Nguồn và việc route trao danh tính phiên được đo bằng soát văn bản mã, chưa bằng đầu ra.
+  - Ngoài-9: Cấu hình gateway trong ca thử là mẫu viết tay; lệch khuôn thật thì ca thử vẫn xanh.
+  - Ngoài-10: Ca SN-AC-1 chỉ kiểm ba trong năm tên CHECK của 047 sau đổi tên bảng.
+  - Treo (S3): ba hàm trigger của 048 tìm bảng theo search_path của bên gọi; mọi bên gọi thật dùng public.
