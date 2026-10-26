@@ -6,14 +6,14 @@ evals:
     executor: script
     cmd: config:executors.script.odt_ops_lap
     paths: [app/tests/ops-facts-so-tong-hop.test.tsx]
-    expected: "exit 0; mười hai dòng 'lan <n>: pass 10 fail 0', cuối 'OPS 12 LAN XANH'"
+    expected: "exit 0; mười hai dòng 'lan <n>: tests <t> pass <t> fail 0' với t ≥ 10 (số ca qua bằng tổng số ca), cuối 'OPS 12 LAN XANH'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
     executor: script
     cmd: config:executors.script.odt_ops_doi_chung
     paths: [app/tests/ops-facts-so-tong-hop.test.tsx]
-    expected: "exit 0; 'ban sua: do 0/3' và 'ban cu aa928f3: do <k>/3' với k ≥ 1 (pgrep giả luân phiên trên PATH); dòng 'pgrep gia duoc goi: <m>' với m > 0 (chứng pgrep giả thật sự được hai phía gọi); cuối 'DOI CHUNG LD OK'"
+    expected: "exit 0; 'ban sua: do 0/3' và 'ban cu aa928f3: do vi lop lech <k>/3' với k ≥ 1 — chỉ đếm lần đỏ có câu «lớp lệch»; pgrep giả luân phiên trên PATH chỉ tới phía app (getLockdownStatus), phía bên ghi chạy pgrep thật vì capture-ops-facts đặt PATH cứng, nên hai phía đọc khác nhau giữa hai lần đo; dòng 'pgrep gia duoc goi (phia app, mot luot ban sua): 7' (mỗi dòng ma trận một lần); cuối 'DOI CHUNG LD OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3

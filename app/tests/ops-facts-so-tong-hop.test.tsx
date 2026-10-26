@@ -112,9 +112,12 @@ describe("ON22-AC-5 lockdown một định nghĩa", () => {
   // Năm lớp đầu (L1–L4b) suy từ tệp log + NOW nên tất định — so khớp từng lớp. Ba lớp «Hạ tầng» là ảnh chụp tiến trình và
   // cổng của máy lúc đo (pgrep -f openclaw khớp cả tiến trình của tệp test chạy song song; :8009/:9210 bật tắt theo máy):
   // hai phía đo ở hai thời điểm nên không so giá trị — chỉ đòi cùng tên lớp và cả hai phía kiểm được (boolean, không null).
-  const LOP_LOG = 5
   test("ON22-AC-5 ma trận cây log: khối lockdown bằng getLockdownStatus từng lớp", async () => {
     ready()
+    // Ranh giới suy từ chính bảng lớp của app (lớp «Hạ tầng» đầu tiên), không viết cứng.
+    const { LOCKDOWN_LAYERS } = await import("../src/lib/ops-queries")
+    const LOP_LOG = LOCKDOWN_LAYERS.findIndex((l) => l.layer === "Hạ tầng")
+    assert.ok(LOP_LOG > 0, "bảng lớp lockdown không còn lớp «Hạ tầng»")
     for (const [label, wd, gw] of MATRIX) {
       const app = await appSide(wd, gw)
       const r = await writerSide(wd, gw)
