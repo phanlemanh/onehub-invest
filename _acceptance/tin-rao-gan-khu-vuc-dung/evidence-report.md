@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0af838e5a1db37923eaef163b00f360b6d31e844
+verified_commit: c83408f0992ef1f885324b6d17ec435f9cf0630f
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -160,3 +160,7 @@ none — mọi eval đều chạy một lần (deterministic), không có eval n
 ## Iterations
 
 Round 1: E1–E8 đều đạt, suite hồi quy xanh. Không có eval nào fail.
+
+### Re-pin lần 1 — 2026-10-26, do E8 thay bởi do-khu-vuc-tu-dung-moi#AC-2 (đã ký); script đo kiem-tin-rao-gan đổi sang mồi tự dựng
+run_id: repin-20261026T132644Z-43342
+sha: c83408f0992ef1f885324b6d17ec435f9cf0630f · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E8 · thay bởi hồ sơ đã ký: E8→do-khu-vuc-tu-dung-moi#AC-2 · AC không có chốt máy: AC-8
