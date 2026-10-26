@@ -35,6 +35,20 @@ FROM areas
 WHERE region_type = 'submarket'
   AND (id ~ '-$' OR length(split_part(id, '-', 3)) = 0);
 
+-- AU9 area_con_ngoai_cha: khu vực con phải nằm trong polygon cha (dung sai 0.01°). Sự cố
+-- 25/10: 34 ranh giới cấp tỉnh nạp làm «phường» Hà Nội, bản đồ Hà Nội phủ cả nước.
+INSERT INTO dq_check_results (check_name, entity, status, detail)
+SELECT 'area_con_ngoai_cha', p.id,
+  CASE WHEN count(*) FILTER (WHERE NOT ST_DWithin(p.geom, ST_PointOnSurface(c.geom), 0.01)) = 0
+       THEN 'pass' ELSE 'fail' END,
+  count(*) FILTER (WHERE NOT ST_DWithin(p.geom, ST_PointOnSurface(c.geom), 0.01))
+    || ' khu vực con có tâm ngoài polygon cha / ' || count(*) || ' con'
+FROM areas p
+JOIN areas c ON c.parent_id = p.id AND c.geom IS NOT NULL
+WHERE p.geom IS NOT NULL
+GROUP BY p.id;
+-- /AU9
+
 -- ============ (b) Volume: tổng items thu được 7 ngày gần nhất vs 7 ngày trước đó ============
 -- Theo (city, source airbnb-listing). Mỗi run batch cap 25 theo thiết kế → so
 -- batch-to-batch chỉ nhiễu; tổng cửa sổ tuần phản ánh volume thu thập thật.

@@ -292,12 +292,12 @@ export type FinderRow = {
  */
 export async function getFinderAreas(
   scope: { country: string } | { marketId: string } | { ids: string[] },
-  { geometry = true }: { geometry?: boolean } = {},
+  { geometry = true, db = pool }: { geometry?: boolean; db?: Queryable } = {},
 ): Promise<FinderRow[]> {
   const isCountry = "country" in scope;
   const isIds = "ids" in scope;
   if (isIds && scope.ids.length === 0) return [];
-  const { rows } = await pool.query(
+  const { rows } = await db.query(
     `WITH a AS (
        SELECT a.id, a.name, a.parent_id, p.name AS parent_name,
               CASE WHEN $2 THEN ST_AsGeoJSON(ST_SimplifyPreserveTopology(a.geom, $3)) END AS geojson,
