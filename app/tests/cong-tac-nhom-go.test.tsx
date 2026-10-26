@@ -1,10 +1,9 @@
 // cong-tac-nhom-go.test.tsx — hồ sơ _acceptance/cong-tac-khong-ha-nhom-go, ca «CT-AC-n». Một lược đồ tạm ở khuôn sau
 // 047 + 048 (pool của app gắn search_path lúc import), mỗi ô ma trận dựng lại dòng nhóm từ đầu; gọi POST thật của route
-// route nhóm thu bằng Bearer. Đối chứng chạy bản chép route trên origin/main (trước sửa). public không được chạm.
+// route nhóm thu bằng Bearer. Đối chứng chạy bản route trước sửa đã ghim (fixture). public không được chạm.
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
-import { execFileSync } from "node:child_process"
-import { rmSync, writeFileSync } from "node:fs"
+import { copyFileSync, rmSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { JSDOM } from "jsdom"
@@ -107,10 +106,12 @@ async function goi(route: Route, enabled: boolean) {
 }
 const routeMoi = () => import("../src/app/api/v1/ops/source-groups/route") as Promise<Route>
 
-/** Bản chép route trên origin/main (trước sửa) — đối chứng; xoá trong finally của bên gọi. */
+/** Bản route trước sửa GHIM thành fixture (route ở 8fc9603d, gốc của #142 — không suy từ ref nhánh lúc chạy); chép cạnh
+ * route để `@/` và `next/server` giải như route thật — đối chứng; xoá trong finally của bên gọi. */
+const ROUTE_CU = join(APP, "tests/fixtures/source-groups-route.truoc-cong-tac.ts.txt")
 function chepRouteCu(): { path: string; done: () => void } {
   const p = join(ROUTE_DIR, `.route-cu-${process.pid}.ts`)
-  writeFileSync(p, execFileSync("git", ["show", "origin/main:app/src/app/api/v1/ops/source-groups/route.ts"], { cwd: APP, encoding: "utf8" }))
+  copyFileSync(ROUTE_CU, p)
   return { path: p, done: () => rmSync(p, { force: true }) }
 }
 
@@ -164,7 +165,7 @@ test("CT-AC-1 ma trận 10 ô của công tắc theo design (5 trạng thái × 
   await sc.query("TRUNCATE collection_units, ops_audit")
   assert.deepEqual(await goi(route, false), { status: 200, body: { ok: false } })
 
-  // Đối chứng: route trên origin/main (trước sửa) phải đỏ ở ô retired+tắt.
+  // Đối chứng: route trước sửa (fixture) phải đỏ ở ô retired+tắt.
   const cu = chepRouteCu()
   try {
     const routeCu = (await import(cu.path)) as Route

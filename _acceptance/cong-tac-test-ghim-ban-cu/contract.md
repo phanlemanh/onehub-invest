@@ -5,7 +5,7 @@ slug: cong-tac-test-ghim-ban-cu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: app/tests/** không thuộc t3_paths
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-26T16:22:46Z
 design_doc: docs/superpowers/specs/2026-10-26-cong-tac-test-ghim-ban-cu-design.md
