@@ -7,9 +7,11 @@ chay() { env -u NODE_TEST_CONTEXT node --import tsx --test --test-name-pattern="
 for n in $(seq 1 8); do chay tests/enrich-db.test.ts && echo "lan $n: xanh" || { echo "lan $n: DO"; exit 1; }; done
 echo "TAM LAN XANH"
 # Thân ca không truyền offerIds cho lượt backlog (giữ ý đo của AC-6).
-than=$(awk -v ca="$CA" 'index($0, ca){f=1} f{print} f && /^}\);/{exit}' tests/enrich-db.test.ts)
-printf '%s\n' "$than" | grep -n 'runId: "test-ac6-backlog"' >/dev/null || { echo "KHONG THAY LOI GOI BACKLOG"; exit 1; }
-printf '%s\n' "$than" | grep -q 'offerIds' && { echo "THAN CA CO offerIds"; exit 1; }
+# Lấy đúng khối «await runEnrich({ … });» của lượt backlog trong ca (bỏ chú thích).
+goi=$(awk -v ca="$CA" 'index($0, ca){f=1} f && /await runEnrich\(\{/{g=1} g{print} g && /\}\);/{exit}' tests/enrich-db.test.ts | sed 's#//.*##')
+printf '%s\n' "$goi" | grep -q 'runId: "test-ac6-backlog"' || { echo "KHONG THAY LOI GOI BACKLOG"; exit 1; }
+printf '%s\n' "$goi" | grep -q 'offerIds' && { echo "LOI GOI BACKLOG CO offerIds"; exit 1; }
+echo "LOI GOI BACKLOG KHONG offerIds"
 # Đối chứng: bản trên origin/main.
 cu=tests/.enrich-db-doi-chung.test.ts; git -C "$ROOT" show origin/main:agent/tests/enrich-db.test.ts > "$cu"
 k=0; for n in $(seq 1 8); do chay "$cu" || k=$((k+1)); done; rm -f "$cu"

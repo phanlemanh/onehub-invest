@@ -13,7 +13,7 @@ evals:
     executor: script
     cmd: config:executors.script.enrich_ac6_tam_lan
     paths: [agent/tests/enrich-db.test.ts]
-    expected: "exit 0; tám dòng 'lan <n>: xanh', cuối 'TAM LAN XANH'; đối chứng trong cùng lệnh: bản tệp test của origin/main chạy tám lần đỏ ít nhất một lần ('DOI CHUNG: ban cu do <k>/8', k ≥ 1); thân ca trong bản sửa không có 'offerIds' ở lời gọi runEnrich của ca"
+    expected: "exit 0; tám dòng 'lan <n>: xanh', cuối 'TAM LAN XANH'; đối chứng trong cùng lệnh: bản tệp test của origin/main chạy tám lần đỏ ít nhất một lần ('DOI CHUNG: ban cu do <k>/8', k ≥ 1); khối 'await runEnrich({ … });' của lượt backlog trong ca (bỏ chú thích) không có 'offerIds' — dòng 'LOI GOI BACKLOG KHONG offerIds'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
