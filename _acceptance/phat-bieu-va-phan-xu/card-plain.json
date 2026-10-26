@@ -1,0 +1,46 @@
+{
+  "feature_plain": "Mỗi ô loại hình, phòng ngủ, WC, đường, toà của tin rao sẽ nói được ai khai và dựa vào đâu; xoá các ô ấy rồi dựng lại vẫn ra đúng như cũ.",
+  "will_do": [
+    {"id":"AC-1","p":"Sẽ thêm sổ lời khai (bảng phát biểu) và cột nguồn gốc vào dữ liệu tin ở máy local; áp hai lần không đổi gì, không ghi vào tin nào."},
+    {"id":"AC-2","p":"Sẽ chặn mọi lần sửa hay xoá lời khai đã ghi — chỉ được «rút» một lời khai, có lý do, đúng một lần."},
+    {"id":"AC-3","p":"Sẽ chọn giá trị mỗi ô theo ba lớp căn cứ (sự thật › quan sát có trích dẫn › suy luận), đúng trên một bảng ≥ 12 ca viết trước, và đảo thứ tự ghi vẫn ra cùng kết quả."},
+    {"id":"AC-4","p":"Sẽ cho mọi ô có giá trị một nguồn gốc trỏ đúng lời khai còn hiệu lực của chính tin đó — 0 ô mồ côi."},
+    {"id":"AC-5","p":"Sẽ để ba đường nạp tin (Zalo, Facebook, Chợ Tốt) chỉ ghi lời khai, không ghi thẳng năm ô; máy quét cả mã lẫn hàm trong cơ sở dữ liệu để chặn đường ghi thẳng."},
+    {"id":"AC-6","p":"Sẽ để bổ sung dữ liệu (luật E1, LLM E2) và quyết định của người duyệt đi qua lời khai: người thắng máy, hoàn tác đưa ô về giá trị có căn cứ kế tiếp, thứ tự áp không đổi kết quả."},
+    {"id":"AC-7","p":"Sẽ xoá năm ô của mọi tin rồi dựng lại trên dữ liệu thật ở máy local và ra trùng từng ô với ảnh chụp trước đó (thước bật của hàng)."},
+    {"id":"AC-8","p":"Sẽ giữ y nguyên khoảng 13,9 nghìn ô hiện có mà chưa có căn cứ bằng cách ghi chúng thành lời khai «cũ», và từ chối phân xử khi bước chuyển này chưa chạy để không ô nào bị xoá trống."},
+    {"id":"AC-9","p":"Sẽ giữ 0 quyết định người mất qua ba lượt nạp lại; quyết định người trên một ô vẫn thắng khi lượt nạp sau đọc ra giá trị khác."},
+    {"id":"AC-10","p":"Sẽ chạy ba đường nạp + dựng lại trong ≤ 5 phút trên máy local; lời khai và nguồn gốc không lên cloud, cổng Invest đọc dữ liệu như cũ."}
+  ],
+  "wont_do": [
+    {"id":"OOS-1","p":"KHÔNG chuyển đề xuất bổ sung cũ và quyết định người cũ thành lời khai, KHÔNG tính bậc dữ liệu B0–B5 — việc của PL16."},
+    {"id":"OOS-2","p":"KHÔNG đưa loại tin, giá, diện tích, tầng qua lời khai và chưa gắn mã luật + đoạn khớp cho parser; Chợ Tốt duy trì đường/WC/tầng — việc của PL17."},
+    {"id":"OOS-3","p":"KHÔNG đổi cách E1/E2 phát biểu theo lớp, KHÔNG loại trích dẫn giả của LLM — việc của PL18."},
+    {"id":"OOS-4","p":"KHÔNG bắt buộc thời điểm quan sát, chưa có trạng thái chào bán và lịch sử giá — việc của PL19."},
+    {"id":"OOS-5","p":"KHÔNG chặn tự áp ở ô chưa đo độ đúng — nguồn gốc chỉ đánh dấu «chưa đo» để PL21 gác."},
+    {"id":"OOS-6","p":"KHÔNG sinh thẻ duyệt cho ô có lời khai bất đồng — việc của PL23; vòng này chỉ đánh cờ bất đồng."},
+    {"id":"OOS-7","p":"KHÔNG hiện nguồn gốc lên cổng Invest hay API công khai, KHÔNG đổi lược đồ cloud."}
+  ],
+  "coverage_plain": [
+    {"i":0,"p":"Ai ghi được giá trị: trường có sẵn của Chợ Tốt, bộ đọc tin Zalo/Facebook, luật E1, LLM E2, người duyệt, giá trị cũ."},
+    {"i":1,"p":"Thước «đủ»: đúng các đường đang ghi năm ô hôm nay (bước nạp tin, bước nạp Chợ Tốt, hàm áp và hàm hoàn tác bổ sung)."},
+    {"i":2,"p":"Phủ bởi AC-5 (ba đường nạp), AC-6 (đường bổ sung), AC-8 (giá trị cũ)."},
+    {"i":3,"p":"Quan hệ giữa các lời khai trong một ô: không có · một lớp · lớp trên trái lớp dưới · cùng lớp đồng ý · cùng lớp bất đồng · chỉ suy luận · đã rút."},
+    {"i":4,"p":"Thước «đủ»: luật phân xử trong review kiến trúc phân loại, đối chiếu cách Wikidata xếp hạng nhiều lời khai cho một thuộc tính."},
+    {"i":5,"p":"Phủ bởi AC-3 (bảng ca phân xử)."},
+    {"i":6,"p":"Vòng đời: ghi lần đầu · nạp lại · rút/hoàn tác · sửa-xoá trái phép · dựng lại từ trống · tin gộp nhiều bài · bước chuyển giá trị cũ."},
+    {"i":7,"p":"Thước «đủ»: thước nạp lại ba lượt của PL14 và điều kiện bật của hàng này; đối chiếu nếp dựng lại từ nhật ký chỉ-thêm."},
+    {"i":8,"p":"Phủ bởi AC-2, AC-6, AC-7, AC-8, AC-9."},
+    {"i":9,"p":"Chỗ đọc: trang tin và API (đọc qua danh sách tin sống), nguồn gốc, đồng bộ cloud, căn nhà nhận giá trị từ tin."},
+    {"i":10,"p":"Thước «đủ»: 50 tệp đang đọc dữ liệu tin, đếm ở PL14."},
+    {"i":11,"p":"Phủ bởi AC-1, AC-4, AC-10."},
+    {"i":12,"p":"[GIẢ ĐỊNH — anh gạch nếu sai] năm trường này không có ô «nguồn đo» chuẩn trong RESO, nên nguồn gốc để dạng riêng của kho."}
+  ],
+  "gap_probe_plain": [
+    {"i":0,"p":"Lượt chấm áp thay đổi cơ sở dữ liệu thật ở máy local trước bước chuyển — một lần bổ sung dữ liệu lúc đó có thể xoá trống đường/WC/toà. Đã sửa: phân xử từ chối khi bước chuyển chưa chạy, có ca kiểm bốn đường."},
+    {"i":1,"p":"Sau merge, lượt nạp đêm đầu có thể chạy trước bước chuyển và xoá trống ~13,5 nghìn ô. Đã sửa: cùng cổng từ chối — lượt đêm báo lỗi có tên chứ không mất ô; thứ tự triển khai ghi trong thiết kế."},
+    {"i":2,"p":"Phép đo «y nguyên» chỉ so số ô, chụp mốc sau bước chuyển nên gần như tự đúng. Đã sửa: so từng ô với ảnh chụp trước bước chuyển, thêm đối chứng lời khai cũ sai giá trị."},
+    {"i":3,"p":"Ca kiểm quyết định người dùng chuỗi «người» viết tay, không đọc từ chỗ gọi thật. Đã sửa: bảng mọi chỗ gọi (3 chỗ hôm nay), đọc tiền tố người/máy ngay ở mã gọi, chỗ gọi mới thì đỏ."},
+    {"i":4,"p":"Máy quét đường ghi thẳng bỏ sót tệp SQL, script shell, câu viết nhiều dòng và hàm cũ còn trong cơ sở dữ liệu. Đã sửa: quét thêm các dạng đó và quét cả hàm đang sống; đối chứng sáu dạng."}
+  ]
+}
