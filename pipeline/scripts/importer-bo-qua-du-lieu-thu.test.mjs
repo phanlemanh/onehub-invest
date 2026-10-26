@@ -9,6 +9,8 @@ test("allowlist: nguồn thật đi qua, mọi nguồn khác bị chặn (kể c
   assert.equal(isAllowedSource("airbnb-discovery"), true);
   assert.equal(isAllowedSource("airdna-research"), true);
   assert.equal(isAllowedSource("osm-boundaries"), true);
+  // PL10 (BÁO 2510-12): snapshot S08 nạp QUA import-airbnb — phải trong allowlist
+  assert.equal(isAllowedSource("s08-danh-muc"), true, "S08 nạp qua import-airbnb — thiếu là mất thầm lặng");
   // bị chặn: thử + lạ
   assert.equal(isAllowedSource("zalo-mock"), false);
   assert.equal(isAllowedSource("e2e"), false);
@@ -20,6 +22,7 @@ test("allowlist: nguồn thật đi qua, mọi nguồn khác bị chặn (kể c
 
 test("isTestSnapshot (nghĩa mới = ngoài allowlist): theo segment nguồn của tên dir", () => {
   assert.equal(isTestSnapshot("hanoi__zalo-mock__2026-10-18T034152"), true);
+  assert.equal(isTestSnapshot("vn__s08-danh-muc__2026-10-24T152955810"), false, "snapshot S08 khuôn tên thật KHÔNG bị coi là test");
   assert.equal(isTestSnapshot("hanoi__example__2026-10-17T153258"), true);
   assert.equal(isTestSnapshot("hanoi__e2e__x"), true);
   assert.equal(isTestSnapshot("hanoi__TEST__1"), true);
