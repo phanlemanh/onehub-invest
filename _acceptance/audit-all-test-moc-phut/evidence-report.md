@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f6945740f5191b2673bec7c6fc7503fcd12a63d7
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: audit-all-test-moc-phut

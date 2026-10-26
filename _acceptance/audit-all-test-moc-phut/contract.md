@@ -5,7 +5,7 @@ slug: audit-all-test-moc-phut
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T15:36:40Z
 approved_by:
@@ -53,3 +53,7 @@ lệch. Ca dòng 334 cùng kiểu. Việc: tệp test tất định, không đ�
 - Ghim mốc cho `find -mtime` ở mục backup — các ca backup dùng tuổi tệp 2 và 10 ngày, xa ngưỡng 8 ngày, không chập chờn.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-2: Kiểm kê nguồn giờ chỉ bắt các cách đọc giờ đã liệt kê (date, stat, -mmin/-mtime/-newer, SECONDS, printf %(); một cách đọc giờ khác thêm vào script kiểm toàn hệ thống sau này có thể làm bài kiểm chập chờn lại mà không bị báo.
+  - Ngoài-3: Phép lặp 12 lần chỉ so số ca với bản cũ cộng một, không so danh sách tên ca, nên bỏ một ca cũ đồng thời thêm hai ca mới thì vẫn xanh.
