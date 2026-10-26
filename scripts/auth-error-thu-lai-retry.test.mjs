@@ -14,9 +14,16 @@ const { resolveConfigKey } = require(path.join(REPO, "lib/evidence-core.cjs"));
 const { parseEvals } = require(path.join(REPO, "lib/eval-yaml.cjs"));
 
 const CONFIG = "_acceptance/config.yaml";
-// «Không lệnh nào đổi nghĩa»: so config.yaml của cây đang kiểm với bản ở merge-base của nhánh chính — nhánh đã gộp main nên
-// phần khác nhau đúng bằng phần vòng này đổi (khoá main thêm về sau có ở cả hai bên). Ở chính nhánh chính, hai bên trùng nhau.
-const MAIN_REF = "origin/main";
+// «Không lệnh nào đổi nghĩa» là bất biến của MỘT lần sửa: so config.yaml trước và sau commit sửa của vòng (cha giống từng byte
+// bc6e5120). KHÔNG so cây đang kiểm hay merge-base — PR khác thêm/sửa khoá là việc hợp lệ (hàng aer-ac2-so-cap-co-dinh).
+const FIX_COMMIT = "5e396cb2";
+
+/** So cặp blob cố định qua bộ đọc `show(rev)`; không đọc cây đang kiểm. */
+export function soCapCoDinh(show) {
+  const before = show(`${FIX_COMMIT}^`);
+  const after = show(FIX_COMMIT);
+  return { doi: before !== after, ...kitBeforeAfter(before, after) };
+}
 const SUPERSEDE = "auth-error-thu-lai-retry#AC-1";
 
 /** `yaml` chỉ có ở pipeline/ — thử checkout này rồi checkout chính (worktree không có node_modules riêng). */
@@ -113,27 +120,46 @@ describe("AER-AC-2 bộ đọc kit khớp bộ đọc chuẩn", () => {
 });
 
 describe("AER-AC-2 không lệnh nào đổi nghĩa", () => {
-  test(`bộ đọc kit ra cùng giá trị cho mọi khoá ở merge-base với ${MAIN_REF} và ở cây đang kiểm`, (t) => {
-    let before;
+  const gitShow = (rev) => execFileSync("git", ["show", `${rev}:${CONFIG}`], { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  test(`bộ đọc kit ra cùng giá trị cho mọi khoá trước và sau commit sửa ${FIX_COMMIT} (hợp tập khoá)`, (t) => {
+    let r;
     try {
-      const git = (...a) => execFileSync("git", a, { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-      before = git("show", `${git("merge-base", "HEAD", MAIN_REF)}:${CONFIG}`);
+      r = soCapCoDinh(gitShow);
     } catch {
-      return t.skip(`không có ${MAIN_REF} hoặc merge-base (clone nông?) — ca so trước-sau không chạy ở đây`);
+      return t.skip(`không đọc được ${FIX_COMMIT}^ / ${FIX_COMMIT} (clone nông?) — ca so trước-sau không chạy ở đây`);
     }
-    const { total, khac } = kitBeforeAfter(before, read(CONFIG));
-    console.log(`so ${total} khoá trước-sau`);
-    assert.ok(total > 100, `chỉ so được ${total} khoá — bộ liệt khoá hỏng?`);
-    assert.deepEqual(khac, [], `giá trị đổi so với merge-base ${MAIN_REF}: ${khac.join(", ")}`);
+    assert.ok(r.doi, `${FIX_COMMIT} không đổi ${CONFIG} — sai commit mốc`);
+    console.log(`so ${r.total} khoá trước-sau`);
+    assert.ok(r.total > 100, `chỉ so được ${r.total} khoá — bộ liệt khoá hỏng?`);
+    assert.deepEqual(r.khac, [], `giá trị đổi qua commit ${FIX_COMMIT}: ${r.khac.join(", ")}`);
   });
-  test("chiều đỏ: đổi giá trị một lệnh, hay xoá hẳn một khoá, trên bản sao → bộ so gọi đúng khoá đó", () => {
-    const text = read(CONFIG);
-    const changed = text.replace(/^( {4}app_ui: )"[^"]*"/m, '$1"cd app && npm test -- --doi-nghia"');
-    assert.notEqual(changed, text, "không tìm thấy dòng app_ui để cấy");
-    assert.deepEqual(kitBeforeAfter(text, changed).khac, ["executors.test.app_ui"]);
-    const removed = text.replace(/^ {4}app_ui: .*\n/m, "");
-    assert.notEqual(removed, text, "không tìm thấy dòng app_ui để xoá");
-    assert.deepEqual(kitBeforeAfter(text, removed).khac, ["executors.test.app_ui"]);
+  test("chiều đỏ: bản «sau» đổi giá trị một lệnh, hay xoá hẳn một khoá → bộ so gọi đúng khoá đó", (t) => {
+    let after;
+    try {
+      after = gitShow(FIX_COMMIT);
+    } catch {
+      return t.skip(`không đọc được ${FIX_COMMIT} (clone nông?)`);
+    }
+    const withAfter = (planted) => (rev) => (rev === FIX_COMMIT ? planted : gitShow(rev));
+    const changed = after.replace(/^( {4}app_ui: )"[^"]*"/m, '$1"cd app && npm test -- --doi-nghia"');
+    assert.notEqual(changed, after, "không tìm thấy dòng app_ui để cấy");
+    assert.deepEqual(soCapCoDinh(withAfter(changed)).khac, ["executors.test.app_ui"]);
+    const removed = after.replace(/^ {4}app_ui: .*\n/m, "");
+    assert.notEqual(removed, after, "không tìm thấy dòng app_ui để xoá");
+    assert.deepEqual(soCapCoDinh(withAfter(removed)).khac, ["executors.test.app_ui"]);
+  });
+  test("PR khác thêm hay sửa khoá ở cây đang kiểm không làm ca này đỏ (ca so không đọc cây đang kiểm)", (t) => {
+    // Đối chứng: cùng bộ so, nếu đem so cây đang kiểm (có thêm khoá) với bản sau sửa thì báo khoá thêm — chứng bộ so nhạy;
+    // còn soCapCoDinh chỉ nhận blob từ bộ đọc git nên kết quả không đổi theo cây.
+    let base;
+    try {
+      base = soCapCoDinh(gitShow);
+    } catch {
+      return t.skip(`không đọc được ${FIX_COMMIT} (clone nông?)`);
+    }
+    const head = read(CONFIG).replace(/^ {2}script:\n/m, (m) => `${m}    pr_khac_them_khoa: "node --test scripts/x.test.mjs"\n`);
+    assert.deepEqual(kitBeforeAfter(gitShow(FIX_COMMIT), head).khac.filter((k) => k.endsWith("pr_khac_them_khoa")), ["executors.script.pr_khac_them_khoa"]);
+    assert.deepEqual(base.khac, [], "ca so cặp cố định phải xanh bất kể cây đang kiểm");
   });
 });
 
