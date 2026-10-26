@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth";
 import { canAccessOps } from "@/lib/ops-access";
 import { auditOpsWrite } from "@/lib/audit";
 import { LOI_NGOAI_NHOM, NHOM_TRANG_CU, datCheDo } from "@/lib/che-do-thu";
+import { khaiDonVi } from "@/lib/so-don-vi";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,8 @@ export const dynamic = "force-dynamic";
  *   add:    { sourceCode, groupKey, name, regionV2?, cityCode? } (Chợ Tốt)
  *   delete: { sourceCode, groupKey, purge: boolean } — purge=xoá cả posts
  *           stg_zalo_posts theo group_name (vô hiệu hóa với dữ liệu S06).
+ *   set-meta: { unitCode, marketCodes, projectNodeIds } — CHỈ phiên admin: khai thị trường, dự án một đơn vị của sổ
+ *           (PL12, lib/so-don-vi.ts; ghi sổ + audit cùng giao dịch).
  *   set-mode: { id, mode: "cho" | "bung" | "duy_tri", burstUntil? } — CHỈ phiên admin (Bearer máy không đủ: bật
  *           Bùng là tăng tải, người duyệt từng lần); luật + giao dịch kèm audit ở lib/che-do-thu.ts.
  * Mọi action ghi ops_audit (actor, action, detail).
@@ -107,6 +110,10 @@ export async function POST(req: Request) {
   if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!b?.action) return NextResponse.json({ error: "thiếu action" }, { status: 400 });
+  if (b.action === "set-meta") {
+    const r = await khaiDonVi(b, getSessionUser);
+    return NextResponse.json(r.body, { status: r.status });
+  }
   if (b.action === "set-mode") {
     const r = await datCheDo(b, getSessionUser);
     return NextResponse.json(r.body, { status: r.status });
