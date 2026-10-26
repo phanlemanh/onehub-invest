@@ -136,7 +136,15 @@ const DAY = (col: string) => `(${col} AT TIME ZONE '${VN_TZ}')::date::text`;
 
 const num = (v: unknown) => Number(v ?? 0);
 
-export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {}): Promise<DataFlow> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- hàng pg trả về động; mỗi chỗ đọc ép kiểu tường minh
+type FlowQueryFn = (text: string, values?: unknown[]) => Promise<{ rows: any[] }>;
+
+export async function getDataFlow(
+  window: FlowWindow,
+  opts: { now?: number; query?: FlowQueryFn; readableS06?: (offers: number, received: number) => number } = {},
+): Promise<DataFlow> {
+  const q: FlowQueryFn = opts.query ?? ((text, values) => pool.query(text, values));
+  const readableS06 = opts.readableS06 ?? s06Readable;
   // Chạy ở server; trang truyền mốc request (requestTime) để mọi vùng cùng một «bây giờ».
   const now = opts.now ?? Date.now();
   const n = WINDOW_DAYS[window];
@@ -147,7 +155,7 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
   const totalsStart = since ?? new Date(0);
 
   const [posts, s06, offers, groups, shortStay, records, pending] = await Promise.all([
-    pool.query(
+    q(
       `WITH ${POSTS_CTE}
        SELECT src, ${DAY("posted_at")} AS d,
               count(*) FILTER (WHERE NOT is_test) AS received,
@@ -158,12 +166,12 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
        GROUP BY 1, 2`,
       [scanStart],
     ),
-    pool.query(
+    q(
       `SELECT ${DAY("list_time")} AS d, count(*) AS received, max(list_time)::text AS latest
        FROM stg_chotot_ads WHERE list_time >= $1 GROUP BY 1`,
       [scanStart],
     ),
-    pool.query(
+    q(
       `SELECT o.source, ${DAY("o.first_seen")} AS d, count(*) AS offers, count(po.offer_id) AS linked,
               count(*) FILTER (WHERE o.area_id IS NOT NULL) AS with_ward,
               count(*) FILTER (WHERE o.property_type <> 'unknown') AS with_type,
@@ -177,7 +185,7 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
        GROUP BY 1, 2`,
       [scanStart],
     ),
-    pool.query(
+    q(
       `WITH ${POSTS_CTE},
        link AS (
          SELECT DISTINCT unnest(post_ids) AS post_id, offer_id, source FROM sale_offers WHERE source IN ('S03', 'S05')
@@ -192,13 +200,13 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
        GROUP BY 1, 2`,
       [totalsStart],
     ),
-    pool.query(
+    q(
       `SELECT (SELECT count(DISTINCT listing_id) FROM stg_abnb_listings WHERE fetched_at >= $1) AS received,
               count(*) AS stored, count(area_id) AS with_ward, max(last_seen)::text AS latest
-       FROM listings WHERE last_seen >= $1::date`,
+       FROM listings WHERE last_seen >= ($1::timestamptz AT TIME ZONE '${VN_TZ}')::date`,
       [totalsStart],
     ),
-    pool.query(
+    q(
       `SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence,
               o.n_reposts, o.first_seen::text, o.last_seen::text,
               a.name AS ward, m.name AS market,
@@ -219,7 +227,7 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
        ORDER BY o.first_seen DESC`,
       [totalsStart],
     ),
-    pool.query(
+    q(
       `SELECT (SELECT count(*) FROM enrichment_proposals WHERE status = 'pending') AS enrich,
               (SELECT count(*) FROM review_queue WHERE status = 'pending') AS review`,
     ),
@@ -291,8 +299,8 @@ export async function getDataFlow(window: FlowWindow, opts: { now?: number } = {
   }
   // S06: không có khoá nối ngược → «đọc được» ước lượng bằng số tin, không vượt số bài.
   const s06Flow = bySource.get("S06")!;
-  s06Flow.readable = s06Readable(s06Flow.offers, s06Flow.received);
-  for (const d of dayMap.values()) if (d.source === "S06") d.readable = s06Readable(d.offers, d.received);
+  s06Flow.readable = readableS06(s06Flow.offers, s06Flow.received);
+  for (const d of dayMap.values()) if (d.source === "S06") d.readable = readableS06(d.offers, d.received);
 
   const ss = shortStay.rows[0] ?? {};
   mix.shortStay = num(ss.stored);

@@ -145,6 +145,8 @@ async function makeSchema(schema: string, offers: Offer[], ads: number) {
     await admin.query(`INSERT INTO "${schema}".stg_abnb_listings (listing_id, snapshot_id, payload, fetched_at) VALUES ($1,'hanoi__airbnb__x','{}',$2)`, [id, vn(IN)])
     await admin.query(`INSERT INTO "${schema}".listings (id, area_id, last_seen) VALUES ($1,'vn-hanoi-a','2026-10-25')`, [id])
   }
+  // Listing thấy lần cuối ngày 19/10 (giờ VN): ngoài cửa sổ 7 ngày 20…26 — ca biên ép ngày theo múi giờ phiên DB.
+  await admin.query(`INSERT INTO "${schema}".listings (id, area_id, last_seen) VALUES ('l3','vn-hanoi-a','2026-10-19')`)
 }
 
 before(async () => {
@@ -233,10 +235,18 @@ describe("DF-AC-2 số chặng theo nguồn", () => {
     assert.deepEqual(pick(by.S03), { received: 6, testRejected: 3, readable: 4, offers: 2, complete: 1, withWard: 1, linked: 1, approx: false })
     assert.deepEqual(pick(by.S05), { received: 2, testRejected: 0, readable: 1, offers: 1, complete: 0, withWard: 0, linked: 0, approx: false })
     assert.deepEqual(pick(by.S06), { received: 4, testRejected: 0, readable: 3, offers: 3, complete: 3, withWard: 3, linked: 1, approx: true })
-    assert.deepEqual([all.shortStay.received, all.shortStay.stored], [2, 2])
+    assert.deepEqual([all.shortStay.received, all.shortStay.stored], [2, 3])
     const w7 = await getDataFlow("7d", { now: NOW })
     const s03 = w7.sources.find((s) => s.source === "S03")!
     assert.deepEqual([s03.received, s03.readable, s03.offers], [4, 3, 1], "7 ngày chỉ đếm bài/tin trong khoảng")
+    assert.equal(w7.shortStay.stored, 2, "listing 19/10 nằm ngoài 7 ngày VN")
+    // Câu cũ `last_seen >= $1::date` lấy phần ngày của mốc theo múi của tiến trình gửi: tiến trình chạy UTC (Vercel) gửi
+    // 19/10 17:00Z → ngày 19/10 → đếm thừa listing ngày 19. Mô phỏng bằng mốc dạng chuỗi UTC.
+    const sinceUtc = new Date(vn("2026-10-20T00:00:00")).toISOString()
+    const cu = (await admin.query(`SELECT count(*)::int n FROM "${S}".listings WHERE last_seen >= $1::date`, [sinceUtc])).rows[0].n
+    const moi = (await admin.query(`SELECT count(*)::int n FROM "${S}".listings WHERE last_seen >= ($1::timestamptz AT TIME ZONE 'Asia/Ho_Chi_Minh')::date`, [sinceUtc])).rows[0].n
+    assert.equal(moi, 2, "câu mới đúng cả khi mốc gửi dạng UTC")
+    assert.notEqual(cu, 2, `đột biến ép ngày theo múi phiên DB phải đỏ: S01 7 ngày ${cu} ≠ 2`)
     const { rows } = await admin.query(`SELECT count(*)::int n FROM "${S}".stg_zalo_posts WHERE post_id IN ('t1','t2','t3')`)
     assert.equal(rows[0].n, 3, "đối chứng: bài thử vẫn nằm trong bảng nạp")
   })
@@ -252,15 +262,21 @@ describe("DF-AC-2 số chặng theo nguồn", () => {
   })
   test("DF-AC-2 S06 min — tin S06 nhiều hơn quảng cáo", async () => {
     ready()
-    const { s06Readable } = await import("../src/lib/data-flow-queries")
+    const { getDataFlow } = await import("../src/lib/data-flow-queries")
     const extra: Offer[] = [1, 2, 3, 4, 5].map((i) => [`m${i}`, "S06", "sale", "house", 1e9, 50, "vn-hcmc-x", IN, [], false])
     await makeSchema(`${S}_min`, extra, 2)
-    const { rows } = await admin.query(
-      `SELECT (SELECT count(*)::int FROM "${S}_min".sale_offers WHERE source='S06') o, (SELECT count(*)::int FROM "${S}_min".stg_chotot_ads) a`,
-    )
-    assert.equal(s06Readable(rows[0].o, rows[0].a), 2)
-    const dotBien = (o: number) => o
-    assert.notEqual(dotBien(rows[0].o), 2, `đột biến phải đỏ: S06 readable ${dotBien(rows[0].o)} ≠ 2`)
+    const c = new pg.Client({ connectionString: schemaUrl(`${S}_min`) })
+    await c.connect()
+    try {
+      const query = (text: string, values?: unknown[]) => c.query(text, values)
+      const s06 = (await getDataFlow("all", { now: NOW, query })).sources.find((x) => x.source === "S06")!
+      assert.deepEqual([s06.offers, s06.received, s06.readable], [5, 2, 2], "S06 readable = min(tin, quảng cáo)")
+      // Chiều đỏ: cùng đường mã getDataFlow, luật «luôn lấy số tin» thay cho min.
+      const sai = (await getDataFlow("all", { now: NOW, query, readableS06: (o) => o })).sources.find((x) => x.source === "S06")!
+      assert.notEqual(sai.readable, 2, `đột biến phải đỏ: S06 readable ${sai.readable} ≠ 2`)
+    } finally {
+      await c.end()
+    }
   })
 })
 
@@ -336,6 +352,7 @@ describe("DF-AC-3 SQL khớp levelOf", () => {
       by.set(r.source, x)
     }
     console.log(`# DF-AC-3 DB thật ${JSON.stringify(Object.fromEntries(by))}`)
+    assert.ok(rows.length > 0, "đối chứng: DB thật phải có tin để so (bảng rỗng = phép đo xanh rỗng)")
     for (const [src, x] of by) assert.equal(x.sql, x.ts, `nguồn ${src}: SQL ${x.sql} ≠ levelOf ${x.ts}`)
   })
 })
@@ -461,6 +478,8 @@ describe("DF-AC-8 trống", () => {
     assert.equal([...root.querySelectorAll("button")].filter((b) => b.textContent?.trim() === "Xem tất cả nguồn").length, 1)
     root = await render(<FlowSankey sources={[sf("S03", 10, 4, 2, 0)]} roles={{}} />)
     assert.doesNotMatch(root.textContent ?? "", /Chưa có bài trong khoảng này/)
+    const dong = [...root.querySelectorAll("ul.sr-only li")].map((li) => li.textContent ?? "")
+    assert.ok(dong.some((t) => t.includes("tới Bài nhận: 10")), `đối chứng dương: có bài thì đường ống vẽ dòng chảy (${dong.join(" | ")})`)
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
     root = await render(<RecordsGrid records={[]} roles={{}} />)
     assert.match(root.textContent ?? "", /Không có tin nào khớp bộ lọc/)
