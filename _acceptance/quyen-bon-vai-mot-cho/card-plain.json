@@ -1,0 +1,34 @@
+{
+ "feature_plain": "Mọi API của Ops kiểm quyền theo một bảng bốn vai ở một chỗ, và mỗi thao tác ghi để lại đúng một dòng nhật ký mang tên người thật, ghi cùng lúc với thao tác.",
+ "will_do": [
+  {"id":"AC-1","p":"Sẽ cho cả 11 API của Ops hỏi quyền qua một hàm chung, không API nào tự viết điều kiện riêng."},
+  {"id":"AC-2","p":"Sẽ chặn đúng theo bảng: chưa đăng nhập 401, sai vai 403, và khi bị chặn thì không đổi dữ liệu, tệp cấu hình hay tiến trình nào."},
+  {"id":"AC-3","p":"Sẽ ghi đúng một dòng nhật ký cho mỗi thao tác thành công, mang mã người làm; thao tác không đổi gì thì không ghi."},
+  {"id":"AC-4","p":"Sẽ huỷ cả thao tác khi ghi nhật ký hỏng, và không để dòng nhật ký nào khi thao tác hỏng."},
+  {"id":"AC-5","p":"Sẽ ghi nhật ký cho việc quản trị Zalo (cấu hình, đăng nhập), kể cả bật và dừng đăng nhập — hôm nay hai việc này không có dòng nào."},
+  {"id":"AC-6","p":"Sẽ cho máy có khoá chung đọc danh sách nhóm thu (hôm nay luôn bị từ chối)."},
+  {"id":"AC-7","p":"Sẽ cho cơ sở dữ liệu chỉ nhận năm vai user, viewer, ops, admin, owner."},
+  {"id":"AC-8","p":"Sẽ cho trang Ops dùng cùng bậc vai: viewer xem được, chỉ admin và owner vào trang quản trị."},
+  {"id":"AC-10","p":"Sẽ giữ máy đêm nạp số chạy như cũ và các bài kiểm hiện có của trang nguồn vẫn xanh."}
+ ],
+ "wont_do": [
+  {"id":"AC-9","p":"Chặn bảng mô tả API công khai nói khác quyền thật: bảng phải khớp bảng quyền từng phương thức."},
+  {"id":"OOS-1","p":"KHÔNG làm khoá máy theo tên, giao diện quản vai, hay cấp vai cho tài khoản thật."},
+  {"id":"OOS-2","p":"KHÔNG làm cho thao tác xoá nhóm đảo lại được."},
+  {"id":"OOS-3","p":"KHÔNG đổi cách các trang Ops kiểm quyền theo từng nút."}
+ ],
+ "coverage_plain": [
+  {"i":0,"p":"Đã quét theo bảng thử: bảy kiểu người gọi × mười hành động × sáu kết cục × ba loại việc."},
+  {"i":1,"p":"Trục người gọi: không ai, user, bốn vai, khoá chung — đủ là ma trận AC-2 có đủ 147 ô."},
+  {"i":2,"p":"Trục hành động: mười hành động của bảng phủ cả 11 API — đủ là AC-1 thấy 21 ô route."},
+  {"i":3,"p":"Trục kết cục: qua, không đổi, việc hỏng, nhật ký hỏng, 401, 403 — AC-2 đến AC-5 mỗi kết cục có ca."},
+  {"i":4,"p":"Trục loại việc: ghi dữ liệu, ghi tệp, chạy tiến trình — AC-4 cho dữ liệu, AC-5 cho tệp và tiến trình."}
+ ],
+ "gap_probe_plain": [
+  {"i":0,"p":"Máy đã tự quyết ai mất quyền (cửa phụ OPS_EMAILS, vai ops mất quyền tạm dừng nhóm) — nay thành Hỏi-1 và Hỏi-2 cho anh; thêm Hỏi-3 về áp lên prod."},
+  {"i":1,"p":"Phép đối chứng đọc bản cũ từ nhánh lúc chạy sẽ hỏng sau khi gộp — đã ghim bản cũ thành tệp cố định."},
+  {"i":2,"p":"Mỗi hành động chỉ thử một API đại diện — đã mở thành đủ 147 ô."},
+  {"i":3,"p":"Chưa đo trường hợp nhật ký hỏng khi quản trị Zalo — đã thêm ca: tệp cấu hình và tiến trình phải không đổi."},
+  {"i":4,"p":"Chưa đo lại rằng chỉ máy đêm dùng khoá chung để ghi — đã thêm ca quét cả kho."}
+ ]
+}
