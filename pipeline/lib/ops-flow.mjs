@@ -76,8 +76,12 @@ export function parseLog(text, { now = Date.now() } = {}) {
 // MỘT định nghĩa cho bên ghi (khối `luong7` của bản tin) và `getFlowDays` của app ở máy thu — app chép nguyên văn hai câu
 // SQL này (app/src/lib/collections-queries.ts); app/tests/luong-7-ngay-dung-so.test.tsx (ON5-AC-4) giữ hai bên khớp.
 // Cùng đồng hồ «ngày đăng»: bài theo posted_at, tin theo first_seen (= giờ đăng bài sớm nhất) — tin không vượt bài.
-/** Bài S03 thật (tác tử thu `zalo-agent`, không mock) theo ngày VN của `posted_at`. $1 = mốc 00:00 giờ VN ngày cũ nhất. */
-export const S03_POSTS_SQL = `SELECT ${VN_DAY_SQL("posted_at")} d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' GROUP BY 1`;
+/**
+ * Bài S03 thật theo ngày VN của `posted_at` (post_id là khoá chính nên mỗi bài một dòng). $1 = mốc 00:00 giờ VN ngày cũ nhất.
+ * «Thật» = snapshot `zalo-agent`, KHÔNG do tác tử S05 thu (`apify-facebook` đi chung ống snapshot — DF0 26/10: trước đó
+ * 100 bài S05 ngày 21/10 bị đếm vào S03), và không mang dấu bài thử của pipeline/lib/test-posts.mjs (tác tử thử, nhóm TEST).
+ */
+export const S03_POSTS_SQL = `SELECT ${VN_DAY_SQL("posted_at")} d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' GROUP BY 1`;
 /** Tin rao nguồn S03 theo ngày VN của `first_seen`. $1 như trên. */
 export const S03_OFFERS_SQL = `SELECT ${VN_DAY_SQL("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
 

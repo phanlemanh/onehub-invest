@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4550cc8732adf50b3da6521a12615cdb985b3d30
+verified_commit: 78ed70327bce78391bca09bf7eb49b88308ce396
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -174,3 +174,7 @@ sha: 099e86ba692a009166f8be665f11adc23ea1f06e · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-26, do gộp origin/main a9f018a (#127 sửa test app chập chờn, #121) sau chữ ký
 run_id: repin-20261026T080211Z-83301
 sha: 4550cc8732adf50b3da6521a12615cdb985b3d30 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): ci-test-module E6
+
+### Re-pin lần 3 — 2026-10-26, do danh sách bỏ qua CI thêm ca DF-AC-3 + gộp #141/#136 (ci-bo-qua-df-ac-3)
+run_id: repin-20261026T145405Z-62211
+sha: 78ed70327bce78391bca09bf7eb49b88308ce396 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
