@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 8df9d81ca00cd5f7d748ecc2a457bbbe47651642
+verified_commit: 24a6dc87b1cb375fe1317380343d0e7557b1288d
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -246,3 +246,7 @@ none — every multi-run eval is uniform
 
 Round 1: REJECT — ba lệnh suite hồi quy (agent, app, pipeline) đỏ và có bốn phát hiện trong hợp đồng (AC-2 hai mục, AC-3, AC-8). Returned to implementation.
 Round 2: PASS — mọi eval chạy lại đều xanh, E4 và E11-E14 mang từ round 1 vì delta không chạm paths của eval; baseline không đo được (hạ tầng); verified_at của các khối round 2 là mốc làm tròn ghi lúc soạn báo cáo.
+
+### Re-pin lần 1 — 2026-10-26, do gộp origin/main (#138, #139) vào feat/ops-data-flow
+run_id: repin-20261026T144507Z-68691
+sha: 24a6dc87b1cb375fe1317380343d0e7557b1288d · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · AC không có chốt máy: AC-7
