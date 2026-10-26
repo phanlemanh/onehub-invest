@@ -5,10 +5,10 @@
   "type": "module",
   "description": "One Invest data collector — Airbnb VN + other sources, raw immutable snapshots + manifest contract",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && cp -R src/test/fixtures dist/test/",
     "check": "tsc -p tsconfig.json --noEmit",
     "collect": "node dist/cli.js",
-    "test": "tsc -p tsconfig.json && node --test 'dist/test/*.test.js'",
+    "test": "tsc -p tsconfig.json && cp -R src/test/fixtures dist/test/ && node --test 'dist/test/*.test.js'",
     "api": "node dist/api/main.js"
   },
   "devDependencies": {

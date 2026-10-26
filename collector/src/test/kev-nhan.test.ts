@@ -91,7 +91,7 @@ test("kev-nhãn: flush tin có kev → manifest khai schemaVersion 3 (PL4, claud
   const m = await s.flush();
   assert.ok(m);
   const manifest = JSON.parse(readFileSync(join(root, "hanoi", m.snapshotId, "manifest.json"), "utf8"));
-  assert.equal(manifest.schemaVersion, 3, "hợp đồng DATA-CONTRACT v3 — bộ ghi phải khai đúng");
+  assert.equal(manifest.schemaVersion, 4, "hợp đồng DATA-CONTRACT v4 — bộ ghi phải khai đúng");
   const items = snapshotItems(root, m.snapshotId);
   assert.ok((items[0].meta as { kev?: unknown }).kev, "items có meta.kev");
 });
