@@ -257,7 +257,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 
 ## Dữ liệu & nguồn
 
-**Nguồn**: Nơi dữ liệu đến, luôn gọi bằng mã S01–S07 (SPL, ADR-0007). Tên thật là tầng A.
+**Nguồn**: Nơi dữ liệu đến, luôn gọi bằng mã S01–S08 (SPL, ADR-0007). Tên thật là tầng A.
 - Code: `source (source_registry.code)` · RESO: OriginatingSystemName
 _Avoid_: kênh dữ liệu
 
@@ -283,7 +283,7 @@ _Avoid_: cào, crawl
 - Code: `freshness (SLO)` · RESO: ≈ ModificationTimestamp
 _Avoid_: freshness
 
-**Tầng A**: Tên nguồn thật, hồ sơ người dùng app — không rời máy local; cloud chỉ nhận hash + aggregate (luật 6). Định danh người bán trên tin rao KHÔNG thuộc tầng A (tầng C, 23/10).
+**Tầng A**: Bốn thứ không rời máy thu (luật 6, ADR-0007 sửa đổi 26/10): tên nguồn thật (kể cả tên miền và giá trị mang nó), hồ sơ người dùng app, định danh tài khoản thu, phiên/khoá/QR/profile trình duyệt. Định danh người bán trên tin rao và tên nhóm thu là tầng C; nội dung bài, ảnh tin và thẻ duyệt lên máy chủ cho vai ops trở lên, đã thay tên nguồn bằng mã.
 - Code: `SPL tier A` · RESO: —
 
 **Tầng B**: Mã nguồn S0x — dùng ở API và mọi trang Ops.
@@ -317,7 +317,7 @@ cổng Ops nằm ở dòng `_Avoid_` để thước chữ hiển thị giữ nó
 **Máy thu**: Máy local chạy collector, pipeline và DB local — nơi duy nhất giữ dữ liệu tầng A.
 - Code: `local` · RESO: —
 
-**Máy chủ**: Bản cổng chạy trên cloud (Vercel + Supabase) — chỉ nhận số tổng hợp và dữ liệu đã lọc tầng A.
+**Máy chủ**: Bản cổng chạy trên cloud (Vercel + Supabase) — nhận số tổng hợp và dữ liệu đã lọc tầng A, ghi lệnh cho máy thu kéo về; không bao giờ gọi vào máy thu (ADR-0015).
 - Code: `cloud` · RESO: —
 _Avoid_: bản cloud, lên cloud
 
@@ -368,6 +368,32 @@ _Avoid_: ít dữ liệu, thin sample
 **Thị trường hiệu chuẩn**: Thị trường có ít nhất một số để đối chiếu với S02 (điểm S02, ADR, công suất hoặc listing) — mỗi thị trường một thẻ; thị trường không có số nào gộp vào một dòng «Chưa có số: …». Khu vực gộp nhiều market S02 dùng market đại diện (nhiều listing nhất), thẻ ghi «đại diện cho k thị trường S02»; riêng dòng Listing cộng listing S02 của cả k thị trường, cùng mẫu số với bảng Độ phủ trung thực (Mạnh duyệt 25/10).
 - Code: `splitCalibrated (calibrated, empty)` · RESO: —
 _Avoid_: khu vực hiệu chuẩn, market hiệu chuẩn
+
+Nhãn tự vận hành từ xa — thêm ở TV0 `adr-duong-lenh-keo` (26/10, ADR-0015). Code là tên bảng đích của đợt
+`tu-van-hanh-2510`; bảng sinh ở hàng của nó (PL12, TV4, TV12, TV14).
+
+**Đơn vị thu**: Một thứ mà một nguồn thu theo nó và người vận hành bật/tắt được: nhóm S03 hay S05, vùng S06, market S02. Mỗi đơn vị có một mã ngắn do máy sinh, ổn định, không tái dùng, dạng `S03-N012` (N nhóm · V vùng · M market), hiện ở cả máy chủ lẫn máy thu. Tiêu đề sửa được, mã thì không. Sổ đơn vị thu là một bảng chung cho mọi nguồn (PL12).
+- Code: `collection_unit (collection_units, unit_key)` · RESO: —
+- Slug URL: `units`
+- Ghi chú: «Nhóm thu» vẫn là nhãn của một đơn vị loại nhóm (S03, S05) trên `/ops/sources`; «Đơn vị thu» là nhãn chung khi câu nói về mọi loại.
+_Avoid_: collection unit, source group
+
+**Lệnh**: Một ý muốn ghi có khuôn mà người vận hành gửi trên máy chủ (tạm dừng nguồn, bật một đơn vị thu, đổi lịch…). Máy thu kéo lệnh đã duyệt về, kiểm bất biến, áp, rồi báo kết quả. Lệnh đi theo vòng nháp → đã gửi → đã duyệt → chờ áp → đang áp → đã áp; nhánh phụ là bị từ chối, hoặc lỗi rồi tự hoàn tác. Hoàn tác là một lệnh đảo mới. Không có lệnh tự do (ADR-0015).
+- Code: `change_request (change_requests)` · RESO: —
+- Slug URL: `change-requests`
+_Avoid_: change request, yêu cầu thay đổi
+
+**Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách tin. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các tin gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
+- Code: `context_rule (context_rules)` · RESO: —
+- Slug URL: `context-rules`
+- Ghi chú: Khác mô tả nhóm (ON19): mô tả là dữ kiện về nhóm; quy định là cách đọc tin của nhóm.
+_Avoid_: quy tắc AI, context rule
+
+**Mục tiêu phủ**: Mức phủ mà đội vận hành đặt cho một thị trường theo một chỉ số độ phủ (đơn vị đang thu, tin 7 ngày, % tin gắn được phường, căn). Trang độ phủ thị trường so số đo với mục tiêu và cảnh báo thị trường dưới mục tiêu. Đặt bằng lệnh.
+- Code: `coverage_target (coverage_targets)` · RESO: —
+- Slug URL: `market-coverage`
+- Ghi chú: Số đo tính sẵn ở pipeline (`market_coverage`, luật 10). Khác «Độ tươi»: độ tươi đo thời gian từ lần thu cuối, độ phủ đo thị trường có đủ tin.
+_Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 
 ## Cổng & tính năng
 
