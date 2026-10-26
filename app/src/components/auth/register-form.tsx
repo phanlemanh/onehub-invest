@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { AuthError } from "./auth-error"
-import { GradientWave } from "./gradient-wave"
 import { PasswordField } from "./password-field"
 
 /**
@@ -35,8 +34,6 @@ export function RegisterForm({
 }) {
   return (
     <div className="bg-background relative isolate min-h-svh w-full overflow-hidden">
-      <GradientWave />
-
       <div className="relative flex min-h-svh flex-col px-6 py-7 sm:px-12 sm:py-10 lg:px-14 lg:py-12">
         <header className="flex items-center justify-between">
           <BrandMark href="/" />
@@ -58,12 +55,8 @@ export function RegisterForm({
                 <span className="bg-primary size-1.5 rounded-full" aria-hidden="true" />
                 <span>{facts.join(" · ")}</span>
               </div>
-              <h1 className="text-foreground text-4xl leading-[1.02] font-semibold tracking-[-0.02em] text-balance sm:text-5xl lg:text-[56px]">
-                Đầu tư cho thuê ngắn hạn bằng{" "}
-                <span className="bg-gradient-to-r from-orange-500 via-pink-500 to-violet-500 bg-clip-text text-transparent">
-                  số liệu
-                </span>
-                , không bằng cảm tính.
+              <h1 className="text-foreground text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+                Đầu tư cho thuê ngắn hạn bằng số liệu, không bằng cảm tính.
               </h1>
               <p className="text-muted-foreground max-w-xl text-base leading-relaxed text-pretty sm:text-lg">
                 Công suất, giá phòng và lợi suất theo từng phường, từ lịch Airbnb
@@ -74,7 +67,7 @@ export function RegisterForm({
             <Frame className="w-full">
               <FramePanel className="space-y-7 p-6 sm:space-y-8">
                 <div className="space-y-2">
-                  <FrameTitle className="text-xl tracking-tight">Tạo tài khoản miễn phí</FrameTitle>
+                  <FrameTitle>Tạo tài khoản miễn phí</FrameTitle>
                   <FrameDescription>Chỉ cần email và mật khẩu.</FrameDescription>
                 </div>
 
