@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
-import { phuongHopLe, slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
+import { NGUON_PHUONG, phuongHopLe, slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
 
 export const MARKETS = {
   hanoi: { id: "vn-hanoi", name: "Hà Nội" },
@@ -105,7 +105,7 @@ async function upsertPhuong(client, city, log) {
                     ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($4), 4326)), 3)) AS g)
        INSERT INTO areas (id, parent_id, region_type, name, country_code, geom, geom_pt, meta)
        SELECT $1, $2, 'submarket', $3, 'vn', g, ST_PointOnSurface(g)::geography,
-              jsonb_build_object('source', 'osm-phuong', 'osm_id', $5::text)
+              jsonb_build_object('source', '${NGUON_PHUONG}', 'osm_id', $5::text)
        FROM g
        ON CONFLICT (id) DO UPDATE SET
          parent_id = EXCLUDED.parent_id, region_type = 'submarket',
@@ -149,7 +149,7 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
     const mid = MARKETS[c].id;
     // Chốt an toàn: snapshot hỏng (mất tag cấp, gom nhầm) thì không được xoá trọn thành phố
     const { rows: con } = await client.query(
-      `SELECT id FROM areas WHERE parent_id = $1 AND meta->>'source' = 'osm-phuong'`,
+      `SELECT id FROM areas WHERE parent_id = $1 AND meta->>'source' = '${NGUON_PHUONG}'`,
       [mid],
     );
     const ids = new Set(u.ids);
@@ -215,7 +215,7 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
   // metrics/breakdowns là cache — 300/400 rebuild lại sau.
   const doomed = `SELECT a.id FROM areas a
      WHERE a.parent_id = ANY($1) AND a.region_type = 'submarket'
-       AND a.meta->>'source' IS DISTINCT FROM 'osm-phuong'
+       AND a.meta->>'source' IS DISTINCT FROM '${NGUON_PHUONG}'
        AND NOT EXISTS (SELECT 1 FROM listing_records l WHERE l.area_id = a.id)
        AND NOT EXISTS (SELECT 1 FROM sale_offer_records o WHERE o.area_id = a.id)
        AND NOT EXISTS (SELECT 1 FROM market_asset_stats s WHERE s.area_id = a.id)
@@ -231,7 +231,7 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
 
   const { rows: keptOld } = await client.query(
     `SELECT id, name FROM areas
-     WHERE parent_id = ANY($1) AND meta->>'source' IS DISTINCT FROM 'osm-phuong'`,
+     WHERE parent_id = ANY($1) AND meta->>'source' IS DISTINCT FROM '${NGUON_PHUONG}'`,
     [active],
   );
   for (const k of keptOld) log.warn(`  ! còn area ngoài OSM (đang bị tham chiếu): ${k.id} ${k.name}`);

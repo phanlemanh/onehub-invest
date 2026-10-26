@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { mintOfferId } from "./lib/offer-key.mjs";
 import { matchPhuong } from "./transform-zalo.mjs";
+import { docPhuongHopLe } from "./lib/osm.mjs";
 import { CONFIDENCE, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
@@ -18,13 +19,13 @@ const DB_URL =
 const norm = (s) =>
   (s ?? "").normalize("NFC").toLowerCase().replace(/^(phường|xã|thị trấn|thị xã)\s+/i, "").trim();
 
-/** Thân transform S06 — người gọi giữ kết nối (và transaction khi cần, như thước nap-lai-ba-luot). */
+/**
+ * Thân transform S06 — main chạy không bọc transaction như trước; test và phép đo (thước nap-lai-ba-luot) bọc BEGIN…ROLLBACK.
+ * @param {import("pg").Client} client
+ */
 export async function runTransformChotot(client) {
-  // Phường theo thành phố (OSM đã migrate sáp nhập 2025)
-  const { rows: areas } = await client.query(
-    `SELECT id, name, parent_id FROM areas WHERE region_type = 'submarket'
-       AND parent_id IN ('vn-hanoi', 'vn-hcmc')`,
-  );
+  // Phường hợp lệ theo thành phố (OSM đã migrate sáp nhập 2025) — bộ đọc chung, bỏ khu vực lạc
+  const areas = await docPhuongHopLe(client, ["vn-hanoi", "vn-hcmc"]);
   const byCity = new Map([
     ["vn-hanoi", new Map(areas.filter((a) => a.parent_id === "vn-hanoi").map((a) => [norm(a.name), a.id]))],
     ["vn-hcmc", new Map(areas.filter((a) => a.parent_id === "vn-hcmc").map((a) => [norm(a.name), a.id]))],
@@ -105,12 +106,14 @@ export async function runTransformChotot(client) {
     `phường: ${nWardV3} ward_v3 + ${nWardTxt} text-match` +
     `${nHigh + nMed > 0 ? ` (match ${(((nWardV3 + nWardTxt) / (nHigh + nMed)) * 100).toFixed(1)}%)` : ""}`,
   );
+  return { high: nHigh, medium: nMed, skip: nSkip, wardV3: nWardV3, wardText: nWardTxt };
 }
 
 async function main() {
   const client = new pg.Client({ connectionString: DB_URL });
   await client.connect();
   try {
+    // Giữ như trước khi tách hàm: mỗi câu upsert tự commit (không bọc transaction)
     await runTransformChotot(client);
   } finally {
     await client.end();

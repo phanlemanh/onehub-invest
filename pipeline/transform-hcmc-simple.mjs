@@ -1,5 +1,5 @@
 import pg from "pg";
-import { slugify } from "./lib/osm.mjs";
+import { ganPhuongTheoToaDo, slugify } from "./lib/osm.mjs";
 
 const client = new pg.Client({ connectionString: "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" });
 await client.connect();
@@ -69,13 +69,7 @@ for (const r of stg) {
 }
 console.log(`listings: ${n} OK, ${fail} fail`);
 
-// 3. Point-in-polygon reassign
-const { rowCount: assigned } = await client.query(
-  `UPDATE listings l SET area_id = a.id
-   FROM areas a
-   WHERE a.parent_id = 'vn-hcmc' AND a.geom IS NOT NULL
-     AND l.latitude IS NOT NULL AND l.area_id = 'vn-hcmc'
-     AND ST_Contains(a.geom::geometry, ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326))`
-);
+// 3. Point-in-polygon reassign — chỉ vào phường hợp lệ (bỏ khu vực lạc), hàm dùng chung của lib/osm.mjs
+const assigned = await ganPhuongTheoToaDo(client, "vn-hcmc");
 console.log(`reassigned to phường: ${assigned}`);
 await client.end();

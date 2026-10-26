@@ -9,7 +9,7 @@
 ```
 dot: cam-mau-2310
 dang: lan-va
-nguon: audit hiện trạng 23/10 (docs/audit/2026-10-23-hien-trang-va-lo-trinh.md §6), Mạnh đồng ý 23/10
+nguon: onehub-invest-tri-thuc:wiki/dot/cam-mau-2310.md#13fb7b0d691eb98809e5d5c1d6b45774bf4995d4
 
 - `A0.2` — leak gate của sync cloud đỏ khi role anon còn SELECT được bảng nào
 - `A0.5` — /api/v1/deals công khai tạm chỉ trả cho token ops cho tới khi tin mock được rút

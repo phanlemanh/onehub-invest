@@ -12,7 +12,7 @@ const echoAgent = {
   tools: {
     get_time: tool({
       description: "Lấy thời gian hiện tại",
-      parameters: z.object({}),
+      inputSchema: z.object({}),
       execute: async () => ({ now: new Date().toISOString() }),
     }),
   },

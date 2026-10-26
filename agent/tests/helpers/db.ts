@@ -17,9 +17,10 @@ export const MIGRATIONS: string[] = [
 ]
   .map((f) => join(MIGRATIONS_DIR, f))
   .filter((p) => existsSync(p));
-// 039 dựng khoá ngoại tới BẢNG sale_offers; DB đã áp 044 (sale_offers là VIEW) thì bỏ 039 — 044 dựng lại khoá ấy.
-const sql = (skip039: boolean) =>
-  MIGRATIONS.filter((p) => !(skip039 && p.endsWith("039_enrichment_proposals_retain.sql")))
+// DB đã áp 044 (sale_offers là VIEW): bỏ cả 039 (khoá ngoại của nó trỏ BẢNG sale_offers) lẫn 044 (đã có; áp lại là DDL
+// khoá độc quyền trên bảng dùng chung, dễ deadlock với phiên khác đang đọc). DB chưa áp: nạp đủ 033+036+039+044.
+const sql = (da044: boolean) =>
+  MIGRATIONS.filter((p) => !(da044 && /\/(039|044)_/.test(p)))
     .map((p) => readFileSync(p, "utf8")).join("\n");
 
 export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {

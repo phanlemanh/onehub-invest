@@ -16,6 +16,43 @@ export const slugify = (s) =>
  */
 export const phuongHopLe = (p = "") => `${p}meta->>'source' = 'osm-phuong' AND NOT (${p}meta ? 'lac')`;
 
+/** Nhãn nguồn của phường OSM trong areas.meta.source — bên ghi (reassign-areas) đọc từ đây, không viết lại chuỗi. */
+export const NGUON_PHUONG = "osm-phuong";
+
+/**
+ * Phường hợp lệ của các thị trường — danh sách khớp tên dùng chung của transform tin rao (S03/S05/S06).
+ * @param {import("pg").Client} client
+ * @param {string[]} markets id thị trường, vd ["vn-hanoi"]
+ * @returns {Promise<{ id: string, name: string, parent_id: string }[]>}
+ */
+export async function docPhuongHopLe(client, markets) {
+  const { rows } = await client.query(
+    `SELECT id, name, parent_id FROM areas
+     WHERE region_type = 'submarket' AND parent_id = ANY($1::text[]) AND ${phuongHopLe()}
+     ORDER BY id`,
+    [markets],
+  );
+  return rows;
+}
+
+/**
+ * Gán listing đang đứng ở cấp thị trường vào phường hợp lệ chứa toạ độ (point-in-polygon).
+ * @param {import("pg").Client} client
+ * @param {string} marketId vd "vn-hcmc"
+ * @returns {Promise<number>} số listing được gán
+ */
+export async function ganPhuongTheoToaDo(client, marketId) {
+  const { rowCount } = await client.query(
+    `UPDATE listings l SET area_id = a.id
+     FROM areas a
+     WHERE a.parent_id = $1 AND a.geom IS NOT NULL AND ${phuongHopLe("a.")}
+       AND l.latitude IS NOT NULL AND l.area_id = $1
+       AND ST_Contains(a.geom::geometry, ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326))`,
+    [marketId],
+  );
+  return rowCount;
+}
+
 export const stripPrefix = (s) =>
   s.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/, "");
 

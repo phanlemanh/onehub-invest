@@ -1,0 +1,66 @@
+schema_version: 1
+feature_slug: ci-test-module
+# Eval máy: scripts/check-ci-test.mjs (AC-1, AC-2 — đọc tĩnh workflow), scripts/ci-test-module.test.mjs (AC-3 DB init,
+# AC-4 helper bỏ qua ca cần dữ liệu thật), scripts/ci-test-local.mjs (AC-5…AC-7 — chạy lại cục bộ trong docker),
+# scripts/ci-test-github.mjs (AC-8 — CI thật qua gh).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.ci_test_static
+    paths: [.github/workflows/ci-test.yml, scripts/check-ci-test.mjs]
+    expected: "exit 0; dòng 'ok   năm job: app, pipeline, agent, data-api, scripts', 'ok   trigger đúng tập (theo Hỏi-3)', 'ok   không secrets.', 'ok   không continue-on-error / || true / if: trên bước typecheck-test', 'ok   service PostGIS kartoza 17-3.5 5433:5432 + healthcheck ở mọi job gọi ci-db-init'; sáu chiều đỏ trên bản sao (bỏ job / thêm paths / push '**' / secrets.X / continue-on-error / đổi cổng service) mỗi chiều in 'ok   chiều đỏ: … → báo <tên luật>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ci_test_static
+    paths: [.github/workflows/ci-test.yml, scripts/check-ci-test.mjs]
+    expected: "exit 0; mỗi job một dòng 'ok   <job>: typecheck <lệnh> · test <lệnh>' khớp bảng viết trước (app next typegen + tsc + npm test · pipeline node --check + npm test · agent tsc + npm test · data-api npm run typecheck · scripts node --check + node --test scripts/*.test.mjs); chiều đỏ 'ok   chiều đỏ: lệnh test thành true → báo job <tên>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ci_test_module
+    paths: [scripts/ci-db-init.mjs, scripts/ci/area_sources.sql, scripts/ci-test-module.test.mjs, db/migrations/**]
+    expected: "exit 0; ca 'AU11-AC-3 ci-db-init dựng DB trống từ migration' ok trên PostGIS docker dùng một lần (in số migration áp, mỗi migration của danh sách đã khai còn lỗi thật, bảng theo Hỏi-1 có mặt), chiều đỏ 'AU11-AC-3 migration giả lỗi → thoát ≠ 0 gọi tên tệp', 'AU11-AC-3 DB đã có bảng → từ chối, không áp gì', 'AU11-AC-3 migration trong danh sách đã khai mà áp xanh → danh sách cũ' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ci_test_module
+    paths: [scripts/lib/ci-can-du-lieu.mjs, scripts/ci-bo-qua.json, scripts/ci-test-module.test.mjs]
+    expected: "exit 0; ca 'AU11-AC-4 CI=true thiếu dữ liệu → bỏ qua kèm lý do' ok, ca 'AU11-AC-4 không CI → ca vẫn chạy và đỏ như cũ' ok (đối chứng: helper không nuốt lỗi ở local), ca 'AU11-AC-4 danh sách bỏ qua không chứa GT-AC-1/job-exit' ok, chiều đỏ 'AU11-AC-4 lời gọi helper ngoài danh sách → lỗi gọi tên ca' ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ci_local_agent_types
+    long_running: 20
+    paths: [agent/package.json, agent/package-lock.json, scripts/ci-test-local.mjs]
+    expected: "exit 0; dòng 'ok   agent cài sạch: tsc exit 0', chiều đỏ 'ok   chiều đỏ: bản cây thiếu @types/json-schema → TS7016'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ci_local
+    long_running: 45
+    paths: [.github/workflows/ci-test.yml, scripts/ci-test-local.mjs, scripts/ci-db-init.mjs, scripts/lib/ci-can-du-lieu.mjs, scripts/ci-bo-qua.json]
+    expected: "exit 0; in bảng cấu hình rút từ workflow (node-version, env, services, working-directory, số bước) mỗi job; năm dòng 'ok   job <tên>: exit 0 · <giây>s · test <pass>/<tổng> · bỏ qua <n>' cho app, pipeline, agent, data-api, scripts; dòng 'ok   tập ca bỏ qua khớp scripts/ci-bo-qua.json'; tiền điều kiện in sha main và có bản sửa liên làn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ci_local_cay
+    long_running: 60
+    paths: [.github/workflows/ci-test.yml, scripts/ci-test-local.mjs]
+    expected: "exit 0; in ma trận 5×5 (hàng = module bị cấy, cột = job): đường chéo đỏ đúng bước ghi trước (TS: typecheck; JS: theo Hỏi-4), ngoài đường chéo xanh, mỗi hàng ghi tệp cấy và loại lỗi; dòng 'ok   ma trận cấy lỗi khớp viết trước (25/25 ô)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.ci_github
+    long_running: 40
+    paths: [.github/workflows/ci-test.yml, scripts/ci-test-github.mjs]
+    expected: "exit 0; dòng 'ok   CI thật trên <sha>: năm job success'; Hỏi-3 (a): năm dòng 'ok   ci-probe/<module>: đúng job <module> failure, bốn job còn lại success' và 'dọn: 0 nhánh ci-probe còn lại'; Hỏi-3 (b): chỉ dòng CI thật xanh, kèm dòng 'giới hạn: «đỏ đúng job» chỉ đo cục bộ (AC-7)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

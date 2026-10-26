@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { parsePost, matchPhuong } from "./transform-zalo.mjs";
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
+import { docPhuongHopLe } from "./lib/osm.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
@@ -47,10 +48,7 @@ const CITY_OF_GROUP = (name) => {
  */
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 export async function runTransformFb(client, { parse = parsePost } = {}) {
-  const { rows: areas } = await client.query(
-    `SELECT id, name, parent_id FROM areas WHERE region_type = 'submarket'
-       AND parent_id IN ('vn-hanoi', 'vn-hcmc')`,
-  );
+  const areas = await docPhuongHopLe(client, ["vn-hanoi", "vn-hcmc"]);
   const slugLists = new Map([
     ["vn-hanoi", areas.filter((a) => a.parent_id === "vn-hanoi").map((a) => [a.id.replace("vn-hanoi-", ""), a.name])],
     ["vn-hcmc", areas.filter((a) => a.parent_id === "vn-hcmc").map((a) => [a.id.replace("vn-hcmc-", ""), a.name])],

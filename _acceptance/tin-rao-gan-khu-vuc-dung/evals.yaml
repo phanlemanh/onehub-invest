@@ -1,0 +1,61 @@
+schema_version: 1
+feature_slug: tin-rao-gan-khu-vuc-dung
+# Eval máy: pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs (AC-1…AC-7 — mồi tự chèn trong BEGIN…ROLLBACK trên DB local,
+# AC-7 đọc tĩnh), scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu (AC-8 — dữ liệu thật trong một transaction rồi ROLLBACK).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tin_rao_gan
+    paths: [pipeline/lib/osm.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'TRG-AC-1 docPhuongHopLe chỉ trả phường hợp lệ' ok (phường hợp lệ mồi có; khu vực lạc mồi và khu vực airbnb-discovery mồi không có), ca 'TRG-AC-1 gỡ dấu lac thì khu vực trở lại' ok (đối chứng dương)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tin_rao_gan
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/osm.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'TRG-AC-2 transform-zalo không gán khu vực lạc' ok (tin từ bài nhắc khu vực lạc mồi có area_id khác khu vực đó; tin từ bài nhắc phường hợp lệ mồi có area_id = phường đó; phường hợp lệ mồi dưới vn-hcmc trùng tên không được chọn)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tin_rao_gan
+    paths: [pipeline/transform-fb.mjs, pipeline/lib/osm.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'TRG-AC-3 transform-fb không gán khu vực lạc (Hà Nội, TP.HCM)' ok (0 tin gắn khu vực lạc mồi của hai thị trường; tin nhắc phường hợp lệ mồi gắn đúng phường)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tin_rao_gan
+    paths: [pipeline/transform-chotot.mjs, pipeline/lib/osm.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'TRG-AC-4 transform-chotot không gán khu vực lạc' ok (tin có ward_name_v3 = tên khu vực lạc mồi không gắn khu vực đó; tin có ward_name_v3 = tên phường hợp lệ mồi gắn đúng phường)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tin_rao_gan
+    paths: [pipeline/transform-fb.mjs, pipeline/lib/osm.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'TRG-AC-5 transform-fb không gán khu vực airbnb-discovery' ok (tin từ bài chỉ nhắc «Quận …» mồi không gắn khu vực airbnb-discovery mồi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.tin_rao_gan
+    paths: [pipeline/lib/osm.mjs, pipeline/transform-hcmc-simple.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'TRG-AC-6 ganPhuongTheoToaDo bỏ qua khu vực lạc' ok (listing trong khu vực lạc mồi giữ area_id vn-hcmc; listing trong phường hợp lệ mồi sang phường đó), transform-hcmc-simple mang nhãn «dùng bộ chung» trong ma trận E7 và không còn câu UPDATE listings … area_id riêng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tin_rao_gan
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/transform-hcmc-simple.mjs, pipeline/lib/osm.mjs, pipeline/scripts/tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước' ok (12 tệp theo design doc §5, nhãn dùng-bộ-chung/miễn), ca 'TRG-AC-7 tệp dùng bộ chung không còn câu chọn riêng' ok ('osm-phuong' chỉ ở pipeline/lib/osm.mjs), chiều đỏ 'TRG-AC-7 bản sao thêm câu chọn riêng → báo tên tệp' ok và 'TRG-AC-7 tệp mới khớp mẫu ngoài ma trận → báo tệp' ok (thông điệp gọi đúng tệp)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.tin_rao_gan_do
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/lib/osm.mjs, scripts/kiem-tin-rao-gan-khu-vuc.mjs]
+    expected: "exit 0; dòng 'ok   trạng thái trước có <n> tin trỏ khu vực không hợp lệ (đối chứng dương)' với n > 0; khối 'sau' in 'ok   0 tin trỏ khu vực không hợp lệ hay khu vực lạc mồi', 'ok   0 tin có phường hợp lệ trước lượt bị gỡ hay đổi khu vực (nối theo offer_id)', dòng đối chứng 'ok   tin mồi bị gỡ nhãn → thước báo đỏ' và mỗi nguồn có tin trỏ khu vực không hợp lệ trước lượt một dòng '<nguồn>: <n> tin trước trỏ khu vực không hợp lệ → <a> sang phường hợp lệ, <b> thành NULL'; dòng 'ok   ROLLBACK — sale_offers <n> → <n>' và dòng cuối 'kiem-tin-rao-gan: PASS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
