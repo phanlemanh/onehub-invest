@@ -5,7 +5,7 @@ slug: uc-ta-5-tmp-rieng
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T04:31:47Z
 approved_by:
@@ -42,3 +42,5 @@ mỗi lần gọi), trả lại khi xong.
 
 - Probe `_acceptance/uc-ta-5-tmp-rieng/probes/`; đột biến chạy trên bản chép tạm.
 - Vòng 1 REJECT (E1: UC-BR-3/6 chập chờn, có sẵn trên main). Mạnh chọn gộp sửa vào hồ sơ (AC-4), chấm vòng 2.
+- Quyết ở Cổng Bằng chứng 2026-10-25 (Mạnh):
+  - Ngoài-1: nâng phạm vi sửa ngay

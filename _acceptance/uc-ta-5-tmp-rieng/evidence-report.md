@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 99d20de75d05f5b69ba0bed0c16662c51e0c5c79
-human_signoff:
+human_signoff: Mạnh 2026-10-25
 ---
 
 # Evidence Report: uc-ta-5-tmp-rieng
