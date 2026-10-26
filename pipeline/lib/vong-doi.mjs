@@ -1,6 +1,8 @@
 // vong-doi.mjs — luật chạy theo vòng đời nguồn × đơn vị thu (TV2a `vong-doi-nguon`, design doc
 // docs/superpowers/specs/2026-10-26-vong-doi-nguon-design.md). Mọi script thu hỏi «có được thu không» qua đúng hàm này
 // (TV2b), không tự đọc `status`/`enabled`. Trạng thái lạ thì chặn (fail-closed); nguồn chặn trước đơn vị.
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 export const TRANG_THAI = Object.freeze(["draft", "active", "paused", "retired", "completed"]);
 
@@ -65,6 +67,6 @@ async function main(argv) {
   }
 }
 
-if (process.argv[1] && import.meta.url === (await import("node:url")).pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exitCode = await main(process.argv.slice(2));
 }
