@@ -340,4 +340,28 @@ enums:
 
 # Ngoại lệ có chủ ý của `vocab.mjs --lint` — mỗi mục: path (tương đối gốc kho) · axis · reason. Mục thiếu reason
 # hoặc không còn khớp chỗ viết tay nào → lint đỏ. Tập này ghim ở hợp đồng PL6 AC-5; thêm mục là đổi phạm vi.
-enums_lint_allow: []
+enums_lint_allow:
+  - path: app/src/components/ops/review-card.tsx
+    axis: enrich_field
+    reason: "FIELD_LABEL của thẻ duyệt — UI1 đang sửa tệp này, PL23 dựng lại /ops/review (LUAT đợt dot0); dọn ở PL23"
+  - path: pipeline/scripts/bench-gate.mjs
+    axis: kind
+    reason: "prompt bench Kev đóng băng để so số đo cũ; có lớp «other» của Kev (lệch L07 có chủ ý, không thuộc đường dữ liệu)"
+  - path: pipeline/scripts/bench-extraction.mjs
+    axis: kind
+    reason: "prompt bench trích xuất đóng băng để so số đo cũ"
+  - path: pipeline/sql/500_asset_stats.sql
+    axis: confidence
+    reason: "bộ lọc tập con confidence IN ('high','medium') cho thước giá — nghĩa nghiệp vụ, không phải định nghĩa trục"
+  - path: pipeline/resolve-properties.mjs
+    axis: confidence
+    reason: "bộ lọc tập con confidence IN ('high','medium') khi gom căn — nghĩa nghiệp vụ"
+  - path: pipeline/resolve-properties.mjs
+    axis: property_type
+    reason: "bộ lọc tập con property_type IN ('apartment','house') — chỉ căn hộ và nhà mới gom thành căn"
+  - path: agent/src/enrich/run.ts
+    axis: confidence
+    reason: "bộ lọc tập con confidence IN ('high','medium') chọn tin để enrich — nghĩa nghiệp vụ"
+  - path: app/src/components/compare/compare-types.ts
+    axis: confidence
+    reason: "better: \"high\" | \"low\" là chiều so sánh chỉ số, trục khác trùng chữ"

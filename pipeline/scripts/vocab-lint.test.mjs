@@ -135,3 +135,49 @@ test("VL-AC-4 object ánh xạ sang code ({s: 'sale', u: 'rent_lt'}) → đỏ; 
   const nhan = "const N = {\n  sale: 'Bán ra',\n  rent_lt: 'Cho thuê dài',\n  other: 'Khác',\n};\n";
   assert.deepEqual(scanText(nhan, "pipeline/n.mjs", REG).map(dongDo), ["pipeline/n.mjs:2 · kind · sale,rent_lt"]);
 });
+
+// ---------------------------------------------------------------------------------------------------------------------
+// VL-AC-5 — cây thật: ma trận kiểm kê viết trước (design doc §1/§2), mỗi chỗ một kết cục.
+import { execFileSync } from "node:child_process";
+const ROOT = join(PIPE, "..");
+const REG_THAT = loadRegister(SO_THAT);
+
+const DOC_HANG_SINH = [
+  "pipeline/dq-enum-vocab.mjs",
+  "pipeline/transform-chotot.mjs",
+  "agent/src/enrich/route.ts",
+  "agent/src/agents/enrich-text.ts",
+  "agent/src/agents/context-resolver.ts",
+  "app/src/lib/ops-labels.ts",
+];
+// Tập ngoại lệ ghim ở contract AC-5 (path|axis) — so tập, không thừa không thiếu.
+const NGOAI_LE = [
+  "app/src/components/ops/review-card.tsx|enrich_field",
+  "pipeline/scripts/bench-gate.mjs|kind",
+  "pipeline/scripts/bench-extraction.mjs|kind",
+  "pipeline/sql/500_asset_stats.sql|confidence",
+  "pipeline/resolve-properties.mjs|confidence",
+  "pipeline/resolve-properties.mjs|property_type",
+  "agent/src/enrich/run.ts|confidence",
+  "app/src/components/compare/compare-types.ts|confidence",
+];
+
+test("VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại lệ đúng bản ghim", () => {
+  for (const p of DOC_HANG_SINH) {
+    const src = readFileSync(join(ROOT, p), "utf8");
+    assert.match(src, /from ["'][^"']*vocab\.generated(?:\.m?js)?["']/, `${p} không import tệp sinh`);
+    assert.deepEqual(scanText(src, p, REG_THAT).map(dongDo), [], `${p} còn literal của trục`);
+  }
+  assert.deepEqual(REG_THAT.allow.map((x) => `${x.path}|${x.axis}`).sort(), [...NGOAI_LE].sort());
+  const kq = lintTree(ROOT, REG_THAT);
+  assert.deepEqual(kq.hits.map(dongDo), [], "cây thật còn chỗ viết tay ngoài sổ");
+  assert.deepEqual(kq.allowStale, []);
+  assert.deepEqual(kq.allowBad, []);
+});
+
+test("VL-AC-5 đối chứng: bản trước vòng của dq-enum-vocab.mjs bị lint bắt", () => {
+  const base = execFileSync("git", ["-C", ROOT, "merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
+  const cu = execFileSync("git", ["-C", ROOT, "show", `${base}:pipeline/dq-enum-vocab.mjs`], { encoding: "utf8" });
+  const hits = scanText(cu, "pipeline/dq-enum-vocab.mjs", REG_THAT);
+  assert.ok(hits.some((h) => h.axis === "kind"), "bản cũ phải có chỗ trục kind");
+});
