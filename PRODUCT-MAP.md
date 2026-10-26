@@ -11,7 +11,7 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>4 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>63 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>42 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
@@ -28,6 +28,11 @@ flowchart TD
 - Tài liệu và đánh dấu của kho khớp các chốt 23–24/10 (tên nhóm S03 tầng C, luật S08, luật phép đo Zalo, ROADMAP V9) (`chep-chot-2410`)
 - Bật nhóm khoá kit 2.34.0 cho làn ghim lại và lưới hoá cũ; gỡ đường cache 2.32.0 khỏi config (`kit-khoa-nhom-1`)
 - Lớp chép CI của Acceptance Gate Kit lên 2.34.0 và kế hoạch chuyển bản cho đợt dot0-cam-mau (`nang-kit-2-34-0`)
+
+## Đang làm
+
+- importer S08 nạp snapshot S08 vào stg_s08_inventory, chạy lại không nhân dòng, đổi số an toàn, bỏ snapshot thử (`import-s08`)
+- collector S08 thu danh mục quỹ căn (gồm OCP1) vào raw — chỉ đọc, cấu hình nguồn ở máy local, không lộ nguồn trong kho công khai (`thu-danh-muc-ocp1`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
