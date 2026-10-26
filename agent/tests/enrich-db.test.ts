@@ -466,6 +466,19 @@ test("AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin 
     assert.equal(r1.reviewIds.length, 1);
     await c.query(`SELECT decide_enrichment_review($1, 'deferred', 'hitl:test')`, [r1.reviewIds[0]]);
     await c.query(`UPDATE review_queue SET status='deferred' WHERE id=$1`, [r1.reviewIds[0]]);
+    // Khoanh lượt backlog vào tin của ca: DB :5433 dùng chung có thể có sẵn tin «hoãn» khác (đề xuất chờ, thẻ không
+    // còn pending) — cùng hạng deferred_first, random() bốc nhầm khi limit 1. Trong giao dịch (rollback cuối ca) đẩy
+    // các đề xuất ấy khỏi hàng; lượt dưới vẫn KHÔNG chỉ định offerIds, đúng điều AC-6 đo.
+    await c.query(
+      `UPDATE enrichment_proposals SET status = 'skipped' WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
+      [a],
+    );
+    const hoan = await c.query(
+      `SELECT DISTINCT ep.offer_id FROM enrichment_proposals ep
+       WHERE ep.status = 'queued' AND ep.route = 'review'
+         AND NOT EXISTS (SELECT 1 FROM review_queue rq WHERE rq.id = ep.review_id AND rq.status = 'pending')`,
+    );
+    assert.deepEqual(hoan.rows.map((r) => r.offer_id), [a], "hàng ưu tiên của lượt backlog phải chỉ còn tin của ca");
 
     await runEnrich({
       client: c, runId: "test-ac6-backlog", dry: false, limit: 1,

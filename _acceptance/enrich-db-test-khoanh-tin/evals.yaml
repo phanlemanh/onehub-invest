@@ -1,0 +1,24 @@
+schema_version: 1
+feature_slug: enrich-db-test-khoanh-tin
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.agent_ba_lan
+    paths: [agent/tests/enrich-db.test.ts]
+    expected: "exit 0; ba dòng 'lan <n>: pass 61 fail 0' (n = 1, 2, 3), cuối 'BA LAN XANH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.enrich_ac6_tam_lan
+    paths: [agent/tests/enrich-db.test.ts]
+    expected: "exit 0; tám dòng 'lan <n>: xanh', cuối 'TAM LAN XANH'; đối chứng trong cùng lệnh: bản tệp test của origin/main chạy tám lần đỏ ít nhất một lần ('DOI CHUNG: ban cu do <k>/8', k ≥ 1); thân ca trong bản sửa không có 'offerIds' ở lời gọi runEnrich của ca"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.enrich_pham_vi
+    paths: [agent/tests/enrich-db.test.ts]
+    expected: "exit 0; 'PHAM-VI OK'; should-NOT-fire: không dòng 'NGOAI PHAM VI', không dòng 'XOA DONG'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
