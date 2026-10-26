@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f5411aa8349eca5be7328f8de4a253a8e65e53b1
+verified_commit: 32e602d5b14d3fc82b887289ad14d38a3000338c
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -173,3 +173,7 @@ mục mức low (log handler không phân biệt nguyên nhân Kev hỏng); ngư
 ### Re-pin lần 1 — 2026-10-26, do ghim lại sau sửa thước kev-nhan (PR #135) và gộp main 441e0405
 run_id: repin-20261026T131455Z-88598
 sha: f5411aa8349eca5be7328f8de4a253a8e65e53b1 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-26, do ghim lại sau thước v4 S08 + probe neo lịch sử cố định
+run_id: repin-20261026T154035Z-80472
+sha: 32e602d5b14d3fc82b887289ad14d38a3000338c · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
