@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: df43c77d496fef39c38cccebdc201b9e1ba4c5ec
+verified_commit: dfc6f9754cfd74f4af639535ada109f1754cc80b
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -194,3 +194,7 @@ sha: 00732520b962e459a2541a77efb2f3cbfb8420ef · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 4 — 2026-10-26, do CD-AC-7b chờ request lưu xong (che-do-thu-test-cho-luu)
 run_id: repin-20261026T144747Z-36323
 sha: df43c77d496fef39c38cccebdc201b9e1ba4c5ec · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths)
+
+### Re-pin lần 5 — 2026-10-26, do gộp origin/main (#140) vào fix/che-do-thu-test-cho-luu
+run_id: repin-20261026T144940Z-98370
+sha: dfc6f9754cfd74f4af639535ada109f1754cc80b · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng · ngoài làn máy: E8 (E8 không khai paths)
