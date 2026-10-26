@@ -1,0 +1,41 @@
+schema_version: 1
+feature_slug: do-khu-vuc-tu-dung-moi
+# Eval máy: scripts/kiem-tin-rao-gan-khu-vuc.mjs --thu (AC-1, AC-2, AC-4 — trực tiếp trên DB local trong một transaction
+# rồi ROLLBACK); scripts/kiem-tin-rao-gan-khu-vuc.test.mjs (AC-3 ba chiều trên cùng DB; AC-4 ca thuần của hàm so băm;
+# AC-5 đọc tĩnh evals.yaml của hồ sơ cũ + design doc). Ca bị bỏ qua (# SKIP) không tính là đạt.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.tin_rao_gan_do
+    paths: [scripts/kiem-tin-rao-gan-khu-vuc.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/lib/osm.mjs, pipeline/lib/write-offers.mjs, pipeline/lib/offer-key.mjs]
+    expected: "exit 0; sáu dòng 'mồi <nguồn> <offer_id> → <id khu vực mồi> «<tên phường nền>» (lạc|không-OSM)'; dòng 'ok   trạng thái trước có 6 tin mồi trỏ khu vực không hợp lệ (+ <n> tin thật)'. Chiều đỏ: tập trước thiếu một tin mồi → dòng FAIL cùng câu, nêu offer_id thiếu."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.tin_rao_gan_do
+    paths: [scripts/kiem-tin-rao-gan-khu-vuc.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/lib/osm.mjs, pipeline/lib/write-offers.mjs, pipeline/lib/offer-key.mjs]
+    expected: "exit 0; khối 'lượt nền' in 'ok   lượt nền: 0 tin có phường hợp lệ ở DB thật bị gỡ hay đổi khu vực (nối theo offer_id)' và mỗi nguồn 'S0x: <r> tin bị cho nghỉ'; khối 'sau' in 'ok   0 tin trỏ khu vực không hợp lệ hay khu vực mồi', ba dòng 'S03: 2 tin mồi → 2 về phường cũ', 'S05: …', 'S06: …', 'ok   0 tin có phường hợp lệ trước lượt bị gỡ hay đổi khu vực (nối theo offer_id, bỏ 6 tin mồi)', 'ok   tin mồi bị gỡ nhãn → thước báo đỏ (<offer_id>)'; dòng cuối 'kiem-tin-rao-gan: PASS'. Chiều đỏ ở E3."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tin_rao_gan_do_test
+    paths: [scripts/kiem-tin-rao-gan-khu-vuc.mjs, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/lib/osm.mjs]
+    expected: "exit 0; ca 'KDM-AC-3 ba chiều trên cùng DB' ok KHÔNG mang '# SKIP' hay '# TODO' — bản thường exit 0 với dòng PASS; '--pha khong-sua' exit 1, dòng FAIL khối sau gọi 6 offer_id mồi, ba dòng '<nguồn>: 2 tin mồi → 0 về phường cũ'; '--pha mo-loc' exit 1, dòng FAIL '… tin trỏ khu vực mồi' gọi ≥ 1 offer_id mồi. Tổng kết test: 'ℹ skipped 0'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.tin_rao_gan_do
+    paths: [scripts/kiem-tin-rao-gan-khu-vuc.mjs, pipeline/lib/write-offers.mjs]
+    expected: "exit 0; dòng 'ok   ROLLBACK — 6 bảng băm bằng gốc · ops_audit +0 dòng transform · 0 khu vực mồi'. Chiều đỏ: ca thuần 'KDM-AC-4 so băm đỏ đúng bảng' của config:executors.test.tin_rao_gan_do_test (một bảng băm khác → FAIL gọi tên bảng) ok, không '# SKIP'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.tin_rao_gan_do_test
+    paths: [_acceptance/tin-rao-gan-khu-vuc-dung/evals.yaml, docs/superpowers/specs/2026-10-26-do-khu-vuc-tu-dung-moi-design.md, scripts/kiem-tin-rao-gan-khu-vuc.test.mjs]
+    expected: "exit 0; ca 'KDM-AC-5 E8 cũ khai thay bởi AC-2' ok, không '# SKIP' — E8 có status not-run, superseded_by do-khu-vuc-tu-dung-moi#AC-2, cmd config:executors.script.tin_rao_gan_do; E1…E7 không khai status hay superseded_by; design doc có thẻ tin-rao-gan-khu-vuc-dung/E8. Chiều đỏ trong cùng ca: bản chép evals bỏ superseded_by → hàm kiểm trả lỗi gọi tên E8. Ca này không nằm trong scripts/ci-bo-qua.json."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -56,6 +56,8 @@ evals:
     criterion: AC-8
     executor: script
     cmd: config:executors.script.tin_rao_gan_do
+    status: not-run
+    superseded_by: do-khu-vuc-tu-dung-moi#AC-2
     paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/lib/osm.mjs, scripts/kiem-tin-rao-gan-khu-vuc.mjs]
     expected: "exit 0; dòng 'ok   trạng thái trước có <n> tin trỏ khu vực không hợp lệ (đối chứng dương)' với n > 0; khối 'sau' in 'ok   0 tin trỏ khu vực không hợp lệ hay khu vực lạc mồi', 'ok   0 tin có phường hợp lệ trước lượt bị gỡ hay đổi khu vực (nối theo offer_id)', dòng đối chứng 'ok   tin mồi bị gỡ nhãn → thước báo đỏ' và mỗi nguồn có tin trỏ khu vực không hợp lệ trước lượt một dòng '<nguồn>: <n> tin trước trỏ khu vực không hợp lệ → <a> sang phường hợp lệ, <b> thành NULL'; dòng 'ok   ROLLBACK — sale_offers <n> → <n>' và dòng cuối 'kiem-tin-rao-gan: PASS'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
