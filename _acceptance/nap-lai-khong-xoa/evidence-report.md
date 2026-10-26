@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 340619612e42e520894adc7ef6ed8e1426ac9ec7
+verified_commit: 5f01598c384ba2b74b801726e430e4240e386e6f
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -217,3 +217,7 @@ Round 1: E12, E13 failed — E12: ca AU9-AC-8 của finder-ranh-gioi báo bảng
 
 Round 2: cây mới nhận bản sửa S4-r1 (test app giữ khoá và nạp 044, thước cloud-sync dump bảng bản ghi, NL-AC-4 qua transform thật, điều kiện dương và đối chứng tự chạy cho ND-AC-5 và nap-lai-ba-luot). E1–E9, E9b, E11, E12, E13 và hai lệnh suite chạy lại, đều xanh; E10 mang sang từ round 1 (delta không chạm paths của eval). Ghi chú: verified_at của các eval chạy lại lấy theo mốc nhận cây ở run-log.
 
+
+### Re-pin lần 1 — 2026-10-26, do gộp main sau PR #130 (xung đột reassign-areas, transform-chotot, transform-fb)
+run_id: repin-20261026T105038Z-74887
+sha: 5f01598c384ba2b74b801726e430e4240e386e6f · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): nap-lai-khong-xoa E7
