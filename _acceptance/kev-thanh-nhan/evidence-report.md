@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f5411aa8349eca5be7328f8de4a253a8e65e53b1
+verified_commit: bb917cd0b8c13ae2d071bbf5aea0e008930875f6
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -238,3 +238,7 @@ sha: 2a4f9401e9c17d442d2e35503ed4498bfaebcfa9 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 3 — 2026-10-26, do ghim lại sau sửa thước kev-nhan (PR #135) và gộp main 441e0405
 run_id: repin-20261026T131214Z-72593
 sha: f5411aa8349eca5be7328f8de4a253a8e65e53b1 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
+
+### Re-pin lần 4 — 2026-10-26, do ghim lại sau thước kev-nhan theo schemaVersion 4 của S08 (PL10)
+run_id: repin-20261026T153412Z-54504
+sha: bb917cd0b8c13ae2d071bbf5aea0e008930875f6 · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng
