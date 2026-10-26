@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: d395acc462052ab8055b853e1c3a060b484e9623
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: auth-error-e2-superseded

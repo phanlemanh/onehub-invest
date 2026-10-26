@@ -5,7 +5,7 @@ slug: auth-error-e2-superseded
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: machine-cleared
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T15:12:00Z
 approved_by:
