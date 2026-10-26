@@ -5,7 +5,7 @@ slug: tin-rao-gan-khu-vuc-dung
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-26
 design_doc: docs/superpowers/specs/2026-10-26-tin-rao-gan-khu-vuc-dung-design.md
@@ -86,3 +86,9 @@ phường OSM} phủ qua bộ đọc chung (AC-1) + ma trận (AC-7), không có
 - AC-8 chọn tên mồi là tên một phường hợp lệ thật để chữ tin rao thật khớp được khu vực lạc mồi; nếu không bài thật nào
   nhắc tên đó thì phần «0 tin trỏ khu vực lạc mồi» đúng hiển nhiên — đối chứng dương của AC-8 là 9 tin S05 trỏ khu vực
   «Quận …» trước lượt.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: căn nằm đúng trên ranh giữa hai phường TP.HCM có thể không được gán, hoặc gán không xác định khi hai phường chồng nhau, cho tới lượt gán lại phường chạy sau.
+  - Ngoài-2: chạy bài kiểm AC-4 trên máy thu có thể làm lượt nạp tin Chợ Tốt trùng giờ phải chờ vài phút.
+  - Ngoài-3: trên DB chưa có tin nào gắn phường, bài đo cuối báo lỗi khó hiểu thay vì dòng đỏ rõ ràng.
+  - Ngoài-5: sau lượt nạp đầu tiên sau merge, bài đo cuối báo đỏ vì hết tin sai để làm đối chứng — bài đo dùng một lần.
+  - Ngoài-7: trên dữ liệu thật, bài đo cuối không chứng minh bản chưa sửa sẽ đẩy tin vào khu vực lạc; nhánh này chỉ được kiểm bằng dữ liệu mồi.
