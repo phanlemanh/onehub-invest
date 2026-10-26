@@ -232,6 +232,29 @@ _Avoid_: homestay
 - Code: `investment pipeline (4 stages)` · RESO: —
 _Avoid_: phễu đầu tư
 
+## Từ vựng dữ liệu (máy sinh)
+
+Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai ở một chỗ duy nhất: khối `enums:` của
+`pipeline/mappings.yaml` (PL6, khuôn RESO Lookup — ADR-0013 §8). Bảng dưới sinh từ sổ; sửa sổ rồi chạy
+`node pipeline/vocab.mjs --write`. Nhãn UI của các giá trị lấy từ cột cuối.
+
+<!-- VOCAB:BEGIN -->
+<!-- MÁY SINH từ pipeline/mappings.yaml — sửa sổ rồi chạy node pipeline/vocab.mjs --write -->
+
+| Thuật ngữ | Code | RESO | Cột bị ràng | Giá trị (code «nhãn») |
+|---|---|---|---|---|
+| Loại tin | `kind` | PropertyType | `sale_offers.kind` | `sale` «Bán» · `rent_lt` «Cho thuê» |
+| Loại hình | `property_type` | PropertySubType | `sale_offers.property_type`, `properties.property_type` | `apartment` «Căn hộ» · `house` «Nhà riêng» · `land` «Đất» · `room` «Phòng» · `commercial` «Mặt bằng» · `unknown` «Chưa rõ» |
+| Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
+| Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
+| Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
+| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `wanted` «Tin tìm mua, tìm thuê» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
+| Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
+| Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
+| Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
+
+<!-- VOCAB:END -->
+
 ## Dữ liệu & nguồn
 
 **Nguồn**: Nơi dữ liệu đến, luôn gọi bằng mã S01–S07 (SPL, ADR-0007). Tên thật là tầng A.

@@ -83,3 +83,93 @@ for (const [ten, fn, truc, code] of SAI_KHUON) {
     });
   });
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// VB-AC-2 / VB-AC-3 — bộ sinh và kiểm lệch, chạy CLI thật trên một kho tối thiểu trong thư mục tạm.
+import { mkdtempSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
+
+const ROOT = join(PIPE, "..");
+const CLI = join(PIPE, "vocab.mjs");
+const CONTEXT_THAT = readFileSync(join(ROOT, "CONTEXT.md"), "utf8");
+const DICH_SINH = ["pipeline/lib/vocab.generated.mjs", "agent/src/vocab.generated.ts", "app/src/lib/vocab.generated.ts"];
+const BEGIN = "<!-- VOCAB:BEGIN -->";
+const END = "<!-- VOCAB:END -->";
+
+function khoTam({ so = SO_THAT, context = CONTEXT_THAT } = {}) {
+  const d = mkdtempSync(join(tmpdir(), "vocab-"));
+  mkdirSync(join(d, "pipeline"), { recursive: true });
+  writeFileSync(join(d, "pipeline", "mappings.yaml"), so);
+  writeFileSync(join(d, "CONTEXT.md"), context);
+  return d;
+}
+const chay = (root, ...args) => spawnSync(process.execPath, [CLI, "--root", root, ...args], { encoding: "utf8" });
+const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
+const ngoaiMoc = (t) => [t.slice(0, t.indexOf(BEGIN)), t.slice(t.indexOf(END) + END.length)];
+
+test("VB-AC-2 --write hai lần ra cùng byte, nạp lại bằng sổ, CONTEXT.md ngoài mốc không đổi", async () => {
+  const d = khoTam();
+  const r1 = chay(d, "--write");
+  assert.equal(r1.status, 0, r1.stderr);
+  const dich = [...DICH_SINH, "CONTEXT.md"].map((p) => join(d, p));
+  const lan1 = dich.map(sha);
+  assert.equal(chay(d, "--write").status, 0);
+  assert.deepEqual(dich.map(sha), lan1, "lần --write thứ hai đổi byte");
+  for (const p of DICH_SINH) {
+    const dong1 = readFileSync(join(d, p), "utf8").split("\n")[0];
+    assert.ok(dong1.includes("MÁY SINH từ pipeline/mappings.yaml"), `${p} thiếu dòng đầu MÁY SINH`);
+  }
+  const reg = loadRegister(SO_THAT);
+  const gen = await import(pathToFileURL(join(d, "pipeline/lib/vocab.generated.mjs")).href);
+  assert.deepEqual(Object.keys(gen.VOCAB), reg.axes.map((a) => a.name));
+  for (const a of reg.axes) assert.deepEqual([...gen.VOCAB[a.name]], a.values.map((v) => v.code));
+  assert.deepEqual([...gen.CANONICAL_FIELDS], reg.canonicalFields);
+  const ctx = readFileSync(join(d, "CONTEXT.md"), "utf8");
+  assert.deepEqual(ngoaiMoc(ctx), ngoaiMoc(CONTEXT_THAT), "CONTEXT.md đổi ngoài hai mốc");
+  const khoi = ctx.slice(ctx.indexOf(BEGIN), ctx.indexOf(END));
+  for (const a of reg.axes) {
+    assert.ok(khoi.includes(a.term_vi), `khối CONTEXT thiếu ${a.term_vi}`);
+    for (const v of a.values) assert.ok(khoi.includes(v.label_vi), `khối CONTEXT thiếu nhãn ${a.name}.${v.code}`);
+  }
+  // đối chứng: đổi một nhãn trong sổ → tệp app đổi đúng chuỗi đó
+  const d2 = khoTam({ so: dotBien((e) => { e.kind.values[0].label_vi = "Bán ra"; }) });
+  assert.equal(chay(d2, "--write").status, 0);
+  assert.ok(readFileSync(join(d2, "app/src/lib/vocab.generated.ts"), "utf8").includes('"Bán ra"'));
+});
+
+test("VB-AC-2 thiếu mốc VOCAB: --write thoát 1, CONTEXT.md không đổi", () => {
+  const ctx = CONTEXT_THAT.replace(BEGIN, "").replace(END, "");
+  const d = khoTam({ context: ctx });
+  const r = chay(d, "--write");
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /thiếu mốc VOCAB/);
+  assert.equal(readFileSync(join(d, "CONTEXT.md"), "utf8"), ctx);
+});
+
+test("VB-AC-3 --check: sạch thoát 0; sửa tay từng đích hoặc sửa sổ chưa --write thì thoát 1, nêu tệp", () => {
+  const d = khoTam();
+  assert.equal(chay(d, "--write").status, 0);
+  const r0 = chay(d, "--check");
+  assert.equal(r0.status, 0, r0.stderr);
+  assert.match(r0.stdout, /vocab --check: 4\/4 đích khớp sổ/);
+  for (const p of [...DICH_SINH, "CONTEXT.md"]) {
+    const f = join(d, p);
+    const goc = readFileSync(f, "utf8");
+    const sua = p === "CONTEXT.md" ? goc.replace("«Căn hộ»", "«Căn họ»") : goc.replace('"sale"', '"salf"');
+    assert.notEqual(sua, goc, `không tìm được chỗ sửa trong ${p}`);
+    writeFileSync(f, sua);
+    const r = chay(d, "--check");
+    assert.equal(r.status, 1, `${p}: --check phải thoát 1`);
+    assert.ok(r.stderr.includes(p), `${p}: stderr không nêu tệp: ${r.stderr}`);
+    writeFileSync(f, goc);
+  }
+  writeFileSync(join(d, "pipeline", "mappings.yaml"),
+    dotBien((e) => { e.data_level.values.push({ code: "B6", label_vi: "Thử" }); }));
+  const r5 = chay(d, "--check");
+  assert.equal(r5.status, 1);
+  for (const p of [...DICH_SINH, "CONTEXT.md"]) assert.ok(r5.stderr.includes(p), `(5) stderr thiếu ${p}`);
+  assert.ok(!existsSync(join(d, "x")));
+});
