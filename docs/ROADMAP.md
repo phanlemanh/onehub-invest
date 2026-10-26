@@ -116,6 +116,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
 - Nhóm S03 trên máy chủ (ON4 `nhom-s03-tren-cloud`, 25/10): bản tin mang khối `s03` (N nhóm bật + số đếm từng nhóm, chỉ tên
   nhóm); bảng nhóm S03 dựng trên máy chủ, cũ thì «Hoạt động» viền xám, chưa có khối thì ở lại Alert gom. «Vào bảng thô» theo
   nhóm nay đúng ở bản tin (trước luôn 0); N đếm theo nhóm hiệu dụng mọi tài khoản (máy thu 7, không còn 4) — OPS-9.
+- Độ phủ API trên máy chủ (AU12 `coverage-cloud-got-tang-a`, 25/10): `GET /api/v1/ops/coverage` trên máy chủ đọc khối
+  `freshness` máy thu đẩy lên, trả cờ `state` tươi / cũ / không số; không số thì `rows: null` + «Chỉ đo ở máy thu» (trước
+  trả `[]` như thể không nguồn nào); phản hồi chỉ trường độ tươi, không tên nguồn thật.
 - Supabase khoá anon + RLS (migration 037, PR #20, merge ce4ad81): thu quyền anon/authenticated, bật RLS
   (không FORCE) trên bảng public — app/data-api/sync chạy bằng role chủ/BYPASSRLS nên không đổi. **Đã merge,
   CHƯA áp cloud** — Mạnh áp theo `docs/ops/supabase-lock-anon-rls.md`.
@@ -221,6 +224,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    (cloud `S08`, local `S08-<tên>`) — sửa đổi luật 6 chờ ADR (TV0); tám quyết định §4.8 (S03 cần người thứ hai duyệt ·
    QR ở lại máy thu · ảnh thu nhỏ, trần 5 GB · S05 tự paused, admin bật lại · quy định AI chạy model local · mã đơn vị
    `S03-N012` · tên thật trong migration cũ chấp nhận như lịch sử). Đợt lộ trình `tu-van-hanh-2510`.
+19. **Lát dọc Ocean Park 1** (26/10, Mạnh duyệt gói lát OCP1 «Hỏi-1..7: theo khuyến nghị», `classification-enrich-review.md`
+   §7.0): Q2/Q3/Q5/Q11 theo §0.2 F (khoá tin gốc + phát biểu `căn`; bảng phát biểu + phân xử; chỉ tự áp ô đã đo; đo trong
+   lát dọc) · lát đầu = OCP1 · Q4/Q9 (ngữ cảnh nhóm chỉ suy luận; thẻ duyệt không hiện độ tự tin) · M1 = model local mặc
+   định, cloud khi số đo cho thấy local không đủ; M3 hoãn tới PH4 · Mạnh và đội gắn nhãn khi PL7 xong · chạy F6 · L0 theo thứ
+   tự ZC6 → ZC4 → hook Kev v3. Kèm: **PL3 gộp vào PL23**; **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất**;
+   C2–C4 cắt cùng lúc, phần UI của PL9 gộp vào C4.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -246,7 +255,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | HITL | /ops/review Review Queue (12 entity_match seeded) | ✅ c6eea64 |
 | M-3 | enrich qua đề xuất: `enrichment_proposals` (033) + luật xác định + thẻ `agent_output` /ops/review; E1 trái LLM → thẻ đối chiếu chọn một bên | ✅ PR #14 (`_acceptance/enrich-qua-de-xuat/`) |
 | M-3b | hậu kỳ enrich: đề xuất sống qua nạp lại (039 + `writeOffers`, khoá ngoại RESTRICT) · hoàn tác có audit (036 + `enrich-revert`) · E1 không suy land từ tên nhóm | 🔶 chờ Cổng Bằng chứng (`_acceptance/enrich-hau-ky/`); sau merge: áp 036 → 039 lên DB local TRƯỚC lượt nạp đêm kế, rồi hoàn tác 639/644 (Hỏi-2) |
-| R-PL | Review kiến trúc phân loại + enrich (`docs/architecture/classification-enrich-review.md`, khung `docs/product/FRAMING.md`): sổ 17 lỗi, kiến trúc đích, việc theo làn | 🔶 FRAMING đã duyệt; chờ Mạnh quyết Q2–Q12 (Q1 Kev thành nhãn đã chốt) |
+| R-PL | Review kiến trúc phân loại + enrich (`docs/architecture/classification-enrich-review.md`, khung `docs/product/FRAMING.md`): sổ 20 lỗi (L01–L20), kiến trúc đích, việc theo làn; khung RESO ở ADR-0013 | 🔶 FRAMING đã duyệt; chờ Mạnh quyết Q2–Q12 (Q1 Kev thành nhãn đã chốt) |
 
 ### Track 2 — "Một Căn Nhà" hoàn thiện
 | # | Việc | Trạng thái |
@@ -299,7 +308,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | BĐ | Bản đồ đích cổng Invest: block đích cho mọi route Invest (cột "Block đích" ở `onehub-ui/routes.md`, test chặn dòng thiếu), shell giữ `app-shell-30`, `/dau-tu` gộp vào `/yield`, slug đích tiếng Anh (cột "Slug đích"), bản đồ nguồn `mapcn`, bước tra Mobbin trong `loop.md` — `_acceptance/invest-target-map` | ✅ Mạnh chọn 23/10 (theo khuyến nghị) — chờ ký PR |
 | I1 | Finder `/[country]`: `solution-analytics-1` + `@mapcn/choropleth`, PageHeader, trạng thái "đang thu thập" | ⏳ |
 | I2 | Insight thị trường + phường: khung `solution-analytics-8`, giữ chart-6/chart-13/InsightGrid, bản đồ `@mapcn/map`, neo mục lục tiếng Anh | ⏳ |
-| I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | ⏳ sau khi gỡ ảnh AirDNA khỏi listing |
+| I3 | Listing: `/listing/[id]` `product-detail-5` (ảnh tự thu) · `/listings` product-grid-2 + `filters` + `@mapcn/store-locator` | 🟡 `/listing/[id]`: hồ sơ `listing-detail-product-detail-5` (UI5) — đầu trang gallery ảnh tự thu (khung 3:2, ảnh dọc hiện trọn; một hàng ảnh nhỏ 1:1 trượt ngang; ảnh chết rời gallery) + hộp Đặc điểm, lịch form-5 hết nút tay/cỡ chữ 9px (baseline −3), KPI và Listing tương tự tải trong Suspense + lỗi tại vùng + Empty; quy định khung ảnh chung ghi ở `onehub-ui/catalog.md` «Ảnh (khung)» (Mạnh 25/10). `/listings` còn ở UI6 |
 | I4 | Lợi suất: `/yield` form-11 + `data-grid-advanced-7` (chi phí + dòng tiền vốn vay), `/dau-tu` → chuyển hướng `/yield` | 🟡 hồ sơ `yield-dong-tien-von-vay` (UI3) — mục «Dòng tiền vốn vay» `#financing` (chuyển thể chỉ đọc ở `yield/financing/`, mô hình trả góp đều `lib/financing.ts`), nhóm Vốn vay `eq`/`rate`/`term` trên form-11, `/<country>/<market>/dau-tu` → 301 `/yield?area=<market>#financing`, `/yield` suy thị trường từ mã phường; gỡ bộ mô phỏng cũ, baseline −16 |
 | I5 | So sánh + Đã lưu: giữ comparison-1 / wishlist-2, thêm PageHeader + trạng thái; `/so-sanh` → `/compare` (301) | ⏳ |
 | I6 | Trang chủ / Phương pháp (`faq-3`, `/phuong-phap` → `/methodology` 301) / Auth (giữ auth-4/5) | 🟡 trang chủ + Phương pháp: hồ sơ `trang-chu-methodology` (UI2) — `/methodology` faq-3 mở sẵn, nền hero/thẻ thị trường không màu cứng, `(marketing)/error.tsx` + `global-error.tsx`, baseline −18; auth giữ nguyên |

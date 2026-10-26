@@ -50,6 +50,8 @@ function cay(noiDung) {
   }
   if (noiDung !== undefined) writeFileSync(path.join(root, SCRIPT), noiDung);
   mkdirSync(path.join(root, SNAP), { recursive: true });
+  // 2510-8: tệp bọc chỉ nạp snapshot đã có manifest (thiếu manifest < 30′ = đang ghi → dừng chuỗi)
+  writeFileSync(path.join(root, SNAP, "manifest.json"), "{}\n");
   mkdirSync(path.join(root, "pipeline/logs"), { recursive: true });
   writeFileSync(path.join(root, STATE), MOC_CU);
   const bin = path.join(root, ".shim-bin");
