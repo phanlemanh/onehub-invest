@@ -34,6 +34,7 @@ executors:
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
+    ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
     ci_test_module: "node --test scripts/ci-test-module.test.mjs"   # AU11 AC-3/AC-4 — DB CI dựng từ migration (docker tạm) + helper bỏ qua ca cần dữ liệu thật
@@ -318,6 +319,11 @@ executors:
     uct_dot_bien: "bash _acceptance/uc-ta-5-tmp-rieng/probes/dot-bien.sh \"$PWD\""
     uct_scope: "bash _acceptance/uc-ta-5-tmp-rieng/probes/scope.sh \"$PWD\""
     uct_keepalive: "bash _acceptance/uc-ta-5-tmp-rieng/probes/keepalive.sh \"$PWD\""
+    # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
+    ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
+    ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
+    ckl_idempotent: "node scripts/chotot-khong-lui/acceptance.mjs idempotent"
+    ckl_scope: "bash _acceptance/chotot-khong-lui/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.32.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)
