@@ -37,7 +37,9 @@ Source input: `_acceptance/nap-lai-khong-xoa/opportunity.md` (hàng PL14 của `
   - `sale_offers` và `listings` là VIEW chỉ gồm hàng `retired_at IS NULL`.
   - Đúng 6 khoá ngoại trỏ hai bảng bản ghi đều là RESTRICT (`nights`, `listing_stats`, `property_offers`,
     `property_candidates` ×2, `enrichment_proposals`).
-  - `v_ruler_p2`/`v_ruler_p2_area` còn chạy.
+  - `v_ruler_p2` và `v_ruler_p2_area` còn chạy.
+  - Tập view/matview phụ thuộc bảng bản ghi (pg_depend) bằng đúng {`sale_offers`, `listings`, `v_ruler_p2`,
+    `v_ruler_p2_area`}; view phụ nào khác trỏ thẳng bảng bản ghi thì đỏ, nêu tên view.
   - Lần áp thứ hai không lỗi, không đổi số dòng.
 - AC-2: Given 044 đã áp, When đếm hàng trước và sau trên cùng DB, Then `sale_offers` (view) và `listings` (view) trả đúng
   số dòng và tập khoá như hai bảng trước 044; người dùng app/data-api thấy cùng dữ liệu.
@@ -48,23 +50,30 @@ Source input: `_acceptance/nap-lai-khong-xoa/opportunity.md` (hàng PL14 của `
   - Tin quay lại ở lượt sau thì gỡ `retired_at`.
 - AC-4: Given transform S03/S05, When một tin đổi giá, diện tích, số phòng, hoặc parser đổi cách đọc, Then `offer_id` không
   đổi.
-  - `offer_id = 'offer_' || sha256('<S0x>|' || <post neo>)[:16]`; post neo = post sớm nhất của nhóm repost.
+  - Khoá theo PL14-Hỏi-3 (khuyến nghị «khoá dính»: nhóm repost thừa kế `offer_id` của tin đang có chung nhiều post
+    nhất; nhóm mới hoàn toàn mới băm `'<S0x>|' || <post neo>`).
+  - Post đến sau mà `posted_at` sớm hơn post neo hiện tại (thu bù lịch sử) không đổi `offer_id`.
   - `originating_system_key` được điền cho mọi tin S03/S05/S06 và mọi listing.
 - AC-5: Given DB local còn khoá băm nội dung, When lượt nạp đầu sau 044 chạy (trong giao dịch), Then đổi khoá xong mà
   không mất quyết định nào.
   - Mọi offer S03/S05 khoá cũ nghỉ với `retired_reason = 'doi_khoa'`.
   - `superseded_by` trỏ offer khoá mới khi có post chung.
-  - Số quyết định và liên kết đếm theo khoá gốc không đổi.
+  - Số quyết định và liên kết đếm theo khoá gốc không đổi, VÀ mọi dòng con trỏ tin sống khi đi theo chuỗi
+    `superseded_by` (không treo trên tin đã nghỉ).
 - AC-6: Given một listing có lịch đêm nằm ngoài mọi phường, When `transform-airbnb` hoặc `reassign-areas` chạy, Then
   listing nghỉ (`retired_reason = 'ngoai_phuong'`), `nights` và `listing_stats` của nó còn nguyên. Listing quay lại phường
   thì gỡ `retired_at`.
+  - Đo cả hai đường (`transform-airbnb` và `reassign-areas`), và đường cũ `200_transform.sql` không xoá đêm của listing
+    đã nghỉ.
 - AC-7: Given DB local, When chạy thước `pipeline/scripts/nap-lai-ba-luot.mjs` (trong giao dịch ROLLBACK), Then 0 quyết định
   người mất và 0 liên kết mất.
   - Ba lượt nạp S03 → S05 → S06 → airbnb.
   - Mỗi lượt đổi một biến: giá một tin, `rule_id` parser, một listing ra ngoài phường.
-  - Ma trận đếm viết trước: đề xuất enrich đã quyết · thẻ review đã quyết · ứng viên ghép merged/rejected ·
-    `property_offers` · thẻ `pair:`.
-  - Đối chứng: cùng thước trên bản giả lập hàm 039 cũ (DELETE + CASCADE) báo mất > 0, thông điệp ghim tên cột mất.
+  - Ma trận đếm viết trước (7 hàng): đề xuất enrich đã quyết · thẻ review đã quyết · ứng viên ghép merged/rejected ·
+    `property_offers` · thẻ `pair:` · `nights` · `listing_stats`; mỗi hàng hai cột: có mặt theo khoá gốc, và trỏ cha
+    sống theo chuỗi `superseded_by`.
+  - Hai đối chứng, mỗi cái báo mất > 0 và nêu tên hàng: (a) giả lập hàm 039 cũ (DELETE + CASCADE); (b) hàm đối soát chỉ
+    cho tin nghỉ mà không chuyển dòng con.
 - AC-8: Given cây sau vòng, When quét `pipeline/` (trừ `db/migrations` cũ và test), Then không còn câu `DELETE FROM` /
   `TRUNCATE` nhắm `sale_offers`, `sale_offer_records`, `listings`, `listing_records`.
   - Bộ quét có cặp hai chiều: cấy một câu DELETE thì đỏ.
@@ -110,6 +119,7 @@ Source input: `_acceptance/nap-lai-khong-xoa/opportunity.md` (hàng PL14 của `
 
 ## Notes
 
-- Hỏi-1 (lối A bảng bản ghi + view sống, hay lối B lọc ở mọi chỗ đọc) và Hỏi-2 (đổi khoá S03/S05 một lần) chờ Cổng
-  Phạm vi.
+- Ba câu riêng của PL14, khác «Hỏi-1..7» của gói OCP1: PL14-Hỏi-1 (lối A bảng bản ghi + view sống, hay lối B lọc ở mọi
+  chỗ đọc — khó đảo), PL14-Hỏi-2 (đổi khoá S03/S05 một lần), PL14-Hỏi-3 (khoá neo sớm nhất hay khoá dính).
+- Cổng Phạm vi và Cổng Bằng chứng do Mạnh ký (T3); giám sát không ký thay.
 - Cột mới không lên cloud trừ khi thêm vào `CLOUD_ALLOW` (`sync-cloud.mjs`). Vòng này không thêm.

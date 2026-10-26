@@ -9,7 +9,7 @@ evals:
     executor: test
     cmd: config:executors.test.nap_lai_db
     paths: [db/migrations/044_nap_lai_khong_xoa.sql, pipeline/scripts/nap-lai-db.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-1': trong giao dịch áp 044 hai lần → to_regclass('sale_offer_records'), to_regclass('listing_records') có; relkind của sale_offers và listings = 'v'; ma trận 6 khoá ngoại viết trước (nights.listing_id, listing_stats.listing_id, property_offers.offer_id, property_candidates.offer_a, property_candidates.offer_b, enrichment_proposals.offer_id) → confrelid là bảng bản ghi và confdeltype = 'r' từng dòng; CHECK retired_reason nhận het_trong_luot/ngoai_phuong/doi_khoa và từ chối 'khac' (đối chứng âm, thông điệp nêu tên ràng buộc); SELECT count(*) FROM v_ruler_p2 chạy được; lần áp hai không lỗi, đếm dòng bảng bản ghi không đổi"
+    expected: "exit 0; ca 'ND-AC-1': trong giao dịch áp 044 hai lần → to_regclass('sale_offer_records'), to_regclass('listing_records') có; relkind của sale_offers và listings = 'v'; ma trận 6 khoá ngoại viết trước (nights.listing_id, listing_stats.listing_id, property_offers.offer_id, property_candidates.offer_a, property_candidates.offer_b, enrichment_proposals.offer_id) → confrelid là bảng bản ghi và confdeltype = 'r' từng dòng; CHECK retired_reason nhận het_trong_luot/ngoai_phuong/doi_khoa và từ chối 'khac' (đối chứng âm, thông điệp nêu tên ràng buộc); SELECT count(*) FROM v_ruler_p2 và FROM v_ruler_p2_area chạy được; tập view/matview phụ thuộc sale_offer_records/listing_records (pg_depend+pg_rewrite) bằng đúng {sale_offers, listings, v_ruler_p2, v_ruler_p2_area}; đối chứng: tạo view phụ v_thu_phu trên sale_offers TRƯỚC khi áp 044 → ca đỏ nêu 'v_thu_phu'; lần áp hai không lỗi, đếm dòng bảng bản ghi không đổi"
   - id: E2
     criterion: AC-2
     executor: test
@@ -27,25 +27,25 @@ evals:
     executor: test
     cmd: config:executors.test.nap_lai
     paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/lib/offer-key.mjs, pipeline/scripts/nap-lai.test.mjs]
-    expected: "exit 0; ca 'NL-AC-4' ma trận 5 dòng cho S03 và S05 (đổi giá, đổi diện tích, đổi số phòng, đổi rule_id parser, thêm một repost muộn hơn) → offer_id trước bằng offer_id sau từng dòng; đối chứng: đổi post neo (post sớm nhất bị gỡ khỏi nhóm) → offer_id khác; offer_id = 'offer_' + sha256('S03|'+post neo)[:16] khớp tính tay; originating_system_key của S03/S05 = post neo, S06 = list_id"
+    expected: "exit 0; ca 'NL-AC-4' ma trận 6 dòng cho S03 và S05 (đổi giá, đổi diện tích, đổi số phòng, đổi rule_id parser, thêm một repost muộn hơn, thêm ở lượt sau một post có posted_at SỚM hơn post neo) → offer_id trước bằng offer_id sau từng dòng; đối chứng: đổi post neo (post sớm nhất bị gỡ khỏi nhóm) → offer_id khác; offer_id = 'offer_' + sha256('S03|'+post neo)[:16] khớp tính tay; originating_system_key của S03/S05 = post neo, S06 = list_id"
   - id: E5
     criterion: AC-5
     executor: test
     cmd: config:executors.test.nap_lai_db
     paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, db/migrations/044_nap_lai_khong_xoa.sql, pipeline/scripts/nap-lai-db.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-5' (giao dịch, DB local thật sau 044): đếm offer S03/S05 khoá cũ (n) + quyết định/liên kết theo khoá gốc (ma trận AC-7) → chạy transform-zalo và transform-fb đường hàm (không CLI) → n offer cũ có retired_reason 'doi_khoa'; mọi offer cũ có post chung với offer mới mang superseded_by khác NULL; ma trận quyết định/liên kết bằng trước"
+    expected: "exit 0; ca 'ND-AC-5' (giao dịch, DB local thật sau 044): đếm offer S03/S05 khoá cũ (n) + quyết định/liên kết theo khoá gốc (ma trận AC-7) → chạy transform-zalo và transform-fb đường hàm (không CLI) → n offer cũ có retired_reason 'doi_khoa'; mọi offer cũ có post chung với offer mới mang superseded_by khác NULL; ma trận quyết định/liên kết bằng trước ở cả hai cột (có mặt theo khoá gốc; trỏ cha sống theo chuỗi superseded_by)"
   - id: E6
     criterion: AC-6
     executor: test
     cmd: config:executors.test.nap_lai_db
     paths: [pipeline/transform-airbnb.mjs, pipeline/reassign-areas.mjs, pipeline/scripts/nap-lai-db.itest.mjs]
-    expected: "exit 0; ca 'ND-AC-6' (giao dịch): chọn một listing có nights, dời toạ độ ra ngoài mọi phường → chạy bước loại-ngoài-phường của reassign-areas (hàm xuất khẩu, scope listing đó) → listing_records còn dòng, retired_reason 'ngoai_phuong', count nights và listing_stats của nó bằng trước; view listings không còn nó; dời lại vào phường → retired_at NULL, view có lại"
+    expected: "exit 0; ca 'ND-AC-6' (giao dịch): chọn một listing có nights, dời toạ độ ra ngoài mọi phường → chạy bước loại-ngoài-phường của reassign-areas (hàm xuất khẩu, scope listing đó) → listing_records còn dòng, retired_reason 'ngoai_phuong', count nights và listing_stats của nó bằng trước; view listings không còn nó; dời lại vào phường → retired_at NULL, view có lại; lặp cùng ca qua hàm của transform-airbnb; ca 200_transform: đêm của listing đã nghỉ còn nguyên sau khi chạy đoạn nights"
   - id: E7
     criterion: AC-7
     executor: script
     cmd: config:executors.script.nap_lai_ba_luot
     paths: [pipeline/scripts/nap-lai-ba-luot.mjs, pipeline/lib/write-offers.mjs, db/migrations/044_nap_lai_khong_xoa.sql]
-    expected: "exit 0; stdout có dòng 'nap-lai-ba-luot: 3 lượt · mất 0 quyết định · mất 0 liên kết' và bảng ma trận 5 dòng (de_xuat_da_quyet, the_review_da_quyet, ung_vien_merged_rejected, property_offers, the_pair) với cột trước/sau bằng nhau; cờ --doi-chung chạy cùng ba lượt với hàm đối soát giả lập 039 (DELETE + CASCADE) → exit 1 và dòng 'mất' nêu tên ít nhất một hàng ma trận"
+    expected: "exit 0; stdout có dòng 'nap-lai-ba-luot: 3 lượt · mất 0 quyết định · mất 0 liên kết' và bảng ma trận 5 dòng (de_xuat_da_quyet, the_review_da_quyet, ung_vien_merged_rejected, property_offers, the_pair) ma trận 7 hàng (thêm nights, listing_stats) × hai cột (có mặt; trỏ cha sống theo superseded_by) với trước/sau bằng nhau; cờ --doi-chung=039 (DELETE + CASCADE) và --doi-chung=khong-chuyen (chỉ đặt retired_at, không chuyển dòng con) → mỗi cờ exit 1 và dòng 'mất' nêu tên ít nhất một hàng ma trận"
   - id: E8
     criterion: AC-8
     executor: test
