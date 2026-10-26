@@ -5,6 +5,7 @@ feature_slug: ops-review-khung-hang-cho
 # dãy U1) + DB local; đăng nhập bằng tài khoản thử của scripts/dev-ops-account.mjs (role admin) và một tài khoản ops thử
 # tạo/xoá trong lượt; số kỳ vọng tính từ DB (cùng truy vấn với trang). Nút quyết định chỉ bấm khi route
 # /api/v1/ops/review/*/decide đã bị chặn bằng page.route (phản hồi giả) — đếm review_queue/sale_offers trước và sau.
+# Mỗi lượt thêm một thẻ Bổ sung tin thử (tiền tố riêng) để luôn có cả hai loại thẻ chờ; N ở E2 tính SAU khi thêm.
 # Mỗi kiểm in «ok …»/«FAIL …», exit 0 = đạt.
 evals:
   - id: E1
@@ -61,14 +62,14 @@ evals:
     executor: test
     cmd: config:executors.test.app_ui
     paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review-content.tsx, app/src/lib/ops/review-queue.ts, app/tests/review-queue.test.tsx, app/tests/review-card.test.tsx]
-    expected: "exit 0; ca 'RQ-AC-6 không độ tự tin' xanh: hàm toReviewItem(row DB mẫu có ai_confidence 0.85) trả object KHÔNG có khoá ai_confidence (Object.keys so TRỌN danh sách khoá viết trước); render bảng + mở sheet từng loại thẻ mẫu (ghép căn có ai_suggestion 'yes', bổ sung tin có fields confidence 0.85, xung đột) → textContent của bảng và từng dialog, sau khi gỡ các phần tử [data-review-quote] (đoạn trích nguyên văn: lý do máy, đoạn tin, căn cứ), không khớp /\\d+\\s*%/ và không chứa 'tự tin'; đối chứng dương cùng ca: thẻ mẫu có ai_reasoning 'Giá/m² chênh 5.3%' → chuỗi đó vẫn hiện trong một [data-review-quote]; ca 'AC-9 thẻ agent_output' của review-card.test.tsx kiểm VẮNG '85%' (thay vế cũ). Chiều đỏ (phá-thử S3): trả lại dòng fmtConfidence → ca đỏ 'thẻ không được hiện độ tự tin (Q9)'"
+    expected: "exit 0; ca 'RQ-AC-6 không độ tự tin' xanh: hàm toReviewItem(row DB mẫu có ai_confidence 0.85) trả object KHÔNG có khoá ai_confidence (Object.keys so TRỌN danh sách khoá viết trước); quét đệ quy thẻ bổ sung tin (ENRICH và thẻ xung đột từ khuôn agent, đối chứng: evidence mẫu CÓ khoá confidence trước khi gọt) → 0 khoá khớp /confidence/i ở mọi tầng, số trường đề xuất giữ nguyên (S4-r1: ai_confidence = max(fields[].confidence) nên chỉ bỏ cột là chưa đủ; chiều đỏ: bỏ stripEvidenceConfidence → ca đỏ 'giá trị độ tự tin không được tới trình duyệt (Q9)'); render bảng + mở sheet từng loại thẻ mẫu (ghép căn có ai_suggestion 'yes', bổ sung tin có fields confidence 0.85, xung đột) → textContent của bảng và từng dialog, sau khi gỡ các phần tử [data-review-quote] (đoạn trích nguyên văn: lý do máy, đoạn tin, căn cứ), không khớp /\\d+\\s*%/ và không chứa 'tự tin'; đối chứng dương cùng ca: thẻ mẫu có ai_reasoning 'Giá/m² chênh 5.3%' → chuỗi đó vẫn hiện trong một [data-review-quote]; ca 'AC-9 thẻ agent_output' của review-card.test.tsx kiểm VẮNG '85%' (thay vế cũ). Chiều đỏ (phá-thử S3): trả lại dòng fmtConfidence → ca đỏ 'thẻ không được hiện độ tự tin (Q9)'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-6
     executor: script
     cmd: config:executors.script.review_queue_smoke
     paths: [app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/src/lib/ops/review-queue.ts, scripts/smoke-review-queue.mjs]
-    expected: "exit 0; 'ok   [desktop-1280] HTML + RSC của /ops/review không chứa khoá ai_confidence' (đối chứng dương cùng dòng: DB có <m> thẻ mang ai_confidence khác null, m ≥ 1); 'ok   [desktop-1280] <n> sheet đã mở: ngoài [data-review-quote] 0 chuỗi khớp /\\d+\\s*%/ hay «tự tin»' (n = số thẻ chờ)"
+    expected: "exit 0; 'ok   [desktop-1280] HTML + RSC của /ops/review không chứa khoá ai_confidence hay fields[].confidence (DB có <m> thẻ mang ai_confidence; thấy 0 khoá)' — khớp cả dạng thoát của RSC; đối chứng dương: m ≥ 1 và thẻ Bổ sung tin thử của lượt mang fields[].confidence trong DB (S4-r1: chiều đỏ bỏ stripEvidenceConfidence → 'thấy <k> khoá', k > 0); 'ok   [desktop-1280] <n> sheet đã mở: ngoài [data-review-quote] 0 chuỗi khớp /\\d+\\s*%/ hay «tự tin»' (n = số thẻ chờ)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-7
@@ -145,5 +146,5 @@ evals:
     cmd: config:executors.script.review_queue_smoke
     layer: backend-effect
     paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, scripts/smoke-review-queue.mjs]
-    expected: "exit 0; route '**/api/v1/ops/review/*/decide' bị chặn (page.route, không request nào tới server — đếm request thật tới decide = 0); ma trận viết trước 3 nút sheet ghép căn × body: 'ok   [desktop-1280] Cùng căn → POST /api/v1/ops/review/<id>/decide {\"status\":\"approved\"}', 'Khác căn → {\"status\":\"rejected\"}', 'Không chắc → {\"status\":\"deferred\"}' (mỗi lượt mở lại trang, phản hồi giả {ok:true}); 3 nút sheet bổ sung tin tương tự ('Áp dụng'/'Bỏ'/'Để sau'); phản hồi giả 409 {error:'đã quyết'} → 'ok   [desktop-1280] lỗi route: dòng «Lỗi: đã quyết» trong sheet, nút còn bấm được'; 'ok   DB không đổi: review_queue <a>=<a>, sale_offers <b>=<b>' (đếm trước/sau, đối chứng: không có lượt ghi nào)"
+    expected: "exit 0; route '**/api/v1/ops/review/*/decide' bị chặn (page.route, không request nào tới server — đếm request thật tới decide = 0); ma trận viết trước 3 nút sheet ghép căn × body: 'ok   [desktop-1280] Cùng căn → POST /api/v1/ops/review/<id>/decide {\"status\":\"approved\"}', 'Khác căn → {\"status\":\"rejected\"}', 'Không chắc → {\"status\":\"deferred\"}' (mỗi lượt mở lại trang, phản hồi giả {ok:true}); 3 nút sheet bổ sung tin tương tự ('Áp dụng'/'Bỏ'/'Để sau') trên thẻ Bổ sung tin THỬ do smoke tạo đầu lượt (evidence cùng dạng agent ghi) và xoá cuối lượt ('ok   dọn thẻ thử: xoá 1 thẻ') — DB thật có thể không còn thẻ bổ sung tin chờ (S4-r1: job transform đã đóng hết); phản hồi giả 409 {error:'đã quyết'} → 'ok   [desktop-1280] lỗi route: dòng «Lỗi: đã quyết» trong sheet, nút còn bấm được'; 'ok   DB không đổi: review_queue <a>=<a>, sale_offers <b>=<b>' (đếm trước/sau, đối chứng: không có lượt ghi nào)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

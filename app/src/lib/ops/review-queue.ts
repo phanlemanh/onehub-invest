@@ -30,14 +30,31 @@ export type ReviewItem = {
   created_at: string | null;
 };
 
-/** Dòng DB → thẻ cho client. `evidence` truyền vào đã gọt ảnh (`stripEvidenceImages`). */
+/**
+ * Bỏ độ tự tin khỏi `evidence` (Q9): thẻ bổ sung tin mang `fields[].confidence` — `review_queue.ai_confidence` chính là
+ * số lớn nhất trong đó (agent/src/enrich/run.ts), nên chỉ bỏ cột thôi thì số vẫn tới trình duyệt.
+ */
+export function stripEvidenceConfidence(evidence: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(evidence.fields)) return evidence;
+  return {
+    ...evidence,
+    fields: evidence.fields.map((f) => {
+      if (!f || typeof f !== "object" || Array.isArray(f)) return f;
+      const { confidence: _c, ...rest } = f as Record<string, unknown>;
+      void _c;
+      return rest;
+    }),
+  };
+}
+
+/** Dòng DB → thẻ cho client. `evidence` truyền vào đã gọt ảnh (`stripEvidenceImages`); ở đây gọt thêm độ tự tin. */
 export function toReviewItem(row: ReviewQueueRow, evidence: Record<string, unknown>): ReviewItem {
   return {
     // review_queue.id là bigint — pg trả chuỗi; ép về số cho đúng kiểu (khoá media, so sánh thẻ đang mở).
     id: Number(row.id),
     item_type: row.item_type,
     title: row.title,
-    evidence,
+    evidence: stripEvidenceConfidence(evidence),
     ai_suggestion: row.ai_suggestion,
     ai_reasoning: row.ai_reasoning,
     status: row.status,

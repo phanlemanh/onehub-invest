@@ -6,7 +6,9 @@
 //   cd app && BASE_URL=http://ui1.localhost:3460 node --import tsx ../scripts/smoke-review-queue.mjs
 // An toàn DB dùng chung: nút quyết định CHỈ bấm sau khi route /api/v1/ops/review/*/decide đã bị chặn bằng page.route
 // (phản hồi giả) — đếm review_queue + sale_offers trước/sau phải bằng nhau. Phiên đăng nhập: hai tài khoản thử (admin,
-// ops) tạo thẳng trong DB với tiền tố riêng mỗi lần chạy, xoá cuối lượt. Mỗi kiểm in «ok …»/«FAIL …»; exit 0 = đạt.
+// ops) tạo thẳng trong DB với tiền tố riêng mỗi lần chạy, xoá cuối lượt. Thẻ chờ của DB thật đổi theo job đêm (S4-r1: job
+// transform đóng hết thẻ Bổ sung tin) → mỗi lượt thêm MỘT thẻ Bổ sung tin thử (tiêu đề mang tiền tố, evidence có
+// fields[].confidence như agent ghi) để luôn có cả hai loại thẻ, xoá cuối lượt. Mỗi kiểm in «ok …»/«FAIL …»; exit 0 = đạt.
 import { randomBytes } from "node:crypto"
 import { execFileSync } from "node:child_process"
 import { existsSync, readdirSync } from "node:fs"
@@ -112,6 +114,29 @@ async function taoPhien() {
   return tokens
 }
 
+/** Thẻ Bổ sung tin thử: evidence cùng dạng agent/src/enrich/run.ts ghi (fields[].confidence, ai_confidence = max). */
+async function taoTheThu() {
+  const evidence = {
+    offer_id: `offer_${nonce}`,
+    text: `Tin thử smoke UI1 ${nonce}`,
+    fields: [
+      { proposal_id: -1, field: "bedrooms", value: "2", confidence: 0.77, source: "e2_llm", basis: null, conflict: false },
+      { proposal_id: -2, field: "bathrooms", value: "1", confidence: 0.61, source: "e2_llm", basis: null, conflict: false },
+    ],
+  }
+  const { rows } = await pool.query(
+    `INSERT INTO review_queue (item_type, item_id, title, evidence, ai_suggestion, ai_confidence, status)
+     VALUES ('agent_output', $1, $2, $3, 'apply', 0.77, 'pending') RETURNING id`,
+    [`enrich:offer_${nonce}`, `Bổ sung dữ liệu: ${nonce} (thẻ thử smoke)`, JSON.stringify(evidence)],
+  )
+  return Number(rows[0].id)
+}
+
+async function xoaTheThu() {
+  const { rowCount } = await pool.query(`DELETE FROM review_queue WHERE item_id = $1`, [`enrich:offer_${nonce}`])
+  check(rowCount === 1, `dọn thẻ thử: xoá ${rowCount} thẻ (kỳ vọng 1)`)
+}
+
 async function donPhien() {
   await pool.query(`DELETE FROM sessions WHERE user_id LIKE $1`, [`${nonce}-%`])
   await pool.query(`DELETE FROM users WHERE id LIKE $1`, [`${nonce}-%`])
@@ -166,6 +191,8 @@ const oAnh = (d) => d.locator("[role=group][aria-label^='Ảnh '] [data-slot=att
 async function main() {
   const playwright = timPlaywright()
   if (!playwright) throw new Error("không tìm thấy playwright-core (app/ hoặc collector/)")
+  const theThu = await taoTheThu()
+  console.log(`thẻ Bổ sung tin thử #${theThu}`)
   const truoc = await dem()
   const cho = await theCho()
   const { rows: conf } = await pool.query(`SELECT count(*)::int AS m FROM review_queue WHERE ai_confidence IS NOT NULL`)
@@ -186,7 +213,10 @@ async function main() {
       check(JSON.stringify(cot.map((c) => c.trim())) === JSON.stringify(["Thẻ", "Loại", "Trạng thái", "Tạo lúc"]), `[desktop-1280] cột ${cot.join(" · ")}`)
       check((await page.locator("tbody img").count()) === 0, "[desktop-1280] bảng: 0 <img>")
       const html = (await resp.text()) + (await page.content())
-      check(conf[0].m >= 1 && !html.includes("ai_confidence"), `[desktop-1280] HTML + RSC của /ops/review không chứa khoá ai_confidence (DB có ${conf[0].m} thẻ mang ai_confidence)`)
+      // Quan hệ cần đo (S4-r1): không khoá độ tự tin NÀO (ai_confidence, fields[].confidence) trong dữ liệu trang —
+      // RSC nhúng trong HTML dạng chuỗi thoát nên khớp cả "confidence": lẫn \"confidence\":.
+      const khoa = html.match(/\\?"(?:ai_)?confidence\\?"\s*:/g) ?? []
+      check(conf[0].m >= 1 && khoa.length === 0, `[desktop-1280] HTML + RSC của /ops/review không chứa khoá ai_confidence hay fields[].confidence (DB có ${conf[0].m} thẻ mang ai_confidence; thấy ${khoa.length} khoá)`)
 
       let sach = 0
       for (const t of cho) {
@@ -221,7 +251,7 @@ async function main() {
       bat.length = 0
 
       const em = cho.find((t) => t.item_type === "entity_match")
-      const ao = cho.find((t) => t.item_type === "agent_output")
+      const ao = cho.find((t) => t.id === theThu) ?? cho.find((t) => t.item_type === "agent_output")
       const maTran = [
         ...(em ? [[em, "Cùng căn", "approved"], [em, "Khác căn", "rejected"], [em, "Không chắc", "deferred"]] : []),
         ...(ao ? [[ao, "Áp dụng", "approved"], [ao, "Bỏ", "rejected"], [ao, "Để sau", "deferred"]] : []),
@@ -318,6 +348,7 @@ async function main() {
     await browser?.close()
     const sau = await dem()
     check(sau.q === truoc.q && sau.o === truoc.o && sau.quyet === truoc.quyet, `DB không đổi: review_queue ${truoc.q}=${sau.q} (đã quyết ${truoc.quyet}=${sau.quyet}), sale_offers ${truoc.o}=${sau.o}`)
+    await xoaTheThu()
     await donPhien()
     await pool.end()
   }
@@ -330,6 +361,10 @@ async function main() {
 
 main().catch(async (err) => {
   console.error(err)
+  // Hỏng trước khối finally (vd đọc DB lỗi): vẫn dọn thẻ thử + tài khoản thử của lượt này.
+  await pool.query(`DELETE FROM review_queue WHERE item_id = $1`, [`enrich:offer_${nonce}`]).catch(() => {})
+  await pool.query(`DELETE FROM sessions WHERE user_id LIKE $1`, [`${nonce}-%`]).catch(() => {})
+  await pool.query(`DELETE FROM users WHERE id LIKE $1`, [`${nonce}-%`]).catch(() => {})
   await pool.end().catch(() => {})
   process.exit(1)
 })

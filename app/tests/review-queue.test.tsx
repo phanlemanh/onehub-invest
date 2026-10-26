@@ -327,6 +327,20 @@ test("RQ-AC-6 không độ tự tin", async () => {
   const row = { id: 1, item_type: "entity_match", title: "x", evidence: {}, ai_suggestion: "yes", ai_reasoning: null, ai_confidence: "0.85", status: "pending", created_at: new Date("2026-10-22T00:00:00Z") };
   const item = toReviewItem(row as never, {});
   assert.deepEqual(Object.keys(item), ["id", "item_type", "title", "evidence", "ai_suggestion", "ai_reasoning", "status", "created_at"], "thẻ gửi xuống client không được mang ai_confidence (Q9)");
+  // Quan hệ cần đo (S4-r1): GIÁ TRỊ độ tự tin không có ở đâu trong dữ liệu client — ai_confidence = max(fields[].confidence)
+  // nên quét đệ quy mọi khoá *confidence*, trên thẻ bổ sung tin THẬT dạng (ENRICH + thẻ xung đột từ khuôn agent).
+  const confidenceKeys = (v: unknown, at = "$"): string[] =>
+    Array.isArray(v)
+      ? v.flatMap((x, i) => confidenceKeys(x, `${at}[${i}]`))
+      : v && typeof v === "object"
+        ? Object.entries(v).flatMap(([k, x]) => [...(/confidence/i.test(k) ? [`${at}.${k}`] : []), ...confidenceKeys(x, `${at}.${k}`)])
+        : [];
+  for (const ev of [ENRICH, CONFLICT.evidence]) {
+    assert.ok(confidenceKeys(ev).length > 0, "đối chứng: evidence mẫu phải có khoá confidence trước khi gọt");
+    const out = toReviewItem({ ...row, item_type: "agent_output", evidence: ev } as never, ev);
+    assert.deepEqual(confidenceKeys(out), [], "giá trị độ tự tin không được tới trình duyệt (Q9) — còn khoá confidence trong thẻ");
+    assert.equal(JSON.stringify(out.evidence.fields).match(/"value":"[^"]*"/g)?.length, (ev.fields as unknown[]).length, "gọt độ tự tin không được làm mất trường đề xuất");
+  }
 
   const withoutQuotes = (el: Element) => {
     const c = el.cloneNode(true) as Element;

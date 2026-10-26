@@ -62,7 +62,6 @@ export type EnrichField = {
   proposal_id: number;
   field: string;
   value: string;
-  confidence: number | null;
   source?: string;
   basis?: string | null;
   conflict?: boolean;
