@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f51c050fbfdb0ba5c119fd4c4b851203ef5cd59c
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: thu-danh-muc-ocp1

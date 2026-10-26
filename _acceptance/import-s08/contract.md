@@ -5,7 +5,7 @@ slug: import-s08
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T13:46:32Z
 approved_by:
@@ -39,3 +39,9 @@ Source input: lộ trình ZC8 + lời giao 2610-10 và BÁO 2610-17 (phiên đi�
 
 - Nạp snapshot S08 thật vào DB oneinvest: việc vận hành sau merge (một lần, chỉ local).
 - Biến đổi stg_s08_inventory thành căn/trục: PL11.
+
+## Notes
+
+- Quyết ở Cổng Bằng chứng 2026-10-26 (Mạnh):
+  - Ngoài-1: mở hợp đồng mới
+  - Ngoài-2: mở hợp đồng mới

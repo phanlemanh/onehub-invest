@@ -5,7 +5,7 @@ slug: thu-danh-muc-ocp1
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T13:46:32Z
 approved_by:
@@ -51,3 +51,13 @@ Source input: lộ trình PL10 + lời giao 2610-10 (phiên điều phối liên
 - Lịch thu hằng tuần (plist/launchd) và cài cấu hình local trên máy thu: việc triển khai riêng sau merge; hiện thu tay.
 - Đưa dữ liệu S08 lên cloud hay cổng Invest: cấm theo luật 5 (AGENTS.md).
 - Chú thích migration 040 trên main có một tên endpoint: migration đã commit không sửa được (luật 2), đã công khai từ trước.
+
+## Notes
+
+- Quyết ở Cổng Bằng chứng 2026-10-26 (Mạnh):
+  - Ngoài-1: mở hợp đồng mới
+  - Ngoài-2: mở hợp đồng mới
+  - Ngoài-3: ghi Known limits
+  - Ngoài-4: mở hợp đồng mới
+- Known limits:
+  - Ngoài-3: OOC-3: Payload danh sách căn ghi nguyên văn, không qua bộ lọc khoá liên hệ
