@@ -1,0 +1,26 @@
+schema_version: 1
+feature_slug: deals-phi-ly-test-theo-view
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/deals-phi-ly.test.tsx]
+    expected: "exit 0; ca 'DP-AC-5 bản cloud' có dấu ✔ (trước sửa: đỏ 42809 'cannot be performed on relation \"sale_offers\"' trên DB đã áp 044); 'ℹ fail 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/scripts/write-offers.test.mjs]
+    expected: "exit 0; 'ℹ fail 0'; các ca AC-1…AC-5 của write-offers.test.mjs có dấu ✔"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.nap_lai_ba_luot
+    paths: [pipeline/scripts/nap-lai-ba-luot.mjs]
+    expected: "exit 0; dòng 'nap-lai-ba-luot: 3 lượt · mất 0 quyết định · mất 0 liên kết'; 'đối chứng 039: thấy mất' và 'đối chứng khong-chuyen: thấy mất'; dòng cuối 'nap-lai-ba-luot: ĐẠT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

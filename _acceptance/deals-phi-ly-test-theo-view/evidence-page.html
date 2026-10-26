@@ -1,0 +1,93 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · deals-phi-ly-test-theo-view</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>test DB theo lược đồ sau 044 — DP-AC-5 xoá cột PII trên bảng bản ghi, test không áp lại 044 khi DB đã có</h1><div class="sub">Trang hồ sơ · <span class="mono">deals-phi-ly-test-theo-view</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">test DB theo lược đồ sau 044 — DP-AC-5 xoá cột PII trên bảng bản ghi, test không áp lại 044 khi DB đã có</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Hồi quy trên main 432d7ca7 do #132 (PL14, migration 044). Từ 044, sale_offers và listings là VIEW sống trên sale_offer_records/listing_records; DB local đã áp 044 ngay sau merge. Hai hệ quả trong bộ test: Ca «DP-AC-5 bản cloud» (app/tests/deals-phi-ly.test.tsx, hồ sơ deals-loai-tin-phi-ly) giả lập lược đồ cloud bằng ALTER TABLE sale_offers DROP COLUMN ……</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra"><span class="vang">chưa có — contract.md</span></div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra"><span class="vang">chưa có — decisions.jsonl</span></div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">3 mục để ngoài phạm vi · 0 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>3</b></span><span data-k="phep_do">Phép đo <b>3</b></span><span data-k="luot_cham">Lượt chấm <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="token">Token <b><span class="vang">chưa có — usage-report.md</span></b></span><span data-k="quyet_dinh_may">Quyết định máy <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="quyet_dinh_nguoi">người <b><span class="vang">chưa có — decisions.jsonl</span></b></span><span data-k="ma">Mã <b>e3db58d</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Hồi quy trên main 432d7ca7 do #132 (PL14, migration 044). Từ 044, sale_offers và listings là VIEW sống trên sale_offer_records/listing_records; DB local đã áp 044 ngay sau merge. Hai hệ quả trong bộ test:</p><ul><li>Ca «DP-AC-5 bản cloud» (app/tests/deals-phi-ly.test.tsx, hồ sơ deals-loai-tin-phi-ly) giả lập lược đồ cloud bằng ALTER TABLE sale_offers DROP COLUMN … — trên VIEW thì đỏ ổn định (42809), chặn S4 của dãy U1.</li><li>pipeline/scripts/write-offers.test.mjs và thước pipeline/scripts/nap-lai-ba-luot.mjs LUÔN áp lại 044 trong giao dịch. Trên DB đã có 044, việc đó chỉ là DDL khoá độc quyền trên view sống, deadlock với test của phiên khác đang đọc DB dùng chung (đo 26/10: ON12-AC-5 đỏ 40P01, tiến trình chờ AccessExclusive trên view listings).</li></ul></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given DB local đã áp 044, When chạy trọn `cd app &amp;&amp; npm test`, Then exit 0 và ca «DP-AC-5 bản cloud» xanh.</li><li data-ac="AC-2"><b>AC-2</b> — Given DB local đã áp 044, When chạy `cd pipeline &amp;&amp; npm test` (gồm write-offers.test.mjs), Then exit 0 và</li><li data-ac="AC-3"><b>AC-3</b> — Given DB local đã áp 044, When chạy `node pipeline/scripts/nap-lai-ba-luot.mjs`, Then dòng cuối «ĐẠT»</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="vang">hợp đồng không khai design_doc</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><span class="vang">chưa có — decisions.jsonl</span></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-deals-phi-ly-test-theo-view-E1-r1</td><td class="mono">2026-10-26T12:01:22Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-deals-phi-ly-test-theo-view-E2-r1</td><td class="mono">2026-10-26T12:01:22Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-3</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-deals-phi-ly-test-theo-view-E3-r1</td><td class="mono">2026-10-26T12:01:22Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · test</h3><p class="crit">AC-1: Given DB local đã áp 044, When chạy trọn `cd app &amp;&amp; npm test`, Then exit 0 và ca «DP-AC-5 bản cloud» xanh.</p>
+<div class="kv"><span>run_id <b>minted-deals-phi-ly-test-theo-view-E1-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.app_ui</b></span><span>verified_at <b>2026-10-26T12:01:22Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd app &amp;&amp; npm test
+ℹ duration_ms 89830.046167</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · test</h3><p class="crit">AC-2: Given DB local đã áp 044, When chạy `cd pipeline &amp;&amp; npm test` (gồm write-offers.test.mjs), Then exit 0 và</p>
+<div class="kv"><span>run_id <b>minted-deals-phi-ly-test-theo-view-E2-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.pipeline</b></span><span>verified_at <b>2026-10-26T12:01:22Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">cd pipeline &amp;&amp; npm test
+ℹ duration_ms 17489.056375</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · script</h3><p class="crit">AC-3: Given DB local đã áp 044, When chạy `node pipeline/scripts/nap-lai-ba-luot.mjs`, Then dòng cuối «ĐẠT»</p>
+<div class="kv"><span>run_id <b>minted-deals-phi-ly-test-theo-view-E3-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.nap_lai_ba_luot</b></span><span>verified_at <b>2026-10-26T12:01:22Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">node pipeline/scripts/nap-lai-ba-luot.mjs
+nap-lai-ba-luot: ĐẠT — bản thật mất 0 ô; đối chứng phải thấy mất</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+Không đo được eval nào có phân biệt hay không ở round này vì baseline bị chặn hạ tầng; mọi field baseline ghi n-a.
+- cd app &amp;&amp; npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+- cd pipeline &amp;&amp; npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+- node pipeline/scripts/nap-lai-ba-luot.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+Eval không-phân-biệt (xanh cả HEAD lẫn baseline): không đo được ở round này (xem dòng baseline BLOCKED ở đầu mục).</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1, E2, E3 đều đạt; lệnh suite xanh. Verdict PASS.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><span class="vang">chưa có — usage-report.md</span></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">Đối chứng 039 của thước ba lượt vẫn chạy DDL (dựng khoá ngoại CASCADE trong giao dịch) — bản chất của đối chứng.</li><li data-loai="ngoai">`pipeline/scripts/nap-lai-db.itest.mjs` vẫn áp 044 hai lần có chủ đích (đo idempotent của chính migration); không nằm trong `npm test`.</li><li data-loai="ngoai">`data-api/` dùng DB và migration riêng.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">e3db58d737f151461331d9ac51aac8a9d93ec343</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: máy đi tiếp, cửa veto mở · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note"></p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>
