@@ -70,22 +70,23 @@ const quaHaiLuot = async (c) => {
   return { bai, c1, c2 };
 };
 
-test("DP-AC-2 bài mồi S03 và S05 mất phường qua hai lượt transform → lechTheoBai bắt", { timeout: 300_000 }, async () => {
+// Hai chiều chạy trên CÙNG hai lần chụp của một transaction (AC-2) — đối chứng dương ghim trước cả hai.
+test("DP-AC-2 mồi S03 + S05 qua hai lượt transform", { timeout: 300_000 }, async (t) => {
   await withTx(async (c) => {
     const { bai, c1, c2 } = await quaHaiLuot(c);
     for (const p of bai) {
-      const t = [...c1.values()].find((o) => (o.post_ids ?? []).includes(p));
-      assert.equal(t?.area_id, MOI.area, `bài mồi ${p} không gắn phường mồi ở lượt đầu — mồi hỏng`);
+      const o = [...c1.values()].find((x) => (x.post_ids ?? []).includes(p));
+      assert.equal(o?.area_id, MOI.area, `bài mồi ${p} không gắn phường mồi ở lượt đầu — mồi hỏng`);
+      assert.equal(o.hop_le, true, `tin mồi ${o.offer_id} không tính là phường hợp lệ ở chụp 1 — mồi hỏng`);
+      assert.ok(!c2.has(o.offer_id), `tin mồi ${o.offer_id} vẫn giữ mã sau lượt B — mồi không đổi mã, chiều đỏ vô nghĩa`);
     }
-    const { lech } = lechTheoBai(c1, c2);
-    assert.deepEqual(lech.map((l) => l.post_id).sort(), [...bai].sort(), "lechTheoBai không trả đúng hai bài mồi");
-    assert.ok(lech.every((l) => l.loai === "mat-phuong"), `bài mồi phải mất phường: ${JSON.stringify(lech)}`);
-  });
-});
-
-test("DP-AC-2 thước cũ nối theo offer_id không thấy", { timeout: 300_000 }, async () => {
-  await withTx(async (c) => {
-    const { c1, c2 } = await quaHaiLuot(c);
-    assert.deepEqual(lechCu(c1, c2), [], "thước cũ lẽ ra mù với tin đổi mã — đối chứng sai");
+    await t.test("DP-AC-2 bài mồi S03 và S05 mất phường qua hai lượt transform → lechTheoBai bắt", () => {
+      const { lech } = lechTheoBai(c1, c2);
+      assert.deepEqual(lech.map((l) => l.post_id).sort(), [...bai].sort(), "lechTheoBai không trả đúng hai bài mồi");
+      assert.ok(lech.every((l) => l.loai === "mat-phuong"), `bài mồi phải mất phường: ${JSON.stringify(lech)}`);
+    });
+    await t.test("DP-AC-2 thước cũ nối theo offer_id không thấy", () => {
+      assert.deepEqual(lechCu(c1, c2), [], "thước cũ lẽ ra mù với tin đổi mã — đối chứng sai");
+    });
   });
 });
