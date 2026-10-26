@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: cc728fa315e2286edf2d180a4e9e73094df7f074
+verified_commit: 87d8d4e9aa2faf0f36b8d49a77b895567a59979b
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -232,3 +232,7 @@ none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạ
 
 Round 1: E6c failed — bộ test agent có 1 test đỏ (AC-6 để sau, enrich-db.test.ts), xanh trên baseline. Returned to implementation.
 Round 2: cả 16 eval xanh. Bảy eval chạy lại trên cây mới, chín eval mang sang từ round 1 (delta không chạm paths của chúng); E6c xanh sau khi cô lập ca enrich-db AC-6. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-26, do ghim lại sau gộp main 7063d29 (xung đột tệp máy sinh + enrich-db của #118)
+run_id: repin-20261026T031937Z-22916
+sha: 87d8d4e9aa2faf0f36b8d49a77b895567a59979b · suites: 6 lệnh exit 0 · evals: 16/16 eval máy đạt kỳ vọng
