@@ -9,6 +9,9 @@ import { fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/format"
 import type { ListingCardRow } from "@/lib/queries"
 import { roomTypeVi } from "./listing-labels"
 
+/** Bảng so sánh không dùng ảnh — nhận cả hàng comps của /yield (không kèm `photoUrls`). */
+type CompRow = Omit<ListingCardRow, "photoUrls">
+
 const NUM = { headerClassName: "text-end", cellClassName: "text-end tabular-nums" }
 
 /** Listing tương tự (comps) — DataGrid trong Frame như các bảng Insight. */
@@ -17,11 +20,11 @@ export function CompsTable({
   currency,
   description,
 }: {
-  rows: ListingCardRow[]
+  rows: CompRow[]
   currency: string
   description: string
 }) {
-  const columns = useMemo<InsightColumn<ListingCardRow>[]>(
+  const columns = useMemo<InsightColumn<CompRow>[]>(
     () => [
       {
         id: "name",

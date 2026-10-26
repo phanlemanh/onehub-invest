@@ -187,3 +187,17 @@
 .maplibregl-map .maplibregl-popup-anchor-right .maplibregl-popup-tip {
   border-left-color: var(--popover);
 }
+
+/*
+ * Bản đồ dựng bằng mapcn (`components/ui/map.tsx`) tự vẽ khung popup bằng token
+ * (bg-popover, border) bên trong nội dung — tắt khung MapLibre và khung chung ở
+ * trên để không thành hai lớp. Chỉ áp trong vùng đánh dấu `data-mapcn`, các bản
+ * đồ MapLibre cũ giữ nguyên. Chép từ CSS mà `shadcn add @mapcn/map` chèn vào
+ * @layer base, thu phạm vi lại.
+ */
+[data-mapcn] .maplibregl-map .maplibregl-popup-content {
+  @apply rounded-none border-0 bg-transparent p-0 shadow-none;
+}
+[data-mapcn] .maplibregl-map .maplibregl-popup-tip {
+  @apply hidden;
+}

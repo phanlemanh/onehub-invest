@@ -46,8 +46,9 @@ chỉ tắt `onehub-ui/no-hardcoded-color` cho đúng 5 file này, mọi luật 
 - `src/components/mini-map.tsx`
 - `src/components/listing/listings-map.tsx`
 
-Bản đồ mới thì nền đi qua `lib/map-style.ts`, popup dùng `setDOMContent` + `textContent`
-(`catalog.md` § Bản đồ nền). Muốn thêm file vào danh sách thì phải sửa cả `eslint.config.mjs`
+Bản đồ mới dựng bằng `@mapcn/map` (`components/ui/map.tsx`), nền đi qua `lib/map-style.ts` (prop `styles`),
+popup là `MapPopup` của mapcn (nội dung React, tự thoát chuỗi); bản đồ MapLibre tay cũ thì popup `setDOMContent` +
+`textContent` (`catalog.md` § Bản đồ nền). Muốn thêm file vào danh sách thì phải sửa cả `eslint.config.mjs`
 lẫn đoạn này trong cùng PR, kèm lý do.
 
 ## Không đụng vendor

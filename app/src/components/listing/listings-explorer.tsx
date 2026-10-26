@@ -5,6 +5,8 @@ import { XIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { Badge } from "@/components/reui/badge"
+import { createFilterQuery } from "@/components/reui/filters/filters-query"
+import type { FilterQuery } from "@/components/reui/filters/filters-types"
 import {
   Frame,
   FrameDescription,
@@ -26,11 +28,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { RegionError } from "@/components/states/region-error"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { fmtInt } from "@/lib/format"
 import type { ListingCardRow } from "@/lib/queries"
+import { activeFilterCount, compileListingFilter } from "./listing-filter-query"
 import { ListingCard } from "./listing-card"
-import { ListingsMap } from "./listings-map"
+import { ListingsFilterBar } from "./listings-filter-bar"
+import { ListingsFilterSheet } from "./listings-filter-sheet"
+import { ListingsMap, inView, type ViewBounds } from "./listings-map"
 
 type SortKey = "revenue" | "occupancy" | "price-desc" | "price-asc"
 
@@ -50,80 +56,61 @@ const COMPARE: Record<SortKey, (a: ListingCardRow, b: ListingCardRow) => number>
 }
 
 const PAGE = 24
-const ALL_AREAS = "__all__"
 
 // Pressed lifts to the card surface (chart-6 toolbar pattern).
 const TOGGLE_ITEM =
   "text-muted-foreground data-pressed:bg-card dark:data-pressed:bg-muted data-pressed:text-foreground"
 
 /**
- * Duyệt listing (IA §3.2, AirDNA "Short-term Rentals"): lưới thẻ | bản đồ nhãn
- * giá. Kéo/zoom bản đồ → lưới lọc theo vùng đang xem; rê chuột thẻ → nhãn sáng.
+ * Duyệt listing (IA §3.2, AirDNA "Short-term Rentals"): bộ lọc | lưới thẻ | bản đồ nhãn giá.
+ * Bộ lọc thuộc tính là MỘT cây `FilterQuery`: thanh chip @reui/filters ở màn rộng, ngăn filter-sidebar-5
+ * ở màn hẹp. Kéo/zoom bản đồ → lưới lọc thêm theo vùng đang xem (cả hai lớp lọc cùng áp); bản đồ chỉ
+ * hiện listing khớp bộ lọc thuộc tính; rê chuột thẻ ↔ nhãn sáng.
  */
 export function ListingsExplorer({
   listings,
   currency,
+  capNote = null,
 }: {
   listings: ListingCardRow[]
   currency: string
+  /** Ghi chú khi trang chỉ tải một phần listing của thị trường. */
+  capNote?: string | null
 }) {
   const [sort, setSort] = useState<SortKey>("revenue")
-  const [area, setArea] = useState<string>(ALL_AREAS)
-  const [visible, setVisible] = useState<Set<string> | null>(null)
+  const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery())
+  const [view, setViewBounds] = useState<ViewBounds | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [shown, setShown] = useState(PAGE)
-  const [view, setView] = useState<"list" | "map">("list")
+  const [mode, setMode] = useState<"list" | "map">("list")
   const [resetKey, setResetKey] = useState(0)
 
-  const areas = useMemo(
-    () =>
-      [...new Set(listings.map((l) => l.areaName).filter((a): a is string => Boolean(a)))].sort(
-        (a, b) => a.localeCompare(b, "vi")
-      ),
-    [listings]
-  )
-  // Bản đồ hiện mọi listing của phường đã chọn; lưới còn lọc thêm theo khung nhìn.
-  const inArea = useMemo(
-    () => (area === ALL_AREAS ? listings : listings.filter((l) => l.areaName === area)),
-    [listings, area]
-  )
+  // Bản đồ hiện mọi listing khớp bộ lọc thuộc tính; lưới còn lọc thêm theo khung nhìn.
+  const matched = useMemo(() => listings.filter(compileListingFilter(query)), [listings, query])
   const rows = useMemo(
-    () => (visible ? inArea.filter((l) => visible.has(l.id)) : inArea).sort(COMPARE[sort]),
-    [inArea, visible, sort]
+    () => (view ? matched.filter((l) => inView(view, l)) : matched).sort(COMPARE[sort]),
+    [matched, view, sort]
   )
+  const filtering = activeFilterCount(query) > 0
 
+  function changeQuery(next: FilterQuery) {
+    setQuery(next)
+    setShown(PAGE)
+  }
   function clearViewport() {
-    setVisible(null)
+    setViewBounds(null)
     setResetKey((k) => k + 1)
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={area}
-          items={[
-            { value: ALL_AREAS, label: "Tất cả phường" },
-            ...areas.map((a) => ({ value: a, label: a })),
-          ]}
-          onValueChange={(value) => {
-            setArea(String(value ?? ALL_AREAS))
-            setVisible(null)
-            setShown(PAGE)
-          }}
-        >
-          <SelectTrigger aria-label="Phường" className="min-w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent alignItemWithTrigger={false}>
-            <SelectItem value={ALL_AREAS}>Tất cả phường</SelectItem>
-            {areas.map((a) => (
-              <SelectItem key={a} value={a}>
-                {a}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="hidden min-w-0 flex-1 lg:block">
+          <ListingsFilterBar listings={listings} currency={currency} query={query} onQueryChange={changeQuery} />
+        </div>
+        <div className="lg:hidden">
+          <ListingsFilterSheet listings={listings} currency={currency} query={query} onQueryChange={changeQuery} />
+        </div>
 
         <Select
           value={sort}
@@ -143,25 +130,10 @@ export function ListingsExplorer({
           </SelectContent>
         </Select>
 
-        {visible && (
-          <Badge variant="info-light" className="gap-1.5">
-            Đang lọc theo vùng bản đồ
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="-me-1"
-              aria-label="Bỏ lọc theo vùng bản đồ"
-              onClick={clearViewport}
-            >
-              <XIcon aria-hidden="true" />
-            </Button>
-          </Badge>
-        )}
-
         <ToggleGroup
           multiple={false}
-          value={[view]}
-          onValueChange={(value) => value[0] && setView(value[0] as "list" | "map")}
+          value={[mode]}
+          onValueChange={(value) => value[0] && setMode(value[0] as "list" | "map")}
           variant="outline"
           spacing={0}
           aria-label="Chế độ xem"
@@ -177,21 +149,50 @@ export function ListingsExplorer({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-        <div className={cn("flex min-w-0 flex-col gap-4", view === "map" && "max-lg:hidden")}>
-          <p className="text-muted-foreground text-sm" aria-live="polite">
-            {fmtInt(rows.length)} listing
-            {visible ? " trong vùng bản đồ" : area === ALL_AREAS ? "" : ` ở ${area}`}
-          </p>
+        <div className={cn("flex min-w-0 flex-col gap-4", mode === "map" && "max-lg:hidden")}>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-muted-foreground text-sm" aria-live="polite">
+              {fmtInt(rows.length)} listing
+              {view ? " trong vùng bản đồ" : filtering ? " khớp bộ lọc" : ""}
+            </p>
+            {capNote && <p className="text-muted-foreground text-xs">{capNote}</p>}
+            {view && (
+              <Badge variant="info-light" className="gap-1.5">
+                Đang lọc theo vùng bản đồ
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="-me-1"
+                  aria-label="Bỏ lọc theo vùng bản đồ"
+                  onClick={clearViewport}
+                >
+                  <XIcon aria-hidden="true" />
+                </Button>
+              </Badge>
+            )}
+          </div>
           {rows.length === 0 ? (
-            <Empty className="border">
-              <EmptyHeader>
-                <EmptyTitle>Không có listing trong vùng này</EmptyTitle>
-                <EmptyDescription>Kéo bản đồ sang chỗ khác, hoặc bỏ lọc theo vùng.</EmptyDescription>
-              </EmptyHeader>
-              <Button variant="outline" size="sm" onClick={clearViewport}>
-                Bỏ lọc
-              </Button>
-            </Empty>
+            matched.length === 0 ? (
+              <Empty className="border">
+                <EmptyHeader>
+                  <EmptyTitle>Không có listing khớp bộ lọc</EmptyTitle>
+                  <EmptyDescription>Nới điều kiện, hoặc xoá bộ lọc để xem mọi listing.</EmptyDescription>
+                </EmptyHeader>
+                <Button variant="outline" size="sm" onClick={() => changeQuery(createFilterQuery())}>
+                  Xoá bộ lọc
+                </Button>
+              </Empty>
+            ) : (
+              <Empty className="border">
+                <EmptyHeader>
+                  <EmptyTitle>Không có listing trong vùng này</EmptyTitle>
+                  <EmptyDescription>Kéo bản đồ sang chỗ khác, hoặc bỏ lọc theo vùng.</EmptyDescription>
+                </EmptyHeader>
+                <Button variant="outline" size="sm" onClick={clearViewport}>
+                  Bỏ lọc vùng
+                </Button>
+              </Empty>
+            )
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {rows.slice(0, shown).map((listing) => (
@@ -212,7 +213,7 @@ export function ListingsExplorer({
           )}
         </div>
 
-        <div className={cn("min-w-0 lg:sticky lg:top-4", view === "list" && "max-lg:hidden")}>
+        <div className={cn("min-w-0 lg:sticky lg:top-4", mode === "list" && "max-lg:hidden")}>
           <Frame spacing="default" className="w-full min-w-0">
             <FrameHeader>
               <FrameTitle role="heading" aria-level={3}>
@@ -223,16 +224,20 @@ export function ListingsExplorer({
               </FrameDescription>
             </FrameHeader>
             <FramePanel className="h-[60svh] overflow-hidden p-0 lg:h-[calc(100svh-12rem)]">
-              <ListingsMap
-                listings={inArea}
-                activeId={activeId}
-                onHover={setActiveId}
-                onViewportChange={(ids) => {
-                  setVisible(ids)
-                  setShown(PAGE)
-                }}
-                resetKey={resetKey}
-              />
+              <RegionError what="bản đồ">
+                <ListingsMap
+                  listings={matched}
+                  currency={currency}
+                  activeId={activeId}
+                  onHover={setActiveId}
+                  onViewportChange={(bounds) => {
+                    setViewBounds(bounds)
+                    setShown(PAGE)
+                  }}
+                  holdView={view !== null}
+                  resetKey={resetKey}
+                />
+              </RegionError>
             </FramePanel>
           </Frame>
         </div>
