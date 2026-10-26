@@ -34,7 +34,7 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/ops/ingest", methods: ["POST"], mode: "ops", note: "nạp số ops từ máy local lên cloud" },
   { route: "v1/ops/truthful-coverage", methods: ["GET"], mode: "ops", note: "độ phủ nói thật" },
   { route: "v1/ops/review/[id]/decide", methods: ["POST"], mode: "ops", note: "quyết thẻ duyệt" },
-  { route: "v1/ops/source-groups", methods: ["GET", "POST"], mode: "ops", note: "nhóm nguồn" },
+  { route: "v1/ops/source-groups", methods: ["GET", "POST"], mode: "ops", note: "nhóm nguồn — action set-mode chặt hơn sổ: phiên phải là admin (che-do-thu-tren-ops)" },
   { route: "v1/ops/zalo/accounts", methods: ["GET", "POST", "DELETE"], mode: "ops", note: "tài khoản thu Zalo" },
   { route: "v1/ops/zalo/groups", methods: ["GET", "POST"], mode: "ops", note: "nhóm Zalo theo dõi" },
   { route: "v1/ops/zalo/login", methods: ["POST", "GET", "DELETE"], mode: "ops", note: "đăng nhập QR tài khoản thu (QR trả base64, không qua zalo-media)" },

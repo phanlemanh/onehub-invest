@@ -48,6 +48,7 @@ export const SCAN_FILES = [
   "src/components/ops/review-content.tsx",
   "src/components/ops/review-photos.tsx",
   "src/components/ops/sources/confirm-delete.tsx",
+  "src/components/ops/sources/mode-dialog.tsx",
   "src/components/ops/sources/new-group-sheet.tsx",
   "src/components/ops/sources/registry-table.tsx",
   "src/components/ops/sources/source-groups.tsx",

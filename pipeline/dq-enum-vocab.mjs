@@ -6,23 +6,21 @@ import { realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { VOCAB } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
-const VOCAB = {
-  kind: ["sale", "rent_lt"],
-  confidence: ["high", "medium", "low"],
-  price_tier: ["P0", "P1", "P2"],
-  property_type: ["apartment", "house", "land", "room", "commercial", "unknown"],
-};
+// Cột enum của sale_offers kiểm theo sổ từ vựng (PL6 — pipeline/mappings.yaml `enums:` → vocab.generated.mjs).
+const COT = ["kind", "confidence", "price_tier", "property_type"];
 
 async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
     let allPass = true;
-    for (const [col, allowed] of Object.entries(VOCAB)) {
+    for (const col of COT) {
+      const allowed = [...VOCAB[col]];
       const { rows } = await c.query(
         `SELECT count(*)::int AS bad, min(${col}) AS sample_bad FROM sale_offers
          WHERE ${col} IS NOT NULL AND ${col} <> ALL($1::text[])`,
