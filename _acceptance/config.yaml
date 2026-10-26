@@ -38,6 +38,7 @@ executors:
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
+    s08_row_unit: "node --test pipeline/scripts/import-s08-row.test.mjs"   # ZC8 s08RowOf
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
@@ -59,6 +60,9 @@ executors:
     nap_lai_db: "cd pipeline && node --test scripts/nap-lai-db.itest.mjs"   # PL14: migration 044 + đối soát + đổi khoá + listing nghỉ + sync con, trong giao dịch ROLLBACK — cần DB local :5433
     che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"
     job_exit: "node --test scripts/job-exit.test.mjs"
+    dong_chay: "cd app && node --import tsx --test tests/ops-dong-chay.test.tsx tests/data-level.test.tsx"
+    luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
+    ops_nhan: "cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx"
     vong_doi_nguon: "cd pipeline && node --test scripts/vong-doi.test.mjs scripts/vong-doi.itest.mjs"   # TV2a: .test thuần (CI), .itest cần DB local :5433
     vong_doi_nguon_route: "cd app && node --import tsx --test tests/vong-doi-nguon.test.tsx"
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
@@ -243,7 +247,7 @@ executors:
     kev_manifest_v3: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs manifest-v3"
     kev_import_versions: "node scripts/kev-nhan/acceptance.mjs import-versions"
     kev_watchdog_l1: "node scripts/kev-nhan/acceptance.mjs watchdog-l1"
-    kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
+    kev_contract_doc: "grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
     # importer-bo-qua-du-lieu-thu (PL1) — DB local :5433: real-mock chỉ chạy importer trên snapshot THỬ (bị bỏ qua); fixtures dữ liệu giả mốc năm 2001, xoá sau
@@ -369,8 +373,16 @@ executors:
     nz4_scope: "bash _acceptance/noi-tiep-zc4/probes/scope.sh \"$PWD\""
     # kev-nhan-thuoc-sau-pl1 — thước kev-nhan đỏ sẵn trên main (PL1 khuôn tên, ZC6 chữ log); stg-roundtrip cần DB local :5433
     ktp_doi_chung: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/doi-chung.sh \"$PWD\""
-    ktp_cac_mode_khac: "cd collector && rm -rf dist && npm run build && cd .. && for m in manifest-v3 watchdog-l1 sourceid stg-roundtrip; do node scripts/kev-nhan/acceptance.mjs $m || exit 1; done && grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
+    ktp_cac_mode_khac: "cd collector && rm -rf dist && npm run build && cd .. && for m in manifest-v3 watchdog-l1 sourceid stg-roundtrip; do node scripts/kev-nhan/acceptance.mjs $m || exit 1; done && grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     ktp_scope: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/scope.sh \"$PWD\""
+    # thu-danh-muc-ocp1 (PL10) + import-s08 (ZC8) — S08 chỉ local; snapshot-that/khong-lo-nguon chỉ in số đếm; nap-hai-lan ghi DB :5433 dưới mốc giả rồi xoá
+    s08_thieu_env: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/s08-danh-muc/acceptance.mjs thieu-env"
+    s08_khong_lo_nguon: "node scripts/s08-danh-muc/acceptance.mjs khong-lo-nguon"
+    s08_kev_v4: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs manifest-v3 && node scripts/kev-nhan/acceptance.mjs import-versions && grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
+    s08_snapshot_that: "node scripts/s08-danh-muc/acceptance.mjs snapshot-that"
+    s08_nap_hai_lan: "node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"
+    s08_nguon_duy_nhat: "node scripts/s08-danh-muc/acceptance.mjs nguon-duy-nhat"
+    s08_scope: "bash _acceptance/thu-danh-muc-ocp1/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node /Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/scripts/design-gate.mjs --jsdom app"   # script tier (a11y/slop)

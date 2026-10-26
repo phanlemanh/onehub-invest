@@ -1,0 +1,17 @@
+schema_version: 1
+feature_slug: auth-error-e2-superseded
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [_acceptance/config.yaml, scripts/auth-error-thu-lai-retry.test.mjs, lib/evidence-core.cjs]
+    expected: "exit 0; trong scripts/auth-error-thu-lai-retry.test.mjs: nhóm 'AER-AC-2 YAML chuẩn' (2 ca: 0 lỗi trên config.yaml; chiều đỏ MULTILINE_IMPLICIT_KEY và DUPLICATE_KEY), nhóm 'AER-AC-2 bộ đọc kit khớp bộ đọc chuẩn' (2 ca: in số khoá executors >50, 0 khoá lệch; chiều đỏ gọi đúng executors.script.<khoá lặp>), nhóm 'AER-AC-2 không lệnh nào đổi nghĩa' (3 ca: soCapCoDinh so blob 5e396cb2^ với 5e396cb2 trên hợp tập khoá, in số khoá >100, khac = []; chiều đỏ đổi giá trị / xoá dòng app_ui ở bản «sau» → ['executors.test.app_ui']; thêm khoá pr_khac_them_khoa ở cây đang kiểm → ca so cặp vẫn xanh, cùng bộ so trên cây thì báo đúng khoá đó) — đều ok"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.scripts
+    paths: [_acceptance/auth-error-thu-lai-retry/evals.yaml, scripts/auth-error-e2-superseded.test.mjs]
+    expected: "exit 0; ca 'AE2-AC-2 ô E2 của auth-error-thu-lai-retry được thay đúng' xanh: lib/eval-yaml.cjs đọc ô E2 → status 'not-run', superseded_by 'auth-error-e2-superseded#AC-1', cmd 'config:executors.test.scripts'; AC-1 có trong _acceptance/auth-error-e2-superseded/contract.md; chiều đỏ trên bản sao chuỗi: đổi slug ở superseded_by → 'superseded_by của auth-error-thu-lai-retry/E2 là <giá trị>, cần auth-error-e2-superseded#AC-1'; bỏ dòng status → 'auth-error-thu-lai-retry/E2 chưa khai status: not-run'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
