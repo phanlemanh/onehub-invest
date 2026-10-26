@@ -5,7 +5,9 @@ slug: tin-rao-gan-khu-vuc-dung
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-26
 design_doc: docs/superpowers/specs/2026-10-26-tin-rao-gan-khu-vuc-dung-design.md
 ---
 
