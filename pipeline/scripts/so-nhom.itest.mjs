@@ -2,7 +2,8 @@
 // PL12 `so-nhom-mot-noi` ca «SN-*»: mỗi ca một lược đồ tạm dựng ở khuôn trước 047 rồi chạy nguyên tệp 047 + 048 trên
 // đó. Trước và sau cả tệp chụp public — 048 chỉ áp lên public sau gộp, ca nào chạm public là đỏ.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
@@ -10,7 +11,7 @@ import pg from "pg";
 import { localDbUrl } from "./capture-ops-facts.mjs";
 import { schemaUrl } from "./ops-facts-fixture.mjs";
 import { DAU_SN, THAM_CHIEU, bangThamChieu, chay048, dungSauGop, nguonMau } from "./so-nhom-fixture.mjs";
-import { chay047, chupPublic, dungKhuonTruoc, xoaLuocDo } from "./vong-doi-fixture.mjs";
+import { COT_047, chay047, chupPublic, dungKhuonTruoc, xoaLuocDo } from "./vong-doi-fixture.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const admin = new pg.Client({ connectionString: localDbUrl() });
@@ -206,3 +207,187 @@ test("SN-AC-4 market_codes chỉ nhận thị trường, project_node_ids chỉ 
   assert.deepEqual(r, { market_codes: [THAM_CHIEU.market], project_node_ids: [String(THAM_CHIEU.project)] });
 });
 
+
+// ------------------------------------------------------------ AC-2 --
+// Câu SQL chạm source_groups, rút NGUYÊN VĂN từ mã nguồn (chuỗi `…` và "…"). Số câu mỗi tệp viết trước — lệch là có câu
+// mới chưa được đo.
+const TEP_SQL = {
+  "pipeline/apify-facebook-collector.mjs": 1,
+  "pipeline/collect-chotot.mjs": 1,
+  "app/src/lib/che-do-thu.ts": 3,
+  "pipeline/ha-bung-het-han.mjs": 4,
+  "app/src/app/api/v1/ops/source-groups/route.ts": 10,
+  "pipeline/lib/vong-doi.mjs": 1,
+};
+function rutSql(text) {
+  const out = [];
+  const conLai = text.replace(/`[^`]*`/g, (m) => {
+    out.push(m.slice(1, -1));
+    return "``";
+  });
+  for (const m of conLai.matchAll(/"([^"\n]*)"/g)) out.push(m[1]);
+  return out.map((q) => q.trim()).filter((q) => /source_groups/.test(q) && /^(SELECT|UPDATE|INSERT|DELETE)\b/i.test(q));
+}
+
+/** Tệp nhắc source_groups trên đỉnh nhánh (ngoài _acceptance/, docs/, migration) — tệp lạ là chỗ chưa được soát. */
+const TEP_NHAC_SOURCE_GROUPS = [
+  "CONTEXT.md",
+  "LO-TRINH.html",
+  "app/src/app/api/v1/ops/source-groups/route.ts",
+  "app/src/components/ops/sources/sources-content.tsx",
+  "app/src/lib/che-do-thu.ts",
+  "app/tests/che-do-thu.test.tsx",
+  "app/tests/so-nhom.test.tsx",
+  "app/tests/vong-doi-nguon.test.tsx",
+  "pipeline/apify-facebook-collector.mjs",
+  "pipeline/collect-chotot.mjs",
+  "pipeline/ha-bung-het-han.mjs",
+  "pipeline/lib/vong-doi.mjs",
+  "pipeline/scripts/so-nhom.itest.mjs",
+  "pipeline/scripts/vong-doi-fixture.mjs",
+  "pipeline/scripts/vong-doi-local.itest.mjs",
+  "pipeline/scripts/vong-doi.itest.mjs",
+  "scripts/cloud-sync.sh",
+  "scripts/ui-standards/tier-a-names.mjs",
+];
+
+const K = (code, k) => `${DAU_SN}-${code}-${k}`;
+/** Tham số của ca cho từng câu (khoá `tệp#thứ tự`); câu không tham số vắng khỏi bảng. */
+const THAM_SO = {
+  "app/src/lib/che-do-thu.ts#1": [1],
+  "app/src/lib/che-do-thu.ts#2": [JSON.stringify({ mode: "duy_tri" }), 1],
+  "pipeline/ha-bung-het-han.mjs#0": [1, "2026-10-26"],
+  "pipeline/ha-bung-het-han.mjs#2": [1],
+  "app/src/app/api/v1/ops/source-groups/route.ts#1": ["S05", K("S05", 2)],
+  "app/src/app/api/v1/ops/source-groups/route.ts#2": ["S05", K("S05", 1), "lý do thử", null],
+  "app/src/app/api/v1/ops/source-groups/route.ts#4": [false, "S05", K("S05", 1)],
+  "app/src/app/api/v1/ops/source-groups/route.ts#5": ["S05", K("S05", 9), "nhóm mới", "{}"],
+  "app/src/app/api/v1/ops/source-groups/route.ts#6": ["S06", K("S06", 9), "vùng mới", "{}"],
+  "app/src/app/api/v1/ops/source-groups/route.ts#7": ["S05", K("S05", 1)],
+  "app/src/app/api/v1/ops/source-groups/route.ts#8": ["S05", K("S05", 1)],
+  "app/src/app/api/v1/ops/source-groups/route.ts#9": ["S05", K("S05", 1)],
+  "pipeline/lib/vong-doi.mjs#0": ["S05", K("S05", 1)],
+};
+
+/** Khuôn sau 047 (A) hoặc sau 048 (B) với cùng 4 nhóm, cùng thứ tự chèn, cùng mốc thời gian. */
+async function luocDoSong(ca, sau048) {
+  const S = tenLuocDo(ca);
+  await dungKhuonTruoc(admin, S);
+  await nguonMau(admin, S);
+  await admin.query(`CREATE TABLE "${S}".stg_zalo_posts (agent_id text, group_name text)`);
+  const c = await moClient(S);
+  const moc = "2026-10-01T00:00:00Z";
+  for (const [code, k, params] of [["S05", 1, { mode: "bung", burst_until: "2026-10-20" }], ["S05", 2, {}],
+    ["S06", 1, { region_v2: 13000 }], ["S06", 2, {}]]) {
+    await c.query(`INSERT INTO source_groups (source_code, group_key, name, params, created_at, updated_at)
+      VALUES ($1, $2, $3, $4::jsonb, $5, $5)`, [code, K(code, k), `${DAU_SN} ${code} ${k}`, JSON.stringify(params), moc]);
+  }
+  await chay047(c);
+  await c.query(`UPDATE source_groups SET status = 'paused', reason = 'x', updated_at = $2 WHERE group_key = $1`, [K("S05", 2), moc]);
+  await c.query(`UPDATE source_groups SET status = 'retired', updated_at = $2 WHERE group_key = $1`, [K("S06", 2), moc]);
+  if (sau048) await chay048(c);
+  return c;
+}
+const anhNhom = async (c) => dong(c, `SELECT id::int, source_code, group_key, name, enabled, params, note, status, reason,
+  resume_when FROM source_groups ORDER BY id`);
+const boGio = (rows) => rows.map(({ updated_at, ...r }) => r); // cột updated_at = now() khác nhau giữa hai lượt
+
+test("SN-AC-2 câu đọc/ghi nguyên văn chạy y như trước qua view; tập tệp nhắc source_groups khớp danh sách", async () => {
+  const cau = [];
+  for (const [tep, soCau] of Object.entries(TEP_SQL)) {
+    const rut = rutSql(readFileSync(path.join(ROOT, tep), "utf8"));
+    assert.equal(rut.length, soCau, `${tep}: rút được ${rut.length} câu, viết trước ${soCau}`);
+    rut.forEach((sql, i) => cau.push({ khoa: `${tep}#${i}`, sql }));
+  }
+  const A = await luocDoSong("ac2a", false);
+  const B = await luocDoSong("ac2b", true);
+  for (const { khoa, sql } of cau) {
+    const ts = THAM_SO[khoa] ?? [];
+    const ket = [];
+    for (const c of [A, B]) {
+      await c.query("BEGIN");
+      try {
+        const r = await c.query(sql, ts);
+        ket.push({ rows: boGio(r.rows), rowCount: r.rowCount, sau: await anhNhom(c) });
+      } finally {
+        await c.query("ROLLBACK");
+      }
+    }
+    assert.deepEqual(ket[1], ket[0], `${khoa} khác nhau trước/sau 048`);
+  }
+
+  // Đơn vị S03, S02 chỉ có ở sổ: không lọt vào câu đọc của script thu S05/S06; ha-bung khoá được dòng S03 mode bung;
+  // docTrangThai hỏi S03 qua tên cũ được.
+  await B.query(`INSERT INTO source_groups (source_code, group_key, name, params) VALUES ('S03', $1, 'nhóm S03', $2::jsonb),
+    ('S02', $3, 'market S02', '{}')`, [K("S03", 1), JSON.stringify({ mode: "bung", burst_until: "2026-10-20" }), K("S02", 1)]);
+  for (const khoa of ["pipeline/apify-facebook-collector.mjs#0", "pipeline/collect-chotot.mjs#0"]) {
+    const { sql } = cau.find((x) => x.khoa === khoa);
+    assert.deepEqual((await B.query(sql)).rows, (await A.query(sql)).rows, `${khoa} thấy đơn vị ngoài nguồn của nó`);
+  }
+  const haBung = cau.find((x) => x.khoa === "pipeline/ha-bung-het-han.mjs#1").sql;
+  await B.query("BEGIN");
+  const khoaDong = (await B.query(haBung)).rows.map((r) => r.source_code);
+  await B.query("ROLLBACK");
+  assert.ok(khoaDong.includes("S03"), "ha-bung không khoá được dòng S03 mode bung");
+  const { docTrangThai } = await import("../lib/vong-doi.mjs");
+  assert.deepEqual(await docTrangThai(B, "S03", K("S03", 1)), { run: true, ly_do: "chay" });
+
+  const tep = execFileSync("git", ["grep", "-l", "source_groups", "--", ".", ":(exclude)_acceptance", ":(exclude)docs",
+    ":(exclude)db/migrations"], { cwd: ROOT, encoding: "utf8" }).trim().split("\n").sort();
+  assert.deepEqual(tep, TEP_NHAC_SOURCE_GROUPS);
+});
+
+// Test C7 của trang Chế độ thu (app/tests/che-do-thu.test.tsx) chép khuôn bằng `LIKE public.<bảng>` — sau gộp
+// public.source_groups là view. Chạy NGUYÊN VĂN bản chép của test đó với `public.` trỏ sang lược đồ mô phỏng public sau
+// gộp (khuôn trước 047 + 047 + 048, ops_audit và stg_zalo_posts chép từ public).
+const SO_CHO_PUBLIC_C7 = 1;
+async function chayC7Tren(P) {
+  const goc = readFileSync(path.join(ROOT, "app", "tests", "che-do-thu.test.tsx"), "utf8");
+  assert.equal(goc.split("public.").length - 1, SO_CHO_PUBLIC_C7, "test C7 đổi số chỗ chép từ public — soát lại ca này");
+  const tep = path.join(ROOT, "app", "tests", `.sn-che-do-thu-${process.pid}-${P}.test.tsx`);
+  writeFileSync(tep, goc.replaceAll("public.", `${P}.`));
+  try {
+    const env = { ...process.env };
+    delete env.NODE_TEST_CONTEXT; // tiến trình con của node --test: biến này làm test con chỉ báo về cha, không tự chạy
+    const out = execFileSync(process.execPath, ["--import", "tsx", "--test", tep], {
+      cwd: path.join(ROOT, "app"), stdio: "pipe", timeout: 300_000, env, encoding: "utf8",
+    });
+    assert.match(out, /ℹ pass [1-9]/, "bản chép không chạy ca nào");
+    return 0;
+  } catch (e) {
+    if (e.code === "ERR_ASSERTION") throw e;
+    if (process.env.SN_IN_C7) console.error(String(e.stdout).split("✖ failing tests:")[1] ?? String(e.stdout).slice(-3000));
+    return e.status ?? 1;
+  } finally {
+    rmSync(tep, { force: true });
+  }
+}
+async function moPhongPublicSauGop(ca) {
+  const P = tenLuocDo(ca);
+  await dungSauGop(admin, P);
+  for (const t of ["ops_audit", "stg_zalo_posts"]) await admin.query(`CREATE TABLE "${P}".${t} (LIKE public.${t} INCLUDING ALL)`);
+  daMo.push([P, { end: async () => {} }]);
+  return P;
+}
+
+test("SN-AC-2b test C7 (không sửa) xanh trên public mô phỏng sau gộp; đối chứng view thiếu cột params thì đỏ", async () => {
+  const P = await moPhongPublicSauGop("ac2p");
+  assert.equal(await chayC7Tren(P), 0, "test C7 đỏ trên public sau gộp");
+
+  const Q = await moPhongPublicSauGop("ac2q");
+  await admin.query(`DROP VIEW "${Q}".source_groups`);
+  await admin.query(`CREATE VIEW "${Q}".source_groups AS SELECT id, source_code, group_key, name, enabled, note,
+    created_at, updated_at, status, reason, resume_when FROM "${Q}".collection_units`);
+  assert.notEqual(await chayC7Tren(Q), 0, "đối chứng: view thiếu cột params mà test C7 vẫn xanh — bản chép không đọc lược đồ mô phỏng");
+});
+
+test("SN-AC-2d ca VD-KHUON của TV2a vẫn đúng sau gộp: cột view source_groups trừ cột 047 = khuôn fixture", async () => {
+  const P = tenLuocDo("ac2d");
+  await dungSauGop(admin, P);
+  const F = tenLuocDo("ac2d_f");
+  await dungKhuonTruoc(admin, F);
+  daMo.push([F, { end: async () => {} }], [P, { end: async () => {} }]);
+  const cot = async (schema) => (await dong(admin, `SELECT column_name FROM information_schema.columns
+    WHERE table_schema = $1 AND table_name = 'source_groups' ORDER BY 1`, [schema])).map((r) => r.column_name);
+  assert.deepEqual((await cot(P)).filter((x) => !COT_047.source_groups.includes(x)), await cot(F));
+});
