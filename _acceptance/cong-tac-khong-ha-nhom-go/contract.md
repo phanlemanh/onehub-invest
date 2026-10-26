@@ -26,7 +26,8 @@ Source input: `_acceptance/cong-tac-khong-ha-nhom-go/opportunity.md`.
 - AC-1: Given lược đồ ở khuôn sau 047 + 048 có một nhóm S05 cho mỗi trạng thái (active, paused, draft, retired, completed), When gọi route thật (Bearer) action `toggle` với `enabled` true và false trên từng nhóm (lược đồ dựng lại cho mỗi ô), Then mười ô cho đúng bảng của design doc: trạng thái, lý do, `resume_when`, `enabled`, `updated_at` và số dòng `ops_audit` như bảng khai; ô `unchanged` và ô 409 không ghi dòng nào.
 - AC-2: Given một nhóm `retired` (và một nhóm `completed`), When gửi tắt rồi bật, và khi gửi tắt và bật đồng thời, Then nhóm vẫn ở trạng thái cũ, `enabled` false, 0 dòng audit mới. (cross-layer)
 - AC-3: Given tắt hay bật một nhóm `retired`/`completed`, When route trả 409, Then thân `{error}` nêu đúng trạng thái: «nhóm đã gỡ …» cho `retired`, «nhóm đã xong …» cho `completed`.
-- AC-4: Given cùng năm trạng thái, When ghi bằng đường cũ (UPDATE chỉ đổi `enabled`) và bằng route trên hai lược đồ song song, Then trạng thái cuối của mỗi ô bằng nhau; ô đường cũ ném lỗi tương ứng ô route trả 409.
+- AC-4: Given cùng năm trạng thái, When ghi bằng đường cũ (UPDATE chỉ đổi `enabled`) và bằng route trên hai lược đồ song song, Then trạng thái cuối của mỗi ô bằng nhau; đường cũ ném lỗi đúng ở hai ô bật `retired`/`completed` (route 409); ở hai ô tắt `retired`/`completed` đường cũ không ném lỗi và giữ trạng thái, còn route trả 409 (Hỏi-1); sáu ô còn lại đường cũ và route cùng kết quả.
+- AC-5: Given lưới nhóm thu `/ops/sources` hiện một nhóm «Đang thu» mà route trả 409 khi tắt, When bấm công tắc, Then công tắc về lại giá trị trước khi bấm và chữ lỗi của máy chủ hiện trong thông báo; không tệp giao diện nào phải sửa. (cross-layer)
 
 ## Coverage
 

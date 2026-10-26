@@ -19,7 +19,8 @@ nằm ở đường mới của route.
 
 ## Quyết định
 
-**Công tắc theo đúng ma trận 5 × 2 của TV2a** (một luật cho cả hai đường ghi):
+**Công tắc theo ma trận 5 × 2 của TV2a, trừ hai ô `retired`/`completed` × tắt** — đường cũ ở hai ô này «không đổi» im
+lặng, route trả 409 có chữ (Hỏi-1; lối khác: 200 `unchanged`). Tám ô còn lại một luật cho cả hai đường ghi:
 
 | trạng thái cũ | bật (`enabled: true`) | tắt (`enabled: false`) |
 |---|---|---|
@@ -30,7 +31,7 @@ nằm ở đường mới của route.
 | `completed` | 409 «nhóm đã xong — không bật lại» | 409 «nhóm đã xong — công tắc không đổi trạng thái» |
 
 - Ô 409 và ô `unchanged`: không UPDATE, không dòng audit, `updated_at` giữ nguyên.
-- Tắt nhóm `retired`/`completed` trả **409 có chữ** (không 200 im): giám sát chốt «giữ nguyên, không ghi, báo rõ».
+- Tắt nhóm `retired`/`completed` trả **409 có chữ** (Hỏi-1, khuyến nghị): giám sát chốt «giữ nguyên, không ghi, báo rõ».
   Lưới nhóm thu đã có sẵn đường xử lý 4xx của công tắc — hoàn công tắc về giá trị cũ và hiện `data.error` trong
   thông báo lỗi — nên giao diện không phải sửa.
 - Đọc trạng thái và ghi trong CÙNG giao dịch có `SELECT … FOR UPDATE` (đã có): hai lệnh sát nhau xếp hàng trên khoá
