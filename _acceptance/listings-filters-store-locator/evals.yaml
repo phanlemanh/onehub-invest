@@ -1,0 +1,132 @@
+schema_version: 1
+feature_slug: listings-filters-store-locator
+# Ca test mang tiền tố «LB-AC-n» trong app/tests/listings-browse.test.tsx (jsdom + đọc tệp, không DB).
+# Smoke trình duyệt thật: scripts/smoke-listings-browse.mjs — cần app chạy TỪ worktree này (BASE_URL, mặc định :3460 của
+# dãy U1) + DB local; số kỳ vọng tính từ DB (cùng truy vấn với getMarketListings, 300 listing doanh thu cao nhất); ảnh chết
+# dựng bằng chặn mạng (CDN trả 404), không sửa DB; mọi lệnh chỉ GET. Mỗi kiểm in «ok …»/«FAIL …», exit 0 = đạt.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/components.json, app/src/components/ui/map.tsx, app/eslint.config.mjs, app/src/app/globals.css, app/package.json, app/package-lock.json, app/tests/listings-browse.test.tsx]
+    expected: "exit 0; ca 'LB-AC-1 vendor mapcn' xanh: components.json registries['@mapcn'].url = 'https://mapcn.dev/r/{name}.json'; ui/map.tsx khớp /export \\{[^}]*\\bMap\\b/ và xuất MapControls, MapPopup, useMap; khối eslint có files đúng một phần tử 'src/components/ui/map.tsx' và rules đúng hai khoá {'react-hooks/refs':'off','react-hooks/set-state-in-effect':'off'} (ma trận viết trước: thêm khoá thứ ba hay đổi files thành 'src/components/ui/**' → ca đỏ với thông điệp 'ngoại lệ lint mapcn rộng hơn một tệp/hai luật'); mọi bộ chọn chứa 'maplibregl-popup-content' trong globals.css mà đặt bg-transparent đều mở đầu bằng '[data-mapcn]'; package.json maplibre-gl và package-lock.json packages['node_modules/maplibre-gl'].version bằng ĐÚNG bản của main (đọc bằng git show <merge-base main>:app/package.json / app/package-lock.json, không ghi cứng) — chiều đỏ cùng ca: bản sao lock đổi version thành 6.16.0 → ca đỏ 'maplibre-gl trong package-lock lệch main'; MAP_FILES của eslint.config.mjs đúng trọn danh sách 5 tệp viết trước. Chiều đỏ (phá-thử S3): bỏ tiền tố [data-mapcn] trong bản sao globals.css → ca đỏ 'CSS popup mapcn phải nằm dưới [data-mapcn]'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-filter-query.ts, app/tests/listings-browse.test.tsx]
+    expected: "exit 0; ca 'LB-AC-2 ma trận lọc' xanh: 6 listing mẫu viết trước (Ba Đình/Nguyên căn/2 PN/1,2 tr; Ba Đình/Phòng riêng/1 PN/500 nghìn; Hoàn Kiếm/Nguyên căn/3 PN/2,4 tr; Hoàn Kiếm/Nguyên căn/null PN/null giá; Tây Hồ/Phòng riêng/0 PN/800 nghìn; null phường/Nguyên căn/4 PN/5 tr) × 13 điều kiện viết trước (area is_any_of [Ba Đình] → 2 id; area is_none_of [Ba Đình] → 4; roomType is_any_of [Entire home/apt] → 4; roomType is_none_of → 2; bedrooms gte 2 → 3; bedrooms eq 0 → 1; bedrooms lte 1 → 2; price between [6e5, 2.5e6] → 3; price gte 1e6 → 3; price lte 8e5 → 2; price between [null, 9e5] → 2; area is_any_of [] (soạn dở) → 6; operator '' (chưa chọn điều kiện) → 6) — danh sách id mỗi ô so TRỌN với bảng viết trước; null giá không khớp 'price lte 8e5'; hai điều kiện cùng lúc (roomType Entire + price gte 1e6) → 3 id; ca 'LB-AC-2 khứ hồi facet' xanh: facets {areas [Ba Đình, Tây Hồ], roomTypes [Entire home/apt], minBedrooms 2, price [6e5, null]} → queryFromFacets → facetsFromQuery = facets gốc, rest []; cây có 'bedrooms eq 0' (id 'r-eq') cạnh 'roomType is_any_of' → facets.roomTypes đúng, rest = đúng rule 'r-eq' (cùng id, cùng giá trị), và queryFromFacets(facets, rest) lọc 6 listing mẫu ra đúng tập của cây gốc (đối chứng: bỏ rest → tập khác, ca đỏ nếu bằng). Chiều đỏ (phá-thử S3): đổi '>=' thành '>' trong nhánh gte → ô 'bedrooms gte 2' đỏ với tên ô"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listings-filter-bar.tsx, app/src/components/listing/listings-explorer.tsx, app/tests/listings-browse.test.tsx]
+    expected: "exit 0; ca 'LB-AC-3 trường lọc' xanh: listingFilterFields(6 listing mẫu, 'VND') → id theo thứ tự ['area','roomType','bedrooms','price'], nhãn ['Phường','Loại phòng','Phòng ngủ','Giá/đêm']; options Phường = ['Ba Đình','Hoàn Kiếm','Tây Hồ'] (null bị bỏ, xếp vi) với description ['2 listing','2 listing','1 listing']; options Loại phòng nhãn ['Nguyên căn','Phòng riêng']; valueText giá với [1500000, 2500000] = '1,5 tr ₫ – 2,5 tr ₫'; FILTER_LABELS_VI không còn khoá nào trùng nguyên văn DEFAULT_FILTER_LABELS ở các khoá thanh basic hiện ra (addFilter, clearAll, searchFields, selectCondition, valuePlaceholder, remove); ca 'LB-AC-3 explorer' xanh: render ListingsExplorer(6 listing mẫu) → 6 thẻ; áp «Nguyên căn» qua ngăn Bộ lọc (cùng cây lọc với thanh chip; jsdom không có media query nên cả hai cùng gắn) → dòng tổng kết '4 listing khớp bộ lọc', 4 thẻ; thao tác chip trên trình duyệt thật đo ở E4"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.listings_browse_smoke
+    paths: [app/src/components/listing/**, app/src/app/(app)/*/*/listings/**, scripts/smoke-listings-browse.mjs]
+    expected: "exit 0; dòng 'ok   [desktop-1280] chip Loại phòng là Nguyên căn: <N1> listing khớp bộ lọc (DB: <N1>)' và 'ok   [desktop-1280] thêm chip Giá/đêm từ <x>: <N2> listing (DB: <N2>), chip đọc «<x rút gọn> ₫»' với N1, N2 đếm từ DB local trong 300 listing doanh thu cao nhất; 'ok   [desktop-1280] thanh lọc tiếng Việt (Thêm bộ lọc, Chọn điều kiện, Xoá)'; 'ok   [desktop-1280] Xoá → 300 listing'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listings-filter-sheet.tsx, app/src/components/listing/listing-filter-query.ts, app/tests/listings-browse.test.tsx]
+    expected: "exit 0; ca 'LB-AC-4 ngăn lọc' xanh: render ListingsFilterSheet(6 listing mẫu) → bấm 'Bộ lọc' → mục theo thứ tự ['Loại phòng','Phòng ngủ','Giá/đêm','Phường']; số cạnh 'Nguyên căn' = '4'; tích 'Nguyên căn' → số cạnh 'Ba Đình' = '1', nút 'Xem 4 listing'; chọn 'Từ 2 phòng ngủ' → 'Xem 3 listing'; bấm → onQueryChange nhận cây có đúng 2 điều kiện (roomType is_any_of, bedrooms gte 2), ngăn đóng; mở lại với cây đó → checkbox 'Nguyên căn' checked, radio 'Từ 2 phòng ngủ' checked; 'Đặt lại' → nút 'Xem 6 listing'; ca 'LB-AC-4 điều kiện ngoài ngăn' xanh: cây có 'roomType is_none_of [Private room]' → mở ngăn hiện đúng dòng 'Còn 1 điều kiện từ thanh lọc màn rộng không chỉnh được ở đây — vẫn được áp; «Xoá hết» bỏ cả chúng.', nút 'Xem 4 listing'; tích 'Từ 2 phòng ngủ' rồi áp → cây có 2 điều kiện, gồm nguyên rule is_none_of; mở lại → 'Xoá hết' → 'Xem 6 listing', áp → cây rỗng; đối chứng dương: cây chỉ có điều kiện ngăn biểu diễn được → 0 dòng báo; priceBounds(giá [224095, 656055, 1320000, 4857252, 32599157]) = [200000, 32600000] tính trên p95 viết trước. Chiều đỏ (phá-thử S3): facetCounts không bỏ chính facet → số cạnh 'Phòng riêng' sau khi tích 'Nguyên căn' thành 0, ca đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.listings_browse_smoke
+    paths: [app/src/components/listing/listings-filter-sheet.tsx, app/src/components/listing/listings-explorer.tsx, scripts/smoke-listings-browse.mjs]
+    expected: "exit 0; dòng 'ok   [mobile-390] ngăn Bộ lọc: Nguyên căn + Từ 2 phòng ngủ + giá → Xem <N> listing (DB: <N>)', 'ok   [mobile-390] sau khi áp: <N> listing, nút Bộ lọc mang số 3', 'ok   [mobile-390] mở lại: nháp giữ 3 lựa chọn', 'ok   [mobile-390 → desktop-1280] thanh chip có 3 điều kiện', 'ok   [mobile-390] không cuộn ngang (scrollWidth = clientWidth)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.listings_browse_smoke
+    paths: [app/src/components/listing/listings-map.tsx, app/src/components/ui/map.tsx, app/src/lib/map-style.ts, scripts/smoke-listings-browse.mjs]
+    expected: "exit 0; ở [desktop-1280] và [desktop-1280--dark]: 'ok … bản đồ mapcn đã load (canvas trong [data-mapcn])', 'ok … nền OpenFreeMap: <k> yêu cầu tiles.openfreemap.org, 0 yêu cầu basemaps.cartocdn.com', 'ok … lớp cụm có <c> cụm, chữ cụm dùng font Noto Sans Bold' (c ≥ 1), 'ok … 1 nút ghi nguồn, thu gọn'; ở [desktop-1280]: 'ok   bấm cụm → zoom <z0> → <z1>' (z1 > z0), 'ok   bấm nhãn giá <id> → popup «<tên>» có Giá/đêm, Công suất, link /listing/<id>; URL trang không đổi', 'ok   đổi sáng → tối: tâm bản đồ lệch < 1e-6, lớp listings-pills còn'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.listings_browse_smoke
+    paths: [app/src/components/listing/listings-map.tsx, app/src/components/listing/listings-explorer.tsx, scripts/smoke-listings-browse.mjs]
+    expected: "exit 0; ma trận viết trước 4 cử chỉ người × kỳ vọng lọc: 'ok   kéo bản đồ → lọc vùng: <n> listing = số listing khớp nằm trong khung', 'ok   Ctrl+lăn → lọc vùng', 'ok   bấm cụm → lọc vùng', 'ok   bấm nút phóng to → lọc vùng'; 4 di chuyển máy × không lọc: 'ok   tải trang → không badge lọc vùng', 'ok   thêm chip lọc (không lọc vùng) → bản đồ canh khung, không badge', 'ok   resize 1280 → 1100 → không badge', 'ok   đổi sáng/tối → không badge', 'ok   lăn thường (không Ctrl/⌘) trên bản đồ → zoom không đổi, không badge, trang cuộn (scrollY <a> → <b>)' (cùng vị trí chuột với ô Ctrl/⌘+lăn làm đối chứng dương); 'ok   kéo tới vùng trống → Empty «Không có listing trong vùng này», 1 hành động «Bỏ lọc vùng»', 'ok   Bỏ lọc vùng → 300 listing, không badge', 'ok   đang lọc vùng + thêm chip → khung giữ nguyên (lệch tâm < 1e-6)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.listings_browse_smoke
+    paths: [app/src/components/listing/listings-map.tsx, app/src/components/listing/listing-card.tsx, scripts/smoke-listings-browse.mjs]
+    expected: "exit 0; 'ok   rê thẻ <id> → listings-pill-active lọc đúng id <id>', 'ok   rê nhãn <id> trên bản đồ → thẻ <id> có ring', 'ok   nguồn bản đồ có <m> điểm = <m> listing khớp bộ lọc' (đo cả khi không lọc và sau chip Nguyên căn)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/listing/listing-card.tsx, app/tests/listings-browse.test.tsx]
+    expected: "exit 0; ca 'LB-AC-8 ảnh thẻ' xanh: photoUrls 3 URL → đúng 1 <img> src '…/1.jpeg?im_w=480', panel mang aspect-[3/2], img mang object-cover; error trên ảnh 1 → src '…/2.jpeg?im_w=480'; error tiếp ảnh 2, 3 → 0 <img>, không phần tử aspect-[3/2]; photoUrls [] → 0 <img>; ảnh lỗi TRƯỚC hydrate (complete=true, naturalWidth=0, không phát error) → lùi ảnh kế. Chiều đỏ (phá-thử S3): gỡ kiểm ref → ca đỏ 'ảnh lỗi trước hydrate phải lùi ảnh kế'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.listings_browse_smoke
+    paths: [app/src/components/listing/listing-card.tsx, app/src/lib/queries.ts, scripts/smoke-listings-browse.mjs]
+    expected: "exit 0; 'ok   [desktop-1280] <k> ảnh thẻ, tất cả thuộc photo_urls tự thu của đúng listing' (so src bỏ scheme/query với listings.photo_urls), 'ok   [desktop-1280] khung ảnh thẻ 1,5 ± 0,02', 'ok   ảnh đầu chết (chặn 404) → thẻ <id> lùi ảnh 2', 'ok   mọi ảnh chết → thẻ <id> không panel ảnh'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [app/src/components/listing/**, app/src/lib/queries.ts, scripts/check-portal-compliance.mjs]
+    expected: "exit 0 và dòng 'portal-compliance: ĐẠT' — không chữ AirDNA/tên nguồn thật trên Invest"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/app/(app)/*/*/listings/page.tsx, app/src/components/listing/listings-page-body.tsx, app/src/components/listing/listings-region.tsx, app/src/components/listing/listings-explorer.tsx, app/src/components/states/region-error.tsx, app/tests/listings-browse.test.tsx]
+    expected: "exit 0; ca 'LB-AC-9 vùng' xanh: cây ListingsPageBody (đồng bộ, không DB) có PageHeader ngoài và đúng một RegionError(what='listing của thị trường') > Suspense(fallback ListingsRegionSkeleton) > ListingsRegion; chiều đỏ cùng ca: thay Suspense bằng Fragment → 'ranh giới lỗi không bọc trực tiếp Suspense'; ListingsRegionSkeleton có aria-busy, 4 khối aspect-[3/2]; ListingsExplorer có RegionError(what='bản đồ') bọc ListingsMap; ca 'LB-AC-9 trống' xanh: query khớp 0 → Empty 'Không có listing khớp bộ lọc' với đúng 1 nút 'Xoá bộ lọc', bấm → 6 thẻ; ca 'LB-AC-9 thị trường rỗng' xanh: ListingsRegionView rows [] → Empty 'Đang thu thập listing ở Thành phố Hà Nội' với đúng 1 link href '/vn/hanoi'; ca 'LB-AC-9 lỗi dựng thật' xanh: render RegionError(what='bản đồ') bọc thành phần ném lỗi khi render, cạnh lưới 6 thẻ → đúng 1 role=alert chứa nguyên văn 'Không tải được bản đồ' và nút 'Thử lại', 6 thẻ còn; RegionError(what='listing của thị trường') bọc thành phần ném lỗi cạnh PageHeader → 1 alert 'Không tải được listing của thị trường' + 'Thử lại', PageHeader còn; đối chứng dương: thành phần lành → 0 alert"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0 (tsc --noEmit sạch; eslint + check-bare-disables 0 lỗi; eslint-suppressions.json không thêm khoá)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/**, app/eslint-plugin-onehub-ui/tests/routes-map.test.mjs]
+    expected: "exit 0; bảng routes.md khớp cây route (dòng (app)/[country]/[market]/listings/page.tsx còn đủ cột Block đích + Slug đích)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-10
+    executor: judgment
+    inputs: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, .claude/skills/onehub-ui/SKILL.md, docs/superpowers/specs/2026-10-26-listings-filters-store-locator-design.md]
+    paths: [.claude/skills/onehub-ui/routes.md, .claude/skills/onehub-ui/catalog.md, .claude/skills/onehub-ui/SKILL.md, docs/superpowers/specs/2026-10-26-listings-filters-store-locator-design.md]
+    question: "Bốn tệp này có nói nhất quán rằng trang Duyệt listing đã có bộ lọc @reui/filters (màn rộng) + filter-sidebar-5 (màn hẹp, listing/listings-filter-sheet.tsx) dùng chung một cây lọc, bản đồ dựng bằng @mapcn/map (components/ui/map.tsx) theo khuôn @mapcn/store-locator ở listing/listings-map.tsx (cụm + nhãn giá ở ListingLayers, không dùng MapClusterLayer), thẻ product-grid-2 có panel ảnh 3:2 tự thu, và registry @mapcn đã khai — không còn chỗ nào coi các việc đó là chưa làm hay trỏ tới tệp/khuôn khác (vd catalog còn ghi ListingsMap là MapLibre tay, hay routes.md còn ghi «Phần còn lại của đợt I3 là trang Duyệt listing») không?"
+    expected: "Nhất quán ở cả bốn tệp; tên tệp trong routes.md và catalog.md khớp design doc."
+    evidence_required: [run_id, verdict, judges]
+  - id: E17
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/listing/**, app/src/app/(app)/*/*/listings/**, app/src/components/ui/map.tsx]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json); không chạy thì FAIL với 'bản chạy :3460 không lên'"
+      - "1280 px sáng: /vn/hanoi/listings chờ bản đồ load → evidence/E17-step1.png; thêm chip «Loại phòng là Nguyên căn» → evidence/E17-step2.png; bấm một nhãn giá → evidence/E17-step3.png"
+      - "1280 px tối (prefers-color-scheme: dark): cùng trang, có chip → evidence/E17-step4.png; kéo bản đồ để bật lọc vùng → evidence/E17-step5.png"
+      - "390 px sáng: trang → evidence/E17-step6.png; mở ngăn Bộ lọc, tích Nguyên căn → evidence/E17-step7.png; chế độ Bản đồ → evidence/E17-step8.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Thanh chip đọc như một câu tiếng Việt; thẻ có ảnh 3:2 không méo, thẻ không ảnh không ô vỡ; cụm và nhãn giá đọc được trên nền sáng lẫn tối; popup có nền tách khỏi bản đồ ở cả hai chế độ; badge lọc vùng thấy rõ; ngăn lọc 390 px có đầu/chân ghim, số đếm đọc được; scrollWidth = clientWidth ở 390 px."
+    evidence_required: [run_id, exit_code, verifier, verified_at, screenshot, observed]

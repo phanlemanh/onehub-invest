@@ -644,6 +644,8 @@ export type ListingCardRow = {
   nights: number;
   occupancy: number | null;
   revenue: number;
+  /** ≤ 3 ảnh tự thu đầu tiên (`listings.photo_urls`) — thẻ lùi ảnh kế khi ảnh chết; rỗng = thẻ không ảnh. */
+  photoUrls: string[];
 };
 
 /**
@@ -686,6 +688,9 @@ export async function getMarketListings(
      )
      SELECT ls.id, ls.name, ls.room_type, ls.bedrooms, ls.accommodates, ls.price_listed,
             ls.area_name, ls.region_type, ls.latitude, ls.longitude,
+            CASE WHEN jsonb_typeof(ls.photo_urls) = 'array'
+                 THEN ARRAY(SELECT jsonb_array_elements_text(ls.photo_urls) LIMIT 3)
+                 ELSE ARRAY[]::text[] END AS photo_urls,
             COALESCE(st.nights, 0) AS nights, COALESCE(st.booked, 0) AS booked,
             COALESCE(st.revenue, 0) AS revenue,
             count(*) OVER () AS total
@@ -714,6 +719,7 @@ export async function getMarketListings(
         nights,
         occupancy: nights > 0 ? booked / nights : null,
         revenue: Number(r.revenue),
+        photoUrls: r.photo_urls ?? [],
       };
     }),
   };
@@ -835,7 +841,7 @@ export async function getYieldAreas(marketId: string): Promise<YieldArea[]> {
     .filter((a) => a.listings > 0 || a.medianPerm2 !== null);
 }
 
-export type YieldCompRow = ListingCardRow & { occupancy90: number | null };
+export type YieldCompRow = Omit<ListingCardRow, "photoUrls"> & { occupancy90: number | null };
 
 /**
  * Listing so sánh cho ước tính: cùng phường + số phòng ngủ (≥ 5), lùi về cả

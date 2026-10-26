@@ -1,0 +1,132 @@
+{
+  "feature_plain": "Nhà đầu tư lọc listing theo phường, loại phòng, số phòng ngủ, giá — thanh chip trên máy tính, ngăn Bộ lọc trên điện thoại — và kéo bản đồ gom cụm để chỉ xem listing trong vùng đang nhìn; thẻ có ảnh tự thu. Lượt chấm máy đạt cả 17 phép đo.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ dựng bản đồ bằng bộ bản đồ mapcn đã khai trong kho, giữ nguyên các bản đồ cũ khác (popup, phiên bản thư viện bản đồ) — AC-1 (khai bộ bản đồ mới)."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ lọc đúng trên mọi tổ hợp trường × điều kiện của bốn trường đã chọn; điều kiện gõ dở không làm mất listing — AC-2 (luật lọc đúng)."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ cho người dùng máy tính thêm chip lọc tiếng Việt; lưới và bản đồ cùng thu hẹp, số listing khớp đúng dữ liệu — AC-3 (thanh chip màn rộng)."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ cho người dùng điện thoại chọn lọc trong ngăn Bộ lọc, thấy trước «Xem N listing», chuyển sang máy tính vẫn giữ bộ lọc; điều kiện ngăn không chỉnh được thì giữ nguyên và báo — AC-4 (ngăn lọc màn hẹp)."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ hiện bản đồ gom cụm có số, phóng to thấy nhãn giá; bấm nhãn mở hộp xem nhanh có «Xem listing» thay vì nhảy trang — AC-5 (bản đồ mapcn)."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ chỉ lọc danh sách theo vùng bản đồ khi chính người dùng kéo, zoom, bấm cụm hay bấm nút phóng to; máy tự canh khung, đổi sáng/tối hay lăn trang thì không — AC-6 (lọc theo vùng)."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ làm nhãn giá sáng lên khi rê chuột vào thẻ và ngược lại; bản đồ chỉ chứa listing khớp bộ lọc — AC-7 (thẻ và bản đồ đồng bộ)."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ hiện ảnh tự thu trên thẻ ở khung 3:2; ảnh chết thì lùi ảnh kế, hết ảnh thì thẻ không có ô ảnh vỡ — AC-8 (ảnh thẻ)."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ đầu trang đứng trong lúc tải, hiện khung chờ đúng bố cục; lỗi chỉ hiện tại vùng hỏng có nút Thử lại; danh sách trống luôn có một hành động — AC-9 (tải, trống, lỗi)."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ đọc được ở máy tính sáng, máy tính tối và điện thoại không cuộn ngang; tài liệu chuẩn giao diện của kho ghi đúng trang đã đổi — AC-10 (nhìn bằng mắt + tài liệu)."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "Sẽ KHÔNG lưu bộ lọc hay đưa bộ lọc lên đường link để chia sẻ."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Sẽ KHÔNG lọc theo công suất, doanh thu, sức chứa, hay tìm theo tên listing (xem Hỏi-5)."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Sẽ KHÔNG chuyển bản đồ trang Thị trường và trang khu vực sang mapcn — để đợt của các trang đó."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Sẽ KHÔNG đổi khung ảnh ở Đã lưu, So sánh và thẻ căn giá tốt bên Vận hành."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Sẽ KHÔNG nâng phiên bản thư viện bản đồ hay chép lại tệp phụ của nó (đang lệch nhẹ từ trước)."
+    },
+    {
+      "id": "OOS-6",
+      "p": "Sẽ KHÔNG tải thêm listing ngoài 300 listing doanh thu cao nhất — lọc chạy trên tập đã tải."
+    }
+  ],
+  "scope_plain": "Những việc dưới đây cố ý để vòng sau hoặc đợt của trang khác:",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Trục lọc: bốn trường (theo Hỏi-5) × từng điều kiện, kể cả điều kiện gõ dở — đủ khi ma trận 13 ô viết trước khớp từng ô (AC-2 luật lọc, AC-3 thanh chip)."
+    },
+    {
+      "i": 1,
+      "p": "Trục chỗ lọc: thanh chip máy tính, ngăn điện thoại, đổi khổ vẫn giữ bộ lọc, điều kiện ngăn không chỉnh được — đủ khi ngăn và thanh cùng ra một bộ lọc (AC-3, AC-4)."
+    },
+    {
+      "i": 2,
+      "p": "Trục bản đồ: cụm, nhãn giá, hộp xem nhanh, bốn cử chỉ người làm lọc vùng, năm kiểu máy tự di chuyển không lọc — đủ khi trình duyệt thật đo từng ô (AC-5, AC-6)."
+    },
+    {
+      "i": 3,
+      "p": "Trục trạng thái: đang tải, có, trống vì bộ lọc, trống vì vùng, thị trường chưa có listing, lỗi dữ liệu, lỗi bản đồ — đủ khi mỗi trạng thái có chữ và hành động riêng (AC-9)."
+    },
+    {
+      "i": 4,
+      "p": "Trục ảnh thẻ: có ảnh, ảnh đầu chết, chết hết, không có ảnh — đủ khi thẻ lùi ảnh kế hoặc bỏ ô ảnh, không ô vỡ; 380/393 listing Hà Nội có ảnh (AC-8)."
+    },
+    {
+      "i": 5,
+      "p": "Trục khổ màn: máy tính sáng, máy tính tối, điện thoại sáng — đủ khi người chấm nhìn ảnh chụp cả ba (AC-10)."
+    },
+    {
+      "i": 6,
+      "p": "Mỗi ô của các trục trên trỏ tới đúng một tiêu chí AC-1…AC-10."
+    },
+    {
+      "i": 7,
+      "p": "Để sau: đưa bộ lọc lên link, lọc công suất/doanh thu, chụp tối trên điện thoại, đo lỗi bản đồ trên trình duyệt thật tắt đồ hoạ."
+    },
+    {
+      "i": 8,
+      "p": "Không làm: lớp gom cụm dựng sẵn của mapcn — chữ số trong cụm không hiện trên nền bản đồ kho đang dùng."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Bộ trường lọc (phường, loại phòng, phòng ngủ, giá) là lựa chọn người dùng thấy nhưng máy đã tự chốt — đã chuyển thành câu hỏi Hỏi-5 cho anh."
+    },
+    {
+      "i": 1,
+      "p": "Bản trước: áp bộ lọc từ ngăn điện thoại xoá im lặng điều kiện chip mà ngăn không chỉnh được — đã sửa thành giữ nguyên và báo, thêm tiêu chí và ca kiểm."
+    },
+    {
+      "i": 2,
+      "p": "Phép kiểm «thư viện bản đồ không đổi phiên bản» chỉ đọc một tệp, bỏ sót tệp khoá phiên bản — đã thêm kiểm cả tệp khoá so với nhánh chính."
+    },
+    {
+      "i": 3,
+      "p": "Phép kiểm lỗi chỉ xem cấu trúc, chưa dựng lỗi thật để thấy chữ và nút Thử lại — đã thêm ca dựng lỗi thật cho vùng bản đồ và vùng listing."
+    },
+    {
+      "i": 4,
+      "p": "Chưa đo chiều ngược: lăn chuột thường trên bản đồ phải cuộn trang chứ không zoom — đã thêm ô đo trên trình duyệt thật."
+    }
+  ]
+}
