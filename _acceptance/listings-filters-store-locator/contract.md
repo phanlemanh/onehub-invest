@@ -5,10 +5,10 @@ slug: listings-filters-store-locator
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-26-listings-filters-store-locator-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-26T01:27:12Z
 ---
 
 # Acceptance Contract: listings-filters-store-locator
