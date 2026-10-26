@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 76ead1471aae7a6b07b040c4de9304dc2ae36c35
+verified_commit: 685e577aa7075a8c16b948d551799397e8608564
 human_signoff:
 ---
 
@@ -29,19 +29,19 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-26T13:03:16Z
+  carried_from_round: 1
   output: |
-    cmd: cd app && npm test
-    ℹ duration_ms 25261.736666
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
-  run_id: minted-auth-error-thu-lai-retry-E2-r1
+  run_id: minted-auth-error-thu-lai-retry-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.scripts
-  verified_at: 2026-10-26T13:03:16Z
+  verified_at: 2026-10-26T13:08:30Z
   output: |
     cmd: node --test scripts/*.test.mjs
-    ℹ duration_ms 29216.7735
+    ℹ duration_ms 27793.606875
 
 - eval: E3
   run_id: minted-auth-error-thu-lai-retry-E3-r1
@@ -49,9 +49,9 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.test.app
   verified_at: 2026-10-26T13:03:16Z
+  carried_from_round: 1
   output: |
-    cmd: cd app && npx tsc --noEmit && npm run lint
-    (tsc và lint không in lỗi nào)
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-auth-error-thu-lai-retry-E4-r1
@@ -59,41 +59,51 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-26T13:03:16Z
+  carried_from_round: 1
   output: |
-    cmd: cd app && npm test
-    ℹ duration_ms 25261.736666
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
-  run_id: minted-auth-error-thu-lai-retry-E5-r1
+  run_id: minted-auth-error-thu-lai-retry-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.scripts
-  verified_at: 2026-10-26T13:03:16Z
+  verified_at: 2026-10-26T13:08:30Z
   output: |
     cmd: node --test scripts/*.test.mjs
-    ℹ duration_ms 29216.7735
+    ℹ duration_ms 27793.606875
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-auth-error-thu-lai-retry-SUITE-npm_test__bb6271-r1
+  run_id: minted-auth-error-thu-lai-retry-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-26T13:03:16Z
+  verified_at: 2026-10-26T13:08:30Z
+
+- cmd: cd app && npx tsc --noEmit && npm run lint
+  run_id: minted-auth-error-thu-lai-retry-SUITE-lint-r2
+  exit_code: 0
+  verified_at: 2026-10-26T13:08:30Z
+
+- cmd: cd app && npm test
+  run_id: minted-auth-error-thu-lai-retry-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-10-26T13:08:30Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-auth-error-thu-lai-retry-SUITE-npm_test__13563d-r1
+  run_id: minted-auth-error-thu-lai-retry-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-26T13:03:16Z
+  verified_at: 2026-10-26T13:08:30Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-auth-error-thu-lai-retry-SUITE-test_lint_rules-r1
+  run_id: minted-auth-error-thu-lai-retry-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-26T13:03:16Z
+  verified_at: 2026-10-26T13:08:30Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-auth-error-thu-lai-retry-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-auth-error-thu-lai-retry-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-26T13:03:16Z
+  verified_at: 2026-10-26T13:08:30Z
 
 ## Known limits
 
@@ -101,19 +111,18 @@ human_signoff:
 
 ## Analyst
 
-baseline: BLOCKED hạ tầng — lệnh baseline không chạy dòng nào (công cụ từ chối lời gọi, hoặc không ghi được tệp kịch bản) — công cụ trả: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
-Baseline không đo:
-- cd app && npm test: BLOCKED hạ tầng baseline: lệnh baseline không chạy dòng nào (công cụ từ chối lời gọi, hoặc không ghi được tệp kịch bản) — công cụ trả: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- node --test scripts/*.test.mjs: BLOCKED hạ tầng baseline: lệnh baseline không chạy dòng nào (công cụ từ chối lời gọi, hoặc không ghi được tệp kịch bản) — công cụ trả: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd app && npx tsc --noEmit && npm run lint: BLOCKED hạ tầng baseline: lệnh baseline không chạy dòng nào (công cụ từ chối lời gọi, hoặc không ghi được tệp kịch bản) — công cụ trả: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+Baseline khong do:
+- node --test scripts/*.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
-Eval không-phân-biệt: không xác định được ở round này — baseline không đo được nên không thể kết luận eval nào đỏ hay xanh trên code cũ. Các lệnh suite (agent, pipeline, lint-rules, portal-compliance) là regression-guard.
+Eval không-phân-biệt: không có eval nào bị liệt kê, nhưng danh sách này KHÔNG đo được ở round này vì baseline bị chặn hạ tầng (xem trên) — đây không phải kết luận «mọi eval đều phân biệt».
 
 ## Variance
 
-none — every multi-run eval is uniform (mọi eval chạy 1 lần, không có phương sai)
+none — every multi-run eval is uniform (mọi eval chạy một lần, deterministic)
 
 ## Iterations
 
-Round 1: E1, E2, E3, E4, E5 đều đạt; các lệnh suite hồi quy đều đạt; baseline A/B bị chặn hạ tầng nên mọi trường baseline là n-a.
+Round 1: E1-E5 đều PASS; bốn finding đo bằng máy, ba mục trong hợp đồng (AC-2, AC-4) được sửa ở commit 685e577a.
+Round 2: E2, E5 chạy lại sau bản sửa (so trước-sau trên hợp tập khoá và cây đang kiểm, bộ khớp ca AH-AC-4 có đối chứng dương) — PASS; E1, E3, E4 carry-forward từ round 1.
