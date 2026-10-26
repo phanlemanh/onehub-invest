@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b914cb0624538361442de90a8698ef8a8d7fb681
+verified_commit: c289a0a04dda822ab048106dd34423345bbd5198
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -178,3 +178,7 @@ none — 6 eval tất định, mỗi lệnh chạy một lần trên HEAD. E1/E2
 
 Round 1: 6/6 eval đạt trên `b914cb0`. Baseline đỏ ở E1, E2, E3, E5; E4 xanh (rào hồi quy); E6 không đo baseline. «Ngoài hợp đồng»
 có 1 mục mức low (tệp tạm rỗng còn lại khi lượt cài lỗi); người quyết. PASS.
+
+### Re-pin lần 1 — 2026-10-26, do gộp main 31d80ff (#112)
+run_id: repin-20261026T073422Z-60957
+sha: c289a0a04dda822ab048106dd34423345bbd5198 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
