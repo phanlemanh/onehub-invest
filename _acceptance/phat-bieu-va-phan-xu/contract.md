@@ -5,10 +5,10 @@ slug: phat-bieu-va-phan-xu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config, docs]
-status: draft
+status: approved
 design_doc: docs/superpowers/specs/2026-10-26-phat-bieu-va-phan-xu-design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-26
 ---
 
 # Acceptance Contract: phat-bieu-va-phan-xu
