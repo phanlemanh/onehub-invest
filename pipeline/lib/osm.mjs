@@ -9,6 +9,13 @@ export const slugify = (s) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+/**
+ * Điều kiện SQL «phường OSM hợp lệ» dùng chung cho mọi bước gán khu vực theo toạ độ (reassign-areas, transform-airbnb).
+ * Khu vực lạc mà lượt theo lịch chưa xoá (AU9 AC-10) mang meta.lac — không bước nào được gán listing vào đó.
+ * @param {string} [p] tiền tố bảng, vd "a."
+ */
+export const phuongHopLe = (p = "") => `${p}meta->>'source' = 'osm-phuong' AND NOT (${p}meta ? 'lac')`;
+
 export const stripPrefix = (s) =>
   s.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/, "");
 

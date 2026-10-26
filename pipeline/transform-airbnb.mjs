@@ -6,6 +6,8 @@
 //    cùng mô hình Bangkok: giá niêm yết từ price_listed; đêm cũ còn NULL được lấp lại)
 import pg from "pg";
 
+import { phuongHopLe } from "./lib/osm.mjs";
+
 const CITY = process.argv[2] ?? 'hanoi';
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -104,7 +106,7 @@ async function main() {
     // tên tỉnh, cả tỉnh lân cận → area trùng/ngoài tỉnh (G0-b).
     const { rows: [{ n: nPhuong }] } = await client.query(
       `SELECT count(*)::int n FROM areas
-       WHERE country_code = 'vn' AND meta->>'source' = 'osm-phuong' AND geom IS NOT NULL`,
+       WHERE country_code = 'vn' AND ${phuongHopLe()} AND geom IS NOT NULL`,
     );
     if (nPhuong === 0) {
       throw new Error("chưa có phường OSM — chạy `node reassign-areas.mjs` trước");
@@ -114,7 +116,7 @@ async function main() {
       const { rows } = await client.query(
         `SELECT id FROM areas
          WHERE region_type = 'submarket' AND country_code = 'vn'
-           AND meta->>'source' = 'osm-phuong'
+           AND ${phuongHopLe()}
            AND ST_Covers(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))
          ORDER BY ST_Area(geom), id LIMIT 1`,
         [lng, lat],
