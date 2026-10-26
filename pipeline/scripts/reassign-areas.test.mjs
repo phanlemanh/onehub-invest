@@ -302,13 +302,19 @@ test("AU9-AC-5 DQ area_con_ngoai_cha pass trên dữ liệu sạch", async (t) =
 test("AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing vẫn gán lại", async (t) => {
   await withTx(t, async (c) => {
     await mocLac(c);
+    await c.query(`INSERT INTO market_asset_stats (area_id, kind) VALUES ('vn-hanoi-tinh-moi-au9', 'sale')`);
     const { dong, log } = ghiLog();
     const r = await runReassign(c, ["hanoi"], { log });
     assert.ok(r.stale.includes("vn-hanoi-tinh-moi-au9"));
     assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9'`), 1, "khu vực lạc còn");
-    for (const tb of ["market_metrics", "area_breakdowns"])
+    for (const tb of ["market_metrics", "area_breakdowns", "market_asset_stats"])
       assert.equal(await dem(c, `SELECT count(*) n FROM ${tb} WHERE area_id = 'vn-hanoi-tinh-moi-au9'`), 1, `${tb} còn`);
     assert.equal(await dem(c, `SELECT count(*) n FROM sale_offers WHERE offer_id = 'au9-moi' AND area_id = 'vn-hanoi-tinh-moi-au9'`), 1, "tin bán giữ nhãn");
+    // log liệt kê từng khu vực lạc kèm số dòng trỏ vào
+    assert.ok(
+      dong.some((d) => /vn-hanoi-tinh-moi-au9 — 0 saved_markets, 0 properties/.test(d)),
+      dong.join("\n"),
+    );
     assert.equal(
       await dem(c, `SELECT count(*) n FROM listings l JOIN areas a ON a.id = l.area_id
                     WHERE l.id = 'au9-moi-trong' AND a.meta->>'source' = 'osm-phuong' AND a.id <> 'vn-hanoi-tinh-moi-au9'`),

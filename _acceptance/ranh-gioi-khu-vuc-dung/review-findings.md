@@ -1,52 +1,74 @@
-# Review findings: ranh-gioi-khu-vuc-dung (round 3)
+# Review findings: ranh-gioi-khu-vuc-dung (round 4)
 
 ## Trong hợp đồng
 
-- **Hình dạng 4 (khẳng định một mình, không đối chứng): kiểm rollup vn-hanoi của AC-7 đúng theo định nghĩa nên không bao giờ đỏ**
-  file: `scripts/kiem-ranh-gioi-khu-vuc.mjs:146`
-  severity: high
-  AC: AC-7
-  source: measurement
-  detail: `check(ru.thang > 0 && ru.lech === 0, 'rollup vn-hanoi bằng tổng con mỗi tháng …')` (dòng 146-147) gọi `rollup()` (dòng 76-86). Hàm này tính tổng `market_metrics` JOIN `areas a ON a.parent_id='vn-hanoi' AND a.region_type='submarket'`, tức đúng công thức mà `pipeline/sql/300_metrics.sql` dòng 48-62 dùng để INSERT dòng cấp market (sau TRUNCATE và DELETE dòng market). Script chạy 300 ngay trước khi gọi `rollup()` (dòng 136-137), nên `lech === 0` đúng theo cách dựng: ranh giới đúng hay sai thì kết quả vẫn vậy, kể cả khi `runReassign` không làm gì. Script cũng không đo rollup ở trạng thái trước nên không có đối chứng nào cho thấy phép đo này có thể đỏ. Vì vậy nửa «metrics tính lại theo ranh giới đúng» của AC-7/E7 chưa được đo thật.
-
-- **Hình dạng 4 (khẳng định âm tính một mình): «0 dòng trỏ khu vực lạc» với market_metrics/area_breakdowns tự đúng nhờ TRUNCATE của 300/400 và FK, không có số trước để đối chứng**
-  file: `scripts/kiem-ranh-gioi-khu-vuc.mjs:144`
+- **Hình dạng 5: ma trận AC-10 thiếu market_asset_stats — hợp đồng nêu 3 bảng cache, test chỉ assert 2**
+  file: `pipeline/scripts/reassign-areas.test.mjs:309`
   severity: medium
-  AC: AC-7
+  AC: AC-10
   source: measurement
-  detail: `tro(c, lac…)` chỉ được gọi ở trạng thái sau (dòng 144-145); trạng thái trước không đo nên không có đối chứng dương. Khu vực lạc mồi (dòng 117-123) chỉ có một dòng `market_metrics`, không có listing hay tin bán. Dòng đó bị `TRUNCATE market_metrics` (300_metrics.sql dòng 19) và `TRUNCATE area_breakdowns` (400_breakdowns.sql dòng 7) xoá dù `runReassign` có dọn hay không. Vế «trỏ tới id không có trong areas» cũng không thể đỏ vì các bảng này có FK `REFERENCES areas(id)` (db/migrations/001_init.sql, 008_zalo_offers.sql). Phép đo chỉ còn ý nghĩa cho listings/sale_offers khi DB local còn khu vực lạc thật. Sau khi áp thật thì không còn, mà script không in hay assert số dòng trỏ ở trạng thái trước.
+  detail: Theo contract, AC-10 hứa không dòng nào của khu vực lạc trong `market_metrics`/`area_breakdowns`/`market_asset_stats` bị xoá khi chạy không cờ. Ca 'AU9-AC-10 không cờ…' chỉ lặp `for (const tb of ["market_metrics", "area_breakdowns"])` (dòng 309-310), còn mocLac() không chèn dòng market_asset_stats nào. Như vậy có 3 phần tử được hứa nhưng chỉ 2 được assert. Nếu nhánh không cờ lỡ xoá market_asset_stats (nhánh có cờ xoá bảng này ở reassign-areas.mjs dòng 264), test vẫn xanh. E10 trong evals.yaml cũng đã thu hẹp lời hứa, không nhắc market_asset_stats.
+  rationale: AC-10 nêu đích danh ba bảng không được xoá dòng của khu vực lạc, bài kiểm chỉ chứng minh hai nên lời hứa chưa được đo đủ.
 
-- **Hình dạng 3 (assert «chuỗi có mặt» thay cho quan hệ): DQ area_con_ngoai_cha chỉ kiểm detail có một số khác 0, không so với số con ngoài cha thật**
-  file: `pipeline/scripts/reassign-areas.test.mjs:278`
+- **Hình dạng 5/3: AC-10 hứa log liệt kê khu vực lạc kèm số dòng trỏ vào, test chỉ kiểm chuỗi gợi ý lệnh có mặt**
+  file: `pipeline/scripts/reassign-areas.test.mjs:318`
   severity: low
-  AC: AC-5
+  AC: AC-10
   source: measurement
-  detail: `assert.match(JSON.stringify(rows[0].detail), /[1-9]\d* khu vực/)` chỉ kiểm có một số dương đứng trước «khu vực». AC-5/E5 hứa «fail kèm số khu vực», tức con số phải bằng số khu vực con có tâm ngoài polygon cha. Test không tính số này độc lập (ví dụ bằng truy vấn `NOT ST_DWithin(p.geom, ST_PointOnSurface(c.geom), 0.01)` như scripts/kiem-ranh-gioi-khu-vuc.mjs dòng 45-47) để so bằng nhau. Vì thế nếu `count(*) FILTER` trong 450_dq_checks.sql đếm sai (ví dụ in tổng số con) thì test vẫn xanh.
+  detail: Contract AC-10 hứa: «log in danh sách khu vực lạc kèm số dòng trỏ vào và câu lệnh dọn có cờ». Ca không cờ chỉ có `assert.ok(dong.some((d) => d.includes("--xoa-khu-vuc-lac")))`. Hai trong ba phần của lời hứa không được đo: dòng chứa id `vn-hanoi-tinh-moi-au9` và các con số đi kèm. Nếu bỏ hẳn vòng `for (const g of giu) log.warn(...)` (reassign-areas.mjs dòng 250), test vẫn xanh.
+  rationale: AC-10 đòi log in danh sách khu vực lạc kèm số dòng trỏ vào; bài kiểm chỉ đo phần câu lệnh gợi ý nên hai phần của lời hứa chưa được đo.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Check DQ mới 'area_con_ngoai_cha' chưa có nhãn ở bên đọc /ops/quality và sai khuôn tên check: test ON12-AC-5 sẽ đỏ**
-  Người dùng thấy gì: Trên trang chất lượng dữ liệu của Ops, kiểm tra mới về khu vực con nằm ngoài khu vực cha sẽ hiện dưới nhãn chung «Kiểm khác (chưa diễn giải)» kèm chuỗi thô, và một bài kiểm tra của trang này sẽ báo đỏ.
-  Căn cứ: Chỉ ảnh hưởng người vận hành nhìn trang Ops, không mất hay sai dữ liệu, tự hiện lại đúng sau khi thêm nhãn và sửa rất rẻ.
+- **Tên check DQ `area_con_ngoai_cha` lệch quy ước đặt tên của mọi check DQ khác**
+  Người dùng thấy gì: Tên của phép kiểm chất lượng dữ liệu mới viết bằng tiếng Việt, khác các phép kiểm còn lại. Người dùng không thấy khác biệt, chỉ gây lộn xộn cho người bảo trì về sau.
+  Căn cứ: Hậu quả nhẹ, không mất hay lộ dữ liệu và không ai dùng ngoài đội bảo trì thấy; đổi tên càng muộn càng tốn vì phải giữ cả hai tên cũ lẫn mới, nên ghi lại là hạn chế đã biết.
   file: `pipeline/sql/450_dq_checks.sql`
   severity: medium
-  Đề xuất: new-contract
+  Đề xuất: known-limits
 
-- **Lượt theo lịch (không cờ): transform-airbnb gán lại listing vào chính khu vực lạc mà reassign vừa loại khỏi PIP**
-  Người dùng thấy gì: Sau mỗi lượt chạy hằng tuần, một số căn Airbnb nằm ngoài Hà Nội (thuộc tỉnh lân cận) vẫn có thể bị đưa lại vào danh sách khu vực Hà Nội, nên bộ lọc tìm căn và số liệu tổng Hà Nội vẫn lẫn căn ngoài tỉnh.
-  Căn cứ: Lỗi lặp lại hằng tuần và làm số liệu hiển thị cho người dùng lệch, nhưng chỉ ở vài chục căn, không mất dữ liệu gốc và chạy lại được; sửa cần chung một luật phường hợp lệ giữa hai bước nên đáng một việc riêng.
+- **Khoá jsonb mới `meta.lac` trên areas đặt tên tiếng Việt, lệch các khoá meta sẵn có**
+  Người dùng thấy gì: Cờ đánh dấu khu vực lạc được đặt tên tiếng Việt, khác các cờ cùng loại. Người dùng không thấy gì khác.
+  Căn cứ: Chỉ là chuyện đặt tên nội bộ, không ảnh hưởng dữ liệu hay giao diện người dùng; ghi lại để lần dọn quy ước sau xử lý.
+  file: `pipeline/lib/osm.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Cờ «khu vực lạc» chưa được tôn trọng ở một bước gán theo toạ độ khác (transform-hcmc-simple)**
+  Người dùng thấy gì: Ở thành phố Hồ Chí Minh, một bước nạp tin vẫn có thể gán vài tin vào khu vực lạc đã bị đánh dấu. Lượt chạy chuẩn sau đó sẽ gán lại cho đúng phường.
+  Căn cứ: Hậu quả nhẹ và tự lành ở lượt chạy kế tiếp theo lịch, không mất dữ liệu; sửa sau rẻ nên ghi hạn chế đã biết rồi xử lý khi dọn tiếp.
+  file: `pipeline/transform-hcmc-simple.mjs`
+  severity: low
+  Đề xuất: known-limits
+
+- **Running with --xoa-khu-vuc-lac never marks the stray areas it keeps as 'lac', so transform-airbnb can still assign listings to them**
+  Người dùng thấy gì: Sau lượt dọn thủ công, một số khu vực lạc được giữ lại có thể tạm nhận tin Airbnb cho đến lượt chạy theo lịch kế tiếp, khi chúng được đánh dấu lại.
+  Căn cứ: Chỉ xảy ra trong khoảng trống ngắn sau lượt dọn tay, không mất dữ liệu và tự lành ở lượt hằng tuần; sửa sau rẻ nên ghi hạn chế đã biết.
   file: `pipeline/reassign-areas.mjs`
-  severity: medium
-  Đề xuất: new-contract
+  severity: low
+  Đề xuất: known-limits
 
-- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): khu vực lạc mồi được INSERT thẳng vào areas với meta khớp bộ lọc của reader, không đi qua writer**
-  Người dùng thấy gì: Đây là độ chặt của bài kiểm tra nội bộ: dữ liệu mẫu khu vực lạc được dựng tay nên nếu cách hệ thống ghi khu vực đổi, bài kiểm tra có thể vẫn xanh trong khi thực tế lệch. Người dùng cuối không thấy gì.
-  Căn cứ: Không ảnh hưởng người dùng hay dữ liệu; rủi ro chỉ là bài kiểm tra bỏ sót trong tương lai và chi phí dựng lại đường nạp thật cao hơn lợi ích.
+- **Hình dạng 2: fixture chi tiết DQ area_con_ngoai_cha viết tay theo khuôn bên đọc, rào bên ghi chỉ ghim một phần khuôn**
+  Người dùng thấy gì: Nếu sau này ai đổi câu chữ mô tả của phép kiểm khu vực, trang vận hành có thể hiện «chưa diễn giải» mà bài kiểm vẫn không báo đỏ.
+  Căn cứ: Chỉ ảnh hưởng chữ hiển thị cho người vận hành, không mất hay sai dữ liệu, và người vận hành thấy ngay nên tự phát hiện; vá sau rẻ.
+  file: `app/tests/ops-nhan-theo-context.test.tsx`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Hình dạng 1: ca 'transform-airbnb dùng chung điều kiện phường hợp lệ' grep mã nguồn thay vì đo đầu ra**
+  Người dùng thấy gì: Bài kiểm xác nhận bước nạp Airbnb dùng đúng điều kiện phường hợp lệ chỉ bằng cách đọc chữ trong mã, nên có thể bỏ sót nếu mã sai hành vi thật.
+  Căn cứ: Là lớp bảo vệ phụ ngoài hợp đồng, không ảnh hưởng dữ liệu người dùng; nếu sót thì chỉ lệch ít tin ở khu vực lạc và tự lành khi chạy lại, nên ghi hạn chế đã biết.
   file: `pipeline/scripts/reassign-areas.test.mjs`
-  severity: medium
-  Đề xuất: wont-fix
+  severity: low
+  Đề xuất: known-limits
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+- **Hình dạng 4: assert loại trừ khu vực lạc khỏi phuongHopLe() là âm tính một mình, không có đối chứng dương**
+  Người dùng thấy gì: Bài kiểm phụ có thể báo xanh dù điểm thử không thật sự rơi vào khu vực lạc, nên khả năng bắt lỗi của nó yếu hơn vẻ ngoài.
+  Căn cứ: Chỉ làm yếu một lớp kiểm phụ, không ảnh hưởng dữ liệu hay người dùng; vá sau rẻ nên ghi hạn chế đã biết.
+  file: `pipeline/scripts/reassign-areas.test.mjs`
+  severity: low
+  Đề xuất: known-limits
 
+⚠ Cụm ngoài vùng phủ: 3/9 lỗi rơi vào file không bộ đo nào phủ (pipeline/lib/osm.mjs, pipeline/transform-hcmc-simple.mjs, app/tests/ops-nhan-theo-context.test.tsx) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
