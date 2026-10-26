@@ -7,7 +7,7 @@ reason:
 verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f51c050fbfdb0ba5c119fd4c4b851203ef5cd59c
+verified_commit: d47524c434ebfaa03139b529d844ad73d2a1cd25
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -250,3 +250,7 @@ none — 9 eval tất định, mỗi lệnh chạy một lần trên HEAD.
 
 Round 1: 9/9 eval đạt trên `f51c050f`. «Ngoài hợp đồng» có 4 mục (catalog im lặng khi lỗi, DATA-CONTRACT thiếu kind `project_catalog`,
 danh sách căn không lọc liên hệ, chú thích fixture cũ); người quyết. PASS.
+
+### Re-pin lần 1 — 2026-10-26, do ghim lại sau gộp main 742cf930
+run_id: repin-20261026T160842Z-59985
+sha: d47524c434ebfaa03139b529d844ad73d2a1cd25 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
