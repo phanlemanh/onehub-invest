@@ -8,7 +8,7 @@ verified_by: feature-loop:cham-lenh
 enforcement_mode: strict
 bypass_used: false
 verified_commit: b0b4c0ae8007ef605b5f530e8c8941878832e346
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: kho-tri-thuc-invest
