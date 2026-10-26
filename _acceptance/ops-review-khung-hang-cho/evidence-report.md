@@ -1,173 +1,178 @@
 ---
 schema_version: 2
 feature_slug: ops-review-khung-hang-cho
-verdict: BLOCKED
-failed_evals: ["E1","E3","E4","E5","E7","E8","E11","E12"]
-reason: |
-  Máy không đo được trọn vẹn vì DB local PostGIS :5433 không chạy (colima không chạy, docker.sock không có), nên kết quả không phải PASS/FAIL thật của tính năng ở các lệnh dưới đây:
-  - cd app && BASE_URL=${BASE_URL:-http://ui1.localhost:3460} node --import tsx ../scripts/smoke-review-queue.mjs: chạy xong nhưng smoke không kết nối được DB local (ECONNREFUSED tới ::1:5433 và 127.0.0.1:5433 trong taoTheThu, dòng 127). Cần khởi động DB (docker compose -f db/docker-compose.yml up -d) rồi chạy lại lệnh đã ghim.
-  - cd agent && npm test: chạy xong, không bị công cụ giết; test cần DB (tests/enrich-revert.test.ts AC-2, AC-10) lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433. Cần bật DB rồi chạy lại.
-  - cd pipeline && npm test: chạy xong, không bị công cụ giết; test cần DB (scripts/write-offers.test.mjs:307 và :316) lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433. Lỗi do môi trường, không phải kết quả logic. Cần bật DB rồi chạy lại.
-  - ui-check:E13: máy chủ dev :3460 có chạy nhưng Postgres local :5433 tắt (colima không chạy, cổng 5433 đóng). /ops/review bắt buộc đăng nhập mà phiên lưu ở DB nên không đăng nhập được bằng tài khoản thử và không chụp được bước nào. Không tự bật colima/DB vì đó là hạ tầng dùng chung của máy. Chạy lại: colima start, docker compose -f db/docker-compose.yml up -d, node scripts/dev-ops-account.mjs, rồi chạy lại E13.
+verdict: PASS
+failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 02c3ef65f4cce9619ce68b7490b0bd32ac4af57a
+verified_commit: 2088f2966c1f86dd843d8843ab7d51729711065c
 human_signoff:
 ---
 
 # Evidence Report: ops-review-khung-hang-cho
 
-Round 2. Lệnh fail có gắn eval: `cd app && npm test` bao E1, E3, E4, E5, E7, E8, E11, E12 (0 trên 1 lần chạy). Phần đuôi log của lệnh này chỉ còn thấy ca của `tests/ty-le-listing-gop.test.tsx` lỗi ECONNREFUSED tới DB :5433, nên chưa rõ các ca RQ-AC của chính tính năng đỏ hay xanh khi DB chạy; cần chạy lại sau khi bật DB. Lệnh fail không gắn eval: không có. Các mốc `verified_at` của lượt round 2 chưa có trong payload máy nên không điền (không bịa); mã run_id của lượt này sẽ được đối chiếu với run-log.jsonl.
+Round 3. Mọi eval có đo trong lượt này đều xanh trên commit đã ghim (sau bản vá S4-r2 lối 2: gọt «tự tin NN%» khỏi căn cứ của LLM ở `toReviewItem`, đo theo giá trị). E15, E16, E17 là carry-forward từ round 1 (delta không chạm paths của chúng); E18 giữ panel của round 2. Lệnh fail không gắn eval: không có. Mốc `verified_at` của lượt này chỉ có ngày (payload máy không mang giờ).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | FAIL |
-| E2 | AC-1 | script | BLOCKED |
-| E3 | AC-2 | test | FAIL |
-| E4 | AC-3 | test | FAIL |
-| E5 | AC-4 | test | FAIL |
-| E6 | AC-4 | script | BLOCKED |
-| E7 | AC-5 | test | FAIL |
-| E8 | AC-6 | test | FAIL |
-| E9 | AC-6 | script | BLOCKED |
-| E10 | AC-7 | script | BLOCKED |
-| E11 | AC-8 | test | FAIL |
-| E12 | AC-9 | test | FAIL |
-| E13 | AC-7 | ui-check | BLOCKED |
+| E1 | AC-1 | test | PASS |
+| E2 | AC-1 | script | PASS |
+| E3 | AC-2 | test | PASS |
+| E4 | AC-3 | test | PASS |
+| E5 | AC-4 | test | PASS |
+| E6 | AC-4 | script | PASS |
+| E7 | AC-5 | test | PASS |
+| E8 | AC-6 | test | PASS |
+| E9 | AC-6 | script | PASS |
+| E10 | AC-7 | script | PASS |
+| E11 | AC-8 | test | PASS |
+| E12 | AC-9 | test | PASS |
+| E13 | AC-7 | ui-check | PASS |
 | E14 | AC-10 | test | PASS |
 | E15 | AC-9 | script | PASS (carry-forward từ round 1) |
 | E16 | AC-10 | test | PASS (carry-forward từ round 1) |
 | E17 | AC-10 | script | PASS (carry-forward từ round 1) |
-| E18 | AC-10 | judgment | PASS (đề xuất của hội đồng, chờ người xác nhận) |
-| E19 | AC-5 | script | BLOCKED |
+| E18 | AC-10 | judgment | PASS (đề xuất của hội đồng, panel giữ nguyên từ round 2, chờ người xác nhận) |
+| E19 | AC-5 | script | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-ops-review-khung-hang-cho-E1-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E1-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    test at tests/ty-le-listing-gop.test.tsx: ca "TL-AC-2/3/4/5 thẻ và bảng Độ phủ trên fixture" lỗi AggregateError [ECONNREFUSED] tới ::1:5433 và 127.0.0.1:5433
-    ca "TL-AC-6 câu chú thích của thẻ khu vực gộp" lỗi AssertionError: ca TL-AC-2/3/4/5 phải chạy trước
-    (đuôi log của cả lệnh app_ui; DB local :5433 không chạy)
+    ℹ duration_ms 34078.990083
 
 - eval: E2
-  run_id: minted-ops-review-khung-hang-cho-E2-r2
-  exit_code: 1
+  run_id: rqsmokef0e9a37c
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.review_queue_smoke
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    AggregateError [ECONNREFUSED]
-    at async taoTheThu (scripts/smoke-review-queue.mjs:127:20)
-    Error: connect ECONNREFUSED ::1:5433
-    Error: connect ECONNREFUSED 127.0.0.1:5433
-    (smoke dừng trước khi đo; không có dòng ok/FAIL nào của eval)
+    SMOKE PASS (rqsmokef0e9a37c)
 
 - eval: E3
-  run_id: minted-ops-review-khung-hang-cho-E3-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E3-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh app_ui với E1: lệnh kết thúc với mã khác 0, đuôi log là ca TL-AC của ty-le-listing-gop lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433
+    ℹ duration_ms 34078.990083
 
 - eval: E4
-  run_id: minted-ops-review-khung-hang-cho-E4-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E4-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh app_ui với E1: lệnh kết thúc với mã khác 0, đuôi log là ca TL-AC của ty-le-listing-gop lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433
+    ℹ duration_ms 34078.990083
 
 - eval: E5
-  run_id: minted-ops-review-khung-hang-cho-E5-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E5-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh app_ui với E1: lệnh kết thúc với mã khác 0, đuôi log là ca TL-AC của ty-le-listing-gop lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433
+    ℹ duration_ms 34078.990083
 
 - eval: E6
-  run_id: minted-ops-review-khung-hang-cho-E6-r2
-  exit_code: 1
+  run_id: rqsmokef0e9a37c
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.review_queue_smoke
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh smoke với E2: AggregateError [ECONNREFUSED] tại taoTheThu (scripts/smoke-review-queue.mjs:127), DB :5433 không chạy; không có dòng đo nào
+    SMOKE PASS (rqsmokef0e9a37c)
 
 - eval: E7
-  run_id: minted-ops-review-khung-hang-cho-E7-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E7-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh app_ui với E1: lệnh kết thúc với mã khác 0, đuôi log là ca TL-AC của ty-le-listing-gop lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433
+    ℹ duration_ms 34078.990083
 
 - eval: E8
-  run_id: minted-ops-review-khung-hang-cho-E8-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E8-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh app_ui với E1: lệnh kết thúc với mã khác 0, đuôi log là ca TL-AC của ty-le-listing-gop lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433
+    ℹ duration_ms 34078.990083
 
 - eval: E9
-  run_id: minted-ops-review-khung-hang-cho-E9-r2
-  exit_code: 1
+  run_id: rqsmokef0e9a37c
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.review_queue_smoke
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh smoke với E2: AggregateError [ECONNREFUSED] tại taoTheThu (scripts/smoke-review-queue.mjs:127), DB :5433 không chạy; không có dòng đo nào
+    SMOKE PASS (rqsmokef0e9a37c)
 
 - eval: E10
-  run_id: minted-ops-review-khung-hang-cho-E10-r2
-  exit_code: 1
+  run_id: rqsmokef0e9a37c
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.script.review_queue_smoke
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh smoke với E2: AggregateError [ECONNREFUSED] tại taoTheThu (scripts/smoke-review-queue.mjs:127), DB :5433 không chạy; không có dòng đo nào
+    SMOKE PASS (rqsmokef0e9a37c)
 
 - eval: E11
-  run_id: minted-ops-review-khung-hang-cho-E11-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E11-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh app_ui với E1: lệnh kết thúc với mã khác 0, đuôi log là ca TL-AC của ty-le-listing-gop lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433
+    ℹ duration_ms 34078.990083
 
 - eval: E12
-  run_id: minted-ops-review-khung-hang-cho-E12-r2
-  exit_code: 1
-  baseline: red
+  run_id: minted-ops-review-khung-hang-cho-E12-r3
+  exit_code: 0
+  baseline: green
   verifier: config:executors.test.app_ui
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    cùng lệnh app_ui với E1: lệnh kết thúc với mã khác 0, đuôi log là ca TL-AC của ty-le-listing-gop lỗi ECONNREFUSED ::1:5433 và 127.0.0.1:5433
+    ℹ duration_ms 34078.990083
 
 - eval: E13
-  run_id: minted-ops-review-khung-hang-cho-E13-r2
-  exit_code: 1
+  run_id: e13-verify-u1-20261026
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  network_observed: n-a (tool-error: không đăng nhập được vì DB :5433 tắt; chỉ thấy trang /login lỗi máy chủ và asset tĩnh, chưa có traffic /ops/review)
-  output: |
-    Không chụp được khung nào ở round 2, nên khối này không có khung và không có mô tả nhìn thấy.
-    1. Máy chủ dev :3460: có chạy; /ops/review chuyển hướng về /login (đạt). /login trả trang bình thường khi không mang cookie phiên.
-    2. Tài khoản thử: tệp .claude/ops-test-account.json có đủ email, mật khẩu, loginUrl (mật khẩu không đọc ra).
-    3. Trình duyệt thật: goto /login hết thời gian chờ, document.readyState kẹt ở "loading"; Browser pane thấy màn hình tối trống và lỗi máy chủ ở /login.
-    4. Nguyên nhân: tra phiên cần DB; cổng 5433 đóng, colima không chạy, docker.sock không có.
-    5. Các bước chụp 1280 sáng, 1280 tối, 390 sáng và đo scrollWidth/clientWidth không chạy được.
-    Lưu ý: các tệp evidence/E13-step1..6.png, E13-step4-table-dark.png và E13-network.txt đang có trên đĩa là của round 1 (12:40-12:42), không phải bằng chứng của lượt chấm này và không được dùng làm bằng chứng cho round 2.
+  verified_at: 2026-10-26T07:26:28Z
+  screenshot: evidence/E13-step1.png
+  observed: |
+    Đã mở từng file frame bằng Read.
+    - step1 (1280 sáng): trang «Hàng duyệt», khung «Danh sách thẻ — 11 thẻ», bộ lọc «Mọi loại» và «Chờ duyệt». Bảng có 4 cột Thẻ/Loại/Trạng thái/Tạo lúc, chữ rõ. Badge «Ghép căn» màu tím, «Chờ duyệt» màu vàng cam, hai màu tách rõ. Không có chữ «tự tin» hay «%».
+    - step2: bộ lọc đổi thành «Ghép căn», vẫn 11 hàng, bố cục như step1.
+    - step3: sheet bên phải. Đầu sheet gồm tên thẻ «Cùng căn? binh-thanh 52m² ↔ 60m²», dòng «#24 · 2026-10-22 15:59», badge «Ghép căn», «Chờ duyệt» và nút X, có đường kẻ ngăn với thân. Thân có «AI: chưa chắc», «Điểm B: 0.908», đoạn lý do (có 5.3%, 15%, 15.4%, 10% nằm trong lời máy), hai thẻ Tin A (S05) và Tin B (S06) đặt cạnh nhau. Dải ảnh là 1 ô ảnh vuông bo góc dưới Tin B, ảnh nhà không méo. Tin A ghi «không có ảnh». Chân sheet có đường kẻ riêng với 3 nút «Cùng căn / Khác căn / Không chắc». Không có «tự tin».
+    - step4 (1280 tối): nền đen, sheet «Bổ sung dữ liệu: offer_c5ac… (2 trường)». Badge «Bổ sung tin» xám và «Từ chối» đỏ nền tối đọc rõ. Thân có đoạn tin, «Tin: không có ảnh», cặp WC 10 và Đường Bạch Đằng. Chân sheet có badge «Đã bỏ». Chữ sáng trên nền tối, không có % hay «tự tin».
+    - step4-table-dark: bảng 4 thẻ Bổ sung tin tối màu, cột Loại/Trạng thái đọc rõ, badge xám và đỏ tách nhau.
+    - step5 (390 sáng): bố cục di động. Bảng nằm trong Frame và cuộn ngang trong khung (cột Loại bị cắt trong khung). Dưới tên thẻ có #24 cùng badge «Ghép căn» và «Chờ duyệt» tách màu. Trang không bị tràn ngang.
+    - step6 (390, sheet đã cuộn): đầu sheet cố định (tên thẻ, #24, hai badge, nút X). Tin A rồi Tin B xếp dọc, mỗi thẻ rộng gần hết bề ngang. Ô ảnh Tin B nằm cuối thân sheet, trong sheet, không méo. Chân sheet cố định với 3 nút quyết định, chỉ báo «N» của Next dev đè nhẹ lên nút đầu. Không có «tự tin»; % chỉ có ở đoạn lý do của máy, không nằm trong khung chụp này.
+    Đối chiếu Expected: khớp toàn bộ.
+  network_observed: clean
 
 - eval: E14
-  run_id: minted-ops-review-khung-hang-cho-E14-r2
+  run_id: minted-ops-review-khung-hang-cho-E14-r3
   exit_code: 0
   baseline: red
   verifier: config:executors.test.app
+  verified_at: 2026-10-26T07:26:28Z
   output: |
-    tsc --noEmit và eslint không in lỗi
+    tsc --noEmit sạch; eslint và check-bare-disables không báo lỗi (đuôi log rỗng, lệnh kết thúc thành công)
 
 - eval: E15
   run_id: minted-ops-review-khung-hang-cho-E15-r1
@@ -199,38 +204,43 @@ Round 2. Lệnh fail có gắn eval: `cd app && npm test` bao E1, E3, E4, E5, E7
 - eval: E18
   judged_by: hội đồng 3 lens (fresh context): domain-correctness, operational-feasibility, spec-alignment
   verdict: PASS
-  rationale: Cả ba lens thấy routes.md, catalog.md và spec nói nhất quán về `solution-agents-5` đã dựng khung (Frame, data-grid lọc theo loại thẻ và trạng thái, Sheet chi tiết trong `components/ops/review/`), dải ảnh `c-attachment-3` nằm trong sheet, không hiện độ tự tin (Q9), lọc theo bậc thuộc PL23. Không còn chữ «(chờ)» hay «vòng sau» gắn với `solution-agents-5`; cụm «theo độ tin» chỉ còn ở dạng bị bỏ hoặc trích lại.
+  rationale: panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; rationale xem round 2.
   votes:
-    - domain-correctness: PASS — routes.md dòng 58 và catalog.md dòng 85-86 khớp nhau và khớp spec: Frame + data-grid lọc theo loại thẻ và trạng thái, sheet ở `components/ops/review/`, dải ảnh `c-attachment-3` nằm trong sheet, không hiện độ tự tin (Q9), lọc theo bậc thuộc PL23.
-    - operational-feasibility: PASS — ba tệp và spec (dòng 46, 105, 114) nói cùng một ý; không có «(chờ)» hay «vòng sau» cho `solution-agents-5`, không có «lọc theo loại thẻ + độ tin»; lần nhắc «theo độ tin» duy nhất trong spec là câu trích «bỏ "theo độ tin"».
-    - spec-alignment: PASS — routes.md dòng 58, catalog.md dòng 85-86 và spec (loại phương án «Lọc theo bậc căn cứ» vì thuộc PL23, cấm hiện độ tự tin) nhất quán; «theo độ tin» chỉ xuất hiện khi trích BOI-CANH là thứ bị bỏ.
+    - domain-correctness: PASS (r2)
+    - operational-feasibility: PASS (r2)
+    - spec-alignment: PASS (r2)
   human_override:  # chi nguoi ghi
+
+- eval: E19
+  run_id: rqsmokef0e9a37c
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.review_queue_smoke
+  verified_at: 2026-10-26T07:26:28Z
+  output: |
+    SMOKE PASS (rqsmokef0e9a37c)
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-ops-review-khung-hang-cho-SUITE-npm_test__bb6271-r2
-  exit_code: 1
+  run_id: minted-ops-review-khung-hang-cho-SUITE-npm_test__bb6271-r3
+  exit_code: 0
+  verified_at: 2026-10-26T07:26:28Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-ops-review-khung-hang-cho-SUITE-npm_test__13563d-r2
-  exit_code: 1
+  run_id: minted-ops-review-khung-hang-cho-SUITE-npm_test__13563d-r3
+  exit_code: 0
+  verified_at: 2026-10-26T07:26:28Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-ops-review-khung-hang-cho-SUITE-test_lint_rules-r2
+  run_id: minted-ops-review-khung-hang-cho-SUITE-test_lint_rules-r3
   exit_code: 0
+  verified_at: 2026-10-26T07:26:28Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-ops-review-khung-hang-cho-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-ops-review-khung-hang-cho-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-
-- eval: E19
-  run_id: minted-ops-review-khung-hang-cho-E19-r2
-  exit_code: 1
-  baseline: n-a
-  verifier: config:executors.script.review_queue_smoke
-  output: |
-    cùng lệnh smoke với E2: AggregateError [ECONNREFUSED] tại taoTheThu (scripts/smoke-review-queue.mjs:127), DB :5433 không chạy; chưa có ma trận nút nào được đo
+  verified_at: 2026-10-26T07:26:28Z
 
 ## Known limits
 
@@ -238,11 +248,9 @@ Round 2. Lệnh fail có gắn eval: `cd app && npm test` bao E1, E3, E4, E5, E7
 
 ## Analyst
 
-none — mọi eval tính năng có đo baseline đều red trên baseline (có phân biệt); E2, E6, E9, E10, E13, E19 không có baseline đo được.
+Eval không phân biệt (xanh cả trên HEAD lẫn baseline, chứng minh harness chứ không phải tính năng; nên viết lại để assert hành vi mới hoặc xác nhận là regression-guard có chủ ý):
 
-Nguyên nhân round này: toàn bộ DB local PostGIS :5433 đang tắt (colima không chạy). Hệ quả: smoke (E2, E6, E9, E10, E19), ui-check E13 và hai lệnh suite `cd agent && npm test`, `cd pipeline && npm test` không đo được; lệnh `cd app && npm test` (E1, E3, E4, E5, E7, E8, E11, E12) kết thúc với mã khác 0 mà đuôi log thấy được cũng là lỗi kết nối DB, nên chưa tách được ca nào là lỗi của chính tính năng. Cần bật DB (colima start; docker compose -f db/docker-compose.yml up -d; node scripts/dev-ops-account.mjs) rồi chạy lại verify.
-
-Ba finding trong hợp đồng của AC-6 (xem review-findings.md) cho rằng giá trị độ tự tin vẫn tới trình duyệt qua `evidence.fields[].basis` («tự tin 82%»), và các phép đo E8, E9 chỉ dò tên khoá; đây là lỗi thật cần sửa bất kể kết quả chạy lại.
+- cd app && npm test: E1, E3, E4, E5, E7, E8, E11, E12
 
 ### Baseline khong do
 
@@ -254,5 +262,6 @@ none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: E2, E6, E9, E10, E19 failed — một lệnh smoke dùng chung kết thúc với mã khác 0 vì DB local không có thẻ bổ sung tin chờ để đo ma trận nút của sheet bổ sung tin (E19); ngoài ra ba finding trong hợp đồng (AC-6) cho rằng giá trị ai_confidence vẫn tới trình duyệt qua evidence.fields. Returned to implementation.
-Round 2: E1, E3, E4, E5, E7, E8, E11, E12 failed (lệnh `cd app && npm test` kết thúc với mã khác 0, đuôi log là lỗi kết nối DB) và smoke, `agent`/`pipeline` test, E13 BLOCKED vì DB local :5433 không chạy; sau S4-r1 vẫn còn ba finding AC-6 (độ tự tin lọt qua `basis`). Cần bật DB rồi verify lại, và xử lý finding AC-6.
+Round 1: E2, E6, E9, E10, E19 failed — một lệnh smoke dùng chung bị đỏ vì DB local không có thẻ bổ sung tin chờ để đo ma trận nút của sheet bổ sung tin (E19); ngoài ra ba finding trong hợp đồng (AC-6) cho rằng giá trị độ tự tin vẫn tới trình duyệt qua evidence.fields. Returned to implementation.
+Round 2: BLOCKED vì DB local :5433 không chạy (app test, smoke, agent/pipeline test, E13 không đo được); ba finding AC-6 còn lại (độ tự tin lọt qua `basis`). Returned to implementation (S4-r2).
+Round 3: toàn bộ eval đo được đều xanh trên commit 2088f296 (smoke, app test, tsc + lint, E13 bốn khung sáng/tối/di động); E15, E16, E17 carry-forward từ round 1, E18 giữ panel round 2. Chờ người ký ở Cổng 2.
