@@ -1,0 +1,37 @@
+{
+  "feature_plain": "Người duyệt mở Hàng duyệt thấy các thẻ chờ xếp thành một bảng, lọc được theo loại thẻ và trạng thái, bấm một dòng thì mở ngăn chi tiết có ảnh tin và nút quyết định — dùng được cả trên điện thoại, và không còn con số «AI tự tin N%» nào trên thẻ.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ hiện hàng duyệt thành một bảng bốn cột (Thẻ, Loại, Trạng thái, Tạo lúc theo giờ VN), mặc định chỉ thẻ chờ, mới nhất trước, số thẻ khớp dữ liệu máy thu."},
+    {"id": "AC-2", "p": "Sẽ cho lọc theo loại thẻ (Ghép căn, Bổ sung tin, Loại khác) và trạng thái (Chờ duyệt, Đã quyết, Tất cả); lọc ra 0 thì có nút thoát dẫn tới chỗ có thẻ."},
+    {"id": "AC-3", "p": "Sẽ mở ngăn chi tiết khi bấm một dòng (hoặc Tab rồi Enter), hiện đúng nội dung thẻ như hôm nay; Esc đóng."},
+    {"id": "AC-4", "p": "Sẽ đặt dải ảnh tin vào trong ngăn chi tiết của đúng thẻ đó — chỉ quản trị viên thấy ảnh, bảng không tải ảnh."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên cách quyết định (cùng nút, cùng dữ liệu gửi đi); quyết xong ngăn vẫn mở và hiện kết quả, lỗi thì báo ngay trong ngăn để bấm lại."},
+    {"id": "AC-8", "p": "Sẽ có đủ ba trạng thái cho vùng hàng duyệt: trống (kèm nút sang trang Thu thập), đang tải (khung giữ chỗ), lỗi (kèm Thử lại)."},
+    {"id": "AC-9", "p": "Sẽ giữ trang trên máy chủ như cũ: chỉ hiện số thẻ chờ theo loại, nội dung thẻ và ảnh vẫn chỉ ở máy thu."},
+    {"id": "AC-10", "p": "Sẽ dọn sạch lỗi chuẩn giao diện của thẻ duyệt và cập nhật bản đồ trang + danh mục khối cho khớp khung mới."}
+  ],
+  "wont_do": [
+    {"id": "AC-6", "p": "Sẽ KHÔNG hiện độ tự tin của máy ở bất kỳ đâu, và con số đó không gửi tới trình duyệt (vẫn giữ trong cơ sở dữ liệu để hiệu chỉnh)."},
+    {"id": "AC-7", "p": "Sẽ KHÔNG để trang cuộn ngang trên điện thoại 390 px: ngăn chi tiết chiếm trọn màn, hai tin xếp chồng, ảnh vẫn xem và bấm được."},
+    {"id": "OOS-1", "p": "KHÔNG dựng thẻ duyệt v2 (căn cứ theo bậc, đoạn trích, bất đồng mọi cặp) và lọc theo bậc — để hàng PL23."},
+    {"id": "OOS-2", "p": "KHÔNG bỏ nhãn gợi ý của máy và KHÔNG thêm căn cứ cho mọi trường — để PL23."},
+    {"id": "OOS-3", "p": "KHÔNG có thao tác hàng loạt — trả lại hàng loạt có lý do là hàng UI12 riêng."},
+    {"id": "OOS-4", "p": "KHÔNG đổi đường ghi quyết định (lý do khi quyết, nhật ký trong cùng giao dịch là việc riêng)."},
+    {"id": "OOS-5", "p": "KHÔNG sửa các hạn chế ảnh tin đã biết (ảnh lưu trên máy chưa hiện, tệp ảnh bị xoá) — để PL23."}
+  ],
+  "scope_plain": "Năm việc dưới đây cố ý để lại cho các hàng sau, để trang Hàng duyệt chỉ phải dựng lại thêm một lần.",
+  "coverage_plain": [
+    {"i": 0, "p": "Đủ bốn loại thẻ: ghép căn, bổ sung tin thường, bổ sung tin có xung đột luật–AI, loại lạ — đối chiếu 16 thẻ thật trên máy thu và các ca test thẻ hiện có (AC-1, AC-3)."},
+    {"i": 1, "p": "Đủ hai trạng thái: chờ và đã quyết (duyệt, từ chối, hoãn) — gồm ca chỉ còn thẻ đã quyết (AC-2, AC-5)."},
+    {"i": 2, "p": "Đủ ba nơi xem: máy thu màn rộng, máy thu điện thoại 390 px, máy chủ (AC-1, AC-7, AC-9)."},
+    {"i": 3, "p": "Đủ hai quyền: quản trị viên thấy ảnh, người vận hành thường không thấy (AC-4)."},
+    {"i": 4, "p": "Áp chung cho mọi ô: bảng, lọc, ngăn chi tiết, ảnh, quyết định, ba trạng thái vùng, không độ tự tin, chuẩn giao diện (AC-6, AC-8, AC-10)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Mặc định chỉ hiện thẻ chờ là một lựa chọn người dùng thấy mà máy đã tự quyết; khi mọi thẻ đã quyết, trang rơi vào ngõ cụt. Đã sửa: có nút «Xem thẻ đã quyết», và mặc định được đưa thành câu hỏi Hỏi-2 cho anh."},
+    {"i": 1, "p": "Bước quyết định chỉ được kiểm trong môi trường giả lập, không trên trình duyệt thật. Đã sửa: kiểm thêm trên trình duyệt thật với đường ghi bị chặn, đếm dữ liệu trước–sau để chắc không ghi gì."},
+    {"i": 2, "p": "Lý do bỏ thao tác hàng loạt trích sai chỗ. Đã sửa: trích đúng câu giao của hàng UI12 (trả lại hàng loạt là hàng riêng)."},
+    {"i": 3, "p": "Chưa kiểm ngăn chi tiết sau khi quyết xong (thẻ rời bộ lọc thì ngăn có bị trắng không). Đã sửa: thêm ca kiểm ngăn vẫn giữ thẻ và hiện kết quả."},
+    {"i": 4, "p": "Ảnh trên điện thoại có thể không được kiểm ở đâu nếu không thẻ nào có ảnh. Đã sửa: thiếu thẻ có ảnh thì phép kiểm báo đỏ thay vì cho qua."}
+  ]
+}
