@@ -359,3 +359,11 @@ capture:
   ui: "bash scripts/ui-capture.sh"                   # <url> <out.png> qua playwright-cli; chụp ngay khi load (MapLibre có thể chưa vẽ xong)
 lo_trinh:
   tep: docs/plan/lo-trinh.json
+# Tầng tri thức (kit 2.34.0, Mạnh duyệt 26/10): kho CÔNG KHAI → raw + trang ở kho RIÊNG TƯ đi kèm, chỉ phục vụ invest.
+# duong tương đối gốc checkout chính (~/dev/onehub-invest), không theo worktree. Tầng A không vào cả kho riêng (luật 6).
+tri_thuc:
+  cong_khai: true
+  kho:
+    ten: onehub-invest-tri-thuc
+    duong: ../onehub-invest-tri-thuc
+    remote: https://github.com/phanlemanh/onehub-invest-tri-thuc.git
