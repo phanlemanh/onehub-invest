@@ -51,7 +51,7 @@ evals:
     executor: script
     cmd: config:executors.script.ranh_gioi_do
     paths: [pipeline/reassign-areas.mjs, pipeline/sql/300_metrics.sql, scripts/kiem-ranh-gioi-khu-vuc.mjs]
-    expected: "exit 0; dòng 'khu vực lạc (trước): <n> id' với n > 0; khối 'sau' in 'ok   0 dòng trỏ khu vực không còn hoặc khu vực lạc (listings, sale_offers, market_metrics, area_breakdowns, market_asset_stats)', 'ok   rollup vn-hanoi bằng tổng con mỗi tháng (<số> tháng, lệch 0)'; dòng 'ok   ROLLBACK — DB local không đổi (areas <n> → <n>)' và dòng cuối 'kiem-ranh-gioi: PASS'"
+    expected: "exit 0; dòng 'khu vực lạc (trước): <n> id' với n > 0; dòng 'ok   trạng thái trước có dòng trỏ khu vực lạc và khu vực lạc góp đêm vào metrics (đối chứng dương AC-7)'; khối 'sau' in 'ok   khu vực lạc góp vào market_metrics: trước <n> đêm → sau 0', 'ok   0 dòng trỏ khu vực không còn hoặc khu vực lạc (listings, sale_offers, market_metrics, area_breakdowns, market_asset_stats)', 'ok   rollup vn-hanoi bằng tổng con mỗi tháng (<số> tháng, lệch 0)'; dòng 'ok   ROLLBACK — DB local không đổi (areas <n> → <n>)' và dòng cuối 'kiem-ranh-gioi: PASS'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8

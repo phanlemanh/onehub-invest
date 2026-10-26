@@ -72,6 +72,15 @@ async function tro(c, lac) {
   return out;
 }
 
+/** Tổng đêm đã đặt mà các khu vực trong danh sách góp vào market_metrics. */
+async function gop(c, ids) {
+  const { rows } = await c.query(
+    `SELECT COALESCE(sum(booked_nights), 0)::int n FROM market_metrics WHERE area_id = ANY($1)`,
+    [ids],
+  );
+  return rows[0].n;
+}
+
 /** Số tháng mà dòng cấp market của vn-hanoi lệch tổng các dòng con hiện có. */
 async function rollup(c) {
   const { rows } = await c.query(
@@ -120,7 +129,9 @@ try {
                  ST_Multi(ST_Buffer(ST_SetSRID(ST_MakePoint(106.05, 20.65), 4326), 0.05)),
                  '{"source":"osm-phuong","osm_id":"au9-moi-lac"}'::jsonb)`,
       );
-      await c.query(`INSERT INTO market_metrics (area_id, month) VALUES ('vn-hanoi-tinh-moi-au9', '2026-01-01')`);
+      await c.query(
+        `INSERT INTO market_metrics (area_id, month, booked_nights, revenue) VALUES ('vn-hanoi-tinh-moi-au9', '2026-01-01', 7, 1000)`,
+      );
       const t = await chup(c);
       console.log("— trước (DB local + một khu vực lạc mồi chèn trong transaction)");
       console.log(`${t.trong ? "ok  " : "đỏ "} extent con vn-hanoi ${t.trong ? "trong" : "vượt"} bbox — ${t.box}`);
@@ -129,6 +140,14 @@ try {
       // Khu vực lạc lấy từ trạng thái TRƯỚC, độc lập với bên ghi: tên tỉnh hoặc tâm ngoài cha
       const lac = [...new Set([...t.tenTinh, ...t.ngoai])];
       console.log(`khu vực lạc (trước): ${lac.length} id`);
+      // Đối chứng dương cho AC-7: trước khi áp, khu vực lạc PHẢI còn dòng trỏ vào và góp đêm vào metrics
+      const trTruoc = await tro(c, lac);
+      const gopTruoc = await gop(c, lac);
+      console.log(`     trước: dòng trỏ khu vực lạc (${Object.entries(trTruoc).map(([k, n]) => `${k} ${n}`).join(", ")}) · góp ${gopTruoc} đêm vào market_metrics`);
+      check(
+        Object.values(trTruoc).reduce((a, b) => a + b, 0) > 0 && gopTruoc > 0,
+        "trạng thái trước có dòng trỏ khu vực lạc và khu vực lạc góp đêm vào metrics (đối chứng dương AC-7)",
+      );
       check(!t.trong && t.tenTinh.length > 0 && lac.length > 0, "trạng thái trước đỏ đúng chỗ (đối chứng dương: extent vượt + có con tên tỉnh)");
 
       const tam = { log() {}, warn() {} };
@@ -143,6 +162,8 @@ try {
       const giu = r.kept.map((k) => k.id);
       const tr = await tro(c, lac.filter((id) => !giu.includes(id)));
       check(Object.values(tr).every((n) => n === 0), `0 dòng trỏ khu vực không còn hoặc khu vực lạc (${Object.entries(tr).map(([k, n]) => `${k} ${n}`).join(", ")})`);
+      const gopSau = await gop(c, lac);
+      check(gopSau === 0, `khu vực lạc góp vào market_metrics: trước ${gopTruoc} đêm → sau ${gopSau}`);
       const ru = await rollup(c);
       check(ru.thang > 0 && ru.lech === 0, `rollup vn-hanoi bằng tổng con mỗi tháng (${ru.thang} tháng, lệch ${ru.lech})`);
     } finally {

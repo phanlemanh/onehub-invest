@@ -9,7 +9,7 @@ import { test } from "node:test";
 
 import pg from "pg";
 
-import { toMultiPolygon } from "../lib/osm.mjs";
+import { phuongHopLe, toMultiPolygon } from "../lib/osm.mjs";
 import { runReassign, WARD_LEVEL } from "../reassign-areas.mjs";
 
 const DB_URL =
@@ -275,7 +275,14 @@ test("AU9-AC-5 DQ area_con_ngoai_cha fail khi có con ngoài cha", async (t) => 
        ORDER BY checked_at DESC, ctid DESC LIMIT 1`,
     );
     assert.equal(rows[0]?.status, "fail");
-    assert.match(JSON.stringify(rows[0].detail), /[1-9]\d* khu vực/);
+    // số in ra = số con của vn-hanoi có tâm ngoài polygon cha, đếm độc lập
+    const ngoai = await dem(
+      c,
+      `SELECT count(*) n FROM areas c JOIN areas p ON p.id = c.parent_id
+       WHERE p.id = 'vn-hanoi' AND c.geom IS NOT NULL AND NOT ST_DWithin(p.geom, ST_PointOnSurface(c.geom), 0.01)`,
+    );
+    assert.ok(ngoai >= 1);
+    assert.equal(Number(String(rows[0].detail).match(/^(\d+) khu vực/)?.[1]), ngoai, String(rows[0].detail));
   });
 });
 
@@ -310,7 +317,22 @@ test("AU9-AC-10 không cờ: khu vực lạc và metrics còn nguyên, listing v
     );
     assert.ok(dong.some((d) => d.includes("--xoa-khu-vuc-lac")), dong.join("\n"));
     assert.ok(!r.removed.some((x) => x.id === "vn-hanoi-tinh-moi-au9"));
+    // khu vực lạc bị đánh dấu → bước gán theo toạ độ khác (transform-airbnb, cùng điều kiện phuongHopLe) không dùng nó
+    assert.equal(await dem(c, `SELECT count(*) n FROM areas WHERE id = 'vn-hanoi-tinh-moi-au9' AND (meta->>'lac')::boolean`), 1);
+    const { rows } = await c.query(
+      `SELECT id FROM areas WHERE region_type = 'submarket' AND country_code = 'vn' AND ${phuongHopLe()}
+         AND ST_Covers(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))`,
+      HUNG_YEN,
+    );
+    assert.ok(!rows.some((x) => x.id === "vn-hanoi-tinh-moi-au9"), "điểm trong khu vực lạc không được gán vào nó");
   });
+});
+
+test("AU9-AC-10 transform-airbnb dùng chung điều kiện phường hợp lệ", () => {
+  const src = readFileSync(join(ROOT, "pipeline/transform-airbnb.mjs"), "utf8");
+  assert.match(src, /import \{ phuongHopLe \} from "\.\/lib\/osm\.mjs"/);
+  assert.doesNotMatch(src, /meta->>'source' = 'osm-phuong'/, "không còn điều kiện phường riêng bỏ sót khu vực lạc");
+  assert.equal((src.match(/\$\{phuongHopLe\(\)\}/g) ?? []).length, 2, "cả hai câu PIP của transform-airbnb");
 });
 
 test("AU9-AC-10 có cờ: khu vực lạc bị xoá", async (t) => {

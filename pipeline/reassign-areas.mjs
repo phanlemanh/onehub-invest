@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
 
 import pg from "pg";
 
-import { slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
+import { phuongHopLe, slugify, stripPrefix, toMultiPolygon } from "./lib/osm.mjs";
 
 export const MARKETS = {
   hanoi: { id: "vn-hanoi", name: "Hà Nội" },
@@ -110,7 +110,7 @@ async function upsertPhuong(client, city, log) {
        ON CONFLICT (id) DO UPDATE SET
          parent_id = EXCLUDED.parent_id, region_type = 'submarket',
          name = EXCLUDED.name, geom = EXCLUDED.geom, geom_pt = EXCLUDED.geom_pt,
-         meta = (areas.meta - 'note') || EXCLUDED.meta`,
+         meta = (areas.meta - 'note' - 'lac') || EXCLUDED.meta`,
       [id, market.id, base, JSON.stringify(mp), String(r.osm_id)],
     );
     out.ids.push(id);
@@ -169,7 +169,7 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
                    (SELECT id FROM areas WHERE parent_id = ANY($1)))`;
   // Phường hợp lệ cho PIP: phường OSM VN trừ khu vực lạc của lượt này
   const phuong = `a.region_type = 'submarket' AND a.country_code = 'vn'
-                  AND a.meta->>'source' = 'osm-phuong' AND a.id <> ALL($2::text[])`;
+                  AND ${phuongHopLe("a.")} AND a.id <> ALL($2::text[])`;
 
   // ---- 2. Point-in-polygon — mọi phường VN, không chỉ tỉnh của snapshot ----
   // ST_Covers để điểm nằm đúng trên ranh vẫn được gán; DISTINCT ON chốt 1 phường.
@@ -243,6 +243,8 @@ export async function runReassign(client, cities = Object.keys(MARKETS), { log =
     [stale],
   );
   if (!xoaKhuVucLac) {
+    // Đánh dấu khu vực lạc để mọi bước gán theo toạ độ khác (transform-airbnb) bỏ qua chúng — không xoá gì
+    await client.query(`UPDATE areas SET meta = meta || '{"lac": true}'::jsonb WHERE id = ANY($1)`, [stale]);
     if (stale.length) {
       log.warn(`  ! ${stale.length} khu vực lạc — KHÔNG xoá ở lượt này (không có cờ --xoa-khu-vuc-lac):`);
       for (const g of giu) log.warn(`    · ${g.id} — ${g.saved} saved_markets, ${g.properties} properties`);
