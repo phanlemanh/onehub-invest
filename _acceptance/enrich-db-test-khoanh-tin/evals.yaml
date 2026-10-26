@@ -13,12 +13,12 @@ evals:
     executor: script
     cmd: config:executors.script.enrich_ac6_tam_lan
     paths: [agent/tests/enrich-db.test.ts]
-    expected: "exit 0; tám dòng 'lan <n>: xanh', cuối 'TAM LAN XANH'; đối chứng trong cùng lệnh: bản tệp test của origin/main chạy tám lần đỏ ít nhất một lần ('DOI CHUNG: ban cu do <k>/8', k ≥ 1); khối 'await runEnrich({ … });' của lượt backlog trong ca (bỏ chú thích) không có 'offerIds' — dòng 'LOI GOI BACKLOG KHONG offerIds'"
+    expected: "exit 0; tám dòng 'lan <n>: xanh', cuối 'TAM LAN XANH'; đối chứng trong cùng lệnh: bản tệp test GHIM ở 106cbd3 chạy tám lần — khi dòng 'tin hoan khac tren DB: <m>' có m > 0 thì bản cũ đỏ ít nhất một lần ('DOI CHUNG: ban cu do <k>/8', k ≥ 1), m = 0 thì in 'DOI CHUNG KHONG AP DUNG'; khối 'await runEnrich({ … });' của lượt backlog trong ca (bỏ chú thích) không có 'offerIds' — dòng 'LOI GOI BACKLOG KHONG offerIds'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: script
     cmd: config:executors.script.enrich_pham_vi
     paths: [agent/tests/enrich-db.test.ts]
-    expected: "exit 0; 'PHAM-VI OK'; should-NOT-fire: không dòng 'NGOAI PHAM VI', không dòng 'XOA DONG'"
+    expected: "exit 0; so với merge-base của origin/main: tệp test có trong diff, 'tep test: them <n> xoa 0' với n > 0 (đếm bằng git diff --numstat), 'doi chung bo dem xoa: 2/2' (tệp tạm có một dòng trống và một dòng mở đầu bằng '-' bị xoá), cuối 'PHAM-VI OK'; should-NOT-fire: không dòng 'NGOAI PHAM VI', 'XOA DONG', 'KHONG THAY TEP TEST TRONG DIFF'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
