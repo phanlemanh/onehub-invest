@@ -5,7 +5,7 @@ slug: kev-nhan-thuoc-sau-pl1
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T12:22:00Z
 approved_by:
@@ -41,3 +41,10 @@ Source input: prompt (giám sát liên làn, 26/10/2026)
 
 - Nâng thước theo schemaVersion 4 của S08 (v1–v4 nhận, v5 chặn, contract-doc): làm ở nhánh tích hợp S08 (PL10) khi nhánh ZCode đạt.
 - Đổi chữ log của `collector/openclaw/handler.js` (T3, an toàn Zalo): thước theo chữ đang chạy, không sửa handler.
+
+## Notes
+
+- Quyết ở Cổng Bằng chứng 2026-10-26 (Mạnh):
+  - Ngoài-1: ghi Known limits
+- Known limits:
+  - Ngoài-1: Log hook Zalo không còn phân biệt Kev chết với Kev trả lỗi, và không ghi nguyên nhân
