@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 685e577aa7075a8c16b948d551799397e8608564
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: auth-error-thu-lai-retry

@@ -5,7 +5,7 @@ slug: auth-error-thu-lai-retry
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-auth-error-thu-lai-retry-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -53,3 +53,7 @@ Bỏ quét không gian tiêu chí — xem dòng sổ `descope` «bỏ coverage-s
 - Ô auth-hop-chuan/E4 → auth-error-thu-lai-retry#AC-1 (cơ chế `superseded_by` 2.24). Thứ tự trong CÙNG PR: hồ sơ này
   ký Cổng Bằng chứng → ghim lại `auth-hop-chuan` bằng làn máy (`repin-lane --write`) → `pre-merge-check` sạch cho cả hai
   hồ sơ → đẩy. Trước khi hồ sơ này ký, lưới trước-merge báo `ho-so-thay-chua-ky` cho `auth-hop-chuan` — đúng thiết kế.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-3: Khi config.yaml hỏng cú pháp, chưa có phép kiểm thông báo lỗi ghi đúng mã và số dòng.
+- Mở hợp đồng mới (Ngoài-1, Ngoài-2): ca «không lệnh nào đổi nghĩa» so config.yaml với merge-base của main nên chặn nhầm CI của
+  PR sau có thêm/sửa khoá — việc riêng: về so cặp commit cố định của vòng + hợp tập khoá.
