@@ -462,6 +462,8 @@ test("AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin 
   await withTx(async (c) => {
     const a = await offerWithPost(c, { property_type: "apartment" });
     await c.query(`UPDATE sale_offers SET street_raw = 'Xuân La', bathrooms = 1, source = 'S05' WHERE offer_id = $1`, [a]);
+    const nhom = `Nhóm thử AC-6 khoanh ${a}`; // tên nhóm riêng để biết lượt dry bên dưới bốc tin nào
+    await c.query(`UPDATE stg_zalo_posts SET group_name = $2 WHERE post_id = $1`, [`p_${a}`, nhom]);
     const r1 = await run(c, [a], llmWith({ ...real(0), street: undefined }), resolveWith());
     assert.equal(r1.reviewIds.length, 1);
     await c.query(`SELECT decide_enrichment_review($1, 'deferred', 'hitl:test')`, [r1.reviewIds[0]]);
@@ -473,12 +475,17 @@ test("AC-6 để sau: lượt backlog sau luôn mở lại thẻ, kể cả tin 
       `UPDATE enrichment_proposals SET status = 'skipped' WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
       [a],
     );
-    // Kiểm đúng điều bước khoanh làm ra (không chép luật xếp hàng của selectOffers): mọi đề xuất chờ duyệt còn lại là của tin ca.
-    const khac = await c.query(
-      `SELECT count(*)::int AS n FROM enrichment_proposals WHERE status = 'queued' AND route = 'review' AND offer_id <> $1`,
-      [a],
-    );
-    assert.equal(khac.rows[0].n, 0, "còn đề xuất chờ duyệt của tin khác — lượt backlog chưa được khoanh");
+    // Hỏi chính bộ chọn tin (selectOffers, không chép luật của nó): năm lượt dry, limit 1, không offerIds — resolve ghi lại
+    // nhóm của tin được bốc; lượt nào cũng phải là tin của ca. Dry không gọi model, không ghi.
+    const boc: (string | null)[] = [];
+    const ghiNhom: ResolveFn = async (g) => {
+      boc.push(g);
+      return ctx();
+    };
+    for (let i = 0; i < 5; i++) {
+      await runEnrich({ client: c, runId: `test-ac6-dry-${i}`, dry: true, limit: 1, llm: llmWith(null), resolve: ghiNhom, buildings: [] });
+    }
+    assert.deepEqual(boc, Array(5).fill(nhom), "lượt backlog bốc tin khác tin của ca — hàng ưu tiên chưa được khoanh");
 
     await runEnrich({
       client: c, runId: "test-ac6-backlog", dry: false, limit: 1,
