@@ -55,7 +55,10 @@ BEGIN
                        ELSE coalesce(nullif(btrim(reason), ''), 'trước TV2a: tắt bằng công tắc enabled') END
    WHERE status IS NULL;
 
-  -- Không mặc định: INSERT không nêu status thì trigger suy từ enabled (NOT NULL kiểm sau trigger).
+  -- Mặc định 'active' đặt SAU backfill (đặt lúc thêm cột thì dòng enabled = false cũng nhận 'active'). Bản chép
+  -- LIKE … INCLUDING ALL mang mặc định và CHECK nhưng không mang trigger — chèn kiểu cũ (không nêu status, enabled
+  -- true) vẫn ra 'active' khớp enabled (lỗi CI run 40302608712, sửa tại chỗ khi 047 chưa gộp — Mạnh duyệt 26/10).
+  ALTER TABLE source_groups ALTER COLUMN status SET DEFAULT 'active';
   ALTER TABLE source_groups ALTER COLUMN status SET NOT NULL;
 
   ALTER TABLE source_groups DROP CONSTRAINT IF EXISTS source_groups_status_chk;
@@ -73,7 +76,8 @@ BEGIN
   CREATE OR REPLACE FUNCTION source_groups_dong_bo_enabled() RETURNS trigger LANGUAGE plpgsql AS $fn$
   BEGIN
     IF TG_OP = 'INSERT' THEN
-      IF NEW.status IS NULL THEN
+      -- Không nêu status (NULL, hoặc mặc định 'active' mà enabled = false) → đường ghi cũ: suy từ enabled.
+      IF NEW.status IS NULL OR (NEW.status = 'active' AND NOT NEW.enabled) THEN
         IF NEW.enabled THEN
           NEW.status := 'active';
         ELSE

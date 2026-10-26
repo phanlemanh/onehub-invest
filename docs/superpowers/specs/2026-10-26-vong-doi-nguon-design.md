@@ -37,7 +37,7 @@ không tạo gì. Chạy lại lần hai thì không lỗi, không đổi dữ l
   (`status <> 'paused' OR length(btrim(coalesce(reason,''))) > 0`).
 
 **`source_groups`**
-- Thêm `status text NOT NULL` (không mặc định — trigger điền), `reason text`, `resume_when text`, cùng hai CHECK cùng
+- Thêm `status text NOT NULL DEFAULT 'active'` (mặc định đặt sau backfill; bản chép `LIKE … INCLUDING ALL` không mang trigger nên cần mặc định — lỗi CI 26/10), `reason text`, `resume_when text`, cùng hai CHECK cùng
   khuôn (`source_groups_status_chk`, `source_groups_paused_reason_chk`).
 - Backfill từ `enabled`: `true` → `active`; `false` → `paused`, `reason = 'trước TV2a: tắt bằng công tắc enabled'`.
   Đo 26/10 trên DB local: 4/4 nhóm đang `enabled = true`, nên nhánh `false` hôm nay không gặp dòng thật nào.
@@ -45,7 +45,7 @@ không tạo gì. Chạy lại lần hai thì không lỗi, không đổi dữ l
   `note`. Đổi một nguồn sang `draft` hay `retired` là quyết định dữ liệu, làm bằng một lệnh UPDATE có lý do sau gộp.
 - **`status` là nguồn sự thật; `enabled` là bản soi giữ cho bên đọc và bên ghi cũ.** Trigger `BEFORE INSERT OR UPDATE`
   `source_groups_dong_bo_enabled` giữ hai cột khớp:
-  - INSERT không nêu `status` → `status` suy từ `enabled` (`true` → `active`, `false` → `paused` kèm lý do cố định
+  - INSERT không nêu `status` (NULL, hoặc mặc định `active` đi cùng `enabled = false`) → `status` suy từ `enabled` (`true` → `active`, `false` → `paused` kèm lý do cố định
     `'tắt qua cột enabled (đường ghi cũ)'`). INSERT có `status` → `enabled := (status = 'active')`.
   - UPDATE đổi `status` → `enabled := (status = 'active')`. Đổi cả hai mà lệch nhau → `status` thắng.
   - UPDATE chỉ đổi `enabled` — luật theo trạng thái cũ (ma trận đủ 5 × 2, AC-10):

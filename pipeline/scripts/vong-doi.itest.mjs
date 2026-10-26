@@ -339,3 +339,39 @@ test("VD-AC-7b câu đọc lưới của trang nguồn và GET route (rút nguy�
     assert.deepEqual(rows.map((r) => [r.group_key, r.enabled]), [[`${DAU}-a`, true], [`${DAU}-b`, false]], tep);
   }
 });
+
+// ---------------------------------------------------------------- AC-10d --
+// Tình huống CI (run 40302608712): DB dựng từ mọi migration; test khác chép source_groups bằng LIKE … INCLUDING ALL —
+// bản chép mang CHECK và mặc định nhưng KHÔNG mang trigger. Chèn kiểu cũ (không nêu status) và lệnh UPDATE của route
+// (rút nguyên văn từ route.ts) phải chạy được trên bản chép ấy.
+test("VD-AC-10d bản chép LIKE không trigger: chèn không nêu status và UPDATE của route vẫn chạy", async () => {
+  const { S, c } = await moLuocDo("ac10d");
+  await nguon(c, "S06");
+  await chay047(c);
+  const B = `${S}_ban`;
+  await admin.query(`DROP SCHEMA IF EXISTS "${B}" CASCADE`);
+  await admin.query(`CREATE SCHEMA "${B}"`);
+  await admin.query(`CREATE TABLE "${B}".source_groups (LIKE "${S}".source_groups INCLUDING ALL)`);
+  const b = new pg.Client({ connectionString: schemaUrl(B) });
+  await b.connect();
+  try {
+    const trig = await dong(admin, `SELECT count(*)::int n FROM pg_trigger t JOIN pg_class k ON k.oid = t.tgrelid JOIN pg_namespace s ON s.oid = k.relnamespace WHERE s.nspname = $1 AND NOT t.tgisinternal`, [B]);
+    assert.equal(trig[0].n, 0, "bản chép LIKE không được có trigger — ca này đo đúng tình huống CI");
+    // chèn kiểu fixture C7: nêu enabled, không nêu status
+    await b.query(`INSERT INTO source_groups (id, source_code, group_key, name, enabled, params) VALUES (7, 'S06', '${DAU}-c7', 'c7', true, '{}'::jsonb)`);
+    assert.deepEqual(Object.values((await dong(b, `SELECT status, enabled FROM source_groups WHERE id = 7`))[0]), ["active", true]);
+    // hai câu UPDATE của nhánh vòng đời trong route, rút nguyên văn
+    const src = readFileSync(path.join(ROOT, "app/src/app/api/v1/ops/source-groups/route.ts"), "utf8");
+    const cau = [...src.matchAll(/`(UPDATE source_groups SET status = [^`]+)`/g)].map((m) => m[1]);
+    assert.equal(cau.length, 2, "route.ts phải có đúng hai câu UPDATE trạng thái");
+    const tat = cau.find((q) => q.includes("'paused'"));
+    const bat = cau.find((q) => q.includes("'active'"));
+    await b.query(tat, ["S06", `${DAU}-c7`, "x", null]);
+    assert.deepEqual(Object.values((await dong(b, `SELECT status, enabled FROM source_groups WHERE id = 7`))[0]), ["paused", false]);
+    await b.query(bat, ["S06", `${DAU}-c7`]);
+    assert.deepEqual(Object.values((await dong(b, `SELECT status, enabled FROM source_groups WHERE id = 7`))[0]), ["active", true]);
+  } finally {
+    await b.end().catch(() => {});
+    await admin.query(`DROP SCHEMA IF EXISTS "${B}" CASCADE`).catch(() => {});
+  }
+});

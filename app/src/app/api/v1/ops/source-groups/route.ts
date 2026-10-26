@@ -71,9 +71,9 @@ async function toggleVongDoi(b: Record<string, unknown>, sourceCode: string, gro
     }
     await c.query(
       bat
-        ? `UPDATE source_groups SET status = 'active', reason = NULL, resume_when = NULL, updated_at = now()
+        ? `UPDATE source_groups SET status = 'active', enabled = true, reason = NULL, resume_when = NULL, updated_at = now()
            WHERE source_code = $1 AND group_key = $2`
-        : `UPDATE source_groups SET status = 'paused', reason = $3, resume_when = $4, updated_at = now()
+        : `UPDATE source_groups SET status = 'paused', enabled = false, reason = $3, resume_when = $4, updated_at = now()
            WHERE source_code = $1 AND group_key = $2`,
       bat ? [sourceCode, groupKey] : [sourceCode, groupKey, reason, resumeWhen],
     );
