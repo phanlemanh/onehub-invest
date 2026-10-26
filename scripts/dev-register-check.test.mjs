@@ -8,17 +8,31 @@ import { after, before, describe, test } from "node:test";
 
 import { DEFAULT_DATABASE_URL, assertLocalDatabaseUrl } from "./dev-ops-account.mjs";
 import {
+  NEXT_CASES,
   SMOKE_EMAIL_PREFIX,
   checkDuplicateResponse,
   checkRegisterResponse,
   cleanupSmokeUsers,
   parseActionId,
+  parseHiddenNext,
   smokeEmail,
 } from "./dev-register-check.mjs";
 
 test("parseActionId: form có server action → tên trường; form trần → null", () => {
   assert.equal(parseActionId('<form><input type="hidden" name="$ACTION_ID_7f3a09"/></form>'), "$ACTION_ID_7f3a09");
   assert.equal(parseActionId('<form><input name="email"/></form>'), null);
+});
+
+test("parseHiddenNext: đọc value của trường ẩn next; form không có next → null", () => {
+  assert.equal(parseHiddenNext('<form><input type="hidden" name="next" value="/ops/review"/></form>'), "/ops/review");
+  assert.equal(parseHiddenNext('<input name="email"/><input type="hidden" name="next" value="/"/>'), "/");
+  assert.equal(parseHiddenNext('<form><input name="email"/></form>'), null);
+});
+
+test("NEXT_CASES có cả đối chứng dương (giữ đường trong site) lẫn đường ra ngoài bị đổi thành /", () => {
+  assert.ok(NEXT_CASES.some((c) => c.want === c.raw), "phải có ca giữ nguyên next trong site");
+  assert.ok(NEXT_CASES.filter((c) => c.want === "/" && c.raw !== "/").length >= 2, "phải có ca chặn đường ra ngoài");
+  assert.deepEqual([...new Set(NEXT_CASES.map((c) => c.path))].sort(), ["/login", "/register"]);
 });
 
 describe("checkRegisterResponse", () => {

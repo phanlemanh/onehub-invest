@@ -26,6 +26,20 @@ export function parseActionId(html) {
   return html.match(/name="(\$ACTION_ID_[0-9a-f]+)"/)?.[1] ?? null;
 }
 
+/** Giá trị trường ẩn `next` của form (đã qua safeNext ở trang); không có → null. */
+export function parseHiddenNext(html) {
+  const input = html.match(/<input[^>]*\bname="next"[^>]*>/)?.[0];
+  return input?.match(/\bvalue="([^"]*)"/)?.[1] ?? null;
+}
+
+// ?next= do người ngoài đặt được: trang phải giữ đường trong site, đổi mọi đường ra ngoài thành "/".
+export const NEXT_CASES = [
+  { path: "/login", raw: "/ops/review", want: "/ops/review" },
+  { path: "/login", raw: "https://evil.example/x", want: "/" },
+  { path: "/register", raw: "/saved", want: "/saved" },
+  { path: "/register", raw: "//evil.example", want: "/" },
+];
+
 export function checkRegisterResponse({ status, location, setCookie }, next) {
   const errors = [];
   if (status !== 303) errors.push(`POST /register trả ${status}, cần 303`);
@@ -78,6 +92,13 @@ async function main(base) {
     if (!page?.ok) throw new Error(`không GET được ${base}/register — dev server chưa chạy?`);
     const aid = parseActionId(await page.text());
     if (!aid) throw new Error("không thấy trường $ACTION_ID_ trong form /register");
+
+    for (const { path, raw, want } of NEXT_CASES) {
+      const res = await fetch(`${base}${path}?next=${encodeURIComponent(raw)}`, { redirect: "manual" });
+      const got = res.ok ? parseHiddenNext(await res.text()) : null;
+      if (got !== want) throw new Error(`${path}?next=${raw}: trường next là ${got} (HTTP ${res.status}), cần ${want} — ?next= không qua safeNext`);
+    }
+    console.log(`?next= qua safeNext: ${NEXT_CASES.map((c) => `${c.path} ${c.raw} → ${c.want}`).join("; ")}`);
 
     const password = randomBytes(16).toString("hex");
     const first = await postRegister(base, aid, { email, password, next: NEXT });

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import type { ReactNode } from "react";
@@ -95,11 +95,23 @@ test("AH-AC-1 không chuyển động", async () => {
 
   const { RegisterForm } = await import("../src/components/auth/register-form");
   const { LoginForm } = await import("../src/components/auth/login-form");
+  // Quét <style> trên CẢ document: React 19 kéo <style href precedence> lên <head>, quét riêng #root sẽ sót.
+  const motionStyles = () => [...document.querySelectorAll("style")].filter((s) => /@keyframes|animation/.test(s.textContent ?? ""));
   for (const el of [<RegisterForm key="r" next="/" facts={["a"]} />, <LoginForm key="l" next="/" />]) {
-    const root = await render(el);
-    const styles = [...root.querySelectorAll("style")].map((s) => s.textContent ?? "");
-    assert.ok(!styles.some((s) => /@keyframes|animation/.test(s)), "form không được nhúng <style> chuyển động");
+    await render(el);
+    assert.deepEqual(motionStyles().map((s) => s.textContent), [], "form không được nhúng <style> chuyển động");
   }
+  // Đối chứng dương cùng bộ quét: một <style> thường và một <style> bị kéo lên <head> đều phải bị bắt.
+  await render(
+    <>
+      <style>{"@keyframes chay { from { opacity: 0 } }"}</style>
+      <style href="ah-ac-1-doi-chung" precedence="default">{".x { animation: chay 1s infinite }"}</style>
+    </>,
+  );
+  const caught = motionStyles();
+  assert.equal(caught.length, 2, `bộ quét <style> phải bắt cả hai style chuyển động cấy (bắt ${caught.length})`);
+  assert.ok(caught.some((s) => s.parentElement === document.head), "bộ quét <style> phải bắt style bị kéo lên <head>");
+  await render(<></>); // tháo gốc đối chứng bằng React — không xoá tay node React đang giữ
 });
 
 test("AH-AC-2 không màu tự chọn", () => {
@@ -168,22 +180,27 @@ test("AH-AC-5 form giữ hành vi", async () => {
   assert.equal(alerts.length, 1);
   assert.ok(alerts[0].textContent?.includes("Sai mật khẩu"), "?error= phải hiện trong cảnh báo");
   assert.ok([...log.querySelectorAll("a")].some((a) => a.getAttribute("href") === "/register?next=%2Fops%2Freview"), "liên kết sang đăng ký phải giữ next");
-  assert.ok(log.querySelector("form")?.getAttribute("action"), "form đăng nhập phải gắn server action");
+  // React đặt cùng một chuỗi action cho MỌI hàm, nên so prop action của <form> với chính hàm server action.
+  const { login, register } = await import("../src/app/actions");
+  assert.notEqual(login, register);
+  const formAction = (root: HTMLElement) => {
+    const form = root.querySelector("form") as (HTMLFormElement & Record<string, { action?: unknown }>) | null;
+    const key = form && Object.keys(form).find((k) => k.startsWith("__reactProps$"));
+    return key ? form[key].action : undefined;
+  };
+  assert.equal(formAction(log), login, "form đăng nhập phải gắn đúng server action login");
 
   const reg = await render(<RegisterForm next="/saved" facts={["a", "b"]} />);
   assert.ok(reg.querySelector('input[name="email"]') && reg.querySelector('input[name="password"]'));
   assert.equal((reg.querySelector('input[type="hidden"][name="next"]') as HTMLInputElement)?.value, "/saved");
   assert.ok([...reg.querySelectorAll("a")].some((a) => a.getAttribute("href") === "/login?next=%2Fsaved"), "liên kết sang đăng nhập phải giữ next");
   assert.ok(reg.textContent?.includes("a · b"), "dải số đếm thật phải còn");
-  for (const root of [reg]) assert.ok(root.querySelector("form")?.getAttribute("action"), "form đăng ký phải gắn server action");
+  assert.equal(formAction(reg), register, "form đăng ký phải gắn đúng server action register");
   const regErr = await render(<RegisterForm next="/" facts={["a"]} error="Email đã tồn tại" />);
   const regAlerts = regErr.querySelectorAll('[role="alert"]');
   assert.equal(regAlerts.length, 1, "?error= ở đăng ký phải hiện đúng một cảnh báo");
   assert.ok(regAlerts[0].textContent?.includes("Email đã tồn tại"));
-
-  for (const f of ["src/app/(auth)/login/page.tsx", "src/app/(auth)/register/page.tsx"]) {
-    assert.match(readApp(f), /safeNext\(rawNext\)/, `${relative(APP, join(APP, f))} phải đưa ?next= qua safeNext`);
-  }
+  // ?next= đi qua safeNext: đo trên bản chạy (E10, scripts/dev-register-check.mjs), không grep mã nguồn trang.
 });
 
 test.after(async () => {
