@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f21b1ba608a156328803be3e5693a95ee932a651
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: tin-rao-doi-phuong-noi-post-ids

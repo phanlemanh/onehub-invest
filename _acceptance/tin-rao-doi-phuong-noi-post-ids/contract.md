@@ -5,7 +5,7 @@ slug: tin-rao-doi-phuong-noi-post-ids
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T10:30:00Z
 design_doc: docs/superpowers/specs/2026-10-26-tin-rao-doi-phuong-noi-post-ids-design.md
@@ -55,3 +55,7 @@ qua transform thật (AC-2), phép đo trên dữ liệu thật có đối chứ
 
 - Bài không còn ở tin nào sau lượt: trong transaction chỉ chạy transform thì stg không đổi, nên bài ấy phải đã rời stg;
   còn trong stg là nối hỏng và thước đỏ (AC-3).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: test của thước (`scripts/lib/doi-phuong.test.mjs`) chỉ chạy khi nghiệm thu, CI không tự chạy nên thước hỏng về sau không bị chặn trước khi vào bản chính.
+  - Ngoài-2: sửa các bước xử lý tin rao (transform S03/S05) sau này không tự làm bằng chứng của hồ sơ này hoá cũ.
+  - Ngoài-4: phép đo có thể báo đỏ nhầm «nối hỏng» khi bài mới nạp vào stg mà chưa qua lượt xử lý; chạy lại sau lượt xử lý là hết.
