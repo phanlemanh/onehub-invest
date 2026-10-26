@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 8176da59d18b0f244b171014d91fbcef66632d76
+verified_commit: 9c9f90dff00652af99cbc482e2d50e92e7bcd191
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -182,3 +182,7 @@ none — every multi-run eval is uniform
 ## Iterations
 
 Round 5: toàn bộ 10 eval và 6 lệnh suite xanh, không eval nào fail; lịch sử các round trước nằm trong run-log.jsonl. Trường verified_at ghi theo ngày 2026-10-26, giờ chính xác do run-log ghi.
+
+### Re-pin lần 1 — 2026-10-26, do gộp origin/main e70e148 (#120, #123, #124) sau chữ ký
+run_id: repin-20261026T061028Z-30339
+sha: 9c9f90dff00652af99cbc482e2d50e92e7bcd191 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
