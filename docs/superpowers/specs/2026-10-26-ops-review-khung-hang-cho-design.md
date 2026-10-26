@@ -29,6 +29,8 @@ dùng được ở màn 390 px. Hạng T2 (không chạm `app/src/app/api/v1/ops
   Trạng thái) và `DataGrid` (cột Thẻ · Loại · Trạng thái · Tạo lúc), chuyển thể từ `approval-queue.tsx` của block,
   đổi `Card` sang `Frame` theo họ khung của trang (routes.md). Bấm một hàng (hoặc nút tên thẻ trong hàng — đường bàn
   phím) mở `ReviewDetailSheet`.
+- Tiêu đề Frame là «Danh sách thẻ» (S3): «hàng chờ» nằm ở `_Avoid_` của thuật ngữ «Hàng duyệt» trong `CONTEXT.md`, và tiêu
+  đề trang đã là «Hàng duyệt».
 - `ReviewDetailSheet` (client, mới): `Sheet` phải, toàn bề ngang ở màn hẹp; đầu sheet = tên thẻ + badge loại +
   badge trạng thái; thân = nội dung thẻ hiện có (`ReviewCardBody`: hai tin A/B hoặc bảng trường bổ sung, kèm dải ảnh
   `ReviewPhotos` — ảnh nay sống trong sheet); chân = nút quyết định hiện có (cùng route, cùng body).

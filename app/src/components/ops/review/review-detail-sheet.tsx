@@ -1,8 +1,11 @@
 "use client"
 
+import { XIcon } from "lucide-react"
+
 import { ReviewCard } from "@/components/ops/review-card"
+import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { fmtVnDateTime } from "@/lib/format"
 import type { ReviewMedia } from "@/lib/ops/review-media"
 import type { ReviewItem } from "@/lib/ops/review-queue"
@@ -21,13 +24,23 @@ export function ReviewDetailSheet({ item, media, onOpenChange }: {
 }) {
   return (
     <Sheet open={item !== null} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-2xl">
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-2xl"
+      >
         {item && (
           <ReviewCard key={item.id} item={item} media={media}>
             {({ body, actions }) => (
               <>
-                <SheetHeader className="gap-2 border-b pe-12">
-                  <SheetTitle translate="no">{item.title}</SheetTitle>
+                <SheetHeader className="gap-2 border-b">
+                  <div className="flex items-start justify-between gap-3">
+                    <SheetTitle translate="no">{item.title}</SheetTitle>
+                    {/* Nút đóng có nhãn tiếng Việt (nút mặc định của Sheet đọc «Close») — mẫu request-detail-sheet. */}
+                    <SheetClose render={<Button variant="ghost" size="icon-sm" aria-label="Đóng" />}>
+                      <XIcon aria-hidden />
+                    </SheetClose>
+                  </div>
                   <SheetDescription className="text-xs tabular-nums">
                     #{item.id} · {fmtVnDateTime(item.created_at)}
                   </SheetDescription>

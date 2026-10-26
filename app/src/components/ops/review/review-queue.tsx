@@ -135,7 +135,7 @@ export function ReviewQueue({ items, media }: { items: ReviewItem[]; media: Reco
     <Frame spacing="default" className="w-full min-w-0">
       <FrameHeader className="flex-row flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <FrameTitle role="heading" aria-level={2}>Hàng chờ</FrameTitle>
+          <FrameTitle role="heading" aria-level={2}>Danh sách thẻ</FrameTitle>
           <FrameDescription data-queue-count={rows.length}>
             <span className="tabular-nums">{fmtInt(rows.length)}</span> thẻ
           </FrameDescription>

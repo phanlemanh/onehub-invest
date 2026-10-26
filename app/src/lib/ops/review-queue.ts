@@ -33,7 +33,8 @@ export type ReviewItem = {
 /** Dòng DB → thẻ cho client. `evidence` truyền vào đã gọt ảnh (`stripEvidenceImages`). */
 export function toReviewItem(row: ReviewQueueRow, evidence: Record<string, unknown>): ReviewItem {
   return {
-    id: row.id,
+    // review_queue.id là bigint — pg trả chuỗi; ép về số cho đúng kiểu (khoá media, so sánh thẻ đang mở).
+    id: Number(row.id),
     item_type: row.item_type,
     title: row.title,
     evidence,
