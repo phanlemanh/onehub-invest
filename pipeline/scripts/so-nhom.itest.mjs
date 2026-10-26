@@ -546,3 +546,64 @@ test("SN-AC-6 đồng bộ S02: mỗi market một đơn vị, thị trường t
     rmSync(thu, { recursive: true, force: true });
   }
 });
+
+// ----------------------------------------------------------- AC-10 --
+/** Hai định danh có sẵn trên main mà script đồng bộ buộc phải nêu (Gate 1.5, Mạnh duyệt sửa E12 26/10). */
+const DINH_DANH_MIEN = ["airdna_markets", "zalouser"];
+
+test("SN-AC-10 sổ không lên cloud; tệp và dữ liệu của vòng không mang tên nguồn thật", async () => {
+  const sync = await import("../sync-cloud.mjs");
+  const tenBang = [...sync.FILL, ...Object.keys(sync.CLOUD_ALLOW), ...sync.TIER_A_TABLES, ...sync.FILL.map(sync.RENAME)];
+  for (const t of ["collection_units", "source_groups", "collection_unit_seq"]) assert.ok(!tenBang.includes(t), `${t} trong danh sách sync-cloud`);
+
+  // Bản tin push-ops-facts dựng trên lược đồ tạm có sổ: không mang khoá đơn vị nào của sổ.
+  const { makeOpsSchema, dropOpsSchema } = await import("./ops-facts-fixture.mjs");
+  const { captureOpsFacts } = await import("./capture-ops-facts.mjs");
+  const O = tenLuocDo("ac10o");
+  await makeOpsSchema(admin, O);
+  try {
+    await admin.query(`CREATE TABLE "${O}".collection_units (source_code text, group_key text, name text)`);
+    await admin.query(`INSERT INTO "${O}".collection_units VALUES ('S03', $1, 'n'), ('S05', $2, 'n'), ('S02', $3, 'n')`,
+      [`${DAU_SN}-khoa-s03`, `${DAU_SN}-khoa-s05`, `${DAU_SN}-khoa-s02`]);
+    const r = await captureOpsFacts({ env: { DATABASE_URL: schemaUrl(O) } });
+    assert.ok(r.payload, `push-ops-facts không gửi bản tin: ${r.stderr.slice(-300)}`);
+    assert.ok(!JSON.stringify(r.payload).includes(`${DAU_SN}-khoa-`), "bản tin mang khoá đơn vị của sổ");
+  } finally {
+    await dropOpsSchema(admin, O).catch(() => {});
+  }
+
+  // Soát tên nguồn thật (real_name + source_ids của public.source_registry) bằng bộ soát dùng chung.
+  const { guardValues, entriesFromTokens } = await import("../lib/tier-a-guard.mjs");
+  const reg = (await admin.query(`SELECT real_name, source_ids FROM public.source_registry`)).rows;
+  const entries = entriesFromTokens(reg.flatMap((r) => [r.real_name, ...(r.source_ids ?? [])]));
+  const doc = (f) => readFileSync(path.join(ROOT, f), "utf8");
+  // (a) toàn văn migration
+  assert.equal(guardValues(doc("db/migrations/048_so_nhom_mot_noi.sql"), entries).length, 0, "048 mang tên nguồn thật");
+  // (b) giá trị script đồng bộ ghi vào sổ và in ra
+  const S = tenLuocDo("ac10s");
+  await dungSauGop(admin, S, { thamChieu: true });
+  await bangS02(S, [["111", "Market thử 1"], ["222", "Market thử 2"]], [[THAM_CHIEU.market, "222"]]);
+  const c = await moClient(S);
+  const thu = mkdtempSync(path.join(tmpdir(), "sn-gw-"));
+  const f = path.join(thu, "cau-hinh.json");
+  writeFileSync(f, cauHinhMau({ "vd-nhom-1": { enabled: true, requireMention: true }, "vd-nhom-2": { enabled: false } }));
+  try {
+    const r = chaySync(S, f);
+    assert.equal(r.code, 0);
+    const ghi = await dong(c, `SELECT unit_code, group_key, name, original_name, reason, market_codes FROM collection_units`);
+    assert.ok(ghi.length >= 4);
+    assert.deepEqual(guardValues({ ghi, out: r.out }, entries), [], "giá trị script ghi hoặc in mang tên nguồn thật");
+  } finally {
+    rmSync(thu, { recursive: true, force: true });
+  }
+  // (c) toàn văn script sau khi bỏ danh sách đóng các định danh có sẵn trên main (mỗi mục ≥ 3 tệp đã commit)
+  for (const t of DINH_DANH_MIEN) {
+    const n = execFileSync("git", ["grep", "-l", "-F", t, "origin/main", "--", "."], { cwd: ROOT, encoding: "utf8" }).trim().split("\n").length;
+    assert.ok(n >= 3, `${t} chỉ có trong ${n} tệp trên origin/main — không phải định danh có sẵn`);
+  }
+  const vanBan = doc("pipeline/sync-don-vi.mjs");
+  const boMien = DINH_DANH_MIEN.reduce((s, t) => s.replaceAll(t, ""), vanBan);
+  assert.deepEqual(guardValues(boMien, entries).map((h) => h.path), [], "sync-don-vi.mjs mang tên nguồn thật ngoài danh sách miễn");
+  // Đối chứng: cấy tên thật đầu tiên vào bản chép → bộ soát bắt được.
+  assert.ok(guardValues(`${boMien}\n// ${reg[0].real_name}`, entries).length >= 1, "đối chứng: bộ soát không bắt tên cấy vào");
+});
