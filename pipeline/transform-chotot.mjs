@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { matchPhuong } from "./transform-zalo.mjs";
+import { CONFIDENCE, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -42,10 +43,13 @@ async function main() {
 
     let nHigh = 0, nMed = 0, nSkip = 0, nWardV3 = 0, nWardTxt = 0;
     for (const ad of ads) {
-      const kind = ad.ad_type === "s" ? "sale" : ad.ad_type === "u" ? "rent_lt" : null;
+      const kind = ad.ad_type === "s" ? KIND.sale : ad.ad_type === "u" ? KIND.rent_lt : null;
       // G-1: property_type theo category Chợ Tốt (migration 025, ADR-0011)
-      const PT = { 1010: "apartment", 1020: "house", 1030: "commercial", 1040: "land", 1050: "room" };
-      const propertyType = PT[ad.category] ?? "unknown";
+      const PT = {
+        1010: PROPERTY_TYPE.apartment, 1020: PROPERTY_TYPE.house, 1030: PROPERTY_TYPE.commercial,
+        1040: PROPERTY_TYPE.land, 1050: PROPERTY_TYPE.room,
+      };
+      const propertyType = PT[ad.category] ?? PROPERTY_TYPE.unknown;
       if (!kind) { nSkip++; continue; }
 
       // Phường: ward_name_v3 (chuẩn 2025) → ward_name → text-match subject
@@ -65,8 +69,8 @@ async function main() {
         }
       }
 
-      const confidence = areaId ? "high" : "medium";
-      if (confidence === "high") nHigh++; else nMed++;
+      const confidence = areaId ? CONFIDENCE.high : CONFIDENCE.medium;
+      if (confidence === CONFIDENCE.high) nHigh++; else nMed++;
 
       const payload = ad.payload ?? {};
       const pricePerm2 = payload.price_million_per_m2

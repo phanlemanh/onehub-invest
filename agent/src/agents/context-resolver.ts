@@ -2,6 +2,7 @@
 // Group name → project + property_type + building qua asset_nodes.
 // Xử lý ~80% tin không cần LLM (nhóm có tên dự án rõ, keyword chuẩn).
 import pg from "pg";
+import { PROPERTY_TYPE } from "../vocab.generated.js";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -66,10 +67,10 @@ async function loadNodes(): Promise<AssetNode[]> {
 // loại khác giữ cách cũ: quét chuỗi ghép tin + tên nhóm (tên nhóm cũng là text môi giới:
 // "…Chung Cư Vin 1,2,3" → apartment); riêng tin có cụm đất rõ thì thắng loại chỉ khớp ở tên nhóm.
 const TYPE_RULES: [RegExp, string][] = [
-  [/chung cư|căn hộ|cc |chcc|apartment|condo|studio/, "apartment"],
-  [/nhà mặt tiền|mặt phố|biệt thự|liền kề|nhà phố|nhà riêng|nhà ngõ|nhà hẻm/, "house"],
-  [/phòng trọ|phòng thuê|nhà trọ/, "room"],
-  [/văn phòng|mặt bằng kinh doanh|shop house/, "commercial"],
+  [/chung cư|căn hộ|cc |chcc|apartment|condo|studio/, PROPERTY_TYPE.apartment],
+  [/nhà mặt tiền|mặt phố|biệt thự|liền kề|nhà phố|nhà riêng|nhà ngõ|nhà hẻm/, PROPERTY_TYPE.house],
+  [/phòng trọ|phòng thuê|nhà trọ/, PROPERTY_TYPE.room],
+  [/văn phòng|mặt bằng kinh doanh|shop house/, PROPERTY_TYPE.commercial],
 ];
 /** Thứ tự ưu tiên cũ: land đứng sau house, trước room. */
 const LAND_RANK = 2;
@@ -86,7 +87,7 @@ export function resolvePropertyType(
   // «nhà đất», «bất động sản» là chữ chung của ngành — bỏ trước khi tìm cụm chỉ đất.
   const landHit = LAND_IN_TEXT.exec(tl.replace(/nhà đất|bất động sản/g, " "));
   const land = landHit && !MULTI_STOREY.test(tl)
-    ? { type: "land", basis: `luật từ khoá: «${landHit[0]}» trong tin → land` }
+    ? { type: PROPERTY_TYPE.land, basis: `luật từ khoá: «${landHit[0]}» trong tin → land` }
     : null;
 
   const t = `${text} ${groupName ?? ""}`.toLowerCase();
@@ -157,7 +158,7 @@ export async function resolveContext(
       const project = nodes.find((n) => n.slug === result.projectSlug);
       if (project?.slug.includes("vinhomes") || project?.slug.includes("masteri") ||
           project?.slug.includes("ecopark")) {
-        result.propertyType = "apartment"; // khu đô thị lớn → apartment mặc định
+        result.propertyType = PROPERTY_TYPE.apartment; // khu đô thị lớn → apartment mặc định
         result.typeBasis = `luật dự án: nhóm thuộc ${project?.name} → mặc định apartment`;
       }
     }
