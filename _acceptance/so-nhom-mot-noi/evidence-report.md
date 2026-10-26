@@ -1,19 +1,19 @@
 ---
 schema_version: 2
 feature_slug: so-nhom-mot-noi
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: baa80ad32f385697205cec902054be53d087c5ba
+verified_commit: eefdf71950d04bdceecf8f2448a2030c56872f8f
 human_signoff:
 ---
 
 # Evidence Report: so-nhom-mot-noi
 
-Round 2. Cả 13 eval của hợp đồng đạt, nhưng verdict là REJECT vì lệnh suite `cd app && npm test` thất bại ở một ca (tests/deals-phi-ly.test.tsx, ca DP-AC-5 bản cloud) và lệnh này không gắn eval nào (xem mục «Lệnh suite (hồi quy)»). Vì vậy `failed_evals` để trống.
+Round 3. Cả 13 eval của hợp đồng đạt và cả sáu lệnh suite hồi quy đều xanh (kể cả `cd app && npm test`, nơi round 2 còn một ca đỏ của main). Không có mục chờ người chốt, không có phương sai.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -34,169 +34,175 @@ Round 2. Cả 13 eval của hợp đồng đạt, nhưng verdict là REJECT vì 
 ## Evidence
 
 - eval: E1
-  run_id: minted-so-nhom-mot-noi-E1-r2
+  run_id: minted-so-nhom-mot-noi-E1-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E2
-  run_id: minted-so-nhom-mot-noi-E2-r2
+  run_id: minted-so-nhom-mot-noi-E2-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E3
-  run_id: minted-so-nhom-mot-noi-E3-r2
+  run_id: minted-so-nhom-mot-noi-E3-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E4
-  run_id: minted-so-nhom-mot-noi-E4-r2
+  run_id: minted-so-nhom-mot-noi-E4-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E5
-  run_id: minted-so-nhom-mot-noi-E5-r2
+  run_id: minted-so-nhom-mot-noi-E5-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E6
-  run_id: minted-so-nhom-mot-noi-E6-r2
+  run_id: minted-so-nhom-mot-noi-E6-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E7
-  run_id: minted-so-nhom-mot-noi-E7-r2
+  run_id: minted-so-nhom-mot-noi-E7-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E8
-  run_id: minted-so-nhom-mot-noi-E8-r2
+  run_id: minted-so-nhom-mot-noi-E8-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E9
-  run_id: minted-so-nhom-mot-noi-E9-r2
+  run_id: minted-so-nhom-mot-noi-E9-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom_app
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd app && node --import tsx --test tests/so-nhom.test.tsx
-    duration_ms 2646.059333
+    duration_ms 2691.355625
 
 - eval: E10
-  run_id: E10-20261026-1927
+  run_id: minted-so-nhom-mot-noi-E10-r3
   exit_code: 0
   baseline: n-a
   verifier: scripts/ui-capture.sh
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   screenshot: evidence/E10-step1.png
   observed: |
-    Đã mở từng khung bằng Read. Bước 1 (sáng, 1280): khu «Sổ đơn vị thu · Market S02» 0 đơn vị, trạng thái trống «Chưa có đơn vị nào» kèm lệnh `node pipeline/sync-don-vi.mjs` và nút «Sao chép lệnh». Bước 2 (sáng): khu «Nhóm S03» 2/3 đơn vị đang thu, các cột Mã, Tên gốc, Thị trường, Khu đô thị, Trạng thái; ba dòng S03-N001..N003 đều có nhãn «theo cổng S03», dòng S05/S06 thì không có nhãn đó.
-    Bước 3 (tối): cùng bố cục, huy hiệu xanh/vàng vẫn đọc được, không vỡ layout. Bước 4 (khổ hẹp 390): cột Mã và Tên gốc hiện, các cột sau cuộn ngang bên trong lưới, trang không cuộn ngang. Bước 5 và 5b: hộp thoại «Khai thị trường, khu đô thị» cho S03-N002 mở được, chọn thêm chip Thành phố Huế cạnh Thành phố Đà Nẵng. Bước 6: sau Lưu, dòng N002 hiện hai thị trường và có toast «Đã khai thị trường, khu đô thị». Khớp expected.
-  network_observed: unscoped-partial
+    Đã mở từng ảnh bằng Read. Ảnh step3 và step4 tôi kiểm lại bằng số đo thay vì chỉ nhìn.
+    - step1 (1280 sáng): khu "Sổ đơn vị thu · Market S02" hiện "0 đơn vị". Hộp trống có tiêu đề "Chưa có đơn vị nào", dòng "Chạy đồng bộ sổ ở máy thu để đưa đơn vị của nguồn này vào: node pipeline/sync-don-vi.mjs" (chữ đơn cách) và nút "Sao chép lệnh". Phía dưới thấy đầu khu Nhóm S03. Khớp Expected.
+    - step2 (1280 sáng): khu "Sổ đơn vị thu · Nhóm S03", phụ đề "2/3 đơn vị đang thu · trạng thái theo cổng S03". Có các tab Tất cả 3, Đang thu 2, Tạm dừng 1, Đã gỡ 0. Cột Mã, Tên gốc, Thị trường, Khu đô thị, Trạng thái. Ba dòng S03-N001 (Thành phố Hà Nội, Ecopark, Đang thu), S03-N002 (Đà Nẵng, Huế, Tạm dừng), S03-N003 (— —, Đang thu). Mỗi dòng có "theo cổng S03" dưới badge, và có nút bút chì. Phía dưới là khu S05 và S06, không có chữ "theo cổng". Nền sáng. Khớp.
+    - step3 (1280 tối): cùng khu S03, nền gần đen, chữ sáng, badge xanh và vàng vẫn đọc được, đủ cột và "theo cổng S03". Khác step2 về nền (body lab(2.75 0 0) so với lab(100 0 0)). Khớp.
+    - step4 (390 sáng): khu S03 hẹp. Chỉ thấy cột Mã và Tên gốc, cột Thị trường bị cắt ở mép phải, thanh cuộn ngang trong khung lưới. Tab strip cũng cuộn ngang. Trang không tràn: scrollWidth=clientWidth=390. Khớp.
+    - step5 (1280 sáng): lớp phủ mờ, hộp thoại "Khai thị trường, khu đô thị", mô tả "S03-N002 · Nhóm S03 chưa có tên. Để trống một ô là xoá khai báo của ô đó." Ô "Thị trường" (đã có hai thẻ Đà Nẵng và Huế, ghi chú "Thị trường mà đơn vị này thu tin.") và ô "Khu đô thị" (placeholder "Chọn khu đô thị…", ghi chú nói nhóm chuyên một khu đô thị). Nút Huỷ và Lưu. Khớp.
+    - step5b: danh sách thả xuống thị trường mở, "Thành phố Hồ Chí Minh" được chọn (dấu tích), thẻ thứ ba hiện ở ô. Khớp.
+    - step6 (1280 sáng): hộp thoại đã đóng, dòng S03-N002 hiện "Thành phố Đà Nẵng, Thành phố Huế, Thành phố Hồ Chí Minh" (xuống ba dòng chữ), Tạm dừng, "theo cổng S03". Khớp.
+    Không có điểm nào mâu thuẫn Expected.
+  network_observed: clean
 
 - eval: E11
-  run_id: minted-so-nhom-mot-noi-E11-r2
+  run_id: minted-so-nhom-mot-noi-E11-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom_app
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd app && node --import tsx --test tests/so-nhom.test.tsx
-    duration_ms 2646.059333
+    duration_ms 2691.355625
 
 - eval: E12
-  run_id: minted-so-nhom-mot-noi-E12-r2
+  run_id: minted-so-nhom-mot-noi-E12-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.so_nhom
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/so-nhom.itest.mjs
-    duration_ms 4518.014209
+    duration_ms 4875.628792
 
 - eval: E13
-  run_id: minted-so-nhom-mot-noi-E13-r2
+  run_id: minted-so-nhom-mot-noi-E13-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.vong_doi_nguon
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
   output: |
     cd pipeline && node --test scripts/vong-doi.test.mjs scripts/vong-doi.itest.mjs
-    duration_ms 845.336875
+    duration_ms 863.355
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-so-nhom-mot-noi-SUITE-npm_test__bb6271-r2
+  run_id: minted-so-nhom-mot-noi-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-so-nhom-mot-noi-SUITE-lint-r2
+  run_id: minted-so-nhom-mot-noi-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
 
 - cmd: cd app && npm test
-  run_id: minted-so-nhom-mot-noi-SUITE-npm_test__bd9a35-r2
-  exit_code: 1
-  verified_at: 2026-10-26T12:25:35Z
-  note: 492 ca, 491 đạt, 1 thất bại. Ca thất bại là tests/deals-phi-ly.test.tsx, «DP-AC-5 bản cloud», dòng 97 của tệp test: câu ALTER ... DROP COLUMN trên quan hệ sale_offers bị Postgres từ chối (mã 42809, «This operation is not supported for views»). Lệnh này không gắn eval nào của hợp đồng.
+  run_id: minted-so-nhom-mot-noi-SUITE-npm_test__bd9a35-r3
+  exit_code: 0
+  verified_at: 2026-10-26T12:55:36Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-so-nhom-mot-noi-SUITE-npm_test__13563d-r2
+  run_id: minted-so-nhom-mot-noi-SUITE-npm_test__13563d-r3
   exit_code: 0
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-so-nhom-mot-noi-SUITE-test_lint_rules-r2
+  run_id: minted-so-nhom-mot-noi-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-so-nhom-mot-noi-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-so-nhom-mot-noi-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-10-26T12:25:35Z
+  verified_at: 2026-10-26T12:55:36Z
 
 ## Known limits
 
@@ -224,3 +230,4 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, không 
 
 Round 1: cả 13 eval đạt, nhưng lệnh suite `cd app && npm test` thất bại ở tests/ops-nhan-theo-context.test.tsx và tests/ops-review-sources-cloud.test.tsx (không gắn eval nào) nên verdict là REJECT. Trả về cho khâu triển khai.
 Round 2: cả 13 eval đạt, nhưng lệnh suite `cd app && npm test` vẫn thất bại ở một ca khác, tests/deals-phi-ly.test.tsx «DP-AC-5 bản cloud» (DROP COLUMN trên sale_offers bị từ chối vì là view), không gắn eval nào nên verdict vẫn là REJECT. Trả về cho khâu triển khai.
+Round 3: cả 13 eval đạt và cả sáu lệnh suite hồi quy xanh sau khi nhánh gộp main (ca DP-AC-5 đã sửa ở main), nên verdict là PASS. Các phát hiện ngoài hợp đồng nằm ở review-findings.md để người quyết ở Gate 2.
