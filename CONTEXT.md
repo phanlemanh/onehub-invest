@@ -279,6 +279,13 @@ _Avoid_: bản chụp, dump
 - Slug URL: `collections`
 _Avoid_: cào, crawl
 
+**Dòng chảy dữ liệu**: Đường đi của bài từ lúc nạp tới căn — Bài nhận → Đọc được → Tin rao mới → Gắn căn — kèm nhánh rơi
+(«Không đọc được», «Chưa gắn căn») và nhánh «Gộp vào tin đã có» (gộp trùng, không phải mất) của mỗi chặng; trang
+`/ops/data-flow` (proto 26/10) đo số và nút thắt từng chặng theo nguồn, nhóm thu.
+- Code: `data flow (getDataFlow, StageCounts: received · readable · offers · linked)` · RESO: —
+- Slug URL: `data-flow`
+_Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
+
 **Độ tươi**: Thời gian từ lần thu gần nhất của một nguồn; vượt SLO thì `check-freshness.mjs` exit 1.
 - Code: `freshness (SLO)` · RESO: ≈ ModificationTimestamp
 _Avoid_: freshness

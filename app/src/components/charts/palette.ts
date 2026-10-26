@@ -35,6 +35,15 @@ export const SERIES = {
   // opsVolume giữ sắc "volume" (--info) của solution-dev-ops-6; opsVolumeRaw là chuỗi thứ hai (bản ghi thô).
   opsVolume:    { light: "var(--color-blue-600)",   dark: "var(--color-blue-400)",   swatch: "bg-blue-600 dark:bg-blue-400" },
   opsVolumeRaw: { light: "var(--color-violet-600)", dark: "var(--color-violet-400)", swatch: "bg-violet-600 dark:bg-violet-400" },
+  // Ops «Dòng chảy dữ liệu» (proto 26/10): bốn chặng đường ống là một thang xanh lam — đậm dần khi càng gần đích.
+  flowReceived: { light: "var(--color-blue-500)", dark: "var(--color-blue-200)", swatch: "bg-blue-500 dark:bg-blue-200" },
+  flowReadable: { light: "var(--color-blue-600)", dark: "var(--color-blue-300)", swatch: "bg-blue-600 dark:bg-blue-300" },
+  flowOffers:   { light: "var(--color-blue-700)", dark: "var(--color-blue-400)", swatch: "bg-blue-700 dark:bg-blue-400" },
+  flowLinked:   { light: "var(--color-blue-900)", dark: "var(--color-blue-500)", swatch: "bg-blue-900 dark:bg-blue-500" },
+  // Loại giao dịch: mỗi loại một sắc riêng, không trùng nghĩa doanh thu/công suất.
+  kindSale:      { light: "var(--color-orange-600)",  dark: "var(--color-orange-400)",  swatch: "bg-orange-600 dark:bg-orange-400" },
+  kindRentLt:    { light: "var(--color-cyan-700)",    dark: "var(--color-cyan-400)",    swatch: "bg-cyan-700 dark:bg-cyan-400" },
+  kindShortStay: { light: "var(--color-fuchsia-600)", dark: "var(--color-fuchsia-400)", swatch: "bg-fuchsia-600 dark:bg-fuchsia-400" },
 } as const satisfies Record<string, SeriesColor>
 
 export type SeriesKey = keyof typeof SERIES
