@@ -1,0 +1,93 @@
+schema_version: 1
+feature_slug: so-nhom-mot-noi
+# Ca «SN-AC-n». Ca DB ở pipeline/scripts/so-nhom.itest.mjs (cần DB local :5433, ngoài npm test): mỗi ca dựng lược đồ tạm
+# ở khuôn SAU 047 (fixture vong-doi + chay047), rồi chạy nguyên tệp migration của vòng; chụp public trước/sau mọi ca
+# (chupPublic) — migration chỉ áp public sau gộp. Ca route/trang ở app/tests/so-nhom.test.tsx (pool trỏ lược đồ tạm).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.so_nhom
+    layer: backend-effect
+    paths: [db/migrations/*_so_nhom_mot_noi.sql, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-1': lược đồ sau 047 có 4 nhóm (S05 active, S05 paused lý do 'x', S06 active, S06 retired); chạy migration hai lần: pg_class có bảng collection_units (relkind r) và source_groups (relkind v); số dòng, id, status, enabled, params deepEqual trước; trigger source_groups_dong_bo_enabled nằm trên collection_units; năm CHECK của 047 còn đủ tên; view chỉ trả dòng S05, S06; ảnh chụp sau lần 2 deepEqual sau lần 1; đối chứng: trên bản sao bỏ điều kiện WHERE của view thì một đơn vị S03 chèn thêm hiện trong view — ca đỏ nêu 'view lộ đơn vị ngoài S05/S06'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.so_nhom
+    paths: [pipeline/apify-facebook-collector.mjs, pipeline/collect-chotot.mjs, pipeline/ha-bung-het-han.mjs, app/src/lib/che-do-thu.ts, app/src/app/api/v1/ops/source-groups/route.ts, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-2' rút NGUYÊN VĂN mọi câu SQL chạm source_groups trong năm tệp (regex trên mã nguồn; số câu rút được mỗi tệp viết trước, lệch thì đỏ nêu tệp), chạy từng câu trên lược đồ đã migration với tham số của ca: câu đọc trả cùng tập dòng như trên khuôn trước migration (so hai lược đồ song song); câu ghi (INSERT, UPDATE, DELETE, SELECT … FOR UPDATE) chạy được và dòng ở collection_units đổi đúng; đơn vị S03, S02 chèn thêm không lọt vào kết quả câu nào"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.che_do_thu
+    paths: [app/tests/che-do-thu.test.tsx]
+    expected: "exit 0 trên đỉnh nhánh (test không sửa)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.so_nhom
+    paths: [db/migrations/*_so_nhom_mot_noi.sql, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-3': backfill cấp mã theo id cho 4 dòng cũ (S05-N001, S05-N002, S06-V001, S06-V002); chèn thêm cho từng cặp (S03 nhom, S05 nhom, S06 vung, S02 market) → mã kế tiếp đúng khuôn ^S0[0-9]-[NVM][0-9]{3}$; retire S05-N002 rồi chèn S05 → S05-N003; xoá S05-N003 rồi chèn → S05-N004 (không cấp lại); UPDATE unit_code bị từ chối nêu tên ràng buộc/trigger; mọi mã duy nhất; đối chứng: trên bản sao gỡ trigger chặn sửa mã thì UPDATE unit_code được nhận"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.so_nhom
+    paths: [db/migrations/*_so_nhom_mot_noi.sql, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-4' (lược đồ tạm có areas và asset_nodes chép LIKE public kèm vài dòng viết trước: một market, một submarket; một node project, một node building): market_codes ['vn-xyz-khong-co'] → lỗi; [<id submarket>] → lỗi; [<id market>] → nhận; project_node_ids [<id building>] → lỗi; [999999] → lỗi; [<id project>] → nhận; mọi lỗi nêu tên ràng buộc/trigger của vòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.so_nhom
+    layer: backend-effect
+    paths: [pipeline/sync-don-vi.mjs, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-5': tệp cấu hình gateway mẫu trong thư mục tạm (khuôn rút từ app/src/lib/zalo-admin.ts — tài khoản có groups riêng, ba nhóm id giả 'vd-nhom-1' bật, 'vd-nhom-2' tắt, 'vd-nhom-3'); chạy script lần 1 (DATABASE_URL lược đồ tạm, đường cấu hình qua biến môi trường); xoá 'vd-nhom-3' khỏi tệp; chạy lần 2 và lần 3: sổ có đúng 3 đơn vị S03 — vd-nhom-1 active, vd-nhom-2 paused lý do 'tắt ở gateway', vd-nhom-3 retired; lần 3 không đổi gì; sha256 tệp cấu hình trước/sau mỗi lần bằng nhau; stdout không chứa 'vd-nhom-'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.so_nhom
+    paths: [pipeline/sync-don-vi.mjs, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-6': lược đồ tạm có airdna_markets 3 dòng và area_sources ánh xạ 1 trong 3; chạy script hai lần: đúng 3 đơn vị S02 loại market, mã S02-M001..M003, market_codes của dòng có ánh xạ = [area_id ánh xạ], hai dòng kia rỗng; lần hai không đổi gì"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.so_nhom
+    paths: [pipeline/lib/vong-doi.mjs, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-7': lược đồ đã migration có đơn vị S03 'vd-nhom-1' active, 'vd-nhom-2' paused, S02 airdna '12345' retired; docTrangThai(client, 'S03', 'vd-nhom-1') → {run: true}; 'vd-nhom-2' → don-vi-paused; ('S02', '12345') → don-vi-retired; ('S05', khoá nhóm S05 active) → chay"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.so_nhom_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/src/components/ops/sources/**, app/src/lib/che-do-thu.ts, app/tests/so-nhom.test.tsx]
+    expected: "exit 0; ca 'SN-AC-8': lược đồ tạm đã migration có một đơn vị mỗi nguồn S02, S03, S05, S06; vẽ khu sổ trong jsdom bằng hàm đọc thật của trang: 4 dòng, mỗi dòng có mã đơn vị, nhãn nguồn, tên gốc, thị trường, dự án, trạng thái; HTML không chứa URL nhóm S05 lẫn id nhóm S03; hộp thoại khai thị trường + dự án gửi action set-meta (phiên admin) → 200, dòng đổi, ops_audit thêm đúng 1 dòng action 'source-group:set-meta' trong cùng giao dịch (đối chứng: thêm CHECK chặn action ấy vào ops_audit → 500 và dòng không đổi)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/sources/**]
+    expected: "Trang /ops/sources (dev :3456, tài khoản ops thử role admin) hiện khu «Sổ đơn vị thu» với các cột mã, nguồn, tên gốc, thị trường, dự án, trạng thái; hộp thoại khai thị trường và dự án mở được và lưu; ảnh sáng, tối và khổ hẹp"
+    evidence_required: [run_id, screenshot, observed]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.so_nhom_app
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/tests/so-nhom.test.tsx]
+    expected: "exit 0; ca 'SN-AC-9': set-meta hợp lệ với getUser trả null, trả người role 'ops', và gọi bằng Bearer OPS_API_TOKEN → 403 cả ba; dòng và số dòng ops_audit không đổi; đối chứng: cùng thân với người role 'admin' → 200"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.so_nhom
+    paths: [pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, db/migrations/*_so_nhom_mot_noi.sql, pipeline/sync-don-vi.mjs, pipeline/scripts/so-nhom.itest.mjs]
+    expected: "exit 0; ca 'SN-AC-10': danh sách bảng sync-cloud (đọc từ chính module) không có collection_units lẫn source_groups; payload push-ops-facts dựng trên lược đồ tạm có sổ không chứa unit_key nào; guardValues với real_name + source_ids của public.source_registry trên tệp migration và sync-don-vi.mjs → 0 chỗ trúng, đối chứng chuỗi chứa real_name đầu tiên → ≥ 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
