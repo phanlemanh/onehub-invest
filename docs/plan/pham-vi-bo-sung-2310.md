@@ -15,7 +15,7 @@
 ```
 dot: bo-sung-2310
 dang: lan-va
-nguon: nghiệm thu ZC2 vòng 3 (phiên điều phối liên làn, 23/10); AU3 Cổng Phạm vi Hỏi-1 A (Mạnh, 23/10), yêu cầu P3-3 đợt dot0-cam-mau
+nguon: onehub-invest-tri-thuc:wiki/dot/bo-sung-2310.md#61e9abdaa8f4e98ead081546c55b85edd59b0c12
 
 - `HK1` — hook Zalo ghi tin gửi lỗi tới collector API vào spool cục bộ append-only và gửi lại ở event kế hoặc theo nhịp, không mất tin khi :9210 khởi động lại
 - `CS1` — cloud-sync.sh thoát khác 0 khi sync-cloud hỏng dù push-ops-facts lành; push-ops-facts.mjs đọc DATABASE_URL thay chuỗi kết nối viết cứng

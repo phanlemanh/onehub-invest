@@ -13,7 +13,7 @@
 ```
 dot: observability-2510
 dang: chuoi
-nguon: docs/plan/danh-gia-observability-s05-2510.md §7–§8 (Mạnh 25/10 «Hỏi-1..5: theo khuyến nghị»); docs/plan/vet-dau-loang-thu-thap-2510.md §C2; gói lát OCP1 26/10 X3 (Mạnh «Hỏi-1..7: theo khuyến nghị»)
+nguon: onehub-invest-tri-thuc:wiki/dot/observability-2510.md#68d42d8a9fb76a54d31e632d2d5baa93e7367e25
 ```
 <!-- PHAM-VI-MA>>> -->
 

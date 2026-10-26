@@ -32,7 +32,7 @@
 ```
 dot: ops-noi-that-2410
 dang: lan-va
-nguon: audit Ops prod 24/10 (OPS-1…OPS-20, máy local của Mạnh); sổ ý chờ dot0-cam-mau mốc khép; quyết định Mạnh 24/10 Câu 1 + Câu 2; quyết định Mạnh 24/10 «Chọn A» (ADR-0014)
+nguon: onehub-invest-tri-thuc:wiki/dot/ops-noi-that-2410.md#0c3f012fbdd7afd24ef145f88162f0234bbd6263
 
 - `OPS-1` — /ops/review trên cloud trả 500 (bảng hàng chờ tầng A chỉ có ở local; app/src/app/ops/review/page.tsx:35 query thẳng) — đang sửa ở dot0
 - `OPS-2` — /ops/sources trên cloud trả 500 (query source_registry ở app/src/app/ops/sources/page.tsx:37-40 không bọc) — đang sửa ở dot0

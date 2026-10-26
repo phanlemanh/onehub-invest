@@ -14,7 +14,7 @@
 ```
 dot: nen-tang-2310
 dang: lan-va
-nguon: khảo sát nền & vận hành + tồn đọng & hậu kỳ, lượt cắt chung 23/10 (audit 23/10, hồ sơ _acceptance/*, BOARD, issue #9), xem docs/plan/BOI-CANH.md
+nguon: onehub-invest-tri-thuc:wiki/dot/nen-tang-2310.md#f1b3e246e47f23674931a2d25a2b4197331a8c94
 
 - `VH1` — pha tráo lỗi phía client không xoá staging khi giao dịch có thể còn chạy; cloud không COMMIT bảng FILL rỗng
 - `TD2` — bảng cloud có khoá ngoại trỏ vào bảng đồng bộ không làm lượt tráo gãy
