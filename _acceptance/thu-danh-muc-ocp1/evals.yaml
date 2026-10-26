@@ -1,0 +1,64 @@
+schema_version: 1
+feature_slug: thu-danh-muc-ocp1
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    paths: [collector/src/**]
+    expected: "exit 0; fail 0; ca 'toRawItems: inventory_unit … bỏ bản ghi không mã căn' xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    paths: [collector/src/**]
+    expected: "exit 0; ca '2410-19: strip PII ĐỆ QUY' xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s08_thieu_env
+    paths: [collector/src/collectors/s08-danh-muc.ts, scripts/s08-danh-muc/acceptance.mjs]
+    expected: "exit 0; 'THIEU-ENV PASS'; should-NOT-fire: 5 dòng 'thiếu … → ném lỗi, 0 lời gọi mạng'; đủ cấu hình có lời gọi và có căn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.collector_test_clean
+    paths: [collector/src/**]
+    expected: "exit 0; ca 'fetchPage/fetchProjectDetail … lỗi code≠1 ném rõ' xanh (gồm 401)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s08_khong_lo_nguon
+    expected: "exit 0; 'KHONG-LO-NGUON PASS'; bộ dò bắt được chuỗi cấy; should-NOT-fire: 0 chuỗi nguồn thật, 0 URL ngoài; project_id fixture ≥ 900000"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s08_kev_v4
+    paths: [scripts/kev-nhan/acceptance.mjs, pipeline/import-airbnb.mjs, collector/src/core/storage.ts, collector/docs/DATA-CONTRACT.md]
+    expected: "exit 0; MANIFEST-V3 PASS; IMPORT-VERSIONS PASS (v1–v4 nhận, should-NOT-fire v5 bị từ chối); CONTRACT-DOC OK"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.s08_snapshot_that
+    paths: [scripts/s08-danh-muc/acceptance.mjs]
+    expected: "exit 0; 'SNAPSHOT-THAT PASS'; chỉ số đếm, không tên/mã/id; should-NOT-fire: 0 trường liên hệ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; fail 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.s08_scope
+    expected: "exit 0; 'SCOPE OK'; should-NOT-fire không dòng 'NGOÀI PHẠM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

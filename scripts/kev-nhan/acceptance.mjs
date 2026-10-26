@@ -184,7 +184,8 @@ async function modeManifestV3() {
     const [snap] = readSnapshot(root);
     const byText = Object.fromEntries(snap.items.map((i) => [i.payload.text, i]));
     console.log(`manifest schemaVersion ${snap.manifest.schemaVersion} · ${snap.items.length} item`);
-    check(snap.manifest.schemaVersion === 3, "manifest khai schemaVersion 3");
+    // ≥3: meta.kev có từ v3; S08 (PL10) nâng lên v4 mà không đổi khuôn tin Zalo
+    check(snap.manifest.schemaVersion >= 3, "manifest khai schemaVersion ≥ 3");
     check(JSON.stringify(byText["có kev"].meta.kev) === JSON.stringify(kev), "tin có kev: meta.kev nguyên vẹn trong raw");
     check(!("kev" in byText["không kev"].meta), "should-NOT-fire: tin không kev không bị gắn meta.kev giả");
   } finally {
@@ -219,7 +220,7 @@ async function modeImportVersions() {
   await new Promise((done) => s.close(done));
   const u = "acc";
   try {
-    for (const v of [1, 2, 3, 4]) {
+    for (const v of [1, 2, 3, 4, 5]) {
       const dir = fixtureSnapshot(root, v);
       // DB trỏ cổng chết: phiên bản được nhận thì đi tiếp tới bước nối DB và hỏng ở đó — không ghi gì
       const r = spawnSync(process.execPath, [join(ROOT, "pipeline/import-airbnb.mjs"), dir], {
@@ -232,8 +233,8 @@ async function modeImportVersions() {
       const rejected = /schemaVersion \d+ chưa hỗ trợ/.test(outAll);
       const passedCheck = /manifest ok:/.test(outAll);
       console.log(`schemaVersion ${v}: exit ${r.status} · ${rejected ? "bị từ chối" : passedCheck ? "qua kiểm phiên bản + sha256, dừng ở bước nối DB (cổng chết)" : outAll.trim().split("\n").at(-1)}`);
-      if (v <= 3) check(passedCheck && !rejected, `v${v} được nhận`);
-      else check(rejected && !passedCheck && r.status !== 0, "should-NOT-fire: v4 bị từ chối trước khi đọc dữ liệu");
+      if (v <= 4) check(passedCheck && !rejected, `v${v} được nhận`);
+      else check(rejected && !passedCheck && r.status !== 0, "should-NOT-fire: v5 bị từ chối trước khi đọc dữ liệu");
     }
   } finally {
     rmSync(root, { recursive: true, force: true });
