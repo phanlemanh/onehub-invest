@@ -15,6 +15,7 @@ import { runTransformZalo } from "../transform-zalo.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const PIPE = join(import.meta.dirname, "..");
+const MIG_044 = readFileSync(join(PIPE, "../db/migrations/044_nap_lai_khong_xoa.sql"), "utf8");
 const SNAP_ZALO = "hanoi__zalo-agent__2099-02-02T000000";
 const SNAP_CT = "hanoi__chotot__2099-02-02T000000";
 
@@ -32,6 +33,8 @@ async function withTx(fn) {
   try {
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(33033)"); // cùng khoá với test-posts: transform S03/S05 không chạy song song
+    // PL14: transform ghi bảng bản ghi của 044 — DB chưa áp thì nạp 044 trong giao dịch.
+    if (!(await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
     for (const [id, name] of [["vn-hanoi", "Hà Nội"], ["vn-hcmc", "TP. Hồ Chí Minh"]]) {
       await c.query(
         `INSERT INTO areas (id, region_type, name, country_code) VALUES ($1, 'market', $2, 'vn') ON CONFLICT (id) DO NOTHING`,

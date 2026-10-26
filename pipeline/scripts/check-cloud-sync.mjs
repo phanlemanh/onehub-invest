@@ -103,11 +103,43 @@ export async function client(db, opts = {}) {
 const sync = await import(pathToFileURL(path.join(PIPE, "sync-cloud.mjs")).href);
 const FILL = sync.FILL;
 
+// DB nguồn để dump (mặc định DB local dùng chung). CLOUD_SYNC_SRC_DB cho phép chạy thước trên một bản sao trong cùng
+// container (vd bản sao đã áp 044 trước khi DB thật áp) — vẫn chỉ ĐỌC.
+const SRC_DB = process.env.CLOUD_SYNC_SRC_DB ?? "oneinvest";
+
+// PL14 (044): ở local, sale_offers/listings là VIEW sống trên bảng bản ghi. pg_dump -t <view> chỉ ra câu CREATE VIEW,
+// nên thước dump bảng bản ghi rồi vẽ lại hình cũ trong DB mô phỏng (veHinhCu). Rỗng khi nguồn chưa áp 044.
+function bangBanGhi() {
+  const out = execFileSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "psql", "-U", "oneinvest", "-h", "localhost",
+    "-d", SRC_DB, "-At", "-c", "SELECT relkind FROM pg_class WHERE oid = to_regclass('public.sale_offers')"], { encoding: "utf8" }).trim();
+  return out === "v" ? { sale_offers: "sale_offer_records", listings: "listing_records" } : {};
+}
+const BAN_GHI = bangBanGhi();
+
 function dump(tables, { schemaOnly }) {
-  const args = ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost", "-d", "oneinvest", "--no-owner", "--no-acl"];
+  const args = ["exec", "-e", "PGPASSWORD=oneinvest", CT_SRC, "pg_dump", "-U", "oneinvest", "-h", "localhost", "-d", SRC_DB, "--no-owner", "--no-acl"];
   if (schemaOnly) args.push("-s");
-  for (const t of tables) args.push("-t", `public.${t}`);
+  for (const t of tables) args.push("-t", `public.${BAN_GHI[t] ?? t}`);
   return execFileSync("docker", args, { encoding: "utf8", maxBuffer: 1 << 30 });
+}
+
+/** Vẽ lại hình trước 044 trong DB mô phỏng: bảng bản ghi đổi tên về sale_offers/listings, bỏ bốn cột 044 (cột ở lại
+ * máy, cloud không có — đo 26/10, docs/ops/cloud-schema-catchup-2026-10-26-044.sql). `cloud`: khoá ngoại như cloud thật
+ * (nights/listing_stats → listings CASCADE; property_offers không khoá ngoại). Không làm gì khi nguồn chưa áp 044. */
+function veHinhCu(db, { cloud }) {
+  if (!Object.keys(BAN_GHI).length) return;
+  psql(db, `ALTER TABLE public.sale_offer_records RENAME TO sale_offers;
+    ALTER TABLE public.listing_records RENAME TO listings;
+    ALTER TABLE public.sale_offers DROP COLUMN IF EXISTS superseded_by, DROP COLUMN IF EXISTS retired_at,
+      DROP COLUMN IF EXISTS retired_reason, DROP COLUMN IF EXISTS originating_system_key;
+    ALTER TABLE public.listings DROP COLUMN IF EXISTS retired_at, DROP COLUMN IF EXISTS retired_reason,
+      DROP COLUMN IF EXISTS originating_system_key;`);
+  if (!cloud) return;
+  psql(db, `ALTER TABLE public.nights DROP CONSTRAINT IF EXISTS nights_listing_id_fkey,
+      ADD CONSTRAINT nights_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.listings(id) ON DELETE CASCADE;
+    ALTER TABLE public.listing_stats DROP CONSTRAINT IF EXISTS listing_stats_listing_id_fkey,
+      ADD CONSTRAINT listing_stats_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.listings(id) ON DELETE CASCADE;
+    ALTER TABLE public.property_offers DROP CONSTRAINT IF EXISTS property_offers_offer_id_fkey;`);
 }
 
 /** DB «local mô phỏng»: bảng FILL + source_registry chép nguyên từ local (được sửa thoải mái). */
@@ -115,6 +147,7 @@ export function buildLocalSim(name = "local") {
   const db = makeDb(name);
   psql(db, "CREATE EXTENSION IF NOT EXISTS postgis;");
   psql(db, dump([...FILL, "source_registry"], { schemaOnly: false }));
+  veHinhCu(db, { cloud: false });
   return db;
 }
 
@@ -142,6 +175,7 @@ export function buildCloudSim(name = "cloud", { roles = true, defaultAcl = true,
   // chỉ đổi TÊN BẢNG như cloud thật (cột airdna_id… giữ nguyên tên, đo 23/10)
   ddl = ddl.replace(/\bairdna_(markets|scores|market_metrics|sub_monthly|future_daily|listings|submarket_metrics)\b/g, "ref_calib_$1");
   psql(db, ddl);
+  veHinhCu(db, { cloud: true });
   // bảng người bán trên cloud chỉ mang cột trong CLOUD_ALLOW (trạng thái đích NT2 — leak gate đỏ khi có cột khác)
   const extra = psql(db, `SELECT format('ALTER TABLE public.%I DROP COLUMN %I;', table_name, column_name)
     FROM information_schema.columns WHERE table_schema = 'public' AND (${Object.entries(sync.CLOUD_ALLOW)

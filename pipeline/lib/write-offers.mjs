@@ -1,9 +1,10 @@
 // write-offers.mjs — bước ghi canonical dùng chung của transform S03 (Zalo) / S05 (Facebook).
 // Spec: docs/superpowers/specs/2026-10-23-enrich-hau-ky-design.md §2.1 (_acceptance/enrich-hau-ky).
 //
-// Thay cho «DELETE toàn nguồn + INSERT»: upsert theo offer_id (băm nội dung — ổn định giữa các
-// lượt) rồi đối soát offer không còn trong lượt bằng hàm SQL reconcile_stale_offers (039).
-// Cột đã enrich KHÔNG bị lượt nạp ghi đè; đề xuất + thẻ duyệt sống qua lần nạp lại.
+// Thay cho «DELETE toàn nguồn + INSERT»: upsert theo offer_id (khoá dính PL14, lib/offer-key.mjs) vào bảng bản ghi
+// sale_offer_records (044), rồi đối soát offer không còn trong lượt bằng hàm SQL reconcile_stale_offers (bản 044:
+// cho nghỉ, không xoá). Tin quay lại thì gỡ retired_at. Cột đã enrich KHÔNG bị lượt nạp ghi đè; đề xuất + thẻ duyệt
+// sống qua lần nạp lại.
 // Người gọi giữ transaction (BEGIN…COMMIT) — hàm này không tự mở/đóng.
 
 import { ENRICH_FIELD, VOCAB } from "./vocab.generated.mjs";
@@ -28,10 +29,11 @@ export async function writeOffers(client, source, offers, { actor = `transform:$
     throw new Error("writeOffers: lượt nạp rỗng — không đối soát");
   }
   const { rows: fn } = await client.query(
-    `SELECT to_regprocedure('reconcile_stale_offers(text,text[],text)') IS NOT NULL AS ok`,
+    `SELECT to_regprocedure('reconcile_stale_offers(text,text[],text)') IS NOT NULL
+        AND to_regclass('sale_offer_records') IS NOT NULL AS ok`,
   );
   if (!fn[0].ok) {
-    throw new Error("writeOffers: chưa áp migration 039 (thiếu hàm reconcile_stale_offers)");
+    throw new Error("writeOffers: chưa áp migration 044 (thiếu sale_offer_records hoặc hàm reconcile_stale_offers)");
   }
 
   for (const offer of offers) {
@@ -42,9 +44,11 @@ export async function writeOffers(client, source, offers, { actor = `transform:$
     const set = cols
       .filter((c) => c !== "offer_id" && c !== "source" && !ENRICH_COLS.includes(c))
       // bedrooms nằm trong băm offer_id; parse ra null thì giữ giá trị enrich đã điền.
-      .map((c) => (c === "bedrooms" ? "bedrooms = COALESCE(EXCLUDED.bedrooms, sale_offers.bedrooms)" : `${c} = EXCLUDED.${c}`));
+      .map((c) => (c === "bedrooms" ? "bedrooms = COALESCE(EXCLUDED.bedrooms, sale_offer_records.bedrooms)" : `${c} = EXCLUDED.${c}`))
+      // Tin quay lại sau khi nghỉ: sống lại, bỏ con trỏ tin kế.
+      .concat(["retired_at = NULL", "retired_reason = NULL", "superseded_by = NULL"]);
     await client.query(
-      `INSERT INTO sale_offers (${cols.join(", ")})
+      `INSERT INTO sale_offer_records (${cols.join(", ")})
        VALUES (${cols.map((_, i) => `$${i + 1}`).join(", ")})
        ON CONFLICT (offer_id) DO UPDATE SET ${set.join(", ")}`,
       cols.map((c) => row[c]),

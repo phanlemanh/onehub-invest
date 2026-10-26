@@ -91,6 +91,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   có enum viết tay ngoài sổ (8 ngoại lệ có lý do ở `enums_lint_allow`); `--check-db` so `ref_lookup`/`ref_field_lookup`
   (migration 043, chỉ local) và CHECK với sổ; `--check-field-targets` khoá tên trường FIELD_TARGET (G3) theo
   `canonical.fields`.
+- Nạp lại không xoá (PL14, `_acceptance/nap-lai-khong-xoa`, migration 044): `sale_offers`/`listings` là VIEW sống
+  (`retired_at IS NULL`) trên bảng bản ghi `sale_offer_records`/`listing_records` — chỗ đọc không đổi, chỉ đường ghi biết
+  bảng bản ghi. Tin vắng lượt nghỉ (`het_trong_luot`/`doi_khoa`), listing ngoài phường nghỉ (`ngoai_phuong`); không câu
+  DELETE/TRUNCATE nào nhắm hai bảng (bộ quét `pipeline/lib/scan-delete.mjs`). `reconcile_stale_offers` bản 044 chuyển đề
+  xuất enrich, thẻ `enrich:`/`pair:`, `property_offers`, ứng viên ghép đã quyết sang tin kế (`superseded_by`); 6 khoá ngoại
+  tới hai bảng là RESTRICT. Khoá S03/S05 «dính» (`pipeline/lib/offer-key.mjs`): nhóm repost thừa kế `offer_id` của tin
+  chung nhiều post nhất, nhóm mới băm `'<S0x>|<post neo>'`; `originating_system_key` (RESO) cho S03/S05/S06 và listing.
+  Thước `pipeline/scripts/nap-lai-ba-luot.mjs` (ba lượt, ma trận 7×2, đối chứng 039 / không chuyển). sync-cloud chép view
+  sống, bảng con chỉ dòng có cha sống; cột mới ở lại máy.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
@@ -290,7 +299,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | G-1 | property_type + DQ + asset_nodes R1 | ✅ 3313a9c |
 | G-2 | properties + ruler dedup + candidates | ✅ 50005b7 |
 | G-2.5 | pHash ảnh — khi ảnh P1 nhiều hơn | ⬜ |
-| PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | 🔶 vòng S4 (migration 043 đã áp local, chưa đẩy Supabase) |
+| PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | ✅ PR #120 (migration 043 đã áp local; Supabase đã áp 26/10 — `docs/ops/cloud-schema-catchup-2026-10-26-043.sql`) |
+| PL14 | Nạp lại không xoá: bảng bản ghi + view sống (lối A, 044), khoá dính S03/S05, tin/listing nghỉ (`retired_at`) thay DELETE, 6 khoá ngoại RESTRICT, đối soát chuyển quyết định sang tin kế — `_acceptance/nap-lai-khong-xoa` | 🔶 vòng S4; sau merge: áp 044 lên DB local NGAY (launchd chạy code main); cloud không đổi lược đồ (`docs/ops/cloud-schema-catchup-2026-10-26.md`) |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

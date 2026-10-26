@@ -42,6 +42,11 @@ test("AU9-AC-8 Finder Hà Nội: trước khi áp có khu vực vượt bbox, sa
   await c.connect()
   try {
     await c.query("BEGIN")
+    // Cùng khoá với các test nạp migration trong giao dịch (pipeline, agent) — chạy song song với 044 là deadlock.
+    await c.query("SELECT pg_advisory_xact_lock(33033)")
+    // PL14: runReassign ghi listing_records (044) — DB chưa áp thì nạp 044 trong giao dịch.
+    const { rows: m044 } = await c.query(`SELECT to_regclass('listing_records') IS NOT NULL AS ok`)
+    if (!m044[0].ok) await c.query(readFileSync(join(ROOT, "db/migrations/044_nap_lai_khong_xoa.sql"), "utf8"))
     const { rows } = await c.query(
       `SELECT ST_XMin(geom) x0, ST_YMin(geom) y0, ST_XMax(geom) x1, ST_YMax(geom) y1 FROM areas WHERE id = 'vn-hanoi' AND geom IS NOT NULL`,
     )
