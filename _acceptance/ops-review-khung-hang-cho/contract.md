@@ -5,7 +5,7 @@ slug: ops-review-khung-hang-cho
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-ops-review-khung-hang-cho-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26T04:18:14Z
@@ -80,3 +80,9 @@ Never: duyệt hàng loạt (routes.md «chỉ trả lại hàng loạt») · hi
 - Sau khi UI1 xong cần một lượt ghim lại các hồ sơ đã ký có `paths` chạm tệp review (liệt ở design doc).
 - Smoke trình duyệt bấm nút quyết định với route `/api/v1/ops/review/*/decide` bị chặn (Playwright `page.route`, phản hồi giả)
   — không request nào tới server, `review_queue`/`sale_offers` không đổi (đếm trước/sau); jsdom đo thêm ma trận body.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Bộ gọt độ tự tin bám đúng khuôn chữ căn cứ hiện nay của agent; nếu agent đổi cách viết, con số có thể hiện lại trên thẻ mà test không báo.
+  - Ngoài-2: Test căn cứ bên AI tính giá trị kỳ vọng bằng chính hàm gọt, nên nếu căn cứ bị cắt quá tay về sau thì không có cảnh báo.
+  - Ngoài-3: Các nhãn mới «Ghép căn», «Bổ sung tin», «Loại thẻ», «Đã quyết», «Loại khác» chưa có mục trong CONTEXT.md.
+  - Ngoài-4: Test ngăn chi tiết thẻ ghép căn chưa phân biệt được tin A với tin B (dữ liệu mẫu hai bên giống nhau).
+  - Ngoài-5: Smoke trình duyệt đo dev server :3460 mà không xác minh server đó chạy từ đúng worktree đang nghiệm thu.
