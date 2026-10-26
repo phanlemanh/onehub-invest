@@ -138,6 +138,15 @@ nêu đường + mã `S0x`, không bao giờ in tên.
   `node pipeline/sync-cloud.mjs --kiem-cot` (mã 1 khi có vi phạm) — **chạy trước khi merge NT2**: schema cloud dựng tay,
   còn cột thừa (vd `properties.photos`, `sale_offers.seller_phone`) thì mọi lượt sync dừng ở pha gate.
 
+## Sổ đơn vị thu (chốt 2026-10-26, `_acceptance/so-nhom-mot-noi/`, PL12)
+
+- Bảng `collection_units` (048) là sổ chung của mọi đơn vị thu; `source_groups` là view gồm mọi dòng với cột cũ — script
+  thu S05/S06, `ha-bung-het-han`, `che-do-thu`, `isRunnable` không đổi. Sổ KHÔNG lên cloud (không có trong `sync-cloud`).
+- Đưa S03 và S02 vào sổ: `node pipeline/sync-don-vi.mjs [--chi S02|S03]` ở máy thu. S03 đọc `~/.openclaw/openclaw.json`
+  CHỈ ĐỌC (biến `ONEHUB_GATEWAY_CONFIG` để trỏ tệp khác), không gọi lệnh gateway; nhóm tắt → tạm dừng «tắt ở gateway»,
+  nhóm biến mất → tạm dừng «không còn ở gateway» (giữ mã). Tệp thiếu/hỏng → thoát 1, sổ không đổi. Chạy lại không đổi gì.
+- Sau khi gộp: áp 048 lên DB local (`/new-migration` bước 5) rồi chạy `sync-don-vi` một lần.
+
 ## Số tổng hợp Ops lên cloud (chốt 2026-10-24, `_acceptance/ops-facts-so-tong-hop/`, ADR-0014)
 
 Mỗi lượt `scripts/cloud-sync.sh` (15′), `pipeline/push-ops-facts.mjs` đẩy thêm khoá `blocks` gồm năm khối số tính ở máy

@@ -31,8 +31,9 @@ const q = async (sql) => {
 }
 const names = [
   ...(await q("SELECT real_name FROM source_registry")),
-  ...(await q("SELECT name FROM source_groups")),
-  ...(await q("SELECT group_key FROM source_groups")),
+  // PL12: source_groups là view gồm mọi đơn vị của sổ — tên market S02 công khai, khoá/tên nhóm S03 tầng C; chỉ S05/S06.
+  ...(await q("SELECT name FROM source_groups WHERE source_code IN ('S05', 'S06')")),
+  ...(await q("SELECT group_key FROM source_groups WHERE source_code IN ('S05', 'S06')")),
   // Tên nhóm S03 (stg_zalo_posts.group_name) là tầng C từ 24/10 (sửa đổi ADR-0007) — không còn trong danh sách che.
 ]
 await db.end()
