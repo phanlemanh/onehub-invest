@@ -205,7 +205,7 @@
     },
     {
       "ma": "PL9",
-      "cau_giao": "Người vận hành dữ liệu chạy eval:classify và thấy trên /ops/quality độ đúng từng (cách đọc × trường × phân khúc) theo cận dưới Wilson so với ngưỡng F3",
+      "cau_giao": "Người vận hành dữ liệu chạy eval:classify và nhận độ đúng từng (cách đọc × trường × phân khúc) theo cận dưới Wilson so với ngưỡng F3, ghi vào dq_check_results",
       "vai": "Người vận hành dữ liệu",
       "tieu_chi": 9,
       "vi_sao": "L05: không tầng nào có tập nhãn; số cũ là độ phủ hoặc đo trên mock. Tiêu chí cần nhãn thật thành ô bỏ qua có tên.",
@@ -219,7 +219,8 @@
       "phu": [
         "C1.4"
       ],
-      "du_lieu": "gia"
+      "du_lieu": "gia",
+      "ghi_chu": "Phần UI (hiện trên /ops/quality) gộp vào C4 quality-du-theo-use-case (Mạnh 26/10, lát OCP1 X3)."
     },
     {
       "ma": "PL10",
@@ -2261,6 +2262,68 @@
         "TVN1",
         "TVN4"
       ]
+    },
+    {
+      "ma": "C2",
+      "cau_giao": "Mỗi đêm pipeline/dq-scorecard.mjs ghi chỉ số thu thập của từng nguồn S0x vào dq_check_results, chạy lại cùng ngày không nhân dòng, nguồn paused thì bỏ qua",
+      "vai": "nen",
+      "tieu_chi": 12,
+      "vi_sao": "Đánh giá observability S05 25/10 §7: chưa có số nào cho biết mỗi nguồn thu đủ chưa, mới hay bão hoà; khối freshness cũ của 450 trùng với SLO độ tươi.",
+      "hang": "T2",
+      "slug": "scorecard-thu-thap",
+      "dung_tren": [
+        "NT7"
+      ],
+      "bat_khi": "Chạy hai lần cùng ngày: số dòng scorecard:* không đổi; mỗi nguồn active có đủ chỉ số (6 chỉ số gốc + «% tin P1 có phường» + coverage NT7 từng thị trường + ⑦ chế độ điểm, ⑧ phần mới mỗi lượt, ⑨ độ sâu cửa sổ, ⑩ hiệu suất + ETA tới mốc kho + ruler trên phường có cầu); nguồn paused 0 dòng; cảnh báo tắt được và có ngày hết hạn; khối freshness của 450 đã gỡ",
+      "nhom": "do-luong",
+      "dot": "observability-2510",
+      "phu": [
+        "C2"
+      ],
+      "ghi_chu": "12 tiêu chí (cho phép tới 12): vết dầu loang §C2 chốt ⑦–⑩ vào tiêu chí của hàng này, không thêm hàng. Chỉ số ③ cần probe đĩa G4, chỉ số ④ cần FIELD_TARGET G3 — hai việc làn ZCode theo lời GIAO; thiếu thì ô ghi «—», không 0. «% tin P1 có phường» không ngưỡng (Hỏi-1 25/10); coverage theo NT7 từng thị trường (Hỏi-2 25/10)."
+    },
+    {
+      "ma": "C3",
+      "cau_giao": "Người vận hành mở /ops/collections và thấy mỗi nguồn S0x một dòng chỉ số thu thập lấy từ dòng scorecard:* mới nhất, không số nào suy từ S02",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "vi_sao": "Đánh giá observability S05 25/10 §7: trang Thu thập chưa có chỗ đọc độ đủ từng nguồn; số suy từ S02 trái luật 5.",
+      "hang": "T2",
+      "slug": "collections-scorecard-nguon",
+      "dung_tren": [
+        "C2",
+        "ON6",
+        "ON5"
+      ],
+      "bat_khi": "Mỗi nguồn active có đúng một dòng; số trên trang bằng dòng scorecard:* mới nhất; 0 số đọc từ bảng S02; chưa có dòng scorecard thì «—»",
+      "nhom": "do-luong",
+      "dot": "observability-2510",
+      "phu": [
+        "C3"
+      ],
+      "ghi_chu": "Chung tệp /ops/collections với ON5, ON6 — chạy sau hai hàng ấy."
+    },
+    {
+      "ma": "C4",
+      "cau_giao": "Người vận hành mở /ops/quality và thấy độ đủ theo use case: ruler so 50/70, coverage so 30/60 từng thị trường, yield từng trường so TARGET, và độ đúng trên nhãn của PL9",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "Đánh giá observability S05 25/10 §7 + gói lát OCP1 26/10 X3: ba phép đo (PL9, C2, trang) cùng ghi dq_check_results và cùng hiện ở /ops/quality — gộp phần hiển thị một chỗ.",
+      "hang": "T2",
+      "slug": "quality-du-theo-use-case",
+      "dung_tren": [
+        "C2",
+        "ON9",
+        "ON10",
+        "ON12"
+      ],
+      "bat_khi": "Mỗi thị trường có ruler, coverage, yield từng trường so ngưỡng; độ đúng PL9 hiện khi có số, chưa có thì «—»; 0 số AirDNA ngoài /ops/quality",
+      "nhom": "do-luong",
+      "dot": "observability-2510",
+      "phu": [
+        "C4"
+      ],
+      "ghi_chu": "Phần UI của PL9 gộp vào đây (Mạnh 26/10, lát OCP1 X3): PL9 ghi số độ đúng, C4 hiện. Chung tệp /ops/quality với ON9, ON10, ON12 — chạy tuần tự."
     }
   ],
   "chan_troi": [
