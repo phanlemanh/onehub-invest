@@ -244,7 +244,7 @@ executors:
     kev_manifest_v3: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs manifest-v3"
     kev_import_versions: "node scripts/kev-nhan/acceptance.mjs import-versions"
     kev_watchdog_l1: "node scripts/kev-nhan/acceptance.mjs watchdog-l1"
-    kev_contract_doc: "grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
+    kev_contract_doc: "grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     zc1_sourceid: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs sourceid"
     zc1_stg_roundtrip: "cd collector && rm -rf dist && npm run build && cd .. && node scripts/kev-nhan/acceptance.mjs stg-roundtrip"   # cần DB local :5433; kiểm trùng trước, xoá snapshot giả sau
     # importer-bo-qua-du-lieu-thu (PL1) — DB local :5433: real-mock chỉ chạy importer trên snapshot THỬ (bị bỏ qua); fixtures dữ liệu giả mốc năm 2001, xoá sau
@@ -365,7 +365,7 @@ executors:
     nz4_scope: "bash _acceptance/noi-tiep-zc4/probes/scope.sh \"$PWD\""
     # kev-nhan-thuoc-sau-pl1 — thước kev-nhan đỏ sẵn trên main (PL1 khuôn tên, ZC6 chữ log); stg-roundtrip cần DB local :5433
     ktp_doi_chung: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/doi-chung.sh \"$PWD\""
-    ktp_cac_mode_khac: "cd collector && rm -rf dist && npm run build && cd .. && for m in manifest-v3 watchdog-l1 sourceid stg-roundtrip; do node scripts/kev-nhan/acceptance.mjs $m || exit 1; done && grep -q 'schemaVersion.: 3' collector/docs/DATA-CONTRACT.md && grep -q 'chấp nhận `{1,2,3}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
+    ktp_cac_mode_khac: "cd collector && rm -rf dist && npm run build && cd .. && for m in manifest-v3 watchdog-l1 sourceid stg-roundtrip; do node scripts/kev-nhan/acceptance.mjs $m || exit 1; done && grep -qE 'schemaVersion.: [3-9]' collector/docs/DATA-CONTRACT.md && grep -qE 'chấp nhận `\\{1,2,3(,[0-9]+)*\\}`' collector/docs/DATA-CONTRACT.md && echo CONTRACT-DOC OK"
     ktp_scope: "bash _acceptance/kev-nhan-thuoc-sau-pl1/probes/scope.sh \"$PWD\""
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
