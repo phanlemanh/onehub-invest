@@ -5,7 +5,7 @@ slug: on-dinh-test-app-chap-chon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-26T04:24:35Z
 approved_by:
@@ -49,3 +49,10 @@ Vòng này chỉ sửa hai tệp test, không đổi hành vi sản phẩm.
 - Làm `pgrep -f openclaw` chặt hơn để không khớp tiến trình lạ — việc sản phẩm riêng.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-26:
+  - Ngoài-1: Ranh giới giữa lớp so giá trị và lớp hạ tầng trong bài kiểm khoá an toàn dựa vào tên lớp «Hạ tầng»; đổi tên lớp đó thì bài kiểm báo đỏ chứ không âm thầm bỏ sót.
+  - Ngoài-3: Phép đối chứng AC-2 chỉ làm phía app đọc pgrep giả; phía bên ghi luôn dùng pgrep thật vì nó đặt PATH cứng.
+  - Ngoài-4: Phép đối chứng chứng pgrep giả được gọi đúng 7 lần ở phía app, không chứng phía bên ghi.
+  - Ngoài-5: Đối chứng âm chỉ đếm lần đỏ có câu «lớp lệch», không ghim tên lớp cụ thể gây lệch.
+  - Ngoài-6: Phép lặp AC-1 nhận mọi tổng số ca từ 10 trở lên, nên bớt ca kiểm mà vẫn còn ≥ 10 thì không bị bắt.

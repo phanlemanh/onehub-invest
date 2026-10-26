@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 9d0acca23ae82b68a3cb5635f150fa9012df39af
-human_signoff:
+human_signoff: Mạnh 2026-10-26
 ---
 
 # Evidence Report: on-dinh-test-app-chap-chon
