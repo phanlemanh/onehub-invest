@@ -16,7 +16,7 @@
 ```
 dot: tu-van-hanh-2510
 dang: chuoi
-nguon: docs/research/ops-tu-van-hanh-nguon-saas.md (thảo luận Mạnh 25/10, PR #79) §2–§5; quyết định Mạnh 25/10 «làm từ xa qua cloud», «nội dung/ảnh/thẻ duyệt lên cloud, tên nguồn thật chỉ local», tám quyết định §4.8
+nguon: onehub-invest-tri-thuc:wiki/dot/tu-van-hanh-2510.md#184faf35bf93aff337c2bac27575ef6075040f52
 
 - `TV0` — ADR-0015 đường lệnh kéo một chiều cloud → máy thu (bổ sung ADR-0014); sửa đổi ADR-0007/luật 6 (nội dung bài, ảnh tin, thẻ duyệt lên cloud cho vai ops; tên nguồn thật chỉ ở máy thu: cloud `S08`, local `S08-<tên>`); thuật ngữ mới trong CONTEXT.md (Đơn vị thu, Lệnh, Quy định ngữ cảnh, Mục tiêu phủ)
 - `TV1` — một luật quyền bốn vai viewer/ops/admin/owner ở một chỗ (`app/src/lib/ops-access.ts`); mọi route ghi `api/v1/ops/**` (zalo, source-groups, review) kiểm theo bảng — hôm nay API quản trị chỉ cần ops hoặc bearer chung; `ops_audit.actor` là id người thật, ghi trong cùng transaction; `users.role` có CHECK

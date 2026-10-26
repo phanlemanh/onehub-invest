@@ -8,7 +8,7 @@
 ```
 dot: phan-loai-2310
 dang: chuoi
-nguon: review kiến trúc phân loại + enrich (docs/architecture/classification-enrich-review.md), Mạnh duyệt 23/10
+nguon: onehub-invest-tri-thuc:wiki/dot/phan-loai-2310.md#207e19a6bf1b5a1b08cf1f0316966df0fa292fa6
 
 - `L19a` — importer bỏ qua snapshot thử, không ghi vào stg_*
 - `L19b` — bảng canonical không còn tin sinh từ dữ liệu thử; transform từ chối post thử
