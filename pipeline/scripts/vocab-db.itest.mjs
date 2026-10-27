@@ -1,4 +1,6 @@
 // vocab-db.itest.mjs — PL6 (VD-AC-7, VD-AC-8): migration 043 + `vocab.mjs --check-db` trên DB local :5433.
+// wanted-thanh-inquiry (VD-IQ-3): 050 đổi `wanted` → `inquiry` sau 043 — sổ khớp 043 + 050, không khớp 043 một mình.
+// Migration chưa gộp chỉ thử trên DB riêng (_acceptance/wanted-thanh-inquiry/rang/db-rieng.mjs đặt DATABASE_URL).
 // Mọi ghi nằm trong BEGIN … ROLLBACK — DB thật không đổi (ca cuối so pg_constraint trước/sau). Cần DB local;
 // không thuộc glob `npm test` (chạy bằng executors.test.vocab_db).
 import { test, before, after } from "node:test";
@@ -15,6 +17,7 @@ import { checkDb, emitSeed, loadRegister, readMappings, validateRegister } from 
 const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(PIPE, "..");
 const MIG_GOC = readFileSync(join(ROOT, "db/migrations/043_ref_vocabulary.sql"), "utf8");
+const MIG050 = readFileSync(join(ROOT, "db/migrations/050_wanted_thanh_inquiry.sql"), "utf8");
 // PL14 (044) đổi sale_offers thành VIEW sống: áp lại 043 trên DB đã có 044 thì nhắm bảng bản ghi (dựng DB mới vẫn chạy
 // 043 nguyên văn theo thứ tự). MIG được gán trong before() khi đã biết trạng thái DB.
 let MIG = MIG_GOC;
@@ -30,6 +33,8 @@ const CHK_025 = {
 };
 
 let c;
+/** Sổ hiện tại = 043 rồi 050. */
+const apMig = async () => { await c.query(MIG); await c.query(MIG050); };
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
@@ -80,7 +85,7 @@ test("VD-AC-7 áp 043 trên tiền đề lần đầu: ref_* đúng sổ, năm C
       Object.keys(CHK_025).map((k) => td[k]), [false, false, false, false], "tiền đề: bốn CHECK 025 phải NOT VALID");
     assert.equal(td.properties_property_type_chk, undefined, "tiền đề: còn CHECK properties");
 
-    await c.query(MIG);
+    await apMig();
     assert.deepEqual(await dbRows(), seedRows(REG));
     const rel = (await c.query("SELECT table_name || '.' || column_name AS col, lookup_name FROM ref_field_lookup")).rows
       .map((r) => `${r.col}|${r.lookup_name}`).sort();
@@ -88,7 +93,7 @@ test("VD-AC-7 áp 043 trên tiền đề lần đầu: ref_* đúng sổ, năm C
     const sau = await trangThai();
     for (const ten of CHK) assert.equal(sau[ten], true, `${ten} chưa VALIDATE`);
     const n = (await c.query("SELECT count(*)::int AS n FROM ref_lookup")).rows[0].n;
-    await c.query(MIG);
+    await apMig();
     assert.equal((await c.query("SELECT count(*)::int AS n FROM ref_lookup")).rows[0].n, n, "áp lần hai đổi số dòng");
   });
 });
@@ -97,6 +102,10 @@ test("VD-AC-7 đối chứng: có dòng property_type ngoài sổ thì 043 lỗi
   await trongGiaoDich(async () => {
     await tienDe();
     const T = await tinThat();
+    // DB riêng dựng từ migration thì bảng tin trống — gieo một tin tối thiểu (trong giao dịch, ROLLBACK cuối ca).
+    if (!(await c.query(`SELECT 1 FROM ${T} LIMIT 1`)).rowCount) {
+      await c.query(`INSERT INTO ${T} (offer_id, kind, first_seen, last_seen) VALUES ('vd-ac-7-gieo', 'sale', now(), now())`);
+    }
     await c.query(`ALTER TABLE ${T} DROP CONSTRAINT sale_offers_property_type_chk`);
     await c.query(`UPDATE ${T} SET property_type = 'khong_co' WHERE offer_id = (SELECT min(offer_id) FROM ${T})`);
     await c.query(`ALTER TABLE ${T} ADD CONSTRAINT sale_offers_property_type_chk ${CHK_025.sale_offers_property_type_chk} NOT VALID`);
@@ -110,7 +119,7 @@ test("VD-AC-7 đối chứng: có dòng property_type ngoài sổ thì 043 lỗi
 test("VD-AC-8 --check-db: khớp → 0 lệch; sổ thêm giá trị, ref_lookup thiếu dòng, cột thiếu CHECK → lệch có tên", async () => {
   await trongGiaoDich(async () => {
     await tienDe();
-    await c.query(MIG);
+    await apMig();
     assert.deepEqual(await checkDb(c, REG), []);
 
     const doc = YAML.parse(readFileSync(join(PIPE, "mappings.yaml"), "utf8"));
@@ -151,7 +160,7 @@ test("VD-AC-7 DB thật không đổi sau các ca (pg_constraint đọc lại tr
   assert.deepEqual(await trangThai(), truoc);
 });
 
-test("VD-AC-7 emitSeed(sổ) nạp ra ĐÚNG các dòng mà 043 nạp — đo quan hệ, không đếm chuỗi", async () => {
+test("VD-AC-7 emitSeed(sổ) nạp ra ĐÚNG các dòng mà 043 + 050 nạp — đo quan hệ, không đếm chuỗi", async () => {
   const relRows = async () => (await c.query("SELECT table_name, column_name, lookup_name FROM ref_field_lookup")).rows
     .map((r) => `${r.table_name}.${r.column_name}|${r.lookup_name}`).sort();
   let tuSeed;
@@ -165,11 +174,11 @@ test("VD-AC-7 emitSeed(sổ) nạp ra ĐÚNG các dòng mà 043 nạp — đo qu
   let tuMig;
   await trongGiaoDich(async () => {
     await tienDe();
-    await c.query(MIG);
+    await apMig();
     tuMig = { lookup: await dbRows(), rel: await relRows() };
   });
-  assert.deepEqual(tuSeed.lookup, tuMig.lookup, "emitSeed và 043 nạp khác dòng ref_lookup");
-  assert.deepEqual(tuSeed.rel, tuMig.rel, "emitSeed và 043 nạp khác dòng ref_field_lookup");
+  assert.deepEqual(tuSeed.lookup, tuMig.lookup, "emitSeed và 043 + 050 nạp khác dòng ref_lookup");
+  assert.deepEqual(tuSeed.rel, tuMig.rel, "emitSeed và 043 + 050 nạp khác dòng ref_field_lookup");
   assert.deepEqual(tuSeed.lookup, seedRows(REG), "emitSeed lệch sổ");
   // đối chứng: sổ đổi một nhãn → emitSeed nạp khác 043
   const doc = YAML.parse(readFileSync(join(PIPE, "mappings.yaml"), "utf8"));
@@ -184,4 +193,27 @@ test("VD-AC-7 emitSeed(sổ) nạp ra ĐÚNG các dòng mà 043 nạp — đo qu
   });
   assert.notDeepEqual(tuSeed2, tuMig.lookup);
   assert.ok(tuSeed2.includes("kind|sale|Residential|Bán ra|false|1"));
+});
+
+test("VD-IQ-3 050 sau 043: wanted → inquiry «Yêu cầu», sổ khớp, các trục khác giữ số dòng, áp lần hai không đổi", async () => {
+  if (process.env.VOCAB_DB_EP_LOI === "1") throw new Error("ép lỗi giữa chừng (--ep-loi của răng db-rieng)");
+  const demTruc = async () => Object.fromEntries((await c.query(
+    "SELECT lookup_name, count(*)::int AS n FROM ref_lookup GROUP BY 1")).rows.map((r) => [r.lookup_name, r.n]));
+  await trongGiaoDich(async () => {
+    await tienDe();
+    await c.query(MIG);
+    const lech = (await checkDb(c, REG)).map((x) => x.msg).join("\n");
+    assert.ok(lech.includes("inquiry"), `043 một mình phải lệch sổ ở inquiry: ${lech}`);
+    const truocTruc = await demTruc();
+    await c.query(MIG050);
+    assert.deepEqual(await checkDb(c, REG), []);
+    const r = (await c.query(
+      "SELECT label_vi, is_local, sort_order FROM ref_lookup WHERE lookup_name = 'listing_intent' AND lookup_value = 'inquiry'")).rows;
+    assert.deepEqual(r, [{ label_vi: "Yêu cầu", is_local: true, sort_order: 2 }]);
+    assert.equal((await c.query("SELECT count(*)::int AS n FROM ref_lookup WHERE lookup_value = 'wanted'")).rows[0].n, 0);
+    assert.deepEqual(await demTruc(), truocTruc, "050 đổi số dòng của một trục");
+    await c.query(MIG050);
+    assert.deepEqual(await demTruc(), truocTruc, "áp 050 lần hai đổi số dòng");
+    assert.deepEqual(await checkDb(c, REG), []);
+  });
 });
