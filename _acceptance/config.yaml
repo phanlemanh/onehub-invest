@@ -384,6 +384,13 @@ executors:
     tkp_lan: "bash _acceptance/test-khong-prune-worktree/probes/lan.sh"
     tkp_pham_vi: "bash _acceptance/test-khong-prune-worktree/probes/pham-vi.sh"
     tkp_selftest_cleanup: "bash _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh"
+    # do-nen-hieu-nang — chỉ đọc DB local (pg_settings, pg_stat_*); đo trang chạy next start cổng 3463 trên build prod
+    dn_db: "node _acceptance/do-nen-hieu-nang/probes/db.mjs"
+    dn_trang: "bash _acceptance/do-nen-hieu-nang/probes/trang.sh"
+    dn_tai_lieu: "node _acceptance/do-nen-hieu-nang/probes/tai-lieu.mjs"
+    dn_thong_ke: "node _acceptance/do-nen-hieu-nang/probes/thong-ke.mjs"
+    dn_khong_luat: "node _acceptance/do-nen-hieu-nang/probes/khong-luat.mjs"
+    dn_pham_vi: "bash _acceptance/do-nen-hieu-nang/probes/pham-vi.sh"
     # audit-all-test-moc-phut — bản sao tệp test ở thư mục tạm, date giả trong hộp; không chạm DB hay mạng
     amp_ca_canh: "bash _acceptance/audit-all-test-moc-phut/probes/ca-canh.sh"
     amp_qua_phut: "bash _acceptance/audit-all-test-moc-phut/probes/qua-phut.sh"

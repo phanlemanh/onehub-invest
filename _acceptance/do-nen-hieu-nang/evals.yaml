@@ -1,0 +1,46 @@
+schema_version: 1
+feature_slug: do-nen-hieu-nang
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.dn_db
+    paths: [docs/superpowers/specs/2026-10-27-do-nen-hieu-nang-design.md, db/docker-compose.yml, _acceptance/do-nen-hieu-nang/probes/db.mjs]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ok cau hinh: max_connections 200, preload pg_cron + pg_stat_statements, extension co'; 'ok sao luu: <byte> byte, sha256 khop design doc, pg_restore -l <n> muc' với n ≥ 285; 'ok docker-compose.yml khong doi'; 'ban sha sai: do, thong diep ghim co'; cuối 'DB OK'; should-NOT-fire: không 'CAU HINH SAI', 'SAO LUU', 'COMPOSE BI DOI', 'CA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.dn_trang
+    long_running: 10
+    paths: [scripts/do-nen-hieu-nang/do.mjs, scripts/dev-ops-account.mjs, "app/src/**", _acceptance/do-nen-hieu-nang/probes/trang.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; năm dòng 'trang <đường> (<cổng>): 20/20 dung trang (HTTP 200 + tieu de) · TTFB p50 … p95 … · tong p50 … p95 …'; 'DO NEN OK'; 'ok tai khoan ops-test khong doi trong luot do'; 'ban dau sai: do TRANG KHONG DUNG'; cuối 'TRANG OK'; should-NOT-fire: không 'TRANG KHONG DUNG' ở bản thật, 'LUOT DO DOI TAI KHOAN OPS-TEST', 'CA KHONG DO', 'DOT BIEN KHONG AP DUOC'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.dn_tai_lieu
+    paths: [docs/research/do-nen-hieu-nang-2610.md, docs/research/do-nen-hieu-nang-2610.json, _acceptance/do-nen-hieu-nang/probes/tai-lieu.mjs]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ok bang trang: 5/5 trang khop p50/p95 JSON'; 'ok truy van: 10/10 theo tong + 10/10 theo trung binh khop JSON'; 'ok sinh so: reset truoc lam nong, 2 danh sach du 10 dong xep giam dan, so goi boi cua <lượt+2>'; 'ok muc: may, co du lieu, cach do, gioi han do'; 'ban doi p50: do, neu trang lech'; 'ban dao thu tu: do THU TU'; 'ban bo reset: do THIEU MOC RESET'; cuối 'TAI LIEU OK'; should-NOT-fire: không 'LECH', 'THIEU MOC RESET', 'DANH SACH', 'THU TU' ngoài dòng đột biến, 'CUA SO', 'THIEU MUC', 'CA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.dn_thong_ke
+    paths: [docs/research/do-nen-hieu-nang-2610.md, docs/research/do-nen-hieu-nang-2610.json, _acceptance/do-nen-hieu-nang/probes/thong-ke.mjs]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'bang thieu thong ke trong anh chup (>50 MB, n_live_tup 0, chua ANALYZE): <danh sách ≥ 1>'; 'ok tai lieu neu du <k>/<k> bang kem co'; 'ok tai lieu neu goc (bo dem thong ke bi xoa)'; 'ok ket luan khop so: <k>/<k> bang reltuples > 0 → planner khong mu; nights phinh'; 'ban bo ten <bảng>: do, neu bang thieu'; 'ban doi thanh planner mu: do'; cuối 'THONG KE OK'; should-NOT-fire: không 'TAI LIEU THIEU BANG', 'THIEU GOC', 'KET LUAN LECH SO', 'CA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.dn_khong_luat
+    paths: [docs/research/do-nen-hieu-nang-2610.md, docs/research/do-nen-hieu-nang-2610.json, AGENTS.md, scripts/lib/tier-a-source-names.mjs, pipeline/lib/mask-source-names.mjs, _acceptance/do-nen-hieu-nang/probes/khong-luat.mjs]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ok muc De xuat nguong: tach rieng, ghi cho Manh quyet'; 'ok AGENTS.md khong doi'; 'ok tang A: 0 ten nguon that trong dong them cua <m> tep nhanh doi + tai lieu + JSON (<n> ten doi chieu)'; 'doi chung: ban chep scripts/do-nen-hieu-nang/do.mjs chen ten that → bat, neu tep'; cuối 'KHONG LUAT OK'; should-NOT-fire: không 'THIEU MUC DE XUAT', 'AGENTS BI DOI', 'LO TEN NGUON', 'DOI CHUNG KHONG BAT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.dn_pham_vi
+    paths: [db/docker-compose.yml, AGENTS.md, _acceptance/do-nen-hieu-nang/probes/pham-vi.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; mọi tệp đổi 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
