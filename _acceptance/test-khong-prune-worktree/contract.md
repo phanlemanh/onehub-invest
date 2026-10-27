@@ -5,7 +5,7 @@ slug: test-khong-prune-worktree
 owner: phanlemanh@gmail.com
 risk_tier: T3      # gộp selftest hook .claude/hooks/** (t3_paths) — Hỏi-1 gộp, Mạnh duyệt ở Cổng Phạm vi 2026-10-27
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-27
 design_doc: docs/superpowers/specs/2026-10-27-test-khong-prune-worktree-design.md
