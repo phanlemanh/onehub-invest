@@ -19,11 +19,10 @@ export function chartDaysOf(window: FlowWindow): number {
  * cũ hơn lấp chỗ, vì đó chính là cách biểu đồ che việc nguồn đã im.
  */
 export function dailySeries(days: FlowDay[], nowMs: number, windowDays: number): DayPoint[] {
-  // Lùi từng ngày lịch từ ngày cuối; tính trên 12:00 UTC của ngày đó nên phép trừ không trượt sang ngày khác.
-  const endNoon = Date.parse(`${vnDayKey(nowMs)}T12:00:00Z`)
+  // Lùi từng 24 giờ từ mốc rồi lấy ngày giờ VN — giờ VN không đổi theo mùa nên mỗi bước là đúng một ngày lịch.
   const points = new Map<string, DayPoint>()
   for (let i = windowDays - 1; i >= 0; i--) {
-    const key = new Date(endNoon - i * 86400000).toISOString().slice(0, 10)
+    const key = vnDayKey(nowMs - i * 86400000)
     points.set(key, { key, received: 0, readable: 0, offers: 0, linked: 0 })
   }
   for (const d of days) {
