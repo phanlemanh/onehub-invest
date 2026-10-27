@@ -386,6 +386,27 @@ describe("DC-AC-2 số khớp DF0", () => {
 })
 
 // ---------- AC-3: máy thu chỉ đọc bảng ----------
+/** Ma trận viết trước: MỌI câu getDataFlow gửi ở máy thu phải thuộc đúng một lớp cho phép. Phần tổng hợp chỉ có lớp
+ * «bảng tính sẵn»; hai lớp còn lại ngoài phần tổng hợp theo kế hoạch Task 3 (thẻ chờ duyệt, «Tin mới nhất»). */
+const ALLOWED_QUERIES: [string, RegExp][] = [
+  ["nhận nơi chạy", /^SELECT to_regclass\('stg_zalo_posts'\)::text AS r$/],
+  ["bảng tính sẵn", /^SELECT to_char\(computed_at AT TIME ZONE 'UTC', '[^']+'\) AS computed_at, facts\s+FROM data_flow_snapshot WHERE time_window = \$1$/],
+  ["thẻ chờ duyệt", /^SELECT count\(\*\) AS review FROM review_queue WHERE status = 'pending'$/],
+  ["Tin mới nhất", /row_number\(\) OVER \(PARTITION BY source ORDER BY first_seen DESC\) AS rn\s+FROM sale_offers WHERE first_seen >= \$1/],
+]
+/** Câu nằm ngoài ma trận (rỗng = mọi câu thuộc một lớp cho phép, không lớp nào lặp). */
+function queryProblems(seen: string[]): string[] {
+  const out: string[] = []
+  const hit = new Map<string, number>()
+  for (const q of seen.map((x) => x.trim())) {
+    const cls = ALLOWED_QUERIES.filter(([, re]) => re.test(q)).map(([n]) => n)
+    if (cls.length !== 1) out.push(`câu ngoài danh sách cho phép: ${q.replace(/\s+/g, " ").slice(0, 80)}`)
+    else hit.set(cls[0], (hit.get(cls[0]) ?? 0) + 1)
+  }
+  for (const [n] of ALLOWED_QUERIES) if (hit.get(n) !== 1) out.push(`lớp «${n}»: ${hit.get(n) ?? 0} câu ≠ 1`)
+  return out
+}
+
 describe("DC-AC-3 chỉ đọc bảng", () => {
   test("DC-AC-3 chỉ đọc bảng — câu tổng hợp chạm data_flow_snapshot, đầu trang «Số tính lúc»", async () => {
     ready()
@@ -403,8 +424,13 @@ describe("DC-AC-3 chỉ đọc bảng", () => {
     assert.equal(flow.mode, "local")
     assert.equal(docStg.length, 1, `câu đọc stg_*: ${docStg.length} (chỉ được câu bài gốc của «Tin mới nhất»)`)
     assert.match(docStg[0], /row_number\(\) OVER/, "câu duy nhất đọc stg_* phải là câu «Tin mới nhất»")
-    assert.ok(seen.some((s) => /FROM data_flow_snapshot WHERE time_window = \$1/.test(s)), "không đọc bảng tính sẵn")
-    assert.ok(!seen.some((s) => /enrichment_proposals|GROUP BY/i.test(s)), "còn câu tổng hợp ở app")
+    assert.deepEqual(queryProblems(seen), [], "mọi câu của getDataFlow phải thuộc ma trận cho phép")
+    // Chiều đỏ cùng ca: thêm lại một câu tổng hợp ngoài bảng tính sẵn (kể cả dạng không GROUP BY) → bị gọi tên.
+    for (const extra of ["SELECT count(*) FROM sale_offers WHERE source = 'S03'", "SELECT count(*) FILTER (WHERE kind = 'sale') FROM sale_offers"]) {
+      const p = queryProblems([...seen, extra])
+      assert.ok(p.some((m) => m.startsWith("câu ngoài danh sách cho phép: SELECT count(*)")), `câu tổng hợp lạ phải bị bắt: ${p.join(" | ")}`)
+    }
+    assert.ok(queryProblems(seen.filter((q) => !/data_flow_snapshot/.test(q))).includes("lớp «bảng tính sẵn»: 0 câu ≠ 1"), "thiếu câu đọc bảng tính sẵn phải bị bắt")
     assert.deepEqual(diffFacts(flow, WANT["7d"]), [])
     const hhmm = (
       await admin.query(`SELECT to_char(computed_at AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI') AS t FROM "${S_LOCAL}".data_flow_snapshot WHERE time_window = '7d'`)
