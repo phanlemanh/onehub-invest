@@ -1,0 +1,71 @@
+schema_version: 1
+feature_slug: viewer-khong-thay-the-duyet
+# Ca «VT-AC-n» ở app/tests/viewer-the-duyet.test.tsx (DB local :5433, lược đồ tạm, dựng thành phần server bằng React).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    paths: [app/src/lib/ops-access.ts, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-1': bảng 6 dòng viết trước (user false, viewer false, ops true, admin true, owner true, role user + email OPS_EMAILS true) → xemNoiDungTin đúng từng dòng; đối chứng: bản ops-access chép tạm với ngưỡng hạ về viewer → ca báo tên dòng 'viewer'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    layer: backend-effect
+    paths: [app/src/components/ops/review-content.tsx, app/src/lib/ops-access.ts, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-2': lược đồ tạm có review_queue với 3 thẻ pending (2 entity_match, 1 data_quality), mỗi thẻ mang chuỗi 'vt-mat-<n>-<cột>' trong title, evidence, ai_suggestion, ai_reasoning; với viewer: renderToStaticMarkup chứa tổng '3', 'entity_match: 2', 'data_quality: 1' và 'Nội dung thẻ chỉ hiện cho vai Vận hành trở lên.', không chứa 'vt-mat-'; duyệt đệ quy cây phần tử trả về, JSON.stringify(props) của mọi phần tử không chứa 'vt-mat-'; bộ bắt truy vấn bọc pool.query ghi cả kết quả — mọi dòng trả về không có khoá title/evidence/ai_suggestion/ai_reasoning và JSON.stringify(rows) không chứa 'vt-mat-'; đối chứng dương: bản review-content chép tạm cho nhánh viewer gọi lại câu chọn đủ cột → ca đỏ nêu tên cột 'title'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    layer: backend-effect
+    paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/data-flow/data-flow-content.tsx, app/src/lib/ops-access.ts, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-3': ma trận MA_TRAN viết trước 6 kiểu người × 2 trang = 12 ô (assert MA_TRAN.length === 12); mỗi ô: có/không 'vt-mat-1-title' trong HTML /ops/review và có/không 'vt-bai-1' trong JSON props của DataFlowView đúng bảng (có ở ops, admin, owner, OPS_EMAILS; không ở user, viewer); props.xemBaiGoc của DataFlowView === (kiểu thuộc nhóm ops trở lên); đối chứng: bản data-flow-content chép tạm thay xemNoiDungTin bằng so sánh role === 'ops' → ca đỏ nêu tên ô 'admin' hoặc 'OPS_EMAILS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    layer: backend-effect
+    paths: [app/src/components/ops/data-flow/data-flow-content.tsx, app/src/app/ops/data-flow/page.tsx, app/src/lib/data-flow-queries.ts, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-4': lược đồ tạm dựng theo fixture của ops-dong-chay có ≥ 2 bản ghi S05 mang bài gốc 'vt-bai-<n>'; phần tử trả về của await DataFlowContent({ window: 'all', user: viewer }) là DataFlowView với props.flow.records mọi postText === null và postGroup === null, JSON.stringify(props) không chứa 'vt-bai-'; với ops → postText từng bản ghi bằng bài gốc đã chèn; page.tsx của /ops/data-flow đọc phiên rồi dựng DataFlowContent với user (rút export default, gọi với searchParams và getSessionUser giả qua tham số không được — đo bằng soát tệp: page không còn import DataFlowView, có '<DataFlowContent' kèm 'user=')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    paths: [app/src/components/ops/data-flow/record-sheet.tsx, app/src/components/ops/data-flow/data-flow-view.tsx, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-5': jsdom dựng RecordSheet mở với bản ghi postText 'vt-bai-x', postGroup 'nhóm vt': xemBaiGoc=false → textContent chứa 'Bài gốc chỉ hiện cho vai Vận hành trở lên.' và không chứa 'vt-bai-x'; xemBaiGoc=true → chứa 'vt-bai-x' và 'Nhóm nhóm vt' và không chứa câu chú thích"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/data-flow/data-flow-content.tsx, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-6': lược đồ «như máy chủ» (không review_queue, không stg_zalo_posts, có ops_heartbeat với khối reviewQueue): ReviewContent cho viewer và ops cùng chứa 'thẻ đang chờ' và 'Hàng duyệt chỉ có ở máy thu'; DataFlowContent cho viewer và ops cùng trả LocalOnlyAlert 'Chỉ xem ở máy thu'; HTML của viewer bằng HTML của ops"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/**, app/src/components/ops/**, app/src/app/ops/**]
+    expected: "exit 0 của cả bộ test app (một tiến trình, không chạy chồng); đầu ra có dòng ✔ cho các ca của tests/ops-nhan-theo-context.test.tsx (bộ quét chữ hiển thị — review-content.tsx, record-sheet.tsx, data-flow-content.tsx nằm trong SCAN_FILES), tests/ops-dong-chay.test.tsx, tests/review-media.test.tsx, tests/o-kpi-chi-do-local.test.tsx, tests/ops-review-sources-cloud.test.tsx và 'ℹ fail 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    paths: [app/src/app/ops/**, app/src/app/api/**, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-8': bảng KIEM_KE viết trước một dòng cho mỗi page.tsx dưới app/src/app/ops (9 trang) và mỗi route.ts dưới app/src/app/api/v1/ops, app/src/app/api/zalo-media, app/src/app/api/v1/deals, app/src/app/api/v1/offers; mỗi dòng: { doc_noi_dung: bool, che: 'xemNoiDungTin' | 'isAdmin' | 'khong-doc' }; tập route trên đĩa (glob, gốc suy từ vị trí tệp ca thử) deepEqual tập khoá của bảng; mỗi dòng doc_noi_dung có bao đóng import (tệp route và lib nó nhập) chứa đúng hàm che đã khai; đối chứng: thêm một page giả trong bộ tệp đọc (không ghi đĩa) chứa 'FROM review_queue' mà không khai → ca nêu tên route giả"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/data-flow/**, app/src/app/ops/data-flow/page.tsx]
+    steps: "app dev chạy từ worktree đang kiểm ở :3456 (DB local :5433 có review_queue và bảng nạp). Chạy 'node scripts/dev-ops-account.mjs --vai viewer' để có tài khoản thử viewer-test@local.test (mật khẩu ở .claude/viewer-test-account.json, không in ra); đăng nhập /login bằng tài khoản đó; mở /ops/review; mở /ops/data-flow, bấm một bản ghi S05 trong lưới để mở sheet; chụp màn từng bước. Lặp lại với tài khoản thử admin (node scripts/dev-ops-account.mjs) cho /ops/review và cùng sheet."
+    expected: "với viewer: /ops/review có dòng «N thẻ đang chờ» và câu «Nội dung thẻ chỉ hiện cho vai Vận hành trở lên.», không có hàng thẻ nào; sheet bản ghi có câu «Bài gốc chỉ hiện cho vai Vận hành trở lên.» và không có khối trích bài; với admin: /ops/review có lưới thẻ, sheet có khối trích bài"
+    evidence_required: [screenshot, observed, verifier, verified_at]
