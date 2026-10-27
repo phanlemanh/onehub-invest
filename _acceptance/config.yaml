@@ -71,6 +71,7 @@ executors:
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
     so_nhom: "cd pipeline && node --test scripts/so-nhom.itest.mjs"
     so_nhom_app: "cd app && node --import tsx --test tests/so-nhom.test.tsx"
+    tu_ngu_collections: "cd app && node --import tsx --test tests/tu-ngu-collections.test.tsx"   # wanted-thanh-inquiry AC-7 — chữ «bài»/«tin» ở /ops/collections (render tĩnh, không DB)
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -93,6 +94,10 @@ executors:
     vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
     nap_lai_ba_luot: "node pipeline/scripts/nap-lai-ba-luot.mjs"   # PL14 thước bật: 3 lượt nạp lại trong giao dịch ROLLBACK, 0 quyết định/liên kết mất — cần DB local :5433
     cloud_catchup_static: "node scripts/check-cloud-catchup.mjs nap-lai-khong-xoa"   # PL14 AC-10: tệp SQL bắt kịp 043/044 có phần đo trước + áp — đo trạng thái cây
+    cloud_catchup_inquiry: "node scripts/check-cloud-catchup.mjs wanted-thanh-inquiry"   # wanted-thanh-inquiry AC-6 — tệp SQL bắt kịp cloud có ĐO TRƯỚC + ÁP
+    ten_cu_inquiry: "node _acceptance/wanted-thanh-inquiry/rang/con-ten-cu.mjs"   # wanted-thanh-inquiry AC-2/4/5/6 — tên cũ wanted chỉ còn ở lịch sử; đích sinh, docs sống, khối ÁP
+    vocab_db_rieng: "node _acceptance/wanted-thanh-inquiry/rang/db-rieng.mjs"   # wanted-thanh-inquiry AC-3 — DB riêng dựng từ db/migrations, chạy vocab-db.itest rồi xoá (luật đợt 27/10: không thử migration chưa gộp trên oneinvest)
+    fixture_goc_inquiry: "node _acceptance/wanted-thanh-inquiry/rang/fixture-goc.mjs"   # wanted-thanh-inquiry AC-7 — bản chụp markup trước vòng dựng lại được từ sha main ghi trong nó
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
     luong7_smoke: "node scripts/smoke-luong-7-ngay.mjs"     # ON5 AC-9 — bảng Luồng 7 ngày ở chế độ máy chủ trên trình duyệt (lược đồ tạm, Chromium)
     s02_smoke: "node scripts/smoke-collections-khong-so-s02.mjs"     # ON6 AC-7 — trang Thu thập ở máy thu không số S02 (Chromium 1280, ảnh chụp)
