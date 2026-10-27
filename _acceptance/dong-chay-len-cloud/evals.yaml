@@ -52,8 +52,8 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.test.dong_chay_cloud
-    paths: [app/src/components/ops/data-flow/**, app/src/lib/ops-facts.ts, app/tests/dong-chay-cloud.test.tsx]
-    expected: "exit 0; ca 'DC-AC-7 bốn trạng thái' xanh, chữ đúng ADR-0014, độ tươi theo computed_at: hằng viết trước 45×60×1000 bằng FACTS_STALE_MS (lệch → đỏ 'ngưỡng cũ ≠ 45′ ADR-0014'); computed_at 10′ trước → «Số đo lúc HH:MM (giờ VN) từ máy local» không Alert; computed_at 3 giờ trước nhưng bản tin vừa đẩy → Alert «Máy local không đẩy số từ HH:MM (giờ VN)» với giờ của computed_at và số cũ vẫn hiện; payload không có khối → «—» kèm «Chỉ đo ở máy local»; khối error → «không đo được»; ở vắng và lỗi DOM không có ô chặng nào ghi 0"
+    paths: [app/src/components/ops/data-flow/**, app/src/components/ops/facts-status.tsx, app/src/lib/ops-facts.ts, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-7 bốn trạng thái' xanh, chữ chung của facts-status.tsx («máy thu»), độ tươi theo computed_at: hằng viết trước 45×60×1000 bằng FACTS_STALE_MS (lệch → đỏ 'ngưỡng cũ ≠ 45′ ADR-0014'); computed_at 10′ trước → «Số đo lúc … từ máy thu» không Alert; computed_at 3 giờ trước nhưng bản tin vừa đẩy → Alert «Máy thu không đẩy số từ …» với giờ VN của computed_at và số cũ vẫn hiện; payload không có khối → «Chỉ đo ở máy thu»; khối error → «không đo được»; ở vắng và lỗi DOM không có ô chặng nào ghi 0"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
