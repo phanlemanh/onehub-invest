@@ -62,9 +62,12 @@ executors:
     job_exit: "node --test scripts/job-exit.test.mjs"
     dong_chay: "cd app && node --import tsx --test tests/ops-dong-chay.test.tsx tests/data-level.test.tsx"
     luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
+    dem_de_xuat: "cd app && node --import tsx --test tests/df0-dem-de-xuat.test.tsx"   # df0-dem-de-xuat-lam-giau — đếm đề xuất làm giàu queued (lược đồ tạm)
     ops_nhan: "cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx"
     vong_doi_nguon: "cd pipeline && node --test scripts/vong-doi.test.mjs scripts/vong-doi.itest.mjs"   # TV2a: .test thuần (CI), .itest cần DB local :5433
     vong_doi_nguon_route: "cd app && node --import tsx --test tests/vong-doi-nguon.test.tsx"
+    cong_tac: "cd app && node --import tsx --test tests/cong-tac-nhom-go.test.tsx"   # cong-tac-khong-ha-nhom-go: ma trận 5 × 2 của công tắc, cần DB local :5433
+    cong_tac_ghim: "node --test scripts/cong-tac-ghim.itest.mjs"   # cong-tac-test-ghim-ban-cu: đối chứng ghim, cần DB local :5433
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
     so_nhom: "cd pipeline && node --test scripts/so-nhom.itest.mjs"
     so_nhom_app: "cd app && node --import tsx --test tests/so-nhom.test.tsx"

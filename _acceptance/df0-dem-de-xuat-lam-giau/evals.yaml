@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: df0-dem-de-xuat-lam-giau
+# Ca test mang tiền tố «DD-AC-n» trong app/tests/df0-dem-de-xuat.test.tsx (lược đồ tạm DB local `dem_<pid>`, bảng
+# enrichment_proposals + review_queue LIKE public kèm CHECK, xoá cuối lượt; jsdom cho AC-4). Trạng thái/tuyến rút từ
+# ràng buộc CHECK của bảng thật. Chiều đỏ là ca đột biến cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dem_de_xuat
+    paths: [app/src/lib/data-flow-queries.ts, app/tests/df0-dem-de-xuat.test.tsx]
+    expected: "exit 0; ca 'DD-AC-1 đếm queued' xanh: tập trạng thái rút từ CHECK của public.enrichment_proposals BẰNG đúng bảng phân loại ghim {queued: đếm; applied, rejected, superseded, skipped, reverted: không} (= 6 phần tử; lệch là đỏ 'trạng thái mới chưa phân loại'), tuyến rút từ CHECK route (4 tuyến); mỗi cặp (trạng thái × tuyến) có dòng, số dòng mỗi trạng thái là luỹ thừa 2 riêng (ca in bảng trạng thái × số dòng) — getDataFlow('all') chạy thật với query tiêm (câu chạm enrichment_proposals/review_queue chạy trên lược đồ tạm, câu khác trả rỗng) ra enrichPending = tổng dòng queued mọi tuyến, khác 0 và khác tổng số dòng; chiều đỏ cùng ca: đột biến lọc thêm route <> 'review' ra số khác"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dem_de_xuat
+    paths: [app/src/lib/data-flow-queries.ts, app/tests/df0-dem-de-xuat.test.tsx]
+    expected: "exit 0; ca 'DD-AC-2 đột biến pending' xanh: cùng fixture, query tiêm đổi `status = 'queued'` thành `status = 'pending'` trong câu đếm → enrichPending = 0, ca khẳng định 0 ≠ số queued với thông điệp ghim 'câu cũ lọc pending đếm 0'; đối chứng: chuỗi đột biến thật sự khác câu gốc"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dem_de_xuat
+    paths: [app/src/lib/data-flow-queries.ts, app/tests/df0-dem-de-xuat.test.tsx]
+    expected: "exit 0; ca 'DD-AC-3 không có queued' xanh: lược đồ tạm chỉ có năm trạng thái đã xử lý (mỗi trạng thái ≥ 1 dòng) → enrichPending = 0; đối chứng dương cùng ca: thêm một dòng queued → 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dem_de_xuat
+    paths: [app/src/lib/data-flow-queries.ts, app/src/components/ops/data-flow/data-flow-view.tsx, app/tests/df0-dem-de-xuat.test.tsx]
+    expected: "exit 0; ca 'DD-AC-4 đầu trang' xanh: dựng DataFlowView (jsdom) với flow đọc ở DD-AC-1 → textContent có «<N> đề xuất làm giàu» với N = fmtInt(số queued); chiều đỏ cùng ca: flow đột biến enrichPending = 0 → không còn «<N> đề xuất làm giàu», có «0 đề xuất làm giàu»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dem_de_xuat
+    paths: [app/src/lib/data-flow-queries.ts, app/tests/df0-dem-de-xuat.test.tsx]
+    expected: "exit 0; ca 'DD-AC-5 thẻ chờ duyệt giữ nguyên' xanh: trạng thái review_queue rút từ CHECK của public.review_queue (ca in danh sách, có 'pending'); lược đồ tạm có pending 2 dòng, mỗi trạng thái khác 1 → reviewPending = 2; chiều đỏ cùng ca: đột biến câu đếm review sang status = 'approved' ra 1 ≠ 2"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: judgment
+    inputs: [app/src/app/ops/data-flow/page.tsx, app/src/components/ops/data-flow/data-flow-view.tsx]
+    question: "Trong page.tsx, kết quả getDataFlow có được truyền thẳng vào prop flow của DataFlowView (không qua biến đổi hay nguồn số khác), và trong data-flow-view.tsx dòng đầu trang có đọc flow.enrichPending cho chữ «đề xuất làm giàu» không?"
+    evidence_required: [verdict, rationale, votes]

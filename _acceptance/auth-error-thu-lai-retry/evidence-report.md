@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 649a6d119bbdf9acc4667949541e49b041adcbda
+verified_commit: 9d9ce0566d640de2530625220b8ed6628fe6e25d
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -130,3 +130,7 @@ Round 2: E2, E5 chạy lại sau bản sửa (so trước-sau trên hợp tập 
 ### Re-pin lần 1 — 2026-10-26, do gộp main + sửa AER-AC-2 so cặp commit cố định (aer-ac2-so-cap-co-dinh)
 run_id: repin-20261026T143917Z-34922
 sha: 649a6d119bbdf9acc4667949541e49b041adcbda · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-26, do ô E2 thay bởi auth-error-e2-superseded#AC-1 (đã ký) + gộp main
+run_id: repin-20261026T231302Z-86952
+sha: 9d9ce0566d640de2530625220b8ed6628fe6e25d · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E2 · thay bởi hồ sơ đã ký: E2→auth-error-e2-superseded#AC-1 · AC không có chốt máy: AC-2
