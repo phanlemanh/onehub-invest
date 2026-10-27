@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: audit-all-test-moc-phut
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.amp_ca_canh
+    paths: [scripts/audit-all.test.mjs, _acceptance/audit-all-test-moc-phut/probes/ca-canh.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ban sua: ca canh xanh'; ba dòng đột biến cùng bản sao tệp test, mỗi dòng đỏ đúng thông điệp ghim: 'ban go date gia: ca canh do, thong diep ghim co', 'ban date tra moc moi doi so: ca canh do, thong diep ghim co', 'ban bo ghi nhat ky: ca canh do, thong diep ghim co'; cuối 'CA CANH OK'; should-NOT-fire: không 'CA CANH KHONG DO', 'KHONG TIM THAY CA CANH', 'DOT BIEN … KHONG AP DUOC'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.amp_qua_phut
+    paths: [scripts/audit-all.test.mjs, scripts/audit-all.sh, _acceptance/audit-all-test-moc-phut/probes/qua-phut.sh, _acceptance/audit-all-test-moc-phut/probes/date-nhay/date]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; hai dòng 'nguon gio da khai: <số dòng>' (tiêu đề, find -mtime); 'ban cu 53e2b83b: do 2/2 ca ON16-AC-2, dau ra co dong AUDIT TOAN DIEN' và 'date nhay phut duoc goi (ban cu): <n>' với n ≥ 4; 'ban sua: xanh 2/2 ca ON16-AC-2' và 'date nhay phut duoc goi (ban sua): 0'; cuối 'QUA PHUT OK'; should-NOT-fire: không 'DOI CHUNG KHONG DO', 'DATE NHAY KHONG DUOC GOI', 'NGUON GIO CHUA KHAI', 'KIEM KE NGUON GIO LECH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.amp_lap
+    paths: [scripts/audit-all.test.mjs, _acceptance/audit-all-test-moc-phut/probes/lap.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'so ca ky vong: <k> (ban cu <k-1> + ca canh)'; mười hai dòng 'lan <n>: tests <k> pass <k> fail 0'; cuối 'LAP 12 LAN XANH'; should-NOT-fire: không 'CAY BAN', 'SO CA KHAC KY VONG', 'SO CA LECH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.amp_pham_vi
+    paths: [scripts/audit-all.test.mjs, scripts/audit-all.sh, _acceptance/audit-all-test-moc-phut/probes/pham-vi.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; tệp test có trong diff so với merge-base của origin/main; mọi tệp đổi 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI', 'THIEU TEP TEST', 'AUDIT-ALL.SH BI DOI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

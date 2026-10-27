@@ -31,7 +31,11 @@ function backupLine(rc) {
 const roots = [];
 after(() => roots.forEach((r) => rmSync(r, { recursive: true, force: true })));
 
+// Mốc giờ ghim cho dòng tiêu đề: hai lượt audit vắt qua ranh giới phút không còn lệch dòng tiêu đề (audit-all-test-moc-phut).
+const MOC_GHIM = "2026-10-23 09:00";
+
 const FAKES = {
+  date: `echo "date $*" >> "$FAKE_LOG"; if [ "$#" -eq 1 ] && [ "$1" = "+%Y-%m-%d %H:%M" ]; then echo "${MOC_GHIM}"; else PATH=/usr/bin:/bin exec date "$@"; fi`,
   docker: `echo "docker $*" >> "$FAKE_LOG"; echo "\${FAKE_DB_VALUE:-5}"`,
   curl: `echo "curl $*" >> "$FAKE_LOG"
 url=""; want_code=0
@@ -277,6 +281,19 @@ describe("audit-all nói thật (AU5)", () => {
     const src = readFileSync(SCRIPT, "utf8");
     assert.doesNotMatch(src, /\/usr\/(local\/)?bin\/(curl|docker|openclaw|security)|\/bin\/launchctl/);
     assert.doesNotMatch(src, /ROOT="\/Users\//, "ROOT còn viết cứng");
+  });
+});
+
+// ---------- `audit-all-test-moc-phut`: dòng tiêu đề đọc mốc ghim, không đọc đồng hồ thật ----------
+describe("mốc giờ ghim trong hộp", () => {
+  test("MP-AC-1 dòng tiêu đề mang mốc ghim, date giả ghi nhật ký và chuyển định dạng khác cho date thật", () => {
+    const r = runAudit();
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(lineOf(r.out, /AUDIT TOÀN DIỆN/), ` AUDIT TOÀN DIỆN ONE INVEST — ${MOC_GHIM}`, "dòng tiêu đề phải mang mốc ghim");
+    assert.match(r.calls, /^date \+%Y-%m-%d %H:%M$/m, "nhật ký lời gọi phải có date của dòng tiêu đề");
+    const bin = r.env.PATH.split(":")[0];
+    const s = spawnSync(path.join(bin, "date"), ["+%s"], { env: r.env, encoding: "utf8" });
+    assert.ok(Math.abs(Number(s.stdout) - Date.now() / 1000) < 5, `date giả phải chuyển định dạng khác cho date thật, được «${s.stdout.trim()}»`);
   });
 });
 

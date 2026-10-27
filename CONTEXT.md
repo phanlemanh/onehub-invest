@@ -65,13 +65,25 @@ _Avoid_: line căn, dòng căn
 - Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
+**Tin**: Một bản ghi niêm yết lấy từ nguồn — khái niệm cha của **tin rao** (bán, thuê dài hạn) và **listing** (thuê ngắn hạn). Là lớp giữa của kiến trúc «tin → căn» (ADR-0013 §1): nhiều tin, có thể trùng, cùng trỏ về một căn nhà. Trường thuộc tin (giá, bán/thuê, người đăng, trạng thái chào) gắn với tin, trường thuộc căn gắn với căn.
+- Code: `sale_offers` + `listings` (không có bảng chung) · RESO: resource Property — RESO gọi mỗi bản ghi là một listing, khoá `ListingKey`
+- Ghi chú: Trên UI, «Tin» đứng một mình là nhãn ngắn cho tin rao khi chỗ đó chỉ có tin rao (cột bảng tin, thẻ duyệt «Tin A» / «Tin B»); chỗ nào có cả listing hay bài thô thì viết «Tin rao».
+_Avoid_: tin đăng
+
 **Listing**: Một chỗ cho thuê ngắn hạn tự thu (bảng `listings`, id `abnb_…`): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết.
 - Code: `listing` · RESO: không có mô hình STR — local extension (reso-standards.md)
 - Slug URL: `listings` · `listing`
-_Avoid_: chỗ ở, phòng cho thuê
+- Ghi chú: «listing» có hai nghĩa — RESO gọi một bản ghi `Property` (= một **tin rao** của ta) là listing,
+  khoá `ListingKey`. Luật (chốt 27/10, `docs/audit/2026-10-27-tu-ngu-tin-listing.md`): `listing` trong code,
+  bảng, API, URL và chữ UI **chỉ** là chỗ cho thuê ngắn hạn; tin rao trong code là `offer`; tên RESO `Listing*`
+  chỉ nằm ở cột đối chiếu RESO (`offer_id` ↔ `ListingKey`), không làm tên cột hay tên trục của ta. Ngoại lệ
+  còn sót: trục `listing_intent` ở bảng từ vựng dưới — đang đổi thành `offer_intent` (Đ1).
+_Avoid_: chỗ ở, phòng cho thuê, listing bán, listing thuê dài hạn
 
 **Tin rao**: Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng `sale_offers`). Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14. Loại tin ở cột `kind`.
-- Code: `sale_offer` · RESO: resource Property (một bản ghi = một tin) + ListPrice; bán/thuê qua PropertyType
+- Code: `sale_offer` (bảng `sale_offers`; cột, API, hằng đều là `offer`: `offer_id`, `offer_status`, `/api/v1/offers`) · RESO: resource Property (một bản ghi = một tin, RESO gọi là listing) + ListPrice; bán/thuê qua PropertyType
+- Nhãn ngắn: «Tin» (xem **Tin**) — chỉ khi chỗ đó chỉ có tin rao.
+- Ghi chú: Bảng `sale_offers` chứa cả tin cho thuê nên chữ «sale» sai nghĩa — đổi thành `offers` ở hàng riêng (Đ2).
 _Avoid_: tin đăng, offer, rao vặt, sale offer
 
 **Tin bán**: Tin rao có `kind = sale`.
@@ -350,7 +362,7 @@ _Avoid_: bản cloud, lên cloud
 - Code: `job (JobStatus)` · RESO: —
 _Avoid_: Job
 
-**Khoá an toàn**: Bảy lớp chặn agent gửi tin vào nhóm Zalo (luật 8) cộng hạ tầng thu; mỗi lớp «Ổn», «Hỏng» hoặc «Chưa kiểm được».
+**Khoá an toàn**: Bảy lớp chặn agent gửi tin nhắn vào nhóm Zalo (luật 8) cộng hạ tầng thu; mỗi lớp «Ổn», «Hỏng» hoặc «Chưa kiểm được».
 - Code: `lockdown (LockdownLayer)` · RESO: —
 _Avoid_: Lockdown
 
@@ -408,7 +420,7 @@ _Avoid_: collection unit, source group
 - Slug URL: `change-requests`
 _Avoid_: change request, yêu cầu thay đổi
 
-**Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách tin. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các tin gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
+**Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách bài thành tin rao. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các bài gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
 - Code: `context_rule (context_rules)` · RESO: —
 - Slug URL: `context-rules`
 - Ghi chú: Khác mô tả nhóm (ON19): mô tả là dữ kiện về nhóm; quy định là cách đọc tin của nhóm.

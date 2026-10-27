@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 34d59edef0df0919ffede9ea082c51512a354534
+verified_commit: e6ab5ffcdeccce8ca1000f081603dca009ff7ed7
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -155,3 +155,11 @@ Round 2: tất cả eval PASS — TCM-AC-2 đã bỏ qua tệp ẩn khi quét c�
 ### Re-pin lần 1 — 2026-10-25, do ghim lại sau gộp main 0d4d19f
 run_id: repin-20261025T063847Z-20010
 sha: 34d59edef0df0919ffede9ea082c51512a354534 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-26, do scripts/audit-all.test.mjs đổi ở audit-all-test-moc-phut (bản giả date + ca canh MP-AC-1)
+run_id: repin-20261026T161818Z-47070
+sha: 59397e94984baaf1b83154326e6d4d36f1debba4 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-26, do ghim lại sau gộp main 50813379 vào #144
+run_id: repin-20261026T232828Z-21709
+sha: e6ab5ffcdeccce8ca1000f081603dca009ff7ed7 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6

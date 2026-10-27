@@ -368,6 +368,11 @@ executors:
     odt_ops_doi_chung: "bash _acceptance/on-dinh-test-app-chap-chon/probes/ops-doi-chung.sh"
     odt_lb_lap: "bash _acceptance/on-dinh-test-app-chap-chon/probes/lb-lap.sh"
     odt_pham_vi: "bash _acceptance/on-dinh-test-app-chap-chon/probes/pham-vi.sh"
+    # audit-all-test-moc-phut — bản sao tệp test ở thư mục tạm, date giả trong hộp; không chạm DB hay mạng
+    amp_ca_canh: "bash _acceptance/audit-all-test-moc-phut/probes/ca-canh.sh"
+    amp_qua_phut: "bash _acceptance/audit-all-test-moc-phut/probes/qua-phut.sh"
+    amp_lap: "bash _acceptance/audit-all-test-moc-phut/probes/lap.sh"
+    amp_pham_vi: "bash _acceptance/audit-all-test-moc-phut/probes/pham-vi.sh"
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
