@@ -61,6 +61,7 @@ executors:
     che_do_thu: "cd app && node --import tsx --test tests/che-do-thu.test.tsx"
     job_exit: "node --test scripts/job-exit.test.mjs"
     dong_chay: "cd app && node --import tsx --test tests/ops-dong-chay.test.tsx tests/data-level.test.tsx"
+    dong_chay_cloud: "cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx"   # DF1 dong-chay-len-cloud — bảng tính sẵn, khối dataFlow, trang trên cloud (lược đồ tạm)
     luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
     dem_de_xuat: "cd app && node --import tsx --test tests/df0-dem-de-xuat.test.tsx"   # df0-dem-de-xuat-lam-giau — đếm đề xuất làm giàu queued (lược đồ tạm)
     chang_ngay: "cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx"   # df0-chang-theo-ngay-diem-0 — chuỗi ngày đủ cửa sổ, ngày im = 0 (thuần + jsdom)
@@ -393,6 +394,13 @@ executors:
     amp_qua_phut: "bash _acceptance/audit-all-test-moc-phut/probes/qua-phut.sh"
     amp_lap: "bash _acceptance/audit-all-test-moc-phut/probes/lap.sh"
     amp_pham_vi: "bash _acceptance/audit-all-test-moc-phut/probes/pham-vi.sh"
+    # test-nen-on22-on12 — đo đỉnh kết nối chỉ đọc pg_stat_activity; bản sao test ở app/node_modules/.tn-*; lược đồ tạm như suite
+    tn_dinh_ket_noi: "node _acceptance/test-nen-on22-on12/probes/dinh-ket-noi.mjs"
+    tn_thu_lai: "bash _acceptance/test-nen-on22-on12/probes/thu-lai.sh"
+    tn_cau_truc: "node _acceptance/test-nen-on22-on12/probes/cau-truc.mjs"
+    tn_ct_cham: "bash _acceptance/test-nen-on22-on12/probes/ct-cham.sh"
+    tn_lap: "bash _acceptance/test-nen-on22-on12/probes/lap.sh"
+    tn_pham_vi: "bash _acceptance/test-nen-on22-on12/probes/pham-vi.sh"
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"

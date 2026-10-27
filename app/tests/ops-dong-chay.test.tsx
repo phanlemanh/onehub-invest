@@ -9,6 +9,7 @@ import type { ReactNode } from "react"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
+import { IN, NOW, OFFERS, fragment, makeFlowSchema, refreshFlow, vn, type Offer } from "./ops-dong-chay-fixture"
 
 const S = `df0_${process.pid}`
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
@@ -81,72 +82,13 @@ async function closeSheets() {
   await act(() => new Promise((r) => setTimeout(r, 30)))
 }
 
-// ---------- lược đồ tạm ----------
-const NOW = Date.parse("2026-10-26T05:00:00Z") // 12:00 VN ngày 26/10 → 7 ngày VN 20…26
-const vn = (s: string) => new Date(`${s}+07:00`).toISOString()
-const IN = "2026-10-24T09:00:00"
-const OLD = "2026-10-10T09:00:00" // ngoài 7 ngày
-const SNAP = "hanoi__zalo-agent__2026-10-24T090000"
-const TABLES = ["stg_zalo_posts", "sale_offers", "property_offers", "stg_chotot_ads", "stg_abnb_listings", "listings", "areas", "enrichment_proposals", "review_queue"]
-
-// [post_id, snapshot_id, agent_id, group_name, posted_at, media, media_files]
-type Post = [string, string, string, string, string, unknown, unknown]
-const POSTS: Post[] = [
-  ["p1", SNAP, "openclaw-hook", "Nhóm A", IN, [{ url: "https://photo-stal-1.zdn.vn/a.jpg" }, { url: "https://photo-stal-1.zdn.vn/b.jpg" }], [{ url: "https://photo-stal-1.zdn.vn/a.jpg", file: "media/a1.jpg" }]],
-  ["p2", SNAP, "openclaw-hook", "Nhóm A", "2026-10-24T10:00:00", [{ url: "https://photo-stal-1.zdn.vn/c.jpg" }, { url: "https://photo-stal-1.zdn.vn/b.jpg" }], null],
-  ["p3", SNAP, "openclaw-hook", "Nhóm B", "2026-10-24T11:00:00", null, null],
-  ["p4", SNAP, "openclaw-hook", "Nhóm B", "2026-10-25T09:00:00", null, null],
-  ["p5", SNAP, "openclaw-hook", "Nhóm A", OLD, null, null],
-  ["p6", SNAP, "openclaw-hook", "Nhóm A", "2026-10-11T09:00:00", null, null],
-  ["t1", "hanoi__zalo-mock__2026-10-24T090000", "openclaw-hook", "Nhóm A", IN, null, null],
-  ["t2", SNAP, "e2e-agent", "Nhóm A", IN, null, null],
-  ["t3", SNAP, "openclaw-hook", "TEST-G1", IN, null, null],
-  ["f1", SNAP, "apify-facebook", "Nhóm FB", IN, [{ url: "https://scontent.fbcdn.net/f.jpg" }], null],
-  ["f2", SNAP, "apify-facebook", "Nhóm FB", "2026-10-25T09:00:00", null, null],
-]
-// [offer_id, source, kind, property_type, price_vnd, area_m2, area_id, first_seen, post_ids, linked]
-type Offer = [string, string, string | null, string | null, number | null, number | null, string | null, string, string[], boolean]
-const OFFERS: Offer[] = [
-  ["o1", "S03", "sale", "apartment", 3_000_000_000, 80, "vn-hanoi-a", IN, ["p1", "p2", "p3"], true],
-  ["o2", "S03", "sale", "unknown", null, null, null, OLD, ["p5"], false],
-  ["o3", "S05", "rent_lt", "unknown", 9_000_000, null, null, IN, ["f1"], false],
-  ["c1", "S06", "sale", "house", 5_000_000_000, 60, "vn-hcmc-x", IN, [], true],
-  ["c2", "S06", "rent_lt", "apartment", 8_000_000, 50, "vn-hcmc-x", IN, [], false],
-  ["c3", "S06", "rent_lt", "room", 4_000_000, 25, "vn-hcmc-y", IN, [], false],
-]
-
+// ---------- lược đồ tạm (fixture dùng chung với DF1 — tests/ops-dong-chay-fixture.ts) ----------
 const admin = new pg.Client({ connectionString: localDbUrl() })
 let setupErr: string | null = null
-async function makeSchema(schema: string, offers: Offer[], ads: number) {
-  await admin.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
-  await admin.query(`CREATE SCHEMA "${schema}"`)
-  for (const t of TABLES) await admin.query(`CREATE TABLE "${schema}".${t} (LIKE public.${t} INCLUDING DEFAULTS)`)
-  for (const [id, snap, agent, group, posted, media, files] of POSTS)
-    await admin.query(
-      `INSERT INTO "${schema}".stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at, captured_at, media, media_files)
-       VALUES ($1,$2,$3,$4,'bài thử',$5,$5,$6,$7)`,
-      [id, snap, agent, group, vn(posted), media === null ? null : JSON.stringify(media), files === null ? null : JSON.stringify(files)],
-    )
-  for (const [id, source, kind, type, price, area, areaId, seen, postIds, linked] of offers) {
-    await admin.query(
-      `INSERT INTO "${schema}".sale_offers (offer_id, source, kind, property_type, price_vnd, area_m2, area_id, first_seen, last_seen, post_ids, confidence, n_reposts)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$8,$9,'medium',$10)`,
-      [id, source, kind, type, price, area, areaId, vn(seen), postIds, Math.max(1, postIds.length)],
-    )
-    if (linked) await admin.query(`INSERT INTO "${schema}".property_offers (property_id, offer_id) VALUES (1, $1)`, [id])
-  }
-  for (let i = 0; i < ads; i++)
-    await admin.query(
-      `INSERT INTO "${schema}".stg_chotot_ads (list_id, snapshot_id, region_v2, city_code, category, ad_type, payload, list_time)
-       VALUES ($1,'hcmc__s06__x',1,'13000',1010,'s','{}',$2)`,
-      [1000 + i, vn(IN)],
-    )
-  for (const id of ["l1", "l2"]) {
-    await admin.query(`INSERT INTO "${schema}".stg_abnb_listings (listing_id, snapshot_id, payload, fetched_at) VALUES ($1,'hanoi__airbnb__x','{}',$2)`, [id, vn(IN)])
-    await admin.query(`INSERT INTO "${schema}".listings (id, area_id, last_seen) VALUES ($1,'vn-hanoi-a','2026-10-25')`, [id])
-  }
-  // Listing thấy lần cuối ngày 19/10 (giờ VN): ngoài cửa sổ 7 ngày 20…26 — ca biên ép ngày theo múi giờ phiên DB.
-  await admin.query(`INSERT INTO "${schema}".listings (id, area_id, last_seen) VALUES ('l3','vn-hanoi-a','2026-10-19')`)
+/** DF1: số tổng hợp đọc bảng tính sẵn — dựng lược đồ, áp 051, làm tươi bằng 600 THẬT (hay bản đột biến `sql`). */
+async function makeSchema(schema: string, offers: Offer[], ads: number, sql?: string) {
+  await makeFlowSchema(admin, schema, { offers, ads })
+  await refreshFlow(schema, { now: NOW, sql })
 }
 
 before(async () => {
@@ -252,7 +194,8 @@ describe("DF-AC-2 số chặng theo nguồn", () => {
   })
   test("DF-AC-2 chiều đỏ — bỏ điều kiện bài thử", async () => {
     ready()
-    const { IS_TEST_SQL } = await import("../src/lib/data-flow-queries")
+    // DF1: định nghĩa bài thử là đoạn ghim IS_TEST của pipeline/sql/600_data_flow.sql (bên tính số thật).
+    const IS_TEST_SQL = `(${fragment("IS_TEST")})`
     const dem = async (pred: string) =>
       (await admin.query(`SELECT count(*)::int n FROM "${S}".stg_zalo_posts WHERE coalesce(agent_id,'') <> 'apify-facebook' AND ${pred}`)).rows[0].n
     assert.equal(await dem(`NOT ${IS_TEST_SQL}`), 6)
@@ -271,8 +214,12 @@ describe("DF-AC-2 số chặng theo nguồn", () => {
       const query = (text: string, values?: unknown[]) => c.query(text, values)
       const s06 = (await getDataFlow("all", { now: NOW, query })).sources.find((x) => x.source === "S06")!
       assert.deepEqual([s06.offers, s06.received, s06.readable], [5, 2, 2], "S06 readable = min(tin, quảng cáo)")
-      // Chiều đỏ: cùng đường mã getDataFlow, luật «luôn lấy số tin» thay cho min.
-      const sai = (await getDataFlow("all", { now: NOW, query, readableS06: (o) => o })).sources.find((x) => x.source === "S06")!
+      // Chiều đỏ: cùng đường đọc getDataFlow, 600 đột biến luật «luôn lấy số tin» thay cho min (DF1: luật nằm ở 600).
+      const goc = "least(coalesce(f.offers, 0), coalesce(r.received, 0))"
+      const { flowSql } = await import("./ops-dong-chay-fixture")
+      assert.ok(flowSql().includes(goc), "khuôn đột biến lệch 600: không thấy luật min của S06")
+      await refreshFlow(`${S}_min`, { sql: flowSql().replace(goc, "coalesce(f.offers, 0)") })
+      const sai = (await getDataFlow("all", { now: NOW, query })).sources.find((x) => x.source === "S06")!
       assert.notEqual(sai.readable, 2, `đột biến phải đỏ: S06 readable ${sai.readable} ≠ 2`)
     } finally {
       await c.end()
@@ -305,7 +252,7 @@ describe("DF-AC-3 SQL khớp levelOf", () => {
   ]
   test("DF-AC-3 SQL khớp levelOf — ma trận ô thiếu trên lược đồ tạm", async () => {
     ready()
-    const { COMPLETE_SQL } = await import("../src/lib/data-flow-queries")
+    const COMPLETE_SQL = fragment("COMPLETE")
     const { levelOf } = await import("../src/lib/data-level")
     const sch = `${S}_mt`
     await makeSchema(sch, MA_TRAN, 0)
@@ -338,7 +285,7 @@ describe("DF-AC-3 SQL khớp levelOf", () => {
     }
   })
   test("DF-AC-3 DB thật — đủ trường lõi theo nguồn = levelOf", async () => {
-    const { COMPLETE_SQL } = await import("../src/lib/data-flow-queries")
+    const COMPLETE_SQL = fragment("COMPLETE")
     const { levelOf } = await import("../src/lib/data-level")
     const { rows } = await admin.query(
       `SELECT o.source, o.kind, o.property_type, o.price_vnd::float8 AS price, o.area_m2::float8 AS area, o.area_id, (${COMPLETE_SQL}) AS sql_du

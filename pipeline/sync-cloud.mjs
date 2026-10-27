@@ -381,7 +381,8 @@ export async function pool(items, n, fn) {
  * Trả danh sách vi phạm (rỗng = PASS). */
 export async function leakGate(exec) {
   const leaks = [];
-  const checks = ["source_registry", "airbnb_snapshots"];
+  // data_flow_snapshot (DF1, migration 051): số tổng hợp chỉ ở máy thu — lên cloud bằng khối bản tin, không bằng bảng.
+  const checks = ["source_registry", "airbnb_snapshots", "data_flow_snapshot"];
   const stg = await exec(
     `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'stg_%'`,
   );
