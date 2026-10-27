@@ -6,9 +6,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { filesOfTree, scanCanonicalWrite } from "../lib/scan-canonical-write.mjs";
-import { CALL_SITES, findCallSites, readActorPrefix } from "../lib/enrich-call-sites.mjs";
+import { CALL_SITES, findCallSites, kiemVai, readActorPrefix } from "../lib/enrich-call-sites.mjs";
 import { CLOUD_ALLOW, FILL } from "../sync-cloud.mjs";
 import { VOCAB } from "../lib/vocab.generated.mjs";
+import { soMoc } from "../phat-bieu-cat-chuyen.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const NAM_COT = VOCAB.enrich_field;
@@ -48,23 +49,19 @@ test("PB-AC-6 chỗ gọi: tập chỗ gọi đúng ma trận viết trước; n
   const khoa = (x) => `${x.file}|${x.fn}`;
   assert.deepEqual([...new Set(thay.map(khoa))].sort(), [...new Set(CALL_SITES.map(khoa))].sort(),
     `chỗ gọi lệch ma trận — tìm thấy: ${thay.map((x) => `${x.file}:${x.line} ${x.fn}`).join(" · ")}`);
-  let n = 0;
-  for (const s of thay) {
-    const vai = CALL_SITES.find((x) => khoa(x) === khoa(s)).vai;
-    const tienTo = readActorPrefix(readFileSync(join(ROOT, s.file), "utf8"), s.line);
-    assert.ok(tienTo, `không đọc được actor — ${s.file}:${s.line}`);
-    if (vai === "nguoi") assert.equal(tienTo, "hitl:", `${s.file}:${s.line} chỗ của người phải truyền 'hitl:'`);
-    else assert.notEqual(tienTo, "hitl:", `${s.file}:${s.line} chỗ của máy không được truyền 'hitl:'`);
-    n++;
-  }
-  assert.equal(n, thay.length);
-  assert.ok(n >= CALL_SITES.length);
-  // đối chứng: đổi vai route decide sang máy → chính route đỏ
+  for (const s of thay) assert.ok(readActorPrefix(readFileSync(join(ROOT, s.file), "utf8"), s.line), `không đọc được actor — ${s.file}:${s.line}`);
+  assert.deepEqual(kiemVai(ROOT), [], "ma trận thật phải đạt");
+  assert.ok(thay.length >= CALL_SITES.length);
+});
+
+test("PB-AC-6 đối chứng: ma trận đổi vai route decide sang máy thì bộ kiểm vai đỏ, nêu tệp route", () => {
   const sai = CALL_SITES.map((x) => (x.file.includes("decide/route.ts") ? { ...x, vai: "may" } : x));
-  const route = thay.find((x) => x.file.includes("decide/route.ts"));
-  const vaiSai = sai.find((x) => khoa(x) === khoa(route)).vai;
-  const tt = readActorPrefix(readFileSync(join(ROOT, route.file), "utf8"), route.line);
-  assert.equal(vaiSai === "may" && tt === "hitl:", true, "đối chứng: ma trận đổi vai không làm route đỏ");
+  const loi = kiemVai(ROOT, sai);
+  assert.ok(loi.length > 0, "đối chứng: đổi vai route sang máy mà bộ kiểm không đỏ");
+  for (const l of loi) assert.match(l, /decide\/route\.ts:\d+ chỗ của máy không được truyền 'hitl:'/);
+  // đối chứng thứ hai: chỗ của máy (run.ts) bị khai là người → đỏ nêu run.ts
+  const sai2 = CALL_SITES.map((x) => (x.file === "agent/src/enrich/run.ts" ? { ...x, vai: "nguoi" } : x));
+  assert.deepEqual(kiemVai(ROOT, sai2).map((l) => l.split(":")[0]), ["agent/src/enrich/run.ts"]);
 });
 
 /** Vi phạm rào cloud của PL15: cột / bảng phát biểu lọt vào tập đồng bộ. */
@@ -80,4 +77,14 @@ test("PB-AC-10 cloud: nguồn gốc và bảng phát biểu không vào tập đ
   const sai = { ...CLOUD_ALLOW, sale_offers: [...CLOUD_ALLOW.sale_offers, "field_provenance"] };
   assert.deepEqual(cloudLeaks(sai, FILL), ["CLOUD_ALLOW.sale_offers: field_provenance"]);
   assert.deepEqual(cloudLeaks(CLOUD_ALLOW, [...FILL, "field_assertions"]), ["FILL: field_assertions"]);
+});
+
+test("PB-AC-8 bộ so mốc: chỉ miễn S05 loại hình NULL → unknown; nguồn khác, trường khác hay giá trị khác đều là lệch", () => {
+  const moc = (o) => ({ moc: new Map(Object.entries(o.moc)), nguon: new Map(Object.entries(o.nguon)) });
+  const nguon = { a: "S05", b: "S03", c: "S06", d: "S05" };
+  const truoc = moc({ nguon, moc: { "a|property_type": null, "b|property_type": null, "c|property_type": null, "d|street_raw": null } });
+  const sau = moc({ nguon, moc: { "a|property_type": "unknown", "b|property_type": "unknown", "c|property_type": "house", "d|street_raw": "unknown" } });
+  const r = soMoc(truoc, sau);
+  assert.deepEqual(r.nullUnknown, ["a"]);
+  assert.deepEqual(r.lech.map((x) => `${x.offer_id}|${x.field}`).sort(), ["b|property_type", "c|property_type", "d|street_raw"]);
 });

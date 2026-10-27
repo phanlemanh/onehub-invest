@@ -55,3 +55,24 @@ export function readActorPrefix(text, line) {
   if (chot) return chot[1];
   return null;
 }
+
+/**
+ * Kiểm vai của mọi chỗ gọi thấy trong cây so với ma trận: chỗ ngoài ma trận, actor không đọc được, người không truyền
+ * 'hitl:', máy truyền 'hitl:'. Trả danh sách lỗi '<tệp>:<dòng> <lý do>' (rỗng = đạt).
+ * @param {string} root
+ * @param {typeof CALL_SITES} maTran
+ */
+export function kiemVai(root, maTran = CALL_SITES, readText = (f) => readFileSync(join(root, f), "utf8")) {
+  const loi = [];
+  const khoa = (x) => `${x.file}|${x.fn}`;
+  for (const s of findCallSites(root)) {
+    const m = maTran.find((x) => khoa(x) === khoa(s));
+    if (!m) { loi.push(`${s.file}:${s.line} chỗ gọi ${s.fn} ngoài ma trận`); continue; }
+    const tienTo = readActorPrefix(readText(s.file), s.line);
+    if (!tienTo) loi.push(`${s.file}:${s.line} không đọc được actor`);
+    else if (m.vai === "nguoi" && tienTo !== "hitl:") loi.push(`${s.file}:${s.line} chỗ của người phải truyền 'hitl:' (thấy '${tienTo}')`);
+    else if (m.vai === "may" && tienTo === "hitl:") loi.push(`${s.file}:${s.line} chỗ của máy không được truyền 'hitl:'`);
+  }
+  for (const m of maTran) if (!findCallSites(root).some((s) => khoa(s) === khoa(m))) loi.push(`${m.file} ma trận khai ${m.fn} mà cây không còn`);
+  return loi;
+}

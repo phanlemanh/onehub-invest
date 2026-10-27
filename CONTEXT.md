@@ -101,11 +101,11 @@ _Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại
 
 **Phát biểu**: Một lời khai về một trường của một tin: giá trị + lớp căn cứ + phương pháp + bằng chứng + ai/khi nào. Chỉ thêm, không sửa, không xoá; rút một phát biểu là đặt lúc rút + lý do (PL15, review phân loại §3.4).
 - Code: `field_assertions` · RESO: extension `FieldAssertion` (khuôn HistoryTransactional, ADR-0013 §6)
-_Avoid_: đề xuất (là một loại nguồn phát biểu, không phải phát biểu), assertion
+_Avoid_: assertion, claim
 
 **Lớp căn cứ**: Thang ba lớp của phát biểu: sự thật (người quyết, trường có cấu trúc của nguồn) › quan sát có trích dẫn (bộ đọc tin, luật, LLM có trích) › suy luận (ngữ cảnh, không trích). Suy luận không bao giờ tự vào cột.
 - Code: `evidence_tier` · RESO: không có — extension local
-_Avoid_: độ tin, confidence, bậc H0–H5
+_Avoid_: confidence, bậc H0–H5
 
 **Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị năm cột loại hình, phòng ngủ, WC, đường, toà. Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
 - Code: `resolve_offer_fields` · RESO: không có — bộ phân xử local

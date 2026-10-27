@@ -132,7 +132,7 @@ async function main(argv) {
         for (const [s, m] of Object.entries(r.maTran).sort()) {
           console.log(`  ${s}  ${NAM_COT.map((f) => `${f}=${m[f].o}/lệch ${m[f].lech}`).join("  ")}`);
         }
-        console.log(`property_type NULL → unknown (khai trước): ${r.nullUnknown.length}`);
+        console.log(`S05 property_type NULL → unknown (khai trước): ${r.nullUnknown.length}`);
         if (doiChung) {
           if (r.lech.length) {
             for (const x of r.lech.slice(0, 3)) console.log(`đối chứng ${doiChung}: lệch ${x.offer_id} · ${x.field} «${x.truoc}» → «${x.sau}»`);

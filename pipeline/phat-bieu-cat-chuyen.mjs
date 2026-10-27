@@ -48,18 +48,25 @@ export function demO({ moc, nguon }) {
   return out;
 }
 
+/** Sai khác khai trước ở hợp đồng PL15 (AC-7/AC-8): ô loại hình NULL của S05 → 'unknown' — không gì khác. */
+export const KHAI_TRUOC = Object.freeze([{ field: "property_type", nguon: "S05", truoc: null, sau: "unknown" }]);
+
 /**
- * So từng ô hai mốc. Sai khác được phép duy nhất: property_type NULL → 'unknown'.
- * @returns {{ lech: Array<{offer_id, field, truoc, sau}>, nullUnknown: string[] }}
+ * So từng ô hai mốc. Sai khác được phép DUY NHẤT là các mục KHAI_TRUOC — xét đủ nguồn × trường × giá trị trước/sau.
+ * @returns {{ lech: Array<{offer_id, field, truoc, sau}>, nullUnknown: string[] }} nullUnknown = offer_id được miễn
  */
-export function soMoc(a, b) {
+export function soMoc(a, b, khaiTruoc = KHAI_TRUOC) {
   const lech = [];
   const nullUnknown = [];
   for (const [k, va] of a.moc) {
     const vb = b.moc.has(k) ? b.moc.get(k) : null;
     if (va === vb) continue;
     const [offer_id, field] = k.split("|");
-    if (field === "property_type" && va === null && vb === "unknown") { nullUnknown.push(offer_id); continue; }
+    const nguon = a.nguon.get(offer_id) ?? b.nguon.get(offer_id);
+    if (khaiTruoc.some((k) => k.field === field && k.nguon === nguon && k.truoc === va && k.sau === vb)) {
+      nullUnknown.push(offer_id);
+      continue;
+    }
     lech.push({ offer_id, field, truoc: va, sau: vb });
   }
   return { lech, nullUnknown };
@@ -127,7 +134,7 @@ async function main(argv) {
       const r = await catChuyen(c, { actor: thu ? "cat-chuyen:thu" : "cat-chuyen:045" });
       inBang("trước", r.truoc, console.log);
       inBang("sau", r.sau, console.log);
-      console.log(`property_type NULL → unknown: ${r.nullUnknown.length} (khai trước)${r.nullUnknown.length
+      console.log(`S05 property_type NULL → unknown: ${r.nullUnknown.length} (khai trước)${r.nullUnknown.length
         ? ` — ${r.nullUnknown.slice(0, 10).join(", ")}${r.nullUnknown.length > 10 ? " …" : ""}` : ""}`);
       console.log(`legacy mới: ${r.legacyMoi}`);
       for (const x of r.lech.slice(0, 10)) console.log(`  lệch ${x.offer_id} · ${x.field}: «${x.truoc}» → «${x.sau}»`);
