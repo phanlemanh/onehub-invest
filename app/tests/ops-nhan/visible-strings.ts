@@ -47,6 +47,7 @@ export const SCAN_FILES = [
   "src/components/ops/data-flow/records-grid.tsx",
   "src/components/ops/data-flow/stage-face.tsx",
   "src/components/ops/data-flow/stage-trend-chart.tsx",
+  "src/components/ops/data-flow/stage-trend-data.ts",
   "src/components/ops/deal-card.tsx",
   "src/components/ops/deal-seen-note.tsx",
   "src/components/ops/design/catalog-samples.tsx",
