@@ -17,7 +17,7 @@ import pg from "pg"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
-import { dungSauGop } from "../../pipeline/scripts/so-nhom-fixture.mjs"
+import { THAM_CHIEU, dungSauGop } from "../../pipeline/scripts/so-nhom-fixture.mjs"
 import { chupPublic, xoaLuocDo } from "../../pipeline/scripts/vong-doi-fixture.mjs"
 import { dungBangPhien, taoNguoi } from "./helpers/phien-thu"
 
@@ -91,7 +91,7 @@ before(async () => {
   }
   await admin.connect()
   publicTruoc = await chupPublic(admin)
-  await dungSauGop(admin, S)
+  await dungSauGop(admin, S, { thamChieu: true })
   await dungBangPhien(admin, S)
   for (const t of ["ops_audit", "stg_zalo_posts", "review_queue"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
   await admin.query(`CREATE TABLE "${S}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
@@ -233,7 +233,21 @@ const BANG_ROUTE: [string, string, string | null, string][] = [
   ["zalo/login", "GET", null, "zalo.admin"],
   ["zalo/login", "DELETE", null, "zalo.admin"],
 ]
-/** Mã mong đợi của một ô: 401 / 403 / "qua" (qua cổng — mã nghiệp vụ tuỳ route). */
+/**
+ * Mã khi QUA cổng, viết trước cho từng ô route (thân lệnh ở lenh()). "thieu-bang": 4 route đọc số chạy tiếp tới truy vấn
+ * số liệu mà lược đồ tạm không có → 500 «relation … does not exist» — chỉ chấp nhận khi bảng thiếu KHÔNG phải users/sessions
+ * (bảng của chính cổng), tức lỗi nằm SAU cổng.
+ */
+const MA_QUA: Record<string, number | "thieu-bang"> = {
+  "audit GET": 200, "collections GET": "thieu-bang", "coverage GET": "thieu-bang", "extraction-quality GET": "thieu-bang",
+  "truthful-coverage GET": "thieu-bang", "ingest POST": 200, "review/[id]/decide POST": 200, "source-groups GET": 200,
+  "source-groups POST toggle": 200, "source-groups POST add": 200, "source-groups POST delete": 200,
+  "source-groups POST set-mode": 200, "source-groups POST set-meta": 200, "zalo/accounts GET": 200, "zalo/accounts POST": 200,
+  "zalo/accounts DELETE": 200, "zalo/groups GET": 200, "zalo/groups POST": 200, "zalo/login POST": 200, "zalo/login GET": 200,
+  "zalo/login DELETE": 200,
+}
+const THIEU_BANG = /^relation "(?!users"|sessions")\w+" does not exist$/
+/** Mã mong đợi của một ô: 401 / 403 / "qua" (qua cổng — mã cụ thể ở MA_QUA). */
 const mongDoi = (hd: string, g: Goi): 401 | 403 | "qua" =>
   g === "khong" ? 401 : g === "bearer" ? (BEARER_DUOC.has(hd) ? "qua" : 403) : BAC[g] >= BAC[VAI_TOI_THIEU[hd]] ? "qua" : 403
 const MA_TRAN = BANG_ROUTE.flatMap(([route, method, action, hd]) => NGUOI_GOI.map((g) => ({ route, method, action, hd, g, ky: mongDoi(hd, g) })))
@@ -242,6 +256,7 @@ const MA_TRAN = BANG_ROUTE.flatMap(([route, method, action, hd]) => NGUOI_GOI.ma
 type Handler = (req: Request, ctx?: unknown) => Promise<Response>
 const napRoute = async (rel: string) => (await import(`../src/app/api/v1/ops/${rel}/route`)) as Record<string, Handler>
 const cookieCua: Partial<Record<Vai5, string>> = {}
+const idCua: Partial<Record<Vai5, string>> = {}
 let nguoiAdmin = { id: "", cookie: "" }
 let soKhoa = 0
 const khoa = () => `https://www.facebook.com/groups/qv-${process.pid}-${++soKhoa}`
@@ -272,7 +287,14 @@ async function lenh(route: string, method: string, action: string | null): Promi
     if (action === "add") return { body: { action, sourceCode: "S05", groupKey: khoa(), name: "nhóm thêm" } }
     if (action === "delete") return { body: { action, sourceCode: "S05", groupKey: n.group_key } }
     if (action === "set-mode") return { body: { action, id: n.id, mode: "cho" } }
-    return { body: { action, unitCode: n.unit_code, marketCodes: [], projectNodeIds: [] } }
+    return { body: { action, unitCode: n.unit_code, marketCodes: [THAM_CHIEU.market], projectNodeIds: [] } }
+  }
+  if (route.startsWith("zalo/")) datCfg() // mỗi ô zalo bắt đầu từ cùng một cấu hình giả
+  if (route === "zalo/login" && method === "DELETE") {
+    // Có tiến trình đăng nhập (gọi thẳng thư viện, không qua route — không dòng audit) để huỷ là một việc thật.
+    const { startZaloLogin } = await import("../src/lib/zalo-admin")
+    await startZaloLogin("acc2")
+    return { query: "account=acc2" }
   }
   if (route === "zalo/accounts" && method === "POST") return { body: { id: `qv${++soKhoa}` } }
   if (route === "zalo/accounts" && method === "DELETE") return { body: { id: "acc2" } }
@@ -341,7 +363,11 @@ const donBanCu = () => {
 }
 
 test("QV-AC-0 dựng người ở năm vai", async () => {
-  for (const v of ["user", "viewer", "ops", "admin", "owner"] as Vai5[]) cookieCua[v] = (await taoNguoi(sc, v)).cookie
+  for (const v of ["user", "viewer", "ops", "admin", "owner"] as Vai5[]) {
+    const n = await taoNguoi(sc, v)
+    cookieCua[v] = n.cookie
+    idCua[v] = n.id
+  }
   nguoiAdmin = await taoNguoi(sc, "admin")
   assert.equal(MA_TRAN.length, 147)
 })
@@ -385,6 +411,7 @@ test("QV-AC-1 21 ô route gọi kiemQuyen đúng hành động; 11 tệp route k
 // ---- QV-AC-2: ma trận 21 × 7 = 147 ô trên route thật (E2) ----
 test("QV-AC-2 147 ô route × người gọi: 401 / 403 / qua đúng bảng; ô bị chặn không đổi bảng, audit, cấu hình, openclaw", async () => {
   assert.equal(MA_TRAN.length, 147)
+  assert.equal(Object.keys(MA_QUA).length, 21)
   const sai: string[] = []
   for (const o of MA_TRAN) {
     const l = await lenh(o.route, o.method, o.action)
@@ -392,7 +419,9 @@ test("QV-AC-2 147 ô route × người gọi: 401 / 403 / qua đúng bảng; ô 
     const r = await goi(o.route, o.method, dauCua(o.g), l)
     const ten = `${o.route} ${o.method}${o.action ? ` ${o.action}` : ""} × ${o.g}`
     if (o.ky === "qua") {
-      if (r.status === 401 || r.status === 403) sai.push(`${ten}: mong qua, được ${r.status}`)
+      const ma = MA_QUA[`${o.route} ${o.method}${o.action ? ` ${o.action}` : ""}`]
+      const dung = ma === "thieu-bang" ? r.status === 500 && THIEU_BANG.test(String(r.json.error)) : r.status === ma
+      if (!dung) sai.push(`${ten}: mong qua với ${ma}, được ${r.status} ${String(r.json.error ?? "").slice(0, 80)}`)
     } else {
       if (r.status !== o.ky) sai.push(`${ten}: mong ${o.ky}, được ${r.status}`)
       const sau = await chup()
@@ -423,33 +452,51 @@ test("QV-AC-2b đối chứng dương: route zalo/accounts bỏ nhánh trả Res
   }
 })
 
-// ---- QV-AC-3: thao tác thành công → đúng một dòng, người thật, tên hành động, trước/sau (E3) ----
-test("QV-AC-3 mỗi thao tác ghi thành công ghi đúng 1 dòng audit user:<id> mang tên hành động; ô không đổi / 409 / 400 ghi 0 dòng", async () => {
-  datCfg()
-  const nOps = await taoNguoi(sc, "ops")
-  const ca: { ten: string; route: string; method: string; dau: Record<string, string>; l: () => Promise<{ body?: unknown; query?: string; id?: number }>; hd: string; actor: string; truocSau?: boolean }[] = [
-    { ten: "ingest bằng bearer", route: "ingest", method: "POST", dau: { authorization: `Bearer ${TOKEN}` }, l: () => lenh("ingest", "POST", null), hd: "ingest.push", actor: "machine:cloud-sync" },
-    { ten: "ingest bằng phiên ops", route: "ingest", method: "POST", dau: { cookie: nOps.cookie }, l: () => lenh("ingest", "POST", null), hd: "ingest.push", actor: `user:${nOps.id}` },
-    { ten: "duyệt thẻ", route: "review/[id]/decide", method: "POST", dau: { cookie: nOps.cookie }, l: () => lenh("review/[id]/decide", "POST", null), hd: "review.decide", actor: `user:${nOps.id}`, truocSau: true },
-    ...(["toggle", "add", "delete", "set-mode", "set-meta"] as const).map((a) => ({
-      ten: a, route: "source-groups", method: "POST", dau: { cookie: nguoiAdmin.cookie }, l: () => lenh("source-groups", "POST", a),
-      hd: BANG_ROUTE.find((x) => x[2] === a)![3], actor: `user:${nguoiAdmin.id}`, truocSau: true,
-    })),
-    { ten: "zalo tạo tài khoản", route: "zalo/accounts", method: "POST", dau: { cookie: nguoiAdmin.cookie }, l: () => lenh("zalo/accounts", "POST", null), hd: "zalo.admin", actor: `user:${nguoiAdmin.id}` },
-    { ten: "zalo bật/tắt nhóm", route: "zalo/groups", method: "POST", dau: { cookie: nguoiAdmin.cookie }, l: () => lenh("zalo/groups", "POST", null), hd: "zalo.admin", actor: `user:${nguoiAdmin.id}` },
-    { ten: "zalo gỡ tài khoản", route: "zalo/accounts", method: "DELETE", dau: { cookie: nguoiAdmin.cookie }, l: () => lenh("zalo/accounts", "DELETE", null), hd: "zalo.admin", actor: `user:${nguoiAdmin.id}` },
-  ]
-  for (const c of ca) {
+// ---- QV-AC-3: mọi ô qua của hành động ghi → đúng một dòng, người thật, tên hành động, trước/sau đúng giá trị (E3) ----
+const GHI = (o: { hd: string; method: string }) => o.hd !== "ops.read" && o.hd !== "audit.read" && !(o.hd === "zalo.admin" && o.method === "GET")
+/** Giá trị trước/sau mong đợi của hành động đổi trạng thái (thân lệnh ở lenh()). */
+const TRUOC_SAU: Record<string, (d: Record<string, unknown>, l: { body?: unknown }) => [unknown, unknown, unknown, unknown]> = {
+  "review.decide": (d) => [d.from, "pending", d.to, "deferred"],
+  "unit.toggle": (d) => [d.from, "active", d.to, "paused"],
+  "unit.create": (d) => [d.from, null, d.to, "active"],
+  "unit.delete": (d, l) => [(d.from as { name?: string })?.name, (l.body as { groupKey: string }).groupKey, d.to, null],
+  "unit.set_mode": (d) => [d.from, null, d.to, "cho"],
+  "unit.update_meta": (d) => [
+    (d.from as { market_codes?: string[] })?.market_codes, [], (d.to as { market_codes?: string[] })?.market_codes, [THAM_CHIEU.market],
+  ],
+}
+test("QV-AC-3 27 ô qua của hành động ghi (rút từ ma trận): đúng 1 dòng audit user:<id> mang tên hành động, trước/sau đúng giá trị; ô không đổi / 409 / 400 ghi 0 dòng", async () => {
+  const o3 = MA_TRAN.filter((o) => o.ky === "qua" && GHI(o))
+  assert.equal(o3.length, 27, "ingest 4 + duyệt thẻ 3 + unit.* 5×2 + zalo ghi 5×2")
+  const sai: string[] = []
+  for (const o of o3) {
+    const l = await lenh(o.route, o.method, o.action)
     const n0 = await nAudit()
-    const r = await goi(c.route, c.method, c.dau, await c.l())
-    assert.ok(r.status >= 200 && r.status < 300, `${c.ten}: ${r.status} ${JSON.stringify(r.json)}`)
-    assert.equal((await nAudit()) - n0, 1, `${c.ten}: số dòng audit mới`)
+    const r = await goi(o.route, o.method, dauCua(o.g), l)
+    const ten = `${o.route} ${o.method}${o.action ? ` ${o.action}` : ""} × ${o.g}`
+    if (r.status < 200 || r.status >= 300) {
+      sai.push(`${ten}: ${r.status} ${JSON.stringify(r.json).slice(0, 80)}`)
+      continue
+    }
+    const moi = (await nAudit()) - n0
+    if (moi !== 1) {
+      sai.push(`${ten}: ${moi} dòng audit mới`)
+      continue
+    }
     const d = await dongCuoi()
-    assert.equal(d.actor, c.actor, `${c.ten}: actor`)
-    assert.equal(d.action, c.hd, `${c.ten}: action`)
-    if (c.truocSau) assert.ok("from" in d.detail && "to" in d.detail, `${c.ten}: detail thiếu from/to — ${JSON.stringify(d.detail)}`)
+    const actor = o.g === "bearer" ? "machine:cloud-sync" : `user:${idCua[o.g as Vai5]}`
+    if (d.actor !== actor) sai.push(`${ten}: actor ${d.actor}, mong ${actor}`)
+    if (d.action !== o.hd) sai.push(`${ten}: action ${d.action}, mong ${o.hd}`)
+    const ts = TRUOC_SAU[o.hd]
+    if (ts) {
+      const [truoc, truocMong, sau, sauMong] = ts(d.detail, l)
+      if (JSON.stringify(truoc) !== JSON.stringify(truocMong) || JSON.stringify(sau) !== JSON.stringify(sauMong)) {
+        sai.push(`${ten}: trước/sau ${JSON.stringify([truoc, sau])}, mong ${JSON.stringify([truocMong, sauMong])}`)
+      }
+    }
   }
-  // Ô không ghi gì: toggle không đổi (tắt nhóm đã tạm dừng), 409 nhóm đã gỡ, 400 thiếu trường.
+  assert.deepEqual(sai, [])
+  // Ô không ghi gì: toggle không đổi (tắt nhóm đã tạm dừng), 409 nhóm đã gỡ, 400 thiếu trường, nhóm không tồn tại.
   const paused = await nhomMoi("paused")
   const retired = await nhomMoi("retired")
   for (const [ten, body, ma] of [
@@ -545,25 +592,45 @@ test("QV-AC-5 zalo: việc xong → 1 dòng (kể cả login bật/huỷ); việ
     assert.equal(r.status, 200)
     assert.equal((await nAudit()) - n0, 0, "huỷ đăng nhập không tiến trình mà vẫn ghi audit")
   }
-  // Việc lỗi: cấu hình không ghi được; tài khoản không hợp lệ cho login.
-  chmodSync(CFG, 0o444)
-  try {
-    for (const [route, method, l] of [
-      ["zalo/groups", "POST", { body: { accountId: "acc2", groupId: "group:b", enabled: true } }],
-      ["zalo/accounts", "POST", { body: { id: "qvloi" } }],
-    ] as const) {
+  // Việc lỗi — bảng lối lỗi viết trước cho từng lệnh ghi của zalo.admin. Huỷ đăng nhập (login DELETE) không có lối lỗi:
+  // cancelZaloLogin chỉ gửi SIGTERM cho tiến trình đang chạy và không ném — ô «không tiến trình → 0 dòng» ở trên là ô của nó.
+  const LOI: [string, string, { body?: unknown; query?: string }, "cfg-chi-doc" | "cfg-khong-doc"][] = [
+    ["zalo/groups", "POST", { body: { accountId: "acc2", groupId: "group:b", enabled: true } }, "cfg-chi-doc"],
+    ["zalo/accounts", "POST", { body: { id: "qvloi" } }, "cfg-chi-doc"],
+    ["zalo/accounts", "DELETE", { body: { id: "acc2" } }, "cfg-chi-doc"],
+    ["zalo/login", "POST", { body: { accountId: "acc2" } }, "cfg-khong-doc"],
+  ]
+  for (const [route, method, l, cach] of LOI) {
+    datCfg()
+    chmodSync(CFG, cach === "cfg-chi-doc" ? 0o444 : 0o000)
+    try {
       const n0 = await nAudit()
       const r = await goi(route, method, A, l)
-      assert.ok(r.status >= 400, `${route} ${method}: việc lỗi phải ≥ 400 (được ${r.status})`)
-      assert.equal((await nAudit()) - n0, 0, `${route} ${method}: việc lỗi mà có dòng audit`)
+      assert.ok(r.status >= 400, `${route} ${method} (${cach}): việc lỗi phải ≥ 400 (được ${r.status})`)
+      assert.equal((await nAudit()) - n0, 0, `${route} ${method} (${cach}): việc lỗi mà có dòng audit`)
+    } finally {
+      chmodSync(CFG, 0o644)
     }
-  } finally {
-    chmodSync(CFG, 0o644)
   }
-  const n0 = await nAudit()
-  const r = await goi("zalo/login", "POST", A, { body: { accountId: "khong-co" } })
-  assert.equal(r.status, 400, "login tài khoản lạ phải 400")
-  assert.equal((await nAudit()) - n0, 0, "login lỗi mà có dòng audit")
+  {
+    const n0 = await nAudit()
+    const r = await goi("zalo/login", "POST", A, { body: { accountId: "khong-co" } })
+    assert.equal(r.status, 400, "login tài khoản lạ phải 400")
+    assert.equal((await nAudit()) - n0, 0, "login lỗi mà có dòng audit")
+  }
+  // openclaw thoát 1 khi gỡ tài khoản: đăng xuất là best-effort (zalo-admin), việc gỡ khỏi cấu hình vẫn xong → 200, 1 dòng.
+  datCfg()
+  writeFileSync(OC_FAIL, "")
+  try {
+    const n0 = await nAudit()
+    const oc0 = lenhGhi()
+    const r = await goi("zalo/accounts", "DELETE", A, { body: { id: "acc2" } })
+    assert.equal(r.status, 200, `gỡ tài khoản khi openclaw lỗi: ${JSON.stringify(r.json)}`)
+    assert.equal(lenhGhi() - oc0, 1, "đăng xuất phải được gọi đúng một lần")
+    assert.equal((await nAudit()) - n0, 1, "gỡ tài khoản xong mà không đúng một dòng audit")
+  } finally {
+    rmSync(OC_FAIL, { force: true })
+  }
   // Đối chứng: bản trước sửa bật đăng nhập không ghi dòng nào.
   try {
     const cu = await napRouteCu("zalo/login")
@@ -636,20 +703,41 @@ test("QV-AC-10 push-ops-facts thật → ingest bằng bearer 200, đúng một 
   const { dropOpsSchema, makeOpsSchema } = await import("../../pipeline/scripts/ops-facts-fixture.mjs")
   const SL = `qv_local_${process.pid}`
   await makeOpsSchema(admin, SL)
-  let payload: unknown
+  // Máy chủ chuyển tiếp: request THẬT của push-ops-facts (đường, header, thân) đi thẳng vào handler POST của route ingest.
+  const http = await import("node:http")
+  const ingest = await napRoute("ingest")
+  const nhan: { url: string; auth: string; status: number }[] = []
+  const may = http.createServer((rq, rs) => {
+    let than = ""
+    rq.on("data", (d) => (than += d))
+    rq.on("end", async () => {
+      const headers = new Headers()
+      for (const [k, v] of Object.entries(rq.headers)) if (typeof v === "string") headers.set(k, v)
+      const res = await ingest.POST(new Request(`http://127.0.0.1${rq.url}`, { method: rq.method, headers, body: than }))
+      nhan.push({ url: rq.url ?? "", auth: headers.get("authorization") ?? "", status: res.status })
+      rs.writeHead(res.status, { "content-type": "application/json" })
+      rs.end(await res.text())
+    })
+  })
+  await new Promise<void>((x) => may.listen(0, "127.0.0.1", () => x()))
+  const cong = (may.address() as { port: number }).port
+  const n0 = await nAudit()
   try {
-    const r = (await captureOpsFacts({ env: { DATABASE_URL: schemaUrl(SL) } })) as { code: number; stderr: string; payload: unknown }
+    const r = (await captureOpsFacts({
+      env: { DATABASE_URL: schemaUrl(SL), INGEST_URL: `http://127.0.0.1:${cong}/api/v1/ops/ingest` },
+      home: { ".oneinvest/cloud.env": `CLOUD_OPS_API_TOKEN=${TOKEN}\n` },
+    })) as { code: number; stderr: string }
     assert.equal(r.code, 0, r.stderr)
-    payload = r.payload
   } finally {
+    may.close()
     await dropOpsSchema(admin, SL)
   }
-  const n0 = await nAudit()
-  const r = await goi("ingest", "POST", { authorization: `Bearer ${TOKEN}` }, { body: payload })
-  assert.equal(r.status, 200, JSON.stringify(r.json))
+  assert.equal(nhan.length, 1, "push-ops-facts phải gửi đúng một request")
+  assert.deepEqual([nhan[0].url, nhan[0].auth, nhan[0].status], ["/api/v1/ops/ingest", `Bearer ${TOKEN}`, 200])
   assert.equal((await sc.query("SELECT count(*)::int AS n FROM ops_heartbeat WHERE id = 'primary'")).rows[0].n, 1)
   assert.equal((await nAudit()) - n0, 1)
-  assert.deepEqual([(await dongCuoi()).actor, (await dongCuoi()).action], ["machine:cloud-sync", "ingest.push"])
+  const d = await dongCuoi()
+  assert.deepEqual([d.actor, d.action], ["machine:cloud-sync", "ingest.push"])
   // Ca thử cũ (route ghi gọi bằng phiên thật) — tiến trình con riêng, không thừa hưởng ngữ cảnh node:test của tệp này.
   const env: NodeJS.ProcessEnv = { ...process.env }
   delete env.NODE_TEST_CONTEXT
