@@ -60,31 +60,30 @@ _Avoid_: line căn, dòng căn
 
 ## Tài sản & tin
 
-**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều tin rao từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
+**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều listing từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
-**Tin**: Một bản ghi niêm yết lấy từ nguồn — khái niệm cha của **tin rao** (bán, thuê dài hạn) và **listing** (thuê ngắn hạn). Là lớp giữa của kiến trúc «tin → căn» (ADR-0013 §1): nhiều tin, có thể trùng, cùng trỏ về một căn nhà. Trường thuộc tin (giá, bán/thuê, người đăng, trạng thái chào) gắn với tin, trường thuộc căn gắn với căn.
-- Code: `sale_offers` + `listings` (không có bảng chung) · RESO: resource Property — RESO gọi mỗi bản ghi là một listing, khoá `ListingKey`
-- Ghi chú: Trên UI, «Tin» đứng một mình là nhãn ngắn cho tin rao khi chỗ đó chỉ có tin rao (cột bảng tin, thẻ duyệt «Tin A» / «Tin B»); chỗ nào có cả listing hay bài thô thì viết «Tin rao».
-_Avoid_: tin đăng
-
-**Listing**: Một chỗ cho thuê ngắn hạn tự thu (bảng `listings`, id `abnb_…`): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết.
-- Code: `listing` · RESO: không có mô hình STR — local extension (reso-standards.md)
+**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn. Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
+- Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
 - Slug URL: `listings` · `listing`
-- Ghi chú: «listing» có hai nghĩa — RESO gọi một bản ghi `Property` (= một **tin rao** của ta) là listing,
-  khoá `ListingKey`. Luật (chốt 27/10, `docs/audit/2026-10-27-tu-ngu-tin-listing.md`): `listing` trong code,
-  bảng, API, URL và chữ UI **chỉ** là chỗ cho thuê ngắn hạn; tin rao trong code là `offer`; tên RESO `Listing*`
-  chỉ nằm ở cột đối chiếu RESO (`offer_id` ↔ `ListingKey`), không làm tên cột hay tên trục của ta. Ngoại lệ
-  còn sót: trục `listing_intent` ở bảng từ vựng dưới — đang đổi thành `offer_intent` (Đ1).
-_Avoid_: chỗ ở, phòng cho thuê, listing bán, listing thuê dài hạn
+- Tiếng Việt: «tin» là cách gọi thường của listing; trên UI «Tin» là nhãn ngắn khi chỗ đó chỉ có một loại listing (cột bảng tin, thẻ duyệt «Tin A» / «Tin B»).
+- Ghi chú: Chốt 27/10 (ROADMAP §3 #21, hướng B — theo RESO): «listing» là khái niệm cha của mọi tin. Hiện trạng còn lệch, đổi ở hàng tái cấu trúc riêng: dữ liệu nằm ở hai bảng — `sale_offers` (tin rao: bán + thuê dài hạn) và `listings` (listing thuê ngắn hạn); bảng `listings` mang tên cha mà chỉ chứa thuê ngắn hạn, và nhãn UI «Listing» trên Insight, Finder, So sánh, Lợi suất, `/ops/quality`, `/ops/collections` hiện chỉ nói loại thuê ngắn hạn.
+_Avoid_: tin đăng, offer, sale offer, rao vặt
 
-**Tin rao**: Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng `sale_offers`). Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14. Loại tin ở cột `kind`.
-- Code: `sale_offer` (bảng `sale_offers`; cột, API, hằng đều là `offer`: `offer_id`, `offer_status`, `/api/v1/offers`) · RESO: resource Property (một bản ghi = một tin, RESO gọi là listing) + ListPrice; bán/thuê qua PropertyType
-- Nhãn ngắn: «Tin» (xem **Tin**) — chỉ khi chỗ đó chỉ có tin rao.
-- Ghi chú: Bảng `sale_offers` chứa cả tin cho thuê nên chữ «sale» sai nghĩa — đổi thành `offers` ở hàng riêng (Đ2).
+**Tin rao**: Listing bán hoặc cho thuê dài hạn (`kind` ∈ `sale`, `rent_lt`) đã chuẩn hoá, hiện ở bảng `sale_offers`. Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14.
+- Code: `sale_offer` (bảng `sale_offers`; cột `offer_id`, `offer_status`; API `/api/v1/offers`) — tên theo bảng hiện tại, đổi ở hàng tái cấu trúc listing · RESO: resource Property + ListPrice; bán/thuê qua PropertyType
+- Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
+
+**Listing thuê ngắn hạn**: Listing cho thuê theo đêm tự thu (bảng `listings`, id `abnb_…`): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết. Mọi chỉ số ADR, công suất, «Listing hoạt động», «Listing so sánh», «Listing tự thu» đều nói về loại này.
+- Code: `listing` (bảng `listings`; `kind = rent_st` khi gộp bảng) · RESO: thuê theo ngày (PropertyType = ResidentialLease + LeaseAmountFrequency = Daily); lịch đêm, công suất, ADR là local extension (reso-standards.md)
+- Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».
+_Avoid_: chỗ ở, phòng cho thuê, homestay
+
+**Yêu cầu mua**: Bài hay tin của người đang cần mua (hoặc thuê) — không phải listing, không gắn căn; giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8). Một giá trị của «Ý định tin».
+- Code: `listing_intent = inquiry` (đổi từ `wanted` — Mạnh chốt 27/10, vòng U1 đang làm; tới khi xong, sổ từ vựng dưới còn ghi `wanted` «Tin tìm mua, tìm thuê») · RESO: không phải resource Property; gần nhất SavedSearch
 
 **Tin bán**: Tin rao có `kind = sale`.
 - Code: `kind = sale` · RESO: PropertyType ∈ Residential, Land, ResidentialIncome
@@ -249,8 +248,8 @@ _Avoid_: Market Score, điểm thị trường
 
 ## Chiến lược đầu tư
 
-**Cho thuê ngắn hạn**: Chiến lược cho thuê theo đêm qua listing; dòng tiền đo bằng ADR × công suất.
-- Code: `str (kind rent_st tương lai)` · RESO: không có mô hình — FeeFrequency=Daily chỉ là mảnh rời
+**Cho thuê ngắn hạn**: Chiến lược cho thuê theo đêm qua listing thuê ngắn hạn; dòng tiền đo bằng ADR × công suất.
+- Code: `str (kind rent_st khi gộp bảng listing)` · RESO: LeaseAmountFrequency = Daily; lịch đêm, công suất không có mô hình — local extension
 _Avoid_: homestay
 
 **Cho thuê dài hạn**: Chiến lược cho thuê theo tháng; dòng tiền đo bằng giá thuê tin cho thuê.

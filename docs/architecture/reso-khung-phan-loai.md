@@ -21,7 +21,7 @@ vật lý trong RESO được định danh bằng **UPI**: `UniversalPropertyId`
 | Lớp (FRAMING) | Bảng hiện tại | RESO |
 |---|---|---|
 | **Căn nhà** (bản ghi gốc) | `properties` | Định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource `Building` (2.1). **Không phải** resource `Property` |
-| **Tin** (tin rao + listing) | `sale_offers`, `listings` | Resource **`Property`** (mỗi bản ghi một tin), cộng `Member` (người đăng), `Media` (ảnh) |
+| **Listing** (tin: bán, thuê dài hạn, thuê ngắn hạn) | `sale_offers`, `listings` | Resource **`Property`** (mỗi bản ghi một tin), cộng `Member` (người đăng), `Media` (ảnh) |
 | **Trường làm giàu** | cột của hai bảng trên | Field của `Property` / `Building`, kèm field nguồn đo (`LivingAreaSource`…) và nhật ký `HistoryTransactional` |
 
 → `CONTEXT.md` đang ghi «Căn nhà — RESO: resource Property». Theo DD thì sai: căn nhà ≈ **UPI + Building**, tin rao ≈

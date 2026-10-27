@@ -7,7 +7,7 @@
 
 ## 1. Mục đích
 
-Gom mọi tin rao của người môi giới trên thị trường thành **một mạng lưới tin rao đủ tin cậy**, để môi giới
+Gom mọi tin rao của người môi giới trên thị trường thành **một mạng lưới listing đủ tin cậy**, để môi giới
 và nhà đầu tư dựa vào đó ra quyết định và làm việc với nhau. Thông tin tin cậy làm **giảm ma sát**, nên
 giao dịch đi **nhanh hơn**.
 
@@ -77,7 +77,7 @@ Câu 4 thay cho «khai thác sau mua» trong `CONTEXT-PRODUCT.md` §2 — cần 
 | Lớp | Là gì | Khoá |
 |---|---|---|
 | **Căn nhà** (bản ghi gốc) | Mỗi căn đúng một bản ghi | số nhà, mã căn |
-| **Tin** | Nhiều tin, có thể trùng, cùng trỏ về một căn | id gốc của nguồn (post, `list_id`…) |
+| **Listing** (tin) | Nhiều tin, có thể trùng, cùng trỏ về một căn | id gốc của nguồn (post, `list_id`…) |
 | **Trường làm giàu** | Loại hình, phòng, đường, tầng… | gắn lên căn hoặc lên tin |
 
 [đề xuất] **Trường thuộc căn ≠ trường thuộc tin.**
@@ -216,3 +216,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | 2026-10-23 | D6 lớp model: AI Gateway, chọn model theo số đo, biết rõ chi phí; trợ lý nhà đầu tư tính tiền riêng | Mạnh nêu · Claude ghi |
 | 2026-10-23 | Thêm sự thật «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh) → thang bậc căn B0–B5, bậc năng lực N0–N4 (§3.4); north star thành phân bố theo bậc | Mạnh nêu · Claude đề xuất thang · Mạnh duyệt thang + bậc đích |
 | 2026-10-27 | Chỉ đổi chữ, không đổi nghĩa: «tin đăng» → «tin rao» / «tin», «mạng lưới listing» → «mạng lưới tin rao» (luật «listing» = thuê ngắn hạn, `docs/audit/2026-10-27-tu-ngu-tin-listing.md`) | Mạnh giao quyết · Claude ghi |
+| 2026-10-27 | Hướng B (Mạnh chốt): «listing» là mọi tin niêm yết theo RESO — trả «mạng lưới listing» về như bản gốc; lớp giữa §3.1 gọi «Listing (tin)» | Mạnh chốt · Claude ghi |
