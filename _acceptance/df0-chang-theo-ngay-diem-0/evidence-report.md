@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d586828e81abdc835b58ce428eef16619cafb85b
+verified_commit: 0711491e293c2a8496224eafb56d0cd601f622fa
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -167,3 +167,7 @@ Round 1: không eval nào của hợp đồng đỏ; lệnh suite `cd app && npm
 Round 2: không eval nào của hợp đồng đỏ (bảy eval máy mang sang từ round 1, E6 đề xuất PASS); lệnh suite `cd app && npm test` vẫn đỏ, lần này ở ca GV-AC-3 (tests/gio-ops-gio-vn.test.tsx) vì stage-trend-data.ts khớp hai mẫu cắt chuỗi mốc / toISOString cắt ngoài danh sách miễn, không gắn eval nào. Returned to implementation.
 
 Round 3: sửa chuỗi ngày dùng vnDayKey (commit d586828e). Sáu eval test và E7 xanh, E6 giữ nguyên từ round 2, cả sáu lệnh suite hồi quy xanh. Verdict PASS, chờ người ký ở Cổng 2.
+
+### Re-pin lần 1 — 2026-10-27, do gộp origin/main (a4a47d15) sau chữ ký
+run_id: repin-20261027T004832Z-53431
+sha: 0711491e293c2a8496224eafb56d0cd601f622fa · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths), E7 · AC không có chốt máy: AC-6, AC-7
