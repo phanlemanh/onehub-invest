@@ -210,7 +210,9 @@ test("VD-IQ-3 050 sau 043: wanted → inquiry «Yêu cầu», sổ khớp, các 
     const r = (await c.query(
       "SELECT label_vi, is_local, sort_order FROM ref_lookup WHERE lookup_name = 'listing_intent' AND lookup_value = 'inquiry'")).rows;
     assert.deepEqual(r, [{ label_vi: "Yêu cầu", is_local: true, sort_order: 2 }]);
-    assert.equal((await c.query("SELECT count(*)::int AS n FROM ref_lookup WHERE lookup_value = 'wanted'")).rows[0].n, 0);
+    const giaTri = (await c.query(
+      "SELECT lookup_value FROM ref_lookup WHERE lookup_name = 'listing_intent' ORDER BY sort_order")).rows.map((x) => x.lookup_value);
+    assert.deepEqual(giaTri, REG.axes.find((a) => a.name === "listing_intent").values.map((v) => v.code), "trục listing_intent lệch sổ");
     assert.deepEqual(await demTruc(), truocTruc, "050 đổi số dòng của một trục");
     await c.query(MIG050);
     assert.deepEqual(await demTruc(), truocTruc, "áp 050 lần hai đổi số dòng");
