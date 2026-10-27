@@ -5,7 +5,7 @@ slug: quyen-bon-vai-mot-cho
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/lib/ops-access.ts, app/src/app/api/v1/ops/**, db/migrations/** (t3_paths)
 surfaces: [api]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-27-quyen-bon-vai-mot-cho-design.md
 approved_by: Mạnh
 approved_at: 2026-10-27
