@@ -6,6 +6,8 @@ owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline, ui]
 status: implemented
+approved_by: Mạnh
+approved_at: 2026-10-27T07:15:20Z
 ---
 
 # Acceptance Contract: s03-gop-trung-dung
