@@ -4,7 +4,7 @@
 // bản chép tạm của tệp nguồn (tests/.vt-cu-*) đổi đúng một chỗ, thông điệp ghim.
 import { after, before, describe, test } from "node:test"
 import assert from "node:assert/strict"
-import { readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import pg from "pg"
@@ -424,5 +424,119 @@ describe("VT-AC-6 cloud không đổi", () => {
       await admin.query(`ALTER TABLE "${S}".vt_rq_tam RENAME TO review_queue`)
       await admin.query(`ALTER TABLE "${S}".vt_zp_tam RENAME TO stg_zalo_posts`)
     }
+  })
+})
+
+// ---------- AC-8: kiểm kê mọi trang và route Ops ----------
+type Che = "xemNoiDungTin" | "isAdmin" | "khong-doc"
+// Viết tay 27/10 — mỗi trang dưới src/app/ops và mỗi route API của Ops một dòng. doc_noi_dung: đưa nội dung tin (thẻ duyệt,
+// bài gốc, ảnh tin, liên hệ) xuống trình duyệt; che: hàm chặn vai ở điểm vào.
+const KIEM_KE: Record<string, { doc_noi_dung: boolean; che: Che }> = {
+  "src/app/ops/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/ops/collections/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/ops/data-flow/page.tsx": { doc_noi_dung: true, che: "xemNoiDungTin" },
+  "src/app/ops/deals/page.tsx": { doc_noi_dung: true, che: "isAdmin" },
+  "src/app/ops/design/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/ops/quality/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/ops/review/page.tsx": { doc_noi_dung: true, che: "xemNoiDungTin" },
+  "src/app/ops/sources/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/deals/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/offers/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/audit/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/collections/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/coverage/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/extraction-quality/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/ingest/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  // decide chỉ đọc id, item_type, item_id, status và trả { ok, status } — không nội dung thẻ.
+  "src/app/api/v1/ops/review/[id]/decide/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/source-groups/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/truthful-coverage/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/zalo/accounts/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/zalo/groups/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/v1/ops/zalo/login/route.ts": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/api/zalo-media/route.ts": { doc_noi_dung: true, che: "isAdmin" },
+}
+/** Cột/trường nội dung tin trong mã: có trong bao đóng import của một điểm vào là điểm vào đó đọc nội dung. */
+const TIN_HIEU = /\b(ai_reasoning|ai_suggestion|post_text|postText)\b/
+/** Bỏ chú thích trước khi dò tín hiệu (chú thích nhắc tên cột không phải đọc cột). */
+const boChuThich = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`\\])\/\/.*$/gm, "$1")
+
+function liet(dir: string, ten: string): string[] {
+  const out: string[] = []
+  const di = (d: string) => {
+    if (!existsSync(path.join(APP, d))) return
+    for (const f of readdirSync(path.join(APP, d))) {
+      const r = `${d}/${f}`
+      if (statSync(path.join(APP, r)).isDirectory()) di(r)
+      else if (f === ten) out.push(r)
+    }
+  }
+  di(dir)
+  return out
+}
+const diemVao = () =>
+  [
+    ...liet("src/app/ops", "page.tsx"),
+    ...["src/app/api/v1/ops", "src/app/api/zalo-media", "src/app/api/v1/deals", "src/app/api/v1/offers"].flatMap((d) => liet(d, "route.ts")),
+  ].sort()
+
+/** Bao đóng import (tĩnh + import() động) trong src/, giải "@/…" và đường tương đối. `ao` = tệp ảo (không ghi đĩa). */
+function baoDong(vao: string, ao: Record<string, string> = {}): Map<string, string> {
+  const doc = (r: string) => ao[r] ?? readFileSync(path.join(APP, r), "utf8")
+  const giai = (tu: string, spec: string): string | null => {
+    const goc = spec.startsWith("@/") ? `src/${spec.slice(2)}` : spec.startsWith(".") ? path.posix.join(path.posix.dirname(tu), spec) : null
+    if (!goc) return null
+    for (const c of [goc, `${goc}.ts`, `${goc}.tsx`, `${goc}/index.ts`, `${goc}/index.tsx`])
+      if (c in ao || (existsSync(path.join(APP, c)) && statSync(path.join(APP, c)).isFile())) return c
+    return null
+  }
+  const seen = new Map<string, string>()
+  const hang = [vao]
+  while (hang.length) {
+    const f = hang.pop()!
+    if (seen.has(f)) continue
+    const src = doc(f)
+    seen.set(f, src)
+    for (const m of src.matchAll(/(?:from\s+|import\(\s*)["']([^"']+)["']/g)) {
+      const r = giai(f, m[1])
+      if (r && !seen.has(r)) hang.push(r)
+    }
+  }
+  return seen
+}
+
+function doKiemKe(ke: typeof KIEM_KE, ao: Record<string, string> = {}) {
+  const dia = [...new Set([...diemVao(), ...Object.keys(ao)])].sort()
+  const chuaKhai = dia.filter((r) => !(r in ke))
+  assert.deepEqual(chuaKhai, [], `route chưa khai trong bảng kiểm kê: ${chuaKhai.join(", ")}`)
+  const thua = Object.keys(ke).filter((r) => !dia.includes(r))
+  assert.deepEqual(thua, [], `bảng kiểm kê khai route không có trên đĩa: ${thua.join(", ")}`)
+  let tep = 0
+  for (const [r, { doc_noi_dung, che }] of Object.entries(ke)) {
+    const bd = baoDong(r, ao)
+    tep += bd.size
+    if (doc_noi_dung) {
+      // Tệp định nghĩa (ops-access.ts) không tính — phải có một chỗ GỌI hàm che trong bao đóng.
+      const co = [...bd].some(([f, src]) => f !== "src/lib/ops-access.ts" && boChuThich(src).includes(`${che}(`))
+      assert.ok(co, `${r}: khai che bằng ${che} mà bao đóng import không gọi ${che}(`)
+    } else {
+      const trung = [...bd].filter(([, src]) => TIN_HIEU.test(boChuThich(src))).map(([f]) => f)
+      assert.deepEqual(trung, [], `${r}: khai không đọc nội dung mà bao đóng có ${trung.join(", ")}`)
+    }
+  }
+  return { khoa: dia.length, tep }
+}
+
+describe("VT-AC-8 kiểm kê route", () => {
+  test("VT-AC-8 bảng kiểm kê khớp đĩa và hàm che", (t) => {
+    const { khoa, tep } = doKiemKe(KIEM_KE)
+    t.diagnostic(`kiểm kê: ${khoa} điểm vào, ${tep} tệp trong các bao đóng`)
+    assert.equal(khoa, 22)
+    // Đối chứng: một trang Ops mới đọc thẻ duyệt mà chưa khai → ca nêu tên route.
+    const gia = { "src/app/ops/vt-gia/page.tsx": 'const q = "SELECT title FROM review_queue"\nexport default function P() { return q }\n' }
+    assert.throws(() => doKiemKe(KIEM_KE, gia), /src\/app\/ops\/vt-gia\/page\.tsx/, "đối chứng route giả phải đỏ và nêu tên")
+    // Đối chứng: khai /ops/data-flow là không đọc nội dung → bao đóng có bài gốc, ca nêu tên.
+    const khaiSai = { ...KIEM_KE, "src/app/ops/data-flow/page.tsx": { doc_noi_dung: false, che: "khong-doc" as const } }
+    assert.throws(() => doKiemKe(khaiSai), /src\/app\/ops\/data-flow\/page\.tsx: khai không đọc nội dung/)
   })
 })
