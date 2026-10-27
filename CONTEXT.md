@@ -65,7 +65,7 @@ _Avoid_: line căn, dòng căn
 - Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
-**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn. Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
+**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn; là bên bán, đối xứng với **Yêu cầu** (bên mua). Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
 - Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
 - Slug URL: `listings` · `listing`
 - Tiếng Việt: «tin» là cách gọi thường của listing; trên UI «Tin» là nhãn ngắn khi chỗ đó chỉ có một loại listing (cột bảng tin, thẻ duyệt «Tin A» / «Tin B»).
@@ -82,8 +82,15 @@ _Avoid_: tin đăng, offer, rao vặt, sale offer
 - Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».
 _Avoid_: chỗ ở, phòng cho thuê, homestay
 
-**Yêu cầu mua**: Bài hay tin của người đang cần mua (hoặc thuê) — không phải listing, không gắn căn; giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8). Một giá trị của «Ý định tin».
-- Code: `listing_intent = inquiry` (đổi từ `wanted` — Mạnh chốt 27/10, vòng U1 đang làm; tới khi xong, sổ từ vựng dưới còn ghi `wanted` «Tin tìm mua, tìm thuê») · RESO: không phải resource Property; gần nhất SavedSearch
+**Yêu cầu**: Một nhu cầu cần mua hoặc cần thuê — bên mua, đối xứng với **listing** bên bán (Mạnh chốt 27/10). Dịch vụ ở `kind` cùng bộ mã với listing (`sale` = mua · `rent_lt` = thuê dài hạn · `rent_st` = thuê ngắn hạn, nhãn theo phía), loại hình ở `property_type` (cùng sổ), giá là khoảng ngân sách. Không gắn một căn mà gắn tiêu chí (khu vực, loại hình, số PN, ngân sách), khớp được với nhiều listing. Hiện mới là một giá trị của «Ý định tin»: bài cần mua, cần thuê giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8); bảng lưu yêu cầu và ghép với listing là tính năng sau, cần số đo trước (luật 11).
+- Code: `listing_intent = inquiry` · RESO: không có bản ghi ngang hàng `Property` — gần nhất SavedSearch (tiêu chí người mua); local extension dùng lại trường RESO phía bán
+_Avoid_: tin tìm mua, wanted
+
+**Yêu cầu mua**: Yêu cầu có `kind = sale`.
+- Code: `kind = sale` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType ∈ Residential, Land
+
+**Yêu cầu thuê**: Yêu cầu có `kind` ∈ `rent_lt`, `rent_st`.
+- Code: `kind = rent_lt | rent_st` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType = ResidentialLease
 
 **Tin bán**: Tin rao có `kind = sale`.
 - Code: `kind = sale` · RESO: PropertyType ∈ Residential, Land, ResidentialIncome
