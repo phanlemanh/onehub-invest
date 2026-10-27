@@ -920,6 +920,7 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | Hỏi-5: **Mạnh và đội gắn nhãn lát** (~200 tin + ~100 cặp, 20% gắn trùng), bắt đầu khi PL7 xong (F5) | §0.3 F5 |
 | Hỏi-6: **chạy F6** — hoàn tác 639/644, bác thẻ 159/161, duyệt lại review 24 (làn Claude, DB local, có audit, từng lệnh chờ Mạnh gõ đồng ý); xoá 1.260 post mock ở stg là làn ZCode (raw giữ nguyên) | §0.3 F6 |
 | Hỏi-7: **L0 theo thứ tự ZC6 → ZC4 → hook Kev nhãn v3**, ZCode làm theo lời GIAO; cửa sổ khởi động lại gateway (an toàn Zalo) ghi trong lời GIAO | lát OCP1 §3 |
+| **Thang căn cứ 3 lớp** (sự thật › quan sát có trích dẫn › suy luận) + thứ tự tạm trong lớp (hitl › trường nguồn; parser › E1 › E2 › giá trị cũ) tới khi ô được đo — Mạnh «Hỏi-1: đồng ý» (PL15, 26/10) | `_acceptance/phat-bieu-va-phan-xu` |
 | **PL3 gộp vào PL23** (`/ops/review` dựng lại một lần, sau PL15; TV13 đứng sau PL23) | lát OCP1 §2 X1 |
 | **`pipeline/mappings.yaml` là nguồn danh sách trường duy nhất** — PL6 sinh mọi thứ từ đó, FIELD_TARGET G3 của ZCode khoá theo tên trường trong `mappings.yaml` | lát OCP1 §2 X2 |
 | C2–C4 cắt cùng lúc vào lộ trình; **phần UI của PL9 gộp vào C4** (chạy tuần tự trên `/ops/quality`) | lát OCP1 §2 X3 |
@@ -930,7 +931,7 @@ nên bắt đầu C1.3 sớm nhất có thể.
 | F4: độ tươi p50 ≤ 10′, p95 ≤ 30′; cửa sổ hiệu lực 14/7 ngày — giữ làm vạch tham chiếu, không chặn | §0.3 |
 | F7: số giờ công/tuần giữ bậc | §0.2 F |
 | M4 (ADR trợ lý nhà đầu tư) — khi bắt đầu làm trợ lý | §0.4 |
-| Thang căn cứ 3 lớp, ghép căn là phát biểu, lát dọc thay đợt ngang (§0.2 D) — đề xuất, chưa duyệt riêng | §0.2 D |
+| Ghép căn là phát biểu, lát dọc thay đợt ngang (§0.2 D) — đề xuất, chưa duyệt riêng. (Thang căn cứ 3 lớp: Mạnh đồng ý 26/10 qua PL15 Hỏi-1 — dòng «Đã chốt 26/10».) | §0.2 D |
 
 **Cắt lượt**: bản phạm vi `phan-loai-2310` và lộ trình 31 hàng (PL1–PL31) + 6 mục chờ (PH1–PH6), kèm việc bật gói
 road-map, nằm ở **nhánh riêng `claude/lo-trinh-phan-loai-2310`** (chạm `.claude/settings.json` → T3, cần hồ sơ và chữ

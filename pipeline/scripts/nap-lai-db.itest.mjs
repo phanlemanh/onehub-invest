@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { napPhatBieu } from "../lib/nap-045.mjs";
 import { writeOffers } from "../lib/write-offers.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
 import { chupMaTran, gieoQuyetDinh, gieoTinKhoaCu, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
@@ -30,6 +31,8 @@ export async function trongGiaoDich(client, fn) {
   await client.query("BEGIN");
   // Cùng khoá với write-offers.test.mjs / test-posts / agent tests: nạp 044 (DDL + CREATE OR REPLACE) song song là deadlock.
   await client.query("SELECT pg_advisory_xact_lock(33033)");
+  // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
+  await napPhatBieu(client);
   try { return await fn(); } finally { await client.query("ROLLBACK"); }
 }
 const one = async (sql, p = []) => (await c.query(sql, p)).rows[0];
