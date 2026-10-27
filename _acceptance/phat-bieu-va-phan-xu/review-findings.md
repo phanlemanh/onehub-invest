@@ -1,18 +1,14 @@
-# Review findings: phat-bieu-va-phan-xu (round 2)
+# Review findings — phat-bieu-va-phan-xu (round 3)
 
 ## Trong hợp đồng
 
-- **Hình dạng 5 — tuyên quét lớp «nguồn khác, trường khác hay giá trị khác đều là lệch» nhưng ma trận thiếu chiều giá trị: case c đổi cùng lúc nguồn và giá trị**
-  AC: AC-8
-  file: `pipeline/scripts/phat-bieu.test.mjs:82`
-  severity: medium
-  source: measurement
-  detail: Test PB-AC-8 (dòng 82–90) có tên hứa ba chiều độc lập (nguồn × trường × giá trị trước/sau) đều làm lệch, nhưng chỉ có bốn điểm-case: a (S05, property_type, null→unknown, được miễn), b (S03, chỉ đổi nguồn), d (S05, street_raw, chỉ đổi trường), và c (S06, property_type, null→'house'). Case c đổi CẢ nguồn (S06) LẪN giá trị sau ('house'), nên chiều giá trị không bao giờ được đo riêng. Không có case S05 + property_type + null→giá trị khác 'unknown', cũng không có case S05 + property_type + truoc khác null (vd 'house'→'unknown'). Đột biến soMoc thành `k.field === field && k.nguon === nguon` (bỏ cả `k.truoc === va` lẫn `k.sau === vb`, dòng 66 của pipeline/phat-bieu-cat-chuyen.mjs) vẫn qua cả hai assert ở dòng 88–89: a vẫn được miễn, còn b/c/d vẫn lệch vì nguồn hoặc trường. Vậy phần «xét đủ giá trị trước/sau» của KHAI_TRUOC, chính là chỗ sửa ở round này, không được phép đo nào ghim. Cần một ma trận viết trước, mỗi chiều đổi đúng một phần tử so với mục KHAI_TRUOC.
-  Lý do vào hợp đồng: AC-8 đòi trước = sau «trừ đúng danh sách ô loại hình S05 NULL → unknown khai trước»; finding nói phép miễn trừ bỏ qua giá trị trước/sau mà không phép đo nào bắt được, tức không ghim được chữ «đúng danh sách» của AC-8.
+Không có finding mới ở round này.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
+
+Không có mục mới ở round này (các mục mang từ round trước do máy tự chèn, không in lại).
 
 - **revert_enrichment không hoàn tác được đề xuất đã áp trước 045 sau khi cắt chuyển (bị bỏ qua lặng lẽ với lý do 'no-assertion') (r1)**
   Người dùng thấy gì: Những giá trị tự động điền trước đợt chuyển đổi này sẽ không hoàn tác được bằng công cụ hoàn tác; ô vẫn giữ giá trị sai và công cụ chỉ lặng lẽ bỏ qua.
@@ -56,7 +52,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 4 (âm tính đứng một mình): cat-chuyen --thu chấp nhận 'lượt hai — legacy mới: 0' mà không buộc lượt một phải có m > 0 (r1 · tệp đã đổi)**
+- **Hình dạng 4 (âm tính đứng một mình): cat-chuyen --thu chấp nhận 'lượt hai — legacy mới: 0' mà không buộc lượt một phải có m > 0 (r1)**
   Người dùng thấy gì: Lệnh thử chuyển đổi có thể báo đạt dù thực ra không xử lý ô nào nếu truy vấn chọn ô bị hỏng, tạo cảm giác yên tâm giả.
   Căn cứ: Chỉ xảy ra khi truy vấn hỏng hoặc DB rỗng, là lệnh chạy thử có hoàn tác nên không làm mất dữ liệu; các phép đo khác vẫn bắt được.
   file: `pipeline/phat-bieu-cat-chuyen.mjs`
@@ -76,5 +72,9 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   file: `pipeline/lib/scan-canonical-write.mjs`
   severity: low
   Đề xuất: known-limits
+
+## Chưa adversarial-verify (refuter chết)
+
+Không có.
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).

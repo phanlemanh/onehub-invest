@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6c63f78a09848852b0ef7a421ba5974a166711f0
+verified_commit: a2fad097bad531ec76d4281419d95356aa6815d0
 human_signoff:
 ---
 
@@ -40,7 +40,45 @@ human_signoff:
 
 ## Evidence
 
-### Chạy ở round 2 (code tại verified_commit)
+### Chạy ở round 3 (code tại verified_commit)
+
+- eval: E9
+  run_id: minted-phat-bieu-va-phan-xu-E9-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.phat_bieu
+  verified_at: 2026-10-27T00:29:33Z
+  output: |
+    ℹ duration_ms 825.842583
+
+- eval: E22
+  run_id: minted-phat-bieu-va-phan-xu-E22-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.phat_bieu
+  verified_at: 2026-10-27T00:29:33Z
+  output: |
+    ℹ duration_ms 825.842583
+
+- eval: E19
+  run_id: minted-phat-bieu-va-phan-xu-E19-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.phat_bieu
+  verified_at: 2026-10-27T00:29:33Z
+  output: |
+    ℹ duration_ms 825.842583
+
+- eval: E20
+  run_id: minted-phat-bieu-va-phan-xu-E20-r3
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-10-27T00:29:33Z
+  output: |
+    ℹ duration_ms 16957.036209
+
+### Mang tu round 2 (carry-forward, khong chay lai)
 
 - eval: E6
   run_id: minted-phat-bieu-va-phan-xu-E6-r2
@@ -48,8 +86,8 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.nguon_goc
   verified_at: 2026-10-27T00:24:35Z
-  output: |
-    nguon-goc: 50278 ô khác mặc định · mồ côi 0
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-phat-bieu-va-phan-xu-E7-r2
@@ -57,53 +95,8 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.test.phat_bieu_db
   verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 50637.763042
-
-- eval: E13
-  run_id: minted-phat-bieu-va-phan-xu-E13-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.phat_bieu_db
-  verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 50637.763042
-
-- eval: E15
-  run_id: minted-phat-bieu-va-phan-xu-E15-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.phat_bieu_db
-  verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 50637.763042
-
-- eval: E9
-  run_id: minted-phat-bieu-va-phan-xu-E9-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.phat_bieu
-  verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 669.925375
-
-- eval: E22
-  run_id: minted-phat-bieu-va-phan-xu-E22-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.phat_bieu
-  verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 669.925375
-
-- eval: E19
-  run_id: minted-phat-bieu-va-phan-xu-E19-r2
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.phat_bieu
-  verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 669.925375
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E12
   run_id: minted-phat-bieu-va-phan-xu-E12-r2
@@ -111,8 +104,17 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.dung_lai
   verified_at: 2026-10-27T00:24:35Z
-  output: |
-    dung-lai: ĐẠT
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
+
+- eval: E13
+  run_id: minted-phat-bieu-va-phan-xu-E13-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.phat_bieu_db
+  verified_at: 2026-10-27T00:24:35Z
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E14
   run_id: minted-phat-bieu-va-phan-xu-E14-r2
@@ -120,17 +122,17 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.script.cat_chuyen_thu
   verified_at: 2026-10-27T00:24:35Z
-  output: |
-    cat-chuyen --thu: ĐẠT (ROLLBACK)
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
 
-- eval: E20
-  run_id: minted-phat-bieu-va-phan-xu-E20-r2
+- eval: E15
+  run_id: minted-phat-bieu-va-phan-xu-E15-r2
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.test.pipeline
+  verifier: config:executors.test.phat_bieu_db
   verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 39793.6475
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
 
 - eval: E21
   run_id: minted-phat-bieu-va-phan-xu-E21-r2
@@ -138,8 +140,8 @@ human_signoff:
   baseline: n-a
   verifier: config:executors.test.app_ui
   verified_at: 2026-10-27T00:24:35Z
-  output: |
-    ℹ duration_ms 25437.320417
+  carried_from_round: 2
+  note: carry-forward tu round 2 — delta khong cham paths cua eval
 
 ### Mang tu round 1 (carry-forward, khong chay lai)
 
@@ -245,24 +247,29 @@ human_signoff:
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-phat-bieu-va-phan-xu-SUITE-npm_test-r2
+  run_id: minted-phat-bieu-va-phan-xu-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:24:35Z
+  verified_at: 2026-10-27T00:29:33Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-phat-bieu-va-phan-xu-SUITE-lint-r2
+  run_id: minted-phat-bieu-va-phan-xu-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:24:35Z
+  verified_at: 2026-10-27T00:29:33Z
+
+- cmd: cd app && npm test
+  run_id: minted-phat-bieu-va-phan-xu-SUITE-npm_test__bd9a35-r3
+  exit_code: 0
+  verified_at: 2026-10-27T00:29:33Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-phat-bieu-va-phan-xu-SUITE-test_lint_rules-r2
+  run_id: minted-phat-bieu-va-phan-xu-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:24:35Z
+  verified_at: 2026-10-27T00:29:33Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-phat-bieu-va-phan-xu-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-phat-bieu-va-phan-xu-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:24:35Z
+  verified_at: 2026-10-27T00:29:33Z
 
 ## Known limits
 
@@ -275,13 +282,8 @@ baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi
 Eval khong-phan-biet (xanh ca tren HEAD lan baseline): none — moi eval feature deu red tren baseline (co phan biet)
 
 Baseline khong do:
-- node pipeline/scripts/dung-lai-canonical.mjs --nguon-goc: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd pipeline && node --test scripts/phat-bieu-db.itest.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 - cd pipeline && node --test scripts/phat-bieu.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- node pipeline/scripts/dung-lai-canonical.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- node pipeline/phat-bieu-cat-chuyen.mjs --thu: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 - cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd app && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
 ## Variance
 
@@ -291,3 +293,4 @@ none — every multi-run eval is uniform
 
 Round 1: E21 failed — lệnh `cd app && npm test` (duy nhất gắn E21) kết thúc lỗi, không in dòng tóm tắt nên chưa rõ nguyên nhân; không có lệnh fail nào ngoài eval. Returned to implementation.
 Round 2: mọi eval chạy lại đều đạt (E6, E7, E9, E12, E13, E14, E15, E19, E20, E21, E22 và bốn lệnh suite); E1–E5, E8, E10, E11, E16–E18 mang từ round 1 vì delta không chạm paths của chúng. Finding trong hợp đồng của round 1 đã sửa ở commit 6c63f78a.
+Round 3: chạy lại E9, E22, E19, E20 và năm lệnh suite (agent, app tsc và lint, app test, lint-rules, portal-compliance), tất cả đạt, code tại a2fad097; E6, E7, E12–E15, E21 mang từ round 2 và E1–E5, E8, E10, E11, E16–E18 mang từ round 1 vì delta không chạm paths của chúng.
