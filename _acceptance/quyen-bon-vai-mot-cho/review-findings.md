@@ -72,3 +72,17 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   Đề xuất: known-limits
 
 ⚠ Cụm ngoài vùng phủ: 2/10 lỗi rơi vào file không bộ đo nào phủ (app/src/lib/che-do-thu.ts, scripts/smoke-portal-compliance.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
+
+- **Vai viewer mới qua canAccessOps nên đọc được thẻ duyệt review_queue, trái luật 6 «thẻ duyệt cho vai ops trở lên» (r1)**
+  Người dùng thấy gì: Nếu sau này có người được cấp vai chỉ-xem, người đó sẽ thấy nguyên văn các thẻ duyệt trên trang duyệt, thứ lẽ ra chỉ dành cho vai vận hành trở lên. Hiện chưa ai mang vai này nên chưa lộ thật.
+  Căn cứ: Chưa có ai mang vai chỉ-xem nên chưa lộ dữ liệu thật, nhưng phải xử lý trước khi cấp vai đó cho bất kỳ ai; việc này thuộc phần kiểm vai ở trang mà vòng này đã loại ra.
+  file: `app/src/lib/ops-access.ts`
+  severity: medium
+  Đề xuất: new-contract
+
+- **ghiRoiLam giữ transaction mở trong lúc startZaloLogin chờ QR tới 20 giây (r1)**
+  Người dùng thấy gì: Khi bấm đăng nhập Zalo, một kết nối cơ sở dữ liệu bị giữ tới khoảng 20 giây chờ mã QR; bấm liên tiếp nhiều lần có thể làm các thao tác khác chậm hoặc nghẽn tạm thời.
+  Căn cứ: Chỉ ảnh hưởng khi vài người bấm đăng nhập Zalo cùng lúc, tự hết sau vài chục giây và không mất dữ liệu; thao tác này hiếm và do quản trị viên làm.
+  file: `app/src/lib/audit.ts`
+  severity: low
+  Đề xuất: known-limits
