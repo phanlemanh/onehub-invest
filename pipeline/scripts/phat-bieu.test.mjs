@@ -79,12 +79,25 @@ test("PB-AC-10 cloud: nguồn gốc và bảng phát biểu không vào tập đ
   assert.deepEqual(cloudLeaks(CLOUD_ALLOW, [...FILL, "field_assertions"]), ["FILL: field_assertions"]);
 });
 
-test("PB-AC-8 bộ so mốc: chỉ miễn S05 loại hình NULL → unknown; nguồn khác, trường khác hay giá trị khác đều là lệch", () => {
-  const moc = (o) => ({ moc: new Map(Object.entries(o.moc)), nguon: new Map(Object.entries(o.nguon)) });
-  const nguon = { a: "S05", b: "S03", c: "S06", d: "S05" };
-  const truoc = moc({ nguon, moc: { "a|property_type": null, "b|property_type": null, "c|property_type": null, "d|street_raw": null } });
-  const sau = moc({ nguon, moc: { "a|property_type": "unknown", "b|property_type": "unknown", "c|property_type": "house", "d|street_raw": "unknown" } });
+test("PB-AC-8 bộ so mốc: chỉ miễn đúng mục khai trước; mỗi biến thể đổi MỘT chiều (nguồn · trường · trước · sau) đều là lệch", () => {
+  // Ma trận viết trước: hàng 0 = đúng mục KHAI_TRUOC (S05 · property_type · NULL → unknown); hàng 1–4 đổi đúng một chiều.
+  const MA_TRAN = [
+    ["dung-khai-truoc", "S05", "property_type", null, "unknown", "mien"],
+    ["doi-nguon", "S03", "property_type", null, "unknown", "lech"],
+    ["doi-truong", "S05", "street_raw", null, "unknown", "lech"],
+    ["doi-truoc", "S05", "property_type", "house", "unknown", "lech"],
+    ["doi-sau", "S05", "property_type", null, "house", "lech"],
+  ];
+  const nguon = new Map(MA_TRAN.map(([ten, n]) => [ten, n]));
+  const truoc = { nguon, moc: new Map(MA_TRAN.map(([ten, , f, va]) => [`${ten}|${f}`, va])) };
+  const sau = { nguon, moc: new Map(MA_TRAN.map(([ten, , f, , vb]) => [`${ten}|${f}`, vb])) };
   const r = soMoc(truoc, sau);
-  assert.deepEqual(r.nullUnknown, ["a"]);
-  assert.deepEqual(r.lech.map((x) => `${x.offer_id}|${x.field}`).sort(), ["b|property_type", "c|property_type", "d|street_raw"]);
+  let n = 0;
+  for (const [ten, , f, , , ky] of MA_TRAN) {
+    const lech = r.lech.some((x) => x.offer_id === ten && x.field === f);
+    const mien = r.nullUnknown.includes(ten);
+    assert.deepEqual([lech, mien], ky === "lech" ? [true, false] : [false, true], `ca ${ten}: phải ${ky}`);
+    n++;
+  }
+  assert.equal(n, MA_TRAN.length);
 });

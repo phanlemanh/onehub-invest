@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-10-27T00:13:39Z",
-  "generated_sha": "acad72e2e196b21866791170f3c0c40e12a3a7c3",
+  "generated_at": "2026-10-27T00:24:35Z",
+  "generated_sha": "6c63f78a09848852b0ef7a421ba5974a166711f0",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "phat-bieu-va-phan-xu",
-  "round": 1,
+  "round": 2,
   "riskTier": "T3",
   "evals": [
     {
@@ -334,8 +334,8 @@
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.34.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/acceptance-collector-graceful-shutdown-942e1d/_acceptance/phat-bieu-va-phan-xu/contract.md",
-  "invokedAt": "2026-10-27T00:13:39Z",
-  "invokedSha": "acad72e2e196b21866791170f3c0c40e12a3a7c3",
+  "invokedAt": "2026-10-27T00:24:35Z",
+  "invokedSha": "6c63f78a09848852b0ef7a421ba5974a166711f0",
   "vungVat": [
     "_acceptance/config.yaml",
     "_acceptance/phat-bieu-va-phan-xu/card-plain.json",
@@ -346,6 +346,7 @@
     "_acceptance/phat-bieu-va-phan-xu/figures/gia-tri-co-san.png",
     "_acceptance/phat-bieu-va-phan-xu/figures/phan-xu-mot-o.html",
     "_acceptance/phat-bieu-va-phan-xu/figures/phan-xu-mot-o.png",
+    "_acceptance/phat-bieu-va-phan-xu/s4-args.json",
     "agent/scripts/enrich-revert.ts",
     "agent/src/vocab.generated.ts",
     "agent/tests/enrich-apply.test.ts",
@@ -405,9 +406,13 @@
     "_acceptance/phat-bieu-va-phan-xu/contract.md",
     "_acceptance/phat-bieu-va-phan-xu/decisions.jsonl",
     "_acceptance/phat-bieu-va-phan-xu/duong-nen.md",
+    "_acceptance/phat-bieu-va-phan-xu/evidence-report.md",
     "_acceptance/phat-bieu-va-phan-xu/figures/index.md",
     "_acceptance/phat-bieu-va-phan-xu/gap-probe.md",
     "_acceptance/phat-bieu-va-phan-xu/opportunity.md",
+    "_acceptance/phat-bieu-va-phan-xu/review-findings.md",
+    "_acceptance/phat-bieu-va-phan-xu/run-log.jsonl",
+    "_acceptance/phat-bieu-va-phan-xu/usage-report.md",
     "docs/ROADMAP.md",
     "docs/architecture/classification-enrich-review.md",
     "docs/ops/runtime-map.md",
@@ -426,6 +431,7 @@
     "_acceptance/phat-bieu-va-phan-xu/du-bao.json",
     "_acceptance/phat-bieu-va-phan-xu/duong-nen.md",
     "_acceptance/phat-bieu-va-phan-xu/evals.yaml",
+    "_acceptance/phat-bieu-va-phan-xu/evidence-report.md",
     "_acceptance/phat-bieu-va-phan-xu/figures/gia-tri-co-san.html",
     "_acceptance/phat-bieu-va-phan-xu/figures/gia-tri-co-san.png",
     "_acceptance/phat-bieu-va-phan-xu/figures/index.md",
@@ -433,6 +439,10 @@
     "_acceptance/phat-bieu-va-phan-xu/figures/phan-xu-mot-o.png",
     "_acceptance/phat-bieu-va-phan-xu/gap-probe.md",
     "_acceptance/phat-bieu-va-phan-xu/opportunity.md",
+    "_acceptance/phat-bieu-va-phan-xu/review-findings.md",
+    "_acceptance/phat-bieu-va-phan-xu/run-log.jsonl",
+    "_acceptance/phat-bieu-va-phan-xu/s4-args.json",
+    "_acceptance/phat-bieu-va-phan-xu/usage-report.md",
     "agent/scripts/enrich-revert.ts",
     "agent/src/vocab.generated.ts",
     "agent/tests/enrich-apply.test.ts",
@@ -486,6 +496,7 @@
     "_acceptance/phat-bieu-va-phan-xu/figures/gia-tri-co-san.png",
     "_acceptance/phat-bieu-va-phan-xu/figures/phan-xu-mot-o.html",
     "_acceptance/phat-bieu-va-phan-xu/figures/phan-xu-mot-o.png",
+    "_acceptance/phat-bieu-va-phan-xu/s4-args.json",
     "agent/scripts/enrich-revert.ts",
     "agent/src/vocab.generated.ts",
     "agent/tests/enrich-apply.test.ts",
@@ -564,10 +575,188 @@
   "coEvalPaths": true,
   "evalsHash": "3f490cadbd525b112b8fe0e9fda5990ad42d66686273b278ef2c684b0fdf8131",
   "runBaseline": true,
+  "carriedEvals": [
+    {
+      "id": "E1",
+      "runId": "minted-phat-bieu-va-phan-xu-E1-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "bash db/check-idempotent-tam.sh db/migrations/045_phat_bieu_va_phan_xu.sql field_assertions sale_offer_records"
+    },
+    {
+      "id": "E2",
+      "runId": "minted-phat-bieu-va-phan-xu-E2-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"
+    },
+    {
+      "id": "E3",
+      "runId": "minted-phat-bieu-va-phan-xu-E3-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"
+    },
+    {
+      "id": "E4",
+      "runId": "minted-phat-bieu-va-phan-xu-E4-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"
+    },
+    {
+      "id": "E5",
+      "runId": "minted-phat-bieu-va-phan-xu-E5-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"
+    },
+    {
+      "id": "E8",
+      "runId": "minted-phat-bieu-va-phan-xu-E8-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"
+    },
+    {
+      "id": "E10",
+      "runId": "minted-phat-bieu-va-phan-xu-E10-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"
+    },
+    {
+      "id": "E11",
+      "runId": "minted-phat-bieu-va-phan-xu-E11-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd agent && npm test"
+    },
+    {
+      "id": "E16",
+      "runId": "minted-phat-bieu-va-phan-xu-E16-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "node pipeline/scripts/nap-lai-ba-luot.mjs"
+    },
+    {
+      "id": "E17",
+      "runId": "minted-phat-bieu-va-phan-xu-E17-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"
+    },
+    {
+      "id": "E18",
+      "runId": "minted-phat-bieu-va-phan-xu-E18-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-27T00:13:39Z",
+      "cmd": "node pipeline/scripts/phat-bieu-chay-that.mjs --thu"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "db/migrations/045_phat_bieu_va_phan_xu.sql",
+      "title": "revert_enrichment không hoàn tác được đề xuất đã áp trước 045 sau khi cắt chuyển (bị bỏ qua lặng lẽ với lý do 'no-assertion')",
+      "severity": "medium",
+      "plain": "Những giá trị tự động điền trước đợt chuyển đổi này sẽ không hoàn tác được bằng công cụ hoàn tác; ô vẫn giữ giá trị sai và công cụ chỉ lặng lẽ bỏ qua.",
+      "can_cu": "Chỉ ảnh hưởng một số giá trị cũ đã điền trước ngày chuyển, không làm mất dữ liệu, và việc xử lý đề xuất cũ đã được hợp đồng giao cho vòng sau.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/transform-chotot.mjs",
+      "title": "transform-chotot không bọc giao dịch: tin S06 mới được commit với property_type/bedrooms NULL tới cuối lượt, lượt hỏng giữa chừng thì chúng ở lại NULL",
+      "severity": "low",
+      "plain": "Nếu một lượt nạp tin từ nguồn S06 hỏng giữa chừng, các tin mới có thể nằm lại với loại hình và số phòng ngủ trống cho tới lượt chạy thành công kế tiếp.",
+      "can_cu": "Chỉ xảy ra khi lượt nạp hỏng giữa chừng, và chỉ cần chạy lại lượt kế tiếp là các ô được điền đầy, không mất dữ liệu.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "_acceptance/config.yaml",
+      "title": "Executor đo PL15 trong config không chốt DATABASE_URL vào DB thử, mặc định chạy trên DB dùng chung 'oneinvest', trái luật đo 27/10",
+      "severity": "low",
+      "plain": "Nếu chạy phép đo từ một máy hoặc phiên khác chưa cấu hình đúng, việc nạp thay đổi cấu trúc có thể khoá cơ sở dữ liệu dùng chung một lúc.",
+      "can_cu": "Chỉ xảy ra khi chạy sai môi trường, khoá chỉ kéo dài trong lúc đo và tự hết, không làm mất dữ liệu; hiện đã có rào ở máy này.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "db/migrations/045_phat_bieu_va_phan_xu.sql",
+      "title": "revert_enrichment cannot undo proposals applied before 045 and skips them silently ('no-assertion'); the CLI still exits 0",
+      "severity": "high",
+      "plain": "Công cụ hoàn tác báo đã xử lý nhưng thực tế bỏ qua mọi đề xuất áp trước đợt chuyển đổi, người vận hành không thấy lỗi nên dễ tưởng đã hoàn tác xong.",
+      "can_cu": "Giá trị cũ vẫn còn nguyên và có thể xử lý sau khi vòng kế tiếp đưa đề xuất cũ vào hệ thống mới; chỉ nguy cơ là người vận hành hiểu nhầm kết quả.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "agent/scripts/enrich-revert.ts",
+      "title": "enrich-revert --dry predicts outcomes that no longer match revert_enrichment 045",
+      "severity": "medium",
+      "plain": "Bản xem trước của công cụ hoàn tác có thể báo kết quả khác với lần chạy thật, nên người vận hành quyết định dựa trên thông tin chưa chính xác.",
+      "can_cu": "Chỉ là bản xem trước, không ghi gì vào dữ liệu và lần chạy thật vẫn đúng; sửa sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "db/check-idempotent-tam.sh",
+      "title": "Hình dạng 4 (âm tính đứng một mình): E1 kiểm 'số dòng không giảm, không trùng' trên DB tạm chỉ có lược đồ, nên phép kiểm luôn đúng",
+      "severity": "medium",
+      "plain": "Phép kiểm chạy lại an toàn của bản nâng cấp cấu trúc không thể phát hiện việc mất hoặc nhân đôi dữ liệu thật, vì nó chạy trên bản sao không có dữ liệu.",
+      "can_cu": "Bản nâng cấp đã được xác nhận không ghi dòng nào vào bảng tin và đo thử trên bản sao thật, nên rủi ro thực tế thấp; thêm đối chứng sau cũng rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/phat-bieu-cat-chuyen.mjs",
+      "title": "Hình dạng 4 (âm tính đứng một mình): cat-chuyen --thu chấp nhận 'lượt hai — legacy mới: 0' mà không buộc lượt một phải có m > 0",
+      "severity": "medium",
+      "plain": "Lệnh thử chuyển đổi có thể báo đạt dù thực ra không xử lý ô nào nếu truy vấn chọn ô bị hỏng, tạo cảm giác yên tâm giả.",
+      "can_cu": "Chỉ xảy ra khi truy vấn hỏng hoặc DB rỗng, là lệnh chạy thử có hoàn tác nên không làm mất dữ liệu; các phép đo khác vẫn bắt được.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": true
+    },
+    {
+      "file": "pipeline/scripts/phat-bieu-db.itest.mjs",
+      "title": "Hình dạng 2 (fixture viết tay đúng khuôn bên đọc): phát biểu legacy trong test được dựng tay đúng khoá evidence.offer_id mà 045 đọc, không đi qua catChuyen",
+      "severity": "medium",
+      "plain": "Nếu cách ghi dấu vết phát biểu cũ đổi dạng, các test liên quan vẫn xanh nên có thể không phát hiện ra hỏng hóc.",
+      "can_cu": "Chỉ làm giảm độ nhạy của test, không ảnh hưởng dữ liệu người dùng; các phép dựng lại trên dữ liệu thật vẫn đo được và bổ sung test sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "pipeline/lib/scan-canonical-write.mjs",
+      "title": "Hình dạng 5 (tuyên quét cả lớp nhưng phạm vi hẹp hơn lời khai): bộ quét ghi thẳng bỏ cả thư mục tests/ và fixtures/, không chỉ *.test.*",
+      "severity": "low",
+      "plain": "Bộ quét chặn ghi thẳng năm cột bỏ sót mã dựng dữ liệu thử nằm trong thư mục test, nên một đường ghi thẳng ở đó sẽ không bị báo.",
+      "can_cu": "Chỉ là mã dùng cho test chứ không chạy trên dữ liệu thật, nên không ảnh hưởng người dùng; mở rộng phạm vi quét sau rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    }
+  ],
+  "deltaFiles": [
+    "_acceptance/phat-bieu-va-phan-xu/s4-args.json",
+    "pipeline/lib/enrich-call-sites.mjs",
+    "pipeline/phat-bieu-cat-chuyen.mjs",
+    "pipeline/scripts/dung-lai-canonical.mjs",
+    "pipeline/scripts/phat-bieu.test.mjs"
+  ],
   "thuocChup": {
-    "sha": "acad72e2e196b21866791170f3c0c40e12a3a7c3",
+    "sha": "6c63f78a09848852b0ef7a421ba5974a166711f0",
     "n": 134,
-    "digest": "d367f07d96ba03c3932abdc647b5245ce6a89f42cb1e64bd929a54b76784a88a",
+    "digest": "ae654a2e34e1b18f75c9317b9484e885af8427161a5cc0d4bb88853787361d53",
     "tep": {
       "_acceptance/config.yaml": "f9bd970669041b16d21e8dcb61870d425c99ad551994b1af799a088acdba4f75",
       "_acceptance/phat-bieu-va-phan-xu/evals.yaml": "3f490cadbd525b112b8fe0e9fda5990ad42d66686273b278ef2c684b0fdf8131",
@@ -670,7 +859,7 @@
       "pipeline/scripts/nap-lai.test.mjs": "a7649e81c3542a69a8e914a41469df704da8a36297acc7e305be6e2121114fca",
       "pipeline/scripts/ops-facts-so-tong-hop.test.mjs": "999e13f4e5942b3900dbb7b9ec868a860d0c2a49407c4bef108507c483ed3567",
       "pipeline/scripts/ops-nhan-ma-nguon.test.mjs": "8e970a715391886dbe193b880ce80a658b9c7a0417c928b69ea80413510a7e3a",
-      "pipeline/scripts/phat-bieu.test.mjs": "7b1d093b8fc13d74693110d5cff325965b044c6b4c3861b491d5f38f9fb0f27f",
+      "pipeline/scripts/phat-bieu.test.mjs": "bc16237320216a245140130efdb8951ab4ae8c8e6fd50751fc19351b33aadc10",
       "pipeline/scripts/reassign-areas.test.mjs": "6f45c6123de464cf6c0f5e71c484a66608fa8e44af88c64b22d31fab8fd7a8cd",
       "pipeline/scripts/s05-b-lich.test.mjs": "9e7ecfacfae058b840da848fa5029f054fa439a0a61a708c828ab227359b3246",
       "pipeline/scripts/s05-paused.test.mjs": "0c3c1fbecf8e497452b9b04d943c8c5e2bad7690a609a9658582c73012122f97",
@@ -706,7 +895,7 @@
     }
   },
   "cayChup": {
-    "sha": "acad72e2e196b21866791170f3c0c40e12a3a7c3",
+    "sha": "6c63f78a09848852b0ef7a421ba5974a166711f0",
     "ban": {},
     "chuaTheoDoi": []
   }
