@@ -1,0 +1,14 @@
+{
+  "feature_plain": "Hai phép kiểm chuẩn giao diện của hồ sơ đã ký thôi đỏ sẵn sau các đợt dọn UI — phép kiểm tự chọn tệp mẫu còn nợ lint, phép kiểm tài liệu so với lần đo mới nhất; luật lint không đổi.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cho phép kiểm «vi phạm mới vẫn bị bắt» tự chọn tệp còn nợ lint thay vì một tệp đã dọn sạch."},
+    {"id": "AC-2", "p": "Sẽ so tài liệu số đo với lần đo mới nhất và báo cáo sống; số nợ và tổng vi phạm chỉ được giảm."},
+    {"id": "AC-3", "p": "Sẽ chuyển lời hứa của phép kiểm tài liệu cũ sang hồ sơ này (cần chữ ký), giữ nguyên phép kiểm còn đúng."}
+  ],
+  "wont_do": [
+    {"id": "AC-4", "p": "Chặn nới luật: không đổi luật lint, cấu hình lint hay sổ nợ suppress."},
+    {"id": "OOS-1", "p": "KHÔNG đổi luật lint hay số nợ."},
+    {"id": "OOS-2", "p": "KHÔNG sửa câu hứa đã ký của hồ sơ cũ."},
+    {"id": "OOS-3", "p": "KHÔNG tự động ghi số đo mỗi lần dọn UI."}
+  ]
+}
