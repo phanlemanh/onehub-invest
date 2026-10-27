@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bài kiểm tự động của lệnh kiểm toàn hệ thống thôi đỏ ngẫu nhiên khi hai lượt chạy rơi vào hai phút khác nhau — giờ trên dòng tiêu đề được ghim cố định trong hộp thử.",
+  "analyst_plain": "Lượt này không chạy được phép so với bản trước khi sửa (công cụ của tác tử chấm thiếu quyền ghi tệp), nên chưa có số đo «bài kiểm nào phân biệt được bản cũ với bản mới». Phần đối chứng bản cũ đỏ / bản mới xanh vẫn có, nằm trong chính đầu dò AC-2."
+}
