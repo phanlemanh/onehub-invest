@@ -5,7 +5,7 @@ slug: test-nen-on22-on12
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-27T04:27:46Z
 approved_by:
@@ -58,3 +58,13 @@ lập, không đổi hành vi app.
 - Truy gốc deadlock ON12-AC-7 khi chưa có nhật ký (P4-60) — xếp cùng lớp lỗi DB tạm thời, chờ nhật ký để xác nhận.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: Thẻ người ký đọc còn mô tả một cơ chế bảo vệ đã bị bỏ, nên người ký có thể tưởng hồ sơ được bảo vệ nhiều hơn thực tế.
+  - Ngoài-2: Khi bước ghi số liệu hỏng, vài ca kiểm thử báo lỗi khó hiểu thay vì nêu đúng nguyên nhân; ca vẫn đỏ chứ không bị che.
+  - Ngoài-3: Trên máy chạy kiểm thử tự động ít nhân, bộ test có thể chạy dồn nhiều hơn trước, làm các ca nhạy nhịp dễ đỏ ngẫu nhiên trở lại.
+  - Ngoài-4: Con số đỉnh kết nối báo cáo có thể thấp hơn thực tế vì bỏ sót một số tiến trình phụ, nên mức dư địa kết nối trông rộng hơn thật.
+  - Ngoài-6: Bằng chứng nói rằng ca đỏ vì quá tải kết nối nhưng thực ra chưa chứng được đúng nguyên nhân đỏ.
+  - Ngoài-7: Cam kết bước ghi số liệu tự thử lại khi gặp lỗi tạm mới được kiểm bằng cách đọc mã, chưa được chạy thử thật.
+  - Ngoài-8: Ca đối chứng có thể đỏ vì lý do khác chứ không phải vì lỗi quá tải được tiêm, nên chưa chứng chắc cơ chế thử lại có tác dụng.
+  - Ngoài-9: Một số điểm chạm cơ sở dữ liệu trong ca kiểm thử chưa được thử với lỗi quá tải, nên nếu mất lớp thử lại ở đó thì chưa chắc bị phát hiện.

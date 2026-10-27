@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 5ee9e5d92c8e46cc1c3513784b0b0ce292a73afa
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: test-nen-on22-on12
