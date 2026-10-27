@@ -1,0 +1,17 @@
+{
+  "feature_plain": "Bộ test app thôi đỏ ngẫu nhiên khi nhiều phiên cùng chạy test trên DB local dùng chung — chạy ít tiến trình hơn để không chiếm hết suất kết nối, và thử lại có giới hạn khi DB báo lỗi tạm thời.",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ có hàm thử lại chỉ cho ba lỗi DB tạm thời (hết suất kết nối, deadlock, DB đang khởi động); lỗi khác báo ngay."},
+    {"id": "AC-3", "p": "Sẽ cho ba ca chạm DB thật thử lại khi DB hết suất — chứng bằng tiêm lỗi thật: một lần thì qua, mãi mãi thì đỏ nêu đúng mã."},
+    {"id": "AC-4", "p": "Sẽ chứng ca công tắc nhóm (CT-AC-1) không còn phụ thuộc nhịp chờ từ khi route ghi nhật ký trong cùng giao dịch."},
+    {"id": "AC-5", "p": "Sẽ chạy cả bộ test app 6 lần liền đều xanh, không lần nào phải thử lại."},
+    {"id": "AC-6", "p": "Sẽ chỉ đổi tệp test và dòng lệnh chạy test; mã app không đổi."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Chặn chiếm suất: một lượt test app chỉ còn chiếm tối đa 40 kết nối DB (trước 53), đủ chỗ cho hai phiên cùng chạy."},
+    {"id": "OOS-1", "p": "KHÔNG nâng giới hạn kết nối của DB local — việc đó cần khởi động lại DB dùng chung, đề nghị gộp vào hàng đo hiệu năng."},
+    {"id": "OOS-2", "p": "KHÔNG đổi cấu hình kết nối trong mã app."},
+    {"id": "OOS-3", "p": "KHÔNG sửa tệp ca công tắc — nguyên nhân đỏ đã hết trên main."},
+    {"id": "OOS-4", "p": "KHÔNG truy tiếp gốc deadlock khi chưa có nhật ký gốc."}
+  ]
+}
