@@ -1,100 +1,74 @@
-# Review findings: quyen-bon-vai-mot-cho (round 1)
+# Review findings: quyen-bon-vai-mot-cho (round 2)
 
 ## Trong hợp đồng
 
-- **Hình dạng 4 (âm tính một mình): ô «qua» của ma trận QV-AC-2 chỉ assert «không phải 401/403», nhận cả 500**
-  file: `app/tests/quyen-bon-vai.test.tsx:395`
-  severity: high
-  AC: AC-2
-  source: measurement
-  detail: Với mọi ô `o.ky === "qua"`, phép đo chỉ có `if (r.status === 401 || r.status === 403) sai.push(...)`. Nó không ghim mã dương nào, trong khi E2 hứa «mỗi ô ghim mã HTTP mong đợi (... 2xx/4xx nghiệp vụ khi qua)». Dòng 301-303 còn đổi mọi lỗi handler ném ra thành `new Response(..., { status: 500 })`. Hệ quả: nếu chính `kiemQuyen` ném lỗi (đọc phiên hỏng, thiếu bảng sessions, v.v.) thì ô vẫn trả 500 và vẫn tính là «qua cổng quyền». Ô qua không có đối chứng dương: không assert 2xx/4xx, không ghim thông điệp. Vì vậy 147 ô không phân biệt được «cổng cho qua» với «cổng sập».
-
-- **Hình dạng 5 (tuyên quét lớp, chỉ có điểm-case): QV-AC-3 tự liệt kê 12 ca thay vì mọi ô «qua» của hành động ghi trong MA_TRAN**
-  file: `app/tests/quyen-bon-vai.test.tsx:430`
-  severity: high
-  AC: AC-3
-  source: measurement
-  detail: E3 và AC-3 hứa «với mọi ô qua-và-thành-công của hành động ghi ở MA_TRAN» thì đúng 1 dòng audit, actor `user:<id>`, đúng action. Nhưng mảng `ca` (dòng 430-441) viết tay, không rút từ `MA_TRAN`, và mỗi hành động chỉ có một người gọi. ingest chỉ chạy bearer và ops. review.decide chỉ chạy ops, thiếu admin và owner. Năm unit.* chỉ chạy admin, thiếu owner. zalo.admin chỉ có accounts POST/DELETE và groups POST với admin, không có ô zalo/login. Vai owner không xuất hiện ở bất kỳ ô ghi nào. Không có assert dạng `ca.length === <số ô qua-ghi của MA_TRAN>`. Phần kiểm audit/actor ở mức route còn trống cho các ô qua-ghi khác của QV-AC-2, mà QV-AC-2 thì không đếm audit ở ô qua.
-
-- **Hình dạng 3 (chuỗi/khoá có mặt thay cho quan hệ): QV-AC-3 chỉ kiểm detail có khoá from/to, không kiểm giá trị trước/sau**
-  file: `app/tests/quyen-bon-vai.test.tsx:450`
-  severity: high
-  AC: AC-3
-  source: measurement
-  detail: `assert.ok("from" in d.detail && "to" in d.detail, ...)` chỉ đo khoá có mặt. Lời hứa của AC-3 là một quan hệ: «detail mang trạng thái trước và sau khi thao tác đổi trạng thái». Cần assert `from` bằng trạng thái đọc trước thao tác (vd toggle: 'active') và `to` bằng trạng thái sau ('paused'). Hiện ghi `from` = `to`, ghi null hay ghi đảo chiều đều vẫn xanh. Phép đo chỉ chạy nhánh vòng đời (lược đồ dungSauGop). Nhánh toggle không vòng đời ở source-groups/route.ts:165 ghi detail không có `from` mà không ca nào chạm tới.
-
-- **Hình dạng 5 (tuyên quét lớp, chỉ có điểm-case): QV-AC-5 hứa việc lỗi cho mọi lệnh zalo nhưng không đo nhánh openclaw thoát 1**
-  file: `app/tests/quyen-bon-vai.test.tsx:38`
-  severity: high
+- **Hình dạng 5 (tuyên quét lớp, chỉ có điểm-case): nhánh «openclaw giả thoát 1» của E5 không có ma trận, ô duy nhất lại assert ngược lời hứa**
+  file: app/tests/quyen-bon-vai.test.tsx:621
+  severity: medium
   AC: AC-5
   source: measurement
-  detail: E5 hứa «cùng lệnh [groups POST, accounts POST/DELETE, login POST/DELETE] khi openclaw giả thoát 1 hoặc tệp cấu hình không ghi được → mã lỗi ≥ 400 và 0 dòng audit». Hằng `OC_FAIL` (dòng 38, dùng trong script giả ở dòng 41) không bao giờ được tạo, nên nhánh openclaw thoát 1 không chạy lần nào. Phần việc lỗi (dòng 549-566) chỉ có hai điểm-case cấu hình chỉ-đọc (groups POST, accounts POST), cộng thêm login POST với id lạ. Ca id lạ là lỗi kiểm đầu vào 400, không phải việc ngoài DB lỗi. accounts DELETE lỗi, login POST lỗi khi spawn hay khi openclaw thoát 1, và login DELETE lỗi đều không có ô nào. Không có ma trận lệnh × kiểu lỗi viết trước.
+  detail: E5 (evals.yaml) hứa cho cả lớp lệnh zalo ghi: «cùng lệnh khi openclaw giả thoát 1 hoặc tệp cấu hình không ghi được → mã lỗi ≥ 400 và 0 dòng audit». Bảng viết trước LOI (dòng 597-602) chỉ có kiểu lỗi cấu hình ('cfg-chi-doc' | 'cfg-khong-doc'). Nhánh openclaw thoát 1 (OC_FAIL) chỉ được bật ở một điểm-case, dòng 621-633 (zalo/accounts DELETE), và ở đó ca assert điều ngược lại: `assert.equal(r.status, 200)` và `(await nAudit()) - n0 === 1`. Không ô nào chạy zalo/login POST hay zalo/groups POST hay zalo/accounts POST với openclaw thoát 1. Riêng login POST mà openclaw thoát 1 thì startZaloLogin chờ QR rồi trả `qrBase64: null`, tức 200 kèm 1 dòng audit, trái với E5. Văn bản E5 chưa được sửa theo hành vi «đăng xuất best-effort». Kết quả là ca thử xanh trong khi `expected` của E5 không đúng cho nhánh này.
+  rationale: AC-5 đòi khi việc ngoài DB lỗi (openclaw giả) thì route trả lỗi và 0 dòng audit, nhưng nhánh openclaw thoát 1 không được đo cho cả lớp lệnh zalo và ca duy nhất assert 200 kèm 1 dòng audit.
 
-- **Hình dạng 2 (dựng tay đúng khuôn bên đọc, không round-trip writer→reader): QV-AC-10 tự viết header bearer thay vì dùng request của push-ops-facts**
-  file: `app/tests/quyen-bon-vai.test.tsx:648`
+- **Hình dạng 2 (fixture viết tay đúng khuôn bên đọc, không round-trip): đối chứng dương của QV-AC-10b bơm thẳng vào map nội bộ, bỏ qua bước thu tệp**
+  file: app/tests/quyen-bon-vai.test.tsx:778
   severity: medium
   AC: AC-10
   source: measurement
-  detail: `captureOpsFacts` chạy push-ops-facts thật, nhưng máy chủ thu tạm (capture-ops-facts.mjs) chỉ giữ body, không giữ header hay URL. Ca thử sau đó tự gọi `goi("ingest", "POST", { authorization: `Bearer ${TOKEN}` }, { body: payload })`, tức header viết tay theo đúng khuôn mà `kiemQuyen` đọc. Chỉ payload được round-trip. Header thật của bên ghi (push-ops-facts.mjs:281 `authorization: Bearer ${token}` lấy từ CLOUD_OPS_API_TOKEN) và đường INGEST_URL không đi qua route. Nếu push-ops-facts đổi tên header, bỏ tiền tố Bearer hay đổi đường dẫn, ca vẫn xanh, trái với lời hứa E10 «đẩy số qua route ingest thật bằng bearer» và AC-10 «máy đêm nạp số vẫn chạy».
+  detail: quetBearer(goc, them) gộp `them` thẳng vào `doc` (dòng 757: `const doc = { ...them }`), tức khuôn {đường dẫn: nội dung} mà vòng so khớp đọc. Bước thu tệp thật (`git ls-files` cộng bộ lọc loại `app/tests/`, `docs/`, `*.md|html|json` ở dòng 754-756) bị bỏ qua hoàn toàn. Đối chứng dòng 778-779 vì thế chỉ chứng minh regex `/api/v1/ops/([a-z-]+)` bắt được chuỗi. Nó không chứng minh tệp thật ở `scripts/` đi qua được bộ lọc để vào tập quét. Bộ lọc có lỡ loại cả lớp tệp chạy thật thì đối chứng vẫn xanh. E10 hứa «thêm một tệp giả trong thư mục tạm … vào tập quét», nhưng ở đây không có tệp nào được tạo hay được ls-files/đọc ra.
+  rationale: AC-10 đòi «mọi chỗ trong cây» gọi bằng OPS_API_TOKEN chỉ nhắm hành động bảng cho bearer, mà thước quét không chứng minh được tệp thật ở scripts/ đi qua bộ lọc vào tập quét.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Vai viewer mới qua canAccessOps nên đọc được thẻ duyệt review_queue, trái luật 6 «thẻ duyệt cho vai ops trở lên»**
-  Người dùng thấy gì: Nếu sau này có người được cấp vai chỉ-xem, người đó sẽ thấy nguyên văn các thẻ duyệt trên trang duyệt, thứ lẽ ra chỉ dành cho vai vận hành trở lên. Hiện chưa ai mang vai này nên chưa lộ thật.
-  Căn cứ: Chưa có ai mang vai chỉ-xem nên chưa lộ dữ liệu thật, nhưng phải xử lý trước khi cấp vai đó cho bất kỳ ai; việc này thuộc phần kiểm vai ở trang mà vòng này đã loại ra.
-  file: `app/src/lib/ops-access.ts`
-  severity: medium
-  Đề xuất: new-contract
-
-- **source-groups POST trả 400 luật PL12 cho người gọi chưa qua cổng quyền**
-  Người dùng thấy gì: Người chưa đăng nhập hoặc không đủ quyền, nếu gửi yêu cầu sai nhóm, sẽ nhận thông báo lỗi nhóm thay vì bị từ chối quyền, nên biết được một phần luật nhóm. Không có dữ liệu nào bị đổi.
-  Căn cứ: Chỉ lộ một câu chữ của luật và không ghi hay đổi gì; người dùng thật không bị ảnh hưởng, sửa sau cũng không đắt.
+- **source-groups POST: chặn PL12 (S02/S03) chạy TRƯỚC kiemQuyen cho toggle/add/delete, người chưa đăng nhập nhận 400 kèm luật thay vì 401/403**
+  Người dùng thấy gì: Người chưa đăng nhập gửi yêu cầu bật/tắt nhóm nguồn thuộc loại bị cấm sẽ thấy báo lỗi kèm câu giải thích luật, thay vì bị yêu cầu đăng nhập. Không có dữ liệu nào bị đổi hay lộ ngoài câu luật.
+  Căn cứ: Hậu quả nhẹ: chỉ lộ một câu luật nội bộ, không ghi hay lộ dữ liệu, và sửa sau rẻ nên có thể ghi nhận rồi ship.
   file: `app/src/app/api/v1/ops/source-groups/route.ts`
-  severity: low
+  severity: medium
   Đề xuất: known-limits
-
-- **nguoiTuRequest gọi decodeURIComponent trên cookie thô, không bắt lỗi: cookie hỏng biến 401 thành 500**
-  Người dùng thấy gì: Một yêu cầu mang cookie đăng nhập bị hỏng sẽ nhận lỗi máy chủ thay vì yêu cầu đăng nhập lại. Cookie thật do hệ thống cấp không gặp lỗi này.
-  Căn cứ: Chỉ xảy ra khi cookie bị sửa tay hoặc hỏng, người dùng bình thường không chạm phải; không lộ hay mất dữ liệu, tải lại hoặc đăng nhập lại là xong.
+- **nguoiTuRequest: decodeURIComponent không bọc try, cookie oi_session hỏng làm mọi route /api/v1/ops/** ném 500 thay vì 401**
+  Người dùng thấy gì: Nếu trình duyệt giữ một cookie đăng nhập bị hỏng, các lệnh gọi Ops trả lỗi máy chủ thay vì yêu cầu đăng nhập lại. Người dùng xoá cookie hoặc đăng nhập lại là hết.
+  Căn cứ: Hậu quả nhẹ và hiếm gặp, không mất hay lộ dữ liệu, người dùng tự khắc phục bằng cách xoá cookie hoặc đăng nhập lại.
   file: `app/src/lib/auth.ts`
+  severity: medium
+  Đề xuất: known-limits
+- **che-do-thu.ts và so-don-vi.ts vẫn tự viết INSERT ops_audit, không đi qua ghiAuditTrong mới**
+  Người dùng thấy gì: Người dùng không thấy khác biệt: các thao tác đổi chế độ thu và sửa thông tin đơn vị vẫn ghi nhật ký đúng. Chỉ là mã nguồn có hai chỗ ghi nhật ký lệch khuôn chung.
+  Căn cứ: Không ảnh hưởng người dùng, chỉ là chuyện gọn mã nên ghi nhận và dọn khi chạm lại phần này.
+  file: `app/src/lib/che-do-thu.ts`
   severity: low
   Đề xuất: known-limits
-
-- **ghiRoiLam giữ transaction mở trong lúc startZaloLogin chờ QR tới 20 giây**
-  Người dùng thấy gì: Khi bấm đăng nhập Zalo, một kết nối cơ sở dữ liệu bị giữ tới khoảng 20 giây chờ mã QR; bấm liên tiếp nhiều lần có thể làm các thao tác khác chậm hoặc nghẽn tạm thời.
-  Căn cứ: Chỉ ảnh hưởng khi vài người bấm đăng nhập Zalo cùng lúc, tự hết sau vài chục giây và không mất dữ liệu; thao tác này hiếm và do quản trị viên làm.
-  file: `app/src/lib/audit.ts`
-  severity: low
-  Đề xuất: known-limits
-
-- **Smoke cổng tuân thủ vẫn chờ 401 cho phiên role=user, nhưng kiemQuyen nay trả 403, nên lệnh portal_smoke sẽ đỏ**
-  Người dùng thấy gì: Bài kiểm tra nhanh của cổng tuân thủ sẽ báo đỏ dù hệ thống hoạt động đúng, vì nó còn chờ mã từ chối cũ. Người vận hành có thể bị báo động giả.
-  Căn cứ: Hệ thống chạy đúng, chỉ có bài kiểm tra báo sai nên không ảnh hưởng người dùng; cần chỉnh kỳ vọng của bài kiểm tra để khỏi báo động giả, sửa rẻ.
+- **portal_smoke sẽ đỏ: smoke vẫn chờ 401 cho phiên role=user, nhưng kiemQuyen nay trả 403**
+  Người dùng thấy gì: Bài kiểm nhanh tuân thủ cổng sẽ báo đỏ dù hệ thống chạy đúng, vì nó còn chờ mã từ chối cũ. Người dùng cuối không bị ảnh hưởng, nhưng người vận hành có thể thấy cảnh báo giả.
+  Căn cứ: Chỉ là kỳ vọng lỗi thời của một bài kiểm, không ảnh hưởng người dùng hay dữ liệu, sửa sau rẻ.
   file: `scripts/smoke-portal-compliance.mjs`
   severity: medium
   Đề xuất: known-limits
-
-- **source-groups POST trả 400 theo luật PL12 trước khi kiểm quyền: khách và vai thấp nhận 400 thay vì 401/403**
-  Người dùng thấy gì: Khách hoặc người vai thấp gửi yêu cầu sai nhóm sẽ nhận thông báo lỗi nhóm thay vì bị từ chối quyền. Không có dữ liệu nào bị thay đổi.
-  Căn cứ: Hậu quả chỉ là sai mã từ chối và lộ một câu chữ luật, không ghi hay mất dữ liệu; người dùng thật không gặp.
+- **source-groups POST trả 400 luật PL12 trước khi kiểm quyền (toggle/add/delete)**
+  Người dùng thấy gì: Khách chưa đăng nhập hoặc vai thấp gửi yêu cầu cho nhóm nguồn bị cấm nhận báo lỗi kèm câu luật thay vì bị từ chối quyền. Không có dữ liệu nào bị đổi.
+  Căn cứ: Hậu quả nhẹ, không ghi hay lộ dữ liệu ngoài một câu luật, nên ghi nhận như giới hạn đã biết.
   file: `app/src/app/api/v1/ops/source-groups/route.ts`
   severity: low
   Đề xuất: known-limits
-
-- **nguoiTuRequest ném URIError khi cookie oi_session có mã % hỏng, nên route Ops trả 500 thay vì 401**
-  Người dùng thấy gì: Yêu cầu mang cookie đăng nhập bị hỏng nhận lỗi máy chủ thay vì được yêu cầu đăng nhập lại. Phiên đăng nhập thật không bị ảnh hưởng.
-  Căn cứ: Chỉ cookie dựng tay mới gây ra, người dùng bình thường không gặp; không lộ hay mất dữ liệu và đăng nhập lại là xử lý được.
+- **nguoiTuRequest: decodeURIComponent không bắt lỗi, cookie % hỏng làm route Ops ném lỗi (500) thay vì 401**
+  Người dùng thấy gì: Cookie đăng nhập hỏng khiến trang/lệnh Ops báo lỗi máy chủ thay vì đưa về đăng nhập. Đăng nhập lại là xử lý được.
+  Căn cứ: Hiếm gặp, không mất dữ liệu, người dùng tự gỡ được bằng cách xoá cookie.
   file: `app/src/lib/auth.ts`
   severity: low
   Đề xuất: known-limits
-
-- **Hình dạng 4 (âm tính một mình, không ghim thông điệp): đối chứng dương QV-AC-2b chỉ assert notEqual 403**
-  Người dùng thấy gì: Bài kiểm tra chứng minh bộ thử phát hiện được lỗi phân quyền còn lỏng, nên có thể bỏ sót một số kiểu hỏng của cổng quyền. Người dùng cuối không thấy ảnh hưởng trực tiếp.
-  Căn cứ: Chỉ làm bộ kiểm tra tự thân kém chặt, không ảnh hưởng chức năng đang chạy hay dữ liệu; có thể bổ sung sau với chi phí thấp.
+- **zalo/login POST ghi audit 'login.start' cả khi chỉ trả lại tiến trình đăng nhập đang chạy (không có thay đổi)**
+  Người dùng thấy gì: Nhật ký thao tác có thể có thêm dòng «bắt đầu đăng nhập Zalo» khi người dùng bấm lại lúc tiến trình đang chạy, dù không có phiên mới nào bật. Chỉ làm nhật ký dài hơn thực tế.
+  Căn cứ: Chỉ thừa một dòng nhật ký, không đổi dữ liệu hay quyền, nên chấp nhận và ghi nhận.
+  file: `app/src/app/api/v1/ops/zalo/login/route.ts`
+  severity: low
+  Đề xuất: known-limits
+- **Hình dạng 4 (không ghim thông điệp): đối chứng dương QV-AC-2b không chạy phép đo của QV-AC-2 và không ghim tên ô được báo**
+  Người dùng thấy gì: Bài kiểm chứng minh thước đo phân quyền bắt được lỗi còn yếu hơn lời hứa: nó chưa chứng minh thước gọi đúng tên ô bị hỏng. Người dùng cuối không bị ảnh hưởng, chỉ là độ tin cậy của bài kiểm thấp hơn dự kiến.
+  Căn cứ: Không ảnh hưởng người dùng hay dữ liệu, chỉ là độ chặt của một bài kiểm đối chứng, bổ sung sau rẻ.
   file: `app/tests/quyen-bon-vai.test.tsx`
-  severity: medium
+  severity: low
   Đề xuất: known-limits
 
-Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
+⚠ Cụm ngoài vùng phủ: 2/10 lỗi rơi vào file không bộ đo nào phủ (app/src/lib/che-do-thu.ts, scripts/smoke-portal-compliance.mjs) — dừng và quyết: mở rộng hợp đồng hay rút phạm vi.
