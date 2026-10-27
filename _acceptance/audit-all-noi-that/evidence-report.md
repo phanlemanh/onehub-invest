@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 5012f195557a41db4f46024cb333690c4275f2c2
+verified_commit: a9f4d5d90281c56ea0387bf02c8e058b196f4164
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -161,3 +161,19 @@ sha: 87df8f5470de137bcdf9d689ce0f730cec2396c3 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-23, do gộp main lần hai (#44)
 run_id: repin-20261023T153428Z-83227
 sha: 5012f195557a41db4f46024cb333690c4275f2c2 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7
+
+### Re-pin lần 3 — 2026-10-26, do scripts/audit-all.test.mjs đổi ở audit-all-test-moc-phut (bản giả date + ca canh MP-AC-1)
+run_id: repin-20261026T161818Z-47070
+sha: 59397e94984baaf1b83154326e6d4d36f1debba4 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7
+
+### Re-pin lần 4 — 2026-10-26, do ghim lại sau gộp main 50813379 vào #144
+run_id: repin-20261026T232828Z-21709
+sha: e6ab5ffcdeccce8ca1000f081603dca009ff7ed7 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7 · chập chờn (đỏ lần đầu, đạt khi chạy lại): suite 3/6
+
+### Re-pin lần 5 — 2026-10-26, do ghim lại sau gộp main 39c660ca vào #144
+run_id: repin-20261026T235228Z-77534
+sha: 09bef5b185df35647e1ef41f1cff358794dc1c38 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7
+
+### Re-pin lần 6 — 2026-10-27, do ghim lại sau gộp main 5cbf0cd9 vào #144
+run_id: repin-20261027T001133Z-91916
+sha: a9f4d5d90281c56ea0387bf02c8e058b196f4164 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E7 (E7 không khai paths) · AC không có chốt máy: AC-7

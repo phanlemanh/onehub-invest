@@ -60,19 +60,30 @@ _Avoid_: line căn, dòng căn
 
 ## Tài sản & tin
 
-**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều tin rao từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
+**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều listing từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
-**Listing**: Một chỗ cho thuê ngắn hạn tự thu (bảng `listings`, id `abnb_…`): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết.
-- Code: `listing` · RESO: không có mô hình STR — local extension (reso-standards.md)
+**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn. Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
+- Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
 - Slug URL: `listings` · `listing`
-_Avoid_: chỗ ở, phòng cho thuê
+- Tiếng Việt: «tin» là cách gọi thường của listing; trên UI «Tin» là nhãn ngắn khi chỗ đó chỉ có một loại listing (cột bảng tin, thẻ duyệt «Tin A» / «Tin B»).
+- Ghi chú: Chốt 27/10 (ROADMAP §3 #21, hướng B — theo RESO): «listing» là khái niệm cha của mọi tin. Hiện trạng còn lệch, đổi ở hàng tái cấu trúc riêng: dữ liệu nằm ở hai bảng — `sale_offers` (tin rao: bán + thuê dài hạn) và `listings` (listing thuê ngắn hạn); bảng `listings` mang tên cha mà chỉ chứa thuê ngắn hạn, và nhãn UI «Listing» trên Insight, Finder, So sánh, Lợi suất, `/ops/quality`, `/ops/collections` hiện chỉ nói loại thuê ngắn hạn.
+_Avoid_: tin đăng, offer, sale offer, rao vặt
 
-**Tin rao**: Một tin bán hoặc cho thuê dài hạn đã chuẩn hoá (bảng `sale_offers`). Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14. Loại tin ở cột `kind`.
-- Code: `sale_offer` · RESO: resource Property (một bản ghi = một tin) + ListPrice; bán/thuê qua PropertyType
+**Tin rao**: Listing bán hoặc cho thuê dài hạn (`kind` ∈ `sale`, `rent_lt`) đã chuẩn hoá, hiện ở bảng `sale_offers`. Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14.
+- Code: `sale_offer` (bảng `sale_offers`; cột `offer_id`, `offer_status`; API `/api/v1/offers`) — tên theo bảng hiện tại, đổi ở hàng tái cấu trúc listing · RESO: resource Property + ListPrice; bán/thuê qua PropertyType
+- Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
+
+**Listing thuê ngắn hạn**: Listing cho thuê theo đêm tự thu (bảng `listings`, id `abnb_…`): nguyên căn hoặc phòng riêng, có lịch đêm và giá niêm yết. Mọi chỉ số ADR, công suất, «Listing hoạt động», «Listing so sánh», «Listing tự thu» đều nói về loại này.
+- Code: `listing` (bảng `listings`; `kind = rent_st` khi gộp bảng) · RESO: thuê theo ngày (PropertyType = ResidentialLease + LeaseAmountFrequency = Daily); lịch đêm, công suất, ADR là local extension (reso-standards.md)
+- Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».
+_Avoid_: chỗ ở, phòng cho thuê, homestay
+
+**Yêu cầu mua**: Bài hay tin của người đang cần mua (hoặc thuê) — không phải listing, không gắn căn; giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8). Một giá trị của «Ý định tin».
+- Code: `listing_intent = inquiry` (đổi từ `wanted` — Mạnh chốt 27/10, vòng U1 đang làm; tới khi xong, sổ từ vựng dưới còn ghi `wanted` «Tin tìm mua, tìm thuê») · RESO: không phải resource Property; gần nhất SavedSearch
 
 **Tin bán**: Tin rao có `kind = sale`.
 - Code: `kind = sale` · RESO: PropertyType ∈ Residential, Land, ResidentialIncome
@@ -221,8 +232,8 @@ _Avoid_: Market Score, điểm thị trường
 
 ## Chiến lược đầu tư
 
-**Cho thuê ngắn hạn**: Chiến lược cho thuê theo đêm qua listing; dòng tiền đo bằng ADR × công suất.
-- Code: `str (kind rent_st tương lai)` · RESO: không có mô hình — FeeFrequency=Daily chỉ là mảnh rời
+**Cho thuê ngắn hạn**: Chiến lược cho thuê theo đêm qua listing thuê ngắn hạn; dòng tiền đo bằng ADR × công suất.
+- Code: `str (kind rent_st khi gộp bảng listing)` · RESO: LeaseAmountFrequency = Daily; lịch đêm, công suất không có mô hình — local extension
 _Avoid_: homestay
 
 **Cho thuê dài hạn**: Chiến lược cho thuê theo tháng; dòng tiền đo bằng giá thuê tin cho thuê.
@@ -332,7 +343,7 @@ _Avoid_: bản cloud, lên cloud
 - Code: `job (JobStatus)` · RESO: —
 _Avoid_: Job
 
-**Khoá an toàn**: Bảy lớp chặn agent gửi tin vào nhóm Zalo (luật 8) cộng hạ tầng thu; mỗi lớp «Ổn», «Hỏng» hoặc «Chưa kiểm được».
+**Khoá an toàn**: Bảy lớp chặn agent gửi tin nhắn vào nhóm Zalo (luật 8) cộng hạ tầng thu; mỗi lớp «Ổn», «Hỏng» hoặc «Chưa kiểm được».
 - Code: `lockdown (LockdownLayer)` · RESO: —
 _Avoid_: Lockdown
 
@@ -390,7 +401,7 @@ _Avoid_: collection unit, source group
 - Slug URL: `change-requests`
 _Avoid_: change request, yêu cầu thay đổi
 
-**Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách tin. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các tin gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
+**Quy định ngữ cảnh**: Đoạn chữ người vận hành viết, gắn với một nguồn, một đơn vị thu hay một thị trường, để agent và bộ lọc đọc khi tách bài thành tin rao. Có phiên bản theo vòng nháp → chạy thử → đang dùng → đã gỡ. Bản mới chạy thử trên các bài gần đây và báo số thay đổi trước khi bật; bật bằng lệnh. AI vẫn chỉ lọc, tách, đề xuất (luật 7).
 - Code: `context_rule (context_rules)` · RESO: —
 - Slug URL: `context-rules`
 - Ghi chú: Khác mô tả nhóm (ON19): mô tả là dữ kiện về nhóm; quy định là cách đọc tin của nhóm.

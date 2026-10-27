@@ -269,6 +269,13 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    `cong_khai: true` và `kho` — tài liệu thô và trang tóm đều ở kho riêng, kho công khai chỉ giữ đường trỏ băm. Kho riêng
    vẫn nằm trên GitHub nên tầng A (luật 6) không vào; nguồn ngoài kho công khai được che tên nguồn bằng mã S0x trước khi
    ghi. Gói `tri-thuc` cài scope local (không chạm `.claude/settings.json`). Đủ 10 bản phạm vi đổi `nguon` sang trang đợt.
+21. **«Listing» là mọi tin niêm yết, theo RESO** (27/10, Mạnh chốt hướng B — thay bản đầu cùng ngày «listing chỉ là thuê
+   ngắn hạn»; `docs/audit/2026-10-27-tu-ngu-tin-listing.md`): listing = resource `Property` (bán · thuê dài hạn · thuê ngắn
+   hạn); dịch vụ ở `kind` (`sale` · `rent_lt` · `rent_st`), loại hình ở `property_type`; nhiều listing trỏ về một căn (UPI).
+   Tin rao = listing bán + thuê dài hạn; listing thuê ngắn hạn = Airbnb tự thu (lịch đêm, ADR là extension). Trục
+   `listing_intent` giữ tên; giá trị `wanted` → `inquiry` «Yêu cầu mua» (Mạnh 27/10). Hai bảng `sale_offers` + `listings`
+   gộp về một khái niệm listing (đổi tên bảng, nhãn UI «Listing» đang chỉ Airbnb) ở hàng tái cấu trúc riêng, khi các dãy
+   khép. Chữ prompt LLM chỉ đổi khi có bench.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>6 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>69 việc"]
+  GB --> DG["Đã giao<br/>71 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>45 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
@@ -84,6 +84,7 @@ flowchart TD
 - Ca «AER-AC-2 không lệnh nào đổi nghĩa» so cặp commit cố định của vòng sửa config.yaml thay vì merge-base origin/main, để PR khác thêm, sửa hay xoá khoá trong _acceptance/config.yaml không bị CI chặn nhầm (`aer-ac2-so-cap-co-dinh`)
 - AU3 phần nạp — tác vụ Chợ Tốt và Facebook báo lỗi rõ khi nạp hỏng, không nhảy qua snapshot lỗi (`au3-nap-bao-loi`)
 - audit-all.sh và trang Ops ở máy local đọc log job ở checkout chính dù chạy từ worktree, không báo LIMITED hay «Hỏng» giả vì thư mục log rỗng (`audit-all-doc-log-o-checkout`)
+- ca ON16-AC-2 của audit-all.test.mjs thôi chập chờn qua ranh giới phút — hộp test ghim mốc giờ của dòng tiêu đề bằng bản giả date (`audit-all-test-moc-phut`)
 - ZC3 — watchdog Zalo không sót log đầu ngày, cảnh báo drop bất thường và DB chết; nạp Zalo đêm phục hồi sau khi DB sập (`audit-p1-resilience`)
 - Ô E2 đã ký của auth-error-thu-lai-retry được thay bởi một tiêu chí tả đúng ba ca AC-2 hiện có (YAML chuẩn, bộ đọc kit khớp bộ đọc chuẩn, so trước-sau trên cặp commit cố định) — sổ hồ sơ hết lệch với code (`auth-error-e2-superseded`)
 - Khi trang đăng nhập hoặc đăng ký lỗi lúc dựng, nút «Thử lại» tải lại phần trang từ server (retry) thay vì chỉ vẽ lại phía client (reset); _acceptance/config.yaml thành YAML chuẩn (`auth-error-thu-lai-retry`)
@@ -98,6 +99,7 @@ flowchart TD
 - test DB theo lược đồ sau 044 — DP-AC-5 xoá cột PII trên bảng bản ghi, test không áp lại 044 khi DB đã có (`deals-phi-ly-test-theo-view`)
 - tài khoản ops thử chỉ ở DB local cho máy tự đăng nhập dev (`dev-ops-account`) — đã giao — máy thông, cửa veto còn mở
 - Biểu đồ «Chặng theo ngày» trên /ops/data-flow vẽ đủ mọi ngày của cửa sổ, ngày nguồn im là điểm 0 (`df0-chang-theo-ngay-diem-0`)
+- Đầu trang /ops/data-flow đếm «đề xuất làm giàu» theo trạng thái chờ thật (queued), thôi luôn là 0 (`df0-dem-de-xuat-lam-giau`)
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - ca «AC-6 để sau» của agent/tests/enrich-db.test.ts khoanh lượt backlog vào tin của chính ca — hết đỏ ngẫu nhiên trên DB :5433 dùng chung (`enrich-db-test-khoanh-tin`)
 - Hậu kỳ enrich-qua-de-xuat — đề xuất sống qua nạp lại, hoàn tác có audit, E1 không suy đất từ tên nhóm (`enrich-hau-ky`)
