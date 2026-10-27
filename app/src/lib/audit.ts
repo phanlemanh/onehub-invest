@@ -54,3 +54,31 @@ export function auditOpsWrite(actor: string, action: string, detail: Record<stri
     ])
     .catch((e) => console.error("audit write failed:", e instanceof Error ? e.message : e));
 }
+
+/** Lỗi của chính việc (ghi tệp, chạy tiến trình) — tách khỏi lỗi DB/audit để route giữ mã lỗi nghiệp vụ của việc. */
+export class LoiViec extends Error {
+  constructor(public readonly goc: unknown) {
+    super(goc instanceof Error ? goc.message : String(goc));
+  }
+}
+
+/**
+ * Việc ngoài DB (tệp cấu hình, tiến trình) kèm audit (TV1): BEGIN → INSERT audit → việc → COMMIT. Việc ném → ROLLBACK,
+ * 0 dòng, ném LoiViec(lỗi gốc); INSERT audit hỏng → việc không chạy, lỗi DB ném nguyên. Giới hạn đã khai: COMMIT hỏng sau
+ * khi việc đã làm thì có thay đổi không dòng audit.
+ */
+export async function ghiRoiLam<T>(
+  actor: string,
+  action: string,
+  detail: Record<string, unknown>,
+  viec: () => Promise<T>,
+): Promise<T> {
+  return trongGiaoDich(async (c) => {
+    await ghiAuditTrong(c, actor, action, detail);
+    try {
+      return await viec();
+    } catch (e) {
+      throw new LoiViec(e);
+    }
+  });
+}
