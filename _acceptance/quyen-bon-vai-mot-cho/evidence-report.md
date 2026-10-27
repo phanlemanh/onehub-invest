@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 94b013447f940beef7edde130c93ec8738033428
+verified_commit: ccea417ed24ca3b72da683080976380d161a6022
 human_signoff:
 ---
 
@@ -182,3 +182,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, determi
 
 Round 1: REJECT — 5 phát hiện phép đo trong hợp đồng (AC-2/3/5/10), thước đo chưa đủ chặt. Returned to implementation.
 Round 2: E1–E10 và 6 lệnh suite xanh sau nhát sửa thước (commit 088c7f7d, sổ S4-r1 ở 94b01344); verdict PASS.
+
+### Re-pin lần 1 — 2026-10-27, do gộp main 1f88d300 (PL15) sau lượt chấm r2 — vật đổi ngoài vòng
+run_id: repin-20261027T013013Z-23982
+sha: ccea417ed24ca3b72da683080976380d161a6022 · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
