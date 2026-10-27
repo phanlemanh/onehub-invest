@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0711491e293c2a8496224eafb56d0cd601f622fa
+verified_commit: 31c2fc1fecec7432850c37db6e66a36957cc505e
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -171,3 +171,7 @@ Round 3: sửa chuỗi ngày dùng vnDayKey (commit d586828e). Sáu eval test v�
 ### Re-pin lần 1 — 2026-10-27, do gộp origin/main (a4a47d15) sau chữ ký
 run_id: repin-20261027T004832Z-53431
 sha: 0711491e293c2a8496224eafb56d0cd601f622fa · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths), E7 · AC không có chốt máy: AC-6, AC-7
+
+### Re-pin lần 2 — 2026-10-27, do gộp origin/main (1649ab91, PL15)
+run_id: repin-20261027T005850Z-53587
+sha: 31c2fc1fecec7432850c37db6e66a36957cc505e · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · ngoài làn máy: E6 (E6 không khai paths), E7 · AC không có chốt máy: AC-6, AC-7
