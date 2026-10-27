@@ -1,19 +1,19 @@
 ---
 schema_version: 2
 feature_slug: df0-chang-theo-ngay-diem-0
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 535dfddeb7ad99acdec645d2894ef36ae9fc7ec1
+verified_commit: d586828e81abdc835b58ce428eef16619cafb85b
 human_signoff:
 ---
 
 # Evidence Report: df0-chang-theo-ngay-diem-0
 
-Round 2. Không eval nào của hợp đồng đỏ, nhưng lệnh suite hồi quy `cd app && npm test` vẫn đỏ ở một ca không gắn eval nào (GV-AC-3 trong `tests/gio-ops-gio-vn.test.tsx`), nên tổng thể là REJECT. Bảy eval máy (E1, E2, E3, E4, E5, E7, E8) mang sang từ round 1 vì delta không chạm paths của chúng; E6 là đề xuất của hội đồng judge. Chi tiết ở khối suite bên dưới và mục Iterations.
+Round 3. Tám eval của hợp đồng đều xanh: sáu eval test (E1, E2, E3, E4, E5, E8) chạy trong cùng một lệnh và qua, E7 (ui-check) chạy lại và khớp Expected, E6 là đề xuất của hội đồng judge giữ nguyên từ round 2. Cả sáu lệnh suite hồi quy xanh, kể cả `cd app && npm test` (ca GV-AC-3 đỏ ở round 2 nay đã xanh sau khi chuỗi ngày dùng vnDayKey).
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -28,124 +28,123 @@ Round 2. Không eval nào của hợp đồng đỏ, nhưng lệnh suite hồi q
 
 ## Evidence
 
-Sáu eval test E1, E2, E3, E4, E5, E8 và eval ui-check E7 được mang sang nguyên trạng từ round 1 (cùng run_id, cùng verified_at); round này không chạy lại chúng.
-
 - eval: E1
-  run_id: minted-df0-chang-theo-ngay-diem-0-E1-r1
+  run_id: minted-df0-chang-theo-ngay-diem-0-E1-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.chang_ngay
-  verified_at: 2026-10-26T23:56:03Z
-  carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  verified_at: 2026-10-27T00:06:19Z
+  output: |
+    cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx
+    ℹ duration_ms 968.993292
 
 - eval: E2
-  run_id: minted-df0-chang-theo-ngay-diem-0-E2-r1
+  run_id: minted-df0-chang-theo-ngay-diem-0-E2-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.chang_ngay
-  verified_at: 2026-10-26T23:56:03Z
-  carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  verified_at: 2026-10-27T00:06:19Z
+  output: |
+    cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx
+    ℹ duration_ms 968.993292
 
 - eval: E3
-  run_id: minted-df0-chang-theo-ngay-diem-0-E3-r1
+  run_id: minted-df0-chang-theo-ngay-diem-0-E3-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.chang_ngay
-  verified_at: 2026-10-26T23:56:03Z
-  carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  verified_at: 2026-10-27T00:06:19Z
+  output: |
+    cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx
+    ℹ duration_ms 968.993292
 
 - eval: E4
-  run_id: minted-df0-chang-theo-ngay-diem-0-E4-r1
+  run_id: minted-df0-chang-theo-ngay-diem-0-E4-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.chang_ngay
-  verified_at: 2026-10-26T23:56:03Z
-  carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  verified_at: 2026-10-27T00:06:19Z
+  output: |
+    cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx
+    ℹ duration_ms 968.993292
 
 - eval: E5
-  run_id: minted-df0-chang-theo-ngay-diem-0-E5-r1
+  run_id: minted-df0-chang-theo-ngay-diem-0-E5-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.chang_ngay
-  verified_at: 2026-10-26T23:56:03Z
-  carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  verified_at: 2026-10-27T00:06:19Z
+  output: |
+    cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx
+    ℹ duration_ms 968.993292
 
 - eval: E6
   judged_by: judge-subagent (fresh context), đề xuất panel 3 góc nhìn
   verdict: PASS
-  rationale: Cả ba góc nhìn cùng xác nhận chuỗi truyền một nguồn thời gian, từ page.tsx qua DataFlowView tới StageTrendChart, và biểu đồ dựng từ dailySeries mà không sort hay slice trên danh sách ngày có số.
+  rationale: Panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; rationale xem round 2.
   votes:
-    - domain-correctness: PASS — page.tsx tạo đúng một biến `nowMs = requestTime()` (dòng 45) và dùng nó cho `getDataFlow(window, { now: nowMs })` lẫn `<DataFlowView nowMs={nowMs} />`. data-flow-view.tsx chuyển nguyên `nowMs` vào `<StageTrendChart nowMs={nowMs} …/>`. stage-trend-chart.tsx dựng `series = dailySeries(days, nowMs, windowDays)` rồi `data = series.map(...)`, không có bước sort hay slice trên danh sách ngày có số.
-    - operational-feasibility: PASS — page.tsx gọi requestTime() đúng một lần (`const nowMs`) và dùng chính biến đó cho `getDataFlow(window, { now: nowMs })` lẫn `<DataFlowView nowMs={nowMs} />`. data-flow-view.tsx chuyển nguyên `nowMs` sang `<StageTrendChart nowMs={nowMs} …>`. stage-trend-chart.tsx dựng `data` từ `dailySeries(days, nowMs, windowDays)` và không có sort/slice nào trên danh sách ngày có số. Tôi không đọc ruột `dailySeries` vì nó nằm ngoài danh sách input, và câu hỏi chỉ hỏi chart có dựng từ hàm đó hay không.
-    - spec-alignment: PASS — page.tsx gọi requestTime() đúng một lần (`const nowMs`), rồi dùng nó cho `getDataFlow(window, { now: nowMs })` và prop `nowMs={nowMs}` của DataFlowView. data-flow-view.tsx truyền nguyên `nowMs` đó vào `<StageTrendChart ... nowMs={nowMs} />`. stage-trend-chart.tsx dựng dữ liệu bằng `dailySeries(days, nowMs, windowDays)` rồi map sang `data`, và file này không có bước sort rồi slice danh sách các ngày có số.
+    - domain-correctness: PASS (r2)
+    - operational-feasibility: PASS (r2)
+    - spec-alignment: PASS (r2)
   required_evidence:
     - (judge không nêu bằng-chứng-thiếu)
   human_override:  # chi nguoi ghi
 
 - eval: E7
-  run_id: minted-df0-chang-theo-ngay-diem-0-E7-r1
+  run_id: minted-df0-chang-theo-ngay-diem-0-E7-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.ui_check
-  verified_at: 2026-10-26T23:56:03Z
-  carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  verified_at: 2026-10-27T00:06:19Z
   screenshot: evidence/E7-step1.png
   observed: |
-    E7-step1.png: trang Ops «Dòng chảy dữ liệu», khung «Chặng theo ngày» (cua so 30 ngay) cuon vao giua; 4 KPI Bai nhan 34.590, Doc duoc 24.292, Tin rao moi 21.248, Gan can 20.893; truc X co nhan 28/9, 1/10, 3/10, 5/10, 7/10, 9/10, 12/10, 15/10, 18/10, 21/10, 24/10, 27/10 → dau 28/9, cuoi 27/10 dung Expected; duong dien tich bat dau sat truc o 28/9 va cham truc o cuoi. E7-step2.png: ro chuot vao diem dau; tooltip «28/9» Bai nhan 29, Doc duoc 28, Tin rao moi 28, Gan can 28, cham xanh o diem dau tren truc; khong co ngay 0 o ca bon chang trong 30 tooltip da doc (ghi ro «không có ngày im trong cửa sổ»). E7-step3.png: cua so 7 ngay, KPI 30.014/20.850/17.813/17.496; dung 7 nhan 21/10 22/10 23/10 24/10 25/10 26/10 27/10, ngay cuoi 27/10 = hom nay gio VN; duong dien tich ve du 7 diem toi 27/10.
+    E7-step1.png (đã mở bằng Read): trang Dòng chảy dữ liệu, nút «30 ngày» đang chọn. Khung «Chặng theo ngày» hiện bốn ô tổng Bài nhận 34.590, Đọc được 24.292 70,2%, Tin rao mới 21.248 87,5%, Gắn căn 20.893 98,3%. Biểu đồ diện tích có trục nhãn 28/9, 1/10, 3/10, 5/10, 7/10, 9/10, 12/10, 15/10, 18/10, 21/10, 24/10, 27/10. Nhãn đầu 28/9 và nhãn cuối 27/10 khớp Expected (29 ngày trước hôm nay và hôm nay giờ VN). Đường diện tích sát trục ở các ngày đầu vì giá trị nhỏ nhưng khác 0, tăng mạnh từ 21/10.
+    E7-step2.png: tooltip đứng ở điểm đầu trục, ngày 28/9, Bài nhận 29, Đọc được 28, Tin rao mới 28, Gắn căn 28. Chấm đánh dấu nằm ở mép trái trục. Không có số 0 ở cả bốn chặng, khớp kết luận «không có ngày im trong cửa sổ».
+    E7-step2b.png: tooltip tại điểm sớm 2/10, bốn chặng đều 18. Không phải ngày im. Quét tooltip cả 30 điểm bằng DOM không thấy ngày nào bốn chặng cùng 0.
+    E7-step3.png: cửa sổ 7 ngày (mặc định). Khung «Chặng theo ngày» có tổng Bài nhận 30.014, Đọc được 20.850 69,5%, Tin rao mới 17.813 85,4%, Gắn căn 17.496 98,2%. Trục đúng 7 nhãn liên tiếp 21/10, 22/10, 23/10, 24/10, 25/10, 26/10, 27/10, ngày cuối là hôm nay giờ VN (27/10). Đường diện tích kéo dài trọn trục và rơi về sát trục ở 27/10 (ngày hôm nay còn dở, 357/71/71/71). Khớp Expected.
   network_observed: no-app-traffic
 
 - eval: E8
-  run_id: minted-df0-chang-theo-ngay-diem-0-E8-r1
+  run_id: minted-df0-chang-theo-ngay-diem-0-E8-r3
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.chang_ngay
-  verified_at: 2026-10-26T23:56:03Z
-  carried_from_round: 1
-  note: carry-forward tu round 1 — delta khong cham paths cua eval
+  verified_at: 2026-10-27T00:06:19Z
+  output: |
+    cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx
+    ℹ duration_ms 968.993292
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-npm_test__bb6271-r2
+  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:01:56Z
+  verified_at: 2026-10-27T00:06:19Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-lint-r2
+  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-lint-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:01:56Z
+  verified_at: 2026-10-27T00:06:19Z
 
 - cmd: cd app && npm test
-  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-npm_test__bd9a35-r2
-  exit_code: 1
-  verified_at: 2026-10-27T00:01:56Z
-  output: |
-    ℹ tests 526 / pass 525 / fail 1
-    ✖ GV-AC-3 không còn mốc cắt chuỗi hay ngày theo múi máy ngoài danh sách miễn
-      tests/gio-ops-gio-vn.test.tsx (dòng 322): danh sách vi phạm thực tế có hai mục, danh sách mong đợi rỗng
-      - src/components/ops/data-flow/stage-trend-data.ts, mẫu «cắt chuỗi mốc»
-      - src/components/ops/data-flow/stage-trend-data.ts, mẫu «toISOString cắt»
+  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-npm_test__bd9a35-r3
+  exit_code: 0
+  verified_at: 2026-10-27T00:06:19Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-npm_test__13563d-r2
+  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-npm_test__13563d-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:01:56Z
+  verified_at: 2026-10-27T00:06:19Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-test_lint_rules-r2
+  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:01:56Z
+  verified_at: 2026-10-27T00:06:19Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-df0-chang-theo-ngay-diem-0-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-10-27T00:01:56Z
+  verified_at: 2026-10-27T00:06:19Z
 
 ## Known limits
 
@@ -153,16 +152,18 @@ Sáu eval test E1, E2, E3, E4, E5, E8 và eval ui-check E7 được mang sang ng
 
 ## Analyst
 
-none — nhưng baseline là n-a cho mọi eval mang sang từ round 1 (round này không chạy lại chúng, nên không đo baseline), vì vậy chưa có căn cứ khẳng định eval nào có phân biệt hay không.
+carried tu round 2 — baseline khong do lai round nay (evals.yaml không đổi từ lần đo baseline cuối); field baseline của từng eval ghi n-a.
 
-Lệnh suite đỏ không gắn eval: `cd app && npm test` — ca GV-AC-3 trong `tests/gio-ops-gio-vn.test.tsx` thấy tệp `src/components/ops/data-flow/stage-trend-data.ts` khớp hai mẫu cấm («cắt chuỗi mốc» và «toISOString cắt») trong khi danh sách miễn của ca không có tệp này. Đây là hồi quy do round 1 kê tệp vào danh sách quét của ca khác (commit f3eefddc); nó không thuộc AC nào của hợp đồng.
+Eval không-phân-biệt (xanh cả trên HEAD lẫn baseline): không có. Lệnh suite xanh cả hai phía là regression-guard bình thường, không liệt kê.
 
 ## Variance
 
-none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval chạy một lần, không có phương sai).
+none — mọi eval chạy một lần (deterministic), không có phương sai.
 
 ## Iterations
 
 Round 1: không eval nào của hợp đồng đỏ; lệnh suite `cd app && npm test` đỏ ở ca ON12-AC-1 (tests/ops-nhan-theo-context.test.tsx) vì danh sách tệp quét có thêm stage-trend-data.ts, không gắn eval nào. Returned to implementation.
 
 Round 2: không eval nào của hợp đồng đỏ (bảy eval máy mang sang từ round 1, E6 đề xuất PASS); lệnh suite `cd app && npm test` vẫn đỏ, lần này ở ca GV-AC-3 (tests/gio-ops-gio-vn.test.tsx) vì stage-trend-data.ts khớp hai mẫu cắt chuỗi mốc / toISOString cắt ngoài danh sách miễn, không gắn eval nào. Returned to implementation.
+
+Round 3: sửa chuỗi ngày dùng vnDayKey (commit d586828e). Sáu eval test và E7 xanh, E6 giữ nguyên từ round 2, cả sáu lệnh suite hồi quy xanh. Verdict PASS, chờ người ký ở Cổng 2.

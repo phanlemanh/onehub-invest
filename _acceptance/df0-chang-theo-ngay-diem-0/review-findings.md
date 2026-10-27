@@ -1,14 +1,12 @@
-# Review findings: df0-chang-theo-ngay-diem-0 (round 2)
+# Review findings: df0-chang-theo-ngay-diem-0 (round 3)
 
 ## Trong hợp đồng
 
-Không có finding nào map được vào AC.
+Không có finding nào map được vào AC ở round này.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
-
-Round này không có finding mới ngoài hợp đồng; hai mục từ round 1 được mang sang và máy tự chèn.
 
 - **Hình dạng 2 — fixture FlowDay viết tay đúng khuôn bên đọc, không round-trip qua writer getDataFlow (r1)**
   Người dùng thấy gì: Các bài kiểm tự động không thử trường hợp dữ liệu ngày từ máy chủ có dạng khác với dạng biểu đồ chờ. Nếu có lệch, biểu đồ «Chặng theo ngày» sẽ hiện toàn số 0 và báo chưa có số, dù nguồn vẫn đang thu.
@@ -23,5 +21,7 @@ Round này không có finding mới ngoài hợp đồng; hai mục từ round 1
   file: `app/tests/df0-chang-theo-ngay.test.tsx`
   severity: low
   Đề xuất: known-limits
+
+## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
