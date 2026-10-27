@@ -5,7 +5,7 @@ slug: airbnb-nghi-khong-hoi-sinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-27T01:35:00Z
 design_doc: docs/superpowers/specs/2026-10-27-airbnb-nghi-khong-hoi-sinh-design.md
@@ -77,3 +77,8 @@ reassign-areas — pipeline/CLAUDE.md) và lỗi thật đã ghi ở review PL14
 - Test DB (`pipeline/scripts/airbnb-nghi.itest.mjs`) chạy trong BEGIN … ROLLBACK trên DB thử riêng
   `oneinvest_p2_airbnb` (luật đo của giám sát 27/10: reassign-areas cập nhật hàng loạt, không đo trên `oneinvest` :5433
   dùng chung). Tệp `.itest` không nằm trong `npm test` nên CI không chạy nó.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: căn nghỉ rồi quay lại trong phường giữ điểm bản đồ ngoài phường hoặc trống tới lượt gán khu vực kế; toạ độ hiển thị vẫn đúng.
+  - Ngoài-2: phép đếm số kiểm tra của bảng ca căn đã nghỉ luôn khớp, nên bớt kiểm tra sau này không bị báo.
+  - Ngoài-3: hai trong ba ca căn đã nghỉ vẫn xanh nếu lỗi cũ quay lại ở bước gán khu vực; lỗi chính vẫn bị các ca khác bắt.
+  - Ngoài-5: kiểm tĩnh trong CI chỉ thấy có ghi toạ độ, không biết ghi đúng giá trị; giá trị được đo ở ca DB chạy tay.

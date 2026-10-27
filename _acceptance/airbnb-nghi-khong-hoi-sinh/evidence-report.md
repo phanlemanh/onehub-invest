@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: d61b124267864e82bd02e0be7eef4464bb0c71fc
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: airbnb-nghi-khong-hoi-sinh
