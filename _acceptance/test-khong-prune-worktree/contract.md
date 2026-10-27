@@ -24,21 +24,24 @@ thấy chỗ thứ hai: `cleanup()` của `.claude/hooks/tests/typecheck-changed
 - AC-1: Given mọi tệp mã đang theo dõi của kho (`.mjs/.js/.cjs/.ts/.tsx/.sh/.py`), When soát lời gọi `worktree prune` ở
   dạng chuỗi lệnh lẫn mảng đối số, Then không còn chỗ nào (trừ đầu dò của chính hồ sơ này); đối chứng dương: bộ soát bắt được
   cả hai dạng trên tệp mẫu.
-- AC-2: Given kho git tạm có worktree «của mình» và worktree «của phiên khác» với thư mục đang vắng, When `boWorktree` gỡ
-  worktree của mình — cả khi `git worktree remove` lỗi lẫn khi thành công, Then worktree của mình hết khỏi
-  `git worktree list` và metadata của worktree kia còn nguyên. Bản sao hàm có nhánh dự phòng đổi thành `worktree prune` làm ca
-  đỏ với thông điệp ghim «worktree của phiên khác bị gỡ metadata».
-- AC-3: Given kho thật, When chạy `node --test scripts/zalo-import-job-lan.test.mjs`, Then 4/4 ca xanh như trước và
-  `git worktree list --porcelain` của kho không còn worktree tạm `zalo-lan-*` nào (chỉ đếm worktree của chính test — phiên
-  khác thêm/gỡ worktree cùng lúc không làm đỏ oan).
+- AC-2: Given kho git tạm có worktree «của mình» (nằm dưới một đường symlink — đường dựng khác đường thật git ghi) và
+  worktree «của phiên khác» với thư mục đang vắng, When `boWorktree` gỡ worktree của mình — ma trận kho {kho chính, worktree
+  liên kết (`.git` là tệp)} × gỡ {lỗi thật: worktree bị `git worktree lock`, `remove --force` trả mã ≠ 0; thành công}, Then
+  worktree của mình hết khỏi metadata và metadata của worktree kia còn nguyên ở cả 4 ô; ca lỗi in mã `remove` thật để chứng
+  nhánh dự phòng đã chạy. Bản sao hàm thay khối giữa dấu mốc `>>> du-phong`/`<<< du-phong` bằng `worktree prune` làm ca đỏ
+  với thông điệp ghim «worktree của phiên khác bị gỡ metadata».
+- AC-3: Given kho thật, When chạy `node --test scripts/zalo-import-job-lan.test.mjs`, Then 4/4 ca xanh như trước; tệp import
+  `boWorktree` từ `./lib/bo-worktree.mjs`, gọi nó ở ≥2 chỗ (`after()` và `finally` của ZL-AC-1) và không còn gọi thẳng
+  `"worktree", "remove"`; worktree tạm `zalo-lan-*` MỚI sinh trong lượt (tập sau trừ tập trước) bằng rỗng — chỉ đo phần chênh
+  của lượt này vì kho dùng chung có thể có lượt chạy khác cùng lúc. Đối chứng dương: bộ đếm bắt được một worktree mẫu.
 - AC-4: Given nhánh so với merge-base của origin/main, When liệt kê tệp đổi, Then chỉ có `scripts/lib/bo-worktree.mjs`,
   `scripts/bo-worktree.test.mjs`, `scripts/zalo-import-job-lan.test.mjs`, `.claude/hooks/tests/typecheck-changed.selftest.sh`,
   hồ sơ này, `_acceptance/config.yaml`, tệp máy sinh, design/plan và dòng ghim lại của hồ sơ bị chạm
   (`zalo-import-so-phan-nap-khong-do-gia`, `ui-standards-reui`); không tệp làn ZCode nào đổi, `typecheck-changed.sh` không đổi.
-- AC-5: Given kho git tạm có worktree «của mình» và worktree «của phiên khác» với thư mục đang vắng, When chạy hàm `cleanup()`
-  của `typecheck-changed.selftest.sh` (rút nguyên văn từ tệp) — cả khi `worktree remove` lỗi lẫn khi thành công, Then worktree
-  của mình hết và metadata của worktree kia còn nguyên; bản sao `cleanup()` có lại `worktree prune` làm ca đỏ với thông điệp
-  ghim «worktree của phiên khác bị gỡ metadata». Selftest vẫn xanh trọn (2 bước hook như trước).
+- AC-5: Given cùng ma trận của AC-2 (kho chính/worktree liên kết × lock/thành công, đường symlink), When chạy hàm `cleanup()`
+  của `typecheck-changed.selftest.sh` (rút nguyên văn từ tệp), Then worktree tạm hết và metadata của worktree kia còn nguyên
+  ở cả 4 ô; bản sao `cleanup()` thay khối dự phòng giữa dấu mốc bằng `worktree prune` làm ca đỏ với thông điệp ghim. Selftest
+  vẫn xanh trọn (2 bước hook như trước).
 
 ## Coverage
 

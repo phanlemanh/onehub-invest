@@ -37,10 +37,21 @@ T3 riêng. Nháp theo khuyến nghị: gộp.
 - **Đổi test sang `git clone` tạm thay worktree**: đổi cách mô phỏng nhánh ZCode của hồ sơ đã ký
   `zalo-import-so-phan-nap-khong-do-gia`; rộng hơn câu giao.
 
+### Chi tiết nhánh dự phòng (sau gap-probe)
+
+- Gốc metadata lấy bằng `git rev-parse --git-common-dir` (kho có thể là worktree liên kết, `.git` là tệp).
+- So `gitdir` với cả đường dựng lẫn đường thật (`realpath`/`pwd -P`) của worktree tạm — git ghi đường thật, `mktemp` trả đường
+  có symlink (`/var` → `/private/var`).
+- Khối dự phòng đặt giữa hai dấu mốc chú thích `>>> du-phong` / `<<< du-phong` (cả Node lẫn bash) để phép đột biến thay đúng
+  khối mà không ghim từng chuỗi lệnh.
+- Gây «remove lỗi» thật trong phép đo bằng `git worktree lock` (git 2.54: `remove --force` lên thư mục đã vắng vẫn trả 0).
+
 ## Đo
 
 - Soát tĩnh: không mã đang theo dõi nào gọi `worktree prune` (dạng chuỗi lệnh lẫn mảng đối số); đối chứng dương: bộ soát bắt
   được cả hai dạng trên tệp mẫu.
-- Hành vi: `bo-worktree.test.mjs` xanh; bản sao hàm có nhánh dự phòng đổi thành prune → ca đỏ với thông điệp ghim.
-- Không rác: chạy `zalo-import-job-lan.test.mjs` xanh và `git worktree list` của kho trước = sau.
+- Hành vi: `bo-worktree.test.mjs` xanh trên ma trận kho chính/worktree liên kết × lock/thành công, đường symlink; bản sao hàm
+  có khối dự phòng đổi thành prune → ca đỏ với thông điệp ghim. Cùng ma trận cho `cleanup()` của selftest (rút nguyên văn).
+- Không rác: `zalo-import-job-lan.test.mjs` xanh, dùng `boWorktree`, và worktree `zalo-lan-*` mới sinh trong lượt bằng rỗng
+  (đo phần chênh — kho dùng chung có lượt khác cùng lúc); bộ đếm có đối chứng dương.
 - Phạm vi: chỉ ba tệp mã + hồ sơ + cấu hình + ghim lại hồ sơ bị chạm.

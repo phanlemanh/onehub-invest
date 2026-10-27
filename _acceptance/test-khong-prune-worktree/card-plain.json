@@ -1,0 +1,25 @@
+{
+  "feature_plain": "Các bài kiểm tự động thôi chạy lệnh dọn worktree trên cả kho dùng chung — lệnh đó có thể gỡ mất worktree của phiên khác; mỗi bài chỉ gỡ đúng worktree tạm của mình.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ soát mọi tệp mã của kho: không còn chỗ nào gọi lệnh dọn worktree toàn kho; bộ soát chứng được nó bắt cả hai cách viết."},
+    {"id": "AC-2", "p": "Sẽ có hàm gỡ worktree dùng chung: gỡ đúng worktree tạm, worktree của phiên khác (kể cả đang vắng thư mục) giữ nguyên — thử cả khi gỡ lỗi thật lẫn gỡ suôn, cả kho chính lẫn worktree liên kết."},
+    {"id": "AC-3", "p": "Sẽ cho bài kiểm Zalo dùng hàm gỡ mới, vẫn xanh 4/4 và không để sót worktree tạm nào trong kho."},
+    {"id": "AC-4", "p": "Sẽ chỉ đổi bốn tệp mã đã nêu cùng hồ sơ; không chạm tệp làn ZCode và không đổi chính hook kiểm kiểu."},
+    {"id": "AC-5", "p": "Sẽ sửa bài tự kiểm của hook kiểm kiểu: thôi dọn worktree toàn kho sau mỗi lần chạy, chỉ gỡ worktree tạm của nó; bài tự kiểm vẫn xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG đổi bài kiểm Zalo sang dùng bản sao kho tạm thay worktree."},
+    {"id": "OOS-2", "p": "KHÔNG điều tra vì sao worktree của dãy P3 bị gỡ hôm 25/10."},
+    {"id": "OOS-3", "p": "KHÔNG dựng rào máy chặn lệnh dọn worktree trong mọi phiên."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Không quét không gian tiêu chí: câu giao nêu đích danh một chỗ; chỗ có thể sót là các chỗ dọn worktree khác thì AC-1 soát cả kho (và đã bắt được chỗ thứ hai → AC-5)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Cách giả lập «gỡ lỗi» cũ không làm git lỗi thật nên nhánh dự phòng chưa từng chạy — nay khoá worktree để gỡ lỗi thật và in mã lỗi làm chứng."},
+    {"i": 1, "p": "Phép thử chỉ dựng kho chính và đường thật, trong khi bài kiểm thật chạy từ worktree liên kết qua đường tắt — nay thử cả hai, và phép phá thử thay cả khối thay vì một câu lệnh."},
+    {"i": 2, "p": "Phép đếm worktree sót có thể đỏ oan khi lượt khác chạy cùng lúc — nay chỉ đếm phần mới sinh trong lượt, có mẫu đối chứng."},
+    {"i": 3, "p": "Chưa đo bài kiểm Zalo thật sự dùng hàm gỡ mới — nay kiểm có nhập và gọi đủ hai chỗ."},
+    {"i": 4, "p": "Phạm vi soát của AC-1 hẹp hơn tập tệp nó quét — nay trùng nhau."}
+  ]
+}

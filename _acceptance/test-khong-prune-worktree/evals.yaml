@@ -5,7 +5,7 @@ evals:
     criterion: AC-1
     executor: script
     cmd: config:executors.script.tkp_soat
-    paths: ["scripts/**", "pipeline/**", "app/tests/**", "agent/**", "data-api/**", "collector/**", "_acceptance/test-khong-prune-worktree/probes/soat-prune.sh"]
+    paths: ["**/*.mjs", "**/*.js", "**/*.cjs", "**/*.ts", "**/*.tsx", "**/*.sh", "**/*.py"]
     expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'doi chung: bat 2/2 dang mau'; 'da soat <n> tep ma' với n ≥ 100; 'khong con worktree prune'; cuối 'SOAT OK'; should-NOT-fire: không 'CON PRUNE', 'DOI CHUNG KHONG BAT'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
@@ -13,14 +13,14 @@ evals:
     executor: script
     cmd: config:executors.script.tkp_bo_worktree
     paths: [scripts/lib/bo-worktree.mjs, scripts/bo-worktree.test.mjs, _acceptance/test-khong-prune-worktree/probes/bo-worktree.sh]
-    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ban sua: <k>/<k> ca xanh' với k ≥ 2; 'ban prune: ca do, thong diep ghim co' — cùng bản sao hàm, nhánh dự phòng đổi thành worktree prune; cuối 'BO WORKTREE OK'; should-NOT-fire: không 'CA KHONG DO', 'DOT BIEN KHONG AP DUOC'"
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ban sua: <k>/<k> ca xanh' với k ≥ 4; 'nhanh du phong da chay (remove loi that)'; 'ban prune: ca do, thong diep ghim co' — cùng bản sao hàm, khối giữa dấu mốc du-phong đổi thành worktree prune; cuối 'BO WORKTREE OK'; should-NOT-fire: không 'CA KHONG DO', 'DOT BIEN KHONG AP DUOC', 'NHANH DU PHONG KHONG CHAY'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: script
     cmd: config:executors.script.tkp_lan
     paths: [scripts/zalo-import-job-lan.test.mjs, scripts/lib/bo-worktree.mjs, _acceptance/test-khong-prune-worktree/probes/lan.sh]
-    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'zalo-import-job-lan: tests 4 pass 4 fail 0'; 'worktree tam zalo-lan con lai: 0 (truoc <n>)'; cuối 'LAN OK'; should-NOT-fire: không 'CON WORKTREE TAM', 'TEST DO'"
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'doi chung: bo dem bat 1/1 worktree mau'; 'tep test dung boWorktree (import + <k> cho goi)' với k ≥ 2; 'zalo-import-job-lan: tests 4 pass 4 fail 0'; 'worktree tam zalo-lan moi sinh con lai: 0 (co san truoc luot: <n>)'; cuối 'LAN OK'; should-NOT-fire: không 'CON WORKTREE TAM', 'TEST DO', 'KHONG DUNG BOWORKTREE', 'DOI CHUNG KHONG BAT'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -34,7 +34,7 @@ evals:
     executor: script
     cmd: config:executors.script.tkp_selftest_cleanup
     paths: [.claude/hooks/tests/typecheck-changed.selftest.sh, _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh]
-    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'cleanup ban sua: remove loi → giu worktree khac, remove ok → giu worktree khac'; 'cleanup ban prune: do, thong diep ghim co' — cùng hàm rút nguyên văn, chỉ thay dòng gỡ metadata bằng worktree prune; cuối 'SELFTEST CLEANUP OK'; should-NOT-fire: không 'KHONG RUT DUOC CLEANUP', 'CLEANUP SAI', 'DOT BIEN KHONG AP DUOC'"
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; bốn dòng 'cleanup ban sua: kho <chinh|lienket>, remove <loi|ok> → giu sach' và 'cleanup ban sua: 4/4 kich ban giu worktree khac va go sach worktree tam'; 'cleanup ban prune: do, thong diep ghim co' — cùng hàm rút nguyên văn, chỉ thay khối giữa dấu mốc du-phong bằng worktree prune; cuối 'SELFTEST CLEANUP OK'; should-NOT-fire: không 'KHONG RUT DUOC CLEANUP', 'CLEANUP SAI', 'DOT BIEN KHONG AP DUOC'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-5
