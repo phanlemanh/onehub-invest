@@ -24,7 +24,7 @@ ngoài DB (zalo) chạy SAU INSERT audit, TRƯỚC COMMIT. Route giữ nguyên c
 - Mã HTTP: không ai 401 `{error:"unauthorized"}`; sai vai/bearer cấm 403 `{error:"forbidden"}`.
 - Không sửa câu SQL chạm `source_groups` trong `source-groups/route.ts` (PL12 ghim 10 câu); tệp mới không nhắc chữ
   `source_groups`.
-- Migration `db/migrations/049_users_role_chk.sql`, idempotent, tên ràng buộc `users_role_chk`; áp DB dùng chung chỉ sau gộp.
+- Migration `db/migrations/049_users_role_nam_vai.sql`, idempotent, tên ràng buộc `users_role_chk`; áp DB dùng chung chỉ sau gộp.
 - Đối chứng dùng 11 fixture `app/tests/fixtures/ops-routes-truoc-tv1/<đường route>.ts.txt` = `git show 39c660ca:<route>`.
 - Mọi lệnh openclaw trong ca thử là openclaw giả (`zaloAdminPaths()` đọc env); luật 8 (không gửi Zalo) giữ nguyên.
 
@@ -67,7 +67,7 @@ ngoài DB (zalo) chạy SAU INSERT audit, TRƯỚC COMMIT. Route giữ nguyên c
 
 **independent: true** · phục vụ E7
 
-**Files:** Create `db/migrations/049_users_role_chk.sql`; Modify `app/tests/quyen-bon-vai.test.tsx` (`QV-AC-7`).
+**Files:** Create `db/migrations/049_users_role_nam_vai.sql`; Modify `app/tests/quyen-bon-vai.test.tsx` (`QV-AC-7`).
 
 - [ ] Viết `QV-AC-7` theo E7 (lược đồ tạm có `users` ở khuôn hiện tại, áp tệp 049 hai lần, năm vai nhận, `superuser` lỗi có tên `users_role_chk`, public trước = sau, 0 dòng vi phạm ở public). FAIL (tệp chưa có).
 - [ ] Viết 049 qua skill `/new-migration` (header, `DO $$ … IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='users_role_chk') … $$`). PASS.

@@ -93,3 +93,32 @@ test("QV-AC-8b kiemQuyen trả 401/403/qua đúng bảng; bearer chỉ qua ở o
     assert.ok(bp.ok, `${hd} × bearer + phiên admin: phải qua bằng phiên`)
   }
 })
+
+// ---- QV-AC-7: migration 049 — CHECK năm vai, idempotent, dữ liệu public không vi phạm (E7) ----
+test("QV-AC-7 049 nhận năm vai, từ chối superuser bằng users_role_chk, áp lại không lỗi; public 0 dòng vi phạm", async () => {
+  const { readFileSync, readdirSync } = await import("node:fs")
+  const { join } = await import("node:path")
+  const MIG = join(import.meta.dirname, "../../db/migrations")
+  const tep = readdirSync(MIG).filter((f) => f.startsWith("049_") && f.includes("vai"))
+  assert.equal(tep.length, 1, `cần đúng một tệp 049_*vai*: ${tep.join(", ")}`)
+  const sql = readFileSync(join(MIG, tep[0]), "utf8")
+  const S7 = `qv7_${process.pid}`
+  await admin.query(`CREATE SCHEMA "${S7}"`)
+  await admin.query(`CREATE TABLE "${S7}".users (LIKE public.users INCLUDING DEFAULTS INCLUDING INDEXES)`)
+  const c7 = new pg.Client({ connectionString: schemaUrl(S7) })
+  await c7.connect()
+  try {
+    await c7.query(sql)
+    await c7.query(sql) // lần hai: idempotent
+    await c7.query(`INSERT INTO users (id, email, password_hash) VALUES ('u7', 'u7@local.test', 'x$y')`)
+    for (const v of ["user", "viewer", "ops", "admin", "owner"]) await c7.query(`UPDATE users SET role = $1 WHERE id = 'u7'`, [v])
+    await assert.rejects(c7.query(`UPDATE users SET role = 'superuser' WHERE id = 'u7'`), /users_role_chk/)
+    const nCheck = (await c7.query(`SELECT count(*)::int AS n FROM pg_constraint WHERE conname = 'users_role_chk' AND conrelid = 'users'::regclass`)).rows[0].n
+    assert.equal(nCheck, 1, "áp hai lần phải còn đúng một ràng buộc")
+  } finally {
+    await c7.end().catch(() => {})
+    await admin.query(`DROP SCHEMA "${S7}" CASCADE`)
+  }
+  const vp = (await admin.query(`SELECT count(*)::int AS n FROM public.users WHERE role NOT IN ('user','viewer','ops','admin','owner')`)).rows[0].n
+  assert.equal(vp, 0, "public.users có dòng vai ngoài năm vai — 049 sẽ không áp được")
+})
