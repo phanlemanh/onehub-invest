@@ -91,7 +91,7 @@ executors:
     vocab_lint: "node pipeline/vocab.mjs --lint"     # PL6: 0 enum viết tay ngoài sổ — đo trạng thái cây
     vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
     nap_lai_ba_luot: "node pipeline/scripts/nap-lai-ba-luot.mjs"   # PL14 thước bật: 3 lượt nạp lại trong giao dịch ROLLBACK, 0 quyết định/liên kết mất — cần DB local :5433
-    idem_045: "bash db/check-idempotent.sh db/migrations/045_phat_bieu_va_phan_xu.sql field_assertions sale_offer_records"   # PL15 AC-1 — áp 045 hai lần vào DB local
+    idem_045: "bash db/check-idempotent-tam.sh db/migrations/045_phat_bieu_va_phan_xu.sql field_assertions sale_offer_records"   # PL15 AC-1 — check-idempotent.sh trên DB tạm chép lược đồ DB local (DB dùng chung chưa nhận 045 trước merge)
     dung_lai: "node pipeline/scripts/dung-lai-canonical.mjs"   # PL15 thước bật: xoá năm cột rồi dựng lại trong giao dịch ROLLBACK, 0 ô lệch — cần DB local :5433
     nguon_goc: "node pipeline/scripts/dung-lai-canonical.mjs --nguon-goc"   # PL15 AC-4: mọi ô khác mặc định có nguồn gốc trỏ phát biểu sống — cần DB local
     cat_chuyen_thu: "node pipeline/phat-bieu-cat-chuyen.mjs --thu"   # PL15 AC-8: cắt chuyển giá trị có sẵn thành phát biểu legacy, giao dịch ROLLBACK — cần DB local

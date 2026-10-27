@@ -30,14 +30,15 @@ Source input: `_acceptance/phat-bieu-va-phan-xu/opportunity.md` (hàng PL15 củ
 
 ## Criteria
 
-- AC-1: Given DB local, When `bash db/check-idempotent.sh db/migrations/045_phat_bieu_va_phan_xu.sql field_assertions
-  sale_offer_records` chạy, Then hai lần áp đều xanh, lược đồ không đổi ở lần hai, và có đủ các thứ sau.
+- AC-1: Given DB local, When `bash db/check-idempotent-tam.sh db/migrations/045_phat_bieu_va_phan_xu.sql field_assertions
+  sale_offer_records` chạy (chính `check-idempotent.sh`, trên DB tạm chép lược đồ DB local), Then hai lần áp đều xanh,
+  lược đồ không đổi ở lần hai, và có đủ các thứ sau.
   - Bảng `field_assertions` với CHECK lấy từ sổ: `field` ∈ trục `enrich_field`, `evidence_tier` ∈ {fact, observed,
     inferred}, `method` ∈ sáu phương pháp, cặp lớp ↔ phương pháp hợp lệ.
   - Chỉ mục duy nhất trên phát biểu sống.
   - Cột `sale_offer_records.field_provenance`; view `sale_offers` có cột đó.
   - `v_ruler_p2`, `v_ruler_p2_area` còn chạy.
-  - `node pipeline/vocab.mjs --check-db` xanh.
+  - DB sau 045 khớp sổ theo phép kiểm của `node pipeline/vocab.mjs --check-db` (chạy trong giao dịch có 045).
   - Migration không ghi dòng nào vào bảng tin.
 - AC-2: Given `field_assertions` có dòng, When UPDATE giá trị, DELETE hay TRUNCATE, Then câu lệnh lỗi với thông điệp
   ghim «field_assertions: chỉ thêm».
@@ -162,7 +163,12 @@ Source input: `_acceptance/phat-bieu-va-phan-xu/opportunity.md` (hàng PL15 củ
 
 - Cổng Phạm vi, Gate 1.5 và Cổng Bằng chứng do Mạnh ký (T3); giám sát không ký thay.
 - Các thước trên DB local tự chứa trong một giao dịch: job đêm vẫn chạy mã của `main` (ghi thẳng năm cột) tới khi vòng
-  này merge, nên đo trên trạng thái DB «đang sống» sẽ lệch vì job đêm, không vì vòng. E1 (`check-idempotent.sh`, theo
-  lời giám sát) áp 045 thật vào DB local: hàm `apply_enrichment`/`revert_enrichment` bản mới chạy ngay, transform cũ vẫn
-  ghi thẳng tới khi merge.
+  này merge, nên đo trên trạng thái DB «đang sống» sẽ lệch vì job đêm, không vì vòng. E1 chạy `check-idempotent.sh`
+  (lời giám sát) trên DB tạm chép lược đồ: DB dùng chung chỉ nhận 045 sau merge, cùng lúc cắt chuyển (runtime-map).
+- Luật đo (giám sát 27/10): mọi test và phép đo nạp 045 chạy trên DB thử riêng `oneinvest_p2_pl15` (`db/db-thu.sh`),
+  không trên `oneinvest` dùng chung; cắt chuyển thật chỉ sau merge, ngoài giờ job đêm, báo giám sát trước. Chi tiết ở
+  đầu `evals.yaml`.
+- Kế hoạch cắt chuyển (giám sát 27/10): áp 045 lên :5433 sau merge chỉ trong cửa sổ yên (ngoài job đêm và sync-cloud),
+  báo giám sát trước, `lock_timeout` 5 giây. Số đo trên bản chép 27/10: áp 045 giữ AccessExclusive tổng 23 ms; cắt
+  chuyển thật 4,5 giây, một giao dịch (runtime-map «Phát biểu + phân xử»).
 - Migration số 045 theo SO-MIGRATION (`_acceptance/so-tu-vung-mot-nguon/contract.md`); không giả định chạy trước 047/048.

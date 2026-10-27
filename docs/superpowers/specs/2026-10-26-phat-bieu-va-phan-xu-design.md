@@ -85,9 +85,13 @@ khai trước: 9 ô loại hình S05 NULL → `unknown`.
 chuyển» khi `ops_audit` chưa có dòng `phat-bieu:cat-chuyen`. Mọi đường gọi nó (transform, `apply_enrichment`,
 `revert_enrichment`) vì thế báo lỗi thay vì đặt ô không có đỡ về trống. Hệ quả:
 
-- Áp 045 thật ở lượt chấm (`check-idempotent.sh`, lời giám sát) an toàn: tới khi cắt chuyển, lượt enrich tay và nút duyệt
-  thẻ enrich trên DB local báo lỗi; job đêm chạy mã `main` không gọi phân xử nên không đổi.
-- Sau merge, thứ tự triển khai: pull → `node pipeline/phat-bieu-cat-chuyen.mjs` (thật) → lượt transform đêm. Quên bước giữa
+- Kiểm idempotent (`check-idempotent.sh`, lời giám sát) chạy trên DB tạm chép lược đồ (`db/check-idempotent-tam.sh`):
+  DB dùng chung chỉ nhận 045 sau merge — 045 thay `apply_enrichment`/`revert_enrichment` mà mã `main` của các dãy khác
+  (đối soát 044 trong thước PL14) đang gọi; áp sớm thì thước của họ vấp cổng.
+- Sau merge, thứ tự triển khai: pull → áp 045 → `node pipeline/phat-bieu-cat-chuyen.mjs` (thật) → lượt transform đêm.
+  Áp 045 chỉ trong cửa sổ yên (ngoài job đêm và sync-cloud), báo giám sát trước, kèm `lock_timeout` 5 giây — đo trên bản
+  chép: áp 045 giữ AccessExclusive tổng 23 ms, nhưng phải chờ lượt đọc dài và chặn đọc mới trong lúc chờ; cắt chuyển 4,5
+  giây một giao dịch, chỉ khoá dòng (runtime-map «Phát biểu + phân xử»). Quên bước giữa
   thì job đêm đỏ có tên, không mất ô.
 - Các thước đo cắt chuyển trong chính giao dịch của chúng nên cổng mở trong giao dịch đó rồi đóng lại khi ROLLBACK.
 

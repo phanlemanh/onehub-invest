@@ -248,6 +248,27 @@ Chuỗi tự khởi động khi máy khởi động lại:
   thông tin người bán); khôi phục khi tin quay lại: `INSERT INTO enrichment_proposals SELECT * FROM
   jsonb_populate_recordset(NULL::enrichment_proposals, <detail->'proposals'>)`.
 
+## Phát biểu + phân xử năm cột phân loại (PL15, `_acceptance/phat-bieu-va-phan-xu/`, migration 045)
+
+- Năm cột `property_type`, `bedrooms`, `bathrooms`, `street_raw`, `block_raw` của tin chỉ do hàm SQL `resolve_offer_fields`
+  dựng từ bảng phát biểu chỉ-thêm `field_assertions` (kèm `field_provenance`). Transform S03/S05/S06, `apply_enrichment`,
+  `revert_enrichment` ghi phát biểu rồi gọi phân xử; không đường nào ghi thẳng năm cột (bộ quét
+  `pipeline/lib/scan-canonical-write.mjs`, cả hàm sống trong DB).
+- **Cổng «chưa cắt chuyển»**: khi `ops_audit` chưa có dòng `phat-bieu:cat-chuyen`, phân xử — và mọi transform tin rao,
+  lệnh enrich, nút duyệt thẻ enrich — dừng với thông điệp «phân xử: chưa cắt chuyển». Job đỏ có tên, không mất ô.
+- **Cửa sổ áp** (giám sát 27/10): áp 045 lên :5433 chỉ trong cửa sổ yên — ngoài job đêm và ngoài lượt sync-cloud — và
+  báo giám sát trước. Đo trên bản chép (27/10): áp 045 tổng 23 ms (câu lâu nhất 3 ms) giữ AccessExclusive trên bảng tin;
+  rủi ro là lệnh DDL phải CHỜ lượt đọc dài (sync-cloud đọc vài phút) và trong lúc chờ chặn mọi lượt đọc mới — áp bằng
+  `psql -1 -v ON_ERROR_STOP=1` kèm `SET lock_timeout = '5s'` (hết hạn thì thử lại sau, không chờ). Cắt chuyển thật đo
+  4,5 giây trong một giao dịch (50.278 phát biểu legacy), chỉ khoá dòng.
+- **Thứ tự triển khai sau merge** (DB local :5433): `git pull` checkout chính → áp `045_phat_bieu_va_phan_xu.sql` (nếu
+  chưa áp) → `node pipeline/vocab.mjs --check-db` (khớp sổ) → `node pipeline/phat-bieu-cat-chuyen.mjs --thu` (xem bảng trước/sau, 0 lệch) → `node
+  pipeline/phat-bieu-cat-chuyen.mjs` (thật, COMMIT khi 0 lệch) → rồi mới tới lượt nạp đêm kế. Mạnh chọn giữ giá trị cũ
+  thành phát biểu `legacy` (PL15 Hỏi-2, 26/10).
+- Không lên cloud: `field_assertions` không thuộc `FILL`, `field_provenance` không thuộc `CLOUD_ALLOW` — cloud không đổi lược
+  đồ ở vòng này.
+- Thước: `node pipeline/scripts/dung-lai-canonical.mjs` (xoá năm cột rồi dựng lại, giao dịch ROLLBACK) và `--nguon-goc`.
+
 ## Job đêm báo lỗi thật (chốt 2026-10-23, `_acceptance/job-bao-loi-that/`, hàng AU3)
 
 Đêm 22→23/10 DB local sập ~8 giờ mà `launchctl` ghi mọi job «last exit 0». Từng bước xử lý (`pipeline/*.mjs`)
