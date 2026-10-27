@@ -69,3 +69,11 @@ evals:
     steps: "app dev chạy từ worktree đang kiểm ở :3456 (DB local :5433 có review_queue và bảng nạp). Chạy 'node scripts/dev-ops-account.mjs --vai viewer' để có tài khoản thử viewer-test@local.test (mật khẩu ở .claude/viewer-test-account.json, không in ra); đăng nhập /login bằng tài khoản đó; mở /ops/review; mở /ops/data-flow, bấm một bản ghi S05 trong lưới để mở sheet; chụp màn từng bước. Lặp lại với tài khoản thử admin (node scripts/dev-ops-account.mjs) cho /ops/review và cùng sheet."
     expected: "với viewer: /ops/review có dòng «N thẻ đang chờ» và câu «Nội dung thẻ chỉ hiện cho vai Vận hành trở lên.», không có hàng thẻ nào; sheet bản ghi có câu «Bài gốc chỉ hiện cho vai Vận hành trở lên.» và không có khối trích bài; với admin: /ops/review có lưới thẻ, sheet có khối trích bài"
     evidence_required: [screenshot, observed, verifier, verified_at]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.dev_ops_account
+    layer: backend-effect
+    paths: [scripts/dev-ops-account.mjs, scripts/dev-ops-account.test.mjs, .gitignore]
+    expected: "exit 0; ca mới trong describe 'vai viewer': (a) ensureAccount(client, { email: 'viewer-test@local.test', role: 'viewer' }) trong giao dịch ROLLBACK → SELECT role FROM users WHERE email = 'viewer-test@local.test' trả 'viewer', gọi lần hai giữ nguyên id và password_hash; (b) git check-ignore .claude/viewer-test-account.json thoát 0; (c) chạy CLI với '--vai la' → exit 2, stderr nêu hai vai nhận được (admin, viewer), không kết nối DB; (d) không cờ --vai → email và tệp như hôm nay (ops-test@local.test, .claude/ops-test-account.json), các ca cũ của tệp vẫn ✔"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
