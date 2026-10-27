@@ -13,6 +13,7 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathS
 import { homedir, tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { luocDoPhienAdmin } from "./helpers/phien-thu"
 
 type Paths = { openclaw: string; config: string; qrDir: string }
 type Admin = {
@@ -39,6 +40,8 @@ const FIXTURE = {
     },
   },
 }
+
+let phien: { url: string; cookie: string; don: () => Promise<void> } | undefined
 
 let tmp = ""
 let home = ""
@@ -86,7 +89,7 @@ async function post(body: unknown): Promise<{ status: number; json: { qrBase64?:
   const res = await route.POST(
     new Request("http://localhost/api/v1/ops/zalo/login", {
       method: "POST",
-      headers: { authorization: "Bearer T", "content-type": "application/json" },
+      headers: { cookie: phien!.cookie, "content-type": "application/json" },
       body: typeof body === "string" ? body : JSON.stringify(body),
     }),
   )
@@ -157,7 +160,9 @@ before(async () => {
   process.env.PATH = `${join(tmp, "bin")}:${PATH_GOC}`
   process.env.OPENCLAW_QR_DIR = qrDir
   process.env.OPS_API_TOKEN = "T"
-  process.env.DATABASE_URL = "postgres://127.0.0.1:9/khong-co"
+  // Route đọc phiên và ghi audit trong DB (TV1): một lược đồ tạm chỉ có users/sessions/ops_audit — không chạm public.
+  phien = await luocDoPhienAdmin("lk")
+  process.env.DATABASE_URL = phien.url
 
   admin = (await import("../src/lib/zalo-admin")) as Admin
   assertRao(tmp, admin.zaloAdminPaths())
@@ -172,6 +177,7 @@ after(async () => {
   }
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
+  await phien?.don()
   if (tmp) rmSync(tmp, { recursive: true, force: true })
 })
 

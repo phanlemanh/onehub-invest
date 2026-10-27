@@ -13,6 +13,7 @@ import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
 import { DAU_SN, THAM_CHIEU, dungSauGop } from "../../pipeline/scripts/so-nhom-fixture.mjs"
 import { chupPublic, xoaLuocDo } from "../../pipeline/scripts/vong-doi-fixture.mjs"
+import { themPhienAdmin } from "./helpers/phien-thu"
 
 // HOME giả cho CẢ tiến trình, đặt TRƯỚC mọi import động: zalo-admin.ts tính đường tệp cấu hình gateway theo HOME lúc
 // import — ca SN-AC-5b gọi hàm ghi thật của app trên tệp tạm, không bao giờ trên ~/.openclaw (luật 8, zalo-safety).
@@ -53,6 +54,7 @@ const ADMIN = { id: "42", email: "admin@local.test", plan: "free" as const, role
 const admin = new pg.Client({ connectionString: localDbUrl() })
 const sc = new pg.Client({ connectionString: schemaUrl(S) })
 let publicTruoc: unknown
+let PHIEN_ADMIN = "" // cookie phiên admin trong lược đồ tạm — route ghi nay đòi người thật (TV1)
 
 const K = (code: string) => `${DAU_SN}-${code}`
 before(async () => {
@@ -60,6 +62,7 @@ before(async () => {
   publicTruoc = await chupPublic(admin)
   await dungSauGop(admin, S, { thamChieu: true })
   for (const t of ["ops_audit", "stg_zalo_posts"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
+  PHIEN_ADMIN = (await themPhienAdmin(admin, S)).cookie
   await sc.connect()
   // Một đơn vị mỗi nguồn; S03 ở mode bùng để set-mode có việc để từ chối.
   for (const [code, params] of [["S02", {}], ["S03", { mode: "bung", burst_until: "2026-10-30" }], ["S05", {}], ["S06", {}]] as const) {
@@ -79,12 +82,12 @@ after(async () => {
   assert.deepEqual(publicSau, publicTruoc, "public đã bị chạm")
 })
 
-async function goi(body: Record<string, unknown>) {
+async function goi(body: Record<string, unknown>, chiBearer = false) {
   const { POST } = await import("../src/app/api/v1/ops/source-groups/route")
   const res = await POST(
     new Request("http://localhost/api/v1/ops/source-groups", {
       method: "POST",
-      headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" },
+      headers: { authorization: `Bearer ${TOKEN}`, ...(chiBearer ? {} : { cookie: PHIEN_ADMIN }), "content-type": "application/json" },
       body: JSON.stringify(body),
     }),
   )
@@ -160,7 +163,7 @@ const donVi = async (code: string) =>
   (await sc.query(`SELECT unit_code, market_codes, project_node_ids::int[] AS project_node_ids FROM collection_units
     WHERE source_code = $1`, [code])).rows[0] as { unit_code: string; market_codes: string[]; project_node_ids: number[] }
 const auditMeta = async () =>
-  (await sc.query(`SELECT detail FROM ops_audit WHERE action = 'source-group:set-meta' ORDER BY id`)).rows as { detail: Record<string, unknown> }[]
+  (await sc.query(`SELECT detail FROM ops_audit WHERE action = 'unit.update_meta' ORDER BY id`)).rows as { detail: Record<string, unknown> }[]
 
 async function renderSo(props: Record<string, unknown>, fetchImpl: (b: Record<string, unknown>) => Promise<{ status: number; body: unknown }>) {
   const React = await import("react")
@@ -248,7 +251,7 @@ test("SN-AC-8 khu sổ: mọi đơn vị bốn nguồn, không khoá nhóm, nhã
   await u.unmount()
 
   // Đối chứng cùng giao dịch: audit bị CHECK chặn → 500, sổ không đổi.
-  await sc.query(`ALTER TABLE ops_audit ADD CONSTRAINT sn_chan CHECK (action <> 'source-group:set-meta') NOT VALID`)
+  await sc.query(`ALTER TABLE ops_audit ADD CONSTRAINT sn_chan CHECK (action <> 'unit.update_meta') NOT VALID`)
   try {
     const r = await khaiDonVi({ unitCode: s03.unit_code, marketCodes: [THAM_CHIEU.market], projectNodeIds: [] }, async () => ADMIN)
     assert.equal(r.status, 500)
@@ -311,11 +314,11 @@ test("SN-AC-9 set-meta: không phiên, phiên ops, Bearer máy → 403, sổ và
   const truocAudit = await nAudit()
   assert.equal((await khaiDonVi(than, async () => null)).status, 403)
   assert.equal((await khaiDonVi(than, async () => OPS)).status, 403)
-  assert.equal((await goi({ action: "set-meta", ...than })).status, 403)
+  assert.equal((await goi({ action: "set-meta", ...than }, true)).status, 403)
   assert.deepEqual(await anhSo(), truocSo)
   assert.equal(await nAudit(), truocAudit)
-  // Route trao set-meta cho khaiDonVi với getSessionUser (không cho Bearer làm danh tính).
+  // Route trao set-meta cho khaiDonVi với người đã qua kiemQuyen (không cho Bearer làm danh tính).
   const route = readFileSync(join(import.meta.dirname, "..", "src/app/api/v1/ops/source-groups/route.ts"), "utf8")
-  assert.match(route, /if \(b\.action === "set-meta"\) \{\s*const r = await khaiDonVi\(b, getSessionUser\);/)
+  assert.match(route, /b\?\.action === "set-meta"\) \{\s*const q = await kiemQuyen\(req, "unit\.update_meta"\);\s*if \(!q\.ok\) return q\.res;\s*const r = await khaiDonVi\(b, async \(\) => q\.nguoi\);/)
   assert.equal((await khaiDonVi(than, async () => ADMIN)).status, 200, "đối chứng: admin khai được")
 })

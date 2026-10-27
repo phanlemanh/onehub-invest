@@ -27,3 +27,38 @@ export async function taoNguoi(
   )
   return { id, email, cookie: `${COOKIE}=${token}` }
 }
+
+/** Bảng phiên + một người admin có phiên trong lược đồ `s` đã có (ca thử cũ chuyển từ bearer sang phiên thật — TV1). */
+export async function themPhienAdmin(admin: pg.Client, s: string): Promise<{ id: string; cookie: string }> {
+  await dungBangPhien(admin, s)
+  await admin.query(`SET search_path TO "${s}"`)
+  try {
+    return await taoNguoi(admin, "admin")
+  } finally {
+    await admin.query(`RESET search_path`)
+  }
+}
+
+/**
+ * Một lược đồ tạm chỉ có users, sessions, ops_audit và một người admin có phiên — cho ca thử route zalo (route nay đọc
+ * phiên và ghi audit trong DB). Trả URL đặt vào DATABASE_URL trước khi nạp route, cookie admin và hàm dọn.
+ */
+export async function luocDoPhienAdmin(ten: string): Promise<{ url: string; cookie: string; don: () => Promise<void> }> {
+  const { localDbUrl } = await import("../../../pipeline/scripts/capture-ops-facts.mjs")
+  const { schemaUrl } = await import("../../../pipeline/scripts/ops-facts-fixture.mjs")
+  const s = `${ten}_${process.pid}`
+  const admin = new pg.Client({ connectionString: localDbUrl() })
+  await admin.connect()
+  await admin.query(`DROP SCHEMA IF EXISTS "${s}" CASCADE`)
+  await admin.query(`CREATE SCHEMA "${s}"`)
+  await admin.query(`CREATE TABLE "${s}".ops_audit (LIKE public.ops_audit INCLUDING ALL)`)
+  const nguoi = await themPhienAdmin(admin, s)
+  return {
+    url: schemaUrl(s),
+    cookie: nguoi.cookie,
+    don: async () => {
+      await admin.query(`DROP SCHEMA IF EXISTS "${s}" CASCADE`).catch(() => {})
+      await admin.end().catch(() => {})
+    },
+  }
+}
