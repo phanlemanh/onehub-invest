@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a2fad097bad531ec76d4281419d95356aa6815d0
+verified_commit: 611eea9ae548e969c38e95cf9f928765bf2bd0ad
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -294,3 +294,7 @@ none — every multi-run eval is uniform
 Round 1: E21 failed — lệnh `cd app && npm test` (duy nhất gắn E21) kết thúc lỗi, không in dòng tóm tắt nên chưa rõ nguyên nhân; không có lệnh fail nào ngoài eval. Returned to implementation.
 Round 2: mọi eval chạy lại đều đạt (E6, E7, E9, E12, E13, E14, E15, E19, E20, E21, E22 và bốn lệnh suite); E1–E5, E8, E10, E11, E16–E18 mang từ round 1 vì delta không chạm paths của chúng. Finding trong hợp đồng của round 1 đã sửa ở commit 6c63f78a.
 Round 3: chạy lại E9, E22, E19, E20 và năm lệnh suite (agent, app tsc và lint, app test, lint-rules, portal-compliance), tất cả đạt, code tại a2fad097; E6, E7, E12–E15, E21 mang từ round 2 và E1–E5, E8, E10, E11, E16–E18 mang từ round 1 vì delta không chạm paths của chúng.
+
+### Re-pin lần 1 — 2026-10-27, do hoá cũ do gộp main sau verify (CONTEXT.md, app, scripts)
+run_id: repin-20261027T004406Z-57864
+sha: 611eea9ae548e969c38e95cf9f928765bf2bd0ad · suites: 6 lệnh exit 0 · evals: 22/22 eval máy đạt kỳ vọng
