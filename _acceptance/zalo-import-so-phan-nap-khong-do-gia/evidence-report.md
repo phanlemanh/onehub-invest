@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 880221ff856b7235150b58dfec551914bf5bb743
+verified_commit: 5bf075ce45024f641f55c37fef95a67a01ab09a4
 human_signoff: Mạnh 2026-10-25
 ---
 
@@ -127,3 +127,7 @@ Round 1: E1, E2, E3, E4, E5 đều đạt; không eval nào đỏ. Verdict PASS.
 ### Re-pin lần 1 — 2026-10-25, do gộp main b0600b9 (#102) sau chữ ký
 run_id: repin-20261025T085819Z-17431
 sha: 880221ff856b7235150b58dfec551914bf5bb743 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-27, do test-khong-prune-worktree: zalo-import-job-lan.test.mjs gỡ đúng worktree tạm, bỏ prune
+run_id: repin-20261027T005704Z-33242
+sha: 5bf075ce45024f641f55c37fef95a67a01ab09a4 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng

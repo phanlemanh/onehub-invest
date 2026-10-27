@@ -19,7 +19,8 @@ const AXES = [
 
 // Ma trận nhãn viết trước (48 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
 // vòng; bậc: nguyên văn FRAMING §3.4; listing_intent + offer_status: Hỏi-1 của PL6 (Mạnh duyệt 26/10);
-// evidence_tier + assertion_method: PL15 (bảng phát biểu, design §3.7).
+// evidence_tier + assertion_method: PL15 (bảng phát biểu, design §3.7); `wanted` → `inquiry` «Yêu cầu»: Mạnh 27/10
+// (hồ sơ wanted-thanh-inquiry).
 const NHAN = [
   ["kind", "sale", "Bán"], ["kind", "rent_lt", "Cho thuê"],
   ["property_type", "apartment", "Căn hộ"], ["property_type", "house", "Nhà riêng"], ["property_type", "land", "Đất"],
@@ -33,7 +34,7 @@ const NHAN = [
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
   ["assertion_method", "parser", "Bộ đọc tin"], ["assertion_method", "e1_rule", "Luật E1"],
   ["assertion_method", "e2_llm", "LLM E2"], ["assertion_method", "legacy", "Giá trị có trước"],
-  ["listing_intent", "offer", "Tin rao"], ["listing_intent", "wanted", "Tin tìm mua, tìm thuê"],
+  ["listing_intent", "offer", "Tin rao"], ["listing_intent", "inquiry", "Yêu cầu"],
   ["listing_intent", "not_listing", "Không phải tin rao"], ["listing_intent", "unknown", "Chưa rõ"],
   ["offer_status", "active", "Đang chào"], ["offer_status", "active_under_contract", "Đã cọc"],
   ["offer_status", "closed", "Đã bán"], ["offer_status", "withdrawn", "Đã gỡ"], ["offer_status", "unknown", "Chưa rõ"],
@@ -55,6 +56,11 @@ test("VB-AC-1 sổ thật: đủ 11 trục, đúng code + nhãn từng byte", ()
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
   assert.equal(NHAN.length, 48);
+  // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
+  const li = reg.axes.find((a) => a.name === "listing_intent");
+  assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);
+  assert.match(li.rationale, /bên mua/);
+  assert.match(li.rationale, /SavedSearch/);
   for (const a of reg.axes) {
     assert.ok(a.term_vi, `${a.name} thiếu term_vi`);
     assert.ok("dd_field" in a, `${a.name} thiếu dd_field`);

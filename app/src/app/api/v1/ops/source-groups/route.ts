@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { pool } from "@/lib/db";
-import { getSessionUser } from "@/lib/auth";
-import { canAccessOps } from "@/lib/ops-access";
-import { auditOpsWrite } from "@/lib/audit";
+import { kiemQuyen } from "@/lib/ops-access";
+import { ghiAuditTrong, trongGiaoDich } from "@/lib/audit";
 import { LOI_NGOAI_NHOM, NHOM_TRANG_CU, datCheDo } from "@/lib/che-do-thu";
 import { khaiDonVi } from "@/lib/so-don-vi";
 
@@ -21,14 +20,10 @@ export const dynamic = "force-dynamic";
  *           (PL12, lib/so-don-vi.ts; ghi sổ + audit cùng giao dịch).
  *   set-mode: { id, mode: "cho" | "bung" | "duy_tri", burstUntil? } — CHỈ phiên admin (Bearer máy không đủ: bật
  *           Bùng là tăng tải, người duyệt từng lần); luật + giao dịch kèm audit ở lib/che-do-thu.ts.
- * Mọi action ghi ops_audit (actor, action, detail).
+ * Quyền theo bảng ở lib/ops-access.ts (TV1): GET `ops.read` (bearer được); mỗi action POST một hành động admin
+ * (toggle `unit.toggle`, add `unit.create`, delete `unit.delete`, set-mode `unit.set_mode`, set-meta `unit.update_meta`).
+ * Mọi action ghi đúng một dòng ops_audit mang `user:<id>`, cùng transaction với thao tác.
  */
-async function auth(req: Request): Promise<boolean> {
-  const expected = process.env.OPS_API_TOKEN;
-  const bearer = req.headers.get("authorization") ?? "";
-  if (!!expected && bearer === `Bearer ${expected}`) return true;
-  return canAccessOps(await getSessionUser());
-}
 
 /**
  * TV2a `vong-doi-nguon`: đã áp migration 047 chưa (source_groups có cột status)? Hỏi mỗi lần ghi, không cache — tiến trình
@@ -55,13 +50,12 @@ const CHU_KHONG_DOI: Record<string, { bat: string; tat: string }> = {
  * xong (409); tắt chỉ hạ nhóm đang thu (active → paused kèm lý do) — nhóm paused/draft giữ nguyên, nhóm đã gỡ hay đã xong
  * trả 409 có chữ (Hỏi-1). Ô không đổi không ghi gì, kể cả nhật ký.
  */
-async function toggleVongDoi(b: Record<string, unknown>, sourceCode: string, groupKey: string) {
+async function toggleVongDoi(b: Record<string, unknown>, sourceCode: string, groupKey: string, actor: string) {
   const bat = Boolean(b.enabled);
   const to = bat ? "active" : "paused";
   const reason = typeof b.reason === "string" && b.reason.trim() ? b.reason.trim() : LY_DO_MAC_DINH;
   const resumeWhen = typeof b.resumeWhen === "string" && b.resumeWhen.trim() ? b.resumeWhen.trim() : null;
   const c = await pool.connect();
-  let from: string;
   try {
     await c.query("BEGIN");
     const cu = (
@@ -92,22 +86,22 @@ async function toggleVongDoi(b: Record<string, unknown>, sourceCode: string, gro
            WHERE source_code = $1 AND group_key = $2`,
       bat ? [sourceCode, groupKey] : [sourceCode, groupKey, reason, resumeWhen],
     );
+    await ghiAuditTrong(c, actor, "unit.toggle", { thao_tac: "toggle", sourceCode, groupKey, enabled: bat, from: cu.status, to });
     await c.query("COMMIT");
-    from = cu.status;
+    return NextResponse.json({ ok: true });
   } catch (e) {
     await c.query("ROLLBACK").catch(() => {});
-    throw e;
+    console.error("toggle failed:", e instanceof Error ? e.message : e);
+    return NextResponse.json({ error: "không ghi được công tắc" }, { status: 500 });
   } finally {
     c.release();
   }
-  await auditOpsWrite("ops-user", "source-group:toggle", { sourceCode, groupKey, enabled: bat, from, to });
-  return NextResponse.json({ ok: true });
 }
 
-export async function GET() {
-  if (!(await auth(new Request("http://x")))) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+export async function GET(req: Request) {
+  // TVN3: kiểm trên request thật — bearer của máy đọc được danh sách (hôm nay request rỗng làm bearer luôn trượt).
+  const q = await kiemQuyen(req, "ops.read");
+  if (!q.ok) return q.res;
   const { rows } = await pool.query(
     `SELECT g.id, g.source_code, g.group_key, g.name, g.enabled, g.params, g.note,
             g.created_at::text, g.updated_at::text,
@@ -118,17 +112,33 @@ export async function GET() {
   return NextResponse.json({ groups: rows });
 }
 
+/** Lỗi ghi trong transaction: 409 nếu trùng khoá, còn lại 500 — dòng audit không bao giờ còn khi thao tác hỏng. */
+function loiGhi(e: unknown, viec: string): NextResponse {
+  const msg = e instanceof Error ? e.message : "";
+  if (msg.includes("unique")) return NextResponse.json({ error: "nhóm đã tồn tại" }, { status: 409 });
+  console.error(`${viec} failed:`, msg);
+  return NextResponse.json({ error: `không ghi được (${viec})` }, { status: 500 });
+}
+
 export async function POST(req: Request) {
-  if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!b?.action) return NextResponse.json({ error: "thiếu action" }, { status: 400 });
-  if (b.action === "set-meta") {
-    const r = await khaiDonVi(b, getSessionUser);
+  if (b?.action === "set-meta") {
+    const q = await kiemQuyen(req, "unit.update_meta");
+    if (!q.ok) return q.res;
+    const r = await khaiDonVi(b, async () => q.nguoi);
     return NextResponse.json(r.body, { status: r.status });
   }
-  if (b.action === "set-mode") {
-    const r = await datCheDo(b, getSessionUser);
+  if (b?.action === "set-mode") {
+    const q = await kiemQuyen(req, "unit.set_mode");
+    if (!q.ok) return q.res;
+    const r = await datCheDo(b, async () => q.nguoi);
     return NextResponse.json(r.body, { status: r.status });
+  }
+  if (!b || !["toggle", "add", "delete"].includes(String(b.action))) {
+    // Thiếu action hay action lạ: vẫn qua cổng quản trị trước khi trả 400 (người ngoài nhận 401/403, không đọc được luật).
+    const q = await kiemQuyen(req, "unit.create");
+    if (!q.ok) return q.res;
+    return NextResponse.json({ error: b?.action ? `action lạ: ${String(b.action)}` : "thiếu action" }, { status: 400 });
   }
   const sourceCode = String(b.sourceCode ?? "");
   const groupKey = String(b.groupKey ?? "");
@@ -138,20 +148,33 @@ export async function POST(req: Request) {
   }
 
   if (b.action === "toggle") {
+    const q = await kiemQuyen(req, "unit.toggle");
+    if (!q.ok) return q.res;
     if (!sourceCode || !groupKey) {
       return NextResponse.json({ error: "thiếu sourceCode/groupKey" }, { status: 400 });
     }
-    if (await coVongDoi()) return toggleVongDoi(b, sourceCode, groupKey);
-    const { rowCount } = await pool.query(
-      `UPDATE source_groups SET enabled = $1, updated_at = now()
+    if (await coVongDoi()) return toggleVongDoi(b, sourceCode, groupKey, q.actor);
+    try {
+      const rowCount = await trongGiaoDich(async (c) => {
+        const r = await c.query(
+          `UPDATE source_groups SET enabled = $1, updated_at = now()
        WHERE source_code = $2 AND group_key = $3`,
-      [Boolean(b.enabled), sourceCode, groupKey],
-    );
-    await auditOpsWrite("ops-user", "source-group:toggle", { sourceCode, groupKey, enabled: b.enabled });
-    return NextResponse.json({ ok: rowCount === 1 });
+          [Boolean(b.enabled), sourceCode, groupKey],
+        );
+        if (r.rowCount === 1) {
+          await ghiAuditTrong(c, q.actor, "unit.toggle", { thao_tac: "toggle", sourceCode, groupKey, enabled: b.enabled, to: Boolean(b.enabled) });
+        }
+        return r.rowCount;
+      });
+      return NextResponse.json({ ok: rowCount === 1 });
+    } catch (e) {
+      return loiGhi(e, "toggle");
+    }
   }
 
   if (b.action === "add") {
+    const q = await kiemQuyen(req, "unit.create");
+    if (!q.ok) return q.res;
     const name = String(b.name ?? "").trim();
     if (!sourceCode || !groupKey || !name) {
       return NextResponse.json({ error: "thiếu sourceCode/groupKey/name" }, { status: 400 });
@@ -162,50 +185,60 @@ export async function POST(req: Request) {
     const params: Record<string, unknown> = {};
     if (b.regionV2) params.region_v2 = Number(b.regionV2);
     if (b.cityCode) params.cityCode = String(b.cityCode);
+    const vongDoi = await coVongDoi();
     try {
-      await pool.query(
-        (await coVongDoi())
-          ? `INSERT INTO source_groups (source_code, group_key, name, status, params)
+      await trongGiaoDich(async (c) => {
+        await c.query(
+          vongDoi
+            ? `INSERT INTO source_groups (source_code, group_key, name, status, params)
              VALUES ($1, $2, $3, 'active', $4::jsonb)`
-          : `INSERT INTO source_groups (source_code, group_key, name, enabled, params)
+            : `INSERT INTO source_groups (source_code, group_key, name, enabled, params)
              VALUES ($1, $2, $3, true, $4::jsonb)`,
-        [sourceCode, groupKey, name, JSON.stringify(params)],
-      );
+          [sourceCode, groupKey, name, JSON.stringify(params)],
+        );
+        await ghiAuditTrong(c, q.actor, "unit.create", { thao_tac: "add", sourceCode, groupKey, name, from: null, to: vongDoi ? "active" : "enabled" });
+      });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "";
-      if (msg.includes("unique")) {
-        return NextResponse.json({ error: "nhóm đã tồn tại" }, { status: 409 });
-      }
-      throw e;
+      return loiGhi(e, "add");
     }
-    await auditOpsWrite("ops-user", "source-group:add", { sourceCode, groupKey, name });
     return NextResponse.json({ ok: true });
   }
 
   if (b.action === "delete") {
+    const q = await kiemQuyen(req, "unit.delete");
+    if (!q.ok) return q.res;
     if (!sourceCode || !groupKey) {
       return NextResponse.json({ error: "thiếu sourceCode/groupKey" }, { status: 400 });
     }
-    const { rows } = await pool.query(
-      `SELECT name FROM source_groups WHERE source_code = $1 AND group_key = $2`,
-      [sourceCode, groupKey],
-    );
-    const name = rows[0]?.name;
-    let purged = 0;
-    if (b.purge && name && sourceCode === "S05") {
-      // xoá chọn lọc dữ liệu nhóm bị bỏ (nỗi "xoá cũng mệt" — giờ 1 click)
-      const r = await pool.query(
-        `DELETE FROM stg_zalo_posts WHERE agent_id = 'apify-facebook' AND group_name = $1`,
-        [name],
-      );
-      purged = r.rowCount ?? 0;
+    try {
+      const purged = await trongGiaoDich(async (c) => {
+        const { rows } = await c.query(
+          `SELECT name FROM source_groups WHERE source_code = $1 AND group_key = $2`,
+          [sourceCode, groupKey],
+        );
+        const name = rows[0]?.name;
+        let purged = 0;
+        if (b.purge && name && sourceCode === "S05") {
+          // xoá chọn lọc dữ liệu nhóm bị bỏ (nỗi "xoá cũng mệt" — giờ 1 click)
+          const r = await c.query(
+            `DELETE FROM stg_zalo_posts WHERE agent_id = 'apify-facebook' AND group_name = $1`,
+            [name],
+          );
+          purged = r.rowCount ?? 0;
+        }
+        const del = await c.query(`DELETE FROM source_groups WHERE source_code = $1 AND group_key = $2`, [
+          sourceCode,
+          groupKey,
+        ]);
+        if (del.rowCount) {
+          await ghiAuditTrong(c, q.actor, "unit.delete", { thao_tac: "delete", sourceCode, groupKey, purge: purged, from: { name }, to: null });
+        }
+        return purged;
+      });
+      return NextResponse.json({ ok: true, purged });
+    } catch (e) {
+      return loiGhi(e, "delete");
     }
-    await pool.query(`DELETE FROM source_groups WHERE source_code = $1 AND group_key = $2`, [
-      sourceCode,
-      groupKey,
-    ]);
-    await auditOpsWrite("ops-user", "source-group:delete", { sourceCode, groupKey, purge: purged });
-    return NextResponse.json({ ok: true, purged });
   }
 
   return NextResponse.json({ error: `action lạ: ${String(b.action)}` }, { status: 400 });

@@ -11,6 +11,7 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathS
 import { homedir, tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { luocDoPhienAdmin } from "./helpers/phien-thu"
 
 type Paths = { openclaw: string; config: string }
 type Admin = {
@@ -52,6 +53,8 @@ const MA_TRAN: [string, (c: Cfg) => void][] = [
   ["L3b", (c) => void (acc(c).default.groups.g1.requireMention = false)],
   ["hỏng", (c) => void (acc(c).acc3 = "x")],
 ]
+
+let phien: { url: string; cookie: string; don: () => Promise<void> } | undefined
 
 let tmp = ""
 let spyLog = ""
@@ -95,7 +98,7 @@ async function del(id: string): Promise<{ status: number; json: { ok?: boolean; 
   const res = await route.DELETE(
     new Request("http://localhost/api/v1/ops/zalo/accounts", {
       method: "DELETE",
-      headers: { authorization: "Bearer T", "content-type": "application/json" },
+      headers: { cookie: phien!.cookie, "content-type": "application/json" },
       body: JSON.stringify({ id }),
     }),
   )
@@ -119,8 +122,9 @@ before(async () => {
   process.env.HOME = home
   process.env.PATH = `${join(tmp, "bin")}:${process.env.PATH ?? ""}`
   process.env.OPS_API_TOKEN = "T"
-  // Cổng đóng: auditOpsWrite (lửa-rồi-quên) không ghi ops_audit vào DB local dùng chung.
-  process.env.DATABASE_URL = "postgres://127.0.0.1:9/khong-co"
+  // Route đọc phiên và ghi audit trong DB (TV1): một lược đồ tạm chỉ có users/sessions/ops_audit — không chạm public.
+  phien = await luocDoPhienAdmin("gc")
+  process.env.DATABASE_URL = phien.url
 
   admin = (await import("../src/lib/zalo-admin")) as Admin
   assertRao(tmp, admin.zaloAdminPaths())
@@ -134,14 +138,15 @@ after(async () => {
   }
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
+  await phien?.don()
   if (tmp) rmSync(tmp, { recursive: true, force: true })
 })
 
-test("GC-AC-5 rào: homedir, zaloAdminPaths().openclaw/.config dưới thư mục tạm; DATABASE_URL cổng đóng; không import tĩnh", () => {
+test("GC-AC-5 rào: homedir, zaloAdminPaths().openclaw/.config dưới thư mục tạm; DATABASE_URL lược đồ tạm; không import tĩnh", () => {
   const p = admin.zaloAdminPaths()
   assertRao(tmp, p)
   assert.equal(thuc(p.config), thuc(cfgPath))
-  assert.match(process.env.DATABASE_URL ?? "", /^postgres:\/\/127\.0\.0\.1:9\//)
+  assert.match(decodeURIComponent(process.env.DATABASE_URL ?? ""), /search_path=[a-z]+_\d+$/, "DATABASE_URL không trỏ lược đồ tạm")
   const src = readFileSync(SELF, "utf8")
   assert.doesNotMatch(src, /^import[^\n]*["']\.\.\/src\/(lib\/zalo-admin|app\/api)/m, "import tĩnh zalo-admin/route")
   // Đối chứng: rào với HOME thật ném, thông điệp nêu HOME thật.

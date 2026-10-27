@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Các bài kiểm tự động thôi chạy lệnh dọn worktree trên cả kho dùng chung — mỗi bài chỉ gỡ đúng worktree tạm của mình, worktree của phiên khác không bị gỡ nhầm.",
+  "analyst_plain": "Lượt này cố ý không chạy phép so với bản cũ: ở bản cũ, bài tự kiểm của hook còn dọn worktree toàn kho mỗi lần chạy, chạy lại nó chính là rủi ro hàng này chặn. Chiều đỏ của từng phép đo đã nằm trong đầu dò (phá thử khối dự phòng, bản cũ)."
+}

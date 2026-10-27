@@ -1,6 +1,6 @@
 // cong-tac-nhom-go.test.tsx — hồ sơ _acceptance/cong-tac-khong-ha-nhom-go, ca «CT-AC-n». Một lược đồ tạm ở khuôn sau
 // 047 + 048 (pool của app gắn search_path lúc import), mỗi ô ma trận dựng lại dòng nhóm từ đầu; gọi POST thật của route
-// route nhóm thu bằng Bearer. Đối chứng chạy bản route trước sửa đã ghim (fixture). public không được chạm.
+// route nhóm thu bằng Bearer kèm phiên admin (route mới đọc phiên, bản cũ đọc bearer). Đối chứng chạy bản route trước sửa đã ghim (fixture). public không được chạm.
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
 import { copyFileSync, rmSync } from "node:fs"
@@ -13,6 +13,7 @@ import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
 import { DAU_SN, dungSauGop } from "../../pipeline/scripts/so-nhom-fixture.mjs"
 import { chupPublic, xoaLuocDo } from "../../pipeline/scripts/vong-doi-fixture.mjs"
+import { themPhienAdmin } from "./helpers/phien-thu"
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..")
 const ROUTE_DIR = join(APP, "src/app/api/v1/ops/source-groups")
@@ -53,6 +54,7 @@ const admin = new pg.Client({ connectionString: localDbUrl() })
 const sc = new pg.Client({ connectionString: schemaUrl(S) })
 const scCu = new pg.Client({ connectionString: schemaUrl(S_CU) })
 let publicTruoc: unknown
+let PHIEN_ADMIN = "" // cookie phiên admin trong lược đồ tạm — route ghi nay đòi người thật (TV1)
 const KHOA = `${DAU_SN}-ct`
 
 before(async () => {
@@ -62,6 +64,7 @@ before(async () => {
     await dungSauGop(admin, s)
     for (const t of ["ops_audit", "stg_zalo_posts"]) await admin.query(`CREATE TABLE "${s}".${t} (LIKE public.${t} INCLUDING ALL)`)
   }
+  PHIEN_ADMIN = (await themPhienAdmin(admin, S)).cookie
   await sc.connect()
   await scCu.connect()
 })
@@ -91,13 +94,13 @@ async function dungNhom(c: pg.Client, st: Trang) {
 const nhom = async (c: pg.Client = sc) =>
   (await c.query(`SELECT status, reason, resume_when, enabled, updated_at::text FROM collection_units WHERE group_key = $1`, [KHOA])).rows[0]
 const nAudit = async () =>
-  (await sc.query(`SELECT count(*)::int AS n FROM ops_audit WHERE action = 'source-group:toggle'`)).rows[0].n as number
+  (await sc.query(`SELECT count(*)::int AS n FROM ops_audit WHERE action IN ('source-group:toggle', 'unit.toggle')`)).rows[0].n as number
 
 async function goi(route: Route, enabled: boolean) {
   const res = await route.POST(
     new Request("http://localhost/api/v1/ops/source-groups", {
       method: "POST",
-      headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" },
+      headers: { authorization: `Bearer ${TOKEN}`, cookie: PHIEN_ADMIN, "content-type": "application/json" },
       body: JSON.stringify({ action: "toggle", sourceCode: "S05", groupKey: KHOA, enabled }),
     }),
   )
