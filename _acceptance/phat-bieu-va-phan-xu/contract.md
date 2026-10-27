@@ -5,7 +5,7 @@ slug: phat-bieu-va-phan-xu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli, config, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-26-phat-bieu-va-phan-xu-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26
@@ -172,3 +172,13 @@ Source input: `_acceptance/phat-bieu-va-phan-xu/opportunity.md` (hàng PL15 củ
   báo giám sát trước, `lock_timeout` 5 giây. Số đo trên bản chép 27/10: áp 045 giữ AccessExclusive tổng 23 ms; cắt
   chuyển thật 4,5 giây, một giao dịch (runtime-map «Phát biểu + phân xử»).
 - Migration số 045 theo SO-MIGRATION (`_acceptance/so-tu-vung-mot-nguon/contract.md`); không giả định chạy trước 047/048.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: Giá trị tự động điền trước đợt chuyển đổi không hoàn tác được bằng công cụ hoàn tác; ô giữ giá trị cũ, công cụ bỏ qua lặng lẽ.
+  - Ngoài-2: Lượt nạp S06 hỏng giữa chừng có thể để tin mới với loại hình và số phòng ngủ trống tới lượt chạy thành công kế tiếp.
+  - Ngoài-3: Chạy phép đo PL15 từ phiên chưa trỏ DB thử có thể khoá DB dùng chung trong lúc đo.
+  - Ngoài-4: Công cụ hoàn tác báo xong nhưng bỏ qua mọi đề xuất áp trước đợt chuyển đổi — người vận hành dễ tưởng đã hoàn tác.
+  - Ngoài-5: Bản xem trước (--dry) của công cụ hoàn tác có thể báo khác lần chạy thật.
+  - Ngoài-6: Kiểm idempotent của 045 chạy trên bản sao không dữ liệu nên không bắt được mất hay nhân đôi dữ liệu thật.
+  - Ngoài-7: Lệnh thử cắt chuyển có thể báo đạt khi truy vấn chọn ô hỏng mà không xử lý ô nào.
+  - Ngoài-8: Test dựng phát biểu legacy bằng tay đúng khuôn bên đọc — đổi dạng dấu vết legacy thì test vẫn xanh.
+  - Ngoài-9: Bộ quét ghi thẳng năm cột bỏ qua thư mục tests/ và fixtures/.
