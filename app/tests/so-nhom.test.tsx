@@ -173,11 +173,18 @@ async function renderSo(props: Record<string, unknown>, fetchImpl: (b: Record<st
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
   const { SoDonVi } = await import("../src/components/ops/sources/so-don-vi")
   const sent: Record<string, unknown>[] = []
-  globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-    const body = JSON.parse(String(init?.body ?? "null"))
-    sent.push(body)
-    const r = await fetchImpl(body)
-    return new Response(JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } })
+  // Request đang chạy: press() chờ chúng xong — lưu là một giao dịch DB, máy CI bận thì 30 ms không đủ (CI #155).
+  const dangChay = new Set<Promise<unknown>>()
+  globalThis.fetch = ((_url: string, init?: RequestInit) => {
+    const viec = (async () => {
+      const body = JSON.parse(String(init?.body ?? "null"))
+      sent.push(body)
+      const r = await fetchImpl(body)
+      return new Response(JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } })
+    })()
+    dangChay.add(viec)
+    void viec.finally(() => dangChay.delete(viec))
+    return viec
   }) as unknown as typeof fetch
   let lamMoi = 0
   const router = { refresh() { lamMoi++ }, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} }
@@ -196,6 +203,8 @@ async function renderSo(props: Record<string, unknown>, fetchImpl: (b: Record<st
   const press = async (el: Element | null | undefined, what: string) => {
     assert.ok(el, `không thấy ${what}`)
     await act(async () => { (el as HTMLElement).click() })
+    await tick()
+    while (dangChay.size) await act(async () => { await Promise.allSettled([...dangChay]) })
     await tick()
   }
   const openFor = (code: string) => press(row(code)?.querySelector('[aria-label="Khai thị trường, khu đô thị"]'), `nút khai hàng ${code}`)
