@@ -98,6 +98,13 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   xuất enrich, thẻ `enrich:`/`pair:`, `property_offers`, ứng viên ghép đã quyết sang tin kế (`superseded_by`); 6 khoá ngoại
   tới hai bảng là RESTRICT. Khoá S03/S05 «dính» (`pipeline/lib/offer-key.mjs`): nhóm repost thừa kế `offer_id` của tin
   chung nhiều post nhất, nhóm mới băm `'<S0x>|<post neo>'`; `originating_system_key` (RESO) cho S03/S05/S06 và listing.
+- Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`
+  (RESO extension `FieldAssertion`, chủ thể = khoá gốc từng post/list_id); hàm `resolve_offer_fields` dựng năm cột
+  `property_type`/`bedrooms`/`bathrooms`/`street_raw`/`block_raw` theo ba lớp căn cứ (sự thật › quan sát có trích dẫn ›
+  suy luận; thứ tự tạm trong lớp hitl › trường nguồn; parser › E1 › E2 › legacy — Mạnh đồng ý 26/10) kèm
+  `field_provenance`; suy luận không vào cột. Hết fill-gap và `ENRICH_COLS`; người (`hitl:`) thắng mọi phương pháp.
+  Cổng «chưa cắt chuyển» chặn phân xử tới khi `pipeline/phat-bieu-cat-chuyen.mjs` ghi giá trị có sẵn thành phát biểu
+  `legacy` (runtime-map «Phát biểu + phân xử»). Chỉ local.
   Thước `pipeline/scripts/nap-lai-ba-luot.mjs` (ba lượt, ma trận 7×2, đối chứng 039 / không chuyển). sync-cloud chép view
   sống, bảng con chỉ dòng có cha sống; cột mới ở lại máy.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
@@ -312,6 +319,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | G-2.5 | pHash ảnh — khi ảnh P1 nhiều hơn | ⬜ |
 | PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | ✅ PR #120 (migration 043 đã áp local; Supabase đã áp 26/10 — `docs/ops/cloud-schema-catchup-2026-10-26-043.sql`) |
 | PL14 | Nạp lại không xoá: bảng bản ghi + view sống (lối A, 044), khoá dính S03/S05, tin/listing nghỉ (`retired_at`) thay DELETE, 6 khoá ngoại RESTRICT, đối soát chuyển quyết định sang tin kế — `_acceptance/nap-lai-khong-xoa` | 🔶 vòng S4; sau merge: áp 044 lên DB local NGAY (launchd chạy code main); cloud không đổi lược đồ (`docs/ops/cloud-schema-catchup-2026-10-26.md`) |
+| PL15 | Bảng phát biểu chỉ-thêm + bộ phân xử ba lớp dựng năm cột phân loại kèm nguồn gốc, chạy lại ra y nguyên (045) — `_acceptance/phat-bieu-va-phan-xu` | 🔶 vòng S4; sau merge: áp 045 + `phat-bieu-cat-chuyen.mjs` trên DB local TRƯỚC lượt nạp đêm kế; cloud không đổi lược đồ |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

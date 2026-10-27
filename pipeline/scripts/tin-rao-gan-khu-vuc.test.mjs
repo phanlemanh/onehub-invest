@@ -7,6 +7,7 @@ import { join, relative } from "node:path";
 import { test } from "node:test";
 
 import pg from "pg";
+import { napPhatBieu } from "../lib/nap-045.mjs";
 
 import { docPhuongHopLe, ganPhuongTheoToaDo } from "../lib/osm.mjs";
 import { runTransformChotot } from "../transform-chotot.mjs";
@@ -35,6 +36,8 @@ async function withTx(fn) {
     await c.query("SELECT pg_advisory_xact_lock(33033)"); // cùng khoá với test-posts: transform S03/S05 không chạy song song
     // PL14: transform ghi bảng bản ghi của 044 — DB chưa áp thì nạp 044 trong giao dịch.
     if (!(await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
+    // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
+    await napPhatBieu(c);
     for (const [id, name] of [["vn-hanoi", "Hà Nội"], ["vn-hcmc", "TP. Hồ Chí Minh"]]) {
       await c.query(
         `INSERT INTO areas (id, region_type, name, country_code) VALUES ($1, 'market', $2, 'vn') ON CONFLICT (id) DO NOTHING`,

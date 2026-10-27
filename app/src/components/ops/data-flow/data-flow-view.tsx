@@ -16,6 +16,7 @@ import { QualityGrid } from "./quality-grid"
 import { groupRows, sourceRows } from "./quality-rows"
 import { RecordsGrid } from "./records-grid"
 import { StageTrendChart } from "./stage-trend-chart"
+import { chartDaysOf } from "./stage-trend-data"
 
 const WINDOWS: { value: FlowWindow; label: string }[] = [
   { value: "7d", label: "7 ngày" },
@@ -39,7 +40,7 @@ export function DataFlowView({
   /** Ảnh tin theo offer_id — chỉ có khi người xem là admin. */
   media?: Record<string, ReviewImage[]>
 }) {
-  const windowDays = flow.window === "7d" ? 7 : 30
+  const windowDays = chartDaysOf(flow.window)
   const received = flow.sources.reduce((a, s) => a + s.received, 0)
   return (
     <div className="flex flex-col gap-6">
@@ -69,7 +70,7 @@ export function DataFlowView({
       <QualityGrid bySource={sourceRows(flow, roles, nowMs)} byGroup={groupRows(flow, roles, nowMs)} />
       <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-12">
         <div className="flex min-w-0 xl:col-span-8">
-          <StageTrendChart sources={flow.sources} days={flow.days} windowDays={windowDays} />
+          <StageTrendChart sources={flow.sources} days={flow.days} nowMs={nowMs} windowDays={windowDays} />
         </div>
         <div className="flex min-w-0 xl:col-span-4">
           <KindMixChart mix={flow.mix} />

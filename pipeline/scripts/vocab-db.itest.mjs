@@ -18,6 +18,14 @@ const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = join(PIPE, "..");
 const MIG_GOC = readFileSync(join(ROOT, "db/migrations/043_ref_vocabulary.sql"), "utf8");
 const MIG050 = readFileSync(join(ROOT, "db/migrations/050_wanted_thanh_inquiry.sql"), "utf8");
+// 045 (PL15) nạp hai trục mới vào ref_* trong mục «4. Sổ từ vựng» — chỉ lấy đúng đoạn ấy (phần còn lại của 045 dựng bảng
+// phát biểu, đã có trên DB khi ci-db-init dựng từ migration).
+const MIG045_REF = (() => {
+  const t = readFileSync(join(ROOT, "db/migrations/045_phat_bieu_va_phan_xu.sql"), "utf8");
+  const i = t.indexOf("INSERT INTO ref_lookup"), j = t.indexOf("-- 5. ", i);
+  if (i < 0 || j < 0) throw new Error("045: không tìm thấy đoạn nạp ref_* (mục 4)");
+  return t.slice(i, j);
+})();
 // PL14 (044) đổi sale_offers thành VIEW sống: áp lại 043 trên DB đã có 044 thì nhắm bảng bản ghi (dựng DB mới vẫn chạy
 // 043 nguyên văn theo thứ tự). MIG được gán trong before() khi đã biết trạng thái DB.
 let MIG = MIG_GOC;
@@ -33,8 +41,8 @@ const CHK_025 = {
 };
 
 let c;
-/** Sổ hiện tại = 043 rồi 050. */
-const apMig = async () => { await c.query(MIG); await c.query(MIG050); };
+/** Sổ hiện tại = 043, đoạn ref_* của 045, rồi 050. */
+const apMig = async () => { await c.query(MIG); await c.query(MIG045_REF); await c.query(MIG050); };
 before(async () => {
   c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
@@ -202,6 +210,7 @@ test("VD-IQ-3 050 sau 043: wanted → inquiry «Yêu cầu», sổ khớp, các 
   await trongGiaoDich(async () => {
     await tienDe();
     await c.query(MIG);
+    await c.query(MIG045_REF);
     const lech = (await checkDb(c, REG)).map((x) => x.msg).join("\n");
     assert.ok(lech.includes("inquiry"), `043 một mình phải lệch sổ ở inquiry: ${lech}`);
     const truocTruc = await demTruc();

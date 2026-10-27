@@ -1,0 +1,64 @@
+schema_version: 1
+feature_slug: df0-chang-theo-ngay-diem-0
+# Ca test mang tiền tố «CN-AC-n» trong app/tests/df0-chang-theo-ngay.test.tsx (thuần + jsdom, không DB). Ma trận mẫu
+# ngày viết trước; chiều đỏ là thuật toán cũ (ngày có số, sắp, cắt đuôi) chạy trên CÙNG ma trận, thông điệp ghim tên mẫu.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.chang_ngay
+    paths: [app/src/components/ops/data-flow/stage-trend-data.ts, app/tests/df0-chang-theo-ngay.test.tsx]
+    expected: "exit 0; ca 'CN-AC-1 đủ ngày' xanh: ma trận viết trước 4 mẫu (lỗ giữa cửa sổ; im ba ngày cuối; hai nguồn cùng một ngày; chỉ một ngày có số), mỗi mẫu so TRỌN chuỗi 7 khoá ngày VN liên tiếp kết thúc ở ngày VN của nowMs và số bốn chặng từng điểm với bảng mong đợi viết trước (ngày không số = 0); chiều đỏ cùng ca: thuật toán cũ trên mẫu 'lỗ giữa' ra ít hơn 7 điểm → ca đỏ 'mẫu lỗ giữa: thiếu ngày'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.chang_ngay
+    paths: [app/src/components/ops/data-flow/stage-trend-data.ts, app/tests/df0-chang-theo-ngay.test.tsx]
+    expected: "exit 0; ca 'CN-AC-2 không lấy ngày ngoài cửa sổ' xanh: mẫu chỉ có số ở các ngày 10–12 ngày trước nowMs → 7 điểm đều 0 và không khoá nào nằm ngoài cửa sổ; chiều đỏ cùng ca: thuật toán cũ trên cùng mẫu trả khoá ngày ngoài cửa sổ → ca đỏ 'mẫu số cũ: ngày ngoài cửa sổ lọt vào'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.chang_ngay
+    paths: [app/src/components/ops/data-flow/stage-trend-data.ts, app/tests/df0-chang-theo-ngay.test.tsx]
+    expected: "exit 0; ca 'CN-AC-3 ranh giới giờ VN' xanh: nowMs = 2026-10-26T16:59:59Z → ngày cuối '2026-10-26'; nowMs = 2026-10-26T17:00:00Z → ngày cuối '2026-10-27' (cùng ngày UTC, khác ngày VN); chiều đỏ cùng ca: khoá ngày tính theo UTC (toISOString().slice(0,10)) cho ngày cuối '2026-10-26' ở mốc 17:00:00Z → khác"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.chang_ngay
+    paths: [app/src/components/ops/data-flow/stage-trend-data.ts, app/tests/df0-chang-theo-ngay.test.tsx]
+    expected: "exit 0; ca 'CN-AC-4 độ dài cửa sổ' xanh: cùng dữ liệu, windowDays 7 → 7 điểm, 30 → 30 điểm; mỗi chuỗi khoá ngày liên tiếp (mỗi khoá cách khoá trước đúng một ngày lịch), không trùng, ngày cuối = ngày VN của nowMs"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.chang_ngay
+    paths: [app/src/components/ops/data-flow/stage-trend-chart.tsx, app/src/components/ops/data-flow/stage-trend-data.ts, app/tests/df0-chang-theo-ngay.test.tsx]
+    expected: "exit 0; ca 'CN-AC-5 trạng thái trống' xanh: dựng StageTrendChart (jsdom) với days rỗng và với days chỉ có số ngoài cửa sổ → có câu «Chưa có số theo ngày trong khoảng này.»; đối chứng dương cùng ca: days có một ngày trong cửa sổ có số → không có câu đó"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: judgment
+    inputs: [app/src/app/ops/data-flow/page.tsx, app/src/components/ops/data-flow/data-flow-view.tsx, app/src/components/ops/data-flow/stage-trend-chart.tsx]
+    question: "Trong page.tsx, có đúng một biến mốc request được truyền cho cả getDataFlow (opts.now) lẫn prop nowMs của DataFlowView không; trong data-flow-view.tsx, StageTrendChart có nhận đúng nowMs đó; và trong stage-trend-chart.tsx dữ liệu biểu đồ có được dựng từ dailySeries(days, nowMs, …) thay vì từ danh sách các ngày có số (sort rồi slice) không?"
+    evidence_required: [verdict, rationale, votes]
+  - id: E7
+    criterion: AC-7
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/data-flow/stage-trend-chart.tsx, app/src/components/ops/data-flow/stage-trend-data.ts, app/src/components/ops/data-flow/data-flow-view.tsx]
+    steps:
+      - "Bản chạy: dev server đang chạy từ worktree của dãy U2 (thư mục làm việc của phiên chấm; cấu hình tên «app-3461» trong .claude/launch.json — cổng thực tế đọc từ preview_list hoặc thử 3461 rồi 3462, chỉ nhận cổng mà trang /ops/data-flow có khung «Chặng theo ngày»), đăng nhập bằng tài khoản thử admin của scripts/dev-ops-account.mjs (mật khẩu trong .claude/ops-test-account.json, không in); không có bản chạy thì FAIL với 'bản chạy không lên'"
+      - "1280 px sáng: /ops/data-flow?window=30d, cuộn tới khung «Chặng theo ngày» → evidence/E7-step1.png; ghi nhãn ngày đầu và cuối trục; rê chuột lên điểm đầu trục và lên vài điểm sớm của trục (tooltip) → evidence/E7-step2.png, ghi các ngày có tooltip 0 ở cả bốn chặng (nếu không có ngày nào như vậy thì ghi rõ «không có ngày im trong cửa sổ»)"
+      - "1280 px sáng: /ops/data-flow (7 ngày), cùng khung → evidence/E7-step3.png; đếm nhãn ngày"
+    expected: "Cửa sổ 30 ngày: nhãn ngày đầu trục là 29 ngày trước hôm nay giờ VN, nhãn cuối là hôm nay giờ VN; mỗi ngày có tooltip 0 ở cả bốn chặng thì đường diện tích nằm sát trục ở ngày đó (không có ngày như vậy thì chỉ chấm nhãn đầu/cuối và ghi rõ); cửa sổ 7 ngày: đúng 7 nhãn ngày liên tiếp, ngày cuối là hôm nay giờ VN."
+    evidence_required: [run_id, verdict, screenshot, observed]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.chang_ngay
+    paths: [app/src/components/ops/data-flow/stage-trend-data.ts, app/src/components/ops/data-flow/data-flow-view.tsx, app/tests/df0-chang-theo-ngay.test.tsx]
+    expected: "exit 0; ca 'CN-AC-8 mọi cửa sổ' xanh: danh sách cửa sổ rút bằng parseFlowWindow trên mọi giá trị nó nhận ('7d', '30d', 'all') cộng một giá trị lạ (rơi về mặc định) — chartDaysOf ra {7d: 7, 30d: 30, all: 30} so trọn bảng viết trước, và dailySeries với số đó ra đúng chừng ấy điểm; chiều đỏ cùng ca: chartDaysOf đột biến trả null cho 'all' → dailySeries ra 0 điểm, ca đỏ 'cửa sổ Tất cả: 0 điểm'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

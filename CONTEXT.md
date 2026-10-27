@@ -117,6 +117,22 @@ _Avoid_: «Đạt» (cho kiểm này), độ phủ đạt
 - Nhãn số lần đăng trên thẻ: «đăng 1 lần», «đăng n lần» (`repostLabel`)
 _Avoid_: tin nghi ngờ, tin ảo, «mới» (để chỉ tin chưa đăng lại)
 
+**Phát biểu**: Một lời khai về một trường của một tin: giá trị + lớp căn cứ + phương pháp + bằng chứng + ai/khi nào. Chỉ thêm, không sửa, không xoá; rút một phát biểu là đặt lúc rút + lý do (PL15, review phân loại §3.4).
+- Code: `field_assertions` · RESO: extension `FieldAssertion` (khuôn HistoryTransactional, ADR-0013 §6)
+_Avoid_: assertion, claim
+
+**Lớp căn cứ**: Thang ba lớp của phát biểu: sự thật (người quyết, trường có cấu trúc của nguồn) › quan sát có trích dẫn (bộ đọc tin, luật, LLM có trích) › suy luận (ngữ cảnh, không trích). Suy luận không bao giờ tự vào cột.
+- Code: `evidence_tier` · RESO: không có — extension local
+_Avoid_: confidence, bậc H0–H5
+
+**Phân xử**: Hàm xác định gom các phát biểu còn hiệu lực của mọi bài trong một tin thành giá trị năm cột loại hình, phòng ngủ, WC, đường, toà. Lớp cao nhất thắng; trong lớp theo thứ tự tạm của phương pháp; bất đồng thì gắn cờ. Xoá cột rồi phân xử lại ra y nguyên.
+- Code: `resolve_offer_fields` · RESO: không có — bộ phân xử local
+_Avoid_: fill-gap, ghi đè
+
+**Nguồn gốc**: Ô nào của tin lấy từ phát biểu nào: lớp, phương pháp, id phát biểu, cờ bất đồng, «chưa đo». Chỉ ở máy local (chưa lên cloud).
+- Code: `field_provenance` · RESO: `*Source` khi field có (năm trường này không có)
+_Avoid_: provenance (trên UI)
+
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 _Avoid_: chủ nhà, broker
@@ -265,7 +281,9 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Loại hình | `property_type` | PropertySubType | `sale_offers.property_type`, `properties.property_type` | `apartment` «Căn hộ» · `house` «Nhà riêng» · `land` «Đất» · `room` «Phòng» · `commercial` «Mặt bằng» · `unknown` «Chưa rõ» |
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
-| Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
+| Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field`, `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
+| Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
+| Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» |
 | Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |

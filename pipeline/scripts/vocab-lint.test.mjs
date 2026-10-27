@@ -152,6 +152,7 @@ const DOC_HANG_SINH = [
 // Tập ngoại lệ ghim ở contract AC-5 (path|axis) — so tập, không thừa không thiếu.
 const NGOAI_LE = [
   "app/src/components/ops/review-card.tsx|enrich_field",
+  "app/src/components/ops/review-card.tsx|assertion_method",   // PL15: nhãn nguồn đề xuất enrich, cùng tệp — dọn ở PL23
   "pipeline/scripts/bench-gate.mjs|kind",
   "pipeline/scripts/bench-extraction.mjs|kind",
   "pipeline/sql/500_asset_stats.sql|confidence",

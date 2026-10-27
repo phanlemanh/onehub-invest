@@ -16,6 +16,7 @@ import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe } from "./lib/osm.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
+import { phatBieuPhongNgu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
 
 /** Nhóm Facebook "MUA BÁN…" mặc định là rao BÁN: môi giới không lặp chữ
@@ -126,7 +127,7 @@ export async function runTransformFb(client, { parse = parsePost } = {}) {
       : null;
     rows.push({
       offer_id: o.offerId, originating_system_key: o.osk, area_id: o.areaId, kind: o.kind, price_vnd: o.priceVnd,
-      area_m2: o.areaM2, price_perm2: o.pricePerm2, bedrooms: o.bedrooms, phuong_raw: o.phuongRaw,
+      area_m2: o.areaM2, price_perm2: o.pricePerm2, phuong_raw: o.phuongRaw,
       confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
       n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_name: o.senderName,
       seller_phone: o.phone, seller_phone_hash: phoneHash, seller_ref: o.authorHash,
@@ -138,7 +139,8 @@ export async function runTransformFb(client, { parse = parsePost } = {}) {
     }
   }
   await auditRejected(client, "S05", rejected);
-  const { reconcile } = await writeOffers(client, "S05", rows);
+  // PL15: phòng ngủ đi qua phát biểu (mỗi post một), năm cột do bộ phân xử dựng — không ghi thẳng.
+  const { reconcile } = await writeOffers(client, "S05", rows, { assertions: phatBieuPhongNgu("S05", nhom, "transform-fb@045") });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`S05 offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
   return { offers: rows.length, rejected, reconcile };
