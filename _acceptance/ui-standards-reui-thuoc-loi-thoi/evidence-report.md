@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 418eb12c7361c996ce8e917e0d033d439cf03d51
+verified_commit: f9d5904ebcbdeba1dd81be5b1a89237d2f6d0a3e
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -112,3 +112,7 @@ none — mọi eval chạy một lần, xác định (runs: 1); không có pass_
 ## Iterations
 
 Round 1: E1, E2, E3, E4 đều đạt; sáu lệnh suite xanh. Baseline không đo được (hạ tầng chặn). Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-27, do ghim lại sau gộp main vào #162
+run_id: repin-20261027T064650Z-97189
+sha: f9d5904ebcbdeba1dd81be5b1a89237d2f6d0a3e · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng

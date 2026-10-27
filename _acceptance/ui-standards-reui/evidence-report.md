@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 94e8dee93a9f7fffef89981f45d40241d08cefa3
+verified_commit: f9d5904ebcbdeba1dd81be5b1a89237d2f6d0a3e
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -218,3 +218,7 @@ sha: e8df8884dbc412061421845f9b5961b74f25e275 · suites: 2 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-27, do ui-standards-reui-thuoc-loi-thoi: E12 thay bởi #AC-2 (đã ký), thước baseline-guard sửa
 run_id: repin-20261027T064351Z-37781
 sha: 94e8dee93a9f7fffef89981f45d40241d08cefa3 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E12 · thay bởi hồ sơ đã ký: E12→ui-standards-reui-thuoc-loi-thoi#AC-2 · AC không có chốt máy: AC-10
+
+### Re-pin lần 3 — 2026-10-27, do ghim lại sau gộp main vào #162
+run_id: repin-20261027T064650Z-97189
+sha: f9d5904ebcbdeba1dd81be5b1a89237d2f6d0a3e · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E12 · thay bởi hồ sơ đã ký: E12→ui-standards-reui-thuoc-loi-thoi#AC-2 · AC không có chốt máy: AC-10
