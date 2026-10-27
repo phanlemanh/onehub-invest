@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: test-nen-on22-on12
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.tn_dinh_ket_noi
+    paths: [app/package.json, "app/tests/**", _acceptance/test-nen-on22-on12/probes/dinh-ket-noi.mjs]
+    long_running: 15
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'script test co --test-concurrency=8'; 'mot luot app: dinh rieng <r> ket noi, tests <t> fail 0, thu lai 0' với 5 ≤ r ≤ 40 (đếm theo application_name của chính lượt); 'mot luot pipeline: dinh rieng <q> ket noi, tests <u> fail 0'; 'suy hai luot app + pipeline + nen 10: <s> / 100' với s ≤ 100; cuối 'DINH KET NOI OK'; should-NOT-fire: không 'VUOT DINH', 'LUOT APP DO', 'LUOT PIPELINE DO', 'THU LAI TRONG LUOT DON', 'THIEU CONCURRENCY', 'DO KHONG BAT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.tn_thu_lai
+    paths: [app/tests/helpers/db-tam-thoi.ts, app/tests/db-tam-thoi.test.tsx, _acceptance/test-nen-on22-on12/probes/thu-lai.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ban sua: <k>/<k> ca xanh' với k ≥ 4; 'ban bo 53300: ca do, thong diep ghim co'; cuối 'THU LAI OK'; should-NOT-fire: không 'CA KHONG DO', 'DOT BIEN KHONG AP DUOC'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.tn_cau_truc
+    paths: [app/tests/ops-nhan-ma-nguon.test.tsx, app/tests/ops-nhan-theo-context.test.tsx, app/tests/ops-facts-so-tong-hop.test.tsx, app/tests/helpers/db-tam-thoi.ts, _acceptance/test-nen-on22-on12/probes/cau-truc.mjs]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; với ON7-AC-2 và ON12-AC-7 mỗi ca hai dòng 'ok <ca>: cham DB qua thu lai (tiem 53300 mot lan → xanh, co dong thu lai)' và 'ok <ca>: tiem 53300 mai mai → do, thong diep neu 53300'; 'doi chung: ca khong boc (ON7-AC-6 (a)) + tiem 53300 mot lan → do'; 'ok ON22-AC-5: ben ghi thu lai theo laLoiBenGhiTam'; 'ok ON22-AC-5: kiem ma ben ghi truoc payload'; cuối 'CAU TRUC OK'; should-NOT-fire: không 'THIEU THU LAI', 'THU LAI CHE LOI', 'DOI CHUNG KHONG DO', 'DOC PAYLOAD TRUOC KHI KIEM MA'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.tn_ct_cham
+    paths: [app/tests/cong-tac-nhom-go.test.tsx, app/src/app/api/v1/ops/source-groups/route.ts, app/src/lib/audit.ts, _acceptance/test-nen-on22-on12/probes/ct-cham.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'tre 400ms co cho: xanh'; 'tre duoc chen: <n> lan' với n ≥ 3; 'ghi nen 400ms: do, thong diep «mot dong nhat ky»'; cuối 'CT CHAM OK'; should-NOT-fire: không 'DOI CHUNG KHONG DO', 'BAN SUA DO', 'TRE KHONG CHEN'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.tn_lap
+    paths: ["app/tests/**", app/package.json, _acceptance/test-nen-on22-on12/probes/lap.sh]
+    long_running: 15
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; sáu dòng 'lan <n>: tests <t> pass <t> fail 0 · thu lai 0' với t bằng nhau; cuối 'LAP 6 LAN XANH'; should-NOT-fire: không 'CAY BAN', 'SO CA LECH', 'THU LAI TRONG LUOT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.tn_pham_vi
+    paths: ["app/tests/**", app/package.json, "app/src/**", _acceptance/test-nen-on22-on12/probes/pham-vi.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'app/package.json chi doi dong test'; mọi tệp đổi 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI', 'DOI APP SRC', 'PACKAGE DOI NGOAI SCRIPT TEST'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -388,6 +388,13 @@ executors:
     amp_qua_phut: "bash _acceptance/audit-all-test-moc-phut/probes/qua-phut.sh"
     amp_lap: "bash _acceptance/audit-all-test-moc-phut/probes/lap.sh"
     amp_pham_vi: "bash _acceptance/audit-all-test-moc-phut/probes/pham-vi.sh"
+    # test-nen-on22-on12 — đo đỉnh kết nối chỉ đọc pg_stat_activity; bản sao test ở app/node_modules/.tn-*; lược đồ tạm như suite
+    tn_dinh_ket_noi: "node _acceptance/test-nen-on22-on12/probes/dinh-ket-noi.mjs"
+    tn_thu_lai: "bash _acceptance/test-nen-on22-on12/probes/thu-lai.sh"
+    tn_cau_truc: "node _acceptance/test-nen-on22-on12/probes/cau-truc.mjs"
+    tn_ct_cham: "bash _acceptance/test-nen-on22-on12/probes/ct-cham.sh"
+    tn_lap: "bash _acceptance/test-nen-on22-on12/probes/lap.sh"
+    tn_pham_vi: "bash _acceptance/test-nen-on22-on12/probes/pham-vi.sh"
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
