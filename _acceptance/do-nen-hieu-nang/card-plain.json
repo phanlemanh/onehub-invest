@@ -1,0 +1,27 @@
+{
+  "feature_plain": "Có một bộ số nền về tốc độ của 5 trang chính và các truy vấn DB chậm nhất, đo trên bản build thật ở máy local, để sau này đặt ngưỡng chống chậm đi. Ngưỡng ở hàng này mới là đề xuất, chờ anh quyết.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ chứng DB local đã bật bộ đếm truy vấn và nâng giới hạn 200 kết nối, bản sao lưu chụp trước khi khởi động lại còn đọc được và khớp băm, tệp compose không bị đổi."},
+    {"id": "AC-2", "p": "Sẽ đo 5 trang (3 Invest, 2 Ops), mỗi trang 20 lượt, chỉ tính lượt ra đúng trang. Trang Ops đăng nhập bằng một tài khoản đo riêng, không đụng tài khoản ops thử của các phiên khác."},
+    {"id": "AC-3", "p": "Sẽ ghi bảng tốc độ 5 trang và hai danh sách 10 truy vấn chậm nhất vào tài liệu nghiên cứu, khớp từng số với tệp đo. Máy kiểm thêm rằng cửa sổ đo chỉ gồm lượt đo này và danh sách xếp đúng."},
+    {"id": "AC-4", "p": "Sẽ nêu 5 bảng lớn mất bộ đếm thống kê, kèm gốc và ảnh hưởng thật: planner vẫn có ước lượng đúng, nhưng bảng nights phình khoảng 50 lần."},
+    {"id": "AC-5", "p": "Sẽ để ngưỡng ở một mục «Đề xuất» riêng chờ anh quyết, không sửa luật nào, và không để lọt tên nguồn thật vào tệp nào trên nhánh."},
+    {"id": "AC-6", "p": "Sẽ chỉ đổi script đo, tài liệu nghiên cứu, hồ sơ và cấu hình của hàng này."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG đưa ngưỡng vào luật: đó là quyết định của anh sau khi đọc số."},
+    {"id": "OOS-2", "p": "KHÔNG ANALYZE, dọn phình bảng nights hay xoá lược đồ test sót ở hàng này: đổi những thứ đó là đổi chính nền đang đo."},
+    {"id": "OOS-3", "p": "KHÔNG chuyển dữ liệu DB vào volume, KHÔNG sửa tệp compose: đó là hàng riêng giám sát trình anh."},
+    {"id": "OOS-4", "p": "KHÔNG đo tải nhiều người cùng lúc."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Không quét hình thái vì câu giao đã nêu đúng phép đo. Sáu trục: hạ tầng đo (AC-1), đo trang (AC-2), số trong tài liệu khớp số đo (AC-3), thống kê bảng (AC-4), không đặt luật và không lộ tên nguồn (AC-5), phạm vi tệp (AC-6). Mỗi trục có một đầu dò chạy hai chiều: xanh trên bản thật, đỏ trên bản bị làm sai."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Chọn đo «thời gian tải» bằng HTML phía server, và chọn 5 trang nào, là việc của anh chứ không phải của máy, vì ngưỡng sẽ đặt trên chính thước này. Đã chuyển thành câu Hỏi-1 trên thẻ."},
+    {"i": 1, "p": "Lần đo trước xoay mật khẩu tài khoản ops thử dùng chung, làm hỏng đăng nhập của phiên khác. Đã chuyển sang tài khoản đo riêng; đầu dò kiểm mật khẩu tài khoản chung không đổi."},
+    {"i": 2, "p": "Danh sách 10 truy vấn chưa được kiểm phía sinh số. Đã thêm kiểm mốc reset, thứ tự và số lần gọi, kèm hai bản làm sai phải đỏ."},
+    {"i": 3, "p": "Phép kiểm bảng thiếu thống kê đọc DB sống, nên sau đêm nạp sẽ co lại. Đã chuyển sang ảnh chụp lúc đo, và kiểm luôn kết luận «planner không mù»."},
+    {"i": 4, "p": "Bộ quét tên nguồn thật mới chỉ quét tài liệu. Đã mở ra mọi dòng nhánh thêm ở mọi tệp, kèm bản làm sai phải bắt được."}
+  ]
+}
