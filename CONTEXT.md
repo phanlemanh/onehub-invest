@@ -77,7 +77,7 @@ _Avoid_: master data, MDM
 - Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
-**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn. Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
+**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn; là bên bán, đối xứng với **Yêu cầu** (bên mua). Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
 - Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
 - Slug URL: `listings` · `listing`
 - Tiếng Việt: «tin» là cách gọi thường của listing; trên UI «Tin» là nhãn ngắn khi chỗ đó chỉ có một loại listing (cột bảng tin, thẻ duyệt «Tin A» / «Tin B»).
@@ -94,8 +94,15 @@ _Avoid_: tin đăng, offer, rao vặt, sale offer
 - Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».
 _Avoid_: chỗ ở, phòng cho thuê, homestay
 
-**Yêu cầu mua**: Bài hay tin của người đang cần mua (hoặc thuê) — không phải listing, không gắn căn; giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8). Một giá trị của «Ý định tin».
-- Code: `listing_intent = inquiry` (đổi từ `wanted` — Mạnh chốt 27/10, vòng U1 đang làm; tới khi xong, sổ từ vựng dưới còn ghi `wanted` «Tin tìm mua, tìm thuê») · RESO: không phải resource Property; gần nhất SavedSearch
+**Yêu cầu**: Một nhu cầu cần mua hoặc cần thuê — bên mua, đối xứng với **listing** bên bán (Mạnh chốt 27/10). Dịch vụ ở `kind` cùng bộ mã với listing (`sale` = mua · `rent_lt` = thuê dài hạn · `rent_st` = thuê ngắn hạn, nhãn theo phía), loại hình ở `property_type` (cùng sổ), giá là khoảng ngân sách. Không gắn một căn mà gắn tiêu chí (khu vực, loại hình, số PN, ngân sách), khớp được với nhiều listing. Hiện mới là một giá trị của «Ý định tin»: bài cần mua, cần thuê giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8); bảng lưu yêu cầu và ghép với listing là tính năng sau, cần số đo trước (luật 11).
+- Code: `listing_intent = inquiry` · RESO: không có bản ghi ngang hàng `Property` — gần nhất SavedSearch (tiêu chí người mua); local extension dùng lại trường RESO phía bán
+_Avoid_: tin tìm mua, wanted
+
+**Yêu cầu mua**: Yêu cầu có `kind = sale`.
+- Code: `kind = sale` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType ∈ Residential, Land
+
+**Yêu cầu thuê**: Yêu cầu có `kind` ∈ `rent_lt`, `rent_st`.
+- Code: `kind = rent_lt | rent_st` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType = ResidentialLease
 
 **Tin bán**: Tin rao có `kind = sale`.
 - Code: `kind = sale` · RESO: PropertyType ∈ Residential, Land, ResidentialIncome
@@ -294,7 +301,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field`, `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
 | Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» |
-| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `wanted` «Tin tìm mua, tìm thuê» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
+| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |

@@ -23,6 +23,7 @@ export const HO_SO = {
     },
     { path: "docs/ops/cloud-schema-catchup-2026-10-26-044.sql" },
   ],
+  "wanted-thanh-inquiry": [{ path: "docs/ops/cloud-schema-catchup-2026-10-27-050.sql" }],
 };
 
 const GHI = /\b(ALTER|CREATE|DROP|INSERT|UPDATE|DELETE|TRUNCATE|GRANT|REVOKE)\b/i;

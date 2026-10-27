@@ -113,7 +113,7 @@ thêm `dd_version` cho từng field. Cách tra: bản JSON máy đọc của RES
 | `PriceBasis` (thu về · NET · gồm phí) | Gần nhất `ListingAgreement=Net`, không trùng nghĩa |
 | `FieldAssertion` (resource) | DD có `*Source` từng field nhưng không có phát biểu nhiều nguồn; RCP-50 Data Provenance còn là đề xuất |
 | `DataLevel` (B0–B5), `CapabilityLevel` (N0–N4) | Thang bậc FRAMING §3.4 |
-| `ListingIntent` (offer · wanted · not_listing) | Tin «tìm mua/thuê» không phải `Property`; gần nhất `SavedSearch` |
+| `ListingIntent` (offer · inquiry · not_listing) | Yêu cầu (bên mua: tìm mua/thuê) không phải `Property`; gần nhất `SavedSearch` |
 | `room` (phòng trọ) | Đã khai từ 025 |
 | UPI kiểu VN (`urn:onehub:upi`) | UPI chuẩn cần số thửa công khai |
 

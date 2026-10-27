@@ -2,7 +2,7 @@
 
 // chuyển thể từ @reui/solution-dev-ops-6 (sync-activity.tsx): cột chồng theo thời gian
 // + chú giải + nút chọn chế độ. Khác bản gốc: trục là 7 NGÀY (không phải 24 giờ — dữ liệu
-// luồng tính theo ngày), hai chế độ Listing / Tin Zalo; bỏ hoa văn cột trống và thẻ docked.
+// luồng tính theo ngày), hai chế độ Listing / S03 (bài thô + tin rao); bỏ hoa văn cột trống và thẻ docked.
 import { useState } from "react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 
@@ -21,7 +21,7 @@ import { SectionHeader } from "./section"
 type Mode = "listings" | "zalo"
 const modesOf = (roles: SourceRoles): { value: Mode; label: string }[] => [
   { value: "listings", label: "Listing" },
-  { value: "zalo", label: `Tin ${sourceLabel("S03", roles)}` },
+  { value: "zalo", label: sourceLabel("S03", roles) },
 ]
 // ON6 (luật 5): tab Listing chỉ đếm tự thu — không chuỗi S02.
 export const SERIES: Record<Mode, (keyof FlowDay)[]> = {

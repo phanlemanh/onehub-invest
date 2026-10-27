@@ -280,7 +280,8 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    ngắn hạn»; `docs/audit/2026-10-27-tu-ngu-tin-listing.md`): listing = resource `Property` (bán · thuê dài hạn · thuê ngắn
    hạn); dịch vụ ở `kind` (`sale` · `rent_lt` · `rent_st`), loại hình ở `property_type`; nhiều listing trỏ về một căn (UPI).
    Tin rao = listing bán + thuê dài hạn; listing thuê ngắn hạn = Airbnb tự thu (lịch đêm, ADR là extension). Trục
-   `listing_intent` giữ tên; giá trị `wanted` → `inquiry` «Yêu cầu mua» (Mạnh 27/10). Hai bảng `sale_offers` + `listings`
+   `listing_intent` giữ tên; giá trị `wanted` → `inquiry` «Yêu cầu» (Mạnh 27/10; yêu cầu là bên mua, đối xứng
+   với listing bên bán; loại con Yêu cầu mua / Yêu cầu thuê theo `kind`; migration 050). Hai bảng `sale_offers` + `listings`
    gộp về một khái niệm listing (đổi tên bảng, nhãn UI «Listing» đang chỉ Airbnb) ở hàng tái cấu trúc riêng, khi các dãy
    khép. Chữ prompt LLM chỉ đổi khi có bench.
 22. **Danh bạ vật thể và người** (27/10, Mạnh duyệt «khung đã sửa ba điểm, theo các mặc định»; **ADR-0016**, sửa ADR-0013
