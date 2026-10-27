@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { nguoiTuRequest, type User, type Vai } from "./auth";
+import type { User, Vai } from "./auth";
 
 /**
  * Luật quyền Ops ở MỘT chỗ (TV1 `quyen-bon-vai-mot-cho`, docs/research/ops-tu-van-hanh-nguon-saas.md §3.5) — ĐÓNG MẶC ĐỊNH.
@@ -81,12 +80,14 @@ export async function kiemQuyen(
 ): Promise<{ ok: true; nguoi: User | null; actor: string } | { ok: false; res: Response }> {
   const luat = QUYEN_OPS[hd];
   if (luat.bearer && bearerKhop(req)) return { ok: true, nguoi: null, actor: ACTOR_BEARER };
+  // Nạp auth muộn: tệp này phải nạp được bằng node thuần (scripts/check-portal-compliance.mjs chạy thật canAccessOps).
+  const { nguoiTuRequest } = await import("./auth");
   const nguoi = await nguoiTuRequest(req);
   // Bearer chung khớp ở hành động cấm bearer, không kèm phiên: máy đã xưng danh nhưng không được làm → 403.
-  if (!nguoi && bearerKhop(req)) return { ok: false, res: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
-  if (!nguoi) return { ok: false, res: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
+  if (!nguoi && bearerKhop(req)) return { ok: false, res: Response.json({ error: "forbidden" }, { status: 403 }) };
+  if (!nguoi) return { ok: false, res: Response.json({ error: "unauthorized" }, { status: 401 }) };
   if (BAC_VAI[vaiHieuLuc(nguoi)] < BAC_VAI[luat.vai]) {
-    return { ok: false, res: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
+    return { ok: false, res: Response.json({ error: "forbidden" }, { status: 403 }) };
   }
   return { ok: true, nguoi, actor: `user:${nguoi.id}` };
 }
