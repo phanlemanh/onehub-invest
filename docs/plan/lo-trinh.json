@@ -2324,6 +2324,93 @@
         "C4"
       ],
       "ghi_chu": "Phần UI của PL9 gộp vào đây (Mạnh 26/10, lát OCP1 X3): PL9 ghi số độ đúng, C4 hiện. Chung tệp /ops/quality với ON9, ON10, ON12 — chạy tuần tự."
+    },
+    {
+      "ma": "DF1",
+      "cau_giao": "Người vận hành mở /ops/data-flow trên cloud và thấy số chặng bài → tin rao → căn theo nguồn và số tin từng bậc, cùng số với máy thu, không còn khung «Chỉ xem ở máy thu»",
+      "vai": "Người vận hành",
+      "tieu_chi": 10,
+      "vi_sao": "Mạnh chốt 27/10 đội vận hành làm qua cloud; trang hôm nay đọc bảng nạp thô nên trên cloud chỉ có khung chỉ-máy-thu. Số tính sẵn ở pipeline (luật 10), một định nghĩa cho cả Thu thập lẫn Dòng chảy; cloud chỉ nhận số tổng hợp qua push-ops-facts như khối Luồng 7 ngày.",
+      "hang": "T3",
+      "slug": "dong-chay-len-cloud",
+      "bat_khi": "Mở /ops/data-flow trên prod thấy số chặng, không còn khung chỉ máy thu; số chặng trên cloud bằng bản máy thu cùng mốc; leak gate xanh, không bảng thô nào lên cloud",
+      "nhom": "df-dong-chay",
+      "dot": "dong-chay-2710",
+      "phu": [
+        "DF1"
+      ]
+    },
+    {
+      "ma": "DF2",
+      "cau_giao": "Người vận hành mở hồ sơ một tin và thấy thẻ điểm tin — độ chắc, lượng bằng chứng, cờ phi lý — cùng điều kiện còn thiếu để tin lên bậc kế",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "vi_sao": "Mạnh hỏi «thiếu gì để lên cấp» (design §1.2, §1.4, §3.3); điều kiện lên bậc là luật thuần đọc trên định nghĩa bậc DF1 tính sẵn.",
+      "hang": "T2",
+      "slug": "the-diem-tin",
+      "dung_tren": [
+        "DF1"
+      ],
+      "bat_khi": "Mỗi tin có thẻ điểm; điều kiện lên bậc khớp bậc DF1 tính sẵn ở mọi ô của ma trận viết trước",
+      "nhom": "df-dong-chay",
+      "dot": "dong-chay-2710",
+      "phu": [
+        "DF2"
+      ]
+    },
+    {
+      "ma": "DF3",
+      "cau_giao": "Người vận hành thấy bảng chặn bậc: mỗi nút thắt bao nhiêu tin đang kẹt và vài tin mẫu, bấm vào thì mở hồ sơ tin",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "Biến điều kiện lên bậc (DF2) thành thước ưu tiên: nút thắt nào chặn nhiều tin nhất làm trước.",
+      "hang": "T2",
+      "slug": "bang-chan-bac",
+      "dung_tren": [
+        "DF2"
+      ],
+      "bat_khi": "Tổng tin kẹt theo nút thắt bằng số tin dưới bậc đích; tin mẫu thuộc đúng nút thắt",
+      "nhom": "df-dong-chay",
+      "dot": "dong-chay-2710",
+      "phu": [
+        "DF3"
+      ]
+    },
+    {
+      "ma": "DF4",
+      "cau_giao": "Người vận hành thấy lăng kính nguyên tắc T1–T8 trên dòng chảy: mỗi nguyên tắc đo ở chặng nào và đang đạt bao nhiêu, ba nguyên tắc chưa đo được ghi rõ hàng sẽ đo",
+      "vai": "Người vận hành",
+      "tieu_chi": 8,
+      "vi_sao": "Mạnh hỏi nguyên tắc đã đóng gói phản ánh qua dòng chảy thế nào (design §1.1); đọc trên số chặng DF1 tính sẵn.",
+      "hang": "T2",
+      "slug": "lang-kinh-nguyen-tac",
+      "dung_tren": [
+        "DF1"
+      ],
+      "bat_khi": "Đủ tám dòng T1–T8; năm dòng có số từ khối DF1; ba dòng «chưa đo được» trỏ PL7, PL9, PL15",
+      "nhom": "df-dong-chay",
+      "dot": "dong-chay-2710",
+      "phu": [
+        "DF4"
+      ]
+    },
+    {
+      "ma": "DF5",
+      "cau_giao": "Người vận hành mở trang Thu thập và thấy đúng phần số thu (không còn cột tin rao), có liên kết sang Dòng chảy và ngược lại; portals.md ghi luật ranh giới trang = ranh giới hợp đồng dữ liệu",
+      "vai": "Người vận hành",
+      "tieu_chi": 6,
+      "vi_sao": "Quyết định §5 câu 2 và 5 (Mạnh 26/10): ranh giới trang theo hợp đồng dữ liệu, gạch /ops/pipeline (UH4) giao cho Dòng chảy; làm sau DF1 để Thu thập và Dòng chảy đọc cùng một định nghĩa.",
+      "hang": "T1",
+      "slug": "don-ia-thu-thap-dong-chay",
+      "dung_tren": [
+        "DF1"
+      ],
+      "bat_khi": "Thu thập không còn cột tin rao (đã đọc); link hai chiều; portals.md có luật ranh giới; UH4 rời mục chờ điều kiện",
+      "nhom": "df-dong-chay",
+      "dot": "dong-chay-2710",
+      "phu": [
+        "DF5"
+      ]
     }
   ],
   "chan_troi": [
