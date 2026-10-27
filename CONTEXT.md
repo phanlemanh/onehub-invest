@@ -50,19 +50,31 @@ _Avoid_: dự án, đại đô thị
 - Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
 _Avoid_: dự án con, phase
 
-**Tòa nhà**: Một tòa chung cư (S1.03, BE02) — `node_type = building`; mã tòa thô trong tin nằm ở `block_raw`.
-- Code: `building` · RESO: BuildingName + Building.BuildingKey (ADR-0013 §2)
+**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; hiện 3 tòa còn ở `asset_nodes.node_type = building`, chuyển sang bảng tòa ở hàng code). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
+- Code: `building` · RESO: resource Building (BuildingName, BuildingKey, BuilderName) (ADR-0013 §2, ADR-0016 §2)
 _Avoid_: block, chung cư
 
 **Trục căn**: Các căn cùng toà, cùng vị trí trên mặt bằng, khác tầng (cùng diện tích, số phòng). Môi giới thường lộ toà + trục mà che tầng («LD2xx11»), nên tin nhiều khi chỉ gắn được tới trục.
 - Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
 _Avoid_: line căn, dòng căn
 
+**Thửa**: Một mảnh đất — cấp `parcel` của danh bạ vật thể; tin đất gắn ở thửa. Chưa nối thửa với tòa nhà phố khi chưa có số nhà, số thửa (ADR-0016 §2).
+- Code: `parcel` · RESO: ParcelNumber; resource local `Parcel` (ADR-0016 §11)
+_Avoid_: lô, mảnh, plot
+
+**Căn**: Phần con bán hoặc thuê được trong một tòa (căn hộ, shophouse chân đế) — cấp `unit` của danh bạ vật thể, con của trục khi biết trục. Khác «Căn nhà»: căn nhà là đơn vị phân tích, có thể là căn, tòa hay thửa.
+- Code: `unit` · RESO: UniversalPropertySubId + UnitNumber; resource local `Unit` (ADR-0016 §2, §11)
+_Avoid_: unit (trong chữ UI), căn hộ (khi nói chung mọi loại)
+
 ## Tài sản & tin
 
-**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều listing từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
+**Danh bạ**: Bảng định danh bền của một loại thực thể của mình — vật thể (thửa, tòa, trục, căn) hoặc người: khoá mờ cấp một lần, bí danh, vòng đời gộp · tách · nghỉ; mọi thuộc tính đi qua phát biểu (ADR-0016 §3). Khác «danh mục»: danh mục là danh sách căn lấy từ một nguồn (S08), là bằng chứng để dựng danh bạ.
+- Code: `registry` · RESO: không có (khung theo HistoryTransactional)
+_Avoid_: master data, MDM
+
+**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện là cụm tin S06, chuyển dần thành view trên danh bạ.
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
-- Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
+- Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
 **Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn; là bên bán, đối xứng với **Yêu cầu** (bên mua). Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
@@ -135,7 +147,12 @@ _Avoid_: provenance (trên UI)
 
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
+- Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
 _Avoid_: chủ nhà, broker
+
+**Vai trò**: Quan hệ của một người với listing (người đăng, môi giới đại diện, sàn) hay với vật thể (chủ đầu tư), ghi bằng phát biểu. Vai suy luận (vd đăng nhiều căn → môi giới) không vào cột, chỉ hiện ở `/ops` (ADR-0016 §8).
+- Code: `party_role` · RESO: ListAgentKey · CoListAgentKey · ListOfficeKey; chủ đầu tư → Building.BuilderName
+_Avoid_: loại người bán
 
 **Diện tích**: Diện tích sử dụng của căn, m² (`numeric`, ADR-0011 Qđ 4).
 - Code: `area_m2` · RESO: LivingArea (LivingAreaUnits = sqm)
