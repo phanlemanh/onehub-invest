@@ -44,6 +44,7 @@ evals:
   - id: E6
     criterion: AC-6
     executor: test
+    layer: backend-effect
     cmd: config:executors.test.dong_chay_cloud
     paths: [app/src/app/ops/data-flow/page.tsx, app/src/components/ops/data-flow/**, app/src/lib/data-flow-queries.ts, app/src/lib/ops-facts.ts, app/tests/dong-chay-cloud.test.tsx]
     expected: "exit 0; ca 'DC-AC-6 route trên cloud' xanh: lược đồ thứ hai KHÔNG có bảng stg_*, có ops_heartbeat 'primary' mang payload bản tin khô thật của E4 — gọi DataFlowContent (mô-đun mà page.tsx dùng) cho 7d/30d/all, dựng phần tử trả về trong jsdom: không có «Chỉ xem ở máy thu»; DOM có số «Bài nhận», «Đọc được», «Tin rao mới», «Gắn căn» từng nguồn, số «Đủ trường lõi», tên từng nhóm và nhãn ngày bằng khối; đối chứng dương: cùng mô-đun trên lược đồ có stg_* thì đi nhánh máy thu; chiều đỏ cùng ca: đột biến giữ cổng stg_* cũ → ca đỏ 'trang cloud vẫn vẽ khung chỉ-máy-thu'"
