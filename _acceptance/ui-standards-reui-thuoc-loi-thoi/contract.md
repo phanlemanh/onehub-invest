@@ -5,7 +5,7 @@ slug: ui-standards-reui-thuoc-loi-thoi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-27T05:58:12Z
 approved_by:
