@@ -17,6 +17,7 @@ import { phuongHopLe } from "../pipeline/lib/osm.mjs";
 import { runTransformChotot } from "../pipeline/transform-chotot.mjs";
 import { runTransformFb } from "../pipeline/transform-fb.mjs";
 import { runTransformZalo } from "../pipeline/transform-zalo.mjs";
+import { napPhatBieu } from "../pipeline/lib/nap-045.mjs";
 
 // Root repo không có node_modules — mượn pg từ app/ (AGENTS.md bẫy 6).
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -114,6 +115,8 @@ async function main() {
       await c.query("BEGIN");
       try {
         await c.query("SELECT pg_advisory_xact_lock(33033)");
+        // PL15: transform đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
+        await napPhatBieu(c);
         const chupGoc = await chup(c);
 
         // ---- Lượt nền: lời hứa đã ký của E8 (tin-rao-gan-khu-vuc-dung) trên DB thật ----
