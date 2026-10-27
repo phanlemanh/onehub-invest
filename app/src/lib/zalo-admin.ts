@@ -438,6 +438,12 @@ export async function zaloLoginStatus(accountId: string): Promise<{
   };
 }
 
+/** Có tiến trình đăng nhập QR đang chạy cho tài khoản này không (huỷ khi không có gì thì không ghi audit). */
+export function coTienTrinhDangNhap(accountId: string): boolean {
+  const handle = logins.get(accountId);
+  return !!handle && handle.child.exitCode === null;
+}
+
 export async function cancelZaloLogin(accountId: string): Promise<void> {
   if (!isZaloAdminAvailable()) return;
   const handle = logins.get(accountId);

@@ -15,6 +15,7 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathS
 import { homedir, tmpdir } from "node:os"
 import { basename, dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { luocDoPhienAdmin } from "./helpers/phien-thu"
 
 type Paths = { openclaw: string; config: string }
 type Acc = { accountId: string; enabledGroups: string[] }
@@ -84,6 +85,8 @@ const G_DEF = ["channels", "zalouser", "accounts", "default", "groups"]
 const G_ACC2 = ["channels", "zalouser", "accounts", "acc2", "groups"]
 const ZU = ["channels", "zalouser"]
 
+let phien: { url: string; cookie: string; don: () => Promise<void> } | undefined
+
 let tmp = ""
 let home = ""
 let spyLog = ""
@@ -108,7 +111,7 @@ function assertRao(goc: string, paths: Paths, h: string = homedir()): void {
       throw new Error(`rào: đường lạc — ${ten} ${String(p)} nằm ngoài thư mục tạm ${goc}`)
     }
   }
-  if (!/:9\//.test(process.env.DATABASE_URL ?? "")) throw new Error("rào: đường lạc — DATABASE_URL không trỏ cổng đóng")
+  if (!/search_path=[a-z]+_\d+$/.test(decodeURIComponent(process.env.DATABASE_URL ?? ""))) throw new Error("rào: đường lạc — DATABASE_URL không trỏ lược đồ tạm")
 }
 
 /** Rào cho đoạn trích bộ canh: không lệnh tắt gateway, không biến shell; tệp đưa cho python nằm dưới thư mục tạm. */
@@ -276,7 +279,7 @@ async function post(body: unknown): Promise<{ status: number; json: { error?: st
   const res = await route.POST(
     new Request("http://localhost/api/v1/ops/zalo/groups", {
       method: "POST",
-      headers: { authorization: "Bearer T", "content-type": "application/json" },
+      headers: { cookie: phien!.cookie, "content-type": "application/json" },
       body: JSON.stringify(body),
     }),
   )
@@ -305,7 +308,9 @@ before(async () => {
   process.env.HOME = home
   process.env.PATH = `${join(tmp, "bin")}:${PATH_GOC}`
   process.env.OPS_API_TOKEN = "T"
-  process.env.DATABASE_URL = "postgres://127.0.0.1:9/khong-co"
+  // Route đọc phiên và ghi audit trong DB (TV1): một lược đồ tạm chỉ có users/sessions/ops_audit — không chạm public.
+  phien = await luocDoPhienAdmin("nm")
+  process.env.DATABASE_URL = phien.url
 
   admin = (await import("../src/lib/zalo-admin")) as Admin
   assertRao(tmp, admin.zaloAdminPaths())
@@ -319,12 +324,13 @@ after(async () => {
   }
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
+  await phien?.don()
   if (tmp) rmSync(tmp, { recursive: true, force: true })
 })
 
 // ---------- AC-8 ----------
 
-test("NM-AC-8 rào: homedir, openclaw, config, tệp python dưới thư mục tạm; DATABASE_URL cổng đóng", () => {
+test("NM-AC-8 rào: homedir, openclaw, config, tệp python dưới thư mục tạm; DATABASE_URL lược đồ tạm", () => {
   const p = admin.zaloAdminPaths()
   assertRao(tmp, p)
   assert.equal(thuc(p.config), thuc(cfgPath))

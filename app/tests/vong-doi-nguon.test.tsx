@@ -1,6 +1,6 @@
 // vong-doi-nguon.test.tsx — hồ sơ _acceptance/vong-doi-nguon (TV2a), ca «VD-AC-6b» rồi «VD-AC-6» trên CÙNG một lược đồ tạm
 // (pool của app gắn search_path lúc import): trước 047 route chạy y như hôm nay; chạy 047 rồi route ghi trạng thái vòng đời.
-// Gọi POST thật của route source-groups bằng Bearer. public không được chạm (chụp trước/sau).
+// Gọi POST thật của route source-groups bằng phiên admin (TV1: route ghi đòi người thật). public không được chạm (chụp trước/sau).
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
 import pg from "pg"
@@ -8,6 +8,7 @@ import pg from "pg"
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
 import { DAU, chay047, chupPublic, dungKhuonTruoc, xoaLuocDo } from "../../pipeline/scripts/vong-doi-fixture.mjs"
+import { themPhienAdmin } from "./helpers/phien-thu"
 
 const S = `vd_route_${process.pid}`
 const TOKEN = "vd-thu-token"
@@ -17,12 +18,14 @@ process.env.OPS_API_TOKEN = TOKEN
 const admin = new pg.Client({ connectionString: localDbUrl() })
 const sc = new pg.Client({ connectionString: schemaUrl(S) })
 let publicTruoc: unknown
+let PHIEN_ADMIN = "" // cookie phiên admin trong lược đồ tạm — route ghi nay đòi người thật (TV1)
 
 before(async () => {
   await admin.connect()
   publicTruoc = await chupPublic(admin)
   await dungKhuonTruoc(admin, S)
   for (const t of ["ops_audit", "stg_zalo_posts"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
+  PHIEN_ADMIN = (await themPhienAdmin(admin, S)).cookie
   await sc.connect()
   await sc.query(`INSERT INTO source_registry (code, real_name, label_vi) VALUES ('S05', '${DAU}-a', 'x'), ('S06', '${DAU}-b', 'x')`)
 })
@@ -42,7 +45,7 @@ async function goi(body: Record<string, unknown>) {
   const res = await POST(
     new Request("http://localhost/api/v1/ops/source-groups", {
       method: "POST",
-      headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" },
+      headers: { authorization: `Bearer ${TOKEN}`, cookie: PHIEN_ADMIN, "content-type": "application/json" },
       body: JSON.stringify(body),
     }),
   )
@@ -52,7 +55,7 @@ async function goi(body: Record<string, unknown>) {
 const nhom = async (key: string) =>
   (await sc.query("SELECT * FROM source_groups WHERE group_key = $1", [key])).rows[0] as Record<string, unknown> | undefined
 const audits = async () =>
-  (await sc.query("SELECT action, detail FROM ops_audit WHERE action = 'source-group:toggle' ORDER BY id")).rows as {
+  (await sc.query("SELECT action, detail FROM ops_audit WHERE action = 'unit.toggle' ORDER BY id")).rows as {
     action: string
     detail: Record<string, unknown>
   }[]

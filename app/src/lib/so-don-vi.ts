@@ -90,11 +90,11 @@ export async function khaiDonVi(
       throw e
     }
     await c.query(
-      `INSERT INTO ops_audit (actor, action, env, detail) VALUES ($1, 'source-group:set-meta', $2, $3::jsonb)`,
+      `INSERT INTO ops_audit (actor, action, env, detail) VALUES ($1, 'unit.update_meta', $2, $3::jsonb)`,
       [
         `user:${user!.id}`,
         process.env.VERCEL === "1" ? "cloud" : "local",
-        JSON.stringify({ unit_code: unitCode, from: rows[0], to: { market_codes: marketCodes, project_node_ids: projectNodeIds } }),
+        JSON.stringify({ thao_tac: "set-meta", unit_code: unitCode, from: rows[0], to: { market_codes: marketCodes, project_node_ids: projectNodeIds } }),
       ],
     )
     await c.query("COMMIT")

@@ -461,10 +461,15 @@ _Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 - Code: `invest portal` · RESO: —
 _Avoid_: Invest Portal, cổng nhà đầu tư
 
-**Cổng Ops**: Cổng vận hành dữ liệu, bắt buộc đăng nhập, quyền ops/admin; mọi route nội bộ nằm dưới `/ops` (luật 9).
+**Cổng Ops**: Cổng vận hành dữ liệu, bắt buộc đăng nhập, từ vai người xem trở lên; mọi route nội bộ nằm dưới `/ops` (luật 9).
 - Code: `ops portal` · RESO: —
 - Slug URL: `ops`
 _Avoid_: Ops Portal, trang admin
+
+**Vai Ops**: Bậc quyền của người dùng ở Cổng Ops, xếp người xem < vận hành < quản trị < chủ sở hữu; quyền từng hành động nằm ở một bảng trong `app/src/lib/ops-access.ts` (TV1). `Người dùng` (`user`) không vào Ops.
+- Code: `role` (`viewer` · `ops` · `admin` · `owner`) · RESO: —
+- Nhãn UI: `viewer` «Người xem» · `ops` «Vận hành» · `admin` «Quản trị» · `owner` «Chủ sở hữu»
+_Avoid_: quyền ops (khi ý là một vai cụ thể), superuser
 
 **Finder**: Tên tính năng (code, docs) của màn xếp hạng khu vực + bản đồ; UI ghi "Thị trường {quốc gia}", không in chữ Finder.
 - Code: `finder` · RESO: —

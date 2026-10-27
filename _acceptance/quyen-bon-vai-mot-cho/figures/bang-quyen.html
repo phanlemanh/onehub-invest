@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng quyền Ops</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--paper:#f5f5f5;--ink:#2d3142;--muted:#4f5d75;--soft:#636b80;--accent:#eb6c36;--sans:'Geist',system-ui,sans-serif;--serif:'Instrument Serif','Lora',serif;--mono:'Geist Mono',ui-monospace,monospace}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:3rem 2rem;background:var(--paper);color:var(--ink);font-family:var(--sans)}
+    .frame{width:100%;max-width:1140px}
+    .eyebrow-h{margin-bottom:.5rem;color:var(--muted);font:500 .66rem/1 var(--mono);letter-spacing:.18em;text-transform:uppercase}
+    h1{margin-bottom:.5rem;font:400 clamp(1.5rem,2.4vw + .75rem,2rem)/1.25 var(--serif);letter-spacing:-.02em}
+    .sub{margin-bottom:1.5rem;color:var(--muted);font-size:.875rem;line-height:1.5}
+    .diagram{overflow-x:auto} svg{display:block;width:100%;min-width:1000px}
+    svg .lab{fill:#fff;stroke:rgba(45,49,66,.12);stroke-width:.8} svg .role{fill:#2d3142}
+    svg .hn,svg .rn{font-family:'Geist',sans-serif;font-size:11px;font-weight:600} svg .hn{fill:#2d3142} svg .rn{fill:#f5f5f5}
+    svg .hs,svg .rs,svg .act,svg .eyebrow,svg .tag,svg .fs,svg .where{font-family:'Geist Mono',monospace}
+    svg .hs{fill:#4f5d75;font-size:9px} svg .rs{fill:#f5f5f5;opacity:.85;font-size:9px}
+    svg .act{fill:#2d3142;font-size:11px;font-weight:500} svg .hint{font-family:'Geist',sans-serif;fill:#4f5d75;font-size:10px}
+    svg .eyebrow{fill:#4f5d75;font-size:9px;font-weight:500;letter-spacing:.14em}
+    svg .cell{stroke:rgba(45,49,66,.12);stroke-width:.6} svg .pass{fill:rgba(45,49,66,.12)} svg .block{fill:#f5f5f5}
+    svg .tint{fill:rgba(235,108,54,.07)}
+    svg .v{font-family:'Geist',sans-serif;font-size:11px} svg .pt{fill:#2d3142;font-weight:600} svg .bt{fill:#636b80}
+    svg .focal{fill:rgba(235,108,54,.07);stroke:#eb6c36;stroke-width:1.4} svg .ft{fill:#eb6c36;font-weight:600}
+    svg .fs{fill:#eb6c36;font-size:9px;font-weight:600;letter-spacing:.06em}
+    svg .tag{fill:#eb6c36;font-size:9px;font-weight:600;letter-spacing:.08em}
+    svg .it{font-family:'Instrument Serif','Lora',serif;font-style:italic;font-size:14px;fill:#eb6c36}
+    svg .alt{fill:#4f5d75} svg .where{fill:#4f5d75;font-size:9px}
+    svg .lt{font-family:'Geist Mono',monospace;fill:#4f5d75;font-size:9px}
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <p class="eyebrow-h">Cổng Phạm vi · quyen-bon-vai-mot-cho · bang-quyen</p>
+    <h1>Một bảng quyền: 10 hành động × 8 người gọi</h1>
+    <p class="sub">Vai ≥ vai tối thiểu của hàng thì qua · bearer chung chỉ đọc số và nạp số · AC-2, AC-8</p>
+    <div class="diagram">
+<svg viewBox="0 0 1084 716" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
+<title id="t">Bảng quyền Ops: 10 hành động × 8 người gọi</title>
+<desc id="d">Ma trận qua/401/403 cho từng hành động và người gọi; hai chỗ chờ quyết Hỏi-1 và Hỏi-2 viền cam.</desc>
+<rect width="1084" height="716" fill="#f5f5f5"/>
+<text class="eyebrow" x="648" y="36" text-anchor="middle">BỐN VAI · viewer &lt; ops &lt; admin &lt; owner</text>
+<path d="M444 56 V48 H852 V56" fill="none" stroke="#4f5d75" stroke-opacity=".5" stroke-width=".8"/>
+<rect class="lab" x="24" y="64" width="200" height="52" rx="6"/>
+<text class="hn" x="124" y="88" text-anchor="middle">Hành động</text>
+<text class="hs" x="124" y="104" text-anchor="middle">× người gọi</text>
+<rect class="role" x="236" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="284" y="86" text-anchor="middle">không ai</text>
+<text class="rs" x="284" y="102" text-anchor="middle">chưa đăng nhập</text>
+<rect class="role" x="340" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="388" y="86" text-anchor="middle">user</text>
+<text class="rs" x="388" y="102" text-anchor="middle">không vào Ops</text>
+<rect class="role" x="444" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="492" y="86" text-anchor="middle">viewer</text>
+<text class="rs" x="492" y="102" text-anchor="middle">bậc 1</text>
+<rect class="role" x="548" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="596" y="86" text-anchor="middle">ops</text>
+<text class="rs" x="596" y="102" text-anchor="middle">bậc 2</text>
+<rect class="role" x="652" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="700" y="86" text-anchor="middle">admin</text>
+<text class="rs" x="700" y="102" text-anchor="middle">bậc 3</text>
+<rect class="role" x="756" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="804" y="86" text-anchor="middle">owner</text>
+<text class="rs" x="804" y="102" text-anchor="middle">bậc 4</text>
+<rect class="role" x="860" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="908" y="86" text-anchor="middle">bearer chung</text>
+<text class="rs" x="908" y="102" text-anchor="middle">OPS_API_TOKEN</text>
+<rect class="role" x="964" y="64" width="96" height="52" rx="6"/>
+<text class="rn" x="1012" y="86" text-anchor="middle">OPS_EMAILS</text>
+<text class="rs" x="1012" y="102" text-anchor="middle">cửa phụ</text>
+<rect class="lab" x="24" y="128" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="150">ops.read</text>
+<text class="hint" x="212" y="150" text-anchor="end">đọc số</text>
+<rect class="cell block" x="236" y="128" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="150" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="128" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="150" text-anchor="middle">403</text>
+<rect class="cell pass" x="444" y="128" width="96" height="36" rx="4"/>
+<text class="v pt" x="492" y="150" text-anchor="middle">qua</text>
+<rect class="cell pass" x="548" y="128" width="96" height="36" rx="4"/>
+<text class="v pt" x="596" y="150" text-anchor="middle">qua</text>
+<rect class="cell pass" x="652" y="128" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="150" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="128" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="150" text-anchor="middle">qua</text>
+<rect class="cell pass" x="860" y="128" width="96" height="36" rx="4"/>
+<text class="v pt" x="908" y="150" text-anchor="middle">qua</text>
+<rect class="cell pass" x="964" y="128" width="96" height="36" rx="4"/>
+<text class="v pt" x="1012" y="150" text-anchor="middle">qua</text>
+<rect class="lab" x="24" y="168" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="190">audit.read</text>
+<text class="hint" x="212" y="190" text-anchor="end">đọc audit</text>
+<rect class="cell block" x="236" y="168" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="190" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="168" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="190" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="168" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="190" text-anchor="middle">403</text>
+<rect class="cell block" x="548" y="168" width="96" height="36" rx="4"/>
+<text class="v bt" x="596" y="190" text-anchor="middle">403</text>
+<rect class="cell pass" x="652" y="168" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="190" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="168" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="190" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="168" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="190" text-anchor="middle">403</text>
+<rect class="cell block" x="964" y="168" width="96" height="36" rx="4"/>
+<text class="v bt" x="1012" y="190" text-anchor="middle">403</text>
+<rect class="lab" x="24" y="208" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="230">ingest.push</text>
+<text class="hint" x="212" y="230" text-anchor="end">nạp số</text>
+<rect class="cell block" x="236" y="208" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="230" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="208" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="230" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="208" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="230" text-anchor="middle">403</text>
+<rect class="cell pass" x="548" y="208" width="96" height="36" rx="4"/>
+<text class="v pt" x="596" y="230" text-anchor="middle">qua</text>
+<rect class="cell pass" x="652" y="208" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="230" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="208" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="230" text-anchor="middle">qua</text>
+<rect class="cell pass" x="860" y="208" width="96" height="36" rx="4"/>
+<text class="v pt" x="908" y="230" text-anchor="middle">qua</text>
+<rect class="cell pass" x="964" y="208" width="96" height="36" rx="4"/>
+<text class="v pt" x="1012" y="230" text-anchor="middle">qua</text>
+<rect class="lab" x="24" y="248" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="270">review.decide</text>
+<text class="hint" x="212" y="270" text-anchor="end">duyệt thẻ</text>
+<rect class="cell block" x="236" y="248" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="270" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="248" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="270" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="248" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="270" text-anchor="middle">403</text>
+<rect class="cell pass" x="548" y="248" width="96" height="36" rx="4"/>
+<text class="v pt" x="596" y="270" text-anchor="middle">qua</text>
+<rect class="cell pass" x="652" y="248" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="270" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="248" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="270" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="248" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="270" text-anchor="middle">403</text>
+<rect class="cell pass" x="964" y="248" width="96" height="36" rx="4"/>
+<text class="v pt" x="1012" y="270" text-anchor="middle">qua</text>
+<rect class="lab" x="24" y="288" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="310">unit.toggle</text>
+<text class="hint" x="212" y="310" text-anchor="end">bật/tắt nhóm</text>
+<rect class="cell block" x="236" y="288" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="310" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="288" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="310" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="288" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="310" text-anchor="middle">403</text>
+<rect class="focal" x="548" y="288" width="96" height="36" rx="4"/>
+<text class="v ft" x="596" y="304" text-anchor="middle">403</text>
+<text class="fs" x="596" y="317" text-anchor="middle">HỎI-2</text>
+<rect class="cell pass" x="652" y="288" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="310" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="288" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="310" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="288" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="310" text-anchor="middle">403</text>
+<rect class="cell block tint" x="964" y="288" width="96" height="36" rx="4"/>
+<text class="v bt" x="1012" y="310" text-anchor="middle">403</text>
+<rect class="lab" x="24" y="328" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="350">unit.create</text>
+<text class="hint" x="212" y="350" text-anchor="end">thêm nhóm</text>
+<rect class="cell block" x="236" y="328" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="350" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="328" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="350" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="328" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="350" text-anchor="middle">403</text>
+<rect class="cell block" x="548" y="328" width="96" height="36" rx="4"/>
+<text class="v bt" x="596" y="350" text-anchor="middle">403</text>
+<rect class="cell pass" x="652" y="328" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="350" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="328" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="350" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="328" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="350" text-anchor="middle">403</text>
+<rect class="cell block tint" x="964" y="328" width="96" height="36" rx="4"/>
+<text class="v bt" x="1012" y="350" text-anchor="middle">403</text>
+<rect class="lab" x="24" y="368" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="390">unit.delete</text>
+<text class="hint" x="212" y="390" text-anchor="end">xoá nhóm</text>
+<rect class="cell block" x="236" y="368" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="390" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="368" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="390" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="368" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="390" text-anchor="middle">403</text>
+<rect class="cell block" x="548" y="368" width="96" height="36" rx="4"/>
+<text class="v bt" x="596" y="390" text-anchor="middle">403</text>
+<rect class="cell pass" x="652" y="368" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="390" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="368" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="390" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="368" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="390" text-anchor="middle">403</text>
+<rect class="cell block tint" x="964" y="368" width="96" height="36" rx="4"/>
+<text class="v bt" x="1012" y="390" text-anchor="middle">403</text>
+<rect class="lab" x="24" y="408" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="430">unit.set_mode</text>
+<text class="hint" x="212" y="430" text-anchor="end">đổi chế độ</text>
+<rect class="cell block" x="236" y="408" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="430" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="408" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="430" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="408" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="430" text-anchor="middle">403</text>
+<rect class="cell block" x="548" y="408" width="96" height="36" rx="4"/>
+<text class="v bt" x="596" y="430" text-anchor="middle">403</text>
+<rect class="cell pass" x="652" y="408" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="430" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="408" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="430" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="408" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="430" text-anchor="middle">403</text>
+<rect class="cell block tint" x="964" y="408" width="96" height="36" rx="4"/>
+<text class="v bt" x="1012" y="430" text-anchor="middle">403</text>
+<rect class="lab" x="24" y="448" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="470">unit.update_meta</text>
+<text class="hint" x="212" y="470" text-anchor="end">sửa thông tin</text>
+<rect class="cell block" x="236" y="448" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="470" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="448" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="470" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="448" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="470" text-anchor="middle">403</text>
+<rect class="cell block" x="548" y="448" width="96" height="36" rx="4"/>
+<text class="v bt" x="596" y="470" text-anchor="middle">403</text>
+<rect class="cell pass" x="652" y="448" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="470" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="448" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="470" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="448" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="470" text-anchor="middle">403</text>
+<rect class="cell block tint" x="964" y="448" width="96" height="36" rx="4"/>
+<text class="v bt" x="1012" y="470" text-anchor="middle">403</text>
+<rect class="lab" x="24" y="488" width="200" height="36" rx="4"/>
+<text class="act" x="36" y="510">zalo.admin</text>
+<text class="hint" x="212" y="510" text-anchor="end">quản trị Zalo</text>
+<rect class="cell block" x="236" y="488" width="96" height="36" rx="4"/>
+<text class="v bt" x="284" y="510" text-anchor="middle">401</text>
+<rect class="cell block" x="340" y="488" width="96" height="36" rx="4"/>
+<text class="v bt" x="388" y="510" text-anchor="middle">403</text>
+<rect class="cell block" x="444" y="488" width="96" height="36" rx="4"/>
+<text class="v bt" x="492" y="510" text-anchor="middle">403</text>
+<rect class="cell block" x="548" y="488" width="96" height="36" rx="4"/>
+<text class="v bt" x="596" y="510" text-anchor="middle">403</text>
+<rect class="cell pass" x="652" y="488" width="96" height="36" rx="4"/>
+<text class="v pt" x="700" y="510" text-anchor="middle">qua</text>
+<rect class="cell pass" x="756" y="488" width="96" height="36" rx="4"/>
+<text class="v pt" x="804" y="510" text-anchor="middle">qua</text>
+<rect class="cell block" x="860" y="488" width="96" height="36" rx="4"/>
+<text class="v bt" x="908" y="510" text-anchor="middle">403</text>
+<rect class="cell block tint" x="964" y="488" width="96" height="36" rx="4"/>
+<text class="v bt" x="1012" y="510" text-anchor="middle">403</text>
+<rect x="960" y="286" width="104" height="240" rx="6" fill="none" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="5,3"/>
+<rect x="984" y="532" width="56" height="16" rx="2" fill="#f5f5f5" stroke="#eb6c36" stroke-width=".8"/>
+<text class="tag" x="1012" y="544" text-anchor="middle">HỎI-1</text>
+<line x1="24" y1="568" x2="1060" y2="568" stroke="rgba(45,49,66,.12)" stroke-width=".8"/>
+<text class="eyebrow" x="24" y="588">CHỜ NGƯỜI QUYẾT</text>
+<rect x="24" y="600" width="56" height="16" rx="2" fill="rgba(235,108,54,.07)" stroke="#eb6c36" stroke-width=".8"/>
+<text class="tag" x="52" y="612" text-anchor="middle">HỎI-2</text>
+<text class="it" x="92" y="612">khuyên 403 tới TV4<tspan class="alt" dx="10">·</tspan><tspan class="alt" dx="6">lối khác: qua</tspan></text>
+<text class="where" x="1060" y="612" text-anchor="end">unit.toggle × ops</text>
+<rect x="24" y="628" width="56" height="16" rx="2" fill="rgba(235,108,54,.07)" stroke="#eb6c36" stroke-width=".8"/>
+<text class="tag" x="52" y="640" text-anchor="middle">HỎI-1</text>
+<text class="it" x="92" y="640">khuyên như ops<tspan class="alt" dx="10">·</tspan><tspan class="alt" dx="6">lối khác: như admin</tspan></text>
+<text class="where" x="1060" y="640" text-anchor="end">OPS_EMAILS · unit.* + zalo.admin</text>
+<line x1="24" y1="668" x2="1060" y2="668" stroke="rgba(45,49,66,.12)" stroke-width=".8"/>
+<text class="eyebrow" x="24" y="696">CHÚ GIẢI</text>
+<rect class="cell pass" x="116" y="686" width="16" height="12" rx="2"/><text class="lt" x="140" y="696">qua</text>
+<rect class="cell block" x="196" y="686" width="16" height="12" rx="2"/><text class="lt" x="220" y="696">chặn · 401 chưa đăng nhập · 403 sai vai hoặc bearer</text>
+<rect x="576" y="686" width="16" height="12" rx="2" fill="rgba(235,108,54,.07)" stroke="#eb6c36" stroke-width="1.2" stroke-dasharray="3,2"/><text class="lt" x="600" y="696">chờ người quyết · ô ghi theo khuyến nghị</text>
+</svg>
+    </div>
+  </main>
+</body>
+</html>

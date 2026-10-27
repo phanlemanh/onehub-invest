@@ -20,7 +20,14 @@
  */
 export type ApiMode = "public" | "ops" | "ops-session" | "admin" | "session-or-noop";
 export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-export type ApiSurfaceEntry = { route: string; methods: ApiMethod[]; mode: ApiMode; note: string };
+/** methodModes: chế độ riêng của phương thức khác chế độ chung (TV1 — vd GET đọc cho bearer, POST quản trị chỉ admin). */
+export type ApiSurfaceEntry = {
+  route: string;
+  methods: ApiMethod[];
+  mode: ApiMode;
+  methodModes?: Partial<Record<ApiMethod, ApiMode>>;
+  note: string;
+};
 
 export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/asset-stats", methods: ["GET"], mode: "public", note: "chỉ số tài sản theo khu vực (metrics precompute)" },
@@ -33,12 +40,12 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/ops/extraction-quality", methods: ["GET"], mode: "ops", note: "chất lượng trích xuất" },
   { route: "v1/ops/ingest", methods: ["POST"], mode: "ops", note: "nạp số ops từ máy local lên cloud" },
   { route: "v1/ops/truthful-coverage", methods: ["GET"], mode: "ops", note: "độ phủ nói thật" },
-  { route: "v1/ops/review/[id]/decide", methods: ["POST"], mode: "ops", note: "quyết thẻ duyệt" },
-  { route: "v1/ops/source-groups", methods: ["GET", "POST"], mode: "ops", note: "nhóm nguồn — action set-mode chặt hơn sổ: phiên phải là admin (che-do-thu-tren-ops)" },
-  { route: "v1/ops/zalo/accounts", methods: ["GET", "POST", "DELETE"], mode: "ops", note: "tài khoản thu Zalo" },
-  { route: "v1/ops/zalo/groups", methods: ["GET", "POST"], mode: "ops", note: "nhóm Zalo theo dõi" },
-  { route: "v1/ops/zalo/login", methods: ["POST", "GET", "DELETE"], mode: "ops", note: "đăng nhập QR tài khoản thu (QR trả base64, không qua zalo-media)" },
-  { route: "v1/ops/audit", methods: ["GET"], mode: "ops", note: "nhật ký ops_audit — mã chặt hơn sổ: phiên phải là admin" },
+  { route: "v1/ops/review/[id]/decide", methods: ["POST"], mode: "ops-session", note: "quyết thẻ duyệt — review.decide: vai ops, không bearer (TV1)" },
+  { route: "v1/ops/source-groups", methods: ["GET", "POST"], mode: "ops", methodModes: { POST: "admin" }, note: "nhóm nguồn — GET ops.read; mọi action POST là unit.* chỉ admin (TV1)" },
+  { route: "v1/ops/zalo/accounts", methods: ["GET", "POST", "DELETE"], mode: "admin", note: "tài khoản thu Zalo — zalo.admin (TV1)" },
+  { route: "v1/ops/zalo/groups", methods: ["GET", "POST"], mode: "admin", note: "nhóm Zalo theo dõi — zalo.admin (TV1)" },
+  { route: "v1/ops/zalo/login", methods: ["POST", "GET", "DELETE"], mode: "admin", note: "đăng nhập QR tài khoản thu (QR trả base64, không qua zalo-media) — zalo.admin (TV1)" },
+  { route: "v1/ops/audit", methods: ["GET"], mode: "admin", note: "nhật ký ops_audit — audit.read: chỉ admin, không bearer (TV1)" },
   { route: "zalo-media", methods: ["GET"], mode: "admin", note: "ảnh tin tầng A cho /ops; chặn ảnh QR đăng nhập" },
   { route: "v1/user-events", methods: ["POST"], mode: "session-or-noop", note: "beacon user_events — khách 204, không ghi" },
 ];
