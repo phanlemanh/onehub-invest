@@ -5,7 +5,7 @@ slug: test-khong-prune-worktree
 owner: phanlemanh@gmail.com
 risk_tier: T3      # gộp selftest hook .claude/hooks/** (t3_paths) — Hỏi-1 gộp, Mạnh duyệt ở Cổng Phạm vi 2026-10-27
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-27
 design_doc: docs/superpowers/specs/2026-10-27-test-khong-prune-worktree-design.md
@@ -58,3 +58,7 @@ thấy chỗ thứ hai: `cleanup()` của `.claude/hooks/tests/typecheck-changed
 - Rào máy (hook) chặn `git worktree prune` trong mọi phiên — cơ chế mới, chưa có số đo; không làm.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: Nếu sau này git được đặt lưu đường worktree kiểu tương đối, việc dọn worktree tạm của bài kiểm có thể bỏ sót mục quản trị mà không báo; hiện cấu hình đó chưa bật.
+  - Ngoài-3: Khi việc dọn worktree tạm không tìm thấy mục để gỡ, bài kiểm vẫn xanh và không cảnh báo, nên phần sót có thể nằm im trong kho.

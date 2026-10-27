@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: a63d5fa63b1060e6a9e7b56bd594324840b45733
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: test-khong-prune-worktree
