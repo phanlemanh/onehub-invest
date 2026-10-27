@@ -25,10 +25,10 @@ lập, không đổi hành vi app.
 
 ## Criteria
 
-- AC-1: Given DB local `max_connections` 100 và nền (kết nối không thuộc phép đo) ≤ 10, When chạy `cd app && npm test` một
-  mình, Then đỉnh kết nối RIÊNG (đỉnh − nền, lấy mẫu `pg_stat_activity` mỗi 100 ms) ≤ 40, bộ xanh và 0 dòng thử lại lỗi DB tạm;
-  và 2 × đỉnh riêng app + đỉnh riêng của `cd pipeline && npm test` + 10 ≤ 100 (suy, KHÔNG chạy song song thật trên DB dùng chung). Nền > 10 suốt 2 phút
-  → không kết luận. Script `test` của app khai `--test-concurrency=8`.
+- AC-1: Given DB local `max_connections` 100, When chạy `cd app && npm test` một mình, Then đỉnh kết nối RIÊNG của lượt
+  (đếm `pg_stat_activity` theo `application_name` đặt riêng cho lượt qua PGAPPNAME, lấy mẫu mỗi 100 ms) ≤ 40, bộ xanh và 0 dòng
+  thử lại lỗi DB tạm; và 2 × đỉnh riêng app + đỉnh riêng của `cd pipeline && npm test` + 10 ≤ 100 (suy, KHÔNG chạy song song
+  thật trên DB dùng chung). Script `test` của app khai `--test-concurrency=8`.
 - AC-2: Given hàm `thuLaiDbTam`, When hàm bọc ném lỗi mã `53300`/`40P01`/`57P03` một lần rồi thành công, Then trả kết quả;
   When ném lỗi tạm 3 lần, Then ném lỗi cuối đúng mã; When ném lỗi khác, Then ném ngay không thử lại. Bản sao bỏ `53300` khỏi tập
   mã làm ca đỏ với thông điệp ghim «lỗi DB tạm thời phải được thử lại».

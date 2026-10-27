@@ -38,8 +38,9 @@ CI PR #153).
 
 ## Đo
 
-- Đỉnh kết nối RIÊNG (đỉnh − nền, lấy mẫu mỗi 100 ms): một lượt app ≤ 40, 0 dòng thử lại; suy 2 × app + pipeline + 10 ≤ 100.
-  Không chạy song song thật (đẩy DB dùng chung tới trần là gây lỗi cho phiên khác); nền > 10 → không kết luận.
+- Đỉnh kết nối RIÊNG (đếm theo `application_name` đặt cho chính lượt qua PGAPPNAME, lấy mẫu mỗi 100 ms): một lượt app ≤ 40,
+  0 dòng thử lại; suy 2 × app + pipeline + 10 ≤ 100. Không chạy song song thật (đẩy DB dùng chung tới trần là gây lỗi cho phiên
+  khác).
 - `thuLaiDbTam`: test riêng với lỗi giả (tạm 1 lần → xanh; tạm 3 lần → ném đúng mã; lỗi thường → ném ngay, không thử lại);
   đột biến bỏ `53300` khỏi tập mã → đỏ với thông điệp ghim.
 - Hành vi thử lại: tiêm `53300` vào `pg.Client.connect` (NODE_OPTIONS --import) rồi chạy chính ON7-AC-2, ON12-AC-7 — một lần

@@ -7,7 +7,7 @@ evals:
     cmd: config:executors.script.tn_dinh_ket_noi
     paths: [app/package.json, "app/tests/**", _acceptance/test-nen-on22-on12/probes/dinh-ket-noi.mjs]
     long_running: 15
-    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'script test co --test-concurrency=8'; 'mot luot app: nen <a> · dinh <b> · dinh rieng <r> ket noi, tests <t> fail 0, thu lai 0' với r ≤ 40; 'mot luot pipeline: dinh rieng <q> ket noi, tests <u> fail 0'; 'suy hai luot app + pipeline + nen 10: <s> / 100' với s ≤ 100; cuối 'DINH KET NOI OK'; exit 3 + 'NEN BAN' là không kết luận (nền > 10 suốt 2 phút), chạy lại; should-NOT-fire: không 'VUOT DINH', 'LUOT APP DO', 'LUOT PIPELINE DO', 'THU LAI TRONG LUOT DON', 'THIEU CONCURRENCY'"
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'script test co --test-concurrency=8'; 'mot luot app: dinh rieng <r> ket noi, tests <t> fail 0, thu lai 0' với 5 ≤ r ≤ 40 (đếm theo application_name của chính lượt); 'mot luot pipeline: dinh rieng <q> ket noi, tests <u> fail 0'; 'suy hai luot app + pipeline + nen 10: <s> / 100' với s ≤ 100; cuối 'DINH KET NOI OK'; should-NOT-fire: không 'VUOT DINH', 'LUOT APP DO', 'LUOT PIPELINE DO', 'THU LAI TRONG LUOT DON', 'THIEU CONCURRENCY', 'DO KHONG BAT'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
     criterion: AC-2
