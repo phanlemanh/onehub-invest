@@ -159,7 +159,25 @@ async function measure(fn) {
   }
 }
 
-/** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A. */
+/** DF1 `dong-chay-len-cloud`: khối `dataFlow` = phần tổng hợp đã tính sẵn của /ops/data-flow (pipeline/sql/
+ * 600_data_flow.sql → bảng `data_flow_snapshot`, chỉ ở máy thu) cho ba cửa sổ, chở nguyên `facts` — không tính lại.
+ * `measured_at` = `computed_at` CŨ NHẤT của bảng (không phải giờ đẩy): làm tươi gãy thì khối cũ dần theo ADR-0014. Bảng
+ * vắng hay thiếu cửa sổ → ném, `measure()` ghi `error` (trang hiện «không đo được», không vẽ 0). */
+const FLOW_WINDOWS = ["7d", "30d", "all"];
+async function readDataFlow(client) {
+  const { rows } = await client.query(
+    `SELECT time_window, to_char(computed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS at, facts
+     FROM data_flow_snapshot`,
+  );
+  const by = new Map(rows.map((r) => [r.time_window, r]));
+  const missing = FLOW_WINDOWS.filter((w) => !by.has(w));
+  if (missing.length) throw new Error(`data_flow_snapshot thiếu cửa sổ ${missing.join(", ")}`);
+  const at = FLOW_WINDOWS.map((w) => by.get(w).at).sort()[0];
+  return { measured_at: at, windows: Object.fromEntries(FLOW_WINDOWS.map((w) => [w, by.get(w).facts])) };
+}
+
+/** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A.
+ * Khối `dataFlow` (DF1) KHÔNG miễn: tên nhóm thường không trúng tên nguồn, tên nhóm mang tên nguồn thật thì chặn (AC-5). */
 export function factsChan(payload, names) {
   if (!names?.length) return ["FACTS CHẶN [tầng A] không có danh sách tên để soát (source_registry) — không gửi"];
   const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/, /^blocks\.s03\.groups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
@@ -197,6 +215,7 @@ async function main() {
   const reviewQueueBlock = await measure(() => readReviewQueue(client));
   // ON5: hai cột S03 của «Luồng 7 ngày» — đúng 7 ngày VN tính tới mốc đo, ngày rỗng = 0 (định nghĩa ở lib/ops-flow.mjs).
   const luong7Block = await measure(async () => ({ days: await luong7(client, { now: now.getTime() }) }));
+  const dataFlowBlock = await measure(() => readDataFlow(client));
   await client.end();
   const [lockdownBlock, jobsBlock] = await Promise.all([
     measure(() => readLockdown({ root: ROOT, agentLogDir: process.env.OPENCLAW_LOG_DIR ?? "/tmp/openclaw", now })),
@@ -260,6 +279,7 @@ async function main() {
       reviewQueue: reviewQueueBlock,
       luong7: luong7Block,
       s03: s03Block,
+      dataFlow: dataFlowBlock,
     },
   };
   // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
