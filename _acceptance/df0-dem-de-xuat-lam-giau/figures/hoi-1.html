@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hỏi-1 đếm đề xuất</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1040px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · df0-dem-de-xuat-lam-giau · hoi-1</p>
+    <h1>Hỏi-1: con số «đề xuất làm giàu» đếm những tuyến nào</h1>
+    <p class="sub">AC-1 · AC-5 · hai nhánh, nhánh tô cam là nhánh máy khuyên</p>
+
+    <svg viewBox="0 0 1000 656" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Khung nhánh (nền, vẽ trước) ============ -->
+      <!-- Nhánh A: khung nhấn duy nhất -->
+      <rect x="48" y="264" width="448" height="272" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="64" y="288" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH A · MÁY KHUYÊN</text>
+      <text x="64" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Đếm cả ba tuyến</text>
+      <!-- Nhánh B -->
+      <rect x="504" y="264" width="448" height="272" rx="8" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="520" y="288" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH B</text>
+      <text x="520" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Bỏ tuyến cần duyệt</text>
+
+      <!-- ============ Mũi tên (vẽ trước nút) ============ -->
+      <!-- Hàng đợi → câu hỏi -->
+      <line x1="356" y1="152" x2="356" y2="184" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- Cần duyệt → Hàng duyệt (đã có thẻ) -->
+      <line x1="648" y1="100" x2="752" y2="100" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <rect x="676" y="76" width="64" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="708" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ĐÃ CÓ THẺ</text>
+      <!-- Câu hỏi → A / B -->
+      <line x1="272" y1="232" x2="272" y2="264" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <line x1="728" y1="232" x2="728" y2="264" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- ============ Hàng đợi: đề xuất làm giàu đang chờ ============ -->
+      <rect x="48" y="24" width="616" height="128" rx="8" fill="#f5f5f5"/>
+      <rect x="48" y="24" width="616" height="128" rx="8" fill="rgba(45,49,66,0.03)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="64" y="48" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ĐỀ XUẤT LÀM GIÀU ĐANG CHỜ · THEO TUYẾN</text>
+
+      <rect x="64" y="64" width="176" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="152" y="104" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tự áp</text>
+
+      <rect x="256" y="64" width="176" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="344" y="104" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có chứng</text>
+
+      <rect x="448" y="64" width="200" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="548" y="96" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Cần duyệt</text>
+      <text x="548" y="116" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">đã thành thẻ ở Hàng duyệt</text>
+
+      <!-- Hàng duyệt -->
+      <rect x="752" y="40" width="200" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="752" y="40" width="200" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="768" y="60" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HÀNG DUYỆT</text>
+      <text x="768" y="84" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Thẻ chờ duyệt</text>
+      <text x="768" y="104" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">đếm riêng, theo thẻ</text>
+      <text x="768" y="120" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">giữ nguyên ở cả hai nhánh</text>
+
+      <!-- ============ Câu hỏi ============ -->
+      <rect x="48" y="184" width="904" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="48" y="184" width="904" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="64" y="212" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỎI-1</text>
+      <text x="500" y="213" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Đầu trang Ops ghi «N đề xuất làm giàu» — N đếm những tuyến nào?</text>
+
+      <!-- ============ Nhánh A: tuyến được đếm ============ -->
+      <rect x="64" y="328" width="128" height="44" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="128" y="346" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tự áp</text>
+      <text x="128" y="364" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ĐẾM</text>
+
+      <rect x="204" y="328" width="128" height="44" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="268" y="346" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có chứng</text>
+      <text x="268" y="364" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ĐẾM</text>
+
+      <rect x="344" y="328" width="136" height="44" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="412" y="346" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Cần duyệt</text>
+      <text x="412" y="364" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ĐẾM</text>
+
+      <text x="64" y="396" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ĐẦU TRANG GHI</text>
+      <rect x="64" y="404" width="416" height="64" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="80" y="430" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">«N đề xuất làm giàu»</text>
+      <text x="240" y="430" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">= cả hàng đợi đang chờ</text>
+      <text x="80" y="454" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">«M thẻ chờ duyệt»</text>
+      <text x="240" y="454" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">đếm riêng, theo thẻ</text>
+
+      <text x="64" y="496" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỆ QUẢ</text>
+      <text x="64" y="520" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Thấy đủ quy mô hàng đợi; tuyến cần duyệt có ở cả hai số</text>
+
+      <!-- ============ Nhánh B: bỏ tuyến cần duyệt ============ -->
+      <rect x="520" y="328" width="128" height="44" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="584" y="346" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Tự áp</text>
+      <text x="584" y="364" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ĐẾM</text>
+
+      <rect x="660" y="328" width="128" height="44" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="724" y="346" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có chứng</text>
+      <text x="724" y="364" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ĐẾM</text>
+
+      <rect x="800" y="328" width="136" height="44" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="868" y="346" fill="#4f5d75" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Cần duyệt</text>
+      <text x="868" y="364" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">KHÔNG ĐẾM</text>
+
+      <text x="520" y="396" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ĐẦU TRANG GHI</text>
+      <rect x="520" y="404" width="416" height="64" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="536" y="430" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">«N đề xuất làm giàu»</text>
+      <text x="696" y="430" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">= nhỏ hơn: tự áp + có chứng</text>
+      <text x="536" y="454" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">«M thẻ chờ duyệt»</text>
+      <text x="696" y="454" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">đếm riêng, theo thẻ</text>
+
+      <text x="520" y="496" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỆ QUẢ</text>
+      <text x="520" y="520" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Không trùng thẻ chờ duyệt; thêm điều kiện tuyến phải đo</text>
+
+      <!-- ============ Chân hình ============ -->
+      <text x="500" y="568" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">AC-1: mẫu thử phủ mọi tuyến · AC-5: số thẻ chờ duyệt giữ nguyên ở cả hai nhánh</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="48" y1="588" x2="952" y2="588" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="48" y="612" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="48" y="624" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="80" y="634" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh máy khuyên</text>
+
+      <rect x="228" y="624" width="24" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="260" y="634" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh còn lại</text>
+
+      <rect x="408" y="624" width="24" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="440" y="634" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Tuyến được đếm</text>
+
+      <rect x="588" y="624" width="24" height="12" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="620" y="634" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Tuyến không đếm</text>
+
+      <line x1="768" y1="630" x2="792" y2="630" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4"/>
+      <text x="800" y="634" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Đã có thẻ ở Hàng duyệt</text>
+    </svg>
+  </div>
+</body>
+</html>

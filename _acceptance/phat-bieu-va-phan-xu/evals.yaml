@@ -1,0 +1,145 @@
+schema_version: 1
+feature_slug: phat-bieu-va-phan-xu
+# Ca «PB-AC-n» ở pipeline/scripts/phat-bieu.test.mjs (không DB), «PD-AC-n» ở pipeline/scripts/phat-bieu-db.itest.mjs
+# (DB local :5433, mỗi ca BEGIN … ROLLBACK, nạp 045 trong giao dịch khi DB chưa áp, giữ pg_advisory_xact_lock(33033)).
+# Fixture tin dựng bằng chính transform thật (parsePost / writeOffers / runTransformChotot) trên dòng stg giả và bằng
+# hàm ghi phát biểu thật (pipeline/lib/assert.mjs) — không viết tay khuôn field_provenance. Đường tính từ vị trí tệp.
+# LUẬT ĐO (giám sát đợt dot0-cam-mau, 27/10, sau sự cố khoá DB dùng chung khi đo PL15): test và phép đo nạp migration CHƯA
+# merge (045, resolve_offer_fields, cắt chuyển) KHÔNG chạy trên DB `oneinvest` :5433 dùng chung. Chúng chạy trên DB thử
+# riêng cùng server `oneinvest_p2_pl15` — dựng bằng `bash db/db-thu.sh oneinvest_p2_pl15` (pg_dump từ oneinvest, chỉ khoá
+# đọc), worktree đặt DATABASE_URL trỏ vào nó (.claude/settings.local.json `env`, cả lượt chấm), xoá sau khi xong
+# (`--xoa`). E1 kiểm idempotent trên DB tạm riêng (`db/check-idempotent-tam.sh`). Cắt chuyển thật trên DB local chỉ SAU
+# merge, ngoài giờ job đêm, báo giám sát trước (runtime-map «Phát biểu + phân xử»).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.idem_045
+    paths: [db/migrations/045_phat_bieu_va_phan_xu.sql, db/check-idempotent.sh, db/check-idempotent-tam.sh]
+    expected: "exit 0; dòng 'DB tạm idem_tam_<pid>: lược đồ chép từ oneinvest (không dữ liệu)'; dòng cuối 'IDEMPOTENT PASS'; lược đồ lần1 = lần2; số dòng field_assertions và sale_offer_records không giảm và không có dòng trùng; DB tạm bị xoá khi thoát; DB dùng chung không đổi (045 chỉ áp sau merge); chiều đỏ có sẵn của check-idempotent.selftest.sh (migration không idempotent → exit 1 'không idempotent')"
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [db/migrations/045_phat_bieu_va_phan_xu.sql, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-1': trong giao dịch áp 045 hai lần → to_regclass('field_assertions') có; ma trận CHECK viết trước: field nhận 5 giá trị của trục enrich_field đọc từ VOCAB (vocab.generated.mjs) và từ chối 'kind'; evidence_tier nhận fact/observed/inferred, từ chối 'khac'; method nhận 6 phương pháp, từ chối 'khac'; cặp (fact, parser) và (observed, hitl) bị từ chối — mỗi lần từ chối thông điệp nêu tên ràng buộc; chỉ mục duy nhất sống: chèn trùng (subject, field, value_key, method, rule_id) lỗi, chèn lại sau khi rút được; information_schema có sale_offers.field_provenance; SELECT count(*) FROM v_ruler_p2, v_ruler_p2_area chạy; đếm sale_offer_records và băm (offer_id, 5 cột) trước = sau khi áp (migration không ghi dữ liệu tin)"
+  - id: E3
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [pipeline/mappings.yaml, db/migrations/045_phat_bieu_va_phan_xu.sql, pipeline/lib/vocab-core.mjs, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-1 sổ': trong giao dịch sau khi nạp 045, checkDb (chính hàm của vocab --check-db) với sổ thật pipeline/mappings.yaml trả 0 lệch — gồm trục evidence_tier, assertion_method và cột field_assertions.field của trục enrich_field; đối chứng: xoá dòng ref_lookup assertion_method · legacy trong giao dịch → đúng 1 lệch, thông điệp nêu 'assertion_method · legacy'"
+  - id: E4
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [db/migrations/045_phat_bieu_va_phan_xu.sql, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-2' (giao dịch): chèn một phát biểu qua lib/assert.mjs; ma trận viết trước 6 dòng — UPDATE value, UPDATE evidence_tier, DELETE, TRUNCATE (trong savepoint) đều lỗi và thông điệp chứa 'field_assertions: chỉ thêm'; rút có lý do → retracted_at khác NULL; rút lần hai lỗi chứa 'đã rút'; rút không lý do lỗi chứa 'lý do'; đối chứng: trong savepoint DROP TRIGGER rồi UPDATE value → câu thành công và ca tự báo 'đối chứng: bỏ trigger thì sửa được' (chứng thước đang đo trigger, không đo quyền)"
+  - id: E5
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [db/migrations/045_phat_bieu_va_phan_xu.sql, pipeline/lib/assert.mjs, pipeline/scripts/phat-bieu-db.itest.mjs, pipeline/scripts/fixtures/phan-xu-ma-tran.json]
+    expected: "exit 0; ca 'PD-AC-3 ma trận': bảng ca viết trước ở fixtures/phan-xu-ma-tran.json (≥ 12 ca, mỗi ca: phát biểu chèn + giá trị cột + cờ tier/method/conflict/lower_disagree/goi_y kỳ vọng) — số assert = số ca × số trường có kỳ vọng; tin mồi dựng bằng writeOffers nguồn TST trong giao dịch; mỗi ca thông điệp lỗi nêu tên ca; ca 'PD-AC-3 đảo thứ tự': chèn cùng tập phát biểu theo thứ tự đảo trên tin mồi thứ hai → (5 cột, field_provenance bỏ ids) trùng tin thứ nhất; ca 'PD-AC-3 chủ thể lạ': phát biểu của post không thuộc post_ids không đổi cột"
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.nguon_goc
+    paths: [pipeline/scripts/dung-lai-canonical.mjs, db/migrations/045_phat_bieu_va_phan_xu.sql]
+    expected: "exit 0; lệnh tự chứa trong MỘT giao dịch ROLLBACK (nạp 045 khi DB chưa áp, chạy cắt chuyển catChuyen, rồi kiểm — không phụ thuộc job đêm đang chạy mã main); 'nguon-goc: <n> ô khác mặc định · mồ côi 0' với n > 0 (n = 0 → exit 2 'không có ô để kiểm'); mồ côi = ô khác mặc định thiếu field_provenance[trường] HOẶC thiếu tier/method/ids HOẶC có id không phải phát biểu sống thuộc offer_subject_keys của chính tin"
+  - id: E7
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [pipeline/scripts/dung-lai-canonical.mjs, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-4 đối chứng': trong giao dịch UPDATE sale_offer_records SET bathrooms = 7 cho một tin mồi không có phát biểu WC → hàm kiemNguonGoc (xuất khẩu của dung-lai-canonical.mjs, cùng câu SQL với lệnh) trả đúng 1 mồ côi nêu offer_id và 'bathrooms'; ca dương: tin mồi sau phân xử → 0 mồ côi"
+  - id: E8
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs, pipeline/transform-chotot.mjs, pipeline/lib/write-offers.mjs, pipeline/lib/assert.mjs, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-5 S06': một dòng stg_chotot_ads giả (category 1020, rooms 3) → runTransformChotot trong giao dịch → field_assertions có ('S06:<list_id>', property_type, house, fact, source_field, rule_id 'category:1020') và (bedrooms, '3', fact, source_field, 'rooms'); cột property_type = house, bedrooms = 3; lượt hai với rooms 4 → phát biểu '3' đã rút lý do 'thay-boi-luot', cột = 4, provenance conflict false; ca 'PD-AC-5 S03' và 'PD-AC-5 S05': hai post repost cùng nhóm, parser ra 2PN → hai phát biểu observed/parser, mỗi post một chủ thể; ma trận ghi: tên cột trong câu upsert của writeOffers không chứa phần tử nào của VOCAB.enrich_field (đọc từ câu lệnh ghi thật qua client giả ghi lại SQL)"
+  - id: E9
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.phat_bieu
+    paths: [pipeline/lib/scan-canonical-write.mjs, pipeline/lib/write-offers.mjs, pipeline/scripts/phat-bieu.test.mjs, pipeline/**, agent/**, app/src/**, scripts/**, db/migrations/**]
+    expected: "exit 0; ca 'PB-AC-5 quét cây thật': quét pipeline/ (.mjs, .sql, .sh), agent/, app/src, scripts/ và db/migrations/0NN với NN ≥ 45 (trừ node_modules, *.test.*, *.itest.*) → 0 câu ghi một trong năm cột (danh sách đọc từ VOCAB.enrich_field) vào sale_offer_records hoặc sale_offers ngoài thân hàm resolve_offer_fields — bắt cả SET nhiều dòng và alias bảng (UPDATE sale_offer_records r SET … r.bedrooms =); ca 'PB-AC-5 ma trận đối chứng' trên cây giả, viết trước 6 phần tử: .mjs UPDATE một dòng, .ts INSERT danh sách cột, .sql SET nhiều dòng, .sh psql -c UPDATE, alias bảng, INSERT … ON CONFLICT DO UPDATE SET street_raw → đúng 6 dòng đỏ, mỗi dòng nêu đường:dòng (số assert = 6); ca 'PB-AC-5 ENRICH_COLS': write-offers.mjs không còn xuất ENRICH_COLS (import động → undefined)"
+  - id: E10
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [db/migrations/045_phat_bieu_va_phan_xu.sql, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-6' (giao dịch, tin mồi nguồn TST, ma trận viết trước): đề xuất e1_rule property_type=house, actor máy → phát biểu observed/e1_rule trên post neo của tin, cột house, đề xuất 'applied'; hai đề xuất máy cùng ô đường (e2_llm Đội Cấn rồi e1_rule Kim Mã) → cột Kim Mã (e1 xếp trước e2), conflict true; đảo thứ tự trên tin mồi thứ hai (e1 rồi e2) → cột + nguồn gốc (bỏ ids) trùng tin thứ nhất, đề xuất e2 'skipped'; đề xuất e2_llm land route review áp bằng actor 'hitl:thu' → phát biểu fact/hitl changed_by 'hitl:thu', cột land, 'applied'; người thứ hai duyệt cùng giá trị land → vẫn đúng 1 phát biểu hitl sống (không nhân, không rút); người đổi ý sang apartment → hitl land rút lý do 'hitl-thay', cột apartment; revert_enrichment(apartment, 'hitl:thu', 'thử') → phát biểu rút 'hoan-tac:thử', cột về house (giá trị kế có căn cứ, method e1_rule), đề xuất 'reverted', ops_audit enrich:revert ghi; ca 'PD-AC-8 cổng apply/revert': chưa có dòng cắt chuyển thì hai hàm lỗi 'phân xử: chưa cắt chuyển', băm năm cột trước = sau"
+  - id: E11
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/**, db/migrations/045_phat_bieu_va_phan_xu.sql]
+    expected: "exit 0 (cả bộ agent npm test, gồm tests/enrich-db.test.ts đã sửa ca fill-gap theo nghĩa mới: ca từng đòi 'skipped vì ô có giá trị' nay đòi theo thứ tự phương pháp — ghi rõ trong tên ca)"
+  - id: E22
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.phat_bieu
+    paths: [pipeline/lib/enrich-call-sites.mjs, pipeline/scripts/phat-bieu.test.mjs, app/src/**, agent/**, pipeline/**, scripts/**]
+    expected: "exit 0; ca 'PB-AC-6 chỗ gọi': ma trận viết trước ở pipeline/lib/enrich-call-sites.mjs — mỗi phần tử (tệp, hàm SQL, vai người|máy); quét cây thật mọi chuỗi gọi apply_enrichment|revert_enrichment|decide_enrichment_review trong app/src, agent/, pipeline/, scripts/ (trừ test) → tập chỗ gọi tìm thấy bằng đúng tập khai (chỗ mới ngoài tập → đỏ nêu tệp:dòng); với mỗi chỗ gọi, bộ đọc lấy biểu thức actor từ CHÍNH tệp gọi (tham số actor của câu gọi; là biến thì lấy câu gán của biến đó trong tệp; là tham số hàm thì lần tới chỗ gán ở hàm gọi trong cùng tệp) và đọc tiền tố literal của nó → vai người phải ra tiền tố 'hitl:', vai máy phải ra tiền tố khác 'hitl:'; không đọc được tiền tố → đỏ 'không đọc được actor' nêu tệp:dòng (số assert = số phần tử); đối chứng: bản sao ma trận đổi vai của route decide sang máy → đỏ nêu tệp route"
+  - id: E12
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.dung_lai
+    paths: [pipeline/scripts/dung-lai-canonical.mjs, db/migrations/045_phat_bieu_va_phan_xu.sql]
+    expected: "exit 0; lệnh tự chứa trong MỘT giao dịch ROLLBACK: nạp 045 khi DB chưa áp → chụp MỐC từng ô (offer_id, trường, giá trị) của năm cột TRƯỚC cắt chuyển → catChuyen → đặt năm cột về mặc định + field_provenance '{}' → resolve_offer_fields(NULL) → so từng ô với MỐC; in ma trận nguồn × trường (S03, S05, S06 × 5 trường): số ô khác mặc định, số lệch; lệch được phép DUY NHẤT là danh sách ô S05 property_type NULL → unknown khai trước (in riêng kèm offer_id); dòng 'dung-lai: <N> bản ghi · lệch 0 · lượt hai đổi 0 dòng'; N = 0 hoặc tổng ô khác mặc định = 0 → exit 2 'không có gì để dựng', không bao giờ 'lệch 0' trên lượt không đo; dòng cuối 'dung-lai: ĐẠT'; DB thật không đổi (băm 5 cột + provenance trước = sau lệnh)"
+  - id: E13
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [pipeline/scripts/dung-lai-canonical.mjs, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-7 đối chứng': chạy dung-lai-canonical.mjs ở ba chế độ (tiến trình con) — --doi-chung=ghi-thang (một ô ghi thẳng sau cắt chuyển, không phát biểu) → exit 1, stdout chứa 'đối chứng ghi-thang: lệch' và một offer_id + tên trường; --doi-chung=rut (rút một phát biểu đang thắng) → exit 1, 'đối chứng rut: lệch' + offer_id + trường; --doi-chung=legacy-khac (tiêm legacy mang giá trị khác mốc cho một ô trước cắt chuyển) → exit 1, 'đối chứng legacy-khac: lệch' + offer_id + trường; cả ba không để lại thay đổi (băm trước = sau)"
+  - id: E14
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.cat_chuyen_thu
+    paths: [pipeline/phat-bieu-cat-chuyen.mjs, db/migrations/045_phat_bieu_va_phan_xu.sql]
+    expected: "exit 0; lệnh tự chứa trong MỘT giao dịch ROLLBACK (nạp 045 khi DB chưa áp); chụp MỐC từng ô (offer_id, trường, giá trị) trước → catChuyen → so từng ô sau với MỐC: 0 lệch ngoài danh sách khai trước 'S05 property_type NULL → unknown: <k>' (in riêng kèm offer_id); in hai bảng đếm nguồn × trường (trước / sau); in 'legacy mới: <m>' với m > 0 trên DB chưa cắt chuyển; lượt hai trong cùng giao dịch in 'legacy mới: 0'; dòng cuối 'cat-chuyen --thu: ĐẠT (ROLLBACK)'; DB thật không đổi (đếm field_assertions và ops_audit trước = sau lệnh)"
+  - id: E15
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [pipeline/phat-bieu-cat-chuyen.mjs, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-8' (giao dịch): tin mồi có street_raw ghi thẳng không phát biểu → hàm catChuyen (xuất khẩu, cùng thân với lệnh) ghi đúng 1 phát biểu legacy (observed, method_version '045', evidence.note), cột giữ nguyên, ops_audit 'phat-bieu:cat-chuyen' có detail.truoc và detail.sau; chạy lại → 0 phát biểu mới; đối chứng: tin mồi đã có phát biểu parser cho ô đó → không ghi legacy; ba ca cổng — 'PD-AC-8 cổng resolve' (resolve_offer_fields), 'PD-AC-8 cổng apply/revert' (apply_enrichment, revert_enrichment), 'PD-AC-8 cổng transform' (runTransformChotot, writeOffers) — trên giao dịch đã nạp 045 mà KHÔNG có dòng ops_audit phat-bieu:cat-chuyen (dòng thật, nếu có, được giấu trong giao dịch): mỗi đường lỗi với thông điệp chứa 'phân xử: chưa cắt chuyển' và băm năm cột trước = sau; đối chứng dương: có dòng cắt chuyển thì resolve_offer_fields và runTransformChotot chạy"
+  - id: E16
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.nap_lai_ba_luot
+    paths: [pipeline/scripts/nap-lai-ba-luot.mjs, pipeline/lib/nap-lai-matrix.mjs, pipeline/lib/write-offers.mjs, pipeline/transform-zalo.mjs, pipeline/transform-chotot.mjs]
+    expected: "exit 0; 'nap-lai-ba-luot: 3 lượt · mất 0 quyết định · mất 0 liên kết'; hai đối chứng có sẵn vẫn in 'thấy mất'; dòng cuối 'nap-lai-ba-luot: ĐẠT'"
+  - id: E17
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.phat_bieu_db
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/write-offers.mjs, db/migrations/045_phat_bieu_va_phan_xu.sql, pipeline/scripts/phat-bieu-db.itest.mjs]
+    expected: "exit 0; ca 'PD-AC-9' (giao dịch): post S03 giả trong stg_zalo_posts '2PN' → transform-zalo đường hàm → cột bedrooms 2; apply_enrichment một đề xuất bedrooms 3 với actor 'hitl:thu' → cột 3; ba lượt transform-zalo liên tiếp, lượt 2 đổi parser (tiêm parse ra 4PN) → sau mỗi lượt phát biểu hitl còn sống, cột = 3; phát biểu parser 2 đã rút 'thay-boi-luot', parser 4 sống; field_provenance.bedrooms.method = 'hitl', lower_disagree true"
+  - id: E18
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.chay_that_thu
+    paths: [pipeline/scripts/phat-bieu-chay-that.mjs, pipeline/transform-chotot.mjs, pipeline/transform-zalo.mjs, pipeline/transform-fb.mjs]
+    expected: "exit 0; in giây từng bước (transform-chotot, transform-zalo, transform-fb, phân xử toàn bộ) và 'tổng <s> giây ≤ 300'; s > 300 → exit 1 nêu bước chậm nhất; dòng cuối 'chay-that --thu: ĐẠT (ROLLBACK)'"
+  - id: E19
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.phat_bieu
+    paths: [pipeline/sync-cloud.mjs, pipeline/scripts/phat-bieu.test.mjs]
+    expected: "exit 0; ca 'PB-AC-10 cloud': CLOUD_ALLOW.sale_offers (import thật từ sync-cloud.mjs) không chứa 'field_provenance'; danh sách bảng sync xuất khẩu không chứa 'field_assertions'; đối chứng: bản sao mảng thêm 'field_provenance' → hàm kiểm trả 1 vi phạm nêu tên cột"
+  - id: E20
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0 (cả bộ pipeline npm test, gồm sync-cloud, write-offers, nap-lai, vocab)"
+  - id: E21
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/**]
+    expected: "exit 0 (test render app đọc view sale_offers không đổi)"

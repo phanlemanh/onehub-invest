@@ -16,6 +16,7 @@ import pg from "pg"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
+import { themPhienAdmin } from "./helpers/phien-thu"
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..")
 const ROOT = join(APP, "..")
@@ -61,12 +62,14 @@ const asAdmin = async () => ADMIN
 type Row = { id: number; source_code: string; group_key: string; name: string; enabled?: boolean; params: Record<string, unknown> }
 const admin = new pg.Client({ connectionString: localDbUrl() })
 const sc = new pg.Client({ connectionString: schemaUrl(S) })
+let PHIEN_ADMIN = "" // cookie phiên admin trong lược đồ tạm — route ghi nay đòi người thật (TV1)
 
 before(async () => {
   await admin.connect()
   await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`)
   await admin.query(`CREATE SCHEMA "${S}"`)
   for (const t of ["source_groups", "ops_audit", "stg_zalo_posts"]) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING ALL)`)
+  PHIEN_ADMIN = (await themPhienAdmin(admin, S)).cookie
   await sc.connect()
 })
 after(async () => {
@@ -107,8 +110,8 @@ test("CD-AC-1 admin bật Bùng hạn H+13 → params + đúng một dòng audit
   const a = await audits()
   assert.equal(a.length, 1, "phải đúng một dòng audit")
   assert.equal(a[0].actor, "user:42")
-  assert.equal(a[0].action, "source-group:mode")
-  assert.deepEqual(a[0].detail, { id: 7, source_code: "S06", from: null, to: "bung", burst_until: ngay(13), burst_until_cu: null })
+  assert.equal(a[0].action, "unit.set_mode")
+  assert.deepEqual(a[0].detail, { thao_tac: "set-mode", id: 7, source_code: "S06", from: null, to: "bung", burst_until: ngay(13), burst_until_cu: null })
   const d = JSON.stringify(a[0].detail)
   assert.ok(!d.includes(S06_HCM.group_key) && !d.includes(S06_HCM.name), "detail audit lộ group_key/name")
 })
@@ -116,7 +119,7 @@ test("CD-AC-1 admin bật Bùng hạn H+13 → params + đúng một dòng audit
 test("CD-AC-1b INSERT audit hỏng → 500, params giữ nguyên; gỡ CHECK thì ghi được", async () => {
   const { datCheDo } = await lib()
   await seed([S06_HCM])
-  await sc.query(`ALTER TABLE ops_audit ADD CONSTRAINT cd_chan CHECK (action <> 'source-group:mode')`)
+  await sc.query(`ALTER TABLE ops_audit ADD CONSTRAINT cd_chan CHECK (action <> 'unit.set_mode')`)
   try {
     const truoc = await allParams()
     const r = await datCheDo({ action: "set-mode", id: 7, mode: "bung", burstUntil: ngay(3) }, asAdmin, { now: NOW })
@@ -156,7 +159,7 @@ test("CD-AC-2 ma trận 7 đầu vào hỏng → 400/404, không đổi params, 
 })
 
 // ---------------------------------------------------------------- AC-3 --
-test("CD-AC-3 không phải admin → 403; route trao set-mode cho datCheDo(…, getSessionUser)", async () => {
+test("CD-AC-3 không phải admin → 403; route trao set-mode cho datCheDo(…, người đã qua kiemQuyen)", async () => {
   const { datCheDo } = await lib()
   await seed([S06_HCM])
   const truoc = await allParams()
@@ -168,17 +171,17 @@ test("CD-AC-3 không phải admin → 403; route trao set-mode cho datCheDo(…,
   assert.deepEqual(await allParams(), truoc)
   assert.equal(await nAudit(), 0)
   const route = readFileSync(join(APP, "src/app/api/v1/ops/source-groups/route.ts"), "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")
-  assert.match(route, /action\s*===\s*["']set-mode["'][\s\S]{0,200}datCheDo\(\s*b\s*,\s*getSessionUser\s*\)/, "route không trao set-mode cho datCheDo(b, getSessionUser)")
+  assert.match(route, /action\s*===\s*["']set-mode["'][\s\S]{0,120}kiemQuyen\(req, "unit\.set_mode"\)[\s\S]{0,80}datCheDo\(\s*b\s*,\s*async \(\) => q\.nguoi\s*\)/, "route không trao set-mode cho datCheDo(b, người đã qua kiemQuyen)")
   assert.equal((await datCheDo(than, asAdmin, { now: NOW })).status, 200, "đối chứng admin")
 })
 
-test("CD-AC-3b action cũ qua Bearer không ghi được khoá chế độ", async () => {
+test("CD-AC-3b action cũ qua route (phiên admin) không ghi được khoá chế độ", async () => {
   const { POST } = await import("../src/app/api/v1/ops/source-groups/route")
   await seed([S06_HCM])
   const goi = (body: Record<string, unknown>) =>
     POST(new Request("http://localhost/api/v1/ops/source-groups", {
       method: "POST",
-      headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" },
+      headers: { authorization: `Bearer ${TOKEN}`, cookie: PHIEN_ADMIN, "content-type": "application/json" },
       body: JSON.stringify(body),
     }))
   const lau = { mode: "bung", burstUntil: "2027-12-31", burst_until: "2027-12-31", params: { mode: "bung", burst_until: "2027-12-31" } }
@@ -190,7 +193,7 @@ test("CD-AC-3b action cũ qua Bearer không ghi được khoá chế độ", asy
   assert.equal(tg.status, 200)
   assert.deepEqual(await params(7), S06_HCM.params)
   await new Promise((r) => setTimeout(r, 100))
-  assert.equal((await audits()).filter((a) => a.action === "source-group:mode").length, 0)
+  assert.equal((await audits()).filter((a) => a.action === "unit.set_mode").length, 0)
 })
 
 // ---------------------------------------------------------------- AC-4 --

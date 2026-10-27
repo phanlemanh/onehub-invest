@@ -1,0 +1,9 @@
+#!/bin/bash
+# date «nhảy phút» (AC-2): mỗi lần gọi định dạng dòng tiêu đề tăng một phút — mô phỏng hai lượt audit vắt qua ranh giới
+# phút. Bộ đếm nằm cạnh tệp (qua-phut.sh chép tệp vào thư mục tạm); hộp test dựng env tối thiểu nên không truyền biến được.
+DEM="$(dirname "$0")/dem"
+if [ "$#" -eq 1 ] && [ "$1" = "+%Y-%m-%d %H:%M" ]; then
+  n=$(( $(cat "$DEM" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$DEM"
+  printf '2026-10-26 10:%02d\n' "$n"; exit 0
+fi
+PATH=/usr/bin:/bin exec date "$@"

@@ -270,7 +270,7 @@ enums:
     local: true
     rationale: "tên trường canonical nhận đề xuất enrich (migration 033); dd_lookup = tên field RESO của trường"
     checked_on: "2026-10-26"
-    columns: [enrichment_proposals.field]
+    columns: [enrichment_proposals.field, field_assertions.field]
     nullable: false
     values:
       - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
@@ -278,20 +278,47 @@ enums:
       - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
       - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
       - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+  evidence_tier:
+    term_vi: Lớp căn cứ
+    dd_field: null
+    local: true
+    rationale: "extension FieldAssertion.EvidenceTier (ADR-0013 §6, reso-khung §6) — thang ba lớp review §0.2 D-1, Mạnh đồng ý 26/10 (PL15 Hỏi-1)"
+    checked_on: "2026-10-26"
+    columns: [field_assertions.evidence_tier]
+    nullable: false
+    values:
+      - { code: fact, label_vi: Sự thật }
+      - { code: observed, label_vi: Quan sát có trích dẫn }
+      - { code: inferred, label_vi: Suy luận }
+  assertion_method:
+    term_vi: Phương pháp phát biểu
+    dd_field: null
+    local: true
+    rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15)"
+    checked_on: "2026-10-26"
+    columns: [field_assertions.method]
+    nullable: false
+    values:
+      - { code: hitl, label_vi: Người quyết }
+      - { code: source_field, label_vi: Trường có cấu trúc của nguồn }
+      - { code: parser, label_vi: Bộ đọc tin }
+      - { code: e1_rule, label_vi: Luật E1 }
+      - { code: e2_llm, label_vi: LLM E2 }
+      - { code: legacy, label_vi: Giá trị có trước }
   listing_intent:
     term_vi: Ý định tin
     dd_field: null
     local: true
-    rationale: "extension ListingIntent (ADR-0013 §9) — tin «tìm mua/thuê» không phải Property; gần nhất SavedSearch"
-    checked_on: "2026-10-23"
+    rationale: "extension ListingIntent (ADR-0013 §9) — yêu cầu là bên mua, đối xứng với listing bên bán (ROADMAP §3 #21); không phải Property, gần nhất SavedSearch"
+    checked_on: "2026-10-27"
     columns: []
     nullable: false
     values:
       - { code: offer, label_vi: Tin rao }
-      - { code: wanted, label_vi: "Tin tìm mua, tìm thuê" }
+      - { code: inquiry, label_vi: Yêu cầu }
       - { code: not_listing, label_vi: Không phải tin rao }
       - { code: unknown, label_vi: Chưa rõ }
-    note: "Cột đến ở PL5. Nhãn: Hỏi-1 của PL6 (Mạnh duyệt 26/10)."
+    note: "Cột đến ở PL5. Nhãn: Hỏi-1 của PL6 (Mạnh duyệt 26/10); wanted → inquiry «Yêu cầu»: Mạnh 27/10, migration 050."
   offer_status:
     term_vi: Trạng thái chào
     dd_field: StandardStatus
@@ -344,6 +371,9 @@ enums_lint_allow:
   - path: app/src/components/ops/review-card.tsx
     axis: enrich_field
     reason: "FIELD_LABEL của thẻ duyệt — UI1 đang sửa tệp này, PL23 dựng lại /ops/review (LUAT đợt dot0); dọn ở PL23"
+  - path: app/src/components/ops/review-card.tsx
+    axis: assertion_method
+    reason: "SOURCE_LABEL/CHOICE_LABEL nhãn nguồn đề xuất enrich (cột enrichment_proposals.source, cùng mã e1_rule/e2_llm) — PL23 dựng lại /ops/review hiện phát biểu theo lớp; dọn ở PL23"
   - path: pipeline/scripts/bench-gate.mjs
     axis: kind
     reason: "prompt bench Kev đóng băng để so số đo cũ; có lớp «other» của Kev (lệch L07 có chủ ý, không thuộc đường dữ liệu)"

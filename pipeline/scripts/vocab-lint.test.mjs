@@ -27,7 +27,7 @@ const SAU_DANG = [
   ["app/src/lib/c-nhan.ts", "export const N = { apartment: 'Căn hộ', land: 'Đất' };\n", 1, "property_type", "apartment,land"],
   ["app/src/lib/d-union.ts", "export type T = 'P1' | 'P2';\n", 1, "price_tier", "P1,P2"],
   ["pipeline/sql/e-in.sql", "-- lọc\nSELECT 1 FROM sale_offers\nWHERE property_type IN ('house', 'room');\n", 3, "property_type", "house,room"],
-  ["pipeline/f-prompt.mjs", "const P = `Trả JSON: {\"listing_intent\": \"offer|wanted\"}`;\n", 1, "listing_intent", "offer,wanted"],
+  ["pipeline/f-prompt.mjs", "const P = `Trả JSON: {\"listing_intent\": \"offer|inquiry\"}`;\n", 1, "listing_intent", "offer,inquiry"],
 ];
 // Cùng sáu tệp, mỗi chỗ còn một code lẻ → 0 chỗ đỏ.
 const MOT_CODE = {
@@ -152,6 +152,7 @@ const DOC_HANG_SINH = [
 // Tập ngoại lệ ghim ở contract AC-5 (path|axis) — so tập, không thừa không thiếu.
 const NGOAI_LE = [
   "app/src/components/ops/review-card.tsx|enrich_field",
+  "app/src/components/ops/review-card.tsx|assertion_method",   // PL15: nhãn nguồn đề xuất enrich, cùng tệp — dọn ở PL23
   "pipeline/scripts/bench-gate.mjs|kind",
   "pipeline/scripts/bench-extraction.mjs|kind",
   "pipeline/sql/500_asset_stats.sql|confidence",

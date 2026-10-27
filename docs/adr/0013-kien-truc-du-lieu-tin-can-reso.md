@@ -3,14 +3,15 @@
 Ngày: 2026-10-23 · Trạng thái: **accepted** (Mạnh duyệt R1–R5 ngày 23/10) · Sửa đổi: ADR-0011 Qđ 2 (danh pháp
 toà/phân khu) · Kèm theo: `docs/product/FRAMING.md` (mục đích, ba lớp, thang bậc),
 `docs/architecture/reso-khung-phan-loai.md` (bảng field đầy đủ, căn cứ tra DD),
-`docs/architecture/classification-enrich-review.md` (review phân loại + enrich)
+`docs/architecture/classification-enrich-review.md` (review phân loại + enrich) · **Được sửa bởi ADR-0016** (27/10):
+§1 lớp căn thành danh bạ vật thể nhiều cấp, §3 UPI neo toà hoặc thửa và đúc một lần, §9 thêm extension
 
 > ADR này là **khung mọi việc sau phải bám**: việc nào chạm dữ liệu tin, căn, phân loại, enrich, danh mục, thẻ
 > duyệt hay API đều đọc §«Luật cho mọi việc sau» trước khi thiết kế.
 
 ## Bối cảnh
 
-- FRAMING (Mạnh duyệt 23/10): mạng lưới listing tin cậy; căn gốc (số nhà / mã căn) là bản ghi duy nhất, tin đăng
+- FRAMING (Mạnh duyệt 23/10): mạng lưới listing tin cậy; căn gốc (số nhà / mã căn) là bản ghi duy nhất, tin
   trùng lặp trỏ về nó, trường dữ liệu là phần làm giàu; dữ liệu đi lên theo thang bậc B0–B5.
 - Review phân loại 23/10 tìm 20 lỗi; ba gốc chính: không lưu căn cứ, định danh băm nội dung, không đo.
 - ADR-0011 đặt RESO-first nhưng bảng danh pháp dựa trên tra cứu chưa đủ: tra lại thẳng tệp máy đọc
@@ -28,8 +29,11 @@ toà/phân khu) · Kèm theo: `docs/product/FRAMING.md` (mục đích, ba lớp,
 | Lớp | Bảng của mình | RESO |
 |---|---|---|
 | **Căn nhà** (bản ghi gốc) | `properties` (+ danh mục) | Định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource `Building` |
-| **Tin đăng** | `sale_offers`, `listings` | Resource `Property` (một bản ghi = một tin) + `Member` (người đăng) + `Media` (ảnh) |
+| **Listing** (tin: bán, thuê dài hạn, thuê ngắn hạn) | `sale_offers`, `listings` | Resource `Property` (một bản ghi = một tin) + `Member` (người đăng) + `Media` (ảnh) |
 | **Trường làm giàu** | cột của hai lớp trên | Field chuẩn của `Property` / `Building`, kèm field nguồn đo `*Source` và nhật ký `HistoryTransactional` |
+
+> **Sửa bởi ADR-0016**: lớp «Căn nhà» là họ danh bạ vật thể (thửa · toà · trục · căn), mỗi cấp một bảng chung một
+> khung; listing gắn ở mức sâu nhất biết được; `properties` chuyển dần thành view.
 
 Trường **thuộc căn** (loại, diện tích, tầng, số phòng, mã căn, toà, dự án) gắn với căn; trường **thuộc tin** (giá,
 bán/thuê, người đăng, trạng thái chào) gắn với tin (FRAMING §3.1).
@@ -56,6 +60,7 @@ metadata; hai trục địa lý `area` ∥ `asset_nodes`).
   `UniversalPropertyId = urn:onehub:upi:1:VN:<ISO 3166-2 tỉnh>:<BuildingKey>` ·
   `UniversalPropertySubId = <StackKey>:<tầng>`, hoặc `<StackKey>:*` khi tầng bị che (mức trục).
   Không dùng namespace `urn:reso:`. Khi VN có số thửa chuẩn thì chuyển sang UPI thật, giữ khoá cũ làm alias.
+  *(Sửa bởi ADR-0016 §4: khoá neo là toà, hoặc thửa khi không có toà; UPI đúc một lần, không tính lại.)*
 - **Người đăng**: `Member.MemberKey` (≈ ULI qua `MemberNationalAssociationId` khi có); tầng C (ROADMAP §3.11).
 
 ### 4. Địa lý
@@ -108,7 +113,7 @@ thêm `dd_version` cho từng field. Cách tra: bản JSON máy đọc của RES
 | `PriceBasis` (thu về · NET · gồm phí) | Gần nhất `ListingAgreement=Net`, không trùng nghĩa |
 | `FieldAssertion` (resource) | DD có `*Source` từng field nhưng không có phát biểu nhiều nguồn; RCP-50 Data Provenance còn là đề xuất |
 | `DataLevel` (B0–B5), `CapabilityLevel` (N0–N4) | Thang bậc FRAMING §3.4 |
-| `ListingIntent` (offer · wanted · not_listing) | Tin «tìm mua/thuê» không phải `Property`; gần nhất `SavedSearch` |
+| `ListingIntent` (offer · inquiry · not_listing) | Yêu cầu (bên mua: tìm mua/thuê) không phải `Property`; gần nhất `SavedSearch` |
 | `room` (phòng trọ) | Đã khai từ 025 |
 | UPI kiểu VN (`urn:onehub:upi`) | UPI chuẩn cần số thửa công khai |
 

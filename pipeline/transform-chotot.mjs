@@ -11,7 +11,8 @@ import pg from "pg";
 import { mintOfferId } from "./lib/offer-key.mjs";
 import { matchPhuong } from "./transform-zalo.mjs";
 import { docPhuongHopLe } from "./lib/osm.mjs";
-import { CONFIDENCE, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
+import { ASSERTION_METHOD, CONFIDENCE, ENRICH_FIELD, EVIDENCE_TIER, KIND, PROPERTY_TYPE } from "./lib/vocab.generated.mjs";
+import { kiemCatChuyen, resolveOffers, subjectKey, writeAssertions } from "./lib/assert.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -24,6 +25,7 @@ const norm = (s) =>
  * @param {import("pg").Client} client
  */
 export async function runTransformChotot(client) {
+  await kiemCatChuyen(client);   // PL15: chưa cắt chuyển thì dừng trước mọi lần ghi (job đỏ có tên, không mất ô)
   // Phường hợp lệ theo thành phố (OSM đã migrate sáp nhập 2025) — bộ đọc chung, bỏ khu vực lạc
   const areas = await docPhuongHopLe(client, ["vn-hanoi", "vn-hcmc"]);
   const byCity = new Map([
@@ -41,6 +43,10 @@ export async function runTransformChotot(client) {
   console.log(`stg có giá+DT: ${ads.length}`);
 
   let nHigh = 0, nMed = 0, nSkip = 0, nWardV3 = 0, nWardTxt = 0;
+  // PL15: loại hình (category) và phòng ngủ (rooms) là trường có cấu trúc của nguồn → phát biểu lớp sự thật; năm cột
+  // do bộ phân xử dựng cuối lượt, không ghi thẳng.
+  const phatBieu = [];
+  const offerIds = [];
   for (const ad of ads) {
     const kind = ad.ad_type === "s" ? KIND.sale : ad.ad_type === "u" ? KIND.rent_lt : null;
     // G-1: property_type theo category Chợ Tốt (migration 025, ADR-0011)
@@ -48,7 +54,7 @@ export async function runTransformChotot(client) {
       1010: PROPERTY_TYPE.apartment, 1020: PROPERTY_TYPE.house, 1030: PROPERTY_TYPE.commercial,
       1040: PROPERTY_TYPE.land, 1050: PROPERTY_TYPE.room,
     };
-    const propertyType = PT[ad.category] ?? PROPERTY_TYPE.unknown;
+    const propertyType = PT[ad.category] ?? null;
     if (!kind) { nSkip++; continue; }
 
     // Phường: ward_name_v3 (chuẩn 2025) → ward_name → text-match subject
@@ -83,24 +89,33 @@ export async function runTransformChotot(client) {
 
     await client.query(
       `INSERT INTO sale_offer_records (offer_id, area_id, kind, price_vnd, area_m2, price_perm2,
-                                 bedrooms, phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
-                                 price_tier, district_raw, seller_name, seller_ref, property_type, originating_system_key)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,1,ARRAY[]::text[],'S06','P2',$11,$12,$13,$14,$15)
+                                 phuong_raw, confidence, first_seen, last_seen, n_reposts, post_ids, source,
+                                 price_tier, district_raw, seller_name, seller_ref, originating_system_key)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,1,ARRAY[]::text[],'S06','P2',$10,$11,$12,$13)
        ON CONFLICT (offer_id) DO UPDATE SET
          last_seen = EXCLUDED.last_seen, price_vnd = EXCLUDED.price_vnd,
          price_perm2 = EXCLUDED.price_perm2, confidence = EXCLUDED.confidence,
          area_id = COALESCE(EXCLUDED.area_id, sale_offer_records.area_id),
          phuong_raw = COALESCE(EXCLUDED.phuong_raw, sale_offer_records.phuong_raw),
-         property_type = EXCLUDED.property_type,
          originating_system_key = EXCLUDED.originating_system_key`,
       [
         offerId, areaId, kind, Number(ad.price), Number(ad.size_m2), pricePerm2,
-        ad.rooms, phuongRaw, confidence, seen,
+        phuongRaw, confidence, seen,
         ad.area_name, seller.full_name ?? null,
-        payload.account_id ? `ct:${payload.account_id}` : null, propertyType, osk,
+        payload.account_id ? `ct:${payload.account_id}` : null, osk,
       ],
     );
+    offerIds.push(offerId);
+    const chung = { subject_key: subjectKey("S06", osk), evidence_tier: EVIDENCE_TIER.fact,
+      method: ASSERTION_METHOD.source_field, method_version: "transform-chotot@045", observed_at: seen };
+    if (propertyType) phatBieu.push({ ...chung, field: ENRICH_FIELD.property_type, value: propertyType, rule_id: `category:${ad.category}` });
+    if (Number.isInteger(Number(ad.rooms)) && Number(ad.rooms) > 0) {
+      phatBieu.push({ ...chung, field: ENRICH_FIELD.bedrooms, value: String(Number(ad.rooms)), rule_id: "rooms" });
+    }
   }
+  const ghi = await writeAssertions(client, phatBieu, { replaceOwn: true });
+  const pxu = offerIds.length ? await resolveOffers(client, offerIds) : { offers: 0, offers_changed: 0 };
+  console.log(`phát biểu S06: +${ghi.inserted} (rút ${ghi.retracted}) · phân xử ${pxu.offers} tin, đổi ${pxu.offers_changed}`);
   console.log(
     `P2 offers: ${nHigh} high / ${nMed} medium / ${nSkip} skip — ` +
     `phường: ${nWardV3} ward_v3 + ${nWardTxt} text-match` +

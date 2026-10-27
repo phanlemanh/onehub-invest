@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUser } from "@/lib/auth";
-import { canAccessOps } from "@/lib/ops-access";
-import { auditOpsWrite } from "@/lib/audit";
+import { kiemQuyen } from "@/lib/ops-access";
+import { LoiViec, ghiRoiLam } from "@/lib/audit";
 import { listZaloAccounts, listZaloGroupDirectory, setZaloGroupEnabled } from "@/lib/zalo-admin";
 
 export const dynamic = "force-dynamic";
@@ -11,16 +10,19 @@ export const dynamic = "force-dynamic";
  * GET  /api/v1/ops/zalo/groups?account=<id> — membership thật (directory) +
  * trạng thái bật + account nào đang sở hữu nhóm (cho bất biến 1-1).
  * POST { accountId, groupId, enabled } — bật/tắt; 409 kèm owner nếu xung đột.
+ * Quyền `zalo.admin` (admin, không bearer — TV1); ghi cấu hình đi sau dòng audit trong cùng transaction.
  */
-async function auth(req: Request): Promise<boolean> {
-  const expected = process.env.OPS_API_TOKEN;
-  const bearer = req.headers.get("authorization") ?? "";
-  if (!!expected && bearer === `Bearer ${expected}`) return true;
-  return canAccessOps(await getSessionUser());
+
+/** Xung đột 1 nhóm – 1 tài khoản: không ghi gì, dòng audit cuộn lại. */
+class XungDot extends Error {
+  constructor(public readonly owner: string) {
+    super(owner);
+  }
 }
 
 export async function GET(req: Request) {
-  if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const q = await kiemQuyen(req, "zalo.admin");
+  if (!q.ok) return q.res;
   const accountId = new URL(req.url).searchParams.get("account") ?? "default";
   const force = new URL(req.url).searchParams.get("refresh") === "1";
   try {
@@ -48,7 +50,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!(await auth(req))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const q = await kiemQuyen(req, "zalo.admin");
+  if (!q.ok) return q.res;
   const body = (await req.json().catch(() => ({}))) as {
     accountId?: string;
     groupId?: string;
@@ -57,20 +60,22 @@ export async function POST(req: Request) {
   if (!body.accountId || !body.groupId || typeof body.enabled !== "boolean") {
     return NextResponse.json({ error: "thiếu accountId/groupId/enabled" }, { status: 400 });
   }
+  const { accountId, groupId, enabled } = body;
   try {
-    const { conflictWith } = await setZaloGroupEnabled(body.accountId, body.groupId, body.enabled);
-    if (conflictWith) {
+    await ghiRoiLam(q.actor, "zalo.admin", { thao_tac: "group.toggle", accountId, groupId, enabled, to: enabled }, async () => {
+      const { conflictWith } = await setZaloGroupEnabled(accountId, groupId, enabled);
+      if (conflictWith) throw new XungDot(conflictWith);
+    });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (!(e instanceof LoiViec)) return NextResponse.json({ error: "không ghi được nhật ký — cấu hình không đổi" }, { status: 500 });
+    if (e.goc instanceof XungDot) {
+      const conflictWith = e.goc.owner;
       return NextResponse.json(
         { error: `Nhóm đã bật ở tài khoản "${conflictWith}" (nguyên tắc 1 nhóm – 1 tài khoản)`, conflictWith },
         { status: 409 },
       );
     }
-    auditOpsWrite("api:zalo-admin", "zalo.group.toggle", { accountId: body.accountId, groupId: body.groupId, enabled: body.enabled });
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "lỗi ghi config" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: e.message || "lỗi ghi config" }, { status: 400 });
   }
 }

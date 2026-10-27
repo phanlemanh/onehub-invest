@@ -1,0 +1,19 @@
+schema_version: 1
+feature_slug: cong-tac-test-ghim-ban-cu
+# Ca «GB-AC-n» ở scripts/cong-tac-ghim.itest.mjs (cần DB local :5433 vì chạy lại ca thử app).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.cong_tac_ghim
+    paths: [app/tests/cong-tac-nhom-go.test.tsx, app/tests/fixtures/source-groups-route.truoc-cong-tac.ts.txt, scripts/cong-tac-ghim.itest.mjs]
+    expected: "exit 0; ca 'GB-AC-1': văn bản ca thử không chứa 'origin/main', 'merge-base', 'execFileSync(\"git\"' hay 'git show'; sha256 fixture deepEqual sha256 của git show 8fc9603d:app/src/app/api/v1/ops/source-groups/route.ts; đối chứng: văn bản ca thử ở đỉnh #142 (git show f036fcb7:app/tests/cong-tac-nhom-go.test.tsx) chứa 'origin/main' → phép soát bắt được"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.cong_tac_ghim
+    layer: backend-effect
+    paths: [app/tests/cong-tac-nhom-go.test.tsx, app/tests/fixtures/source-groups-route.truoc-cong-tac.ts.txt, scripts/cong-tac-ghim.itest.mjs]
+    expected: "exit 0; ca 'GB-AC-2': thư mục tạm có tệp 'git' giả (chmod 755) in nguyên văn route hiện tại cho mọi 'git show …', đặt đầu PATH; chạy 'node --import tsx --test tests/cong-tac-nhom-go.test.tsx' trong app → exit 0 và đầu ra có 'ℹ pass 5', 'ℹ fail 0'; đối chứng: chép ca thử ở đỉnh f036fcb7 ra app/tests/.gb-cu-<pid>.test.tsx, chạy cùng PATH giả → exit ≠ 0 và đầu ra nêu 'CT-AC-1' hoặc 'CT-AC-2' trong mục failing; xoá bản chép trong finally"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

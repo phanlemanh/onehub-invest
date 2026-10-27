@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
-import { getSessionUser } from "@/lib/auth";
-import { canAccessOps } from "@/lib/ops-access";
-import { auditOpsWrite } from "@/lib/audit";
+import { kiemQuyen } from "@/lib/ops-access";
+import { ghiAuditTrong } from "@/lib/audit";
 import { planEnrichApproval, type EnrichChoices } from "@/lib/enrich-choices";
 
 export const dynamic = "force-dynamic";
@@ -18,18 +17,16 @@ export const dynamic = "force-dynamic";
  *   Thẻ có field xung đột (luật E1 trái LLM, AC-11): approved bắt buộc `choices` cho mỗi
  *   field đó (thiếu → 400, không đổi gì) → apply_enrichment(đề xuất được chọn + không xung
  *   đột) rồi decide_enrichment_review(...,'rejected') bác phần còn lại, cùng transaction.
- * Audit mọi quyết định.
+ * Quyền `review.decide` (vai ops, không bearer); quyết định và dòng audit ghi cùng transaction.
  */
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const user = await getSessionUser();
-  const expected = process.env.OPS_API_TOKEN;
-  const bearer = req.headers.get("authorization") ?? "";
-  const authOk =
-    (!!expected && bearer === `Bearer ${expected}`) || canAccessOps(user);
-  if (!authOk) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Quyền `review.decide`: một người từ vai ops — không bearer (quyết định ghi dữ liệu đi qua người, AGENTS.md luật 7).
+  const q = await kiemQuyen(req, "review.decide");
+  if (!q.ok) return q.res;
+  const user = q.nguoi!;
 
   const { id: idStr } = await params;
   const id = parseInt(idStr);
@@ -88,7 +85,7 @@ export async function POST(
     // Cập nhật review_queue
     await client.query(
       `UPDATE review_queue SET status = $1, decided_by = $2, decided_at = now() WHERE id = $3`,
-      [status, user?.id ?? "ops-api", id],
+      [status, user.id, id],
     );
 
     // Nếu entity_match → cập nhật property_candidates tương ứng
@@ -102,7 +99,7 @@ export async function POST(
         await client.query(
           `UPDATE property_candidates SET status = $1, decided_by = $2
            WHERE (offer_a = $3 AND offer_b = $4) OR (offer_a = $4 AND offer_b = $3)`,
-          [candStatus, `hitl:${user?.id ?? "api"}`, offerA, offerB],
+          [candStatus, `hitl:${user.id}`, offerA, offerB],
         );
       }
     }
@@ -110,7 +107,7 @@ export async function POST(
     // agent_output enrich:<offer_id> → áp/bác đề xuất enrichment qua hàm SQL duy nhất
     // (migration 033) — cùng transaction với cập nhật review_queue ở trên.
     if (isEnrich) {
-      const actor = `hitl:${user?.id ?? "api"}`;
+      const actor = `hitl:${user.id}`;
       if (applyIds) {
         // Thẻ xung đột: áp bên được chọn, bác phần còn lại — hai hàm SQL của 033.
         await client.query(`SELECT apply_enrichment($1, $2)`, [applyIds, actor]);
@@ -119,18 +116,19 @@ export async function POST(
         await client.query(`SELECT decide_enrichment_review($1, $2, $3)`, [id, status, actor]);
       }
     }
-    await client.query("COMMIT");
-
-    auditOpsWrite(user?.id ?? "ops-api", "review:decide", {
-      reviewId: id, item_type: item.item_type, item_id: item.item_id,
-      status, decided_by: user?.id ?? "api",
+    // Dòng audit trong CÙNG transaction: ghi hỏng → ROLLBACK cả quyết định.
+    await ghiAuditTrong(client, q.actor, "review.decide", {
+      thao_tac: "decide", reviewId: id, item_type: item.item_type, item_id: item.item_id,
+      from: item.status, to: status,
       ...(applyIds ? { choices } : {}),
     });
+    await client.query("COMMIT");
 
     return NextResponse.json({ ok: true, status });
   } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("review decide failed:", e instanceof Error ? e.message : e);
+    return NextResponse.json({ error: "không ghi được quyết định" }, { status: 500 });
   } finally {
     client.release();
   }

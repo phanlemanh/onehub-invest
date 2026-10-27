@@ -71,6 +71,10 @@ const eslintConfig = defineConfig([
     "src/components/blocks/**",
     // Bản sao nguyên văn maplibre-gl/dist (đã minify), xem lib/map-worker.ts.
     "public/maplibre-gl-worker.mjs",
+    // Bản chép tạm của ca thử công tắc nhóm thu (tests/cong-tac-nhom-go, scripts/cong-tac-ghim.itest): tạo rồi xoá giữa
+    // lượt, lint chạy chồng thì liệt kê được mà mở không thấy (ENOENT).
+    "**/.route-cu-*",
+    "**/.gb-cu-*",
   ]),
 ]);
 

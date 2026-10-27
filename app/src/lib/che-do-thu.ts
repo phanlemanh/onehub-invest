@@ -72,11 +72,11 @@ export async function datCheDo(
     else delete moi.burst_until
     await c.query("UPDATE source_groups SET params = $1::jsonb, updated_at = now() WHERE id = $2", [JSON.stringify(moi), id])
     await c.query(
-      `INSERT INTO ops_audit (actor, action, env, detail) VALUES ($1, 'source-group:mode', $2, $3::jsonb)`,
+      `INSERT INTO ops_audit (actor, action, env, detail) VALUES ($1, 'unit.set_mode', $2, $3::jsonb)`,
       [
         `user:${user!.id}`,
         process.env.VERCEL === "1" ? "cloud" : "local",
-        JSON.stringify({ id, source_code: rows[0].source_code, from, to: k.mode, burst_until: k.burstUntil, burst_until_cu: hanCu }),
+        JSON.stringify({ thao_tac: "set-mode", id, source_code: rows[0].source_code, from, to: k.mode, burst_until: k.burstUntil, burst_until_cu: hanCu }),
       ],
     )
     await c.query("COMMIT")
