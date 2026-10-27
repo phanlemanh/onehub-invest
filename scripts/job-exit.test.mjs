@@ -147,7 +147,7 @@ const JOBS = {
   "cloud-sync": {
     script: "scripts/cloud-sync.sh",
     tree: { copy: ["scripts/cloud-sync.sh", "scripts/lib/job-step.sh"] },
-    seq: ["ha-bung-het-han", "sync-cloud", "push-ops-facts"],
+    seq: ["ha-bung-het-han", "sync-cloud", "refresh-data-flow", "push-ops-facts"],
   },
   "collector-tuan": {
     // weekly-with-jitter → weekly-collect (set -e, exec) → finalize-hanoi.sh: khúc DB làn Claude nằm ở finalize
