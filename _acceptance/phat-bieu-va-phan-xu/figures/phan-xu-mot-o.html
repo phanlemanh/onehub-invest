@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phân xử một ô</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1120px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · phat-bieu-va-phan-xu · Hỏi-1</p>
+    <h1>Phân xử một ô: lớp cao nhất thắng, trong lớp xếp theo thứ tự tạm</h1>
+    <p class="sub">Một ô = một tin × một trường · tin gộp nhận phát biểu của mọi post · AC-3 · AC-4</p>
+
+    <svg viewBox="0 20 1040 640" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+
+      <rect x="0" y="20" width="1040" height="640" fill="#f5f5f5"/>
+
+      <!-- ===================== ARROWS (trước hộp) ===================== -->
+      <!-- bắt đầu → có lớp sự thật -->
+      <line x1="200" y1="96" x2="200" y2="130" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- sự thật: không → quan sát -->
+      <line x1="200" y1="236" x2="200" y2="274" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- quan sát: không → chỉ suy luận -->
+      <line x1="200" y1="380" x2="200" y2="418" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- chỉ suy luận → mặc định -->
+      <line x1="200" y1="484" x2="200" y2="518" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- sự thật: có → nhập nhánh -->
+      <path d="M300 184 H416 Q424 184 424 192 V252" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+      <!-- quan sát: có → nhập nhánh -->
+      <path d="M300 328 H416 Q424 328 424 320 V260" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+      <!-- nhập nhánh → một giá trị? -->
+      <line x1="428" y1="256" x2="482" y2="256" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- một giá trị: có → cột -->
+      <line x1="684" y1="256" x2="758" y2="256" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- nhiều giá trị → xếp -->
+      <line x1="584" y1="308" x2="584" y2="358" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <!-- xếp → cột -->
+      <path d="M704 408 H872 Q880 408 880 400 V298" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- arrow labels -->
+      <rect x="208" y="248" width="48" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="212" y="260" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">KHÔNG</text>
+      <rect x="208" y="392" width="48" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="212" y="404" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">KHÔNG</text>
+      <rect x="344" y="162" width="32" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="360" y="174" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÓ</text>
+      <rect x="344" y="306" width="32" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="360" y="318" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÓ</text>
+      <rect x="688" y="234" width="64" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="720" y="246" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÓ · NHẬN</text>
+      <rect x="592" y="324" width="44" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="596" y="336" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">NHIỀU</text>
+
+      <!-- ===================== NODES ===================== -->
+      <!-- bắt đầu -->
+      <rect x="80" y="40" width="240" height="56" rx="28" fill="#f5f5f5"/>
+      <rect x="80" y="40" width="240" height="56" rx="28" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="200" y="64" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Phát biểu sống</text>
+      <text x="200" y="80" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">của mọi post trong tin</text>
+
+      <!-- có lớp sự thật? -->
+      <polygon points="200,132 300,184 200,236 100,184" fill="#f5f5f5"/>
+      <polygon points="200,132 300,184 200,236 100,184" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="200" y="182" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có lớp sự thật?</text>
+      <text x="200" y="198" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">người · trường nguồn</text>
+
+      <!-- có lớp quan sát? -->
+      <polygon points="200,276 300,328 200,380 100,328" fill="#f5f5f5"/>
+      <polygon points="200,276 300,328 200,380 100,328" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="200" y="326" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Có lớp quan sát?</text>
+      <text x="200" y="342" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">parser · E1 · E2 · cũ</text>
+
+      <!-- chỉ suy luận / không có -->
+      <rect x="100" y="420" width="200" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="100" y="420" width="200" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="200" y="448" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chỉ suy luận / không có</text>
+      <text x="200" y="466" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">suy luận không bao giờ vào cột</text>
+
+      <!-- mặc định + gợi ý -->
+      <rect x="80" y="520" width="240" height="56" rx="28" fill="#f5f5f5"/>
+      <rect x="80" y="520" width="240" height="56" rx="28" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="200" y="544" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Mặc định + gợi ý</text>
+      <text x="200" y="562" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">unknown · các trường khác trống</text>
+
+      <!-- nhập nhánh -->
+      <circle cx="424" cy="256" r="4" fill="#2d3142"/>
+
+      <!-- trong lớp thắng: một giá trị? -->
+      <polygon points="584,204 684,256 584,308 484,256" fill="#f5f5f5"/>
+      <polygon points="584,204 684,256 584,308 484,256" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="584" y="252" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Trong lớp thắng:</text>
+      <text x="584" y="268" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">một giá trị?</text>
+
+      <!-- xếp theo thứ tự tạm (focal) -->
+      <rect x="464" y="360" width="240" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="464" y="360" width="240" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="472" y="366" width="36" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="490" y="377" fill="#ba4513" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-3</text>
+      <text x="584" y="400" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Xếp theo thứ tự tạm</text>
+      <text x="584" y="416" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">người › trường nguồn</text>
+      <text x="584" y="430" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">parser › E1 › E2 › cũ</text>
+      <text x="584" y="446" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist', sans-serif" text-anchor="middle">+ cờ bất đồng</text>
+
+      <!-- cột + nguồn gốc -->
+      <rect x="760" y="216" width="240" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="760" y="216" width="240" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="768" y="222" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="786" y="233" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-4</text>
+      <text x="880" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Cột + nguồn gốc</text>
+      <text x="880" y="272" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif" text-anchor="middle">lớp · phương pháp · id phát biểu</text>
+      <text x="880" y="286" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">measured: false</text>
+
+      <!-- ghi chú biên tập -->
+      <text x="464" y="492" fill="#4f5d75" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">Thứ tự tạm chỉ đứng tới khi ô được đo —</text>
+      <text x="464" y="512" fill="#4f5d75" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Lora', serif">nguồn gốc ghi «chưa đo» để PL21 có chỗ gác.</text>
+
+      <!-- ===================== LEGEND ===================== -->
+      <line x1="40" y1="600" x2="1000" y2="600" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="620" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="632" width="24" height="12" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="72" y="642" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bắt đầu / kết thúc</text>
+
+      <rect x="176" y="632" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="200" y="642" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước</text>
+
+      <polygon points="256,632 264,638 256,644 248,638" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="272" y="642" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Quyết định</text>
+
+      <circle cx="348" cy="638" r="4" fill="#2d3142"/>
+      <text x="360" y="642" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhập nhánh</text>
+
+      <rect x="440" y="632" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="464" y="642" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Câu hỏi đang trình: thứ tự tạm trong lớp</text>
+
+      <rect x="664" y="630" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="682" y="641" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AC-n</text>
+      <text x="708" y="642" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Tiêu chí liên quan</text>
+    </svg>
+  </div>
+</body>
+</html>
