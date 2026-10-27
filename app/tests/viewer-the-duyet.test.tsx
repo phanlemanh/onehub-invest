@@ -4,10 +4,12 @@
 // bản chép tạm của tệp nguồn (tests/.vt-cu-*) đổi đúng một chỗ, thông điệp ghim.
 import { after, before, describe, test } from "node:test"
 import assert from "node:assert/strict"
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { readFileSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import pg from "pg"
+import type { ReactElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
@@ -38,7 +40,8 @@ async function banChepTam<T>(rel: string, doi: (s: string) => string): Promise<T
   const dir = path.dirname(path.join(APP, rel))
   const tuyet = sau.replace(/(from\s+|import\()"(\.{1,2}\/[^"]+)"/g, (_m, a, p) => `${a}"${path.join(dir, p)}"`)
   const f = path.join(APP, "tests", `.vt-cu-${process.pid}-${CHEP.length}${path.extname(rel)}`)
-  writeFileSync(f, tuyet)
+  // tsx dịch JSX ở tests/ theo runtime cổ điển (tsconfig không phủ bản chép) → cần React trong phạm vi.
+  writeFileSync(f, rel.endsWith(".tsx") ? `import React from "react"\n${tuyet}` : tuyet)
   CHEP.push(f)
   return (await import(f)) as T
 }
@@ -61,8 +64,8 @@ async function napThe(schema: string) {
   for (const [id, type, status] of THE)
     await admin.query(
       `INSERT INTO "${schema}".review_queue (id, item_type, item_id, title, evidence, ai_suggestion, ai_reasoning, status, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now() - ($1 || ' minutes')::interval)`,
-      [id, type, `vt:${id}`, `vt-mat-${id}-title`, JSON.stringify({ note: `vt-mat-${id}-evidence` }), `vt-mat-${id}-ai_suggestion`, `vt-mat-${id}-ai_reasoning`, status],
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now() - make_interval(mins => $9))`,
+      [id, type, `vt:${id}`, `vt-mat-${id}-title`, JSON.stringify({ note: `vt-mat-${id}-evidence` }), `vt-mat-${id}-ai_suggestion`, `vt-mat-${id}-ai_reasoning`, status, id],
     )
 }
 
@@ -132,5 +135,70 @@ describe("VT-AC-1 luật xem nội dung", () => {
   })
 })
 
-void ready
-void mkdirSync
+
+// ---------- công cụ đo ----------
+/** JSON của props mọi phần tử trong cây trả về (bỏ hàm) — thứ sẽ tuần tự hoá xuống thành phần client. */
+const jsonCay = (el: unknown) => JSON.stringify(el, (_k, v) => (typeof v === "function" || typeof v === "symbol" ? undefined : v))
+type Ghi = { sql: string; rows: Record<string, unknown>[] }
+/** Bọc pool.query của app: ghi câu SQL và mọi dòng DB trả về trong lúc chạy fn. */
+async function batTruyVan<T>(fn: () => Promise<T>): Promise<{ kq: T; ghi: Ghi[] }> {
+  const { pool } = await import("../src/lib/db")
+  const goc = pool.query.bind(pool) as (...a: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
+  const ghi: Ghi[] = []
+  ;(pool as unknown as { query: unknown }).query = async (...a: unknown[]) => {
+    const r = await goc(...a)
+    ghi.push({ sql: String(typeof a[0] === "string" ? a[0] : (a[0] as { text?: string })?.text), rows: r.rows ?? [] })
+    return r
+  }
+  try {
+    return { kq: await fn(), ghi }
+  } finally {
+    ;(pool as unknown as { query: unknown }).query = goc
+  }
+}
+const COT_THE = ["title", "evidence", "ai_suggestion", "ai_reasoning"]
+const CHU_THE = "Nội dung thẻ chỉ hiện cho vai Vận hành trở lên."
+type ReviewMod = { ReviewContent: (p: { user: User }) => Promise<ReactElement> }
+
+/** Phép đo AC-2 trên một bản ReviewContent: dòng DB trước, rồi props, rồi HTML. Trả HTML. */
+async function doReviewViewer(mod: ReviewMod, user: User = NGUOI.viewer): Promise<string> {
+  const { kq: el, ghi } = await batTruyVan(() => mod.ReviewContent({ user }))
+  for (const g of ghi) {
+    for (const r of g.rows) for (const k of COT_THE) assert.ok(!(k in r), `cột '${k}' trả cho viewer (${g.sql.trim().slice(0, 60)})`)
+    assert.doesNotMatch(JSON.stringify(g.rows), /vt-mat-/, "dòng DB trả cho viewer mang nội dung thẻ")
+  }
+  assert.doesNotMatch(jsonCay(el), /vt-mat-/, "props của cây trả về mang nội dung thẻ")
+  const html = renderToStaticMarkup(el)
+  assert.doesNotMatch(html, /vt-mat-/, "HTML mang nội dung thẻ")
+  return html
+}
+
+// ---------- AC-2: /ops/review cho viewer ----------
+describe("VT-AC-2 viewer: hàng duyệt chỉ số đếm", () => {
+  test("VT-AC-2 số thẻ chờ, không nội dung", async () => {
+    ready()
+    const mod = (await import("../src/components/ops/review-content")) as ReviewMod
+    const html = await doReviewViewer(mod)
+    assert.match(html, /data-pending-total="3"/, "tổng 3 thẻ chờ (thẻ approved không đếm)")
+    assert.match(html, /entity_match: 2/)
+    assert.match(html, /data_quality: 1/)
+    assert.ok(html.includes(CHU_THE), "câu chú thích")
+    // Đối chứng: nhánh viewer bị bỏ — trang đọc đủ cột như vai ops.
+    const sai = await banChepTam<ReviewMod>("src/components/ops/review-content.tsx", (s) => s.replace("if (!xemNoiDungTin(user))", "if (false)"))
+    await assert.rejects(doReviewViewer(sai), /cột 'title'/, "đối chứng đọc đủ cột phải đỏ ở cột title")
+  })
+  test("VT-AC-2b hàng rỗng", async () => {
+    ready()
+    await admin.query(`ALTER TABLE "${S}".review_queue RENAME TO vt_rq_day`)
+    try {
+      await admin.query(`CREATE TABLE "${S}".review_queue (LIKE public.review_queue INCLUDING DEFAULTS)`)
+      const mod = (await import("../src/components/ops/review-content")) as ReviewMod
+      const html = await doReviewViewer(mod)
+      assert.match(html, /data-pending-total="0"/)
+      assert.ok(html.includes(CHU_THE))
+    } finally {
+      await admin.query(`DROP TABLE IF EXISTS "${S}".review_queue`)
+      await admin.query(`ALTER TABLE "${S}".vt_rq_day RENAME TO review_queue`)
+    }
+  })
+})
