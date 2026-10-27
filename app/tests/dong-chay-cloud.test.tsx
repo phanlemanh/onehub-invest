@@ -50,8 +50,15 @@ Object.assign(globalThis, {
     unobserve() {}
     disconnect() {}
   },
+  // Báo kích thước thật khi quan sát: biểu đồ ngày (Recharts) dựng điểm và tooltip được trong jsdom (AC-6 đọc điểm ngày).
   ResizeObserver: class {
-    observe() {}
+    cb: ResizeObserverCallback
+    constructor(cb: ResizeObserverCallback) {
+      this.cb = cb
+    }
+    observe(el: Element) {
+      this.cb([{ target: el, contentRect: { width: 800, height: 248 } } as unknown as ResizeObserverEntry], this as unknown as ResizeObserver)
+    }
     unobserve() {}
     disconnect() {}
   },
@@ -579,6 +586,59 @@ function mutantApp(rel: string, fn: (s: string) => string) {
   return { path: dst.replace(/\.tsx$/, ""), done: () => rmSync(dst, { force: true }) }
 }
 
+/** Điểm ngày trên DOM: đi biểu đồ «Chặng theo ngày» bằng bàn phím (accessibilityLayer), đọc tooltip từng ngày. */
+async function trendPoints(root: Element, n: number) {
+  const svg = [...root.querySelectorAll("svg.recharts-surface")].find((x) => x.closest("[data-slot=frame]")?.textContent?.includes("Chặng theo ngày")) as HTMLElement | undefined
+  assert.ok(svg, "không thấy biểu đồ «Chặng theo ngày»")
+  const read = () => {
+    const t = txt(svg.closest(".recharts-wrapper")?.querySelector(".recharts-tooltip-wrapper")).replace(/\s/g, "")
+    const m = t.match(/^(\d+\/\d+)/)
+    const v = (label: string) => Number(t.match(new RegExp(`${label}([\\d.]+)`))?.[1]?.replace(/\./g, "") ?? NaN)
+    return { day: m?.[1] ?? "", received: v("Bàinhận"), readable: v("Đọcđược"), offers: v("Tinraomới"), linked: v("Gắncăn") }
+  }
+  await act(() => svg.focus())
+  const out = [read()]
+  for (let i = 1; i < n; i++) {
+    await act(() => void svg.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })))
+    out.push(read())
+  }
+  return out
+}
+/** Điểm ngày mong đợi tính độc lập từ khối: n ngày VN kết thúc ở ngày VN của NOW, cộng mọi nguồn, ngày không số = 0. */
+function wantPoints(days: FF["days"], n: number) {
+  const end = Date.parse(`${new Date(NOW + 7 * 3_600_000).toISOString().slice(0, 10)}T00:00:00Z`)
+  return Array.from({ length: n }, (_, i) => {
+    const iso = new Date(end - (n - 1 - i) * 86_400_000).toISOString().slice(0, 10)
+    const on = days.filter((d) => d.day === iso)
+    const sum = (k: "received" | "readable" | "offers" | "linked") => on.reduce((a, d) => a + d[k], 0)
+    return { day: `${Number(iso.slice(8, 10))}/${Number(iso.slice(5, 7))}`, received: sum("received"), readable: sum("readable"), offers: sum("offers"), linked: sum("linked") }
+  })
+}
+/** Lưới «Theo nhóm thu»: số từng nhóm (Bài nhận · Đọc được · Tin rao) trên DOM so với khối. */
+async function groupProblems(root: Element, groups: FF["groups"]): Promise<string[]> {
+  const trigger = root.querySelector("[aria-label='Phân đoạn']") as HTMLElement | null
+  assert.ok(trigger, "không thấy chọn phân đoạn")
+  await act(() => trigger.click())
+  const opt = [...document.querySelectorAll("[role=option]")].find((o) => txt(o).includes("Theo nhóm thu")) as HTMLElement | undefined
+  assert.ok(opt, "không thấy lựa chọn «Theo nhóm thu»")
+  await act(() => opt.click())
+  const table = root.querySelector("th[data-col-id='health']")?.closest("table")
+  const cols = [...(table?.querySelectorAll("thead th") ?? [])].map((th) => th.getAttribute("data-col-id"))
+  const rows = [...(table?.querySelectorAll("tbody tr") ?? [])]
+  const out: string[] = []
+  if (rows.length !== groups.length) out.push(`lưới nhóm ${rows.length} hàng ≠ ${groups.length}`)
+  for (const g of groups) {
+    const tr = rows.find((r) => txt(r.querySelector("td")).startsWith(g.group) && txt(r.querySelector("td")).includes(g.source))
+    if (!tr) {
+      out.push(`lưới nhóm thiếu «${g.group}» (${g.source})`)
+      continue
+    }
+    const cell = (col: string) => txt(tr.querySelectorAll("td")[cols.indexOf(col)]?.querySelector("span.font-medium"))
+    for (const k of ["received", "readable", "offers"] as const) if (cell(k) !== String(g[k])) out.push(`nhóm «${g.group}» ${k} «${cell(k)}» ≠ ${g[k]}`)
+  }
+  return out
+}
+
 describe("DC-AC-6 route trên cloud", () => {
   test("DC-AC-6 route trên cloud — DataFlowContent ba cửa sổ trên lược đồ không stg_*", async () => {
     ready()
@@ -592,18 +652,31 @@ describe("DC-AC-6 route trên cloud", () => {
       console.log(`# DC-AC-6 ${w}: ${p.length ? p.join(" | ") : "khớp khối"}`)
       assert.deepEqual(p, [], `cửa sổ ${w}`)
       assert.doesNotMatch(txt(root), /Chưa có số theo ngày trong khoảng này/, "có điểm ngày trong khối mà biểu đồ ngày trống")
+      // Điểm ngày trên DOM = tổng viết tay từ khối (độc lập với dailySeries), từng ngày của cửa sổ biểu đồ.
+      const { chartDaysOf } = await import("../src/components/ops/data-flow/stage-trend-data")
+      const n = chartDaysOf(w)
+      const got = await trendPoints(root, n)
+      const want = wantPoints(blocks[w].days, n)
+      console.log(`# DC-AC-6 ${w} điểm ngày: ${got.filter((p) => p.received).map((p) => `${p.day}=${p.received}/${p.readable}/${p.offers}/${p.linked}`).join(" · ")}`)
+      assert.deepEqual(got, want, `cửa sổ ${w}: điểm ngày trên DOM ≠ khối`)
+      assert.ok(want.some((p) => p.received > 0), "đối chứng: cửa sổ phải có ngày có số")
     }
-    // Tên nhóm trên DOM: lưới «Theo nhóm thu».
-    const root = await render(await content("all", NOW))
-    const trigger = root.querySelector("[aria-label='Phân đoạn']") as HTMLElement | null
-    assert.ok(trigger, "không thấy chọn phân đoạn")
-    await act(() => trigger!.click())
-    const opt = [...document.querySelectorAll("[role=option]")].find((o) => txt(o).includes("Theo nhóm thu")) as HTMLElement | undefined
-    assert.ok(opt, "không thấy lựa chọn «Theo nhóm thu»")
-    await act(() => opt!.click())
-    const names = [...root.querySelectorAll("tbody tr")].map((tr) => txt(tr.querySelector("td")))
-    console.log(`# DC-AC-6 nhóm trên lưới: ${names.join(" · ")}`)
-    for (const g of blocks.all.groups) assert.ok(names.some((n) => n.includes(g.group)), `lưới nhóm thiếu «${g.group}»`)
+    // Số từng nhóm trên DOM: lưới «Theo nhóm thu», hai cửa sổ có số nhóm khác nhau.
+    for (const w of ["all", "7d"] as const) {
+      const root = await render(await content(w, NOW))
+      const p = await groupProblems(root, blocks[w].groups)
+      console.log(`# DC-AC-6 nhóm ${w}: ${p.length ? p.join(" | ") : blocks[w].groups.map((g) => `${g.group}=${g.received}/${g.readable}/${g.offers}`).join(" · ")}`)
+      assert.deepEqual(p, [], `cửa sổ ${w}: lưới nhóm ≠ khối`)
+    }
+    // Chiều đỏ của hai phép đo DOM: khối đột biến (một điểm ngày, một số nhóm) → phép đo gọi tên chỗ lệch.
+    {
+      const root = await render(await content("7d", NOW))
+      const i24 = blocks["7d"].days.findIndex((d) => d.day === "2026-10-24")
+      const sai = wantPoints(blocks["7d"].days.map((d, i) => (i === i24 ? { ...d, received: d.received + 5 } : d)), 7)
+      assert.notDeepEqual(await trendPoints(root, 7), sai, "phép đo điểm ngày phải phân biệt khối lệch một ngày")
+      const p = await groupProblems(root, blocks["7d"].groups.map((g, i) => (i === 0 ? { ...g, readable: g.readable + 1 } : g)))
+      assert.ok(p.some((m) => m.includes("readable")), `phép đo nhóm phải bắt số lệch: ${p.join(" | ")}`)
+    }
 
     // Đối chứng dương: cùng mô-đun, lược đồ có stg_* (và bảng tính sẵn) → nhánh máy thu.
     await admin.query(`CREATE TABLE "${S_CLOUD}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING DEFAULTS)`)
