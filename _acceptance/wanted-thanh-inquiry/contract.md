@@ -5,7 +5,7 @@ slug: wanted-thanh-inquiry
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [config, docs, ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-27-wanted-thanh-inquiry-design.md
 approved_by: Mạnh
 approved_at: 2026-10-27
@@ -129,3 +129,7 @@ Bỏ: hồ sơ không có `opportunity.md` (Mạnh giao thẳng trong phiên). X
   Đo 27/10, chỉ đọc: local và cloud mỗi bên đúng 1 dòng `wanted`.
 - PL5 (046, P2) tạo cột `listing_intent` với giá trị `inquiry` (giám sát đã chuyển lời).
 - Không đụng `stg_*`, DATA-CONTRACT hay collector.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-2: phép tự thử của răng so bản chụp giao diện luôn báo đúng, nên nếu bước so hỏng thì người chấm có thể không biết.
+  - Ngoài-3: phép tự thử ấy chỉ xác nhận chuỗi chữ đổi được, chưa chứng bước so bắt được chỗ lệch.
+  - Ngoài-4: răng rà tên cũ chưa bắt dạng liệt kê nối bằng «·» hay «,»; tài liệu nội bộ có thể còn sót chữ cũ mà không ai báo.
