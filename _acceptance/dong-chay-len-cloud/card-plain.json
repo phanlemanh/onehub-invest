@@ -1,0 +1,34 @@
+{
+  "feature_plain": "Đội vận hành mở «Dòng chảy dữ liệu» trên cloud và thấy số chặng, số tin từng bậc như ở máy thu, thay vì khung «Chỉ xem ở máy thu».",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ tính sẵn số dòng chảy ở máy thu mỗi 15 phút vào một bảng chỉ ở máy thu (ba cửa sổ 7 ngày, 30 ngày, toàn kho); chạy lại không nhân đôi, chỉ ghi bảng ấy, xong trong 30 giây."},
+    {"id": "AC-2", "p": "Sẽ cho ra đúng các số mà trang hôm nay đang hiện, đo trên cùng bộ dữ liệu thử của DF0."},
+    {"id": "AC-3", "p": "Sẽ để trang ở máy thu đọc bảng tính sẵn thay vì tính lúc tải, đầu trang ghi «Số tính lúc …»."},
+    {"id": "AC-4", "p": "Sẽ gửi số lên cloud trong bản tin 15 phút, chỉ gồm đúng danh sách đã duyệt ở Hỏi-2 — máy chặn mọi trường ngoài danh sách, kể cả mã tin hay mã nhóm."},
+    {"id": "AC-5", "p": "Sẽ chặn bản tin nếu tên nhóm lỡ mang tên nguồn thật."},
+    {"id": "AC-6", "p": "Sẽ cho trang trên cloud hiện số chặng, bậc, nhóm, ngày từ bản tin, không còn khung chỉ máy thu."},
+    {"id": "AC-7", "p": "Sẽ hiện đúng chữ trạng thái chung của các trang Ops trên cloud: số tươi, số cũ (kèm cảnh báo), chưa có số, không đo được — không bao giờ vẽ 0 thay cho số không có; số cũ tính theo lúc máy thu tính, không theo lúc gửi."},
+    {"id": "AC-8", "p": "Sẽ hiện «Tin mới nhất» trên cloud từ tin rao đã có trên cloud; hồ sơ tin ghi «Bài gốc chỉ xem ở máy thu» (theo khuyến nghị Hỏi-1)."},
+    {"id": "AC-9", "p": "Sẽ chạy bước tính sẵn trước bước gửi bản tin, và giữ bảng tính sẵn ở máy thu: không vào danh sách đồng bộ, rào kiểm báo đỏ nếu ai lỡ thêm, kiểm sau đồng bộ báo nếu cloud có bảng."},
+    {"id": "AC-10", "p": "Sẽ chứng số trên cloud bằng số máy thu ở cả ba cửa sổ, từ cùng một lần tính."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG làm thẻ điểm tin, điều kiện lên bậc, bảng chặn bậc (DF2–DF3) hay lăng kính nguyên tắc (DF4)."},
+    {"id": "OOS-2", "p": "KHÔNG đưa bài gốc và ảnh tin lên cloud (TV9), không làm trang hồ sơ tin riêng (TV10)."},
+    {"id": "OOS-3", "p": "KHÔNG đổi trang Thu thập (DF5)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Nơi đọc: máy thu (AC-3) và cloud (AC-6, AC-8)."},
+    {"i": 1, "p": "Trạng thái số trên cloud: tươi, cũ, chưa có, lỗi (AC-7)."},
+    {"i": 2, "p": "Ba cửa sổ 7 ngày, 30 ngày, toàn kho (AC-1, AC-2, AC-6, AC-10)."},
+    {"i": 3, "p": "Đường số: tính sẵn, bản tin, soát tầng A, lịch và rào đồng bộ (AC-1/2, AC-4, AC-5, AC-9)."},
+    {"i": 4, "p": "Một định nghĩa: số cloud bằng số máy thu (AC-10)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bài kiểm trang cloud ban đầu không đi qua đường trang thật. Đã sửa: trang và bài kiểm dùng chung một mô-đun, có đột biến giữ cổng cũ."},
+    {"i": 1, "p": "Danh sách trường lên cloud chỉ kiểm ở tầng ngoài, mã nhóm có thể lọt. Đã sửa: quét mọi tầng theo danh sách viết trước, đột biến mã nhóm và mã tin đều đỏ."},
+    {"i": 2, "p": "Lý do bỏ bước nhìn bản bấm được ban đầu không thật. Đã sửa: lý do thật là chưa được thử bảng mới trên DB máy thu trước merge; mặt cloud trên prod đo ở phiên nghiệm thu sau khi giao."},
+    {"i": 3, "p": "Số trên cloud có thể ghi «vừa đo» dù máy thu đã ngừng tính nhiều giờ. Đã sửa: tuổi số tính theo lúc máy thu tính, ngưỡng 45 phút ghim theo ADR."},
+    {"i": 4, "p": "Chưa có phép đo «cloud bằng máy thu». Đã sửa: thêm AC-10 so trọn hai bên, và mục Đường đo cho phần trên prod."}
+  ]
+}

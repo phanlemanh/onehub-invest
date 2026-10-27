@@ -1,0 +1,78 @@
+schema_version: 1
+feature_slug: dong-chay-len-cloud
+# Ca test mang tiền tố «DC-AC-n» trong app/tests/dong-chay-cloud.test.tsx (lược đồ tạm DB local `dc_<pid>` dựng như
+# fixture DF0 — không đụng public; áp db/migrations/051 + pipeline/sql/600 trên lược đồ tạm; bản tin khô thật qua
+# pipeline/scripts/capture-ops-facts.mjs; jsdom cho route). AC-9 thêm ca ở pipeline/sync-pii.test.mjs. Chiều đỏ là đột
+# biến cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [db/migrations/051_data_flow_snapshot.sql, pipeline/sql/600_data_flow.sql, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-1 bảng tính sẵn' xanh: áp 051 hai lần trên lược đồ tạm, cột/kiểu/khoá của data_flow_snapshot sau lần hai bằng sau lần một (đọc information_schema); chạy 600 hai lần → đúng ba dòng {7d, 30d, all}, facts lần hai deep-equal lần một, computed_at không lùi; mọi câu ghi (INSERT/UPDATE/DELETE/TRUNCATE) trong 600 chỉ nhắm data_flow_snapshot (quét câu SQL của tệp); ca 'DC-AC-1 thời gian thật' chạy 600 trong một giao dịch ROLLBACK trên DB local thật, in số giây, ≤ 30; chiều đỏ cùng ca: 600 đột biến bỏ DELETE → 6 dòng, ca đỏ 'làm tươi không idempotent'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [pipeline/sql/600_data_flow.sql, app/tests/dong-chay-cloud.test.tsx, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; ca 'DC-AC-2 số khớp DF0' xanh: fixture của DF-AC-2 dùng chung một mô-đun với tests/ops-dong-chay.test.tsx (không chép tay), facts của 'all' và '7d' ra đúng bảng mong đợi viết trước (S03: received 6, testRejected 3, readable 4, offers 2, complete 1, withWard 1, linked 1; S05: received 2, readable 1, offers 1; S06: received 4, readable 3, offers 3, linked 1, approx true; '7d' S03 received 4), cộng ngày, nhóm, shortStay, mix, enrichPending; chiều đỏ cùng ca: 600 đột biến bỏ vế NOT is_test → ca đỏ 'S03 received 9 ≠ 6'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dong_chay
+    paths: [app/src/lib/data-flow-queries.ts, app/tests/ops-dong-chay.test.tsx]
+    expected: "exit 0; bộ DF0 (tests/ops-dong-chay.test.tsx, tests/data-level.test.tsx) xanh khi getDataFlow đọc bảng tính sẵn (ca DB áp 051 + làm tươi 600 trên lược đồ tạm trước khi đọc); ca 'DC-AC-3 chỉ đọc bảng' của tests/dong-chay-cloud.test.tsx (chạy ở E1) ghi mọi câu getDataFlow gửi qua query tiêm: câu tổng hợp chỉ chạm data_flow_snapshot, câu duy nhất chạm stg_* là câu bài gốc của «Tin mới nhất» ở máy thu; DataFlowView dựng có «Số tính lúc HH:MM (giờ VN)» với giờ VN của computed_at"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [pipeline/push-ops-facts.mjs, pipeline/scripts/capture-ops-facts.mjs, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-4 khối dataFlow' xanh: bản tin khô THẬT (capture-ops-facts chạy push-ops-facts --kho trên lược đồ tạm) có blocks.dataFlow đủ ba cửa sổ; measured_at của khối bằng computed_at nhỏ nhất của bảng; quét đệ quy mọi đường khoá của khối, mọi đường thuộc ma trận viết trước (cấp một {sources, days, groups, shortStay, mix, enrichPending}; sources[] = khoá SourceFlow; days[] = {day, source, received, readable, offers, linked}; groups[] = {group, source, received, readable, offers, latestAt}; shortStay = {received, stored, withWard, latestAt}; mix = {sale, rentLt, shortStay}) — đối chứng dương: bản tin thật 0 vi phạm; chiều đỏ cùng ca: chèn groups[0].groupId → đỏ 'khối mang trường ngoài danh sách: groups[].groupId', chèn sources[0].offerId → đỏ nêu sources[].offerId; lược đồ không có data_flow_snapshot → khối chỉ có measured_at và error 'không đo được'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/tier-a-guard.mjs, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-5 soát tầng A' xanh: factsChan trên bản tin khô thật có blocks.dataFlow với tên nhóm thường → 0 dòng chặn; cùng bản tin, một tên nhóm chứa tên nguồn thật lấy từ source_registry của lược đồ tạm → đúng một dòng 'FACTS CHẶN [tầng A] blocks.dataFlow…'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [app/src/app/ops/data-flow/page.tsx, app/src/components/ops/data-flow/**, app/src/lib/data-flow-queries.ts, app/src/lib/ops-facts.ts, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-6 route trên cloud' xanh: lược đồ thứ hai KHÔNG có bảng stg_*, có ops_heartbeat 'primary' mang payload bản tin khô thật của E4 — gọi DataFlowContent (mô-đun mà page.tsx dùng) cho 7d/30d/all, dựng phần tử trả về trong jsdom: không có «Chỉ xem ở máy thu»; DOM có số «Bài nhận», «Đọc được», «Tin rao mới», «Gắn căn» từng nguồn, số «Đủ trường lõi», tên từng nhóm và nhãn ngày bằng khối; đối chứng dương: cùng mô-đun trên lược đồ có stg_* thì đi nhánh máy thu; chiều đỏ cùng ca: đột biến giữ cổng stg_* cũ → ca đỏ 'trang cloud vẫn vẽ khung chỉ-máy-thu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [app/src/components/ops/data-flow/**, app/src/lib/ops-facts.ts, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-7 bốn trạng thái' xanh, chữ đúng ADR-0014, độ tươi theo computed_at: hằng viết trước 45×60×1000 bằng FACTS_STALE_MS (lệch → đỏ 'ngưỡng cũ ≠ 45′ ADR-0014'); computed_at 10′ trước → «Số đo lúc HH:MM (giờ VN) từ máy local» không Alert; computed_at 3 giờ trước nhưng bản tin vừa đẩy → Alert «Máy local không đẩy số từ HH:MM (giờ VN)» với giờ của computed_at và số cũ vẫn hiện; payload không có khối → «—» kèm «Chỉ đo ở máy local»; khối error → «không đo được»; ở vắng và lỗi DOM không có ô chặng nào ghi 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [app/src/lib/data-flow-queries.ts, app/src/components/ops/data-flow/record-sheet.tsx, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-8 tin mới nhất trên cloud' xanh: lược đồ không stg_* có sale_offers của fixture — records trả đủ tin (≤150/nguồn) với postText null, bậc mỗi tin bằng levelOf; sheet hồ sơ tin có «Bài gốc chỉ xem ở máy thu», không có khối bài gốc; đối chứng dương: ở máy thu cùng tin có bài gốc"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [scripts/cloud-sync.sh, pipeline/sync-cloud.mjs, pipeline/sync-pii.test.mjs, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-9 lịch, FILL, leak gate' xanh: cloud-sync.sh có dòng job_run chạy 600_data_flow.sql đứng trước dòng job_run push-ops-facts (so chỉ số dòng; bản sao đảo hai dòng → đỏ 'làm tươi phải chạy trước push-ops-facts'); FILL (hằng xuất của sync-cloud.mjs) không chứa data_flow_snapshot; chạy node --test pipeline/sync-pii.test.mjs trên bản sao thư mục pipeline: xanh với code thật, ĐỎ ở ca data_flow_snapshot khi cấy bảng vào FILL; leakGate với cloud giả có data_flow_snapshot 3 dòng → báo 'data_flow_snapshot=3', 0 dòng → im"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [app/src/lib/data-flow-queries.ts, app/src/lib/ops-facts.ts, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; ca 'DC-AC-10 một định nghĩa' xanh: cùng một snapshot trên lược đồ tạm, phần tổng hợp của DataFlow (sources, days, groups, shortStay, mix, enrichPending) qua nhánh máy thu (đọc bảng) và nhánh cloud (đọc payload bản tin khô thật) deep-equal ở 7d/30d/all; chiều đỏ cùng ca: payload đột biến dời days[0].day sang ngày kế → ca đỏ 'cloud ≠ máy thu: days'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
