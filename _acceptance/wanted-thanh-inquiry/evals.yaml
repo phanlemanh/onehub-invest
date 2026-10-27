@@ -1,0 +1,67 @@
+schema_version: 1
+feature_slug: wanted-thanh-inquiry
+# Ca «VB-AC-1» ở pipeline/scripts/vocab.test.mjs (sổ thật), «VD-IQ-3» ở vocab-db.itest.mjs (chạy trên DB RIÊNG do răng
+# rang/db-rieng.mjs dựng từ db/migrations rồi xoá — không chạm oneinvest :5433), «TN-AC-7» ở
+# app/tests/tu-ngu-collections.test.tsx (render tĩnh). Răng quét tên cũ: rang/con-ten-cu.mjs (đường tính từ vị trí tệp;
+# đối chứng cấy trong bản sao thư mục tạm).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.vocab
+    paths: [pipeline/mappings.yaml, pipeline/scripts/vocab.test.mjs]
+    expected: "exit 0; ca 'VB-AC-1 sổ thật': 9 trục đúng thứ tự cũ; trục listing_intent có đúng code [offer, inquiry, not_listing, unknown]; ma trận nhãn viết trước có 4 dòng listing_intent ['Tin rao', 'Yêu cầu', 'Không phải tin rao', 'Chưa rõ'] và term_vi 'Ý định tin'; rationale chứa 'bên mua' và 'SavedSearch'; sổ không có code wanted; 35 dòng nhãn của tám trục khác giữ byte như trước vòng; ca sai khuôn 6 dòng của PL6 vẫn đỏ đúng thông điệp (đối chứng: sổ đột biến → validate ném)"
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.vocab_check
+    paths: [pipeline/mappings.yaml, pipeline/lib/vocab.generated.mjs, agent/src/vocab.generated.ts, app/src/lib/vocab.generated.ts, CONTEXT.md]
+    expected: "exit 0; dòng cuối 'vocab --check: 4/4 đích khớp sổ'"
+  - id: E2b
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.ten_cu_inquiry
+    paths: [pipeline/lib/vocab.generated.mjs, agent/src/vocab.generated.ts, app/src/lib/vocab.generated.ts, CONTEXT.md, _acceptance/wanted-thanh-inquiry/rang/con-ten-cu.mjs]
+    expected: "exit 0; khối 'đích sinh' in 4 dòng 'ok <đường>': in riêng từng tệp và thứ nó phải chứa — app/src/lib/vocab.generated.ts: code 'inquiry' + nhãn 'Yêu cầu'; pipeline/lib/vocab.generated.mjs và agent/src/vocab.generated.ts: code 'inquiry', CONTEXT.md có dòng bảng VOCAB chứa '`inquiry` «Yêu cầu»'; không đích nào chứa code wanted trong nháy hay nhãn 'Tin tìm mua, tìm thuê'"
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.vocab_db_rieng
+    paths: [db/migrations/050_wanted_thanh_inquiry.sql, pipeline/scripts/vocab-db.itest.mjs, _acceptance/wanted-thanh-inquiry/rang/db-rieng.mjs]
+    expected: "exit 0; răng dựng DB 'oneinvest_u1_inquiry_<pid>' trên cùng máy chủ :5433, áp db/migrations bằng scripts/ci-db-init.mjs, chạy vocab-db.itest.mjs với DATABASE_URL trỏ DB đó, rồi DROP DATABASE trong finally; in 'db riêng: dựng · áp N migration · test xanh · đã xoá'; sau lượt pg_database không còn tên 'oneinvest_u1_inquiry_%'. Đối chứng lỗi: chạy răng với cờ --ep-loi (test ném giữa chừng) → răng thoát khác 0 NHƯNG vẫn in 'đã xoá' và pg_database không còn DB tạm. Đối chứng tên: gọi hàm xoá với 'oneinvest' và 'oneinvest_u1_inquiry_x' → từ chối 'tên DB ngoài khuôn', không DROP, thoát khác 0. Ca 'VD-IQ-3' trong BEGIN…ROLLBACK: bỏ ref_*, áp 043 → checkDb trả lệch chứa 'inquiry' (đối chứng đỏ); áp 050 → 0 lệch; dòng (listing_intent, inquiry) = ('Yêu cầu', is_local true, sort_order 2); count lookup_value='wanted' = 0; số dòng theo từng trục bằng trước khi áp; áp lần hai → không ném, cùng kết quả; ca VD-AC-7/8 cũ áp 043 rồi 050 và vẫn xanh. Đối chứng an toàn: trước và sau lượt, current_database() của DB oneinvest không có bảng mới và count(ref_lookup WHERE lookup_value='wanted') ở oneinvest giữ nguyên"
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.ten_cu_inquiry
+    paths: ["**"]
+    expected: "exit 0; dòng 'tên cũ: 0 chỗ ngoài bảng lịch sử'; khối 'bảng lịch sử' in đúng 12 dòng theo thứ tự bảng AC-4, mỗi dòng '<mục> · <n> chỗ'; dòng đổi tên (tên cũ cùng '→ `inquiry`' hoặc '→ inquiry') đếm riêng 'dòng đổi tên: <k>'; đối chứng tự chạy cuối lượt trên bản sao git ls-files ở thư mục tạm, ma trận 6 dạng viết trước: cấy '\"wanted\"', \"'wanted'\", '`wanted`', 'code: wanted' vào bốn bản sao tệp khác nhau, 'offer|wanted|not_listing' vào bản sao agent/src/agents/enrich-text.ts, 'Tin tìm mua, tìm thuê' vào bản sao app/src/lib/vocab.generated.ts → mỗi ca đúng 1 dòng đỏ '<đường>:<dòng>' nêu đúng đường; cấy 'const wanted = 1' → 0 dòng đỏ; cấy '`wanted` → `inquiry`' vào bản sao docs/ROADMAP.md → 0 dòng đỏ; đối chứng sai kỳ vọng → thoát 1 với 'răng hỏng'"
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ten_cu_inquiry
+    paths: [CONTEXT.md, docs/adr/0013-kien-truc-du-lieu-tin-can-reso.md, docs/architecture/reso-khung-phan-loai.md, docs/ROADMAP.md]
+    expected: "exit 0; khối 'docs sống' in 5 dòng 'ok': CONTEXT.md có ba khối mở đầu '**Yêu cầu**:', '**Yêu cầu mua**:', '**Yêu cầu thuê**:'; khối **Yêu cầu** chứa 'bên mua', '`kind`', 'SavedSearch'; khối **Listing** chứa 'bên bán'; CONTEXT.md không còn chuỗi 'vòng U1 đang làm'; ADR-0013 và reso-khung chứa '`ListingIntent` (offer · inquiry · not_listing)'; ROADMAP §3 #21 chứa '`inquiry` «Yêu cầu»'"
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.cloud_catchup_inquiry
+    paths: [docs/ops/cloud-schema-catchup-2026-10-27-050.sql, scripts/check-cloud-catchup.mjs]
+    expected: "exit 0; bộ kiểm báo tệp catchup của hồ sơ wanted-thanh-inquiry có '-- ĐO TRƯỚC' chỉ đọc rồi '-- ÁP'; đối chứng tự chạy của bộ kiểm (chèn ALTER vào ĐO TRƯỚC của bản sao) đỏ"
+  - id: E6b
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ten_cu_inquiry
+    paths: [docs/ops/cloud-schema-catchup-2026-10-27-050.sql, db/migrations/050_wanted_thanh_inquiry.sql, _acceptance/wanted-thanh-inquiry/rang/con-ten-cu.mjs]
+    expected: "exit 0; dòng 'ok catchup: 1/1 UPDATE khớp migration 050' — câu UPDATE (chuẩn hoá khoảng trắng) của migration có nguyên văn trong khối sau mốc '-- ÁP' của tệp catchup; đối chứng: bản sao catchup bỏ câu UPDATE → hàm so trả 'thiếu 1/1' và nêu câu thiếu"
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tu_ngu_collections
+    paths: [app/src/components/ops/collections/sync-activity.tsx, app/src/components/ops/collections/collections-tiles.tsx, app/tests/tu-ngu-collections.test.tsx, app/tests/fixtures/tu-ngu-collections/**]
+    expected: "exit 0; tệp bản chụp mang dòng đầu 'sha: a4a47d15…' và 'sha256: <hex>' khớp nội dung (test kiểm băm); ca 'TN-AC-7' render tĩnh (renderToStaticMarkup) SyncActivity (roles {S03:'Cộng đồng', S01:'Tự thu'}, 7 ngày số mồi) và CollectionsTiles (funnel today {passed:5,skipped:2,messages:7}, cùng roles); markup mới so với bản chụp TRƯỚC vòng ở app/tests/fixtures/tu-ngu-collections/ (chụp từ code main bằng đúng props này, trước khi sửa component): tách theo nút văn bản, khác biệt đúng ba cặp [('Tin S03 · Cộng đồng' → 'S03 · Cộng đồng'), ('Tin S03 · Cộng đồng hôm nay' → 'Bài S03 · Cộng đồng hôm nay'), ('2 tin bị cổng chặn' → '2 bài bị cổng chặn')] và không khác gì nữa; markup mới không chứa 'Tin S03' và 'tin bị cổng chặn'; đối chứng: roles rỗng → nút 'S03'; đối chứng phá: thay thêm một chuỗi khác trong bản sao markup → hàm so báo thừa đúng một cặp"
+  - id: E7b
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.fixture_goc_inquiry
+    paths: [app/tests/fixtures/tu-ngu-collections/**, _acceptance/wanted-thanh-inquiry/rang/fixture-goc.mjs]
+    expected: "exit 0; trên clone đầy đủ: lấy sync-activity.tsx và collections-tiles.tsx ở sha ghi trong bản chụp (git show), đặt bản tạm cạnh tệp gốc trong cây app, render bằng đúng props của TN-AC-7, so byte với bản chụp → in 'ok bản chụp khớp render ở <sha>' cho hai component, xoá bản tạm; đối chứng: đổi một ký tự trong bản sao bản chụp → 'lệch bản chụp' và thoát 1"

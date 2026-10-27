@@ -92,12 +92,12 @@ export function CollectionsTiles({
         period="Hôm nay"
         value={cloud && !cloud.funnelMeasured ? "—" : fmtInt(funnel.today.passed)}
         total={cloud && !cloud.funnelMeasured ? undefined : fmtInt(funnel.today.messages)}
-        basis={cloud && !cloud.funnelMeasured ? "Chưa có số" : `${fmtInt(funnel.today.skipped)} tin bị cổng chặn`}
+        basis={cloud && !cloud.funnelMeasured ? "Chưa có số" : `${fmtInt(funnel.today.skipped)} bài bị cổng chặn`}
         muted={muted}
         action={{ label: `Xem nhóm ${s03}`, href: cloud && !cloud.s03Shown ? CLOUD_ANCHOR : "#nhom-s03" }}
       >
         {cloud && !cloud.funnelMeasured ? null : <SegmentBar
-          label={`Tin ${s03} hôm nay`}
+          label={`Bài ${s03} hôm nay`}
           segments={[
             { key: "passed", label: "Qua cổng", count: funnel.today.passed, tone: tone("bg-success") },
             { key: "skipped", label: "Bị chặn", count: funnel.today.skipped, tone: "bg-muted-foreground/40" },

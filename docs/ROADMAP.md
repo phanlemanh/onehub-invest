@@ -280,9 +280,18 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    ngắn hạn»; `docs/audit/2026-10-27-tu-ngu-tin-listing.md`): listing = resource `Property` (bán · thuê dài hạn · thuê ngắn
    hạn); dịch vụ ở `kind` (`sale` · `rent_lt` · `rent_st`), loại hình ở `property_type`; nhiều listing trỏ về một căn (UPI).
    Tin rao = listing bán + thuê dài hạn; listing thuê ngắn hạn = Airbnb tự thu (lịch đêm, ADR là extension). Trục
-   `listing_intent` giữ tên; giá trị `wanted` → `inquiry` «Yêu cầu mua» (Mạnh 27/10). Hai bảng `sale_offers` + `listings`
+   `listing_intent` giữ tên; giá trị `wanted` → `inquiry` «Yêu cầu» (Mạnh 27/10; yêu cầu là bên mua, đối xứng
+   với listing bên bán; loại con Yêu cầu mua / Yêu cầu thuê theo `kind`; migration 050). Hai bảng `sale_offers` + `listings`
    gộp về một khái niệm listing (đổi tên bảng, nhãn UI «Listing» đang chỉ Airbnb) ở hàng tái cấu trúc riêng, khi các dãy
    khép. Chữ prompt LLM chỉ đổi khi có bench.
+22. **Danh bạ vật thể và người** (27/10, Mạnh duyệt «khung đã sửa ba điểm, theo các mặc định»; **ADR-0016**, sửa ADR-0013
+   §1/§3/§9): bốn họ danh bạ — Vùng (`areas`, `asset_nodes` khu đô thị/phân khu; «thị trường» là tên cấp vùng, không phải
+   danh bạ) · Vật thể (thửa · toà · trục · căn, mỗi cấp một bảng chung khung khoá mờ/bí danh/gộp-tách/phát biểu) · Người
+   (vai trò là quan hệ có phát biểu; vai suy luận chỉ ở `/ops`; không thu chủ sở hữu ngoài tin) · Listing. «Một Căn Nhà» =
+   nút vật thể listing gắn vào, ở mức sâu nhất biết được; UPI neo toà hoặc thửa, đúc một lần. Kế thừa hai chiều theo năm
+   luật (chỉ trường thuộc vật thể, không đè, không tự nuôi, mâu thuẫn ra thẻ, rút dây chuyền). Nhà phố/đất: một vật thể tạm
+   mỗi tin, gộp theo bằng chứng — toạ độ S06 chỉ là tín hiệu phụ. S08: vật thể chỉ-S08 ở local, giá trị chỉ-S08 không lên
+   Invest. Hàng code thay PL11, PL24 và thêm hàng Người — giám sát cắt vào lộ trình.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -398,7 +407,8 @@ có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới �
 ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
 boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
-0013 tin → căn RESO · 0014 Ops cloud đọc số tổng hợp · 0015 đường lệnh kéo một chiều.
+0013 tin → căn RESO · 0014 Ops cloud đọc số tổng hợp · 0015 đường lệnh kéo một chiều ·
+0016 danh bạ vật thể và người.
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.
