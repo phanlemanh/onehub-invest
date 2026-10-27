@@ -1,0 +1,63 @@
+# E7 network (trang /ops/data-flow, 7 ngay; phien playwright e7)
+## requests (non-static)
+### Result
+
+Note: 49 static requests not shown, run with --static option to see them.
+## requests (static)
+### Result
+1. [GET] http://localhost:3461/ops/data-flow => [200] OK
+2. [GET] http://localhost:3461/_next/static/media/53b9e256198e5412-s.p.390ncx5urfkfu.woff2 => [200] OK
+3. [GET] http://localhost:3461/_next/static/media/7178b3e590c64307-s.p.21jp631_3pja2.woff2 => [200] OK
+4. [GET] http://localhost:3461/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2 => [200] OK
+5. [GET] http://localhost:3461/_next/static/media/7d817b4c03b0c5f1-s.p.1uyisp29ctx0d.woff2 => [200] OK
+6. [GET] http://localhost:3461/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2 => [200] OK
+7. [GET] http://localhost:3461/_next/static/chunks/%5Broot-of-the-server%5D__1f753dw8o2j75._.css => [200] OK
+8. [GET] http://localhost:3461/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0qva5cupmdgep._.js => [200] OK
+9. [GET] http://localhost:3461/_next/static/chunks/1daa_next_dist_compiled_react-dom_cjs_react-dom-client_development_0mp0cp_t-ezj9.js => [200] OK
+10. [GET] http://localhost:3461/_next/static/chunks/1q96_modules_next_dist_compiled_react-dom_cjs_react-dom_development_1sqry0_53krp4.js => [200] OK
+11. [GET] http://localhost:3461/_next/static/chunks/node_modules_next_dist_compiled_react-dom_0grqycjrj6mju._.js => [200] OK
+12. [GET] http://localhost:3461/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-67asdr9._.js => [200] OK
+13. [GET] http://localhost:3461/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_090k2jmam7qwg.js => [200] OK
+14. [GET] http://localhost:3461/_next/static/chunks/node_modules_next_dist_compiled_1amofcmz--cdp._.js => [200] OK
+15. [GET] http://localhost:3461/_next/static/chunks/node_modules_next_dist_client_1wygxxh5rwq0t._.js => [200] OK
+16. [GET] http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js => [200] OK
+17. [GET] http://localhost:3461/_next/static/chunks/node_modules_%40swc_helpers_cjs_1r9vbqwj2323d._.js => [200] OK
+18. [GET] http://localhost:3461/_next/static/chunks/_1anvha4rlo79g._.js => [200] OK
+19. [GET] http://localhost:3461/_next/static/chunks/turbopack-_06rkbud3pyrlm._.js => [200] OK
+20. [GET] http://localhost:3461/_next/static/chunks/_08tql74jskefr._.js => [200] OK
+21. [GET] http://localhost:3461/_next/static/chunks/node_modules_14b_hroe7y71h._.js => [200] OK
+22. [GET] http://localhost:3461/_next/static/chunks/src_components_1l9nwmkpkd7cn._.js => [200] OK
+23. [GET] http://localhost:3461/_next/static/chunks/src_16jj7o79_l7oy._.js => [200] OK
+24. [GET] http://localhost:3461/_next/static/chunks/node_modules_%40base-ui_react_09sugepvxo1-z._.js => [200] OK
+25. [GET] http://localhost:3461/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_0q79z23r57r2s._.js => [200] OK
+26. [GET] http://localhost:3461/_next/static/chunks/node_modules_1tkxwbccqu1_9._.js => [200] OK
+27. [GET] http://localhost:3461/_next/static/chunks/_1g--mohl7s-9f._.js => [200] OK
+28. [GET] http://localhost:3461/_next/static/chunks/src_components_reui_data-grid_0_bjlkunm8swq._.js => [200] OK
+29. [GET] http://localhost:3461/_next/static/chunks/src_components_reui_cascader_1vsi8zcq2eal-._.js => [200] OK
+30. [GET] http://localhost:3461/_next/static/chunks/src_components_reui_filters_0i8v5jhu8w--1._.js => [200] OK
+31. [GET] http://localhost:3461/_next/static/chunks/src_components_reui_1ug21593xs12o._.js => [200] OK
+32. [GET] http://localhost:3461/_next/static/chunks/src_components_ui_02_poefj28b88._.js => [200] OK
+33. [GET] http://localhost:3461/_next/static/chunks/src_components_ops_0ksu8k60psr3j._.js => [200] OK
+34. [GET] http://localhost:3461/_next/static/chunks/src_components_1yiom9thbcj57._.js => [200] OK
+35. [GET] http://localhost:3461/_next/static/chunks/src_lib_054rm4z4d-0oa._.js => [200] OK
+36. [GET] http://localhost:3461/_next/static/chunks/node_modules_recharts_es6_util_1-e31auh4xov_._.js => [200] OK
+37. [GET] http://localhost:3461/_next/static/chunks/node_modules_recharts_es6_state_0-evaahv3vh4z._.js => [200] OK
+38. [GET] http://localhost:3461/_next/static/chunks/node_modules_recharts_es6_component_0mm2rx2w_p9dw._.js => [200] OK
+39. [GET] http://localhost:3461/_next/static/chunks/node_modules_recharts_es6_chart_12_pfokwo7m_t._.js => [200] OK
+40. [GET] http://localhost:3461/_next/static/chunks/node_modules_recharts_es6_cartesian_0qmy3-oln0df_._.js => [200] OK
+41. [GET] http://localhost:3461/_next/static/chunks/node_modules_recharts_es6_0vdji7oge3h9v._.js => [200] OK
+42. [GET] http://localhost:3461/_next/static/chunks/node_modules_%40tanstack_table-core_dist_0o17k3b-tj3z5._.js => [200] OK
+43. [GET] http://localhost:3461/_next/static/chunks/node_modules_%40base-ui_react_0eoq1h0qzot2_._.js => [200] OK
+44. [GET] http://localhost:3461/_next/static/chunks/node_modules_0pvhpyt-6c-l2._.js => [200] OK
+45. [GET] http://localhost:3461/_next/static/chunks/node_modules_1l3m3iglgy1xq._.js => [200] OK
+46. [GET] http://localhost:3461/_next/static/chunks/%5Broot-of-the-server%5D__1kj8f3vx3vmqq._.js => [200] OK
+47. [GET] http://localhost:3461/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css => [200] OK
+48. [GET] http://localhost:3461/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsayzyj2p6._.js => [200] OK
+49. [GET] http://localhost:3461/favicon.ico?favicon.117ezoe8m31dk.ico => [200] OK
+## console
+### Result
+Total messages: 3 (Errors: 0, Warnings: 1)
+
+[INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[LOG] [HMR] connected @ http://localhost:3461/_next/static/chunks/node_modules_next_dist_05y3oi5z9mc_3._.js:719
+[WARNING] The resource http://localhost:3461/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3461/ops/data-flow:0

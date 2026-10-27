@@ -6,9 +6,10 @@
 # chạy (stg_zalo_posts nhận tin Zalo liên tục) — so bằng sẽ đỏ chập chờn.
 #
 # Dùng: bash db/check-idempotent.sh db/migrations/NNN_x.sql [bảng-đếm-dòng ...]
+#   IDEM_DB=<tên> chạy trên DB khác trong cùng container (mặc định oneinvest) — db/check-idempotent-tam.sh dựng DB tạm.
 set -euo pipefail
 MIG="$1"; shift
-PSQL=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d oneinvest -v ON_ERROR_STOP=1 -qAt)
+PSQL=(docker exec -i -e PGPASSWORD=oneinvest one-invest-db psql -U oneinvest -h localhost -d "${IDEM_DB:-oneinvest}" -v ON_ERROR_STOP=1 -qAt)
 
 schema() { "${PSQL[@]}" -c "select md5(string_agg(table_name||'.'||column_name||':'||data_type, ',' order by table_name, column_name)) from information_schema.columns where table_schema='public'"; }
 counts() { local out=""; for t in "$@"; do out+="$("${PSQL[@]}" -c "select count(*) from $t") "; done; echo "$out"; }

@@ -9,13 +9,13 @@ import type { FlowDay, SourceFlow } from "@/lib/data-flow-queries"
 import { fmtInt, fmtPct } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
+import { dailySeries, type StageKey } from "./stage-trend-data"
+
 /**
  * «Chặng theo ngày» — chuyển thể activation-funnel-chart của @reui/solution-analytics-3: bốn ô số của bốn chặng
  * (thay % so kỳ trước bằng tỉ lệ so với chặng trước), dưới là diện tích theo ngày. Khác bản gốc: các chặng lồng nhau
  * nên KHÔNG chồng (stackId) — mỗi đường là số thật của chặng đó; bỏ chọn khoảng (khoảng ở đầu trang).
  */
-
-type StageKey = "received" | "readable" | "offers" | "linked"
 
 const STAGES: { key: StageKey; label: string; color: Exclude<SeriesKey, "rest">; of?: StageKey; ofLabel?: string }[] = [
   { key: "received", label: "Bài nhận", color: "flowReceived" },
@@ -29,20 +29,26 @@ const chartConfig = Object.fromEntries(STAGES.map((s) => [s.key, { label: s.labe
 /** "2026-10-24" → "24/10". */
 const dayLabel = (d: string) => `${Number(d.slice(8, 10))}/${Number(d.slice(5, 7))}`
 
-export function StageTrendChart({ sources, days, windowDays }: { sources: SourceFlow[]; days: FlowDay[]; windowDays: number }) {
+export function StageTrendChart({
+  sources,
+  days,
+  nowMs,
+  windowDays,
+}: {
+  sources: SourceFlow[]
+  days: FlowDay[]
+  /** Mốc request — cùng mốc getDataFlow dùng; ngày cuối của trục là ngày VN của mốc này. */
+  nowMs: number
+  windowDays: number
+}) {
   const totals = Object.fromEntries(
     STAGES.map((s) => [s.key, sources.reduce((acc, src) => acc + src[s.key], 0)]),
   ) as Record<StageKey, number>
 
-  // Gộp mọi nguồn theo ngày; ngày trống vẫn có điểm 0 để trục liền.
-  const byDay = new Map<string, Record<StageKey, number>>()
-  for (const d of days) {
-    const row = byDay.get(d.day) ?? { received: 0, readable: 0, offers: 0, linked: 0 }
-    for (const s of STAGES) row[s.key] += d[s.key]
-    byDay.set(d.day, row)
-  }
-  const keys = [...byDay.keys()].sort().slice(-windowDays)
-  const data = keys.map((day) => ({ day: dayLabel(day), ...byDay.get(day)! }))
+  // Gộp mọi nguồn theo ngày; mọi ngày của cửa sổ đều có điểm, ngày trống là 0 để trục liền.
+  const series = dailySeries(days, nowMs, windowDays)
+  const data = series.map((p) => ({ ...p, day: dayLabel(p.key) }))
+  const empty = series.every((p) => STAGES.every((s) => p[s.key] === 0))
 
   return (
     <Frame className="flex h-full w-full flex-col">
@@ -69,7 +75,7 @@ export function StageTrendChart({ sources, days, windowDays }: { sources: Source
             </div>
           ))}
         </div>
-        {data.length === 0 ? (
+        {empty ? (
           <p className="text-muted-foreground px-2 pb-2 text-sm">Chưa có số theo ngày trong khoảng này.</p>
         ) : (
           <ChartContainer config={chartConfig} className="mt-auto h-62 w-full">
@@ -83,7 +89,7 @@ export function StageTrendChart({ sources, days, windowDays }: { sources: Source
                 ))}
               </defs>
               <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={10} minTickGap={16} tick={{ fontSize: 12 }} />
+              <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={10} minTickGap={16} interval="preserveStartEnd" tick={{ fontSize: 12 }} />
               <YAxis hide />
               <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
               {STAGES.map((s) => (

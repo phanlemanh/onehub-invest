@@ -25,6 +25,8 @@ function parseArgs(argv: string[]): Args | string {
   if (parts.length === 0 || !parts.every((s) => /^[1-9]\d*$/.test(s))) return `--ids không hợp lệ: ${rawIds}`;
   const actor = get("--actor");
   if (!actor) return "thiếu --actor";
+  // PL15: actor người là lớp sự thật của phát biểu — chặn ngay ở dòng lệnh (hàm SQL cũng chặn).
+  if (!/^hitl:.+/.test(actor)) return "--actor phải là người (hitl:<tên>)";
   const reason = get("--reason");
   if (!reason || !reason.trim()) return "thiếu --reason";
   return { ids: parts.map(Number), actor, reason, dry: argv.includes("--dry") };

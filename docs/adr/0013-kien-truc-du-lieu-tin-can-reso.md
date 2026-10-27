@@ -10,7 +10,7 @@ toà/phân khu) · Kèm theo: `docs/product/FRAMING.md` (mục đích, ba lớp,
 
 ## Bối cảnh
 
-- FRAMING (Mạnh duyệt 23/10): mạng lưới listing tin cậy; căn gốc (số nhà / mã căn) là bản ghi duy nhất, tin đăng
+- FRAMING (Mạnh duyệt 23/10): mạng lưới listing tin cậy; căn gốc (số nhà / mã căn) là bản ghi duy nhất, tin
   trùng lặp trỏ về nó, trường dữ liệu là phần làm giàu; dữ liệu đi lên theo thang bậc B0–B5.
 - Review phân loại 23/10 tìm 20 lỗi; ba gốc chính: không lưu căn cứ, định danh băm nội dung, không đo.
 - ADR-0011 đặt RESO-first nhưng bảng danh pháp dựa trên tra cứu chưa đủ: tra lại thẳng tệp máy đọc
@@ -28,7 +28,7 @@ toà/phân khu) · Kèm theo: `docs/product/FRAMING.md` (mục đích, ba lớp,
 | Lớp | Bảng của mình | RESO |
 |---|---|---|
 | **Căn nhà** (bản ghi gốc) | `properties` (+ danh mục) | Định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource `Building` |
-| **Tin đăng** | `sale_offers`, `listings` | Resource `Property` (một bản ghi = một tin) + `Member` (người đăng) + `Media` (ảnh) |
+| **Listing** (tin: bán, thuê dài hạn, thuê ngắn hạn) | `sale_offers`, `listings` | Resource `Property` (một bản ghi = một tin) + `Member` (người đăng) + `Media` (ảnh) |
 | **Trường làm giàu** | cột của hai lớp trên | Field chuẩn của `Property` / `Building`, kèm field nguồn đo `*Source` và nhật ký `HistoryTransactional` |
 
 Trường **thuộc căn** (loại, diện tích, tầng, số phòng, mã căn, toà, dự án) gắn với căn; trường **thuộc tin** (giá,

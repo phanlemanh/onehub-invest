@@ -62,6 +62,8 @@ executors:
     job_exit: "node --test scripts/job-exit.test.mjs"
     dong_chay: "cd app && node --import tsx --test tests/ops-dong-chay.test.tsx tests/data-level.test.tsx"
     luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
+    dem_de_xuat: "cd app && node --import tsx --test tests/df0-dem-de-xuat.test.tsx"   # df0-dem-de-xuat-lam-giau — đếm đề xuất làm giàu queued (lược đồ tạm)
+    chang_ngay: "cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx"   # df0-chang-theo-ngay-diem-0 — chuỗi ngày đủ cửa sổ, ngày im = 0 (thuần + jsdom)
     ops_nhan: "cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx"
     vong_doi_nguon: "cd pipeline && node --test scripts/vong-doi.test.mjs scripts/vong-doi.itest.mjs"   # TV2a: .test thuần (CI), .itest cần DB local :5433
     vong_doi_nguon_route: "cd app && node --import tsx --test tests/vong-doi-nguon.test.tsx"
@@ -71,6 +73,8 @@ executors:
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
     so_nhom: "cd pipeline && node --test scripts/so-nhom.itest.mjs"
     so_nhom_app: "cd app && node --import tsx --test tests/so-nhom.test.tsx"
+    phat_bieu: "cd pipeline && node --test scripts/phat-bieu.test.mjs"   # PL15: quét ghi năm cột, cloud, ENRICH_COLS — không cần DB
+    phat_bieu_db: "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"   # PL15: 045 + chỉ-thêm + ma trận phân xử + đường ghi, giao dịch ROLLBACK — cần DB local :5433
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -92,6 +96,11 @@ executors:
     vocab_lint: "node pipeline/vocab.mjs --lint"     # PL6: 0 enum viết tay ngoài sổ — đo trạng thái cây
     vocab_db: "node pipeline/vocab.mjs --check-db"   # PL6: DB local khớp sổ (ref_* + CHECK) — cần DB local :5433
     nap_lai_ba_luot: "node pipeline/scripts/nap-lai-ba-luot.mjs"   # PL14 thước bật: 3 lượt nạp lại trong giao dịch ROLLBACK, 0 quyết định/liên kết mất — cần DB local :5433
+    idem_045: "bash db/check-idempotent-tam.sh db/migrations/045_phat_bieu_va_phan_xu.sql field_assertions sale_offer_records"   # PL15 AC-1 — check-idempotent.sh trên DB tạm chép lược đồ DB local (DB dùng chung chưa nhận 045 trước merge)
+    dung_lai: "node pipeline/scripts/dung-lai-canonical.mjs"   # PL15 thước bật: xoá năm cột rồi dựng lại trong giao dịch ROLLBACK, 0 ô lệch — cần DB local :5433
+    nguon_goc: "node pipeline/scripts/dung-lai-canonical.mjs --nguon-goc"   # PL15 AC-4: mọi ô khác mặc định có nguồn gốc trỏ phát biểu sống — cần DB local
+    cat_chuyen_thu: "node pipeline/phat-bieu-cat-chuyen.mjs --thu"   # PL15 AC-8: cắt chuyển giá trị có sẵn thành phát biểu legacy, giao dịch ROLLBACK — cần DB local
+    chay_that_thu: "node pipeline/scripts/phat-bieu-chay-that.mjs --thu"   # PL15 AC-10: ba transform + phân xử trên DB local, đo giây, ROLLBACK
     cloud_catchup_static: "node scripts/check-cloud-catchup.mjs nap-lai-khong-xoa"   # PL14 AC-10: tệp SQL bắt kịp 043/044 có phần đo trước + áp — đo trạng thái cây
     luong7_do: "node scripts/luong-7-ngay-do.mjs"            # ON5 AC-8 — ngưỡng tin rao S03 trên DB local thật
     luong7_smoke: "node scripts/smoke-luong-7-ngay.mjs"     # ON5 AC-9 — bảng Luồng 7 ngày ở chế độ máy chủ trên trình duyệt (lược đồ tạm, Chromium)
@@ -361,6 +370,11 @@ executors:
     odt_ops_doi_chung: "bash _acceptance/on-dinh-test-app-chap-chon/probes/ops-doi-chung.sh"
     odt_lb_lap: "bash _acceptance/on-dinh-test-app-chap-chon/probes/lb-lap.sh"
     odt_pham_vi: "bash _acceptance/on-dinh-test-app-chap-chon/probes/pham-vi.sh"
+    # audit-all-test-moc-phut — bản sao tệp test ở thư mục tạm, date giả trong hộp; không chạm DB hay mạng
+    amp_ca_canh: "bash _acceptance/audit-all-test-moc-phut/probes/ca-canh.sh"
+    amp_qua_phut: "bash _acceptance/audit-all-test-moc-phut/probes/qua-phut.sh"
+    amp_lap: "bash _acceptance/audit-all-test-moc-phut/probes/lap.sh"
+    amp_pham_vi: "bash _acceptance/audit-all-test-moc-phut/probes/pham-vi.sh"
     # chotot-khong-lui (2510-6) — DB TẠM acc_ckl_* (pg_dump -s), fixture snapshot thư mục tạm; không ghi DB oneinvest
     ckl_khong_lui: "node scripts/chotot-khong-lui/acceptance.mjs khong-lui"
     ckl_tien: "node scripts/chotot-khong-lui/acceptance.mjs tien"
