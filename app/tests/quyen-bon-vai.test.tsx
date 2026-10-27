@@ -7,7 +7,7 @@
 // nếu đường đi lạc ra HOME thật. openclaw giả ghi argv mỗi lần gọi vào spy.log; lệnh login ghi ảnh QR rồi ngủ (bị giết ở after).
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs"
 import { homedir, tmpdir } from "node:os"
@@ -628,4 +628,65 @@ test("QV-AC-9 chế độ sổ của 21 ô route · phương thức khớp thư�
   }
   assert.deepEqual(sai, [])
   execFileSync("node", ["scripts/check-api-surface.mjs", "mutation"], { cwd: join(APP, ".."), stdio: "pipe" })
+})
+
+// ---- QV-AC-10: máy đêm nạp số vẫn chạy; chỉ nạp số và đọc số còn dùng bearer chung; ca thử cũ xanh (E10) ----
+test("QV-AC-10 push-ops-facts thật → ingest bằng bearer 200, đúng một dòng audit machine:cloud-sync; ca thử cũ của trang nguồn xanh", async () => {
+  const { captureOpsFacts } = await import("../../pipeline/scripts/capture-ops-facts.mjs")
+  const { dropOpsSchema, makeOpsSchema } = await import("../../pipeline/scripts/ops-facts-fixture.mjs")
+  const SL = `qv_local_${process.pid}`
+  await makeOpsSchema(admin, SL)
+  let payload: unknown
+  try {
+    const r = (await captureOpsFacts({ env: { DATABASE_URL: schemaUrl(SL) } })) as { code: number; stderr: string; payload: unknown }
+    assert.equal(r.code, 0, r.stderr)
+    payload = r.payload
+  } finally {
+    await dropOpsSchema(admin, SL)
+  }
+  const n0 = await nAudit()
+  const r = await goi("ingest", "POST", { authorization: `Bearer ${TOKEN}` }, { body: payload })
+  assert.equal(r.status, 200, JSON.stringify(r.json))
+  assert.equal((await sc.query("SELECT count(*)::int AS n FROM ops_heartbeat WHERE id = 'primary'")).rows[0].n, 1)
+  assert.equal((await nAudit()) - n0, 1)
+  assert.deepEqual([(await dongCuoi()).actor, (await dongCuoi()).action], ["machine:cloud-sync", "ingest.push"])
+  // Ca thử cũ (route ghi gọi bằng phiên thật) — tiến trình con riêng, không thừa hưởng ngữ cảnh node:test của tệp này.
+  const env: NodeJS.ProcessEnv = { ...process.env }
+  delete env.NODE_TEST_CONTEXT
+  delete env.DATABASE_URL
+  delete env.OPS_API_TOKEN
+  for (const t of ["cong-tac-nhom-go", "vong-doi-nguon", "so-nhom", "che-do-thu", "coverage-cloud-got-tang-a"]) {
+    const kq = spawnSync("node", ["--import", "tsx", "--test", `tests/${t}.test.tsx`], { cwd: APP, env, encoding: "utf8" })
+    assert.equal(kq.status, 0, `${t}: ${kq.stdout.slice(-1500)}`)
+  }
+})
+
+/** Tệp chạy thật (ngoài route, ca thử, hồ sơ, tài liệu) vừa đọc token chung vừa gọi /api/v1/ops/: (tệp, route) mỗi cặp. */
+function quetBearer(goc: string, them: Record<string, string> = {}): string[] {
+  const tep = execFileSync("git", ["ls-files"], { cwd: goc, encoding: "utf8" })
+    .split("\n")
+    .filter((f) => f && !/^(app\/src\/app\/api\/|app\/tests\/|_acceptance\/|docs\/)/.test(f) && !/\.(md|html|json)$/.test(f))
+  const doc: Record<string, string> = { ...them }
+  for (const f of tep) {
+    try {
+      doc[f] = readFileSync(join(goc, f), "utf8")
+    } catch {
+      /* tệp đã xoá khỏi cây làm việc */
+    }
+  }
+  const cap: string[] = []
+  for (const [f, t] of Object.entries(doc)) {
+    if (!t.includes("OPS_API_TOKEN") || f === "app/src/lib/ops-access.ts") continue
+    for (const m of t.matchAll(/\/api\/v1\/ops\/([a-z-]+)/g)) cap.push(`${f} → ${m[1]}`)
+  }
+  return [...new Set(cap)].sort()
+}
+test("QV-AC-10b mọi chỗ gọi /api/v1/ops bằng token chung chỉ nhắm route nạp số / đọc số; đối chứng: tệp gọi source-groups bằng token bị bắt", () => {
+  const DUOC = new Set(["ingest", "collections", "coverage", "extraction-quality", "truthful-coverage"])
+  const goc = join(APP, "..")
+  // smoke-api-matrix là bộ khói của sổ bề mặt: đi qua MỌI route bằng bearer để đo chính cổng này.
+  const sai = quetBearer(goc).filter((x) => !DUOC.has(x.split(" → ")[1]) && !x.startsWith("scripts/smoke-api-matrix.mjs"))
+  assert.deepEqual(sai, [])
+  const gia = quetBearer(goc, { "scripts/gia-goi-nhom.mjs": 'fetch(`${U}/api/v1/ops/source-groups`, { method: "POST", headers: { authorization: `Bearer ${process.env.OPS_API_TOKEN}` } })' })
+  assert.ok(gia.includes("scripts/gia-goi-nhom.mjs → source-groups"), "phép quét không bắt được tệp gọi source-groups bằng token chung")
 })

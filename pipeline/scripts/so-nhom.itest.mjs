@@ -336,8 +336,9 @@ test("SN-AC-2 câu đọc/ghi nguyên văn chạy y như trước qua view; tậ
   const { docTrangThai } = await import("../lib/vong-doi.mjs");
   assert.deepEqual(await docTrangThai(B, "S03", K("S03", 1)), { run: true, ly_do: "chay" });
 
+  // Bản route cũ ghim làm fixture đối chứng (app/tests/fixtures, đuôi .txt) là vật đóng băng, không phải chỗ đọc/ghi sống.
   const tep = execFileSync("git", ["grep", "--untracked", "-l", "source_groups", "--", ".", ":(exclude)_acceptance", ":(exclude)docs",
-    ":(exclude)db/migrations"], { cwd: ROOT, encoding: "utf8" }).trim().split("\n").sort();
+    ":(exclude)db/migrations", ":(exclude)app/tests/fixtures"], { cwd: ROOT, encoding: "utf8" }).trim().split("\n").sort();
   assert.deepEqual(tep, TEP_NHAC_SOURCE_GROUPS);
 });
 
