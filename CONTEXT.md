@@ -259,7 +259,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `wanted` «Tin tìm mua, tìm thuê» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
+| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
