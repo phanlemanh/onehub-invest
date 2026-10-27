@@ -1,31 +1,88 @@
 {
-  "feature_plain": "Gọi nhu cầu mua/thuê là «Yêu cầu» — đối xứng với Listing bên bán — trước khi dữ liệu thật ghi xuống, và sửa ba nhãn Ops đang gọi bài thô là «tin».",
+  "feature_plain": "Nhu cầu mua/thuê giờ gọi là «Yêu cầu» — đối xứng với Listing bên bán — trong sổ từ vựng, DB (migration 050) và tài liệu; trang Thu thập thôi gọi bài thô là «tin».",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ đổi giá trị «Tin tìm mua, tìm thuê» của Ý định tin thành inquiry «Yêu cầu»; ba giá trị còn lại và tám trục khác giữ y nguyên."},
-    {"id": "AC-2", "p": "Sẽ sinh lại hằng số cho pipeline, agent, app và bảng từ vựng trong CONTEXT.md; máy kiểm cả bốn chỗ khớp sổ, không còn tên cũ."},
-    {"id": "AC-4", "p": "Sẽ quét toàn kho theo sáu dạng viết tên cũ (kể cả chuỗi liệt kê trong prompt): tên cũ chỉ còn ở 12 tệp lịch sử đã kê sẵn."},
-    {"id": "AC-5", "p": "Sẽ ghi mô hình đối xứng vào CONTEXT.md: Listing là bên bán, Yêu cầu là bên mua (loại con Yêu cầu mua, Yêu cầu thuê); ADR-0013, khung RESO, ROADMAP theo tên mới."},
-    {"id": "AC-6", "p": "Sẽ viết sẵn tệp SQL bắt kịp cho cloud (phần đo trước + phần áp), máy kiểm phần áp khớp đúng migration 050."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ đổi giá trị «Tin tìm mua, tìm thuê» của Ý định tin thành inquiry «Yêu cầu»; ba giá trị còn lại và tám trục khác giữ y nguyên."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ sinh lại hằng số cho pipeline, agent, app và bảng từ vựng trong CONTEXT.md; máy kiểm cả bốn chỗ khớp sổ, không còn tên cũ."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ quét toàn kho theo sáu dạng viết tên cũ (kể cả chuỗi liệt kê trong prompt): tên cũ chỉ còn ở 12 tệp lịch sử đã kê sẵn."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ ghi mô hình đối xứng vào CONTEXT.md: Listing là bên bán, Yêu cầu là bên mua (loại con Yêu cầu mua, Yêu cầu thuê); ADR-0013, khung RESO, ROADMAP theo tên mới."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ viết sẵn tệp SQL bắt kịp cho cloud (phần đo trước + phần áp), máy kiểm phần áp khớp đúng migration 050."
+    }
   ],
   "wont_do": [
-    {"id": "AC-3", "p": "Sẽ KHÔNG thử migration trên DB dùng chung: thử trên một DB riêng dựng từ migration rồi xoá ngay cả khi test lỗi; hàm xoá từ chối mọi tên ngoài khuôn."},
-    {"id": "AC-7", "p": "Sẽ KHÔNG còn chữ «Tin» trỏ bài thô ở trang Thu thập: «S03 · Cộng đồng», «Bài S03 · Cộng đồng hôm nay», «n bài bị cổng chặn»; mọi chữ khác giữ nguyên, so với bản chụp ghim sha."},
-    {"id": "OOS-1", "p": "KHÔNG áp lên cloud trong vòng này — sau khi gộp, giám sát đo trước, anh duyệt mới áp."},
-    {"id": "OOS-2", "p": "KHÔNG áp migration 050 vào DB local dùng chung trước khi gộp."},
-    {"id": "OOS-3", "p": "KHÔNG làm bảng lưu yêu cầu, trích ngân sách, ghép yêu cầu với listing — tính năng mới, cần số đo trước."},
-    {"id": "OOS-4", "p": "KHÔNG tạo cột thật của Ý định tin — việc của PL5, sẽ dùng giá trị inquiry."},
-    {"id": "OOS-5", "p": "KHÔNG gộp hai bảng tin rao và listing Airbnb — hàng riêng sau khi các dãy khép."},
-    {"id": "OOS-6", "p": "KHÔNG sửa hồ sơ PL6 đã ký; chỗ còn tên cũ ở đó là bản ghi lịch sử."}
+    {
+      "id": "AC-3",
+      "p": "Sẽ KHÔNG thử migration trên DB dùng chung: thử trên một DB riêng dựng từ migration rồi xoá ngay cả khi test lỗi; hàm xoá từ chối mọi tên ngoài khuôn."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ KHÔNG còn chữ «Tin» trỏ bài thô ở trang Thu thập: «S03 · Cộng đồng», «Bài S03 · Cộng đồng hôm nay», «n bài bị cổng chặn»; mọi chữ khác giữ nguyên, so với bản chụp ghim sha."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG áp lên cloud trong vòng này — sau khi gộp, giám sát đo trước, anh duyệt mới áp."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG áp migration 050 vào DB local dùng chung trước khi gộp."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG làm bảng lưu yêu cầu, trích ngân sách, ghép yêu cầu với listing — tính năng mới, cần số đo trước."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG tạo cột thật của Ý định tin — việc của PL5, sẽ dùng giá trị inquiry."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG gộp hai bảng tin rao và listing Airbnb — hàng riêng sau khi các dãy khép."
+    },
+    {
+      "id": "OOS-6",
+      "p": "KHÔNG sửa hồ sơ PL6 đã ký; chỗ còn tên cũ ở đó là bản ghi lịch sử."
+    }
   ],
   "scope_plain": "Những việc dưới đây cố ý để ngoài vòng:",
   "coverage_plain": [
-    {"i": 0, "p": "Không quét bảng hình thái: phạm vi chỉ là danh sách chỗ còn tên cũ — đã kê bằng tìm kiếm toàn kho, và AC-4 (quét tên cũ) đo lại trên toàn cây."}
+    {
+      "i": 0,
+      "p": "Không quét bảng hình thái: phạm vi chỉ là danh sách chỗ còn tên cũ — đã kê bằng tìm kiếm toàn kho, và AC-4 (quét tên cũ) đo lại trên toàn cây."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Việc dựng rồi xoá một DB trên máy chủ dùng chung bị ghi là máy tự quyết, và chỉ đo đường xanh — đã sửa: thành câu hỏi cho anh (lối khác: container riêng), thêm đo xoá khi test lỗi và chặn xoá tên sai."},
-    {"i": 1, "p": "Máy tự chốt «một giá trị cho cả mua lẫn thuê» mà không cho anh thấy lối tách — đã sửa: gộp thành một câu hỏi có cả hai lối."},
-    {"i": 2, "p": "Quét tên cũ thiếu dạng chuỗi liệt kê trong prompt (offer|wanted) — đã sửa: ma trận sáu dạng, mỗi dạng một ca cấy."},
-    {"i": 3, "p": "Tiêu chí hứa nhãn «Yêu cầu» có trong cả ba tệp sinh, thực tế chỉ tệp app có nhãn — đã sửa lời tiêu chí cho khớp."},
-    {"i": 4, "p": "Bản chụp markup «trước vòng» không chứng được nguồn gốc — đã sửa: ghim sha main và mã băm, thêm bước dựng lại ở sha đó và so từng byte."}
+    {
+      "i": 0,
+      "p": "Việc dựng rồi xoá một DB trên máy chủ dùng chung bị ghi là máy tự quyết, và chỉ đo đường xanh — đã sửa: thành câu hỏi cho anh (lối khác: container riêng), thêm đo xoá khi test lỗi và chặn xoá tên sai."
+    },
+    {
+      "i": 1,
+      "p": "Máy tự chốt «một giá trị cho cả mua lẫn thuê» mà không cho anh thấy lối tách — đã sửa: gộp thành một câu hỏi có cả hai lối."
+    },
+    {
+      "i": 2,
+      "p": "Quét tên cũ thiếu dạng chuỗi liệt kê trong prompt (offer|wanted) — đã sửa: ma trận sáu dạng, mỗi dạng một ca cấy."
+    },
+    {
+      "i": 3,
+      "p": "Tiêu chí hứa nhãn «Yêu cầu» có trong cả ba tệp sinh, thực tế chỉ tệp app có nhãn — đã sửa lời tiêu chí cho khớp."
+    },
+    {
+      "i": 4,
+      "p": "Bản chụp markup «trước vòng» không chứng được nguồn gốc — đã sửa: ghim sha main và mã băm, thêm bước dựng lại ở sha đó và so từng byte."
+    }
   ]
 }
