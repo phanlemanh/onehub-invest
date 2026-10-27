@@ -231,7 +231,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    `vercel *` / `npx vercel *` (giữ ask `supabase db push`, `sync-public`); rào push main chuyển
    sang branch protection GitHub (PR bắt buộc, check `gate` + `ui-lint`, admin không vượt, cấm
    force-push) như crm/kit. Làn merge dùng `gh pr merge`. Hồ sơ `_acceptance/narrow-ask-rules`.
-13. **Framing** (23/10, `docs/product/FRAMING.md` §2.0): mạng lưới listing tin cậy, **gom vào** (không
+13. **Framing** (23/10, `docs/product/FRAMING.md` §2.0): mạng lưới tin rao tin cậy, **gom vào** (không
    đăng hộ ra kênh khác), OneHub Invest là nơi hiển thị; căn gốc = số nhà / mã căn. D1 dùng/mua danh mục dự
    án · toà · mã căn · D2 người dùng đầu tiên là chính đội (vừa đầu tư vừa môi giới) · D3 căn hộ trước, môi
    giới giữ mã căn · D4 tin P1 hiện công khai, trao đổi tức thời (độ tươi tính bằng phút) · D5 thuê người gắn
@@ -269,6 +269,11 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    `cong_khai: true` và `kho` — tài liệu thô và trang tóm đều ở kho riêng, kho công khai chỉ giữ đường trỏ băm. Kho riêng
    vẫn nằm trên GitHub nên tầng A (luật 6) không vào; nguồn ngoài kho công khai được che tên nguồn bằng mã S0x trước khi
    ghi. Gói `tri-thuc` cài scope local (không chạm `.claude/settings.json`). Đủ 10 bản phạm vi đổi `nguon` sang trang đợt.
+21. **«listing» chỉ là thuê ngắn hạn; tin rao trong code là `offer`** (27/10, Mạnh giao «quyết định đổi ở đâu để chuẩn hoá
+   nhất», sửa gốc khi dữ liệu còn ít; `docs/audit/2026-10-27-tu-ngu-tin-listing.md`): «Tin» là khái niệm cha của tin rao và
+   listing (RESO `Property`). Tên RESO `Listing*` chỉ ở cột đối chiếu (`offer_id` ↔ `ListingKey`). Đổi tên: Đ1 trục
+   `listing_intent` → `offer_intent` (`not_offer`) trước PL5; Đ2 bảng `sale_offers` → `offers` ở hàng riêng, có view tương
+   thích. Chữ prompt LLM chỉ đổi khi có bench.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

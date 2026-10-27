@@ -7,11 +7,11 @@
 
 ## 1. Mục đích
 
-Gom mọi tin đăng của người môi giới trên thị trường thành **một mạng lưới listing đủ tin cậy**, để môi giới
+Gom mọi tin rao của người môi giới trên thị trường thành **một mạng lưới tin rao đủ tin cậy**, để môi giới
 và nhà đầu tư dựa vào đó ra quyết định và làm việc với nhau. Thông tin tin cậy làm **giảm ma sát**, nên
 giao dịch đi **nhanh hơn**.
 
-- **Ngôi nhà chỉ có một, tin đăng thì trùng lặp.** Để giảm công sức của mọi người cần một **bản ghi gốc**:
+- **Ngôi nhà chỉ có một, tin thì trùng lặp.** Để giảm công sức của mọi người cần một **bản ghi gốc**:
   số nhà, mã căn.
 - **Các trường dữ liệu là phần làm giàu** cho bản ghi gốc.
 - **Dữ liệu tin cậy không tự nhiên mà có** (Mạnh, 23/10): nó là kết quả của **nỗ lực liên tục**, và không trắng
@@ -28,7 +28,7 @@ cứ đăng ở nơi quen thuộc                      4 câu hỏi đầu tư
         │  hệ thống gom vào                            ▲  OneHub Invest hiển thị
         ▼                                              │
    ┌─────────────────── LÕI TIN CẬY ───────────────────┐
-   │  căn gốc (số nhà / mã căn)  ◄── nhiều tin đăng     │
+   │  căn gốc (số nhà / mã căn)  ◄── nhiều tin          │
    │  trường thuộc căn · trường thuộc tin               │
    │  mỗi giá trị có căn cứ, độ chắc nói rõ             │
    └────────────────────────────────────────────────────┘
@@ -77,7 +77,7 @@ Câu 4 thay cho «khai thác sau mua» trong `CONTEXT-PRODUCT.md` §2 — cần 
 | Lớp | Là gì | Khoá |
 |---|---|---|
 | **Căn nhà** (bản ghi gốc) | Mỗi căn đúng một bản ghi | số nhà, mã căn |
-| **Tin đăng** | Nhiều tin, có thể trùng, cùng trỏ về một căn | id gốc của nguồn (post, `list_id`…) |
+| **Tin** | Nhiều tin, có thể trùng, cùng trỏ về một căn | id gốc của nguồn (post, `list_id`…) |
 | **Trường làm giàu** | Loại hình, phòng, đường, tầng… | gắn lên căn hoặc lên tin |
 
 [đề xuất] **Trường thuộc căn ≠ trường thuộc tin.**
@@ -159,7 +159,7 @@ người đăng đã giấu.
 | Nhà đầu tư | Số thị trường đủ thước theo loại · độ đúng danh sách «Căn giá tốt» · sai số ước giá thuê / giá trị khi có số thật | Câu 1–3 |
 | Năng lực (§3.4) | Bậc N0–N4 của từng phân khúc | Phân khúc nào lên N3 thì mới mở rộng ra cổng công khai rộng |
 | Tự động hoá (D5) | **Tỉ lệ giá trị/căn được máy quyết mà vẫn đạt ngưỡng đúng** · số phút người mỗi 100 tin · xu hướng theo tuần | Phải tăng dần; đo trên tập test đóng băng |
-| Độ tươi (D4) | **Phút** từ lúc tin đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95) | Mục tiêu cụ thể: câu hỏi mở |
+| Độ tươi (D4) | **Phút** từ lúc tin được đăng ở nguồn tới lúc hiện trên OneHub Invest (p50 / p95) | Mục tiêu cụ thể: câu hỏi mở |
 | Chi phí (D6) | Chi phí model + phút người **để đưa một căn lên bậc**, theo phân khúc · chi phí trợ lý theo người dùng | Sổ cuộc gọi AI (review §0.4) |
 | Giao dịch (trễ) | Thời gian từ tìm tới liên hệ · số liên hệ mỗi căn | Cần sự kiện sản phẩm |
 | **Bất biến** (test, không phải tỉ lệ) | 0 quyết định người bị mất qua nạp lại · 0 giá trị máy không có căn cứ · 0 dữ liệu tầng A lên cloud | Chặn ở CI |
@@ -215,3 +215,4 @@ nhật ROADMAP §3 nếu là quyết định mới.
 | 2026-10-23 | Bản đầu: mục đích, hai phía một lõi, sáu chiều «tin cậy», thước đo; D1–D5 | Mạnh duyệt · Claude ghi |
 | 2026-10-23 | D6 lớp model: AI Gateway, chọn model theo số đo, biết rõ chi phí; trợ lý nhà đầu tư tính tiền riêng | Mạnh nêu · Claude ghi |
 | 2026-10-23 | Thêm sự thật «dữ liệu là nỗ lực liên tục, có cấp bậc» (Mạnh) → thang bậc căn B0–B5, bậc năng lực N0–N4 (§3.4); north star thành phân bố theo bậc | Mạnh nêu · Claude đề xuất thang · Mạnh duyệt thang + bậc đích |
+| 2026-10-27 | Chỉ đổi chữ, không đổi nghĩa: «tin đăng» → «tin rao» / «tin», «mạng lưới listing» → «mạng lưới tin rao» (luật «listing» = thuê ngắn hạn, `docs/audit/2026-10-27-tu-ngu-tin-listing.md`) | Mạnh giao quyết · Claude ghi |
