@@ -5,7 +5,7 @@ slug: test-nen-on22-on12
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-27T04:27:46Z
 approved_by:
