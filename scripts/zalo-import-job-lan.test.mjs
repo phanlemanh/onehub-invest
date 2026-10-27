@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, before, test } from "node:test";
+import { boWorktree } from "./lib/bo-worktree.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = "scripts/zalo-import-daily.sh";
@@ -38,15 +39,9 @@ before(() => {
   writeFileSync(path.join(WT, SCRIPT), sua);
   git(WT, "-c", "user.name=zcode-mo-phong", "-c", "user.email=mo-phong@local.test", "commit", "-qam", "mô phỏng: ZCode sửa phần nạp");
 });
+// Gỡ đúng worktree tạm của test — không dùng lệnh prune của git trên kho dùng chung (hồ sơ test-khong-prune-worktree).
 after(() => {
-  if (WT) {
-    try {
-      git(REPO, "worktree", "remove", "--force", WT);
-    } catch {
-      rmSync(WT, { recursive: true, force: true });
-      git(REPO, "worktree", "prune");
-    }
-  }
+  if (WT) boWorktree(REPO, WT);
 });
 
 test("ZL-AC-1 ZJ-AC-5 không đọc tệp bọc ở cây làm việc, không dùng merge-base", () => {
@@ -65,7 +60,7 @@ test("ZL-AC-1 ZJ-AC-5 không đọc tệp bọc ở cây làm việc, không dù
     assert.match(r.stdout, /ℹ pass 1\b/, "ZL-AC-1 ZJ-AC-5 không chạy");
     assert.match(r.stdout, /ℹ skipped 0/, "ZL-AC-1 ZJ-AC-5 bị bỏ qua");
   } finally {
-    git(REPO, "worktree", "remove", "--force", wt2);
+    boWorktree(REPO, wt2);
   }
 });
 
