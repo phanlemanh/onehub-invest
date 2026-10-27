@@ -7,8 +7,8 @@ import { getSourceRoles } from "@/lib/source-roles";
 import { DataFlowView } from "./data-flow-view";
 
 /**
- * Nội dung /ops/data-flow (DF1): một đường cho cả hai nơi. `getDataFlow` tự nhận nơi chạy — máy thu đọc bảng tính sẵn
- * `data_flow_snapshot`, máy chủ đọc khối `dataFlow` của bản tin — nên không còn cổng «không thấy stg_* thì dừng».
+ * Nội dung /ops/data-flow (DF1): một đường cho cả hai nơi. `getDataFlow` nhận nơi chạy theo `VERCEL` — máy thu đọc bảng tính
+ * sẵn `data_flow_snapshot`, máy chủ đọc khối `dataFlow` của bản tin — nên không còn cổng «không thấy stg_* thì dừng».
  * `getUser` tiêm được để phép đo dựng route ngoài request (mặc định phiên đăng nhập thật).
  */
 export async function DataFlowContent({

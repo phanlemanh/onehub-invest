@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e8df8884dbc412061421845f9b5961b74f25e275
+verified_commit: f9d5904ebcbdeba1dd81be5b1a89237d2f6d0a3e
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -214,3 +214,11 @@ Round 1: E1-E12 đều xanh trên commit 50ea40b573faebf006ee099f7b4f511de74214b
 ### Re-pin lần 1 — 2026-10-22, do merge main sau PR #3 + #5: đổi khoá baseline /deals, route map
 run_id: repin-20261022T230905Z-93242
 sha: e8df8884dbc412061421845f9b5961b74f25e275 · suites: 2 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng
+
+### Re-pin lần 2 — 2026-10-27, do ui-standards-reui-thuoc-loi-thoi: E12 thay bởi #AC-2 (đã ký), thước baseline-guard sửa
+run_id: repin-20261027T064351Z-37781
+sha: 94e8dee93a9f7fffef89981f45d40241d08cefa3 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E12 · thay bởi hồ sơ đã ký: E12→ui-standards-reui-thuoc-loi-thoi#AC-2 · AC không có chốt máy: AC-10
+
+### Re-pin lần 3 — 2026-10-27, do ghim lại sau gộp main vào #162
+run_id: repin-20261027T064650Z-97189
+sha: f9d5904ebcbdeba1dd81be5b1a89237d2f6d0a3e · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E12 · thay bởi hồ sơ đã ký: E12→ui-standards-reui-thuoc-loi-thoi#AC-2 · AC không có chốt máy: AC-10

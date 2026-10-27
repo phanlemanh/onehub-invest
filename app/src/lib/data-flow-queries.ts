@@ -196,7 +196,8 @@ export async function getDataFlow(
   opts: {
     now?: number;
     query?: FlowQueryFn;
-    /** Bỏ trống → tự nhận: bảng bài `stg_zalo_posts` có → máy thu, vắng → máy chủ. */
+    /** Bỏ trống → theo nơi chạy: `VERCEL=1` → máy chủ, còn lại → máy thu (cùng quy ước collections-queries/audit).
+     * Không nhận theo bảng có mặt: cloud có thể giữ bảng `stg_*` RỖNG (leak gate chỉ đòi 0 dòng) — sự cố prod 27/10. */
     mode?: "local" | "cloud";
     /** Máy chủ: đọc bản tin (mặc định readOpsFacts). */
     readFacts?: (o: { now: Date }) => Promise<OpsFacts>;
@@ -205,9 +206,7 @@ export async function getDataFlow(
   const q: FlowQueryFn = opts.query ?? ((text, values) => pool.query(text, values));
   // Chạy ở server; trang truyền mốc request (requestTime) để mọi vùng cùng một «bây giờ».
   const now = opts.now ?? Date.now();
-  const mode =
-    opts.mode ??
-    ((await q(`SELECT to_regclass('stg_zalo_posts')::text AS r`)).rows[0]?.r == null ? "cloud" : "local");
+  const mode = opts.mode ?? (process.env.VERCEL === "1" ? "cloud" : "local");
   const n = WINDOW_DAYS[window];
   const since = n ? windowStart(n, now) : null;
   const totalsStart = since ?? new Date(0);

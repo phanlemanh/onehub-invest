@@ -385,6 +385,11 @@ executors:
     tkp_lan: "bash _acceptance/test-khong-prune-worktree/probes/lan.sh"
     tkp_pham_vi: "bash _acceptance/test-khong-prune-worktree/probes/pham-vi.sh"
     tkp_selftest_cleanup: "bash _acceptance/test-khong-prune-worktree/probes/selftest-cleanup.sh"
+    # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
+    urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
+    urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
+    urt_thay_boi: "node _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/thay-boi.mjs"
+    urt_pham_vi: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/pham-vi.sh"
     # audit-all-test-moc-phut — bản sao tệp test ở thư mục tạm, date giả trong hộp; không chạm DB hay mạng
     amp_ca_canh: "bash _acceptance/audit-all-test-moc-phut/probes/ca-canh.sh"
     amp_qua_phut: "bash _acceptance/audit-all-test-moc-phut/probes/qua-phut.sh"

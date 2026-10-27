@@ -28,6 +28,7 @@ const S_MIG = `dc_mig_${P}` // áp 051 hai lần
 const SCHEMAS = [S_LOCAL, S_CLOUD, S_NOFLOW, S_TA, S_MUT, S_MIG]
 process.env.DATABASE_URL = schemaUrl(S_CLOUD) // pool của app = máy chủ — đặt TRƯỚC mọi import động
 process.env.OPS_API_TOKEN = "dc-thu"
+delete process.env.VERCEL // máy thu là mặc định; ca cloud bật VERCEL=1 qua asCloud (cùng quy ước collections-queries)
 const WINDOWS = ["7d", "30d", "all"] as const
 type W = (typeof WINDOWS)[number]
 
@@ -179,9 +180,21 @@ async function schemaQuery(schema: string, seen?: string[]) {
     end: () => c.end(),
   }
 }
-async function content(window: W, nowMs: number) {
+/** Chạy `fn` như trên Vercel (VERCEL=1 — đường nhận nơi chạy của getDataFlow), trả env về như cũ. */
+async function asCloud<T>(fn: () => Promise<T>, cloud = true): Promise<T> {
+  const prev = process.env.VERCEL
+  if (cloud) process.env.VERCEL = "1"
+  else delete process.env.VERCEL
+  try {
+    return await fn()
+  } finally {
+    if (prev === undefined) delete process.env.VERCEL
+    else process.env.VERCEL = prev
+  }
+}
+async function content(window: W, nowMs: number, { cloud = true } = {}) {
   const { DataFlowContent } = await import("../src/components/ops/data-flow/data-flow-content")
-  return (await DataFlowContent({ window, nowMs, getUser: async () => null })) as ReactElement<{ flow: DF }>
+  return asCloud(async () => (await DataFlowContent({ window, nowMs, getUser: async () => null })) as ReactElement<{ flow: DF }>, cloud)
 }
 
 // ---------- AC-1: bảng tính sẵn ----------
@@ -393,10 +406,10 @@ describe("DC-AC-2 số khớp DF0", () => {
 })
 
 // ---------- AC-3: máy thu chỉ đọc bảng ----------
-/** Ma trận viết trước: MỌI câu getDataFlow gửi ở máy thu phải thuộc đúng một lớp cho phép. Phần tổng hợp chỉ có lớp
+/** Ma trận viết trước: MỌI câu getDataFlow gửi ở máy thu phải thuộc đúng một lớp cho phép (nơi chạy nhận theo VERCEL,
+ * không còn câu dò bảng). Phần tổng hợp chỉ có lớp
  * «bảng tính sẵn»; hai lớp còn lại ngoài phần tổng hợp theo kế hoạch Task 3 (thẻ chờ duyệt, «Tin mới nhất»). */
 const ALLOWED_QUERIES: [string, RegExp][] = [
-  ["nhận nơi chạy", /^SELECT to_regclass\('stg_zalo_posts'\)::text AS r$/],
   ["bảng tính sẵn", /^SELECT to_char\(computed_at AT TIME ZONE 'UTC', '[^']+'\) AS computed_at, facts\s+FROM data_flow_snapshot WHERE time_window = \$1$/],
   ["thẻ chờ duyệt", /^SELECT count\(\*\) AS review FROM review_queue WHERE status = 'pending'$/],
   ["Tin mới nhất", /row_number\(\) OVER \(PARTITION BY source ORDER BY first_seen DESC\) AS rn\s+FROM sale_offers WHERE first_seen >= \$1/],
@@ -581,9 +594,10 @@ function mutantApp(rel: string, fn: (s: string) => string) {
   const src = readFileSync(p, "utf8")
   const out = fn(src)
   assert.notEqual(out, src, `khuôn đột biến ${rel} không khớp mã nguồn`)
-  const dst = p.replace(/\/([^/]+)\.tsx$/, `/.dc-mut-${P}-${++mutSeq}-$1.tsx`)
+  const dst = p.replace(/\/([^/]+)\.(tsx?)$/, `/.dc-mut-${P}-${++mutSeq}-$1.$2`)
+  assert.notEqual(dst, p, `bản đột biến không được ghi đè tệp thật ${rel}`)
   writeFileSync(dst, out)
-  return { path: dst.replace(/\.tsx$/, ""), done: () => rmSync(dst, { force: true }) }
+  return { path: dst.replace(/\.tsx?$/, ""), done: () => rmSync(dst, { force: true }) }
 }
 
 /** Điểm ngày trên DOM: đi biểu đồ «Chặng theo ngày» bằng bàn phím (accessibilityLayer), đọc tooltip từng ngày. */
@@ -678,12 +692,40 @@ describe("DC-AC-6 route trên cloud", () => {
       assert.ok(p.some((m) => m.includes("readable")), `phép đo nhóm phải bắt số lệch: ${p.join(" | ")}`)
     }
 
-    // Đối chứng dương: cùng mô-đun, lược đồ có stg_* (và bảng tính sẵn) → nhánh máy thu.
+    // Hồi quy sự cố prod 27/10: cloud giữ bảng stg_zalo_posts RỖNG (leak gate chỉ đòi 0 dòng) — trên Vercel trang vẫn đi
+    // nhánh cloud. Bản nhận nơi chạy cũ (dò bảng có mặt) đi nhánh máy thu và vỡ ở review_queue (42P01).
+    await admin.query(`CREATE TABLE "${S_CLOUD}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING DEFAULTS)`)
+    try {
+      const el = await content("7d", NOW)
+      const r = await render(el)
+      const p = cloudPageProblems(r, el.props.flow, blocks["7d"])
+      console.log(`# DC-AC-6 cloud có stg_zalo_posts rỗng: nhánh ${el.props.flow.mode} · ${p.length ? p.join(" | ") : "khớp khối"}`)
+      assert.deepEqual(p, [], "cloud có bảng stg_* rỗng mà trang không đi nhánh cloud")
+      // Chiều đỏ cùng ca: bản nhận nơi chạy cũ trên cùng lược đồ → nhánh máy thu → vỡ (bảng review_queue vắng ở cloud).
+      const cu = mutantApp("src/lib/data-flow-queries.ts", (src) =>
+        src.replace(
+          `const mode = opts.mode ?? (process.env.VERCEL === "1" ? "cloud" : "local");`,
+          "const mode = opts.mode ?? ((await q(`SELECT to_regclass('stg_zalo_posts')::text AS r`)).rows[0]?.r == null ? \"cloud\" : \"local\");",
+        ),
+      )
+      try {
+        const { getDataFlow: cuGet } = await import(cu.path)
+        const loi = await asCloud(() => cuGet("7d", { now: NOW }).then((f: DF) => `nhánh ${f.mode}`, (e: { code?: string }) => `lỗi ${e.code}`))
+        console.log(`# DC-AC-6 chiều đỏ dò bảng: ${loi}`)
+        assert.equal(loi, "lỗi 42P01", "bản dò bảng có mặt phải vỡ đúng như prod 27/10")
+      } finally {
+        cu.done()
+      }
+    } finally {
+      await admin.query(`DROP TABLE IF EXISTS "${S_CLOUD}".stg_zalo_posts`)
+    }
+
+    // Đối chứng dương: cùng mô-đun, không VERCEL (máy thu, bảng tính sẵn có) → nhánh máy thu.
     await admin.query(`CREATE TABLE "${S_CLOUD}".stg_zalo_posts (LIKE public.stg_zalo_posts INCLUDING DEFAULTS)`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".review_queue (LIKE public.review_queue INCLUDING DEFAULTS)`)
     await admin.query(`CREATE TABLE "${S_CLOUD}".data_flow_snapshot AS SELECT * FROM "${S_LOCAL}".data_flow_snapshot`)
     try {
-      const el = await content("7d", NOW)
+      const el = await content("7d", NOW, { cloud: false })
       const r = await render(el)
       assert.equal(el.props.flow.mode, "local")
       assert.match(txt(r.querySelector("[data-flow-stamp]")), /^Số tính lúc /)
@@ -702,7 +744,7 @@ describe("DC-AC-6 route trên cloud", () => {
     )
     try {
       const { DataFlowContent } = await import(mut.path)
-      const el = await DataFlowContent({ window: "7d", nowMs: NOW, getUser: async () => null })
+      const el = (await asCloud(() => DataFlowContent({ window: "7d", nowMs: NOW, getUser: async () => null }))) as ReactElement
       const r = await render(el)
       const p = cloudPageProblems(r, { mode: "cloud", days: blocks["7d"].days, groups: blocks["7d"].groups, sources: blocks["7d"].sources } as DF, blocks["7d"])
       console.log(`# DC-AC-6 chiều đỏ giữ cổng stg_*: ${p[0]}`)
@@ -778,7 +820,7 @@ describe("DC-AC-8 tin mới nhất trên cloud", () => {
     ready()
     const { getDataFlow } = await import("../src/lib/data-flow-queries")
     const { levelLabel, levelOf } = await import("../src/lib/data-level")
-    const flow = await getDataFlow("all", { now: NOW })
+    const flow = await asCloud(() => getDataFlow("all", { now: NOW }))
     assert.equal(flow.mode, "cloud")
     assert.deepEqual(flow.records.map((r) => r.offerId).sort(), OFFERS.map((o) => o[0]).sort(), "records phải là tin của sale_offers cloud")
     assert.ok(flow.records.every((r) => r.postText === null && r.postGroup === null), "cloud không có bài gốc")
@@ -908,14 +950,14 @@ describe("DC-AC-10 một định nghĩa", () => {
     try {
       for (const w of WINDOWS) {
         const local = await getDataFlow(w, { now: NOW, query: q.query })
-        const cloud = await getDataFlow(w, { now: NOW })
+        const cloud = await asCloud(() => getDataFlow(w, { now: NOW }))
         assert.equal(local.mode, "local")
         assert.equal(cloud.mode, "cloud")
         assert.deepEqual(oneDefProblems(local, cloud), [], `cửa sổ ${w}`)
         assert.ok(local.days.length > 0 && local.sources.length === 3, "đối chứng: snapshot có số")
         if (w === "7d") {
           // Chiều đỏ cùng ca: payload đột biến dời days[0].day sang ngày kế.
-          const sai = await getDataFlow(w, {
+          const sai = await asCloud(() => getDataFlow(w, {
             now: NOW,
             readFacts: async (o) => {
               const f = structuredClone(await readOpsFacts(o))
@@ -923,7 +965,7 @@ describe("DC-AC-10 một định nghĩa", () => {
               days[0] = { ...days[0], day: new Date(Date.parse(`${days[0].day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10) }
               return f
             },
-          })
+          }))
           const p = oneDefProblems(local, sai)
           console.log(`# DC-AC-10 chiều đỏ dời days[0]: ${p.join(" | ")}`)
           assert.deepEqual(p, ["cloud ≠ máy thu: days"])

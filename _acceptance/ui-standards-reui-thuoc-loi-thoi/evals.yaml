@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: ui-standards-reui-thuoc-loi-thoi
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.urt_guard
+    paths: [app/eslint-plugin-onehub-ui/selftest.mjs, app/eslint-suppressions.json, _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ban that: PASS, tep mau <tệp .tsx> <luật>'; 'ban khong tep tsx: do, thong diep ghim co'; 'ban tang dem suppress: do, thong diep ghim co'; cuối 'GUARD OK'; should-NOT-fire: không 'BAN THAT DO', 'CA KHONG DO', 'DOT BIEN KHONG AP DUOC'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.urt_doc
+    paths: [scripts/ui-standards/acceptance.mjs, docs/research/ui-baseline-2026-10.md, app/eslint-suppressions.json, "app/src/**", _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'tai lieu that: xanh — tài liệu: 138 → 131 → 85 → <n>'; bốn dòng 'ban bo muc 27/10 | ban baseline tang | ban lech hai bang | ban tong tang: do, thong diep ghim co'; cuối 'DOC OK'; should-NOT-fire: không 'TAI LIEU THAT DO', 'THIEU MUC DO 27/10', 'CA KHONG DO', 'DOT BIEN KHONG AP DUOC'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.urt_thay_boi
+    paths: [_acceptance/ui-standards-reui/evals.yaml, _acceptance/ui-standards-reui-thuoc-loi-thoi/contract.md, lib/eval-yaml.cjs, lib/evidence-core.cjs, _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/thay-boi.mjs]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ok E12 → AC-2: not-run, superseded_by dung, cmd giu nguyen; E7 giu song'; 'ok evals.yaml cu chi them 2 dong (status, superseded_by)'; 'ok kit notRunConflicts: E12 thay-boi hop le (gia lap ho so thay signed-off)'; 'ban bo the bat tay: do, ly do thay-khong-nhan'; cuối 'THAY BOI OK'; should-NOT-fire: không 'THAY BOI SAI', 'EVALS CU DOI NGOAI 2 DONG', 'KIT KHONG NHAN THAY BOI', 'CA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.urt_pham_vi
+    paths: [app/eslint-suppressions.json, app/eslint.config.mjs, "app/eslint-plugin-onehub-ui/**", _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/pham-vi.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; bốn tệp chính có trong diff; mọi tệp đổi 'ok'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'LUAT LINT BI DOI', 'NGOAI PHAM VI', 'THIEU TEP'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

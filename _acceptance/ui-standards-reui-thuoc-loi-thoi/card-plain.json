@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Hai phép kiểm chuẩn giao diện của hồ sơ đã ký thôi đỏ sẵn sau các đợt dọn UI — phép kiểm tự chọn tệp mẫu còn nợ lint, phép kiểm tài liệu so với lần đo mới nhất; luật lint không đổi.",
+  "analyst_plain": "Phép so với bản trước khi sửa không chạy được (tác tử chấm thiếu công cụ ghi tệp); chiều đỏ của từng phép đo nằm trong chính đầu dò (bản sao app, bản chép tài liệu, bản giả lập hồ sơ thay)."
+}
