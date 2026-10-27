@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 418eb12c7361c996ce8e917e0d033d439cf03d51
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: ui-standards-reui-thuoc-loi-thoi

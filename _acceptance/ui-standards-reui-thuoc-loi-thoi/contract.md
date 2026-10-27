@@ -5,7 +5,7 @@ slug: ui-standards-reui-thuoc-loi-thoi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-27T05:58:12Z
 approved_by:
@@ -60,3 +60,7 @@ thước + tài liệu; không nới luật ReUI.
 - Tự động thêm mục đo vào tài liệu mỗi lần dọn UI — mỗi đợt dọn tự thêm mục như mục 27/10.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: Bước kiểm tra chất lượng giao diện nay bỏ qua các thay đổi trong thư mục hồ sơ nghiệm thu khi xét «không có gì bị sửa»; người dùng cuối không bị ảnh hưởng.
+  - Ngoài-2: Bộ kiểm tra chặn việc thêm lỗi giao diện mới chỉ thử một loại lỗi mỗi lần chạy và mới có mẫu cho một nửa số luật; nếu sai thì báo đỏ nhầm chứ không bỏ lọt lỗi.
