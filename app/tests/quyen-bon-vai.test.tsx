@@ -612,3 +612,20 @@ test("QV-AC-6 GET source-groups: bearer → 200 có danh sách; không gì → 4
     donBanCu()
   }
 })
+
+// ---- QV-AC-9: sổ bề mặt khớp bảng quyền theo phương thức; bộ kiểm sổ của NT4 xanh (E9) ----
+test("QV-AC-9 chế độ sổ của 21 ô route · phương thức khớp thước; check-api-surface mutation thoát 0", async () => {
+  const { API_SURFACE } = (await import("../src/lib/api-surface")) as {
+    API_SURFACE: { route: string; mode: string; methodModes?: Record<string, string> }[]
+  }
+  const cheDoMongDoi = (hd: string) =>
+    BEARER_DUOC.has(hd) ? "ops" : BAC[VAI_TOI_THIEU[hd]] >= BAC.admin ? "admin" : "ops-session"
+  const sai: string[] = []
+  for (const [route, method, action, hd] of BANG_ROUTE) {
+    const e = API_SURFACE.find((x) => x.route === `v1/ops/${route}`)
+    const mode = e ? (e.methodModes?.[method] ?? e.mode) : "(vắng)"
+    if (mode !== cheDoMongDoi(hd)) sai.push(`${route} ${method}${action ? ` ${action}` : ""}: sổ ${mode}, bảng ${cheDoMongDoi(hd)}`)
+  }
+  assert.deepEqual(sai, [])
+  execFileSync("node", ["scripts/check-api-surface.mjs", "mutation"], { cwd: join(APP, ".."), stdio: "pipe" })
+})
