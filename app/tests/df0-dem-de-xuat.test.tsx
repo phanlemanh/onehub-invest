@@ -199,7 +199,7 @@ describe("DD-AC-4 đầu trang", () => {
       await React.act(async () =>
         root.render(
           <AppRouterContext.Provider value={router as never}>
-            <DataFlowView flow={f} roles={{}} nowMs={NOW} />
+            <DataFlowView flow={f} roles={{}} nowMs={NOW} xemBaiGoc />
           </AppRouterContext.Provider>,
         ),
       )

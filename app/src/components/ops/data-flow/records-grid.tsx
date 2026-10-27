@@ -110,10 +110,13 @@ export function RecordsGrid({
   records,
   roles,
   media,
+  xemBaiGoc,
 }: {
   records: FlowRecord[]
   roles: SourceRoles
   media?: Record<string, ReviewImage[]>
+  /** Vai ops trở lên — không thì sheet hiện câu chú thích thay bài gốc. */
+  xemBaiGoc: boolean
 }) {
   const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery())
   const [open, setOpen] = useState<FlowRecord | null>(null)
@@ -170,7 +173,7 @@ export function RecordsGrid({
           </FrameFooter>
         </Frame>
       </DataGrid>
-      <RecordSheet record={open} roles={roles} media={media} onOpenChange={(o) => !o && setOpen(null)} />
+      <RecordSheet record={open} roles={roles} media={media} xemBaiGoc={xemBaiGoc} onOpenChange={(o) => !o && setOpen(null)} />
     </>
   )
 }

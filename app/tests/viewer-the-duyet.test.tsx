@@ -10,6 +10,8 @@ import { fileURLToPath } from "node:url"
 import pg from "pg"
 import type { ReactElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { JSDOM } from "jsdom"
+import type { ReactNode } from "react"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
@@ -29,6 +31,74 @@ const NGUOI = {
   opsEmail: { id: "6", email: "vt-ops@local.test", plan: "free", role: "user" },
 } satisfies Record<string, User>
 type Kieu = keyof typeof NGUOI
+
+// ---------- jsdom (cùng khuôn ops-dong-chay.test.tsx) — chỉ cho ca sheet ----------
+const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost:3461/ops/data-flow" })
+Object.assign(globalThis, {
+  window: dom.window,
+  self: dom.window,
+  document: dom.window.document,
+  HTMLElement: dom.window.HTMLElement,
+  Element: dom.window.Element,
+  Node: dom.window.Node,
+  IS_REACT_ACT_ENVIRONMENT: true,
+  requestAnimationFrame: (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0),
+  cancelAnimationFrame: (id: number) => clearTimeout(id),
+  getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+  MutationObserver: dom.window.MutationObserver,
+  IntersectionObserver: class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+  ResizeObserver: class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+  matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }),
+})
+dom.window.matchMedia = (globalThis as unknown as { matchMedia: typeof dom.window.matchMedia }).matchMedia
+dom.window.HTMLElement.prototype.scrollIntoView = () => {}
+;(dom.window.Element.prototype as unknown as { getAnimations: () => unknown[] }).getAnimations = () => []
+Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true })
+
+let currentRoot: { render: (n: ReactNode) => void; unmount: () => void } | null = null
+async function render(node: ReactNode) {
+  const React = await import("react")
+  Object.assign(globalThis, { React })
+  const { createRoot } = await import("react-dom/client")
+  if (currentRoot) {
+    const r = currentRoot
+    currentRoot = null
+    await React.act(async () => r.unmount())
+  }
+  document.body.innerHTML = "<div id=root></div>"
+  const root = createRoot(document.getElementById("root")!)
+  currentRoot = root
+  await React.act(async () => root.render(node))
+  return document.getElementById("root")!
+}
+async function act(fn: () => void | Promise<void>) {
+  const React = await import("react")
+  await React.act(async () => {
+    await fn()
+    await new Promise((r) => setTimeout(r, 20))
+  })
+}
+const click = async (el: Element | null | undefined, what: string) => {
+  assert.ok(el, `không tìm thấy ${what} để bấm`)
+  await act(() => (el as HTMLElement).click())
+}
+const dialogs = () => document.querySelectorAll("[role=dialog]")
+async function closeSheets() {
+  for (const d of dialogs()) {
+    await act(() => {
+      d.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+    })
+  }
+  await act(() => new Promise((r) => setTimeout(r, 30)))
+}
 
 // ---------- bản chép tạm (đối chứng dương) ----------
 const CHEP: string[] = []
@@ -103,6 +173,12 @@ before(async () => {
   }
 })
 after(async () => {
+  await closeSheets().catch(() => {})
+  if (currentRoot) {
+    const React = await import("react")
+    const r = currentRoot
+    await React.act(async () => r.unmount())
+  }
   for (const f of CHEP) rmSync(f, { force: true })
   await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`).catch(() => {})
   await admin.end().catch(() => {})
@@ -200,5 +276,69 @@ describe("VT-AC-2 viewer: hàng duyệt chỉ số đếm", () => {
       await admin.query(`DROP TABLE IF EXISTS "${S}".review_queue`)
       await admin.query(`ALTER TABLE "${S}".vt_rq_day RENAME TO review_queue`)
     }
+  })
+})
+
+// ---------- AC-4: /ops/data-flow — dữ liệu trao cho thành phần client đã che ----------
+type FlowRecord = import("../src/lib/data-flow-queries").FlowRecord
+type DfEl = ReactElement<{ flow: { records: FlowRecord[] }; xemBaiGoc: boolean }>
+type DfMod = { DataFlowContent: (p: { window: "all"; user: User | null }) => Promise<DfEl> }
+const CHU_BAI = "Bài gốc chỉ hiện cho vai Vận hành trở lên."
+
+describe("VT-AC-4 data-flow: props đã che", () => {
+  test("VT-AC-4 bài gốc không xuống trình duyệt", async () => {
+    ready()
+    const { DataFlowContent } = (await import("../src/components/ops/data-flow/data-flow-content")) as DfMod
+    const { DataFlowView } = await import("../src/components/ops/data-flow/data-flow-view")
+    for (const [nhan, u] of [["viewer", NGUOI.viewer], ["null", null]] as const) {
+      const el = await DataFlowContent({ window: "all", user: u })
+      assert.equal(el.type, DataFlowView, `${nhan}: phần tử trả về là DataFlowView`)
+      assert.ok(el.props.flow.records.length >= 2, `${nhan}: có bản ghi`)
+      for (const r of el.props.flow.records) {
+        assert.equal(r.postText, null, `${nhan}: postText ${r.offerId}`)
+        assert.equal(r.postGroup, null, `${nhan}: postGroup ${r.offerId}`)
+      }
+      // Tên nhóm vẫn có ở bảng chất lượng theo nhóm (tầng C, AGENTS.md luật 6) — phép đo là chữ bài gốc.
+      assert.doesNotMatch(jsonCay(el.props), /vt-bai-/, `${nhan}: props mang bài gốc`)
+      assert.equal(el.props.xemBaiGoc, false, `${nhan}: cờ xemBaiGoc`)
+    }
+    const ops = await DataFlowContent({ window: "all", user: NGUOI.ops })
+    const bai = ops.props.flow.records.filter((r) => r.source === "S05").map((r) => r.postText).sort()
+    assert.deepEqual(bai, ["vt-bai-1", "vt-bai-2"], "ops nhận bài gốc như đã chèn")
+    assert.equal(ops.props.xemBaiGoc, true)
+    const page = readFileSync(path.join(APP, "src/app/ops/data-flow/page.tsx"), "utf8")
+    assert.doesNotMatch(page, /DataFlowView/, "page.tsx không tự dựng DataFlowView")
+    assert.match(page, /<DataFlowContent[^>]*user=/, "page.tsx trao user cho DataFlowContent")
+  })
+})
+
+// ---------- AC-5: sheet bản ghi ----------
+const rec = (p: Partial<FlowRecord>): FlowRecord => ({
+  offerId: "r", source: "S05", kind: "rent_lt", propertyType: "apartment", priceVnd: 9_000_000, areaM2: 40, bedrooms: 1,
+  ward: null, market: null, confidence: "medium", nPosts: 1, linked: false, firstSeen: "2026-10-25 09:00:00+00",
+  lastSeen: "2026-10-25 09:00:00+00", postText: "vt-bai-x", postGroup: "nhóm vt", ...p,
+})
+const RECS: FlowRecord[] = [rec({ offerId: "x" }), rec({ offerId: "y", source: "S06", postText: null, postGroup: null, firstSeen: "2026-10-24 09:00:00+00" })]
+
+describe("VT-AC-5 sheet bài gốc", () => {
+  test("VT-AC-5 câu chú thích thay bài gốc", async () => {
+    const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
+    const mo = async (xemBaiGoc: boolean, i: number) => {
+      const root = await render(<RecordsGrid records={RECS} roles={{}} xemBaiGoc={xemBaiGoc} />)
+      await click([...root.querySelectorAll("tbody tr")][i]?.querySelector("td:nth-child(2)"), `hàng ${i}`)
+      const t = dialogs()[0]?.textContent ?? ""
+      await closeSheets()
+      return t
+    }
+    let t = await mo(false, 0)
+    assert.ok(t.includes(CHU_BAI), "viewer: câu chú thích")
+    assert.ok(!t.includes("vt-bai-x"), "viewer: không bài gốc")
+    t = await mo(false, 1)
+    assert.ok(t.includes(CHU_BAI), "viewer, bản ghi S06: vẫn câu chú thích vai")
+    assert.ok(!t.includes("S06 chưa lưu khoá nối ngược tin → bài"), "viewer, S06: không câu S06")
+    t = await mo(true, 0)
+    assert.ok(t.includes("vt-bai-x"), "ops: bài gốc")
+    assert.ok(t.includes("Nhóm nhóm vt"), "ops: tên nhóm")
+    assert.ok(!t.includes(CHU_BAI), "ops: không câu chú thích")
   })
 })

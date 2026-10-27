@@ -82,12 +82,15 @@ export function RecordSheet({
   record,
   roles,
   media,
+  xemBaiGoc,
   onOpenChange,
 }: {
   record: FlowRecord | null
   roles: SourceRoles
   /** Ảnh tin theo offer_id (chỉ admin); vắng → không hiện dải ảnh. */
   media?: Record<string, ReviewImage[]>
+  /** Vai ops trở lên (xemNoiDungTin) — không thì bài gốc đã bị xoá ở máy chủ. */
+  xemBaiGoc: boolean
   onOpenChange: (open: boolean) => void
 }) {
   return (
@@ -152,7 +155,9 @@ export function RecordSheet({
                 </Section>
                 <Separator />
                 <Section title="Bài gốc">
-                  {record.postText ? (
+                  {!xemBaiGoc ? (
+                    <p className="text-muted-foreground text-sm">Bài gốc chỉ hiện cho vai Vận hành trở lên.</p>
+                  ) : record.postText ? (
                     <div className="flex flex-col gap-2">
                       {record.postGroup ? <p className="text-muted-foreground text-xs">Nhóm {record.postGroup}</p> : null}
                       <blockquote className="border-s-2 ps-3 text-sm break-words whitespace-pre-wrap">{record.postText}</blockquote>
