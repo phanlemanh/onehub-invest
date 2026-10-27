@@ -5,7 +5,7 @@ slug: df0-chang-theo-ngay-diem-0
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-27-df0-chang-theo-ngay-diem-0-design.md
 approved_by: Mạnh
 approved_at: 2026-10-26T23:45:57Z
@@ -48,3 +48,6 @@ trong và ngoài cửa sổ × độ dài cửa sổ) quét ở AC-1/AC-2/AC-4 b
 ## Notes
 
 - Tệp test riêng `app/tests/df0-chang-theo-ngay.test.tsx`; không chạm tệp test của `ops-dong-chay-df0`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: bài kiểm dùng ngày viết tay, không đi qua đường đọc dữ liệu thật — máy chủ đổi dạng ngày thì biểu đồ hiện câu trống mà bài kiểm vẫn xanh (ảnh trang thật bắt được).
+  - Ngoài-2: chiều đối chứng của ca nửa đêm giờ VN chỉ so khác, không ghim ngày UTC mong đợi; các phép kiểm chính vẫn khoá ngày VN.
