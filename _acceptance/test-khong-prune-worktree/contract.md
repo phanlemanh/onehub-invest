@@ -3,9 +3,11 @@ schema_version: 1
 feature: test gỡ đúng worktree tạm của mình — bỏ git worktree prune trên kho dùng chung (zalo-import-job-lan.test.mjs và selftest hook typecheck-changed)
 slug: test-khong-prune-worktree
 owner: phanlemanh@gmail.com
-risk_tier: T3      # gộp selftest hook .claude/hooks/** (t3_paths) — Hỏi-1, chờ Mạnh ở Cổng Phạm vi
+risk_tier: T3      # gộp selftest hook .claude/hooks/** (t3_paths) — Hỏi-1 gộp, Mạnh duyệt ở Cổng Phạm vi 2026-10-27
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-27
 design_doc: docs/superpowers/specs/2026-10-27-test-khong-prune-worktree-design.md
 ---
 
