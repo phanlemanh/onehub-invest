@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hỏi-1 chặng theo ngày</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1040px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · df0-chang-theo-ngay-diem-0 · hoi-1</p>
+    <h1>Hỏi-1: nguồn im trọn 7 ngày thì «Chặng theo ngày» hiện gì</h1>
+    <p class="sub">AC-5 · tình huống: nguồn im trọn cửa sổ 7 ngày · hai nhánh, nhánh tô cam là nhánh máy khuyên</p>
+
+    <svg viewBox="0 0 1000 752" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Khung nhánh (nền, vẽ trước) ============ -->
+      <!-- Nhánh A: khung nhấn duy nhất -->
+      <rect x="48" y="280" width="448" height="352" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="64" y="304" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH A · MÁY KHUYÊN</text>
+      <text x="64" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Giữ câu trống</text>
+      <!-- Nhánh B -->
+      <rect x="504" y="280" width="448" height="352" rx="8" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="520" y="304" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH B</text>
+      <text x="520" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Vẽ đường phẳng 0</text>
+
+      <!-- ============ Mũi tên (vẽ trước nút) ============ -->
+      <!-- Khung biểu đồ → câu hỏi -->
+      <line x1="356" y1="160" x2="356" y2="200" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- Khung biểu đồ ↔ khung Chất lượng (cùng trang) -->
+      <line x1="664" y1="104" x2="752" y2="104" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <rect x="672" y="76" width="72" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="708" y="88" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CÙNG TRANG</text>
+      <!-- Câu hỏi → A / B -->
+      <line x1="272" y1="248" x2="272" y2="280" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <line x1="728" y1="248" x2="728" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- ============ Khung «Chặng theo ngày»: bốn ô số đều 0 ============ -->
+      <rect x="48" y="24" width="616" height="136" rx="8" fill="#f5f5f5"/>
+      <rect x="48" y="24" width="616" height="136" rx="8" fill="rgba(45,49,66,0.03)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="64" y="48" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">DÒNG CHẢY DỮ LIỆU · KHUNG «CHẶNG THEO NGÀY» · CỬA SỔ 7 NGÀY</text>
+
+      <rect x="64" y="64" width="136" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="132" y="104" fill="#2d3142" font-size="20" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">0</text>
+      <text x="132" y="128" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">chặng 1 · 7 ngày</text>
+
+      <rect x="212" y="64" width="136" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="280" y="104" fill="#2d3142" font-size="20" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">0</text>
+      <text x="280" y="128" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">chặng 2 · 7 ngày</text>
+
+      <rect x="360" y="64" width="136" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="428" y="104" fill="#2d3142" font-size="20" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">0</text>
+      <text x="428" y="128" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">chặng 3 · 7 ngày</text>
+
+      <rect x="508" y="64" width="140" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="578" y="104" fill="#2d3142" font-size="20" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">0</text>
+      <text x="578" y="128" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">chặng 4 · 7 ngày</text>
+
+      <!-- Khung «Chất lượng từng chặng» -->
+      <rect x="752" y="40" width="200" height="112" rx="6" fill="#f5f5f5"/>
+      <rect x="752" y="40" width="200" height="112" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="768" y="60" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CHẤT LƯỢNG TỪNG CHẶNG</text>
+      <rect x="768" y="72" width="88" height="24" rx="2" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+      <text x="812" y="88" fill="#2d3142" font-size="10" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Im 7 ngày</text>
+      <text x="768" y="120" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">nhãn báo nguồn im, có sẵn</text>
+      <text x="768" y="136" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">giữ nguyên ở cả hai nhánh</text>
+
+      <!-- ============ Câu hỏi ============ -->
+      <rect x="48" y="200" width="904" height="48" rx="6" fill="#f5f5f5"/>
+      <rect x="48" y="200" width="904" height="48" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="64" y="228" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỎI-1</text>
+      <text x="500" y="229" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Mọi điểm trong 7 ngày đều 0 — vùng biểu đồ hiện câu trống hay vẽ đường phẳng 0?</text>
+
+      <!-- ============ Nhánh A: giữ câu trống ============ -->
+      <text x="64" y="356" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">VÙNG BIỂU ĐỒ HIỆN</text>
+      <rect x="64" y="364" width="416" height="120" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="272" y="428" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">«Chưa có số theo ngày trong khoảng này.»</text>
+
+      <text x="64" y="512" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CÂU GIẢI THÍCH</text>
+      <text x="64" y="536" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif">Có — câu trống nói chưa có số; nhãn «Im 7 ngày» nói vì sao</text>
+
+      <text x="64" y="568" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỆ QUẢ</text>
+      <text x="64" y="592" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Nói thẳng là chưa có số trong khoảng này</text>
+      <text x="64" y="612" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">lý do nguồn im đọc ở nhãn «Im N ngày» cùng trang</text>
+
+      <!-- ============ Nhánh B: vẽ đường phẳng 0 ============ -->
+      <text x="520" y="356" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">VÙNG BIỂU ĐỒ HIỆN</text>
+      <rect x="520" y="364" width="416" height="120" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <!-- lưới trên + trục đáy -->
+      <line x1="548" y1="392" x2="908" y2="392" stroke="rgba(45,49,66,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
+      <line x1="548" y1="452" x2="908" y2="452" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="540" y="455" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">0</text>
+      <!-- đường phẳng 0 sát trục, đủ 7 ngày -->
+      <line x1="548" y1="452" x2="908" y2="452" stroke="#2d3142" stroke-width="1.6"/>
+      <circle cx="548" cy="452" r="3" fill="#2d3142"/>
+      <circle cx="608" cy="452" r="3" fill="#2d3142"/>
+      <circle cx="668" cy="452" r="3" fill="#2d3142"/>
+      <circle cx="728" cy="452" r="3" fill="#2d3142"/>
+      <circle cx="788" cy="452" r="3" fill="#2d3142"/>
+      <circle cx="848" cy="452" r="3" fill="#2d3142"/>
+      <circle cx="908" cy="452" r="3" fill="#2d3142"/>
+      <text x="548" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">21/10</text>
+      <text x="608" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">22/10</text>
+      <text x="668" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">23/10</text>
+      <text x="728" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">24/10</text>
+      <text x="788" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">25/10</text>
+      <text x="848" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">26/10</text>
+      <text x="908" y="472" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">hôm nay</text>
+
+      <text x="520" y="512" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CÂU GIẢI THÍCH</text>
+      <text x="520" y="536" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif">Không — chỉ còn nhãn «Im 7 ngày» ở khung Chất lượng</text>
+
+      <text x="520" y="568" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỆ QUẢ</text>
+      <text x="520" y="592" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Trục 7 ngày giống hệt lúc có số</text>
+      <text x="520" y="612" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">đường phẳng sát đáy, vùng không có câu nói vì sao</text>
+
+      <!-- ============ Chân hình ============ -->
+      <text x="500" y="664" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">Có ít nhất một ngày có số → cả hai nhánh vẽ trục đủ 7 ngày, ngày im là điểm 0 (AC-1, AC-2)</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="48" y1="684" x2="952" y2="684" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="48" y="708" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="48" y="720" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="80" y="730" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh máy khuyên</text>
+
+      <rect x="228" y="720" width="24" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="260" y="730" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh còn lại</text>
+
+      <rect x="408" y="720" width="24" height="12" rx="2" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="440" y="730" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Vùng biểu đồ trên trang</text>
+
+      <line x1="588" y1="726" x2="612" y2="726" stroke="#2d3142" stroke-width="1.6"/>
+      <circle cx="600" cy="726" r="3" fill="#2d3142"/>
+      <text x="620" y="730" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Điểm theo ngày</text>
+
+      <line x1="768" y1="726" x2="792" y2="726" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4"/>
+      <text x="800" y="730" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Cùng một trang</text>
+    </svg>
+  </div>
+</body>
+</html>

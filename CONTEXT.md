@@ -50,22 +50,34 @@ _Avoid_: dự án, đại đô thị
 - Code: `subzone` · RESO: Building.ComplexName / ComplexId (DD 2.1 — ADR-0013 §2)
 _Avoid_: dự án con, phase
 
-**Tòa nhà**: Một tòa chung cư (S1.03, BE02) — `node_type = building`; mã tòa thô trong tin nằm ở `block_raw`.
-- Code: `building` · RESO: BuildingName + Building.BuildingKey (ADR-0013 §2)
+**Tòa nhà**: Một công trình — tòa chung cư (S1.03, BE02), nhà phố, nhà trọ; cấp `building` của danh bạ vật thể (ADR-0016; hiện 3 tòa còn ở `asset_nodes.node_type = building`, chuyển sang bảng tòa ở hàng code). Mã tòa thô trong tin nằm ở `block_raw`. Nhà phố nguyên căn gắn ở mức tòa.
+- Code: `building` · RESO: resource Building (BuildingName, BuildingKey, BuilderName) (ADR-0013 §2, ADR-0016 §2)
 _Avoid_: block, chung cư
 
 **Trục căn**: Các căn cùng toà, cùng vị trí trên mặt bằng, khác tầng (cùng diện tích, số phòng). Môi giới thường lộ toà + trục mà che tầng («LD2xx11»), nên tin nhiều khi chỉ gắn được tới trục.
 - Code: `stack` · RESO: không có — extension `Stack` (ADR-0013 §9)
 _Avoid_: line căn, dòng căn
 
+**Thửa**: Một mảnh đất — cấp `parcel` của danh bạ vật thể; tin đất gắn ở thửa. Chưa nối thửa với tòa nhà phố khi chưa có số nhà, số thửa (ADR-0016 §2).
+- Code: `parcel` · RESO: ParcelNumber; resource local `Parcel` (ADR-0016 §11)
+_Avoid_: lô, mảnh, plot
+
+**Căn**: Phần con bán hoặc thuê được trong một tòa (căn hộ, shophouse chân đế) — cấp `unit` của danh bạ vật thể, con của trục khi biết trục. Khác «Căn nhà»: căn nhà là đơn vị phân tích, có thể là căn, tòa hay thửa.
+- Code: `unit` · RESO: UniversalPropertySubId + UnitNumber; resource local `Unit` (ADR-0016 §2, §11)
+_Avoid_: unit (trong chữ UI), căn hộ (khi nói chung mọi loại)
+
 ## Tài sản & tin
 
-**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng (bảng `properties`); nhiều listing từ nhiều nguồn gộp về một căn, nguồn chỉ là bằng chứng (ROADMAP §1.7).
+**Danh bạ**: Bảng định danh bền của một loại thực thể của mình — vật thể (thửa, tòa, trục, căn) hoặc người: khoá mờ cấp một lần, bí danh, vòng đời gộp · tách · nghỉ; mọi thuộc tính đi qua phát biểu (ADR-0016 §3). Khác «danh mục»: danh mục là danh sách căn lấy từ một nguồn (S08), là bằng chứng để dựng danh bạ.
+- Code: `registry` · RESO: không có (khung theo HistoryTransactional)
+_Avoid_: master data, MDM
+
+**Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện là cụm tin S06, chuyển dần thành view trên danh bạ.
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
-- Ghi chú: `asset_nodes` là cây khu đô thị/tòa, không phải căn nhà — vì thế "asset" bị loại.
+- Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
 _Avoid_: tài sản, bất động sản, BĐS, asset
 
-**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn. Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
+**Listing**: Một tin niêm yết lấy từ nguồn — chào bán, cho thuê dài hạn hay cho thuê ngắn hạn; là bên bán, đối xứng với **Yêu cầu** (bên mua). Là lớp giữa của kiến trúc «listing → căn» (ADR-0013 §1): nhiều listing từ nhiều nguồn, có thể trùng, cùng trỏ về một căn nhà. Dịch vụ (bán · thuê dài hạn · thuê ngắn hạn) ở cột `kind` («Loại tin»), loại hình ở `property_type`. Trường thuộc listing (giá, dịch vụ, người đăng, trạng thái chào) gắn với listing; trường thuộc căn gắn với căn.
 - Code: `listing` · RESO: resource Property — mỗi bản ghi là một lần niêm yết, khoá `ListingKey`; bán/thuê qua PropertyType, tần suất thuê qua LeaseAmountFrequency
 - Slug URL: `listings` · `listing`
 - Tiếng Việt: «tin» là cách gọi thường của listing; trên UI «Tin» là nhãn ngắn khi chỗ đó chỉ có một loại listing (cột bảng tin, thẻ duyệt «Tin A» / «Tin B»).
@@ -82,8 +94,15 @@ _Avoid_: tin đăng, offer, rao vặt, sale offer
 - Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».
 _Avoid_: chỗ ở, phòng cho thuê, homestay
 
-**Yêu cầu mua**: Bài hay tin của người đang cần mua (hoặc thuê) — không phải listing, không gắn căn; giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8). Một giá trị của «Ý định tin».
-- Code: `listing_intent = inquiry` (đổi từ `wanted` — Mạnh chốt 27/10, vòng U1 đang làm; tới khi xong, sổ từ vựng dưới còn ghi `wanted` «Tin tìm mua, tìm thuê») · RESO: không phải resource Property; gần nhất SavedSearch
+**Yêu cầu**: Một nhu cầu cần mua hoặc cần thuê — bên mua, đối xứng với **listing** bên bán (Mạnh chốt 27/10). Dịch vụ ở `kind` cùng bộ mã với listing (`sale` = mua · `rent_lt` = thuê dài hạn · `rent_st` = thuê ngắn hạn, nhãn theo phía), loại hình ở `property_type` (cùng sổ), giá là khoảng ngân sách. Không gắn một căn mà gắn tiêu chí (khu vực, loại hình, số PN, ngân sách), khớp được với nhiều listing. Hiện mới là một giá trị của «Ý định tin»: bài cần mua, cần thuê giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8); bảng lưu yêu cầu và ghép với listing là tính năng sau, cần số đo trước (luật 11).
+- Code: `listing_intent = inquiry` · RESO: không có bản ghi ngang hàng `Property` — gần nhất SavedSearch (tiêu chí người mua); local extension dùng lại trường RESO phía bán
+_Avoid_: tin tìm mua, wanted
+
+**Yêu cầu mua**: Yêu cầu có `kind = sale`.
+- Code: `kind = sale` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType ∈ Residential, Land
+
+**Yêu cầu thuê**: Yêu cầu có `kind` ∈ `rent_lt`, `rent_st`.
+- Code: `kind = rent_lt | rent_st` (phía yêu cầu) · RESO: tiêu chí SavedSearch với PropertyType = ResidentialLease
 
 **Tin bán**: Tin rao có `kind = sale`.
 - Code: `kind = sale` · RESO: PropertyType ∈ Residential, Land, ResidentialIncome
@@ -128,7 +147,12 @@ _Avoid_: provenance (trên UI)
 
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
+- Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
 _Avoid_: chủ nhà, broker
+
+**Vai trò**: Quan hệ của một người với listing (người đăng, môi giới đại diện, sàn) hay với vật thể (chủ đầu tư), ghi bằng phát biểu. Vai suy luận (vd đăng nhiều căn → môi giới) không vào cột, chỉ hiện ở `/ops` (ADR-0016 §8).
+- Code: `party_role` · RESO: ListAgentKey · CoListAgentKey · ListOfficeKey; chủ đầu tư → Building.BuilderName
+_Avoid_: loại người bán
 
 **Diện tích**: Diện tích sử dụng của căn, m² (`numeric`, ADR-0011 Qđ 4).
 - Code: `area_m2` · RESO: LivingArea (LivingAreaUnits = sqm)
@@ -277,7 +301,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field`, `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
 | Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
 | Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» |
-| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `wanted` «Tin tìm mua, tìm thuê» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
+| Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
 | Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
@@ -437,10 +461,15 @@ _Avoid_: coverage target, mục tiêu độ phủ, chỉ tiêu phủ
 - Code: `invest portal` · RESO: —
 _Avoid_: Invest Portal, cổng nhà đầu tư
 
-**Cổng Ops**: Cổng vận hành dữ liệu, bắt buộc đăng nhập, quyền ops/admin; mọi route nội bộ nằm dưới `/ops` (luật 9).
+**Cổng Ops**: Cổng vận hành dữ liệu, bắt buộc đăng nhập, từ vai người xem trở lên; mọi route nội bộ nằm dưới `/ops` (luật 9).
 - Code: `ops portal` · RESO: —
 - Slug URL: `ops`
 _Avoid_: Ops Portal, trang admin
+
+**Vai Ops**: Bậc quyền của người dùng ở Cổng Ops, xếp người xem < vận hành < quản trị < chủ sở hữu; quyền từng hành động nằm ở một bảng trong `app/src/lib/ops-access.ts` (TV1). `Người dùng` (`user`) không vào Ops.
+- Code: `role` (`viewer` · `ops` · `admin` · `owner`) · RESO: —
+- Nhãn UI: `viewer` «Người xem» · `ops` «Vận hành» · `admin` «Quản trị» · `owner` «Chủ sở hữu»
+_Avoid_: quyền ops (khi ý là một vai cụ thể), superuser
 
 **Finder**: Tên tính năng (code, docs) của màn xếp hạng khu vực + bản đồ; UI ghi "Thị trường {quốc gia}", không in chữ Finder.
 - Code: `finder` · RESO: —

@@ -45,8 +45,14 @@ const ALLOWED = {
   admin: [],
   "session-or-noop": [],
 };
-// Bị từ chối = 401, hoặc 404 «not found» (route admin giấu sự tồn tại với người không phải admin).
-const denied = (r) => r.status === 401 || (r.status === 404 && r.body.trim() === "not found");
+// Bị từ chối = 401, 403 «forbidden» (bảng quyền TV1: sai vai hoặc bearer ở hành động cấm bearer), hoặc 404 «not found»
+// (route admin giấu sự tồn tại với người không phải admin).
+const denied = (r) =>
+  r.status === 401 ||
+  (r.status === 403 && r.body.trim() === '{"error":"forbidden"}') ||
+  (r.status === 404 && r.body.trim() === "not found");
+/** Chế độ sổ của một phương thức: methodModes ghi đè chế độ chung (TV1). */
+const cheDo = (e, method) => e.methodModes?.[method] ?? e.mode;
 
 /** Vi phạm của một bộ kết quả so với một bản sổ: mỗi phần tử là chuỗi có tên route + phương thức + người gọi. */
 export function evaluate(results, entries) {
@@ -56,13 +62,14 @@ export function evaluate(results, entries) {
   for (const r of results) {
     const e = byRoute.get(r.route);
     if (!e) continue;
-    if (e.mode === "session-or-noop") {
+    const mode = cheDo(e, r.method);
+    if (mode === "session-or-noop") {
       if (r.status !== 204) violations.push(`${r.route} ${r.method}: ${r.caller} nhận ${r.status}, sổ khai session-or-noop (phải 204)`);
       continue;
     }
-    const allowedBySo = ALLOWED[e.mode].includes(r.caller);
-    if (!denied(r) && !allowedBySo) violations.push(`${r.route} ${r.method}: mã cho ${r.caller} mà sổ khai ${e.mode} (${r.status})`);
-    if (denied(r) && allowedBySo && e.mode !== "public") notes.push(`${r.route} ${r.method}: mã chặt hơn sổ — ${r.caller} bị từ chối (${r.status})`);
+    const allowedBySo = ALLOWED[mode].includes(r.caller);
+    if (!denied(r) && !allowedBySo) violations.push(`${r.route} ${r.method}: mã cho ${r.caller} mà sổ khai ${mode} (${r.status})`);
+    if (denied(r) && allowedBySo && mode !== "public") notes.push(`${r.route} ${r.method}: mã chặt hơn sổ — ${r.caller} bị từ chối (${r.status})`);
   }
   return { violations, notes };
 }
@@ -80,8 +87,13 @@ if (isMain) {
   for (const e of API_SURFACE) {
     const url = `${BASE}/api/${e.route.replace(/\[[^\]]+\]/g, "khong-hop-le")}`;
     for (const method of e.methods) {
+      // An toàn Zalo (.claude/rules/zalo-safety.md): phép đo không gọi phương thức ghi trên v1/ops/zalo/** với bất kỳ ai.
+      if (method !== "GET" && /^v1\/ops\/zalo\//.test(e.route)) {
+        skipped.push(`${e.route} ${method} (mọi người gọi — an toàn Zalo)`);
+        continue;
+      }
       for (const caller of ["khách", "bearer"]) {
-        if (caller === "bearer" && method !== "GET" && ALLOWED[e.mode].includes("bearer")) {
+        if (caller === "bearer" && method !== "GET" && ALLOWED[cheDo(e, method)].includes("bearer")) {
           skipped.push(`${e.route} ${method}`);
           continue;
         }
@@ -101,15 +113,16 @@ if (isMain) {
   if (!TU_THU) {
     for (const r of results) {
       const e = API_SURFACE.find((x) => x.route === r.route);
-      if (e.mode !== "public") console.log(`     ${r.route} ${r.method} ${r.caller}: ${r.status}${denied(r) ? " (từ chối)" : ""} — sổ ${e.mode}`);
+      if (cheDo(e, r.method) !== "public") console.log(`     ${r.route} ${r.method} ${r.caller}: ${r.status}${denied(r) ? " (từ chối)" : ""} — sổ ${cheDo(e, r.method)}`);
     }
     for (const n of real.notes) console.log(`note ${n}`);
     for (const k of skipped) console.log(`bỏ qua ${k} bearer — phương thức ghi ở route sổ đã cho bearer (không thể vi phạm, tránh tác dụng phụ)`);
     for (const v of real.violations) check(false, v);
     check(real.violations.length === 0, `ma trận hành vi: ${results.length} lời gọi, ${real.violations.length} lần mã cho người gọi mà sổ không cho`);
   } else {
-    // Sổ cố ý sai: một route công khai khai chặt, hai route nhận bearer khai «chỉ quản trị».
-    const WRONG = { "v1/markets": "ops", "v1/offers": "admin", "v1/ops/audit": "admin" };
+    // Sổ cố ý sai: một route công khai khai chặt, hai route nhận bearer khai «chỉ quản trị» (TV1: audit nay thật là admin
+    // nên lỗi cài sẵn thứ ba chuyển sang coverage — route đọc số cho bearer).
+    const WRONG = { "v1/markets": "ops", "v1/offers": "admin", "v1/ops/coverage": "admin" };
     const wrong = API_SURFACE.map((e) => (WRONG[e.route] ? { ...e, mode: WRONG[e.route] } : e));
     const got = evaluate(results, wrong).violations;
     check(real.violations.length === 0, `bản sổ thật: 0 vi phạm (${real.violations.length})`);

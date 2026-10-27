@@ -4,6 +4,7 @@ import { useTransition } from "react"
 import { ChevronsUpDownIcon, LogOutIcon, PaletteIcon } from "lucide-react"
 
 import { logout } from "@/app/actions"
+import type { Vai } from "@/lib/auth"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,9 +21,15 @@ import { SidebarMenuButton } from "@/components/ui/sidebar"
 import { initialsOf, ThemeSwatches } from "../account-menu"
 import { CARD_META, CARD_NAME, CARD_TEXT, CARD_TRIGGER, RAIL_CARD } from "./faces"
 
-export type OpsUser = { email: string; role: "user" | "ops" | "admin" }
+export type OpsUser = { email: string; role: Vai }
 
-const ROLE_VI: Record<OpsUser["role"], string> = { admin: "Quản trị", ops: "Vận hành", user: "Người dùng" }
+const ROLE_VI: Record<OpsUser["role"], string> = {
+  owner: "Chủ sở hữu",
+  admin: "Quản trị",
+  ops: "Vận hành",
+  viewer: "Người xem",
+  user: "Người dùng",
+}
 
 /** Thẻ tài khoản ở chân thanh bên (user-menu của app-shell-36): chỉ giữ việc thật —
  * giao diện sáng/tối và đăng xuất. Bỏ các mục mẫu (bảo mật, danh bạ, trợ giúp). */

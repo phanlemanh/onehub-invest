@@ -9,7 +9,7 @@ export const VOCAB = {
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
   evidence_tier: ["fact", "observed", "inferred"],
   assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
-  listing_intent: ["offer", "wanted", "not_listing", "unknown"],
+  listing_intent: ["offer", "inquiry", "not_listing", "unknown"],
   offer_status: ["active", "active_under_contract", "closed", "withdrawn", "unknown"],
   data_level: ["B0", "B1", "B2", "B3", "B4", "B5"],
   capability_level: ["N0", "N1", "N2", "N3", "N4"],
@@ -35,7 +35,7 @@ export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
 export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
-export const LISTING_INTENT = { offer: "offer", wanted: "wanted", not_listing: "not_listing", unknown: "unknown" } as const;
+export const LISTING_INTENT = { offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" } as const;
 export const OFFER_STATUS = { active: "active", active_under_contract: "active_under_contract", closed: "closed", withdrawn: "withdrawn", unknown: "unknown" } as const;
 export const DATA_LEVEL = { B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" } as const;
 export const CAPABILITY_LEVEL = { N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" } as const;
@@ -51,7 +51,7 @@ export const LABELS_VI = {
   enrich_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà" },
   evidence_tier: { fact: "Sự thật", observed: "Quan sát có trích dẫn", inferred: "Suy luận" },
   assertion_method: { hitl: "Người quyết", source_field: "Trường có cấu trúc của nguồn", parser: "Bộ đọc tin", e1_rule: "Luật E1", e2_llm: "LLM E2", legacy: "Giá trị có trước" },
-  listing_intent: { offer: "Tin rao", wanted: "Tin tìm mua, tìm thuê", not_listing: "Không phải tin rao", unknown: "Chưa rõ" },
+  listing_intent: { offer: "Tin rao", inquiry: "Yêu cầu", not_listing: "Không phải tin rao", unknown: "Chưa rõ" },
   offer_status: { active: "Đang chào", active_under_contract: "Đã cọc", closed: "Đã bán", withdrawn: "Đã gỡ", unknown: "Chưa rõ" },
   data_level: { B0: "Có lời khai", B1: "Đọc được", B2: "Gắn căn", B3: "Đã đo", B4: "Xác minh", B5: "Sống" },
   capability_level: { N0: "Thu được", N1: "Đọc được", N2: "Đo được", N3: "Tự động ở ngưỡng", N4: "Tự duy trì" },

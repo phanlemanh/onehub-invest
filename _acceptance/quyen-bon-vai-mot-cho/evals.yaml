@@ -1,0 +1,79 @@
+schema_version: 1
+feature_slug: quyen-bon-vai-mot-cho
+# Ca «QV-AC-n» ở app/tests/quyen-bon-vai.test.tsx (DB local :5433, lược đồ tạm, phiên thật qua header Cookie, openclaw giả).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    paths: [app/src/app/api/v1/ops/**, app/src/lib/ops-access.ts, app/tests/quyen-bon-vai.test.tsx, app/tests/fixtures/ops-routes-truoc-tv1/**]
+    expected: "exit 0; ca 'QV-AC-1': bảng BANG_ROUTE viết trước có đúng 21 ô (route · phương thức · action → hành động); mỗi ô: thân phương thức (rút theo export của tệp route) gọi kiemQuyen(req, '<hành động>') đúng tên; 11 tệp route không chứa 'OPS_API_TOKEN', 'canAccessOps(', 'isAdmin(', 'getSessionUser('; đối chứng: cùng phép soát trên 11 tệp fixture ghim (app/tests/fixtures/ops-routes-truoc-tv1/, sha256 từng tệp bằng git show 39c660ca:<route>) → bắt được ≥ 1 ô thiếu kiemQuyen và ≥ 1 tệp còn 'OPS_API_TOKEN'; ca không gọi git lúc chạy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/**, app/src/lib/ops-access.ts, app/src/lib/auth.ts, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-2': ma trận MA_TRAN viết trước 21 ô route · phương thức (· action) × 7 người gọi = 147 ô (assert MA_TRAN.length === 147), mỗi ô gọi đúng route của nó, mỗi ô ghim mã HTTP mong đợi (401 không ai · 403 sai vai hoặc bearer ở hành động cấm bearer · 2xx/4xx nghiệp vụ khi qua); ô 401/403: ảnh chụp bảng nghiệp vụ, đếm ops_audit, nội dung tệp cấu hình Zalo giả, số dòng nhật ký openclaw giả trước = sau (deepEqual); đối chứng dương: chép tạm route zalo/accounts với nhánh trả Response của kiemQuyen bị bỏ → ô DELETE × viewer không còn 403 và ca báo tên ô 'zalo/accounts DELETE × viewer'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/**, app/src/lib/ops-access.ts, app/src/lib/audit.ts, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-3': với mọi ô qua-và-thành-công của hành động ghi ở MA_TRAN: đếm ops_audit sau − trước === 1, actor === 'user:' + id người gọi (ô bearer ingest.push: 'machine:cloud-sync'), action === tên hành động của bảng; unit.toggle/unit.* có detail.from và detail.to; ô toggle unchanged, 409 nhóm đã gỡ, 400 thiếu trường → đếm sau − trước === 0; đối chứng: không actor nào trong các dòng mới là 'ops-user', 'api:zalo-admin' hay 'ops-api'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/**, app/src/lib/audit.ts, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-4': lược đồ tạm có trigger BEFORE INSERT trên ops_audit ném lỗi 'qv-audit-hong' → review.decide, unit.toggle, unit.create, unit.delete trả 500 và ảnh chụp bảng nghiệp vụ trước = sau; trigger ném lỗi ở bảng nghiệp vụ (review_queue / collection_units) → 0 dòng audit mới; đối chứng: fixture route source-groups trước sửa (chép tạm cạnh route, gọi bằng bearer) với trigger audit hỏng → toggle trả 200 và collection_units đã đổi (bắt đúng lỗi audit ngoài transaction)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/zalo/**, app/src/lib/zalo-admin.ts, app/src/lib/audit.ts, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-5': openclaw giả (tệp thực thi trong thư mục tạm, ghi nhật ký lệnh) + tệp cấu hình giả: zalo/groups POST, zalo/accounts POST và DELETE, zalo/login POST và DELETE với admin → mỗi lệnh đúng 1 dòng audit action 'zalo.admin' actor 'user:<id>'; cùng lệnh khi openclaw giả thoát 1 hoặc tệp cấu hình không ghi được → mã lỗi ≥ 400 và 0 dòng audit; ca 'QV-AC-5b': trigger BEFORE INSERT trên ops_audit ném 'qv-audit-hong' rồi gọi zalo/groups POST, zalo/accounts POST, zalo/login POST với admin → mỗi lệnh 5xx, nội dung tệp cấu hình giả trước = sau (deepEqual) và số dòng nhật ký openclaw giả trước = sau; đối chứng: fixture route zalo/login trước sửa gọi bằng bearer ghi 0 dòng audit"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    paths: [app/src/app/api/v1/ops/source-groups/route.ts, app/src/lib/ops-access.ts, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-6': GET source-groups với header 'Authorization: Bearer <OPS_API_TOKEN thử>' → 200 và body có mảng nhóm; không header không cookie → 401; đối chứng: fixture route source-groups trước sửa với cùng bearer → 401"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    paths: [db/migrations/**, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-7': lược đồ tạm có bảng users ở khuôn hiện tại, áp tệp migration mới (đọc từ db/migrations theo tên chứa 'vai'): UPDATE role thành từng vai 'user','viewer','ops','admin','owner' → không lỗi; 'superuser' → lỗi có tên ràng buộc users_role_chk; áp lại tệp lần hai → không lỗi; trên public của DB local: SELECT count(*) FROM users WHERE role NOT IN (năm vai) === 0; public không đổi (ảnh chụp trước = sau)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    paths: [app/src/lib/ops-access.ts, app/src/lib/auth.ts, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-8': bảng 7 dòng viết trước (user, viewer, ops, admin, owner, OPS_EMAILS với role user, role lạ 'superuser' đọc qua phiên) → canAccessOps lần lượt false,true,true,true,true,true,false; isAdmin false,false,false,true,true,false,false; vai đọc từ phiên của 'superuser' là 'user'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    paths: [app/src/lib/api-surface.ts, app/src/lib/ops-access.ts, scripts/check-api-surface.mjs, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-9': với mỗi ô của BANG_ROUTE, chế độ sổ của route · phương thức khớp bảng quyền (hành động không bearer ↔ chế độ không nhánh bearer; viewer ↔ ops; admin ↔ admin); và 'node scripts/check-api-surface.mjs mutation' chạy từ gốc kho thoát 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.quyen_bon_vai
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/ingest/route.ts, pipeline/push-ops-facts.mjs, pipeline/scripts/capture-ops-facts.mjs, app/tests/quyen-bon-vai.test.tsx]
+    expected: "exit 0; ca 'QV-AC-10': captureOpsFacts (pipeline/scripts/capture-ops-facts.mjs — chạy tiến trình pipeline/push-ops-facts.mjs thật với INGEST_URL trỏ máy chủ thử) đẩy số qua route ingest thật bằng bearer → 200, ops_heartbeat có dòng, đúng 1 dòng ops_audit actor 'machine:cloud-sync'; ca 'QV-AC-10b': quét git ls-files (gốc suy từ vị trí tệp ca thử) mọi tệp ngoài app/src/app/api và _acceptance vừa đọc OPS_API_TOKEN vừa nhắc '/api/v1/ops/' → tập (tệp, route) chỉ gồm ingest và route ops.read; đối chứng dương: thêm một tệp giả trong thư mục tạm gọi POST source-groups bằng bearer vào tập quét → ca báo tên tệp; và các tệp ca thử tests/cong-tac-nhom-go, vong-doi-nguon, so-nhom, che-do-thu, coverage-cloud-got-tang-a chạy trong tiến trình con → thoát 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
