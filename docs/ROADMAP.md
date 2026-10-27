@@ -98,6 +98,10 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   xuất enrich, thẻ `enrich:`/`pair:`, `property_offers`, ứng viên ghép đã quyết sang tin kế (`superseded_by`); 6 khoá ngoại
   tới hai bảng là RESTRICT. Khoá S03/S05 «dính» (`pipeline/lib/offer-key.mjs`): nhóm repost thừa kế `offer_id` của tin
   chung nhiều post nhất, nhóm mới băm `'<S0x>|<post neo>'`; `originating_system_key` (RESO) cho S03/S05/S06 và listing.
+- Gộp trùng S03 vừa tay (`_acceptance/s03-gop-trung-dung`, 27/10): khoá gom repost (`repostKey`, transform-zalo bước 4)
+  thiếu phường hoặc diện tích thì thêm người đăng (`sender_id` → SĐT → chữ bài chuẩn hoá) — DB local 349 → 586 tin S03,
+  nhóm lớn nhất 177 → 115 bài, đối soát không cho nghỉ tin nào. «Luồng 7 ngày qua» đếm «S03 — bài nhận» bằng đúng tập
+  `loadStgPosts` + `testMarker`, cột «S03 — tin rao mới». S05 cùng công thức khoá — chưa đổi.
   Listing Airbnb transform cho nghỉ ngoài phường mang toạ độ của lần thu mới nhất (thiếu → NULL), giữ mốc + lý do nghỉ cũ
   (`_acceptance/airbnb-nghi-khong-hoi-sinh`) — reassign-areas chỉ đánh thức listing nghỉ khi toạ độ HIỆN HÀNH vào phường.
 - Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`

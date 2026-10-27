@@ -43,7 +43,7 @@ export function FlowTable({ days, roles = {} }: { days: FlowDay[]; roles?: Sourc
       {
         id: "zaloPosts",
         accessorFn: (r) => r.zaloPosts,
-        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — bài thô`} column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — bài nhận`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.zaloPosts),
         size: 130,
         meta: NUM,
@@ -52,7 +52,7 @@ export function FlowTable({ days, roles = {} }: { days: FlowDay[]; roles?: Sourc
       {
         id: "zaloOffers",
         accessorFn: (r) => r.zaloOffers,
-        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin rao (đã đọc)`} column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin rao mới`} column={column} />,
         cell: ({ row }) => fmtInt(row.original.zaloOffers),
         size: 140,
         meta: NUM,
@@ -64,7 +64,7 @@ export function FlowTable({ days, roles = {} }: { days: FlowDay[]; roles?: Sourc
   return (
     <InsightGrid
       title="Luồng 7 ngày qua"
-      description="Số bản ghi theo nguồn, theo ngày (giờ VN); S03 tính theo ngày đăng bài"
+      description="Số bản ghi theo nguồn, theo ngày (giờ VN); S03 tính theo ngày đăng bài; tin rao mới có sau lượt đọc đêm nên hôm nay chưa đủ"
       data={days}
       columns={columns}
       getRowId={(r) => r.day}
@@ -113,7 +113,7 @@ export function CloudFlowTable({ days, stale, roles = {} }: { days: CloudFlowDay
       {
         id: "zaloPosts",
         accessorFn: (r) => r.zaloPosts ?? -1,
-        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — bài thô`} column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — bài nhận`} column={column} />,
         cell: ({ row }) => cloudCount(row.original.zaloPosts, stale),
         size: 200,
         meta: NUM,
@@ -122,7 +122,7 @@ export function CloudFlowTable({ days, stale, roles = {} }: { days: CloudFlowDay
       {
         id: "zaloOffers",
         accessorFn: (r) => r.zaloOffers ?? -1,
-        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin rao (đã đọc)`} column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title={`${sourceLabel("S03", roles)} — tin rao mới`} column={column} />,
         cell: ({ row }) => cloudCount(row.original.zaloOffers, stale),
         size: 230,
         meta: NUM,
@@ -134,7 +134,7 @@ export function CloudFlowTable({ days, stale, roles = {} }: { days: CloudFlowDay
   return (
     <InsightGrid
       title="Luồng 7 ngày qua"
-      description="Số bản ghi theo nguồn, theo ngày (giờ VN); S03 tính theo ngày đăng bài, máy thu đếm sẵn"
+      description="Số bản ghi theo nguồn, theo ngày (giờ VN); S03 tính theo ngày đăng bài, máy thu đếm sẵn; tin rao mới có sau lượt đọc đêm nên hôm nay chưa đủ"
       data={days}
       columns={columns}
       getRowId={(r) => r.day}
