@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: ccea417ed24ca3b72da683080976380d161a6022
-human_signoff:
+human_signoff: Mạnh 2026-10-27
 ---
 
 # Evidence Report: quyen-bon-vai-mot-cho

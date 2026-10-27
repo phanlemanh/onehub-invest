@@ -5,7 +5,7 @@ slug: quyen-bon-vai-mot-cho
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/lib/ops-access.ts, app/src/app/api/v1/ops/**, db/migrations/** (t3_paths)
 surfaces: [api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-27-quyen-bon-vai-mot-cho-design.md
 approved_by: Mạnh
 approved_at: 2026-10-27
@@ -56,3 +56,13 @@ Quét bằng morphological-scan, preset test-matrix:
   Áp DB local dùng chung sau gộp. Áp Supabase prod là quyết định của Mạnh (Hỏi-3): áp tay bằng `psql` tệp 049, lùi bằng
   `ALTER TABLE users DROP CONSTRAINT users_role_chk`.
 - Đối chứng các AC chạy trên bản route trước sửa ghim thành fixture (route ở 39c660ca), không đọc ref nhánh lúc chạy.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: Người chưa đăng nhập gửi lệnh cho nhóm S02/S03 nhận báo lỗi kèm câu luật nhóm thay vì bị từ chối quyền.
+  - Ngoài-2: Cookie đăng nhập bị hỏng làm API Ops trả lỗi máy chủ thay vì yêu cầu đăng nhập lại.
+  - Ngoài-3: Đổi chế độ thu và khai đơn vị vẫn tự viết câu ghi nhật ký, chưa đi qua hàm chung (hành vi đúng).
+  - Ngoài-4: Bộ khói cổng tuân thủ còn chờ mã 401 cho phiên user nên báo đỏ giả khi chạy với app thật.
+  - Ngoài-5: Như Ngoài-1 (lượt chấm thứ hai bắt cùng lỗi) — luật nhóm S02/S03 chạy trước cổng quyền.
+  - Ngoài-6: Như Ngoài-2 — cookie hỏng ra lỗi máy chủ.
+  - Ngoài-7: Bấm đăng nhập Zalo khi đang có tiến trình đăng nhập vẫn ghi một dòng nhật ký «bắt đầu đăng nhập».
+  - Ngoài-8: Đối chứng dương của ca QV-AC-2b không chạy phép đo của QV-AC-2 và không ghim thông điệp.
+  - Ngoài-10: Bấm đăng nhập Zalo giữ một kết nối cơ sở dữ liệu tới khoảng 20 giây trong lúc chờ mã QR.
