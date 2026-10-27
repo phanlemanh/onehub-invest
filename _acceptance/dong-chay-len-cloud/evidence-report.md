@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e3cdf2f519c6403b656b57318b5d6426a49b784f
+verified_commit: e443b4e9edddc8aeb3ce8876972dcbeaf6277aa8
 human_signoff:
 ---
 
@@ -29,146 +29,146 @@ human_signoff:
 ## Evidence
 
 - eval: E1
-  run_id: minted-dong-chay-len-cloud-E1-r1
+  run_id: minted-dong-chay-len-cloud-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E2
-  run_id: minted-dong-chay-len-cloud-E2-r1
+  run_id: minted-dong-chay-len-cloud-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E3
-  run_id: minted-dong-chay-len-cloud-E3-r1
+  run_id: minted-dong-chay-len-cloud-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/ops-dong-chay.test.tsx tests/data-level.test.tsx
-    ℹ duration_ms 2314.884458
+    ℹ duration_ms 2061.521583
     __EXIT=0
 
 - eval: E4
-  run_id: minted-dong-chay-len-cloud-E4-r1
+  run_id: minted-dong-chay-len-cloud-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E5
-  run_id: minted-dong-chay-len-cloud-E5-r1
+  run_id: minted-dong-chay-len-cloud-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E6
-  run_id: minted-dong-chay-len-cloud-E6-r1
+  run_id: minted-dong-chay-len-cloud-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E7
-  run_id: minted-dong-chay-len-cloud-E7-r1
+  run_id: minted-dong-chay-len-cloud-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E8
-  run_id: minted-dong-chay-len-cloud-E8-r1
+  run_id: minted-dong-chay-len-cloud-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E9
-  run_id: minted-dong-chay-len-cloud-E9-r1
+  run_id: minted-dong-chay-len-cloud-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 - eval: E10
-  run_id: minted-dong-chay-len-cloud-E10-r1
+  run_id: minted-dong-chay-len-cloud-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.dong_chay_cloud
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
   output: |
     cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx
-    ℹ duration_ms 4660.476875
+    ℹ duration_ms 3753.451459
     __EXIT=0
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-dong-chay-len-cloud-SUITE-npm_test__bb6271-r1
+  run_id: minted-dong-chay-len-cloud-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-dong-chay-len-cloud-SUITE-lint-r1
+  run_id: minted-dong-chay-len-cloud-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
 
 - cmd: cd app && npm test
-  run_id: minted-dong-chay-len-cloud-SUITE-npm_test__bd9a35-r1
+  run_id: minted-dong-chay-len-cloud-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-dong-chay-len-cloud-SUITE-npm_test__13563d-r1
+  run_id: minted-dong-chay-len-cloud-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-dong-chay-len-cloud-SUITE-test_lint_rules-r1
+  run_id: minted-dong-chay-len-cloud-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-dong-chay-len-cloud-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-dong-chay-len-cloud-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-27T04:37:48Z
+  verified_at: 2026-10-27T04:44:25Z
 
 ## Known limits
 
@@ -191,4 +191,5 @@ none — mọi eval chạy một lần (runs: 1), không có eval nhiều lượ
 
 ## Iterations
 
-Round 1: E1–E10 đều đạt, bộ suite hồi quy xanh; baseline không đo được do hạ tầng. Không có mục cần người chốt ở bảng judgment.
+Round 1: E1–E10 đều đạt, bộ suite hồi quy xanh; baseline không đo được do hạ tầng. Phép đo của DC-AC-3 bị nhận xét là chỉ chặn hai mẫu câu cụ thể; đã sửa bằng so mọi câu với ma trận cho phép viết trước (commit 0e203f1e).
+Round 2: E1–E10 đều đạt trên commit e443b4e9, sáu lệnh suite hồi quy xanh; baseline vẫn không đo được do hạ tầng. Không có mục cần người chốt ở bảng judgment; các phát hiện đo của AC-6 và các mục ngoài hợp đồng nằm ở review-findings.md.
