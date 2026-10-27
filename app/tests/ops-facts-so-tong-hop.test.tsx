@@ -12,6 +12,7 @@ import pg from "pg"
 import { captureOpsFacts, localDbUrl, mutantPush } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { dropOpsSchema, makeOpsSchema, schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
 import { runCheck } from "../../scripts/check-freshness.mjs"
+import { laLoiBenGhiTam } from "./helpers/db-tam-thoi"
 
 const S = `on22_app_${process.pid}`
 const S_ERR = `on22_app_err_${process.pid}`
@@ -38,12 +39,17 @@ after(async () => {
   await pool.end()
 })
 const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm không được — eval đòi chạy thật: ${setupErr}`)
-const push = (opts: Record<string, unknown> = {}, schema = S) =>
-  captureOpsFacts({ ...opts, env: { DATABASE_URL: schemaUrl(schema), ...((opts.env as object) ?? {}) } }) as Promise<{
-    code: number
-    stderr: string
-    payload: Payload
-  }>
+type KetQua = { code: number; stderr: string; payload: Payload }
+// Bên ghi là tiến trình con mở kết nối riêng tới DB local dùng chung — lỗi DB tạm thời (hết suất kết nối, deadlock) thử lại
+// tối đa 3 lần; lỗi khác trả nguyên để ca đỏ vì lỗi thật (hồ sơ test-nen-on22-on12).
+const push = async (opts: Record<string, unknown> = {}, schema = S): Promise<KetQua> => {
+  for (let i = 1; ; i++) {
+    const r = (await captureOpsFacts({ ...opts, env: { DATABASE_URL: schemaUrl(schema), ...((opts.env as object) ?? {}) } })) as KetQua
+    if (r.code === 0 || !laLoiBenGhiTam(r.stderr) || i >= 3) return r
+    console.log(`# bên ghi gặp lỗi DB tạm thời — thử lại lần ${i + 1}/3`)
+    await new Promise((res) => setTimeout(res, 500 * i))
+  }
+}
 
 describe("ON22-AC-3 bản ghi 24h một định nghĩa", () => {
   const diff = async (payload: Payload) => {
@@ -98,13 +104,17 @@ describe("ON22-AC-5 lockdown một định nghĩa", () => {
       rmSync(root, { recursive: true, force: true })
     }
   }
-  const writerSide = (wd: string | null, gw: string | null, script?: string) =>
-    push({
+  const writerSide = async (wd: string | null, gw: string | null, script?: string) => {
+    const r = await push({
       ...(script ? { script } : {}),
       logs: wd === null ? {} : { "zalo-watchdog.log": wd },
       agentLogs: gw === null ? {} : { [`openclaw-${DAY}.log`]: gw },
       env: { OPS_FACTS_NOW: NOW.toISOString() },
     })
+    // Kiểm mã bên ghi TRƯỚC khi đọc payload: bên ghi lỗi thì nói lỗi gì, không thành «đọc blocks của null».
+    assert.equal(r.code, 0, `bên ghi lỗi (mã ${r.code}): ${r.stderr.slice(0, 800)}`)
+    return r
+  }
   type Layer = { layer: string; desc: string; ok: boolean | null }
   const layerDiff = (got: Layer[], want: Layer[]) =>
     want.filter((w, i) => got[i]?.ok !== w.ok || got[i]?.layer !== w.layer).map((w) => w.layer)

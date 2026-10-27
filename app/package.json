@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint && node eslint-plugin-onehub-ui/check-bare-disables.mjs",
     "lint:ui-report": "eslint -f json . | node eslint-plugin-onehub-ui/report.mjs",
-    "test": "node --import tsx --test \"tests/*.test.tsx\"",
+    "test": "node --import tsx --test --test-concurrency=8 \"tests/*.test.tsx\"",
     "test:lint-rules": "node --test \"eslint-plugin-onehub-ui/tests/*.test.mjs\""
   },
   "dependencies": {

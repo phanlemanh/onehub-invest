@@ -21,6 +21,7 @@ import {
   soiChu,
 } from "../../scripts/lib/ops-nhan.mjs"
 import { PARTIAL, SCAN_FILES, expandPatterns, visibleStrings, type VisibleString } from "./ops-nhan/visible-strings"
+import { thuLaiDbTam } from "./helpers/db-tam-thoi"
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const REPO = resolve(APP, "..")
@@ -157,13 +158,21 @@ const inSoi = (l: { luat: string; tu: string; chu: string }[]) => l.map((x) => `
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
 async function canDb(): Promise<pg.Client> {
-  const c = new pg.Client({ connectionString: DB_URL })
+  // Mở kết nối cũng đi qua thuLaiDbTam: «53300 hết suất kết nối» xảy ra đúng lúc connect (hồ sơ test-nen-on22-on12).
   try {
-    await c.connect()
+    return await thuLaiDbTam(async () => {
+      const c = new pg.Client({ connectionString: DB_URL })
+      try {
+        await c.connect()
+        return c
+      } catch (e) {
+        await c.end().catch(() => {})
+        throw e
+      }
+    })
   } catch (e) {
     assert.fail(`DB local :5433 không tới được — eval đòi chạy thật: ${(e as Error).message}`)
   }
-  return c
 }
 
 // ---------- AC-3: chữ đọc màn hình của khung ----------
@@ -494,10 +503,12 @@ test("ON12-AC-7 render danh mục nguồn, thẻ duyệt, cột thị trường 
 
 test("ON12-AC-7 mọi giá trị đang có trên DB local có nhãn", async () => {
   const L = await import("../src/lib/ops-labels")
+  // Mọi lần chạm DB local dùng chung đi qua thuLaiDbTam: lỗi DB tạm thời (hết suất kết nối, deadlock khi phiên khác chạy DDL)
+  // thử lại có giới hạn (hồ sơ test-nen-on22-on12).
   const c = await canDb()
   try {
-    const st = (await c.query<{ v: string }>(`SELECT DISTINCT status v FROM source_registry`)).rows.map((r) => r.v)
-    const pt = (await c.query<{ v: string }>(`SELECT DISTINCT property_type v FROM sale_offers WHERE property_type IS NOT NULL`)).rows.map((r) => r.v)
+    const st = (await thuLaiDbTam(() => c.query<{ v: string }>(`SELECT DISTINCT status v FROM source_registry`))).rows.map((r) => r.v)
+    const pt = (await thuLaiDbTam(() => c.query<{ v: string }>(`SELECT DISTINCT property_type v FROM sale_offers WHERE property_type IS NOT NULL`))).rows.map((r) => r.v)
     console.log(`# ON12-AC-7 DB local: trạng thái nguồn ${st.join(",")} · loại hình ${pt.join(",")}`)
     assert.deepEqual(st.filter((v) => !L.sourceStatusLabel(v).known), [])
     assert.deepEqual(pt.filter((v) => !L.propertyTypeLabel(v).known), [])
@@ -505,10 +516,10 @@ test("ON12-AC-7 mọi giá trị đang có trên DB local có nhãn", async () =
     await c.end()
   }
   const { getAirdnaComparison } = await import("../src/lib/queries")
-  const cmp = await getAirdnaComparison("vn-hanoi")
+  const cmp = await thuLaiDbTam(() => getAirdnaComparison("vn-hanoi"))
   if (cmp) for (const m of cmp.metrics) assert.ok(["ADR", "Công suất", "Listing"].includes(m.metric), `tên chỉ số thô: ${m.metric}`)
   const { default: OpsOverviewPage } = await import("../src/app/ops/page")
-  const html = await render(await OpsOverviewPage())
+  const html = await thuLaiDbTam(async () => render(await OpsOverviewPage()))
   const loi = soiHtml(html)
   assert.deepEqual(loi, [], `trang /ops còn chữ thô:\n${inSoi(loi)}`)
 })
