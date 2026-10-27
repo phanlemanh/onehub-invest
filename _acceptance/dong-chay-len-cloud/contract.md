@@ -5,7 +5,7 @@ slug: dong-chay-len-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, db, pipeline]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-27-dong-chay-len-cloud-design.md
 approved_by: Mạnh
 approved_at: 2026-10-27T03:52:00Z
@@ -66,3 +66,8 @@ cấp 27/10; bảng chỉ ở máy thu theo mẫu rào `stg_s08_inventory` (hồ
 
 - Migration chỉ thử trong lược đồ tạm riêng của bài kiểm (không đụng `public` của :5433 — giám sát dặn 27/10); vì vậy
   trước merge không có bản chạy thật nào có bảng 051, mặt nhìn đo bằng jsdom, trên prod đo ở phiên nghiệm thu.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-27:
+  - Ngoài-1: khối số dòng chảy trên cloud không được kiểm khuôn — bản tin hỏng hay lệch phiên bản có thể làm vùng số lỗi hoặc đầu trang ghi «0 thẻ chờ duyệt» thay vì «không đo được».
+  - Ngoài-3: khi máy thu chưa áp migration 051, trang máy thu ghi «chưa làm tươi, chờ lượt đồng bộ» thay vì nói thiếu migration.
+  - Ngoài-4: phép đo bậc trên bảng «Tin mới nhất» trên cloud so với chính hàm bậc mà bảng dùng, không có bảng bậc viết trước cho từng tin.
+  - Ngoài-7: ca vắng/lỗi của bốn trạng thái kiểm «không còn vùng số» bằng bộ dò thiếu đối chứng dương cho ba trong bốn vùng.
