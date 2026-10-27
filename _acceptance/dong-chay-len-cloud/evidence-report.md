@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4b91b5f85b1d8e01040a0d607563a699097700ff
+verified_commit: e8fd57f092e993bab5d3e43181ba9b7d7f77bc9c
 human_signoff: Mạnh 2026-10-27
 ---
 
@@ -194,3 +194,7 @@ none — mọi eval chạy một lần (runs: 1), không có eval nhiều lượ
 Round 1: E1–E10 đều đạt, bộ suite hồi quy xanh; baseline không đo được do hạ tầng. Phép đo của DC-AC-3 bị nhận xét là chỉ chặn hai mẫu câu cụ thể; đã sửa bằng so mọi câu với ma trận cho phép viết trước (commit 0e203f1e).
 Round 2: E1–E10 đều đạt trên commit e443b4e9, sáu lệnh suite hồi quy xanh; baseline vẫn không đo được do hạ tầng. Phép đo của AC-6 bị nhận xét là chỉ kiểm tên nhóm và điểm ngày bằng một phép phủ định; đã sửa bằng so điểm ngày và số nhóm trên DOM với khối (commit 4b91b5f8).
 Round 3: E1–E10 đều đạt trên commit 4b91b5f8, sáu lệnh suite hồi quy xanh; baseline vẫn không đo được do hạ tầng. Không còn phát hiện nào nằm trong hợp đồng; bảy mục ngoài hợp đồng nằm ở review-findings.md để người quyết ở Cổng 2.
+
+### Re-pin lần 1 — 2026-10-27, do sửa nhận nơi chạy theo VERCEL sau sự cố prod 27/10 (42P01)
+run_id: repin-20261027T061302Z-34132
+sha: e8fd57f092e993bab5d3e43181ba9b7d7f77bc9c · suites: 6 lệnh exit 0 · evals: 10/10 eval máy đạt kỳ vọng
