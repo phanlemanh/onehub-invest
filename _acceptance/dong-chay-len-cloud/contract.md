@@ -5,7 +5,7 @@ slug: dong-chay-len-cloud
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, db, pipeline]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-27-dong-chay-len-cloud-design.md
 approved_by: Mạnh
 approved_at: 2026-10-27T03:52:00Z
