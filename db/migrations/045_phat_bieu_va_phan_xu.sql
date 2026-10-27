@@ -176,11 +176,16 @@ BEGIN
     SELECT offer_id, offer_subject_keys(source, originating_system_key, post_ids) AS subj
       FROM sale_offer_records
      WHERE p_offer_ids IS NULL OR offer_id = ANY (p_offer_ids)
+  ), sk AS (   -- mỗi (tin, chủ thể) một dòng — nối bằng đẳng thức (hash join), không quét bảng phát biểu cho từng tin
+    SELECT DISTINCT o.offer_id, unnest(o.subj) AS subject_key FROM o
   ), a AS (
-    SELECT o.offer_id, fa.id, fa.subject_key, fa.field, fa.value, fa.value_key, fa.method,
+    SELECT sk.offer_id, fa.id, fa.subject_key, fa.field, fa.value, fa.value_key, fa.method,
            CASE fa.evidence_tier WHEN 'fact' THEN 0 WHEN 'observed' THEN 1 ELSE 2 END AS tier_rank,
            fa.evidence_tier, assertion_method_rank(fa.method) AS method_rank
-      FROM o JOIN field_assertions fa ON fa.subject_key = ANY (o.subj) AND fa.retracted_at IS NULL
+      FROM sk JOIN field_assertions fa ON fa.subject_key = sk.subject_key AND fa.retracted_at IS NULL
+     -- legacy = lịch sử của chính bản ghi (không biết đến từ post nào) → chỉ đỡ đúng tin đã sinh ra nó; không rò sang tin
+     -- khác chung post (tin đã nghỉ vì đổi khoá PL14 chung post với tin kế). Phát biểu khác đi theo post như thiết kế §3.1.
+     WHERE fa.method <> 'legacy' OR fa.evidence ->> 'offer_id' = sk.offer_id
   ), g AS (   -- mỗi (tin, trường, lớp, giá trị) một nhóm
     SELECT offer_id, field, tier_rank, min(evidence_tier) AS tier, value_key,
            min(value COLLATE "C") AS v,
@@ -195,11 +200,12 @@ BEGIN
     SELECT g.*, row_number() OVER (PARTITION BY g.offer_id, g.field ORDER BY g.mrank, g.nsub DESC, g.value_key) AS rn,
            count(*) OVER (PARTITION BY g.offer_id, g.field) AS ngroups
       FROM g JOIN top ON top.offer_id = g.offer_id AND top.field = g.field AND g.tier_rank = top.tr
-  ), win AS (
+  ), win AS (   -- lớp dưới có giá trị khác giá trị thắng → lower_disagree (nối + gộp, không truy vấn con từng dòng)
     SELECT r.offer_id, r.field, r.v, r.value_key, r.tier, r.method, r.ids, r.ngroups > 1 AS conflict,
-           EXISTS (SELECT 1 FROM g x WHERE x.offer_id = r.offer_id AND x.field = r.field AND x.tier_rank > r.tier_rank
-                                       AND x.value_key <> r.value_key) AS lower_disagree
-      FROM ranked r WHERE r.rn = 1
+           coalesce(bool_or(x.tier_rank > r.tier_rank AND x.value_key <> r.value_key), false) AS lower_disagree
+      FROM ranked r JOIN g x ON x.offer_id = r.offer_id AND x.field = r.field
+     WHERE r.rn = 1
+     GROUP BY r.offer_id, r.field, r.v, r.value_key, r.tier, r.method, r.ids, r.ngroups
   ), goi_y AS (  -- trường chỉ có suy luận
     SELECT g.offer_id, g.field,
            jsonb_agg(jsonb_build_object('v', g.v, 'method', g.method, 'ids', to_jsonb(g.ids)) ORDER BY g.mrank, g.value_key) AS ds
@@ -241,7 +247,8 @@ BEGIN
 END $$;
 
 -- 7. apply_enrichment bản 045 — đề xuất thành phát biểu rồi phân xử (thay fill-gap của 033). Cùng chữ ký.
---   actor 'hitl:%' → lớp sự thật/hitl (người), rút phát biểu hitl cũ khác giá trị cùng ô; còn lại → quan sát/<nguồn đề xuất>.
+--   actor 'hitl:%' — hoặc đề xuất đã do người quyết (decided_by 'hitl:%', ca đối soát 044 áp lại sang tin kế bằng actor
+--   máy) → lớp sự thật/hitl, rút phát biểu hitl cũ khác giá trị cùng ô; còn lại → quan sát/<nguồn đề xuất>.
 --   Đề xuất 'applied' khi cột nhận đúng giá trị của nó, ngược lại 'skipped'. Cascade properties như 033.
 CREATE OR REPLACE FUNCTION apply_enrichment(p_ids bigint[], p_actor text)
 RETURNS integer LANGUAGE plpgsql AS $$
@@ -253,19 +260,25 @@ DECLARE
   n       integer := 0;
   offers  text[] := '{}';
   applied bigint[] := '{}';
-  nguoi   boolean := coalesce(p_actor, '') LIKE 'hitl:%';
+  nguoi   boolean;
+  ai      text;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM ops_audit WHERE action = 'phat-bieu:cat-chuyen') THEN
     RAISE EXCEPTION 'phân xử: chưa cắt chuyển — chạy node pipeline/phat-bieu-cat-chuyen.mjs trước (PL15)';
   END IF;
   FOR r IN
-    SELECT ep.*, o.source AS o_source, o.originating_system_key AS osk
+    SELECT ep.*, o.source AS o_source, coalesce(o.originating_system_key, o.post_ids[1]) AS osk
       FROM enrichment_proposals ep JOIN sale_offer_records o ON o.offer_id = ep.offer_id
      WHERE ep.id = ANY (p_ids) AND ep.status = 'queued'
      ORDER BY ep.id
        FOR UPDATE OF ep
   LOOP
+    IF r.osk IS NULL THEN
+      RAISE EXCEPTION 'apply_enrichment: tin % thiếu originating_system_key và post_ids (PL14) — không treo được phát biểu', r.offer_id;
+    END IF;
     subj := r.o_source || ':' || r.osk;
+    nguoi := coalesce(p_actor, '') LIKE 'hitl:%' OR coalesce(r.decided_by, '') LIKE 'hitl:%';
+    ai := CASE WHEN coalesce(p_actor, '') LIKE 'hitl:%' THEN p_actor ELSE r.decided_by END;
     IF nguoi THEN
       UPDATE field_assertions SET retracted_at = clock_timestamp(), retract_reason = 'hitl-thay'
        WHERE subject_key = subj AND field = r.field AND method = 'hitl' AND retracted_at IS NULL
@@ -277,7 +290,7 @@ BEGIN
             CASE WHEN nguoi THEN 'fact' ELSE 'observed' END,
             CASE WHEN nguoi THEN 'hitl' ELSE r.source END,
             r.model, r.evidence || jsonb_build_object('proposal_id', r.id, 'route', r.route),
-            CASE WHEN nguoi THEN p_actor END, r.run_id)
+            CASE WHEN nguoi THEN ai END, r.run_id)
     ON CONFLICT DO NOTHING;
     offers := offers || r.offer_id;
   END LOOP;
@@ -360,7 +373,7 @@ BEGIN
     RAISE EXCEPTION 'phân xử: chưa cắt chuyển — chạy node pipeline/phat-bieu-cat-chuyen.mjs trước (PL15)';
   END IF;
   FOREACH rid IN ARRAY COALESCE(p_ids, '{}') LOOP
-    SELECT ep.*, o.source AS o_source, o.originating_system_key AS osk INTO r
+    SELECT ep.*, o.source AS o_source, coalesce(o.originating_system_key, o.post_ids[1]) AS osk INTO r
       FROM enrichment_proposals ep JOIN sale_offer_records o ON o.offer_id = ep.offer_id
      WHERE ep.id = rid FOR UPDATE OF ep;
     IF NOT FOUND THEN

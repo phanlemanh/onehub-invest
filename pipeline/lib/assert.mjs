@@ -2,6 +2,8 @@
 // Spec: docs/superpowers/specs/2026-10-26-phat-bieu-va-phan-xu-design.md §3.4.
 // Người gọi giữ transaction — hàm không tự mở/đóng.
 
+import { ASSERTION_METHOD, ENRICH_FIELD, EVIDENCE_TIER } from "./vocab.generated.mjs";
+
 /** Khoá gốc của chủ thể phát biểu: '<S0x>:<id gốc>' (post_id, list_id). */
 export function subjectKey(source, id) {
   if (!source || id === null || id === undefined || id === "") throw new Error("subjectKey: thiếu nguồn hoặc id gốc");
@@ -55,6 +57,13 @@ export async function writeAssertions(client, rows, { replaceOwn = false } = {})
   return { inserted: res.rowCount, retracted };
 }
 
+/** Cổng «chưa cắt chuyển» (045): ném trước khi bộ ghi đụng dòng nào — cùng thông điệp với hàm SQL. */
+export async function kiemCatChuyen(client) {
+  const { rows } = await client.query(
+    `SELECT EXISTS (SELECT 1 FROM ops_audit WHERE action = 'phat-bieu:cat-chuyen') AS ok`);
+  if (!rows[0].ok) throw new Error("phân xử: chưa cắt chuyển — chạy node pipeline/phat-bieu-cat-chuyen.mjs trước (PL15)");
+}
+
 /**
  * Phân xử lại năm cột của các tin (null = mọi bản ghi tin).
  * @returns {Promise<{offers: number, offers_changed: number}>}
@@ -62,4 +71,19 @@ export async function writeAssertions(client, rows, { replaceOwn = false } = {})
 export async function resolveOffers(client, offerIds) {
   const { rows } = await client.query(`SELECT resolve_offer_fields($1::text[]) AS r`, [offerIds]);
   return rows[0].r;
+}
+
+/**
+ * Phát biểu phòng ngủ của bộ đọc tin S03/S05: mỗi post trong nhóm một phát biểu quan sát (nhóm gom theo nội dung có
+ * cả số phòng, nên mọi post của nhóm cùng giá trị). PL17 thêm rule_id + đoạn khớp.
+ * @param {string} source
+ * @param {Array<{bedrooms: number|null, posts: Array<{post_id: string, posted_at: string|Date|null}>}>} nhom
+ * @param {string} methodVersion vd 'transform-zalo@045'
+ */
+export function phatBieuPhongNgu(source, nhom, methodVersion) {
+  return nhom.flatMap((o) => (o.bedrooms === null || o.bedrooms === undefined ? [] : o.posts.map((p) => ({
+    subject_key: subjectKey(source, p.post_id), field: ENRICH_FIELD.bedrooms, value: String(o.bedrooms),
+    evidence_tier: EVIDENCE_TIER.observed, method: ASSERTION_METHOD.parser, method_version: methodVersion,
+    observed_at: p.posted_at ?? null,
+  }))));
 }

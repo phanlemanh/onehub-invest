@@ -4,6 +4,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import pg from "pg";
+import { napPhatBieu } from "../lib/nap-045.mjs";
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -34,6 +35,8 @@ async function withTx(fn) {
     await c.query("SELECT pg_advisory_xact_lock(33033)");
     // PL14: transform ghi vào bảng bản ghi của 044 — DB chưa áp thì nạp 044 trong giao dịch.
     if (!(await c.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await c.query(MIG_044);
+    // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
+    await napPhatBieu(c);
     // stg_zalo_posts.snapshot_id có khoá ngoại tới airbnb_snapshots — đăng ký hai snapshot fixture.
     for (const [id, source] of [[AGENT_SNAP, "zalo-agent"], [MOCK_SNAP, "zalo-mock"]]) {
       await c.query(
@@ -135,8 +138,11 @@ test("AC-2 transform S03 từ chối post thử", { timeout: 300_000 }, async ()
     const [offerB] = await offersWith(c, pReal);
     assert.deepEqual(offerB.post_ids, [pReal], `AC-2 offer mang post thử: ${pTest}`);
     assert.equal(offerB.n_reposts, 1);
+    // PL15: field_provenance mang id phát biểu — id cấp lại ở mỗi lượt (lượt A đã ROLLBACK), so phần còn lại.
+    const boIds = (v) => JSON.parse(JSON.stringify(v, (k, x) => (k === "ids" ? undefined : x)));
     for (const col of Object.keys(offerA)) {
-      assert.deepEqual(offerB[col], offerA[col], `AC-2 offer trộn mang trường của post thử: ${col}`);
+      const [a, b] = col === "field_provenance" ? [boIds(offerA[col]), boIds(offerB[col])] : [offerA[col], offerB[col]];
+      assert.deepEqual(b, a, `AC-2 offer trộn mang trường của post thử: ${col}`);
     }
     assert.equal((await offersWith(c, pTest)).length, 0, `AC-2 offer mang post thử: ${pTest}`);
     assert.equal((await offersWith(c, pOnly)).length, 0, `AC-2 offer mang post thử: ${pOnly}`);

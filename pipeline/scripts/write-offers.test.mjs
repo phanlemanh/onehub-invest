@@ -11,6 +11,7 @@ import { test } from "node:test";
 import pg from "pg";
 
 import { scanDeleteAll, writeOffers } from "../lib/write-offers.mjs";
+import { napPhatBieu } from "../lib/nap-045.mjs";
 
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -32,6 +33,8 @@ async function withTx(fn) {
     // DB đã áp 044: chỉ nạp lại 033+036 (hàm). Không nạp 039 (khoá ngoại của nó trỏ BẢNG sale_offers) và không áp lại 044 —
     // áp lại là DDL khoá độc quyền trên view sống, deadlock với phiên khác đang đọc DB dùng chung.
     await c.query((da044 ? MIG_TRUOC_044.slice(0, 2) : MIG_TRUOC_044.concat(MIG_044)).join("\n"));
+    // PL15: 045 nạp SAU 033/036 (thay apply/revert bằng bản đi qua phát biểu) và mở cổng cắt chuyển trong giao dịch.
+    await napPhatBieu(c);
     return await fn(c);
   } finally {
     await c.query("ROLLBACK").catch(() => {});
@@ -87,7 +90,12 @@ async function legacyWrite(c, offers) {
 /** Dựng X đã enrich + đề xuất applied/rejected/queued-trên-thẻ. */
 async function enrichedOffer(c, id, posts) {
   await writeOffers(c, SRC, [row(id, posts)]);
-  await c.query(`UPDATE sale_offers SET property_type = 'house', street_raw = 'Quang Trung', bathrooms = 2 WHERE offer_id = $1`, [id]);
+  // PL15: giá trị đã enrich trước vòng = phát biểu legacy (như DB sau cắt chuyển), không UPDATE thẳng.
+  for (const [f, v] of [["property_type", "house"], ["street_raw", "Quang Trung"], ["bathrooms", "2"]]) {
+    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence)
+      VALUES ($1, $2, $3, 'observed', 'legacy', '045', jsonb_build_object('offer_id', $4::text))`, [`${SRC}:${posts[0]}`, f, v, id]);
+  }
+  await c.query(`SELECT resolve_offer_fields(ARRAY[$1])`, [id]);
   const cardId = await card(c, id);
   const ids = {
     applied: await proposal(c, id, "property_type", "house", "applied", { decided_by: "hitl:manh" }),
@@ -176,14 +184,20 @@ test("AC-2 offer kế đã có thẻ chờ: thẻ cũ để sau, đề xuất th
   });
 });
 
-test("AC-2 offer kế đã có giá trị khác: đề xuất áp lại thành skipped", async () => {
+test("AC-2 offer kế có giá trị máy khác: quyết định người áp lại vẫn thắng (PL15 — hết fill-gap)", async () => {
+  // Trước PL15: ô tin kế đã có giá trị thì đề xuất áp lại thành skipped. Từ PL15: đề xuất do người quyết (decided_by hitl:)
+  // áp lại là phát biểu lớp sự thật → thắng giá trị máy (bộ đọc tin nói apartment) của tin kế.
   await withTx(async (c) => {
     const x = uid("x"); const y = uid("y");
     const { ids } = await enrichedOffer(c, x, ["p1"]);
-    await writeOffers(c, SRC, [row(y, ["p1"], { property_type: "apartment" })]);
-    assert.equal((await offer(c, y)).property_type, "apartment");
+    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method)
+      VALUES ($1, 'property_type', 'apartment', 'observed', 'parser')`, [`${SRC}:p1`]);
+    await writeOffers(c, SRC, [row(y, ["p1"])]);
+    const o = await offer(c, y);
+    assert.equal(o.property_type, "house", "PL15 quyết định người áp lại phải thắng giá trị máy");
+    assert.equal(o.field_provenance.property_type.method, "hitl");
     const p = (await c.query(`SELECT status FROM enrichment_proposals WHERE id = $1`, [ids.applied])).rows[0];
-    assert.equal(p.status, "skipped");
+    assert.equal(p.status, "applied");
   });
 });
 

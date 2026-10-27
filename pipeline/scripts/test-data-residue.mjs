@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 import pg from "pg";
+import { napPhatBieu } from "../lib/nap-045.mjs";
 
 import { TEST_MARKERS, testMarker } from "../lib/test-posts.mjs";
 import { refreshBaitGap } from "../refresh-bait-gap.mjs";
@@ -102,6 +103,8 @@ export async function simulate(c) {
     // Xếp hàng với các bộ test nạp lại hàm 039 trong giao dịch (khoá 33033) — tránh deadlock khi
     // lượt chấm chạy thước này song song với suite pipeline/agent.
     await c.query("SELECT pg_advisory_xact_lock(33033)");
+    // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
+    await napPhatBieu(c);
     const maxId = Number((await c.query(`SELECT coalesce(max(id), 0) AS m FROM ops_audit`)).rows[0].m);
     before = await measureResidue(c);
     await runTransformZalo(c);

@@ -12,6 +12,14 @@ import { writeOffers } from "../lib/write-offers.mjs";
 import { mintOfferId } from "../lib/offer-key.mjs";
 import { resolveOffers, subjectKey, writeAssertions } from "../lib/assert.mjs";
 import { VOCAB } from "../lib/vocab.generated.mjs";
+import { scanProcs } from "../lib/scan-canonical-write.mjs";
+import { checkDb, readMappings } from "../lib/vocab-core.mjs";
+import { kiemNguonGoc } from "./dung-lai-canonical.mjs";
+import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
+import { spawnSync } from "node:child_process";
+import { parsePost, runTransformZalo } from "../transform-zalo.mjs";
+import { runTransformFb } from "../transform-fb.mjs";
+import { runTransformChotot } from "../transform-chotot.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
@@ -149,6 +157,8 @@ async function gieoCa(ca, tin, dao = false) {
   const ds = ca.phat_bieu.map((p) => ({
     subject_key: p.post === "la" ? subjectKey(TST, `${tin.posts[0]}-la`) : subjectKey(TST, tin.posts[p.post]),
     field: p.field, value: p.value, evidence_tier: p.tier, method: p.method, rule_id: p.rule_id ?? null, rut: p.rut,
+    // legacy là lịch sử của chính bản ghi (lệnh cắt chuyển ghi offer_id) — tin_khac: legacy của tin khác chung post
+    evidence: p.method === "legacy" ? { offer_id: p.tin_khac ? `${tin.row.offer_id}-khac` : tin.row.offer_id } : {},
   }));
   for (const p of dao ? [...ds].reverse() : ds) {
     const { rut, ...row } = p;
@@ -304,5 +314,212 @@ test("PD-AC-8 cổng apply/revert: chưa cắt chuyển thì từ chối, không
       await c.query("ROLLBACK TO SAVEPOINT s");
       assert.equal(await bamTin(), truoc, `${sql} đổi cột khi chưa cắt chuyển`);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+const SNAP = "pd-ac-5-snap";
+async function dangKySnap() {
+  await c.query(`INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', 'zalo-agent', '{}')
+    ON CONFLICT (snapshot_id) DO NOTHING`, [SNAP]);
+}
+async function postStg({ post_id, agent_id = "openclaw-hook", text, posted_at = "2026-10-22T08:00:00Z" }) {
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at)
+    VALUES ($1, $2, $3, 'Nhóm thật PB', $4, $5)`, [post_id, SNAP, agent_id, text, posted_at]);
+}
+const phatBieuSong = async (subject, field) => (await c.query(
+  `SELECT value, evidence_tier, method, rule_id FROM field_assertions WHERE subject_key = $1 AND field = $2 AND retracted_at IS NULL
+   ORDER BY id`, [subject, field])).rows;
+const tinTheoPost = async (postId) => (await one(`SELECT offer_id, ${NAM_COT.join(", ")}, field_provenance FROM sale_offers
+  WHERE $1 = ANY (post_ids)`, [postId]));
+const tinBan = (pn, dt, gia) => `Bán căn hộ ${pn}PN ${dt}m2 Nghĩa Đô, giá ${gia} tỷ. LH 0912 345 678`;
+
+test("PD-AC-5 S06: category và rooms thành phát biểu sự thật; lượt sau đổi rooms thì phát biểu cũ rút, không thành bất đồng", { timeout: 300_000 }, async () => {
+  await trongGiaoDich(c, async () => {
+    await moCong(c);
+    await dangKySnap();
+    await c.query("DELETE FROM stg_chotot_ads");   // trong giao dịch — chỉ chạy tin mồi
+    const listId = 9900000451;
+    await c.query(`INSERT INTO stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, subject, price, size_m2, rooms,
+      payload, snapshot_id, list_time) VALUES ($1, 12000, 'vn-hanoi', 1020, 's', 'Bán nhà', 5100000000, 60, 3, '{}', $2,
+      '2026-10-25T00:00:00Z')`, [listId, SNAP]);
+    await runTransformChotot(c);
+    const subj = `S06:${listId}`;
+    assert.deepEqual((await phatBieuSong(subj, "property_type")).map((r) => [r.value, r.evidence_tier, r.method, r.rule_id]),
+      [["house", "fact", "source_field", "category:1020"]]);
+    assert.deepEqual((await phatBieuSong(subj, "bedrooms")).map((r) => [r.value, r.evidence_tier, r.method, r.rule_id]),
+      [["3", "fact", "source_field", "rooms"]]);
+    const id = mintOfferId("S06", String(listId));
+    let t = await one(`SELECT property_type, bedrooms, field_provenance FROM sale_offers WHERE offer_id = $1`, [id]);
+    assert.deepEqual([t.property_type, t.bedrooms], ["house", 3]);
+    await c.query("UPDATE stg_chotot_ads SET rooms = 4 WHERE list_id = $1", [listId]);
+    await runTransformChotot(c);
+    assert.deepEqual((await phatBieuSong(subj, "bedrooms")).map((r) => r.value), ["4"]);
+    assert.equal((await one(`SELECT retract_reason FROM field_assertions WHERE subject_key = $1 AND field = 'bedrooms' AND value = '3'`,
+      [subj])).retract_reason, "thay-boi-luot");
+    t = await one(`SELECT bedrooms, field_provenance FROM sale_offers WHERE offer_id = $1`, [id]);
+    assert.equal(t.bedrooms, 4);
+    assert.equal(t.field_provenance.bedrooms.conflict, false);
+  });
+});
+
+test("PD-AC-5 S03 và S05: phòng ngủ là phát biểu quan sát/parser, mỗi post một; câu ghi không chứa năm cột", { timeout: 300_000 }, async () => {
+  await trongGiaoDich(c, async () => {
+    await moCong(c);
+    await dangKySnap();
+    for (const [src, agent, run] of [["S03", "openclaw-hook", runTransformZalo], ["S05", "apify-facebook", runTransformFb]]) {
+      const a = `pd5-${src}-a`; const b = `pd5-${src}-b`;
+      const text = tinBan(2, src === "S03" ? "61.7" : "62.7", "3.17");
+      await postStg({ post_id: a, agent_id: agent, text, posted_at: "2026-10-22T08:00:00Z" });
+      await postStg({ post_id: b, agent_id: agent, text, posted_at: "2026-10-23T08:00:00Z" });
+      // client ghi lại mọi câu SQL — ma trận ghi: không câu INSERT/UPDATE nào vào bảng tin nhắc năm cột
+      const cau = [];
+      const ghiLai = { query: (sql, p) => { cau.push(typeof sql === "string" ? sql : sql.text); return c.query(sql, p); } };
+      await run(ghiLai);
+      for (const pid of [a, b]) {
+        assert.deepEqual((await phatBieuSong(`${src}:${pid}`, "bedrooms")).map((r) => [r.value, r.evidence_tier, r.method]),
+          [["2", "observed", "parser"]], `${src} · ${pid}: phát biểu phòng ngủ`);
+      }
+      const t = await tinTheoPost(a);
+      assert.equal(t.bedrooms, 2, `${src}: cột phòng ngủ`);
+      assert.equal(t.field_provenance.bedrooms.method, "parser");
+      const ghiTin = cau.filter((q) => /(INSERT\s+INTO|UPDATE)\s+sale_offer(_record)?s\b/i.test(q));
+      assert.ok(ghiTin.length > 0, `${src}: không bắt được câu ghi tin nào — client ghi lại hỏng`);
+      for (const q of ghiTin) for (const f of NAM_COT) {
+        assert.doesNotMatch(q, new RegExp(`\\b${f}\\b`), `${src}: câu ghi tin nhắc ${f}`);
+      }
+    }
+  });
+});
+
+test("PD-AC-5 lượt rỗng: writeOffers ném trước khi ghi phát biểu nào", async () => {
+  await trongGiaoDich(c, async () => {
+    await moCong(c);
+    const n0 = (await one("SELECT count(*)::int AS n FROM field_assertions")).n;
+    await assert.rejects(writeOffers(c, TST, [], { assertions: [{ subject_key: "TST:x", field: "bedrooms", value: "1",
+      evidence_tier: "observed", method: "parser" }] }), /lượt nạp rỗng/);
+    assert.equal((await one("SELECT count(*)::int AS n FROM field_assertions")).n, n0);
+  });
+});
+
+test("PD-AC-9 quyết định người sống qua ba lượt nạp và thắng bộ đọc khi bộ đọc đổi giá trị", { timeout: 300_000 }, async () => {
+  await trongGiaoDich(c, async () => {
+    await moCong(c);
+    await dangKySnap();
+    const pid = "pd9-a";
+    await postStg({ post_id: pid, text: tinBan(2, "64.9", "3.19") });
+    await runTransformZalo(c);
+    let t = await tinTheoPost(pid);
+    assert.equal(t.bedrooms, 2);
+    const p = Number((await one(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, evidence)
+      VALUES ('pd-ac-9', $1, 'bedrooms', '3', '3', 'e2_llm', 'review', '{}'::jsonb) RETURNING id`, [t.offer_id])).id);
+    await c.query("SELECT apply_enrichment($1, 'hitl:thu')", [[p]]);
+    assert.equal((await tinTheoPost(pid)).bedrooms, 3);
+    const bonPN = (text) => { const r = parsePost(text); if (text.includes("64.9m2")) r.bedrooms = 4; return r; };
+    for (const parse of [parsePost, bonPN, bonPN]) {
+      await runTransformZalo(c, { parse });
+      t = await tinTheoPost(pid);
+      assert.equal(t.bedrooms, 3, "quyết định người phải giữ qua lượt nạp");
+      assert.equal(t.field_provenance.bedrooms.method, "hitl");
+      assert.equal((await phatBieuSong(`S03:${pid}`, "bedrooms")).filter((r) => r.method === "hitl").length, 1);
+    }
+    assert.equal(t.field_provenance.bedrooms.lower_disagree, true);
+    assert.deepEqual((await phatBieuSong(`S03:${pid}`, "bedrooms")).filter((r) => r.method === "parser").map((r) => r.value), ["4"]);
+    assert.equal((await one(`SELECT retract_reason FROM field_assertions WHERE subject_key = $1 AND method = 'parser' AND value = '2'
+      ORDER BY id DESC LIMIT 1`, [`S03:${pid}`])).retract_reason, "thay-boi-luot");
+  });
+});
+
+test("PD-AC-8 cổng transform: chưa cắt chuyển thì transform-chotot dừng trước mọi lần ghi", { timeout: 300_000 }, async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query("UPDATE ops_audit SET action = 'phat-bieu:cat-chuyen#an' WHERE action = 'phat-bieu:cat-chuyen'");
+    const truoc = await bamTin();
+    const n0 = (await one("SELECT count(*)::int AS n FROM sale_offer_records")).n;
+    await c.query("SAVEPOINT s");
+    await assert.rejects(runTransformChotot(c), /phân xử: chưa cắt chuyển/);
+    await c.query("ROLLBACK TO SAVEPOINT s");
+    await assert.rejects(writeOffers(c, TST, [tinMoi("ac8t", 1).row]), /phân xử: chưa cắt chuyển/);
+    await c.query("ROLLBACK TO SAVEPOINT s");
+    assert.equal(await bamTin(), truoc);
+    assert.equal((await one("SELECT count(*)::int AS n FROM sale_offer_records")).n, n0);
+    // đối chứng dương: có dòng cắt chuyển thì chạy
+    await moCong(c);
+    await c.query("DELETE FROM stg_chotot_ads");
+    await runTransformChotot(c);
+  });
+});
+
+test("PD-AC-5 hàm sống trong DB: ngoài resolve_offer_fields không hàm nào ghi năm cột; cấy một hàm thì đỏ nêu tên", async () => {
+  await trongGiaoDich(c, async () => {
+    assert.deepEqual(await scanProcs(c, NAM_COT), []);
+    await c.query(`CREATE FUNCTION pb_thu_ghi_thang(p text) RETURNS void LANGUAGE plpgsql AS $f$
+      BEGIN UPDATE sale_offer_records SET bathrooms = 7 WHERE offer_id = p; END $f$`);
+    assert.deepEqual(await scanProcs(c, NAM_COT), ["pb_thu_ghi_thang"]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+test("PD-AC-4 nguồn gốc: tin mồi sau phân xử 0 mồ côi; ghi thẳng một ô bỏ qua bộ phân xử thì đúng ô đó mồ côi", async () => {
+  await trongGiaoDich(c, async () => {
+    await moCong(c);
+    const t = tinMoi("ac4", 1);
+    await writeOffers(c, TST, [t.row], { assertions: [{ subject_key: subjectKey(TST, t.posts[0]), field: "bedrooms",
+      value: "2", evidence_tier: "observed", method: "parser" }] });
+    const cuaTin = (r) => r.moCoi.filter((x) => x.offer_id === t.row.offer_id);
+    assert.deepEqual(cuaTin(await kiemNguonGoc(c)), [], "đối chứng dương: tin mồi sau phân xử phải 0 mồ côi");
+    await c.query("UPDATE sale_offer_records SET bathrooms = 7 WHERE offer_id = $1", [t.row.offer_id]);
+    assert.deepEqual(cuaTin(await kiemNguonGoc(c)).map((x) => [x.offer_id, x.field, x.ly_do]),
+      [[t.row.offer_id, "bathrooms", "thiếu nguồn gốc"]]);
+  });
+});
+
+test("PD-AC-8 cắt chuyển: ô ghi thẳng không phát biểu thành đúng một legacy, cột giữ nguyên, audit có trước/sau; chạy lại 0; ô đã có parser thì không legacy", async () => {
+  await trongGiaoDich(c, async () => {
+    await c.query("UPDATE ops_audit SET action = 'phat-bieu:cat-chuyen#an' WHERE action = 'phat-bieu:cat-chuyen'");
+    await c.query("SAVEPOINT m"); await moCong(c);
+    const a = tinMoi("ac8c", 1); const b = tinMoi("ac8d", 1);
+    await writeOffers(c, TST, [a.row, b.row], { assertions: [{ subject_key: subjectKey(TST, b.posts[0]),
+      field: "street_raw", value: "Láng", evidence_tier: "observed", method: "parser" }] });
+    await c.query("UPDATE ops_audit SET action = 'phat-bieu:cat-chuyen#an' WHERE action = 'phat-bieu:cat-chuyen'");
+    // giá trị có trước 045: ghi thẳng (như DB trước cắt chuyển)
+    await c.query("UPDATE sale_offer_records SET street_raw = 'Kim Mã' WHERE offer_id = $1", [a.row.offer_id]);
+    await c.query("UPDATE sale_offer_records SET street_raw = 'Láng' WHERE offer_id = $1", [b.row.offer_id]);
+    const r = await catChuyen(c, { actor: "test:pd-ac-8" });
+    const leg = async (o) => (await c.query(`SELECT evidence_tier, method, method_version, evidence ->> 'note' AS note
+      FROM field_assertions WHERE subject_key = $1 AND field = 'street_raw' AND method = 'legacy'`, [subjectKey(TST, o.posts[0])])).rows;
+    assert.deepEqual((await leg(a)).map((x) => [x.evidence_tier, x.method, x.method_version, !!x.note]), [["observed", "legacy", "045", true]]);
+    assert.deepEqual(await leg(b), [], "đối chứng: ô đã có phát biểu parser không được ghi legacy");
+    assert.equal((await one("SELECT street_raw FROM sale_offers WHERE offer_id = $1", [a.row.offer_id])).street_raw, "Kim Mã");
+    assert.equal(r.lech.length, 0, `cắt chuyển lệch: ${JSON.stringify(r.lech.slice(0, 3))}`);
+    const au = await one(`SELECT detail FROM ops_audit WHERE action = 'phat-bieu:cat-chuyen' AND actor = 'test:pd-ac-8'`);
+    assert.ok(au.detail.truoc && au.detail.sau, "audit thiếu bảng trước/sau");
+    assert.equal((await catChuyen(c, { actor: "test:pd-ac-8b" })).legacyMoi, 0, "chạy lại phải ghi 0 legacy");
+  });
+});
+
+/** Chạy thước dựng lại ở tiến trình con (nó tự BEGIN … ROLLBACK, cần khoá 33033 — không gọi trong giao dịch test). */
+function thuoc(...args) {
+  const r = spawnSync(process.execPath, [join(HERE, "dung-lai-canonical.mjs"), ...args], { encoding: "utf8", timeout: 600_000 });
+  return { code: r.status, out: `${r.stdout}${r.stderr}` };
+}
+
+test("PD-AC-7 đối chứng: ghi-thang, rut, legacy-khac đều thấy lệch nêu tin + trường, DB thật không đổi", { timeout: 1_800_000 }, async () => {
+  for (const ca of ["ghi-thang", "rut", "legacy-khac"]) {
+    const truoc = await bamTin();
+    const { code, out } = thuoc(`--doi-chung=${ca}`);
+    assert.equal(code, 1, `đối chứng ${ca}: mã thoát ${code}\n${out}`);
+    assert.match(out, new RegExp(`đối chứng ${ca}: lệch \\S+ · (${NAM_COT.join("|")})`), `đối chứng ${ca}: không nêu tin + trường\n${out}`);
+    assert.equal(await bamTin(), truoc, `đối chứng ${ca}: DB thật bị đổi`);
+  }
+});
+
+test("PD-AC-1 sổ: sau 045 trong giao dịch, DB khớp sổ từ vựng (checkDb của vocab --check-db); xoá một mục trục mới thì lệch nêu trục", async () => {
+  await trongGiaoDich(c, async () => {
+    const reg = readMappings(ROOT);
+    assert.deepEqual((await checkDb(c, reg)).map((x) => x.msg), [], "DB sau 045 lệch sổ");
+    await c.query("DELETE FROM ref_lookup WHERE lookup_name = 'assertion_method' AND lookup_value = 'legacy'");
+    const lech = await checkDb(c, reg);
+    assert.equal(lech.length, 1);
+    assert.match(lech[0].msg, /assertion_method · legacy/);
   });
 });
