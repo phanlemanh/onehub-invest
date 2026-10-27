@@ -1,19 +1,22 @@
 import type { User } from "./auth";
 import { pool } from "./db";
-import { VN_TZ, vnDayKey, vnDayStart } from "./format";
+import { vnDayKey, vnDayStart } from "./format";
+import { readOpsFacts, type OpsFacts } from "./ops-facts";
 import { isAdmin } from "./ops-access";
 import { buildOfferImages, type PostMediaRow, type ReviewImage } from "./ops/review-media";
 
 /**
- * Số cho /ops/data-flow «Dòng chảy dữ liệu» (proto 26/10): một tin đi từ bài nhận → đọc được → tin rao → gắn căn,
- * theo nguồn, theo ngày và theo nhóm thu. CHỈ ĐỌC; chỉ chạy ở máy thu (bảng stg_* không lên cloud).
+ * Số cho /ops/data-flow «Dòng chảy dữ liệu»: một tin đi từ bài nhận → đọc được → tin rao → gắn căn, theo nguồn, theo
+ * ngày và theo nhóm thu. CHỈ ĐỌC.
  *
- * Hai đồng hồ, một luật: bài tính theo ngày đăng (`posted_at`, S06 `list_time`), tin theo `first_seen` (= giờ đăng bài
- * sớm nhất của tin). Bài «đọc được» = bài nằm trong `post_ids` của một tin cùng nguồn; tin mới ≤ bài đọc được nên
- * «gộp vào tin đã có» = đọc được − tin mới. S06 chưa có khoá nối ngược bài → tin (TV10), nên chặng đọc được của S06
- * là ước lượng bằng số tin (`approx`).
+ * DF1 (luật 10, ADR-0014): phần TỔNG HỢP (`FlowFacts`) tính sẵn ở pipeline/sql/600_data_flow.sql vào bảng
+ * `data_flow_snapshot` (migration 051, chỉ ở máy thu) — MỘT định nghĩa. Máy thu đọc bảng; máy chủ đọc khối `dataFlow`
+ * mà push-ops-facts chở lên (`readOpsFacts`). Trang không còn câu tổng hợp nào. «Tin mới nhất» đọc `sale_offers` ở cả
+ * hai nơi; bài gốc chỉ có ở máy thu (TV9).
  *
- * Proto: tính lúc tải trang. Bản thật tính sẵn ở pipeline/sql (luật 10).
+ * Hai đồng hồ, một luật (định nghĩa ở 600): bài tính theo ngày đăng (`posted_at`, S06 `list_time`), tin theo
+ * `first_seen`. Bài «đọc được» = bài nằm trong `post_ids` của một tin cùng nguồn; S06 chưa có khoá nối ngược bài → tin
+ * (TV10), nên chặng đọc được của S06 là ước lượng bằng số tin (`approx`).
  */
 
 export type FlowWindow = "7d" | "30d" | "all";
@@ -82,247 +85,154 @@ export type FlowRecord = {
   postGroup: string | null;
 };
 
-export type DataFlow = {
-  window: FlowWindow;
-  since: string | null;
+/** Phần tổng hợp của DataFlow — đúng các khoá 600_data_flow.sql ghi vào `facts` (danh sách đóng, khối lên cloud). */
+export const FLOW_FACT_KEYS = ["sources", "days", "groups", "shortStay", "mix", "enrichPending"] as const;
+export type FlowFacts = {
   sources: SourceFlow[];
   days: FlowDay[];
   groups: GroupFlow[];
   shortStay: ShortStay;
   mix: KindMix;
-  records: FlowRecord[];
   enrichPending: number;
-  reviewPending: number;
+};
+
+/** Trạng thái số tổng hợp: máy thu `fresh` (có dòng tính sẵn) / `none`; máy chủ theo khối (ADR-0014). */
+export type FlowFactsState = "fresh" | "stale" | "none" | "error";
+
+export type DataFlow = FlowFacts & {
+  window: FlowWindow;
+  since: string | null;
+  records: FlowRecord[];
+  /** Thẻ chờ duyệt — máy chủ lấy từ khối `reviewQueue`; null = không có số. */
+  reviewPending: number | null;
+  /** «local» = máy thu (bảng tính sẵn), «cloud» = máy chủ (khối bản tin). */
+  mode: "local" | "cloud";
+  /** Mốc tính của bảng (máy thu) / `measured_at` của khối = computed_at cũ nhất (máy chủ). */
+  computedAt: string | null;
+  factsState: FlowFactsState;
+  factsError: string | null;
 };
 
 const WINDOW_DAYS: Record<FlowWindow, number | null> = { "7d": 7, "30d": 30, all: null };
-/** Biểu đồ theo ngày luôn có mốc: «Toàn kho» vẽ 30 ngày gần nhất. */
-const SERIES_DAYS = 30;
 
 /** Ngày VN bắt đầu cửa sổ `n` ngày tính tới `now` (gồm hôm nay). */
 function windowStart(n: number, now: number): Date {
   return vnDayStart(vnDayKey(now - (n - 1) * 86400000));
 }
 
-// Dấu bài thử — cùng ba dấu của pipeline/lib/test-posts.mjs (snapshot thử, tác tử thử, nhóm TEST).
-/** Vế «bài thử» trên một dòng stg_zalo_posts (xuất cho phép đo). */
-export const IS_TEST_SQL = `(split_part(snapshot_id, '__', 2) ~* '(mock|test|e2e)' OR split_part(snapshot_id, '__', 2) = 'example'
-  OR coalesce(agent_id, '') ~* '^(e2e|test|mock)' OR btrim(coalesce(group_name, '')) ~* '^test($|[^[:alpha:]])')`;
-
-const POSTS_CTE = `
-  p AS (
-    SELECT DISTINCT ON (post_id) post_id, snapshot_id, agent_id, group_name, posted_at
-    FROM stg_zalo_posts
-    ORDER BY post_id, captured_at DESC
-  ),
-  t AS (
-    SELECT post_id, posted_at, group_name,
-           CASE WHEN agent_id = 'apify-facebook' THEN 'S05' ELSE 'S03' END AS src,
-           ${IS_TEST_SQL} AS is_test
-    FROM p WHERE posted_at >= $1
-  ),
-  used AS (
-    SELECT DISTINCT unnest(post_ids) AS post_id, source FROM sale_offers WHERE source IN ('S03', 'S05')
-  )`;
-
-/** Năm trường lõi của bậc B1 trên một dòng sale_offers `o` — cùng điều kiện với lib/data-level.ts (xuất cho phép đo). */
-export const COMPLETE_SQL = `o.kind IS NOT NULL AND o.property_type IS NOT NULL AND o.property_type <> 'unknown' AND o.price_vnd > 0
-  AND o.area_m2 > 0 AND o.area_id IS NOT NULL`;
-
-/** Đề xuất làm giàu đang chờ: `queued` là trạng thái mặc định của đề xuất mới (migration 033), mọi tuyến — Hỏi-1 26/10. */
-export const ENRICH_PENDING_SQL = `SELECT count(*) FROM enrichment_proposals WHERE status = 'queued'`;
-
-/** S06 chưa nối bài → tin: «đọc được» ước lượng bằng số tin, không vượt số quảng cáo. */
-export const s06Readable = (offers: number, received: number) => Math.min(offers, received);
-
-const DAY = (col: string) => `(${col} AT TIME ZONE '${VN_TZ}')::date::text`;
-
 const num = (v: unknown) => Number(v ?? 0);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- hàng pg trả về động; mỗi chỗ đọc ép kiểu tường minh
 type FlowQueryFn = (text: string, values?: unknown[]) => Promise<{ rows: any[] }>;
 
+const EMPTY_FACTS: FlowFacts = {
+  sources: [],
+  days: [],
+  groups: [],
+  shortStay: { received: 0, stored: 0, withWard: 0, latestAt: null },
+  mix: { sale: 0, rentLt: 0, shortStay: 0 },
+  enrichPending: 0,
+};
+
+/** «Tin mới nhất»: mỗi nguồn tối đa 150 tin (S06 ~500 tin/ngày không đẩy tin nhóm khép ra khỏi bảng). Máy thu kèm bài
+ * gốc sớm nhất (cắt 600 ký tự); máy chủ không có bảng bài nên `postText`/`postGroup` null (Hỏi-1 DF1). */
+const recordsSql = (withPost: boolean) => `
+  SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence,
+         o.n_reposts, o.first_seen::text, o.last_seen::text,
+         a.name AS ward, m.name AS market,
+         EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id) AS linked,
+         ${withPost ? "z.text AS post_text, z.group_name AS post_group" : "NULL::text AS post_text, NULL::text AS post_group"}
+  FROM (
+    SELECT *, row_number() OVER (PARTITION BY source ORDER BY first_seen DESC) AS rn
+    FROM sale_offers WHERE first_seen >= $1 AND source IN ('S03', 'S05', 'S06')
+  ) o
+  LEFT JOIN areas a ON a.id = o.area_id
+  LEFT JOIN areas m ON m.id = a.parent_id
+  ${
+    withPost
+      ? `LEFT JOIN LATERAL (
+    SELECT left(s.text, 600) AS text, s.group_name FROM stg_zalo_posts s
+    WHERE s.post_id = ANY (o.post_ids) ORDER BY s.posted_at LIMIT 1
+  ) z ON TRUE`
+      : ""
+  }
+  WHERE o.rn <= 150
+  ORDER BY o.first_seen DESC`;
+
+/** Kết quả đọc phần tổng hợp của một cửa sổ (máy thu hay máy chủ). */
+type FactsRead = { state: FlowFactsState; at: string | null; facts: FlowFacts | null; error: string | null };
+
+/** Số tổng hợp của một cửa sổ ở máy thu: dòng `data_flow_snapshot` (bảng vắng hay chưa làm tươi → `none`). */
+async function localFacts(q: FlowQueryFn, window: FlowWindow): Promise<FactsRead> {
+  try {
+    // Mốc ISO UTC (ms) — cùng dạng `measured_at` mà push-ops-facts ghi cho khối `dataFlow`.
+    const { rows } = await q(
+      `SELECT to_char(computed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS computed_at, facts
+       FROM data_flow_snapshot WHERE time_window = $1`,
+      [window],
+    );
+    const r = rows[0];
+    if (!r) return { state: "none", at: null, facts: null, error: null };
+    return { state: "fresh", at: r.computed_at as string, facts: r.facts as FlowFacts, error: null };
+  } catch (err) {
+    if ((err as { code?: string }).code === "42P01") return { state: "none", at: null, facts: null, error: null };
+    throw err;
+  }
+}
+
+/** Số tổng hợp của một cửa sổ ở máy chủ: khối `dataFlow` của bản tin (trạng thái theo `measured_at` = computed_at). */
+function cloudFacts(facts: OpsFacts, window: FlowWindow): FactsRead {
+  const b = facts.blocks.dataFlow;
+  if (!b) return { state: "none", at: null, facts: null, error: null };
+  if (b.state === "error") return { state: "error", at: b.measuredAt, facts: null, error: b.error };
+  const windows = (b.data?.windows ?? {}) as Partial<Record<FlowWindow, FlowFacts>>;
+  const f = windows[window];
+  if (!f) return { state: "error", at: b.measuredAt, facts: null, error: `khối không có cửa sổ ${window}` };
+  return { state: b.state, at: b.measuredAt, facts: f, error: null };
+}
+
 export async function getDataFlow(
   window: FlowWindow,
-  opts: { now?: number; query?: FlowQueryFn; readableS06?: (offers: number, received: number) => number } = {},
+  opts: {
+    now?: number;
+    query?: FlowQueryFn;
+    /** Bỏ trống → tự nhận: bảng bài `stg_zalo_posts` có → máy thu, vắng → máy chủ. */
+    mode?: "local" | "cloud";
+    /** Máy chủ: đọc bản tin (mặc định readOpsFacts). */
+    readFacts?: (o: { now: Date }) => Promise<OpsFacts>;
+  } = {},
 ): Promise<DataFlow> {
   const q: FlowQueryFn = opts.query ?? ((text, values) => pool.query(text, values));
-  const readableS06 = opts.readableS06 ?? s06Readable;
   // Chạy ở server; trang truyền mốc request (requestTime) để mọi vùng cùng một «bây giờ».
   const now = opts.now ?? Date.now();
+  const mode =
+    opts.mode ??
+    ((await q(`SELECT to_regclass('stg_zalo_posts')::text AS r`)).rows[0]?.r == null ? "cloud" : "local");
   const n = WINDOW_DAYS[window];
   const since = n ? windowStart(n, now) : null;
-  // Một lần quét: cửa sổ dài nhất cần cho tổng (since) và cho chuỗi ngày (30 ngày).
-  const seriesStart = windowStart(SERIES_DAYS, now);
-  const scanStart = since ? (since < seriesStart ? since : seriesStart) : new Date(0);
   const totalsStart = since ?? new Date(0);
 
-  const [posts, s06, offers, groups, shortStay, records, pending] = await Promise.all([
-    q(
-      `WITH ${POSTS_CTE}
-       SELECT src, ${DAY("posted_at")} AS d,
-              count(*) FILTER (WHERE NOT is_test) AS received,
-              count(*) FILTER (WHERE is_test) AS test_rejected,
-              count(*) FILTER (WHERE NOT is_test AND u.post_id IS NOT NULL) AS readable,
-              max(posted_at) FILTER (WHERE NOT is_test)::text AS latest
-       FROM t LEFT JOIN used u ON u.post_id = t.post_id AND u.source = t.src
-       GROUP BY 1, 2`,
-      [scanStart],
-    ),
-    q(
-      `SELECT ${DAY("list_time")} AS d, count(*) AS received, max(list_time)::text AS latest
-       FROM stg_chotot_ads WHERE list_time >= $1 GROUP BY 1`,
-      [scanStart],
-    ),
-    q(
-      `SELECT o.source, ${DAY("o.first_seen")} AS d, count(*) AS offers, count(po.offer_id) AS linked,
-              count(*) FILTER (WHERE o.area_id IS NOT NULL) AS with_ward,
-              count(*) FILTER (WHERE o.property_type <> 'unknown') AS with_type,
-              count(*) FILTER (WHERE o.price_vnd IS NOT NULL AND o.area_m2 IS NOT NULL) AS with_price_area,
-              count(*) FILTER (WHERE o.confidence = 'high') AS high_conf,
-              count(*) FILTER (WHERE ${COMPLETE_SQL}) AS complete,
-              count(*) FILTER (WHERE o.kind = 'sale') AS sale,
-              count(*) FILTER (WHERE o.kind = 'rent_lt') AS rent_lt
-       FROM sale_offers o LEFT JOIN (SELECT DISTINCT offer_id FROM property_offers) po USING (offer_id)
-       WHERE o.first_seen >= $1 AND o.source IN ('S03', 'S05', 'S06')
-       GROUP BY 1, 2`,
-      [scanStart],
-    ),
-    q(
-      `WITH ${POSTS_CTE},
-       link AS (
-         SELECT DISTINCT unnest(post_ids) AS post_id, offer_id, source FROM sale_offers WHERE source IN ('S03', 'S05')
-       )
-       SELECT t.src, coalesce(nullif(btrim(t.group_name), ''), 'Nhóm chưa có tên') AS g,
-              count(DISTINCT t.post_id) AS received,
-              count(DISTINCT t.post_id) FILTER (WHERE l.offer_id IS NOT NULL) AS readable,
-              count(DISTINCT l.offer_id) AS offers,
-              max(t.posted_at)::text AS latest
-       FROM t LEFT JOIN link l ON l.post_id = t.post_id AND l.source = t.src
-       WHERE NOT t.is_test
-       GROUP BY 1, 2`,
-      [totalsStart],
-    ),
-    q(
-      `SELECT (SELECT count(DISTINCT listing_id) FROM stg_abnb_listings WHERE fetched_at >= $1) AS received,
-              count(*) AS stored, count(area_id) AS with_ward, max(last_seen)::text AS latest
-       FROM listings WHERE last_seen >= ($1::timestamptz AT TIME ZONE '${VN_TZ}')::date`,
-      [totalsStart],
-    ),
-    q(
-      `SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence,
-              o.n_reposts, o.first_seen::text, o.last_seen::text,
-              a.name AS ward, m.name AS market,
-              EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id) AS linked,
-              z.text AS post_text, z.group_name AS post_group
-       FROM (
-         -- Mỗi nguồn tối đa 150 tin mới nhất: S06 (~500 tin/ngày) không đẩy tin nhóm khép ra khỏi bảng.
-         SELECT *, row_number() OVER (PARTITION BY source ORDER BY first_seen DESC) AS rn
-         FROM sale_offers WHERE first_seen >= $1 AND source IN ('S03', 'S05', 'S06')
-       ) o
-       LEFT JOIN areas a ON a.id = o.area_id
-       LEFT JOIN areas m ON m.id = a.parent_id
-       LEFT JOIN LATERAL (
-         SELECT left(s.text, 600) AS text, s.group_name FROM stg_zalo_posts s
-         WHERE s.post_id = ANY (o.post_ids) ORDER BY s.posted_at LIMIT 1
-       ) z ON TRUE
-       WHERE o.rn <= 150
-       ORDER BY o.first_seen DESC`,
-      [totalsStart],
-    ),
-    q(
-      `SELECT (${ENRICH_PENDING_SQL}) AS enrich,
-              (SELECT count(*) FROM review_queue WHERE status = 'pending') AS review`,
-    ),
-  ]);
-
-  const inTotals = (d: string) => !since || d >= vnDayKey(since);
-  const seriesFrom = vnDayKey(seriesStart);
-
-  // Gom theo nguồn (tổng cửa sổ) và theo (nguồn, ngày) cho chuỗi.
-  const bySource = new Map<FlowSource, SourceFlow>(
-    FLOW_SOURCES.map((s) => [
-      s,
-      { source: s, received: 0, readable: 0, offers: 0, linked: 0, testRejected: 0, withWard: 0, withType: 0,
-        withPriceArea: 0, complete: 0, highConfidence: 0, latestAt: null, approx: s === "S06" },
-    ]),
-  );
-  const dayMap = new Map<string, FlowDay>();
-  const dayOf = (source: FlowSource, day: string) => {
-    const k = `${source}|${day}`;
-    let row = dayMap.get(k);
-    if (!row) dayMap.set(k, (row = { source, day, received: 0, readable: 0, offers: 0, linked: 0 }));
-    return row;
-  };
-  const later = (a: string | null, b: string | null) => (!a ? b : !b ? a : a > b ? a : b);
-  const mix: KindMix = { sale: 0, rentLt: 0, shortStay: 0 };
-
-  for (const r of posts.rows) {
-    const s = r.src as FlowSource;
-    if (inTotals(r.d)) {
-      const t = bySource.get(s)!;
-      t.received += num(r.received);
-      t.readable += num(r.readable);
-      t.testRejected += num(r.test_rejected);
-      t.latestAt = later(t.latestAt, r.latest);
-    }
-    if (r.d >= seriesFrom) {
-      const d = dayOf(s, r.d);
-      d.received += num(r.received);
-      d.readable += num(r.readable);
-    }
+  let reviewPending: number | null = null;
+  let f: FactsRead;
+  if (mode === "local") {
+    const [lf, pending] = await Promise.all([
+      localFacts(q, window),
+      q(`SELECT count(*) AS review FROM review_queue WHERE status = 'pending'`),
+    ]);
+    f = lf;
+    reviewPending = num(pending.rows[0]?.review);
+  } else {
+    const facts = await (opts.readFacts ?? readOpsFacts)({ now: new Date(now) });
+    f = cloudFacts(facts, window);
+    const rq = facts.blocks.reviewQueue;
+    if (rq && rq.state !== "error" && rq.data) reviewPending = num((rq.data as { total?: unknown }).total);
   }
-  for (const r of s06.rows) {
-    if (inTotals(r.d)) {
-      const t = bySource.get("S06")!;
-      t.received += num(r.received);
-      t.latestAt = later(t.latestAt, r.latest);
-    }
-    if (r.d >= seriesFrom) dayOf("S06", r.d).received += num(r.received);
-  }
-  for (const r of offers.rows) {
-    const s = r.source as FlowSource;
-    if (inTotals(r.d)) {
-      const t = bySource.get(s)!;
-      t.offers += num(r.offers);
-      t.linked += num(r.linked);
-      t.withWard += num(r.with_ward);
-      t.withType += num(r.with_type);
-      t.withPriceArea += num(r.with_price_area);
-      t.highConfidence += num(r.high_conf);
-      t.complete += num(r.complete);
-      mix.sale += num(r.sale);
-      mix.rentLt += num(r.rent_lt);
-    }
-    if (r.d >= seriesFrom) {
-      const d = dayOf(s, r.d);
-      d.offers += num(r.offers);
-      d.linked += num(r.linked);
-    }
-  }
-  // S06: không có khoá nối ngược → «đọc được» ước lượng bằng số tin, không vượt số bài.
-  const s06Flow = bySource.get("S06")!;
-  s06Flow.readable = readableS06(s06Flow.offers, s06Flow.received);
-  for (const d of dayMap.values()) if (d.source === "S06") d.readable = readableS06(d.offers, d.received);
-
-  const ss = shortStay.rows[0] ?? {};
-  mix.shortStay = num(ss.stored);
+  const records = await q(recordsSql(mode === "local"), [totalsStart]);
 
   return {
+    ...(f.facts ?? EMPTY_FACTS),
     window,
     since: since ? since.toISOString() : null,
-    sources: [...bySource.values()],
-    days: [...dayMap.values()].sort((a, b) => a.day.localeCompare(b.day)),
-    groups: groups.rows.map((r) => ({
-      group: r.g as string,
-      source: r.src as FlowSource,
-      received: num(r.received),
-      readable: num(r.readable),
-      offers: num(r.offers),
-      latestAt: r.latest ?? null,
-    })),
-    shortStay: { received: num(ss.received), stored: num(ss.stored), withWard: num(ss.with_ward), latestAt: ss.latest ?? null },
-    mix,
     records: records.rows.map((r) => ({
       offerId: r.offer_id,
       source: r.source,
@@ -341,8 +251,11 @@ export async function getDataFlow(
       postText: r.post_text ?? null,
       postGroup: r.post_group ?? null,
     })),
-    enrichPending: num(pending.rows[0]?.enrich),
-    reviewPending: num(pending.rows[0]?.review),
+    reviewPending,
+    mode,
+    computedAt: f.at,
+    factsState: f.state,
+    factsError: f.error,
   };
 }
 

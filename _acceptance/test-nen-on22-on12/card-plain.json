@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bộ test app thôi đỏ ngẫu nhiên khi nhiều phiên cùng chạy test trên DB local dùng chung — chạy ít tiến trình hơn để không chiếm hết suất kết nối, và thử lại có giới hạn khi DB báo lỗi tạm thời.",
+  "analyst_plain": "Phép so với bản trước khi sửa đã chạy; xem trang bằng chứng để biết bài kiểm nào phân biệt được hai bản."
+}

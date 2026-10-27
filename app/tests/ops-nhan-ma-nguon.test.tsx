@@ -13,6 +13,7 @@ import path from "node:path"
 
 import { findSourceNames, fold, sourceRegistrySeeds } from "../../scripts/lib/tier-a-source-names.mjs"
 import { readable } from "./ops-html"
+import { thuLaiDbTam } from "./helpers/db-tam-thoi"
 
 type Seed = { code: string; realName: string }
 const SEEDS: Seed[] = sourceRegistrySeeds()
@@ -159,7 +160,8 @@ describe("ON7-AC-1 /ops/collections", () => {
 describe("ON7-AC-2 /ops/quality", () => {
   test("ON7-AC-2 /ops/quality thật trên DB local → 0 tên nguồn thật, có «S02 · Hiệu chuẩn»", async () => {
     const { default: QualityPage } = await import("../src/app/ops/quality/page")
-    const h = await html(await QualityPage())
+    // Trang đọc DB local dùng chung — lỗi DB tạm thời (hết suất kết nối khi nhiều bộ test cùng chạy) thử lại có giới hạn.
+    const h = await thuLaiDbTam(async () => html(await QualityPage()))
     assert.ok(h.includes("Chất lượng dữ liệu"), "tiền đề: trang dựng được")
     assert.ok(h.includes("S02 · Hiệu chuẩn"), "thiếu nhãn «S02 · Hiệu chuẩn»")
     assert.deepEqual(leaks(h), [], "HTML /ops/quality còn tên nguồn thật")

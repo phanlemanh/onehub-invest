@@ -159,6 +159,7 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
 | `lockdown` | `layers` (bảy lớp, `ok` true/false/null), `lastWatchdogAt`, `agentTurnsToday` | `readLockdown` — bản .mjs của `getLockdownStatus` (ON2) |
 | `records24h` | `bySource`: số snapshot 24 giờ theo mã | `readRecords24h` — bản .mjs của `items24h` trong `getSourceFeedHealth` |
 | `reviewQueue` | `byType` (thẻ `pending` theo `item_type`), `total` — chỉ số đếm | `readReviewQueue` |
+| `dataFlow` (DF1) | `windows.{7d,30d,all}`: phần tổng hợp của /ops/data-flow (`sources` · `days` · `groups` · `shortStay` · `mix` · `enrichPending`); `measured_at` = `computed_at` cũ nhất của bảng | `pipeline/sql/600_data_flow.sql` → bảng `data_flow_snapshot` (migration 051, chỉ ở máy thu), `readDataFlow` chở nguyên |
 
 - **Đo không được thì nói ra**: khối hỏng là `{measured_at, error: "không đo được: …"}`, không bao giờ 0, mảng rỗng hay
   «Ổn»; các khối khác vẫn gửi. Lớp lockdown không kiểm được là `null` từng lớp. Soi khô ở máy thu:
@@ -170,6 +171,9 @@ local; mỗi khối mang `measured_at` (lúc khối đo xong). Khoá cũ của b
   `error`. Hằng `FACTS_STALE_MS` (45′ = 3 lượt cloud-sync) chỉ ở tệp này — đổi chu kỳ cloud-sync thì đổi hằng.
   Trang hiện số: ON3 (/ops, /ops/collections), ON23 (lockdown), ON5 (luồng 7 ngày), ON4 (nhóm S03), AU12 (độ phủ).
 - Bản tin đi qua bộ soát tầng A (mục trên): tên nguồn thật trong khối nào cũng làm lượt đẩy dừng (`FACTS CHẶN … blocks.<khối>…`).
+- **DF1 sau khi gộp**: áp `db/migrations/051_data_flow_snapshot.sql` lên DB local. Trước đó bước `refresh-data-flow` báo
+  `JOB FAIL [cloud-sync] bước refresh-data-flow mã 1` mỗi lượt và khối `dataFlow` ghi «không đo được» (sync-cloud và
+  push-ops-facts vẫn chạy). Lượt cloud-sync kế làm tươi bảng; trang /ops/data-flow trên cloud hiện số từ lượt đẩy kế.
 - Bảng snapshot đọc không được thì `sourceRuns` cũ vẫn gửi vai trò từng mã, số lần chạy để `null` (chưa đo).
 
 ### Ba trang Ops trên cloud đọc gì (ON3 `o-kpi-chi-do-local`, 24/10)
@@ -282,7 +286,7 @@ giữa chuỗi) thì launchd thấy 0.
 | `com.oneinvest.zalo-import` (`scripts/zalo-import-daily.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | `transform-zalo` + `refresh-bait-gap` bọc `job_run` (hồ sơ `transform-zalo-boc-job-run`); đoạn nạp làn ZCode giữ nguyên |
 | `com.oneinvest.airdna-daily` (`scripts/airdna-daily.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
 | `com.oneinvest.collector` (→ `pipeline/finalize-hanoi.sh`) | thoát ≠ 0, dừng tại bước hỏng | `set -euo pipefail` từ trước |
-| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | ba bước luôn chạy cả ba: `ha-bung-het-han` (máy hạ chế độ thu Bùng quá hạn → Duy trì, ghi `ops_audit`, hồ sơ `che-do-thu-tren-ops`) → `sync-cloud` → `push-ops-facts` (nhịp tim `/ops`, vẫn chạy khi bước trước hỏng — AU13) |
+| `com.oneinvest.cloud-sync` (`scripts/cloud-sync.sh`) | thoát ≠ 0 (mã của bước hỏng đầu) | bốn bước luôn chạy hết: `ha-bung-het-han` (máy hạ chế độ thu Bùng quá hạn → Duy trì, ghi `ops_audit`, hồ sơ `che-do-thu-tren-ops`) → `sync-cloud` → `refresh-data-flow` (`pipeline/refresh-data-flow.mjs` chạy `pipeline/sql/600_data_flow.sql`, làm tươi `data_flow_snapshot` — DF1; hỏng thì khối `dataFlow` cũ dần) → `push-ops-facts` (nhịp tim `/ops`, vẫn chạy khi bước trước hỏng — AU13) |
 
 - **Tìm nguyên nhân trong log:** chotot/apify/cloud-sync in một dòng `JOB FAIL [<job>] bước <bước> mã <n>` ra stderr
   cho mỗi bước hỏng (`grep 'JOB FAIL' pipeline/logs/chotot.log`; cloud-sync: `JOB FAIL [cloud-sync] bước sync-cloud mã 1`
