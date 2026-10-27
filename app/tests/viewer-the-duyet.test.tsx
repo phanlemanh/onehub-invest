@@ -342,3 +342,87 @@ describe("VT-AC-5 sheet bài gốc", () => {
     assert.ok(!t.includes(CHU_BAI), "ops: không câu chú thích")
   })
 })
+
+// ---------- AC-3: ma trận 6 kiểu người × 2 trang ----------
+type O = { kieu: Kieu; trang: "review" | "data-flow"; thay: boolean }
+const THAY: Record<Kieu, boolean> = { user: false, viewer: false, ops: true, admin: true, owner: true, opsEmail: true }
+const MA_TRAN: O[] = [
+  { kieu: "user", trang: "review", thay: false },
+  { kieu: "viewer", trang: "review", thay: false },
+  { kieu: "ops", trang: "review", thay: true },
+  { kieu: "admin", trang: "review", thay: true },
+  { kieu: "owner", trang: "review", thay: true },
+  { kieu: "opsEmail", trang: "review", thay: true },
+  { kieu: "user", trang: "data-flow", thay: false },
+  { kieu: "viewer", trang: "data-flow", thay: false },
+  { kieu: "ops", trang: "data-flow", thay: true },
+  { kieu: "admin", trang: "data-flow", thay: true },
+  { kieu: "owner", trang: "data-flow", thay: true },
+  { kieu: "opsEmail", trang: "data-flow", thay: true },
+]
+
+describe("VT-AC-3 ma trận vai", () => {
+  test("VT-AC-3 12 ô vai × trang", async () => {
+    ready()
+    assert.equal(MA_TRAN.length, 12)
+    for (const o of MA_TRAN) assert.equal(o.thay, THAY[o.kieu], `bảng viết tay lệch ở ô '${o.kieu}/${o.trang}'`)
+    const review = (await import("../src/components/ops/review-content")) as ReviewMod
+    const df = (await import("../src/components/ops/data-flow/data-flow-content")) as DfMod
+    const doMaTran = async (dfMod: DfMod) => {
+      for (const o of MA_TRAN) {
+        const u = NGUOI[o.kieu]
+        const ten = `ô '${o.kieu}/${o.trang}'`
+        if (o.trang === "review") {
+          const html = renderToStaticMarkup(await review.ReviewContent({ user: u }))
+          assert.equal(html.includes("vt-mat-1-title"), o.thay, `${ten}: tiêu đề thẻ`)
+        } else {
+          const el = await dfMod.DataFlowContent({ window: "all", user: u })
+          assert.equal(/vt-bai-/.test(jsonCay(el.props)), o.thay, `${ten}: bài gốc trong props`)
+          assert.equal(el.props.xemBaiGoc, o.thay, `${ten}: cờ xemBaiGoc`)
+        }
+      }
+    }
+    await doMaTran(df)
+    // Đối chứng: luật viết sai «chỉ đúng vai ops» lọt admin, owner và người vào bằng OPS_EMAILS.
+    const sai = await banChepTam<DfMod>("src/components/ops/data-flow/data-flow-content.tsx", (s) =>
+      s.replace("const xem = xemNoiDungTin(user);", 'const xem = user?.role === "ops";'),
+    )
+    await assert.rejects(doMaTran(sai), /ô '(admin|owner|opsEmail)\/data-flow'/, "đối chứng role === 'ops' phải đỏ ở ô admin/owner/OPS_EMAILS")
+  })
+})
+
+// ---------- AC-6: máy chủ (cloud) — nhánh «bảng tầng A vắng» chạy trước nhánh vai ----------
+describe("VT-AC-6 cloud không đổi", () => {
+  test("VT-AC-6 viewer và ops cùng một trang trên máy chủ", async () => {
+    ready()
+    // Pool của app gắn với lược đồ S lúc import → dựng «như máy chủ» trên chính S: giấu hai bảng tầng A, thêm bản tin.
+    await admin.query(`ALTER TABLE "${S}".review_queue RENAME TO vt_rq_tam`)
+    await admin.query(`ALTER TABLE "${S}".stg_zalo_posts RENAME TO vt_zp_tam`)
+    try {
+      await admin.query(`CREATE TABLE "${S}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
+      const at = new Date().toISOString()
+      await admin.query(`INSERT INTO "${S}".ops_heartbeat (id, payload, pushed_at) VALUES ('primary', $1, now())`, [
+        JSON.stringify({ pushedAt: at, blocks: { reviewQueue: { measured_at: at, byType: [{ type: "entity_match", n: 2 }], total: 2 } } }),
+      ])
+      const review = (await import("../src/components/ops/review-content")) as ReviewMod
+      const { DataFlowContent } = (await import("../src/components/ops/data-flow/data-flow-content")) as DfMod
+      const { LocalOnlyAlert } = await import("../src/components/ops/local-only-alert")
+      const hv = renderToStaticMarkup(await review.ReviewContent({ user: NGUOI.viewer }))
+      const ho = renderToStaticMarkup(await review.ReviewContent({ user: NGUOI.ops }))
+      assert.equal(hv, ho, "trên máy chủ HTML của viewer bằng HTML của ops")
+      assert.match(hv, /data-pending-total="2"/)
+      assert.ok(hv.includes("thẻ đang chờ"))
+      assert.ok(hv.includes("Hàng duyệt chỉ có ở máy thu"))
+      assert.ok(!hv.includes(CHU_THE), "máy chủ không hiện câu chú thích vai")
+      for (const u of [NGUOI.viewer, NGUOI.ops]) {
+        const el = (await DataFlowContent({ window: "all", user: u })) as unknown as ReactElement<{ title: string }>
+        assert.equal(el.type, LocalOnlyAlert, `${u.role}: data-flow dừng ở LocalOnlyAlert`)
+        assert.equal(el.props.title, "Chỉ xem ở máy thu")
+      }
+    } finally {
+      await admin.query(`DROP TABLE IF EXISTS "${S}".ops_heartbeat`)
+      await admin.query(`ALTER TABLE "${S}".vt_rq_tam RENAME TO review_queue`)
+      await admin.query(`ALTER TABLE "${S}".vt_zp_tam RENAME TO stg_zalo_posts`)
+    }
+  })
+})
