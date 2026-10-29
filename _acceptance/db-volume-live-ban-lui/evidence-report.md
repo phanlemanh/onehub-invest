@@ -7,11 +7,13 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 90aa03348689007e82e02f4bbb93464ddfb11019
+verified_commit: 39eefa6f2c41bf4b63a3de0a9842970f5e53ae4f
 human_signoff:
 ---
 
 # Evidence Report: db-volume-live-ban-lui
+
+Round 2. Nội dung thay trọn round cũ; lịch sử round nằm ở mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -22,116 +24,118 @@ human_signoff:
 | E5 | AC-5 | script | PASS |
 | E6 | AC-5 | script | PASS |
 | E7 | AC-5 | script | PASS |
-| E8 | AC-5 | judgment | PASS (đề xuất của hội đồng, chờ người điền human_override) |
+| E8 | AC-5 | judgment | PASS |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-db-volume-live-ban-lui-E1-r1
+  run_id: minted-db-volume-live-ban-lui-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.db_volume_live
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
   output: |
     db-volume-check live: ĐẠT
 
 - eval: E2
-  run_id: minted-db-volume-live-ban-lui-E2-r1
+  run_id: minted-db-volume-live-ban-lui-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.db_volume_live
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
   output: |
     db-volume-check live: ĐẠT
 
 - eval: E3
-  run_id: minted-db-volume-live-ban-lui-E3-r1
+  run_id: minted-db-volume-live-ban-lui-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.db_volume_live
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
   output: |
     db-volume-check live: ĐẠT
 
 - eval: E4
-  run_id: minted-db-volume-live-ban-lui-E4-r1
+  run_id: minted-db-volume-live-ban-lui-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.db_volume_live
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
   output: |
     db-volume-check live: ĐẠT
 
 - eval: E5
-  run_id: minted-db-volume-live-ban-lui-E5-r1
+  run_id: minted-db-volume-live-ban-lui-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.db_volume_static
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
   output: |
     db-volume-check static: ĐẠT
 
 - eval: E6
-  run_id: minted-db-volume-live-ban-lui-E6-r1
+  run_id: minted-db-volume-live-ban-lui-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.db_volume_mutation
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
   output: |
     db-volume-check mutation: ĐẠT
 
 - eval: E7
-  run_id: minted-db-volume-live-ban-lui-E7-r1
+  run_id: minted-db-volume-live-ban-lui-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.db_volume_tap_duot
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
   output: |
     db-volume-check tap-duot: ĐẠT
+
+### Judgment
+
+Đề xuất panel cho E8 (người để trống human_override ở Cổng 2):
+
+- domain-correctness: PASS — dòng cuối run-log kind repin có sha khác sha trước đó, cả 6 suite và các eval máy đều xanh, báo cáo có mục re-pin cite đúng run_id, verified_commit khớp sha dòng run-log; lý do nhắc tên feature nằm ở tiêu đề mục báo cáo.
+- operational-feasibility: PASS — cùng căn cứ: dòng repin cuối run-log, 6 suite xanh, mục re-pin trong báo cáo cite đúng run_id, sha trong mục và frontmatter khớp dòng run-log; đọc câu hỏi theo nghĩa trong hai tệp này.
+- spec-alignment: PASS — dòng repin (dòng 41 run-log) có sha khác sha trước, toàn bộ suite và 14 eval máy xanh, mục Re-pin lần 1 cite đúng run_id, frontmatter và mục khớp sha; phần lý do lấy từ tiêu đề mục.
+
+- eval: E8
+  judged_by: judge-subagent (fresh context)
+  verdict: PASS
+  rationale: Ba thấu kính domain-correctness, operational-feasibility, spec-alignment cùng bỏ phiếu PASS trên dòng repin cuối của run-log và mục re-pin trong báo cáo.
+  human_override:  # chi nguoi ghi
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-db-volume-live-ban-lui-SUITE-npm_test__bb6271-r1
+  run_id: minted-db-volume-live-ban-lui-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-db-volume-live-ban-lui-SUITE-lint-r1
+  run_id: minted-db-volume-live-ban-lui-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
 
 - cmd: cd app && npm test
-  run_id: minted-db-volume-live-ban-lui-SUITE-npm_test__bd9a35-r1
+  run_id: minted-db-volume-live-ban-lui-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-db-volume-live-ban-lui-SUITE-npm_test__13563d-r1
+  run_id: minted-db-volume-live-ban-lui-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-db-volume-live-ban-lui-SUITE-test_lint_rules-r1
+  run_id: minted-db-volume-live-ban-lui-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-29T10:57:47Z
+  verified_at: 2026-10-29T11:07:01Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-db-volume-live-ban-lui-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-db-volume-live-ban-lui-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-29T10:57:47Z
-
-### Judgment
-
-- eval: E8
-  judged_by: judge-panel (domain-correctness, operational-feasibility, spec-alignment; fresh context)
-  verdict: PASS
-  rationale: Cả ba góc nhìn đều đọc cùng một chuỗi bằng chứng của lần ghim lại sau db-volume-live-ban-lui và kết luận đạt. Dòng run-log cuối loại repin có sha d4d94502 khác 4f5486d6, cả 6 suite và 14 eval máy (E1–E12, E14, E15) đều đạt, mục «Re-pin lần 1» của báo cáo cite đúng run_id repin-20261029T103227Z-30313 và verified_commit cùng sha. Run-log không có trường lý do riêng nên lý do lấy từ tiêu đề mục Re-pin trong báo cáo.
-  votes:
-    - domain-correctness: PASS — Dòng run-log cuối (kind repin, run_id repin-20261029T103227Z-30313) có sha d4d94502, khác 4f5486d6. Cả 6 phần tử suites_exit và evals_exit của E1–E12, E14, E15 đều đạt, E13 nằm riêng trong evals_not_machine. Lý do «do sau db-volume-live-ban-lui» nằm ở tiêu đề mục Re-pin lần 1 trong evidence-report.md, mục này cite đúng run_id đó, và verified_commit ở front-matter (d4d9450292f0e864927b242b9c86ef172828072a) trùng sha của dòng ấy.
-    - operational-feasibility: PASS — Dòng run-log cuối (kind repin, run_id repin-20261029T103227Z-30313) có sha d4d94502 khác 4f5486d6; cả 6 suite và 14 eval máy đạt. evidence-report.md có mục Re-pin lần 1 nhắc db-volume-live-ban-lui, cite đúng run_id và verified_commit cùng sha d4d9450292f0e864927b242b9c86ef172828072a. Dòng run-log không có trường lý do riêng nên phần lý do lấy từ mục Re-pin trong báo cáo.
-    - spec-alignment: PASS — Dòng run-log cuối kind repin có sha d4d94502 khác 4f5486d6; cả 6 suites_exit và evals_exit của E1–E12, E14, E15 đều đạt. Mục «Re-pin lần 1 … do sau db-volume-live-ban-lui» cite đúng run_id đó, sha và verified_commit trong front-matter đều là d4d9450292f0e864927b242b9c86ef172828072a. Chữ db-volume-live-ban-lui chỉ nằm ở tiêu đề mục báo cáo, không ở run-log; đọc phần lý do là của lượt ghim lại và báo cáo ghi, nên vẫn tính là đạt.
-  human_override:  # chi nguoi ghi
+  verified_at: 2026-10-29T11:07:01Z
 
 ## Known limits
 
@@ -141,9 +145,7 @@ human_signoff:
 
 baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
-Mọi field baseline của các eval máy ghi n-a; danh sách eval không-phân-biệt không đo được ở round này.
-
-none — danh sách eval green-trên-cả-hai-phía không đo được vì baseline bị chặn hạ tầng (không có eval nào được xác nhận là không-phân-biệt, cũng không có eval nào được xác nhận là có phân biệt).
+Danh sách eval không-phân-biệt không đo được ở round này (baseline không chạy); không có eval nào bị liệt kê là không-phân-biệt.
 
 ### Baseline khong do
 
@@ -154,8 +156,9 @@ none — danh sách eval green-trên-cả-hai-phía không đo được vì base
 
 ## Variance
 
-none — mọi eval chạy một lần và đều đạt (không có eval ngẫu nhiên, không có phương sai).
+none — every multi-run eval is uniform
 
 ## Iterations
 
-Round 1: 7 eval máy (E1–E7) và 6 lệnh suite đều đạt trên commit 90aa0334; E8 là judgment, hội đồng đề xuất PASS, human_override để trống cho người quyết ở Cổng 2. Baseline không đo được (hạ tầng chặn).
+Round 1: E7 đỏ ở cụm đối chứng của tập dượt (dựng cụm không thử lại, lỗi docker không in); trả về triển khai, sửa ở 759f7614 rồi chấm lại, ghim mốc hạn giữ bản lùi.
+Round 2: E1 đến E7 xanh, sáu lệnh suite xanh, E8 đề xuất PASS; verified_commit 39eefa6f2c41bf4b63a3de0a9842970f5e53ae4f.
