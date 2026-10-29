@@ -5,7 +5,7 @@ slug: dung-m2-song-song
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-29T04:12:04Z
 approved_by:
@@ -92,3 +92,14 @@ nhận nguyên, nhóm lồng nối bằng `-`). Giám sát duyệt hàng (P3-96)
 
 - Ranh giới: `design/**`, `scripts/design-floor/**`, `.claude/skills/onehub-ui/**`; ngoài vùng chỉ hai dòng config đã duyệt
   (P3-97) và tài liệu quy trình (`docs/superpowers/`).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: câu «expected» của E10 vẫn ghi đối chiếu hai tệp trong khi hội đồng đọc ba tệp; tính năng không đổi.
+  - Ngoài-3: câu hỏi chấm E10 của vòng 1 xếp ví dụ c-* sai bậc; đã sửa ở vòng 2, chỉ còn trong lịch sử chấm.
+  - Ngoài-5: thêm thành phần vào danh mục hay màu vào bảng màu thì test đỏ cho tới khi cập nhật số đếm ghim.
+  - Ngoài-6: bảng màu viết theo vài kiểu hợp lệ nhưng hiếm có thể bị lệnh sinh bỏ sót một giá trị mà không báo; bảng màu hiện tại không dùng các kiểu đó.
+  - Ngoài-7: một mẫu giao diện rơi khỏi danh mục vì sai định dạng có thể lọt qua test; danh mục hiện đủ.
+  - Ngoài-8: mô tả của đa số mẫu trong danh mục chưa được test đối chiếu từng cái.
+  - Ngoài-9: biến thể của 13 trên 17 thành phần có biến thể chưa được test đối chiếu độc lập.
+  - Ngoài-10: phép kiểm «bỏ qua biến thể ngoài lời gọi cva» chưa có đối chứng dương trên cùng dữ liệu thử.
+  - Ngoài-12: giá trị của chín cỡ bo góc và phông chữ riêng chỉ được kiểm tên, chưa kiểm từng giá trị.
+  - Ngoài-13: luật buộc kế hoạch dùng lại ở S1 mới là hướng dẫn trong skill; máy chỉ chặn khi kho bật M2.
