@@ -64,6 +64,7 @@ executors:
     dong_chay: "cd app && node --import tsx --test tests/ops-dong-chay.test.tsx tests/data-level.test.tsx"
     dong_chay_cloud: "cd app && node --import tsx --test tests/dong-chay-cloud.test.tsx"   # DF1 dong-chay-len-cloud — bảng tính sẵn, khối dataFlow, trang trên cloud (lược đồ tạm)
     luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
+    gop_trung: "cd pipeline && node --test scripts/gop-trung-s03.test.mjs scripts/gop-trung-s03.itest.mjs"   # s03-gop-trung-dung — .test thuần (CI), .itest cần DB local :5433 (BEGIN…ROLLBACK)
     dem_de_xuat: "cd app && node --import tsx --test tests/df0-dem-de-xuat.test.tsx"   # df0-dem-de-xuat-lam-giau — đếm đề xuất làm giàu queued (lược đồ tạm)
     chang_ngay: "cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx"   # df0-chang-theo-ngay-diem-0 — chuỗi ngày đủ cửa sổ, ngày im = 0 (thuần + jsdom)
     ops_nhan: "cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx"
