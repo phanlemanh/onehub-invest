@@ -5,7 +5,7 @@ slug: dong-chay-so-cu-may-thu
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-27-dong-chay-so-cu-may-thu-design.md
