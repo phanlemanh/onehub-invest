@@ -165,10 +165,11 @@ function mutantChain(leaf: { rel: string; fn: (s: string) => string }, parents: 
   }
   return { path: made[made.length - 1].path, done: () => made.forEach((m) => m.done()) }
 }
-const COL_PAGE = { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-view" }
+// Thân trang ở collections-content.tsx (dinh-danh-tai-khoan-thu-theo-vai): chuỗi đột biến đi lá → thân → page.
+const COL_PAGE = [{ rel: "src/components/ops/collections/collections-content.tsx", spec: "@/components/ops/collections/collections-view" }, { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-content" }]
 const COL_VIEW_GRID = { rel: "src/components/ops/collections/collections-view.tsx", spec: "@/components/ops/collections/lockdown-grid" }
 const COL_VIEW_JOBS = { rel: "src/components/ops/collections/collections-view.tsx", spec: "@/components/ops/collections/jobs-grid" }
-const PAGE_CLOUD = { rel: "src/app/ops/collections/page.tsx", spec: "@/lib/ops-cloud" }
+const PAGE_CLOUD = [{ rel: "src/components/ops/collections/collections-content.tsx", spec: "@/lib/ops-cloud" }, { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-content" }]
 /** Bên ghi: khối lockdown ném lỗi — bản tin mang `{measured_at, error}` cho khối ấy, không viết tay khối lỗi. */
 const LOCKDOWN_THROWS = (s: string) => s.replace("measure(() => readLockdown(", 'measure(() => (() => { throw new Error("thử: không đọc được khoá an toàn") })() ?? readLockdown(')
 
@@ -197,7 +198,7 @@ describe("ON23-AC-1 không bản tin", () => {
     await clear()
     const m = mutantChain(
       { rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("LOCKDOWN_LAYERS.map((l) => ({ ...l, ok: null }))", "LOCKDOWN_LAYERS.map((l) => ({ ...l, ok: true }))").replace("machineOnly={!lockdown}", "machineOnly={false}") },
-      [COL_PAGE],
+      [...COL_PAGE],
     )
     try {
       const g = grid(await renderCollections(m.path))
@@ -222,7 +223,7 @@ describe("ON23-AC-2 khối lockdown lỗi ở bên ghi", () => {
   test("ON23-AC-2 bản sao đọc khối lỗi như khối có số → bắt", async () => {
     ready()
     await ingest(await push(mutantPush("lockdown-loi.mjs", LOCKDOWN_THROWS)))
-    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("machineOnly={!lockdown}", "machineOnly={false}") }, [COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("machineOnly={!lockdown}", "machineOnly={false}") }, [...COL_PAGE])
     try {
       const rs = rows(grid(await renderCollections(m.path)))
       assert.ok(rs.some(([, label]) => label !== "Chỉ kiểm ở máy thu"), "phép đo phải thấy hàng không phải «Chỉ kiểm ở máy thu»")
@@ -259,7 +260,7 @@ describe("ON23-AC-3 bản tin tươi", () => {
     await ingest(withOks(await push(), MIXED))
     const m = mutantChain(
       { rel: "src/components/ops/collections/lockdown-grid.tsx", fn: (s) => s.replace('(l.ok === true ? "ok" : l.ok === false ? "bad" : "unknown")', '(l.ok !== false ? "ok" : "bad")') },
-      [COL_VIEW_GRID, COL_PAGE],
+      [COL_VIEW_GRID, ...COL_PAGE],
     )
     try {
       const g = grid(await renderCollections(m.path))
@@ -300,7 +301,7 @@ describe("ON23-AC-4 khối cũ", () => {
   test("ON23-AC-4 bản sao lưới không nhận cờ số cũ → bắt", async () => {
     ready()
     await ingest(staleBlock(withOks(await push(), ALL_OK)))
-    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("stale={lockdown?.stale ?? false}", "stale={false}") }, [COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace("stale={lockdown?.stale ?? false}", "stale={false}") }, [...COL_PAGE])
     try {
       assert.ok(successBadges(grid(await renderCollections(m.path))) > 0, "phép đo phải thấy «Ổn» xanh trên số cũ")
     } finally {
@@ -312,7 +313,7 @@ describe("ON23-AC-4 khối cũ", () => {
     await ingest(staleBlock(withOks(await push(), ALL_OK)))
     const m = mutantChain(
       { rel: "src/components/ops/collections/jobs-grid.tsx", fn: (s) => s.replace("(stale || row.original.stale) && row.original.alive", "stale && row.original.alive") },
-      [COL_VIEW_JOBS, COL_PAGE],
+      [COL_VIEW_JOBS, ...COL_PAGE],
     )
     try {
       const r = jobRow(await renderCollections(m.path), "kev")
@@ -326,7 +327,7 @@ describe("ON23-AC-4 khối cũ", () => {
     await ingest(staleBlock(withOks(await push(), ALL_OK)))
     const m = mutantChain(
       { rel: "src/components/ops/collections/jobs-grid.tsx", fn: (s) => s.replace('tabs={stale || jobs.some((j) => j.stale && j.alive === "yes") ? STALE_TABS : TABS}', "tabs={TABS}") },
-      [COL_VIEW_JOBS, COL_PAGE],
+      [COL_VIEW_JOBS, ...COL_PAGE],
     )
     try {
       assert.ok(successTone(jobsTabs(await renderCollections(m.path))) > 0, "phép đo phải thấy chấm tab «Sống» xanh trên số cũ")
@@ -378,7 +379,7 @@ describe("ON23-AC-5 Máy móc cùng trạng thái với Khoá an toàn", () => {
   test("ON23-AC-5 bản sao đọc alive của khoá jobs cũ → bắt", async () => {
     ready()
     await ingest(contrary(withOks(await push(), [true, true, true, true, true, true, true, true]), true, true))
-    const m = mutantChain({ rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace("    if (!desc) return j\n", "    if (desc || !desc) return j\n") }, [PAGE_CLOUD])
+    const m = mutantChain({ rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace("    if (!desc) return j\n", "    if (desc || !desc) return j\n") }, [...PAGE_CLOUD])
     try {
       assert.notEqual(jobRow(await renderCollections(m.path), "kev")?.[1], "Sống", "phép đo phải thấy trạng thái của khoá jobs cũ")
     } finally {
@@ -390,7 +391,7 @@ describe("ON23-AC-5 Máy móc cùng trạng thái với Khoá an toàn", () => {
     await ingest(withOks(await push(), [true, true, true, true, true, true, true, false]))
     const m = mutantChain(
       { rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace('{ kev: "Cổng Kev :8009", "collector-api": "Cổng nhận tin :9210" }', '{ kev: "Cổng nhận tin :9210", "collector-api": "Cổng Kev :8009" }') },
-      [PAGE_CLOUD],
+      [...PAGE_CLOUD],
     )
     try {
       assert.notEqual(jobRow(await renderCollections(m.path), "kev")?.[1], "Sống", "phép đo phải thấy Kev mang trạng thái của collector")

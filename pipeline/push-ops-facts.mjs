@@ -176,6 +176,19 @@ async function readDataFlow(client) {
   return { measured_at: at, windows: Object.fromEntries(FLOW_WINDOWS.map((w) => [w, by.get(w).facts])) };
 }
 
+/**
+ * Tài khoản thu cho bản tin từ cấu hình `channels.zalouser`. NT2 Hỏi-1 = A: tên tài khoản thu là tầng A — gửi null; cloud
+ * hiện mã tài khoản. dinh-danh-tai-khoan-thu-theo-vai Hỏi-1 = A: mã nhóm không rời máy — gửi số nhóm bật, `enabledGroups`
+ * rỗng (cùng luật khối s03).
+ */
+export function zaloAccountsTuCauHinh(z) {
+  const { byAccount } = readS03Allowlist(z);
+  return [...byAccount].map(([id, nhomBat]) => {
+    const acc = id === "default" ? undefined : z.accounts?.[id];
+    return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups: [], soNhomBat: nhomBat.length };
+  });
+}
+
 /** Dòng chặn của bộ soát tầng A cho bản tin (rỗng = được gửi). Tên nhóm S03 là tầng C (miễn); tên tài khoản thu tầng A.
  * Khối `dataFlow` (DF1) KHÔNG miễn: tên nhóm thường không trúng tên nguồn, tên nhóm mang tên nguồn thật thì chặn (AC-5). */
 export function factsChan(payload, names) {
@@ -183,6 +196,7 @@ export function factsChan(payload, names) {
   const out = guardValues(payload, names, { exempt: [/^zaloGroups\[\d+\]\.name$/, /^blocks\.s03\.groups\[\d+\]\.name$/] }).map((h) => `FACTS CHẶN [tầng A] ${h.path} ${h.code}`);
   (payload.zaloAccounts ?? []).forEach((a, i) => {
     if (a?.name != null) out.push(`FACTS CHẶN [tầng A] zaloAccounts[${i}].name tên tài khoản thu`);
+    if (a?.enabledGroups?.length > 0) out.push(`FACTS CHẶN [tầng A] zaloAccounts[${i}].enabledGroups mã nhóm`);
   });
   return out;
 }
@@ -236,12 +250,7 @@ async function main() {
   try {
     zaloCfg = JSON.parse(await readFile(path.join(homedir(), ".openclaw/openclaw.json"), "utf8"));
     const z = zaloCfg?.channels?.zalouser ?? {};
-    const { byAccount } = readS03Allowlist(z);
-    zaloAccounts = [...byAccount].map(([id, enabledGroups]) => {
-      const acc = id === "default" ? undefined : z.accounts?.[id];
-      // NT2 Hỏi-1 = A: tên tài khoản thu là tầng A — không rời máy; cloud hiện mã tài khoản.
-      return { accountId: id, name: null, profile: acc?.profile ?? id, enabledGroups };
-    });
+    zaloAccounts = zaloAccountsTuCauHinh(z);
   } catch { /* config không đọc được */ }
 
   // ON4 (ADR-0014, Hỏi-1 = A): khối s03 — N nhóm bật theo `readS03Allowlist` và số đếm từng nhóm; CHỈ tên nhóm (tầng C),

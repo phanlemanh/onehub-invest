@@ -23,6 +23,7 @@ export const SCAN_FILES = [
   "src/app/ops/sources/page.tsx",
   "src/components/ops/collections-tables.tsx",
   "src/components/ops/collections/attention-list.tsx",
+  "src/components/ops/collections/collections-content.tsx",
   "src/components/ops/collections/collections-tiles.tsx",
   "src/components/ops/collections/collections-view.tsx",
   "src/components/ops/collections/feed-status.ts",

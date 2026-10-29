@@ -73,6 +73,14 @@ export function xemNoiDungTin(user: User | null | undefined): boolean {
   return BAC_VAI[vaiHieuLuc(user ?? null)] >= BAC_VAI.ops;
 }
 
+/**
+ * Định danh tài khoản thu (mã tài khoản, hồ sơ, tài khoản giữ nhóm) và mã nhóm Zalo ở bề mặt Thu thập — AGENTS.md luật 6
+ * (tầng A); hồ sơ dinh-danh-tai-khoan-thu-theo-vai Hỏi-2 = A: vai ops trở lên. Bearer chung (`nguoi: null`) không thấy.
+ */
+export function xemDinhDanhThu(user: User | null | undefined): boolean {
+  return BAC_VAI[vaiHieuLuc(user ?? null)] >= BAC_VAI.ops;
+}
+
 function bearerKhop(req: Request): boolean {
   const token = process.env.OPS_API_TOKEN;
   return !!token && req.headers.get("authorization") === `Bearer ${token}`;

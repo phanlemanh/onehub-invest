@@ -211,9 +211,10 @@ function mutantChain(leaf: { rel: string; fn: (s: string) => string }, parents: 
   }
   return { path: made[made.length - 1].path, done: () => made.forEach((m) => m.done()) }
 }
-const COL_PAGE = { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-view" }
+// Thân trang ở collections-content.tsx (dinh-danh-tai-khoan-thu-theo-vai): chuỗi đột biến đi lá → thân → page.
+const COL_PAGE = [{ rel: "src/components/ops/collections/collections-content.tsx", spec: "@/components/ops/collections/collections-view" }, { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-content" }]
 const COL_VIEW_TABLES = { rel: "src/components/ops/collections/collections-view.tsx", spec: "@/components/ops/collections-tables" }
-const PAGE_CLOUD = { rel: "src/app/ops/collections/page.tsx", spec: "@/lib/ops-cloud" }
+const PAGE_CLOUD = [{ rel: "src/components/ops/collections/collections-content.tsx", spec: "@/lib/ops-cloud" }, { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-content" }]
 
 describe("ON4-AC-1 «Vào bảng thô» theo nhóm", () => {
   const byName = (groups: { name: string; accepted: number | null }[]) => Object.fromEntries(groups.map((g) => [g.name, g.accepted]))
@@ -276,12 +277,15 @@ describe("ON4-AC-2 một định nghĩa «nhóm bật»", () => {
     assert.deepEqual(local.filter((a) => a.enabled).map((a) => a.groupId).sort(), [...UNION].sort(), "trang máy thu")
     assert.equal(local.filter((a) => a.enabled).length, N)
   })
-  test("ON4-AC-2 zaloAccounts[].enabledGroups của cùng bản tin: default 7, b {T1…T4}, c {D4}, hợp lại = 8 nhóm", async () => {
+  // dinh-danh-tai-khoan-thu-theo-vai Hỏi-1 = A: bản tin gửi số nhóm bật (soNhomBat), mã nhóm không rời máy — cùng định nghĩa
+  // «nhóm bật» (readS03Allowlist) nên số từng tài khoản giữ nguyên: default 7, b 4, c 1; hợp lại 8 đo ở các bản sao dưới.
+  test("ON4-AC-2 zaloAccounts[].soNhomBat của cùng bản tin: default 7, b 4, c 1, không mã nhóm", async () => {
     ready()
     const p = await push()
-    const acc = Object.fromEntries(p.zaloAccounts.map((a) => [a.accountId, [...a.enabledGroups].sort()]))
-    assert.deepEqual(acc, { default: [T1, T2, T3, D4, D5, D6, D7].sort(), b: [T1, T2, T3, T4].sort(), c: [D4] })
-    assert.deepEqual([...new Set(p.zaloAccounts.flatMap((a) => a.enabledGroups))].sort(), [...UNION].sort())
+    const acc = Object.fromEntries(p.zaloAccounts.map((a) => [a.accountId, (a as { soNhomBat?: number }).soNhomBat]))
+    assert.deepEqual(acc, { default: [T1, T2, T3, D4, D5, D6, D7].length, b: [T1, T2, T3, T4].length, c: [D4].length })
+    assert.ok(p.zaloAccounts.every((a) => a.enabledGroups.length === 0), "bản tin không mang mã nhóm")
+    assert.equal(UNION.length, N)
   })
   const z = CFG.channels.zalouser
   const reds: [string, (s: string) => string, number][] = [
@@ -345,7 +349,7 @@ describe("ON4-AC-3 bảng nhóm S03 trên máy chủ", () => {
   test("ON4-AC-3 bản sao bảng máy chủ in mã nhóm ở chân bảng → bắt", async () => {
     ready()
     await ingest(await push())
-    const m = mutantChain({ rel: "src/components/ops/collections-tables.tsx", fn: (s) => s.replace("{cloud ? (\n            <>Danh sách cho phép: mã nhóm chỉ xem ở máy thu.</>", "{false ? (\n            <>Danh sách cho phép: mã nhóm chỉ xem ở máy thu.</>") }, [COL_VIEW_TABLES, COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections-tables.tsx", fn: (s) => s.replace("{cloud ? (\n            <>Danh sách cho phép: mã nhóm chỉ xem ở máy thu.</>", "{false ? (\n            <>Danh sách cho phép: mã nhóm chỉ xem ở máy thu.</>") }, [COL_VIEW_TABLES, ...COL_PAGE])
     try {
       const t = text(table(await renderCollections(m.path)))
       assert.ok(t.includes("Danh sách cho phép (mã nhóm, chưa ghép tên)"), "bản sao in nhánh liệt mã")
@@ -396,7 +400,7 @@ describe("ON4-AC-4 chưa có khối s03", () => {
   test("ON4-AC-4 bản sao đọc khối lỗi như danh sách rỗng → bắt («0 nhóm»)", async () => {
     ready()
     await ingest(await push({ cfg: "{ hỏng" }))
-    const m = mutantChain({ rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace('function toCloudS03(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["s03"]): CloudS03 | null {\n  if (!b || b.state === "error" || !b.data) return null', 'function toCloudS03(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["s03"]): CloudS03 | null {\n  if (b?.state === "error") return { allowlistEnabled: 0, groups: [], stale: false }\n  if (!b || !b.data) return null') }, [PAGE_CLOUD])
+    const m = mutantChain({ rel: "src/lib/ops-cloud.ts", fn: (s) => s.replace('function toCloudS03(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["s03"]): CloudS03 | null {\n  if (!b || b.state === "error" || !b.data) return null', 'function toCloudS03(b: Awaited<ReturnType<typeof readOpsFacts>>["blocks"]["s03"]): CloudS03 | null {\n  if (b?.state === "error") return { allowlistEnabled: 0, groups: [], stale: false }\n  if (!b || !b.data) return null') }, [...PAGE_CLOUD])
     try {
       const h = await renderCollections(m.path)
       assert.ok(/\b0 nhóm\b/.test(text(h)), "bản sao hiện «0 nhóm» — phép đo phải bắt")
@@ -421,7 +425,7 @@ describe("ON4-AC-5 khối cũ", () => {
   test("ON4-AC-5 bản sao bảng không nhận cờ số cũ → bắt", async () => {
     ready()
     await ingest(stalePayload(await push()))
-    const m = mutantChain({ rel: "src/components/ops/collections-tables.tsx", fn: (s) => s.replace("groupStatusBadge(row.original.lastSeenAt, stale)", "groupStatusBadge(row.original.lastSeenAt)") }, [COL_VIEW_TABLES, COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections-tables.tsx", fn: (s) => s.replace("groupStatusBadge(row.original.lastSeenAt, stale)", "groupStatusBadge(row.original.lastSeenAt)") }, [COL_VIEW_TABLES, ...COL_PAGE])
     try {
       const t = table(await renderCollections(m.path))
       assert.ok((t.match(/bg-success\/10/g) ?? []).length > 0, "bản sao còn badge xanh — phép đo phải bắt")
@@ -452,7 +456,7 @@ describe("ON4-AC-5 số cũ mờ (đổi khuôn sau lượt 2)", () => {
   test("ON4-AC-5 bản sao bảng không làm mờ số cũ → bắt", async () => {
     ready()
     await ingest(stalePayload(await push()))
-    const m = mutantChain({ rel: "src/components/ops/collections-tables.tsx", fn: (s) => s.replace("cloudCount(row.original.accepted, stale)", "cloudCount(row.original.accepted, false)") }, [COL_VIEW_TABLES, COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections-tables.tsx", fn: (s) => s.replace("cloudCount(row.original.accepted, stale)", "cloudCount(row.original.accepted, false)") }, [COL_VIEW_TABLES, ...COL_PAGE])
     try {
       assert.ok(!cellHtml(table(await renderCollections(m.path)), "Nhóm A").includes("text-muted-foreground"), "bản sao không mờ — phép đo phải bắt")
     } finally {
@@ -500,7 +504,15 @@ describe("ON4-AC-6 máy thu", () => {
     ready()
     for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     try {
-      const { h, n } = await withHome(() => spyHeartbeat(() => renderCollections(undefined, { cloud: false })))
+      // Người xem vai Vận hành (dinh-danh-tai-khoan-thu-theo-vai): trang chạy ngoài request không có phiên → bị che; bản sao
+      // page.tsx tiêm người vai ops để đo đúng cái Vận hành thấy ở máy thu.
+      const pOps = mutantApp("src/app/ops/collections/page.tsx", (src) => src.replace("CollectionsContent({ nowMs: requestTime() })", 'CollectionsContent({ nowMs: requestTime(), getUser: async () => ({ id: "on4", email: "on4@local.test", plan: "free", role: "ops" }) })'))
+      let h = "", n = 0
+      try {
+        ;({ h, n } = await withHome(() => spyHeartbeat(() => renderCollections(pOps.path, { cloud: false }))))
+      } finally {
+        pOps.done()
+      }
       const t = table(h)
       assert.equal(description(t), String(N), "mô tả bảng máy thu")
       assert.equal(acceptedByName(t).get("Nhóm B"), "—")
@@ -526,7 +538,7 @@ describe("ON4-AC-6 máy thu", () => {
   test("ON4-AC-6 bản sao đọc cấu hình hỏng thành danh sách rỗng → bắt («0 nhóm»)", async () => {
     ready()
     for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
-    const m = mutantChain({ rel: "src/lib/collections-queries.ts", fn: (s) => s.replace("enabled: true }));\n  } catch {\n    return null;", "enabled: true }));\n  } catch {\n    return [];") }, [{ rel: "src/app/ops/collections/page.tsx", spec: "@/lib/collections-queries" }])
+    const m = mutantChain({ rel: "src/lib/collections-queries.ts", fn: (s) => s.replace("enabled: true }));\n  } catch {\n    return null;", "enabled: true }));\n  } catch {\n    return [];") }, [{ rel: "src/components/ops/collections/collections-content.tsx", spec: "@/lib/collections-queries" }, { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-content" }])
     try {
       const h = await withHome(() => renderCollections(m.path, { cloud: false }), { cfg: null })
       assert.ok(/\b0 nhóm\b/.test(text(table(h))), "bản sao hiện «0 nhóm» — phép đo phải bắt")
@@ -555,7 +567,7 @@ describe("ON4-AC-6 máy thu", () => {
     ready()
     for (const t of RAW_LOCAL.filter((x) => !CLOUD_SYNCED.includes(x))) await admin.query(`CREATE TABLE "${S_CLOUD}".${t} (LIKE public.${t} INCLUDING ALL)`)
     await admin.query(`INSERT INTO "${S_CLOUD}".stg_zalo_posts (post_id, snapshot_id, text, group_name, captured_at) VALUES ('on4-d', 'zalo-agent-on4', 'x', 'Nhóm D', now() - interval '1 hour')`)
-    const m = mutantChain({ rel: "src/lib/collections-queries.ts", fn: (s) => s.replace('"utf8").catch(\n      () => null,\n    ),', '"utf8").catch(\n      () => "",\n    ),') }, [{ rel: "src/app/ops/collections/page.tsx", spec: "@/lib/collections-queries" }])
+    const m = mutantChain({ rel: "src/lib/collections-queries.ts", fn: (s) => s.replace('"utf8").catch(\n      () => null,\n    ),', '"utf8").catch(\n      () => "",\n    ),') }, [{ rel: "src/components/ops/collections/collections-content.tsx", spec: "@/lib/collections-queries" }, { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-content" }])
     try {
       const h = await withHome(() => renderCollections(m.path, { cloud: false }), { log: false })
       assert.equal(acceptedByName(table(h)).get("Nhóm D"), "0", "bản sao ghi 0 — phép đo phải bắt")
