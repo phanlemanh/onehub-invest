@@ -41,6 +41,7 @@ executors:
     s08_row_unit: "node --test pipeline/scripts/import-s08-row.test.mjs"   # ZC8 s08RowOf
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
+    design_floor_vung: "node --test scripts/design-floor-vung.test.mjs"   # noi-design-floor — vùng giao diện liệt kê dương khớp thư mục components trừ VENDOR_DIRS; bộ khớp + sàn S4 nạp từ kit (CI không cài kit thì bỏ qua có lời)
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
     design_floor_gen: "node --test scripts/design-floor/*.test.mjs"   # dung-m2-song-song: hai lệnh sinh tokens/registry + reuse-plan check của kit — không cần DB
     ci_test_module: "node --test scripts/ci-test-module.test.mjs"   # AU11 AC-3/AC-4 — DB CI dựng từ migration (docker tạm) + helper bỏ qua ca cần dữ liệu thật
@@ -448,14 +449,31 @@ executors:
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
     gate_don_hex_tho: "for f in app/src/components/finder/bins.ts app/src/components/finder/choropleth-map.tsx app/src/components/listing/listings-map.tsx app/src/components/mini-map.tsx app/src/components/ops/data-flow/flow-journey.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # don-hex-tho E8 — gate từng tệp giao diện của vòng (gate không tự nối tệp từ paths); giám sát duyệt U1-63
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
-    # executors.design.floor (S4 tuân thủ design system) CHƯA nối: 52/619 tệp giao diện còn hex thô (đo 29/10) — dọn ở vòng
-    # riêng trước, rồi mới nối và đếm mười vòng thí điểm DO1 (ghi chú nhận 2.35.0 của kit, mục 2.4 + rủi ro thí điểm).
+    # Sàn thiết kế S4 (design-floor bậc M1): chấm hex thô trên tệp giao diện mà vòng chạm. Nối ở noi-design-floor sau khi
+    # don-hex-tho dọn hết hex thô ngoài vendor; mười vòng thí điểm DO1 đếm từ hàng này (ghi chú nhận 2.35.0 của kit, mục 2.4).
+    floor: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-floor-s4.mjs)}/scripts/design-floor-s4.mjs\" --root ."
 # Vùng giao diện (kit 2.35.0, design-floor bậc M1): S4 bắt «diff chạm surface mà lane không có design eval»; bộ đọc bậc dùng cho M1.
 # Chưa khai design_floor.tokens/registry (M2) — kho chưa có bộ token và danh mục thành phần.
 design:
+  # Liệt kê dương (noi-design-floor): kit 2.35.0 chưa đọc glob trừ, nên vendor (VENDOR_DIRS của app/eslint.config.mjs:
+  # ui, reui, blocks, examples) nằm ngoài vùng bằng cách KHÔNG liệt kê. Thư mục giao diện mới thêm một dòng — test
+  # scripts/design-floor-vung.test.mjs đỏ khi sót.
   surface_globs:
     - "app/src/app/**"
-    - "app/src/components/**"
+    - "app/src/components/*.tsx"
+    - "app/src/components/auth/**"
+    - "app/src/components/charts/**"
+    - "app/src/components/compare/**"
+    - "app/src/components/finder/**"
+    - "app/src/components/insight/**"
+    - "app/src/components/listing/**"
+    - "app/src/components/marketing/**"
+    - "app/src/components/ops/**"
+    - "app/src/components/page/**"
+    - "app/src/components/saved/**"
+    - "app/src/components/shell/**"
+    - "app/src/components/states/**"
+    - "app/src/components/yield/**"
 risk_tiers:
   t1_skip_globs:
     - "docs/**"
