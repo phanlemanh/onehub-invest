@@ -501,6 +501,7 @@ type Che = "xemNoiDungTin" | "isAdmin" | "khong-doc"
 // bài gốc, ảnh tin, liên hệ) xuống trình duyệt; che: hàm chặn vai ở điểm vào.
 const KIEM_KE: Record<string, { doc_noi_dung: boolean; che: Che }> = {
   "src/app/ops/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
+  "src/app/ops/ai-calls/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
   "src/app/ops/collections/page.tsx": { doc_noi_dung: false, che: "khong-doc" },
   "src/app/ops/data-flow/page.tsx": { doc_noi_dung: true, che: "xemNoiDungTin" },
   "src/app/ops/deals/page.tsx": { doc_noi_dung: true, che: "isAdmin" },
@@ -599,7 +600,7 @@ describe("VT-AC-8 kiểm kê route", () => {
   test("VT-AC-8 bảng kiểm kê khớp đĩa và hàm che", (t) => {
     const { khoa, tep } = doKiemKe(KIEM_KE)
     t.diagnostic(`kiểm kê: ${khoa} điểm vào, ${tep} tệp trong các bao đóng`)
-    assert.equal(khoa, 22)
+    assert.equal(khoa, 23) // +1: /ops/ai-calls (PL29 so-cuoc-goi-ai, 29/10) — chỉ số, không đọc nội dung tin
     // Đối chứng: một trang Ops mới đọc thẻ duyệt mà chưa khai → ca nêu tên route.
     const gia = { "src/app/ops/vt-gia/page.tsx": 'const q = "SELECT title FROM review_queue"\nexport default function P() { return q }\n' }
     assert.throws(() => doKiemKe(KIEM_KE, gia), /src\/app\/ops\/vt-gia\/page\.tsx/, "đối chứng route giả phải đỏ và nêu tên")

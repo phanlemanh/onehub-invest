@@ -11,6 +11,7 @@ import ts from "typescript"
 
 /** Danh sách tệp quét ĐÓNG (viết tay 24/10 từ các mẫu ở design doc §3.1). */
 export const SCAN_FILES = [
+  "src/app/ops/ai-calls/page.tsx",
   "src/app/ops/collections/page.tsx",
   "src/app/ops/data-flow/page.tsx",
   "src/app/ops/deals/page.tsx",
@@ -22,6 +23,9 @@ export const SCAN_FILES = [
   "src/app/ops/review/page.tsx",
   "src/app/ops/sources/page.tsx",
   "src/components/ops/collections-tables.tsx",
+  "src/components/ops/ai-calls/ai-calls-content.tsx",
+  "src/components/ops/ai-calls/ai-calls-skeleton.tsx",
+  "src/components/ops/ai-calls/ai-calls-view.tsx",
   "src/components/ops/collections/attention-list.tsx",
   "src/components/ops/collections/collections-content.tsx",
   "src/components/ops/collections/collections-tiles.tsx",

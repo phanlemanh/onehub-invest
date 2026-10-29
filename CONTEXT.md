@@ -339,6 +339,13 @@ _Avoid_: cào, crawl
 - Slug URL: `data-flow`
 _Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
 
+**Cuộc gọi AI**: Một lượt agent runtime gọi model AI (judge, enrich…) — sổ ghi việc, model, token vào/ra, độ trễ, thành
+công hay lỗi; chi phí = token × đơn giá của model (model chạy local giá 0, model chưa có giá thì «chưa có giá»). Trang
+`/ops/ai-calls` (PL29) tổng hợp theo ngày × việc × model, 30 ngày.
+- Code: `ai_calls`, `ai_model_prices`, `AiCallGroup` (getAiCalls, readAiCalls) · RESO: —
+- Slug URL: `ai-calls`
+_Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
+
 **Độ tươi**: Thời gian từ lần thu gần nhất của một nguồn; vượt SLO thì `check-freshness.mjs` exit 1.
 - Code: `freshness (SLO)` · RESO: ≈ ModificationTimestamp
 _Avoid_: freshness

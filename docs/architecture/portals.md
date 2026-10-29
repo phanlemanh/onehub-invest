@@ -135,6 +135,7 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | `/ops` | Tổng quan vận hành | health tổng: freshness SLO từng nguồn, block rate, trạng thái circuit breaker, run gần nhất | CCP+DQO | C1 |
 | `/ops/collections` | Thu thập | QUAN SÁT dòng chảy: hôm nay chảy gì, funnel theo nguồn/nhóm, máy móc launchd, rotation kế tiếp (read-only) | CCP+DQO | C1→E2 |
 | `/ops/data-flow` | Dòng chảy dữ liệu | QUAN SÁT đường ống bài → tin → căn: mỗi chặng chảy bao nhiêu, rơi ở đâu, nút thắt theo nguồn/nhóm thu, tin mới nhất + hồ sơ tin (read-only, chỉ máy thu) | DQO | proto 26/10 |
+| `/ops/ai-calls` | Cuộc gọi AI | QUAN SÁT chi phí, token, độ trễ của mọi cuộc gọi agent runtime theo ngày × việc × model, 30 ngày (read-only; máy chủ đọc khối `aiCalls` của bản tin) | — | PL29 29/10 |
 | `/ops/pipeline` | Pipeline | transform/rollup chạy chưa, kết quả DQ gates | DQO | C1 |
 | `/ops/quality` | Chất lượng dữ liệu | 4 trụ DQ: freshness/volume/schema/distribution + divergence đối chiếu | DQO | đã có (mở rộng C1) |
 | `/ops/agents` | Agent Swarm | agent đang làm gì, F1 extraction vs regex, chi phí token | DCA | C2/C3 |
