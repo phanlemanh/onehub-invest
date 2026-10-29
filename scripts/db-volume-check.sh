@@ -156,12 +156,22 @@ td_cleanup() {
 td_con_sot() { # số tài nguyên tập dượt còn lại
   echo $(( $(docker ps -a --format '{{.Names}}' | grep -cE '^onehub-tapduot-') + $(docker volume ls --format '{{.Name}}' | grep -cE '^onehub[-_]tapduot') ))
 }
-td_cho_healthy() { # $1 container — chờ tối đa 180 giây
-  local i s; for i in $(seq 1 180); do
+td_cho_healthy() { # $1 container — chờ tối đa 300 giây (lượt chấm chạy 6 suite song song, kartoza khởi tạo chậm hơn)
+  local i s; for i in $(seq 1 300); do
     s=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$1" 2>/dev/null)
     [ "$s" = healthy ] && return 0; sleep 1
   done
   echo "--- đuôi log $1:"; docker logs --tail 15 "$1" 2>&1; return 1
+}
+# compose up có thử lại một lần; thất bại thì in đuôi đầu ra compose + log container (không nuốt lỗi).
+td_compose_up() { # $1 project, $2 tệp compose, $3 container
+  local k log="$TD_TMP/compose-$1.log"
+  for k in 1 2; do
+    docker compose -p "$1" -f "$2" up -d >"$log" 2>&1 && td_cho_healthy "$3" && return 0
+    echo "--- compose up $1 lượt $k lỗi:"; tail -8 "$log"; docker logs --tail 8 "$3" 2>&1 | sed 's/^/    /'
+    docker compose -p "$1" -f "$2" down -v >/dev/null 2>&1
+  done
+  return 1
 }
 td_dung_cu() { # cụm kiểu cũ + dữ liệu mồi
   mkdir -p "$TD_TMP/cu"
@@ -169,8 +179,7 @@ td_dung_cu() { # cụm kiểu cũ + dữ liệu mồi
     | sed -e "s/container_name: one-invest-db/container_name: $TD_DB/" -e "s/\"5433:5432\"/\"$TD_PORT:5432\"/" > "$TD_TMP/cu/docker-compose.yml" \
     || { fail "không đọc được compose cũ ở $TD_CU_REF"; return 1; }
   grep -q '/var/lib/postgresql/data' "$TD_TMP/cu/docker-compose.yml" || { fail "compose ở $TD_CU_REF không phải kiểu cũ"; return 1; }
-  docker compose -p onehub-tapduot-cu -f "$TD_TMP/cu/docker-compose.yml" up -d >/dev/null 2>&1 || { fail "không dựng được $TD_DB"; return 1; }
-  td_cho_healthy "$TD_DB" || { fail "$TD_DB không healthy"; return 1; }
+  td_compose_up onehub-tapduot-cu "$TD_TMP/cu/docker-compose.yml" "$TD_DB" || { fail "không dựng được $TD_DB"; return 1; }
   td_psql -d oneinvest -c "create table mau_a(id serial primary key, v int); insert into mau_a(v) select g from generate_series(1,1000) g;
     create extension if not exists postgis; create table mau_geo(id int, g geometry(Point,4326));
     insert into mau_geo select g, st_setsrid(st_makepoint(105.8+g/100.0, 21.0), 4326) from generate_series(1,10) g;
@@ -345,7 +354,7 @@ ca_tao_lai() {
   mkdir -p "$TD_TMP/dc"
   sed -e "s/container_name: $TD_DB/container_name: onehub-tapduot-dc/" -e "s/\"$TD_PORT:5432\"/\"$((TD_PORT + 1)):5432\"/" \
     "$TD_TMP/cu/docker-compose.yml" > "$TD_TMP/dc/docker-compose.yml"
-  docker compose -p onehub-tapduot-dc -f "$TD_TMP/dc/docker-compose.yml" up -d >/dev/null 2>&1 && td_cho_healthy onehub-tapduot-dc || { fail "không dựng được cụm đối chứng"; return 1; }
+  td_compose_up onehub-tapduot-dc "$TD_TMP/dc/docker-compose.yml" onehub-tapduot-dc || { fail "không dựng được cụm đối chứng"; return 1; }
   docker exec -i -e PGPASSWORD=oneinvest onehub-tapduot-dc psql -U oneinvest -h localhost -d oneinvest -qc "create table x(i int); insert into x select generate_series(1,5)"
   docker compose -p onehub-tapduot-dc -f "$TD_TMP/dc/docker-compose.yml" up -d --force-recreate >/dev/null 2>&1 && td_cho_healthy onehub-tapduot-dc
   if docker exec -i -e PGPASSWORD=oneinvest onehub-tapduot-dc psql -U oneinvest -h localhost -d oneinvest -Atqc "select count(*) from x" >/dev/null 2>&1; then
