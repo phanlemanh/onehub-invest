@@ -32,7 +32,7 @@ const WINDOWS: { value: FlowWindow; label: string }[] = [
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Dòng chảy dữ liệu" }]
 const DESCRIPTION = "Một tin đi từ bài nhận tới căn: chặng nào đang chảy, chặng nào rơi, vì sao."
 
-/** Dòng trạng thái số dưới đầu trang (DF1). Máy thu: mốc tính của bảng. Máy chủ: chữ chung của các trang Ops
+/** Dòng trạng thái số dưới đầu trang (DF1). Máy thu: mốc tính cũ nhất của bảng, quá 45′ thêm cảnh báo. Máy chủ: chữ chung của các trang Ops
  * (facts-status.tsx, ADR-0014) theo `computedAt` — số vắng hay lỗi thì nói rõ, không vẽ 0. */
 function FlowFactsStatus({ flow }: { flow: DataFlow }) {
   if (flow.mode === "local") {
@@ -42,10 +42,21 @@ function FlowFactsStatus({ flow }: { flow: DataFlow }) {
           Máy thu chưa làm tươi bảng số dòng chảy. Bước làm tươi chạy cùng tác vụ đồng bộ mỗi 15 phút.
         </LocalOnlyAlert>
       )
+    // Quá 45′ (ageState của ops-facts): bước làm tươi gãy — vẫn vẽ số của lần tính cuối, kèm cảnh báo cùng khuôn
+    // FactsStaleAlert; chữ nói đúng lỗi ở máy thu (Hỏi-1 dong-chay-so-cu-may-thu), không phải «không đẩy số».
     return (
-      <p className="text-muted-foreground text-xs tabular-nums" data-flow-stamp="">
-        Số tính lúc {fmtVnDateTime(flow.computedAt)}
-      </p>
+      <>
+        <p className="text-muted-foreground text-xs tabular-nums" data-flow-stamp="">
+          Số tính lúc {fmtVnDateTime(flow.computedAt)}
+        </p>
+        {flow.factsState === "stale" ? (
+          <Alert variant="warning" data-flow-stale="">
+            <CircleAlertIcon aria-hidden="true" />
+            <AlertTitle>Bước làm tươi số dòng chảy không chạy từ {fmtVnDateTime(flow.computedAt)}</AlertTitle>
+            <AlertDescription>Số dưới đây là lần tính cuối — kiểm tác vụ đồng bộ ở máy thu.</AlertDescription>
+          </Alert>
+        ) : null}
+      </>
     )
   }
   if (flow.factsState === "none")
@@ -77,12 +88,15 @@ export function DataFlowView({
   roles,
   nowMs,
   media,
+  xemBaiGoc,
 }: {
   flow: DataFlow
   roles: SourceRoles
   nowMs: number
   /** Ảnh tin theo offer_id — chỉ có khi người xem là admin. */
   media?: Record<string, ReviewImage[]>
+  /** Người xem có vai ops trở lên — không thì bài gốc đã bị xoá ở máy chủ, sheet hiện câu chú thích. */
+  xemBaiGoc: boolean
 }) {
   const windowDays = chartDaysOf(flow.window)
   const received = flow.sources.reduce((a, s) => a + s.received, 0)
@@ -130,7 +144,7 @@ export function DataFlowView({
           </div>
         </>
       ) : null}
-      <RecordsGrid records={flow.records} roles={roles} media={media} cloud={flow.mode === "cloud"} />
+      <RecordsGrid records={flow.records} roles={roles} media={media} cloud={flow.mode === "cloud"} xemBaiGoc={xemBaiGoc} />
     </div>
   )
 }

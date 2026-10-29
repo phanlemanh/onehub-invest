@@ -410,7 +410,8 @@ describe("DC-AC-2 số khớp DF0", () => {
  * không còn câu dò bảng). Phần tổng hợp chỉ có lớp
  * «bảng tính sẵn»; hai lớp còn lại ngoài phần tổng hợp theo kế hoạch Task 3 (thẻ chờ duyệt, «Tin mới nhất»). */
 const ALLOWED_QUERIES: [string, RegExp][] = [
-  ["bảng tính sẵn", /^SELECT to_char\(computed_at AT TIME ZONE 'UTC', '[^']+'\) AS computed_at, facts\s+FROM data_flow_snapshot WHERE time_window = \$1$/],
+  // Mốc là computed_at CŨ NHẤT của bảng (dong-chay-so-cu-may-thu: máy thu báo số cũ theo cùng luật measured_at của khối).
+  ["bảng tính sẵn", /^SELECT facts,\s+\(SELECT to_char\(min\(computed_at\) AT TIME ZONE 'UTC', '[^']+'\) FROM data_flow_snapshot\) AS oldest_at\s+FROM data_flow_snapshot WHERE time_window = \$1$/],
   ["thẻ chờ duyệt", /^SELECT count\(\*\) AS review FROM review_queue WHERE status = 'pending'$/],
   ["Tin mới nhất", /row_number\(\) OVER \(PARTITION BY source ORDER BY first_seen DESC\) AS rn\s+FROM sale_offers WHERE first_seen >= \$1/],
 ]
@@ -453,12 +454,12 @@ describe("DC-AC-3 chỉ đọc bảng", () => {
     assert.ok(queryProblems(seen.filter((q) => !/data_flow_snapshot/.test(q))).includes("lớp «bảng tính sẵn»: 0 câu ≠ 1"), "thiếu câu đọc bảng tính sẵn phải bị bắt")
     assert.deepEqual(diffFacts(flow, WANT["7d"]), [])
     const hhmm = (
-      await admin.query(`SELECT to_char(computed_at AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI') AS t FROM "${S_LOCAL}".data_flow_snapshot WHERE time_window = '7d'`)
+      await admin.query(`SELECT to_char(min(computed_at) AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI') AS t FROM "${S_LOCAL}".data_flow_snapshot`)
     ).rows[0].t
     const { DataFlowView } = await import("../src/components/ops/data-flow/data-flow-view")
-    const root = await render(<DataFlowView flow={flow} roles={{}} nowMs={NOW} />)
+    const root = await render(<DataFlowView flow={flow} roles={{}} nowMs={NOW} xemBaiGoc />)
     const stamp = txt(root.querySelector("[data-flow-stamp]"))
-    console.log(`# DC-AC-3 dấu: «${stamp}» · giờ VN của computed_at ${hhmm}`)
+    console.log(`# DC-AC-3 dấu: «${stamp}» · giờ VN của computed_at cũ nhất ${hhmm}`)
     assert.match(stamp, new RegExp(`^Số tính lúc \\d{4}-\\d{2}-\\d{2} ${hhmm} \\(GMT\\+7\\)$`))
     assert.equal(root.querySelector("[data-facts-stamp]"), null, "máy thu không ghi «từ máy thu» như máy chủ")
   })
@@ -825,7 +826,7 @@ describe("DC-AC-8 tin mới nhất trên cloud", () => {
     assert.deepEqual(flow.records.map((r) => r.offerId).sort(), OFFERS.map((o) => o[0]).sort(), "records phải là tin của sale_offers cloud")
     assert.ok(flow.records.every((r) => r.postText === null && r.postGroup === null), "cloud không có bài gốc")
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    const root = await render(<RecordsGrid records={flow.records} roles={{}} cloud />)
+    const root = await render(<RecordsGrid records={flow.records} roles={{}} cloud xemBaiGoc />)
     const rows = [...root.querySelectorAll("tbody tr[data-row-id]")]
     assert.equal(rows.length, flow.records.length)
     // Hàng không mang mã tin (lưới đánh số hàng) → so bội tập bậc trên lưới với levelOf của records.
@@ -851,7 +852,7 @@ describe("DC-AC-8 tin mới nhất trên cloud", () => {
     const o1 = local.records.find((r) => r.offerId === "o1")!
     assert.equal(o1.postText, "bài thử")
     const { RecordSheet } = await import("../src/components/ops/data-flow/record-sheet")
-    await render(<RecordSheet record={o1} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={o1} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     assert.match(txt(dialogs()[0]?.querySelector("blockquote")), /bài thử/)
     assert.doesNotMatch(txt(dialogs()[0]), /Bài gốc chỉ xem ở máy thu/)
   })
