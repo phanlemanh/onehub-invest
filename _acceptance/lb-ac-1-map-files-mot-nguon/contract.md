@@ -5,7 +5,7 @@ slug: lb-ac-1-map-files-mot-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [tooling]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-29T10:12:26Z
 design_doc: docs/superpowers/specs/2026-10-29-lb-ac-1-map-files-mot-nguon-design.md
