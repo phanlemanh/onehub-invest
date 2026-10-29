@@ -29,30 +29,35 @@ const run = (dbUrl) => {
 };
 try {
   if (psql("oneinvest", `DROP DATABASE IF EXISTS ${DB}; CREATE DATABASE ${DB};`).status !== 0) throw new Error("không tạo được DB tạm");
-  const schema = spawnSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", "one-invest-db", "pg_dump", "-U", "oneinvest", "-h", "localhost", "-s", "-t", "source_registry", "oneinvest"], { encoding: "utf8" }).stdout;
-  check(psql(DB, schema).status === 0, "dựng bảng source_registry trên DB tạm (pg_dump -s, chỉ đọc :5433)");
-  psql(DB, `INSERT INTO source_registry (code, real_name, label_vi, status, source_ids) VALUES ('S05','acc-canh','x','paused','{acc-s05}');`);
+  const schema = spawnSync("docker", ["exec", "-e", "PGPASSWORD=oneinvest", "one-invest-db", "pg_dump", "-U", "oneinvest", "-h", "localhost", "-s", "-t", "source_registry", "-t", "collection_units", "-t", "source_groups", "oneinvest"], { encoding: "utf8" }).stdout;
+  psql(DB, schema); // pg_dump -t không mang hàm trigger của 048 → psql báo lỗi ở CREATE TRIGGER; kiểm theo quan hệ đã có
+  check(psql(DB, "SELECT to_regclass('source_registry') IS NOT NULL AND to_regclass('collection_units') IS NOT NULL AND to_regclass('source_groups') IS NOT NULL").stdout.trim() === "t", "dựng source_registry + collection_units/view source_groups trên DB tạm (pg_dump -s, chỉ đọc :5433)");
+  // 047 (TV2a) thêm CHECK paused phải có reason — thiếu reason thì INSERT hỏng lặng lẽ và ca (a)(b) đo nhầm «không có dòng»
+  check(psql(DB, `INSERT INTO source_registry (code, real_name, label_vi, status, reason, source_ids) VALUES ('S05','acc-canh','x','paused','acc: thử cổng','{acc-s05}');`).status === 0, "chèn dòng S05 paused (kèm reason theo 047)");
   // (a) paused → bỏ qua thu, exit 0, 0 lời gọi mạng
   let r = run(url(DB));
   check(r.code === 0, `(a) S05 paused: collector thoát 0 (được ${r.code})`);
-  check(/S05 paused — bỏ qua thu/.test(r.out), "(a) log 'S05 paused — bỏ qua thu'");
+  // TV2b (cong-tac-that) đổi chữ log sang lý do của vong-doi: «S05 nguon-paused — bỏ qua thu»
+  check(/S05 (nguon-)?paused — bỏ qua thu/.test(r.out), "(a) log 'S05 nguon-paused — bỏ qua thu'");
   check(r.fetches.length === 0, `(a) should-NOT-fire: 0 lời gọi mạng (được ${r.fetches.length}: ${r.fetches.join(" ")})`);
   check(!/acc-canh/.test(r.out), "(a) không in real_name ra log");
   // (b) active → qua cổng, tới bước creds (HOME giả không có token → lỗi) — vẫn 0 lời gọi Apify
   psql(DB, `UPDATE source_registry SET status='active' WHERE code='S05';`);
+  // một nhóm S05 active (bảng gốc collection_units của 048, mã đơn vị ghi tay vì pg_dump -t không mang trigger cấp mã) để (b) đi qua cổng nguồn + nhóm tới bước creds (TV2b: 0 nhóm active thì cũng «bỏ qua thu»)
+  check(psql(DB, `INSERT INTO collection_units (source_code, group_key, name, status, unit_code, unit_type) VALUES ('S05','acc-nhom','acc','active','S05-N999','nhom');`).status === 0, "chèn một nhóm S05 active");
   r = run(url(DB));
-  check(!/S05 paused/.test(r.out), "(b) S05 active: should-NOT-fire — không có dòng 'S05 paused'");
+  check(!/bỏ qua thu/.test(r.out) && !/fail-closed/.test(r.out), "(b) S05 active: should-NOT-fire — không 'bỏ qua thu', không dừng fail-closed");
   check(r.code !== 0, `(b) active + HOME giả không token: collector đi tiếp tới creds và thoát khác 0 (được ${r.code})`);
   check(!r.fetches.some((u) => /apify\.com/.test(u)), "(b) không gọi Apify thật");
-  // (c) DB không tới → fail-open (coi như active), có cảnh báo
+  // (c) DB không tới → DỪNG (fail-closed, Mạnh duyệt 27/10 ở cong-tac-that, đảo fail-open của 2510-4): thoát ≠0, 0 lời gọi
   const chet = new URL("postgres://placeholder/acc"); chet.hostname = "127.0.0.1"; chet.port = "1"; chet.username = "acc";
   r = run(chet.toString());
-  check(/coi như active/.test(r.out), "(c) DB không tới: log cảnh báo 'coi như active' (fail-open)");
-  check(!/S05 paused/.test(r.out), "(c) DB không tới: không coi là paused");
+  check(r.code !== 0 && /fail-closed/.test(r.out), `(c) DB không tới: thoát khác 0, log fail-closed (được ${r.code})`);
+  check(r.fetches.length === 0, `(c) should-NOT-fire: 0 lời gọi mạng khi DB không tới (được ${r.fetches.length})`);
   // (d) thiếu dòng S05 → bỏ qua như paused
   psql(DB, `DELETE FROM source_registry WHERE code='S05';`);
   r = run(url(DB));
-  check(r.code === 0 && /S05 paused — bỏ qua thu/.test(r.out) && r.fetches.length === 0, `(d) thiếu dòng S05: bỏ qua thu, exit 0, 0 lời gọi mạng (code ${r.code})`);
+  check(r.code === 0 && /S05 (nguon-khong-co|paused) — bỏ qua thu/.test(r.out) && r.fetches.length === 0, `(d) thiếu dòng S05: bỏ qua thu, exit 0, 0 lời gọi mạng (code ${r.code})`);
 } finally {
   psql("oneinvest", `DROP DATABASE IF EXISTS ${DB};`);
 }

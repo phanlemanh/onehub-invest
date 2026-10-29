@@ -36,7 +36,7 @@ executors:
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
-    kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
+    kns_s05_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # 2510-4 → TV2b: s05-paused.test.mjs xoá, luật chỉ active mới thu nay ở cong-tac-that.test (revisit 29/10)
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
     s08_row_unit: "node --test pipeline/scripts/import-s08-row.test.mjs"   # ZC8 s08RowOf
     ctt_unit: "node --test pipeline/scripts/cong-tac-that.test.mjs"   # TV2b cong-tac-that — nhà cung cấp giả + DB tạm

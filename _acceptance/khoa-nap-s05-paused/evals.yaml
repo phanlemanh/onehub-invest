@@ -35,7 +35,7 @@ evals:
     criterion: AC-4
     executor: test
     cmd: config:executors.test.kns_s05_unit
-    expected: "exit 0; s05-paused.test 2/2 (luật chỉ 'active' mới thu)"
+    expected: "exit 0; fail 0 — cong-tac-that.test (luật chỉ 'active' mới thu qua vong-doi; thay s05-paused.test đã xoá ở TV2b)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-6
