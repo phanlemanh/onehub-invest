@@ -1,0 +1,15 @@
+{
+  "feature_plain": "Bộ kiểm của công cụ thiết kế tự dọn thư mục tạm nó tạo, để mỗi lần chạy không còn bỏ lại hàng trăm MB rác trên máy.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ để thư mục tạm sạch trơn sau một lượt chạy trọn bộ kiểm (kể cả ca đo mới), và chứng minh các thư mục ấy đã thật sự được tạo rồi dọn."},
+    {"id": "AC-2", "p": "Sẽ cho thấy bản trước khi sửa để lại rác ở đủ bốn chỗ — chiều đỏ của cùng phép đo."},
+    {"id": "AC-3", "p": "Sẽ dọn cả khi một ca kiểm đỏ giữa chừng."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên mọi ca kiểm cũ."}
+  ],
+  "wont_do": [
+    {"id": "AC-4", "p": "Chặn chỗ tạo thư mục tạm mới không qua hàm dọn chung (chỉ hai chỗ miễn đã khai)."},
+    {"id": "OOS-1", "p": "KHÔNG xoá hơn nghìn thư mục rác đã có trên máy từ trước — PR sẽ ghi lệnh để anh tự dọn."},
+    {"id": "OOS-2", "p": "KHÔNG dọn được khi tiến trình bị giết cưỡng bức."},
+    {"id": "OOS-3", "p": "KHÔNG đổi bộ kiểm ngoài công cụ thiết kế, không nối CI."}
+  ]
+}
