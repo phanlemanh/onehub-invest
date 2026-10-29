@@ -6,10 +6,11 @@ import { after, before, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { createServer, type Server, type Socket } from "node:net";
 import pg from "pg";
 import { MockLanguageModelV4 } from "ai/test";
 import { runAgent, type AgentConfig } from "../src/runtime/loop.js";
-import { tenLop, type AiCallRecord } from "../src/runtime/ai-call-log.js";
+import { taoRecordCallDb, tenLop, type AiCallRecord } from "../src/runtime/ai-call-log.js";
 
 const SERVER = process.env.SCA_PG_SERVER ?? "postgres://oneinvest:oneinvest@localhost:5433";
 const TEN_DB = `oneinvest_p4_sca_test_${process.pid}`;
@@ -150,4 +151,57 @@ test("E4 doi chung: so binh thuong thi trace khong co ai-call-log-error", async 
   const r = await runAgent(agent("sca-mau-so-lanh"), "chào", {}, { model: modelOk(), recordCall: async () => {} });
   const trace = (await readFile(r.tracePath, "utf8")).trim().split("\n").map((l) => JSON.parse(l));
   assert.ok(!trace.some((t) => t.type === "ai-call-log-error"));
+});
+
+// DB treo: một cổng TCP nhận kết nối mà không bao giờ trả lời (Postgres bị pause, mạng đen).
+async function moCongTreo(): Promise<{ url: string; dong: () => Promise<void> }> {
+  const socks: Socket[] = [];
+  const srv: Server = createServer((s) => void socks.push(s));
+  await new Promise<void>((ok) => srv.listen(0, "127.0.0.1", ok));
+  const port = (srv.address() as { port: number }).port;
+  return {
+    url: `postgres://u@127.0.0.1:${port}/treo`,
+    dong: async () => {
+      for (const s of socks) s.destroy();
+      await new Promise<void>((ok) => srv.close(() => ok()));
+    },
+  };
+}
+// Hàm kiểm dùng chung: lời hứa xong trước `ms` mili giây.
+const kiemKhongTreo = async <T>(p: Promise<T>, ms: number) => {
+  let hen: NodeJS.Timeout | undefined;
+  const het = new Promise<"het">((ok) => (hen = setTimeout(() => ok("het"), ms)));
+  const kq = await Promise.race([p.then(() => "xong" as const, () => "xong" as const), het]);
+  clearTimeout(hen);
+  assert.equal(kq, "xong", "SO TREO CHAN AGENT");
+};
+
+test("E4 DB treo: writer mac dinh het tran, runAgent van tra ket qua va trace co ai-call-log-error", async () => {
+  const treo = await moCongTreo();
+  const cu = process.env.DATABASE_URL;
+  process.env.DATABASE_URL = treo.url;
+  try {
+    const p = runAgent(agent("sca-mau-so-treo"), "chào", {}, { model: modelOk() });
+    await kiemKhongTreo(p, 8000);
+    const r = await p;
+    assert.equal(r.output, "xin chao");
+    const trace = (await readFile(r.tracePath, "utf8")).trim().split("\n").map((l) => JSON.parse(l));
+    assert.ok(trace.some((t) => t.type === "ai-call-log-error"), "THIEU DONG ai-call-log-error");
+  } finally {
+    process.env.DATABASE_URL = cu;
+    await treo.dong();
+  }
+});
+
+test("E4 doi chung do: writer khong tran tren DB treo thi kiemKhongTreo bat SO TREO CHAN AGENT", async () => {
+  const treo = await moCongTreo();
+  const cu = process.env.DATABASE_URL;
+  process.env.DATABASE_URL = treo.url;
+  try {
+    const p = runAgent(agent("sca-mau-so-treo-dc"), "chào", {}, { model: modelOk(), recordCall: taoRecordCallDb(0) });
+    await assert.rejects(kiemKhongTreo(p, 1500), /SO TREO CHAN AGENT/);
+  } finally {
+    process.env.DATABASE_URL = cu;
+    await treo.dong(); // đóng socket → writer không trần nhận lỗi, lượt agent kết thúc
+  }
 });

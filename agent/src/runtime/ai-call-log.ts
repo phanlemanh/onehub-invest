@@ -33,19 +33,29 @@ export function soToken(x: unknown): number | null {
   return typeof x === "number" && Number.isFinite(x) && x >= 0 ? Math.round(x) : null;
 }
 
-/** Writer mặc định: một kết nối ngắn tới DATABASE_URL (đọc lúc gọi, để test trỏ được DB thử / lược đồ tạm). */
-export const recordCallDb: RecordCall = async (r) => {
-  const c = new pg.Client({
-    connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
-  });
-  await c.connect();
-  try {
-    await c.query(
-      `INSERT INTO ai_calls (khach, viec, model, input_tokens, output_tokens, latency_ms, ok, loi, trace)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [r.khach ?? "pipeline", r.viec, r.model, r.inputTokens, r.outputTokens, Math.max(0, Math.round(r.latencyMs)), r.ok, r.loi, r.trace],
-    );
-  } finally {
-    await c.end();
-  }
-};
+/** Trần chờ của writer mặc định: DB treo (cổng mở mà không trả lời, INSERT bị khoá chờ) không được giữ lượt agent. */
+export const SO_TIMEOUT_MS = 3000;
+
+/** Tạo writer ghi vào DATABASE_URL (đọc lúc gọi, để test trỏ được DB thử / lược đồ tạm). `timeoutMs` = 0 là không trần. */
+export function taoRecordCallDb(timeoutMs = SO_TIMEOUT_MS): RecordCall {
+  return async (r) => {
+    const tran = timeoutMs > 0 ? { connectionTimeoutMillis: timeoutMs, query_timeout: timeoutMs, statement_timeout: timeoutMs } : {};
+    const c = new pg.Client({
+      connectionString: process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest",
+      ...tran,
+    });
+    await c.connect();
+    try {
+      await c.query(
+        `INSERT INTO ai_calls (khach, viec, model, input_tokens, output_tokens, latency_ms, ok, loi, trace)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [r.khach ?? "pipeline", r.viec, r.model, r.inputTokens, r.outputTokens, Math.max(0, Math.round(r.latencyMs)), r.ok, r.loi, r.trace],
+      );
+    } finally {
+      await c.end();
+    }
+  };
+}
+
+/** Writer mặc định của runAgent: một kết nối ngắn, trần SO_TIMEOUT_MS. */
+export const recordCallDb: RecordCall = taoRecordCallDb();
