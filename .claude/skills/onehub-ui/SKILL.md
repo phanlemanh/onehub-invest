@@ -99,14 +99,13 @@ chưa chấm tệp này. Kế hoạch vẫn bắt buộc — người duyệt đ
 
 ## Hex chỉ được dùng trong file bản đồ (danh sách đóng)
 
-MapLibre không đọc được biến CSS hay oklch, nên chỉ 5 file sau được dùng hex. `eslint.config.mjs`
-chỉ tắt `onehub-ui/no-hardcoded-color` cho đúng 5 file này, mọi luật khác vẫn chạy:
+MapLibre không đọc được biến CSS hay oklch, nên chỉ 2 file sau được dùng hex. `eslint.config.mjs`
+chỉ tắt `onehub-ui/no-hardcoded-color` cho đúng 2 file này, mọi luật khác vẫn chạy. Cả hai nằm ở `lib/`, ngoài
+vùng giao diện của design-floor: màu lớp vẽ bản đồ khai tên theo vai ở `map-colors.ts`, tệp giao diện chỉ import tên
+(hồ sơ don-hex-tho):
 
 - `src/lib/map-style.ts`
-- `src/components/finder/bins.ts`
-- `src/components/finder/choropleth-map.tsx`
-- `src/components/mini-map.tsx`
-- `src/components/listing/listings-map.tsx`
+- `src/lib/map-colors.ts`
 
 Bản đồ mới dựng bằng `@mapcn/map` (`components/ui/map.tsx`), nền đi qua `lib/map-style.ts` (prop `styles`),
 popup là `MapPopup` của mapcn (nội dung React, tự thoát chuỗi); bản đồ MapLibre tay cũ thì popup `setDOMContent` +

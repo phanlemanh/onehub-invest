@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bộ kiểm của công cụ thiết kế tự dọn thư mục tạm nó tạo, để mỗi lần chạy không còn bỏ lại hàng trăm MB rác trên máy.",
+  "scope_plain": "Phạm vi bỏ ngoài giữ như đã khai: không xoá rác cũ trên máy (PR ghi lệnh dọn tay), không dọn khi tiến trình bị giết cưỡng bức, không đổi bộ kiểm khác."
+}
