@@ -1,6 +1,6 @@
 # S03 — bóc tin chữ thành dữ liệu có cấu trúc: framing, phân tích, đề xuất (30/10)
 
-> Ngày 2026-10-30 · Trạng thái: **chờ Mạnh duyệt §6** · Làn: Claude (transform → canonical), một phần ZCode (danh mục, §5 B5).
+> Ngày 2026-10-30 · Trạng thái: **chờ Mạnh duyệt §8.6** (bổ sung chiều 30/10: nguyên lý gốc, thử Kev/Qwen trên bài thật, trạng thái lộ trình — §8 thay §5–§6 ở chỗ khác nhau) · Làn: Claude (transform → canonical), một phần ZCode (danh mục, §5 B5).
 > Cách làm: chỉ đọc — DB local :5433 (SELECT), chạy `parsePost` của `pipeline/transform-zalo.mjs` (HEAD `842ee484`) trên
 > toàn bộ bài S03 thật đang có, không ghi DB, không sửa code. Số thô ở `research-local/s03-boc-tach-3010/` (gitignored).
 > Đọc kèm: `docs/architecture/classification-enrich-review.md` (§0.2–§0.3, §7.0 đã chốt), ADR-0013,
@@ -261,3 +261,161 @@ Duyệt xong: cắt B1/B3 (hàng mới) và sửa câu giao PL10/PL11/PL13 bằn
 - Offer: `sale_offers WHERE source = 'S03'` (415 dòng, chưa retire); `last_seen` mới nhất 28/10 16:51Z.
 - Script và kết quả thô (có chữ bài gốc nên chỉ ở local): `research-local/s03-boc-tach-3010/do-out.json`, `do2-out.json`, `do3-out.txt`.
 - Mẫu 40 bài bị bỏ: hạt LCG 42, phân loại tay (tin rao · Yêu cầu · không rõ); cận Wilson 95% cho 27/40 = 0,52–0,80.
+
+---
+
+## 8. Bổ sung 30/10 (chiều) — nguyên lý gốc: dùng model nào cho việc nào, và cái gì đã có trong lộ trình
+
+> Mạnh hỏi: đừng sửa theo kiểu vá lỗi, hãy lùi về nguyên lý gốc. Kev/Jev đã dùng để phân loại, nhưng đã dùng để bóc tách
+> chưa, và dùng có đúng cách chưa? Nếu Kev không làm được thì LLM nào đủ rẻ và hiệu quả (GLM-5.3 flash, DeepSeek v4.1
+> flash)? Những việc này kiến trúc phân loại + enrich đã thiết kế tới đâu, để tránh làm lại?
+> Trong kho chỉ có **Kev** (local, :8009) và **Jev** (bản tham chiếu hosted, chỉ dùng để so). Không có model nào tên
+> «Rev». Mục này hiểu «Rev, Kev» là họ model quyết định Kev/Jev.
+
+### 8.1 Nguyên lý gốc — bóc một bài là bốn loại phép tính khác nhau
+
+Một bài phải thành các phát biểu (trường · giá trị · căn cứ · bậc). Theo **hình dạng đầu ra**, các phép tính chia thành bốn
+loại, và mỗi loại hợp với một loại công cụ:
+
+| Loại phép tính | Đầu ra | Ví dụ | Công cụ đúng bản chất | Vì sao |
+|---|---|---|---|---|
+| **Phân loại** | chọn một trong tập đóng, kèm xác suất | ý định (tin rao · Yêu cầu · không phải tin), bán/thuê, loại hình, nội thất, loại căn, bài nhiều căn? | **Model quyết định (Kev)** — câu hỏi `choice`/`noul` | Ra phân phối xác suất đã hiệu chuẩn (Brier), rẻ, local; bậc tin đọc thẳng từ xác suất |
+| **Trích** | chuỗi hoặc số **nằm trong chữ** | giá, DT, mã toà, mã căn, ngày vào ở, điều khoản cọc | **Luật xác định** trước; phần luật không phủ được thì dùng **LLM sinh, có trích dẫn** | Mọi giá trị phải trỏ được về đoạn chữ. Luật thì kiểm được; LLM thì kiểm bằng trích dẫn |
+| **Nối** | một dòng danh mục | «Hawaii H3» → toà nào | **Tra cứu** danh mục + luật phân giải; khi mờ thì Kev `choice` trên danh sách ứng viên **lấy từ danh mục** | Đáp án phải là một dòng có thật; model không được bịa dòng mới |
+| **Suy ra** | thuộc tính kế thừa | KĐT, CĐT, phường, loại hình từ toà | **Không cần model**: đi theo cây danh mục | Tri thức nằm trong danh mục có nguồn, không nằm trong trí nhớ model |
+
+Từ bảng này, ba điều về cách đang làm:
+
+1. **Kev là đúng công cụ cho phân loại, nhưng đang hỏi sai câu và chưa được nối vào đường.**
+   - Câu gate «có phải tin rao BĐS (bán/cho thuê/**tìm mua**)?» và câu `kind` «sale = rao bán **hoặc tìm mua**» gộp cung với
+     cầu, nên không tách được Yêu cầu.
+   - Điểm `meta.kev.p` chỉ nằm trong raw (PL4). `stg_zalo_posts` không có cột Kev. `transform-zalo` không đọc Kev.
+   - Ý định bán/thuê vẫn do regex quyết. Đây chính là chỗ làm 7.163 bài bị bỏ và 20% tin bán bị xếp thành thuê (§3).
+2. **Regex đang làm cả hai việc phân loại lẫn trích.** Nó chỉ hợp với việc trích, và ngay việc trích cũng còn hổng (§3.2).
+3. **E2 (Qwen) đang làm sai kiểu**:
+   - prompt bắt LLM tự khai «confidence 0–1» (không hiệu chuẩn) và không đòi trích dẫn;
+   - prompt được mồi đáp án E1;
+   - LLM được hỏi cả phân loại (`property_type`) — việc Kev làm rẻ hơn và có xác suất thật.
+
+   PL18 đã nhận ra hai lỗi đầu. Lỗi thứ ba chưa có hàng nào ghi.
+
+### 8.2 Thử ngay trên bài thật: Kev và Qwen local, mỗi bên làm đúng loại việc của mình
+
+Mẫu gồm 61 bài: 40 bài đang bị bỏ (§3.1, hạt 42), 20 bài đang lọt (hạt 7) và tin ví dụ. Mỗi bài cho chạy qua hai đường:
+- **Kev-4B** với 5 câu hỏi typed: ý định 3 lớp · bán/thuê · loại hình · nội thất · bài nhiều căn?
+- **Qwen 27B local** (MTPLX, tắt suy nghĩ) đọc ra mảng căn. Mỗi giá trị kèm trích dẫn nguyên văn; giá chuẩn hoá về đồng;
+  giá bị che chuyển thành khoảng.
+
+Nhãn đúng do phiên này gắn tay. Số dưới đây **chỉ để định hướng**, chưa thay được tập nhãn mù của đội (PL7, F5).
+
+| Đo | Kev-4B (choice) | Qwen 27B local (đọc có trích dẫn) | Regex hiện tại |
+|---|---|---|---|
+| Ý định đúng (offer · inquiry · not) | 46/61 = 75% (cận Wilson 0,63–0,85) | **58/61 = 95%** (0,87–0,98) | 21/61 — 40 bài bị bỏ đều có số |
+| Nhận ra Yêu cầu (12 bài) | 3/12 | 10/12 | 0/12 |
+| Bán/thuê đúng | 35/61 = 57% — bài viết đủ chữ 20/21, bài viết gọn 15/40 | **58/61 = 95%** | chỉ đúng trên bài có từ khoá |
+| Bài nhiều căn tách thành nhiều mục | xác suất «nhiều căn» ≥ 0,9 ở 3/3 bài tổng hợp | tách đúng 3 căn, 10 căn, 2 căn; bài «1.165 căn» bị cắt ở 1.500 token | không tách |
+| Giá chuẩn hoá | — | «4,000 thu về» → 4 tỷ; «8tr5», «4tr8», «3ty2», «7.000.000» đúng; giá che «2,3x tỷ» → khoảng 2,30–2,39 tỷ ở 4/5 bài, 1/5 chỉ ra một điểm | sai bậc hoặc mất phần lẻ (§3.2) |
+| Mã toà/căn | — | ra được ở phần lớn bài (PR1, LD2xx13, BE4xx06, S10.03, «Hawaii H3»); sót BE2, BS8, GH1 ở 3 bài viết rất gọn | không đọc |
+| Trường thuê | nội thất: nghiêng về «full» trên hầu hết bài | lấy được ngày vào ở, điều khoản cọc (gồm «1 năm đóng 3 cọc 1»), nội thất | không đọc |
+| Trích dẫn có thật trong chữ | — | **304/305** — 1 trích dẫn giả bị bắt bằng phép so chuỗi | — |
+| JSON hỏng | — | 2/61 (1 bài ngoặc thừa, 1 bài bị cắt vì quá dài) | — |
+| Độ trễ | p50 0,8 s cho 5 câu (một câu ~0,1 s) | p50 6,2 s · p90 10,3 s · tối đa 41 s | ~0 |
+
+Đọc bảng theo nguyên lý ở §8.1:
+- **Kev hỏng ở đúng chỗ cần tri thức nghề.** «S7 2PN 7tr» là tin thuê vì 7 triệu chỉ có thể là tiền thuê tháng. Model 4B có
+  đầu quyết định huấn luyện trên bộ câu hỏi chung không có tri thức đó, và cũng không phân biệt được «khách tìm…» với «sẵn
+  căn…». Có hai cách sửa, đều đã nằm trong khung:
+  - huấn luyện lại đầu quyết định trên nhãn BĐS VN — bản tổng quan model quyết định ghi train-head thêm khoảng 10 điểm;
+  - nâng lên Kev-9B — chỉ đổi một cờ.
+
+  Cả hai đều cần **tập nhãn** trước. Đến lúc đó Kev hợp vai **bộ lọc rẻ đầu đường**: «không phải tin», «nhiều căn», kèm xác
+  suất hiệu chuẩn. Bán/thuê và Yêu cầu thì chưa giao cho Kev.
+- **LLM local đọc tốt hơn hẳn khi bị ép trích dẫn.** Phép so trích dẫn với chữ là lưới an toàn rẻ. Nhưng cận dưới 0,87 vẫn
+  **chưa đạt ngưỡng 0,95** của nhóm A (F3). Nghĩa là chưa được tự áp; muốn chứng minh cần ~150 nhãn, ≤ 2 lỗi.
+- **Luật xác định vẫn cần.** Luật cho số không đổi giữa các lần chạy, gần như không tốn gì, và là lớp «parser» trong thang
+  phân xử. Bài «Nhãn: giá trị» chuẩn thì luật đọc đủ mà không cần LLM.
+
+### 8.3 Chọn LLM: GLM-5.3 flash, DeepSeek v4.1 flash hay local?
+
+| Ứng viên | Chạy ở đâu | Điều đã biết | Ràng buộc |
+|---|---|---|---|
+| Qwen 27B (MTPLX :8000) | **local**, đang chạy | §8.2: 95% ý định/bán-thuê trên mẫu, 6 s/bài, 0 đồng | ~2.200 bài/ngày × 6 s ≈ 3,7 giờ máy/ngày nếu đọc mọi bài; chỉ đọc phần luật bỏ sót thì ít hơn nhiều |
+| Kev-4B / Kev-9B (:8009) | **local** | §8.2: hợp lọc/định tuyến, yếu bán/thuê và Yêu cầu khi chưa huấn luyện lại | cần nhãn để huấn luyện lại đầu quyết định |
+| GLM-5.3 (bản ZCode dùng) | **cloud** — ZCode gọi qua API của nhà cung cấp, gói coding plan; **không chạy ở máy** | chưa đo trên bài S03 | dữ liệu rời máy; dùng gói coding plan cho pipeline có thể nằm ngoài điều khoản gói — phải kiểm trước |
+| DeepSeek v4.1 flash | **cloud** | chưa đo | dữ liệu rời máy và đi ra nhà cung cấp nước ngoài |
+
+Những điều đã chốt, phải giữ:
+- **M1 = local mặc định.** Model cloud chỉ dùng khi số đo cho thấy local không đủ (Mạnh 26/10, Hỏi-4 lát OCP1).
+- **RV-M2** — gửi chữ bài/tiêu đề nhóm cho model cloud hay chỉ dùng local — còn chờ.
+- Về SPL, chữ bài S03 không chứa tầng A (SĐT/tên người bán và tên nhóm là tầng C). Gửi cloud vẫn phải gạt tên nguồn và
+  tên nhóm, và ghi mọi cuộc gọi vào `ai_calls` (PL29 đã ký).
+
+**Khuyến nghị**:
+- **Không chọn model bằng cảm nhận.** Hàng **PL30 `chon-model-theo-o` đã có**: «chạy nhiều model trên cùng tập nhãn, sinh
+  bảng chọn model theo ô (rẻ nhất đạt ngưỡng và độ trễ)».
+- Đưa cả bốn ứng viên vào PL30 khi có tập nhãn. Trên mẫu này, Qwen local đã đạt độ đúng cỡ cần. Lý do còn lại để xét cloud
+  là **thông lượng và độ trễ** (p90 10 s), không phải chất lượng.
+- Muốn đo GLM/DeepSeek trước PL30 thì phải xin Mạnh duyệt việc gửi mẫu bài ra ngoài (RV-M2) và kiểm điều khoản gói GLM.
+
+Ước lượng tải để so giá khi đến PL30: ~2.200 bài/ngày × (~1.400 token vào + ~300 token ra) ≈ 3 triệu token vào và
+0,7 triệu token ra mỗi ngày nếu đọc mọi bài. Bỏ bớt bài luật đã đủ thì tải giảm theo.
+
+### 8.4 Kiến trúc phân loại + enrich đang ở giai đoạn nào (máy suy từ `_acceptance/`, 30/10)
+
+| Khâu (§4) | Hàng | Trạng thái | Ghi chú |
+|---|---|---|---|
+| Nền dữ liệu | PL1, PL2 (bỏ dữ liệu thử) · PL14 (nạp lại không xoá) · PL15 (bảng phát biểu + phân xử 3 lớp) · PL6 (sổ từ vựng) · PL29 (sổ cuộc gọi AI) · PL32 | **đã ký** | `field_assertions` chạy thật, nhưng chỉ nhận 5 trường; S03 mới có `bedrooms` của parser |
+| Kev thành nhãn | PL4 | **đã ký** | `meta.kev.p` nằm trong raw; stg chưa có cột |
+| Kev → ý định tin | PL5 `meta-kev-thanh-phat-bieu` | chưa mở | câu giao chỉ dùng `meta.kev.p` (một câu gộp cung/cầu) → **cần sửa** (§8.5 S1) |
+| Danh mục | PL10 (thu OCP1) **đã ký** · PL11 (trục/căn có bậc) chưa · S08 nạp local 0 dòng | dở | chưa có Grand Park (§5 B5) |
+| Đọc | PL13 (mã căn, giá khoảng, price_basis) · PL17 (parser ghi phát biểu) · PL18 (E1/E2 theo lớp, E2 mù có trích dẫn) · PL28 (gộp tin chỉ ảnh) | **chưa mở cả bốn** | §8.2 cho thấy hướng PL18 đúng; thiếu tách nhiều căn, trường thuê, sửa số |
+| Đo | PL7 (màn gắn nhãn mù) → PL8 (tập mẫu) → PL9 (Wilson) → PL30 (chọn model) → PL21 (tự áp theo số đo) | **chưa mở** | **nút cổ chai**: mọi ô tự áp và mọi lựa chọn model đều chờ chuỗi này |
+| Ghép, bậc | PL16, PL20, PL24, PL25, PL27 | chưa mở | đứng sau Đọc + Đo |
+| Enrich chạy lại | NT6 | chưa mở | `enrichment_proposals` 0 dòng từ sau F6 |
+| Ngữ cảnh nhóm | PL12 (sổ nhóm) **đã ký** · ON20/ON21 chưa | dở | |
+
+Tóm lại: **nền đã xong, ba khâu Đọc, Đo, Ghép chưa mở hàng nào.** Phần lớn việc ở §5 đã có chỗ trong các hàng này. Không cần
+dựng kiến trúc mới, chỉ cần **sửa câu giao** những hàng đã có và **thêm đúng phần còn thiếu**.
+
+### 8.5 Đề xuất sau khi lùi về nguyên lý gốc (thay §5 ở chỗ khác nhau)
+
+**Không làm lại** (đã có hàng): PL5, PL7–PL9, PL11, PL13, PL17, PL18, PL20, PL28, PL30.
+
+**Sửa câu giao (S) — để những hàng đó làm đúng loại việc:**
+
+| Mã | Sửa | Vì sao (nguyên lý) |
+|---|---|---|
+| **S1 → PL5** | Ý định tin đến từ câu hỏi Kev **3 lớp** (tin rao · Yêu cầu · không phải tin) kèm xác suất, cộng câu bán/thuê, chứ không chỉ `meta.kev.p`. Sửa luôn câu gate «tin rao gồm cả tìm mua». Kev ở bậc suy luận; không phát biểu nào được tự áp trước PL9 | Phân loại → model quyết định. Câu hiện tại gộp cung với cầu, nên Yêu cầu không bao giờ tách ra được |
+| **S2 → PL18** | E2 là **bộ đọc có trích dẫn, ra mảng căn** (tách nhiều căn ngay ở đầu ra). Bỏ «confidence» tự khai. Phân loại không hỏi LLM khi Kev/luật đã đủ; ai đọc ô nào do bảng PL30 quyết | Trích → LLM có kiểm. Bảng §8.2: 304/305 trích dẫn kiểm được, tách được bài nhiều căn |
+| **S3 → PL13** | Thêm trường thuê (nội thất, điều khoản HĐ/cọc, ngày vào ở, phí) và loại căn có cờ «+»; mở rộng lát danh mục sang Grand Park (cùng PL10/PL11) | §3.2: 28% bài nói nội thất; 47% bài thuộc Grand Park |
+| **S4 → PL30** | Ứng viên gồm Kev-4B/9B, Qwen local, GLM-5.3, DeepSeek flash. Hai ứng viên cloud chỉ chạy khi RV-M2 cho phép | §8.3 |
+
+**Thêm mới (N) — phần không hàng nào có:**
+
+| Mã | Việc | Làn · tầng |
+|---|---|---|
+| **N1** (= B1 thu hẹp) | **Cầm máu số liệu**: bỏ URL/SĐT trước khi đọc số; giá «X.YYY tỷ»/«XXXX tỷ thu về»; «2ty450», «5tr5»; DT «64m»; khoá gom có mã toà/căn. Không vá ý định bằng regex — việc đó chuyển sang PL5 (S1) | Claude · T2 · không migration |
+| **N2** (= B3) | Khoá offer theo (post, thứ tự mục), để đầu ra nhiều căn của PL18 thành nhiều offer mà vẫn giữ khoá dính PL14 | Claude · T2, đi cùng PL18 |
+| **N3** (= B4) | Phường theo thị trường của nhóm (sổ nhóm PL12) và theo `area_ids` của dự án sau khi nối | Claude · T2, gộp vào N1 được |
+
+**Thứ tự** — chỉ một nguyên tắc: đo trước, tự áp sau.
+1. **N1** ngay: nhỏ, không phụ thuộc, chặn số sai đang lên `/ops`.
+2. **PL7 → PL8** ngay sau: đây là nút cổ chai thật. Mẫu 61 bài ở `research-local/` dùng làm bài tập dượt cho màn gắn nhãn,
+   không dùng làm nhãn vàng.
+3. **PL5 (S1) và PL18 (S2)** chạy ở bậc suy luận, ghi phát biểu nhưng không tự áp. Kèm N2.
+4. **PL9 → PL30 (S4)**: chọn model theo ô, rồi PL21 mới được tự áp.
+5. **PL10/PL11 (S3) → PL13 → PL20**: danh mục → đọc mã → ghép căn; enrich thật (dự án, CĐT, phường, loại hình) đi theo
+   khâu này.
+
+### 8.6 Câu hỏi cho Mạnh (gộp với §6; câu nào khác §6 thì câu ở đây thay)
+
+| Hỏi | Nội dung | Khuyến nghị |
+|---|---|---|
+| **Hỏi-1′** | Duyệt **N1** (cầm máu số liệu, T2) thay cho B1 rộng — phần ý định chuyển sang PL5? | Duyệt |
+| **Hỏi-2′** | Sửa câu giao **PL5, PL18, PL13, PL30** theo S1–S4? | Duyệt |
+| **Hỏi-3′** | Mở **PL7 → PL8** (màn gắn nhãn + tập lát) ngay sau N1, và Mạnh cùng đội gắn ~200 bài S03 (F5 đã chốt việc gắn nhãn, chưa chốt lúc nào)? | Ngay sau N1 |
+| **Hỏi-4′** | GLM-5.3 / DeepSeek flash: chỉ đưa vào PL30 khi có tập nhãn, hay cho đo sớm trên ~60 bài mẫu (gửi chữ bài ra ngoài — cần quyết RV-M2 và kiểm điều khoản gói GLM)? | Chờ PL30; Qwen local đã đạt độ đúng cỡ cần |
+| Hỏi-2..5 của §6 | Lát danh mục Grand Park · trường thuê · Yêu cầu · CĐT ở cấp toà | giữ như §6 (Hỏi-3 và Hỏi-4 nay nằm trong S3 và S1) |
+
+Căn cứ của §8.2: `research-local/s03-boc-tach-3010/thu-model.jsonl` (61 dòng: chữ bài đã bỏ URL, đáp án Kev, đầu ra Qwen,
+độ trễ) và script trong scratchpad của phiên. Chỉ đọc DB, không ghi `ai_calls`, vì đây là lần dò ngoài đường chạy.
