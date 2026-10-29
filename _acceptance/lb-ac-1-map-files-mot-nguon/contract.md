@@ -5,7 +5,7 @@ slug: lb-ac-1-map-files-mot-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [tooling]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-29T10:12:26Z
 design_doc: docs/superpowers/specs/2026-10-29-lb-ac-1-map-files-mot-nguon-design.md
@@ -44,3 +44,9 @@ Bỏ quét không gian tiêu chí — xem sổ quyết định dòng «bỏ cove
   trọn danh sách 5 tệp») — hồ sơ đã ký, ngoài vùng tệp; lệch con số có từ `don-hex-tho`, vế «đúng trọn danh sách» vẫn đo.
 - OOS-2: Đổi `MAP_FILES` của `eslint.config.mjs` hay danh sách đóng của `SKILL.md` — vòng chỉ đổi chỗ test đọc danh sách
   viết trước.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: Khi danh sách tệp bản đồ của eslint thiếu một tệp, LB-AC-1 vẫn đỏ đúng nhưng thông điệp ghi «thừa []», không nói tệp nào thiếu.
+  - Ngoài-2: Khi danh sách bị đảo thứ tự, LB-AC-1 vẫn đỏ đúng nhưng thông điệp cũng ghi «thừa []», không nói lệch thứ tự.

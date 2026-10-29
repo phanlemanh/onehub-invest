@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 63f297c0d586ff72b761565a59b226455191ab56
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: lb-ac-1-map-files-mot-nguon
