@@ -403,6 +403,9 @@ executors:
     dn_thong_ke: "node _acceptance/do-nen-hieu-nang/probes/thong-ke.mjs"
     dn_khong_luat: "node _acceptance/do-nen-hieu-nang/probes/khong-luat.mjs"
     dn_pham_vi: "bash _acceptance/do-nen-hieu-nang/probes/pham-vi.sh"
+    # rao-db-local-do-nen — do.mjs trong tiến trình con với DATABASE_URL ngoài máy (.invalid, TEST-NET) và localhost:1; không ghi DB
+    rdl_rao: "node _acceptance/rao-db-local-do-nen/probes/rao.mjs"
+    rdl_pham_vi: "bash _acceptance/rao-db-local-do-nen/probes/pham-vi.sh"
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"

@@ -16,13 +16,16 @@ import { fileURLToPath } from "node:url"
 
 import { maskSourceNames } from "../../pipeline/lib/mask-source-names.mjs"
 import { sourceRegistrySeeds } from "../lib/tier-a-source-names.mjs"
-import { ensureAccount } from "../dev-ops-account.mjs"
+import { assertLocalDatabaseUrl, ensureAccount } from "../dev-ops-account.mjs"
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const APP = path.join(ROOT, "app")
 const arg = (k, md) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : md }
 const LUOT = Number(arg("--luot", "20")), CONG = Number(arg("--cong", "3463")), RA = arg("--ra", "")
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest"
+// Rào chỉ-DB-local, đứng trước mọi kết nối: script ghi DB (CREATE EXTENSION, tài khoản đo admin, reset pg_stat_statements),
+// nên DATABASE_URL trỏ ra ngoài máy thì dừng ngay — không bao giờ ghi lên DB cloud/production.
+assertLocalDatabaseUrl(DB_URL)
 const BASE = `http://localhost:${CONG}`
 // `dau`: chuỗi phải có trong <title> — lượt tính chỉ khi đúng là trang đã dựng (không phải trang lỗi hay /login).
 export const TRANG = [
