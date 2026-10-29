@@ -32,7 +32,9 @@ export type OpsFacts = {
   blocks: Partial<Record<OpsFactBlockName, OpsFactBlock>>
 }
 
-const ageState = (iso: string | null, now: Date): "fresh" | "stale" => {
+/** Luật tươi/cũ DUY NHẤT (ADR-0014): mốc trong FACTS_STALE_MS → `fresh`, quá hay không đọc được → `stale`. Máy thu
+ * dùng cùng hàm cho `computed_at` của data_flow_snapshot (dong-chay-so-cu-may-thu). */
+export const ageState = (iso: string | null, now: Date): "fresh" | "stale" => {
   const t = iso ? Date.parse(iso) : Number.NaN
   return Number.isFinite(t) && now.getTime() - t <= FACTS_STALE_MS ? "fresh" : "stale"
 }

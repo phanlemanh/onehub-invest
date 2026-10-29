@@ -1,7 +1,7 @@
 import type { User } from "./auth";
 import { pool } from "./db";
 import { vnDayKey, vnDayStart } from "./format";
-import { readOpsFacts, type OpsFacts } from "./ops-facts";
+import { ageState, readOpsFacts, type OpsFacts } from "./ops-facts";
 import { isAdmin } from "./ops-access";
 import { buildOfferImages, type PostMediaRow, type ReviewImage } from "./ops/review-media";
 
@@ -96,7 +96,8 @@ export type FlowFacts = {
   enrichPending: number;
 };
 
-/** Trạng thái số tổng hợp: máy thu `fresh` (có dòng tính sẵn) / `none`; máy chủ theo khối (ADR-0014). */
+/** Trạng thái số tổng hợp: máy thu theo `computed_at` cũ nhất của bảng tính sẵn (`fresh`/`stale`/`none`); máy chủ theo
+ * khối (ADR-0014). */
 export type FlowFactsState = "fresh" | "stale" | "none" | "error";
 
 export type DataFlow = FlowFacts & {
@@ -107,7 +108,7 @@ export type DataFlow = FlowFacts & {
   reviewPending: number | null;
   /** «local» = máy thu (bảng tính sẵn), «cloud» = máy chủ (khối bản tin). */
   mode: "local" | "cloud";
-  /** Mốc tính của bảng (máy thu) / `measured_at` của khối = computed_at cũ nhất (máy chủ). */
+  /** `computed_at` cũ nhất của bảng tính sẵn — máy thu đọc thẳng, máy chủ qua `measured_at` của khối. */
   computedAt: string | null;
   factsState: FlowFactsState;
   factsError: string | null;
@@ -162,18 +163,22 @@ const recordsSql = (withPost: boolean) => `
 /** Kết quả đọc phần tổng hợp của một cửa sổ (máy thu hay máy chủ). */
 type FactsRead = { state: FlowFactsState; at: string | null; facts: FlowFacts | null; error: string | null };
 
-/** Số tổng hợp của một cửa sổ ở máy thu: dòng `data_flow_snapshot` (bảng vắng hay chưa làm tươi → `none`). */
-async function localFacts(q: FlowQueryFn, window: FlowWindow): Promise<FactsRead> {
+/** Số tổng hợp của một cửa sổ ở máy thu: dòng `data_flow_snapshot` (bảng vắng hay chưa làm tươi → `none`). Tuổi số
+ * theo `computed_at` CŨ NHẤT của bảng — cùng luật `measured_at` của khối cloud (DF1 AC-4) — so bằng `ageState` của
+ * ops-facts (một ngưỡng FACTS_STALE_MS cho hai nơi): bước làm tươi gãy quá 45′ thì `stale`. */
+async function localFacts(q: FlowQueryFn, window: FlowWindow, now: number): Promise<FactsRead> {
   try {
     // Mốc ISO UTC (ms) — cùng dạng `measured_at` mà push-ops-facts ghi cho khối `dataFlow`.
     const { rows } = await q(
-      `SELECT to_char(computed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS computed_at, facts
+      `SELECT facts,
+              (SELECT to_char(min(computed_at) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') FROM data_flow_snapshot) AS oldest_at
        FROM data_flow_snapshot WHERE time_window = $1`,
       [window],
     );
     const r = rows[0];
     if (!r) return { state: "none", at: null, facts: null, error: null };
-    return { state: "fresh", at: r.computed_at as string, facts: r.facts as FlowFacts, error: null };
+    const at = r.oldest_at as string;
+    return { state: ageState(at, new Date(now)), at, facts: r.facts as FlowFacts, error: null };
   } catch (err) {
     if ((err as { code?: string }).code === "42P01") return { state: "none", at: null, facts: null, error: null };
     throw err;
@@ -215,7 +220,7 @@ export async function getDataFlow(
   let f: FactsRead;
   if (mode === "local") {
     const [lf, pending] = await Promise.all([
-      localFacts(q, window),
+      localFacts(q, window, now),
       q(`SELECT count(*) AS review FROM review_queue WHERE status = 'pending'`),
     ]);
     f = lf;
