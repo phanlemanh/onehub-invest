@@ -5,7 +5,7 @@ slug: db-vao-volume
 owner: phanlemanh@gmail.com
 risk_tier: T3      # ý định P2 khai T3: đổi chỗ ở của toàn bộ DB local dùng chung (khó đảo); Mạnh ký ba cổng
 surfaces: [config, ops, docs]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-29-db-vao-volume-design.md
 approved_by: Mạnh
 approved_at: 2026-10-29
