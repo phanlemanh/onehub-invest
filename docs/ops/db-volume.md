@@ -96,4 +96,13 @@ Giữ `one-invest-db-cu-<YYYYMMDD>`, volume rỗng cũ `db_oneinvest_pgdata` và
 
 ## Lượt chuyển thật
 
-Chưa chạy — điền giờ chuyển, bản sao lưu dùng, kết quả và ngày sớm nhất được hỏi xoá bản lùi sau lượt chuyển.
+- **29/10/2026, 16:19:43–16:20:50 giờ VN (09:19–09:21Z)**, lệnh `db-chuyen-volume.sh --lam`, exit 0, 66 giây; dãy P2
+  của đợt `dot0-cam-mau` cầm khoá s4 (không lượt chấm nào chạy trên :5433). Đã báo phiên điều phối liên làn trước
+  (ZCode, mã `claudedp-2910-4`).
+- Bản sao lưu dùng: `$HOME/onehub-backups/db/20261029T085125Z/` — khôi phục thử khớp 283/283 bảng lúc 08:52Z; thư mục
+  này còn giữ tar lạnh `datadir-17.tar` của lượt chuyển.
+- Kết quả: `tar --diff` 0 tệp lệch; `pg_controldata` shut down; số dòng 283 bảng trước = sau chuyển = sau tạo lại (so
+  chặt 279 bảng chính); 4 DB (`oneinvest`, `postgres`, `zcode_tv2b`, `zcode_verify`) và ALTER SYSTEM còn nguyên; kiểm
+  vận hành trước/sau như nhau (30 PASS · 3 FAIL có từ trước · 6 LIMITED). Bằng chứng: `_acceptance/db-vao-volume/evidence/`.
+- Bản lùi: container `one-invest-db-cu-20261029` (dừng, restart `no`), volume rỗng cũ `db_oneinvest_pgdata`, tar lạnh
+  trong thư mục bản sao lưu. **Sớm nhất được hỏi Mạnh xoá: 05/11/2026 16:20 giờ VN.**
