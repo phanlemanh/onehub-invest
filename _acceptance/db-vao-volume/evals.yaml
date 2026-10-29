@@ -1,0 +1,130 @@
+schema_version: 1
+feature_slug: db-vao-volume
+# Khoá executors.script.db_volume_* thêm vào _acceptance/config.yaml theo yêu cầu P2-74 (giám sát duyệt 29/10).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_volume_static
+    expected: "exit 0; dòng ghim: PASS compose volume onehub_pgdata gắn /var/lib/postgresql chứa DEFAULT_DATADIR=/var/lib/postgresql/17/main (đọc từ ảnh); PASS compose project=onehub-db; PASS compose db.restart=unless-stopped. Chiều đỏ ở E2."
+    paths: ["db/docker-compose.yml", "scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.db_volume_mutation
+    expected: "exit 0; đối chứng dương: PASS bản lành xanh; phải-bắn, mỗi bản đỏ với thông điệp ghim riêng: gan-data → FAIL volume không chứa thư mục dữ liệu; vo-danh → FAIL volume vô danh; bind → FAIL bind mount; project-db → FAIL project=db; mat-name → FAIL volume thiếu name; loai-canonical → FAIL danh sách loại trừ chứa bảng canonical; thiếu một thông điệp ghim hay bản lành đỏ → exit 1"
+    paths: ["db/docker-compose.yml", "scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_autostart_static
+    expected: "exit 0; PASS compose db.restart=unless-stopped trên compose mới (hồ sơ db-tu-khoi-dong không lùi)"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_autostart_mutation
+    expected: "exit 0; bản lành (compose mới) xanh ở static và diff, bốn đột biến của db-tu-khoi-dong vẫn đỏ đúng thông điệp ghim — cần sửa diff bỏ qua khoá volume/name (Hỏi-2 ở Cổng Phạm vi)"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; ca sao-luu: PASS bản có <db>.dump mỗi DB không template + globals.sql + so-dong.tsv + manifest.sha256 khớp; PASS so-dong.tsv đếm cùng snapshot — móc DB_SAO_LUU_SAU_SNAPSHOT_HOOK chen một INSERT ở phiên khác ngay sau pg_export_snapshot(): so-dong.tsv của bảng ấy = N và bản khôi phục ra đúng N; đối chứng đỏ trên CÙNG cụm: bản chép script đếm ngoài snapshot (biến DB_SAO_LUU_DEM_NGOAI_SNAPSHOT=1 chỉ có ở ca thử) → FAIL đếm lệch snapshot <bảng> N≠N+1; chiều đỏ: thư mục trong cây kho → FAIL đích nằm trong kho, exit 2, thư mục không có byte nào"
+    paths: ["scripts/db-sao-luu.sh", "scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; ca khoi-phuc: PASS khớp N/N bảng + dấu khoi-phuc-ok; chiều đỏ trên CÙNG bản: sửa một dòng so-dong.tsv (và cập nhật manifest) → FAIL lệch bảng <tên> <a>≠<b> exit 1; đổi một byte dump → FAIL sha256 <tệp> exit 1; đích oneinvest → exit 2 trước khi chạm DB (danh sách DB không đổi)"
+    paths: ["scripts/db-khoi-phuc.sh", "scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; ca chi-kiem: không cờ → Id/StartedAt/danh sách container+volume tập dượt không đổi; ca tien-dieu-kien, mỗi ca đỏ ghim, exit 2 và không đổi gì: cụm đã trên volume → FAIL đã chuyển; thiếu khoi-phuc-ok → FAIL chưa có bản sao lưu đã khôi phục thử; khoi-phuc-ok mtime 25 giờ → FAIL bản sao lưu quá 24 giờ; volume đích có tệp → FAIL volume đích không rỗng; đã có bản lùi → FAIL đã có one-invest-db-cu; giờ giả trùng job launchd (DB_CHUYEN_GIO_GIA + plist chép thật) → FAIL trùng cửa sổ <job>; tiến trình giả tên chotot-daily.sh → FAIL đang chạy <tiến trình>; đĩa giả (DB_CHUYEN_DIA_GIA) nhỏ hơn 2× → FAIL đĩa không đủ <đĩa>; đối chứng dương: giờ giả ngoài mọi cửa sổ với plist chép thật → PASS cửa sổ"
+    paths: ["scripts/db-chuyen-volume.sh", "scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; ca chuyen: PASS pg_controldata shut down; PASS bản lùi còn, dừng, restart=no; PASS tar --diff 0 tệp lệch; PASS data_directory dưới mount volume; PASS số dòng bảng chính trước=sau; đối chứng đỏ: một tệp bản chép bị sửa trước bước so → FAIL tar --diff lệch <tệp>"
+    paths: ["scripts/db-chuyen-volume.sh", "scripts/db-volume-check.sh", "db/docker-compose.yml"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; ca tao-lai: sau --force-recreate và sau down+up: PASS số dòng bảng chính = sau chuyển; PASS max_connections=200 (ALTER SYSTEM mồi), DB phụ còn, extension postgis còn; đối chứng: cùng thao tác trên container kiểu cũ → số dòng về 0 (bảng mất) — chứng phép đo thấy được mất dữ liệu"
+    paths: ["scripts/db-chuyen-volume.sh", "scripts/db-volume-check.sh", "db/docker-compose.yml"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; ca lui: PASS container cũ chạy lại trên cổng tập dượt, số dòng = trước chuyển; PASS container mới dừng; PASS volume tập dượt còn và còn dữ liệu; ca lui-tu-tar: container kiểu cũ dựng bằng compose cũ thật (nhãn project thật) → sau --lam chạy compose cũ down → PASS bản lùi bị xoá (đo rủi ro, ghim dòng) → --lui --tu-tar → PASS sha256 tar lạnh khớp, cụm cũ chạy lại, số dòng = trước chuyển; đối chứng đỏ: tar lạnh sửa một byte → FAIL sha256 datadir-17.tar, exit 1, không dựng gì"
+    paths: ["scripts/db-chuyen-volume.sh", "scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; ca khong-cham: Id + StartedAt của one-invest-db trước = sau lượt; PASS không còn onehub-tapduot-*; ca don-khi-loi: lượt con bị SIGTERM sau khi dựng container tập dượt → sau khi thoát không còn container/volume onehub-tapduot-*"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0 SAU lượt chuyển thật; PASS data_directory /var/lib/postgresql/17/main dưới mount volume onehub_pgdata; PASS bản lùi one-invest-db-cu-* exited restart=no. Chiều đỏ: trước chuyển cùng lệnh exit 1 với FAIL data_directory nằm trong lớp ghi container (ghi trong evidence/live-truoc.log); selftest trên JSON inspect thật đã làm hỏng (mount /data) → FAIL"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-10
+    executor: judgment
+    inputs:
+      - _acceptance/db-vao-volume/evidence/chuyen-that.log
+      - _acceptance/db-vao-volume/evidence/khoi-phuc-that.log
+      - _acceptance/db-vao-volume/evidence/ops-check-truoc.log
+      - _acceptance/db-vao-volume/evidence/ops-check-sau.log
+      - docs/ops/db-volume.md
+      - docs/ops/runtime-map.md
+      - db/README.md
+    question: "Trong các tệp này: (1) khoi-phuc-that.log có cho thấy bản sao lưu thật của oneinvest khôi phục trên DB thử khớp số dòng mọi bảng, với giờ TRƯỚC giờ bắt đầu chuyển ghi trong chuyen-that.log không? (2) chuyen-that.log có bảng cửa sổ đọc từ plist (job, giờ, khoảng cách tới giờ chuyển) cho thấy giờ chuyển ngoài ±20 phút mọi job theo giờ; có danh sách bảng loại khỏi phép so kèm lý do từng bảng, danh sách ấy không chứa sale_offers, sale_offer_records, listings, properties, và số dòng các bảng còn lại trước = sau chuyển = sau tạo lại không? Và ops-check-sau.log có không xấu hơn ops-check-truoc.log (không thêm dòng FAIL hay nguồn quá hạn nào) không? (3) runbook có đủ lệnh sao lưu, khôi phục, chuyển, lùi, nơi để bản sao lưu chỉ ở đĩa máy này, hạn giữ bản lùi (giờ chuyển + 7 ngày), cách lùi từ tar lạnh, và cảnh báo không chạy docker compose từ checkout chưa pull main trong 7 ngày giữ không? Trả PASS chỉ khi cả ba đúng."
+    paths: ["docs/ops/db-volume.md", "docs/ops/runtime-map.md", "db/README.md"]
+    evidence_required: [run_id, verdict, rationale]
+
+  - id: E14
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_autostart_live
+    expected: "exit 0 SAU lượt chuyển thật: dòng PASS của hồ sơ db-tu-khoi-dong (one-invest-db running, policy unless-stopped; colima RunAtLoad=true và đang nạp); kết quả cùng lệnh TRƯỚC chuyển lưu ở evidence/autostart-live-truoc.log làm mốc"
+    paths: ["db/docker-compose.yml", "scripts/check-db-autostart.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E15
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_volume_static
+    expected: "exit 0; PASS danh sách bảng loại trừ của db-chuyen-volume.sh không chứa bảng canonical và còn ≥1 bảng được so; chiều đỏ ở E2 bản loai-canonical (thêm sale_offers vào danh sách) → FAIL danh sách loại trừ chứa bảng canonical sale_offers"
+    paths: ["scripts/db-chuyen-volume.sh", "scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

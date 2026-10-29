@@ -3,11 +3,11 @@
 // sau gộp, vì trên nhánh chưa gộp ca merge-base cũ vẫn xanh.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, cpSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { BEFORE_FIX, CONFIG_PAIR, HERE, ROOT, blobAt, git, requireCommit } from './test-helpers.mjs';
+import { BEFORE_FIX, CONFIG_PAIR, HERE, ROOT, blobAt, git, requireCommit, tempDir } from './test-helpers.mjs';
 
 const OLD_DIFF_CASE = 'M2-AC-10 diff config.yaml so merge-base origin/main chỉ thêm hai dòng executors của hồ sơ';
 
@@ -21,7 +21,7 @@ function mustGit(args, cwd) {
 function cloneWithConfigKey() {
   requireCommit(CONFIG_PAIR);
   requireCommit(BEFORE_FIX);
-  const dir = path.join(mkdtempSync(path.join(tmpdir(), 'sau-gop-')), 'kho');
+  const dir = path.join(tempDir('sau-gop-'), 'kho');
   mustGit(['clone', '--shared', '-q', ROOT, dir], tmpdir());
   for (const f of readdirSync(HERE).filter((x) => x.endsWith('.mjs'))) cpSync(path.join(HERE, f), path.join(dir, 'scripts/design-floor', f));
   mustGit(['add', '-A', 'scripts/design-floor'], dir);

@@ -225,8 +225,9 @@ Chuỗi tự khởi động khi máy khởi động lại:
   `cleanup`, `live-selftest`.
 - Triển khai sau merge: KHÔNG cần tạo lại container ngay — container đang sống đã mang `unless-stopped`
   (đặt tay 23/10). Lần `docker compose up -d` kế tiếp (`scripts/setup.sh`, `scripts/migrate-export.sh` hay
-  chạy tay) thấy cấu hình đổi và tự tạo lại container theo file mới, cùng policy; DB gián đoạn vài giây,
-  dữ liệu nằm trong volume `oneinvest_pgdata` nên không mất.
+  chạy tay) thấy cấu hình đổi và tự tạo lại container theo file mới, cùng policy; DB gián đoạn vài giây.
+  (Sửa 29/10: câu cũ ghi «dữ liệu nằm trong volume `oneinvest_pgdata` nên không mất» là SAI — volume ấy gắn sai
+  chỗ và rỗng, dữ liệu nằm trong lớp ghi container. Xem mục «DB local trong volume» ngay dưới.)
 - Giới hạn:
   - Cần đăng nhập macOS: LaunchAgent chỉ chạy trong phiên người dùng, máy khởi động lại mà chưa ai đăng
     nhập thì colima và DB chưa lên.
@@ -235,6 +236,19 @@ Chuỗi tự khởi động khi máy khởi động lại:
   - Bằng chứng «Docker khởi động lại → DB lên lại» đo trên Docker riêng tạm; chưa diễn tập trên colima của
     máy (dừng cùng lúc DB và các container dự án khác). Diễn tập là việc Mạnh chọn giờ làm tay; agent không
     tự khởi động lại colima hay Docker của máy. Diễn tập xong chạy lại lệnh `live`.
+
+## DB local trong volume `onehub_pgdata` (2026-10-29, `_acceptance/db-vao-volume/`)
+
+Ảnh kartoza để dữ liệu ở `/var/lib/postgresql/<major>/main`; compose trước 29/10 gắn volume ở
+`/var/lib/postgresql/data` nên volume rỗng và ~3,7 GB nằm trong lớp ghi container. Compose mới gắn volume có tên
+`onehub_pgdata` ở `/var/lib/postgresql`, project `onehub-db`. Sổ tay đầy đủ (sao lưu, khôi phục, chuyển, lùi, tar
+lạnh, hạn giữ bản lùi): `docs/ops/db-volume.md`.
+
+- Kiểm (chỉ đọc): `bash scripts/db-volume-check.sh live` — `data_directory` nằm dưới mount volume `onehub_pgdata`, bản
+  lùi `one-invest-db-cu-*` đang dừng.
+- Sao lưu: `bash scripts/db-sao-luu.sh` → `$HOME/onehub-backups/db/<UTC>/` (chỉ đĩa máy này — có tầng A).
+- Trong 7 ngày giữ bản lùi: không chạy `docker compose` từ checkout/worktree còn compose cũ (project `db`) — nó có thể
+  xoá bản lùi.
 
 ## Transform S03/S05 và migration enrich (chốt 2026-10-23, `_acceptance/enrich-hau-ky/`)
 

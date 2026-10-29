@@ -1,7 +1,7 @@
 // Dùng chung cho test của scripts/design-floor (hồ sơ dung-m2-song-song): gốc kho suy từ vị trí tệp, bản chép kho tạm,
 // đường tới bản gói acceptance-gate 2.35.0, ma trận biến thể viết tay.
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,9 +22,30 @@ export function requireKitFile(file) {
   return file;
 }
 
+// Mọi thư mục tạm của test design-floor đi qua tempDir (hồ sơ don-clone-tam-design-floor): ghi sổ đường, xoá cả sổ khi
+// tiến trình thoát — kể cả khi một ca ném giữa chừng. Tiến trình bị SIGKILL thì không dọn (giới hạn đã khai).
+const TEMP_DIRS = new Set();
+let cleanupArmed = false;
+
+// <<<TEMPDIR-MIEN
+/** Thư mục tạm mới trong tmpdir(), tự xoá khi tiến trình thoát; DESIGN_FLOOR_TMP_LOG bật thì ghi đường vào tệp nhật ký. */
+export function tempDir(prefix) {
+  if (!cleanupArmed) {
+    cleanupArmed = true;
+    process.once('exit', () => {
+      for (const d of TEMP_DIRS) rmSync(d, { recursive: true, force: true });
+    });
+  }
+  const dir = mkdtempSync(path.join(tmpdir(), prefix));
+  TEMP_DIRS.add(dir);
+  if (process.env.DESIGN_FLOOR_TMP_LOG) appendFileSync(process.env.DESIGN_FLOOR_TMP_LOG, `${dir}\n`);
+  return dir;
+}
+// TEMPDIR-MIEN>>>
+
 /** Chép các nguồn của hai lệnh sinh (và tệp tuỳ chọn khác) sang một gốc tạm. */
 export function copyRepo(extra = []) {
-  const dir = mkdtempSync(path.join(tmpdir(), 'design-floor-'));
+  const dir = tempDir('design-floor-');
   for (const rel of ['app/src/app/globals.css', 'app/src/components/ui', 'app/src/components/reui',
     '.claude/skills/onehub-ui/catalog.md', ...extra]) {
     cpSync(path.join(ROOT, rel), path.join(dir, rel), { recursive: true });
@@ -42,6 +63,8 @@ export function run(script, args, cwd = ROOT) {
 export const CONFIG_PAIR = '3b3a33e53671584edebf43a8c431a17507583954';
 /** Main ngay sau PR #165 — bản test trước khi sửa ca M2-AC-10. */
 export const BEFORE_FIX = '98757b5ff29c1801f5af25d07afd63e31a62d521';
+/** Main ngay sau PR #166 — bản test trước khi dọn thư mục tạm (hồ sơ don-clone-tam-design-floor). */
+export const BEFORE_TMP_FIX = '89730e6b5ded39de82b950fd330b8ea357f94a4f';
 export const M2_EXECUTOR_KEYS = ['design_floor_gen', 'design_floor_fresh'];
 
 export function git(args, cwd = ROOT) {
@@ -65,7 +88,7 @@ export function blobAt(rev, rel, cwd = ROOT) {
 
 /** Dòng thêm/bớt giữa hai bản văn (git diff --no-index, bỏ dòng tiêu đề diff). */
 export function soCapConfig(before, after) {
-  const dir = mkdtempSync(path.join(tmpdir(), 'cap-config-'));
+  const dir = tempDir('cap-config-');
   writeFileSync(path.join(dir, 'before'), before);
   writeFileSync(path.join(dir, 'after'), after);
   const r = git(['diff', '--no-index', '--unified=0', 'before', 'after'], dir);

@@ -12,8 +12,8 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>7 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>81 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>50 việc"] --> GG{"Cổng Giá trị"}
+  GB --> DG["Đã giao<br/>87 việc"]
+  GB --> CN["Chờ phiên nghiệm thu<br/>51 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
 
@@ -47,6 +47,7 @@ flowchart TD
 - DB local tự khởi động lại sau khi Docker hoặc máy khởi động lại (`db-tu-khoi-dong`)
 - /api/v1/deals chỉ trả dữ liệu cho token ops cho tới khi tin mock được rút khỏi canonical (`deals-api-tam-dong`)
 - Người vận hành mở «Căn giá tốt» /ops/deals không thấy căn có diện tích hay số phòng phi lý, danh sách không dồn ở trần giảm giá, và thẻ ghi «đăng 1 lần» thay «mới» (`deals-loai-tin-phi-ly`)
+- Người xem và bearer chung không nhận định danh tài khoản thu hay mã nhóm Zalo ở bề mặt Thu thập; mã nhóm không lên cloud (`dinh-danh-tai-khoan-thu-theo-vai`)
 - Người vận hành mở /ops/data-flow trên cloud và thấy số chặng bài → tin rao → căn theo nguồn và số tin từng bậc, cùng số với máy thu, không còn khung «Chỉ xem ở máy thu» (`dong-chay-len-cloud`)
 - Người vận hành mở /ops/data-flow ở máy thu khi bước làm tươi số dòng chảy hỏng quá 45 phút thì thấy cảnh báo số cũ như trên cloud, không phải số cũ trình bày như số mới (`dong-chay-so-cu-may-thu`)
 - Người vận hành mở «Kiểm chất lượng» trên /ops/quality thấy bản mới nhất của mỗi kiểm theo từng thực thể, số kiểm đếm đúng, và kết quả độ phủ không ghi «Đạt» xanh khi độ phủ 0% (`dq-moi-nhat-moi-kiem`)
@@ -104,12 +105,15 @@ flowchart TD
 - script cài collector :9210 dưới launchd (ZC4 bước code) — kiểm điều kiện chạy trước, ghi plist, KHÔNG tự khởi động (`collector-api-launchd`)
 - Collector API :9210 tắt êm — SIGTERM/SIGINT flush hết buffer rồi mới thoát (`collector-graceful-shutdown`)
 - 2510-2 — collector API không còn treo cứng khi một lượt flush có hơn 5000 tin mới; bộ nhớ khử trùng giữ đúng 5000 id mới nhất; lô HTTP có trần (`collector-seen-cap`)
+- Dữ liệu DB local nằm trong volume có tên — sao lưu, khôi phục kiểm được, chuyển và lùi (`db-vao-volume`)
 - test DB theo lược đồ sau 044 — DP-AC-5 xoá cột PII trên bảng bản ghi, test không áp lại 044 khi DB đã có (`deals-phi-ly-test-theo-view`)
 - tài khoản ops thử chỉ ở DB local cho máy tự đăng nhập dev (`dev-ops-account`) — đã giao — máy thông, cửa veto còn mở
 - Biểu đồ «Chặng theo ngày» trên /ops/data-flow vẽ đủ mọi ngày của cửa sổ, ngày nguồn im là điểm 0 (`df0-chang-theo-ngay-diem-0`)
 - Đầu trang /ops/data-flow đếm «đề xuất làm giàu» theo trạng thái chờ thật (queued), thôi luôn là 0 (`df0-dem-de-xuat-lam-giau`)
 - Phép đo gán khu vực tin rao (kiem-tin-rao-gan-khu-vuc --thu) tự dựng tin mồi trỏ khu vực không hợp lệ trong transaction, không dựa vào trạng thái DB thật (`do-khu-vuc-tu-dung-moi`)
 - đo nền hiệu năng DB local + 5 trang chính (Invest, Ops) trên build prod — số nền vào docs/research, ngưỡng chỉ đề xuất (`do-nen-hieu-nang`)
+- Bộ test design-floor dọn mọi thư mục tạm nó tạo (clone sau-gộp, bản chép, cap-config, reuse-plan) khi tiến trình thoát, để mỗi lượt chạy không bỏ lại rác trong TMPDIR (`don-clone-tam-design-floor`)
+- Mã giao diện của app hết hex thô ngoài thư mục vendor — màu bản đồ dời sang app/src/lib, mặt nạ quét dùng black, giữ đúng từng giá trị màu (`don-hex-tho`)
 - dựng sẵn nguyên liệu M2 của design-floor (chưa bật) — lệnh sinh tokens DTCG + danh mục thành phần, skill onehub-ui buộc reuse-plan.md ở S1 (`dung-m2-song-song`)
 - ca «AC-6 để sau» của agent/tests/enrich-db.test.ts khoanh lượt backlog vào tin của chính ca — hết đỏ ngẫu nhiên trên DB :5433 dùng chung (`enrich-db-test-khoanh-tin`)
 - Hậu kỳ enrich-qua-de-xuat — đề xuất sống qua nạp lại, hoàn tác có audit, E1 không suy đất từ tên nhóm (`enrich-hau-ky`)
@@ -127,6 +131,7 @@ flowchart TD
 - PL4 — hook Zalo đẩy mọi tin tới collector kèm điểm Kev (meta.kev), không bỏ tin theo điểm (`kev-thanh-nhan`)
 - kho tri thức riêng tư đi kèm — nguồn của mọi bản phạm vi đang dùng là trang tri thức ghim băm (`kho-tri-thuc-invest`)
 - khoá nạp Zalo tự gỡ khi tiến trình giữ khoá đã chết hoặc khoá quá 2 giờ; S05 tạm dừng thì bước thu không gọi Apify; lịch S05 xuống 2 lượt/tuần (`khoa-nap-s05-paused`)
+- Danh sách tệp bản đồ được dùng hex (MAP_FILES) viết trước chỉ ghim chữ ở một module chung; LB-AC-1 và DHT-AC-5 cùng đọc nó (`lb-ac-1-map-files-mot-nguon`)
 - Gỡ ảnh và chữ AirDNA khỏi trang chi tiết listing (Invest) (`listing-airdna-photos`)
 - Lộ trình máy đọc + quy định «mỗi loại thông tin một chỗ» — bật gói road-map, cắt đợt phan-loai-2310 và cam-mau-2310 (`lo-trinh-2310`)
 - Lockdown tính ở máy local không báo «Ổn» cho lớp không kiểm được và «Dòng log cuối» của job là dòng có nghĩa (`lockdown-local-noi-that`)
@@ -135,6 +140,7 @@ flowchart TD
 - Ca «M2-AC-10 chỉ thêm hai dòng config» so cặp commit cố định 3b3a33e5^→3b3a33e5 thay vì merge-base origin/main, để bộ test design-floor không đỏ trên main sau khi gộp hay trên nhánh khác sửa config.yaml (`m2-ac10-so-cap-co-dinh`)
 - Dọn luật hỏi quyền rộng — rào push main chuyển sang branch protection GitHub như crm/kit (`narrow-ask-rules`)
 - Tick bật nhóm trên /ops/sources luôn ghi requireMention true, và bộ ghi cấu hình OpenClaw từ chối mọi bản cấu hình phạm bất biến bộ canh trước khi ghi (`nhom-moi-requiremention`)
+- Vùng giao diện của design-floor liệt kê dương (loại thư mục vendor), có test bắt thư mục sót, và sàn thiết kế S4 được nối (`noi-design-floor`)
 - hai việc nối tiếp ZC4 — script cài collector tạo thư mục log và không để plist rỗng; lượt thu bị bỏ qua không để lại thư mục ẩn rỗng (`noi-tiep-zc4`)
 - hai test app chập chờn thành tất định — ON22-AC-5 (lớp hạ tầng đo trực tiếp máy) và listings-browse (ngăn lọc đóng theo nhịp hẹn giờ, assert inspect phần tử jsdom treo tiến trình) (`on-dinh-test-app-chap-chon`)
 - Siết quyền — cổng Ops đóng mặc định, /api/zalo-media chỉ ảnh staging (`ops-access-hardening`)
@@ -145,6 +151,7 @@ flowchart TD
 - /ops/review và /ops/sources trên cloud không còn 500 khi thiếu bảng tầng A — nói rõ chỉ có ở máy local (`ops-review-sources-500-tren-cloud`)
 - Vá ranh giới cổng — Căn giá tốt sang Ops, gỡ AirDNA khỏi Mô phỏng đầu tư (`portal-deals-airdna`)
 - Khu vực Hà Nội chỉ gồm phường/xã của Hà Nội; metrics tính lại theo ranh giới đúng (`ranh-gioi-khu-vuc-dung`)
+- script đo nền hiệu năng chỉ chạy trên DB local — rào assertLocalDatabaseUrl trước mọi lệnh ghi DB (`rao-db-local-do-nen`)
 - Ảnh tin trên thẻ hàng duyệt /ops/review (dải ảnh + phóng to, nối loadReviewMedia) (`review-card-photos`)
 - Backend ảnh tin cho hàng duyệt /ops/review (route /api/zalo-media + loader ảnh theo thẻ) (`review-media-backend`)
 - Đưa view ruler v_ruler_p2_area + v_ruler_p2 vào migration và hướng dẫn bắt kịp schema cloud (`ruler-p2-views-migration`)
