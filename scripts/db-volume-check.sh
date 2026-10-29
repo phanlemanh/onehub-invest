@@ -82,7 +82,8 @@ check_loai_tru() { # $1 = db-chuyen-volume.sh
 # (rỗng khi chờ xanh), còn lại: lệnh kiểm. Cùng khuôn check-db-autostart.sh.
 expect() {
   local label="$1" want="$2" msg="$3" out rc; shift 3
-  out=$( FAIL=0; "$@"; exit $FAIL ); rc=$?
+  # Lệnh ngoài (script) trả mã thoát của nó; hàm kiểm trong tệp này báo qua biến FAIL — nhận cả hai.
+  out=$( FAIL=0; "$@"; r=$?; [ $FAIL != 0 ] && exit 1; exit $r ); rc=$?
   if [ "$want" = 0 ]; then
     [ $rc = 0 ] && pass "$label xanh" || { fail "$label lẽ ra xanh"; echo "$out"; }
   elif [ $rc != 0 ] && grep -qF "$msg" <<<"$out"; then
@@ -126,9 +127,123 @@ run_mutation() {
   fi
 }
 
+# ─── tap-duot ───────────────────────────────────────────────────────────────────────────────────────────────
+# Cụm giả cùng daemon, mọi tài nguyên tên onehub-tapduot-* / onehub_tapduot_* (cổng 55433). Kiểu cũ dựng bằng compose
+# CŨ THẬT ở commit trước vòng (TD_CU_REF) nên mang nhãn compose thật. Không bao giờ chạm one-invest-db / onehub_pgdata.
+DB_THAT=one-invest-db
+TD_CU_REF="${TD_CU_REF:-89730e6b}"       # main trước vòng db-vao-volume: volume gắn /var/lib/postgresql/data
+TD_DB=onehub-tapduot-db
+TD_PORT=55433
+TD_TMP=""; TD_BAN=""
+td_psql() { docker exec -i -e PGPASSWORD=oneinvest "$TD_DB" psql -U oneinvest -h localhost -At -q -v ON_ERROR_STOP=1 "$@"; }
+td_dem() { td_psql -d "${2:-oneinvest}" -c "select count(*) from $1" 2>/dev/null; }
+
+td_cleanup() {
+  local x
+  for x in $(docker ps -a --format '{{.Names}}' | grep -E '^onehub-tapduot-'); do
+    case "$x" in onehub-tapduot-*) docker rm -fv "$x" >/dev/null 2>&1 ;; esac
+  done
+  for x in $(docker volume ls --format '{{.Name}}' | grep -E '^onehub[-_]tapduot'); do
+    case "$x" in onehub-tapduot*|onehub_tapduot*) docker volume rm -f "$x" >/dev/null 2>&1 ;; esac
+  done
+  [ -n "$TD_TMP" ] && rm -rf "$TD_TMP"
+  [ -n "$TD_BAN" ] && rm -rf "$TD_BAN"
+}
+td_con_sot() { # số tài nguyên tập dượt còn lại
+  echo $(( $(docker ps -a --format '{{.Names}}' | grep -cE '^onehub-tapduot-') + $(docker volume ls --format '{{.Name}}' | grep -cE '^onehub[-_]tapduot') ))
+}
+td_cho_healthy() { # $1 container — chờ tối đa 180 giây
+  local i s; for i in $(seq 1 180); do
+    s=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$1" 2>/dev/null)
+    [ "$s" = healthy ] && return 0; sleep 1
+  done
+  echo "--- đuôi log $1:"; docker logs --tail 15 "$1" 2>&1; return 1
+}
+td_dung_cu() { # cụm kiểu cũ + dữ liệu mồi
+  mkdir -p "$TD_TMP/cu"
+  git -C "$ROOT" show "$TD_CU_REF:db/docker-compose.yml" \
+    | sed -e "s/container_name: one-invest-db/container_name: $TD_DB/" -e "s/\"5433:5432\"/\"$TD_PORT:5432\"/" > "$TD_TMP/cu/docker-compose.yml" \
+    || { fail "không đọc được compose cũ ở $TD_CU_REF"; return 1; }
+  grep -q '/var/lib/postgresql/data' "$TD_TMP/cu/docker-compose.yml" || { fail "compose ở $TD_CU_REF không phải kiểu cũ"; return 1; }
+  docker compose -p onehub-tapduot-cu -f "$TD_TMP/cu/docker-compose.yml" up -d >/dev/null 2>&1 || { fail "không dựng được $TD_DB"; return 1; }
+  td_cho_healthy "$TD_DB" || { fail "$TD_DB không healthy"; return 1; }
+  td_psql -d oneinvest -c "create table mau_a(id serial primary key, v int); insert into mau_a(v) select g from generate_series(1,1000) g;
+    create extension if not exists postgis; create table mau_geo(id int, g geometry(Point,4326));
+    insert into mau_geo select g, st_setsrid(st_makepoint(105.8+g/100.0, 21.0), 4326) from generate_series(1,10) g;
+    create table mau_ghi(id serial primary key, luc timestamptz default now()); insert into mau_ghi default values;" \
+    && td_psql -d postgres -c "create database zcode_tapduot" && td_psql -d zcode_tapduot -c "create table z(i int); insert into z values (1),(2),(3)" \
+    && td_psql -d postgres -c "alter system set max_connections = 200" || { fail "không nạp được dữ liệu mồi"; return 1; }
+  docker restart "$TD_DB" >/dev/null && td_cho_healthy "$TD_DB" || { fail "$TD_DB không lên lại sau ALTER SYSTEM"; return 1; }
+  [ "$(td_psql -d postgres -c 'show max_connections')" = 200 ] || { fail "mồi ALTER SYSTEM không ăn"; return 1; }
+  pass "cụm kiểu cũ $TD_DB dựng bằng compose $TD_CU_REF (project onehub-tapduot-cu), mồi mau_a=1000 mau_geo=10 zcode_tapduot max_connections=200"
+}
+
+ca_sao_luu() {
+  local hook="docker exec -i -e PGPASSWORD=oneinvest $TD_DB psql -U oneinvest -h localhost -d oneinvest -qc 'insert into mau_a(v) values (-1)'"
+  local out rc a so
+  out=$(DB_CONTAINER="$TD_DB" DB_SAO_LUU_SAU_SNAPSHOT_HOOK="$hook" bash "$ROOT/scripts/db-sao-luu.sh" "$TD_BAN/b1" 2>&1); rc=$?
+  [ $rc = 0 ] || { fail "db-sao-luu lẽ ra xanh (rc=$rc)"; echo "$out"; return 1; }
+  for f in oneinvest.dump postgres.dump zcode_tapduot.dump globals.sql so-dong.tsv thong-tin.txt manifest.sha256; do
+    [ -s "$TD_BAN/b1/$f" ] || fail "bản sao lưu thiếu $f"
+  done
+  ( cd "$TD_BAN/b1" && shasum -a 256 -c manifest.sha256 >/dev/null 2>&1 ) && pass "manifest.sha256 khớp mọi tệp" || fail "manifest.sha256 không khớp"
+  pass "bản có <db>.dump mỗi DB không template + globals.sql + so-dong.tsv + manifest.sha256"
+  so=$(awk -F'\t' '$1 == "public.mau_a" { print $2 }' "$TD_BAN/b1/so-dong.tsv"); a=$(td_dem mau_a)
+  if [ "$so" = 1000 ] && [ "$a" = 1001 ]; then
+    pass "so-dong.tsv đếm cùng snapshot — dòng chen sau pg_export_snapshot không vào số (mau_a 1000, cụm sống 1001)"
+  else fail "so-dong.tsv không cùng snapshot (so-dong mau_a=$so, cụm sống $a — chờ 1000/1001)"; fi
+  local trong="$ROOT/_acceptance/db-vao-volume/.thu-sao-luu-$$"
+  expect "đích trong cây kho" do "FAIL đích nằm trong kho" bash "$ROOT/scripts/db-sao-luu.sh" "$trong"
+  [ ! -e "$trong" ] && pass "đích trong kho: không ghi byte nào" || { fail "đích trong kho đã bị tạo $trong"; rm -rf "$trong"; }
+}
+
+ca_khoi_phuc() {
+  local ds0 ds1
+  DB_CONTAINER="$TD_DB" expect "khôi phục bản b1" 0 "" bash "$ROOT/scripts/db-khoi-phuc.sh" "$TD_BAN/b1" oneinvest_tapduot_kp
+  [ -f "$TD_BAN/b1/khoi-phuc-ok" ] && pass "dấu khoi-phuc-ok có" || fail "không có dấu khoi-phuc-ok"
+  [ "$(td_dem mau_a oneinvest_tapduot_kp)" = 1000 ] && [ "$(td_dem mau_geo oneinvest_tapduot_kp)" = 10 ] \
+    && pass "bản khôi phục mau_a=1000 (không có dòng chen) mau_geo=10" || fail "bản khôi phục sai số dòng"
+  cp -R "$TD_BAN/b1" "$TD_BAN/b1-lech"; rm -f "$TD_BAN/b1-lech/khoi-phuc-ok"
+  awk 'BEGIN { FS = OFS = "\t" } $1 == "public.mau_a" { $2 = 999 } 1' "$TD_BAN/b1/so-dong.tsv" > "$TD_BAN/b1-lech/so-dong.tsv"
+  ( cd "$TD_BAN/b1-lech" && shasum -a 256 $(ls | grep -v '^manifest.sha256$') > manifest.sha256 )
+  DB_CONTAINER="$TD_DB" expect "so-dong.tsv sửa một dòng" do "FAIL lệch bảng public.mau_a 999≠1000" bash "$ROOT/scripts/db-khoi-phuc.sh" "$TD_BAN/b1-lech" oneinvest_tapduot_kp
+  cp -R "$TD_BAN/b1" "$TD_BAN/b1-sha"; printf 'x' >> "$TD_BAN/b1-sha/oneinvest.dump"
+  DB_CONTAINER="$TD_DB" expect "dump đổi một byte" do "FAIL sha256 oneinvest.dump" bash "$ROOT/scripts/db-khoi-phuc.sh" "$TD_BAN/b1-sha" oneinvest_tapduot_kp
+  ds0=$(td_psql -d postgres -c "select string_agg(datname, ',' order by datname) from pg_database")
+  DB_CONTAINER="$TD_DB" expect "đích oneinvest" do "FAIL đích phải dạng oneinvest_" bash "$ROOT/scripts/db-khoi-phuc.sh" "$TD_BAN/b1" oneinvest
+  ds1=$(td_psql -d postgres -c "select string_agg(datname, ',' order by datname) from pg_database")
+  [ "$ds0" = "$ds1" ] && pass "đích oneinvest: danh sách DB không đổi" || fail "đích oneinvest: danh sách DB đổi ($ds0 → $ds1)"
+  # Đối chứng: đếm ngoài snapshot (phiên riêng, sau dòng chen) → so-dong.tsv thấy dòng mà dump không thấy.
+  local hook="docker exec -i -e PGPASSWORD=oneinvest $TD_DB psql -U oneinvest -h localhost -d oneinvest -qc 'insert into mau_a(v) values (-2)'"
+  DB_CONTAINER="$TD_DB" DB_SAO_LUU_SAU_SNAPSHOT_HOOK="$hook" DB_SAO_LUU_DEM_NGOAI_SNAPSHOT=1 bash "$ROOT/scripts/db-sao-luu.sh" "$TD_BAN/b2" >/dev/null 2>&1 \
+    || fail "db-sao-luu (đếm ngoài snapshot) không chạy"
+  DB_CONTAINER="$TD_DB" expect "đếm lệch snapshot (đối chứng đếm ngoài snapshot)" do "FAIL lệch bảng public.mau_a 1002≠1001" bash "$ROOT/scripts/db-khoi-phuc.sh" "$TD_BAN/b2" oneinvest_tapduot_kp
+}
+
+run_tap_duot() {
+  local id0 st0 id1 st1
+  export DB_CONTAINER="$TD_DB"
+  TD_TMP=$(mktemp -d)
+  mkdir -p "$HOME/onehub-backups" && TD_BAN=$(mktemp -d "$HOME/onehub-backups/.tapduot-XXXXXX")
+  trap td_cleanup EXIT; trap 'exit 143' TERM; trap 'exit 130' INT
+  id0=$(docker inspect -f '{{.Id}}' "$DB_THAT" 2>/dev/null); st0=$(docker inspect -f '{{.State.StartedAt}}' "$DB_THAT" 2>/dev/null)
+  [ "$(td_con_sot)" = 0 ] || { echo "dọn tài nguyên tập dượt còn sót từ lượt trước"; td_cleanup; TD_TMP=$(mktemp -d); TD_BAN=$(mktemp -d "$HOME/onehub-backups/.tapduot-XXXXXX"); }
+  td_dung_cu || return
+  # Móc phá-thử cho ca don-khi-loi — lượt thật không đặt biến này.
+  [ "${TD_SLEEP_AFTER:-}" = dung ] && { echo "chờ tín hiệu sau khi dựng $TD_DB"; sleep 300 & wait $!; }
+  ca_sao_luu; ca_khoi_phuc
+  declare -F ca_chuyen_tron >/dev/null && ca_chuyen_tron
+  id1=$(docker inspect -f '{{.Id}}' "$DB_THAT" 2>/dev/null); st1=$(docker inspect -f '{{.State.StartedAt}}' "$DB_THAT" 2>/dev/null)
+  if [ -n "$id0" ] && [ "$id0" = "$id1" ] && [ "$st0" = "$st1" ]; then pass "$DB_THAT không bị chạm (Id + StartedAt $st0 không đổi)"
+  else fail "$DB_THAT bị chạm trong lượt (Id $id0→$id1, StartedAt $st0→$st1)"; fi
+  td_cleanup; TD_TMP=""; TD_BAN=""
+  [ "$(td_con_sot)" = 0 ] && pass "không còn onehub-tapduot-*" || fail "còn $(td_con_sot) tài nguyên onehub-tapduot-*"
+}
+
 case "$MODE" in
   static) check_compose "$COMPOSE"; check_loai_tru "$CHUYEN" ;;
   mutation) run_mutation ;;
+  tap-duot) run_tap_duot ;;
   *) echo "dùng: $0 static|mutation|tap-duot|live|live-selftest" >&2; exit 2 ;;
 esac
 [ $FAIL = 0 ] && echo "db-volume-check $MODE: ĐẠT" || echo "db-volume-check $MODE: KHÔNG ĐẠT"
