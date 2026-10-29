@@ -5,7 +5,7 @@ slug: do-nen-hieu-nang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-27-do-nen-hieu-nang-design.md
@@ -60,3 +60,15 @@ ngưỡng để đưa vào luật. Hàng ĐO, không đặt luật. Khởi độ
 - Hỏi-1 ở Cổng Phạm vi (sổ quyết định, dòng `chi-nguoi`) đã trả lời 29/10 theo khuyến nghị: thước «thời gian tải» là HTML phía
   server trên build prod, 20 lượt cho 5 trang `/vn`, `/vn/hanoi`, `/vn/hanoi/listings`, `/ops`, `/ops/data-flow`; LCP trong trình
   duyệt là hàng riêng.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: Ba tệp tham số của vòng soát vẫn nằm trên đĩa và chưa được chặn khỏi git. Nếu ai đó lỡ commit toàn bộ thư mục, các đường dẫn chứa tên nguồn thật có thể lọt lên nhánh, và cổng kiểm sẽ báo đỏ trở lại.
+  - Ngoài-3: Một cơ sở dữ liệu dựng mới từ các bản migration sẽ chưa có bộ đếm thống kê truy vấn cho đến khi chạy lệnh đo hoặc bật tay.
+  - Ngoài-4: Người đọc tài liệu thiết kế sẽ hiểu sai cách đăng nhập khi đo và tưởng việc chọn thước đo còn chờ Mạnh quyết, dù đã chốt ngày 29/10.
+  - Ngoài-5: Khi máy chủ thử không khởi động được, người chạy chỉ thấy thông báo chung chung và có thể đo nhầm trên một máy chủ cũ còn sót lại.
+  - Ngoài-6: Chạy lại phép đo sau khi mã ứng dụng đổi vẫn có thể đo bản dựng cũ mà vẫn báo xanh.
+  - Ngoài-7: Cột dung lượng trang trong báo cáo hơi thấp hơn thực tế vì trang tiếng Việt có nhiều ký tự chiếm nhiều byte.
+  - Ngoài-8: Tài liệu viết quá rộng rằng không có truy vấn nền nào lẫn vào, trong khi chỉ mới kiểm hai danh sách 10 dòng.
+  - Ngoài-9: Tài liệu thiết kế mô tả sai cách đăng nhập khi đo và cửa sổ đo, dễ làm người đọc sau hiểu nhầm cơ chế.
+  - Ngoài-10: Phép kiểm bản sao lưu báo xanh đúng khi sha khớp, nhưng nhánh báo đỏ khi sao lưu lệch chưa được chứng minh là bắn thật.
+  - Ngoài-11: Phép đo có thể chạy trên bản dựng cũ nhưng vẫn ghi mã phiên bản hiện tại, làm số đo bị gán nhầm.
+  - Ngoài-12: Phép kiểm «tài khoản thử không bị đụng» có thể báo xanh dù tài khoản không có, nên chưa chắc đã kiểm được gì trong trường hợp đó.
