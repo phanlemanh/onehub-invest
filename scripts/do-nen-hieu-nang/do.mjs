@@ -34,7 +34,9 @@ export const TRANG = [
 ]
 const pg = createRequire(path.join(APP, "package.json"))("pg")
 // Câu truy vấn và tên bảng mang tên nguồn thật (tên bảng stg_*) — che bằng mã S0x trước khi ghi (SPL tầng A, ADR-0007).
-const TEN_NGUON = sourceRegistrySeeds(ROOT).map(({ code, realName }) => ({ code, realName }))
+// Danh sách che: seed của migration (để chạy được trước khi kết nối) hợp với source_registry SỐNG sau khi kết nối — tên chỉ
+// có ở DB local (vd S08, AGENTS.md luật 5) không nằm trong migration.
+let TEN_NGUON = sourceRegistrySeeds(ROOT).map(({ code, realName }) => ({ code, realName }))
 const che = (s) => { const r = maskSourceNames(s, TEN_NGUON); if (r == null) throw new Error("không che được tên nguồn — dừng, không ghi chữ gốc"); return r }
 const ms = (t0) => Number(process.hrtime.bigint() - t0) / 1e6
 const phanVi = (xs, p) => { const s = [...xs].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil((p / 100) * s.length) - 1)] }
@@ -90,6 +92,10 @@ async function doTrang(t, cookie) {
 const sql = new pg.Client({ connectionString: DB_URL, application_name: "do-nen-hieu-nang" })
 await sql.connect()
 const q = async (s, v) => (await sql.query(s, v)).rows
+const song = await q("select code, real_name from source_registry where real_name is not null and real_name <> ''")
+if (!song.length) throw new Error("source_registry không có real_name nào — không che được, dừng")
+const coSan = new Set(TEN_NGUON.map((e) => `${e.code}\u0000${e.realName}`))
+TEN_NGUON = [...TEN_NGUON, ...song.map((r) => ({ code: r.code, realName: r.real_name })).filter((e) => !coSan.has(`${e.code}\u0000${e.realName}`))]
 const cauHinh = Object.fromEntries((await q("select name, setting from pg_settings where name in ('max_connections','shared_preload_libraries','server_version','shared_buffers','work_mem')")).map((r) => [r.name, r.setting]))
 if (!String(cauHinh.shared_preload_libraries).includes("pg_stat_statements")) throw new Error("pg_stat_statements chưa nạp (shared_preload_libraries)")
 await q("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")

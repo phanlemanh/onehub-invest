@@ -3,6 +3,7 @@
 // chứng dương: bản chép do.mjs chèn một tên thật → bắt, nêu tệp (không in tên).
 import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
+import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..")
@@ -15,8 +16,22 @@ const i = md.indexOf("## Đề xuất ngưỡng")
 if (i >= 0 && /chờ Mạnh quyết/.test(md.slice(i, i + 600))) console.log("ok muc De xuat nguong: tach rieng, ghi cho Manh quyet"); else { console.log("THIEU MUC DE XUAT"); bad = 1 }
 const base = git("merge-base", "origin/main", "HEAD").trim()
 if (git("diff", "--name-only", base, "HEAD", "--", "AGENTS.md").trim() === "") console.log("ok AGENTS.md khong doi"); else { console.log("AGENTS BI DOI"); bad = 1 }
-const entries = sourceRegistrySeeds(ROOT).map(({ code, realName }) => ({ code, realName })).filter((e) => e.realName)
-if (!entries.length) { console.log("LO TEN NGUON: không đọc được source_registry để đối chiếu"); bad = 1 }
+// Tên đối chiếu = seed migration HỢP source_registry SỐNG ở DB local (AC-5: «tên rút từ source_registry lúc chạy»); tên chỉ có
+// ở DB (vd S08) không nằm trong migration. Không đọc được DB → đỏ, không lùi về seed.
+const seeds = sourceRegistrySeeds(ROOT).map(({ code, realName }) => ({ code, realName })).filter((e) => e.realName)
+let song = []
+try {
+  const pg = createRequire(path.join(ROOT, "app/package.json"))("pg")
+  const c = new pg.Client({ connectionString: process.env.DATABASE_URL || "postgres://oneinvest:oneinvest@localhost:5433/oneinvest" })
+  await c.connect()
+  song = (await c.query("select code, real_name from source_registry where real_name is not null and real_name <> ''")).rows.map((r) => ({ code: r.code, realName: r.real_name }))
+  await c.end()
+} catch (e) { console.log(`LO TEN NGUON: khong doc duoc source_registry song (${e.code ?? e.message})`); bad = 1 }
+const khoa = (e) => `${e.code}\u0000${e.realName}`
+const coSeed = new Set(seeds.map(khoa))
+const chiSong = song.filter((e) => !coSeed.has(khoa(e)))
+const entries = [...seeds, ...chiSong]
+if (!song.length) { console.log("LO TEN NGUON: source_registry song rong — khong doi chieu duoc"); bad = 1 }
 // Tệp đã có trên base (vd _acceptance/config.yaml mang tên của hàng khác) chỉ quét DÒNG NHÁNH THÊM; tệp mới thì cả tệp (diff thêm hết).
 // Đếm RÒNG theo từng tên: tệp máy sinh một dòng rất dài (LO-TRINH.html) đổi vài ký tự thì cả dòng vào diff, kéo theo tên đã có
 // sẵn trên base — tên chỉ tính khi số lần ở dòng thêm vượt số lần ở dòng bớt.
@@ -32,6 +47,11 @@ if (lo) bad = 1; else console.log(`ok tang A: 0 ten nguon that trong dong them c
 const doMjs = "scripts/do-nen-hieu-nang/do.mjs"
 if (entries.length && quet(doMjs, readFileSync(path.join(ROOT, doMjs), "utf8") + `\n// ${entries[0].realName}\n`)) console.log(`doi chung: ban chep ${doMjs} chen ten that → bat, neu tep`)
 else { console.log("DOI CHUNG KHONG BAT"); bad = 1 }
+// Đối chứng tên chỉ có ở DB sống: bản chép do.mjs chèn một tên như vậy → bắt (không in tên). Không có tên nào chỉ ở DB → nói ra.
+if (chiSong.length) {
+  if (quet(doMjs, readFileSync(path.join(ROOT, doMjs), "utf8") + `\n// ${chiSong[0].realName}\n`)) console.log(`doi chung song: ban chep ${doMjs} chen ten chi co o source_registry (${chiSong[0].code}) → bat`)
+  else { console.log("DOI CHUNG SONG KHONG BAT"); bad = 1 }
+} else console.log("doi chung song: source_registry khong co ten nao ngoai migration")
 // Cặp cho phép đếm ròng, cùng một dòng bớt: dòng thêm y hệt → 0; dòng thêm chèn thêm một tên thật → bắt.
 if (entries.length) {
   const dong = `x ${entries[0].realName} y`
