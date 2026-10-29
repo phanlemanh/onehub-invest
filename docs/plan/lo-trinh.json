@@ -136,7 +136,7 @@
     },
     {
       "ma": "PL5",
-      "cau_giao": "Transform ghi phát biểu listing_intent từ meta.kev.p cho mọi tin, không loại tin nào theo Kev khi ngưỡng chưa đo",
+      "cau_giao": "Transform ghi phát biểu ý định tin (tin rao · Yêu cầu · không phải tin) và bán/thuê từ câu hỏi Kev typed kèm xác suất cho mọi tin, không loại tin nào theo Kev khi ngưỡng chưa đo",
       "vai": "nen",
       "tieu_chi": 8,
       "vi_sao": "C1.1: lọc là phát biểu ở pipeline, chạy lại được khi đổi ngưỡng.",
@@ -146,13 +146,13 @@
         "PL6"
       ],
       "slug": "meta-kev-thanh-phat-bieu",
-      "bat_khi": "Nạp một ngày v3: mọi tin stg có cột kev_*; số tin rao không giảm so với khi chưa có Kev",
+      "bat_khi": "Nạp một ngày v3: mọi tin stg có cột kev_*; số tin rao không giảm so với khi chưa có Kev; bài «khách tìm…» ra Yêu cầu, không bị bỏ",
       "nhom": "du-lieu-that",
       "dot": "phan-loai-2310",
       "phu": [
         "C1.1"
       ],
-      "ghi_chu": "KV3 (nghiệm thu PL4, 23/10): hết lọc Kev thì raw/stg Zalo dự kiến phình ×3 — thêm tiêu chí đo dung lượng và thời gian chạy transform-zalo + sync cloud trên một ngày v3 trước khi bật."
+      "ghi_chu": "KV3 (nghiệm thu PL4, 23/10): hết lọc Kev thì raw/stg Zalo dự kiến phình ×3 — thêm tiêu chí đo dung lượng và thời gian chạy transform-zalo + sync cloud trên một ngày v3 trước khi bật. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): câu gate cũ gộp «tìm mua» vào tin rao, và meta.kev.p một câu không tách được Yêu cầu; thử 61 bài cho thấy Kev chưa huấn luyện lại yếu ở bán/thuê — ở bậc suy luận, chỉnh lại Kev là mục chờ PH3."
     },
     {
       "ma": "PL6",
@@ -258,9 +258,9 @@
     },
     {
       "ma": "PL13",
-      "cau_giao": "Bộ đọc ra phát biểu mã căn, toà, dự án, giá dạng khoảng và price_basis cho tin Ocean Park 1, mỗi phát biểu kèm trích dẫn",
+      "cau_giao": "Bộ đọc ra phát biểu mã căn, toà, dự án, giá dạng khoảng, price_basis, loại căn có cờ «+» và các trường thuê (nội thất, điều khoản HĐ/cọc, ngày vào ở, phí đã gồm) cho tin căn hộ của lát, mỗi phát biểu kèm trích dẫn",
       "vai": "nen",
-      "tieu_chi": 10,
+      "tieu_chi": 11,
       "vi_sao": "F1: môi giới che tầng (LD2xx11), 52% tin che số giá, 42% ghi «thu về / NET».",
       "hang": "T2",
       "dung_tren": [
@@ -273,7 +273,7 @@
       "phu": [
         "C1.6"
       ],
-      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1."
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài."
     },
     {
       "ma": "PL14",
@@ -368,21 +368,22 @@
     },
     {
       "ma": "PL18",
-      "cau_giao": "E1 phát biểu theo lớp (tên nhóm, mặc định dự án là suy luận); E2 chạy mù, chỉ được tính khi trích dẫn có thật trong tin",
+      "cau_giao": "E1 phát biểu theo lớp (tên nhóm, mặc định dự án là suy luận); E2 là bộ đọc chạy mù ra mảng căn, mỗi giá trị kèm trích dẫn, chỉ được tính khi trích dẫn có thật trong tin, và mỗi căn của bài nhiều căn thành một offer có khoá riêng",
       "vai": "nen",
-      "tieu_chi": 10,
+      "tieu_chi": 12,
       "vi_sao": "L01/L02: tên nhóm vẫn quyết 4 loại; E2 bị mồi đáp án E1.",
       "hang": "T2",
       "dung_tren": [
         "PL15"
       ],
       "slug": "e1-e2-theo-lop",
-      "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%",
+      "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%; bài nhiều căn ra đủ số offer, nạp lại không đổi offer_id; không còn trường confidence tự khai",
       "nhom": "doc-tin",
       "dot": "phan-loai-2310",
       "phu": [
         "C2.4"
-      ]
+      ],
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30."
     },
     {
       "ma": "PL19",
@@ -531,22 +532,22 @@
     },
     {
       "ma": "PL28",
-      "cau_giao": "Transform gộp tin chỉ có ảnh vào tin chữ liền trước cùng nhóm, cùng người gửi, cách nhau dưới 2 phút; raw giữ nguyên từng event",
+      "cau_giao": "Transform gộp tin chỉ có ảnh vào tin chữ liền trước hoặc liền sau cùng nhóm, cùng người gửi, cách nhau dưới 2 phút; raw giữ nguyên từng event",
       "vai": "nen",
       "tieu_chi": 8,
       "vi_sao": "L06: 59/80 tin bị bỏ là tin chỉ ảnh. ZCode đề xuất gộp ở transform (làn Claude) để raw giữ đúng event (§6). Cần L20 sửa trước để tin ảnh không mất lúc ingest.",
       "hang": "T2",
       "dung_tren": [
-        "PL4",
-        "PL17"
+        "PL4"
       ],
       "slug": "gop-tin-chi-anh-o-transform",
-      "bat_khi": "Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút trước đều được gộp; raw không đổi",
+      "bat_khi": "Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút ở hai phía đều được gộp; offer S03 có ảnh ≥ 50%; raw không đổi",
       "nhom": "doc-tin",
       "dot": "phan-loai-2310",
       "phu": [
         "Z3.1"
-      ]
+      ],
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): A2 của báo cáo 29/10 — nhìn hai phía (106/294 so với 72/294 khi chỉ nhìn liền trước); bỏ đứng trên PL17 vì gộp ảnh không cần phát biểu parser (Hỏi-2 29/10)."
     },
     {
       "ma": "PL29",
@@ -579,7 +580,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "CM.2"
-      ]
+      ],
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): ứng viên gồm Kev-4B/9B, Qwen 27B local, GLM-5.3, DeepSeek flash; hai ứng viên cloud chỉ chạy khi RV-M2 cho gửi chữ bài ra ngoài và đã kiểm điều khoản gói."
     },
     {
       "ma": "PL31",
@@ -2071,7 +2073,8 @@
       "dung_tren": [
         "AU1",
         "TV0",
-        "ZC4"
+        "ZC4",
+        "NH1"
       ],
       "bat_khi": "anon đọc 0 dòng 0 ảnh; vai user 403; soát tên nguồn thật trên toàn bộ bài đã lên: 0 trúng; ảnh của tin mất quá 90 ngày bị xoá; dung lượng vượt 80% của 5 GB có cảnh báo",
       "nhom": "tv-xem-tin",
@@ -2079,7 +2082,7 @@
       "phu": [
         "TV9"
       ],
-      "ghi_chu": "11 tiêu chí: luật leak gate (CLOUD_ALLOW) và dữ liệu đi lên phải đổi cùng một hàng, không tách được mà giữ nghĩa. Cần ZC4 triển khai thật để media_files S03 có dòng; ZC4 chờ AU3 merge (snapshot Zalo có mili-giây) — liên làn 25/10."
+      "ghi_chu": "11 tiêu chí: luật leak gate (CLOUD_ALLOW) và dữ liệu đi lên phải đổi cùng một hàng, không tách được mà giữ nghĩa. Cần ZC4 triển khai thật để media_files S03 có dòng; ZC4 chờ AU3 merge (snapshot Zalo có mili-giây) — liên làn 25/10. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): ảnh thu nhỏ dựng từ bảng media canonical NH1, phủ cả S06; S03 đủ ảnh khi ZC9 giao."
     },
     {
       "ma": "TV10",
@@ -2392,6 +2395,112 @@
       "phu": [
         "DF5"
       ]
+    },
+    {
+      "ma": "NH1",
+      "cau_giao": "Ảnh của tin S03 và S06 nằm ở một bảng media canonical theo RESO Media nối với offer, và /ops/review, /ops/data-flow ở máy thu đọc ảnh từ bảng này",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "Mục chờ NH1 đạt điều kiện mở: ZC4 đã ký, media_files S03 có dòng thật. Đo 30/10: /ops hiện 0 ảnh S06 dù stg có ảnh ở gần mọi tin; ảnh S03 đi loader riêng. Một bảng cho mọi nguồn thay cho loader từng trang (gộp A3 của báo cáo 29/10).",
+      "hang": "T3",
+      "dung_tren": [
+        "ZC4"
+      ],
+      "slug": "media-canonical-reso",
+      "bat_khi": "Offer S06 có ảnh trong stg thì thẻ duyệt hiện ≥ 1 ảnh; offer S03 có file local thì hiện ảnh; nạp lại hai lần không nhân dòng; sync cloud không đẩy URL ảnh, leak gate xanh",
+      "nhom": "tv-xem-tin",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "TD11"
+      ],
+      "vung": [
+        "db/migrations/**",
+        "app/src/lib/ops/**"
+      ],
+      "ghi_chu": "Cắt từ mục chờ ngày 30/10, lượt doc-tin-anh-3010 (docs/plan/pham-vi-doc-tin-anh-3010.md). Migration xin số ở phiên điều phối liên làn. URL ảnh S06 chứa tên miền nguồn (tầng A) nên không lên cloud; TV9 dựng ảnh thu nhỏ từ bảng này."
+    },
+    {
+      "ma": "N1",
+      "cau_giao": "Transform S03 đọc giá và diện tích từ chữ bài đã bỏ URL và SĐT, chuẩn hoá cách viết giá của môi giới, gom repost theo mã toà/căn khi thiếu phường và diện tích, ghi tên người bán và phường theo thị trường của nhóm",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "Đo 30/10 (docs/research/s03-boc-tach-cau-truc-3010.md §3, §9): 579 bài bán đọc ra trên 100 tỷ, giá đọc từ URL ảnh, một offer gom 278 bài với 67 nội dung, seller_name S03 0%, phường chỉ nạp Hà Nội. Cầm máu bằng luật; ý định bán/thuê không vá bằng regex mà đi PL5.",
+      "hang": "T2",
+      "dung_tren": [],
+      "slug": "s03-cam-mau-so-lieu",
+      "bat_khi": "Nạp lại S03: 0 offer thuê giá ≥ 1 tỷ, 0 offer bán trên 100 tỷ, 0 giá đọc từ URL; mọi ca thử số lấy từ bài thật xanh; không offer nào gom quá 10 nội dung khác nhau; seller_name S03 ≥ 95%; bài nhóm TP.HCM có tên phường thì ra phường vn-hcmc-*",
+      "nhom": "doc-tin",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "N1"
+      ],
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/lib/**"
+      ],
+      "ghi_chu": "Gánh N3 (phường theo thị trường) và A4 (seller_name) của §9.2. Đi trước PL17 (cùng transform-zalo); PL17 sau đó gắn rule_id cho các luật này."
+    },
+    {
+      "ma": "C2b",
+      "cau_giao": "Mỗi đêm scorecard ghi media-yield theo bậc và field-yield theo tầng đọc của từng nguồn S0x vào dq_check_results, cửa sổ 7 và 30 ngày",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Báo cáo 29/10 §3 và 30/10 §8: ảnh và trường rơi ở bậc nào hiện chỉ đo được bằng tay. C2 đã đủ 12 tiêu chí nên tách thành hàng riêng (Hỏi-3 29/10).",
+      "hang": "T2",
+      "dung_tren": [
+        "C2"
+      ],
+      "slug": "scorecard-media-field-yield",
+      "bat_khi": "Chạy hai lần cùng ngày không nhân dòng; mỗi nguồn active có media-yield cho từng bậc (bài có ảnh → file local → media canonical → offer có ảnh) và field-yield cho từng trường theo tầng (bài → mục → trường đọc → nối → suy ra); bậc chưa có dữ liệu ghi «—», không ghi 0",
+      "nhom": "do-luong",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "C2b"
+      ],
+      "vung": [
+        "pipeline/dq-scorecard.mjs",
+        "pipeline/sql/**"
+      ]
+    },
+    {
+      "ma": "ZC9",
+      "cau_giao": "Collector S03 tải ảnh của tin chỉ có ảnh không còn lỗi hàng loạt, và tải bù entry lỗi khi URL còn hạn",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Làn ZCode (collector/). Từ khoảng 05:00Z 27/10, cỡ một phần ba entry ảnh S03 lỗi http-500, dồn vào ảnh của tin chỉ có ảnh; ngày 29/10 vẫn 27,8%. GIAO claudedp-2910-10.",
+      "hang": "T2",
+      "dung_tren": [],
+      "slug": "s03-anh-tai-loi",
+      "bat_khi": "Một ngày chạy thật: entry media_files có error dưới 5% ở mọi họ host; entry lỗi còn hạn URL được tải bù và có file",
+      "nhom": "collector",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "ZC9"
+      ],
+      "vung": [
+        "collector/src/**"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ: một bước tải; không gộp với PL10b vì khác nguồn, khác kết quả. Không đụng cấu hình OpenClaw khi chưa đọc docs/ops/runtime-map.md (luật 8). Tên host CDN không lên kênh GitHub."
+    },
+    {
+      "ma": "PL10b",
+      "cau_giao": "Collector thu danh mục toà · trục · mã căn của Vinhomes Grand Park vào raw, từ nguồn đã được Mạnh duyệt sau khi kiểm điều khoản",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "47% bài S03 (30/10) thuộc nhóm Grand Park; các mã toà S1–S10, BS, GH, BE, LBV… không có dòng danh mục để nối. Cùng dáng PL10 đã ký. Làn ZCode.",
+      "hang": "T2",
+      "dung_tren": [],
+      "slug": "thu-danh-muc-grand-park",
+      "bat_khi": "Mọi toà Grand Park có mã xuất hiện ≥ 20 lần trong bài S03 30 ngày đều có danh sách trục trong raw; chạy lại không nhân snapshot",
+      "nhom": "danh-muc",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "PL10b"
+      ],
+      "vung": [
+        "collector/src/**"
+      ],
+      "ghi_chu": "Gọi nguồn bằng mã S0x, không ghi tên thật (ADR-0007). Nguồn danh mục theo chính sách luật 5 (chỉ nội bộ, tối đa một lần mỗi tuần). Danh bạ toà Grand Park dựng từ dữ liệu này là mục chờ DBG."
     }
   ],
   "chan_troi": [
@@ -2544,16 +2653,6 @@
         "GDH7"
       ],
       "mo_lai_khi": "Bắt đầu giai đoạn C2 của Cổng Ops"
-    },
-    {
-      "ma": "NH1",
-      "dot": "nen-tang-2310",
-      "cau_giao": "media_files từ stg lên canonical theo RESO Media",
-      "ly_do": "Chưa có snapshot ảnh v2 thật để đo (0 dòng media_files)",
-      "phu": [
-        "TD11"
-      ],
-      "mo_lai_khi": "ZC4 giao xong và media_files S03 có dòng thật"
     },
     {
       "ma": "NH2",
@@ -2819,7 +2918,7 @@
     {
       "ma": "DB1",
       "dot": "danh-ba-2910",
-      "cau_giao": "Danh bạ có toà · trục · căn Ocean Park 1 dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà",
+      "cau_giao": "Danh bạ có toà · trục · căn Ocean Park 1 dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; dọn bí danh dự án trùng mã toà, đối chiếu area_ids OCP1–3 với nguồn xác minh, chủ đầu tư ghi ở cấp toà (Building.BuilderName)",
       "ly_do": "Luật 11 (ADR-0016 §10): chỉ dựng cấp có dữ liệu lấp — stg_s08_inventory chưa có dòng vì ZC8 chưa giao; PL14, PL15 đã gộp. Thay PL11.",
       "phu": [
         "DB1"
@@ -2835,6 +2934,26 @@
         "DB2"
       ],
       "mo_lai_khi": "DB1 đã cắt thành hàng và giao"
+    },
+    {
+      "ma": "DBG",
+      "dot": "doc-tin-anh-3010",
+      "cau_giao": "Danh bạ có toà · trục Grand Park dựng từ danh mục PL10b và phát biểu toà/mã căn trên tin, cùng khung chung với DB1",
+      "ly_do": "Luật 11: chưa có dữ liệu danh mục Grand Park (PL10b chưa giao); tách khỏi DB1 để DB1 không phình",
+      "phu": [
+        "DBG"
+      ],
+      "mo_lai_khi": "PL10b giao và DB1 đã thành hàng"
+    },
+    {
+      "ma": "AP1",
+      "dot": "doc-tin-anh-3010",
+      "cau_giao": "Căn nhà có ảnh đại diện lấy từ media canonical của các tin gắn vào nó",
+      "ly_do": "Cần bảng media canonical (NH1) và căn bền trên danh bạ (DB2)",
+      "phu": [
+        "AP1"
+      ],
+      "mo_lai_khi": "NH1 và DB2 giao"
     }
   ],
   "da_bac": []
