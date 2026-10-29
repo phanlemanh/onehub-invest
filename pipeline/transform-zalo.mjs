@@ -133,6 +133,25 @@ export function matchPhuong(text, phuongSlugs) {
   return best;
 }
 
+/** Chữ bài đã chuẩn hoá để so trùng: NFC, chữ thường, mọi dãy không phải chữ/số thành một dấu cách. */
+export const normText = (text) => (text ?? "").normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+
+/**
+ * Khoá gom repost của một bài đã đọc (bước 4). Đủ phường và diện tích: chỉ nội dung kind|phường|giá|DT|PN — bài của
+ * người khác đăng lại cùng căn vẫn gộp. Thiếu phường hoặc diện tích: nội dung còn lại quá rộng (26/10: 95 bài «cho thuê
+ * 12 triệu» của nhiều người thành một tin; 321/324 tin S03 không có phường) nên thêm người đăng — `sender_id`, rồi SĐT
+ * trong bài, không có cả hai thì chữ bài đã chuẩn hoá. Khoá này chỉ để gom; offer_id vẫn theo post (PL14, offer-key.mjs).
+ * @param {{ kind: string, phuong?: string|null, priceVnd: number|null, pricePerm2Vnd: number|null, areaM2: number|null,
+ *           bedrooms: number|null, phone?: string|null }} pr
+ * @param {{ sender_id?: string|null, text?: string|null }} post
+ */
+export function repostKey(pr, post) {
+  const noiDung = `${pr.kind}|${pr.phuong ?? "?"}|${pr.priceVnd ?? pr.pricePerm2Vnd}|${pr.areaM2 ?? "?"}|${pr.bedrooms ?? "?"}`;
+  if (pr.phuong && pr.areaM2 != null) return noiDung;
+  const nguoi = post.sender_id ? `sender:${post.sender_id}` : pr.phone ? `phone:${pr.phone}` : `text:${normText(post.text)}`;
+  return `${noiDung}|${nguoi}`;
+}
+
 /**
  * Thân transform S03 — người gọi giữ transaction (main bọc BEGIN…COMMIT; test và thước dư
  * lượng bọc BEGIN…ROLLBACK). Post thử bị gạt ở đầu đọc (lib/test-posts.mjs, PL2).
@@ -174,13 +193,11 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   }
   console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${(nFull / posts.length * 100).toFixed(1)}%`);
 
-  // ---- Bước 4: gom repost theo nội dung — hash(kind + phường + price + area + bedrooms); offer_id cấp ở bước 5 ----
+  // ---- Bước 4: gom repost theo khoá nội dung (repostKey); offer_id cấp ở bước 5 ----
   const dedup = new Map();
   for (const pr of parsed) {
     if (pr.confidence === "low") continue;
-    const key = createHash("sha256")
-      .update(`${pr.kind}|${pr.phuong ?? "?"}|${pr.priceVnd ?? pr.pricePerm2Vnd}|${pr.areaM2 ?? "?"}|${pr.bedrooms ?? "?"}`)
-      .digest("hex").slice(0, 16);
+    const key = createHash("sha256").update(repostKey(pr, pr.post)).digest("hex").slice(0, 16);
     const offerId = `offer_${key}`;
     if (!dedup.has(offerId)) {
       dedup.set(offerId, {
