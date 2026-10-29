@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: db-vao-volume
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 4f5486d618635945bc3e668aa947fe016ca83b55
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: db-vao-volume
@@ -172,7 +172,7 @@ human_signoff:
   required_evidence:
     - Số dòng của public.sale_offers và public.listings ở ba mốc (truoc.tsv, sau.tsv, sau-tao-lai.tsv) trong $HOME/onehub-backups/db/20261029T085125Z/. Lấy bằng cách chạy lại bước in số dòng của chuyen-that.log (các dòng `sale_offers: →` và `listings: →`) cho ra dạng `public.sale_offers: N→N→N`, hoặc grep hai tên đó trong ba tệp tsv và dán kết quả vào evidence/chuyen-that.log.
     - Giải thích hai dòng trống, kèm bằng chứng: `SELECT relkind FROM pg_class WHERE relname IN ('sale_offers','listings')` trên DB oneinvest, và xác nhận hai tên này có (hoặc không có) trong danh sách 283 bảng của truoc.tsv. Nếu chúng là bảng phân vùng hoặc view thì ghi rõ cách phép so bao phủ dữ liệu của chúng.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-29 — Đạt
 
 ### Lệnh suite (hồi quy)
 

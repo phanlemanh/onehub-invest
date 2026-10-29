@@ -5,7 +5,7 @@ slug: db-vao-volume
 owner: phanlemanh@gmail.com
 risk_tier: T3      # ý định P2 khai T3: đổi chỗ ở của toàn bộ DB local dùng chung (khó đảo); Mạnh ký ba cổng
 surfaces: [config, ops, docs]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-29-db-vao-volume-design.md
 approved_by: Mạnh
 approved_at: 2026-10-29
@@ -119,3 +119,17 @@ thu để đo.
 - Lượt chuyển thật (AC-6…AC-10 trên `one-invest-db`) chỉ chạy ở S3 sau khi Mạnh ký Gate 1.5, có bằng chứng khôi phục
   bản sao lưu thật trên DB thử, và đã báo phiên điều phối liên làn.
 - Sau chuyển, PR phải vào main trước CN 01/11 19:30 (job tuần là job duy nhất đi đường compose — design doc §3.4).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: Sổ tay vận hành chưa nói rõ rằng công việc tuần chủ nhật 19:30 tự chạy bằng cấu hình cũ nếu bản sửa chưa vào nhánh chính trước 01/11. Nếu quên hạn đó, công việc này có thể làm bản lùi của cơ sở dữ liệu biến mất đúng lúc ta cần nó.
+  - Ngoài-2: Lệnh sao lưu vẫn cho ghi bản sao lưu vào thư mục của một bản làm việc khác của kho, ví dụ bản của ZCode. Bản sao lưu chứa dữ liệu hồ sơ người dùng nhạy cảm, nên nếu ai đó lỡ commit thư mục này thì dữ liệu có thể bị đẩy ra ngoài.
+  - Ngoài-3: Sổ tay không nhắc rằng lệnh chuyển sẽ từ chối khi còn người hoặc công việc đang dùng cơ sở dữ liệu. Người vận hành có thể bị từ chối mà không hiểu lý do ngay.
+  - Ngoài-5: Lưới bảo vệ chưa canh bảng tin rao nền, nên sau này nếu ai đó vô tình loại bảng này khỏi phép so số dòng lúc chuyển thì sẽ không bị chặn. Lượt chuyển thật đã xong, nên hiện chưa gây mất dữ liệu.
+  - Ngoài-6: Phép kiểm có thể báo xanh dù thực ra không đọc được danh sách bảng bị loại. Nếu định dạng tệp đổi trong tương lai, lưới bảo vệ lặng lẽ mất tác dụng.
+  - Ngoài-7: Nếu bước liệt kê các cơ sở dữ liệu bị lỗi, bản sao lưu vẫn báo thành công nhưng thiếu các cơ sở dữ liệu phụ như của ZCode. Người dùng chỉ biết thiếu khi cần khôi phục.
+  - Ngoài-8: Khi lệnh chuyển không kiểm tra được ai đang dùng cơ sở dữ liệu, nó vẫn coi như không có ai. Nếu có người dùng, lúc dừng cụm có thể cắt ngang công việc của họ.
+  - Ngoài-9: Phép thử chứng minh cách cũ gây mất dữ liệu có thể báo đạt mà thực chất chưa đo gì. Do đó bằng chứng này yếu hơn vẻ ngoài của nó.
+  - Ngoài-10: Phép thử dọn dẹp khi bị ngắt giữa chừng có thể báo đạt dù chưa hề ngắt đúng lúc có tài nguyên. Ta chưa chắc cơ chế dọn thật sự được thử.
+  - Ngoài-11: Phép thử chạy cấu hình từ thư mục khác có thể báo đạt dù lệnh đã thất bại. Chiều ổn định của cấu hình do đó được chứng yếu hơn.
+  - Ngoài-12: Phép thử sao lưu chỉ kiểm vài cơ sở dữ liệu theo danh sách gõ tay và dòng đạt luôn được in. Một cơ sở dữ liệu phụ khác bị thiếu sẽ không bị phát hiện.
+  - Ngoài-13: Phép kiểm chưa bảo đảm rằng sau khi loại bảng vẫn còn ít nhất một bảng để so số dòng. Về lý thuyết ai đó có thể loại hết mà vẫn thấy xanh.
+  - Ngoài-15: Phép thử chưa kiểm bộ nhận diện công việc đang chạy thật của lệnh chuyển, chỉ kiểm một bộ nhận diện do chính phép thử đặt. Nếu bộ thật nhận sai thì lệnh có thể không dừng khi một công việc đang ghi dữ liệu.
