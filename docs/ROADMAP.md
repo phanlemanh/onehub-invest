@@ -294,6 +294,13 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    luật (chỉ trường thuộc vật thể, không đè, không tự nuôi, mâu thuẫn ra thẻ, rút dây chuyền). Nhà phố/đất: một vật thể tạm
    mỗi tin, gộp theo bằng chứng — toạ độ S06 chỉ là tín hiệu phụ. S08: vật thể chỉ-S08 ở local, giá trị chỉ-S08 không lên
    Invest. Hàng code thay PL11, PL24 và thêm hàng Người — giám sát cắt vào lộ trình.
+23. **Quỹ hàng là sản phẩm SaaS riêng** (29/10, Mạnh chốt «Chốt app riêng» và «Chốt, viết ADR»; **ADR-0017**): ứng dụng
+   quản lý hàng cho sàn môi giới, phía cung của Platform, **không phải cổng thứ ba** của Invest — `app/` không có route nào
+   của nó; kho riêng tư `onehub-quy-hang`, cơ sở dữ liệu riêng. Nguyên tắc SaaS: cơ chế ở kiến trúc, mỗi kết nối là một
+   thoả thuận bật/tắt, chỉ mở tới trần của lớp dữ liệu (thông tin chủ nhà không bao giờ rời công ty). Invest → Quỹ hàng là
+   thoả thuận đầu tiên, một chiều, Invest đẩy theo mẫu ADR-0014: danh mục căn, số thị trường tổng hợp, tin rao đã khớp căn
+   — không S08, không AirDNA, không tên nguồn hay đường dẫn bài gốc; bộ soát chạy ở cửa ra của Invest. Chiều ngược tắt,
+   mở bằng thoả thuận và qua cửa kiểm của Invest. Việc ở kho này: một bước đẩy nguồn cấp ở `pipeline/`, làm sau.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -410,7 +417,7 @@ ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
 boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
 0013 tin → căn RESO · 0014 Ops cloud đọc số tổng hợp · 0015 đường lệnh kéo một chiều ·
-0016 danh bạ vật thể và người.
+0016 danh bạ vật thể và người · 0017 Quỹ hàng SaaS riêng, kết nối một chiều có thoả thuận.
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.
