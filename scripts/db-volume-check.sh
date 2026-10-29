@@ -7,12 +7,14 @@
 #                  tên tường minh (khoá name:) gắn ở thư mục chứa DEFAULT_DATADIR của chính ảnh khai trong compose;
 #                  không bind, không volume vô danh; project ≠ db; restart unless-stopped|always; danh sách bảng loại
 #                  khỏi phép so của db-chuyen-volume.sh không chứa bảng canonical.
-#   mutation       các bản compose/script hỏng chép từ bản lành phải đỏ với thông điệp ghim; bản lành xanh.
+#   mutation       các bản compose/script hỏng chép từ bản lành phải đỏ với thông điệp ghim; bản lành xanh. Gồm cả
+#                  bản sao tệp này với nhánh «volume khác tên» của bộ đọc live bị phá: live-selftest của nó phải đỏ.
 #   tap-duot       sao lưu → khôi phục → chuyển → tạo lại → lùi trên cụm giả onehub-tapduot-* cùng daemon;
 #                  không chạm one-invest-db (Id + StartedAt không đổi); tự dọn kể cả khi lỗi/SIGTERM.
 #   live           CHỈ ĐỌC máy này: data_directory của one-invest-db nằm dưới mount volume onehub_pgdata (bất biến); còn
 #                  bản lùi one-invest-db-cu-* thì MỌI bản đang dừng, restart no; vắng bản lùi trước hạn giữ là đỏ, sau
-#                  hạn là xanh (hồ sơ db-volume-live-ban-lui). Chạy live-selftest trước: đường gom + ma trận 16 ô.
+#                  hạn là xanh (hồ sơ db-volume-live-ban-lui). Chạy live-selftest trước: đường gom + ma trận 16 ô +
+#                  bốn nhánh dữ liệu (đúng volume · volume khác tên · lớp ghi · không đọc được; db-volume-check-volume-khac-ten).
 #   live-selftest  bộ đọc của live chạy trên JSON inspect thật đã làm hỏng phải đỏ.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -129,6 +131,10 @@ run_mutation() {
   else
     echo "SKIP chưa có $(basename "$CHUYEN") — chưa thử đột biến loai-canonical"
   fi
+  # Bộ đọc live bị phá: nhánh «volume khác tên» báo xanh → tự kiểm của bản sao phải đỏ ở đúng ô khac-ten.
+  mutate "$SELF" "$T/self-khac-ten.sh" 's#fail "data_directory \$2 nằm trong volume \$v#pass "data_directory $2 nằm trong volume $v#' &&
+    expect "đột biến bộ đọc live khac-ten" do "ô dữ liệu khac-ten lẽ ra đỏ" bash "$T/self-khac-ten.sh" live-selftest
+  expect "bản lành bộ đọc live" 0 "PASS nhánh dữ liệu đủ 4 ô" bash "$SELF" live-selftest
 }
 
 # ─── tap-duot ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -473,10 +479,13 @@ check_ban_lui() { # $1 tệp JSON mảng bản lùi, $2 giờ «bây giờ» ISO
     else fail "bản lùi $ten trạng thái $st restart=$rp (cần exited, no)"; fi
   done
 }
+doc_dd() { # $1 container → in data_directory; truy vấn lỗi in chuỗi rỗng
+  docker exec -i -e PGPASSWORD=oneinvest "$1" psql -U oneinvest -h localhost -At -c 'show data_directory' 2>/dev/null
+}
 live_doc() { # $1 thư mục tạm → inspect.json, ban-lui.json; in data_directory
   docker inspect "$DB_THAT" > "$1/inspect.json" 2>/dev/null || echo '[]' > "$1/inspect.json"
   gom_ban_lui "$BAN_LUI_MAU" > "$1/ban-lui.json" 2>/dev/null || echo '[]' > "$1/ban-lui.json"
-  docker exec -i -e PGPASSWORD=oneinvest "$DB_THAT" psql -U oneinvest -h localhost -At -c 'show data_directory' 2>/dev/null
+  doc_dd "$DB_THAT"
 }
 o_live() { check_du_lieu "$1" "$3"; check_ban_lui "$2" "$4"; } # $1 inspect $2 bản lùi $3 data_directory $4 giờ
 LIVE_TMP=""
@@ -487,7 +496,7 @@ run_live() {
   check_du_lieu "$LIVE_TMP/inspect.json" "$dd"; check_ban_lui "$LIVE_TMP/ban-lui.json" "${DB_VOLUME_GIO_GIA:-}"
 }
 run_live_selftest() {
-  local T dd b sau truoc n0 nk so=0 hang cot
+  local T dd b sau truoc n0 nk so=0 hang cot ban gio want msg ddo
   LIVE_TMP=$(mktemp -d); trap 'rm -rf "$LIVE_TMP"' EXIT; T="$LIVE_TMP"
   dd=$(live_doc "$T")
   [ -n "$dd" ] && [ "$(jq length "$T/inspect.json")" = 1 ] || { fail "không đọc được docker inspect / data_directory của $DB_THAT để dựng fixture"; return; }
@@ -527,6 +536,19 @@ hai-ban-deu-dung|hai-dung|$sau|0|PASS bản lùi $DB_THAT-cu-20261020 exited res
 EOF
   done
   [ "$so" = 16 ] && pass "ma trận đủ 16 ô" || fail "ma trận chạy $so ô, cần 16"
+  # Bốn nhánh của check_du_lieu (hồ sơ db-volume-check-volume-khac-ten), bản lùi cố định xanh: màu ô chỉ do trục dữ liệu.
+  # Ô khong-doc đọc data_directory bằng chính doc_dd trên một container không tồn tại — không viết tay chuỗi rỗng.
+  jq '.[0].Mounts = [{"Type":"volume","Name":"db_pgdata","Destination":"/var/lib/postgresql"}]' "$T/inspect.json" > "$T/khac-ten.json"
+  so=0
+  while IFS='|' read -r hang ddo want msg; do
+    expect "ô dữ liệu $hang" "$want" "$msg" o_live "$T/${hang/khong-doc/dung}.json" "$T/mot-dung.json" "$ddo" "$sau"; so=$((so + 1))
+  done <<EOF
+dung|$dd|0|PASS data_directory $dd dưới mount volume $VOL_TEN
+khac-ten|$dd|do|FAIL data_directory $dd nằm trong volume db_pgdata (cần $VOL_TEN)
+gan-data|$dd|do|FAIL data_directory nằm trong lớp ghi container
+khong-doc|$(doc_dd "$DB_THAT-khong-co-$$")|do|FAIL không đọc được data_directory của $DB_THAT
+EOF
+  [ "$so" = 4 ] && pass "nhánh dữ liệu đủ 4 ô" || fail "nhánh dữ liệu chạy $so ô, cần 4"
 }
 
 case "$MODE" in
