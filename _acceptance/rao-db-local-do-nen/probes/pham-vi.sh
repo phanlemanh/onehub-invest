@@ -24,8 +24,14 @@ if cho_phep "scripts/dev-ops-account.mjs" || cho_phep "app/src/x.ts" || cho_phep
   echo "DOI CHUNG PHAM VI KHONG BAT"; bad=1
 else echo "doi chung: tep gia ngoai danh sach (dev-ops-account.mjs, app/src/x.ts, contract do-nen-hieu-nang) → NGOAI PHAM VI; do.mjs → ok"; fi
 if [ -z "$(git diff --name-only "$base" HEAD -- scripts/dev-ops-account.mjs)" ]; then echo "ok dev-ops-account.mjs khong doi"; else echo "DEV-OPS-ACCOUNT BI DOI"; bad=1; fi
-out=$(bash scripts/pre-merge-check.sh . --slug do-nen-hieu-nang --base origin/main 2>&1); rc=$?
-if [ $rc -eq 0 ] && printf '%s\n' "$out" | grep -q 'pre-merge-check: clean'; then echo "ok luoi truoc gop do-nen-hieu-nang: clean"
+# Lưới chạy KHÔNG --base: có --base thì pre-merge-check bỏ luật hoá cũ cho slug không có tệp trong diff PR (khối
+# STALE-DIFF-SCOPE-GUARD), nên do-nen-hieu-nang luôn «clean» dù do.mjs đã đổi sau verified_commit của nó.
+out=$(bash scripts/pre-merge-check.sh . --slug do-nen-hieu-nang 2>&1); rc=$?
+if [ $rc -eq 0 ] && printf '%s\n' "$out" | grep -q 'pre-merge-check: clean'; then echo "ok luoi truoc gop do-nen-hieu-nang: clean (khong --base)"
 else echo "DO-NEN-HIEU-NANG HOA CU (rc $rc)"; printf '%s\n' "$out" | grep -E 'VIOLATION' | head -3; bad=1; fi
+# AC-5 «đúng hai tệp ghim lại»: phải CÓ trong diff, không chỉ được phép.
+for f in _acceptance/do-nen-hieu-nang/run-log.jsonl _acceptance/do-nen-hieu-nang/evidence-report.md; do
+  if git diff --name-only "$base" HEAD | grep -qx "$f"; then echo "ok ghim lai co trong nhanh: $f"; else echo "THIEU TEP GHIM LAI $f"; bad=1; fi
+done
 [ "$bad" -eq 0 ] && echo "PHAM-VI OK"
 exit $bad
