@@ -1,0 +1,1197 @@
+{
+  "version": "0.1.0",
+  "components": [
+    {
+      "name": "@mapcn/store-locator",
+      "category": "template",
+      "description": "(không giữ bản gốc — khuôn tham chiếu) → listing/listings-map.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/app-shell-30",
+      "category": "template",
+      "description": "blocks/app-shell-30/ (bản gốc, tham chiếu) → **components/shell/** (bản dùng)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/app-shell-36",
+      "category": "template",
+      "description": "blocks/app-shell-36/ → **shell/ops-shell/**",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/auth-4",
+      "category": "template",
+      "description": "blocks/auth-4/ → auth/login-form.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/auth-5",
+      "category": "template",
+      "description": "blocks/auth-5/ → auth/register-form.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-alert-1",
+      "category": "template",
+      "description": "examples/c-alert-1.tsx → states/page-error.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-alert-dialog-5",
+      "category": "template",
+      "description": "ops/sources/confirm-delete.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-attachment-3",
+      "category": "template",
+      "description": "ops/review-photos.tsx (`ui/attachment` + shadcn `Dialog`; file ví dụ không giữ trong `examples/`)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-card-15",
+      "category": "template",
+      "description": "examples/c-card-15.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-chart-16",
+      "category": "template",
+      "description": "examples/c-chart-16.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-chart-19",
+      "category": "template",
+      "description": "examples/c-chart-19.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-chart-2",
+      "category": "template",
+      "description": "examples/c-chart-2.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-command-5",
+      "category": "template",
+      "description": "examples/c-command-5.tsx → shell/search-command.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-data-grid-11",
+      "category": "template",
+      "description": "examples/c-data-grid-11.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-empty-11",
+      "category": "template",
+      "description": "examples/c-empty-11.tsx → saved/saved-empty.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/c-empty-3",
+      "category": "template",
+      "description": "examples/c-empty-3.tsx → states/not-found-state.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/card-29",
+      "category": "template",
+      "description": "blocks/card-29/ → marketing/market-cards.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/chart-13",
+      "category": "template",
+      "description": "blocks/chart-13/ → insight/revenue-mix/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/chart-36",
+      "category": "template",
+      "description": "blocks/chart-36/ → yield/pnl/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/chart-49",
+      "category": "template",
+      "description": "blocks/chart-49/ → ops/data-flow/ (`flow-sankey.tsx`, `flow-journey.tsx`, `flow-readout.tsx`, `flow-sankey-data.ts`, `stage-face.tsx`)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/chart-6",
+      "category": "template",
+      "description": "blocks/chart-6/ → insight/performance/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/comparison-1",
+      "category": "template",
+      "description": "blocks/comparison-1/ → compare/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/data-grid-advanced-7",
+      "category": "template",
+      "description": "(không giữ bản gốc trong blocks/ — bản gốc không qua tsc với data-grid đang cài) → yield/financing/financing-grid.tsx + financing-cells.tsx, mô hình lib/financing.ts",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/data-grid-base-2",
+      "category": "template",
+      "description": "blocks/data-grid-base-2/ → finder/finder-cells.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/faq-3",
+      "category": "template",
+      "description": "blocks/faq-3/ → marketing/definition-grid.tsx + hàng hai nút ở (marketing)/methodology/page.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/faq-6",
+      "category": "template",
+      "description": "blocks/faq-6/ → marketing/faq-section.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/filter-sidebar-5",
+      "category": "template",
+      "description": "blocks/filter-sidebar-5/ → listing/listings-filter-sheet.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/form-11",
+      "category": "template",
+      "description": "blocks/form-11/ → yield/yield-form.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/form-5",
+      "category": "template",
+      "description": "blocks/form-5/ → listing/booking-heatmap.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/hero-8",
+      "category": "template",
+      "description": "blocks/hero-8/ → marketing/hero.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/how-it-works-1",
+      "category": "template",
+      "description": "blocks/how-it-works-1/ → marketing/how-it-works.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/navbar-12",
+      "category": "template",
+      "description": "blocks/navbar-12/ → marketing/marketing-navbar.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/product-detail-5",
+      "category": "template",
+      "description": "(không giữ bản gốc trong blocks/: bản gốc kéo `ui/carousel.tsx` đỏ lint react-hooks và embla, mà trang chỉ cần gallery + cột thông tin) → listing/listing-gallery.tsx · listing/listing-hero.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/product-grid-2",
+      "category": "template",
+      "description": "blocks/product-grid-2/ → listing/listing-card.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/solution-agents-5",
+      "category": "template",
+      "description": "blocks/solution-agents-5/ → ops/review/ (`review-queue.tsx`, `review-detail-sheet.tsx`, `review-badges.tsx`, `review-queue-skeleton.tsx`)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/solution-ai-ops-2",
+      "category": "template",
+      "description": "blocks/solution-ai-ops-2/ → ops/sources/ (`zalo-accounts`, `zalo-account-row`, `zalo-qr-dialog`)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/solution-analytics-3",
+      "category": "template",
+      "description": "(không giữ bản gốc trong blocks/: `acquisition-mix-chart.tsx` gốc không qua tsc với recharts đang cài, và `report-header` kéo thêm `ui/calendar` + react-day-picker không dùng) → ops/data-flow/ (`stage-trend-chart.tsx`, `kind-mix-chart.tsx`, `quality-grid.tsx`, `records-grid.tsx`)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/solution-dev-ops-1",
+      "category": "template",
+      "description": "blocks/solution-dev-ops-1/ → ops/collections/jobs-grid.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/solution-dev-ops-5",
+      "category": "template",
+      "description": "blocks/solution-dev-ops-5/ → ops/overview/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/solution-dev-ops-6",
+      "category": "template",
+      "description": "blocks/solution-dev-ops-6/ → ops/collections/ (thẻ số, luồng, cần chú ý, `status-grid`) + ops/sources/ (`source-groups`, `new-group-sheet`)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/stats-1",
+      "category": "template",
+      "description": "blocks/stats-1/ → insight/insight-stats.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "@reui/wishlist-2",
+      "category": "template",
+      "description": "blocks/wishlist-2/ → saved/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "AreaThumbnail",
+      "category": "app",
+      "description": "components/page/area-thumbnail.tsx + `getAreaThumbnails` (lib/queries.ts)",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ChoroplethMap",
+      "category": "app",
+      "description": "components/finder/choropleth-map.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "InsightGrid",
+      "category": "app",
+      "description": "components/insight/insight-grid.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "InsightNav",
+      "category": "app",
+      "description": "components/insight/insight-nav.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ListingComps",
+      "category": "app",
+      "description": "components/listing/listing-sections.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ListingKpis",
+      "category": "app",
+      "description": "components/listing/listing-sections.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ListingLayers",
+      "category": "app",
+      "description": "components/listing/listings-map.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ListingsMap",
+      "category": "app",
+      "description": "components/listing/listings-map.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "MiniMap",
+      "category": "app",
+      "description": "components/mini-map.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "PageHeader",
+      "category": "app",
+      "description": "components/page/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "PageSkeleton",
+      "category": "app",
+      "description": "components/states/page-skeleton.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "RegionError",
+      "category": "app",
+      "description": "components/states/region-error.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "SiteFooter",
+      "category": "app",
+      "description": "components/shell/site-footer.tsx",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "StatTiles",
+      "category": "app",
+      "description": "components/page/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "charts/*",
+      "category": "app",
+      "description": "components/charts/",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "reui/alert",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "variant=default",
+        "variant=destructive",
+        "variant=info",
+        "variant=invert",
+        "variant=success",
+        "variant=warning"
+      ]
+    },
+    {
+      "name": "reui/badge",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "radius=default",
+        "radius=full",
+        "size=default",
+        "size=lg",
+        "size=sm",
+        "size=xl",
+        "size=xs",
+        "variant=default",
+        "variant=destructive",
+        "variant=destructive-light",
+        "variant=destructive-outline",
+        "variant=focus",
+        "variant=focus-light",
+        "variant=focus-outline",
+        "variant=info",
+        "variant=info-light",
+        "variant=info-outline",
+        "variant=invert",
+        "variant=invert-light",
+        "variant=invert-outline",
+        "variant=outline",
+        "variant=primary-light",
+        "variant=primary-outline",
+        "variant=secondary",
+        "variant=success",
+        "variant=success-light",
+        "variant=success-outline",
+        "variant=warning",
+        "variant=warning-light",
+        "variant=warning-outline"
+      ]
+    },
+    {
+      "name": "reui/cascader",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "reui/code-block",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "reui/data-grid",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "reui/filters",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "size=default",
+        "size=sm"
+      ]
+    },
+    {
+      "name": "reui/frame",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "dense=false",
+        "dense=true",
+        "spacing=default",
+        "spacing=lg",
+        "spacing=sm",
+        "spacing=xs",
+        "stacked=false",
+        "stacked=true",
+        "variant=default",
+        "variant=ghost",
+        "variant=inverse"
+      ]
+    },
+    {
+      "name": "reui/icon-tile",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "radius=default",
+        "radius=full",
+        "size=default",
+        "size=lg",
+        "size=sm",
+        "size=xl",
+        "size=xs",
+        "variant=elevated",
+        "variant=frame",
+        "variant=outline",
+        "variant=soft",
+        "variant=solid"
+      ]
+    },
+    {
+      "name": "reui/number-field",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "size=default",
+        "size=lg",
+        "size=sm"
+      ]
+    },
+    {
+      "name": "reui/rating",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "size=default",
+        "size=lg",
+        "size=sm"
+      ]
+    },
+    {
+      "name": "reui/stepper",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "reui/timeline",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "reui/tree",
+      "category": "reui",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/accordion",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/alert-dialog",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/attachment",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "orientation=horizontal",
+        "orientation=vertical",
+        "size=default",
+        "size=sm",
+        "size=xs",
+        "variant=icon",
+        "variant=image"
+      ]
+    },
+    {
+      "name": "ui/avatar",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/breadcrumb",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/button",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "size=default",
+        "size=icon",
+        "size=icon-lg",
+        "size=icon-sm",
+        "size=icon-xs",
+        "size=lg",
+        "size=sm",
+        "size=xs",
+        "variant=default",
+        "variant=destructive",
+        "variant=ghost",
+        "variant=link",
+        "variant=outline",
+        "variant=secondary"
+      ]
+    },
+    {
+      "name": "ui/button-group",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "orientation=horizontal",
+        "orientation=vertical"
+      ]
+    },
+    {
+      "name": "ui/card",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/chart",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/checkbox",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/collapsible",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/combobox",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/command",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/dialog",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/dropdown-menu",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/empty",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "variant=default",
+        "variant=icon"
+      ]
+    },
+    {
+      "name": "ui/field",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "orientation=horizontal",
+        "orientation=responsive",
+        "orientation=vertical"
+      ]
+    },
+    {
+      "name": "ui/hover-card",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/input",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/input-group",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "align=block-end",
+        "align=block-start",
+        "align=inline-end",
+        "align=inline-start",
+        "size=icon-sm",
+        "size=icon-xs",
+        "size=sm",
+        "size=xs"
+      ]
+    },
+    {
+      "name": "ui/item",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "size=default",
+        "size=sm",
+        "size=xs",
+        "variant=default",
+        "variant=icon",
+        "variant=image",
+        "variant=muted",
+        "variant=outline"
+      ]
+    },
+    {
+      "name": "ui/kbd",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/label",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/map",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/navigation-menu",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/popover",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/progress",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/radio-group",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/scroll-area",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/select",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/separator",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/sheet",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/sidebar",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "size=default",
+        "size=lg",
+        "size=sm",
+        "variant=default",
+        "variant=outline"
+      ]
+    },
+    {
+      "name": "ui/skeleton",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/slider",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/sonner",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/spinner",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/anthropicBlack",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/anthropicBlackWordmark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/anthropicWhite",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/anthropicWhiteWordmark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/apple",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/appleDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/convex",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/cursorDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/cursorLight",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/drive",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/dropbox",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/githubDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/githubLight",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/google",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/googleCloud",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/hono",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/linear",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/mintlify",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/mintlifyWordmarkDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/mintlifyWordmarkLight",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/modelContextProtocolDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/modelContextProtocolLight",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/n8n",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/neon",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/openai",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/openaiDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/openaiWordmarkDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/openaiWordmarkLight",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/openclaw",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/paper",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/paypal",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/planetscale",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/planetscaleDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/prisma",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/prismaDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/redis",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/remixDark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/remixLight",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/resendIconBlack",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/resendIconWhite",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/resendWordmarkBlack",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/resendWordmarkWhite",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/slack",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/slackWordmark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/stripe",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/stripeWordmark",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/supabase",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/surrealdb",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/svgs/zoom",
+      "category": "logo",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/switch",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/table",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/tabs",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "variant=default",
+        "variant=line"
+      ]
+    },
+    {
+      "name": "ui/textarea",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/toggle",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": [],
+      "variants": [
+        "size=default",
+        "size=lg",
+        "size=sm",
+        "variant=default",
+        "variant=outline"
+      ]
+    },
+    {
+      "name": "ui/toggle-group",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    },
+    {
+      "name": "ui/tooltip",
+      "category": "shadcn",
+      "markup": "",
+      "tokensUsed": []
+    }
+  ]
+}

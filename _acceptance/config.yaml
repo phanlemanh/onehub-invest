@@ -42,6 +42,7 @@ executors:
     ckl_unit: "node --test pipeline/scripts/chotot-khong-lui-noi-dung.test.mjs"   # 2510-6
     scripts: "node --test scripts/*.test.mjs"        # test script ở scripts/ (dev-ops-account) — cần DB local :5433
     audit_all: "node --test scripts/audit-all.test.mjs"   # audit-all trong hộp (AU5 + ON16 gốc log ở checkout chính) — không cần DB
+    design_floor_gen: "node --test scripts/design-floor/*.test.mjs"   # dung-m2-song-song: hai lệnh sinh tokens/registry + reuse-plan check của kit — không cần DB
     ci_test_module: "node --test scripts/ci-test-module.test.mjs"   # AU11 AC-3/AC-4 — DB CI dựng từ migration (docker tạm) + helper bỏ qua ca cần dữ liệu thật
     ui_capture_login: "node --test scripts/ui-capture-login.test.mjs"   # ON10 — bước chụp /ops có phiên (máy chủ giả, không cần DB/app)
     ui_capture_browser: "node --test scripts/ui-capture-browser.test.mjs"   # bước chụp trên trình duyệt thật (playwright-cli), máy chủ giả — không DB, không app
@@ -88,6 +89,7 @@ executors:
     ruler_views_static: "bash scripts/check-ruler-views.sh static"       # PII seller_name không rời máy; catch-up chỉ DDL
     ruler_views_cloudsim: "bash scripts/check-ruler-views.sh cloudsim"   # DB mô phỏng cloud + SQL catch-up
     portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
+    design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
     listing_static: "node scripts/check-listing-no-airdna.mjs"   # /listing/[id] không AirDNA (luật 5) — đo trạng thái cây
