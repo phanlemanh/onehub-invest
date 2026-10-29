@@ -11,17 +11,18 @@ import { Badge } from "@/components/reui/badge"
 import { Button } from "@/components/ui/button"
 import { Map as MapCanvas, MapControls, MapPopup, useMap } from "@/components/ui/map"
 import { fmtCompact, fmtMoney, fmtPct } from "@/lib/format"
+import { LISTING_PIN } from "@/lib/map-colors"
 import { MAP_FONT, MAP_OPTIONS, addAttribution, basemapUrl, denseBounds, prepareBasemap } from "@/lib/map-style"
 import type { ListingCardRow } from "@/lib/queries"
 import { bedroomsVi, roomTypeVi } from "./listing-labels"
 
 /**
  * Màu nhãn theo kiểu Airbnb (MapLibre cần hex): nhãn giá trắng chữ đậm ở cả sáng
- * lẫn tối, nhãn đang chọn đen viền trắng; cụm và chấm đảo màu theo nền.
+ * lẫn tối, nhãn đang chọn đen viền trắng; cụm và chấm đảo màu theo nền. Giá trị ở lib/map-colors.ts.
  */
-const INK = "#18181b"
-const PAPER = "#ffffff"
-const EDGE = "#d4d4d8"
+const INK = LISTING_PIN.ink
+const PAPER = LISTING_PIN.paper
+const EDGE = LISTING_PIN.edge
 
 const SOURCE = "listings"
 const L = {

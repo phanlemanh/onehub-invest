@@ -66,6 +66,7 @@ executors:
     dong_chay_so_cu: "cd app && node --import tsx --test tests/dong-chay-so-cu.test.tsx"   # dong-chay-so-cu-may-thu — số tính sẵn quá 45′ ở máy thu báo số cũ
     luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
     gop_trung: "cd pipeline && node --test scripts/gop-trung-s03.test.mjs scripts/gop-trung-s03.itest.mjs"   # s03-gop-trung-dung — .test thuần (CI), .itest cần DB local :5433 (BEGIN…ROLLBACK)
+    hex_tho: "node --test scripts/don-hex-tho.test.mjs"   # don-hex-tho — 0 hex thô ngoài vendor (RE_HEX của design-floor S4), 14 màu bản đồ giữ giá trị ở lib/map-colors.ts; không DB (giám sát duyệt U1-61)
     dem_de_xuat: "cd app && node --import tsx --test tests/df0-dem-de-xuat.test.tsx"   # df0-dem-de-xuat-lam-giau — đếm đề xuất làm giàu queued (lược đồ tạm)
     chang_ngay: "cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx"   # df0-chang-theo-ngay-diem-0 — chuỗi ngày đủ cửa sổ, ngày im = 0 (thuần + jsdom)
     ops_nhan: "cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx"
@@ -442,6 +443,7 @@ executors:
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
+    gate_don_hex_tho: "for f in app/src/components/finder/bins.ts app/src/components/finder/choropleth-map.tsx app/src/components/listing/listings-map.tsx app/src/components/mini-map.tsx app/src/components/ops/data-flow/flow-journey.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # don-hex-tho E8 — gate từng tệp giao diện của vòng (gate không tự nối tệp từ paths); giám sát duyệt U1-63
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
     # executors.design.floor (S4 tuân thủ design system) CHƯA nối: 52/619 tệp giao diện còn hex thô (đo 29/10) — dọn ở vòng
     # riêng trước, rồi mới nối và đếm mười vòng thí điểm DO1 (ghi chú nhận 2.35.0 của kit, mục 2.4 + rủi ro thí điểm).

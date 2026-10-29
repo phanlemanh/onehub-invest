@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: don-hex-tho
+# Ca test mang tiền tố «DHT-AC-n» ở scripts/don-hex-tho.test.mjs (node --test, không DB, chạy cả ở CI scripts).
+# Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành → xanh; bản sao bị phá → đỏ với thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [app/src/app/**, app/src/components/**, scripts/don-hex-tho.test.mjs]
+    expected: "exit 0; ca 'DHT-AC-1' xanh: (a) quét vùng giao diện trừ vendor bằng RE_HEX → 0 chỗ; (b) đối chứng dương trên mã thật: năm tệp ở 3936e3d0 (git show) báo đúng 15 chỗ tệp:dòng:giá trị của danh sách viết trước, có flow-journey.tsx:20 #000; (c) bản sao tạm của mini-map.tsx chèn '#123456' → báo 'mini-map.tsx:<dòng> #123456'; (d) máy có kit 2.35.0 → RE_HEX.source của test bằng của design-floor-s4.mjs"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [app/src/lib/map-colors.ts, scripts/don-hex-tho.test.mjs]
+    expected: "exit 0; ca 'DHT-AC-2' xanh: import app/src/lib/map-colors.ts (node 24 bỏ kiểu), 14 assert so giá trị lúc chạy với bảng AC-2 viết trước; bảng đổi một giá trị → đỏ ghim tên vai đó"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [app/src/components/finder/bins.ts, app/src/components/finder/choropleth-map.tsx, app/src/components/listing/listings-map.tsx, app/src/components/mini-map.tsx, scripts/don-hex-tho.test.mjs]
+    expected: "exit 0; ca 'DHT-AC-3' xanh: 7 neo chỗ dùng viết trước (phủ 14 giá trị) mỗi neo một assert; đột biến đảo cặp ở cả bốn tệp (bins bỏ NO_DATA_COLOR_DARK, choropleth đảo dark/light, listings đảo ink/paper, mini-map đảo active/idle) → mỗi đột biến đỏ ghim đúng neo"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [app/src/components/ops/data-flow/flow-journey.tsx, scripts/don-hex-tho.test.mjs]
+    expected: "exit 0; ca 'DHT-AC-4' xanh: SWEEP_MASK = 'linear-gradient(to right, black 48%, transparent 52%)'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [app/eslint.config.mjs, .claude/skills/onehub-ui/SKILL.md, scripts/don-hex-tho.test.mjs]
+    expected: "exit 0; ca 'DHT-AC-5' xanh: MAP_FILES = [src/lib/map-style.ts, src/lib/map-colors.ts]; danh sách đóng của SKILL.md bằng đúng MAP_FILES; bản sao thêm một tệp vào SKILL.md → đỏ ghim tệp thừa"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.ui_lint_should_not_fire
+    paths: [app/eslint-plugin-onehub-ui/selftest.mjs, app/eslint.config.mjs]
+    expected: "exit 0, dòng cuối PASS; in 'OK    src/lib/map-colors.ts: hex KHÔNG bị no-hardcoded-color', 'OK    src/lib/map-colors.ts: alert() VẪN bị no-native-dialogs' và dòng đối chứng file thường vẫn bị no-hardcoded-color"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint.config.mjs]
+    expected: "exit 0; tsc 0 lỗi, lint 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.design.gate_don_hex_tho
+    paths: [app/src/components/finder/bins.ts, app/src/components/finder/choropleth-map.tsx, app/src/components/listing/listings-map.tsx, app/src/components/mini-map.tsx, app/src/components/ops/data-flow/flow-journey.tsx]
+    expected: "exit 0; design gate chạy lần lượt trên năm tệp giao diện của vòng, mỗi lần verdict PASS, không P0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [scripts/don-hex-tho.test.mjs]
+    expected: "exit 0; ca 'DHT-AC-8' xanh: commit không gộp từ 3936e3d0 chạm tệp riêng của vòng không đổi tệp vendor; bộ chọn trên danh sách commit giả: commit chạm vendor + tệp vòng → đỏ ghim tệp vendor, commit chỉ chạm vendor → không tính; ref 3936e3d0 vắng → đỏ ghim 'thiếu ref 3936e3d0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
