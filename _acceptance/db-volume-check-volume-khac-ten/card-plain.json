@@ -1,0 +1,25 @@
+{
+  "feature_plain": "Bộ tự kiểm của phép kiểm «DB có nằm trong ổ dữ liệu riêng không» sẽ bắt được cả trường hợp dữ liệu nằm trong một ổ sai tên, và trường hợp không đọc được thư mục dữ liệu — hai chỗ trước nay chưa có phép thử nào.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ báo đỏ, nói rõ tên ổ sai, khi dữ liệu DB nằm trong một ổ dữ liệu không phải onehub_pgdata."},
+    {"id": "AC-2", "p": "Sẽ thử đủ bốn tình huống chỗ nằm của dữ liệu (đúng ổ · ổ sai tên · ngay trong container · không đọc được), mỗi tình huống một kết luận ghim sẵn, và đếm đủ 4."},
+    {"id": "AC-3", "p": "Sẽ tự chứng minh bộ tự kiểm không mù: cố tình làm hỏng chỗ bắt «ổ sai tên» trong một bản sao thì bộ tự kiểm của bản sao phải báo đỏ."},
+    {"id": "AC-4", "p": "Sẽ giữ nguyên mọi phép kiểm DB hiện có, kể cả bảng 16 tình huống bản lùi đã ký hôm nay."},
+    {"id": "AC-5", "p": "Sẽ ghim lại bằng chứng của hai hồ sơ đã ký trước (chuyển DB vào ổ riêng; bản lùi) trên mã mới."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không thử thêm kiểu gắn ổ «đúng bằng thư mục dữ liệu» — để sau, chưa ai nêu."},
+    {"id": "OOS-2", "p": "Không sửa hai hạn chế đã ghi hôm nay về ô «hai bản lùi đều dừng đúng»."},
+    {"id": "OOS-3", "p": "Không gộp bốn tình huống mới vào bảng 16 tình huống đã ký — làm thế là đổi lời một tiêu chí đã ký."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Chỗ nằm của dữ liệu: đủ bốn kết quả mà hàm kiểm có thể trả (AC-1, AC-2) — «đủ» là mỗi nhánh của hàm có một ô."},
+    {"i": 1, "p": "Phép đo được thử cả hai chiều: ô thật, bản sao bị làm hỏng phải đỏ, bản lành phải xanh (AC-3)."},
+    {"i": 2, "p": "Không lùi: bảng 16 tình huống cũ, các phép kiểm khác cùng tệp, và hai hồ sơ đã ký (AC-4, AC-5)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Hai lựa chọn máy ghi là «không còn lối khác» thật ra vẫn còn lối khác. Đã sửa: chỗ đặt phép thử làm hỏng thành câu Hỏi-1 cho anh; chỗ đặt tài liệu thiết kế dựa vào tiền lệ của hồ sơ trước."},
+    {"i": 1, "p": "Phép chấm hồ sơ cũ chỉ đọc chữ, không đọc được bằng chứng đã ghim trên mã cuối cùng hay chưa. Không thêm phép đo: lưới kiểm trước khi gộp trên GitHub đã chặn đúng việc này, và đã bắt được nó hôm nay ở PR #178."},
+    {"i": 2, "p": "Ô «không đọc được» lúc đầu dùng giá trị gõ tay. Đã sửa: ô đọc thư mục dữ liệu bằng đúng hàm đọc thật, trỏ vào một container không tồn tại."}
+  ]
+}
