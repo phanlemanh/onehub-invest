@@ -397,3 +397,36 @@ describe("DD-AC-5 trang Thu thập", () => {
     await assert.rejects(doTrang(sai), /ô 'viewer'/, "đối chứng bỏ dòng che phải đỏ ở ô viewer")
   })
 })
+
+// ---------- AC-7: /ops/sources trên cloud đọc số nhóm bật ----------
+type AccMod = { ZaloAccounts: (p: { isCloud?: boolean }) => import("react").ReactElement }
+async function dungNguon(mod: AccMod, zaloAccounts: unknown[]) {
+  const fetchGoc = globalThis.fetch
+  globalThis.fetch = (async () => new Response(JSON.stringify({ zaloAccounts }), { headers: { "content-type": "application/json" } })) as typeof fetch
+  try {
+    const React = await import("react")
+    const root = await render(React.createElement(mod.ZaloAccounts, { isCloud: true }))
+    const React2 = await import("react")
+    await React2.act(() => new Promise((r) => setTimeout(r, 50)))
+    return root.textContent ?? ""
+  } finally {
+    globalThis.fetch = fetchGoc
+  }
+}
+async function doNguon(mod: AccMod) {
+  const moi = await dungNguon(mod, [{ accountId: "acc-a", name: null, profile: "acc-a", enabledGroups: [], soNhomBat: 4 }])
+  assert.ok(moi.includes("4 nhóm bật"), `bản tin mới: phải '4 nhóm bật' — ${moi.slice(0, 200)}`)
+  assert.ok(!moi.includes("0 nhóm bật"), "bản tin mới: không được '0 nhóm bật'")
+  // Review Focus 3: bản tin cũ (chưa có soNhomBat) vẫn đếm theo enabledGroups.
+  const cu = await dungNguon(mod, [{ accountId: "acc-b", name: null, profile: "acc-b", enabledGroups: ["g1", "g2", "g3"] }])
+  assert.ok(cu.includes("3 nhóm bật"), "bản tin cũ: phải '3 nhóm bật'")
+}
+
+describe("DD-AC-7 trang Nguồn trên cloud", () => {
+  test("DD-AC-7 nhãn số nhóm bật từ soNhomBat", async () => {
+    const mod = (await import("../src/components/ops/sources/zalo-accounts")) as unknown as AccMod
+    await doNguon(mod)
+    const sai = await banChepTam<AccMod>("src/components/ops/sources/zalo-accounts.tsx", (s) => s.replace("a.soNhomBat ?? a.enabledGroups.length", "a.enabledGroups.length"))
+    await assert.rejects(doNguon(sai), /'4 nhóm bật'/, "đối chứng đọc enabledGroups.length phải đỏ (hiện '0 nhóm bật')")
+  })
+})
