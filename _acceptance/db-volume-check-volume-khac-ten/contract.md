@@ -5,7 +5,7 @@ slug: db-volume-check-volume-khac-ten
 owner: phanlemanh@gmail.com
 risk_tier: T2      # scripts/db-volume-check.sh + hồ sơ — không chạm t3_paths
 surfaces: [ops]
-status: approved
+status: implemented
 design_doc: _acceptance/db-volume-check-volume-khac-ten/design.md
 approved_by: Mạnh
 approved_at: 2026-10-29
