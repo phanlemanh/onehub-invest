@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6e6e668886cc2cb75a41fc80dfeaa2d56e025a54
+verified_commit: 392fdb9ca8138ba3d99496185bb818deea41d4d9
 human_signoff: Mạnh 2026-10-29
 ---
 
@@ -223,3 +223,7 @@ none — mọi eval nhiều lần chạy đều đồng nhất (mọi eval ở r
 
 Round 1: E1–E13 chạy lần đầu, tất cả đạt; bằng chứng S4 lượt 1.
 Round 2: sau commit 6e6e6688 (trần chờ cho sổ cuộc gọi AI, AC-4) chạy lại E2, E3, E4, E13 và 6 lệnh suite; E1, E5–E12 mang từ round 1 vì delta không chạm paths của chúng; tất cả đạt.
+
+### Re-pin lần 1 — 2026-10-29, do gộp origin/main sau lượt chấm, rồi chữ ký
+run_id: repin-20261029T143406Z-21999
+sha: 392fdb9ca8138ba3d99496185bb818deea41d4d9 · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · ngoài làn máy: E6
