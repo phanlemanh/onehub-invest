@@ -1,0 +1,39 @@
+schema_version: 1
+feature_slug: rao-db-local-do-nen
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.rdl_rao
+    paths: [scripts/do-nen-hieu-nang/do.mjs, scripts/dev-ops-account.mjs, _acceptance/rao-db-local-do-nen/probes/rao.mjs]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; ba dòng 'ok ngoai may <nhãn>: chan (<ms> ms)' cho ten-mien, ip, ghi-de-host; cuối 'RAO OK'; should-NOT-fire: không 'KHONG CHAN', 'SAI THONG DIEP', 'QUA CHAM'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.rdl_rao
+    paths: [scripts/do-nen-hieu-nang/do.mjs, scripts/dev-ops-account.mjs, _acceptance/rao-db-local-do-nen/probes/rao.mjs]
+    expected: "exit 0; ba dòng 'ok local <nhãn>: rao cho qua (ECONNREFUSED)' cho localhost, 127.0.0.1, postgresql; cuối 'RAO OK'; should-NOT-fire: không 'RAO CHAN NHAM LOCAL', 'LOCAL KHONG RA ECONNREFUSED'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.rdl_rao
+    paths: [scripts/do-nen-hieu-nang/do.mjs, _acceptance/rao-db-local-do-nen/probes/rao.mjs]
+    expected: "exit 0; dòng 'ok thu tu: rao truoc moi ket noi va lenh ghi (<k> moc, da bo comment)'; dòng 'ban bo rao: do RAO VANG (<bản chép>, ENOTFOUND)'; dòng 'ban chen Pool truoc rao: do THU TU SAI'; cuối 'RAO OK'; should-NOT-fire: không 'THU TU SAI' ở bản thật, 'DOT BIEN KHONG AP DUOC', 'CA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.dn_trang
+    long_running: 10
+    paths: [scripts/do-nen-hieu-nang/do.mjs, scripts/dev-ops-account.mjs, _acceptance/do-nen-hieu-nang/probes/trang.sh]
+    expected: "exit 0; năm dòng 'trang <đường> (<cổng>): 20/20 dung trang (HTTP 200 + tieu de) …'; 'DO NEN OK'; 'ok tai khoan ops-test khong doi trong luot do'; 'ban dau sai: do TRANG KHONG DUNG'; cuối 'TRANG OK'; should-NOT-fire: không 'LUOT DO DOI TAI KHOAN OPS-TEST', 'CA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.rdl_pham_vi
+    paths: [scripts/dev-ops-account.mjs, scripts/do-nen-hieu-nang/do.mjs, "_acceptance/do-nen-hieu-nang/**", _acceptance/rao-db-local-do-nen/probes/pham-vi.sh]
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; mọi tệp đổi 'ok'; 'doi chung: tep gia ngoai danh sach (…) → NGOAI PHAM VI; do.mjs → ok'; 'ok dev-ops-account.mjs khong doi'; 'ok ho so do-nen-hieu-nang khong doi'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI', 'DEV-OPS-ACCOUNT BI DOI', 'DO-NEN-HIEU-NANG BI DOI', 'DOI CHUNG PHAM VI KHONG BAT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
