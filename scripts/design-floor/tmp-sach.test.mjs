@@ -26,6 +26,9 @@ function runSuite(cwd, files, extraEnv = {}) {
   return { code: r.status, out: `${r.stdout}${r.stderr}`, tmp };
 }
 const tapLines = (out, re) => out.split('\n').filter((l) => re.test(l));
+/** Tên ca thật (kể cả ca sinh từ bảng hay đặt tên bằng hằng) từ dòng TAP cấp ngoài cùng của một lượt chạy. */
+const tapNames = (out) => out.split('\n').map((l) => /^(?:not )?ok \d+ - (.*?)(?: # (?:SKIP|TODO)\b.*)?$/.exec(l)?.[1]).filter(Boolean);
+const NAMES = { now: null, before: null };
 /** Dòng TAP `ok N - <tên>` cấp ngoài cùng, không mang # SKIP hay # TODO. */
 const okReal = (out, name) => out.split('\n').some((l) => /^ok \d+ - /.test(l) && l.includes(name) && !/# (SKIP|TODO)/.test(l));
 
@@ -35,6 +38,7 @@ test('tmp-sạch: bộ test bản sửa để TMPDIR rỗng', { skip: NESTED ? '
   const files = readdirSync(HERE).filter((f) => f.endsWith('.test.mjs')).sort().map((f) => `scripts/design-floor/${f}`);
   assert.ok(files.includes(`scripts/design-floor/${SELF}`), 'lượt đo phải chạy cả tệp đo');
   const r = runSuite(ROOT, files, { TMP_SACH_NESTED: '1', DESIGN_FLOOR_TMP_LOG: log });
+  NAMES.now = tapNames(r.out);
   assert.deepEqual(tapLines(r.out, /^\s*not ok\b/), [], r.out.slice(-2000));
   assert.equal(r.code, 0, r.out.slice(-2000));
   for (const name of ['M2-AC-10 diff config.yaml cặp cố định', 'M2-AC-10 sau gộp (a)', 'tmp-sạch cặp đỏ']) {
@@ -45,15 +49,23 @@ test('tmp-sạch: bộ test bản sửa để TMPDIR rỗng', { skip: NESTED ? '
   assert.deepEqual(leftoverPrefixes(r.tmp), [], 'TMPDIR còn thư mục sau lượt chạy');
 });
 
-test('tmp-sạch cặp đỏ: bản 89730e6b để rác ở đủ bốn nguồn', () => {
-  requireCommit(BEFORE_TMP_FIX);
+/** Bản clone --shared của kho, đứng ở commit `sha` (cây cũ trọn vẹn, tự dọn qua tempDir). */
+function cloneAt(sha) {
+  requireCommit(sha);
   const dir = path.join(tempDir('tmp-sach-clone-'), 'kho');
   assert.equal(git(['clone', '--shared', '-q', ROOT, dir], path.dirname(dir)).status, 0);
-  assert.equal(git(['checkout', '-q', BEFORE_TMP_FIX], dir).status, 0);
-  const files = readdirSync(path.join(dir, 'scripts/design-floor')).filter((f) => f.endsWith('.test.mjs')).sort()
-    .map((f) => `scripts/design-floor/${f}`);
+  assert.equal(git(['checkout', '-q', sha], dir).status, 0);
+  return dir;
+}
+const testFiles = (root) => readdirSync(path.join(root, 'scripts/design-floor')).filter((f) => f.endsWith('.test.mjs')).sort()
+  .map((f) => `scripts/design-floor/${f}`);
+
+test('tmp-sạch cặp đỏ: bản 89730e6b để rác ở đủ bốn nguồn', () => {
+  const dir = cloneAt(BEFORE_TMP_FIX);
+  const files = testFiles(dir);
   assert.ok(!files.includes(`scripts/design-floor/${SELF}`), 'bản cũ không được có tệp đo');
   const r = runSuite(dir, files);
+  NAMES.before = tapNames(r.out);
   const left = leftoverPrefixes(r.tmp);
   for (const prefix of SOURCES) assert.ok(left.includes(prefix), `bản cũ phải để rác ${prefix}; còn: ${left.join(', ')}`);
 });
@@ -83,15 +95,17 @@ const d = mkdtempSync(path.join(tmpdir(), 'nem-')); console.log(d); throw new Er
 
 const RAW_CALL = /mkdtemp[S]ync\(/;
 const REGION = /^\s*\/\/ <<<(TEMPDIR-MIEN|RAW-MKDTEMP-DOI-CHUNG)\s*$/;
-/** Lời gọi mkdtemp trần ngoài vùng miễn đóng; trả { hits: ['<tệp>:<dòng>'], regions: số vùng miễn }. */
+/** Danh sách miễn ĐÓNG viết trước: đúng hai cặp (tệp, vùng). */
+const MIEN = ['test-helpers.mjs:TEMPDIR-MIEN', 'tmp-sach.test.mjs:RAW-MKDTEMP-DOI-CHUNG'];
+/** Lời gọi mkdtemp trần ngoài vùng miễn và các vùng miễn gặp được: { hits: ['<tệp>:<dòng>'], regions: ['<tệp>:<vùng>'] }. */
 export function rawMkdtemp(sources) {
   const hits = [];
-  let regions = 0;
+  const regions = [];
   for (const { name, text } of sources) {
     let open = null;
     text.split('\n').forEach((line, i) => {
       const start = REGION.exec(line);
-      if (start) { open = start[1]; regions++; return; }
+      if (start) { open = start[1]; regions.push(`${name}:${open}`); return; }
       if (open && line.trim() === `// ${open}>>>`) { open = null; return; }
       if (!open && RAW_CALL.test(line)) hits.push(`${name}:${i + 1}`);
     });
@@ -99,32 +113,42 @@ export function rawMkdtemp(sources) {
   }
   return { hits, regions };
 }
+/** Mọi chỗ lệch so với danh sách miễn đóng: lời gọi trần, vùng miễn thừa, vùng miễn thiếu. */
+export function mienLech({ hits, regions }) {
+  return [...hits.map((h) => `gọi trần ${h}`),
+    ...regions.filter((r) => !MIEN.includes(r)).map((r) => `vùng miễn thừa ${r}`),
+    ...MIEN.filter((m) => regions.filter((r) => r === m).length !== 1).map((m) => `vùng miễn thiếu hoặc lặp ${m}`)];
+}
 const designFloorSources = () => readdirSync(HERE).filter((f) => f.endsWith('.mjs')).sort()
   .map((name) => ({ name, text: readFileSync(path.join(HERE, name), 'utf8') }));
 
 test('tmp-sạch: không mkdtempSync trần ngoài hai vùng miễn', () => {
   const sources = designFloorSources();
-  assert.deepEqual(rawMkdtemp(sources), { hits: [], regions: 2 });
-  const inject = (name, at) => sources.map((s) => {
-    if (s.name !== name) return s;
-    const lines = s.text.split('\n');
-    lines.splice(at - 1, 0, `const leak = ${'mkdtemp'}Sync('x');`);
-    return { name, text: lines.join('\n') };
-  });
-  assert.deepEqual(rawMkdtemp(inject('reuse-plan.test.mjs', 3)).hits, ['reuse-plan.test.mjs:3']);
-  assert.deepEqual(rawMkdtemp(inject(SELF, 12)).hits, [`${SELF}:12`]);
+  assert.deepEqual(rawMkdtemp(sources).regions.sort(), [...MIEN].sort());
+  assert.deepEqual(mienLech(rawMkdtemp(sources)), []);
+  const edit = (name, fn) => sources.map((s) => (s.name === name ? { name, text: fn(s.text.split('\n')).join('\n') } : s));
+  const call = `const leak = ${'mkdtemp'}Sync('x');`;
+  const insertAt = (at, ...rows) => (lines) => { lines.splice(at - 1, 0, ...rows); return lines; };
+  assert.deepEqual(mienLech(rawMkdtemp(edit('reuse-plan.test.mjs', insertAt(3, call)))), ['gọi trần reuse-plan.test.mjs:3']);
+  assert.deepEqual(mienLech(rawMkdtemp(edit(SELF, insertAt(12, call)))), [`gọi trần ${SELF}:12`]);
+  // vùng miễn giả quanh một lời gọi trần ở tệp khác: hits rỗng nhưng thước gọi tên vùng thừa
+  assert.deepEqual(mienLech(rawMkdtemp(edit('reuse-plan.test.mjs', insertAt(3, '// <<<TEMPDIR-MIEN', call, '// TEMPDIR-MIEN>>>')))),
+    ['vùng miễn thừa reuse-plan.test.mjs:TEMPDIR-MIEN']);
+  // bỏ dấu mốc của vùng đối chứng: lộ lời gọi trần và thiếu vùng
+  const lechBo = mienLech(rawMkdtemp(edit(SELF, (lines) => lines.filter((l) => !/RAW-MKDTEMP-DOI-CHUNG/.test(l) || /^const |MIEN = /.test(l.trim())))));
+  assert.ok(lechBo.some((x) => x.startsWith(`gọi trần ${SELF}:`)), lechBo.join(' | '));
+  assert.ok(lechBo.includes(`vùng miễn thiếu hoặc lặp ${SELF}:RAW-MKDTEMP-DOI-CHUNG`), lechBo.join(' | '));
 });
 
-const caseNames = (src) => [...src.matchAll(/\btest\(\s*(['`])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]);
 const lostCases = (before, now) => before.filter((n) => !new Set(now).has(n));
 
-test('tmp-sạch: không hạ thước — mọi ca của bản 89730e6b còn', () => {
-  const r = git(['ls-tree', '--name-only', `${BEFORE_TMP_FIX}:scripts/design-floor`]);
-  assert.equal(r.status, 0, r.stderr);
-  const oldFiles = r.stdout.trim().split('\n').filter((f) => f.endsWith('.test.mjs'));
-  const before = oldFiles.flatMap((f) => caseNames(blobAt(BEFORE_TMP_FIX, `scripts/design-floor/${f}`)));
-  assert.ok(before.length >= 25, `đếm ca bản trước: ${before.length}`);
-  const now = designFloorSources().filter((s) => s.name.endsWith('.test.mjs')).flatMap((s) => caseNames(s.text));
+test('tmp-sạch: không hạ thước — mọi ca của bản 89730e6b còn', { skip: NESTED ? 'lượt lồng — cần tên từ ca AC-1' : false }, () => {
+  const { before, now } = NAMES;
+  assert.ok(before && now, 'thiếu tên ca: ca AC-1 hoặc AC-2 chưa chạy trước ca này');
+  assert.equal(before.length, 49, `bản 89730e6b có 49 ca (đếm lúc viết thước): đếm được ${before.length}`);
+  assert.ok(before.includes('M2-AC-10 diff config.yaml cặp cố định 3b3a33e5^→3b3a33e5 chỉ thêm hai dòng executors'), 'ca đặt tên bằng hằng phải có');
+  assert.ok(before.filter((n) => n.startsWith('M2-AC-6 ')).length >= 5, 'ca sinh từ bảng phải được liệt kê từng ca');
   assert.deepEqual(lostCases(before, now), []);
-  assert.deepEqual(lostCases(before, now.filter((n) => n !== before[0])), [before[0]], 'thước phải gọi tên ca bị mất');
+  const dropped = before.find((n) => n.startsWith('M2-AC-6 ') && n !== before[0]);
+  assert.deepEqual(lostCases(before, now.filter((n) => n !== dropped)), [dropped], 'thước phải gọi tên ca sinh từ bảng bị mất');
 });
