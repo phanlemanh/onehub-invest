@@ -346,11 +346,6 @@
       "phu": [
         "DB2b"
       ],
-      "vung": [
-        "db/migrations/**",
-        "pipeline/sync-cloud.mjs",
-        "pipeline/mappings.yaml"
-      ],
       "ghi_chu": "Khung chung ADR-0016 §3 (khoá mờ tiền tố, trạng thái, bảng bí danh và sự kiện dùng chung) do hàng danh bạ mở trước dựng; DB2b sẵn sàng trước DB1 nên thường là hàng này — chốt ở Cổng Phạm vi. Không gộp người liên nguồn (Đợt 3). Vai suy luận chỉ ở /ops, không vào cột. Người bán là tầng C (ADR-0007 mục 9); người dùng app và tài khoản thu (tầng A) không vào danh bạ. Migration xin số ở phiên điều phối liên làn."
     },
     {
