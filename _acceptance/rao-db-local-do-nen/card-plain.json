@@ -1,1 +1,1 @@
-{"feature_plain":"Script đo nền hiệu năng từ chối chạy khi DATABASE_URL trỏ ra ngoài máy, nên không bao giờ tạo tài khoản đo hay xoá bộ đếm thống kê trên DB cloud."}
+{"feature_plain":"Script đo nền hiệu năng từ chối chạy khi DATABASE_URL trỏ ra ngoài máy, nên không bao giờ tạo tài khoản đo hay xoá bộ đếm thống kê trên DB cloud; trên DB local vẫn đo như cũ."}
