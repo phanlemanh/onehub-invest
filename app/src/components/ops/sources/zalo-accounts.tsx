@@ -23,7 +23,8 @@ import { ZaloGroupsGrid, type ZaloGroup } from "./zalo-groups-grid"
 import { ZaloQrDialog } from "./zalo-qr-dialog"
 
 type GroupsResult = { groups: ZaloGroup[] | null; error: string | null }
-type CloudAccount = { accountId: string; name: string | null; profile: string; enabledGroups: string[] }
+/** `soNhomBat`: bản tin mới gửi số nhóm bật, `enabledGroups` rỗng (mã nhóm không rời máy — dinh-danh-tai-khoan-thu-theo-vai). */
+type CloudAccount = { accountId: string; name: string | null; profile: string; enabledGroups: string[]; soNhomBat?: number }
 
 async function fetchAccounts(): Promise<ZaloAccount[] | null> {
   const r = await fetch("/api/v1/ops/zalo/accounts")
@@ -80,7 +81,7 @@ function CloudAccounts() {
           accounts.map((a) => (
             <FramePanel key={a.accountId} className="flex items-center gap-2">
               <span className="font-mono text-sm" translate="no">{a.accountId}</span>
-              <Badge variant="outline">{fmtInt(a.enabledGroups.length)} nhóm bật</Badge>
+              <Badge variant="outline">{fmtInt(a.soNhomBat ?? a.enabledGroups.length)} nhóm bật</Badge>
             </FramePanel>
           ))
         )}

@@ -1,0 +1,95 @@
+{
+  "feature_plain": "Người xem và máy đọc bằng token chung vào trang Thu thập chỉ thấy số tài khoản và số nhóm; mã tài khoản thu, mã nhóm Zalo và tài khoản giữ nhóm chỉ hiện cho vai Vận hành trở lên, và mã nhóm thôi lên cloud.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ có một luật «ai được thấy định danh tài khoản thu»: Vận hành, Quản trị, Chủ sở hữu và email trong OPS_EMAILS thì có; người dùng thường, Người xem và máy đọc bằng token chung thì không."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ che bằng cách giữ đủ số tài khoản và số nhóm, chỉ xoá mã: mỗi tài khoản còn một dòng kèm số nhóm bật, mỗi nhóm trong danh sách cho phép còn một dòng không mã."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ đo đủ bảy kiểu người gọi API Thu thập ở máy thu: ai thấy mã tài khoản và mã nhóm đúng bảng viết trước, và số dòng không đổi giữa người thấy và người bị che."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ che y như vậy khi API chạy trên cloud: Người xem và máy dùng token chung nhận bản đã che, Vận hành vẫn thấy mã tài khoản."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ cho Người xem thấy ở trang Thu thập cột tài khoản giữ nhóm toàn «—» và câu «mã nhóm chỉ hiện cho vai Vận hành trở lên.»; dữ liệu mã không xuống trình duyệt, cả ở máy thu lẫn cloud."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ để bản tin máy thu gửi lên cloud chỉ số nhóm bật của từng tài khoản, không gửi mã nhóm; bản tin còn mã nhóm thì bị chặn không gửi (theo Hỏi-1)."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ giữ đúng nhãn «N nhóm bật» ở trang Nguồn trên cloud khi bản tin chỉ còn số nhóm."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ giữ xanh toàn bộ test của app và của pipeline."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ chụp màn trang Thu thập bằng tài khoản thử Người xem (không thấy mã nhóm, không thấy tài khoản giữ nhóm) và tài khoản thử Quản trị (thấy như hôm nay)."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "Không đụng tên tài khoản thu — đã chốt là bí mật và đã che ở việc trước."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không sửa các lệnh bật/tắt nhóm, đăng nhập Zalo, hay trang Nguồn (chỉ Quản trị) ngoài nhãn số nhóm."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không đổi bậc quyền đọc Ops hay quyền token chung của các route khác."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Trục người gọi: đủ bảy kiểu (người dùng thường, Người xem, Vận hành, Quản trị, Chủ sở hữu, email OPS_EMAILS, token chung) — đo ở AC-1 và ma trận AC-3."
+    },
+    {
+      "i": 1,
+      "p": "Trục chỗ lộ: hàm che, API ở máy thu và cloud, trang ở máy thu và cloud, bản tin lên cloud, nhãn số nhóm ở trang Nguồn — AC-2 tới AC-7, AC-9."
+    },
+    {
+      "i": 2,
+      "p": "Trục trường dữ liệu: mã tài khoản, hồ sơ, tên, mã nhóm bật, mã nhóm trong danh sách cho phép, tài khoản giữ nhóm."
+    },
+    {
+      "i": 3,
+      "p": "Cắt ngang: giữ nguyên số dòng cho máy đếm bằng token chung (bộ kiểm toàn hệ thống), và không hồi quy (AC-8)."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Ngưỡng ai được thấy lẽ ra là câu anh chốt, máy đã ghi như tự quyết. Đã sửa: chuyển thành Hỏi-2 cho anh."
+    },
+    {
+      "i": 1,
+      "p": "Phép đo cho máy dùng token chung có thể giả mà không đi qua bước xác thực thật. Đã sửa: bắt buộc gọi bằng token thật, thêm đối chứng."
+    },
+    {
+      "i": 2,
+      "p": "Thiếu đo trang Thu thập khi chạy trên cloud. Đã sửa: thêm vế cloud vào AC-5 và phép đo."
+    },
+    {
+      "i": 3,
+      "p": "Lo dữ liệu bản tin cũ trên cloud còn mã nhóm. Bác bỏ: cloud chỉ giữ một bản tin, ghi đè mỗi 15 phút."
+    },
+    {
+      "i": 4,
+      "p": "Phép đo API cloud chưa soi trường hồ sơ tài khoản. Đã sửa: cấy và kiểm hồ sơ, thêm đối chứng."
+    }
+  ]
+}

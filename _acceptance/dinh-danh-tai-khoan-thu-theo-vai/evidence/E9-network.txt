@@ -1,0 +1,2 @@
+viewer: /ops/collections 200 ; admin: 200 (curl)
+dev log: no 5xx; playwright-cli driver cannot read network

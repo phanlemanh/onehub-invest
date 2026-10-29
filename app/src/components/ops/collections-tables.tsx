@@ -265,10 +265,13 @@ export function ZaloGroupsTable({
           Qua cổng = cổng Kev ≥ 0,9 (đọc nhật ký cổng).{" "}
           {cloud ? (
             <>Danh sách cho phép: mã nhóm chỉ xem ở máy thu.</>
+          ) : enabled?.some((a) => a.groupId === null) ? (
+            // Máy chủ đã che mã nhóm (cheDinhDanhThu — người xem dưới vai Vận hành): chỉ còn số nhóm bật.
+            <>Danh sách cho phép đang bật {enabled.length} nhóm; mã nhóm chỉ hiện cho vai Vận hành trở lên.</>
           ) : (
             <>
               Danh sách cho phép (mã nhóm, chưa ghép tên):{" "}
-              {enabled?.map((a) => a.groupId.replace("group:", "…").slice(-6)).join(", ") || "—"}.
+              {enabled?.map((a) => (a.groupId ?? "").replace("group:", "…").slice(-6)).join(", ") || "—"}.
             </>
           )}{" "}
           Nhóm im quá 72h: kiểm tra bị mời ra hoặc đổi tên;

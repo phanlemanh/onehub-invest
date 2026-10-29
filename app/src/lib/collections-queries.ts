@@ -37,9 +37,30 @@ type LocalFacts = {
   rotation: { cursor: number; total: number; next: { id: string; name: string; lastCapturedAt: string | null }[]; updatedAt?: string | null };
   zaloGroups: ZaloGroupRow[];
   zaloFlow: Record<string, { posts?: number; offers?: number }>;
-  zaloAccounts?: { accountId: string; name: string | null; profile: string; enabledGroups: string[] }[];
+  zaloAccounts?: TaiKhoanThu[];
   sourceRuns?: { code: string; label_vi: string | null }[];
 };
+
+/** Một tài khoản thu trong bản tin / API Thu thập. `soNhomBat`: số nhóm bật — bản tin từ dinh-danh-tai-khoan-thu-theo-vai
+ * (Hỏi-1 = A) gửi số này, `enabledGroups` rỗng (mã nhóm không rời máy); bản tin cũ chỉ có `enabledGroups`. Mã về null khi
+ * đã che. */
+export type TaiKhoanThu = { accountId: string | null; name: string | null; profile: string | null; enabledGroups: string[]; soNhomBat?: number };
+
+/**
+ * Che định danh tài khoản thu và mã nhóm cho người gọi dưới vai ops (Người xem, bearer chung — `xemDinhDanhThu`). Giữ số
+ * phần tử (máy đếm tài khoản qua bearer — scripts/audit-all.sh), chỉ đặt mã về null; `zaloAllowlist === null` (cấu hình
+ * không đọc được) giữ null. Hàm thuần, không đổi đầu vào.
+ */
+export function cheDinhDanhThu<T extends { zaloAccounts?: TaiKhoanThu[]; zaloAllowlist?: ZaloAllowlistEntry[] | null; zaloGroups?: ZaloGroupRow[] }>(p: T): T {
+  return {
+    ...p,
+    ...(p.zaloAccounts && {
+      zaloAccounts: p.zaloAccounts.map((a) => ({ accountId: null, name: null, profile: null, enabledGroups: [], soNhomBat: a.soNhomBat ?? a.enabledGroups.length })),
+    }),
+    ...(p.zaloAllowlist !== undefined && { zaloAllowlist: p.zaloAllowlist && p.zaloAllowlist.map((g) => ({ groupId: null, enabled: g.enabled })) }),
+    ...(p.zaloGroups && { zaloGroups: p.zaloGroups.map((g) => ({ ...g, ownerAccount: null })) }),
+  };
+}
 
 /** Cloud: danh sách tài khoản Zalo từ ops-heartbeat (read-only). */
 export async function getZaloAccountsFromFacts(): Promise<LocalFacts["zaloAccounts"]> {
@@ -393,7 +414,7 @@ export type ZaloGroupRow = {
   ownerAccount: string | null; // account đang sở hữu nhóm (config/directory)
 };
 
-export type ZaloAllowlistEntry = { groupId: string; enabled: boolean };
+export type ZaloAllowlistEntry = { groupId: string | null; enabled: boolean };
 
 /** Allowlist đọc runtime từ ~/.openclaw/openclaw.json — KHÔNG commit id vào
  * repo/migration (SPL ADR-0007: định danh nguồn thật ở tầng A, máy local). Nhóm bật = hợp nhóm bật hiệu dụng của mọi

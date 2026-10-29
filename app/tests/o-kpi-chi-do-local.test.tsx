@@ -161,7 +161,8 @@ function mutantChain(leaf: { rel: string; fn: (s: string) => string }, parents: 
   }
   return { path: made[made.length - 1].path, done: () => made.forEach((m) => m.done()) }
 }
-const COL_PAGE = { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-view" }
+// Thân trang ở collections-content.tsx (dinh-danh-tai-khoan-thu-theo-vai): chuỗi đột biến đi lá → thân → page.
+const COL_PAGE = [{ rel: "src/components/ops/collections/collections-content.tsx", spec: "@/components/ops/collections/collections-view" }, { rel: "src/app/ops/collections/page.tsx", spec: "@/components/ops/collections/collections-content" }]
 const COL_VIEW_TILES = { rel: "src/components/ops/collections/collections-view.tsx", spec: "@/components/ops/collections/collections-tiles" }
 const OPS_PAGE_TILES = { rel: "src/app/ops/page.tsx", spec: "@/components/ops/overview/overview-tiles" }
 
@@ -210,7 +211,7 @@ describe("ON3-AC-1 chưa có bản tin", () => {
     await clear()
     const m = mutantChain(
       { rel: "src/components/ops/collections/collections-tiles.tsx", fn: (s) => s.replace('value={cloud && !cloud.funnelMeasured ? "—" : fmtInt(funnel.today.passed)}', "value={fmtInt(funnel.today.passed)}") },
-      [COL_VIEW_TILES, COL_PAGE],
+      [COL_VIEW_TILES, ...COL_PAGE],
     )
     try {
       const h = await renderCollections(m.path)
@@ -288,7 +289,7 @@ describe("ON3-AC-2/AC-3 bản tin tươi", () => {
     ready()
     const p = await push()
     await ingest(p)
-    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace('cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0)', "0") }, [COL_PAGE])
+    const m = mutantChain({ rel: "src/components/ops/collections/collections-view.tsx", fn: (s) => s.replace('cloud.records24h.filter((r) => r.code !== "S02").reduce((a, r) => a + r.n, 0)', "0") }, [...COL_PAGE])
     try {
       const want = (p.blocks.records24h.bySource as { n: number }[]).reduce((a, r) => a + r.n, 0)
       assert.notEqual(tileValue(await renderCollections(m.path), "Bản ghi 24h"), String(want))
@@ -334,7 +335,7 @@ describe("ON3-AC-4 bản tin cũ", () => {
   test("ON3-AC-4 bản sao còn ngưỡng 30′ trên cloud → bắt", async () => {
     ready()
     await ingest(shiftPayload(await push(), -31) as Payload)
-    const m = mutantChain(NO_CLOUD_VIEW, [COL_PAGE])
+    const m = mutantChain(NO_CLOUD_VIEW, [...COL_PAGE])
     try {
       assert.ok((await renderCollections(m.path)).includes("Máy thu có thể mất kết nối"), "phép đo phải thấy cảnh báo 30′ cũ")
     } finally {
@@ -346,7 +347,7 @@ describe("ON3-AC-4 bản tin cũ", () => {
     await ingest(shiftPayload(await push(), -46) as Payload)
     const m = mutantChain(
       { rel: "src/components/ops/collections/collections-tiles.tsx", fn: (s) => s.replace('const tone = (t: string) => (muted ? "bg-muted-foreground/40" : t)', "const tone = (t: string) => t") },
-      [COL_VIEW_TILES, COL_PAGE],
+      [COL_VIEW_TILES, ...COL_PAGE],
     )
     try {
       assert.ok(successTone(region(await renderCollections(m.path), COL_TILES[0], COL_TILES[4])) > 0, "phép đo phải thấy màu đạt trên số cũ")
@@ -388,7 +389,7 @@ describe("ON3-AC-4 vùng đo trên máy thu không dựng trên cloud", () => {
   test("ON3-AC-4 bản sao dựng bố cục máy local trên cloud → bắt", async () => {
     ready()
     await ingest(shiftPayload(await push(), -46) as Payload)
-    const m = mutantChain(NO_CLOUD_VIEW, [COL_PAGE])
+    const m = mutantChain(NO_CLOUD_VIEW, [...COL_PAGE])
     try {
       const h = await renderCollections(m.path)
       assert.ok(headings(h).some((x) => !CLOUD_HEADINGS.includes(x)), "phép đo phải thấy vùng ngoài bản tin")
@@ -457,7 +458,7 @@ describe("ON3-AC-6 khối lỗi do bên ghi thật", () => {
     await ingest(await push(LOCAL_ERR.records24h))
     const m = mutantChain(
       { rel: "src/components/ops/collections/collections-tiles.tsx", fn: (s) => s.replace('value={items24h === null ? "—" : fmtInt(items24h)}', "value={fmtInt(items24h ?? 0)}") },
-      [COL_VIEW_TILES, COL_PAGE],
+      [COL_VIEW_TILES, ...COL_PAGE],
     )
     try {
       assert.ok(zeroValues(region(await renderCollections(m.path), COL_TILES[1], COL_TILES[2])) > 0, "phép đo phải thấy số 0 trong ô")
