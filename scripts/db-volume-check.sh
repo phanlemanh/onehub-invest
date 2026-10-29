@@ -10,8 +10,9 @@
 #   mutation       các bản compose/script hỏng chép từ bản lành phải đỏ với thông điệp ghim; bản lành xanh.
 #   tap-duot       sao lưu → khôi phục → chuyển → tạo lại → lùi trên cụm giả onehub-tapduot-* cùng daemon;
 #                  không chạm one-invest-db (Id + StartedAt không đổi); tự dọn kể cả khi lỗi/SIGTERM.
-#   live           CHỈ ĐỌC máy này: data_directory của one-invest-db nằm dưới mount volume onehub_pgdata; bản lùi
-#                  one-invest-db-cu-* tồn tại, đang dừng, restart no. Chạy live-selftest trước (chiều đỏ của bộ đọc).
+#   live           CHỈ ĐỌC máy này: data_directory của one-invest-db nằm dưới mount volume onehub_pgdata (bất biến); còn
+#                  bản lùi one-invest-db-cu-* thì MỌI bản đang dừng, restart no; vắng bản lùi trước hạn giữ là đỏ, sau
+#                  hạn là xanh (hồ sơ db-volume-live-ban-lui). Chạy live-selftest trước: đường gom + ma trận 16 ô.
 #   live-selftest  bộ đọc của live chạy trên JSON inspect thật đã làm hỏng phải đỏ.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -85,7 +86,8 @@ expect() {
   # Lệnh ngoài (script) trả mã thoát của nó; hàm kiểm trong tệp này báo qua biến FAIL — nhận cả hai.
   out=$( FAIL=0; "$@"; r=$?; [ $FAIL != 0 ] && exit 1; exit $r ); rc=$?
   if [ "$want" = 0 ]; then
-    [ $rc = 0 ] && pass "$label xanh" || { fail "$label lẽ ra xanh"; echo "$out"; }
+    if [ $rc = 0 ] && { [ -z "$msg" ] || grep -qF "$msg" <<<"$out"; }; then pass "$label xanh${msg:+ — $msg}"
+    else fail "$label lẽ ra xanh${msg:+ với «$msg»} (rc=$rc)"; echo "$out"; fi
   elif [ $rc != 0 ] && grep -qF "$msg" <<<"$out"; then
     pass "$label đỏ — $msg"
   else
@@ -154,12 +156,22 @@ td_cleanup() {
 td_con_sot() { # số tài nguyên tập dượt còn lại
   echo $(( $(docker ps -a --format '{{.Names}}' | grep -cE '^onehub-tapduot-') + $(docker volume ls --format '{{.Name}}' | grep -cE '^onehub[-_]tapduot') ))
 }
-td_cho_healthy() { # $1 container — chờ tối đa 180 giây
-  local i s; for i in $(seq 1 180); do
+td_cho_healthy() { # $1 container — chờ tối đa 300 giây (lượt chấm chạy 6 suite song song, kartoza khởi tạo chậm hơn)
+  local i s; for i in $(seq 1 300); do
     s=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$1" 2>/dev/null)
     [ "$s" = healthy ] && return 0; sleep 1
   done
   echo "--- đuôi log $1:"; docker logs --tail 15 "$1" 2>&1; return 1
+}
+# compose up có thử lại một lần; thất bại thì in đuôi đầu ra compose + log container (không nuốt lỗi).
+td_compose_up() { # $1 project, $2 tệp compose, $3 container
+  local k log="$TD_TMP/compose-$1.log"
+  for k in 1 2; do
+    docker compose -p "$1" -f "$2" up -d >"$log" 2>&1 && td_cho_healthy "$3" && return 0
+    echo "--- compose up $1 lượt $k lỗi:"; tail -8 "$log"; docker logs --tail 8 "$3" 2>&1 | sed 's/^/    /'
+    docker compose -p "$1" -f "$2" down -v >/dev/null 2>&1
+  done
+  return 1
 }
 td_dung_cu() { # cụm kiểu cũ + dữ liệu mồi
   mkdir -p "$TD_TMP/cu"
@@ -167,8 +179,7 @@ td_dung_cu() { # cụm kiểu cũ + dữ liệu mồi
     | sed -e "s/container_name: one-invest-db/container_name: $TD_DB/" -e "s/\"5433:5432\"/\"$TD_PORT:5432\"/" > "$TD_TMP/cu/docker-compose.yml" \
     || { fail "không đọc được compose cũ ở $TD_CU_REF"; return 1; }
   grep -q '/var/lib/postgresql/data' "$TD_TMP/cu/docker-compose.yml" || { fail "compose ở $TD_CU_REF không phải kiểu cũ"; return 1; }
-  docker compose -p onehub-tapduot-cu -f "$TD_TMP/cu/docker-compose.yml" up -d >/dev/null 2>&1 || { fail "không dựng được $TD_DB"; return 1; }
-  td_cho_healthy "$TD_DB" || { fail "$TD_DB không healthy"; return 1; }
+  td_compose_up onehub-tapduot-cu "$TD_TMP/cu/docker-compose.yml" "$TD_DB" || { fail "không dựng được $TD_DB"; return 1; }
   td_psql -d oneinvest -c "create table mau_a(id serial primary key, v int); insert into mau_a(v) select g from generate_series(1,1000) g;
     create extension if not exists postgis; create table mau_geo(id int, g geometry(Point,4326));
     insert into mau_geo select g, st_setsrid(st_makepoint(105.8+g/100.0, 21.0), 4326) from generate_series(1,10) g;
@@ -343,7 +354,7 @@ ca_tao_lai() {
   mkdir -p "$TD_TMP/dc"
   sed -e "s/container_name: $TD_DB/container_name: onehub-tapduot-dc/" -e "s/\"$TD_PORT:5432\"/\"$((TD_PORT + 1)):5432\"/" \
     "$TD_TMP/cu/docker-compose.yml" > "$TD_TMP/dc/docker-compose.yml"
-  docker compose -p onehub-tapduot-dc -f "$TD_TMP/dc/docker-compose.yml" up -d >/dev/null 2>&1 && td_cho_healthy onehub-tapduot-dc || { fail "không dựng được cụm đối chứng"; return 1; }
+  td_compose_up onehub-tapduot-dc "$TD_TMP/dc/docker-compose.yml" onehub-tapduot-dc || { fail "không dựng được cụm đối chứng"; return 1; }
   docker exec -i -e PGPASSWORD=oneinvest onehub-tapduot-dc psql -U oneinvest -h localhost -d oneinvest -qc "create table x(i int); insert into x select generate_series(1,5)"
   docker compose -p onehub-tapduot-dc -f "$TD_TMP/dc/docker-compose.yml" up -d --force-recreate >/dev/null 2>&1 && td_cho_healthy onehub-tapduot-dc
   if docker exec -i -e PGPASSWORD=oneinvest onehub-tapduot-dc psql -U oneinvest -h localhost -d oneinvest -Atqc "select count(*) from x" >/dev/null 2>&1; then
@@ -437,43 +448,85 @@ check_du_lieu() { # $1 JSON docker inspect của DB, $2 data_directory
   elif [ -n "$v" ]; then fail "data_directory $2 nằm trong volume $v (cần $VOL_TEN)"
   else fail "data_directory nằm trong lớp ghi container ($2 không dưới mount volume nào)"; fi
 }
-check_ban_lui() { # $1 JSON docker inspect của bản lùi (mảng rỗng khi không có)
-  local n st rp
-  n=$(jq -r '.[0].Name // ""' "$1" 2>/dev/null | sed 's#^/##')
-  [ -n "$n" ] || { fail "không có bản lùi $DB_THAT-cu-*"; return; }
-  st=$(jq -r '.[0].State.Status' "$1"); rp=$(jq -r '.[0].HostConfig.RestartPolicy.Name' "$1")
-  [ "$st" = exited ] && [ "$rp" = no ] && pass "bản lùi $n exited restart=no" || fail "bản lùi $n trạng thái $st restart=$rp (cần exited, no)"
+# Bản lùi là điều kiện TẠM của thời gian giữ (hồ sơ db-volume-live-ban-lui, Mạnh chọn lối b ở Cổng Phạm vi 29/10):
+# còn bản lùi thì MỌI bản phải dừng + restart no; vắng bản lùi trước hạn giữ là đỏ, sau hạn là xanh.
+BAN_LUI_MAU='^one-invest-db-cu-[0-9]{8}$'
+BAN_LUI_GIU_DEN="2026-11-05T09:20:00Z"   # nhật ký lượt chuyển 29/10: «sớm nhất hỏi xoá bản lùi: 2026-11-05 16:20 +07»
+epoch_utc() { date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$1" +%s 2>/dev/null; }
+gom_ban_lui() { # $1 regex tên → in MỘT mảng JSON docker inspect (rỗng: []) — không gọi inspect với danh sách rỗng
+  local ten; ten=$(docker ps -a --format '{{.Names}}' | grep -E "$1" | sort)
+  if [ -z "$ten" ]; then echo '[]'; else docker inspect $ten; fi
 }
-live_doc() { # $1 thư mục tạm → inspect.json, ban-lui.json, data_directory
+check_ban_lui() { # $1 tệp JSON mảng bản lùi, $2 giờ «bây giờ» ISO UTC (vắng: giờ máy)
+  local n gio han i ten st rp
+  n=$(jq 'length' "$1" 2>/dev/null) || { fail "không đọc được danh sách bản lùi"; return; }
+  if [ "$n" = 0 ]; then
+    gio=$(epoch_utc "${2:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"); han=$(epoch_utc "$BAN_LUI_GIU_DEN")
+    if [ -z "$gio" ] || [ -z "$han" ]; then fail "không đọc được giờ để so hạn giữ $BAN_LUI_GIU_DEN"
+    elif [ "$gio" -ge "$han" ]; then pass "không còn bản lùi $DB_THAT-cu-* (sau hạn giữ $BAN_LUI_GIU_DEN)"
+    else fail "bản lùi mất trước hạn giữ $BAN_LUI_GIU_DEN — không còn container $DB_THAT-cu-*"; fi
+    return
+  fi
+  for i in $(seq 0 $((n - 1))); do
+    ten=$(jq -r ".[$i].Name" "$1" | sed 's#^/##'); st=$(jq -r ".[$i].State.Status" "$1"); rp=$(jq -r ".[$i].HostConfig.RestartPolicy.Name" "$1")
+    if [ "$st" = exited ] && [ "$rp" = no ]; then pass "bản lùi $ten exited restart=no"
+    else fail "bản lùi $ten trạng thái $st restart=$rp (cần exited, no)"; fi
+  done
+}
+live_doc() { # $1 thư mục tạm → inspect.json, ban-lui.json; in data_directory
   docker inspect "$DB_THAT" > "$1/inspect.json" 2>/dev/null || echo '[]' > "$1/inspect.json"
-  local b; b=$(docker ps -a --format '{{.Names}}' | grep -E "^$DB_THAT-cu-[0-9]{8}$" | sort | tail -1)
-  if [ -n "$b" ]; then docker inspect "$b" > "$1/ban-lui.json"; else echo '[]' > "$1/ban-lui.json"; fi
+  gom_ban_lui "$BAN_LUI_MAU" > "$1/ban-lui.json" 2>/dev/null || echo '[]' > "$1/ban-lui.json"
   docker exec -i -e PGPASSWORD=oneinvest "$DB_THAT" psql -U oneinvest -h localhost -At -c 'show data_directory' 2>/dev/null
 }
+o_live() { check_du_lieu "$1" "$3"; check_ban_lui "$2" "$4"; } # $1 inspect $2 bản lùi $3 data_directory $4 giờ
 LIVE_TMP=""
 run_live() {
   local dd
   LIVE_TMP=$(mktemp -d); trap 'rm -rf "$LIVE_TMP"' EXIT
   dd=$(live_doc "$LIVE_TMP")
-  check_du_lieu "$LIVE_TMP/inspect.json" "$dd"; check_ban_lui "$LIVE_TMP/ban-lui.json"
+  check_du_lieu "$LIVE_TMP/inspect.json" "$dd"; check_ban_lui "$LIVE_TMP/ban-lui.json" "${DB_VOLUME_GIO_GIA:-}"
 }
 run_live_selftest() {
-  local T dd
+  local T dd b sau truoc n0 nk so=0 hang cot
   LIVE_TMP=$(mktemp -d); trap 'rm -rf "$LIVE_TMP"' EXIT; T="$LIVE_TMP"
   dd=$(live_doc "$T")
   [ -n "$dd" ] && [ "$(jq length "$T/inspect.json")" = 1 ] || { fail "không đọc được docker inspect / data_directory của $DB_THAT để dựng fixture"; return; }
+  # Đường gom thật qua docker (chỉ đọc): không khớp → [] exit 0; khớp → đủ số container khớp.
+  if b=$(gom_ban_lui '^one-invest-db-khong-co-[0-9]+$') && [ "$(jq length <<<"$b")" = 0 ]; then pass "gom bản lùi qua docker thật: mẫu không khớp → mảng rỗng exit 0"
+  else fail "gom bản lùi qua docker thật: mẫu không khớp lẽ ra cho [] exit 0 (được «$b»)"; fi
+  n0=$(docker ps -a --format '{{.Names}}' | grep -cE "^$DB_THAT(-cu-[0-9]{8})?$")
+  nk=$(gom_ban_lui "^$DB_THAT(-cu-[0-9]{8})?$" | jq length)
+  [ "$nk" = "$n0" ] && [ "$nk" -ge 1 ] && pass "gom bản lùi qua docker thật: mẫu khớp → đủ $nk container khớp" \
+    || fail "gom bản lùi qua docker thật: mẫu khớp cho $nk phần tử, cần $n0"
+  # Ma trận 16 ô dựng từ inspect thật: trục dữ liệu × trục bản lùi; kỳ vọng viết trước từng ô.
   jq '.[0].Mounts = [{"Type":"volume","Name":"onehub_pgdata","Destination":"/var/lib/postgresql"}]' "$T/inspect.json" > "$T/dung.json"
   jq '.[0].Mounts = [{"Type":"volume","Name":"db_oneinvest_pgdata","Destination":"/var/lib/postgresql/data"}]' "$T/inspect.json" > "$T/gan-data.json"
-  jq '.[0].Mounts = [{"Type":"volume","Name":"khac","Destination":"/var/lib/postgresql"}]' "$T/inspect.json" > "$T/vol-khac.json"
-  jq '.[0].Name = "/'"$DB_THAT"'-cu-20261029" | .[0].State.Status = "exited" | .[0].HostConfig.RestartPolicy.Name = "no"' "$T/inspect.json" > "$T/lui-dung.json"
-  jq '.[0].Name = "/'"$DB_THAT"'-cu-20261029" | .[0].State.Status = "running" | .[0].HostConfig.RestartPolicy.Name = "unless-stopped"' "$T/inspect.json" > "$T/lui-chay.json"
-  echo '[]' > "$T/lui-vang.json"
-  expect "inspect thật sửa mount thành onehub_pgdata" 0 "" check_du_lieu "$T/dung.json" "$dd"
-  expect "inspect thật mount /var/lib/postgresql/data" do "FAIL data_directory nằm trong lớp ghi container" check_du_lieu "$T/gan-data.json" "$dd"
-  expect "inspect thật mount volume khác tên" do "FAIL data_directory $dd nằm trong volume khac" check_du_lieu "$T/vol-khac.json" "$dd"
-  expect "bản lùi exited restart=no" 0 "" check_ban_lui "$T/lui-dung.json"
-  expect "bản lùi đang chạy" do "trạng thái running restart=unless-stopped" check_ban_lui "$T/lui-chay.json"
-  expect "không có bản lùi" do "FAIL không có bản lùi" check_ban_lui "$T/lui-vang.json"
+  bl() { jq --arg n "/$DB_THAT-cu-$1" --arg s "$2" --arg r "$3" '.[0] | .Name = $n | .State.Status = $s | .HostConfig.RestartPolicy.Name = $r' "$T/inspect.json"; }
+  echo '[]' > "$T/vang.json"
+  jq -s . <(bl 20261029 exited no) > "$T/mot-dung.json"
+  jq -s . <(bl 20261029 running unless-stopped) > "$T/mot-chay.json"
+  jq -s . <(bl 20261029 exited unless-stopped) > "$T/mot-sai-restart.json"
+  jq -s . <(bl 20261020 running unless-stopped) <(bl 20261029 exited no) > "$T/hai-nho-chay.json"
+  jq -s . <(bl 20261020 exited no) <(bl 20261029 running unless-stopped) > "$T/hai-lon-chay.json"
+  jq -s . <(bl 20261020 exited no) <(bl 20261029 exited no) > "$T/hai-dung.json"
+  # Sát mốc hạn giữ (một giây trước / đúng mốc) — đo quan hệ với ĐÚNG mốc đã chốt, không chỉ «xa trước/xa sau».
+  truoc="2026-11-05T09:19:59Z"; sau="2026-11-05T09:20:00Z"
+  for hang in dung gan-data; do
+    while IFS='|' read -r cot ban gio want msg; do
+      [ "$hang" = gan-data ] && { want=do; msg="FAIL data_directory nằm trong lớp ghi container"; }
+      expect "ô $hang × $cot" "$want" "$msg" o_live "$T/$hang.json" "$T/$ban.json" "$dd" "$gio"; so=$((so + 1))
+    done <<EOF
+vang-truoc-han|vang|$truoc|do|FAIL bản lùi mất trước hạn giữ 2026-11-05T09:20:00Z
+vang-sau-han|vang|$sau|0|PASS không còn bản lùi $DB_THAT-cu-* (sau hạn giữ 2026-11-05T09:20:00Z)
+mot-exited-no|mot-dung|$sau|0|PASS bản lùi $DB_THAT-cu-20261029 exited restart=no
+mot-running|mot-chay|$sau|do|FAIL bản lùi $DB_THAT-cu-20261029 trạng thái running restart=unless-stopped
+mot-exited-sai-restart|mot-sai-restart|$sau|do|FAIL bản lùi $DB_THAT-cu-20261029 trạng thái exited restart=unless-stopped
+hai-ban-nho-running|hai-nho-chay|$sau|do|FAIL bản lùi $DB_THAT-cu-20261020 trạng thái running
+hai-ban-lon-running|hai-lon-chay|$sau|do|FAIL bản lùi $DB_THAT-cu-20261029 trạng thái running
+hai-ban-deu-dung|hai-dung|$sau|0|PASS bản lùi $DB_THAT-cu-20261020 exited restart=no
+EOF
+  done
+  [ "$so" = 16 ] && pass "ma trận đủ 16 ô" || fail "ma trận chạy $so ô, cần 16"
 }
 
 case "$MODE" in
