@@ -201,16 +201,10 @@ test("LB-AC-1 vendor mapcn: registry, map.tsx nguyên bản, ngoại lệ lint �
   bumped.packages["node_modules/maplibre-gl"].version = "6.16.0";
   assert.throws(() => checkLock(bumped), /maplibre-gl trong package-lock lệch main/);
 
-  // Danh sách tệp được dùng hex: đúng 5 tệp viết trước.
+  // Danh sách tệp được dùng hex: đúng 2 tệp lib viết trước (don-hex-tho dời màu bản đồ sang lib/map-colors.ts).
   const eslintSrc = read("eslint.config.mjs");
   const mapFiles = [...(eslintSrc.match(/const MAP_FILES = \[([\s\S]*?)\]/)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(mapFiles, [
-    "src/lib/map-style.ts",
-    "src/components/finder/bins.ts",
-    "src/components/finder/choropleth-map.tsx",
-    "src/components/mini-map.tsx",
-    "src/components/listing/listings-map.tsx",
-  ]);
+  assert.deepEqual(mapFiles, ["src/lib/map-style.ts", "src/lib/map-colors.ts"]);
 });
 
 // ── LB-AC-2: biên dịch cây lọc ───────────────────────────────────────────────────────────────────

@@ -55,9 +55,9 @@ evals:
   - id: E8
     criterion: AC-7
     executor: script
-    cmd: config:executors.design.gate
+    cmd: config:executors.design.gate_don_hex_tho
     paths: [app/src/components/finder/bins.ts, app/src/components/finder/choropleth-map.tsx, app/src/components/listing/listings-map.tsx, app/src/components/mini-map.tsx, app/src/components/ops/data-flow/flow-journey.tsx]
-    expected: "chạy cmd cho TỪNG file trong paths (đối số cuối): mỗi lần exit 0, verdict PASS, không P0"
+    expected: "exit 0; design gate chạy lần lượt trên năm tệp giao diện của vòng, mỗi lần verdict PASS, không P0"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9
     criterion: AC-8
