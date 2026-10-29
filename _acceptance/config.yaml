@@ -35,6 +35,8 @@ executors:
     ui_lint_rules: "cd app && npm run test:lint-rules"   # plugin lint onehub-ui (RuleTester + script kèm)
     ui_routes_map: "cd app && node --test eslint-plugin-onehub-ui/tests/routes-map.test.mjs"
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
+    sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
+    sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -406,6 +408,12 @@ executors:
     # rao-db-local-do-nen — do.mjs trong tiến trình con với DATABASE_URL ngoài máy (.invalid, TEST-NET) và localhost:1; không ghi DB
     rdl_rao: "node _acceptance/rao-db-local-do-nen/probes/rao.mjs"
     rdl_pham_vi: "bash _acceptance/rao-db-local-do-nen/probes/pham-vi.sh"
+    # so-cuoc-goi-ai — migration trên lược đồ tạm (ROLLBACK), mồi dòng 'sca-mau-*' dọn trong finally, push-ops-facts --kho
+    sca_migration: "node _acceptance/so-cuoc-goi-ai/probes/migration.mjs"
+    sca_trang: "node _acceptance/so-cuoc-goi-ai/probes/trang.mjs"
+    sca_facts: "node _acceptance/so-cuoc-goi-ai/probes/facts.mjs"
+    sca_duong: "bash _acceptance/so-cuoc-goi-ai/probes/duong.sh"
+    sca_pham_vi: "bash _acceptance/so-cuoc-goi-ai/probes/pham-vi.sh"
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
@@ -447,6 +455,7 @@ executors:
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
     gate_don_hex_tho: "for f in app/src/components/finder/bins.ts app/src/components/finder/choropleth-map.tsx app/src/components/listing/listings-map.tsx app/src/components/mini-map.tsx app/src/components/ops/data-flow/flow-journey.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # don-hex-tho E8 — gate từng tệp giao diện của vòng (gate không tự nối tệp từ paths); giám sát duyệt U1-63
+    sca_gate: "for f in app/src/app/ops/ai-calls/page.tsx app/src/components/ops/ai-calls/ai-calls-view.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # so-cuoc-goi-ai E10
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
     # executors.design.floor (S4 tuân thủ design system) CHƯA nối: 52/619 tệp giao diện còn hex thô (đo 29/10) — dọn ở vòng
     # riêng trước, rồi mới nối và đếm mười vòng thí điểm DO1 (ghi chú nhận 2.35.0 của kit, mục 2.4 + rủi ro thí điểm).
