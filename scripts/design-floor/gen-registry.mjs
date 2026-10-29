@@ -8,7 +8,7 @@
 // thuộc khuôn kit. Tên theo đúng cách kho gọi (`ui/<x>`, `reui/<x>`, `@reui/<block>`, tên component của app). Block
 // của catalog (kể cả ví dụ `c-*`) là template — bậc 2, thứ trang được dựng từ đó (`routes.md`, cột Block đích); thành
 // phần đã cài và component của app là bậc 3.
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -249,6 +249,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exitCode = main(process.argv.slice(2));
 }

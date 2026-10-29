@@ -7,7 +7,7 @@
 // `$type` + `$value`, chế độ tối ở `$extensions["mode.dark"].$value`, bậc 6 tra `<nhóm>.<tên>` hai đoạn.
 // Không khai báo nào bị bỏ lặng: mỗi khai báo của ba khối hoặc thành lá, hoặc nhập vào lá (tối), hoặc là cầu nối đã
 // kiểm; khai báo không xếp được → thoát 1, không ghi tệp.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -155,6 +155,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exitCode = main(process.argv.slice(2));
 }
