@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: bd7ae5cc2fd3662d3852a44d1b8cbcd7df907400
+verified_commit: dcf258fc34391265cdb58784ec7391d5d6080244
 human_signoff: Mạnh 2026-10-29
 ---
 
@@ -121,3 +121,7 @@ none — mọi eval đa lượt đều đồng nhất (không eval nào chạy n
 
 Round 1: REJECT — một finding trong hợp đồng (AC-5): kiểm "lưới trước gộp do-nen-hieu-nang clean" của pham-vi.sh rỗng, luôn xanh dù bằng chứng đã hoá cũ. Trả về implementation.
 Round 2: PASS — thu hẹp AC-5 (không ghim lại do-nen-hieu-nang, Known limit có tên) và đầu dò chạy lưới không cần --base, theo các commit d7ac5848 và bd7ae5cc; E5 chạy lại, E1-E4 mang từ round 1 (delta không chạm paths của eval).
+
+### Re-pin lần 1 — 2026-10-29, do hoá cũ do gộp origin/main sau chữ ký
+run_id: repin-20261029T102925Z-84797
+sha: dcf258fc34391265cdb58784ec7391d5d6080244 · suites: 6 lệnh exit 0 · evals: 5/5 eval máy đạt kỳ vọng
