@@ -1,6 +1,6 @@
 # S03 — bóc tin chữ thành dữ liệu có cấu trúc: framing, phân tích, đề xuất (30/10)
 
-> Ngày 2026-10-30 · Trạng thái: **chờ Mạnh duyệt §8.6** (bổ sung chiều 30/10: nguyên lý gốc, thử Kev/Qwen trên bài thật, trạng thái lộ trình — §8 thay §5–§6 ở chỗ khác nhau) · Làn: Claude (transform → canonical), một phần ZCode (danh mục, §5 B5).
+> Ngày 2026-10-30 · Trạng thái: **§8.6 Mạnh đã duyệt 30/10; bản cắt cuối §9 chờ Mạnh gật để cắt lượt** (bổ sung chiều 30/10: nguyên lý gốc, thử Kev/Qwen trên bài thật, trạng thái lộ trình — §8 thay §5–§6 ở chỗ khác nhau) · Làn: Claude (transform → canonical), một phần ZCode (danh mục, §5 B5).
 > Cách làm: chỉ đọc — DB local :5433 (SELECT), chạy `parsePost` của `pipeline/transform-zalo.mjs` (HEAD `842ee484`) trên
 > toàn bộ bài S03 thật đang có, không ghi DB, không sửa code. Số thô ở `research-local/s03-boc-tach-3010/` (gitignored).
 > Đọc kèm: `docs/architecture/classification-enrich-review.md` (§0.2–§0.3, §7.0 đã chốt), ADR-0013,
@@ -419,3 +419,108 @@ dựng kiến trúc mới, chỉ cần **sửa câu giao** những hàng đã c�
 
 Căn cứ của §8.2: `research-local/s03-boc-tach-3010/thu-model.jsonl` (61 dòng: chữ bài đã bỏ URL, đáp án Kev, đầu ra Qwen,
 độ trễ) và script trong scratchpad của phiên. Chỉ đọc DB, không ghi `ai_calls`, vì đây là lần dò ngoài đường chạy.
+
+---
+
+## 9. Bản cắt cuối (30/10): gộp lỗi ảnh (báo cáo 29/10) với bóc tách (§5, §8), đối chiếu lộ trình
+
+> Mạnh duyệt §8.6 («Đồng ý») và yêu cầu: gộp các lỗi về ảnh; kiểm lộ trình hiện nay để tránh trùng; cắt gọn rồi đề xuất
+> lại lần cuối.
+> Lộ trình kiểm tại `origin/main` `83419002`: 133 hàng, 40 mục chờ, không đổi từ 29/10. Trạng thái suy từ `_acceptance/`.
+> Mục này chỉ là **đề xuất**. Cắt thật (bản phạm vi + trang tri thức + hàng + răng phủ) chạy bằng
+> `/acceptance-gate:cat-luot` sau khi Mạnh gật bảng này.
+
+### 9.1 Ba điều đối chiếu làm đổi đề xuất cũ
+
+1. **Mục chờ NH1** «media_files từ stg lên canonical theo RESO Media» (đợt `nen-tang-2310`) có điều kiện mở lại là «ZC4 giao
+   xong và media_files S03 có dòng thật». Cả hai **đã đạt**: ZC4 đã ký, và `stg_zalo_posts.media_files` có hàng nghìn dòng.
+   → A3 (loader riêng đọc ảnh S06 từ stg) **gộp vào NH1**. Một bảng media canonical cho cả S03 lẫn S06; `/ops/review`,
+   `/ops/data-flow` và TV9 cùng đọc bảng đó. Không dựng loader thứ ba.
+2. **Mục chờ PH3** «Chỉnh lại Kev trên tập nhãn G0» chính là việc huấn luyện lại đầu quyết định Kev ở §8.2. Giữ nguyên, mở
+   lại khi PL7/PL8 có nhãn. Không cắt hàng mới cho Kev.
+3. **A1** (tải ảnh S03 lỗi, làn ZCode) mới ở bước `GIAO claudedp-2910-10`, chưa có NHẬN. Lỗi vẫn còn: 29/10 là 27,8% entry.
+   Lộ trình chưa có hàng nào cho việc này.
+
+### 9.2 Bảng cắt — mỗi mã của §4 (29/10), §5 và §8 nằm ở đúng một chỗ
+
+**Hàng mới (4)**
+
+| Hàng đề xuất | Gánh mã | Câu giao (nháp) | Hạng · cỡ | Đứng trên | Vùng |
+|---|---|---|---|---|---|
+| **N1** `s03-cam-mau-so-lieu` | N1, N3, A4, B4 + khoá gom có mã toà | Transform S03 đọc số không lẫn URL/SĐT, chuẩn hoá giá VN («X.YYY tỷ», «2ty450», «5tr5», «4,000 thu về», số đồng không đơn vị), đọc DT «64m», gom repost theo mã toà/căn, ghi `seller_name` từ `sender_name`, nạp phường theo thị trường của nhóm. **Bật khi**: nạp lại S03 thì 0 offer thuê ≥ 1 tỷ, 0 offer bán > 100 tỷ, 0 giá đọc từ URL, không offer nào gom > 10 nội dung khác nhau, `seller_name` ≥ 95% | T2 · ~10 | — | `pipeline/transform-zalo.mjs`, `pipeline/lib/` |
+| **NH1** `media-canonical-reso` (cắt từ mục chờ NH1) | NH1, A3 | Ảnh của tin S03 (`media_files`) và S06 (`images`) nằm ở một bảng media canonical theo RESO Media, nối với offer; `/ops/review` và `/ops/data-flow` ở máy thu đọc bảng này. **Bật khi**: offer S06 có ảnh trong stg thì thẻ hiện ≥ 1 ảnh; offer S03 có file local thì hiện ảnh; nạp lại hai lần không nhân dòng; sync cloud không đẩy URL ảnh (leak gate xanh) | T3 (migration) · ~10 | — (ZC4 đã ký) | `db/migrations/`, `pipeline/`, `app/src/lib/ops/` |
+| **C2b** `scorecard-media-field-yield` | A6, B8 | Mỗi đêm scorecard ghi media-yield theo bậc (bài có ảnh → file → media canonical → offer có ảnh) và field-yield theo tầng (bài → mục → trường đọc → nối → suy ra) cho từng nguồn, cửa sổ 7/30 ngày | T2 · ~9 | C2 | `pipeline/` |
+| **ZC-ảnh** (số do liên làn cấp) `s03-anh-tai-loi` | A1 | Collector S03 tải ảnh của tin chỉ-ảnh không còn lỗi http-500 hàng loạt, có thử lại hoặc backfill khi URL còn hạn. **Bật khi**: một ngày chạy thật, entry lỗi < 5% | T2 · làn **ZCode** | — | `collector/` |
+
+**Sửa câu giao hàng đã có (7) — không cắt trùng**
+
+| Hàng | Sửa | Gánh mã |
+|---|---|---|
+| **PL5** `meta-kev-thanh-phat-bieu` | Ý định tin lấy từ câu Kev **3 lớp** (tin rao · Yêu cầu · không phải tin) cộng câu bán/thuê, ở bậc suy luận, không chỉ `meta.kev.p`; sửa câu gate đang gộp «tìm mua» vào tin rao; bài Yêu cầu không bị bỏ | S1, B2 |
+| **PL18** `e1-e2-theo-lop` | E2 là bộ đọc có trích dẫn, **ra mảng căn**; mỗi căn một offer với khoá (post, thứ tự mục) giữ khoá dính PL14; bỏ «confidence» tự khai; phân loại không hỏi LLM khi Kev/luật đủ. Cỡ lên ~12 — ghi lý do: tách nhiều căn không tách khỏi đầu ra của bộ đọc mà vẫn giữ nghĩa | S2, N2, B3, B7 |
+| **PL13** `doc-ma-can-gia-khoang` | Thêm trường thuê (nội thất, điều khoản HĐ/cọc, ngày vào ở, phí đã gồm) và loại căn có cờ «+»; lát gồm cả Grand Park | S3, B6 |
+| **PL11** `danh-muc-truc-can` | Danh mục có bậc cho **OCP1 và Grand Park**; dọn bí danh dự án trùng mã toà (`s7`/`s10`); đối chiếu `area_ids` OCP1–3 với nguồn xác minh; CĐT ghi ở cấp toà (`Building.BuilderName`) | B5b–c, Hỏi-5 |
+| **PL28** `gop-tin-chi-anh-o-transform` | «liền trước» → **hai phía** trong 2 phút; bỏ `dung_tren` PL17 (gộp ảnh không cần phát biểu parser); bật khi offer S03 có ảnh từ ~31% lên ≥ 50% | A2 |
+| **PL30** `chon-model-theo-o` | Ứng viên: Kev-4B/9B, Qwen 27B local, GLM-5.3, DeepSeek flash. Hai ứng viên cloud chỉ chạy khi RV-M2 cho gửi chữ bài ra ngoài | S4 |
+| **TV9** `bai-goc-anh-len-cloud` | Ảnh thu nhỏ lấy từ bảng media canonical (thêm `dung_tren` NH1), phủ cả S06; S03 cần ZC-ảnh xong mới đủ ảnh | A5 |
+
+**Hàng mới cho danh mục Grand Park — làn ZCode (1)**: **PL10b** `thu-danh-muc-grand-park` (gánh B5a). Cùng dáng với PL10 đã ký.
+PL10 đã ký nên không sửa nó; PL11 (đã sửa) đứng trên cả PL10 lẫn PL10b.
+
+**Giữ ở mục chờ (không cắt)**
+
+| Mục | Vì sao |
+|---|---|
+| PH3 Kev chỉnh lại | Mở khi PL7/PL8 có nhãn (§9.1) |
+| SH7 Kev-V media gate / đọc ảnh bằng model | Thông tin nằm trong ảnh (bảng giá ảnh) — luật 11 «đo trước khi build»; mở khi NH1 giao |
+| **A7 mới** `properties-photos` | `resolve-properties` chép ảnh vào `properties.photos` và gắn offer S03 vào căn. Mở lại khi NH1 và PL24 giao |
+| SH4 E5 học alias | Như cũ |
+
+**Ra khỏi kho (việc người, không thành hàng)**:
+- Mạnh và đội gắn ~200 bài S03 trên màn PL7 khi PL7 giao.
+- Chạy nạp S08 vào DB local: vòng `import-s08` đã ký nhưng `stg_s08_inventory` local 0 dòng. Đây là bước triển khai, liên
+  làn giao.
+- Kiểm điều khoản gói GLM coding plan trước khi đưa GLM vào PL30.
+
+### 9.3 Thứ tự chạy
+
+```
+ngay, song song theo vùng:  N1 ──► PL28′ (cùng transform-zalo, nối sau N1)
+                            NH1 (T3) ──► TV9′ ──► TV10
+                            PL7 ──► PL8 ──► PL9 ──► PL30′ ──► PL21     (PH3 mở khi có nhãn)
+                            ZC-ảnh (ZCode)
+sau đó:                     PL17 ──► PL5′ (T3) · PL18′ ──► NT6
+                            C2 ──► C2b
+                            PL10b (ZCode) ──► PL11′ (T3) ──► PL13′ ──► PL20
+```
+
+Ba việc mở được ngay mà không chờ gì: **N1**, **NH1**, **PL7**. Chúng không chung vùng mã, nên chạy song song được.
+
+### 9.4 Cập nhật sau PR #186 (đợt `danh-ba-2910`, ADR-0016) — áp vào bảng §9.2 khi cắt
+
+PR #186 vừa đổi lộ trình:
+- PL11 và PL24 chuyển sang mục chờ, «không mở riêng»; phần của chúng giao cùng **DB1** (toà · trục · căn OCP1) và **DB2**
+  (nhà phố/đất, `properties` thành view).
+- DB1 là mục chờ, mở khi ZC8 giao và `stg_s08_inventory` ở máy thu có dòng OCP1.
+- PL13 bỏ phụ thuộc PL11. Thêm DB2b `ho-nguoi-theo-nguon` (T3).
+
+Bảng §9.2 đổi như sau:
+
+| Chỗ trong §9.2 | Sau #186 |
+|---|---|
+| Sửa câu giao **PL11** (OCP1 + Grand Park, dọn bí danh trùng mã toà, đối chiếu `area_ids`, CĐT ở cấp toà) | Áp vào **mục chờ DB1** — ghi vào `cau_giao` của DB1 để lúc DB1 thành hàng có sẵn. Riêng phần Grand Park: thêm **mục chờ mới** «danh bạ toà Grand Park», mở khi PL10b giao, để DB1 không phình |
+| PL11 đứng trên PL10 và PL10b | DB1 đứng trên ZC8/S08; Grand Park đứng trên PL10b |
+| Mục chờ mới **A7** mở khi «NH1 và PL24 giao» | Mở khi **NH1 và DB2 giao** |
+| **PL13′** chờ PL11 | PL13 nay chỉ đứng trên PL6 (đã ký) → **mở được ngay**, cùng N1, NH1, PL7. Phần nối mã toà vào danh bạ vẫn đứng sau DB1 (PL20) |
+| A4 `seller_name` trong N1 | Giữ trong N1: chỉ là một cột chép từ `sender_name`. DB2b gắn người đăng vào danh bạ Người là việc khác, không trùng |
+| «Ra khỏi kho: nạp S08 vào local» | Đây chính là điều kiện mở DB1 (ZC8 + dòng OCP1 ở máy thu) — giữ, liên làn giao |
+
+Khi cắt lượt: cắt nhánh từ `origin/main` sau #186; sinh lại `LO-TRINH.html`/`PRODUCT-MAP.md` bằng
+`scripts/product-map.mjs` của kho, không sửa tay.
+
+Liên làn 30/10:
+- **ZC-ảnh** sẽ mang mã **ZC9** khi cắt lượt; trên kênh tạm dùng slug `s03-anh-tai-loi`. Đã nhắc ZCode NHẬN
+  `claudedp-2910-10`.
+- **PL10b** ghi «đề xuất chờ», GIAO khi Mạnh gật §9.
+- Nạp S08 vào máy thu (điều kiện mở DB1) đã GIAO là `claudedp-2910-12`. Việc này nạp snapshot có sẵn từ 24/10, không thu
+  mới.
