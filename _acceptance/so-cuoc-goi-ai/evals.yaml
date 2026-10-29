@@ -1,0 +1,105 @@
+schema_version: 1
+feature_slug: so-cuoc-goi-ai
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.sca_migration
+    paths: [db/migrations/052_ai_calls.sql, _acceptance/so-cuoc-goi-ai/probes/migration.mjs]
+    expected: "exit 0; áp migration hai lần trên lược đồ tạm (DB local, ROLLBACK): 'ok bang ai_calls: 10 cot' và 'ok bang ai_model_prices: gia qwen3.8-27b-local = 0'; 'ok ap lan hai: khong loi, 1 dong gia'; chiều đỏ: bản chép migration bỏ cột latency_ms → 'THIEU COT latency_ms'; cuối 'MIGRATION OK'; should-NOT-fire: không 'THIEU COT' ở bản thật, 'NHAN DOI GIA', 'CA KHONG DO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sca_agent
+    layer: backend-effect
+    paths: [agent/src/runtime/**, agent/tests/ai-call-log.test.ts]
+    expected: "exit 0; ca 'ghi mot dong khi thanh cong' xanh: một dòng ai_calls (giao dịch ROLLBACK) viec=tên agent, model, input 120, output 30, latency_ms > 0, ok=true, khach='pipeline', dòng final của trace mang usage {input 120, output 30}; kết quả runAgent không đổi; đối chứng: bản runAgent tiêm recordCall rỗng → ca đỏ với thông điệp 'KHONG GHI SO'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.sca_agent
+    layer: backend-effect
+    paths: [agent/src/runtime/**, agent/tests/ai-call-log.test.ts]
+    expected: "exit 0; ca 'ghi ok=false khi model loi' xanh: model giả ném hai dạng lỗi mang 'PROMPT-MAU' trong message và trong responseBody (giống APICallError); mỗi dạng một dòng ok=false, loi đúng bằng tên lớp lỗi, không chứa 'PROMPT-MAU'; runAgent ném đúng lỗi gốc (cùng message); đối chứng đỏ: bản đột biến ghi err.message vào loi → ca đỏ 'LOI CHEP PROMPT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.sca_agent
+    paths: [agent/src/runtime/**, agent/tests/ai-call-log.test.ts]
+    expected: "exit 0; ca 'so hong khong chan agent' xanh: recordCall ném lỗi kết nối → runAgent trả output như ca thường, trace có dòng type ai-call-log-error; đối chứng: recordCall bình thường → trace không có dòng ấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.sca_tong_hop
+    paths: [pipeline/lib/ai-calls.mjs, pipeline/lib/ai-calls.test.mjs]
+    expected: "exit 0; ma trận viết trước 3 model (giá ≠ 0, giá 0, chưa có giá) × 2 kết quả (ok, lỗi) × 3 ngày: mỗi nhóm đúng số cuộc, số lỗi, tổng token, chi phí (đồng, làm tròn), p50/p95; model chưa có giá → chi_phi null; đối chứng đỏ: bản đột biến coi null là 0 → ca 'CHUA CO GIA KHONG PHAI 0' đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3463/ops/ai-calls"
+    paths: [app/src/app/ops/ai-calls/**, app/src/components/ops/ai-calls/**, app/src/lib/ai-calls-queries.ts]
+    steps:
+      - "Bản chạy: dev server của worktree đang kiểm ở http://localhost:3463, chạy với DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p4_sca_facts (DB thử, không phải oneinvest) và đã mồi bằng probes/seed.mjs. KHÔNG tạo hay sửa tệp nào trong cây; không có bản chạy thì FAIL với 'bản chạy không lên'"
+      - "Chụp BẰNG bước chụp của kho, KÈM CÙNG DATABASE_URL của DB thử (bước chụp tự giữ tài khoản ops thử theo biến này; thiếu biến thì nó xoay mật khẩu trên DB oneinvest và đăng nhập hỏng): DATABASE_URL=<như trên> bash scripts/ui-capture.sh http://localhost:3463/ops/ai-calls _acceptance/so-cuoc-goi-ai/evidence/E6-step1.png — 1280 px sáng. KHÔNG đọc hay in mật khẩu"
+      - "Cùng lệnh với UI_CAPTURE_SIZE=390x844 UI_CAPTURE_SCHEME=dark → evidence/E6-step2.png (điện thoại, tối); ghi dòng «bề rộng: …» lệnh in"
+      - "Đối chiếu số: DATABASE_URL=<như trên> node -e chạy readAiCalls của pipeline/lib/ai-calls.mjs (hoặc đọc probes/seed.mjs + GIA_MAU của probes/_db.mjs) để lấy số cuộc, token, chi phí kỳ vọng của dòng sca-mau-*; so với ba ô đầu trang và từng dòng bảng trong ảnh"
+    expected: "Dev server cổng 3463 chạy với DATABASE_URL của DB thử oneinvest_p4_sca_facts (không phải oneinvest), đã mồi bằng probes/seed.mjs; đăng nhập tài khoản ops thử: trang hiện ba ô tóm tắt và bảng ngày × việc × model; số của dòng mồi khớp tổng hợp; dòng model chưa có giá ghi «chưa có giá»; ảnh chụp desktop + mobile"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.sca_trang
+    layer: backend-effect
+    paths: [app/src/app/ops/ai-calls/**, app/src/components/ops/ai-calls/**, app/src/lib/ai-calls-queries.ts, pipeline/lib/ai-calls.mjs, _acceptance/so-cuoc-goi-ai/probes/trang.mjs]
+    expected: "exit 0; mồi dòng 'sca-mau-*' rồi dọn trong finally; render server của trang (local) chứa đúng số cuộc/token/chi phí của nhóm mồi do hàm tổng hợp tính; đối chứng đỏ: mồi thêm một cuộc mà so với số cũ → 'LECH SO'; cuối 'TRANG OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.sca_facts
+    paths: [pipeline/push-ops-facts.mjs, pipeline/lib/ai-calls.mjs, app/src/lib/ops-facts.ts, app/src/lib/ai-calls-queries.ts, _acceptance/so-cuoc-goi-ai/probes/facts.mjs]
+    expected: "exit 0; mồi dòng 'sca-mau-*' (dọn trong finally), chạy thật 'push-ops-facts --kho', lấy blocks.aiCalls từ CHÍNH đầu ra ấy: soát tầng A qua, mọi giá trị chuỗi thuộc {ngày ISO, tên việc, tên model}; đối chứng đỏ: chèn trường 'prompt' → 'CHU TU DO'; render server trang ở chế độ cloud (VERCEL=1) với khối ấy đặt trong ops_heartbeat giả lập: có số → bảng khớp hàm tổng hợp, measured_at cũ → cảnh báo số cũ, không có khối → 'Chỉ đo ở máy thu'; đối chứng đỏ: đổi tên một khoá ở bên ghi → 'LECH KHUON'; cuối 'FACTS OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/components/ops/ai-calls/**, app/tests/ai-calls.test.tsx]
+    expected: "exit 0; ca render: rỗng → chữ 'Chưa có cuộc gọi AI nào' + hướng dẫn chạy thử; lỗi → Alert có nút 'Thử lại'; đang tải → Skeleton; mỗi ca có đối chứng ngược (dữ liệu có → không hiện chữ trống)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.design.sca_gate
+    paths: [app/src/app/ops/ai-calls/**, app/src/components/ops/ai-calls/**]
+    expected: "exit 0; design-gate (a11y, màu thô, chữ nhỏ) sạch trên các tệp giao diện mới của trang"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.sca_duong
+    paths: [CONTEXT.md, app/src/components/shell/nav.tsx, .claude/skills/onehub-ui/routes.md, _acceptance/so-cuoc-goi-ai/probes/duong.sh]
+    expected: "exit 0; test route-slugs xanh; CONTEXT.md có 'Slug URL: `ai-calls`'; nav.tsx có mục href '/ops/ai-calls' nhóm 'Giám sát'; routes.md có dòng '/ops/ai-calls'; đối chứng: bản chép CONTEXT.md bỏ dòng slug → route-slugs đỏ nêu 'ai-calls'; cuối 'DUONG OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.sca_pham_vi
+    paths: [_acceptance/so-cuoc-goi-ai/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi 'ok'; không tệp nào dưới collector/, pipeline/import-*, pipeline/cron/; đối chứng: app/tests/ai-calls.test.tsx → ok, app/tests/x.test.tsx và collector/x.ts → NGOAI PHAM VI; cuối 'PHAM-VI OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sca_agent
+    layer: backend-effect
+    paths: [agent/src/runtime/**, agent/tests/ai-call-log.test.ts]
+    expected: "exit 0; ca 'duong mac dinh ghi so that' xanh: runAgent qua đúng đường import của agent thật, chỉ tiêm model giả (không tiêm recordCall/client), viec 'sca-mau-mac-dinh'; đọc ai_calls bằng kết nối riêng thấy đúng 1 dòng, xoá trong finally; đối chứng đỏ: bản đột biến đặt writer mặc định no-op → 'KHONG GHI SO MAC DINH'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

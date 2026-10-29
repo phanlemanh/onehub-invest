@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { ActivityIcon, BadgePercentIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon, WorkflowIcon } from "lucide-react"
+import { ActivityIcon, BadgePercentIcon, BotIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon, WorkflowIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
@@ -83,6 +83,14 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       href: "/ops/data-flow",
       icon: glyph(WorkflowIcon),
       match: (p) => p.startsWith("/ops/data-flow"),
+      group: "Giám sát",
+    },
+    {
+      id: "ai-calls",
+      label: "Cuộc gọi AI",
+      href: "/ops/ai-calls",
+      icon: glyph(BotIcon),
+      match: (p) => p.startsWith("/ops/ai-calls"),
       group: "Giám sát",
     },
     {

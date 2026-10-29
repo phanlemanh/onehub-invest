@@ -9,6 +9,7 @@ import { writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { offload } from "./context.js";
 import { getModel, qwenParams, type ModelName } from "./models.js";
+import { recordCallDb, soToken, tenLop, type RecordCall } from "./ai-call-log.js";
 
 export type AgentTool = Tool<Record<string, unknown>>;
 
@@ -23,7 +24,7 @@ export type AgentConfig = {
 export type StepRecord = {
   t: string;
   step: number;
-  type: "model" | "tool-call" | "tool-result" | "final" | "budget-exceeded" | "error";
+  type: "model" | "tool-call" | "tool-result" | "final" | "budget-exceeded" | "error" | "ai-call-log-error";
   data: Record<string, unknown>;
 };
 
@@ -40,14 +41,32 @@ export type LoopHooks = {
   onToolResult?: (name: string, result: unknown) => void;
 };
 
+/** Phụ thuộc tiêm được (test): model thay cho getModel(config.model), writer sổ cuộc gọi AI thay cho ghi DB. */
+export type LoopDeps = {
+  model?: LanguageModel;
+  recordCall?: RecordCall;
+};
+
 const TRACES_DIR = join(import.meta.dirname, "../../traces");
 
-async function writeTrace(name: string, records: StepRecord[]): Promise<string> {
+function tracePathFor(name: string): string {
   const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const path = join(TRACES_DIR, `${ts}--${name}.jsonl`);
+  return join(TRACES_DIR, `${ts}--${name}.jsonl`);
+}
+
+async function writeTrace(path: string, records: StepRecord[]): Promise<string> {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, records.map((r) => JSON.stringify(r)).join("\n") + "\n");
   return path;
+}
+
+/** Ghi sổ cuộc gọi AI, fail-soft: sổ hỏng không làm hỏng lượt agent — chỉ để lại một dòng trong trace (PL29 AC-4). */
+async function ghiSo(recordCall: RecordCall, r: Parameters<RecordCall>[0], trace: StepRecord[]): Promise<void> {
+  try {
+    await recordCall(r);
+  } catch (err) {
+    trace.push({ t: new Date().toISOString(), step: trace.length, type: "ai-call-log-error", data: { error: tenLop(err) } });
+  }
 }
 
 /** Chạy 1 agent loop. Fail → throw (caller quyết định retry/abort). */
@@ -55,11 +74,17 @@ export async function runAgent(
   config: AgentConfig,
   input: string,
   hooks: LoopHooks = {},
+  deps: LoopDeps = {},
 ): Promise<LoopResult> {
   const budget = config.budget ?? 8;
   const trace: StepRecord[] = [];
   const toolCalls: { name: string; args: Record<string, unknown> }[] = [];
-  const model: LanguageModel = getModel(config.model);
+  const model: LanguageModel = deps.model ?? getModel(config.model);
+  const recordCall = deps.recordCall ?? recordCallDb;
+  // Tên model vào sổ: id thật của model (khớp bảng giá ai_model_prices), không phải bí danh ModelName.
+  const modelId = typeof model === "string" ? model : (model as { modelId?: string }).modelId ?? config.model;
+  const tracePath = tracePathFor(config.name);
+  const t0 = performance.now();
 
   const toolNames = Object.keys(config.tools);
 
@@ -131,6 +156,9 @@ export async function runAgent(
         });
       }
     }
+    const usage = result.totalUsage ?? result.usage;
+    const inputTokens = soToken(usage?.inputTokens);
+    const outputTokens = soToken(usage?.outputTokens);
     trace.push({
       t: new Date().toISOString(),
       step: trace.length,
@@ -140,10 +168,16 @@ export async function runAgent(
         finishReason: result.finishReason,
         steps: result.steps?.length ?? 0,
         toolCalls: (result.toolCalls ?? []).length,
+        usage: { inputTokens, outputTokens },
       },
     });
 
-    const tracePath = await writeTrace(config.name, trace);
+    await ghiSo(
+      recordCall,
+      { viec: config.name, model: modelId, inputTokens, outputTokens, latencyMs: performance.now() - t0, ok: true, loi: null, trace: tracePath },
+      trace,
+    );
+    await writeTrace(tracePath, trace);
     // dùng result.toolCalls (AI SDK aggregate) thay vì local tracking
     const finalToolCalls = (result.toolCalls ?? []).map((tc) => ({
       name: tc.toolName,
@@ -162,7 +196,12 @@ export async function runAgent(
       type: "error",
       data: { error: err instanceof Error ? err.message : String(err) },
     });
-    const tracePath = await writeTrace(config.name, trace);
+    await ghiSo(
+      recordCall,
+      { viec: config.name, model: modelId, inputTokens: null, outputTokens: null, latencyMs: performance.now() - t0, ok: false, loi: tenLop(err), trace: tracePath },
+      trace,
+    );
+    await writeTrace(tracePath, trace);
     throw err;
   }
 }
