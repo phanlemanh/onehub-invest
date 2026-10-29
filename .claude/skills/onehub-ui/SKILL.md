@@ -34,6 +34,68 @@ Khi hai tầng mâu thuẫn, tầng trên thắng. Ghi chỗ lệch ở dòng 5 
 | `data-color.md` | bậc p30/p60/p90 (`finder/bins.ts`, `page/tiers.ts`), màu biểu đồ | khi tô màu theo số liệu: bản đồ, chú giải, thanh, badge bậc, chuỗi biểu đồ |
 | `copy-vi.md` | `lib/format.ts`, đơn vị, ngân sách chữ, giọng trạng thái trống/lỗi, "đang thu thập", bẫy `"use client"` | khi hiện số, viết nhãn/nút/tiêu đề, viết trạng thái trống/lỗi; khi trang server import từ file client |
 | `loop.md` | vòng 8 bước, từ kế hoạch tới bước nhìn, kết bằng 5 dòng hand-back | mỗi lần bắt đầu một việc UI |
+| mục «Kế hoạch dùng lại» dưới đây | `reuse-plan.md` bắt buộc ở S1: khuôn, thang 7 bậc, tên theo registry | mọi hồ sơ chạm giao diện, ở S1 |
+
+## Kế hoạch dùng lại (`reuse-plan.md`) — bắt buộc ở S1
+
+Hồ sơ nào chạm giao diện (`_acceptance/<slug>/` có tệp dưới `app/src/app/**` hay `app/src/components/**` trong vùng)
+PHẢI viết `_acceptance/<slug>/reuse-plan.md` ở S1, cùng lúc với kế hoạch 7 dòng (`loop.md` bước 1), TRƯỚC khi chọn
+block hay viết mã. Không phải gợi ý: thiếu tệp là S1 chưa xong. Kế hoạch ghi, cho từng ô của từng màn, bậc dùng lại
+đầu tiên đứng được — đọc thang dưới từ trên xuống, dừng ở bậc đầu tiên đúng.
+
+Khuôn (bên đọc là `ui reuse-plan check` của acceptance-gate):
+
+- mỗi màn một mục `## Screen: <tên>`;
+- một dòng `Pattern: <template>`, hoặc `Pattern: none — <lý do thật>`;
+- một bảng bốn cột `| Slot | Rung | Use | Reason |`, mỗi ô một dòng.
+
+| Bậc | Hỏi | Ở kho này ghi gì ở `Use` |
+|---|---|---|
+| 1 | Ô này có cần không? | `skip`, lý do thật ở `Reason` |
+| 2 | Có block đã chuyển thể phủ trọn ô (hay cả màn)? | block của `catalog.md`, tên nguyên văn: `@reui/hero-8`, `@mapcn/store-locator`, kể cả ví dụ `@reui/c-empty-11` |
+| 3 | Có thành phần đã cài, đúng tên? | `ui/<x>` (shadcn), `reui/<x>`, `ui/svgs/<x>` (logo), hay component của app trong bảng Custom Components (`StatTiles`, `PageHeader`) |
+| 4 | Là một biến thể của thành phần bậc 3? | `ui/button (variant=destructive)` — trục và giá trị đúng như prop JSX |
+| 5 | Ghép được từ các thành phần đã có? | `reui/frame + ui/empty` |
+| 6 | Chỉ cần token trên một khối có sẵn? | `color.chart-1, radius.base` — đường `<nhóm>.<tên>` của `design/tokens.json` |
+| 7 | Không bậc nào trên đứng được | `ds-new: <Tên>` + lý do; làm xong thì thêm dòng vào `catalog.md` (Custom Components) và chạy lại lệnh sinh registry |
+
+Đây là thang «ReUI block → shadcn/ui → tự viết (cuối cùng)» của kho viết thành bảy bậc: block ReUI/mapcn ở bậc 2, mọi
+thành phần đã cài ở bậc 3–5, tự viết ở bậc 7. Code gần đó trong app không phải căn cứ — chỉ thứ có tên trong
+registry mới đứng được ở bậc 2–5.
+
+Tên phải khớp nguyên văn một bản ghi của `design/component-registry.json` (sinh từ `components/ui`, `components/reui`
+và `catalog.md` bằng `node scripts/design-floor/gen-registry.mjs`); token phải có trong `design/tokens.json` (sinh từ
+`globals.css` bằng `node scripts/design-floor/gen-tokens.mjs`). Tệp sinh cũ hơn nguồn thì chạy lại lệnh sinh trước.
+
+Mẫu (cũng là ca test của `scripts/design-floor/reuse-plan.test.mjs` — sửa mẫu thì test phải còn xanh):
+
+<!-- REUSE-PLAN-MAU -->
+```markdown
+## Screen: Đã lưu
+Pattern: @reui/wishlist-2
+
+| Slot | Rung | Use | Reason |
+|---|---|---|---|
+| đầu trang | 3 | PageHeader | — |
+| lưới khu vực | 2 | @reui/wishlist-2 | — |
+| trống | 2 | @reui/c-empty-11 | — |
+| nút bỏ lưu | 4 | ui/button (variant=ghost) | — |
+| ô số RevPAR | 5 | reui/frame + StatTiles | — |
+| dải bậc màu | 6 | color.chart-1, color.muted-foreground | — |
+| nút chia sẻ | 7 | ds-new: Share sheet | registry chưa có hộp chia sẻ |
+| quảng cáo | 1 | skip | sản phẩm không chạy quảng cáo |
+```
+<!-- /REUSE-PLAN-MAU -->
+
+Kiểm tay (bản gói của acceptance-gate đang cài; thoát 0 sạch · 2 có lỗi · 3 thiếu tệp · 4 sai cú pháp):
+
+```bash
+node <acceptance-gate>/design-floor/dist/ui.mjs reuse-plan check _acceptance/<slug>/reuse-plan.md --file design/component-registry.json --tokens design/tokens.json
+```
+
+Hôm nay kho ở bậc M1 của design-floor: khối S1 của kit in «kế hoạch dùng lại: chưa khai nguồn — không kiểm», tức máy
+chưa chấm tệp này. Kế hoạch vẫn bắt buộc — người duyệt đọc nó ở Cổng Phạm vi, và khi kho bật M2 (khai
+`design_floor.tokens`/`registry` sau 10 vòng thí điểm M1) S1 sẽ chạy đúng lệnh trên mà skill không phải đổi.
 
 ## Hex chỉ được dùng trong file bản đồ (danh sách đóng)
 
