@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-10-29T09:22:10Z",
-  "generated_sha": "853b3b4e026d5fdccf8f19234fbdcde657a0861a",
+  "generated_at": "2026-10-29T09:49:44Z",
+  "generated_sha": "88c94a4861374195c0dc332b4b573d96c2736dd8",
   "mainBranchInfo": {
     "branch": "main",
     "source": "remote"
   },
   "slug": "don-hex-tho",
-  "round": 1,
+  "round": 2,
   "riskTier": "T2",
   "evals": [
     {
@@ -157,8 +157,8 @@
     {
       "id": "E8",
       "criterion": "AC-7",
-      "cmd": "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app",
-      "expected": "\"chạy cmd cho TỪNG file trong paths (đối số cuối): mỗi lần exit 0, verdict PASS, không P0\"",
+      "cmd": "for f in app/src/components/finder/bins.ts app/src/components/finder/choropleth-map.tsx app/src/components/listing/listings-map.tsx app/src/components/mini-map.tsx app/src/components/ops/data-flow/flow-journey.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done",
+      "expected": "\"exit 0; design gate chạy lần lượt trên năm tệp giao diện của vòng, mỗi lần verdict PASS, không P0\"",
       "executor": "script",
       "expectedExit": 0,
       "paths": [
@@ -175,7 +175,7 @@
         "verified_at",
         "output"
       ],
-      "ref": "config:executors.design.gate"
+      "ref": "config:executors.design.gate_don_hex_tho"
     },
     {
       "id": "E9",
@@ -205,20 +205,21 @@
     "cd app && npm run test:lint-rules",
     "node scripts/check-portal-compliance.mjs"
   ],
-  "diffBase": "936dd186b58b114ae7bd901c8d16e182b6435500",
+  "diffBase": "3ffd1784355dad2ae4ee8dc3a68d3ba8a2d6b30c",
   "repoRoot": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/zealous-chaum-88035f",
   "personasPath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.35.0/skills/acceptance/references/judge-personas.md",
   "templatePath": "/Users/manhphan/.claude/plugins/cache/acceptance-gate-kit/acceptance-gate/2.35.0/skills/acceptance/references/evidence-report-template.md",
   "toolKillRule": "# TOOL-KILL-RULE — lệnh bị công cụ ngắt KHÔNG phải lệnh fail\n\n**Nguồn duy nhất** của luật «hết giờ không phải trượt» cho MỌI đường chạy lệnh\nkiểm của kit. Hai đường tiêu thụ, cùng đọc khối marker dưới đây, không chép tay:\n\n- **Vòng lặp tính năng** (plugin feature-loop): skill `feature-loop` đọc file này\n  (resolve qua `resolve-plugin.mjs --require skills/acceptance/references/tool-kill-rule.md`)\n  và truyền NGUYÊN VĂN vào `args.toolKillRule` của workflow\n  `acceptance-verify.js`; workflow rút khối marker và nội suy vào prompt của mọi\n  agent chạy lệnh (machine · ui-check · baseline). Thiếu args hoặc không rút\n  được marker → workflow trả BLOCKED có tên, không chạy không luật.\n- **Đường VERIFY độc lập** (skill `acceptance` Phase 3): phiên điều phối chép khối\n  marker VERBATIM vào prompt của phiên tươi VERIFY, cùng nếp «Network truth».\n\nVì sao có luật: verifier chạy lệnh qua Bash tool có trần thời gian mặc định\n(~120 s) NGẮN hơn nhiều suite; lệnh bị công cụ giết trả exit code CỦA CÔNG CỤ,\nkhông phải của lệnh (vấp thật release-2-2-0 S4 r5: suite 108 s đơn lẻ, dưới tải\nbị giết ở 118 s → REJECT giả 4 eval). Nhận diện là việc AGENT (nó thấy tool\nresult thật); phần máy chỉ phòng thủ trên field cấu trúc `killedByTool` —\nKHÔNG grep nội dung output trong engine (chuỗi tổng kết là của suite từng repo).\n\nLệnh dài hơn trần 600 s của công cụ thì KHÔNG bị giết: công cụ **đẩy nó sang\nnền** và nó chạy tiếp. Tệp đầu ra nền trống tới phút chót, vì khung bọc lệnh của\nkit chỉ in khi lệnh xong — đọc trống thành «bị giết» là đúng sự cố crm 07/10/2026\n(hồ sơ `lenh-dai-chay-rieng`: hai lượt BLOCKED giả). Dòng «chuyển sang nền» trong\nkhối dưới là lối LỜI cho mọi lệnh. Lối MÁY: eval khai `long_running: <phút>`\ntrong `evals.yaml` thì lượt chấm feature-loop tự chạy lệnh nền, ghi nhật ký ở\n`.acceptance-runs/<slug>/s4-lenh-dai/` và chờ bằng lệnh nó sinh ra\n(`eval-executors.md`, mục `long_running`).\n\n<!-- <<<TOOL-KILL-RULE -->\nTRAN THOI GIAN CONG CU: khi goi Bash chay lenh, LUON dat tham so timeout >= 600000 (ms) — tran mac dinh cua cong cu (~120s) NGAN hon nhieu suite; lenh vuot tran se bi CONG CU giet va exit code luc do la cua cong cu, KHONG phai cua lenh. Neu lenh van bi cong cu dung (tool result bao timeout/killed, hoac output bi CAT giua chung truoc dong tong ket cuoi cua lenh) → DO KHONG PHAI ket qua that: khai cannotRun=true + killedByTool=true + reason \"bi cong cu giet o <so giay> giay\" kem dau hieu (timeout tool / output cat). TUYET DOI khong bao exitCode nhu the lenh tu fail va khong doan PASS/FAIL tu output cut.\nDAU RA DAI: harness co the CAT DAU RA RA TEP (\"Output too large … saved to <tep>\") va chi hien doan DAU — do KHONG phai bi cong cu giet: doc DUOI tep do (tail) de lay dong tong ket va ma thoat; chi khai killedByTool khi tool result bao timeout/killed that.\nCHUYEN SANG NEN KHONG PHAI BI GIET: tool result bao lenh chua xong trong timeout va da duoc CHUYEN SANG NEN (\"moved to the background\", kem ID + tep dau ra) → lenh VAN DANG CHAY: KHONG khai killedByTool, KHONG ket luan tu tep dau ra luc do. Tep dau ra nen TRONG la binh thuong — khung boc lenh chi in duoi dau ra + dong __EXIT=<n> khi lenh XONG. Cho bang lenh Bash co gioi han (moi lan goi ≤ 100 giay, duoi tran mac dinh 120 giay cua cong cu; vd vong lap kiem tep do co dong __EXIT= chua, sleep vai giay, het 100 giay thi thoat) va goi lai toi khi tep co dong __EXIT=<n> → doc ma tu dong do nhu binh thuong. Tong thoi gian cho toi da = so phut eval khai o long_running (vang thi 30 phut), tinh tu luc chay lenh; qua ma chua co dong __EXIT → cannotRun=true + reason \"lenh chay qua <so> phut chua xong — khai long_running: <phut> cho eval trong evals.yaml\" (KHONG killedByTool), va dung tac vu nen neu cong cu cho phep.\n<!-- TOOL-KILL-RULE>>> -->\n\n## Hồ sơ cho lượt bị ngắt (đường độc lập)\n\nPhiên tươi VERIFY gặp lệnh bị công cụ ngắt thì:\n\n- dòng run-log của eval đó: `\"exit_code\": null, \"killed_by_tool\": true` (không\n  ghi mã thoát của công cụ như mã thoát của lệnh);\n- verdict báo cáo `BLOCKED`, `reason: bi cong cu giet o <so giay> giay — <eval ids>`\n  (kèm dấu hiệu: timeout tool / output cắt trước dòng tổng kết); `failed_evals`\n  rỗng — người đọc hồ sơ thấy đây là sự cố hạ tầng, chữa bằng chạy lại với trần\n  công cụ đủ dài, không phải sửa sản phẩm.\n\nLệnh bị đẩy sang nền rồi QUÁ trần chờ (`long_running`, vắng thì 30 phút) cũng\nlà sự cố hạ tầng chứ không phải lệnh hỏng: dòng run-log `\"exit_code\": null`,\n`\"cannot_run\": true` (KHÔNG `killed_by_tool` — công cụ không giết nó), verdict\n`BLOCKED`, reason gọi tên việc cần làm (khai `long_running: <phút>` cho eval).\n",
   "contractPath": "/Users/manhphan/dev/onehub-invest/.claude/worktrees/zealous-chaum-88035f/_acceptance/don-hex-tho/contract.md",
-  "invokedAt": "2026-10-29T09:22:10Z",
-  "invokedSha": "853b3b4e026d5fdccf8f19234fbdcde657a0861a",
+  "invokedAt": "2026-10-29T09:49:44Z",
+  "invokedSha": "88c94a4861374195c0dc332b4b573d96c2736dd8",
   "vungVat": [
     ".claude/skills/onehub-ui/SKILL.md",
     ".claude/skills/onehub-ui/data-color.md",
     "_acceptance/config.yaml",
     "_acceptance/don-hex-tho/design-floor.json",
     "_acceptance/don-hex-tho/evals.yaml",
+    "_acceptance/don-hex-tho/s4-args.json",
     "app/eslint-plugin-onehub-ui/selftest.mjs",
     "app/eslint.config.mjs",
     "app/src/components/finder/bins.ts",
@@ -227,6 +228,7 @@
     "app/src/components/mini-map.tsx",
     "app/src/components/ops/data-flow/flow-journey.tsx",
     "app/src/lib/map-colors.ts",
+    "app/tests/listings-browse.test.tsx",
     "scripts/don-hex-tho.test.mjs"
   ],
   "ngoaiVatGlobs": [
@@ -247,8 +249,11 @@
     "_acceptance/don-hex-tho/contract.md",
     "_acceptance/don-hex-tho/decisions.jsonl",
     "_acceptance/don-hex-tho/duong-nen.md",
+    "_acceptance/don-hex-tho/evidence-report.md",
     "_acceptance/don-hex-tho/gap-probe.md",
     "_acceptance/don-hex-tho/reuse-plan.md",
+    "_acceptance/don-hex-tho/review-findings.md",
+    "_acceptance/don-hex-tho/run-log.jsonl",
     "_acceptance/don-hex-tho/usage-report.md",
     "docs/superpowers/specs/2026-10-29-don-hex-tho-design.md"
   ],
@@ -261,8 +266,12 @@
     "_acceptance/don-hex-tho/design-floor.json",
     "_acceptance/don-hex-tho/duong-nen.md",
     "_acceptance/don-hex-tho/evals.yaml",
+    "_acceptance/don-hex-tho/evidence-report.md",
     "_acceptance/don-hex-tho/gap-probe.md",
     "_acceptance/don-hex-tho/reuse-plan.md",
+    "_acceptance/don-hex-tho/review-findings.md",
+    "_acceptance/don-hex-tho/run-log.jsonl",
+    "_acceptance/don-hex-tho/s4-args.json",
     "_acceptance/don-hex-tho/usage-report.md",
     "app/eslint-plugin-onehub-ui/selftest.mjs",
     "app/eslint.config.mjs",
@@ -272,6 +281,7 @@
     "app/src/components/mini-map.tsx",
     "app/src/components/ops/data-flow/flow-journey.tsx",
     "app/src/lib/map-colors.ts",
+    "app/tests/listings-browse.test.tsx",
     "docs/superpowers/specs/2026-10-29-don-hex-tho-design.md",
     "scripts/don-hex-tho.test.mjs"
   ],
@@ -280,6 +290,7 @@
     "_acceptance/config.yaml",
     "_acceptance/don-hex-tho/design-floor.json",
     "_acceptance/don-hex-tho/evals.yaml",
+    "_acceptance/don-hex-tho/s4-args.json",
     "app/eslint-plugin-onehub-ui/selftest.mjs",
     "app/eslint.config.mjs",
     "app/src/components/finder/bins.ts",
@@ -288,6 +299,7 @@
     "app/src/components/mini-map.tsx",
     "app/src/components/ops/data-flow/flow-journey.tsx",
     "app/src/lib/map-colors.ts",
+    "app/tests/listings-browse.test.tsx",
     "scripts/don-hex-tho.test.mjs"
   ],
   "coverageFiles": [
@@ -303,15 +315,125 @@
     "scripts/don-hex-tho.test.mjs"
   ],
   "coEvalPaths": true,
-  "evalsHash": "00def61c7b10eae436163eda1fb5219b843249cd83e388b556c928b24fbb91f4",
+  "evalsHash": "9340a8d61ce7da63c6c45fa03ae9d135f21e1965c81ccb2d09fcf7d13edd697e",
   "runBaseline": true,
+  "carriedEvals": [
+    {
+      "id": "E2",
+      "runId": "minted-don-hex-tho-E2-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-29T09:22:10Z",
+      "cmd": "node --test scripts/don-hex-tho.test.mjs"
+    },
+    {
+      "id": "E3",
+      "runId": "minted-don-hex-tho-E3-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-29T09:22:10Z",
+      "cmd": "node --test scripts/don-hex-tho.test.mjs"
+    },
+    {
+      "id": "E4",
+      "runId": "minted-don-hex-tho-E4-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-29T09:22:10Z",
+      "cmd": "node --test scripts/don-hex-tho.test.mjs"
+    },
+    {
+      "id": "E9",
+      "runId": "minted-don-hex-tho-E9-r1",
+      "fromRound": 1,
+      "verifiedAt": "2026-10-29T09:22:10Z",
+      "cmd": "node --test scripts/don-hex-tho.test.mjs"
+    }
+  ],
+  "carriedFindings": [
+    {
+      "file": "app/eslint.config.mjs",
+      "title": "Rút MAP_FILES còn 2 tệp làm đỏ test cũ LB-AC-1 (app/tests/listings-browse.test.tsx), test này vẫn ghim đúng 5 tệp",
+      "severity": "high",
+      "plain": "Giao diện người dùng không đổi, nhưng một bước kiểm tra tự động cũ của trang danh sách tin sẽ báo lỗi sau thay đổi này. Lỗi đó có thể chặn việc đưa bản cập nhật lên.",
+      "can_cu": "Người dùng không thấy gì khác, nhưng bước kiểm tra đỏ chặn việc đưa bản lên và phải sửa trước khi nhập; sửa nhỏ, rẻ, làm riêng thành một việc ngoài hợp đồng này.",
+      "proposal": "new-contract",
+      "fromRound": 1,
+      "tepDoi": true
+    },
+    {
+      "file": "scripts/don-hex-tho.test.mjs",
+      "title": "Hình dạng 4 (assertion âm-tính-một-mình): DHT-AC-8 trên commit thật chỉ assert danh sách vendor rỗng, không ghim rằng đã tìm thấy commit nào của vòng",
+      "severity": "medium",
+      "plain": "Một phép kiểm nội bộ xác nhận vòng dọn màu không chạm mã cài sẵn có thể báo xanh dù không tìm thấy thay đổi nào để kiểm. Người dùng cuối không bị ảnh hưởng, chỉ giảm độ tin cậy của lưới an toàn.",
+      "can_cu": "Không ảnh hưởng người dùng cuối và không làm mất dữ liệu; rủi ro chỉ xảy ra trong tình huống hiếm về lịch sử thay đổi, và có thể bổ sung sau với giá rẻ.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    },
+    {
+      "file": "scripts/don-hex-tho.test.mjs",
+      "title": "Hình dạng 6 (đường dẫn hardcode): DHT-AC-1 (d) đọc kit ở đường cache plugin cố định theo máy tác giả và phiên bản 2.35.0, không có thì skip",
+      "severity": "low",
+      "plain": "Phép đối chiếu cách quét màu với công cụ kiểm của bộ nghiệm thu chỉ chạy được trên máy có đúng phiên bản công cụ đó, ở máy khác nó bị bỏ qua. Người dùng cuối không bị ảnh hưởng.",
+      "can_cu": "Hợp đồng đã chấp nhận điều kiện này và không ảnh hưởng người dùng cuối; chỉ làm yếu một phép đối chiếu phụ, có thể nâng cấp sau khi kit đổi phiên bản.",
+      "proposal": "known-limits",
+      "fromRound": 1,
+      "tepDoi": false
+    }
+  ],
+  "deltaFiles": [
+    ".gitignore",
+    "_acceptance/config.yaml",
+    "_acceptance/don-clone-tam-design-floor/card-plain.json",
+    "_acceptance/don-clone-tam-design-floor/card.html",
+    "_acceptance/don-clone-tam-design-floor/design-floor.json",
+    "_acceptance/don-clone-tam-design-floor/evals.yaml",
+    "_acceptance/don-clone-tam-design-floor/evidence-page.html",
+    "_acceptance/don-clone-tam-design-floor/s4-args-r2.json",
+    "_acceptance/don-clone-tam-design-floor/s4-args.json",
+    "_acceptance/don-hex-tho/evals.yaml",
+    "_acceptance/don-hex-tho/s4-args.json",
+    "_acceptance/viewer-khong-thay-the-duyet/card-plain.json",
+    "_acceptance/viewer-khong-thay-the-duyet/card.html",
+    "_acceptance/viewer-khong-thay-the-duyet/evals.yaml",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence-page.html",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-network.txt",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step1.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step2.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step3.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step4.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step5.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step6.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step7.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step8.png",
+    "_acceptance/viewer-khong-thay-the-duyet/evidence/E9-step9.png",
+    "_acceptance/viewer-khong-thay-the-duyet/s4-args-r2.json",
+    "_acceptance/viewer-khong-thay-the-duyet/s4-args.json",
+    "app/eslint.config.mjs",
+    "app/src/components/ops/data-flow/data-flow-content.tsx",
+    "app/src/components/ops/data-flow/data-flow-view.tsx",
+    "app/src/components/ops/data-flow/record-sheet.tsx",
+    "app/src/components/ops/data-flow/records-grid.tsx",
+    "app/src/components/ops/review-content.tsx",
+    "app/src/lib/ops-access.ts",
+    "app/tests/df0-dem-de-xuat.test.tsx",
+    "app/tests/dong-chay-cloud.test.tsx",
+    "app/tests/dong-chay-so-cu.test.tsx",
+    "app/tests/listings-browse.test.tsx",
+    "app/tests/ops-dong-chay.test.tsx",
+    "app/tests/viewer-the-duyet.test.tsx",
+    "scripts/design-floor/fresh-sau-gop.test.mjs",
+    "scripts/design-floor/reuse-plan.test.mjs",
+    "scripts/design-floor/test-helpers.mjs",
+    "scripts/design-floor/tmp-sach.test.mjs",
+    "scripts/dev-ops-account.mjs",
+    "scripts/dev-ops-account.test.mjs"
+  ],
   "thuocChup": {
-    "sha": "853b3b4e026d5fdccf8f19234fbdcde657a0861a",
-    "n": 149,
-    "digest": "74a6740fe7384ab8895c78e629257b21e3a2ef216d2a024296ba917876b28d3b",
+    "sha": "88c94a4861374195c0dc332b4b573d96c2736dd8",
+    "n": 151,
+    "digest": "f4f5d45ed2c288eb11fea46cd8e1d4e78becc9a72fa41dad3311894fd1a8b484",
     "tep": {
-      "_acceptance/config.yaml": "10eabba8b22334e0446388c83fc21d85f748d9f9527faa0d3201374b80bb71b1",
-      "_acceptance/don-hex-tho/evals.yaml": "00def61c7b10eae436163eda1fb5219b843249cd83e388b556c928b24fbb91f4",
+      "_acceptance/config.yaml": "ba20b290a8f21c71f5cd09a4b8e44233f181ad957ec1c6280e36dbcae5d7b766",
+      "_acceptance/don-hex-tho/evals.yaml": "9340a8d61ce7da63c6c45fa03ae9d135f21e1965c81ccb2d09fcf7d13edd697e",
       "agent/tests/context-resolver.test.ts": "4304d51acb755a99c15cef56563df5bcba1b7ae001ee6c7bf19346e1317d983d",
       "agent/tests/enrich-apply.test.ts": "d76479864a9624ada708034e1b13caed25542b50359290fcb6387a93968d316c",
       "agent/tests/enrich-db.test.ts": "c63c78104c4eed04758214392e359d15d84473dcb666fb6939a53489f6b25a90",
@@ -347,10 +469,10 @@
       "app/tests/deals-api-guard.test.tsx": "9de18791dfdf658a52655180e9e3fe9da8c92efe7573991c9f5a6dcb15c46e34",
       "app/tests/deals-phi-ly.test.tsx": "bf28f8844848ed95a6b93ba9aae8e47f8f0e8155ddded11a934d00519fa4b90f",
       "app/tests/df0-chang-theo-ngay.test.tsx": "27d9c3ffd06484c297bb38cdc084bf5c6ee6fd7343ed435cb6e90a42db32f7fd",
-      "app/tests/df0-dem-de-xuat.test.tsx": "c198d3dab42c623af83396758d2ccabef37860d2ae2b0c819ef8c52e96a1e94a",
+      "app/tests/df0-dem-de-xuat.test.tsx": "39cc3d297fd6ac5a5c469e612894604bc5e54cb521d833cf253a7d079d24bd74",
       "app/tests/doc-log-o-checkout.test.tsx": "c7abd92ec751a362e9cb6e07f112afac827a4ee1ad202d20f2651676149a949c",
-      "app/tests/dong-chay-cloud.test.tsx": "1136052a1524d5fe4a3d3a06b62b2b7c8045204b6524e41160353f06030c4684",
-      "app/tests/dong-chay-so-cu.test.tsx": "048d74b39b49c19fdbc98fece8ff21d92082ad2f7eee0a1c33e88dcc26a6b0cc",
+      "app/tests/dong-chay-cloud.test.tsx": "ed49b2d6b0973d8d12199cc3d205ffb1f89050a9e44f9a5a626baf44ae26908d",
+      "app/tests/dong-chay-so-cu.test.tsx": "cc0c61977a40dc336bee9892f944b58a0699aa98cce7f1dbd285be060b048ae2",
       "app/tests/dq-moi-nhat.test.tsx": "b870feab93d0dedd48ae61cd513d5c61c7cbb219949e8905da30cb42b0a4cb45",
       "app/tests/enrich-choices.test.tsx": "a11babaf649d7b43fe8c9bff6053f4a2e76fd7bc3ae546d28c5ef22283eabe60",
       "app/tests/finder-ranh-gioi.test.tsx": "2f162095bbca08f9aecb2836d4cf4518eb6b3213bfc7173280abf5783f66cf81",
@@ -359,7 +481,7 @@
       "app/tests/go-tai-khoan-kiem-id.test.tsx": "87587e0489da2f8e2274b33f0dbdc58788cececa6f6ced84a1bef28a408222a7",
       "app/tests/hieu-chuan.test.tsx": "cf6fab90b3c0d6acbb8dac3c11d572ad1beab744c5abb3b0dc08658841ffb17f",
       "app/tests/listing-detail.test.tsx": "b9de48ecbf46edf07c8c38ae4c75f84b65e2805cb68b3a221de32c9d18859cb0",
-      "app/tests/listings-browse.test.tsx": "10ac109f3fb0cb11c65ebcfcd4f1c8d6903f72f04dd4e0ea63df5566d4f12dc6",
+      "app/tests/listings-browse.test.tsx": "c39ae6fd3226c6cb5ef2d6204bdc48875d88b2eb5882109398f7387312ddfa31",
       "app/tests/lockdown-cloud-theo-facts.test.tsx": "032004162b3ddf7fbddc92db30bf7bd9744ad91b02cf0be1f4f099b231788f18",
       "app/tests/lockdown-local.test.tsx": "662e4d49a8e73595d3c5dfa9b7ed24f9fc9641ed5dd46faf7a91c31e65ea6ddf",
       "app/tests/login-kiem-id.test.tsx": "743aaf92f3b60b4f1c6e0d8b05985e4dcf8060caf4feaf6c0e4244d02f281187",
@@ -368,7 +490,7 @@
       "app/tests/nhom-s03-tren-cloud.test.tsx": "422dc1e3572f06131f6d86293033554a580a5f5b72e0af87f6bd0c394b64edb5",
       "app/tests/o-kpi-chi-do-local.test.tsx": "f90823965eab97042d49ed7a91845492e468f0bd6355cb24770a964a15ed5dc8",
       "app/tests/ops-cloud-khong-bang-nap.test.tsx": "26ed69b8cddc2610e6d9460c90379598ddf7d2fef19b6591b0a1300f39b20e0e",
-      "app/tests/ops-dong-chay.test.tsx": "dba38fac6634e9305c964b5f6ee8510aa038519419d070b7fa6c454a977ccf96",
+      "app/tests/ops-dong-chay.test.tsx": "d067ba49ddc38eee4e022ff090643d99cf4e7b88423a36162ed2c9651e1654a5",
       "app/tests/ops-facts-so-tong-hop.test.tsx": "7fc25098d72613df03d97c6f58c22bd12162e4254afbf6a65dbebe01a05e89c4",
       "app/tests/ops-mobile-cot-trang-thai.test.tsx": "f9977f32d8f30dd8e8c2c341ed636524cf920f3a6932aaffca431d25fa435417",
       "app/tests/ops-nhan-ma-nguon-cloud.test.tsx": "a78dfc6caa4dea053595217bd53260183fae581696fef01bbcb964fb211264a8",
@@ -387,6 +509,7 @@
       "app/tests/trang-chu-methodology.test.tsx": "95b7f1f2bb37c170af2a9b59d10a634e7a907713d8811cd911e10f6be86fa3fe",
       "app/tests/tu-ngu-collections.test.tsx": "0fc14170ad61a867076f88f4d747691c839b4288f6fbef88cd12d6a25c0f3b1c",
       "app/tests/ty-le-listing-gop.test.tsx": "df902f74fac31c736b8e6c6d2eb918797ac411144bf0a16a5d311979debc1766",
+      "app/tests/viewer-the-duyet.test.tsx": "ffe0d173a9c2a4c1d7d0d2da89185e8fe9a4a30cb7a316b0e3f75c9a1913253d",
       "app/tests/vocab-labels.test.tsx": "94a303721170da44b9d70579447fafb6f922f323a8eb76196fcc078b88a363f7",
       "app/tests/vong-doi-nguon.test.tsx": "1046ed250355602f38c8e6ba118c3308fc503d07707b1f371590917e25c926c6",
       "app/tests/yield-dong-tien-von-vay.test.tsx": "fb12633f01b62ff9a7345a5bd095ab2602b49d9a16c8dd85adb514b708cb6bcb",
@@ -441,12 +564,13 @@
       "scripts/check-freshness.test.mjs": "6d3b15f16d06b364c4324e72db9cb50842647729257e7e4322a857b709b96f54",
       "scripts/ci-bo-qua-df-ac-3.test.mjs": "8fd923f94cf976f98fc380936e1dfc9c983abac57bd8171c7e3705b2823389ef",
       "scripts/ci-test-module.test.mjs": "176797a31dcb9b436bd93ed9944f7a6ca68f3a9415efd746df4ecf2eff770381",
-      "scripts/design-floor/fresh-sau-gop.test.mjs": "06b01ec69479823a4d6d9c633e5b0cada2c44199ed56a58580791afc638d5149",
+      "scripts/design-floor/fresh-sau-gop.test.mjs": "bdbc756b9c72b6ccc4a51e9b4121ab9511c0096b0415873b6390ebac36a0a9cc",
       "scripts/design-floor/fresh.test.mjs": "8392ab4a47d06a8d2f9919a1d63371f1c9407883fd4a3c54fce453de83d98a93",
       "scripts/design-floor/gen-registry.test.mjs": "2197172883631c82ea871d80b5d02072233f2513450769e36798bad004393d59",
       "scripts/design-floor/gen-tokens.test.mjs": "673991d9aa284a1d8763f6b7af4afe959c28a485bf7193e559b202fc7c55644c",
-      "scripts/design-floor/reuse-plan.test.mjs": "890569ab59e1a740c65ebd833455e9afa9385191d69cd51aaec2c6803e7913e3",
-      "scripts/dev-ops-account.test.mjs": "eaae93ef5b886eaae6563cfd040c364f0ccff637592bc0c5c5df584bf368e399",
+      "scripts/design-floor/reuse-plan.test.mjs": "b0e6469024daf10921cda9c1e0b90bcc1a77da84b7fb6450ba4c6268a0c5ca4a",
+      "scripts/design-floor/tmp-sach.test.mjs": "6988a5241592a036477901918f09183b2e32b32b85d992be3ffd32705d618365",
+      "scripts/dev-ops-account.test.mjs": "f941b6214cfbc7ee37c3684adffb2a251818eba212d1d4b8aa80cf6c8df33dc4",
       "scripts/dev-register-check.test.mjs": "f7c08eff1fbcf8ca23b4382195e4ec18e9b043fd87a3f3a00865d3ace14557fc",
       "scripts/don-hex-tho.test.mjs": "6f93d8ee69e935b1cd0f73e0d340aca74f07dd2a1e8e581cf865213ee0ae471f",
       "scripts/freshness-parity.test.mjs": "fe666329104ba61c5e386838da05a14fc3ae6572ed51103ee3bb9b2519dc66b9",
@@ -462,7 +586,7 @@
     }
   },
   "cayChup": {
-    "sha": "853b3b4e026d5fdccf8f19234fbdcde657a0861a",
+    "sha": "88c94a4861374195c0dc332b4b573d96c2736dd8",
     "ban": {},
     "chuaTheoDoi": []
   }
