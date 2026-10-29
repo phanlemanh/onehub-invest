@@ -5,7 +5,7 @@ slug: cong-tac-that
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-27
 ---
