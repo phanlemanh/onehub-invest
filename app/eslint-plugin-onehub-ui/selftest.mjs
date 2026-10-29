@@ -107,11 +107,12 @@ async function shouldNotFire() {
     check(onehub(msgs).length === 0 && fatal(msgs).length === 0, `${name} → 0 báo cáo onehub-ui${onehub(msgs).length ? ` (got ${onehub(msgs).map((m) => m.ruleId)})` : ""}`);
   }
 
-  // File bản đồ: hex được phép, nhưng <table> vẫn bị báo.
-  const mapCode = 'export const A = () => <div style={{ color: "#ff0000" }} />;\nexport const B = () => <table />;\n';
-  const mapMsgs = onehub(await lint(mapCode, "src/components/mini-map.tsx")).map((m) => m.ruleId);
-  check(!mapMsgs.includes("onehub-ui/no-hardcoded-color"), "src/components/mini-map.tsx: hex KHÔNG bị no-hardcoded-color");
-  check(mapMsgs.includes("onehub-ui/no-raw-table"), "src/components/mini-map.tsx: <table> VẪN bị no-raw-table");
+  // File bản đồ: hex được phép, nhưng luật khác vẫn báo. Tệp miễn là .ts (lib/map-colors.ts) nên mẫu không có JSX:
+  // hex nằm ở khoá `color` (ngữ cảnh màu của luật), luật còn chạy là no-native-dialogs.
+  const mapCode = 'export const A = { color: "#ff0000" };\nexport const B = () => alert("x");\n';
+  const mapMsgs = onehub(await lint(mapCode, "src/lib/map-colors.ts")).map((m) => m.ruleId);
+  check(!mapMsgs.includes("onehub-ui/no-hardcoded-color"), "src/lib/map-colors.ts: hex KHÔNG bị no-hardcoded-color");
+  check(mapMsgs.includes("onehub-ui/no-native-dialogs"), "src/lib/map-colors.ts: alert() VẪN bị no-native-dialogs");
   // Đối chứng: cùng mã ở file không thuộc bản đồ thì hex bị báo.
   const ctrl = onehub(await lint(mapCode, "src/components/__selftest__/not-map.tsx")).map((m) => m.ruleId);
   check(ctrl.includes("onehub-ui/no-hardcoded-color"), "đối chứng: file thường vẫn bị no-hardcoded-color (cấu hình bản đồ là ngoại lệ có chủ đích)");
