@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 19b0fd40ec2f30bbea8746e08818dfee576d9601
+verified_commit: c74b704b596529cb4f34cc0fbce4e1bfda370a80
 human_signoff: Mạnh 2026-10-29
 ---
 
@@ -135,3 +135,7 @@ none — every multi-run eval is uniform
 Round 1: bằng chứng gốc cho E1, E3, E4, E6 (E5 chạy trên bản sau khi che tên nguồn bằng source_registry sống, commit 7ec916ce).
 Round 2: E5 đỏ — s4-args.json được commit mang 6 đường tệp có tên nguồn thật; E2 chạy lại ở round này. Returned to implementation.
 Round 3: E5 xanh sau commit 19b0fd40 (bỏ theo dõi tệp args S4 khỏi nhánh); E1, E2, E3, E4, E6 carry-forward; sáu lệnh suite xanh. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-29, do hoá cũ do gộp origin/main sau chữ ký
+run_id: repin-20261029T090359Z-76204
+sha: c74b704b596529cb4f34cc0fbce4e1bfda370a80 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng
