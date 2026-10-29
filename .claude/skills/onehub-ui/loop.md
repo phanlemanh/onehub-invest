@@ -5,7 +5,10 @@ về file ReUI, file này không chép lại.
 
 1. **Kế hoạch 7 dòng** (`reui/SKILL.md`, mục "Before you write UI code"). Viết vào câu trả lời
    trước khi viết code. Bề mặt, archetype và họ khung lấy từ dòng của trang trong `routes.md`.
-   Trang mới thì thêm dòng vào đó trước.
+   Trang mới thì thêm dòng vào đó trước. Việc chạy trong một hồ sơ nghiệm thu thì cùng lúc viết
+   `_acceptance/<slug>/reuse-plan.md` — bắt buộc ở S1, khuôn và thang 7 bậc ở mục «Kế hoạch dùng lại» của
+   `SKILL.md`. Bước 2–5 dưới đây là cách tìm câu trả lời cho từng ô của kế hoạch; ô nào xuống bậc 7 (tự viết)
+   thì bước 6 thêm dòng `catalog.md` cho nó.
 2. **Tra danh mục** `catalog.md`. Đã có bản chuyển thể cho đúng việc này thì dùng lại và nhảy
    tới bước 6. Loại UI nằm trong bảng "Một loại UI, một cách làm" thì dùng đúng cách đã ghi.
 3. **Tìm bằng MCP.** *Trước khi chọn block*, khi chốt khuôn IA/bố cục (≥2 khuôn khả dĩ): tra

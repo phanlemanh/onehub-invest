@@ -9,6 +9,7 @@ import pg from "pg"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 import { schemaUrl } from "../../pipeline/scripts/ops-facts-fixture.mjs"
+import { TABLES, flowSql, fragment, makeFlowSchema, refreshFlow } from "./ops-dong-chay-fixture"
 
 const S = `dem_${process.pid}`
 process.env.DATABASE_URL = schemaUrl(S) // pool của app đọc lúc import — đặt TRƯỚC mọi import động
@@ -65,11 +66,12 @@ async function checkValues(table: string, conname: string): Promise<string[]> {
   return [...String(rows[0].d).matchAll(/'([a-z_]+)'::text/g)].map((m) => m[1])
 }
 
-/** Dựng lại lược đồ tạm: đề xuất theo bảng {trạng thái → số dòng mỗi tuyến}, thẻ duyệt theo {trạng thái → số dòng}. */
+/** Dựng lại lược đồ tạm: đề xuất theo bảng {trạng thái → số dòng mỗi tuyến}, thẻ duyệt theo {trạng thái → số dòng}.
+ * DF1: số đề xuất chờ tính ở pipeline/sql/600 — lược đồ có đủ bảng 600 đọc (fixture DF0, không tin rao) + bảng 051. */
 async function makeSchema(perRoute: Record<string, number>, review: Record<string, number>) {
-  await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`)
-  await admin.query(`CREATE SCHEMA "${S}"`)
-  for (const t of ["enrichment_proposals", "review_queue"])
+  const CHECKED = ["enrichment_proposals", "review_queue"]
+  await makeFlowSchema(admin, S, { offers: [], ads: 0, tables: TABLES.filter((t) => !CHECKED.includes(t)) })
+  for (const t of CHECKED)
     await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING DEFAULTS INCLUDING CONSTRAINTS)`)
   let id = 0
   for (const [status, n] of Object.entries(perRoute))
@@ -94,15 +96,17 @@ async function makeSchema(perRoute: Record<string, number>, review: Record<strin
 }
 
 type Rewrite = (sql: string) => string
-/** Hàm query tiêm cho getDataFlow: câu chạm hai bảng của hồ sơ chạy trên lược đồ tạm, câu khác trả rỗng. */
+/** Hàm query tiêm cho getDataFlow: mọi câu chạy trên lược đồ tạm (`rewrite` đột biến câu của trang). */
 const viaSchema = (rewrite: Rewrite = (s) => s, seen?: string[]) => async (text: string, values?: unknown[]) => {
-  if (!/enrichment_proposals|review_queue/.test(text)) return { rows: [] }
   const sql = rewrite(text)
   seen?.push(sql)
   return inSchema.query(sql, values)
 }
-const flowWith = async (rewrite?: Rewrite, seen?: string[]) =>
-  (await import("../src/lib/data-flow-queries")).getDataFlow("all", { now: NOW, query: viaSchema(rewrite, seen) })
+/** Làm tươi 600 (`sql` đột biến câu làm tươi — nơi số đề xuất chờ được tính từ DF1) rồi đọc như trang. */
+const flowWith = async ({ sql, query, seen }: { sql?: Rewrite; query?: Rewrite; seen?: string[] } = {}) => {
+  await refreshFlow(S, { now: NOW, sql: sql ? sql(flowSql()) : undefined })
+  return (await import("../src/lib/data-flow-queries")).getDataFlow("all", { now: NOW, query: viaSchema(query, seen) })
+}
 
 // Bảng đầy đủ của AC-1: mỗi trạng thái một luỹ thừa 2 riêng mỗi tuyến → mọi tập con trạng thái cho tổng khác nhau.
 const FULL_W: Record<string, number> = { applied: 1, rejected: 2, superseded: 4, skipped: 8, reverted: 16, queued: 32 }
@@ -142,7 +146,7 @@ describe("DD-AC-1 đếm queued", () => {
     assert.notEqual(flow.enrichPending, 0)
     assert.notEqual(flow.enrichPending, total)
     // Chiều đỏ cùng fixture: lọc thêm bỏ tuyến review (lối khác của Hỏi-1) ra số khác.
-    const route = await flowWith((s) => s.replace("status = 'queued'", "status = 'queued' AND route <> 'review'"))
+    const route = await flowWith({ sql: (s) => s.replace("status = 'queued'", "status = 'queued' AND route <> 'review'") })
     console.log(`# DD-AC-1 chiều đỏ bỏ tuyến review: ${route.enrichPending}`)
     assert.notEqual(route.enrichPending, flow.enrichPending, "đột biến bỏ tuyến review phải ra số khác")
   })
@@ -152,11 +156,12 @@ describe("DD-AC-2 đột biến pending", () => {
   test("DD-AC-2 đột biến pending — câu cũ lọc pending đếm 0", async () => {
     ready()
     await makeSchema(FULL_W, reviewOf(2))
-    const { ENRICH_PENDING_SQL } = await import("../src/lib/data-flow-queries")
+    // DF1: câu đếm là đoạn ghim ENRICH của pipeline/sql/600_data_flow.sql; đột biến đổi đúng đoạn ấy.
+    const ENRICH_PENDING_SQL = fragment("ENRICH")
     const cu = (s: string) => s.replace("status = 'queued'", "status = 'pending'")
     assert.notEqual(cu(ENRICH_PENDING_SQL), ENRICH_PENDING_SQL, "đối chứng: chuỗi đột biến phải khác câu gốc")
     const goc = (await flowWith()).enrichPending
-    const sai = (await flowWith(cu)).enrichPending
+    const sai = (await flowWith({ sql: (s) => s.replace(ENRICH_PENDING_SQL, cu(ENRICH_PENDING_SQL)) })).enrichPending
     console.log(`# DD-AC-2 gốc ${goc} · câu cũ ${sai}`)
     assert.equal(sai, 0, "câu cũ lọc pending đếm 0")
     assert.notEqual(sai, goc, "câu cũ lọc pending đếm 0 — phép đo phải phân biệt được bản cũ")
@@ -225,10 +230,10 @@ describe("DD-AC-5 thẻ chờ duyệt giữ nguyên", () => {
     assert.ok(REVIEW_STATUSES.includes("pending") && REVIEW_STATUSES.length >= 2)
     await makeSchema(FULL_W, reviewOf(2))
     const seen: string[] = []
-    const flow = await flowWith(undefined, seen)
+    const flow = await flowWith({ seen })
     assert.ok(seen.some((s) => /FROM review_queue WHERE status = 'pending'/.test(s)), "câu đếm review_queue phải giữ status = 'pending'")
     assert.equal(flow.reviewPending, 2)
-    const sai = await flowWith((s) => s.replace("FROM review_queue WHERE status = 'pending'", "FROM review_queue WHERE status = 'approved'"))
+    const sai = await flowWith({ query: (s) => s.replace("FROM review_queue WHERE status = 'pending'", "FROM review_queue WHERE status = 'approved'") })
     console.log(`# DD-AC-5 thẻ chờ ${flow.reviewPending} · đột biến approved ${sai.reviewPending}`)
     assert.equal(sai.reviewPending, 1)
     assert.notEqual(sai.reviewPending, flow.reviewPending, "đột biến câu đếm thẻ phải ra số khác")

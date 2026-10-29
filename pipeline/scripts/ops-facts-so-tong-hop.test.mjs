@@ -22,8 +22,9 @@ const SEEDS = sourceRegistrySeeds();
 const ENTRIES = SEEDS.map(({ code, realName }) => ({ code, realName }));
 const name = (code) => SEEDS.find((s) => s.code === code).realName;
 // ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7`, ON4 (nhom-s03-tren-cloud) khối thứ bảy `s03` — cùng khuôn
-// {measured_at, …} của ON22.
-const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7", "s03"];
+// {measured_at, …} của ON22. DF1 (dong-chay-len-cloud) thêm khối thứ tám `dataFlow`: measured_at là computed_at CŨ NHẤT
+// của bảng tính sẵn data_flow_snapshot — có thể trước lượt chạy (làm tươi ở bước cloud-sync trước), không được sau.
+const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7", "s03", "dataFlow"];
 const OLD_KEYS = ["pushedAt", "funnel", "health", "jobs", "sourceRuns", "rotation", "zaloGroups", "zaloFlow", "zaloAccounts"];
 const S = `on22_pipe_${process.pid}`;
 const LOGS = () => ({
@@ -32,11 +33,23 @@ const LOGS = () => ({
   "chotot.log": "2026-10-24T20:10:00 xong\n",
 });
 const admin = new pg.Client({ connectionString: localDbUrl() });
+/** DF1: bảng tính sẵn 051 THẬT trên lược đồ tạm + ba dòng tối thiểu — khối `dataFlow` đo được như các khối khác. */
+async function withFlow(schema) {
+  const c = new pg.Client({ connectionString: schemaUrl(schema) });
+  await c.connect();
+  try {
+    await c.query(readFileSync(path.join(HERE, "..", "..", "db/migrations/051_data_flow_snapshot.sql"), "utf8"));
+    await c.query(`INSERT INTO data_flow_snapshot (time_window, computed_at, facts) SELECT w, now(), '{}'::jsonb FROM unnest(ARRAY['7d','30d','all']) w`);
+  } finally {
+    await c.end();
+  }
+}
 const extra = []; // lược đồ phụ của ca «không đo được»
 
 before(async () => {
   await admin.connect();
   await makeOpsSchema(admin, S);
+  await withFlow(S);
 });
 after(async () => {
   for (const x of [S, ...extra]) await dropOpsSchema(admin, x).catch(() => {});
@@ -54,7 +67,7 @@ function blockProblems(payload, t0, t1) {
   for (const b of BLOCKS) {
     const at = Date.parse(payload?.blocks?.[b]?.measured_at ?? "");
     if (!Number.isFinite(at)) out.push(`${b}: thiếu measured_at`);
-    else if (at < t0 - 1000 || at > t1 + 1000) out.push(`${b}: measured_at ngoài khoảng chạy`);
+    else if ((at < t0 - 1000 && !(b === "dataFlow" && !payload.blocks[b].error)) || at > t1 + 1000) out.push(`${b}: measured_at ngoài khoảng chạy`);
   }
   return out;
 }
@@ -191,17 +204,20 @@ describe("ON22-AC-7 khối không đo được", () => {
     ["records24h", { omit: ["airbnb_snapshots"] }, ["freshness", "records24h"]],
     // ON4: cấu hình OpenClaw không đọc được → chỉ khối s03 lỗi.
     ["s03", { noCfg: true }, ["s03"]],
+    // DF1: máy thu chưa áp 051 → chỉ khối dataFlow lỗi.
+    ["dataFlow", { omit: ["data_flow_snapshot"] }, ["dataFlow"]],
   ];
   /** Cấu hình OpenClaw tối thiểu + nhật ký cổng rỗng ở HOME tạm để khối s03 đo được (ON4) — ca `noCfg` bỏ cả hai. */
   const CFG_HOME = { ".openclaw/openclaw.json": JSON.stringify({ channels: { zalouser: { groups: {} } } }), ".openclaw/logs/oneinvest-zalo-pipe.log": "" };
   const errored = (payload) => BLOCKS.filter((b) => payload.blocks[b].error !== undefined);
-  const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType", s03: "groups" };
+  const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType", s03: "groups", dataFlow: "windows" };
   const caseRun = async ([block, how], script) => {
     let schema = S;
     if (how.omit) {
       schema = `on22_pipe_${block.toLowerCase()}_${process.pid}`;
       extra.push(schema);
       await makeOpsSchema(admin, schema, { omit: how.omit });
+      if (!how.omit.includes("data_flow_snapshot")) await withFlow(schema);
     }
     return captureOpsFacts({ script, logs: LOGS(), home: how.noCfg ? {} : CFG_HOME, ...(how.launchctl === null ? { launchctl: null } : {}), env: { DATABASE_URL: schemaUrl(schema) } });
   };
@@ -272,7 +288,11 @@ describe("ON22-AC-10 máy thu thật", () => {
       assert.equal(kho.posts, 0, "chế độ khô không được gửi");
       assert.match(kho.stdout, /ops-facts khô: sạch, 0 chỗ chặn/);
       const line = kho.stdout.split("\n").find((l) => l.startsWith("khối: "));
-      assert.equal(line, `khối: ${BLOCKS.map((b) => `${b} đo được`).join(" · ")}`, "năm khối phải đo được trên máy thật");
+      // DF1: khối dataFlow đo được khi máy thu đã áp migration 051 (bảng tính sẵn); trước đó nó phải nói «không đo được».
+      const co051 = (await real.query(`SELECT to_regclass('public.data_flow_snapshot')::text AS r`)).rows[0].r !== null;
+      console.log(`# ON22-AC-10 bảng data_flow_snapshot ở máy thu: ${co051 ? "có" : "chưa áp 051"}`);
+      const trang = (b) => (b === "dataFlow" && !co051 ? "không đo được" : "đo được");
+      assert.equal(line, `khối: ${BLOCKS.map((b) => `${b} ${trang(b)}`).join(" · ")}`, "năm khối phải đo được trên máy thật");
       assert.deepEqual(findSourceNames(kho.stdout + kho.stderr.replace(/^(FACTS CHẶN \[tầng A\]) \S+/gm, "$1"), ENTRIES), []);
       const now = new Date();
       const sent = await captureOpsFacts({ env: { ...realEnv(), OPS_FACTS_NOW: now.toISOString() } }); // gửi về máy chủ thu tạm, không lên cloud

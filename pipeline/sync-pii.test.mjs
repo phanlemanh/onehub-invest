@@ -27,6 +27,10 @@ test("FILL không chứa stg_s08_inventory (S08 chỉ dùng nội bộ — AGENT
   assert.ok(!FILL.includes("stg_s08_inventory"));
 });
 
+test("FILL không chứa data_flow_snapshot (DF1 — số tổng hợp chỉ ở máy thu, lên cloud qua khối dataFlow của push-ops-facts)", () => {
+  assert.ok(!FILL.includes("data_flow_snapshot"));
+});
+
 test("FILL không chứa raw/registry tầng A", () => {
   for (const t of ["airbnb_snapshots", "source_registry"]) assert.ok(!FILL.includes(t), t);
 });

@@ -83,6 +83,7 @@ export function RecordSheet({
   roles,
   media,
   xemBaiGoc,
+  cloud = false,
   onOpenChange,
 }: {
   record: FlowRecord | null
@@ -91,6 +92,8 @@ export function RecordSheet({
   media?: Record<string, ReviewImage[]>
   /** Vai ops trở lên (xemNoiDungTin) — không thì bài gốc đã bị xoá ở máy chủ. */
   xemBaiGoc: boolean
+  /** Máy chủ: bài gốc và ảnh tin chưa lên cloud (TV9) — nói rõ thay vì «không tìm thấy». */
+  cloud?: boolean
   onOpenChange: (open: boolean) => void
 }) {
   return (
@@ -147,6 +150,8 @@ export function RecordSheet({
                 <Section title="Ảnh tin">
                   {record.source === "S06" ? (
                     <p className="text-muted-foreground text-sm">Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10).</p>
+                  ) : cloud ? (
+                    <p className="text-muted-foreground text-sm">Ảnh tin chỉ xem ở máy thu.</p>
                   ) : media ? (
                     <ReviewPhotos label="Tin" images={media[record.offerId] ?? []} />
                   ) : (
@@ -155,7 +160,9 @@ export function RecordSheet({
                 </Section>
                 <Separator />
                 <Section title="Bài gốc">
-                  {!xemBaiGoc ? (
+                  {cloud ? (
+                    <p className="text-muted-foreground text-sm">Bài gốc chỉ xem ở máy thu.</p>
+                  ) : !xemBaiGoc ? (
                     <p className="text-muted-foreground text-sm">Bài gốc chỉ hiện cho vai Vận hành trở lên.</p>
                   ) : record.postText ? (
                     <div className="flex flex-col gap-2">
