@@ -43,9 +43,9 @@ evals:
     executor: ui-check
     layer: ui-observed
     cmd: config:executors.design.ui_check
-    target: "http://localhost:3456/ops/ai-calls"
+    target: "http://localhost:3463/ops/ai-calls"
     paths: [app/src/app/ops/ai-calls/**, app/src/components/ops/ai-calls/**, app/src/lib/ai-calls-queries.ts]
-    expected: "Đăng nhập tài khoản ops thử, DB local có dòng mồi viec 'sca-mau-*' (probe seed.mjs): trang hiện ba ô tóm tắt và bảng ngày × việc × model; số của dòng mồi khớp tổng hợp; dòng model chưa có giá ghi «chưa có giá»; ảnh chụp desktop + mobile"
+    expected: "Dev server cổng 3463 chạy với DATABASE_URL của DB thử oneinvest_p4_sca_facts (không phải oneinvest), đã mồi bằng probes/seed.mjs; đăng nhập tài khoản ops thử: trang hiện ba ô tóm tắt và bảng ngày × việc × model; số của dòng mồi khớp tổng hợp; dòng model chưa có giá ghi «chưa có giá»; ảnh chụp desktop + mobile"
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E7
     criterion: AC-6
@@ -88,7 +88,7 @@ evals:
     executor: script
     cmd: config:executors.script.sca_pham_vi
     paths: [_acceptance/so-cuoc-goi-ai/probes/pham-vi.sh]
-    expected: "exit 0; mọi tệp đổi 'ok'; không tệp nào dưới collector/, pipeline/import-*, pipeline/cron/; đối chứng: tệp giả app/tests/x.test.tsx → ok, collector/x.ts → NGOAI PHAM VI; cuối 'PHAM-VI OK'"
+    expected: "exit 0; mọi tệp đổi 'ok'; không tệp nào dưới collector/, pipeline/import-*, pipeline/cron/; đối chứng: app/tests/ai-calls.test.tsx → ok, app/tests/x.test.tsx và collector/x.ts → NGOAI PHAM VI; cuối 'PHAM-VI OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E13
     criterion: AC-2

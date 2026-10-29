@@ -25,12 +25,12 @@ import { fmtInt, fmtVnDate } from "@/lib/format"
  */
 
 const CRUMBS = [{ label: "Vận hành", href: "/ops" }, { label: "Cuộc gọi AI" }]
-const DESCRIPTION = "Token, độ trễ và chi phí của mọi cuộc gọi qua agent runtime, 30 ngày gần nhất."
+const DESCRIPTION = "Token, độ trễ và chi phí của mọi cuộc gọi AI của máy, 30 ngày gần nhất."
 
 /** Đồng: null = model chưa có giá (không phải 0). */
 export function fmtChiPhi(v: number | null): string {
   if (v == null) return "chưa có giá"
-  return `${v.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} đ`
+  return `${new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 }).format(v)} đ`
 }
 const fmtMs = (v: number | null) => (v == null ? "—" : `${fmtInt(v)} ms`)
 
@@ -51,7 +51,7 @@ const COLUMNS: ColumnDef<DataGridFeatures, AiCallGroup>[] = [
     meta: { headerClassName: "ps-5", cellClassName: "ps-5" },
   },
   { accessorKey: "viec", id: "viec", header: ({ column }) => <DataGridColumnHeader title="Việc" column={column} /> },
-  { accessorKey: "model", id: "model", header: ({ column }) => <DataGridColumnHeader title="Model" column={column} /> },
+  { accessorKey: "model", id: "model", header: ({ column }) => <DataGridColumnHeader title="Mô hình" column={column} /> },
   so("Cuộc", "cuoc"),
   so("Lỗi", "loi"),
   so("Token vào", "tokenVao"),
@@ -103,8 +103,8 @@ function AiCallsEmpty() {
         </EmptyMedia>
         <EmptyTitle>Chưa có cuộc gọi AI nào trong 30 ngày</EmptyTitle>
         <EmptyDescription>
-          Chạy thử agent để có dòng đầu tiên: <code className="font-mono text-xs">cd agent && npm run smoke</code>. Mỗi lượt judge
-          hay enrich cũng ghi một dòng vào sổ.
+          Chạy thử một lượt AI để có dòng đầu tiên: <code className="font-mono text-xs">cd agent && npm run smoke</code>. Mỗi lượt phân xử thực thể
+          hay làm giàu tin cũng ghi một dòng vào sổ.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
@@ -134,7 +134,7 @@ export function AiCallsView({ data }: { data: AiCalls }) {
             ? [
                 `${fmtInt(t.cuoc)} cuộc`,
                 `${fmtInt(t.tokenVao + t.tokenRa)} token`,
-                t.chiPhi == null ? "chưa có giá" : t.chiPhi === 0 ? "0 đ — model local" : fmtChiPhi(t.chiPhi),
+                t.chiPhi == null ? "chưa có giá" : t.chiPhi === 0 ? "0 đ — mô hình chạy tại máy" : fmtChiPhi(t.chiPhi),
               ]
             : []
         }
@@ -153,10 +153,10 @@ export function AiCallsView({ data }: { data: AiCalls }) {
           <Frame variant="default" spacing="sm" className="w-full">
             <FrameHeader className="flex flex-col items-start gap-3">
               <div className="flex min-w-0 flex-col gap-0.5">
-                <FrameTitle>Theo ngày, việc và model</FrameTitle>
+                <FrameTitle>Theo ngày, việc và mô hình</FrameTitle>
                 <FrameDescription className="text-xs text-pretty">
                   {fmtInt(data.nhom.length)} nhóm · {fmtInt(t.loi)} lượt lỗi · ngày theo giờ Việt Nam
-                  {t.nhomChuaCoGia ? ` · ${fmtInt(t.nhomChuaCoGia)} nhóm chưa có giá model` : ""}
+                  {t.nhomChuaCoGia ? ` · ${fmtInt(t.nhomChuaCoGia)} nhóm chưa có giá mô hình` : ""}
                 </FrameDescription>
               </div>
             </FrameHeader>
