@@ -5,7 +5,7 @@ slug: so-cuoc-goi-ai
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api, cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-29-so-cuoc-goi-ai-design.md
@@ -77,3 +77,15 @@ Cổng Phạm vi; hợp đồng này soạn theo khuyến nghị của cả ba.
 
 - Hỏi-1..3 (phạm vi đo, cách tính chi phí, chỗ lưu và hiện) và Hỏi-4 (ngưỡng nghiệm thu) chờ Mạnh ở Cổng Phạm vi; xem sổ
   quyết định, dòng `chi-nguoi`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: DB nhận kết nối xong rồi mới treo thì lượt agent có thể bị giữ khoảng 6 giây (3 giây kết nối + 3 giây ghi), không phải 3 giây như ghi chú; lượt vẫn xong.
+  - Ngoài-2: chưa có phép thử cho ca lệnh ghi sổ bị khoá chờ sau khi đã kết nối; gỡ trần truy vấn thì các phép thử hiện tại vẫn xanh.
+  - Ngoài-3: tên cột của sổ (migration 052) và khoá của khối bản tin `aiCalls` bằng tiếng Việt, ngoại lệ có chủ ý của quy ước đặt tên tiếng Anh.
+  - Ngoài-4: ô tổng chi phí đầu trang chỉ cộng nhóm có giá — có cả mô hình chạy tại máy lẫn mô hình chưa khai giá thì có thể ghi «0 đ»; dòng mô tả dưới vẫn nêu số nhóm chưa có giá.
+  - Ngoài-5: ghi tệp vết lỗi (đĩa đầy, thiếu quyền) sau một lượt thành công thì lượt đó bị đếm thành hai dòng, một ok và một lỗi.
+  - Ngoài-6: lệnh đối chiếu sổ với tệp vết có thể báo lệch giả sau khi chạy bộ test agent (đếm cả vết của dòng mẫu thử).
+  - Ngoài-7: phép thử cảnh báo «số đã cũ» ở chế độ máy chủ chỉ kiểm trang khác đi, chưa ghim chữ cảnh báo.
+  - Ngoài-8: phép thử «chưa có giá» khớp chữ ở bất kỳ đâu trên trang, chưa gắn với đúng dòng của mô hình chưa có giá.
+  - Ngoài-9: đầu dò trang so token và chi phí từng nhóm trên dữ liệu đưa vào, chưa so trên bảng đã dựng.
+  - Ngoài-10: ma trận phép tính tổng hợp phủ 7/18 tổ hợp mô hình × kết quả × ngày.
+  - Ngoài-11: ma trận phép tính tổng hợp kiểm bản tính JS song sinh, chưa kiểm trực tiếp câu SQL thật (ranh giới nửa đêm).
