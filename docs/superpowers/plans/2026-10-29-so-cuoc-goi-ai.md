@@ -17,9 +17,9 @@ cùng fixture (xanh trên vật lành, đỏ với thông điệp ghim trên b�
 
 Sau task 6: sàn thiết kế S3, đặt `implemented`, xin lượt S4.
 
-**Chỗ áp migration (Hỏi ở Gate 1.5).** Test và đầu dò dùng lược đồ tạm: E1 áp 052 vào lược đồ tạm trong ROLLBACK; E13 và
-`trang.mjs` chạy với `DATABASE_URL` mang `?options=-c search_path=<lược đồ tạm>` nên vẫn đi đúng writer/đường mặc định mà
-không cần bảng ở `public`. Riêng E6 (ui-check trên dev server :3456) đọc DB qua `app/.env.local`, nên cần bảng 052 ở
-`public` của DB local :5433. Máy khuyên: áp 052 lên DB local trước S4 (bảng mới, không đụng bảng cũ, idempotent, gỡ được
-bằng `DROP TABLE IF EXISTS`), ghi một dòng sổ; lối khác: E6 chỉ chụp trạng thái trống/lỗi qua test render, bỏ ảnh chụp
-có số thật tới sau khi gộp.
+**Chỗ áp migration (giám sát trả lời 29/10, theo LUAT đợt).** KHÔNG áp 052 lên DB `oneinvest` :5433 trước khi gộp.
+Lượt chấm và đầu dò dùng DB thử riêng `oneinvest_p4_so_cuoc_goi_ai` (`bash db/db-thu.sh oneinvest_p4_so_cuoc_goi_ai`,
+chép lược đồ + dữ liệu của oneinvest), áp 052 vào DB thử, rồi trỏ `DATABASE_URL` của test, đầu dò và dev server dùng cho
+ui-check E6 (cổng riêng, `DATABASE_URL` của DB thử) vào đó. E1 vẫn áp 052 vào lược đồ tạm trong ROLLBACK. Áp 052 lên DB
+máy thu là bước TRIỂN KHAI sau khi gộp: `pg_dump` trước, rồi chạy theo `/new-migration`. Xong lượt chấm thì xoá DB thử
+(`db-thu.sh … --xoa`).
