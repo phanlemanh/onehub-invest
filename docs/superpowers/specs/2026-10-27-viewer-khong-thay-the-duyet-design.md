@@ -28,10 +28,13 @@ mỗi route ops (AC-8), đỏ khi trên đĩa có route chưa khai hoặc route 
   «Nội dung thẻ chỉ hiện cho vai Vận hành trở lên.». Vai Vận hành trở lên: như hôm nay.
 - **`/ops/data-flow` với vai dưới Vận hành**: trang thay `postText`, `postGroup` của mọi bản ghi bằng `null` TRƯỚC khi
   trao cho `DataFlowView` (thành phần client — dữ liệu không xuống trình duyệt); sheet của bản ghi hiện
-  «Bài gốc chỉ hiện cho vai Vận hành trở lên.» thay cho khối «Bài gốc». Thân trang tách thành
-  `components/ops/data-flow/data-flow-content.tsx` nhận `user` để ca thử dựng được.
+  «Bài gốc chỉ hiện cho vai Vận hành trở lên.» thay cho khối «Bài gốc». Thân trang là
+  `components/ops/data-flow/data-flow-content.tsx` (DF1 đã tách); nó tự đọc phiên qua `getUser` (mặc định
+  `getSessionUser`, ca thử tiêm người giả) rồi mới che.
 - Nhãn vai lấy từ `CONTEXT.md` mục «Vai Ops» («Vận hành»). Không thêm thuật ngữ mới.
-- Cloud không đổi: nhánh «bảng tầng A vắng» chạy trước nhánh vai ở cả hai trang.
+- Cloud không đổi: `/ops/review` giữ nhánh «bảng tầng A vắng» chạy trước nhánh vai; `/ops/data-flow` theo khuôn cloud
+  của DF1 (`dong-chay-len-cloud`, gộp 29/10) — bản ghi cloud vốn không mang bài gốc, sheet ghi «Bài gốc chỉ xem ở máy
+  thu.» cho mọi vai.
 
 ## Kiểm bằng mắt
 

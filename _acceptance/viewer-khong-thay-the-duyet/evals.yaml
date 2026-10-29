@@ -23,7 +23,7 @@ evals:
     cmd: config:executors.test.viewer_the_duyet
     layer: backend-effect
     paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/data-flow/data-flow-content.tsx, app/src/lib/ops-access.ts, app/tests/viewer-the-duyet.test.tsx]
-    expected: "exit 0; ca 'VT-AC-3': ma trận MA_TRAN viết trước 6 kiểu người × 2 trang = 12 ô (assert MA_TRAN.length === 12); mỗi ô: có/không 'vt-mat-1-title' trong HTML /ops/review và có/không 'vt-bai-1' trong JSON props của DataFlowView đúng bảng (có ở ops, admin, owner, OPS_EMAILS; không ở user, viewer); props.xemBaiGoc của DataFlowView === (kiểu thuộc nhóm ops trở lên); đối chứng: bản data-flow-content chép tạm thay xemNoiDungTin bằng so sánh role === 'ops' → ca đỏ nêu tên ô 'admin' hoặc 'OPS_EMAILS'"
+    expected: "exit 0; ca 'VT-AC-3': ma trận MA_TRAN viết trước 6 kiểu người × 2 trang = 12 ô (assert MA_TRAN.length === 12); mỗi ô: có/không 'vt-mat-1-title' trong HTML /ops/review và có/không 'vt-bai-1' trong JSON props của DataFlowView (dựng bằng DataFlowContent({ window: 'all', nowMs, getUser: async () => <kiểu người> })) đúng bảng (có ở ops, admin, owner, OPS_EMAILS; không ở user, viewer); props.xemBaiGoc của DataFlowView === (kiểu thuộc nhóm ops trở lên); đối chứng: bản data-flow-content chép tạm thay xemNoiDungTin bằng so sánh role === 'ops' → ca đỏ nêu tên ô 'admin' hoặc 'OPS_EMAILS'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
@@ -31,7 +31,7 @@ evals:
     cmd: config:executors.test.viewer_the_duyet
     layer: backend-effect
     paths: [app/src/components/ops/data-flow/data-flow-content.tsx, app/src/app/ops/data-flow/page.tsx, app/src/lib/data-flow-queries.ts, app/tests/viewer-the-duyet.test.tsx]
-    expected: "exit 0; ca 'VT-AC-4': lược đồ tạm dựng theo fixture của ops-dong-chay có ≥ 2 bản ghi S05 mang bài gốc 'vt-bai-<n>'; phần tử trả về của await DataFlowContent({ window: 'all', user: viewer }) là DataFlowView với props.flow.records mọi postText === null và postGroup === null, JSON.stringify(props) không chứa 'vt-bai-'; với ops → postText từng bản ghi bằng bài gốc đã chèn; page.tsx của /ops/data-flow đọc phiên rồi dựng DataFlowContent với user (rút export default, gọi với searchParams và getSessionUser giả qua tham số không được — đo bằng soát tệp: page không còn import DataFlowView, có '<DataFlowContent' kèm 'user=')"
+    expected: "exit 0; ca 'VT-AC-4': lược đồ tạm dựng theo fixture của ops-dong-chay có ≥ 2 bản ghi S05 mang bài gốc 'vt-bai-<n>'; phần tử trả về của await DataFlowContent({ window: 'all', nowMs, getUser: async () => viewer }) là DataFlowView với props.flow.records mọi postText === null và postGroup === null, JSON.stringify(props) không chứa 'vt-bai-'; với ops → postText từng bản ghi bằng bài gốc đã chèn; thân trang tự đọc phiên — đo bằng soát tệp: data-flow-content.tsx khai 'getUser = getSessionUser' và gọi getUser() trước khi che, page.tsx không import DataFlowView và dựng '<DataFlowContent'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
@@ -44,8 +44,8 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.viewer_the_duyet
-    paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/data-flow/data-flow-content.tsx, app/tests/viewer-the-duyet.test.tsx]
-    expected: "exit 0; ca 'VT-AC-6': lược đồ «như máy chủ» (không review_queue, không stg_zalo_posts, có ops_heartbeat với khối reviewQueue): ReviewContent cho viewer và ops cùng chứa 'thẻ đang chờ' và 'Hàng duyệt chỉ có ở máy thu'; DataFlowContent cho viewer và ops cùng trả LocalOnlyAlert 'Chỉ xem ở máy thu'; HTML của viewer bằng HTML của ops"
+    paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/data-flow/data-flow-content.tsx, app/src/components/ops/data-flow/record-sheet.tsx, app/src/lib/data-flow-queries.ts, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; ca 'VT-AC-6': lược đồ «như máy chủ» (không review_queue, không stg_zalo_posts, có ops_heartbeat với khối reviewQueue): ReviewContent cho viewer và ops cùng chứa 'thẻ đang chờ' và 'Hàng duyệt chỉ có ở máy thu'; DataFlowContent chạy như máy chủ (VERCEL=1, ops_heartbeat mang khối dataFlow theo khuôn fixture của dong-chay-cloud) cho viewer và ops cùng trả DataFlowView với props.flow.mode === 'cloud', JSON.stringify(props.flow) của hai vai bằng nhau và mọi postText === null; renderToStaticMarkup của hai phần tử bằng nhau; jsdom mở sheet bản ghi đầu từ lưới của mỗi vai → textContent chứa 'Bài gốc chỉ xem ở máy thu.' và không có blockquote; HTML của viewer bằng HTML của ops"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
