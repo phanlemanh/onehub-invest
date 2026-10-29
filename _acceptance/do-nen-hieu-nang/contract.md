@@ -5,7 +5,9 @@ slug: do-nen-hieu-nang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-27-do-nen-hieu-nang-design.md
 ---
 
@@ -55,5 +57,6 @@ ngưỡng để đưa vào luật. Hàng ĐO, không đặt luật. Khởi độ
 
 ## Notes
 
-- Câu hỏi chờ người ở Cổng Phạm vi (sổ quyết định, dòng `chi-nguoi`): thước «thời gian tải» (HTML phía server, hay LCP trong trình
-  duyệt) và danh sách 5 trang chính. Máy khuyên giữ HTML server + 5 trang hiện tại cho số nền này, LCP là hàng riêng.
+- Hỏi-1 ở Cổng Phạm vi (sổ quyết định, dòng `chi-nguoi`) đã trả lời 29/10 theo khuyến nghị: thước «thời gian tải» là HTML phía
+  server trên build prod, 20 lượt cho 5 trang `/vn`, `/vn/hanoi`, `/vn/hanoi/listings`, `/ops`, `/ops/data-flow`; LCP trong trình
+  duyệt là hàng riêng.
