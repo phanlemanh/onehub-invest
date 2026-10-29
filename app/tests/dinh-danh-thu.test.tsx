@@ -117,6 +117,8 @@ before(async () => {
     await admin.query(`CREATE SCHEMA "${S}"`)
     await dungBangPhien(admin, S)
     await admin.query(`CREATE TABLE "${S}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
+    // Nhánh cloud của trang (DD-AC-5) đọc «Luồng 7 ngày» từ listings đã đồng bộ — bảng rỗng cùng khuôn.
+    await admin.query(`CREATE TABLE "${S}".listings (LIKE public.listings)`)
     await admin.query(`SET search_path TO "${S}"`)
     try {
       for (const k of Object.keys(NGUOI) as Kieu[]) {
@@ -223,10 +225,12 @@ describe("DD-AC-2 hàm che", () => {
   })
 })
 
-// ---------- AC-3: API ở máy thu — ma trận bảy kiểu người gọi ----------
-type ApiMod = { xuLyThuThap: (req: Request, doc?: (days: number) => Promise<Record<string, unknown>>) => Promise<Response> }
+// ---------- AC-3: API ở máy thu — ma trận bảy kiểu người gọi, gọi GET thật của route.ts ----------
+type Doc = (days: number) => Promise<Record<string, unknown>>
+type ApiMod = { nguonThuThap: { doc: Doc } }
+type RouteMod = { GET: (req: Request) => Promise<Response> }
 const URL_API = "http://localhost:3462/api/v1/ops/collections?days=7"
-const docGia = async () => ({ generatedAt: "x", flow: [], funnel: null, jobs: [], rotation: null, zaloHealth: null, ...BO_DU_LIEU() })
+const docGia: Doc = async () => ({ generatedAt: "x", flow: [], funnel: null, jobs: [], rotation: null, zaloHealth: null, ...BO_DU_LIEU() })
 type O3 = { o: string; headers: Record<string, string>; thay: boolean | "403" }
 const MA_TRAN_3 = (): O3[] => [
   { o: "user", headers: { cookie: COOKIE.user! }, thay: "403" },
@@ -237,14 +241,21 @@ const MA_TRAN_3 = (): O3[] => [
   { o: "opsEmail", headers: { cookie: COOKIE.opsEmail! }, thay: true },
   { o: "bearer", headers: { authorization: `Bearer ${TOKEN}` }, thay: false },
 ]
-async function goi(api: ApiMod, headers: Record<string, string>, doc: () => Promise<Record<string, unknown>> = docGia) {
-  const res = await api.xuLyThuThap(new Request(URL_API, { headers }), doc)
-  return { status: res.status, text: await res.text() }
+/** Gọi GET của route (bản thật hay bản chép tạm) với nguồn dữ liệu `doc` đặt vào đúng module collections-api mà route ấy nạp. */
+async function goi(route: RouteMod, api: ApiMod, headers: Record<string, string>, doc: Doc = docGia) {
+  const goc = api.nguonThuThap.doc
+  api.nguonThuThap.doc = doc
+  try {
+    const res = await route.GET(new Request(URL_API, { headers }))
+    return { status: res.status, text: await res.text() }
+  } finally {
+    api.nguonThuThap.doc = goc
+  }
 }
-async function doMaTran3(api: ApiMod) {
+async function doMaTran3(route: RouteMod, api: ApiMod) {
   const dem: Record<string, { acc: number; allow: number }> = {}
   for (const c of MA_TRAN_3()) {
-    const r = await goi(api, c.headers)
+    const r = await goi(route, api, c.headers)
     if (c.thay === "403") {
       assert.equal(r.status, 403, `ô '${c.o}': phải 403`)
       continue
@@ -260,34 +271,32 @@ async function doMaTran3(api: ApiMod) {
   assert.deepEqual(dem.viewer, dem.ops, "số dòng viewer phải bằng ops")
   assert.deepEqual(dem.bearer, dem.ops, "số dòng bearer phải bằng ops")
 }
+const ROUTE_REL = "src/app/api/v1/ops/collections/route.ts"
+const thatSu = async () => ({
+  route: (await import("../src/app/api/v1/ops/collections/route")) as RouteMod,
+  api: (await import("../src/lib/collections-api")) as unknown as ApiMod,
+})
 
 describe("DD-AC-3 API máy thu theo người gọi", () => {
-  test("DD-AC-3 ma trận bảy kiểu người gọi", async () => {
+  test("DD-AC-3 ma trận bảy kiểu người gọi qua GET của route.ts", async () => {
     ready()
     assert.equal(MA_TRAN_3().length, 7)
-    const api = (await import("../src/lib/collections-api")) as ApiMod
-    await doMaTran3(api)
-    // Review Focus 1: bearer kèm cookie phiên ops — nhánh bearer thắng (kiemQuyen), nên vẫn bị che.
-    const kem = await goi(api, { authorization: `Bearer ${TOKEN}`, cookie: COOKIE.ops! })
+    const { route, api } = await thatSu()
+    await doMaTran3(route, api)
+    // Review Focus 1: bearer kèm cookie phiên ops — nhánh bearer thắng (kiemQuyen), nên vẫn bị che, vẫn 200 và đủ số dòng.
+    const kem = await goi(route, api, { authorization: `Bearer ${TOKEN}`, cookie: COOKIE.ops! })
+    assert.equal(kem.status, 200, "bearer kèm cookie ops: status")
+    assert.equal((JSON.parse(kem.text) as ReturnType<typeof BO_DU_LIEU>).zaloAccounts.length, 2, "bearer kèm cookie ops: số tài khoản")
     assert.doesNotMatch(kem.text, MA_CAY, "bearer kèm cookie ops vẫn phải bị che")
-    const boChe = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) => s.replace("xemDinhDanhThu(nguoi) ? payload : cheDinhDanhThu(payload)", "payload"))
-    await assert.rejects(doMaTran3(boChe), /ô '(viewer|bearer)'/, "đối chứng bỏ nhánh che phải đỏ ở ô viewer/bearer")
-    const theoActor = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) => s.replace("xemDinhDanhThu(nguoi) ? payload", "(nguoi === null || xemDinhDanhThu(nguoi)) ? payload"))
-    await assert.rejects(doMaTran3(theoActor), /ô 'bearer'/, "đối chứng coi bearer như vai ops phải đỏ ở ô bearer")
-  })
-  test("DD-AC-3b route.ts gọi traThuThap sau kiemQuyen", () => {
-    const loiRoute = (src: string) => {
-      const loi: string[] = []
-      if (!/kiemQuyen\(req, "ops\.read"\)[\s\S]*traThuThap\(req, q\.nguoi\)/.test(src)) loi.push("route.ts không gọi traThuThap(req, q.nguoi) sau kiemQuyen")
-      if (/Promise\.all|NextResponse\.json/.test(src)) loi.push("route.ts tự dựng payload")
-      return loi
-    }
-    const src = readFileSync(path.join(APP, "src/app/api/v1/ops/collections/route.ts"), "utf8")
-    assert.deepEqual(loiRoute(src), [])
-    assert.deepEqual(loiRoute(`export async function GET(req: Request) { return NextResponse.json(await Promise.all([])) }`), [
-      "route.ts không gọi traThuThap(req, q.nguoi) sau kiemQuyen",
-      "route.ts tự dựng payload",
-    ])
+    // Chiều đỏ 1: bản collections-api bỏ nhánh che, bản route chép tạm nạp đúng bản ấy.
+    const apiBoChe = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) => s.replace("xemDinhDanhThu(nguoi) ? payload : cheDinhDanhThu(payload)", "payload"))
+    const routeBoChe = await banChepTam<RouteMod>(ROUTE_REL, (s) => s.replace('"@/lib/collections-api"', JSON.stringify(CHEP[CHEP.length - 1])))
+    await assert.rejects(doMaTran3(routeBoChe, apiBoChe), /ô '(viewer|bearer)'/, "đối chứng bỏ nhánh che phải đỏ ở ô viewer/bearer")
+    // Chiều đỏ 2: bản route chép tạm coi bearer như vai ops.
+    const routeBearerOps = await banChepTam<RouteMod>(ROUTE_REL, (s) =>
+      s.replace("traThuThap(req, q.nguoi)", 'traThuThap(req, q.nguoi ?? ({ id: "b", email: "b@local.test", plan: "free", role: "ops" } as never))'),
+    )
+    await assert.rejects(doMaTran3(routeBearerOps, api), /ô 'bearer'/, "đối chứng coi bearer như vai ops phải đỏ ở ô bearer")
   })
 })
 
@@ -302,21 +311,31 @@ async function asCloud<T>(fn: () => Promise<T>): Promise<T> {
     else process.env.VERCEL = prev
   }
 }
+const SO_0 = { messages: 0, passed: 0, skipped: 0, accepted: 0, media: 0 }
 const BAN_TIN = () => ({
   pushedAt: new Date().toISOString(),
   zaloAccounts: [
     { accountId: "dd-acc-1", name: null, profile: "dd-prof-1", enabledGroups: ["dd-grp-1-1", "dd-grp-1-2"] },
     { accountId: "dd-acc-2", name: null, profile: "dd-prof-2", enabledGroups: ["dd-grp-2-1"] },
   ],
+  zaloGroups: [nhom("Nhóm DD một", "dd-acc-1")],
+  // Khoá cơ bản mà nhánh cloud của trang đọc (LocalFacts); số 0 — ca thử chỉ đo định danh.
+  jobs: [],
+  zaloFlow: {},
+  rotation: { cursor: 0, total: 0, next: [] },
+  funnel: { lastEventAt: null, today: SO_0, last7: SO_0 },
 })
-async function doCloud(api: ApiMod) {
+const ghiBanTin = () =>
+  admin.query(`INSERT INTO "${S}".ops_heartbeat (id, payload, pushed_at) VALUES ('primary', $1, now())
+    ON CONFLICT (id) DO UPDATE SET payload = EXCLUDED.payload, pushed_at = now()`, [JSON.stringify(BAN_TIN())])
+async function doCloud(route: RouteMod, api: ApiMod) {
   const { getZaloAccountsFromFacts, resetFactsCache } = await import("../src/lib/collections-queries")
   resetFactsCache()
-  const doc = async () => ({ generatedAt: "x", zaloAccounts: await getZaloAccountsFromFacts(), zaloAllowlist: null, zaloGroups: [] })
+  const doc: Doc = async () => ({ generatedAt: "x", zaloAccounts: await getZaloAccountsFromFacts(), zaloAllowlist: null, zaloGroups: [] })
   return asCloud(async () => {
     const out: Record<string, { text: string; j: { zaloAccounts: { profile: string | null; soNhomBat?: number }[] } }> = {}
     for (const [o, headers] of [["viewer", { cookie: COOKIE.viewer! }], ["bearer", { authorization: `Bearer ${TOKEN}` }], ["ops", { cookie: COOKIE.ops! }]] as const) {
-      const r = await goi(api, headers, doc)
+      const r = await goi(route, api, headers, doc)
       out[o] = { text: r.text, j: JSON.parse(r.text) }
     }
     for (const o of ["viewer", "bearer"]) {
@@ -330,18 +349,18 @@ async function doCloud(api: ApiMod) {
 }
 
 describe("DD-AC-4 API trên cloud", () => {
-  test("DD-AC-4 bản tin che theo người gọi", async () => {
+  test("DD-AC-4 bản tin che theo người gọi qua GET của route.ts", async () => {
     ready()
-    await admin.query(`INSERT INTO "${S}".ops_heartbeat (id, payload, pushed_at) VALUES ('primary', $1, now())
-      ON CONFLICT (id) DO UPDATE SET payload = EXCLUDED.payload`, [JSON.stringify(BAN_TIN())])
+    await ghiBanTin()
     const vercelTruoc = process.env.VERCEL
-    const api = (await import("../src/lib/collections-api")) as ApiMod
-    await doCloud(api)
+    const { route, api } = await thatSu()
+    await doCloud(route, api)
     assert.equal(process.env.VERCEL, vercelTruoc, "VERCEL phải trả về như cũ")
-    const sai = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) =>
+    const apiSai = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) =>
       s.replace("cheDinhDanhThu(payload)", "{ ...cheDinhDanhThu(payload), zaloAccounts: (payload.zaloAccounts ?? []).map((a) => ({ ...a, accountId: null, enabledGroups: [], soNhomBat: a.enabledGroups.length })) }"),
     )
-    await assert.rejects(doCloud(sai), /profile/, "đối chứng bỏ che profile phải đỏ")
+    const routeSai = await banChepTam<RouteMod>(ROUTE_REL, (s) => s.replace('"@/lib/collections-api"', JSON.stringify(CHEP[CHEP.length - 1])))
+    await assert.rejects(doCloud(routeSai, apiSai), /profile/, "đối chứng bỏ che profile phải đỏ")
   })
 })
 
@@ -358,19 +377,47 @@ async function bangNhom(props: CollectionsData) {
   return render(<ZaloGroupsTable rows={props.zaloGroups} allowlist={props.zaloAllowlist} roles={{}} />)
 }
 async function doTrang(mod: ContentMod) {
-  for (const cloud of [false, true]) {
-    const noi = cloud ? "cloud" : "máy thu"
-    const pv = await dungTrang(mod, NGUOI.viewer, cloud)
-    assert.doesNotMatch(JSON.stringify(pv), MA_CAY, `${noi} ô 'viewer': props trao client còn mã cấy`)
-    const po = await dungTrang(mod, NGUOI.ops, cloud)
-    assert.match(JSON.stringify(po), /dd-acc-1/, `${noi} ô 'ops': props phải còn mã tài khoản`)
+  for (const k of ["viewer", "ops"] as const) {
+    const p = await dungTrang(mod, NGUOI[k])
+    if (k === "viewer") assert.doesNotMatch(JSON.stringify(p), MA_CAY, `máy thu ô 'viewer': props trao client còn mã cấy`)
+    else assert.match(JSON.stringify(p), /dd-acc-1/, `máy thu ô 'ops': props phải còn mã tài khoản`)
   }
+}
+type DocMod = ContentMod & { docTrangThuThap: (nowMs: number) => Promise<CollectionsData> }
+/** Nhánh cloud THẬT: lược đồ tạm không có source_registry → docTrangThuThap đi nhánh cloud, đọc bản tin ops_heartbeat (cấy mã). */
+async function doTrangCloud(mod: DocMod) {
+  await ghiBanTin()
+  const { resetFactsCache } = await import("../src/lib/collections-queries")
+  return asCloud(async () => {
+    resetFactsCache()
+    const tho = await mod.docTrangThuThap(0)
+    assert.ok((tho as { cloud?: unknown }).cloud, "nhánh cloud phải dựng từ bản tin")
+    const pv = (await mod.CollectionsContent({ nowMs: 0, getUser: async () => NGUOI.viewer })).props
+    const po = (await mod.CollectionsContent({ nowMs: 0, getUser: async () => NGUOI.ops })).props
+    assert.doesNotMatch(JSON.stringify(pv), MA_CAY, "cloud ô 'viewer': props trao client còn mã cấy")
+    return { tho, po }
+  })
 }
 
 describe("DD-AC-5 trang Thu thập", () => {
   test("DD-AC-5 che trước khi trao client, chú thích theo vai", async () => {
-    const mod = (await import("../src/components/ops/collections/collections-content")) as unknown as ContentMod
+    ready()
+    const mod = (await import("../src/components/ops/collections/collections-content")) as unknown as DocMod
     await doTrang(mod)
+    // Nhánh cloud thật: trang cloud không mang mã tài khoản cho bất kỳ vai nào; ops nhận đúng dữ liệu thô như hôm nay.
+    const { tho, po } = await doTrangCloud(mod)
+    assert.doesNotMatch(JSON.stringify(tho), MA_CAY, "cloud: dữ liệu thô của trang không mang mã cấy")
+    assert.equal(JSON.stringify(po), JSON.stringify(tho), "cloud ô 'ops': props bằng dữ liệu thô (như hôm nay)")
+    // Đối chứng dương trên đường cloud thật: bản chép tạm cho nhánh cloud mang bảng nhóm của bản tin (có tài khoản giữ nhóm)
+    // → ops thấy dd-acc-1, viewer vẫn bị che; thêm bỏ dòng che → ô viewer đỏ.
+    const nhomCloud = (src: string) => src.replace("return { ...CLOUD_EMPTY, funnel,", "return { ...CLOUD_EMPTY, zaloGroups: await getZaloGroups(), funnel,")
+    const coNhom = await banChepTam<DocMod>("src/components/ops/collections/collections-content.tsx", nhomCloud)
+    const r = await doTrangCloud(coNhom)
+    assert.match(JSON.stringify(r.po), /dd-acc-1/, "đối chứng dương: ops trên cloud thấy tài khoản giữ nhóm của bản tin")
+    const coNhomBoChe = await banChepTam<DocMod>("src/components/ops/collections/collections-content.tsx", (src) =>
+      nhomCloud(src).replace("xemDinhDanhThu(user) ? data : cheDinhDanhThu(data)", "data"),
+    )
+    await assert.rejects(doTrangCloud(coNhomBoChe), /cloud ô 'viewer'/, "đối chứng bỏ dòng che trên đường cloud phải đỏ ở ô viewer")
     const rv = await bangNhom(await dungTrang(mod, NGUOI.viewer))
     const tv = rv.textContent ?? ""
     assert.ok(tv.includes("mã nhóm chỉ hiện cho vai Vận hành trở lên."), "viewer: câu chú thích mã nhóm")

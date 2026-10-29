@@ -152,14 +152,23 @@ describe("DD-AC-6 bản tin không mang mã nhóm (dinh-danh-tai-khoan-thu-theo-
     assert.equal(r.code, 0, r.stderr.slice(0, 800));
     assert.equal(r.posts, 1);
     const acc = r.payload.zaloAccounts;
-    assert.ok(acc.length >= 1, "phải dựng tài khoản từ cấu hình");
+    // Quan hệ tài khoản → số nhóm bật của chính nó, ghim trọn bảng (không chỉ «có một tài khoản 2 nhóm»).
+    assert.deepEqual(Object.fromEntries(acc.map((a) => [a.accountId, a.soNhomBat])), { default: 2, phu: 1 }, "bảng tài khoản → soNhomBat");
     for (const [i, a] of acc.entries()) {
       assert.deepEqual(a.enabledGroups, [], `zaloAccounts[${i}].enabledGroups phải rỗng`);
       assert.equal(typeof a.soNhomBat, "number", `zaloAccounts[${i}].soNhomBat`);
       assert.equal(a.name, null, `zaloAccounts[${i}].name`);
     }
-    assert.ok(acc.some((a) => a.soNhomBat === 2), `có tài khoản 2 nhóm bật: ${JSON.stringify(acc.map((a) => a.soNhomBat))}`);
     assert.ok(!JSON.stringify(r.payload.zaloAccounts).includes("dd-grp-"), "bản tin còn mã nhóm");
+  });
+  test("DD-AC-6 bản sao gửi cùng một số nhóm cho mọi tài khoản → bảng tài khoản đỏ", async () => {
+    const f = mutantPush("so-nhom-sai.mjs", (s) => s.replace("soNhomBat: nhomBat.length", "soNhomBat: 2"));
+    const r = await captureOpsFacts({ script: f, logs: LOGS(), home: { ".openclaw/openclaw.json": CAU_HINH } });
+    assert.equal(r.code, 0, r.stderr.slice(0, 800));
+    assert.throws(
+      () => assert.deepEqual(Object.fromEntries(r.payload.zaloAccounts.map((a) => [a.accountId, a.soNhomBat])), { default: 2, phu: 1 }, "bảng tài khoản → soNhomBat"),
+      /bảng tài khoản → soNhomBat/,
+    );
   });
   test("DD-AC-6 bản sao gửi mã nhóm → chặn, nêu zaloAccounts[0].enabledGroups", async () => {
     const f = mutantPush("ma-nhom.mjs", (s) => s.replace("enabledGroups: [], soNhomBat", "enabledGroups: nhomBat, soNhomBat"));
