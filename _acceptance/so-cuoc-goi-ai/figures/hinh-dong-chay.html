@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dòng chảy sổ cuộc gọi AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1440px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 1040px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · so-cuoc-goi-ai · Hỏi-1 · Hỏi-3</p>
+    <h1>Sổ cuộc gọi AI: ghi một chỗ, hiện ở hai nơi</h1>
+    <p class="sub">Dòng dữ liệu trái → phải · (a) trang ở máy thu, (b) trang trên cloud · AC-2 · AC-5 · AC-6 · AC-7</p>
+
+    <svg viewBox="0 0 1424 568" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="rgba(45,49,66,0.40)"/></marker>
+      </defs>
+
+      <rect x="0" y="0" width="1424" height="568" fill="#f5f5f5"/>
+
+      <!-- ===================== VÙNG ===================== -->
+      <rect x="24" y="40" width="1056" height="456" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.14)" stroke-width="0.8"/>
+      <rect x="36" y="44" width="200" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="40" y="56" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">MÁY THU · DB LOCAL :5433</text>
+
+      <rect x="1224" y="40" width="176" height="352" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.14)" stroke-width="0.8"/>
+      <rect x="1236" y="44" width="152" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="1240" y="56" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CLOUD · SUPABASE</text>
+
+      <!-- ===================== MŨI TÊN (vẽ trước khối) ===================== -->
+      <!-- Ba việc → runAgent -->
+      <line x1="184" y1="220" x2="240" y2="220" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- runAgent → sổ -->
+      <line x1="384" y1="220" x2="440" y2="220" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- sổ → hàm tổng hợp -->
+      <line x1="616" y1="220" x2="672" y2="220" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- hàm → (a) trang máy thu -->
+      <path d="M832,204 H856 Q864,204 864,196 V120 Q864,112 872,112 H896" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- hàm → đẩy số -->
+      <path d="M832,236 H856 Q864,236 864,244 V320 Q864,328 872,328 H896" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- đẩy số → ops_heartbeat (lên cloud, focal) -->
+      <line x1="1056" y1="328" x2="1240" y2="328" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <!-- ops_heartbeat → (b) trang cloud -->
+      <line x1="1312" y1="288" x2="1312" y2="152" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Kev-4B gate → sổ (ngoài vòng) -->
+      <line x1="528" y1="404" x2="528" y2="268" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-soft)"/>
+
+      <!-- ===================== KHỐI ===================== -->
+      <!-- N1 · Ba việc agent (input) -->
+      <rect x="40" y="172" width="144" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="172" width="144" height="96" rx="6" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <rect x="48" y="180" width="40" height="16" rx="2" fill="transparent" stroke="rgba(99,107,128,0.50)" stroke-width="0.8"/>
+      <text x="68" y="192" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">VIỆC</text>
+      <text x="112" y="212" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Ba việc agent</text>
+      <text x="112" y="228" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">judge-entity</text>
+      <text x="112" y="242" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">enrich-text</text>
+      <text x="112" y="256" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">smoke-echo</text>
+
+      <!-- N2 · runAgent (focal) -->
+      <rect x="240" y="172" width="144" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="240" y="172" width="144" height="96" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <rect x="248" y="180" width="60" height="16" rx="2" fill="transparent" stroke="rgba(235,108,54,0.50)" stroke-width="0.8"/>
+      <text x="278" y="192" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">RUNTIME</text>
+      <text x="376" y="192" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-2</text>
+      <text x="312" y="212" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Ghi sổ một chỗ</text>
+      <text x="312" y="228" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">runAgent</text>
+      <text x="312" y="242" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">fail-soft: sổ hỏng</text>
+      <text x="312" y="256" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">agent vẫn trả kết quả</text>
+
+      <!-- N3 · Sổ (store) -->
+      <rect x="440" y="172" width="176" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="440" y="172" width="176" height="96" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="448" y="180" width="64" height="16" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+      <text x="480" y="192" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DB LOCAL</text>
+      <text x="608" y="192" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">mig 052</text>
+      <text x="528" y="212" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Sổ cuộc gọi AI</text>
+      <text x="528" y="228" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ai_calls</text>
+      <text x="528" y="242" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ai_model_prices</text>
+      <text x="528" y="256" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">không vào sync-cloud</text>
+
+      <!-- N4 · Hàm tổng hợp -->
+      <rect x="672" y="172" width="160" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="672" y="172" width="160" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="680" y="180" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="698" y="192" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HÀM</text>
+      <text x="824" y="192" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-5</text>
+      <text x="752" y="212" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Hàm tổng hợp</text>
+      <text x="752" y="228" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ngày × việc × model</text>
+      <text x="752" y="242" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">token · chi phí · p50/p95</text>
+      <text x="752" y="256" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">lib/ai-calls.mjs</text>
+
+      <!-- N5 · (a) trang máy thu -->
+      <rect x="896" y="72" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="896" y="72" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="904" y="80" width="48" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="928" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TRANG</text>
+      <text x="1048" y="92" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-6</text>
+      <text x="976" y="114" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">(a) Ở máy thu</text>
+      <text x="976" y="130" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/ops/ai-calls</text>
+      <text x="976" y="144" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">đọc thẳng ai_calls</text>
+
+      <!-- N6 · đẩy số -->
+      <rect x="896" y="288" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="896" y="288" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="904" y="296" width="36" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="922" y="308" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ĐẨY</text>
+      <text x="1048" y="308" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-7</text>
+      <text x="976" y="330" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Khối aiCalls</text>
+      <text x="976" y="346" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">push-ops-facts</text>
+      <text x="976" y="360" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">qua bộ soát tầng A</text>
+
+      <!-- N7 · (b) trang cloud -->
+      <rect x="1240" y="72" width="144" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="1240" y="72" width="144" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="1248" y="80" width="48" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="1272" y="92" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TRANG</text>
+      <text x="1376" y="92" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">AC-7</text>
+      <text x="1312" y="114" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">(b) Trên Vercel</text>
+      <text x="1312" y="130" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">/ops/ai-calls</text>
+      <text x="1312" y="144" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">đọc khối aiCalls</text>
+
+      <!-- N8 · ops_heartbeat (store, cloud) -->
+      <rect x="1240" y="288" width="144" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="1240" y="288" width="144" height="80" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <rect x="1248" y="296" width="40" height="16" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+      <text x="1268" y="308" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">BẢNG</text>
+      <text x="1312" y="330" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nhịp ops</text>
+      <text x="1312" y="346" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">ops_heartbeat</text>
+      <text x="1312" y="360" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">chỉ nhóm 30 ngày</text>
+
+      <!-- N9 · Kev-4B gate (ngoài vòng) -->
+      <rect x="440" y="404" width="176" height="72" rx="6" fill="#f5f5f5"/>
+      <rect x="440" y="404" width="176" height="72" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <rect x="448" y="412" width="76" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="486" y="424" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">NGOÀI VÒNG</text>
+      <text x="528" y="446" fill="#4f5d75" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Kev-4B gate</text>
+      <text x="528" y="462" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">làn ZCode · GIAO riêng</text>
+
+      <!-- ===================== NHÃN MŨI TÊN (vẽ sau cùng) ===================== -->
+      <rect x="388" y="194" width="48" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="412" y="206" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">GHI SỔ</text>
+
+      <rect x="624" y="194" width="40" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="644" y="206" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ĐỌC</text>
+
+      <rect x="1320" y="212" width="32" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="1336" y="224" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ĐỌC</text>
+
+      <rect x="536" y="328" width="76" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="574" y="340" fill="#636b80" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">GHI SAU</text>
+
+      <!-- nhãn bắt buộc trên mũi tên lên cloud -->
+      <rect x="1088" y="288" width="128" height="32" rx="2" fill="#f5f5f5"/>
+      <text x="1152" y="300" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist', sans-serif" text-anchor="middle">chỉ số + tên việc/model,</text>
+      <text x="1152" y="314" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist', sans-serif" text-anchor="middle">không nội dung prompt</text>
+
+      <!-- ===================== CHÚ THÍCH ===================== -->
+      <line x1="24" y1="516" x2="1400" y2="516" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="544" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CHÚ THÍCH</text>
+
+      <line x1="136" y1="540" x2="168" y2="540" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="176" y="544" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">luồng trong vòng này</text>
+
+      <line x1="320" y1="540" x2="352" y2="540" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <text x="360" y="544" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">lên cloud: chỉ số, không chữ tự do</text>
+
+      <line x1="560" y1="540" x2="592" y2="540" stroke="rgba(45,49,66,0.40)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-soft)"/>
+      <text x="600" y="544" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">ngoài vòng · việc GIAO riêng, ghi cùng bảng sau</text>
+
+      <rect x="852" y="534" width="20" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="880" y="544" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">điểm ghi sổ duy nhất</text>
+
+      <rect x="1004" y="534" width="20" height="12" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="1032" y="544" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">bảng dữ liệu</text>
+
+      <rect x="1124" y="534" width="20" height="12" rx="2" fill="rgba(79,93,117,0.10)" stroke="#636b80" stroke-width="1"/>
+      <text x="1152" y="544" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">đầu vào</text>
+    </svg>
+  </div>
+</body>
+</html>
