@@ -1,10 +1,13 @@
-// Độ tươi của hai tệp sinh và bậc M1 giữ nguyên (hồ sơ dung-m2-song-song AC-8, AC-10).
+// Độ tươi của hai tệp sinh và bậc M1 giữ nguyên (hồ sơ dung-m2-song-song AC-8, AC-10; ca diff so cặp cố định —
+// hồ sơ m2-ac10-so-cap-co-dinh).
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { appendFileSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { GEN_REGISTRY, GEN_TOKENS, KIT, ROOT, copyRepo, requireKitFile, run } from './test-helpers.mjs';
+import {
+  BEFORE_FIX, CONFIG_PAIR, GEN_REGISTRY, GEN_TOKENS, HERE, KIT, ROOT, blobAt, copyRepo, kiemCapM2, requireKitFile, run,
+} from './test-helpers.mjs';
 
 const TOKENS = 'design/tokens.json';
 const REGISTRY = 'design/component-registry.json';
@@ -86,14 +89,75 @@ test('M2-AC-10 cặp đỏ: bản chép khai design_floor.tokens + registry → 
   assert.match(bac(dir), /bậc M2/);
 });
 
-test('M2-AC-10 diff config.yaml so merge-base origin/main chỉ thêm hai dòng executors của hồ sơ', () => {
-  const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8' }).trim();
-  const base = git('merge-base', 'HEAD', 'origin/main');
-  const lines = git('diff', '--unified=0', base, '--', '_acceptance/config.yaml').split('\n');
-  const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
-  const removed = lines.filter((l) => l.startsWith('-') && !l.startsWith('---'));
-  assert.deepEqual(removed, []);
-  assert.equal(added.length, 2, added.join('\n'));
+const DIFF_CASE = 'M2-AC-10 diff config.yaml cặp cố định 3b3a33e5^→3b3a33e5 chỉ thêm hai dòng executors';
+const OLD_DIFF_CASE = 'M2-AC-10 diff config.yaml so merge-base origin/main chỉ thêm hai dòng executors của hồ sơ';
+const CONFIG = '_acceptance/config.yaml';
+
+test(DIFF_CASE, () => {
+  const { added } = kiemCapM2(blobAt(`${CONFIG_PAIR}^`, CONFIG), blobAt(CONFIG_PAIR, CONFIG));
   assert.match(added[0], /^\+\s+design_floor_gen: /);
   assert.match(added[1], /^\+\s+design_floor_fresh: /);
+});
+
+test('M2-AC-10 hàm kiểm cặp: cặp thật qua; bản sau thêm hay bớt một dòng → lỗi nêu đúng dòng', () => {
+  const before = blobAt(`${CONFIG_PAIR}^`, CONFIG);
+  const after = blobAt(CONFIG_PAIR, CONFIG);
+  const ok = kiemCapM2(before, after);
+  assert.deepEqual(ok.removed, []);
+  assert.equal(ok.added.length, 2);
+  const extra = after.replace(/^(\s+design_floor_gen: .*)$/m, '$1\n    x: 1');
+  assert.notEqual(extra, after, 'đột biến thêm dòng không áp được');
+  assert.throws(() => kiemCapM2(before, extra), /cặp config thêm 3 dòng.*\+    x: 1/);
+  const dropped = after.replace(/^\s+design_floor_fresh: .*\n/m, '');
+  assert.notEqual(dropped, after, 'đột biến bớt dòng không áp được');
+  assert.throws(() => kiemCapM2(before, dropped), /cặp config thêm 1 dòng, chờ đúng design_floor_gen, design_floor_fresh/);
+  const lost = after.replace(/^.*\n/, '');
+  assert.notEqual(lost, after, 'đột biến bớt dòng có sẵn không áp được');
+  assert.throws(() => kiemCapM2(before, lost), /cặp config bớt dòng: -/);
+});
+
+test('M2-AC-10 thiếu commit ghim: blobAt đỏ có tên và gợi ý; commit thật thì trả blob', () => {
+  const zero = '0'.repeat(40);
+  assert.throws(() => blobAt(zero, CONFIG), (e) => e.message.includes(`thiếu commit ghim ${zero}`) && e.message.includes('git fetch --unshallow'));
+  assert.throws(() => blobAt(`${zero}^`, CONFIG), new RegExp(`thiếu commit ghim ${zero}`));
+  assert.match(blobAt(CONFIG_PAIR, CONFIG), /design_floor_gen/);
+});
+
+/** Thân một ca `test('<tên>'` hay `test(<HẰNG>` tới dòng `});` đóng đầu tiên ở cột 0. */
+function caseBody(src, head) {
+  const i = src.indexOf(head);
+  assert.ok(i >= 0, `không thấy ca ${head}`);
+  return src.slice(i, src.indexOf('\n});\n', i) + 4);
+}
+
+test('M2-AC-10 ca diff không đọc cây hay merge-base: thân ca chỉ gọi kiemCapM2 trên hai blob ghim', () => {
+  const body = caseBody(readFileSync(new URL(import.meta.url), 'utf8'), 'test(DIFF_CASE');
+  for (const banned of ['merge-base', 'origin/main', 'readFileSync', 'ROOT']) assert.ok(!body.includes(banned), banned);
+  assert.match(body, /kiemCapM2\(blobAt\(`\$\{CONFIG_PAIR\}\^`, CONFIG\), blobAt\(CONFIG_PAIR, CONFIG\)\)/);
+});
+
+const TEST_FILES = ['fresh.test.mjs', 'gen-tokens.test.mjs', 'gen-registry.test.mjs', 'reuse-plan.test.mjs'];
+/** Tên ca thô (giữ nguyên `${…}` của tên động) của mọi lời gọi test( trong một tệp. */
+const caseNames = (src) => [...src.matchAll(/\btest\(\s*(['`])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]);
+/** Tên ca ở bản trước sửa (trừ ca diff được đổi) mà tập hiện tại không còn. */
+function lostCases(beforeNames, currentNames) {
+  const now = new Set(currentNames);
+  return beforeNames.filter((n) => n !== OLD_DIFF_CASE && !now.has(n));
+}
+
+test('M2-AC-10 không hạ thước: mọi ca của bản 98757b5f còn (trừ đúng ca diff đổi tên), hai ca M2-AC-10 còn lại không đổi thân', () => {
+  const before = TEST_FILES.flatMap((f) => caseNames(blobAt(BEFORE_FIX, `scripts/design-floor/${f}`)));
+  assert.ok(before.includes(OLD_DIFF_CASE), 'bản trước sửa phải có ca diff cũ');
+  assert.ok(before.length >= 20, `đếm ca bản trước: ${before.length}`);
+  const current = readdirSync(HERE).filter((f) => f.endsWith('.test.mjs'))
+    .flatMap((f) => caseNames(readFileSync(path.join(HERE, f), 'utf8')));
+  assert.deepEqual(lostCases(before, current), []);
+  assert.ok(!current.includes(OLD_DIFF_CASE));
+  const oldSrc = blobAt(BEFORE_FIX, 'scripts/design-floor/fresh.test.mjs');
+  const nowSrc = readFileSync(new URL(import.meta.url), 'utf8');
+  for (const name of ['M2-AC-10 config không khai design_floor', 'M2-AC-10 cặp đỏ: bản chép khai design_floor']) {
+    assert.equal(caseBody(nowSrc, `test('${name}`), caseBody(oldSrc, `test('${name}`), name);
+  }
+  const drop = current.filter((n) => n !== before[0]);
+  assert.deepEqual(lostCases(before, drop), [before[0]], 'thước phải gọi tên ca bị mất');
 });
