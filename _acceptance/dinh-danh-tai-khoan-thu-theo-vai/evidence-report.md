@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: b4b555dd9810b2b4cb9223563bf93483ae238456
+verified_commit: 5dc721b8a53c6bc1e5d4d0170cba8806f1535a4f
 human_signoff: Mạnh 2026-10-29
 ---
 
@@ -179,3 +179,7 @@ none — every multi-run eval is uniform
 
 Round 1: mọi eval máy và ui-check đều PASS; baseline không đo được (hạ tầng BLOCKED); các phát hiện của bước rà soát nằm ở review-findings.md.
 Round 2: E1–E8 và E10 chạy lại trên b4b555dd, đều PASS; E9 mang từ round 1 (delta không chạm paths của eval); baseline vẫn không đo được (hạ tầng BLOCKED); các phát hiện mới nằm ở review-findings.md.
+
+### Re-pin lần 1 — 2026-10-29, do hoá cũ do gộp origin/main 82ae8c77 (app/tests/listings-browse.test.tsx)
+run_id: repin-20261029T121720Z-91667
+sha: 5dc721b8a53c6bc1e5d4d0170cba8806f1535a4f · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng · ngoài làn máy: E9 · AC không có chốt máy: AC-9
