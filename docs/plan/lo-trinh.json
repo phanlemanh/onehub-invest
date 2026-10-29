@@ -239,24 +239,6 @@
       "ghi_chu": "23/10 Mạnh chốt thêm một nguồn danh mục cần đăng nhập; ZCode kiểm ToS ở bước 0 (claudedp-2310-25) trước khi thu. Gọi nguồn bằng mã S0x khi cấp, không ghi tên thật (ADR-0007)."
     },
     {
-      "ma": "PL11",
-      "cau_giao": "asset_nodes có cấp trục và căn cho Ocean Park 1, mỗi dòng mang bậc nguồn (xác minh · suy ra mạnh · một lời khai)",
-      "vai": "nen",
-      "tieu_chi": 9,
-      "vi_sao": "F2: danh mục cũng có bậc; trục là bản ghi gốc tạm khi môi giới che tầng.",
-      "hang": "T3",
-      "dung_tren": [
-        "PL10"
-      ],
-      "slug": "danh-muc-truc-can",
-      "bat_khi": "Nạp lại danh mục hai lần không nhân dòng; dòng suy ra mạnh có ≥ 3 môi giới độc lập",
-      "nhom": "danh-muc",
-      "dot": "phan-loai-2310",
-      "phu": [
-        "C1.5"
-      ]
-    },
-    {
       "ma": "PL12",
       "cau_giao": "Người vận hành khai mọi đơn vị thu (nhóm S03, nhóm S05, vùng S06, market S02) trong một sổ trên /ops, mỗi đơn vị có mã ổn định dạng S03-N012, thị trường, dự án nhóm chuyên và trạng thái vòng đời",
       "vai": "Người vận hành",
@@ -282,8 +264,7 @@
       "vi_sao": "F1: môi giới che tầng (LD2xx11), 52% tin che số giá, 42% ghi «thu về / NET».",
       "hang": "T2",
       "dung_tren": [
-        "PL6",
-        "PL11"
+        "PL6"
       ],
       "slug": "doc-ma-can-gia-khoang",
       "bat_khi": "Trên tập test của lát: cận dưới Wilson đạt ngưỡng F3 nhóm A cho toà/dự án",
@@ -291,7 +272,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "C1.6"
-      ]
+      ],
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1."
     },
     {
       "ma": "PL14",
@@ -346,6 +328,30 @@
       "phu": [
         "C2.3"
       ]
+    },
+    {
+      "ma": "DB2b",
+      "cau_giao": "Mỗi tin có người đăng gắn với một người trong danh bạ Người của đúng nguồn ấy qua vai «người đăng» là một phát biểu có bằng chứng, và nạp lại không nhân người",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "ADR-0016 §8, §10 Đợt 2b: vai trò là quan hệ có phát biểu, không phải thuộc tính; bảng sellers cũ một vai, không bí danh. Điều kiện PL15 đã gộp nên sẵn sàng; song song Đợt 1.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL15"
+      ],
+      "slug": "ho-nguoi-theo-nguon",
+      "bat_khi": "Nạp lại mọi nguồn hai lần: số người và số vai không đổi; mọi dòng sellers cũ có người tương ứng kèm bí danh nguồn",
+      "nhom": "danh-ba",
+      "dot": "danh-ba-2910",
+      "phu": [
+        "DB2b"
+      ],
+      "vung": [
+        "db/migrations/**",
+        "pipeline/sync-cloud.mjs",
+        "pipeline/mappings.yaml"
+      ],
+      "ghi_chu": "Khung chung ADR-0016 §3 (khoá mờ tiền tố, trạng thái, bảng bí danh và sự kiện dùng chung) do hàng danh bạ mở trước dựng; DB2b sẵn sàng trước DB1 nên thường là hàng này — chốt ở Cổng Phạm vi. Không gộp người liên nguồn (Đợt 3). Vai suy luận chỉ ở /ops, không vào cột. Người bán là tầng C (ADR-0007 mục 9); người dùng app và tài khoản thu (tầng A) không vào danh bạ. Migration xin số ở phiên điều phối liên làn."
     },
     {
       "ma": "PL17",
@@ -477,41 +483,21 @@
       ]
     },
     {
-      "ma": "PL24",
-      "cau_giao": "resolve-properties dựng căn với stable_key không chứa giá và loại, đọc must_link/cannot_link, và đưa tin P1 vào căn",
-      "vai": "nen",
-      "tieu_chi": 10,
-      "vi_sao": "L03/L11: 45 tin gắn 2 căn, 39 căn mồ côi, 0 tin P1 trong properties, «Cùng căn» không hiệu lực.",
-      "hang": "T3",
-      "dung_tren": [
-        "PL14",
-        "PL16"
-      ],
-      "slug": "resolve-can-ben",
-      "bat_khi": "Đổi giá một tin: không sinh căn mới; quyết định Cùng căn giữ qua resolve",
-      "nhom": "can-nha",
-      "dot": "phan-loai-2310",
-      "phu": [
-        "C3.2a"
-      ]
-    },
-    {
       "ma": "PL25",
       "cau_giao": "judge-entity áp ngưỡng bằng code, LLM chỉ giải thích; mọi lần chấm lưu model và trace; ứng viên sinh thẻ ghép căn",
       "vai": "nen",
       "tieu_chi": 9,
       "vi_sao": "L14: luật xác định nằm trong prompt; 134 cặp needs_llm không có thẻ.",
       "hang": "T2",
-      "dung_tren": [
-        "PL24"
-      ],
+      "dung_tren": [],
       "slug": "judge-nguong-la-code",
       "bat_khi": "Mọi ứng viên needs_llm có thẻ; không prompt nào chứa ngưỡng số",
       "nhom": "can-nha",
       "dot": "phan-loai-2310",
       "phu": [
         "C3.2b"
-      ]
+      ],
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL24 khỏi dung_tren (PL24 sang mục chờ, DB2 thay). Hàng chạy trên ứng viên của resolver hiện tại; thẻ ghép căn nó sinh là một nguồn bằng chứng gộp vật thể của DB2 (ADR-0016 §6)."
     },
     {
       "ma": "PL26",
@@ -2662,7 +2648,7 @@
       "phu": [
         "TD10"
       ],
-      "mo_lai_khi": "Mạnh quyết, PL11 và PL23 giao xong"
+      "mo_lai_khi": "Mạnh quyết, DB1 (thay PL11) và PL23 giao xong"
     },
     {
       "ma": "SH5",
@@ -2672,7 +2658,7 @@
       "phu": [
         "TD24"
       ],
-      "mo_lai_khi": "PL11 giao xong và lát mở rộng ngang"
+      "mo_lai_khi": "DB1 (thay PL11) giao xong và lát mở rộng ngang"
     },
     {
       "ma": "SH6",
@@ -2682,7 +2668,7 @@
       "phu": [
         "TD18"
       ],
-      "mo_lai_khi": "PL20 và PL24 giao xong"
+      "mo_lai_khi": "PL20 và DB2 (thay PL24) giao xong"
     },
     {
       "ma": "SH7",
@@ -2762,7 +2748,7 @@
       "phu": [
         "TD29"
       ],
-      "mo_lai_khi": "Mạnh quyết, PL24 và PL27 giao xong"
+      "mo_lai_khi": "Mạnh quyết, DB2 (thay PL24) và PL27 giao xong"
     },
     {
       "ma": "KH-KV3",
@@ -2814,6 +2800,46 @@
         "TV17"
       ],
       "mo_lai_khi": "TV6, TV7 và TV13 giao xong"
+    },
+    {
+      "ma": "PL11",
+      "dot": "phan-loai-2310",
+      "cau_giao": "asset_nodes có cấp trục và căn cho Ocean Park 1, mỗi dòng mang bậc nguồn (xác minh · suy ra mạnh · một lời khai)",
+      "ly_do": "ADR-0016 §10 Đợt 1 thay hàng này (Mạnh duyệt ADR 27/10): không kéo asset_nodes xuống trục/căn; danh bạ toà · trục · căn gánh C1.5. Chuyển khỏi hàng ở lượt cắt danh-ba-2910.",
+      "phu": [
+        "C1.5"
+      ],
+      "mo_lai_khi": "Không mở riêng: C1.5 giao cùng DB1 (đợt danh-ba-2910)"
+    },
+    {
+      "ma": "PL24",
+      "dot": "phan-loai-2310",
+      "cau_giao": "resolve-properties dựng căn với stable_key không chứa giá và loại, đọc must_link/cannot_link, và đưa tin P1 vào căn",
+      "ly_do": "ADR-0016 §10 Đợt 2 thay hàng này (Mạnh duyệt ADR 27/10): resolver vật thể thay resolve-properties.mjs, properties thành view; danh bạ gánh C3.2a. Chuyển khỏi hàng ở lượt cắt danh-ba-2910.",
+      "phu": [
+        "C3.2a"
+      ],
+      "mo_lai_khi": "Không mở riêng: C3.2a giao cùng DB2 (đợt danh-ba-2910)"
+    },
+    {
+      "ma": "DB1",
+      "dot": "danh-ba-2910",
+      "cau_giao": "Danh bạ có toà · trục · căn Ocean Park 1 dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà",
+      "ly_do": "Luật 11 (ADR-0016 §10): chỉ dựng cấp có dữ liệu lấp — stg_s08_inventory chưa có dòng vì ZC8 chưa giao; PL14, PL15 đã gộp. Thay PL11.",
+      "phu": [
+        "DB1"
+      ],
+      "mo_lai_khi": "ZC8 giao và stg_s08_inventory trên DB máy thu có dòng Ocean Park 1 — cắt thành hàng T3 và ước cỡ lúc ấy (dùng phát biểu PL13 nếu đã giao)"
+    },
+    {
+      "ma": "DB2",
+      "dot": "danh-ba-2910",
+      "cau_giao": "Nhà phố, đất thành vật thể tạm và chỉ gộp khi có bằng chứng; tin P1 và listing thuê ngắn hạn gắn vật thể ở mức sâu nhất biết được; properties thành view trên danh bạ để các tệp đang đọc không gãy",
+      "ly_do": "ADR-0016 §10: Đợt 2 đứng sau Đợt 1 (cần khung chung và bộ dựng vật thể của DB1). Thay PL24.",
+      "phu": [
+        "DB2"
+      ],
+      "mo_lai_khi": "DB1 đã cắt thành hàng và giao"
     }
   ],
   "da_bac": []
