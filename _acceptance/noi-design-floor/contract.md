@@ -5,7 +5,7 @@ slug: noi-design-floor
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [tooling]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-29T10:44:14Z
 design_doc: docs/superpowers/specs/2026-10-29-noi-design-floor-design.md
@@ -52,3 +52,9 @@ Bỏ quét không gian tiêu chí — xem sổ quyết định dòng «bỏ cove
 - OOS-1: Bật bậc M2 (`design_floor.tokens`/`registry`) — sau mười vòng DO1 ở M1 (lời Mạnh qua phiên MBP).
 - OOS-2: Sửa bộ đọc glob của kit để nhận `!`/`{a,b}` (K1) — việc của kit, gửi qua kênh kit.
 - OOS-3: Đếm hay ghi vòng DO1 — bắt đầu sau khi hàng này gộp; vòng này không phải vòng DO1.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: Glob app/src/components/*.tsx chỉ nhận tệp .tsx đặt thẳng trong components; tệp .ts hay .css mới đặt ở đó nằm ngoài sàn S4, và trên CI không ca nào báo vì ca so tập tệp cần kit.
+  - Ngoài-3: Cùng chỗ hở với Ngoài-1 — thước design-floor-vung chỉ duyệt thư mục con, không duyệt tệp nằm thẳng trong components.

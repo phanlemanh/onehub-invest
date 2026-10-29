@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 6ba0950bae45acc8e22612c0952f49702994e807
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: noi-design-floor
