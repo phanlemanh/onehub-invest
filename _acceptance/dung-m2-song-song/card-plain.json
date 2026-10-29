@@ -1,0 +1,95 @@
+{
+  "feature_plain": "Kho có sẵn bảng token màu và danh mục thành phần theo khuôn của bộ kiểm thiết kế, cùng luật buộc mỗi việc giao diện viết kế hoạch dùng lại trước khi dựng — chưa bật bậc kiểm M2.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ chuyển trọn 130 biến màu, bo góc, phông của giao diện thành bảng token, màu tối đi kèm đúng màu sáng, không biến nào bị bỏ."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ để token trỏ token khác viết thành tham chiếu, còn biến của thư viện ngoài giữ nguyên chữ."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ dừng và nêu đúng biến hỏng khi nguồn màu sai khuôn, không ghi bảng nửa vời."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ liệt mọi thành phần đã cài (shadcn, ReUI, logo) kèm các biến thể dùng được."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ đưa mọi block đã chuyển thể trong danh mục làm khuôn trang, và component tự viết của app làm thành phần dùng lại."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ dừng và nói thiếu gì khi danh mục hay thư mục thành phần vắng."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ để bộ kiểm kế hoạch dùng lại của kit đọc được cả hai tệp: kế hoạch đúng ra sạch, tên bịa bị bắt."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ có lệnh báo khi hai tệp sinh ra cũ hơn nguồn."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ buộc mọi việc giao diện viết kế hoạch dùng lại ở bước thiết kế, có ví dụ mẫu qua được bộ kiểm."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ giữ kho ở bậc M1 — cấu hình chỉ thêm hai lệnh chạy test."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG bật bậc M2 ở vòng này — để hàng riêng sau 10 vòng thí điểm M1."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG điền mã HTML và token đã dùng cho từng thành phần — kit nhận để trống."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG đổi tên thành phần sang mẫu của Design OS."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG viết tệp khuôn trang riêng — khuôn trang lấy từ danh mục block."
+    },
+    {
+      "id": "OOS-5",
+      "p": "KHÔNG nối test mới vào CI ở vòng này."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Không quét hình thái vì ý định đã chốt phạm vi; trục tự kê: nguồn token (AC-1 tới AC-3), nguồn thành phần (AC-4 tới AC-6), bộ kiểm của kit qua bảy bậc (AC-7), độ tươi (AC-8), luật skill (AC-9), giữ bậc M1 (AC-10)."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Hai lựa chọn (cách đặt tên, block nào là khuôn trang) ghi căn cứ chưa đủ sức quyết. Đã thay: tên theo ý định đã duyệt; khuôn trang theo định nghĩa «Block đích» của bản đồ trang — nên ví dụ c-* cũng là khuôn trang."
+    },
+    {
+      "i": 1,
+      "p": "Lý do không ghi cầu nối Tailwind thành token chưa chặt. Đã thay bằng ràng buộc thật: bộ kiểm đặt tên biến CSS từ đường token, nên ghi thêm sẽ đẻ biến không tồn tại."
+    },
+    {
+      "i": 2,
+      "p": "Phép đo màu tối chỉ đếm. Đã thêm bảng đối chiếu đủ 41 biến và ca tráo màu tối phải đỏ."
+    },
+    {
+      "i": 3,
+      "p": "Phép đo biến thể chỉ soi một nút. Đã thêm bảng viết tay cho badge, nút, item, bộ lọc và chạy từng biến thể qua bộ kiểm."
+    },
+    {
+      "i": 4,
+      "p": "Chưa đo ô mô tả (chỗ bản chuyển thể nằm). Đã thêm số dòng từng bảng đếm trước, mô tả viết tay và ca mô tả rỗng phải đỏ."
+    }
+  ]
+}
