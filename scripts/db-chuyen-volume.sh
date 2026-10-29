@@ -25,8 +25,15 @@ CUA_SO_PHUT=20
 
 # Bảng loại khỏi phép so «bảng chính» lúc chuyển thật: bảng mà job 5/15 phút ghi trong lúc DB ngừng — lệch số dòng ở
 # đây không phải mất dữ liệu (tar --diff là lưới từng byte). Mỗi dòng "<schema.bảng>|<lý do>". Không bao giờ chứa bảng
-# canonical (db-volume-check.sh static canh). Danh sách thật lập ở việc 7 của kế hoạch, đo từ pg_stat_user_tables.
+# canonical (db-volume-check.sh static canh). Lập 29/10 từ mã các job 5/15 phút — số đo pg_stat_user_tables không dùng
+# được: lượt chấm của dãy khác chạy test trong giao dịch ROLLBACK vẫn tăng n_tup_*. Lúc chuyển P2 cầm khoá s4 nên chỉ
+# còn job launchd và app dev ghi.
 BANG_LOAI_TRU=(
+  "public.data_flow_snapshot|cloud-sync 15 phút — refresh-data-flow (600_data_flow.sql) DELETE + INSERT"
+  "public.ops_audit|cloud-sync 15 phút — ha-bung-het-han ghi nhật ký"
+  "public.source_groups|cloud-sync 15 phút — ha-bung-het-han hạ cờ bùng hết hạn"
+  "public.sessions|app dev :3456 — phiên đăng nhập /ops"
+  "public.users|app dev :3456 — cập nhật lần đăng nhập"
 )
 
 MODE=kiem; BAN=""
