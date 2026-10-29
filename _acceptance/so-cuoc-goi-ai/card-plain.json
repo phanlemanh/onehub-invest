@@ -1,17 +1,1 @@
-{"feature_plain":"Người vận hành mở /ops/ai-calls và thấy mỗi ngày, mỗi việc, mỗi model của agent đã gọi AI bao nhiêu lần, tốn bao nhiêu token, chậm bao lâu và tốn bao nhiêu tiền — để chọn model theo số đo.",
-"will_do":[
-{"id":"AC-1","p":"Sẽ có hai bảng mới ở DB máy thu: sổ cuộc gọi AI và bảng đơn giá model (Qwen local giá 0); áp lại lần hai không lỗi."},
-{"id":"AC-2","p":"Sẽ ghi một dòng sổ cho mỗi lượt agent chạy xong: việc, model, token vào/ra, độ trễ — cả khi agent chạy thật không qua test."},
-{"id":"AC-3","p":"Sẽ ghi một dòng «lỗi» khi model hỏng, chỉ ghi tên loại lỗi, không chép nội dung prompt; agent vẫn báo đúng lỗi gốc."},
-{"id":"AC-4","p":"Sẽ không làm hỏng việc của agent khi ghi sổ thất bại — chỉ để lại một dòng trong trace."},
-{"id":"AC-5","p":"Sẽ tính đúng số cuộc, số lỗi, token, chi phí và độ trễ p50/p95 theo ngày giờ Việt Nam × việc × model; model chưa có giá hiện trống, không hiện 0 giả."},
-{"id":"AC-6","p":"Sẽ có trang /ops/ai-calls ở máy thu với ba ô tóm tắt và bảng tổng hợp khớp số tính."},
-{"id":"AC-7","p":"Sẽ đẩy bảng tổng hợp (chỉ số, tên việc, tên model — không nội dung prompt) lên cloud để /ops trên Vercel cũng thấy; số cũ hoặc chưa đẩy thì báo rõ."},
-{"id":"AC-8","p":"Sẽ có trạng thái trống có hướng dẫn chạy thử, lỗi có nút Thử lại, và khung chờ khi đang tải."},
-{"id":"AC-9","p":"Sẽ có mục «Cuộc gọi AI» trong menu Ops nhóm Giám sát, với địa chỉ ai-calls đã đăng ký trong từ điển."},
-{"id":"AC-10","p":"Sẽ chỉ đổi tệp của làn Claude; không chạm collector, bước nhập liệu hay lịch chạy của làn ZCode."}],
-"wont_do":[
-{"id":"OOS-1","p":"KHÔNG đo Kev-4B gate ở vòng này — đề xuất giao ZCode một việc riêng ghi cùng sổ."},
-{"id":"OOS-2","p":"KHÔNG làm AI Gateway, ngân sách, dự phòng, bộ đánh giá nhiều model hay chi phí đưa căn lên bậc."},
-{"id":"OOS-3","p":"KHÔNG làm sổ riêng cho trợ lý nhà đầu tư (chỉ chừa cột phân loại khách)."},
-{"id":"OOS-4","p":"KHÔNG ghi nội dung prompt hay đầu ra vào sổ."}]}
+{"feature_plain":"Người vận hành mở trang Cuộc gọi AI trong cổng Ops và thấy mỗi ngày AI được gọi bao nhiêu lần, tốn bao nhiêu token, chậm bao lâu và tốn bao nhiêu tiền, chia theo việc và theo mô hình.","scope_plain":"Bản này chỉ sổ cuộc gọi của agent phía Claude; các mục dưới để vòng sau.","decisions":[]}
