@@ -5,7 +5,7 @@ slug: do-nen-hieu-nang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-27-do-nen-hieu-nang-design.md

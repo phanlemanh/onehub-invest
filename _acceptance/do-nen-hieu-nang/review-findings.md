@@ -1,24 +1,28 @@
+# Review findings: do-nen-hieu-nang (round 3)
+
 ## Trong hợp đồng
 
-- **Commit s4-args.json làm đầu dò AC-5 (E5) đỏ tại HEAD: khong-luat.mjs thoát khác 0 với dòng «LO TEN NGUON ... (6 cho)»**
-  file: `_acceptance/do-nen-hieu-nang/s4-args.json:337`
-  severity: high
-  source: bugs
-  AC: AC-5
-  detail: Commit 7ec916ce thêm `_acceptance/do-nen-hieu-nang/s4-args.json`, một artefact của kit ánh xạ đường dẫn tệp test sang mã băm. Tệp mới trên nhánh nên mọi dòng đều tính là dòng thêm, và `khong-luat.mjs` quét mọi tệp nhánh đổi (`doiTrenNhanh`, dòng 38). Chạy `node _acceptance/do-nen-hieu-nang/probes/khong-luat.mjs` tại HEAD 7ec916ce in `LO TEN NGUON: _acceptance/do-nen-hieu-nang/s4-args.json (6 cho)`, thoát khác 0 và không có dòng «KHONG LUAT OK». Sáu chỗ trúng nằm ở các đường dẫn repo có tên chứa tên nguồn thật: dòng 337 (S03), 352 (S01), 353 (S03), 355 (S06), 402 (S03), 403 (S03). E5 từng được ghi PASS trong evidence-report.md và run-log.jsonl, nhưng chỉ cho sha cb8efcf3, trước khi s4-args.json được commit; tại cây hiện tại eval đỏ. Các đường dẫn này vốn đã công khai trong repo nên không phải lộ tầng A mới. Đây là xung đột phạm vi: đầu dò coi artefact kit có liệt kê đường dẫn repo là rò rỉ. Tệp chưa commit `s4-args-r2.json` có cùng 6 chỗ trúng (dòng 506, 521, 522, 524, 571, 572) nên commit nó cũng giữ E5 đỏ. Hướng xử lý: che tên hoặc để các artefact này ngoài nhánh, hoặc cho đầu dò loại trừ chúng có chủ ý kèm lý do ghi rõ. Sau đó chạy lại E5 ở HEAD mới.
+(không có)
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **do.mjs tạo tài khoản admin và reset pg_stat_statements mà không qua rào chỉ-DB-local của dev-ops-account (r1 · tệp đã đổi)**
+- **Đã bỏ theo dõi s4-args*.json nhưng không gitignore: lần `git add -A` sau sẽ commit lại và E5 lại đỏ**
+  Người dùng thấy gì: Ba tệp tham số của vòng soát vẫn nằm trên đĩa và chưa được chặn khỏi git. Nếu ai đó lỡ commit toàn bộ thư mục, các đường dẫn chứa tên nguồn thật có thể lọt lên nhánh, và cổng kiểm sẽ báo đỏ trở lại.
+  Căn cứ: Chưa có gì bị lộ, và nếu lỡ commit thì cổng kiểm tên nguồn thật sẽ chặn trước khi gộp, nên hậu quả nhẹ và tự phát hiện được; ghi lại để người làm sau biết là đủ.
+  file: `_acceptance/do-nen-hieu-nang/s4-args.json`
+  severity: medium
+  Đề xuất: known-limits
+
+- **do.mjs tạo tài khoản admin và reset pg_stat_statements mà không qua rào chỉ-DB-local của dev-ops-account (r1)**
   Người dùng thấy gì: Nếu máy đang trỏ nhầm vào cơ sở dữ liệu thật trên cloud, lệnh đo sẽ tạo một tài khoản quản trị thử và xoá bộ đếm thống kê ở đó.
   Căn cứ: Hậu quả nặng nếu xảy ra vì ghi nhầm vào dữ liệu thật, dù chỉ khi người chạy tự đặt sai biến môi trường; sửa rẻ nhưng nằm ngoài phạm vi hàng đo này nên cần một việc riêng.
   file: `scripts/do-nen-hieu-nang/do.mjs`
   severity: high
   Đề xuất: new-contract
 
-- **CREATE EXTENSION pg_stat_statements chạy từ script trên DB dùng chung, ngoài migration (r1 · tệp đã đổi)**
+- **CREATE EXTENSION pg_stat_statements chạy từ script trên DB dùng chung, ngoài migration (r1)**
   Người dùng thấy gì: Một cơ sở dữ liệu dựng mới từ các bản migration sẽ chưa có bộ đếm thống kê truy vấn cho đến khi chạy lệnh đo hoặc bật tay.
   Căn cứ: Hậu quả nhẹ: chỉ ảnh hưởng máy dựng mới và người chạy thấy ngay là thiếu, tự bật lại được; ghi vào giới hạn đã biết là đủ.
   file: `scripts/do-nen-hieu-nang/do.mjs`
@@ -32,7 +36,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-- **Lỗi của next start bị nuốt: svLog gom nhưng không bao giờ in, và không kiểm tiến trình con còn sống hay đúng là server vừa spawn (r1 · tệp đã đổi)**
+- **Lỗi của next start bị nuốt: svLog gom nhưng không bao giờ in, và không kiểm tiến trình con còn sống hay đúng là server vừa spawn (r1)**
   Người dùng thấy gì: Khi máy chủ thử không khởi động được, người chạy chỉ thấy thông báo chung chung và có thể đo nhầm trên một máy chủ cũ còn sót lại.
   Căn cứ: Hiếm gặp và người chạy thử lại được sau khi tắt tiến trình cũ; số đo sai nếu xảy ra nhưng không làm mất dữ liệu.
   file: `scripts/do-nen-hieu-nang/do.mjs`
@@ -46,7 +50,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   severity: low
   Đề xuất: known-limits
 
-- **Cột «byte»/«HTML (KB)» thật ra đếm đơn vị UTF-16, không phải byte (r1 · tệp đã đổi)**
+- **Cột «byte»/«HTML (KB)» thật ra đếm đơn vị UTF-16, không phải byte (r1)**
   Người dùng thấy gì: Cột dung lượng trang trong báo cáo hơi thấp hơn thực tế vì trang tiếng Việt có nhiều ký tự chiếm nhiều byte.
   Căn cứ: Chỉ lệch số phụ, không ảnh hưởng thước đo chính là thời gian tải; sửa một dòng bất cứ lúc nào.
   file: `scripts/do-nen-hieu-nang/do.mjs`
