@@ -1,37 +1,6 @@
 {
-  "feature_plain": "DB trên máy này thôi nằm trong lớp tạm của container: dữ liệu chuyển vào một ổ dữ liệu riêng có tên, dựng lại container không mất gì, có lệnh sao lưu và khôi phục kiểm được, bản cũ giữ lại để lùi.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ cấu hình DB để dữ liệu nằm đúng trong ổ dữ liệu có tên, vẫn tự bật lại khi Docker khởi động lại, và các phép kiểm tự khởi động đã ký trước đó vẫn xanh."},
-    {"id": "AC-2", "p": "Sẽ báo đỏ, gọi đúng chỗ hỏng, khi ai đó sửa cấu hình DB sai theo một trong sáu kiểu đã biết."},
-    {"id": "AC-3", "p": "Sẽ có lệnh sao lưu toàn bộ DB ra đĩa máy này kèm bảng số dòng chụp cùng một thời điểm, và từ chối ghi bản sao lưu vào trong kho mã."},
-    {"id": "AC-4", "p": "Sẽ có lệnh khôi phục bản sao lưu vào một DB thử rồi so số dòng từng bảng, báo đúng bảng nào lệch; không bao giờ khôi phục đè lên DB thật."},
-    {"id": "AC-5", "p": "Sẽ chỉ chuyển khi đủ điều kiện an toàn (có bản sao lưu đã thử khôi phục trong 24 giờ, không trùng giờ job đêm, không job nào đang chạy, đủ đĩa); thiếu điều kiện nào thì dừng và gọi tên nó."},
-    {"id": "AC-6", "p": "Sẽ chuyển dữ liệu bằng cách tắt sạch DB cũ, chép nguyên và kiểm từng byte, giữ container cũ nguyên vẹn làm bản lùi, rồi bật DB mới cùng tên, cùng cổng với số dòng không đổi."},
-    {"id": "AC-7", "p": "Sẽ giữ nguyên dữ liệu sau khi dựng lại container hay tắt rồi bật lại toàn bộ."},
-    {"id": "AC-8", "p": "Sẽ lùi được về DB cũ bằng một lệnh, kể cả khi container cũ đã bị xoá nhầm (lùi từ bản chép lạnh trên đĩa máy chủ)."},
-    {"id": "AC-9", "p": "Sẽ tập dượt toàn bộ đường đi trên một DB giả cạnh DB thật mà không chạm DB thật; sau khi chuyển thật, phép kiểm trực tiếp xác nhận dữ liệu đã nằm trong ổ có tên."},
-    {"id": "AC-10", "p": "Sẽ để lại nhật ký lượt chuyển thật và sổ tay vận hành để Mạnh đọc lại: khôi phục thử trước giờ chuyển, giờ chuyển ngoài giờ job, số dòng khớp, hạn giữ bản lùi, cách lùi."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "Không đặt lịch sao lưu tự động trong việc này — lịch chạy là việc của làn ZCode, sẽ thành hàng sau."},
-    {"id": "OOS-2", "p": "Không xoá container cũ hay ổ dữ liệu rỗng cũ — sau ít nhất 7 ngày mới hỏi Mạnh."},
-    {"id": "OOS-3", "p": "Không sửa script của làn ZCode — sau khi vào main chúng tự dùng cấu hình mới."},
-    {"id": "OOS-4", "p": "Không nâng phiên bản PostgreSQL, không đổi ảnh hay cổng, không tạm tắt job đêm."},
-    {"id": "OOS-5", "p": "Không tự gỡ luật cấm lệnh compose của đợt — giám sát gỡ khi việc này xong."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Theo từng pha của lượt chuyển: sao lưu và khôi phục (AC-3, AC-4), điều kiện an toàn (AC-5), lúc chuyển (AC-6), sau chuyển (AC-7, AC-9, AC-10), lùi (AC-8) — thước là bốn bước trong ý định của Mạnh."},
-    {"i": 1, "p": "Theo từng thứ bị ảnh hưởng: cấu hình (AC-1, AC-2), dữ liệu của cả cụm kể cả DB của ZCode (AC-3, AC-6, AC-7), container cũ và mới (AC-6, AC-8), các job đang dùng DB (AC-5)."},
-    {"i": 2, "p": "Mỗi phép kiểm có cả chiều đúng lẫn chiều hỏng — hỏng thì báo đỏ gọi đúng tên (AC-2, AC-4, AC-5, AC-9)."},
-    {"i": 3, "p": "Rủi ro riêng của bản lùi: một lệnh compose từ checkout cũ có thể xoá nó, nên có bản chép lạnh để lùi (AC-8) và cảnh báo trong sổ tay (AC-10)."},
-    {"i": 4, "p": "Áp cho mọi phần: không xoá dữ liệu nào; tập dượt không chạm DB thật (AC-9); bản sao lưu chứa dữ liệu nhạy cảm nên chỉ nằm trên đĩa máy này (AC-3, AC-10)."},
-    {"i": 5, "p": "Giả định chưa đo: các job chạy mỗi 5–15 phút lỡ một nhịp trong 3–6 phút DB ngừng rồi tự chạy lại ở nhịp sau — lượt chuyển thật sẽ ghi lại nhịp đầu tiên của chúng."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Bản lùi vẫn mang nhãn compose cũ nên một lệnh compose từ checkout cũ có thể xoá nó mà tập dượt không thấy — đã sửa: tập dượt dựng bằng compose thật và đo đúng kịch bản xoá, thêm bản chép lạnh trên đĩa máy chủ và lệnh lùi từ bản chép ấy."},
-    {"i": 1, "p": "Câu hỏi cho người chấm về lượt chuyển thật đòi những thứ không có trong tệp được đưa — đã sửa: thêm kết quả kiểm vận hành trước và sau, nhật ký ghi rõ lịch job và danh sách bảng không so, cấm loại bảng tin rao chính khỏi phép so."},
-    {"i": 2, "p": "Điều kiện an toàn trước khi chuyển chưa có ca thử hỏng cho job đang chạy, thiếu đĩa, bản sao lưu cũ, DB đã chuyển — đã sửa: thêm đủ các ca đỏ và một ca đối chứng giờ an toàn."},
-    {"i": 3, "p": "Phép kiểm tự khởi động của việc đã ký trước được hứa giữ xanh nhưng chưa có phép đo sau lượt chuyển thật — đã sửa: thêm phép đo trước và sau."},
-    {"i": 4, "p": "Lời hứa «đếm số dòng cùng một thời điểm với bản sao lưu» chưa có cách chứng — đã sửa: chen một dòng ghi vào giữa lúc chụp và kiểm hai phía đều không thấy nó, kèm bản hỏng phải bị bắt."}
+  "feature_plain": "DB trên máy này đã chuyển vào ổ dữ liệu riêng có tên: dựng lại container không còn mất dữ liệu, có lệnh sao lưu và khôi phục kiểm được, bản cũ giữ lại để lùi.",
+  "decisions": [
+    {"id": "E13", "q": "Bằng chứng lượt chuyển thật và sổ tay vận hành đã đủ để anh tin chưa?", "why": "Hai giám khảo chấm đạt; một giám khảo lưỡng lự vì hai dòng số của tin rao để trống. Hai tên ấy là view chứ không phải bảng, bằng chứng bổ sung đã chỉ bảng nền khớp số ở cả ba mốc."}
   ]
 }
