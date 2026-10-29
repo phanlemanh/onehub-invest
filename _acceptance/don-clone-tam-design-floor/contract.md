@@ -5,7 +5,7 @@ slug: don-clone-tam-design-floor
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-29T08:17:34Z
 approved_by:
@@ -56,3 +56,5 @@ mới tạo thư mục trần (AC-4) × không hạ thước (AC-5). Phạm vi b
 ## Notes
 
 - Ranh giới hàng: `scripts/design-floor/**`.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: ca «không hạ thước» vẫn tính một ca cũ là còn khi ca đó bị đánh dấu bỏ qua (SKIP/TODO), miễn tên còn trong đầu ra.
