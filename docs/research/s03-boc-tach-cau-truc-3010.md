@@ -517,3 +517,10 @@ Bảng §9.2 đổi như sau:
 
 Khi cắt lượt: cắt nhánh từ `origin/main` sau #186; sinh lại `LO-TRINH.html`/`PRODUCT-MAP.md` bằng
 `scripts/product-map.mjs` của kho, không sửa tay.
+
+Liên làn 30/10:
+- **ZC-ảnh** sẽ mang mã **ZC9** khi cắt lượt; trên kênh tạm dùng slug `s03-anh-tai-loi`. Đã nhắc ZCode NHẬN
+  `claudedp-2910-10`.
+- **PL10b** ghi «đề xuất chờ», GIAO khi Mạnh gật §9.
+- Nạp S08 vào máy thu (điều kiện mở DB1) đã GIAO là `claudedp-2910-12`. Việc này nạp snapshot có sẵn từ 24/10, không thu
+  mới.
