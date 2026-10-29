@@ -509,14 +509,15 @@ run_live_selftest() {
   jq -s . <(bl 20261020 running unless-stopped) <(bl 20261029 exited no) > "$T/hai-nho-chay.json"
   jq -s . <(bl 20261020 exited no) <(bl 20261029 running unless-stopped) > "$T/hai-lon-chay.json"
   jq -s . <(bl 20261020 exited no) <(bl 20261029 exited no) > "$T/hai-dung.json"
-  truoc="2026-11-01T00:00:00Z"; sau="2026-11-06T00:00:00Z"
+  # Sát mốc hạn giữ (một giây trước / đúng mốc) — đo quan hệ với ĐÚNG mốc đã chốt, không chỉ «xa trước/xa sau».
+  truoc="2026-11-05T09:19:59Z"; sau="2026-11-05T09:20:00Z"
   for hang in dung gan-data; do
     while IFS='|' read -r cot ban gio want msg; do
       [ "$hang" = gan-data ] && { want=do; msg="FAIL data_directory nằm trong lớp ghi container"; }
       expect "ô $hang × $cot" "$want" "$msg" o_live "$T/$hang.json" "$T/$ban.json" "$dd" "$gio"; so=$((so + 1))
     done <<EOF
-vang-truoc-han|vang|$truoc|do|FAIL bản lùi mất trước hạn giữ
-vang-sau-han|vang|$sau|0|PASS không còn bản lùi $DB_THAT-cu-*
+vang-truoc-han|vang|$truoc|do|FAIL bản lùi mất trước hạn giữ 2026-11-05T09:20:00Z
+vang-sau-han|vang|$sau|0|PASS không còn bản lùi $DB_THAT-cu-* (sau hạn giữ 2026-11-05T09:20:00Z)
 mot-exited-no|mot-dung|$sau|0|PASS bản lùi $DB_THAT-cu-20261029 exited restart=no
 mot-running|mot-chay|$sau|do|FAIL bản lùi $DB_THAT-cu-20261029 trạng thái running restart=unless-stopped
 mot-exited-sai-restart|mot-sai-restart|$sau|do|FAIL bản lùi $DB_THAT-cu-20261029 trạng thái exited restart=unless-stopped
