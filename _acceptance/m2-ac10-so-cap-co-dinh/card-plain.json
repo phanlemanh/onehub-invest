@@ -1,0 +1,15 @@
+{
+  "feature_plain": "Bộ kiểm của công cụ thiết kế thôi báo đỏ giả trên nhánh chính sau khi gộp và trên nhánh khác có sửa tệp cấu hình.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ so tệp cấu hình ở đúng một cặp commit cố định của lần sửa trước, không so với nhánh chính."},
+    {"id": "AC-2", "p": "Sẽ xanh ở ba trạng thái kho (sau gộp, nhánh chưa gộp có sửa cấu hình, không có nhánh chính), còn bản cũ đỏ đúng ca này."},
+    {"id": "AC-3", "p": "Sẽ báo đúng dòng bị thêm hay bớt khi cặp so lệch hai dòng đã hứa."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên mọi ca kiểm cũ, chỉ đổi tên đúng một ca."}
+  ],
+  "wont_do": [
+    {"id": "AC-4", "p": "Chặn xanh lặng khi máy thiếu commit ghim: báo đỏ có tên và gợi ý tải đủ lịch sử."},
+    {"id": "OOS-1", "p": "KHÔNG sửa ca ghim số đếm (Ngoài-5) — giữ đúng lựa chọn Known limits của anh."},
+    {"id": "OOS-2", "p": "KHÔNG đổi lời hồ sơ đã ký dung-m2-song-song; chỉ ghim lại bằng máy nếu lưới đòi."},
+    {"id": "OOS-3", "p": "KHÔNG nối bộ kiểm vào CI."}
+  ]
+}
