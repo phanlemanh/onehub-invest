@@ -84,7 +84,7 @@ _Avoid_: tài sản, bất động sản, BĐS, asset
 - Ghi chú: Chốt 27/10 (ROADMAP §3 #21, hướng B — theo RESO): «listing» là khái niệm cha của mọi tin. Hiện trạng còn lệch, đổi ở hàng tái cấu trúc riêng: dữ liệu nằm ở hai bảng — `sale_offers` (tin rao: bán + thuê dài hạn) và `listings` (listing thuê ngắn hạn); bảng `listings` mang tên cha mà chỉ chứa thuê ngắn hạn, và nhãn UI «Listing» trên Insight, Finder, So sánh, Lợi suất, `/ops/quality`, `/ops/collections` hiện chỉ nói loại thuê ngắn hạn.
 _Avoid_: tin đăng, offer, sale offer, rao vặt
 
-**Tin rao**: Listing bán hoặc cho thuê dài hạn (`kind` ∈ `sale`, `rent_lt`) đã chuẩn hoá, hiện ở bảng `sale_offers`. Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14.
+**Tin rao**: Listing bán hoặc cho thuê dài hạn (`kind` ∈ `sale`, `rent_lt`) đã chuẩn hoá, hiện ở bảng `sale_offers`. Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); tin nhóm (P1, S03/S05) từ PL14 mang khoá dính theo post (`pipeline/lib/offer-key.mjs`), còn nội dung chỉ để **gộp trùng**.
 - Code: `sale_offer` (bảng `sale_offers`; cột `offer_id`, `offer_status`; API `/api/v1/offers`) — tên theo bảng hiện tại, đổi ở hàng tái cấu trúc listing · RESO: resource Property + ListPrice; bán/thuê qua PropertyType
 - Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
@@ -415,7 +415,19 @@ _Avoid_: deadline, hạn burst
 
 **Bài**: Một bài đăng thô trong nhóm cộng đồng trước khi đọc thành tin rao; «bài thử» là bài từ nhóm thử.
 - Code: `post (stg_zalo_posts)` · RESO: —
-_Avoid_: post raw, post mock, bài post
+- Nhãn đếm: «bài nhận» = bài thật transform đọc (`loadStgPosts` + `testMarker`, không bài S05, không bài thử) theo ngày
+  đăng — cột «S03 — bài nhận» của «Luồng 7 ngày qua», chặng «Bài nhận» của Dòng chảy. Cột «S03 — tin rao mới» cạnh nó
+  đếm tin theo ngày `first_seen`, có sau lượt đọc đêm (~00:00 giờ VN) nên ngày hôm nay chưa đủ (đổi nhãn 27/10, trước là
+  «bài thô» / «tin rao (đã đọc)»).
+_Avoid_: post raw, post mock, bài post, bài thô (làm nhãn cột đếm)
+
+**Gộp trùng**: Bước gom các bài đăng lại cùng một tin thành một tin rao (transform S03/S05 bước 4, `repostKey`). Nội dung
+đủ phường và diện tích thì gộp theo nội dung (kind · phường · giá · diện tích · PN), kể cả bài của người khác; thiếu một
+trong hai thì thêm người đăng (`sender_id`, rồi SĐT, rồi chữ bài đã chuẩn hoá) — khoá thiếu trường mà không phân biệt
+người thì gộp nhầm nhiều tin (26/10: 95 bài «cho thuê 12 triệu» thành một tin; sửa 27/10 ở S03). Gộp trùng không đổi
+`offer_id` (khoá dính PL14); trên Dòng chảy là nhánh «Gộp vào tin đã có».
+- Code: `repostKey` (`pipeline/transform-zalo.mjs`), `n_reposts` · RESO: — (local extension)
+_Avoid_: dedup (trên UI), lọc trùng, khử trùng
 
 **Listing tự thu**: Số listing đang theo dõi trong cả khu vực (gồm phường con) — một định nghĩa dùng chung cho thẻ hiệu chuẩn, bảng Độ phủ trung thực và bảng thị trường S02 toàn quốc trên `/ops/quality` (ON10, Mạnh chốt 25/10).
 - Code: `ourListings (loadOurListings)` · RESO: —

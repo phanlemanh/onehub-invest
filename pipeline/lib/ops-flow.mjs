@@ -78,10 +78,12 @@ export function parseLog(text, { now = Date.now() } = {}) {
 // Cùng đồng hồ «ngày đăng»: bài theo posted_at, tin theo first_seen (= giờ đăng bài sớm nhất) — tin không vượt bài.
 /**
  * Bài S03 thật theo ngày VN của `posted_at` (post_id là khoá chính nên mỗi bài một dòng). $1 = mốc 00:00 giờ VN ngày cũ nhất.
- * «Thật» = snapshot `zalo-agent`, KHÔNG do tác tử S05 thu (`apify-facebook` đi chung ống snapshot — DF0 26/10: trước đó
- * 100 bài S05 ngày 21/10 bị đếm vào S03), và không mang dấu bài thử của pipeline/lib/test-posts.mjs (tác tử thử, nhóm TEST).
+ * «Thật» = đúng tập bài transform S03 đọc: `loadStgPosts(client, "zalo")` + `testMarker` của pipeline/lib/test-posts.mjs —
+ * KHÔNG do tác tử S05 thu (`apify-facebook` đi chung ống snapshot — DF0 26/10: trước đó 100 bài S05 ngày 21/10 bị đếm vào
+ * S03), không mang dấu bài thử (nguồn snapshot example/mock/test/e2e, tác tử thử, nhóm TEST). 27/10 thay lọc
+ * `snapshot_id LIKE '%zalo-agent%'` bằng dấu nguồn snapshot của testMarker; scripts/gop-trung-s03.itest.mjs (GT-AC-5) đối chiếu.
  */
-export const S03_POSTS_SQL = `SELECT ${VN_DAY_SQL("posted_at")} d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' GROUP BY 1`;
+export const S03_POSTS_SQL = `SELECT ${VN_DAY_SQL("posted_at")} d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND split_part(snapshot_id, '__', 2) <> 'example' AND split_part(snapshot_id, '__', 2) !~* '(mock|test|e2e)' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' GROUP BY 1`;
 /** Tin rao nguồn S03 theo ngày VN của `first_seen`. $1 như trên. */
 export const S03_OFFERS_SQL = `SELECT ${VN_DAY_SQL("first_seen")} d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
 

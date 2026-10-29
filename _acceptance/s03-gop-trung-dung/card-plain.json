@@ -1,0 +1,12 @@
+{
+  "feature_plain": "Tin rao từ nhóm cộng đồng thôi gộp bài của nhiều người đăng khác nhau thành một tin khi bài thiếu phường hoặc diện tích, và cột đếm bài trên bảng «Luồng 7 ngày qua» đếm đúng những bài mà lượt đọc đêm thật sự đọc.",
+  "scope_plain": "Ba việc để sang hàng riêng, không làm trong lần này:",
+  "decisions": [
+    {
+      "id": "E6",
+      "q": "Nhãn hai cột S03 và mục từ trong từ điển sản phẩm đã đúng chưa?",
+      "why": "Hội đồng chấm xác nhận nhãn, mô tả và mục «Gộp trùng» đều đúng, nhưng không được xem câu đếm nên không kết luận được vế cuối. Máy đã tự đối chiếu: câu đếm trên trang Thu thập có cùng điều kiện lọc với bản của bước xử lý đêm, và khớp định nghĩa «bài nhận» (bài thật, không bài S05, không bài thử, theo ngày đăng)."
+    }
+  ],
+  "analyst_plain": "Lượt này không chạy được phép đối chứng trên code cũ (công cụ của tác tử đối chứng thiếu quyền ghi — lỗi đã biết của bộ kiểm, đang chờ bản vá). Các bài kiểm xanh nhưng chưa được chứng là sẽ đỏ trên code cũ."
+}
