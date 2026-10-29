@@ -5,7 +5,9 @@ slug: don-clone-tam-design-floor
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-10-29T08:17:34Z
 approved_by:
 approved_at:
 design_doc: docs/superpowers/specs/2026-10-29-don-clone-tam-design-floor-design.md
