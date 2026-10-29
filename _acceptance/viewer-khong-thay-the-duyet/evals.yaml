@@ -66,7 +66,7 @@ evals:
     executor: ui-check
     layer: ui-observed
     paths: [app/src/components/ops/review-content.tsx, app/src/components/ops/data-flow/**, app/src/app/ops/data-flow/page.tsx]
-    steps: "app dev chạy từ worktree đang kiểm ở :3456 (DB local :5433 có review_queue và bảng nạp). Chạy 'node scripts/dev-ops-account.mjs --vai viewer' để có tài khoản thử viewer-test@local.test (mật khẩu ở .claude/viewer-test-account.json, không in ra); đăng nhập /login bằng tài khoản đó; mở /ops/review; mở /ops/data-flow, bấm một bản ghi S05 trong lưới để mở sheet; chụp màn từng bước. Lặp lại với tài khoản thử admin (node scripts/dev-ops-account.mjs) cho /ops/review và cùng sheet."
+    steps: "app dev chạy từ worktree đang kiểm ở cổng riêng :3462 — khởi động bằng npm --prefix app run dev -- -p 3462 từ gốc worktree (cổng :3456 đang là dev server của worktree khác, KHÔNG dùng; luật đợt: dãy dùng cổng riêng) — DB local :5433 có review_queue và bảng nạp; mọi URL dưới đây là http://localhost:3462. Chạy 'node scripts/dev-ops-account.mjs --vai viewer' để có tài khoản thử viewer-test@local.test (mật khẩu ở .claude/viewer-test-account.json, không in ra); đăng nhập /login bằng tài khoản đó; mở /ops/review; mở /ops/data-flow, bấm một bản ghi S05 trong lưới để mở sheet; chụp màn từng bước. Lặp lại với tài khoản thử admin (node scripts/dev-ops-account.mjs) cho /ops/review và cùng sheet."
     expected: "với viewer: /ops/review có dòng «N thẻ đang chờ» và câu «Nội dung thẻ chỉ hiện cho vai Vận hành trở lên.», không có hàng thẻ nào; sheet bản ghi có câu «Bài gốc chỉ hiện cho vai Vận hành trở lên.» và không có khối trích bài; với admin: /ops/review có lưới thẻ, sheet có khối trích bài"
     evidence_required: [screenshot, observed, verifier, verified_at]
   - id: E10
