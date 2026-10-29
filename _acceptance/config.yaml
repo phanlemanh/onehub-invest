@@ -74,6 +74,8 @@ executors:
     cong_tac: "cd app && node --import tsx --test tests/cong-tac-nhom-go.test.tsx"   # cong-tac-khong-ha-nhom-go: ma trận 5 × 2 của công tắc, cần DB local :5433
     cong_tac_ghim: "node --test scripts/cong-tac-ghim.itest.mjs"   # cong-tac-test-ghim-ban-cu: đối chứng ghim, cần DB local :5433
     quyen_bon_vai: "cd app && node --import tsx --test tests/quyen-bon-vai.test.tsx"   # quyen-bon-vai-mot-cho (TV1): bảng quyền bốn vai + audit cùng transaction, cần DB local :5433
+    viewer_the_duyet: "cd app && node --import tsx --test tests/viewer-the-duyet.test.tsx"
+    dev_ops_account: "node --test scripts/dev-ops-account.test.mjs"   # tài khoản thử dev (admin, --vai viewer) — cần DB local :5433   # viewer-khong-thay-the-duyet: vai viewer không thấy thẻ duyệt và bài gốc, cần DB local :5433
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
     so_nhom: "cd pipeline && node --test scripts/so-nhom.itest.mjs"
     so_nhom_app: "cd app && node --import tsx --test tests/so-nhom.test.tsx"

@@ -12,6 +12,9 @@ import { after, before, describe, test } from "node:test";
 import {
   CRED_FILE,
   DEFAULT_DATABASE_URL,
+  DEFAULT_EMAIL,
+  VAI_THU,
+  docVai,
   assertLocalDatabaseUrl,
   ensureAccount,
   hashPassword,
@@ -176,5 +179,82 @@ describe("ensureAccount (DB local, ROLLBACK)", () => {
     // Mật khẩu trong tệp lệch DB (worktree khác đã xoay) → tự xoay
     const healed = await ensureAccount(client, { email, currentPassword: "mat-khau-cu" });
     assert.equal(healed.action, "rotated");
+  });
+});
+
+describe("vai viewer (--vai viewer, hồ sơ viewer-khong-thay-the-duyet E10)", () => {
+  const script = path.join(import.meta.dirname, "dev-ops-account.mjs");
+  let client;
+  let skip = false;
+  before(async () => {
+    const pg = createRequire(path.join(import.meta.dirname, "../app/package.json"))("pg");
+    client = new pg.Client({ connectionString: process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL });
+    try {
+      assertLocalDatabaseUrl(process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL);
+      await client.connect();
+      await client.query("BEGIN");
+    } catch {
+      skip = true;
+    }
+  });
+  after(async () => {
+    if (!skip) {
+      await client.query("ROLLBACK");
+      await client.end();
+    }
+  });
+
+  test("(a) tài khoản viewer-test@local.test mang role viewer, gọi lại giữ nguyên", async (t) => {
+    if (skip) return t.skip("DB local :5433 không lên");
+    const email = VAI_THU.viewer.email;
+    assert.equal(email, "viewer-test@local.test");
+    // Trong ROLLBACK: xoá bản thật (nếu đã tạo bằng CLI) để đo đường tạo mới; giao dịch trả lại như cũ.
+    await client.query(`DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE email = $1)`, [email]);
+    await client.query(`DELETE FROM users WHERE email = $1`, [email]);
+    const tao = await ensureAccount(client, { email, role: "viewer" });
+    assert.equal(tao.action, "created");
+    const { rows } = await client.query(`SELECT id, password_hash, role FROM users WHERE email = $1`, [email]);
+    assert.equal(rows[0].role, "viewer");
+    const lai = await ensureAccount(client, { email, role: "viewer", currentPassword: tao.password });
+    assert.equal(lai.action, "unchanged");
+    const { rows: sau } = await client.query(`SELECT id, password_hash, role FROM users WHERE email = $1`, [email]);
+    assert.deepEqual(sau[0], rows[0], "gọi lần hai giữ nguyên id, password_hash, role");
+  });
+
+  test("(b) .claude/viewer-test-account.json bị git check-ignore", () => {
+    assert.equal(VAI_THU.viewer.file, path.join(path.dirname(CRED_FILE), "viewer-test-account.json"));
+    assert.ok(isGitIgnored(VAI_THU.viewer.file));
+  });
+
+  test("(c) --vai lạ → exit 2, nêu hai vai, không kết nối DB", () => {
+    let code = 0;
+    let stderr = "";
+    let stdout = "";
+    try {
+      // Cổng 1 không có gì nghe: nếu script lỡ kết nối thì lỗi là ECONNREFUSED, không phải câu về vai.
+      execFileSync(process.execPath, [script, "--vai", "la"], {
+        env: { ...process.env, DATABASE_URL: pgUrl("localhost", { port: "1" }) },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (err) {
+      code = err.status;
+      stderr = String(err.stderr);
+      stdout = String(err.stdout);
+    }
+    assert.equal(code, 2);
+    assert.match(stderr, /admin, viewer/);
+    assert.doesNotMatch(stderr, /ECONNREFUSED|connect/);
+    assert.doesNotMatch(stdout, /tài khoản ops thử/);
+    assert.throws(() => docVai(["--vai"]), /admin, viewer/, "--vai thiếu giá trị");
+  });
+
+  test("(d) không cờ --vai → như hôm nay", () => {
+    assert.equal(docVai([]), "admin");
+    assert.equal(docVai(["--rotate"]), "admin");
+    assert.equal(docVai(["--vai", "viewer"]), "viewer");
+    assert.equal(VAI_THU.admin.email, DEFAULT_EMAIL);
+    assert.equal(DEFAULT_EMAIL, "ops-test@local.test");
+    assert.equal(VAI_THU.admin.file, CRED_FILE);
+    assert.equal(path.basename(CRED_FILE), "ops-test-account.json");
   });
 });
