@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: s03-gop-trung-dung
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 7d1e629e619ba55b7b4a1d3caeeab9cc7ca24a38
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: s03-gop-trung-dung
@@ -119,7 +119,7 @@ Hội đồng đề xuất cho E6: UNCERTAIN. Ba thành viên cùng không kiể
   required_evidence:
     - Thêm file chứa hằng S03_POSTS_SQL (tìm bằng grep -rn S03_POSTS_SQL trong app/src/lib, có thể là app/src/lib/collections-queries.ts) vào Input của eval E6, để xác nhận câu SQL đếm bài thật theo ngày đăng, loại bài S05 và bài thử, khớp định nghĩa «bài nhận» ở CONTEXT.md dòng 418-419.
     - Hoặc sửa câu hỏi E6 bỏ vế «khớp định nghĩa của S03_POSTS_SQL»; khi đó phần còn lại đã đủ bằng chứng và kết luận thành PASS.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-29 — Đạt
 
 - eval: E6
   judged_by: judge-subagent (fresh context) — tiêu điểm operational-feasibility
@@ -128,7 +128,7 @@ Hội đồng đề xuất cho E6: UNCERTAIN. Ba thành viên cùng không kiể
   required_evidence:
     - Thêm file định nghĩa hằng S03_POSTS_SQL vào Input của eval E6 (tìm bằng grep -rn S03_POSTS_SQL app/src pipeline), cho thấy truy vấn chỉ đếm bài thật, loại bài S05 và bài thử qua testMarker, nhóm theo ngày đăng giờ VN.
     - Hoặc sửa câu hỏi E6 chỉ hỏi về hai file đã có; phần so khớp S03_POSTS_SQL tách thành một eval script hoặc test.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-29 — Đạt
 
 - eval: E6
   judged_by: judge-subagent (fresh context) — tiêu điểm spec-alignment
@@ -137,7 +137,7 @@ Hội đồng đề xuất cho E6: UNCERTAIN. Ba thành viên cùng không kiể
   required_evidence:
     - Đoạn định nghĩa S03_POSTS_SQL (app/src/lib/collections-queries.ts) đưa vào Input của eval E6, cho thấy nó lọc bài thật, loại bài S05 và bài thử, nhóm theo ngày đăng giờ VN.
     - Hoặc tách eval: E6 chỉ hỏi về collections-tables.tsx và CONTEXT.md; việc khớp S03_POSTS_SQL chuyển sang eval script, test hoặc judge khác có collections-queries.ts trong Input.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-29 — Đạt
 
 Phiếu bầu tóm tắt:
 - domain-correctness: UNCERTAIN — không đối chiếu được nhãn «bài nhận» với S03_POSTS_SQL.

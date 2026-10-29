@@ -5,7 +5,7 @@ slug: s03-gop-trung-dung
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline, ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-27T07:15:20Z
 ---
@@ -61,3 +61,9 @@ Căn cứ: phiên điều tra chỉ-đọc 26/10 trên `/ops/collections` «Lu�
 | nhóm lớn nhất | 177 bài (cho thuê 7 tr, 2PN, nhiều người) | 115 bài (một người, cùng một chữ bài đăng lại) |
 | tin mới theo ngày 20→27/10 | 35 18 24 101 52 37 55 25 | 37 28 33 159 109 73 101 44 |
 | đối soát `stale` | 0 | 0 |
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: Bài kiểm của bảng «Luồng 7 ngày» không phân biệt cách lọc nguồn cũ với cách lọc mới, nên nếu bản chép câu đếm trên trang Thu thập lệch khỏi bản của bước xử lý đêm thì bài kiểm vẫn xanh.
+  - Ngoài-2: Bài kiểm câu đếm bài S03 chỉ so tổng số bài, không so từng bài, nên một lần đếm nhầm cộng một lần bỏ sót bù trừ nhau vẫn qua.
