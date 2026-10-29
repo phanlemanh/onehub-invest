@@ -5,9 +5,9 @@ slug: bat-dieu-phoi-cap-du-an
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [config]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-29-bat-dieu-phoi-cap-du-an-design.md
 ---
 
