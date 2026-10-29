@@ -16,6 +16,9 @@ import { join } from "node:path";
  */
 
 const SCRIPTS = [
+  // 2610-13 vòng 3: chotot-daily thật — S06 không chạy → MỘT dòng + thoát 0,
+  // KHÔNG chạy import/transform/refresh/resolve (Claude bắt: hiện vẫn chạy 4 dòng)
+  ["scripts/chotot-daily.sh", "S06"],
   ["scripts/smoke-daily.sh", "S01"],
   ["scripts/airdna-daily.sh", "S02"],
   ["pipeline/scripts/weekly-with-jitter.sh", "S01"],
@@ -30,12 +33,25 @@ function fixture(script) {
   // vong-doi GIẢ: in một dòng JSON + thoát mã theo VONG_DOI_RC
   writeFileSync(join(root, "pipeline/lib/vong-doi.mjs"),
     `process.stdout.write(JSON.stringify({code:"X",run:process.env.VONG_DOI_RC!=="3",ly_do:process.env.VONG_DOI_RC==="3"?"nguon-paused":"chay"})+"\\n");process.exit(Number(process.env.VONG_DOI_RC));\n`);
-  const dest = join(root, script.path ?? script);
-  // giữ cấu trúc thư mục đích
+  const dest = join(root, script);
   mkdirSync(join(dest, ".."), { recursive: true });
   copyFileSync(join(REPO, script), dest);
   chmodSync(dest, 0o755);
-  return { S, root, dest, cleanup: () => rmSync(S, { recursive: true, force: true }) };
+  // chotot-daily cần thêm: collector giả (thoát 0 = collect xong), import giả,
+  // transform/refresh/resolve giả (đếm lượt chạy), logs dir + state
+  if (script.includes("chotot-daily")) {
+    writeFileSync(join(root, "pipeline/collect-chotot.mjs"), "// giả\nprocess.exit(0);\n");
+    writeFileSync(join(root, "pipeline/import-chotot.mjs"), "// giả\nconsole.log(\"[giả] import-chotot\");\nprocess.exit(0);\n");
+    for (const [f] of [["transform-chotot.mjs"], ["refresh-bait-gap.mjs"], ["resolve-properties.mjs"]]) {
+      writeFileSync(join(root, "pipeline/" + f), `// giả — đếm lượt chạy\nconst { appendFileSync } = await import("node:fs");\nappendFileSync("${join(S, "runs.log")}", "${f.replace(".mjs", "")}\\n");\n`);
+    }
+    mkdirSync(join(root, "pipeline/logs"), { recursive: true });
+    writeFileSync(join(root, "pipeline/logs/apify-daily.state"), "2026-01-01T000000\n");
+    // chép job-step.sh thật (làn Claude)
+    mkdirSync(join(root, "scripts/lib"), { recursive: true });
+    copyFileSync(join(REPO, "scripts/lib/job-step.sh"), join(root, "scripts/lib/job-step.sh"));
+  }
+  return { S, root, dest, runs: join(S, "runs.log"), cleanup: () => rmSync(S, { recursive: true, force: true }) };
 }
 
 const chay = (fx, rc, extraPatch) => {
@@ -88,6 +104,14 @@ test("v2: vong-doi trả 0 → script VƯỢT cổng sang bước kế (không c
       t = t.replace(/if ! \(cd "\$ROOT\/collector".*?fi/s, 'echo "[vá-test] đã qua cổng, tới bước smoke"');
       writeFileSync(p, t);
     },
+    "scripts/chotot-daily.sh": (fx) => {
+      const f = fx.dest;
+      let s = readFileSync(f, "utf8");
+      const iBat = s.indexOf("CITIES=");
+      const iKet = s.indexOf("for CITY in", iBat);
+      s = s.slice(0, iBat) + 'CITIES="hanoi"\n' + s.slice(iKet);
+      writeFileSync(f, s);
+    },
     "scripts/airdna-daily.sh": (fx) => {
       const p = fx.dest;
       let t = readFileSync(p, "utf8");
@@ -100,7 +124,12 @@ test("v2: vong-doi trả 0 → script VƯỢT cổng sang bước kế (không c
     try {
       const r = chay(fx, 0, patches[script]);
       assert.equal(r.code, 0, `${script}: exit 0 (được ${r.code}; out: ${r.out.slice(0, 200)})`);
-      assert.match(r.out, /\[vá-test\] đã qua cổng/, `${script}: script đi tiếp sau cổng`);
+      if (script.includes("chotot-daily")) {
+        // chotot-daily chạy thật collect/import giả — kiểm exit 0 + KHÔNG dừng ở cổng
+        assert.ok(!/bỏ qua lượt thu/.test(r.out) && !/vong-doi .* lỗi/.test(r.out), `${script}: không dừng ở cổng`);
+      } else {
+        assert.match(r.out, /\[vá-test\] đã qua cổng/, `${script}: script đi tiếp sau cổng`);
+      }
       assert.ok(!/vong-doi .* lỗi/.test(r.out), `${script}: không dừng ở cổng`);
     } finally { fx.cleanup(); }
   }

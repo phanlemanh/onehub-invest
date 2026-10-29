@@ -39,11 +39,19 @@ async function loadRegions() {
     const { rows } = await c.query(
       `SELECT group_key, params, status FROM source_groups WHERE source_code = 'S06' ORDER BY id`,
     );
-    return rows
-      .filter((r) => r.params?.region_v2)
-      .map((r) => ({ region_v2: r.params.region_v2, city: r.group_key, cityCode: r.params.cityCode, ...isRunnable(src, { status: r.status }) }))
-      .filter((r) => r.run)
-      .map(({ run, ly_do, ...r }) => r);
+    // 2610-13 vòng 3: vùng active thiếu region_v2 → in một dòng mã + params-hong
+    // (thay vì bỏ lặng lẽ — quản trị /ops/sources thấy ngay mà sửa)
+    const kq = [];
+    for (const r of rows) {
+      const quyet = isRunnable(src, { status: r.status });
+      if (!quyet.run) continue;
+      if (!r.params?.region_v2) {
+        console.log(`S06 ${r.group_key} params-hong — thiếu region_v2 trong params`);
+        continue;
+      }
+      kq.push({ region_v2: r.params.region_v2, city: r.group_key, cityCode: r.params.cityCode });
+    }
+    return kq;
   } finally {
     await c.end().catch(() => {});
   }

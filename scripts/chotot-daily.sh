@@ -7,6 +7,13 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export PATH="$HOME/.local/node-v24.21.0/bin:$PATH"
 export DATABASE_URL="${DATABASE_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest}"
 
+# 2610-13 vòng 3: cổng vòng đời S06 NGUỒN — DUY NHẤT qua vong-doi CLI.
+# Từ chối (exit 3) → 0 lời gọi, thoát 0, MỘT dòng mã + lý do; lỗi → dừng.
+VD_RC=0
+VD_KQ="$(node "$ROOT"/pipeline/lib/vong-doi.mjs S06)" || VD_RC=$?
+if [ "$VD_RC" -eq 3 ]; then echo "$VD_KQ — bỏ qua lượt thu S06"; exit 0; fi
+if [ "$VD_RC" -ne 0 ]; then echo "❌ vong-doi S06 lỗi — dừng (fail-closed)"; exit 1; fi
+
 node "$ROOT/pipeline/collect-chotot.mjs" || exit 1
 
 # Import snapshot mới nhất mỗi thành phố rồi transform (AU3 phần nạp,
