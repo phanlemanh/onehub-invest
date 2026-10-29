@@ -5,7 +5,7 @@ slug: so-cuoc-goi-ai
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api, cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-29-so-cuoc-goi-ai-design.md
