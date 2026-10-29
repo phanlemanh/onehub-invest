@@ -495,3 +495,25 @@ sau đó:                     PL17 ──► PL5′ (T3) · PL18′ ──► NT
 ```
 
 Ba việc mở được ngay mà không chờ gì: **N1**, **NH1**, **PL7**. Chúng không chung vùng mã, nên chạy song song được.
+
+### 9.4 Cập nhật sau PR #186 (đợt `danh-ba-2910`, ADR-0016) — áp vào bảng §9.2 khi cắt
+
+PR #186 vừa đổi lộ trình:
+- PL11 và PL24 chuyển sang mục chờ, «không mở riêng»; phần của chúng giao cùng **DB1** (toà · trục · căn OCP1) và **DB2**
+  (nhà phố/đất, `properties` thành view).
+- DB1 là mục chờ, mở khi ZC8 giao và `stg_s08_inventory` ở máy thu có dòng OCP1.
+- PL13 bỏ phụ thuộc PL11. Thêm DB2b `ho-nguoi-theo-nguon` (T3).
+
+Bảng §9.2 đổi như sau:
+
+| Chỗ trong §9.2 | Sau #186 |
+|---|---|
+| Sửa câu giao **PL11** (OCP1 + Grand Park, dọn bí danh trùng mã toà, đối chiếu `area_ids`, CĐT ở cấp toà) | Áp vào **mục chờ DB1** — ghi vào `cau_giao` của DB1 để lúc DB1 thành hàng có sẵn. Riêng phần Grand Park: thêm **mục chờ mới** «danh bạ toà Grand Park», mở khi PL10b giao, để DB1 không phình |
+| PL11 đứng trên PL10 và PL10b | DB1 đứng trên ZC8/S08; Grand Park đứng trên PL10b |
+| Mục chờ mới **A7** mở khi «NH1 và PL24 giao» | Mở khi **NH1 và DB2 giao** |
+| **PL13′** chờ PL11 | PL13 nay chỉ đứng trên PL6 (đã ký) → **mở được ngay**, cùng N1, NH1, PL7. Phần nối mã toà vào danh bạ vẫn đứng sau DB1 (PL20) |
+| A4 `seller_name` trong N1 | Giữ trong N1: chỉ là một cột chép từ `sender_name`. DB2b gắn người đăng vào danh bạ Người là việc khác, không trùng |
+| «Ra khỏi kho: nạp S08 vào local» | Đây chính là điều kiện mở DB1 (ZC8 + dòng OCP1 ở máy thu) — giữ, liên làn giao |
+
+Khi cắt lượt: cắt nhánh từ `origin/main` sau #186; sinh lại `LO-TRINH.html`/`PRODUCT-MAP.md` bằng
+`scripts/product-map.mjs` của kho, không sửa tay.
