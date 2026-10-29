@@ -5,10 +5,10 @@ slug: db-volume-live-ban-lui
 owner: phanlemanh@gmail.com
 risk_tier: T2      # scripts/db-volume-check.sh + hồ sơ — không chạm t3_paths
 surfaces: [ops]
-status: draft
+status: approved
 design_doc: _acceptance/db-volume-live-ban-lui/design.md
-approved_by:
-approved_at:
+approved_by: Mạnh
+approved_at: 2026-10-29
 ---
 
 # Acceptance Contract: db-volume-live-ban-lui
