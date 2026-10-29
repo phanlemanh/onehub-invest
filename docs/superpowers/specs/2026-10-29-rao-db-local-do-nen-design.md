@@ -41,9 +41,10 @@ Thêm hai phép:
 
 ## Hồ sơ đã ký bị chạm
 
-`do.mjs` nằm trong `paths` eval của hồ sơ đã ký `do-nen-hieu-nang`, nên đổi nó làm hồ sơ ấy hoá cũ. Sau khi sửa, chạy làn
-máy ghim lại (`repin-lane.mjs --slug do-nen-hieu-nang --write`) trên đầu nhánh; làn chỉ ghi `run-log.jsonl` và
-`evidence-report.md` của hồ sơ ấy, không đụng chữ ký. Đầu dò phạm vi chạy lưới trước-gộp của `do-nen-hieu-nang` và đòi xanh.
+`do.mjs` nằm trong `paths` eval của hồ sơ đã ký `do-nen-hieu-nang`, nên đổi nó làm hồ sơ ấy hoá cũ khi lưới trước-gộp chạy
+không `--base`. Ghim lại trên nhánh này không làm được: eval phạm vi (E6) của hồ sơ ấy đo diff nhánh nên đỏ trên mọi nhánh
+khác. Sau S4 round 1, giám sát duyệt thu phạm vi (P4-71): không ghim lại, ghi Known limit có tên trong hợp đồng; hồ sơ
+`do-nen-hieu-nang` không đổi tệp nào. E4 của hồ sơ này chạy lại phép đo 5 trang trên do.mjs mới.
 
 `.invalid` (RFC 2606) và `203.0.113.0/24` (TEST-NET-3) không bao giờ là máy thật. Khi có rào, không ca nào mở được kết nối ra
 ngoài.

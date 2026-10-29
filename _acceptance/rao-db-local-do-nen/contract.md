@@ -36,9 +36,8 @@ DB đó. Hàng này thêm rào chỉ-DB-local (dùng lại `assertLocalDatabaseU
 - AC-4: Given app đã `next build` và DB local :5433, When chạy phép đo 5 trang của hồ sơ `do-nen-hieu-nang`, Then vẫn 5/5
   trang 20/20 lượt đúng trang và mật khẩu ops-test không đổi (rào không chặn DB local).
 - AC-5: Given nhánh so với merge-base của origin/main, When liệt kê tệp đổi, Then chỉ có `scripts/do-nen-hieu-nang/do.mjs`,
-  hồ sơ này, `_acceptance/config.yaml`, design/plan của hàng, tệp máy sinh (`PRODUCT-MAP.md`, `LO-TRINH.html`) và đúng hai
-  tệp ghim lại của hồ sơ đã ký `do-nen-hieu-nang` (`run-log.jsonl`, `evidence-report.md` — đổi do.mjs làm nó hoá cũ, làn máy
-  ghim lại); `scripts/dev-ops-account.mjs` không đổi; lưới trước-gộp của `do-nen-hieu-nang` xanh tại đầu nhánh.
+  hồ sơ này, `_acceptance/config.yaml`, design/plan của hàng và tệp máy sinh (`PRODUCT-MAP.md`, `LO-TRINH.html`);
+  `scripts/dev-ops-account.mjs` và mọi tệp của hồ sơ đã ký `do-nen-hieu-nang` không đổi.
 
 ## Coverage
 
@@ -54,3 +53,7 @@ DB đó. Hàng này thêm rào chỉ-DB-local (dùng lại `assertLocalDatabaseU
 ## Notes
 
 - Không có câu hỏi chờ người ở bước thiết kế; mọi lựa chọn có căn cứ trong sổ quyết định.
+- Known limits — thu phạm vi AC-5 sau S4 round 1 (giám sát duyệt lối 1 của P4-71, 29/10; làn V, Mạnh giữ quyền veto):
+  - Bằng chứng do-nen-hieu-nang đo trên do.mjs trước rào: hồ sơ đã ký ấy không ghim lại được trên nhánh này vì eval phạm vi
+    (E6) của nó đo diff nhánh; lưới trước-gộp chạy không `--base` sẽ báo nó hoá cũ, CI chạy có `--base` nên không chặn.
+    Rào không đổi phép đo trên DB local — E4 của hồ sơ này chạy lại phép đo 5 trang.

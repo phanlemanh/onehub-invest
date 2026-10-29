@@ -35,5 +35,5 @@ evals:
     executor: script
     cmd: config:executors.script.rdl_pham_vi
     paths: [scripts/dev-ops-account.mjs, scripts/do-nen-hieu-nang/do.mjs, "_acceptance/do-nen-hieu-nang/**", _acceptance/rao-db-local-do-nen/probes/pham-vi.sh]
-    expected: "exit 0; dòng 'root <gốc> sha <sha>'; mọi tệp đổi 'ok'; 'ok dev-ops-account.mjs khong doi'; 'ok luoi truoc gop do-nen-hieu-nang: clean'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI', 'DEV-OPS-ACCOUNT BI DOI', 'DO-NEN-HIEU-NANG HOA CU'"
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; mọi tệp đổi 'ok'; 'doi chung: tep gia ngoai danh sach (…) → NGOAI PHAM VI; do.mjs → ok'; 'ok dev-ops-account.mjs khong doi'; 'ok ho so do-nen-hieu-nang khong doi'; cuối 'PHAM-VI OK'; should-NOT-fire: không 'NGOAI PHAM VI', 'DEV-OPS-ACCOUNT BI DOI', 'DO-NEN-HIEU-NANG BI DOI', 'DOI CHUNG PHAM VI KHONG BAT'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
