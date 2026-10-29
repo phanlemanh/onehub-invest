@@ -126,6 +126,13 @@ function pointers() {
 }
 
 // ---------------------------------------------------------------- E12
+/** Các hàng «| **Tổng** | tổng | baseline | ngoại lệ | mới |» theo thứ tự xuất hiện. */
+const hangTong = (md) =>
+  [...md.matchAll(/\|\s*\*\*Tổng\*\*\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|/g)].map((m) => m.slice(1, 5).map(Number));
+
+// Tài liệu baseline là NHẬT KÝ các lần đo (138 → 131 → 85 → …): mỗi lần đo hai bảng (theo luật, theo thư mục) cùng hàng Tổng.
+// Thước: lần đo MỚI NHẤT khớp báo cáo sống; cột Baseline = tổng count của eslint-suppressions.json; không vi phạm mới; số
+// tổng và baseline qua các lần đo chỉ giảm (hồ sơ ui-standards-reui-thuoc-loi-thoi — thay so «ba con số bằng 138» đã lỗi thời).
 function baselineDoc() {
   const appDir = join(ROOT, "app");
   const rep = spawnSync("npm run --silent lint:ui-report", {
@@ -135,25 +142,32 @@ function baselineDoc() {
     maxBuffer: 64 * 1024 * 1024,
   });
   // eslint thoát khác 0 nếu có lỗi mới; report vẫn in được → chỉ cần stdout.
-  const m = /\*\*Tổng (\d+) vi phạm/.exec(rep.stdout ?? "");
-  if (!m) fail(`không đọc được tổng từ lint:ui-report:\n${(rep.stdout ?? "").slice(-300)}${rep.stderr ?? ""}`);
-  const reportTotal = Number(m[1]);
+  const song = hangTong(rep.stdout ?? "")[0];
+  if (!song) fail(`không đọc được hàng Tổng từ lint:ui-report:\n${(rep.stdout ?? "").slice(-300)}${rep.stderr ?? ""}`);
 
   const sup = JSON.parse(readFileSync(join(appDir, "eslint-suppressions.json"), "utf8"));
   const supTotal = Object.values(sup)
     .flatMap((rules) => Object.values(rules))
     .reduce((a, v) => a + v.count, 0);
 
-  const doc = read("docs/research/ui-baseline-2026-10.md");
-  const dm = /\*\*Tổng (\d+) vi phạm/.exec(doc);
-  if (!dm) fail("tài liệu baseline không có câu '**Tổng N vi phạm'");
-  const docTotal = Number(dm[1]);
-  const tableTotal = [...doc.matchAll(/\|\s*\*\*Tổng\*\*\s*\|\s*(\d+)\s*\|/g)].map((x) => Number(x[1]));
-
-  console.log(`    lint:ui-report = ${reportTotal} · eslint-suppressions.json = ${supTotal} · tài liệu = ${docTotal} (hàng bảng: ${tableTotal.join(", ")})`);
-  if (!(reportTotal === supTotal && supTotal === docTotal)) fail("ba con số không bằng nhau");
-  if (tableTotal.some((n) => n !== docTotal)) fail("hàng Tổng trong bảng của tài liệu lệch con số tổng");
-  ok(`cả ba bằng ${docTotal}`);
+  // UI_BASELINE_DOC (đường tuyệt đối): bản chép tài liệu cho phép đo đột biến; vắng → tài liệu thật.
+  const hang = hangTong(process.env.UI_BASELINE_DOC ? readFileSync(process.env.UI_BASELINE_DOC, "utf8") : read("docs/research/ui-baseline-2026-10.md"));
+  if (hang.length < 2 || hang.length % 2) fail(`tài liệu baseline phải có từng cặp hàng Tổng (theo luật, theo thư mục) — đọc được ${hang.length}`);
+  const lan = [];
+  for (let i = 0; i < hang.length; i += 2) {
+    if (hang[i].join() !== hang[i + 1].join()) fail(`lần đo thứ ${i / 2 + 1} của tài liệu: hai bảng lệch nhau (${hang[i]} ≠ ${hang[i + 1]})`);
+    lan.push(hang[i]);
+  }
+  const moiNhat = lan.at(-1);
+  console.log(`    lint:ui-report = ${song.join("/")} (tổng/baseline/ngoại lệ/mới) · eslint-suppressions.json = ${supTotal} · tài liệu: ${lan.map((l) => l[0]).join(" → ")} (mới nhất ${moiNhat.join("/")})`);
+  if (song[3] !== 0) fail(`lint:ui-report còn ${song[3]} vi phạm mới (đỏ)`);
+  if (song[1] !== supTotal) fail(`cột Baseline của báo cáo (${song[1]}) lệch tổng eslint-suppressions.json (${supTotal})`);
+  if (moiNhat.join() !== song.join()) fail(`mục đo mới nhất của tài liệu (${moiNhat.join("/")}) lệch báo cáo sống (${song.join("/")}) — thêm mục đo mới vào tài liệu`);
+  const tongTang = lan.findIndex((l, i) => i > 0 && l[0] > lan[i - 1][0]);
+  if (tongTang > 0) fail(`tổng vi phạm tăng ở lần đo thứ ${tongTang + 1} (${lan[tongTang - 1][0]} → ${lan[tongTang][0]}) — tổng chỉ được giảm`);
+  const tang = lan.findIndex((l, i) => i > 0 && l[1] > lan[i - 1][1]);
+  if (tang > 0) fail(`số baseline tăng ở lần đo thứ ${tang + 1} (${lan[tang - 1][1]} → ${lan[tang][1]}) — baseline chỉ được giảm`);
+  ok(`lần đo mới nhất khớp báo cáo sống (${song.join("/")}), baseline = suppressions = ${supTotal}, tổng và baseline chỉ giảm`);
 }
 
 const CHECKS = {

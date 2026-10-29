@@ -82,5 +82,7 @@ evals:
     criterion: AC-10
     executor: script
     cmd: config:executors.script.ui_baseline_doc
+    status: not-run
+    superseded_by: ui-standards-reui-thuoc-loi-thoi#AC-2
     expected: "exit 0; tổng của lint:ui-report = tổng count trong eslint-suppressions.json = con số tổng trong docs/research/ui-baseline-2026-10.md (138)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -168,3 +168,34 @@ Ba luật không có đối ứng trong kiểm kê tay: `no-emoji-icons` (17), `
 | `components/ops` | 45 | xem bảng trên |
 | `app/ops` (trừ deals) | 15 | 0 |
 | Kiểu bảng / ô KPI / đầu trang ở cổng Ops | 3 / 2 / 5 | 1 InsightGrid + lưới của block · StatTiles + ô của block (ngoại lệ có tên) · 1 PageHeader |
+
+## Hiện trạng 27/10 — sau các đợt dọn UI (main b6705e5a)
+
+Đo bằng `cd app && npm run lint:ui-report`. Hồ sơ `ui-standards-reui-thuoc-loi-thoi`: từ lần này thước `ui_baseline_doc` so
+lần đo MỚI NHẤT của tài liệu với báo cáo sống — mỗi đợt dọn UI làm giảm baseline thì thêm một mục đo như mục này.
+
+### Số liệu lint UI (luật `onehub-ui/*`)
+
+**Tổng 16 vi phạm trong 8 file.** Baseline = mục nằm trong `eslint-suppressions.json`; ngoại lệ = `eslint-disable` kèm lý do; mới = đang làm lint đỏ.
+
+#### Theo luật
+
+| Luật | Tổng | Baseline | Ngoại lệ có lý do | Mới (đỏ) |
+|---|---:|---:|---:|---:|
+| `onehub-ui/no-raw-palette` | 9 | 9 | 0 | 0 |
+| `onehub-ui/no-arbitrary-text-size` | 2 | 2 | 0 | 0 |
+| `onehub-ui/no-banned-motion` | 2 | 0 | 2 | 0 |
+| `onehub-ui/no-emoji-icons` | 1 | 1 | 0 | 0 |
+| `onehub-ui/no-raw-controls` | 1 | 0 | 1 | 0 |
+| `onehub-ui/no-raw-table` | 1 | 0 | 1 | 0 |
+| **Tổng** | 16 | 12 | 4 | 0 |
+
+#### Theo thư mục (cấp 2 dưới `src/`)
+
+| Thư mục | Tổng | Baseline | Ngoại lệ có lý do | Mới (đỏ) |
+|---|---:|---:|---:|---:|
+| `components/finder` | 9 | 9 | 0 | 0 |
+| `components/insight` | 4 | 1 | 3 | 0 |
+| `components/shell` | 2 | 2 | 0 | 0 |
+| `components/compare` | 1 | 0 | 1 | 0 |
+| **Tổng** | 16 | 12 | 4 | 0 |
