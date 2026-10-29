@@ -5,7 +5,9 @@ slug: dinh-danh-tai-khoan-thu-theo-vai
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/lib/ops-access.ts, pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, api]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-29-dinh-danh-tai-khoan-thu-theo-vai-design.md
 ---
 
