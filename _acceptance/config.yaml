@@ -445,6 +445,7 @@ executors:
     s08_nap_hai_lan: "node scripts/s08-danh-muc/acceptance.mjs nap-hai-lan"
     s08_nguon_duy_nhat: "node scripts/s08-danh-muc/acceptance.mjs nguon-duy-nhat"
     s08_scope: "bash _acceptance/thu-danh-muc-ocp1/probes/scope.sh \"$PWD\""
+    bdp_settings: "node _acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs"
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

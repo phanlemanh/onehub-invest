@@ -1,0 +1,31 @@
+schema_version: 1
+feature_slug: bat-dieu-phoi-cap-du-an
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.bdp_settings
+    paths: [.claude/settings.json, _acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs]
+    expected: "exit 0; dòng 'ok   AC-1 settings.json = nền 0103d246 + đúng khoá dieu-phoi@acceptance-gate-kit=true (bỏ khoá thì giống hệt, cả thứ tự)'; should-NOT-fire: không dòng 'FAIL'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.bdp_settings
+    paths: [.claude/settings.json, _acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs]
+    expected: "exit 0; dòng 'ok   AC-2 gói dieu-phoi có trong manifest marketplace acceptance-gate-kit; hậu tố trùng 4 gói kit; extraKnownMarketplaces.acceptance-gate-kit giữ nguyên'; should-NOT-fire: không dòng 'FAIL'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.bdp_settings
+    paths: [.claude/settings.json, _acceptance/config.yaml, _acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs]
+    expected: "exit 0; dòng 'ok   AC-3 tệp đổi từ merge-base ngoài hồ sơ/tài liệu ⊆ {.claude/settings.json, _acceptance/config.yaml}; config.yaml +1 dòng bdp_settings'; should-NOT-fire: không dòng 'FAIL'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.bdp_settings
+    paths: [_acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs]
+    expected: "exit 0; đúng bảy dòng 'ok   AC-4 bản phá <tên> đỏ: <thông điệp>' — giá trị false và thiếu khoá ('khoá dieu-phoi phải là true'), đổi thêm quyền ('khác nền ngoài khoá dieu-phoi'), hậu tố khác ('hậu tố marketplace'), tên gói lạ đúng hậu tố ('không có gói dieu-phoi trong marketplace'), thêm scripts/x.sh ('tệp ngoài vùng: scripts/x.sh'), config.yaml +2 dòng ('config.yaml phải thêm đúng một dòng bdp_settings'); dữ liệu thật xanh trên cùng hàm; should-NOT-fire: không dòng 'FAIL'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

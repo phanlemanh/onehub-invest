@@ -68,6 +68,7 @@
     "feature-loop@acceptance-gate-kit": true,
     "diagram-design@acceptance-gate-kit": true,
     "road-map@acceptance-gate-kit": true,
+    "dieu-phoi@acceptance-gate-kit": true,
     "superpowers@claude-plugins-official": true
   }
 }
