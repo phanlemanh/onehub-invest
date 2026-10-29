@@ -22,8 +22,8 @@ mục tạm của `scripts/design-floor/` đều không dọn. Hàng do Mạnh d
 ## Acceptance criteria
 
 - AC-1: Given `TMPDIR` trỏ một thư mục rỗng mới và nhật ký `tempDir` bật (biến môi trường trỏ một tệp ngoài `TMPDIR`),
-  When chạy `node --test` TẤT CẢ tệp `scripts/design-floor/*.test.mjs` kể cả `tmp-sach.test.mjs` (lượt lồng chỉ bỏ đúng ca
-  AC-1 để không đệ quy), Then lệnh thoát 0; đầu ra có dòng `ok` không mang `# SKIP`/`# TODO` của ca diff M2-AC-10, ca
+  When chạy `node --test` TẤT CẢ tệp `scripts/design-floor/*.test.mjs` kể cả `tmp-sach.test.mjs` (lượt lồng chỉ bỏ đúng
+  ca của tiêu chí này để không đệ quy), Then lệnh thoát 0; đầu ra có dòng `ok` không mang `# SKIP`/`# TODO` của ca diff M2-AC-10, ca
   sau-gộp (a) và ca AC-2 của tệp đo; nhật ký có đủ bốn tiền tố `sau-gop`, `design-floor`, `cap-config`, `reuse-plan` (thư
   mục đã thật sự được tạo); và sau khi lệnh thoát thư mục `TMPDIR` rỗng.
 - AC-2: Given bản clone của kho với các tệp test ở `89730e6b` (main trước hàng) và `TMPDIR` rỗng mới, When chạy cùng lệnh,
