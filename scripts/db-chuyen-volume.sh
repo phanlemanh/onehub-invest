@@ -149,6 +149,12 @@ tien_dieu_kien() { # in PASS/FAIL từng điều kiện; trả số FAIL
   kiem_cua_so "${1:-}"
   tt=$(pgrep -fl "$TT_MAU" 2>/dev/null | awk -v p="$$" '$1 != p' | head -3)
   [ -z "$tt" ] && pass "không tiến trình job nào đang chạy" || fail "đang chạy $(tr '\n' ';' <<<"$tt")"
+  # Phiên đang chạy truy vấn, hay nối DB khác oneinvest/postgres (vd zcode_* của ZCode — lời khuyên liên làn 29/10):
+  # fast shutdown sẽ cắt ngang chúng → dời giờ. Phiên rảnh của app/job thì cắt được.
+  tt=$(psql_c "$C" -d postgres -c "select datname||':'||usename||':'||coalesce(application_name,'')||':'||state from pg_stat_activity
+    where backend_type = 'client backend' and pid <> pg_backend_pid()
+      and (state not in ('idle') or datname not in ('oneinvest','postgres'))" 2>/dev/null | head -5)
+  [ -z "$tt" ] && pass "không phiên nào đang chạy truy vấn hay nối DB phụ" || fail "đang có phiên $(tr '\n' ';' <<<"$tt")"
   size=$(docker exec "$C" du -sk "$(dirname "$dd")" 2>/dev/null | awk '{print $1}')
   vm="${DB_CHUYEN_DIA_GIA:-$(docker run --rm --entrypoint df "$img" -Pk / 2>/dev/null | awk 'NR == 2 {print $4}')}"
   mkdir -p "$BR" 2>/dev/null; host=$(df -Pk "$BR" | awk 'NR == 2 {print $4}')

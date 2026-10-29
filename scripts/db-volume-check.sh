@@ -261,7 +261,11 @@ ca_tien_dieu_kien() {
   bash -c 'exec -a onehub-tapduot-gia-daily.sh sleep 120' & pid=$!; sleep 1
   expect "tiến trình job đang chạy" do "FAIL đang chạy" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
   kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null
-  [ "$(td_trang)" = "$s0" ] && pass "năm ca đỏ không đổi gì" || fail "ca tiền điều kiện đã đổi trạng thái"
+  docker exec -i -e PGPASSWORD=oneinvest "$TD_DB" psql -U oneinvest -h localhost -d zcode_tapduot -qc 'select pg_sleep(30)' >/dev/null 2>&1 & pid=$!; sleep 2
+  expect "phiên đang chạy ở DB phụ" do "FAIL đang có phiên zcode_tapduot:oneinvest" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
+  kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null
+  td_psql -d postgres -c "select pg_terminate_backend(pid) from pg_stat_activity where datname = 'zcode_tapduot' and pid <> pg_backend_pid()" >/dev/null
+  [ "$(td_trang)" = "$s0" ] && pass "sáu ca đỏ không đổi gì" || fail "ca tiền điều kiện đã đổi trạng thái"
   docker create --name "$TD_DB-cu-20000101" --entrypoint true "$TD_IMG" >/dev/null
   expect "đã có bản lùi" do "FAIL đã có $TD_DB-cu" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
   docker rm -f "$TD_DB-cu-20000101" >/dev/null
