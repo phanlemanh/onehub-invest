@@ -107,13 +107,16 @@ test('M2-AC-10 hàm kiểm cặp: cặp thật qua; bản sau thêm hay bớt m�
   assert.equal(ok.added.length, 2);
   const extra = after.replace(/^(\s+design_floor_gen: .*)$/m, '$1\n    x: 1');
   assert.notEqual(extra, after, 'đột biến thêm dòng không áp được');
-  assert.throws(() => kiemCapM2(before, extra), /cặp config thêm 3 dòng.*\+    x: 1/);
-  const dropped = after.replace(/^\s+design_floor_fresh: .*\n/m, '');
-  assert.notEqual(dropped, after, 'đột biến bớt dòng không áp được');
-  assert.throws(() => kiemCapM2(before, dropped), /cặp config thêm 1 dòng, chờ đúng design_floor_gen, design_floor_fresh/);
-  const lost = after.replace(/^.*\n/, '');
-  assert.notEqual(lost, after, 'đột biến bớt dòng có sẵn không áp được');
-  assert.throws(() => kiemCapM2(before, lost), /cặp config bớt dòng: -/);
+  assert.throws(() => kiemCapM2(before, extra), (e) => e.message.includes('thiếu: không; thừa: +    x: 1'));
+  for (const [key, other] of [['design_floor_fresh', 'design_floor_gen'], ['design_floor_gen', 'design_floor_fresh']]) {
+    const dropped = after.replace(new RegExp(`^\\s+${key}: .*\\n`, 'm'), '');
+    assert.notEqual(dropped, after, `đột biến bớt ${key} không áp được`);
+    assert.throws(() => kiemCapM2(before, dropped), (e) => e.message.includes(`thiếu: ${key};`) && !e.message.includes(`thiếu: ${other}`), key);
+  }
+  const firstLine = after.split('\n')[0];
+  const lost = after.slice(firstLine.length + 1);
+  assert.ok(firstLine && before.startsWith(`${firstLine}\n`), 'dòng đầu phải là dòng có sẵn ở bản trước');
+  assert.throws(() => kiemCapM2(before, lost), (e) => e.message === `cặp config bớt dòng: -${firstLine}`);
 });
 
 test('M2-AC-10 thiếu commit ghim: blobAt đỏ có tên và gợi ý; commit thật thì trả blob', () => {

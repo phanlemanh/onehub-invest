@@ -83,7 +83,9 @@ export function kiemCapM2(before, after) {
   if (removed.length) throw new Error(`cặp config bớt dòng: ${removed.join(' | ')}`);
   const keys = added.map((l) => /^\+\s+([a-z_]+):/.exec(l)?.[1] ?? null);
   if (added.length !== 2 || keys[0] !== M2_EXECUTOR_KEYS[0] || keys[1] !== M2_EXECUTOR_KEYS[1]) {
-    throw new Error(`cặp config thêm ${added.length} dòng, chờ đúng ${M2_EXECUTOR_KEYS.join(', ')}: ${added.join(' | ')}`);
+    const missing = M2_EXECUTOR_KEYS.filter((k) => !keys.includes(k));
+    const extra = added.filter((_, i) => !M2_EXECUTOR_KEYS.includes(keys[i]));
+    throw new Error(`cặp config thêm ${added.length} dòng, chờ đúng ${M2_EXECUTOR_KEYS.join(', ')} — thiếu: ${missing.join(', ') || 'không'}; thừa: ${extra.join(' | ') || 'không'}`);
   }
   return { added, removed };
 }
