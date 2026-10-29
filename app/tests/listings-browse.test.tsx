@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { Fragment, isValidElement, Suspense, type ReactElement, type ReactNode } from "react";
 
+import { MAP_FILES_MONG } from "../../scripts/lib/map-files-mong.mjs";
 import type { FilterQuery } from "../src/components/reui/filters/filters-types";
 import type { ListingCardRow } from "../src/lib/queries";
 
@@ -201,10 +202,26 @@ test("LB-AC-1 vendor mapcn: registry, map.tsx nguyên bản, ngoại lệ lint �
   bumped.packages["node_modules/maplibre-gl"].version = "6.16.0";
   assert.throws(() => checkLock(bumped), /maplibre-gl trong package-lock lệch main/);
 
-  // Danh sách tệp được dùng hex: đúng 2 tệp lib viết trước (don-hex-tho dời màu bản đồ sang lib/map-colors.ts).
-  const eslintSrc = read("eslint.config.mjs");
+  // Danh sách tệp được dùng hex: đúng trọn danh sách viết trước, ghim chữ ở scripts/lib/map-files-mong.mjs.
+  kiemMapFiles(read("eslint.config.mjs"));
+});
+
+/** MAP_FILES của eslint bằng đúng danh sách viết trước và không miễn hex cho ui/map.tsx (bản cài mapcn). */
+function kiemMapFiles(eslintSrc: string, mong: readonly string[] = MAP_FILES_MONG) {
   const mapFiles = [...(eslintSrc.match(/const MAP_FILES = \[([\s\S]*?)\]/)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(mapFiles, ["src/lib/map-style.ts", "src/lib/map-colors.ts"]);
+  if (mapFiles.includes("src/components/ui/map.tsx")) throw new Error("ui/map.tsx (mapcn) không được miễn hex");
+  if (JSON.stringify(mapFiles) !== JSON.stringify([...mong])) {
+    throw new Error(`MAP_FILES lệch danh sách viết trước: thừa [${mapFiles.filter((x) => !mong.includes(x)).join(", ")}]`);
+  }
+}
+
+test("LB-AC-1 MAP_FILES đột biến: đổi danh sách mà không đổi danh sách viết trước → đỏ; đổi cả hai → xanh", () => {
+  const eslintSrc = read("eslint.config.mjs");
+  const cuoi = `"${MAP_FILES_MONG.at(-1)}",`;
+  const them = (f: string) => eslintSrc.replace(cuoi, `${cuoi}\n  "${f}",`);
+  assert.throws(() => kiemMapFiles(them("src/lib/map-extra.ts")), /MAP_FILES lệch danh sách viết trước: thừa \[src\/lib\/map-extra\.ts\]/);
+  assert.doesNotThrow(() => kiemMapFiles(them("src/lib/map-extra.ts"), [...MAP_FILES_MONG, "src/lib/map-extra.ts"]));
+  assert.throws(() => kiemMapFiles(them("src/components/ui/map.tsx"), [...MAP_FILES_MONG, "src/components/ui/map.tsx"]), /ui\/map\.tsx \(mapcn\) không được miễn hex/);
 });
 
 // ── LB-AC-2: biên dịch cây lọc ───────────────────────────────────────────────────────────────────
