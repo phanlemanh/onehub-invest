@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f1971a7f4fd64414f3230b8963e54e76580c07a7
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: viewer-khong-thay-the-duyet

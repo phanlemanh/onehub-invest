@@ -5,7 +5,7 @@ slug: viewer-khong-thay-the-duyet
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/lib/ops-access.ts (t3_paths)
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-27-viewer-khong-thay-the-duyet-design.md
@@ -49,3 +49,10 @@ Quét bằng morphological-scan, preset test-matrix:
 ## Notes
 
 - Chưa ai mang vai viewer (đo 27/10): local user=1, admin=2; cloud admin=1. Tài khoản thử vai viewer `viewer-test@local.test` chỉ trên DB local (khuôn `scripts/dev-ops-account.mjs`, không lên cloud).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-2: Hai commit cũ của nhánh PR (e171c91d, b456126f) còn ảnh bằng chứng lượt 1 có toàn văn một bài S03; cây hiện tại đã che.
+  - Ngoài-3: Phép kiểm tài khoản thử viewer (E10) có thể báo đạt mà chưa chạm DB khi DB local tắt.
+  - Ngoài-5: Người xem không thấy tên nhóm trong khung chi tiết bản ghi, dù tên nhóm vẫn hiện ở bảng nhóm cùng trang (che thừa, không che thiếu).
+  - Ngoài-6: Bộ kiểm kê route chỉ nhận ra bốn tên cột nội dung, nên một màn Ops mới đọc thẻ hay ảnh tin mà tự khai «không đọc» có thể lọt.
+  - Ngoài-7: Phép đo «trang tự đọc phiên đăng nhập» soát chữ trong mã, không chạy trang; sửa trang dùng người cố định có thể không làm nó đỏ.
+  - Ngoài-8: Phép đo trang Dòng chảy trên cloud dùng bản tin mẫu tự dựng, lệch khuôn bản tin thật có thể không làm nó đỏ.
