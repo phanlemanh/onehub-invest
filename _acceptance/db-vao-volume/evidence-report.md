@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 4f5486d618635945bc3e668aa947fe016ca83b55
+verified_commit: 3dbf610d3c4544c685d83ed564122e8f88a08e39
 human_signoff: Mạnh 2026-10-29
 ---
 
@@ -233,3 +233,11 @@ none — mọi eval chạy một lần (xác định), không có eval nhiều l
 ## Iterations
 
 Round 1: mọi eval máy (E1-E12, E14, E15) đạt và các lệnh suite đạt; E13 (judgment) còn một phiếu chưa chốt (hai dòng số dòng trống trong chuyen-that.log), chờ người ở Cổng 2. Baseline không đo được (hạ tầng). Mốc giờ verified_at chỉ ghi ngày verify (2026-10-29), không bắt được giờ chính xác.
+
+### Re-pin lần 1 — 2026-10-29, do sau db-volume-live-ban-lui: thước live không đòi bản lùi tồn tại mãi
+run_id: repin-20261029T103227Z-30313
+sha: d4d9450292f0e864927b242b9c86ef172828072a · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E13 · AC không có chốt máy: AC-10
+
+### Re-pin lần 2 — 2026-10-29, do sau db-volume-live-ban-lui vòng 2 (sửa tự kiểm live) + gộp origin/main
+run_id: repin-20261029T120251Z-66574
+sha: 3dbf610d3c4544c685d83ed564122e8f88a08e39 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E13 · AC không có chốt máy: AC-10
