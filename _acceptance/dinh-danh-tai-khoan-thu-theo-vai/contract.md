@@ -5,7 +5,7 @@ slug: dinh-danh-tai-khoan-thu-theo-vai
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/lib/ops-access.ts, pipeline/push-ops-facts.mjs (t3_paths)
 surfaces: [ui, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-29-dinh-danh-tai-khoan-thu-theo-vai-design.md
@@ -75,3 +75,10 @@ Vòng này che các trường ấy với Người xem và bearer, và thôi đư
 ## Notes
 
 - Mã tài khoản là bí danh cấu hình, không phải định danh thật (kiểm cục bộ 29/10, không in giá trị).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-2: Chưa có phép thử khứ hồi từ bản tin kiểu mới (chỉ gửi số nhóm bật); nếu nhánh đọc số ấy gãy, Người xem thấy «0 nhóm bật» mà không phép đo nào báo.
+  - Ngoài-3: Khi DB phiên trục trặc, người vận hành thấy trang Thu thập ở dạng đã che như thiếu quyền, không có lời báo lỗi (che nhiều hơn, không lộ).
+  - Ngoài-4: Nhóm Zalo chưa có tên hiển thị thì mã nhóm được dùng làm tên, vẫn lên cloud và hiện cho Người xem, bearer trong bảng nhóm.
+  - Ngoài-5: Trùng Ngoài-3 — phiên ops, admin bị che định danh mà không báo gì khi tra phiên lỗi.
+  - Ngoài-6: Ca bearer kèm cookie vận hành chỉ kiểm vắng mã, không kiểm mã trạng thái, nên có thể xanh dù route trả lỗi.
+  - Ngoài-7: Phép đo ON4-AC-2 về số nhóm S03 lên cloud yếu đi; bản tin đếm sai tổng số nhóm thì nó không bắt được.
