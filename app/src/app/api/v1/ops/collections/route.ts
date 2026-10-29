@@ -1,4 +1,5 @@
-import { xuLyThuThap } from "@/lib/collections-api";
+import { traThuThap } from "@/lib/collections-api";
+import { kiemQuyen } from "@/lib/ops-access";
 
 export const dynamic = "force-dynamic";
 
@@ -8,5 +9,7 @@ export const dynamic = "force-dynamic";
  * (tối đa 90). Người xem và bearer nhận bản đã che định danh tài khoản thu (lib/collections-api.ts).
  */
 export async function GET(req: Request) {
-  return xuLyThuThap(req);
+  const q = await kiemQuyen(req, "ops.read");
+  if (!q.ok) return q.res;
+  return traThuThap(req, q.nguoi);
 }

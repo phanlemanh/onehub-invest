@@ -270,22 +270,22 @@ describe("DD-AC-3 API máy thu theo người gọi", () => {
     // Review Focus 1: bearer kèm cookie phiên ops — nhánh bearer thắng (kiemQuyen), nên vẫn bị che.
     const kem = await goi(api, { authorization: `Bearer ${TOKEN}`, cookie: COOKIE.ops! })
     assert.doesNotMatch(kem.text, MA_CAY, "bearer kèm cookie ops vẫn phải bị che")
-    const boChe = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) => s.replace("xemDinhDanhThu(q.nguoi) ? payload : cheDinhDanhThu(payload)", "payload"))
+    const boChe = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) => s.replace("xemDinhDanhThu(nguoi) ? payload : cheDinhDanhThu(payload)", "payload"))
     await assert.rejects(doMaTran3(boChe), /ô '(viewer|bearer)'/, "đối chứng bỏ nhánh che phải đỏ ở ô viewer/bearer")
-    const theoActor = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) => s.replace("xemDinhDanhThu(q.nguoi) ? payload", "(q.nguoi === null || xemDinhDanhThu(q.nguoi)) ? payload"))
+    const theoActor = await banChepTam<ApiMod>("src/lib/collections-api.ts", (s) => s.replace("xemDinhDanhThu(nguoi) ? payload", "(nguoi === null || xemDinhDanhThu(nguoi)) ? payload"))
     await assert.rejects(doMaTran3(theoActor), /ô 'bearer'/, "đối chứng coi bearer như vai ops phải đỏ ở ô bearer")
   })
-  test("DD-AC-3b route.ts gọi xuLyThuThap", () => {
+  test("DD-AC-3b route.ts gọi traThuThap sau kiemQuyen", () => {
     const loiRoute = (src: string) => {
       const loi: string[] = []
-      if (!/xuLyThuThap\(req/.test(src)) loi.push("route.ts không gọi xuLyThuThap(req")
+      if (!/kiemQuyen\(req, "ops\.read"\)[\s\S]*traThuThap\(req, q\.nguoi\)/.test(src)) loi.push("route.ts không gọi traThuThap(req, q.nguoi) sau kiemQuyen")
       if (/Promise\.all|NextResponse\.json/.test(src)) loi.push("route.ts tự dựng payload")
       return loi
     }
     const src = readFileSync(path.join(APP, "src/app/api/v1/ops/collections/route.ts"), "utf8")
     assert.deepEqual(loiRoute(src), [])
     assert.deepEqual(loiRoute(`export async function GET(req: Request) { return NextResponse.json(await Promise.all([])) }`), [
-      "route.ts không gọi xuLyThuThap(req",
+      "route.ts không gọi traThuThap(req, q.nguoi) sau kiemQuyen",
       "route.ts tự dựng payload",
     ])
   })

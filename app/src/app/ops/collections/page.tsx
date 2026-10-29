@@ -12,5 +12,5 @@ function requestTime(): number {
 
 /** /ops/collections "Thu Thập" (portals.md) — thân trang ở CollectionsContent (đọc phiên, che theo vai). */
 export default async function CollectionsPage() {
-  return <CollectionsContent nowMs={requestTime()} />;
+  return CollectionsContent({ nowMs: requestTime() });
 }

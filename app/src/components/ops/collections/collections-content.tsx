@@ -17,7 +17,7 @@ import { freshnessLocalOnly, getSourceFeedHealth, getLockdownStatus } from "@/li
 import { getCloudOpsView, withLockdownGates } from "@/lib/ops-cloud";
 import { getSourceRoles } from "@/lib/source-roles";
 
-import { CollectionsView, type CollectionsData } from "./collections-view";
+import { CollectionsView, type CollectionsData } from "@/components/ops/collections/collections-view";
 
 /** Dữ liệu trang Thu thập ở máy thu hoặc trên cloud (ON3, ADR-0014) — tách khỏi page.tsx để ca thử tiêm nguồn. */
 export async function docTrangThuThap(nowMs: number): Promise<CollectionsData> {
@@ -53,9 +53,18 @@ export async function docTrangThuThap(nowMs: number): Promise<CollectionsData> {
  * thành phần client (hồ sơ dinh-danh-tai-khoan-thu-theo-vai, Hỏi-2 = A) — dữ liệu không xuống trình duyệt.
  * `getUser`, `doc` tiêm được để ca thử dựng ngoài request.
  */
+/** Phiên đăng nhập của request; ngoài request Next (ca thử dựng trang trực tiếp) không có cookies → null, tức bị che. */
+async function nguoiPhien(): Promise<User | null> {
+  try {
+    return await getSessionUser();
+  } catch {
+    return null;
+  }
+}
+
 export async function CollectionsContent({
   nowMs,
-  getUser = getSessionUser,
+  getUser = nguoiPhien,
   doc = docTrangThuThap,
 }: {
   nowMs: number;
