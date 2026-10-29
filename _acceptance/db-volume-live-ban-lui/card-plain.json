@@ -1,0 +1,28 @@
+{
+  "feature_plain": "Phép kiểm «DB có nằm trong ổ dữ liệu riêng không» thôi báo động giả sau khi dọn bản lùi theo kế hoạch, mà vẫn canh bản lùi suốt thời gian còn cần nó.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ báo xanh khi đã dọn bản lùi sau hạn giữ (05/11 16:20), và báo đỏ nếu bản lùi biến mất trước hạn ấy (theo khuyến nghị — chờ Mạnh chọn ở Hỏi-1)."},
+    {"id": "AC-3", "p": "Sẽ báo đỏ, gọi đúng tên, khi bất kỳ bản lùi nào bị bật lại hay đặt tự chạy lại — không chỉ bản mới nhất."},
+    {"id": "AC-4", "p": "Sẽ tự kiểm cả đường gom bản lùi trên máy thật và đủ 16 tình huống đã liệt kê trước, mỗi tình huống một kết luận ghim sẵn."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên các phép kiểm khác của DB và hồ sơ đã ký trước (chuyển DB vào volume) — có lượt ghim lại làm bằng chứng."}
+  ],
+  "wont_do": [
+    {"id": "AC-2", "p": "Sẽ KHÔNG bao giờ báo xanh khi dữ liệu DB nằm ngoài ổ dữ liệu riêng, bất kể bản lùi ở trạng thái nào."},
+    {"id": "OOS-1", "p": "Không sửa sổ tay vận hành trong việc này (ngoài vùng hàng; câu hiện có vẫn đúng khi còn bản lùi)."},
+    {"id": "OOS-2", "p": "Không xoá bản lùi — đó là việc Mạnh duyệt sau 05/11."},
+    {"id": "OOS-3", "p": "Không làm các hạn chế đã biết khác của việc chuyển DB."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Theo chỗ ở của dữ liệu: trong ổ dữ liệu riêng (AC-1, AC-3) hay trong lớp tạm của container (AC-2)."},
+    {"i": 1, "p": "Theo tình trạng bản lùi: tám trạng thái, gồm vắng trước/sau hạn giữ, một hay hai bản, bản đang chạy ở đầu hay cuối danh sách (AC-1, AC-3)."},
+    {"i": 2, "p": "Theo đường gom bản lùi trên máy thật: không có hay có container khớp (AC-4)."},
+    {"i": 3, "p": "Áp cho mọi phần: hồ sơ đã ký trước không lùi (AC-5)."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Câu của Mạnh không chọn giữa «vắng bản lùi luôn xanh» và «vẫn đòi trong hạn giữ» — đã chuyển thành câu hỏi Hỏi-1 cho Mạnh, nháp theo lối vẫn đòi trong hạn giữ."},
+    {"i": 1, "p": "Đường gom bản lùi trên máy thật chưa được thử khi không còn bản lùi nào — đã thêm hai phép thử chạy qua Docker thật."},
+    {"i": 2, "p": "Lời hứa «mọi bản lùi» mới thử ở một vị trí — đã thêm tình huống bản mới nhất đang chạy và hai bản đều đúng, nâng lên 16 tình huống."},
+    {"i": 3, "p": "Kỳ vọng ghim cứng tên bản lùi hiện tại, nên sẽ đỏ lại sau khi dọn — đã đổi kỳ vọng theo tình trạng lúc chạy."},
+    {"i": 4, "p": "Lời hứa không lùi hồ sơ đã ký chưa có phép đo — đã thêm phép đo đọc lượt ghim lại của hồ sơ ấy và ghim đầu ra các phép kiểm khác."}
+  ]
+}

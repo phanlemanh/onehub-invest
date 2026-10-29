@@ -1,0 +1,78 @@
+schema_version: 1
+feature_slug: dinh-danh-tai-khoan-thu-theo-vai
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dinh_danh_thu
+    paths: [app/src/lib/ops-access.ts, app/tests/dinh-danh-thu.test.tsx]
+    expected: "exit 0; ca 'DD-AC-1': bảng 7 dòng viết trước (user false, viewer false, ops true, admin true, owner true, role user + email OPS_EMAILS true, bearer null false) → xemDinhDanhThu đúng từng dòng; đối chứng: bản ops-access chép tạm hạ ngưỡng về viewer → ca đỏ nêu tên dòng 'viewer'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dinh_danh_thu
+    paths: [app/src/lib/collections-queries.ts, app/tests/dinh-danh-thu.test.tsx]
+    expected: "exit 0; ca 'DD-AC-2': bộ dữ liệu viết trước 2 tài khoản (mã 'dd-acc-<n>', hồ sơ 'dd-prof-<n>', nhóm bật 'dd-grp-<n>-<k>'), allowlist 3 mã 'dd-grp-*', 2 nhóm có ownerAccount 'dd-acc-1'; sau cheDinhDanhThu: zaloAccounts.length === 2, mỗi phần tử accountId/name/profile === null, enabledGroups.length === 0, soNhomBat === số nhóm gốc; zaloAllowlist.length === 3 và mọi groupId === null; mọi ownerAccount === null; JSON.stringify(kết quả) không khớp /dd-(acc|prof|grp)-/; đối chứng: bản chép tạm bỏ dòng che ownerAccount → ca đỏ nêu 'ownerAccount'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dinh_danh_thu
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/collections/route.ts, app/src/lib/collections-queries.ts, app/src/lib/ops-access.ts, app/tests/dinh-danh-thu.test.tsx]
+    expected: "exit 0; ca 'DD-AC-3': gọi GET của route.ts với Request giả: 6 kiểu người bằng phiên giả (nguoiTuRequest tiêm được); ô bearer BẮT BUỘC là Request có header Authorization 'Bearer <token thử>' với OPS_API_TOKEN đặt bằng token thử, đi qua kiemQuyen thật, không tiêm người, nguồn dữ liệu giả trả bộ dữ liệu của DD-AC-2; ma trận MA_TRAN viết trước 7 ô (assert length 7): user → 403; viewer, bearer → JSON không khớp /dd-(acc|prof|grp)-/; ops, admin, owner, OPS_EMAILS → JSON chứa 'dd-acc-1' và 'dd-grp-1-1'; zaloAccounts.length và zaloAllowlist.length bằng nhau giữa ô viewer và ô ops; đối chứng: bản route chép tạm bỏ nhánh che → ca đỏ nêu ô 'viewer' hoặc 'bearer'; bản route chép tạm coi bearer như vai ops (che theo q.actor thay vì xemDinhDanhThu(q.nguoi)) → ca đỏ nêu ô 'bearer'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dinh_danh_thu
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/collections/route.ts, app/src/lib/collections-queries.ts, app/tests/dinh-danh-thu.test.tsx]
+    expected: "exit 0; ca 'DD-AC-4': VERCEL=1, getLocalFacts đọc bản tin giả có zaloAccounts mang 'dd-acc-*', profile 'dd-prof-*' và enabledGroups 'dd-grp-*'; viewer (phiên giả) và bearer (header Authorization thật qua kiemQuyen) → JSON không khớp /dd-(acc|prof|grp)-/, mỗi phần tử profile === null và zaloAccounts.length giữ nguyên; ops → chứa 'dd-acc-1'; đối chứng: bản chép tạm bỏ dòng che profile → ca đỏ nêu 'profile'; biến VERCEL trả về như cũ sau ca"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dinh_danh_thu
+    layer: backend-effect
+    paths: [app/src/app/ops/collections/page.tsx, app/src/components/ops/collections-tables.tsx, app/src/components/ops/collections/collections-view.tsx, app/tests/dinh-danh-thu.test.tsx]
+    expected: "exit 0; ca 'DD-AC-5': thân trang /ops/collections ở máy thu dựng với người tiêm qua tham số cho viewer và ops, nguồn dữ liệu giả của DD-AC-2; viewer: JSON props trao CollectionsView không khớp /dd-(acc|grp)-/; jsdom dựng ZaloGroupsTable với props ấy → mọi ô cột tài khoản giữ nhóm là '—', chú thích chứa 'mã nhóm chỉ hiện cho vai Vận hành trở lên.' và số nhóm bật '3'; ops: chú thích chứa đuôi 6 ký tự của 'dd-grp-1-1', ô tài khoản giữ nhóm chứa 'dd-acc-1', không chứa câu chú thích vai; chế độ cloud (VERCEL=1, bản tin giả mang 'dd-acc-*', 'dd-prof-*', 'dd-grp-*'): JSON props trao CollectionsView của viewer không khớp /dd-(acc|prof|grp)-/, của ops vẫn hiện như hôm nay"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/push-ops-facts.mjs, pipeline/scripts/soat-tang-a.test.mjs]
+    expected: "exit 0; ca 'DD-AC-6' (trong pipeline/scripts/soat-tang-a.test.mjs): hàm dựng zaloAccounts của push-ops-facts nhận cấu hình giả 1 tài khoản với 2 nhóm bật → enabledGroups.length === 0, soNhomBat === 2, name === null; factsChan trên bản tin giả có zaloAccounts[0].enabledGroups = ['dd-grp-x'] → trả dòng chứa 'zaloAccounts[0].enabledGroups'; bản tin che đúng → factsChan không có dòng nào về zaloAccounts"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.dinh_danh_thu
+    paths: [app/src/components/ops/sources/zalo-accounts.tsx, app/tests/dinh-danh-thu.test.tsx]
+    expected: "exit 0; ca 'DD-AC-7': jsdom dựng danh sách tài khoản cloud của zalo-accounts.tsx với fetch giả trả zaloAccounts [{accountId:'acc-a', name:null, profile:'acc-a', enabledGroups:[], soNhomBat:4}] → textContent chứa '4 nhóm bật', không chứa '0 nhóm bật'; đối chứng: bản chép tạm đọc enabledGroups.length → ca đỏ nêu '0 nhóm bật'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/**, app/src/components/ops/**, app/src/app/ops/**, app/src/lib/**]
+    expected: "exit 0 của cả bộ test app; đầu ra có '✔' cho các ca của tests/soat-tang-a.test.tsx, tests/collections-khong-so-s02.test.tsx, tests/tu-ngu-collections.test.tsx, tests/ops-nhan-theo-context.test.tsx và 'ℹ fail 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0 của cả bộ test pipeline; 'ℹ fail 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/collections-tables.tsx, app/src/app/ops/collections/page.tsx]
+    steps:
+      - "app dev chạy từ worktree đang kiểm ở cổng riêng :3462 — khởi động bằng npm --prefix app run dev -- -p 3462 từ gốc worktree (cổng :3456 có thể là dev server của worktree khác, KHÔNG dùng) — DB local :5433; mọi URL là http://localhost:3462. Chạy 'node scripts/dev-ops-account.mjs --vai viewer' để có tài khoản thử viewer-test@local.test (mật khẩu ở .claude/viewer-test-account.json, không in ra); đăng nhập /login; mở /ops/collections, cuộn tới bảng nhóm S03 và chú thích dưới bảng; chụp màn. Lặp lại với tài khoản thử admin (node scripts/dev-ops-account.mjs). Ảnh chụp không được để lộ mã nhóm đầy đủ hay tên nguồn thật: ảnh admin chỉ cần thấy đuôi mã nhóm như trang vẽ."
+    expected: "với viewer: cột tài khoản giữ nhóm toàn «—», chú thích dưới bảng có câu «mã nhóm chỉ hiện cho vai Vận hành trở lên.» và không có đuôi mã nhóm nào; với admin: chú thích có đuôi mã nhóm, cột tài khoản giữ nhóm có mã tài khoản ở ít nhất một hàng"
+    evidence_required: [screenshot, observed, verifier, verified_at]
