@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bộ kiểm của công cụ thiết kế thôi báo đỏ giả trên nhánh chính sau khi gộp và trên nhánh khác có sửa tệp cấu hình.",
+  "scope_plain": "Phạm vi bỏ ngoài giữ như đã khai ở Cổng Phạm vi: không sửa ca ghim số đếm (Ngoài-5 cũ), không đổi lời hồ sơ đã ký, không nối CI."
+}

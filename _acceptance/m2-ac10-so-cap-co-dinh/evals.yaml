@@ -1,0 +1,38 @@
+schema_version: 1
+feature_slug: m2-ac10-so-cap-co-dinh
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/fresh.test.mjs, scripts/design-floor/test-helpers.mjs]
+    expected: "exit 0; ca 'M2-AC-10 diff config.yaml cặp cố định 3b3a33e5^→3b3a33e5 chỉ thêm hai dòng executors' pass: 0 dòng bớt, đúng hai dòng thêm design_floor_gen, design_floor_fresh; thân ca (rút từ tệp nguồn) không có chuỗi 'merge-base', 'origin/main' hay readFileSync của config cây; quan hệ «không phụ thuộc ref» đo ở E2 (ba trạng thái ref); cặp đỏ của hàm ở E3; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/fresh-sau-gop.test.mjs, scripts/design-floor/fresh.test.mjs, scripts/design-floor/test-helpers.mjs]
+    expected: "exit 0; ca 'M2-AC-10 sau gộp' pass ở ba trạng thái ref của bản clone có một commit thêm khoá vào config.yaml — (a) origin/main = HEAD, (b) origin/main = cha của commit đó, (c) xoá ref origin/main: fresh.test.mjs bản sửa thoát 0 ở cả ba; cặp đỏ cùng cây ở (a) và (b): fresh.test.mjs ở 98757b5f có đúng MỘT dòng TAP bắt đầu 'not ok' và dòng đó chứa 'M2-AC-10 diff config.yaml so merge-base'; should-NOT-fire: không 'not ok' ở bản sửa"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/fresh.test.mjs, scripts/design-floor/test-helpers.mjs]
+    expected: "exit 0; các ca 'M2-AC-10 hàm kiểm cặp' pass: kiemCapM2 trên cặp blob thật 3b3a33e5^→3b3a33e5 không ném, trả added đúng hai dòng (design_floor_gen, design_floor_fresh), removed []; bản sau thêm dòng 'x: 1' → ném lỗi nêu dòng thêm đó; bản sau bớt dòng design_floor_fresh → ném lỗi nêu dòng bớt đó; thân ca 'M2-AC-10 diff config.yaml cặp cố định' (rút từ tệp nguồn) gọi kiemCapM2; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/fresh.test.mjs, scripts/design-floor/test-helpers.mjs]
+    expected: "exit 0; ca 'M2-AC-10 thiếu commit ghim' pass: blobAt (đúng hàm ca M2-AC-10 dùng) với sha 40 chữ số 0 ném lỗi chứa 'thiếu commit ghim 0000000000000000000000000000000000000000' và 'git fetch --unshallow'; đối chứng dương cùng hàm: blobAt('3b3a33e5…', '_acceptance/config.yaml') trả chuỗi khác rỗng có 'design_floor_gen'; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/*.test.mjs]
+    expected: "exit 0; 0 'not ok'; ca 'M2-AC-10 không hạ thước' pass: tập tên ca test(...) của bốn tệp test tại 98757b5f trừ đúng tên 'M2-AC-10 diff config.yaml so merge-base origin/main chỉ thêm hai dòng executors của hồ sơ' là tập con của tập tên ca hiện tại; thân hai ca M2-AC-10 còn lại giống từng byte bản 98757b5f; cặp đỏ cùng thước: bỏ một tên ca khỏi tập hiện tại → thước gọi đúng tên đó"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
