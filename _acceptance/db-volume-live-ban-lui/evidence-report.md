@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 39eefa6f2c41bf4b63a3de0a9842970f5e53ae4f
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: db-volume-live-ban-lui

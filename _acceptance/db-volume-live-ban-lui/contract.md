@@ -5,7 +5,7 @@ slug: db-volume-live-ban-lui
 owner: phanlemanh@gmail.com
 risk_tier: T2      # scripts/db-volume-check.sh + hồ sơ — không chạm t3_paths
 surfaces: [ops]
-status: verified
+status: signed-off
 design_doc: _acceptance/db-volume-live-ban-lui/design.md
 approved_by: Mạnh
 approved_at: 2026-10-29
@@ -64,3 +64,14 @@ coverage-scan» trong sổ).
 - Không có bề mặt UI → không design-pass, không đặc tả UX, không eval ui-check (sổ quyết định).
 - S3 chạy làn ghim lại của hồ sơ `db-vao-volume` trên cây sau vòng (`repin-lane.mjs --slug db-vao-volume --write`, cần
   lượt `ghim-lai` của đợt); E8 đọc kết quả lượt ấy. Phải gộp trước 05/11/2026 16:20 giờ VN (hạn giữ bản lùi).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: đặt biến ép giờ `DB_VOLUME_GIO_GIA` khi chạy `live` trên máy thật có thể làm phép kiểm xanh dù bản lùi mất trước hạn giữ, và kết quả không nói giờ đã bị ép.
+  - Ngoài-3: docker lỗi đúng lúc gom bản lùi thì phép kiểm hiểu là «không còn bản lùi», sau hạn giữ sẽ báo xanh; chạy lại là ra kết quả đúng.
+  - Ngoài-4: mô tả E1 trong `evals.yaml` nói tự kiểm đi qua biến ép giờ, nhưng thật ra tự kiểm truyền giờ trực tiếp.
+  - Ngoài-5: tự kiểm chỉ ghim chuỗi mốc hạn trong thông điệp; sửa nhầm hằng hạn giữ sang giờ khác nhưng vẫn giữ chuỗi thì có thể lọt.
+  - Ngoài-6: ô «hai bản đều dừng đúng» chỉ ghim dòng PASS của một bản lùi.
+  - Ngoài-7: biến ép giờ không được ghi ở đầu tệp như một móc chỉ để thử.
+  - Ngoài-8: bước dựng lại cụm đối chứng (`--force-recreate`) của tập dượt vẫn nuốt lỗi docker, khó chẩn đoán khi hỏng.
+  - Ngoài-9: ca đối chứng kiểu cũ có thể báo «bảng x mất» cả khi cụm đối chứng không lên hoặc lệnh tạo bảng lỗi.
+  - Ngoài-12: ô «hai bản đều dừng đúng» chỉ xác nhận dòng báo của một bản (cùng gốc Ngoài-6).
+  - Ngoài-13: tự kiểm không đi qua đúng đường nhận giờ của lệnh `live` thật.
