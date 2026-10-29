@@ -344,3 +344,56 @@ describe("DD-AC-4 API trên cloud", () => {
     await assert.rejects(doCloud(sai), /profile/, "đối chứng bỏ che profile phải đỏ")
   })
 })
+
+// ---------- AC-5: trang Thu thập che ở máy chủ ----------
+type CollectionsData = import("../src/components/ops/collections/collections-view").CollectionsData
+type ContentMod = { CollectionsContent: (p: { nowMs: number; getUser?: () => Promise<User | null>; doc?: () => Promise<CollectionsData> }) => Promise<import("react").ReactElement<CollectionsData>> }
+const DU_LIEU_TRANG = (cloud: boolean) => ({ ...BO_DU_LIEU(), nowMs: 0, ...(cloud ? { cloud: { state: "fresh" } } : {}) }) as unknown as CollectionsData
+async function dungTrang(mod: ContentMod, u: User, cloud = false) {
+  const el = await mod.CollectionsContent({ nowMs: 0, getUser: async () => u, doc: async () => DU_LIEU_TRANG(cloud) })
+  return el.props
+}
+async function bangNhom(props: CollectionsData) {
+  const { ZaloGroupsTable } = await import("../src/components/ops/collections-tables")
+  return render(<ZaloGroupsTable rows={props.zaloGroups} allowlist={props.zaloAllowlist} roles={{}} />)
+}
+async function doTrang(mod: ContentMod) {
+  for (const cloud of [false, true]) {
+    const noi = cloud ? "cloud" : "máy thu"
+    const pv = await dungTrang(mod, NGUOI.viewer, cloud)
+    assert.doesNotMatch(JSON.stringify(pv), MA_CAY, `${noi} ô 'viewer': props trao client còn mã cấy`)
+    const po = await dungTrang(mod, NGUOI.ops, cloud)
+    assert.match(JSON.stringify(po), /dd-acc-1/, `${noi} ô 'ops': props phải còn mã tài khoản`)
+  }
+}
+
+describe("DD-AC-5 trang Thu thập", () => {
+  test("DD-AC-5 che trước khi trao client, chú thích theo vai", async () => {
+    const mod = (await import("../src/components/ops/collections/collections-content")) as unknown as ContentMod
+    await doTrang(mod)
+    const rv = await bangNhom(await dungTrang(mod, NGUOI.viewer))
+    const tv = rv.textContent ?? ""
+    assert.ok(tv.includes("mã nhóm chỉ hiện cho vai Vận hành trở lên."), "viewer: câu chú thích mã nhóm")
+    assert.ok(tv.includes("đang bật 3 nhóm"), "viewer: số nhóm bật")
+    assert.ok(!tv.includes("1-1"), "viewer: không đuôi mã nhóm")
+    // Cột «Tài khoản» (tài khoản giữ nhóm) tìm theo tiêu đề, không theo vị trí.
+    const cotTaiKhoan = (root: HTMLElement) => {
+      const idx = [...root.querySelectorAll("thead th")].findIndex((th) => (th.textContent ?? "").trim() === "Tài khoản")
+      assert.ok(idx >= 0, "bảng nhóm phải có cột «Tài khoản»")
+      return [...root.querySelectorAll("tbody tr")].map((tr) => (tr.querySelectorAll("td")[idx]?.textContent ?? "").trim())
+    }
+    const oViewer = cotTaiKhoan(rv)
+    assert.deepEqual([...new Set(oViewer)], ["—"], `viewer: mọi ô cột tài khoản giữ nhóm phải là «—»: ${JSON.stringify(oViewer)}`)
+    assert.ok(!tv.includes("dd-acc-1"), "viewer: không tài khoản giữ nhóm")
+    const ro = await bangNhom(await dungTrang(mod, NGUOI.ops))
+    const to = ro.textContent ?? ""
+    assert.ok(to.includes("grp-1-1".slice(-6)), "ops: đuôi mã nhóm")
+    assert.ok(cotTaiKhoan(ro).includes("dd-acc-1"), "ops: cột tài khoản giữ nhóm có dd-acc-1")
+    assert.ok(!to.includes("mã nhóm chỉ hiện cho vai Vận hành trở lên."), "ops: không câu chú thích vai")
+    assert.ok(oViewer.length > 0, "viewer: bảng có hàng")
+    const sai = await banChepTam<ContentMod>("src/components/ops/collections/collections-content.tsx", (s) =>
+      s.replace("xemDinhDanhThu(user) ? data : cheDinhDanhThu(data)", "data"),
+    )
+    await assert.rejects(doTrang(sai), /ô 'viewer'/, "đối chứng bỏ dòng che phải đỏ ở ô viewer")
+  })
+})
