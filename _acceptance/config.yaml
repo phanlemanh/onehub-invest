@@ -66,6 +66,7 @@ executors:
     dong_chay_so_cu: "cd app && node --import tsx --test tests/dong-chay-so-cu.test.tsx"   # dong-chay-so-cu-may-thu — số tính sẵn quá 45′ ở máy thu báo số cũ
     luong7: "cd app && node --import tsx --test tests/luong-7-ngay-dung-so.test.tsx"
     gop_trung: "cd pipeline && node --test scripts/gop-trung-s03.test.mjs scripts/gop-trung-s03.itest.mjs"   # s03-gop-trung-dung — .test thuần (CI), .itest cần DB local :5433 (BEGIN…ROLLBACK)
+    hex_tho: "node --test scripts/don-hex-tho.test.mjs"   # don-hex-tho — 0 hex thô ngoài vendor (RE_HEX của design-floor S4), 14 màu bản đồ giữ giá trị ở lib/map-colors.ts; không DB (giám sát duyệt U1-61)
     dem_de_xuat: "cd app && node --import tsx --test tests/df0-dem-de-xuat.test.tsx"   # df0-dem-de-xuat-lam-giau — đếm đề xuất làm giàu queued (lược đồ tạm)
     chang_ngay: "cd app && node --import tsx --test tests/df0-chang-theo-ngay.test.tsx"   # df0-chang-theo-ngay-diem-0 — chuỗi ngày đủ cửa sổ, ngày im = 0 (thuần + jsdom)
     ops_nhan: "cd app && node --import tsx --test tests/ops-nhan-theo-context.test.tsx"
@@ -74,6 +75,8 @@ executors:
     cong_tac: "cd app && node --import tsx --test tests/cong-tac-nhom-go.test.tsx"   # cong-tac-khong-ha-nhom-go: ma trận 5 × 2 của công tắc, cần DB local :5433
     cong_tac_ghim: "node --test scripts/cong-tac-ghim.itest.mjs"   # cong-tac-test-ghim-ban-cu: đối chứng ghim, cần DB local :5433
     quyen_bon_vai: "cd app && node --import tsx --test tests/quyen-bon-vai.test.tsx"   # quyen-bon-vai-mot-cho (TV1): bảng quyền bốn vai + audit cùng transaction, cần DB local :5433
+    viewer_the_duyet: "cd app && node --import tsx --test tests/viewer-the-duyet.test.tsx"
+    dev_ops_account: "node --test scripts/dev-ops-account.test.mjs"   # tài khoản thử dev (admin, --vai viewer) — cần DB local :5433   # viewer-khong-thay-the-duyet: vai viewer không thấy thẻ duyệt và bài gốc, cần DB local :5433
     vong_doi_nguon_local: "cd pipeline && node --test scripts/vong-doi-local.itest.mjs"   # TV2a AC-9: DB local :5433 sau khi áp migration
     so_nhom: "cd pipeline && node --test scripts/so-nhom.itest.mjs"
     so_nhom_app: "cd app && node --import tsx --test tests/so-nhom.test.tsx"
@@ -216,6 +219,11 @@ executors:
     db_autostart_diff: "bash scripts/check-db-autostart.sh diff"           # compose của cây bỏ restart == compose commit trước vòng (f3cff1f)
     db_autostart_cleanup: "bash scripts/check-db-autostart.sh cleanup"     # lượt lỗi / SIGTERM giữa chừng vẫn dọn dind; DB thật không bị khởi động lại
     db_autostart_live_selftest: "bash scripts/check-db-autostart.sh live-selftest"   # bộ đọc live trên bản chép plist + inspect thật đã làm hỏng
+    # db-vao-volume (P2, yêu cầu P2-74 giám sát duyệt 29/10) — dữ liệu DB local nằm trong volume có tên
+    db_volume_static: "bash scripts/db-volume-check.sh static"         # compose gộp: volume có tên gắn ở thư mục chứa DEFAULT_DATADIR của ảnh
+    db_volume_mutation: "bash scripts/db-volume-check.sh mutation"     # năm bản compose hỏng đỏ với thông điệp ghim; bản lành xanh
+    db_volume_tap_duot: "bash scripts/db-volume-check.sh tap-duot"     # cần docker + ảnh kartoza/postgis:17-3.5; container onehub-tapduot-* cổng riêng, không chạm one-invest-db
+    db_volume_live: "bash scripts/db-volume-check.sh live"             # chỉ đọc máy này: data_directory của one-invest-db nằm trong volume onehub_pgdata
     # deals-api-tam-dong (AU2) — /api/v1/deals chỉ ops; smoke cần app chạy TỪ worktree đang kiểm + DB local :5433
     deals_api_smoke: "BASE_URL=${BASE_URL:-http://localhost:3456} node scripts/smoke-deals-api.mjs"
     deals_api_mutation: "node scripts/check-deals-api.mjs mutation"
@@ -438,6 +446,7 @@ executors:
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
+    gate_don_hex_tho: "for f in app/src/components/finder/bins.ts app/src/components/finder/choropleth-map.tsx app/src/components/listing/listings-map.tsx app/src/components/mini-map.tsx app/src/components/ops/data-flow/flow-journey.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # don-hex-tho E8 — gate từng tệp giao diện của vòng (gate không tự nối tệp từ paths); giám sát duyệt U1-63
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
     # executors.design.floor (S4 tuân thủ design system) CHƯA nối: 52/619 tệp giao diện còn hex thô (đo 29/10) — dọn ở vòng
     # riêng trước, rồi mới nối và đếm mười vòng thí điểm DO1 (ghi chú nhận 2.35.0 của kit, mục 2.4 + rủi ro thí điểm).

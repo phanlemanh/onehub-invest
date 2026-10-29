@@ -17,7 +17,8 @@ import { STAGE_COLOR, STAGE_LABEL } from "./stage-face"
  * «gộp trùng» màu trung tính.
  */
 
-const SWEEP_MASK = "linear-gradient(to right, #000 48%, transparent 52%)"
+// Mặt nạ chỉ đọc kênh alpha: từ khoá black có alpha 1, hình vẽ y như mã đen ba số trước đây.
+const SWEEP_MASK = "linear-gradient(to right, black 48%, transparent 52%)"
 
 const MOTION_STYLE = `
 @keyframes c49-sweep {

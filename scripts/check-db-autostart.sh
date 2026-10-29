@@ -5,7 +5,8 @@
 #   static         cấu hình gộp (`docker compose config`) của db/docker-compose.yml có
 #                  services.db.restart ∈ {unless-stopped, always}. Không cần daemon.
 #   diff           cấu hình gộp của cây bỏ khoá restart == của commit trước vòng (AU7_BASE, mặc định
-#                  f3cff1f) — thêm restart không được kéo theo đổi cổng, ảnh, volume, biến, healthcheck.
+#                  f3cff1f) — thêm restart không được kéo theo đổi cổng, ảnh, biến, healthcheck. Volume + tên
+#                  project được bỏ qua từ hồ sơ db-vao-volume (dữ liệu vào volume onehub_pgdata).
 #   mutation       bốn bản compose hỏng (bỏ restart, "no", on-failure, đổi cổng) phải đỏ với thông điệp
 #                  ghim; bản lành cùng thư mục phải xanh.
 #   restart        daemon Docker CÁCH LY (container docker:28-dind tạm): dựng service db từ compose của
@@ -52,8 +53,11 @@ check_diff() { # $1 = tệp compose
   if ! git -C "$ROOT" show "$BASE:db/docker-compose.yml" > "$t/base.yml" 2>/dev/null; then
     fail "không đọc được db/docker-compose.yml ở $BASE"; rm -rf "$t"; return
   fi
-  a=$(docker compose -p au7cmp -f "$1" config --format json 2>/dev/null | jq -S 'del(.services.db.restart)')
-  b=$(docker compose -p au7cmp -f "$t/base.yml" config --format json 2>/dev/null | jq -S 'del(.services.db.restart)')
+  # Volume và tên project đổi có chủ đích ở hồ sơ db-vao-volume (Hỏi-2, Mạnh duyệt 29/10): dữ liệu vào volume
+  # onehub_pgdata, project onehub-db. Ảnh, tên container, cổng, biến, healthcheck vẫn được canh như AU7.
+  local bo='del(.services.db.restart, .services.db.volumes, .volumes, .name)'
+  a=$(docker compose -p au7cmp -f "$1" config --format json 2>/dev/null | jq -S "$bo")
+  b=$(docker compose -p au7cmp -f "$t/base.yml" config --format json 2>/dev/null | jq -S "$bo")
   if [ -z "$a" ] || [ -z "$b" ]; then
     fail "không gộp được cấu hình để so (cây hoặc $BASE)"
   elif [ "$a" = "$b" ]; then

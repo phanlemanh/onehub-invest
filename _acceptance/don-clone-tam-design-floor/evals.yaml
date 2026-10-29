@@ -1,0 +1,38 @@
+schema_version: 1
+feature_slug: don-clone-tam-design-floor
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/*.mjs]
+    expected: "exit 0; ca 'tmp-sạch: bộ test bản sửa để TMPDIR rỗng' pass: tiến trình con chạy TẤT CẢ scripts/design-floor/*.test.mjs (kể cả tmp-sach.test.mjs, biến lồng làm đúng ca AC-1 bỏ qua) với TMPDIR rỗng mới, nhật ký tempDir trỏ tệp ngoài TMPDIR và không có NODE_TEST_CONTEXT → thoát 0, 0 dòng 'not ok', có dòng TAP 'ok' KHÔNG mang '# SKIP'/'# TODO' chứa 'M2-AC-10 diff config.yaml cặp cố định', 'M2-AC-10 sau gộp (a)' và 'tmp-sạch cặp đỏ'; nhật ký chứa đủ bốn tiền tố sau-gop, design-floor, cap-config, reuse-plan; sau khi thoát readdirSync(TMPDIR) = []; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/*.mjs]
+    expected: "exit 0; ca 'tmp-sạch cặp đỏ: bản 89730e6b để rác' pass: trên bản clone với các tệp scripts/design-floor ở 89730e6b và TMPDIR rỗng mới, sau lệnh chạy cùng tập tệp, hàm leftoverPrefixes(TMPDIR) trả tập chứa đủ 'sau-gop', 'design-floor', 'cap-config', 'reuse-plan'; cùng hàm trên TMPDIR của bản sửa trả []; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/test-helpers.mjs, scripts/design-floor/tmp-sach.test.mjs]
+    expected: "exit 0; ca 'tmp-sạch: ném giữa chừng vẫn dọn' pass: tiến trình con nhập tempDir, tạo thư mục, in đường, rồi ném → mã thoát khác 0 và existsSync(đường) = false; đối chứng cùng kịch bản với mkdtempSync trần → existsSync(đường) = true (rồi ca tự xoá); should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/*.mjs]
+    expected: "exit 0; ca 'tmp-sạch: không mkdtempSync trần' pass: rawMkdtemp(các tệp scripts/design-floor/*.mjs) trả [] với danh sách miễn đóng đúng hai vùng khoanh dấu mốc (thân tempDir ở test-helpers.mjs, vùng đối chứng AC-3 ở tmp-sach.test.mjs) và số vùng miễn đếm được = 2; cặp đỏ: bản sao reuse-plan.test.mjs chèn 'mkdtempSync(' một dòng → đúng một mục '<tệp>:<dòng chèn>'; bản sao tmp-sach.test.mjs chèn ngoài vùng miễn → đúng một mục 'tmp-sach.test.mjs:<dòng chèn>'; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/*.test.mjs]
+    expected: "exit 0; 0 'not ok'; ca 'tmp-sạch: không hạ thước' pass: tập tên ca test(...) của các tệp *.test.mjs tại 89730e6b là tập con của tập tên ca hiện tại; cặp đỏ cùng thước: bỏ một tên khỏi tập hiện tại → thước gọi đúng tên đó"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

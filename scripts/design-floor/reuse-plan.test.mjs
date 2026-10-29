@@ -2,15 +2,15 @@
 // round-trip ma trận biến thể của AC-4). Chạy trên tệp sinh từ nguồn hiện tại, ghi vào thư mục tạm.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { buildRegistry, render as renderRegistry } from './gen-registry.mjs';
 import { SOURCE, buildTokens, render as renderTokens } from './gen-tokens.mjs';
-import { ROOT, UI, VARIANT_MATRIX, requireKitFile } from './test-helpers.mjs';
+import { ROOT, UI, VARIANT_MATRIX, requireKitFile, tempDir } from './test-helpers.mjs';
 
-const WORK = mkdtempSync(path.join(tmpdir(), 'reuse-plan-'));
+const WORK = tempDir('reuse-plan-');
+let planCount = 0;
 const REGISTRY = path.join(WORK, 'component-registry.json');
 const TOKENS = path.join(WORK, 'tokens.json');
 writeFileSync(REGISTRY, renderRegistry(buildRegistry(ROOT)));
@@ -18,7 +18,9 @@ writeFileSync(TOKENS, renderTokens(buildTokens(readFileSync(path.join(ROOT, SOUR
 
 /** Chạy `ui reuse-plan check` trên một kế hoạch; trả mã thoát và các mã finding. */
 function check(planText) {
-  const plan = path.join(mkdtempSync(path.join(WORK, 'plan-')), 'reuse-plan.md');
+  const dir = path.join(WORK, `plan-${planCount++}`);
+  mkdirSync(dir);
+  const plan = path.join(dir, 'reuse-plan.md');
   writeFileSync(plan, planText);
   const r = spawnSync(process.execPath, [requireKitFile(UI), 'reuse-plan', 'check', plan, '--file', REGISTRY, '--tokens', TOKENS, '--json'],
     { cwd: WORK, encoding: 'utf8' });
