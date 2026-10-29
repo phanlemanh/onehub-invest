@@ -8,6 +8,8 @@
 
 **Tech Stack:** bash, docker CLI + compose v2, jq, psql/pg_dump/pg_restore/pg_controldata/tar TRONG ảnh `kartoza/postgis:17-3.5` (máy chủ không cần cài postgres client).
 
+**Gate 1.5:** Mạnh duyệt kế hoạch 2026-10-29 («duyệt kế hoạch»).
+
 **Spec:** `docs/superpowers/specs/2026-10-29-db-vao-volume-design.md` · hợp đồng `_acceptance/db-vao-volume/contract.md` (đã duyệt 29/10) · evals `_acceptance/db-vao-volume/evals.yaml`.
 
 ## Global Constraints
