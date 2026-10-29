@@ -45,6 +45,11 @@ evals:
     cmd: config:executors.design.ui_check
     target: "http://localhost:3463/ops/ai-calls"
     paths: [app/src/app/ops/ai-calls/**, app/src/components/ops/ai-calls/**, app/src/lib/ai-calls-queries.ts]
+    steps:
+      - "Bản chạy: dev server của worktree đang kiểm ở http://localhost:3463, chạy với DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p4_sca_facts (DB thử, không phải oneinvest) và đã mồi bằng probes/seed.mjs. KHÔNG tạo hay sửa tệp nào trong cây; không có bản chạy thì FAIL với 'bản chạy không lên'"
+      - "Chụp BẰNG bước chụp của kho, KÈM CÙNG DATABASE_URL của DB thử (bước chụp tự giữ tài khoản ops thử theo biến này; thiếu biến thì nó xoay mật khẩu trên DB oneinvest và đăng nhập hỏng): DATABASE_URL=<như trên> bash scripts/ui-capture.sh http://localhost:3463/ops/ai-calls _acceptance/so-cuoc-goi-ai/evidence/E6-step1.png — 1280 px sáng. KHÔNG đọc hay in mật khẩu"
+      - "Cùng lệnh với UI_CAPTURE_SIZE=390x844 UI_CAPTURE_SCHEME=dark → evidence/E6-step2.png (điện thoại, tối); ghi dòng «bề rộng: …» lệnh in"
+      - "Đối chiếu số: DATABASE_URL=<như trên> node -e chạy readAiCalls của pipeline/lib/ai-calls.mjs (hoặc đọc probes/seed.mjs + GIA_MAU của probes/_db.mjs) để lấy số cuộc, token, chi phí kỳ vọng của dòng sca-mau-*; so với ba ô đầu trang và từng dòng bảng trong ảnh"
     expected: "Dev server cổng 3463 chạy với DATABASE_URL của DB thử oneinvest_p4_sca_facts (không phải oneinvest), đã mồi bằng probes/seed.mjs; đăng nhập tài khoản ops thử: trang hiện ba ô tóm tắt và bảng ngày × việc × model; số của dòng mồi khớp tổng hợp; dòng model chưa có giá ghi «chưa có giá»; ảnh chụp desktop + mobile"
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E7
