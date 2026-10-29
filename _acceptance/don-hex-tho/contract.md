@@ -5,7 +5,7 @@ slug: don-hex-tho
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-29T08:52:00Z
 design_doc: docs/superpowers/specs/2026-10-29-don-hex-tho-design.md
@@ -78,3 +78,16 @@ mỗi chỗ thuộc đúng một tiêu chí (14 giá trị bản đồ ở AC-2/
 - OOS-2: Nối `executors.design.floor` và đổi `design.surface_globs` — hàng `noi-design-floor` (sau hàng này).
 - OOS-3: Đổi màu bản đồ sang token hay bảng màu mới — MapLibre không đọc biến CSS; giá trị giữ nguyên.
 - OOS-4: `rgb()`/`hsl()`/`oklch()` thô — sàn M1 chỉ chấm hex.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: Sau khi gộp, ca DHT-AC-8 thành rào CI không hạn — commit sau này vừa sửa lib/map-colors.ts vừa chạm mã cài sẵn sẽ làm job scripts đỏ dù không liên quan vòng này.
+  - Ngoài-2: catalog.md của skill onehub-ui vẫn dạy «màu MapLibre phải là hex» mà không trỏ tới lib/map-colors.ts — người dựng bản đồ mới có thể đặt hex trong component rồi bị thước chặn.
+  - Ngoài-3: Chú thích executors.design trong config.yaml còn số đo cũ (52/619 tệp còn hex) — phần còn lại nay chỉ là mã cài sẵn.
+  - Ngoài-4: Design gate ở chế độ dom không đọc tệp .tsx, nên phần «design gate đạt» của AC-7 không đo độ tương phản — vòng giữ nguyên giá trị màu nên rủi ro thấp.
+  - Ngoài-5: Ca DHT-AC-8 không ghim rằng tập commit của vòng khác rỗng — bộ lọc đường dẫn trả rỗng thì ca vẫn xanh mà không đo gì.
+  - Ngoài-6: Việc bốn tệp giao diện mất miễn trừ hex chỉ đo bằng chữ nguồn của MAP_FILES, không đo cấu hình eslint áp lên tệp thật.
+  - Ngoài-7: Phép quét AC-1 chỉ duyệt tệp .ts/.tsx/.css trong vùng giao diện, không phải mọi tệp khớp design.surface_globs.
+  - Ngoài-9: Ca DHT-AC-8 trên commit thật chỉ kiểm danh sách tệp cài sẵn rỗng (trùng ý Ngoài-5, ghi từ lượt 1).
+  - Ngoài-10: Ca so regex với kit (DHT-AC-1 d) chỉ chạy ở máy có acceptance-gate 2.35.0 trong cache; ở CI và máy khác ca bị bỏ qua.

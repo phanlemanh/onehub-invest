@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 88c94a4861374195c0dc332b4b573d96c2736dd8
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: don-hex-tho
