@@ -10,6 +10,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, test } from "node:test";
 
+import { MAP_FILES_MONG } from "./lib/map-files-mong.mjs";
+
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = "3936e3d0316293d55e6ddc5b68e2f82d4c91683a";
 // Chép nguyên văn từ design-floor-s4.mjs (acceptance-gate 2.35.0); DHT-AC-1 (d) đối chiếu nguồn khi máy có kit.
@@ -159,8 +161,6 @@ test("DHT-AC-4 mặt nạ quét của Sankey dùng black (cùng alpha với #000
   assert.ok(t.includes('const SWEEP_MASK = "linear-gradient(to right, black 48%, transparent 52%)"'), "SWEEP_MASK không đúng chuỗi mong đợi");
 });
 
-const MAP_FILES_MONG = ["src/lib/map-style.ts", "src/lib/map-colors.ts"];
-
 export function docMapFiles(eslintText) {
   const m = eslintText.match(/const MAP_FILES = \[([\s\S]*?)\];/);
   assert.ok(m, "eslint.config.mjs không còn «const MAP_FILES = [...]»");
@@ -174,20 +174,63 @@ export function docDanhSachSkill(skillText) {
   return [...muc.matchAll(/^- `(src\/[^`]+)`$/gm)].map((x) => x[1]);
 }
 
-describe("DHT-AC-5 MAP_FILES chỉ còn tệp lib và SKILL.md khớp", () => {
-  test("DHT-AC-5 MAP_FILES = [map-style.ts, map-colors.ts]", () => {
-    assert.deepEqual(docMapFiles(doc("app/eslint.config.mjs")), MAP_FILES_MONG);
-  });
+const lech = (thay, mong) => `thừa [${thay.filter((x) => !mong.includes(x)).join(", ")}] thiếu [${mong.filter((x) => !thay.includes(x)).join(", ")}]`;
 
-  test("DHT-AC-5 danh sách đóng của SKILL.md bằng đúng MAP_FILES", () => {
-    assert.deepEqual(docDanhSachSkill(doc(".claude/skills/onehub-ui/SKILL.md")), docMapFiles(doc("app/eslint.config.mjs")));
+/** DHT-AC-5: MAP_FILES của eslint bằng đúng danh sách viết trước (scripts/lib/map-files-mong.mjs), SKILL.md khớp MAP_FILES. */
+export function kiemDanhSachBanDo(eslintText, skillText, mong = MAP_FILES_MONG) {
+  const mf = docMapFiles(eslintText);
+  if (JSON.stringify(mf) !== JSON.stringify([...mong])) throw new Error(`MAP_FILES lệch danh sách viết trước: ${lech(mf, mong)}`);
+  const sk = docDanhSachSkill(skillText);
+  if (JSON.stringify(sk) !== JSON.stringify(mf)) throw new Error(`SKILL.md lệch MAP_FILES: ${lech(sk, mf)}`);
+}
+
+const ESLINT = "app/eslint.config.mjs";
+const SKILL = ".claude/skills/onehub-ui/SKILL.md";
+
+describe("DHT-AC-5 MAP_FILES chỉ còn tệp lib và SKILL.md khớp", () => {
+  test("DHT-AC-5 MAP_FILES bằng danh sách viết trước và SKILL.md khớp", () => {
+    assert.doesNotThrow(() => kiemDanhSachBanDo(doc(ESLINT), doc(SKILL)));
   });
 
   test("DHT-AC-5 chiều đỏ: SKILL.md thêm một tệp → lệch, gọi tên tệp thừa", () => {
-    const s = doc(".claude/skills/onehub-ui/SKILL.md").replace("- `src/lib/map-colors.ts`", "- `src/lib/map-colors.ts`\n- `src/components/mini-map.tsx`");
-    const thua = docDanhSachSkill(s).filter((x) => !MAP_FILES_MONG.includes(x));
-    assert.deepEqual(thua, ["src/components/mini-map.tsx"]);
+    const s = doc(SKILL).replace("- `src/lib/map-colors.ts`", "- `src/lib/map-colors.ts`\n- `src/components/mini-map.tsx`");
+    assert.throws(() => kiemDanhSachBanDo(doc(ESLINT), s), /SKILL\.md lệch MAP_FILES: thừa \[src\/components\/mini-map\.tsx\]/);
   });
+});
+
+// lb-ac-1-map-files-mot-nguon: danh sách viết trước chỉ ghim chữ ở scripts/lib/map-files-mong.mjs.
+/** Tệp có mảng chữ chứa từ hai phần tử của danh sách viết trước (mọi kiểu nháy) — tức ghim lại danh sách. */
+export function choGhim(rel, text, mong = MAP_FILES_MONG) {
+  const nhay = (x) => new RegExp(`["'\`]${x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'\`]`);
+  return [...text.matchAll(/\[[^[\]]*\]/g)].some((m) => mong.filter((x) => nhay(x).test(m[0])).length >= 2) ? [rel] : [];
+}
+
+const THEM = (s, sau, moi) => s.replace(sau, `${sau}\n${moi}`);
+
+describe("LBM-AC-2 danh sách tệp bản đồ chỉ ghim chữ một chỗ", () => {
+  test("LBM-AC-2 không tệp test nào (app/ git theo dõi + scripts/*.test.mjs) ghim lại mảng danh sách", () => {
+    const tep = git("ls-files", "-z", "--", ":(glob)app/**/*.test.*", ":(glob)scripts/*.test.mjs").split("\0").filter(Boolean);
+    assert.ok(tep.includes("app/tests/listings-browse.test.tsx") && tep.some((t) => t.startsWith("app/eslint-plugin-onehub-ui/tests/")), `tập quét thiếu test app/plugin lint (${tep.length} tệp)`);
+    assert.deepEqual(tep.flatMap((t) => choGhim(t, doc(t))), []);
+  });
+
+  test("LBM-AC-2 chiều đỏ: chèn mảng chữ (nháy kép, đơn, backtick) vào LB-AC-1 hay test plugin lint → gọi đúng tệp", () => {
+    const lb = doc("app/tests/listings-browse.test.tsx");
+    for (const q of ['"', "'", "`"]) {
+      const mang = `const X = [${MAP_FILES_MONG.map((x) => q + x + q).join(", ")}];`;
+      assert.deepEqual(choGhim("app/tests/listings-browse.test.tsx", `${lb}\n${mang}`), ["app/tests/listings-browse.test.tsx"], `nháy ${q}`);
+    }
+    const gia = `export const Y = [${MAP_FILES_MONG.map((x) => `"${x}"`).join(", ")}];`;
+    assert.deepEqual(choGhim("app/eslint-plugin-onehub-ui/tests/x.test.mjs", gia), ["app/eslint-plugin-onehub-ui/tests/x.test.mjs"]);
+  });
+});
+
+test("LBM-AC-3 đổi danh sách ở eslint + SKILL.md mà không đổi danh sách viết trước → DHT-AC-5 đỏ; đổi cả ba → xanh", () => {
+  const extra = "src/lib/map-extra.ts";
+  const e = THEM(doc(ESLINT), `"${MAP_FILES_MONG.at(-1)}",`, `  "${extra}",`);
+  const s = THEM(doc(SKILL), `- \`${MAP_FILES_MONG.at(-1)}\``, `- \`${extra}\``);
+  assert.throws(() => kiemDanhSachBanDo(e, s), /MAP_FILES lệch danh sách viết trước: thừa \[src\/lib\/map-extra\.ts\]/);
+  assert.doesNotThrow(() => kiemDanhSachBanDo(e, s, [...MAP_FILES_MONG, extra]));
 });
 
 // AC-8: chỉ tính commit không gộp của vòng (chạm tệp riêng của vòng) — commit sau vòng chỉ chạm vendor không bị tính.
