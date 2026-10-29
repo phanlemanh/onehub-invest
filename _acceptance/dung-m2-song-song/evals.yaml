@@ -1,0 +1,87 @@
+schema_version: 1
+feature_slug: dung-m2-song-song
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/gen-tokens.mjs, scripts/design-floor/gen-tokens.test.mjs, app/src/app/globals.css, design/tokens.json]
+    expected: "exit 0; mọi ca 'M2-AC-1' pass: đếm 41 lá :root + 40 mode.dark + 9 @theme riêng + 40 cầu nối = 130 trên globals.css thật; ma trận đủ 41 biến: tên → (giá trị :root, giá trị .dark) rút độc lập theo dòng từ globals.css, so $value và mode.dark.$value của đúng lá cùng tên; cặp đỏ: tráo giá trị tối của hai lá → ma trận đỏ nêu tên biến; không khoá gốc ngoài nhóm; số đếm so với đếm độc lập bằng regex dòng '--' trong từng khối; cặp trên cùng fixture: thêm một khai báo :root → có lá mới và tổng 131, xoá lá đó khỏi đầu ra (đột biến) → kiểm đếm đỏ «khai báo bị bỏ: --x»; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/gen-tokens.mjs, scripts/design-floor/gen-tokens.test.mjs, app/src/app/globals.css]
+    expected: "exit 0; mọi ca 'M2-AC-2' pass: radius.lg = '{radius.base}', var(--color-red-800) và var(--font-geist-sans) giữ chuỗi; color.chart-1, color.sidebar-primary-foreground, radius.base có lá ở đường hai đoạn; cặp đỏ trên cùng fixture: var trỏ biến ngoài tệp không thành alias; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/gen-tokens.mjs, scripts/design-floor/gen-tokens.test.mjs]
+    expected: "exit 0; mọi ca 'M2-AC-3' pass: bản thật thoát 0 và ghi tệp; bốn bản phá (biến chỉ ở .dark, cầu nối trỏ token không có, khai báo @theme lạ, thiếu :root) mỗi bản thoát 1, không tạo design/tokens.json, stderr chứa đúng thông điệp ghim của AC-3; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/gen-registry.mjs, scripts/design-floor/gen-registry.test.mjs, "app/src/components/ui/**", "app/src/components/reui/**", design/component-registry.json]
+    expected: "exit 0; mọi ca 'M2-AC-4' pass: tập tên ui/, ui/svgs/, reui/ bằng đúng tập tệp/thư mục liệt kê độc lập bằng readdir; mọi bản ghi chỉ khoá thuộc khuôn kit, markup '', tokensUsed []; ma trận viết trước: reui/badge đủ 30 cặp (gồm variant=success-light), ui/button 14 cặp, ui/item 8 cặp, reui/filters (thư mục, cva ở một tệp) size=default+size=sm — so bằng nhau, không thừa trục giả từ defaultVariants/compoundVariants; mỗi cặp của ma trận round-trip qua reuse-plan check bậc 4 → 0 finding; tệp không cva không có khoá variants; cặp đỏ: fixture thư mục reui/x có hai tệp cva → hợp cả hai, bỏ một tệp → mất cặp của nó, bỏ hết → mất bản ghi; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/gen-registry.mjs, scripts/design-floor/gen-registry.test.mjs, .claude/skills/onehub-ui/catalog.md]
+    expected: "exit 0; mọi ca 'M2-AC-5' pass: mọi mã @reui/@mapcn ở ô đầu bảng block của catalog thật (rút độc lập bằng regex trên từng dòng bảng) có đúng một bản ghi hoặc trùng component đã cài; số bản ghi block theo từng bảng bằng số viết trước (36 dòng «ReUI Blocks», 10 «Cổng Ops» trừ mã trùng component đã cài; 15 tên app từ 12 dòng); @reui/hero-8 và @reui/c-chart-16 là template; description của @reui/hero-8 và @mapcn/store-locator bằng đúng ô File viết tay trước; cặp đỏ: đột biến description rỗng → đỏ; PageHeader và StatTiles là app; không có bản ghi @reui/frame, @reui/filters, @reui/number-field, @mapcn/map; tên duy nhất, đã sắp; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/gen-registry.mjs, scripts/design-floor/gen-registry.test.mjs]
+    expected: "exit 0; mọi ca 'M2-AC-6' pass: bản chép thật thoát 0; bốn bản phá (không catalog, catalog không bảng block, catalog không bảng Custom Components, không thư mục reui) mỗi bản thoát 1, không tạo design/component-registry.json, stderr chứa đúng thông điệp ghim của AC-6; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/reuse-plan.test.mjs, scripts/design-floor/gen-tokens.mjs, scripts/design-floor/gen-registry.mjs, design/tokens.json, design/component-registry.json]
+    expected: "exit 0; mọi ca 'M2-AC-7' pass: ui.mjs 2.35.0 tìm thấy (DESIGN_FLOOR_UI hoặc cache plugin), kế hoạch bảy bậc → thoát 0, errorCount 0; bốn biến thể phá một ô → thoát 2 với đúng mã UNKNOWN_COMPONENT, BAD_VARIANT_VALUE, UNRESOLVED_TOKEN, RUNG2_NOT_TEMPLATE; should-NOT-fire: không 'not ok', không 'không thấy ui.mjs'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [scripts/design-floor/gen-tokens.mjs, scripts/design-floor/gen-registry.mjs, scripts/design-floor/fresh.test.mjs]
+    expected: "exit 0; mọi ca 'M2-AC-8' pass: trên bản chép kho, --check của hai lệnh thoát 0 khi khớp; sửa một giá trị globals.css → tokens --check thoát 1 nêu design/tokens.json và lệnh sinh lại; xoá một tệp ui/*.tsx → registry --check thoát 1; xoá tệp sinh → thoát 1 «chưa có»; ghi hai lần giống từng byte; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.design_floor_fresh
+    paths: [scripts/design-floor/gen-tokens.mjs, scripts/design-floor/gen-registry.mjs, app/src/app/globals.css, "app/src/components/ui/**", "app/src/components/reui/**", .claude/skills/onehub-ui/catalog.md, design/tokens.json, design/component-registry.json]
+    expected: "exit 0; hai dòng '--check: design/tokens.json khớp nguồn' và '--check: design/component-registry.json khớp nguồn' trên cây đã commit; should-NOT-fire: không 'lệch nguồn', không 'chưa có'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: judgment
+    inputs: [.claude/skills/onehub-ui/SKILL.md, .claude/skills/onehub-ui/loop.md]
+    question: "Đọc hai tệp skill. (1) Có luật nói rõ hồ sơ chạm giao diện PHẢI viết _acceptance/<slug>/reuse-plan.md ở S1, trước khi chọn block hay viết mã, không phải gợi ý? (2) Khuôn nêu đủ: mỗi màn một mục '## Screen: <tên>', một dòng 'Pattern:' (hoặc 'Pattern: none — <lý do>'), bảng bốn cột Slot | Rung | Use | Reason, mỗi ô chọn bậc đầu tiên đứng được? (3) Có bảng ánh thang của kho (ReUI block → shadcn/ui → tự viết) lên bảy bậc của kit, nói bậc 2 là block @reui/@mapcn, bậc 3 là ui/, reui/, ví dụ c-* hay component của app, bậc 7 là ds-new kèm lý do và thêm dòng catalog? (4) Nêu cách gọi tên theo registry (ui/<x>, reui/<x>, @reui/<b> nguyên văn, tên component app) và lệnh kiểm tay có --file design/component-registry.json --tokens design/tokens.json? (5) loop.md bước đầu trỏ tới luật đó? (6) Có nói ở M1 kit chưa kiểm nhưng kế hoạch vẫn bắt buộc? Trả PASS khi cả sáu đúng; nêu câu nào sai."
+    expected: "PASS — sáu câu đều đúng trên hai tệp"
+    evidence_required: [run_id, verdict, judges, verified_at]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [.claude/skills/onehub-ui/SKILL.md, scripts/design-floor/reuse-plan.test.mjs, design/tokens.json, design/component-registry.json]
+    expected: "exit 0; mọi ca 'M2-AC-9' pass: rút đúng một khối giữa hai marker REUSE-PLAN-MAU của SKILL.md, có ≥1 '## Screen:', reuse-plan check thoát 0 với 0 finding; cặp đỏ: cùng khối đổi một tên thành tên bịa → thoát 2 UNKNOWN_COMPONENT; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.design_floor_gen
+    paths: [_acceptance/config.yaml, scripts/design-floor/fresh.test.mjs]
+    expected: "exit 0; mọi ca 'M2-AC-10' pass: config không có khoá design_floor ở cấp nào (đọc bằng regex dòng, cả khoá lồng); design-floor-bac.mjs 2.35.0 in 'bậc M1'; diff config.yaml so merge-base origin/main chỉ thêm hai dòng design_floor_gen, design_floor_fresh; cặp đỏ: bản chép config thêm 'design_floor:' + tokens/registry → bộ đọc của test báo có khoá và design-floor-bac in 'bậc M2'; should-NOT-fire: không 'not ok'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
