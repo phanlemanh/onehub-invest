@@ -282,7 +282,22 @@ describe("VT-AC-2 viewer: hàng duyệt chỉ số đếm", () => {
 // ---------- AC-4: /ops/data-flow — dữ liệu trao cho thành phần client đã che ----------
 type FlowRecord = import("../src/lib/data-flow-queries").FlowRecord
 type DfEl = ReactElement<{ flow: { records: FlowRecord[] }; xemBaiGoc: boolean }>
-type DfMod = { DataFlowContent: (p: { window: "all"; user: User | null }) => Promise<DfEl> }
+type DfMod = {
+  DataFlowContent: (p: { window: "all"; nowMs: number; getUser: () => Promise<User | null> }) => Promise<DfEl>
+}
+/** Dựng thân /ops/data-flow như trang làm, với người tiêm qua getUser (DF1: thân trang tự đọc phiên). */
+const dungDf = (mod: DfMod, u: User | null) => mod.DataFlowContent({ window: "all", nowMs: Date.now(), getUser: async () => u })
+/** Thân trang tự đọc phiên: getUser mặc định là phiên thật và được gọi TRƯỚC khi che. Trả danh sách lỗi (rỗng = đạt). */
+function loiDocPhien(content: string, page: string): string[] {
+  const loi: string[] = []
+  if (!/getUser = getSessionUser\b/.test(content)) loi.push("getUser không mặc định là getSessionUser")
+  const goi = content.indexOf("getUser()")
+  const che = content.indexOf("xemNoiDungTin(user)")
+  if (goi < 0 || che < 0 || goi > che) loi.push("getUser() không được gọi trước xemNoiDungTin(user)")
+  if (/DataFlowView/.test(page)) loi.push("page.tsx tự dựng DataFlowView")
+  if (!/<DataFlowContent\b/.test(page)) loi.push("page.tsx không dựng DataFlowContent")
+  return loi
+}
 const CHU_BAI = "Bài gốc chỉ hiện cho vai Vận hành trở lên."
 
 describe("VT-AC-4 data-flow: props đã che", () => {
@@ -291,7 +306,7 @@ describe("VT-AC-4 data-flow: props đã che", () => {
     const { DataFlowContent } = (await import("../src/components/ops/data-flow/data-flow-content")) as DfMod
     const { DataFlowView } = await import("../src/components/ops/data-flow/data-flow-view")
     for (const [nhan, u] of [["viewer", NGUOI.viewer], ["null", null]] as const) {
-      const el = await DataFlowContent({ window: "all", user: u })
+      const el = await dungDf({ DataFlowContent }, u)
       assert.equal(el.type, DataFlowView, `${nhan}: phần tử trả về là DataFlowView`)
       assert.ok(el.props.flow.records.length >= 2, `${nhan}: có bản ghi`)
       for (const r of el.props.flow.records) {
@@ -302,13 +317,17 @@ describe("VT-AC-4 data-flow: props đã che", () => {
       assert.doesNotMatch(jsonCay(el.props), /vt-bai-/, `${nhan}: props mang bài gốc`)
       assert.equal(el.props.xemBaiGoc, false, `${nhan}: cờ xemBaiGoc`)
     }
-    const ops = await DataFlowContent({ window: "all", user: NGUOI.ops })
+    const ops = await dungDf({ DataFlowContent }, NGUOI.ops)
     const bai = ops.props.flow.records.filter((r) => r.source === "S05").map((r) => r.postText).sort()
     assert.deepEqual(bai, ["vt-bai-1", "vt-bai-2"], "ops nhận bài gốc như đã chèn")
     assert.equal(ops.props.xemBaiGoc, true)
     const page = readFileSync(path.join(APP, "src/app/ops/data-flow/page.tsx"), "utf8")
-    assert.doesNotMatch(page, /DataFlowView/, "page.tsx không tự dựng DataFlowView")
-    assert.match(page, /<DataFlowContent[^>]*user=/, "page.tsx trao user cho DataFlowContent")
+    const content = readFileSync(path.join(APP, "src/components/ops/data-flow/data-flow-content.tsx"), "utf8")
+    assert.deepEqual(loiDocPhien(content, page), [], "thân trang tự đọc phiên")
+    // Chiều đỏ cùng thước: mặc định không còn là phiên thật → thước gọi tên lỗi.
+    const sai = content.replace("getUser = getSessionUser", "getUser = async () => null")
+    assert.notEqual(sai, content, "đột biến getUser không đổi gì")
+    assert.deepEqual(loiDocPhien(sai, page), ["getUser không mặc định là getSessionUser"])
   })
 })
 
@@ -376,7 +395,7 @@ describe("VT-AC-3 ma trận vai", () => {
           const html = renderToStaticMarkup(await review.ReviewContent({ user: u }))
           assert.equal(html.includes("vt-mat-1-title"), o.thay, `${ten}: tiêu đề thẻ`)
         } else {
-          const el = await dfMod.DataFlowContent({ window: "all", user: u })
+          const el = await dungDf(dfMod, u)
           assert.equal(/vt-bai-/.test(jsonCay(el.props)), o.thay, `${ten}: bài gốc trong props`)
           assert.equal(el.props.xemBaiGoc, o.thay, `${ten}: cờ xemBaiGoc`)
         }
@@ -391,7 +410,19 @@ describe("VT-AC-3 ma trận vai", () => {
   })
 })
 
-// ---------- AC-6: máy chủ (cloud) — nhánh «bảng tầng A vắng» chạy trước nhánh vai ----------
+// ---------- AC-6: máy chủ (cloud) — /ops/review giữ nhánh «bảng tầng A vắng»; /ops/data-flow theo khuôn cloud DF1 ----------
+/** Chạy như máy chủ (`VERCEL=1` — getDataFlow nhận nơi chạy theo biến này, DF1), trả biến về như cũ. */
+async function asCloud<T>(fn: () => Promise<T>): Promise<T> {
+  const prev = process.env.VERCEL
+  process.env.VERCEL = "1"
+  try {
+    return await fn()
+  } finally {
+    if (prev === undefined) delete process.env.VERCEL
+    else process.env.VERCEL = prev
+  }
+}
+const FACTS_RONG = { sources: [], days: [], groups: [], shortStay: { received: 0, stored: 0, withWard: 0, latestAt: null }, mix: { sale: 0, rentLt: 0, shortStay: 0 }, enrichPending: 0 }
 describe("VT-AC-6 cloud không đổi", () => {
   test("VT-AC-6 viewer và ops cùng một trang trên máy chủ", async () => {
     ready()
@@ -402,11 +433,19 @@ describe("VT-AC-6 cloud không đổi", () => {
       await admin.query(`CREATE TABLE "${S}".ops_heartbeat (id text PRIMARY KEY, payload jsonb NOT NULL, pushed_at timestamptz)`)
       const at = new Date().toISOString()
       await admin.query(`INSERT INTO "${S}".ops_heartbeat (id, payload, pushed_at) VALUES ('primary', $1, now())`, [
-        JSON.stringify({ pushedAt: at, blocks: { reviewQueue: { measured_at: at, byType: [{ type: "entity_match", n: 2 }], total: 2 } } }),
+        JSON.stringify({
+          pushedAt: at,
+          blocks: {
+            reviewQueue: { measured_at: at, byType: [{ type: "entity_match", n: 2 }], total: 2 },
+            dataFlow: { measured_at: at, windows: { all: FACTS_RONG } },
+          },
+        }),
       ])
       const review = (await import("../src/components/ops/review-content")) as ReviewMod
       const { DataFlowContent } = (await import("../src/components/ops/data-flow/data-flow-content")) as DfMod
-      const { LocalOnlyAlert } = await import("../src/components/ops/local-only-alert")
+      const { DataFlowView } = await import("../src/components/ops/data-flow/data-flow-view")
+      const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
+      const router = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} }
       const hv = renderToStaticMarkup(await review.ReviewContent({ user: NGUOI.viewer }))
       const ho = renderToStaticMarkup(await review.ReviewContent({ user: NGUOI.ops }))
       assert.equal(hv, ho, "trên máy chủ HTML của viewer bằng HTML của ops")
@@ -414,11 +453,40 @@ describe("VT-AC-6 cloud không đổi", () => {
       assert.ok(hv.includes("thẻ đang chờ"))
       assert.ok(hv.includes("Hàng duyệt chỉ có ở máy thu"))
       assert.ok(!hv.includes(CHU_THE), "máy chủ không hiện câu chú thích vai")
-      for (const u of [NGUOI.viewer, NGUOI.ops]) {
-        const el = (await DataFlowContent({ window: "all", user: u })) as unknown as ReactElement<{ title: string }>
-        assert.equal(el.type, LocalOnlyAlert, `${u.role}: data-flow dừng ở LocalOnlyAlert`)
-        assert.equal(el.props.title, "Chỉ xem ở máy thu")
+      const kiemDfCloud = async (mod: DfMod) => {
+        const vai: { flow: string; html: string; sheet: string }[] = []
+        for (const u of [NGUOI.viewer, NGUOI.ops]) {
+          const el = await asCloud(() => dungDf(mod, u))
+          assert.equal(el.type, DataFlowView, `${u.role}: data-flow trên máy chủ vẽ DataFlowView`)
+          const flow = el.props.flow as import("../src/lib/data-flow-queries").DataFlow
+          assert.equal(flow.mode, "cloud", `${u.role}: khuôn cloud`)
+          assert.ok(flow.records.length >= 2, `${u.role}: có bản ghi từ sale_offers`)
+          assert.ok(flow.records.every((r) => r.postText === null && r.postGroup === null), `${u.role}: cloud không bài gốc`)
+          const cay = <AppRouterContext.Provider value={router as never}>{el}</AppRouterContext.Provider>
+          const html = renderToStaticMarkup(cay)
+          const root = await render(cay)
+          await click(root.querySelector("tbody tr td:nth-child(2)"), `${u.role}: hàng đầu của lưới`)
+          const d = dialogs()[0]
+          const sheet = d?.textContent ?? ""
+          assert.ok(sheet.includes("Bài gốc chỉ xem ở máy thu."), `${u.role}: sheet ghi bài gốc chỉ xem ở máy thu`)
+          assert.ok(!sheet.includes(CHU_BAI), `${u.role}: máy chủ không hiện câu chú thích vai`)
+          assert.equal(d?.querySelector("blockquote") ?? null, null, `${u.role}: không khối trích bài`)
+          await closeSheets()
+          vai.push({ flow: JSON.stringify(flow), html, sheet })
+        }
+        assert.equal(vai[0].flow, vai[1].flow, "dữ liệu tin của viewer bằng của ops")
+        assert.equal(vai[0].html, vai[1].html, "HTML data-flow của viewer bằng của ops")
+        assert.equal(vai[0].sheet, vai[1].sheet, "sheet của viewer bằng của ops")
       }
+      await kiemDfCloud({ DataFlowContent })
+      // Chiều đỏ cùng lược đồ: đặt lại cổng cũ «máy chủ → chỉ xem ở máy thu» (DF1 đã bỏ) → thước gọi tên nó.
+      const cong = await banChepTam<DfMod>("src/components/ops/data-flow/data-flow-content.tsx", (src) =>
+        src.replace(
+          "  const [flow, roles, user]",
+          '  if (process.env.VERCEL === "1") return <LocalOnlyAlert title="Chỉ xem ở máy thu">Dòng chảy đọc bảng nạp thô.</LocalOnlyAlert>;\n  const [flow, roles, user]',
+        ).replace('import { getSourceRoles }', 'import { LocalOnlyAlert } from "@/components/ops/local-only-alert";\nimport { getSourceRoles }'),
+      )
+      await assert.rejects(kiemDfCloud(cong), /viewer: data-flow trên máy chủ vẽ DataFlowView/, "đối chứng cổng cũ phải đỏ")
     } finally {
       await admin.query(`DROP TABLE IF EXISTS "${S}".ops_heartbeat`)
       await admin.query(`ALTER TABLE "${S}".vt_rq_tam RENAME TO review_queue`)

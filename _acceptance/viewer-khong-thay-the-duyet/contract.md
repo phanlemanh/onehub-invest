@@ -5,7 +5,7 @@ slug: viewer-khong-thay-the-duyet
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: app/src/lib/ops-access.ts (t3_paths)
 surfaces: [ui]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-27-viewer-khong-thay-the-duyet-design.md
