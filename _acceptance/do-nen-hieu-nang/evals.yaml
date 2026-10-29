@@ -35,7 +35,7 @@ evals:
     executor: script
     cmd: config:executors.script.dn_khong_luat
     paths: [docs/research/do-nen-hieu-nang-2610.md, docs/research/do-nen-hieu-nang-2610.json, AGENTS.md, scripts/lib/tier-a-source-names.mjs, pipeline/lib/mask-source-names.mjs, _acceptance/do-nen-hieu-nang/probes/khong-luat.mjs]
-    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ok muc De xuat nguong: tach rieng, ghi cho Manh quyet'; 'ok AGENTS.md khong doi'; 'ok tang A: 0 ten nguon that trong dong them cua <m> tep nhanh doi + tai lieu + JSON (<n> ten doi chieu)'; 'doi chung: ban chep scripts/do-nen-hieu-nang/do.mjs chen ten that → bat, neu tep'; cuối 'KHONG LUAT OK'; should-NOT-fire: không 'THIEU MUC DE XUAT', 'AGENTS BI DOI', 'LO TEN NGUON', 'DOI CHUNG KHONG BAT'"
+    expected: "exit 0; dòng 'root <gốc> sha <sha>'; 'ok muc De xuat nguong: tach rieng, ghi cho Manh quyet'; 'ok AGENTS.md khong doi'; 'ok tang A: 0 ten nguon that trong dong them cua <m> tep nhanh doi + tai lieu + JSON (<n> ten doi chieu)'; 'doi chung: ban chep scripts/do-nen-hieu-nang/do.mjs chen ten that → bat, neu tep'; 'doi chung rong: dong doi giu ten cu → 0, chen them mot ten → bat'; cuối 'KHONG LUAT OK'; should-NOT-fire: không 'THIEU MUC DE XUAT', 'AGENTS BI DOI', 'LO TEN NGUON', 'DOI CHUNG KHONG BAT', 'DEM RONG SAI'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
