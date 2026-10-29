@@ -5,7 +5,7 @@ slug: m2-ac10-so-cap-co-dinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-29T07:29:55Z
 approved_by:
@@ -59,3 +59,8 @@ hàm kiểm cặp (lành / thêm / bớt, AC-3) × không hạ thước (AC-5).
 ## Notes
 
 - Ranh giới hàng: `scripts/design-floor/**`, `_acceptance/dung-m2-song-song/**` (chỉ để ghim lại khi lưới đòi).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: mỗi lượt chạy bộ test design-floor để lại khoảng 350MB bản clone tạm trong thư mục tạm của máy, không tự dọn.
+  - Ngoài-2: nếu tệp test đổi cách đóng ca, phép so «hai ca M2-AC-10 không đổi thân» có thể so hai chuỗi rỗng mà vẫn xanh.
+  - Ngoài-3: kho tải nông cắt đúng tại 3b3a33e5 thì ca đỏ với lỗi git thô thay vì lời nhắc «git fetch --unshallow».
+  - Ngoài-4: xoá một hàng của bảng ca sinh tự động thì phép «không hạ thước» không phát hiện, vì nó đếm theo tên khuôn.
