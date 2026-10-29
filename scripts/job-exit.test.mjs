@@ -142,7 +142,8 @@ const JOBS = {
       dirs: ["collector/snapshots/vn/vn__airdna-research__20261023T000000"],
       files: { "collector/dist/cli.js": "" },
     },
-    seq: ["airdna-rotate", "cli", "transform-airdna", "dq-truthful-coverage"],
+    // TV2b (cong-tac-that): cổng vòng đời S02 chạy TRƯỚC mọi bước — node giả trả 0 (chạy); DB tắt thì cổng thoát ≠0 (fail-closed)
+    seq: ["vong-doi", "airdna-rotate", "cli", "transform-airdna", "dq-truthful-coverage"],
   },
   "cloud-sync": {
     script: "scripts/cloud-sync.sh",
