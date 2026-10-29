@@ -110,11 +110,14 @@ export function RecordsGrid({
   records,
   roles,
   media,
+  xemBaiGoc,
   cloud = false,
 }: {
   records: FlowRecord[]
   roles: SourceRoles
   media?: Record<string, ReviewImage[]>
+  /** Vai ops trở lên — không thì sheet hiện câu chú thích thay bài gốc. */
+  xemBaiGoc: boolean
   /** Máy chủ: hồ sơ tin ghi bài gốc chỉ xem ở máy thu. */
   cloud?: boolean
 }) {
@@ -173,7 +176,7 @@ export function RecordsGrid({
           </FrameFooter>
         </Frame>
       </DataGrid>
-      <RecordSheet record={open} roles={roles} media={media} cloud={cloud} onOpenChange={(o) => !o && setOpen(null)} />
+      <RecordSheet record={open} roles={roles} media={media} xemBaiGoc={xemBaiGoc} cloud={cloud} onOpenChange={(o) => !o && setOpen(null)} />
     </>
   )
 }

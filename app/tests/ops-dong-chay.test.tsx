@@ -382,29 +382,29 @@ describe("DF-AC-6 bộ lọc và hồ sơ tin", () => {
   })
   test("DF-AC-6 hàng bảng — bậc và x/5 trường lõi", async () => {
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    const root = await render(<RecordsGrid records={[RECS[0]]} roles={{}} />)
+    const root = await render(<RecordsGrid records={[RECS[0]]} roles={{}} xemBaiGoc />)
     const tr = root.querySelector("tbody tr")!
     assert.match(tr.textContent ?? "", /B0 · Có lời khai/)
     assert.match(tr.textContent ?? "", /3\/5 trường lõi/)
   })
   test("DF-AC-6 hồ sơ tin — điều kiện lên bậc kế", async () => {
     const { RecordSheet } = await import("../src/components/ops/data-flow/record-sheet")
-    await render(<RecordSheet record={RECS[0]} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={RECS[0]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     let d = dialogs()[0]
     assert.match(d.textContent ?? "", /Trường lõi 3\/5/)
     assert.match(d.textContent ?? "", /Lên B1 cần đủ năm trường lõi — còn thiếu loại hình, phường\./)
     assert.match(d.querySelector("blockquote")?.textContent ?? "", /3pn 81m2/)
-    await render(<RecordSheet record={RECS[3]} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={RECS[3]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     d = dialogs()[0]
     assert.match(d.textContent ?? "", /Trường lõi 5\/5/)
     assert.match(d.textContent ?? "", /Lên B3 cần số đo trên nhãn cho các trường lõi \(PL7, PL9\)\./)
     assert.match(d.textContent ?? "", /S06 chưa lưu khoá nối ngược tin → bài \(TV10\)\./)
-    await render(<RecordSheet record={RECS[4]} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={RECS[4]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     assert.match(dialogs()[0].textContent ?? "", /Lên B2 cần gắn được tin về một căn\./)
   })
   test("DF-AC-6 bấm nút tiêu đề — hồ sơ mở và ở lại", async () => {
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    const root = await render(<RecordsGrid records={RECS} roles={{}} />)
+    const root = await render(<RecordsGrid records={RECS} roles={{}} xemBaiGoc />)
     const nut = [...root.querySelectorAll("tbody button")].find((b) => b.textContent?.includes("3,2 tỷ"))
     await click(nut, "nút tiêu đề")
     await act(() => new Promise((r) => setTimeout(r, 60)))
@@ -428,7 +428,7 @@ describe("DF-AC-8 trống", () => {
     const dong = [...root.querySelectorAll("ul.sr-only li")].map((li) => li.textContent ?? "")
     assert.ok(dong.some((t) => t.includes("tới Bài nhận: 10")), `đối chứng dương: có bài thì đường ống vẽ dòng chảy (${dong.join(" | ")})`)
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    root = await render(<RecordsGrid records={[]} roles={{}} />)
+    root = await render(<RecordsGrid records={[]} roles={{}} xemBaiGoc />)
     assert.match(root.textContent ?? "", /Không có tin nào khớp bộ lọc/)
     const { QualityGrid } = await import("../src/components/ops/data-flow/quality-grid")
     root = await render(<QualityGrid bySource={[]} byGroup={[]} />)
@@ -481,7 +481,7 @@ describe("DF-AC-10 ảnh tin", () => {
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
     const img = (n: number) => ({ src: `https://photo-stal-1.zdn.vn/${n}.jpg`, origin: "remote" as const, expiring: true })
     const media = { a: [img(1), img(2)], b: [] }
-    const root = await render(<RecordsGrid records={RECS} roles={{}} media={media} />)
+    const root = await render(<RecordsGrid records={RECS} roles={{}} xemBaiGoc media={media} />)
     assert.equal(root.querySelectorAll("img").length, 0, "bảng không tải ảnh")
     const open = async (id: string) => {
       const tr = [...root.querySelectorAll("tbody tr")][RECS.findIndex((r) => r.offerId === id)]
@@ -500,7 +500,7 @@ describe("DF-AC-10 ảnh tin", () => {
     d = await open("d")
     assert.match(d.textContent ?? "", /Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo \(TV10\)\./)
     await closeSheets()
-    const root2 = await render(<RecordsGrid records={RECS} roles={{}} />)
+    const root2 = await render(<RecordsGrid records={RECS} roles={{}} xemBaiGoc />)
     await click([...root2.querySelectorAll("tbody tr")][0]?.querySelector("td:nth-child(2)"), "hàng a (không admin)")
     d = dialogs()[0]
     assert.equal(d.querySelectorAll("[role=group][aria-label^='Ảnh'] img").length, 0, "không admin: 0 ảnh")

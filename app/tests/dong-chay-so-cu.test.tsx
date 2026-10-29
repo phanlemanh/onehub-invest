@@ -139,7 +139,7 @@ async function flowOf(window: W, { mod = QUERIES, schema = S_LOCAL }: { mod?: st
 }
 async function view(flow: DF, mod = VIEW) {
   const { DataFlowView } = (await import(mod)) as ViewMod
-  return render(<DataFlowView flow={flow} roles={{}} nowMs={NOW} />)
+  return render(<DataFlowView flow={flow} roles={{}} nowMs={NOW} xemBaiGoc />)
 }
 
 let mutSeq = 0
