@@ -119,7 +119,9 @@ run_mutation() {
   expect "bản lành compose" 0 "" check_compose "$T/lanh.yml"
   if [ -f "$CHUYEN" ]; then
     cp "$CHUYEN" "$T/chuyen-lanh.sh"
-    mutate "$T/chuyen-lanh.sh" "$T/loai-canonical.sh" 's#^BANG_LOAI_TRU=\(#BANG_LOAI_TRU=(\n  "public.sale_offers|đột biến thử"#' &&
+    awk '{ print } /^BANG_LOAI_TRU=\(/ { print "  \"public.sale_offers|đột biến thử\"" }' "$T/chuyen-lanh.sh" > "$T/loai-canonical.sh"
+    cmp -s "$T/chuyen-lanh.sh" "$T/loai-canonical.sh" && fail "đột biến loai-canonical không đổi gì — không thấy BANG_LOAI_TRU=("
+    grep -q '^  "public.sale_offers|đột biến thử"$' "$T/loai-canonical.sh" &&
       expect "đột biến loai-canonical" do "FAIL danh sách loại trừ chứa bảng canonical public.sale_offers" check_loai_tru "$T/loai-canonical.sh"
     expect "bản lành danh sách loại trừ" 0 "" check_loai_tru "$T/chuyen-lanh.sh"
   else
@@ -220,6 +222,186 @@ ca_khoi_phuc() {
   DB_CONTAINER="$TD_DB" expect "đếm lệch snapshot (đối chứng đếm ngoài snapshot)" do "FAIL lệch bảng public.mau_a 1002≠1001" bash "$ROOT/scripts/db-khoi-phuc.sh" "$TD_BAN/b2" oneinvest_tapduot_kp
 }
 
+TD_IMG=kartoza/postgis:17-3.5
+td_trang() { # dấu trạng thái để so «không đổi gì»
+  docker inspect -f '{{.Id}} {{.State.StartedAt}}' "$TD_DB" 2>/dev/null
+  docker ps -a --format '{{.Names}}' | grep -E '^onehub-tapduot-' | sort | tr '\n' ' '
+  docker volume ls --format '{{.Name}}' | grep -E '^onehub[-_]tapduot' | sort | tr '\n' ' '
+}
+td_id() { docker inspect -f '{{.Id}}' "$1" 2>/dev/null; }
+td_chuan_bi_moi() { # compose mới (bản của cây) đổi sang tên tập dượt + bản chép plist launchd
+  mkdir -p "$TD_TMP/moi" "$TD_TMP/plist"
+  sed -e 's/^name: onehub-db$/name: onehub-tapduot-moi/' -e "s/container_name: one-invest-db/container_name: $TD_DB/" \
+      -e "s/\"5433:5432\"/\"$TD_PORT:5432\"/" -e 's/name: onehub_pgdata$/name: onehub_tapduot_moi/' "$COMPOSE" > "$TD_TMP/moi/docker-compose.yml"
+  for x in 'name: onehub-tapduot-moi' "container_name: $TD_DB" "$TD_PORT:5432" 'name: onehub_tapduot_moi'; do
+    grep -qF "$x" "$TD_TMP/moi/docker-compose.yml" || { fail "compose tập dượt thiếu «$x» — sed không khớp compose của cây"; return 1; }
+  done
+  cp "$HOME"/Library/LaunchAgents/com.oneinvest.*.plist "$TD_TMP/plist/" 2>/dev/null
+  if [ ! -f "$TD_TMP/plist/com.oneinvest.chotot.plist" ]; then
+    plutil -create xml1 "$TD_TMP/plist/com.oneinvest.chotot.plist"
+    plutil -insert StartCalendarInterval -json '{"Hour":5,"Minute":30}' "$TD_TMP/plist/com.oneinvest.chotot.plist"
+  fi
+  export DB_PORT=$TD_PORT DB_VOLUME=onehub_tapduot_moi DB_COMPOSE="$TD_TMP/moi/docker-compose.yml" DB_BACKUP_ROOT="$TD_BAN" \
+    DB_LAUNCH_DIR="$TD_TMP/plist" DB_CHUYEN_TIEN_TRINH_MAU='onehub-tapduot-gia-daily' DB_CHUYEN_GIO_GIA=15:00 DB_CHUYEN_THU_GIA=3
+  pass "compose tập dượt từ compose của cây (project onehub-tapduot-moi, volume onehub_tapduot_moi), $(ls "$TD_TMP/plist" | wc -l | tr -d ' ') plist chép"
+}
+
+ca_tien_dieu_kien() {
+  local s0 out vol pid
+  s0=$(td_trang)
+  out=$(bash "$CHUYEN" --sao-luu "$TD_BAN/b1" 2>&1); [ $? = 0 ] && pass "chỉ kiểm: đủ tiền điều kiện, thoát 0" || { fail "chỉ kiểm lẽ ra thoát 0"; echo "$out"; }
+  grep -q '^PASS cửa sổ' <<<"$out" && pass "đối chứng dương: giờ 15:00 với plist chép thật → PASS cửa sổ" || fail "giờ ngoài cửa sổ lẽ ra PASS cửa sổ"
+  [ "$(td_trang)" = "$s0" ] && pass "chỉ kiểm không đổi gì (Id, StartedAt, container, volume)" || fail "chỉ kiểm đã đổi trạng thái"
+  expect "thiếu khoi-phuc-ok" do "FAIL chưa có bản sao lưu đã khôi phục thử" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b2"
+  cp -R "$TD_BAN/b1" "$TD_BAN/b1-cu"; touch -t "$(date -v-25H +%Y%m%d%H%M)" "$TD_BAN/b1-cu/khoi-phuc-ok"
+  expect "khoi-phuc-ok 25 giờ" do "FAIL bản sao lưu quá 24 giờ" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1-cu"
+  rm -rf "$TD_BAN/b1-cu"
+  expect "giờ trùng job launchd" do "FAIL trùng cửa sổ com.oneinvest.chotot" env DB_CHUYEN_GIO_GIA=05:25 bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
+  expect "đĩa giả" do "FAIL đĩa không đủ vm" env DB_CHUYEN_DIA_GIA=1 bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
+  bash -c 'exec -a onehub-tapduot-gia-daily.sh sleep 120' & pid=$!; sleep 1
+  expect "tiến trình job đang chạy" do "FAIL đang chạy" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
+  kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null
+  [ "$(td_trang)" = "$s0" ] && pass "năm ca đỏ không đổi gì" || fail "ca tiền điều kiện đã đổi trạng thái"
+  docker create --name "$TD_DB-cu-20000101" --entrypoint true "$TD_IMG" >/dev/null
+  expect "đã có bản lùi" do "FAIL đã có $TD_DB-cu" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
+  docker rm -f "$TD_DB-cu-20000101" >/dev/null
+  docker volume create onehub_tapduot_moi >/dev/null
+  docker run --rm -v onehub_tapduot_moi:/v --entrypoint sh "$TD_IMG" -c 'echo x > /v/co-tep'
+  expect "volume đích có tệp" do "FAIL volume đích không rỗng" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
+  docker volume rm onehub_tapduot_moi >/dev/null
+  [ "$(td_trang)" = "$s0" ] && pass "tiền điều kiện: mọi ca đỏ thoát 2, không đổi gì" || fail "ca tiền điều kiện để lại thay đổi"
+}
+
+ca_loi_sau_chep() {
+  local id0 out rc
+  id0=$(td_id "$TD_DB")
+  out=$(env DB_CHUYEN_LOI_GIA=sau-chep bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1" 2>&1); rc=$?
+  if [ $rc = 1 ] && grep -q 'db-chuyen-volume.sh --lui' <<<"$out" && [ "$(td_id "$TD_DB-cu-$(date +%Y%m%d)")" = "$id0" ]; then
+    pass "lỗi giữa chừng sau khi tắt cụm: thoát 1, in lệnh lùi, bản lùi còn nguyên, không bật DB mới"
+  else fail "lỗi giữa chừng lẽ ra thoát 1 + in lệnh lùi + còn bản lùi (rc=$rc)"; echo "$out" | tail -5; fi
+  docker inspect "$TD_DB" >/dev/null 2>&1 && fail "lỗi giữa chừng mà vẫn có $TD_DB mới"
+  expect "lùi sau lỗi giữa chừng" 0 "" bash "$CHUYEN" --lui
+  [ "$(td_id "$TD_DB")" = "$id0" ] && [ "$(td_dem mau_a)" = "$TD_A0" ] && pass "sau lùi: $TD_DB là container cũ (cùng Id), mau_a=$TD_A0" \
+    || fail "sau lùi: $TD_DB không phải container cũ hoặc sai số dòng"
+  docker volume rm onehub_tapduot_moi >/dev/null 2>&1
+}
+
+TD_ID_CU=""
+ca_chuyen() {
+  local out rc l
+  TD_ID_CU=$(td_id "$TD_DB")
+  out=$(env DB_CHUYEN_SAU_DEM_HOOK="docker exec -i -e PGPASSWORD=oneinvest $TD_DB psql -U oneinvest -h localhost -d oneinvest -qc 'insert into mau_ghi default values'" \
+    DB_CHUYEN_LOAI_TRU_THEM='public.mau_ghi|tập dượt: bảng job ghi giữa lúc đếm và lúc tắt' bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1" 2>&1); rc=$?
+  [ $rc = 0 ] && pass "chuyển (--lam) thoát 0" || { fail "chuyển lẽ ra thoát 0 (rc=$rc)"; echo "$out" | tail -15; return 1; }
+  for l in "PASS bản lùi $TD_DB-cu-$(date +%Y%m%d) exited restart=no" "PASS tar --diff 0 tệp lệch" "PASS pg_controldata shut down" \
+           "PASS data_directory /var/lib/postgresql/17/main dưới mount volume onehub_tapduot_moi" "PASS số dòng bảng chính trước=sau" \
+           "PASS ALTER SYSTEM giữ nguyên (max_connections=200)" "PASS số dòng bảng chính sau chuyển=sau tạo lại" \
+           "bảng loại trừ public.mau_ghi 1→2 (không chặn)"; do
+    grep -qF "$l" <<<"$out" && pass "chuyển: $l" || fail "chuyển thiếu dòng «$l»"
+  done
+  [ "$(td_id "$TD_DB-cu-$(date +%Y%m%d)")" = "$TD_ID_CU" ] && [ "$(td_id "$TD_DB")" != "$TD_ID_CU" ] \
+    && pass "bản lùi là đúng container cũ (Id giữ), $TD_DB là container mới" || fail "Id bản lùi / container mới sai"
+  [ "$(td_dem mau_a)" = "$TD_A0" ] && [ "$(td_dem mau_geo)" = 10 ] && [ "$(td_dem z zcode_tapduot)" = 3 ] \
+    && pass "cụm mới: mau_a=$TD_A0 mau_geo=10 zcode_tapduot.z=3" || fail "cụm mới sai số dòng"
+  [ -s "$TD_BAN/b1/datadir-17.tar" ] && ( cd "$TD_BAN/b1" && shasum -a 256 -c datadir-17.tar.sha256 >/dev/null 2>&1 ) \
+    && pass "tar lạnh datadir-17.tar + sha256 khớp" || fail "thiếu hoặc sai tar lạnh"
+}
+
+ca_so_byte() {
+  docker volume create onehub_tapduot_so >/dev/null
+  docker run --rm -i -v onehub_tapduot_so:/var/lib/postgresql --entrypoint tar "$TD_IMG" -x -C /var/lib/postgresql < "$TD_BAN/b1/datadir-17.tar"
+  expect "so byte bản chép lành" 0 "" env DB_VOLUME=onehub_tapduot_so bash "$CHUYEN" --chi-so-byte
+  docker run --rm -v onehub_tapduot_so:/var/lib/postgresql --entrypoint sh "$TD_IMG" -c 'echo x >> /var/lib/postgresql/17/main/PG_VERSION'
+  expect "bản chép sửa một tệp" do "FAIL tar --diff lệch 17/main/PG_VERSION" env DB_VOLUME=onehub_tapduot_so bash "$CHUYEN" --chi-so-byte
+  docker volume create onehub_tapduot_dang >/dev/null
+  docker run --rm -v onehub_tapduot_moi:/a:ro -v onehub_tapduot_dang:/b --entrypoint sh "$TD_IMG" -c 'cd /a && tar -c 17 | tar -x -C /b'
+  expect "bản chép của cụm đang chạy" do "FAIL cụm không tắt sạch" env DB_VOLUME=onehub_tapduot_dang bash "$CHUYEN" --chi-so-byte
+  docker volume rm onehub_tapduot_so onehub_tapduot_dang >/dev/null
+  # Cặp hai chiều trên tệp bên viết thật (sau.tsv, sau-tao-lai.tsv của lượt chuyển vừa chạy).
+  awk 'BEGIN { FS = OFS = "\t" } $1 == "public.mau_a" { $2 = $2 + 1 } 1' "$TD_BAN/b1/sau.tsv" > "$TD_TMP/sau-lech.tsv"
+  expect "so số dòng sau chuyển với sau tạo lại" 0 "" bash "$CHUYEN" --chi-so-dong "$TD_BAN/b1/sau.tsv" "$TD_BAN/b1/sau-tao-lai.tsv"
+  expect "so số dòng một bảng lệch" do "FAIL lệch bảng public.mau_a" bash "$CHUYEN" --chi-so-dong "$TD_TMP/sau-lech.tsv" "$TD_BAN/b1/sau-tao-lai.tsv"
+}
+
+ca_tao_lai() {
+  local id
+  docker compose -f "$DB_COMPOSE" up -d --force-recreate >/dev/null 2>&1 && td_cho_healthy "$TD_DB" || { fail "force-recreate lỗi"; return 1; }
+  [ "$(td_dem mau_a)" = "$TD_A0" ] && [ "$(td_dem mau_geo)" = 10 ] && pass "tạo lại (--force-recreate): mau_a=$TD_A0 mau_geo=10" || fail "tạo lại mất dữ liệu"
+  docker compose -f "$DB_COMPOSE" down >/dev/null 2>&1 && docker compose -f "$DB_COMPOSE" up -d >/dev/null 2>&1 && td_cho_healthy "$TD_DB" \
+    || { fail "down rồi up lỗi"; return 1; }
+  [ "$(td_dem mau_a)" = "$TD_A0" ] && [ "$(td_dem z zcode_tapduot)" = 3 ] && [ "$(td_psql -d postgres -c 'show max_connections')" = 200 ] \
+    && [ "$(td_psql -d oneinvest -c "select count(*) from pg_extension where extname = 'postgis'")" = 1 ] \
+    && pass "down (không -v) rồi up: mau_a=$TD_A0, DB phụ, max_connections=200, postgis còn" || fail "down rồi up mất dữ liệu hoặc cấu hình"
+  mkdir -p "$TD_TMP/khac"; cp "$DB_COMPOSE" "$TD_TMP/khac/docker-compose.yml"; id=$(td_id "$TD_DB")
+  docker compose -f "$TD_TMP/khac/docker-compose.yml" up -d >/dev/null 2>&1
+  [ "$(td_id "$TD_DB")" = "$id" ] && pass "compose cùng cấu hình từ đường khác: up -d không tạo lại container" || fail "compose từ đường khác đã tạo lại container"
+  # Đối chứng: container kiểu cũ tạo lại thì mất dữ liệu — chứng phép đo trên thấy được mất mát.
+  mkdir -p "$TD_TMP/dc"
+  sed -e "s/container_name: $TD_DB/container_name: onehub-tapduot-dc/" -e "s/\"$TD_PORT:5432\"/\"$((TD_PORT + 1)):5432\"/" \
+    "$TD_TMP/cu/docker-compose.yml" > "$TD_TMP/dc/docker-compose.yml"
+  docker compose -p onehub-tapduot-dc -f "$TD_TMP/dc/docker-compose.yml" up -d >/dev/null 2>&1 && td_cho_healthy onehub-tapduot-dc || { fail "không dựng được cụm đối chứng"; return 1; }
+  docker exec -i -e PGPASSWORD=oneinvest onehub-tapduot-dc psql -U oneinvest -h localhost -d oneinvest -qc "create table x(i int); insert into x select generate_series(1,5)"
+  docker compose -p onehub-tapduot-dc -f "$TD_TMP/dc/docker-compose.yml" up -d --force-recreate >/dev/null 2>&1 && td_cho_healthy onehub-tapduot-dc
+  if docker exec -i -e PGPASSWORD=oneinvest onehub-tapduot-dc psql -U oneinvest -h localhost -d oneinvest -Atqc "select count(*) from x" >/dev/null 2>&1; then
+    fail "đối chứng kiểu cũ: tạo lại mà bảng x vẫn còn — phép đo không phân biệt được"
+  else pass "đối chứng kiểu cũ: tạo lại container kiểu cũ thì bảng x mất (số dòng về 0)"; fi
+  docker compose -p onehub-tapduot-dc -f "$TD_TMP/dc/docker-compose.yml" down -v >/dev/null 2>&1
+}
+
+ca_lui() {
+  local id_moi
+  expect "chuyển lần hai trên cụm đã chuyển" do "FAIL đã chuyển" bash "$CHUYEN" --lam --sao-luu "$TD_BAN/b1"
+  id_moi=$(td_id "$TD_DB")
+  expect "lùi (--lui)" 0 "" bash "$CHUYEN" --lui
+  [ "$(td_id "$TD_DB")" = "$TD_ID_CU" ] && [ "$(docker port "$TD_DB" 5432/tcp | head -1 | sed 's/.*://')" = "$TD_PORT" ] && [ "$(td_dem mau_a)" = "$TD_A0" ] \
+    && pass "lùi: container cũ chạy lại trên cổng $TD_PORT, mau_a=$TD_A0" || fail "lùi: sai container, cổng hoặc số dòng"
+  [ "$(docker ps -a --filter "id=$id_moi" --format '{{.Names}} {{.State}}' | grep -cE "^$TD_DB-moi-[0-9]+ exited$")" = 1 ] \
+    && pass "lùi: container mới cất sang $TD_DB-moi-*, đang dừng" || fail "lùi: container mới không được cất"
+  docker run --rm -v onehub_tapduot_moi:/v:ro --entrypoint test "$TD_IMG" -s /v/17/main/PG_VERSION \
+    && pass "lùi: volume onehub_tapduot_moi còn nguyên dữ liệu" || fail "lùi: volume mới mất dữ liệu"
+}
+
+ca_lui_tu_tar() {
+  local s0
+  docker compose -p onehub-tapduot-cu -f "$TD_TMP/cu/docker-compose.yml" down >/dev/null 2>&1
+  docker inspect "$TD_DB" >/dev/null 2>&1 && fail "compose cũ down lẽ ra xoá container mang nhãn project cũ" \
+    || pass "rủi ro đo được: compose cũ (project cũ) chạy down là xoá container cũ — lý do có tar lạnh"
+  cp -R "$TD_BAN/b1" "$TD_BAN/b1-tarhong"; printf 'x' >> "$TD_BAN/b1-tarhong/datadir-17.tar"
+  s0=$(td_trang)
+  expect "tar lạnh đổi một byte" do "FAIL sha256 datadir-17.tar" bash "$CHUYEN" --lui --tu-tar "$TD_BAN/b1-tarhong"
+  [ "$(td_trang)" = "$s0" ] && pass "tar lạnh hỏng: không dựng gì" || fail "tar lạnh hỏng mà đã dựng/đổi tài nguyên"
+  expect "lùi từ tar lạnh" 0 "" bash "$CHUYEN" --lui --tu-tar "$TD_BAN/b1"
+  [ "$(td_dem mau_a)" = "$TD_A0" ] && [ "$(td_dem z zcode_tapduot)" = 3 ] && [ "$(docker port "$TD_DB" 5432/tcp | head -1 | sed 's/.*://')" = "$TD_PORT" ] \
+    && pass "lùi từ tar lạnh: cụm cũ chạy lại trên cổng $TD_PORT, mau_a=$TD_A0 như trước chuyển" || fail "lùi từ tar lạnh sai số dòng hoặc cổng"
+}
+
+TD_A0=""
+ca_chuyen_tron() {
+  td_chuan_bi_moi || return
+  TD_A0=$(td_dem mau_a)   # số dòng mau_a của cụm cũ ngay trước mọi ca chuyển — mọi mốc sau phải giữ đúng số này
+  ca_tien_dieu_kien; ca_loi_sau_chep; ca_chuyen || return; ca_so_byte; ca_tao_lai; ca_lui; ca_lui_tu_tar
+}
+
+ca_don_khi_loi() { # lượt con bị SIGTERM sau khi dựng cụm → không sót gì
+  local pid i
+  TD_CON=1 TD_SLEEP_AFTER=dung bash "$SELF" tap-duot > "$TD_TMP/con.log" 2>&1 & pid=$!
+  for i in $(seq 1 180); do [ "$(trang_thai_td)" = running ] && grep -q 'chờ tín hiệu' "$TD_TMP/con.log" && break; sleep 1; done
+  kill -TERM "$pid"; wait "$pid" 2>/dev/null
+  [ "$(td_con_sot)" = 0 ] && pass "lượt con bị SIGTERM sau khi dựng $TD_DB: không còn onehub-tapduot-*" \
+    || { fail "lượt con bị SIGTERM để sót $(td_con_sot) tài nguyên"; tail -5 "$TD_TMP/con.log"; }
+  docker create --name onehub-tapduot-sot --entrypoint true "$TD_IMG" >/dev/null
+  td_don_dau_luot
+  [ "$(td_con_sot)" = 0 ] && pass "tài nguyên sót từ lượt trước (onehub-tapduot-sot) được dọn ở đầu lượt" || fail "không dọn được tài nguyên sót"
+}
+trang_thai_td() { docker inspect -f '{{.State.Status}}' "$TD_DB" 2>/dev/null; }
+td_don_dau_luot() {
+  [ "$(td_con_sot)" = 0 ] && return
+  echo "dọn tài nguyên tập dượt còn sót từ lượt trước"
+  local x
+  for x in $(docker ps -a --format '{{.Names}}' | grep -E '^onehub-tapduot-'); do docker rm -fv "$x" >/dev/null 2>&1; done
+  for x in $(docker volume ls --format '{{.Name}}' | grep -E '^onehub[-_]tapduot'); do docker volume rm -f "$x" >/dev/null 2>&1; done
+}
+
 run_tap_duot() {
   local id0 st0 id1 st1
   export DB_CONTAINER="$TD_DB"
@@ -227,7 +409,8 @@ run_tap_duot() {
   mkdir -p "$HOME/onehub-backups" && TD_BAN=$(mktemp -d "$HOME/onehub-backups/.tapduot-XXXXXX")
   trap td_cleanup EXIT; trap 'exit 143' TERM; trap 'exit 130' INT
   id0=$(docker inspect -f '{{.Id}}' "$DB_THAT" 2>/dev/null); st0=$(docker inspect -f '{{.State.StartedAt}}' "$DB_THAT" 2>/dev/null)
-  [ "$(td_con_sot)" = 0 ] || { echo "dọn tài nguyên tập dượt còn sót từ lượt trước"; td_cleanup; TD_TMP=$(mktemp -d); TD_BAN=$(mktemp -d "$HOME/onehub-backups/.tapduot-XXXXXX"); }
+  td_don_dau_luot
+  [ -z "${TD_CON:-}" ] && ca_don_khi_loi
   td_dung_cu || return
   # Móc phá-thử cho ca don-khi-loi — lượt thật không đặt biến này.
   [ "${TD_SLEEP_AFTER:-}" = dung ] && { echo "chờ tín hiệu sau khi dựng $TD_DB"; sleep 300 & wait $!; }
