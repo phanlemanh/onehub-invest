@@ -7,6 +7,7 @@ import { LngLatBounds, Map as MLMap, Popup } from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
 import "@/lib/map-worker"
 
+import { AREA_LINE } from "@/lib/map-colors"
 import { MAP_OPTIONS, addAttribution, basemapUrl, prepareBasemap } from "@/lib/map-style"
 
 import { BIN_COLORS, NO_DATA_COLOR, NO_DATA_COLOR_DARK } from "./bins"
@@ -118,7 +119,7 @@ export function ChoroplethMap({ areas }: { areas: ChoroplethArea[] }) {
           id: "areas-line",
           type: "line",
           source: "areas",
-          paint: { "line-color": isDark ? "#0a0a0a" : "#ffffff", "line-width": 0.8 },
+          paint: { "line-color": isDark ? AREA_LINE.dark : AREA_LINE.light, "line-width": 0.8 },
         },
         beforeLabels
       )

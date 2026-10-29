@@ -6,6 +6,7 @@ import { LngLatBounds, Map as MLMap, Popup } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@/lib/map-worker";
 
+import { MINI_MAP } from "@/lib/map-colors";
 import { MAP_OPTIONS, addAttribution, basemapUrl, prepareBasemap } from "@/lib/map-style";
 
 /**
@@ -69,7 +70,7 @@ export function MiniMap({
           type: "fill",
           source: "areas",
           paint: {
-            "fill-color": ["case", ["get", "active"], "#2563eb", "#93c5fd"],
+            "fill-color": ["case", ["get", "active"], MINI_MAP.active, MINI_MAP.idle],
             "fill-opacity": ["case", ["get", "active"], 0.6, 0.35],
           },
         },
@@ -80,7 +81,7 @@ export function MiniMap({
           id: "areas-line",
           type: "line",
           source: "areas",
-          paint: { "line-color": "#1e3a8a", "line-width": 1 },
+          paint: { "line-color": MINI_MAP.line, "line-width": 1 },
         },
         beforeLabels,
       );

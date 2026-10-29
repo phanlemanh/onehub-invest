@@ -40,10 +40,10 @@ evals:
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-6
-    executor: test
-    cmd: config:executors.test.ui_lint_rules
-    paths: [app/eslint-plugin-onehub-ui/**, app/eslint.config.mjs]
-    expected: "exit 0; selftest in 'src/lib/map-colors.ts: hex KHÔNG bị no-hardcoded-color' và dòng đối chứng file thường vẫn bị báo"
+    executor: script
+    cmd: config:executors.script.ui_lint_should_not_fire
+    paths: [app/eslint-plugin-onehub-ui/selftest.mjs, app/eslint.config.mjs]
+    expected: "exit 0, dòng cuối PASS; in 'OK    src/lib/map-colors.ts: hex KHÔNG bị no-hardcoded-color', 'OK    src/lib/map-colors.ts: alert() VẪN bị no-native-dialogs' và dòng đối chứng file thường vẫn bị no-hardcoded-color"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7

@@ -13,12 +13,10 @@ const VENDOR_DIRS = [
 ];
 
 // File bản đồ: được phép dùng hex (màu dữ liệu/nền bản đồ). Chỉ tắt đúng luật màu, các luật khác vẫn chạy.
+// Màu lớp vẽ MapLibre gom ở lib/map-colors.ts (don-hex-tho) — tệp giao diện chỉ import tên, không được miễn.
 const MAP_FILES = [
   "src/lib/map-style.ts",
-  "src/components/finder/bins.ts",
-  "src/components/finder/choropleth-map.tsx",
-  "src/components/mini-map.tsx",
-  "src/components/listing/listings-map.tsx",
+  "src/lib/map-colors.ts",
 ];
 
 const eslintConfig = defineConfig([
