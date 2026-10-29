@@ -5,7 +5,7 @@ slug: db-volume-check-volume-khac-ten
 owner: phanlemanh@gmail.com
 risk_tier: T2      # scripts/db-volume-check.sh + hồ sơ — không chạm t3_paths
 surfaces: [ops]
-status: verified
+status: signed-off
 design_doc: _acceptance/db-volume-check-volume-khac-ten/design.md
 approved_by: Mạnh
 approved_at: 2026-10-29
@@ -63,3 +63,6 @@ Không chạy `morphological-scan`: không gian là bốn nhánh của một hà
   của chúng); E8 đọc kết quả hai lượt ấy. Quan hệ «sha của lượt ghim lại chứa bản cuối của `db-volume-check.sh`» do lưới
   trước-merge (`scripts/pre-merge-check.sh`, chạy trong CI) chặn: tệp đổi sau `verified_commit` của hồ sơ đã ký là
   `VIOLATION evidence is stale` (gap-probe P1).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: chú thích của bộ kiểm đột biến trong `_acceptance/config.yaml` chưa nói rằng nó giờ cần DB local
+    `one-invest-db` đang chạy; ai chạy nó khi DB tắt sẽ thấy đỏ mà không được báo trước, bật DB rồi chạy lại là xanh.

@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: dea2ad9481a97f0838a55560ad361ddc4a0dabdd
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: db-volume-check-volume-khac-ten
