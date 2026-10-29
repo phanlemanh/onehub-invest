@@ -24,12 +24,13 @@ test("AC-8 trong: chua co cuoc goi → chu huong dan chay thu", () => {
   assert.doesNotMatch(ve(du({ nhom: NHOM, tong: tomTat(NHOM) })), /Chưa có cuộc gọi AI nào/)
 })
 
-test("AC-8 loi: khong do duoc → Alert, khong ve 0", () => {
+test("AC-8 loi: khong do duoc → Alert co Thu lai, khong ve 0", () => {
   const html = ve(du({ state: "error", error: "máy thu chưa có bảng ai_calls (migration 052 chưa áp)" }))
   assert.match(html, /Số cuộc gọi AI không đo được/)
   assert.match(html, /migration 052 chưa áp/)
+  assert.match(html, /Thử lại/)
   assert.doesNotMatch(html, /0 cuộc/)
-  assert.doesNotMatch(ve(du({ nhom: NHOM, tong: tomTat(NHOM) })), /không đo được/)
+  assert.doesNotMatch(ve(du({ nhom: NHOM, tong: tomTat(NHOM) })), /không đo được|Thử lại/)
 })
 
 test("AC-8 dang tai: Skeleton dung bo cuc", () => {

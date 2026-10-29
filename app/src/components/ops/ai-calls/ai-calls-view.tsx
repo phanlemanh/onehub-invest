@@ -2,18 +2,19 @@
 
 import { useState } from "react"
 import { useTable, type ColumnDef, type PaginationState, type SortingState } from "@tanstack/react-table"
-import { BotIcon, CircleAlertIcon } from "lucide-react"
+import { BotIcon, CircleAlertIcon, RotateCwIcon } from "lucide-react"
 
 import { DATA_GRID_VI } from "@/components/insight/insight-grid"
 import { FactsStaleAlert, FactsStamp } from "@/components/ops/facts-status"
 import { LocalOnlyAlert } from "@/components/ops/local-only-alert"
 import { PageHeader } from "@/components/page/page-header"
-import { Alert, AlertDescription, AlertTitle } from "@/components/reui/alert"
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/reui/alert"
 import { DataGrid, dataGridFeatures, type DataGridFeatures } from "@/components/reui/data-grid/data-grid"
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header"
 import { DataGridPagination } from "@/components/reui/data-grid/data-grid-pagination"
 import { DataGridScrollArea } from "@/components/reui/data-grid/data-grid-scroll-area"
 import { DataGridTable } from "@/components/reui/data-grid/data-grid-table"
+import { Button } from "@/components/ui/button"
 import { Frame, FrameDescription, FrameFooter, FrameHeader, FramePanel, FrameTitle } from "@/components/reui/frame"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import type { AiCallGroup, AiCalls } from "@/lib/ai-calls-queries"
@@ -77,6 +78,13 @@ function AiCallsStatus({ data }: { data: AiCalls }) {
         <CircleAlertIcon aria-hidden="true" />
         <AlertTitle>Số cuộc gọi AI không đo được</AlertTitle>
         <AlertDescription>{data.error ?? "không đo được"}</AlertDescription>
+        <AlertAction>
+          {/* Tải lại cả trang: lỗi đo (bảng chưa có, khối bản tin lỗi) nằm ở server, cùng chữ với RegionError. */}
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            <RotateCwIcon data-icon="inline-start" aria-hidden="true" />
+            Thử lại
+          </Button>
+        </AlertAction>
       </Alert>
     )
   if (data.mode === "local") return null
