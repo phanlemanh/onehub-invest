@@ -11,7 +11,7 @@
 #   tap-duot       sao lưu → khôi phục → chuyển → tạo lại → lùi trên cụm giả onehub-tapduot-* cùng daemon;
 #                  không chạm one-invest-db (Id + StartedAt không đổi); tự dọn kể cả khi lỗi/SIGTERM.
 #   live           CHỈ ĐỌC máy này: data_directory của one-invest-db nằm dưới mount volume onehub_pgdata; bản lùi
-#                  one-invest-db-cu-* tồn tại, đang dừng, restart no.
+#                  one-invest-db-cu-* tồn tại, đang dừng, restart no. Chạy live-selftest trước (chiều đỏ của bộ đọc).
 #   live-selftest  bộ đọc của live chạy trên JSON inspect thật đã làm hỏng phải đỏ.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -423,10 +423,61 @@ run_tap_duot() {
   [ "$(td_con_sot)" = 0 ] && pass "không còn onehub-tapduot-*" || fail "còn $(td_con_sot) tài nguyên onehub-tapduot-*"
 }
 
+# ─── live ───────────────────────────────────────────────────────────────────────────────────────────────────
+check_du_lieu() { # $1 JSON docker inspect của DB, $2 data_directory
+  local v
+  [ -n "$2" ] || { fail "không đọc được data_directory của $DB_THAT"; return; }
+  v=$(jq -r --arg d "$2" '.[0].Mounts[]? | select(.Type == "volume")
+    | select(. as $m | $m.Destination == $d or ($d | startswith($m.Destination + "/"))) | .Name' "$1" 2>/dev/null | head -1)
+  if [ "$v" = "$VOL_TEN" ]; then pass "data_directory $2 dưới mount volume $VOL_TEN"
+  elif [ -n "$v" ]; then fail "data_directory $2 nằm trong volume $v (cần $VOL_TEN)"
+  else fail "data_directory nằm trong lớp ghi container ($2 không dưới mount volume nào)"; fi
+}
+check_ban_lui() { # $1 JSON docker inspect của bản lùi (mảng rỗng khi không có)
+  local n st rp
+  n=$(jq -r '.[0].Name // ""' "$1" 2>/dev/null | sed 's#^/##')
+  [ -n "$n" ] || { fail "không có bản lùi $DB_THAT-cu-*"; return; }
+  st=$(jq -r '.[0].State.Status' "$1"); rp=$(jq -r '.[0].HostConfig.RestartPolicy.Name' "$1")
+  [ "$st" = exited ] && [ "$rp" = no ] && pass "bản lùi $n exited restart=no" || fail "bản lùi $n trạng thái $st restart=$rp (cần exited, no)"
+}
+live_doc() { # $1 thư mục tạm → inspect.json, ban-lui.json, data_directory
+  docker inspect "$DB_THAT" > "$1/inspect.json" 2>/dev/null || echo '[]' > "$1/inspect.json"
+  local b; b=$(docker ps -a --format '{{.Names}}' | grep -E "^$DB_THAT-cu-[0-9]{8}$" | sort | tail -1)
+  if [ -n "$b" ]; then docker inspect "$b" > "$1/ban-lui.json"; else echo '[]' > "$1/ban-lui.json"; fi
+  docker exec -i -e PGPASSWORD=oneinvest "$DB_THAT" psql -U oneinvest -h localhost -At -c 'show data_directory' 2>/dev/null
+}
+LIVE_TMP=""
+run_live() {
+  local dd
+  LIVE_TMP=$(mktemp -d); trap 'rm -rf "$LIVE_TMP"' EXIT
+  dd=$(live_doc "$LIVE_TMP")
+  check_du_lieu "$LIVE_TMP/inspect.json" "$dd"; check_ban_lui "$LIVE_TMP/ban-lui.json"
+}
+run_live_selftest() {
+  local T dd
+  LIVE_TMP=$(mktemp -d); trap 'rm -rf "$LIVE_TMP"' EXIT; T="$LIVE_TMP"
+  dd=$(live_doc "$T")
+  [ -n "$dd" ] && [ "$(jq length "$T/inspect.json")" = 1 ] || { fail "không đọc được docker inspect / data_directory của $DB_THAT để dựng fixture"; return; }
+  jq '.[0].Mounts = [{"Type":"volume","Name":"onehub_pgdata","Destination":"/var/lib/postgresql"}]' "$T/inspect.json" > "$T/dung.json"
+  jq '.[0].Mounts = [{"Type":"volume","Name":"db_oneinvest_pgdata","Destination":"/var/lib/postgresql/data"}]' "$T/inspect.json" > "$T/gan-data.json"
+  jq '.[0].Mounts = [{"Type":"volume","Name":"khac","Destination":"/var/lib/postgresql"}]' "$T/inspect.json" > "$T/vol-khac.json"
+  jq '.[0].Name = "/'"$DB_THAT"'-cu-20261029" | .[0].State.Status = "exited" | .[0].HostConfig.RestartPolicy.Name = "no"' "$T/inspect.json" > "$T/lui-dung.json"
+  jq '.[0].Name = "/'"$DB_THAT"'-cu-20261029" | .[0].State.Status = "running" | .[0].HostConfig.RestartPolicy.Name = "unless-stopped"' "$T/inspect.json" > "$T/lui-chay.json"
+  echo '[]' > "$T/lui-vang.json"
+  expect "inspect thật sửa mount thành onehub_pgdata" 0 "" check_du_lieu "$T/dung.json" "$dd"
+  expect "inspect thật mount /var/lib/postgresql/data" do "FAIL data_directory nằm trong lớp ghi container" check_du_lieu "$T/gan-data.json" "$dd"
+  expect "inspect thật mount volume khác tên" do "FAIL data_directory $dd nằm trong volume khac" check_du_lieu "$T/vol-khac.json" "$dd"
+  expect "bản lùi exited restart=no" 0 "" check_ban_lui "$T/lui-dung.json"
+  expect "bản lùi đang chạy" do "trạng thái running restart=unless-stopped" check_ban_lui "$T/lui-chay.json"
+  expect "không có bản lùi" do "FAIL không có bản lùi" check_ban_lui "$T/lui-vang.json"
+}
+
 case "$MODE" in
   static) check_compose "$COMPOSE"; check_loai_tru "$CHUYEN" ;;
   mutation) run_mutation ;;
   tap-duot) run_tap_duot ;;
+  live) echo "── tự kiểm bộ đọc (inspect thật đã làm hỏng)"; run_live_selftest; rm -rf "$LIVE_TMP"; echo "── máy này"; run_live ;;
+  live-selftest) run_live_selftest ;;
   *) echo "dùng: $0 static|mutation|tap-duot|live|live-selftest" >&2; exit 2 ;;
 esac
 [ $FAIL = 0 ] && echo "db-volume-check $MODE: ĐẠT" || echo "db-volume-check $MODE: KHÔNG ĐẠT"
