@@ -16,8 +16,20 @@ before="$(git -C "$REPO" status --porcelain)"
 fails=0
 
 cleanup() {
-  git -C "$REPO" worktree remove --force "$WT" >/dev/null 2>&1
-  git -C "$REPO" worktree prune >/dev/null 2>&1
+  # Gỡ ĐÚNG worktree tạm của selftest, không dùng lệnh prune của git: prune quét mọi worktree của kho dùng chung và gỡ
+  # metadata của phiên khác khi thư mục của nó đang vắng (hồ sơ test-khong-prune-worktree).
+  local thuc=""
+  thuc="$(cd "$WT" 2>/dev/null && pwd -P)"
+  if ! git -C "$REPO" worktree remove --force "$WT" >/dev/null 2>&1; then
+    # >>> du-phong — chỉ gỡ mục quản trị có gitdir trỏ về worktree tạm (đường dựng hoặc đường thật)
+    local common d tro
+    common="$(cd "$REPO" && cd "$(git rev-parse --git-common-dir)" && pwd -P)"
+    for d in "$common"/worktrees/*; do
+      tro="$(cat "$d/gitdir" 2>/dev/null)"
+      if [ "$tro" = "$WT/.git" ] || { [ -n "$thuc" ] && [ "$tro" = "$thuc/.git" ]; }; then rm -rf "$d"; fi
+    done
+    # <<< du-phong
+  fi
   rm -rf "$TMP"
 }
 trap cleanup EXIT

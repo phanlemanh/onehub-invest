@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Áp catchup lên cloud sau gộp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Luồng · AC-3 · AC-6</p>
+    <h1>Áp catchup lên cloud sau khi gộp</h1>
+
+    <svg viewBox="0 0 1200 480" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Lane dividers -->
+      <line x1="40" y1="40" x2="1160" y2="40" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="40" y1="160" x2="1160" y2="160" stroke="rgba(45,49,66,0.10)" stroke-width="1"/>
+      <line x1="40" y1="384" x2="1160" y2="384" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+      <line x1="160" y1="40" x2="160" y2="384" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+
+      <!-- Lane labels -->
+      <text x="40" y="104" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">Kho (vòng này)</text>
+      <text x="40" y="268" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">Sau gộp</text>
+      <text x="40" y="284" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">(giám sát + Mạnh)</text>
+
+      <!-- Arrows (drawn first) -->
+      <!-- Làn 1 -->
+      <line x1="336" y1="100" x2="368" y2="100" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="528" y1="100" x2="560" y2="100" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="720" y1="100" x2="752" y2="100" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Bàn giao: PR gộp -> ĐO TRƯỚC trên cloud (rẽ góc bo tròn) -->
+      <path d="M 832 140 V 188 A 8 8 0 0 1 824 196 H 456 A 8 8 0 0 0 448 204 V 232" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Làn 2 -->
+      <line x1="528" y1="272" x2="616" y2="272" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="776" y1="272" x2="808" y2="272" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="968" y1="272" x2="1000" y2="272" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Nhánh phụ: lệch kỳ vọng -> DỪNG -->
+      <line x1="448" y1="312" x2="448" y2="340" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="4,3"/>
+      <line x1="436" y1="344" x2="460" y2="344" stroke="#eb6c36" stroke-width="1.4"/>
+
+      <!-- Arrow labels -->
+      <rect x="600" y="172" width="64" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="632" y="184" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">sau gộp</text>
+
+      <rect x="530" y="230" width="76" height="32" rx="2" fill="#f5f5f5"/>
+      <text x="568" y="244" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">số đo khớp</text>
+      <text x="568" y="257" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">kỳ vọng</text>
+
+      <text x="472" y="348" fill="#ba4513" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.06em">lệch kỳ vọng → DỪNG, báo lại</text>
+
+      <!-- Nodes: làn 1 -->
+      <rect x="176" y="60" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="176" y="60" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="256" y="96" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">migration 050</text>
+      <text x="256" y="112" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">UPDATE <tspan font-family="'Geist Mono', monospace" font-weight="400" font-size="10" fill="#4f5d75">ref_lookup</tspan></text>
+
+      <rect x="368" y="60" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="368" y="60" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="448" y="96" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">tệp catchup:</text>
+      <text x="448" y="112" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">ĐO TRƯỚC + ÁP</text>
+
+      <rect x="560" y="60" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="560" y="60" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="640" y="88" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">bộ kiểm tĩnh</text>
+      <text x="640" y="104" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">check-cloud-catchup</text>
+      <text x="640" y="120" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">(AC-6)</text>
+
+      <rect x="752" y="60" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="752" y="60" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="832" y="104" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">PR gộp</text>
+
+      <!-- Nodes: làn 2 -->
+      <rect x="368" y="232" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="368" y="232" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="448" y="252" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">giám sát chạy ĐO TRƯỚC</text>
+      <text x="448" y="268" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">trên cloud (đếm dòng</text>
+      <text x="448" y="284" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">wanted /</text>
+      <text x="448" y="300" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace" text-anchor="middle">inquiry)</text>
+
+      <rect x="616" y="232" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="616" y="232" width="160" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="696" y="276" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Mạnh gõ duyệt</text>
+
+      <rect x="808" y="232" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="808" y="232" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="888" y="276" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">ÁP trên cloud</text>
+
+      <rect x="1000" y="232" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="1000" y="232" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1080" y="268" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle"><tspan font-family="'Geist Mono', monospace" font-weight="400" font-size="10" fill="#4f5d75">--check-db</tspan> cloud</text>
+      <text x="1080" y="284" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">khớp sổ</text>
+
+      <!-- Legend -->
+      <line x1="40" y1="412" x2="1160" y2="412" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="432" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="448" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="60" y="457" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước</text>
+
+      <rect x="132" y="448" width="14" height="10" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="152" y="457" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Cổng do người duyệt</text>
+
+      <line x1="288" y1="453" x2="316" y2="453" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="324" y="457" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nối tiếp</text>
+
+      <line x1="420" y1="453" x2="448" y2="453" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="4,3"/>
+      <line x1="448" y1="448" x2="448" y2="458" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="456" y="457" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh dừng</text>
+    </svg>
+  </div>
+</body>
+</html>

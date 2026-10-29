@@ -446,13 +446,14 @@ test("AC-11 chọn một bên rồi áp", async () => {
 });
 
 test("AC-11 chiều đỏ: duyệt thẻ xung đột không chọn thì áp nhầm luật", async () => {
-  // Vì sao route PHẢI chặn khi thiếu choices: decide 'approved' thẳng áp theo thứ tự id → E1 thắng.
+  // Vì sao route PHẢI chặn khi thiếu choices: decide 'approved' thẳng áp CẢ HAI đề xuất bằng tay người — PL15: phát biểu
+  // người sau (id lớn, LLM) rút phát biểu người trước (E1) → một bên thắng theo thứ tự id, không theo người chọn.
   await withTx(async (c) => {
     const a = await conflictOffer(c, 0);
     const r = await run(c, [a], llmWith(llmFrom(CONFLICT.cases[0])), resolveOldLand);
     await c.query(`SELECT decide_enrichment_review($1, 'approved', 'hitl:test')`, [r.reviewIds[0]]);
-    assert.equal((await offerRow(c, a)).property_type, "land", "AC-11 duyệt không chọn áp nhầm E1");
-    assert.deepEqual((await ptypeProposals(c, a)).map((p) => p.status), ["applied", "skipped"]);
+    assert.equal((await offerRow(c, a)).property_type, "house", "AC-11 duyệt không chọn: bên thắng theo thứ tự id");
+    assert.deepEqual((await ptypeProposals(c, a)).map((p) => p.status), ["skipped", "applied"]);
   });
 });
 

@@ -14,6 +14,9 @@ import { gunzipSync } from "node:zlib";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+// 2610-10 vòng 2: đường nạp S08 dùng ĐÚNG hàm pure này (BÁO 2610-17)
+import { s08RowOf, s08Num, s08Int } from "./import-s08-row.mjs";
+export { s08Num, s08Int }; // re-export — test cũ import từ đây
 
 // Luật khuôn tên thư mục dùng chung cho cả hai importer (PL1 mở lại vòng 4,
 // claudedp-2310-4 + BÁO claudedp-2510-5): '<city>__<nguồn>__<mốc thời gian>'
@@ -60,6 +63,9 @@ const AIRBNB_IMPORTER_SOURCES = new Set([
   "airbnb-discovery",
   "airdna-research",
   "osm-boundaries",
+  "s08-danh-muc", // PL10/BÁO 2510-12: snapshot vn__s08-danh-muc__ nạp qua
+                  // import-airbnb vào stg_s08_inventory — thiếu là bị allowlist
+                  // bỏ exit 0 (0 dòng stg, không job nào báo lỗi)
 ]);
 export function isAllowedSource(source) {
   return AIRBNB_IMPORTER_SOURCES.has(String(source));
@@ -99,7 +105,7 @@ async function main() {
   }
   const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8"));
   // v2 (N1 media) + v3 (Kev-nhãn meta.kev) đều giữ nguyên hình dạng cũ, chỉ thêm key
-  if (![1, 2, 3].includes(manifest.schemaVersion)) {
+  if (![1, 2, 3, 4].includes(manifest.schemaVersion)) {
     throw new Error(`schemaVersion ${manifest.schemaVersion} chưa hỗ trợ`);
   }
   // Lớp thứ hai nhận diện snapshot thử (mở lại 2310-4): chỉ nhìn TÊN THƯ MỤC
@@ -164,6 +170,8 @@ async function main() {
     let osm = 0;
     let zalo = 0;
     let zaloMedia = 0;
+  let s08 = 0;
+  let s08Detail = 0;
     for (const it of items) {
       if (it.source === "zalo-mock" || it.source === "zalo-groups" || it.source === "zalo-agent") {
         const mediaFiles = mediaFilesOf(it, manifest.snapshotId);
@@ -254,6 +262,46 @@ async function main() {
           ],
         );
         discovery++;
+      } else if (it.source === "s08-danh-muc") {
+        // S08 inventory_unit (2410-12): item state=detail là metadata dự án
+        // (không phải căn, CHECK state chặn) — bỏ có log.
+        if (it.meta?.state === "detail") {
+          s08Detail++;
+          continue;
+        }
+        const st = it.meta?.state;
+        if (st !== "notSold" && st !== "sold") {
+          console.warn(`bỏ item S08 state lạ '${st}' (product ${it.meta?.productCode}): ${manifest.snapshotId}`);
+          continue;
+        }
+        // 2610-10 vòng 2: dựng dòng bằng s08RowOf (nguồn duy nhất, có đổi số
+        // rác→NULL) — không còn bản dựng tham số song song trong importer.
+        const row = s08RowOf(it, manifest.snapshotId);
+        if (!row) {
+          console.warn(`bỏ item S08 state lạ '${st}' (product ${it.meta?.productCode}): ${manifest.snapshotId}`);
+          continue;
+        }
+        const ins = await client.query(
+          `INSERT INTO stg_s08_inventory (source_id, snapshot_id, project_id, project_type, state,
+                                         product_code, row_code, subdivision_name, apartment_type_name,
+                                         land_area, construction_area, base_direction_name,
+                                         number_of_room, number_of_wc, apartment_price, early_payment_price,
+                                         state_line, delivery_standard_name, fund_groups_sell_code,
+                                         payload, fetched_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+           ON CONFLICT (source_id, snapshot_id) DO NOTHING`,
+          [
+            row.source_id, row.snapshot_id, row.project_id, row.project_type, row.state,
+            row.product_code, row.row_code, row.subdivision_name, row.apartment_type_name,
+            row.land_area, row.construction_area, row.base_direction_name,
+            row.number_of_room, row.number_of_wc, row.apartment_price, row.early_payment_price,
+            row.state_line, row.delivery_standard_name, row.fund_groups_sell_code,
+            JSON.stringify(row.payload), row.fetched_at,
+          ],
+        );
+        // 2610-10 vòng 2: chỉ tính dòng THẬT SỰ ghi — nạp lại cùng snapshot
+        // thì log báo 0 dòng mới (rowCount 0 khi ON CONFLICT DO NOTHING trúng).
+        if (ins.rowCount === 1) s08++;
       } else if (it.source === "osm-boundaries") {
         await client.query(
           `INSERT INTO stg_osm_boundaries (osm_id, snapshot_id, name, payload)
@@ -266,7 +314,7 @@ async function main() {
     }
     await client.query("COMMIT");
     console.log(
-      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files)`,
+      `đã nạp: ${listings} listings (+${nights} đêm), ${discovery} discovery refs, ${osm} osm boundaries, ${zalo} zalo posts (${zaloMedia} có media_files), ${s08} S08 căn (+${s08Detail} detail bỏ)`,
     );
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

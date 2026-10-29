@@ -1,0 +1,54 @@
+schema_version: 1
+feature_slug: airbnb-nghi-khong-hoi-sinh
+# Ca «AN-AC-n» ở pipeline/scripts/airbnb-nghi.itest.mjs: mỗi ca BEGIN … ROLLBACK, fixture là một listing thật có đêm +
+# listing_stats ở một market VN, gọi ghiListing (transform-airbnb.mjs) và runReassign (reassign-areas.mjs) thật.
+# Ca «AN-AC-6» ở pipeline/scripts/airbnb-nghi.test.mjs (đọc tĩnh, không DB).
+# LUẬT ĐO (giám sát đợt dot0-cam-mau, 27/10): reassign-areas cập nhật hàng loạt listing_records/areas — test DB chạy trên
+# DB thử riêng `oneinvest_p2_airbnb` (`bash db/db-thu.sh oneinvest_p2_airbnb`, DATABASE_URL trỏ vào đó), không trên
+# `oneinvest` :5433 dùng chung. Test ném lỗi (không bỏ qua) khi thiếu DATABASE_URL, khi current_database() = 'oneinvest',
+# hoặc khi không có fixture; mỗi ca DB assert tiền đề fixture (view listings 1 dòng, nights > 0, listing_stats > 0) trước
+# khi ghi. Tổng kết lượt chạy itest phải là «ℹ pass 7 · ℹ fail 0 · ℹ skipped 0 · ℹ todo 0» (AN-AC-1, 2, 3, 4, 5a, 5b +
+# ca chốt DB).
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.airbnb_nghi
+    paths: [pipeline/transform-airbnb.mjs, pipeline/scripts/airbnb-nghi.itest.mjs]
+    expected: "exit 0; tổng kết itest pass 7, skipped 0, todo 0; ca 'AN-AC-1': tiền đề view listings 1 dòng, nights > 0, listing_stats > 0 trước khi ghi; ghiListing(areaId null, toạ độ mới (0.5, 0.5) ngoài mọi phường) trả false; listing_records: retired_reason 'ngoai_phuong', retired_at khác NULL, latitude 0.5, longitude 0.5, ST_X/ST_Y(geom) = (0.5, 0.5); view listings 0 dòng cho id; đếm nights và listing_stats bằng trước. Chiều đỏ: bản cũ (không ghi toạ độ) để latitude = toạ độ cũ → assert toạ độ đỏ, thông điệp nêu 'toạ độ lần thu mới'"
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.airbnb_nghi
+    paths: [pipeline/transform-airbnb.mjs, pipeline/reassign-areas.mjs, pipeline/scripts/airbnb-nghi.itest.mjs]
+    expected: "exit 0; ca 'AN-AC-2': sau ghiListing ngoài phường, runReassign([thành phố của listing]) → retired_reason 'ngoai_phuong', retired_at bằng mốc trước reassign, view listings 0 dòng; đối chứng cặp cùng ca (SAVEPOINT): cho nghỉ bằng hằng CAU_NGHI_CU (câu UPDATE cũ chép nguyên văn) rồi runReassign → retired_at NULL và view listings 1 dòng — thiếu điều này ca tự đỏ 'đối chứng: câu cũ phải bị reassign đánh thức'"
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.airbnb_nghi
+    paths: [pipeline/transform-airbnb.mjs, pipeline/reassign-areas.mjs, pipeline/scripts/airbnb-nghi.itest.mjs]
+    expected: "exit 0; ca 'AN-AC-3': ghiListing với lat/lng null, areaId null → latitude, longitude, geom đều NULL, retired_reason 'ngoai_phuong'; runReassign → vẫn nghỉ, view listings 0 dòng. Chiều đỏ: giữ toạ độ cũ khi thiếu → reassign đánh thức, assert 'vẫn nghỉ' đỏ"
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.airbnb_nghi
+    paths: [pipeline/transform-airbnb.mjs, pipeline/scripts/airbnb-nghi.itest.mjs]
+    expected: "exit 0; ca 'AN-AC-4' bảng viết trước 3 dòng, mỗi dòng mốc nghỉ gieo now() - 1 ngày: (ngoai_phuong, toạ độ gieo (0.5, 0.5), lần thu (0.25, 0.75)), (doi_khoa, toạ độ gieo (0.5, 0.5), lần thu (0.25, 0.75)), (ngoai_phuong, toạ độ gieo = toạ độ cũ trong phường, lần thu thiếu toạ độ); mỗi dòng sau ghiListing: latitude/longitude/geom = toạ độ lần thu (NULL khi thiếu), retired_reason và retired_at bằng giá trị gieo; rồi runReassign → vẫn nghỉ, view listings 0 dòng; số assert = 3 × 4, thông điệp lỗi nêu tên dòng. Chiều đỏ: bản giữ 'WHERE retired_at IS NULL' không cập nhật toạ độ → dòng 1 đỏ và dòng 3 bị reassign đánh thức; bản đặt lại retired_at = now() → assert mốc đỏ"
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.airbnb_nghi
+    paths: [pipeline/transform-airbnb.mjs, pipeline/reassign-areas.mjs, pipeline/scripts/airbnb-nghi.itest.mjs]
+    expected: "exit 0; ca 'AN-AC-5a': listing nghỉ ngoai_phuong, ghiListing với areaId = area_id cũ và toạ độ cũ → true, retired_at/retired_reason NULL, view listings 1 dòng; ca 'AN-AC-5b': listing nghỉ ngoai_phuong với toạ độ hiện hành trong phường (gieo trực tiếp vào bản ghi) → runReassign → retired_at NULL, area_id là phường chứa toạ độ, view listings 1 dòng"
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.airbnb_nghi_tinh
+    paths: [pipeline/transform-airbnb.mjs, pipeline/scripts/airbnb-nghi.test.mjs]
+    expected: "exit 0; ca 'AN-AC-6': thân ghiListing đọc từ tệp — nhánh `if (!areaId)` có câu UPDATE listing_records gán latitude và longitude, không chứa 'retired_at IS NULL' trong WHERE; ca đối chứng: chạy cùng hàm kiểm trên chuỗi CAU_NGHI_CU → trả lỗi nêu 'không ghi toạ độ'"
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.nap_lai
+    paths: [pipeline/transform-airbnb.mjs, pipeline/reassign-areas.mjs, pipeline/scripts/nap-lai.test.mjs]
+    expected: "exit 0; răng scan-delete có sẵn của PL14: không câu DELETE FROM / TRUNCATE nào nhắm listing_records hay sale_offer_records trong cây"

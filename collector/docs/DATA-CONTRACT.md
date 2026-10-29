@@ -19,11 +19,11 @@ snapshots/
       manifest.json
 ```
 
-## manifest.json (schemaVersion 3)
+## manifest.json (schemaVersion 4)
 
 ```jsonc
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "snapshotId": "hanoi__airbnb-listing__20261017T101500",
   "city": "hanoi",
   "source": "airbnb-listing",
@@ -63,6 +63,11 @@ snapshots/
 
 ## Lịch sử phiên bản
 
+- **schemaVersion 4 (2026-10-24, PL10/claudedp-2310-12)**: thêm kind
+  `inventory_unit` + nguồn `s08-danh-muc` (S08 — quỹ căn chủ đầu tư OCP1-3,
+  sourceId = sha256(S08|project|product_code), meta {projectId, projectType,
+  state notSold|sold|detail, productCode}; payload bản ghi API nguyên vẹn,
+  KHÔNG contact_data). Tương thích cũ; bên import chấp nhận `{1,2,3,4}`.
 - **schemaVersion 3 (2026-10-23, claudedp-2310-11 Kev-nhãn)**: thêm
   `RawItem.meta.kev = {p, model, threshold, at}` cho nguồn `zalo-agent`/`openclaw-hook` —
   điểm gate Kev-4B đi CÙNG tin như dữ liệu (p=null khi gate down); KHÔNG còn lọc p<0.9 ở

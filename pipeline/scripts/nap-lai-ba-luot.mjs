@@ -21,6 +21,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { napPhatBieu } from "../lib/nap-045.mjs";
 
 import { chupMaTran, gieoQuyetDinh, gieoTinKhoaCu, HANG, inMaTran, soMaTran } from "../lib/nap-lai-matrix.mjs";
 import { runTransformZalo } from "../transform-zalo.mjs";
@@ -132,6 +133,8 @@ export async function chayBaLuot(client, { doiChung = null, out = console.log } 
     await client.query("SELECT pg_advisory_xact_lock(33033)");
     // DB chưa áp 044 (trước triển khai) thì nạp trong giao dịch; đã áp thì không áp lại — DDL khoá độc quyền trên view sống.
     if (!(await client.query(`SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok`)).rows[0].ok) await client.query(MIG_044);
+    // PL15: transform/writeOffers đi qua phát biểu + phân xử — nạp 045 và mở cổng cắt chuyển trong giao dịch.
+    await napPhatBieu(client);
     if (doiChung) await client.query(DOI_CHUNG[doiChung]);
     const can = (dk, loi) => { if (!dk) throw new Error(`nap-lai-ba-luot: điều kiện dương không đạt — ${loi}`); };
     const tinCu = [];

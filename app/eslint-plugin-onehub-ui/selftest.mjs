@@ -133,7 +133,8 @@ async function shouldNotFire() {
 function run(cmd, args, opts = {}) {
   return spawnSync(cmd, args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, ...opts });
 }
-const porcelain = () => run("git", ["-C", REPO_DIR, "status", "--porcelain"]).stdout;
+// Bỏ _acceptance/: lượt chấm ghi sổ hồ sơ song song với selftest — không phải thay đổi do selftest gây ra.
+const porcelain = () => run("git", ["-C", REPO_DIR, "status", "--porcelain", "--", ".", ":(exclude)_acceptance"]).stdout;
 const ESLINT_BIN = join(APP_DIR, "node_modules/eslint/bin/eslint.js");
 
 /** Dựng bản sao tối thiểu của app/ (không node_modules — symlink) dưới tmpdir. */
@@ -146,14 +147,30 @@ function makeTempApp() {
   return dir;
 }
 
+// Một vi phạm mẫu cho mỗi luật có thể nằm trong baseline — thêm vào cuối tệp mẫu để vượt số đếm suppress của CÙNG luật.
+const MAU_VI_PHAM = {
+  "onehub-ui/no-raw-palette": 'export const __SelfTestVp = () => <div className="bg-red-500" />;',
+  "onehub-ui/no-arbitrary-text-size": 'export const __SelfTestVp = () => <p className="text-[13px]" />;',
+  "onehub-ui/no-emoji-icons": "export const __SelfTestVp = () => <span>🚀</span>;",
+  "onehub-ui/no-raw-table": "export const __SelfTestVp = () => <table />;",
+};
+
 async function baselineGuard() {
   console.log("[ui-standards-reui] selftest baseline-guard");
   const before = porcelain();
-  const FILE = "src/app/ops/page.tsx"; // có mục suppress: no-raw-palette 1, no-raw-table 1
-  const original = readFileSync(join(APP_DIR, FILE), "utf8");
+  // Tệp mẫu suy từ CHÍNH eslint-suppressions.json (không viết cứng): tệp .tsx đầu tiên (thứ tự khoá) có mục suppress của một luật
+  // có mẫu vi phạm — dọn UI xoá dần mục suppress nên tệp viết cứng sẽ hết mục (hồ sơ ui-standards-reui-thuoc-loi-thoi).
   const sup = JSON.parse(readFileSync(join(APP_DIR, "eslint-suppressions.json"), "utf8"));
-  check(Boolean(sup[FILE]), `${FILE} có mục trong eslint-suppressions.json`);
-  const extraTable = `${original}\nexport const __SelfTestTable = () => <table />;\n`;
+  const chon = Object.keys(sup)
+    .sort()
+    .filter((f) => f.endsWith(".tsx"))
+    .flatMap((f) => Object.keys(sup[f]).filter((r) => MAU_VI_PHAM[r]).map((r) => [f, r]))[0];
+  check(Boolean(chon), "eslint-suppressions.json còn tệp .tsx có mục suppress với luật có mẫu vi phạm");
+  if (!chon) return;
+  const [FILE, LUAT] = chon;
+  console.log(`  INFO  tệp mẫu ${FILE} · luật ${LUAT} (suppress ${sup[FILE][LUAT].count})`);
+  const original = readFileSync(join(APP_DIR, FILE), "utf8");
+  const extraCungLuat = `${original}\n${MAU_VI_PHAM[LUAT]}\n`;
   const extraSelect = `${original}\nexport const __SelfTestSelect = () => <select />;\n`;
 
   // (a1) Thử stdin trước: suppressions chỉ áp dụng ở chế độ file thật, stdin thường không.
@@ -179,8 +196,8 @@ async function baselineGuard() {
   try {
     const base = runner(original);
     check(base.status === 0, `bản gốc ${FILE} (đã có mục suppress) → eslint exit 0`);
-    const t = runner(extraTable);
-    check(t.status === 1 && /onehub-ui\/no-raw-table/.test(t.stdout + t.stderr), `thêm 1 <table/> vào ${FILE} (vượt số đếm suppress) → exit ${t.status}, in onehub-ui/no-raw-table`);
+    const t = runner(extraCungLuat);
+    check(t.status === 1 && (t.stdout + t.stderr).includes(LUAT), `thêm 1 vi phạm ${LUAT} vào ${FILE} (vượt số đếm suppress) → exit ${t.status}, in ${LUAT}`);
     const s = runner(extraSelect);
     check(s.status === 1 && /onehub-ui\/no-raw-controls/.test(s.stdout + s.stderr), `thêm 1 <select/> (luật chưa có trong baseline) → exit ${s.status}, in onehub-ui/no-raw-controls`);
   } finally {

@@ -82,12 +82,15 @@ export function RecordSheet({
   record,
   roles,
   media,
+  cloud = false,
   onOpenChange,
 }: {
   record: FlowRecord | null
   roles: SourceRoles
   /** Ảnh tin theo offer_id (chỉ admin); vắng → không hiện dải ảnh. */
   media?: Record<string, ReviewImage[]>
+  /** Máy chủ: bài gốc và ảnh tin chưa lên cloud (TV9) — nói rõ thay vì «không tìm thấy». */
+  cloud?: boolean
   onOpenChange: (open: boolean) => void
 }) {
   return (
@@ -144,6 +147,8 @@ export function RecordSheet({
                 <Section title="Ảnh tin">
                   {record.source === "S06" ? (
                     <p className="text-muted-foreground text-sm">Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10).</p>
+                  ) : cloud ? (
+                    <p className="text-muted-foreground text-sm">Ảnh tin chỉ xem ở máy thu.</p>
                   ) : media ? (
                     <ReviewPhotos label="Tin" images={media[record.offerId] ?? []} />
                   ) : (
@@ -152,7 +157,9 @@ export function RecordSheet({
                 </Section>
                 <Separator />
                 <Section title="Bài gốc">
-                  {record.postText ? (
+                  {cloud ? (
+                    <p className="text-muted-foreground text-sm">Bài gốc chỉ xem ở máy thu.</p>
+                  ) : record.postText ? (
                     <div className="flex flex-col gap-2">
                       {record.postGroup ? <p className="text-muted-foreground text-xs">Nhóm {record.postGroup}</p> : null}
                       <blockquote className="border-s-2 ps-3 text-sm break-words whitespace-pre-wrap">{record.postText}</blockquote>

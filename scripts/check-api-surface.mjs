@@ -2,7 +2,7 @@
 // Kiểm TĨNH sổ bề mặt API (hồ sơ so-be-mat-api, NT4): mỗi route.ts dưới app/src/app/api khớp đúng một dòng của
 // app/src/lib/api-surface.ts và cổng trong mã khớp chế độ sổ khai. Đo trạng thái cây, không đo diff.
 //   node scripts/check-api-surface.mjs static    — đo cây thật (exit 0 = đạt, 1 = vi phạm)
-//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M16 phải TRƯỢT đúng thông điệp
+//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M19 phải TRƯỢT đúng thông điệp
 // check-portal-compliance.mjs gọi checkApiSurface trên cây thật (làn ghim lại).
 import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
@@ -22,7 +22,32 @@ export const MSG = {
   admin: "chế độ admin mà mã không có isAdmin",
   adminBearer: "chế độ admin mà mã nhận bearer OPS_API_TOKEN",
   noop: "chế độ session-or-noop mà khách không nhận 204",
+  kqThieu: "phương thức thiếu kiemQuyen",
+  kqMode: "chế độ sổ lệch bảng quyền (kiemQuyen)",
 };
+
+// TV1 quyen-bon-vai-mot-cho: route gọi kiemQuyen(req, "<hành động>") — chế độ sổ của mỗi phương thức phải khớp dòng của
+// hành động trong QUYEN_OPS (app/src/lib/ops-access.ts): ops ↔ bearer được; ops-session ↔ không bearer, vai viewer/ops;
+// admin ↔ không bearer, vai admin/owner.
+const OPS_ACCESS = "app/src/lib/ops-access.ts";
+export function bangQuyen(files) {
+  const bang = {};
+  for (const m of (files[OPS_ACCESS] ?? "").matchAll(/"([a-z_.]+)":\s*\{\s*vai:\s*"(\w+)",\s*bearer:\s*(true|false)\s*\}/g)) {
+    bang[m[1]] = { vai: m[2], bearer: m[3] === "true" };
+  }
+  return bang;
+}
+const thanPhuongThuc = (run, method) => {
+  const i = run.search(new RegExp(`export\\s+(?:async\\s+)?function\\s+${method}\\b`));
+  if (i < 0) return "";
+  const j = run.indexOf("\nexport ", i + 1);
+  return run.slice(i, j < 0 ? undefined : j);
+};
+const hopCheDo = (mode, q) =>
+  mode === "ops" ? q.bearer
+  : mode === "ops-session" ? !q.bearer && ["viewer", "ops"].includes(q.vai)
+  : mode === "admin" ? !q.bearer && ["admin", "owner"].includes(q.vai)
+  : false;
 
 const API_DIR = "app/src/app/api";
 const routeFile = (route) => `${API_DIR}/${route}/route.ts`;
@@ -109,12 +134,25 @@ export function checkApiSurface({ entries, files }) {
     const own = closure.filter((g) => g !== "app/src/lib/ops-access.ts");
     const bearer = own.some((g) => /\bOPS_API_TOKEN\b/.test(code(files[g] ?? ""))) || /\bcanCallOpsApi\(/.test(run);
     const sessionGate = /\bcanAccessOps\(/.test(run) || /(?<!function\s)\bisAdmin\(/.test(run);
-    if (e.mode === "ops" && !(/\bcanCallOpsApi\(/.test(run) || (bearer && sessionGate))) violations.push(`${e.route}: ${MSG.ops}`);
-    if (e.mode === "ops-session" && !/\bcanAccessOps\(/.test(run)) violations.push(`${e.route}: ${MSG.opsSession}`);
+    if (/\bkiemQuyen\(/.test(run)) {
+      // Cổng một chỗ (TV1): mỗi phương thức gọi kiemQuyen, hành động của nó khớp chế độ sổ (methodModes ghi đè theo phương thức).
+      const bang = bangQuyen(files);
+      for (const m of got) {
+        const mode = e.methodModes?.[m] ?? e.mode;
+        const hds = [...thanPhuongThuc(run, m).matchAll(/\bkiemQuyen\(req,\s*"([a-z_.]+)"\)/g)].map((x) => x[1]);
+        if (hds.length === 0) violations.push(`${e.route} ${m}: ${MSG.kqThieu}`);
+        for (const hd of hds) {
+          if (!bang[hd] || !hopCheDo(mode, bang[hd])) violations.push(`${e.route} ${m}: ${MSG.kqMode} (${hd} ↔ ${mode})`);
+        }
+      }
+    } else {
+      if (e.mode === "ops" && !(/\bcanCallOpsApi\(/.test(run) || (bearer && sessionGate))) violations.push(`${e.route}: ${MSG.ops}`);
+      if (e.mode === "ops-session" && !/\bcanAccessOps\(/.test(run)) violations.push(`${e.route}: ${MSG.opsSession}`);
+      // Lời gọi isAdmin(...) trong bao đóng — không tính chỗ định nghĩa `function isAdmin(` ở ops-access.ts.
+      if (e.mode === "admin" && !closure.some((g) => /(?<!function\s)\bisAdmin\(/.test(code(files[g] ?? ""))))
+        violations.push(`${e.route}: ${MSG.admin}`);
+    }
     if (e.mode === "ops-session" && bearer) violations.push(`${e.route}: ${MSG.opsSessionBearer}`);
-    // Lời gọi isAdmin(...) trong bao đóng — không tính chỗ định nghĩa `function isAdmin(` ở ops-access.ts.
-    if (e.mode === "admin" && !closure.some((g) => /(?<!function\s)\bisAdmin\(/.test(code(files[g] ?? ""))))
-      violations.push(`${e.route}: ${MSG.admin}`);
     if (e.mode === "admin" && bearer) violations.push(`${e.route}: ${MSG.adminBearer}`);
     if (e.mode === "session-or-noop" && !/if \(!user\) return new NextResponse\(null, \{ status: 204 \}\)/.test(run))
       violations.push(`${e.route}: ${MSG.noop}`);
@@ -197,8 +235,8 @@ export const MUTATIONS = [
   ["M8", "offers gọi cổng không await", MSG.guardOrder, guardMutant("gọi cổng không await")],
   ["M9", "offers gọi cổng mà không trả 401", MSG.guardOrder, guardMutant("gọi cổng mà không return 401")],
   ["M10", "offers truy vấn trước cổng", MSG.guardOrder, guardMutant("cổng sau truy vấn")],
-  ["M11", "route ops khuôn bearer mất canAccessOps", MSG.ops, ({ entries, files }) => {
-    const r = replaceIn(files, routeFile("v1/ops/coverage"), "if (!canAccessOps(user))", "if (!user)");
+  ["M11", "route ops bỏ cổng kiemQuyen (không còn cổng nào)", MSG.ops, ({ entries, files }) => {
+    const r = replaceIn(files, routeFile("v1/ops/coverage"), 'const q = await kiemQuyen(req, "ops.read");\n  if (!q.ok) return q.res;', "");
     return r && { entries, files: r };
   }],
   ["M12", "route ops-session (dựng mới) thiếu canAccessOps", MSG.opsSession, ({ entries, files }) => ({
@@ -237,6 +275,23 @@ export const MUTATIONS = [
       [routeFile("v1/moi-phien-bearer")]: `import { getSessionUser } from "@/lib/auth";\nimport { canAccessOps } from "@/lib/ops-access";\nexport async function GET(req: Request) {\n  const ok = req.headers.get("authorization") === \`Bearer \${process.env.OPS_API_TOKEN}\` || canAccessOps(await getSessionUser());\n  return ok ? Response.json({}) : Response.json({}, { status: 401 });\n}\n`,
     },
   })],
+  ["M17", "route admin (zalo/accounts) kiểm hành động cho bearer", MSG.kqMode, ({ entries, files }) => {
+    const r = replaceIn(files, routeFile("v1/ops/zalo/accounts"), 'kiemQuyen(req, "zalo.admin")', 'kiemQuyen(req, "ops.read")');
+    return r && { entries, files: r };
+  }],
+  ["M18", "zalo/login DELETE bỏ kiemQuyen (phương thức khác còn)", MSG.kqThieu, ({ entries, files }) => {
+    const f = routeFile("v1/ops/zalo/login");
+    if (!(f in files)) return null;
+    const moi = files[f].replace(
+      /(export async function DELETE\(req: Request\) \{\n)  const q = await kiemQuyen\(req, "zalo\.admin"\);\n  if \(!q\.ok\) return q\.res;/,
+      '$1  const q = { ok: true, actor: "x" } as const;',
+    );
+    return moi === files[f] ? null : { entries, files: { ...files, [f]: moi } };
+  }],
+  ["M19", "bảng quyền cho bearer ở zalo.admin", MSG.kqMode, ({ entries, files }) => {
+    const r = replaceIn(files, OPS_ACCESS, '"zalo.admin": { vai: "admin", bearer: false }', '"zalo.admin": { vai: "admin", bearer: true }');
+    return r && { entries, files: r };
+  }],
 ];
 
 const isMain = process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);

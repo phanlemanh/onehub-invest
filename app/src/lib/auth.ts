@@ -2,7 +2,11 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { pool } from "./db";
 
-export type User = { id: string; email: string; plan: "free" | "pro"; role: "user" | "ops" | "admin" };
+/** Vai người dùng (TV1, migration 049): `user` không vào Ops; bốn vai Ops xếp bậc ở `ops-access.ts`. */
+export type Vai = "user" | "viewer" | "ops" | "admin" | "owner";
+export const VAI: readonly Vai[] = ["user", "viewer", "ops", "admin", "owner"];
+
+export type User = { id: string; email: string; plan: "free" | "pro"; role: Vai };
 
 const COOKIE = "oi_session";
 const SESSION_DAYS = 30;
@@ -43,9 +47,8 @@ export async function destroySession(): Promise<void> {
   jar.delete(COOKIE);
 }
 
-/** Người dùng từ session cookie; null khi chưa đăng nhập (coi như free tier). */
-export async function getSessionUser(): Promise<User | null> {
-  const token = (await cookies()).get(COOKIE)?.value;
+/** Người dùng từ một token phiên; null khi token vắng, sai hay hết hạn. */
+async function nguoiTuToken(token: string | undefined): Promise<User | null> {
   if (!token) return null;
   const { rows } = await pool.query(
     `SELECT u.id, u.email, u.plan, u.role
@@ -60,11 +63,24 @@ export async function getSessionUser(): Promise<User | null> {
     email: r.email,
     plan: r.plan === "pro" ? "pro" : "free",
     // Giá trị lạ trong DB rơi về "user" (đóng mặc định — không ai vô tình có quyền Ops).
-    role: r.role === "admin" || r.role === "ops" ? r.role : "user",
+    role: (VAI as readonly string[]).includes(r.role) ? (r.role as Vai) : "user",
   };
 }
 
-// ----- Saved markets -----
+/** Người dùng từ session cookie; null khi chưa đăng nhập (coi như free tier). */
+export async function getSessionUser(): Promise<User | null> {
+  return nguoiTuToken((await cookies()).get(COOKIE)?.value);
+}
+
+/**
+ * Người dùng từ header `Cookie` của chính request — cùng truy vấn với getSessionUser. Route API dùng đường này để
+ * kiểm quyền trên request thật (chạy được ngoài máy chủ Next, TV1).
+ */
+export async function nguoiTuRequest(req: Request): Promise<User | null> {
+  const header = req.headers.get("cookie") ?? "";
+  const cap = header.split(";").map((p) => p.trim()).find((p) => p.startsWith(`${COOKIE}=`));
+  return nguoiTuToken(cap ? decodeURIComponent(cap.slice(COOKIE.length + 1)) : undefined);
+}
 
 export async function isSaved(userId: string, areaId: string): Promise<boolean> {
   const { rowCount } = await pool.query(

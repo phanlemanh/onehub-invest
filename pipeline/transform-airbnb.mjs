@@ -108,10 +108,17 @@ function extractListing(payload) {
  */
 export async function ghiListing(client, { id, areaId, ex, fetchedAt }) {
   if (!areaId) {
+    // Bản ghi nghỉ mang toạ độ của lần thu mới nhất (thiếu → NULL): reassign-areas xét lại listing nghỉ ngoài phường
+    // bằng toạ độ trong bản ghi — giữ toạ độ cũ là bị đánh thức sai (Ngoài-4 PL14). Đã nghỉ thì giữ mốc + lý do cũ.
     await client.query(
-      `UPDATE listing_records SET retired_at = now(), retired_reason = 'ngoai_phuong'
-       WHERE id = $1 AND retired_at IS NULL`,
-      [id],
+      `UPDATE listing_records
+          SET latitude = $2, longitude = $3,
+              geom = CASE WHEN $2::float8 IS NULL OR $3::float8 IS NULL THEN NULL
+                          ELSE ST_SetSRID(ST_MakePoint($3::float8, $2::float8), 4326)::geography END,
+              retired_at = COALESCE(retired_at, now()),
+              retired_reason = COALESCE(retired_reason, 'ngoai_phuong')
+        WHERE id = $1`,
+      [id, ex.lat, ex.lng],
     );
     return false;
   }

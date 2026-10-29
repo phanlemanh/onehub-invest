@@ -21,7 +21,7 @@ vật lý trong RESO được định danh bằng **UPI**: `UniversalPropertyId`
 | Lớp (FRAMING) | Bảng hiện tại | RESO |
 |---|---|---|
 | **Căn nhà** (bản ghi gốc) | `properties` | Định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource `Building` (2.1). **Không phải** resource `Property` |
-| **Tin đăng** | `sale_offers`, `listings` | Resource **`Property`** (mỗi bản ghi một tin), cộng `Member` (người đăng), `Media` (ảnh) |
+| **Listing** (tin: bán, thuê dài hạn, thuê ngắn hạn) | `sale_offers`, `listings` | Resource **`Property`** (mỗi bản ghi một tin), cộng `Member` (người đăng), `Media` (ảnh) |
 | **Trường làm giàu** | cột của hai bảng trên | Field của `Property` / `Building`, kèm field nguồn đo (`LivingAreaSource`…) và nhật ký `HistoryTransactional` |
 
 → `CONTEXT.md` đang ghi «Căn nhà — RESO: resource Property». Theo DD thì sai: căn nhà ≈ **UPI + Building**, tin rao ≈
@@ -40,7 +40,7 @@ vật lý trong RESO được định danh bằng **UPI**: `UniversalPropertyId`
 | T7 Phân xử | Kết quả ghi vào field chuẩn của `Property`/`Building`; nguồn thắng ghi vào `*Source` khi field đó có | Bộ phân xử và provenance là local |
 | T8 Người | `HistoryTransactional.ChangedByMemberKey` cho mọi lần người sửa | Phán của người là `FieldAssertion` lớp sự thật |
 | Realtime (F4) | **`EntityEvent`** (`EntityEventSequence`, `ResourceName`, `ResourceRecordKey`) + chuẩn Push Replication (webhook) | — |
-| Nhu cầu «tìm mua/thuê» (Q8) | `SavedSearch` / `Prospecting` là mô hình tiêu chí của người mua | Tin «wanted» ở nhóm Zalo là local; không đưa vào `Property` |
+| Nhu cầu «tìm mua/thuê» (Q8) | `SavedSearch` / `Prospecting` là mô hình tiêu chí của người mua | Yêu cầu (`inquiry`, bên mua) ở nhóm Zalo là local; không đưa vào `Property` |
 
 ## 3. Danh mục dự án → `Building` (DD 2.1)
 
@@ -138,7 +138,7 @@ Thang bậc đọc thẳng được từ hai field này: có `UniversalPropertyI
 | `RetractedTimestamp`, `RetractReason` | rút phát biểu | local |
 
 Field `*Source` chuẩn của RESO được bộ phân xử điền khi có: ví dụ diện tích lấy từ danh mục chủ đầu tư →
-`LivingAreaSource=Builder`; từ tin đăng → `Other`; LLM suy → `Estimated`.
+`LivingAreaSource=Builder`; từ tin rao → `Other`; LLM suy → `Estimated`.
 
 ## 7. Loại BĐS: `PropertyType` × `PropertySubType` (DD 2.0)
 
@@ -166,7 +166,7 @@ SingleFamilyResidence · Duplex · MultiFamily · UnimprovedLand · Office · Re
 | `PriceBasis` (thu về · NET · gồm phí) | gần nhất `ListingAgreement=Net`, không trùng nghĩa | 42% tin Zalo thật (155/367) ghi nghĩa giá; sai nghĩa là so thước sai | CHECK enum; alias `ListingAgreement.Net` | đề xuất (PL6, PL13) |
 | `FieldAssertion` (resource) | không có; tiền lệ `*Source`, `HistoryTransactional`; RCP-50 đang đề xuất | Gom lời khai không xác thực từ nhiều nguồn — MLS không cần, mình cần | bảng append-only (PL15) | đề xuất |
 | `DataLevel` (B0–B5) và `CapabilityLevel` (N0–N4) | không có | FRAMING §3.4 | CHECK enum; DQ theo dõi phân bố | đề xuất (PL16) |
-| `ListingIntent` (offer · wanted · not_listing) | gần nhất `SavedSearch` (tiêu chí người mua) | Kev/parser/bench lệch định nghĩa (L07) | CHECK enum | đề xuất (PL5, PL6) |
+| `ListingIntent` (offer · inquiry · not_listing) | gần nhất `SavedSearch` (tiêu chí người mua) | Kev/parser/bench lệch định nghĩa (L07) | CHECK enum | đề xuất (PL5, PL6) |
 | phòng trọ (`room`) | không có | VN | đã có CHECK 025, mappings.yaml | **đã khai** (cần VALIDATE CHECK) |
 | UPI kiểu VN (`urn:onehub:upi`) | UPI cần số thửa | VN không công bố số thửa | sinh xác định từ BuildingKey + StackKey | đề xuất (R3) |
 

@@ -8,7 +8,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | Script | Purpose |
 |--------|---------|
 | import-airbnb.mjs | Import snapshots (verify sha256, write staging tables) |
-| transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ |
+| transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ; ngoài mọi phường → nghỉ `ngoai_phuong` mang toạ độ lần thu mới (reassign không đánh thức bằng toạ độ cũ) |
 | transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs) |
 | refresh-bait-gap.mjs | Bait gap P1 + registry sellers (xoá người bán không còn tin, audit) |
 | scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
@@ -17,6 +17,9 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | vocab.mjs | Sổ từ vựng một nguồn (PL6): `--write` sinh hằng từ `mappings.yaml` `enums:` · `--check` · `--lint` (enum viết tay) · `--check-db` (ref_* + CHECK) · `--check-field-targets` |
 | reassign-areas.mjs | Upsert phường OSM (areas + polygon), point-in-polygon mọi listing VN, listing ngoài mọi phường NGHỈ (`ngoai_phuong`, không xoá), xoá area không phải phường OSM |
 | scripts/nap-lai-ba-luot.mjs | Thước PL14: ba lượt nạp S03→S05→S06→airbnb trong giao dịch ROLLBACK, ma trận quyết định/liên kết 7×2; `--doi-chung=039\|khong-chuyen` |
+| phat-bieu-cat-chuyen.mjs | PL15 bước chuyển: giá trị có sẵn của năm cột → phát biểu `legacy`, mở cổng phân xử; `--thu` ROLLBACK |
+| scripts/dung-lai-canonical.mjs | Thước PL15: xoá năm cột rồi dựng lại trong giao dịch ROLLBACK (0 ô lệch); `--nguon-goc`; `--doi-chung=…` |
+| scripts/phat-bieu-chay-that.mjs | PL15: ba transform + phân xử trên dữ liệu thật, đo giây, ROLLBACK (`--thu`) |
 | finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 
 ## SQL Files (execute in order)
@@ -62,3 +65,7 @@ airdna_markets / airdna_scores / airdna_market_metrics
    không đổi khoá. Đừng quay lại băm nội dung.
 6. **Test DB nạp 044 trong giao dịch** khi DB chưa áp, và giữ `pg_advisory_xact_lock(33033)` — thiếu khoá thì deadlock
    với các test nạp migration song song.
+7. **Năm cột phân loại chỉ qua phân xử (PL15, 045)**: `property_type`, `bedrooms`, `bathrooms`, `street_raw`, `block_raw`
+   do `resolve_offer_fields` dựng từ `field_assertions` — bộ đọc ghi phát biểu (`lib/assert.mjs`), không UPDATE thẳng
+   (`lib/scan-canonical-write.mjs` đỏ). Chưa cắt chuyển (`ops_audit phat-bieu:cat-chuyen`) thì phân xử dừng có tên. Test
+   và thước trong giao dịch: `napPhatBieu(c)` (`lib/nap-045.mjs`) nạp 045 + mở cổng trong giao dịch.

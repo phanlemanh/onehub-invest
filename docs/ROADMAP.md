@@ -98,6 +98,15 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   xuất enrich, thẻ `enrich:`/`pair:`, `property_offers`, ứng viên ghép đã quyết sang tin kế (`superseded_by`); 6 khoá ngoại
   tới hai bảng là RESTRICT. Khoá S03/S05 «dính» (`pipeline/lib/offer-key.mjs`): nhóm repost thừa kế `offer_id` của tin
   chung nhiều post nhất, nhóm mới băm `'<S0x>|<post neo>'`; `originating_system_key` (RESO) cho S03/S05/S06 và listing.
+  Listing Airbnb transform cho nghỉ ngoài phường mang toạ độ của lần thu mới nhất (thiếu → NULL), giữ mốc + lý do nghỉ cũ
+  (`_acceptance/airbnb-nghi-khong-hoi-sinh`) — reassign-areas chỉ đánh thức listing nghỉ khi toạ độ HIỆN HÀNH vào phường.
+- Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`
+  (RESO extension `FieldAssertion`, chủ thể = khoá gốc từng post/list_id); hàm `resolve_offer_fields` dựng năm cột
+  `property_type`/`bedrooms`/`bathrooms`/`street_raw`/`block_raw` theo ba lớp căn cứ (sự thật › quan sát có trích dẫn ›
+  suy luận; thứ tự tạm trong lớp hitl › trường nguồn; parser › E1 › E2 › legacy — Mạnh đồng ý 26/10) kèm
+  `field_provenance`; suy luận không vào cột. Hết fill-gap và `ENRICH_COLS`; người (`hitl:`) thắng mọi phương pháp.
+  Cổng «chưa cắt chuyển» chặn phân xử tới khi `pipeline/phat-bieu-cat-chuyen.mjs` ghi giá trị có sẵn thành phát biểu
+  `legacy` (runtime-map «Phát biểu + phân xử»). Chỉ local.
   Thước `pipeline/scripts/nap-lai-ba-luot.mjs` (ba lượt, ma trận 7×2, đối chứng 039 / không chuyển). sync-cloud chép view
   sống, bảng con chỉ dòng có cha sống; cột mới ở lại máy.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
@@ -269,6 +278,22 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    `cong_khai: true` và `kho` — tài liệu thô và trang tóm đều ở kho riêng, kho công khai chỉ giữ đường trỏ băm. Kho riêng
    vẫn nằm trên GitHub nên tầng A (luật 6) không vào; nguồn ngoài kho công khai được che tên nguồn bằng mã S0x trước khi
    ghi. Gói `tri-thuc` cài scope local (không chạm `.claude/settings.json`). Đủ 10 bản phạm vi đổi `nguon` sang trang đợt.
+21. **«Listing» là mọi tin niêm yết, theo RESO** (27/10, Mạnh chốt hướng B — thay bản đầu cùng ngày «listing chỉ là thuê
+   ngắn hạn»; `docs/audit/2026-10-27-tu-ngu-tin-listing.md`): listing = resource `Property` (bán · thuê dài hạn · thuê ngắn
+   hạn); dịch vụ ở `kind` (`sale` · `rent_lt` · `rent_st`), loại hình ở `property_type`; nhiều listing trỏ về một căn (UPI).
+   Tin rao = listing bán + thuê dài hạn; listing thuê ngắn hạn = Airbnb tự thu (lịch đêm, ADR là extension). Trục
+   `listing_intent` giữ tên; giá trị `wanted` → `inquiry` «Yêu cầu» (Mạnh 27/10; yêu cầu là bên mua, đối xứng
+   với listing bên bán; loại con Yêu cầu mua / Yêu cầu thuê theo `kind`; migration 050). Hai bảng `sale_offers` + `listings`
+   gộp về một khái niệm listing (đổi tên bảng, nhãn UI «Listing» đang chỉ Airbnb) ở hàng tái cấu trúc riêng, khi các dãy
+   khép. Chữ prompt LLM chỉ đổi khi có bench.
+22. **Danh bạ vật thể và người** (27/10, Mạnh duyệt «khung đã sửa ba điểm, theo các mặc định»; **ADR-0016**, sửa ADR-0013
+   §1/§3/§9): bốn họ danh bạ — Vùng (`areas`, `asset_nodes` khu đô thị/phân khu; «thị trường» là tên cấp vùng, không phải
+   danh bạ) · Vật thể (thửa · toà · trục · căn, mỗi cấp một bảng chung khung khoá mờ/bí danh/gộp-tách/phát biểu) · Người
+   (vai trò là quan hệ có phát biểu; vai suy luận chỉ ở `/ops`; không thu chủ sở hữu ngoài tin) · Listing. «Một Căn Nhà» =
+   nút vật thể listing gắn vào, ở mức sâu nhất biết được; UPI neo toà hoặc thửa, đúc một lần. Kế thừa hai chiều theo năm
+   luật (chỉ trường thuộc vật thể, không đè, không tự nuôi, mâu thuẫn ra thẻ, rút dây chuyền). Nhà phố/đất: một vật thể tạm
+   mỗi tin, gộp theo bằng chứng — toạ độ S06 chỉ là tín hiệu phụ. S08: vật thể chỉ-S08 ở local, giá trị chỉ-S08 không lên
+   Invest. Hàng code thay PL11, PL24 và thêm hàng Người — giám sát cắt vào lộ trình.
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -304,6 +329,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | G-2.5 | pHash ảnh — khi ảnh P1 nhiều hơn | ⬜ |
 | PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | ✅ PR #120 (migration 043 đã áp local; Supabase đã áp 26/10 — `docs/ops/cloud-schema-catchup-2026-10-26-043.sql`) |
 | PL14 | Nạp lại không xoá: bảng bản ghi + view sống (lối A, 044), khoá dính S03/S05, tin/listing nghỉ (`retired_at`) thay DELETE, 6 khoá ngoại RESTRICT, đối soát chuyển quyết định sang tin kế — `_acceptance/nap-lai-khong-xoa` | 🔶 vòng S4; sau merge: áp 044 lên DB local NGAY (launchd chạy code main); cloud không đổi lược đồ (`docs/ops/cloud-schema-catchup-2026-10-26.md`) |
+| PL15 | Bảng phát biểu chỉ-thêm + bộ phân xử ba lớp dựng năm cột phân loại kèm nguồn gốc, chạy lại ra y nguyên (045) — `_acceptance/phat-bieu-va-phan-xu` | 🔶 vòng S4; sau merge: áp 045 + `phat-bieu-cat-chuyen.mjs` trên DB local TRƯỚC lượt nạp đêm kế; cloud không đổi lược đồ |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
@@ -342,6 +368,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V14 | Tầng tri thức (kit 2.34.0): kho riêng `onehub-invest-tri-thuc` (12 raw, 2 trang nền, 10 trang đợt), `nguon` của 10 bản phạm vi là đường trỏ băm, 7 tệp kit `[only-if-declared: tri_thuc]` đã chép — `_acceptance/kho-tri-thuc-invest` (T2) | 🔄 chờ Cổng 2 |
 | V15 | Vòng đời nguồn: `source_registry` + `source_groups` năm trạng thái có CHECK (paused bắt buộc lý do), `enabled` thành bản soi do trigger giữ khớp; `isRunnable` + CLI `pipeline/lib/vong-doi.mjs` cho TV2b — migration 047, TV2a `_acceptance/vong-doi-nguon` (T3) | 🔄 Cổng 2 Mạnh ký 26/10 — PR #129; 047 áp DB local SAU gộp |
 | V16 | Sổ đơn vị thu: `source_groups` đổi tên `collection_units` (view tương thích gồm mọi dòng), mã đơn vị không cấp lại, thị trường + dự án nhóm chuyên (khu đô thị) kiểm bằng trigger; `pipeline/sync-don-vi.mjs` đưa S03 (chỉ đọc cấu hình gateway, nhóm biến mất → tạm dừng giữ mã) và S02 vào sổ; khu «Sổ đơn vị thu» + action `set-meta` (admin, audit cùng giao dịch) — migration 048, PL12 `_acceptance/so-nhom-mot-noi` (T3) | 🔄 Cổng 2 Mạnh ký 26/10 — PR #139; 048 áp DB local SAU gộp, rồi chạy `sync-don-vi` |
+| V17 | Công tắc nhóm thu theo ma trận 5 × 2 của TV2a: không hồi sinh nhóm đã gỡ/đã xong qua tắt rồi bật (409 có chữ), tắt nhóm nháp/tạm dừng không đổi — `_acceptance/cong-tac-khong-ha-nhom-go` (T3) | 🔄 S4 chấm |
+| V18 | Ca thử công tắc nhóm thu đối chứng với route trước sửa đã ghim (fixture), không đọc `origin/main` lúc chạy — vẫn xanh sau khi #142 gộp — `_acceptance/cong-tac-test-ghim-ban-cu` (T2) | 🔄 S4 chấm |
+| V19 | Một bảng quyền bốn vai (viewer < ops < admin < owner) ở `app/src/lib/ops-access.ts` cho 11 route `/api/v1/ops/**`; route quản trị nhóm thu và Zalo chỉ admin, bearer chung chỉ đọc và nạp số; mỗi thao tác ghi đúng một dòng `ops_audit` mang `user:<id>`, cùng transaction; `users.role` CHECK (049, prod chờ Mạnh áp) — `_acceptance/quyen-bon-vai-mot-cho` (T3, TV1) | 🔄 S4 chấm |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI
@@ -380,7 +409,8 @@ có "Tỉnh Phú Thọ", "Tỉnh Hưng Yên"). Nghi gán khu vực/ranh giới �
 ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
 boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
-0013 tin → căn RESO · 0014 Ops cloud đọc số tổng hợp · 0015 đường lệnh kéo một chiều.
+0013 tin → căn RESO · 0014 Ops cloud đọc số tổng hợp · 0015 đường lệnh kéo một chiều ·
+0016 danh bạ vật thể và người.
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.
