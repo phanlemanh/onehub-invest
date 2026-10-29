@@ -5,7 +5,7 @@ slug: m2-ac10-so-cap-co-dinh
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [script]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-29T07:29:55Z
 approved_by:
