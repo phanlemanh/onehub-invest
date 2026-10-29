@@ -3,7 +3,7 @@
 // nhóm Zalo — những thứ đọc file/CLI chỉ có ở máy này).
 // Đi qua HTTPS (POST /api/v1/ops/ingest trên Vercel, Bearer cloud token).
 // Gọi từ cloud-sync.sh sau mỗi lần sync dữ liệu (15'/lần).
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import pg from "pg";
@@ -13,6 +13,7 @@ import { guardValues } from "./lib/tier-a-guard.mjs";
 
 import { tailLog } from "./lib/last-log-line.mjs";
 import { luong7, parseLog, zaloFlow } from "./lib/ops-flow.mjs";
+import { readAiCalls } from "./lib/ai-calls.mjs";
 import { readFreshness } from "../scripts/lib/freshness.mjs";
 import { readLaunchdJobs, readLockdown, readRecords24h, readReviewQueue, readS03Allowlist } from "../scripts/lib/ops-local.mjs";
 
@@ -216,6 +217,9 @@ async function main() {
   // ON5: hai cột S03 của «Luồng 7 ngày» — đúng 7 ngày VN tính tới mốc đo, ngày rỗng = 0 (định nghĩa ở lib/ops-flow.mjs).
   const luong7Block = await measure(async () => ({ days: await luong7(client, { now: now.getTime() }) }));
   const dataFlowBlock = await measure(() => readDataFlow(client));
+  // PL29 `so-cuoc-goi-ai`: sổ cuộc gọi AI 30 ngày, chỉ số + tên việc/model/ngày (không nội dung prompt). Bảng ai_calls
+  // (052) chưa áp → ném, khối ghi `error` — trang hiện «không đo được», không vẽ 0.
+  const aiCallsBlock = await measure(() => readAiCalls(client, 30));
   await client.end();
   const [lockdownBlock, jobsBlock] = await Promise.all([
     measure(() => readLockdown({ root: ROOT, agentLogDir: process.env.OPENCLAW_LOG_DIR ?? "/tmp/openclaw", now })),
@@ -280,6 +284,7 @@ async function main() {
       luong7: luong7Block,
       s03: s03Block,
       dataFlow: dataFlowBlock,
+      aiCalls: aiCallsBlock,
     },
   };
   // NT2: bộ soát tầng A chung (pipeline/lib/tier-a-guard.mjs) — còn tên nguồn thật thì dừng trước khi gửi.
@@ -288,6 +293,9 @@ async function main() {
     for (const l of chan) console.error(l);
     console.log(`khối: ${Object.entries(payload.blocks).map(([k, b]) => `${k} ${b.error ? "không đo được" : "đo được"}`).join(" · ")}`);
     console.log(chan.length ? `ops-facts khô: ${chan.length} chỗ chặn` : "ops-facts khô: sạch, 0 chỗ chặn");
+    // --ra <tệp>: ghi bản tin khô ra tệp để phép đo đọc ĐÚNG đầu ra của bên ghi (PL29 E8) — không gửi đi đâu.
+    const ra = process.argv.indexOf("--ra");
+    if (ra > 0 && process.argv[ra + 1]) await writeFile(process.argv[ra + 1], JSON.stringify(payload));
     process.exitCode = chan.length ? 1 : 0;
     return;
   }

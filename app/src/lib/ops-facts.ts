@@ -13,7 +13,7 @@ import { pool } from "./db"
 /** Ngưỡng số cũ: 3 lượt cloud-sync 15′. Hằng DUY NHẤT — đổi chu kỳ cloud-sync thì đổi ở đây (ADR-0014). */
 export const FACTS_STALE_MS = 45 * 60_000
 
-export const OPS_FACT_BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7", "s03", "dataFlow"] as const
+export const OPS_FACT_BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7", "s03", "dataFlow", "aiCalls"] as const
 export type OpsFactBlockName = (typeof OPS_FACT_BLOCKS)[number]
 
 export type FactsState = "none" | "fresh" | "stale"
