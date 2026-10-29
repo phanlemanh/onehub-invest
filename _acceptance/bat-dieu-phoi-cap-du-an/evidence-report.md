@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: bfde6bf2cd50537384936fb92d2990b22a76757b
-human_signoff:
+human_signoff: Mạnh 2026-10-29
 ---
 
 # Evidence Report: bat-dieu-phoi-cap-du-an

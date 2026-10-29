@@ -5,7 +5,7 @@ slug: bat-dieu-phoi-cap-du-an
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [config]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-29
 design_doc: docs/superpowers/specs/2026-10-29-bat-dieu-phoi-cap-du-an-design.md
@@ -44,3 +44,6 @@ Hỏi-1 ở Cổng Phạm vi).
 ## Notes
 
 - Ranh giới hàng: `.claude/settings.json`; thêm `_acceptance/config.yaml` một dòng (giám sát duyệt P3-109).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-29:
+  - Ngoài-1: thẻ Cổng Phạm vi hiện AC-4 bằng chữ hợp đồng chưa dịch (bản dịch xếp nhầm vào wont_do trong card-plain.json).
+  - Ngoài-2: bản phá «tên gói lạ» chỉ đỏ ở phép so tên cứng `dieu-phoi`; chưa có bản phá chứng minh riêng vế tra tên gói trong manifest.
