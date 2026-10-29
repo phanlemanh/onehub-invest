@@ -65,6 +65,14 @@ export function isAdmin(user: User | null): boolean {
   return BAC_VAI[vaiHieuLuc(user)] >= BAC_VAI.admin;
 }
 
+/**
+ * Nội dung tin (thẻ duyệt review_queue, bài gốc) — AGENTS.md luật 6: cho vai ops trở lên. Vai viewer vào được Ops nhưng
+ * chỉ nhận số và mã S0x; mọi chỗ đưa nội dung tin xuống trình duyệt hỏi hàm này.
+ */
+export function xemNoiDungTin(user: User | null | undefined): boolean {
+  return BAC_VAI[vaiHieuLuc(user ?? null)] >= BAC_VAI.ops;
+}
+
 function bearerKhop(req: Request): boolean {
   const token = process.env.OPS_API_TOKEN;
   return !!token && req.headers.get("authorization") === `Bearer ${token}`;

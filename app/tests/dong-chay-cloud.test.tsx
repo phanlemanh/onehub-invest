@@ -457,7 +457,7 @@ describe("DC-AC-3 chỉ đọc bảng", () => {
       await admin.query(`SELECT to_char(min(computed_at) AT TIME ZONE 'Asia/Ho_Chi_Minh', 'HH24:MI') AS t FROM "${S_LOCAL}".data_flow_snapshot`)
     ).rows[0].t
     const { DataFlowView } = await import("../src/components/ops/data-flow/data-flow-view")
-    const root = await render(<DataFlowView flow={flow} roles={{}} nowMs={NOW} />)
+    const root = await render(<DataFlowView flow={flow} roles={{}} nowMs={NOW} xemBaiGoc />)
     const stamp = txt(root.querySelector("[data-flow-stamp]"))
     console.log(`# DC-AC-3 dấu: «${stamp}» · giờ VN của computed_at cũ nhất ${hhmm}`)
     assert.match(stamp, new RegExp(`^Số tính lúc \\d{4}-\\d{2}-\\d{2} ${hhmm} \\(GMT\\+7\\)$`))
@@ -826,7 +826,7 @@ describe("DC-AC-8 tin mới nhất trên cloud", () => {
     assert.deepEqual(flow.records.map((r) => r.offerId).sort(), OFFERS.map((o) => o[0]).sort(), "records phải là tin của sale_offers cloud")
     assert.ok(flow.records.every((r) => r.postText === null && r.postGroup === null), "cloud không có bài gốc")
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    const root = await render(<RecordsGrid records={flow.records} roles={{}} cloud />)
+    const root = await render(<RecordsGrid records={flow.records} roles={{}} cloud xemBaiGoc />)
     const rows = [...root.querySelectorAll("tbody tr[data-row-id]")]
     assert.equal(rows.length, flow.records.length)
     // Hàng không mang mã tin (lưới đánh số hàng) → so bội tập bậc trên lưới với levelOf của records.
@@ -852,7 +852,7 @@ describe("DC-AC-8 tin mới nhất trên cloud", () => {
     const o1 = local.records.find((r) => r.offerId === "o1")!
     assert.equal(o1.postText, "bài thử")
     const { RecordSheet } = await import("../src/components/ops/data-flow/record-sheet")
-    await render(<RecordSheet record={o1} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={o1} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     assert.match(txt(dialogs()[0]?.querySelector("blockquote")), /bài thử/)
     assert.doesNotMatch(txt(dialogs()[0]), /Bài gốc chỉ xem ở máy thu/)
   })

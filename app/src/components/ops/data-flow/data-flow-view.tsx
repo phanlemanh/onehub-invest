@@ -88,12 +88,15 @@ export function DataFlowView({
   roles,
   nowMs,
   media,
+  xemBaiGoc,
 }: {
   flow: DataFlow
   roles: SourceRoles
   nowMs: number
   /** Ảnh tin theo offer_id — chỉ có khi người xem là admin. */
   media?: Record<string, ReviewImage[]>
+  /** Người xem có vai ops trở lên — không thì bài gốc đã bị xoá ở máy chủ, sheet hiện câu chú thích. */
+  xemBaiGoc: boolean
 }) {
   const windowDays = chartDaysOf(flow.window)
   const received = flow.sources.reduce((a, s) => a + s.received, 0)
@@ -141,7 +144,7 @@ export function DataFlowView({
           </div>
         </>
       ) : null}
-      <RecordsGrid records={flow.records} roles={roles} media={media} cloud={flow.mode === "cloud"} />
+      <RecordsGrid records={flow.records} roles={roles} media={media} cloud={flow.mode === "cloud"} xemBaiGoc={xemBaiGoc} />
     </div>
   )
 }
