@@ -227,3 +227,47 @@ test("AC-10 chiều đỏ: bỏ so remaining thì ô (2) cho qua", () => {
   const wrong = AC10_MATRIX.filter(([, args, ok]) => loose({ ...args, now: NOW }) !== ok).map(([name]) => name);
   assert.deepEqual(wrong, ["(2) sellers tụt, remaining lệch 1", "(3) sellers tụt, audit cũ hơn 24h"]);
 });
+
+// ---- NH1 media-canonical-reso AC-9 (E10): bảng media chỉ ở máy thu ----
+const { FILL, leakGate } = await import("./sync-cloud.mjs");
+
+/** Ném khi danh sách bảng sync có bảng media (URL ảnh S06 mang tên miền nguồn — tầng A). */
+function kiemFill(fill) {
+  if (fill.includes("media")) throw new Error("media không được vào FILL");
+}
+
+/** exec giả cho leakGate: bảng media vắng (null) hay có n dòng; mọi kiểm khác sạch. */
+function execGia(media) {
+  return async (sql) => {
+    if (/table_name LIKE 'stg_%'/.test(sql)) return [];
+    const reg = sql.match(/to_regclass\('(?:public\.)?([a-z_]+)'\)/);
+    if (reg) return [{ r: reg[1] === "media" && media !== null ? "media" : null }];
+    if (/FROM public\."media"/.test(sql)) return [{ n: media }];
+    if (/FROM pg_roles WHERE rolname = 'anon'/.test(sql)) return [{ n: 1 }];
+    if (/count\(\*\)/.test(sql)) return [{ n: 0 }];
+    return [];
+  };
+}
+
+test("NH-AC-9 media không lên cloud", async () => {
+  kiemFill(FILL);
+  assert.throws(() => kiemFill([...FILL, "media"]), /media không được vào FILL/);
+  const mediaLeaks = async (m) => (await leakGate(execGia(m))).filter((l) => l.startsWith("media"));
+  assert.deepEqual(await mediaLeaks(3), ["media=3"], "cloud có bảng media có dòng → vi phạm");
+  assert.deepEqual(await mediaLeaks(null), [], "bảng vắng → sạch");
+  assert.deepEqual(await mediaLeaks(0), [], "bảng rỗng → sạch");
+  const { readdirSync, readFileSync, statSync } = await import("node:fs");
+  const path = await import("node:path");
+  const goc = new URL("../data-api/src/", import.meta.url).pathname;
+  const tep = [];
+  const di = (d) => {
+    for (const f of readdirSync(d)) {
+      const p = path.join(d, f);
+      if (statSync(p).isDirectory()) di(p);
+      else if (/\.(ts|mts|js|mjs)$/.test(f)) tep.push(p);
+    }
+  };
+  di(goc);
+  assert.ok(tep.length > 0, "không quét được data-api/src");
+  for (const p of tep) assert.doesNotMatch(readFileSync(p, "utf8"), /FROM media\b|media_url/, `data-api nhắc bảng media: ${p}`);
+});

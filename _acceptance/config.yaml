@@ -90,6 +90,8 @@ executors:
     phat_bieu_db: "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"   # PL15: 045 + chỉ-thêm + ma trận phân xử + đường ghi, giao dịch ROLLBACK — cần DB local :5433
     airbnb_nghi: "cd pipeline && node --test scripts/airbnb-nghi.itest.mjs"   # airbnb-nghi-khong-hoi-sinh: ghiListing cho nghỉ ghi toạ độ mới + reassign không đánh thức, giao dịch ROLLBACK — chạy trên DB thử riêng (DATABASE_URL)
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
+    media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
+    media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
     cam_mau_s03: "cd pipeline && node --test scripts/cam-mau-s03.test.mjs"   # s03-cam-mau-so-lieu (N1): ma trận giá/DT/khoá gom/chốt khoảng — không cần DB (giám sát duyệt P1-47)
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
@@ -464,6 +466,8 @@ executors:
     s08_nguon_duy_nhat: "node scripts/s08-danh-muc/acceptance.mjs nguon-duy-nhat"
     s08_scope: "bash _acceptance/thu-danh-muc-ocp1/probes/scope.sh \"$PWD\""
     bdp_settings: "node _acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs"
+    media_roundtrip: "cd app && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --import tsx scripts/media-roundtrip.ts"   # media-canonical-reso E8: bên ghi → bảng media → loader thật trên bản chép DB máy thu; GHI bảng media nên chỉ DB thử
+    media_khong_lui: "node _acceptance/media-canonical-reso/probes/khong-lui.mjs"   # media-canonical-reso E12: lưới trước-merge chỉ còn vi phạm đã biết trước chữ ký
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 24a6dc87b1cb375fe1317380343d0e7557b1288d
+verified_commit: de3b9e7ba20a7510801951a44f15ac7851d99c1e
 human_signoff: Mạnh 2026-10-26
 ---
 
@@ -250,3 +250,7 @@ Round 2: PASS — mọi eval chạy lại đều xanh, E4 và E11-E14 mang từ 
 ### Re-pin lần 1 — 2026-10-26, do gộp origin/main (#138, #139) vào feat/ops-data-flow
 run_id: repin-20261026T144507Z-68691
 sha: 24a6dc87b1cb375fe1317380343d0e7557b1288d · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E7, E9 · AC không có chốt máy: AC-7
+
+### Re-pin lần 2 — 2026-10-30, do sau chữ ký media-canonical-reso: ô superseded_by trỏ NH1 nay hợp lệ; gộp main
+run_id: repin-20261030T043133Z-53882
+sha: de3b9e7ba20a7510801951a44f15ac7851d99c1e · suites: 6 lệnh exit 0 · evals: 12/12 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E15, E16 · thay bởi hồ sơ đã ký: E15→media-canonical-reso#AC-6, E16→media-canonical-reso#AC-6 · ngoài làn máy: E7, E9 · diff chạm vật đo ngoài làn máy: E7, E9 — chưa chứng lại, đi vòng S4 delta · AC không có chốt máy: AC-7, AC-10
