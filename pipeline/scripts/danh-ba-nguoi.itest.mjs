@@ -173,7 +173,7 @@ async function fixtureZalo(db) {
   const b5 = await themBai(db, "b5", { kenh: "apify-facebook", sender: "s1" });
   const b7 = await themBai(db, "b7", { sender: "s7" });
   return {
-    motBai: await themTin(db, { id: "mot-bai", source: "S03", postIds: [b1] }),
+    motBai: await themTin(db, { id: "mot-bai", source: "S03", postIds: [b1], sdt: ai("h1") }),
     haiBai: await themTin(db, { id: "hai-bai", source: "S03", postIds: [b2a, b2b] }),
     chiSdt: await themTin(db, { id: "chi-sdt", source: "S03", postIds: [], sdt: ai("h9") }),
     khongGi: await themTin(db, { id: "khong-gi", source: "S03", postIds: [b4] }),
@@ -268,13 +268,17 @@ test("AC-6 chạy lại: lượt hai bằng 0, đổi người gửi rút vai, m
     assert.ok((await vaiSong(db, f.haiBai)).some((v) => v.party_key === s4), "AC-6 thiếu vai người gửi mới");
     assert.equal((await dem4(db)).party_roles, dem2.party_roles + 1, "AC-6 chạy lại nhân dòng: party_roles");
 
-    // Lượt 4: bài của tin s1 mất khỏi stg_zalo_posts → giữ vai, không vai parser.
+    // Lượt 4: bài của tin s1 (tin CÓ SĐT h1) mất khỏi stg_zalo_posts → giữ vai, không ghi vai parser tới người h1.
+    const [h1] = await nguoiCua(db, "S03", "sdt_bam", ai("h1"));
+    assert.ok(h1, "AC-6 fixture: tin một bài phải mang SĐT để ca bài mất chạm nhánh vai parser");
     await db.query("DELETE FROM stg_zalo_posts WHERE post_id = $1", [f.bai.b1]);
     const l4 = await dungNguoi(db, { runId: "itest-ac6-4", out: im });
-    assert.deepEqual([l4.vai_moi, l4.vai_rut], [0, 0], `AC-6 bài mất làm rút vai: ${T}-mot-bai`);
+    assert.deepEqual([l4.vai_moi, l4.vai_rut], [0, 0], `AC-6 bài mất làm rút vai hay ghi vai parser: ${T}-mot-bai`);
     const [s1] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s1"));
     assert.deepEqual((await vaiSong(db, f.motBai)).map((v) => `${v.party_key}/${v.method}`), [`${s1}/source_field`],
-      `AC-6 bài mất làm rút vai: ${T}-mot-bai`);
+      `AC-6 bài mất làm rút vai hay ghi vai parser: ${T}-mot-bai`);
+    const parserH1 = (await db.query("SELECT count(*)::int AS n FROM party_roles WHERE subject_key = $1 AND party_key = $2", [f.motBai, h1])).rows[0].n;
+    assert.equal(parserH1, 0, `AC-6 bài mất sinh vai parser tới người theo SĐT: ${T}-mot-bai`);
   });
 });
 

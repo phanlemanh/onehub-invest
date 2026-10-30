@@ -4,7 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FILL } from "../sync-cloud.mjs";
 import {
-  BANG_TANG_A, PHUONG_PHAP_GHI, SQL, VAI_GHI, bangDuocDoc, chonVaiRut, giaiNguoi, khoaBiDanh, moiKhoaNguoi, rutDinhDanh,
+  BANG_TANG_A, PHUONG_PHAP_GHI, SQL, VAI_GHI, bangDuocDoc, chonVaiRut, giaiNguoi, giuVaiBaiMat, khoaBiDanh, moiKhoaNguoi,
+  rutDinhDanh,
 } from "../lib/danh-ba-nguoi.mjs";
 
 const BON_BANG = ["parties", "registry_aliases", "registry_events", "party_roles"];
@@ -147,6 +148,26 @@ test("moiKhoaNguoi: pty_ + 26 ký tự Crockford, không trùng", () => {
 });
 
 // ---- AC-6 luật rút vai (lõi) ----
+
+test("AC-6 bài mất (tin có SĐT): giữ vai theo bài, không vai parser thay; chiều đỏ khi bỏ giữ", () => {
+  const t = tin("S03", { post_ids: ["q1"], seller_phone_hash: "h1" });
+  const subject = `S03:${t.originating_system_key}`;
+  const cu = { id: 1, subject_key: subject, party_key: "pty_CU", method: "source_field", evidence: { offer_id: t.offer_id, field: "post_ids", post_ids: ["q1"] } };
+  const mat = new Map(); // q1 không còn nối được
+  const giu = giuVaiBaiMat([cu], mat);
+  assert.deepEqual([...giu], [subject]);
+  const kq = giaiNguoi([t], new Map(), { baiTheoId: mat, taoKhoa: khoaGia(), giuBaiMat: giu });
+  assert.deepEqual(kq.vai, [], "AC-6 bài mất sinh vai parser thay");
+  assert.deepEqual(kq.khongDinhDanh, {}, "AC-6 tin giữ vai theo bài bị đếm không định danh");
+  assert.deepEqual(chonVaiRut([cu], kq.vai, [t], mat), [], "AC-6 bài mất làm rút vai");
+  // chiều đỏ: bỏ tập giữ (luật cũ) → bộ dựng sinh vai parser cho đúng tin này
+  const doi = giaiNguoi([t], new Map(), { baiTheoId: mat, taoKhoa: khoaGia() });
+  assert.deepEqual(doi.vai.map((v) => v.method), ["parser"], "chiều đỏ: thiếu tập giữ phải sinh vai parser");
+  // bài nối lại được (cùng người gửi) → không còn giữ; tin chưa từng có vai theo bài → vai parser như AC-4
+  assert.deepEqual([...giuVaiBaiMat([cu], bai([["q1", "S03", "s1"]]))], []);
+  assert.deepEqual([...giuVaiBaiMat([], mat)], []);
+  assert.deepEqual([...giuVaiBaiMat([{ ...cu, method: "parser", evidence: { field: "seller_phone_hash" } }], mat)], []);
+});
 
 test("AC-6 chonVaiRut: chỉ rút khi có bằng chứng thay; bài mất thì giữ", () => {
   const t = tin("S03", { post_ids: ["q1"] });

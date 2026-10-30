@@ -71,10 +71,11 @@ const thoiDiem = (x) => (x == null ? Number.POSITIVE_INFINITY : +new Date(x));
  * tin chỉ SĐT mang vai tới người theo SĐT (parser/observed); không có cả hai → đếm khong_dinh_danh.
  * Nhiều bản ghi cùng chủ thể (tin nghỉ `doi_khoa` giữ originating_system_key của tin thay nó) gộp thành một vai mỗi
  * (chủ thể, người), bằng chứng lấy từ bản ghi sống; khong_dinh_danh đếm theo chủ thể.
+ * Chủ thể trong `giuBaiMat` (vai theo bài đang được giữ vì bài mất) không nhận vai parser thay và không đếm khong_dinh_danh.
  * @param {object[]} tins
  * @param {Map<string, string>} biDanh khoaBiDanh → party_key (không bị đột biến)
  */
-export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKhoaNguoi } = {}) {
+export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKhoaNguoi, giuBaiMat = new Set() } = {}) {
   const bd = new Map(biDanh);
   const nguoiMoi = [];
   const biDanhMoi = [];
@@ -114,7 +115,7 @@ export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKh
       ghiVai({ subject_key, party_key, role: PARTY_ROLE.nguoi_dang, method: ASSERTION_METHOD.source_field, evidence_tier: EVIDENCE_TIER.fact, evidence });
     }
     const nguoiSdt = d.sdt ? layNguoi(t.source, ALIAS_KIND.sdt_bam, d.sdt) : null;
-    if (!d.taiKhoan.length && nguoiSdt) {
+    if (!d.taiKhoan.length && nguoiSdt && !giuBaiMat.has(subject_key)) {
       ghiVai({
         subject_key, party_key: nguoiSdt, role: PARTY_ROLE.nguoi_dang, method: ASSERTION_METHOD.parser,
         evidence_tier: EVIDENCE_TIER.observed, evidence: { offer_id: t.offer_id, field: "seller_phone_hash" },
@@ -124,8 +125,27 @@ export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKh
   const vai = [...vaiTheo.values()];
   const coVai = new Set(vai.map((v) => v.subject_key));
   const khongDinhDanh = {};
-  for (const [sk, source] of chuThe) if (!coVai.has(sk)) khongDinhDanh[source] = (khongDinhDanh[source] ?? 0) + 1;
+  for (const [sk, source] of chuThe) if (!coVai.has(sk) && !giuBaiMat.has(sk)) khongDinhDanh[source] = (khongDinhDanh[source] ?? 0) + 1;
   return { nguoiMoi, biDanhMoi, vai, khongDinhDanh };
+}
+
+const baiNoiDuoc = (p, source, baiTheoId) => {
+  const b = baiTheoId.get(p);
+  return Boolean(b && b.source === source && sach(b.sender_id) !== null);
+};
+
+/**
+ * Chủ thể có vai sống dựa trên bài mà mọi bài bằng chứng đều không còn nối được (AC-6 «bài mất»): vai ấy được giữ,
+ * nên lượt này không ghi vai parser thay cho chủ thể.
+ * @param {{ subject_key: string, method: string, evidence?: { post_ids?: string[] } }[]} vaiSong
+ */
+export function giuVaiBaiMat(vaiSong, baiTheoId) {
+  const giu = new Set();
+  for (const r of vaiSong) {
+    const ps = r.method === ASSERTION_METHOD.source_field ? r.evidence?.post_ids ?? [] : [];
+    if (ps.length && !ps.some((p) => baiNoiDuoc(p, r.subject_key.slice(0, 3), baiTheoId))) giu.add(r.subject_key);
+  }
+  return giu;
 }
 
 /**
@@ -142,10 +162,7 @@ export function chonVaiRut(vaiSong, vaiLuotNay, tinsLuotNay, baiTheoId) {
     const t = tinTheo.get(r.subject_key);
     if (!t) return false;
     if (r.method === ASSERTION_METHOD.parser || r.evidence?.field === "seller_ref") return coVaiMoi.has(r.subject_key);
-    return (r.evidence?.post_ids ?? []).some((p) => {
-      const b = baiTheoId.get(p);
-      return b && b.source === t.source && sach(b.sender_id) !== null;
-    });
+    return (r.evidence?.post_ids ?? []).some((p) => baiNoiDuoc(p, t.source, baiTheoId));
   });
 }
 
@@ -190,7 +207,8 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   const biDanh = new Map(
     traBiDanh ? (await c.query(SQL.biDanh)).rows.map((a) => [khoaBiDanh(a.source, a.kind, a.value, a.object_key), a.object_key]) : [],
   );
-  const kq = giaiNguoi(tins, biDanh, { baiTheoId });
+  const vaiSong = (await c.query(SQL.vaiSong)).rows;
+  const kq = giaiNguoi(tins, biDanh, { baiTheoId, giuBaiMat: giuVaiBaiMat(vaiSong, baiTheoId) });
 
   if (kq.nguoiMoi.length) await c.query(SQL.themNguoi, [kq.nguoiMoi.map((p) => p.party_key), kq.nguoiMoi.map((p) => p.source)]);
   const cot = (ds) => [ds.map((a) => a.object_key), ds.map((a) => a.source), ds.map((a) => a.kind), ds.map((a) => a.value)];
@@ -200,7 +218,6 @@ export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh
   if (dinhDanh.length) biDanhMoi += (await c.query(SQL.themDinhDanh, cot(dinhDanh))).rowCount;
   if (ten.length) biDanhMoi += (await c.query(SQL.themTen, cot(ten))).rowCount;
 
-  const vaiSong = (await c.query(SQL.vaiSong)).rows;
   const dangSong = new Set(vaiSong.map((v) => `${v.subject_key}|${v.party_key}`));
   const rut = chonVaiRut(vaiSong, kq.vai, tins, baiTheoId);
   if (rut.length) await c.query(SQL.rutVai, [rut.map((r) => r.id), LY_DO_RUT]);
