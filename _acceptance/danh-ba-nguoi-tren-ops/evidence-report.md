@@ -143,7 +143,7 @@ human_signoff: Mạnh 2026-10-30
   run_id: E12-ui-verify-2026-10-30
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.ui-check
+  verifier: scripts/ui-capture.sh
   verified_at: 2026-10-30T15:32:34Z
   screenshot: evidence/E12-step1.png
   observed: |
