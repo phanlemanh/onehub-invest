@@ -30,7 +30,7 @@ evals:
     executor: test
     cmd: config:executors.test.cam_mau_s03
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
-    expected: "exit 0; ca 'CM-AC-4' xanh: 5 dòng diện tích ra đúng số, 4 dòng bề ngang ra null, biên «15m» → 15 còn «14m», «501m» → null (should-NOT-fire); ca đỏ trên bản sao bỏ danh sách chặn bề ngang ghim «mặt tiền 5m»"
+    expected: "exit 0; ca 'CM-AC-4' xanh: 5 dòng diện tích ra đúng số, 4 dòng bề ngang ra null, biên «15m» → 15 còn «14m», «501m» → null (should-NOT-fire); ca đỏ trên bản sao bỏ danh sách chặn bề ngang ghim «mặt tiền 20m» (bề ngang từ 15 m — dưới 15 m khoảng 15–500 đã tự loại)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
