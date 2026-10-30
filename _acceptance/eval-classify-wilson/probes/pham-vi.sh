@@ -1,5 +1,5 @@
 #!/bin/bash
-# AC-9 (eval-classify-wilson, E9): tệp đổi so merge-base origin/main chỉ trong danh sách của hợp đồng.
+# AC-10 (eval-classify-wilson, E10): tệp đổi so merge-base origin/main chỉ trong danh sách của hợp đồng.
 # Đối chứng: cùng hàm phân loại trên tệp giả (migration, transform) phải ra NGOAI PHAM VI.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)" || exit 2; cd "$ROOT" || exit 2
@@ -9,7 +9,8 @@ files=$(git diff --name-only "$base" HEAD) || { echo "GIT DIFF LOI"; exit 2; }
 cho_phep() {
   case "$1" in
     pipeline/lib/eval-classify.mjs|pipeline/lib/eval-classify.test.mjs|pipeline/eval-classify.mjs|\
-    pipeline/package.json|pipeline/CLAUDE.md|_acceptance/config.yaml|_acceptance/eval-classify-wilson/*|\
+    pipeline/package.json|pipeline/CLAUDE.md|app/src/lib/dq-labels.ts|app/tests/dq-eval-classify-label.test.tsx|\
+    app/tests/eval-classify-mien.test.tsx|CONTEXT.md|_acceptance/config.yaml|_acceptance/eval-classify-wilson/*|\
     docs/superpowers/specs/2026-10-30-eval-classify-wilson-design.md|docs/superpowers/plans/2026-10-30-eval-classify-wilson.md|\
     PRODUCT-MAP.md|LO-TRINH.html) return 0 ;;
     *) return 1 ;;
