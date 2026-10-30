@@ -1,6 +1,6 @@
 # khoa-phuong-chung-phuong-so Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans. Steps use checkbox (`- [x]`) syntax.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax.
 
 **Goal:** thẻ duyệt và luật chấm cùng coi «P.12» = «Phường 12».
 
