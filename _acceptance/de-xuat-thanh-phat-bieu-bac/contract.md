@@ -5,7 +5,7 @@ slug: de-xuat-thanh-phat-bieu-bac
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (t3_paths) — migration 056
 surfaces: [cli, ui]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-30-de-xuat-thanh-phat-bieu-bac-design.md
 approved_by: Mạnh
 approved_at: 2026-10-30
