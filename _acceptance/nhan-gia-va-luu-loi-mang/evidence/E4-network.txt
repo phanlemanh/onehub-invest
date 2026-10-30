@@ -1,0 +1,7 @@
+E4 network dump (driver: ego-browser, khong co read_network_requests; nguon = Performance resource timing trong trang + DB)
+app origin: http://localhost:3465
+Buoc 3 (Luu voi '4.350'/'4.400'): fetch POST /api/v1/ops/labels -> HTTP 400 (loi validate dau ngan nghin, DUNG nhu expected cua eval; trang khong chuyen tin)
+Buoc 4 (fetch bi gia lap Promise.reject TypeError): khong co request that ra mang (gia lap theo steps), UI hien Alert 'Khong chac da luu'
+Buoc 5 (co mang, bam Luu lai): trang chuyen tin ke, 'Toi da gan 1/10 tin'; DB oneinvest_p4_ngl eval_labels co dung 9 dong (khop 9 truong loi)
+Console errors: khong doc duoc qua ego-browser (n/a)
+Khac: static asset 200 (script chunks); khong co third-party.
