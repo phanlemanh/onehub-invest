@@ -6,7 +6,7 @@ failed_evals: []
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e3d7ca7de35dea016d8525c7febcd3516824a240
+verified_commit: 54f3e6390c70a49e5be2767b6973b07e33d8f1d0
 human_signoff:
 ---
 
@@ -164,3 +164,7 @@ Round 2: REJECT — AC-2 còn sót số ngưỡng «15,0%» ở lệch đúng ng
 Round 3: PASS — prompt judge-entity không mang số đo lệch, số chỉ ở thẻ (commit 70d5df01); E1, E2, E3, E5 chạy lại, E4, E6, E7, E8, E9 mang từ round 1; 5 lệnh suite xanh. Phát hiện trong hợp đồng mới (AC-1, sai số dấu phẩy động ở đúng ngưỡng) ghi ở review-findings.md.
 Round 4: REJECT — sửa AC-1 (commit a0f2fa47, làm tròn độ lệch); E1, E2, E3, E5 chạy lại xanh, E4, E6, E7, E8, E9 mang từ round 1, nhưng lệnh suite `cd app && npm test` đỏ ở ca ON12-AC-5 (bảng kiểm chất lượng trên DB local còn 5 dòng chưa diễn giải), không gắn eval nào.
 Round 5: PASS — gộp main vào nhánh (commit e3d7ca7d); E1, E2, E3, E5 chạy lại xanh, E4, E6, E7, E8, E9 mang từ round 1; cả 5 lệnh suite xanh, kể cả `cd app && npm test` mà ca ON12-AC-5 đã hết đỏ. Không có phát hiện trong hợp đồng; ba phát hiện ngoài hợp đồng mới và bảy mục mang từ round trước nằm ở review-findings.md để người quyết ở Gate 2.
+
+### Re-pin lần 1 — 2026-10-30, do bản đồ LO-TRINH.html vẽ lại sau lượt chấm vòng 5
+run_id: repin-20261030T120131Z-93668
+sha: 54f3e6390c70a49e5be2767b6973b07e33d8f1d0 · suites: 6 lệnh exit 0 · evals: 9/9 eval máy đạt kỳ vọng
