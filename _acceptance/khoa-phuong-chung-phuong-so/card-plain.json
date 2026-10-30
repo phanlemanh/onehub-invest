@@ -1,0 +1,27 @@
+{
+  "feature_plain": "Thẻ duyệt ghép căn và máy chấm cùng coi «P.12» là «Phường 12», nên cùng một phường số ghi khác kiểu không còn hiện Lệch hay bị máy kết luận «khác căn».",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ hiện «Khớp» ở hàng Phường khi hai tin ghi «Phường 12» với «P.12» (hay «P. 12», « phường 12 »); hai số khác nhau và slug phuong-12 vẫn «Lệch»."},
+    {"id": "AC-2", "p": "Sẽ cho máy chấm nói đúng điều thẻ duyệt nói về phường trên mọi cặp tên viết trước, kể cả các cặp phường số mới."},
+    {"id": "AC-3", "p": "Sẽ cho máy chấm ra «cùng căn» với hai tin số đo khớp ghi «Phường 12» và «P.12»; «Phường 12» với «Phường 21» vẫn ra «khác căn»."},
+    {"id": "AC-4", "p": "Sẽ giữ nguyên mọi ca đã ký khác của thẻ phường và luật chấm (khác phường theo chữ, ô trống, chín hàng còn lại)."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không dạy «Phường 01» bằng «Phường 1» — vẫn Lệch."},
+    {"id": "OOS-2", "p": "Không dạy «P12» không chấm hay slug phuong-12 bằng «Phường 12»."},
+    {"id": "OOS-3", "p": "Không phân biệt hai phường cùng số ở hai quận — thẻ chưa có hàng Quận."},
+    {"id": "OOS-4", "p": "Không chấm lại thẻ cũ trên dữ liệu thật; đó là việc vận hành sau gộp."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Thẻ duyệt: sáu cặp phường số viết trước, mỗi cặp hai chiều (AC-1)."},
+    {"i": 1, "p": "Máy chấm: cùng ma trận 21 cặp so với thẻ (AC-2), và hai ca đầu-cuối ra cùng căn / khác căn (AC-3)."},
+    {"i": 2, "p": "Phần không đổi: các ca đã ký khác vẫn xanh, cỡ ma trận ghim theo bản trước vòng (AC-4)."},
+    {"i": 3, "p": "Đủ nghĩa là số phép kiểm bằng số ô viết trước nhân hai chiều, mỗi phép có một bản cố ý sai phải đỏ."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Máy tự loại «Phường 01», «P12», slug phuong-12 mà ghi như lời anh đã quyết; lời giao chỉ nêu «P.12». Đã chuyển thành câu Hỏi-1 cho anh."},
+    {"i": 1, "p": "Phép đo máy chấm có thể chạy bằng hàm của thẻ thay vì hàm thật của máy chấm. Đã ghim chạy hàm thật và thêm một bản sai của chính tệp máy chấm phải đỏ."},
+    {"i": 2, "p": "Lời hứa «phần khác không đổi» chỉ đo test xanh. Đã ghim cỡ từng ma trận theo bản trước vòng và soát diff ở lượt chấm."},
+    {"i": 3, "p": "Thông điệp lỗi còn mang mã tiêu chí của hồ sơ cũ. Đã đổi sang mã của hồ sơ này."}
+  ]
+}
