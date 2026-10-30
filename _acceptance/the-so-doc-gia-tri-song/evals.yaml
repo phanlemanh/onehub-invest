@@ -35,7 +35,7 @@ evals:
     cmd: config:executors.test.the_so_song
     paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review-card.tsx, app/tests/the-so-gia-tri-song.test.tsx]
     layer: backend-effect
-    expected: "exit 0; ca 'GS-AC-4 tin rời kho khoá nút' xanh: lát tạm thiếu Tin A trong sale_offers, Tin B sống; loadReviewContext thật → context.offer_a.ben === null; ReviewCard dựng bằng createRoot trong jsdom, gõ lý do 'đủ căn cứ' vào [data-review-reason] (khuôn TD-AC-7) → [data-review-roi-kho] chứa 'Tin A không còn trong kho', ba nút Cùng căn/Khác căn/Không chắc có thuộc tính disabled; lát đối xứng (Tin B rời) → 'Tin B không còn trong kho'; lát cả hai rời → Alert có đúng hai dòng [data-review-roi-kho-ben] với hai câu ấy, không câu nào khác ngoài tiêu đề; chiều đỏ: bản chép review-card.tsx bỏ điều kiện khoá → đỏ 'GS-AC-4 nút quyết không khoá khi tin rời kho'"
+    expected: "exit 0; ca 'GS-AC-4 tin rời kho khoá nút' xanh: lát tạm thiếu Tin A trong sale_offers, Tin B sống; loadReviewContext thật → context.offer_a.ben === null; ReviewCard dựng bằng createRoot trong jsdom, gõ lý do 'đủ căn cứ' vào [data-review-reason] (khuôn TD-AC-7) → [data-review-roi-kho] chứa 'Tin A không còn trong kho', ba nút Cùng căn/Khác căn/Không chắc có thuộc tính disabled; lát đối xứng (Tin B rời) → 'Tin B không còn trong kho'; lát cả hai rời → Alert có đúng hai dòng [data-review-roi-kho-ben] với hai câu ấy và chữ của Alert chỉ gồm hai câu đó; chiều đỏ: bản chép review-card.tsx bỏ điều kiện khoá → đỏ 'GS-AC-4 nút quyết không khoá khi tin rời kho'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-5
