@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { napPhatBieu } from "../lib/nap-045.mjs";
 import { napKev } from "../lib/nap-057.mjs";
+import { napYeuCau } from "../lib/nap-058.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1";
@@ -36,6 +37,8 @@ try {
   // Vế chính: áp 057 (hai lần) rồi checkDb phải sạch.
   await napKev(c);
   await napKev(c);
+  // bang-yeu-cau: sổ gắn cột inquiry_records vào hai trục (058) — nạp 058 để vế chính chỉ đo phần 057.
+  await napYeuCau(c);
   const lech = await checkDb(c, reg);
   console.log(`--check-db (đã áp 057): ${lech.length} lệch`);
   for (const x of lech) console.log(`  ${x.msg}`);

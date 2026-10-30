@@ -15,6 +15,7 @@ import { VOCAB } from "../lib/vocab.generated.mjs";
 import { scanProcs } from "../lib/scan-canonical-write.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { napKev } from "../lib/nap-057.mjs";
+import { napYeuCau } from "../lib/nap-058.mjs";
 import { kiemNguonGoc } from "./dung-lai-canonical.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { spawnSync } from "node:child_process";
@@ -518,11 +519,13 @@ test("PD-AC-7 đối chứng: ghi-thang, rut, legacy-khac đều thấy lệch n
 });
 
 // PL5: sổ có trục assertion_field + mã kev (migration 057) — DB khớp sổ khi đã áp cả 045 lẫn 057.
-test("PD-AC-1 sổ: sau 045 (+ 057, PL5) trong giao dịch, DB khớp sổ từ vựng (checkDb của vocab --check-db); xoá một mục trục mới thì lệch nêu trục", async () => {
+// bang-yeu-cau: sổ gắn inquiry_records.kind / property_type vào hai trục (migration 058) — nạp thêm 058.
+test("PD-AC-1 sổ: sau 045 (+ 057 PL5, + 058 bang-yeu-cau) trong giao dịch, DB khớp sổ từ vựng (checkDb của vocab --check-db); xoá một mục trục mới thì lệch nêu trục", async () => {
   await trongGiaoDich(c, async () => {
     await napKev(c);
+    await napYeuCau(c);
     const reg = readMappings(ROOT);
-    assert.deepEqual((await checkDb(c, reg)).map((x) => x.msg), [], "DB sau 045 + 057 lệch sổ");
+    assert.deepEqual((await checkDb(c, reg)).map((x) => x.msg), [], "DB sau 045 + 057 + 058 lệch sổ");
     await c.query("DELETE FROM ref_lookup WHERE lookup_name = 'assertion_method' AND lookup_value = 'legacy'");
     const lech = await checkDb(c, reg);
     assert.equal(lech.length, 1);
