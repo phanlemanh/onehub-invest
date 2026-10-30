@@ -69,7 +69,7 @@ evals:
     executor: test
     cmd: config:executors.test.ecw_app_nhan
     paths: [app/src/lib/dq-labels.ts, app/tests/dq-eval-classify-label.test.tsx]
-    expected: "exit 0; ma trận viết trước dòng eval-classify (pass nhóm A, fail nhóm B, skip 'chua-co-nhan-nguoi', skip 'chua-co-cach-doc'; phân khúc tat-ca, apartment, khong-neu; chín trường) → dqCheckName, dqEntityLabel, dqDetail đều known: true, chữ chứa nhãn trường của FIELD_LABEL (labels-normalize.ts) và số cận dưới/ngưỡng kiểu Việt (dấu phẩy); số assert = số phần tử; đối chứng đỏ: detail thiếu khoá can_duoi → known: false"
+    expected: "exit 0; ma trận viết trước dòng eval-classify (pass nhóm A, fail nhóm B, skip 'chua-co-nhan-nguoi', skip 'chua-co-cach-doc'; phân khúc tat-ca, apartment, khong-neu; chín trường) → dqCheckName, dqEntityLabel, dqDetail đều known: true, chữ kết bằng nhãn trường của FIELD_LABEL (labels-normalize.ts) — riêng project là «Khu đô thị» theo CONTEXT.md (tránh «dự án») — và số cận dưới/ngưỡng kiểu Việt (dấu phẩy); số assert = số phần tử; đối chứng đỏ: detail thiếu khoá can_duoi → known: false"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E9b
     criterion: AC-9

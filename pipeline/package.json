@@ -7,6 +7,7 @@
     "pg": "^8.23.1"
   },
   "scripts": {
+    "eval:classify": "node eval-classify.mjs",
     "test": "node --test 'parse.test.mjs' 'sync-pii.test.mjs' 'sync-cloud.test.mjs' 'scripts/*.test.mjs'"
   },
   "devDependencies": {
