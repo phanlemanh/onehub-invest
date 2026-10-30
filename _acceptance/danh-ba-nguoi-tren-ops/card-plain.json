@@ -96,5 +96,6 @@
       "i": 4,
       "p": "Chưa quét tên người bán thật tìm tên nguồn thật. Máy đã đo: có một tên người bán chứa tên nguồn thật. Đã thêm bước che bằng bộ che chung của kho, phép đo ở AC-7 và quét trên dữ liệu thật ở AC-10."
     }
-  ]
+  ],
+  "analyst_plain": "Lượt so với bản trước vòng không đo được vì công cụ chạy so sánh bị chặn; các phép đo của vòng đều có chiều đỏ riêng nên vẫn phân biệt được bản đúng và bản hỏng."
 }
