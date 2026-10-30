@@ -15,6 +15,7 @@ export type ReviewQueueRow = {
   ai_suggestion: string | null;
   ai_reasoning: string | null;
   status: string;
+  decision_note?: string | null;
   created_at: Date | string | null;
 };
 
@@ -27,6 +28,8 @@ export type ReviewItem = {
   ai_suggestion: string | null;
   ai_reasoning: string | null;
   status: string;
+  /** Lý do người duyệt ghi khi quyết (PL3); null/vắng khi chưa quyết hay quyết trước PL3. */
+  decision_note?: string | null;
   created_at: string | null;
 };
 
@@ -67,6 +70,7 @@ export function toReviewItem(row: ReviewQueueRow, evidence: Record<string, unkno
     ai_suggestion: row.ai_suggestion,
     ai_reasoning: row.ai_reasoning,
     status: row.status,
+    decision_note: row.decision_note ?? null,
     created_at: row.created_at === null ? null : new Date(row.created_at).toISOString(),
   };
 }

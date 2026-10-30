@@ -90,6 +90,8 @@ executors:
     phat_bieu: "cd pipeline && node --test scripts/phat-bieu.test.mjs"   # PL15: quét ghi năm cột, cloud, ENRICH_COLS — không cần DB
     phat_bieu_db: "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"   # PL15: 045 + chỉ-thêm + ma trận phân xử + đường ghi, giao dịch ROLLBACK — cần DB local :5433
     airbnb_nghi: "cd pipeline && node --test scripts/airbnb-nghi.itest.mjs"   # airbnb-nghi-khong-hoi-sinh: ghiListing cho nghỉ ghi toạ độ mới + reassign không đánh thức, giao dịch ROLLBACK — chạy trên DB thử riêng (DATABASE_URL)
+    the_duyet: "cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx"   # the-duyet-du-can-cu (PL3) — lược đồ tạm td_<pid> trên DB local :5433 + jsdom; giám sát duyệt U1-73
+    the_duyet_agent: "cd agent && node --import tsx --test tests/enrich-goi-y.test.ts"   # the-duyet-du-can-cu AC-6 — thẻ bổ sung tin mới không mang gợi ý apply; DB local trong ROLLBACK ngắn (U1-73)
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
@@ -157,6 +159,7 @@ executors:
     ui_lint_should_not_fire: "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-not-fire"
     ui_baseline_guard: "cd app && node eslint-plugin-onehub-ui/selftest.mjs baseline-guard"
     ui_hook_selftest: "bash .claude/hooks/tests/typecheck-changed.selftest.sh"
+    the_duyet_design_gate: "for f in app/src/components/ops/review-card.tsx app/src/components/ops/review/review-compare.tsx app/src/components/ops/review/review-full-text.tsx app/src/components/ops/review/review-reason.tsx app/src/components/ops/review-photos.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # the-duyet-du-can-cu E15 — design gate từng tệp giao diện của vòng (cùng khuôn gate_don_hex_tho, U1-73)
     # Đợt B1 dọn cổng Ops (ui-clean-b1-ops) — một harness, mỗi kiểu kiểm một lệnh
     ui_b1_suppressions: "node scripts/ui-standards/b1-ops.mjs suppressions"
     ui_b1_handdrawn: "node scripts/ui-standards/b1-ops.mjs handdrawn"
@@ -351,6 +354,10 @@ executors:
     tsd_mut: "bash _acceptance/test-scripts-sau-87-90/probes/mut.sh \"$PWD\""
     tsd_scope: "bash _acceptance/test-scripts-sau-87-90/probes/scope.sh \"$PWD\""
     tsd_ac7: "bash _acceptance/test-scripts-sau-87-90/probes/ac7.sh \"$PWD\""
+    # check-s08-harness (30/10, PR #200) — script kiểm S08 local-only chép thêm import-s08-row.mjs
+    cs8h_lo: "bash _acceptance/check-s08-harness/probes/local-only.sh \"$PWD\""
+    cs8h_base: "bash _acceptance/check-s08-harness/probes/baseline.sh \"$PWD\""
+    cs8h_scope: "bash _acceptance/check-s08-harness/probes/scope.sh \"$PWD\""
     # hook-spool-nghiem-ngat (2410-23, ZC6 nối tiếp, T3) — cùng hộp cát ZC6: handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
     hsn_auth_held: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"
     hsn_held_then_hang: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs held-then-hang"

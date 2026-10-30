@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6ba0950bae45acc8e22612c0952f49702994e807
+verified_commit: e1363685fb45ca87709bbfd3df7489bd62ab5287
 human_signoff: Mạnh 2026-10-29
 ---
 
@@ -142,3 +142,7 @@ none — every multi-run eval is uniform (moi eval chay 1 lan, deterministic)
 
 Round 1: E1, E2, E3, E4, E5, E6 passed; no judgment item pending; verdict PASS.
 
+
+### Re-pin lần 1 — 2026-10-30, do kho tạm NDF-AC-4 tắt hook git của máy (U1-76)
+run_id: repin-20261030T083757Z-25294
+sha: e1363685fb45ca87709bbfd3df7489bd62ab5287 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng

@@ -87,6 +87,16 @@ const click = async (el: Element | null | undefined, what = "phần tử") => {
   assert.ok(el, `không tìm thấy ${what} để bấm`);
   await act(() => (el as HTMLElement).click());
 };
+/** PL3: gõ lý do vào ô «Lý do» của sheet đang mở (mọi quyết định kèm lý do). */
+async function lyDo(s: string) {
+  const el = document.querySelector("[role=dialog] [data-review-reason]") as HTMLTextAreaElement | null;
+  assert.ok(el, "không thấy ô «Lý do» trong sheet");
+  const set = Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!;
+  await act(() => {
+    set.call(el, s);
+    el.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+  });
+}
 const byText = (root: ParentNode, sel: string, text: string) =>
   [...root.querySelectorAll(sel)].find((e) => e.textContent?.trim() === text);
 const dialog = () => document.querySelector("[role=dialog]");
@@ -228,9 +238,11 @@ test("RQ-AC-3 sheet", async () => {
   assert.equal(dialogs(), 1, "bấm hàng phải mở đúng một sheet");
   const d = dialog()!;
   assert.equal(d.querySelector("[data-slot=sheet-title]")?.textContent?.trim(), "Cùng căn? mẫu 12", "tiêu đề sheet = tên thẻ");
-  for (const s of ["Ghép căn", "Chờ duyệt", "Tin A", "Tin B", "Giá", "Diện tích", "Giá/m²", "Phường", "Điểm B"]) {
+  // PL3 (the-duyet-du-can-cu): bảng so từng trường + ô Lý do thay khối tin + «Điểm B».
+  for (const s of ["Ghép căn", "Chờ duyệt", "Tin A", "Tin B", "Giá", "Diện tích", "Giá/m²", "Phường", "Lý do"]) {
     assert.ok(d.textContent?.includes(s), `sheet thẻ ghép căn thiếu «${s}»`);
   }
+  assert.ok(!d.textContent?.includes("Điểm B"), "sheet thẻ ghép căn không còn «Điểm B» (PL3)");
   await closeSheet();
   assert.equal(dialogs(), 0, "Escape phải đóng sheet");
 
@@ -281,16 +293,17 @@ test("RQ-AC-4 ảnh trong sheet", async () => {
 test("RQ-AC-5 quyết định từ sheet", async () => {
   fetchReply = { ok: true, body: { ok: true } };
   const cases: [number, string, unknown][] = [
-    [12, "Cùng căn", { status: "approved" }],
-    [12, "Khác căn", { status: "rejected" }],
-    [12, "Không chắc", { status: "deferred" }],
-    [13, "Áp dụng", { status: "approved" }],
-    [13, "Bỏ", { status: "rejected" }],
-    [13, "Để sau", { status: "deferred" }],
+    [12, "Cùng căn", { status: "approved", reason: "cùng toà" }],
+    [12, "Khác căn", { status: "rejected", reason: "cùng toà" }],
+    [12, "Không chắc", { status: "deferred", reason: "cùng toà" }],
+    [13, "Áp dụng", { status: "approved", reason: "cùng toà" }],
+    [13, "Bỏ", { status: "rejected", reason: "cùng toà" }],
+    [13, "Để sau", { status: "deferred", reason: "cùng toà" }],
   ];
   for (const [id, label, body] of cases) {
     await render(await queue());
     await openRow(id);
+    await lyDo("cùng toà");
     const before = refreshes;
     await click(byText(dialog()!, "button", label), `nút «${label}»`);
     assert.equal(sent.at(-1)!.url, `/api/v1/ops/review/${id}/decide`, `nút «${label}»: sai route`);
@@ -305,13 +318,15 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
   const apply = () => byText(dialog()!, "button", "Áp dụng") as HTMLButtonElement;
   assert.ok(apply().disabled || apply().getAttribute("aria-disabled") === "true", "«Áp dụng» phải khoá khi chưa chọn");
   await click(byText(dialog()!, "button", "Chọn AI"), "lựa chọn «Chọn AI»");
+  await lyDo("ảnh là nhà riêng");
   await click(apply(), "nút «Áp dụng»");
   const llm = (CONFLICT.evidence.fields as { proposal_id: number; field: string; source: string }[]).find((f) => f.field === "property_type" && f.source === "e2_llm")!;
-  assert.deepEqual(sent.at(-1)!.body, { status: "approved", choices: { property_type: llm.proposal_id } });
+  assert.deepEqual(sent.at(-1)!.body, { status: "approved", choices: { property_type: llm.proposal_id }, reason: "ảnh là nhà riêng" });
 
   // Sau khi quyết: router.refresh() đổi props — thẻ đang mở chuyển «approved», rời bộ lọc mặc định; sheet giữ thẻ.
   await render(await queue());
   await openRow(12);
+  await lyDo("cùng toà");
   await click(byText(dialog()!, "button", "Cùng căn"), "nút «Cùng căn»");
   await rerender(await queue(ITEMS.map((i) => (i.id === 12 ? { ...i, status: "approved" } : i))));
   assert.equal(dialogs(), 1, "sheet phải giữ thẻ vừa quyết (không đóng/trắng)");
@@ -323,6 +338,7 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
   fetchReply = { ok: false, body: { error: "đã quyết" } };
   await render(await queue());
   await openRow(11);
+  await lyDo("khác toà");
   await click(byText(dialog()!, "button", "Khác căn"), "nút «Khác căn»");
   assert.ok(dialog()!.textContent?.includes("đã quyết"), "lỗi route phải hiện trong sheet");
   assert.equal((byText(dialog()!, "button", "Khác căn") as HTMLButtonElement).disabled, false, "sau lỗi nút phải bấm lại được");
@@ -332,7 +348,7 @@ test("RQ-AC-5 quyết định từ sheet", async () => {
 test("RQ-AC-6 không độ tự tin", async () => {
   const row = { id: 1, item_type: "entity_match", title: "x", evidence: {}, ai_suggestion: "yes", ai_reasoning: null, ai_confidence: "0.85", status: "pending", created_at: new Date("2026-10-22T00:00:00Z") };
   const item = toReviewItem(row as never, {});
-  assert.deepEqual(Object.keys(item), ["id", "item_type", "title", "evidence", "ai_suggestion", "ai_reasoning", "status", "created_at"], "thẻ gửi xuống client không được mang ai_confidence (Q9)");
+  assert.deepEqual(Object.keys(item), ["id", "item_type", "title", "evidence", "ai_suggestion", "ai_reasoning", "status", "decision_note", "created_at"], "thẻ gửi xuống client không được mang ai_confidence (Q9)");
   // Quan hệ cần đo (S4-r1): GIÁ TRỊ độ tự tin không có ở đâu trong dữ liệu client — ai_confidence = max(fields[].confidence)
   // nên quét đệ quy mọi khoá *confidence*, trên thẻ bổ sung tin THẬT dạng (ENRICH + thẻ xung đột từ khuôn agent).
   const confidenceKeys = (v: unknown, at = "$"): string[] =>
