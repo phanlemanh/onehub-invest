@@ -108,5 +108,6 @@ fi
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
 job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
+job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
 exit "$JOB_RC"
