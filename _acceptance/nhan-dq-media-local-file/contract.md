@@ -5,7 +5,7 @@ slug: nhan-dq-media-local-file
 owner: phanlemanh@gmail.com
 risk_tier: T2      # app/src/lib/dq-labels.ts + CONTEXT.md + test — không chạm t3_paths
 surfaces: [ops]
-status: verified
+status: signed-off
 design_doc: _acceptance/nhan-dq-media-local-file/design.md
 approved_by:
 approved_at:
@@ -50,3 +50,6 @@ Không chạy morphological-scan: không gian là ba hàm thuần đã liệt k�
 ## Notes
 
 - Code sửa viết trước hồ sơ (sửa gấp, commit c09ede86); vòng này dựng hồ sơ và lượt chấm độc lập cho đúng thay đổi đó.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Chú thích đầu `dq-labels.ts` chưa liệt kê bên ghi mới `transform-media.mjs` và dạng đối tượng mã nguồn trần; người dùng không thấy khác.
+  - Ngoài-2: Test nhãn ảnh tin dùng chuỗi chi tiết gõ tay và ca ON12-AC-5 không bắt buộc có dòng `media:local-file`, nên nếu bên ghi đổi khuôn thì bộ kiểm có thể vẫn xanh trong khi bảng hiện «chưa diễn giải».

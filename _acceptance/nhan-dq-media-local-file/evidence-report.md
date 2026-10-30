@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: db00491027b41eb5967cbd3bb6a95a263b90b189
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: nhan-dq-media-local-file
