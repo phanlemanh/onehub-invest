@@ -94,7 +94,7 @@ const AC2_RF = [
 ];
 
 test("CM-AC-1 đột biến: chỉ bỏ bước gạt SĐT → cả ba dòng SĐT ra giá sai", async () => {
-  const m = await banSaoDotBien([['.replace(URL_RE, " ").replace(PHONE_RE, " ")', '.replace(URL_RE, " ")']]);
+  const m = await banSaoDotBien([['return t.replace(PHONE_RE, (m, i) => (laDuoiNhomNghin(t, m, i) ? m : " "));', "return t;"]]);
   for (const chu of AC1_SDT) assert.notEqual(m.parsePost(chu).priceVnd, 9e6, `CM-AC-1 đột biến SĐT «${chu}» vẫn đúng — thước không đo bước gạt SĐT`);
 });
 
