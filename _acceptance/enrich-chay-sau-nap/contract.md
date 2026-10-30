@@ -5,7 +5,7 @@ slug: enrich-chay-sau-nap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-enrich-chay-sau-nap-design.md
@@ -64,3 +64,11 @@ Quét tay tám trục (dòng sổ «bỏ coverage-scan»), mỗi ô một AC:
 - Hiển thị mới trên `/ops` — `/ops/data-flow` đã đếm đề xuất chờ.
 - Plist launchd riêng cho enrich (làn ZCode) và mọi dòng của bước thu/nạp.
 - Triển khai lên máy thu (job thật chạy bản mới sau gộp) — bước sau gộp, giám sát giao.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Việc tin ghi hỏng không để lại dấu «đã thử» chỉ được kiểm chắc ở test mức hàm; test chạy lệnh thật không phân biệt được ở điểm này.
+  - Ngoài-2: Chạy tay mà gõ `--offers` thiếu danh sách (hoặc theo sau là một cờ khác) thì lượt chạy 0 tin mà vẫn báo xong.
+  - Ngoài-3: Bên gọi enrich mới mà quên mở giao dịch sẽ ghi hỏng mọi tin; chỉ mã thoát 2 báo ra — hai bên gọi hiện có đều đúng.
+  - Ngoài-5: Chạy tay với `--offers` rỗng thì 0 tin và thoát 0 (cùng gốc với Ngoài-2).

@@ -1,40 +1,4 @@
 {
   "feature_plain": "Mỗi đêm, sau khi nạp tin từ nhóm chat, máy tự bổ sung trường còn thiếu cho tối đa 50 tin: ghi đề xuất, áp giá trị theo luật chắc chắn, đưa phần còn lại lên hàng duyệt — không giữ khoá dữ liệu lâu và không bốc lại tin đã thử.",
-  "will_do": [
-    {"id": "AC-4", "p": "Sẽ in dòng tổng kết mỗi lượt bằng đúng số đề xuất mới, số đã áp và số chờ duyệt có thật trong bảng; chạy lại cùng tin thì báo 0 đề xuất mới."},
-    {"id": "AC-6", "p": "Sẽ thêm bước bổ sung trường vào cuối job nạp tin đêm, 50 tin mỗi đêm (đổi được bằng một biến); nạp hỏng thì không chạy."},
-    {"id": "AC-7", "p": "Sẽ cho job đêm báo đỏ đúng tên bước khi bước bổ sung trường hỏng, và vẫn chạy bước này dù bước trước hỏng."},
-    {"id": "AC-8", "p": "Sẽ nhả khoá nạp trước bước bổ sung trường, để job nạp khác không phải chờ quá 5 phút rồi hỏng."}
-  ],
-  "wont_do": [
-    {"id": "AC-1", "p": "Sẽ KHÔNG giữ khoá thẻ hay tin trong lúc chờ LLM: mỗi tin ghi trong một giao dịch ngắn, tin trước xong là người khác thấy ngay."},
-    {"id": "AC-2", "p": "Sẽ KHÔNG để một tin ghi hỏng làm mất công các tin khác: tin hỏng lui lại sạch, lượt chạy tiếp, job báo mã 2."},
-    {"id": "AC-3", "p": "Sẽ KHÔNG để LLM chết hay trả rác mà job vẫn xanh: đếm số lời gọi hỏng, hỏng từ một nửa thì báo mã 3 (theo Hỏi-1); lỗi ghi luôn được báo trước."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG đổi hành vi cũ của khâu bổ sung trường: bộ test cũ xanh nguyên, và LLM vẫn không ghi thẳng vào tin."},
-    {"id": "AC-9", "p": "Sẽ KHÔNG bốc lại tin đã thử trong cửa sổ 30 ngày (theo Hỏi-3); tin mà LLM lỗi thì đêm sau thử lại."},
-    {"id": "OOS-1", "p": "KHÔNG chạy hết 394 tin tồn trong một lượt, và không bổ sung lại cho tin S03 mất đề xuất trước 23/10 — để hàng NT6."},
-    {"id": "OOS-2", "p": "KHÔNG thêm khoá chống hai lượt chạy chồng nhau — dữ liệu vẫn đúng, chồng lượt chỉ tốn thêm lời gọi LLM."},
-    {"id": "OOS-3", "p": "KHÔNG thêm màn hình mới — trang Dòng chảy dữ liệu đã đếm số đề xuất chờ."},
-    {"id": "OOS-4", "p": "KHÔNG thêm lịch chạy riêng và không đụng bước thu/nạp (làn ZCode)."},
-    {"id": "OOS-5", "p": "KHÔNG tự triển khai lên máy thu — sau khi gộp, giám sát giao bước này."}
-  ],
-  "scope_plain": "Những việc dưới đây cố ý để ngoài lượt này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Không chạy bộ quét độ phủ tự động; bảng dưới liệt tay tám trục, mỗi ô gắn một tiêu chí."},
-    {"i": 2, "p": "Ranh giới giao dịch: gọi LLM ngoài giao dịch, ghi trong giao dịch của từng tin, tin hỏng lui lại (AC-1 không giữ khoá, AC-2 cô lập lỗi)."},
-    {"i": 3, "p": "LLM: không cần gọi, sống, hỏng dưới nửa, hỏng từ nửa, lỗi hết, trả rác hết (AC-3 đếm và mã thoát)."},
-    {"i": 4, "p": "LLM kết hợp lỗi ghi: mỗi trạng thái LLM ghép với một tin ghi hỏng, lỗi ghi luôn được báo trước (AC-3)."},
-    {"i": 5, "p": "Bốc tin mỗi đêm: tin chưa thử, đã thử trong cửa sổ, thử mà LLM lỗi, tin hoãn (AC-9 không bốc lại)."},
-    {"i": 6, "p": "Áp giá trị: theo luật E1, có căn cứ độc lập, hay chờ người duyệt (AC-4, theo Hỏi-2)."},
-    {"i": 7, "p": "Bộ đếm: lượt đầu và lượt chạy lại trên cùng tin (AC-4 đếm đúng)."},
-    {"i": 8, "p": "Job đêm: lành, nạp hỏng, bước trước hỏng, bước bổ sung hỏng, job khác lấy khoá trong lúc chạy (AC-6, AC-7, AC-8)."},
-    {"i": 9, "p": "Hành vi cũ: đề xuất, áp, thẻ duyệt, hoàn tác, không ghi thẳng vào tin (AC-5 giữ nguyên)."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Ngưỡng «LLM chết» làm job đỏ là khẩu vị rủi ro mà máy đã tự đặt; câu trả lời rác lại không bị đếm là lỗi. Đã chuyển thành Hỏi-1 cho anh quyết; bản nháp theo khuyến nghị đếm cả câu trả lời rác."},
-    {"i": 1, "p": "Job đêm sẽ tự áp giá trị lên tin thật mỗi đêm mà không ai bấm, trong khi chữ cũ nói «chỉ ghi đề xuất». Đã chuyển thành Hỏi-2 (việc khó đảo) và sửa chữ cho đúng."},
-    {"i": 2, "p": "Đường lỗi ghi mới chỉ được đo trong giao dịch giả của test. Đã thêm phép đo trên CLI thật trên DB thử, ép tin giữa hỏng bằng trigger."},
-    {"i": 3, "p": "Chưa có gì chặn việc đêm sau bốc lại đúng tin đã thử, nên số đề xuất mới có thể tụt về 0. Đã thêm dấu «đã thử» cho mỗi tin và tiêu chí AC-9."},
-    {"i": 4, "p": "Chưa đo ô «tin ghi hỏng cùng lúc LLM chết». Đã mở ma trận đủ 12 ô; lỗi ghi phải thắng."}
-  ]
+  "analyst_plain": "Không đo được eval nào «đỏ trên bản cũ» ở vòng này: bước chạy lại trên bản trước khi sửa bị công cụ chặn (tác tử chấm không có quyền ghi tệp kịch bản). Mọi phép đo mới đã tự mang chiều đỏ ngay trong test của nó."
 }
