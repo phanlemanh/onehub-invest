@@ -5,7 +5,7 @@ slug: khoa-phuong-chung-phuong-so
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-khoa-phuong-chung-phuong-so-design.md
@@ -57,3 +57,6 @@ Trục quét (preset entity-feature, làm tay vì chỉ có hai trục nhỏ): *
 
 - Hai eval đã ký bị thay khi hồ sơ này được ký: `the-duyet-phuong-lech-gia/E3` → AC-1,
   `judge-giu-quyet-dinh-nguoi/E4` → AC-2 (bảng ở design doc §4).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: mô tả eval E2 nói đối chứng đỏ 2 nạp bản chép bằng lột kiểu TypeScript, còn test thật ghi một tệp .ts tạm rồi nạp qua tsx — phép đo vẫn đúng, chỉ chữ mô tả lệch.
+  - Ngoài-2: cùng lệch mô tả ấy ở evals.yaml (thấy từ lượt 1).
