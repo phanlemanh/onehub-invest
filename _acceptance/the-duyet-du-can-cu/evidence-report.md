@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 15f752e595fda44f166af5a24c0df9aa45ab93a2
+verified_commit: 6cccdb14e9f3316134ec9b85eb14ed96dd85de9c
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -258,3 +258,7 @@ Round 2: sửa kiểm tra cổng zalo-media theo gate xemNoiDungTin + admin ở 
 ### Re-pin lần 1 — 2026-10-30, do gộp main 96c6c4b2 (#199 DB2b) đổi tệp nhãn trong paths eval
 run_id: repin-20261030T073651Z-83377
 sha: 15f752e595fda44f166af5a24c0df9aa45ab93a2 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13
+
+### Re-pin lần 2 — 2026-10-30, do ba ca probe DB máy thu bỏ qua có lời ở CI
+run_id: repin-20261030T075624Z-91866
+sha: 6cccdb14e9f3316134ec9b85eb14ed96dd85de9c · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13
