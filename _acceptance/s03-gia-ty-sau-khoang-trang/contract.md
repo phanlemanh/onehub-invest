@@ -5,7 +5,7 @@ slug: s03-gia-ty-sau-khoang-trang
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs — không khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-30T04:03:33Z
 approved_by:
@@ -72,3 +72,6 @@ giá và mất luôn số đứng sau. Nguồn: Ngoài-3 của `_acceptance/s03-
   0 bài thuộc dạng lỗi, nên thước «trước → sau» trên bài thật chỉ chứng không lùi.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Thước so trên bài thật (AC-6) chỉ kiểm chắc giá của tin; giá theo m² có thể đổi sai mà thước vẫn cho qua.
