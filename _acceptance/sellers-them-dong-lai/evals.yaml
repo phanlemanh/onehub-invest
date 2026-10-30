@@ -3,7 +3,7 @@ feature_slug: sellers-them-dong-lai
 # Ca test mang tiền tố «SD-AC-n». Pipeline: pipeline/scripts/bait-gap-sellers.test.mjs, BEGIN…ROLLBACK trên :5433 dưới
 # khoá advisory 33033 (khuôn hiện có của tệp). Chiều đỏ: bản đột biến của refresh-bait-gap.mjs chép tạm CẠNH tệp thật
 # (pipeline/.tam-sellers-<pid>-<n>.mjs — import ./lib/ vẫn đúng), xoá trong finally; mỗi bản một tên (ESM cache).
-# Probe DB máy thu (AC-5, AC-6) bỏ qua có lý do dưới CI (CI chỉ có lược đồ). AC-6 ở app/tests/sellers-chip.test.ts gọi
+# Probe DB máy thu (AC-5, AC-6) bỏ qua có lý do dưới CI (CI chỉ có lược đồ). AC-6 ở app/tests/sellers-chip.test.tsx gọi
 # dealsSql thật của app/src/lib/deals.ts.
 evals:
   - id: E1
@@ -46,9 +46,9 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.sellers_chip
-    paths: [pipeline/refresh-bait-gap.mjs, app/src/lib/deals.ts, app/tests/sellers-chip.test.ts]
+    paths: [pipeline/refresh-bait-gap.mjs, app/src/lib/deals.ts, app/tests/sellers-chip.test.tsx]
     layer: backend-effect
-    expected: "exit 0 trên máy thu; ca 'SD-AC-6 chip Căn giá tốt có số tin người bán' xanh: BEGIN…ROLLBACK trên DB máy thu, refreshBaitGap rồi chạy dealsSql() thật của app (ngưỡng 0, giới hạn 500) → mọi dòng có seller_phone khác rỗng có broker_n_ads khác rỗng, và có ít nhất một dòng như vậy (không có thì t.skip có lý do 'không tin Căn giá tốt nào có SĐT'); chiều đỏ cùng ca, giao dịch mới: bản đột biến bỏ lệnh thêm dòng → có dòng thiếu broker_n_ads, đỏ 'SD-AC-6 tin có SĐT thiếu số tin người bán'. Dưới CI bỏ qua có lý do"
+    expected: "exit 0 trên máy thu; ca 'SD-AC-6 chip Căn giá tốt có số tin người bán' xanh: BEGIN…ROLLBACK trên DB máy thu, thêm một tin Căn giá tốt mang SĐT chưa có dòng sellers ở phường có thước, refreshBaitGap rồi chạy dealsSql() thật của app (ngưỡng 0, giới hạn 500) → mọi dòng có seller_phone khác rỗng có broker_n_ads khác rỗng, và có ít nhất một dòng như vậy; chiều đỏ cùng ca, giao dịch mới: bản đột biến bỏ lệnh thêm dòng → có dòng thiếu broker_n_ads, đỏ 'SD-AC-6 tin có SĐT thiếu số tin người bán'. Dưới CI bỏ qua có lý do"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
