@@ -468,3 +468,123 @@ describe("TD-AC-2/3 probe DB local thật (chỉ SELECT)", () => {
     assert.ok(soBen > 0, "không thẻ chờ nào có tin trong sale_offers — probe không đo được")
   })
 })
+
+// ---------- TD-AC-4 ảnh tin theo vai ----------
+type MediaMod = typeof import("../src/lib/ops/review-media")
+type Vai = "user" | "viewer" | "ops" | "admin" | "owner"
+const nguoi = (role: Vai) => ({ id: `td-${role}`, email: `td-${role}@local.test`, plan: "free" as const, role })
+const SNAP = "hanoi__zalo-agent__2026-10-30T000000"
+const THE_ANH = [{ id: 1, item_type: "entity_match", evidence: { offer_a: { offer_id: "td_s05" }, offer_b: { offer_id: "td_s06" } } }]
+
+async function napAnh() {
+  const rows: [string, string, string | null, string | null, number][] = [
+    ["mk1", "td_s05", null, `${SNAP}/media/a.jpg`, 1],
+    ["mk2", "td_s05", "https://scontent.fbcdn.net/x/1.jpg", null, 2],
+    ["mk3", "td_s06", "https://cdn.nguon-thu.example/2.jpg", null, 1],
+  ]
+  for (const [k, offer, url, file, order] of rows)
+    await admin.query(
+      `INSERT INTO "${S}".media (media_key, resource_record_key, originating_system_name, originating_system_resource_record_key,
+                                 media_order, media_url, local_file)
+       VALUES ($1,$2,'S0x',$1,$3,$4,$5)`,
+      [k, offer, order, url, file],
+    )
+}
+
+async function kiemAc4(mod: MediaMod) {
+  // Ma trận viết trước: 5 vai × {ảnh đã tải, chỉ URL gốc} = 10 ô — kỳ vọng [đã tải, URL gốc].
+  const KY_VONG: Record<Vai, [boolean, boolean]> = {
+    user: [false, false], viewer: [false, false], ops: [true, false], admin: [true, true], owner: [true, true],
+  }
+  let n = 0
+  for (const [vai, [taiVe, goc]] of Object.entries(KY_VONG) as [Vai, [boolean, boolean]][]) {
+    const m = (await mod.loadReviewMedia(THE_ANH, nguoi(vai), qDb))[1]
+    const anh = [...(m?.offer_a ?? []), ...(m?.offer_b ?? [])]
+    if (vai === "ops" && anh.some((i) => i.origin !== "local")) assert.fail("TD-AC-4: vai ops nhận URL gốc")
+    assert.equal(anh.some((i) => i.origin === "local"), taiVe, `${vai}: ảnh đã tải`)
+    assert.equal(anh.some((i) => i.origin === "remote"), goc, `${vai}: URL gốc`)
+    n += 2
+  }
+  assert.equal(n, 10)
+}
+
+describe("TD-AC-4 ảnh tin theo vai", () => {
+  let tmp = ""
+  let snapPrev: string | undefined
+  before(async () => {
+    const { mkdtempSync, mkdirSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    tmp = mkdtempSync(path.join(tmpdir(), "td-anh-"))
+    mkdirSync(path.join(tmp, "hanoi", SNAP, "media"), { recursive: true })
+    writeFileSync(path.join(tmp, "hanoi", SNAP, "media", "a.jpg"), Buffer.from([0xff, 0xd8, 0xff, 0xd9]))
+    snapPrev = process.env.SNAPSHOTS_DIR
+    process.env.SNAPSHOTS_DIR = tmp
+    if (!setupErr) await napAnh().catch((e) => (setupErr = (e as Error).message))
+  })
+  after(() => {
+    if (snapPrev === undefined) delete process.env.SNAPSHOTS_DIR
+    else process.env.SNAPSHOTS_DIR = snapPrev
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  test("TD-AC-4 loader: ma trận 5 vai × 2 loại ảnh; vai ops chỉ ảnh đã tải + số ảnh bị giữ", async () => {
+    ready()
+    const mod = (await import("../src/lib/ops/review-media")) as MediaMod
+    await kiemAc4(mod)
+    const ops = (await mod.loadReviewMedia(THE_ANH, nguoi("ops"), qDb))[1]
+    assert.deepEqual(ops.chiGoc, { offer_a: 1, offer_b: 1 }, "vai ops: số ảnh chỉ có URL gốc theo bên")
+    const sai = await banChepTam<MediaMod>("src/lib/ops/review-media.ts", (s) => s.replace("media[s.key] = local;", "media[s.key] = all;"))
+    await assert.rejects(kiemAc4(sai), /TD-AC-4: vai ops nhận URL gốc/)
+  })
+
+  test("TD-AC-4 route ảnh: snapshot 200 cho ops/admin/owner, 404 cho user/viewer/khách; ?path= 404 cho ops", async () => {
+    const { serveZaloMedia, snapshotMediaUrl } = await import("../src/lib/ops/zalo-media")
+    const url = snapshotMediaUrl(SNAP, "media/a.jpg")!
+    const get = (u: ReturnType<typeof nguoi> | null, qs = url.split("?")[1]) =>
+      serveZaloMedia(new Request(`http://localhost:3460/api/zalo-media?${qs}`), u)
+    for (const vai of ["ops", "admin", "owner"] as const) assert.equal((await get(nguoi(vai))).status, 200, `${vai} snapshot`)
+    for (const u of [null, nguoi("user"), nguoi("viewer")]) assert.equal((await get(u)).status, 404, `${u?.role ?? "khách"} snapshot`)
+    const p = `path=${encodeURIComponent(path.join(tmp, "x.png"))}`
+    assert.equal((await get(nguoi("ops"), p)).status, 404, "ops ?path=")
+  })
+
+  test("TD-AC-4 sheet vai ops: tin chỉ có URL gốc → không <img> ngoài /api/zalo-media, câu «chỉ có ở nguồn»", async () => {
+    ready()
+    const { loadReviewMedia } = (await import("../src/lib/ops/review-media")) as MediaMod
+    const media = (await loadReviewMedia(THE_ANH, nguoi("ops"), qDb))[1]
+    const { html, doc } = await dungThe(thatCard, ghepCan(), { media })
+    for (const img of doc.querySelectorAll("img")) {
+      assert.ok(img.getAttribute("src")!.startsWith("/api/zalo-media?"), `ảnh ngoài route nội bộ: ${img.getAttribute("src")}`)
+    }
+    assert.ok(!html.includes("fbcdn") && !html.includes("nguon-thu.example"), "URL gốc lọt vào trang vai ops")
+    const cau = [...doc.querySelectorAll("[data-review-photos-chi-goc]")].map((e) => e.textContent)
+    assert.deepEqual(cau, ["Tin A: 1 ảnh chỉ có ở nguồn — quản trị viên xem được", "Tin B: 1 ảnh chỉ có ở nguồn — quản trị viên xem được"])
+  })
+
+  test("TD-AC-4 probe DB local thật: ảnh local_file của tin trên thẻ chờ = số ảnh vai ops nhận", async () => {
+    const that = new pg.Client({ connectionString: localDbUrl() })
+    await that.connect()
+    try {
+      const { loadReviewMedia, MAX_IMAGES_PER_OFFER } = (await import("../src/lib/ops/review-media")) as MediaMod
+      const { rows: the } = await that.query(`SELECT id::int AS id, item_type, evidence FROM review_queue WHERE status = 'pending'`)
+      const media = await loadReviewMedia(the, nguoi("ops"), (t, v) => that.query(t, v))
+      let so = 0
+      for (const t of the) {
+        for (const k of ["offer_a", "offer_b", "offer"] as const) {
+          const id = k === "offer" ? t.evidence?.offer_id : t.evidence?.[k]?.offer_id
+          if (typeof id !== "string") continue
+          const { rows } = await that.query(
+            `SELECT count(DISTINCT local_file)::int AS n FROM media WHERE resource_record_key = $1 AND local_file ~ '^[^/]+/media/[A-Za-z0-9][A-Za-z0-9_.-]*$'`,
+            [id],
+          )
+          const nhan = (media[t.id]?.[k] ?? []).filter((i) => i.origin === "local").length
+          assert.equal(nhan, Math.min(rows[0].n, MAX_IMAGES_PER_OFFER), `thẻ #${t.id} ${k}: ảnh local lệch`)
+          so++
+        }
+      }
+      assert.ok(so > 0, "không thẻ chờ nào có tin — probe không đo được")
+    } finally {
+      await that.end()
+    }
+  })
+})

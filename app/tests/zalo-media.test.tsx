@@ -1,4 +1,4 @@
-// zalo-media.test.tsx — serveZaloMedia (lõi GET /api/zalo-media): ảnh tầng A chỉ admin,
+// zalo-media.test.tsx — serveZaloMedia (lõi GET /api/zalo-media): ảnh snapshot cho vai ops trở lên (PL3), ?path= chỉ admin,
 // chế độ snapshot+file trong gốc snapshots, chế độ path cũ của OpenClaw (PR #5).
 // Hồ sơ nghiệm thu: _acceptance/review-media-backend (AC-1…AC-4).
 import { test, before, after } from "node:test";
