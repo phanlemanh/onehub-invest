@@ -1,38 +1,24 @@
 ## Trong hợp đồng
 
-- **Định dạng phanTram mới đưa đúng số ngưỡng «15,0%/10,0%/30,0%» vào prompt khi độ lệch bằng đúng ngưỡng, và soiNguong không bắt được dạng này**
-  AC: AC-2
-  file:line: `agent/src/agents/judge-entity.ts:51`
-  severity: medium
-  source: conventions
-  detail: Theo AC-2/L14, prompt không được chứa số ngưỡng (15/10/30 kèm %). phanTram mới cắt xuống một chữ số thập phân, nên khi độ lệch bằng đúng ngưỡng (thường gặp với số tròn) thì lý do luật in đúng số ngưỡng. Đã chạy thử với apNguong thật: diện tích 45 với 50 ra «diện tích lệch 10,0%»; giá/m² 85tr với 100tr ra «giá/m² lệch 15,0%»; 70tr với 100tr ra «giá/m² lệch 30,0%». Cả ba vào buildJudgeInput, tức là vào prompt model nhận. Bộ soi dùng chung soiNguong (agent/tests/judge-chung.ts) chỉ có mẫu `(?<![\d.,])(?:15|10|30)\s*%`, nên ra [] với cả ba chuỗi: «15» đứng trước «,0%» chứ không đứng trước «%», còn «0%» bị lookbehind dấu phẩy chặn. Vì vậy cổng AC-2 không thấy dạng định dạng mới. Đối chứng đỏ trong judge-nguong.test.ts:116 chỉ thử dạng Math.round cũ («15%»), và bốn ca SAT đều tránh giá trị đúng bằng ngưỡng. Thêm một điểm: số bù +1e-6 trong Math.floor(x*1000+1e-6) làm lệch trong khoảng [0,15−1e-9; 0,15) hiện thành «15,0%» dù luật xếp gia_m2_gan / yes, tức là đúng kiểu lời lý do trái kết luận mà bản sửa S4 r1 định chặn. Cần sửa cả hai phía: bộ soi phải bắt cả dạng có phần thập phân (15,0% / 15.0%), test thêm ca lệch đúng bằng ngưỡng, và định dạng không được in số ngưỡng (hoặc hợp đồng phải ghi rõ đây là ngoại lệ được chấp nhận).
-
-- **Lệch đúng bằng ngưỡng in «10,0%»/«15,0%»/«30,0%» vào prompt mà hàm soi AC-2 không bắt**
-  AC: AC-2
-  file:line: `agent/src/agents/judge-entity.ts:51`
+- **Ở đúng ngưỡng, kết luận phụ thuộc sai số dấu phẩy động: 19,8 vs 22 m² (lệch đúng 10%) ra «yes», còn 45 vs 50 m² ra «unsure»**
+  AC: AC-1
+  file: `agent/src/agents/judge-entity.ts:69`
   severity: medium
   source: bugs
-  detail: Định dạng mới thêm phần thập phân, nên khi độ lệch đúng bằng ngưỡng (rất hay gặp với số tròn trong tin rao, ví dụ diện tích 45 với 50 m², giá/m² 85tr với 100tr, 70tr với 100tr), lý do luật in «diện tích lệch 10,0%», «giá/m² lệch 15,0%», «giá/m² lệch 30,0%». Cả ba chính là số ngưỡng và đi thẳng vào buildJudgeInput, tức nội dung model nhận. Thế nhưng regex trong soiNguong (agent/tests/judge-chung.ts:31, `(?<![\d.,])(?:15|10|30)\s*%`) chỉ khớp khi «%» đứng ngay sau số, nên «10,0%» lọt qua. Đã chạy thử: soiNguong(buildJudgeInput(...)) trả về [] cho cả ba ca. Định dạng cũ in «10%» thì hàm soi vẫn bắt được, còn định dạng mới làm AC-2 (không chỗ nào chứa số ngưỡng 15/10/30 kèm %) im lặng thất bại ở ca đúng ngưỡng: rò rỉ vẫn còn mà test vẫn xanh. Ma trận test sát ngưỡng không có ca lệch đúng bằng ngưỡng.
-
-- **Hình dạng 4 — đối chứng đỏ dùng khuôn cũ, nên bộ soi không bắt được số ngưỡng ở khuôn mới «15,0%»**
-  AC: AC-2
-  file:line: `agent/tests/judge-nguong.test.ts:116`
-  severity: high
-  source: measurement
-  detail: Ở dòng 113, test dương gọi `kiemKhongNguong(buildJudgeInput(s.p, kq))`. Đối chứng đỏ duy nhất (dòng 116) lại là chuỗi viết tay theo khuôn CŨ: `giá/m² lệch ${Math.round(0.149 * 100)}%` → «15%». Lần sửa này đổi khuôn của phanTram (judge-entity.ts dòng 51) sang một chữ số thập phân, dấu phẩy, cắt xuống. Vì thế đúng số ngưỡng giờ in ra thành «15,0%», «10,0%», «30,0%». Mẫu của soiNguong (judge-chung.ts dòng 31) là `/(?<![\d.,])(?:15|10|30)\s*%/` và không khớp «15,0%»: sau «15» là «,0» chứ không phải «%», còn «0%» thì bị lookbehind `[\d.,]` loại. Tôi đã chạy thử: phanTram(0.15) cho «15,0%», phanTram(0.3) cho «30,0%», phanTram(0.1) cho «10,0%», và soiNguong trả [] cho cả ba. buildJudgeInput của cặp 85 vs 100 TR/m² (ô 10) có «giá/m² lệch 15,0%», của cặp 70 vs 100 (ô 12) có «giá/m² lệch 30,0%», của diện tích 45 vs 50 có «diện tích lệch 10,0%», và soiNguong vẫn trả []. Hợp đồng AC-2 lại nói không chỗ nào được chứa số ngưỡng «15/10/30 kèm %». Như vậy cái kiểm âm (không có chỗ trúng) đã mù trước đúng khuôn đầu ra mà lần sửa này tạo ra. Lẽ ra phải có một đối chứng đỏ lấy chính đầu ra phanTram ở đúng ngưỡng, ví dụ `kiemKhongNguong(phanTram(0.15))` phải ném.
+  detail: apNguong so sánh trần `lg < NGUONG.giaM2YesMax` / `ld < NGUONG.dienTichYesMax` / `lg > NGUONG.giaM2NoMin` trên số thực, không có dung sai. Trong khi đó phanTram lại cộng `1e-6` để bù sai số. Vì vậy cùng một độ lệch thật ở đúng ngưỡng có thể bị xếp khác nhau. Đã tái hiện bằng hàm thật qua tsx với fixture cap()/voi() của judge-chung. Cặp area 19.8 vs 22: lech = 0.09999999999999996 < 0.1, cho ra `yes` và thẻ ghi «diện tích sát nhau (10,0%)». Cặp area 45 vs 50, cũng lệch đúng 10%, cho ra `unsure` và thẻ ghi «diện tích lệch đáng kể (10,0%)». Test S4 r2 khẳng định lệch đúng ngưỡng thì không được yes (ca 45/50 → unsure), nhưng hợp đồng đó chỉ đúng với các số biểu diễn chẵn. Quét b=20..200 với ba ngưỡng ra 183 ca mà lg < ngưỡng theo dấu phẩy động nhưng thẻ in đúng số ngưỡng («sát nhau (10,0%)», «(15,0%)»…). Thẻ in số ngưỡng cạnh lời «sát nhau» mâu thuẫn với kết luận, đúng lỗi AC-2 mà vòng r1–r2 đang sửa, chỉ là chuyển từ prompt sang thẻ. Kết luận ghép căn (yes/unsure) vì thế không tất định theo giá trị thập phân thật. Cách sửa gợi ý: so sánh trên cùng một đại lượng đã lượng tử hoá (ví dụ `Math.round(lech*1e6)` so với ngưỡng nhân 1e6), hoặc cho so sánh và phanTram dùng chung một dung sai.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **phanTram cắt xuống làm cùng chữ «30,0%» đi với hai kết luận khác nhau ở ngưỡng giaM2NoMin**
+- **phanTram cắt xuống làm cùng chữ «30,0%» đi với hai kết luận khác nhau ở ngưỡng giaM2NoMin (r2 · tệp đã đổi)**
   Người dùng thấy gì: Với những cặp tin lệch giá gần đúng 30%, lời giải thích trên thẻ ghi «lệch 30,0%» cho cả cặp được xếp «không phải cùng căn» lẫn cặp «chưa chắc». Người duyệt nhìn con số không phân biệt được hai trường hợp, nhưng kết luận máy trên thẻ vẫn đúng.
   Căn cứ: Hậu quả nhẹ: chỉ làm lời giải thích kém rõ ở một dải rất hẹp, kết luận đề xuất không sai, không mất dữ liệu và người duyệt vẫn tự quyết được.
   file: `agent/src/agents/judge-entity.ts`
   severity: medium
   Đề xuất: known-limits
 
-- **Hình dạng 5 + 3 — nói quét cả lớp «sát ngưỡng / chữ không trái kết luận» nhưng chỉ có 4 điểm né các giá trị x,0**
+- **Hình dạng 5 + 3 — nói quét cả lớp «sát ngưỡng / chữ không trái kết luận» nhưng chỉ có 4 điểm né các giá trị x,0 (r2 · tệp đã đổi)**
   Người dùng thấy gì: Bộ kiểm tra chỉ thử vài điểm gần ngưỡng nên có thể bỏ sót những cặp tin lệch đúng bằng ngưỡng, nơi lời giải thích trên thẻ có thể ghi số không khớp kết luận. Người dùng không thấy lỗi mới, chỉ là chưa có lưới bắt sớm.
   Căn cứ: Hậu quả nhẹ, chỉ là thiếu lưới kiểm tra ở dải hẹp, không làm sai dữ liệu hay kết luận; bổ sung ca kiểm tra sau này rẻ và không gấp.
   file: `agent/tests/judge-nguong.test.ts`
