@@ -1,0 +1,58 @@
+schema_version: 1
+feature_slug: nhan-dq-media-local-file
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-media-label.test.tsx]
+    expected: "exit 0; ca 'media:local-file có tên kiểm, đối tượng và chi tiết tiếng Việt' của tests/dq-media-label.test.tsx xanh: dqCheckName('media:local-file') deepEqual { text: 'Ảnh tin đã tải', known: true }"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-media-label.test.tsx]
+    expected: "exit 0; cùng ca: dqEntityLabel(S03|S05|S06) → 'Nguồn S0x' known; chiều đỏ ca 'khuôn lệch của media:local-file vẫn rơi về «chưa diễn giải»': dqEntityLabel('S0X').known false với thông điệp ghim 'mã nguồn sai khuôn phải là đối tượng lạ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-media-label.test.tsx]
+    expected: "exit 0; cùng ca: dqDetail('media:local-file','rows=182852 local=0 offers_with_media=27702') → '182.852 ảnh · 0 đã tải · 27.702 tin có ảnh' known; chiều đỏ: 'rows=10 local=2' known false với thông điệp ghim 'thiếu offers_with_media phải là khuôn lạ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ops_nhan
+    paths: [app/src/lib/dq-labels.ts]
+    expected: "exit 0; ca 'ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ' xanh trên DB máy thu :5433 (có dòng media:local-file của S03, S05, S06 trong 7 ngày — bảng media đã có sau triển khai NH1): dòng '# ON12-AC-5 DB local: <n> dòng, <k> loại kiểm' với k ≥ 2, không dòng 'dòng kiểm chưa diễn giải'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/src/lib/dq-labels.ts, CONTEXT.md]
+    expected: "exit 0; cd app && npm test toàn bộ xanh (0 fail)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/lib/dq-labels.ts]
+    expected: "exit 0; typecheck và lint của app 0 lỗi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: judgment
+    inputs: [CONTEXT.md, app/src/lib/dq-labels.ts]
+    question: "CONTEXT.md có khối thuật ngữ in đậm «Ảnh tin» nêu kiểm media:local-file trong dòng Code, và nhãn «Ảnh tin đã tải» trong dq-labels.ts dùng đúng thuật ngữ đó (không dùng tên ở dòng _Avoid_ của khối)?"
+    expected: "PASS khi khối «Ảnh tin» có dòng Code nêu media:local-file và nhãn trong dq-labels.ts mở đầu bằng «Ảnh tin»"
+    evidence_required: [run_id, judged_by, verdict, rationale]

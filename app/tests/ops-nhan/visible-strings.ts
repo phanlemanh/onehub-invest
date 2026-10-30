@@ -64,6 +64,7 @@ export const SCAN_FILES = [
   "src/components/ops/labels/labels-content.tsx",
   "src/components/ops/labels/labels-skeleton.tsx",
   "src/components/ops/labels/labels-view.tsx",
+  "src/components/ops/labels/luu-nhan.tsx",
   "src/components/ops/local-only-alert.tsx",
   "src/components/ops/overview/objectives-grid.tsx",
   "src/components/ops/overview/overview-tiles.tsx",
