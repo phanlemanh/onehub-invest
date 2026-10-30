@@ -1,0 +1,28 @@
+{
+  "feature_plain": "Có ngay một tập tin rao mẫu của Ocean Park 1 kèm đáp án biết sẵn, để đo các cách đọc tin trước khi đội gắn nhãn xong — sinh lại ra đúng tập cũ, mang dấu «mẫu» và không bao giờ lọt vào dữ liệu thật.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ sinh lại ra đúng tập cũ khi cùng tham số (hai lần chạy giống nhau từng ký tự), và tệp kiểm 40 tin trong kho luôn khớp bản sinh lại."},
+    {"id": "AC-2", "p": "Sẽ ghi đáp án đúng bằng giá trị bộ sinh đã điền vào tin, theo đúng quy ước nhãn của màn gắn nhãn; chỗ tin không viết thì đáp án là «tin không nêu»."},
+    {"id": "AC-3", "p": "Sẽ cho mọi đáp án đi qua chính bộ ghi nhãn của màn gắn nhãn và được nhận nguyên vẹn."},
+    {"id": "AC-4", "p": "Sẽ có đủ 37 loại tin: bán/thuê/cần mua/cần thuê/không phải tin rao, mỗi trường có tin nêu và tin không nêu, đủ các cách viết giá, diện tích, phòng ngủ, tên dự án."},
+    {"id": "AC-5", "p": "Sẽ rút mỗi khuôn câu từ một tin thật riêng của Ocean Park 1 — máy kiểm khung câu khớp tin gốc ít nhất 80%."},
+    {"id": "AC-7", "p": "Sẽ đánh dấu «mẫu» trên từng tin và ở đầu tệp, không có cách tắt dấu."},
+    {"id": "AC-10", "p": "Sẽ chỉ đổi bộ sinh, test của nó và hồ sơ này."}
+  ],
+  "wont_do": [
+    {"id": "AC-6", "p": "Sẽ KHÔNG có số điện thoại, đường dẫn, tên người gửi, tên nhóm hay tên nguồn thật nào trong khuôn, bộ sinh hay tệp kiểm."},
+    {"id": "AC-8", "p": "Chặn mọi đường từ tập mẫu tới bảng tin rao thật hay bảng thu: bộ sinh không ghi DB, không phần nào của đường dữ liệu dùng nó, và DB có 0 tin mẫu."},
+    {"id": "OOS-1", "p": "KHÔNG làm phần chấm điểm và hiển thị số trên trang Chất lượng — đó là PL9."},
+    {"id": "OOS-2", "p": "KHÔNG lưu tập mẫu vào cơ sở dữ liệu ở vòng này."},
+    {"id": "OOS-3", "p": "KHÔNG làm dự án khác, nguồn khác, hay cặp ghép căn."},
+    {"id": "OOS-4", "p": "KHÔNG sinh các cách viết có hai cách hiểu như «5,5x tỷ», «1N+1», «Studio», giá không ghi đơn vị (Hỏi-2)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Chín trường nhãn, mỗi trường có tin nêu và tin không nêu (AC-2, AC-4) — đủ khi test đếm được từng ô."},
+    {"i": 1, "p": "Cách viết: bảy kiểu giá, ba kiểu diện tích, ba kiểu phòng ngủ, ba kiểu tên dự án, mã toà (AC-2, AC-4)."},
+    {"i": 2, "p": "Năm tổ hợp ý định × loại tin, «không phải tin rao» thì không có loại tin (AC-4)."},
+    {"i": 3, "p": "Ba đường ra: hàm, tệp, và DB phải là 0 (AC-1, AC-7, AC-8)."},
+    {"i": 4, "p": "Thước: bảng liệt kê viết trước trong test, số kiểm bằng số ô; bản quét đầy đủ ở coverage-scan.md."}
+  ],
+  "scope_plain": "Bốn việc để ngoài vòng này:"
+}
