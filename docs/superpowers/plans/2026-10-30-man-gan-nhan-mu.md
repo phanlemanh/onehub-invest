@@ -9,14 +9,14 @@ thuận từng trường và phút công. Hợp đồng: `_acceptance/man-gan-nh
 
 **Chặn trước S3:** số migration (yêu cầu P4-82) và quyền thêm executor `mgn_*` vào `_acceptance/config.yaml` (P4-83).
 Task 1 và Task 7 không bắt đầu khi chưa có hai trả lời này; các task khác viết được trước trên tên tệp tạm
-`db/migrations/<NNN>_eval_labels.sql`, đổi tên khi có số.
+`db/migrations/054_labels.sql` (liên làn cấp 30/10).
 
 **DB:** mọi phép đo dùng DB thử `oneinvest_p4_mgn` (`bash db/db-thu.sh oneinvest_p4_mgn`); test app dùng lược đồ tạm như
 `app/tests/quyen-bon-vai.test.tsx` (helper `tests/helpers/phien-thu.ts`). Không áp migration chưa gộp lên `oneinvest`.
 
 ## Task 1 — Migration hai bảng + view
 
-- Files: `db/migrations/<NNN>_eval_labels.sql`
+- Files: `db/migrations/054_labels.sql`
 - Nội dung: `eval_label_items` (item_id bigserial PK, lat, source_code, ref_id, text_hash, split CHECK dev|test,
   double_label, seed, sampled_at; UNIQUE (lat,text_hash), UNIQUE (lat,ref_id)); `eval_labels` (id, item_id FK
   ON DELETE CASCADE, labeler_id text, field CHECK chín trường, value text, not_stated bool, labeled_at; UNIQUE

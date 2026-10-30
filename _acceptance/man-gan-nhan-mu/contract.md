@@ -18,11 +18,11 @@ approved_at: 2026-10-30
 Hàng PL7 (mã C1.3, phần màn gắn nhãn mù và lưu nhãn) của đợt phan-loai-2310. Cổng Đáng `build`: Mạnh 30/10 «Làm theo
 khuyến nghị» — ngưỡng đồng thuận ≥ 0,9 trên phần gắn trùng, hạn 2 tuần sau gộp, nhãn chỉ ở máy thu
 (`opportunity.md`). Lộ trình ghi hạng T2; máy suy T3 vì vòng chạm migration mới, `ops-access.ts` và
-`app/src/app/api/v1/ops/**`. Số migration do sổ migration cấp (yêu cầu P4-82); dưới đây viết `<NNN>`.
+`app/src/app/api/v1/ops/**`. Số migration 054 do liên làn cấp (sổ SO-MIGRATION, 30/10), tệp `db/migrations/054_labels.sql`.
 
 ## Criteria
 
-- AC-1: Given DB thử tạo từ `oneinvest`, When áp migration `<NNN>` hai lần, Then có bảng `eval_label_items`, bảng
+- AC-1: Given DB thử tạo từ `oneinvest`, When áp migration 054 hai lần, Then có bảng `eval_label_items`, bảng
   `eval_labels` và view `eval_label_agreement` với các cột của design doc; lần áp thứ hai không lỗi, không đổi số dòng.
   - Khoá duy nhất chặn: hai dòng `eval_label_items` cùng `(lat, text_hash)`; hai dòng `eval_labels` cùng
     `(item_id, labeler_id, field)`; `split` ngoài `dev`/`test`.
@@ -79,7 +79,7 @@ khuyến nghị» — ngưỡng đồng thuận ≥ 0,9 trên phần gắn trùn
   - `QUYEN_OPS` có `label.write` (vai ops, không bearer).
 - AC-10: Given nhánh so với merge-base, When liệt kê tệp đổi, Then mọi tệp nằm trong danh sách dưới; không chạm làn
   ZCode (`collector/`, `pipeline/import-*`, `pipeline/collect-*`, cron).
-  - Migration: `db/migrations/<NNN>_eval_labels.sql`.
+  - Migration: `db/migrations/054_labels.sql`.
   - Pipeline: `pipeline/label-sample.mjs`, `pipeline/label-agreement.mjs`, `pipeline/lib/eval-labels.mjs` (+ test).
   - App: `app/src/app/ops/labels/`, `app/src/components/ops/labels/`, `app/src/app/api/v1/ops/labels/`,
     `app/src/lib/` (truy vấn nhãn, `ops-access.ts`), `app/src/components/shell/nav.tsx`, `app/tests/labels*.test.tsx`.

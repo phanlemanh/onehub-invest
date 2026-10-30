@@ -1,14 +1,14 @@
 schema_version: 1
 feature_slug: man-gan-nhan-mu
 # DB: mọi phép đo chạy trên DB thử tạo bằng `bash db/db-thu.sh oneinvest_p4_mgn` (bản sao oneinvest), không ghi oneinvest :5433.
-# <NNN> = số migration do sổ migration cấp (P4-82); probes đọc tên tệp bằng glob db/migrations/*_eval_labels.sql.
+# Migration 054 (liên làn cấp 30/10): db/migrations/054_labels.sql.
 evals:
   - id: E1
     criterion: AC-1
     executor: script
     cmd: config:executors.script.mgn_migration
     layer: backend-effect
-    paths: [db/migrations/*_eval_labels.sql, pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, _acceptance/man-gan-nhan-mu/probes/migration.mjs]
+    paths: [db/migrations/054_labels.sql, pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, _acceptance/man-gan-nhan-mu/probes/migration.mjs]
     expected: "exit 0; trên DB thử áp migration hai lần: 'ok bang eval_label_items', 'ok bang eval_labels', 'ok view eval_label_agreement' kèm đủ cột của design doc; 'ok ap lan hai: khong loi, so dong khong doi'; ba ca chèn vi phạm (trùng (lat,text_hash), trùng (item_id,labeler_id,field), split='x') đều bị DB từ chối, mỗi ca in 'ok chan <ca>'; 'ok khong len cloud' khi sync-cloud.mjs và push-ops-facts.mjs không nhắc eval_label; chiều đỏ: bản chép migration bỏ khoá duy nhất (item_id,labeler_id,field) → 'KHONG CHAN TRUNG NHAN'; cuối 'MIGRATION OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E2
@@ -62,7 +62,7 @@ evals:
     executor: script
     cmd: config:executors.script.mgn_dong_thuan
     layer: backend-effect
-    paths: [db/migrations/*_eval_labels.sql, pipeline/label-agreement.mjs, pipeline/lib/eval-labels.mjs, _acceptance/man-gan-nhan-mu/probes/dong-thuan.mjs]
+    paths: [db/migrations/054_labels.sql, pipeline/label-agreement.mjs, pipeline/lib/eval-labels.mjs, _acceptance/man-gan-nhan-mu/probes/dong-thuan.mjs]
     expected: "exit 0; probe COMMIT vào DB thử lát mgn-thu rồi DELETE sau khi đo; lệnh label-agreement chạy bằng TIẾN TRÌNH CON; ma trận viết trước: mỗi trường một tổ hợp cặp (khớp; lệch; cùng tin không nêu; một bên tin không nêu; số 3500000000 vs 3.5e9; chữ 'LD2' vs ' ld2 '; tin trùng mới một người): view trả đúng số cặp đủ, số khớp, tỉ lệ của bảng kỳ vọng; trường không có cặp đủ → tỉ lệ null; label-agreement.mjs --lat mgn-thu --json in đúng cùng số + thap_nhat; phut_cong: ma trận labeled_at viết trước (người A: 0, 2, 5 phút, nghỉ 40 phút, 43 phút) → A = 8 phút; khứ hồi qua bộ ghi thật (hàm chuẩn hoá của route, dùng chung với probe bằng import): '4,35 tỷ' với '4350 triệu', 'LD2' với ' ld2 ', NFC với NFD → khớp 1/1; đối chứng đỏ thứ hai: bản cộng cả khoảng nghỉ → 'PHUT CONG CONG KHOANG NGHI'; đối chứng đỏ: bản view coi null là khớp → 'NULL KHONG PHAI KHOP'; cuối 'DONG THUAN OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
