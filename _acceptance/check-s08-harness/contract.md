@@ -5,7 +5,7 @@ slug: check-s08-harness
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: machine-cleared
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-30T07:32:16Z
 approved_by:
@@ -29,7 +29,7 @@ Source input: tin XONG claudedp-2910-12 của ZCode (30/10) — «local-only FAI
 - AC-1: Given cây của nhánh, When chạy `node scripts/check-s08-inventory.mjs local-only` trong `pipeline/`, Then exit 0, in `S08 LOCAL-ONLY PASS`, có dòng `ok   M0 bản gốc: sync-pii.test xanh`.
 - AC-2: Given cùng lượt chạy, When đọc dòng M1, Then đột biến cấy `stg_s08_inventory` vào FILL vẫn bị bắt: `ok   M1 FILL += stg_s08_inventory: sync-pii.test đỏ, ca S08 đỏ` — bước kiểm còn răng, không xanh suông.
 - AC-3: Given bản chép script kiểm bỏ `import-s08-row.mjs` khỏi danh sách chép (đúng dạng trên main trước bản sửa), When chạy local-only, Then M0 ĐỎ và lỗi nêu `import-s08-row.mjs` — chứng tỏ thiếu tệp này là nguyên nhân, bản sửa không che lỗi khác.
-- AC-4: Given nhánh so với main, When liệt kê tệp đổi, Then chỉ có `pipeline/scripts/check-s08-inventory.mjs`, hồ sơ này và `_acceptance/config.yaml` — KHÔNG tệp mã sản phẩm nào; và trong script kiểm chỉ đổi đúng dòng danh sách chép.
+- AC-4: Given nhánh so với main, When liệt kê tệp đổi, Then chỉ có `pipeline/scripts/check-s08-inventory.mjs`, hồ sơ này, `_acceptance/config.yaml` và hai tệp máy sinh `PRODUCT-MAP.md`, `LO-TRINH.html` — KHÔNG tệp mã sản phẩm nào; và trong script kiểm chỉ đổi đúng dòng danh sách chép.
 
 ## Coverage
 
