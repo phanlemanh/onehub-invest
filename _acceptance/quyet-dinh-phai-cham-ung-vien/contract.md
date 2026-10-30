@@ -5,7 +5,7 @@ slug: quyet-dinh-phai-cham-ung-vien
 owner: phanlemanh@gmail.com
 risk_tier: T3      # app/src/app/api/v1/ops/review/** — đường ghi quyết định (t3_paths)
 surfaces: [api]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-quyet-dinh-phai-cham-ung-vien-design.md

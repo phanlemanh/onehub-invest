@@ -873,7 +873,9 @@ describe("HD9 quyết định phải chạm đúng một ứng viên", () => {
     }
   })
   const route = async () => (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
-  const boKiemSoDong = (s: string) => s.replace("if (cham.length !== 1) {", "if (false) {")
+  // bản lỗi tái hiện route cũ (H2): bỏ kiểm số dòng, vẫn đóng thẻ dù không chạm ứng viên nào
+  const boKiemSoDong = (s: string) =>
+    s.replace("if (cham.length !== 1) {", "if (false) {").replace("ungVien = cham[0].id;", "ungVien = cham[0]?.id ?? null;")
 
   async function kiemAc1(mod: RouteMod) {
     for (const status of QUYET) {

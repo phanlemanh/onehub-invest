@@ -110,7 +110,7 @@ export async function POST(
         : { rows: [] as { id: number }[] };
       if (cham.length !== 1) {
         await client.query("ROLLBACK");
-        const khoa = cap ? `${cap[0]} ↔ ${cap[1]}` : `«${item.item_id}» (khoá thẻ sai khuôn)`;
+        const khoa = cap ? `${cap[0]} và ${cap[1]}` : `«${item.item_id}» (khoá thẻ sai khuôn)`;
         return NextResponse.json({
           error: `Thẻ không chạm đúng một ứng viên ghép căn còn chờ (${khoa}: khớp ${cham.length}) — quyết định không được ghi, thẻ vẫn chờ.`,
           code: "khong-cham-ung-vien",
