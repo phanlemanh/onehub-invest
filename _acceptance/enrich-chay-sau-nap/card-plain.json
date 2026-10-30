@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Mỗi đêm, sau khi nạp tin từ nhóm chat, máy tự bổ sung trường còn thiếu cho tối đa 50 tin: ghi đề xuất, áp giá trị theo luật chắc chắn, đưa phần còn lại lên hàng duyệt — không giữ khoá dữ liệu lâu và không bốc lại tin đã thử.",
+  "analyst_plain": "Không đo được eval nào «đỏ trên bản cũ» ở vòng này: bước chạy lại trên bản trước khi sửa bị công cụ chặn (tác tử chấm không có quyền ghi tệp kịch bản). Mọi phép đo mới đã tự mang chiều đỏ ngay trong test của nó."
+}

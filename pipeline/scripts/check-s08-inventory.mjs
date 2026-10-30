@@ -72,7 +72,7 @@ async function localOnly() {
   const run = (mutate) => {
     const dir = mkdtempSync(join(tmpdir(), "s08-mut-"));
     try {
-      for (const f of ["sync-cloud.mjs", "sync-pii.test.mjs", "import-airbnb.mjs"]) copyFileSync(join(PIPE, f), join(dir, f));
+      for (const f of ["sync-cloud.mjs", "sync-pii.test.mjs", "import-airbnb.mjs", "import-s08-row.mjs"]) copyFileSync(join(PIPE, f), join(dir, f));
       symlinkSync(join(PIPE, "node_modules"), join(dir, "node_modules"));
       symlinkSync(join(PIPE, "lib"), join(dir, "lib")); // sync-cloud.mjs nhập lib/tier-a-guard.mjs
       if (mutate) {

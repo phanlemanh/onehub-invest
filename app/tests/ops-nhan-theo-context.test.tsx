@@ -488,7 +488,7 @@ test("ON12-AC-7 render danh mục nguồn, thẻ duyệt, cột thị trường 
   )
   assert.match(the, /Căn hộ/)
   assert.match(the, /Nhà riêng/)
-  assert.match(the, /AI: cùng căn/)
+  assert.match(the, /AI cho là: cùng căn/) // PL3: suy luận AI tách khỏi căn cứ («AI cho là: …»)
   assert.doesNotMatch(the, />(apartment|house)</)
   assert.doesNotMatch(the, /AI: yes/)
   // Giá trị chưa có nhãn: nhãn chung KÈM mã gốc trong <code> (người duyệt vẫn thấy giá trị thật).
@@ -498,7 +498,7 @@ test("ON12-AC-7 render danh mục nguồn, thẻ duyệt, cột thị trường 
     <AppRouterContext.Provider value={router as never}><ReviewCard item={{ id: 2, item_type: "entity_match", title: "x", evidence: { offer_a: { ...offer, property_type: "villa" }, offer_b: offer, stage_b_score: 0.5 }, ai_suggestion: "maybe", ai_reasoning: null, ai_confidence: null, status: "pending" } as never} /></AppRouterContext.Provider>,
   )
   assert.match(theLa, /Giá trị khác <code[^>]*>villa<\/code>/)
-  assert.match(theLa, /AI: Giá trị khác <code[^>]*>maybe<\/code>/)
+  assert.match(theLa, /AI cho là: Giá trị khác <code[^>]*>maybe<\/code>/)
 })
 
 test("ON12-AC-7 mọi giá trị đang có trên DB local có nhãn", async () => {

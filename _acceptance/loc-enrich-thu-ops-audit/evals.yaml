@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: loc-enrich-thu-ops-audit
+# Ca test mang tiền tố «LA-AC-n», cùng một tệp app/tests/audit-loc.test.tsx (khuôn labels.test.tsx):
+# - lược đồ tạm `la_<pid>` có ops_audit + users/sessions (luocDoPhienAdmin của tests/helpers/phien-thu.ts); DATABASE_URL
+#   trỏ lược đồ đó TRƯỚC khi nạp route; route GET thật gọi bằng Request có Cookie phiên. public không bị chạm.
+# - «route trước vòng» = fixture commit sẵn app/tests/fixtures/audit-route-truoc-loc/route.ts.txt (chép nguyên từ
+#   origin/main 4cfd7cd1, sha ghi ở dòng đầu) — không gọi git lúc chạy (CI clone nông); vắng fixture → ca ĐỎ có tên, không
+#   skip. Chép sang thư mục tạm, import `@/` viết lại thành file:// tới app/src thật — chiều đỏ AC-1..AC-3, vế so của AC-4.
+# - mỗi dòng gieo mang khoá duy nhất `detail.seq` (rows trả về không có id) — so từng dòng theo (at, action, detail.seq).
+# - bản đột biến của audit-loc.ts (thư mục tạm, cùng cách viết lại import) cho chiều đỏ AC-3, AC-5.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.audit_loc
+    paths: [app/src/app/api/v1/ops/audit/route.ts, app/src/lib/ops/audit-loc.ts, app/tests/audit-loc.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'LA-AC-1 dấu máy không che người' xanh: lược đồ tạm 5 dòng user:* cũ hơn + 150 dòng enrich:thu mới hơn, GET thật bằng cookie admin → 200, 5 dòng người có đủ (so theo detail.seq, đếm đúng 5), 0 dòng enrich:thu; chiều đỏ cùng ca và cùng lát: route trước vòng → ca đỏ với thông điệp 'thao tác người bị dấu máy đẩy ra'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.audit_loc
+    paths: [app/src/app/api/v1/ops/audit/route.ts, app/src/lib/ops/audit-loc.ts, app/tests/audit-loc.test.tsx]
+    expected: "exit 0; ca 'LA-AC-2 đủ 100 dòng không phải dấu' xanh: 130 dòng thường xen 60 enrich:thu (at tăng dần, thứ tự gieo viết trước) → rows dài 100, bằng từng dòng danh sách 100 dòng thường mới nhất tính trước (bộ at, action, detail.seq theo at giảm dần), mỗi dòng đúng tập khoá {at, actor, action, env, detail}; chiều đỏ cùng ca: route trước vòng → đỏ 'trả dòng dấu máy hoặc thiếu dòng thường'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.audit_loc
+    paths: [app/src/app/api/v1/ops/audit/route.ts, app/src/lib/ops/audit-loc.ts, app/tests/audit-loc.test.tsx]
+    expected: "exit 0; ca 'LA-AC-3 chỉ lọc đúng enrich:thu' xanh: ma trận viết trước 10 action đang có thật (enrich:revert, enrich:reconcile, enrich:retire, bait-gap:loai-phi-ly, transform:reject-test, phat-bieu:cat-chuyen, review:decide, zalo.admin, source-group:toggle) + enrich:thu-lai cùng tiền tố, cộng 1 dòng enrich:thu → số assert hiện = 10, enrich:thu vắng; chiều đỏ cùng ca: bản audit-loc.ts lọc theo tiền tố 'enrich:' → đỏ 'lọc nhầm thao tác: enrich:revert'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.audit_loc
+    paths: [app/src/app/api/v1/ops/audit/route.ts, app/tests/audit-loc.test.tsx]
+    expected: "exit 0; ca 'LA-AC-4 quyền không đổi' xanh: ma trận viết trước 6 người gọi (admin, ops, viewer, phiên hết hạn, không phiên, bearer OPS_API_TOKEN) gọi route trước vòng và route sau vòng trên cùng lược đồ → 6 cặp mã bằng nhau, số assert = 6 (quan hệ bằng nhau, không ghim mã tuyệt đối); đối chứng: ô admin của route sau vòng trả 200 kèm rows; chiều đỏ cùng ca: bản route đổi quyền sang ops.read → đỏ 'quyền đổi ở ô vai ops'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.audit_loc
+    paths: [app/src/lib/ops/audit-loc.ts, agent/src/enrich/run.ts, app/tests/audit-loc.test.tsx]
+    expected: "exit 0; ca 'LA-AC-5 bên ghi khớp bên lọc' xanh: rút chuỗi action từ câu INSERT INTO ops_audit của agent/src/enrich/run.ts (đối chứng dương: rút được đúng một chuỗi, khác rỗng) → chuỗi nằm trong DAU_MAY; chiều đỏ cùng ca: bản run.ts đổi 'enrich:thu' thành 'enrich:da-thu' (chuỗi trong bộ nhớ) → đỏ 'bên ghi lệch bên lọc: enrich:da-thu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

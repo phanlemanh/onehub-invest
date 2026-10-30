@@ -154,6 +154,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   (`chotot-daily` S06, `zalo-import-daily` S03 S05), từ `stg_zalo_posts.media_files` + `media` và
   `stg_chotot_ads.images`; `/ops/review` và hồ sơ tin `/ops/data-flow` đọc bảng này (tin S06 có ảnh). Chỉ máy thu:
   không vào FILL, leak gate đếm `media` — `_acceptance/media-canonical-reso`.
+- Thẻ duyệt đủ căn cứ (PL3): sheet `/ops/review` hiện bảng so mười trường Tin A/Tin B kèm lớp căn cứ + phương pháp đọc từ
+  `sale_offers.field_provenance` (`lib/ops/review-can-cu.ts`), toàn văn đọc lại ở máy thu theo `post_ids` (S03, S05) và
+  `stg_chotot_ads.payload.body` (S06) (`lib/ops/review-context.ts`), không độ tự tin/điểm Stage B, suy luận AI tách khỏi
+  căn cứ; vai Vận hành nhận ảnh đã tải, URL gốc chỉ quản trị. Quyết định bắt buộc lý do (1–1.000 ký tự) ghi
+  `review_queue.decision_note` + `ops_audit.detail.ly_do` cùng transaction; lượt bổ sung tin không gắn
+  `ai_suggestion` — `_acceptance/the-duyet-du-can-cu`.
 - S08 (danh mục căn, PL10): `stg_s08_inventory` (migration 040) — một dòng = một căn ở một snapshot
   (khoá `source_id` + `snapshot_id`, `state` notSold/sold), chỉ local (test `sync-pii` + leak gate gác);
   ánh xạ RESO ở `mappings.yaml` `sources.S08`. Chờ importer DATA-CONTRACT v4 của ZCode; chưa có transform.
@@ -383,6 +389,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | bang-yeu-cau | Bảng Yêu cầu bên mua (cần mua · cần thuê) đối xứng listing, transform ghi từ phát biểu ý định = Yêu cầu, nạp lại không nhân dòng (058) — `_acceptance/bang-yeu-cau` | 🔶 S3 xong trên mẫu + DB thử; PR mở sau PL5; sau merge: áp 058 lên DB local (trước đó transform in «chưa áp 058»); KHÔNG áp Supabase, không sync cloud |
 | DB2b | Danh bạ Người theo nguồn (ADR-0016 §8, 055): bốn bảng chỉ-thêm `parties` · `registry_aliases` · `registry_events` · `party_roles`; mỗi tài khoản/SĐT tại một nguồn là một người (khoá `pty_<ULID>`), vai «Người đăng» trỏ từ tin (`S0x:<khoá nguồn>`); bộ dựng chạy cuối bước bait gap trong giao dịch riêng; chỉ local — `_acceptance/ho-nguoi-theo-nguon` | 🔶 vòng S3; sau merge: áp 055 lên DB local (trước đó job đêm in «bỏ qua»); KHÔNG áp Supabase, không sync cloud |
 | NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
+| PL3 | Thẻ duyệt đủ căn cứ: mọi trường kèm căn cứ, toàn văn, ảnh cho vai Vận hành, không độ tự tin/gợi ý mặc định, lý do bắt buộc ghi audit cùng transaction — `_acceptance/the-duyet-du-can-cu` (T3) | 🔶 vòng S4; không migration; sau merge: khởi động lại app ở máy thu để đồng hồ nghiệm thu 7 ngày bắt đầu |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 

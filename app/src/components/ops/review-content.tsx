@@ -15,6 +15,7 @@ import { xemNoiDungTin } from "@/lib/ops-access";
 import { localOnlyTable } from "@/lib/ops-queries";
 import { cn } from "@/lib/utils";
 import { FactsStaleAlert, FactsStamp } from "@/components/ops/facts-status";
+import { loadReviewContext } from "@/lib/ops/review-context";
 import { loadReviewMedia, stripEvidenceImages } from "@/lib/ops/review-media";
 import { toReviewItem, type ReviewQueueRow } from "@/lib/ops/review-queue";
 
@@ -61,11 +62,11 @@ export async function ReviewContent({ user }: { user: User }) {
     );
   }
 
-  const { items, media } = await loadReviewQueue(user);
+  const { items, media, context } = await loadReviewQueue(user);
   return (
     <div className="flex flex-col gap-4">
       <ReviewTitle />
-      <ReviewQueue items={items} media={media} />
+      <ReviewQueue items={items} media={media} context={context} />
     </div>
   );
 }
@@ -136,12 +137,13 @@ async function loadPendingCounts(): Promise<PendingCount> {
 /** Đọc review_queue (tầng A, chỉ local). Không chọn ai_confidence — Q9: số không tới trình duyệt. */
 async function loadReviewQueue(user: User) {
   const { rows } = await pool.query<ReviewQueueRow>(
-    `SELECT id, item_type, title, evidence, ai_suggestion, ai_reasoning, status, created_at
+    `SELECT id, item_type, title, evidence, ai_suggestion, ai_reasoning, status, decision_note, created_at
      FROM review_queue ORDER BY created_at DESC, id DESC`,
   );
   // URL ảnh không đi trong evidence — ảnh tới thẻ chỉ qua loadReviewMedia (admin).
   const items = rows.map((r) => toReviewItem(r, stripEvidenceImages(r.evidence)));
-  // Ảnh tin (tầng A): {} khi không phải admin; một truy vấn cho cả hàng duyệt.
-  const media = await loadReviewMedia(rows, user);
-  return { items, media };
+  // Ảnh tin: ảnh đã tải cho vai Vận hành, URL gốc chỉ admin (PL3); một truy vấn cho cả hàng duyệt.
+  // Toàn văn + căn cứ từng trường (PL3): một truy vấn; nhánh viewer và cloud đã dừng ở trên nên không tới đây.
+  const [media, context] = await Promise.all([loadReviewMedia(rows, user), loadReviewContext(rows)]);
+  return { items, media, context };
 }
