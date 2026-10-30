@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: de-xuat-thanh-phat-bieu-bac
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: d95e28bb366adea62432213ff8fa949dfc288a2b
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: de-xuat-thanh-phat-bieu-bac
@@ -31,7 +31,7 @@ human_signoff:
 | E14 | AC-9 | test | PASS |
 | E15 | AC-9 | test | PASS |
 | E16 | AC-9 | test | PASS |
-| E17 | AC-9 | judgment | PASS (đề xuất của hội đồng judge, chờ người điền human_override) |
+| E17 | AC-9 | judgment | PASS |
 | E18 | AC-5 | test | PASS |
 
 ## Evidence
@@ -232,7 +232,7 @@ human_signoff:
     - domain-correctness: PASS — CONTEXT.md có khối in đậm «**Phân bố bậc**» (dòng 148-149) nêu `data_level_snapshot`, `pipeline/bac-du-lieu.mjs` và nghĩa «theo thị trường × loại hình». Trong pipeline/mappings.yaml, trục `data_level` (dòng 378-384) có `columns: [data_level_snapshot.data_level]`.
     - operational-feasibility: PASS — CONTEXT.md dòng 148-149 có khối in đậm **Phân bố bậc**. Khối này nêu «theo thị trường × loại hình», bảng `data_level_snapshot` và `pipeline/bac-du-lieu.mjs`. Trong pipeline/mappings.yaml dòng 378-384, trục `data_level` có `columns: [data_level_snapshot.data_level]`.
     - spec-alignment: PASS — CONTEXT.md có khối in đậm «**Phân bố bậc**» (dòng 148-149), nêu `data_level_snapshot`, lệnh `pipeline/bac-du-lieu.mjs` và nghĩa «theo thị trường × loại hình». Trong pipeline/mappings.yaml, trục `data_level` có `columns: [data_level_snapshot.data_level]` (dòng 384).
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-30 — Đạt
 
 ## Known limits
 

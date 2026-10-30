@@ -5,7 +5,7 @@ slug: de-xuat-thanh-phat-bieu-bac
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (t3_paths) — migration 056
 surfaces: [cli, ui]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-30-de-xuat-thanh-phat-bieu-bac-design.md
 approved_by: Mạnh
 approved_at: 2026-10-30
@@ -95,3 +95,9 @@ biểu của một đề xuất.
   ngày ở `data_level_snapshot`.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-2: Từ lúc gộp tới khi 056 được áp lên DB máy thu, mỗi lượt đồng bộ 15 phút báo lỗi ở bước phân bố bậc và nhịp tim `/ops` đỏ oan — phải áp 056 ngay sau khi gộp.
+  - Ngoài-4: Ảnh chụp phân bố đổi ngày lúc 7 giờ sáng giờ Việt Nam (DB chạy giờ UTC), nên ngày in trên bảng lệch lịch Việt Nam trong 7 giờ đầu mỗi ngày.
+  - Ngoài-5: Chưa căn nào lên được B3/B4 trên dữ liệu thật vì chưa có bên ghi số đo cho trường lõi (PL17/PL21); test chỉ chứng minh hàm đúng khi dữ liệu đã đúng khuôn.
+  - Ngoài-8: Phép kiểm bảng in chỉ bắt mã loại hình chưa dịch, chưa kiểm từng dòng có đủ tên thị trường và nhãn tiếng Việt.
