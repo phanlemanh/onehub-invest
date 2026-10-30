@@ -1,0 +1,87 @@
+schema_version: 1
+feature_slug: eval-classify-wilson
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ecw_pipeline
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/lib/eval-classify.test.mjs]
+    expected: "exit 0; ma trận viết trước 10 mốc (k/n → đạt/không đạt ngưỡng): 100/100, 148/150, 197/200 đạt 0,95; 99/100, 147/150, 196/200 không đạt 0,95; 96/100, 143/150 đạt 0,90; 95/100, 142/150 không đạt 0,90 — số assert = 10, cộng giá trị cận dưới làm tròn 4 chữ số khớp 0,9630 · 0,9455 · 0,9527 · 0,9429 · 0,9568 · 0,9497 · 0,9016 · 0,8882 · 0,9068 · 0,8983; wilsonDuoi(0, 0) === null; đối chứng đỏ: bản chép lib dùng z = 1,645 → phép đo bắt ('WILSON LECH MOC 99/100')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ecw_pipeline
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/lib/eval-classify.test.mjs]
+    expected: "exit 0; ma trận viết trước 9 trường → nhóm (5 A, 4 B) và ngưỡng (0,95 / 0,90), số assert = 9; trạng thái: nhóm A 148/150 → pass, 147/150 → fail (tỉ lệ thô 0,98 ≥ 0,95 mà vẫn fail), nhóm B 143/150 → pass, 142/150 → fail; n = 0 → skip ly_do 'chua-co-nhan-nguoi' (chữ «chưa có nhãn người»); cách đọc không trả trường → skip ly_do 'chua-co-cach-doc' (chữ «chưa có cách đọc») kể cả khi n > 0; đối chứng đỏ: bản chép xếp trạng thái theo tỉ lệ thô → bắt ('TRANG THAI THEO TI LE THO'); bản chép đặt area_m2 vào nhóm A → bắt ('NHOM TRUONG LECH area_m2')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ecw_pipeline
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/lib/eval-classify.test.mjs]
+    expected: "exit 0; ma trận viết trước (trường × ca) → đúng/sai, số assert = số phần tử: không nêu × không trả → đúng; không nêu × có trả → sai; có giá trị × không trả → sai (mỗi ca cho đủ 9 trường); project 'Ocean  Park 1' vs 'ocean park 1' → đúng; building 'PR2' vs 'pr2' → đúng; kind 'sale' vs 'rent_lt' → sai; price 3150000000 vs 3150000000 → đúng, vs 3150000001 → sai; area 64 vs 65,9 → đúng (≤ 3%), vs 66 → sai (3,125%); bedrooms 2 vs 3 → sai; đối chứng đỏ: bản chép so diện tích bằng nhau tuyệt đối → bắt ('DIEN TICH KHONG CHO LECH 3%')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ecw_pipeline
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/lib/eval-classify.test.mjs, pipeline/transform-zalo.mjs]
+    expected: "exit 0; với mọi tin của _acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl và ma trận chữ viết trước (giá tỷ/triệu/đồng, «64,5 m2», «2PN», «Căn PR2.03», «PR2 và S1», tin không số), số assert = số phần tử: cách đọc parser trả kind/giá/DT/PN bằng đúng giá trị parsePost thật đọc ra (giá cho cả min và max, đổi sang chuỗi khuôn nhãn PL7), building = mã toà duy nhất của maToaCan bỏ đuôi căn ('Căn PR2.03' → 'pr2'; 'PR2 và S1' → không trả), không có khoá listing_intent/property_type/project; đối chứng đỏ: bản chép giữ đuôi căn → bắt ('TOA CON DUOI CAN'); bản chép trả price_max = null → bắt ('GIA MOT DAU')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4b
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.ecw_app_mien
+    paths: [pipeline/lib/eval-classify.mjs, app/tests/eval-classify-mien.test.tsx, app/src/lib/labels-normalize.ts]
+    expected: "exit 0; mọi giá trị cách đọc parser trả trên mau-kiem.jsonl và ma trận chữ của E4, đổi thành RawLabels (giá → value theo triệu + unit 'trieu', «không trả» → not_stated) đưa qua chuanHoaLuot thật → ok: true và value của từng trường trùng chuỗi parser trả (miền giá trị cách đọc = miền nhãn PL7); đối chứng đỏ: bản chép parser trả area_m2 dạng '64,5' → chuanHoaLuot đổi chuỗi, phép đo bắt ('GIA TRI NGOAI MIEN NHAN area_m2')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ecw_db
+    paths: [pipeline/lib/eval-classify.mjs, _acceptance/eval-classify-wilson/probes/nap-nhan.tsx, _acceptance/eval-classify-wilson/probes/db.mjs]
+    expected: "exit 0; DB thử oneinvest_p4_ecw dựng mới mỗi lượt (db/db-thu.sh); fixture COMMIT trên kết nối riêng, mã post 'ecw-thu-…': stg_zalo_posts + eval_label_items viết tay, nhãn ghi bằng bên ghi thật của PL7 (chuanHoaLuot + ghiNhan của app/src/lib/labels-queries.ts); ca: lát ocp1 test một người gắn, hai người cùng nhãn, hai người khác nhãn ở kind, tin mất chữ ở stg; cùng lát split dev và lát khác mỗi bên một tin; docNhanNguoi(lat ocp1, split test) trên client riêng trả đúng tập tin theo id viết trước, nhãn đồng thuận đúng giá trị, kind của tin bất đồng vắng, bat_dong = 1, mat_chu = 1; split dev trả đúng tin dev; client ghi lại câu lệnh: câu đầu của docNhanNguoi là BEGIN … READ ONLY; đối chứng đỏ: bản gộp lấy nhãn người đầu tiên khi bất đồng → bắt ('BAT DONG KHONG BI LOAI'); bản chép bỏ READ ONLY → bắt ('DOC NHAN KHONG READ ONLY'); in 'NHAN VANG OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.ecw_pipeline
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/lib/eval-classify.test.mjs]
+    expected: "exit 0; tập vàng rỗng → đúng 9 ô (tat-ca × parser × 9 trường), mỗi ô một lần, 6 skip 'chua-co-nhan-nguoi' + 3 skip 'chua-co-cach-doc'; tập vàng viết trước có loại hình apartment, house, «không nêu» và một tin bất đồng loại hình → phân khúc đúng {tat-ca, apartment, house, khong-neu}, mỗi phân khúc 9 ô, không ô trùng khoá, n của tat-ca = tổng tin, tin bất đồng chỉ đếm ở tat-ca; đối chứng đỏ: bản chép bỏ ô khi n = 0 → bắt ('THIEU O tat-ca|parser|listing_intent')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.script.ecw_db
+    paths: [pipeline/lib/eval-classify.mjs, pipeline/eval-classify.mjs, _acceptance/eval-classify-wilson/probes/db.mjs]
+    expected: "exit 0; trên DB thử với fixture của E5: tiến trình con `eval-classify.mjs --lat ocp1` (không --dry) → số dòng check_name 'eval-classify' tăng đúng bằng số ô lệnh in, mọi dòng mới chung một run, entity khớp /^ocp1\\|[a-z_-]+\\|parser\\|[a-z_0-9]+$/, status theo AC-2, detail tách ra đúng 12 khoá theo thứ tự viết trước (đỏ khi thiếu hay thừa, in tên khoá lệch); quét entity + detail: không chứa labeler_id fixture, chữ tin fixture, real_name nào của source_registry; tiến trình con `--dry` → số dòng không đổi; ghiKetQua trên client riêng với ô thứ 5 mang status NULL → ném lỗi và số dòng không đổi (cả lượt hoàn tác); quét mã eval-classify.mjs + lib: câu ghi duy nhất là INSERT INTO dq_check_results; lượt `--dry` trên DB local oneinvest in 9 ô skip ở tat-ca; cuối probe số dòng mang 'ecw-thu-' còn lại = 0; đối chứng đỏ: chuỗi detail chèn labeler_id fixture → hàm quét bắt ('DINH DANH NGUOI GAN LOT'); mã giả có INSERT INTO eval_labels → bắt ('GHI NGOAI dq_check_results'); in 'GHI DQ OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.ecw_pipeline
+    paths: [pipeline/eval-classify.mjs, pipeline/lib/eval-classify.mjs, pipeline/lib/eval-classify.test.mjs]
+    expected: "exit 0; tiến trình con `eval-classify.mjs --tap-mau _acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl` với DATABASE_URL trỏ một cổng đóng ở 127.0.0.1 (cổng 1) → exit 0, in 'tập mẫu' và bảng có ô tat-ca|parser|kind với n và dung bằng số do một phép đếm độc lập trong test (gọi parsePost thẳng trên chữ tin, so với nhan.kind của tệp — không qua chamO), can_duoi bằng wilsonDuoi(dung, n); tệp chép bỏ dòng đầu → exit ≠ 0 kèm 'khong phai tap nhan mau'; tệp dòng đầu mau:false → exit ≠ 0; quét mã eval-classify.mjs + lib: 0 import tap-mau (cùng regex NHAP_BO_SINH của tap-mau.test.mjs); đối chứng đỏ: bản chép CLI mở pg.Client trước khi rẽ nhánh --tap-mau → tiến trình con với cổng đóng thoát ≠ 0, phép đo bắt ('TAP MAU MO KET NOI DB')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ecw_app_nhan
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-eval-classify-label.test.tsx]
+    expected: "exit 0; ma trận viết trước dòng eval-classify (pass nhóm A, fail nhóm B, skip 'chua-co-nhan-nguoi', skip 'chua-co-cach-doc'; phân khúc tat-ca, apartment, khong-neu; chín trường) → dqCheckName, dqEntityLabel, dqDetail đều known: true, chữ kết bằng nhãn trường của FIELD_LABEL (labels-normalize.ts) — riêng project là «Khu đô thị» theo CONTEXT.md (tránh «dự án») — và số cận dưới/ngưỡng kiểu Việt (dấu phẩy); số assert = số phần tử; đối chứng đỏ: detail thiếu khoá can_duoi → known: false"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9b
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.ecw_on12
+    paths: [app/src/lib/dq-labels.ts, pipeline/eval-classify.mjs, _acceptance/eval-classify-wilson/probes/db.mjs]
+    expected: "exit 0; trên DB thử sau lượt ghi thật của E7 (dòng eval-classify còn trong 7 ngày): ca ON12-AC-5 của app/tests/ops-nhan-theo-context.test.tsx chạy với DATABASE_URL trỏ DB thử → pass, log '# ON12-AC-5 DB local' cho số loại kiểm gồm eval-classify; CONTEXT.md có mục thuật ngữ chứa 'eval-classify'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.ecw_pham_vi
+    paths: [_acceptance/eval-classify-wilson/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp của git diff merge-base origin/main..HEAD nằm trong danh sách AC-10; in 'PHAM VI OK'; đối chứng: cùng hàm phân loại trên db/migrations/057_x.sql và pipeline/transform-zalo.mjs → NGOAI PHAM VI"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

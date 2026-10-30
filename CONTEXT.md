@@ -164,6 +164,11 @@ _Avoid_: tin hết hạn, expired, tình trạng tin
 - Slug URL: —
 _Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
 
+**Độ đúng cách đọc**: Tỉ lệ tin mà một cách đọc (bộ đọc theo luật, sau này luật E1, AI) đọc đúng một trường so với nhãn người, tính trên tập chấm của một lát cho từng phân khúc (thị trường × loại hình), so với ngưỡng tự áp F3 bằng cận dưới Wilson 95% chứ không bằng tỉ lệ thô (nhóm A 0,95 · nhóm B 0,90). Ô chưa có nhãn người hay chưa có cách đọc là «bỏ qua» có lý do.
+- Code: `pipeline/eval-classify.mjs` (`npm run eval:classify`), `pipeline/lib/eval-classify.mjs`, kiểm `eval-classify` ở `dq_check_results` · RESO: không có
+- Slug URL: —
+_Avoid_: accuracy, độ chính xác
+
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
