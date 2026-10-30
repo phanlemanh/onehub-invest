@@ -1,48 +1,7 @@
 {
  "feature_plain": "Người gắn nhãn mở một trang trên Ops, đọc từng tin rao của lát Ocean Park 1 và ghi lại chín trường lõi mà không thấy máy đã đoán gì; 20% số tin được hai người gắn để đo hai người có khớp nhau không.",
- "will_do": [
-  {
-   "id": "AC-1",
-   "p": "Sẽ lưu nhãn ở hai bảng mới chỉ có trên máy thu, không lên cloud; áp lại lần hai không lỗi."
-  },
-  {
-   "id": "AC-2",
-   "p": "Sẽ chọn sẵn khoảng 200 tin của lát bằng một lệnh: bỏ tin thử, bỏ tin trùng chữ, đánh dấu 20% gắn trùng và chia đôi phần chỉnh/phần chấm; chạy lại không đổi gì."
-  },
-  {
-   "id": "AC-3",
-   "p": "Sẽ cho người gắn điền chín trường của tin đang xem, bấm Lưu là sang tin kế; ba ô chọn lấy đúng nhãn của sổ từ vựng."
-  },
-  {
-   "id": "AC-4",
-   "p": "Sẽ chỉ hiện chữ gốc của tin — trang và đường ghi không chứa giá trị máy đã đọc ra."
-  },
-  {
-   "id": "AC-6",
-   "p": "Sẽ tính độ khớp giữa hai người theo từng trường, cùng một số trên trang và trên lệnh đo, kèm số phút công của từng người."
-  },
-  {
-   "id": "AC-8",
-   "p": "Sẽ có đủ trạng thái: chưa có tin, đang tải, lỗi có nút thử lại, đã gắn hết, vai chỉ xem, và «Chỉ ở máy thu» khi mở trên cloud."
-  },
-  {
-   "id": "AC-9",
-   "p": "Sẽ có mục «Gắn nhãn» trong menu Ops nhóm Xử lý, thuật ngữ trong từ điển sản phẩm và quyền ghi nhãn riêng."
-  },
-  {
-   "id": "AC-10",
-   "p": "Sẽ chỉ đổi đúng các tệp đã liệt, không chạm phần thu thập của ZCode."
-  }
- ],
+ "scope_plain": "Vòng này chỉ làm tin Zalo (S03) của lát Ocean Park 1; phần còn lại của tập nhãn để vòng sau.",
  "wont_do": [
-  {
-   "id": "AC-5",
-   "p": "Sẽ KHÔNG đưa lại tin người đó đã gắn; tin đơn chỉ một người, tin trùng đúng hai người; hai người bấm cùng lúc thì một người được báo tin đã có người gắn."
-  },
-  {
-   "id": "AC-7",
-   "p": "Chặn lượt ghi sai (thiếu trường, giá ngược, số âm, tin ngoài lát…) và chặn vai chỉ xem — không ghi dòng nào."
-  },
   {
    "id": "OOS-1",
    "p": "Chưa gắn tin S05/S06 và cặp tin cùng căn (G3) — vòng sau, dùng lại cùng bảng."
@@ -63,12 +22,5 @@
    "id": "OOS-5",
    "p": "Không viết hướng dẫn gắn nhãn — đó là tài liệu của đội gắn."
   }
- ],
- "coverage_plain": [
-  {
-   "i": 0,
-   "p": "Phủ mười trục: lưu, chọn tin của lát, gắn, mù giá trị máy, gắn trùng 20%, đo đồng thuận, chặn ghi sai và quyền, trạng thái trang, đường tới trang, và phạm vi tệp kèm nhãn không rời máy thu — mỗi trục có ít nhất một tiêu chí."
-  }
- ],
- "scope_plain": "Vòng này chỉ làm tin Zalo (S03) của lát Ocean Park 1; phần còn lại của tập nhãn để vòng sau."
+ ]
 }
