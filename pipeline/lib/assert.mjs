@@ -19,7 +19,7 @@ const COT = ["subject_key", "field", "value", "evidence_tier", "method", "method
  * (lý do 'thay-boi-luot') — một bộ đọc chạy lại ra giá trị mới thì thay chính nó, không thành bất đồng.
  * @param {import("pg").Client} client
  * @param {Array<{subject_key: string, field: string, value: string|number, evidence_tier: string, method: string,
- *   method_version?: string|null, rule_id?: string|null, evidence?: object, observed_at?: string|Date|null,
+ *   method_version?: string|null, rule_id?: string|null, evidence?: object, observed_at?: string|Date|null (vắng → lúc gọi),
  *   changed_by?: string|null, run_id?: string|null}>} rows
  * @param {{ replaceOwn?: boolean }} [opts]
  * @returns {Promise<{inserted: number, retracted: number}>}
@@ -27,11 +27,13 @@ const COT = ["subject_key", "field", "value", "evidence_tier", "method", "method
 export async function writeAssertions(client, rows, { replaceOwn = false } = {}) {
   if (!rows.length) return { inserted: 0, retracted: 0 };
   const cols = Object.fromEntries(COT.map((c) => [c, []]));
+  const lucDoc = new Date(); // nguồn không cho thời điểm đăng → lúc bộ đọc đọc tin (PL19: observed_at bắt buộc)
   for (const r of rows) {
     if (r.value === null || r.value === undefined || r.value === "") throw new Error(`writeAssertions: giá trị rỗng (${r.subject_key} · ${r.field})`);
     for (const c of COT) {
       const v = r[c];
-      cols[c].push(c === "value" ? String(v) : c === "evidence" ? JSON.stringify(v ?? {}) : v ?? null);
+      cols[c].push(c === "value" ? String(v) : c === "evidence" ? JSON.stringify(v ?? {})
+        : c === "observed_at" ? v ?? lucDoc : v ?? null);
     }
   }
   let retracted = 0;

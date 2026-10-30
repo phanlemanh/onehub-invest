@@ -15,3 +15,4 @@ export type HangNguoi = {
 
 export const AN_VOI_VIEWER = "Ẩn với vai Người xem"
 export const LENH_DUNG = "node pipeline/dung-nguoi.mjs"
+export const BO_TIM = "Tìm theo tên hay tài khoản chỉ dành cho vai Vận hành — danh sách dưới đây không lọc theo chữ tìm."
