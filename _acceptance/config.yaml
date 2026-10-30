@@ -95,6 +95,8 @@ executors:
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
+    bac_db: "cd pipeline && DATABASE_URL=${BAC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_bac} node --test scripts/bac-du-lieu.itest.mjs"   # de-xuat-thanh-phat-bieu-bac E2/E3/E4/E7: 056 + vị từ bậc + kiểm đề xuất, giao dịch ROLLBACK — DB thử (sau gộp: BAC_DB_URL)
+    bac_level: "cd app && DATABASE_URL=${BAC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_bac} node --import tsx --test tests/data-level-sql.itest.tsx"   # de-xuat-thanh-phat-bieu-bac E1: offer_data_level (SQL) khớp levelOf (app) trên 64 tổ hợp — DB thử
     cam_mau_s03: "cd pipeline && node --test scripts/cam-mau-s03.test.mjs"   # s03-cam-mau-so-lieu (N1): ma trận giá/DT/khoá gom/chốt khoảng — không cần DB (giám sát duyệt P1-47)
     nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
     nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)
@@ -483,6 +485,8 @@ executors:
     bdp_settings: "node _acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs"
     media_roundtrip: "cd app && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --import tsx scripts/media-roundtrip.ts"   # media-canonical-reso E8: bên ghi → bảng media → loader thật trên bản chép DB máy thu; GHI bảng media nên chỉ DB thử
     media_khong_lui: "node _acceptance/media-canonical-reso/probes/khong-lui.mjs"   # media-canonical-reso E12: lưới trước-merge chỉ còn vi phạm đã biết trước chữ ký
+    bac_roundtrip: "cd app && DATABASE_URL=${BAC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_bac} node --import tsx scripts/bac-roundtrip.ts"   # de-xuat-thanh-phat-bieu-bac E5/E6/E8/E10: bac-du-lieu --write hai lần trên bản chép DB máy thu, bảng in, kiểm đề xuất, nhãn dq qua bên đọc thật — GHI ảnh chụp nên chỉ DB thử
+    idem_056: "bash db/check-idempotent-tam.sh db/migrations/056_data_level.sql data_level_snapshot ref_lookup ref_field_lookup"   # de-xuat-thanh-phat-bieu-bac E12 — DB tạm chép lược đồ DB local
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)

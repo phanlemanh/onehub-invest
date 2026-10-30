@@ -153,6 +153,11 @@ _Avoid_: fill-gap, ghi đè
 - Code: `field_provenance` · RESO: `*Source` khi field có (năm trường này không có)
 _Avoid_: provenance (trên UI)
 
+**Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi căn cộng mỗi tin rao chưa gắn căn; đơn vị không có phường đếm ở thị trường «chưa rõ». Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
+- Code: `data_level_snapshot`, `offer_data_level`, `property_data_level`, `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
+- Slug URL: —
+_Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
+
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
@@ -316,7 +321,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
 | Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
-| Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
+| Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
 
 <!-- VOCAB:END -->
