@@ -1,10 +1,33 @@
-# Review findings: judge-nguong-la-code (round 4)
+# Review findings: judge-nguong-la-code (round 5)
 
 ## Trong hợp đồng
+
+Không có phát hiện nào map được vào AC ở round này.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
+
+- **Thẻ đang chờ mà tin đã biến khỏi sale_offers bị bỏ qua lặng lẽ: kết luận LLM kiểu cũ vẫn nằm trên /ops/review**
+  Người dùng thấy gì: 11 thẻ ghép căn cũ trên trang duyệt vẫn giữ gợi ý và lời giải thích do máy viết theo kiểu cũ, đứng cạnh các thẻ mới theo luật. Người duyệt có thể thấy kết luận không khớp với luật mới ở những thẻ này.
+  Căn cứ: Chỉ ảnh hưởng 11 thẻ cũ có tin gốc đã mất, người duyệt vẫn tự quyết được và không mất dữ liệu; ghi lại là đủ, sau này dọn các thẻ này bằng một lần xử lý riêng thì rẻ.
+  file: `agent/scripts/judge-run.ts`
+  severity: medium
+  Đề xuất: known-limits
+
+- **Ghi sổ ai_calls lỗi thì bị nuốt, nhưng thẻ vẫn ghi model/trace như thể sổ có dòng**
+  Người dùng thấy gì: Hiếm khi, nếu việc ghi nhật ký cuộc gọi máy bị lỗi, thẻ vẫn ghi tên model và tệp theo dõi như thể nhật ký đã có dòng. Khi đó người kiểm tra đối chiếu thẻ với nhật ký sẽ không thấy dòng tương ứng.
+  Căn cứ: Chỉ xảy ra khi cơ sở dữ liệu bận hoặc quá chậm, kết luận trên thẻ vẫn đúng và chỉ lệch phần dấu vết nên hậu quả nhẹ; chạy lại sẽ tự ghi lại đúng.
+  file: `agent/scripts/judge-run.ts`
+  severity: low
+  Đề xuất: known-limits
+
+- **Hình dạng 4 — assertion âm tính một mình: AC-5(a) chỉ kiểm cham.loi KHÔNG chứa 'PROMPT-MAU', không ghim giá trị dương, không có đối chứng đỏ cho rò rỉ**
+  Người dùng thấy gì: Người dùng không thấy gì khác đi hôm nay. Rủi ro là về sau nếu có thay đổi làm chép nguyên nội dung yêu cầu gửi model vào thẻ, bài kiểm tra này có thể không bắt được.
+  Căn cứ: Hành vi hiện tại đúng và không ảnh hưởng người dùng; lỗ hổng chỉ nằm ở khả năng phát hiện lỗi tương lai nên chấp nhận và ghi vết, không cần mở việc mới.
+  file: `agent/tests/judge-run.test.ts`
+  severity: medium
+  Đề xuất: wont-fix
 
 - **phanTram cắt xuống làm cùng chữ «30,0%» đi với hai kết luận khác nhau ở ngưỡng giaM2NoMin (r2 · tệp đã đổi)**
   Người dùng thấy gì: Với những cặp tin lệch giá gần đúng 30%, lời giải thích trên thẻ ghi «lệch 30,0%» cho cả cặp được xếp «không phải cùng căn» lẫn cặp «chưa chắc». Người duyệt nhìn con số không phân biệt được hai trường hợp, nhưng kết luận máy trên thẻ vẫn đúng.
@@ -54,7 +77,5 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   file: `agent/tests/judge-run.test.ts`
   severity: medium
   Đề xuất: known-limits
-
-## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
