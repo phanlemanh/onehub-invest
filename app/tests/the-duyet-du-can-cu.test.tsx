@@ -781,3 +781,53 @@ test("TD-AC-8 quét tĩnh: trong app/ agent/ pipeline/ scripts/ chỉ route deci
     /TD-AC-8: 2 chỗ ghi review\.decide/,
   )
 })
+
+// ---------- TD-AC-9 vai viewer và cloud không đổi ----------
+type ContentMod = typeof import("../src/components/ops/review-content")
+const NOI_DUNG = /stg_zalo_posts|stg_chotot_ads|field_provenance|FROM media/
+async function demTruyVan(mod: ContentMod, role: Vai, cloud: boolean): Promise<{ html: string; sql: string[] }> {
+  const React = await import("react")
+  Object.assign(globalThis, { React })
+  const { pool } = await import("../src/lib/db")
+  const goc = pool.query.bind(pool)
+  const sql: string[] = []
+  ;(pool as unknown as { query: unknown }).query = async (text: string | { text: string }, values?: unknown[]) => {
+    const t = typeof text === "string" ? text : text.text
+    sql.push(t)
+    if (cloud && /to_regclass/.test(t) && values?.[0] === "review_queue") return { rows: [{ r: null }] }
+    return goc(text as string, values)
+  }
+  try {
+    const el = await mod.ReviewContent({ user: nguoi(role) })
+    return { html: renderToStaticMarkup(el), sql }
+  } finally {
+    ;(pool as unknown as { query: unknown }).query = goc
+  }
+}
+async function kiemAc9(mod: ContentMod) {
+  const viewer = await demTruyVan(mod, "viewer", false)
+  assert.ok(!viewer.sql.some((t) => NOI_DUNG.test(t)), "TD-AC-9: vai viewer chạy truy vấn toàn văn")
+  assert.ok(viewer.html.includes("thẻ đang chờ") && viewer.html.includes("Nội dung thẻ chỉ hiện cho vai Vận hành trở lên."))
+  const cloud = await demTruyVan(mod, "ops", true)
+  assert.ok(!cloud.sql.some((t) => NOI_DUNG.test(t)), "TD-AC-9: nhánh cloud chạy truy vấn toàn văn")
+  assert.ok(cloud.html.includes("Hàng duyệt chỉ có ở máy thu"))
+}
+test("TD-AC-9 vai viewer và nhánh cloud: 0 truy vấn toàn văn/căn cứ/ảnh, chữ y như trước; đối chứng: vai ops ở máy thu có", async () => {
+  ready()
+  await db.query(
+    `INSERT INTO review_queue (id, item_type, item_id, title, evidence) VALUES (900, 'agent_output', 'enrich:td_s03', 'td thẻ nội dung', $1)
+     ON CONFLICT DO NOTHING`,
+    [JSON.stringify({ offer_id: "td_s03", text: "đoạn đầu" })],
+  )
+  const mod = (await import("../src/components/ops/review-content")) as ContentMod
+  await kiemAc9(mod)
+  const ops = await demTruyVan(mod, "ops", false)
+  assert.ok(ops.sql.some((t) => /stg_zalo_posts/.test(t)), "đối chứng dương: vai ops ở máy thu phải đọc toàn văn — bộ đếm có bắt được")
+  const sai = await banChepTam<ContentMod>("src/components/ops/review-content.tsx", (s) =>
+    s.replace(
+      "  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ",
+      '  await loadReviewContext([{ id: 0, item_type: "agent_output", evidence: { offer_id: "td" } }]);\n  // Vai dưới Vận hành (viewer): chỉ số thẻ chờ',
+    ),
+  )
+  await assert.rejects(kiemAc9(sai), /TD-AC-9: vai viewer chạy truy vấn toàn văn/)
+})
