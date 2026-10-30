@@ -347,7 +347,7 @@ test("ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ
   console.log(`# ON12-AC-5 DB local: ${shown.length} dòng, ${loai.size} loại kiểm trong 7 ngày — soi trọn từng dòng`)
   assert.ok(loai.size >= 2, "DB local cần ≥ 2 loại kiểm trong 7 ngày để phép đo có nghĩa")
   const map = new Map(Object.entries(areaNames))
-  const chuaDien = shown.flatMap((r) => [dqCheckName(r.check_name), dqEntityLabel(r.entity, map), dqDetail(r.check_name, r.detail)].filter((t) => !t.known).map((t) => `${r.check_name} · ${t.code}`))
+  const chuaDien = shown.flatMap((r) => [dqCheckName(r.check_name, r.entity), dqEntityLabel(r.entity, map), dqDetail(r.check_name, r.detail)].filter((t) => !t.known).map((t) => `${r.check_name} · ${t.code}`))
   assert.deepEqual([...new Set(chuaDien)], [], "dòng kiểm chưa diễn giải")
   let daDung = 0
   const loi = []
