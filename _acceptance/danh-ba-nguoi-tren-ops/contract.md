@@ -5,7 +5,7 @@ slug: danh-ba-nguoi-tren-ops
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-danh-ba-nguoi-tren-ops-design.md
@@ -55,3 +55,9 @@ xuất CSV. Never: ghi vào danh bạ từ trang (Out of scope).
 - Hỏi-2 (phân trang): nếu Mạnh chọn lối khác — trả 500 người nhiều tin nhất khớp lọc — AC-3 đổi Then thành: kết quả cắt ở
   500 người, trang hiện «500/m người khớp — lọc hoặc tìm để thấy người khác», `data-grid` phân trang phía khách 20/50.
 - Hỏi-1 (ngưỡng nhãn suy luận): N trong AC-5 lấy theo câu trả lời; nháp dùng 5.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-2: Trang một người khi không có bí danh hay không có tin chỉ báo trống, chưa có nút đi tiếp.
+  - Ngoài-4: Ca kiểm dấu «Đã nghỉ» chỉ đếm số lần xuất hiện, chưa bắt được trường hợp dấu gắn nhầm sang bí danh còn dùng.
+  - Ngoài-5: Ca kiểm nhãn «Có thể là môi giới» ở danh sách chỉ đếm, chưa bắt được trường hợp nhãn gắn nhầm hàng người.
+  - Ngoài-6: Phép đối chiếu «không lọt tên nguồn» trên máy thu chỉ tự chứng được bộ quét khi máy thu có bí danh chứa tên nguồn.
+- Mở hợp đồng mới ở Cổng Bằng chứng 2026-10-30: Ngoài-1 và Ngoài-3 — vai Người xem dò được bí danh đã che qua ô tìm.
