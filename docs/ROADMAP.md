@@ -104,7 +104,7 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `loadStgPosts` + `testMarker`, cột «S03 — tin rao mới». S05 cùng công thức khoá — chưa đổi.
 - Cầm máu số liệu S03 (N1 `_acceptance/s03-cam-mau-so-lieu`, 30/10): `parsePost` đọc số trên chữ đã gạt URL và SĐT (`gatSo`),
   luật giá môi giới («2.650 tỷ» = 2,65 tỷ, «2400 tỷ thu về» = 2,4 tỷ, «2ty450», «5tr5», «7.000.000», «Giá: 4,000» tin bán),
-  DT «64m» (15–500, chặn bề ngang); bài thuê từ 1 tỷ / bán trên 100 tỷ không thành tin (`lyDoGiaPhiLy`, đếm theo lý do);
+  DT «64m» (15–500, chặn bề ngang); số đếm sau chữ tỷ («8 tỷ 4 tầng») không thành phần lẻ, đơn giá «45.000.000/m2» ra giá/m²; bài thuê từ 1 tỷ / bán trên 100 tỷ không thành tin (`lyDoGiaPhiLy`, đếm theo lý do);
   khoá gom thiếu phường/DT thêm mã toà/căn (`maToaCan`); `seller_name` = tên bài mới nhất; phường theo `market_codes` của
   nhóm, nhóm chưa khai đối chiếu mọi thị trường có phường, tên trùng hai nơi ra null. DB thử: 0 tin thuê ≥ 1 tỷ (từ 41),
   0 bán > 100 tỷ (từ 94), 0 giá từ URL (từ 4), `seller_name` 96,9% (từ 0), 0 tin TP.HCM sai phường (từ 38).

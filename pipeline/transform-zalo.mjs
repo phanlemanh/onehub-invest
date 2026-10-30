@@ -40,12 +40,15 @@ export function parseVnNumber(raw) {
 // Cách môi giới viết giá (hồ sơ s03-cam-mau-so-lieu, bản nghiên cứu s03-boc-tach-cau-truc-3010 §3.2).
 // "2.650 tỷ", "3,349 tỷ": một–hai chữ số + đúng ba chữ số sau dấu, kèm chữ tỷ — môi giới viết triệu, không phải 2.650 tỷ.
 const GIA_TY_NHOM_NGHIN = /^\d{1,2}[.,]\d{3}$/;
-// "2ty450", "3ty2", "2 tỷ 450" — phần lẻ không được là số phòng, diện tích hay triệu.
-const GIA_TY_LE = /(?<![\d.,])(\d{1,3})\s*t(?:ỷ|y)\s*(\d{1,3})(?![\d.,])(?!\s*(?:pn|phòng|wc|tr|triệu|m\b|m2|m²|%|n\b|ng))/i;
+// "2ty450", "3ty2", "2 tỷ 450" — phần lẻ không được là số phòng, diện tích, triệu hay số đếm của căn ("8 tỷ 4 tầng",
+// "3 tỷ 2 ô tô tránh" — Ngoài-1, Ngoài-4 nâng phạm vi ở Cổng Bằng chứng 30/10).
+const GIA_TY_LE = /(?<![\d.,])(\d{1,3})\s*t(?:ỷ|y)\s*(\d{1,3})(?![\d.,])(?!\s*(?:pn|phòng|wc|tr|triệu|m\b|m2|m²|%|n\b|ng|tầng|lầu|trệt|ô\s*tô|oto|căn|mặt))/i;
 // "5tr5", "8tr5" (không dấu cách giữa tr và phần lẻ).
 const GIA_TR_LE = /(?<![\d.,])(\d{1,3})tr(\d{1,2})(?![\d.,])(?!\s*(?:pn|wc|m\b|m2|m²))/i;
-// "7.000.000" — đồng, đủ hai nhóm nghìn, không theo sau là đơn vị.
-const GIA_DONG = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ\/m))/i;
+// "7.000.000" — đồng, đủ hai nhóm nghìn, không theo sau là đơn vị hay "/m" (đơn giá — Ngoài-2).
+const GIA_DONG = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ\/m|\/\s*m[2²]|\/\s*m\b))/i;
+// "45.000.000/m2", "45.000.000đ/m2" — đơn giá viết bằng đồng: giá/m², không phải tổng giá (Ngoài-2).
+const GIA_DONG_M2 = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])\s*(?:đ|vnđ|vnd)?\s*\/\s*m(?:2|²)?(?![\p{L}\p{N}])/iu;
 // "Giá: 4,000 (thu về)" — số nhóm nghìn đứng sau nhãn giá, không đơn vị: triệu.
 const GIA_NHAN_TRIEU = /giá(?:\s*bán)?\s*:?\s*(\d{1,3}[.,]\d{3})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ|vnd))/i;
 
@@ -121,6 +124,8 @@ export function parsePost(text) {
   // giá: "45tr/m2", "3.2 tỷ", "2tỷ", "15tr/tháng", "12 triệu/th"
   const perm2 = so.match(/(\d[\d.,]*)\s*(?:tr|triệu)\/m[²2]/i);
   if (perm2) out.pricePerm2Vnd = Math.round(parseVnNumber(perm2[1]) * 1e6);
+  const dongM2 = so.match(GIA_DONG_M2);
+  if (!out.pricePerm2Vnd && dongM2) out.pricePerm2Vnd = parseInt(dongM2[1].replace(/\./g, ""), 10);
 
   // "2ty450", "3ty2", "2 tỷ 450": phần sau chữ tỷ là phần lẻ (2,45 tỷ) — xét trước dạng tỷ thường, vì "3ty2" khớp cả hai.
   const tyLe = so.match(GIA_TY_LE);

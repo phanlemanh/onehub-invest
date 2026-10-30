@@ -79,6 +79,15 @@ const AC2 = [
   ["Bán căn 2,93 tỷ", 2.93e9],
   ["Bán căn 3 tỷ", 3e9],
 ];
+// Số đếm đứng sau chữ tỷ không phải phần lẻ (Ngoài-1, Ngoài-4 nâng phạm vi ở Cổng Bằng chứng 30/10).
+const AC2_SO_DEM = [
+  ["Bán nhà 50m2 giá 8 tỷ 4 tầng", 8e9],
+  ["Bán nhà 4 tỷ 5 tầng ngõ rộng", 4e9],
+  ["Bán nhà 5 tỷ 3 lầu", 5e9],
+  ["Bán nhà 3 tỷ 2 ô tô tránh", 3e9],
+  ["Bán nhà 6 tỷ 2 mặt tiền", 6e9],
+  ["Bán 7 tỷ 3 căn liền kề", 7e9],
+];
 const AC2_RF = [
   ["Bán studio 1.5 tỷ", 1.5e9],
   ["Bán studio 1,5 tỷ", 1.5e9],
@@ -89,9 +98,9 @@ test("CM-AC-1 đột biến: chỉ bỏ bước gạt SĐT → cả ba dòng SĐ
   for (const chu of AC1_SDT) assert.notEqual(m.parsePost(chu).priceVnd, 9e6, `CM-AC-1 đột biến SĐT «${chu}» vẫn đúng — thước không đo bước gạt SĐT`);
 });
 
-test("CM-AC-2: 12 dạng giá tỷ ra đúng số đồng", () => {
-  assert.equal(AC2.length, 12);
-  for (const [chu, dapAn] of [...AC2, ...AC2_RF]) assert.equal(tz.parsePost(chu).priceVnd, dapAn, `CM-AC-2 «${chu}»`);
+test("CM-AC-2: 12 dạng giá tỷ và 6 dạng số đếm sau chữ tỷ ra đúng số đồng", () => {
+  assert.equal(AC2.length + AC2_SO_DEM.length, 18);
+  for (const [chu, dapAn] of [...AC2, ...AC2_SO_DEM, ...AC2_RF]) assert.equal(tz.parsePost(chu).priceVnd, dapAn, `CM-AC-2 «${chu}»`);
 });
 
 test("CM-AC-2 đột biến: parseVnNumber cũ → «2.650 tỷ» ra sai", async () => {
@@ -112,10 +121,29 @@ const AC3 = [
   ["Cho thuê studio Giá 7.500.000/tháng", (p) => p.priceVnd, 7.5e6],
 ];
 
+test("CM-AC-2 đột biến: bỏ danh sách chặn số đếm → «8 tỷ 4 tầng» ra 8,4 tỷ", async () => {
+  const m = await banSaoDotBien([["|tầng|lầu|trệt|ô\\s*tô|oto|căn|mặt", ""]]);
+  assert.equal(m.parsePost("Bán nhà 50m2 giá 8 tỷ 4 tầng").priceVnd, 8.4e9, "CM-AC-2 đột biến «8 tỷ 4 tầng» không tái lập lỗi lùi — thước không đo danh sách chặn");
+});
+
+// Đơn giá viết bằng đồng ra giá/m², không thành tổng giá (Ngoài-2 nâng phạm vi ở Cổng Bằng chứng 30/10).
+const AC3_DON_GIA = ["Bán đất 60m2 giá 45.000.000/m2", "Bán đất giá 45.000.000 /m²", "Bán đất giá 45.000.000đ/m2"];
+
 test("CM-AC-3: 9 dạng giá triệu / không đơn vị ra đúng", () => {
   assert.equal(AC3.length, 9);
   for (const [chu, doc, dapAn] of AC3) assert.equal(doc(tz.parsePost(chu)), dapAn, `CM-AC-3 «${chu}»`);
   assert.equal(tz.parsePost("Cho thuê 2PN Giá: 4,000").priceVnd, null, "CM-AC-3 «Giá: 4,000» tin thuê giữ null");
+  for (const chu of AC3_DON_GIA) {
+    const p = tz.parsePost(chu);
+    assert.equal(p.pricePerm2Vnd, 45e6, `CM-AC-3 đơn giá «${chu}»`);
+    assert.equal(p.priceVnd, null, `CM-AC-3 đơn giá không thành tổng giá «${chu}»`);
+  }
+  assert.equal(AC3.length + AC3_DON_GIA.length, 12);
+});
+
+test("CM-AC-3 đột biến: tắt luật đơn giá đồng và bỏ chặn «/m» → «45.000.000/m2» thành tổng giá", async () => {
+  const m = await banSaoDotBien([["const dongM2 = so.match(GIA_DONG_M2);", "const dongM2 = null;"], ["|đ\\/m|\\/\\s*m[2²]|\\/\\s*m\\b))", "|đ\\/m))"]]);
+  assert.equal(m.parsePost(AC3_DON_GIA[0]).priceVnd, 45e6, "CM-AC-3 đột biến «45.000.000/m2» không tái lập lỗi lùi — thước không đo đơn giá đồng");
 });
 
 test("CM-AC-3 đột biến: bỏ luật «tr chen phần lẻ» → «5tr5» ra sai", async () => {
