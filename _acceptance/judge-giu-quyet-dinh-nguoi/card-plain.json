@@ -1,0 +1,16 @@
+{"feature_plain":"Khi máy chấm lại các cặp ghép căn, thẻ người vừa quyết không bị máy đổi nữa, và máy so phường giống hệt cách thẻ duyệt so, nên cùng một phường ghi khác kiểu không còn bị gợi ý «khác căn».",
+"will_do":[
+{"id":"AC-1","p":"Sẽ để nguyên thẻ người vừa duyệt, bác hay hoãn trong lúc máy đang chấm, và tính cặp đó là «bỏ qua»."},
+{"id":"AC-2","p":"Sẽ không sửa thẻ nào của một cặp khi người đã quyết một trong hai thẻ của cặp ấy giữa lúc chấm."},
+{"id":"AC-3","p":"Sẽ vẫn cập nhật bình thường các thẻ đang chờ mà không ai đụng tới."},
+{"id":"AC-4","p":"Sẽ kết luận cùng, khác hay thiếu phường trùng đúng nhãn Khớp, Lệch, Thiếu mà thẻ duyệt hiện, trên 18 cặp tên phường đã liệt trước."},
+{"id":"AC-5","p":"Sẽ gợi ý «cùng căn» khi hai tin khớp số đo và ghi cùng một phường theo hai kiểu («Phương Liệt» với «Phường Phương Liệt», «Xã Kim Chung» với «kim-chung», «P.Bến Nghé» với «Phường Bến Nghé», «Thị trấn Đông Anh» với «Đông Anh»)."}],
+"wont_do":[
+{"id":"OOS-1","p":"Không sửa con số «thẻ mới» bị đếm dư khi thẻ trùng (anh đã chấp nhận ở PL25)."},
+{"id":"OOS-2","p":"Không dọn các thẻ cũ có tin gốc đã mất (đã ghi hạn chế ở PL25)."},
+{"id":"OOS-3","p":"Không sửa cách so phường của thẻ duyệt, kể cả phường chỉ có số: «Phường 12» với «P.12» vẫn bị coi là khác phường."},
+{"id":"OOS-4","p":"Không chạy chấm thật trên dữ liệu chính; đó là việc vận hành sau khi gộp."}],
+"coverage_plain":[
+{"i":0,"p":"Quét hai trục: trạng thái thẻ lúc máy ghi (chờ suốt, bị duyệt/bác/hoãn giữa chừng, cặp hai chiều có một thẻ bị quyết) và mười dạng ghi tên phường."},
+{"i":1,"p":"Trạng thái thẻ: AC-1 phủ ba kiểu quyết giữa chừng, AC-2 phủ cặp hai chiều, AC-3 phủ thẻ không ai đụng."},
+{"i":2,"p":"Tên phường: AC-4 đối chiếu 18 cặp với chính hàm của thẻ duyệt, AC-5 chạy đầu-cuối qua luật."}]}
