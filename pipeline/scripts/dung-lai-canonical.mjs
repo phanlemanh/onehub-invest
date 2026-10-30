@@ -64,8 +64,8 @@ export async function dungLai(client, { doiChung = null } = {}) {
       `SELECT offer_id, source, coalesce(originating_system_key, post_ids[1]) AS neo FROM sale_offer_records
         WHERE street_raw IS NOT NULL AND coalesce(originating_system_key, post_ids[1]) IS NOT NULL ORDER BY offer_id LIMIT 1`);
     // giá trị «!» xếp trước mọi tên đường cùng hạng — bộ phân xử chọn nó, ô lệch mốc
-    await client.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence)
-      VALUES ($1, 'street_raw', '!', 'observed', 'legacy', 'doi-chung', jsonb_build_object('offer_id', $2::text))`,
+    await client.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence,
+        observed_at) VALUES ($1, 'street_raw', '!', 'observed', 'legacy', 'doi-chung', jsonb_build_object('offer_id', $2::text), now())`,
     [`${o.source}:${o.neo}`, o.offer_id]);
   }
   await catChuyen(client, { actor: "dung-lai:do" });
