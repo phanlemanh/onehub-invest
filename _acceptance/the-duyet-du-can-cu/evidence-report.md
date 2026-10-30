@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 88fc2ddb7ce1b1d5eda82158b6f160a63d3d8f96
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: the-duyet-du-can-cu

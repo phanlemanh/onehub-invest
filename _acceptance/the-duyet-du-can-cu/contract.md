@@ -5,7 +5,7 @@ slug: the-duyet-du-can-cu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30T05:49:10Z
 design_doc: docs/superpowers/specs/2026-10-30-the-duyet-du-can-cu-design.md
@@ -98,3 +98,9 @@ cần Mạnh gật từng lệnh, F6); hiện điểm hay độ tự tin dưới
   AC-1…AC-4 dựng đủ thứ để không phải mở.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-3: Design gate của vòng không quét khung chi tiết (review-detail-sheet) và hàng chờ (review-queue) dù hai tệp đã đổi.
+  - Ngoài-4: Ca NH-AC-5 không bắt được nếu vai Vận hành mất hẳn ảnh đã tải (chỉ kiểm không nhận URL gốc).
+  - Ngoài-5: Phép kiểm hàng chờ không hiện độ tự tin có thể xanh khi hàng chờ không dựng ra hàng nào.
+  - Ngoài-6: Probe toàn văn trên DB máy thu có thể xanh khi không thẻ chờ nào có bài gốc ở máy thu.
