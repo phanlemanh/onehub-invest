@@ -1,0 +1,10 @@
+{
+  "feature_plain": "Người vận hành dữ liệu sinh được một tập tin mẫu của lát Ocean Park 1 có đáp án biết sẵn, sinh lại ra đúng tập cũ, mang dấu mẫu và không bao giờ lọt vào bảng tin thật — để PL9 chấm cách đọc tin trước khi đội gắn nhãn xong.",
+  "decisions": [
+    {
+      "id": "E9",
+      "q": "Nhãn của 40 tin mẫu có đúng điều người gắn cẩn thận sẽ gắn?",
+      "why": "Hội đồng không thấy trường nào sai rõ, nhưng hai góc nhìn chỉ ra hai kiểu chữ đọc được hai cách: ngân sách của khách trong tin tìm mua/tìm thuê («tc 9 triệu», «tài chính 5,8 tỷ») có tính là giá không, và «Căn PR2» là toà hay mã căn. «Căn biệt thự» gắn house là đúng — sổ từ vựng loại hình không có mã riêng cho biệt thự."
+    }
+  ]
+}

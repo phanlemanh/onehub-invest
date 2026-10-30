@@ -1,0 +1,82 @@
+schema_version: 1
+feature_slug: tap-nhan-mau-ocp1
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.tnm_pipeline
+    paths: [pipeline/lib/tap-mau.mjs, pipeline/label-mau.mjs, pipeline/lib/khuon-mau-ocp1.mjs, pipeline/lib/tap-mau.test.mjs, _acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl]
+    expected: "exit 0; ma trận ba seed × n ∈ {1, 40, 200}: hai lần sinhTapMau cho cùng chuỗi veJsonl; lệnh label-mau.mjs --out chạy hai lần (tiến trình con thật) → hai tệp cùng sha256 và cùng sha256 với veJsonl của hàm; seed khác → ≥1 tin khác; |dev − test| ≤ 1; tệp _acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl trùng từng byte veJsonl(sinhTapMau({lat:'ocp1', n:40, seed:'kiem'})); đối chứng đỏ: bản chép tap-mau.mjs lấy ngẫu nhiên bằng Math.random → phép đo bắt ('TAP KHONG TAT DINH'); bản chép tệp kiểm sửa một byte → bắt ('TEP KIEM CU')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.tnm_pipeline
+    paths: [pipeline/lib/tap-mau.mjs, pipeline/lib/khuon-mau-ocp1.mjs, pipeline/lib/tap-mau.test.mjs]
+    expected: "exit 0; ma trận viết trước dạng viết → đáp án (giá «3,15 tỷ» «3.15 tỷ» «3 tỷ 150» «3150 triệu» → 3150000000; khoảng «3,1–3,3 tỷ» → 3100000000/3300000000; «12tr/tháng» «12 triệu» «12.000.000» → 12000000; «64m2» → 64, «64,5 m²» «64.5m» → 64.5; «2PN» «2 ngủ» «2N» → 2; «OCP1» → ocp1), số assert = số phần tử; với mọi khuôn: ô vắng → not_stated, ô có → nhãn bằng giá trị đã bơm (đọc lại từ chính chữ tin bằng vị trí ô, không tính lại từ bể); đối chứng đỏ: bản chép đổi «3 tỷ 150» thành 3015000000 → phép đo bắt ('DAP AN LECH O GIA'); bản chép quên not_stated cho ô vắng → bắt ('O VANG KHONG LA TIN KHONG NEU')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.tnm_app
+    paths: [pipeline/lib/tap-mau.mjs, pipeline/lib/khuon-mau-ocp1.mjs, app/tests/labels-mau.test.tsx]
+    expected: "exit 0; tập n=200 ở ba seed: mọi tin, nhãn đổi thành RawLabels (giá → value + unit theo bậc tỷ/triệu, not_stated giữ nguyên) đưa qua chuanHoaLuot thật của app/src/lib/labels-normalize.ts → ok: true và rows trùng nhãn từng trường; đối chứng đỏ: bản chép bộ sinh ghi diện tích dạng «64,5» (dấu phẩy) → phép đo bắt ('NHAN KHONG QUA BO GHI THAT')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.tnm_pipeline
+    paths: [pipeline/lib/tap-mau.mjs, pipeline/lib/khuon-mau-ocp1.mjs, pipeline/lib/tap-mau.test.mjs]
+    expected: "exit 0; ma trận phủ viết trước 37 ô theo tên (5 tổ hợp ý định × loại tin: offer×sale, offer×rent_lt, inquiry×sale, inquiry×rent_lt, not_listing; 8 trường kind, property_type, project, building, price_min_vnd, price_max_vnd, area_m2, bedrooms × {nêu, không nêu}; 7 dạng giá; 3 dạng diện tích; 3 dạng phòng ngủ; 3 dạng dự án) × ba seed, số assert = 37 × 3, mỗi ô ≥ 1 tin, in bảng đếm; đối chứng đỏ: thư viện khuôn bỏ mọi khuôn inquiry × rent_lt → phép đo bắt ('O PHU TRONG inquiry×rent_lt')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.tnm_db
+    paths: [pipeline/lib/khuon-mau-ocp1.mjs, _acceptance/tap-nhan-mau-ocp1/probes/db.mjs]
+    expected: "exit 0; trên DB local (giao dịch chỉ đọc) đọc tin S03 của lát bằng loadStgPosts + LAT_NHOM.ocp1 + textHash của PL7; với mọi khuôn: goc có trong tập băm, goc không trùng giữa các khuôn, các đoạn chữ cố định giữa các ô (normText) xuất hiện theo thứ tự trong normText(gatSo(chữ tin gốc)) phủ ≥ 80% độ dài chữ cố định; in 'GOC OK k/k'; đối chứng đỏ: cùng hàm trên bản thư viện có một khuôn mang goc giả → 'GOC KHONG CO: <id khuôn>'; một khuôn mang goc thật nhưng khung câu của tin khác → 'KHUON KHONG RUT TU GOC: <id khuôn>'; hai khuôn cùng goc → 'GOC TRUNG: <id>'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.tnm_db
+    paths: [pipeline/lib/khuon-mau-ocp1.mjs, pipeline/lib/tap-mau.mjs, _acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl, _acceptance/tap-nhan-mau-ocp1/probes/db.mjs]
+    expected: "exit 0; quét chữ nguồn của khuon-mau-ocp1.mjs và tap-mau.mjs (mọi bể giá trị), tập n=200 (ba seed) và mau-kiem.jsonl: 0 dãy SĐT VN (10–11 chữ số, cho phép dấu cách/chấm), 0 URL, 0 tên người gửi và 0 tên nhóm của lát (đọc từ stg của lát; so nguyên tên sau NFC + chữ thường, có ranh giới từ, tên ≥ 2 từ hoặc ≥ 6 ký tự), 0 tên nguồn thật (source_registry); in 'DINH DANH 0'; đối chứng xanh: chữ 'phương án thanh toán', 'Ocean Park 1', 'OCP1' → 'DINH DANH 0'; đối chứng đỏ: cùng hàm quét trên chữ chèn một SĐT dạng 0912 345 678 và một tên người gửi thật → bắt cả hai ('SDT LOT', 'TEN NGUOI GUI LOT')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.tnm_pipeline
+    paths: [pipeline/lib/tap-mau.mjs, pipeline/label-mau.mjs, pipeline/lib/tap-mau.test.mjs]
+    expected: "exit 0; mọi tin mau === true và id khớp /^mau-ocp1-/; dòng đầu JSONL parse ra loai 'tap-nhan-mau', mau true, seed, n, khuon_ban (64 hex = băm thư viện); label-mau.mjs --khong-dau và --mau=false → exit ≠ 0 kèm 'co la'; đối chứng đỏ: bản chép veJsonl bỏ dòng đầu → phép đo bắt ('THIEU DONG DAU MAU')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.tnm_pipeline
+    paths: [pipeline/lib/tap-mau.mjs, pipeline/label-mau.mjs, pipeline/lib/tap-mau.test.mjs]
+    expected: "exit 0; quét mã: tap-mau.mjs, khuon-mau-ocp1.mjs, label-mau.mjs không có import 'pg' và không có INSERT/UPDATE/DELETE/COPY/TRUNCATE; quét mọi .mjs dưới pipeline/ (trừ ba tệp ấy và tap-mau.test.mjs): 0 tệp import tap-mau; đối chứng đỏ: tệp tạm trong bản sao pipeline import tap-mau → phép đo bắt ('BO SINH CO DUONG TOI PIPELINE: <tệp>'); bản chép label-mau.mjs thêm import pg → bắt ('BO SINH CO DUONG GHI DB')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.script.tnm_db
+    layer: backend-effect
+    paths: [_acceptance/tap-nhan-mau-ocp1/probes/db.mjs]
+    expected: "exit 0; DB local (chỉ đọc): SELECT count(*) sale_offer_records có originating_system_key LIKE 'mau-%' hoặc post_ids có phần tử LIKE 'mau-%' = 0, stg_zalo_posts post_id LIKE 'mau-%' = 0, in 'CANONICAL 0 · STG 0'; đối chứng đỏ: trong giao dịch ROLLBACK chèn một dòng stg_zalo_posts post_id 'mau-thu' → cùng câu đếm ra 1 ('MAU LOT VAO STG')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: judgment
+    inputs: [_acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl, docs/superpowers/specs/2026-10-30-man-gan-nhan-mu-design.md]
+    question: "Đọc chữ (trường text) từng tin trong mau-kiem.jsonl theo bảng «Trường lõi» của design PL7 (dự án và toà ghi như tin viết, chữ thường; giá VND, một giá thì min = max; tin không nêu khi chữ không có). Nhãn (trường nhan) của từng tin có đúng là điều một người gắn cẩn thận sẽ gắn không? Liệt kê mọi tin có trường sai hoặc chữ có hai cách hiểu, kèm id và trường."
+    paths: [pipeline/lib/khuon-mau-ocp1.mjs, pipeline/lib/tap-mau.mjs]
+    expected: "Không tin nào có trường sai hay hai cách hiểu."
+    evidence_required: [run_id, verifier, verified_at, rationale]
+  - id: E10
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.tnm_pham_vi
+    paths: [_acceptance/tap-nhan-mau-ocp1/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base với origin/main khớp danh sách AC-10, in 'PHAM VI OK'; chiều đỏ: tệp giả db/migrations/055_x.sql và pipeline/transform-zalo.mjs → 'NGOAI PHAM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
