@@ -1,0 +1,100 @@
+{
+  "feature_plain": "Người vận hành mở cổng Ops ở máy thu là xem được danh bạ người bán: ai thuộc nguồn nào, đã đăng bao nhiêu tin, mang những tên và tài khoản nào — không phải viết SQL.",
+  "will_do": [
+    {
+      "id": "AC-2",
+      "p": "Sẽ hiện mỗi người đang dùng một hàng, đếm đúng số tin họ đã đăng (bỏ tin đã rút), người đã gộp không hiện, xếp người nhiều tin lên đầu."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ lọc theo nguồn, tìm theo tên hay tài khoản (không phân biệt hoa thường), chia trang 100 người và nói rõ đang ở trang mấy trên tổng bao nhiêu người khớp."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ có trang riêng cho một người: các tên và tài khoản của họ (đánh dấu cái đã nghỉ), các tin họ đã đăng, số tin đã rút; mã người sai thì báo không tìm thấy."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ gắn nhãn «Có thể là môi giới · suy luận» cho người đăng từ N tin trở lên — chỉ hiển thị, trang không ghi gì vào danh bạ."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ cho vai Người xem thấy mã người, nguồn, số tin; tên, tài khoản và SĐT của người bán hiện «Ẩn với vai Người xem»; vai Vận hành trở lên thấy đủ."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ chỉ hiện nguồn bằng mã S0x; tên người bán có chứa tên nguồn thật thì phần đó được che thành mã; SĐT băm chỉ hiện 8 ký tự đầu."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ có trạng thái trống (kèm lệnh dựng danh bạ), lọc không khớp (kèm nút Xoá lọc), khung chờ khi đang tải và lỗi kèm Thử lại."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ thêm mục «Danh bạ người» vào thanh bên Ops (nhóm Xử lý), đường dẫn tiếng Anh /ops/people có trong từ điển sản phẩm."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ được chụp trên máy thu thật ở khổ máy tính và điện thoại, sáng và tối, đăng nhập cả quản trị lẫn người xem; số trên trang đối chiếu khớp số đếm độc lập trong dữ liệu thật."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ KHÔNG đọc danh bạ trên máy chủ cloud: ở đó trang chỉ báo «Chỉ ở máy thu»."
+    },
+    {
+      "id": "OOS-1",
+      "p": "KHÔNG đưa danh bạ người lên cloud ở việc này."
+    },
+    {
+      "id": "OOS-2",
+      "p": "KHÔNG gộp, tách hay cho nghỉ người từ trang — trang chỉ đọc."
+    },
+    {
+      "id": "OOS-3",
+      "p": "KHÔNG lưu nhãn môi giới vào dữ liệu — đó là việc của luật suy luận ở hàng sau."
+    },
+    {
+      "id": "OOS-4",
+      "p": "KHÔNG nối mã tin sang trang chi tiết tin."
+    }
+  ],
+  "scope_plain": "Bốn việc để hàng sau:",
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Phủ năm loại phiên (khách, người dùng thường, Người xem, Vận hành, Quản trị) — AC-6 kiểm từng loại trên cả hai trang."
+    },
+    {
+      "i": 1,
+      "p": "Phủ bảy dạng người trong dữ liệu (nhiều tin, một tin, không tin, đã gộp, tên đã nghỉ, tin đã rút, hai nguồn) — AC-2, AC-4, AC-5 so từng dạng với kết quả viết sẵn."
+    },
+    {
+      "i": 2,
+      "p": "Phủ năm hoàn cảnh chạy (máy thu có dữ liệu, máy thu rỗng, cloud, thiếu bảng, lỗi truy vấn) — AC-1 và AC-8."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Máy đã tự quyết «chỉ hiện 500 người nhiều tin nhất» như thể luật kho bắt vậy, trong khi đó là đánh đổi của người: 73% người chỉ có 1–2 tin sẽ bị khuất. Đã chuyển thành câu hỏi Hỏi-2 cho anh; bản nháp theo khuyến nghị chia trang 100 người."
+    },
+    {
+      "i": 1,
+      "p": "Chưa có phép đo nào kiểm trang có nói ra tổng số người khớp và ba số đầu trang có đúng không. Đã thêm vào AC-3, đo trên trang thật."
+    },
+    {
+      "i": 2,
+      "p": "Việc che tên với vai Người xem mới chỉ kiểm bằng phiên giả. Đã thêm bước chụp đăng nhập tài khoản thử Người xem thật ở AC-10."
+    },
+    {
+      "i": 3,
+      "p": "Dữ liệu thử viết tay theo khuôn bên đọc, không qua bộ dựng danh bạ thật. Đã thêm phép đối chiếu chỉ-đọc trên dữ liệu máy thu do bộ dựng thật ghi (AC-10)."
+    },
+    {
+      "i": 4,
+      "p": "Chưa quét tên người bán thật tìm tên nguồn thật. Máy đã đo: có một tên người bán chứa tên nguồn thật. Đã thêm bước che bằng bộ che chung của kho, phép đo ở AC-7 và quét trên dữ liệu thật ở AC-10."
+    }
+  ]
+}

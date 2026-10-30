@@ -1,0 +1,121 @@
+schema_version: 1
+feature_slug: danh-ba-nguoi-tren-ops
+# Ca «DBN-AC-n» ở app/tests/danh-ba-nguoi-tren-ops.test.tsx (node --test + tsx; lược đồ tạm có migration 055, page thật
+# dựng bằng renderToStaticMarkup với getSessionUser giả). Mỗi phép đo mới có cặp hai chiều trên cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/src/lib/ops/people.ts, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-1: VERCEL=1 → HTML hai trang có «Chỉ ở máy thu» và số truy vấn tới bốn bảng = 0 (đếm qua client giả); lược đồ thiếu bảng parties → cùng kết quả; đối chứng dương: máy thu có bảng → HTML không có «Chỉ ở máy thu» và có hàng người; chiều đỏ: bản đột biến bỏ nhánh cloud → ca đỏ với thông điệp ghim «DBN-AC-1 cloud vẫn truy vấn»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-2 trên lược đồ tạm có migration 055: ma trận viết trước bảy người (P1 5 tin, P2 1 tin, P3 0 tin, P4 đã gộp, P5 có vai rút, P6 có bí danh nghỉ, P7 nguồn S05) — mỗi người so ĐỦ (có hàng?, số tin, số bí danh) với bảng kỳ vọng, số assert = số phần tử; thứ tự hàng đúng danh sách khoá kỳ vọng; chiều đỏ: bản đột biến đếm cả vai rút → ca đỏ ghim «DBN-AC-2 P5 số tin»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-3: source=S05 → đúng tập khoá S05 và tổng; q theo một phần tên khác hoa thường và theo tài khoản → đúng tập khoá; source='S0X; drop' và 'abc' → như không lọc, không lỗi; lô 230 người S09 trong lược đồ → page=1 và page=2 mỗi trang 100 hàng, page=3 30 hàng, ba trang rời nhau và hợp lại đủ 230 khoá, tổng 230; page=0, page=-1, page=abc, page=99 → trang 1; HTML page thật ở page=2 lọc S09 có «Trang 2/3» và «230 người khớp»; ba số đầu trang (người đang dùng, vai sống, người theo nguồn) bằng bảng kỳ vọng của ma trận bảy người (không đếm P4 đã gộp, không đếm vai rút của P5); đối chứng dương: lọc S05 một trang → «Trang 1/1», không có nút Trang sau; chiều đỏ: bản đột biến bỏ lower() → ca tìm khác hoa thường đỏ ghim «DBN-AC-3 q hoa thường»; bản đột biến OFFSET cố định 0 → ca ba trang rời nhau đỏ ghim «DBN-AC-3 trang trùng»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-4: HTML trang người P5/P6 có mỗi bí danh với nhãn loại từ ref_lookup («Tài khoản tại nguồn», «SĐT băm», «Tên hiển thị»), dấu «Đã nghỉ» chỉ ở bí danh nghỉ, các khoá tin của vai sống và KHÔNG có khoá tin của vai rút, câu số vai đã rút = 1; khoá 'pty_sai' và khoá đúng khuôn không tồn tại → notFound; chiều đỏ: bản đột biến bỏ lọc retracted_at → ca đỏ ghim «DBN-AC-4 vai rút lọt»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-5: người đúng N tin và người N−1 tin — nhãn «Có thể là môi giới» + «suy luận» chỉ ở người N tin (cả danh sách lẫn trang người); đếm dòng bốn bảng trước và sau khi dựng hai trang bằng nhau; quét mã people.ts không có INSERT/UPDATE/DELETE/TRUNCATE; chiều đỏ: bản đột biến ngưỡng > thay ≥ → ca đỏ ghim «DBN-AC-5 ngưỡng N»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/src/lib/ops/people.ts, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-6: ma trận 5 vai (khách, user, viewer, ops, admin) × 2 trang dựng qua page thật với getSessionUser giả — khách/user: không có hàng người; viewer: có mã người, S0x, số tin, KHÔNG có chuỗi bí danh nào của fixture và có «Ẩn với vai Người xem»; ops/admin: có chuỗi bí danh; số assert = 10 ô; chiều đỏ: bản đột biến đổi xemNoiDungTin thành canAccessOps ở chỗ che → ô viewer đỏ ghim «DBN-AC-6 viewer thấy bí danh»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-7: lược đồ tạm có source_registry dòng code S07, real_name 'Nguon That Dbn' và người P1 mang bí danh tên 'Nha Dat Nguon That Dbn 24h' — HTML hai trang (vai admin) không chứa 'Nguon That Dbn' (so qua fold không dấu, không phân biệt hoa thường) và chứa bản đã che 'Nha Dat S07 24h'; mọi chuỗi khớp /S\\d\\d/ đều đúng khuôn mã nguồn; đối chứng dương: cùng bí danh khi danh sách tên rỗng → giá trị về «—» (đóng chặt), không hiện nguyên văn; SĐT băm 64 ký tự hiện đúng 8 ký tự đầu + «…» và chuỗi băm đầy đủ không có; quét mã people.ts không có source_registry, real_name, users, sessions, user_events, user_profile; chiều đỏ: bản đột biến bỏ maskSourceNames ở chỗ hiện bí danh → ca đỏ ghim «DBN-AC-7 bí danh lộ tên nguồn»; bản sao people.ts chèn JOIN source_registry → quét đỏ ghim «DBN-AC-7 đọc bảng cấm»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-8: danh bạ rỗng → HTML có lệnh «node pipeline/dung-nguoi.mjs»; lọc không khớp → «Xoá lọc» trỏ /ops/people; skeleton của trang có Skeleton; page bọc RegionError (câu «Thử lại» trong HTML khi nội dung ném lỗi); đối chứng dương: danh bạ có người → không có hai câu trống"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_route_slugs
+    paths: [CONTEXT.md, app/src/app/ops/people/**]
+    expected: "exit 0; đoạn tĩnh people có trong dòng Slug URL của CONTEXT.md"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.ui_routes_map
+    paths: [.claude/skills/onehub-ui/routes.md, app/src/app/ops/people/**]
+    expected: "exit 0; hai page.tsx mới có dòng trong routes.md"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/shell/nav.tsx, docs/architecture/portals.md, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca DBN-AC-9: nav Ops có mục href /ops/people nhãn «Danh bạ người» nhóm «Xử lý»; portals.md có dòng `/ops/people`"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json phải trỏ worktree), DB máy thu :5433 có danh bạ thật, đăng nhập tài khoản thử admin của scripts/dev-ops-account.mjs qua loginState của scripts/ui-capture-login.mjs; không lên thì FAIL «bản chạy :3460 không lên»"
+      - "1280 px sáng: /ops/people → evidence/E12-step1.png (ba số đầu trang + bảng, hàng đầu có nhãn suy luận); lọc nguồn S03 → evidence/E12-step2.png"
+      - "1280 px tối: bấm mã người hàng đầu → evidence/E12-step3.png (bí danh + tin đã đăng)"
+      - "390 px sáng: /ops/people → evidence/E12-step4.png; ghi document.documentElement.scrollWidth và clientWidth"
+      - "Đăng xuất, đăng nhập tài khoản thử viewer (node scripts/dev-ops-account.mjs --vai viewer; loginState đọc .claude/viewer-test-account.json, không in mật khẩu), 1280 px sáng: /ops/people → evidence/E12-step5.png; bấm mã người hàng đầu → evidence/E12-step6.png; ghi mã pty_ của hàng đầu và chuỗi ở ô tên"
+    expected: "Bảng đọc được ở cả sáng và tối; nhãn «Có thể là môi giới · suy luận» là badge tách khỏi cột số; nguồn chỉ là mã S0x; scrollWidth = clientWidth ở 390 px; ở phiên viewer (step5, step6) mã pty_ của hàng đầu vẫn hiện, ô tên và bảng bí danh hiện «Ẩn với vai Người xem», không giá trị bí danh nào của hàng đầu (đã thấy ở step1/step3 với admin) xuất hiện."
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E13
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.dbn_gate
+    paths: [app/src/app/ops/people/**, app/src/components/ops/people/**]
+    expected: "exit 0; design-gate (a11y/slop) xanh trên từng tệp giao diện của vòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E14
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/app/ops/people/**, app/src/components/ops/people/**]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-10
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_doi_chieu
+    paths: [app/src/lib/ops/people.ts, app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-doi-chieu.test.tsx]
+    expected: "exit 0; ca DBN-DC trên DB máy thu :5433 (chỉ SELECT, một giao dịch READ ONLY): tổng người đang dùng hàm trả = count(*) parties status active đếm độc lập; tổng số tin cộng mọi trang = count(DISTINCT (party_key, subject_key)) của vai nguoi_dang chưa rút đếm độc lập; số người đã gộp có hàng = 0; mọi alias_kind xuất hiện có nhãn trong ref_lookup (số loại không nhãn = 0); HTML trang danh sách trang 1 và trang của mọi người có bí danh khớp tên nguồn (tìm bằng findSourceNames với danh sách lấy trong ca test) có 0 chỗ khớp tên nguồn thật; ca chỉ in số đếm, không in tên; DB không đổi sau ca (đếm bốn bảng trước = sau); đối chứng dương: cùng ca quét chuỗi đã che bằng danh sách rỗng giả của bộ che → báo ≥ 1 chỗ khớp ghim «DBN-DC tên nguồn lọt»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
