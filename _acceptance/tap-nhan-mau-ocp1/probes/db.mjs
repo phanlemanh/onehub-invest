@@ -89,10 +89,15 @@ const chuan = (s) => (s ?? "").normalize("NFC").toLowerCase().replace(/\s+/g, " 
  * E6: quét chữ — SĐT VN (10–11 số, cho phép dấu cách/chấm), URL, tên người gửi, tên nhóm (so nguyên tên, có ranh giới
  * từ, tên ≥ 2 từ hoặc ≥ 6 ký tự), tên nguồn thật (so mọi độ dài). Trả danh sách lỗi theo nhãn, không kèm chữ lộ.
  */
-export function quetDinhDanh(chuDs, { nguoi, nhom, nguon }) {
+/** Danh sách tên đem so, sau chuẩn hoá và lọc độ dài — cùng một hàm cho phép quét và đối chứng dương «khác rỗng». */
+export function dsTen({ nguoi, nhom, nguon }) {
+  const ten = (ds) => [...new Set(ds.map(chuan).filter((t) => t && (t.includes(" ") || t.length >= 6)))]
+  return { nguoi: ten(nguoi), nhom: ten(nhom), nguon: [...new Set(nguon.map(chuan).filter((t) => t.length >= 3))] }
+}
+
+export function quetDinhDanh(chuDs, danhBa) {
   const loi = []
-  const ten = (ds) => ds.map(chuan).filter((t) => t && (t.includes(" ") || t.length >= 6))
-  const dsNguoi = ten(nguoi), dsNhom = ten(nhom), dsNguon = nguon.map(chuan).filter((t) => t.length >= 3)
+  const { nguoi: dsNguoi, nhom: dsNhom, nguon: dsNguon } = dsTen(danhBa)
   for (const [nhan, chu] of chuDs) {
     // băm hex 64 ký tự (goc, khuon_ban) không phải chữ người viết — bỏ trước khi tìm SĐT
     const c = chuan(chu).replace(/\b[0-9a-f]{64}\b/g, " ")
@@ -105,10 +110,10 @@ export function quetDinhDanh(chuDs, { nguoi, nhom, nguon }) {
   return loi
 }
 
-/** E8b: đếm dòng mẫu trong canonical và stg. `stg` là tên quan hệ — đối chứng truyền bảng VALUES. */
-export async function demMau(c, stg = "stg_zalo_posts") {
+/** E8b: đếm dòng mẫu trong canonical và stg. `canonical`/`stg` là tên quan hệ — đối chứng truyền bảng VALUES cùng cột. */
+export async function demMau(c, { canonical = "sale_offer_records", stg = "stg_zalo_posts" } = {}) {
   const { rows: [a] } = await c.query(
-    `SELECT count(*)::int AS n FROM sale_offer_records
+    `SELECT count(*)::int AS n FROM ${canonical}
      WHERE originating_system_key LIKE 'mau-%' OR EXISTS (SELECT 1 FROM unnest(post_ids) p WHERE p::text LIKE 'mau-%')`)
   const { rows: [b] } = await c.query(`SELECT count(*)::int AS n FROM ${stg} WHERE post_id LIKE 'mau-%'`)
   return { canonical: a.n, stg: b.n }
@@ -150,18 +155,32 @@ async function main() {
       ["_acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl", readFileSync(path.join(ROOT, "_acceptance/tap-nhan-mau-ocp1/mau-kiem.jsonl"), "utf8")],
       ...SEEDS.flatMap((s) => sinhTapMau({ lat: "ocp1", n: 200, seed: s }).tin.map((t) => [t.id, t.text])),
     ]
-    const loi = quetDinhDanh(ds, { nguoi, nhom, nguon })
-    bao(loi.length === 0, loi.length === 0 ? `DINH DANH 0 (${ds.length} chữ quét · ${nguoi.length} tên người gửi · ${nhom.length} tên nhóm · ${nguon.length} tên nguồn)` : loi.join("\n"))
-    const xanh = quetDinhDanh([["doi-chung-xanh", "phương án thanh toán · Ocean Park 1 · OCP1"]], { nguoi, nhom, nguon })
+    const danhBa = { nguoi, nhom, nguon }
+    const dsSo = dsTen(danhBa)
+    // đối chứng dương: ba danh sách đọc từ DB phải khác rỗng — rỗng thì «DINH DANH 0» đúng một cách vô nghĩa
+    for (const [loai, ds2] of Object.entries(dsSo)) bao(ds2.length > 0, ds2.length > 0 ? `danh sach ${loai}: ${ds2.length} ten` : `DANH SACH TEN RONG: ${loai}`)
+    const loi = quetDinhDanh(ds, danhBa)
+    bao(loi.length === 0, loi.length === 0 ? `DINH DANH 0 (${ds.length} chữ quét · ${dsSo.nguoi.length} tên người gửi · ${dsSo.nhom.length} tên nhóm · ${dsSo.nguon.length} tên nguồn)` : loi.join("\n"))
+    const xanh = quetDinhDanh([["doi-chung-xanh", "phương án thanh toán · Ocean Park 1 · OCP1"]], danhBa)
     bao(xanh.length === 0, `doi chung xanh: ${xanh.length === 0 ? "DINH DANH 0" : xanh.join(", ")}`)
-    const mot = nguoi.map(chuan).find((t) => t.includes(" ")) ?? "nguyen van thu"
-    const do_ = quetDinhDanh([["doi-chung-do", `Bán căn 2N liên hệ 0912 345 678 gặp ${mot}`]], { nguoi: [...nguoi, mot], nhom, nguon })
-    bao(do_.some((x) => x.startsWith("SDT LOT")) && do_.some((x) => x.startsWith("TEN NGUOI GUI LOT")), `doi chung do: ${do_.map((x) => x.split(":")[0]).join(", ")}`)
+    // đối chứng đỏ: chèn một SĐT và MỘT TÊN THẬT lấy từ chính danh sách DB (không thêm tên vào danh sách) cho từng loại
+    const that = { nguoi: dsSo.nguoi.find((t) => t.includes(" ")) ?? dsSo.nguoi[0], nhom: dsSo.nhom[0], nguon: dsSo.nguon[0] }
+    const doCa = [["SDT LOT", "Bán căn 2N liên hệ 0912 345 678"], ["TEN NGUOI GUI LOT", `gặp ${that.nguoi} nhé`],
+      ["TEN NHOM LOT", `đăng ở ${that.nhom} nhé`], ["TEN NGUON LOT", `xem trên ${that.nguon} nhé`]]
+    for (const [nhan, chu] of doCa) {
+      const r = chu.includes("undefined") ? [] : quetDinhDanh([["doi-chung-do", chu]], danhBa)
+      bao(r.some((x) => x.startsWith(nhan)), `doi chung do: ${nhan} ${r.some((x) => x.startsWith(nhan)) ? "bat" : "KHONG BAT"}`)
+    }
 
     // E8b
     const d = await demMau(c)
     bao(d.canonical === 0 && d.stg === 0, `CANONICAL ${d.canonical} · STG ${d.stg}`)
-    const dc = await demMau(c, "(VALUES ('mau-thu'), ('p-123')) AS v(post_id)")
+    // đối chứng: cùng hai câu đếm trên bảng VALUES cùng cột — mỗi vế canonical (khoá, phần tử post_ids) và stg phải bắt đúng
+    const dc = await demMau(c, {
+      canonical: "(VALUES ('mau-ocp1-a-1'::text, ARRAY['p-1']::text[]), ('s03:p-2', ARRAY['mau-ocp1-a-2']::text[]), ('s03:p-3', ARRAY['p-3']::text[])) AS v(originating_system_key, post_ids)",
+      stg: "(VALUES ('mau-thu'), ('p-123')) AS v(post_id)",
+    })
+    bao(dc.canonical === 2, dc.canonical === 2 ? "doi chung: MAU LOT VAO CANONICAL (cau dem bat 2 dong: khoa + post_ids)" : `doi chung canonical: cau dem ra ${dc.canonical}`)
     bao(dc.stg === 1, dc.stg === 1 ? "doi chung: MAU LOT VAO STG (cau dem bat 1 dong)" : `doi chung: cau dem ra ${dc.stg}`)
   } finally {
     await c.query("ROLLBACK").catch(() => {})
