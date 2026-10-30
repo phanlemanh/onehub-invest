@@ -393,6 +393,40 @@ test("AC-2 hai chiều, một thẻ bị quyết — cả hai thẻ giữ nguyê
   assert.throws(() => kiemAnhEm(hong.id, anhEmTruoc, hong), /AC-2 máy sửa thẻ anh em của cặp người đã quyết: 1/);
 });
 
+/** Người quyết thẻ `quyetId` trong một giao dịch CHƯA commit đúng lúc máy ghi cặp — route quyết khoá dòng
+ *  (`SELECT … FOR UPDATE`) rồi UPDATE. Trả rowCount câu ghi của máy sau khi người commit. */
+async function ghiKhiNguoiQuyetDo(sql: string, quyetId: number, ids: number[]) {
+  const nguoi = new pg.Client({ connectionString: TEST_DB_URL });
+  await nguoi.connect();
+  try {
+    await nguoi.query("BEGIN");
+    await nguoi.query(`SELECT id FROM review_queue WHERE id = $1 FOR UPDATE`, [quyetId]);
+    await nguoi.query(`UPDATE review_queue SET status = 'rejected', decided_by = 'nguoi-thu', decided_at = now() WHERE id = $1`, [quyetId]);
+    const ghi = db.query(sql, ["yes", "lý do", JSON.stringify({ ket_luan: "yes" }), ids]);
+    await new Promise((r) => setTimeout(r, 150)); // câu ghi của máy đã vào và đứng chờ khoá của người
+    await nguoi.query("COMMIT");
+    return (await ghi).rowCount;
+  } finally {
+    await nguoi.end();
+  }
+}
+test("AC-2 người quyết dở giao dịch đúng lúc máy ghi — thẻ anh em không bị sửa, đếm bỏ qua", async () => {
+  await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:o1|o2', 'chờ'), ('entity_match', 'pair:o2|o1', 'chờ')`);
+  const id = async (itemId: string) => (await anhThe(itemId)).id as number;
+  const [x, y] = [await id("pair:o2|o1"), await id("pair:o1|o2")];
+  const anhEmTruoc = await anhThe("pair:o1|o2");
+  const rowCount = await ghiKhiNguoiQuyetDo(SQL_CAP_NHAT, x, [y, x]);
+  assert.equal(rowCount, 0, "AC-2 máy đếm cập nhật cặp người vừa quyết");
+  kiemAnhEm(y, anhEmTruoc, await anhThe("pair:o1|o2"));
+  // đối chứng đỏ: câu chỉ chặn bằng NOT EXISTS theo ảnh chụp câu lệnh (bản r1) ghi lên thẻ anh em
+  await db.query(`UPDATE review_queue SET status = 'pending', decided_by = NULL, decided_at = NULL WHERE id = $1`, [x]);
+  const SQL_R1 = `${SQL_CHAN_DONG}
+     AND NOT EXISTS (SELECT 1 FROM review_queue x WHERE x.id = ANY($4) AND x.status <> 'pending')`;
+  await ghiKhiNguoiQuyetDo(SQL_R1, x, [y, x]);
+  const hong = await anhThe("pair:o1|o2");
+  assert.throws(() => kiemAnhEm(y, anhEmTruoc, hong), /AC-2 máy sửa thẻ anh em của cặp người đã quyết: 1/);
+});
+
 // ── AC-9
 const bam = async (bang: "property_candidates" | "sale_offers") =>
   (await db.query(`SELECT md5(coalesce(string_agg(t::text, '|' ORDER BY ${bang === "sale_offers" ? "offer_id" : "id"}), '')) AS h FROM ${bang} t`)).rows[0].h as string;

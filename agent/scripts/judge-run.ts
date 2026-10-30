@@ -106,11 +106,14 @@ function evidenceThe(p: PairData) {
 
 /** Ghi kết quả chấm lên thẻ của cặp — chỉ khi MỌI thẻ của cặp còn chờ. Người quyết một thẻ giữa lúc đọc thẻ và lúc
  *  ghi (model mất vài giây) thì không thẻ nào của cặp bị sửa: cùng luật «người đã quyết cặp này — không sửa» áp lúc
- *  đọc. Postgres kiểm WHERE theo từng dòng lúc ghi nên không cần khoá dòng suốt cuộc gọi model. */
-export const SQL_CAP_NHAT = `UPDATE review_queue SET ai_suggestion = $1, ai_reasoning = $2, ai_confidence = NULL,
+ *  đọc. CTE khoá mọi thẻ của cặp (`FOR UPDATE`) ngay trong câu ghi, chỉ vài ms chứ không giữ suốt cuộc gọi model:
+ *  người đang quyết dở giao dịch thì câu ghi chờ người commit rồi đọc trạng thái mới. Chỉ dựa NOT EXISTS theo ảnh chụp
+ *  câu lệnh thì vẫn thấy thẻ người đang quyết là «chờ» và ghi lên thẻ anh em (S4 r1, AC-2). */
+export const SQL_CAP_NHAT = `WITH khoa AS (SELECT id, status FROM review_queue WHERE id = ANY($4) FOR UPDATE)
+   UPDATE review_queue SET ai_suggestion = $1, ai_reasoning = $2, ai_confidence = NULL,
      evidence = evidence || jsonb_build_object('cham', $3::jsonb)
    WHERE id = ANY($4) AND status = 'pending'
-     AND NOT EXISTS (SELECT 1 FROM review_queue x WHERE x.id = ANY($4) AND x.status <> 'pending')`;
+     AND NOT EXISTS (SELECT 1 FROM khoa WHERE khoa.status <> 'pending')`;
 
 const tieuDe = (p: PairData) =>
   `Cùng căn? ${p.a.phuong ?? "?"} ${p.a.areaM2 ?? 0}m² ↔ ${p.b.areaM2 ?? 0}m² (score ${p.score})`;
