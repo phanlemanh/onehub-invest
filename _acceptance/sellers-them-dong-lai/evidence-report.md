@@ -7,7 +7,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 3a175da05a6d025cdc0d5e5ec7b99ba38d9b7c5c
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: sellers-them-dong-lai

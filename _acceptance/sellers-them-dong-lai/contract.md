@@ -5,7 +5,7 @@ slug: sellers-them-dong-lai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-30T18:01:20Z
 approved_by:
@@ -58,3 +58,9 @@ Quét tay ba trục (dòng sổ «bỏ coverage-scan»), mỗi ô một AC:
 - Đo trục SĐT hằng đêm trên `/ops/quality` — hàng `do-danh-ba-sdt`.
 - Đổi luật hiện chip môi giới (người bán chỉ một tin vẫn không có chip).
 - Đổi cột lên cloud của `sellers` — `sync-cloud.mjs` giữ nguyên (`name` ở lại máy); AC-8 chỉ đo payload phía máy, không gọi cloud.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Lượt test bị ngắt giữa chừng có thể để lại một tệp mã tạm trong thư mục pipeline/, người làm phải tự xoá trước khi commit.
+  - Ngoài-2: Phép đối chiếu danh bạ xét mọi nguồn trên tin, nên tin của nguồn ngoài S03/S05/S06, tin thiếu khoá hay SĐT có khoảng trắng sẽ bị báo thiếu người mãi.
