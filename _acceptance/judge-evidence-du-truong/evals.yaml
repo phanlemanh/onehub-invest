@@ -47,7 +47,7 @@ evals:
   - id: E6
     criterion: AC-6
     executor: test
-    cmd: "cd agent && node --import tsx --test tests/judge-lo-that.itest.ts"
+    cmd: cd agent && node --import tsx --test tests/judge-lo-that.itest.ts
     expected: "exit 0; ca 'JE-AC-6 lô thật' trong agent/tests/judge-lo-that.itest.ts xanh (tệp ngoài glob tests/*.test.ts — chỉ chạy ở máy có kho local, CI không chạy): DB thử riêng (oneinvest_p3_lo_that_<pid>) dựng sale_offers theo kiểu cột của oneinvest (information_schema), property_candidates từ 027, review_queue từ 029 tới «-- Seed», ai_calls từ 052, stg_zalo_posts/stg_chotot_ads tối thiểu, pgcrypto. Chép từ oneinvest CHỈ BẰNG SELECT: mọi cặp property_candidates status needs_llm, hàng sale_offers của hai tin mỗi cặp (các cột queryPair đọc), và thẻ entity_match đang chờ của các cặp đó. Lô rỗng → 'JE-AC-6 kho không có cặp needs_llm'. Lượt 1: chụp offer_a/offer_b của mọi thẻ cũ → chamMotLuot(khongLlm, queryPair thật trên client DB thử) → mọi ảnh bằng trước. Lượt 2 (gieo lại): xoá thẻ entity_match của lô trên DB thử → chamMotLuot → số thẻ mới = số cặp; mỗi thẻ có khuôn khoá như E1 (seed 029 ∪ TRUONG_GHEP_CAN); với mỗi bên, street/block/floor/bathrooms === street_raw/block_raw/floor_raw/bathrooms của chính tin đó trong hàng đã chép. Output in số cặp, số thẻ cũ, số giá trị khác null của từng trường. Đối chứng đỏ cùng lô: (1) hàm kiểm khuôn trên thẻ bỏ khoá 'street' → 'JE-AC-6 thẻ lệch khuôn: street'; (2) hàm kiểm thẻ cũ trên ảnh sau mà offer_a bị thay bằng evidence lượt mới → 'JE-AC-6 thẻ cũ bị sửa dữ liệu tin: offer_a'."
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
     paths: [agent/scripts/judge-run.ts, agent/src/tools/native.ts, agent/tests/judge-lo-that.itest.ts, agent/tests/judge-chung.ts]
