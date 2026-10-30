@@ -30,19 +30,44 @@ export function lech(x: number | null, y: number | null): number | null {
   return lamTron(Math.abs(x - y) / Math.max(x, y));
 }
 
-/** Tên phường so được: thường, bỏ dấu, bỏ tiền tố «phường/p.», gộp khoảng trắng; rỗng → null (thiếu ≠ khác). */
-export function chuanHoaPhuong(s: string | null): string | null {
-  if (!s) return null;
-  const t = s
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replace(/đ/gi, "d")
+/** Nhãn so hàng Phường — trùng nhãn Khớp / Lệch / Thiếu của thẻ duyệt `/ops/review`. */
+export type SoPhuong = "khop" | "lech" | "thieu";
+
+// ── Chép từ app/src/lib/ops/review-can-cu.ts (gói agent/ không nạp được tệp app: bí danh `@/` của Next). Luật ghép
+// căn so phường bằng ĐÚNG khoá của thẻ duyệt, để «cùng / khác / thiếu phường» của luật trùng nhãn người duyệt thấy.
+// tests/judge-nguong.test.ts (AC-4) rút nguyên văn các hàm này từ tệp app và chạy cùng ma trận — lệch một ô là đỏ.
+const trong = (v: unknown): v is null | undefined => v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+const khoa = (v: string | number) => (typeof v === "number" ? String(v) : v.trim().toLowerCase());
+
+function soGiaTri(a: string | number | null | undefined, b: string | number | null | undefined): SoPhuong {
+  if (trong(a) || trong(b)) return "thieu";
+  return khoa(a) === khoa(b) ? "khop" : "lech";
+}
+
+/** Khoá tên phường: bỏ MỘT tiền tố hành chính trên chuỗi còn dấu, rồi slug. Bỏ tiền tố trước khi bỏ dấu vì «Phường»
+ *  và «Phương» cùng thành `phuong` — «Phương Liệt», «Phượng Dực» là tên phường thật. */
+export function khoaPhuong(v: string): string {
+  return v
+    .normalize("NFC")
+    .trim()
     .toLowerCase()
-    .replace(/[-_]/g, " ")
-    .replace(/^\s*(phuong|p\.|p)\s+/, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  return t || null;
+    .replace(/^(?:(?:phường|xã|thị trấn)(?:\s+|$)|p\.\s*)/u, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** Khoá rỗng (chỉ có tiền tố) → thiếu. Khoá chỉ số («Phường 12» của hai quận) → so chuỗi gốc, nên «Phường 12» với
+ *  «P.12» vẫn là lệch — giới hạn kế thừa có chủ ý từ thẻ duyệt. */
+export function soPhuong(a: string | number | null, b: string | number | null): SoPhuong {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaPhuong(String(a));
+  const kb = khoaPhuong(String(b));
+  if (ka === "" || kb === "") return "thieu";
+  if (/^\d+$/.test(ka) || /^\d+$/.test(kb)) return soGiaTri(a, b);
+  return ka === kb ? "khop" : "lech";
 }
 
 const loaiHinh = (s: string | null): string | null => {
@@ -55,18 +80,17 @@ const giaM2 = (t: PairData["a"] | PairData["b"]): number | null =>
  *  trên thẻ — lệch đúng bằng ngưỡng vẫn in ra đúng số ngưỡng, nên số không bao giờ vào prompt (S4 r1–r2, AC-2). */
 export const phanTram = (x: number) => `${(Math.floor(x * 1000 + 1e-6) / 10).toFixed(1).replace(".", ",")}%`;
 
-/** Luật ghép căn — tất định, đối xứng A↔B. `lechFn` chỉ để test đối chứng. */
-export function apNguong(pair: PairData, lechFn: typeof lech = lech): KetQuaLuat {
+/** Luật ghép căn — tất định, đối xứng A↔B. `lechFn`, `soPhuongFn` chỉ để test đối chứng. */
+export function apNguong(pair: PairData, lechFn: typeof lech = lech, soPhuongFn: typeof soPhuong = soPhuong): KetQuaLuat {
   const lg = lechFn(giaM2(pair.a), giaM2(pair.b));
   const ld = lechFn(pair.a.areaM2, pair.b.areaM2);
-  const pa = chuanHoaPhuong(pair.a.phuong);
-  const pb = chuanHoaPhuong(pair.b.phuong);
+  const sp = soPhuongFn(pair.a.phuong, pair.b.phuong);
   const la = loaiHinh(pair.a.propertyType);
   const lb = loaiHinh(pair.b.propertyType);
   const ly_do: LyDo[] = [];
 
   const giaXa = lg !== null && lg > NGUONG.giaM2NoMin;
-  const khacPhuong = pa !== null && pb !== null && pa !== pb;
+  const khacPhuong = sp === "lech";
   const khacLoai = la !== null && lb !== null && la !== lb;
   if (lg === null) ly_do.push({ ma: "thieu_gia_m2", cau: "thiếu giá/m² ở một tin" });
   else if (giaXa) ly_do.push({ ma: "gia_m2_xa", cau: "giá/m² lệch xa", so: phanTram(lg) });
@@ -75,7 +99,7 @@ export function apNguong(pair: PairData, lechFn: typeof lech = lech): KetQuaLuat
   if (ld === null) ly_do.push({ ma: "thieu_dien_tich", cau: "thiếu diện tích ở một tin" });
   else if (ld < NGUONG.dienTichYesMax) ly_do.push({ ma: "dien_tich_gan", cau: "diện tích sát nhau", so: phanTram(ld) });
   else ly_do.push({ ma: "dien_tich_xa", cau: "diện tích lệch đáng kể", so: phanTram(ld) });
-  if (pa === null || pb === null) ly_do.push({ ma: "thieu_phuong", cau: "thiếu phường ở một tin" });
+  if (sp === "thieu") ly_do.push({ ma: "thieu_phuong", cau: "thiếu phường ở một tin" });
   else ly_do.push(khacPhuong ? { ma: "khac_phuong", cau: "khác phường" } : { ma: "cung_phuong", cau: "cùng phường" });
   if (la === null || lb === null) ly_do.push({ ma: "thieu_loai", cau: "thiếu loại hình ở một tin" });
   else ly_do.push(khacLoai ? { ma: "khac_loai", cau: "khác loại hình" } : { ma: "cung_loai", cau: "cùng loại hình" });
@@ -85,7 +109,7 @@ export function apNguong(pair: PairData, lechFn: typeof lech = lech): KetQuaLuat
   else if (
     lg !== null && lg < NGUONG.giaM2YesMax &&
     ld !== null && ld < NGUONG.dienTichYesMax &&
-    pa !== null && pa === pb &&
+    sp === "khop" &&
     la !== null && la === lb
   ) same_house = "yes";
   return { same_house, ly_do, lech: { gia_m2: lg, dien_tich: ld } };

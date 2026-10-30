@@ -104,6 +104,17 @@ function evidenceThe(p: PairData) {
   };
 }
 
+/** Ghi kết quả chấm lên thẻ của cặp — chỉ khi MỌI thẻ của cặp còn chờ. Người quyết một thẻ giữa lúc đọc thẻ và lúc
+ *  ghi (model mất vài giây) thì không thẻ nào của cặp bị sửa: cùng luật «người đã quyết cặp này — không sửa» áp lúc
+ *  đọc. CTE khoá mọi thẻ của cặp (`FOR UPDATE`) ngay trong câu ghi, chỉ vài ms chứ không giữ suốt cuộc gọi model:
+ *  người đang quyết dở giao dịch thì câu ghi chờ người commit rồi đọc trạng thái mới. Chỉ dựa NOT EXISTS theo ảnh chụp
+ *  câu lệnh thì vẫn thấy thẻ người đang quyết là «chờ» và ghi lên thẻ anh em (S4 r1, AC-2). */
+export const SQL_CAP_NHAT = `WITH khoa AS (SELECT id, status FROM review_queue WHERE id = ANY($4) FOR UPDATE)
+   UPDATE review_queue SET ai_suggestion = $1, ai_reasoning = $2, ai_confidence = NULL,
+     evidence = evidence || jsonb_build_object('cham', $3::jsonb)
+   WHERE id = ANY($4) AND status = 'pending'
+     AND NOT EXISTS (SELECT 1 FROM khoa WHERE khoa.status <> 'pending')`;
+
 const tieuDe = (p: PairData) =>
   `Cùng căn? ${p.a.phuong ?? "?"} ${p.a.areaM2 ?? 0}m² ↔ ${p.b.areaM2 ?? 0}m² (score ${p.score})`;
 
@@ -155,13 +166,14 @@ export async function chamMotLuot(
     };
     const lyDo = canCu(kq, giai, cuocGoi);
     if (the.length > 0) {
-      await db.query(
-        `UPDATE review_queue SET ai_suggestion = $1, ai_reasoning = $2, ai_confidence = NULL,
-           evidence = evidence || jsonb_build_object('cham', $3::jsonb)
-         WHERE id = ANY($4)`,
-        [kq.same_house, lyDo, JSON.stringify(cham), the.map((t) => t.id)],
-      );
-      dem.capNhat++;
+      const { rowCount } = await db.query(SQL_CAP_NHAT, [
+        kq.same_house,
+        lyDo,
+        JSON.stringify(cham),
+        the.map((t) => t.id),
+      ]);
+      if (rowCount === 0) dem.boQua++; // người quyết cặp này trong lúc máy chấm — giữ nguyên quyết định
+      else dem.capNhat++;
     } else {
       await db.query(
         `INSERT INTO review_queue (item_type, item_id, title, evidence, ai_suggestion, ai_reasoning, ai_confidence)
