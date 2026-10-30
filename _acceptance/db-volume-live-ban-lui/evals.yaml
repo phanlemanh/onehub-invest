@@ -1,0 +1,68 @@
+schema_version: 1
+feature_slug: db-volume-live-ban-lui
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0; ô «mount đúng × vắng sau hạn» xanh với dòng ghim PASS không còn bản lùi one-invest-db-cu-*; ô «mount đúng × vắng trước hạn» đỏ với FAIL bản lùi mất trước hạn giữ (cùng fixture rỗng, chỉ khác giờ ép DB_VOLUME_GIO_GIA) — cặp hai chiều trên cùng fixture"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0; tám ô hàng «mount /var/lib/postgresql/data» (vắng trước hạn · vắng sau hạn · một bản exited/no · một bản running/unless-stopped · một bản exited/unless-stopped · hai bản tên nhỏ running · hai bản tên lớn running · hai bản đều exited/no) đều đỏ với FAIL data_directory nằm trong lớp ghi container; một ô xanh → exit 1"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0; hàng «mount đúng»: «một bản exited/no» và «hai bản đều exited/no» xanh (dòng PASS bản lùi <tên> exited restart=no mỗi bản); «running/unless-stopped» đỏ FAIL bản lùi <tên> trạng thái running restart=unless-stopped; «exited/unless-stopped» đỏ FAIL bản lùi <tên> trạng thái exited restart=unless-stopped; «hai bản tên nhỏ running» đỏ gọi đúng tên bản nhỏ; «hai bản tên lớn running» đỏ gọi đúng tên bản lớn"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0; PASS gom bản lùi qua docker thật: mẫu không khớp → mảng rỗng exit 0; PASS gom bản lùi qua docker thật: mẫu khớp → đủ số container khớp; PASS ma trận đủ 16 ô; phần «máy này»: PASS data_directory … dưới mount volume onehub_pgdata và, theo trạng thái lúc chạy, mỗi bản lùi một dòng PASS … exited restart=no hoặc PASS không còn bản lùi (không ghim tên bản lùi)"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.db_volume_static
+    expected: "exit 0; PASS compose volume onehub_pgdata gắn /var/lib/postgresql chứa DEFAULT_DATADIR=/var/lib/postgresql/17/main (đọc từ ảnh); PASS compose project=onehub-db; PASS compose db.restart=unless-stopped; PASS danh sách loại trừ của db-chuyen-volume.sh không chứa bảng canonical; db-volume-check static: ĐẠT"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.db_volume_mutation
+    expected: "exit 0; sáu dòng đỏ ghim: đột biến gan-data đỏ — FAIL volume không chứa thư mục dữ liệu; vo-danh — FAIL volume vô danh; bind — FAIL bind mount; project-db — FAIL project=db; mat-name — FAIL volume thiếu name; loai-canonical — FAIL danh sách loại trừ chứa bảng canonical public.sale_offers; cùng PASS bản lành compose xanh và PASS bản lành danh sách loại trừ xanh; db-volume-check mutation: ĐẠT"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; PASS one-invest-db không bị chạm (Id + StartedAt … không đổi); PASS không còn onehub-tapduot-*; db-volume-check tap-duot: ĐẠT"
+    paths: ["scripts/db-volume-check.sh", "scripts/db-chuyen-volume.sh", "scripts/db-sao-luu.sh", "scripts/db-khoi-phuc.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: judgment
+    inputs:
+      - _acceptance/db-vao-volume/run-log.jsonl
+      - _acceptance/db-vao-volume/evidence-report.md
+    question: "Trong hai tệp này: dòng run-log cuối cùng có kind «repin» của hồ sơ db-vao-volume có ghi một lượt ghim lại SAU vòng db-volume-live-ban-lui (sha khác 4f5486d6…, lý do nhắc db-volume-live-ban-lui) với mọi suite exit 0 và evals_exit của mọi eval máy (E1…E12, E14, E15) bằng 0 không; và evidence-report.md có mục «Re-pin lần …» cite đúng run_id của dòng ấy, verified_commit bằng sha của dòng ấy không? Trả PASS chỉ khi cả hai đúng."
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, verdict, rationale]

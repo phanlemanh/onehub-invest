@@ -2,7 +2,7 @@
 // Kiểm TĨNH sổ bề mặt API (hồ sơ so-be-mat-api, NT4): mỗi route.ts dưới app/src/app/api khớp đúng một dòng của
 // app/src/lib/api-surface.ts và cổng trong mã khớp chế độ sổ khai. Đo trạng thái cây, không đo diff.
 //   node scripts/check-api-surface.mjs static    — đo cây thật (exit 0 = đạt, 1 = vi phạm)
-//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M19 phải TRƯỢT đúng thông điệp
+//   node scripts/check-api-surface.mjs mutation  — bản nguyên phải ĐẠT, bảng đột biến M1–M20 phải TRƯỢT đúng thông điệp
 // check-portal-compliance.mjs gọi checkApiSurface trên cây thật (làn ghim lại).
 import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
@@ -246,10 +246,14 @@ export const MUTATIONS = [
       [routeFile("v1/moi-phien")]: `import { getSessionUser } from "@/lib/auth";\nexport async function GET() {\n  if (!(await getSessionUser())) return Response.json({}, { status: 401 });\n  return Response.json({});\n}\n`,
     },
   })],
-  ["M13", "route admin (zalo-media) mất isAdmin", MSG.admin, ({ entries, files }) => {
-    const r = replaceIn(files, "app/src/lib/ops/zalo-media.ts", "if (!isAdmin(user))", "if (!user)");
-    return r && { entries, files: r };
-  }],
+  // M13/M15: route admin không qua kiemQuyen dựng giả — zalo-media thôi là route admin (sổ ops-session, api-surface-anh-vai-ops).
+  ["M13", "route admin (dựng mới) mất isAdmin", MSG.admin, ({ entries, files }) => ({
+    entries: [...entries, { route: "v1/moi-admin", methods: ["GET"], mode: "admin", note: "đột biến" }],
+    files: {
+      ...files,
+      [routeFile("v1/moi-admin")]: `import { getSessionUser } from "@/lib/auth";\nexport async function GET() {\n  if (!(await getSessionUser())) return new Response("not found", { status: 404 });\n  return Response.json({});\n}\n`,
+    },
+  })],
   ["M14", "beacon bỏ nhánh 204", MSG.noop, ({ entries, files }) => {
     const r = replaceIn(
       files,
@@ -259,15 +263,13 @@ export const MUTATIONS = [
     );
     return r && { entries, files: r };
   }],
-  ["M15", "route admin (zalo-media) thêm nhánh bearer", MSG.adminBearer, ({ entries, files }) => {
-    const r = replaceIn(
-      files,
-      routeFile("zalo-media"),
-      "return serveZaloMedia(req, await getSessionUser());",
-      'if (req.headers.get("authorization") === `Bearer ${process.env.OPS_API_TOKEN}`) return new Response("ok");\n  return serveZaloMedia(req, await getSessionUser());',
-    );
-    return r && { entries, files: r };
-  }],
+  ["M15", "route admin (dựng mới) thêm nhánh bearer", MSG.adminBearer, ({ entries, files }) => ({
+    entries: [...entries, { route: "v1/moi-admin-bearer", methods: ["GET"], mode: "admin", note: "đột biến" }],
+    files: {
+      ...files,
+      [routeFile("v1/moi-admin-bearer")]: `import { getSessionUser } from "@/lib/auth";\nimport { isAdmin } from "@/lib/ops-access";\nexport async function GET(req: Request) {\n  if (req.headers.get("authorization") === \`Bearer \${process.env.OPS_API_TOKEN}\`) return new Response("ok");\n  return isAdmin(await getSessionUser()) ? Response.json({}) : new Response("not found", { status: 404 });\n}\n`,
+    },
+  })],
   ["M16", "route ops-session (dựng mới) có nhánh bearer", MSG.opsSessionBearer, ({ entries, files }) => ({
     entries: [...entries, { route: "v1/moi-phien-bearer", methods: ["GET"], mode: "ops-session", note: "đột biến" }],
     files: {
@@ -290,6 +292,10 @@ export const MUTATIONS = [
   }],
   ["M19", "bảng quyền cho bearer ở zalo.admin", MSG.kqMode, ({ entries, files }) => {
     const r = replaceIn(files, OPS_ACCESS, '"zalo.admin": { vai: "admin", bearer: false }', '"zalo.admin": { vai: "admin", bearer: true }');
+    return r && { entries, files: r };
+  }],
+  ["M20", "route ops-session (zalo-media) mất canAccessOps", MSG.opsSession, ({ entries, files }) => {
+    const r = replaceIn(files, routeFile("zalo-media"), "if (!canAccessOps(user)) return", "if (!user) return");
     return r && { entries, files: r };
   }],
 ];

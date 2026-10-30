@@ -16,6 +16,7 @@ import { scanProcs } from "../lib/scan-canonical-write.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { kiemNguonGoc } from "./dung-lai-canonical.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
+import { napLai059 } from "../lib/nap-045.mjs";
 import { spawnSync } from "node:child_process";
 import { parsePost, runTransformZalo } from "../transform-zalo.mjs";
 import { runTransformFb } from "../transform-fb.mjs";
@@ -43,7 +44,10 @@ export async function trongGiaoDich(client, fn) {
   }
 }
 /** Nạp 045 (DB chưa áp → áp lần đầu; đã áp → áp lại, phải không lỗi). */
-export async function napMigration045(client) { await client.query(MIG); }
+export async function napMigration045(client) {
+  await client.query(MIG);
+  await napLai059(client);   // DB đã áp 059 (PL19): 045 vừa đè hàm + dòng sổ của 059
+}
 /** Mở cổng «chưa cắt chuyển» trong giao dịch đang chạy (ca không đo cổng). */
 export async function moCong(client) {
   await client.query(`INSERT INTO ops_audit (actor, action, detail) VALUES ('test:phat-bieu', 'phat-bieu:cat-chuyen', '{}'::jsonb)`);
@@ -89,7 +93,8 @@ test("PD-AC-1 045 áp hai lần: bảng, CHECK theo sổ, chỉ mục sống, c�
     await c.query("SELECT count(*) FROM v_ruler_p2_area");
 
     // Ma trận CHECK viết trước: nhận đúng giá trị sổ, từ chối giá trị lạ (thông điệp nêu tên ràng buộc).
-    const chen = (f) => `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method) VALUES ${f}`;
+    const chen = (f) => `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at)
+      SELECT *, now() FROM (VALUES ${f}) v`;   // observed_at bắt buộc từ 059 (PL19)
     let n = 0;
     for (const f of NAM_COT) {
       const v = f === "bedrooms" || f === "bathrooms" ? "2" : "x";

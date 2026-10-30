@@ -1,0 +1,26 @@
+{
+ "feature_plain": "Người gắn nhãn mở một trang trên Ops, đọc từng tin rao của lát Ocean Park 1 và ghi lại chín trường lõi mà không thấy máy đã đoán gì; 20% số tin được hai người gắn để đo hai người có khớp nhau không.",
+ "scope_plain": "Vòng này chỉ làm tin Zalo (S03) của lát Ocean Park 1; phần còn lại của tập nhãn để vòng sau.",
+ "wont_do": [
+  {
+   "id": "OOS-1",
+   "p": "Chưa gắn tin S05/S06 và cặp tin cùng căn (G3) — vòng sau, dùng lại cùng bảng."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Chưa chấm độ đúng của máy trên nhãn (PL9) và chưa sinh tập nhãn mẫu (PL8)."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Chưa gắn từ xa qua cloud — nhãn sẽ phải đi ngược chiều đồng bộ hiện có."
+  },
+  {
+   "id": "OOS-4",
+   "p": "Chưa sửa/xoá nhãn đã lưu, chưa có vai «người gắn nhãn» riêng, chưa có trường nghĩa của giá, tầng, mã căn."
+  },
+  {
+   "id": "OOS-5",
+   "p": "Không viết hướng dẫn gắn nhãn — đó là tài liệu của đội gắn."
+  }
+ ]
+}

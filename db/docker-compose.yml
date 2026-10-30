@@ -1,3 +1,6 @@
+# Project tường minh: container cũ trước 29/10 mang nhãn project «db» — compose project db với cấu hình này sẽ
+# tạo lại (xoá) nó. Hồ sơ _acceptance/db-vao-volume/, sổ tay docs/ops/db-volume.md.
+name: onehub-db
 services:
   db:
     image: kartoza/postgis:17-3.5
@@ -11,8 +14,11 @@ services:
       POSTGRES_PASS: oneinvest
     ports:
       - "5433:5432"
+    # kartoza để dữ liệu ở /var/lib/postgresql/<major>/main — gắn thư mục cha, không phải /var/lib/postgresql/data
+    # (đường của ảnh postgres chính thức; gắn đó thì volume rỗng và dữ liệu nằm trong lớp ghi của container).
+    # Kiểm: bash scripts/db-volume-check.sh static|live
     volumes:
-      - oneinvest_pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U oneinvest -d oneinvest"]
       interval: 3s
@@ -20,4 +26,5 @@ services:
       retries: 20
 
 volumes:
-  oneinvest_pgdata:
+  pgdata:
+    name: onehub_pgdata

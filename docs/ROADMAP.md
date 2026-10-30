@@ -98,6 +98,22 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   xuất enrich, thẻ `enrich:`/`pair:`, `property_offers`, ứng viên ghép đã quyết sang tin kế (`superseded_by`); 6 khoá ngoại
   tới hai bảng là RESTRICT. Khoá S03/S05 «dính» (`pipeline/lib/offer-key.mjs`): nhóm repost thừa kế `offer_id` của tin
   chung nhiều post nhất, nhóm mới băm `'<S0x>|<post neo>'`; `originating_system_key` (RESO) cho S03/S05/S06 và listing.
+- Gộp trùng S03 vừa tay (`_acceptance/s03-gop-trung-dung`, 27/10): khoá gom repost (`repostKey`, transform-zalo bước 4)
+  thiếu phường hoặc diện tích thì thêm người đăng (`sender_id` → SĐT → chữ bài chuẩn hoá) — DB local 349 → 586 tin S03,
+  nhóm lớn nhất 177 → 115 bài, đối soát không cho nghỉ tin nào. «Luồng 7 ngày qua» đếm «S03 — bài nhận» bằng đúng tập
+  `loadStgPosts` + `testMarker`, cột «S03 — tin rao mới». S05 cùng công thức khoá — chưa đổi.
+- Cầm máu số liệu S03 (N1 `_acceptance/s03-cam-mau-so-lieu`, 30/10): `parsePost` đọc số trên chữ đã gạt URL và SĐT (`gatSo`),
+  luật giá môi giới («2.650 tỷ» = 2,65 tỷ, «2400 tỷ thu về» = 2,4 tỷ, «2ty450», «5tr5», «7.000.000», «Giá: 4,000» tin bán),
+  DT «64m» (15–500, chặn bề ngang); số đếm sau chữ tỷ («8 tỷ 4 tầng») không thành phần lẻ, đơn giá «45.000.000/m2» ra giá/m²; bài thuê từ 1 tỷ / bán trên 100 tỷ không thành tin (`lyDoGiaPhiLy`, đếm theo lý do);
+  khoá gom thiếu phường/DT thêm mã toà/căn (`maToaCan`); `seller_name` = tên bài mới nhất; phường theo `market_codes` của
+  nhóm, nhóm chưa khai đối chiếu mọi thị trường có phường, tên trùng hai nơi ra null. DB thử: 0 tin thuê ≥ 1 tỷ (từ 41),
+  0 bán > 100 tỷ (từ 94), 0 giá từ URL (từ 4), `seller_name` 96,9% (từ 0), 0 tin TP.HCM sai phường (từ 38).
+  Bước gạt SĐT bỏ qua đuôi nhóm nghìn của giá đồng: «3.000.000.000» (`_acceptance/s03-gia-ty-chan-dong`) và cả khi sau giá là
+  khoảng trắng/xuống dòng + 1–2 chữ số, «3.000.000.000\n50m2» (`_acceptance/s03-gia-ty-sau-khoang-trang`; nhóm cuối «000», thân
+  số tiền không dính chữ — SĐT 3-3-3 kèm đuôi vẫn bị gạt); 21.934 bài thật: 0 bài đổi.
+  Ảnh của tin chỉ-ảnh S03 (mỗi ảnh một tin, chữ là URL) vào offer của tin chữ GẦN NHẤT cùng người, cùng nhóm, dưới 2 phút
+  — ở bước dựng bảng `media` (`transform-media.mjs` + `lib/gop-anh.mjs`), `sale_offers` và bảng nạp không đổi
+  (`_acceptance/gop-tin-chi-anh-o-transform`, PL28): DB thử 276 → 422/885 offer có ảnh (31,2% → 47,7%, ngưỡng ≥ 45%).
   Listing Airbnb transform cho nghỉ ngoài phường mang toạ độ của lần thu mới nhất (thiếu → NULL), giữ mốc + lý do nghỉ cũ
   (`_acceptance/airbnb-nghi-khong-hoi-sinh`) — reassign-areas chỉ đánh thức listing nghỉ khi toạ độ HIỆN HÀNH vào phường.
 - Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`
@@ -109,9 +125,27 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `legacy` (runtime-map «Phát biểu + phân xử»). Chỉ local.
   Thước `pipeline/scripts/nap-lai-ba-luot.mjs` (ba lượt, ma trận 7×2, đối chứng 039 / không chuyển). sync-cloud chép view
   sống, bảng con chỉ dòng có cha sống; cột mới ở lại máy.
+- Danh bạ Người theo nguồn (DB2b, `_acceptance/ho-nguoi-theo-nguon`, migration 055, ADR-0016 §8): bốn bảng chỉ-thêm
+  (rào trigger chặn DELETE/TRUNCATE và sửa khoá) `parties` (khoá mờ `pty_<ULID>`, một nguồn mỗi người) · `registry_aliases`
+  (tài khoản tại nguồn, SĐT băm, tên) · `registry_events` · `party_roles` (vai `nguoi_dang` trỏ chủ thể `S0x:<khoá nguồn>`,
+  kèm lớp căn cứ + phương pháp). `pipeline/lib/danh-ba-nguoi.mjs` dựng từ mọi tin S03/S05/S06 kể cả tin nghỉ: S06 theo
+  `seller_ref`, S03/S05 theo người gửi của bài; SĐT luôn là người riêng (Hỏi-4); rút vai chỉ khi có bằng chứng thay. Chạy
+  cuối `refresh-bait-gap.mjs` (`buocDem`) trong giao dịch riêng, khoá advisory 55055; tay: `pipeline/dung-nguoi.mjs [--thu]`.
+  Thước `pipeline/scripts/nap-lai-nguoi.mjs` (hai lượt, lượt 2 bằng 0, đối chứng bỏ tra bí danh). Chỉ local, không sync cloud.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
-  `pipeline/sync-pii.test.mjs` gác FILL). Transform/`/ops` chưa đọc cột này.
+  `pipeline/sync-pii.test.mjs` gác FILL).
+- Ảnh tin canonical (NH1, migration 053): bảng `media` theo resource Media của RESO DD 2.1, một dòng mỗi ảnh khác nhau của
+  một tin (`resource_record_key` = offer_id). `pipeline/transform-media.mjs` dựng lại theo nguồn ngay sau transform
+  (`chotot-daily` S06, `zalo-import-daily` S03 S05), từ `stg_zalo_posts.media_files` + `media` và
+  `stg_chotot_ads.images`; `/ops/review` và hồ sơ tin `/ops/data-flow` đọc bảng này (tin S06 có ảnh). Chỉ máy thu:
+  không vào FILL, leak gate đếm `media` — `_acceptance/media-canonical-reso`.
+- Thẻ duyệt đủ căn cứ (PL3): sheet `/ops/review` hiện bảng so mười trường Tin A/Tin B kèm lớp căn cứ + phương pháp đọc từ
+  `sale_offers.field_provenance` (`lib/ops/review-can-cu.ts`), toàn văn đọc lại ở máy thu theo `post_ids` (S03, S05) và
+  `stg_chotot_ads.payload.body` (S06) (`lib/ops/review-context.ts`), không độ tự tin/điểm Stage B, suy luận AI tách khỏi
+  căn cứ; vai Vận hành nhận ảnh đã tải, URL gốc chỉ quản trị. Quyết định bắt buộc lý do (1–1.000 ký tự) ghi
+  `review_queue.decision_note` + `ops_audit.detail.ly_do` cùng transaction; lượt bổ sung tin không gắn
+  `ai_suggestion` — `_acceptance/the-duyet-du-can-cu`.
 - S08 (danh mục căn, PL10): `stg_s08_inventory` (migration 040) — một dòng = một căn ở một snapshot
   (khoá `source_id` + `snapshot_id`, `state` notSold/sold), chỉ local (test `sync-pii` + leak gate gác);
   ánh xạ RESO ở `mappings.yaml` `sources.S08`. Chờ importer DATA-CONTRACT v4 của ZCode; chưa có transform.
@@ -294,6 +328,19 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    luật (chỉ trường thuộc vật thể, không đè, không tự nuôi, mâu thuẫn ra thẻ, rút dây chuyền). Nhà phố/đất: một vật thể tạm
    mỗi tin, gộp theo bằng chứng — toạ độ S06 chỉ là tín hiệu phụ. S08: vật thể chỉ-S08 ở local, giá trị chỉ-S08 không lên
    Invest. Hàng code thay PL11, PL24 và thêm hàng Người — giám sát cắt vào lộ trình.
+23. **Quỹ hàng là sản phẩm SaaS riêng** (29/10, Mạnh chốt «Chốt app riêng» và «Chốt, viết ADR»; **ADR-0017**): ứng dụng
+   quản lý hàng cho sàn môi giới, phía cung của Platform, **không phải cổng thứ ba** của Invest — `app/` không có route nào
+   của nó; kho riêng tư `onehub-quy-hang`, cơ sở dữ liệu riêng. Nguyên tắc SaaS: cơ chế ở kiến trúc, mỗi kết nối là một
+   thoả thuận bật/tắt, chỉ mở tới trần của lớp dữ liệu (thông tin chủ nhà không bao giờ rời công ty). Invest → Quỹ hàng là
+   thoả thuận đầu tiên, một chiều, Invest đẩy theo mẫu ADR-0014: danh mục căn, số thị trường tổng hợp, tin rao đã khớp căn
+   — không S08, không AirDNA, không tên nguồn hay đường dẫn bài gốc; bộ soát chạy ở cửa ra của Invest. Chiều ngược tắt,
+   mở bằng thoả thuận và qua cửa kiểm của Invest. Việc ở kho này: một bước đẩy nguồn cấp ở `pipeline/`, làm sau.
+24. **SĐT là lõi nhận diện Người, lưu số gốc dạng `+84…`** (30/10, Mạnh chốt Hỏi-A/B của
+   `docs/research/audit-bang-nguoi-sdt-3010.md`): danh bạ và tin lưu **số gốc**, mọi chỗ một dạng E.164 `+84xxxxxxxxx`
+   (RESO `MemberMobilePhone`: số quốc tế có «+» đứng đầu). Băm chỉ còn là khoá cho cloud, tính từ E.164. Khoá Người vẫn là
+   `party_key`, SĐT là bí danh mạnh nhất để tìm và gộp. Số gốc hiện ở máy thu cho **vai Vận hành và `admin`**
+   (`/ops/people`, `/ops/deals`); vai Người xem không thấy, không tìm theo SĐT. Đưa số gốc lên cloud là quyết định riêng,
+   chưa mở (`PII_EXCLUDE` giữ nguyên).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 
@@ -330,6 +377,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | ✅ PR #120 (migration 043 đã áp local; Supabase đã áp 26/10 — `docs/ops/cloud-schema-catchup-2026-10-26-043.sql`) |
 | PL14 | Nạp lại không xoá: bảng bản ghi + view sống (lối A, 044), khoá dính S03/S05, tin/listing nghỉ (`retired_at`) thay DELETE, 6 khoá ngoại RESTRICT, đối soát chuyển quyết định sang tin kế — `_acceptance/nap-lai-khong-xoa` | 🔶 vòng S4; sau merge: áp 044 lên DB local NGAY (launchd chạy code main); cloud không đổi lược đồ (`docs/ops/cloud-schema-catchup-2026-10-26.md`) |
 | PL15 | Bảng phát biểu chỉ-thêm + bộ phân xử ba lớp dựng năm cột phân loại kèm nguồn gốc, chạy lại ra y nguyên (045) — `_acceptance/phat-bieu-va-phan-xu` | 🔶 vòng S4; sau merge: áp 045 + `phat-bieu-cat-chuyen.mjs` trên DB local TRƯỚC lượt nạp đêm kế; cloud không đổi lược đồ |
+| DB2b | Danh bạ Người theo nguồn (ADR-0016 §8, 055): bốn bảng chỉ-thêm `parties` · `registry_aliases` · `registry_events` · `party_roles`; mỗi tài khoản/SĐT tại một nguồn là một người (khoá `pty_<ULID>`), vai «Người đăng» trỏ từ tin (`S0x:<khoá nguồn>`); bộ dựng chạy cuối bước bait gap trong giao dịch riêng; chỉ local — `_acceptance/ho-nguoi-theo-nguon` | 🔶 vòng S3; sau merge: áp 055 lên DB local (trước đó job đêm in «bỏ qua»); KHÔNG áp Supabase, không sync cloud |
+| NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
+| PL3 | Thẻ duyệt đủ căn cứ: mọi trường kèm căn cứ, toàn văn, ảnh cho vai Vận hành, không độ tự tin/gợi ý mặc định, lý do bắt buộc ghi audit cùng transaction — `_acceptance/the-duyet-du-can-cu` (T3) | 🔶 vòng S4; không migration; sau merge: khởi động lại app ở máy thu để đồng hồ nghiệm thu 7 ngày bắt đầu |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |
 
@@ -371,6 +421,9 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V17 | Công tắc nhóm thu theo ma trận 5 × 2 của TV2a: không hồi sinh nhóm đã gỡ/đã xong qua tắt rồi bật (409 có chữ), tắt nhóm nháp/tạm dừng không đổi — `_acceptance/cong-tac-khong-ha-nhom-go` (T3) | 🔄 S4 chấm |
 | V18 | Ca thử công tắc nhóm thu đối chứng với route trước sửa đã ghim (fixture), không đọc `origin/main` lúc chạy — vẫn xanh sau khi #142 gộp — `_acceptance/cong-tac-test-ghim-ban-cu` (T2) | 🔄 S4 chấm |
 | V19 | Một bảng quyền bốn vai (viewer < ops < admin < owner) ở `app/src/lib/ops-access.ts` cho 11 route `/api/v1/ops/**`; route quản trị nhóm thu và Zalo chỉ admin, bearer chung chỉ đọc và nạp số; mỗi thao tác ghi đúng một dòng `ops_audit` mang `user:<id>`, cùng transaction; `users.role` CHECK (049, prod chờ Mạnh áp) — `_acceptance/quyen-bon-vai-mot-cho` (T3, TV1) | 🔄 S4 chấm |
+| V20 | Vai viewer vào Ops nhưng không nhận nội dung tin: `xemNoiDungTin` (ops trở lên) ở `app/src/lib/ops-access.ts`; `/ops/review` cho viewer chỉ số thẻ chờ theo loại (không truy vấn cột nội dung), `/ops/data-flow` xoá bài gốc + tên nhóm trước khi gửi xuống trình duyệt; bảng kiểm kê 22 trang/route Ops; tài khoản thử `--vai viewer` — `_acceptance/viewer-khong-thay-the-duyet` (T3, Ngoài-9 của TV1). Định danh tài khoản thu ở `/ops/collections` để hàng riêng (P1-40): chưa cấp vai viewer cho người thật | 🔄 S4 chấm |
+| V21 | Định danh tài khoản thu theo vai: `xemDinhDanhThu` (ops trở lên) ở `app/src/lib/ops-access.ts` + `cheDinhDanhThu` (giữ số dòng, mã về null) — `GET /api/v1/ops/collections` (thân ở `lib/collections-api.ts`) và trang `/ops/collections` che mã tài khoản, hồ sơ, mã nhóm, tài khoản giữ nhóm với Người xem và bearer chung, cả máy thu lẫn cloud; bản tin `push-ops-facts` gửi `soNhomBat` thay mã nhóm, `factsChan` chặn mã nhóm — `_acceptance/dinh-danh-tai-khoan-thu-theo-vai` (T3, Hỏi-1 của V20) | 🔄 S4 chấm |
+| V22 | Cầm máu số liệu S03: transform-zalo đọc số không lẫn URL/SĐT, luật giá VN, DT «Nm», chặn giá phi lý, khoá gom có mã toà/căn, `seller_name`, phường theo thị trường của nhóm — `_acceptance/s03-cam-mau-so-lieu` (T2, N1) | 🔄 S4 chấm |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI
@@ -410,7 +463,7 @@ ADR: 0001 stack · 0002 insight-core · 0003 collector · 0004 đa nguồn ·
 0005 AirDNA hiệu chuẩn · 0006→0007 SPL+SOC · 0008 scope VN · 0009
 boundaries · 0010 bán dài hạn · 0011 RESO-first · 0012 onehub-ai-agent ·
 0013 tin → căn RESO · 0014 Ops cloud đọc số tổng hợp · 0015 đường lệnh kéo một chiều ·
-0016 danh bạ vật thể và người.
+0016 danh bạ vật thể và người · 0017 Quỹ hàng SaaS riêng, kết nối một chiều có thoả thuận.
 Research nền: investment-pipeline-4-stages (north star) ·
 unified-property-pipeline · decision-models-landscape ·
 agent-harness-survey · agent-memory-survey · reso-standards.

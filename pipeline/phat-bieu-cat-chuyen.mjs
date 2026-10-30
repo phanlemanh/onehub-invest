@@ -80,20 +80,23 @@ export async function catChuyen(client, { actor = "cat-chuyen:045" } = {}) {
   const moc = await chupMoc(client);
   const { rowCount: legacyMoi } = await client.query(
     `WITH o AS (
-       SELECT offer_id, source, coalesce(originating_system_key, post_ids[1]) AS neo,
+       SELECT offer_id, source, coalesce(originating_system_key, post_ids[1]) AS neo, last_seen,
               offer_subject_keys(source, originating_system_key, post_ids) AS subj,
               NULLIF(property_type, 'unknown') AS property_type, bedrooms::text AS bedrooms, bathrooms::text AS bathrooms,
               street_raw, block_raw
          FROM sale_offer_records
      ), o_ AS (
-       SELECT o.offer_id, o.source, o.neo, o.subj, x.f, x.v
+       SELECT o.offer_id, o.source, o.neo, o.subj, o.last_seen, x.f, x.v
          FROM o, LATERAL (VALUES ('property_type', o.property_type), ('bedrooms', o.bedrooms), ('bathrooms', o.bathrooms),
                                  ('street_raw', o.street_raw), ('block_raw', o.block_raw)) x(f, v)
         WHERE x.v IS NOT NULL AND btrim(x.v) <> '' AND o.neo IS NOT NULL
      ), sk AS (SELECT DISTINCT offer_id, f, unnest(subj) AS subject_key FROM o_)
-     INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence)
+     -- observed_at theo luật điền lùi của 059: least(lần thấy cuối của tin, lúc ghi)
+     INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, rule_id, evidence,
+                                   observed_at)
      SELECT o_.source || ':' || o_.neo, o_.f, o_.v, 'observed', 'legacy', '045', 'offer:' || o_.offer_id,
-            jsonb_build_object('note', 'giá trị có trước 045, không căn cứ', 'offer_id', o_.offer_id)
+            jsonb_build_object('note', 'giá trị có trước 045, không căn cứ', 'offer_id', o_.offer_id),
+            least(o_.last_seen, clock_timestamp())
        FROM o_
       WHERE NOT EXISTS (SELECT 1 FROM sk JOIN field_assertions fa ON fa.subject_key = sk.subject_key AND fa.field = sk.f
                          AND fa.retracted_at IS NULL WHERE sk.offer_id = o_.offer_id AND sk.f = o_.f)

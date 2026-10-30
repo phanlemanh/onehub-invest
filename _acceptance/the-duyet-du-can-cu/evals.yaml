@@ -1,0 +1,131 @@
+schema_version: 1
+feature_slug: the-duyet-du-can-cu
+# Ca «TD-AC-n» ở app/tests/the-duyet-du-can-cu.test.tsx (node --test + tsx; jsdom cho sheet; ca DB dựng lược đồ tạm
+# `td_<pid>` bằng schemaUrl như viewer-the-duyet.test.tsx, dữ liệu viết trước, xoá cuối lượt). Ca agent «TD-AC-6» ở
+# agent/tests/enrich-goi-y.test.ts (DB local trong ROLLBACK như enrich-db.test.ts). Gốc kho suy từ import.meta.url.
+# Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành → xanh; bản chép tạm của tệp nguồn (tests/.td-cu-*) đổi
+# đúng một chỗ → đỏ với thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.the_duyet
+    paths: [app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/src/lib/ops/review-can-cu.ts, app/src/lib/ops/review-queue.ts, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-1' xanh: fixture thẻ bổ sung tin 3 trường (1 xung đột hai bên có basis, 1 không xung đột có basis «LLM m · tự tin 92% · trace t», 1 không basis) dựng bằng ReviewCard thật → mỗi trường đúng một hàng [data-review-field] có tên · giá trị · phương pháp · căn cứ; hàng không basis có đúng «Chưa ghi căn cứ»; không hàng nào chứa '92' hay 'tự tin'. Chiều đỏ: bản chép review-card bỏ ô căn cứ của trường không xung đột → 'TD-AC-1: trường bathrooms thiếu ô căn cứ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.the_duyet
+    paths: [app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-2' xanh: ma trận viết trước 10 trường × {khớp, lệch, thiếu một bên} = 30 ca cho hàm thuần soTruongGhepCan (30 assert); bảng dựng bằng ReviewCard thật có đúng 10 hàng [data-review-compare]; ma trận viết trước TOÀN BỘ VOCAB.evidence_tier × VOCAB.assertion_method của vocab.generated.ts (3 × 6 = 18 phần tử, 18 assert) qua nhanCanCu ra chuỗi khác rỗng chứa nhãn LABELS_VI tương ứng (legacy ra «Giá trị có trước — chưa có căn cứ»), không chép nhãn tay trong test; probe chỉ đọc trên DB local thật: SELECT DISTINCT evidence_tier, method của field_assertions còn hiệu lực → mọi cặp có nhãn (0 cặp rơi về chuỗi rỗng hay mã thô); trường giá/diện tích/phường mang «Chưa ghi căn cứ — đọc từ tin». Chiều đỏ: bản chép soTruongGhepCan coi null = null là khớp → 'TD-AC-2: tầng thiếu cả hai bên phải là Thiếu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.the_duyet
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review-content.tsx, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-2 DB' xanh: lược đồ tạm có sale_offers với field_provenance ghi bởi resolve_offer_fields thật của 045 (không viết tay jsonb) cho hai tin của một thẻ ghép căn → loadReviewContext trả căn cứ khớp từng ô của field_provenance (round-trip từ bên ghi). Chiều đỏ: tin không có field_provenance → mọi trường trục ra 'Chưa ghi căn cứ — đọc từ tin', không ném"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.the_duyet
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-context.ts, app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-3' xanh: lược đồ tạm có bài S03 1.200 ký tự (hai bản, bản mới nhất khác bản cũ, có xuống dòng) theo post_ids, tin S06 có payload.body 800 ký tự theo originating_system_key, tin S05 không bài → khối [data-review-fulltext] của S03 bằng đúng bản mới nhất từng ký tự, S06 bằng body, S05 là 'Không có toàn văn ở máy thu'; không phần tử nào trong khối mang line-clamp; tên nhóm nằm ở [data-review-group], không đứng đầu khối toàn văn. Chiều đỏ: bản chép loader cắt left(text, 300) → 'TD-AC-3: toàn văn S03 dài 300, kỳ vọng 1200'. Probe khoá nối trên DB local thật (chỉ đọc, dữ liệu do importer + transform thật ghi): mọi thẻ chờ có tin S03/S06 mà stg_zalo_posts (theo post_ids) hay stg_chotot_ads (theo list_id = originating_system_key) có bài → loadReviewContext trả toàn văn khác null, tỉ lệ 100%; ghim 'TD-AC-3 probe: thẻ #<id> có bài gốc ở stg mà loader trả null'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_duyet
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-media.ts, app/src/lib/ops/zalo-media.ts, app/src/app/api/zalo-media/**, app/src/components/ops/review-photos.tsx, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-4' xanh: ma trận viết trước 5 vai (user, viewer, ops, admin, owner) × {ảnh đã tải, ảnh chỉ URL gốc} = 10 ca: loadReviewMedia trên lược đồ tạm có bảng media trả ảnh local cho ops/admin/owner, URL gốc chỉ cho admin/owner, {} cho user/viewer; serveZaloMedia chế độ snapshot trên tệp thật trong thư mục tạm: ops/admin/owner 200, user/viewer 404; sheet vai ops với tin chỉ có URL gốc không có <img> nào mang src ngoài /api/zalo-media và hiện câu ảnh chỉ có ở nguồn. Chiều đỏ: bản chép loader trả URL gốc cho ops → 'TD-AC-4: vai ops nhận URL gốc'. Probe trên DB local thật (bảng media do transform-media thật dựng, chỉ đọc): mọi dòng media có local_file của offer trên thẻ chờ → loadReviewMedia vai ops trả đúng số ảnh local đó (so đếm từng tin)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.the_duyet
+    paths: [app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/src/lib/ops/review-queue.ts, app/src/components/ops/review-content.tsx, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-5' xanh: fixture thẻ ghép căn stage_b_score 0.873 + ai_confidence 0.91 và thẻ bổ sung tin fields[].confidence 0.92 qua toReviewItem + ReviewCard + ReviewQueue thật → HTML không chứa 'Điểm B', 'tự tin', '0.873', '87', '0.91', '91', '0.92', '92'. Chiều đỏ: bản chép review-card còn badge Điểm B → 'TD-AC-5: còn điểm Stage B trên thẻ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.the_duyet
+    paths: [app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-6 UI' xanh: cùng thẻ ghép căn với ai_suggestion yes, no, unsure, null → outerHTML của vùng [data-review-actions] giống hệt nhau qua bốn bản; khối [data-review-ai] chỉ có khi ai_suggestion hoặc ai_reasoning khác null, đứng sau [data-review-compare] trong DOM. cùng thẻ bổ sung tin với ai_suggestion 'apply' và null → outerHTML [data-review-actions] giống hệt, HTML không có 'nên áp'. Chiều đỏ: bản chép đổi variant nút «Cùng căn» theo ai_suggestion → 'TD-AC-6: vùng nút đổi theo gợi ý AI'; bản chép tô «Áp dụng» theo 'apply' → 'TD-AC-6: nút Áp đổi theo gợi ý apply'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.the_duyet_agent
+    layer: backend-effect
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-goi-y.test.ts]
+    expected: "exit 0; ca 'TD-AC-6 agent' xanh: runEnrich thật (model giả trả đề xuất cần duyệt) trên DB local trong ROLLBACK tạo thẻ agent_output → dòng review_queue mới có ai_suggestion IS NULL. Chiều đỏ: bản chép run.ts còn 'apply' → 'TD-AC-6: thẻ bổ sung tin mới mang gợi ý apply'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.the_duyet
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-7' xanh: sheet jsdom với ô lý do trống và '   ' → mọi nút trong [data-review-actions] disabled + gợi ý 'Ghi lý do trước khi quyết'; gõ lý do → nút bật. Route POST thật trên lược đồ tạm với body thiếu reason, reason '   ', reason 1.001 ký tự (ma trận 3 × 2 loại thẻ = 6 ca) → 400, và băm bốn bảng review_queue, property_candidates, enrichment_proposals, ops_audit trước = sau. Chiều đỏ: bản chép route bỏ kiểm reason → 'TD-AC-7: thiếu lý do mà route vẫn ghi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.the_duyet
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/review/**, app/src/lib/audit.ts, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-8' xanh: ma trận 2 loại thẻ × 3 trạng thái = 6 ca qua route thật trên lược đồ tạm, reason '  Giá lệch 2 tỷ  ' → decision_note = 'Giá lệch 2 tỷ' và đúng 1 dòng ops_audit review.decide mới có detail.ly_do = 'Giá lệch 2 tỷ', cùng reviewId; ca audit hỏng (trigger tạm ném ở INSERT ops_audit) → 500, status 'pending', decision_note NULL, 0 dòng audit mới. Chiều đỏ: bản chép route ghi decision_note sau COMMIT → 'TD-AC-8: audit hỏng mà decision_note đã ghi'. Quét tĩnh git ls-files dưới app/ agent/ pipeline/ scripts/ (trừ tests): tệp có chuỗi 'review.decide' đi kèm ghiAuditTrong/INSERT INTO ops_audit đúng một — route decide; chiều đỏ: bản sao tạm thêm một tệp ghi review.decide → 'TD-AC-8: 2 chỗ ghi review.decide'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.the_duyet
+    paths: [app/src/components/ops/review-content.tsx, app/src/lib/ops/review-context.ts, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; ca 'TD-AC-9' xanh: ReviewContent thật cho vai viewer trên lược đồ tạm và nhánh cloud (review_queue vắng) với pool bọc đếm truy vấn → 0 truy vấn chạm stg_zalo_posts, stg_chotot_ads, field_provenance, media; HTML hai nhánh chứa đúng các câu của trước vòng ('thẻ đang chờ', 'Hàng duyệt chỉ có ở máy thu', 'Nội dung thẻ chỉ hiện cho vai Vận hành trở lên.'). Chiều đỏ: bản chép gọi loadReviewContext trước khi kiểm vai → 'TD-AC-9: vai viewer chạy truy vấn toàn văn'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.viewer_the_duyet
+    paths: [app/src/components/ops/review-content.tsx, app/src/lib/ops/review-media.ts, app/tests/viewer-the-duyet.test.tsx]
+    expected: "exit 0; bộ viewer-the-duyet có sẵn vẫn xanh (vai viewer không nhận nội dung thẻ, bài gốc, ảnh)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: ui-check
+    layer: ui-observed
+    paths: [app/src/components/ops/review/**, app/src/components/ops/review-card.tsx, app/src/components/ops/review-photos.tsx, app/src/components/ops/review-content.tsx, app/src/app/ops/review/**]
+    steps:
+      - "Bản chạy: dev server của worktree dãy U1 ở http://localhost:3460 (cấu hình app-3460 của .claude/launch.json), đăng nhập bằng tài khoản thử admin của scripts/dev-ops-account.mjs; không chạy thì FAIL với 'bản chạy :3460 không lên'"
+      - "1280 px sáng: /ops/review → bấm hàng thẻ ghép căn đầu tiên → evidence/E13-step1.png (bảng so + căn cứ); cuộn tới khối Toàn văn → evidence/E13-step2.png; cuộn tới chân sheet, ô Lý do trống → evidence/E13-step3.png"
+      - "1280 px tối (prefers-color-scheme: dark): sheet thẻ bổ sung tin đầu tiên (lọc Trạng thái «Tất cả» nếu không còn thẻ chờ) → evidence/E13-step4.png"
+      - "390 px sáng: sheet thẻ ghép căn → evidence/E13-step5.png (bảng so xếp chồng); gõ «thử» vào ô Lý do, không bấm quyết → evidence/E13-step6.png; ghi document.documentElement.scrollWidth và clientWidth"
+    expected: "Mỗi trường của bảng so đọc được kèm dòng căn cứ; nhãn Khớp/Lệch/Thiếu tách màu rõ ở cả sáng và tối; toàn văn hiện trọn, giữ xuống dòng; ô Lý do có nhãn, nút tắt khi trống (step3) và bật khi có chữ (step6); không chỗ nào hiện 'Điểm B', 'tự tin' hay '%' độ tin; scrollWidth = clientWidth ở 390 px."
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E14
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/src/components/ops/review-content.tsx, app/src/components/ops/review-photos.tsx]
+    expected: "exit 0; sàn thiết kế bậc M1 không báo hex thô mới trên tệp giao diện vòng chạm"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E15
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.the_duyet_design_gate
+    paths: [app/src/components/ops/review-card.tsx, app/src/components/ops/review/**]
+    expected: "exit 0; design gate không P0 trên từng tệp giao diện mới/đổi của vòng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E16
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.app
+    paths: [app/src/**, app/eslint-suppressions.json, app/eslint.config.mjs]
+    expected: "exit 0; tsc --noEmit sạch và lint 0 lỗi, baseline suppressions không tăng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

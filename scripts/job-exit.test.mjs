@@ -128,7 +128,8 @@ const JOBS = {
       dirs: ["collector/snapshots/hanoi/hanoi__chotot-ads__20261023T000000", "pipeline"],
     },
     // TV2b vòng 3 (cong-tac-that): cổng vòng đời S06 chạy TRƯỚC mọi bước — node giả trả 0 (chạy); DB tắt thì cổng thoát ≠0 (fail-closed)
-    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "refresh-bait-gap", "resolve-properties"],
+    // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-chotot.
+    seq: ["vong-doi", "collect-chotot", "doc-vung-s06", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"],
   },
   "apify-facebook-daily": {
     script: "scripts/apify-facebook-daily.sh",
@@ -152,7 +153,7 @@ const JOBS = {
   "cloud-sync": {
     script: "scripts/cloud-sync.sh",
     tree: { copy: ["scripts/cloud-sync.sh", "scripts/lib/job-step.sh"] },
-    seq: ["ha-bung-het-han", "sync-cloud", "refresh-data-flow", "push-ops-facts"],
+    seq: ["ha-bung-het-han", "sync-cloud", "refresh-data-flow", "push-ops-facts", "trang-thai-chao", "bac-du-lieu"],
   },
   "collector-tuan": {
     // weekly-with-jitter → weekly-collect (set -e, exec) → finalize-hanoi.sh: khúc DB làn Claude nằm ở finalize
@@ -225,7 +226,7 @@ describe("AC-6 job_step", () => {
 
 // ------------------------------------------------------------- AC-1, AC-2 --
 for (const [ac, job, steps] of [
-  ["AC-1", "chotot-daily", ["transform-chotot", "refresh-bait-gap", "resolve-properties"]],
+  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"]],
   ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap"]],
 ]) {
   const J = JOBS[job];
@@ -296,6 +297,19 @@ describe("AU13 cloud-sync", () => {
   test("AU13 cloud-sync: push-ops-facts hỏng → ≠0, dòng ghim, bước sau vẫn chạy", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "push-ops-facts" });
     assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "push-ops-facts", J.seq), [], r.stderr);
+  });
+  test("AU13 cloud-sync: bac-du-lieu hỏng → ≠0, dòng JOB FAIL [cloud-sync] bước bac-du-lieu (PL16, bước cuối)", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "bac-du-lieu" });
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "bac-du-lieu", J.seq), [], r.stderr);
+    assert.equal(J.seq.at(-1), "bac-du-lieu", "phân bố bậc là bước cuối, sau push-ops-facts (Hỏi-3)");
+    assert.ok(r.stderr.split("\n").includes(failLine("cloud-sync", "bac-du-lieu", 1)), r.stderr);
+  });
+  test("AU13 cloud-sync: trang-thai-chao hỏng → ≠0, dòng JOB FAIL [cloud-sync] bước trang-thai-chao (PL19, ngay trước bậc)", () => {
+    const r = runJob(J.root(), J.script, { FAIL_STEPS: "trang-thai-chao" });
+    assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "trang-thai-chao", J.seq), [], r.stderr);
+    assert.deepEqual(J.seq.slice(-3), ["push-ops-facts", "trang-thai-chao", "bac-du-lieu"],
+      "trạng thái chào chạy ngay trước ảnh chụp bậc (B5 đọc trạng thái mới)");
+    assert.ok(r.stderr.split("\n").includes(failLine("cloud-sync", "trang-thai-chao", 1)), r.stderr);
   });
   test("AU13 cloud-sync: ha-bung-het-han hỏng (che-do-thu-tren-ops) → ≠0, dòng ghim, sync-cloud và push-ops-facts vẫn chạy", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "ha-bung-het-han" });

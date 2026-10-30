@@ -1,0 +1,14 @@
+{
+  "feature_plain": "Phiên Claude mở trong kho tự nạp gói điều phối đợt, để chẩn đoán đợt hết báo «thiếu hook của phiên» trên máy chưa bật gói ở phạm vi người dùng.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm đúng một dòng bật gói điều phối vào cấu hình Claude của kho, mọi dòng khác giữ nguyên."},
+    {"id": "AC-2", "p": "Sẽ kiểm tên gói có thật trong danh mục gói của kit, cùng nguồn với bốn gói kit đang bật."},
+    {"id": "AC-3", "p": "Sẽ chỉ đổi tệp cấu hình ấy cộng một dòng khai thước đo."}
+  ],
+  "wont_do": [
+    {"id": "AC-4", "p": "Chặn mọi bản cấu hình sai (giá trị tắt, thiếu dòng, sai tên gói, đổi thêm quyền, đổi tệp khác) — thước đo phải báo đỏ."},
+    {"id": "OOS-1", "p": "KHÔNG để máy mở phiên Claude mới để kiểm hiệu lực ở mỗi lần chấm — anh kiểm một lần ở Cổng Bằng chứng (Hỏi-1)."},
+    {"id": "OOS-2", "p": "KHÔNG sửa thước cũ của lộ trình dù nó báo đỏ trên nhánh này; nó tự xanh sau khi gộp."},
+    {"id": "OOS-3", "p": "KHÔNG đổi cấu hình Claude ở phạm vi người dùng trên bất kỳ máy nào."}
+  ]
+}

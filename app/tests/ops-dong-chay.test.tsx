@@ -382,29 +382,29 @@ describe("DF-AC-6 bộ lọc và hồ sơ tin", () => {
   })
   test("DF-AC-6 hàng bảng — bậc và x/5 trường lõi", async () => {
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    const root = await render(<RecordsGrid records={[RECS[0]]} roles={{}} />)
+    const root = await render(<RecordsGrid records={[RECS[0]]} roles={{}} xemBaiGoc />)
     const tr = root.querySelector("tbody tr")!
     assert.match(tr.textContent ?? "", /B0 · Có lời khai/)
     assert.match(tr.textContent ?? "", /3\/5 trường lõi/)
   })
   test("DF-AC-6 hồ sơ tin — điều kiện lên bậc kế", async () => {
     const { RecordSheet } = await import("../src/components/ops/data-flow/record-sheet")
-    await render(<RecordSheet record={RECS[0]} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={RECS[0]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     let d = dialogs()[0]
     assert.match(d.textContent ?? "", /Trường lõi 3\/5/)
     assert.match(d.textContent ?? "", /Lên B1 cần đủ năm trường lõi — còn thiếu loại hình, phường\./)
     assert.match(d.querySelector("blockquote")?.textContent ?? "", /3pn 81m2/)
-    await render(<RecordSheet record={RECS[3]} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={RECS[3]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     d = dialogs()[0]
     assert.match(d.textContent ?? "", /Trường lõi 5\/5/)
     assert.match(d.textContent ?? "", /Lên B3 cần số đo trên nhãn cho các trường lõi \(PL7, PL9\)\./)
     assert.match(d.textContent ?? "", /S06 chưa lưu khoá nối ngược tin → bài \(TV10\)\./)
-    await render(<RecordSheet record={RECS[4]} roles={{}} onOpenChange={() => {}} />)
+    await render(<RecordSheet record={RECS[4]} roles={{}} xemBaiGoc onOpenChange={() => {}} />)
     assert.match(dialogs()[0].textContent ?? "", /Lên B2 cần gắn được tin về một căn\./)
   })
   test("DF-AC-6 bấm nút tiêu đề — hồ sơ mở và ở lại", async () => {
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    const root = await render(<RecordsGrid records={RECS} roles={{}} />)
+    const root = await render(<RecordsGrid records={RECS} roles={{}} xemBaiGoc />)
     const nut = [...root.querySelectorAll("tbody button")].find((b) => b.textContent?.includes("3,2 tỷ"))
     await click(nut, "nút tiêu đề")
     await act(() => new Promise((r) => setTimeout(r, 60)))
@@ -428,7 +428,7 @@ describe("DF-AC-8 trống", () => {
     const dong = [...root.querySelectorAll("ul.sr-only li")].map((li) => li.textContent ?? "")
     assert.ok(dong.some((t) => t.includes("tới Bài nhận: 10")), `đối chứng dương: có bài thì đường ống vẽ dòng chảy (${dong.join(" | ")})`)
     const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    root = await render(<RecordsGrid records={[]} roles={{}} />)
+    root = await render(<RecordsGrid records={[]} roles={{}} xemBaiGoc />)
     assert.match(root.textContent ?? "", /Không có tin nào khớp bộ lọc/)
     const { QualityGrid } = await import("../src/components/ops/data-flow/quality-grid")
     root = await render(<QualityGrid bySource={[]} byGroup={[]} />)
@@ -436,75 +436,5 @@ describe("DF-AC-8 trống", () => {
   })
 })
 
-describe("DF-AC-10 ảnh tin", () => {
-  type User = import("../src/lib/auth").User
-  const ADMIN: User = { id: "1", email: "a@local.test", plan: "free", role: "admin" }
-  const OPS: User = { id: "2", email: "o@local.test", plan: "free", role: "ops" }
-  test("DF-AC-10 nạp ảnh theo quyền", async () => {
-    ready()
-    const { loadFlowMedia } = await import("../src/lib/data-flow-queries")
-    const { buildOfferImages } = await import("../src/lib/ops/review-media")
-    const records = [{ offerId: "o1", source: "S03" }, { offerId: "o2", source: "S03" }, { offerId: "o3", source: "S05" }, { offerId: "c1", source: "S06" }]
-    const got = await loadFlowMedia(records, ADMIN)
-    const posts = async (id: string) =>
-      (
-        await admin.query(
-          `SELECT o.offer_id, p.snapshot_id, p.media, p.media_files FROM "${S}".sale_offers o
-           CROSS JOIN LATERAL unnest(o.post_ids) WITH ORDINALITY AS u(post_id, ord) JOIN "${S}".stg_zalo_posts p ON p.post_id = u.post_id
-           WHERE o.offer_id = $1 ORDER BY u.ord`,
-          [id],
-        )
-      ).rows
-    for (const id of ["o1", "o2", "o3"]) assert.deepEqual(got[id], buildOfferImages(await posts(id)), `tin ${id}`)
-    assert.ok(got.o1.length >= 2, "tin gộp 2 bài có ảnh")
-    assert.equal(new Set(got.o1.map((i) => i.src)).size, got.o1.length, "URL trùng chỉ một lần")
-    assert.deepEqual(got.o2, [], "tin không ảnh → []")
-    assert.equal("c1" in got, false, "S06 không truy vấn ảnh")
-    const nguoc = buildOfferImages((await posts("o1")).reverse())
-    assert.notDeepEqual(got.o1, nguoc, "đột biến thứ tự ngược post_ids phải đỏ ở tin o1")
-    let goi = 0
-    const dem: import("../src/lib/data-flow-queries").MediaQuery = async () => {
-      goi++
-      return { rows: [] }
-    }
-    assert.deepEqual(await loadFlowMedia(records, OPS, dem), {})
-    assert.deepEqual(await loadFlowMedia(records, null, dem), {})
-    assert.equal(goi, 0, "người không phải admin: 0 truy vấn ảnh")
-    const boKiem: typeof loadFlowMedia = (r, u, qq) => loadFlowMedia(r, u ? { ...u, role: "admin" } : u, qq)
-    assert.notDeepEqual(await boKiem(records, OPS), {}, "đột biến bỏ kiểm isAdmin phải đỏ: người không phải admin không được nhận ảnh")
-    const vang: import("../src/lib/data-flow-queries").MediaQuery = async () => {
-      throw Object.assign(new Error("relation does not exist"), { code: "42P01" })
-    }
-    assert.deepEqual(await loadFlowMedia(records, ADMIN, vang), {})
-  })
-  test("DF-AC-10 dải ảnh trong hồ sơ tin", async () => {
-    const { RecordsGrid } = await import("../src/components/ops/data-flow/records-grid")
-    const img = (n: number) => ({ src: `https://photo-stal-1.zdn.vn/${n}.jpg`, origin: "remote" as const, expiring: true })
-    const media = { a: [img(1), img(2)], b: [] }
-    const root = await render(<RecordsGrid records={RECS} roles={{}} media={media} />)
-    assert.equal(root.querySelectorAll("img").length, 0, "bảng không tải ảnh")
-    const open = async (id: string) => {
-      const tr = [...root.querySelectorAll("tbody tr")][RECS.findIndex((r) => r.offerId === id)]
-      await click(tr?.querySelector("td:nth-child(2)"), `hàng ${id}`)
-      return dialogs()[0]
-    }
-    let d = await open("a")
-    const g = d.querySelector("[role=group][aria-label^='Ảnh']")
-    assert.ok(g, "hồ sơ tin a có dải ảnh")
-    assert.deepEqual([...g!.querySelectorAll("img")].map((i) => i.getAttribute("src")), [img(1).src, img(2).src], "ảnh phải thuộc đúng tin đang mở")
-    await closeSheets()
-    d = await open("b")
-    assert.match(d.textContent ?? "", /không có ảnh/)
-    assert.equal(d.querySelectorAll("img").length, 0)
-    await closeSheets()
-    d = await open("d")
-    assert.match(d.textContent ?? "", /Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo \(TV10\)\./)
-    await closeSheets()
-    const root2 = await render(<RecordsGrid records={RECS} roles={{}} />)
-    await click([...root2.querySelectorAll("tbody tr")][0]?.querySelector("td:nth-child(2)"), "hàng a (không admin)")
-    d = dialogs()[0]
-    assert.equal(d.querySelectorAll("[role=group][aria-label^='Ảnh'] img").length, 0, "không admin: 0 ảnh")
-    assert.doesNotMatch(d.textContent ?? "", /không có ảnh/)
-    await closeSheets()
-  })
-})
+// DF-AC-10 (ảnh tin của hồ sơ tin) đã thay bởi NH1 media-canonical-reso AC-6 (tests/media-canonical.test.tsx «NH-AC-6 …»):
+// ảnh đọc bảng media (053) cho mọi nguồn, kể cả S06.

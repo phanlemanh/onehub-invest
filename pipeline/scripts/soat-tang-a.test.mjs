@@ -142,6 +142,41 @@ describe("NT2-AC-1…AC-5 push-ops-facts qua bộ soát", () => {
   });
 });
 
+describe("DD-AC-6 bản tin không mang mã nhóm (dinh-danh-tai-khoan-thu-theo-vai, Hỏi-1 = A)", () => {
+  // Hai tài khoản: «default» (không mục accounts riêng — profile = mã) bật 2 nhóm, «phu» bật 1 nhóm.
+  const CAU_HINH = JSON.stringify({ channels: { zalouser: { groups: { "dd-grp-a": { enabled: true }, "dd-grp-b": { enabled: true } }, accounts: {
+    phu: { profile: "phu", groups: { "dd-grp-c": { enabled: true } } },
+  } } } });
+  test("DD-AC-6 bản tin gửi soNhomBat, enabledGroups rỗng", async () => {
+    const r = await captureOpsFacts({ logs: LOGS(), home: { ".openclaw/openclaw.json": CAU_HINH } });
+    assert.equal(r.code, 0, r.stderr.slice(0, 800));
+    assert.equal(r.posts, 1);
+    const acc = r.payload.zaloAccounts;
+    // Quan hệ tài khoản → số nhóm bật của chính nó, ghim trọn bảng (không chỉ «có một tài khoản 2 nhóm»).
+    assert.deepEqual(Object.fromEntries(acc.map((a) => [a.accountId, a.soNhomBat])), { default: 2, phu: 1 }, "bảng tài khoản → soNhomBat");
+    for (const [i, a] of acc.entries()) {
+      assert.deepEqual(a.enabledGroups, [], `zaloAccounts[${i}].enabledGroups phải rỗng`);
+      assert.equal(typeof a.soNhomBat, "number", `zaloAccounts[${i}].soNhomBat`);
+      assert.equal(a.name, null, `zaloAccounts[${i}].name`);
+    }
+    assert.ok(!JSON.stringify(r.payload.zaloAccounts).includes("dd-grp-"), "bản tin còn mã nhóm");
+  });
+  test("DD-AC-6 bản sao gửi cùng một số nhóm cho mọi tài khoản → bảng tài khoản đỏ", async () => {
+    const f = mutantPush("so-nhom-sai.mjs", (s) => s.replace("soNhomBat: nhomBat.length", "soNhomBat: 2"));
+    const r = await captureOpsFacts({ script: f, logs: LOGS(), home: { ".openclaw/openclaw.json": CAU_HINH } });
+    assert.equal(r.code, 0, r.stderr.slice(0, 800));
+    assert.throws(
+      () => assert.deepEqual(Object.fromEntries(r.payload.zaloAccounts.map((a) => [a.accountId, a.soNhomBat])), { default: 2, phu: 1 }, "bảng tài khoản → soNhomBat"),
+      /bảng tài khoản → soNhomBat/,
+    );
+  });
+  test("DD-AC-6 bản sao gửi mã nhóm → chặn, nêu zaloAccounts[0].enabledGroups", async () => {
+    const f = mutantPush("ma-nhom.mjs", (s) => s.replace("enabledGroups: [], soNhomBat", "enabledGroups: nhomBat, soNhomBat"));
+    const r = await captureOpsFacts({ script: f, logs: LOGS(), home: { ".openclaw/openclaw.json": CAU_HINH } });
+    assertBlocked(r, "FACTS CHẶN [tầng A] zaloAccounts[0].enabledGroups mã nhóm");
+  });
+});
+
 describe("NT2-AC-10 bản tin thật, chế độ khô", () => {
   // log + cấu hình thật của máy thu: HOME thật, cây log ở checkout chính (launchd ghi ở đó, không ở worktree)
   const mainRoot = () => path.dirname(execFileSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: HERE, encoding: "utf8" }).trim());

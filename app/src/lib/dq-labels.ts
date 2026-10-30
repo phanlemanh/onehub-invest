@@ -5,7 +5,9 @@
  * đổi ở bên ghi không đổi được dòng đã ghi. Khuôn lạ → giữ chuỗi gốc (hiện trong `<code>`) kèm `known: false`.
  */
 import { marketNameOf } from "./market-names"
+import { FIELD_LABEL } from "./labels-normalize"
 import { confidenceLabel, offerKindLabel, propertyTypeLabel } from "./ops-labels"
+import { LABELS_VI } from "./vocab.generated"
 
 export type DqText = { text: string; code?: string; known: boolean }
 
@@ -20,6 +22,10 @@ const TEN_KIEM: Record<string, string> = {
   "truthful-coverage": "Độ phủ tham chiếu",
   "extraction-quality": "Chất lượng trích xuất",
   "enum-vocab:property_type-coverage": "Độ phủ loại hình",
+  "media:local-file": "Ảnh tin đã tải", // pipeline/transform-media.mjs (NH1)
+  "enrich:proposal-assertion": "Đề xuất có phát biểu", // pipeline/bac-du-lieu.mjs (PL16)
+  "data-level:distribution": "Phân bố bậc", // pipeline/bac-du-lieu.mjs (PL16)
+  "eval-classify": "Độ đúng cách đọc", // pipeline/eval-classify.mjs (PL9)
 }
 const COT_ENUM: Record<string, string> = {
   kind: "loại tin",
@@ -28,10 +34,20 @@ const COT_ENUM: Record<string, string> = {
   property_type: "loại hình",
 }
 
-/** Tên kiểm của bên ghi → tên tiếng Việt. */
-export function dqCheckName(check: string): DqText {
+/** Cột enum của bảng danh bạ (DB2b) — tên cột trùng cột của sale_offers (`kind`) nên tra theo `<bảng>.<cột>` trước. */
+const COT_ENUM_THEO_BANG: Record<string, string> = {
+  "parties.status": "trạng thái danh bạ",
+  "registry_aliases.kind": "loại bí danh",
+  "registry_events.kind": "sự kiện danh bạ",
+  "party_roles.role": "vai của người",
+}
+
+/** Tên kiểm của bên ghi → tên tiếng Việt. `entity` (bảng) phân biệt cột enum trùng tên giữa các bảng. */
+export function dqCheckName(check: string, entity?: string): DqText {
   if (Object.hasOwn(TEN_KIEM, check)) return { text: TEN_KIEM[check], known: true }
   const m = check.match(/^enum-vocab:(\w+)$/)
+  const theoBang = m && entity ? `${entity}.${m[1]}` : null
+  if (theoBang && Object.hasOwn(COT_ENUM_THEO_BANG, theoBang)) return { text: `Từ vựng ${COT_ENUM_THEO_BANG[theoBang]}`, known: true }
   if (m && Object.hasOwn(COT_ENUM, m[1])) return { text: `Từ vựng ${COT_ENUM[m[1]]}`, known: true }
   return { text: "Kiểm khác (chưa diễn giải)", code: check, known: false }
 }
@@ -41,16 +57,40 @@ const DOI_TUONG: Record<string, string> = {
   listing_stats: "Số liệu listing",
   areas: "Khu vực",
   sale_offers: "Tin rao",
+  parties: "Danh bạ người",
+  registry_aliases: "Bí danh người",
+  registry_events: "Sự kiện danh bạ người",
+  party_roles: "Vai trò của người",
   regex: "Bộ đọc theo luật",
   llm: "Bộ đọc AI",
   all: "Mọi thị trường",
+  enrichment_proposals: "Bảng đề xuất",
+}
+
+/** Ô độ đúng của eval-classify (PL9): `<lát>|<phân khúc>|<cách đọc>|<trường>`. */
+const LAT_NHAN: Record<string, string> = { ocp1: "Lát OCP1" }
+const CACH_DOC_NHAN: Record<string, string> = { parser: "Bộ đọc theo luật" }
+const PHAN_KHUC_NHAN: Record<string, string> = { "tat-ca": "mọi loại hình", "khong-neu": "loại hình không nêu" }
+/** Nhãn trường của màn gắn nhãn; trường `project` gọi theo CONTEXT.md («Khu đô thị», tránh «dự án»). */
+export const TRUONG_DO_DUNG: Record<string, string> = { ...FIELD_LABEL, project: "Khu đô thị" }
+function oDoDung(entity: string): DqText | null {
+  const m = entity.match(/^([a-z0-9]+)\|([a-z_-]+)\|([a-z0-9_]+)\|([a-z_0-9]+)$/)
+  if (!m) return null
+  const [, lat, pk, cd, truong] = m
+  const pt = propertyTypeLabel(pk)
+  const pkNhan = Object.hasOwn(PHAN_KHUC_NHAN, pk) ? PHAN_KHUC_NHAN[pk] : pt.known ? pt.label : null
+  if (!Object.hasOwn(LAT_NHAN, lat) || !pkNhan || !Object.hasOwn(CACH_DOC_NHAN, cd) || !Object.hasOwn(TRUONG_DO_DUNG, truong)) return null
+  return { text: `${LAT_NHAN[lat]} · ${pkNhan} · ${CACH_DOC_NHAN[cd]} · ${TRUONG_DO_DUNG[truong]}`, known: true }
 }
 
 /** Đối tượng kiểm: tên bảng, `sale_offers:S0x`, `S0x/<mã thị trường>`, mã khu vực `vn-…`, mã thị trường trần. */
 export function dqEntityLabel(entity: string, areaNames: ReadonlyMap<string, string>): DqText {
   if (Object.hasOwn(DOI_TUONG, entity)) return { text: DOI_TUONG[entity], known: true }
+  const o = oDoDung(entity)
+  if (o) return o
   const tin = entity.match(/^sale_offers:(S0\d)$/)
   if (tin) return { text: `Tin rao · ${tin[1]}`, known: true }
+  if (/^S0\d$/.test(entity)) return { text: `Nguồn ${entity}`, known: true } // mã nguồn trần (media:local-file)
   const nguon = entity.match(/^(S0\d)\/(.+)$/)
   const tt = marketNameOf(nguon ? nguon[2] : entity, areaNames)
   if (tt.known) return { text: nguon ? `${nguon[1]} · ${tt.name}` : tt.name, known: true }
@@ -65,11 +105,20 @@ const chuaCo = (s: string) => (s === "null" || s === "n/a" ? "chưa có" : s)
 /** Kỳ «2026-09» → «09/2026». */
 const ky = (s: string) => (/^\d{4}-\d{2}$/.test(s) ? `${s.slice(5)}/${s.slice(0, 4)}` : chuaCo(s))
 
+/** Nhãn giá trị của bốn trục danh bạ (sổ từ vựng, không viết tay). */
+const NHAN_DANH_BA: Record<string, string> = {
+  ...LABELS_VI.registry_status,
+  ...LABELS_VI.alias_kind,
+  ...LABELS_VI.registry_event_kind,
+  ...LABELS_VI.party_role,
+}
+
 const GIA_TRI_ENUM = (v: string): string => {
   for (const f of [propertyTypeLabel, offerKindLabel, confidenceLabel]) {
     const n = f(v)
     if (n.known) return n.label
   }
+  if (Object.hasOwn(NHAN_DANH_BA, v)) return NHAN_DANH_BA[v]
   return v // P0/P1/P2 — mã bậc giá giữ nguyên
 }
 
@@ -115,6 +164,30 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `${nguyen(m[1])} giá trị ngoài danh sách cho phép, ví dụ:`, code: m[2], known: true }
   if ((m = d.match(/^(\d+)\/(\d+) offers có loại hình$/)))
     return { text: `${nguyen(m[1])}/${nguyen(m[2])} tin rao có loại hình`, known: true }
+  if ((m = d.match(/^rows=(\d+) local=(\d+) offers_with_media=(\d+)$/)))
+    return { text: `${nguyen(m[1])} ảnh · ${nguyen(m[2])} đã tải · ${nguyen(m[3])} tin có ảnh`, known: true }
+  if ((m = d.match(/^applied=(\d+) missing=(\d+)$/)))
+    return { text: `${nguyen(m[1])} đề xuất đã áp · ${nguyen(m[2])} thiếu phát biểu`, known: true }
+  if ((m = d.match(/^units=(\d+) B0=(\d+) B1=(\d+) B2=(\d+) B3=(\d+) B4=(\d+) B5=(\d+)$/)))
+    return { text: [`${nguyen(m[1])} đơn vị`, ...m.slice(2).map((n, i) => `B${i} ${nguyen(n)}`)].join(" · "), known: true }
+  if (
+    (m = d.match(
+      /^run=\S+ tap=nguoi split=(test|dev) n=(\d+) dung=(\d+|-) ti_le=([\d.]+|-) can_duoi=([\d.]+|-) nguong=([\d.]+) nhom=([AB]) ly_do=(-|chua-co-nhan-nguoi|chua-co-cach-doc) bat_dong=(\d+) mat_chu=(\d+)$/,
+    ))
+  ) {
+    const [, split, n, dung, , canDuoi, nguong, nhom, lyDo, batDong, matChu] = m
+    const nguongChu = `ngưỡng ${so(nguong)} (nhóm ${nhom})`
+    const dau =
+      lyDo === "chua-co-cach-doc" ? "Bỏ qua — chưa có cách đọc cho trường này"
+      : lyDo === "chua-co-nhan-nguoi" ? "Bỏ qua — chưa có nhãn người"
+      : `Đúng ${nguyen(dung)}/${nguyen(n)} · cận dưới ${so(canDuoi)}`
+    const them = [
+      split === "test" ? "tập chấm" : "tập chỉnh luật",
+      ...(batDong !== "0" ? [`${nguyen(batDong)} trường người gắn bất đồng`] : []),
+      ...(matChu !== "0" ? [`${nguyen(matChu)} tin mất chữ`] : []),
+    ]
+    return { text: [dau, nguongChu, ...them].join(" · "), known: true }
+  }
   if (d === "samples=0") return { text: "Chưa có mẫu", known: true }
   if ((m = d.match(/^samples=(\d+) avgF1=([\d.]+)((?: \w+=[\d.]+)*)$/))) {
     const truong = m[3].trim() ? m[3].trim().split(" ").map((kv) => kv.split("=")) : []

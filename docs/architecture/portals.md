@@ -135,10 +135,13 @@ mới tách thành app riêng, không mất gì vì URL đã có ranh giới s�
 | `/ops` | Tổng quan vận hành | health tổng: freshness SLO từng nguồn, block rate, trạng thái circuit breaker, run gần nhất | CCP+DQO | C1 |
 | `/ops/collections` | Thu thập | QUAN SÁT dòng chảy: hôm nay chảy gì, funnel theo nguồn/nhóm, máy móc launchd, rotation kế tiếp (read-only) | CCP+DQO | C1→E2 |
 | `/ops/data-flow` | Dòng chảy dữ liệu | QUAN SÁT đường ống bài → tin → căn: mỗi chặng chảy bao nhiêu, rơi ở đâu, nút thắt theo nguồn/nhóm thu, tin mới nhất + hồ sơ tin (read-only, chỉ máy thu) | DQO | proto 26/10 |
+| `/ops/ai-calls` | Cuộc gọi AI | QUAN SÁT chi phí, token, độ trễ của mọi cuộc gọi agent runtime theo ngày × việc × model, 30 ngày (read-only; máy chủ đọc khối `aiCalls` của bản tin) | — | PL29 29/10 |
 | `/ops/pipeline` | Pipeline | transform/rollup chạy chưa, kết quả DQ gates | DQO | C1 |
 | `/ops/quality` | Chất lượng dữ liệu | 4 trụ DQ: freshness/volume/schema/distribution + divergence đối chiếu | DQO | đã có (mở rộng C1) |
 | `/ops/agents` | Agent Swarm | agent đang làm gì, F1 extraction vs regex, chi phí token | DCA | C2/C3 |
 | `/ops/review` | Review Queue | HITL phán quyết: AI/hệ thống đề xuất, người quyết (entity_match, source_decision, agent_output) | DCA | HITL |
+| `/ops/labels` | Gắn nhãn | XỬ LÝ: người gắn chín trường lõi cho tin của lát, không thấy giá trị máy; 20% gắn trùng để đo đồng thuận (quyền `label.write` vai ops; chỉ máy thu, máy chủ hiện «Chỉ ở máy thu») | DQO | PL7 30/10 |
+| `/ops/people` | Danh bạ người | XỬ LÝ: người đăng tin theo nguồn S0x, số tin, bí danh; trang một người `/ops/people/[partyKey]`; nhãn môi giới là suy luận chỉ hiển thị; vai Người xem không thấy giá trị bí danh (chỉ máy thu, máy chủ hiện «Chỉ ở máy thu») | DQO | danh-ba-nguoi-tren-ops 30/10 |
 | `/ops/console` | Bảng điều khiển | bề mặt NGƯỜI của hành động máy: trigger collect/transform (Idempotency-Key) | DCA | C2 |
 | `/ops/audit` | Nhật ký thao tác | audit log mọi `ops:write` (token nào, lệnh gì, khi nào, kết quả) | DCA | C4 |
 | `/ops/backups` | Sao lưu | lần pg_dump/replica gần nhất, drill khôi phục | DR | C4 |

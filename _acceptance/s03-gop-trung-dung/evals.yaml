@@ -1,0 +1,46 @@
+schema_version: 1
+feature_slug: s03-gop-trung-dung
+# Ca test mang tiền tố «GT-AC-n»: thuần ở pipeline/scripts/gop-trung-s03.test.mjs, DB local (BEGIN…ROLLBACK) ở
+# pipeline/scripts/gop-trung-s03.itest.mjs. AC-6 là judgment trên tệp nhãn + CONTEXT.md.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.gop_trung
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/gop-trung-s03.test.mjs]
+    expected: "exit 0; hai ca 'GT-AC-1' xanh: thiếu phường + DT, A ≠ B, A = A (đăng lại kèm dấu câu khác); thiếu phường có DT, A ≠ B"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.gop_trung
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/gop-trung-s03.test.mjs]
+    expected: "exit 0; ca 'GT-AC-2' xanh: đủ phường + DT, A = B, khoá = 'sale|nghia-do|<giá>|66.7|2'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.gop_trung
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/gop-trung-s03.test.mjs]
+    expected: "exit 0; hai ca 'GT-AC-3' xanh: hai SĐT khác → hai khoá; không SĐT: chữ chỉ khác hoa/thường/dấu câu → một khoá, chữ khác → hai khoá; normText NFC/NFD, null"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.gop_trung
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/test-posts.mjs, pipeline/scripts/gop-trung-s03.itest.mjs]
+    expected: "exit 0; ca 'GT-AC-4' xanh trên DB local :5433 trong BEGIN…ROLLBACK: A-thiếu một tin n_reposts 2, B-thiếu tin khác n_reposts 1, đủ trường một tin n_reposts 2, reconcile.stale = 0"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.gop_trung
+    paths: [pipeline/lib/ops-flow.mjs, app/src/lib/collections-queries.ts, pipeline/scripts/gop-trung-s03.itest.mjs]
+    expected: "exit 0; ca 'GT-AC-5' xanh: tập loadStgPosts khớp đáp án viết trước của 10 hàng; S03_POSTS_SQL đếm 4; đột biến LIKE '%zalo-agent%' đếm 3. Bản chép app khớp pipeline: config:executors.test.luong7 (ON5-AC-4) xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: judgment
+    inputs: [app/src/components/ops/collections-tables.tsx, CONTEXT.md]
+    question: "Hai bảng FlowTable và CloudFlowTable có mang nhãn «S03 — bài nhận» / «S03 — tin rao mới» và mô tả nói tin rao mới có sau lượt đọc đêm không; CONTEXT.md có mục «Gộp trùng» và nhãn đếm «bài nhận» khớp định nghĩa của S03_POSTS_SQL không?"
+    evidence_required: [verdict, rationale, votes]

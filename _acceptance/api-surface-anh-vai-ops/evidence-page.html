@@ -1,0 +1,123 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hồ sơ · api-surface-anh-vai-ops</title>
+<style>
+:root{--bg:#faf9f6;--card:#fff;--bd:#e6e4de;--ink:#1f1f1d;--mut:#6c6a64;--hint:#9a988f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;font-size:15px}
+.wrap{max-width:920px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:30px 0 10px;letter-spacing:.02em}
+.sub{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 11px;border-radius:999px;vertical-align:middle}
+.pass{background:#E1F5EE;color:#085041}.pend{background:#FAEEDA;color:#633806}.rej{background:#FAECE7;color:#712B13}.neutral{background:#f1efe8;color:#444441}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin-top:6px}
+.meta b{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600;font-size:12px}
+td a{color:#185FA5;text-decoration:none}.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.eval{scroll-margin-top:14px}.eval h3{font-size:14px;margin:0 0 4px}.eval .crit{font-size:13px;color:var(--mut);margin:0 0 8px}
+pre.out{background:#1f1f1d;color:#e8e6df;border-radius:8px;padding:11px 13px;overflow:auto;max-height:280px;font-size:12px;margin:8px 0}
+.kv{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0}.kv b{color:var(--ink)}
+.shot img{display:block;max-width:100%;border:1px solid var(--bd);border-radius:8px}
+.slide{position:relative}.slide .frame{position:absolute;inset:0;opacity:0;transition:opacity .35s}.slide .frame:first-child{position:relative}.slide .frame.on{opacity:1}
+.slidebar{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut);margin-top:6px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--bd);border-radius:7px;background:#fff;cursor:pointer}
+.ov{background:#FAEEDA;color:#633806;border-radius:7px;padding:6px 10px;font-size:12px;display:inline-block}
+.ovok{background:#E1F5EE;color:#085041}
+.note{font-size:13px;color:var(--mut)}.flag{font-size:13px;border-radius:8px;padding:8px 11px;margin:6px 0}
+.fred{background:#FAECE7;color:#712B13}.fok{background:#E1F5EE;color:#085041}
+.foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--bd);font-size:12px;color:var(--hint)}
+ul.ck{list-style:none;padding:0;margin:0}ul.ck li{padding:5px 0;font-size:14px}ul.ck input{margin-right:8px}
+.tl{border-left:2px solid var(--bd);padding-left:14px;margin:0}.tl li{font-size:13px;margin:0 0 6px;list-style:none}
+.dai{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 8px}
+.o{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 11px;min-width:0}
+.o .hoi{font-size:11px;color:var(--mut);text-transform:none;letter-spacing:.02em}
+.o .tra{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.vang{color:var(--hint);font-style:italic}
+.chu-kho{font-size:12px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px}.chu-kho b{color:var(--ink)}
+details.muc{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:0 14px}
+details.muc>summary{cursor:pointer;font-weight:600;font-size:14px;padding:11px 0}
+details.muc[open]>summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+details.muc .noi{padding:0 0 12px;font-size:13px}
+.loc{display:flex;gap:6px;margin:0 0 8px}.loc .btn[aria-pressed="true"]{background:#1f1f1d;color:#fff}
+.tl li[hidden]{display:none}
+@media (max-width:720px){.dai{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>Sổ bề mặt API khai /api/zalo-media rộng bằng hoặc hơn quyền thật sau PL3 (ảnh snapshot cho vai Vận hành), route và hai bộ kiểm tĩnh khớp sổ</h1><div class="sub">Trang hồ sơ · <span class="mono">api-surface-anh-vai-ops</span> · tier T2</div>
+<section class="dai" aria-label="Hồ sơ trong một phút"><div class="o" data-o="da_giao" data-nguon="contract.md"><div class="hoi">Đã giao gì</div><div class="tra">Sổ bề mặt API khai /api/zalo-media rộng bằng hoặc hơn quyền thật sau PL3 (ảnh snapshot cho vai Vận hành), route và hai bộ kiểm tĩnh khớp sổ</div></div><div class="o" data-o="vi_sao" data-nguon="contract.md"><div class="hoi">Vì sao</div><div class="tra">Căn cứ: mục Ngoài-2 của PL3 the-duyet-du-can-cu — Mạnh chọn «mở hợp đồng mới» ở Cổng Bằng chứng 30/10 (_acceptance/the-duyet-du-can-cu/decisions.jsonl d-20261030T071529Z-27); giám sát xếp hàng cho dãy U1. Sổ app/src/lib/api-surface.ts khai zalo-media là admin trong khi serveZaloMedia cho vai Vận hành xem ảnh snapshot (PL3) — trái luật đầu tệp sổ «sổ phải rộng bằng hoặc hơn mã».</div></div><div class="o" data-o="trang_thai" data-nguon="contract.md"><div class="hoi">Trạng thái</div><div class="tra">Đang làm</div></div><div class="o" data-o="ngay" data-nguon="contract.md"><div class="hoi">Ngày</div><div class="tra">2026-10-30</div></div><div class="o" data-o="production" data-nguon="decisions.jsonl"><div class="hoi">Đã lên production chưa</div><div class="tra">chưa ghi quan sát production</div></div><div class="o" data-o="do_gi" data-nguon="opportunity.md"><div class="hoi">Sẽ đo gì, khi nào</div><div class="tra"><span class="vang">chưa có — opportunity.md</span></div></div><div class="o" data-o="ket_qua" data-nguon="uat-session.md"><div class="hoi">Kết quả</div><div class="tra">chưa đo</div></div><div class="o" data-o="chua_lam" data-nguon="contract.md"><div class="hoi">Chưa làm gì</div><div class="tra">2 mục để ngoài phạm vi · 0 giới hạn đã biết</div></div><div class="o" data-o="ai_quyet" data-nguon="contract.md"><div class="hoi">Ai quyết</div><div class="tra">Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</div></div></section>
+<div class="chu-kho" data-chu-kho><span data-k="tieu_chi">Tiêu chí <b>5</b></span><span data-k="phep_do">Phép đo <b>7</b></span><span data-k="luot_cham">Lượt chấm <b>1</b></span><span data-k="token">Token <b>44.974</b></span><span data-k="quyet_dinh_may">Quyết định máy <b>8</b></span><span data-k="quyet_dinh_nguoi">người <b>2</b></span><span data-k="ma">Mã <b>551d843</b></span></div>
+<details class="muc" id="vi-sao"><summary>Vì sao làm</summary><div class="noi"><p>Căn cứ: mục Ngoài-2 của PL3 the-duyet-du-can-cu — Mạnh chọn «mở hợp đồng mới» ở Cổng Bằng chứng 30/10 (_acceptance/the-duyet-du-can-cu/decisions.jsonl d-20261030T071529Z-27); giám sát xếp hàng cho dãy U1. Sổ app/src/lib/api-surface.ts khai zalo-media là admin trong khi serveZaloMedia cho vai Vận hành xem ảnh snapshot (PL3) — trái luật đầu tệp sổ «sổ phải rộng bằng hoặc hơn mã».</p></div></details>
+<details class="muc" id="da-hua"><summary>Đã hứa</summary><div class="noi"><ol class="hua"><li data-ac="AC-1"><b>AC-1</b> — Given sổ bề mặt API, When đọc dòng `zalo-media`, Then chế độ là `ops-session`, phương thức `GET`, và `note` nêu</li><li data-ac="AC-2"><b>AC-2</b> — Given ma trận viết trước 6 người gọi (khách, user, viewer, ops, admin, bearer OPS_API_TOKEN không phiên) × 2 chế</li><li data-ac="AC-3"><b>AC-3</b> — Given route `app/src/app/api/zalo-media/route.ts`, When đọc mã, Then route đọc phiên đúng một lần, chặn</li><li data-ac="AC-4"><b>AC-4</b> — Given `node scripts/check-api-surface.mjs static` và `mutation`, When chạy trên cây vòng, Then bản nguyên đạt; M13</li><li data-ac="AC-5"><b>AC-5</b> — Given `node scripts/check-portal-compliance.mjs`, When chạy, Then mục 6 (zalo-media: `xemNoiDungTin` chặn trước</li></ol></div></details>
+<details class="muc" id="thiet-ke"><summary>Thiết kế</summary><div class="noi"><p class="mono" data-design-doc>docs/superpowers/specs/2026-10-30-api-surface-anh-vai-ops-design.md</p></div></details>
+<details class="muc" id="quyet-dinh"><summary>Quyết định</summary><div class="noi"><div class="loc" role="group" aria-label="Lọc quyết định"><button class="btn" data-loc="tat-ca" aria-pressed="true">Tất cả 10</button><button class="btn" data-loc="may" aria-pressed="false">Máy 8</button><button class="btn" data-loc="nguoi" aria-pressed="false">Người 2</button></div><ol class="tl" data-dong-thoi-gian><li data-loai="may" data-id="d-20261030T105710Z-1"><b>2026-10-30</b> · Máy · approach · S1 — Đã tra tri thức: sổ bề mặt API khai sai quyền /api/zalo-media sau PL3<div class="note">Kho đã khai tri_thuc — bước thiết kế tra trang trước khi chọn.</div></li><li data-loai="may" data-id="d-20261030T105710Z-2"><b>2026-10-30</b> · Máy · approach · S1 — Dòng zalo-media của sổ đổi sang ops-session, note ghi phần mã chặt hơn sổ (snapshot vai Vận hành trở lên, ?path= admin, Người xem 404).<div class="note">Luật đầu tệp sổ cho sổ rộng hơn mã khi ghi ở note; ops-session là chế độ hẹp nhất còn rộng bằng mã (ops có bearer, admin hẹp hơn mã) — design doc mục Cách làm.</div></li><li data-loai="may" data-id="d-20261030T105710Z-3"><b>2026-10-30</b> · Máy · approach · S1 — Không thêm chế độ thứ sáu cho sổ; dùng ops-session kèm note.<div class="note">Chế độ mới phải nở cả sổ, bộ kiểm, mcp-tools.json và bảng quyền cho một route, trong khi luật sổ đã cho phép rộng hơn mã khi ghi ở note.</div></li><li data-loai="may" data-id="d-20261030T105710Z-4"><b>2026-10-30</b> · Máy · approach · S1 — Route đọc phiên một lần, chặn !canAccessOps(user) bằng 404 rồi gọi serveZaloMedia(req, user); §6 của check-portal-compliance đổi biểu thức nhận route theo khuôn này.<div class="note">Chế độ ops-session của check-api-surface đòi route gọi canAccessOps(; đọc phiên hai lần chỉ để giữ biểu thức §6 cũ là thêm một lần đọc phiên mỗi ảnh.</div></li><li data-loai="may" data-id="d-20261030T105710Z-5"><b>2026-10-30</b> · Máy · approach · S1 — M13 và M15 của bảng đột biến check-api-surface đổi sang route admin dựng giả; thêm M20 cho zalo-media mất canAccessOps.<div class="note">zalo-media là route admin duy nhất không qua kiemQuyen, làm mẫu cho nhánh kiểm admin cũ; đổi chế độ thì hai ca mất mẫu thật (khuôn dựng giả đã có ở M12/M16).</div></li><li data-loai="may" data-id="d-20261030T105710Z-6"><b>2026-10-30</b> · Máy · descope · S1 — bỏ đặc-tả-UX — vòng không có giao diện: sổ khai quyền, một cổng máy chủ không đổi hành vi và hai bộ kiểm tĩnh<div class="note">Hợp đồng surfaces [api]; không tệp nào dưới app/src/components hay app/src/app/(app|ops) đổi.</div></li><li data-loai="may" data-id="d-20261030T110034Z-7"><b>2026-10-30</b> · Máy · approach · S1 — Nếu giữ năm chế độ có sẵn: dòng zalo-media đổi sang ops-session, note ghi phần mã chặt hơn sổ (snapshot vai Vận hành trở lên, ?path= admin, Người xem 404).<div class="note">Luật đầu tệp sổ cho sổ rộng hơn mã khi ghi ở note; trong năm chế độ có sẵn chỉ ops-session đứng được — design doc mục Cách làm.</div></li><li data-loai="may" data-id="d-20261030T110034Z-8"><b>2026-10-30</b> · Máy · approach · S1 — Hỏi-1: sổ khai zalo-media bằng ops-session kèm note (vai Người xem hiện «được gọi» trong sổ, note nói mã trả 404), hay thêm chế độ thứ sáu khít đúng «vai Vận hành, không bearer»?<div class="note">Cả hai lối đều hợp luật sổ; đây là đánh đổi độ khít của sổ với cỡ từ vựng, chỉ chủ kho chọn (gap-probe P2).</div></li><li data-loai="nguoi" data-id="d-20261030T114138Z-9"><b>2026-10-30</b> · Người (Mạnh) · approach · gate1 — Hỏi-1: ops-session kèm note (theo khuyến nghị) — sổ dùng năm chế độ có sẵn, không thêm chế độ thứ sáu.<div class="note">người chọn ở Cổng Phạm vi: duyệt</div></li><li data-loai="nguoi" data-id="d-20261030T114138Z-10"><b>2026-10-30</b> · Người · seal · gate1 — </li></ol></div></details>
+<details class="muc" id="bang-chung"><summary>Bằng chứng</summary><div class="noi">
+<div class="card" style="margin-top:12px"><span class="badge pass">PASS</span>
+<div class="meta"><span>Verified by: <b>fresh-context verification subagent</b></span><span>Human signoff: <b>CHƯA ký</b></span><span>enforcement: <b>strict</b></span></div></div>
+<h2>Các eval</h2><div class="card" style="padding:4px 8px"><table><thead><tr><th>Eval</th><th>Tiêu chí</th><th>Loại</th><th>Verdict</th><th>run_id</th><th>verified_at</th></tr></thead><tbody>
+<tr><td><a href="#E1">E1</a></td><td>AC-1</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-api-surface-anh-vai-ops-E1-r1</td><td class="mono">2026-10-30T11:46:27Z</td></tr>
+<tr><td><a href="#E2">E2</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-api-surface-anh-vai-ops-E2-r1</td><td class="mono">2026-10-30T11:46:27Z</td></tr>
+<tr><td><a href="#E3">E3</a></td><td>AC-2</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-api-surface-anh-vai-ops-E3-r1</td><td class="mono">2026-10-30T11:46:27Z</td></tr>
+<tr><td><a href="#E4">E4</a></td><td>AC-3</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-api-surface-anh-vai-ops-E4-r1</td><td class="mono">2026-10-30T11:46:27Z</td></tr>
+<tr><td><a href="#E5">E5</a></td><td>AC-4</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-api-surface-anh-vai-ops-E5-r1</td><td class="mono">2026-10-30T11:46:27Z</td></tr>
+<tr><td><a href="#E6">E6</a></td><td>AC-5</td><td>script</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-api-surface-anh-vai-ops-E6-r1</td><td class="mono">2026-10-30T11:46:27Z</td></tr>
+<tr><td><a href="#E7">E7</a></td><td>AC-3</td><td>test</td><td><span class="badge pass">PASS</span></td><td class="mono">minted-api-surface-anh-vai-ops-E7-r1</td><td class="mono">2026-10-30T11:46:27Z</td></tr>
+</tbody></table></div>
+<h2>Chi tiết từng eval</h2>
+<div class="card eval" id="E1"><h3><span class="badge pass">PASS</span> &nbsp;E1 · test</h3><p class="crit">AC-1: Given sổ bề mặt API, When đọc dòng `zalo-media`, Then chế độ là `ops-session`, phương thức `GET`, và `note` nêu</p>
+<div class="kv"><span>run_id <b>minted-api-surface-anh-vai-ops-E1-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.api_surface_ops</b></span><span>verified_at <b>2026-10-30T11:46:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lệnh: cd app &amp;&amp; node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx
+ca ASO-AC-1 xanh (dòng zalo-media mode ops-session, note ghim ba quan hệ; hai chiều đỏ đều báo đúng thông điệp)
+ℹ duration_ms 404.349166</pre>
+</div>
+<div class="card eval" id="E2"><h3><span class="badge pass">PASS</span> &nbsp;E2 · test</h3><p class="crit">AC-2: Given ma trận viết trước 6 người gọi (khách, user, viewer, ops, admin, bearer OPS_API_TOKEN không phiên) × 2 chế</p>
+<div class="kv"><span>run_id <b>minted-api-surface-anh-vai-ops-E2-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.api_surface_ops</b></span><span>verified_at <b>2026-10-30T11:46:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lệnh: cd app &amp;&amp; node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx
+ca ASO-AC-2 xanh (ma trận 6 người gọi x 2 chế độ = 12 ô trên serveZaloMedia thật; chiều đỏ đổi sổ sang admin báo đúng)
+ℹ duration_ms 404.349166</pre>
+</div>
+<div class="card eval" id="E3"><h3><span class="badge pass">PASS</span> &nbsp;E3 · test</h3><p class="crit">AC-2: Given ma trận viết trước 6 người gọi (khách, user, viewer, ops, admin, bearer OPS_API_TOKEN không phiên) × 2 chế</p>
+<div class="kv"><span>run_id <b>minted-api-surface-anh-vai-ops-E3-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.zalo_media_core</b></span><span>verified_at <b>2026-10-30T11:46:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lệnh: cd app &amp;&amp; node --import tsx --test tests/zalo-media.test.tsx
+bộ lõi zalo-media chạy đích danh, hồi quy quyền thật không đổi
+ℹ duration_ms 82.596917</pre>
+</div>
+<div class="card eval" id="E4"><h3><span class="badge pass">PASS</span> &nbsp;E4 · test</h3><p class="crit">AC-3: Given route `app/src/app/api/zalo-media/route.ts`, When đọc mã, Then route đọc phiên đúng một lần, chặn</p>
+<div class="kv"><span>run_id <b>minted-api-surface-anh-vai-ops-E4-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.api_surface_ops</b></span><span>verified_at <b>2026-10-30T11:46:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lệnh: cd app &amp;&amp; node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx
+ca ASO-AC-3 xanh (route gọi getSessionUser một lần, chặn canAccessOps trước serveZaloMedia(req, user), docstring đã sửa)
+ℹ duration_ms 404.349166</pre>
+</div>
+<div class="card eval" id="E5"><h3><span class="badge pass">PASS</span> &nbsp;E5 · script</h3><p class="crit">AC-4: Given `node scripts/check-api-surface.mjs static` và `mutation`, When chạy trên cây vòng, Then bản nguyên đạt; M13</p>
+<div class="kv"><span>run_id <b>minted-api-surface-anh-vai-ops-E5-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.api_surface_mutation</b></span><span>verified_at <b>2026-10-30T11:46:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lệnh: node scripts/check-api-surface.mjs mutation
+api-surface mutation: ĐẠT</pre>
+</div>
+<div class="card eval" id="E6"><h3><span class="badge pass">PASS</span> &nbsp;E6 · script</h3><p class="crit">AC-5: Given `node scripts/check-portal-compliance.mjs`, When chạy, Then mục 6 (zalo-media: `xemNoiDungTin` chặn trước</p>
+<div class="kv"><span>run_id <b>minted-api-surface-anh-vai-ops-E6-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.script.portal_static</b></span><span>verified_at <b>2026-10-30T11:46:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lệnh: node scripts/check-portal-compliance.mjs
+portal-compliance: ĐẠT</pre>
+</div>
+<div class="card eval" id="E7"><h3><span class="badge pass">PASS</span> &nbsp;E7 · test</h3><p class="crit">AC-3: Given route `app/src/app/api/zalo-media/route.ts`, When đọc mã, Then route đọc phiên đúng một lần, chặn</p>
+<div class="kv"><span>run_id <b>minted-api-surface-anh-vai-ops-E7-r1</b></span><span>exit_code <b>0</b></span><span>verifier <b class="mono">config:executors.test.api_surface_ops</b></span><span>verified_at <b>2026-10-30T11:46:27Z</b></span><span>baseline <b>n-a</b></span></div>
+<pre class="out">lệnh: cd app &amp;&amp; node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx
+ca ASO-AC-3b xanh (ma trận 5 vai x ?snapshot= qua handler route chép; khách/user/viewer 404, ops và admin 200)
+ℹ duration_ms 404.349166</pre>
+</div>
+<h2>Eval không phân biệt (Analyst)</h2><div class="flag fred">baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+Danh sách eval không-phân-biệt (xanh cả trên HEAD lẫn baseline) không đo được ở round này vì baseline bị chặn hạ tầng; mọi field baseline ghi n-a.
+Baseline khong do:
+- cd app &amp;&amp; node --import tsx --test tests/api-surface-anh-vai-ops.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+- cd app &amp;&amp; node --import tsx --test tests/zalo-media.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+- node scripts/check-api-surface.mjs mutation: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»
+- node scripts/check-portal-compliance.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «&lt;\tool_use_error&gt;Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.&lt;\/tool_use_error&gt;»</div>
+<h2>Vòng verify</h2><ul class="tl"><li>Round 1: E1, E2, E3, E4, E5, E6, E7 đều đạt; năm lệnh suite hồi quy đều xanh. Không có eval thất bại, không cần trả về triển khai.</li></ul>
+</div></details>
+<details class="muc" id="tai-nguyen"><summary>Tài nguyên</summary><div class="noi"><table data-tai-nguyen><thead><tr><th>Khối</th><th>Tác tử</th><th>Token đầu ra</th></tr></thead><tbody><tr><td>S4 round 1</td><td>16</td><td>44.974</td></tr></tbody></table><p class="note">1 lượt chấm · tổng 44.974 token</p></div></details>
+<details class="muc" id="gioi-han"><summary>Giới hạn và ngoài hợp đồng</summary><div class="noi"><ul data-gioi-han><li data-loai="ngoai">OOS-1: Đổi ai xem được ảnh nào ở `/api/zalo-media` — quyền thật giữ nguyên quyết định PL3.</li><li data-loai="ngoai">OOS-2: Thêm chế độ thứ sáu cho sổ, hay sửa dòng sổ của route khác.</li></ul></div></details>
+<details class="muc" id="giao"><summary>Giao</summary><div class="noi"><div class="kv" data-giao><span>Mã đã chấm <b class="mono">551d843d196d2a2362123b6f53b5b9027ebcdf99</b></span><span>Ngày ký <b>—</b></span><span>Cổng Phạm vi: Mạnh · Cổng Bằng chứng: chưa ký</span><span data-pr>chưa gộp</span></div><p class="note">chưa ghi quan sát production</p></div></details>
+<details class="muc" id="gia-tri"><summary>Giá trị</summary><div class="noi"><span class="vang">chưa có — opportunity.md</span></div></details>
+<div class="foot">Trang trình bày · KHÔNG quyết — <span class="mono">evidence-report.md</span> + hook là nguồn-sự-thật. Sinh từ run đã verify; ảnh/output gắn run_id.</div>
+<script>
+document.querySelectorAll('[data-loc]').forEach(function(b){b.addEventListener('click',function(){var v=b.getAttribute('data-loc');document.querySelectorAll('[data-loc]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});document.querySelectorAll('[data-dong-thoi-gian] li').forEach(function(li){li.hidden=!(v==='tat-ca'||li.getAttribute('data-loai')===v);});});});
+document.querySelectorAll('.slide').forEach(function(s){var fr=s.querySelectorAll('.frame');if(fr.length<2)return;var i=0;fr[0].classList.add('on');var adv=function(){fr[i].classList.remove('on');i=(i+1)%fr.length;fr[i].classList.add('on');};s._t=setInterval(adv,1600);var bar=s.nextElementSibling,b=bar?bar.querySelector('[data-toggle]'):null;if(b)b.addEventListener('click',function(){if(s._t){clearInterval(s._t);s._t=null;b.textContent='▶ Chạy';}else{s._t=setInterval(adv,1600);b.textContent='⏸ Tạm dừng';}});});
+</script>
+</div></body></html>

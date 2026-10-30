@@ -136,7 +136,7 @@
     },
     {
       "ma": "PL5",
-      "cau_giao": "Transform ghi phát biểu listing_intent từ meta.kev.p cho mọi tin, không loại tin nào theo Kev khi ngưỡng chưa đo",
+      "cau_giao": "Transform ghi phát biểu ý định tin (tin rao · Yêu cầu · không phải tin) và bán/thuê từ câu hỏi Kev typed kèm xác suất cho mọi tin, không loại tin nào theo Kev khi ngưỡng chưa đo",
       "vai": "nen",
       "tieu_chi": 8,
       "vi_sao": "C1.1: lọc là phát biểu ở pipeline, chạy lại được khi đổi ngưỡng.",
@@ -146,13 +146,13 @@
         "PL6"
       ],
       "slug": "meta-kev-thanh-phat-bieu",
-      "bat_khi": "Nạp một ngày v3: mọi tin stg có cột kev_*; số tin rao không giảm so với khi chưa có Kev",
+      "bat_khi": "Nạp một ngày v3: mọi tin stg có cột kev_*; số tin rao không giảm so với khi chưa có Kev; bài «khách tìm…» ra Yêu cầu, không bị bỏ",
       "nhom": "du-lieu-that",
       "dot": "phan-loai-2310",
       "phu": [
         "C1.1"
       ],
-      "ghi_chu": "KV3 (nghiệm thu PL4, 23/10): hết lọc Kev thì raw/stg Zalo dự kiến phình ×3 — thêm tiêu chí đo dung lượng và thời gian chạy transform-zalo + sync cloud trên một ngày v3 trước khi bật."
+      "ghi_chu": "KV3 (nghiệm thu PL4, 23/10): hết lọc Kev thì raw/stg Zalo dự kiến phình ×3 — thêm tiêu chí đo dung lượng và thời gian chạy transform-zalo + sync cloud trên một ngày v3 trước khi bật. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): câu gate cũ gộp «tìm mua» vào tin rao, và meta.kev.p một câu không tách được Yêu cầu; thử 61 bài cho thấy Kev chưa huấn luyện lại yếu ở bán/thuê — ở bậc suy luận, chỉnh lại Kev là mục chờ PH3."
     },
     {
       "ma": "PL6",
@@ -239,24 +239,6 @@
       "ghi_chu": "23/10 Mạnh chốt thêm một nguồn danh mục cần đăng nhập; ZCode kiểm ToS ở bước 0 (claudedp-2310-25) trước khi thu. Gọi nguồn bằng mã S0x khi cấp, không ghi tên thật (ADR-0007)."
     },
     {
-      "ma": "PL11",
-      "cau_giao": "asset_nodes có cấp trục và căn cho Ocean Park 1, mỗi dòng mang bậc nguồn (xác minh · suy ra mạnh · một lời khai)",
-      "vai": "nen",
-      "tieu_chi": 9,
-      "vi_sao": "F2: danh mục cũng có bậc; trục là bản ghi gốc tạm khi môi giới che tầng.",
-      "hang": "T3",
-      "dung_tren": [
-        "PL10"
-      ],
-      "slug": "danh-muc-truc-can",
-      "bat_khi": "Nạp lại danh mục hai lần không nhân dòng; dòng suy ra mạnh có ≥ 3 môi giới độc lập",
-      "nhom": "danh-muc",
-      "dot": "phan-loai-2310",
-      "phu": [
-        "C1.5"
-      ]
-    },
-    {
       "ma": "PL12",
       "cau_giao": "Người vận hành khai mọi đơn vị thu (nhóm S03, nhóm S05, vùng S06, market S02) trong một sổ trên /ops, mỗi đơn vị có mã ổn định dạng S03-N012, thị trường, dự án nhóm chuyên và trạng thái vòng đời",
       "vai": "Người vận hành",
@@ -276,14 +258,13 @@
     },
     {
       "ma": "PL13",
-      "cau_giao": "Bộ đọc ra phát biểu mã căn, toà, dự án, giá dạng khoảng và price_basis cho tin Ocean Park 1, mỗi phát biểu kèm trích dẫn",
+      "cau_giao": "Bộ đọc ra phát biểu mã căn, toà, dự án, giá dạng khoảng, price_basis, loại căn có cờ «+» và các trường thuê (nội thất, điều khoản HĐ/cọc, ngày vào ở, phí đã gồm) cho tin căn hộ của lát, mỗi phát biểu kèm trích dẫn",
       "vai": "nen",
-      "tieu_chi": 10,
+      "tieu_chi": 11,
       "vi_sao": "F1: môi giới che tầng (LD2xx11), 52% tin che số giá, 42% ghi «thu về / NET».",
       "hang": "T2",
       "dung_tren": [
-        "PL6",
-        "PL11"
+        "PL6"
       ],
       "slug": "doc-ma-can-gia-khoang",
       "bat_khi": "Trên tập test của lát: cận dưới Wilson đạt ngưỡng F3 nhóm A cho toà/dự án",
@@ -291,7 +272,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "C1.6"
-      ]
+      ],
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL11 khỏi dung_tren: theo ADR-0016 §6, danh bạ toà · trục · căn (DB1) dựng TỪ phát biểu toà/mã căn của hàng này, nên hàng này đứng trước DB1. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): lát gồm Ocean Park 1 và Grand Park; trường thuê là nhóm C (ngưỡng 0,80). 11 tiêu chí: trường thuê đọc cùng một lượt với mã căn và giá, tách ra thì đọc hai lần cùng một bài."
     },
     {
       "ma": "PL14",
@@ -348,6 +330,25 @@
       ]
     },
     {
+      "ma": "DB2b",
+      "cau_giao": "Mỗi tin có người đăng gắn với một người trong danh bạ Người của đúng nguồn ấy qua vai «người đăng» là một phát biểu có bằng chứng, và nạp lại không nhân người",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "ADR-0016 §8, §10 Đợt 2b: vai trò là quan hệ có phát biểu, không phải thuộc tính; bảng sellers cũ một vai, không bí danh. Điều kiện PL15 đã gộp nên sẵn sàng; song song Đợt 1.",
+      "hang": "T3",
+      "dung_tren": [
+        "PL15"
+      ],
+      "slug": "ho-nguoi-theo-nguon",
+      "bat_khi": "Nạp lại mọi nguồn hai lần: số người và số vai không đổi; mọi dòng sellers cũ có người tương ứng kèm bí danh nguồn",
+      "nhom": "danh-ba",
+      "dot": "danh-ba-2910",
+      "phu": [
+        "DB2b"
+      ],
+      "ghi_chu": "Khung chung ADR-0016 §3 (khoá mờ tiền tố, trạng thái, bảng bí danh và sự kiện dùng chung) do hàng danh bạ mở trước dựng; DB2b sẵn sàng trước DB1 nên thường là hàng này — chốt ở Cổng Phạm vi. Không gộp người liên nguồn (Đợt 3). Vai suy luận chỉ ở /ops, không vào cột. Người bán là tầng C (ADR-0007 mục 9); người dùng app và tài khoản thu (tầng A) không vào danh bạ. Migration xin số ở phiên điều phối liên làn."
+    },
+    {
       "ma": "PL17",
       "cau_giao": "Parser mọi nguồn ghi phát biểu có rule_id và vị trí đoạn khớp; sửa parser cập nhật được tin cũ; Chợ Tốt duy trì đường, WC, tầng",
       "vai": "nen",
@@ -367,21 +368,22 @@
     },
     {
       "ma": "PL18",
-      "cau_giao": "E1 phát biểu theo lớp (tên nhóm, mặc định dự án là suy luận); E2 chạy mù, chỉ được tính khi trích dẫn có thật trong tin",
+      "cau_giao": "E1 phát biểu theo lớp (tên nhóm, mặc định dự án là suy luận); E2 là bộ đọc chạy mù ra mảng căn, mỗi giá trị kèm trích dẫn, chỉ được tính khi trích dẫn có thật trong tin, và mỗi căn của bài nhiều căn thành một offer có khoá riêng",
       "vai": "nen",
-      "tieu_chi": 10,
+      "tieu_chi": 12,
       "vi_sao": "L01/L02: tên nhóm vẫn quyết 4 loại; E2 bị mồi đáp án E1.",
       "hang": "T2",
       "dung_tren": [
         "PL15"
       ],
       "slug": "e1-e2-theo-lop",
-      "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%",
+      "bat_khi": "Không prompt E2 nào chứa đáp án E1; trích dẫn giả bị loại 100%; bài nhiều căn ra đủ số offer, nạp lại không đổi offer_id; không còn trường confidence tự khai",
       "nhom": "doc-tin",
       "dot": "phan-loai-2310",
       "phu": [
         "C2.4"
-      ]
+      ],
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): gánh N2/B3 (tách bài nhiều căn) và B7. 12 tiêu chí: tách nhiều căn là đầu ra của chính bộ đọc, tách hàng thì mất nghĩa. Phân loại không hỏi LLM khi Kev/luật đủ; ai đọc ô nào do bảng PL30."
     },
     {
       "ma": "PL19",
@@ -477,41 +479,21 @@
       ]
     },
     {
-      "ma": "PL24",
-      "cau_giao": "resolve-properties dựng căn với stable_key không chứa giá và loại, đọc must_link/cannot_link, và đưa tin P1 vào căn",
-      "vai": "nen",
-      "tieu_chi": 10,
-      "vi_sao": "L03/L11: 45 tin gắn 2 căn, 39 căn mồ côi, 0 tin P1 trong properties, «Cùng căn» không hiệu lực.",
-      "hang": "T3",
-      "dung_tren": [
-        "PL14",
-        "PL16"
-      ],
-      "slug": "resolve-can-ben",
-      "bat_khi": "Đổi giá một tin: không sinh căn mới; quyết định Cùng căn giữ qua resolve",
-      "nhom": "can-nha",
-      "dot": "phan-loai-2310",
-      "phu": [
-        "C3.2a"
-      ]
-    },
-    {
       "ma": "PL25",
       "cau_giao": "judge-entity áp ngưỡng bằng code, LLM chỉ giải thích; mọi lần chấm lưu model và trace; ứng viên sinh thẻ ghép căn",
       "vai": "nen",
       "tieu_chi": 9,
       "vi_sao": "L14: luật xác định nằm trong prompt; 134 cặp needs_llm không có thẻ.",
       "hang": "T2",
-      "dung_tren": [
-        "PL24"
-      ],
+      "dung_tren": [],
       "slug": "judge-nguong-la-code",
       "bat_khi": "Mọi ứng viên needs_llm có thẻ; không prompt nào chứa ngưỡng số",
       "nhom": "can-nha",
       "dot": "phan-loai-2310",
       "phu": [
         "C3.2b"
-      ]
+      ],
+      "ghi_chu": "Lượt cắt danh-ba-2910 bỏ PL24 khỏi dung_tren (PL24 sang mục chờ, DB2 thay). Hàng chạy trên ứng viên của resolver hiện tại; thẻ ghép căn nó sinh là một nguồn bằng chứng gộp vật thể của DB2 (ADR-0016 §6)."
     },
     {
       "ma": "PL26",
@@ -550,22 +532,22 @@
     },
     {
       "ma": "PL28",
-      "cau_giao": "Transform gộp tin chỉ có ảnh vào tin chữ liền trước cùng nhóm, cùng người gửi, cách nhau dưới 2 phút; raw giữ nguyên từng event",
+      "cau_giao": "Transform gộp tin chỉ có ảnh vào tin chữ liền trước hoặc liền sau cùng nhóm, cùng người gửi, cách nhau dưới 2 phút; raw giữ nguyên từng event",
       "vai": "nen",
       "tieu_chi": 8,
       "vi_sao": "L06: 59/80 tin bị bỏ là tin chỉ ảnh. ZCode đề xuất gộp ở transform (làn Claude) để raw giữ đúng event (§6). Cần L20 sửa trước để tin ảnh không mất lúc ingest.",
       "hang": "T2",
       "dung_tren": [
-        "PL4",
-        "PL17"
+        "PL4"
       ],
       "slug": "gop-tin-chi-anh-o-transform",
-      "bat_khi": "Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút trước đều được gộp; raw không đổi",
+      "bat_khi": "Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút ở hai phía đều được gộp; offer S03 có ảnh ≥ 50%; raw không đổi",
       "nhom": "doc-tin",
       "dot": "phan-loai-2310",
       "phu": [
         "Z3.1"
-      ]
+      ],
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): A2 của báo cáo 29/10 — nhìn hai phía (106/294 so với 72/294 khi chỉ nhìn liền trước); bỏ đứng trên PL17 vì gộp ảnh không cần phát biểu parser (Hỏi-2 29/10)."
     },
     {
       "ma": "PL29",
@@ -598,7 +580,8 @@
       "dot": "phan-loai-2310",
       "phu": [
         "CM.2"
-      ]
+      ],
+      "ghi_chu": "Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): ứng viên gồm Kev-4B/9B, Qwen 27B local, GLM-5.3, DeepSeek flash; hai ứng viên cloud chỉ chạy khi RV-M2 cho gửi chữ bài ra ngoài và đã kiểm điều khoản gói."
     },
     {
       "ma": "PL31",
@@ -2090,7 +2073,8 @@
       "dung_tren": [
         "AU1",
         "TV0",
-        "ZC4"
+        "ZC4",
+        "NH1"
       ],
       "bat_khi": "anon đọc 0 dòng 0 ảnh; vai user 403; soát tên nguồn thật trên toàn bộ bài đã lên: 0 trúng; ảnh của tin mất quá 90 ngày bị xoá; dung lượng vượt 80% của 5 GB có cảnh báo",
       "nhom": "tv-xem-tin",
@@ -2098,7 +2082,7 @@
       "phu": [
         "TV9"
       ],
-      "ghi_chu": "11 tiêu chí: luật leak gate (CLOUD_ALLOW) và dữ liệu đi lên phải đổi cùng một hàng, không tách được mà giữ nghĩa. Cần ZC4 triển khai thật để media_files S03 có dòng; ZC4 chờ AU3 merge (snapshot Zalo có mili-giây) — liên làn 25/10."
+      "ghi_chu": "11 tiêu chí: luật leak gate (CLOUD_ALLOW) và dữ liệu đi lên phải đổi cùng một hàng, không tách được mà giữ nghĩa. Cần ZC4 triển khai thật để media_files S03 có dòng; ZC4 chờ AU3 merge (snapshot Zalo có mili-giây) — liên làn 25/10. Sửa 30/10 (lượt doc-tin-anh-3010, docs/research/s03-boc-tach-cau-truc-3010.md §9.2): ảnh thu nhỏ dựng từ bảng media canonical NH1, phủ cả S06; S03 đủ ảnh khi ZC9 giao."
     },
     {
       "ma": "TV10",
@@ -2411,6 +2395,505 @@
       "phu": [
         "DF5"
       ]
+    },
+    {
+      "ma": "NH1",
+      "cau_giao": "Ảnh của tin S03 và S06 nằm ở một bảng media canonical theo RESO Media nối với offer, và /ops/review, /ops/data-flow ở máy thu đọc ảnh từ bảng này",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "Mục chờ NH1 đạt điều kiện mở: ZC4 đã ký, media_files S03 có dòng thật. Đo 30/10: /ops hiện 0 ảnh S06 dù stg có ảnh ở gần mọi tin; ảnh S03 đi loader riêng. Một bảng cho mọi nguồn thay cho loader từng trang (gộp A3 của báo cáo 29/10).",
+      "hang": "T3",
+      "dung_tren": [
+        "ZC4"
+      ],
+      "slug": "media-canonical-reso",
+      "bat_khi": "Offer S06 có ảnh trong stg thì thẻ duyệt hiện ≥ 1 ảnh; offer S03 có file local thì hiện ảnh; nạp lại hai lần không nhân dòng; sync cloud không đẩy URL ảnh, leak gate xanh",
+      "nhom": "tv-xem-tin",
+      "dot": "nen-tang-2310",
+      "phu": [
+        "TD11"
+      ],
+      "vung": [
+        "db/migrations/**",
+        "app/src/lib/ops/**"
+      ],
+      "ghi_chu": "Cắt từ mục chờ ngày 30/10, lượt doc-tin-anh-3010 (docs/plan/pham-vi-doc-tin-anh-3010.md). Migration xin số ở phiên điều phối liên làn. URL ảnh S06 chứa tên miền nguồn (tầng A) nên không lên cloud; TV9 dựng ảnh thu nhỏ từ bảng này."
+    },
+    {
+      "ma": "N1",
+      "cau_giao": "Transform S03 đọc giá và diện tích từ chữ bài đã bỏ URL và SĐT, chuẩn hoá cách viết giá của môi giới, gom repost theo mã toà/căn khi thiếu phường và diện tích, ghi tên người bán và phường theo thị trường của nhóm",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "vi_sao": "Đo 30/10 (docs/research/s03-boc-tach-cau-truc-3010.md §3, §9): 579 bài bán đọc ra trên 100 tỷ, giá đọc từ URL ảnh, một offer gom 278 bài với 67 nội dung, seller_name S03 0%, phường chỉ nạp Hà Nội. Cầm máu bằng luật; ý định bán/thuê không vá bằng regex mà đi PL5.",
+      "hang": "T2",
+      "dung_tren": [],
+      "slug": "s03-cam-mau-so-lieu",
+      "bat_khi": "Nạp lại S03: 0 offer thuê giá ≥ 1 tỷ, 0 offer bán trên 100 tỷ, 0 giá đọc từ URL; mọi ca thử số lấy từ bài thật xanh; không offer nào gom quá 10 nội dung khác nhau; seller_name S03 ≥ 95%; bài nhóm TP.HCM có tên phường thì ra phường vn-hcmc-*",
+      "nhom": "doc-tin",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "N1"
+      ],
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/lib/**"
+      ],
+      "ghi_chu": "Gánh N3 (phường theo thị trường) và A4 (seller_name) của §9.2. Đi trước PL17 (cùng transform-zalo); PL17 sau đó gắn rule_id cho các luật này."
+    },
+    {
+      "ma": "C2b",
+      "cau_giao": "Mỗi đêm scorecard ghi media-yield theo bậc và field-yield theo tầng đọc của từng nguồn S0x vào dq_check_results, cửa sổ 7 và 30 ngày",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "vi_sao": "Báo cáo 29/10 §3 và 30/10 §8: ảnh và trường rơi ở bậc nào hiện chỉ đo được bằng tay. C2 đã đủ 12 tiêu chí nên tách thành hàng riêng (Hỏi-3 29/10).",
+      "hang": "T2",
+      "dung_tren": [
+        "C2"
+      ],
+      "slug": "scorecard-media-field-yield",
+      "bat_khi": "Chạy hai lần cùng ngày không nhân dòng; mỗi nguồn active có media-yield cho từng bậc (bài có ảnh → file local → media canonical → offer có ảnh) và field-yield cho từng trường theo tầng (bài → mục → trường đọc → nối → suy ra); bậc chưa có dữ liệu ghi «—», không ghi 0",
+      "nhom": "do-luong",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "C2b"
+      ],
+      "vung": [
+        "pipeline/dq-scorecard.mjs",
+        "pipeline/sql/**"
+      ]
+    },
+    {
+      "ma": "ZC9",
+      "cau_giao": "Collector S03 tải ảnh của tin chỉ có ảnh không còn lỗi hàng loạt, và tải bù entry lỗi khi URL còn hạn",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "vi_sao": "Làn ZCode (collector/). Từ khoảng 05:00Z 27/10, cỡ một phần ba entry ảnh S03 lỗi http-500, dồn vào ảnh của tin chỉ có ảnh; ngày 29/10 vẫn 27,8%. GIAO claudedp-2910-10.",
+      "hang": "T2",
+      "dung_tren": [],
+      "slug": "s03-anh-tai-loi",
+      "bat_khi": "Một ngày chạy thật: entry media_files có error dưới 5% ở mọi họ host; entry lỗi còn hạn URL được tải bù và có file",
+      "nhom": "collector",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "ZC9"
+      ],
+      "vung": [
+        "collector/src/**"
+      ],
+      "ghi_chu": "Dưới mục tiêu cỡ: một bước tải; không gộp với PL10b vì khác nguồn, khác kết quả. Không đụng cấu hình OpenClaw khi chưa đọc docs/ops/runtime-map.md (luật 8). Tên host CDN không lên kênh GitHub."
+    },
+    {
+      "ma": "PL10b",
+      "cau_giao": "Collector thu danh mục toà · trục · mã căn của Vinhomes Grand Park vào raw, từ nguồn đã được Mạnh duyệt sau khi kiểm điều khoản",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "vi_sao": "47% bài S03 (30/10) thuộc nhóm Grand Park; các mã toà S1–S10, BS, GH, BE, LBV… không có dòng danh mục để nối. Cùng dáng PL10 đã ký. Làn ZCode.",
+      "hang": "T2",
+      "dung_tren": [],
+      "slug": "thu-danh-muc-grand-park",
+      "bat_khi": "Mọi toà Grand Park có mã xuất hiện ≥ 20 lần trong bài S03 30 ngày đều có danh sách trục trong raw; chạy lại không nhân snapshot",
+      "nhom": "danh-muc",
+      "dot": "doc-tin-anh-3010",
+      "phu": [
+        "PL10b"
+      ],
+      "vung": [
+        "collector/src/**"
+      ],
+      "ghi_chu": "Gọi nguồn bằng mã S0x, không ghi tên thật (ADR-0007). Nguồn danh mục theo chính sách luật 5 (chỉ nội bộ, tối đa một lần mỗi tuần). Danh bạ toà Grand Park dựng từ dữ liệu này là mục chờ DBG."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD1",
+      "slug": "judge-evidence-du-truong",
+      "nhom": "hang-duyet-dot1",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "phu": [
+        "HD1"
+      ],
+      "cau_giao": "Bộ đánh giá ghép căn ghi vào evidence của thẻ đủ mười trường mà bảng so trên thẻ hiện, mỗi trường kèm giá trị của cả hai tin",
+      "bat_khi": "Gieo lại một lô thẻ: mọi thẻ mới có đủ mười khoá của bảng so cho cả Tin A và Tin B (giá trị hay null tường minh); thẻ cũ không bị sửa",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §3, H8): evidence của PL25 ghi 8 khoá trong khi bảng so có 10 hàng, nên thẻ thiếu trường người duyệt cần.",
+      "vung": [
+        "agent/scripts/judge-run.ts",
+        "agent/src/tools/native.ts"
+      ],
+      "ghi_chu": "Dãy P3, mở đầu đợt 1. Khi bảng Người gộp theo SĐT (HD13) đã giao, evidence thêm party_key — ghi ở Cổng Phạm vi của HD13, không chặn hàng này."
+    },
+    {
+      "dung_tren": [
+        "HD1"
+      ],
+      "dot": "hang-duyet-3010",
+      "ma": "HD2",
+      "slug": "judge-luat-loai-tru-dac-trung",
+      "nhom": "hang-duyet-dot1",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "phu": [
+        "HD2"
+      ],
+      "cau_giao": "Bộ đánh giá ghép căn loại trừ tất định một cặp khi một đặc trưng nhà khác rõ (số nhà, phòng ngủ, diện tích, ngang×dài, tầng, toạ độ), ghi đặc trưng nào khác vào evidence",
+      "bat_khi": "Trên các cặp Mạnh đã từ chối có ghi đặc trưng khác, luật cho ra «khác căn» ở mọi cặp có đủ đặc trưng hai bên; trên cặp đã nhận, luật không loại cặp nào; đặc trưng thiếu một bên không bao giờ thành lý do loại",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §7): Mạnh nhận trùng qua đặc trưng nhà — chỉ cần một đặc trưng khác là gần như chắc không cùng căn; 10 lần từ chối đều nêu ít nhất một đặc trưng khác.",
+      "vung": [
+        "agent/src/agents/judge-entity.ts",
+        "agent/scripts/judge-run.ts"
+      ],
+      "ghi_chu": "Dãy P3. Luật xác định, không LLM (luật 7). Đọc đặc trưng S06 khi HD5 đã giao; trước đó dùng trường đang có — hàng không đứng trên HD5 để không chặn."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD3",
+      "slug": "the-ghep-can-tin-roi-kho",
+      "nhom": "hang-duyet-dot1",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "phu": [
+        "HD3"
+      ],
+      "cau_giao": "Thẻ ghép căn có một bên đã rời kho (khoá tin không còn trong sale_offers) tự rút khỏi hàng duyệt kèm lý do có tên, không hiện cho người duyệt",
+      "bat_khi": "Sau một lượt đêm: 0 thẻ chờ duyệt trỏ khoá tin không còn sống; mỗi thẻ rút có lý do «tin rời kho» và vết audit; chạy lại không rút trùng",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §1, H1): 12 thẻ trỏ khoá S05 đã chết sau PL14, người duyệt quyết trên dữ liệu không còn.",
+      "vung": [
+        "pipeline/resolve-properties.mjs",
+        "agent/scripts/judge-run.ts"
+      ],
+      "ghi_chu": "Dãy P3. Dưới mục tiêu cỡ: một kết quả nền hẹp; không gộp với HD9 vì HD9 là T3 (đường quyết định)."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD4",
+      "slug": "seller-ref-theo-nguoi-gui",
+      "nhom": "hang-duyet-dot1",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "phu": [
+        "HD4"
+      ],
+      "cau_giao": "Transform S03 và S05 ghi seller_ref theo người gửi bài, không còn một giá trị hằng cho mọi tin của nhóm",
+      "bat_khi": "Nạp lại S03/S05: số seller_ref khác nhau bằng số người gửi khác nhau (±1%); không seller_ref nào gánh quá 5% số tin của nguồn trừ khi một người gửi thật gửi chừng ấy",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §3b, H15): seller_ref S03/S05 là hằng nên thẻ không phân biệt người đăng và danh bạ không nối được.",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/transform-fb.mjs"
+      ],
+      "ghi_chu": "Dãy P3. Chung transform-zalo.mjs với N1 (đợt doc-tin-anh-3010) — chạy sau N1, không song song."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD5",
+      "slug": "dac-trung-nha-s06-len-canonical",
+      "nhom": "hang-duyet-dot1",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "phu": [
+        "HD5"
+      ],
+      "cau_giao": "Đặc trưng nhà của tin S06 (số nhà, ngang, dài, số tầng, số phòng, số WC, toạ độ, mã căn) lên canonical qua phát biểu trường, có căn cứ",
+      "bat_khi": "Nạp lại S06: mỗi đặc trưng lên canonical ở ít nhất 95% số tin có trường ấy ở stg; mỗi giá trị có phát biểu với căn cứ; field mới khai RESO-first trong mappings.yaml",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §7, Q12): stg S06 có sẵn số nhà, ngang×dài, tầng, phòng cho phần lớn ~6,3 nghìn căn nhưng canonical không có — bộ đánh giá và thẻ không dùng được.",
+      "vung": [
+        "pipeline/transform-chotot.mjs",
+        "pipeline/mappings.yaml",
+        "db/migrations"
+      ],
+      "ghi_chu": "Dãy P1, song song với dãy P3 của đợt 1. T3 vì đổi schema (migration) và năm cột trục PL15."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD6",
+      "slug": "the-so-doc-gia-tri-song",
+      "nhom": "hang-duyet-dot2",
+      "hang": "T2",
+      "vai": "Người duyệt",
+      "tieu_chi": 8,
+      "phu": [
+        "HD6"
+      ],
+      "cau_giao": "Người duyệt mở thẻ ghép căn và thấy bảng so đọc giá trị sống của hai tin, ô thiếu một bên hiện «Thiếu» chứ không tính là «Lệch»",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §3, H9, H10): bảng so đọc evidence đóng băng lúc gieo; «chưa biết» bị đếm như «Lệch» làm người duyệt nghi oan.",
+      "vung": [
+        "app/src/lib/ops",
+        "app/src/components/ops/review"
+      ],
+      "ghi_chu": "Dãy U1, mở đầu đợt 2. HD6 → HD7 → HD8 chạy tuần tự (cùng vùng)."
+    },
+    {
+      "dung_tren": [
+        "HD4"
+      ],
+      "dot": "hang-duyet-3010",
+      "ma": "HD7",
+      "slug": "the-duyet-hien-nguoi-dang",
+      "nhom": "hang-duyet-dot2",
+      "hang": "T2",
+      "vai": "Người duyệt",
+      "tieu_chi": 8,
+      "phu": [
+        "HD7"
+      ],
+      "cau_giao": "Người duyệt thấy người đăng của mỗi tin trên thẻ ghép căn (tên, SĐT, số tin đang rao) và nhận ra ngay khi hai tin cùng một người",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §3b, H14, H17): thẻ không hiện người đăng; 5/8 ứng viên kế có Tin B từ một tài khoản rao hơn nghìn tin.",
+      "vung": [
+        "app/src/lib/ops",
+        "app/src/components/ops/review"
+      ],
+      "ghi_chu": "Dãy U1. Định danh người bán là tầng C (ADR-0007 mục 9). Đứng trên HD4 vì cần seller_ref thật."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD8",
+      "slug": "the-duyet-tu-sang-the-ke",
+      "nhom": "hang-duyet-dot2",
+      "hang": "T2",
+      "vai": "Người duyệt",
+      "tieu_chi": 7,
+      "phu": [
+        "HD8"
+      ],
+      "cau_giao": "Người duyệt quyết một thẻ và được đưa ngay sang thẻ kế trong hàng duyệt, không phải đóng rồi mở lại",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §4, H13): sau khi quyết, sheet đứng yên trên thẻ đã quyết; trung vị 52 giây mỗi thẻ.",
+      "vung": [
+        "app/src/components/ops/review",
+        "app/src/components/ops/review-card.tsx"
+      ],
+      "ghi_chu": "Dãy U1, cuối đợt 2. Dưới mục tiêu cỡ: một hành vi hẹp; không gộp với HD7 để giữ mỗi hàng một kết quả."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD9",
+      "slug": "quyet-dinh-phai-cham-ung-vien",
+      "nhom": "hang-duyet-dot3",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "phu": [
+        "HD9"
+      ],
+      "cau_giao": "Quyết định trên thẻ ghép căn chỉ được ghi khi nó chạm đúng một ứng viên còn sống; không chạm được thì trả lỗi có tên và không đóng thẻ",
+      "bat_khi": "Thử quyết trên thẻ trỏ ứng viên đã mất: route trả lỗi có tên, thẻ vẫn chờ, 0 dòng ghi; quyết trên thẻ hợp lệ: đúng một ứng viên đổi trạng thái, có audit",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §1, H2): 11 quyết định cũ chạm 0 ứng viên mà thẻ vẫn đóng — Mạnh duyệt bỏ 11 quyết định ấy, không khôi phục.",
+      "vung": [
+        "app/src/app/api/v1/ops/review",
+        "pipeline/resolve-properties.mjs"
+      ],
+      "ghi_chu": "Dãy P3, đợt 3. T3: đường ghi quyết định (t3_paths)."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD10",
+      "slug": "anh-goc-qua-may-chu",
+      "nhom": "hang-duyet-dot3",
+      "hang": "T3",
+      "vai": "Người duyệt",
+      "tieu_chi": 9,
+      "phu": [
+        "HD10"
+      ],
+      "cau_giao": "Người duyệt vai ops trên cloud thấy ảnh của tin S06 trên thẻ ghép căn, ảnh đi qua máy chủ chứ không lộ URL nguồn",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §2, H5): S06 có 0 ảnh local nên vai ops trên cloud không thấy ảnh nào; Mạnh duyệt cho ảnh S06 đi qua máy chủ.",
+      "vung": [
+        "app/src/app/api/zalo-media",
+        "app/src/lib/ops-access.ts",
+        "app/src/components/ops/review"
+      ],
+      "ghi_chu": "Dãy U1, đợt 3. T3: chạm quyền xem ảnh (lớp quyền), không chạm dữ liệu người dùng."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD11",
+      "slug": "do-the-duyet-du-du-lieu",
+      "nhom": "hang-duyet-dot3",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 7,
+      "phu": [
+        "HD11"
+      ],
+      "cau_giao": "Mỗi đêm scorecard ghi tỉ lệ thẻ ghép căn chờ duyệt có đủ dữ liệu hai bên (ảnh, đặc trưng nhà, người đăng, tin còn sống)",
+      "bat_khi": "Chạy hai lần cùng ngày không nhân dòng; mỗi thành phần có tỉ lệ riêng; thẻ không còn chờ không được đếm",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §5, H4): 0/8 ứng viên kế có ảnh bên A — đo bằng tay; cần số đêm để biết hàng duyệt có đáng duyệt.",
+      "vung": [
+        "pipeline/sql"
+      ],
+      "ghi_chu": "Dãy P4, đợt 3. Dưới mục tiêu cỡ: một phép đo hẹp."
+    },
+    {
+      "dung_tren": [],
+      "dot": "hang-duyet-3010",
+      "ma": "HD12",
+      "slug": "s06-sdt-theo-tin",
+      "nhom": "hang-duyet-dot3",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 8,
+      "phu": [
+        "HD12"
+      ],
+      "cau_giao": "Collector S06 thu SĐT người đăng theo từng tin được chọn và ghi vào stg ở dạng số gốc +84… (Hỏi-A #216), tăng schemaVersion của DATA-CONTRACT",
+      "bat_khi": "Một lượt thu thử trên tin được chọn: tin có SĐT ghi số gốc dạng +84… ở stg; DATA-CONTRACT tăng schemaVersion; lượt thu không vượt giới hạn tần suất đã khai",
+      "vi_sao": "Làn ZCode (collector/). Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §3b, H16; docs/research/audit-bang-nguoi-sdt-3010.md): S06 giấu SĐT nên không nối được Người khác nguồn; Mạnh chốt SĐT là khoá chính và S06 cần thu SĐT.",
+      "vung": [
+        "collector/src/**",
+        "collector/docs/DATA-CONTRACT.md"
+      ],
+      "ghi_chu": "Trùng s06-thu-sdt của audit hàng duyệt và s06-sdt-theo-tin (SH3) của audit #216 — giữ một hàng, tên #216. Dạng khoá theo Hỏi-A đã quyết 30/10: lưu số gốc dạng +84… (E.164). Migration stg do Claude viết (luật giáp ranh)."
+    },
+    {
+      "dung_tren": [
+        "SD3"
+      ],
+      "dot": "hang-duyet-3010",
+      "ma": "HD13",
+      "slug": "nguoi-noi-theo-sdt",
+      "nhom": "hang-duyet-dot3",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 10,
+      "phu": [
+        "HD13"
+      ],
+      "cau_giao": "Danh bạ Người gộp người đăng theo SĐT, trước trong cùng nguồn rồi khác nguồn, mỗi lần gộp có vết và đảo được",
+      "bat_khi": "Dựng lại danh bạ trong giao dịch ROLLBACK: mọi cặp tài khoản cùng SĐT về một Người; lượt hai gộp 0; không Người nào gộp hai SĐT khác nhau mà không có bí danh nối; tách lại một lần gộp không mất dữ liệu",
+      "vi_sao": "Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §3b, H16, §7; docs/research/audit-bang-nguoi-sdt-3010.md): 0 Người khác nguồn; Mạnh chốt SĐT là khoá chính để nối Người.",
+      "vung": [
+        "pipeline/lib/danh-ba-nguoi.mjs",
+        "pipeline/dung-nguoi.mjs"
+      ],
+      "ghi_chu": "Gánh cả gop-nguoi-sdt-tai-khoan của audit #216 (một hàng, không cắt riêng — lượt cắt nguoi-sdt-3010). Đứng trên SD3: gộp trên bí danh số gốc +84…. Phần cùng nguồn S03/S05 (luật 1–1 tất định, ca nhiều–nhiều thành thẻ duyệt) giao trước; phần khác nguồn dùng SĐT S06 khi HD12 giao — HD12 chưa giao thì Cổng Phạm vi để phần khác nguồn ra ngoài hợp đồng."
+    },
+    {
+      "dung_tren": [],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD1",
+      "slug": "sellers-them-dong-lai",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "phu": [
+        "SD1"
+      ],
+      "cau_giao": "Bước tổng hợp người bán thêm dòng cho mọi SĐT mới trên tin, không chỉ cập nhật và xoá dòng đã có",
+      "bat_khi": "Chạy bước bait gap trên DB hiện tại: số dòng sellers bằng số SĐT khác nhau trên sale_offers (hôm nay 19 so với 161); chạy lại lần hai không đổi số dòng; test đỏ khi bỏ lệnh thêm dòng",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §0 N3, Hỏi-C bước 1): commit 907f4bd4 bỏ INSERT ở transform, refresh-bait-gap chỉ UPDATE/DELETE nên sellers teo còn 19 dòng; chip môi giới /ops/deals thiếu 142/161 SĐT.",
+      "vung": [
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/lib/danh-ba-nguoi.mjs"
+      ],
+      "ghi_chu": "Dãy P3. Dưới mục tiêu cỡ: một vá nhỏ có test, Mạnh duyệt làm ngay (Hỏi-C bước 1); bước 2 nằm trong SD3."
+    },
+    {
+      "dung_tren": [],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD2",
+      "slug": "boc-sdt-du-va-chon-ro",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "phu": [
+        "SD2"
+      ],
+      "cau_giao": "Bộ bóc SĐT của S03/S05 bắt đủ các dạng viết tách lạ, bỏ số 11 chữ số, trả số dạng +84…, và tin chọn SĐT theo luật rõ trên mọi bài của tin",
+      "bat_khi": "Trên toàn bộ bài S03 ở stg: bài sót theo bộ dò rộng từ 46 xuống 0; 0 bài nhận số 11 chữ số; mọi số trả về khớp ^\\+84[35789]\\d{8}$; 3 tin S03 rỗng SĐT mà bài có số thành có; test cố định bốn dạng sót (•, (+84), (0xx), hai ký tự tách)",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §2, N4–N6): bộ bóc bắt 99,6% số trong chữ nhưng sót bốn dạng lạ, nhận số 11 chữ số, và tin chỉ giữ số đầu của bài đầu (11 tin S03 có nhiều số).",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/transform-fb.mjs",
+        "pipeline/parse.test.mjs"
+      ],
+      "ghi_chu": "Dãy P1. Chung transform-zalo.mjs với HD4 và N1: lịch xếp nối tiếp theo vùng. Hàm chuẩn hoá về +84… dùng chung cho ô tìm của SD4."
+    },
+    {
+      "dung_tren": [
+        "SD1",
+        "SD2"
+      ],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD3",
+      "slug": "sdt-luu-goc-e164",
+      "nhom": "nguoi-sdt",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 11,
+      "phu": [
+        "SD3"
+      ],
+      "cau_giao": "Tin và danh bạ Người lưu số gốc SĐT ở một dạng +84…, danh bạ có bí danh số gốc, và bảng người bán thành view trên danh bạ",
+      "bat_khi": "Trên DB thử: 0 giá trị SĐT nào ở sale_offers và registry_aliases kind sdt không khớp ^\\+84[35789]\\d{8}$; mọi người theo SĐT có bí danh sdt (hôm nay 165); bí danh sdt_bam cũ được nghỉ, không sửa tại chỗ; nạp lại lượt hai thêm 0 bí danh; sellers đọc từ view ra cùng số dòng và cột tổng hợp như bảng cũ; leak gate cloud xanh, seller_phone vẫn không lên cloud",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §3.2, §5b, N7; Hỏi-A, Hỏi-C bước 2): danh bạ chỉ giữ SĐT băm sha256 không muối, đảo ngược được, là dư âm thời SĐT tầng A; Mạnh chốt lưu số gốc, một dạng +84….",
+      "vung": [
+        "db/migrations",
+        "pipeline/lib/danh-ba-nguoi.mjs",
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/sync-cloud.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/transform-fb.mjs"
+      ],
+      "ghi_chu": "Dãy P3, T3 (migration + sync-cloud). 11 tiêu chí: lưu số gốc, đổi khoá và view sellers phải đi một lượt để khoá SĐT chỉ đổi một lần (Hỏi-C) — tách ra thì đổi khoá hai lần. Migration số 060 (điều phối liên làn cấp 30/10, sổ SO-MIGRATION); áp lên cloud chỉ khi Mạnh duyệt. Đưa số gốc lên cloud là quyết định riêng, không thuộc hàng này."
+    },
+    {
+      "dung_tren": [
+        "SD3"
+      ],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD4",
+      "slug": "people-hien-so-goc",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "phu": [
+        "SD4"
+      ],
+      "cau_giao": "Người vận hành mở danh bạ người trên Ops ở máy thu, thấy số gốc của từng người, gọi được bằng một chạm và tìm được người theo SĐT; vai Người xem không thấy số",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §5, N8, N10; Hỏi-B): /ops/people chỉ hiện 8 ký tự băm và không tìm theo SĐT; /ops/deals hiện số gốc chỉ cho admin; Mạnh chốt mở cho cả vai Vận hành và admin.",
+      "vung": [
+        "app/src/app/ops/people",
+        "app/src/components/ops/people",
+        "app/src/lib/ops/people.ts",
+        "app/src/app/ops/deals",
+        "app/src/components/ops/deal-card.tsx",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Dãy U1, sau che-tim-bi-danh-viewer (đợt dot0) vì chung app/src/lib/ops/people*. Gồm hạ cổng liên hệ /ops/deals từ isAdmin xuống vai Vận hành và sửa chú thích «SĐT tầng A». HTML/JSON của vai Người xem không được chứa SĐT."
+    },
+    {
+      "dung_tren": [],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD5",
+      "slug": "do-danh-ba-sdt",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "phu": [
+        "SD5"
+      ],
+      "cau_giao": "Mỗi đêm đo trục SĐT của danh bạ Người và ghi vào dq_check_results để /ops/quality hiện",
+      "bat_khi": "Chạy trên DB 30/10 ra đúng số của audit §0: SĐT nối 1–1 chưa gộp S03 129 · S05 13; người theo SĐT không vai 150; sellers 19/161; tin nhiều SĐT 11; bài sót 46. Chạy hai lần cùng ngày không nhân dòng",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §0): mọi số của audit đo bằng tay; cần số đêm để đối chứng trước và sau SD1–SD3, HD13.",
+      "vung": [
+        "pipeline/sql"
+      ],
+      "ghi_chu": "Dãy P4. Dưới mục tiêu cỡ: một phép đo hẹp. Nên giao trước HD13 để có số đối chứng."
     }
   ],
   "chan_troi": [
@@ -2565,16 +3048,6 @@
       "mo_lai_khi": "Bắt đầu giai đoạn C2 của Cổng Ops"
     },
     {
-      "ma": "NH1",
-      "dot": "nen-tang-2310",
-      "cau_giao": "media_files từ stg lên canonical theo RESO Media",
-      "ly_do": "Chưa có snapshot ảnh v2 thật để đo (0 dòng media_files)",
-      "phu": [
-        "TD11"
-      ],
-      "mo_lai_khi": "ZC4 giao xong và media_files S03 có dòng thật"
-    },
-    {
       "ma": "NH2",
       "dot": "nen-tang-2310",
       "cau_giao": "Bản công khai của app không đỏ test vì đọc tệp mẫu trong agent/",
@@ -2662,7 +3135,7 @@
       "phu": [
         "TD10"
       ],
-      "mo_lai_khi": "Mạnh quyết, PL11 và PL23 giao xong"
+      "mo_lai_khi": "Mạnh quyết, DB1 (thay PL11) và PL23 giao xong"
     },
     {
       "ma": "SH5",
@@ -2672,7 +3145,7 @@
       "phu": [
         "TD24"
       ],
-      "mo_lai_khi": "PL11 giao xong và lát mở rộng ngang"
+      "mo_lai_khi": "DB1 (thay PL11) giao xong và lát mở rộng ngang"
     },
     {
       "ma": "SH6",
@@ -2682,7 +3155,7 @@
       "phu": [
         "TD18"
       ],
-      "mo_lai_khi": "PL20 và PL24 giao xong"
+      "mo_lai_khi": "PL20 và DB2 (thay PL24) giao xong"
     },
     {
       "ma": "SH7",
@@ -2762,7 +3235,7 @@
       "phu": [
         "TD29"
       ],
-      "mo_lai_khi": "Mạnh quyết, PL24 và PL27 giao xong"
+      "mo_lai_khi": "Mạnh quyết, DB2 (thay PL24) và PL27 giao xong"
     },
     {
       "ma": "KH-KV3",
@@ -2814,6 +3287,86 @@
         "TV17"
       ],
       "mo_lai_khi": "TV6, TV7 và TV13 giao xong"
+    },
+    {
+      "ma": "PL11",
+      "dot": "phan-loai-2310",
+      "cau_giao": "asset_nodes có cấp trục và căn cho Ocean Park 1, mỗi dòng mang bậc nguồn (xác minh · suy ra mạnh · một lời khai)",
+      "ly_do": "ADR-0016 §10 Đợt 1 thay hàng này (Mạnh duyệt ADR 27/10): không kéo asset_nodes xuống trục/căn; danh bạ toà · trục · căn gánh C1.5. Chuyển khỏi hàng ở lượt cắt danh-ba-2910.",
+      "phu": [
+        "C1.5"
+      ],
+      "mo_lai_khi": "Không mở riêng: C1.5 giao cùng DB1 (đợt danh-ba-2910)"
+    },
+    {
+      "ma": "PL24",
+      "dot": "phan-loai-2310",
+      "cau_giao": "resolve-properties dựng căn với stable_key không chứa giá và loại, đọc must_link/cannot_link, và đưa tin P1 vào căn",
+      "ly_do": "ADR-0016 §10 Đợt 2 thay hàng này (Mạnh duyệt ADR 27/10): resolver vật thể thay resolve-properties.mjs, properties thành view; danh bạ gánh C3.2a. Chuyển khỏi hàng ở lượt cắt danh-ba-2910.",
+      "phu": [
+        "C3.2a"
+      ],
+      "mo_lai_khi": "Không mở riêng: C3.2a giao cùng DB2 (đợt danh-ba-2910)"
+    },
+    {
+      "ma": "DB1",
+      "dot": "danh-ba-2910",
+      "cau_giao": "Danh bạ có toà · trục · căn Ocean Park 1 dựng từ danh mục S08 và phát biểu toà/mã căn trên tin, trên khung chung có UPI neo toà; 3 dòng asset_nodes building chuyển sang toà; dọn bí danh dự án trùng mã toà, đối chiếu area_ids OCP1–3 với nguồn xác minh, chủ đầu tư ghi ở cấp toà (Building.BuilderName)",
+      "ly_do": "Luật 11 (ADR-0016 §10): chỉ dựng cấp có dữ liệu lấp — stg_s08_inventory chưa có dòng vì ZC8 chưa giao; PL14, PL15 đã gộp. Thay PL11.",
+      "phu": [
+        "DB1"
+      ],
+      "mo_lai_khi": "ZC8 giao và stg_s08_inventory trên DB máy thu có dòng Ocean Park 1 — cắt thành hàng T3 và ước cỡ lúc ấy (dùng phát biểu PL13 nếu đã giao)"
+    },
+    {
+      "ma": "DB2",
+      "dot": "danh-ba-2910",
+      "cau_giao": "Nhà phố, đất thành vật thể tạm và chỉ gộp khi có bằng chứng; tin P1 và listing thuê ngắn hạn gắn vật thể ở mức sâu nhất biết được; properties thành view trên danh bạ để các tệp đang đọc không gãy",
+      "ly_do": "ADR-0016 §10: Đợt 2 đứng sau Đợt 1 (cần khung chung và bộ dựng vật thể của DB1). Thay PL24.",
+      "phu": [
+        "DB2"
+      ],
+      "mo_lai_khi": "DB1 đã cắt thành hàng và giao"
+    },
+    {
+      "ma": "DBG",
+      "dot": "doc-tin-anh-3010",
+      "cau_giao": "Danh bạ có toà · trục Grand Park dựng từ danh mục PL10b và phát biểu toà/mã căn trên tin, cùng khung chung với DB1",
+      "ly_do": "Luật 11: chưa có dữ liệu danh mục Grand Park (PL10b chưa giao); tách khỏi DB1 để DB1 không phình",
+      "phu": [
+        "DBG"
+      ],
+      "mo_lai_khi": "PL10b giao và DB1 đã thành hàng"
+    },
+    {
+      "ma": "AP1",
+      "dot": "doc-tin-anh-3010",
+      "cau_giao": "Căn nhà có ảnh đại diện lấy từ media canonical của các tin gắn vào nó",
+      "ly_do": "Cần bảng media canonical (NH1) và căn bền trên danh bạ (DB2)",
+      "phu": [
+        "AP1"
+      ],
+      "mo_lai_khi": "NH1 và DB2 giao"
+    },
+    {
+      "ma": "HD14",
+      "dot": "hang-duyet-3010",
+      "cau_giao": "Ảnh tin S05 tải lại về máy thu để thẻ ghép căn có ảnh bên S05",
+      "ly_do": "S05 ngừng thu từ 21/10, URL ảnh hết hạn; Mạnh tạm không nạp credit S05 để S01, S03, S06 chạy ổn định trước",
+      "phu": [
+        "HD14"
+      ],
+      "mo_lai_khi": "Mạnh quyết nạp lại S05 và S05 thu lại"
+    },
+    {
+      "ma": "HD15",
+      "dot": "hang-duyet-3010",
+      "cau_giao": "Mô hình thị giác so ảnh hai tin của một cặp ghép căn và đề xuất khác căn kèm ảnh làm bằng chứng",
+      "ly_do": "Chưa có đủ cặp có ảnh hai bên kèm nhãn để đo (luật 11: đo trước khi build)",
+      "phu": [
+        "HD15"
+      ],
+      "mo_lai_khi": "Có ít nhất 30 cặp có ảnh hai bên đã có nhãn của người duyệt (sau HD10 và HD13)"
     }
   ],
   "da_bac": []

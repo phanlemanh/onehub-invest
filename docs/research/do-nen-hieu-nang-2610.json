@@ -1,0 +1,421 @@
+{
+  "do_luc": {
+    "reset_pg_stat_statements": "2026-10-27T07:36:52.311Z",
+    "bat_dau": "2026-10-27T07:36:52.330Z",
+    "ket_thuc": "2026-10-27T07:36:55.611Z"
+  },
+  "build_id": "ohbBBHoFHUUcfK5Kqvt8o",
+  "luot_moi_trang": 20,
+  "may": {
+    "os": "Darwin 27.0.0",
+    "cpu": "Apple M5 Max",
+    "nhan": 18,
+    "ram_gb": 128,
+    "node": "v24.21.0",
+    "postgres": "17.7 (Debian 17.7-3.pgdg12+1)"
+  },
+  "db": {
+    "co": "2973 MB",
+    "max_connections": "200",
+    "shared_buffers": "32768",
+    "work_mem": "16384"
+  },
+  "trang": [
+    {
+      "cong": "invest",
+      "duong": "/vn",
+      "dau": "Thị trường Việt Nam",
+      "luot": 20,
+      "http200": 20,
+      "dung_trang": 20,
+      "ma": [
+        200
+      ],
+      "ttfb": {
+        "p50": 33.2,
+        "p95": 38.8,
+        "max": 41.6
+      },
+      "tong": {
+        "p50": 34.9,
+        "p95": 40.5,
+        "max": 43.3
+      },
+      "byteTb": 200870
+    },
+    {
+      "cong": "invest",
+      "duong": "/vn/hanoi",
+      "dau": "Insight thị trường",
+      "luot": 20,
+      "http200": 20,
+      "dung_trang": 20,
+      "ma": [
+        200
+      ],
+      "ttfb": {
+        "p50": 34.9,
+        "p95": 37.6,
+        "max": 38.8
+      },
+      "tong": {
+        "p50": 38.6,
+        "p95": 42.8,
+        "max": 43
+      },
+      "byteTb": 436438
+    },
+    {
+      "cong": "invest",
+      "duong": "/vn/hanoi/listings",
+      "dau": "Listing tại",
+      "luot": 20,
+      "http200": 20,
+      "dung_trang": 20,
+      "ma": [
+        200
+      ],
+      "ttfb": {
+        "p50": 8.5,
+        "p95": 11.9,
+        "max": 13.3
+      },
+      "tong": {
+        "p50": 14.9,
+        "p95": 17.4,
+        "max": 18.5
+      },
+      "byteTb": 521071
+    },
+    {
+      "cong": "ops",
+      "duong": "/ops",
+      "dau": "Tổng quan vận hành",
+      "luot": 20,
+      "http200": 20,
+      "dung_trang": 20,
+      "ma": [
+        200
+      ],
+      "ttfb": {
+        "p50": 21.1,
+        "p95": 22.5,
+        "max": 24.6
+      },
+      "tong": {
+        "p50": 21.9,
+        "p95": 23.3,
+        "max": 25.4
+      },
+      "byteTb": 129241
+    },
+    {
+      "cong": "ops",
+      "duong": "/ops/data-flow",
+      "dau": "Dòng chảy dữ liệu",
+      "luot": 20,
+      "http200": 20,
+      "dung_trang": 20,
+      "ma": [
+        200
+      ],
+      "ttfb": {
+        "p50": 4.6,
+        "p95": 5.4,
+        "max": 7.8
+      },
+      "tong": {
+        "p50": 34.4,
+        "p95": 38.6,
+        "max": 38.8
+      },
+      "byteTb": 484917
+    }
+  ],
+  "truy_van_theo_tong": [
+    {
+      "cau": "SELECT id, name, ST_AsGeoJSON(ST_SimplifyPreserveTopology(geom, $2)) AS geojson, ST_Y(ST_Centroid(geom)) AS lat, ST_X(ST_Centroid(geom)) AS lng FROM areas WHERE id = $1 OR parent_id = $1",
+      "goi": 22,
+      "tong_ms": 420.5,
+      "tb_ms": 19.11,
+      "max_ms": 19.5,
+      "dong": "3036"
+    },
+    {
+      "cau": "WITH a AS ( SELECT a.id, a.name, a.parent_id, p.name AS parent_name, CASE WHEN $2 THEN ST_AsGeoJSON(ST_SimplifyPreserveTopology(a.geom, $3)) END AS geojson, ST_Y(ST_Centroid(a.geom)) AS lat, ST_X(ST_Centroid(a.geom)) AS ",
+      "goi": 44,
+      "tong_ms": 362.2,
+      "tb_ms": 8.23,
+      "max_ms": 16,
+      "dong": "1584"
+    },
+    {
+      "cau": "SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence, o.n_reposts, o.first_seen::text, o.last_seen::text, a.name AS ward, m.name AS market, EXISTS (SELECT $2 FROM propert",
+      "goi": 22,
+      "tong_ms": 344.7,
+      "tb_ms": 15.67,
+      "max_ms": 16.9,
+      "dong": "7216"
+    },
+    {
+      "cau": "WITH a AS ( SELECT a.id, a.name, a.parent_id, p.name AS parent_name, CASE WHEN $2 THEN ST_AsGeoJSON(ST_SimplifyPreserveTopology(a.geom, $3)) END AS geojson, ST_Y(ST_Centroid(a.geom)) AS lat, ST_X(ST_Centroid(a.geom)) AS ",
+      "goi": 22,
+      "tong_ms": 206.3,
+      "tb_ms": 9.38,
+      "max_ms": 15.4,
+      "dong": "44"
+    },
+    {
+      "cau": "SELECT s.city, max(s.collected_at) AS last FROM stg_S06_ads c JOIN S01_snapshots s USING (snapshot_id) WHERE s.source = ANY($1) GROUP BY s.city",
+      "goi": 22,
+      "tong_ms": 177.7,
+      "tb_ms": 8.08,
+      "max_ms": 9.1,
+      "dong": "44"
+    },
+    {
+      "cau": "SELECT s.city, max(s.collected_at) AS last FROM stg_S03_posts p JOIN S01_snapshots s USING (snapshot_id) WHERE p.agent_id = ANY($1) OR (s.source = ANY($1) AND (p.agent_id IS NULL OR NOT p.agent_id = ANY($2))) GROUP B",
+      "goi": 22,
+      "tong_ms": 101.9,
+      "tb_ms": 4.63,
+      "max_ms": 5,
+      "dong": "22"
+    },
+    {
+      "cau": "SELECT o.offer_id, p.snapshot_id, p.media, p.media_files FROM sale_offers o CROSS JOIN LATERAL unnest(o.post_ids) WITH ORDINALITY AS u(post_id, ord) JOIN stg_S03_posts p ON p.post_id = u.post_id WHERE o.offer_id = ANY($",
+      "goi": 22,
+      "tong_ms": 45.6,
+      "tb_ms": 2.07,
+      "max_ms": 2.3,
+      "dong": "22814"
+    },
+    {
+      "cau": "SELECT a.id, a.region_type, a.name, a.parent_id, p.name AS parent_name FROM areas a LEFT JOIN areas p ON p.id = a.parent_id WHERE a.region_type IN ($1, $2) ORDER BY a.region_type, a.name",
+      "goi": 66,
+      "tong_ms": 30.2,
+      "tb_ms": 0.46,
+      "max_ms": 0.7,
+      "dong": "22308"
+    },
+    {
+      "cau": "SELECT d.snapshot_id, to_char(min(a.collected_at), $2) AS date, array_agg(DISTINCT d.listing_id) AS ids FROM stg_abnb_discovery d JOIN S01_snapshots a ON a.snapshot_id = d.snapshot_id WHERE a.city = $1 GROUP BY d.snap",
+      "goi": 22,
+      "tong_ms": 28.6,
+      "tb_ms": 1.3,
+      "max_ms": 1.5,
+      "dong": "352"
+    },
+    {
+      "cau": "WITH ls AS ( SELECT l.*, a.name AS area_name, a.region_type FROM listings l JOIN areas a ON a.id = l.area_id WHERE (a.id = $1 OR a.parent_id = $1) AND l.latitude IS NOT NULL AND ($3::text IS NULL OR l.area_id = $3) AND (",
+      "goi": 22,
+      "tong_ms": 27,
+      "tb_ms": 1.23,
+      "max_ms": 1.4,
+      "dong": "6600"
+    }
+  ],
+  "truy_van_theo_tb": [
+    {
+      "cau": "SELECT id, name, ST_AsGeoJSON(ST_SimplifyPreserveTopology(geom, $2)) AS geojson, ST_Y(ST_Centroid(geom)) AS lat, ST_X(ST_Centroid(geom)) AS lng FROM areas WHERE id = $1 OR parent_id = $1",
+      "goi": 22,
+      "tong_ms": 420.5,
+      "tb_ms": 19.11,
+      "max_ms": 19.5,
+      "dong": "3036"
+    },
+    {
+      "cau": "SELECT o.offer_id, o.source, o.kind, o.property_type, o.price_vnd, o.area_m2, o.bedrooms, o.confidence, o.n_reposts, o.first_seen::text, o.last_seen::text, a.name AS ward, m.name AS market, EXISTS (SELECT $2 FROM propert",
+      "goi": 22,
+      "tong_ms": 344.7,
+      "tb_ms": 15.67,
+      "max_ms": 16.9,
+      "dong": "7216"
+    },
+    {
+      "cau": "WITH a AS ( SELECT a.id, a.name, a.parent_id, p.name AS parent_name, CASE WHEN $2 THEN ST_AsGeoJSON(ST_SimplifyPreserveTopology(a.geom, $3)) END AS geojson, ST_Y(ST_Centroid(a.geom)) AS lat, ST_X(ST_Centroid(a.geom)) AS ",
+      "goi": 22,
+      "tong_ms": 206.3,
+      "tb_ms": 9.38,
+      "max_ms": 15.4,
+      "dong": "44"
+    },
+    {
+      "cau": "WITH a AS ( SELECT a.id, a.name, a.parent_id, p.name AS parent_name, CASE WHEN $2 THEN ST_AsGeoJSON(ST_SimplifyPreserveTopology(a.geom, $3)) END AS geojson, ST_Y(ST_Centroid(a.geom)) AS lat, ST_X(ST_Centroid(a.geom)) AS ",
+      "goi": 44,
+      "tong_ms": 362.2,
+      "tb_ms": 8.23,
+      "max_ms": 16,
+      "dong": "1584"
+    },
+    {
+      "cau": "SELECT s.city, max(s.collected_at) AS last FROM stg_S06_ads c JOIN S01_snapshots s USING (snapshot_id) WHERE s.source = ANY($1) GROUP BY s.city",
+      "goi": 22,
+      "tong_ms": 177.7,
+      "tb_ms": 8.08,
+      "max_ms": 9.1,
+      "dong": "44"
+    },
+    {
+      "cau": "SELECT s.city, max(s.collected_at) AS last FROM stg_S03_posts p JOIN S01_snapshots s USING (snapshot_id) WHERE p.agent_id = ANY($1) OR (s.source = ANY($1) AND (p.agent_id IS NULL OR NOT p.agent_id = ANY($2))) GROUP B",
+      "goi": 22,
+      "tong_ms": 101.9,
+      "tb_ms": 4.63,
+      "max_ms": 5,
+      "dong": "22"
+    },
+    {
+      "cau": "SELECT o.offer_id, p.snapshot_id, p.media, p.media_files FROM sale_offers o CROSS JOIN LATERAL unnest(o.post_ids) WITH ORDINALITY AS u(post_id, ord) JOIN stg_S03_posts p ON p.post_id = u.post_id WHERE o.offer_id = ANY($",
+      "goi": 22,
+      "tong_ms": 45.6,
+      "tb_ms": 2.07,
+      "max_ms": 2.3,
+      "dong": "22814"
+    },
+    {
+      "cau": "SELECT d.snapshot_id, to_char(min(a.collected_at), $2) AS date, array_agg(DISTINCT d.listing_id) AS ids FROM stg_abnb_discovery d JOIN S01_snapshots a ON a.snapshot_id = d.snapshot_id WHERE a.city = $1 GROUP BY d.snap",
+      "goi": 22,
+      "tong_ms": 28.6,
+      "tb_ms": 1.3,
+      "max_ms": 1.5,
+      "dong": "352"
+    },
+    {
+      "cau": "WITH ls AS ( SELECT l.*, a.name AS area_name, a.region_type FROM listings l JOIN areas a ON a.id = l.area_id WHERE (a.id = $1 OR a.parent_id = $1) AND l.latitude IS NOT NULL AND ($3::text IS NULL OR l.area_id = $3) AND (",
+      "goi": 22,
+      "tong_ms": 27,
+      "tb_ms": 1.23,
+      "max_ms": 1.4,
+      "dong": "6600"
+    },
+    {
+      "cau": "WITH l AS ( SELECT count(*)::int AS n FROM listings WHERE area_id = $1 OR area_id LIKE $1 || $3 ), s AS ( SELECT max(collected_at)::text AS last FROM S01_snapshots WHERE city = $2 AND source IN (SELECT unnest(source_i",
+      "goi": 22,
+      "tong_ms": 18.8,
+      "tb_ms": 0.86,
+      "max_ms": 1.1,
+      "dong": "22"
+    }
+  ],
+  "bang": [
+    {
+      "bang": "nights",
+      "co": "1322 MB",
+      "byte": "1386168320",
+      "n_live_tup": "0",
+      "analyze_gan_nhat": "",
+      "reltuples": "215400"
+    },
+    {
+      "bang": "stg_calendar",
+      "co": "720 MB",
+      "byte": "754917376",
+      "n_live_tup": "0",
+      "analyze_gan_nhat": "",
+      "reltuples": "11288353"
+    },
+    {
+      "bang": "sale_offer_records",
+      "co": "268 MB",
+      "byte": "280829952",
+      "n_live_tup": "13795",
+      "analyze_gan_nhat": "2026-10-27 00:56:14.778344+00",
+      "reltuples": "13795"
+    },
+    {
+      "bang": "stg_S06_ads",
+      "co": "174 MB",
+      "byte": "182435840",
+      "n_live_tup": "22497",
+      "analyze_gan_nhat": "2026-10-26 22:35:22.054708+00",
+      "reltuples": "22497"
+    },
+    {
+      "bang": "stg_abnb_listings",
+      "co": "123 MB",
+      "byte": "128720896",
+      "n_live_tup": "0",
+      "analyze_gan_nhat": "",
+      "reltuples": "853"
+    },
+    {
+      "bang": "stg_listings",
+      "co": "82 MB",
+      "byte": "85909504",
+      "n_live_tup": "0",
+      "analyze_gan_nhat": "",
+      "reltuples": "30922"
+    },
+    {
+      "bang": "stg_abnb_nights",
+      "co": "62 MB",
+      "byte": "65462272",
+      "n_live_tup": "0",
+      "analyze_gan_nhat": "",
+      "reltuples": "305505"
+    },
+    {
+      "bang": "S02_listings",
+      "co": "52 MB",
+      "byte": "54509568",
+      "n_live_tup": "79197",
+      "analyze_gan_nhat": "2026-10-26 12:49:22.437574+00",
+      "reltuples": "79197"
+    },
+    {
+      "bang": "field_assertions",
+      "co": "43 MB",
+      "byte": "45334528",
+      "n_live_tup": "4149",
+      "analyze_gan_nhat": "2026-10-27 00:56:16.688843+00",
+      "reltuples": "4149"
+    },
+    {
+      "bang": "areas",
+      "co": "24 MB",
+      "byte": "25378816",
+      "n_live_tup": "338",
+      "analyze_gan_nhat": "2026-10-26 07:22:24.706727+00",
+      "reltuples": "338"
+    },
+    {
+      "bang": "properties",
+      "co": "20 MB",
+      "byte": "20881408",
+      "n_live_tup": "19651",
+      "analyze_gan_nhat": "2026-10-26 22:46:21.574132+00",
+      "reltuples": "19651"
+    },
+    {
+      "bang": "stg_S03_posts",
+      "co": "10 MB",
+      "byte": "11001856",
+      "n_live_tup": "14906",
+      "analyze_gan_nhat": "2026-10-27 05:01:37.785242+00",
+      "reltuples": "14906"
+    },
+    {
+      "bang": "stg_S04_boundaries",
+      "co": "9008 kB",
+      "byte": "9224192",
+      "n_live_tup": "579",
+      "analyze_gan_nhat": "",
+      "reltuples": "579"
+    },
+    {
+      "bang": "spatial_ref_sys",
+      "co": "7144 kB",
+      "byte": "7315456",
+      "n_live_tup": "0",
+      "analyze_gan_nhat": "",
+      "reltuples": "8500"
+    },
+    {
+      "bang": "property_offers",
+      "co": "5344 kB",
+      "byte": "5472256",
+      "n_live_tup": "21176",
+      "analyze_gan_nhat": "2026-10-26 22:42:21.39471+00",
+      "reltuples": "20470"
+    }
+  ]
+}

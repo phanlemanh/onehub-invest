@@ -1,9 +1,9 @@
 import type { User } from "./auth";
 import { pool } from "./db";
 import { vnDayKey, vnDayStart } from "./format";
-import { readOpsFacts, type OpsFacts } from "./ops-facts";
+import { ageState, readOpsFacts, type OpsFacts } from "./ops-facts";
 import { isAdmin } from "./ops-access";
-import { buildOfferImages, type PostMediaRow, type ReviewImage } from "./ops/review-media";
+import { buildMediaImages, loadOfferMedia, type MediaRow, type MediaRowQuery, type ReviewImage } from "./ops/review-media";
 
 /**
  * Số cho /ops/data-flow «Dòng chảy dữ liệu»: một tin đi từ bài nhận → đọc được → tin rao → gắn căn, theo nguồn, theo
@@ -96,7 +96,8 @@ export type FlowFacts = {
   enrichPending: number;
 };
 
-/** Trạng thái số tổng hợp: máy thu `fresh` (có dòng tính sẵn) / `none`; máy chủ theo khối (ADR-0014). */
+/** Trạng thái số tổng hợp: máy thu theo `computed_at` cũ nhất của bảng tính sẵn (`fresh`/`stale`/`none`); máy chủ theo
+ * khối (ADR-0014). */
 export type FlowFactsState = "fresh" | "stale" | "none" | "error";
 
 export type DataFlow = FlowFacts & {
@@ -107,7 +108,7 @@ export type DataFlow = FlowFacts & {
   reviewPending: number | null;
   /** «local» = máy thu (bảng tính sẵn), «cloud» = máy chủ (khối bản tin). */
   mode: "local" | "cloud";
-  /** Mốc tính của bảng (máy thu) / `measured_at` của khối = computed_at cũ nhất (máy chủ). */
+  /** `computed_at` cũ nhất của bảng tính sẵn — máy thu đọc thẳng, máy chủ qua `measured_at` của khối. */
   computedAt: string | null;
   factsState: FlowFactsState;
   factsError: string | null;
@@ -162,18 +163,22 @@ const recordsSql = (withPost: boolean) => `
 /** Kết quả đọc phần tổng hợp của một cửa sổ (máy thu hay máy chủ). */
 type FactsRead = { state: FlowFactsState; at: string | null; facts: FlowFacts | null; error: string | null };
 
-/** Số tổng hợp của một cửa sổ ở máy thu: dòng `data_flow_snapshot` (bảng vắng hay chưa làm tươi → `none`). */
-async function localFacts(q: FlowQueryFn, window: FlowWindow): Promise<FactsRead> {
+/** Số tổng hợp của một cửa sổ ở máy thu: dòng `data_flow_snapshot` (bảng vắng hay chưa làm tươi → `none`). Tuổi số
+ * theo `computed_at` CŨ NHẤT của bảng — cùng luật `measured_at` của khối cloud (DF1 AC-4) — so bằng `ageState` của
+ * ops-facts (một ngưỡng FACTS_STALE_MS cho hai nơi): bước làm tươi gãy quá 45′ thì `stale`. */
+async function localFacts(q: FlowQueryFn, window: FlowWindow, now: number): Promise<FactsRead> {
   try {
     // Mốc ISO UTC (ms) — cùng dạng `measured_at` mà push-ops-facts ghi cho khối `dataFlow`.
     const { rows } = await q(
-      `SELECT to_char(computed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS computed_at, facts
+      `SELECT facts,
+              (SELECT to_char(min(computed_at) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') FROM data_flow_snapshot) AS oldest_at
        FROM data_flow_snapshot WHERE time_window = $1`,
       [window],
     );
     const r = rows[0];
     if (!r) return { state: "none", at: null, facts: null, error: null };
-    return { state: "fresh", at: r.computed_at as string, facts: r.facts as FlowFacts, error: null };
+    const at = r.oldest_at as string;
+    return { state: ageState(at, new Date(now)), at, facts: r.facts as FlowFacts, error: null };
   } catch (err) {
     if ((err as { code?: string }).code === "42P01") return { state: "none", at: null, facts: null, error: null };
     throw err;
@@ -215,7 +220,7 @@ export async function getDataFlow(
   let f: FactsRead;
   if (mode === "local") {
     const [lf, pending] = await Promise.all([
-      localFacts(q, window),
+      localFacts(q, window, now),
       q(`SELECT count(*) AS review FROM review_queue WHERE status = 'pending'`),
     ]);
     f = lf;
@@ -263,39 +268,27 @@ export function parseFlowWindow(v: string | string[] | undefined): FlowWindow {
   return (FLOW_WINDOWS as readonly string[]).includes(s ?? "") ? (s as FlowWindow) : "7d";
 }
 
-// ---- Ảnh tin của hồ sơ tin (AC-10, Mạnh sửa ở Cổng Phạm vi 26/10) ----
-// Cùng luật với Hàng duyệt: ảnh tin chỉ cho admin, chỉ ở máy thu; ghép bằng chính buildOfferImages (ảnh đã tải trước,
-// rồi URL gốc, không trùng, tối đa 12). Không sửa lib/ops/review-media.ts — tệp nằm trong hồ sơ đã ký của Hàng duyệt.
-// S06 chưa có khoá nối tin → quảng cáo (TV10) nên không truy vấn ảnh cho S06.
+// ---- Ảnh tin của hồ sơ tin (AC-10 của ops-dong-chay-df0; NH1 media-canonical-reso AC-6) ----
+// Cùng luật với Hàng duyệt: ảnh tin chỉ cho admin, chỉ ở máy thu; đọc bảng `media` (053) qua loadOfferMedia và ghép
+// bằng buildMediaImages (ảnh đã tải trước, rồi URL gốc, không trùng, tối đa 12) — cho mọi nguồn, kể cả S06.
 
-const MEDIA_SQL = `
-  SELECT o.offer_id, p.snapshot_id, p.media, p.media_files
-  FROM sale_offers o
-  CROSS JOIN LATERAL unnest(o.post_ids) WITH ORDINALITY AS u(post_id, ord)
-  JOIN stg_zalo_posts p ON p.post_id = u.post_id
-  WHERE o.offer_id = ANY($1::text[])
-  ORDER BY o.offer_id, u.ord`;
+export type MediaQuery = MediaRowQuery;
 
-export type MediaQuery = (text: string, values: unknown[]) => Promise<{ rows: PostMediaRow[] }>;
-const defaultMediaQuery: MediaQuery = (text, values) => pool.query<PostMediaRow>(text, values);
-
-/** Ảnh từng tin S03/S05, khoá theo offer_id. Không phải admin → `{}` không chạm DB; cloud (42P01) → `{}`. */
+/** Ảnh từng tin, khoá theo offer_id. Không phải admin → `{}` không chạm DB; cloud (42P01) → `{}`. */
 export async function loadFlowMedia(
   records: Pick<FlowRecord, "offerId" | "source">[],
   user: User | null,
-  query: MediaQuery = defaultMediaQuery,
+  query?: MediaQuery,
 ): Promise<Record<string, ReviewImage[]>> {
   if (!isAdmin(user)) return {};
-  const ids = [...new Set(records.filter((r) => r.source === "S03" || r.source === "S05").map((r) => r.offerId))];
+  const ids = [...new Set(records.map((r) => r.offerId))];
   if (ids.length === 0) return {};
-  let rows: PostMediaRow[];
+  let byOffer: Map<string, MediaRow[]>;
   try {
-    ({ rows } = await query(MEDIA_SQL, [ids]));
+    byOffer = await loadOfferMedia(ids, query);
   } catch (err) {
     if ((err as { code?: string }).code === "42P01") return {};
     throw err;
   }
-  const posts = new Map<string, PostMediaRow[]>();
-  for (const r of rows) posts.set(r.offer_id, [...(posts.get(r.offer_id) ?? []), r]);
-  return Object.fromEntries(ids.map((id) => [id, buildOfferImages(posts.get(id) ?? [])]));
+  return Object.fromEntries(ids.map((id) => [id, buildMediaImages(byOffer.get(id) ?? [])]));
 }

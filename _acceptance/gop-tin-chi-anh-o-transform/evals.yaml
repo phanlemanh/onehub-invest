@@ -1,0 +1,73 @@
+schema_version: 1
+feature_slug: gop-tin-chi-anh-o-transform
+# Ca test thuần mang tiền tố «GA-AC-n» ở pipeline/scripts/gop-anh.test.mjs (trong npm test của pipeline); ca DB ở
+# pipeline/scripts/gop-anh.itest.mjs (DB thử). Mỗi ma trận có ca đỏ: bản sao đột biến chép cạnh tệp thật, nạp rồi xoá ngay.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/gop-anh.mjs, pipeline/scripts/gop-anh.test.mjs]
+    expected: "exit 0; ca 'GA-AC-1' xanh: 6 dòng viết trước (3 chỉ-URL, 1 rỗng → true; 2 có lời → false), số assert bằng số dòng; ca đỏ trên bản sao bỏ bước gạt URL trong laChiAnh ghim dòng một URL"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/gop-anh.mjs, pipeline/scripts/gop-anh.test.mjs]
+    expected: "exit 0; ca 'GA-AC-2' xanh: 9 dòng viết trước, mỗi dòng một kết quả gán (post_id chữ hoặc không gán), số assert bằng số dòng; ba ca đỏ: bản sao bỏ điều kiện cùng người ghim dòng khác người, bản sao đổi '< cuaSoGiay' thành '<=' ghim dòng cách 120 giây, bản sao lấy bài chữ đầu tiên thay vì gần nhất ghim dòng hai bài chữ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.gop_anh_that
+    paths: [pipeline/transform-media.mjs, pipeline/lib/gop-anh.mjs, pipeline/scripts/gop-anh.itest.mjs]
+    expected: "exit 0; ca 'GA-AC-3' xanh trên DB thử: offer tổng hợp có dòng ảnh của đúng 3 bài chỉ-ảnh trong cửa sổ, media_order của chúng lớn hơn mọi ảnh của hai bài chữ, không dòng nào của bài cách 5 phút; lượt hai: thêm 0 · đổi 0 · xoá 0; ca 'GA-AC-3b': chèn bài chữ gần hơn thuộc offer khác (và biến thể không offer), lượt ba → offer cũ 0 dòng của bài ảnh, offer mới đúng dòng của nó (biến thể: không offer nào); ca 'GA-AC-3c': bài chữ chỉ có ảnh từ xa, bài chỉ-ảnh có ảnh đã tải → ảnh gộp vẫn có media_order lớn hơn; ba ca đỏ: bản sao transform-media bỏ bước nối bài ảnh ghim «3 bài chỉ-ảnh», bản sao bỏ bước xoá dòng không còn sinh ghim 'GA-AC-3b', bản sao trộn chung một danh sách bài ghim 'GA-AC-3c'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.gop_anh_that
+    paths: [pipeline/transform-media.mjs, pipeline/lib/gop-anh.mjs, pipeline/scripts/gop-anh.itest.mjs]
+    expected: "exit 0; ca 'GA-AC-4' xanh: bài chỉ-ảnh gần bài chữ không offer sinh 0 dòng media; ca đỏ trên bản sao transform-media lọc bài chữ chỉ còn bài thuộc offer trước khi gọi ganBaiAnh ghim chính bài ấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.gop_anh_that
+    paths: [pipeline/transform-media.mjs, pipeline/scripts/gop-anh.itest.mjs]
+    expected: "exit 0; ca 'GA-AC-5' xanh: băm md5 toàn bộ stg_zalo_posts và băm (offer_id, post_ids, n_reposts) của sale_offers trước = sau transform-media; đối chứng dương trong cùng ca: một UPDATE thử lên stg trong giao dịch làm băm lệch"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.gop_anh_that
+    paths: [pipeline/transform-media.mjs, pipeline/lib/gop-anh.mjs, pipeline/scripts/do-gop-anh.mjs]
+    expected: "exit 0; do-gop-anh trong một giao dịch ROLLBACK: chạy transform-media S03 bằng bản nền ghim (git show) lấy «trước», rồi bằng cây lấy «sau»; in số offer S03 (< 500 → exit 1), tỉ lệ có ảnh trước → sau, ngưỡng đọc từ opportunity.md (dòng «Kết quả nào là SỐNG», số % đầu tiên) và sau ≥ ngưỡng; ngày mẫu 2026-10-28 (giờ VN): tập cặp (post_id ảnh, offer_id) theo SQL độc lập (gần nhất, hai phía, < 120 giây, cùng sender_id và conversation_id, bỏ bài thử và bài không cột ảnh, hoà → bài chữ đứng sau) = tập cặp đọc từ bảng media qua originating_system_resource_record_key (post_id bài nguồn của dòng; bài mà mọi ảnh đã có ở offer theo URL/tệp tính là đã gộp), so hai chiều, in từng cặp lệch, lệch 0; lượt đối chứng (luôn chạy): bản sao gop-anh bỏ điều kiện cùng người phải ra cặp lệch > 0, không thì exit 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; toàn bộ test pipeline xanh, gồm gop-anh.test.mjs và media-wiring.test.mjs"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7b
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.media_app
+    paths: [pipeline/media-rows.mjs, pipeline/transform-media.mjs]
+    expected: "exit 0; media-canonical.test.tsx của NH1 xanh (mediaRowsFromPosts tương đương buildOfferImages, hai loader)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7c
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.gop_anh_that
+    paths: [pipeline/transform-media.mjs]
+    expected: "exit 0; trong cùng lệnh, media-canonical.itest.mjs của NH1 xanh trên DB thử"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

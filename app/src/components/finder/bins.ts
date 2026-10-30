@@ -4,12 +4,10 @@ import { fmtCompact, fmtInt, fmtMoney, fmtMoneyCompact, fmtPct } from "@/lib/for
  * Bốn bậc theo phân vị p30/p60/p90 của tập đang xem (AirDNA: legend động theo
  * phân bố). Cùng một bảng màu cho bản đồ, chú giải và thanh trong bảng, để ba
  * chỗ đọc như một: blue-200/400/700/900 của Tailwind v4. Bản đồ cần hex vì
- * MapLibre không đọc được biến CSS/oklch; thanh và chú giải dùng class.
+ * MapLibre không đọc được biến CSS/oklch — hex sống ở lib/map-colors.ts; thanh
+ * và chú giải dùng class.
  */
-export const BIN_COLORS = ["#bedbff", "#51a2ff", "#1447e6", "#1c398e"] as const
-export const NO_DATA_COLOR = "#e2e8f0"
-/** Vùng chưa có số trên nền bản đồ tối (zinc-700). */
-export const NO_DATA_COLOR_DARK = "#3f3f46"
+export { BIN_COLORS, NO_DATA_COLOR, NO_DATA_COLOR_DARK } from "@/lib/map-colors"
 
 /** Ô màu chú giải — class tĩnh để Tailwind sinh đủ. */
 export const BIN_SWATCH = ["bg-blue-200", "bg-blue-400", "bg-blue-700", "bg-blue-900"] as const

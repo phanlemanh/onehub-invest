@@ -4,8 +4,10 @@
 //
 //   node scripts/dev-ops-account.mjs            # đảm bảo có tài khoản; mật khẩu trong tệp còn đúng → giữ nguyên
 //   node scripts/dev-ops-account.mjs --rotate   # ép xoay mật khẩu mới (xoá luôn session cũ)
+//   node scripts/dev-ops-account.mjs --vai viewer   # tài khoản thử vai viewer (viewer-test@local.test) — kiểm trang
+//                                                   # bằng mắt với vai không thấy nội dung tin (viewer-khong-thay-the-duyet)
 //
-// Thông tin đăng nhập ghi vào .claude/ops-test-account.json (gitignored, chmod 600) của
+// Thông tin đăng nhập ghi vào .claude/ops-test-account.json (vai viewer: .claude/viewer-test-account.json; gitignored, chmod 600) của
 // checkout đang chạy — KHÔNG in mật khẩu ra stdout. DB :5433 dùng chung giữa các worktree:
 // worktree khác xoay thì tệp ở đây hết đúng, lần chạy sau tự xoay lại.
 //
@@ -24,6 +26,21 @@ export const DEFAULT_DATABASE_URL = "postgres://oneinvest:oneinvest@localhost:54
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const CRED_FILE = path.join(REPO, ".claude/ops-test-account.json");
+
+/** Hai tài khoản thử: admin (mặc định, vào mọi trang /ops) và viewer (vào Ops, không thấy nội dung tin). */
+export const VAI_THU = {
+  admin: { email: DEFAULT_EMAIL, file: CRED_FILE },
+  viewer: { email: "viewer-test@local.test", file: path.join(REPO, ".claude/viewer-test-account.json") },
+};
+
+/** Vai từ argv: không cờ → admin; `--vai <admin|viewer>`; giá trị khác hoặc thiếu → ném lỗi (CLI thoát 2, chưa kết nối DB). */
+export function docVai(argv) {
+  const i = argv.indexOf("--vai");
+  if (i === -1) return "admin";
+  const v = argv[i + 1];
+  if (!Object.hasOwn(VAI_THU, v ?? "")) throw new Error(`--vai nhận một trong: ${Object.keys(VAI_THU).join(", ")} (nhận: ${v ?? "trống"})`);
+  return v;
+}
 
 /** Ném lỗi khi connection string không trỏ máy local. Trả URL đã kiểm. */
 export function assertLocalDatabaseUrl(raw) {
@@ -156,12 +173,14 @@ export function loadPg() {
 }
 
 async function main() {
+  const vai = docVai(process.argv.slice(2));
+  const { email, file } = VAI_THU[vai];
   const rotate = process.argv.includes("--rotate");
   const url = assertLocalDatabaseUrl(process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL);
-  if (!isGitIgnored(CRED_FILE)) {
-    throw new Error(`${path.relative(REPO, CRED_FILE)} chưa bị .gitignore — từ chối ghi mật khẩu vào đó`);
+  if (!isGitIgnored(file)) {
+    throw new Error(`${path.relative(REPO, file)} chưa bị .gitignore — từ chối ghi mật khẩu vào đó`);
   }
-  const saved = readCredFile(CRED_FILE);
+  const saved = readCredFile(file);
   const pg = loadPg();
   const client = new pg.Client({ connectionString: url.toString() });
   await client.connect();
@@ -169,7 +188,9 @@ async function main() {
   try {
     await client.query("BEGIN");
     result = await ensureAccount(client, {
-      currentPassword: saved?.email === DEFAULT_EMAIL ? saved.password : undefined,
+      email,
+      role: vai,
+      currentPassword: saved?.email === email ? saved.password : undefined,
       rotate,
     });
     await client.query("COMMIT");
@@ -180,18 +201,22 @@ async function main() {
     await client.end();
   }
   if (result.action !== "unchanged" || !saved) {
-    writeCredFile(CRED_FILE, {
+    writeCredFile(file, {
       email: result.email,
       password: result.password,
-      role: "admin",
+      role: vai,
       database: `${url.hostname}:${url.port || 5432}${url.pathname}`,
       loginUrl: "http://localhost:3456/login",
       updatedAt: new Date().toISOString(),
     });
   }
   console.log(`tài khoản ops thử: ${result.email} — ${result.action}`);
-  console.log(`thông tin đăng nhập: ${path.relative(process.cwd(), CRED_FILE) || CRED_FILE} (gitignored, không in mật khẩu)`);
-  console.log(`role admin → vào được mọi trang /ops (cổng Ops mở cho role admin/ops, không cần OPS_EMAILS).`);
+  console.log(`thông tin đăng nhập: ${path.relative(process.cwd(), file) || file} (gitignored, không in mật khẩu)`);
+  console.log(
+    vai === "admin"
+      ? `role admin → vào được mọi trang /ops (cổng Ops mở cho role admin/ops, không cần OPS_EMAILS).`
+      : `role viewer → vào được Ops nhưng chỉ thấy số và mã S0x; thẻ duyệt, bài gốc, ảnh tin bị che.`,
+  );
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {

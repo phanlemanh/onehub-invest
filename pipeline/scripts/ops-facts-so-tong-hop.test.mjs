@@ -24,7 +24,8 @@ const name = (code) => SEEDS.find((s) => s.code === code).realName;
 // ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7`, ON4 (nhom-s03-tren-cloud) khối thứ bảy `s03` — cùng khuôn
 // {measured_at, …} của ON22. DF1 (dong-chay-len-cloud) thêm khối thứ tám `dataFlow`: measured_at là computed_at CŨ NHẤT
 // của bảng tính sẵn data_flow_snapshot — có thể trước lượt chạy (làm tươi ở bước cloud-sync trước), không được sau.
-const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7", "s03", "dataFlow"];
+// PL29 (so-cuoc-goi-ai) thêm khối thứ chín `aiCalls`: sổ cuộc gọi AI 30 ngày (bảng 052, áp lên lược đồ tạm như 051).
+const BLOCKS = ["freshness", "jobs", "lockdown", "records24h", "reviewQueue", "luong7", "s03", "dataFlow", "aiCalls"];
 const OLD_KEYS = ["pushedAt", "funnel", "health", "jobs", "sourceRuns", "rotation", "zaloGroups", "zaloFlow", "zaloAccounts"];
 const S = `on22_pipe_${process.pid}`;
 const LOGS = () => ({
@@ -44,12 +45,23 @@ async function withFlow(schema) {
     await c.end();
   }
 }
+/** PL29: bảng 052 THẬT (ai_calls + ai_model_prices) trên lược đồ tạm, không dòng — khối `aiCalls` đo được (0 nhóm). */
+async function withAiCalls(schema) {
+  const c = new pg.Client({ connectionString: schemaUrl(schema) });
+  await c.connect();
+  try {
+    await c.query(readFileSync(path.join(HERE, "..", "..", "db/migrations/052_ai_calls.sql"), "utf8"));
+  } finally {
+    await c.end();
+  }
+}
 const extra = []; // lược đồ phụ của ca «không đo được»
 
 before(async () => {
   await admin.connect();
   await makeOpsSchema(admin, S);
   await withFlow(S);
+  await withAiCalls(S);
 });
 after(async () => {
   for (const x of [S, ...extra]) await dropOpsSchema(admin, x).catch(() => {});
@@ -206,11 +218,13 @@ describe("ON22-AC-7 khối không đo được", () => {
     ["s03", { noCfg: true }, ["s03"]],
     // DF1: máy thu chưa áp 051 → chỉ khối dataFlow lỗi.
     ["dataFlow", { omit: ["data_flow_snapshot"] }, ["dataFlow"]],
+    // PL29: máy thu chưa áp 052 → chỉ khối aiCalls lỗi.
+    ["aiCalls", { omit: ["ai_calls"] }, ["aiCalls"]],
   ];
   /** Cấu hình OpenClaw tối thiểu + nhật ký cổng rỗng ở HOME tạm để khối s03 đo được (ON4) — ca `noCfg` bỏ cả hai. */
   const CFG_HOME = { ".openclaw/openclaw.json": JSON.stringify({ channels: { zalouser: { groups: {} } } }), ".openclaw/logs/oneinvest-zalo-pipe.log": "" };
   const errored = (payload) => BLOCKS.filter((b) => payload.blocks[b].error !== undefined);
-  const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType", s03: "groups", dataFlow: "windows" };
+  const DATA = { freshness: "rows", jobs: "items", records24h: "bySource", reviewQueue: "byType", s03: "groups", dataFlow: "windows", aiCalls: "nhom" };
   const caseRun = async ([block, how], script) => {
     let schema = S;
     if (how.omit) {
@@ -218,6 +232,7 @@ describe("ON22-AC-7 khối không đo được", () => {
       extra.push(schema);
       await makeOpsSchema(admin, schema, { omit: how.omit });
       if (!how.omit.includes("data_flow_snapshot")) await withFlow(schema);
+      if (!how.omit.includes("ai_calls")) await withAiCalls(schema);
     }
     return captureOpsFacts({ script, logs: LOGS(), home: how.noCfg ? {} : CFG_HOME, ...(how.launchctl === null ? { launchctl: null } : {}), env: { DATABASE_URL: schemaUrl(schema) } });
   };
@@ -291,7 +306,10 @@ describe("ON22-AC-10 máy thu thật", () => {
       // DF1: khối dataFlow đo được khi máy thu đã áp migration 051 (bảng tính sẵn); trước đó nó phải nói «không đo được».
       const co051 = (await real.query(`SELECT to_regclass('public.data_flow_snapshot')::text AS r`)).rows[0].r !== null;
       console.log(`# ON22-AC-10 bảng data_flow_snapshot ở máy thu: ${co051 ? "có" : "chưa áp 051"}`);
-      const trang = (b) => (b === "dataFlow" && !co051 ? "không đo được" : "đo được");
+      // PL29: khối aiCalls đo được khi máy thu đã áp 052 (bảng ai_calls); áp sau khi gộp — trước đó «không đo được».
+      const co052 = (await real.query(`SELECT to_regclass('public.ai_calls')::text AS r`)).rows[0].r !== null;
+      console.log(`# ON22-AC-10 bảng ai_calls ở máy thu: ${co052 ? "có" : "chưa áp 052"}`);
+      const trang = (b) => ((b === "dataFlow" && !co051) || (b === "aiCalls" && !co052) ? "không đo được" : "đo được");
       assert.equal(line, `khối: ${BLOCKS.map((b) => `${b} ${trang(b)}`).join(" · ")}`, "năm khối phải đo được trên máy thật");
       assert.deepEqual(findSourceNames(kho.stdout + kho.stderr.replace(/^(FACTS CHẶN \[tầng A\]) \S+/gm, "$1"), ENTRIES), []);
       const now = new Date();

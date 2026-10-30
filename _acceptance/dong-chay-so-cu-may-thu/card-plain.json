@@ -1,0 +1,15 @@
+{
+  "feature_plain": "Ở máy thu, khi bước làm tươi số dòng chảy hỏng quá 45 phút, trang Dòng chảy dữ liệu báo số cũ kèm giờ tính thay vì vẽ số cũ như số mới.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ coi số là mới khi lần tính cũ nhất còn trong 45 phút: chỉ có dòng «Số tính lúc …», không cảnh báo."},
+    {"id": "AC-2", "p": "Sẽ hiện cảnh báo số cũ kèm giờ tính khi lần tính cũ nhất quá 45 phút, và vẫn hiện đúng số của lần tính cuối."},
+    {"id": "AC-3", "p": "Sẽ dùng đúng ngưỡng 45 phút chung của các trang Ops: đổi ngưỡng chung thì máy thu đổi theo."},
+    {"id": "AC-4", "p": "Sẽ giữ nguyên bốn trạng thái của trang trên cloud."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên trạng thái «chưa có số tính sẵn» khi bảng vắng hay chưa có dòng."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Chưa sửa chữ báo khi máy thu chưa áp migration 051 (đã ghi Known limits ở DF1)."},
+    {"id": "OOS-2", "p": "Chưa kiểm khuôn khối số dòng chảy trên cloud (đã ghi Known limits ở DF1)."}
+  ],
+  "decisions_plain": []
+}

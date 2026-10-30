@@ -202,8 +202,9 @@ describe("ON22-AC-9 đọc trên cloud qua route ingest thật", () => {
     assert.equal(fresh.state, "fresh")
     // ON5 (luong-7-ngay-dung-so) thêm khối thứ sáu `luong7`; ON4 (nhom-s03-tren-cloud) thêm khối thứ bảy `s03` — HOME tạm
     // của phép đo này không có cấu hình OpenClaw nên khối ấy báo lỗi (không 0, không danh sách rỗng). DF1 thêm khối thứ tám
-    // `dataFlow`: lược đồ tạm không có bảng tính sẵn 051 nên khối ấy cũng báo lỗi.
-    assert.deepEqual(blockStates(fresh), { freshness: "fresh", jobs: "fresh", lockdown: "fresh", records24h: "fresh", reviewQueue: "fresh", luong7: "fresh", s03: "error", dataFlow: "error" })
+    // `dataFlow`: lược đồ tạm không có bảng tính sẵn 051 nên khối ấy cũng báo lỗi. PL29 thêm khối thứ chín `aiCalls`: lược
+    // đồ tạm không có bảng ai_calls (052) nên khối ấy báo lỗi theo cùng khuôn.
+    assert.deepEqual(blockStates(fresh), { freshness: "fresh", jobs: "fresh", lockdown: "fresh", records24h: "fresh", reviewQueue: "fresh", luong7: "fresh", s03: "error", dataFlow: "error", aiCalls: "error" })
     for (const [k, v] of Object.entries(fresh.blocks)) assert.equal(v!.measuredAt, r.payload.blocks[k].measured_at, `${k}: measuredAt khác bên ghi`)
     const c = new pg.Client({ connectionString: schemaUrl(S) })
     await c.connect()

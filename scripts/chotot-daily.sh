@@ -65,6 +65,7 @@ fi
 # mã của bước hỏng ĐẦU TIÊN để launchd thấy lỗi (đêm 22/10: DB lên lại giữa chuỗi → exit 0).
 . "$ROOT/scripts/lib/job-step.sh"
 job_run chotot-daily transform-chotot node "$ROOT/pipeline/transform-chotot.mjs"
+job_run chotot-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S06
 job_run chotot-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
 job_run chotot-daily resolve-properties node "$ROOT/pipeline/resolve-properties.mjs"
 exit "$JOB_RC"

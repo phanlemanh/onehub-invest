@@ -8,7 +8,8 @@ File này chỉ nói màu **mang số liệu**: bậc phân vị và chuỗi bi�
 Không tự đặt ngưỡng, không tự chọn màu bậc. Bản đồ, chú giải, thanh trong bảng và badge KPI
 đều phải đọc cùng một bậc.
 
-**`components/finder/bins.ts`** (module thường; được phép chứa hex, xem danh sách file bản đồ ở SKILL.md):
+**`components/finder/bins.ts`** (module thường; ba hằng màu bản đồ tái xuất từ `lib/map-colors.ts` — hex chỉ sống ở
+đó, xem danh sách file bản đồ ở SKILL.md):
 
 | Export | Dùng cho |
 |---|---|

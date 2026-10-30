@@ -142,6 +142,47 @@ canonical:
       checked_on: "2026-10-22"
 
 # --------------------------------------------------------------------------
+# LỚP MEDIA — bảng `media` (migration 053, NH1 media-canonical-reso): ảnh tin theo resource Media
+# của RESO DD 2.1, một dòng mỗi ảnh khác nhau của một tin. Bên ghi pipeline/transform-media.mjs.
+# KHÔNG sync cloud (media_url S06 mang tên miền nguồn, tầng A). ResourceName = Property và
+# MediaCategory = Photo ngầm hiểu (bảng chỉ chứa ảnh của tin) — thêm cột kèm lookup khi có loại khác.
+# --------------------------------------------------------------------------
+media:
+  table: media
+  dd_resource: Media
+  dd_version: "2.1"
+  checked_on: "2026-10-30"  # tra research-local/reso/dd-2.1.json
+  fields:
+    media_key:
+      dd: MediaKey
+      note: "md5(resource_record_key | local_file ?? media_url) — ổn định qua các lượt nạp"
+    resource_record_key:
+      dd: ResourceRecordKey
+      note: "offer_id (FK sale_offer_records); ResourceName = Property ngầm hiểu"
+    originating_system_name:
+      dd: OriginatingSystemName
+      note: "mã S0x (ADR-0007), không phải tên nguồn thật"
+    originating_system_resource_record_key:
+      dd: OriginatingSystemResourceRecordKey
+      note: "post_id (S03/S05) hoặc list_id (S06) — bản ghi gốc ở nguồn"
+    media_url:
+      dd: MediaURL
+      note: "URL gốc http(s); tầng A với S06 (tên miền nguồn) — chỉ máy thu"
+    media_order:
+      dd: Order
+      note: "ảnh đã tải trước, rồi URL gốc (luật ghép của review-media-backend AC-5)"
+    local_file:
+      dd: null
+      rationale: >
+        con trỏ tới ảnh đã tải vào raw snapshot của máy thu, dạng <snapshotId>/media/<tên>
+        (route /api/zalo-media) — DD 2.1 resource Media không có trường cho bản lưu cục bộ;
+        không phải trường miền nghiệp vụ. DQ: dq_check_results `media:local-file` mỗi nguồn mỗi lượt.
+      checked_on: "2026-10-30"
+    media_modification_timestamp:
+      dd: MediaModificationTimestamp
+      note: "đổi khi nội dung dòng đổi; dòng không đổi giữ nguyên"
+
+# --------------------------------------------------------------------------
 # LỚP NGUỒN — staging → canonical
 # --------------------------------------------------------------------------
 sources:
@@ -154,7 +195,8 @@ sources:
     fields:
       text: "→ price_vnd, area_m2, bedrooms, phuong_raw, kind (regex + fallback)"
       post_id: "→ thành phần hash offer_id"
-      media_files: "chưa map — ảnh N1 đã tải (DATA-CONTRACT v2, PII tầng A, chỉ local); lên canonical → RESO Media"
+      media_files: "→ bảng media (053) qua transform-media.mjs: local_file khi tải được, media_url khi lỗi — chỉ máy thu"
+      media: "→ bảng media (053): URL gốc chưa có bản tải, đứng sau ảnh đã tải"
   S05:
     label: "facebook groups (P2)"
     staging: stg_zalo_posts
@@ -177,6 +219,7 @@ sources:
       "ward_name_v3 | ward_name | area_name + subject": "→ phuong_raw / district_raw (match areas)"
       "seller.full_name": "→ seller_name"
       "payload.account_id": "→ seller_ref"
+      images: "→ bảng media (053) qua transform-media.mjs: mảng images.images, giữ thứ tự, bỏ trùng — URL mang tên miền nguồn, chỉ máy thu"
     da_dua_sang_canonical:
       - "category → property_type (migration 025 — ĐÃ LÀM)"
     chua_dua_sang_canonical:
@@ -270,7 +313,7 @@ enums:
     local: true
     rationale: "tên trường canonical nhận đề xuất enrich (migration 033); dd_lookup = tên field RESO của trường"
     checked_on: "2026-10-26"
-    columns: [enrichment_proposals.field, field_assertions.field]
+    columns: [enrichment_proposals.field]
     nullable: false
     values:
       - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
@@ -278,13 +321,28 @@ enums:
       - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
       - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
       - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+  assertion_field:
+    term_vi: Trường phát biểu
+    dd_field: null
+    local: true
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059); dd_lookup = tên field RESO của trường"
+    checked_on: "2026-10-30"
+    columns: [field_assertions.field]
+    nullable: false
+    values:
+      - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
+      - { code: bedrooms, label_vi: Phòng ngủ, dd_lookup: BedroomsTotal }
+      - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
+      - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
+      - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+      - { code: offer_status, label_vi: Trạng thái chào, dd_lookup: StandardStatus }
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
     local: true
     rationale: "extension FieldAssertion.EvidenceTier (ADR-0013 §6, reso-khung §6) — thang ba lớp review §0.2 D-1, Mạnh đồng ý 26/10 (PL15 Hỏi-1)"
     checked_on: "2026-10-26"
-    columns: [field_assertions.evidence_tier]
+    columns: [field_assertions.evidence_tier, party_roles.evidence_tier]
     nullable: false
     values:
       - { code: fact, label_vi: Sự thật }
@@ -296,7 +354,7 @@ enums:
     local: true
     rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15)"
     checked_on: "2026-10-26"
-    columns: [field_assertions.method]
+    columns: [field_assertions.method, party_roles.method]
     nullable: false
     values:
       - { code: hitl, label_vi: Người quyết }
@@ -305,6 +363,53 @@ enums:
       - { code: e1_rule, label_vi: Luật E1 }
       - { code: e2_llm, label_vi: LLM E2 }
       - { code: legacy, label_vi: Giá trị có trước }
+  registry_status:
+    term_vi: Trạng thái danh bạ
+    dd_field: null
+    local: true
+    rationale: "extension ObjectStatus của danh bạ vật thể và người (ADR-0016 §3) — DD 2.1 không có vòng đời gộp/tách cho Member/Office; StandardStatus chỉ cho tin"
+    checked_on: "2026-10-30"
+    columns: [parties.status]
+    nullable: false
+    values:
+      - { code: active, label_vi: Đang dùng }
+      - { code: merged, label_vi: Đã gộp }
+      - { code: split, label_vi: Đã tách }
+      - { code: retired, label_vi: Đã nghỉ }
+  alias_kind:
+    term_vi: Loại bí danh
+    dd_field: null
+    local: true
+    rationale: "extension AliasKind (ADR-0016 §3, §8) — DD 2.1 chỉ có khoá tài khoản theo hệ (MemberMlsId, OriginatingSystemMemberKey), không có SĐT băm hay tên làm định danh phụ"
+    checked_on: "2026-10-30"
+    columns: [registry_aliases.kind]
+    nullable: false
+    values:
+      - { code: tai_khoan_nguon, label_vi: Tài khoản tại nguồn }
+      - { code: sdt_bam, label_vi: SĐT băm }
+      - { code: ten, label_vi: Tên hiển thị }
+  registry_event_kind:
+    term_vi: Sự kiện danh bạ
+    dd_field: null
+    local: true
+    rationale: "extension sự kiện gộp/tách/nghỉ theo khuôn HistoryTransactional (ADR-0016 §3) — DD 2.1 HistoryTransactional ghi đổi trường, không có loại sự kiện danh bạ"
+    checked_on: "2026-10-30"
+    columns: [registry_events.kind]
+    nullable: false
+    values:
+      - { code: gop, label_vi: Gộp }
+      - { code: tach, label_vi: Tách }
+      - { code: nghi, label_vi: Nghỉ }
+  party_role:
+    term_vi: Vai của người
+    dd_field: null
+    local: true
+    rationale: "extension PartyRole (ADR-0016 §8) — DD 2.1 chỉ có trường ListAgentKey/CoListAgentKey/ListOfficeKey gắn vào Property, không có vai là phát biểu riêng; tin rao VN thường do người đăng không xác định được là môi giới"
+    checked_on: "2026-10-30"
+    columns: [party_roles.role]
+    nullable: false
+    values:
+      - { code: nguoi_dang, label_vi: Người đăng }
   listing_intent:
     term_vi: Ý định tin
     dd_field: null
@@ -322,7 +427,7 @@ enums:
   offer_status:
     term_vi: Trạng thái chào
     dd_field: StandardStatus
-    columns: []
+    columns: [sale_offer_records.offer_status]
     nullable: false
     values:
       - { code: active, label_vi: Đang chào, dd_lookup: Active }
@@ -330,15 +435,29 @@ enums:
       - { code: closed, label_vi: Đã bán, dd_lookup: Closed }
       - { code: withdrawn, label_vi: Đã gỡ, dd_lookup: Withdrawn }
       - { code: unknown, label_vi: Chưa rõ, local: true, rationale: "chưa có bằng chứng trạng thái; quá cửa sổ độ tươi KHÔNG thành Expired (reso-khung §6)" }
-    note: "Cột đến ở PL19; chỉ đổi theo bằng chứng (reso-khung-phan-loai.md §6). Nhãn: Hỏi-1 của PL6."
+    note: "Cột sale_offer_records.offer_status (PL19, 059) — chỉ hàm phân xử resolve_offer_status ghi; chỉ đổi theo bằng chứng (reso-khung-phan-loai.md §6). Nhãn: Hỏi-1 của PL6."
     checked_on: "2026-10-26"
+  change_type:
+    term_vi: Loại thay đổi
+    dd_field: ChangeType
+    checked_on: "2026-10-30"
+    columns: [history_transactional.change_type]
+    nullable: false
+    values:
+      - { code: new_listing, label_vi: Tin mới, dd_lookup: NewListing }
+      - { code: price_change, label_vi: Đổi giá, dd_lookup: PriceChange }
+      - { code: withdrawn, label_vi: Gỡ tin, dd_lookup: Withdrawn }
+      - { code: back_on_market, label_vi: Chào lại, dd_lookup: BackOnMarket }
+      - { code: active_under_contract, label_vi: Đã cọc, dd_lookup: ActiveUnderContract }
+      - { code: closed, label_vi: Đã bán, dd_lookup: Closed }
+    note: "Lịch sử giá và trạng thái của tin (RESO HistoryTransactional, PL19, 059) — trigger trên sale_offer_records ghi; bảng §6 của reso-khung-phan-loai.md."
   data_level:
     term_vi: Bậc dữ liệu
     dd_field: null
     local: true
     rationale: "extension DataLevel — thang bậc FRAMING §3.4 (Mạnh duyệt 23/10)"
     checked_on: "2026-10-23"
-    columns: []
+    columns: [data_level_snapshot.data_level]
     nullable: false
     values:
       - { code: B0, label_vi: Có lời khai }
@@ -368,9 +487,15 @@ enums:
 # Ngoại lệ có chủ ý của `vocab.mjs --lint` — mỗi mục: path (tương đối gốc kho) · axis · reason. Mục thiếu reason
 # hoặc không còn khớp chỗ viết tay nào → lint đỏ. Tập này ghim ở hợp đồng PL6 AC-5; thêm mục là đổi phạm vi.
 enums_lint_allow:
+  - path: app/src/lib/source-status-labels.ts
+    axis: registry_status
+    reason: "nhãn source_registry.status (migration 012: active/paused/completed/retired) — trục khác trùng chữ với registry_status (active, retired) của danh bạ DB2b"
   - path: app/src/components/ops/review-card.tsx
     axis: enrich_field
     reason: "FIELD_LABEL của thẻ duyệt — UI1 đang sửa tệp này, PL23 dựng lại /ops/review (LUAT đợt dot0); dọn ở PL23"
+  - path: app/src/components/ops/review-card.tsx
+    axis: assertion_field
+    reason: "cùng FIELD_LABEL ở trên — năm mã enrich_field cũng là năm mã đầu của assertion_field (PL19); dọn ở PL23"
   - path: app/src/components/ops/review-card.tsx
     axis: assertion_method
     reason: "SOURCE_LABEL/CHOICE_LABEL nhãn nguồn đề xuất enrich (cột enrichment_proposals.source, cùng mã e1_rule/e2_llm) — PL23 dựng lại /ops/review hiện phát biểu theo lớp; dọn ở PL23"

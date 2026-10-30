@@ -1,0 +1,95 @@
+{
+  "feature_plain": "Người được cấp vai Người xem vào Ops chỉ thấy số đếm và mã nguồn; thẻ duyệt và bài gốc tin rao chỉ hiện cho vai Vận hành trở lên.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ có một luật duy nhất «ai được xem nội dung tin»: Người xem và người dùng thường không; Vận hành, Quản trị, Chủ sở hữu và email trong danh sách OPS_EMAILS thì có."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ cho Người xem thấy ở trang Duyệt tổng số thẻ chờ và số theo từng loại kèm câu «Nội dung thẻ chỉ hiện cho vai Vận hành trở lên.»; nội dung thẻ không được đọc từ DB và không xuống trình duyệt."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ đo đủ 6 kiểu người × 2 trang (12 ô): ai thấy nội dung thẻ và bài gốc đúng bảng viết trước."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ xoá bài gốc và tên nhóm khỏi dữ liệu trang Dòng chảy trước khi gửi xuống trình duyệt khi người xem là Người xem; trang tự nhận ra ai đang đăng nhập."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ cho ô chi tiết của một bản ghi hiện «Bài gốc chỉ hiện cho vai Vận hành trở lên.» thay cho bài gốc khi người xem không đủ vai."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ giữ trang trên máy chủ cloud như hiện tại: trang Duyệt vẫn ghi «chỉ có ở máy thu»; trang Dòng chảy (bản cloud vừa ra) cho Người xem và Vận hành thấy y hệt nhau, không bài gốc nào, ô chi tiết ghi «Bài gốc chỉ xem ở máy thu.»"
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ giữ xanh toàn bộ test của app, gồm bộ quét chữ hiển thị và các test cũ của hai trang."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ có bảng kiểm kê mọi trang và route của Ops: route nào đọc nội dung tin phải hỏi luật che; thêm route mới mà không khai thì test đỏ."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-9",
+      "p": "Sẽ KHÔNG hiện tiêu đề thẻ hay bài gốc nào khi đăng nhập bằng tài khoản thử vai Người xem trên máy dev (có ảnh chụp), còn tài khoản thử Quản trị vẫn thấy đủ."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Định danh tài khoản thu trên trang Thu thập để ngoài vòng này — chờ anh quyết ở Hỏi-1."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Khoá nhóm của S05 và khoá hiệu chuẩn ở trang độ phủ không đổi ở vòng này."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không đưa nội dung thẻ hay bài gốc lên cloud (việc của hàng sau)."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Trục vai: đủ năm vai và email OPS_EMAILS — đo ở AC-1 và ma trận AC-3."
+    },
+    {
+      "i": 1,
+      "p": "Trục chỗ lộ nội dung: trang Duyệt, trang Dòng chảy, ô chi tiết bản ghi, và mọi route Ops khác qua bảng kiểm kê AC-8."
+    },
+    {
+      "i": 2,
+      "p": "Trục môi trường: máy thu che theo vai; trên cloud trang Duyệt giữ câu «chỉ có ở máy thu», trang Dòng chảy hiện y hệt cho mọi vai và không có bài gốc (AC-6)."
+    },
+    {
+      "i": 3,
+      "p": "Cắt ngang: dữ liệu bị che không nằm trong gói gửi xuống trình duyệt; chữ chú thích dùng nhãn vai đã có trong từ vựng."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Lý do bỏ chụp màn hình là sai — kho có sẵn cách tạo tài khoản thử trên máy dev. Đã sửa: thêm AC-9 chụp màn bằng tài khoản thử Người xem và Quản trị."
+    },
+    {
+      "i": 1,
+      "p": "Để định danh tài khoản thu ra ngoài là chọn nghĩa sản phẩm, máy không tự quyết. Chuyển thành Hỏi-1 cho anh."
+    },
+    {
+      "i": 2,
+      "p": "Thiếu phép kiểm mọi trang Ops khác có đọc nội dung tin không. Đã sửa: AC-8 bảng kiểm kê có đối chứng route giả."
+    },
+    {
+      "i": 3,
+      "p": "Phép đo cũ chỉ soi chữ trên trang, không soi dữ liệu đã đọc và gửi xuống trình duyệt. Đã sửa: AC-2 soi cả dòng DB trả về lẫn dữ liệu trao cho thành phần."
+    },
+    {
+      "i": 4,
+      "p": "Bảng vai thiếu Chủ sở hữu và email OPS_EMAILS. Đã sửa: AC-3 thành 12 ô, có đối chứng luật viết sai «chỉ đúng vai ops»."
+    }
+  ]
+}

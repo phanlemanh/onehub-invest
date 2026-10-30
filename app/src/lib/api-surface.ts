@@ -41,11 +41,12 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/ops/ingest", methods: ["POST"], mode: "ops", note: "nạp số ops từ máy local lên cloud" },
   { route: "v1/ops/truthful-coverage", methods: ["GET"], mode: "ops", note: "độ phủ nói thật" },
   { route: "v1/ops/review/[id]/decide", methods: ["POST"], mode: "ops-session", note: "quyết thẻ duyệt — review.decide: vai ops, không bearer (TV1)" },
+  { route: "v1/ops/labels", methods: ["GET", "POST"], mode: "ops-session", note: "gắn nhãn đánh giá mù — label.write: vai ops, không bearer; chỉ máy thu (PL7)" },
   { route: "v1/ops/source-groups", methods: ["GET", "POST"], mode: "ops", methodModes: { POST: "admin" }, note: "nhóm nguồn — GET ops.read; mọi action POST là unit.* chỉ admin (TV1)" },
   { route: "v1/ops/zalo/accounts", methods: ["GET", "POST", "DELETE"], mode: "admin", note: "tài khoản thu Zalo — zalo.admin (TV1)" },
   { route: "v1/ops/zalo/groups", methods: ["GET", "POST"], mode: "admin", note: "nhóm Zalo theo dõi — zalo.admin (TV1)" },
   { route: "v1/ops/zalo/login", methods: ["POST", "GET", "DELETE"], mode: "admin", note: "đăng nhập QR tài khoản thu (QR trả base64, không qua zalo-media) — zalo.admin (TV1)" },
   { route: "v1/ops/audit", methods: ["GET"], mode: "admin", note: "nhật ký ops_audit — audit.read: chỉ admin, không bearer (TV1)" },
-  { route: "zalo-media", methods: ["GET"], mode: "admin", note: "ảnh tin tầng A cho /ops; chặn ảnh QR đăng nhập" },
+  { route: "zalo-media", methods: ["GET"], mode: "ops-session", note: "ảnh tin cho /ops; mã chặt hơn sổ: ?snapshot= cho vai Vận hành trở lên (xemNoiDungTin, PL3); ?path= (staging OpenClaw) chỉ admin; vai Người xem nhận 404; chặn ảnh QR đăng nhập" },
   { route: "v1/user-events", methods: ["POST"], mode: "session-or-noop", note: "beacon user_events — khách 204, không ghi" },
 ];

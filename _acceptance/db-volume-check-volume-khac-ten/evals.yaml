@@ -1,0 +1,70 @@
+schema_version: 1
+feature_slug: db-volume-check-volume-khac-ten
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0; dòng ghim: ô dữ liệu khac-ten đỏ — FAIL data_directory /var/lib/postgresql/17/main nằm trong volume db_pgdata (cần onehub_pgdata); và trên cùng inspect thật, cùng bản lùi xanh, ô dữ liệu dung xanh — cặp hai chiều chỉ khác tên volume"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0; bốn dòng ghim của khối nhánh dữ liệu: ô dữ liệu dung xanh — PASS data_directory … dưới mount volume onehub_pgdata; ô dữ liệu khac-ten đỏ — FAIL … nằm trong volume db_pgdata (cần onehub_pgdata); ô dữ liệu gan-data đỏ — FAIL data_directory nằm trong lớp ghi container; ô dữ liệu khong-doc đỏ — FAIL không đọc được data_directory của one-invest-db (data_directory của ô này đọc bằng doc_dd trên container không tồn tại, không viết tay); rồi PASS nhánh dữ liệu đủ 4 ô"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.db_volume_mutation
+    expected: "exit 0; PASS đột biến bộ đọc live khac-ten đỏ — ô dữ liệu khac-ten lẽ ra đỏ; PASS bản lành bộ đọc live xanh — PASS nhánh dữ liệu đủ 4 ô; không có dòng FAIL đột biến self-khac-ten.sh không đổi gì; db-volume-check mutation: ĐẠT"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_volume_live
+    expected: "exit 0; PASS ma trận đủ 16 ô (ma trận cũ không đổi); hai dòng PASS gom bản lùi qua docker thật; phần «máy này»: PASS data_directory … dưới mount volume onehub_pgdata và dòng bản lùi theo trạng thái lúc chạy; db-volume-check live: ĐẠT"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_volume_mutation
+    expected: "exit 0; sáu dòng đỏ ghim cũ còn nguyên: gan-data — FAIL volume không chứa thư mục dữ liệu; vo-danh — FAIL volume vô danh; bind — FAIL bind mount; project-db — FAIL project=db; mat-name — FAIL volume thiếu name; loai-canonical — FAIL danh sách loại trừ chứa bảng canonical public.sale_offers; cùng PASS bản lành compose xanh và PASS bản lành danh sách loại trừ xanh"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_volume_static
+    expected: "exit 0; PASS compose volume onehub_pgdata gắn /var/lib/postgresql chứa DEFAULT_DATADIR=/var/lib/postgresql/17/main (đọc từ ảnh); PASS compose project=onehub-db; PASS compose db.restart=unless-stopped; db-volume-check static: ĐẠT"
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.db_volume_tap_duot
+    expected: "exit 0; PASS one-invest-db không bị chạm (Id + StartedAt … không đổi); PASS không còn onehub-tapduot-*; db-volume-check tap-duot: ĐẠT"
+    paths: ["scripts/db-volume-check.sh", "scripts/db-chuyen-volume.sh", "scripts/db-sao-luu.sh", "scripts/db-khoi-phuc.sh"]
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-5
+    executor: judgment
+    question: "Trong bốn tệp này: với MỖI hồ sơ (db-vao-volume và db-volume-live-ban-lui), dòng run-log cuối cùng có kind «repin» có lý do nhắc db-volume-check-volume-khac-ten, mọi phần tử suites_exit bằng 0 và mọi giá trị evals_exit bằng 0 không; và evidence-report.md của hồ sơ đó có verified_commit bằng sha của dòng ấy, cùng một mục «Re-pin lần …» cite đúng run_id của dòng ấy không? Trả PASS chỉ khi cả hai hồ sơ đều đúng."
+    inputs:
+      - _acceptance/db-vao-volume/run-log.jsonl
+      - _acceptance/db-vao-volume/evidence-report.md
+      - _acceptance/db-volume-live-ban-lui/run-log.jsonl
+      - _acceptance/db-volume-live-ban-lui/evidence-report.md
+    paths: ["scripts/db-volume-check.sh"]
+    evidence_required: [run_id, verdict, rationale]

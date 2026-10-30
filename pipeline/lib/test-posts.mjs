@@ -43,7 +43,7 @@ export async function loadStgPosts(client, channel) {
   if (!where) throw new Error(`loadStgPosts: kênh lạ «${channel}»`);
   const { rows } = await client.query(
     `SELECT DISTINCT ON (post_id) post_id, snapshot_id, agent_id, text, posted_at, group_name,
-            author_hash, sender_name
+            author_hash, sender_name, sender_id, conversation_id
      FROM stg_zalo_posts
      WHERE ${where}
      ORDER BY post_id, captured_at DESC`,

@@ -1,0 +1,6 @@
+{
+  "feature_plain": "DB trên máy này đã chuyển vào ổ dữ liệu riêng có tên: dựng lại container không còn mất dữ liệu, có lệnh sao lưu và khôi phục kiểm được, bản cũ giữ lại để lùi.",
+  "decisions": [
+    {"id": "E13", "q": "Bằng chứng lượt chuyển thật và sổ tay vận hành đã đủ để anh tin chưa?", "why": "Hai giám khảo chấm đạt; một giám khảo lưỡng lự vì hai dòng số của tin rao để trống. Hai tên ấy là view chứ không phải bảng, bằng chứng bổ sung đã chỉ bảng nền khớp số ở cả ba mốc."}
+  ]
+}

@@ -1,0 +1,18 @@
+---
+slug: media-canonical-reso
+at: 2026-10-30T01:44:00Z
+verdict: findings
+p0: 1
+p1: 4
+p2: 0
+---
+
+## Findings
+
+| Sev | Artifact | Thiếu gì | Kịch bản fail | Thước đo | Xử lý |
+|---|---|---|---|---|---|
+| P0 | design | Sổ d-5 ghi nguồn mot-loi nhưng chỉ loại lối chỉ-thêm. Lối giữ ảnh của tin nghỉ vẫn sống, và xoá ảnh tin nghỉ là một lựa chọn xoá dữ liệu chạm PL14 và AP1. Cùng lớp với [db-volume-check-volume-khac-ten#F1] | Thẻ entity_match có offer_b vừa nghỉ: transform-media xoá ảnh, admin mở /ops/review thì một bên thẻ «không có ảnh», trong khi đường cũ còn hiện ảnh | Thay d-5 bằng một dòng mới (chi-nguoi hoặc muc-tieu có câu trích quyết được); thêm ca tin nghỉ vào AC-5/AC-6 nếu giữ xoá | fixed: kiểm lại thì đường cũ cũng chỉ đọc tin sống — cả review-media.ts lẫn data-flow-queries.ts nối từ view sale_offers (retired_at IS NULL), nên ảnh tin nghỉ hôm nay không hiện ở đâu, xoá không làm lùi. Dòng media là dẫn xuất dựng lại được từ bảng nạp bất biến, không phải xoá dữ liệu. Dòng d-14 thay d-5 với căn cứ muc-tieu trích pipeline/CLAUDE.md (sale_offers = VIEW sống) |
+| P1 | contract | Ngưỡng SỐNG đòi bốn vế đạt trên bản chép DB, nhưng vế leak gate bị hoãn sau triển khai không mốc ngày; vế «thẻ duyệt hiện ≥ 1 ảnh» chỉ đếm ở bảng media, loader chỉ thử một thẻ; timebox trong ô cơ hội còn «…» | Tới 02/11 chưa có lượt sync sau triển khai, Cổng Giá trị không phán được; một lỗi ở loadOfferMedia làm phần lớn thẻ S06 rỗng mà probe vẫn «hụt 0» | Tách vế leak gate (luật trong vòng, số thật ở lượt sync đầu sau triển khai); probe AC-7 đếm hụt ở đầu ra loader trên mọi tin S06 | fixed: AC-7 và E8 nay đếm «S06 hụt ảnh ở loader: 0/n» trên đầu ra loadFlowMedia cho mọi tin S06 sống; §Đường đo và ô cơ hội tách vế leak gate (chưa có lượt sync = CHƯA ĐO); timebox 3 ngày tới hết 02/11 ghi vào ô cơ hội; Hỏi-2 thay bằng d-15 |
+| P1 | evals | E8 đo sự có mặt trong khi AC-2 hứa quan hệ (mỗi URL một dòng, đúng thứ tự); fixture E3 viết tay đúng khuôn bên đọc | Phần tử ảnh thật là object hoặc bên ghi chỉ lấy phần tử đầu: mỗi tin 1 dòng, E3 và E8 vẫn xanh, thẻ chỉ hiện 1/6,5 ảnh | E8 thêm «S06 lệch số ảnh: 0/n» tính độc lập bằng SQL jsonb; E3 thêm ca từ dòng stg_chotot_ads thật | fixed: AC-7 và E8 thêm «S06 lệch số ảnh: 0/n» so số dòng + media_order với danh sách URL tính bằng SQL jsonb trên bảng nạp, không gọi hàm bên ghi; E3 thêm ca 'NH-AC-2 dòng bảng nạp thật' rút một dòng thật cho mỗi dạng images trên DB thử |
+| P1 | evals | E9 cần một thẻ có tin S06 mà không khai cách có thẻ đó; không khai /api/zalo-media của dev server worktree đọc kho thô ở đâu (snapshots/ gitignored) | Hàng chờ DB thử không có thẻ S06 thì E9 FAIL hoặc PASS nhầm vế S06; ảnh S03 404 vì worktree không có snapshots, AC-8 đỏ do môi trường | Mồi thẻ bền có id cố định; điều kiện tiền src /api/zalo-media trả 200, không đạt thì FAIL «môi trường» | fixed: bước E9 nay mồi thẻ bền bằng scripts/media-roundtrip.ts --moi-the (in id, ghi vào observed), chụp đúng thẻ đó; dev server chạy với SNAPSHOTS_DIR trỏ kho thô của checkout chính; điều kiện tiền 200, không đạt thì FAIL «môi trường: kho thô không đọc được» |
+| P1 | contract | Bảng trạng thái UX có ST-ho-so-tin-khong-admin và câu cloud nhưng không eval nào đo ở lớp giao diện; vòng sửa đúng khối nhánh đó | Bỏ nhánh S06 xong, vai ops mở hồ sơ tin S06 thấy «không có ảnh» thay vì «chỉ hiện cho quản trị viên»; E7, E9, E13 vẫn xanh | Thêm hai ca jsdom (vai ops, chế độ cloud) có đối chứng dương admin; thêm hàng cloud vào bảng trạng thái | fixed: AC-6 thêm vế vai không phải admin và chế độ cloud; E7 thêm hai ca 'NH-AC-6 hồ sơ tin S06 không admin' và '… cloud' kèm đối chứng dương admin; bảng trạng thái thêm ST-ho-so-tin-cloud |

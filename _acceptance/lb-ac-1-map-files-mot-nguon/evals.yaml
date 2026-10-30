@@ -1,0 +1,47 @@
+schema_version: 1
+feature_slug: lb-ac-1-map-files-mot-nguon
+# Ca «LB-AC-1 …» ở app/tests/listings-browse.test.tsx (suite app_ui); ca «LBM-AC-n» ở scripts/don-hex-tho.test.mjs (hex_tho).
+# Danh sách viết trước: scripts/lib/map-files-mong.mjs. Gốc kho suy từ import.meta.url, không ghi cứng.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/listings-browse.test.tsx, scripts/lib/map-files-mong.mjs, app/eslint.config.mjs]
+    expected: "exit 0; ca 'LB-AC-1 vendor mapcn' xanh với phần MAP_FILES gọi kiemMapFiles(eslintSrc, MAP_FILES_MONG): đúng trọn danh sách module và không có src/components/ui/map.tsx"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [app/**, scripts/*.test.mjs, scripts/lib/map-files-mong.mjs]
+    expected: "exit 0; ca 'LBM-AC-2' xanh: git ls-files '*.test.*' dưới app/ + scripts/*.test.mjs → 0 tệp có mảng chữ chứa ≥2 phần tử của danh sách module; ba bản sao LB-AC-1 (nháy kép, nháy đơn, backtick) và một tệp giả app/eslint-plugin-onehub-ui/tests/x.test.mjs → mỗi bản báo đúng tên tệp"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [scripts/don-hex-tho.test.mjs, scripts/lib/map-files-mong.mjs]
+    expected: "exit 0; ca 'LBM-AC-3' xanh: kiemDanhSachBanDo(eslint thật, SKILL.md thật) không ném; bản sao thêm src/lib/map-extra.ts vào eslint + SKILL.md → ném thông điệp có 'map-extra.ts'; thêm cả vào danh sách mong → không ném"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/listings-browse.test.tsx, scripts/lib/map-files-mong.mjs]
+    expected: "exit 0; ca 'LB-AC-1 MAP_FILES đột biến' xanh: eslint bản sao thêm src/lib/map-extra.ts → kiemMapFiles ném thông điệp có 'map-extra.ts'; danh sách mong cũng thêm → không ném; thêm src/components/ui/map.tsx vào cả hai → ném 'ui/map.tsx (mapcn) không được miễn hex'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.app_ui
+    paths: [app/tests/**]
+    expected: "exit 0; bộ test app xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.hex_tho
+    paths: [scripts/don-hex-tho.test.mjs]
+    expected: "exit 0; mọi ca DHT-AC-n và LBM-AC-n xanh"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

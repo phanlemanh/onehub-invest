@@ -72,6 +72,16 @@ _Avoid_: unit (trong chữ UI), căn hộ (khi nói chung mọi loại)
 - Code: `registry` · RESO: không có (khung theo HistoryTransactional)
 _Avoid_: master data, MDM
 
+**Danh bạ người**: Phần người của danh bạ — mỗi người một khoá mờ `pty_…` cấp một lần, thuộc đúng một nguồn (chưa nối xuyên nguồn); định danh tại nguồn là bí danh, quan hệ với tin là vai trò (ADR-0016 §8). Chỉ ở DB local.
+- Code: `party` · RESO: resource Member (khung), khoá local
+- Slug URL: `people`
+- Ghi chú: trang `/ops/people` «Danh bạ người» (máy thu) liệt người theo nguồn, số tin, bí danh; nhãn «Có thể là môi giới» là suy luận chỉ hiển thị (từ 5 tin còn sống).
+_Avoid_: hồ sơ người bán
+
+**Bí danh**: Một định danh của thực thể danh bạ tại một nguồn — tài khoản tại nguồn, SĐT băm hay tên hiển thị. Bí danh tài khoản và SĐT thuộc đúng một người sống của nguồn ấy; SĐT luôn là người riêng, không gắn vào người tài khoản (DB2b, Hỏi-4).
+- Code: `registry_alias` · RESO: không có
+_Avoid_: alias (trên UI)
+
 **Căn nhà**: "Một Căn Nhà" — đơn vị phân tích của nền tảng: nút vật thể trong danh bạ mà listing gắn vào — căn (căn hộ, phòng), tòa (nhà phố nguyên căn) hay thửa (đất); nhiều listing từ nhiều nguồn gộp về một căn nhà, nguồn chỉ là bằng chứng (ROADMAP §1.7, ADR-0016). Bảng `properties` hiện là cụm tin S06, chuyển dần thành view trên danh bạ.
 - Code: `property` · RESO: định danh UPI (`UniversalPropertyId` + `UniversalPropertySubId`) + resource Building — **không phải** resource Property, vốn là một tin (ADR-0013 §1)
 - Ghi chú: `asset_nodes` là cây khu đô thị/phân khu, không phải căn nhà — vì thế "asset" bị loại.
@@ -84,7 +94,7 @@ _Avoid_: tài sản, bất động sản, BĐS, asset
 - Ghi chú: Chốt 27/10 (ROADMAP §3 #21, hướng B — theo RESO): «listing» là khái niệm cha của mọi tin. Hiện trạng còn lệch, đổi ở hàng tái cấu trúc riêng: dữ liệu nằm ở hai bảng — `sale_offers` (tin rao: bán + thuê dài hạn) và `listings` (listing thuê ngắn hạn); bảng `listings` mang tên cha mà chỉ chứa thuê ngắn hạn, và nhãn UI «Listing» trên Insight, Finder, So sánh, Lợi suất, `/ops/quality`, `/ops/collections` hiện chỉ nói loại thuê ngắn hạn.
 _Avoid_: tin đăng, offer, sale offer, rao vặt
 
-**Tin rao**: Listing bán hoặc cho thuê dài hạn (`kind` ∈ `sale`, `rent_lt`) đã chuẩn hoá, hiện ở bảng `sale_offers`. Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); hiện `offer_id` của tin nhóm (P1) còn băm nội dung — đổi ở PL14.
+**Tin rao**: Listing bán hoặc cho thuê dài hạn (`kind` ∈ `sale`, `rent_lt`) đã chuẩn hoá, hiện ở bảng `sale_offers`. Khoá theo ADR-0013: id gốc tại nguồn (`OriginatingSystemKey`); tin nhóm (P1, S03/S05) từ PL14 mang khoá dính theo post (`pipeline/lib/offer-key.mjs`), còn nội dung chỉ để **gộp trùng**.
 - Code: `sale_offer` (bảng `sale_offers`; cột `offer_id`, `offer_status`; API `/api/v1/offers`) — tên theo bảng hiện tại, đổi ở hàng tái cấu trúc listing · RESO: resource Property + ListPrice; bán/thuê qua PropertyType
 - Nhãn ngắn: «Tin» — chỉ khi chỗ đó chỉ có tin rao.
 _Avoid_: tin đăng, offer, rao vặt, sale offer
@@ -145,6 +155,20 @@ _Avoid_: fill-gap, ghi đè
 - Code: `field_provenance` · RESO: `*Source` khi field có (năm trường này không có)
 _Avoid_: provenance (trên UI)
 
+**Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng, quá cửa sổ không đổi: tin lâu không thấy lại vẫn giữ trạng thái, chỉ căn tụt bậc B5 về B4 (khung RESO §6). Bằng chứng là phát biểu trường `offer_status` (tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp); phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19).
+- Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus
+_Avoid_: tin hết hạn, expired, tình trạng tin
+
+**Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi căn cộng mỗi tin rao chưa gắn căn; đơn vị không có phường đếm ở thị trường «chưa rõ». Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
+- Code: `data_level_snapshot`, `offer_data_level`, `property_data_level`, `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
+- Slug URL: —
+_Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
+
+**Độ đúng cách đọc**: Tỉ lệ tin mà một cách đọc (bộ đọc theo luật, sau này luật E1, AI) đọc đúng một trường so với nhãn người, tính trên tập chấm của một lát cho từng phân khúc (thị trường × loại hình), so với ngưỡng tự áp F3 bằng cận dưới Wilson 95% chứ không bằng tỉ lệ thô (nhóm A 0,95 · nhóm B 0,90). Ô chưa có nhãn người hay chưa có cách đọc là «bỏ qua» có lý do.
+- Code: `pipeline/eval-classify.mjs` (`npm run eval:classify`), `pipeline/lib/eval-classify.mjs`, kiểm `eval-classify` ở `dq_check_results` · RESO: không có
+- Slug URL: —
+_Avoid_: accuracy, độ chính xác
+
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.
@@ -152,6 +176,7 @@ _Avoid_: chủ nhà, broker
 
 **Vai trò**: Quan hệ của một người với listing (người đăng, môi giới đại diện, sàn) hay với vật thể (chủ đầu tư), ghi bằng phát biểu. Vai suy luận (vd đăng nhiều căn → môi giới) không vào cột, chỉ hiện ở `/ops` (ADR-0016 §8).
 - Code: `party_role` · RESO: ListAgentKey · CoListAgentKey · ListOfficeKey; chủ đầu tư → Building.BuilderName
+- Ghi chú: vai đang ghi là «Người đăng» (`nguoi_dang`, DB2b) — từ trường tài khoản của nguồn hoặc từ SĐT trong tin.
 _Avoid_: loại người bán
 
 **Diện tích**: Diện tích sử dụng của căn, m² (`numeric`, ADR-0011 Qđ 4).
@@ -168,6 +193,10 @@ _Avoid_: loại người bán
 
 **Giá rao**: Giá ghi trong tin rao, VND (bigint).
 - Code: `price_vnd` · RESO: ListPrice (thuê: LeaseAmount)
+
+**Lịch sử giá**: Các mốc giá và trạng thái của tin theo thời gian — tin mới, đổi giá (giá cũ → giá mới), gỡ tin, chào lại — gom theo căn qua mọi tin gắn căn. Ghi lại cùng giá không sinh mốc. Căn có ít nhất hai mốc giá là một điều kiện của bậc B5 (PL19 Hỏi-3).
+- Code: bảng `history_transactional` (trigger trên `sale_offer_records`, chỉ local), view gom theo căn `property_price_history` · RESO: HistoryTransactional (ChangeType)
+_Avoid_: nhật ký giá, biến động giá
 
 **Bậc giá**: Độ gần giá giao dịch của một tin rao: P0 giá giao dịch, P1 giá nội bộ, P2 giá công khai.
 - Code: `price_tier` · RESO: không có — đặc trưng VN (mappings.yaml)
@@ -298,12 +327,18 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Loại hình | `property_type` | PropertySubType | `sale_offers.property_type`, `properties.property_type` | `apartment` «Căn hộ» · `house` «Nhà riêng» · `land` «Đất» · `room` «Phòng» · `commercial` «Mặt bằng» · `unknown` «Chưa rõ» |
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
-| Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field`, `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
-| Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
-| Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» |
+| Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |
+| Trường phát biểu | `assertion_field` | local | `field_assertions.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» · `offer_status` «Trạng thái chào» |
+| Lớp căn cứ | `evidence_tier` | local | `field_assertions.evidence_tier`, `party_roles.evidence_tier` | `fact` «Sự thật» · `observed` «Quan sát có trích dẫn» · `inferred` «Suy luận» |
+| Phương pháp phát biểu | `assertion_method` | local | `field_assertions.method`, `party_roles.method` | `hitl` «Người quyết» · `source_field` «Trường có cấu trúc của nguồn» · `parser` «Bộ đọc tin» · `e1_rule` «Luật E1» · `e2_llm` «LLM E2» · `legacy` «Giá trị có trước» |
+| Trạng thái danh bạ | `registry_status` | local | `parties.status` | `active` «Đang dùng» · `merged` «Đã gộp» · `split` «Đã tách» · `retired` «Đã nghỉ» |
+| Loại bí danh | `alias_kind` | local | `registry_aliases.kind` | `tai_khoan_nguon` «Tài khoản tại nguồn» · `sdt_bam` «SĐT băm» · `ten` «Tên hiển thị» |
+| Sự kiện danh bạ | `registry_event_kind` | local | `registry_events.kind` | `gop` «Gộp» · `tach` «Tách» · `nghi` «Nghỉ» |
+| Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
 | Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
-| Trạng thái chào | `offer_status` | StandardStatus | — | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
-| Bậc dữ liệu | `data_level` | local | — | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
+| Trạng thái chào | `offer_status` | StandardStatus | `sale_offer_records.offer_status` | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
+| Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
+| Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
 
 <!-- VOCAB:END -->
@@ -339,6 +374,27 @@ _Avoid_: cào, crawl
 - Slug URL: `data-flow`
 _Avoid_: pipeline (trùng «Pipeline đầu tư»), funnel, phễu Kev
 
+**Cuộc gọi AI**: Một lượt agent runtime gọi model AI (judge, enrich…) — sổ ghi việc, model, token vào/ra, độ trễ, thành
+công hay lỗi; chi phí = token × đơn giá của model (model chạy local giá 0, model chưa có giá thì «chưa có giá»). Trang
+`/ops/ai-calls` (PL29) tổng hợp theo ngày × việc × model, 30 ngày.
+- Code: `ai_calls`, `ai_model_prices`, `AiCallGroup` (getAiCalls, readAiCalls) · RESO: —
+- Slug URL: `ai-calls`
+_Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
+
+**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho chín trường lõi (ý định tin,
+loại tin, loại hình, dự án, toà, giá thấp nhất, giá cao nhất, diện tích, phòng ngủ), KHÔNG thấy giá trị máy đã đọc ra
+(gắn mù, tránh neo). 20% tin của lát do hai người gắn để đo đồng thuận; đồng thuận một trường dưới 0,9 thì sửa hướng dẫn
+gắn nhãn trước khi tin số đo. Trang `/ops/labels` (PL7), chỉ ở máy thu.
+- Code: `eval_label_items`, `label.write`, `label-sample.mjs` · RESO: —
+- Slug URL: `labels`
+_Avoid_: annotate, label UI, gán nhãn
+
+**Nhãn đánh giá**: Giá trị một người gắn cho một trường của một tin khi gắn nhãn — sự thật tham chiếu để chấm độ đúng
+của máy (PL9), không phải giá trị hiển thị; «tin không nêu» là một nhãn hợp lệ. Gắn với người gắn nên là tầng A, chỉ ở
+máy thu.
+- Code: `eval_labels`, `eval_label_agreement` · RESO: —
+_Avoid_: nhãn tiếng Việt (`label_vi` — chữ hiển thị của sổ từ vựng, khái niệm khác), ground truth
+
 **Độ tươi**: Thời gian từ lần thu gần nhất của một nguồn; vượt SLO thì `check-freshness.mjs` exit 1.
 - Code: `freshness (SLO)` · RESO: ≈ ModificationTimestamp
 _Avoid_: freshness
@@ -368,6 +424,14 @@ _Avoid_: calibration
 - Slug URL: `review`
 - Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10).
 _Avoid_: Review Queue, hàng chờ
+
+**Lý do quyết định**: Câu người duyệt ghi khi quyết một thẻ ở Hàng duyệt — bắt buộc, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Nhãn ô: «Lý do».
+- Code: `review_queue.decision_note` · `ops_audit.detail.ly_do` · RESO: không có — extension local
+_Avoid_: ghi chú, comment, note
+
+**Suy luận của AI** (trên thẻ ghép căn): Gợi ý cùng căn/khác căn và lời giải thích của bộ chấm LLM. Hiện tách khỏi căn cứ, không đổi thứ tự hay kiểu nút; không kèm điểm hay độ tự tin (Q9).
+- Code: `review_queue.ai_suggestion`, `ai_reasoning` · RESO: —
+_Avoid_: AI tự tin, điểm B, gợi ý mặc định
 
 ## Vận hành (cổng Ops)
 
@@ -415,7 +479,19 @@ _Avoid_: deadline, hạn burst
 
 **Bài**: Một bài đăng thô trong nhóm cộng đồng trước khi đọc thành tin rao; «bài thử» là bài từ nhóm thử.
 - Code: `post (stg_zalo_posts)` · RESO: —
-_Avoid_: post raw, post mock, bài post
+- Nhãn đếm: «bài nhận» = bài thật transform đọc (`loadStgPosts` + `testMarker`, không bài S05, không bài thử) theo ngày
+  đăng — cột «S03 — bài nhận» của «Luồng 7 ngày qua», chặng «Bài nhận» của Dòng chảy. Cột «S03 — tin rao mới» cạnh nó
+  đếm tin theo ngày `first_seen`, có sau lượt đọc đêm (~00:00 giờ VN) nên ngày hôm nay chưa đủ (đổi nhãn 27/10, trước là
+  «bài thô» / «tin rao (đã đọc)»).
+_Avoid_: post raw, post mock, bài post, bài thô (làm nhãn cột đếm)
+
+**Gộp trùng**: Bước gom các bài đăng lại cùng một tin thành một tin rao (transform S03/S05 bước 4, `repostKey`). Nội dung
+đủ phường và diện tích thì gộp theo nội dung (kind · phường · giá · diện tích · PN), kể cả bài của người khác; thiếu một
+trong hai thì thêm người đăng (`sender_id`, rồi SĐT, rồi chữ bài đã chuẩn hoá) — khoá thiếu trường mà không phân biệt
+người thì gộp nhầm nhiều tin (26/10: 95 bài «cho thuê 12 triệu» thành một tin; sửa 27/10 ở S03). Gộp trùng không đổi
+`offer_id` (khoá dính PL14); trên Dòng chảy là nhánh «Gộp vào tin đã có».
+- Code: `repostKey` (`pipeline/transform-zalo.mjs`), `n_reposts` · RESO: — (local extension)
+_Avoid_: dedup (trên UI), lọc trùng, khử trùng
 
 **Listing tự thu**: Số listing đang theo dõi trong cả khu vực (gồm phường con) — một định nghĩa dùng chung cho thẻ hiệu chuẩn, bảng Độ phủ trung thực và bảng thị trường S02 toàn quốc trên `/ops/quality` (ON10, Mạnh chốt 25/10).
 - Code: `ourListings (loadOurListings)` · RESO: —
@@ -504,6 +580,11 @@ _Avoid_: Rentalizer
 - Code: `area thumbnail` (`getAreaThumbnails`, `AreaThumbnail`) · RESO: —
 - Slug URL: —
 _Avoid_: ảnh khu vực (gây hiểu là ảnh chụp phường/thành phố), ảnh AirDNA
+
+**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này; chỉ admin thấy, không lên máy chủ. Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
+- Code: `media` (`transform-media.mjs`, `loadOfferMedia`), kiểm `media:local-file` · RESO: `Media` (DD 2.1)
+- Slug URL: —
+_Avoid_: media canonical (tên kỹ thuật, không dùng trên UI), ảnh khu vực
 
 **Đã lưu**: Khu vực (sau này listing, báo cáo) người dùng đã lưu — cần đăng nhập.
 - Code: `saved` · RESO: —

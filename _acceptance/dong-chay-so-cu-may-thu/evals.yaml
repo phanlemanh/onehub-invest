@@ -1,0 +1,42 @@
+schema_version: 1
+feature_slug: dong-chay-so-cu-may-thu
+# Ca test mang tiền tố «SC-AC-n» trong app/tests/dong-chay-so-cu.test.tsx: lược đồ tạm `sc_<pid>` dựng bằng fixture DF0
+# dùng chung (tests/ops-dong-chay-fixture.ts) + 051 + 600 THẬT, rồi đặt computed_at theo ca; jsdom cho trang. Chiều đỏ là
+# đột biến cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.dong_chay_so_cu
+    paths: [app/src/lib/data-flow-queries.ts, app/src/lib/ops-facts.ts, app/src/components/ops/data-flow/data-flow-view.tsx, app/tests/dong-chay-so-cu.test.tsx]
+    expected: "exit 0; ca 'SC-AC-1 tươi' xanh: computed_at 10′ trước mốc đọc → getDataFlow (máy thu, query trên lược đồ tạm) trả factsState fresh; DataFlowView có [data-flow-stamp] «Số tính lúc …», KHÔNG có [data-flow-stale]; chiều đỏ cùng ca: localFacts đột biến luôn trả stale → ca đỏ 'số 10′ mà báo cũ'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.dong_chay_so_cu
+    paths: [app/src/lib/data-flow-queries.ts, app/src/components/ops/data-flow/data-flow-view.tsx, app/src/components/ops/data-flow/data-flow-content.tsx, app/tests/dong-chay-so-cu.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca 'SC-AC-2 cũ trên route' xanh: (a) cả ba dòng computed_at 3 giờ trước và (b) chỉ dòng '30d' 3 giờ trước, hai dòng kia 10′ — DataFlowContent (pool trên lược đồ tạm, không VERCEL) cho '7d' → flow.factsState stale ở cả hai; DOM có [data-flow-stale] mang tiêu đề chữ Hỏi-1 với fmtVnDateTime của computed_at CŨ NHẤT, nằm trước vùng đường ống (không lồng trong nó); số trên DOM bằng facts của bảng: dòng đường ống 'tới Bài nhận: N' từng nguồn và ô Bài nhận · Đọc được · Tin rao · Đủ trường lõi · Gắn căn của lưới; chiều đỏ cùng ca: localFacts đột biến luôn fresh → đỏ 'số 3 giờ mà không báo cũ'; view đột biến bỏ vùng số khi stale → đỏ nêu ô thiếu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.dong_chay_so_cu
+    paths: [app/src/lib/data-flow-queries.ts, app/src/lib/ops-facts.ts, app/tests/dong-chay-so-cu.test.tsx]
+    expected: "exit 0; ca 'SC-AC-3 ngưỡng' xanh: ma trận viết trước {44′ → fresh, 46′ → stale} trên cùng lược đồ; phép đo hành vi một hằng: bản sao ops-facts.ts với FACTS_STALE_MS = 60′ cùng bản sao data-flow-queries.ts trỏ tới nó → ca 46′ thành fresh (máy thu đi theo hằng chung); chiều đỏ cùng ca: bản sao data-flow-queries.ts mang hằng 45′ riêng thì đổi hằng chung không làm ca 46′ đổi → đỏ 'máy thu không dùng FACTS_STALE_MS'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.dong_chay_cloud
+    paths: [app/src/lib/data-flow-queries.ts, app/src/lib/ops-facts.ts, app/src/components/ops/data-flow/data-flow-view.tsx, app/src/components/ops/data-flow/data-flow-content.tsx, app/tests/dong-chay-cloud.test.tsx]
+    expected: "exit 0; bộ dong-chay-cloud (DC-AC-1…10) xanh — đặc biệt DC-AC-7 bốn trạng thái cloud giữ nguyên chữ facts-status"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.dong_chay_so_cu
+    paths: [app/src/lib/data-flow-queries.ts, app/tests/dong-chay-so-cu.test.tsx]
+    expected: "exit 0; ca 'SC-AC-5 vắng' xanh: lược đồ tạm không có data_flow_snapshot → factsState none; có bảng mà không dòng cửa sổ → none; đối chứng dương: có dòng → không none"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

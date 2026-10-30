@@ -1,0 +1,44 @@
+schema_version: 1
+feature_slug: s03-null-byte
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.s03nb_unit
+    expected: "exit 0; 1 test pass, 0 fail"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.s03nb_fix
+    expected: "exit 0; 'lượt 1 exit 0', 'số dòng: 1', dòng đã lọc khớp kỳ vọng, 'FIXTURE OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.s03nb_base
+    expected: "exit 0; should-NOT-fire trên baseline: importer cũ đỏ với 'invalid byte sequence for encoding \"UTF8\": 0x00'; 'BASE OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.s03nb_real
+    expected: "exit 0; snapshot 042737822 có dòng > 0, snapshot sau có dòng > 0; 'REAL OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.s03nb_fix
+    expected: "exit 0; should-NOT-fire: 'lượt 2 exit 0' và 'số dòng: 1' — không có 'nạp lại nhân dòng'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.s03nb_scope
+    expected: "exit 0; should-NOT-fire: không 'tệp ngoài phạm vi', không 'dòng xoá ngoài đường S03', không 'chạm nhánh khác'; 'SCOPE OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

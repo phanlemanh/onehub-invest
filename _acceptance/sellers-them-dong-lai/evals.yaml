@@ -1,0 +1,67 @@
+schema_version: 1
+feature_slug: sellers-them-dong-lai
+# Ca test mang tiền tố «SD-AC-n». Pipeline: pipeline/scripts/bait-gap-sellers.test.mjs, BEGIN…ROLLBACK trên :5433 dưới
+# khoá advisory 33033 (khuôn hiện có của tệp). Chiều đỏ: bản đột biến của refresh-bait-gap.mjs chép tạm CẠNH tệp thật
+# (pipeline/.tam-sellers-<pid>-<n>.mjs — import ./lib/ vẫn đúng), xoá trong finally; mỗi bản một tên (ESM cache).
+# Probe DB máy thu (AC-5, AC-6) bỏ qua có lý do dưới CI (CI chỉ có lược đồ). AC-6 ở app/tests/sellers-chip.test.tsx gọi
+# dealsSql thật của app/src/lib/deals.ts.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.sellers_them
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/bait-gap-sellers.test.mjs]
+    layer: backend-effect
+    expected: "exit 0; ca 'SD-AC-1 mọi SĐT trên tin có dòng sellers' xanh: lát 3 SĐT viết trước (A có dòng cũ n_ads 999, B một tin S03, C hai tin S03+S05) → refreshBaitGap → với mỗi hash h trong {A,B,C}: count(*) FROM sellers WHERE phone_hash = h bằng 1 (không đếm cả bảng — máy thu có dữ liệu thật); B: n_ads 1, sources {S03}; C: n_ads 2, sources {S03,S05}, flags.multi_channel true; first/last_seen bằng min/max của tin; chiều đỏ cùng lát: bản đột biến bỏ lệnh thêm dòng (về UPDATE như trước vòng) → ca đỏ với thông điệp 'SD-AC-1 SĐT trên tin thiếu dòng sellers'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.sellers_them
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/bait-gap-sellers.test.mjs]
+    expected: "exit 0; ca 'SD-AC-2 lượt hai không đổi' xanh: lát AC-1 chạy hai lượt, ảnh chụp bảng (phone_hash, n_ads, sources, first_seen, last_seen, flags, name) của 3 SĐT bằng nhau từng ô, lượt hai sellersInserted 0; chiều đỏ: bản đột biến cộng dồn n_ads (n_ads = sellers.n_ads + EXCLUDED.n_ads) → đỏ 'SD-AC-2 lượt hai đổi cột tổng hợp'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.sellers_them
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/bait-gap-sellers.test.mjs]
+    expected: "exit 0; ca 'SD-AC-3 tên' xanh: A có tên 'Tên cũ A', tin A mang 'Tên tin A', tin B mang 'Tên tin B' → A giữ 'Tên cũ A', B = 'Tên tin B'; chiều đỏ: bản đột biến ghi đè tên (name = EXCLUDED.name) → đỏ 'SD-AC-3 tên cũ bị ghi đè'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.sellers_them
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/bait-gap-sellers.test.mjs]
+    expected: "exit 0; hai ca AC-7 của PL2 có sẵn trong tệp ('AC-7 sellers mồ côi', 'AC-7 cặp hai chiều: người bán có tin thì không bị xoá') xanh nguyên văn — dòng mồ côi bị xoá kèm đúng 1 dòng audit bait-gap:sellers-orphan, remaining bằng số dòng; dòng còn tin giữ lại và n_ads làm mới về 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.sellers_them
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/scripts/bait-gap-sellers.test.mjs]
+    expected: "exit 0 trên máy thu; ca 'SD-AC-5 probe DB máy thu' xanh: BEGIN…ROLLBACK, đếm sellers trước lượt (n0) → refreshBaitGap lượt một → hiệu tập hai chiều rỗng (SELECT DISTINCT seller_phone_hash FROM sale_offers EXCEPT SELECT phone_hash FROM sellers = 0 dòng, và chiều ngược lại = 0 dòng), số dòng lớn hơn n0 khi trước lượt còn thiếu SĐT; lượt hai → cùng số dòng, sellersInserted 0; chiều đỏ cùng giao dịch: bản đột biến bỏ lệnh thêm dòng trên dữ liệu thật (giao dịch mới) → hiệu tập sale_offers trừ sellers khác rỗng, đỏ 'SD-AC-5 sellers thiếu SĐT'. Dưới CI ca bỏ qua có lý do (t.skip), không assert"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.sellers_chip
+    paths: [pipeline/refresh-bait-gap.mjs, app/src/lib/deals.ts, app/tests/sellers-chip.test.tsx]
+    layer: backend-effect
+    expected: "exit 0 trên máy thu; ca 'SD-AC-6 chip Căn giá tốt có số tin người bán' xanh: BEGIN…ROLLBACK trên DB máy thu, thêm một tin Căn giá tốt mang SĐT chưa có dòng sellers ở phường có thước, refreshBaitGap rồi chạy dealsSql() thật của app (ngưỡng 0, giới hạn 500) → mọi dòng có seller_phone khác rỗng có broker_n_ads khác rỗng, và có ít nhất một dòng như vậy; chiều đỏ cùng ca, giao dịch mới: bản đột biến bỏ lệnh thêm dòng → có dòng thiếu broker_n_ads, đỏ 'SD-AC-6 tin có SĐT thiếu số tin người bán'. Dưới CI bỏ qua có lý do"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.sellers_them
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/bait-gap-sellers.test.mjs]
+    expected: "exit 0; ca 'SD-AC-7 đối chiếu danh bạ theo SĐT trên tin' xanh: BEGIN…ROLLBACK, thêm tin S06 mang SĐT hz (không có dòng sellers, không bí danh sdt_bam) → sellersThieuNguoi chứa 'hz:S06'; đối chứng dương cùng giao dịch: thêm bí danh sdt_bam sống cho (S06, hz) gắn một người → không còn chứa 'hz:S06'; chiều đỏ: câu đối chiếu cũ (chỉ đọc sellers, chép từ trước vòng) → không chứa 'hz:S06', đỏ 'SD-AC-7 SĐT trên tin không vào phép đối chiếu'; ca AC-8 của DB2b (pipeline/scripts/danh-ba-nguoi.itest.mjs) đổi chiều đỏ sang một tin S06 mang hy thêm sau dungNguoi (không còn chèn dòng sellers) và vẫn ghim 'AC-8 sellers thiếu người: hy:S06'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.sellers_them
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/sync-cloud.mjs, pipeline/scripts/bait-gap-sellers.test.mjs]
+    layer: backend-effect
+    expected: "exit 0; ca 'SD-AC-8 payload cloud' xanh: lát AC-1 sau refreshBaitGap, cột local đọc từ information_schema → selectList('sellers', cols) + localReadSql thật của sync-cloud.mjs → mỗi hash trong {A,B,C} có đúng 1 dòng payload, không dòng nào có khoá 'name'; chiều đỏ cùng ca, giao dịch mới: bản đột biến bỏ lệnh thêm dòng → B, C vắng khỏi payload, đỏ 'SD-AC-8 payload cloud thiếu SĐT'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

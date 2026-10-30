@@ -37,9 +37,30 @@ type LocalFacts = {
   rotation: { cursor: number; total: number; next: { id: string; name: string; lastCapturedAt: string | null }[]; updatedAt?: string | null };
   zaloGroups: ZaloGroupRow[];
   zaloFlow: Record<string, { posts?: number; offers?: number }>;
-  zaloAccounts?: { accountId: string; name: string | null; profile: string; enabledGroups: string[] }[];
+  zaloAccounts?: TaiKhoanThu[];
   sourceRuns?: { code: string; label_vi: string | null }[];
 };
+
+/** Một tài khoản thu trong bản tin / API Thu thập. `soNhomBat`: số nhóm bật — bản tin từ dinh-danh-tai-khoan-thu-theo-vai
+ * (Hỏi-1 = A) gửi số này, `enabledGroups` rỗng (mã nhóm không rời máy); bản tin cũ chỉ có `enabledGroups`. Mã về null khi
+ * đã che. */
+export type TaiKhoanThu = { accountId: string | null; name: string | null; profile: string | null; enabledGroups: string[]; soNhomBat?: number };
+
+/**
+ * Che định danh tài khoản thu và mã nhóm cho người gọi dưới vai ops (Người xem, bearer chung — `xemDinhDanhThu`). Giữ số
+ * phần tử (máy đếm tài khoản qua bearer — scripts/audit-all.sh), chỉ đặt mã về null; `zaloAllowlist === null` (cấu hình
+ * không đọc được) giữ null. Hàm thuần, không đổi đầu vào.
+ */
+export function cheDinhDanhThu<T extends { zaloAccounts?: TaiKhoanThu[]; zaloAllowlist?: ZaloAllowlistEntry[] | null; zaloGroups?: ZaloGroupRow[] }>(p: T): T {
+  return {
+    ...p,
+    ...(p.zaloAccounts && {
+      zaloAccounts: p.zaloAccounts.map((a) => ({ accountId: null, name: null, profile: null, enabledGroups: [], soNhomBat: a.soNhomBat ?? a.enabledGroups.length })),
+    }),
+    ...(p.zaloAllowlist !== undefined && { zaloAllowlist: p.zaloAllowlist && p.zaloAllowlist.map((g) => ({ groupId: null, enabled: g.enabled })) }),
+    ...(p.zaloGroups && { zaloGroups: p.zaloGroups.map((g) => ({ ...g, ownerAccount: null })) }),
+  };
+}
 
 /** Cloud: danh sách tài khoản Zalo từ ops-heartbeat (read-only). */
 export async function getZaloAccountsFromFacts(): Promise<LocalFacts["zaloAccounts"]> {
@@ -90,9 +111,9 @@ export type FlowDay = {
 
 // Hai cột S03 (ON5): CHÉP NGUYÊN VĂN S03_POSTS_SQL / S03_OFFERS_SQL của pipeline/lib/ops-flow.mjs — bên ghi khối `luong7`
 // dùng bản đó; app/tests/luong-7-ngay-dung-so.test.tsx (ON5-AC-4) đối chiếu hai bên trên cùng lược đồ. Bài S03 thật
-// (`zalo-agent`, không mock, không bài S05 `apify-facebook`, không bài thử) theo ngày đăng; tin rao chỉ
+// (đúng tập transform S03 đọc — loadStgPosts + testMarker: không snapshot mock/thử, không bài S05 `apify-facebook`, không bài thử) theo ngày đăng; tin rao chỉ
 // nguồn S03 theo first_seen (= giờ đăng bài sớm nhất).
-const S03_POSTS_SQL = `SELECT (posted_at AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND snapshot_id LIKE '%zalo-agent%' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' GROUP BY 1`;
+const S03_POSTS_SQL = `SELECT (posted_at AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM stg_zalo_posts WHERE posted_at >= $1 AND split_part(snapshot_id, '__', 2) <> 'example' AND split_part(snapshot_id, '__', 2) !~* '(mock|test|e2e)' AND coalesce(agent_id, '') <> 'apify-facebook' AND coalesce(agent_id, '') !~* '^(e2e|test|mock)' AND btrim(coalesce(group_name, '')) !~* '^test($|[^[:alpha:]])' GROUP BY 1`;
 const S03_OFFERS_SQL = `SELECT (first_seen AT TIME ZONE '${VN_TZ}')::date::text d, count(*)::int n FROM sale_offers WHERE first_seen >= $1 AND source = 'S03' GROUP BY 1`;
 
 /** Luồng N ngày gần nhất theo nguồn. Perf-audit: từng là 42 subquery
@@ -393,7 +414,7 @@ export type ZaloGroupRow = {
   ownerAccount: string | null; // account đang sở hữu nhóm (config/directory)
 };
 
-export type ZaloAllowlistEntry = { groupId: string; enabled: boolean };
+export type ZaloAllowlistEntry = { groupId: string | null; enabled: boolean };
 
 /** Allowlist đọc runtime từ ~/.openclaw/openclaw.json — KHÔNG commit id vào
  * repo/migration (SPL ADR-0007: định danh nguồn thật ở tầng A, máy local). Nhóm bật = hợp nhóm bật hiệu dụng của mọi

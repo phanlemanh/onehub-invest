@@ -14,6 +14,7 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
+import { dungNguoi } from "./lib/danh-ba-nguoi.mjs";
 import { implausibleReason } from "./lib/deal-plausibility.mjs";
 
 const DB_URL =
@@ -41,6 +42,8 @@ export async function refreshBaitGap(c) {
   console.log(`bait_gap_pct: cập nhật ${gap.rowCount} offers P1`);
 
   // ---- 3. Sellers registry — tổng hợp lại toàn bộ từ offers (chân lý) ----
+  // Upsert: SĐT mới trên tin được thêm dòng (lệnh thêm dòng mất ở 907f4bd4 — SD1); dòng đã có ghi đè cột tổng hợp
+  // (không cộng dồn), tên giữ tên đã có. xmax = 0 ⇔ dòng vừa thêm.
   const agg = await c.query(`
     WITH s AS (
       SELECT seller_phone_hash h,
@@ -56,16 +59,22 @@ export async function refreshBaitGap(c) {
       WHERE seller_phone_hash IS NOT NULL
       GROUP BY 1
     )
-    UPDATE sellers x
-    SET n_ads = s.n_ads, sources = s.srcs, first_seen = s.fs, last_seen = s.ls,
-        name = COALESCE(x.name, s.best_name),
-        flags = jsonb_build_object(
-          'n_sale', s.n_sale, 'n_rent', s.n_rent,
-          'median_gap_pct', s.med_gap, 'n_good_deals', s.n_good,
-          'multi_channel', cardinality(s.srcs) > 1,
-          'sources', to_jsonb(s.srcs))
-    FROM s WHERE x.phone_hash = s.h`);
-  console.log(`sellers: cập nhật ${agg.rowCount} người bán`);
+    INSERT INTO sellers AS x (phone_hash, name, sources, n_ads, first_seen, last_seen, flags)
+    SELECT s.h, s.best_name, s.srcs, s.n_ads, s.fs, s.ls,
+           jsonb_build_object(
+             'n_sale', s.n_sale, 'n_rent', s.n_rent,
+             'median_gap_pct', s.med_gap, 'n_good_deals', s.n_good,
+             'multi_channel', cardinality(s.srcs) > 1,
+             'sources', to_jsonb(s.srcs))
+    FROM s
+    ON CONFLICT (phone_hash) DO UPDATE
+    SET n_ads = EXCLUDED.n_ads, sources = EXCLUDED.sources, first_seen = EXCLUDED.first_seen,
+        last_seen = EXCLUDED.last_seen,
+        name = COALESCE(x.name, EXCLUDED.name),
+        flags = EXCLUDED.flags
+    RETURNING (xmax = 0) AS moi`);
+  const sellersInserted = agg.rows.filter((r) => r.moi).length;
+  console.log(`sellers: thêm ${sellersInserted}, cập nhật ${agg.rowCount - sellersInserted} người bán`);
 
   // ---- 4. Người bán không còn tin nào (vd chỉ đăng trong tin thử đã rút — PL2) ----
   // Registry dẫn xuất từ offers: không còn offer thì không còn chỗ đứng. Ghi audit số đã xoá
@@ -99,7 +108,8 @@ export async function refreshBaitGap(c) {
   }
   return {
     gap: gap.rowCount,
-    sellersUpdated: agg.rowCount,
+    sellersUpdated: agg.rowCount - sellersInserted,
+    sellersInserted,
     sellersDeleted: orphan.rowCount,
     sellersRemaining: remaining,
     loaiPhiLy: loai.total,
@@ -132,11 +142,37 @@ export async function loaiTinPhiLy(c, rows) {
   return detail;
 }
 
+/**
+ * Bước đêm: bait gap + sellers (tự-commit như trước), rồi danh bạ Người (DB2b) trong giao dịch RIÊNG — bộ dựng lỗi
+ * không kéo lùi bait gap/sellers, và lỗi được ném lại (không nuốt). `savepoint: true` khi người gọi đã mở giao dịch
+ * (test, thước nạp lại). DB chưa áp 055 (chưa có bảng parties) → bỏ qua bộ dựng, in một dòng.
+ * @param {import("pg").Client} c
+ */
+export async function buocDem(c, { savepoint = false, runId } = {}) {
+  const kq = await refreshBaitGap(c);
+  if (!(await c.query("SELECT to_regclass('public.parties') AS t")).rows[0].t) {
+    console.log("danh-ba-nguoi: bỏ qua — DB chưa áp 055 (chưa có bảng parties)");
+    return { ...kq, nguoi: null };
+  }
+  const [mo, xong, lui] = savepoint
+    ? ["SAVEPOINT dung_nguoi", "RELEASE SAVEPOINT dung_nguoi", "ROLLBACK TO SAVEPOINT dung_nguoi"]
+    : ["BEGIN", "COMMIT", "ROLLBACK"];
+  await c.query(mo);
+  try {
+    const nguoi = await dungNguoi(c, { runId });
+    await c.query(xong);
+    return { ...kq, nguoi };
+  } catch (e) {
+    await c.query(lui);
+    throw e;
+  }
+}
+
 async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
-    await refreshBaitGap(c);
+    await buocDem(c);
   } finally {
     await c.end();
   }

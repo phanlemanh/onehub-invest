@@ -12,6 +12,7 @@ export type HanhDong =
   | "audit.read"
   | "ingest.push"
   | "review.decide"
+  | "label.write"
   | "unit.toggle"
   | "unit.create"
   | "unit.delete"
@@ -29,6 +30,8 @@ export const QUYEN_OPS: Record<HanhDong, { vai: Exclude<Vai, "user">; bearer: bo
   "audit.read": { vai: "admin", bearer: false },
   "ingest.push": { vai: "ops", bearer: true },
   "review.decide": { vai: "ops", bearer: false },
+  // Gắn nhãn đánh giá (PL7 man-gan-nhan-mu, Hỏi-2): một người thật từ vai ops, ghi ở máy thu — nhãn gắn với người gắn.
+  "label.write": { vai: "ops", bearer: false },
   "unit.toggle": { vai: "admin", bearer: false },
   "unit.create": { vai: "admin", bearer: false },
   "unit.delete": { vai: "admin", bearer: false },
@@ -63,6 +66,22 @@ export function canAccessOps(user: User | null): boolean {
 /** Clearance law (ADR-0007 + portals.md): trang quản trị /ops — admin trở lên. */
 export function isAdmin(user: User | null): boolean {
   return BAC_VAI[vaiHieuLuc(user)] >= BAC_VAI.admin;
+}
+
+/**
+ * Nội dung tin (thẻ duyệt review_queue, bài gốc) — AGENTS.md luật 6: cho vai ops trở lên. Vai viewer vào được Ops nhưng
+ * chỉ nhận số và mã S0x; mọi chỗ đưa nội dung tin xuống trình duyệt hỏi hàm này.
+ */
+export function xemNoiDungTin(user: User | null | undefined): boolean {
+  return BAC_VAI[vaiHieuLuc(user ?? null)] >= BAC_VAI.ops;
+}
+
+/**
+ * Định danh tài khoản thu (mã tài khoản, hồ sơ, tài khoản giữ nhóm) và mã nhóm Zalo ở bề mặt Thu thập — AGENTS.md luật 6
+ * (tầng A); hồ sơ dinh-danh-tai-khoan-thu-theo-vai Hỏi-2 = A: vai ops trở lên. Bearer chung (`nguoi: null`) không thấy.
+ */
+export function xemDinhDanhThu(user: User | null | undefined): boolean {
+  return BAC_VAI[vaiHieuLuc(user ?? null)] >= BAC_VAI.ops;
 }
 
 function bearerKhop(req: Request): boolean {
