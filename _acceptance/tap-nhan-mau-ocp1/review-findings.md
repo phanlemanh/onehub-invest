@@ -1,37 +1,35 @@
 ## Trong hợp đồng
 
-- **Hình dạng 4 (âm-tính-một-mình): E6 'DINH DANH 0' cho tên người gửi/tên nhóm/tên nguồn không có đối chứng dương rằng danh sách tên đọc từ DB khác rỗng; đối chứng đỏ tự chèn tên vào danh sách**
-  AC: AC-6
-  file: `_acceptance/tap-nhan-mau-ocp1/probes/db.mjs:157`
+- **Hình dạng 3 (assert «chuỗi có mặt» trong khi lời hứa là QUAN HỆ): khuon_ban chỉ kiểm khuôn 64 hex, không kiểm có bằng băm thư viện**
+  file: `pipeline/lib/tap-mau.test.mjs:192`
   severity: medium
+  AC: AC-7
   source: measurement
-  detail: Dòng 143-146 dựng `nguoi`, `nhom`, `nguon` từ stg/source_registry, rồi dòng 154 chỉ kiểm `loi.length === 0`. Không có assert nào rằng `nguoi.length`, `nhom.length`, `nguon.length` > 0; số đếm chỉ được in ra. Nếu sender_name hay group_name của lát đều null, hoặc real_name rỗng, thì `ten()` lọc ra danh sách rỗng và kết quả xanh 'DINH DANH 0' đúng một cách vô nghĩa. Đối chứng đỏ ở dòng 157-158 cũng không bắt được trường hợp này: `mot = nguoi.map(chuan).find(...) ?? "nguyen van thu"` rơi về một tên bịa, rồi truyền `nguoi: [...nguoi, mot]`. Tức là đối chứng tự nhét chính cái tên nó sẽ quét vào danh sách so, nên chỉ chứng được hàm `ranhGioi`, không chứng được danh sách thật đã nạp đủ. Hợp đồng E6 yêu cầu chèn 'một tên người gửi thật'. Tên nhóm (TEN NHOM LOT) và tên nguồn (TEN NGUON LOT) thì hoàn toàn không có đối chứng nào, cả đỏ lẫn danh sách khác rỗng.
-  lý do vào hợp đồng: AC-6 đòi quét tên người gửi và tên nhóm đọc từ DB local và tên nguồn thật; phép kiểm có thể xanh khi danh sách tên rỗng, nên chưa chứng được AC-6.
+  detail: AC-7/E7 hứa dòng đầu JSONL khai «khuon_ban (64 hex = băm thư viện)», tức đây là quan hệ giữa khuon_ban và nội dung KHUON+BE. kiemDau chỉ có `assert.match(dau.khuon_ban, /^[0-9a-f]{64}$/)`. Một hằng 64 hex bất kỳ, hoặc băm không phụ thuộc thư viện, vẫn xanh. Không chỗ nào so với `khuonBan('ocp1')` hay với sha256(JSON.stringify({khuon: KHUON, be: BE})). Cũng không có đối chứng nào sửa thư viện khuôn rồi bắt khuon_ban phải đổi, dù đó chính là lý do có trường này (PL9 cần biết tập cũ không sinh lại được nữa). Lý do vào hợp đồng: AC-7 hứa dòng đầu khai băm của thư viện khuôn; phép kiểm chỉ xác nhận có chuỗi 64 hex nên không chứng minh được lời hứa đó.
 
-- **Hình dạng 4 (âm-tính-một-mình): E8b 'CANONICAL 0' không có đối chứng dương; đối chứng chỉ thay bảng stg, nhánh canonical không bao giờ được thấy bắt một dòng mẫu**
-  AC: AC-8
-  file: `_acceptance/tap-nhan-mau-ocp1/probes/db.mjs:164`
+- **Hình dạng 5 (tuyên quét LỚP nhưng chỉ có điểm-case): quét «không import pg» bỏ sót cách nạp createRequire mà chính diff này đang dùng**
+  file: `pipeline/lib/tap-mau.test.mjs:202`
   severity: low
+  AC: AC-8
   source: measurement
-  detail: `demMau` (dòng 109-115) chạy hai câu đếm. Câu thứ nhất đếm trên `sale_offer_records` với `originating_system_key LIKE 'mau-%' OR EXISTS(unnest(post_ids) ... LIKE 'mau-%')`, câu thứ hai đếm trên bảng `stg`. Đối chứng ở dòng 164 chỉ thay tham số `stg` bằng bảng VALUES và chỉ kiểm `dc.stg === 1`. Câu canonical vẫn chạy trên bảng thật và `dc.canonical` bị bỏ qua. Vì vậy vị từ canonical (cách ép `p::text`, tên cột `post_ids`/`originating_system_key`) chưa từng được chứng là bắt được một dòng 'mau-…'. Kết quả 'CANONICAL 0' ở dòng 163 là phép đo âm tính đứng một mình.
-  lý do vào hợp đồng: AC-8 đòi 0 dòng mẫu trong bảng canonical; câu đếm canonical chưa từng được chứng là bắt được một dòng «mau-», nên kết quả 0 là phép đo âm tính đứng một mình.
+  detail: AC-8/E8 tuyên là quét cả lớp «không import pg». NHAP_PG chỉ khớp ba dạng: `from "pg"`, `import("pg")`, `require("pg")`. Đối chứng đỏ (dòng 343) chỉ thử đúng một điểm `import pg from "pg"`. Không có ma trận viết trước gồm các cách nạp pg. Đã chạy thử: `createRequire(path.join(ROOT, "pipeline/package.json"))("pg")`, đúng dạng ở _acceptance/tap-nhan-mau-ocp1/probes/db.mjs:12 trong cùng diff, cho NHAP_PG.test = false. Dạng side-effect `import "pg"` cũng = false. Bộ sinh dùng các dạng đó để có đường ghi DB thì phép đo vẫn xanh. Lý do vào hợp đồng: AC-8 yêu cầu bộ sinh không import pg; phép quét bỏ sót các cách nạp khác nên không bảo đảm được điều AC hứa.
+
+- **Hình dạng 4 (âm tính đứng một mình): vế «không có câu SQL ghi» (CAU_GHI) không có đối chứng đỏ nào**
+  file: `pipeline/lib/tap-mau.test.mjs:203`
+  severity: low
+  AC: AC-8
+  source: measurement
+  detail: kiemNguonBoSinh có hai vế: NHAP_PG và CAU_GHI = /\b(?:INSERT|UPDATE|DELETE|COPY|TRUNCATE)\b/. Trong test TNM-AC-8 (dòng 340-343), đối chứng đỏ duy nhất chèn `import pg`, nên chỉ chứng được vế NHAP_PG có thể bắt. Vế CAU_GHI chỉ chạy âm tính trên nguồn thật, chưa lần nào được thấy bắt. Thêm nữa regex này phân biệt hoa thường: đã thử `c.query("insert into stg_zalo_posts values (1)")` và CAU_GHI.test = false. Vậy lời hứa «không có INSERT/UPDATE/DELETE/COPY/TRUNCATE» của AC-8 xanh mà không có bằng chứng phép đo có thể đỏ. Lý do vào hợp đồng: AC-8 nêu rõ bộ sinh không có câu SQL ghi; vế quét này chưa từng được chứng minh có thể bắt và bỏ sót chữ thường nên chưa bảo đảm được AC.
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
 Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm vi và CHƯA qua bác bỏ đối kháng — người quyết, máy không sửa và không chấm thứ máy không được sửa.
 
-- **Định dạng JSONL tập mẫu (giao diện cho PL9) dùng khoá tiếng Việt, trái quy ước đặt tên «Code, API, tên bảng/cột, types: tiếng Anh»**
-  Người dùng thấy gì: Tệp tập mẫu dùng vài tên trường viết tiếng Việt không dấu thay vì tiếng Anh. Người dùng cuối và người vận hành không thấy gì khác, chỉ lệch quy ước đặt tên nội bộ.
-  Căn cứ: Không ảnh hưởng ai đang dùng, không mất hay lộ dữ liệu. Đổi tên thì phải sinh lại tệp kiểm và băm đã duyệt, tốn công hơn lợi ích.
-  file: `pipeline/lib/tap-mau.mjs`
+- **db.mjs nhận diện «chạy trực tiếp» bằng path.resolve thay vì realpathSync: gọi qua đường symlink thì main() không chạy, probe thoát 0 mà không in gì**
+  Người dùng thấy gì: Nếu ai đó chạy phép đo đếm dòng mẫu trong cơ sở dữ liệu qua đường tắt (symlink) thì nó im lặng thoát mà không đo gì, trông như đã đạt. Cách chạy chuẩn trong cấu hình không bị ảnh hưởng.
+  Căn cứ: Hậu quả nhẹ và chỉ xảy ra khi tự gọi bằng đường tắt hiếm dùng; không mất hay lộ dữ liệu, người chạy chỉ cần chạy lại bằng lệnh chuẩn, nên chi phí sửa vượt hậu quả.
+  file: `_acceptance/tap-nhan-mau-ocp1/probes/db.mjs`
   severity: low
   Đề xuất: wont-fix
-
-- **Mô tả E8b trong evals.yaml vẫn ghi đối chứng đỏ là «chèn dòng stg_zalo_posts trong giao dịch ROLLBACK», nhưng probe làm khác**
-  Người dùng thấy gì: Lời mô tả của phép kiểm «không có dòng mẫu trong DB» ghi một cách đối chứng, nhưng phép kiểm thật làm cách khác. Người đọc hồ sơ có thể hiểu sai phép kiểm đã làm gì, còn kết quả kiểm không đổi.
-  Căn cứ: Chỉ là chỗ ghi chép chưa khớp, không ảnh hưởng dữ liệu hay người dùng, và lý do đã có trong sổ quyết định. Ghi lại là đủ, sửa chữ lúc nào cũng rẻ.
-  file: `_acceptance/tap-nhan-mau-ocp1/evals.yaml`
-  severity: low
-  Đề xuất: known-limits
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
