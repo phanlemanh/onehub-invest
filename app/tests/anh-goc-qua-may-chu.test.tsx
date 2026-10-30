@@ -343,3 +343,65 @@ describe("AGM-AC-6 dòng có local_file phục vụ từ đĩa qua hai lớp ki�
     })
   }
 })
+
+// ---------- loader thẻ duyệt (AC-5) ----------
+describe("AGM-AC-5 loader thẻ duyệt đưa ảnh qua máy chủ, không tên máy gốc", () => {
+  type RM = typeof import("../src/lib/ops/review-media")
+  const K = (n: number) => `${n}`.repeat(32).slice(0, 32).replace(/[^0-9]/g, "0")
+  const KB = [K(1), K(2), K(3)]
+  const ROWS = [
+    { offer_id: "agm_a", media_key: K(9), media_url: "https://anh.nguon-gia.test/a0.jpg", local_file: `${SNAP}/media/a.jpg` },
+    ...KB.map((k, i) => ({ offer_id: "agm_b", media_key: k, media_url: `https://anh.nguon-gia.test/b${i + 1}.jpg`, local_file: null })),
+  ]
+  const THE = [
+    {
+      id: 1,
+      item_type: "entity_match",
+      evidence: {
+        offer_a: { offer_id: "agm_a", image_url: "https://anh.nguon-gia.test/mau-a.jpg" },
+        offer_b: { offer_id: "agm_b", image_url: "https://anh.nguon-gia.test/mau-b.jpg" },
+      },
+    },
+  ]
+  const q = async (_t: string, v: unknown[]) => ({ rows: ROWS.filter((r) => (v[0] as string[]).includes(r.offer_id)) })
+
+  async function kiem(mod: RM, vai: Vai) {
+    const out = await mod.loadReviewMedia(THE, NGUOI[vai], q)
+    const m = out[1]
+    if (JSON.stringify(out).includes("nguon-gia")) assert.fail(`AGM-AC-5 lộ tên máy gốc (${vai})`)
+    assert.deepEqual(
+      m.offer_b,
+      KB.map((k) => ({ src: `/api/zalo-media?media=${k}`, origin: "proxy", expiring: false })),
+      `${vai}: bên B phải là 3 ảnh proxy theo khoá, đúng thứ tự`,
+    )
+    assert.equal(m.offer_a?.[0]?.origin, "local")
+    assert.ok(!m.chiGoc?.offer_b, `${vai}: chiGoc không đếm ảnh lấy hộ được`)
+  }
+
+  test("AGM-AC-5 vai ops và admin: bên B 3 ảnh proxy, ảnh mẫu không có, JSON không chứa tên máy gốc", async () => {
+    const mod = (await import("../src/lib/ops/review-media")) as RM
+    await kiem(mod, "ops")
+    await kiem(mod, "admin")
+    assert.deepEqual(await mod.loadReviewMedia(THE, NGUOI.viewer, q), {}, "viewer → {}")
+  })
+
+  test("chiều đỏ AGM-AC-5 lộ tên máy gốc: bản đột biến giữ src = media_url → phép đo bắt", async () => {
+    const goc = readFileSync(path.join(APP, "src/lib/ops/review-media.ts"), "utf8")
+    const a = `if (src) push({ src, origin: "proxy", expiring: false });`
+    assert.ok(goc.includes(a), "chỗ đột biến không còn trong review-media.ts")
+    const dir = mkdtempSync(path.join(APP, "tests", ".agm-dot-"))
+    try {
+      const f = path.join(dir, "review-media.ts")
+      writeFileSync(
+        f,
+        goc
+          .replace(a, `if (src) push({ src: r.media_url, origin: "proxy", expiring: false });`)
+          .replace(`from "./zalo-media"`, `from ${JSON.stringify(path.join(APP, "src/lib/ops/zalo-media.ts"))}`),
+      )
+      const mod = (await import(pathToFileURL(f).href)) as RM
+      await assert.rejects(kiem(mod, "admin"), /AGM-AC-5 lộ tên máy gốc/)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
