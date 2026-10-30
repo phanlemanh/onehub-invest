@@ -168,7 +168,8 @@ async function deXuat(offer, status, value = "3") {
   return Number(r.id);
 }
 const phatBieu = (offer, method, evidence = {}) => c.query(`INSERT INTO field_assertions (subject_key, field, value,
-    evidence_tier, method, evidence) VALUES ($1, 'bedrooms', '3', 'observed', $2, $3)`, [`S06:${offer}`, method, evidence]);
+    evidence_tier, method, evidence, observed_at) VALUES ($1, 'bedrooms', '3', 'observed', $2, $3, now())`,
+  [`S06:${offer}`, method, evidence]);
 const dongKiem = async () => (await c.query(`SELECT status, detail FROM dq_check_results
   WHERE check_name = 'enrich:proposal-assertion' ORDER BY id DESC LIMIT 1`)).rows[0];
 const im = () => {};

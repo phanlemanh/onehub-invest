@@ -82,8 +82,8 @@ export async function insertOffer(c: pg.Client, o: OfferFixture): Promise<void> 
   }).filter(([, v]) => v !== null && v !== undefined);
   for (const [field, value] of legacy) {
     await c.query(
-      `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence)
-       VALUES ($1, $2, $3, 'observed', 'legacy', '045', jsonb_build_object('note', 'gieo test', 'offer_id', $4::text))`,
+      `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence, observed_at)
+       VALUES ($1, $2, $3, 'observed', 'legacy', '045', jsonb_build_object('note', 'gieo test', 'offer_id', $4::text), now())`,
       [`${source}:${osk}`, field, String(value), o.offer_id],
     );
   }

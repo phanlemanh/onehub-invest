@@ -89,7 +89,8 @@ test("PD-AC-1 045 áp hai lần: bảng, CHECK theo sổ, chỉ mục sống, c�
     await c.query("SELECT count(*) FROM v_ruler_p2_area");
 
     // Ma trận CHECK viết trước: nhận đúng giá trị sổ, từ chối giá trị lạ (thông điệp nêu tên ràng buộc).
-    const chen = (f) => `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method) VALUES ${f}`;
+    const chen = (f) => `INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at)
+      SELECT *, now() FROM (VALUES ${f}) v`;   // observed_at bắt buộc từ 059 (PL19)
     let n = 0;
     for (const f of NAM_COT) {
       const v = f === "bedrooms" || f === "bathrooms" ? "2" : "x";

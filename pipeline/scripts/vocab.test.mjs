@@ -21,8 +21,8 @@ const AXES = [
 // Ma trận nhãn viết trước (65 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
 // vòng; bậc: nguyên văn FRAMING §3.4; listing_intent + offer_status: Hỏi-1 của PL6 (Mạnh duyệt 26/10);
 // evidence_tier + assertion_method: PL15 (bảng phát biểu, design §3.7); `wanted` → `inquiry` «Yêu cầu»: Mạnh 27/10
-// (hồ sơ wanted-thanh-inquiry); bốn trục danh bạ: DB2b; assertion_field: PL19 (năm trường enrich + trạng thái chào)
-// ho-nguoi-theo-nguon (Mạnh duyệt 30/10).
+// (hồ sơ wanted-thanh-inquiry); bốn trục danh bạ: DB2b
+// ho-nguoi-theo-nguon (Mạnh duyệt 30/10); assertion_field: PL19 (năm trường enrich + trạng thái chào).
 const NHAN = [
   ["kind", "sale", "Bán"], ["kind", "rent_lt", "Cho thuê"],
   ["property_type", "apartment", "Căn hộ"], ["property_type", "house", "Nhà riêng"], ["property_type", "land", "Đất"],
