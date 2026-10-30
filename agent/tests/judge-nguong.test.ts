@@ -80,6 +80,44 @@ test("AC-1 đối chứng đỏ: mẫu số min ở ô 11 ra no", () => {
   assert.throws(() => kiemO(11, o11.p, "unsure", lechMin), /AC-1 luật sai ở ô: 11/);
 });
 
+// S4 r3 (AC-1): cặp lệch ĐÚNG bằng ngưỡng về toán (a = k·b) phải so ra như nhau, không theo sai số dấu phẩy động.
+const lechTho = (x: number | null, y: number | null) =>
+  x === null || y === null || x <= 0 || y <= 0 ? null : Math.abs(x - y) / Math.max(x, y);
+
+/** Quét n = 1..2000 phần mười: diện tích lệch đúng 0,1, giá/m² lệch đúng 0,15 và 0,30 — mọi cặp phải ra unsure. */
+function kiemDungNguong(lechFn = lech): number {
+  let n = 0;
+  for (let i = 1; i <= 2000; i++) {
+    const b = i / 10;
+    const ca: [string, PairData][] = [
+      ["dt 0,1", cap(voi({ area: (b * 9) / 10 }), voi({ perm2: 105 * TR, area: b }))],
+      ["giá 0,15", cap(voi({ perm2: ((b * 85) / 100) * TR }), voi({ perm2: b * TR }))],
+      ["giá 0,30", cap(voi({ perm2: ((b * 70) / 100) * TR }), voi({ perm2: b * TR }))],
+    ];
+    for (const [ten, p] of ca) {
+      const kq = apNguong(p, lechFn).same_house;
+      assert.equal(kq, "unsure", `AC-1 đúng ngưỡng lệch theo sai số máy: ${ten} ở b=${b} ra ${kq}`);
+      n++;
+    }
+  }
+  return n;
+}
+
+test("AC-1 lệch đúng bằng ngưỡng — kết luận không phụ thuộc sai số dấu phẩy động", () => {
+  assert.equal(kiemDungNguong(), 6000);
+  // ca hội đồng nêu: 19,8 vs 22 m² — tính thô dưới 0,1 nhưng phải là đúng ngưỡng
+  const p = cap(voi({ area: 19.8 }), voi({ perm2: 105 * TR, area: 22 }));
+  assert.ok(lechTho(19.8, 22)! < NGUONG.dienTichYesMax);
+  const kq = apNguong(p);
+  assert.equal(kq.same_house, "unsure");
+  assert.equal(kq.lech.dien_tich, NGUONG.dienTichYesMax);
+  assert.ok(lyDoChu(kq).includes("diện tích lệch đáng kể (10,0%)"));
+});
+
+test("AC-1 đối chứng đỏ: so độ lệch thô thì quét đúng ngưỡng bắt được", () => {
+  assert.throws(() => kiemDungNguong(lechTho), /AC-1 đúng ngưỡng lệch theo sai số máy/);
+});
+
 // Prompt cũ trước vòng (git 2e25631c agent/src/agents/judge-entity.ts) — vật đỏ của phép soi.
 const PROMPT_CU = `Quy tắc:
 - "yes": giá/m² lệch <15%, diện tích lệch <10%, cùng phường, cùng loại hình

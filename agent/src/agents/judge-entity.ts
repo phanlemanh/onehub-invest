@@ -20,10 +20,14 @@ export type KetQuaLuat = {
   lech: { gia_m2: number | null; dien_tich: number | null };
 };
 
-/** Độ lệch tương đối |x−y|/max(x,y) — cùng phép đo bộ lọc Stage B (pipeline/resolve-properties.mjs). */
+/** Làm tròn độ lệch về 1e-9: bỏ sai số dấu phẩy động để lệch đúng bằng ngưỡng so ra như nhau ở mọi cặp số
+ *  (19,8 vs 22 m² tính thô ra 0,09999999999999996 — S4 r3, AC-1). */
+export const lamTron = (x: number) => Math.round(x * 1e9) / 1e9;
+
+/** Độ lệch tương đối |x−y|/max(x,y) — cùng phép đo bộ lọc Stage B (pipeline/resolve-properties.mjs), đã làm tròn. */
 export function lech(x: number | null, y: number | null): number | null {
   if (x === null || y === null || !Number.isFinite(x) || !Number.isFinite(y) || x <= 0 || y <= 0) return null;
-  return Math.abs(x - y) / Math.max(x, y);
+  return lamTron(Math.abs(x - y) / Math.max(x, y));
 }
 
 /** Tên phường so được: thường, bỏ dấu, bỏ tiền tố «phường/p.», gộp khoảng trắng; rỗng → null (thiếu ≠ khác). */
