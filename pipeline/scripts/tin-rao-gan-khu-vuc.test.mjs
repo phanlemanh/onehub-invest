@@ -117,7 +117,9 @@ test("TRG-AC-2 transform-zalo không gán khu vực lạc", { timeout: 300_000 }
     await runTransformZalo(c);
     assert.notEqual(await areaOfPost(c, pLac), HN_LAC.id, "S03 gán tin vào khu vực lạc");
     assert.equal(await areaOfPost(c, pHopLe), HN_HOP_LE.id, "S03 không gán được phường hợp lệ mồi (đối chứng dương)");
-    assert.notEqual(await areaOfPost(c, pTrung), HCM_TRUNG.id, "S03 (chỉ Hà Nội) lấy nhầm phường TP.HCM trùng tên");
+    // N1 s03-cam-mau-so-lieu (Hỏi-1, Mạnh duyệt 30/10): nhóm chưa khai thị trường đối chiếu mọi thị trường có phường —
+    // tên chỉ thuộc TP.HCM nay ra phường TP.HCM (trước N1 S03 chỉ nạp Hà Nội). Tên trùng hai nơi đo ở CM-AC-8.
+    assert.equal(await areaOfPost(c, pTrung), HCM_TRUNG.id, "S03 nhóm chưa khai không nhận phường chỉ thuộc TP.HCM");
   });
 });
 
@@ -200,6 +202,7 @@ export const MA_TRAN = {
   "transform-chotot.mjs": "vong",
   "transform-hcmc-simple.mjs": "vong",
   "scripts/bench-extraction.mjs": "mien",
+  "scripts/do-cam-mau-s03.mjs": "mien", // phép đo N1 s03-cam-mau-so-lieu: đọc phường để đếm thước, không gán khu vực
   "sql/200_transform.sql": "mien",
   "sql/300_metrics.sql": "mien",
   "sql/450_dq_checks.sql": "mien",
@@ -239,7 +242,7 @@ export function kiemMaTran(files, maTran = MA_TRAN) {
 }
 
 test("TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước", () => {
-  assert.equal(Object.keys(MA_TRAN).length, 12, "ma trận viết trước phải đủ 12 tệp (design doc §5)");
+  assert.equal(Object.keys(MA_TRAN).length, 13, "ma trận viết trước phải đủ 13 tệp (design doc §5 + phép đo N1)");
   assert.deepEqual(kiemMaTran(docPipeline()), []);
 });
 

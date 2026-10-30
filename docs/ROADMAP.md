@@ -102,6 +102,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   thiếu phường hoặc diện tích thì thêm người đăng (`sender_id` → SĐT → chữ bài chuẩn hoá) — DB local 349 → 586 tin S03,
   nhóm lớn nhất 177 → 115 bài, đối soát không cho nghỉ tin nào. «Luồng 7 ngày qua» đếm «S03 — bài nhận» bằng đúng tập
   `loadStgPosts` + `testMarker`, cột «S03 — tin rao mới». S05 cùng công thức khoá — chưa đổi.
+- Cầm máu số liệu S03 (N1 `_acceptance/s03-cam-mau-so-lieu`, 30/10): `parsePost` đọc số trên chữ đã gạt URL và SĐT (`gatSo`),
+  luật giá môi giới («2.650 tỷ» = 2,65 tỷ, «2400 tỷ thu về» = 2,4 tỷ, «2ty450», «5tr5», «7.000.000», «Giá: 4,000» tin bán),
+  DT «64m» (15–500, chặn bề ngang); số đếm sau chữ tỷ («8 tỷ 4 tầng») không thành phần lẻ, đơn giá «45.000.000/m2» ra giá/m²; bài thuê từ 1 tỷ / bán trên 100 tỷ không thành tin (`lyDoGiaPhiLy`, đếm theo lý do);
+  khoá gom thiếu phường/DT thêm mã toà/căn (`maToaCan`); `seller_name` = tên bài mới nhất; phường theo `market_codes` của
+  nhóm, nhóm chưa khai đối chiếu mọi thị trường có phường, tên trùng hai nơi ra null. DB thử: 0 tin thuê ≥ 1 tỷ (từ 41),
+  0 bán > 100 tỷ (từ 94), 0 giá từ URL (từ 4), `seller_name` 96,9% (từ 0), 0 tin TP.HCM sai phường (từ 38).
   Listing Airbnb transform cho nghỉ ngoài phường mang toạ độ của lần thu mới nhất (thiếu → NULL), giữ mốc + lý do nghỉ cũ
   (`_acceptance/airbnb-nghi-khong-hoi-sinh`) — reassign-areas chỉ đánh thức listing nghỉ khi toạ độ HIỆN HÀNH vào phường.
 - Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`
@@ -384,6 +390,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | V19 | Một bảng quyền bốn vai (viewer < ops < admin < owner) ở `app/src/lib/ops-access.ts` cho 11 route `/api/v1/ops/**`; route quản trị nhóm thu và Zalo chỉ admin, bearer chung chỉ đọc và nạp số; mỗi thao tác ghi đúng một dòng `ops_audit` mang `user:<id>`, cùng transaction; `users.role` CHECK (049, prod chờ Mạnh áp) — `_acceptance/quyen-bon-vai-mot-cho` (T3, TV1) | 🔄 S4 chấm |
 | V20 | Vai viewer vào Ops nhưng không nhận nội dung tin: `xemNoiDungTin` (ops trở lên) ở `app/src/lib/ops-access.ts`; `/ops/review` cho viewer chỉ số thẻ chờ theo loại (không truy vấn cột nội dung), `/ops/data-flow` xoá bài gốc + tên nhóm trước khi gửi xuống trình duyệt; bảng kiểm kê 22 trang/route Ops; tài khoản thử `--vai viewer` — `_acceptance/viewer-khong-thay-the-duyet` (T3, Ngoài-9 của TV1). Định danh tài khoản thu ở `/ops/collections` để hàng riêng (P1-40): chưa cấp vai viewer cho người thật | 🔄 S4 chấm |
 | V21 | Định danh tài khoản thu theo vai: `xemDinhDanhThu` (ops trở lên) ở `app/src/lib/ops-access.ts` + `cheDinhDanhThu` (giữ số dòng, mã về null) — `GET /api/v1/ops/collections` (thân ở `lib/collections-api.ts`) và trang `/ops/collections` che mã tài khoản, hồ sơ, mã nhóm, tài khoản giữ nhóm với Người xem và bearer chung, cả máy thu lẫn cloud; bản tin `push-ops-facts` gửi `soNhomBat` thay mã nhóm, `factsChan` chặn mã nhóm — `_acceptance/dinh-danh-tai-khoan-thu-theo-vai` (T3, Hỏi-1 của V20) | 🔄 S4 chấm |
+| V22 | Cầm máu số liệu S03: transform-zalo đọc số không lẫn URL/SĐT, luật giá VN, DT «Nm», chặn giá phi lý, khoá gom có mã toà/căn, `seller_name`, phường theo thị trường của nhóm — `_acceptance/s03-cam-mau-so-lieu` (T2, N1) | 🔄 S4 chấm |
 | V11 | Leak gate kiểm anon: sync cloud dừng đỏ khi anon/authenticated SELECT được quan hệ nào trong `public` (chừa 3 quan hệ PostGIS), kèm lệnh gỡ; `--kiem-anon` soi prod chỉ đọc (AU1, audit P12) — `_acceptance/leak-gate-kiem-anon` | 🔄 đợt 0; merge SAU khi Mạnh áp 037 và `--kiem-anon` trên prod sạch |
 
 ### Track 6 — Chuẩn UI/UX ReUI
