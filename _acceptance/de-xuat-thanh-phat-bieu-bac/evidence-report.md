@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: d95e28bb366adea62432213ff8fa949dfc288a2b
+verified_commit: 794bf035df134a7fa6a995df84d9262a7bfa8bf5
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -263,3 +263,7 @@ none — mọi eval chạy một lần, xác định (runs: 1), không có phư�
 ## Iterations
 
 Round 1: mọi eval máy (E1-E16, E18) đều xanh; E17 là mục judgment chờ người điền human_override ở Cổng 2. Verdict PENDING-JUDGMENT.
+
+### Re-pin lần 1 — 2026-10-30, do ghim lại sau gộp origin/main
+run_id: repin-20261030T082715Z-16834
+sha: 794bf035df134a7fa6a995df84d9262a7bfa8bf5 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)
