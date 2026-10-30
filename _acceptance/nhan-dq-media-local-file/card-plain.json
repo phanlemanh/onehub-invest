@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Bảng «Kiểm chất lượng» ở /ops/quality hiện nhãn tiếng Việt cho dòng kiểm ảnh tin mới của NH1 (ví dụ «Ảnh tin đã tải · Nguồn S06 · 182.852 ảnh · 0 đã tải · 27.702 tin có ảnh») thay vì «chưa diễn giải».",
+  "analyst_plain": "Lượt đối chứng trên code cũ không chạy được (công cụ của tác tử thiếu quyền ghi tệp — lỗi bộ công cụ đã báo, P2-77). Test mới có chiều khuôn lạ ghim thông điệp, và ca ON12-AC-5 đã đỏ thật trên main trước bản sửa (nhật ký của P1), xanh sau bản sửa."
+}
