@@ -5,7 +5,7 @@ slug: gop-tin-chi-anh-o-transform
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-media.mjs, pipeline/lib/ — không khớp t3_paths; không migration
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-gop-tin-chi-anh-o-transform-design.md
@@ -75,3 +75,9 @@ không đổi. Câu hỏi quy tắc gộp: Hỏi-1 (sổ quyết định).
 - «Raw không đổi» ← AC-5.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Ca GA-AC-5 chưa có đối chứng dương cho nửa «sale_offers không đổi» — một lần sửa sau vô tình đổi tin rao có thể không bị báo.
+  - Ngoài-2: Nhánh «tin chữ không phải tin rao chen vào gần hơn» của GA-AC-3b chưa kiểm ảnh từng được gắn trước đó, cũng chưa có ca đỏ ghim.
+  - Ngoài-3: Thước do-gop-anh có thể đếm một cặp là đã gộp khi tin chỉ-ảnh có danh sách ảnh rỗng (hôm nay 0 bài như vậy).
+  - Ngoài-5: Phép băm bảng nạp của GA-AC-5 chỉ xét 6 cột, không phải toàn bảng.
