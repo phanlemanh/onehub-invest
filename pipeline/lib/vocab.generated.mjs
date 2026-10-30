@@ -7,6 +7,7 @@ export const VOCAB = Object.freeze({
   confidence: Object.freeze(["high", "medium", "low"]),
   price_tier: Object.freeze(["P0", "P1", "P2"]),
   enrich_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"]),
+  assertion_field: Object.freeze(["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status"]),
   evidence_tier: Object.freeze(["fact", "observed", "inferred"]),
   assertion_method: Object.freeze(["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"]),
   registry_status: Object.freeze(["active", "merged", "split", "retired"]),
@@ -24,6 +25,7 @@ export const PROPERTY_TYPE = Object.freeze({ apartment: "apartment", house: "hou
 export const CONFIDENCE = Object.freeze({ high: "high", medium: "medium", low: "low" });
 export const PRICE_TIER = Object.freeze({ P0: "P0", P1: "P1", P2: "P2" });
 export const ENRICH_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" });
+export const ASSERTION_FIELD = Object.freeze({ property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status" });
 export const EVIDENCE_TIER = Object.freeze({ fact: "fact", observed: "observed", inferred: "inferred" });
 export const ASSERTION_METHOD = Object.freeze({ hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" });
 export const REGISTRY_STATUS = Object.freeze({ active: "active", merged: "merged", split: "split", retired: "retired" });

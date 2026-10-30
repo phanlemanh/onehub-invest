@@ -7,6 +7,7 @@ export const VOCAB = {
   confidence: ["high", "medium", "low"],
   price_tier: ["P0", "P1", "P2"],
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
+  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "offer_status"],
   evidence_tier: ["fact", "observed", "inferred"],
   assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
   registry_status: ["active", "merged", "split", "retired"],
@@ -25,6 +26,7 @@ export type PropertyType = (typeof VOCAB.property_type)[number];
 export type Confidence = (typeof VOCAB.confidence)[number];
 export type PriceTier = (typeof VOCAB.price_tier)[number];
 export type EnrichField = (typeof VOCAB.enrich_field)[number];
+export type AssertionField = (typeof VOCAB.assertion_field)[number];
 export type EvidenceTier = (typeof VOCAB.evidence_tier)[number];
 export type AssertionMethod = (typeof VOCAB.assertion_method)[number];
 export type RegistryStatus = (typeof VOCAB.registry_status)[number];
@@ -41,6 +43,7 @@ export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "la
 export const CONFIDENCE = { high: "high", medium: "medium", low: "low" } as const;
 export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
+export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", offer_status: "offer_status" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
 export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
@@ -61,6 +64,7 @@ export const LABELS_VI = {
   confidence: { high: "cao", medium: "trung bình", low: "thấp" },
   price_tier: { P0: "giá giao dịch (P0)", P1: "giá nội bộ (P1)", P2: "giá công khai (P2)" },
   enrich_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà" },
+  assertion_field: { property_type: "Loại hình", bedrooms: "Phòng ngủ", bathrooms: "WC", street_raw: "Đường", block_raw: "Toà", offer_status: "Trạng thái chào" },
   evidence_tier: { fact: "Sự thật", observed: "Quan sát có trích dẫn", inferred: "Suy luận" },
   assertion_method: { hitl: "Người quyết", source_field: "Trường có cấu trúc của nguồn", parser: "Bộ đọc tin", e1_rule: "Luật E1", e2_llm: "LLM E2", legacy: "Giá trị có trước" },
   registry_status: { active: "Đang dùng", merged: "Đã gộp", split: "Đã tách", retired: "Đã nghỉ" },
