@@ -1,0 +1,27 @@
+{
+  "feature_plain": "Mỗi nhu cầu cần mua · cần thuê đăng ở nhóm S03 thành một dòng trong bảng Yêu cầu — kèm khu vực, loại hình, số phòng ngủ, ngân sách — để hàng đo cầu đếm được và sau này ghép với tin rao; nạp lại không nhân dòng.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm bảng Yêu cầu (chỉ ở máy local) với các cột tiêu chí; ràng buộc chặn dịch vụ, loại hình ngoài sổ và ngân sách thấp nhất lớn hơn cao nhất."},
+    {"id": "AC-2", "p": "Sẽ khai bảng trong sổ theo RESO SavedSearch, thêm kiểm chất lượng cho hai cột dịch vụ và loại hình, và sửa định nghĩa «Yêu cầu» trong từ điển."},
+    {"id": "AC-3", "p": "Sẽ đọc đúng tiêu chí từ chữ bài: ngân sách mọi dạng (khoảng, trần, sàn, đứng một mình), loại hình, mua hay thuê, số phòng ngủ, diện tích, phường."},
+    {"id": "AC-4", "p": "Sẽ chỉ biến thành Yêu cầu những bài mà phát biểu ý định lớp cao nhất là «Yêu cầu»; bài thử và bài không có phát biểu thì không; chạy lại không thêm dòng."},
+    {"id": "AC-5", "p": "Sẽ gom bài đăng lại cùng người cùng chữ thành một Yêu cầu, cộng dồn khi có bài mới, bớt khi một bài đổi ý."},
+    {"id": "AC-6", "p": "Sẽ cho Yêu cầu nghỉ (không xoá) khi bài không còn là Yêu cầu, và sống lại đúng dòng cũ khi bài trở lại."},
+    {"id": "AC-7", "p": "Sẽ để người thắng máy: bài người đã ghi «tin rao» không thành Yêu cầu dù Kev chấm «Yêu cầu»."},
+    {"id": "AC-8", "p": "Sẽ không làm gãy bước dựng tin rao khi máy thu chưa áp migration của bảng."},
+    {"id": "AC-9", "p": "Sẽ đo trên bản chép dữ liệu thật: mỗi bài Yêu cầu nằm trong đúng một dòng, in tỉ lệ đọc ra từng tiêu chí, thời gian thêm, tin rao giữ nguyên, bảng không lên cloud."},
+    {"id": "AC-10", "p": "Sẽ giữ các phép thử pipeline, bảng phát biểu và bước Kev đều xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không ghép Yêu cầu với tin rao, không làm trang /ops, không đưa bảng lên cloud."},
+    {"id": "OOS-2", "p": "Không lưu danh tính người tìm, không gom hai bài khác chữ, không lấy Yêu cầu từ S05/S06, chưa có thuê ngắn hạn."},
+    {"id": "OOS-3", "p": "Không đặt ngưỡng xác suất Kev cho Yêu cầu, không áp migration lên máy thu trong vòng này."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Bảng đọc loại hình và mua/thuê từ chữ bị ghi là máy tự quyết dù đó là nghĩa sản phẩm — đã chuyển thành câu hỏi Hỏi-3 cho anh; ngưỡng chặn ngân sách dùng lại luật giá phi lý của tin rao."},
+    {"i": 1, "p": "Thiếu ca bài đăng lại tới ở lượt sau và một bài trong nhóm đổi ý — đã thêm ca ba lượt, có ca đỏ khi danh sách bài bị ghi đè."},
+    {"i": 2, "p": "Thước dữ liệu thật chỉ so hai con số — đã đổi sang kiểm quan hệ: mỗi bài nằm trong đúng một Yêu cầu, mỗi Yêu cầu một người một chữ."},
+    {"i": 3, "p": "Bài Kev gate down và cụm «tầm X» chưa rõ luật — đã ghi: gate down không có phát biểu nên tự nhiên không thành Yêu cầu; «tầm X» thuộc Hỏi-1."},
+    {"i": 4, "p": "Ngưỡng sống đếm bài trong khi bảng gom nhóm, tỉ lệ đọc tiêu chí sai mẫu số — đã sửa ngưỡng theo nhóm và tính tỉ lệ trên bài có viết tiêu chí, chỉ in."}
+  ]
+}

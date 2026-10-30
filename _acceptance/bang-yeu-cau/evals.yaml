@@ -1,0 +1,97 @@
+schema_version: 1
+feature_slug: bang-yeu-cau
+# Ca test thuần «YC-AC-n» ở pipeline/scripts/yeu-cau.test.mjs (npm test); ca DB ở pipeline/scripts/yeu-cau.itest.mjs (DB thử
+# oneinvest_p1_n1, nạp 045 + 057 + 058 trong giao dịch). Mỗi ma trận có ca đỏ trên bản sao đột biến chép cạnh tệp thật rồi xoá.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [db/migrations/058_*.sql, pipeline/lib/nap-058.mjs, pipeline/scripts/yeu-cau.itest.mjs]
+    expected: "exit 0; ca 'YC-AC-1' xanh: sau khi áp 058 hai lần, information_schema có bảng inquiry_records với cột và kiểu viết trước, view inquiries chỉ chứa dòng retired_at IS NULL; INSERT kind='rent_st', property_type='nha', source='zalo', budget_min 5 tỷ > max 3 tỷ, retired_at có mà retired_reason trống đều bị CHECK chặn với tên ràng buộc; dòng hợp lệ vào được; số dòng sale_offer_records và inquiry_records không đổi sau khi áp; ca đỏ: bản sao 058 bỏ CHECK khoảng ngân sách ghim «budget»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.yeu_cau_vocab
+    paths: [pipeline/mappings.yaml, pipeline/lib/vocab.generated.mjs, db/migrations/058_*.sql]
+    expected: "exit 0; vocab --check, --lint xanh; yeu-cau-vocab-db: --check-db trên DB thử đã áp 057 + 058 (trong giao dịch) 0 lệch; đối chứng cùng lệnh: chưa áp 058 thì checkDb lệch và gọi tên inquiry_records"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2b
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/mappings.yaml, pipeline/dq-enum-vocab.mjs, CONTEXT.md, pipeline/scripts/yeu-cau.test.mjs]
+    expected: "exit 0; ca 'YC-AC-2' xanh: khối inquiries của sổ có dd_resource SavedSearch và mỗi cột của bảng có dd hoặc rationale; KIEM_ENUM có mục (inquiries, kind, kind) và (inquiries, property_type, property_type); CONTEXT.md mục «Yêu cầu» không còn chuỗi «bảng lưu yêu cầu và ghép với listing là tính năng sau» và có «inquiries»; ca đỏ: bản sao sổ bỏ rationale một cột ghim tên cột"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau.test.mjs]
+    expected: "exit 0; ca 'YC-AC-3' xanh: ma trận viết trước — mỗi dạng ngân sách một dòng (khoảng, từ a đến b, trần, sàn, đứng một mình theo Hỏi-1 gồm «tầm X» «khoảng X» «tài chính X», đơn vị tr/triệu/củ, ngoài khoảng giá phi lý), mỗi mục bảng ánh xạ loại hình theo Hỏi-3 một dòng cộng dòng «nhà» đứng một mình ra trống, dịch vụ theo chữ, có phường, có phát biểu kind/property_type; số assert bằng số dòng, mỗi dòng đúng bộ (kind, property_type, bedrooms, area_m2, budget_min_vnd, budget_max_vnd, area_id); hai ca đỏ: bản sao bỏ nhánh «dưới/tối đa» ghim dòng trần, bản sao bỏ ưu tiên phát biểu kind ghim dòng «có phát biểu kind»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau.itest.mjs]
+    expected: "exit 0; ca 'YC-AC-4' xanh: đúng các bài có phát biểu inquiry sống lớp cao nhất thành Yêu cầu sống (tập inquiry_id viết trước) với tiêu chí viết trước; bài thử, bài gate down, tin rao, không phải tin không thành; lượt hai thêm 0, nghỉ 0; ca đỏ: bản sao bỏ lọc bài thử ghim bài thử"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau.itest.mjs]
+    expected: "exit 0; ca 'YC-AC-5' xanh: hai bài cùng người cùng chữ → một Yêu cầu, post_ids hai phần tử, first_seen = bài sớm, last_seen = bài muộn; bài cùng chữ khác người và bài không người gửi lẫn SĐT → mỗi bài một Yêu cầu; ca 'YC-AC-5b' xanh: lượt một chỉ bài A, lượt hai thêm B (cùng người cùng chữ, muộn hơn) và C → thêm đúng 1 Yêu cầu, Yêu cầu của A có post_ids {A,B}, first_seen theo A, last_seen theo B, nghỉ 0; lượt ba đổi điểm Kev của B thành tin rao và chạy bước Kev thật (không chèn tay field_assertions) → post_ids co về {A}, Yêu cầu sống, last_seen theo A; hai ca đỏ: bản sao khoá gom bỏ người gửi ghim «khác người», bản sao upsert ghi đè post_ids ghim YC-AC-5b"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/lib/scan-delete.mjs, pipeline/scripts/yeu-cau.itest.mjs]
+    expected: "exit 0; ca 'YC-AC-6' xanh: Kev đổi ý → Yêu cầu nghỉ với retired_reason 'het-phat-bieu', dòng còn trong inquiry_records; đổi về → sống lại cùng inquiry_id; răng quét DELETE (scan-delete) báo đỏ trên một tệp mẫu có DELETE FROM inquiry_records và sạch trên cây thật"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau.itest.mjs]
+    expected: "exit 0; ca 'YC-AC-7' xanh: bài có kev/inferred inquiry và hitl/fact offer không thành Yêu cầu; bỏ phát biểu hitl thì thành; ca đỏ: bản sao chọn phát biểu mới nhất bất kể lớp ghim bài ấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/yeu-cau.mjs, pipeline/scripts/yeu-cau.itest.mjs]
+    expected: "exit 0; ca 'YC-AC-8' xanh: trong giao dịch không nạp 058 (DROP bảng nếu DB thử đã áp, ROLLBACK), transform-zalo chạy hết, số offer và số phát biểu kev bằng lượt có bảng, đúng 1 dòng log «chưa áp 058»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/yeu-cau.mjs, pipeline/scripts/do-yeu-cau.mjs]
+    expected: "exit 0; do-yeu-cau in số bài S03 (> 500, không thì exit 1), số bài có phát biểu inquiry sống, số Yêu cầu sống; quan hệ: số bài inquiry vắng mọi post_ids sống = 0 và số bài nằm trong hơn một post_ids sống = 0 (không thì exit 1); mỗi Yêu cầu chỉ gồm bài cùng nguồn · người gửi · chữ chuẩn hoá và không hai Yêu cầu chung bộ ấy (không thì exit 1); với từng tiêu chí (dịch vụ, loại hình, PN, diện tích, ngân sách, khu vực) in số bài có dấu hiệu chữ và tỉ lệ đọc ra giá trị trên mẫu số ấy (chỉ in); giây transform thêm; tập offer giống lượt không Yêu cầu (exit 1 nếu lệch); inquiry_records không trong FILL/CLOUD_ALLOW; đối chứng luôn chạy: bản sao gom bỏ người gửi phải làm quan hệ đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; toàn bộ test pipeline xanh, gồm yeu-cau.test.mjs, kev-phat-bieu.test.mjs, vocab"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10b
+    criterion: AC-10
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.yeu_cau_that
+    paths: [pipeline/transform-zalo.mjs]
+    expected: "exit 0; trong cùng lệnh ca DB phát biểu 045 (phat-bieu-db.itest.mjs) và ca DB Kev (kev-phat-bieu.itest.mjs) xanh trên DB thử"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
