@@ -12,7 +12,7 @@ flowchart TD
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>7 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
-  GB --> DG["Đã giao<br/>91 việc"]
+  GB --> DG["Đã giao<br/>92 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>63 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
@@ -185,6 +185,7 @@ flowchart TD
 - test gỡ đúng worktree tạm của mình — bỏ git worktree prune trên kho dùng chung (zalo-import-job-lan.test.mjs và selftest hook typecheck-changed) (`test-khong-prune-worktree`)
 - test app thôi đỏ nền khi nhiều bộ test dùng chung DB :5433 — giới hạn song song, thử lại lỗi DB tạm thời; chứng CT-AC-1 không còn phụ thuộc nhịp chờ (`test-nen-on22-on12`)
 - hai bộ test scripts/ theo khuôn tên snapshot và captured_at = giờ thu sau (`test-scripts-sau-87-90`) — đã giao — máy thông, cửa veto còn mở
+- Hàng Phường của bảng so ghép căn ở /ops/review so theo tên phường chuẩn, không báo «Lệch» khi hai tin cùng phường chỉ khác cách viết (`the-duyet-phuong-lech-gia`)
 - collector S08 thu danh mục quỹ căn (gồm OCP1) vào raw — chỉ đọc, cấu hình nguồn ở máy local, không lộ nguồn trong kho công khai (`thu-danh-muc-ocp1`)
 - Tin rao bán và bước gán theo toạ độ chỉ gán vào phường hợp lệ — không vào khu vực lạc hay khu vực không phải phường OSM (`tin-rao-gan-khu-vuc-dung`) — đã giao — không đo, khai ở Cổng Đáng
 - hai ca test bước chụp (UC-TA-5, UC-BR) hết đỏ chập chờn khi bộ test scripts/ chạy song song (`uc-ta-5-tmp-rieng`)
