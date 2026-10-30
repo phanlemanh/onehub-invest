@@ -101,7 +101,7 @@ evals:
     executor: script
     cmd: config:executors.script.media_khong_lui
     paths: [_acceptance/media-canonical-reso/probes/khong-lui.mjs]
-    expected: "exit 0; stdout 'KHÔNG LÙI PASS': chạy scripts/pre-merge-check.sh --base origin/main trên cây; mọi VIOLATION còn lại chỉ thuộc hai lớp đã biết trước chữ ký — human_signoff trống của chính media-canonical-reso, và ô superseded_by trỏ media-canonical-reso#AC-n chờ hồ sơ này ký (ho-so-thay-chua-ky); không VIOLATION 'evidence is stale' nào cho hồ sơ khác. Chiều đỏ: probe in nguyên văn dòng VIOLATION lạ và thoát 1"
+    expected: "exit 0; stdout 'KHÔNG LÙI PASS': chạy scripts/pre-merge-check.sh --base origin/main trên cây; mọi VIOLATION còn lại chỉ thuộc ba lớp đã biết trước chữ ký — (1) trạng thái/chữ ký của chính media-canonical-reso; (2) ô superseded_by trỏ media-canonical-reso#AC-n chờ hồ sơ này ký (ho-so-thay-chua-ky); (3) 'evidence is stale' của hồ sơ đã ký có ô superseded_by trỏ media-canonical-reso (làn ghim lại từ chối ghim chúng khi hồ sơ thay chưa ký, nên chúng ghim trong lượt ký của NH1) — với lớp (3) probe tự chạy MỌI eval test/script còn hiệu lực (không not-run) của từng hồ sơ ấy trên cây và đòi thoát 0, in 'chạy lại <hồ sơ>: k/k lệnh xanh'; không 'evidence is stale' nào cho hồ sơ khác. Chiều đỏ: probe in nguyên văn dòng VIOLATION lạ hoặc lệnh đỏ và thoát 1"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E13
