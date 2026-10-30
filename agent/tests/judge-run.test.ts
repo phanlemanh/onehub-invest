@@ -1,4 +1,5 @@
 // judge-run.test.ts — PL25 `judge-nguong-la-code` AC-2b..AC-9 (E2b–E9): chamMotLuot sinh/cập nhật thẻ hàng duyệt.
+// Thêm hồ sơ `judge-giu-quyet-dinh-nguoi` AC-1..AC-3 (E1–E3): thẻ người quyết giữa lúc chấm không bị máy ghi đè.
 // DB thử RỖNG riêng trên :5433 (tạo đầu tệp, xoá cuối tệp) — không chạm `oneinvest`. Lược đồ rút từ migration thật:
 // khối property_candidates của 027, 029 tới «-- Seed», 052 nguyên tệp; sale_offers tối thiểu (chỉ để khoá ngoại).
 // Model giả MockLanguageModelV4. Mỗi ca có đối chứng đỏ chạy ĐÚNG hàm kiểm trên vật hỏng, thông điệp ghim theo evals.yaml.
@@ -12,7 +13,7 @@ import { MockLanguageModelV4 } from "ai/test";
 import { TR, cap, kiemKhongNguong, type Tin } from "./judge-chung.js";
 import { NGUONG, apNguong } from "../src/agents/judge-entity.js";
 import type { PairData } from "../src/tools/native.js";
-import { CAU_DEM_THIEU_THE, chamMotLuot, type ChamDeps } from "../scripts/judge-run.js";
+import { CAU_DEM_THIEU_THE, SQL_CAP_NHAT, chamMotLuot, type ChamDeps } from "../scripts/judge-run.js";
 
 const SERVER = process.env.SCA_PG_SERVER ?? "postgres://oneinvest:oneinvest@localhost:5433";
 const TEN_DB = `oneinvest_p3_judge_test_${process.pid}`;
@@ -252,6 +253,8 @@ const kiemKhongTrung = async () => {
     FROM review_queue WHERE item_type = 'entity_match' GROUP BY 1 HAVING count(*) > 1`);
   assert.equal(rows.length, 0, `AC-7 nhân đôi thẻ: ${rows.map((r) => r.cap).join(", ")}`);
 };
+const kiemCapNhat = (capNhat: number, soThe: number) =>
+  assert.equal(capNhat, soThe, "AC-3 thẻ chờ không được cập nhật");
 test("AC-7 chạy lại — không nhân đôi, thẻ chiều ngược được cập nhật", async () => {
   await nap(FIX_AC6);
   await chamMotLuot(db, deps({ khongLlm: true }));
@@ -264,6 +267,16 @@ test("AC-7 chạy lại — không nhân đôi, thẻ chiều ngược được 
   const truoc = await tatCaThe();
   const dem = await chamMotLuot(db, deps({ khongLlm: true }));
   assert.equal(dem.sinh, 0);
+  // AC-3 (hồ sơ judge-giu-quyet-dinh-nguoi): mọi thẻ chờ không ai đụng vẫn được cập nhật, kết luận theo luật
+  const choTruoc = truoc.filter((t) => t.status === "pending");
+  // 3 thẻ lượt 1 sinh + pair:o8|o7 + pair:o10|o9 — evals.yaml E3 ghi «(4)» là đếm sót (sổ quyết định S3)
+  assert.equal(choTruoc.length, 5);
+  kiemCapNhat(dem.capNhat, choTruoc.length);
+  for (const t of choTruoc) {
+    const [, a, b] = String(t.item_id).match(/^pair:(.+)\|(.+)$/)!;
+    assert.equal((await the(t.item_id)).ai_suggestion, apNguong(dungCap(a, b)).same_house, `AC-3 sai kết luận: ${t.item_id}`);
+  }
+  assert.throws(() => kiemCapNhat(0, choTruoc.length), /AC-3 thẻ chờ không được cập nhật/);
   const sau = await tatCaThe();
   assert.equal(sau.length, truoc.length);
   assert.deepEqual(sau.map((t) => t.id), truoc.map((t) => t.id));
@@ -298,6 +311,120 @@ test("AC-8 thẻ đã quyết — approved · rejected · deferred y nguyên", a
   assert.equal(cho, 0);
   // đối chứng đỏ
   assert.throws(() => kiemNguyen(truoc[0].j, { ...truoc[0].j, ai_suggestion: "yes" }), /AC-8 sửa thẻ người đã quyết: 1/);
+});
+
+// ── hồ sơ judge-giu-quyet-dinh-nguoi AC-1, AC-2: người quyết giữa lúc máy đọc thẻ và lúc máy ghi
+/** Câu UPDATE trước vòng (judge-run.ts tại 14f5851d), chép nguyên văn — chỉ để đối chứng đỏ. */
+const SQL_CU = `UPDATE review_queue SET ai_suggestion = $1, ai_reasoning = $2, ai_confidence = NULL,
+           evidence = evidence || jsonb_build_object('cham', $3::jsonb)
+         WHERE id = ANY($4)`;
+/** Câu UPDATE chỉ chặn status từng dòng, không chặn cả cặp — đối chứng đỏ của AC-2. */
+const SQL_CHAN_DONG = `${SQL_CU} AND status = 'pending'`;
+const anhThe = async (itemId: string) =>
+  (await db.query(`SELECT to_jsonb(r) AS j FROM review_queue r WHERE item_type = 'entity_match' AND item_id = $1`, [itemId])).rows[0].j;
+/** db bọc: ghi lại tham số mà chamMotLuot truyền cho câu cập nhật — để đối chứng đỏ chạy ĐÚNG tham số ấy. */
+function dbBat(bat: unknown[][]): pg.ClientBase {
+  return new Proxy(db, {
+    get(t, p) {
+      if (p === "query") return (sql: unknown, params?: unknown[]) => {
+        if (sql === SQL_CAP_NHAT && params) bat.push(params);
+        return t.query(sql as string, params);
+      };
+      const v = Reflect.get(t, p);
+      return typeof v === "function" ? v.bind(t) : v;
+    },
+  });
+}
+/** queryPair giả: người quyết thẻ `itemId` sang `st` ngay trước khi máy có cặp (tức sau khi máy đã đọc thẻ). */
+const nguoiQuyetGiuaChung = (itemId: string, st: string, sauQuyet: { j?: unknown }) => async (a: string, b: string) => {
+  await db.query(`UPDATE review_queue SET status = $2, decided_by = 'nguoi-thu', decided_at = now(), ai_suggestion = 'NGUOI'
+    WHERE item_type = 'entity_match' AND item_id = $1`, [itemId, st]);
+  sauQuyet.j = await anhThe(itemId);
+  return queryPair(a, b);
+};
+const kiemGiuNguoiQuyet = (id: unknown, truoc: unknown, sau: unknown) =>
+  assert.equal(JSON.stringify(sau), JSON.stringify(truoc), `AC-1 máy ghi đè thẻ người vừa quyết: ${String(id)}`);
+test("AC-1 thẻ bị quyết giữa lúc chấm — approved · rejected · deferred giữ nguyên, đếm bỏ qua", async () => {
+  let soAnh = 0;
+  for (const st of ["approved", "rejected", "deferred"]) {
+    await db.query("TRUNCATE review_queue, property_candidates, sale_offers RESTART IDENTITY CASCADE");
+    await nap([["o1", "o2", "needs_llm"]]);
+    await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:o1|o2', 'chờ')`);
+    const sauQuyet: { j?: Record<string, unknown> } = {};
+    const bat: unknown[][] = [];
+    const dem = await chamMotLuot(dbBat(bat), deps({ khongLlm: true, queryPair: nguoiQuyetGiuaChung("pair:o1|o2", st, sauQuyet) }));
+    const sau = await anhThe("pair:o1|o2");
+    assert.equal(sauQuyet.j?.status, st);
+    kiemGiuNguoiQuyet(sau.id, sauQuyet.j, sau);
+    soAnh++;
+    assert.equal(dem.boQua, 1, `AC-1 không đếm bỏ qua ở ô ${st}`);
+    assert.equal(dem.capNhat, 0, `AC-1 đếm cập nhật ở ô ${st}`);
+    if (st === "approved") {
+      // đối chứng đỏ: câu UPDATE cũ, đúng tham số chamMotLuot vừa dùng, lên thẻ người vừa duyệt
+      assert.equal(bat.length, 1);
+      await db.query(SQL_CU, bat[0]);
+      const hong = await anhThe("pair:o1|o2");
+      assert.throws(() => kiemGiuNguoiQuyet(hong.id, sauQuyet.j, hong), /AC-1 máy ghi đè thẻ người vừa quyết: 1/);
+    }
+  }
+  assert.equal(soAnh, 3);
+});
+
+const kiemAnhEm = (id: unknown, truoc: unknown, sau: unknown) =>
+  assert.equal(JSON.stringify(sau), JSON.stringify(truoc), `AC-2 máy sửa thẻ anh em của cặp người đã quyết: ${String(id)}`);
+test("AC-2 hai chiều, một thẻ bị quyết — cả hai thẻ giữ nguyên, đếm bỏ qua", async () => {
+  await nap([["o1", "o2", "needs_llm"]]);
+  await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:o1|o2', 'chờ'), ('entity_match', 'pair:o2|o1', 'chờ')`);
+  const anhEmTruoc = await anhThe("pair:o1|o2");
+  const sauQuyet: { j?: Record<string, unknown> } = {};
+  const bat: unknown[][] = [];
+  const dem = await chamMotLuot(dbBat(bat), deps({ khongLlm: true, queryPair: nguoiQuyetGiuaChung("pair:o2|o1", "rejected", sauQuyet) }));
+  const quyet = await anhThe("pair:o2|o1");
+  const anhEm = await anhThe("pair:o1|o2");
+  kiemGiuNguoiQuyet(quyet.id, sauQuyet.j, quyet);
+  kiemAnhEm(anhEm.id, anhEmTruoc, anhEm);
+  assert.equal(anhEm.evidence.cham, undefined);
+  assert.equal(dem.boQua, 1);
+  assert.equal(dem.capNhat, 0);
+  // đối chứng đỏ: chỉ chặn status từng dòng → thẻ anh em còn chờ bị sửa
+  assert.equal(bat.length, 1);
+  await db.query(SQL_CHAN_DONG, bat[0]);
+  const hong = await anhThe("pair:o1|o2");
+  assert.throws(() => kiemAnhEm(hong.id, anhEmTruoc, hong), /AC-2 máy sửa thẻ anh em của cặp người đã quyết: 1/);
+});
+
+/** Người quyết thẻ `quyetId` trong một giao dịch CHƯA commit đúng lúc máy ghi cặp — route quyết khoá dòng
+ *  (`SELECT … FOR UPDATE`) rồi UPDATE. Trả rowCount câu ghi của máy sau khi người commit. */
+async function ghiKhiNguoiQuyetDo(sql: string, quyetId: number, ids: number[]) {
+  const nguoi = new pg.Client({ connectionString: TEST_DB_URL });
+  await nguoi.connect();
+  try {
+    await nguoi.query("BEGIN");
+    await nguoi.query(`SELECT id FROM review_queue WHERE id = $1 FOR UPDATE`, [quyetId]);
+    await nguoi.query(`UPDATE review_queue SET status = 'rejected', decided_by = 'nguoi-thu', decided_at = now() WHERE id = $1`, [quyetId]);
+    const ghi = db.query(sql, ["yes", "lý do", JSON.stringify({ ket_luan: "yes" }), ids]);
+    await new Promise((r) => setTimeout(r, 150)); // câu ghi của máy đã vào và đứng chờ khoá của người
+    await nguoi.query("COMMIT");
+    return (await ghi).rowCount;
+  } finally {
+    await nguoi.end();
+  }
+}
+test("AC-2 người quyết dở giao dịch đúng lúc máy ghi — thẻ anh em không bị sửa, đếm bỏ qua", async () => {
+  await db.query(`INSERT INTO review_queue (item_type, item_id, title) VALUES ('entity_match', 'pair:o1|o2', 'chờ'), ('entity_match', 'pair:o2|o1', 'chờ')`);
+  const id = async (itemId: string) => (await anhThe(itemId)).id as number;
+  const [x, y] = [await id("pair:o2|o1"), await id("pair:o1|o2")];
+  const anhEmTruoc = await anhThe("pair:o1|o2");
+  const rowCount = await ghiKhiNguoiQuyetDo(SQL_CAP_NHAT, x, [y, x]);
+  assert.equal(rowCount, 0, "AC-2 máy đếm cập nhật cặp người vừa quyết");
+  kiemAnhEm(y, anhEmTruoc, await anhThe("pair:o1|o2"));
+  // đối chứng đỏ: câu chỉ chặn bằng NOT EXISTS theo ảnh chụp câu lệnh (bản r1) ghi lên thẻ anh em
+  await db.query(`UPDATE review_queue SET status = 'pending', decided_by = NULL, decided_at = NULL WHERE id = $1`, [x]);
+  const SQL_R1 = `${SQL_CHAN_DONG}
+     AND NOT EXISTS (SELECT 1 FROM review_queue x WHERE x.id = ANY($4) AND x.status <> 'pending')`;
+  await ghiKhiNguoiQuyetDo(SQL_R1, x, [y, x]);
+  const hong = await anhThe("pair:o1|o2");
+  assert.throws(() => kiemAnhEm(y, anhEmTruoc, hong), /AC-2 máy sửa thẻ anh em của cặp người đã quyết: 1/);
 });
 
 // ── AC-9
