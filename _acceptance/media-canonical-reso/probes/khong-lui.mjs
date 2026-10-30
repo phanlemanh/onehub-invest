@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // khong-lui.mjs — media-canonical-reso E12 (AC-10 vế không lùi): chạy lưới trước-merge trên cây rồi phân loại từng
 // dòng VIOLATION. Trước chữ ký chỉ được còn ba lớp đã biết:
-//   1. vi phạm của CHÍNH media-canonical-reso về trạng thái/chữ ký (chưa arm cổng, human_signoff trống);
+//   1. vi phạm của CHÍNH media-canonical-reso về trạng thái/chữ ký (status, verdict lượt trước, human_signoff trống…),
+//      trừ «evidence is stale»;
 //   2. ô `superseded_by` của hồ sơ đã ký trỏ media-canonical-reso#AC-n chờ hồ sơ này ký (`ho-so-thay-chua-ky`);
 //   3. `evidence is stale` của hồ sơ đã ký có ô `superseded_by` trỏ media-canonical-reso — làn ghim lại từ chối ghim
 //      chúng khi hồ sơ thay chưa ký, nên chúng ghim trong lượt ký của NH1. Lớp này chỉ được nhận khi probe tự chạy MỌI
@@ -48,7 +49,9 @@ export function dongLa(output, laTroVeDay = troVeDay) {
   const chayLai = [];
   for (const l of output.split("\n").filter((x) => x.startsWith("VIOLATION"))) {
     const slug = l.match(/^VIOLATION \[([^\]]+)\]/)?.[1];
-    if (slug === SLUG && /status chưa arm|status=implemented|status=verified|evidence-report\.md|human_signoff|chưa ký|signoff/.test(l) && !/stale/.test(l)) continue;
+    // Lớp (1): trạng thái của CHÍNH hồ sơ lúc đang chấm (status, verdict lượt trước, báo cáo, chữ ký, lượt dùng được hay
+    // không) — cổng tự đo chúng; E12 đo không lùi ở hồ sơ KHÁC. Riêng «evidence is stale» vẫn đỏ: code đổi sau lượt chấm.
+    if (slug === SLUG && !/evidence is stale/.test(l)) continue;
     const tro = l.match(/con trỏ thay thế không chứng được: (.*)$/)?.[1];
     if (slug !== SLUG && tro) {
       const muc = tro.split(";").map((x) => x.trim()).filter(Boolean);

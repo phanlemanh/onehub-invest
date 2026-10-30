@@ -2,29 +2,27 @@
 schema_version: 2
 feature_slug: media-canonical-reso
 verdict: REJECT
-failed_evals: ["E1","E3","E5","E8","E12"]
+failed_evals: [E12]
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 0133b31c209c6ea92599c4f541438f91c5fba2b5
+verified_commit: 57b519f8c90d7f5d9dd1a4ca47aed34d1400a4e9
 human_signoff:
 ---
 
 # Evidence Report: media-canonical-reso
 
-Round 1. Nội dung thay trọn round cũ; lịch sử round nằm ở mục Iterations.
-
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | FAIL |
+| E1 | AC-1 | test | PASS |
 | E2 | AC-1 | test | PASS |
-| E3 | AC-2 | test | FAIL |
+| E3 | AC-2 | test | PASS |
 | E4 | AC-3 | test | PASS |
-| E5 | AC-4 | test | FAIL |
+| E5 | AC-4 | test | PASS |
 | E6 | AC-5 | test | PASS |
 | E7 | AC-6 | test | PASS |
-| E8 | AC-7 | script | FAIL |
+| E8 | AC-7 | script | PASS |
 | E9 | AC-8 | ui-check | PASS |
 | E10 | AC-9 | test | PASS |
 | E11 | AC-10 | test | PASS |
@@ -33,203 +31,188 @@ Round 1. Nội dung thay trọn round cũ; lịch sử round nằm ở mục Ite
 | E14 | AC-10 | test | PASS |
 | E15 | AC-10 | test | PASS |
 
-Lệnh đỏ không gắn eval nào: không có. Ba lệnh đỏ đều gắn eval (E1, E3, E5 chung một lệnh itest; E8; E12).
-
 ## Evidence
 
 - eval: E1
   run_id: minted-media-canonical-reso-E1-r1
-  exit_code: 1
+  exit_code: 0
   baseline: n-a
   verifier: config:executors.test.media_db
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs
-    tests 10 · pass 9 · fail 1 · cancelled 0 · skipped 0
-    Ca đỏ duy nhất: «NH-AC-2 S06: mỗi URL http(s) khác nhau một dòng, đúng thứ tự; tin không ảnh 0 dòng; một dòng DQ» (scripts/media-canonical.itest.mjs:154)
-    error: deadlock detected (mã PG 40P01) tại runTransformMedia (pipeline/transform-media.mjs:72), gọi từ itest dòng 163, trong trongGiaoDich (dòng 45)
-    detail: Process 223147 waits for ExclusiveLock on advisory lock [5270140,0,53053,1]; blocked by process 223141. Process 223141 waits for RowExclusiveLock on relation 5342843 of database 5270140; blocked by process 223147.
-    Ghi chú: lệnh này che E1, E3, E5 nên cả ba nhận kết quả đỏ của lệnh; ca đỏ cụ thể thuộc NH-AC-2 (E3). Chín ca còn lại xanh, gồm hai ca NH-AC-1 (053 chạy hai lần, ràng buộc) và các ca NH-AC-4.
+    cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs
+    ℹ duration_ms 15653.376834
+
+- eval: E3
+  run_id: minted-media-canonical-reso-E3-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.media_db
+  verified_at: 2026-10-30T03:45:42Z
+  output: |
+    (cùng lệnh với E1) ℹ duration_ms 15653.376834
+
+- eval: E5
+  run_id: minted-media-canonical-reso-E5-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.media_db
+  verified_at: 2026-10-30T03:45:42Z
+  output: |
+    (cùng lệnh với E1) ℹ duration_ms 15653.376834
 
 - eval: E2
   run_id: minted-media-canonical-reso-E2-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: cd pipeline && npm test
-    duration_ms 33908.791125
-
-- eval: E3
-  run_id: minted-media-canonical-reso-E3-r1
-  exit_code: 1
-  baseline: n-a
-  verifier: config:executors.test.media_db
-  verified_at: 2026-10-30T03:33:43Z
-  output: |
-    Cùng lệnh itest với E1 (một lần chạy, mười ca, chín xanh).
-    Ca đỏ: «NH-AC-2 S06 …» (itest dòng 154) dừng vì deadlock detected tại pipeline/transform-media.mjs:72.
-    Hệ quả: các khẳng định AC-2 (2 dòng cho tin A, 1 dòng cho tin B, 0 dòng cho tin C, 1 dòng DQ) chưa được đo xong trong giao dịch này.
-
-- eval: E4
-  run_id: minted-media-canonical-reso-E4-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.media_app
-  verified_at: 2026-10-30T03:33:43Z
-  output: |
-    Lệnh: cd app && node --import tsx --test tests/media-canonical.test.tsx
-    duration_ms 2418.724416
-
-- eval: E5
-  run_id: minted-media-canonical-reso-E5-r1
-  exit_code: 1
-  baseline: n-a
-  verifier: config:executors.test.media_db
-  verified_at: 2026-10-30T03:33:43Z
-  output: |
-    Cùng lệnh itest với E1 (một lần chạy, mười ca, chín xanh). Ca đỏ của lượt không thuộc nhóm NH-AC-4 theo tên, nhưng lệnh thoát đỏ nên eval nhận kết quả đỏ của lệnh.
-    Cần người xem lại: có ca NH-AC-4 nào bị che bởi deadlock hay không, hoặc cần chạy lại riêng nhóm này.
-
-- eval: E6
-  run_id: minted-media-canonical-reso-E6-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.media_app
-  verified_at: 2026-10-30T03:33:43Z
-  output: |
-    Lệnh: cd app && node --import tsx --test tests/media-canonical.test.tsx
-    duration_ms 2418.724416
-
-- eval: E7
-  run_id: minted-media-canonical-reso-E7-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.media_app
-  verified_at: 2026-10-30T03:33:43Z
-  output: |
-    Lệnh: cd app && node --import tsx --test tests/media-canonical.test.tsx
-    duration_ms 2418.724416
-
-- eval: E8
-  run_id: minted-media-canonical-reso-E8-r1
-  exit_code: 1
-  baseline: n-a
-  verifier: config:executors.script.media_roundtrip
-  verified_at: 2026-10-30T03:33:43Z
-  output: |
-    Lệnh: cd app && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --import tsx scripts/media-roundtrip.ts
-    lượt một: 183867 ảnh · thêm 0 · đổi 0 · xoá 0 · đã tải 288
-    deadlock detected
-    Không có dòng «ROUNDTRIP PASS»; các dòng đếm 'S06 hụt ảnh ở loader', 'S06 lệch số ảnh', 'S03 hụt ảnh đã tải ở loader', 'lượt hai', 'thẻ duyệt S06', 'hồ sơ tin S06' chưa in ra.
-
-- eval: E9
-  run_id: minted-media-canonical-reso-E9-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.design.ui_check
-  verified_at: 2026-10-30T03:33:43Z
-  screenshot: evidence/E9-review.png
-  observed: |
-    E9-review.png (đã đọc): ngăn chi tiết «Cùng căn? binh-thanh 49m² ↔ 51m²» thẻ #14, Ghép căn, Chờ duyệt. Hai thẻ Tin A (S05, giá 6,00 tỷ, 49 m²) và Tin B (S06, 6,90 tỷ, 51 m², Đường Đinh Bộ Lĩnh). Dưới Tin A: «Tin A: không có ảnh» (S05 không có ảnh trong bảng media, đúng dữ liệu). Dưới Tin B (nhãn S06): dải 3 ảnh thật (hẻm có cây, căn phòng, mặt tiền phố), không ô nào là «Ảnh hỏng». Mã tin S06 thể hiện qua nhãn «S06» ở thẻ Tin B (id offer_355e22d49076246c không in trên UI).
-    E9-review-list.png (đã đọc): danh sách 11 thẻ chờ duyệt, #24 đến #17 hiện, không có dải ảnh (dải ảnh chỉ có trong ngăn chi tiết).
-    E9-ho-so-s06.png (đã đọc): hồ sơ «Cho thuê · 1,9 tr ₫ · 20 m²», S06 · Rao vặt công khai, B2 · Gắn căn, trường lõi 5/5; mục «Ảnh tin» hiện 3 ảnh thật (phòng trắng, bếp, xe máy); mục «Bài gốc» ghi «S06 chưa lưu khoá nối ngược tin → bài (TV10)»; không có câu «Chưa gắn được ảnh», không «Ảnh hỏng».
-    E9-ho-so-s03.png (đã đọc): hồ sơ «Cho thuê · 2,8 tỷ ₫», S03 · Cộng đồng, B0 · Có lời khai; mục «Ảnh tin» hiện 1 ảnh thật (ảnh mặt bằng/bản đồ khu căn hộ) có src /api/zalo-media; «Bài gốc» có chữ bài Zalo; không «Chưa gắn được ảnh», không «Ảnh hỏng».
-    Đối chiếu Expected: cả ba khung khớp (thẻ S06 có dải ≥ 1 ảnh thật; hồ sơ S06 ≥ 1 ảnh thật không có câu chưa gắn; hồ sơ S03 ≥ 1 ảnh đã tải qua /api/zalo-media; không ô ảnh hỏng).
-  network_observed: clean
+    cd pipeline && npm test
+    ℹ duration_ms 34351.80725
 
 - eval: E10
   run_id: minted-media-canonical-reso-E10-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: cd pipeline && npm test
-    duration_ms 33908.791125
+    (cùng lệnh với E2) ℹ duration_ms 34351.80725
 
 - eval: E11
   run_id: minted-media-canonical-reso-E11-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: cd pipeline && npm test
-    duration_ms 33908.791125
+    (cùng lệnh với E2) ℹ duration_ms 34351.80725
+
+- eval: E4
+  run_id: minted-media-canonical-reso-E4-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.media_app
+  verified_at: 2026-10-30T03:45:42Z
+  output: |
+    cd app && node --import tsx --test tests/media-canonical.test.tsx
+    ℹ duration_ms 2274.795333
+
+- eval: E6
+  run_id: minted-media-canonical-reso-E6-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.media_app
+  verified_at: 2026-10-30T03:45:42Z
+  output: |
+    (cùng lệnh với E4) ℹ duration_ms 2274.795333
+
+- eval: E7
+  run_id: minted-media-canonical-reso-E7-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.media_app
+  verified_at: 2026-10-30T03:45:42Z
+  output: |
+    (cùng lệnh với E4) ℹ duration_ms 2274.795333
+
+- eval: E8
+  run_id: minted-media-canonical-reso-E8-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.media_roundtrip
+  verified_at: 2026-10-30T03:45:42Z
+  output: |
+    cd app && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --import tsx scripts/media-roundtrip.ts
+    ROUNDTRIP PASS
+
+- eval: E9
+  run_id: minted-media-canonical-reso-E9-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.design.ui_check
+  verified_at: 2026-10-30T03:45:42Z
+  screenshot: evidence/E9-review.png
+  observed: |
+    E9-review.png: sheet 'Cung can? binh-thanh 49m² ↔ 51m²' #14 trên nền danh sách thẻ mở. Tin A (S05, 6.00 ty, 49 m²) ghi 'Tin A: khong co anh'; Tin B (nhãn S06, 6.90 ty, 51 m²) có dải 3 ảnh thật (hẻm có cây, phòng khách cửa sáng, đường phố/tòa nhà), không ô nào 'Ảnh hỏng'.
+    E9-ho-so-s06.png: sheet 'Cho thue · 1,9 tr · 20 m²', S06, mục 'Anh tin' có 3 thumbnail thật (phòng có bồn rửa, bếp đá granite, bãi xe máy); không có câu 'Chua gan duoc anh'.
+    E9-ho-so-s03.png: sheet 'Cho thue · 6 ty', S03, mục 'Anh tin' có 1 thumbnail thật (phòng ngủ cửa sổ, giường trắng), DOM src bắt đầu /api/zalo-media. Cả ba khung khớp Expected.
+  network_observed: no-app-traffic
+  output: |
+    Frame đã lưu dưới _acceptance/media-canonical-reso/evidence/: E9-review.png, E9-ho-so-s06.png, E9-ho-so-s03.png, E9-network.txt.
+    Ghi chú: khung E9-ho-so-s03 và E9-review do playwright chụp trực tiếp, không qua bước che tầng A của ui-capture; khung S03 hiện tên nhóm cộng đồng và nội dung bài gốc (tầng C theo AGENTS.md mục 6).
 
 - eval: E12
   run_id: minted-media-canonical-reso-E12-r1
   exit_code: 1
   baseline: n-a
   verifier: config:executors.script.media_khong_lui
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: node _acceptance/media-canonical-reso/probes/khong-lui.mjs
+    node _acceptance/media-canonical-reso/probes/khong-lui.mjs
     chạy lại ops-dong-chay-df0: 7/7 lệnh xanh
     chạy lại review-media-backend: 4/4 lệnh xanh
     chạy lại transform-zalo-boc-job-run: 1/1 lệnh xanh
     khong-lui: 1 dòng ngoài ba lớp đã biết trước chữ ký (tổng 4 vi phạm):
-    VIOLATION [media-canonical-reso]: status=implemented but no evidence-report.md
-    Không có dòng «KHÔNG LÙI PASS». Dòng lạ duy nhất là thiếu evidence-report.md của chính hồ sơ này tại thời điểm probe chạy (báo cáo này được ghi sau khi probe chạy); các lớp (2) và (3) chạy lại đều xanh.
+    VIOLATION [media-canonical-reso]: lượt chấm cuối không dùng được — cây đổi trong lượt chấm (_acceptance/media-canonical-reso/probes/khong-lui.mjs (đổi nội dung); pipeline/scripts/media-canonical.itest.mjs (đổ…
 
 - eval: E13
   run_id: minted-media-canonical-reso-E13-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.design.floor
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: design-floor-s4.mjs --root .
-    (không in dòng nào; sàn M1 không báo hex thô mới)
+    node "…/scripts/design-floor-s4.mjs" --root .
+    (không in dòng nào, thoát 0)
 
 - eval: E14
   run_id: minted-media-canonical-reso-E14-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.zalo_import_job
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: node --test scripts/zalo-import-job.test.mjs
-    duration_ms 1196.404167
+    node --test scripts/zalo-import-job.test.mjs
+    ℹ duration_ms 1516.432458
 
 - eval: E15
   run_id: minted-media-canonical-reso-E15-r1
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.job_exit
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
   output: |
-    Lệnh: node --test scripts/job-exit.test.mjs
-    duration_ms 4098.92925
+    node --test scripts/job-exit.test.mjs
+    ℹ duration_ms 4030.92975
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
   run_id: minted-media-canonical-reso-SUITE-npm_test__bb6271-r1
   exit_code: 0
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
   run_id: minted-media-canonical-reso-SUITE-lint-r1
   exit_code: 0
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
 
 - cmd: cd app && npm test
   run_id: minted-media-canonical-reso-SUITE-npm_test__bd9a35-r1
   exit_code: 0
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
 
 - cmd: cd app && npm run test:lint-rules
   run_id: minted-media-canonical-reso-SUITE-test_lint_rules-r1
   exit_code: 0
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
 
 - cmd: node scripts/check-portal-compliance.mjs
   run_id: minted-media-canonical-reso-SUITE-node_scripts_check_portal_compliance_mjs-r1
   exit_code: 0
-  verified_at: 2026-10-30T03:33:43Z
+  verified_at: 2026-10-30T03:45:42Z
 
 ## Known limits
 
@@ -239,7 +222,12 @@ Lệnh đỏ không gắn eval nào: không có. Ba lệnh đỏ đều gắn ev
 
 baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
-Baseline khong do:
+Eval không-phân-biệt: không xác định được ở round này, vì baseline bị chặn hạ tầng nên mọi field baseline đều n-a và không eval nào được đo green hay red trên code cũ.
+
+Lệnh đỏ không gán eval: không có. Lệnh đỏ duy nhất (`node _acceptance/media-canonical-reso/probes/khong-lui.mjs`) gán cho E12.
+
+### Baseline khong do
+
 - cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 - cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 - cd app && node --import tsx --test tests/media-canonical.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
@@ -249,16 +237,10 @@ Baseline khong do:
 - node --test scripts/zalo-import-job.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 - node --test scripts/job-exit.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
-Eval không-phân-biệt: không xác lập được ở round này, vì baseline bị chặn hạ tầng nên không eval nào có số đo green hay red; không được hiểu là «mọi eval đều có phân biệt».
-
-Ghi chú về mốc giờ: cột verified_at ở trên chỉ ghi ngày (giờ để 00:00:00Z); giờ chạy thật của từng eval nằm ở run-log.jsonl cùng thư mục.
-
-Ghi chú về nguyên nhân đỏ (chưa kết luận): cả E1/E3/E5 (itest) và E8 (media-roundtrip) đều dừng bằng «deadlock detected» quanh transform-media (khoá advisory so với RowExclusiveLock trên cùng bảng). Hai lệnh dùng chung DB thử oneinvest_p2_media; cần người xác định đây là lỗi thứ tự khoá trong transform-media.mjs hay do hai lượt chạy chồng nhau trên cùng DB thử, rồi mới chạy lại.
-
 ## Variance
 
-none — mọi eval chạy một lần (runs 1), không eval nào có variance; không có pass_rate hỗn hợp.
+none — mọi eval chạy một lần (runs 1, xác định), không eval nào có pass_rate hỗn hợp và không eval nào flaky.
 
 ## Iterations
 
-Round 1: E1, E3, E5, E8, E12 failed — E1/E3/E5 và E8: «deadlock detected» khi chạy transform-media trên DB thử (một ca NH-AC-2 đỏ, chín ca khác xanh; media-roundtrip dừng sau lượt một); E12: probe còn một dòng lạ là thiếu evidence-report.md của chính hồ sơ. Returned to implementation.
+Round 1: E12 failed — probe khong-lui.mjs còn 1 dòng ngoài ba lớp đã biết: «lượt chấm cuối không dùng được — cây đổi trong lượt chấm» (probe khong-lui.mjs và itest đổi nội dung trong lúc chấm). Returned to implementation.
