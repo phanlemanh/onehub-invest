@@ -3,9 +3,11 @@ schema_version: 1
 feature: Nhật ký thao tác Ops (GET /api/v1/ops/audit) không trả dấu máy enrich:thu — thao tác của người không bị đẩy khỏi 100 dòng gần nhất
 slug: loc-enrich-thu-ops-audit
 owner: phanlemanh@gmail.com
-risk_tier: T3
+risk_tier: T2
 surfaces: [api]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-loc-enrich-thu-ops-audit-design.md
 ---
 
@@ -15,8 +17,10 @@ design_doc: docs/superpowers/specs/2026-10-30-loc-enrich-thu-ops-audit-design.md
 
 Căn cứ: mục Ngoài-4 của Cổng Bằng chứng `enrich-chay-sau-nap` (PR #201) — Mạnh chọn «mở hợp đồng mới» 30/10
 (`_acceptance/enrich-chay-sau-nap/decisions.jsonl` dòng `d-20261030T082925Z-25`). Từ 31/10 job đêm ghi tối đa 50 dòng
-`ops_audit` action `enrich:thu` mỗi đêm; `GET /api/v1/ops/audit` trả 100 dòng mới nhất không lọc. Hạng T3 do route nằm dưới
-`app/src/app/api/v1/ops/**` (`t3_paths`) — xem Hỏi-1.
+`ops_audit` action `enrich:thu` mỗi đêm; `GET /api/v1/ops/audit` trả 100 dòng mới nhất không lọc. Ngoại lệ T3 có tên
+(Hỏi-1, Mạnh duyệt 30/10): giữ hạng T2 dù vòng chạm `app/src/app/api/v1/ops/**` (`t3_paths`) — chỉ thêm một điều kiện WHERE
+vào route GET chỉ đọc; quyền không đổi và AC-4 đo. Chỉ lọc API, không thêm tham số xem dấu máy (Hỏi-2), không làm trang
+(Hỏi-3).
 
 ## Criteria
 
