@@ -107,16 +107,31 @@ function mediaGated(src) {
     src.indexOf("await stat(") > src.indexOf("async function sendImage")
   );
 }
+// Route chỉ chuyển phiên: đọc phiên một lần, chặn phiên Ops (sổ ops-session, api-surface-anh-vai-ops) rồi gọi lõi với
+// chính phiên đó; không đọc tệp.
+function routeChuyenPhien(src) {
+  return (
+    (src.match(/getSessionUser\(\)/g) ?? []).length === 1 &&
+    /return serveZaloMedia\(req, user\);/.test(src) &&
+    !/readFile|realpath|stat\(/.test(src)
+  );
+}
 check(
-  /serveZaloMedia\(req, await getSessionUser\(\)\)/.test(mediaRoute) &&
-    !/readFile|realpath|stat\(/.test(mediaRoute) &&
-    mediaGated(media),
+  routeChuyenPhien(mediaRoute) && mediaGated(media),
   "zalo-media: xemNoiDungTin chặn trước stat/readFile; nhánh ?path= chặn isAdmin",
 );
 // Chiều đỏ: bản sao bỏ gate admin của nhánh ?path= → phép kiểm phải báo.
 check(
   !mediaGated(media.replace(/if \(!isAdmin\(user\)\) return [^\n]*\n/, "")),
   "chiều đỏ zalo-media: bản sao bỏ isAdmin ở nhánh ?path= → báo",
+);
+check(
+  !routeChuyenPhien(mediaRoute.replace("return serveZaloMedia(req, user);", 'await readFile("x");\n  return serveZaloMedia(req, user);')),
+  "chiều đỏ zalo-media: bản sao route có readFile → báo",
+);
+check(
+  !routeChuyenPhien(mediaRoute.replace("return serveZaloMedia(req, user);", "return serveZaloMedia(req);")),
+  "chiều đỏ zalo-media: bản sao route gọi serveZaloMedia(req) không kèm phiên → báo",
 );
 
 // 7. /yield + mục «Dòng tiền vốn vay» (Mô phỏng đầu tư cũ gộp vào, UI3): không chữ AirDNA/tên nguồn thật trong mã render;
