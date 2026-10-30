@@ -20,6 +20,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DATA_GRID_VI } from "@/components/insight/insight-grid"
 import { fmtInt, fmtVnDateTime } from "@/lib/format"
+import type { ReviewContext } from "@/lib/ops/review-context"
 import type { ReviewMedia } from "@/lib/ops/review-media"
 import {
   DEFAULT_STATUS_FILTER,
@@ -43,7 +44,11 @@ const PAGE_SIZE = 20
  * Lọc theo loại thẻ + trạng thái phía client (hàng duyệt nhỏ); bấm hàng hoặc tên thẻ mở sheet chi tiết.
  * Không cột độ tự tin (Q9) — `ReviewItem` không mang số đó.
  */
-export function ReviewQueue({ items, media }: { items: ReviewItem[]; media: Record<number, ReviewMedia> }) {
+export function ReviewQueue({ items, media, context = {} }: {
+  items: ReviewItem[]
+  media: Record<number, ReviewMedia>
+  context?: Record<number, ReviewContext>
+}) {
   const [type, setType] = useState<TypeFilter>(DEFAULT_TYPE_FILTER)
   const [status, setStatus] = useState<StatusFilter>(DEFAULT_STATUS_FILTER)
   const [openId, setOpenId] = useState<number | null>(null)
@@ -200,6 +205,7 @@ export function ReviewQueue({ items, media }: { items: ReviewItem[]; media: Reco
       <ReviewDetailSheet
         item={open}
         media={open ? media[open.id] : undefined}
+        context={open ? context[open.id] : undefined}
         onOpenChange={(o) => !o && setOpenId(null)}
       />
     </Frame>

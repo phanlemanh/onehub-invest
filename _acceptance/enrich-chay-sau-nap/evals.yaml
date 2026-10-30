@@ -1,0 +1,107 @@
+schema_version: 1
+feature_slug: enrich-chay-sau-nap
+# Ca test mang tiền tố «EC-AC-n».
+# - agent/tests/enrich-giao-dich.test.ts: runEnrich trong withTx (BEGIN…ROLLBACK trên :5433), giaoDich = SAVEPOINT; LLM và E1 tiêm
+#   bằng stub; lỗi ghi tiêm bằng client bọc (ném ở câu thứ k của tin chỉ định). Không ghi gì còn lại trên :5433.
+# - agent/tests/enrich-cli.itest.ts: CLI enrich-run THẬT (tiến trình con) trên DB thử oneinvest_u2_enrich (bản sao oneinvest
+#   bằng db/db-thu.sh), MTPLX_URL trỏ máy chủ LLM giả kiểu OpenAI trong tiến trình test; từ chối chạy khi tên DB là oneinvest.
+# - scripts/enrich-buoc-job.test.mjs: khuôn zalo-import-job.test.mjs — chép NGUYÊN tệp bọc thật + job-step.sh vào cây tạm,
+#   node giả đầu PATH (nhãn = tệp .mjs/.js/.ts đầu tiên), không node thật, không DB, không OpenClaw.
+# Chiều đỏ: đột biến bản sao cạnh tệp thật (run.ts / enrich-run.ts / zalo-import-daily.sh), cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.enrich_cli_thu
+    paths: [agent/src/enrich/run.ts, agent/scripts/enrich-run.ts, agent/tests/enrich-cli.itest.ts]
+    layer: backend-effect
+    expected: "exit 0; ca 'EC-AC-1 giao dịch ngắn' xanh: CLI thật --offers ba tin cần LLM trên DB thử, máy chủ LLM giả ghi tại mỗi lời gọi pg_stat_activity của phiên application_name 'enrich-run' → xact_start NULL ở cả ba lời gọi; từ lời gọi thứ hai, phiên khác đọc thấy đề xuất của tin trước (run_id của lượt); chiều đỏ cùng ca: bản sao run.ts gọi LLM BÊN TRONG giaoDich → ca đỏ 'LLM gọi trong giao dịch mở'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.enrich_giao_dich
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-giao-dich.test.ts]
+    expected: "exit 0; ca 'EC-AC-2 cô lập lỗi ghi' xanh: ba tin, client bọc ném lỗi ở câu ghi thứ hai của tin hai → tin hai 0 đề xuất / 0 thẻ / 0 field_assertions của run_id; tin một và ba đủ đề xuất như ca lành; kết quả loiGhi = [tin hai]; hàm mã thoát của CLI (maThoat) cho ca này trả 2; chiều đỏ cùng ca: bản sao run.ts bỏ giaoDich (ghi thẳng) → đỏ 'tin hỏng để lại đề xuất'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.enrich_giao_dich
+    paths: [agent/src/enrich/run.ts, agent/scripts/enrich-run.ts, agent/tests/enrich-giao-dich.test.ts]
+    expected: "exit 0; ca 'EC-AC-3 ma trận LLM × ghi' xanh: ma trận viết trước 6 hàng LLM {0/0, 0/3, hỏng 1/3, hỏng 2/3, lỗi 3/3, không đọc được 3/3} × 2 trạng thái ghi {lành, tin hai ghi hỏng} = 12 ô, số assert mã thoát = 12: ghi lành → {0, 0, 0 + dòng ⚠, 3, 3, 3}; tin hai ghi hỏng → 2 ở cả 6 hàng; dòng tổng kết chứa đúng 'LLM hỏng m/n (lỗi a · không đọc được b)' ở 6 hàng của runEnrich thật (stub LLM); các hàng thoát 3 vẫn có đề xuất e1_rule của run_id; chiều đỏ cùng ca: bản sao maThoat xét LLM trước lỗi ghi → đỏ 'chết LLM che lỗi ghi'; bản sao không đếm câu không đọc được → đỏ 'không đọc được hết mà thoát 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: script
+    cmd: config:executors.script.enrich_cli_thu
+    paths: [agent/scripts/enrich-run.ts, agent/tests/enrich-cli.itest.ts]
+    layer: backend-effect
+    expected: "exit 0; ca 'EC-AC-3 LLM chết trên CLI' xanh: máy chủ giả trả 500 mọi lời gọi → tiến trình CLI thoát 3, stdout có 'LLM hỏng 3/3'; đối chứng dương cùng tệp: máy chủ trả lời hợp lệ → thoát 0 và 'LLM hỏng 0/3'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.enrich_giao_dich
+    paths: [agent/src/enrich/run.ts, agent/tests/enrich-giao-dich.test.ts]
+    expected: "exit 0; ca 'EC-AC-4 đếm đúng' xanh: sau lượt một, deXuatMoi/daAp/choDuyet bằng count(*) của enrichment_proposals theo run_id và status (queued/applied/skipped); lượt hai cùng tin → deXuatMoi 0 và bảng không thêm dòng; chiều đỏ cùng ca: bản sao đếm theo routed (summarizeRun) → đỏ 'lượt hai đếm đề xuất trùng'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.enrich_cli_thu
+    paths: [agent/scripts/enrich-run.ts, agent/tests/enrich-cli.itest.ts]
+    layer: backend-effect
+    expected: "exit 0; ca 'EC-AC-4 tổng kết CLI khớp DB thử' xanh: số trong dòng tổng kết stdout của CLI (đề xuất mới · đã áp · chờ duyệt) bằng count(*) theo run_id đọc từ DB thử; chạy lại cùng --offers → 'đề xuất mới: 0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    paths: [agent/src/enrich/**, agent/scripts/enrich-run.ts, agent/tests/**]
+    expected: "exit 0; toàn bộ agent npm test xanh (enrich-db, enrich-guard, enrich-apply, enrich-revert, enrich-route, context-resolver… không sửa ca cũ); enrich-guard vẫn khẳng định run.ts không có UPDATE sale_offers/properties"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.enrich_buoc_job
+    paths: [scripts/zalo-import-daily.sh, scripts/enrich-buoc-job.test.mjs]
+    expected: "exit 0; ca 'EC-AC-6 dãy bước' xanh: job lành → lời gọi đúng [import-airbnb, transform-zalo, transform-media, refresh-bait-gap, enrich-run]; node giả ghi cwd = <cây>/agent và LIMIT = 50, với ENRICH_LIMIT=7 → LIMIT 7; nạp hỏng → không có enrich-run; chiều đỏ cùng ca: bản sao tệp bọc thiếu dòng enrich → đỏ 'thiếu bước enrich-run'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.enrich_buoc_job
+    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/enrich-buoc-job.test.mjs]
+    expected: "exit 0; ca 'EC-AC-7 mã job' xanh: ma trận viết trước {enrich-run:3 → job 3 + một dòng JOB FAIL …enrich-run mã 3; enrich-run:2 → job 2; transform-zalo:4 + enrich lành → job 4 và enrich-run vẫn gọi; transform-zalo:4 + enrich-run:3 → job 4, hai dòng JOB FAIL}; chiều đỏ cùng ca: bản sao gọi enrich bằng lệnh trần (không job_run) → đỏ 'mã enrich bị nuốt'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.enrich_buoc_job
+    paths: [scripts/zalo-import-daily.sh, scripts/enrich-buoc-job.test.mjs]
+    expected: "exit 0; ca 'EC-AC-8 nhả khoá' xanh: node giả của enrich-run ghi lại có thư mục khoá hay không (phải KHÔNG) rồi tạo khoá như job khác (pid khác); sau khi job thoát, khoá của job khác còn nguyên; đối chứng: bước transform-zalo thấy khoá CÓ; chiều đỏ cùng ca: bản sao bỏ dòng nhả khoá → đỏ 'enrich chạy khi còn giữ khoá nạp'; bản sao nhả khoá mà không gỡ trap → đỏ 'xoá khoá của job khác'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; bộ zalo-import-job (ZJ-AC, NH-AC-10) xanh với dãy năm bước có enrich-run"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.enrich_cli_thu
+    paths: [agent/src/enrich/run.ts, agent/scripts/enrich-run.ts, agent/tests/enrich-cli.itest.ts]
+    layer: backend-effect
+    expected: "exit 0; ca 'EC-AC-2 lỗi ghi trên CLI' xanh: trên DB thử, trigger BEFORE INSERT trên enrichment_proposals raise khi offer_id = tin hai; CLI thật --offers tin1,tin2,tin3 → tiến trình thoát 2, stdout nêu lỗi ghi ở tin hai; phiên khác đọc thấy đề xuất của tin một và tin ba theo run_id, tin hai 0 đề xuất / 0 thẻ pending mới / 0 dòng enrich:thu; chiều đỏ cùng ca: bản sao enrich-run.ts có giaoDich không ROLLBACK → đỏ 'tin sau tin hỏng không ghi được'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.enrich_cli_thu
+    paths: [agent/src/enrich/run.ts, agent/scripts/enrich-run.ts, agent/tests/enrich-cli.itest.ts]
+    layer: backend-effect
+    expected: "exit 0; ca 'EC-AC-9 không bốc lại' xanh: trên DB thử, hai lượt CLI liên tiếp không --offers, LIMIT 3, LLM giả trả lời hợp lệ → mỗi tin lượt một có đúng một dòng ops_audit enrich:thu; tập tin lượt hai (đọc từ ops_audit theo run) rời tập tin lượt một; lượt ba với LLM giả trả 500 cho một tin → tin đó không có enrich:thu; đối chứng: tin hoãn dựng sẵn vẫn được bốc dù có enrich:thu; chiều đỏ cùng ca: bản sao selectOffers bỏ điều kiện enrich:thu → đỏ 'lượt hai bốc lại tin đã thử'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

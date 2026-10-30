@@ -24,15 +24,25 @@ import type { ReviewImage } from "@/lib/ops/review-media";
 
 /**
  * Dải ảnh tin trên thẻ hàng duyệt (chuyển thể @reui/c-attachment-3) + hộp phóng to.
- * Ảnh tin là tầng A: `images` chỉ có khi người xem là admin (loadReviewMedia) —
- * undefined thì không render gì. URL gốc fbcdn/zdn có hạn → ảnh lỗi hiện «Ảnh hỏng».
+ * `images` từ loadReviewMedia: vai Vận hành nhận ảnh đã tải về máy thu, quản trị viên nhận cả URL gốc (PL3);
+ * undefined thì không render gì. `chiGoc` = số ảnh chỉ có URL gốc mà vai người xem không nhận — thẻ nói ra thay vì im.
+ * URL gốc fbcdn/zdn có hạn → ảnh lỗi hiện «Ảnh hỏng».
  */
-export function ReviewPhotos({ label, images }: { label: string; images: ReviewImage[] | undefined }) {
+export function ReviewPhotos({ label, images, chiGoc = 0 }: {
+  label: string;
+  images: ReviewImage[] | undefined;
+  chiGoc?: number;
+}) {
   const [open, setOpen] = useState<number | null>(null);
   const [broken, setBroken] = useState<ReadonlySet<number>>(new Set());
   if (!images) return null;
+  const giu = chiGoc > 0 ? (
+    <p className="text-muted-foreground text-xs" data-review-photos-chi-goc>
+      {label}: {chiGoc} ảnh chỉ có ở nguồn — quản trị viên xem được
+    </p>
+  ) : null;
   if (images.length === 0) {
-    return <p className="text-muted-foreground text-xs">{label}: không có ảnh</p>;
+    return giu ?? <p className="text-muted-foreground text-xs">{label}: không có ảnh</p>;
   }
   const markBroken = (i: number) => setBroken((s) => new Set(s).add(i));
 
@@ -101,6 +111,7 @@ export function ReviewPhotos({ label, images }: { label: string; images: ReviewI
           </DialogContent>
         )}
       </Dialog>
+      {giu}
     </>
   );
 }

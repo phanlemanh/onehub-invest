@@ -160,6 +160,7 @@ const NGOAI_LE = [
   "pipeline/resolve-properties.mjs|property_type",
   "agent/src/enrich/run.ts|confidence",
   "app/src/components/compare/compare-types.ts|confidence",
+  "app/src/lib/source-status-labels.ts|registry_status",   // DB2b: source_registry.status trùng chữ active/retired
 ];
 
 test("VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại lệ đúng bản ghim", () => {
