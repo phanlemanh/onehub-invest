@@ -179,11 +179,19 @@ describe("NH-AC-5 Hàng duyệt đọc bảng media", () => {
     assert.equal(o2[7].offer_b!.at(-1)?.src, IMG(99), "image_url của evidence đứng cuối khi chưa có")
   })
 
-  test("NH-AC-5 không phải admin → {} và 0 truy vấn; 42P01 → {}; lỗi khác ném", async () => {
-    for (const u of [null, user("user"), user("ops")]) {
+  test("NH-AC-5 dưới vai Vận hành → {} và 0 truy vấn; vai ops chỉ ảnh đã tải (PL3); 42P01 → {}; lỗi khác ném", async () => {
+    for (const u of [null, user("user"), user("viewer")]) {
       const { calls, query } = fakeQuery(ROWS)
-      assert.deepEqual(await loadReviewMedia(ITEMS, u, query), {}, "người không phải admin không được nhận ảnh")
+      assert.deepEqual(await loadReviewMedia(ITEMS, u, query), {}, "người dưới vai Vận hành không được nhận ảnh")
       assert.equal(calls.length, 0, u?.role ?? "khách")
+    }
+    // PL3 (the-duyet-du-can-cu Hỏi-1): vai ops nhận ảnh đã tải, URL gốc (tên miền nguồn — tầng A) chỉ admin.
+    const { query: qOps } = fakeQuery(ROWS)
+    const ops = await loadReviewMedia(ITEMS, user("ops"), qOps)
+    for (const m of Object.values(ops)) {
+      for (const k of ["offer_a", "offer_b", "offer"] as const) {
+        for (const img of m[k] ?? []) assert.equal(img.origin, "local", "vai ops nhận URL gốc")
+      }
     }
     // Chiều đỏ: đột biến bỏ kiểm isAdmin (gọi như admin) → có ảnh — ca trên sẽ đỏ đúng thông điệp ghim.
     const { query } = fakeQuery(ROWS)

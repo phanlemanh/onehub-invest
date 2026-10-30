@@ -1,13 +1,14 @@
 import type { User } from "@/lib/auth";
 import { pool } from "@/lib/db";
-import { isAdmin } from "@/lib/ops-access";
+import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
 
 import { snapshotMediaUrl } from "./zalo-media";
 
 /**
  * Ảnh tin cho thẻ ở hàng duyệt /ops/review và hồ sơ tin của /ops/data-flow — người duyệt nhìn ảnh để quyết
- * (vd. E1 ghi «đất» mà ảnh là nhà 4 tầng). Ảnh tin chỉ cho admin, chỉ DB máy thu: bảng `media` không sync cloud
- * (URL ảnh S06 mang tên miền nguồn — tầng A).
+ * (vd. E1 ghi «đất» mà ảnh là nhà 4 tầng). Chỉ DB máy thu: bảng `media` không sync cloud.
+ * Vai (PL3, AGENTS.md luật 6): ảnh ĐÃ TẢI về máy thu tới vai Vận hành trở lên (`xemNoiDungTin`); URL gốc mang tên miền
+ * nguồn thật (tầng A) chỉ tới quản trị viên — vai Vận hành nhận số ảnh bị giữ lại ở `chiGoc` để thẻ nói ra.
  *
  * Nguồn: bảng `media` (053, RESO Media; NH1 media-canonical-reso) do pipeline/transform-media.mjs dựng mỗi đêm
  * cho S03, S05, S06 theo `media_order`:
@@ -24,12 +25,11 @@ export type ReviewImage = {
   expiring: boolean;
 };
 
-/** Thẻ entity_match: Tin A/Tin B; thẻ agent_output: tin được bổ sung. */
-export type ReviewMedia = {
-  offer_a?: ReviewImage[];
-  offer_b?: ReviewImage[];
-  offer?: ReviewImage[];
-};
+/** Bên của thẻ: entity_match Tin A/Tin B; agent_output tin được bổ sung. */
+export type MediaSide = "offer_a" | "offer_b" | "offer";
+
+/** Ảnh theo bên; `chiGoc` = số ảnh chỉ có URL gốc mà vai người xem không được nhận (chỉ có ở vai dưới quản trị). */
+export type ReviewMedia = Partial<Record<MediaSide, ReviewImage[]>> & { chiGoc?: Partial<Record<MediaSide, number>> };
 
 export type PostMediaRow = {
   offer_id: string;
@@ -149,7 +149,7 @@ export async function loadOfferMedia(offerIds: string[], query: MediaRowQuery = 
   return byOffer;
 }
 
-type Side = { key: keyof ReviewMedia; offerId: string; imageUrl: unknown };
+type Side = { key: MediaSide; offerId: string; imageUrl: unknown };
 
 function sidesOf(item: ReviewMediaItem): Side[] {
   const ev = record(item.evidence);
@@ -183,14 +183,15 @@ export function stripEvidenceImages(evidence: unknown): Record<string, unknown> 
 
 /**
  * Ảnh cho từng thẻ, khoá theo `review_queue.id`. Một truy vấn cho cả hàng duyệt.
- * Không phải admin → `{}` (không chạm DB). DB thiếu bảng `media` (cloud) → `{}`.
+ * Vai dưới Vận hành → `{}` (không chạm DB). Vai Vận hành → chỉ ảnh đã tải, kèm `chiGoc`. DB thiếu bảng `media` → `{}`.
  */
 export async function loadReviewMedia(
   items: ReviewMediaItem[],
   user: User | null,
   query: MediaRowQuery = defaultMediaQuery,
 ): Promise<Record<number, ReviewMedia>> {
-  if (!isAdmin(user)) return {};
+  if (!xemNoiDungTin(user)) return {};
+  const admin = isAdmin(user);
   const plan = items.map((item) => ({ id: item.id, sides: sidesOf(item) })).filter((p) => p.sides.length > 0);
   if (plan.length === 0) return {};
 
@@ -206,7 +207,17 @@ export async function loadReviewMedia(
   const out: Record<number, ReviewMedia> = {};
   for (const { id, sides } of plan) {
     const media: ReviewMedia = {};
-    for (const s of sides) media[s.key] = buildMediaImages(byOffer.get(s.offerId) ?? [], s.imageUrl);
+    for (const s of sides) {
+      const all = buildMediaImages(byOffer.get(s.offerId) ?? [], s.imageUrl);
+      if (admin) {
+        media[s.key] = all;
+        continue;
+      }
+      const local = all.filter((img) => img.origin === "local");
+      media[s.key] = local;
+      const giu = all.length - local.length;
+      if (giu > 0) media.chiGoc = { ...media.chiGoc, [s.key]: giu };
+    }
     out[id] = media;
   }
   return out;

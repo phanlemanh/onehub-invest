@@ -49,7 +49,17 @@ async function render(item: Record<string, unknown>) {
       await new Promise((r) => setTimeout(r, 0));
     });
   };
-  return { text: () => document.body.textContent ?? "", sent, click, unmount: () => act(async () => root.unmount()) };
+  // PL3 (the-duyet-du-can-cu): mọi quyết định kèm lý do — gõ vào ô «Lý do» trước khi bấm.
+  const lyDo = async (s: string) => {
+    const el = document.querySelector("[data-review-reason]") as HTMLTextAreaElement | null;
+    assert.ok(el, "không thấy ô «Lý do»");
+    const set = Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!;
+    await act(async () => {
+      set.call(el, s);
+      el.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+    });
+  };
+  return { text: () => document.body.textContent ?? "", sent, click, lyDo, unmount: () => act(async () => root.unmount()) };
 }
 
 const agentItem = (evidence: Record<string, unknown>) => ({
@@ -83,11 +93,12 @@ test("AC-9 thẻ agent_output", async () => {
   assert.ok(t.includes("Phòng ngủ"), "thiếu hàng phòng ngủ");
   // Q9 (Mạnh 26/10, UI1 Hỏi-1 duyệt): thẻ duyệt KHÔNG hiện độ tự tin — vế «độ tin cậy» cũ của AC-9 đổi thành kiểm vắng.
   assert.ok(!t.includes("85%") && !t.includes("tự tin"), "thẻ không được hiện độ tự tin (Q9)");
+  await r.lyDo("đúng tin");
   for (const [label, status] of [["Áp dụng", "approved"], ["Bỏ", "rejected"], ["Để sau", "deferred"]] as const) {
     await r.click(label);
     const last = r.sent.at(-1)!;
     assert.equal(last.url, "/api/v1/ops/review/7/decide");
-    assert.deepEqual(last.body, { status }, `AC-9: nút «${label}» phải gửi status ${status}`);
+    assert.deepEqual(last.body, { status, reason: "đúng tin" }, `AC-9: nút «${label}» phải gửi status ${status} kèm lý do`);
   }
   await r.unmount();
 });
@@ -105,8 +116,9 @@ test("AC-9 entity_match không đổi", async () => {
   const t = r.text();
   assert.ok(t.includes("Tin A") && t.includes("Tin B"));
   assert.ok(t.includes("Cùng căn"));
+  await r.lyDo("khác toà");
   await r.click("Khác căn"); // UI1: nhãn nút bỏ emoji (luật onehub-ui no-emoji-icons)
-  assert.deepEqual(r.sent.at(-1)!.body, { status: "rejected" });
+  assert.deepEqual(r.sent.at(-1)!.body, { status: "rejected", reason: "khác toà" });
   await r.unmount();
 });
 
@@ -160,34 +172,40 @@ test("AC-11 thẻ xung đột: hai bên + căn cứ, chọn rồi mới áp", as
   assert.ok(button("Chọn luật") && button("Chọn AI") && button("Bỏ cả hai"), "AC-11: thiếu lựa chọn");
   assert.ok(isDisabled(button("Áp dụng")), "AC-11: «Áp dụng» phải khoá khi chưa chọn");
 
+  await r.lyDo("ảnh là nhà riêng");
+  assert.ok(isDisabled(button("Áp dụng")), "AC-11: có lý do mà chưa chọn bên thì «Áp dụng» vẫn khoá");
   await r.click("Chọn AI");
   assert.ok(!isDisabled(button("Áp dụng")), "AC-11: chọn xong «Áp dụng» phải bật");
   await r.click("Áp dụng");
   assert.deepEqual(
     r.sent.at(-1)!.body,
-    { status: "approved", choices: { property_type: llm.proposal_id } },
+    { status: "approved", choices: { property_type: llm.proposal_id }, reason: "ảnh là nhà riêng" },
     "AC-11: body phải mang lựa chọn",
   );
   // «Bỏ» và «Để sau» không cần chọn.
   await r.click("Bỏ");
-  assert.deepEqual(r.sent.at(-1)!.body, { status: "rejected" });
+  assert.deepEqual(r.sent.at(-1)!.body, { status: "rejected", reason: "ảnh là nhà riêng" });
   await r.unmount();
 });
 
 test("AC-11 thẻ xung đột: «Bỏ cả hai» gửi null", async () => {
   const r = await render(agentItem(CONFLICT_CARD.evidence));
   await r.click("Bỏ cả hai");
+  await r.lyDo("cả hai sai");
   await r.click("Áp dụng");
-  assert.deepEqual(r.sent.at(-1)!.body, { status: "approved", choices: { property_type: null } });
+  assert.deepEqual(r.sent.at(-1)!.body, { status: "approved", choices: { property_type: null }, reason: "cả hai sai" });
   await r.unmount();
 });
 
 test("AC-11 đối chứng: thẻ không xung đột không có lựa chọn", async () => {
   const r = await render(agentItem(ENRICH_EVIDENCE));
   assert.equal(button("Chọn luật"), undefined);
-  assert.ok(!isDisabled(button("Áp dụng")), "thẻ thường: «Áp dụng» bật ngay");
+  // PL3: «Áp dụng» chờ lý do (trước PL3 bật ngay); có lý do thì bật, không cần chọn bên.
+  assert.ok(isDisabled(button("Áp dụng")), "thẻ thường: chưa có lý do thì «Áp dụng» khoá");
+  await r.lyDo("đủ căn cứ");
+  assert.ok(!isDisabled(button("Áp dụng")), "thẻ thường: có lý do thì «Áp dụng» bật");
   await r.click("Áp dụng");
-  assert.deepEqual(r.sent.at(-1)!.body, { status: "approved" });
+  assert.deepEqual(r.sent.at(-1)!.body, { status: "approved", reason: "đủ căn cứ" });
   await r.unmount();
 });
 
