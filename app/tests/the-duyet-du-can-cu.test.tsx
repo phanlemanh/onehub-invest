@@ -338,7 +338,8 @@ async function napTin() {
   ]
   for (const [subj, f, v, tier, m, ev] of pb)
     await q(
-      `INSERT INTO "${S}".field_assertions (subject_key, field, value, evidence_tier, method, evidence) VALUES ($1,$2,$3,$4,$5,$6)`,
+      // observed_at bắt buộc từ 059 (PL19)
+      `INSERT INTO "${S}".field_assertions (subject_key, field, value, evidence_tier, method, evidence, observed_at) VALUES ($1,$2,$3,$4,$5,$6,now())`,
       [subj, f, v, tier, m, JSON.stringify(ev)],
     )
   await q(`INSERT INTO "${S}".ops_audit (actor, action, env, detail) VALUES ('machine:td', 'phat-bieu:cat-chuyen', 'local', '{}')`, [])
