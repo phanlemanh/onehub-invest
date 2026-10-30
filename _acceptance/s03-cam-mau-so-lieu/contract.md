@@ -5,9 +5,9 @@ slug: s03-cam-mau-so-lieu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/** — không khớp t3_paths
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-s03-cam-mau-so-lieu-design.md
 ---
 
