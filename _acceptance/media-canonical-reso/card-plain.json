@@ -103,5 +103,6 @@
       "i": 4,
       "p": "Chưa ai thử câu hiện cho vai không phải admin và cho cloud sau khi bỏ nhánh S06 — đã thêm hai ca thử kèm đối chứng admin."
     }
-  ]
+  ],
+  "analyst_plain": "Lượt đối chứng trên code cũ không chạy được (công cụ của tác tử thiếu quyền ghi tệp — lỗi bộ công cụ đã báo, P2-77), nên chưa có số «các phép đo này đỏ trên code cũ». Bù lại: mỗi phép đo mới đã được phá thử bằng tay trong lúc viết (ràng buộc 053, lệnh xoá theo nguồn, thứ tự bài, leak gate, probe không lùi) và đều đỏ đúng chỗ."
 }
