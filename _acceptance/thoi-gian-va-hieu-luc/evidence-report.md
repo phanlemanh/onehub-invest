@@ -1,17 +1,19 @@
 ---
 schema_version: 2
 feature_slug: thoi-gian-va-hieu-luc
-verdict: PENDING-JUDGMENT
-failed_evals: []
+verdict: REJECT
+failed_evals: ["E8"]
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: a8019a2600892b1eedee19f1ebd0db4174fa8bdf
+verified_commit: 606ecf6539c8f1c80b0165a3dfe28e2516ab30d5
 human_signoff:
 ---
 
 # Evidence Report: thoi-gian-va-hieu-luc
+
+Round 2. Nội dung này thay trọn round cũ; lịch sử round nằm ở mục Iterations.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -22,213 +24,214 @@ human_signoff:
 | E5 | AC-5 | test | PASS |
 | E6 | AC-6 | test | PASS |
 | E7 | AC-7 | test | PASS |
-| E8 | AC-8 | script | PASS |
+| E8 | AC-8 | script | FAIL |
 | E9 | AC-9 | test | PASS |
 | E10 | AC-9 | script | PASS |
 | E11 | AC-9 | script | PASS |
 | E12 | AC-9 | test | PASS |
 | E13 | AC-9 | test | PASS |
 | E14 | AC-9 | test | PASS |
-| E15 | AC-9 | judgment | PASS (panel đề xuất, chờ người chốt ở Cổng 2) |
+| E15 | AC-9 | judgment | PASS (đề xuất của hội đồng, chờ human_override) |
 
 ## Evidence
 
 - eval: E1
-  run_id: minted-thoi-gian-va-hieu-luc-E1-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg_db
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs (một lần chạy chung cho E1–E7, 1/1 lần đạt)
-    ℹ duration_ms 4523.011166
+    Lệnh: cd pipeline && node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs (DB thử oneinvest_p2_tg)
+    ℹ duration_ms 5650.953542
 
 - eval: E2
-  run_id: minted-thoi-gian-va-hieu-luc-E2-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg_db
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs (một lần chạy chung cho E1–E7, 1/1 lần đạt)
-    ℹ duration_ms 4523.011166
+    Lệnh: cd pipeline && node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs (DB thử oneinvest_p2_tg)
+    ℹ duration_ms 5650.953542
 
 - eval: E3
-  run_id: minted-thoi-gian-va-hieu-luc-E3-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg_db
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs (một lần chạy chung cho E1–E7, 1/1 lần đạt)
-    ℹ duration_ms 4523.011166
+    Lệnh: cd pipeline && node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs (DB thử oneinvest_p2_tg)
+    ℹ duration_ms 5650.953542
 
 - eval: E4
-  run_id: minted-thoi-gian-va-hieu-luc-E4-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg_db
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs (một lần chạy chung cho E1–E7, 1/1 lần đạt)
-    ℹ duration_ms 4523.011166
+    Lệnh: cd pipeline && node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs (DB thử oneinvest_p2_tg)
+    ℹ duration_ms 5650.953542
 
 - eval: E5
-  run_id: minted-thoi-gian-va-hieu-luc-E5-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg_db
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs (một lần chạy chung cho E1–E7, 1/1 lần đạt)
-    ℹ duration_ms 4523.011166
+    Lệnh: cd pipeline && node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs (DB thử oneinvest_p2_tg)
+    ℹ duration_ms 5650.953542
 
 - eval: E6
-  run_id: minted-thoi-gian-va-hieu-luc-E6-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg_db
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs (một lần chạy chung cho E1–E7, 1/1 lần đạt)
-    ℹ duration_ms 4523.011166
+    Lệnh: cd pipeline && node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs (DB thử oneinvest_p2_tg)
+    ℹ duration_ms 5650.953542
 
 - eval: E7
-  run_id: minted-thoi-gian-va-hieu-luc-E7-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.tg_db
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs (một lần chạy chung cho E1–E7, 1/1 lần đạt)
-    ℹ duration_ms 4523.011166
+    Lệnh: cd pipeline && node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs (DB thử oneinvest_p2_tg)
+    ℹ duration_ms 5650.953542
 
 - eval: E8
-  run_id: minted-thoi-gian-va-hieu-luc-E8-r1
-  exit_code: 0
+  run_id: minted-thoi-gian-va-hieu-luc-E8-r2
+  exit_code: 1
   baseline: n-a
   verifier: config:executors.script.tg_roundtrip
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node scripts/trang-thai-roundtrip.mjs (1/1 lần đạt)
-    AC-8 lỗi chạy → thoát 1
+    AC-8 lần một: 28980 tin · active 28646 · active_under_contract 0 · closed 0 · withdrawn 0 · unknown 334 · 0 phát biểu mới · tổng khớp
+    AC-8 lần hai: 0 phát biểu mới, cùng đếm
+    AC-8 tin sống unknown: 0
+    AC-8 withdrawn = 0 = 0 tin S06 het_trong_luot đếm độc lập
+    AC-8 tin S03/S05 het_trong_luot không thành withdrawn: 37 (vắng lượt nhóm không phải bằng chứng gỡ — AC-4)
+    trang-thai-roundtrip: deadlock detected
+  ghi chú: script dừng với lỗi deadlock sau bốn dòng AC-8 đầu; không thấy dòng «AC-8 căn bị vế lịch sử giá loại» và không thấy dòng chiều đỏ «AC-8 lỗi chạy → thoát» mà expected đòi, nên eval không đạt.
 
 - eval: E9
-  run_id: minted-thoi-gian-va-hieu-luc-E9-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.job_exit
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: node --test scripts/job-exit.test.mjs (1/1 lần đạt)
-    ℹ duration_ms 4020.631541
+    Lệnh: node --test scripts/job-exit.test.mjs
+    ℹ duration_ms 4191.83
 
 - eval: E10
-  run_id: minted-thoi-gian-va-hieu-luc-E10-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.idem_059
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: bash db/check-idempotent-tam.sh db/migrations/059_thoi_gian_hieu_luc.sql history_transactional ref_lookup ref_field_lookup (1/1 lần đạt)
-    IDEMPOTENT PASS
+    IDEMPOTENT PASS (có dữ liệu)
 
 - eval: E11
-  run_id: minted-thoi-gian-va-hieu-luc-E11-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E11-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.vocab_check
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: node pipeline/vocab.mjs --check (1/1 lần đạt)
     vocab --check: 4/4 đích khớp sổ
 
 - eval: E12
-  run_id: minted-thoi-gian-va-hieu-luc-E12-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E12-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd pipeline && npm test (1/1 lần đạt)
-    ℹ duration_ms 44523.686916
+    Lệnh: cd pipeline && npm test
+    ℹ duration_ms 49346.1165
 
 - eval: E13
-  run_id: minted-thoi-gian-va-hieu-luc-E13-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E13-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.app_ui
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd app && npm test (1/1 lần đạt)
-    ℹ duration_ms 42588.263583
+    Lệnh: cd app && npm test
+    ℹ duration_ms 41938.748542
 
 - eval: E14
-  run_id: minted-thoi-gian-va-hieu-luc-E14-r1
+  run_id: minted-thoi-gian-va-hieu-luc-E14-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.app
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
   output: |
-    cmd: cd app && npx tsc --noEmit && npm run lint (1/1 lần đạt)
-    (đầu ra rỗng: typecheck và lint không báo lỗi)
+    Lệnh: cd app && npx tsc --noEmit && npm run lint
+    (không có dòng lỗi)
 
 - eval: E15
-  judged_by: judge panel đề xuất (3 lens, fresh context) — chưa có người chốt
+  judged_by: judge panel (fresh context, ba lăng kính)
   verdict: PASS
-  rationale: Panel đề xuất PASS; cả ba lens thấy CONTEXT.md có khối in đậm «Trạng thái chào» và «Lịch sử giá», và mappings.yaml có trục offer_status (cột sale_offer_records.offer_status) cùng trục assertion_field (cột field_assertions.field). Đây chỉ là đề xuất, người chốt ở Cổng 2.
+  rationale: Đề xuất của hội đồng. CONTEXT.md có hai khối in đậm «Trạng thái chào» (cột sale_offer_records.offer_status, «chỉ đổi theo bằng chứng, quá cửa sổ không đổi») và «Lịch sử giá» (bảng history_transactional, gom theo căn qua view property_price_history); mappings.yaml có trục offer_status (columns sale_offer_records.offer_status) và trục assertion_field (columns field_assertions.field).
   votes:
-    - domain-correctness: PASS — CONTEXT.md có khối in đậm «Trạng thái chào» (nêu cột sale_offer_records.offer_status, luật «Chỉ đổi theo bằng chứng, quá cửa sổ không đổi») và «Lịch sử giá» (nêu bảng history_transactional, gom theo căn qua view property_price_history). mappings.yaml có trục offer_status với columns [sale_offer_records.offer_status], và trục assertion_field với columns [field_assertions.field] cùng giá trị offer_status.
-    - operational-feasibility: PASS — CONTEXT.md dòng 156-157 có khối in đậm «Trạng thái chào», nêu cột `sale_offer_records.offer_status` và luật «Chỉ đổi theo bằng chứng, quá cửa sổ không đổi». Dòng 190-191 có khối in đậm «Lịch sử giá», nêu bảng `history_transactional` và việc gom theo căn. Trong mappings.yaml, trục `offer_status` (dòng 427-430) có `columns: [sale_offer_records.offer_status]`, và trục `assertion_field` (dòng 324-330) có `columns: [field_assertions.field]`. Hai trục này nằm cùng cấp thụt lề.
-    - spec-alignment: PASS — CONTEXT.md dòng 156-158 có khối in đậm «Trạng thái chào» nêu cột `sale_offer_records.offer_status` và luật «Chỉ đổi theo bằng chứng, quá cửa sổ không đổi». Dòng 190-191 có khối in đậm «Lịch sử giá» nêu bảng `history_transactional` và việc gom theo căn. Trong mappings.yaml, trục `offer_status` (dòng 427-430) có `columns: [sale_offer_records.offer_status]`, và trục `assertion_field` (dòng 324-338) có `columns: [field_assertions.field]` với giá trị `offer_status`.
+    - domain-correctness: PASS — CONTEXT.md có hai khối in đậm «Trạng thái chào» (nêu cột sale_offer_records.offer_status, «chỉ đổi theo bằng chứng, quá cửa sổ không đổi») và «Lịch sử giá» (nêu bảng history_transactional, gom theo căn qua view property_price_history). mappings.yaml có trục offer_status với columns [sale_offer_records.offer_status], và trục assertion_field với columns [field_assertions.field] kèm giá trị offer_status.
+    - operational-feasibility: PASS — CONTEXT.md có khối in đậm «Trạng thái chào» (dòng 156-157) nêu cột sale_offer_records.offer_status và luật «Chỉ đổi theo bằng chứng, quá cửa sổ không đổi». Khối «Lịch sử giá» (dòng 190-191) nêu bảng history_transactional và «gom theo căn». Trong pipeline/mappings.yaml, trục offer_status có columns [sale_offer_records.offer_status] (dòng 430), và trục assertion_field có columns [field_assertions.field] (dòng 330) cùng giá trị offer_status.
+    - spec-alignment: PASS — CONTEXT.md có khối in đậm «Trạng thái chào» (cột sale_offer_records.offer_status, «Chỉ đổi theo bằng chứng, quá cửa sổ không đổi») và «Lịch sử giá» (bảng history_transactional, «gom theo căn»). Trong mappings.yaml, trục offer_status có columns [sale_offer_records.offer_status], và trục assertion_field có columns [field_assertions.field] kèm value offer_status.
   human_override:  # chi nguoi ghi
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-thoi-gian-va-hieu-luc-SUITE-npm_test-r1
+  run_id: minted-thoi-gian-va-hieu-luc-SUITE-npm_test-r2
   exit_code: 0
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-thoi-gian-va-hieu-luc-SUITE-test_lint_rules-r1
+  run_id: minted-thoi-gian-va-hieu-luc-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-thoi-gian-va-hieu-luc-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-thoi-gian-va-hieu-luc-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-30T14:29:35Z
+  verified_at: 2026-10-30T14:44:15Z
+
+Lệnh fail không gắn eval nào: không có. Lệnh fail duy nhất là lệnh của E8 (cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node scripts/trang-thai-roundtrip.mjs), đã gắn eval E8.
 
 ## Known limits
 
 ## Ngoài hợp đồng
 
-Có 4 lỗi ngoài hợp đồng chưa qua bác bỏ đối kháng, người quyết ở Cổng 2 (chi tiết ở review-findings.md): probe mgn_mu chèn field_assertions thiếu observed_at (đề xuất new-contract); test nạp 059 chỉ giữ khoá 56056 (đề xuất known-limits); phat-bieu-db.itest nạp lại 045 làm hàm chặn tụt về bản cũ (đề xuất known-limits); «đếm độc lập» của AC-8 dùng chung câu SQL với CLI (đề xuất known-limits).
-
 ## Analyst
 
-baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
 
-Eval không-phân-biệt: không đo được ở round này. Baseline bị chặn hạ tầng nên mọi field baseline là n-a; chưa eval nào được xác nhận là phân biệt, cũng chưa eval nào bị xác nhận là không-phân-biệt.
+Mọi field baseline ở round này là n-a, nên danh sách eval không-phân-biệt KHÔNG đo được ở round này; không thể khẳng định eval nào có phân biệt code cũ với code mới.
 
-Hai phép đo yếu trong hợp đồng (chi tiết ở review-findings.md, mục Trong hợp đồng): E7 hứa «bộ itest PL16 vẫn xanh» nhưng lệnh của nó không chạy bac-du-lieu.itest.mjs; E10 đo tính lũy đẳng của 059 trên DB chỉ có lược đồ nên bước điền lùi history_transactional chạy trên bảng rỗng.
-
-### Baseline khong do
-
-- cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test scripts/trang-thai-chao.itest.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node scripts/trang-thai-roundtrip.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- node --test scripts/job-exit.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- bash db/check-idempotent-tam.sh db/migrations/059_thoi_gian_hieu_luc.sql history_transactional ref_lookup ref_field_lookup: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- node pipeline/vocab.mjs --check: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd app && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd app && npx tsc --noEmit && npm run lint: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+Baseline khong do:
+- cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node --test --test-concurrency=1 scripts/trang-thai-chao.itest.mjs scripts/bac-du-lieu.itest.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- cd pipeline && DATABASE_URL=${TG_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_tg} node scripts/trang-thai-roundtrip.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- node --test scripts/job-exit.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- bash db/check-idempotent-tam.sh db/migrations/059_thoi_gian_hieu_luc.sql history_transactional ref_lookup ref_field_lookup && bash db/db-thu.sh oneinvest_p2_idem >/dev/null && (cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_idem node scripts/idem-059.mjs); rc=$?; bash db/db-thu.sh oneinvest_p2_idem --xoa >/dev/null; exit $rc: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- node pipeline/vocab.mjs --check: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- cd app && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- cd app && npx tsc --noEmit && npm run lint: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
 
 ## Variance
 
-none — mọi eval chạy một lần, xác định; không có eval ngẫu nhiên nhiều lần chạy nên không có pass_rate hỗn hợp
+none — mọi eval chạy một lần, xác định; không eval nào có pass_rate lẫn lộn.
 
 ## Iterations
 
-Round 1: 14 eval máy đều đạt, không eval nào đỏ. E15 (judgment) có đề xuất PASS từ panel ba lens nhưng chưa có human_override nên verdict giữ PENDING-JUDGMENT. Baseline bị chặn hạ tầng nên mọi field baseline là n-a. Giờ chạy chính xác không đo được nên verified_at ghi theo ngày chạy.
+Round 1: kết quả chi tiết của vòng này nằm ở gói bằng chứng r1 đã commit (cc3463bd, 606ecf65); không được truyền kèm ở lần soạn này nên không chép lại.
+Round 2: E8 failed — trang-thai-roundtrip.mjs báo «deadlock detected» sau bốn dòng AC-8 đầu, chưa in dòng «căn bị vế lịch sử giá loại» và chưa chạy chiều đỏ. Trả về cho khâu triển khai.
