@@ -102,6 +102,37 @@ export function soGiaTri(a: string | number | null | undefined, b: string | numb
   return khoa(a) === khoa(b) ? "khop" : "lech";
 }
 
+/**
+ * Khoá tên phường để so hai nguồn (S05 ghi slug `binh-thanh`, S06 ghi «Phường Bình Thạnh»): bỏ MỘT tiền tố hành chính
+ * trên chuỗi còn dấu, rồi slug như `slugifyName()` của queries.ts (= đuôi mã phường). Bỏ tiền tố trước khi bỏ dấu vì
+ * «Phường» và «Phương» cùng thành `phuong` — «Phương Liệt», «Phượng Dực» là tên phường thật.
+ */
+export function khoaPhuong(v: string): string {
+  return v
+    .normalize("NFC")
+    .trim()
+    .toLowerCase()
+    .replace(/^(?:(?:phường|xã|thị trấn)(?:\s+|$)|p\.\s*)/u, "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * So hàng Phường theo khoá tên chuẩn. Khoá rỗng (chỉ có tiền tố) → Thiếu. Khoá chỉ số («Phường 12» của hai quận khác
+ * nhau cùng khoá) → so chuỗi gốc như cũ, để khoá số không làm hai chuỗi khác nhau thành Khớp.
+ */
+function soPhuong(a: string | number | null, b: string | number | null): So {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaPhuong(String(a));
+  const kb = khoaPhuong(String(b));
+  if (ka === "" || kb === "") return "thieu";
+  if (/^\d+$/.test(ka) || /^\d+$/.test(kb)) return soGiaTri(a, b);
+  return ka === kb ? "khop" : "lech";
+}
+
 /** Bảng so mười trường của thẻ ghép căn, mỗi giá trị kèm căn cứ của chính tin đó. */
 export function soTruongGhepCan(a: BenGhepCan, b: BenGhepCan, canCuA: CanCuTin = {}, canCuB: CanCuTin = {}): HangSo[] {
   return TRUONG_GHEP_CAN.map(({ key, label, truc }) => {
@@ -112,7 +143,7 @@ export function soTruongGhepCan(a: BenGhepCan, b: BenGhepCan, canCuA: CanCuTin =
       label,
       a: va,
       b: vb,
-      so: soGiaTri(va, vb),
+      so: key === "phuong" ? soPhuong(va, vb) : soGiaTri(va, vb),
       truc: Boolean(truc),
       canCuA: truc ? nhanCanCu(canCuA[truc]) : CHUA_CAN_CU_TIN,
       canCuB: truc ? nhanCanCu(canCuB[truc]) : CHUA_CAN_CU_TIN,
