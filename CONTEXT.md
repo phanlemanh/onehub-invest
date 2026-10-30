@@ -153,6 +153,10 @@ _Avoid_: fill-gap, ghi đè
 - Code: `field_provenance` · RESO: `*Source` khi field có (năm trường này không có)
 _Avoid_: provenance (trên UI)
 
+**Trạng thái chào**: Tin còn đang chào hay không — Đang chào · Đã cọc · Đã bán · Đã gỡ · Chưa rõ. Chỉ đổi theo bằng chứng, quá cửa sổ không đổi: tin lâu không thấy lại vẫn giữ trạng thái, chỉ căn tụt bậc B5 về B4 (khung RESO §6). Bằng chứng là phát biểu trường `offer_status` (tin S06 còn trên sàn, bài nhóm S03/S05 được đọc, tin S06 vắng khỏi lượt nạp); phát biểu mới nhất thắng, cùng lúc mới xét phương pháp (PL19).
+- Code: `sale_offer_records.offer_status`, `ghi_bang_chung_chao`, `resolve_offer_status`, `pipeline/trang-thai-chao.mjs` · RESO: StandardStatus
+_Avoid_: tin hết hạn, expired, tình trạng tin
+
 **Phân bố bậc**: Số đơn vị ở mỗi bậc dữ liệu B0–B5 (FRAMING §3.4) theo thị trường × loại hình, chụp mỗi ngày ở máy thu. Đơn vị là mỗi căn cộng mỗi tin rao chưa gắn căn; đơn vị không có phường đếm ở thị trường «chưa rõ». Kiểm «Đề xuất có phát biểu» giữ bất biến mọi đề xuất enrich đã áp có phát biểu tương ứng.
 - Code: `data_level_snapshot`, `offer_data_level`, `property_data_level`, `pipeline/bac-du-lieu.mjs`, kiểm `data-level:distribution` và `enrich:proposal-assertion` · RESO: không có — extension `DataLevel`
 - Slug URL: —
@@ -182,6 +186,10 @@ _Avoid_: loại người bán
 
 **Giá rao**: Giá ghi trong tin rao, VND (bigint).
 - Code: `price_vnd` · RESO: ListPrice (thuê: LeaseAmount)
+
+**Lịch sử giá**: Các mốc giá và trạng thái của tin theo thời gian — tin mới, đổi giá (giá cũ → giá mới), gỡ tin, chào lại — gom theo căn qua mọi tin gắn căn. Ghi lại cùng giá không sinh mốc. Căn có ít nhất hai mốc giá là một điều kiện của bậc B5 (PL19 Hỏi-3).
+- Code: bảng `history_transactional` (trigger trên `sale_offer_records`, chỉ local), view gom theo căn `property_price_history` · RESO: HistoryTransactional (ChangeType)
+_Avoid_: nhật ký giá, biến động giá
 
 **Bậc giá**: Độ gần giá giao dịch của một tin rao: P0 giá giao dịch, P1 giá nội bộ, P2 giá công khai.
 - Code: `price_tier` · RESO: không có — đặc trưng VN (mappings.yaml)

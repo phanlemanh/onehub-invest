@@ -30,6 +30,15 @@ const sql = (da044: boolean, da045: boolean) =>
       return da045 && /\/045_/.test(p) ? t.slice(t.indexOf("-- 6. Bộ phân xử")) : t;
     }).join("\n");
 
+// PL19: DB đã áp 059 → nạp lại 045 đè apply_enrichment/resolve_offer_fields bản 059 (observed_at bắt buộc) và dòng sổ
+// field_assertions.field → nạp lại phần ấy của 059 ngay sau (dòng sổ + hàm, không DDL bảng).
+const TEP_059 = join(MIGRATIONS_DIR, "059_thoi_gian_hieu_luc.sql");
+const MIG_059 = existsSync(TEP_059) ? readFileSync(TEP_059, "utf8") : "";
+const SAU_045_CUA_059 = MIG_059
+  ? MIG_059.slice(MIG_059.indexOf("-- Sổ từ vựng (node pipeline/vocab.mjs --emit-seed, các dòng của trục/cột mới)"),
+    MIG_059.indexOf("-- 6. Lịch sử giá"))
+  : "";
+
 /** Mở cổng «chưa cắt chuyển» của 045 trong giao dịch test — giá trị gieo được ghi kèm phát biểu legacy (insertOffer). */
 const MO_CONG = `INSERT INTO ops_audit (actor, action, detail) VALUES ('test:agent', 'phat-bieu:cat-chuyen', '{}'::jsonb)`;
 
@@ -44,6 +53,8 @@ export async function withTx<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
     const { rows } = await c.query(
       `SELECT to_regclass('sale_offer_records') IS NOT NULL AS ok, to_regclass('field_assertions') IS NOT NULL AS pb`);
     await c.query(sql(rows[0].ok, rows[0].pb));
+    const { rows: [m] } = await c.query("SELECT to_regclass('history_transactional') IS NOT NULL AS co");
+    if (m.co && SAU_045_CUA_059) await c.query(SAU_045_CUA_059);
     await c.query(MO_CONG);
     return await fn(c);
   } finally {
