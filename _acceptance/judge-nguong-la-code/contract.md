@@ -5,7 +5,7 @@ slug: judge-nguong-la-code
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-30T07:40:22Z
 approved_by:
@@ -79,3 +79,11 @@ Trục quét (morphological-scan, preset entity-feature): **nhánh luật** {yes
 - Chạy judge-run thật trên DB `oneinvest` (việc vận hành sau gộp).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Thẻ ghép căn cũ có tin gốc đã mất khỏi `sale_offers` (11 thẻ lúc ký) bị judge-run bỏ qua lặng lẽ, nên vẫn giữ gợi ý và lời giải thích LLM kiểu cũ trên `/ops/review`.
+  - Ngoài-2: Khi ghi sổ `ai_calls` lỗi, lỗi bị nuốt nhưng thẻ vẫn mang model id và đường trace như thể sổ có dòng.
+  - Ngoài-4: Số phần trăm trên thẻ cắt xuống một chữ số, nên cặp lệch giá/m² sát 30% có thể cùng hiện «30,0%» dù một cặp là «khác căn», một cặp là «chưa chắc».
+  - Ngoài-5: Bài kiểm «chữ không trái kết luận» sát ngưỡng chỉ thử vài điểm, chưa quét cả dải số in trên thẻ ở đúng ngưỡng.
+  - Ngoài-9: judge-run báo xong mà không đếm số cặp model lỗi, và cặp đọc lỗi không được ghi tên trong dòng tổng kết.
+  - Ngoài-10: Bài kiểm AC-5(a) chỉ kiểm thẻ KHÔNG chứa prompt mẫu, không có đối chứng dương hay đối chứng đỏ cho rò prompt.
