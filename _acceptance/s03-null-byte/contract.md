@@ -5,7 +5,7 @@ slug: s03-null-byte
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-10-30T10:38:43Z
 approved_by:
