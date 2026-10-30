@@ -37,13 +37,58 @@ export function parseVnNumber(raw) {
   return parseFloat(raw.replace(/[.,]/g, ""));
 }
 
+// Cách môi giới viết giá (hồ sơ s03-cam-mau-so-lieu, bản nghiên cứu s03-boc-tach-cau-truc-3010 §3.2).
+// "2.650 tỷ", "3,349 tỷ": một–hai chữ số + đúng ba chữ số sau dấu, kèm chữ tỷ — môi giới viết triệu, không phải 2.650 tỷ.
+const GIA_TY_NHOM_NGHIN = /^\d{1,2}[.,]\d{3}$/;
+// "2ty450", "3ty2", "2 tỷ 450" — phần lẻ không được là số phòng, diện tích hay triệu.
+const GIA_TY_LE = /(?<![\d.,])(\d{1,3})\s*t(?:ỷ|y)\s*(\d{1,3})(?![\d.,])(?!\s*(?:pn|phòng|wc|tr|triệu|m\b|m2|m²|%|n\b|ng))/i;
+// "5tr5", "8tr5" (không dấu cách giữa tr và phần lẻ).
+const GIA_TR_LE = /(?<![\d.,])(\d{1,3})tr(\d{1,2})(?![\d.,])(?!\s*(?:pn|wc|m\b|m2|m²))/i;
+// "7.000.000" — đồng, đủ hai nhóm nghìn, không theo sau là đơn vị.
+const GIA_DONG = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ\/m))/i;
+// "Giá: 4,000 (thu về)" — số nhóm nghìn đứng sau nhãn giá, không đơn vị: triệu.
+const GIA_NHAN_TRIEU = /giá(?:\s*bán)?\s*:?\s*(\d{1,3}[.,]\d{3})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ|vnd))/i;
+
+/** Số đứng trước chữ tỷ, ra đơn vị tỷ: "2.650" → 2,65 · "2400" (từ 1.000, không dấu) → 2,4 · còn lại như parseVnNumber. */
+export function soTy(raw) {
+  if (GIA_TY_NHOM_NGHIN.test(raw)) return parseFloat(raw.replace(",", "."));
+  const v = parseVnNumber(raw);
+  if (/^\d{4,}$/.test(raw) && v >= 1000) return v / 1000;
+  return v;
+}
+
+// Diện tích viết thiếu chữ 2 ("64m", "DT:43.2m"): chỉ nhận 15–500 m², và không phải bề ngang/khoảng cách đứng trước.
+const BE_NGANG = /(ngang|mặt tiền|\bmt\b|rộng|dài|sâu|hẻm|ngõ|đường|lộ giới|cách)/i;
+const MET_TRAN = /(\d+(?:[.,]\d+)?)\s*m(?![\p{L}\p{N}²])/giu;
+
+/** Diện tích từ "<số>m" đứng một mình, hoặc null. */
+export function dienTichMetTran(so) {
+  for (const m of so.matchAll(MET_TRAN)) {
+    const v = parseFloat(m[1].replace(",", "."));
+    if (!(v >= 15 && v <= 500)) continue;
+    const truoc = so.slice(Math.max(0, m.index - 12), m.index);
+    if (BE_NGANG.test(truoc)) continue;
+    return v;
+  }
+  return null;
+}
+
 /** SĐT di động VN từ text tin rao: "0973034567", "0973 034 567",
  * "0973.034.567", "+84973…". Chuẩn hoá về dạng 0xxxxxxxxx(x); chỉ nhận đầu
  * số mobile (3,5,7,8,9) — môi giới gần như luôn dùng mobile, lọc luôn giúp
  * tránh vớ phải số nhà/mã nào đó. Guard (?<!\d)(?!\d) để không cắt giữa dãy
  * số dài (mã bưu chính, số tài khoản…). */
+const PHONE_RE = /(?<!\d)(?:\+84|0)(?:[.\-\s]?\d){8,10}(?!\d)/g;
+const URL_RE = /https?:\/\/\S+|www\.\S+/gi;
+
+/** Chữ bài để đọc số (N1): mọi URL và mọi dãy dạng SĐT thay bằng một dấu cách — URL ảnh mang «6tY», «/2650/»
+ *  từng thành giá, SĐT thành diện tích. SĐT người đăng vẫn đọc từ chữ gốc (extractPhones). */
+export function gatSo(text) {
+  return (text ?? "").replace(URL_RE, " ").replace(PHONE_RE, " ");
+}
+
 export function extractPhones(text) {
-  const raw = text.match(/(?<!\d)(?:\+84|0)(?:[.\-\s]?\d){8,10}(?!\d)/g) ?? [];
+  const raw = text.match(PHONE_RE) ?? [];
   const seen = new Set();
   const out = [];
   for (const r of raw) {
@@ -63,32 +108,51 @@ export function extractPhones(text) {
 export function parsePost(text) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
+  // Số đọc trên chữ đã gạt URL và SĐT (N1); SĐT người đăng đọc từ chữ gốc ở dưới.
+  const so = gatSo(text);
+
   // loại tin: bán vs thuê. KHÔNG return sớm khi thiếu keyword — môi giới ở
   // nhóm "mua bán" thường không lặp chữ "bán", chỉ ghi giá ("Giá: 6.1 tỷ").
   // Transform tự suy kind theo bối cảnh khi cần; parser cứ parse đủ trường.
-  if (/cho thuê|thuê dài hạn|cần cho thuê|thuê dài hạn/i.test(text)) out.kind = "rent_lt";
-  else if (/bán|chính chủ bán|cần tiền bán|bán gấp/i.test(text)) out.kind = "sale";
+  // Ý định không vá ở đây (hồ sơ s03-cam-mau-so-lieu: việc của PL5).
+  if (/cho thuê|thuê dài hạn|cần cho thuê|thuê dài hạn/i.test(so)) out.kind = "rent_lt";
+  else if (/bán|chính chủ bán|cần tiền bán|bán gấp/i.test(so)) out.kind = "sale";
 
   // giá: "45tr/m2", "3.2 tỷ", "2tỷ", "15tr/tháng", "12 triệu/th"
-  const perm2 = text.match(/(\d[\d.,]*)\s*(?:tr|triệu)\/m[²2]/i);
+  const perm2 = so.match(/(\d[\d.,]*)\s*(?:tr|triệu)\/m[²2]/i);
   if (perm2) out.pricePerm2Vnd = Math.round(parseVnNumber(perm2[1]) * 1e6);
 
+  // "2ty450", "3ty2", "2 tỷ 450": phần sau chữ tỷ là phần lẻ (2,45 tỷ) — xét trước dạng tỷ thường, vì "3ty2" khớp cả hai.
+  const tyLe = so.match(GIA_TY_LE);
   // (?!..) chặn 't' của chữ thường tiếng Việt ("62m2, tổng …") — \b của JS
   // chỉ theo ASCII nên 'tổ' vẫn tạo boundary giả (bench C2 bắt được).
-  const ty = text.match(/(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/i);
-  if (ty) out.priceVnd = Math.round(parseVnNumber(ty[1]) * 1e9);
+  const ty = so.match(/(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/i);
+  if (tyLe) out.priceVnd = Math.round(parseFloat(`${tyLe[1]}.${tyLe[2]}`) * 1e9);
+  else if (ty) out.priceVnd = Math.round(soTy(ty[1]) * 1e9);
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {
-    const trieu = text.match(/(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
-    if (trieu) out.priceVnd = Math.round(parseVnNumber(trieu[1]) * 1e6);
+    // "5tr5", "8tr5": phần sau chữ tr là phần lẻ (5,5 triệu).
+    const trLe = so.match(GIA_TR_LE);
+    const trieu = so.match(/(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
+    if (trLe) out.priceVnd = Math.round(parseFloat(`${trLe[1]}.${trLe[2]}`) * 1e6);
+    else if (trieu) out.priceVnd = Math.round(parseVnNumber(trieu[1]) * 1e6);
+  }
+
+  if (!out.priceVnd && !out.pricePerm2Vnd) {
+    // Không đơn vị: "7.000.000" (đủ hai nhóm nghìn) là đồng; "Giá: 4,000" ở tin bán là triệu (4 tỷ), tin thuê để trống.
+    const dong = so.match(GIA_DONG);
+    const giaTrieu = out.kind === "sale" ? so.match(GIA_NHAN_TRIEU) : null;
+    if (dong) out.priceVnd = parseInt(dong[1].replace(/\./g, ""), 10);
+    else if (giaTrieu) out.priceVnd = Math.round(parseVnNumber(giaTrieu[1]) * 1e6);
   }
 
   // diện tích: "65m2", "65m²", "DT 45m"
-  const area = text.match(/(\d+(?:\.\d+)?)\s*m[²2]/i);
+  const area = so.match(/(\d+(?:\.\d+)?)\s*m[²2]/i);
   if (area) out.areaM2 = parseFloat(area[1]);
+  else out.areaM2 = dienTichMetTran(so);
 
   // bedrooms: "2PN", "2 phòng ngủ", "2BR"
-  const bd = text.match(/(\d+)\s*(?:PN|phòng ngủ|BR)/i);
+  const bd = so.match(/(\d+)\s*(?:PN|phòng ngủ|BR)/i);
   if (bd) out.bedrooms = parseInt(bd[1]);
 
   // SĐT người đăng (nằm sẵn trong text tin rao — nguồn contact chính của P1)

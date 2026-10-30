@@ -46,8 +46,10 @@ test("'t' của chữ 'tổng' không bị nhận là đơn vị tỷ (\\b ASCII
   assert.equal(p.priceVnd, 5_100_000_000);
 });
 
-test("tỷ chấm ngàn: '2.900 tỷ' → 2900e9; không trộn với 'triệu'", () => {
-  assert.equal(parsePost("Bán 2.900 tỷ nhà phố").priceVnd, 2_900_000_000_000);
+// Đổi nghĩa có chủ ý (hồ sơ s03-cam-mau-so-lieu, sổ quyết định): môi giới viết triệu kèm chữ tỷ — 579 bài bán từng ra
+// trên 100 tỷ. "2.900 tỷ" nay là 2,9 tỷ, không còn 2.900 tỷ.
+test("tỷ ba chữ số sau dấu: '2.900 tỷ' → 2.9e9; không trộn với 'triệu'", () => {
+  assert.equal(parsePost("Bán 2.900 tỷ nhà phố").priceVnd, 2_900_000_000);
   assert.equal(parsePost("Thuê dài hạn: 12 triệu/th").priceVnd, 12_000_000);
 });
 
