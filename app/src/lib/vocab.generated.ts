@@ -16,6 +16,7 @@ export const VOCAB = {
   party_role: ["nguoi_dang"],
   listing_intent: ["offer", "inquiry", "not_listing", "unknown"],
   offer_status: ["active", "active_under_contract", "closed", "withdrawn", "unknown"],
+  change_type: ["new_listing", "price_change", "withdrawn", "back_on_market", "active_under_contract", "closed"],
   data_level: ["B0", "B1", "B2", "B3", "B4", "B5"],
   capability_level: ["N0", "N1", "N2", "N3", "N4"],
 } as const;
@@ -35,6 +36,7 @@ export type RegistryEventKind = (typeof VOCAB.registry_event_kind)[number];
 export type PartyRole = (typeof VOCAB.party_role)[number];
 export type ListingIntent = (typeof VOCAB.listing_intent)[number];
 export type OfferStatus = (typeof VOCAB.offer_status)[number];
+export type ChangeType = (typeof VOCAB.change_type)[number];
 export type DataLevel = (typeof VOCAB.data_level)[number];
 export type CapabilityLevel = (typeof VOCAB.capability_level)[number];
 
@@ -52,6 +54,7 @@ export const REGISTRY_EVENT_KIND = { gop: "gop", tach: "tach", nghi: "nghi" } as
 export const PARTY_ROLE = { nguoi_dang: "nguoi_dang" } as const;
 export const LISTING_INTENT = { offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" } as const;
 export const OFFER_STATUS = { active: "active", active_under_contract: "active_under_contract", closed: "closed", withdrawn: "withdrawn", unknown: "unknown" } as const;
+export const CHANGE_TYPE = { new_listing: "new_listing", price_change: "price_change", withdrawn: "withdrawn", back_on_market: "back_on_market", active_under_contract: "active_under_contract", closed: "closed" } as const;
 export const DATA_LEVEL = { B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" } as const;
 export const CAPABILITY_LEVEL = { N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" } as const;
 
@@ -73,6 +76,7 @@ export const LABELS_VI = {
   party_role: { nguoi_dang: "Người đăng" },
   listing_intent: { offer: "Tin rao", inquiry: "Yêu cầu", not_listing: "Không phải tin rao", unknown: "Chưa rõ" },
   offer_status: { active: "Đang chào", active_under_contract: "Đã cọc", closed: "Đã bán", withdrawn: "Đã gỡ", unknown: "Chưa rõ" },
+  change_type: { new_listing: "Tin mới", price_change: "Đổi giá", withdrawn: "Gỡ tin", back_on_market: "Chào lại", active_under_contract: "Đã cọc", closed: "Đã bán" },
   data_level: { B0: "Có lời khai", B1: "Đọc được", B2: "Gắn căn", B3: "Đã đo", B4: "Xác minh", B5: "Sống" },
   capability_level: { N0: "Thu được", N1: "Đọc được", N2: "Đo được", N3: "Tự động ở ngưỡng", N4: "Tự duy trì" },
 } as const satisfies Record<VocabAxis, Record<string, string>>;

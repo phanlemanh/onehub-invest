@@ -303,3 +303,64 @@ test("AC-5 phân xử theo thời gian: mới nhất thắng, cùng lúc theo ph
     sql: sql059().replace(thuTu, "ORDER BY sk.offer_id, assertion_method_rank(fa.method), fa.observed_at DESC, fa.id"),
   }), /trạng thái mới nhất phải thắng/);
 });
+
+// ---- Task 4 · AC-6: lịch sử giá và trạng thái ----
+const lichSu = async (id) => (await c.query(`SELECT field_name, previous_value, new_value, change_type FROM history_transactional
+  WHERE resource_record_key = $1 ORDER BY id`, [id])).rows.map((r) => [r.change_type, r.field_name, r.previous_value, r.new_value]);
+async function canCo(...offers) {
+  const { rows: [p] } = await c.query("INSERT INTO properties (property_type) VALUES ('house') RETURNING id");
+  for (const o of offers) await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [p.id, o]);
+  return Number(p.id);
+}
+async function kiemCungGia() {
+  const o = await tin({ price: 3_000_000_000 });
+  await c.query("UPDATE sale_offer_records SET price_vnd = price_vnd, last_seen = now() WHERE offer_id = $1", [o]);
+  assert.deepEqual(await lichSu(o), [["new_listing", "ListPrice", null, "3000000000"]], "cùng giá không sinh dòng lịch sử");
+}
+test("AC-6 lịch sử giá và trạng thái: tin mới, đổi giá, gỡ, chào lại, gom theo căn, điền lùi (kèm chiều đỏ)", async (t) => {
+  let truoc;
+  await trongGiaoDich(async () => {
+    // điền lùi: mỗi tin có sẵn đúng một new_listing
+    const { rows: [d] } = await c.query(`SELECT (SELECT count(*) FROM sale_offer_records)::int AS tin,
+      (SELECT count(*) FROM history_transactional WHERE change_type = 'new_listing')::int AS moi,
+      (SELECT count(DISTINCT resource_record_key) FROM history_transactional WHERE change_type = 'new_listing')::int AS khac`);
+    assert.equal(d.moi, d.tin, "điền lùi: số new_listing phải bằng số tin có sẵn");
+    assert.equal(d.khac, d.tin, "điền lùi: mỗi tin đúng một new_listing");
+
+    const a = await tin({ source: "S06", price: 2_000_000_000, last_seen: "2026-10-01T00:00:00Z" });
+    await c.query("UPDATE sale_offer_records SET price_vnd = 1900000000 WHERE offer_id = $1", [a]);
+    await kiemCungGia();
+    await chao([a]);                                   // unknown → active: lần xác định đầu, không ghi
+    await nghi(a, "2026-10-05T00:00:00Z");
+    await chao([a]);
+    await quayLai(a, "2026-10-08T00:00:00Z");
+    await chao([a]);
+    assert.deepEqual(await lichSu(a), [
+      ["new_listing", "ListPrice", null, "2000000000"],
+      ["price_change", "ListPrice", "2000000000", "1900000000"],
+      ["withdrawn", "StandardStatus", "active", "withdrawn"],
+      ["back_on_market", "StandardStatus", "withdrawn", "active"],
+    ]);
+    // gom theo căn: hai tin cùng căn, dòng của cả hai theo thời gian
+    const b = await tin({ source: "S03", price: 2_100_000_000, first_seen: "2026-09-15T00:00:00Z", last_seen: "2026-10-02T00:00:00Z" });
+    const p = await canCo(a, b);
+    const { rows } = await c.query(`SELECT offer_id, change_type, new_value FROM property_price_history
+      WHERE property_id = $1 ORDER BY modification_timestamp, offer_id`, [p]);
+    assert.deepEqual(rows.map((r) => [r.offer_id, r.change_type, r.new_value]), [
+      [b, "new_listing", "2100000000"],
+      [a, "new_listing", "2000000000"],
+      [a, "price_change", "1900000000"],
+    ], "lịch sử giá của căn phải gồm dòng của mọi tin gắn căn theo thời gian");
+    // hiệu năng: lượt nạp ghi lại cùng giá cho mọi tin S06 (Review Focus 3)
+    truoc = Number((await c.query("SELECT count(*) FROM history_transactional")).rows[0].count);
+    const t0 = performance.now();
+    const { rowCount } = await c.query("UPDATE sale_offer_records SET price_vnd = price_vnd WHERE source = 'S06'");
+    const giay = (performance.now() - t0) / 1000;
+    const sau = Number((await c.query("SELECT count(*) FROM history_transactional")).rows[0].count);
+    assert.equal(sau, truoc, "ghi lại cùng giá cho mọi tin không sinh dòng lịch sử");
+    t.diagnostic(`cùng giá: UPDATE ${rowCount} tin S06 trong ${giay.toFixed(2)} s, 0 dòng lịch sử`);
+  });
+  const khi = "WHEN (OLD.price_vnd IS DISTINCT FROM NEW.price_vnd) ";
+  assert.ok(sql059().includes(khi), `chiều đỏ: 059 không còn «${khi}»`);
+  await assert.rejects(trongGiaoDich(kiemCungGia, { sql: sql059().replace(khi, "") }), /cùng giá không sinh dòng lịch sử/);
+});

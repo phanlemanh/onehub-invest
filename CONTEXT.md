@@ -322,6 +322,7 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 | Vai của người | `party_role` | local | `party_roles.role` | `nguoi_dang` «Người đăng» |
 | Ý định tin | `listing_intent` | local | — | `offer` «Tin rao» · `inquiry` «Yêu cầu» · `not_listing` «Không phải tin rao» · `unknown` «Chưa rõ» |
 | Trạng thái chào | `offer_status` | StandardStatus | `sale_offer_records.offer_status` | `active` «Đang chào» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» · `withdrawn` «Đã gỡ» · `unknown` «Chưa rõ» |
+| Loại thay đổi | `change_type` | ChangeType | `history_transactional.change_type` | `new_listing` «Tin mới» · `price_change` «Đổi giá» · `withdrawn` «Gỡ tin» · `back_on_market` «Chào lại» · `active_under_contract` «Đã cọc» · `closed` «Đã bán» |
 | Bậc dữ liệu | `data_level` | local | `data_level_snapshot.data_level` | `B0` «Có lời khai» · `B1` «Đọc được» · `B2` «Gắn căn» · `B3` «Đã đo» · `B4` «Xác minh» · `B5` «Sống» |
 | Bậc năng lực | `capability_level` | local | — | `N0` «Thu được» · `N1` «Đọc được» · `N2` «Đo được» · `N3` «Tự động ở ngưỡng» · `N4` «Tự duy trì» |
 

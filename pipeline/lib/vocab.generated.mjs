@@ -16,6 +16,7 @@ export const VOCAB = Object.freeze({
   party_role: Object.freeze(["nguoi_dang"]),
   listing_intent: Object.freeze(["offer", "inquiry", "not_listing", "unknown"]),
   offer_status: Object.freeze(["active", "active_under_contract", "closed", "withdrawn", "unknown"]),
+  change_type: Object.freeze(["new_listing", "price_change", "withdrawn", "back_on_market", "active_under_contract", "closed"]),
   data_level: Object.freeze(["B0", "B1", "B2", "B3", "B4", "B5"]),
   capability_level: Object.freeze(["N0", "N1", "N2", "N3", "N4"]),
 });
@@ -34,6 +35,7 @@ export const REGISTRY_EVENT_KIND = Object.freeze({ gop: "gop", tach: "tach", ngh
 export const PARTY_ROLE = Object.freeze({ nguoi_dang: "nguoi_dang" });
 export const LISTING_INTENT = Object.freeze({ offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" });
 export const OFFER_STATUS = Object.freeze({ active: "active", active_under_contract: "active_under_contract", closed: "closed", withdrawn: "withdrawn", unknown: "unknown" });
+export const CHANGE_TYPE = Object.freeze({ new_listing: "new_listing", price_change: "price_change", withdrawn: "withdrawn", back_on_market: "back_on_market", active_under_contract: "active_under_contract", closed: "closed" });
 export const DATA_LEVEL = Object.freeze({ B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" });
 export const CAPABILITY_LEVEL = Object.freeze({ N0: "N0", N1: "N1", N2: "N2", N3: "N3", N4: "N4" });
 

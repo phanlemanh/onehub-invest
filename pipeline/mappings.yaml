@@ -437,6 +437,20 @@ enums:
       - { code: unknown, label_vi: Chưa rõ, local: true, rationale: "chưa có bằng chứng trạng thái; quá cửa sổ độ tươi KHÔNG thành Expired (reso-khung §6)" }
     note: "Cột sale_offer_records.offer_status (PL19, 059) — chỉ hàm phân xử resolve_offer_status ghi; chỉ đổi theo bằng chứng (reso-khung-phan-loai.md §6). Nhãn: Hỏi-1 của PL6."
     checked_on: "2026-10-26"
+  change_type:
+    term_vi: Loại thay đổi
+    dd_field: ChangeType
+    checked_on: "2026-10-30"
+    columns: [history_transactional.change_type]
+    nullable: false
+    values:
+      - { code: new_listing, label_vi: Tin mới, dd_lookup: NewListing }
+      - { code: price_change, label_vi: Đổi giá, dd_lookup: PriceChange }
+      - { code: withdrawn, label_vi: Gỡ tin, dd_lookup: Withdrawn }
+      - { code: back_on_market, label_vi: Chào lại, dd_lookup: BackOnMarket }
+      - { code: active_under_contract, label_vi: Đã cọc, dd_lookup: ActiveUnderContract }
+      - { code: closed, label_vi: Đã bán, dd_lookup: Closed }
+    note: "Lịch sử giá và trạng thái của tin (RESO HistoryTransactional, PL19, 059) — trigger trên sale_offer_records ghi; bảng §6 của reso-khung-phan-loai.md."
   data_level:
     term_vi: Bậc dữ liệu
     dd_field: null
