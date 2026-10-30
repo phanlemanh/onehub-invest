@@ -14,6 +14,7 @@ import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 
+import { dungNguoi } from "./lib/danh-ba-nguoi.mjs";
 import { implausibleReason } from "./lib/deal-plausibility.mjs";
 
 const DB_URL =
@@ -132,11 +133,37 @@ export async function loaiTinPhiLy(c, rows) {
   return detail;
 }
 
+/**
+ * Bước đêm: bait gap + sellers (tự-commit như trước), rồi danh bạ Người (DB2b) trong giao dịch RIÊNG — bộ dựng lỗi
+ * không kéo lùi bait gap/sellers, và lỗi được ném lại (không nuốt). `savepoint: true` khi người gọi đã mở giao dịch
+ * (test, thước nạp lại). DB chưa áp 055 (chưa có bảng parties) → bỏ qua bộ dựng, in một dòng.
+ * @param {import("pg").Client} c
+ */
+export async function buocDem(c, { savepoint = false, runId } = {}) {
+  const kq = await refreshBaitGap(c);
+  if (!(await c.query("SELECT to_regclass('public.parties') AS t")).rows[0].t) {
+    console.log("danh-ba-nguoi: bỏ qua — DB chưa áp 055 (chưa có bảng parties)");
+    return { ...kq, nguoi: null };
+  }
+  const [mo, xong, lui] = savepoint
+    ? ["SAVEPOINT dung_nguoi", "RELEASE SAVEPOINT dung_nguoi", "ROLLBACK TO SAVEPOINT dung_nguoi"]
+    : ["BEGIN", "COMMIT", "ROLLBACK"];
+  await c.query(mo);
+  try {
+    const nguoi = await dungNguoi(c, { runId });
+    await c.query(xong);
+    return { ...kq, nguoi };
+  } catch (e) {
+    await c.query(lui);
+    throw e;
+  }
+}
+
 async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
-    await refreshBaitGap(c);
+    await buocDem(c);
   } finally {
     await c.end();
   }

@@ -32,9 +32,9 @@ export function DqChecksTable({ rows, areaNames = {} }: { rows: DqCheckRow[]; ar
     () => [
       {
         id: "check",
-        accessorFn: (r) => dqCheckName(r.check_name).text,
+        accessorFn: (r) => dqCheckName(r.check_name, r.entity).text,
         header: ({ column }) => <DataGridColumnHeader title="Kiểm" column={column} />,
-        cell: ({ row }) => <DqCell t={dqCheckName(row.original.check_name)} />,
+        cell: ({ row }) => <DqCell t={dqCheckName(row.original.check_name, row.original.entity)} />,
         // ON13: Kiểm 150 + Kết quả 160 ≤ khung 316px ở 390px; 160 đủ cho nhãn dài nhất «Thiếu số tham chiếu».
         size: 150,
         enableSorting: true,

@@ -327,7 +327,7 @@ enums:
     local: true
     rationale: "extension FieldAssertion.EvidenceTier (ADR-0013 §6, reso-khung §6) — thang ba lớp review §0.2 D-1, Mạnh đồng ý 26/10 (PL15 Hỏi-1)"
     checked_on: "2026-10-26"
-    columns: [field_assertions.evidence_tier]
+    columns: [field_assertions.evidence_tier, party_roles.evidence_tier]
     nullable: false
     values:
       - { code: fact, label_vi: Sự thật }
@@ -339,7 +339,7 @@ enums:
     local: true
     rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15)"
     checked_on: "2026-10-26"
-    columns: [field_assertions.method]
+    columns: [field_assertions.method, party_roles.method]
     nullable: false
     values:
       - { code: hitl, label_vi: Người quyết }
@@ -348,6 +348,53 @@ enums:
       - { code: e1_rule, label_vi: Luật E1 }
       - { code: e2_llm, label_vi: LLM E2 }
       - { code: legacy, label_vi: Giá trị có trước }
+  registry_status:
+    term_vi: Trạng thái danh bạ
+    dd_field: null
+    local: true
+    rationale: "extension ObjectStatus của danh bạ vật thể và người (ADR-0016 §3) — DD 2.1 không có vòng đời gộp/tách cho Member/Office; StandardStatus chỉ cho tin"
+    checked_on: "2026-10-30"
+    columns: [parties.status]
+    nullable: false
+    values:
+      - { code: active, label_vi: Đang dùng }
+      - { code: merged, label_vi: Đã gộp }
+      - { code: split, label_vi: Đã tách }
+      - { code: retired, label_vi: Đã nghỉ }
+  alias_kind:
+    term_vi: Loại bí danh
+    dd_field: null
+    local: true
+    rationale: "extension AliasKind (ADR-0016 §3, §8) — DD 2.1 chỉ có khoá tài khoản theo hệ (MemberMlsId, OriginatingSystemMemberKey), không có SĐT băm hay tên làm định danh phụ"
+    checked_on: "2026-10-30"
+    columns: [registry_aliases.kind]
+    nullable: false
+    values:
+      - { code: tai_khoan_nguon, label_vi: Tài khoản tại nguồn }
+      - { code: sdt_bam, label_vi: SĐT băm }
+      - { code: ten, label_vi: Tên hiển thị }
+  registry_event_kind:
+    term_vi: Sự kiện danh bạ
+    dd_field: null
+    local: true
+    rationale: "extension sự kiện gộp/tách/nghỉ theo khuôn HistoryTransactional (ADR-0016 §3) — DD 2.1 HistoryTransactional ghi đổi trường, không có loại sự kiện danh bạ"
+    checked_on: "2026-10-30"
+    columns: [registry_events.kind]
+    nullable: false
+    values:
+      - { code: gop, label_vi: Gộp }
+      - { code: tach, label_vi: Tách }
+      - { code: nghi, label_vi: Nghỉ }
+  party_role:
+    term_vi: Vai của người
+    dd_field: null
+    local: true
+    rationale: "extension PartyRole (ADR-0016 §8) — DD 2.1 chỉ có trường ListAgentKey/CoListAgentKey/ListOfficeKey gắn vào Property, không có vai là phát biểu riêng; tin rao VN thường do người đăng không xác định được là môi giới"
+    checked_on: "2026-10-30"
+    columns: [party_roles.role]
+    nullable: false
+    values:
+      - { code: nguoi_dang, label_vi: Người đăng }
   listing_intent:
     term_vi: Ý định tin
     dd_field: null
@@ -411,6 +458,9 @@ enums:
 # Ngoại lệ có chủ ý của `vocab.mjs --lint` — mỗi mục: path (tương đối gốc kho) · axis · reason. Mục thiếu reason
 # hoặc không còn khớp chỗ viết tay nào → lint đỏ. Tập này ghim ở hợp đồng PL6 AC-5; thêm mục là đổi phạm vi.
 enums_lint_allow:
+  - path: app/src/lib/source-status-labels.ts
+    axis: registry_status
+    reason: "nhãn source_registry.status (migration 012: active/paused/completed/retired) — trục khác trùng chữ với registry_status (active, retired) của danh bạ DB2b"
   - path: app/src/components/ops/review-card.tsx
     axis: enrich_field
     reason: "FIELD_LABEL của thẻ duyệt — UI1 đang sửa tệp này, PL23 dựng lại /ops/review (LUAT đợt dot0); dọn ở PL23"

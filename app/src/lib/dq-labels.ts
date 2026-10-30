@@ -6,6 +6,7 @@
  */
 import { marketNameOf } from "./market-names"
 import { confidenceLabel, offerKindLabel, propertyTypeLabel } from "./ops-labels"
+import { LABELS_VI } from "./vocab.generated"
 
 export type DqText = { text: string; code?: string; known: boolean }
 
@@ -29,10 +30,20 @@ const COT_ENUM: Record<string, string> = {
   property_type: "loại hình",
 }
 
-/** Tên kiểm của bên ghi → tên tiếng Việt. */
-export function dqCheckName(check: string): DqText {
+/** Cột enum của bảng danh bạ (DB2b) — tên cột trùng cột của sale_offers (`kind`) nên tra theo `<bảng>.<cột>` trước. */
+const COT_ENUM_THEO_BANG: Record<string, string> = {
+  "parties.status": "trạng thái danh bạ",
+  "registry_aliases.kind": "loại bí danh",
+  "registry_events.kind": "sự kiện danh bạ",
+  "party_roles.role": "vai của người",
+}
+
+/** Tên kiểm của bên ghi → tên tiếng Việt. `entity` (bảng) phân biệt cột enum trùng tên giữa các bảng. */
+export function dqCheckName(check: string, entity?: string): DqText {
   if (Object.hasOwn(TEN_KIEM, check)) return { text: TEN_KIEM[check], known: true }
   const m = check.match(/^enum-vocab:(\w+)$/)
+  const theoBang = m && entity ? `${entity}.${m[1]}` : null
+  if (theoBang && Object.hasOwn(COT_ENUM_THEO_BANG, theoBang)) return { text: `Từ vựng ${COT_ENUM_THEO_BANG[theoBang]}`, known: true }
   if (m && Object.hasOwn(COT_ENUM, m[1])) return { text: `Từ vựng ${COT_ENUM[m[1]]}`, known: true }
   return { text: "Kiểm khác (chưa diễn giải)", code: check, known: false }
 }
@@ -42,6 +53,10 @@ const DOI_TUONG: Record<string, string> = {
   listing_stats: "Số liệu listing",
   areas: "Khu vực",
   sale_offers: "Tin rao",
+  parties: "Danh bạ người",
+  registry_aliases: "Bí danh người",
+  registry_events: "Sự kiện danh bạ người",
+  party_roles: "Vai trò của người",
   regex: "Bộ đọc theo luật",
   llm: "Bộ đọc AI",
   all: "Mọi thị trường",
@@ -67,11 +82,20 @@ const chuaCo = (s: string) => (s === "null" || s === "n/a" ? "chưa có" : s)
 /** Kỳ «2026-09» → «09/2026». */
 const ky = (s: string) => (/^\d{4}-\d{2}$/.test(s) ? `${s.slice(5)}/${s.slice(0, 4)}` : chuaCo(s))
 
+/** Nhãn giá trị của bốn trục danh bạ (sổ từ vựng, không viết tay). */
+const NHAN_DANH_BA: Record<string, string> = {
+  ...LABELS_VI.registry_status,
+  ...LABELS_VI.alias_kind,
+  ...LABELS_VI.registry_event_kind,
+  ...LABELS_VI.party_role,
+}
+
 const GIA_TRI_ENUM = (v: string): string => {
   for (const f of [propertyTypeLabel, offerKindLabel, confidenceLabel]) {
     const n = f(v)
     if (n.known) return n.label
   }
+  if (Object.hasOwn(NHAN_DANH_BA, v)) return NHAN_DANH_BA[v]
   return v // P0/P1/P2 — mã bậc giá giữ nguyên
 }
 
