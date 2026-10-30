@@ -1,19 +1,19 @@
 ---
 schema_version: 2
 feature_slug: the-duyet-du-can-cu
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 95373ec01e64e0897337291477e80f576aab72ea
+verified_commit: 88fc2ddb7ce1b1d5eda82158b6f160a63d3d8f96
 human_signoff:
 ---
 
 # Evidence Report: the-duyet-du-can-cu
 
-Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể vẫn bị REJECT vì một lệnh suite hồi quy không gắn eval nào (`node scripts/check-portal-compliance.mjs`) đỏ ở một kiểm tra: «zalo-media: isAdmin chặn trước stat/readFile». Chi tiết ở mục «Lệnh suite (hồi quy)». Danh sách `failed_evals` để trống vì lệnh đỏ không thuộc eval nào.
+Vòng 2. Sau vòng 1, lệnh suite cổng portal đã sửa (kiểm tra zalo-media theo gate xemNoiDungTin + admin ở ?path=); cả sáu lệnh suite chạy lại ở vòng này đều xanh. Cả 16 eval của hợp đồng (E1–E16) là carry-forward từ vòng 1 vì delta của vòng 2 không chạm paths của eval nào (mỗi khối ghi `carried_from_round: 1`). Hợp đồng không có eval dạng judgment nên không có mục nào chờ người chốt.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -42,9 +42,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-the-duyet-du-can-cu-E2-r1
@@ -52,9 +52,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-the-duyet-du-can-cu-E3-r1
@@ -62,9 +62,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E4
   run_id: minted-the-duyet-du-can-cu-E4-r1
@@ -72,9 +72,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E5
   run_id: minted-the-duyet-du-can-cu-E5-r1
@@ -82,9 +82,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E6
   run_id: minted-the-duyet-du-can-cu-E6-r1
@@ -92,9 +92,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E7
   run_id: minted-the-duyet-du-can-cu-E7-r1
@@ -102,9 +102,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E8
   run_id: minted-the-duyet-du-can-cu-E8-r1
@@ -112,9 +112,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet_agent
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd agent && node --import tsx --test tests/enrich-goi-y.test.ts
-    ℹ duration_ms 354.973083
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E9
   run_id: minted-the-duyet-du-can-cu-E9-r1
@@ -122,9 +122,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E10
   run_id: minted-the-duyet-du-can-cu-E10-r1
@@ -132,9 +132,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E11
   run_id: minted-the-duyet-du-can-cu-E11-r1
@@ -142,9 +142,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx
-    ℹ duration_ms 1969.000833
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E12
   run_id: minted-the-duyet-du-can-cu-E12-r1
@@ -152,9 +152,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.viewer_the_duyet
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && node --import tsx --test tests/viewer-the-duyet.test.tsx
-    ℹ duration_ms 2772.563166
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E13
   run_id: E13-the-duyet-du-can-cu-20261030
@@ -162,6 +162,7 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: scripts/ui-capture.sh
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   screenshot: evidence/E13-step1.png
   observed: |
     E13-step1.png (1280 sáng, sheet Ghép căn #24 «Cùng căn? binh-thanh 52m² ↔ 60m²»): bảng 4 cột Trường/Tin A/Tin B/So; từng hàng (Giá 7.00 tỷ vs 8.50 tỷ, Diện tích, Giá/m², Phường, Phòng ngủ, WC, Loại hình, Đường, Toà, Tầng) kèm dòng căn cứ cỡ nhỏ dưới giá trị hoặc dưới nhãn trường; nhãn So: Lệch (vàng/hổ phách) và Thiếu (viền xám) tách rõ; dưới cùng ô «Lý do» có nhãn, ba nút Cùng căn/Khác căn/Không chắc đang xám (tắt), gợi ý «Ghi lý do trước khi quyết». Không có «Điểm B», «tự tin», % độ tin.
@@ -172,9 +173,7 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
     E13-step6.png (390, gõ «thử»): ô Lý do có «thử», đếm 3/1.000 ký tự, nút Cùng căn chuyển nền tối (bật), Khác căn/Không chắc viền màu bật; scrollWidth=clientWidth=390. Khớp Expected; không mâu thuẫn.
   network_observed: unscoped-partial   # chỉ từ chữ; số status thô nằm ở evidence/E13-network.txt
   output: |
-    Ghi chú không làm hỏng eval: (1) bước 5 ghi «bảng so xếp chồng» nhưng ở 390 px bảng vẫn 4 cột, ô căn cứ ngắt dòng 3–4 dòng, vẫn đọc được và không tràn — contract AC-10 và Expected không đòi xếp chồng. (2) Nút «N» Next dev đè góc trái nút Cùng căn ở 390 (chỉ có ở dev, design-pass.md đã ghi). (3) Đường tải trang lần đầu: skeleton «Đang tải hàng duyệt» giữ ~20–30 s trên dev trước khi hiện bảng (biên dịch dev), sau đó ổn.
-    Frames đã lưu (thư mục _acceptance/the-duyet-du-can-cu/evidence/): E13-step1.png, E13-step1b-ai.png, E13-step2.png, E13-step3.png, E13-step4.png, E13-step4b-dark-ghep-can.png, E13-step5.png, E13-step5b-toan-van-390.png, E13-step6.png, E13-network.txt.
-    Network: app-origin :3460 chỉ trả thành công (/ops/review, favicon + static); 4 ảnh tin rao từ host ngoài đều thành công (host đã che trong tệp vì là tên nguồn tầng A); console 0 lỗi, 2 cảnh báo preload font. config dev_server.url là :3456 nên origin :3460 ngoài scope khai, nên là unscoped-partial (chỉ ghi chú).
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E14
   run_id: minted-the-duyet-du-can-cu-E14-r1
@@ -182,8 +181,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.design.floor
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    design-floor-s4.mjs --root . (không in thêm dòng nào ngoài mã thoát)
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E15
   run_id: design-gate-654d8df638
@@ -191,9 +191,9 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.script.the_duyet_design_gate
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    design-gate --jsdom chạy lần lượt trên 5 tệp (review-card.tsx, review-compare.tsx, review-full-text.tsx, review-reason.tsx, review-photos.tsx); vòng lặp không thoát sớm.
-    }
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E16
   run_id: minted-the-duyet-du-can-cu-E16-r1
@@ -201,41 +201,41 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: config:executors.test.app
   verified_at: 2026-10-30T06:13:49Z
+  carried_from_round: 1
   output: |
-    cd app && npx tsc --noEmit && npm run lint
-    (tsc sạch, lint không lỗi)
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-the-duyet-du-can-cu-SUITE-npm_test__bb6271-r1
+  run_id: minted-the-duyet-du-can-cu-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:13:49Z
+  verified_at: 2026-10-30T06:27:02Z
+
+- cmd: cd app && npx tsc --noEmit && npm run lint
+  run_id: minted-the-duyet-du-can-cu-SUITE-lint-r2
+  exit_code: 0
+  verified_at: 2026-10-30T06:27:02Z
 
 - cmd: cd app && npm test
-  run_id: minted-the-duyet-du-can-cu-SUITE-npm_test__bd9a35-r1
+  run_id: minted-the-duyet-du-can-cu-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:13:49Z
+  verified_at: 2026-10-30T06:27:02Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-the-duyet-du-can-cu-SUITE-npm_test__13563d-r1
+  run_id: minted-the-duyet-du-can-cu-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:13:49Z
+  verified_at: 2026-10-30T06:27:02Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-the-duyet-du-can-cu-SUITE-test_lint_rules-r1
+  run_id: minted-the-duyet-du-can-cu-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:13:49Z
+  verified_at: 2026-10-30T06:27:02Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-the-duyet-du-can-cu-SUITE-node_scripts_check_portal_compliance_mjs-r1
-  exit_code: 1
-  verified_at: 2026-10-30T06:13:49Z
-  note: lệnh này KHÔNG gắn eval nào và là lý do duy nhất của REJECT. Một kiểm tra đỏ trong cổng portal.
-  output: |
-    FAIL zalo-media: isAdmin chặn trước stat/readFile
-    (các kiểm tra còn lại đều ok, trong đó «zalo-media: ALLOWED_ROOTS đúng hai gốc», «sổ bề mặt API: 19/19 route khớp sổ»)
-    portal-compliance: 1 vi phạm
+  run_id: minted-the-duyet-du-can-cu-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  exit_code: 0
+  verified_at: 2026-10-30T06:27:02Z
 
 ## Known limits
 
@@ -243,17 +243,7 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
 
 ## Analyst
 
-baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-
-Mọi field baseline ghi n-a. Danh sách eval không-phân-biệt (xanh cả HEAD lẫn baseline) KHÔNG đo được ở round này, nên không kết luận eval nào là red hay green.
-
-Baseline khong do:
-- cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd agent && node --import tsx --test tests/enrich-goi-y.test.ts: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd app && node --import tsx --test tests/viewer-the-duyet.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- node "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-floor-s4.mjs)}/scripts/design-floor-s4.mjs" --root .: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- for f in app/src/components/ops/review-card.tsx app/src/components/ops/review/review-compare.tsx app/src/components/ops/review/review-full-text.tsx app/src/components/ops/review/review-reason.tsx app/src/components/ops/review-photos.tsx; do node "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs" --jsdom app "$f" || exit $?; done: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd app && npx tsc --noEmit && npm run lint: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+none (danh sách rỗng) — không eval nào được xác nhận xanh cả hai phía. Mọi field baseline ở vòng này ghi n-a (baseline không đo được cho eval carry-forward và cho lệnh suite), nên không kết luận eval nào là red hay green.
 
 ## Variance
 
@@ -261,4 +251,6 @@ none — mọi eval chạy một lần, xác định, không có phương sai.
 
 ## Iterations
 
-Round 1: không eval nào đỏ; lệnh suite `node scripts/check-portal-compliance.mjs` (không gắn eval) đỏ ở kiểm tra «zalo-media: isAdmin chặn trước stat/readFile» — diff đã đổi rào đầu của serveZaloMedia khỏi isAdmin, nên kiểm tra tĩnh của cổng portal không còn thấy dạng cũ. Trả về giai đoạn triển khai.
+Round 1: không eval nào đỏ; lệnh suite `node scripts/check-portal-compliance.mjs` (không gắn eval) đỏ ở kiểm tra «zalo-media: isAdmin chặn trước stat/readFile» — diff đã đổi rào đầu của serveZaloMedia khỏi isAdmin nên kiểm tra tĩnh của cổng portal không còn thấy dạng cũ. Trả về giai đoạn triển khai.
+
+Round 2: sửa kiểm tra cổng zalo-media theo gate xemNoiDungTin + admin ở ?path= (commit ff22a187); sáu lệnh suite chạy lại đều xanh, trong đó cổng portal báo «ĐẠT»; 16 eval carry-forward từ vòng 1 vì delta không chạm paths của eval. Verdict PASS.
