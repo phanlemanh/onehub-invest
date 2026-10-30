@@ -3,7 +3,7 @@ schema_version: 1
 feature: Mọi phát biểu có thời điểm quan sát; mỗi tin có trạng thái chào được phân xử từ bằng chứng theo thời gian; giá và trạng thái của tin được giữ thành lịch sử gom được theo căn; căn lên B5 khi đang chào, còn trong cửa sổ độ tươi và có lịch sử giá
 slug: thoi-gian-va-hieu-luc
 owner: phanlemanh@gmail.com
-risk_tier: T3      # db/migrations/** (t3_paths) — migration 057
+risk_tier: T3      # db/migrations/** (t3_paths) — migration 059
 surfaces: [cli]
 status: draft
 design_doc: docs/superpowers/specs/2026-10-30-thoi-gian-va-hieu-luc-design.md
@@ -22,14 +22,14 @@ Căn cứ: RV-C2.8 · RV-L18 · FR-§3.4 (B5) · RESO-§6.
 
 ## Criteria
 
-- AC-1: Given DB sau 057, When đếm phát biểu sống thiếu `observed_at` và thử chèn một phát biểu không có `observed_at`,
+- AC-1: Given DB sau 059, When đếm phát biểu sống thiếu `observed_at` và thử chèn một phát biểu không có `observed_at`,
   Then đếm bằng 0, phát biểu `legacy` mang `observed_at = least(last_seen của tin, created_at của phát biểu)` (tin không
   còn → `created_at`), và lệnh chèn bị CHECK/NOT NULL từ chối.
 - AC-2: Given ba bộ ghi phát biểu — bộ đọc tin (`lib/assert.mjs`), áp đề xuất làm giàu (`apply_enrichment`), bước chuyển
   giá trị có trước (`phat-bieu-cat-chuyen.mjs`) — When mỗi bộ ghi một phát biểu mà nguồn không cho thời điểm đăng,
   Then phát biểu có `observed_at` khác rỗng: bộ đọc lấy lúc đọc, áp đề xuất lấy lúc tạo đề xuất, bước chuyển theo luật
   điền lùi của AC-1.
-- AC-3: Given 057, When đọc lược đồ và chạy `vocab.mjs --check-db`, Then `sale_offers` có cột `offer_status` (mặc định
+- AC-3: Given 059, When đọc lược đồ và chạy `vocab.mjs --check-db`, Then `sale_offers` có cột `offer_status` (mặc định
   `unknown`, CHECK đúng năm giá trị trục `offer_status`), `field_assertions.field` theo trục mới `assertion_field` (năm
   trường enrich + `offer_status`), `enrichment_proposals.field` vẫn theo `enrich_field`, và lệnh kiểm DB khớp sổ.
 - AC-4: Given tin sống S06, tin sống S03 và S05, tin S06 nghỉ `het_trong_luot`, tin nghỉ `doi_khoa`, When chạy bộ ghi
@@ -40,7 +40,7 @@ Căn cứ: RV-C2.8 · RV-L18 · FR-§3.4 (B5) · RESO-§6.
   phân xử sau mỗi bước, Then trạng thái lần lượt là `withdrawn` rồi `active` (phát biểu `active` cũ bị rút có lý do và
   một phát biểu mới lúc t3 được ghi); hai phát biểu khác giá trị cùng thời điểm thì theo thứ tự phương pháp của 045; tin
   chỉ quá cửa sổ độ tươi, không có bằng chứng mới, giữ nguyên trạng thái (Hỏi-1).
-- AC-6: Given một tin mới, một tin đổi giá, một tin đổi trạng thái và các tin có sẵn trước 057, When ghi qua
+- AC-6: Given một tin mới, một tin đổi giá, một tin đổi trạng thái và các tin có sẵn trước 059, When ghi qua
   `sale_offer_records`, Then lịch sử có `NewListing` cho tin mới, `PriceChange` mang giá cũ và giá mới, dòng đổi trạng
   thái theo bảng §6 (`Withdrawn`, `BackOnMarket`), mỗi tin có sẵn đúng một `NewListing` điền lùi, ghi lại cùng giá không
   sinh dòng, và lịch sử gom theo căn trả các dòng của mọi tin gắn căn ấy theo thời gian.
@@ -50,9 +50,9 @@ Căn cứ: RV-C2.8 · RV-L18 · FR-§3.4 (B5) · RESO-§6.
 - AC-8: Given bản chép DB máy thu, When chạy `node pipeline/trang-thai-chao.mjs` hai lần, Then lệnh thoát 0, in đếm tin
   theo năm trạng thái với tổng bằng số tin; mọi tin sống có trạng thái khác `unknown` hoặc nằm trong danh sách nguồn
   không có bằng chứng đã in; lần hai in «0 phát biểu mới» và cùng đếm; lỗi chạy (DB không tới được) làm lệnh thoát khác 0.
-- AC-9: Given cây sau vòng, When chạy `scripts/cloud-sync.sh` trong hộp thử job-exit và áp 057 hai lần, Then bước
+- AC-9: Given cây sau vòng, When chạy `scripts/cloud-sync.sh` trong hộp thử job-exit và áp 059 hai lần, Then bước
   `trang-thai-chao` đứng ngay trước `bac-du-lieu`, hỏng thì job thoát khác 0 với dòng `JOB FAIL [cloud-sync] bước
-  trang-thai-chao`; 057 chạy hai lần không lỗi, không nhân dòng ở `history_transactional`, `ref_lookup`,
+  trang-thai-chao`; 059 chạy hai lần không lỗi, không nhân dòng ở `history_transactional`, `ref_lookup`,
   `ref_field_lookup`; `CONTEXT.md` có thuật ngữ «Trạng thái chào» và «Lịch sử giá»; bộ test pipeline, test app,
   typecheck và lint đều thoát 0.
 

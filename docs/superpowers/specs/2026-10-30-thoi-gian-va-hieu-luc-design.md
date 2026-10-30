@@ -17,7 +17,7 @@ phân xử, 045) và PL16 (hàm bậc + ảnh chụp, 056 — nhánh xếp chồ
 
 ## 2. Thành phần
 
-1. **Migration 057** (số xin ở liên làn):
+1. **Migration 059** (số xin ở liên làn):
    - **observed_at bắt buộc.** Điền lùi phát biểu `legacy`: `least(tin.last_seen, phát biểu.created_at)` (giá trị có
      trước được đọc lần cuối ở lượt thấy tin cuối trước bước chuyển); tin không tìm thấy → `created_at`. Rồi
      `observed_at SET NOT NULL`. `apply_enrichment` ghi `observed_at = đề xuất.created_at` (lúc bộ làm giàu đọc tin).
@@ -66,7 +66,7 @@ hợp đồng niêm yết — sai nghĩa); chỉ căn hạ B5 → B4. Câu giao 
 
 ## 5. Rủi ro
 
-- 057 phụ thuộc 056 (PR #202): nhánh xếp chồng; gộp #202 trước.
+- 059 phụ thuộc 056 (PR #202): nhánh xếp chồng; gộp #202 trước.
 - `SET NOT NULL` khoá bảng `field_assertions` ngắn khi áp; áp sau gộp ngoài giờ chạy bộ đọc.
 - Trigger trên `sale_offer_records` chạy trong mọi lượt nạp: chi phí một dòng mỗi tin đổi giá; lượt nạp S06 đầy đủ
   (~28k tin) chỉ ghi dòng khi giá thật sự đổi.

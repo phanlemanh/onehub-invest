@@ -5,15 +5,15 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.tg_db
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
-    expected: "exit 0; ca 'observed_at bắt buộc' xanh trên DB thử, giao dịch ROLLBACK: sau 057 đếm phát biểu sống thiếu observed_at = 0; phát biểu legacy fixture mang least(last_seen, created_at), legacy mồ côi mang created_at; chèn không observed_at bị từ chối; chiều đỏ: bản điền lùi bỏ least (chỉ lấy last_seen) → ca đỏ với thông điệp ghim 'legacy phải lấy least(last_seen, created_at)'"
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
+    expected: "exit 0; ca 'observed_at bắt buộc' xanh trên DB thử, giao dịch ROLLBACK: sau 059 đếm phát biểu sống thiếu observed_at = 0; phát biểu legacy fixture mang least(last_seen, created_at), legacy mồ côi mang created_at; chèn không observed_at bị từ chối; chiều đỏ: bản điền lùi bỏ least (chỉ lấy last_seen) → ca đỏ với thông điệp ghim 'legacy phải lấy least(last_seen, created_at)'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E2
     criterion: AC-2
     executor: test
     cmd: config:executors.test.tg_db
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/lib/assert.mjs, pipeline/phat-bieu-cat-chuyen.mjs, pipeline/scripts/trang-thai-chao.itest.mjs]
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/lib/assert.mjs, pipeline/phat-bieu-cat-chuyen.mjs, pipeline/scripts/trang-thai-chao.itest.mjs]
     expected: "exit 0; ca 'ba bộ ghi đều ghi observed_at' xanh: phát biểu của lib/assert.mjs với posted_at null có observed_at = lúc đọc (không null); apply_enrichment ghi observed_at = created_at của đề xuất; bước chuyển ghi observed_at theo luật điền lùi; chiều đỏ ghim 'apply_enrichment phải ghi observed_at'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -21,7 +21,7 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.tg_db
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/mappings.yaml, pipeline/scripts/trang-thai-chao.itest.mjs]
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/mappings.yaml, pipeline/scripts/trang-thai-chao.itest.mjs]
     expected: "exit 0; ca 'cột và trục' xanh: sale_offers có offer_status mặc định unknown; CHECK của sale_offer_records.offer_status và field_assertions.field đúng tập giá trị sổ; checkDb(sổ) trên DB thử trả 0 lệch; chiều đỏ: sổ thêm giá trị vào offer_status mà DB chưa có → checkDb lệch có tên trục"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -29,7 +29,7 @@ evals:
     criterion: AC-4
     executor: test
     cmd: config:executors.test.tg_db
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
     expected: "exit 0; ca 'bộ ghi bằng chứng năm dạng' xanh: S06 sống → active fact source_field; S03 và S05 sống → active observed parser; S06 het_trong_luot → withdrawn fact observed_at = retired_at; doi_khoa → không withdrawn; lần hai 0 phát biểu mới; chiều đỏ ghim 'đổi khoá không phải bằng chứng gỡ'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -37,7 +37,7 @@ evals:
     criterion: AC-5
     executor: test
     cmd: config:executors.test.tg_db
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
     expected: "exit 0; ca 'phân xử theo thời gian' xanh: active t1 + withdrawn t2 → withdrawn; xuất hiện lại t3 → active với phát biểu active cũ đã rút có lý do; cùng thời điểm khác giá trị → theo thứ tự phương pháp; chỉ quá cửa sổ → trạng thái giữ nguyên; chiều đỏ: bản phân xử theo thứ tự phương pháp trước thời gian → ca đỏ ghim 'trạng thái mới nhất phải thắng'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -45,7 +45,7 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.tg_db
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs]
     expected: "exit 0; ca 'lịch sử giá và trạng thái' xanh: NewListing khi thêm tin; PriceChange mang giá cũ/mới; Withdrawn và BackOnMarket khi đổi trạng thái; ghi lại cùng giá 0 dòng; property_price_history của căn hai tin trả dòng của cả hai theo thời gian; điền lùi: số NewListing = số tin có sẵn; chiều đỏ ghim 'cùng giá không sinh dòng lịch sử'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -53,15 +53,15 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.test.tg_db
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs, pipeline/scripts/bac-du-lieu.itest.mjs]
-    expected: "exit 0; ca 'B5 và tụt về B4' xanh: căn B4 active trong cửa sổ có lịch sử → B5 giu-nhip; quá cửa sổ, withdrawn, không lịch sử → B4 hieu-luc; chiều đỏ ghim 'quá cửa sổ phải về B4'; bộ itest PL16 (bac-du-lieu.itest.mjs) chạy trên 057 vẫn xanh"
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-chao.itest.mjs, pipeline/scripts/bac-du-lieu.itest.mjs]
+    expected: "exit 0; ca 'B5 và tụt về B4' xanh: căn B4 active trong cửa sổ có lịch sử → B5 giu-nhip; quá cửa sổ, withdrawn, không lịch sử → B4 hieu-luc; chiều đỏ ghim 'quá cửa sổ phải về B4'; bộ itest PL16 (bac-du-lieu.itest.mjs) chạy trên 059 vẫn xanh"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E8
     criterion: AC-8
     executor: script
     cmd: config:executors.script.tg_roundtrip
-    paths: [pipeline/trang-thai-chao.mjs, db/migrations/057_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-roundtrip.mjs]
+    paths: [pipeline/trang-thai-chao.mjs, db/migrations/059_thoi_gian_hieu_luc.sql, pipeline/scripts/trang-thai-roundtrip.mjs]
     expected: "exit 0 trên bản chép DB máy thu (oneinvest_p2_tg): dòng 'AC-8 lần một: <n> tin · active <a> · withdrawn <w> · ... · tổng khớp' với tổng = số dòng sale_offer_records đếm độc lập; dòng 'AC-8 lần hai: 0 phát biểu mới, cùng đếm'; dòng 'AC-8 tin sống unknown: 0'; chiều đỏ trong cùng script: DATABASE_URL trỏ cổng không có DB → lệnh trang-thai-chao thoát khác 0, dòng 'AC-8 lỗi chạy → thoát <m>'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -76,9 +76,9 @@ evals:
   - id: E10
     criterion: AC-9
     executor: script
-    cmd: config:executors.script.idem_057
-    paths: [db/migrations/057_thoi_gian_hieu_luc.sql]
-    expected: "exit 0; 057 áp hai lần trên DB tạm (lược đồ local + 056) không lỗi, số dòng history_transactional, ref_lookup, ref_field_lookup giữa lần một và lần hai không đổi"
+    cmd: config:executors.script.idem_059
+    paths: [db/migrations/059_thoi_gian_hieu_luc.sql]
+    expected: "exit 0; 059 áp hai lần trên DB tạm (lược đồ local + 056) không lỗi, số dòng history_transactional, ref_lookup, ref_field_lookup giữa lần một và lần hai không đổi"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
   - id: E11
