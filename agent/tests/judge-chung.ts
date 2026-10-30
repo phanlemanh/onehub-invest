@@ -28,7 +28,7 @@ export function cap(a: Tin, b: Tin): PairData {
 }
 /** Soi chữ tìm số ngưỡng — dùng chung với judge-run.test.ts. Trả danh sách chỗ trúng. */
 export function soiNguong(text: string): string[] {
-  const mau = [/(?<![\d.,])(?:15|10|30)\s*%/g, /(?<![\d.,])0\.(?:15|1|3)(?![\d])/g, /[<>≤≥]\s*\d/g];
+  const mau = [/(?<![\d.,])(?:15|10|30)(?:[.,]0+)?\s*%/g, /(?<![\d.,])0\.(?:15|1|3)(?![\d])/g, /[<>≤≥]\s*\d/g];
   return mau.flatMap((m) => [...text.matchAll(m)].map((x) => x[0]));
 }
 export const kiemKhongNguong = (text: string) => {

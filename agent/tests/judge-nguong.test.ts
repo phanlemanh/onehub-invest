@@ -10,7 +10,9 @@ import {
   buildJudgeInput,
   judgeEntityAgent,
   lech,
+  lyDoChu,
   parseGiaiThich,
+  phanTram,
   type KetLuan,
 } from "../src/agents/judge-entity.js";
 
@@ -98,22 +100,41 @@ test("AC-2 đối chứng đỏ: prompt cũ bị hàm soi bắt", () => {
   assert.throws(() => kiemKhongNguong(PROMPT_CU), /AC-2 prompt chứa ngưỡng/);
 });
 
-// S4 r1 (AC-2): lệch sát ngưỡng không được in thành đúng số ngưỡng, và chữ không trái kết luận.
-test("AC-2 sát ngưỡng — lý do không làm tròn thành số ngưỡng", () => {
-  const SAT: { p: PairData; ky_vong: KetLuan; chu: string }[] = [
-    { p: cap(voi({ perm2: 85.1 * TR }), voi({ perm2: 100 * TR })), ky_vong: "yes", chu: "giá/m² lệch 14,9%" },
-    { p: cap(voi({ perm2: 70.4 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure", chu: "giá/m² lệch 29,6%" },
-    { p: cap(voi({ perm2: 69.6 * TR }), voi({ perm2: 100 * TR })), ky_vong: "no", chu: "giá/m² lệch 30,4%" },
-    { p: cap(voi({ area: 45.25 }), voi({ perm2: 105 * TR, area: 50 })), ky_vong: "yes", chu: "diện tích lệch 9,5%" },
+// S4 r1–r2 (AC-2): lệch sát và ĐÚNG ngưỡng — prompt chỉ mang lời định tính, số đo chỉ ở thẻ (lyDoChu); lời đi đúng kết luận.
+test("AC-2 sát ngưỡng — prompt không mang số đo, kể cả lệch đúng bằng ngưỡng", () => {
+  const SAT: { p: PairData; ky_vong: KetLuan; cau: string; so: string }[] = [
+    { p: cap(voi({ perm2: 85.1 * TR }), voi({ perm2: 100 * TR })), ky_vong: "yes", cau: "giá/m² sát nhau", so: "14,9%" },
+    { p: cap(voi({ perm2: 85 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure", cau: "giá/m² lệch vừa", so: "15,0%" },
+    { p: cap(voi({ perm2: 70.4 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure", cau: "giá/m² lệch vừa", so: "29,6%" },
+    { p: cap(voi({ perm2: 70 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure", cau: "giá/m² lệch vừa", so: "30,0%" },
+    { p: cap(voi({ perm2: 69.97 * TR }), voi({ perm2: 100 * TR })), ky_vong: "no", cau: "giá/m² lệch xa", so: "30,0%" },
+    { p: cap(voi({ perm2: 69.6 * TR }), voi({ perm2: 100 * TR })), ky_vong: "no", cau: "giá/m² lệch xa", so: "30,4%" },
+    { p: cap(voi({ area: 45.25 }), voi({ perm2: 105 * TR, area: 50 })), ky_vong: "yes", cau: "diện tích sát nhau", so: "9,5%" },
+    { p: cap(voi({ area: 45 }), voi({ perm2: 105 * TR, area: 50 })), ky_vong: "unsure", cau: "diện tích lệch đáng kể", so: "10,0%" },
   ];
+  let n = 0;
   for (const s of SAT) {
     const kq = apNguong(s.p);
-    assert.equal(kq.same_house, s.ky_vong);
-    assert.ok(kq.ly_do.some((l) => l.cau === s.chu), `thiếu «${s.chu}»: ${kq.ly_do.map((l) => l.cau).join("; ")}`);
+    assert.equal(kq.same_house, s.ky_vong, `kết luận sai ở «${s.so}»`);
+    const l = kq.ly_do.find((x) => x.cau === s.cau);
+    assert.ok(l, `thiếu «${s.cau}»: ${kq.ly_do.map((x) => x.cau).join("; ")}`);
+    assert.equal(l.so, s.so);
     kiemKhongNguong(buildJudgeInput(s.p, kq));
+    assert.ok(lyDoChu(kq).includes(`${s.cau} (${s.so})`), `thẻ thiếu số đo «${s.so}»`);
+    n++;
   }
-  // đối chứng đỏ: định dạng cũ Math.round in «15%» cho lệch 0,149
+  assert.equal(n, 8);
+});
+
+test("AC-2 đối chứng đỏ: hàm soi bắt số đo ở đúng ngưỡng, kể cả khuôn có phần thập phân", () => {
+  for (const x of [0.15, 0.1, 0.3]) assert.throws(() => kiemKhongNguong(phanTram(x)), /AC-2 prompt chứa ngưỡng/);
+  // định dạng cũ Math.round in «15%» cho lệch 0,149
   assert.throws(() => kiemKhongNguong(`giá/m² lệch ${Math.round(0.149 * 100)}%`), /AC-2 prompt chứa ngưỡng/);
+  // cùng fixture lệch đúng 0,15: nếu số đo lọt vào prompt thì hàm soi bắt
+  const p = cap(voi({ perm2: 85 * TR }), voi({ perm2: 100 * TR }));
+  const kq = apNguong(p);
+  const roRi = buildJudgeInput(p, kq) + kq.ly_do.map((l) => (l.so ? `\n- ${l.cau} ${l.so}` : "")).join("");
+  assert.throws(() => kiemKhongNguong(roRi), /AC-2 prompt chứa ngưỡng: 15,0%/);
 });
 
 test("parseGiaiThich chỉ rút lời giải thích", () => {

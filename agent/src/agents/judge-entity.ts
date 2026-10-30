@@ -12,7 +12,8 @@ export const NGUONG = Object.freeze({ giaM2YesMax: 0.15, dienTichYesMax: 0.1, gi
 export const PHIEN_BAN_NGUONG = "pl25-1";
 
 export type KetLuan = "yes" | "no" | "unsure";
-export type LyDo = { ma: string; cau: string };
+/** `cau` là lời định tính đưa vào prompt (không mang số đo — AC-2); `so` là số đo chỉ in trên thẻ cho người duyệt. */
+export type LyDo = { ma: string; cau: string; so?: string };
 export type KetQuaLuat = {
   same_house: KetLuan;
   ly_do: LyDo[];
@@ -46,8 +47,8 @@ const loaiHinh = (s: string | null): string | null => {
 };
 const giaM2 = (t: PairData["a"] | PairData["b"]): number | null =>
   t.pricePerm2 ?? (t.priceVnd !== null && t.areaM2 ? t.priceVnd / t.areaM2 : null);
-/** Độ lệch thành phần trăm một chữ số thập phân, cắt xuống (không làm tròn lên): 0,149 phải hiện «14,9%», không thành
- *  «15%» — làm tròn sát ngưỡng in đúng số ngưỡng vào prompt và trái với kết luận (S4 r1, AC-2). */
+/** Độ lệch thành phần trăm một chữ số thập phân, cắt xuống: 0,149 hiện «14,9%», không thành «15%». Chỉ dùng cho `so`
+ *  trên thẻ — lệch đúng bằng ngưỡng vẫn in ra đúng số ngưỡng, nên số không bao giờ vào prompt (S4 r1–r2, AC-2). */
 export const phanTram = (x: number) => `${(Math.floor(x * 1000 + 1e-6) / 10).toFixed(1).replace(".", ",")}%`;
 
 /** Luật ghép căn — tất định, đối xứng A↔B. `lechFn` chỉ để test đối chứng. */
@@ -64,9 +65,12 @@ export function apNguong(pair: PairData, lechFn: typeof lech = lech): KetQuaLuat
   const khacPhuong = pa !== null && pb !== null && pa !== pb;
   const khacLoai = la !== null && lb !== null && la !== lb;
   if (lg === null) ly_do.push({ ma: "thieu_gia_m2", cau: "thiếu giá/m² ở một tin" });
-  else ly_do.push({ ma: giaXa ? "gia_m2_xa" : lg < NGUONG.giaM2YesMax ? "gia_m2_gan" : "gia_m2_giua", cau: `giá/m² lệch ${phanTram(lg)}` });
+  else if (giaXa) ly_do.push({ ma: "gia_m2_xa", cau: "giá/m² lệch xa", so: phanTram(lg) });
+  else if (lg < NGUONG.giaM2YesMax) ly_do.push({ ma: "gia_m2_gan", cau: "giá/m² sát nhau", so: phanTram(lg) });
+  else ly_do.push({ ma: "gia_m2_giua", cau: "giá/m² lệch vừa", so: phanTram(lg) });
   if (ld === null) ly_do.push({ ma: "thieu_dien_tich", cau: "thiếu diện tích ở một tin" });
-  else ly_do.push({ ma: ld < NGUONG.dienTichYesMax ? "dien_tich_gan" : "dien_tich_xa", cau: `diện tích lệch ${phanTram(ld)}` });
+  else if (ld < NGUONG.dienTichYesMax) ly_do.push({ ma: "dien_tich_gan", cau: "diện tích sát nhau", so: phanTram(ld) });
+  else ly_do.push({ ma: "dien_tich_xa", cau: "diện tích lệch đáng kể", so: phanTram(ld) });
   if (pa === null || pb === null) ly_do.push({ ma: "thieu_phuong", cau: "thiếu phường ở một tin" });
   else ly_do.push(khacPhuong ? { ma: "khac_phuong", cau: "khác phường" } : { ma: "cung_phuong", cau: "cùng phường" });
   if (la === null || lb === null) ly_do.push({ ma: "thieu_loai", cau: "thiếu loại hình ở một tin" });
@@ -85,9 +89,9 @@ export function apNguong(pair: PairData, lechFn: typeof lech = lech): KetQuaLuat
 
 const NHAN: Record<KetLuan, string> = { yes: "cùng một căn", no: "khác căn", unsure: "chưa chắc" };
 
-/** Lý do luật thành một câu cho người duyệt (dùng khi không có lời giải thích của model). */
+/** Lý do luật thành một câu cho người duyệt, kèm số đo (thẻ, không vào prompt). */
 export function lyDoChu(kq: KetQuaLuat): string {
-  return `Luật: ${NHAN[kq.same_house]} — ${kq.ly_do.map((l) => l.cau).join("; ")}`;
+  return `Luật: ${NHAN[kq.same_house]} — ${kq.ly_do.map((l) => (l.so ? `${l.cau} (${l.so})` : l.cau)).join("; ")}`;
 }
 
 export const judgeEntityAgent: AgentConfig = {
