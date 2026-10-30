@@ -7,10 +7,13 @@
 // Một giao dịch mỗi lượt, khoá advisory riêng: upsert theo media_key (dòng không đổi giữ nguyên dấu thời gian), xoá dòng
 // của đúng các nguồn được gọi mà lượt này không sinh ra (bài gom sang tin khác, tin nghỉ, ảnh bị gỡ). Mỗi nguồn một dòng
 // dq_check_results `media:local-file` (ADR-0011 điều 6 cho cột ngoài DD local_file).
+// PL28: S03 còn nối ảnh của bài chỉ-ảnh vào offer của bài chữ gần nhất cùng người (baiAnhCuaTin, lib/gop-anh.mjs).
 // Bảng chỉ ở máy thu — KHÔNG sync cloud (media_url S06 mang tên miền nguồn, tầng A).
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { ganBaiAnh, laChiAnh } from "./lib/gop-anh.mjs";
+import { loadStgPosts } from "./lib/test-posts.mjs";
 import { mediaRowsFromAd, mediaRowsFromPosts } from "./media-rows.mjs";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
@@ -43,6 +46,54 @@ const SQL_QC = `
   JOIN stg_chotot_ads a ON a.list_id::text = o.originating_system_key
   WHERE o.source = 'S06'`;
 
+const SQL_MEDIA_BAI = `
+  SELECT DISTINCT ON (post_id) post_id, snapshot_id, media, media_files
+  FROM stg_zalo_posts WHERE post_id = ANY($1::text[])
+  ORDER BY post_id, captured_at DESC`;
+
+/**
+ * Bài chỉ-ảnh S03 đã gán vào offer (PL28 `gop-tin-chi-anh-o-transform`): mỗi bài chỉ-ảnh theo bài chữ gần nhất cùng người,
+ * cùng nhóm, dưới 2 phút (lib/gop-anh.mjs); bài chữ ấy nằm trong post_ids của một offer S03 thì bài ảnh thuộc offer đó.
+ * Bài chữ gần nhất không thuộc offer nào → ảnh không vào đâu. Trả offer_id → bài ảnh theo posted_at (cột như SQL_BAI).
+ */
+export async function baiAnhCuaTin(c) {
+  const { rows: tin } = await c.query(`SELECT offer_id, post_ids FROM sale_offers WHERE source = 'S03'`);
+  const offerCua = new Map();
+  for (const t of tin) for (const id of t.post_ids ?? []) offerCua.set(id, t.offer_id);
+  const { posts } = await loadStgPosts(c, "zalo");
+  const chu = posts.filter((p) => !laChiAnh(p.text));
+  const anh = posts.filter((p) => laChiAnh(p.text));
+  const luc = new Map(anh.map((p) => [p.post_id, new Date(p.posted_at).getTime()]));
+  const theoTin = new Map();
+  for (const [anhId, chuId] of ganBaiAnh(chu, anh)) {
+    const offerId = offerCua.get(chuId);
+    if (!offerId) continue;
+    if (!theoTin.has(offerId)) theoTin.set(offerId, []);
+    theoTin.get(offerId).push(anhId);
+  }
+  const ids = [...theoTin.values()].flat();
+  const media = new Map((await c.query(SQL_MEDIA_BAI, [ids])).rows.map((r) => [r.post_id, r]));
+  const out = new Map();
+  for (const [offerId, ds] of theoTin) {
+    ds.sort((a, b) => luc.get(a) - luc.get(b) || a.localeCompare(b));
+    out.set(offerId, ds.map((id) => media.get(id)).filter(Boolean));
+  }
+  return out;
+}
+
+/**
+ * PL28: ảnh của bài chỉ-ảnh xếp SAU mọi ảnh của chính các bài chữ của offer — kể cả khi bài chữ chỉ có ảnh từ xa còn bài
+ * ảnh có ảnh đã tải (luật ghép NH1 đưa ảnh đã tải của mọi bài lên trước, nên không trộn chung một danh sách bài). Bỏ ảnh
+ * trùng tệp hay URL với ảnh đã có; media_order nối tiếp.
+ */
+function noiSau(cua, them) {
+  const tep = new Set(cua.map((r) => r.local_file).filter(Boolean));
+  const url = new Set(cua.map((r) => r.media_url).filter(Boolean));
+  return them
+    .filter((r) => !(r.local_file && tep.has(r.local_file)) && !(r.media_url && url.has(r.media_url)))
+    .map((r, i) => ({ ...r, media_order: cua.length + i }));
+}
+
 /** Tập dòng muốn có của các nguồn (tin sống). */
 async function dungDong(c, sources) {
   const rows = [];
@@ -54,7 +105,12 @@ async function dungDong(c, sources) {
       if (!theoTin.has(x.offer_id)) theoTin.set(x.offer_id, { source: x.source, posts: [] });
       theoTin.get(x.offer_id).posts.push(x);
     }
-    for (const [offerId, { source, posts }] of theoTin) rows.push(...mediaRowsFromPosts(offerId, source, posts));
+    const anhGan = bai.includes("S03") ? await baiAnhCuaTin(c) : new Map();
+    for (const [offerId, { source, posts }] of theoTin) {
+      const cua = mediaRowsFromPosts(offerId, source, posts);
+      const gop = source === "S03" ? noiSau(cua, mediaRowsFromPosts(offerId, source, anhGan.get(offerId) ?? [])) : [];
+      rows.push(...cua, ...gop);
+    }
   }
   if (sources.includes("S06")) {
     const { rows: r } = await c.query(SQL_QC);

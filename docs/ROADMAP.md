@@ -108,6 +108,12 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   khoá gom thiếu phường/DT thêm mã toà/căn (`maToaCan`); `seller_name` = tên bài mới nhất; phường theo `market_codes` của
   nhóm, nhóm chưa khai đối chiếu mọi thị trường có phường, tên trùng hai nơi ra null. DB thử: 0 tin thuê ≥ 1 tỷ (từ 41),
   0 bán > 100 tỷ (từ 94), 0 giá từ URL (từ 4), `seller_name` 96,9% (từ 0), 0 tin TP.HCM sai phường (từ 38).
+  Bước gạt SĐT bỏ qua đuôi nhóm nghìn của giá đồng: «3.000.000.000» (`_acceptance/s03-gia-ty-chan-dong`) và cả khi sau giá là
+  khoảng trắng/xuống dòng + 1–2 chữ số, «3.000.000.000\n50m2» (`_acceptance/s03-gia-ty-sau-khoang-trang`; nhóm cuối «000», thân
+  số tiền không dính chữ — SĐT 3-3-3 kèm đuôi vẫn bị gạt); 21.934 bài thật: 0 bài đổi.
+  Ảnh của tin chỉ-ảnh S03 (mỗi ảnh một tin, chữ là URL) vào offer của tin chữ GẦN NHẤT cùng người, cùng nhóm, dưới 2 phút
+  — ở bước dựng bảng `media` (`transform-media.mjs` + `lib/gop-anh.mjs`), `sale_offers` và bảng nạp không đổi
+  (`_acceptance/gop-tin-chi-anh-o-transform`, PL28): DB thử 276 → 422/885 offer có ảnh (31,2% → 47,7%, ngưỡng ≥ 45%).
   Listing Airbnb transform cho nghỉ ngoài phường mang toạ độ của lần thu mới nhất (thiếu → NULL), giữ mốc + lý do nghỉ cũ
   (`_acceptance/airbnb-nghi-khong-hoi-sinh`) — reassign-areas chỉ đánh thức listing nghỉ khi toạ độ HIỆN HÀNH vào phường.
 - Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`
@@ -119,6 +125,13 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `legacy` (runtime-map «Phát biểu + phân xử»). Chỉ local.
   Thước `pipeline/scripts/nap-lai-ba-luot.mjs` (ba lượt, ma trận 7×2, đối chứng 039 / không chuyển). sync-cloud chép view
   sống, bảng con chỉ dòng có cha sống; cột mới ở lại máy.
+- Danh bạ Người theo nguồn (DB2b, `_acceptance/ho-nguoi-theo-nguon`, migration 055, ADR-0016 §8): bốn bảng chỉ-thêm
+  (rào trigger chặn DELETE/TRUNCATE và sửa khoá) `parties` (khoá mờ `pty_<ULID>`, một nguồn mỗi người) · `registry_aliases`
+  (tài khoản tại nguồn, SĐT băm, tên) · `registry_events` · `party_roles` (vai `nguoi_dang` trỏ chủ thể `S0x:<khoá nguồn>`,
+  kèm lớp căn cứ + phương pháp). `pipeline/lib/danh-ba-nguoi.mjs` dựng từ mọi tin S03/S05/S06 kể cả tin nghỉ: S06 theo
+  `seller_ref`, S03/S05 theo người gửi của bài; SĐT luôn là người riêng (Hỏi-4); rút vai chỉ khi có bằng chứng thay. Chạy
+  cuối `refresh-bait-gap.mjs` (`buocDem`) trong giao dịch riêng, khoá advisory 55055; tay: `pipeline/dung-nguoi.mjs [--thu]`.
+  Thước `pipeline/scripts/nap-lai-nguoi.mjs` (hai lượt, lượt 2 bằng 0, đối chứng bỏ tra bí danh). Chỉ local, không sync cloud.
 - DATA-CONTRACT v1–2: importer nhận cả hai; ảnh Zalo N1 (`meta.mediaFiles`) →
   `stg_zalo_posts.media_files` (migration 035, PII tầng A — chỉ local, test
   `pipeline/sync-pii.test.mjs` gác FILL).
@@ -352,6 +365,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | PL6 | Sổ từ vựng một nguồn (mappings.yaml → hằng + CONTEXT.md + `ref_*`; lint enum viết tay; VALIDATE CHECK 025) — `_acceptance/so-tu-vung-mot-nguon` | ✅ PR #120 (migration 043 đã áp local; Supabase đã áp 26/10 — `docs/ops/cloud-schema-catchup-2026-10-26-043.sql`) |
 | PL14 | Nạp lại không xoá: bảng bản ghi + view sống (lối A, 044), khoá dính S03/S05, tin/listing nghỉ (`retired_at`) thay DELETE, 6 khoá ngoại RESTRICT, đối soát chuyển quyết định sang tin kế — `_acceptance/nap-lai-khong-xoa` | 🔶 vòng S4; sau merge: áp 044 lên DB local NGAY (launchd chạy code main); cloud không đổi lược đồ (`docs/ops/cloud-schema-catchup-2026-10-26.md`) |
 | PL15 | Bảng phát biểu chỉ-thêm + bộ phân xử ba lớp dựng năm cột phân loại kèm nguồn gốc, chạy lại ra y nguyên (045) — `_acceptance/phat-bieu-va-phan-xu` | 🔶 vòng S4; sau merge: áp 045 + `phat-bieu-cat-chuyen.mjs` trên DB local TRƯỚC lượt nạp đêm kế; cloud không đổi lược đồ |
+| DB2b | Danh bạ Người theo nguồn (ADR-0016 §8, 055): bốn bảng chỉ-thêm `parties` · `registry_aliases` · `registry_events` · `party_roles`; mỗi tài khoản/SĐT tại một nguồn là một người (khoá `pty_<ULID>`), vai «Người đăng» trỏ từ tin (`S0x:<khoá nguồn>`); bộ dựng chạy cuối bước bait gap trong giao dịch riêng; chỉ local — `_acceptance/ho-nguoi-theo-nguon` | 🔶 vòng S3; sau merge: áp 055 lên DB local (trước đó job đêm in «bỏ qua»); KHÔNG áp Supabase, không sync cloud |
 | NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |
 | R2-R4 | asset_nodes mở rộng (subzone/building; geo-polygon; dedup căn) | ⬜ |

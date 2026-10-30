@@ -1,0 +1,18 @@
+{
+  "feature_plain": "Tin S03 ghi giá tỷ bằng chữ số đồng rồi xuống dòng hay cách một khoảng trước diện tích/số phòng («3.000.000.000\n50m2») ra đúng giá và giữ được số đứng sau, mà không SĐT nào lọt vào bước đọc số.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đọc đúng giá khi ngay sau giá là khoảng trắng hay xuống dòng rồi số 1–2 chữ số, và giữ đúng diện tích/số phòng đứng sau."},
+    {"id": "AC-2", "p": "Sẽ vẫn gạt mọi SĐT khỏi bước đọc số, kể cả SĐT viết nhóm 3 số kèm đuôi đứng sau «m2.» hay sau một số."},
+    {"id": "AC-3", "p": "Sẽ giữ nguyên danh sách SĐT người bán — so trực tiếp với bản trước sửa."},
+    {"id": "AC-4", "p": "Sẽ cho giá mới đọc được đi qua chốt giá phi lý như mọi giá khác."},
+    {"id": "AC-5", "p": "Sẽ giữ bộ test pipeline và bảy thước của N1 trên dữ liệu thật đều xanh."},
+    {"id": "AC-6", "p": "Sẽ so toàn bộ đầu ra đọc tin trên bài thật trước và sau sửa: không bài nào đổi SĐT, bài nào đổi phải đúng dạng này với giá bằng số trong chữ."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không sửa lỗi có sẵn: danh sách SĐT nhận nhầm «050.000.000\n60» thành một SĐT."},
+    {"id": "OOS-2", "p": "Không xử lý gạch hay dấu chấm sau giá («3.000.000.000-3.500.000.000»)."},
+    {"id": "OOS-3", "p": "Không đọc giá nhóm nghìn bằng dấu phẩy hay dấu cách."},
+    {"id": "OOS-4", "p": "Không sửa hai lỗi giá N1 đã ghi Known limits, không đổi cách làm luật giá, không nạp lại dữ liệu thật trong vòng."},
+    {"id": "OOS-5", "p": "Không phân biệt SĐT viết 3-3-3 tận cùng «000» đứng sau một số và dấu chấm với một số tiền."}
+  ]
+}
