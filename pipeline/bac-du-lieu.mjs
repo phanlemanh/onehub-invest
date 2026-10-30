@@ -6,11 +6,12 @@ import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { VOCAB } from "./lib/vocab.generated.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const SQL_610 = readFileSync(path.join(HERE, "sql/610_data_level.sql"), "utf8");
 export const KHOA = 56056;
-const BAC = ["B0", "B1", "B2", "B3", "B4", "B5"];
+const BAC = VOCAB.data_level;
 
 /** Chụp phân bố ngày hôm nay trong giao dịch của client; trả tổng đơn vị và số theo bậc. */
 export async function ghiAnhChup(client) {
