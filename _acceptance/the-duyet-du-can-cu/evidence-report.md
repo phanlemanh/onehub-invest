@@ -162,7 +162,7 @@ Vòng 1. Cả 16 eval của hợp đồng (E1–E16) đều xanh. Tổng thể v
   baseline: n-a
   verifier: scripts/ui-capture.sh
   verified_at: 2026-10-30T06:13:49Z
-  screenshot: evidence/E13-step1.png   # khung đầu; các bước E13-step{n}.png khác nằm cùng thư mục evidence/
+  screenshot: evidence/E13-step1.png
   observed: |
     E13-step1.png (1280 sáng, sheet Ghép căn #24 «Cùng căn? binh-thanh 52m² ↔ 60m²»): bảng 4 cột Trường/Tin A/Tin B/So; từng hàng (Giá 7.00 tỷ vs 8.50 tỷ, Diện tích, Giá/m², Phường, Phòng ngủ, WC, Loại hình, Đường, Toà, Tầng) kèm dòng căn cứ cỡ nhỏ dưới giá trị hoặc dưới nhãn trường; nhãn So: Lệch (vàng/hổ phách) và Thiếu (viền xám) tách rõ; dưới cùng ô «Lý do» có nhãn, ba nút Cùng căn/Khác căn/Không chắc đang xám (tắt), gợi ý «Ghi lý do trước khi quyết». Không có «Điểm B», «tự tin», % độ tin.
     E13-step2.png: khối Toàn văn Tin A (đoạn đầu, ghi chú không có toàn văn ở máy thu) và Toàn văn Tin B hiển thị trọn, giữ xuống dòng, emoji hiện; chân sheet ghim, Lý do trống, nút tắt. E13-step3.png: giống hệt step2 (cùng sha — chân sheet ghim nên cuộn tới đáy ra cùng khung); Lý do trống + nút tắt.
