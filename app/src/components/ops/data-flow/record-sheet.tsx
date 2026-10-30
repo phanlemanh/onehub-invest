@@ -148,9 +148,7 @@ export function RecordSheet({
                 </Section>
                 <Separator />
                 <Section title="Ảnh tin">
-                  {record.source === "S06" ? (
-                    <p className="text-muted-foreground text-sm">Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10).</p>
-                  ) : cloud ? (
+                  {cloud ? (
                     <p className="text-muted-foreground text-sm">Ảnh tin chỉ xem ở máy thu.</p>
                   ) : media ? (
                     <ReviewPhotos label="Tin" images={media[record.offerId] ?? []} />

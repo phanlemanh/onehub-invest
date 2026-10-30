@@ -124,7 +124,8 @@ const JOBS = {
       copy: ["scripts/chotot-daily.sh", "scripts/lib/job-step.sh"],
       dirs: ["collector/snapshots/hanoi/hanoi__chotot-ads__20261023T000000"],
     },
-    seq: ["collect-chotot", "import-chotot", "transform-chotot", "refresh-bait-gap", "resolve-properties"],
+    // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-chotot.
+    seq: ["collect-chotot", "import-chotot", "transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"],
   },
   "apify-facebook-daily": {
     script: "scripts/apify-facebook-daily.sh",
@@ -220,7 +221,7 @@ describe("AC-6 job_step", () => {
 
 // ------------------------------------------------------------- AC-1, AC-2 --
 for (const [ac, job, steps] of [
-  ["AC-1", "chotot-daily", ["transform-chotot", "refresh-bait-gap", "resolve-properties"]],
+  ["AC-1", "chotot-daily", ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"]],
   ["AC-2", "apify-facebook-daily", ["transform-fb", "refresh-bait-gap"]],
 ]) {
   const J = JOBS[job];

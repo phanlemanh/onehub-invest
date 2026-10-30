@@ -40,6 +40,8 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.app_ui
+    status: not-run
+    superseded_by: media-canonical-reso#AC-5
     expected: "ca 'AC-6' xanh — khoá theo id thẻ, entity_match có offer_a/offer_b, agent_output có offer, loại khác không có mục, đúng 1 truy vấn"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -47,6 +49,8 @@ evals:
     criterion: AC-7
     executor: test
     cmd: config:executors.test.app_ui
+    status: not-run
+    superseded_by: media-canonical-reso#AC-5
     expected: "should-NOT-fire: ca 'AC-7' xanh — không phải admin → {} và 0 truy vấn; lỗi 42P01 → {}; lỗi DB khác vẫn ném"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 
@@ -55,6 +59,8 @@ evals:
     executor: script
     layer: backend-effect
     cmd: config:executors.script.review_media_roundtrip
+    status: not-run
+    superseded_by: media-canonical-reso#AC-7
     expected: "exit 0; stdout có 'ROUNDTRIP PASS' và 'dọn: còn 0 dòng của lần chạy'; các dòng ok: agent_output nhận ảnh local + URL dự phòng + URL fbcdn đúng thứ tự, entity_match nhận offer_a/offer_b"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
 

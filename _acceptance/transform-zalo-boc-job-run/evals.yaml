@@ -8,6 +8,8 @@ evals:
     criterion: AC-1
     executor: test
     cmd: config:executors.test.zalo_import_job
+    status: not-run
+    superseded_by: media-canonical-reso#AC-10
     paths: [scripts/zalo-import-daily.sh, scripts/zalo-import-job.test.mjs]
     expected: "exit 0; ca 'ZJ-AC-1': mọi bước lành → mã 0, lời gọi === ['import-airbnb','transform-zalo','refresh-bait-gap'], stderr không chứa 'JOB FAIL', và pipeline/logs/apify-daily.state (tệp STATE của tệp bọc) đổi từ mốc cũ sang '2026-10-25T000000Z' — đối chứng dương cho E3"
   - id: E2
@@ -38,6 +40,8 @@ evals:
     criterion: AC-6
     executor: test
     cmd: config:executors.test.zalo_import_job
+    status: not-run
+    superseded_by: media-canonical-reso#AC-10
     paths: [scripts/zalo-import-job.test.mjs]
     expected: "exit 0; ca 'ZJ-AC-6 rào': env của lần chạy có PATH = '<cây>/.shim-bin:/usr/bin:/bin', HOME dưới thư mục tạm và không có .local/node-*, DATABASE_URL cổng 9; mọi nhãn trong lời gọi của ZJ-AC-1..4 thuộc {import-airbnb, transform-zalo, refresh-bait-gap}"
   - id: E7

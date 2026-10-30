@@ -87,7 +87,18 @@ const URL_RE = /https?:\/\/\S+|www\.\S+/gi;
 /** Chữ bài để đọc số (N1): mọi URL và mọi dãy dạng SĐT thay bằng một dấu cách — URL ảnh mang «6tY», «/2650/»
  *  từng thành giá, SĐT thành diện tích. SĐT người đăng vẫn đọc từ chữ gốc (extractPhones). */
 export function gatSo(text) {
-  return (text ?? "").replace(URL_RE, " ").replace(PHONE_RE, " ");
+  const t = (text ?? "").replace(URL_RE, " ");
+  return t.replace(PHONE_RE, (m, i) => (laDuoiNhomNghin(t, m, i) ? m : " "));
+}
+
+/** Khớp SĐT ở vị trí i thật ra là đuôi nhóm nghìn của một số tiền («3.|000.000.000» — hồ sơ s03-gia-ty-chan-dong): đứng
+ *  ngay sau «chữ số + dấu chấm/phẩy» và gồm đủ các nhóm 3 chữ số nối bằng cùng dấu ấy. SĐT nối SĐT («…567,0912345678») và
+ *  SĐT sau «m2,» không có dạng nhóm 3 chữ số nên vẫn bị gạt. */
+function laDuoiNhomNghin(t, m, i) {
+  const dau = t[i - 1];
+  if ((dau !== "." && dau !== ",") || !/\d/.test(t[i - 2] ?? "")) return false;
+  const nhom = dau === "." ? /^\d{3}(?:\.\d{3})+$/ : /^\d{3}(?:,\d{3})+$/;
+  return nhom.test(m);
 }
 
 export function extractPhones(text) {

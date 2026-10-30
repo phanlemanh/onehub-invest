@@ -20,7 +20,9 @@ after(() => rmSync(SCRATCH, { recursive: true, force: true }));
 const SNAP = "collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-25T000000Z";
 const STATE = "pipeline/logs/apify-daily.state";
 const MOC_CU = "2026-10-24T000000Z";
-const NHAN = ["import-airbnb", "transform-zalo", "refresh-bait-gap"];
+// NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-zalo. ZJ-AC-1, ZJ-AC-6 của
+// hồ sơ transform-zalo-boc-job-run (lời «ba bước») thay bởi media-canonical-reso#AC-10.
+const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap"];
 
 // node giả: nhãn = tên tệp .mjs đầu tiên (không đuôi); ghi nhãn + môi trường thấy được; hỏng theo FAIL_STEPS (nhan:ma,…).
 const NODE_SHIM = `#!/bin/bash
@@ -95,13 +97,20 @@ function chay(root, failSteps = "", failMsg = "") {
 const daChay = [];
 const ghi = (r) => (daChay.push(r), r);
 
-test("ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự ba bước, không JOB FAIL", () => {
+test("ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự bốn bước (NH-AC-10), không JOB FAIL", () => {
   const r = ghi(chay(cay()));
   assert.equal(r.code, 0, r.stderr);
   assert.deepEqual(r.calls, NHAN);
   assert.deepEqual(r.jobFail, [], "ZJ-AC-1 bước lành mà có dòng JOB FAIL");
   // Đối chứng dương cho ZJ-AC-3: tệp state này là tệp tệp bọc thật sự ghi.
   assert.equal(r.state, "2026-10-25T000000Z", `ZJ-AC-1 ${STATE} không chuyển sang mốc snapshot mới`);
+});
+
+test("NH-AC-10 zalo-import-daily: transform-media hỏng → ≠0, dòng ghim, bước sau vẫn chạy", () => {
+  const r = ghi(chay(cay(), "transform-media:1"));
+  assert.equal(r.code, 1, `NH-AC-10 transform-media hỏng: mã thoát — stderr: ${r.stderr}`);
+  assert.deepEqual(r.jobFail, ["JOB FAIL [zalo-import-daily] bước transform-media mã 1"], "NH-AC-10 dòng JOB FAIL của bước ảnh");
+  assert.deepEqual(r.calls, NHAN, "NH-AC-10 refresh-bait-gap vẫn chạy sau bước ảnh hỏng");
 });
 
 test("ZJ-AC-2 ma trận ba tổ hợp hỏng của hai bước làn Claude", () => {
