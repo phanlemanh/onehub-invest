@@ -11,7 +11,7 @@ import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/comp
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EnrichChoices } from "@/lib/enrich-choices";
 import { aiSuggestionLabel, propertyTypeLabel } from "@/lib/ops-labels";
-import { CHUA_CAN_CU, soTruongGhepCan } from "@/lib/ops/review-can-cu";
+import { CHUA_CAN_CU, lyDoHopLe, soTruongGhepCan } from "@/lib/ops/review-can-cu";
 import type { ReviewContext } from "@/lib/ops/review-context";
 import type { ReviewItem } from "@/lib/ops/review-queue";
 import { RawLabel } from "./raw-label";
@@ -19,7 +19,7 @@ import type { ReviewMedia } from "@/lib/ops/review-media";
 
 import { ReviewCompare } from "./review/review-compare";
 import { ReviewFullText } from "./review/review-full-text";
-import { lyDoHopLe, ReviewReason } from "./review/review-reason";
+import { ReviewReason } from "./review/review-reason";
 import { ReviewPhotos } from "./review-photos";
 
 export type { ReviewItem } from "@/lib/ops/review-queue";

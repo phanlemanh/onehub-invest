@@ -5,15 +5,7 @@ import { useId } from "react"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import { fmtInt } from "@/lib/format"
-
-/** Trần độ dài lý do — route decide trả 400 khi vượt (PL3). */
-export const LY_DO_TOI_DA = 1000
-
-/** Lý do sau khi cắt khoảng trắng hai đầu; rỗng → null (chưa quyết được). */
-export function lyDoHopLe(v: string): string | null {
-  const t = v.trim()
-  return t.length === 0 || t.length > LY_DO_TOI_DA ? null : t
-}
+import { LY_DO_TOI_DA, lyDoHopLe } from "@/lib/ops/review-can-cu"
 
 /**
  * Ô «Lý do» ở chân sheet hàng duyệt (PL3) — ghép `ui/field` + `ui/textarea` như reject-dialog của solution-agents-5.

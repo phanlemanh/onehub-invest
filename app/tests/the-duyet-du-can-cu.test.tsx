@@ -13,6 +13,7 @@ import { JSDOM } from "jsdom"
 import pg from "pg"
 
 import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
+import { dungBangPhien, taoNguoi } from "./helpers/phien-thu"
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
@@ -280,7 +281,7 @@ test("TD-AC-6 vùng nút không đổi theo ai_suggestion; suy luận AI tách s
 const admin = new pg.Client({ connectionString: localDbUrl() })
 const db = new pg.Client({ connectionString: urlS })
 let setupErr: string | null = null
-const BANG = ["review_queue", "sale_offer_records", "stg_zalo_posts", "stg_chotot_ads", "field_assertions", "ops_audit", "media", "property_candidates", "enrichment_proposals"]
+const BANG = ["review_queue", "sale_offer_records", "stg_zalo_posts", "stg_chotot_ads", "field_assertions", "ops_audit", "media", "property_candidates", "enrichment_proposals", "properties", "property_offers"]
 
 const VAN_S03 = Array.from({ length: 30 }, (_, i) => `Dòng ${String(i).padStart(2, "0")} của bài S03: căn hộ 2 ngủ, sổ hồng, tầng trung, giá thương lượng.`).join("\n").slice(0, 1200)
 const VAN_S03_CU = "Bản cũ của bài S03 — không được hiện."
@@ -343,10 +344,21 @@ async function napTin() {
   await q(`INSERT INTO "${S}".ops_audit (actor, action, env, detail) VALUES ('machine:td', 'phat-bieu:cat-chuyen', 'local', '{}')`, [])
 }
 
+/** Ảnh chụp public mà route decide và hàm 033/045 có thể chạm (số dòng từng bảng) — phải y nguyên sau lượt. */
+const BANG_PUBLIC = ["review_queue", "ops_audit", "property_candidates", "enrichment_proposals", "sale_offer_records", "properties", "property_offers", "field_assertions", "users", "sessions"]
+let publicTruoc: Record<string, number> = {}
+async function chupPublic(): Promise<Record<string, number>> {
+  const out: Record<string, number> = {}
+  for (const t of BANG_PUBLIC) out[t] = (await admin.query(`SELECT count(*)::int AS n FROM public.${t}`)).rows[0].n
+  return out
+}
+
 before(async () => {
   try {
     await admin.connect()
+    publicTruoc = await chupPublic()
     await dungLuocDo()
+    await dungBangPhien(admin, S)
     await napTin()
     await db.connect()
     await db.query(`SELECT resolve_offer_fields(ARRAY['td_s03','td_s05','td_s06','td_s06b','td_np'])`)
@@ -356,10 +368,12 @@ before(async () => {
 })
 after(async () => {
   await db.end().catch(() => {})
-  await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`).catch(() => {})
-  await admin.end().catch(() => {})
   const { pool } = await import("../src/lib/db")
   await pool.end().catch(() => {})
+  await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`).catch(() => {})
+  const publicSau = await chupPublic().catch(() => null)
+  await admin.end().catch(() => {})
+  assert.deepEqual(publicSau, publicTruoc, "public đã bị chạm")
 })
 const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm không được — eval đòi chạy thật: ${setupErr}`)
 
@@ -587,4 +601,183 @@ describe("TD-AC-4 ảnh tin theo vai", () => {
       await that.end()
     }
   })
+})
+
+// ---------- TD-AC-7 / TD-AC-8: route decide nhận lý do ----------
+type RouteMod = typeof import("../src/app/api/v1/ops/review/[id]/decide/route")
+const ROUTE = "src/app/api/v1/ops/review/[id]/decide/route.ts"
+let soThe = 100
+let cookieOps = ""
+
+/** Thẻ chờ mới: ghép căn kèm property_candidates, hay bổ sung tin kèm một đề xuất queued. */
+async function theMoi(loai: "entity_match" | "agent_output"): Promise<number> {
+  const id = ++soThe
+  if (loai === "entity_match") {
+    await db.query(`INSERT INTO review_queue (id, item_type, item_id, title) VALUES ($1, 'entity_match', $2, 'td ghép')`, [id, `pair:tdA${id}|tdB${id}`])
+    await db.query(`INSERT INTO property_candidates (offer_a, offer_b, score) VALUES ($1, $2, 0.5)`, [`tdA${id}`, `tdB${id}`])
+  } else {
+    await db.query(`INSERT INTO review_queue (id, item_type, item_id, title) VALUES ($1, 'agent_output', $2, 'td bổ sung')`, [id, `enrich:td_s06b`])
+    await db.query(
+      `INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route, review_id, status)
+       VALUES ('td-run', 'td_s06b', 'bedrooms', '3', '3', 'e2_llm', 'review', $1, 'queued')`,
+      [id],
+    )
+  }
+  return id
+}
+
+const BANG_HASH = ["review_queue", "property_candidates", "enrichment_proposals", "ops_audit"]
+async function bam(): Promise<Record<string, string>> {
+  const out: Record<string, string> = {}
+  for (const t of BANG_HASH) out[t] = (await db.query(`SELECT md5(coalesce(string_agg(x::text, '|' ORDER BY x::text), '')) AS h FROM ${t} x`)).rows[0].h
+  return out
+}
+async function goi(mod: RouteMod, id: number, body: unknown) {
+  const req = new Request(`http://localhost:3460/api/v1/ops/review/${id}/decide`, {
+    method: "POST",
+    headers: { cookie: cookieOps, "content-type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  const res = await mod.POST(req, { params: Promise.resolve({ id: String(id) }) })
+  return { status: res.status, json: (await res.json().catch(() => ({}))) as Record<string, unknown> }
+}
+
+describe("TD-AC-7/8 route decide nhận lý do", () => {
+  before(async () => {
+    if (setupErr) return
+    try {
+      cookieOps = (await taoNguoi(db, "ops")).cookie
+    } catch (e) {
+      setupErr = (e as Error).message
+    }
+  })
+
+  async function kiemAc7(mod: RouteMod) {
+    for (const loai of ["entity_match", "agent_output"] as const) {
+      for (const [ten, reason] of [["thiếu", undefined], ["trắng", "  \u00a0\u3000 "], ["quá dài", "x".repeat(1001)]] as const) {
+        const id = await theMoi(loai)
+        const truoc = await bam()
+        const r = await goi(mod, id, reason === undefined ? { status: "approved" } : { status: "approved", reason })
+        assert.deepEqual(await bam(), truoc, `TD-AC-7: thiếu lý do mà route vẫn ghi (${loai}, ${ten})`)
+        assert.equal(r.status, 400, `${loai} ${ten}: mã`)
+      }
+    }
+  }
+  test("TD-AC-7 route: thiếu / trắng / quá 1.000 ký tự × 2 loại thẻ → 400, bốn bảng không đổi", async () => {
+    ready()
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    await kiemAc7(mod)
+    const sai = await banChepTam<RouteMod>(ROUTE, (s) => s.replace("if (reason === null) {", "if (false) {"))
+    await assert.rejects(kiemAc7(sai), /TD-AC-7: thiếu lý do mà route vẫn ghi/)
+  })
+
+  test("TD-AC-7 sheet: lý do trống, trắng hay NBSP/U+3000 → mọi nút tắt + gợi ý; gõ chữ → bật", async () => {
+    const React = await import("react")
+    Object.assign(globalThis, { React })
+    const { createRoot } = await import("react-dom/client")
+    const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime")
+    for (const item of [ghepCan(), boSung()]) {
+      document.body.innerHTML = "<div id=root></div>"
+      const root = createRoot(document.getElementById("root")!)
+      await React.act(async () =>
+        root.render(
+          <AppRouterContext.Provider value={ROUTER as never}>
+            <thatCard.ReviewCard item={item} />
+          </AppRouterContext.Provider>,
+        ),
+      )
+      const nut = () => [...document.querySelectorAll("[data-review-actions] button")] as HTMLButtonElement[]
+      const go = async (v: string) => {
+        const el = document.querySelector("[data-review-reason]") as HTMLTextAreaElement
+        const set = Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!
+        await React.act(async () => {
+          set.call(el, v)
+          el.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+        })
+      }
+      for (const v of ["", "   ", "\u00a0\u3000"]) {
+        await go(v)
+        assert.ok(nut().length === 3 && nut().every((b) => b.disabled), `${item.item_type} «${JSON.stringify(v)}»: nút phải tắt`)
+        assert.ok(document.body.textContent?.includes("Ghi lý do trước khi quyết"), "thiếu gợi ý")
+      }
+      await go("đủ căn cứ")
+      const bat = item.item_type === "entity_match" ? nut() : nut().filter((b) => b.textContent !== "Áp dụng") // Áp còn chờ chọn bên xung đột
+      assert.ok(bat.every((b) => !b.disabled), `${item.item_type}: có lý do thì nút bật`)
+      await React.act(async () => root.unmount())
+    }
+  })
+
+  async function kiemAc8(mod: RouteMod) {
+    for (const loai of ["entity_match", "agent_output"] as const) {
+      for (const status of ["approved", "rejected", "deferred"] as const) {
+        const id = await theMoi(loai)
+        const n0 = (await db.query(`SELECT count(*)::int AS n FROM ops_audit WHERE action = 'review.decide'`)).rows[0].n
+        const r = await goi(mod, id, { status, reason: "  Giá lệch 2 tỷ  " })
+        assert.equal(r.status, 200, `${loai} ${status}: ${JSON.stringify(r.json)}`)
+        const the = (await db.query(`SELECT status, decision_note FROM review_queue WHERE id = $1`, [id])).rows[0]
+        assert.deepEqual(the, { status, decision_note: "Giá lệch 2 tỷ" }, `${loai} ${status}: thẻ`)
+        const au = (await db.query(`SELECT detail FROM ops_audit WHERE action = 'review.decide' AND (detail->>'reviewId')::int = $1`, [id])).rows
+        assert.equal(au.length, 1, `${loai} ${status}: đúng một dòng audit`)
+        assert.equal(au[0].detail.ly_do, "Giá lệch 2 tỷ")
+        const n1 = (await db.query(`SELECT count(*)::int AS n FROM ops_audit WHERE action = 'review.decide'`)).rows[0].n
+        assert.equal(n1, n0 + 1)
+      }
+    }
+    // Audit hỏng (trigger tạm ném ở INSERT ops_audit) → 500, ROLLBACK cả quyết định lẫn lý do.
+    const hong = await theMoi("entity_match")
+    const n0 = (await db.query(`SELECT count(*)::int AS n FROM ops_audit`)).rows[0].n
+    await db.query(`CREATE FUNCTION "${S}".td_hong() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'td audit hỏng'; END $$`)
+    await db.query(`CREATE TRIGGER td_hong BEFORE INSERT ON "${S}".ops_audit FOR EACH ROW EXECUTE FUNCTION "${S}".td_hong()`)
+    try {
+      const r = await goi(mod, hong, { status: "approved", reason: "sẽ hỏng" })
+      const the = (await db.query(`SELECT status, decision_note FROM review_queue WHERE id = $1`, [hong])).rows[0]
+      assert.equal(the.decision_note, null, "TD-AC-8: audit hỏng mà decision_note đã ghi")
+      assert.equal(the.status, "pending", "audit hỏng mà thẻ đã quyết")
+      assert.equal(r.status, 500)
+      assert.equal((await db.query(`SELECT count(*)::int AS n FROM ops_audit`)).rows[0].n, n0)
+    } finally {
+      await db.query(`DROP TRIGGER td_hong ON "${S}".ops_audit`)
+      await db.query(`DROP FUNCTION "${S}".td_hong()`)
+    }
+    // Thẻ đã quyết → 409, lý do cũ giữ nguyên.
+    const id = await theMoi("entity_match")
+    await goi(mod, id, { status: "rejected", reason: "lần một" })
+    const lai = await goi(mod, id, { status: "approved", reason: "lần hai" })
+    assert.equal(lai.status, 409)
+    assert.equal((await db.query(`SELECT decision_note FROM review_queue WHERE id = $1`, [id])).rows[0].decision_note, "lần một")
+  }
+  test("TD-AC-8 route: 2 loại × 3 trạng thái ghi decision_note + ops_audit.ly_do cùng transaction; 409 giữ lý do; audit hỏng → ROLLBACK", async () => {
+    ready()
+    const mod = (await import("../src/app/api/v1/ops/review/[id]/decide/route")) as RouteMod
+    await kiemAc8(mod)
+    const sai = await banChepTam<RouteMod>(ROUTE, (s) =>
+      s.replace(
+        "  const client = await pool.connect();",
+        '  await pool.query("UPDATE review_queue SET decision_note = $1 WHERE id = $2", [reason, id]);\n  const client = await pool.connect();',
+      ),
+    )
+    await assert.rejects(kiemAc8(sai), /TD-AC-8: audit hỏng mà decision_note đã ghi/)
+  })
+})
+
+// ---------- TD-AC-8 quét tĩnh: chỉ một chỗ ghi review.decide ----------
+const GOC = path.resolve(APP, "..")
+function choGhiReviewDecide(tep: { f: string; s: string }[]): string[] {
+  return tep
+    .filter(({ f }) => !/(^|\/)tests?\//.test(f) && !/\.test\.|\.itest\./.test(f))
+    .filter(({ s }) => /["'`]review\.decide["'`]/.test(s) && /ghiAuditTrong|INSERT INTO ops_audit/.test(s))
+    .map(({ f }) => f)
+}
+test("TD-AC-8 quét tĩnh: trong app/ agent/ pipeline/ scripts/ chỉ route decide ghi review.decide", async () => {
+  const { execFileSync } = await import("node:child_process")
+  const ds = execFileSync("git", ["ls-files", "app", "agent", "pipeline", "scripts"], { cwd: GOC, encoding: "utf8" })
+    .split("\n")
+    .filter((f) => /\.(ts|tsx|mjs|js|cjs|sql)$/.test(f))
+  const tep = ds.map((f) => ({ f, s: readFileSync(path.join(GOC, f), "utf8") }))
+  assert.deepEqual(choGhiReviewDecide(tep), ["app/src/app/api/v1/ops/review/[id]/decide/route.ts"])
+  const them = [...tep, { f: "app/src/lib/ops/td-ghi-them.ts", s: 'await ghiAuditTrong(c, a, "review.decide", {})' }]
+  assert.throws(
+    () => assert.equal(choGhiReviewDecide(them).length, 1, `TD-AC-8: ${choGhiReviewDecide(them).length} chỗ ghi review.decide`),
+    /TD-AC-8: 2 chỗ ghi review\.decide/,
+  )
 })

@@ -132,3 +132,13 @@ export function fmtGiaM2(v: number | null): string {
   if (v === null) return "—";
   return `${Math.round(v / 1e6)}tr/m²`;
 }
+
+/** Trần độ dài lý do quyết định (PL3, CONTEXT «Lý do quyết định»). Route decide và ô «Lý do» dùng chung. */
+export const LY_DO_TOI_DA = 1000;
+
+/** Lý do sau khi cắt khoảng trắng hai đầu (gồm NBSP, U+3000); rỗng hay quá trần → null (chưa quyết được). */
+export function lyDoHopLe(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t.length === 0 || t.length > LY_DO_TOI_DA ? null : t;
+}
