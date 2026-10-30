@@ -2,7 +2,7 @@
 // vai, không độ tự tin, không gợi ý mặc định, quyết kèm lý do ghi audit cùng transaction. Tên ca mở đầu bằng mã AC (TD-AC-n).
 // Ca DB dựng lược đồ tạm `td_<pid>` (bảng LIKE public.*, dữ liệu viết trước), xoá cuối lượt; probe trên DB local thật chỉ
 // SELECT. Mỗi phép đo có chiều đỏ: bản chép tạm của tệp nguồn (tests/.td-cu-*) đổi đúng một chỗ, thông điệp ghim.
-import { after, before, test } from "node:test"
+import { after, before, describe, test } from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync, rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
@@ -10,8 +10,20 @@ import { fileURLToPath } from "node:url"
 import type { ReactElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { JSDOM } from "jsdom"
+import pg from "pg"
+
+import { localDbUrl } from "../../pipeline/scripts/capture-ops-facts.mjs"
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+
+// Lược đồ tạm: search_path = td_<pid>, public — bảng tạm che bảng public, hàm của 045 (resolve_offer_fields…) tìm ở public.
+const S = `td_${process.pid}`
+const urlS = (() => {
+  const u = new URL(localDbUrl())
+  u.searchParams.set("options", `-c search_path=${S},public`)
+  return u.toString()
+})()
+process.env.DATABASE_URL = urlS // pool của app đọc lúc import — đặt TRƯỚC mọi import động
 
 // ---------- jsdom (cùng khuôn review-card.test.tsx) ----------
 const dom = new JSDOM("<!doctype html><div id=root></div>", { url: "http://localhost:3460/ops/review" })
@@ -262,4 +274,197 @@ test("TD-AC-6 vùng nút không đổi theo ai_suggestion; suy luận AI tách s
     s.replace('<Button size="sm" onClick={approve}', '<Button size="sm" variant={item.ai_suggestion === "apply" ? "default" : "outline"} onClick={approve}'),
   )
   await assert.rejects(kiemAc6(saiBo), /TD-AC-6: nút Áp đổi theo gợi ý apply/)
+})
+
+// ================= DB: lược đồ tạm td_<pid> =================
+const admin = new pg.Client({ connectionString: localDbUrl() })
+const db = new pg.Client({ connectionString: urlS })
+let setupErr: string | null = null
+const BANG = ["review_queue", "sale_offer_records", "stg_zalo_posts", "stg_chotot_ads", "field_assertions", "ops_audit", "media", "property_candidates", "enrichment_proposals"]
+
+const VAN_S03 = Array.from({ length: 30 }, (_, i) => `Dòng ${String(i).padStart(2, "0")} của bài S03: căn hộ 2 ngủ, sổ hồng, tầng trung, giá thương lượng.`).join("\n").slice(0, 1200)
+const VAN_S03_CU = "Bản cũ của bài S03 — không được hiện."
+const VAN_S05 = "Bài S05 rất dài. ".repeat(750).slice(0, 12000)
+const BODY_S06 = "Mô tả S06: nhà phố 4 tầng, hẻm xe hơi. ".repeat(30).slice(0, 800)
+const NHOM_S03 = "Nhóm thử td"
+
+async function dungLuocDo() {
+  await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`)
+  await admin.query(`CREATE SCHEMA "${S}"`)
+  for (const t of BANG) await admin.query(`CREATE TABLE "${S}".${t} (LIKE public.${t} INCLUDING DEFAULTS INCLUDING GENERATED)`)
+  await admin.query(`CREATE VIEW "${S}".sale_offers AS SELECT * FROM "${S}".sale_offer_records WHERE retired_at IS NULL`)
+  // Cột serial mang default nextval(public…) — đổi sang sequence riêng của lược đồ để không đụng sequence của public.
+  const { rows } = await admin.query(
+    `SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = $1 AND column_default LIKE 'nextval(%'`,
+    [S],
+  )
+  for (const r of rows) {
+    const seq = `"${S}"."${r.table_name}_${r.column_name}_seq"`
+    await admin.query(`CREATE SEQUENCE ${seq} START 1000`)
+    await admin.query(`ALTER TABLE "${S}".${r.table_name} ALTER COLUMN ${r.column_name} SET DEFAULT nextval('${seq}')`)
+  }
+}
+
+async function napTin() {
+  const q = (t: string, v: unknown[]) => admin.query(t, v)
+  const tin: [string, string, string | null, string[]][] = [
+    ["td_s03", "S03", null, ["tp0", "tp1"]],
+    ["td_s05", "S05", null, ["tf1"]],
+    ["td_s06", "S06", "9001", []],
+    ["td_s06b", "S06", "9002", []],
+    ["td_np", "S06", "9003", []],
+  ]
+  for (const [id, src, osk, posts] of tin)
+    await q(
+      `INSERT INTO "${S}".sale_offer_records (offer_id, source, kind, originating_system_key, post_ids, first_seen, last_seen)
+       VALUES ($1,$2,'sale',$3,$4, now(), now())`,
+      [id, src, osk, posts],
+    )
+  await q(`INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, group_name, text, captured_at) VALUES ('tp0','hanoi__zalo-agent__a',$1,$2, now() - interval '2 days')`, [NHOM_S03, VAN_S03_CU])
+  await q(`INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, group_name, text, captured_at) VALUES ('tp1','hanoi__zalo-agent__b',$1,$2, now())`, [NHOM_S03, VAN_S03])
+  await q(`INSERT INTO "${S}".stg_zalo_posts (post_id, snapshot_id, group_name, text, captured_at) VALUES ('tf1','hanoi__apify-facebook__c','nhóm FB thử',$1, now())`, [VAN_S05])
+  await q(
+    `INSERT INTO "${S}".stg_chotot_ads (list_id, region_v2, city_code, category, ad_type, payload, snapshot_id)
+     VALUES (9001, 1, 'HN', 1000, 's', $1, 'hanoi__chotot__d')`,
+    [JSON.stringify({ body: BODY_S06, subject: "S06 tiêu đề" })],
+  )
+  // Phát biểu → resolve_offer_fields thật của 045 ghi field_provenance (không viết tay jsonb).
+  const pb: [string, string, string, string, string, Record<string, unknown>][] = [
+    ["S03:tp1", "bedrooms", "2", "fact", "source_field", {}],
+    ["S03:tp1", "property_type", "apartment", "observed", "parser", {}],
+    ["S06:9001", "bathrooms", "3", "fact", "source_field", {}],
+    ["S05:tf1", "street_raw", "Âu Cơ", "observed", "legacy", { offer_id: "td_s05" }],
+  ]
+  for (const [subj, f, v, tier, m, ev] of pb)
+    await q(
+      `INSERT INTO "${S}".field_assertions (subject_key, field, value, evidence_tier, method, evidence) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [subj, f, v, tier, m, JSON.stringify(ev)],
+    )
+  await q(`INSERT INTO "${S}".ops_audit (actor, action, env, detail) VALUES ('machine:td', 'phat-bieu:cat-chuyen', 'local', '{}')`, [])
+}
+
+before(async () => {
+  try {
+    await admin.connect()
+    await dungLuocDo()
+    await napTin()
+    await db.connect()
+    await db.query(`SELECT resolve_offer_fields(ARRAY['td_s03','td_s05','td_s06','td_s06b','td_np'])`)
+  } catch (e) {
+    setupErr = (e as Error).message
+  }
+})
+after(async () => {
+  await db.end().catch(() => {})
+  await admin.query(`DROP SCHEMA IF EXISTS "${S}" CASCADE`).catch(() => {})
+  await admin.end().catch(() => {})
+  const { pool } = await import("../src/lib/db")
+  await pool.end().catch(() => {})
+})
+const ready = () => assert.equal(setupErr, null, `dựng lược đồ tạm không được — eval đòi chạy thật: ${setupErr}`)
+
+type CtxMod = typeof import("../src/lib/ops/review-context")
+const THE_DB = [
+  { id: 1, item_type: "entity_match", evidence: { offer_a: { offer_id: "td_s05" }, offer_b: { offer_id: "td_s06" } } },
+  { id: 2, item_type: "agent_output", evidence: { offer_id: "td_s03" } },
+  { id: 3, item_type: "entity_match", evidence: { offer_a: { offer_id: "td_np" }, offer_b: { offer_id: "td_vang" } } },
+  { id: 4, item_type: "agent_output", evidence: { offer_id: "td_s06b" } },
+]
+const qDb = (t: string, v: unknown[]) => db.query(t, v)
+
+describe("TD-AC-2 DB căn cứ đọc từ field_provenance do bên ghi 045 dựng", () => {
+  test("TD-AC-2 DB căn cứ loader khớp field_provenance từng ô; tin không phát biểu / vắng → không căn cứ, không ném", async () => {
+    ready()
+    const { loadReviewContext } = (await import("../src/lib/ops/review-context")) as CtxMod
+    const ctx = await loadReviewContext(THE_DB, qDb)
+    const { rows } = await db.query(`SELECT offer_id, field_provenance FROM sale_offers`)
+    const fp = Object.fromEntries(rows.map((r) => [r.offer_id, r.field_provenance]))
+    assert.deepEqual(ctx[2].offer!.canCu, canCu.docCanCu(fp.td_s03), "căn cứ td_s03 lệch field_provenance")
+    assert.deepEqual(ctx[2].offer!.canCu, {
+      bedrooms: { lop: "fact", phuongPhap: "source_field" },
+      property_type: { lop: "observed", phuongPhap: "parser" },
+    })
+    assert.deepEqual(ctx[1].offer_b!.canCu, { bathrooms: { lop: "fact", phuongPhap: "source_field" } })
+    assert.deepEqual(ctx[1].offer_a!.canCu, { street_raw: { lop: "observed", phuongPhap: "legacy" } })
+    assert.deepEqual(ctx[3].offer_a!.canCu, {}, "tin không phát biểu")
+    assert.deepEqual(ctx[3].offer_b, { toanVan: null, nhom: null, canCu: {} }, "tin vắng khỏi sale_offers")
+    const rowsSo = canCu.soTruongGhepCan({}, {}, ctx[3].offer_a!.canCu, ctx[3].offer_b!.canCu).filter((h) => h.truc)
+    for (const h of rowsSo) assert.equal(h.canCuA, "Chưa ghi căn cứ — đọc từ tin", `${h.key}`)
+  })
+})
+
+async function kiemAc3(mod: CtxMod) {
+  const ctx = await mod.loadReviewContext(THE_DB, qDb)
+  const s03 = ctx[2].offer!.toanVan ?? ""
+  assert.equal(s03.length, VAN_S03.length, `TD-AC-3: toàn văn S03 dài ${s03.length}, kỳ vọng ${VAN_S03.length}`)
+  assert.equal(s03, VAN_S03, "toàn văn S03 phải là bản mới nhất, từng ký tự")
+  assert.equal(ctx[2].offer!.nhom, NHOM_S03)
+  assert.equal(ctx[1].offer_a!.toanVan, VAN_S05, "toàn văn S05 (12.000 ký tự) phải trọn")
+  assert.equal(ctx[1].offer_a!.nhom, null, "tên nhóm chỉ hiện cho S03")
+  assert.equal(ctx[1].offer_b!.toanVan, BODY_S06)
+  assert.equal(ctx[4].offer!.toanVan, null, "S06 không có bài ở stg → null")
+}
+describe("TD-AC-3 toàn văn đọc ở máy thu", () => {
+  test("TD-AC-3 S03 bản mới nhất 1.200 ký tự, S05 12.000 ký tự, S06 body; không cắt, không line-clamp; nhóm tách riêng", async () => {
+    ready()
+    const mod = (await import("../src/lib/ops/review-context")) as CtxMod
+    await kiemAc3(mod)
+    const ctx = await mod.loadReviewContext(THE_DB, qDb)
+    const React = await import("react")
+    Object.assign(globalThis, { React })
+    const { ReviewFullText } = await import("../src/components/ops/review/review-full-text")
+    const html = renderToStaticMarkup(<ReviewFullText label="Tin" ctx={ctx[2].offer} doanDau="đoạn đầu" />)
+    const doc = new JSDOM(`<div>${html}</div>`).window.document
+    assert.equal(doc.querySelector("[data-review-fulltext]")!.textContent, VAN_S03, "khối toàn văn phải giữ nguyên văn và xuống dòng")
+    assert.equal(doc.querySelectorAll("[class*=line-clamp]").length, 0, "không line-clamp")
+    assert.equal(doc.querySelector("[data-review-group]")!.textContent, `Nhóm: ${NHOM_S03}`)
+    assert.ok(!doc.querySelector("[data-review-fulltext]")!.textContent!.startsWith(NHOM_S03), "tên nhóm không đứng đầu đoạn tin")
+    assert.ok(!html.includes("đoạn đầu"), "có toàn văn thì không hiện đoạn đầu evidence")
+    const thieu = renderToStaticMarkup(<ReviewFullText label="Tin" ctx={ctx[4].offer} doanDau="đoạn đầu lưu" />)
+    assert.ok(thieu.includes("Không có toàn văn ở máy thu") && thieu.includes("đoạn đầu lưu"))
+    const sai = await banChepTam<CtxMod>("src/lib/ops/review-context.ts", (s) => s.replace("ELSE z.text END", "ELSE left(z.text, 300) END"))
+    await assert.rejects(kiemAc3(sai), /TD-AC-3: toàn văn S03 dài 300, kỳ vọng 1200/)
+  })
+})
+
+// ---------- Probe chỉ đọc trên DB local thật (dữ liệu importer + transform thật ghi) ----------
+describe("TD-AC-2/3 probe DB local thật (chỉ SELECT)", () => {
+  const that = new pg.Client({ connectionString: localDbUrl() })
+  before(async () => that.connect())
+  after(async () => that.end())
+  const qThat = (t: string, v: unknown[]) => that.query(t, v)
+
+  test("TD-AC-2 probe: mọi cặp lớp × phương pháp đang sống ở field_assertions có nhãn", async () => {
+    const { rows } = await that.query(`SELECT DISTINCT evidence_tier, method FROM field_assertions WHERE retracted_at IS NULL`)
+    assert.ok(rows.length > 0, "DB local không có phát biểu nào — probe không đo được")
+    for (const r of rows) {
+      const nhan = canCu.nhanCanCu({ lop: r.evidence_tier, phuongPhap: r.method })
+      assert.ok(nhan && nhan !== r.method && !nhan.includes(r.evidence_tier), `cặp ${r.evidence_tier}·${r.method} không có nhãn: «${nhan}»`)
+    }
+  })
+
+  test("TD-AC-3 probe: thẻ chờ có bài gốc ở stg → loader trả toàn văn (100%); căn cứ khớp field_provenance", async () => {
+    const { loadReviewContext } = (await import("../src/lib/ops/review-context")) as CtxMod
+    const { rows: the } = await that.query(`SELECT id::int AS id, item_type, evidence FROM review_queue WHERE status = 'pending'`)
+    const ctx = await loadReviewContext(the, qThat)
+    let soBen = 0
+    for (const t of the) {
+      for (const k of ["offer_a", "offer_b", "offer"] as const) {
+        const id = k === "offer" ? t.evidence?.offer_id : t.evidence?.[k]?.offer_id
+        if (typeof id !== "string") continue
+        const { rows } = await that.query(
+          `SELECT o.field_provenance,
+                  EXISTS (SELECT 1 FROM stg_zalo_posts p WHERE p.post_id = ANY (o.post_ids))
+                  OR EXISTS (SELECT 1 FROM stg_chotot_ads a WHERE o.source = 'S06' AND a.list_id::text = o.originating_system_key) AS co_bai
+             FROM sale_offers o WHERE o.offer_id = $1`,
+          [id],
+        )
+        if (rows.length === 0) continue
+        soBen++
+        if (rows[0].co_bai) assert.ok(ctx[t.id]?.[k]?.toanVan, `TD-AC-3 probe: thẻ #${t.id} có bài gốc ở stg mà loader trả null`)
+        assert.deepEqual(ctx[t.id]?.[k]?.canCu, canCu.docCanCu(rows[0].field_provenance), `thẻ #${t.id} ${k}: căn cứ lệch field_provenance`)
+      }
+    }
+    assert.ok(soBen > 0, "không thẻ chờ nào có tin trong sale_offers — probe không đo được")
+  })
 })

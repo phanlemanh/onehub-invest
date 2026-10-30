@@ -22,17 +22,18 @@ type Row = { offer_id: string; field_provenance: unknown; toan_van: string | nul
 export type ContextQuery = (text: string, values: unknown[]) => Promise<{ rows: Row[] }>;
 
 /**
- * S03: bài mới nhất theo `post_ids`; S06: `payload->>'body'` của lượt thu mới nhất theo `originating_system_key`
- * (= `list_id`). Nguồn khác chưa có bài gốc ở máy thu → toan_van NULL.
+ * Tin có `post_ids` (S03, S05 — bài nằm ở `stg_zalo_posts`): bài mới nhất theo `post_ids`; S06: `payload->>'body'` của
+ * lượt thu mới nhất theo `originating_system_key` (= `list_id`). Nguồn khác chưa có bài gốc ở máy thu → toan_van NULL.
+ * Tên nhóm chỉ lấy cho S03 (tầng C, AGENTS.md luật 6); nhóm của nguồn khác không hiện.
  */
 export const CONTEXT_SQL = `
   SELECT o.offer_id, o.field_provenance,
-         CASE o.source WHEN 'S03' THEN z.text WHEN 'S06' THEN c.body END AS toan_van,
+         CASE WHEN o.source = 'S06' THEN c.body ELSE z.text END AS toan_van,
          CASE o.source WHEN 'S03' THEN z.group_name END AS nhom
   FROM sale_offers o
   LEFT JOIN LATERAL (
     SELECT p.text, p.group_name FROM stg_zalo_posts p
-    WHERE o.source = 'S03' AND p.post_id = ANY (o.post_ids)
+    WHERE p.post_id = ANY (o.post_ids)
     ORDER BY p.captured_at DESC NULLS LAST LIMIT 1
   ) z ON TRUE
   LEFT JOIN LATERAL (
