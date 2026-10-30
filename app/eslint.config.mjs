@@ -73,6 +73,7 @@ const eslintConfig = defineConfig([
     // lượt, lint chạy chồng thì liệt kê được mà mở không thấy (ENOENT).
     "**/.route-cu-*",
     "**/.gb-cu-*",
+    "**/.tpl-cu-*",
     // Bản chép tạm của tests/viewer-the-duyet (đối chứng dương), cùng lý do.
     "**/.vt-cu-*",
   ]),

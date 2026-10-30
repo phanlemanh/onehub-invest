@@ -335,6 +335,12 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
    thoả thuận đầu tiên, một chiều, Invest đẩy theo mẫu ADR-0014: danh mục căn, số thị trường tổng hợp, tin rao đã khớp căn
    — không S08, không AirDNA, không tên nguồn hay đường dẫn bài gốc; bộ soát chạy ở cửa ra của Invest. Chiều ngược tắt,
    mở bằng thoả thuận và qua cửa kiểm của Invest. Việc ở kho này: một bước đẩy nguồn cấp ở `pipeline/`, làm sau.
+24. **SĐT là lõi nhận diện Người, lưu số gốc dạng `+84…`** (30/10, Mạnh chốt Hỏi-A/B của
+   `docs/research/audit-bang-nguoi-sdt-3010.md`): danh bạ và tin lưu **số gốc**, mọi chỗ một dạng E.164 `+84xxxxxxxxx`
+   (RESO `MemberMobilePhone`: số quốc tế có «+» đứng đầu). Băm chỉ còn là khoá cho cloud, tính từ E.164. Khoá Người vẫn là
+   `party_key`, SĐT là bí danh mạnh nhất để tìm và gộp. Số gốc hiện ở máy thu cho **vai Vận hành và `admin`**
+   (`/ops/people`, `/ops/deals`); vai Người xem không thấy, không tìm theo SĐT. Đưa số gốc lên cloud là quyết định riêng,
+   chưa mở (`PII_EXCLUDE` giữ nguyên).
 
 ## 4. LỘ TRÌNH THỐNG NHẤT
 

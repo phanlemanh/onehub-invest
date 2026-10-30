@@ -96,26 +96,36 @@ test("TPL-AC-2 khác phường → Lệch, kể cả tên này là phần đầu
   assert.throws(() => kiemAc2(sai), /TPL-AC-2: Bình Thạnh ↔ Bình Thạnh Đông phải Lệch/)
 })
 
-// ---------- TPL-AC-3 ----------
-// Khoá chỉ số giữ cách so trước vòng: so với nhãn ghim và với soGiaTri trên chuỗi gốc.
+// ---------- KP-AC-1 (hồ sơ khoa-phuong-chung-phuong-so; thay ca TPL-AC-3) ----------
+// Khoá phường chung: phường số ghi khác kiểu cùng khoá → Khớp; số khác, slug phuong-12 → Lệch.
 const SO: [string, string, "khop" | "lech"][] = [
-  ["Phường 12", "phuong-12", "lech"],
-  ["Phường 12", "P.12", "lech"],
-  ["Phường 12", "Phường 21", "lech"],
+  ["Phường 12", "P.12", "khop"],
+  ["Phường 12", "P. 12", "khop"],
   ["Phường 12", " phường 12 ", "khop"],
+  ["Phường 12", "Phường 21", "lech"],
+  ["Phường 1", "Phường 12", "lech"],
+  ["Phường 12", "phuong-12", "lech"],
 ]
-function kiemAc3(mod: CanCuMod) {
+function kiemKp1(mod: CanCuMod) {
+  let n = 0
   for (const [a, b, nhan] of SO) {
-    const so = soPhuong(mod, a, b).so
-    const loi = nhan === "khop" ? "phải Khớp như trước vòng" : "không được Khớp chỉ vì cùng số"
-    assert.equal(so, nhan, `TPL-AC-3: ${a} ↔ ${b} ${loi}`)
-    assert.equal(so, mod.soGiaTri(a, b), `TPL-AC-3: ${a} ↔ ${b} khác cách so trước vòng`)
+    for (const [x, y] of [[a, b], [b, a]]) {
+      assert.equal(soPhuong(mod, x, y).so, nhan, `KP-AC-1: ${x} ↔ ${y} phải ${nhan === "khop" ? "Khớp" : "Lệch"}`)
+      n++
+    }
   }
+  assert.equal(SO.length, 6)
+  assert.equal(n, 12)
 }
-test("TPL-AC-3 khoá chỉ số giữ cách so trước vòng (4 cặp viết trước)", async () => {
-  kiemAc3(canCu)
-  const sai = await banChep((s) => s.replace("if (/^\\d+$/.test(ka) || /^\\d+$/.test(kb)) return soGiaTri(a, b);\n", ""))
-  assert.throws(() => kiemAc3(sai), /TPL-AC-3: Phường 12 ↔ P.12 không được Khớp chỉ vì cùng số/)
+test("KP-AC-1 phường số ghi khác kiểu → Khớp, số khác → Lệch (6 cặp viết trước, hai chiều)", async () => {
+  kiemKp1(canCu)
+  const sai = await banChep((s) =>
+    s.replace(
+      '  if (ka === "" || kb === "") return "thieu";\n',
+      '  if (ka === "" || kb === "") return "thieu";\n  if (/^\\d+$/.test(ka) || /^\\d+$/.test(kb)) return soGiaTri(a, b);\n',
+    ),
+  )
+  assert.throws(() => kiemKp1(sai), /KP-AC-1: Phường 12 ↔ P\.12 phải Khớp/)
 })
 
 // ---------- TPL-AC-4 ----------
@@ -134,8 +144,8 @@ function kiemAc4(mod: CanCuMod) {
   const h = soPhuong(mod, "binh-thanh", "Phường Bình Thạnh")
   assert.deepEqual([h.a, h.b], ["binh-thanh", "Phường Bình Thạnh"], "TPL-AC-4: ô giá trị phải giữ nguyên chuỗi nguồn")
   // Chín hàng còn lại, mỗi hàng một cặp viết trước kèm nhãn ghim (cách so trước vòng). Bốn hàng chữ dùng cặp mà
-  // khoaPhuong sẽ biến thành Khớp (bắt rò rỉ); năm hàng số: khoá số của khoaPhuong rơi về soGiaTri nên rò rỉ không đổi
-  // kết quả. Mỗi assert so cả với nhãn ghim lẫn với soGiaTri — như TPL-AC-3.
+  // khoaPhuong sẽ biến thành Khớp (bắt rò rỉ); năm hàng số: khoá của khoaPhuong là chính chữ số nên rò rỉ không đổi
+  // kết quả. Mỗi assert so cả với nhãn ghim lẫn với soGiaTri.
   const KHAC_PHUONG: [keyof import("../src/lib/ops/review-can-cu").BenGhepCan, string | number, string | number, "khop" | "lech"][] = [
     ["price_vnd", 7e9, 8.5e9, "lech"],
     ["area_m2", 52, 52, "khop"],
