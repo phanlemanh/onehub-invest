@@ -1,0 +1,98 @@
+schema_version: 1
+feature_slug: ho-nguoi-theo-nguon
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    expected: "exit 0; ca 'AC-1 khung danh bạ' trong pipeline/scripts/danh-ba-nguoi.itest.mjs xanh trên DB thử oneinvest_p3_nguoi (BEGIN…ROLLBACK): nạp 055 hai lần liên tiếp → lần hai không lỗi, ảnh lược đồ (information_schema.columns + pg_constraint + pg_trigger của bốn bảng) trước/sau lần hai bằng nhau. Ma trận viết trước 18 dòng, mỗi dòng một SAVEPOINT, số assert = 18: (1) INSERT parties khoá 'pty_01HZZZZZZZZZZZZZZZZZZZZZZZ' (26 ký tự Crockford) → được; (2) khoá 'pty_abc' → từ chối; (3) khoá 'usr_01HZ…' → từ chối; (4) status 'deleted' → từ chối; (5) status 'merged' thiếu merged_into → từ chối; (6) status 'active' có merged_into → từ chối; (7) parties.source 'chotot' → từ chối; (8) registry_aliases.source 'chotot' → từ chối; (9)–(16) đủ tám ô DELETE FROM và TRUNCATE trên từng bảng parties, party_roles, registry_aliases, registry_events → từ chối, mỗi ô thông điệp chứa 'chỉ thêm'; (17) UPDATE party_roles đặt retracted_at không lý do → từ chối, thông điệp chứa 'chỉ thêm'; (18) UPDATE party_roles đổi party_key → từ chối, thông điệp chứa 'chỉ thêm'. Đối chứng dương cùng ma trận: dòng (1) và một UPDATE party_roles rút CÓ lý do đều được. Ghim 'AC-1 ràng buộc không chặn: <dòng>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [db/migrations/055_danh_ba_nguoi.sql, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    expected: "exit 0; ca 'AC-2 enum và DQ' xanh trên DB thử (BEGIN…ROLLBACK, 055 nạp): (a) chạy logic --check-db của pipeline/vocab.mjs (hàm xuất ra, cùng hàm CLI dùng) → 0 lệch cho bốn trục registry_status, alias_kind, registry_event_kind, party_role — mỗi giá trị khai ở mappings.yaml có dòng ref_lookup và CHECK của cột liệt đúng tập ấy; chiều đỏ cùng giao dịch: xoá một dòng ref_lookup ('party_role','nguoi_dang') → --check-db báo đúng trục 'party_role'. (b) gọi hàm kiểm của dq-enum-vocab.mjs → dq_check_results có dòng check_name 'enum-vocab:<cột>' cho registry_aliases.kind, party_roles.role, parties.status với status 'pass'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/mappings.yaml, pipeline/lib/vocab.generated.mjs, pipeline/vocab.mjs, pipeline/dq-enum-vocab.mjs, db/migrations/055_danh_ba_nguoi.sql, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+
+  - id: E2b
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.nguoi_app
+    expected: "exit 0; ca 'AC-2 nhãn dòng kiểm danh bạ' trong app/tests/dq-nhan-danh-ba.test.tsx xanh (không DB): ma trận viết trước — ba dòng kiểm do dq-enum-vocab sinh cho bảng mới (check_name 'enum-vocab:kind' entity 'registry_aliases'; 'enum-vocab:role' entity 'party_roles'; 'enum-vocab:status' entity 'parties'; detail đúng khuôn chữ dq-enum-vocab ghi) → dqCheckName, dqEntityLabel, dqDetail đều known:true và chữ không chứa mã thô 'party_roles'/'registry_aliases'/'parties'; DqChecksTable dựng ba dòng ra HTML không chứa ba mã thô ấy. Chiều đỏ cùng ma trận: entity 'party_roles_x' (không có nhãn) → dqEntityLabel known:false. Ghim 'AC-2 dòng kiểm chưa diễn giải: <check_name · entity>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [app/src/lib/dq-labels.ts, app/tests/dq-nhan-danh-ba.test.tsx, pipeline/dq-enum-vocab.mjs]
+
+  - id: E2c
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.vocab
+    expected: "exit 0; bộ test sổ từ vựng hiện có xanh với bốn trục mới: vocab.mjs --check (hằng sinh khớp mappings.yaml) và --lint (không enum viết tay ngoài danh sách cho phép) không báo lệch ở pipeline/lib/danh-ba-nguoi.mjs, agent/app/pipeline vocab.generated."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/mappings.yaml, pipeline/lib/vocab.generated.mjs, app/src/lib/vocab.generated.ts, agent/src/vocab.generated.ts, pipeline/lib/danh-ba-nguoi.mjs]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    expected: "exit 0; ca 'AC-3 S06 tài khoản' xanh (BEGIN…ROLLBACK, 055 nạp, fixture tự chèn vào sale_offer_records với khoá 'TEST-DB2b-*'): ba tin S06 — t1, t2 seller_ref 'ct:900001', t3 'ct:900002' — → dungNguoi → t1 và t2 có đúng MỘT vai sống nguoi_dang, cùng party_key; t3 trỏ người khác; party của t1 có bí danh (S06, tai_khoan_nguon, '900001'); vai có method 'source_field', evidence_tier 'fact', evidence.offer_id = offer_id của tin, subject_key = 'S06:' || originating_system_key; party.source = 'S06'. Đối chứng cùng fixture: t3 đổi sang 'ct:900001' rồi chạy lại → t3 rút vai cũ, trỏ người của t1. Ghim 'AC-3 tin S06 sai người: <offer_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    expected: "exit 0; ca 'AC-4 S03/S05 người gửi' xanh (BEGIN…ROLLBACK): fixture bài stg_zalo_posts + tin sale_offer_records tự chèn, ma trận viết trước 7 dòng (số assert = 7): S03 một bài sender 's1' → 1 vai source_field/fact tới người bí danh (S03,tai_khoan_nguon,'s1'); S03 hai bài sender 's1','s2' → 2 vai, hai người; S03 không sender, có seller_phone_hash 'h9' → 1 vai parser/observed tới người bí danh (S03,sdt_bam,'h9'); S03 không sender không SĐT → 0 vai và khong_dinh_danh.S03 tăng 1; S05 bài kênh apify-facebook sender 's1' → 1 vai tới người S05 KHÁC người S03 's1'; S05 không sender có SĐT → 1 vai parser; tin S03 đã nghỉ (retired_at khác NULL) sender 's7' → 1 vai tới người 's7'. Đối chứng dương: dòng 'không gì' thêm sender 's3' rồi chạy lại → có 1 vai. Ghim 'AC-4 sai vai: <dòng ma trận>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.nguoi
+    expected: "exit 0; ca 'AC-5 luật bí danh SĐT' trong pipeline/scripts/danh-ba-nguoi.test.mjs xanh (không DB, hàm thuần giaiNguoi trên bảng bí danh trong bộ nhớ): ma trận viết trước 7 dòng (số assert = 7) — (a) tin tài khoản A + SĐT h → vai chỉ tới người A; h là bí danh của người theo SĐT PH (nguồn S03), người A không có bí danh sdt_bam; (b) lượt sau tin chỉ SĐT h → vai parser tới PH (không tới A); (c) tin tài khoản B + SĐT h → vai tới B; h vẫn thuộc PH, không người mới; (d) tin hai người gửi A, B + SĐT k → hai vai A, B; k là bí danh người PK mới; (e) tin không tài khoản + SĐT m mới → tạo người PM, vai parser; (f) S05 SĐT h (S03 đã có PH) → người S05 mới, khác PH; (g) chạy lại toàn bộ (a)-(f) lần hai → 0 người mới, 0 bí danh mới. Chiều đỏ cùng ma trận: bản sao luật theo lối khác của Hỏi-4 (gắn SĐT chưa ai giữ vào người tài khoản duy nhất) → assert dòng (a) đỏ, thông điệp ghim 'AC-5 SĐT gắn vào người tài khoản: h'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.test.mjs]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    expected: "exit 0; ca 'AC-6 chạy lại' xanh (BEGIN…ROLLBACK, fixture của E3+E4): dungNguoi lần 1 → kết quả có nguoi_moi > 0; lần 2 → {nguoi_moi:0, bi_danh_moi:0, vai_moi:0, vai_rut:0} và đếm bốn bảng bằng nhau giữa hai lần. Đổi sender_id của bài 's2' thành 's4' → lần 3 → vai tới người 's2' có retracted_at và retract_reason 'thay-boi-luot', có vai sống mới tới người 's4', tổng số dòng party_roles (cả rút) = trước + 1 (không xoá). Xoá bài của tin 's1' khỏi stg_zalo_posts (trong giao dịch) → lần 4 → {vai_moi:0, vai_rut:0}, vai tới người 's1' vẫn sống, không có vai parser mới cho tin ấy. Ghim 'AC-6 chạy lại nhân dòng: <bảng> <trước>→<sau>' và 'AC-6 bài mất làm rút vai: <offer_id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]
+
+  - id: E7
+    criterion: AC-7
+    executor: script
+    cmd: config:executors.test.nguoi_nap_lai
+    expected: "exit 0; output có dòng 'luot1' và 'luot2' mỗi dòng in nguoi/bi_danh/vai sống và tổng dòng party_roles (kể cả đã rút) theo nguồn S03, S05, S06 với mọi số sống > 0; dòng 'ket-qua luot2: nguoi_moi=0 bi_danh_moi=0 vai_moi=0 vai_rut=0'; dòng 'bang-nhau: true' (số sống và tổng dòng party_roles lượt 2 = lượt 1); dòng 'doi-chung bo-tra-bi-danh: loi trung khoa registry_aliases → do (đúng kỳ vọng)'; dòng 'sellers_thieu_nguoi: 0'; dòng 'rollback: dem truoc = dem sau' cho parties, party_roles, sale_offer_records. Lệnh chạy trọn hai lượt transform thật (runTransformZalo, runTransformFb, runTransformChotot) + refreshBaitGap + dungNguoi trên DB thử chép từ DB local, tất cả trong MỘT giao dịch ROLLBACK; đối chứng chạy cùng dữ liệu trong cùng giao dịch (SAVEPOINT): bộ dựng bỏ tra bí danh, lượt hai phải ném lỗi trùng khoá trên chỉ mục duy nhất sống của registry_aliases. Thoát 1 nếu kết quả lượt 2 khác 0, số lượt 2 khác lượt 1, hoặc đối chứng không ném; thoát 2 nếu điều kiện dương không đạt (một nguồn có 0 người)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/scripts/nap-lai-nguoi.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/refresh-bait-gap.mjs]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    expected: "exit 0; ca 'AC-8 sellers có người' xanh (BEGIN…ROLLBACK): fixture sellers dòng phone_hash 'hx' sources {S03,S05} + tin S03 và S05 mang 'hx' → dungNguoi → hàm sellersThieuNguoi(client) trả []; chiều đỏ cùng giao dịch: thêm dòng sellers 'hy' sources {S06} không có tin → sellersThieuNguoi trả ['hy:S06'], thông điệp ghim 'AC-8 sellers thiếu người: hy:S06'. nap-lai-nguoi.mjs (E7) in 'sellers_thieu_nguoi: 0' trên dữ liệu thật."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs, pipeline/scripts/nap-lai-nguoi.mjs]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.nguoi
+    expected: "exit 0; ca 'AC-9 chỉ local, không suy, không tầng A' xanh (đọc tĩnh, không DB): (a) danh sách bảng mà sync-cloud.mjs đẩy (hằng xuất ra của nó) ∩ {parties, party_roles, registry_aliases, registry_events} = ∅; chiều đỏ: danh sách mẫu chứa 'parties' → trả ['parties']; (b) quét pipeline/lib/danh-ba-nguoi.mjs: tập chuỗi giá trị role ghi = {'nguoi_dang'} và tập method ghi ⊆ {'source_field','parser'} — rút từ hằng xuất ra của mô-đun, không grep chữ; (c) mã SQL của bộ dựng không nhắc bảng nào trong {users, sessions, user_events, user_profile, source_registry} — quét bằng hàm bangDuocDoc(sql) áp lên chính chuỗi SQL mô-đun xuất; chiều đỏ: chuỗi mẫu 'JOIN users u' → trả ['users']. Ghim 'AC-9 bảng tầng A trong bộ dựng: <bảng>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/sync-cloud.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.test.mjs]
+
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.nguoi_db
+    expected: "exit 0; ca 'AC-10 chạy đêm' xanh (BEGIN…ROLLBACK, fixture E3): hàm bước xuất ra của refresh-bait-gap.mjs (cùng hàm main gọi) chạy với cờ savepoint → parties có người của t1 và giá trị trả về có khoá nguoi với nguoi_moi, vai_moi, khong_dinh_danh; chiều đỏ cùng fixture: DROP TABLE party_roles trong giao dịch rồi chạy hàm bước → hàm ném lỗi (không nuốt), VÀ sau đó trong cùng giao dịch sale_offers.bait_gap_pct của tin fixture P1 và dòng sellers của fixture vẫn mang giá trị lượt này ghi (bộ dựng lỗi không rollback bait gap/sellers), parties không có người của lượt lỗi. Ca tiến trình: spawn node refresh-bait-gap.mjs với DATABASE_URL trỏ DB không tồn tại → mã thoát ≠ 0. Ghim 'AC-10 bộ dựng lỗi kéo bait gap: <cột>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [pipeline/refresh-bait-gap.mjs, pipeline/lib/danh-ba-nguoi.mjs, pipeline/scripts/danh-ba-nguoi.itest.mjs]

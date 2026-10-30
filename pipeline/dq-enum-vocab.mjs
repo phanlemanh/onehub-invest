@@ -11,37 +11,62 @@ import { VOCAB } from "./lib/vocab.generated.mjs";
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
-// Cột enum của sale_offers kiểm theo sổ từ vựng (PL6 — pipeline/mappings.yaml `enums:` → vocab.generated.mjs).
-const COT = ["kind", "confidence", "price_tier", "property_type"];
+// Cột enum kiểm theo sổ từ vựng (PL6 — pipeline/mappings.yaml `enums:` → vocab.generated.mjs): bảng · cột · trục.
+export const KIEM_ENUM = Object.freeze([
+  { bang: "sale_offers", cot: "kind", truc: "kind" },
+  { bang: "sale_offers", cot: "confidence", truc: "confidence" },
+  { bang: "sale_offers", cot: "price_tier", truc: "price_tier" },
+  { bang: "sale_offers", cot: "property_type", truc: "property_type" },
+  // Danh bạ Người (DB2b, 055): check_name trùng `enum-vocab:kind` của sale_offers — /ops/quality phân biệt theo entity.
+  { bang: "parties", cot: "status", truc: "registry_status" },
+  { bang: "registry_aliases", cot: "kind", truc: "alias_kind" },
+  { bang: "registry_events", cot: "kind", truc: "registry_event_kind" },
+  { bang: "party_roles", cot: "role", truc: "party_role" },
+]);
+
+/**
+ * Kiểm một cột enum đúng sổ từ vựng, ghi một dòng dq_check_results (check_name `enum-vocab:<cột>`, entity `<bảng>`).
+ * @param {import("pg").Client} c
+ * @param {{ bang: string, cot: string, truc: string }} muc một phần tử của KIEM_ENUM
+ * @returns {Promise<{ status: "pass" | "fail", bad: number }>}
+ */
+export async function kiemEnum(c, { bang, cot: col, truc }) {
+  const allowed = [...VOCAB[truc]];
+  const { rows } = await c.query(
+    `SELECT count(*)::int AS bad, min(${col}) AS sample_bad FROM ${bang}
+     WHERE ${col} IS NOT NULL AND ${col} <> ALL($1::text[])`,
+    [allowed],
+  );
+  const bad = rows[0].bad;
+  const status = bad === 0 ? "pass" : "fail";
+  await c.query(
+    `INSERT INTO dq_check_results (check_name, entity, status, detail)
+     VALUES ($1, $2, $3, $4)`,
+    [
+      `enum-vocab:${col}`,
+      bang,
+      status,
+      bad === 0
+        ? `0 giá trị ngoài vocabulary (${allowed.join("|")})`
+        : `${bad} giá trị ngoài vocabulary, ví dụ: ${rows[0].sample_bad}`,
+    ],
+  );
+  return { status, bad };
+}
 
 async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
     let allPass = true;
-    for (const col of COT) {
-      const allowed = [...VOCAB[col]];
-      const { rows } = await c.query(
-        `SELECT count(*)::int AS bad, min(${col}) AS sample_bad FROM sale_offers
-         WHERE ${col} IS NOT NULL AND ${col} <> ALL($1::text[])`,
-        [allowed],
-      );
-      const bad = rows[0].bad;
-      const status = bad === 0 ? "pass" : "fail";
+    for (const muc of KIEM_ENUM) {
+      if (!(await c.query("SELECT to_regclass($1) AS t", [`public.${muc.bang}`])).rows[0].t) {
+        console.log(`${muc.bang}.${muc.cot}: bỏ qua — chưa có bảng`);
+        continue;
+      }
+      const { status, bad } = await kiemEnum(c, muc);
       if (bad > 0) allPass = false;
-      await c.query(
-        `INSERT INTO dq_check_results (check_name, entity, status, detail)
-         VALUES ($1, $2, $3, $4)`,
-        [
-          `enum-vocab:${col}`,
-          "sale_offers",
-          status,
-          bad === 0
-            ? `0 giá trị ngoài vocabulary (${allowed.join("|")})`
-            : `${bad} giá trị ngoài vocabulary, ví dụ: ${rows[0].sample_bad}`,
-        ],
-      );
-      console.log(`${col}: ${status}${bad ? ` (${bad} lệch)` : ""}`);
+      console.log(`${muc.bang}.${muc.cot}: ${status}${bad ? ` (${bad} lệch)` : ""}`);
     }
     // độ phủ property_type (không bắt buộc P1, nhưng theo dõi)
     const { rows: cov } = await c.query(
