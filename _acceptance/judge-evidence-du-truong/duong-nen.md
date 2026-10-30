@@ -1,7 +1,7 @@
 ---
 slug: judge-evidence-du-truong
-at: 2026-10-30T22:40:03.932Z
-sha: 417f9341731792f20c516d3aa0915880b5be6c4f
+at: 2026-10-30T22:50:09.274Z
+sha: b0d87768de9ee5e4302fb6d3152e5cc71e781e37
 nen: do
 cong_cu: xanh
 suite: do
@@ -11,11 +11,12 @@ engine: xanh
 
 ## Dòng đỏ
 
-- nen suite: DO SAN executors.test.agent ma 1
-- nen suite: DO SAN executors.test.app_ui ma 1
+- nen suite: CAY BAN SAU SUITE agent/scripts/judge-run.ts
+- nen suite: CAY BAN SAU SUITE agent/src/tools/native.ts
+- nen suite: CAY BAN SAU SUITE agent/tests/judge-chung.ts
+- nen suite: CAY BAN SAU SUITE agent/tests/judge-run.test.ts
+- nen suite: CAY BAN SAU SUITE agent/tests/judge-pair.test.ts
 
 ## Dòng vàng
 
-- nen suite: TEP CUA VONG _acceptance/judge-evidence-du-truong/contract.md (khong tinh)
-- nen suite: TEP CUA VONG _acceptance/judge-evidence-du-truong/evals.yaml (khong tinh)
-- nen suite: TEP CUA VONG docs/superpowers/specs/2026-10-31-judge-evidence-du-truong-design.md (khong tinh)
+- nen suite: TEP CUA VONG docs/superpowers/plans/2026-10-31-judge-evidence-du-truong.md (khong tinh)

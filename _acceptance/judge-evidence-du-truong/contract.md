@@ -61,8 +61,12 @@ Trục quét (preset entity-feature, làm tay vì chỉ có ba trục nhỏ): **
 - Gieo lại thẻ đang chờ trên chính DB `oneinvest` (việc vận hành sau gộp — ghi dữ liệu thật). Ngưỡng của hàng đo ở
   AC-6 trên bản chép lô thật.
 
+## Đường đo
+
+- Số thẻ mới đủ khuôn khoá trên tổng số thẻ mới của lô gieo lại · từ output E6 (lô `needs_llm` thật chép sang DB thử) ·
+  AC-6.
+- Số thẻ cũ giữ nguyên dữ liệu hai tin trên tổng số thẻ cũ của lô · từ output E6 · AC-6 (và AC-4 trên fixture).
+
 ## Notes
 
-- Đường đo của ngưỡng `bat_khi` («Gieo lại một lô thẻ: mọi thẻ mới đủ mười khoá…; thẻ cũ không bị sửa»): AC-6, lô
-  `needs_llm` thật của kho local chép sang DB thử lúc chạy eval; số cặp của lô in trong output.
 - Eval đã ký bị thay khi hồ sơ này được ký: `judge-nguong-la-code/E6` → AC-1 (bảng ở design doc §4).
