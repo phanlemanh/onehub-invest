@@ -54,8 +54,8 @@ async function transformDotBien(thay) {
   }
 }
 
-async function post(c, { sender, name = null, text, at, nhom = null }) {
-  const id = `t_${tag}_${++seq}`;
+async function post(c, { sender, name = null, text, at, nhom = null, id: duoi = null }) {
+  const id = duoi ? `t_${tag}_${duoi}` : `t_${tag}_${++seq}`;
   await c.query(
     `INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, group_name, text, posted_at, sender_id, sender_name, conversation_id)
      VALUES ($1, $2, 'openclaw-hook', 'Nhóm thử N1', $3, $4, $5, $6, $7)`,
@@ -82,10 +82,12 @@ test("CM-AC-5 DB: bài thuê từ 1 tỷ và bán trên 100 tỷ không thành o
 
 test("CM-AC-7: seller_name = tên của bài mới nhất có tên; không tên → null", { timeout: 600_000 }, async () => {
   const TEXT = "Cho thuê căn 2PN giá 11.37 triệu/tháng";
+  // Mã bài đặt để thứ tự xử lý (ORDER BY post_id) NGƯỢC thứ tự thời gian: bài có tên mới nhất được xử lý TRƯỚC bài có
+  // tên cũ — cài ngây thơ «bài có tên sau cùng thắng» ra «A», chỉ so posted_at mới ra «B».
   const mo = async (c) => ({
-    cu: await post(c, { sender: "s7", name: "A", text: TEXT, at: "2099-01-03T01:00:00Z" }),
-    moi: await post(c, { sender: "s7", name: " B ", text: TEXT, at: "2099-01-03T05:00:00Z" }),
-    rong: await post(c, { sender: "s7", name: "", text: TEXT, at: "2099-01-03T06:00:00Z" }),
+    moi: await post(c, { sender: "s7", name: " B ", text: TEXT, at: "2099-01-03T05:00:00Z", id: "s7a" }),
+    cu: await post(c, { sender: "s7", name: "A", text: TEXT, at: "2099-01-03T01:00:00Z", id: "s7b" }),
+    rong: await post(c, { sender: "s7", name: "", text: TEXT, at: "2099-01-03T06:00:00Z", id: "s7c" }),
     khongTen: await post(c, { sender: "s8", text: TEXT, at: "2099-01-03T02:00:00Z" }),
   });
   await withTx(async (c) => {
@@ -101,6 +103,12 @@ test("CM-AC-7: seller_name = tên của bài mới nhất có tên; không tên 
     const dotBien = await transformDotBien([[">= new Date(o.sellerNameAt)", "< new Date(o.sellerNameAt)"]]);
     await dotBien(c);
     assert.notEqual((await offerOf(c, p.cu))?.seller_name, "B", "CM-AC-7 đột biến lấy bài sớm nhất vẫn ra «B» — thước không đo");
+  });
+  await withTx(async (c) => {
+    const p = await mo(c);
+    const ngayTho = await transformDotBien([["if (ten && (o.sellerNameAt === null || new Date(pr.post.posted_at) >= new Date(o.sellerNameAt))) {", "if (ten) {"]]);
+    await ngayTho(c);
+    assert.notEqual((await offerOf(c, p.cu))?.seller_name, "B", "CM-AC-7 đột biến «bài có tên sau cùng thắng» vẫn ra «B» — thước không tách thời gian khỏi thứ tự xử lý");
   });
 });
 

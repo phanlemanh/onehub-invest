@@ -41,11 +41,22 @@ const AC1 = [
   ["Cho thuê 2PN full đồ 9tr https://f64-zpg-r.zdn.vn/12PN/x.jpg", (p) => p.bedrooms, 2],
   ["Bán 3PN 80m2 3,2 tỷ www.zdn.vn/150m2/a.jpg", (p) => p.areaM2, 80],
 ];
+// SĐT ba dạng đứng trước «T.Lan»: không gạt thì regex tỷ (nhánh "t" + ranh giới) đọc SĐT thành giá.
+const AC1_SDT = [
+  "Cho thuê 2PN 9tr, liên hệ 0901234567 T.Lan",
+  "Cho thuê 2PN 9tr, liên hệ 0901.234.567 T.Lan",
+  "Cho thuê 2PN 9tr, liên hệ 0901 234 567 T.Lan",
+];
 
 test("CM-AC-1: giá/DT/PN không lấy từ URL hay SĐT; phones đọc từ chữ gốc", () => {
   for (const [chu, doc, dapAn] of AC1) assert.equal(doc(tz.parsePost(chu)), dapAn, `CM-AC-1 «${chu}»`);
   assert.deepEqual(tz.parsePost("Cho thuê 65m2 lh 0901.234.567").phones, ["0901234567"], "CM-AC-1 phones");
-  assert.equal(AC1.length, 5);
+  for (const chu of AC1_SDT) {
+    const p = tz.parsePost(chu);
+    assert.equal(p.priceVnd, 9e6, `CM-AC-1 SĐT «${chu}»`);
+    assert.deepEqual(p.phones, ["0901234567"], `CM-AC-1 phones «${chu}»`);
+  }
+  assert.equal(AC1.length + AC1_SDT.length, 8);
 });
 
 test("CM-AC-1 đột biến: bỏ bước gạt URL/SĐT → dòng URL «6tY» ra sai", async () => {
@@ -72,6 +83,11 @@ const AC2_RF = [
   ["Bán studio 1.5 tỷ", 1.5e9],
   ["Bán studio 1,5 tỷ", 1.5e9],
 ];
+
+test("CM-AC-1 đột biến: chỉ bỏ bước gạt SĐT → cả ba dòng SĐT ra giá sai", async () => {
+  const m = await banSaoDotBien([['.replace(URL_RE, " ").replace(PHONE_RE, " ")', '.replace(URL_RE, " ")']]);
+  for (const chu of AC1_SDT) assert.notEqual(m.parsePost(chu).priceVnd, 9e6, `CM-AC-1 đột biến SĐT «${chu}» vẫn đúng — thước không đo bước gạt SĐT`);
+});
 
 test("CM-AC-2: 12 dạng giá tỷ ra đúng số đồng", () => {
   assert.equal(AC2.length, 12);

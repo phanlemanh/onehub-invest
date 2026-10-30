@@ -202,6 +202,7 @@ export const MA_TRAN = {
   "transform-chotot.mjs": "vong",
   "transform-hcmc-simple.mjs": "vong",
   "scripts/bench-extraction.mjs": "mien",
+  "scripts/do-cam-mau-s03.mjs": "mien", // phép đo N1 s03-cam-mau-so-lieu: đọc phường để đếm thước, không gán khu vực
   "sql/200_transform.sql": "mien",
   "sql/300_metrics.sql": "mien",
   "sql/450_dq_checks.sql": "mien",
@@ -241,7 +242,7 @@ export function kiemMaTran(files, maTran = MA_TRAN) {
 }
 
 test("TRG-AC-7 tập tệp khớp mẫu bằng đúng ma trận viết trước", () => {
-  assert.equal(Object.keys(MA_TRAN).length, 12, "ma trận viết trước phải đủ 12 tệp (design doc §5)");
+  assert.equal(Object.keys(MA_TRAN).length, 13, "ma trận viết trước phải đủ 13 tệp (design doc §5 + phép đo N1)");
   assert.deepEqual(kiemMaTran(docPipeline()), []);
 });
 
