@@ -1,0 +1,38 @@
+{
+  "feature_plain": "Mỗi căn và mỗi tin chưa gắn căn có một bậc dữ liệu B0–B5; mỗi ngày máy thu chụp phân bố bậc theo thị trường × loại hình và in ra được, kèm một phép kiểm báo khi một đề xuất làm giàu đã áp mà không có phát biểu.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ tính bậc của một tin bằng SQL đúng như trang Dòng chảy dữ liệu đang tính, kiểm chéo trên 74 tổ hợp kể cả giá 0, diện tích 0, loại hình chưa rõ."},
+    {"id": "AC-2", "p": "Sẽ xếp căn có tin đủ năm trường lõi vào B2, căn chỉ có tin thiếu trường vào B0, tin chưa gắn căn đủ trường vào B1."},
+    {"id": "AC-3", "p": "Sẽ chỉ cho căn lên B3 khi mọi trường lõi đã được đo; thiếu một trường đo thì ở lại B2 và ghi «thiếu số đo»."},
+    {"id": "AC-4", "p": "Sẽ cho căn lên B4 khi đã đo, được xác nhận và trường lõi có nguồn sự thật; không đơn vị nào lên B5 cho tới khi có trạng thái lời chào (PL19)."},
+    {"id": "AC-5", "p": "Sẽ chụp mỗi ngày số đơn vị ở từng bậc theo thị trường × loại hình; tổng khớp số căn cộng số tin lẻ, chạy lại trong ngày ra y nguyên, ngày cũ giữ nguyên."},
+    {"id": "AC-6", "p": "Sẽ in bảng phân bố bằng một lệnh: mỗi dòng một phân khúc, sáu cột bậc mang nhãn tiếng Việt, một dòng tổng."},
+    {"id": "AC-7", "p": "Sẽ báo «chưa đạt» khi một đề xuất làm giàu đã áp mà không có phát biểu của chính nó (giá trị có trước không được tính thay); máy thu hôm nay báo «đạt, thiếu 0»."},
+    {"id": "AC-8", "p": "Sẽ có nhãn tiếng Việt cho hai phép kiểm mới trên bảng «Kiểm chất lượng», không dòng nào «chưa diễn giải»."},
+    {"id": "AC-9", "p": "Sẽ chạy phân bố ở bước cuối của lượt đồng bộ 15 phút; phép kiểm báo chưa đạt không làm lượt đồng bộ đỏ; migration chạy lại an toàn; thêm thuật ngữ «Phân bố bậc»."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG viết công cụ chuyển đề xuất cũ — bảng đề xuất đã rỗng từ 26/10 (Hỏi-1)."},
+    {"id": "OOS-2", "p": "KHÔNG đưa phân bố bậc lên máy chủ hay trang Ops — chỉ ở máy thu, in bằng lệnh."},
+    {"id": "OOS-3", "p": "KHÔNG dựng bảng bậc đích từng phân khúc và số «đạt bậc đích»."},
+    {"id": "OOS-4", "p": "KHÔNG tính bậc năng lực N0–N4 của phân khúc."},
+    {"id": "OOS-5", "p": "KHÔNG làm nguồn gốc cho bốn trường lõi còn lại (PL17) hay cổng số đo mở B3 (PL21)."},
+    {"id": "OOS-6", "p": "KHÔNG làm nhánh «khớp danh mục» của B4 — chờ danh mục S08 (DB1)."},
+    {"id": "OOS-7", "p": "KHÔNG tính điều kiện B5 (lời chào còn hiệu lực, lịch sử giá) — PL19."},
+    {"id": "OOS-8", "p": "KHÔNG ghi quyết định «bác» của người thành phát biểu, không sửa ca thẻ chờ chuyển sang tin kế — PL23."},
+    {"id": "OOS-9", "p": "KHÔNG đổi định nghĩa «căn» theo danh bạ ADR-0016 — tính trên bảng căn hôm nay (Hỏi-2)."}
+  ],
+  "scope_plain": "Những việc dưới đây để cho các hàng sau hoặc không làm:",
+  "coverage_plain": [
+    {"i": 0, "p": "Đơn vị × bậc: tin lẻ đi B0–B1, căn đi B0, B2, B3, B4; B5 chưa ai đạt — AC-1 tới AC-4 phủ từng nấc theo bảng FRAMING §3.4."},
+    {"i": 1, "p": "Đường đi của con số: hàm tính bậc → ảnh chụp mỗi ngày → bảng in → phép kiểm → bước chạy định kỳ — AC-5 tới AC-9."},
+    {"i": 2, "p": "Bất biến đề xuất → phát biểu: có phát biểu, thiếu phát biểu, chỉ có giá trị cũ, bảng rỗng — AC-7."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phép kiểm chạy-lại-an-toàn của migration đếm nhầm bảng; đã sửa để đếm cả hai bảng nhãn nơi có thể nhân dòng."},
+    {"i": 1, "p": "Chưa có phép đo việc xếp đơn vị vào đúng thị trường × loại hình; đã thêm câu đếm độc lập từng phân khúc và ca tin không phường rơi vào «chưa rõ»."},
+    {"i": 2, "p": "Thiết kế và hợp đồng nói khác nhau về đề xuất nào phải có phát biểu, và giá trị cũ có thể che một đề xuất thiếu; đã thống nhất: chỉ đề xuất đã áp, giá trị cũ không bao giờ được tính thay."},
+    {"i": 3, "p": "Chỗ chạy phân bố (lượt đồng bộ 15 phút hay job đêm) là đánh đổi người quyết; đã đưa thành Hỏi-3 và ghim: phép kiểm chưa đạt không làm job đỏ."},
+    {"i": 4, "p": "Bảng đối chiếu bậc SQL với app chưa có ô biên như giá 0; đã thêm năm ô biên và ca đỏ «giá 0»."}
+  ]
+}
