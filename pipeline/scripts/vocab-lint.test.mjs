@@ -153,6 +153,7 @@ const DOC_HANG_SINH = [
 const NGOAI_LE = [
   "app/src/components/ops/review-card.tsx|enrich_field",
   "app/src/components/ops/review-card.tsx|assertion_method",   // PL15: nhãn nguồn đề xuất enrich, cùng tệp — dọn ở PL23
+  "app/src/components/ops/review-card.tsx|assertion_field",    // PL19: cùng FIELD_LABEL — năm mã đầu của trục phát biểu
   "pipeline/scripts/bench-gate.mjs|kind",
   "pipeline/scripts/bench-extraction.mjs|kind",
   "pipeline/sql/500_asset_stats.sql|confidence",
