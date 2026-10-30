@@ -5,7 +5,11 @@ slug: judge-evidence-du-truong
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
+status: implemented
+veto_state: mo
+veto_opened_at: 2026-10-30T23:00:00Z
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-10-31-judge-evidence-du-truong-design.md
 ---
 

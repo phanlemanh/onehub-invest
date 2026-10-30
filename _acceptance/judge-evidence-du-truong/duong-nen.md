@@ -1,22 +1,19 @@
 ---
 slug: judge-evidence-du-truong
-at: 2026-10-30T22:50:09.274Z
-sha: b0d87768de9ee5e4302fb6d3152e5cc71e781e37
-nen: do
+at: 2026-10-30T22:58:06.122Z
+sha: 6f0c83b878a5ff16f58e24f7f0a50f0321a452ec
+nen: xanh
 cong_cu: xanh
-suite: do
+suite: xanh
 luoi: xanh
 engine: xanh
 ---
 
 ## Dòng đỏ
 
-- nen suite: CAY BAN SAU SUITE agent/scripts/judge-run.ts
-- nen suite: CAY BAN SAU SUITE agent/src/tools/native.ts
-- nen suite: CAY BAN SAU SUITE agent/tests/judge-chung.ts
-- nen suite: CAY BAN SAU SUITE agent/tests/judge-run.test.ts
-- nen suite: CAY BAN SAU SUITE agent/tests/judge-pair.test.ts
+- không có
 
 ## Dòng vàng
 
-- nen suite: TEP CUA VONG docs/superpowers/plans/2026-10-31-judge-evidence-du-truong.md (khong tinh)
+- nen luoi: 1 vi pham cua chinh vong (khong tinh)
+- VIOLATION [judge-evidence-du-truong]: hồ sơ có bằng chứng nhưng status chưa arm cổng — status=draft; PR đổi code chịu cổng (agent/scripts/judge-run.ts…) mà hồ sơ trong PR chưa arm. Cổng chỉ chấm hồ sơ ở implemented/verified/signed-off, hồ sơ này đang tàng hình. Đặt status: implemented để cổng chấm, hoặc gỡ evidence-report.md / tách hồ sơ khỏi PR nếu bằng chứng thuộc phạm vi đã bỏ.
