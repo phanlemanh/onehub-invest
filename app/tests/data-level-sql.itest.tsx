@@ -57,7 +57,7 @@ async function doiChieu(fn: string, o: O[]): Promise<number> {
   return khop
 }
 
-test("AC-1 SQL offer_data_level trùng levelOf trên 74 ô", async () => {
+test("AC-1 offer_data_level khớp levelOf trên ma trận (74 ô)", async () => {
   const o = maTran()
   assert.equal(o.length, 74, "ma trận viết trước phải đủ 74 ô")
   const khop = await doiChieu("offer_data_level", o)

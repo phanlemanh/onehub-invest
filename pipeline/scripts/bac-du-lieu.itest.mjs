@@ -83,16 +83,22 @@ async function banLech(cu, moi) {
   return "pg_temp.property_data_level_lech";
 }
 
-test("AC-2 căn B2 · căn B0 truong-loi · tin lẻ B1 gan-can; không căn nào B1", async () => {
+async function kiemAC2(fn, b2, b0) {
+  const r = await bacCan(fn, [b2, b0]);
+  assert.deepEqual(r.get(b2), { data_level: "B2", ke_thieu: "so-do" }, "căn có tin đủ trường lõi phải là B2");
+  assert.deepEqual(r.get(b0), { data_level: "B0", ke_thieu: "truong-loi" }, "căn thiếu trường lõi phải là B0");
+}
+test("AC-2 căn B2 · căn B0 truong-loi · tin lẻ B1 gan-can; không căn nào nhận B1 (kèm chiều đỏ)", async () => {
   await trongGiaoDich(async () => {
     const du = await tin();
     const thieu = await tin({ price: 0 });
     const le = await tin();
     const b2 = await can({}, du);
     const b0 = await can({}, thieu);
-    const r = await bacCan("property_data_level", [b2, b0]);
-    assert.deepEqual(r.get(b2), { data_level: "B2", ke_thieu: "so-do" });
-    assert.deepEqual(r.get(b0), { data_level: "B0", ke_thieu: "truong-loi" });
+    await kiemAC2("property_data_level", b2, b0);
+    const lech = await banLech(
+      "OR NOT offer_core_complete(o.kind, o.property_type, o.price_vnd, o.area_m2, o.area_id) THEN 0", "THEN 0");
+    await assert.rejects(kiemAC2(lech, b2, b0), /căn thiếu trường lõi phải là B0/);
     assert.deepEqual(await bacTin(le, false), { data_level: "B1", ke_thieu: "gan-can" });
     const { rows: [n] } = await c.query("SELECT count(*)::int AS n FROM property_data_level(NULL) WHERE data_level = 'B1'");
     assert.equal(n.n, 0, "không căn nào nhận B1");

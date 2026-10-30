@@ -293,7 +293,7 @@ describe("AU13 cloud-sync", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "push-ops-facts" });
     assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "push-ops-facts", J.seq), [], r.stderr);
   });
-  test("AU13 cloud-sync: bac-du-lieu hỏng (PL16, bước cuối) → ≠0, dòng JOB FAIL [cloud-sync] bước bac-du-lieu", () => {
+  test("AU13 cloud-sync: bac-du-lieu hỏng → ≠0, dòng JOB FAIL [cloud-sync] bước bac-du-lieu (PL16, bước cuối)", () => {
     const r = runJob(J.root(), J.script, { FAIL_STEPS: "bac-du-lieu" });
     assert.deepEqual(problemsContinueOnFail(r, "cloud-sync", "bac-du-lieu", J.seq), [], r.stderr);
     assert.equal(J.seq.at(-1), "bac-du-lieu", "phân bố bậc là bước cuối, sau push-ops-facts (Hỏi-3)");

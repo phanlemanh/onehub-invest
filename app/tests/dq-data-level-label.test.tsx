@@ -6,7 +6,7 @@ import assert from "node:assert/strict"
 
 import { dqCheckName, dqDetail, dqEntityLabel } from "../src/lib/dq-labels"
 
-test("enrich:proposal-assertion và data-level:distribution có tên kiểm, đối tượng và chi tiết tiếng Việt", () => {
+test("nhãn hai kiểm PL16: enrich:proposal-assertion và data-level:distribution có tên kiểm, đối tượng và chi tiết tiếng Việt", () => {
   assert.deepEqual(dqCheckName("enrich:proposal-assertion"), { text: "Đề xuất có phát biểu", known: true })
   assert.deepEqual(dqCheckName("data-level:distribution"), { text: "Phân bố bậc", known: true })
   assert.deepEqual(dqEntityLabel("enrichment_proposals", new Map()), { text: "Bảng đề xuất", known: true })
