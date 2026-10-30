@@ -29,7 +29,7 @@ evals:
     criterion: AC-5
     executor: script
     cmd: config:executors.script.kns_s05_gate
-    expected: "exit 0; (b) active → should-NOT-fire không có dòng 'S05 paused', đi tới creds; (c) DB không tới → log 'coi như active', không coi là paused"
+    expected: "exit 0; (b) active → should-NOT-fire không có dòng 'S05 paused', đi tới creds; (c) DB không tới → fail-closed: thoát ≠0, 0 lời gọi (đảo AC-5 theo cong-tac-that, revisit 29/10)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-4

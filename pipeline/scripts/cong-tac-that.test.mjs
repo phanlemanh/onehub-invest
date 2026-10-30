@@ -1,7 +1,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -163,6 +163,35 @@ test("TV2b (b): S05 active nhưng 0 nhóm active → 0 lượt, KHÔNG fallback,
   } finally { await pv.close(); fh.cleanup(); }
 });
 
+/** Chạy THẬT scripts/chotot-daily.sh trên cây tạm: vong-doi + pg thật, mọi bước thu/nạp/transform giả. */
+function chotDailyThat(dbUrl) {
+  const T = mkdtempSync(join(tmpdir(), "tv2b-cd-"));
+  const repo = join(import.meta.dirname, "../..");
+  const napLog = join(T, "nap.log");
+  for (const d of ["scripts/lib", "pipeline/lib", "pipeline/logs"]) mkdirSync(join(T, d), { recursive: true });
+  for (const f of ["scripts/chotot-daily.sh", "scripts/lib/job-step.sh", "pipeline/lib/vong-doi.mjs"]) {
+    writeFileSync(join(T, f), readFileSync(join(repo, f)));
+  }
+  symlinkSync(join(repo, "pipeline/node_modules"), join(T, "pipeline/node_modules"));
+  writeFileSync(join(T, "pipeline/collect-chotot.mjs"), "process.exit(0);\n");
+  writeFileSync(join(T, "pipeline/import-chotot.mjs"),
+    `import { appendFileSync } from "node:fs"; import { basename, dirname } from "node:path";\nappendFileSync(${JSON.stringify(napLog)}, basename(dirname(process.argv[2])) + "\\n");\n`);
+  for (const f of ["transform-chotot", "transform-media", "refresh-bait-gap", "resolve-properties"]) {
+    writeFileSync(join(T, `pipeline/${f}.mjs`), "process.exit(0);\n");
+  }
+  for (const v of ["hanoi", "da-nang", "hcmc", "hp"]) {
+    mkdirSync(join(T, `collector/snapshots/${v}/${v}__chotot-ads__20261030T000000`), { recursive: true });
+  }
+  const r = spawnSync("bash", [join(T, "scripts/chotot-daily.sh")], {
+    env: { ...process.env, DATABASE_URL: dbUrl }, encoding: "utf8", timeout: 60_000,
+  });
+  return {
+    code: r.status, out: (r.stdout ?? "") + (r.stderr ?? ""),
+    napVung: () => (existsSync(napLog) ? readFileSync(napLog, "utf8").trim().split("\n").filter(Boolean) : []),
+    cleanup: () => rmSync(T, { recursive: true, force: true }),
+  };
+}
+
 test("TV2b (c)+(d): S06 — vùng active được thu (kể cả vùng MỚI), vùng paused/retired bị bỏ, nạp theo DB", async () => {
   seed({ registry: [["S06", "active"]], groups: [
     { sc: "S06", key: "hanoi", st: "active", params: { region_v2: 12000, cityCode: "vn-hanoi" } },
@@ -181,18 +210,13 @@ test("TV2b (c)+(d): S06 — vùng active được thu (kể cả vùng MỚI), v
     const vungGoi = pv.hits.map((h) => new URLSearchParams(h).get("region_v2"));
     assert.ok(vungGoi.includes("12000") && vungGoi.includes("4700"), "thu cả vùng mới da-nang");
     assert.ok(!vungGoi.includes("13000") && !vungGoi.includes("5500"), "paused/retired KHÔNG được bắn");
-    // nạp theo DB: chuỗi node của chotot-daily in đúng vùng active
-    const lst = spawnSync("node", ["--input-type=module", "-e", `
-      const pg = (await import("pg")).default;
-      const { isRunnable } = await import("./lib/vong-doi.mjs");
-      const c = new pg.Client({ connectionString: "${DB}" });
-      await c.connect();
-      const src = (await c.query("SELECT code, status FROM source_registry WHERE code = $1", ["S06"])).rows[0] ?? null;
-      const { rows } = await c.query("SELECT group_key, status FROM source_groups WHERE source_code = $1 ORDER BY id", ["S06"]);
-      await c.end();
-      console.log(rows.filter((r) => isRunnable(src, { status: r.status }).run).map((r) => r.group_key).join(" "));
-    `], { cwd: join(import.meta.dirname, ".."), encoding: "utf8", timeout: 30_000 });
-    assert.equal(lst.stdout.trim(), "hanoi da-nang", "chotot-daily sẽ nạp vùng mới, bỏ paused/retired");
+    // nạp theo DB: chạy THẬT scripts/chotot-daily.sh trên cây tạm — vong-doi thật + DB tạm,
+    // collect/import/transform giả; import giả ghi vùng của snapshot được nạp
+    const nap = chotDailyThat(DB);
+    try {
+      assert.equal(nap.code, 0, `chotot-daily exit 0 (out: ${nap.out.slice(-400)})`);
+      assert.deepEqual(nap.napVung(), ["hanoi", "da-nang"], "chotot-daily nạp vùng mới, bỏ paused/retired");
+    } finally { nap.cleanup(); }
   } finally { await pv.close(); rmSync(snapRoot, { recursive: true, force: true }); }
 });
 
