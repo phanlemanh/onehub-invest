@@ -108,6 +108,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   khoá gom thiếu phường/DT thêm mã toà/căn (`maToaCan`); `seller_name` = tên bài mới nhất; phường theo `market_codes` của
   nhóm, nhóm chưa khai đối chiếu mọi thị trường có phường, tên trùng hai nơi ra null. DB thử: 0 tin thuê ≥ 1 tỷ (từ 41),
   0 bán > 100 tỷ (từ 94), 0 giá từ URL (từ 4), `seller_name` 96,9% (từ 0), 0 tin TP.HCM sai phường (từ 38).
+  Bước gạt SĐT bỏ qua đuôi nhóm nghìn của giá đồng: «3.000.000.000» (`_acceptance/s03-gia-ty-chan-dong`) và cả khi sau giá là
+  khoảng trắng/xuống dòng + 1–2 chữ số, «3.000.000.000\n50m2» (`_acceptance/s03-gia-ty-sau-khoang-trang`; nhóm cuối «000», thân
+  số tiền không dính chữ — SĐT 3-3-3 kèm đuôi vẫn bị gạt); 21.934 bài thật: 0 bài đổi.
   Listing Airbnb transform cho nghỉ ngoài phường mang toạ độ của lần thu mới nhất (thiếu → NULL), giữ mốc + lý do nghỉ cũ
   (`_acceptance/airbnb-nghi-khong-hoi-sinh`) — reassign-areas chỉ đánh thức listing nghỉ khi toạ độ HIỆN HÀNH vào phường.
 - Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`
