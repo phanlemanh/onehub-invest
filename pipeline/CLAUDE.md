@@ -11,7 +11,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ; ngoài mọi phường → nghỉ `ngoai_phuong` mang toạ độ lần thu mới (reassign không đánh thức bằng toạ độ cũ) |
 | transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs); số đọc trên chữ đã gạt URL/SĐT (đuôi nhóm nghìn của giá đồng không bị gạt, kể cả khi sau là khoảng trắng + 1–2 chữ số), luật giá VN, chặn giá phi lý, phường theo thị trường nhóm (N1) |
 | transform-media.mjs | Bảng `media` (RESO Media, NH1) cho tin sống S03/S05/S06; S03 nối thêm ảnh của tin chỉ-ảnh vào offer của tin chữ gần nhất cùng người, dưới 2 phút (PL28, `lib/gop-anh.mjs`) |
-| refresh-bait-gap.mjs | Bait gap P1 + registry sellers (xoá người bán không còn tin, audit); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng |
+| refresh-bait-gap.mjs | Bait gap P1 + registry sellers (upsert: thêm dòng cho SĐT mới trên tin, ghi đè cột tổng hợp, giữ tên; xoá người bán không còn tin, audit); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng |
 | scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
 | transform-hcmc-simple.mjs | HCMC-specific (market-first, then phường assign) |
 | transform-airdna.mjs | AirDNA XHR → airdna_markets, metrics, scores |
@@ -21,9 +21,12 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | phat-bieu-cat-chuyen.mjs | PL15 bước chuyển: giá trị có sẵn của năm cột → phát biểu `legacy`, mở cổng phân xử; `--thu` ROLLBACK |
 | scripts/dung-lai-canonical.mjs | Thước PL15: xoá năm cột rồi dựng lại trong giao dịch ROLLBACK (0 ô lệch); `--nguon-goc`; `--doi-chung=…` |
 | scripts/phat-bieu-chay-that.mjs | PL15: ba transform + phân xử trên dữ liệu thật, đo giây, ROLLBACK (`--thu`) |
+| trang-thai-chao.mjs | PL19: bộ ghi bằng chứng + phân xử trạng thái chào mọi tin (059 `ghi_bang_chung_chao`, `resolve_offer_status`), in đếm năm trạng thái — bước cloud-sync ngay trước `bac-du-lieu`; khoá 56056 |
+| scripts/trang-thai-roundtrip.mjs | Thước PL19 (AC-8): trang-thai-chao hai lần trên DB thử, đếm độc lập, chiều đỏ DB không tới được |
 | dung-nguoi.mjs | DB2b: dựng danh bạ Người + vai người đăng một lượt (chạy đêm đi qua `buocDem` của refresh-bait-gap); `--thu` ROLLBACK |
 | scripts/nap-lai-nguoi.mjs | Thước DB2b: hai lượt transform + bước đêm trong giao dịch ROLLBACK, lượt 2 bằng 0, đối chứng bỏ tra bí danh; `--doi-chung-hong` |
 | label-mau.mjs | PL8: tập tin mẫu lát OCP1 có đáp án biết sẵn (`--lat ocp1 --n 200 --seed s [--out f.jsonl]`); hàm thuần `lib/tap-mau.mjs` + khuôn `lib/khuon-mau-ocp1.mjs`, không DB, không đường tới canonical/stg |
+| eval-classify.mjs | PL9: độ đúng từng ô (cách đọc × trường × phân khúc) theo cận dưới Wilson so ngưỡng F3 (`npm run eval:classify -- --lat ocp1 [--split dev] [--dry]` → `dq_check_results`, `--tap-mau <tệp.jsonl>` chỉ in); lõi `lib/eval-classify.mjs`, cách đọc `parser` |
 | finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 
 ## SQL Files (execute in order)
@@ -45,6 +48,7 @@ nights (listing_id, night, available, price)
 market_metrics (area_id, month, listing_count, revenue, adr, occupancy, revpar)
 sale_offer_records (offer_id, …, retired_at, retired_reason, superseded_by, originating_system_key) — bảng bản ghi (044)
 sale_offers = VIEW sống của sale_offer_records (offer_id, area_id, kind, price_vnd, area_m2, confidence, …)
+history_transactional (resource_record_key = offer_id, field_name ListPrice|StandardStatus, change_type, …) — lịch sử giá/trạng thái (059, trigger trên sale_offer_records, chỉ local); property_price_history = VIEW gom theo căn
 market_asset_stats (area_id, kind, median_perm2, median_rent)
 parties / registry_aliases / registry_events / party_roles — danh bạ Người (055, chỉ-thêm, chỉ local; khoá `pty_<ULID>`)
 airdna_markets / airdna_scores / airdna_market_metrics

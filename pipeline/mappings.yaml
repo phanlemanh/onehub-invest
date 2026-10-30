@@ -313,7 +313,7 @@ enums:
     local: true
     rationale: "tên trường canonical nhận đề xuất enrich (migration 033); dd_lookup = tên field RESO của trường"
     checked_on: "2026-10-26"
-    columns: [enrichment_proposals.field, field_assertions.field]
+    columns: [enrichment_proposals.field]
     nullable: false
     values:
       - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
@@ -321,6 +321,21 @@ enums:
       - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
       - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
       - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+  assertion_field:
+    term_vi: Trường phát biểu
+    dd_field: null
+    local: true
+    rationale: "extension FieldAssertion.FieldName (ADR-0013 §6) — trường nhận phát biểu và phân xử: năm trường enrich + trạng thái chào (PL19, migration 059); dd_lookup = tên field RESO của trường"
+    checked_on: "2026-10-30"
+    columns: [field_assertions.field]
+    nullable: false
+    values:
+      - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
+      - { code: bedrooms, label_vi: Phòng ngủ, dd_lookup: BedroomsTotal }
+      - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
+      - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
+      - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+      - { code: offer_status, label_vi: Trạng thái chào, dd_lookup: StandardStatus }
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
@@ -412,7 +427,7 @@ enums:
   offer_status:
     term_vi: Trạng thái chào
     dd_field: StandardStatus
-    columns: []
+    columns: [sale_offer_records.offer_status]
     nullable: false
     values:
       - { code: active, label_vi: Đang chào, dd_lookup: Active }
@@ -420,8 +435,22 @@ enums:
       - { code: closed, label_vi: Đã bán, dd_lookup: Closed }
       - { code: withdrawn, label_vi: Đã gỡ, dd_lookup: Withdrawn }
       - { code: unknown, label_vi: Chưa rõ, local: true, rationale: "chưa có bằng chứng trạng thái; quá cửa sổ độ tươi KHÔNG thành Expired (reso-khung §6)" }
-    note: "Cột đến ở PL19; chỉ đổi theo bằng chứng (reso-khung-phan-loai.md §6). Nhãn: Hỏi-1 của PL6."
+    note: "Cột sale_offer_records.offer_status (PL19, 059) — chỉ hàm phân xử resolve_offer_status ghi; chỉ đổi theo bằng chứng (reso-khung-phan-loai.md §6). Nhãn: Hỏi-1 của PL6."
     checked_on: "2026-10-26"
+  change_type:
+    term_vi: Loại thay đổi
+    dd_field: ChangeType
+    checked_on: "2026-10-30"
+    columns: [history_transactional.change_type]
+    nullable: false
+    values:
+      - { code: new_listing, label_vi: Tin mới, dd_lookup: NewListing }
+      - { code: price_change, label_vi: Đổi giá, dd_lookup: PriceChange }
+      - { code: withdrawn, label_vi: Gỡ tin, dd_lookup: Withdrawn }
+      - { code: back_on_market, label_vi: Chào lại, dd_lookup: BackOnMarket }
+      - { code: active_under_contract, label_vi: Đã cọc, dd_lookup: ActiveUnderContract }
+      - { code: closed, label_vi: Đã bán, dd_lookup: Closed }
+    note: "Lịch sử giá và trạng thái của tin (RESO HistoryTransactional, PL19, 059) — trigger trên sale_offer_records ghi; bảng §6 của reso-khung-phan-loai.md."
   data_level:
     term_vi: Bậc dữ liệu
     dd_field: null
@@ -464,6 +493,9 @@ enums_lint_allow:
   - path: app/src/components/ops/review-card.tsx
     axis: enrich_field
     reason: "FIELD_LABEL của thẻ duyệt — UI1 đang sửa tệp này, PL23 dựng lại /ops/review (LUAT đợt dot0); dọn ở PL23"
+  - path: app/src/components/ops/review-card.tsx
+    axis: assertion_field
+    reason: "cùng FIELD_LABEL ở trên — năm mã enrich_field cũng là năm mã đầu của assertion_field (PL19); dọn ở PL23"
   - path: app/src/components/ops/review-card.tsx
     axis: assertion_method
     reason: "SOURCE_LABEL/CHOICE_LABEL nhãn nguồn đề xuất enrich (cột enrichment_proposals.source, cùng mã e1_rule/e2_llm) — PL23 dựng lại /ops/review hiện phát biểu theo lớp; dọn ở PL23"

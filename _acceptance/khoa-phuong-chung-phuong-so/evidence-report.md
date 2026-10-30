@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 77dbc4936f9be85e104272bfd87d5a4c26c4cdf7
+verified_commit: 71d13bca7d372b82393f7cac705cb12d28c1ddad
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -126,3 +126,7 @@ none — mọi eval chạy một lần, không có eval nhiều lượt.
 Round 1: E1–E5 chạy và xanh; các eval này được mang tiếp (carry-forward) sang các round sau vì delta không chạm paths của chúng.
 Round 2: REJECT ở bước S4 — chập chờn: eslint đọc tệp chép tạm .tpl-cu đã xoá (ENOENT) khi lint chạy chồng; bàn đo cũng được ghi lại từ lượt đầu (DB local 0 thẻ chờ). Trả về triển khai.
 Round 3: eslint bỏ qua bản chép tạm .tpl-cu-* (commit 77dbc493); sáu lệnh suite xanh; E1–E5 mang tiếp từ round 1. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-30, do phuong-so đổi khoaPhuong; trỏ eval thay thế tới phuong-so; gộp main
+run_id: repin-20261030T222258Z-25093
+sha: 71d13bca7d372b82393f7cac705cb12d28c1ddad · suites: 6 lệnh exit 0 · evals: 2/2 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E1, E2, E3 · thay bởi hồ sơ đã ký: E1→phuong-so#AC-1, E2→phuong-so#AC-2, E3→phuong-so#AC-3 · AC không có chốt máy: AC-1, AC-2, AC-3

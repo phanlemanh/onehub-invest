@@ -5,6 +5,7 @@
  * đổi ở bên ghi không đổi được dòng đã ghi. Khuôn lạ → giữ chuỗi gốc (hiện trong `<code>`) kèm `known: false`.
  */
 import { marketNameOf } from "./market-names"
+import { FIELD_LABEL } from "./labels-normalize"
 import { confidenceLabel, offerKindLabel, propertyTypeLabel } from "./ops-labels"
 import { LABELS_VI } from "./vocab.generated"
 
@@ -24,6 +25,7 @@ const TEN_KIEM: Record<string, string> = {
   "media:local-file": "Ảnh tin đã tải", // pipeline/transform-media.mjs (NH1)
   "enrich:proposal-assertion": "Đề xuất có phát biểu", // pipeline/bac-du-lieu.mjs (PL16)
   "data-level:distribution": "Phân bố bậc", // pipeline/bac-du-lieu.mjs (PL16)
+  "eval-classify": "Độ đúng cách đọc", // pipeline/eval-classify.mjs (PL9)
 }
 const COT_ENUM: Record<string, string> = {
   kind: "loại tin",
@@ -65,9 +67,27 @@ const DOI_TUONG: Record<string, string> = {
   enrichment_proposals: "Bảng đề xuất",
 }
 
+/** Ô độ đúng của eval-classify (PL9): `<lát>|<phân khúc>|<cách đọc>|<trường>`. */
+const LAT_NHAN: Record<string, string> = { ocp1: "Lát OCP1" }
+const CACH_DOC_NHAN: Record<string, string> = { parser: "Bộ đọc theo luật" }
+const PHAN_KHUC_NHAN: Record<string, string> = { "tat-ca": "mọi loại hình", "khong-neu": "loại hình không nêu" }
+/** Nhãn trường của màn gắn nhãn; trường `project` gọi theo CONTEXT.md («Khu đô thị», tránh «dự án»). */
+export const TRUONG_DO_DUNG: Record<string, string> = { ...FIELD_LABEL, project: "Khu đô thị" }
+function oDoDung(entity: string): DqText | null {
+  const m = entity.match(/^([a-z0-9]+)\|([a-z_-]+)\|([a-z0-9_]+)\|([a-z_0-9]+)$/)
+  if (!m) return null
+  const [, lat, pk, cd, truong] = m
+  const pt = propertyTypeLabel(pk)
+  const pkNhan = Object.hasOwn(PHAN_KHUC_NHAN, pk) ? PHAN_KHUC_NHAN[pk] : pt.known ? pt.label : null
+  if (!Object.hasOwn(LAT_NHAN, lat) || !pkNhan || !Object.hasOwn(CACH_DOC_NHAN, cd) || !Object.hasOwn(TRUONG_DO_DUNG, truong)) return null
+  return { text: `${LAT_NHAN[lat]} · ${pkNhan} · ${CACH_DOC_NHAN[cd]} · ${TRUONG_DO_DUNG[truong]}`, known: true }
+}
+
 /** Đối tượng kiểm: tên bảng, `sale_offers:S0x`, `S0x/<mã thị trường>`, mã khu vực `vn-…`, mã thị trường trần. */
 export function dqEntityLabel(entity: string, areaNames: ReadonlyMap<string, string>): DqText {
   if (Object.hasOwn(DOI_TUONG, entity)) return { text: DOI_TUONG[entity], known: true }
+  const o = oDoDung(entity)
+  if (o) return o
   const tin = entity.match(/^sale_offers:(S0\d)$/)
   if (tin) return { text: `Tin rao · ${tin[1]}`, known: true }
   if (/^S0\d$/.test(entity)) return { text: `Nguồn ${entity}`, known: true } // mã nguồn trần (media:local-file)
@@ -150,6 +170,24 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `${nguyen(m[1])} đề xuất đã áp · ${nguyen(m[2])} thiếu phát biểu`, known: true }
   if ((m = d.match(/^units=(\d+) B0=(\d+) B1=(\d+) B2=(\d+) B3=(\d+) B4=(\d+) B5=(\d+)$/)))
     return { text: [`${nguyen(m[1])} đơn vị`, ...m.slice(2).map((n, i) => `B${i} ${nguyen(n)}`)].join(" · "), known: true }
+  if (
+    (m = d.match(
+      /^run=\S+ tap=nguoi split=(test|dev) n=(\d+) dung=(\d+|-) ti_le=([\d.]+|-) can_duoi=([\d.]+|-) nguong=([\d.]+) nhom=([AB]) ly_do=(-|chua-co-nhan-nguoi|chua-co-cach-doc) bat_dong=(\d+) mat_chu=(\d+)$/,
+    ))
+  ) {
+    const [, split, n, dung, , canDuoi, nguong, nhom, lyDo, batDong, matChu] = m
+    const nguongChu = `ngưỡng ${so(nguong)} (nhóm ${nhom})`
+    const dau =
+      lyDo === "chua-co-cach-doc" ? "Bỏ qua — chưa có cách đọc cho trường này"
+      : lyDo === "chua-co-nhan-nguoi" ? "Bỏ qua — chưa có nhãn người"
+      : `Đúng ${nguyen(dung)}/${nguyen(n)} · cận dưới ${so(canDuoi)}`
+    const them = [
+      split === "test" ? "tập chấm" : "tập chỉnh luật",
+      ...(batDong !== "0" ? [`${nguyen(batDong)} trường người gắn bất đồng`] : []),
+      ...(matChu !== "0" ? [`${nguyen(matChu)} tin mất chữ`] : []),
+    ]
+    return { text: [dau, nguongChu, ...them].join(" · "), known: true }
+  }
   if (d === "samples=0") return { text: "Chưa có mẫu", known: true }
   if ((m = d.match(/^samples=(\d+) avgF1=([\d.]+)((?: \w+=[\d.]+)*)$/))) {
     const truong = m[3].trim() ? m[3].trim().split(" ").map((kv) => kv.split("=")) : []

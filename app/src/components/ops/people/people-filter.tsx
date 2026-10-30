@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 
 const TAT_CA = "all"
 
-/** Lọc /ops/people bằng form GET: đổi nguồn gửi ngay; tìm theo tên hay tài khoản bằng nút Tìm. Trang về 1. */
-export function PeopleFilter({ sources, source, q }: { sources: string[]; source: string | null; q: string }) {
+/** Lọc /ops/people bằng form GET: đổi nguồn gửi ngay; tìm theo tên hay tài khoản bằng nút Tìm (chỉ khi `coTim`). Trang về 1. */
+export function PeopleFilter({ sources, source, q, coTim }: { sources: string[]; source: string | null; q: string; coTim: boolean }) {
   const form = useRef<HTMLFormElement>(null)
   const [nguon, setNguon] = useState(source ?? TAT_CA)
   const items = [{ value: TAT_CA, label: "Mọi nguồn" }, ...sources.map((s) => ({ value: s, label: s }))]
@@ -39,15 +39,19 @@ export function PeopleFilter({ sources, source, q }: { sources: string[]; source
           </SelectGroup>
         </SelectContent>
       </Select>
-      <InputGroup className="w-64 max-w-full">
-        <InputGroupAddon>
-          <SearchIcon aria-hidden="true" />
-        </InputGroupAddon>
-        <InputGroupInput name="q" defaultValue={q} placeholder="Tên hoặc tài khoản" aria-label="Tìm theo tên hoặc tài khoản" />
-      </InputGroup>
-      <Button type="submit" variant="outline" size="sm">
-        Tìm
-      </Button>
+      {coTim && (
+        <>
+          <InputGroup className="w-64 max-w-full">
+            <InputGroupAddon>
+              <SearchIcon aria-hidden="true" />
+            </InputGroupAddon>
+            <InputGroupInput name="q" defaultValue={q} placeholder="Tên hoặc tài khoản" aria-label="Tìm theo tên hoặc tài khoản" />
+          </InputGroup>
+          <Button type="submit" variant="outline" size="sm">
+            Tìm
+          </Button>
+        </>
+      )}
     </form>
   )
 }
