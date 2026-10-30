@@ -1,11 +1,6 @@
-## Trong hợp đồng
+# Review findings: judge-nguong-la-code (round 4)
 
-- **Ở đúng ngưỡng, kết luận phụ thuộc sai số dấu phẩy động: 19,8 vs 22 m² (lệch đúng 10%) ra «yes», còn 45 vs 50 m² ra «unsure»**
-  AC: AC-1
-  file: `agent/src/agents/judge-entity.ts:69`
-  severity: medium
-  source: bugs
-  detail: apNguong so sánh trần `lg < NGUONG.giaM2YesMax` / `ld < NGUONG.dienTichYesMax` / `lg > NGUONG.giaM2NoMin` trên số thực, không có dung sai. Trong khi đó phanTram lại cộng `1e-6` để bù sai số. Vì vậy cùng một độ lệch thật ở đúng ngưỡng có thể bị xếp khác nhau. Đã tái hiện bằng hàm thật qua tsx với fixture cap()/voi() của judge-chung. Cặp area 19.8 vs 22: lech = 0.09999999999999996 < 0.1, cho ra `yes` và thẻ ghi «diện tích sát nhau (10,0%)». Cặp area 45 vs 50, cũng lệch đúng 10%, cho ra `unsure` và thẻ ghi «diện tích lệch đáng kể (10,0%)». Test S4 r2 khẳng định lệch đúng ngưỡng thì không được yes (ca 45/50 → unsure), nhưng hợp đồng đó chỉ đúng với các số biểu diễn chẵn. Quét b=20..200 với ba ngưỡng ra 183 ca mà lg < ngưỡng theo dấu phẩy động nhưng thẻ in đúng số ngưỡng («sát nhau (10,0%)», «(15,0%)»…). Thẻ in số ngưỡng cạnh lời «sát nhau» mâu thuẫn với kết luận, đúng lỗi AC-2 mà vòng r1–r2 đang sửa, chỉ là chuyển từ prompt sang thẻ. Kết luận ghép căn (yes/unsure) vì thế không tất định theo giá trị thập phân thật. Cách sửa gợi ý: so sánh trên cùng một đại lượng đã lượng tử hoá (ví dụ `Math.round(lech*1e6)` so với ngưỡng nhân 1e6), hoặc cho so sánh và phanTram dùng chung một dung sai.
+## Trong hợp đồng
 
 ## Ngoài hợp đồng — người quyết ở Gate 2
 
@@ -59,5 +54,7 @@ Các lỗi dưới đây nằm ngoài phạm vi đã duyệt ở Cổng Phạm v
   file: `agent/tests/judge-run.test.ts`
   severity: medium
   Đề xuất: known-limits
+
+## Chưa adversarial-verify (refuter chết)
 
 Cụm ngoài vùng phủ: cluster: n-a (không đo được — không eval nào khai paths, hoặc dưới ngưỡng cụm).
