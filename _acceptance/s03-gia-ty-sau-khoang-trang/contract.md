@@ -5,7 +5,7 @@ slug: s03-gia-ty-sau-khoang-trang
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs — không khớp t3_paths
 surfaces: [cli]
-status: approved
+status: implemented
 veto_state: mo
 veto_opened_at: 2026-10-30T04:03:33Z
 approved_by:

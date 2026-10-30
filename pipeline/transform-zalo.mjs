@@ -98,7 +98,21 @@ function laDuoiNhomNghin(t, m, i) {
   const dau = t[i - 1];
   if ((dau !== "." && dau !== ",") || !/\d/.test(t[i - 2] ?? "")) return false;
   const nhom = dau === "." ? /^\d{3}(?:\.\d{3})+$/ : /^\d{3}(?:,\d{3})+$/;
+  if (coDuoiSoNgan(t, m, i, nhom)) return true;
   return nhom.test(m);
+}
+
+/** Thân số tiền đứng riêng ngay trước dấu: 1–3 chữ số không dính chữ cái hay dấu chấm/phẩy («Bán 3.» — không phải «50m2.»). */
+const THAN_SO_TIEN = /(?:^|[^\p{L}\d.,])\d{1,3}$/u;
+
+/** Khớp kéo sang số ngắn đứng sau giá («3.|000.000.000\n50» trong «3.000.000.000\n50m2» — hồ sơ s03-gia-ty-sau-khoang-trang):
+ *  đuôi nhóm nghìn có nhóm cuối «000», rồi khoảng trắng/xuống dòng và 1–2 chữ số (không thể là SĐT), sau một thân số tiền
+ *  đứng riêng. SĐT 3-3-3 kèm đuôi («LH 2.098.765.432 1», «50m2.098.765.000 1») trượt một trong hai điều kiện nên vẫn bị gạt. */
+function coDuoiSoNgan(t, m, i, nhom) {
+  const duoi = /\s\d{1,2}$/.exec(m);
+  if (!duoi) return false;
+  const than = m.slice(0, duoi.index);
+  return nhom.test(than) && than.endsWith("000") && THAN_SO_TIEN.test(t.slice(0, i - 1));
 }
 
 export function extractPhones(text) {
