@@ -16,18 +16,58 @@ import { join } from "node:path";
  * vong-doi, không cần CHECK của migration 047.
  */
 
-const PSQL = (sql) =>
-  spawnSync("docker", ["exec", "-i", "-e", "PGPASSWORD=oneinvest", "one-invest-db",
-    "psql", "-h", "localhost", "-U", "oneinvest", "-d", "zcode_tv2b", "-tAc", sql],
-    { input: "", encoding: "utf8", timeout: 30_000 });
+// 2610-13 vòng 3: tự CREATE DATABASE tạm qua pg (không docker exec — CI dùng
+// service postgres); áp lược đồ bằng chính db/migrations (source_groups = VIEW
+// trên collection_units như thật); DROP khi xong.
+const TAMP_DB = `zcode_tv2b_test_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+const DB_ROOT = process.env.TEST_DATABASE_URL_ADMIN ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
+const DB = `postgres://oneinvest:oneinvest@localhost:5433/${TAMP_DB}`;
+const { readdirSync } = await import("node:fs");
+const MIG_DIR = join(import.meta.dirname, "../../db/migrations");
 
+const PSQL = (sql) => {
+  const r = spawnSync("node", ["--input-type=module", "-e", `
+    const pg = (await import("pg")).default;
+    const c = new pg.Client({ connectionString: "${DB}" });
+    try { await c.connect(); const r = await c.query(${JSON.stringify(sql)}); await c.end(); }
+    catch (e) { console.error(e.message); process.exit(1); }
+  `], { encoding: "utf8", timeout: 30_000 });
+  return r;
+};
+
+test.before(async () => {
+  // tạo database tạm + áp migrations theo thứ tự số
+  const admin = (await import("pg")).default;
+  const c = new admin.Client({ connectionString: DB_ROOT });
+  await c.connect();
+  await c.query(`DROP DATABASE IF EXISTS ${TAMP_DB}`);
+  await c.query(`CREATE DATABASE ${TAMP_DB}`);
+  await c.end();
+  const client = new admin.Client({ connectionString: DB });
+  await client.connect();
+  const files = readdirSync(MIG_DIR).filter((f) => f.endsWith(".sql")).sort();
+  for (const f of files) {
+    const sql = (await import("node:fs/promises")).readFileSync(join(MIG_DIR, f), "utf8");
+    await client.query(sql);
+  }
+  await client.end();
+});
+
+test.after(async () => {
+  const admin = (await import("pg")).default;
+  const c = new admin.Client({ connectionString: DB_ROOT });
+  await c.connect();
+  await c.query(`DROP DATABASE IF EXISTS ${TAMP_DB}`);
+  await c.end();
+});
+
+// source_groups là VIEW trên collection_units (migration 048) — seed qua bảng thật
 const seed = (rows) => {
-  PSQL("DROP TABLE IF EXISTS source_groups, source_registry");
-  PSQL("CREATE TABLE source_registry(code text PRIMARY KEY, status text)");
-  PSQL("CREATE TABLE source_groups(id serial PRIMARY KEY, source_code text, group_key text, status text, params jsonb)");
-  PSQL(`INSERT INTO source_registry VALUES ${rows.registry.map((r) => `('${r[0]}','${r[1]}')`).join(",")}`);
+  PSQL("DELETE FROM collection_units");
+  PSQL("DELETE FROM source_registry");
+  PSQL(`INSERT INTO source_registry(code, status) VALUES ${rows.registry.map((r) => `('${r[0]}','${r[1]}')`).join(",")}`);
   for (const g of rows.groups ?? []) {
-    PSQL(`INSERT INTO source_groups(source_code, group_key, status, params) VALUES ('${g.sc}','${g.key}','${g.st}','${JSON.stringify(g.params ?? {})}')`);
+    PSQL(`INSERT INTO collection_units(source_code, unit_key, status, params) VALUES ('${g.sc}','${g.key}','${g.st}','${JSON.stringify(g.params ?? {})}')`);
   }
 };
 
@@ -85,7 +125,6 @@ const chay = (file, args, extraEnv, home) =>
 
 const S05 = join(import.meta.dirname, "../apify-facebook-collector.mjs");
 const S06 = join(import.meta.dirname, "../collect-chotot.mjs");
-const DB = "postgres://oneinvest:oneinvest@localhost:5433/zcode_tv2b";
 
 test("TV2b (a): S05 paused → 0 lời gọi, thoát 0, một dòng mã + lý_do", async () => {
   seed({ registry: [["S05", "paused"]], groups: [{ sc: "S05", key: "g1", st: "active" }] });
@@ -186,4 +225,26 @@ test("TV2b: cổng script bash S01/S02 — vong-doi CLI exit 3 → bỏ lượt 
   assert.equal(JSON.parse(r1.stdout).ly_do, "nguon-paused");
   const r2 = spawnSync("node", [vd, "S02"], { env: { ...process.env, DATABASE_URL: DB }, encoding: "utf8" });
   assert.equal(r2.status, 0, "S02 active → exit 0 (chạy)");
+});
+
+// 2610-13 vòng 3 (nửa dương AC-1): S05 active + nhóm active → CÓ lời gọi
+// tới nhà cung cấp giả, đúng CÁC nhóm active (bỏ paused/retired)
+test("TV2b (nửa dương): S05 active + nhóm active → lời gọi tới nhà cung cấp giả đúng nhóm active", async () => {
+  seed({ registry: [["S05", "active"]], groups: [
+    { sc: "S05", key: "nhom-a", st: "active" },
+    { sc: "S05", key: "nhom-b", st: "active" },
+    { sc: "S05", key: "nhom-c", st: "paused" },
+  ] });
+  const pv = fakeProvider(); await pv.start();
+  const fh = fakeHome();
+  try {
+    const r = await chay(S05, [], { DATABASE_URL: DB, APIFY_API: `${pv.addr()}/apify` }, fh.home);
+    assert.ok(pv.hits.length > 0, `phải có lời gọi nhà cung cấp (được ${pv.hits.length}; out: ${r.out.slice(0, 300)})`);
+    // startRun POST chứa input với startUrls từ NHỮNG nhóm active
+    const startRun = pv.hits.find((h) => h.includes("startUrls") || h.includes("url="));
+    assert.ok(startRun, `có lời gọi startRun (hits: ${pv.hits.slice(0, 3).join(" | ")})`);
+    assert.ok(pv.hits.some((h) => h.includes("nhom-a")), "nhóm active A có mặt");
+    assert.ok(pv.hits.some((h) => h.includes("nhom-b")), "nhóm active B có mặt");
+    assert.ok(!pv.hits.some((h) => h.includes("nhom-c")), "nhóm paused C KHÔNG được bắn");
+  } finally { await pv.close(); fh.cleanup(); }
 });
