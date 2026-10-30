@@ -3,11 +3,23 @@
 // DNS và bộ tải về đều giả; tên máy giả dùng đuôi `.test`.
 import { describe, test } from "node:test"
 import assert from "node:assert/strict"
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 
 import { laDiaChiChan, layAnhGoc, type DiaChi, type PhanHoiNguon, type TaiVe, type TraDns } from "../src/lib/ops/lay-anh-goc"
+import { serveZaloMedia, type MediaKeyQuery, type MediaKeyRow } from "../src/lib/ops/zalo-media"
+
+type User = import("../src/lib/auth").User
+const NGUOI = {
+  khach: null,
+  user: { id: "1", email: "agm-user@local.test", plan: "free", role: "user" },
+  viewer: { id: "2", email: "agm-viewer@local.test", plan: "free", role: "viewer" },
+  ops: { id: "3", email: "agm-ops@local.test", plan: "free", role: "ops" },
+  admin: { id: "4", email: "agm-admin@local.test", plan: "free", role: "admin" },
+} satisfies Record<string, User | null>
+type Vai = keyof typeof NGUOI
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const HOST = "anh.nguon-gia.test"
@@ -176,4 +188,158 @@ describe("AGM-AC-4 bộ lấy ảnh chặn nguồn xấu (bảng chặn của de
     for (const ip of ["93.184.216.34", "8.8.8.8", "2606:4700::1111"]) assert.equal(laDiaChiChan(ip), false, ip)
     for (const ip of ["0.0.0.0", "100.64.0.1", "224.0.0.1", "::", "ff02::1", "::ffff:7f00:1", "not-an-ip"]) assert.equal(laDiaChiChan(ip), true, ip)
   })
+})
+
+// ---------- chế độ ?media= của serveZaloMedia (AC-1, 2, 3, 6) ----------
+const K_GOC = "0123456789abcdef0123456789abcdef"
+const K_LOCAL = "fedcba9876543210fedcba9876543210"
+const K_VANG = "00000000000000000000000000000000"
+const MEDIA_URL = "https://anh.nguon-gia.test/a.jpg"
+const SNAP = "hanoi__s06-gia__2026-10-31T000000"
+const BA_BYTE = new Uint8Array([0xff, 0xd8, 0xff])
+
+const goc = mkdtempSync(path.join(os.tmpdir(), "agm-snap-"))
+mkdirSync(path.join(goc, "hanoi", SNAP, "media"), { recursive: true })
+writeFileSync(path.join(goc, "hanoi", SNAP, "media", "a.jpg"), JPEG)
+const ngoai = mkdtempSync(path.join(os.tmpdir(), "agm-ngoai-"))
+writeFileSync(path.join(ngoai, "bi-mat.jpg"), JPEG)
+symlinkSync(path.join(ngoai, "bi-mat.jpg"), path.join(goc, "hanoi", SNAP, "media", "lien-ket.jpg"))
+process.env.SNAPSHOTS_DIR = goc
+process.on("exit", () => {
+  rmSync(goc, { recursive: true, force: true })
+  rmSync(ngoai, { recursive: true, force: true })
+})
+
+const BANG: Record<string, MediaKeyRow> = {
+  [K_GOC]: { media_url: MEDIA_URL, local_file: null },
+  [K_LOCAL]: { media_url: MEDIA_URL, local_file: `${SNAP}/media/a.jpg` },
+}
+
+function gia(bang: Record<string, MediaKeyRow> = BANG, nem?: unknown) {
+  const dem = { db: 0, mang: 0 }
+  const traMedia: MediaKeyQuery = async (k) => {
+    dem.db++
+    if (nem) throw nem
+    return bang[k] ?? null
+  }
+  const layAnh = (async () => {
+    dem.mang++
+    return new Response(BA_BYTE, { headers: { "content-type": "image/jpeg" } })
+  }) as typeof layAnhGoc
+  return { dem, deps: { traMedia, layAnh } }
+}
+
+const goi = (key: string) => new Request(`http://localhost/api/zalo-media?media=${encodeURIComponent(key)}`)
+
+type Serve = typeof serveZaloMedia
+/** Bản chép tạm của zalo-media.ts đổi đúng một chỗ; import tương đối trỏ về src. */
+async function banDot(thay: [string, string][]): Promise<{ serve: Serve; xoa: () => void }> {
+  let src = readFileSync(path.join(APP, "src/lib/ops/zalo-media.ts"), "utf8")
+  for (const [a, b] of thay) {
+    assert.ok(src.includes(a), `chỗ đột biến không còn trong zalo-media.ts: ${a}`)
+    src = src.replace(a, b)
+  }
+  src = src.replace(`from "./lay-anh-goc"`, `from ${JSON.stringify(path.join(APP, "src/lib/ops/lay-anh-goc.ts"))}`)
+  const dir = mkdtempSync(path.join(APP, "tests", ".agm-dot-"))
+  const f = path.join(dir, "zalo-media.ts")
+  writeFileSync(f, src)
+  const m = (await import(pathToFileURL(f).href)) as typeof import("../src/lib/ops/zalo-media")
+  return { serve: m.serveZaloMedia, xoa: () => rmSync(dir, { recursive: true, force: true }) }
+}
+
+describe("AGM-AC-1 ảnh chỉ có URL gốc đi qua máy chủ, không lộ URL", () => {
+  test("AGM-AC-1 vai ops, khoá chỉ URL gốc → 200 đúng 3 byte image/jpeg, không lộ tên máy", async () => {
+    const { dem, deps } = gia()
+    const res = await serveZaloMedia(goi(K_GOC), NGUOI.ops, deps)
+    assert.equal(res.status, 200)
+    assert.equal(res.headers.get("content-type"), "image/jpeg")
+    await khongLo(res, "nguon-gia")
+    assert.deepEqual(new Uint8Array(await res.arrayBuffer()), BA_BYTE)
+    assert.equal(dem.mang, 1)
+  })
+
+  test("chiều đỏ AGM-AC-1 lộ URL gốc: bản đột biến chép media_url vào header x-goc → phép đo bắt", async () => {
+    const { serve, xoa } = await banDot([
+      ["return layAnh(row.media_url);", `{ const r = await layAnh(row.media_url); const h = new Headers(r.headers); h.set("x-goc", row.media_url); return new Response(r.body, { status: r.status, headers: h }); }`],
+    ])
+    try {
+      const res = await serve(goi(K_GOC), NGUOI.ops, gia().deps)
+      await assert.rejects(khongLo(res, "nguon-gia"), /header phản hồi chứa tên máy/, "AGM-AC-1 lộ URL gốc: phép đo không bắt được")
+    } finally {
+      xoa()
+    }
+  })
+})
+
+describe("AGM-AC-2 ma trận 5 vai × 3 khoá", () => {
+  const KHOA = { goc: K_GOC, local: K_LOCAL, vang: K_VANG } as const
+  const DUOC: Vai[] = ["ops", "admin"]
+  const O: { vai: Vai; khoa: keyof typeof KHOA; ma: number }[] = (Object.keys(NGUOI) as Vai[]).flatMap((vai) =>
+    (Object.keys(KHOA) as (keyof typeof KHOA)[]).map((khoa) => ({ vai, khoa, ma: DUOC.includes(vai) && khoa !== "vang" ? 200 : 404 })),
+  )
+  test("AGM-AC-2 đủ 15 ô viết trước", () => assert.equal(O.length, 15))
+  for (const o of O) {
+    test(`AGM-AC-2 ${o.vai} × khoá ${o.khoa} → ${o.ma}`, async () => {
+      const { dem, deps } = gia()
+      const res = await serveZaloMedia(goi(KHOA[o.khoa]), NGUOI[o.vai], deps)
+      assert.equal(res.status, o.ma)
+      if (!DUOC.includes(o.vai)) assert.deepEqual(dem, { db: 0, mang: 0 }, "vai dưới Vận hành không được chạm DB hay mạng")
+    })
+  }
+
+  test("chiều đỏ AGM-AC-2 viewer nhận ảnh: bản đột biến đổi xemNoiDungTin thành canAccessOps → ô viewer đỏ", async () => {
+    const { serve, xoa } = await banDot([
+      [`import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";`, `import { canAccessOps, isAdmin, xemNoiDungTin } from "@/lib/ops-access";`],
+      ["if (!xemNoiDungTin(user)) return notFound();", "if (!canAccessOps(user)) return notFound();"],
+    ])
+    try {
+      const res = await serve(goi(K_GOC), NGUOI.viewer, gia().deps)
+      assert.notEqual(res.status, 404, "AGM-AC-2 viewer nhận ảnh: phép đo không bắt được")
+    } finally {
+      xoa()
+    }
+  })
+})
+
+describe("AGM-AC-3 khoá hỏng, khoá vắng, cloud thiếu bảng → 404, không gọi mạng", () => {
+  const CA: [string, string, unknown?][] = [
+    ["khoá '../x'", "../x"],
+    ["khoá rỗng", ""],
+    ["khoá có ký tự ngoài khuôn", "0123456789abcdef0123456789abcdeg"],
+    ["khoá viết hoa", K_GOC.toUpperCase()],
+    ["khoá không có dòng", K_VANG],
+    ["truy vấn DB ném 42P01 (cloud)", K_GOC, Object.assign(new Error("relation does not exist"), { code: "42P01" })],
+  ]
+  for (const [ten, key, nem] of CA) {
+    test(`AGM-AC-3 ${ten} → 404, fetch 0 lần`, async () => {
+      const { dem, deps } = gia(BANG, nem)
+      const res = await serveZaloMedia(goi(key), NGUOI.ops, deps)
+      assert.equal(res.status, 404)
+      assert.equal(dem.mang, 0)
+    })
+  }
+  test("AGM-AC-3 đối chứng dương: khoá có thật → 200", async () => {
+    assert.equal((await serveZaloMedia(goi(K_GOC), NGUOI.ops, gia().deps)).status, 200)
+  })
+})
+
+describe("AGM-AC-6 dòng có local_file phục vụ từ đĩa qua hai lớp kiểm", () => {
+  test("AGM-AC-6 local_file hợp lệ → 200 đúng byte, fetch 0 lần", async () => {
+    const { dem, deps } = gia()
+    const res = await serveZaloMedia(goi(K_LOCAL), NGUOI.ops, deps)
+    assert.equal(res.status, 200)
+    assert.deepEqual(new Uint8Array(await res.arrayBuffer()), JPEG)
+    assert.equal(dem.mang, 0)
+  })
+  for (const [ten, lf] of [
+    ["local_file thoát gốc (../)", `${SNAP}/media/../../../../etc/a.jpg`],
+    ["local_file là symlink ra ngoài", `${SNAP}/media/lien-ket.jpg`],
+  ]) {
+    test(`AGM-AC-6 ${ten} → 403, fetch 0 lần`, async () => {
+      const { dem, deps } = gia({ [K_LOCAL]: { media_url: MEDIA_URL, local_file: lf } })
+      const res = await serveZaloMedia(goi(K_LOCAL), NGUOI.ops, deps)
+      assert.equal(res.status, 403)
+      assert.equal(dem.mang, 0)
+    })
+  }
 })
