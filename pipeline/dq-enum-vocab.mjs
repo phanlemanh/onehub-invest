@@ -22,6 +22,8 @@ export const KIEM_ENUM = Object.freeze([
   { bang: "registry_aliases", cot: "kind", truc: "alias_kind" },
   { bang: "registry_events", cot: "kind", truc: "registry_event_kind" },
   { bang: "party_roles", cot: "role", truc: "party_role" },
+  { bang: "inquiries", cot: "kind", truc: "kind" },
+  { bang: "inquiries", cot: "property_type", truc: "property_type" },
 ]);
 
 /**
@@ -54,13 +56,18 @@ export async function kiemEnum(c, { bang, cot: col, truc }) {
   return { status, bad };
 }
 
+/** Bảng (hay view) có ở DB này chưa — bảng chỉ-local (055, 058) vắng ở máy chưa áp thì mục kiểm bỏ qua, không văng. */
+export async function coBang(c, bang) {
+  return Boolean((await c.query("SELECT to_regclass($1) AS t", [`public.${bang}`])).rows[0].t);
+}
+
 async function main() {
   const c = new pg.Client({ connectionString: DB_URL });
   await c.connect();
   try {
     let allPass = true;
     for (const muc of KIEM_ENUM) {
-      if (!(await c.query("SELECT to_regclass($1) AS t", [`public.${muc.bang}`])).rows[0].t) {
+      if (!(await coBang(c, muc.bang))) {
         console.log(`${muc.bang}.${muc.cot}: bỏ qua — chưa có bảng`);
         continue;
       }

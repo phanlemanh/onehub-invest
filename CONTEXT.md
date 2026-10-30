@@ -102,7 +102,7 @@ _Avoid_: tin đăng, offer, rao vặt, sale offer
 - Ghi chú: Trang chỉ có loại này được ghi trơn «Listing»; trang có cả tin rao thì viết đủ «listing thuê ngắn hạn».
 _Avoid_: chỗ ở, phòng cho thuê, homestay
 
-**Yêu cầu**: Một nhu cầu cần mua hoặc cần thuê — bên mua, đối xứng với **listing** bên bán (Mạnh chốt 27/10). Dịch vụ ở `kind` cùng bộ mã với listing (`sale` = mua · `rent_lt` = thuê dài hạn · `rent_st` = thuê ngắn hạn, nhãn theo phía), loại hình ở `property_type` (cùng sổ), giá là khoảng ngân sách. Không gắn một căn mà gắn tiêu chí (khu vực, loại hình, số PN, ngân sách), khớp được với nhiều listing. Hiện mới là một giá trị của «Ý định tin»: bài cần mua, cần thuê giữ ở raw + stg làm tín hiệu cầu (review phân loại Q8); bảng lưu yêu cầu và ghép với listing là tính năng sau, cần số đo trước (luật 11).
+**Yêu cầu**: Một nhu cầu cần mua hoặc cần thuê — bên mua, đối xứng với **listing** bên bán (Mạnh chốt 27/10). Dịch vụ ở `kind` cùng bộ mã với listing (`sale` = mua · `rent_lt` = thuê dài hạn · `rent_st` = thuê ngắn hạn, nhãn theo phía), loại hình ở `property_type` (cùng sổ), giá là khoảng ngân sách. Không gắn một căn mà gắn tiêu chí (khu vực, loại hình, số PN, ngân sách), khớp được với nhiều listing. Bài S03 có phát biểu «Ý định tin» = Yêu cầu (lớp cao nhất thắng) được transform dựng thành một dòng ở bảng `inquiry_records` (view sống `inquiries`, chỉ DB local, migration 058): bài đăng lại cùng người cùng chữ gom một Yêu cầu, số tiền đứng một mình là trần ngân sách, hết phát biểu thì Yêu cầu nghỉ chứ không xoá. Ghép Yêu cầu với listing là hàng sau.
 - Code: `listing_intent = inquiry` · RESO: không có bản ghi ngang hàng `Property` — gần nhất SavedSearch (tiêu chí người mua); local extension dùng lại trường RESO phía bán
 _Avoid_: tin tìm mua, wanted
 
@@ -303,8 +303,8 @@ Mọi enum dữ liệu (loại tin, loại hình, trạng thái chào…) khai �
 
 | Thuật ngữ | Code | RESO | Cột bị ràng | Giá trị (code «nhãn») |
 |---|---|---|---|---|
-| Loại tin | `kind` | PropertyType | `sale_offers.kind` | `sale` «Bán» · `rent_lt` «Cho thuê» |
-| Loại hình | `property_type` | PropertySubType | `sale_offers.property_type`, `properties.property_type` | `apartment` «Căn hộ» · `house` «Nhà riêng» · `land` «Đất» · `room` «Phòng» · `commercial` «Mặt bằng» · `unknown` «Chưa rõ» |
+| Loại tin | `kind` | PropertyType | `sale_offers.kind`, `inquiry_records.kind` | `sale` «Bán» · `rent_lt` «Cho thuê» |
+| Loại hình | `property_type` | PropertySubType | `sale_offers.property_type`, `properties.property_type`, `inquiry_records.property_type` | `apartment` «Căn hộ» · `house` «Nhà riêng» · `land` «Đất» · `room` «Phòng» · `commercial` «Mặt bằng» · `unknown` «Chưa rõ» |
 | Độ tin trích xuất | `confidence` | local | `sale_offers.confidence` | `high` «cao» · `medium` «trung bình» · `low` «thấp» |
 | Bậc giá | `price_tier` | local | `sale_offers.price_tier` | `P0` «giá giao dịch (P0)» · `P1` «giá nội bộ (P1)» · `P2` «giá công khai (P2)» |
 | Trường làm giàu | `enrich_field` | local | `enrichment_proposals.field` | `property_type` «Loại hình» · `bedrooms` «Phòng ngủ» · `bathrooms` «WC» · `street_raw` «Đường» · `block_raw` «Toà» |

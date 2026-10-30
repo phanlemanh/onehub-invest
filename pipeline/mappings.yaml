@@ -183,6 +183,96 @@ media:
       note: "đổi khi nội dung dòng đổi; dòng không đổi giữ nguyên"
 
 # --------------------------------------------------------------------------
+# LỚP YÊU CẦU — bảng `inquiry_records` + view sống `inquiries` (migration 058, bang-yeu-cau): nhu cầu bên mua (cần mua ·
+# cần thuê), đối xứng listing. RESO DD 2.1 không có bản ghi ngang hàng Property cho nhu cầu bên mua; gần nhất là
+# SavedSearch, nhưng tiêu chí của nó là một chuỗi truy vấn (SearchQuery) — bảng dùng trường khoá/hệ thống của SavedSearch
+# và dùng lại trường RESO phía bán (resource Property) cho tiêu chí. Bên ghi pipeline/lib/yeu-cau.mjs (transform-zalo).
+# KHÔNG sync cloud (chỉ DB local); không cột danh tính người tìm.
+# --------------------------------------------------------------------------
+inquiries:
+  table: inquiry_records
+  dd_resource: SavedSearch
+  dd_version: "2.1"
+  checked_on: "2026-10-30"  # tra research-local/reso/dd-2.1.json
+  fields:
+    inquiry_id:
+      dd: SavedSearchKey
+      note: "'inq_' + băm (nguồn · người gửi · chữ chuẩn hoá) — ổn định qua các lượt nạp (Hỏi-2: gom bài đăng lại)"
+    source:
+      dd: OriginatingSystemName
+      note: "mã S0x (ADR-0007), không phải tên nguồn thật"
+    originating_system_key:
+      dd: OriginatingSystemKey
+      note: "post_id của bài neo (bài sớm nhất của nhóm đăng lại)"
+    post_ids:
+      dd: null
+      rationale: >
+        mọi bài cùng một nhu cầu (đăng lại cùng người cùng chữ) — SavedSearch không có trường danh sách bản ghi gốc;
+        cùng vai post_ids của sale_offer_records. Dựng lại đủ tập mỗi lượt transform.
+      checked_on: "2026-10-30"
+    kind:
+      dd: PropertyType
+      note: "trường Property phía bán dùng lại, trục kind của sổ: sale = mua · rent_lt = thuê; trống khi chưa rõ"
+    property_type:
+      dd: PropertySubType
+      note: "trường Property phía bán dùng lại, trục property_type; trống khi chưa rõ (không ghi unknown)"
+    bedrooms:
+      dd: BedroomsTotal
+      note: "trường Property dùng lại — số phòng ngủ bài nêu"
+    area_m2:
+      dd: LivingArea
+      note: "trường Property dùng lại — diện tích bài nêu, đơn vị m²"
+    budget_min_vnd:
+      dd: ListPrice
+      note: "trường Property dùng lại làm đầu dưới khoảng ngân sách (VND); CHECK min ≤ max"
+    budget_max_vnd:
+      dd: ListPrice
+      note: "trường Property dùng lại làm đầu trên khoảng ngân sách (VND); số tiền đứng một mình là trần (Hỏi-1)"
+    area_id:
+      dd: null
+      rationale: >
+        phường OSM khớp được trong chữ bài (cùng khoá areas.id của sale_offers.area_id) — DD dùng địa chỉ chuỗi, không
+        có khoá vùng nội bộ; không khoá ngoại vì reassign-areas xoá area không phải phường.
+      checked_on: "2026-10-30"
+    market_id:
+      dd: null
+      rationale: >
+        thị trường (cha của phường, hoặc thị trường duy nhất nhóm S03 khai ở sổ nhóm) — khoá vùng nội bộ, DD không có.
+      checked_on: "2026-10-30"
+    first_seen:
+      dd: OriginalEntryTimestamp
+      note: "posted_at sớm nhất của các bài trong nhóm"
+    last_seen:
+      dd: ModificationTimestamp
+      note: "posted_at muộn nhất của các bài trong nhóm"
+    intent_evidence:
+      dd: null
+      rationale: >
+        phát biểu ý định đã quyết cho bài mới nhất {assertion_id, method, tier, p} — dấu vết chứng cứ theo
+        field_assertions (045), DD không có trường xuất xứ cho bản ghi SavedSearch.
+      checked_on: "2026-10-30"
+    retired_at:
+      dd: null
+      rationale: >
+        nghỉ thay vì xoá (khuôn PL14, 044) — Yêu cầu hết phát biểu inquiry rời view inquiries, dòng giữ nguyên.
+      checked_on: "2026-10-30"
+    retired_reason:
+      dd: null
+      rationale: >
+        lý do nghỉ ('het-phat-bieu'); có khi và chỉ khi retired_at có (CHECK 058).
+      checked_on: "2026-10-30"
+    created_at:
+      dd: null
+      rationale: >
+        lúc dòng được tạo ở DB local — dấu kỹ thuật, không phải thời điểm của nhu cầu (đó là first_seen).
+      checked_on: "2026-10-30"
+    updated_at:
+      dd: null
+      rationale: >
+        lúc transform ghi dòng lần cuối — dấu kỹ thuật, không phải ModificationTimestamp của nhu cầu (đó là last_seen).
+      checked_on: "2026-10-30"
+
+# --------------------------------------------------------------------------
 # LỚP NGUỒN — staging → canonical
 # --------------------------------------------------------------------------
 sources:
@@ -262,7 +352,7 @@ enums:
   kind:
     term_vi: Loại tin
     dd_field: PropertyType
-    columns: [sale_offers.kind]
+    columns: [sale_offers.kind, inquiry_records.kind]
     nullable: false
     values:
       - { code: sale, label_vi: Bán, dd_lookup: Residential }
@@ -272,7 +362,7 @@ enums:
   property_type:
     term_vi: Loại hình
     dd_field: PropertySubType
-    columns: [sale_offers.property_type, properties.property_type]
+    columns: [sale_offers.property_type, properties.property_type, inquiry_records.property_type]
     nullable: true
     values:
       - { code: apartment, label_vi: Căn hộ, dd_lookup: Condominium }
