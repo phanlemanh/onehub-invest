@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { KHOA_DANH_BA, LY_DO_RUT, chotDbThuNguoi, dungNguoi, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
+import { KIEM_ENUM, kiemEnum } from "../dq-enum-vocab.mjs";
 import { buocDem } from "../refresh-bait-gap.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -369,4 +370,30 @@ test("RF5 hai lượt dựng chồng nhau: lượt sau chờ khoá 55055 rồi c
   } finally {
     await b.end();
   }
+});
+
+test("AC-2 enum và DQ (b): kiểm từ vựng bốn bảng danh bạ ghi dòng pass vào dq_check_results", async () => {
+  await trongGiaoDich(async (db) => {
+    await fixtureS06(db);
+    await fixtureZalo(db);
+    await dungNguoi(db, { runId: "itest-ac2b", out: im });
+    const muc = KIEM_ENUM.filter((m) => BON_BANG.includes(m.bang));
+    assert.deepEqual(muc.map((m) => m.truc).sort(), [...TRUC_MOI].sort(), "AC-2 KIEM_ENUM thiếu trục danh bạ");
+    const { rows: [{ moc }] } = await db.query("SELECT max(id) AS moc FROM dq_check_results");
+    for (const m of muc) assert.deepEqual(await kiemEnum(db, m), { status: "pass", bad: 0 }, `AC-2 kiểm từ vựng lệch: ${m.bang}.${m.cot}`);
+    const { rows } = await db.query(
+      `SELECT entity || '.' || check_name AS k, status FROM dq_check_results WHERE id > $1 ORDER BY 1`, [moc ?? 0]);
+    assert.deepEqual(rows, [
+      { k: "parties.enum-vocab:status", status: "pass" },
+      { k: "party_roles.enum-vocab:role", status: "pass" },
+      { k: "registry_aliases.enum-vocab:kind", status: "pass" },
+      { k: "registry_events.enum-vocab:kind", status: "pass" },
+    ]);
+    // Chiều đỏ: bỏ CHECK của party_roles.role rồi chèn giá trị ngoài sổ → kiemEnum báo fail.
+    await db.query("ALTER TABLE party_roles DROP CONSTRAINT IF EXISTS party_roles_role_check");
+    await db.query("ALTER TABLE party_roles DISABLE TRIGGER USER");
+    await db.query("UPDATE party_roles SET role = 'moi_gioi' WHERE id = (SELECT min(id) FROM party_roles)");
+    const m = muc.find((x) => x.bang === "party_roles");
+    assert.deepEqual(await kiemEnum(db, m), { status: "fail", bad: 1 }, "AC-2 kiểm từ vựng không bắt giá trị ngoài sổ");
+  });
 });
