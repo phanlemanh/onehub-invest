@@ -5,7 +5,7 @@ slug: s03-cam-mau-so-lieu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/** — không khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-s03-cam-mau-so-lieu-design.md
@@ -86,8 +86,10 @@ phường Hà Nội. Căn cứ: `docs/research/s03-boc-tach-cau-truc-3010.md` §
 ## Notes
 
 - Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
-  - Ngoài-3: Sổ ánh xạ `pipeline/mappings.yaml` lớp nguồn S03 chưa ghi hai trường transform đã đọc (`sender_name` → `seller_name`, `conversation_id`).
-  - Ngoài-6: Tin có cụm khoảng cách đứng một mình («gần chợ 200m», «ra hồ 100m») có thể nhận số đó làm diện tích.
-
+  - Ngoài-1: Tin thuê viết giá bằng đồng kiểu «7.000.000/mỗi tháng» hay «7.000.000/ một tháng» bị đọc thành không có giá nên vắng khỏi danh sách.
+  - Ngoài-2: Tin ghi cả tổng giá lẫn đơn giá bằng đồng mất tổng giá, chỉ còn đơn giá, và không qua được chốt khoảng giá.
+  - Ngoài-3: Cùng gốc với Ngoài-1 — luật chặn «/m» của giá đồng khớp nhầm chữ có dấu «mỗi», «một».
+  - Ngoài-6: Sổ ánh xạ `pipeline/mappings.yaml` lớp nguồn S03 chưa ghi hai trường transform đã đọc (`sender_name` → `seller_name`, `conversation_id`).
+  - Ngoài-9: Tin có cụm khoảng cách đứng một mình («gần chợ 200m», «ra hồ 100m») có thể nhận số đó làm diện tích.
 - Ra khỏi kho (việc người): admin khai `market_codes` cho 11 nhóm S03 ở `/ops/sources` để nhánh «nhóm đã khai» của
   AC-8 chạy trên dữ liệu thật.
