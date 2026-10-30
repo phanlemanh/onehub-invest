@@ -3,7 +3,7 @@ import { pool } from "./db";
 import { vnDayKey, vnDayStart } from "./format";
 import { ageState, readOpsFacts, type OpsFacts } from "./ops-facts";
 import { isAdmin } from "./ops-access";
-import { buildOfferImages, type PostMediaRow, type ReviewImage } from "./ops/review-media";
+import { buildMediaImages, loadOfferMedia, type MediaRow, type MediaRowQuery, type ReviewImage } from "./ops/review-media";
 
 /**
  * Số cho /ops/data-flow «Dòng chảy dữ liệu»: một tin đi từ bài nhận → đọc được → tin rao → gắn căn, theo nguồn, theo
@@ -268,39 +268,27 @@ export function parseFlowWindow(v: string | string[] | undefined): FlowWindow {
   return (FLOW_WINDOWS as readonly string[]).includes(s ?? "") ? (s as FlowWindow) : "7d";
 }
 
-// ---- Ảnh tin của hồ sơ tin (AC-10, Mạnh sửa ở Cổng Phạm vi 26/10) ----
-// Cùng luật với Hàng duyệt: ảnh tin chỉ cho admin, chỉ ở máy thu; ghép bằng chính buildOfferImages (ảnh đã tải trước,
-// rồi URL gốc, không trùng, tối đa 12). Không sửa lib/ops/review-media.ts — tệp nằm trong hồ sơ đã ký của Hàng duyệt.
-// S06 chưa có khoá nối tin → quảng cáo (TV10) nên không truy vấn ảnh cho S06.
+// ---- Ảnh tin của hồ sơ tin (AC-10 của ops-dong-chay-df0; NH1 media-canonical-reso AC-6) ----
+// Cùng luật với Hàng duyệt: ảnh tin chỉ cho admin, chỉ ở máy thu; đọc bảng `media` (053) qua loadOfferMedia và ghép
+// bằng buildMediaImages (ảnh đã tải trước, rồi URL gốc, không trùng, tối đa 12) — cho mọi nguồn, kể cả S06.
 
-const MEDIA_SQL = `
-  SELECT o.offer_id, p.snapshot_id, p.media, p.media_files
-  FROM sale_offers o
-  CROSS JOIN LATERAL unnest(o.post_ids) WITH ORDINALITY AS u(post_id, ord)
-  JOIN stg_zalo_posts p ON p.post_id = u.post_id
-  WHERE o.offer_id = ANY($1::text[])
-  ORDER BY o.offer_id, u.ord`;
+export type MediaQuery = MediaRowQuery;
 
-export type MediaQuery = (text: string, values: unknown[]) => Promise<{ rows: PostMediaRow[] }>;
-const defaultMediaQuery: MediaQuery = (text, values) => pool.query<PostMediaRow>(text, values);
-
-/** Ảnh từng tin S03/S05, khoá theo offer_id. Không phải admin → `{}` không chạm DB; cloud (42P01) → `{}`. */
+/** Ảnh từng tin, khoá theo offer_id. Không phải admin → `{}` không chạm DB; cloud (42P01) → `{}`. */
 export async function loadFlowMedia(
   records: Pick<FlowRecord, "offerId" | "source">[],
   user: User | null,
-  query: MediaQuery = defaultMediaQuery,
+  query?: MediaQuery,
 ): Promise<Record<string, ReviewImage[]>> {
   if (!isAdmin(user)) return {};
-  const ids = [...new Set(records.filter((r) => r.source === "S03" || r.source === "S05").map((r) => r.offerId))];
+  const ids = [...new Set(records.map((r) => r.offerId))];
   if (ids.length === 0) return {};
-  let rows: PostMediaRow[];
+  let byOffer: Map<string, MediaRow[]>;
   try {
-    ({ rows } = await query(MEDIA_SQL, [ids]));
+    byOffer = await loadOfferMedia(ids, query);
   } catch (err) {
     if ((err as { code?: string }).code === "42P01") return {};
     throw err;
   }
-  const posts = new Map<string, PostMediaRow[]>();
-  for (const r of rows) posts.set(r.offer_id, [...(posts.get(r.offer_id) ?? []), r]);
-  return Object.fromEntries(ids.map((id) => [id, buildOfferImages(posts.get(id) ?? [])]));
+  return Object.fromEntries(ids.map((id) => [id, buildMediaImages(byOffer.get(id) ?? [])]));
 }
