@@ -2,6 +2,7 @@ import type { PoolClient } from "pg"
 
 import { pool } from "../db"
 import { maskSourceNames, type SourceNameEntry } from "../mask-source-names"
+import { ALIAS_KIND } from "../vocab.generated"
 
 /**
  * Danh bạ người trên Ops (`danh-ba-nguoi-tren-ops`) — truy vấn của /ops/people và /ops/people/[partyKey].
@@ -73,7 +74,7 @@ export function laMoiGioi(soTin: number): boolean {
  */
 export function hienBiDanh(kind: string, value: string, entries: SourceNameEntry[], xem: boolean): string | null {
   if (!xem) return null
-  if (kind === "sdt_bam") return `${value.slice(0, 8)}…`
+  if (kind === ALIAS_KIND.sdt_bam) return `${value.slice(0, 8)}…`
   return maskSourceNames(value, entries) ?? "—"
 }
 
@@ -81,7 +82,7 @@ export function hienBiDanh(kind: string, value: string, entries: SourceNameEntry
 const LOC = `p.status = 'active' AND ($1::text IS NULL OR p.source = $1)
   AND ($2::text = '' OR EXISTS (
     SELECT 1 FROM registry_aliases a
-    WHERE a.object_key = p.party_key AND a.retired_at IS NULL AND a.kind IN ('ten', 'tai_khoan_nguon')
+    WHERE a.object_key = p.party_key AND a.retired_at IS NULL AND a.kind IN ('${ALIAS_KIND.ten}', '${ALIAS_KIND.tai_khoan_nguon}')
       AND strpos(lower(a.value), lower($2)) > 0))`
 
 export async function danhBaTongQuan(q: Q = pool): Promise<TongQuan> {

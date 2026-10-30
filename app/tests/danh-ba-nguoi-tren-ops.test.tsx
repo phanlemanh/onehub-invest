@@ -118,8 +118,7 @@ async function banDot(tu: string, thanh: string): Promise<typeof import("../src/
   assert.ok(goc.includes(tu), `đột biến không áp được: ${tu}`)
   const dot = goc
     .replace(tu, thanh)
-    .replace(`from "../db"`, `from "${pathToFileURL(join(APP, "src/lib/db.ts")).href}"`)
-    .replace(`from "../mask-source-names"`, `from "${pathToFileURL(join(APP, "src/lib/mask-source-names.ts")).href}"`)
+    .replace(/from "\.\.\/([\w.-]+)"/g, (_m, ten: string) => `from "${pathToFileURL(join(APP, `src/lib/${ten}.ts`)).href}"`)
   const f = join(mkdtempSync(join(tmpdir(), "dbn-dot-")), "people.ts")
   writeFileSync(f, dot)
   return import(pathToFileURL(f).href)
