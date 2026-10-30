@@ -5,9 +5,9 @@ slug: judge-giu-quyet-dinh-nguoi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-judge-giu-quyet-dinh-nguoi-design.md
 ---
 
