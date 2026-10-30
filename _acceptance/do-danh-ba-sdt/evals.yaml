@@ -13,7 +13,7 @@ evals:
     executor: script
     cmd: config:executors.script.ddb_db
     paths: [pipeline/do-danh-ba-sdt.mjs, _acceptance/do-danh-ba-sdt/probes/db.mjs]
-    expected: "exit 0; DB thử oneinvest_p4_ddb dựng mới (db/db-thu.sh), xoá khi xong; lệnh (tiến trình con, không --write) và câu đo độc lập chép từ audit §7 (SQL Q2/Q3/Q4 + bộ dò rộng viết lại trong probe, không nạp do-danh-ba-sdt.mjs) cho cùng mười số, in bảng hai cột; ma trận Δ viết trước 11 ô (N1, N2, N4-nhiều, N4-rỗng, N5 × S03, S05 + N3): mỗi fixture COMMIT (mã 'ddb-thu-…', chèn theo ràng buộc 055/044) tăng đúng ô đích 1 và mọi ô khác Δ = 0, số assert = 11 × số fixture; đối chứng đỏ: câu độc lập trên bảng VALUES lệch một số → hàm so bắt ('LECH N<i> <nguồn>'); in 'DOI CHUNG OK'"
+    expected: "exit 0; DB thử oneinvest_p4_ddb dựng mới (db/db-thu.sh), xoá khi xong; lệnh (tiến trình con, không --write) và câu đo độc lập chép từ audit §7 (SQL Q2/Q3/Q4 + bộ dò rộng viết lại trong probe, không nạp do-danh-ba-sdt.mjs) cho cùng mười số, in bảng hai cột; ma trận Δ viết trước 12 ô (N1, N2, N4-nhiều, N4-rỗng, N5 × S03, S05 + N3 sellers + N3 SĐT trên tin) × 9 fixture (mỗi nguồn: cặp 1–1 + người SĐT không vai · tin hai SĐT · tin trống SĐT · bài «ddd dd•dd ddd»; thêm một dòng sellers): mỗi fixture COMMIT (mã 'ddb-thu-…', chèn theo ràng buộc 055/044) cho Δ đúng bằng vectơ viết trước ở MỌI ô (ô đích 1, ô kéo theo như N3 SĐT khi thêm SĐT mới 1, còn lại 0), số assert = 12 × 9 = 108, và sau mỗi fixture lệnh vẫn trùng câu đo độc lập; đối chứng đỏ: câu độc lập trên bảng VALUES lệch một số → hàm so bắt ('LECH N<i> <nguồn>'); in 'DOI CHUNG OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
