@@ -5,7 +5,7 @@ slug: media-canonical-reso
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (053) + pipeline/sync-cloud.mjs nằm trong t3_paths
 surfaces: [ui, cli]
-status: approved
+status: implemented
 design_doc: docs/superpowers/specs/2026-10-30-media-canonical-reso-design.md
 approved_by: Mạnh
 approved_at: 2026-10-30
