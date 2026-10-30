@@ -19,9 +19,12 @@ import {
   type SelectAxis,
 } from "@/lib/labels-normalize"
 
+import { guiNhan, LuuLoiAlert } from "./luu-nhan"
+
 /**
  * Biểu mẫu chín trường lõi (PL7). Mỗi ô có «Tin không nêu»; giá là một khoảng (thấp nhất, cao nhất) chung một đơn vị.
  * Lưu → POST /api/v1/ops/labels; 400 hiện lỗi dưới đúng ô và giữ chữ đã gõ; 409 (tin vừa có người gắn) → tải tin kế.
+ * Mất kết nối → Alert «Không chắc đã lưu» + «Lưu lại», giữ chữ đã gõ (hàng nhan-gia-va-luu-loi-mang).
  */
 
 type Cell = { value: string; not_stated: boolean }
@@ -64,6 +67,7 @@ export function LabelForm({ lat, itemId }: { lat: string; itemId: number }) {
   const [donVi, setDonVi] = useState<PriceUnit>("ty")
   const [loi, setLoi] = useState<Partial<Record<LabelField, string>>>({})
   const [dangLuu, setDangLuu] = useState(false)
+  const [matKetNoi, setMatKetNoi] = useState(false)
   const cell = (f: LabelField) => cells[f] ?? TRONG
   const dat = (f: LabelField, patch: Partial<Cell>) => setCells((c) => ({ ...c, [f]: { ...(c[f] ?? TRONG), ...patch } }))
   const giaKhongNeu = cell("price_min_vnd").not_stated
@@ -74,27 +78,17 @@ export function LabelForm({ lat, itemId }: { lat: string; itemId: number }) {
     for (const f of ["price_min_vnd", "price_max_vnd"] as const) values[f] = { ...cell(f), not_stated: giaKhongNeu, unit: donVi }
     setDangLuu(true)
     try {
-      const res = await fetch("/api/v1/ops/labels", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ lat, item_id: itemId, values }),
-      })
-      const body = (await res.json().catch(() => ({}))) as { error?: string; loi?: Partial<Record<LabelField, string>> }
-      if (res.status === 400 && body.loi) {
-        setLoi(body.loi)
-        return
-      }
-      if (res.status === 409) {
-        toast.info(`${body.error ?? "Tin này vừa có người gắn"} — chuyển tin kế`)
+      const kq = await guiNhan(fetch, { lat, item_id: itemId, values })
+      setMatKetNoi(kq.kind === "mat-ket-noi")
+      if (kq.kind === "loi-truong") setLoi(kq.loi)
+      else if (kq.kind === "da-co-nguoi") {
+        toast.info(`${kq.error} — chuyển tin kế`)
         sangTinKe()
-        return
+      } else if (kq.kind === "loi-may-chu") toast.error(kq.error)
+      else if (kq.kind === "da-luu") {
+        toast.success("Đã lưu nhãn")
+        sangTinKe()
       }
-      if (!res.ok) {
-        toast.error(body.error ?? "Không lưu được nhãn — thử lại")
-        return
-      }
-      toast.success("Đã lưu nhãn")
-      sangTinKe()
     } finally {
       setDangLuu(false)
     }
@@ -166,8 +160,9 @@ export function LabelForm({ lat, itemId }: { lat: string; itemId: number }) {
           ))}
         </FieldGroup>
       </FramePanel>
-      <FrameFooter className="flex justify-end">
-        <Button onClick={luu} disabled={dangLuu}>
+      <FrameFooter className="flex flex-col items-stretch gap-3">
+        {matKetNoi ? <LuuLoiAlert onRetry={luu} dangLuu={dangLuu} /> : null}
+        <Button className="self-end" onClick={luu} disabled={dangLuu}>
           {dangLuu ? "Đang lưu…" : "Lưu và sang tin kế"}
         </Button>
       </FrameFooter>
