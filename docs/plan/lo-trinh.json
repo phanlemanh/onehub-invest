@@ -2746,18 +2746,18 @@
       "phu": [
         "HD12"
       ],
-      "cau_giao": "Collector S06 thu SĐT người đăng theo từng tin được chọn và ghi vào stg ở dạng khoá theo Hỏi-A #216, tăng schemaVersion của DATA-CONTRACT",
-      "bat_khi": "Một lượt thu thử trên tin được chọn: tin có SĐT ghi khoá SĐT ở stg theo dạng đã quyết; DATA-CONTRACT tăng schemaVersion; lượt thu không vượt giới hạn tần suất đã khai",
+      "cau_giao": "Collector S06 thu SĐT người đăng theo từng tin được chọn và ghi vào stg ở dạng số gốc +84… (Hỏi-A #216), tăng schemaVersion của DATA-CONTRACT",
+      "bat_khi": "Một lượt thu thử trên tin được chọn: tin có SĐT ghi số gốc dạng +84… ở stg; DATA-CONTRACT tăng schemaVersion; lượt thu không vượt giới hạn tần suất đã khai",
       "vi_sao": "Làn ZCode (collector/). Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §3b, H16; docs/research/audit-bang-nguoi-sdt-3010.md): S06 giấu SĐT nên không nối được Người khác nguồn; Mạnh chốt SĐT là khoá chính và S06 cần thu SĐT.",
       "vung": [
         "collector/src/**",
         "collector/docs/DATA-CONTRACT.md"
       ],
-      "ghi_chu": "Trùng s06-thu-sdt của audit hàng duyệt và s06-sdt-theo-tin (SH3) của audit #216 — giữ một hàng, tên #216. Dạng khoá chờ Hỏi-A #216; Cổng Phạm vi không mở khi Hỏi-A chưa quyết. Migration stg do Claude viết (luật giáp ranh)."
+      "ghi_chu": "Trùng s06-thu-sdt của audit hàng duyệt và s06-sdt-theo-tin (SH3) của audit #216 — giữ một hàng, tên #216. Dạng khoá theo Hỏi-A đã quyết 30/10: lưu số gốc dạng +84… (E.164). Migration stg do Claude viết (luật giáp ranh)."
     },
     {
       "dung_tren": [
-        "HD12"
+        "SD3"
       ],
       "dot": "hang-duyet-3010",
       "ma": "HD13",
@@ -2776,7 +2776,124 @@
         "pipeline/lib/danh-ba-nguoi.mjs",
         "pipeline/dung-nguoi.mjs"
       ],
-      "ghi_chu": "Gánh cả gop-nguoi-sdt-tai-khoan của audit #216 (một hàng, không cắt riêng). Phần cùng nguồn S03/S05 làm được trước khi HD12 giao; phần S06 cần HD12. Dạng khoá theo Hỏi-A #216."
+      "ghi_chu": "Gánh cả gop-nguoi-sdt-tai-khoan của audit #216 (một hàng, không cắt riêng — lượt cắt nguoi-sdt-3010). Đứng trên SD3: gộp trên bí danh số gốc +84…. Phần cùng nguồn S03/S05 (luật 1–1 tất định, ca nhiều–nhiều thành thẻ duyệt) giao trước; phần khác nguồn dùng SĐT S06 khi HD12 giao — HD12 chưa giao thì Cổng Phạm vi để phần khác nguồn ra ngoài hợp đồng."
+    },
+    {
+      "dung_tren": [],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD1",
+      "slug": "sellers-them-dong-lai",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "phu": [
+        "SD1"
+      ],
+      "cau_giao": "Bước tổng hợp người bán thêm dòng cho mọi SĐT mới trên tin, không chỉ cập nhật và xoá dòng đã có",
+      "bat_khi": "Chạy bước bait gap trên DB hiện tại: số dòng sellers bằng số SĐT khác nhau trên sale_offers (hôm nay 19 so với 161); chạy lại lần hai không đổi số dòng; test đỏ khi bỏ lệnh thêm dòng",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §0 N3, Hỏi-C bước 1): commit 907f4bd4 bỏ INSERT ở transform, refresh-bait-gap chỉ UPDATE/DELETE nên sellers teo còn 19 dòng; chip môi giới /ops/deals thiếu 142/161 SĐT.",
+      "vung": [
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/lib/danh-ba-nguoi.mjs"
+      ],
+      "ghi_chu": "Dãy P3. Dưới mục tiêu cỡ: một vá nhỏ có test, Mạnh duyệt làm ngay (Hỏi-C bước 1); bước 2 nằm trong SD3."
+    },
+    {
+      "dung_tren": [],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD2",
+      "slug": "boc-sdt-du-va-chon-ro",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 9,
+      "phu": [
+        "SD2"
+      ],
+      "cau_giao": "Bộ bóc SĐT của S03/S05 bắt đủ các dạng viết tách lạ, bỏ số 11 chữ số, trả số dạng +84…, và tin chọn SĐT theo luật rõ trên mọi bài của tin",
+      "bat_khi": "Trên toàn bộ bài S03 ở stg: bài sót theo bộ dò rộng từ 46 xuống 0; 0 bài nhận số 11 chữ số; mọi số trả về khớp ^\\+84[35789]\\d{8}$; 3 tin S03 rỗng SĐT mà bài có số thành có; test cố định bốn dạng sót (•, (+84), (0xx), hai ký tự tách)",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §2, N4–N6): bộ bóc bắt 99,6% số trong chữ nhưng sót bốn dạng lạ, nhận số 11 chữ số, và tin chỉ giữ số đầu của bài đầu (11 tin S03 có nhiều số).",
+      "vung": [
+        "pipeline/transform-zalo.mjs",
+        "pipeline/transform-fb.mjs",
+        "pipeline/parse.test.mjs"
+      ],
+      "ghi_chu": "Dãy P1. Chung transform-zalo.mjs với HD4 và N1: lịch xếp nối tiếp theo vùng. Hàm chuẩn hoá về +84… dùng chung cho ô tìm của SD4."
+    },
+    {
+      "dung_tren": [
+        "SD1",
+        "SD2"
+      ],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD3",
+      "slug": "sdt-luu-goc-e164",
+      "nhom": "nguoi-sdt",
+      "hang": "T3",
+      "vai": "nen",
+      "tieu_chi": 11,
+      "phu": [
+        "SD3"
+      ],
+      "cau_giao": "Tin và danh bạ Người lưu số gốc SĐT ở một dạng +84…, danh bạ có bí danh số gốc, và bảng người bán thành view trên danh bạ",
+      "bat_khi": "Trên DB thử: 0 giá trị SĐT nào ở sale_offers và registry_aliases kind sdt không khớp ^\\+84[35789]\\d{8}$; mọi người theo SĐT có bí danh sdt (hôm nay 165); bí danh sdt_bam cũ được nghỉ, không sửa tại chỗ; nạp lại lượt hai thêm 0 bí danh; sellers đọc từ view ra cùng số dòng và cột tổng hợp như bảng cũ; leak gate cloud xanh, seller_phone vẫn không lên cloud",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §3.2, §5b, N7; Hỏi-A, Hỏi-C bước 2): danh bạ chỉ giữ SĐT băm sha256 không muối, đảo ngược được, là dư âm thời SĐT tầng A; Mạnh chốt lưu số gốc, một dạng +84….",
+      "vung": [
+        "db/migrations",
+        "pipeline/lib/danh-ba-nguoi.mjs",
+        "pipeline/refresh-bait-gap.mjs",
+        "pipeline/sync-cloud.mjs",
+        "pipeline/transform-zalo.mjs",
+        "pipeline/transform-fb.mjs"
+      ],
+      "ghi_chu": "Dãy P3, T3 (migration + sync-cloud). 11 tiêu chí: lưu số gốc, đổi khoá và view sellers phải đi một lượt để khoá SĐT chỉ đổi một lần (Hỏi-C) — tách ra thì đổi khoá hai lần. Số migration do điều phối liên làn cấp. Đưa số gốc lên cloud là quyết định riêng, không thuộc hàng này."
+    },
+    {
+      "dung_tren": [
+        "SD3"
+      ],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD4",
+      "slug": "people-hien-so-goc",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "Người vận hành",
+      "tieu_chi": 9,
+      "phu": [
+        "SD4"
+      ],
+      "cau_giao": "Người vận hành mở danh bạ người trên Ops ở máy thu, thấy số gốc của từng người, gọi được bằng một chạm và tìm được người theo SĐT; vai Người xem không thấy số",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §5, N8, N10; Hỏi-B): /ops/people chỉ hiện 8 ký tự băm và không tìm theo SĐT; /ops/deals hiện số gốc chỉ cho admin; Mạnh chốt mở cho cả vai Vận hành và admin.",
+      "vung": [
+        "app/src/app/ops/people",
+        "app/src/components/ops/people",
+        "app/src/lib/ops/people.ts",
+        "app/src/app/ops/deals",
+        "app/src/components/ops/deal-card.tsx",
+        "app/src/lib/deals.ts"
+      ],
+      "ghi_chu": "Dãy U1, sau che-tim-bi-danh-viewer (đợt dot0) vì chung app/src/lib/ops/people*. Gồm hạ cổng liên hệ /ops/deals từ isAdmin xuống vai Vận hành và sửa chú thích «SĐT tầng A». HTML/JSON của vai Người xem không được chứa SĐT."
+    },
+    {
+      "dung_tren": [],
+      "dot": "nguoi-sdt-3010",
+      "ma": "SD5",
+      "slug": "do-danh-ba-sdt",
+      "nhom": "nguoi-sdt",
+      "hang": "T2",
+      "vai": "nen",
+      "tieu_chi": 6,
+      "phu": [
+        "SD5"
+      ],
+      "cau_giao": "Mỗi đêm đo trục SĐT của danh bạ Người và ghi vào dq_check_results để /ops/quality hiện",
+      "bat_khi": "Chạy trên DB 30/10 ra đúng số của audit §0: SĐT nối 1–1 chưa gộp S03 129 · S05 13; người theo SĐT không vai 150; sellers 19/161; tin nhiều SĐT 11; bài sót 46. Chạy hai lần cùng ngày không nhân dòng",
+      "vi_sao": "Audit bảng Người theo trục SĐT 30/10 (docs/research/audit-bang-nguoi-sdt-3010.md §0): mọi số của audit đo bằng tay; cần số đêm để đối chứng trước và sau SD1–SD3, HD13.",
+      "vung": [
+        "pipeline/sql"
+      ],
+      "ghi_chu": "Dãy P4. Dưới mục tiêu cỡ: một phép đo hẹp. Nên giao trước HD13 để có số đối chứng."
     }
   ],
   "chan_troi": [
