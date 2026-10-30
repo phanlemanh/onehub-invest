@@ -92,6 +92,7 @@ executors:
     airbnb_nghi: "cd pipeline && node --test scripts/airbnb-nghi.itest.mjs"   # airbnb-nghi-khong-hoi-sinh: ghiListing cho nghỉ ghi toạ độ mới + reassign không đánh thức, giao dịch ROLLBACK — chạy trên DB thử riêng (DATABASE_URL)
     the_duyet: "cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx"   # the-duyet-du-can-cu (PL3) — lược đồ tạm td_<pid> trên DB local :5433 + jsdom; giám sát duyệt U1-73
     the_duyet_agent: "cd agent && node --import tsx --test tests/enrich-goi-y.test.ts"   # the-duyet-du-can-cu AC-6 — thẻ bổ sung tin mới không mang gợi ý apply; DB local trong ROLLBACK ngắn (U1-73)
+    the_duyet_phuong: "cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx"   # the-duyet-phuong-lech-gia — hàm thuần + jsdom; probe chỉ SELECT DB máy thu (bỏ qua có lời ở CI)
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
