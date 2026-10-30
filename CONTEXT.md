@@ -160,6 +160,11 @@ _Avoid_: provenance (trên UI)
 - Slug URL: —
 _Avoid_: điểm tin cậy, confidence, độ chắc (dùng cho nhãn hiển thị ba mức, không phải thang sáu bậc)
 
+**Danh bạ SĐT**: Năm kiểm đo trục số điện thoại của danh bạ Người theo nguồn, mỗi ngày một dòng: cặp một–một (một SĐT, một người gửi) mà người theo SĐT chưa gộp; người theo SĐT không có tin; bảng người bán so với số SĐT trên tin; tin nhiều số và tin trống số dù bài có số; số bộ bóc bỏ sót so với bộ dò rộng. Chỉ số đếm — không SĐT, không khoá băm.
+- Code: `pipeline/do-danh-ba-sdt.mjs`, kiểm `danh-ba-sdt:n1`…`n5` ở `dq_check_results` · RESO: không có
+- Slug URL: —
+_Avoid_: sổ điện thoại
+
 **Người bán**: Người đăng tin rao — chủ hoặc môi giới, không tự suy vai. Định danh xuyên nguồn bằng hash SĐT. Tên, SĐT, ID tài khoản người bán là tầng C — công khai, vì đăng rao là hoạt động bán hàng/môi giới (Mạnh chốt 23/10).
 - Code: `seller` · RESO: resource Member; `seller_phone_hash` ≈ ULI
 - Ghi chú: thuộc danh bạ người (ADR-0016 §8); «chủ» chỉ là «tự nhận chính chủ» lấy từ tin — không thu chủ sở hữu ngoài tin.

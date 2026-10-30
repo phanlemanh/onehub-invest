@@ -20,5 +20,8 @@ job_run cloud-sync push-ops-facts node "$ROOT/pipeline/push-ops-facts.mjs"
 # PL16 `de-xuat-thanh-phat-bieu-bac` (Hỏi-3): chụp phân bố bậc B0–B5 + hai dòng kiểm, chỉ ghi DB local — bước CUỐI để
 # không làm chậm nhịp tim /ops. Dòng kiểm `fail` không đổi mã thoát; chỉ lỗi chạy mới làm job ≠0.
 job_run cloud-sync bac-du-lieu node "$ROOT/pipeline/bac-du-lieu.mjs" --write
+# SD5 `do-danh-ba-sdt` (Hỏi-3): năm kiểm trục SĐT của danh bạ Người, một dòng mỗi kiểm mỗi ngày (giờ máy thu), chỉ ghi DB
+# local; bước cuối. Dòng kiểm `fail` không đổi mã thoát; chỉ lỗi chạy mới làm job ≠0.
+job_run cloud-sync do-danh-ba-sdt node "$ROOT/pipeline/do-danh-ba-sdt.mjs" --write
 exit "$JOB_RC"
 
