@@ -7,12 +7,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { chotDbThuNguoi } from "../lib/danh-ba-nguoi.mjs";
+import { KHOA_DANH_BA, LY_DO_RUT, chotDbThuNguoi, dungNguoi, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_055 = readFileSync(path.join(ROOT, "db/migrations/055_danh_ba_nguoi.sql"), "utf8");
-export const KHOA_DANH_BA = 55055;
 const BON_BANG = ["parties", "registry_aliases", "registry_events", "party_roles"];
 const TRUC_MOI = ["registry_status", "alias_kind", "registry_event_kind", "party_role"];
 const PTY = "pty_01HZZZZZZZZZZZZZZZZZZZZZZZ";
@@ -123,5 +122,180 @@ test("AC-2 enum và DQ (a): sổ từ vựng khớp DB cho bốn trục mới, c
     await c.query(`DELETE FROM ref_lookup WHERE lookup_name = 'party_role' AND lookup_value = 'nguoi_dang'`);
     const lech = lechMoi(await checkDb(c, reg));
     assert.ok(lech.some((x) => x.axis === "party_role"), `AC-2 --check-db không báo trục party_role: ${JSON.stringify(lech)}`);
+  });
+});
+
+// ---- Task 3: bộ dựng dungNguoi trên fixture tự chèn (khoá TEST-DB2b-*, không va dữ liệu thật) ----
+const T = `TEST-DB2b-${process.pid}`;
+const im = () => {};
+let snapZalo;
+async function themTin(db, { id, source, at = "2026-10-01T00:00:00Z", postIds = [], sellerRef = null, ten = null, sdt = null, nghi = false }) {
+  await db.query(
+    `INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, source, post_ids, originating_system_key,
+                                     seller_ref, seller_name, seller_phone_hash, retired_at)
+     VALUES ($1, 'sale', $2, $2, $3, $4::text[], $1, $5, $6, $7, CASE WHEN $8 THEN now() END)`,
+    [`${T}-${id}`, at, source, postIds, sellerRef, ten, sdt, nghi]);
+  return `${source}:${T}-${id}`;
+}
+async function themBai(db, id, { kenh = "openclaw-hook", sender = null, ten = null }) {
+  snapZalo ??= (await db.query("SELECT snapshot_id FROM stg_zalo_posts LIMIT 1")).rows[0].snapshot_id;
+  await db.query(
+    `INSERT INTO stg_zalo_posts (post_id, snapshot_id, agent_id, text, sender_id, sender_name, captured_at)
+     VALUES ($1, $2, $3, 'bài thử DB2b', $4, $5, now())`,
+    [`${T}-${id}`, snapZalo, kenh, sender && `${T}-${sender}`, ten]);
+  return `${T}-${id}`;
+}
+const ai = (s) => `${T}-${s}`;
+/** Vai sống của một tin: [{party_key, method, evidence_tier, evidence}] */
+const vaiSong = async (db, subject) =>
+  (await db.query(`SELECT party_key, method, evidence_tier, evidence FROM party_roles WHERE subject_key = $1 AND retracted_at IS NULL ORDER BY party_key`, [subject])).rows;
+const nguoiCua = async (db, source, kind, value) =>
+  (await db.query(`SELECT object_key FROM registry_aliases WHERE source = $1 AND kind = $2 AND value = $3 AND retired_at IS NULL`, [source, kind, value])).rows.map((r) => r.object_key);
+const dem4 = async (db) => Object.fromEntries(await Promise.all(BON_BANG.map(async (t) => [t, (await db.query(`SELECT count(*)::int AS n FROM ${t}`)).rows[0].n])));
+
+/** Fixture E3: ba tin S06. */
+async function fixtureS06(db) {
+  return {
+    t1: await themTin(db, { id: "t1", source: "S06", sellerRef: "ct:900001", ten: "Người bán thử 1" }),
+    t2: await themTin(db, { id: "t2", source: "S06", sellerRef: "ct:900001" }),
+    t3: await themTin(db, { id: "t3", source: "S06", sellerRef: "ct:900002" }),
+  };
+}
+/** Fixture E4: bảy dòng ma trận S03/S05 (bài + tin). */
+async function fixtureZalo(db) {
+  const b1 = await themBai(db, "b1", { sender: "s1", ten: "Anh S1" });
+  const b2a = await themBai(db, "b2a", { sender: "s1" });
+  const b2b = await themBai(db, "b2b", { sender: "s2" });
+  const b4 = await themBai(db, "b4", {});
+  const b5 = await themBai(db, "b5", { kenh: "apify-facebook", sender: "s1" });
+  const b7 = await themBai(db, "b7", { sender: "s7" });
+  return {
+    motBai: await themTin(db, { id: "mot-bai", source: "S03", postIds: [b1] }),
+    haiBai: await themTin(db, { id: "hai-bai", source: "S03", postIds: [b2a, b2b] }),
+    chiSdt: await themTin(db, { id: "chi-sdt", source: "S03", postIds: [], sdt: ai("h9") }),
+    khongGi: await themTin(db, { id: "khong-gi", source: "S03", postIds: [b4] }),
+    s05: await themTin(db, { id: "s05", source: "S05", postIds: [b5] }),
+    s05Sdt: await themTin(db, { id: "s05-sdt", source: "S05", postIds: [], sdt: ai("h5") }),
+    nghi: await themTin(db, { id: "nghi", source: "S03", postIds: [b7], nghi: true }),
+    bai: { b1, b2b, b4 },
+  };
+}
+
+test("AC-3 S06 tài khoản: một tài khoản một người, đổi tài khoản thì rút vai cũ", async () => {
+  await trongGiaoDich(async (db) => {
+    const f = await fixtureS06(db);
+    await dungNguoi(db, { runId: "itest-ac3", out: im });
+    const [p1] = await nguoiCua(db, "S06", "tai_khoan_nguon", "900001");
+    const [p2] = await nguoiCua(db, "S06", "tai_khoan_nguon", "900002");
+    assert.ok(p1 && p2 && p1 !== p2, "AC-3 thiếu người tài khoản 900001/900002");
+    for (const [k, mong] of [["t1", p1], ["t2", p1], ["t3", p2]]) {
+      const v = await vaiSong(db, f[k]);
+      assert.equal(v.length, 1, `AC-3 tin S06 sai người: ${T}-${k}`);
+      assert.equal(v[0].party_key, mong, `AC-3 tin S06 sai người: ${T}-${k}`);
+      assert.equal(v[0].method, "source_field");
+      assert.equal(v[0].evidence_tier, "fact");
+      assert.equal(v[0].evidence.offer_id, `${T}-${k}`);
+    }
+    assert.equal((await db.query("SELECT source FROM parties WHERE party_key = $1", [p1])).rows[0].source, "S06");
+    assert.deepEqual(await nguoiCua(db, "S06", "ten", "Người bán thử 1"), [p1]);
+    // Đối chứng: t3 đổi sang tài khoản của t1 → rút vai cũ, trỏ người của t1.
+    await db.query("UPDATE sale_offer_records SET seller_ref = 'ct:900001' WHERE offer_id = $1", [`${T}-t3`]);
+    const kq = await dungNguoi(db, { runId: "itest-ac3b", out: im });
+    assert.deepEqual((await vaiSong(db, f.t3)).map((v) => v.party_key), [p1], `AC-3 tin S06 sai người: ${T}-t3`);
+    const rut = (await db.query("SELECT party_key, retract_reason FROM party_roles WHERE subject_key = $1 AND retracted_at IS NOT NULL", [f.t3])).rows;
+    assert.deepEqual(rut, [{ party_key: p2, retract_reason: LY_DO_RUT }]);
+    assert.ok(kq.vai_rut >= 1 && kq.vai_moi >= 1);
+  });
+});
+
+test("AC-4 S03/S05 người gửi: ma trận 7 dòng", async () => {
+  await trongGiaoDich(async (db) => {
+    const f = await fixtureZalo(db);
+    const truoc = (await dungNguoi(db, { runId: "itest-ac4", out: im })).khong_dinh_danh.S03 ?? 0;
+    const [s1] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s1"));
+    const [s2] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s2"));
+    const [h9] = await nguoiCua(db, "S03", "sdt_bam", ai("h9"));
+    const [s1f] = await nguoiCua(db, "S05", "tai_khoan_nguon", ai("s1"));
+    const [h5] = await nguoiCua(db, "S05", "sdt_bam", ai("h5"));
+    const [s7] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s7"));
+    const nguoiVa = async (subject) => (await vaiSong(db, subject)).map((v) => `${v.party_key}/${v.method}/${v.evidence_tier}`);
+    const MA_TRAN = [
+      ["S03 một bài s1", f.motBai, [`${s1}/source_field/fact`]],
+      ["S03 hai bài s1,s2", f.haiBai, [`${s1}/source_field/fact`, `${s2}/source_field/fact`].sort()],
+      ["S03 chỉ SĐT h9", f.chiSdt, [`${h9}/parser/observed`]],
+      ["S03 không gì", f.khongGi, []],
+      ["S05 s1 khác người S03", f.s05, [`${s1f}/source_field/fact`]],
+      ["S05 chỉ SĐT", f.s05Sdt, [`${h5}/parser/observed`]],
+      ["S03 tin nghỉ s7", f.nghi, [`${s7}/source_field/fact`]],
+    ];
+    assert.ok(s1 && s2 && h9 && s1f && h5 && s7 && s1 !== s1f, "AC-4 thiếu người fixture");
+    let soAssert = 0;
+    for (const [dong, subject, mong] of MA_TRAN) {
+      assert.deepEqual((await nguoiVa(subject)).sort(), mong, `AC-4 sai vai: ${dong}`);
+      soAssert++;
+    }
+    assert.equal(soAssert, 7);
+    // Đối chứng dương: dòng «không gì» thêm sender s3 → có 1 vai; khong_dinh_danh.S03 giảm 1.
+    await db.query("UPDATE stg_zalo_posts SET sender_id = $2 WHERE post_id = $1", [f.bai.b4, ai("s3")]);
+    const sau = (await dungNguoi(db, { runId: "itest-ac4b", out: im })).khong_dinh_danh.S03 ?? 0;
+    assert.equal((await vaiSong(db, f.khongGi)).length, 1, "AC-4 sai vai: không gì + s3");
+    assert.equal(truoc - sau, 1, "AC-4 khong_dinh_danh.S03 không đổi theo dòng «không gì»");
+  });
+});
+
+test("AC-6 chạy lại: lượt hai bằng 0, đổi người gửi rút vai, mất bài giữ vai", async () => {
+  await trongGiaoDich(async (db) => {
+    await fixtureS06(db);
+    const f = await fixtureZalo(db);
+    const l1 = await dungNguoi(db, { runId: "itest-ac6-1", out: im });
+    assert.ok(l1.nguoi_moi > 0);
+    const dem1 = await dem4(db);
+    const l2 = await dungNguoi(db, { runId: "itest-ac6-2", out: im });
+    assert.deepEqual([l2.nguoi_moi, l2.bi_danh_moi, l2.vai_moi, l2.vai_rut], [0, 0, 0, 0], "AC-6 chạy lại nhân dòng: kết quả lượt 2");
+    const dem2 = await dem4(db);
+    for (const t of BON_BANG) assert.equal(dem2[t], dem1[t], `AC-6 chạy lại nhân dòng: ${t} ${dem1[t]}→${dem2[t]}`);
+
+    // Lượt 3: bài s2 đổi người gửi thành s4.
+    await db.query("UPDATE stg_zalo_posts SET sender_id = $2 WHERE post_id = $1", [f.bai.b2b, ai("s4")]);
+    await dungNguoi(db, { runId: "itest-ac6-3", out: im });
+    const [s2] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s2"));
+    const [s4] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s4"));
+    const rut = (await db.query("SELECT retract_reason FROM party_roles WHERE subject_key = $1 AND party_key = $2 AND retracted_at IS NOT NULL", [f.haiBai, s2])).rows;
+    assert.deepEqual(rut, [{ retract_reason: LY_DO_RUT }], "AC-6 vai người gửi cũ không rút");
+    assert.ok((await vaiSong(db, f.haiBai)).some((v) => v.party_key === s4), "AC-6 thiếu vai người gửi mới");
+    assert.equal((await dem4(db)).party_roles, dem2.party_roles + 1, "AC-6 chạy lại nhân dòng: party_roles");
+
+    // Lượt 4: bài của tin s1 mất khỏi stg_zalo_posts → giữ vai, không vai parser.
+    await db.query("DELETE FROM stg_zalo_posts WHERE post_id = $1", [f.bai.b1]);
+    const l4 = await dungNguoi(db, { runId: "itest-ac6-4", out: im });
+    assert.deepEqual([l4.vai_moi, l4.vai_rut], [0, 0], `AC-6 bài mất làm rút vai: ${T}-mot-bai`);
+    const [s1] = await nguoiCua(db, "S03", "tai_khoan_nguon", ai("s1"));
+    assert.deepEqual((await vaiSong(db, f.motBai)).map((v) => `${v.party_key}/${v.method}`), [`${s1}/source_field`],
+      `AC-6 bài mất làm rút vai: ${T}-mot-bai`);
+  });
+});
+
+test("AC-8 sellers có người: mỗi (SĐT, nguồn) của sellers có người sống", async () => {
+  await trongGiaoDich(async (db) => {
+    const hx = ai("hx");
+    await themTin(db, { id: "hx3", source: "S03", postIds: [], sdt: hx });
+    await themTin(db, { id: "hx5", source: "S05", postIds: [], sdt: hx });
+    await db.query(`INSERT INTO sellers (phone_hash, sources, first_seen, last_seen) VALUES ($1, ARRAY['S03','S05'], now(), now())`, [hx]);
+    await dungNguoi(db, { runId: "itest-ac8", out: im });
+    assert.deepEqual(await sellersThieuNguoi(db), [], "AC-8 sellers thiếu người");
+    const hy = ai("hy");
+    await db.query(`INSERT INTO sellers (phone_hash, sources, first_seen, last_seen) VALUES ($1, ARRAY['S06'], now(), now())`, [hy]);
+    assert.deepEqual(await sellersThieuNguoi(db), [`${hy}:S06`], `AC-8 sellers thiếu người: ${hy}:S06`);
+  });
+});
+
+test("RF3 post_ids: cột NOT NULL (lõi vẫn chịu null), tin S03 mảng rỗng chỉ SĐT vẫn có vai", async () => {
+  await trongGiaoDich(async (db) => {
+    const { rows: [r] } = await db.query(
+      `SELECT attnotnull FROM pg_attribute WHERE attrelid = 'sale_offer_records'::regclass AND attname = 'post_ids'`);
+    assert.equal(r.attnotnull, true, "RF3 post_ids thôi NOT NULL — thêm ca null vào itest");
+    const s = await themTin(db, { id: "rf3", source: "S03", sdt: ai("h3") });
+    await dungNguoi(db, { runId: "itest-rf3", out: im });
+    assert.equal((await vaiSong(db, s)).length, 1, "RF3 tin post_ids rỗng mất vai SĐT");
   });
 });

@@ -171,3 +171,17 @@ test("AC-6 chonVaiRut: chỉ rút khi có bằng chứng thay; bài mất thì g
   const r6 = { id: 3, subject_key: s6, party_key: "pty_1", method: "source_field", evidence: { field: "seller_ref" } };
   assert.deepEqual(chonVaiRut([r6], [{ subject_key: s6, party_key: "pty_2" }], [t6], new Map()).map((r) => r.id), [3]);
 });
+
+test("RF6 hai bản ghi cùng chủ thể (tin nghỉ doi_khoa + tin thay): một vai, bằng chứng từ bản ghi sống", () => {
+  const b = bai([["p1", "S03", "A"]]);
+  const cu = tin("S03", { offer_id: "cu", originating_system_key: "k-chung", post_ids: ["p1"], seller_phone_hash: "h",
+    retired_at: "2026-10-02T00:00:00Z", first_seen: "2026-09-01T00:00:00Z" });
+  const moi = tin("S03", { offer_id: "moi", originating_system_key: "k-chung", post_ids: ["p1"], seller_phone_hash: "h" });
+  const rong = tin("S05", { offer_id: "r1", originating_system_key: "k-rong" });
+  const rong2 = tin("S05", { offer_id: "r2", originating_system_key: "k-rong", retired_at: "2026-10-02T00:00:00Z" });
+  const kq = giaiNguoi([cu, moi, rong, rong2], new Map(), { baiTheoId: b, taoKhoa: khoaGia() });
+  const cap = kq.vai.map((v) => `${v.subject_key}|${v.party_key}`);
+  assert.equal(new Set(cap).size, cap.length, `RF6 vai trùng chủ thể: ${cap}`);
+  assert.deepEqual(kq.vai.map((v) => v.evidence.offer_id), ["moi"], "RF6 bằng chứng không lấy từ bản ghi sống");
+  assert.deepEqual(kq.khongDinhDanh, { S05: 1 }, "RF6 khong_dinh_danh đếm theo bản ghi thay vì chủ thể");
+});

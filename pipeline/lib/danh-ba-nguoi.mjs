@@ -69,6 +69,8 @@ const thoiDiem = (x) => (x == null ? Number.POSITIVE_INFINITY : +new Date(x));
  * Giải người cho các tin theo thứ tự tất định (first_seen, offer_id). Luật Hỏi-4: SĐT luôn là bí danh của người theo
  * SĐT riêng của nguồn, không gắn vào người tài khoản; tin có tài khoản mang vai tới người tài khoản (source_field/fact),
  * tin chỉ SĐT mang vai tới người theo SĐT (parser/observed); không có cả hai → đếm khong_dinh_danh.
+ * Nhiều bản ghi cùng chủ thể (tin nghỉ `doi_khoa` giữ originating_system_key của tin thay nó) gộp thành một vai mỗi
+ * (chủ thể, người), bằng chứng lấy từ bản ghi sống; khong_dinh_danh đếm theo chủ thể.
  * @param {object[]} tins
  * @param {Map<string, string>} biDanh khoaBiDanh → party_key (không bị đột biến)
  */
@@ -76,8 +78,9 @@ export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKh
   const bd = new Map(biDanh);
   const nguoiMoi = [];
   const biDanhMoi = [];
-  const vai = [];
-  const khongDinhDanh = {};
+  const vaiTheo = new Map();
+  const tinCuaVai = new Map();
+  const chuThe = new Map();
   const themBiDanh = (source, kind, value, object_key) => {
     const k = khoaBiDanh(source, kind, value, object_key);
     if (bd.has(k)) return bd.get(k);
@@ -96,21 +99,32 @@ export function giaiNguoi(tins, biDanh, { baiTheoId = new Map(), taoKhoa = moiKh
   for (const t of thuTu) {
     const d = rutDinhDanh(t, baiTheoId);
     const subject_key = `${t.source}:${t.originating_system_key}`;
+    if (!chuThe.has(subject_key)) chuThe.set(subject_key, t.source);
+    const ghiVai = (v) => {
+      const k = `${subject_key}|${v.party_key}`;
+      const cu = tinCuaVai.get(k);
+      if (cu && !(cu.retired_at != null && t.retired_at == null)) return;
+      vaiTheo.set(k, v);
+      tinCuaVai.set(k, t);
+    };
     for (const tk of d.taiKhoan) {
       const party_key = layNguoi(t.source, ALIAS_KIND.tai_khoan_nguon, tk.value);
       if (tk.ten) themBiDanh(t.source, ALIAS_KIND.ten, tk.ten, party_key);
       const evidence = { offer_id: t.offer_id, field: d.field, ...(tk.post_ids.length ? { post_ids: tk.post_ids } : {}) };
-      vai.push({ subject_key, party_key, role: PARTY_ROLE.nguoi_dang, method: ASSERTION_METHOD.source_field, evidence_tier: EVIDENCE_TIER.fact, evidence });
+      ghiVai({ subject_key, party_key, role: PARTY_ROLE.nguoi_dang, method: ASSERTION_METHOD.source_field, evidence_tier: EVIDENCE_TIER.fact, evidence });
     }
     const nguoiSdt = d.sdt ? layNguoi(t.source, ALIAS_KIND.sdt_bam, d.sdt) : null;
     if (!d.taiKhoan.length && nguoiSdt) {
-      vai.push({
+      ghiVai({
         subject_key, party_key: nguoiSdt, role: PARTY_ROLE.nguoi_dang, method: ASSERTION_METHOD.parser,
         evidence_tier: EVIDENCE_TIER.observed, evidence: { offer_id: t.offer_id, field: "seller_phone_hash" },
       });
     }
-    if (!d.taiKhoan.length && !nguoiSdt) khongDinhDanh[t.source] = (khongDinhDanh[t.source] ?? 0) + 1;
   }
+  const vai = [...vaiTheo.values()];
+  const coVai = new Set(vai.map((v) => v.subject_key));
+  const khongDinhDanh = {};
+  for (const [sk, source] of chuThe) if (!coVai.has(sk)) khongDinhDanh[source] = (khongDinhDanh[source] ?? 0) + 1;
   return { nguoiMoi, biDanhMoi, vai, khongDinhDanh };
 }
 
@@ -143,7 +157,78 @@ export const SQL = Object.freeze({
          WHERE post_id = ANY($1::text[]) AND agent_id = ANY($2::text[]) ORDER BY post_id, captured_at DESC`,
   biDanh: `SELECT object_key, source, kind, value FROM registry_aliases WHERE retired_at IS NULL AND object_key LIKE 'pty\\_%'`,
   vaiSong: `SELECT id, subject_key, party_key, method, evidence FROM party_roles WHERE retracted_at IS NULL`,
+  themNguoi: `INSERT INTO parties (party_key, source) SELECT * FROM unnest($1::text[], $2::text[])`,
+  // Định danh (tài khoản, SĐT): KHÔNG nuốt trùng — trùng nghĩa là bộ dựng không tra bí danh (đối chứng E7 đỏ ở đây).
+  themDinhDanh: `INSERT INTO registry_aliases (object_key, source, kind, value) SELECT * FROM unnest($1::text[], $2::text[], $3::text[], $4::text[])`,
+  themTen: `INSERT INTO registry_aliases (object_key, source, kind, value) SELECT * FROM unnest($1::text[], $2::text[], $3::text[], $4::text[])
+            ON CONFLICT (object_key, kind, value) WHERE kind = 'ten' DO NOTHING`,
+  themVai: `INSERT INTO party_roles (subject_key, party_key, role, method, evidence_tier, evidence, run_id)
+            SELECT s, p, r, m, e, ev, $7 FROM unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::jsonb[]) AS x(s, p, r, m, e, ev)`,
+  rutVai: `UPDATE party_roles SET retracted_at = now(), retract_reason = $2 WHERE id = ANY($1::bigint[]) AND retracted_at IS NULL`,
+  sellersThieu: `SELECT s.phone_hash || ':' || src AS k FROM sellers s CROSS JOIN LATERAL unnest(s.sources) AS src
+                  WHERE NOT EXISTS (SELECT 1 FROM registry_aliases a WHERE a.retired_at IS NULL AND a.kind = 'sdt_bam'
+                                      AND a.source = src AND a.value = s.phone_hash)
+                  ORDER BY 1`,
 });
+
+/** Khoá advisory của bộ dựng — hai lượt chồng nhau (job đêm, --thu) xếp hàng thay vì va chỉ mục duy nhất. */
+export const KHOA_DANH_BA = 55055;
+
+/**
+ * Dựng danh bạ Người + vai người đăng từ mọi sale_offer_records (kể cả tin nghỉ). Chạy trong giao dịch của người gọi;
+ * chỉ thêm (rút vai có lý do, không xoá). `traBiDanh: false` bỏ tra bí danh — CHỈ cho đối chứng của thước E7.
+ * @param {import("pg").Client} c
+ */
+export async function dungNguoi(c, { runId = new Date().toISOString(), traBiDanh = true, out = console.log } = {}) {
+  await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA_DANH_BA]);
+  const tins = (await c.query(SQL.tin, [["S03", "S05", "S06"]])).rows;
+  const postIds = [...new Set(tins.flatMap((t) => (t.source === "S06" ? [] : t.post_ids ?? [])))];
+  const baiTheoId = new Map(
+    (await c.query(SQL.bai, [postIds, Object.keys(KENH_NGUON)])).rows
+      .map((b) => [b.post_id, { source: KENH_NGUON[b.agent_id], sender_id: b.sender_id, sender_name: b.sender_name }]),
+  );
+  const biDanh = new Map(
+    traBiDanh ? (await c.query(SQL.biDanh)).rows.map((a) => [khoaBiDanh(a.source, a.kind, a.value, a.object_key), a.object_key]) : [],
+  );
+  const kq = giaiNguoi(tins, biDanh, { baiTheoId });
+
+  if (kq.nguoiMoi.length) await c.query(SQL.themNguoi, [kq.nguoiMoi.map((p) => p.party_key), kq.nguoiMoi.map((p) => p.source)]);
+  const cot = (ds) => [ds.map((a) => a.object_key), ds.map((a) => a.source), ds.map((a) => a.kind), ds.map((a) => a.value)];
+  const dinhDanh = kq.biDanhMoi.filter((a) => a.kind !== ALIAS_KIND.ten);
+  const ten = kq.biDanhMoi.filter((a) => a.kind === ALIAS_KIND.ten);
+  let biDanhMoi = 0;
+  if (dinhDanh.length) biDanhMoi += (await c.query(SQL.themDinhDanh, cot(dinhDanh))).rowCount;
+  if (ten.length) biDanhMoi += (await c.query(SQL.themTen, cot(ten))).rowCount;
+
+  const vaiSong = (await c.query(SQL.vaiSong)).rows;
+  const dangSong = new Set(vaiSong.map((v) => `${v.subject_key}|${v.party_key}`));
+  const rut = chonVaiRut(vaiSong, kq.vai, tins, baiTheoId);
+  if (rut.length) await c.query(SQL.rutVai, [rut.map((r) => r.id), LY_DO_RUT]);
+  const moi = kq.vai.filter((v) => !dangSong.has(`${v.subject_key}|${v.party_key}`));
+  if (moi.length) {
+    await c.query(SQL.themVai, [
+      moi.map((v) => v.subject_key), moi.map((v) => v.party_key), moi.map((v) => v.role), moi.map((v) => v.method),
+      moi.map((v) => v.evidence_tier), moi.map((v) => JSON.stringify(v.evidence)), runId,
+    ]);
+  }
+
+  const theo_nguon = {};
+  const cong = (s, k) => { theo_nguon[s] ??= { nguoi_moi: 0, vai_moi: 0 }; theo_nguon[s][k]++; };
+  for (const p of kq.nguoiMoi) cong(p.source, "nguoi_moi");
+  for (const v of moi) cong(v.subject_key.slice(0, 3), "vai_moi");
+  const kqDem = {
+    nguoi_moi: kq.nguoiMoi.length, bi_danh_moi: biDanhMoi, vai_moi: moi.length, vai_rut: rut.length,
+    khong_dinh_danh: kq.khongDinhDanh, theo_nguon,
+  };
+  const kdd = Object.entries(kq.khongDinhDanh).map(([s, n]) => `${s}=${n}`).join(" ") || "0";
+  out(`danh-ba-nguoi: +${kqDem.nguoi_moi} người · +${biDanhMoi} bí danh · +${moi.length} vai · rút ${rut.length} · không định danh ${kdd}`);
+  return kqDem;
+}
+
+/** «<phone_hash>:<S0x>» cho mỗi (dòng sellers, nguồn trong sources) chưa có người sống mang bí danh sdt_bam đúng nguồn. */
+export async function sellersThieuNguoi(c) {
+  return (await c.query(SQL.sellersThieu)).rows.map((r) => r.k);
+}
 
 /** Bảng tầng A mà một câu SQL nhắc tới (sau FROM/JOIN/INTO/UPDATE). */
 export function bangDuocDoc(sql) {
