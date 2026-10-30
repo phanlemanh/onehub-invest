@@ -121,15 +121,14 @@ export function khoaPhuong(v: string): string {
 }
 
 /**
- * So hàng Phường theo khoá tên chuẩn. Khoá rỗng (chỉ có tiền tố) → Thiếu. Khoá chỉ số («Phường 12» của hai quận khác
- * nhau cùng khoá) → so chuỗi gốc như cũ, để khoá số không làm hai chuỗi khác nhau thành Khớp.
+ * So hàng Phường theo khoá tên chuẩn. Khoá rỗng (chỉ có tiền tố) → Thiếu. Khoá chỉ số so như mọi khoá: «Phường 12» với
+ * «P.12» cùng khoá «12» nên Khớp (hồ sơ khoa-phuong-chung-phuong-so; bản chép ở agent/src/agents/judge-entity.ts).
  */
 function soPhuong(a: string | number | null, b: string | number | null): So {
   if (a === null || b === null) return "thieu";
   const ka = khoaPhuong(String(a));
   const kb = khoaPhuong(String(b));
   if (ka === "" || kb === "") return "thieu";
-  if (/^\d+$/.test(ka) || /^\d+$/.test(kb)) return soGiaTri(a, b);
   return ka === kb ? "khop" : "lech";
 }
 
