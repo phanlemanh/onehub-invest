@@ -5,7 +5,7 @@ slug: nhan-gia-va-luu-loi-mang
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui, api]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-30-nhan-gia-va-luu-loi-mang-design.md
 approved_by: Mạnh
 approved_at: 2026-10-30
@@ -66,3 +66,10 @@ giá trị mơ hồ phải bị từ chối, không được đoán.
 ## Notes
 
 - Câu chờ Mạnh ở Cổng Phạm vi: Hỏi-1 (dấu chấm ngăn nghìn), Hỏi-2 (dấu phẩy + đúng ba chữ số) — sổ quyết định.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: gõ sai giá, sửa lại cho đúng rồi Lưu mà mất mạng thì ô giá vẫn đỏ kèm lỗi dấu ngăn nghìn cũ, cạnh thông báo mất kết nối; bấm «Lưu lại» khi có mạng thì hết.
+  - Ngoài-2: cùng gốc với Ngoài-1 — hai tín hiệu trái nhau (giá sai và mất mạng) có thể khiến người gắn sửa lại một giá vốn đã đúng; không mất hay lưu sai dữ liệu.
+  - Ngoài-3: mạng đứt ngay sau khi máy thu đã ghi, người gắn sửa thêm một ô rồi bấm «Lưu lại» thì màn vẫn báo đã lưu, nhưng máy thu giữ giá trị lượt đầu — chỗ vừa sửa bị bỏ.
+  - Ngoài-4: lượt gắn mới cho tin mình đã gắn (mở hai tab, hay lượt trước mất phản hồi) được báo «Đã lưu nhãn» dù không ghi gì; máy thu giữ nhãn cũ.
+  - Ngoài-5: phép kiểm tự động chỉ thấy chữ «Lưu lại» trong thông báo mất mạng, chưa chứng minh có nút bấm.
+  - Ngoài-7: phép kiểm tự động chưa xác nhận lỗi giá được đặt đúng dưới ô giá, chỉ xác nhận có lỗi theo trường; màn thật đã được kiểm ở E4.
