@@ -448,7 +448,8 @@ describe("TD-AC-2/3 probe DB local thật (chỉ SELECT)", () => {
   after(async () => that.end())
   const qThat = (t: string, v: unknown[]) => that.query(t, v)
 
-  test("TD-AC-2 probe: mọi cặp lớp × phương pháp đang sống ở field_assertions có nhãn", async () => {
+  test("TD-AC-2 probe: mọi cặp lớp × phương pháp đang sống ở field_assertions có nhãn", async (t) => {
+    if (process.env.CI) return t.skip("cần DB máy thu có dữ liệu thật (phát biểu, thẻ chờ, bài gốc) — CI chỉ có lược đồ")
     const { rows } = await that.query(`SELECT DISTINCT evidence_tier, method FROM field_assertions WHERE retracted_at IS NULL`)
     assert.ok(rows.length > 0, "DB local không có phát biểu nào — probe không đo được")
     for (const r of rows) {
@@ -457,7 +458,8 @@ describe("TD-AC-2/3 probe DB local thật (chỉ SELECT)", () => {
     }
   })
 
-  test("TD-AC-3 probe: thẻ chờ có bài gốc ở stg → loader trả toàn văn (100%); căn cứ khớp field_provenance", async () => {
+  test("TD-AC-3 probe: thẻ chờ có bài gốc ở stg → loader trả toàn văn (100%); căn cứ khớp field_provenance", async (t) => {
+    if (process.env.CI) return t.skip("cần DB máy thu có dữ liệu thật (phát biểu, thẻ chờ, bài gốc) — CI chỉ có lược đồ")
     const { loadReviewContext } = (await import("../src/lib/ops/review-context")) as CtxMod
     const { rows: the } = await that.query(`SELECT id::int AS id, item_type, evidence FROM review_queue WHERE status = 'pending'`)
     const ctx = await loadReviewContext(the, qThat)
@@ -575,7 +577,8 @@ describe("TD-AC-4 ảnh tin theo vai", () => {
     assert.deepEqual(cau, ["Tin A: 1 ảnh chỉ có ở nguồn — quản trị viên xem được", "Tin B: 1 ảnh chỉ có ở nguồn — quản trị viên xem được"])
   })
 
-  test("TD-AC-4 probe DB local thật: ảnh local_file của tin trên thẻ chờ = số ảnh vai ops nhận", async () => {
+  test("TD-AC-4 probe DB local thật: ảnh local_file của tin trên thẻ chờ = số ảnh vai ops nhận", async (t) => {
+    if (process.env.CI) return t.skip("cần DB máy thu có dữ liệu thật (phát biểu, thẻ chờ, bài gốc) — CI chỉ có lược đồ")
     const that = new pg.Client({ connectionString: localDbUrl() })
     await that.connect()
     try {
