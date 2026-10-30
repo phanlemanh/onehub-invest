@@ -1,0 +1,110 @@
+schema_version: 1
+feature_slug: man-gan-nhan-mu
+# DB: mọi phép đo chạy trên DB thử tạo bằng `bash db/db-thu.sh oneinvest_p4_mgn` (bản sao oneinvest), không ghi oneinvest :5433.
+# <NNN> = số migration do sổ migration cấp (P4-82); probes đọc tên tệp bằng glob db/migrations/*_eval_labels.sql.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    cmd: config:executors.script.mgn_migration
+    layer: backend-effect
+    paths: [db/migrations/*_eval_labels.sql, pipeline/sync-cloud.mjs, pipeline/push-ops-facts.mjs, _acceptance/man-gan-nhan-mu/probes/migration.mjs]
+    expected: "exit 0; trên DB thử áp migration hai lần: 'ok bang eval_label_items', 'ok bang eval_labels', 'ok view eval_label_agreement' kèm đủ cột của design doc; 'ok ap lan hai: khong loi, so dong khong doi'; ba ca chèn vi phạm (trùng (lat,text_hash), trùng (item_id,labeler_id,field), split='x') đều bị DB từ chối, mỗi ca in 'ok chan <ca>'; 'ok khong len cloud' khi sync-cloud.mjs và push-ops-facts.mjs không nhắc eval_label; chiều đỏ: bản chép migration bỏ khoá duy nhất (item_id,labeler_id,field) → 'KHONG CHAN TRUNG NHAN'; cuối 'MIGRATION OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.mgn_mau
+    layer: backend-effect
+    paths: [pipeline/label-sample.mjs, pipeline/lib/eval-labels.mjs, pipeline/lib/test-posts.mjs, _acceptance/man-gan-nhan-mu/probes/mau.mjs]
+    expected: "exit 0; probe COMMIT vào DB thử một lát thử riêng (lat mgn-thu, nhóm tên 'MGN-THU …'), chạy lệnh thật bằng TIẾN TRÌNH CON (node pipeline/label-sample.mjs --lat mgn-thu --nhom-khop '^MGN-THU'), không gọi hàm, rồi DELETE dữ liệu thử sau khi đo; ma trận viết trước: 30 nội dung khác nhau ở nhóm khớp lát, 5 bản trùng nội dung, 6 post thử (mỗi dấu của lib/test-posts.mjs một ca), 8 tin nhóm khác; chạy label-sample --n 20 --seed mgn: đúng 20 dòng, 0 post thử, 0 nhóm khác, 0 hai dòng cùng text_hash, double_label = 4, dev/test 10/10 (lệch ≤ 1); chạy lại: 0 thêm 0 đổi; --thu: 0 dòng ghi (đếm qua kết nối thứ hai); --n 100: lấy 30, in 'thieu 70', exit 0; chiều đỏ: bản bộ lọc không gạt post thử → 'POST THU LOT VAO MAU'; cuối 'MAU OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3464/ops/labels"
+    paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, app/src/app/api/v1/ops/labels/**]
+    steps:
+      - "Bản chạy: dev server của worktree ở http://localhost:3464, chạy với DATABASE_URL của DB thử oneinvest_p4_mgn (không phải oneinvest), đã mồi bằng probes/seed.mjs (lát ocp1, 10 tin, 2 tin gắn trùng). KHÔNG tạo hay sửa tệp nào trong cây; không có bản chạy thì FAIL với 'bản chạy không lên'"
+      - "Chụp bằng bước chụp của kho KÈM CÙNG DATABASE_URL của DB thử: DATABASE_URL=<DB thử> bash scripts/ui-capture.sh http://localhost:3464/ops/labels _acceptance/man-gan-nhan-mu/evidence/E3-step1.png — 1280 sáng; KHÔNG đọc hay in mật khẩu"
+      - "Cùng lệnh với UI_CAPTURE_SIZE=390x844 UI_CAPTURE_SCHEME=dark → evidence/E3-step2.png; ghi dòng «bề rộng: …» lệnh in"
+      - "Điền chín ô của tin đang hiện bằng dữ liệu của probes/seed.mjs (GIA_TRI_MAU) qua trình duyệt của kho (ego-browser) rồi bấm «Lưu và sang tin kế»; chụp evidence/E3-step3.png; rồi chạy DATABASE_URL=<DB thử> node _acceptance/man-gan-nhan-mu/probes/doc-nhan.mjs để in các dòng eval_labels của tin vừa lưu"
+    expected: "Trang hiện ô số, chữ gốc của tin, nhóm, giờ đăng và biểu mẫu chín ô; ba ô chọn mang đúng các nhãn của sổ từ vựng; sau Lưu trang chuyển sang tin khác và doc-nhan in 9 dòng mang labeler_id của tài khoản ops thử; ảnh desktop sáng + điện thoại tối không cuộn ngang cấp trang"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.mgn_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/labels/**, app/src/lib/labels-queries.ts, app/src/components/ops/labels/**, app/tests/labels.test.tsx]
+    expected: "exit 0; ca 'luu chin truong' xanh: gọi handler POST với phiên vai ops (DB thử, giao dịch ROLLBACK) → 9 dòng eval_labels đúng field/value/not_stated, labeler_id = người gọi; ô «Tin không nêu» → not_stated true, value null; ca 'lua chon theo so tu vung': option của ba ô chọn = các code của trục cùng tên trong vocab.generated.ts, cùng thứ tự; đối chứng đỏ: handler bỏ labeler_id → ca đỏ 'NHAN KHONG CO NGUOI GAN'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.mgn_mu
+    layer: backend-effect
+    paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, app/src/app/api/v1/ops/labels/**, _acceptance/man-gan-nhan-mu/probes/mu.mjs]
+    expected: "exit 0; probe mồi trên DB thử một tin của lát kèm giá trị máy mang dấu riêng (sale_offer_records price_vnd 9876543210, bedrooms 7, block_raw 'TOAMAYDOAN'; field_assertions 'DAUPHATBIEU'; enrichment_proposals 'DAUDEXUAT'), lấy HTML /ops/labels (dev server DB thử, đăng nhập ops thử) và JSON của route tin kế: 'ok html khong co dau may' với từng dấu, 'ok route khong co dau may'; quét mã nguồn màn + truy vấn + route: 0 lần nhắc sale_offers, sale_offer_records, field_assertions, enrichment_proposals, meta; đối chứng dương: chữ gốc của tin (dấu 'CHUGOC-MGN') CÓ trong HTML; chiều đỏ: bản truy vấn chép thêm join sale_offers → 'LO GIA TRI MAY'; cuối 'MU OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.mgn_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-queries.ts, app/src/app/api/v1/ops/labels/**, app/tests/labels.test.tsx]
+    expected: "exit 0; ma trận viết trước 2 người (A, B) × 4 loại tin (đơn chưa ai, đơn đã A, trùng chưa ai, trùng đã A, trùng đã A+B): tin kế của mỗi người đúng bảng kỳ vọng từng bước (tin trùng đã một người đứng trước tin mới); không bao giờ trả lại tin người đó đã gắn; B ghi tin đơn đã A → 409, 0 dòng; người thứ ba ghi tin trùng đã đủ → 409, 0 dòng; ca đồng thời: hai client pg hai giao dịch song song ghi cùng tin đơn, rồi cùng tin trùng còn một chỗ → đúng một thành công, một 409, đếm người gắn của tin = 1 và = 2; đối chứng đỏ thứ hai: bản bỏ FOR UPDATE → 'GHI DOI KHI DONG THOI'; đối chứng đỏ: bản truy vấn bỏ điều kiện 'chua do nguoi nay gan' → ca 'TRA LAI TIN DA GAN' đỏ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.script.mgn_dong_thuan
+    layer: backend-effect
+    paths: [db/migrations/*_eval_labels.sql, pipeline/label-agreement.mjs, pipeline/lib/eval-labels.mjs, _acceptance/man-gan-nhan-mu/probes/dong-thuan.mjs]
+    expected: "exit 0; probe COMMIT vào DB thử lát mgn-thu rồi DELETE sau khi đo; lệnh label-agreement chạy bằng TIẾN TRÌNH CON; ma trận viết trước: mỗi trường một tổ hợp cặp (khớp; lệch; cùng tin không nêu; một bên tin không nêu; số 3500000000 vs 3.5e9; chữ 'LD2' vs ' ld2 '; tin trùng mới một người): view trả đúng số cặp đủ, số khớp, tỉ lệ của bảng kỳ vọng; trường không có cặp đủ → tỉ lệ null; label-agreement.mjs --lat mgn-thu --json in đúng cùng số + thap_nhat; phut_cong: ma trận labeled_at viết trước (người A: 0, 2, 5 phút, nghỉ 40 phút, 43 phút) → A = 8 phút; khứ hồi qua bộ ghi thật (hàm chuẩn hoá của route, dùng chung với probe bằng import): '4,35 tỷ' với '4350 triệu', 'LD2' với ' ld2 ', NFC với NFD → khớp 1/1; đối chứng đỏ thứ hai: bản cộng cả khoảng nghỉ → 'PHUT CONG CONG KHOANG NGHI'; đối chứng đỏ: bản view coi null là khớp → 'NULL KHONG PHAI KHOP'; cuối 'DONG THUAN OK'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.mgn_app
+    paths: [app/src/components/ops/labels/**, app/tests/labels.test.tsx]
+    expected: "exit 0; ca 'bang dong thuan': props mẫu (một trường 0,95, một trường 0,8, một trường null) → dòng 0,8 có Badge cảnh báo, dòng 0,95 không, dòng null ghi «chưa đủ cặp» chứ không '0'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.mgn_app
+    layer: backend-effect
+    paths: [app/src/app/api/v1/ops/labels/**, app/src/lib/labels-queries.ts, app/src/lib/ops-access.ts, app/tests/labels.test.tsx]
+    expected: "exit 0; bảy ca sai (thiếu trường, giá trị ngoài sổ, min>max, số âm, diện tích 0, phòng ngủ 2.5, tin ngoài lát) → mỗi ca 400 nêu đúng tên trường, 0 dòng ghi; vai viewer → 403, bearer chung → 401 hoặc 403, 0 dòng ghi; đối chứng dương: lượt đúng → 200, 9 dòng; ca màn: lỗi 400 hiện dưới đúng ô, ô đã gõ giữ giá trị"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.mgn_app
+    paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/tests/labels.test.tsx]
+    expected: "exit 0; sáu ca trạng thái: rỗng → chữ «Chưa có tin nào của lát để gắn» + lệnh label-sample; đang tải → Skeleton; lỗi → Alert có nút «Thử lại»; đã gắn hết → «Anh đã gắn hết tin của lát» + bảng đồng thuận; viewer → không có biểu mẫu, có câu «Cần vai ops để gắn nhãn»; VERCEL=1 → «Chỉ ở máy thu» và hàm truy vấn nhãn không được gọi (đếm lời gọi = 0)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E11
+    criterion: AC-8
+    executor: script
+    cmd: config:executors.design.mgn_gate
+    paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**]
+    expected: "exit 0; design-gate (P0 floor) xanh trên page.tsx và các component của màn"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E12
+    criterion: AC-9
+    executor: script
+    cmd: config:executors.script.mgn_duong
+    paths: [CONTEXT.md, app/src/components/shell/nav.tsx, .claude/skills/onehub-ui/routes.md, docs/architecture/portals.md, app/src/lib/ops-access.ts, _acceptance/man-gan-nhan-mu/probes/duong.sh]
+    expected: "exit 0; 'ok context' (thuật ngữ «Gắn nhãn» có 'Slug URL: `labels`', «Nhãn đánh giá» có mặt); test route-slugs xanh; 'ok nav' (mục /ops/labels thuộc group «Xử lý»); 'ok routes' và 'ok portals' có dòng /ops/labels; 'ok quyen' QUYEN_OPS['label.write'] = {vai: ops, bearer: false}; chiều đỏ: bản nav chép bỏ mục → 'THIEU MUC NAV'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E13
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.mgn_pham_vi
+    paths: [_acceptance/man-gan-nhan-mu/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base với origin/main khớp danh sách của AC-10; in 'PHAM VI OK'; chiều đỏ: thêm tên tệp collector/x vào danh sách thử → 'NGOAI PHAM VI collector/x'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
