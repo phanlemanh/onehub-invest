@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Ảnh của mọi tin S03 và S06 nằm ở một bảng chung ở máy thu, nên người duyệt thấy được ảnh tin S06 ở Hàng duyệt và hồ sơ tin lần đầu tiên.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm bảng ảnh tin theo chuẩn RESO, chạy lại không lỗi, và chặn dữ liệu sai khuôn (đường ảnh lạ, tệp sai chỗ, tin không có thật)."},
+    {"id": "AC-2", "p": "Sẽ chép mọi ảnh của tin S06 vào bảng, đúng thứ tự, mỗi ảnh một dòng; tin không ảnh thì không có dòng nào."},
+    {"id": "AC-3", "p": "Sẽ chép ảnh tin S03/S05 theo đúng luật ghép đã ký (ảnh đã tải trước, rồi đường gốc, không trùng), và test so trọn với bộ ghép cũ."},
+    {"id": "AC-4", "p": "Sẽ nạp lại mà không nhân dòng; ảnh đi theo bài khi bài gom sang tin khác; tin nghỉ thì bỏ ảnh; nguồn này chạy không đụng nguồn kia."},
+    {"id": "AC-5", "p": "Sẽ cho Hàng duyệt đọc ảnh từ bảng mới: thẻ có tin S06 thấy ảnh, chỉ admin thấy, cả hàng một truy vấn."},
+    {"id": "AC-6", "p": "Sẽ cho hồ sơ tin ở Dòng chảy hiện dải ảnh của tin S06, bỏ câu «chưa gắn được ảnh», giữ đúng câu cho vai không phải admin và cho cloud."},
+    {"id": "AC-7", "p": "Sẽ chạy thật trên bản chép DB máy thu: không tin S06 nào có ảnh mà thiếu ảnh ở loader, số ảnh từng tin khớp bảng nạp, nạp lần hai không đổi gì."},
+    {"id": "AC-8", "p": "Sẽ chụp màn thật: thẻ duyệt có tin S06, hồ sơ một tin S06 và một tin S03 đều hiện ảnh thật."},
+    {"id": "AC-10", "p": "Sẽ chạy bước ảnh mỗi đêm ngay sau bước dựng tin của từng nguồn, và giữ xanh các hồ sơ đã ký bị chạm (hoặc thay ô của chúng theo Hỏi-1)."}
+  ],
+  "wont_do": [
+    {"id": "AC-9", "p": "Chặn bảng ảnh lên cloud: không nằm trong danh sách sync, và leak gate báo vi phạm nếu cloud có dòng nào."},
+    {"id": "OOS-1", "p": "KHÔNG làm ảnh đại diện của căn (AP1) và ảnh thu nhỏ lên cloud (TV9) — hai hàng đó đọc bảng này sau."},
+    {"id": "OOS-2", "p": "KHÔNG thêm chỉ số ảnh vào scorecard đêm (C2b); vòng này chỉ ghi một dòng kiểm chất lượng mỗi nguồn."},
+    {"id": "OOS-3", "p": "KHÔNG sửa lỗi tải ảnh S03 (ZC9, làn ZCode) và không gộp tin chỉ-ảnh vào tin chữ (PL28) — nên tỉ lệ tin S03 có ảnh chưa tăng ở vòng này."},
+    {"id": "OOS-4", "p": "KHÔNG áp bảng mới lên máy chủ cloud — bảng chỉ sống ở máy thu."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi trạng thái ảnh của từng nguồn (S03 đã tải, tải lỗi, chỉ đường gốc, tham số hỏng; S05; S06 có và không ảnh; tin không bài) đều có ca thử — AC-2, AC-3, AC-5, AC-6."},
+    {"i": 1, "p": "Mỗi bậc của dòng ảnh (ghi bảng, Hàng duyệt, hồ sơ tin, chạy thật, cloud) có ít nhất một tiêu chí — AC-1 tới AC-9."},
+    {"i": 2, "p": "Mỗi kiểu lượt nạp (lần đầu, chạy lại, bài gom sang tin khác, tin nghỉ, nguồn khác chạy) có ca thử — AC-4, AC-7."},
+    {"i": 3, "p": "Cả ba vai (admin, vận hành, khách) được thử: chỉ admin thấy ảnh — AC-5, AC-6."},
+    {"i": 4, "p": "Chạy hằng đêm và không làm lùi hồ sơ đã ký — AC-10."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Phản biện lo xoá ảnh của tin đã nghỉ là làm lùi; kiểm lại thì hai trang hôm nay vốn chỉ đọc tin còn sống, nên không lùi — ghi lại căn cứ đúng trong sổ."},
+    {"i": 1, "p": "Ngưỡng «leak gate xanh» không đo được trong vòng và phép đếm chỉ nhìn bảng — đã tách vế leak gate sang lượt sync đầu sau triển khai, và đếm hụt ảnh ở đầu ra loader cho mọi tin S06."},
+    {"i": 2, "p": "Phép đo chỉ thấy «có ảnh» chứ chưa thấy «đủ ảnh, đúng thứ tự» — đã thêm phép so số ảnh từng tin với bảng nạp, tính độc lập, và ca thử từ dòng nạp thật."},
+    {"i": 3, "p": "Bước chụp màn chưa chắc có thẻ S06 và kho ảnh đã tải — đã thêm bước mồi thẻ, chỉ đường kho ảnh, và điều kiện «ảnh mở được» trước khi chụp."},
+    {"i": 4, "p": "Chưa ai thử câu hiện cho vai không phải admin và cho cloud sau khi bỏ nhánh S06 — đã thêm hai ca thử kèm đối chứng admin."}
+  ]
+}
