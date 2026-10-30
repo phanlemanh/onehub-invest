@@ -22,7 +22,7 @@ evals:
     executor: test
     cmd: config:executors.test.pipeline
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/gia-ty-chan-dong.test.mjs]
-    expected: "exit 0; ca 'GT-AC-3' xanh: extractPhones ra [] ở 5 dòng giá tỷ chẵn, cả hai số ở dòng SĐT nối SĐT bằng phẩy, [\"0901234567\"] ở các dòng AC-2 khác; ca đỏ trên bản sao đưa điều kiện dấu chấm/phẩy vào PHONE_RE dùng chung ghim «0901234567,0912345678» chỉ còn một số"
+    expected: "exit 0; ca 'GT-AC-3' xanh: extractPhones ra [] ở 5 dòng giá tỷ chẵn, cả hai số ở dòng SĐT nối SĐT bằng phẩy, [\"0901234567\"] ở các dòng AC-2 khác; ca đỏ trên bản sao đưa điều kiện dấu chấm/phẩy vào biểu thức của bộ bóc SĐT (SDT_RE — từ SD2 bộ bóc tách khỏi PHONE_RE dùng chung; giám sát duyệt P1-78) ghim «0901234567,0912345678» chỉ còn một số"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4

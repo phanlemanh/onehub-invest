@@ -22,7 +22,7 @@ evals:
     executor: test
     cmd: config:executors.test.pipeline
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/gia-ty-sau-khoang-trang.test.mjs]
-    expected: "exit 0; ca 'GS-AC-3' xanh: extractPhones của bản cây bằng extractPhones của bản nền ghim ec899d03 (git show, chép cạnh tệp thật rồi xoá) ở 15 dòng (5 dòng giá AC-1, 10 dòng SĐT AC-2) — số assert bằng số dòng; ca đỏ trên bản sao theo lối (a) — PHONE_RE dùng chung thôi nhận khoảng trắng làm ký tự cách — ghim «liên hệ.0901 234 567»"
+    expected: "exit 0; ca 'GS-AC-3' xanh: extractPhones của bản cây bằng extractPhones của bản nền ghim ec899d03 (git show, chép cạnh tệp thật rồi xoá) ở 15 dòng (5 dòng giá AC-1, 10 dòng SĐT AC-2) — số assert bằng số dòng; từ SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-78, P1-79) hai dòng bản nền nhận số 11 chữ số («1.050.000.000⏎60m2», «0912.345.678 9») chờ rỗng, 13 dòng còn lại so bản nền; ca đỏ trên bản sao theo lối (a) — bộ bóc SĐT (SDT_RE, tách khỏi PHONE_RE dùng chung từ SD2) thôi nhận khoảng trắng làm ký tự cách — ghim «liên hệ.0901 234 567»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
