@@ -108,5 +108,11 @@ fi
 # hỏng ĐẦU TIÊN để launchd thấy lỗi.
 . "$ROOT/scripts/lib/job-step.sh"
 job_run zalo-import-daily transform-zalo node "$ROOT/pipeline/transform-zalo.mjs"
+job_run zalo-import-daily transform-media node "$ROOT/pipeline/transform-media.mjs" S03 S05
 job_run zalo-import-daily refresh-bait-gap node "$ROOT/pipeline/refresh-bait-gap.mjs"
+# Enrich (enrich-chay-sau-nap): bước dài (LLM ~10″/tin) không đụng state nạp — nhả khoá nạp trước để job nạp khác
+# (apify-facebook-daily, chờ khoá tối đa 5′) không hỏng vì đợi; gỡ trap để lúc thoát không xoá khoá của job khác.
+trap - EXIT; rm -rf "$LOCK_DIR"
+enrich_run() { (cd "$ROOT/agent" && LIMIT="${ENRICH_LIMIT:-50}" node --import tsx scripts/enrich-run.ts); }
+job_run zalo-import-daily enrich-run enrich_run
 exit "$JOB_RC"

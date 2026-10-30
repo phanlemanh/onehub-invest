@@ -38,6 +38,7 @@ executors:
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
     mgn_app: "cd app && node --import tsx --test tests/labels.test.tsx"   # man-gan-nhan-mu AC-3, AC-5..AC-8 — lược đồ tạm, route thật
+    ngl_app: "cd app && node --import tsx --test tests/labels-gia.test.tsx"   # nhan-gia-va-luu-loi-mang AC-1..AC-3 — ma trận + route thật trên lược đồ tạm
     tnm_pipeline: "node --test pipeline/lib/tap-mau.test.mjs"   # tap-nhan-mau-ocp1 E1, E2, E4, E7, E8 — hàm thuần, không DB
     tnm_app: "cd app && node --import tsx --test tests/labels-mau.test.tsx"   # tap-nhan-mau-ocp1 E3 — chuanHoaLuot thật, không DB
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
@@ -91,8 +92,21 @@ executors:
     phat_bieu: "cd pipeline && node --test scripts/phat-bieu.test.mjs"   # PL15: quét ghi năm cột, cloud, ENRICH_COLS — không cần DB
     phat_bieu_db: "cd pipeline && node --test scripts/phat-bieu-db.itest.mjs"   # PL15: 045 + chỉ-thêm + ma trận phân xử + đường ghi, giao dịch ROLLBACK — cần DB local :5433
     airbnb_nghi: "cd pipeline && node --test scripts/airbnb-nghi.itest.mjs"   # airbnb-nghi-khong-hoi-sinh: ghiListing cho nghỉ ghi toạ độ mới + reassign không đánh thức, giao dịch ROLLBACK — chạy trên DB thử riêng (DATABASE_URL)
+    the_duyet: "cd app && node --import tsx --test tests/the-duyet-du-can-cu.test.tsx"   # the-duyet-du-can-cu (PL3) — lược đồ tạm td_<pid> trên DB local :5433 + jsdom; giám sát duyệt U1-73
+    the_duyet_agent: "cd agent && node --import tsx --test tests/enrich-goi-y.test.ts"   # the-duyet-du-can-cu AC-6 — thẻ bổ sung tin mới không mang gợi ý apply; DB local trong ROLLBACK ngắn (U1-73)
+    the_duyet_phuong: "cd app && node --import tsx --test tests/the-duyet-phuong-lech-gia.test.tsx"   # the-duyet-phuong-lech-gia — hàm thuần + jsdom; probe chỉ SELECT DB máy thu (bỏ qua có lời ở CI)
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
+    media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
+    media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
+    bac_db: "cd pipeline && DATABASE_URL=${BAC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_bac} node --test scripts/bac-du-lieu.itest.mjs"   # de-xuat-thanh-phat-bieu-bac E2/E3/E4/E7: 056 + vị từ bậc + kiểm đề xuất, giao dịch ROLLBACK — DB thử (sau gộp: BAC_DB_URL)
+    bac_level: "cd app && DATABASE_URL=${BAC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_bac} node --import tsx --test tests/data-level-sql.itest.tsx"   # de-xuat-thanh-phat-bieu-bac E1: offer_data_level (SQL) khớp levelOf (app) trên 64 tổ hợp — DB thử
     cam_mau_s03: "cd pipeline && node --test scripts/cam-mau-s03.test.mjs"   # s03-cam-mau-so-lieu (N1): ma trận giá/DT/khoá gom/chốt khoảng — không cần DB (giám sát duyệt P1-47)
+    enrich_giao_dich: "cd agent && node --import tsx --test tests/enrich-giao-dich.test.ts"   # enrich-chay-sau-nap AC-2..AC-4 — runEnrich trong BEGIN…ROLLBACK trên :5433, giao dịch mỗi tin = SAVEPOINT
+    enrich_buoc_job: "node --test scripts/enrich-buoc-job.test.mjs"   # enrich-chay-sau-nap AC-6..AC-8 — bước enrich-run của zalo-import-daily (node giả, không DB)
+    nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
+    nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)
+    nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
+    nguoi_app: "cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx"   # DB2b AC-2: nhãn dòng kiểm DQ ba bảng mới — không DB (giám sát duyệt P3-115)
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -103,7 +117,10 @@ executors:
     ruler_views_cloudsim: "bash scripts/check-ruler-views.sh cloudsim"   # DB mô phỏng cloud + SQL catch-up
     portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
     cam_mau_s03_that: "bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/cam-mau-s03.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-cam-mau-s03.mjs"   # s03-cam-mau-so-lieu (N1): ca DB + sáu thước «Bật khi» trên DB thử, BEGIN…ROLLBACK (giám sát duyệt P1-47)
+    enrich_cli_thu: "bash db/db-thu.sh oneinvest_u2_enrich && cd agent && ENRICH_DB_THU=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_u2_enrich node --import tsx --test tests/enrich-cli.itest.ts"   # enrich-chay-sau-nap AC-1/3/4 — CLI enrich-run thật trên DB thử + LLM giả (không ghi :5433)
     gia_ty_chan_dong_so: "cd pipeline && node scripts/so-gia-ty-chan-dong.mjs"   # s03-gia-ty-chan-dong AC-6: so đầu ra bản nền với bản cây trên mọi bài S03 thật, chỉ đọc (READ ONLY); lượt đối chứng luôn chạy (giám sát duyệt P1-55)
+    gia_ty_sau_khoang_trang_so: "cd pipeline && node scripts/so-gia-ty-sau-khoang-trang.mjs"   # s03-gia-ty-sau-khoang-trang AC-6: so mọi trường parsePost bản nền ec899d03 với bản cây trên mọi bài S03 thật, chỉ đọc (READ ONLY); lượt đối chứng luôn chạy (giám sát duyệt P1-58)
+    gop_anh_that: "bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/gop-anh.itest.mjs scripts/media-canonical.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-gop-anh.mjs"   # gop-tin-chi-anh-o-transform (PL28) E3–E6, E7c: ca DB + thước dữ liệu thật trên DB thử, giao dịch ROLLBACK (giám sát duyệt P1-61)
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
@@ -148,6 +165,7 @@ executors:
     ui_lint_should_not_fire: "cd app && node eslint-plugin-onehub-ui/selftest.mjs should-not-fire"
     ui_baseline_guard: "cd app && node eslint-plugin-onehub-ui/selftest.mjs baseline-guard"
     ui_hook_selftest: "bash .claude/hooks/tests/typecheck-changed.selftest.sh"
+    the_duyet_design_gate: "for f in app/src/components/ops/review-card.tsx app/src/components/ops/review/review-compare.tsx app/src/components/ops/review/review-full-text.tsx app/src/components/ops/review/review-reason.tsx app/src/components/ops/review-photos.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # the-duyet-du-can-cu E15 — design gate từng tệp giao diện của vòng (cùng khuôn gate_don_hex_tho, U1-73)
     # Đợt B1 dọn cổng Ops (ui-clean-b1-ops) — một harness, mỗi kiểu kiểm một lệnh
     ui_b1_suppressions: "node scripts/ui-standards/b1-ops.mjs suppressions"
     ui_b1_handdrawn: "node scripts/ui-standards/b1-ops.mjs handdrawn"
@@ -342,6 +360,16 @@ executors:
     tsd_mut: "bash _acceptance/test-scripts-sau-87-90/probes/mut.sh \"$PWD\""
     tsd_scope: "bash _acceptance/test-scripts-sau-87-90/probes/scope.sh \"$PWD\""
     tsd_ac7: "bash _acceptance/test-scripts-sau-87-90/probes/ac7.sh \"$PWD\""
+    # check-s08-harness (30/10, PR #200) — script kiểm S08 local-only chép thêm import-s08-row.mjs
+    cs8h_lo: "bash _acceptance/check-s08-harness/probes/local-only.sh \"$PWD\""
+    cs8h_base: "bash _acceptance/check-s08-harness/probes/baseline.sh \"$PWD\""
+    cs8h_scope: "bash _acceptance/check-s08-harness/probes/scope.sh \"$PWD\""
+    # s03-null-byte (30/10, claudedp-3010-3) — bộ nạp S03 lọc U+0000
+    s03nb_unit: "cd pipeline && node --test scripts/s03-null-byte.test.mjs"
+    s03nb_fix: "bash _acceptance/s03-null-byte/probes/fixture.sh \"$PWD\""
+    s03nb_base: "bash _acceptance/s03-null-byte/probes/baseline.sh \"$PWD\""
+    s03nb_real: "bash _acceptance/s03-null-byte/probes/real.sh"
+    s03nb_scope: "bash _acceptance/s03-null-byte/probes/scope.sh \"$PWD\""
     # hook-spool-nghiem-ngat (2410-23, ZC6 nối tiếp, T3) — cùng hộp cát ZC6: handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
     hsn_auth_held: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"
     hsn_held_then_hang: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs held-then-hang"
@@ -428,6 +456,7 @@ executors:
     mgn_dong_thuan: "cd app && node --import tsx ../_acceptance/man-gan-nhan-mu/probes/dong-thuan.mjs"   # man-gan-nhan-mu E7
     mgn_duong: "bash _acceptance/man-gan-nhan-mu/probes/duong.sh"   # man-gan-nhan-mu E12
     mgn_pham_vi: "bash _acceptance/man-gan-nhan-mu/probes/pham-vi.sh"   # man-gan-nhan-mu E13
+    ngl_pham_vi: "bash _acceptance/nhan-gia-va-luu-loi-mang/probes/pham-vi.sh"   # nhan-gia-va-luu-loi-mang E6
     tnm_db: "node _acceptance/tap-nhan-mau-ocp1/probes/db.mjs"   # tap-nhan-mau-ocp1 E5, E6, E8b — DB local, giao dịch READ ONLY
     tnm_pham_vi: "bash _acceptance/tap-nhan-mau-ocp1/probes/pham-vi.sh"   # tap-nhan-mau-ocp1 E10
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
@@ -468,12 +497,17 @@ executors:
     s08_nguon_duy_nhat: "node scripts/s08-danh-muc/acceptance.mjs nguon-duy-nhat"
     s08_scope: "bash _acceptance/thu-danh-muc-ocp1/probes/scope.sh \"$PWD\""
     bdp_settings: "node _acceptance/bat-dieu-phoi-cap-du-an/probes/settings.mjs"
+    media_roundtrip: "cd app && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --import tsx scripts/media-roundtrip.ts"   # media-canonical-reso E8: bên ghi → bảng media → loader thật trên bản chép DB máy thu; GHI bảng media nên chỉ DB thử
+    media_khong_lui: "node _acceptance/media-canonical-reso/probes/khong-lui.mjs"   # media-canonical-reso E12: lưới trước-merge chỉ còn vi phạm đã biết trước chữ ký
+    bac_roundtrip: "cd app && DATABASE_URL=${BAC_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_bac} node --import tsx scripts/bac-roundtrip.ts"   # de-xuat-thanh-phat-bieu-bac E5/E6/E8/E10: bac-du-lieu --write hai lần trên bản chép DB máy thu, bảng in, kiểm đề xuất, nhãn dq qua bên đọc thật — GHI ảnh chụp nên chỉ DB thử
+    idem_056: "bash db/check-idempotent-tam.sh db/migrations/056_data_level.sql data_level_snapshot ref_lookup ref_field_lookup"   # de-xuat-thanh-phat-bieu-bac E12 — DB tạm chép lược đồ DB local
   design:                                            # app/ là web UI
     # DOM mode cần jsdom: cài ở app/ (devDependency), trỏ bằng --jsdom app — thiếu cờ này mọi eval design ra BLOCKED.
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
     gate_don_hex_tho: "for f in app/src/components/finder/bins.ts app/src/components/finder/choropleth-map.tsx app/src/components/listing/listings-map.tsx app/src/components/mini-map.tsx app/src/components/ops/data-flow/flow-journey.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # don-hex-tho E8 — gate từng tệp giao diện của vòng (gate không tự nối tệp từ paths); giám sát duyệt U1-63
     sca_gate: "for f in app/src/app/ops/ai-calls/page.tsx app/src/components/ops/ai-calls/ai-calls-view.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # so-cuoc-goi-ai E10
     mgn_gate: "for f in app/src/app/ops/labels/page.tsx app/src/components/ops/labels/labels-view.tsx app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/agreement-table.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # man-gan-nhan-mu E11
+    ngl_gate: "for f in app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/luu-nhan.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # nhan-gia-va-luu-loi-mang E5
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
     # Sàn thiết kế S4 (design-floor bậc M1): chấm hex thô trên tệp giao diện mà vòng chạm. Nối ở noi-design-floor sau khi
     # don-hex-tho dọn hết hex thô ngoài vendor; mười vòng thí điểm DO1 đếm từ hàng này (ghi chú nhận 2.35.0 của kit, mục 2.4).

@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: fcebec48b28eb21dfd057c005193aa4877c70756
+verified_commit: de3b9e7ba20a7510801951a44f15ac7851d99c1e
 human_signoff: Mạnh 2026-10-23
 ---
 
@@ -227,3 +227,7 @@ sha: 770c7609db093c0a8f0600888258a577855dbcb3 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-23, do hoá cũ do merge main 5fee467 (PR #1)
 run_id: repin-20261023T024744Z-72700
 sha: fcebec48b28eb21dfd057c005193aa4877c70756 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
+
+### Re-pin lần 3 — 2026-10-30, do sau chữ ký media-canonical-reso: ô superseded_by trỏ NH1 nay hợp lệ; gộp main
+run_id: repin-20261030T043133Z-53882
+sha: de3b9e7ba20a7510801951a44f15ac7851d99c1e · suites: 6 lệnh exit 0 · evals: 8/8 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E6, E7, E8 · thay bởi hồ sơ đã ký: E6→media-canonical-reso#AC-5, E7→media-canonical-reso#AC-5, E8→media-canonical-reso#AC-7 · AC không có chốt máy: AC-6, AC-7, AC-8

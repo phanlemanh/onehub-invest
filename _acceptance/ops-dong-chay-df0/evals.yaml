@@ -114,6 +114,8 @@ evals:
     criterion: AC-10
     executor: test
     cmd: config:executors.test.dong_chay
+    status: not-run
+    superseded_by: media-canonical-reso#AC-6
     layer: backend-effect
     paths: [app/src/lib/data-flow-queries.ts, app/src/app/ops/data-flow/**, app/tests/ops-dong-chay.test.tsx]
     expected: "exit 0; ca 'DF-AC-10 nạp ảnh theo quyền' xanh trên lược đồ tạm (cần DB local): tin S03 gộp 3 bài (bài 1 media_files 1 tệp + media 2 URL zdn, bài 2 media 2 URL — một mới, một trùng bài 1), tin S03 có bài mà không ảnh, tin S05 1 bài 1 URL fbcdn, tin S06 — với người dùng admin, bộ nạp ảnh của dòng chảy trả cho mỗi tin ĐÚNG mảng mà buildOfferImages (lib/ops/review-media.ts) trả trên cùng các dòng bài theo thứ tự post_ids (so TRỌN src + origin + expiring; ảnh đã tải đứng đầu, URL trùng chỉ một lần), tin không ảnh → [], tin S06 → vắng khoá (không truy vấn ảnh cho S06); với người dùng role 'ops' (không admin) và với khách → {} và 0 truy vấn tới stg_zalo_posts (đếm bằng query giả); bảng nạp ảnh vắng (42P01) → {} không ném. Chiều đỏ cùng ca: đột biến bỏ kiểm isAdmin → ca đỏ 'người không phải admin không được nhận ảnh'; đột biến ghép ảnh theo thứ tự ngược post_ids → ca đỏ tên tin gộp 2 bài"
@@ -122,6 +124,8 @@ evals:
     criterion: AC-10
     executor: test
     cmd: config:executors.test.dong_chay
+    status: not-run
+    superseded_by: media-canonical-reso#AC-6
     paths: [app/src/components/ops/data-flow/record-sheet.tsx, app/src/components/ops/data-flow/records-grid.tsx, app/tests/ops-dong-chay.test.tsx]
     expected: "exit 0; ca 'DF-AC-10 dải ảnh trong hồ sơ tin' xanh (jsdom): RecordsGrid với media {tin A: 2 ảnh, tin B: []} → bảng 0 <img>; mở hồ sơ tin A → group aria-label bắt đầu 'Ảnh' có đúng 2 <img> với src đúng media mẫu, bấm ảnh 1 → hộp phóng to mở; mở hồ sơ tin B → chữ 'không có ảnh', 0 <img>; mở hồ sơ tin S06 → đúng câu 'Chưa gắn được ảnh: S06 chưa lưu khoá nối ngược tin → quảng cáo (TV10).'; media vắng (người không phải admin) → hồ sơ tin A 0 group ảnh, 0 <img> và không có chữ 'không có ảnh'. Chiều đỏ cùng ca: hồ sơ đọc media của tin đầu bảng thay vì tin đang mở → ca đỏ 'ảnh phải thuộc đúng tin đang mở'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]

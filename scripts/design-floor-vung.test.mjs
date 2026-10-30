@@ -148,7 +148,9 @@ describe("NDF-AC-4 sàn thiết kế S4 đã nối", () => {
     const { chayS4 } = await import(pathToFileURL(path.join(kit, "scripts/design-floor-s4.mjs")).href);
     assert.ok(docBac(REPO).floor, "docBac của kit chưa thấy executors.design.floor");
     const root = path.join(TMP, "s4");
-    const g = (...a) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...a], { cwd: root, encoding: "utf8" }).trim();
+    // Kho tạm không mang hook của máy: git-secrets toàn máy chặn commit vì config.yaml có URL DB thử kèm mật khẩu.
+    const g = (...a) =>
+      execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", "-c", "core.hooksPath=/dev/null", ...a], { cwd: root, encoding: "utf8" }).trim();
     mkdirSync(path.join(root, "_acceptance"), { recursive: true });
     cpSync(path.join(REPO, CFG), path.join(root, CFG));
     g("init", "-q");

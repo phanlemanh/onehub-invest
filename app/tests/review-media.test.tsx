@@ -1,13 +1,11 @@
 // review-media.test.tsx — ảnh tin cho thẻ hàng duyệt /ops/review (buildOfferImages,
-// loadReviewMedia với truy vấn giả). Hồ sơ nghiệm thu: _acceptance/review-media-backend (AC-5…AC-7).
+// stripEvidenceImages). Hồ sơ nghiệm thu: _acceptance/review-media-backend (AC-5, AC-7 review-card-photos).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import type { User } from "../src/lib/auth";
 import {
   MAX_IMAGES_PER_OFFER,
   buildOfferImages,
-  loadReviewMedia,
   stripEvidenceImages,
   type PostMediaRow,
 } from "../src/lib/ops/review-media";
@@ -18,8 +16,6 @@ const local = (file: string, snapshot = SNAP) =>
 const ZDN = (n: number) => `https://f1-zpg-r.zdn.vn/${n}/anh-${n}.jpg`;
 const FB = (n: number) => `https://scontent.xx.fbcdn.net/v/t39/${n}.jpg?oe=6720`;
 const CHOTOT = "https://cdn.chotot.com/abc/preset:view/plain/x.jpg";
-const user = (role: User["role"]): User => ({ id: "1", email: `${role}@x.vn`, plan: "pro", role });
-const ADMIN = user("admin");
 
 const post = (offer_id: string, media_files: unknown, media: unknown = null, snapshot_id = SNAP): PostMediaRow => ({
   offer_id,
@@ -99,72 +95,8 @@ test("AC-5 tối đa 12 ảnh mỗi tin rao — 11 giữ đủ, 13 cắt còn 12
   assert.equal(cut[11].src, FB(11));
 });
 
-type Call = { text: string; values: unknown[] };
-function fakeQuery(rows: PostMediaRow[]) {
-  const calls: Call[] = [];
-  const query = async (text: string, values: unknown[]) => {
-    calls.push({ text, values });
-    return { rows };
-  };
-  return { calls, query };
-}
-
-const ITEMS = [
-  {
-    id: 7,
-    item_type: "entity_match",
-    evidence: {
-      offer_a: { offer_id: "offer_a1", source: "S05" },
-      offer_b: { offer_id: "offer_b1", source: "S06", image_url: CHOTOT },
-    },
-  },
-  { id: 9, item_type: "agent_output", evidence: { offer_id: "offer_a1", fields: [] } },
-  { id: 11, item_type: "source_decision", evidence: { offer_id: "offer_a1" } },
-  { id: 12, item_type: "agent_output", evidence: { fields: [] } },
-  { id: 13, item_type: "entity_match", evidence: null },
-];
-
-test("AC-6 khoá theo id thẻ: entity_match có offer_a/offer_b, agent_output có offer, một truy vấn", async () => {
-  const { calls, query } = fakeQuery([post("offer_a1", null, [{ url: FB(1) }])]);
-  const out = await loadReviewMedia(ITEMS, ADMIN, query);
-  assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0].values, [["offer_a1", "offer_b1"]]);
-  assert.match(calls[0].text, /stg_zalo_posts/);
-  assert.deepEqual(Object.keys(out).map(Number).sort((a, b) => a - b), [7, 9]);
-  assert.deepEqual(out[7], {
-    offer_a: [{ src: FB(1), origin: "remote", expiring: true }],
-    offer_b: [{ src: CHOTOT, origin: "remote", expiring: false }],
-  });
-  assert.deepEqual(out[9], { offer: [{ src: FB(1), origin: "remote", expiring: true }] });
-});
-
-test("AC-6 tin rao không có post nào vẫn có mục rỗng để UI hiện «không có ảnh»", async () => {
-  const { query } = fakeQuery([]);
-  const out = await loadReviewMedia([ITEMS[1]], ADMIN, query);
-  assert.deepEqual(out, { 9: { offer: [] } });
-});
-
-test("AC-7 should-NOT-fire: không phải admin → {} và không truy vấn DB", async () => {
-  for (const u of [null, user("user"), user("ops")]) {
-    const { calls, query } = fakeQuery([post("offer_a1", null, [{ url: FB(1) }])]);
-    assert.deepEqual(await loadReviewMedia(ITEMS, u, query), {});
-    assert.equal(calls.length, 0, u?.role ?? "khách");
-  }
-});
-
-test("AC-7 DB thiếu bảng stg_zalo_posts (cloud) → {}; lỗi DB khác vẫn ném", async () => {
-  const failWith = (code: string) => async () => {
-    throw Object.assign(new Error(`lỗi ${code}`), { code });
-  };
-  assert.deepEqual(await loadReviewMedia(ITEMS, ADMIN, failWith("42P01")), {});
-  await assert.rejects(loadReviewMedia(ITEMS, ADMIN, failWith("57P01")), /57P01/);
-});
-
-test("AC-7 không thẻ nào cần ảnh → {} và không truy vấn", async () => {
-  const { calls, query } = fakeQuery([]);
-  assert.deepEqual(await loadReviewMedia([ITEMS[2], ITEMS[3]], ADMIN, query), {});
-  assert.equal(calls.length, 0);
-});
+// Ca AC-6/AC-7 của loadReviewMedia (đọc bài qua stg_zalo_posts) đã thay bởi NH1 media-canonical-reso AC-5
+// (tests/media-canonical.test.tsx «NH-AC-5 …»): loader nay đọc bảng media (053).
 
 test("AC-7 (review-card-photos) stripEvidenceImages bỏ image_url hai bên, giữ mọi field khác, không đụng bản gốc", () => {
   const ev = {

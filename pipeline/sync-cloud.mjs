@@ -382,7 +382,8 @@ export async function pool(items, n, fn) {
 export async function leakGate(exec) {
   const leaks = [];
   // data_flow_snapshot (DF1, migration 051): số tổng hợp chỉ ở máy thu — lên cloud bằng khối bản tin, không bằng bảng.
-  const checks = ["source_registry", "airbnb_snapshots", "data_flow_snapshot"];
+  // media (NH1, migration 053): URL ảnh S06 mang tên miền nguồn, local_file trỏ kho thô — chỉ máy thu, không vào FILL.
+  const checks = ["source_registry", "airbnb_snapshots", "data_flow_snapshot", "media"];
   const stg = await exec(
     `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'stg_%'`,
   );

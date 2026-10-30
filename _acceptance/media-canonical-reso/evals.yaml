@@ -1,0 +1,129 @@
+schema_version: 1
+feature_slug: media-canonical-reso
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.media_db
+    paths: [db/migrations/053_media.sql, pipeline/scripts/media-canonical.itest.mjs]
+    expected: "exit 0; ca 'NH-AC-1 053 chạy hai lần' và 'NH-AC-1 ràng buộc' xanh trên DB thử (không phải oneinvest): áp 053 lần hai trong giao dịch thoát 0; information_schema cho đúng 8 cột của design §2.1; INSERT media_url 'javascript:x', dòng thiếu cả media_url lẫn local_file, local_file 'a/../media/x.jpg' và 'snap/x.jpg', media_order -1, resource_record_key không có trong sale_offer_records — mỗi lệnh bị từ chối với đúng tên ràng buộc ghim trong ca; dòng hợp lệ (url https + local_file 'hcmc__zalo-agent__2026-10-23T000000/media/1.jpg') vào được. Chiều đỏ: ca 'NH-AC-1 chốt DB' đỏ với 'DATABASE_URL trỏ DB oneinvest dùng chung' khi trỏ oneinvest chưa có bảng media"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E2
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/mappings.yaml, db/migrations/053_media.sql, pipeline/scripts/media-wiring.test.mjs]
+    expected: "exit 0; ca 'NH-AC-1 mappings khai bảng media' xanh: khối media của pipeline/mappings.yaml có đúng các cột của 053 (đọc tên cột từ CREATE TABLE trong tệp migration, không chép tay), mỗi cột có dd là field DD 2.1 của resource Media (MediaKey, ResourceRecordKey, OriginatingSystemName, OriginatingSystemResourceRecordKey, MediaURL, Order, MediaModificationTimestamp), local_file có dd: null kèm rationale và checked_on; đầu 053 có dòng 'KHÔNG sync cloud'. Chiều đỏ cùng ca: bản sao mappings bỏ một cột → đỏ gọi tên cột thiếu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.media_db
+    paths: [pipeline/transform-media.mjs, pipeline/media-rows.mjs, pipeline/scripts/media-canonical.itest.mjs]
+    expected: "exit 0; ca 'NH-AC-2 S06' xanh trong giao dịch ROLLBACK trên DB thử: ba tin S06 dựng tay — tin A bảng nạp dạng {images:[u1,u2,u1,'ftp://x']}, tin B dạng mảng [u3], tin C không ảnh — sau transform-media S06: A có đúng 2 dòng (u1 order 0, u2 order 1), B 1 dòng order 0, C 0 dòng; originating_system_resource_record_key = list_id; local_file NULL; đúng 1 dòng dq_check_results check_name 'media:local-file' entity S06 mới của lượt; ca 'NH-AC-2 dòng bảng nạp thật' rút từ DB thử một dòng stg_chotot_ads thật cho mỗi dạng images đang có (đếm dạng bằng jsonb_typeof, ghi số dạng gặp), gắn vào tin dựng trong giao dịch, và so số dòng + thứ tự với danh sách URL http(s) khác nhau tính bằng SQL jsonb trên chính dòng đó. Chiều đỏ: ca ghim 'tin C không ảnh phải 0 dòng' và 'URL trùng chỉ một dòng'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.media_app
+    paths: [pipeline/media-rows.mjs, app/src/lib/ops/review-media.ts, app/src/lib/ops/zalo-media.ts, app/tests/media-canonical.test.tsx]
+    expected: "exit 0; ca 'NH-AC-3 tương đương với buildOfferImages' xanh: trên ma trận ca viết trước (mọi ca AC-5 của tests/review-media.test.tsx, cộng trùng URL giữa hai bài, entry thiếu snapshotId, snapshot có '..', file ngoài media/, 13 ảnh) buildMediaImages(mediaRowsFromPosts(bài)) deepEqual buildOfferImages(bài), so trọn src+origin+expiring, số ca chạy = số ca khai; ca 'NH-AC-3 hai bản regex' xanh: SNAPSHOT_ID/MEDIA_FILE của pipeline/media-rows.mjs và app/src/lib/ops/zalo-media.ts cho cùng kết quả trên ma trận chuỗi viết trước. Chiều đỏ cùng ca: đột biến mediaRowsFromPosts xếp URL gốc trước ảnh đã tải → ca đỏ gọi tên ca lệch"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.media_db
+    paths: [pipeline/transform-media.mjs, pipeline/media-rows.mjs, pipeline/scripts/media-canonical.itest.mjs]
+    expected: "exit 0; ca 'NH-AC-4 chạy lại không đổi', 'NH-AC-4 bài gom sang tin khác', 'NH-AC-4 tin nghỉ', 'NH-AC-4 nguồn khác không bị chạm' xanh trong giao dịch ROLLBACK: lượt hai cùng số dòng, cùng tập media_key, cùng media_modification_timestamp; chuyển post p2 từ tin T1 sang T2 → ảnh của p2 khoá theo T2, T1 không còn dòng của ảnh đó; đặt retired_at cho tin → 0 dòng media của tin; chạy S06 → dòng S03 giữ nguyên từng cột. Chiều đỏ: ca ghim 'lượt hai không được đổi media_modification_timestamp'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.media_app
+    paths: [app/src/lib/ops/review-media.ts, app/tests/media-canonical.test.tsx]
+    expected: "exit 0; ca 'NH-AC-5 …' xanh với truy vấn giả: thẻ entity_match (offer_a S06, offer_b S03) + agent_output → đúng 1 truy vấn, SQL đọc bảng media (không có stg_zalo_posts), kết quả khoá theo id thẻ; bên S06 ≥ 1 ảnh origin remote từ media_url; bên S03 ảnh local trước rồi remote expiring, cắt ở 12, evidence.image_url đứng cuối khi chưa có; vai ops, user, khách → {} và 0 truy vấn; lỗi 42P01 → {}; lỗi khác ném. Chiều đỏ cùng ca: đột biến bỏ kiểm isAdmin → ca đỏ 'người không phải admin không được nhận ảnh'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.media_app
+    paths: [app/src/lib/data-flow-queries.ts, app/src/lib/ops/review-media.ts, app/src/components/ops/data-flow/record-sheet.tsx, app/tests/media-canonical.test.tsx]
+    expected: "exit 0; ca 'NH-AC-6 nạp ảnh dòng chảy' xanh (truy vấn giả): tin S03, S05, S06 đều có khoá; mảng mỗi tin = buildMediaImages trên dòng media của chính tin đó; tin không ảnh → []; ops/khách → {} 0 truy vấn; 42P01 → {}. Ca 'NH-AC-6 hồ sơ tin S06' xanh (jsdom): RecordsGrid với tin S06 có 2 ảnh → bảng 0 <img>; mở hồ sơ tin S06 → group aria-label bắt đầu 'Ảnh' có đúng 2 <img> với src của tin đang mở, KHÔNG có chuỗi 'Chưa gắn được ảnh'; tin S06 media [] → 'không có ảnh'; ca 'NH-AC-6 hồ sơ tin S06 không admin' (media vắng) → đúng câu 'Ảnh tin chỉ hiện cho quản trị viên.', 0 <img>, không có 'không có ảnh'; ca 'NH-AC-6 hồ sơ tin S06 cloud' → đúng câu 'Ảnh tin chỉ xem ở máy thu.', 0 <img>, không có 'không có ảnh'; đối chứng dương cùng tin với admin → dải ảnh 2 <img>. Chiều đỏ cùng ca: hồ sơ đọc media của tin đầu bảng → ca đỏ 'ảnh phải thuộc đúng tin đang mở'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E8
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.media_roundtrip
+    paths: [pipeline/transform-media.mjs, pipeline/media-rows.mjs, app/src/lib/ops/review-media.ts, app/src/lib/data-flow-queries.ts, app/scripts/media-roundtrip.ts]
+    expected: "exit 0; stdout có 'ROUNDTRIP PASS' và các dòng đếm trên DB thử (không phải oneinvest): 'S06 hụt ảnh ở loader: 0/<n>' với n > 20000 (đếm trên đầu ra loadFlowMedia cho MỌI tin S06 sống có URL http(s) ở bảng nạp), 'S06 lệch số ảnh: 0/<n>' (số dòng media và thứ tự media_order so với danh sách URL http(s) khác nhau theo thứ tự, tính bằng SQL jsonb trên stg_chotot_ads, không gọi hàm bên ghi), 'S03 hụt ảnh đã tải ở loader: 0/<m>' với m > 0, 'lượt hai: thêm 0 · xoá 0 · đổi 0', 'thẻ duyệt S06: <k> ảnh' với k ≥ 1, 'hồ sơ tin S06: <k> ảnh' với k ≥ 1; thẻ tạo trong giao dịch (nếu có) đã ROLLBACK ('dọn: còn 0 dòng'). Chiều đỏ: probe dừng exit 1 gọi tên khi DATABASE_URL trỏ oneinvest, hoặc khi n = 0 (bảng nạp S06 rỗng — đo trên DB rỗng không chứng gì)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E9
+    criterion: AC-8
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    paths: [app/src/components/ops/data-flow/record-sheet.tsx, app/src/lib/ops/review-media.ts, app/src/lib/data-flow-queries.ts]
+    steps:
+      - "Bản chạy: dev server của worktree đang kiểm ở http://localhost:3462, chạy với DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media (DB thử, không phải oneinvest) và SNAPSHOTS_DIR=/Users/manhphan/dev/onehub-invest/collector/snapshots (kho thô của checkout chính — worktree không có snapshots/), bảng media đã dựng bằng transform-media.mjs S03 S05 S06, và đã mồi thẻ duyệt bền bằng 'cd app && DATABASE_URL=<như trên> node --import tsx scripts/media-roundtrip.ts --moi-the' (in id thẻ entity_match có tin S06 — ghi id vào observed). KHÔNG tạo hay sửa tệp nào trong cây; không có bản chạy thì FAIL với 'bản chạy không lên'"
+      - "Điều kiện tiền: một src dạng /api/zalo-media của tin S03 sẽ chụp phải trả 200 (curl kèm cookie phiên admin của bước chụp, hoặc đọc mã trong trình duyệt). Không 200 thì FAIL với lý do 'môi trường: kho thô không đọc được', không ghi 'ảnh hỏng'"
+      - "Chụp BẰNG bước chụp của kho, KÈM CÙNG DATABASE_URL của DB thử: DATABASE_URL=<như trên> bash scripts/ui-capture.sh http://localhost:3462/ops/review _acceptance/media-canonical-reso/evidence/E9-review.png — 1280 px sáng, ở đúng thẻ có id vừa mồi (lọc hay cuộn tới thẻ đó; ảnh phải thấy được mã tin S06 của thẻ). KHÔNG đọc hay in mật khẩu"
+      - "Mở /ops/data-flow, bấm một tin S06 và một tin S03 có ảnh đã tải trong bảng «Tin mới nhất», chụp hồ sơ tin: E9-ho-so-s06.png, E9-ho-so-s03.png"
+    expected: "Ba ảnh chụp: thẻ duyệt có tin S06 với dải ảnh hiện ≥ 1 ảnh thật; hồ sơ tin S06 mục «Ảnh tin» hiện ≥ 1 ảnh thật, không có câu «Chưa gắn được ảnh»; hồ sơ tin S03 hiện ≥ 1 ảnh đã tải (src bắt đầu /api/zalo-media). Không ô nào là «Ảnh hỏng»"
+    evidence_required: [screenshot, observed]
+
+  - id: E10
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/sync-cloud.mjs, pipeline/sync-cloud.test.mjs]
+    expected: "exit 0; ca 'NH-AC-9 media không lên cloud' xanh: FILL không chứa 'media'; leakGate với exec giả: bảng media có ở cloud với 3 dòng → danh sách vi phạm có 'media=3'; to_regclass trả null → không có mục media; có bảng nhưng 0 dòng → không có mục media; quét data-api/src không có chuỗi 'FROM media' hay 'media_url'. Chiều đỏ cùng ca: bản FILL có thêm 'media' → ca đỏ 'media không được vào FILL'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E11
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [scripts/chotot-daily.sh, scripts/zalo-import-daily.sh, pipeline/scripts/media-wiring.test.mjs]
+    expected: "exit 0; ca 'NH-AC-10 chạy hằng đêm' xanh: scripts/chotot-daily.sh có đúng một dòng job_run chotot-daily transform-media … transform-media.mjs S06, nằm ngay sau dòng transform-chotot; scripts/zalo-import-daily.sh có đúng một dòng job_run zalo-import-daily transform-media … transform-media.mjs S03 S05, nằm ngay sau dòng transform-zalo. Chiều đỏ cùng ca: bản sao script đặt bước media trước transform → đỏ gọi tên script"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E12
+    criterion: AC-10
+    executor: script
+    cmd: config:executors.script.media_khong_lui
+    paths: [_acceptance/media-canonical-reso/probes/khong-lui.mjs]
+    expected: "exit 0; stdout 'KHÔNG LÙI PASS': chạy scripts/pre-merge-check.sh --base origin/main trên cây; mọi VIOLATION còn lại chỉ thuộc ba lớp đã biết trước chữ ký — (1) trạng thái/chữ ký của chính media-canonical-reso; (2) ô superseded_by trỏ media-canonical-reso#AC-n chờ hồ sơ này ký (ho-so-thay-chua-ky); (3) 'evidence is stale' của hồ sơ đã ký có ô superseded_by trỏ media-canonical-reso (làn ghim lại từ chối ghim chúng khi hồ sơ thay chưa ký, nên chúng ghim trong lượt ký của NH1) — với lớp (3) probe tự chạy MỌI eval test/script còn hiệu lực (không not-run) của từng hồ sơ ấy trên cây và đòi thoát 0, in 'chạy lại <hồ sơ>: k/k lệnh xanh'; không 'evidence is stale' nào cho hồ sơ khác. Chiều đỏ: probe in nguyên văn dòng VIOLATION lạ hoặc lệnh đỏ và thoát 1"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E13
+    criterion: AC-6
+    executor: script
+    cmd: config:executors.design.floor
+    paths: [app/src/components/ops/data-flow/record-sheet.tsx]
+    expected: "exit 0; sàn thiết kế bậc M1 của kho không báo hex thô mới trên tệp giao diện vòng chạm (record-sheet.tsx chỉ bỏ một nhánh chữ, không thêm màu)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự bốn bước (NH-AC-10), không JOB FAIL' xanh: bản chép nguyên zalo-import-daily.sh + job-step.sh với node giả gọi đúng import-airbnb → transform-zalo → transform-media → refresh-bait-gap, thoát 0; ca 'ZJ-AC-6 …' xanh: mọi lời gọi node giả nằm trong bốn nhãn ấy; ca 'NH-AC-10 zalo-import-daily: transform-media hỏng → ≠0, dòng ghim, bước sau vẫn chạy' xanh: thoát 1, đúng dòng 'JOB FAIL [zalo-import-daily] bước transform-media mã 1', refresh-bait-gap vẫn được gọi. Chiều đỏ: các ca ZJ-AC-2 sẵn có ghim dòng JOB FAIL theo từng bước hỏng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E15
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.job_exit
+    paths: [scripts/chotot-daily.sh, scripts/lib/job-step.sh, scripts/job-exit.test.mjs]
+    expected: "exit 0; ca 'AC-1 chotot-daily: mọi bước lành → 0, nhật ký lời gọi khớp dãy viết trước' xanh với dãy collect-chotot → import-chotot → transform-chotot → transform-media → refresh-bait-gap → resolve-properties; ca 'AC-1 chotot-daily: transform-media hỏng → ≠0, dòng ghim, bước sau vẫn chạy' xanh; chiều đỏ cùng cây: ca 'AC-1 chotot-daily: bản đột biến bỏ ghi mã sau transform-media → bị bắt' xanh (hàm kiểm bắt được bản đột biến, thông điệp nêu tên bước transform-media)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg"
 
 import { pool } from "./db"
-import type { LabelRow } from "./labels-normalize"
+import { DA_GAN_CUA_TOI, type LabelRow } from "./labels-normalize"
 
 /**
  * Gắn nhãn đánh giá (PL7 `man-gan-nhan-mu`) — truy vấn của trang /ops/labels và route /api/v1/ops/labels.
@@ -74,7 +74,7 @@ export async function ghiNhan(c: Q, userId: string, lat: string, itemId: number,
        FROM eval_labels WHERE item_id = $1`, [itemId, userId])
     if (da[0].cua_toi) {
       await c.query("ROLLBACK")
-      return { ok: false, status: 409, error: "Anh đã gắn tin này" }
+      return { ok: false, status: 409, error: DA_GAN_CUA_TOI }
     }
     if (da[0].so >= (tin[0].double_label ? 2 : 1)) {
       await c.query("ROLLBACK")

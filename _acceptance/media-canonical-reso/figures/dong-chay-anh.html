@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dòng chảy ảnh tin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1160px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 960px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · media-canonical-reso · dong-chay-anh</p>
+    <h1>Dòng chảy ảnh: bảng nạp → bên ghi → bảng media → hai loader → hai màn</h1>
+    <p class="sub">NH1 · design §2 · AC-2, AC-3, AC-5, AC-6, AC-9 · nguồn gọi bằng mã S03, S05, S06</p>
+
+    <svg viewBox="0 0 1136 456" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Đầu cột: 5 bước ============ -->
+      <text x="148" y="56" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em" text-anchor="middle">1 · BẢNG NẠP</text>
+      <text x="388" y="56" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em" text-anchor="middle">2 · BÊN GHI</text>
+      <text x="604" y="56" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em" text-anchor="middle">3 · BẢNG MEDIA</text>
+      <text x="812" y="56" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em" text-anchor="middle">4 · HAI LOADER</text>
+      <text x="1016" y="56" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em" text-anchor="middle">5 · HAI MÀN</text>
+
+      <!-- ============ Ranh giới máy thu | cloud (nền, vẽ trước) ============ -->
+      <line x1="40" y1="320" x2="1096" y2="320" stroke="#4f5d75" stroke-width="1" stroke-dasharray="6,4"/>
+      <text x="40" y="308" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">MÁY THU</text>
+      <text x="40" y="344" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CLOUD</text>
+      <rect x="976" y="312" width="120" height="16" rx="2" fill="#f5f5f5"/>
+      <text x="1036" y="324" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">máy thu | cloud</text>
+
+      <!-- ============ Mũi tên (vẽ trước nút) ============ -->
+      <!-- hai làn nhập vào bên ghi: hai điểm gắn riêng trên cạnh trái -->
+      <path d="M256 120 H268 Q276 120 276 128 V156 Q276 164 284 164 H296" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <path d="M256 240 H268 Q276 240 276 232 V204 Q276 196 284 196 H296" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- bên ghi → bảng media -->
+      <line x1="480" y1="180" x2="520" y2="180" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <!-- bảng media → loader -->
+      <line x1="688" y1="180" x2="728" y2="180" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- loader → hai màn: hai điểm gắn riêng trên cạnh phải -->
+      <path d="M896 164 H908 Q916 164 916 156 V128 Q916 120 924 120 H936" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <path d="M896 196 H908 Q916 196 916 204 V232 Q916 240 924 240 H936" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- bảng media → cloud: bị chặn -->
+      <line x1="604" y1="220" x2="604" y2="352" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="592" y1="352" x2="616" y2="352" stroke="#2d3142" stroke-width="2"/>
+      <rect x="616" y="244" width="176" height="36" rx="2" fill="#f5f5f5"/>
+      <text x="624" y="258" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">AC-9 · BỊ CHẶN</text>
+      <text x="624" y="274" fill="#2d3142" font-size="10" font-family="'Geist', sans-serif">không vào FILL, leak gate đếm</text>
+
+      <!-- ============ 1 · Bảng nạp ============ -->
+      <!-- S06 -->
+      <rect x="40" y="80" width="216" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="80" width="216" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="56" y="100" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">AC-2</text>
+      <text x="56" y="124" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace">stg_chotot_ads.images</text>
+      <text x="56" y="144" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">(S06)</text>
+
+      <!-- S03/S05 -->
+      <rect x="40" y="200" width="216" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="200" width="216" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="56" y="220" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">AC-3</text>
+      <text x="56" y="240" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace">stg_zalo_posts.media_files</text>
+      <text x="56" y="254" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace">+ media</text>
+      <text x="56" y="272" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">(S03/S05, theo <tspan font-family="'Geist Mono', monospace">post_ids</tspan>)</text>
+
+      <!-- ============ 2 · Bên ghi ============ -->
+      <rect x="296" y="140" width="184" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="296" y="140" width="184" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="388" y="172" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">transform-media.mjs</text>
+      <text x="388" y="192" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">(<tspan font-family="'Geist Mono', monospace">job_run</tspan> sau transform</text>
+      <text x="388" y="206" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">mỗi nguồn)</text>
+
+      <!-- ============ 3 · Bảng media (tiêu điểm) ============ -->
+      <rect x="520" y="140" width="168" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="520" y="140" width="168" height="80" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="604" y="172" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">bảng <tspan font-family="'Geist Mono', monospace">media</tspan></text>
+      <text x="604" y="192" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">(RESO Media,</text>
+      <text x="604" y="206" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif" text-anchor="middle">khoá <tspan font-family="'Geist Mono', monospace">offer_id</tspan>)</text>
+
+      <!-- ============ 4 · Hai loader ============ -->
+      <rect x="728" y="140" width="168" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="728" y="140" width="168" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="812" y="176" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">loadOfferMedia</text>
+      <text x="812" y="196" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">+ buildMediaImages</text>
+
+      <!-- ============ 5 · Hai màn ============ -->
+      <rect x="936" y="80" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="936" y="80" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="952" y="100" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">AC-5</text>
+      <text x="952" y="124" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace">/ops/review</text>
+      <text x="952" y="144" fill="#4f5d75" font-size="10" font-family="'Geist', sans-serif">(dải ảnh thẻ)</text>
+
+      <rect x="936" y="200" width="160" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="936" y="200" width="160" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="952" y="220" fill="#4f5d75" font-size="8" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">AC-6</text>
+      <text x="952" y="244" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">hồ sơ tin</text>
+      <text x="952" y="264" fill="#4f5d75" font-size="10" font-family="'Geist Mono', monospace">/ops/data-flow</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="40" y1="388" x2="1096" y2="388" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="40" y="412" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="40" y="424" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="72" y="434" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bảng mới của NH1, chỉ ở máy thu</text>
+
+      <line x1="280" y1="430" x2="312" y2="430" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="320" y="434" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Ảnh đi tiếp</text>
+
+      <line x1="440" y1="430" x2="464" y2="430" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="464" y1="424" x2="464" y2="436" stroke="#2d3142" stroke-width="2"/>
+      <text x="476" y="434" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Đường bị chặn</text>
+
+      <line x1="600" y1="430" x2="632" y2="430" stroke="#4f5d75" stroke-width="1" stroke-dasharray="6,4"/>
+      <text x="640" y="434" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Ranh giới máy thu | cloud</text>
+    </svg>
+  </div>
+</body>
+</html>
