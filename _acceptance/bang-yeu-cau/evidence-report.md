@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 7ec8eaa82fde1e83022a5f5ca253dd7bbef9a38d
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: bang-yeu-cau

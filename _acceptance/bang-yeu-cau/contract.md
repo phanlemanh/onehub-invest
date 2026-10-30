@@ -5,7 +5,7 @@ slug: bang-yeu-cau
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (058) — khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-bang-yeu-cau-design.md
@@ -82,3 +82,14 @@ cầu bên mua theo CONTEXT «Yêu cầu»; hàng `do-cau-tu-yeu-cau` đọc t�
   in, không ngưỡng; dòng sổ descope ghi giá).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Hai cột ngân sách cùng ánh xạ RESO ListPrice; cận dưới chưa dùng tên ListPriceLow.
+  - Ngoài-2: CONTEXT «Yêu cầu» còn nhắc thuê ngắn hạn (rent_st), dù bảng Yêu cầu không nhận loại này.
+  - Ngoài-3: Sổ khai trục kind không rỗng, nhưng Yêu cầu không đọc được dịch vụ thì để trống kind.
+  - Ngoài-6: Ca đếm ô nhãn căn cứ (TD-AC-2) tính số ô từ sổ nên không tự đỏ khi số ô lệch; chỉ các ca từng ô bắt.
+  - Ngoài-8: CHECK loại hình của bảng Yêu cầu vẫn nhận «unknown»; bộ ghi không ghi giá trị này nhưng DB không chặn.
+  - Ngoài-14: Ca DB «bài không người gửi lẫn SĐT thành Yêu cầu riêng» chỉ có một bài như vậy; ca nhiều bài nằm ở test hàm gom thuần.
+- Mở hợp đồng mới (Ngoài-4, 5, 7, 9, 10, 11): MỘT hàng sửa bộ đọc ngân sách — sàn lớn hơn trần làm đổ transform S03,
+  khoảng có đầu dưới không đơn vị («800-1,2 tỷ»), phần lẻ («2 tỷ 500», «3tr5») bị đọc thấp. Phải gộp trước khi áp 058 lên
+  máy thu (Mạnh 30/10).

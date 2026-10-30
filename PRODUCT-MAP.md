@@ -11,9 +11,9 @@ flowchart TD
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
   B --> CD["Chờ duyệt phạm vi<br/>7 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
+  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>93 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>64 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>65 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
 
@@ -34,13 +34,13 @@ flowchart TD
 
 ## Đang làm
 
-- Bảng Yêu cầu bên mua (cần mua · cần thuê) đối xứng listing — transform ghi từ bài có phát biểu ý định = Yêu cầu, tiêu chí khu vực · loại hình · số PN · ngân sách, nạp lại không nhân dòng (`bang-yeu-cau`)
 - Điểm Kev typed (ý định tin, bán/thuê) có cột ở bảng nạp và thành phát biểu theo bài cho mọi tin S03, không loại tin nào theo Kev (`meta-kev-thanh-phat-bieu`)
 
 ## Đã giao — chờ phiên nghiệm thu
 
 - audit-all không còn PASS giả ở backup và membership S03, và kiểm các trang /ops ở đúng cổng :3456 (`audit-all-noi-that`)
 - Khách đăng nhập hoặc đăng ký qua auth-4/auth-5 không còn chuyển động bị cấm, gradient tự chọn hay chữ kích thước tuỳ ý, và lỗi nhóm (auth) hiện error.tsx (`auth-hop-chuan`)
+- Bảng Yêu cầu bên mua (cần mua · cần thuê) đối xứng listing — transform ghi từ bài có phát biểu ý định = Yêu cầu, tiêu chí khu vực · loại hình · số PN · ngân sách, nạp lại không nhân dòng (`bang-yeu-cau`)
 - Bước chụp trang của kho gặp lỗi ở bất kỳ bước nào cũng không in hay đặt tên nguồn thật ra ngoài tiến trình, và không ghi ảnh khi chưa che xong tầng A (`buoc-chup-khong-in-ten-that`)
 - Bảng canonical không còn tin sinh từ dữ liệu thử, và transform từ chối post thử nếu lọt vào (`canonical-khong-tin-gia`)
 - /ops/sources hiện và đổi chế độ thu (Chờ · Bùng · Duy trì) của từng điểm thu — bật Bùng chỉ admin và bắt buộc hạn ≤ 14 đêm; máy tự hạ bùng quá hạn về Duy trì; mọi lần đổi ghi ops_audit (`che-do-thu-tren-ops`)
