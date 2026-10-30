@@ -188,8 +188,17 @@ try {
   // Dòng cũ: 06:30 sáng nay giờ máy thu = 23:30 UTC hôm trước.
   await c2.query(`INSERT INTO dq_check_results (checked_at, check_name, entity, status, detail)
     VALUES ((date_trunc('day', now() AT TIME ZONE '${MUI}') + interval '6 hours 30 minutes') AT TIME ZONE '${MUI}', 'danh-ba-sdt:n1', 'S03', 'fail', 'so=999 tong=999')`)
+  // Phiên UTC: node-pg đọc PGOPTIONS (không đọc PGTZ). Chứng điều kiện đã dựng bằng SHOW TimeZone trên một client cùng env.
+  const PHIEN_UTC = { PGOPTIONS: "-c TimeZone=UTC" }
+  const tz = spawnSync(process.execPath, ["-e", `const pg=require(${JSON.stringify(path.join(ROOT, "pipeline/node_modules/pg"))});const c=new pg.Client({connectionString:process.env.DATABASE_URL});c.connect().then(()=>c.query("SHOW TimeZone")).then(r=>{console.log(r.rows[0].TimeZone);return c.end()})`],
+    { encoding: "utf8", env: { ...process.env, DATABASE_URL: URL, ...PHIEN_UTC } })
+  if (tz.stdout.trim() !== "UTC") throw new Error(`PHIEN KHONG PHAI UTC: «${tz.stdout.trim()}» ${tz.stderr.slice(0, 200)}`)
+  const tzMacDinh = spawnSync(process.execPath, ["-e", `const pg=require(${JSON.stringify(path.join(ROOT, "pipeline/node_modules/pg"))});const c=new pg.Client({connectionString:process.env.DATABASE_URL});c.connect().then(()=>c.query("SHOW TimeZone")).then(r=>{console.log(r.rows[0].TimeZone);return c.end()})`],
+    { encoding: "utf8", env: { ...process.env, DATABASE_URL: URL, PGOPTIONS: "-c TimeZone=Asia/Ho_Chi_Minh" } })
+  assert.equal(tzMacDinh.stdout.trim(), "Asia/Ho_Chi_Minh", "đối chứng: PGOPTIONS đổi được múi giờ phiên")
+  ok("E3 phiên UTC dựng thật (SHOW TimeZone = UTC; đối chứng đặt Asia/Ho_Chi_Minh đổi được)")
   for (const lan of [1, 2]) {
-    const r = chayLenh(["--write"], { PGTZ: "UTC" })
+    const r = chayLenh(["--write"], PHIEN_UTC)
     assert.equal(r.status, 0, r.stderr)
     const n = await demHomNay(c2)
     if (n !== 9) throw new Error(`NHAN DONG TRONG NGAY: lượt ${lan} có ${n} dòng`)

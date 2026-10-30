@@ -177,8 +177,9 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `${nguyen(m[1])} đề xuất đã áp · ${nguyen(m[2])} thiếu phát biểu`, known: true }
   if ((m = d.match(/^units=(\d+) B0=(\d+) B1=(\d+) B2=(\d+) B3=(\d+) B4=(\d+) B5=(\d+)$/)))
     return { text: [`${nguyen(m[1])} đơn vị`, ...m.slice(2).map((n, i) => `B${i} ${nguyen(n)}`)].join(" · "), known: true }
-  if (check.startsWith("danh-ba-sdt:")) {
-    const kiem = check.slice("danh-ba-sdt:".length)
+  const kiemDanhBa = check.match(/^danh-ba-sdt:(n[1-5])$/)
+  if (kiemDanhBa) {
+    const kiem = kiemDanhBa[1]
     if ((m = d.match(/^so=(\d+) tong=(\d+)$/)) && ["n1", "n2", "n5"].includes(kiem)) {
       const [, so, tong] = m
       if (kiem === "n1") return { text: `${nguyen(so)}/${nguyen(tong)} cặp một–một chưa gộp`, known: true }
