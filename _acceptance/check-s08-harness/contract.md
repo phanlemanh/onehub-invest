@@ -5,7 +5,7 @@ slug: check-s08-harness
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: machine-cleared
 veto_state: mo
 veto_opened_at: 2026-10-30T07:32:16Z
 approved_by:
