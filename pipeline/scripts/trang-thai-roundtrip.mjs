@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { KHOA } from "../bac-du-lieu.mjs";
 import { VOCAB } from "../lib/vocab.generated.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -41,7 +42,11 @@ async function main() {
       "SELECT current_database() AS ten, to_regclass('public.history_transactional') IS NOT NULL AS co059");
     if (db.ten === "oneinvest") throw new Error("từ chối chạy trên DB oneinvest dùng chung — phép đo GHI dữ liệu, dùng DB thử");
     if (!db.co059) {
+      // giữ khoá 56056 như mọi bên nạp 059 / ghi trạng thái (itest, trang-thai-chao) — không deadlock khi chạy cùng DB thử
+      await c.query("BEGIN");
+      await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
       await c.query(readFileSync(path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql"), "utf8"));
+      await c.query("COMMIT");
       console.log(`AC-8 DB thử ${db.ten}: đã áp 059`);
     }
 
@@ -79,6 +84,7 @@ async function main() {
     // Vế lịch sử giá (Hỏi-3): số căn B5 khi bỏ vế, trừ số căn B5 thật — bản hàm ở pg_temp, giao dịch ROLLBACK.
     await c.query("BEGIN");
     try {
+      await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
       const { rows: [f] } = await c.query("SELECT pg_get_functiondef('property_data_level(bigint[])'::regprocedure) AS d");
       const ve = "\n                         AND coalesce(g.n, 0) >= 2";
       if (!f.d.includes(ve)) throw new Error("property_data_level không còn vế lịch sử giá — sửa phép đo theo hàm");

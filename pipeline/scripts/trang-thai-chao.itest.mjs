@@ -320,13 +320,6 @@ async function kiemCungGia() {
 test("AC-6 lịch sử giá và trạng thái: tin mới, đổi giá, gỡ, chào lại, gom theo căn, điền lùi (kèm chiều đỏ)", async (t) => {
   let truoc;
   await trongGiaoDich(async () => {
-    // điền lùi: mỗi tin có sẵn đúng một new_listing
-    const { rows: [d] } = await c.query(`SELECT (SELECT count(*) FROM sale_offer_records)::int AS tin,
-      (SELECT count(*) FROM history_transactional WHERE change_type = 'new_listing')::int AS moi,
-      (SELECT count(DISTINCT resource_record_key) FROM history_transactional WHERE change_type = 'new_listing')::int AS khac`);
-    assert.equal(d.moi, d.tin, "điền lùi: số new_listing phải bằng số tin có sẵn");
-    assert.equal(d.khac, d.tin, "điền lùi: mỗi tin đúng một new_listing");
-
     const a = await tin({ source: "S06", price: 2_000_000_000, last_seen: "2026-10-01T00:00:00Z" });
     await c.query("UPDATE sale_offer_records SET price_vnd = 1900000000 WHERE offer_id = $1", [a]);
     await kiemCungGia();
@@ -363,6 +356,28 @@ test("AC-6 lịch sử giá và trạng thái: tin mới, đổi giá, gỡ, ch�
   const khi = "WHEN (OLD.price_vnd IS DISTINCT FROM NEW.price_vnd) ";
   assert.ok(sql059().includes(khi), `chiều đỏ: 059 không còn «${khi}»`);
   await assert.rejects(trongGiaoDich(kiemCungGia, { sql: sql059().replace(khi, "") }), /cùng giá không sinh dòng lịch sử/);
+});
+
+// Điền lùi: DB đã áp 059 thì bỏ bảng lịch sử trong giao dịch trước khi nạp lại, để bước điền lùi thật sự chạy
+// (đối chứng dương: có tin, mỗi tin đúng một new_listing — S4 r2 t5).
+const boLichSu = (db) => db.query("DROP TABLE IF EXISTS history_transactional CASCADE");
+async function kiemDienLui(db) {
+  const { rows: [d] } = await db.query(`SELECT (SELECT count(*) FROM sale_offer_records)::int AS tin,
+    (SELECT count(*) FROM history_transactional WHERE change_type = 'new_listing')::int AS moi,
+    (SELECT count(DISTINCT resource_record_key) FROM history_transactional WHERE change_type = 'new_listing')::int AS khac`);
+  assert.ok(d.tin > 0, "đối chứng dương: DB thử phải có tin để đo điền lùi");
+  assert.equal(d.moi, d.tin, "điền lùi: số new_listing phải bằng số tin có sẵn");
+  assert.equal(d.khac, d.tin, "điền lùi: mỗi tin đúng một new_listing");
+}
+test("AC-6 điền lùi lịch sử: mỗi tin có sẵn đúng một new_listing (đối chứng dương + chiều đỏ)", async () => {
+  await trongGiaoDich(kiemDienLui, { truoc: boLichSu });
+  const dienLui = `INSERT INTO history_transactional (resource_record_key, field_name, previous_value, new_value, change_type,
+                                   modification_timestamp)
+SELECT offer_id, 'ListPrice', NULL, price_vnd::text, 'new_listing', first_seen FROM sale_offer_records
+ON CONFLICT DO NOTHING;`;
+  assert.ok(sql059().includes(dienLui), "chiều đỏ: 059 không còn câu điền lùi — sửa ca theo migration");
+  await assert.rejects(trongGiaoDich(kiemDienLui, { truoc: boLichSu, sql: sql059().replace(dienLui, "") }),
+    /điền lùi: số new_listing phải bằng số tin có sẵn/);
 });
 
 // ---- Task 5 · AC-7: vị từ B5 và tụt về B4 ----
