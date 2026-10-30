@@ -363,6 +363,12 @@ executors:
     cs8h_lo: "bash _acceptance/check-s08-harness/probes/local-only.sh \"$PWD\""
     cs8h_base: "bash _acceptance/check-s08-harness/probes/baseline.sh \"$PWD\""
     cs8h_scope: "bash _acceptance/check-s08-harness/probes/scope.sh \"$PWD\""
+    # s03-null-byte (30/10, claudedp-3010-3) — bộ nạp S03 lọc U+0000
+    s03nb_unit: "cd pipeline && node --test scripts/s03-null-byte.test.mjs"
+    s03nb_fix: "bash _acceptance/s03-null-byte/probes/fixture.sh \"$PWD\""
+    s03nb_base: "bash _acceptance/s03-null-byte/probes/baseline.sh \"$PWD\""
+    s03nb_real: "bash _acceptance/s03-null-byte/probes/real.sh"
+    s03nb_scope: "bash _acceptance/s03-null-byte/probes/scope.sh \"$PWD\""
     # hook-spool-nghiem-ngat (2410-23, ZC6 nối tiếp, T3) — cùng hộp cát ZC6: handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
     hsn_auth_held: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"
     hsn_held_then_hang: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs held-then-hang"
