@@ -538,6 +538,11 @@ _Avoid_: Rentalizer
 - Slug URL: —
 _Avoid_: ảnh khu vực (gây hiểu là ảnh chụp phường/thành phố), ảnh AirDNA
 
+**Ảnh tin**: Ảnh của một tin rao, lưu một dòng mỗi ảnh ở bảng `media` của máy thu (NH1, migration 053): ảnh đã tải vào kho thô, hoặc chỉ còn đường dẫn gốc. Hàng duyệt và hồ sơ tin đọc ảnh tin từ bảng này; chỉ admin thấy, không lên máy chủ. Kiểm chất lượng «Ảnh tin đã tải» đếm mỗi nguồn bao nhiêu ảnh, bao nhiêu đã tải, bao nhiêu tin có ảnh.
+- Code: `media` (`transform-media.mjs`, `loadOfferMedia`), kiểm `media:local-file` · RESO: `Media` (DD 2.1)
+- Slug URL: —
+_Avoid_: media canonical (tên kỹ thuật, không dùng trên UI), ảnh khu vực
+
 **Đã lưu**: Khu vực (sau này listing, báo cáo) người dùng đã lưu — cần đăng nhập.
 - Code: `saved` · RESO: —
 - Slug URL: `saved`
