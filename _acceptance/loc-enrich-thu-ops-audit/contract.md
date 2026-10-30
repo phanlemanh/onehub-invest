@@ -5,7 +5,7 @@ slug: loc-enrich-thu-ops-audit
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-loc-enrich-thu-ops-audit-design.md
@@ -54,3 +54,9 @@ Quét tay bốn trục (dòng sổ «bỏ coverage-scan»), mỗi ô một AC:
 - Dời dấu đã thử sang bảng riêng — cần migration và sửa làn enrich đã ký ở `enrich-chay-sau-nap`.
 - Trang UI cho nhật ký thao tác — chưa có màn nào hiện nhật ký (theo Hỏi-3).
 - Đổi cách enrich ghi dấu, hay lọc ở chỗ khác — không chỗ nào khác đọc «N dòng gần nhất» của `ops_audit`.
+
+## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Mô tả phép đo trong evals.yaml lệch tên ca thật (E1, E5) và ghi chiều đỏ AC-3 đột biến tệp hằng trong khi test đột biến câu lọc của route.
+  - Ngoài-3: Chiều đỏ của ca lọc đúng action (LA-AC-3) không kiểm mã trả lời, nên route hỏng vì lý do khác cũng làm nó đỏ.

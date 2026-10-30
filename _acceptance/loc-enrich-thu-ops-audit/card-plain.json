@@ -1,30 +1,4 @@
 {
   "feature_plain": "Người vận hành đọc nhật ký thao tác Ops qua API sẽ không còn thấy các dòng đánh dấu «đã thử» mà enrich ghi mỗi đêm; thao tác của người không bị đẩy khỏi 100 dòng gần nhất.",
-  "will_do": [
-    {"id": "AC-3", "p": "Sẽ chỉ ẩn đúng một loại dòng — dấu «đã thử» của enrich; mọi thao tác khác, kể cả hoàn tác enrich và việc của các job máy, vẫn hiện."}
-  ],
-  "wont_do": [
-    {"id": "AC-1", "p": "Sẽ KHÔNG để 150 dấu «đã thử» mới hơn che mất 5 thao tác của người cũ hơn trong nhật ký."},
-    {"id": "AC-2", "p": "Sẽ KHÔNG trả thiếu: nhật ký vẫn đủ 100 dòng thao tác mới nhất, đúng thứ tự và đúng năm trường như cũ."},
-    {"id": "AC-4", "p": "Sẽ KHÔNG đổi ai được xem nhật ký: sáu kiểu người gọi nhận đúng mã trả lời như trước vòng."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG để tên dấu bên ghi (enrich) và bên lọc (app) lệch nhau mà không ai biết — đổi tên một bên thì test đỏ."},
-    {"id": "OOS-1", "p": "KHÔNG dời dấu «đã thử» sang bảng riêng — cần migration và sửa phần enrich vừa ký."},
-    {"id": "OOS-2", "p": "KHÔNG làm trang nhật ký thao tác trên /ops — hiện chưa có màn nào (Hỏi-3)."},
-    {"id": "OOS-3", "p": "KHÔNG đổi cách enrich ghi dấu, và không lọc chỗ nào khác — không chỗ nào khác đọc nhật ký kiểu «N dòng gần nhất»."}
-  ],
-  "scope_plain": "Những việc dưới đây cố ý để ngoài lượt này:",
-  "coverage_plain": [
-    {"i": 0, "p": "Không chạy bộ quét độ phủ tự động; bảng dưới liệt tay bốn trục, mỗi ô gắn một tiêu chí."},
-    {"i": 2, "p": "100 dòng gần nhất: toàn dấu máy che người, xen kẽ quá 100 dòng, ít dòng người (AC-1, AC-2)."},
-    {"i": 3, "p": "Loại dòng: dấu «đã thử», thao tác máy khác, thao tác người, tên cùng tiền tố (AC-3)."},
-    {"i": 4, "p": "Người gọi: admin, vai ops, vai viewer, phiên hết hạn, không phiên, khoá máy (AC-4)."},
-    {"i": 5, "p": "Bên ghi và bên lọc dùng cùng tên dấu (AC-5)."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Lời anh ở Cổng 2 nói sửa ở «màn Ops», nhưng chưa màn nào hiện nhật ký; máy không được tự bỏ việc làm trang. Đã chuyển thành Hỏi-3."},
-    {"i": 1, "p": "Máy tự định nghĩa «dấu máy» mà chưa loại lối «ẩn mọi dòng không phải người». Đã đo bảng thật: thao tác người mang năm kiểu tên khác nhau, nên lối đó sẽ ẩn cả việc người làm — giữ chỉ ẩn dấu «đã thử»."},
-    {"i": 2, "p": "Phép so từng dòng dựa vào mã dòng mà API không trả. Đã đổi sang khoá riêng gieo trong mỗi dòng thử."},
-    {"i": 3, "p": "Bản route cũ để so lấy bằng lịch sử git lúc chạy — CI không có đủ lịch sử. Đã đổi sang bản chép sẵn, vắng thì test đỏ có tên."},
-    {"i": 4, "p": "Phép đo quyền ghim sẵn «chỉ admin xem được» khi chưa đo route cũ. Đã bỏ, chỉ giữ «mã trả lời trước và sau bằng nhau»."}
-  ]
+  "analyst_plain": "Không đo được phép «đỏ trên bản cũ» tự động ở vòng này (bước chạy lại trên bản trước vòng bị công cụ chặn); bù lại, mỗi ca của bộ test tự mang chiều đỏ trên bản route trước vòng hoặc bản đột biến."
 }

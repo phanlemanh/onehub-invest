@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: ae912e93cbda0329517ff1c17f7bc65659621ff2
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: loc-enrich-thu-ops-audit
