@@ -1,5 +1,6 @@
 // judge-run.test.ts — PL25 `judge-nguong-la-code` AC-2b..AC-9 (E2b–E9): chamMotLuot sinh/cập nhật thẻ hàng duyệt.
 // Thêm hồ sơ `judge-giu-quyet-dinh-nguoi` AC-1..AC-3 (E1–E3): thẻ người quyết giữa lúc chấm không bị máy ghi đè.
+// Thêm hồ sơ `judge-evidence-du-truong` AC-1, AC-3, AC-4 (E1, E3, E4): thẻ mang đủ mười trường của bảng so; ca AC-6 cũ thay bằng JE-AC-1.
 // DB thử RỖNG riêng trên :5433 (tạo đầu tệp, xoá cuối tệp) — không chạm `oneinvest`. Lược đồ rút từ migration thật:
 // khối property_candidates của 027, 029 tới «-- Seed», 052 nguyên tệp; sale_offers tối thiểu (chỉ để khoá ngoại).
 // Model giả MockLanguageModelV4. Mỗi ca có đối chứng đỏ chạy ĐÚNG hàm kiểm trên vật hỏng, thông điệp ghim theo evals.yaml.
@@ -10,10 +11,10 @@ import { readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import pg from "pg";
 import { MockLanguageModelV4 } from "ai/test";
-import { TR, cap, kiemKhongNguong, type Tin } from "./judge-chung.js";
+import { TR, cap, khoaBangSo, khuonBen, kiemKhongNguong, kiemKhuonThe, napBangSo, type Tin } from "./judge-chung.js";
 import { NGUONG, apNguong } from "../src/agents/judge-entity.js";
 import type { PairData } from "../src/tools/native.js";
-import { CAU_DEM_THIEU_THE, SQL_CAP_NHAT, chamMotLuot, type ChamDeps } from "../scripts/judge-run.js";
+import { CAU_DEM_THIEU_THE, SQL_CAP_NHAT, chamMotLuot, evidenceThe, type ChamDeps } from "../scripts/judge-run.js";
 
 const SERVER = process.env.SCA_PG_SERVER ?? "postgres://oneinvest:oneinvest@localhost:5433";
 const TEN_DB = `oneinvest_p3_judge_test_${process.pid}`;
@@ -193,41 +194,32 @@ test("AC-5 model lỗi — ma trận 3 ô, kết luận luật giữ", async () 
   assert.throws(() => kiemGiuKetLuan({ ...t, ai_suggestion: null }, kv), /AC-5 lỗi model làm mất kết luận/);
 });
 
-// ── AC-6
-async function khoaSeed029(ben: "offer_a" | "offer_b"): Promise<string[]> {
-  const sql = await readFile(MIG("029_review_queue.sql"), "utf8");
-  const seed = sql.slice(sql.indexOf("-- Seed"));
-  const dau = seed.indexOf(`'${ben}', jsonb_build_object(`);
-  const cuoi = ben === "offer_a" ? seed.indexOf(`'offer_b', jsonb_build_object(`) : seed.indexOf(`'stage_b_score'`);
-  assert.ok(dau >= 0 && cuoi > dau, `không rút được khối ${ben} từ seed 029`);
-  const khoi = seed.slice(seed.indexOf("\n", dau), cuoi);
-  return [...khoi.matchAll(/^\s*'(\w+)',/gm)].map((x) => x[1]).sort();
-}
-const kiemKhuon = (khoa: string[], mau: string[]) => {
-  const lech = [...mau.filter((k) => !khoa.includes(k)), ...khoa.filter((k) => !mau.includes(k))];
-  assert.equal(lech.length, 0, `AC-6 thẻ lệch khuôn seed 029: ${lech.join(", ")}`);
-};
+// ── AC-6 cũ (judge-nguong-la-code/E6) thay bởi judge-evidence-du-truong#AC-1 — khuôn khoá = seed 029 ∪ bảng so.
 const kiemDuThe = async () => {
   const { rows } = await db.query(`SELECT pc.offer_a || '|' || pc.offer_b AS cap FROM property_candidates pc
     WHERE pc.status = 'needs_llm' AND NOT EXISTS (SELECT 1 FROM review_queue r WHERE r.item_type = 'entity_match'
       AND r.item_id IN ('pair:' || pc.offer_a || '|' || pc.offer_b, 'pair:' || pc.offer_b || '|' || pc.offer_a))`);
-  assert.equal(rows.length, 0, `AC-6 ứng viên thiếu thẻ: ${rows.map((r) => r.cap).join(", ")}`);
+  assert.equal(rows.length, 0, `JE-AC-1 ứng viên thiếu thẻ: ${rows.map((r) => r.cap).join(", ")}`);
 };
 const demThieu = async () => (await db.query(CAU_DEM_THIEU_THE)).rows[0].n as number;
+const BON = ["street", "block", "floor", "bathrooms"] as const;
+/** Khoá rơi khi JSON hoá (undefined) cũng là lệch khuôn: so trên bản đã qua JSON như cột jsonb nhận. */
+const khoaSauJson = (o: object) => Object.keys(JSON.parse(JSON.stringify(o))).sort();
 
-test("AC-6 sinh thẻ — mọi cặp needs_llm có đúng một thẻ khuôn seed 029", async () => {
+test("JE-AC-1 sinh thẻ đủ mười trường — mọi cặp needs_llm có đúng một thẻ, khuôn seed 029 ∪ bảng so", async () => {
   await nap(FIX_AC6);
-  // đối chứng đỏ cùng fixture: bỏ bước sinh (chưa thẻ nào) → câu đếm = 3
+  const bangSo = await khoaBangSo();
+  assert.equal(bangSo.length, 10, "JE-AC-1 bảng so không đủ mười trường");
+  const mauA = await khuonBen("offer_a");
+  const mauB = await khuonBen("offer_b");
+  // đối chứng đỏ (1): bỏ bước sinh (chưa thẻ nào)
   assert.equal(await demThieu(), 3);
-  await assert.rejects(kiemDuThe(), /AC-6 ứng viên thiếu thẻ: o1\|o2/);
+  await assert.rejects(kiemDuThe(), /JE-AC-1 ứng viên thiếu thẻ: o1\|o2/);
 
   const dem = await chamMotLuot(db, deps({ khongLlm: true }));
   assert.equal(dem.sinh, 3);
   const ts = await tatCaThe();
   assert.equal(ts.length, 3);
-  const mauA = await khoaSeed029("offer_a");
-  const mauB = await khoaSeed029("offer_b");
-  assert.ok(mauA.includes("phuong") && mauB.includes("subject"));
   for (const [a, b] of FIX_AC6.slice(0, 3)) {
     const t = await the(`pair:${a}|${b}`);
     assert.ok(t, `thiếu thẻ pair:${a}|${b}`);
@@ -236,14 +228,120 @@ test("AC-6 sinh thẻ — mọi cặp needs_llm có đúng một thẻ khuôn se
     assert.equal(t.evidence.offer_b.offer_id, b);
     assert.equal(t.ai_suggestion, apNguong(dungCap(a, b)).same_house);
     assert.ok(t.title.startsWith("Cùng căn? "), t.title);
-    kiemKhuon(Object.keys(t.evidence.offer_a).sort(), mauA);
-    kiemKhuon(Object.keys(t.evidence.offer_b).sort(), mauB);
+    kiemKhuonThe(Object.keys(t.evidence.offer_a).sort(), mauA);
+    kiemKhuonThe(Object.keys(t.evidence.offer_b).sort(), mauB);
+    for (const ben of ["offer_a", "offer_b"] as const)
+      for (const k of BON) {
+        assert.ok(Object.hasOwn(t.evidence[ben], k), `JE-AC-1 thẻ lệch khuôn: ${k}`);
+        assert.equal(t.evidence[ben][k], null);
+      }
   }
   assert.equal(await the("pair:o7|o8"), undefined);
   assert.equal(await demThieu(), 0);
   await kiemDuThe();
-  // đối chứng đỏ: bộ khoá thiếu 'phuong'
-  assert.throws(() => kiemKhuon(mauA.filter((k) => k !== "phuong"), mauA), /AC-6 thẻ lệch khuôn seed 029: phuong/);
+  // đối chứng đỏ (2): bộ khoá bỏ 'street'
+  assert.throws(() => kiemKhuonThe(mauA.filter((k) => k !== "street"), mauA), /JE-AC-1 thẻ lệch khuôn: street/);
+  // đối chứng đỏ (3): bên A có street = undefined → khoá rơi khi JSON hoá
+  const benA = { ...evidenceThe(dungCap("o1", "o2")).offer_a, street: undefined };
+  assert.throws(() => kiemKhuonThe(khoaSauJson(benA), mauA), /JE-AC-1 thẻ lệch khuôn: street/);
+  // đối chứng đỏ (4): không rút được TRUONG_GHEP_CAN
+  await assert.rejects(khoaBangSo("TRUONG_GHEP_CAN_SAI"), /JE-AC-1 không rút được TRUONG_GHEP_CAN/);
+});
+
+// ── judge-evidence-du-truong AC-3: bốn trường mang giá trị của đúng bên, và bảng so thật hiện đúng.
+const CO_A = { street: "Đường Phan Văn Trị", block: "A1", floor: "12", bathrooms: 2 };
+const CO_B = { street: "Phan Văn Trị", block: "B2", floor: "7", bathrooms: 3 };
+TIN.o15 = voi(CO_A);
+TIN.o16 = voi({ ...CO_B, perm2: 105 * TR, area: 52 });
+TIN.o17 = goc;
+TIN.o18 = voi({ perm2: 105 * TR, area: 52 });
+type Ev = { offer_a: Record<string, unknown>; offer_b: Record<string, unknown> };
+/** 16 ô viết trước: 4 trường × 2 bên × {có (o15|o16), null (o17|o18)}. Trả số assert đã chạy. */
+const kiemGiaTri = (evCo: Ev, evNull: Ev, pCo: PairData) => {
+  let n = 0;
+  for (const [ben, p] of [["offer_a", pCo.a], ["offer_b", pCo.b]] as const)
+    for (const k of BON) {
+      assert.equal(evCo[ben][k], p[k], `JE-AC-3 thẻ sai giá trị: ${ben}.${k}`);
+      assert.equal(evNull[ben][k], null, `JE-AC-3 thẻ sai giá trị: ${ben}.${k}`);
+      n += 2;
+    }
+  return n;
+};
+const kiemBangSo = (hang: { key: string; a: unknown; b: unknown; so: string }[], kyVongA: Record<string, unknown>, kyVongB: Record<string, unknown>, rong: boolean) => {
+  let n = 0;
+  for (const k of BON) {
+    const h = hang.find((x) => x.key === k);
+    assert.ok(h, `JE-AC-3 bảng so thiếu hàng: ${k}`);
+    assert.equal(h.a, rong ? null : kyVongA[k], `JE-AC-3 bảng so sai: ${k}.a`);
+    assert.equal(h.b, rong ? null : kyVongB[k], `JE-AC-3 bảng so sai: ${k}.b`);
+    if (rong) assert.equal(h.so, "thieu", `JE-AC-3 bảng so sai: ${k}.so`);
+    n += 2;
+  }
+  return n;
+};
+test("JE-AC-3 thẻ mang giá trị bốn trường — evidence và bảng so thật", async () => {
+  await nap([["o15", "o16", "needs_llm"], ["o17", "o18", "needs_llm"]]);
+  await chamMotLuot(db, deps({ khongLlm: true }));
+  const evCo = (await the("pair:o15|o16")).evidence as Ev;
+  const evNull = (await the("pair:o17|o18")).evidence as Ev;
+  const pCo = dungCap("o15", "o16");
+  assert.deepEqual([pCo.a.street, pCo.b.street], [CO_A.street, CO_B.street]);
+  assert.equal(kiemGiaTri(evCo, evNull, pCo), 16);
+  const bs = await napBangSo();
+  try {
+    let n = kiemBangSo(bs.soTruongGhepCan(evCo.offer_a, evCo.offer_b), CO_A, CO_B, false);
+    n += kiemBangSo(bs.soTruongGhepCan(evNull.offer_a, evNull.offer_b), {}, {}, true);
+    assert.equal(n, 16);
+    // đối chứng đỏ (2): bên A ghi 'street_raw' thay 'street' → hàng Đường mất giá trị
+    const { street, ...conLai } = evCo.offer_a;
+    assert.throws(
+      () => kiemBangSo(bs.soTruongGhepCan({ ...conLai, street_raw: street }, evCo.offer_b), CO_A, CO_B, false),
+      /JE-AC-3 bảng so sai: street\.a/,
+    );
+  } finally {
+    await bs.don();
+  }
+  // đối chứng đỏ (1): tráo bốn trường hai bên
+  const trao = (e: Ev): Ev => {
+    const a = { ...e.offer_a }, b = { ...e.offer_b };
+    for (const k of BON) [a[k], b[k]] = [b[k], a[k]];
+    return { offer_a: a, offer_b: b };
+  };
+  assert.throws(() => kiemGiaTri(trao(evCo), evNull, pCo), /JE-AC-3 thẻ sai giá trị: offer_a\.street/);
+});
+
+// ── judge-evidence-du-truong AC-4: thẻ cũ khuôn tám khoá — dữ liệu hai tin không đổi khi chạy lại.
+const anhTin = async (itemId: string) =>
+  (await db.query(`SELECT evidence->'offer_a' AS a, evidence->'offer_b' AS b, evidence ? 'cham' AS co_cham
+    FROM review_queue WHERE item_id = $1`, [itemId])).rows[0];
+const kiemTheCu = (truoc: { a: unknown; b: unknown }, sau: { a: unknown; b: unknown }) => {
+  assert.deepEqual(sau.a, truoc.a, "JE-AC-4 thẻ cũ bị sửa dữ liệu tin: offer_a");
+  assert.deepEqual(sau.b, truoc.b, "JE-AC-4 thẻ cũ bị sửa dữ liệu tin: offer_b");
+};
+test("JE-AC-4 thẻ cũ giữ khuôn — chạy lại chỉ nối kết quả chấm", async () => {
+  await nap([["o1", "o2", "needs_llm"]]);
+  const tin8 = (id: string, cuoi: Record<string, string>) => ({
+    offer_id: id, source: "S03", price_vnd: 5e9, area_m2: 50, price_perm2: 1e8, bedrooms: null, phuong: "Bình Thạnh",
+    property_type: "nha_pho", ...cuoi,
+  });
+  await db.query(
+    `INSERT INTO review_queue (item_type, item_id, title, evidence) VALUES ('entity_match', 'pair:o1|o2', 'Cùng căn? cũ', $1::jsonb)`,
+    [JSON.stringify({ offer_a: tin8("o1", { text: "tin A" }), offer_b: tin8("o2", { subject: "tin B" }), stage_b_score: 0.92 })],
+  );
+  const truoc = await anhTin("pair:o1|o2");
+  assert.equal(Object.keys(truoc.a).length, 9);
+  const dem = await chamMotLuot(db, deps({ khongLlm: true }));
+  assert.equal(dem.sinh, 0);
+  assert.equal(dem.capNhat, 1);
+  const sau = await anhTin("pair:o1|o2");
+  kiemTheCu(truoc, sau);
+  assert.equal(sau.co_cham, true);
+  // đối chứng đỏ: câu ghi thay evidence bằng evidenceThe của lượt
+  await db.query(`UPDATE review_queue SET evidence = $1::jsonb WHERE item_id = 'pair:o1|o2'`, [
+    JSON.stringify(evidenceThe(dungCap("o1", "o2"))),
+  ]);
+  const hong = await anhTin("pair:o1|o2");
+  assert.throws(() => kiemTheCu(truoc, hong), /JE-AC-4 thẻ cũ bị sửa dữ liệu tin: offer_a/);
 });
 
 // ── AC-7
