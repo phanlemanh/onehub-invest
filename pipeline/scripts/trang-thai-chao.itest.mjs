@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
-import { KHOA } from "../bac-du-lieu.mjs";
+import { ghiAnhChup, KHOA } from "../bac-du-lieu.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
 import { writeAssertions } from "../lib/assert.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
@@ -363,4 +363,73 @@ test("AC-6 lịch sử giá và trạng thái: tin mới, đổi giá, gỡ, ch�
   const khi = "WHEN (OLD.price_vnd IS DISTINCT FROM NEW.price_vnd) ";
   assert.ok(sql059().includes(khi), `chiều đỏ: 059 không còn «${khi}»`);
   await assert.rejects(trongGiaoDich(kiemCungGia, { sql: sql059().replace(khi, "") }), /cùng giá không sinh dòng lịch sử/);
+});
+
+// ---- Task 5 · AC-7: vị từ B5 và tụt về B4 ----
+const MARKET = "vn-tst-tg-m";
+const WARD = "vn-tst-tg-w";
+const LOI = ["kind", "property_type", "price_vnd", "area_m2", "area_id"];
+const FACT = Object.fromEntries(LOI.map((k) => [k, { v: "x", ids: [], tier: "fact", method: "source_field", measured: true }]));
+const ngayTruoc = (n) => new Date(Date.now() - n * 86400e3).toISOString();
+/** Tin đủ điều kiện B4 (trường lõi đủ, đã đo, lớp sự thật); `doiGia` thêm một mốc giá; trạng thái qua bộ ghi + phân xử. */
+async function tinB4({ last_seen = ngayTruoc(1), doiGia = true, rut = false } = {}) {
+  const id = `${T}-b-${++dem}`;
+  await c.query(`INSERT INTO sale_offer_records (offer_id, kind, property_type, price_vnd, area_m2, area_id, source,
+      originating_system_key, first_seen, last_seen, field_provenance)
+    VALUES ($1, 'sale', 'house', 2000000000, 60, $2, 'S06', $1, $3, $3, $4)`, [id, WARD, last_seen, FACT]);
+  if (doiGia) await c.query("UPDATE sale_offer_records SET price_vnd = 1950000000 WHERE offer_id = $1", [id]);
+  await chao([id]);
+  if (rut) {
+    await phatBieuChao(id, "withdrawn", "fact", "source_field", new Date().toISOString());
+    await c.query("SELECT resolve_offer_status($1::text[])", [[id]]);
+  }
+  return id;
+}
+async function canB4(...offers) {
+  const { rows: [p] } = await c.query(
+    "INSERT INTO properties (area_id, property_type, verification) VALUES ($1, 'house', 'verified') RETURNING id", [WARD]);
+  for (const o of offers) await c.query("INSERT INTO property_offers (property_id, offer_id) VALUES ($1, $2)", [p.id, o]);
+  return Number(p.id);
+}
+async function sauCan() {
+  await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta) VALUES
+    ($1, NULL, 'market', 'Thị trường thử PL19', 'VN', '{}'), ($2, $1, 'submarket', 'Phường thử PL19', 'VN', '{}')`, [MARKET, WARD]);
+  const dau = await tinB4();
+  return {
+    dau, can: {
+      dat: await canB4(dau),
+      quaCuaSo: await canB4(await tinB4({ last_seen: ngayTruoc(10) })),
+      daGo: await canB4(await tinB4({ rut: true })),
+      thieuLichSu: await canB4(await tinB4({ doiGia: false })),
+      haiTinGo: await canB4(await tinB4(), await tinB4({ rut: true })),
+      haiTinCu: await canB4(await tinB4(), await tinB4({ last_seen: ngayTruoc(10) })),
+    },
+  };
+}
+async function kiemAC7(can) {
+  const { rows } = await c.query("SELECT property_id, data_level, ke_thieu FROM property_data_level($1)", [Object.values(can)]);
+  const b = new Map(rows.map((r) => [Number(r.property_id), [r.data_level, r.ke_thieu]]));
+  assert.deepEqual(b.get(can.dat), ["B5", "giu-nhip"], "căn đang chào, trong cửa sổ, có lịch sử giá phải lên B5");
+  assert.deepEqual(b.get(can.quaCuaSo), ["B4", "hieu-luc"], "quá cửa sổ phải về B4");
+  assert.deepEqual(b.get(can.daGo), ["B4", "hieu-luc"], "tin đã gỡ phải ở B4");
+  assert.deepEqual(b.get(can.thieuLichSu), ["B4", "hieu-luc"], "thiếu lịch sử giá (Hỏi-3) phải ở B4");
+  assert.deepEqual(b.get(can.haiTinGo), ["B5", "giu-nhip"], "căn lấy tin tốt nhất");
+  assert.deepEqual(b.get(can.haiTinCu), ["B5", "giu-nhip"], "căn lấy tin tốt nhất");
+}
+test("AC-7 B5 và tụt về B4: sáu căn, ảnh chụp trước/sau đẩy quá cửa sổ (kèm chiều đỏ)", async () => {
+  await trongGiaoDich(async () => {
+    const { dau, can } = await sauCan();
+    await kiemAC7(can);
+    const truoc = (await ghiAnhChup(c)).byLevel;
+    await c.query("UPDATE sale_offer_records SET last_seen = $2 WHERE offer_id = $1", [dau, ngayTruoc(10)]);
+    const sau = (await ghiAnhChup(c)).byLevel;
+    assert.deepEqual([sau.B5 - truoc.B5, sau.B4 - truoc.B4], [-1, 1], "ảnh chụp sau: B5 giảm một, B4 tăng một");
+  });
+  const cuaSo = " AND o.last_seen >= now() - freshness_window()";
+  const totNhat = "SELECT pid, max(lv) AS lv FROM tin GROUP BY pid";
+  for (const cu of [cuaSo, totNhat]) assert.ok(sql059().includes(cu), `chiều đỏ: 059 không còn «${cu}»`);
+  await assert.rejects(trongGiaoDich(async () => kiemAC7((await sauCan()).can), { sql: sql059().replace(cuaSo, "") }),
+    /quá cửa sổ phải về B4/);
+  await assert.rejects(trongGiaoDich(async () => kiemAC7((await sauCan()).can),
+    { sql: sql059().replace(totNhat, "SELECT pid, min(lv) AS lv FROM tin GROUP BY pid") }), /căn lấy tin tốt nhất/);
 });
