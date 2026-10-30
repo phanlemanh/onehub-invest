@@ -26,7 +26,9 @@ Vì sao: Mục chờ NH1 đạt điều kiện mở: ZC4 đã ký, media_files S
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Offer S06 có ảnh trong stg thì thẻ duyệt hiện ≥ 1 ảnh; offer S03 có file local thì hiện ảnh; nạp lại hai lần không nhân dòng; sync cloud không đẩy URL ảnh, leak gate xanh» chưa?
-- Kết quả nào là SỐNG: [đề xuất] Offer S06 có ảnh trong stg thì thẻ duyệt hiện ≥ 1 ảnh; offer S03 có file local thì hiện ảnh; nạp lại hai lần không nhân dòng; sync cloud không đẩy URL ảnh, leak gate xanh
-- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Offer S06 có ảnh trong stg thì thẻ duyệt hiện ≥ 1 ảnh; offer S03 có file local thì hiện ảnh; nạp lại hai lần không nhân dòng; sync cloud không đẩy URL ảnh, leak gate xanh» khi hết timebox
-- Timebox: [đề xuất] 3 ngày, tới hết 02/11/2026. Vế leak gate đọc ở lượt sync đêm đầu tiên sau bước triển khai; chưa có lượt sync nào thì vế ấy là CHƯA ĐO.
+Mạnh chốt ở Cổng Phạm vi 30/10 (Hỏi-2, nhận khuyến nghị).
+
+- Câu hỏi phép đo trả lời: đã đạt «Offer S06 có ảnh trong stg thì thẻ duyệt hiện ≥ 1 ảnh; offer S03 có file local thì hiện ảnh; nạp lại hai lần không nhân dòng; sync cloud không đẩy URL ảnh, leak gate xanh» chưa?
+- Kết quả nào là SỐNG: cả bốn vế đạt trước hết 02/11/2026 — ba vế đầu đo trên bản chép DB máy thu (probe AC-7, chụp AC-8), vế leak gate đọc ở lượt sync đêm đầu tiên sau bước triển khai.
+- Kết quả nào là CHẾT: còn ít nhất một vế chưa đạt khi hết 02/11/2026. Vế leak gate chưa có lượt sync nào là CHƯA ĐO, không tính SỐNG.
+- Timebox: 3 ngày, tới hết 02/11/2026.
