@@ -5,7 +5,7 @@ slug: s03-gia-ty-chan-dong
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs — không khớp t3_paths
 surfaces: [cli]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-30T02:52:00Z
 approved_by:
