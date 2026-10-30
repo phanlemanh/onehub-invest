@@ -5,7 +5,7 @@ slug: the-duyet-du-can-cu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-30T05:49:10Z
 design_doc: docs/superpowers/specs/2026-10-30-the-duyet-du-can-cu-design.md
