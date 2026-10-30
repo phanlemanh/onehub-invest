@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 254c5f632b573bbce9fbdd07da365a3dbc72a9ad
+verified_commit: 0941a2194d9a978c7a423527235032f3ce673d72
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -233,3 +233,7 @@ none — every multi-run eval is uniform
 
 Round 1: S4 vòng 1 và vòng 2 bị từ chối ở các vòng trước (E8 deadlock khi chạy cùng tg_db; thiếu đối chứng dương cho AC-6). Đã vá ở 8991f1e8, Mạnh chọn chấm thêm một lượt.
 Round 2: E1–E14 xanh trên cây 254c5f63; E15 chờ người chốt ở Cổng 2 (panel giữ nguyên từ round 2, đề xuất PASS).
+
+### Re-pin lần 1 — 2026-10-30, do hoá cũ do gộp origin/main sau chữ ký
+run_id: repin-20261030T165552Z-38198
+sha: 0941a2194d9a978c7a423527235032f3ce673d72 · suites: 6 lệnh exit 0 · evals: 14/14 eval máy đạt kỳ vọng · ngoài làn máy: E15 (E15 không khai paths)
