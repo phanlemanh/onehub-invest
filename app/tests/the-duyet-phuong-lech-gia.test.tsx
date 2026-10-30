@@ -133,14 +133,31 @@ function kiemAc4(mod: CanCuMod) {
   for (const [a, b] of CHI_TIEN_TO) assert.equal(soPhuong(mod, a, b).so, "thieu", `TPL-AC-4: ${a} ↔ ${b} chỉ có tiền tố phải Thiếu`)
   const h = soPhuong(mod, "binh-thanh", "Phường Bình Thạnh")
   assert.deepEqual([h.a, h.b], ["binh-thanh", "Phường Bình Thạnh"], "TPL-AC-4: ô giá trị phải giữ nguyên chuỗi nguồn")
-  const rows = mod.soTruongGhepCan({ street: "Đường Phan Văn Trị", block: "P. A1" }, { street: "Phan Văn Trị", block: "A1" })
-  assert.equal(rows.find((r) => r.key === "street")!.so, "lech", "TPL-AC-4: chuẩn hoá phường lan sang hàng street")
-  assert.equal(rows.find((r) => r.key === "block")!.so, "lech", "TPL-AC-4: chuẩn hoá phường lan sang hàng block")
+  // Chín hàng còn lại, mỗi hàng một cặp viết trước. Bốn hàng chữ dùng cặp mà khoaPhuong sẽ biến thành Khớp (bắt rò rỉ);
+  // năm hàng số: khoá số của khoaPhuong rơi về soGiaTri nên rò rỉ không đổi kết quả — đo bằng nhau với soGiaTri.
+  const KHAC_PHUONG: [keyof import("../src/lib/ops/review-can-cu").BenGhepCan, string | number, string | number][] = [
+    ["price_vnd", 7e9, 8.5e9],
+    ["area_m2", 52, 52],
+    ["price_perm2", 1.35e8, 1.42e8],
+    ["bedrooms", 2, 3],
+    ["bathrooms", 1, 1],
+    ["property_type", "Nhà riêng", "nha-rieng"],
+    ["street", "Đường Phan Văn Trị", "duong-phan-van-tri"],
+    ["block", "P. A1", "A1"],
+    ["floor", "Tầng 12", "tang-12"],
+  ]
+  for (const [k, x, y] of KHAC_PHUONG) {
+    const so = mod.soTruongGhepCan({ [k]: x }, { [k]: y }).find((r) => r.key === k)!.so
+    assert.equal(so, mod.soGiaTri(x, y), `TPL-AC-4: chuẩn hoá phường lan sang hàng ${k}`)
+  }
+  assert.equal(KHAC_PHUONG.length, 9)
 }
 test("TPL-AC-4 trống hay chỉ tiền tố → Thiếu; giá trị giữ nguyên; chín hàng khác không chuẩn hoá", async () => {
   kiemAc4(canCu)
   const lan = await banChep((s) => s.replace('so: key === "phuong" ? soPhuong(va, vb) : soGiaTri(va, vb),', "so: soPhuong(va, vb),"))
-  assert.throws(() => kiemAc4(lan), /TPL-AC-4: chuẩn hoá phường lan sang hàng block/)
+  assert.throws(() => kiemAc4(lan), /TPL-AC-4: chuẩn hoá phường lan sang hàng property_type/)
+  const lanTang = await banChep((s) => s.replace('so: key === "phuong" ? soPhuong(va, vb) : soGiaTri(va, vb),', 'so: key === "phuong" || key === "floor" ? soPhuong(va, vb) : soGiaTri(va, vb),'))
+  assert.throws(() => kiemAc4(lanTang), /TPL-AC-4: chuẩn hoá phường lan sang hàng floor/)
   const rong = await banChep((s) => s.replace('if (ka === "" || kb === "") return "thieu";\n', ""))
   assert.throws(() => kiemAc4(rong), /TPL-AC-4: P\. ↔ Phường chỉ có tiền tố phải Thiếu/)
 })
