@@ -34,16 +34,16 @@ async function don() {
   // field_assertions chỉ thêm (trigger cấm xoá): dòng phát biểu thử ở lại DB thử — DB thử là bản bỏ đi, không phải oneinvest.
   await c.query(`DELETE FROM sale_offer_records WHERE offer_id LIKE 'mgn-%'`)
   await c.query(`DELETE FROM users WHERE email LIKE '%@mgn.test'`)
-  await donThu(c)
+  await donThu(c, { lat: "mgn-mu", post: "mgn-mu-", tag: "mu" })
 }
 try {
   await don()
-  await datSnapshot(c)
-  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text) VALUES ('mgn-mu1', 'hanoi__zalo__mgnthu', 'MGN-THU OCP', 'CHUGOC-MGN bán căn 2PN toà LD, giá thương lượng')`)
-  await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed) VALUES ($1, 'S03', 'mgn-mu1', 'mgn-mu-h', 'dev', false, 'mu')`, [LAT])
+  await datSnapshot(c, "mu")
+  await c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text) VALUES ('mgn-mu-1', 'hanoi__zalo__mgnmu', 'MGN-THU OCP', 'CHUGOC-MGN bán căn 2PN toà LD, giá thương lượng')`)
+  await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed) VALUES ($1, 'S03', 'mgn-mu-1', 'mgn-mu-h', 'dev', false, 'mu')`, [LAT])
   await c.query(`INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, post_ids, price_vnd, bedrooms, block_raw)
-                 VALUES ('mgn-mu-offer', 'sale', now(), now(), ARRAY['mgn-mu1'], 9876543210, 7, 'TOAMAYDOAN')`)
-  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method) VALUES ('S03:mgn-mu1', 'block_raw', 'DAUPHATBIEU', 'observed', 'parser') ON CONFLICT DO NOTHING`)
+                 VALUES ('mgn-mu-offer', 'sale', now(), now(), ARRAY['mgn-mu-1'], 9876543210, 7, 'TOAMAYDOAN')`)
+  await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method) VALUES ('S03:mgn-mu-1', 'block_raw', 'DAUPHATBIEU', 'observed', 'parser') ON CONFLICT DO NOTHING`)
   await c.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source, route) VALUES ('mgn-mu', 'mgn-mu-offer', 'block_raw', 'DAUDEXUAT', 'daudexuat', 'e1_rule', 'direct')`)
   const ops = await taoNguoi(c, "ops", { email: "ops@mgn.test" })
   const user = { id: ops.id, email: ops.email, plan: "free", role: "ops" }

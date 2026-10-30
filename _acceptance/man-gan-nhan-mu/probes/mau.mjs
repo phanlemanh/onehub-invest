@@ -12,23 +12,24 @@ import { ROOT, URL_THU, datSnapshot, donThu, kiem, noiDbThu } from "./_db.mjs"
 
 const LENH = path.join(ROOT, "pipeline/label-sample.mjs")
 const NHOM = "^(MGN-THU|TEST)"
+const DON = { lat: "mgn-thu%", post: "mgn-mau-", tag: "mau" }
 
 async function moi(c) {
-  await donThu(c)
-  await datSnapshot(c)
+  await donThu(c, DON)
+  await datSnapshot(c, "mau")
   const them = (id, snap, nhom, text, agent = null) =>
     c.query(`INSERT INTO stg_zalo_posts (post_id, snapshot_id, group_name, text, agent_id) VALUES ($1,$2,$3,$4,$5)`,
       [id, snap, nhom, text, agent])
-  for (let i = 0; i < 30; i++) await them(`mgn-p${String(i).padStart(2, "0")}`, "hanoi__zalo__mgnthu", "MGN-THU OCP", `Bán căn MGN số ${i} toà S${i % 4}`)
-  for (let i = 0; i < 5; i++) await them(`mgn-z${i}`, "hanoi__zalo__mgnthu", "MGN-THU OCP", `  BÁN căn MGN số ${i} toà S${i % 4}!!`)
+  for (let i = 0; i < 30; i++) await them(`mgn-mau-p${String(i).padStart(2, "0")}`, "hanoi__zalo__mgnmau", "MGN-THU OCP", `Bán căn MGN số ${i} toà S${i % 4}`)
+  for (let i = 0; i < 5; i++) await them(`mgn-mau-z${i}`, "hanoi__zalo__mgnmau", "MGN-THU OCP", `  BÁN căn MGN số ${i} toà S${i % 4}!!`)
   // post thử: snapshot nguồn mock (2), snapshot example (1), agent e2e (2), nhóm TEST (1) — chữ khác mọi tin thật
-  await them("mgn-t0", "hanoi__zalo-mock__mgnthu", "MGN-THU OCP", "POSTTHU mock 0")
-  await them("mgn-t1", "hanoi__zalo-mock__mgnthu", "MGN-THU OCP", "POSTTHU mock 1")
-  await them("mgn-t2", "hanoi__example__mgnthu", "MGN-THU OCP", "POSTTHU example 2")
-  await them("mgn-t3", "hanoi__zalo__mgnthu", "MGN-THU OCP", "POSTTHU agent 3", "e2e-mgn")
-  await them("mgn-t4", "hanoi__zalo__mgnthu", "MGN-THU OCP", "POSTTHU agent 4", "test-mgn")
-  await them("mgn-t5", "hanoi__zalo__mgnthu", "TEST-MGN", "POSTTHU nhom 5")
-  for (let i = 0; i < 8; i++) await them(`mgn-k${i}`, "hanoi__zalo__mgnthu", "Nhóm khác MGN", `Tin nhóm khác MGN ${i}`)
+  await them("mgn-mau-t0", "hanoi__zalo-mock__mgnmau", "MGN-THU OCP", "POSTTHU mock 0")
+  await them("mgn-mau-t1", "hanoi__zalo-mock__mgnmau", "MGN-THU OCP", "POSTTHU mock 1")
+  await them("mgn-mau-t2", "hanoi__example__mgnmau", "MGN-THU OCP", "POSTTHU example 2")
+  await them("mgn-mau-t3", "hanoi__zalo__mgnmau", "MGN-THU OCP", "POSTTHU agent 3", "e2e-mgn")
+  await them("mgn-mau-t4", "hanoi__zalo__mgnmau", "MGN-THU OCP", "POSTTHU agent 4", "test-mgn")
+  await them("mgn-mau-t5", "hanoi__zalo__mgnmau", "TEST-MGN", "POSTTHU nhom 5")
+  for (let i = 0; i < 8; i++) await them(`mgn-mau-k${i}`, "hanoi__zalo__mgnmau", "Nhóm khác MGN", `Tin nhóm khác MGN ${i}`)
 }
 
 const chay = (lenh, args) =>
@@ -45,7 +46,7 @@ async function doLat(c, lat) {
 async function kiemLenh(c, lenh, im = false) {
   const loi = []
   const k = (d, ok, fail) => (d ? im || console.log(`ok ${ok}`) : (im || console.log(fail), loi.push(fail)))
-  await c.query(`DELETE FROM eval_label_items WHERE lat LIKE 'mgn-%'`)
+  await c.query(`DELETE FROM eval_label_items WHERE lat LIKE 'mgn-thu%'`)
   const out = chay(lenh, ["--lat", "mgn-thu", "--n", "20", "--seed", "mgn", "--nhom-khop", NHOM])
   const r = await doLat(c, "mgn-thu")
   k(r.length === 20, "20 dong", `SAI SO DONG: ${r.length}`)
@@ -88,7 +89,7 @@ try {
   const loiDot = await kiemLenh(c, banDot, true)
   kiem(loi, loiDot.includes("POST THU LOT VAO MAU"), "doi chung: ban bo bo loc bi bat 'POST THU LOT VAO MAU'", "DOI CHUNG KHONG DO: ban bo bo loc khong bi bat")
 } finally {
-  await donThu(c)
+  await donThu(c, DON)
   await c.end()
   rmSync(tmp, { recursive: true, force: true })
 }

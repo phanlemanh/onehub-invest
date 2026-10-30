@@ -25,20 +25,21 @@ export async function noiDbThu() {
   return c
 }
 
-/** Snapshot giả cho post thử: nguồn thật (`zalo`) và nguồn thử (`zalo-mock`, `example`). */
-export async function datSnapshot(c) {
-  for (const [id, src] of [["hanoi__zalo__mgnthu", "zalo"], ["hanoi__zalo-mock__mgnthu", "zalo-mock"], ["hanoi__example__mgnthu", "example"]]) {
+/** Snapshot giả cho post thử của MỘT phép đo (`tag` riêng — các phép đo chạy song song, không dùng chung dòng thử):
+ * nguồn thật (`zalo`) và nguồn thử (`zalo-mock`, `example`). */
+export async function datSnapshot(c, tag) {
+  for (const [id, src] of [[`hanoi__zalo__mgn${tag}`, "zalo"], [`hanoi__zalo-mock__mgn${tag}`, "zalo-mock"], [`hanoi__example__mgn${tag}`, "example"]]) {
     await c.query(
       `INSERT INTO airbnb_snapshots (snapshot_id, city, source, manifest) VALUES ($1, 'hanoi', $2, '{}'::jsonb) ON CONFLICT DO NOTHING`,
       [id, src])
   }
 }
 
-/** Xoá mọi dữ liệu thử `mgn-` (nhãn, tin của lát thử, post thử, snapshot thử). */
-export async function donThu(c) {
-  await c.query(`DELETE FROM eval_label_items WHERE lat LIKE 'mgn-%'`)
-  await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE 'mgn-%'`)
-  await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id LIKE '%\\_\\_mgnthu'`)
+/** Xoá dữ liệu thử của MỘT phép đo: lát khớp `lat` (mẫu LIKE), post có tiền tố `post`, snapshot của `tag`. */
+export async function donThu(c, { lat, post = null, tag = null }) {
+  await c.query(`DELETE FROM eval_label_items WHERE lat LIKE $1`, [lat])
+  if (post) await c.query(`DELETE FROM stg_zalo_posts WHERE post_id LIKE $1`, [`${post}%`])
+  if (tag) await c.query(`DELETE FROM airbnb_snapshots WHERE snapshot_id LIKE $1`, [`%\\_\\_mgn${tag}`])
 }
 
 /** In một dòng kết quả và ghi lỗi (chuỗi ghim) vào mảng. */

@@ -38,7 +38,7 @@ const tmp = mkdtempSync(path.join(tmpdir(), "mgn-dt-"))
 const loi = []
 const k = (d, ok, fail) => kiem(loi, d, ok, fail)
 try {
-  await donThu(c)
+  await donThu(c, { lat: "mgn-dt%" })
   const item = async (ref, dbl, lat = LAT) =>
     (await c.query(`INSERT INTO eval_label_items (lat, source_code, ref_id, text_hash, split, double_label, seed)
                     VALUES ($1,'S03',$2,$2,'dev',$3,'dt') RETURNING item_id::int`, [lat, ref, dbl])).rows[0].item_id
@@ -115,7 +115,7 @@ try {
   const { rows: moc } = await c.query(`SELECT DISTINCT labeler_id, labeled_at FROM eval_labels l JOIN eval_label_items i USING (item_id) WHERE i.lat = $1`, [LAT])
   k(phutCong(moc)["mgn-A"] !== 8, "doi chung: ban cong khoang nghi bi bat 'PHUT CONG CONG KHOANG NGHI'", "PHUT CONG CONG KHOANG NGHI — doi chung khong do")
 } finally {
-  await donThu(c)
+  await donThu(c, { lat: "mgn-dt%" })
   await c.end()
   const { pool } = await import(pathToFileURL(path.join(ROOT, "app/src/lib/db.ts")).href)
   await pool.end().catch(() => {})
