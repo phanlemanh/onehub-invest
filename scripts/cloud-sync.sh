@@ -17,5 +17,8 @@ job_run cloud-sync sync-cloud node "$ROOT/pipeline/sync-cloud.mjs"
 # push-ops-facts chở nó lên thành khối `dataFlow`. Hỏng thì khối mang computed_at cũ → trang cloud báo số cũ (ADR-0014).
 job_run cloud-sync refresh-data-flow node "$ROOT/pipeline/refresh-data-flow.mjs" "$ROOT/pipeline/sql/600_data_flow.sql"
 job_run cloud-sync push-ops-facts node "$ROOT/pipeline/push-ops-facts.mjs"
+# PL16 `de-xuat-thanh-phat-bieu-bac` (Hỏi-3): chụp phân bố bậc B0–B5 + hai dòng kiểm, chỉ ghi DB local — bước CUỐI để
+# không làm chậm nhịp tim /ops. Dòng kiểm `fail` không đổi mã thoát; chỉ lỗi chạy mới làm job ≠0.
+job_run cloud-sync bac-du-lieu node "$ROOT/pipeline/bac-du-lieu.mjs" --write
 exit "$JOB_RC"
 
