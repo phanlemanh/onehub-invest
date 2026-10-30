@@ -13,7 +13,7 @@ flowchart TD
   B --> CD["Chờ duyệt phạm vi<br/>7 việc"] --> GP{"Cổng Phạm vi"}
   GP --> DL["Đang làm<br/>chưa có"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>91 việc"]
-  GB --> CN["Chờ phiên nghiệm thu<br/>62 việc"] --> GG{"Cổng Giá trị"}
+  GB --> CN["Chờ phiên nghiệm thu<br/>63 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
 ```
 
