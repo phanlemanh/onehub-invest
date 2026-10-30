@@ -5,9 +5,9 @@ slug: s03-cam-mau-so-lieu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/** — không khớp t3_paths
 surfaces: [cli]
-status: verified
-approved_by: Mạnh
-approved_at: 2026-10-30
+status: draft
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-10-30-s03-cam-mau-so-lieu-design.md
 ---
 
@@ -26,11 +26,14 @@ phường Hà Nội. Căn cứ: `docs/research/s03-boc-tach-cau-truc-3010.md` §
   `parsePost` đọc, Then giá, diện tích, phòng ngủ đúng đáp án viết trước (không lấy số từ URL/SĐT), và `phones` vẫn ra
   đúng SĐT của chữ gốc.
 - AC-2: Given ma trận viết trước các dạng giá tỷ lấy từ bài thật («2.650 tỷ», «6,950 tỷ», «3,349 tỷ», «2400 tỷ thu về»,
-  «1950 Tỷ thu về», «2ty450», «1ty650», «3ty2», «2 tỷ 450», «2.9 tỷ», «2,93 tỷ», «3 tỷ»), When `parsePost` đọc, Then mỗi dòng ra đúng số đồng của
-  đáp án.
+  «1950 Tỷ thu về», «2ty450», «1ty650», «3ty2», «2 tỷ 450», «2.9 tỷ», «2,93 tỷ», «3 tỷ») và các dạng số đếm đứng sau chữ tỷ
+  («8 tỷ 4 tầng», «4 tỷ 5 tầng», «5 tỷ 3 lầu», «3 tỷ 2 ô tô tránh», «6 tỷ 2 mặt tiền», «7 tỷ 3 căn»), When `parsePost` đọc, Then
+  mỗi dòng ra đúng số đồng của đáp án — số đếm sau chữ tỷ không thành phần lẻ của giá (Ngoài-1, Ngoài-4 nâng phạm vi
+  ở Cổng Bằng chứng 30/10).
 - AC-3: Given ma trận viết trước các dạng giá triệu và giá không đơn vị lấy từ bài thật («5tr5», «8tr5», «4tr8»,
-  «8,5tr/tháng», «12 triệu/th», «45.5tr/m²», «Giá: 4,000 (thu về)», «7.000.000», «Giá 7.500.000/tháng»), When
-  `parsePost` đọc, Then mỗi dòng ra đúng giá (hoặc giá/m²) của đáp án.
+  «8,5tr/tháng», «12 triệu/th», «45.5tr/m²», «Giá: 4,000 (thu về)», «7.000.000», «Giá 7.500.000/tháng») và đơn giá viết bằng
+  đồng («45.000.000/m2», «45.000.000 /m²», «45.000.000đ/m2»), When `parsePost` đọc, Then mỗi dòng ra đúng giá (hoặc giá/m²)
+  của đáp án — đơn giá bằng đồng ra giá/m², không thành tổng giá (Ngoài-2 nâng phạm vi ở Cổng Bằng chứng 30/10).
 - AC-4: Given ma trận viết trước «64m», «43.2m», «DT:43.2m», «65m2», «DT 70m²» và các dạng bề ngang «mặt tiền 5m», «ngang 4m»,
   «hẻm 3m», «đường 12m», When `parsePost` đọc, Then năm dạng đầu ra đúng diện tích, bốn dạng bề ngang ra diện tích
   null; biên khoảng «Nm»: «15m» ra 15, «14m» và «501m» ra null.
@@ -81,6 +84,10 @@ phường Hà Nội. Căn cứ: `docs/research/s03-boc-tach-cau-truc-3010.md` §
   thật ← AC-1…AC-4.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-3: Sổ ánh xạ `pipeline/mappings.yaml` lớp nguồn S03 chưa ghi hai trường transform đã đọc (`sender_name` → `seller_name`, `conversation_id`).
+  - Ngoài-6: Tin có cụm khoảng cách đứng một mình («gần chợ 200m», «ra hồ 100m») có thể nhận số đó làm diện tích.
 
 - Ra khỏi kho (việc người): admin khai `market_codes` cho 11 nhóm S03 ở `/ops/sources` để nhánh «nhóm đã khai» của
   AC-8 chạy trên dữ liệu thật.

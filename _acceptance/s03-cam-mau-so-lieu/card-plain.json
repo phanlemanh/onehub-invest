@@ -7,7 +7,7 @@
     },
     {
       "id": "AC-2",
-      "p": "Sẽ đọc đúng cách môi giới viết giá tỷ: «2.650 tỷ» là 2,65 tỷ, «2400 tỷ thu về» là 2,4 tỷ, «2ty450» là 2,45 tỷ."
+      "p": "Sẽ đọc đúng cách môi giới viết giá tỷ («2.650 tỷ» là 2,65 tỷ, «2ty450» là 2,45 tỷ), và không ghép số tầng, lầu, ô tô, căn đứng sau chữ tỷ thành phần lẻ («8 tỷ 4 tầng» vẫn là 8 tỷ)."
     },
     {
       "id": "AC-4",
@@ -37,7 +37,7 @@
   "wont_do": [
     {
       "id": "AC-3",
-      "p": "Sẽ đọc đúng giá triệu chen phần lẻ («5tr5» là 5,5 triệu) và giá không đơn vị («Giá: 4,000 thu về» là 4 tỷ, «7.000.000» là 7 triệu)."
+      "p": "Sẽ đọc đúng giá triệu chen phần lẻ («5tr5»), giá không đơn vị («7.000.000»), và đơn giá viết bằng đồng («45.000.000/m2» là giá/m², không phải tổng giá)."
     },
     {
       "id": "AC-5",

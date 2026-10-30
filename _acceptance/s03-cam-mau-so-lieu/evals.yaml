@@ -16,14 +16,14 @@ evals:
     executor: test
     cmd: config:executors.test.cam_mau_s03
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
-    expected: "exit 0; ca 'CM-AC-2' xanh: 12 dòng giá tỷ viết trước, mỗi dòng đúng số đồng; ca đỏ trên bản sao giữ parseVnNumber cũ cho «2.650 tỷ» ghim «2.650 tỷ»"
+    expected: "exit 0; ca 'CM-AC-2' xanh: 12 dòng giá tỷ viết trước và 6 dòng số đếm sau chữ tỷ (tầng, lầu, ô tô, mặt tiền, căn), mỗi dòng đúng số đồng; ca đỏ trên bản sao bỏ danh sách chặn số đếm ghim «8 tỷ 4 tầng»; ca đỏ trên bản sao giữ parseVnNumber cũ cho «2.650 tỷ» ghim «2.650 tỷ»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E3
     criterion: AC-3
     executor: test
     cmd: config:executors.test.cam_mau_s03
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
-    expected: "exit 0; ca 'CM-AC-3' xanh: 9 dòng giá triệu/không đơn vị viết trước đúng đáp án; ca đỏ trên bản sao bỏ luật «tr chen phần lẻ» ghim «5tr5»"
+    expected: "exit 0; ca 'CM-AC-3' xanh: 9 dòng giá triệu/không đơn vị và 3 dòng đơn giá viết bằng đồng («…/m2» ra pricePerm2Vnd, priceVnd null) viết trước đúng đáp án; ca đỏ trên bản sao bỏ chặn «/m» của luật giá đồng ghim «45.000.000/m2»; ca đỏ trên bản sao bỏ luật «tr chen phần lẻ» ghim «5tr5»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
