@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 88fc2ddb7ce1b1d5eda82158b6f160a63d3d8f96
+verified_commit: 15f752e595fda44f166af5a24c0df9aa45ab93a2
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -254,3 +254,7 @@ none — mọi eval chạy một lần, xác định, không có phương sai.
 Round 1: không eval nào đỏ; lệnh suite `node scripts/check-portal-compliance.mjs` (không gắn eval) đỏ ở kiểm tra «zalo-media: isAdmin chặn trước stat/readFile» — diff đã đổi rào đầu của serveZaloMedia khỏi isAdmin nên kiểm tra tĩnh của cổng portal không còn thấy dạng cũ. Trả về giai đoạn triển khai.
 
 Round 2: sửa kiểm tra cổng zalo-media theo gate xemNoiDungTin + admin ở ?path= (commit ff22a187); sáu lệnh suite chạy lại đều xanh, trong đó cổng portal báo «ĐẠT»; 16 eval carry-forward từ vòng 1 vì delta không chạm paths của eval. Verdict PASS.
+
+### Re-pin lần 1 — 2026-10-30, do gộp main 96c6c4b2 (#199 DB2b) đổi tệp nhãn trong paths eval
+run_id: repin-20261030T073651Z-83377
+sha: 15f752e595fda44f166af5a24c0df9aa45ab93a2 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13
