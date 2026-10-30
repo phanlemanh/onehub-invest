@@ -4,6 +4,8 @@
 //   review: thẻ /ops/review agent_output enrich:<offer_id> (người quyết)
 //   review + conflict (E1 trái LLM): cả hai lên thẻ, người chọn một bên (AC-7, AC-11)
 // File này KHÔNG có câu UPDATE sale_offers/properties nào (AC-1).
+// enrich-chay-sau-nap: mỗi tin hai pha — đọc + gọi LLM NGOÀI giao dịch, ghi trong giao dịch riêng của tin
+// (opts.giaoDich); tin ghi hỏng lui lại một mình. Bộ đếm cộng từ những gì thật sự ghi.
 import type pg from "pg";
 
 import type { ContextResult } from "../agents/context-resolver.js";
@@ -11,11 +13,37 @@ import { needsLLM, type EnrichResult } from "../agents/enrich-text.js";
 import {
   llmFieldsFromEnrich, routeFields, summarizeRun, type BuildingNode, type EnrichField, type Routed,
 } from "./route.js";
+import { demRong, type DemLuot } from "./tong-ket.js";
 
+/** `loi` = tên lớp lỗi khi lời gọi ném lỗi; `result: null` mà không `loi` = câu trả lời không đọc được. */
 export type LlmFn = (
   text: string,
   ctx: ContextResult,
-) => Promise<{ result: EnrichResult | null; model: string; tracePath: string | null }>;
+) => Promise<{ result: EnrichResult | null; model: string; tracePath: string | null; loi?: string }>;
+/** Chạy fn trong giao dịch của một tin: commit khi xong, lui lại rồi ném lại khi lỗi. */
+export type GiaoDich = <T>(fn: () => Promise<T>) => Promise<T>;
+
+/** Cửa sổ không bốc lại tin đã thử (Hỏi-3, Mạnh duyệt 30/10). */
+export const CUA_SO_THU_NGAY = 30;
+
+/**
+ * Giao dịch bằng SAVEPOINT — mặc định của runEnrich. Test chạy trong withTx (BEGIN ngoài cùng): BEGIN/COMMIT lồng
+ * sẽ đóng giao dịch của test và ghi thật lên DB, nên ở đó chỉ dùng SAVEPOINT. CLI tiêm bản BEGIN/COMMIT.
+ */
+export function giaoDichSavepoint(c: pg.Client): GiaoDich {
+  return async (fn) => {
+    await c.query("SAVEPOINT enrich_tin");
+    try {
+      const r = await fn();
+      await c.query("RELEASE SAVEPOINT enrich_tin");
+      return r;
+    } catch (e) {
+      await c.query("ROLLBACK TO SAVEPOINT enrich_tin");
+      await c.query("RELEASE SAVEPOINT enrich_tin");
+      throw e;
+    }
+  };
+}
 export type ResolveFn = (groupName: string | null, text: string) => Promise<ContextResult>;
 
 export type RunEnrichOpts = {
@@ -28,6 +56,8 @@ export type RunEnrichOpts = {
   llm: LlmFn;
   resolve: ResolveFn;
   buildings?: BuildingNode[];
+  /** Vắng → giaoDichSavepoint(client). */
+  giaoDich?: GiaoDich;
 };
 
 type OfferRow = {
@@ -51,13 +81,15 @@ const OFFER_SELECT = `
   ) z ON true`;
 
 async function selectOffers(c: pg.Client, limit: number, offerIds?: string[]): Promise<OfferRow[]> {
+  // --offers chạy đúng tin chỉ định, không xét dấu đã thử.
   if (offerIds) {
     const { rows } = await c.query(`${OFFER_SELECT} WHERE o.offer_id = ANY ($1) ORDER BY o.offer_id`, [offerIds]);
     return rows;
   }
   // Offer còn đề xuất chờ mà không nằm trên thẻ đang chờ (thẻ bị «Để sau») ĐI TRƯỚC, kể cả khi
   // offer không còn khớp bộ lọc thiếu field — không thì thẻ hoãn chỉ quay lại nhờ random() (AC-6,
-  // S4-r3). Phần còn lại của lượt bốc ngẫu nhiên từ backlog như cũ.
+  // S4-r3). Phần còn lại của lượt bốc ngẫu nhiên từ backlog, trừ tin đã thử trong CUA_SO_THU_NGAY ngày
+  // (ops_audit enrich:thu) — không thì tin LLM không tìm ra trường bị bốc lại mỗi đêm (AC-9).
   const { rows } = await c.query(
     `WITH loose AS (
        SELECT DISTINCT ep.offer_id FROM enrichment_proposals ep
@@ -68,11 +100,15 @@ async function selectOffers(c: pg.Client, limit: number, offerIds?: string[]): P
        SELECT t.*, (t.offer_id IN (SELECT offer_id FROM loose)) AS deferred_first FROM (${OFFER_SELECT}
          WHERE o.offer_id IN (SELECT offer_id FROM loose)
             OR (o.source IN ('S03','S05') AND o.kind = 'sale' AND o.confidence IN ('high','medium')
-                AND (o.property_type = 'unknown' OR o.street_raw IS NULL OR o.bathrooms IS NULL))) t
+                AND (o.property_type = 'unknown' OR o.street_raw IS NULL OR o.bathrooms IS NULL)
+                AND NOT EXISTS (
+                  SELECT 1 FROM ops_audit a
+                  WHERE a.action = 'enrich:thu' AND a.detail->>'offer_id' = o.offer_id
+                    AND a.at > now() - make_interval(days => $2)))) t
        WHERE t.text IS NOT NULL AND length(t.text) > 20
      ) s
      ORDER BY deferred_first DESC, random() LIMIT $1`,
-    [Math.max(1, limit)],
+    [Math.max(1, limit), CUA_SO_THU_NGAY],
   );
   return rows;
 }
@@ -184,20 +220,33 @@ async function syncReview(
   return cardId;
 }
 
-export async function runEnrich(
-  opts: RunEnrichOpts,
-): Promise<{ routed: Routed[][]; summary: ReturnType<typeof summarizeRun>; reviewIds: number[] }> {
+export async function runEnrich(opts: RunEnrichOpts): Promise<{
+  routed: Routed[][];
+  summary: ReturnType<typeof summarizeRun>;
+  reviewIds: number[];
+  dem: DemLuot;
+}> {
   const c = opts.client;
+  const giaoDich = opts.giaoDich ?? giaoDichSavepoint(c);
   const buildings = opts.buildings ?? (await loadBuildings(c));
   const offers = await selectOffers(c, opts.limit, opts.offerIds);
   const routed: Routed[][] = [];
   const reviewIds: number[] = [];
+  const dem = demRong();
+  dem.tin = offers.length;
 
   for (const o of offers) {
+    // Pha đọc — ngoài giao dịch: không giữ khoá dòng nào trong lúc chờ LLM (AC-1).
     const text = o.text ?? "";
     const ctx = await opts.resolve(o.group_name, text);
     // --dry: chỉ E1, 0 lượt gọi model, 0 lần ghi.
-    const llmRes = !opts.dry && needsLLM(ctx, text) ? await opts.llm(text, ctx) : null;
+    const canLLM = !opts.dry && needsLLM(ctx, text);
+    const llmRes = canLLM ? await opts.llm(text, ctx) : null;
+    if (llmRes) {
+      dem.llmGoi++;
+      if (llmRes.loi) dem.llmLoi++;
+      else if (!llmRes.result) dem.llmKhongDoc++;
+    }
     const held = await heldFields(c, o.offer_id);
     const rs = routeFields({
       current: {
@@ -219,35 +268,64 @@ export async function runEnrich(
     const llmMeta = llmRes?.result
       ? { model: llmRes.model, confidence: llmRes.result.confidence ?? null, tracePath: llmRes.tracePath }
       : null;
-    const applyIds: number[] = [];
-    for (const r of rs) {
-      const llmRow = r.source === "e2_llm";
-      const { rows } = await c.query(
-        `INSERT INTO enrichment_proposals
-           (run_id, offer_id, field, value, value_key, source, route, corroborated_by,
-            confidence, model, trace_path, evidence, status)
-         VALUES ($1, $2, $3, $4, lower($4), $5, $6, $7, $8, $9, $10, $11, $12)
-         ON CONFLICT (offer_id, field, value_key, source) DO NOTHING
-         RETURNING id`,
-        [
-          opts.runId, o.offer_id, r.field, r.value, r.source, r.route, r.corroboratedBy,
-          llmRow ? (llmRes?.result?.confidence ?? null) : null,
-          llmRow ? (llmRes?.model ?? null) : "context-resolver",
-          llmRow ? (llmRes?.tracePath ?? null) : null,
-          { ...evidence, basis: basisOf(r, ctx, llmMeta) },
-          r.route === "superseded" ? "superseded" : "queued",
-        ],
-      );
-      if (rows[0] && (r.route === "direct" || r.route === "corroborated")) applyIds.push(Number(rows[0].id));
+
+    // Pha ghi — một giao dịch của tin. Bộ đếm của tin chỉ cộng vào lượt khi giao dịch xong.
+    const ghi = async () => {
+      const t = { deXuatMoi: 0, daAp: 0, choDuyet: 0, card: null as number | null };
+      const applyIds: number[] = [];
+      for (const r of rs) {
+        const llmRow = r.source === "e2_llm";
+        const status = r.route === "superseded" ? "superseded" : "queued";
+        const { rows } = await c.query(
+          `INSERT INTO enrichment_proposals
+             (run_id, offer_id, field, value, value_key, source, route, corroborated_by,
+              confidence, model, trace_path, evidence, status)
+           VALUES ($1, $2, $3, $4, lower($4), $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (offer_id, field, value_key, source) DO NOTHING
+           RETURNING id`,
+          [
+            opts.runId, o.offer_id, r.field, r.value, r.source, r.route, r.corroboratedBy,
+            llmRow ? (llmRes?.result?.confidence ?? null) : null,
+            llmRow ? (llmRes?.model ?? null) : "context-resolver",
+            llmRow ? (llmRes?.tracePath ?? null) : null,
+            { ...evidence, basis: basisOf(r, ctx, llmMeta) },
+            status,
+          ],
+        );
+        if (!rows[0]) continue;
+        t.deXuatMoi++;
+        if (r.route === "direct" || r.route === "corroborated") applyIds.push(Number(rows[0].id));
+        else if (r.route === "review" && status === "queued") t.choDuyet++;
+      }
+      if (applyIds.length > 0) {
+        const { rows } = await c.query(`SELECT apply_enrichment($1, $2) AS n`, [applyIds, `enrich-run:${opts.runId}`]);
+        t.daAp = Number(rows[0].n ?? 0);
+      }
+      t.card = await syncReview(c, o, {
+        runId: opts.runId, model: llmRes?.model ?? null, tracePath: llmRes?.tracePath ?? null,
+      });
+      // Dấu đã thử (AC-9) — trừ khi lời gọi LLM ném lỗi: đêm sau LLM sống lại thì thử tiếp.
+      if (!llmRes?.loi) {
+        await c.query(
+          `INSERT INTO ops_audit (actor, action, detail) VALUES ($1, 'enrich:thu', $2)`,
+          [`enrich-run:${opts.runId}`, { offer_id: o.offer_id, run_id: opts.runId }],
+        );
+      }
+      return t;
+    };
+
+    try {
+      const t = await giaoDich(ghi);
+      dem.deXuatMoi += t.deXuatMoi;
+      dem.daAp += t.daAp;
+      dem.choDuyet += t.choDuyet;
+      if (t.card !== null) reviewIds.push(t.card);
+    } catch (e) {
+      const err = e as { code?: string; name?: string };
+      dem.loiGhi.push({ offer_id: o.offer_id, loi: err.code ?? err.name ?? "Error" });
     }
-    if (applyIds.length > 0) {
-      await c.query(`SELECT apply_enrichment($1, $2)`, [applyIds, `enrich-run:${opts.runId}`]);
-    }
-    const card = await syncReview(c, o, {
-      runId: opts.runId, model: llmRes?.model ?? null, tracePath: llmRes?.tracePath ?? null,
-    });
-    if (card !== null) reviewIds.push(card);
   }
 
-  return { routed, summary: summarizeRun(routed), reviewIds };
+  dem.the = new Set(reviewIds).size;
+  return { routed, summary: summarizeRun(routed), reviewIds, dem };
 }
