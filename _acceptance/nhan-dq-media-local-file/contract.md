@@ -5,7 +5,7 @@ slug: nhan-dq-media-local-file
 owner: phanlemanh@gmail.com
 risk_tier: T2      # app/src/lib/dq-labels.ts + CONTEXT.md + test — không chạm t3_paths
 surfaces: [ops]
-status: implemented
+status: verified
 design_doc: _acceptance/nhan-dq-media-local-file/design.md
 approved_by:
 approved_at:
