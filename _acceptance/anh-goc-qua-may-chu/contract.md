@@ -5,7 +5,9 @@ slug: anh-goc-qua-may-chu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [api, ui]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-anh-goc-qua-may-chu-design.md
 ---
 
