@@ -1,0 +1,42 @@
+schema_version: 1
+feature_slug: che-tim-bi-danh-viewer
+# Ca «CTV-AC-n» thêm vào app/tests/danh-ba-nguoi-tren-ops.test.tsx (cùng lược đồ tạm, page thật với getSessionUser giả).
+# Mỗi phép đo mới có cặp hai chiều trên cùng fixture, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    layer: backend-effect
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca CTV-AC-1 qua page thật: viewer với q='chị lan' → HTML có cùng tập mã người, cùng «Trang 1/k · m người khớp» và cùng ba số đầu trang như viewer không q (so nguyên chuỗi) và có dòng báo «chỉ dành cho vai Vận hành»; viewer không q → không có dòng báo; ops và admin với cùng q → chỉ mã P2, «1 người khớp», không có dòng báo; quét app/src: chỗ gọi danhSachNguoi( duy nhất là people-content.tsx; chiều đỏ: bản chép people-content.tsx bỏ chỗ xoá q cho viewer → ca viewer đỏ ghim «CTV-AC-1 viewer lọc được bằng q»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/src/app/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; ca CTV-AC-2: ma trận 5 vai × /ops/people — name=\"q\" và nút «Tìm» có đúng ở ops, admin; viewer có aria-label «Nguồn» mà không có name=\"q\"; khách, user có «Cần đăng nhập ops.»; số ô = 5; chiều đỏ: bản chép people-view.tsx truyền coTim luôn đúng → ô viewer đỏ ghim «CTV-AC-2 viewer thấy ô tìm»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    layer: backend-effect
+    expected: "exit 0; ca CTV-AC-3: tập mã người và chuỗi «Trang k/n · m người khớp» của viewer với source=S05&q=zzz bằng đúng của viewer với source=S05 không q (so quan hệ hai tập); đối chứng dương: ops cùng tham số → «Không có người khớp bộ lọc»; chiều đỏ: bản chép people-content.tsx bỏ luôn source cho viewer → ca đỏ ghim «CTV-AC-3 viewer mất lọc nguồn»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.danh_ba_ops
+    paths: [app/src/components/ops/people/**, app/src/lib/ops/people.ts, app/tests/danh-ba-nguoi-tren-ops.test.tsx]
+    expected: "exit 0; đầu ra liệt đủ mười ca DBN-AC-1…9 của danh-ba-nguoi-tren-ops (kể cả DBN-AC-8 RegionError) đều ✔ — không ca DBN nào bị bỏ qua"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.design.dbn_gate
+    paths: [app/src/components/ops/people/**]
+    expected: "exit 0; design-gate xanh trên tệp giao diện của danh bạ người"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

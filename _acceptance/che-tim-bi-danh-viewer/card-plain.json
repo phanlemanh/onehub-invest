@@ -1,0 +1,24 @@
+{
+  "feature_plain": "Người dùng vai Người xem không còn đoán được tên hay tài khoản người bán đã bị che bằng cách gõ dần vào ô tìm của danh bạ người.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ bỏ chữ tìm khi vai Người xem gõ (danh sách như không tìm) và báo «Tìm theo tên hay tài khoản chỉ dành cho vai Vận hành»; vai Vận hành, Quản trị vẫn tìm như cũ."},
+    {"id": "AC-2", "p": "Sẽ ẩn ô tìm và nút Tìm với vai Người xem; bộ chọn nguồn vẫn còn."},
+    {"id": "AC-3", "p": "Sẽ vẫn lọc theo nguồn cho vai Người xem, chỉ bỏ phần chữ tìm."},
+    {"id": "AC-4", "p": "Sẽ giữ nguyên mọi kiểm tra cũ của trang danh bạ người."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG đổi quyền xem bí danh của vai Vận hành trở lên."},
+    {"id": "OOS-2", "p": "KHÔNG hiện số điện thoại gốc ở vòng này."},
+    {"id": "OOS-3", "p": "KHÔNG thêm tìm theo mã người ở vòng này (là lối khác của Hỏi-1)."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Phủ năm loại phiên — AC-1 và AC-2 đo từng loại qua trang thật."},
+    {"i": 1, "p": "Phủ ba kiểu tham số (chỉ chữ tìm, chữ tìm cùng nguồn, không gì) — AC-1 và AC-3."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Máy đã tự quyết vai Người xem còn tìm được gì, trong khi đó là đánh đổi của người. Đã chuyển thành Hỏi-1; bản nháp theo khuyến nghị bỏ chữ tìm kèm dòng báo."},
+    {"i": 1, "p": "Chưa kiểm còn chỗ nào khác gọi hàm danh sách người. Đã đo: chỉ một chỗ; thêm phép quét vào AC-1."},
+    {"i": 2, "p": "Ca lọc nguồn chỉ dò chuỗi có mặt. Đã đổi thành so hai tập người và thêm chiều đỏ."},
+    {"i": 3, "p": "Ca giữ kiểm tra cũ chỉ nhìn mã thoát. Đã đòi liệt đủ mười ca cũ đều đạt."}
+  ]
+}
