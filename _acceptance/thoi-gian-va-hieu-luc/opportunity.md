@@ -28,7 +28,8 @@ Cổng Đáng: build — Mạnh duyệt «Xếp theo bốn làn» (30/10), LUAT 
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Tin quá cửa sổ hiệu lực tự về hết hạn; căn tụt B5 về B4» chưa?
-- Kết quả nào là SỐNG: [đề xuất] Tin quá cửa sổ hiệu lực tự về hết hạn; căn tụt B5 về B4
-- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Tin quá cửa sổ hiệu lực tự về hết hạn; căn tụt B5 về B4» khi hết timebox
+- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Tin quá cửa sổ độ tươi giữ nguyên trạng thái chào; căn tụt B5 về B4» chưa?
+- Kết quả nào là SỐNG: [đề xuất] Tin quá cửa sổ độ tươi giữ nguyên trạng thái chào; căn tụt B5 về B4
+- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Tin quá cửa sổ độ tươi giữ nguyên trạng thái chào; căn tụt B5 về B4» khi hết timebox
+- Ghi chú: câu giao gốc ghi «tự về hết hạn»; Mạnh duyệt Hỏi-1 nhánh A ở Cổng Phạm vi 30/10 (khung RESO §6 — quá cửa sổ trạng thái không đổi), nên ngưỡng sửa theo.
 - Timebox: …
