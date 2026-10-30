@@ -10,8 +10,8 @@ flowchart TD
   GD --> B["Sắp mở vòng<br/>chưa có"]
   GD --> XL["Xếp lại sau<br/>chưa có"]
   GD --> DB["Đã bác từ khám phá<br/>chưa có"]
-  B --> CD["Chờ duyệt phạm vi<br/>8 việc"] --> GP{"Cổng Phạm vi"}
-  GP --> DL["Đang làm<br/>1 việc"] --> GB{"Cổng Bằng chứng"}
+  B --> CD["Chờ duyệt phạm vi<br/>7 việc"] --> GP{"Cổng Phạm vi"}
+  GP --> DL["Đang làm<br/>2 việc"] --> GB{"Cổng Bằng chứng"}
   GB --> DG["Đã giao<br/>90 việc"]
   GB --> CN["Chờ phiên nghiệm thu<br/>60 việc"] --> GG{"Cổng Giá trị"}
   GG --> NT["Đã nghiệm thu giá trị<br/>chưa có"]
@@ -25,7 +25,6 @@ flowchart TD
 ## Chờ duyệt phạm vi
 
 - ADR-0015 «đường lệnh kéo một chiều cloud → máy thu» và bản sửa đổi ADR-0007, kèm thuật ngữ mới và ROADMAP §2.3–2.4 khớp thực tế (`adr-duong-lenh-keo`)
-- Bảng Yêu cầu bên mua (cần mua · cần thuê) đối xứng listing — transform ghi từ bài có phát biểu ý định = Yêu cầu, tiêu chí khu vực · loại hình · số PN · ngân sách, nạp lại không nhân dòng (`bang-yeu-cau`)
 - Ca CD-AC-7b chờ request lưu ghi xong rồi mới đọc params, hết chập chờn trên CI (`che-do-thu-test-cho-luu`)
 - Tài liệu và đánh dấu của kho khớp các chốt 23–24/10 (tên nhóm S03 tầng C, luật S08, luật phép đo Zalo, ROADMAP V9) (`chep-chot-2410`)
 - CI bỏ qua ca «DF-AC-3 DB thật» cần tin rao thật ở DB local (chỉ chạy ở máy thu) (`ci-bo-qua-df-ac-3`)
@@ -35,6 +34,7 @@ flowchart TD
 
 ## Đang làm
 
+- Bảng Yêu cầu bên mua (cần mua · cần thuê) đối xứng listing — transform ghi từ bài có phát biểu ý định = Yêu cầu, tiêu chí khu vực · loại hình · số PN · ngân sách, nạp lại không nhân dòng (`bang-yeu-cau`)
 - Điểm Kev typed (ý định tin, bán/thuê) có cột ở bảng nạp và thành phát biểu theo bài cho mọi tin S03, không loại tin nào theo Kev (`meta-kev-thanh-phat-bieu`)
 
 ## Đã giao — chờ phiên nghiệm thu
