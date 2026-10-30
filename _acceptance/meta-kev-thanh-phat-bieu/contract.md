@@ -5,7 +5,7 @@ slug: meta-kev-thanh-phat-bieu
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (057) — khớp t3_paths
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-meta-kev-thanh-phat-bieu-design.md
