@@ -47,7 +47,7 @@ evals:
     cmd: config:executors.script.mgn_mu
     layer: backend-effect
     paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/src/lib/labels-queries.ts, app/src/app/api/v1/ops/labels/**, _acceptance/man-gan-nhan-mu/probes/mu.mjs]
-    expected: "exit 0; probe mồi trên DB thử một tin của lát kèm giá trị máy mang dấu riêng (sale_offer_records price_vnd 9876543210, bedrooms 7, block_raw 'TOAMAYDOAN'; field_assertions 'DAUPHATBIEU'; enrichment_proposals 'DAUDEXUAT'), lấy HTML /ops/labels (dev server DB thử, đăng nhập ops thử) và JSON của route tin kế: 'ok html khong co dau may' với từng dấu, 'ok route khong co dau may'; quét mã nguồn màn + truy vấn + route: 0 lần nhắc sale_offers, sale_offer_records, field_assertions, enrichment_proposals, meta; đối chứng dương: chữ gốc của tin (dấu 'CHUGOC-MGN') CÓ trong HTML; chiều đỏ: bản truy vấn chép thêm join sale_offers → 'LO GIA TRI MAY'; cuối 'MU OK'"
+    expected: "exit 0; probe mồi trên DB thử một tin của lát kèm giá trị máy mang dấu riêng (sale_offer_records price_vnd 9876543210, bedrooms 7, block_raw 'TOAMAYDOAN'; field_assertions 'DAUPHATBIEU'; enrichment_proposals 'DAUDEXUAT'), dựng HTML nội dung trang /ops/labels bằng chính LabelsContent (người ops thử tạo trên DB thử) và gọi route GET /api/v1/ops/labels bằng Cookie phiên thật: 'ok html khong co dau may' với từng dấu, 'ok route khong co dau may'; quét mã nguồn màn + truy vấn + route: 0 lần nhắc sale_offers, sale_offer_records, field_assertions, enrichment_proposals, meta; đối chứng dương: chữ gốc của tin (dấu 'CHUGOC-MGN') CÓ trong HTML; chiều đỏ: bản truy vấn chép thêm join sale_offers → 'LO GIA TRI MAY'; cuối 'MU OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E6
     criterion: AC-5
