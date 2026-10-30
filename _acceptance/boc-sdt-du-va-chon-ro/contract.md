@@ -5,7 +5,7 @@ slug: boc-sdt-du-va-chon-ro
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-*.mjs, không chạm t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-30-boc-sdt-du-va-chon-ro-design.md
@@ -73,3 +73,11 @@ rỗng SĐT dù bài có số). Dạng số ra `+84…` tách sang SD3 để kho
 - «Test cố định bốn dạng sót» ← AC-1.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Thước dữ liệu thật đọc thẳng bảng bài thu nên đếm cả bài thử; số sót và số 11 chữ số có thể lệch vài bài so với tập bài thật.
+- Mở hợp đồng mới (Ngoài-2): SĐT đứng ngay trước một con số rời («0912345678. 3 tầng», «0912345678 2 ngủ») bị bỏ do luật
+  đuôi số 11 chữ số — sửa luật đuôi có đo, giữ số hợp lệ mà vẫn loại số 11 chữ số viết tách.
+- Sửa test hai hồ sơ đã ký (giám sát duyệt P1-78, P1-79): `s03-gia-ty-chan-dong` GT-AC-3 ca đỏ và
+  `s03-gia-ty-sau-khoang-trang` GS-AC-3 (hai dòng bản nền nhận số 11 chữ số chờ rỗng) + ca đỏ — đột biến chuyển từ
+  `PHONE_RE` sang `SDT_RE`; lời E3 hai hồ sơ sửa theo, mỗi hồ sơ một dòng sổ.

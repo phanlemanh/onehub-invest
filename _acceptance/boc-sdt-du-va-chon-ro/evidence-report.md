@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 68cc04c5be78d851a41709f41f0ff0386b185bca
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: boc-sdt-du-va-chon-ro
