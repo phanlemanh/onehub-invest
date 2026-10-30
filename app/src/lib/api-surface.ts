@@ -47,6 +47,6 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/ops/zalo/groups", methods: ["GET", "POST"], mode: "admin", note: "nhóm Zalo theo dõi — zalo.admin (TV1)" },
   { route: "v1/ops/zalo/login", methods: ["POST", "GET", "DELETE"], mode: "admin", note: "đăng nhập QR tài khoản thu (QR trả base64, không qua zalo-media) — zalo.admin (TV1)" },
   { route: "v1/ops/audit", methods: ["GET"], mode: "admin", note: "nhật ký ops_audit — audit.read: chỉ admin, không bearer (TV1)" },
-  { route: "zalo-media", methods: ["GET"], mode: "admin", note: "ảnh tin tầng A cho /ops; chặn ảnh QR đăng nhập" },
+  { route: "zalo-media", methods: ["GET"], mode: "ops-session", note: "ảnh tin cho /ops; mã chặt hơn sổ: ?snapshot= cho vai Vận hành trở lên (xemNoiDungTin, PL3); ?path= (staging OpenClaw) chỉ admin; vai Người xem nhận 404; chặn ảnh QR đăng nhập" },
   { route: "v1/user-events", methods: ["POST"], mode: "session-or-noop", note: "beacon user_events — khách 204, không ghi" },
 ];
