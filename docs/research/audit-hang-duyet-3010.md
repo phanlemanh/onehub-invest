@@ -1,6 +1,6 @@
 # Audit hàng duyệt Ops — thẻ ghép căn Tin A ↔ Tin B (30/10/2026)
 
-- **Câu hỏi của Mạnh** (tự duyệt `/ops/review` chiều 30/10): (1) Tin A không có ảnh, Tin B có; (2) Tin A bóc tách kém
+- **Quyết định của Mạnh tối 30/10 ở §7.** **Câu hỏi của Mạnh** (tự duyệt `/ops/review` chiều 30/10): (1) Tin A không có ảnh, Tin B có; (2) Tin A bóc tách kém
   hơn Tin B; (3) duyệt xong một thẻ nên tự chuyển sang thẻ kế. **Bổ sung sau khi mở PR**: (4) một tín hiệu dễ nhận dạng
   là danh tính người đăng tin hoặc người được nêu trong tin (§3b).
 - **Cách đo**: DB máy thu :5433, mọi truy vấn chạy trong phiên `default_transaction_read_only=on`, đo lúc 15:40–15:47Z
@@ -442,6 +442,9 @@ FROM stg_zalo_posts GROUP BY 1;
 -- S06: payload->>'body' của lượt thu mới nhất mỗi list_id; S03/S05: bài mới nhất theo post_ids
 SELECT count(*) FILTER (WHERE regexp_replace(tx, '[\s.\-]', '', 'g') ~ '(\+?84|0)[35789]\d{8}') co_sdt_ro FROM (…) t;
 
+-- Q12 đặc trưng nhà: payload S06 (street_number, width+length, floors, rooms, toilets, latitude, unitnumber_display)
+-- và văn bản S03/S05 (kích thước «a x b», số nhà, số tầng) — đầy đủ ở research-local/audit-hang-duyet-3010/q12.sql
+
 -- Q11 danh bạ: người có mặt ở ≥ 2 nguồn; cặp ứng viên cùng một người đăng bên B
 SELECT count(*) FROM (SELECT party_key FROM party_roles WHERE retracted_at IS NULL
   GROUP BY 1 HAVING count(DISTINCT split_part(subject_key, ':', 1)) > 1) x;
@@ -453,3 +456,97 @@ WHERE pc.status IN ('needs_llm','pending') GROUP BY 1;
 
 Ngoài DB: `pipeline/logs/zalo-import.log` ở checkout chính (dòng «nạp fail tại …2026-10-29T042737822»);
 `git log -S'job_run zalo-import-daily enrich-run' -- scripts/zalo-import-daily.sh` → `fc9483eb` (30/10).
+
+---
+
+## 7. Quyết định của Mạnh (30/10, tối) và hàng bổ sung
+
+### 7.1 Quyết định
+
+| # | Câu hỏi | Mạnh quyết | Hệ quả |
+|---|---|---|---|
+| 1 | Cắt hàng sửa theo ba đợt? | **Có** (theo đề xuất, đợt 1 trước) | Cắt §5.1 qua `/acceptance-gate:cat-luot` |
+| 2 | 11 quyết định 30/10 không tới ứng viên | **Bỏ** (theo đề xuất) | Không nối lại cặp khoá cũ. Lý do chữ vẫn nằm ở `review_queue.decision_note` và được dùng làm căn cứ cho §7.3 |
+| 3 | S05: nạp credit hay dừng? | **Tạm không nạp.** Chưa mở thêm S05; để ba nguồn S01, S03, S06 chạy ổn trên toàn pipeline trước | `s05-tai-anh` giữ ở mục chờ. Hàng duyệt hôm nay chỉ có S05 ↔ S06, nên sẽ **cạn** cho tới khi S03 vào được Stage B (H12) → N1 (phường S03) thành điều kiện để hàng duyệt có thẻ |
+| 4 | Ảnh S06 cho vai Vận hành qua máy chủ? | **Có** (theo đề xuất) | Cắt `anh-goc-qua-may-chu` (T3) |
+| 5 | Nối người khác nguồn | **Dùng SĐT làm khoá chính để nối Người. S06 cần tìm cách thu SĐT để nối.** Thay đề xuất «chỉ hiện tên» ở §3b.3 | Mở lại SH3 với mục đích mới (nối người nội bộ, không hiện lên cổng Invest), §7.2 |
+| 6 | Cách duyệt «cùng căn» (Mạnh nêu thêm) | Dùng **đặc trưng của ngôi nhà**: số nhà, số PN, diện tích, hình dạng, vị trí. **Chỉ cần một đặc trưng khác là khả năng rất cao không cùng căn.** Thêm một bước chưa làm: dùng VLM so ảnh | Luật loại trừ trong `judge-entity` (§7.3), mục chờ VLM (§7.4) |
+
+### 7.2 SĐT làm khoá nối Người
+
+Hiện trạng (§3b): danh bạ đã có khoá `sdt_bam` cho S03 (145) và S05 (20), nhưng S06 có 0 SĐT vì nguồn giấu
+(`phone_hidden`). Trong văn bản tin S06 chỉ có 51/29.604 tin ghi SĐT rõ. Khoảng 11.094 tin có chuỗi giống SĐT bị che một
+phần; chuỗi này không dùng làm khoá được.
+
+- **Thu (làn ZCode)**: khảo sát rồi chọn cách lấy SĐT người đăng S06 trong giới hạn điều khoản và nhịp thu hiện có. Ghi
+  vào snapshot, chỉ ghi dạng băm cùng hàm với `seller_phone_hash`. DATA-CONTRACT tăng `schemaVersion`. SĐT người bán là
+  tầng C (luật 6), nhưng vẫn chỉ đi qua đường băm như S03/S05.
+- **Nối (làn Claude, P3)**: hai người ở hai nguồn có cùng `sdt_bam` thì gộp làm một người, bằng luật tất định có bằng
+  chứng (không LLM, luật 7). Thẻ ghép căn hiện hàng «Người đăng» là **Khớp (cùng SĐT)** khi cùng người. Tên chỉ là gợi ý
+  phụ, không bao giờ dùng để nối.
+- SH1 (hiện liên hệ người bán lên cổng Invest) **không** mở theo quyết định này. SĐT chỉ dùng để nối nội bộ.
+
+### 7.3 Luật loại trừ theo đặc trưng nhà
+
+**Luật hiện tại** (`agent/src/agents/judge-entity.ts:84–116`, `pl25-1`) chỉ có bốn trường: giá/m², diện tích, phường, loại
+hình. Chỉ ba điều ra «khác căn»: giá/m² lệch > 30%, khác phường, khác loại hình. Diện tích lệch ≥ 10% chỉ ra «chưa chắc».
+
+**Cách Mạnh duyệt thật** (lý do chữ của 10 thẻ «Khác căn» ngày 30/10): **10/10** nêu ít nhất một đặc trưng khác nhau.
+Diện tích 8/10, đường 5/10, PN 4/10, tầng 1/10, hình dạng/kích thước 1/10 («4,6 × 11» ↔ khác). Mạnh coi lệch diện tích nhỏ
+là khác căn: 49 ↔ 51 m² và 45 ↔ 40 m² đều ghi «diện tích khác». Thẻ duy nhất duyệt «Cùng căn» (#23) có diện tích bằng nhau.
+
+**Đặc trưng nào có trên tin** (Q12, `research-local/audit-hang-duyet-3010/q12.sql`):
+
+| Đặc trưng | S06 nhà riêng (6.270) | S06 căn hộ (4.263) | S03 (371, văn bản) | S05 (23, văn bản) | Đã lên `sale_offers`? |
+|---|---|---|---|---|---|
+| Số nhà | 4.385 (`street_number`/`streetnumber_display`) | 956 | 33 | 0 | Chưa |
+| Kích thước mặt tiền × sâu | 4.257 (`width` + `length`) | — | 12 | 3 | Chưa |
+| Số tầng | 4.675 (`floors`) | — | 17 | 9 | `floor_raw` 4% (là tầng của căn hộ, không phải số tầng nhà) |
+| PN · WC | 5.957 · 4.179 | 4.148 · 3.238 | §3.3 | §3.3 | PN có; WC S06 23% |
+| Toạ độ | 6.270 | 4.259 | — | — | Chỉ ở `stg_chotot_ads` |
+| Mã căn | 1.185 | 686 (`unitnumber_display`) | 43 (toà) | 7 | `block_raw` 3% |
+
+Phía S06 có sẵn phần lớn đặc trưng ở cột có cấu trúc, nhưng transform chưa đưa lên canonical. Phía P1 phải đọc từ văn
+bản, và tỉ lệ có thấp. Đó là lý do luật phải là **loại trừ**: khi **cả hai bên** có giá trị mà khác nhau thì «khác căn»;
+thiếu một bên thì bỏ qua đặc trưng đó, không suy ra gì. Thiếu không được biến thành «Lệch» (cùng tinh thần H9).
+
+### 7.4 VLM so ảnh
+
+Mục chờ SH7 («đọc ảnh bằng model») có điều kiện mở là «khi NH1 giao». NH1 đã giao (053). Nhưng hôm nay **không có cặp nào
+có ảnh xem được ở cả hai bên**: S05 0 ảnh, S06 chỉ có URL gốc, S03 chưa vào hàng duyệt. Luật 11 (đo trước khi build) và luật
+7 đặt hai điều kiện:
+- Chỉ mở khi có ≥ 30 cặp có ảnh hai bên **và** có nhãn người, để đo VLM trước khi dùng.
+- VLM chỉ ghi nhận xét kèm ảnh nào đối chiếu ảnh nào, hiện trên thẻ như một căn cứ. Nó không quyết, và không ghi vào
+  canonical.
+
+### 7.5 Hàng bổ sung
+
+| Slug | Câu giao (nháp) | Ranh giới tệp | Tầng | Dãy | Đứng trên |
+|---|---|---|---|---|---|
+| `judge-luat-loai-tru-dac-trung` | Luật ngưỡng ghép căn thêm luật loại trừ: khi cả hai bên có giá trị mà khác nhau ở **PN, WC, số tầng nhà, số nhà (cùng đường), đường (cùng phường), kích thước mặt tiền × sâu, mã căn**, hoặc diện tích lệch quá ngưỡng chặt, thì kết luận «khác căn» và nêu đặc trưng đó. Thiếu một bên thì không suy. Ngưỡng diện tích đặt từ nhãn đo (lý do 30/10 làm ca khởi đầu), phiên bản `pl25-2`. **Bật khi**: chạy lại trên 12 cặp 30/10 (dữ liệu chụp trong `evidence`) thì ≥ 9/10 thẻ bị từ chối ra «khác căn» và thẻ #23 không ra «khác căn»; ma trận 18 cặp của PL25 không đổi kết luận đúng | `agent/src/agents/judge-entity.ts`, `agent/src/tools/native.ts`, test | T2 | **P3** | `judge-evidence-du-truong` |
+| `dac-trung-nha-s06-len-canonical` | Transform S06 ghi phát biểu `source_field` cho số nhà, kích thước mặt tiền × sâu, số tầng nhà, hướng, mã căn, từ cột có cấu trúc của nguồn. Tên trường theo RESO (`StreetNumber`, `FrontageLength`/`LotSizeDimensions`, `StoriesTotal`, `DirectionFaces`, `UnitNumber`), tra DD 2.1 trước (luật 3). **Bật khi**: S06 nhà riêng có số tầng ≥ 70%, kích thước ≥ 65%, số nhà ≥ 65% trên canonical (nguồn đang có 75% · 68% · 70%) | `pipeline/transform-chotot.mjs`, `pipeline/mappings.yaml`, `db/migrations/` nếu thêm cột | T3 (migration) | **P1** | — |
+| `nguoi-noi-theo-sdt` | Danh bạ Người gộp người của hai nguồn khi cùng `sdt_bam`, bằng luật tất định có bằng chứng, chỉ thêm (đúng khung 055). Thẻ ghép căn hiện «Cùng người (SĐT)». **Bật khi**: trên bản thu S06 có SĐT, số người có mặt ở ≥ 2 nguồn > 0 và mỗi lần gộp có một dòng bằng chứng; nạp lại hai lần không nhân người | `pipeline/lib/danh-ba-nguoi.mjs`, `pipeline/dung-nguoi.mjs`, test | T2 | **P3** | ZCode `s06-thu-sdt` |
+
+**Sửa câu giao hàng đã có**:
+- **PL13 / N1** (P1): bộ đọc S03 đọc thêm kích thước «a × b», số tầng nhà («n tầng», «n lầu»), số nhà, thành phát biểu
+  `observed · parser`.
+- **`the-duyet-hien-nguoi-dang`** (U1, §5.1): so «Người đăng» theo `party_key`, cả khi khác nguồn, sau khi có
+  `nguoi-noi-theo-sdt`. Trước đó thì ghi «Không so được».
+- **`the-so-doc-gia-tri-song`** (U1): bảng so thêm các hàng số nhà, kích thước, số tầng nhà.
+
+**Liên làn ZCode**: `s06-thu-sdt`: khảo sát và thu SĐT người đăng S06 (dạng băm), có giới hạn lượt, DATA-CONTRACT tăng
+`schemaVersion`. Câu giao chi tiết do phiên điều phối liên làn viết sau khi khảo sát xong. Cách thu phải giữ điều khoản
+nguồn và an toàn tài khoản thu.
+
+**Mục chờ**: `vlm-so-anh-cap` (cắt từ SH7). Mở khi có ≥ 30 cặp có ảnh hai bên và có nhãn người. Cần `anh-goc-qua-may-chu`
+hoặc ảnh S03 trong hàng duyệt.
+
+### 7.6 Thứ tự sau quyết định
+
+1. Kiểm lượt đêm 31/10 (H6).
+2. **Đợt 1 (P3)**: `judge-evidence-du-truong` → `judge-luat-loai-tru-dac-trung`; `the-ghep-can-tin-roi-kho`;
+   `seller-ref-theo-nguoi-gui`. Song song: P1 `dac-trung-nha-s06-len-canonical` (T3) và N1 (phường S03). Thiếu N1 thì
+   hàng duyệt không có thẻ, vì S05 đã dừng.
+3. **Đợt 2 (U1, nối tiếp)**: `the-so-doc-gia-tri-song` → `the-duyet-hien-nguoi-dang` → `the-duyet-tu-sang-the-ke`.
+4. **Đợt 3**: `quyet-dinh-phai-cham-ung-vien`, `anh-goc-qua-may-chu`, `do-the-duyet-du-du-lieu`; ZCode `s06-thu-sdt` →
+   `nguoi-noi-theo-sdt`.
