@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e252352172d487061b728839442d5b0eeb940a54
+verified_commit: 97f6a455c7cd852ba85f33a9bf7558d419478621
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -120,3 +120,7 @@ none — every multi-run eval is uniform
 
 Round 1: PASS kèm một finding trong hợp đồng (AC-2, khe giao dịch dở) — trả về implementation.
 Round 2: E1, E2, E3 chạy lại trên bản sửa khoá cả cặp trong câu ghi; E4, E5 carry-forward từ round 1; tất cả PASS.
+
+### Re-pin lần 1 — 2026-10-30, do eval bị thay bởi khoa-phuong-chung-phuong-so (P.12 = Phường 12)
+run_id: repin-20261030T164739Z-87521
+sha: 97f6a455c7cd852ba85f33a9bf7558d419478621 · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E4 · thay bởi hồ sơ đã ký: E4→khoa-phuong-chung-phuong-so#AC-2 · AC không có chốt máy: AC-4
