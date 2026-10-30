@@ -5,6 +5,8 @@
 // Bài tổng hợp «Bán nhà 3.000.000.000\n50m2» là đối chứng dương của nhãn ở cả hai lượt. Sai → exit 1, gọi tên bài.
 // Lượt đối chứng (luôn chạy) thay bản cây bằng bản sao bỏ điều kiện nhóm cuối «000», thêm một bài tổng hợp có SĐT 3-3-3 kèm
 //               đuôi — phải TRƯỢT và gọi tên bài tổng hợp, không thì thước không đo gì.
+// SD2 (boc-sdt-du-va-chon-ro, giám sát duyệt P1-81): bộ bóc SĐT đổi có chủ ý sau bản nền, nên phone/phones «trước» lấy bằng bộ bóc
+//               của cây — thước chỉ đo phần giá của hồ sơ này.
 import { execFileSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -65,11 +67,14 @@ function dungQuanHe(text, a, b, doi) {
 /** Một lượt so: true khi ĐẠT. */
 async function luot(dotBien) {
   const cay = await napCay(dotBien);
+  const boc = (await napCay(false)).extractPhones;
   const posts = dotBien ? [...thatPosts, BAI_DUONG, BAI_TONG_HOP] : [...thatPosts, BAI_DUONG];
   const doi = [];
   const doiSdt = [];
   for (const p of posts) {
     const a = nen.parsePost(p.text);
+    a.phones = boc(p.text);
+    a.phone = a.phones[0] ?? null;
     const b = cay.parsePost(p.text);
     const truong = Object.keys({ ...a, ...b }).filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
     if (truong.includes("phones") || truong.includes("phone")) doiSdt.push(p.post_id);

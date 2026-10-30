@@ -1,0 +1,48 @@
+schema_version: 1
+feature_slug: khoa-phuong-chung-phuong-so
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    status: not-run
+    superseded_by: phuong-so#AC-1
+    expected: "exit 0; ca 'KP-AC-1 phường số ghi khác kiểu' trong app/tests/the-duyet-phuong-lech-gia.test.tsx xanh: ma trận viết trước ĐÚNG 6 cặp qua soTruongGhepCan (hàng key 'phuong'): (1) 'Phường 12'/'P.12' khop; (2) 'Phường 12'/'P. 12' khop; (3) 'Phường 12'/' phường 12 ' khop; (4) 'Phường 12'/'Phường 21' lech; (5) 'Phường 1'/'Phường 12' lech; (6) 'Phường 12'/'phuong-12' lech; mỗi cặp hai chiều, số assert = 12. Đối chứng đỏ cùng ma trận: bản chép review-can-cu.ts chèn lại dòng 'if (/^\\d+$/.test(ka) || /^\\d+$/.test(kb)) return soGiaTri(a, b);' ngay sau dòng trả 'thieu' của soPhuong → 'KP-AC-1: Phường 12 ↔ P.12 phải Khớp'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    status: not-run
+    superseded_by: phuong-so#AC-2
+    expected: "exit 0; ca 'KP-AC-2 phường khớp thẻ duyệt' trong agent/tests/judge-nguong.test.ts xanh (không DB): rút NGUYÊN VĂN thân trong, khoa, soGiaTri, khoaPhuong, soPhuong từ app/src/lib/ops/review-can-cu.ts, bỏ kiểu bằng stripTypeScriptTypes; ma trận viết trước ĐÚNG 21 cặp: 18 cặp của hồ sơ judge-giu-quyet-dinh-nguoi giữ nguyên nhãn, trừ ô 'Phường 12'/'P.12' nay khop; thêm 'Phường 12'/'P. 12' khop, 'Phường 1'/'Phường 12' lech, 'Phường 12'/'phuong-12' lech. Với mỗi cặp, nhãn soPhuong của bản rút từ app BẰNG nhãn mong đợi BẰNG nhãn luật (mã lý do phường của apNguong: cung_phuong/khac_phuong/thieu_phuong → khop/lech/thieu), hai chiều; số assert = 42. Lượt xanh gọi apNguong KHÔNG kèm tham số so phường, tức chạy soPhuong thật của agent/src/agents/judge-entity.ts. Rút hàm không được → 'KP-AC-2 không rút được <tên hàm> từ review-can-cu.ts'. Đối chứng đỏ 1 cùng ma trận: soPhuong có dòng khoá-chỉ-số (nhúng nguyên văn trong test) truyền qua tham số so phường của apNguong → 'KP-AC-2 luật lệch thẻ duyệt ở: Phường 12 | P.12'. Đối chứng đỏ 2: bản chép judge-entity.ts (đọc từ tệp thật, chèn lại dòng khoá-chỉ-số vào soPhuong, nạp bằng stripTypeScriptTypes) chạy qua đường mặc định → cùng thông điệp. Đối chứng đỏ 3: rút một tên hàm không có trong tệp app → 'KP-AC-2 không rút được'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts, app/src/lib/ops/review-can-cu.ts]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    status: not-run
+    superseded_by: phuong-so#AC-3
+    expected: "exit 0; ca 'KP-AC-3 phường số ra yes' trong agent/tests/judge-nguong.test.ts xanh: trên cặp số đo của ma trận AC-5 hồ sơ judge-giu-quyet-dinh-nguoi (giá/m² lệch 5%, diện tích lệch 4%, cùng loại), 2 ô viết trước — 'Phường 12'/'P.12' → same_house 'yes' và ly_do có 'cung_phuong'; 'Phường 12'/'Phường 21' → 'no' và ly_do có 'khac_phuong'; hai chiều, số assert = 4; apNguong gọi KHÔNG kèm tham số so phường (soPhuong thật của judge-entity.ts). Đối chứng đỏ: soPhuong có dòng khoá-chỉ-số trên ô đầu → 'KP-AC-3 luật sai ở ô: Phường 12 | P.12'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    expected: "exit 0; toàn tệp app/tests/the-duyet-phuong-lech-gia.test.tsx xanh, gồm các ca đã ký TPL-AC-1, TPL-AC-2 (5 cặp khác phường, có 'Phường 1'/'Phường 12'), TPL-AC-4 (trống, chỉ tiền tố → thieu; chín hàng còn lại so như soGiaTri, kèm đối chứng đỏ 'chuẩn hoá phường lan sang hàng property_type') và TPL-AC-5 cùng đối chứng đỏ của chúng; không ca nào bị bỏ hay đổi nhãn (ca TPL-AC-3 được thay bằng KP-AC-1). Ghim so với nền 3ad9d838: các ma trận giữ lại vẫn assert đúng cỡ của nền — TPL-AC-1 15 cặp, TPL-AC-2 5 cặp, TPL-AC-4 CHI_TIEN_TO 4 và KHAC_PHUONG 9 — và bước soát diff ở S4 xác nhận không ô nào của các ma trận ấy đổi so với 3ad9d838."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; cd agent && npm test xanh, gồm ca 'AC-1 ma trận luật' của judge-nguong-la-code và ca 'AC-5 cùng phường ghi khác kiểu ra yes' của judge-giu-quyet-dinh-nguoi với nhãn như trước vòng (ca 'AC-4 phường khớp thẻ duyệt' được thay bằng KP-AC-2). Ghim so với nền 3ad9d838: ma trận AC-1 PL25 vẫn 12 ô, MA_TRAN_AC5 vẫn 5 ô, và bước soát diff ở S4 xác nhận không ô nào của hai ma trận ấy đổi so với 3ad9d838."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts]

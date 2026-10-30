@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 99185e22e479e128f9161e4685e485774e65b2bb
+verified_commit: 71d13bca7d372b82393f7cac705cb12d28c1ddad
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -150,3 +150,11 @@ none — mọi eval chạy một lần, xác định (không eval nào có runs 
 Round 1: E1, E2, E3, E4, E5, E6, E7 đều xanh; sáu lệnh suite hồi quy xanh. Không eval nào đỏ.
 Round 2: commit 6533c944 mở rộng phép đo TPL-AC-4 sang đủ chín hàng còn lại; E1, E2, E3, E4, E6, E7 chạy lại và xanh, E5 mang sang từ round 1 vì delta không chạm paths của eval; sáu lệnh suite hồi quy xanh. Không eval nào đỏ.
 Round 3: commit 99185e22 ghim nhãn từng hàng cho TPL-AC-4 và thêm chiều đỏ rò rỉ ngược (S4 r2); E1, E2, E3, E4, E6, E7 chạy lại và xanh, E5 vẫn mang sang từ round 1 vì delta không chạm paths của eval; sáu lệnh suite hồi quy xanh. Không eval nào đỏ.
+
+### Re-pin lần 1 — 2026-10-30, do eval bị thay bởi khoa-phuong-chung-phuong-so (P.12 = Phường 12)
+run_id: repin-20261030T164739Z-87521
+sha: 97f6a455c7cd852ba85f33a9bf7558d419478621 · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E3 · thay bởi hồ sơ đã ký: E3→khoa-phuong-chung-phuong-so#AC-1 · AC không có chốt máy: AC-3
+
+### Re-pin lần 2 — 2026-10-30, do phuong-so đổi khoaPhuong; trỏ eval thay thế tới phuong-so; gộp main
+run_id: repin-20261030T222258Z-25093
+sha: 71d13bca7d372b82393f7cac705cb12d28c1ddad · suites: 6 lệnh exit 0 · evals: 6/6 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E3 · thay bởi hồ sơ đã ký: E3→phuong-so#AC-1 · AC không có chốt máy: AC-3

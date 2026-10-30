@@ -40,8 +40,8 @@ test("AC-5 theo thứ tự phương pháp (PL15): E2 thắng giá trị cũ (leg
 
     // chiều đỏ: bộ đọc tin (parser) đã nói 4 → E2 thua, đề xuất skipped, cột giữ 4
     await insertOffer(c, { offer_id: "t_offer_a2b", post_ids: ["p_a2b"] });
-    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method)
-      VALUES ('S03:p_a2b', 'bedrooms', '4', 'observed', 'parser')`);
+    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at)
+      VALUES ('S03:p_a2b', 'bedrooms', '4', 'observed', 'parser', now())`);
     const id2 = await insertProposal(c, { offer_id: "t_offer_a2b", field: "bedrooms", value: "2" });
     const { rows: [{ n: n2 }] } = await c.query(`SELECT apply_enrichment($1, 't') AS n`, [[id2]]);
     assert.equal(n2, 0, "AC-5 skipped: E2 thua bộ đọc tin thì không được tính là áp");

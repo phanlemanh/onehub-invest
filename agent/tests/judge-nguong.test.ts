@@ -1,9 +1,11 @@
 // judge-nguong.test.ts — PL25 `judge-nguong-la-code` AC-1 (E1) + AC-2a (E2): luật ngưỡng ghép căn là code, prompt không
 // mang số ngưỡng. Không DB, không model. Ma trận viết trước; mỗi phép đo có đối chứng đỏ cùng fixture, thông điệp ghim.
-// Thêm hồ sơ `judge-giu-quyet-dinh-nguoi` AC-4 (E4) + AC-5 (E5): luật so phường cùng khoá với thẻ duyệt /ops/review.
+// Thêm hồ sơ `judge-giu-quyet-dinh-nguoi` AC-5 (E5): luật so phường cùng khoá với thẻ duyệt /ops/review.
+// Thêm hồ sơ `phuong-so` PS-AC-2 (E2) + PS-AC-3 (E3), thay KP-AC-2/KP-AC-3 của `khoa-phuong-chung-phuong-so`: phường số
+// mang cấp và bỏ số 0 đầu ở cả hai bản.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import { join } from "node:path";
 import type { PairData } from "../src/tools/native.js";
@@ -193,7 +195,7 @@ function rut(nguon: string, ten: string): string {
   const m =
     nguon.match(new RegExp(`^(?:export )?function ${ten}\\([\\s\\S]*?\\n}`, "m")) ??
     nguon.match(new RegExp(`^const ${ten} = .*;$`, "m"));
-  assert.ok(m, `AC-4 không rút được ${ten} từ review-can-cu.ts`);
+  assert.ok(m, `PS-AC-2 không rút được ${ten} từ review-can-cu.ts`);
   return m[0].replace(/^export /, "");
 }
 /** Dựng soPhuong của thẻ duyệt từ chính tệp app: rút thân, bỏ kiểu, chạy. */
@@ -227,12 +229,9 @@ const soPhuongCu = (a: string | number | null, b: string | number | null): SoPhu
 const NHAN_LY_DO: Record<string, SoPhuong> = { cung_phuong: "khop", khac_phuong: "lech", thieu_phuong: "thieu" };
 /** Cặp tin số đo ô (1) ma trận AC-1 PL25 (giá/m² lệch 5%, dt lệch 4%, cùng loại), chỉ khác tên phường. */
 const capPhuong = (a: string | null, b: string | null) => cap(voi({ phuong: a }), voi({ perm2: 105 * TR, area: 52, phuong: b }));
-const nhanLuat = (p: PairData, soFn?: typeof soPhuongCu) => {
-  const ma = apNguong(p, lech, soFn).ly_do.map((l) => l.ma).find((m) => m in NHAN_LY_DO);
-  return ma ? NHAN_LY_DO[ma] : undefined;
-};
 
-/** Ma trận viết trước — ĐÚNG 18 cặp kèm nhãn thẻ duyệt mong đợi (evals.yaml E4). */
+/** Ma trận viết trước — ĐÚNG 32 cặp (evals.yaml E2): 21 ô của KP-AC-2 theo thứ tự cũ, ô (21) «Phường 12 | phuong-12» nay
+ *  khop; rồi 11 ô phường số mới. */
 const MA_TRAN_PHUONG: [string | null, string | null, SoPhuong][] = [
   ["Phương Liệt", "Phường Phương Liệt", "khop"],
   ["Phương Liệt", "Phương Mai", "lech"],
@@ -247,41 +246,104 @@ const MA_TRAN_PHUONG: [string | null, string | null, SoPhuong][] = [
   ["Phường Bình Thạnh", "binh-thanh", "khop"],
   ["tay-nam", "Phường Tây Mỗ", "lech"],
   ["Phường 12", "Phường 12", "khop"],
-  ["Phường 12", "P.12", "lech"],
+  ["Phường 12", "P.12", "khop"],
   ["Phường 12", "Phường 13", "lech"],
   ["Phường", "Bình Thạnh", "thieu"],
   [null, "Bình Thạnh", "thieu"],
   ["", "Bình Thạnh", "thieu"],
+  ["Phường 12", "P. 12", "khop"],
+  ["Phường 1", "Phường 12", "lech"],
+  ["Phường 12", "phuong-12", "khop"],
+  ["Phường 01", "Phường 1", "khop"],
+  ["Phường 12", "P12", "khop"],
+  ["Phường 12", "phuong 12", "khop"],
+  ["Xã 12", "xa-12", "khop"],
+  ["Thị trấn 12", "thi-tran-12", "khop"],
+  ["12", "12", "khop"],
+  ["Phường 12".normalize("NFD"), "Phường 12", "khop"],
+  ["Xã 12", "Phường 12", "lech"],
+  ["Thị trấn 12", "Phường 12", "lech"],
+  ["12", "Phường 12", "lech"],
+  ["Phường 12A", "Phường 12", "lech"],
 ];
 
-/** Một assert so ba nhãn: thẻ duyệt (bản rút từ app), mong đợi, luật. */
-function kiemPhuong(a: string | null, b: string | null, kyVong: SoPhuong, app: ReturnType<typeof soPhuongApp>, soFn?: typeof soPhuongCu) {
+/** Một assert so ba nhãn: thẻ duyệt (bản rút từ app), mong đợi, luật. `apNguongFn` mặc định là apNguong thật. */
+function kiemPhuong(
+  a: string | null,
+  b: string | null,
+  kyVong: SoPhuong,
+  app: ReturnType<typeof soPhuongApp>,
+  soFn?: typeof soPhuongCu,
+  apNguongFn: typeof apNguong = apNguong,
+) {
   const the = app(a, b);
-  const luat = nhanLuat(capPhuong(a, b), soFn);
-  assert.ok(the === kyVong && luat === kyVong, `AC-4 luật lệch thẻ duyệt ở: ${a} | ${b} (thẻ ${the}, luật ${luat}, kỳ vọng ${kyVong})`);
+  const ma = (soFn ? apNguongFn(capPhuong(a, b), lech, soFn) : apNguongFn(capPhuong(a, b))).ly_do
+    .map((l) => l.ma)
+    .find((m) => m in NHAN_LY_DO);
+  const luat = ma ? NHAN_LY_DO[ma] : undefined;
+  assert.ok(the === kyVong && luat === kyVong, `PS-AC-2 luật lệch thẻ duyệt ở: ${a} | ${b} (thẻ ${the}, luật ${luat}, kỳ vọng ${kyVong})`);
 }
-
-test("AC-4 phường khớp thẻ duyệt — 18 cặp, hai chiều, bản rút từ tệp app", () => {
-  const app = soPhuongApp();
-  assert.equal(MA_TRAN_PHUONG.length, 18);
+function kiemMaTran(app: ReturnType<typeof soPhuongApp>, soFn?: typeof soPhuongCu, apNguongFn?: typeof apNguong): number {
   let n = 0;
   for (const [a, b, ky] of MA_TRAN_PHUONG) {
-    kiemPhuong(a, b, ky, app);
-    kiemPhuong(b, a, ky, app);
+    kiemPhuong(a, b, ky, app, soFn, apNguongFn);
+    kiemPhuong(b, a, ky, app, soFn, apNguongFn);
     n += 2;
   }
-  assert.equal(n, 36);
+  return n;
+}
+
+/** khoaPhuong + soPhuong trước vòng phuong-so (judge-entity.ts tại 4704315b), chép nguyên văn — chỉ để đối chứng đỏ. */
+function khoaPhuongCu(v: string): string {
+  return v
+    .normalize("NFC")
+    .trim()
+    .toLowerCase()
+    .replace(/^(?:(?:phường|xã|thị trấn)(?:\s+|$)|p\.\s*)/u, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+function soPhuongTruoc(a: string | number | null, b: string | number | null): SoPhuong {
+  if (a === null || b === null) return "thieu";
+  const ka = khoaPhuongCu(String(a));
+  const kb = khoaPhuongCu(String(b));
+  if (ka === "" || kb === "") return "thieu";
+  return ka === kb ? "khop" : "lech";
+}
+
+/** Bản chép judge-entity.ts thật bỏ dòng nhánh phường số của khoaPhuong — ghi tệp .ts tạm cạnh tests, nạp qua tsx để
+ *  chạy apNguong mặc định của bản chép. */
+async function apNguongBanChepCu(): Promise<typeof apNguong> {
+  const tep = join(import.meta.dirname, "../src/agents/judge-entity.ts");
+  const goc = readFileSync(tep, "utf8");
+  const sau = goc
+    .replace(/^ {2}if \(so\) return .*\n/m, "")
+    .replace(/from "\.\.\/(runtime|tools)\//g, (_m, d) => `from "${join(import.meta.dirname, "../src", d)}/`);
+  assert.notEqual(sau.length, goc.length, "PS-AC-2 không thấy dòng nhánh phường số trong judge-entity.ts");
+  const f = join(import.meta.dirname, `.kp-cu-${process.pid}.ts`);
+  writeFileSync(f, sau);
+  try {
+    return ((await import(f)) as { apNguong: typeof apNguong }).apNguong;
+  } finally {
+    rmSync(f, { force: true });
+  }
+}
+
+test("PS-AC-2 phường khớp thẻ duyệt — 32 cặp, hai chiều, apNguong mặc định, bản rút từ tệp app", () => {
+  assert.equal(MA_TRAN_PHUONG.length, 32);
+  assert.equal(kiemMaTran(soPhuongApp()), 64);
 });
 
-test("AC-4 đối chứng đỏ: chuanHoaPhuong cũ lệch thẻ duyệt; tên hàm không có thì báo không rút được", () => {
+test("PS-AC-2 đối chứng đỏ: khoaPhuong cũ tiêm qua tham số, bản chép judge-entity.ts bỏ nhánh phường số, tên hàm không có", async () => {
   const app = soPhuongApp();
-  assert.throws(() => {
-    for (const [a, b, ky] of MA_TRAN_PHUONG) {
-      kiemPhuong(a, b, ky, app, soPhuongCu);
-      kiemPhuong(b, a, ky, app, soPhuongCu);
-    }
-  }, /AC-4 luật lệch thẻ duyệt ở: Phương Liệt \| Phường Phương Liệt/);
-  assert.throws(() => rut(readFileSync(TEP_APP, "utf8"), "khoaPhuongKhongCo"), /AC-4 không rút được khoaPhuongKhongCo từ review-can-cu.ts/);
+  assert.throws(() => kiemMaTran(app, soPhuongTruoc), /PS-AC-2 luật lệch thẻ duyệt ở: Phường 12 \| phuong-12/);
+  const apCu = await apNguongBanChepCu();
+  assert.throws(() => kiemMaTran(app, undefined, apCu), /PS-AC-2 luật lệch thẻ duyệt ở: Phường 12 \| phuong-12/);
+  assert.throws(() => kiemMaTran(app, soPhuongCu), /PS-AC-2 luật lệch thẻ duyệt ở: Phương Liệt \| Phường Phương Liệt/);
+  assert.throws(() => rut(readFileSync(TEP_APP, "utf8"), "khoaPhuongKhongCo"), /PS-AC-2 không rút được khoaPhuongKhongCo từ review-can-cu.ts/);
 });
 
 /** Ma trận viết trước — 5 ô (evals.yaml E5). */
@@ -310,4 +372,33 @@ test("AC-5 cùng phường ghi khác kiểu ra yes — 5 ô, hai chiều", () =>
 test("AC-5 đối chứng đỏ: chuanHoaPhuong cũ ra no ở ô Phương Liệt | Phường Phương Liệt", () => {
   const [a, b, ky, ma] = MA_TRAN_AC5[0];
   assert.throws(() => kiemAC5(a, b, ky, ma, soPhuongCu), /AC-5 luật sai ở ô: Phương Liệt \| Phường Phương Liệt/);
+});
+
+/** Ma trận viết trước — 4 ô (evals.yaml E3), cùng cặp số đo với AC-5. */
+const MA_TRAN_PS3: [string, string, KetLuan, string][] = [
+  ["Phường 12", "P.12", "yes", "cung_phuong"],
+  ["Phường 01", "Phường 1", "yes", "cung_phuong"],
+  ["Phường 12", "Phường 21", "no", "khac_phuong"],
+  ["Xã 12", "Phường 12", "no", "khac_phuong"],
+];
+function kiemPS3(a: string, b: string, kyVong: KetLuan, ma: string, soFn?: typeof soPhuongCu) {
+  const kq = soFn ? apNguong(capPhuong(a, b), lech, soFn) : apNguong(capPhuong(a, b));
+  assert.ok(kq.same_house === kyVong && kq.ly_do.some((l) => l.ma === ma), `PS-AC-3 luật sai ở ô: ${a} | ${b} (ra ${kq.same_house})`);
+}
+function kiemMaTranPS3(soFn?: typeof soPhuongCu): number {
+  let n = 0;
+  for (const [a, b, ky, ma] of MA_TRAN_PS3) {
+    kiemPS3(a, b, ky, ma, soFn);
+    kiemPS3(b, a, ky, ma, soFn);
+    n += 2;
+  }
+  return n;
+}
+
+test("PS-AC-3 phường số ra yes/no — 4 ô, hai chiều, apNguong mặc định", () => {
+  assert.equal(kiemMaTranPS3(), 8);
+});
+
+test("PS-AC-3 đối chứng đỏ: khoaPhuong cũ ra no ở ô Phường 01 | Phường 1", () => {
+  assert.throws(() => kiemMaTranPS3(soPhuongTruoc), /PS-AC-3 luật sai ở ô: Phường 01 \| Phường 1/);
 });

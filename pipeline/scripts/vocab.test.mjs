@@ -13,16 +13,16 @@ const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SO_THAT = readFileSync(join(PIPE, "mappings.yaml"), "utf8");
 
 const AXES = [
-  "kind", "property_type", "confidence", "price_tier", "enrich_field", "evidence_tier", "assertion_method",
+  "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier", "assertion_method",
   "registry_status", "alias_kind", "registry_event_kind", "party_role",
-  "listing_intent", "offer_status", "data_level", "capability_level",
+  "listing_intent", "offer_status", "change_type", "data_level", "capability_level",
 ];
 
-// Ma trận nhãn viết trước (59 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
+// Ma trận nhãn viết trước (71 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
 // vòng; bậc: nguyên văn FRAMING §3.4; listing_intent + offer_status: Hỏi-1 của PL6 (Mạnh duyệt 26/10);
 // evidence_tier + assertion_method: PL15 (bảng phát biểu, design §3.7); `wanted` → `inquiry` «Yêu cầu»: Mạnh 27/10
 // (hồ sơ wanted-thanh-inquiry); bốn trục danh bạ: DB2b
-// ho-nguoi-theo-nguon (Mạnh duyệt 30/10).
+// ho-nguoi-theo-nguon (Mạnh duyệt 30/10); assertion_field + change_type: PL19 (trường phát biểu; loại thay đổi RESO ChangeType).
 const NHAN = [
   ["kind", "sale", "Bán"], ["kind", "rent_lt", "Cho thuê"],
   ["property_type", "apartment", "Căn hộ"], ["property_type", "house", "Nhà riêng"], ["property_type", "land", "Đất"],
@@ -31,6 +31,9 @@ const NHAN = [
   ["price_tier", "P0", "giá giao dịch (P0)"], ["price_tier", "P1", "giá nội bộ (P1)"], ["price_tier", "P2", "giá công khai (P2)"],
   ["enrich_field", "property_type", "Loại hình"], ["enrich_field", "bedrooms", "Phòng ngủ"], ["enrich_field", "bathrooms", "WC"],
   ["enrich_field", "street_raw", "Đường"], ["enrich_field", "block_raw", "Toà"],
+  ["assertion_field", "property_type", "Loại hình"], ["assertion_field", "bedrooms", "Phòng ngủ"],
+  ["assertion_field", "bathrooms", "WC"], ["assertion_field", "street_raw", "Đường"], ["assertion_field", "block_raw", "Toà"],
+  ["assertion_field", "offer_status", "Trạng thái chào"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
@@ -45,6 +48,9 @@ const NHAN = [
   ["listing_intent", "not_listing", "Không phải tin rao"], ["listing_intent", "unknown", "Chưa rõ"],
   ["offer_status", "active", "Đang chào"], ["offer_status", "active_under_contract", "Đã cọc"],
   ["offer_status", "closed", "Đã bán"], ["offer_status", "withdrawn", "Đã gỡ"], ["offer_status", "unknown", "Chưa rõ"],
+  ["change_type", "new_listing", "Tin mới"], ["change_type", "price_change", "Đổi giá"], ["change_type", "withdrawn", "Gỡ tin"],
+  ["change_type", "back_on_market", "Chào lại"], ["change_type", "active_under_contract", "Đã cọc"],
+  ["change_type", "closed", "Đã bán"],
   ["data_level", "B0", "Có lời khai"], ["data_level", "B1", "Đọc được"], ["data_level", "B2", "Gắn căn"],
   ["data_level", "B3", "Đã đo"], ["data_level", "B4", "Xác minh"], ["data_level", "B5", "Sống"],
   ["capability_level", "N0", "Thu được"], ["capability_level", "N1", "Đọc được"], ["capability_level", "N2", "Đo được"],
@@ -58,11 +64,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 15 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 17 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 59);
+  assert.equal(NHAN.length, 71);
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

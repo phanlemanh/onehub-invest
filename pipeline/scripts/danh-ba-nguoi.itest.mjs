@@ -282,16 +282,16 @@ test("AC-6 chạy lại: lượt hai bằng 0, đổi người gửi rút vai, m
   });
 });
 
-test("AC-8 sellers có người: mỗi (SĐT, nguồn) của sellers có người sống", async () => {
+test("AC-8 sellers có người: mỗi (SĐT, nguồn) trên tin có người sống", async () => {
   await trongGiaoDich(async (db) => {
     const hx = ai("hx");
     await themTin(db, { id: "hx3", source: "S03", postIds: [], sdt: hx });
     await themTin(db, { id: "hx5", source: "S05", postIds: [], sdt: hx });
-    await db.query(`INSERT INTO sellers (phone_hash, sources, first_seen, last_seen) VALUES ($1, ARRAY['S03','S05'], now(), now())`, [hx]);
     await dungNguoi(db, { runId: "itest-ac8", out: im });
     assert.deepEqual(await sellersThieuNguoi(db), [], "AC-8 sellers thiếu người");
+    // Chiều đỏ: tin mang SĐT mới thêm SAU lượt dựng — đối chiếu đọc SĐT trên tin (SD1), không đọc sellers.
     const hy = ai("hy");
-    await db.query(`INSERT INTO sellers (phone_hash, sources, first_seen, last_seen) VALUES ($1, ARRAY['S06'], now(), now())`, [hy]);
+    await themTin(db, { id: "hy6", source: "S06", sdt: hy });
     assert.deepEqual(await sellersThieuNguoi(db), [`${hy}:S06`], `AC-8 sellers thiếu người: ${hy}:S06`);
   });
 });

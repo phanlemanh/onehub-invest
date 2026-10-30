@@ -106,12 +106,15 @@ export function soGiaTri(a: string | number | null | undefined, b: string | numb
  * Khoá tên phường để so hai nguồn (S05 ghi slug `binh-thanh`, S06 ghi «Phường Bình Thạnh»): bỏ MỘT tiền tố hành chính
  * trên chuỗi còn dấu, rồi slug như `slugifyName()` của queries.ts (= đuôi mã phường). Bỏ tiền tố trước khi bỏ dấu vì
  * «Phường» và «Phương» cùng thành `phuong` — «Phương Liệt», «Phượng Dực» là tên phường thật.
+ * Phường số (sau tiền tố chỉ còn chữ số) mang cấp và bỏ số 0 đầu: «Phường 01», «P.1», «P1», `phuong-1` → `p-1`; «Xã 1»,
+ * `xa-1` → `x-1`; «Thị trấn 1» → `tt-1`; «1» trần → `1` — khác cấp là khác phường (hồ sơ phuong-so; bản chép ở
+ * agent/src/agents/judge-entity.ts).
  */
 export function khoaPhuong(v: string): string {
-  return v
-    .normalize("NFC")
-    .trim()
-    .toLowerCase()
+  const s = v.normalize("NFC").trim().toLowerCase();
+  const so = s.match(/^(?:(phường|phuong|p)|(xã|xa)|(thị trấn|thi[\s-]*tran))?[\s.-]*0*(\d+)$/u);
+  if (so) return `${so[1] ? "p-" : so[2] ? "x-" : so[3] ? "tt-" : ""}${so[4]}`;
+  return s
     .replace(/^(?:(?:phường|xã|thị trấn)(?:\s+|$)|p\.\s*)/u, "")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -121,15 +124,14 @@ export function khoaPhuong(v: string): string {
 }
 
 /**
- * So hàng Phường theo khoá tên chuẩn. Khoá rỗng (chỉ có tiền tố) → Thiếu. Khoá chỉ số («Phường 12» của hai quận khác
- * nhau cùng khoá) → so chuỗi gốc như cũ, để khoá số không làm hai chuỗi khác nhau thành Khớp.
+ * So hàng Phường theo khoá tên chuẩn. Khoá rỗng (chỉ có tiền tố) → Thiếu; còn lại cùng khoá → Khớp, khác → Lệch (bản chép
+ * ở agent/src/agents/judge-entity.ts).
  */
 function soPhuong(a: string | number | null, b: string | number | null): So {
   if (a === null || b === null) return "thieu";
   const ka = khoaPhuong(String(a));
   const kb = khoaPhuong(String(b));
   if (ka === "" || kb === "") return "thieu";
-  if (/^\d+$/.test(ka) || /^\d+$/.test(kb)) return soGiaTri(a, b);
   return ka === kb ? "khop" : "lech";
 }
 
