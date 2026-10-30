@@ -346,6 +346,20 @@ công hay lỗi; chi phí = token × đơn giá của model (model chạy local 
 - Slug URL: `ai-calls`
 _Avoid_: log AI, LLM usage, chi phí model (chưa nói đơn vị)
 
+**Gắn nhãn**: Việc người đọc chữ gốc của một tin rao trong một lát và ghi giá trị đúng cho chín trường lõi (ý định tin,
+loại tin, loại hình, dự án, toà, giá thấp nhất, giá cao nhất, diện tích, phòng ngủ), KHÔNG thấy giá trị máy đã đọc ra
+(gắn mù, tránh neo). 20% tin của lát do hai người gắn để đo đồng thuận; đồng thuận một trường dưới 0,9 thì sửa hướng dẫn
+gắn nhãn trước khi tin số đo. Trang `/ops/labels` (PL7), chỉ ở máy thu.
+- Code: `eval_label_items`, `label.write`, `label-sample.mjs` · RESO: —
+- Slug URL: `labels`
+_Avoid_: annotate, label UI, gán nhãn
+
+**Nhãn đánh giá**: Giá trị một người gắn cho một trường của một tin khi gắn nhãn — sự thật tham chiếu để chấm độ đúng
+của máy (PL9), không phải giá trị hiển thị; «tin không nêu» là một nhãn hợp lệ. Gắn với người gắn nên là tầng A, chỉ ở
+máy thu.
+- Code: `eval_labels`, `eval_label_agreement` · RESO: —
+_Avoid_: nhãn tiếng Việt (`label_vi` — chữ hiển thị của sổ từ vựng, khái niệm khác), ground truth
+
 **Độ tươi**: Thời gian từ lần thu gần nhất của một nguồn; vượt SLO thì `check-freshness.mjs` exit 1.
 - Code: `freshness (SLO)` · RESO: ≈ ModificationTimestamp
 _Avoid_: freshness

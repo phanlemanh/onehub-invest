@@ -37,6 +37,7 @@ executors:
     ui_route_slugs: "cd app && node --test eslint-plugin-onehub-ui/tests/route-slugs.test.mjs"   # URL tiếng Anh theo CONTEXT.md (glossary-context)
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
+    mgn_app: "cd app && node --import tsx --test tests/labels.test.tsx"   # man-gan-nhan-mu AC-3, AC-5..AC-8 — lược đồ tạm, route thật
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -91,6 +92,7 @@ executors:
     airbnb_nghi_tinh: "cd pipeline && node --test scripts/airbnb-nghi.test.mjs"   # airbnb-nghi-khong-hoi-sinh AC-6: đọc tĩnh nhánh cho nghỉ của ghiListing — không cần DB
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
+    cam_mau_s03: "cd pipeline && node --test scripts/cam-mau-s03.test.mjs"   # s03-cam-mau-so-lieu (N1): ma trận giá/DT/khoá gom/chốt khoảng — không cần DB (giám sát duyệt P1-47)
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
@@ -100,6 +102,8 @@ executors:
     ruler_views_static: "bash scripts/check-ruler-views.sh static"       # PII seller_name không rời máy; catch-up chỉ DDL
     ruler_views_cloudsim: "bash scripts/check-ruler-views.sh cloudsim"   # DB mô phỏng cloud + SQL catch-up
     portal_static: "node scripts/check-portal-compliance.mjs"     # ranh giới cổng tĩnh (luật 5/6/9) — đo trạng thái cây
+    cam_mau_s03_that: "bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/cam-mau-s03.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-cam-mau-s03.mjs"   # s03-cam-mau-so-lieu (N1): ca DB + sáu thước «Bật khi» trên DB thử, BEGIN…ROLLBACK (giám sát duyệt P1-47)
+    gia_ty_chan_dong_so: "cd pipeline && node scripts/so-gia-ty-chan-dong.mjs"   # s03-gia-ty-chan-dong AC-6: so đầu ra bản nền với bản cây trên mọi bài S03 thật, chỉ đọc (READ ONLY); lượt đối chứng luôn chạy (giám sát duyệt P1-55)
     design_floor_fresh: "node scripts/design-floor/gen-tokens.mjs --root . --check && node scripts/design-floor/gen-registry.mjs --root . --check"   # dung-m2-song-song: design/*.json khớp nguồn — đo trạng thái cây
     portal_smoke: "BASE_URL=http://localhost:3456 node scripts/smoke-portal-compliance.mjs"   # cần app đang chạy :3456 + DB local
     product_map: "node scripts/product-map.mjs --root . --check"
@@ -418,6 +422,12 @@ executors:
     sca_facts: "node _acceptance/so-cuoc-goi-ai/probes/facts.mjs"
     sca_duong: "bash _acceptance/so-cuoc-goi-ai/probes/duong.sh"
     sca_pham_vi: "bash _acceptance/so-cuoc-goi-ai/probes/pham-vi.sh"
+    mgn_migration: "node _acceptance/man-gan-nhan-mu/probes/migration.mjs"   # man-gan-nhan-mu E1 — DB rỗng riêng oneinvest_p4_mgn_mig
+    mgn_mau: "node _acceptance/man-gan-nhan-mu/probes/mau.mjs"   # man-gan-nhan-mu E2 — DB thử oneinvest_p4_mgn, lệnh thật
+    mgn_mu: "cd app && node --import tsx ../_acceptance/man-gan-nhan-mu/probes/mu.mjs"   # man-gan-nhan-mu E5 — gắn mù
+    mgn_dong_thuan: "cd app && node --import tsx ../_acceptance/man-gan-nhan-mu/probes/dong-thuan.mjs"   # man-gan-nhan-mu E7
+    mgn_duong: "bash _acceptance/man-gan-nhan-mu/probes/duong.sh"   # man-gan-nhan-mu E12
+    mgn_pham_vi: "bash _acceptance/man-gan-nhan-mu/probes/pham-vi.sh"   # man-gan-nhan-mu E13
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"
@@ -463,6 +473,7 @@ executors:
     gate: "node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app"   # script tier (a11y/slop)
     gate_don_hex_tho: "for f in app/src/components/finder/bins.ts app/src/components/finder/choropleth-map.tsx app/src/components/listing/listings-map.tsx app/src/components/mini-map.tsx app/src/components/ops/data-flow/flow-journey.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # don-hex-tho E8 — gate từng tệp giao diện của vòng (gate không tự nối tệp từ paths); giám sát duyệt U1-63
     sca_gate: "for f in app/src/app/ops/ai-calls/page.tsx app/src/components/ops/ai-calls/ai-calls-view.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # so-cuoc-goi-ai E10
+    mgn_gate: "for f in app/src/app/ops/labels/page.tsx app/src/components/ops/labels/labels-view.tsx app/src/components/ops/labels/label-form.tsx app/src/components/ops/labels/agreement-table.tsx; do node \"${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-gate.mjs)}/scripts/design-gate.mjs\" --jsdom app \"$f\" || exit $?; done"   # man-gan-nhan-mu E11
     ui_check: "${CLAUDE_PLUGIN_ROOT:-$(node $HOME/.claude/plugins/marketplaces/acceptance-gate-kit/feature-loop/scripts/resolve-plugin.mjs --plugin acceptance-gate --require scripts/design-scan.js)}/scripts/design-scan.js"     # browser tier (authoritative P0)
     # Sàn thiết kế S4 (design-floor bậc M1): chấm hex thô trên tệp giao diện mà vòng chạm. Nối ở noi-design-floor sau khi
     # don-hex-tho dọn hết hex thô ngoài vendor; mười vòng thí điểm DO1 đếm từ hàng này (ghi chú nhận 2.35.0 của kit, mục 2.4).

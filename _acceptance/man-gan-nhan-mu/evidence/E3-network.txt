@@ -1,0 +1,7 @@
+driver: ego-browser (không có đường đọc network); nguồn thay thế: log dev server dev3464.log
+ GET /ops/labels 200 in 163ms (next.js: 40ms, proxy.ts: 4ms, application-code: 119ms)
+ GET /ops/labels 200 in 56ms (next.js: 9ms, proxy.ts: 2ms, application-code: 44ms)
+ GET /ops/labels 200 in 65ms (next.js: 1.7ms, proxy.ts: 1.5ms, application-code: 62ms)
+ POST /api/v1/ops/labels 200 in 43ms (next.js: 22ms, application-code: 21ms)
+ GET /ops/labels 200 in 72ms (next.js: 1.9ms, proxy.ts: 1.2ms, application-code: 69ms)
+ POST /api/v1/ops/labels 400 in 10ms (next.js: 0.6ms, application-code: 9ms)

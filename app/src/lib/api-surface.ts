@@ -41,6 +41,7 @@ export const API_SURFACE: ApiSurfaceEntry[] = [
   { route: "v1/ops/ingest", methods: ["POST"], mode: "ops", note: "nạp số ops từ máy local lên cloud" },
   { route: "v1/ops/truthful-coverage", methods: ["GET"], mode: "ops", note: "độ phủ nói thật" },
   { route: "v1/ops/review/[id]/decide", methods: ["POST"], mode: "ops-session", note: "quyết thẻ duyệt — review.decide: vai ops, không bearer (TV1)" },
+  { route: "v1/ops/labels", methods: ["GET", "POST"], mode: "ops-session", note: "gắn nhãn đánh giá mù — label.write: vai ops, không bearer; chỉ máy thu (PL7)" },
   { route: "v1/ops/source-groups", methods: ["GET", "POST"], mode: "ops", methodModes: { POST: "admin" }, note: "nhóm nguồn — GET ops.read; mọi action POST là unit.* chỉ admin (TV1)" },
   { route: "v1/ops/zalo/accounts", methods: ["GET", "POST", "DELETE"], mode: "admin", note: "tài khoản thu Zalo — zalo.admin (TV1)" },
   { route: "v1/ops/zalo/groups", methods: ["GET", "POST"], mode: "admin", note: "nhóm Zalo theo dõi — zalo.admin (TV1)" },

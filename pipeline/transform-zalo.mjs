@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
-import { docPhuongHopLe } from "./lib/osm.mjs";
+import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { phatBieuPhongNgu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
@@ -37,13 +37,72 @@ export function parseVnNumber(raw) {
   return parseFloat(raw.replace(/[.,]/g, ""));
 }
 
+// Cách môi giới viết giá (hồ sơ s03-cam-mau-so-lieu, bản nghiên cứu s03-boc-tach-cau-truc-3010 §3.2).
+// "2.650 tỷ", "3,349 tỷ": một–hai chữ số + đúng ba chữ số sau dấu, kèm chữ tỷ — môi giới viết triệu, không phải 2.650 tỷ.
+const GIA_TY_NHOM_NGHIN = /^\d{1,2}[.,]\d{3}$/;
+// "2ty450", "3ty2", "2 tỷ 450" — phần lẻ không được là số phòng, diện tích, triệu hay số đếm của căn ("8 tỷ 4 tầng",
+// "3 tỷ 2 ô tô tránh" — Ngoài-1, Ngoài-4 nâng phạm vi ở Cổng Bằng chứng 30/10).
+const GIA_TY_LE = /(?<![\d.,])(\d{1,3})\s*t(?:ỷ|y)\s*(\d{1,3})(?![\d.,])(?!\s*(?:pn|phòng|wc|tr|triệu|m\b|m2|m²|%|n\b|ng|tầng|lầu|trệt|ô\s*tô|oto|căn|mặt))/i;
+// "5tr5", "8tr5" (không dấu cách giữa tr và phần lẻ).
+const GIA_TR_LE = /(?<![\d.,])(\d{1,3})tr(\d{1,2})(?![\d.,])(?!\s*(?:pn|wc|m\b|m2|m²))/i;
+// "7.000.000" — đồng, đủ hai nhóm nghìn, không theo sau là đơn vị hay "/m" (đơn giá — Ngoài-2).
+const GIA_DONG = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ\/m|\/\s*m[2²]|\/\s*m\b))/i;
+// "45.000.000/m2", "45.000.000đ/m2" — đơn giá viết bằng đồng: giá/m², không phải tổng giá (Ngoài-2).
+const GIA_DONG_M2 = /(?<![\d.,])(\d{1,3}(?:\.\d{3}){2,})(?![\d.,])\s*(?:đ|vnđ|vnd)?\s*\/\s*m(?:2|²)?(?![\p{L}\p{N}])/iu;
+// "Giá: 4,000 (thu về)" — số nhóm nghìn đứng sau nhãn giá, không đơn vị: triệu.
+const GIA_NHAN_TRIEU = /giá(?:\s*bán)?\s*:?\s*(\d{1,3}[.,]\d{3})(?![\d.,])(?!\s*(?:tỷ|ty|tr|triệu|m\b|m2|m²|đ|vnd))/i;
+
+/** Số đứng trước chữ tỷ, ra đơn vị tỷ: "2.650" → 2,65 · "2400" (từ 1.000, không dấu) → 2,4 · còn lại như parseVnNumber. */
+export function soTy(raw) {
+  if (GIA_TY_NHOM_NGHIN.test(raw)) return parseFloat(raw.replace(",", "."));
+  const v = parseVnNumber(raw);
+  if (/^\d{4,}$/.test(raw) && v >= 1000) return v / 1000;
+  return v;
+}
+
+// Diện tích viết thiếu chữ 2 ("64m", "DT:43.2m"): chỉ nhận 15–500 m², và không phải bề ngang/khoảng cách đứng trước.
+const BE_NGANG = /(ngang|mặt tiền|\bmt\b|rộng|dài|sâu|hẻm|ngõ|đường|lộ giới|cách)/i;
+const MET_TRAN = /(\d+(?:[.,]\d+)?)\s*m(?![\p{L}\p{N}²])/giu;
+
+/** Diện tích từ "<số>m" đứng một mình, hoặc null. */
+export function dienTichMetTran(so) {
+  for (const m of so.matchAll(MET_TRAN)) {
+    const v = parseFloat(m[1].replace(",", "."));
+    if (!(v >= 15 && v <= 500)) continue;
+    const truoc = so.slice(Math.max(0, m.index - 12), m.index);
+    if (BE_NGANG.test(truoc)) continue;
+    return v;
+  }
+  return null;
+}
+
 /** SĐT di động VN từ text tin rao: "0973034567", "0973 034 567",
  * "0973.034.567", "+84973…". Chuẩn hoá về dạng 0xxxxxxxxx(x); chỉ nhận đầu
  * số mobile (3,5,7,8,9) — môi giới gần như luôn dùng mobile, lọc luôn giúp
  * tránh vớ phải số nhà/mã nào đó. Guard (?<!\d)(?!\d) để không cắt giữa dãy
  * số dài (mã bưu chính, số tài khoản…). */
+const PHONE_RE = /(?<!\d)(?:\+84|0)(?:[.\-\s]?\d){8,10}(?!\d)/g;
+const URL_RE = /https?:\/\/\S+|www\.\S+/gi;
+
+/** Chữ bài để đọc số (N1): mọi URL và mọi dãy dạng SĐT thay bằng một dấu cách — URL ảnh mang «6tY», «/2650/»
+ *  từng thành giá, SĐT thành diện tích. SĐT người đăng vẫn đọc từ chữ gốc (extractPhones). */
+export function gatSo(text) {
+  const t = (text ?? "").replace(URL_RE, " ");
+  return t.replace(PHONE_RE, (m, i) => (laDuoiNhomNghin(t, m, i) ? m : " "));
+}
+
+/** Khớp SĐT ở vị trí i thật ra là đuôi nhóm nghìn của một số tiền («3.|000.000.000» — hồ sơ s03-gia-ty-chan-dong): đứng
+ *  ngay sau «chữ số + dấu chấm/phẩy» và gồm đủ các nhóm 3 chữ số nối bằng cùng dấu ấy. SĐT nối SĐT («…567,0912345678») và
+ *  SĐT sau «m2,» không có dạng nhóm 3 chữ số nên vẫn bị gạt. */
+function laDuoiNhomNghin(t, m, i) {
+  const dau = t[i - 1];
+  if ((dau !== "." && dau !== ",") || !/\d/.test(t[i - 2] ?? "")) return false;
+  const nhom = dau === "." ? /^\d{3}(?:\.\d{3})+$/ : /^\d{3}(?:,\d{3})+$/;
+  return nhom.test(m);
+}
+
 export function extractPhones(text) {
-  const raw = text.match(/(?<!\d)(?:\+84|0)(?:[.\-\s]?\d){8,10}(?!\d)/g) ?? [];
+  const raw = text.match(PHONE_RE) ?? [];
   const seen = new Set();
   const out = [];
   for (const r of raw) {
@@ -63,37 +122,59 @@ export function extractPhones(text) {
 export function parsePost(text) {
   const out = { kind: null, priceVnd: null, pricePerm2Vnd: null, areaM2: null, bedrooms: null, phuong: null, phone: null, phones: null };
 
+  // Số đọc trên chữ đã gạt URL và SĐT (N1); SĐT người đăng đọc từ chữ gốc ở dưới.
+  const so = gatSo(text);
+
   // loại tin: bán vs thuê. KHÔNG return sớm khi thiếu keyword — môi giới ở
   // nhóm "mua bán" thường không lặp chữ "bán", chỉ ghi giá ("Giá: 6.1 tỷ").
   // Transform tự suy kind theo bối cảnh khi cần; parser cứ parse đủ trường.
-  if (/cho thuê|thuê dài hạn|cần cho thuê|thuê dài hạn/i.test(text)) out.kind = "rent_lt";
-  else if (/bán|chính chủ bán|cần tiền bán|bán gấp/i.test(text)) out.kind = "sale";
+  // Ý định không vá ở đây (hồ sơ s03-cam-mau-so-lieu: việc của PL5).
+  if (/cho thuê|thuê dài hạn|cần cho thuê|thuê dài hạn/i.test(so)) out.kind = "rent_lt";
+  else if (/bán|chính chủ bán|cần tiền bán|bán gấp/i.test(so)) out.kind = "sale";
 
   // giá: "45tr/m2", "3.2 tỷ", "2tỷ", "15tr/tháng", "12 triệu/th"
-  const perm2 = text.match(/(\d[\d.,]*)\s*(?:tr|triệu)\/m[²2]/i);
+  const perm2 = so.match(/(\d[\d.,]*)\s*(?:tr|triệu)\/m[²2]/i);
   if (perm2) out.pricePerm2Vnd = Math.round(parseVnNumber(perm2[1]) * 1e6);
+  const dongM2 = so.match(GIA_DONG_M2);
+  if (!out.pricePerm2Vnd && dongM2) out.pricePerm2Vnd = parseInt(dongM2[1].replace(/\./g, ""), 10);
 
+  // "2ty450", "3ty2", "2 tỷ 450": phần sau chữ tỷ là phần lẻ (2,45 tỷ) — xét trước dạng tỷ thường, vì "3ty2" khớp cả hai.
+  const tyLe = so.match(GIA_TY_LE);
   // (?!..) chặn 't' của chữ thường tiếng Việt ("62m2, tổng …") — \b của JS
   // chỉ theo ASCII nên 'tổ' vẫn tạo boundary giả (bench C2 bắt được).
-  const ty = text.match(/(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/i);
-  if (ty) out.priceVnd = Math.round(parseVnNumber(ty[1]) * 1e9);
+  const ty = so.match(/(\d+(?:[.,]\d+)*)\s*t(?:ỷ|y|\b)(?![a-zA-Zà-ỹÀ-Ỹ])/i);
+  if (tyLe) out.priceVnd = Math.round(parseFloat(`${tyLe[1]}.${tyLe[2]}`) * 1e9);
+  else if (ty) out.priceVnd = Math.round(soTy(ty[1]) * 1e9);
 
   if (!out.priceVnd && !out.pricePerm2Vnd) {
-    const trieu = text.match(/(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
-    if (trieu) out.priceVnd = Math.round(parseVnNumber(trieu[1]) * 1e6);
+    // "5tr5", "8tr5": phần sau chữ tr là phần lẻ (5,5 triệu).
+    const trLe = so.match(GIA_TR_LE);
+    const trieu = so.match(/(\d[\d.,]*)\s*(?:tr|triệu)(?!\/m)(?:\s*\/\s*th(?:áng)?)?/i);
+    if (trLe) out.priceVnd = Math.round(parseFloat(`${trLe[1]}.${trLe[2]}`) * 1e6);
+    else if (trieu) out.priceVnd = Math.round(parseVnNumber(trieu[1]) * 1e6);
+  }
+
+  if (!out.priceVnd && !out.pricePerm2Vnd) {
+    // Không đơn vị: "7.000.000" (đủ hai nhóm nghìn) là đồng; "Giá: 4,000" ở tin bán là triệu (4 tỷ), tin thuê để trống.
+    const dong = so.match(GIA_DONG);
+    const giaTrieu = out.kind === "sale" ? so.match(GIA_NHAN_TRIEU) : null;
+    if (dong) out.priceVnd = parseInt(dong[1].replace(/\./g, ""), 10);
+    else if (giaTrieu) out.priceVnd = Math.round(parseVnNumber(giaTrieu[1]) * 1e6);
   }
 
   // diện tích: "65m2", "65m²", "DT 45m"
-  const area = text.match(/(\d+(?:\.\d+)?)\s*m[²2]/i);
+  const area = so.match(/(\d+(?:\.\d+)?)\s*m[²2]/i);
   if (area) out.areaM2 = parseFloat(area[1]);
+  else out.areaM2 = dienTichMetTran(so);
 
   // bedrooms: "2PN", "2 phòng ngủ", "2BR"
-  const bd = text.match(/(\d+)\s*(?:PN|phòng ngủ|BR)/i);
+  const bd = so.match(/(\d+)\s*(?:PN|phòng ngủ|BR)/i);
   if (bd) out.bedrooms = parseInt(bd[1]);
 
   // SĐT người đăng (nằm sẵn trong text tin rao — nguồn contact chính của P1)
   out.phones = extractPhones(text);
   out.phone = out.phones[0] ?? null;
+  out.ma = maToaCan(text);
 
   // sanitize: regex "tổng thể" có thể vớ chuỗi lạ → NaN; NaN vô hại hoá
   // thành null để transform bỏ qua thay vì gãy INSERT bigint.
@@ -133,6 +214,34 @@ export function matchPhuong(text, phuongSlugs) {
   return best;
 }
 
+/**
+ * Phường theo thị trường (N1): khớp dài nhất như matchPhuong trên danh sách phường của nhiều thị trường; khớp dài nhất
+ * rơi vào hai thị trường (tên trùng giữa Hà Nội và TP.HCM) thì không đoán — trả null.
+ * @param {string} text
+ * @param {{ id: string, name: string, market: string }[]} entries
+ * @returns {{ id: string, slug: string, market: string } | null}
+ */
+export function matchPhuongThiTruong(text, entries) {
+  const textLower = text.normalize("NFC").toLowerCase();
+  let best = null;
+  let bestLen = 0;
+  let tranh = false;
+  for (const e of entries) {
+    const slug = e.id.slice(e.market.length + 1);
+    const variants = [e.name, slug.replace(/-/g, " "), e.name.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/i, "")]
+      .map((v) => v.normalize("NFC").toLowerCase());
+    let len = 0;
+    for (const v of variants) {
+      if (v.length < 2 || /^[\d\s]+$/.test(v)) continue;
+      if (textLower.includes(v) && v.length > len) len = v.length;
+    }
+    if (len === 0) continue;
+    if (len > bestLen) { best = { id: e.id, slug, market: e.market }; bestLen = len; tranh = false; }
+    else if (len === bestLen && best && best.market !== e.market) tranh = true;
+  }
+  return tranh ? null : best;
+}
+
 /** Chữ bài đã chuẩn hoá để so trùng: NFC, chữ thường, mọi dãy không phải chữ/số thành một dấu cách. */
 export const normText = (text) => (text ?? "").normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 
@@ -149,7 +258,45 @@ export function repostKey(pr, post) {
   const noiDung = `${pr.kind}|${pr.phuong ?? "?"}|${pr.priceVnd ?? pr.pricePerm2Vnd}|${pr.areaM2 ?? "?"}|${pr.bedrooms ?? "?"}`;
   if (pr.phuong && pr.areaM2 != null) return noiDung;
   const nguoi = post.sender_id ? `sender:${post.sender_id}` : pr.phone ? `phone:${pr.phone}` : `text:${normText(post.text)}`;
-  return `${noiDung}|${nguoi}`;
+  // N1: mã toà/căn tách các căn khác nhau của một môi giới cùng giá/PN (đo 30/10: một offer gom 40 bài).
+  const ma = pr.ma ?? [];
+  return `${noiDung}|${ma.join(",") || "?"}|${nguoi}`;
+}
+
+// Mã toà/căn trong chữ bài: chữ HOA 1–3 + 1–2 số (S10, BS8, PR2, LD2), kèm đuôi căn ".03", "-1203", "xx13".
+const MA_TOA_CAN = /(?<![\p{L}\p{N}])([A-Z]{1,3}\d{1,2}(?:[.\-]\d{2,4}|x{2}\d{2})?)(?![\p{L}\p{N}])/gu;
+
+/** Mã toà/căn đọc từ chữ đã gạt URL, sắp xếp, không trùng; bỏ "T<số>" (thường là mốc «T4/2027»). Chỉ để gom, không nối. */
+export function maToaCan(text) {
+  const ma = [...gatSo(text).matchAll(MA_TOA_CAN)].map((m) => m[1]).filter((m) => !/^T\d{1,2}$/.test(m));
+  return [...new Set(ma)].sort();
+}
+
+// Chốt khoảng giá (N1, Hỏi-2 = a): số phi lý không thành offer. Không đổi loại tin — ý định là việc của PL5.
+const GIA_THUE_TRAN = 1e9;
+const GIA_BAN_TRAN = 100e9;
+
+/** Lý do một bài đã đọc có giá phi lý, hoặc null. */
+export function lyDoGiaPhiLy(pr) {
+  if (pr.priceVnd == null) return null;
+  if (pr.kind === "rent_lt" && pr.priceVnd >= GIA_THUE_TRAN) return "thue-tu-1-ty";
+  if (pr.kind === "sale" && pr.priceVnd > GIA_BAN_TRAN) return "ban-tren-100-ty";
+  return null;
+}
+
+/**
+ * Thị trường khai của từng nhóm S03 ở sổ nhóm (collection_units, PL12): group_key (= stg_zalo_posts.conversation_id) →
+ * market_codes. Sổ chưa có (DB chưa áp 048) → bảng rỗng, mọi nhóm đi nhánh «chưa khai».
+ * @param {import("pg").Client} client
+ * @returns {Promise<Map<string, string[]>>}
+ */
+export async function docThiTruongNhom(client) {
+  const { rows: co } = await client.query("SELECT to_regclass('collection_units') IS NOT NULL AS ok");
+  if (!co[0].ok) return new Map();
+  const { rows } = await client.query(
+    "SELECT group_key, market_codes FROM collection_units WHERE source_code = 'S03' AND cardinality(market_codes) > 0",
+  );
+  return new Map(rows.map((r) => [r.group_key, r.market_codes]));
 }
 
 /**
@@ -159,10 +306,20 @@ export function repostKey(pr, post) {
  */
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 export async function runTransformZalo(client, { parse = parsePost } = {}) {
-  // Load phường list (tên + area_id)
-  const areas = await docPhuongHopLe(client, ["vn-hanoi"]);
-  const phuongSlugs = areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.name]);
-  const areaBySlug = new Map(areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.id]));
+  // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
+  // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
+  const moiThiTruong = await docThiTruongCoPhuong(client);
+  const areas = await docPhuongHopLe(client, moiThiTruong);
+  const entriesCua = new Map(); // khoá thị trường đã sắp → danh sách phường
+  const entries = (markets) => {
+    const k = [...markets].sort().join(",");
+    if (!entriesCua.has(k)) {
+      const set = new Set(markets);
+      entriesCua.set(k, areas.filter((a) => set.has(a.parent_id)).map((a) => ({ id: a.id, name: a.name, market: a.parent_id })));
+    }
+    return entriesCua.get(k);
+  };
+  const thiTruongNhom = await docThiTruongNhom(client);
 
   // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
   // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
@@ -173,11 +330,15 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   // ---- Bước 2+3: parse + confidence ----
   const parsed = [];
   let nFull = 0, nPartial = 0, nFail = 0;
+  const loaiGiaPhiLy = { "thue-tu-1-ty": 0, "ban-tren-100-ty": 0 };
   for (const p of posts) {
     const pr = parse(p.text);
     if (!pr.kind) { nFail++; continue; }
-    const ph = matchPhuong(p.text, phuongSlugs);
-    if (ph) pr.phuong = ph.slug;
+    const lyDo = lyDoGiaPhiLy(pr);
+    if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
+    const khai = thiTruongNhom.get(p.conversation_id);
+    const ph = matchPhuongThiTruong(p.text, entries(khai?.length ? khai : moiThiTruong));
+    if (ph) { pr.phuong = ph.slug; pr.areaId = ph.id; }
     // tính price_perm2 nếu thiếu
     if (!pr.pricePerm2Vnd && pr.priceVnd && pr.areaM2) {
       pr.pricePerm2Vnd = Math.round(pr.priceVnd / pr.areaM2);
@@ -192,6 +353,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     parsed.push({ ...pr, post: p });
   }
   console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${(nFull / posts.length * 100).toFixed(1)}%`);
+  console.log(`giá phi lý (không thành offer): ${JSON.stringify(loaiGiaPhiLy)}`);
 
   // ---- Bước 4: gom repost theo khoá nội dung (repostKey); offer_id cấp ở bước 5 ----
   const dedup = new Map();
@@ -199,22 +361,29 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     if (pr.confidence === "low") continue;
     const key = createHash("sha256").update(repostKey(pr, pr.post)).digest("hex").slice(0, 16);
     const offerId = `offer_${key}`;
-    if (!dedup.has(offerId)) {
-      dedup.set(offerId, {
-        offerId, kind: pr.kind, areaId: pr.phuong ? areaBySlug.get(pr.phuong) : null,
+    let o = dedup.get(offerId);
+    if (!o) {
+      o = {
+        offerId, kind: pr.kind, areaId: pr.areaId ?? null,
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
         postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
-        phone: pr.phone, authorHash: pr.post.author_hash,
-      });
+        phone: pr.phone, authorHash: pr.post.author_hash, sellerName: null, sellerNameAt: null,
+      };
+      dedup.set(offerId, o);
     } else {
-      const o = dedup.get(offerId);
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
       o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
+    }
+    // seller_name (N1): tên hiển thị của bài mới nhất có tên — người bán trên tin rao là tầng C (ADR-0007 sửa đổi 23/10).
+    const ten = (pr.post.sender_name ?? "").trim();
+    if (ten && (o.sellerNameAt === null || new Date(pr.post.posted_at) >= new Date(o.sellerNameAt))) {
+      o.sellerName = ten;
+      o.sellerNameAt = pr.post.posted_at;
     }
   }
   console.log(`dedup: ${dedup.size} unique offers (từ ${parsed.filter(p => p.confidence !== "low").length} tin có giá)`);
@@ -238,7 +407,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
       area_m2: o.areaM2, price_perm2: o.pricePerm2, phuong_raw: o.phuongRaw,
       confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
       n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_phone: o.phone,
-      seller_phone_hash: phoneHash, seller_ref: o.authorHash,
+      seller_phone_hash: phoneHash, seller_ref: o.authorHash, seller_name: o.sellerName,
     });
     if (phoneHash) {
       const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };
@@ -253,7 +422,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   const { reconcile } = await writeOffers(client, "S03", rows, { assertions: phatBieuPhongNgu("S03", nhom, "transform-zalo@045") });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile };
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy };
 }
 
 async function main() {

@@ -1,0 +1,115 @@
+{
+  "feature_plain": "Tin rao S03 lên /ops với giá, diện tích đúng bậc, không lấy số từ đường dẫn ảnh hay SĐT, chặn giá phi lý, tách các căn khác mã của cùng môi giới, có tên người bán và phường TP.HCM.",
+  "will_do": [
+    {
+      "id": "AC-1",
+      "p": "Sẽ đọc giá, diện tích, số phòng ngủ trên chữ đã bỏ đường dẫn ảnh và SĐT, nên dãy số trong URL không thành giá; SĐT người đăng vẫn lấy đủ."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ đọc đúng cách môi giới viết giá tỷ («2.650 tỷ» là 2,65 tỷ, «2ty450» là 2,45 tỷ), và không ghép số tầng, lầu, ô tô, căn đứng sau chữ tỷ thành phần lẻ («8 tỷ 4 tầng» vẫn là 8 tỷ)."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ đọc diện tích viết thiếu chữ 2 («64m», «DT:43.2m») mà không nhầm bề ngang «mặt tiền 5m», «hẻm 3m» thành diện tích."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ tách các căn khác mã toà/căn của cùng một môi giới thành tin riêng khi bài thiếu phường hoặc diện tích."
+    },
+    {
+      "id": "AC-7",
+      "p": "Sẽ ghi tên người bán của tin bằng tên hiển thị của người đăng bài mới nhất."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ gán phường theo thị trường của nhóm: nhóm TP.HCM ra phường TP.HCM, nhóm Hà Nội không nhận tên phường TP.HCM."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ chứng trên bản chép dữ liệu thật: không còn tin thuê từ 1 tỷ, tin bán trên 100 tỷ, giá lấy từ URL, tin gom quá 10 nội dung; ≥ 95% tin có tên người bán."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ giữ toàn bộ bộ test pipeline xanh; riêng ca «2.900 tỷ» cũ đổi đáp án sang 2,9 tỷ."
+    }
+  ],
+  "wont_do": [
+    {
+      "id": "AC-3",
+      "p": "Sẽ đọc đúng giá triệu chen phần lẻ («5tr5»), giá không đơn vị («7.000.000»), và đơn giá viết bằng đồng («45.000.000/m2» là giá/m², không phải tổng giá)."
+    },
+    {
+      "id": "AC-5",
+      "p": "Chặn tin thuê giá từ 1 tỷ và tin bán giá trên 100 tỷ — không thành tin, đếm theo lý do (theo khuyến nghị Hỏi-2)."
+    },
+    {
+      "id": "OOS-1",
+      "p": "Không phân loại lại bán/thuê, không tách tin tìm mua/thuê, không tách bài nhiều căn — để PL5, PL18."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Không đọc giá che số («36XX tỷ»), mã căn có bậc, trường thuê; không nối mã toà vào danh mục — để PL13, PL20."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Không gộp tin chỉ có ảnh, không ghi phát biểu có mã luật — để PL28, PL17."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Không đổi đường lên cloud của tên người bán, không thêm migration."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Không nạp lại thật trên DB dùng chung — đó là bước triển khai sau khi gộp."
+    }
+  ],
+  "coverage_plain": [
+    {
+      "i": 0,
+      "p": "Dạng giá: mọi cách viết đo được ở bản nghiên cứu (tỷ thập phân, tỷ viết triệu, tỷ/triệu chen phần lẻ, không đơn vị) đều có dòng trong ma trận AC-2, AC-3; giá che số để PL13."
+    },
+    {
+      "i": 1,
+      "p": "Nhiễu số: URL ảnh, SĐT, bề ngang «Nm» — AC-1, AC-4."
+    },
+    {
+      "i": 2,
+      "p": "Khoá gom: đủ phường và DT, thiếu có mã, thiếu không mã — AC-6."
+    },
+    {
+      "i": 3,
+      "p": "Phường: nhóm khai Hà Nội, khai TP.HCM, chưa khai — AC-8 cùng Hỏi-1."
+    },
+    {
+      "i": 4,
+      "p": "Chốt khoảng giá: hai biên thuê 1 tỷ và bán 100 tỷ, mỗi biên hai phía — AC-5."
+    },
+    {
+      "i": 5,
+      "p": "Cắt ngang: số trên dữ liệu thật (AC-9), không hồi quy (AC-10), tên người bán (AC-7)."
+    }
+  ],
+  "gap_probe_plain": [
+    {
+      "i": 0,
+      "p": "Chặn giá phi lý mà bỏ hẳn tin hay giữ tin bỏ giá là lựa chọn người dùng thấy — đã đưa thành Hỏi-2."
+    },
+    {
+      "i": 1,
+      "p": "Khoá gom bằng nguyên chữ bài khi thiếu cả mã lẫn diện tích không có căn cứ — đã bỏ, chỉ thêm mã theo đúng câu giao."
+    },
+    {
+      "i": 2,
+      "p": "Thước «nhóm TP.HCM» trên dữ liệu thật chưa định nghĩa khi chưa nhóm nào khai thị trường — đã định nghĩa theo tên phường chỉ thuộc TP.HCM, loại tên trùng."
+    },
+    {
+      "i": 3,
+      "p": "Nhánh «nhóm đã khai thị trường» chỉ đo bằng nhóm mồi viết tay — nhóm mồi nay đi qua ràng buộc kiểm thị trường của DB, thêm thước tỉ lệ bài nối được tới sổ nhóm."
+    },
+    {
+      "i": 4,
+      "p": "Phép đo dữ liệu thật thiếu đối chứng riêng từng thước — nay chạy lại bản transform cũ phải tái lập số gốc của từng thước."
+    }
+  ]
+}
