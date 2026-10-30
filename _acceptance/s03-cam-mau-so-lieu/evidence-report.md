@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: e4c1d8e2e6267b2c14fc588e993373f42c6af402
+verified_commit: 37ccf927269970bccc954e45af15ce9e8b829158
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -187,3 +187,7 @@ none — mọi eval chạy một lần (xác định), không eval nào có pass
 Round 1: E10 (pipeline npm test) fail, kèm hai finding đo lường trong hợp đồng (AC-1 vế gạt SĐT chỉ có một dòng; AC-7 không tách thời gian khỏi thứ tự xử lý). Trả về triển khai; commit 4b3e3595 sửa cả hai.
 Round 2: toàn bộ eval chạy lại xanh trên commit 4b3e3595; sau đó Cổng Bằng chứng trả lại vì phạm vi AC-2/AC-3 được nâng theo Ngoài-1, Ngoài-2, Ngoài-4 và Mạnh duyệt lại ở Gate 1.
 Round 3: toàn bộ eval (E1-E10, gồm E9 chạy lại) và năm lệnh suite xanh trên commit e4c1d8e2 sau khi mở rộng AC-2/AC-3 (số đếm sau chữ tỷ, đơn giá viết bằng đồng).
+
+### Re-pin lần 1 — 2026-10-30, do hoá cũ do gộp origin/main 8b06612c (pipeline label-*, lib/eval-labels)
+run_id: repin-20261030T023014Z-72507
+sha: 37ccf927269970bccc954e45af15ce9e8b829158 · suites: 6 lệnh exit 0 · evals: 11/11 eval máy đạt kỳ vọng
