@@ -5,9 +5,9 @@ slug: gop-tin-chi-anh-o-transform
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-media.mjs, pipeline/lib/ — không khớp t3_paths; không migration
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-gop-tin-chi-anh-o-transform-design.md
 ---
 
@@ -69,8 +69,8 @@ không đổi. Câu hỏi quy tắc gộp: Hỏi-1 (sổ quyết định).
 
 ## Đường đo
 
-- «Offer S03 có ảnh trước → sau» ← AC-6 (thước `do-gop-anh.mjs` trên DB thử). Ngưỡng của ô cơ hội (≥ 50%) đứng tới khi
-  Mạnh trả Hỏi-1: theo quy tắc khuyến nghị (gần nhất), đo 30/10 ra 47,7%; thước đọc ngưỡng từ ô cơ hội.
+- «Offer S03 có ảnh trước → sau» ← AC-6 (thước `do-gop-anh.mjs` trên DB thử). Ngưỡng của ô cơ hội ≥ 45% (Mạnh chọn ở
+  Cổng Phạm vi 30/10, Hỏi-1: quy tắc gần nhất; đo 30/10 ra 47,7%); thước đọc ngưỡng từ ô cơ hội.
 - «Mọi tin chỉ-ảnh có tin chữ cùng người trong 2 phút ở hai phía đều được gộp» ← AC-6 (ngày mẫu, cặp lệch 0) + AC-2.
 - «Raw không đổi» ← AC-5.
 

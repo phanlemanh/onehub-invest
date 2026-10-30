@@ -28,7 +28,7 @@ Cổng Đáng: build, Mạnh duyệt 30/10 ~05:00Z bằng câu «Xếp theo bố
 
 ## Ngưỡng chết / ngưỡng UAT
 
-- Câu hỏi phép đo trả lời: [đề xuất] đã đạt «Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút ở hai phía đều được gộp; offer S03 có ảnh ≥ 50%; raw không đổi» chưa?
-- Kết quả nào là SỐNG: [đề xuất] Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút ở hai phía đều được gộp; offer S03 có ảnh ≥ 50%; raw không đổi
-- Kết quả nào là CHẾT: [đề xuất] chưa đạt «Mẫu một ngày: mọi tin chỉ ảnh có tin chữ cùng người trong 2 phút ở hai phía đều được gộp; offer S03 có ảnh ≥ 50%; raw không đổi» khi hết timebox
+- Câu hỏi phép đo trả lời: mọi tin chỉ-ảnh có tin chữ cùng người trong 2 phút ở hai phía có được gộp vào tin chữ gần nhất, và offer S03 có ảnh đạt ngưỡng chưa?
+- Kết quả nào là SỐNG: offer S03 có ảnh ≥ 45% (Mạnh chọn ở Cổng Phạm vi 30/10, Hỏi-1: quy tắc gần nhất); mẫu một ngày mọi tin chỉ-ảnh có tin chữ cùng người trong 2 phút ở hai phía đều gộp vào tin chữ gần nhất; raw không đổi
+- Kết quả nào là CHẾT: offer S03 có ảnh dưới 45%, hoặc ảnh gắn sang tin chữ không phải gần nhất, hoặc raw đổi
 - Timebox: một vòng T2.
