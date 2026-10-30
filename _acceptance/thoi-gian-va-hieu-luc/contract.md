@@ -5,7 +5,7 @@ slug: thoi-gian-va-hieu-luc
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (t3_paths) — migration 059
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-thoi-gian-va-hieu-luc-design.md
