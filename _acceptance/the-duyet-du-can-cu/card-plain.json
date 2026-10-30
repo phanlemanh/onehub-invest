@@ -1,36 +1,108 @@
 {
-  "feature_plain": "Người duyệt ở /ops/review quyết một thẻ chỉ bằng những gì sheet hiện ra: từng trường kèm căn cứ, ảnh tin, toàn văn tin, không con số độ tự tin nào; mỗi quyết định kèm lý do, ghi nhật ký cùng lúc với quyết định.",
+  "feature_plain": "Người duyệt ở /ops/review quyết thẻ bằng bảng so từng trường kèm căn cứ, ảnh tin, toàn văn tin, không con số độ tự tin; mọi quyết định kèm lý do ghi nhật ký cùng lúc.",
   "will_do": [
-    {"id": "AC-1", "p": "Sẽ hiện mọi trường máy đề xuất ở thẻ bổ sung tin kèm cách máy ra giá trị (luật hay AI) và căn cứ; trường không có căn cứ ghi thẳng «Chưa ghi căn cứ»."},
-    {"id": "AC-2", "p": "Sẽ thay hai khối tin của thẻ ghép căn bằng một bảng so mười trường Tin A cạnh Tin B, mỗi hàng ghi Khớp / Lệch / Thiếu, kèm căn cứ của từng tin."},
-    {"id": "AC-3", "p": "Sẽ hiện trọn văn bản tin đọc lại ở máy thu, giữ xuống dòng; tên nhóm là một dòng riêng; tin không có bài gốc thì nói ra và hiện đoạn đầu đã lưu."},
-    {"id": "AC-4", "p": "Sẽ cho người duyệt vai Vận hành thấy ảnh đã tải về máy thu; ảnh chỉ có ở trang nguồn vẫn chỉ quản trị viên thấy, thẻ nói rõ số ảnh bị giữ lại."},
-    {"id": "AC-5", "p": "Sẽ KHÔNG hiện điểm ghép căn hay độ tự tin của AI ở bất kỳ chỗ nào trên thẻ."},
-    {"id": "AC-6", "p": "Sẽ KHÔNG đổi nút theo gợi ý của AI; suy luận của AI đứng riêng một khối ghi «không phải căn cứ»; thẻ bổ sung tin mới không còn gợi ý «nên áp» gắn sẵn."},
-    {"id": "AC-7", "p": "Chặn quyết định khi ô «Lý do» trống, toàn khoảng trắng hay quá 1.000 ký tự — nút tắt trên trang và máy chủ từ chối, không đổi gì."},
-    {"id": "AC-8", "p": "Sẽ ghi lý do vào thẻ và nhật ký Ops cùng lúc với quyết định; nhật ký hỏng thì cả quyết định cũng không được ghi."},
-    {"id": "AC-9", "p": "Sẽ giữ nguyên trang của vai viewer và của bản trên cloud (chỉ số thẻ chờ), không đọc thêm nội dung tin nào cho hai nơi đó."},
-    {"id": "AC-10", "p": "Sẽ đọc được sheet ở màn hẹp 390 px và màn rộng, sáng và tối, không cuộn ngang trang."}
+    {
+      "id": "AC-1",
+      "p": "Sẽ hiện mọi trường máy đề xuất ở thẻ bổ sung tin kèm cách máy ra giá trị (luật hay AI) và căn cứ; trường không có căn cứ ghi thẳng «Chưa ghi căn cứ»."
+    },
+    {
+      "id": "AC-2",
+      "p": "Sẽ thay hai khối tin của thẻ ghép căn bằng một bảng so mười trường Tin A cạnh Tin B, mỗi hàng ghi Khớp / Lệch / Thiếu, kèm căn cứ của từng tin."
+    },
+    {
+      "id": "AC-3",
+      "p": "Sẽ hiện trọn văn bản tin đọc lại ở máy thu, giữ xuống dòng; tên nhóm là một dòng riêng; tin không có bài gốc thì nói ra và hiện đoạn đầu đã lưu."
+    },
+    {
+      "id": "AC-4",
+      "p": "Sẽ cho người duyệt vai Vận hành thấy ảnh đã tải về máy thu; ảnh chỉ có ở trang nguồn vẫn chỉ quản trị viên thấy, thẻ nói rõ số ảnh bị giữ lại."
+    },
+    {
+      "id": "AC-5",
+      "p": "Sẽ KHÔNG hiện điểm ghép căn hay độ tự tin của AI ở bất kỳ chỗ nào trên thẻ."
+    },
+    {
+      "id": "AC-6",
+      "p": "Sẽ KHÔNG đổi nút theo gợi ý của AI; suy luận của AI đứng riêng một khối ghi «không phải căn cứ»; thẻ bổ sung tin mới không còn gợi ý «nên áp» gắn sẵn."
+    },
+    {
+      "id": "AC-7",
+      "p": "Chặn quyết định khi ô «Lý do» trống, toàn khoảng trắng hay quá 1.000 ký tự — nút tắt trên trang và máy chủ từ chối, không đổi gì."
+    },
+    {
+      "id": "AC-8",
+      "p": "Sẽ ghi lý do vào thẻ và nhật ký Ops cùng lúc với quyết định; nhật ký hỏng thì cả quyết định cũng không được ghi."
+    },
+    {
+      "id": "AC-9",
+      "p": "Sẽ giữ nguyên trang của vai viewer và của bản trên cloud (chỉ số thẻ chờ), không đọc thêm nội dung tin nào cho hai nơi đó."
+    },
+    {
+      "id": "AC-10",
+      "p": "Sẽ đọc được sheet ở màn hẹp 390 px và màn rộng, sáng và tối, không cuộn ngang trang."
+    }
   ],
   "wont_do": [
-    {"id": "OOS-1", "p": "Thẻ duyệt v2 — mọi nguồn cãi nhau theo lớp, đoạn trích tô trong toàn văn, quyết định thành nhãn đo — để hàng PL23."},
-    {"id": "OOS-2", "p": "Duyệt thẻ trên cloud kèm lý do — hàng TV13."},
-    {"id": "OOS-3", "p": "Sửa các thẻ đã có trong hàng duyệt (dữ liệu cũ giữ nguyên)."},
-    {"id": "OOS-4", "p": "Căn cứ có lớp cho giá, diện tích, giá/m², phường, tầng — các trường này chưa có phát biểu."},
-    {"id": "OOS-5", "p": "Toàn văn cho nguồn chưa lưu bài gốc ở máy thu (S05 và nguồn khác)."}
+    {
+      "id": "OOS-1",
+      "p": "Thẻ duyệt v2 — mọi nguồn cãi nhau theo lớp, đoạn trích tô trong toàn văn, quyết định thành nhãn đo — để hàng PL23."
+    },
+    {
+      "id": "OOS-2",
+      "p": "Duyệt thẻ trên cloud kèm lý do — hàng TV13."
+    },
+    {
+      "id": "OOS-3",
+      "p": "Sửa các thẻ đã có trong hàng duyệt (dữ liệu cũ giữ nguyên)."
+    },
+    {
+      "id": "OOS-4",
+      "p": "Căn cứ có lớp cho giá, diện tích, giá/m², phường, tầng — các trường này chưa có phát biểu."
+    },
+    {
+      "id": "OOS-5",
+      "p": "Toàn văn cho nguồn chưa lưu bài gốc ở máy thu (S05 và nguồn khác)."
+    }
   ],
   "scope_plain": "Vòng này chỉ đổ căn cứ, toàn văn và lý do vào sheet đã dựng ở UI1; dựng lại thẻ theo kiểu phát biểu đầy đủ là việc sau.",
   "coverage_plain": [
-    {"i": 0, "p": "Loại thẻ: ghép căn (AC-2) và bổ sung tin (AC-1); loại khác giữ dòng báo cũ — đủ là mỗi loại có giao diện đều có tiêu chí."},
-    {"i": 1, "p": "Phần của thẻ: căn cứ (AC-1, AC-2), ảnh (AC-4), toàn văn (AC-3), tín hiệu máy (AC-5, AC-6), lý do và nhật ký (AC-7, AC-8) — đối chiếu sáu gạch của lỗi thẻ thiếu căn cứ trong review phân loại."},
-    {"i": 2, "p": "Vai × nơi chạy: quản trị và Vận hành ở máy thu (AC-4), viewer và cloud giữ nguyên (AC-9)."},
-    {"i": 3, "p": "Dữ liệu thiếu: trường chưa có căn cứ, giá trị có trước, tin không có bài gốc, ảnh chỉ có ở nguồn — mỗi ca có câu nói ra thay vì ô trống (AC-1…AC-4)."}
+    {
+      "i": 0,
+      "p": "Loại thẻ: ghép căn (AC-2) và bổ sung tin (AC-1); loại khác giữ dòng báo cũ — đủ là mỗi loại có giao diện đều có tiêu chí."
+    },
+    {
+      "i": 1,
+      "p": "Phần của thẻ: căn cứ (AC-1, AC-2), ảnh (AC-4), toàn văn (AC-3), tín hiệu máy (AC-5, AC-6), lý do và nhật ký (AC-7, AC-8) — đối chiếu sáu gạch của lỗi thẻ thiếu căn cứ trong review phân loại."
+    },
+    {
+      "i": 2,
+      "p": "Vai × nơi chạy: quản trị và Vận hành ở máy thu (AC-4), viewer và cloud giữ nguyên (AC-9)."
+    },
+    {
+      "i": 3,
+      "p": "Dữ liệu thiếu: trường chưa có căn cứ, giá trị có trước, tin không có bài gốc, ảnh chỉ có ở nguồn — mỗi ca có câu nói ra thay vì ô trống (AC-1…AC-4)."
+    }
   ],
   "gap_probe_plain": [
-    {"i": 0, "p": "Lý do không dọn gợi ý «nên áp» trên thẻ cũ chưa đứng vững — đã đo: 0 thẻ bổ sung tin đang chờ, 4 thẻ mang gợi ý đều đã bác; thêm tiêu chí thẻ không đọc gợi ý này ở đâu cả."},
-    {"i": 1, "p": "Chưa có phép đo cho việc nút của thẻ bổ sung tin không đổi theo gợi ý «nên áp» — đã thêm vế vào AC-6 kèm ca đỏ."},
-    {"i": 2, "p": "Phép đo nhãn căn cứ chỉ thử ba cặp có sẵn — đã đổi thành bảng viết trước đủ 18 cặp lớp × cách ra giá trị, cộng một lần dò trên dữ liệu thật."},
-    {"i": 3, "p": "Dữ liệu thử của toàn văn và ảnh viết tay theo đúng cách đọc — đã thêm lần dò trên dữ liệu thật: tin có bài gốc phải ra toàn văn, ảnh đã tải phải tới vai Vận hành."},
-    {"i": 4, "p": "Thước «100% quyết định có lý do» đếm từ ngày gộp và giả định chỉ một chỗ ghi — đã đổi mốc sang lúc máy thu chạy bản mới, và thêm phép quét chỉ đúng một chỗ ghi quyết định."}
+    {
+      "i": 0,
+      "p": "Lý do không dọn gợi ý «nên áp» trên thẻ cũ chưa đứng vững — đã đo: 0 thẻ bổ sung tin đang chờ, 4 thẻ mang gợi ý đều đã bác; thêm tiêu chí thẻ không đọc gợi ý này ở đâu cả."
+    },
+    {
+      "i": 1,
+      "p": "Chưa có phép đo cho việc nút của thẻ bổ sung tin không đổi theo gợi ý «nên áp» — đã thêm vế vào AC-6 kèm ca đỏ."
+    },
+    {
+      "i": 2,
+      "p": "Phép đo nhãn căn cứ chỉ thử ba cặp có sẵn — đã đổi thành bảng viết trước đủ 18 cặp lớp × cách ra giá trị, cộng một lần dò trên dữ liệu thật."
+    },
+    {
+      "i": 3,
+      "p": "Dữ liệu thử của toàn văn và ảnh viết tay theo đúng cách đọc — đã thêm lần dò trên dữ liệu thật: tin có bài gốc phải ra toàn văn, ảnh đã tải phải tới vai Vận hành."
+    },
+    {
+      "i": 4,
+      "p": "Thước «100% quyết định có lý do» đếm từ ngày gộp và giả định chỉ một chỗ ghi — đã đổi mốc sang lúc máy thu chạy bản mới, và thêm phép quét chỉ đúng một chỗ ghi quyết định."
+    }
   ]
 }
