@@ -34,19 +34,25 @@ Căn cứ: RV-C2.8 · RV-L18 · FR-§3.4 (B5) · RESO-§6.
   trường enrich + `offer_status`), `enrichment_proposals.field` vẫn theo `enrich_field`, và lệnh kiểm DB khớp sổ.
 - AC-4: Given tin sống S06, tin sống S03 và S05, tin S06 nghỉ `het_trong_luot`, tin nghỉ `doi_khoa`, When chạy bộ ghi
   bằng chứng hai lần, Then tin S06 sống có phát biểu `active` lớp `fact` phương pháp `source_field`; tin S03/S05 sống có
-  `active` lớp `observed` phương pháp `parser`; tin `het_trong_luot` có `withdrawn` lớp `fact` với `observed_at` = lúc
-  nghỉ; tin `doi_khoa` không có `withdrawn`; lần hai không thêm phát biểu nào.
+  `active` lớp `observed` phương pháp `parser`, mọi `active` mang `observed_at` = `last_seen` của tin (không phải giờ
+  chạy); tin `het_trong_luot` có `withdrawn` lớp `fact` với `observed_at` = lúc nghỉ; tin `doi_khoa` không có `withdrawn`;
+  lần hai không thêm phát biểu nào; đầu–cuối: tin sống → ghi + phân xử → nghỉ `het_trong_luot` → chạy lại ra
+  `withdrawn` → quay lại ra `active`.
 - AC-5: Given một tin có `active` quan sát lúc t1 và `withdrawn` lúc t2 > t1, rồi tin xuất hiện lại lúc t3 > t2, When
   phân xử sau mỗi bước, Then trạng thái lần lượt là `withdrawn` rồi `active` (phát biểu `active` cũ bị rút có lý do và
-  một phát biểu mới lúc t3 được ghi); hai phát biểu khác giá trị cùng thời điểm thì theo thứ tự phương pháp của 045; tin
-  chỉ quá cửa sổ độ tươi, không có bằng chứng mới, giữ nguyên trạng thái (Hỏi-1).
+  một phát biểu mới lúc t3 được ghi); hai phát biểu khác giá trị cùng thời điểm thì theo thứ tự phương pháp của 045; một
+  phát biểu lớp `observed` mới hơn và một phát biểu lớp `fact` cũ hơn phân xử theo lối Hỏi-4 chọn; tin chỉ quá cửa sổ
+  độ tươi, không có bằng chứng mới, giữ nguyên trạng thái (Hỏi-1).
 - AC-6: Given một tin mới, một tin đổi giá, một tin đổi trạng thái và các tin có sẵn trước 059, When ghi qua
   `sale_offer_records`, Then lịch sử có `NewListing` cho tin mới, `PriceChange` mang giá cũ và giá mới, dòng đổi trạng
   thái theo bảng §6 (`Withdrawn`, `BackOnMarket`), mỗi tin có sẵn đúng một `NewListing` điền lùi, ghi lại cùng giá không
   sinh dòng, và lịch sử gom theo căn trả các dòng của mọi tin gắn căn ấy theo thời gian.
-- AC-7: Given căn B4 có tin `active` còn trong cửa sổ độ tươi và có lịch sử giá, căn B4 cùng điều kiện nhưng `last_seen`
-  quá cửa sổ, căn B4 có tin `withdrawn`, căn B4 không có dòng lịch sử giá, When gọi `property_data_level`, Then căn đầu
-  là B5 với chỗ kẹt `giu-nhip`, ba căn sau là B4 với chỗ kẹt `hieu-luc`; mọi ca của AC-1…AC-4 PL16 vẫn trả như cũ.
+- AC-7: Given căn B4 có tin `active` còn trong cửa sổ độ tươi và có lịch sử giá theo định nghĩa Hỏi-3, căn B4 cùng điều
+  kiện nhưng `last_seen` quá cửa sổ, căn B4 có tin `withdrawn`, căn B4 thiếu lịch sử giá theo định nghĩa Hỏi-3, căn hai
+  tin (một tin đạt, một tin `withdrawn`), căn hai tin (một tin đạt, một tin quá cửa sổ), When gọi `property_data_level`
+  rồi chụp phân bố (`bac-du-lieu`) trước và sau khi đẩy `last_seen` của căn đầu quá cửa sổ, Then căn đầu là B5 với chỗ
+  kẹt `giu-nhip`, ba căn sau là B4 với chỗ kẹt `hieu-luc`, hai căn hai tin là B5 (căn lấy tin tốt nhất, như PL16); ảnh
+  chụp sau có B5 giảm một và B4 tăng một; mọi ca của AC-1…AC-4 PL16 vẫn trả như cũ.
 - AC-8: Given bản chép DB máy thu, When chạy `node pipeline/trang-thai-chao.mjs` hai lần, Then lệnh thoát 0, in đếm tin
   theo năm trạng thái với tổng bằng số tin; mọi tin sống có trạng thái khác `unknown` hoặc nằm trong danh sách nguồn
   không có bằng chứng đã in; lần hai in «0 phát biểu mới» và cùng đếm; lỗi chạy (DB không tới được) làm lệnh thoát khác 0.
@@ -80,8 +86,10 @@ không có bộ ghi bằng chứng cho chúng (bộ đọc chữ «đã bán/đ�
 
 ## Đường đo
 
-- «Tin quá cửa sổ hiệu lực ... căn tụt B5 về B4»: ca AC-7 (căn quá cửa sổ về B4 `hieu-luc`) và ảnh chụp phân bố bậc mỗi
-  lượt cloud-sync (`data_level_snapshot`, PL16) đọc bậc mới sau bước `trang-thai-chao` (AC-9).
+- Ngưỡng SỐNG nguyên văn «Tin quá cửa sổ hiệu lực tự về hết hạn; căn tụt B5 về B4»: vế «căn tụt B5 về B4» đo bằng ca
+  AC-7 (căn quá cửa sổ về B4 `hieu-luc`, ảnh chụp phân bố thấy B5 giảm, B4 tăng) và ảnh chụp mỗi lượt cloud-sync đọc
+  bậc sau bước `trang-thai-chao` (AC-9). Vế «tự về hết hạn» phụ thuộc Hỏi-1: theo khuyến nghị thì được thay bằng «trạng
+  thái giữ nguyên» và ngưỡng ở `opportunity.md` sửa theo lựa chọn trước khi ký.
 - «Mọi phát biểu có observed_at»: ràng buộc NOT NULL (AC-1) — không còn đường ghi thiếu.
 
 ## Notes

@@ -32,7 +32,9 @@ phân xử, 045) và PL16 (hàm bậc + ảnh chụp, 056 — nhánh xếp chồ
    - **Bộ ghi bằng chứng** `ghi_bang_chung_chao(text[])` (SQL, chạy trước phân xử): tin sống S06 → `active`
      (`source_field`, `fact` — tin còn trên sàn là trạng thái do sàn khai); tin sống S03/S05 → `active` (`parser`,
      `observed` — bài trong nhóm được đọc là tin rao); tin S06 nghỉ `het_trong_luot` → `withdrawn` (`source_field`,
-     `fact`, `observed_at = retired_at`). Nghỉ `doi_khoa` (đổi khoá) không phải bằng chứng gỡ. Giá trị đã có phát biểu
+     `fact`, `observed_at = retired_at`). Nghỉ `doi_khoa` (đổi khoá) không phải bằng chứng gỡ. Phát biểu `active` mang
+     `observed_at = last_seen` của tin lúc ghi (lần thấy cuối), không phải giờ chạy — để `withdrawn` (lúc nghỉ, luôn sau
+     lần thấy cuối) mới hơn nó và tin quay lại (lần thấy mới, sau lúc nghỉ) mới hơn `withdrawn`. Giá trị đã có phát biểu
      sống cùng phương pháp thì không ghi lại; tin quay lại sau `withdrawn` → rút phát biểu `active` cũ rồi ghi mới.
    - **Lịch sử giá và trạng thái** bảng `history_transactional` (dáng RESO `HistoryTransactional`:
      `resource_name, resource_record_key, field_name, previous_value, new_value, change_type,
@@ -40,7 +42,8 @@ phân xử, 045) và PL16 (hàm bậc + ảnh chụp, 056 — nhánh xếp chồ
      `price_vnd`, đổi trạng thái theo bảng §6 (`Withdrawn`, `BackOnMarket`, `ActiveUnderContract`, `Closed`). Điền lùi
      một dòng `NewListing` cho mỗi tin có sẵn. View `property_price_history` gom theo căn qua `property_offers`.
    - **Vị từ B5** trong `property_data_level` (thay hàm của 056): tin ở B4 + `offer_status = 'active'` +
-     `last_seen` trong cửa sổ độ tươi (`freshness_window()`, Hỏi-2) + căn có ít nhất một dòng lịch sử giá → B5.
+     `last_seen` trong cửa sổ độ tươi (`freshness_window()`, Hỏi-2) + căn có lịch sử giá theo Hỏi-3 → B5. Căn lấy
+     tin tốt nhất như PL16: một tin đạt là đủ.
      Quá cửa sổ → căn về B4 với chỗ kẹt `hieu-luc`. B5 không còn bậc kế: chỗ kẹt `giu-nhip`.
 2. **`pipeline/trang-thai-chao.mjs`**: chạy bộ ghi bằng chứng + phân xử cho mọi tin, in đếm theo trạng thái; bước
    `job_run cloud-sync trang-thai-chao` đứng ngay TRƯỚC `bac-du-lieu` (cùng nhịp 15′ đã chọn ở PL16 Hỏi-3) để ảnh chụp
@@ -54,6 +57,14 @@ phân xử, 045) và PL16 (hàm bậc + ảnh chụp, 056 — nhánh xếp chồ
 hợp đồng niêm yết — sai nghĩa); chỉ căn hạ B5 → B4. Câu giao của hàng ghi «tự về hết hạn». Máy khuyên theo §6 — trục
 `offer_status` đã duyệt không có giá trị «hết hạn», và ghi chú trục nói đúng điều này. Lối khác: thêm giá trị local
 `stale` vào trục và để bộ ghi bằng chứng tự hạ — đổi lại một trạng thái không do bằng chứng nào phát biểu.
+
+Hỏi-3 — «có lịch sử giá»: máy khuyên «căn có ít nhất hai mốc giá trong lịch sử» (một `NewListing` + ít nhất một
+`PriceChange`, hoặc hai tin cùng căn khác thời điểm), vì điền lùi cho mọi căn một dòng `NewListing` nên «ít nhất một
+dòng» không lọc căn nào. Lối khác: «ít nhất một dòng» — đơn giản, nhưng vế lịch sử giá của B5 thành luôn đúng.
+
+Hỏi-4 — luật phân xử trạng thái: máy khuyên «mới nhất thắng» (thời gian trước lớp), vì trạng thái là sự kiện theo thời
+gian. Lối khác: giữ thứ tự lớp của 045 và rút phát biểu đối nghịch khi có bằng chứng mới — giữ một luật cho mọi trường,
+đổi lại một bằng chứng `observed` mới (vd bộ đọc «đã bán» của P1 sau này) không thắng được `active` lớp `fact` cũ.
 
 ## 4. Không làm (cắt)
 
