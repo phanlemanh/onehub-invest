@@ -14,13 +14,15 @@ const SO_THAT = readFileSync(join(PIPE, "mappings.yaml"), "utf8");
 
 const AXES = [
   "kind", "property_type", "confidence", "price_tier", "enrich_field", "evidence_tier", "assertion_method",
+  "registry_status", "alias_kind", "registry_event_kind", "party_role",
   "listing_intent", "offer_status", "data_level", "capability_level",
 ];
 
-// Ma trận nhãn viết trước (48 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
+// Ma trận nhãn viết trước (59 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
 // vòng; bậc: nguyên văn FRAMING §3.4; listing_intent + offer_status: Hỏi-1 của PL6 (Mạnh duyệt 26/10);
 // evidence_tier + assertion_method: PL15 (bảng phát biểu, design §3.7); `wanted` → `inquiry` «Yêu cầu»: Mạnh 27/10
-// (hồ sơ wanted-thanh-inquiry).
+// (hồ sơ wanted-thanh-inquiry); bốn trục danh bạ: DB2b
+// ho-nguoi-theo-nguon (Mạnh duyệt 30/10).
 const NHAN = [
   ["kind", "sale", "Bán"], ["kind", "rent_lt", "Cho thuê"],
   ["property_type", "apartment", "Căn hộ"], ["property_type", "house", "Nhà riêng"], ["property_type", "land", "Đất"],
@@ -34,6 +36,11 @@ const NHAN = [
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
   ["assertion_method", "parser", "Bộ đọc tin"], ["assertion_method", "e1_rule", "Luật E1"],
   ["assertion_method", "e2_llm", "LLM E2"], ["assertion_method", "legacy", "Giá trị có trước"],
+  ["registry_status", "active", "Đang dùng"], ["registry_status", "merged", "Đã gộp"],
+  ["registry_status", "split", "Đã tách"], ["registry_status", "retired", "Đã nghỉ"],
+  ["alias_kind", "tai_khoan_nguon", "Tài khoản tại nguồn"], ["alias_kind", "sdt_bam", "SĐT băm"], ["alias_kind", "ten", "Tên hiển thị"],
+  ["registry_event_kind", "gop", "Gộp"], ["registry_event_kind", "tach", "Tách"], ["registry_event_kind", "nghi", "Nghỉ"],
+  ["party_role", "nguoi_dang", "Người đăng"],
   ["listing_intent", "offer", "Tin rao"], ["listing_intent", "inquiry", "Yêu cầu"],
   ["listing_intent", "not_listing", "Không phải tin rao"], ["listing_intent", "unknown", "Chưa rõ"],
   ["offer_status", "active", "Đang chào"], ["offer_status", "active_under_contract", "Đã cọc"],
@@ -51,11 +58,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 11 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 15 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 48);
+  assert.equal(NHAN.length, 59);
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);

@@ -11,12 +11,7 @@ const nhan = (bang: Record<string, string>) => (v: string | null | undefined): N
   v != null && Object.hasOwn(bang, v) ? { label: bang[v], known: true } : { label: "Giá trị khác", known: false }
 
 /** Trạng thái mã nguồn trong danh mục nguồn (`source_registry.status`). */
-export const sourceStatusLabel = nhan({
-  active: "Đang dùng",
-  paused: "Tạm dừng",
-  completed: "Đã xong",
-  retired: "Đã ngừng",
-})
+export { sourceStatusLabel } from "./source-status-labels"
 
 /** Loại hình của tin rao (`sale_offers.property_type`) — nhãn từ sổ từ vựng (PL6). */
 export const propertyTypeLabel = nhan(LABELS_VI.property_type)

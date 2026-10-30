@@ -347,7 +347,7 @@ test("ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ
   console.log(`# ON12-AC-5 DB local: ${shown.length} dòng, ${loai.size} loại kiểm trong 7 ngày — soi trọn từng dòng`)
   assert.ok(loai.size >= 2, "DB local cần ≥ 2 loại kiểm trong 7 ngày để phép đo có nghĩa")
   const map = new Map(Object.entries(areaNames))
-  const chuaDien = shown.flatMap((r) => [dqCheckName(r.check_name), dqEntityLabel(r.entity, map), dqDetail(r.check_name, r.detail)].filter((t) => !t.known).map((t) => `${r.check_name} · ${t.code}`))
+  const chuaDien = shown.flatMap((r) => [dqCheckName(r.check_name, r.entity), dqEntityLabel(r.entity, map), dqDetail(r.check_name, r.detail)].filter((t) => !t.known).map((t) => `${r.check_name} · ${t.code}`))
   assert.deepEqual([...new Set(chuaDien)], [], "dòng kiểm chưa diễn giải")
   let daDung = 0
   const loi = []
@@ -488,7 +488,7 @@ test("ON12-AC-7 render danh mục nguồn, thẻ duyệt, cột thị trường 
   )
   assert.match(the, /Căn hộ/)
   assert.match(the, /Nhà riêng/)
-  assert.match(the, /AI: cùng căn/)
+  assert.match(the, /AI cho là: cùng căn/) // PL3: suy luận AI tách khỏi căn cứ («AI cho là: …»)
   assert.doesNotMatch(the, />(apartment|house)</)
   assert.doesNotMatch(the, /AI: yes/)
   // Giá trị chưa có nhãn: nhãn chung KÈM mã gốc trong <code> (người duyệt vẫn thấy giá trị thật).
@@ -498,7 +498,7 @@ test("ON12-AC-7 render danh mục nguồn, thẻ duyệt, cột thị trường 
     <AppRouterContext.Provider value={router as never}><ReviewCard item={{ id: 2, item_type: "entity_match", title: "x", evidence: { offer_a: { ...offer, property_type: "villa" }, offer_b: offer, stage_b_score: 0.5 }, ai_suggestion: "maybe", ai_reasoning: null, ai_confidence: null, status: "pending" } as never} /></AppRouterContext.Provider>,
   )
   assert.match(theLa, /Giá trị khác <code[^>]*>villa<\/code>/)
-  assert.match(theLa, /AI: Giá trị khác <code[^>]*>maybe<\/code>/)
+  assert.match(theLa, /AI cho là: Giá trị khác <code[^>]*>maybe<\/code>/)
 })
 
 test("ON12-AC-7 mọi giá trị đang có trên DB local có nhãn", async () => {

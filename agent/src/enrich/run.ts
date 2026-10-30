@@ -175,8 +175,9 @@ async function syncReview(
   if (loose.length === 0 && cardId === null) return null;
   if (cardId === null) {
     const { rows } = await c.query(
-      `INSERT INTO review_queue (item_type, item_id, title, ai_suggestion)
-       VALUES ('agent_output', $1, $2, 'apply') RETURNING id`,
+      // Không gắn gợi ý mặc định (PL3, RV-L04: 'apply' gắn cứng mồi người bấm Áp) — ai_suggestion để NULL.
+      `INSERT INTO review_queue (item_type, item_id, title)
+       VALUES ('agent_output', $1, $2) RETURNING id`,
       [itemId, `Bổ sung dữ liệu: ${o.offer_id}`],
     );
     cardId = Number(rows[0].id);

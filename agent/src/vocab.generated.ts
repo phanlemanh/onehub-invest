@@ -9,6 +9,10 @@ export const VOCAB = {
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
   evidence_tier: ["fact", "observed", "inferred"],
   assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
+  registry_status: ["active", "merged", "split", "retired"],
+  alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten"],
+  registry_event_kind: ["gop", "tach", "nghi"],
+  party_role: ["nguoi_dang"],
   listing_intent: ["offer", "inquiry", "not_listing", "unknown"],
   offer_status: ["active", "active_under_contract", "closed", "withdrawn", "unknown"],
   data_level: ["B0", "B1", "B2", "B3", "B4", "B5"],
@@ -23,6 +27,10 @@ export type PriceTier = (typeof VOCAB.price_tier)[number];
 export type EnrichField = (typeof VOCAB.enrich_field)[number];
 export type EvidenceTier = (typeof VOCAB.evidence_tier)[number];
 export type AssertionMethod = (typeof VOCAB.assertion_method)[number];
+export type RegistryStatus = (typeof VOCAB.registry_status)[number];
+export type AliasKind = (typeof VOCAB.alias_kind)[number];
+export type RegistryEventKind = (typeof VOCAB.registry_event_kind)[number];
+export type PartyRole = (typeof VOCAB.party_role)[number];
 export type ListingIntent = (typeof VOCAB.listing_intent)[number];
 export type OfferStatus = (typeof VOCAB.offer_status)[number];
 export type DataLevel = (typeof VOCAB.data_level)[number];
@@ -35,6 +43,10 @@ export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
 export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
+export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
+export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten" } as const;
+export const REGISTRY_EVENT_KIND = { gop: "gop", tach: "tach", nghi: "nghi" } as const;
+export const PARTY_ROLE = { nguoi_dang: "nguoi_dang" } as const;
 export const LISTING_INTENT = { offer: "offer", inquiry: "inquiry", not_listing: "not_listing", unknown: "unknown" } as const;
 export const OFFER_STATUS = { active: "active", active_under_contract: "active_under_contract", closed: "closed", withdrawn: "withdrawn", unknown: "unknown" } as const;
 export const DATA_LEVEL = { B0: "B0", B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5" } as const;
