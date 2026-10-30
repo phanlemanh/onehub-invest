@@ -1,0 +1,87 @@
+schema_version: 1
+feature_slug: s03-cam-mau-so-lieu
+# Ca test mang tiền tố «CM-AC-n»: thuần ở pipeline/scripts/cam-mau-s03.test.mjs; DB thử oneinvest_p1_n1 (BEGIN…ROLLBACK) ở
+# pipeline/scripts/cam-mau-s03.itest.mjs; phép đo dữ liệu thật ở pipeline/scripts/do-cam-mau-s03.mjs.
+# Mỗi phép đo có cặp đỏ: bản sao đột biến của transform-zalo.mjs (thư mục tạm) làm ca đỏ với thông điệp ghim mã ca.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.cam_mau_s03
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
+    expected: "exit 0; ca 'CM-AC-1' xanh: ma trận viết trước (URL ảnh mang dãy số hoặc «6tY», SĐT dạng thường/chấm/cách) — số assert bằng số dòng, giá/DT/PN đúng đáp án, phones đúng SĐT chữ gốc; ca đỏ 'CM-AC-1 đột biến' trên bản sao bỏ bước gạt URL ra thông điệp ghim dòng sai"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.cam_mau_s03
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
+    expected: "exit 0; ca 'CM-AC-2' xanh: 12 dòng giá tỷ viết trước, mỗi dòng đúng số đồng; ca đỏ trên bản sao giữ parseVnNumber cũ cho «2.650 tỷ» ghim «2.650 tỷ»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.cam_mau_s03
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
+    expected: "exit 0; ca 'CM-AC-3' xanh: 9 dòng giá triệu/không đơn vị viết trước đúng đáp án; ca đỏ trên bản sao bỏ luật «tr chen phần lẻ» ghim «5tr5»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.cam_mau_s03
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
+    expected: "exit 0; ca 'CM-AC-4' xanh: 5 dòng diện tích ra đúng số, 4 dòng bề ngang ra null; ca đỏ trên bản sao bỏ danh sách chặn bề ngang ghim «mặt tiền 5m»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.cam_mau_s03
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
+    expected: "exit 0; ca 'CM-AC-5' xanh: bảng bốn biên (thuê 999 triệu nhận, thuê 1 tỷ loại thue-tu-1-ty, bán 100 tỷ nhận, bán 100,001 tỷ loại ban-tren-100-ty) qua hàm chốt khoảng mà runTransformZalo dùng; ca đỏ trên bản sao đổi biên «>=» thành «>» ghim «thuê 1 tỷ»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5b
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cam_mau_s03_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.itest.mjs]
+    expected: "exit 0; ca 'CM-AC-5 DB' xanh trên DB thử oneinvest_p1_n1 trong BEGIN…ROLLBACK: bốn bài mồi (thuê 1 tỷ, bán 120 tỷ, thuê 9 triệu, bán 3 tỷ) → đúng hai offer mới; kết quả runTransformZalo đếm loại theo lý do ≥ 1 mỗi lý do"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.cam_mau_s03
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.test.mjs]
+    expected: "exit 0; ca 'CM-AC-6' xanh: bảng bốn ô viết trước (khác mã → hai khoá; cùng mã → một khoá; không mã → khoá theo khuôn cũ có «|?|» và người đăng; đủ phường + DT → khoá bằng 'sale|<phường>|<giá>|<DT>|<PN>'); ca đỏ trên bản sao bỏ mã khỏi khoá ghim «khác mã»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cam_mau_s03_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/cam-mau-s03.itest.mjs]
+    expected: "exit 0; ca 'CM-AC-7' xanh trên DB thử: nhóm ba bài (cũ có tên «A», mới nhất có tên « B », một bài tên rỗng mới hơn) → sale_offer_records.seller_name = 'B'; nhóm không tên → null; ca đỏ với transform đột biến lấy bài sớm nhất ghim «seller_name»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cam_mau_s03_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/osm.mjs, pipeline/scripts/cam-mau-s03.itest.mjs]
+    expected: "exit 0; ca 'CM-AC-8' xanh trên DB thử: ba nhóm mồi chèn vào collection_units qua trigger kiểm tham chiếu của 048 (market_codes {vn-hcmc}, {vn-hanoi}, {}), nối bằng conversation_id = group_key; bảng năm ô viết trước: tên phường HCM ở nhóm HCM → 'vn-hcmc-…'; tên phường HN ở nhóm HN → 'vn-hanoi-…'; tên phường HCM ở nhóm HN → null; nhóm chưa khai, tên chỉ thuộc HCM → 'vn-hcmc-…'; nhóm chưa khai, tên trùng HN–HCM → null; ca đỏ với transform đột biến chỉ nạp vn-hanoi ghim «vn-hcmc»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.cam_mau_s03_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/**, pipeline/scripts/do-cam-mau-s03.mjs]
+    expected: "exit 0; do-cam-mau-s03 chạy hai lượt trên bản chép dữ liệu thật (DB thử, mỗi lượt BEGIN…ROLLBACK). Lượt một, transform của cây: bảy dòng thước đều 'ĐẠT' — thue_tu_1_ty=0, ban_tren_100_ty=0, gia_tu_url=0 (offer mang giá X mà đọc chữ gốc ra X còn đọc chữ đã gạt URL không ra X), max_noi_dung_moi_offer<=10 (đếm chữ đã gạt URL, SĐT), seller_name_pct>=95, noi_nhom_pct>=95, hcm_sai_thi_truong=0. Lượt đối chứng, transform-zalo.mjs của commit nền ghim c333a342 (chép tạm cạnh tệp thật rồi xoá): mỗi thước phụ thuộc transform phải ra dòng 'TRƯỢT' ghim tên, tái lập mốc gốc (thue_tu_1_ty>=200, ban_tren_100_ty>=500, gia_tu_url>=1, max_noi_dung_moi_offer>10, seller_name_pct=0, hcm_sai_thi_truong>0); noi_nhom_pct đối chứng bằng phép nối sai khoá (group_name thay conversation_id) ra 'TRƯỢT'. Một thước không tái lập được mốc gốc → exit 1 gọi tên thước"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E10
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; toàn bộ test pipeline xanh, gồm parse.test.mjs (ca «2.900 tỷ» đáp án 2,9 tỷ) và gop-trung-s03.test.mjs"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
