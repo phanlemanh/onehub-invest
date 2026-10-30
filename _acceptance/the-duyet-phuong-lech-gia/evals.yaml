@@ -1,0 +1,56 @@
+schema_version: 1
+feature_slug: the-duyet-phuong-lech-gia
+# Ca «TPL-AC-n» ở app/tests/the-duyet-phuong-lech-gia.test.tsx (node --test + tsx; jsdom cho sheet; probe chỉ SELECT trên
+# DB máy thu, bỏ qua có lời ở CI). Mỗi phép đo mới có cặp hai chiều trên cùng fixture: vật lành → xanh; bản chép tạm của
+# review-can-cu.ts (tests/.tpl-cu-*) đổi đúng một chỗ → đỏ với thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+    expected: "exit 0; ca 'TPL-AC-1' xanh: ma trận viết trước 15 cặp cùng phường (5 cặp thật đo 30/10 binh-thanh/Phường Bình Thạnh, phu-nhuan/Phường Phú Nhuận, tan-son-nhi/Phường Tân Sơn Nhì, thong-tay-hoi/Phường Thông Tây Hội, + P. Bình Thạnh, P.Bình Thạnh, phường bình thạnh, Bình Thạnh, Xã Bình Chánh/binh-chanh, Thị trấn Củ Chi/cu-chi, Phường Đa Kao/da-kao, PHƯỜNG BẾN THÀNH/ben-thanh, phuong-liet/Phường Phương Liệt, Phương Liệt/Phường Phương Liệt, phuong-duc/Phường Phượng Dực) qua soTruongGhepCan → hàng phuong 'khop', 15 assert. Hai chiều đỏ: bản chép bỏ bước bỏ tiền tố → 'TPL-AC-1: binh-thanh ↔ Phường Bình Thạnh phải Khớp'; bản chép bỏ tiền tố SAU khi bỏ dấu (cắt phuong- trên slug) → 'TPL-AC-1: phuong-liet ↔ Phường Phương Liệt phải Khớp'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+    expected: "exit 0; ca 'TPL-AC-2' xanh: ma trận viết trước 5 cặp khác phường (Bình Thạnh/Bình Thạnh Đông, binh-thanh/Phường Phú Nhuận, Phường 1/Phường 12, Tây Hồ/Ba Đình, P. Bến Nghé/ben-thanh) → 'lech', 5 assert. Chiều đỏ: bản chép so bằng startsWith thay bằng → 'TPL-AC-2: Bình Thạnh ↔ Bình Thạnh Đông phải Lệch'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+    expected: "exit 0; ca 'TPL-AC-3' xanh: ma trận viết trước 4 cặp so với hành vi trước vòng (soGiaTri trên chuỗi gốc): Phường 12/phuong-12 → 'lech', Phường 12/P.12 → 'lech', Phường 12/Phường 21 → 'lech', Phường 12/' phường 12 ' → 'khop' (giống hệt sau trim + lower, như trước vòng — OOS-5); 4 assert, mỗi assert so cả với nhãn ghim lẫn với soGiaTri(chuỗi gốc). Chiều đỏ: bản chép bỏ chặn khoá chỉ-số → 'TPL-AC-3: Phường 12 ↔ P.12 không được Khớp chỉ vì cùng số' (phuong-12 vốn Lệch vì slug không mang tiền tố)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+    expected: "exit 0; ca 'TPL-AC-4' xanh: phuong null/'  '/'Phường Bình Thạnh' → 'thieu' cả hai chiều; ma trận chỉ-tiền-tố viết trước P./Phường, Xã/Phường, -/Bình Thạnh, Phường/binh-thanh → 'thieu' (4 assert, không cặp nào 'khop'); hàng phuong giữ a/b nguyên chuỗi nguồn ('binh-thanh', 'Phường Bình Thạnh'); ma trận viết trước 9 hàng còn lại (một cặp mỗi hàng kèm nhãn ghim, 18 assert: mỗi hàng so cả với nhãn ghim lẫn với soGiaTri trên chuỗi gốc): bốn hàng chữ dùng cặp mà khoaPhuong sẽ biến thành Khớp — property_type 'Nhà riêng'/'nha-rieng', street 'Đường Phan Văn Trị'/'duong-phan-van-tri', block 'P. A1'/'A1', floor 'Tầng 12'/'tang-12' → 'lech'; năm hàng số so bằng soGiaTri (khoá số của khoaPhuong rơi về soGiaTri nên rò rỉ không đổi kết quả). Bốn chiều đỏ: bản chép áp khoaPhuong cho mọi hàng → 'TPL-AC-4: chuẩn hoá phường lan sang hàng property_type'; bản chép áp cho riêng floor → 'TPL-AC-4: chuẩn hoá phường lan sang hàng floor'; bản chép đưa khoaPhuong vào soGiaTri (rò rỉ ngược) → 'TPL-AC-4: chuẩn hoá phường lan sang hàng property_type'; bản chép coi khoá rỗng như khoá thường → 'TPL-AC-4: P. ↔ Phường chỉ có tiền tố phải Thiếu'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_duyet
+    paths: [app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review-card.tsx, app/src/components/ops/review/**, app/tests/the-duyet-du-can-cu.test.tsx]
+    expected: "exit 0; bộ ca PL3 (the-duyet-du-can-cu.test.tsx) vẫn xanh nguyên, gồm ma trận 30 ca TD-AC-2 của chín hàng không phải Phường và cặp Tây Hồ/Ba Đình vẫn Lệch — đối chứng hồi quy của hàm dùng chung"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    paths: [app/src/lib/ops/review-can-cu.ts, app/src/components/ops/review/review-compare.tsx, app/src/components/ops/review-card.tsx, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+    expected: "exit 0; ca 'TPL-AC-5' xanh: ReviewCard thật dựng trong jsdom cho thẻ ghép căn chờ (Tin A binh-thanh, Tin B Phường Bình Thạnh) → hàng [data-review-compare] có chữ 'Phường' chứa badge 'Khớp', chứa nguyên văn 'binh-thanh' và 'Phường Bình Thạnh', không chứa 'Lệch'. Chiều đỏ: bản chép review-can-cu bỏ khoaPhuong → 'TPL-AC-5: hàng Phường của sheet phải hiện Khớp'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    layer: backend-effect
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+    expected: "exit 0 trên máy thu; ca 'TPL-AC-6 probe' xanh, chỉ SELECT trên DB máy thu thật. Mốc là đuôi area.id sau parent_id + '-' (dữ liệu bên ghi OSM đã lưu), không qua khoaPhuong hay slugifyName. Nhánh cùng phường: với mỗi area submarket, soTruongGhepCan(đuôi, 'Phường ' + name) và (đuôi, name) → 'khop' (đếm ≥ 1 mỗi dạng, ghim 'TPL-AC-6 probe: <đuôi> ↔ Phường <name> cùng phường mà báo <nhãn>'). Nhánh khác phường: mọi cặp hai area khác nhau cùng parent_id, (đuôi_a, 'Phường ' + name_b) → 'lech' (đếm ≥ 1, ghim 'TPL-AC-6 probe: <đuôi_a> ↔ Phường <name_b> khác phường mà báo Khớp'). Thẻ thật: mọi review_queue entity_match mà hai bên giải về cùng một đuôi mã (bên slug = đuôi; bên tên = area có 'Phường ' + name hoặc name bằng nguyên chuỗi, so NFC chữ thường) → hàng Phường 'khop', số thẻ giải được ≥ 1 (ghim 'TPL-AC-6 probe: không thẻ nào giải được phường — phép đo xanh suông'). Ở CI (process.env.CI) ca bỏ qua có lời: DB CI chỉ có lược đồ. Chiều đỏ: bản chép bỏ tiền tố sau khi bỏ dấu → nhánh cùng phường đỏ đúng ở phuong-liet ↔ Phường Phương Liệt"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
