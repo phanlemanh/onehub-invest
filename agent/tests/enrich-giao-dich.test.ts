@@ -57,14 +57,22 @@ function giaoDichDem(c: pg.Client) {
   return { gd, doSau: () => sau };
 }
 
-/** Client bọc: ném lỗi (phía JS) ở câu ghi thứ k của tin `hong`. */
-function clientHong(c: pg.Client, hong: string, k: number): pg.Client {
+/**
+ * Client bọc: ném lỗi (phía JS) ở câu ghi thứ k của tin `hong`; k = "sauCuoi" → chạy xong câu ghi CUỐI của tin (dấu
+ * enrich:thu) rồi mới ném — mọi câu ghi của tin đã thành công, nên chỉ việc lui giao dịch mới xoá được chúng (S4-r1 t5).
+ */
+function clientHong(c: pg.Client, hong: string, k: number | "sauCuoi"): pg.Client {
   let dang = false;
   let dem = 0;
   let daNem = false;
   const query = async (text: unknown, params?: unknown[]) => {
     const sql = typeof text === "string" ? text : "";
     if (/^\s*INSERT INTO enrichment_proposals/.test(sql)) dang = params?.[1] === hong;
+    if (k === "sauCuoi" && dang && !daNem && /^\s*INSERT INTO ops_audit/.test(sql)) {
+      await (c.query as (t: unknown, p?: unknown[]) => Promise<pg.QueryResult>)(text, params);
+      daNem = true;
+      throw Object.assign(new Error("boom (thử lỗi sau câu ghi cuối)"), { code: "XX000" });
+    }
     if (dang && !daNem && /^\s*(INSERT|UPDATE|SELECT apply_enrichment)/.test(sql) && ++dem === k) {
       daNem = true;
       throw Object.assign(new Error("boom (thử lỗi ghi)"), { code: "XX000" });
@@ -121,36 +129,51 @@ async function voiDotBien<M, T>(tep: string, doi: [string, string], fn: (m: M) =
 }
 
 // ── EC-AC-2 ─────────────────────────────────────────────────────────────────────────────────────────────────
-async function kiemCoLapLoi(c: pg.Client, run: RunFn) {
+/** Gom mọi vế lệch rồi ném một lần — chiều đỏ kiểm được TỪNG vế có thể đỏ (S4-r1 t5). */
+async function kiemCoLapLoi(c: pg.Client, run: RunFn, cho: number | "sauCuoi") {
   const [t1, t2, t3] = [await tin(c), await tin(c), await tin(c)];
   const { gd, doSau } = giaoDichDem(c);
   const thay: number[] = [];
   const runId = `test-gd-${seq}`;
   const { dem } = await run({
-    client: clientHong(c, t2, 2), runId, dry: false, limit: 50, offerIds: [t1, t2, t3],
+    client: clientHong(c, t2, cho), runId, dry: false, limit: 50, offerIds: [t1, t2, t3],
     llm: llmTheo(["ok", "ok", "ok"], doSau, thay), resolve: CAN_LLM, buildings: [], giaoDich: gd,
   });
-  assert.equal(await deXuat(c, t2, runId), 0, "EC-AC-2 tin hỏng để lại đề xuất");
-  assert.equal(await theCho(c, t2), 0, "EC-AC-2 tin hỏng để lại thẻ chờ");
-  assert.equal(await phatBieu(c, t2), 0, "EC-AC-2 tin hỏng để lại phát biểu");
-  assert.equal(await daThu(c, t2), 0, "EC-AC-2 tin hỏng có dấu đã thử");
+  const lech: string[] = [];
+  const phai = (dung: boolean, tb: string) => { if (!dung) lech.push(tb); };
+  phai((await deXuat(c, t2, runId)) === 0, "tin hỏng để lại đề xuất");
+  phai((await theCho(c, t2)) === 0, "tin hỏng để lại thẻ chờ");
+  phai((await phatBieu(c, t2)) === 0, "tin hỏng để lại phát biểu");
+  phai((await daThu(c, t2)) === 0, "tin hỏng có dấu đã thử");
+  // Đối chứng dương cùng lượt: tin lành có đủ bốn thứ mà tin hỏng phải không còn.
   for (const t of [t1, t3]) {
-    assert.ok((await deXuat(c, t, runId)) > 0, `EC-AC-2 tin lành ${t} không có đề xuất`);
-    assert.equal(await daThu(c, t), 1, `EC-AC-2 tin lành ${t} thiếu dấu đã thử`);
+    phai((await deXuat(c, t, runId)) > 0, `tin lành ${t} không có đề xuất`);
+    phai((await theCho(c, t)) > 0, `tin lành ${t} không có thẻ chờ`);
+    phai((await phatBieu(c, t)) > 0, `tin lành ${t} không có phát biểu`);
+    phai((await daThu(c, t)) === 1, `tin lành ${t} thiếu dấu đã thử`);
   }
-  assert.deepEqual(dem.loiGhi, [{ offer_id: t2, loi: "XX000" }], "EC-AC-2 loiGhi phải gọi tên tin hai");
-  assert.equal(maThoat(dem), 2, "EC-AC-2 mã thoát");
-  assert.deepEqual(thay, [0, 0, 0], "EC-AC-2 LLM gọi trong giao dịch mở");
+  phai(JSON.stringify(dem.loiGhi) === JSON.stringify([{ offer_id: t2, loi: "XX000" }]), "loiGhi phải gọi tên tin hai");
+  phai(maThoat(dem) === 2, "mã thoát phải là 2");
+  phai(thay.length === 3 && thay.every((d) => d === 0), "LLM gọi trong giao dịch mở");
+  if (lech.length) assert.fail(`EC-AC-2 (${cho}) ${lech.join("; ")}`);
 }
 
-test("EC-AC-2 cô lập lỗi ghi", async () => {
-  await withTx((c) => kiemCoLapLoi(c, runEnrich));
+test("EC-AC-2 cô lập lỗi ghi: hỏng ở câu ghi thứ hai và hỏng sau câu ghi cuối", async () => {
+  await withTx(async (c) => {
+    await kiemCoLapLoi(c, runEnrich, 2);
+    await kiemCoLapLoi(c, runEnrich, "sauCuoi");
+  });
 });
 
-test("EC-AC-2 chiều đỏ: bỏ giaoDich (ghi thẳng) → tin hỏng để lại đề xuất", async () => {
+test("EC-AC-2 chiều đỏ: bỏ giaoDich (ghi thẳng) → từng vế của tin hỏng đều đỏ", async () => {
   await withTx((c) =>
-    voiDotBien<{ runEnrich: RunFn }, void>("run.ts", ["const t = await giaoDich(ghi);", "const t = await ghi();"], (m) =>
-      assert.rejects(kiemCoLapLoi(c, m.runEnrich), /EC-AC-2 tin hỏng để lại đề xuất/)),
+    voiDotBien<{ runEnrich: RunFn }, void>("run.ts", ["const t = await giaoDich(ghi);", "const t = await ghi();"], async (m) => {
+      const e = await kiemCoLapLoi(c, m.runEnrich, "sauCuoi").then(() => null, (x: Error) => x.message);
+      assert.ok(e, "EC-AC-2 chiều đỏ: bản ghi thẳng mà ca vẫn xanh");
+      for (const ve of ["tin hỏng để lại đề xuất", "tin hỏng để lại thẻ chờ", "tin hỏng để lại phát biểu", "tin hỏng có dấu đã thử"]) {
+        assert.ok(e.includes(ve), `EC-AC-2 chiều đỏ thiếu vế «${ve}»: ${e}`);
+      }
+    }),
   );
 });
 

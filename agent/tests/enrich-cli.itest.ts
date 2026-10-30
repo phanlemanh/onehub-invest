@@ -196,35 +196,62 @@ test("EC-AC-4 tổng kết CLI khớp DB thử; chạy lại → đề xuất m�
 });
 
 // ── EC-AC-2 ─────────────────────────────────────────────────────────────────────────────────────────────────
-async function kiemLoiGhiCli(agentDir: string) {
+/**
+ * Lỗi ghi ở tin hai do trigger trên DB thử. `dau`: BEFORE INSERT trên enrichment_proposals (câu ghi đầu tiên của tin).
+ * `cuoi`: BEFORE INSERT trên ops_audit (dấu enrich:thu — câu ghi cuối): đề xuất và thẻ của tin hai đã ghi trong giao
+ * dịch, chỉ ROLLBACK mới xoá được (S4-r1 t7). Gom mọi vế lệch rồi ném một lần.
+ */
+async function kiemLoiGhiCli(agentDir: string, cho: "dau" | "cuoi") {
   const [t1, t2, t3] = await gieo(3);
+  const bang = cho === "dau" ? "enrichment_proposals" : "ops_audit";
+  const khop = cho === "dau" ? "NEW.offer_id" : "NEW.detail->>'offer_id'";
   await soi.query(`CREATE OR REPLACE FUNCTION ecli_hong() RETURNS trigger LANGUAGE plpgsql AS $$
-    BEGIN IF NEW.offer_id = '${t2}' THEN RAISE EXCEPTION 'ecli: thử lỗi ghi %', NEW.offer_id; END IF; RETURN NEW; END $$`);
-  await soi.query(`CREATE TRIGGER ecli_hong BEFORE INSERT ON enrichment_proposals FOR EACH ROW EXECUTE FUNCTION ecli_hong()`);
+    BEGIN IF ${khop} = '${t2}' THEN RAISE EXCEPTION 'ecli: thử lỗi ghi %', ${khop}; END IF; RETURN NEW; END $$`);
+  await soi.query(`CREATE TRIGGER ecli_hong BEFORE INSERT ON ${bang} FOR EACH ROW EXECUTE FUNCTION ecli_hong()`);
   try {
     cheDo = { tra500: () => false };
     const r = await cli(agentDir, ["--offers", [t1, t2, t3].join(",")]);
-    assert.ok((await deXuatTin(t3)) > 0, `EC-AC-2 tin sau tin hỏng không ghi được — ${r.out}`);
-    assert.equal(r.code, 2, `EC-AC-2 mã thoát — ${r.out}`);
-    assert.match(r.out, new RegExp(`ghi lỗi 1 tin: ${t2}\\(`), "EC-AC-2 stdout phải gọi tên tin hai");
-    assert.ok((await deXuatTin(t1)) > 0, "EC-AC-2 tin một không có đề xuất");
-    assert.equal(await deXuatTin(t2), 0, "EC-AC-2 tin hai còn đề xuất");
-    assert.equal(await so(`SELECT count(*) n FROM review_queue WHERE item_id=$1 AND status='pending'`, [`enrich:${t2}`]), 0,
-      "EC-AC-2 tin hai còn thẻ chờ");
-    assert.equal(await so(`SELECT count(*) n FROM ops_audit WHERE action='enrich:thu' AND detail->>'offer_id'=$1`, [t2]), 0,
-      "EC-AC-2 tin hai có dấu đã thử");
+    const lech: string[] = [];
+    const phai = (dung: boolean, tb: string) => { if (!dung) lech.push(tb); };
+    phai((await deXuatTin(t3)) > 0, "tin sau tin hỏng không ghi được");
+    phai(r.code === 2, `mã thoát ${r.code}, muốn 2`);
+    phai(new RegExp(`ghi lỗi 1 tin: ${t2}\\(`).test(r.out), "stdout phải gọi tên tin hai");
+    phai((await deXuatTin(t1)) > 0, "tin một không có đề xuất");
+    phai((await deXuatTin(t2)) === 0, "tin hỏng để lại đề xuất");
+    const theCho = (id: string) => so(`SELECT count(*) n FROM review_queue WHERE item_id=$1 AND status='pending'`, [`enrich:${id}`]);
+    phai((await theCho(t2)) === 0, "tin hỏng để lại thẻ chờ");
+    phai((await theCho(t1)) > 0, "tin một không có thẻ chờ (đối chứng dương)");
+    phai((await so(`SELECT count(*) n FROM ops_audit WHERE action='enrich:thu' AND detail->>'offer_id'=$1`, [t2])) === 0,
+      "tin hỏng có dấu đã thử");
+    if (lech.length) assert.fail(`EC-AC-2 (${cho}) ${lech.join("; ")} — ${r.out.slice(-400)}`);
   } finally {
-    await soi.query(`DROP TRIGGER IF EXISTS ecli_hong ON enrichment_proposals`);
+    await soi.query(`DROP TRIGGER IF EXISTS ecli_hong ON ${bang}`);
   }
 }
 
-test("EC-AC-2 lỗi ghi trên CLI: trigger hỏng tin hai → thoát 2, tin một và ba còn", () => kiemLoiGhiCli(AGENT));
+test("EC-AC-2 lỗi ghi trên CLI: trigger hỏng tin hai (câu ghi đầu · câu ghi cuối) → thoát 2, tin một và ba còn", async () => {
+  await kiemLoiGhiCli(AGENT, "dau");
+  await kiemLoiGhiCli(AGENT, "cuoi");
+});
 test("EC-AC-2 chiều đỏ: giaoDich không ROLLBACK → tin sau tin hỏng không ghi được", () =>
   voiDotBien(
     "scripts/enrich-run.ts",
     `await c.query("ROLLBACK").catch(() => {});`,
     "",
-    (d) => assert.rejects(kiemLoiGhiCli(d), /EC-AC-2 tin sau tin hỏng không ghi được/),
+    (d) => assert.rejects(kiemLoiGhiCli(d, "dau"), /tin sau tin hỏng không ghi được/),
+  ));
+test("EC-AC-2 chiều đỏ: không mở giao dịch mỗi tin (tự commit từng câu) → tin hỏng để lại đề xuất và thẻ", () =>
+  voiDotBien(
+    "scripts/enrich-run.ts",
+    `    await c.query("BEGIN");\n    try {\n      const r = await fn();\n      await c.query("COMMIT");`,
+    `    try {\n      const r = await fn();`,
+    async (d) => {
+      const e = await kiemLoiGhiCli(d, "cuoi").then(() => null, (x: Error) => x.message);
+      assert.ok(e, "EC-AC-2 chiều đỏ: bản tự commit mà ca vẫn xanh");
+      for (const ve of ["tin hỏng để lại đề xuất", "tin hỏng để lại thẻ chờ"]) {
+        assert.ok(e.includes(ve), `EC-AC-2 chiều đỏ thiếu vế «${ve}»: ${e}`);
+      }
+    },
   ));
 
 // ── EC-AC-9 ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -273,7 +300,10 @@ async function kiemKhongBocLai(agentDir: string) {
   await soi.query(`UPDATE stg_zalo_posts SET text = 'x' WHERE post_id LIKE $1`, [`p_${ca}%`]);
   cheDo = { tra500: (ma) => ma === f };
   const r3 = await cli(agentDir, [], 3);
-  assert.ok(r3.out.includes("LLM hỏng"), r3.out);
+  // Đối chứng dương (S4-r1 t6): lượt ba THẬT bốc đúng tin f và lời gọi LLM của nó thật sự lỗi.
+  assert.match(r3.out, /tin: 1 \|/, `EC-AC-9 lượt ba phải bốc đúng một tin — ${r3.out}`);
+  assert.match(r3.out, /LLM hỏng 1\/1 \(lỗi 1 · không đọc được 0\)/, `EC-AC-9 lượt ba: LLM của tin f phải lỗi — ${r3.out}`);
+  assert.equal(r3.code, 3, `EC-AC-9 lượt ba phải thoát 3 — ${r3.out}`);
   assert.equal(await so(`SELECT count(*) n FROM ops_audit WHERE action='enrich:thu' AND detail->>'offer_id'=$1`, [f]), 0,
     `EC-AC-9 tin LLM lỗi có dấu đã thử — ${r3.out}`);
 }
@@ -285,6 +315,14 @@ test("EC-AC-9 chiều đỏ: selectOffers bỏ điều kiện enrich:thu → lư
     "WHERE a.action = 'enrich:thu' AND",
     "WHERE a.action = 'enrich:thu-khong-co' AND",
     (d) => assert.rejects(kiemKhongBocLai(d), /EC-AC-9 lượt hai bốc lại tin đã thử/),
+  ));
+
+test("EC-AC-9 chiều đỏ: ghi dấu cả khi LLM ném lỗi → tin LLM lỗi có dấu đã thử", () =>
+  voiDotBien(
+    "src/enrich/run.ts",
+    "if (!llmRes?.loi) {",
+    "if (true) {",
+    (d) => assert.rejects(kiemKhongBocLai(d), /EC-AC-9 tin LLM lỗi có dấu đã thử/),
   ));
 
 // ── Review Focus 4 ──────────────────────────────────────────────────────────────────────────────────────────
