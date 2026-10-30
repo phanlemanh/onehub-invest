@@ -1,0 +1,35 @@
+{
+  "feature_plain": "Máy đọc đủ số điện thoại người bán trong bài S03/S05, kể cả bốn kiểu viết lạ đang bị sót, không nhận số 11 chữ số, và mỗi tin chọn số theo một luật rõ thay vì lấy số đầu của bài đầu — dạng số lưu giữ nguyên.",
+  "will_do": [
+    {"id":"AC-1","p":"Sẽ đọc được số viết với mọi tổ hợp đầu số (0, +84, 84, (+84), (84), (0xx)) và dấu tách (chấm, gạch, cách, •, ·), một hoặc hai dấu liền — kể cả bốn kiểu đang sót."},
+    {"id":"AC-2","p":"Sẽ bỏ số 11 chữ số nhưng vẫn giữ số 10 chữ số đứng cạnh, và đọc đúng hai số viết sát nhau."},
+    {"id":"AC-4","p":"Sẽ chọn số của tin là số có ở nhiều bài nhất; hoà thì lấy theo bài đăng sớm nhất."},
+    {"id":"AC-5","p":"Sẽ ghi vào nhật ký mỗi lượt nạp số tin có từ hai số trở lên, khớp với phép đếm độc lập."},
+    {"id":"AC-6","p":"Sẽ giữ đúng dạng số đang lưu (0xxxxxxxxx) và khoá băm đúng với số."},
+    {"id":"AC-7","p":"Sẽ đưa số bài sót trên dữ liệu thật từ 46 về 0, số bài nhận số 11 chữ số về 0, và 3 tin đang trống số có số."},
+    {"id":"AC-8","p":"Sẽ giữ nguyên tập tin rao, giá và diện tích của S03/S05 — so bản trước và bản mới trên bản chép dữ liệu thật."},
+    {"id":"AC-9","p":"Sẽ giữ bộ test pipeline xanh."}
+  ],
+  "wont_do": [
+    {"id":"AC-3","p":"Sẽ KHÔNG nhận nhầm giá, diện tích, ngày, mã căn, số bàn, dãy số dài hay số trong đường link làm số điện thoại, và chữ dùng để đọc giá không đổi."},
+    {"id":"OOS-1","p":"KHÔNG đổi số sang dạng +84… và khoá băm — để SD3 làm một lần cho mọi bảng."},
+    {"id":"OOS-2","p":"KHÔNG đọc số ở S06, trong ảnh, và chưa gộp người theo số."},
+    {"id":"OOS-3","p":"KHÔNG đổi cách đọc giá và cách gom bài thành tin."},
+    {"id":"OOS-4","p":"KHÔNG viết sẵn hàm chuẩn hoá +84 — SD3 viết khi nối."}
+  ],
+  "coverage_plain": [
+    {"i":0,"p":"Cách viết số: mọi tổ hợp đầu số × dấu tách × một/hai dấu, bốn kiểu sót, số 11 chữ số, hai số sát nhau, chữ không phải số (AC-1, AC-2, AC-3)."},
+    {"i":1,"p":"Chọn số cho tin: một bài, nhiều bài cùng số, nhiều số, hoà, bài sớm nhất không có số, không có số (AC-4)."},
+    {"i":2,"p":"Hai nguồn S03 và S05 cùng luật, đo trên bản chép dữ liệu thật (AC-5, AC-7, AC-8)."},
+    {"i":3,"p":"Số lưu giữ dạng cũ, khoá băm khớp số (AC-6)."},
+    {"i":4,"p":"Không lùi: tin, giá, diện tích, chữ đọc giá và bộ test giữ nguyên (AC-3, AC-8, AC-9)."},
+    {"i":5,"p":"Không chạy bước quét hình thái riêng: cách viết số đã thành bảng đủ mọi tổ hợp ở AC-1."}
+  ],
+  "gap_probe_plain": [
+    {"i":0,"p":"Lý do bỏ bước quét độ phủ chưa đứng vững — đã sửa: cách viết số thành bảng đủ 60 tổ hợp, thêm ca hai số sát nhau."},
+    {"i":1,"p":"Hàm chuẩn hoá +84 viết sẵn mà chưa dùng sẽ phải sửa lại ở SD3 — đã bỏ khỏi vòng này."},
+    {"i":2,"p":"Hai số viết sát nhau có thể bị coi là một số 11+ chữ số và mất cả hai — đã thêm ca kiểm và luật: xuống dòng không nối số."},
+    {"i":3,"p":"Cách đếm «tin nhiều số» lệch giữa tiêu chí và phép đo — đã thống nhất, đếm bằng bộ dò độc lập và so với số audit."},
+    {"i":4,"p":"Phép quét «không ai gọi hàm +84» yếu — không còn áp dụng vì hàm đã bỏ."}
+  ]
+}
