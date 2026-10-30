@@ -5,7 +5,7 @@ slug: sellers-them-dong-lai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: implemented
+status: verified
 veto_state: mo
 veto_opened_at: 2026-10-30T18:01:20Z
 approved_by:
