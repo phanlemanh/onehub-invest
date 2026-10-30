@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e252352172d487061b728839442d5b0eeb940a54
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: judge-giu-quyet-dinh-nguoi

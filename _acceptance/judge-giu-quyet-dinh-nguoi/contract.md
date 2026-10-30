@@ -5,7 +5,7 @@ slug: judge-giu-quyet-dinh-nguoi
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-judge-giu-quyet-dinh-nguoi-design.md
@@ -64,3 +64,7 @@ Trục quét (morphological-scan, preset entity-feature): **trạng thái thẻ 
 - Chạy judge-run thật trên DB `oneinvest` (việc vận hành sau gộp).
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Ca test «người quyết dở giao dịch» không tự chứng rằng câu ghi của máy thật sự đứng chờ khoá trong lần đo, nên có thể xanh dù tình huống tranh chấp không xảy ra lần đó.
+  - Ngoài-2: Ca test «thẻ chờ được cập nhật» không so trước/sau lượt chấm, nên một bản sửa lỡ bỏ sót vài thẻ đã mang sẵn kết luận đúng vẫn có thể lọt qua.
