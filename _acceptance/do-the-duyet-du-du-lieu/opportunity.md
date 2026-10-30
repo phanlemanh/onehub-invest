@@ -3,10 +3,10 @@ schema_version: 1
 slug: do-the-duyet-du-du-lieu
 feature: Mỗi đêm scorecard ghi tỉ lệ thẻ ghép căn chờ duyệt có đủ dữ liệu hai bên (ảnh, đặc trưng nhà, người đăng, tin còn sống)
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build        # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: Mạnh
+decided_at: 2026-10-30T23:19:54Z    # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
@@ -30,3 +30,8 @@ Vì sao: Audit hàng duyệt 30/10 (docs/research/audit-hang-duyet-3010.md §5, 
 - Kết quả nào là SỐNG: [đề xuất] Chạy hai lần cùng ngày không nhân dòng; mỗi thành phần có tỉ lệ riêng; thẻ không còn chờ không được đếm
 - Kết quả nào là CHẾT: [đề xuất] chưa đạt «Chạy hai lần cùng ngày không nhân dòng; mỗi thành phần có tỉ lệ riêng; thẻ không còn chờ không được đếm» khi hết timebox
 - Timebox: …
+
+## Cổng 0
+
+- **decision = build** Căn cứ: Mạnh 30/10 ở §7 docs/research/audit-hang-duyet-3010.md (PR #217), nguyên văn «Các điều còn lại theo đề xuất» — cắt ba đợt, HD11 thuộc đợt 3 (giám sát trả lời P4-107).
+- **disposition = (không có bản mẫu)**
