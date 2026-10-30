@@ -127,3 +127,49 @@ test("CM-AC-4 đột biến: bỏ danh sách chặn bề ngang → «mặt tiề
   const m = await banSaoDotBien([["if (BE_NGANG.test(truoc)) continue;", ""]]);
   assert.notEqual(m.parsePost("Bán nhà mặt tiền 20m").areaM2, null, "CM-AC-4 đột biến «mặt tiền 20m» vẫn null");
 });
+
+// ---- AC-5: chốt khoảng giá (Hỏi-2 = a: bài phi lý không thành offer) ----
+const AC5 = [
+  [{ kind: "rent_lt", priceVnd: 999e6 }, null],
+  [{ kind: "rent_lt", priceVnd: 1e9 }, "thue-tu-1-ty"],
+  [{ kind: "sale", priceVnd: 100e9 }, null],
+  [{ kind: "sale", priceVnd: 100.001e9 }, "ban-tren-100-ty"],
+];
+
+test("CM-AC-5: bốn biên chốt khoảng giá", () => {
+  for (const [pr, dapAn] of AC5) assert.equal(tz.lyDoGiaPhiLy(pr), dapAn, `CM-AC-5 ${pr.kind} ${pr.priceVnd}`);
+  assert.equal(tz.lyDoGiaPhiLy({ kind: "sale", priceVnd: null }), null, "CM-AC-5 không giá");
+});
+
+test("CM-AC-5 đột biến: biên «>=» thành «>» → thuê 1 tỷ lọt", async () => {
+  const m = await banSaoDotBien([["pr.priceVnd >= GIA_THUE_TRAN", "pr.priceVnd > GIA_THUE_TRAN"]]);
+  assert.equal(m.lyDoGiaPhiLy(AC5[1][0]), null, "CM-AC-5 đột biến «thuê 1 tỷ» vẫn bị loại — thước không đo biên");
+});
+
+// ---- AC-6: khoá gom có mã toà/căn ----
+const NGUOI = { sender_id: "u1", text: "x" };
+const thieu = (chu) => ({ ...tz.parsePost(chu), phuong: null });
+
+test("CM-AC-6: bảng bốn ô khoá gom", () => {
+  const a = thieu("Cho thuê 2PN S10.03 7tr");
+  const b = thieu("Cho thuê 2PN S5.12 7tr");
+  const a2 = thieu("Cho thuê căn 2PN S10.03 giá 7tr full đồ");
+  assert.notEqual(tz.repostKey(a, NGUOI), tz.repostKey(b, NGUOI), "CM-AC-6 khác mã → hai khoá");
+  assert.equal(tz.repostKey(a, NGUOI), tz.repostKey(a2, NGUOI), "CM-AC-6 cùng mã → một khoá");
+  const khong = thieu("Cho thuê 2PN 7tr");
+  assert.equal(tz.repostKey(khong, NGUOI), `rent_lt|?|7000000|?|2|?|sender:u1`, "CM-AC-6 không mã → khuôn cũ có «|?|»");
+  const du = { kind: "sale", phuong: "nghia-do", priceVnd: 5e9, pricePerm2Vnd: null, areaM2: 66.7, bedrooms: 2 };
+  assert.equal(tz.repostKey(du, NGUOI), "sale|nghia-do|5000000000|66.7|2", "CM-AC-6 đủ phường + DT → khoá nội dung cũ");
+});
+
+test("CM-AC-6: maToaCan bỏ mốc «T4/2027» và mã trong URL", () => {
+  assert.deepEqual(tz.maToaCan("Bán BS8 nhận nhà T4/2027 xem https://zdn.vn/PR2/x.jpg"), ["BS8"]);
+  assert.deepEqual(tz.maToaCan("Căn S10.03 và LD2xx13"), ["LD2xx13", "S10.03"]);
+});
+
+test("CM-AC-6 đột biến: bỏ mã khỏi khoá → khác mã chung một khoá", async () => {
+  const m = await banSaoDotBien([["|${ma.join(\",\") || \"?\"}|${nguoi}", "|?|${nguoi}"]]);
+  const a = { ...m.parsePost("Cho thuê 2PN S10.03 7tr"), phuong: null };
+  const b = { ...m.parsePost("Cho thuê 2PN S5.12 7tr"), phuong: null };
+  assert.equal(m.repostKey(a, NGUOI), m.repostKey(b, NGUOI), "CM-AC-6 đột biến «khác mã» vẫn tách — thước không đo mã");
+});

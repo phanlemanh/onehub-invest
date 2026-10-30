@@ -158,6 +158,7 @@ export function parsePost(text) {
   // SĐT người đăng (nằm sẵn trong text tin rao — nguồn contact chính của P1)
   out.phones = extractPhones(text);
   out.phone = out.phones[0] ?? null;
+  out.ma = maToaCan(text);
 
   // sanitize: regex "tổng thể" có thể vớ chuỗi lạ → NaN; NaN vô hại hoá
   // thành null để transform bỏ qua thay vì gãy INSERT bigint.
@@ -213,7 +214,30 @@ export function repostKey(pr, post) {
   const noiDung = `${pr.kind}|${pr.phuong ?? "?"}|${pr.priceVnd ?? pr.pricePerm2Vnd}|${pr.areaM2 ?? "?"}|${pr.bedrooms ?? "?"}`;
   if (pr.phuong && pr.areaM2 != null) return noiDung;
   const nguoi = post.sender_id ? `sender:${post.sender_id}` : pr.phone ? `phone:${pr.phone}` : `text:${normText(post.text)}`;
-  return `${noiDung}|${nguoi}`;
+  // N1: mã toà/căn tách các căn khác nhau của một môi giới cùng giá/PN (đo 30/10: một offer gom 40 bài).
+  const ma = pr.ma ?? [];
+  return `${noiDung}|${ma.join(",") || "?"}|${nguoi}`;
+}
+
+// Mã toà/căn trong chữ bài: chữ HOA 1–3 + 1–2 số (S10, BS8, PR2, LD2), kèm đuôi căn ".03", "-1203", "xx13".
+const MA_TOA_CAN = /(?<![\p{L}\p{N}])([A-Z]{1,3}\d{1,2}(?:[.\-]\d{2,4}|x{2}\d{2})?)(?![\p{L}\p{N}])/gu;
+
+/** Mã toà/căn đọc từ chữ đã gạt URL, sắp xếp, không trùng; bỏ "T<số>" (thường là mốc «T4/2027»). Chỉ để gom, không nối. */
+export function maToaCan(text) {
+  const ma = [...gatSo(text).matchAll(MA_TOA_CAN)].map((m) => m[1]).filter((m) => !/^T\d{1,2}$/.test(m));
+  return [...new Set(ma)].sort();
+}
+
+// Chốt khoảng giá (N1, Hỏi-2 = a): số phi lý không thành offer. Không đổi loại tin — ý định là việc của PL5.
+const GIA_THUE_TRAN = 1e9;
+const GIA_BAN_TRAN = 100e9;
+
+/** Lý do một bài đã đọc có giá phi lý, hoặc null. */
+export function lyDoGiaPhiLy(pr) {
+  if (pr.priceVnd == null) return null;
+  if (pr.kind === "rent_lt" && pr.priceVnd >= GIA_THUE_TRAN) return "thue-tu-1-ty";
+  if (pr.kind === "sale" && pr.priceVnd > GIA_BAN_TRAN) return "ban-tren-100-ty";
+  return null;
 }
 
 /**
@@ -237,9 +261,12 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   // ---- Bước 2+3: parse + confidence ----
   const parsed = [];
   let nFull = 0, nPartial = 0, nFail = 0;
+  const loaiGiaPhiLy = { "thue-tu-1-ty": 0, "ban-tren-100-ty": 0 };
   for (const p of posts) {
     const pr = parse(p.text);
     if (!pr.kind) { nFail++; continue; }
+    const lyDo = lyDoGiaPhiLy(pr);
+    if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
     const ph = matchPhuong(p.text, phuongSlugs);
     if (ph) pr.phuong = ph.slug;
     // tính price_perm2 nếu thiếu
@@ -256,6 +283,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     parsed.push({ ...pr, post: p });
   }
   console.log(`parse: ${nFull} high, ${nPartial} medium, ${nFail} fail — coverage ${(nFull / posts.length * 100).toFixed(1)}%`);
+  console.log(`giá phi lý (không thành offer): ${JSON.stringify(loaiGiaPhiLy)}`);
 
   // ---- Bước 4: gom repost theo khoá nội dung (repostKey); offer_id cấp ở bước 5 ----
   const dedup = new Map();
@@ -317,7 +345,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   const { reconcile } = await writeOffers(client, "S03", rows, { assertions: phatBieuPhongNgu("S03", nhom, "transform-zalo@045") });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile };
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy };
 }
 
 async function main() {
