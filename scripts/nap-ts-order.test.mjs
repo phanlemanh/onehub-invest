@@ -44,6 +44,7 @@ function buildTree(scriptName) {
     path.join(t.root, "scripts", "lib"),
     path.join(t.root, "pipeline", "logs"),
     path.join(t.root, "collector", "snapshots", "hanoi"),
+    path.join(t.root, "agent"), // bước enrich-run cuối zalo-import-daily chạy trong agent/ (enrich-chay-sau-nap)
   ]) mkdirSync(d, { recursive: true });
   copyFileSync(path.join(REPO, "scripts", scriptName), path.join(t.root, "scripts", scriptName));
   copyFileSync(path.join(REPO, "scripts", "lib", "job-step.sh"), path.join(t.root, "scripts", "lib", "job-step.sh"));

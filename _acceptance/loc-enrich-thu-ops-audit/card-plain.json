@@ -1,0 +1,4 @@
+{
+  "feature_plain": "Người vận hành đọc nhật ký thao tác Ops qua API sẽ không còn thấy các dòng đánh dấu «đã thử» mà enrich ghi mỗi đêm; thao tác của người không bị đẩy khỏi 100 dòng gần nhất.",
+  "analyst_plain": "Không đo được phép «đỏ trên bản cũ» tự động ở vòng này (bước chạy lại trên bản trước vòng bị công cụ chặn); bù lại, mỗi ca của bộ test tự mang chiều đỏ trên bản route trước vòng hoặc bản đột biến."
+}

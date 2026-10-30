@@ -280,7 +280,7 @@ async function theMoi(): Promise<number> {
 /** Thân + query hợp lệ cho từng ô (để ô «qua» chạy nghiệp vụ thật, ô bị chặn thì không gì được đổi). */
 async function lenh(route: string, method: string, action: string | null): Promise<{ body?: unknown; query?: string; id?: number }> {
   if (route === "ingest") return { body: { pushedAt: new Date().toISOString() } }
-  if (route === "review/[id]/decide") return { id: await theMoi(), body: { status: "deferred" } }
+  if (route === "review/[id]/decide") return { id: await theMoi(), body: { status: "deferred", reason: "kiểm quyền" } } // PL3: lý do bắt buộc
   if (route === "source-groups" && method === "POST") {
     const n = await nhomMoi()
     if (action === "toggle") return { body: { action, sourceCode: "S05", groupKey: n.group_key, enabled: false } }

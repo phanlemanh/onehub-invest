@@ -22,6 +22,8 @@ const TEN_KIEM: Record<string, string> = {
   "extraction-quality": "Chất lượng trích xuất",
   "enum-vocab:property_type-coverage": "Độ phủ loại hình",
   "media:local-file": "Ảnh tin đã tải", // pipeline/transform-media.mjs (NH1)
+  "enrich:proposal-assertion": "Đề xuất có phát biểu", // pipeline/bac-du-lieu.mjs (PL16)
+  "data-level:distribution": "Phân bố bậc", // pipeline/bac-du-lieu.mjs (PL16)
 }
 const COT_ENUM: Record<string, string> = {
   kind: "loại tin",
@@ -60,6 +62,7 @@ const DOI_TUONG: Record<string, string> = {
   regex: "Bộ đọc theo luật",
   llm: "Bộ đọc AI",
   all: "Mọi thị trường",
+  enrichment_proposals: "Bảng đề xuất",
 }
 
 /** Đối tượng kiểm: tên bảng, `sale_offers:S0x`, `S0x/<mã thị trường>`, mã khu vực `vn-…`, mã thị trường trần. */
@@ -143,6 +146,10 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `${nguyen(m[1])}/${nguyen(m[2])} tin rao có loại hình`, known: true }
   if ((m = d.match(/^rows=(\d+) local=(\d+) offers_with_media=(\d+)$/)))
     return { text: `${nguyen(m[1])} ảnh · ${nguyen(m[2])} đã tải · ${nguyen(m[3])} tin có ảnh`, known: true }
+  if ((m = d.match(/^applied=(\d+) missing=(\d+)$/)))
+    return { text: `${nguyen(m[1])} đề xuất đã áp · ${nguyen(m[2])} thiếu phát biểu`, known: true }
+  if ((m = d.match(/^units=(\d+) B0=(\d+) B1=(\d+) B2=(\d+) B3=(\d+) B4=(\d+) B5=(\d+)$/)))
+    return { text: [`${nguyen(m[1])} đơn vị`, ...m.slice(2).map((n, i) => `B${i} ${nguyen(n)}`)].join(" · "), known: true }
   if (d === "samples=0") return { text: "Chưa có mẫu", known: true }
   if ((m = d.match(/^samples=(\d+) avgF1=([\d.]+)((?: \w+=[\d.]+)*)$/))) {
     const truong = m[3].trim() ? m[3].trim().split(" ").map((kv) => kv.split("=")) : []
