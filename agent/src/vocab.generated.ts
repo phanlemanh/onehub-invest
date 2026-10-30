@@ -7,8 +7,9 @@ export const VOCAB = {
   confidence: ["high", "medium", "low"],
   price_tier: ["P0", "P1", "P2"],
   enrich_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw"],
+  assertion_field: ["property_type", "bedrooms", "bathrooms", "street_raw", "block_raw", "listing_intent", "kind"],
   evidence_tier: ["fact", "observed", "inferred"],
-  assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy"],
+  assertion_method: ["hitl", "source_field", "parser", "e1_rule", "e2_llm", "legacy", "kev"],
   registry_status: ["active", "merged", "split", "retired"],
   alias_kind: ["tai_khoan_nguon", "sdt_bam", "ten"],
   registry_event_kind: ["gop", "tach", "nghi"],
@@ -25,6 +26,7 @@ export type PropertyType = (typeof VOCAB.property_type)[number];
 export type Confidence = (typeof VOCAB.confidence)[number];
 export type PriceTier = (typeof VOCAB.price_tier)[number];
 export type EnrichField = (typeof VOCAB.enrich_field)[number];
+export type AssertionField = (typeof VOCAB.assertion_field)[number];
 export type EvidenceTier = (typeof VOCAB.evidence_tier)[number];
 export type AssertionMethod = (typeof VOCAB.assertion_method)[number];
 export type RegistryStatus = (typeof VOCAB.registry_status)[number];
@@ -41,8 +43,9 @@ export const PROPERTY_TYPE = { apartment: "apartment", house: "house", land: "la
 export const CONFIDENCE = { high: "high", medium: "medium", low: "low" } as const;
 export const PRICE_TIER = { P0: "P0", P1: "P1", P2: "P2" } as const;
 export const ENRICH_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw" } as const;
+export const ASSERTION_FIELD = { property_type: "property_type", bedrooms: "bedrooms", bathrooms: "bathrooms", street_raw: "street_raw", block_raw: "block_raw", listing_intent: "listing_intent", kind: "kind" } as const;
 export const EVIDENCE_TIER = { fact: "fact", observed: "observed", inferred: "inferred" } as const;
-export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy" } as const;
+export const ASSERTION_METHOD = { hitl: "hitl", source_field: "source_field", parser: "parser", e1_rule: "e1_rule", e2_llm: "e2_llm", legacy: "legacy", kev: "kev" } as const;
 export const REGISTRY_STATUS = { active: "active", merged: "merged", split: "split", retired: "retired" } as const;
 export const ALIAS_KIND = { tai_khoan_nguon: "tai_khoan_nguon", sdt_bam: "sdt_bam", ten: "ten" } as const;
 export const REGISTRY_EVENT_KIND = { gop: "gop", tach: "tach", nghi: "nghi" } as const;

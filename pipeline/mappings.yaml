@@ -313,7 +313,7 @@ enums:
     local: true
     rationale: "tên trường canonical nhận đề xuất enrich (migration 033); dd_lookup = tên field RESO của trường"
     checked_on: "2026-10-26"
-    columns: [enrichment_proposals.field, field_assertions.field]
+    columns: [enrichment_proposals.field]
     nullable: false
     values:
       - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
@@ -321,6 +321,22 @@ enums:
       - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
       - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
       - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+  assertion_field:
+    term_vi: Trường phát biểu
+    dd_field: null
+    local: true
+    rationale: "extension FieldAssertion.Field (ADR-0013 §6) — trường mà một lời khai nói về: năm trường enrich + ý định tin và loại tin theo bài (PL5; PL18 «E2 là bộ đọc có trích dẫn» giữ enrich_field cho đề xuất enrich)"
+    checked_on: "2026-10-30"
+    columns: [field_assertions.field]
+    nullable: false
+    values:
+      - { code: property_type, label_vi: Loại hình, dd_lookup: PropertySubType }
+      - { code: bedrooms, label_vi: Phòng ngủ, dd_lookup: BedroomsTotal }
+      - { code: bathrooms, label_vi: WC, dd_lookup: BathroomsTotalInteger }
+      - { code: street_raw, label_vi: Đường, dd_lookup: StreetName }
+      - { code: block_raw, label_vi: Toà, dd_lookup: BuildingName }
+      - { code: listing_intent, label_vi: Ý định tin }
+      - { code: kind, label_vi: Loại tin, dd_lookup: PropertyType }
   evidence_tier:
     term_vi: Lớp căn cứ
     dd_field: null
@@ -337,8 +353,8 @@ enums:
     term_vi: Phương pháp phát biểu
     dd_field: null
     local: true
-    rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl và source_field thuộc lớp sự thật, còn lại lớp quan sát (PL15)"
-    checked_on: "2026-10-26"
+    rationale: "extension FieldAssertion.Method (ADR-0013 §6) — ai/cái gì ghi lời khai; hitl, source_field lớp sự thật; parser, legacy lớp quan sát; e1_rule, e2_llm quan sát hoặc suy luận (PL15); kev chỉ suy luận — Kev cho một lớp kèm xác suất, không trích dẫn (PL5)"
+    checked_on: "2026-10-30"
     columns: [field_assertions.method, party_roles.method]
     nullable: false
     values:
@@ -348,6 +364,7 @@ enums:
       - { code: e1_rule, label_vi: Luật E1 }
       - { code: e2_llm, label_vi: LLM E2 }
       - { code: legacy, label_vi: Giá trị có trước }
+      - { code: kev, label_vi: Bộ lọc Kev }
   registry_status:
     term_vi: Trạng thái danh bạ
     dd_field: null
@@ -408,7 +425,7 @@ enums:
       - { code: inquiry, label_vi: Yêu cầu }
       - { code: not_listing, label_vi: Không phải tin rao }
       - { code: unknown, label_vi: Chưa rõ }
-    note: "Cột đến ở PL5. Nhãn: Hỏi-1 của PL6 (Mạnh duyệt 26/10); wanted → inquiry «Yêu cầu»: Mạnh 27/10, migration 050."
+    note: "Phát biểu theo bài qua trục assertion_field (PL5, phương pháp kev). Nhãn: Hỏi-1 của PL6 (Mạnh duyệt 26/10); wanted → inquiry «Yêu cầu»: Mạnh 27/10, migration 050."
   offer_status:
     term_vi: Trạng thái chào
     dd_field: StandardStatus
@@ -467,6 +484,15 @@ enums_lint_allow:
   - path: app/src/components/ops/review-card.tsx
     axis: assertion_method
     reason: "SOURCE_LABEL/CHOICE_LABEL nhãn nguồn đề xuất enrich (cột enrichment_proposals.source, cùng mã e1_rule/e2_llm) — PL23 dựng lại /ops/review hiện phát biểu theo lớp; dọn ở PL23"
+  - path: app/src/components/ops/review-card.tsx
+    axis: assertion_field
+    reason: "FIELD_LABEL của thẻ duyệt (năm trường enrich) — trùng năm mã đầu của assertion_field (PL5); dọn cùng mục enrich_field ở PL23"
+  - path: app/src/lib/dq-labels.ts
+    axis: assertion_field
+    reason: "COT_ENUM khoá theo tên cột sale_offers (kind, property_type…) — trùng chữ với mã trường phát biểu (PL5), không phải giá trị của trục"
+  - path: app/src/lib/labels-normalize.ts
+    axis: assertion_field
+    reason: "SELECT_AXES là tên trục sổ (listing_intent, kind) — trùng chữ vì hai trường phát biểu mang đúng tên trục (PL5)"
   - path: pipeline/scripts/bench-gate.mjs
     axis: kind
     reason: "prompt bench Kev đóng băng để so số đo cũ; có lớp «other» của Kev (lệch L07 có chủ ý, không thuộc đường dữ liệu)"

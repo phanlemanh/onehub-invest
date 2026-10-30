@@ -161,6 +161,9 @@ const NGOAI_LE = [
   "agent/src/enrich/run.ts|confidence",
   "app/src/components/compare/compare-types.ts|confidence",
   "app/src/lib/source-status-labels.ts|registry_status",   // DB2b: source_registry.status trùng chữ active/retired
+  "app/src/components/ops/review-card.tsx|assertion_field",   // PL5: FIELD_LABEL trùng năm mã đầu của trục mới
+  "app/src/lib/dq-labels.ts|assertion_field",                  // PL5: tên cột sale_offers trùng chữ mã trường
+  "app/src/lib/labels-normalize.ts|assertion_field",           // PL5: tên trục sổ trùng chữ mã trường
 ];
 
 test("VL-AC-5 ma trận kiểm kê: sáu tệp đọc hằng sinh, tập ngoại lệ đúng bản ghim", () => {

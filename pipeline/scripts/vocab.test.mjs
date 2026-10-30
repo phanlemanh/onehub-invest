@@ -13,16 +13,17 @@ const PIPE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SO_THAT = readFileSync(join(PIPE, "mappings.yaml"), "utf8");
 
 const AXES = [
-  "kind", "property_type", "confidence", "price_tier", "enrich_field", "evidence_tier", "assertion_method",
+  "kind", "property_type", "confidence", "price_tier", "enrich_field", "assertion_field", "evidence_tier",
+  "assertion_method",
   "registry_status", "alias_kind", "registry_event_kind", "party_role",
   "listing_intent", "offer_status", "data_level", "capability_level",
 ];
 
-// Ma trận nhãn viết trước (59 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
+// Ma trận nhãn viết trước (67 dòng). Năm trục cũ: nguyên văn ops-labels.ts / FIELD_LABEL của review-card.tsx trước
 // vòng; bậc: nguyên văn FRAMING §3.4; listing_intent + offer_status: Hỏi-1 của PL6 (Mạnh duyệt 26/10);
 // evidence_tier + assertion_method: PL15 (bảng phát biểu, design §3.7); `wanted` → `inquiry` «Yêu cầu»: Mạnh 27/10
 // (hồ sơ wanted-thanh-inquiry); bốn trục danh bạ: DB2b
-// ho-nguoi-theo-nguon (Mạnh duyệt 30/10).
+// ho-nguoi-theo-nguon (Mạnh duyệt 30/10); assertion_field + mã kev: PL5 meta-kev-thanh-phat-bieu (Mạnh duyệt 30/10).
 const NHAN = [
   ["kind", "sale", "Bán"], ["kind", "rent_lt", "Cho thuê"],
   ["property_type", "apartment", "Căn hộ"], ["property_type", "house", "Nhà riêng"], ["property_type", "land", "Đất"],
@@ -31,11 +32,14 @@ const NHAN = [
   ["price_tier", "P0", "giá giao dịch (P0)"], ["price_tier", "P1", "giá nội bộ (P1)"], ["price_tier", "P2", "giá công khai (P2)"],
   ["enrich_field", "property_type", "Loại hình"], ["enrich_field", "bedrooms", "Phòng ngủ"], ["enrich_field", "bathrooms", "WC"],
   ["enrich_field", "street_raw", "Đường"], ["enrich_field", "block_raw", "Toà"],
+  ["assertion_field", "property_type", "Loại hình"], ["assertion_field", "bedrooms", "Phòng ngủ"],
+  ["assertion_field", "bathrooms", "WC"], ["assertion_field", "street_raw", "Đường"], ["assertion_field", "block_raw", "Toà"],
+  ["assertion_field", "listing_intent", "Ý định tin"], ["assertion_field", "kind", "Loại tin"],
   ["evidence_tier", "fact", "Sự thật"], ["evidence_tier", "observed", "Quan sát có trích dẫn"],
   ["evidence_tier", "inferred", "Suy luận"],
   ["assertion_method", "hitl", "Người quyết"], ["assertion_method", "source_field", "Trường có cấu trúc của nguồn"],
   ["assertion_method", "parser", "Bộ đọc tin"], ["assertion_method", "e1_rule", "Luật E1"],
-  ["assertion_method", "e2_llm", "LLM E2"], ["assertion_method", "legacy", "Giá trị có trước"],
+  ["assertion_method", "e2_llm", "LLM E2"], ["assertion_method", "legacy", "Giá trị có trước"], ["assertion_method", "kev", "Bộ lọc Kev"],
   ["registry_status", "active", "Đang dùng"], ["registry_status", "merged", "Đã gộp"],
   ["registry_status", "split", "Đã tách"], ["registry_status", "retired", "Đã nghỉ"],
   ["alias_kind", "tai_khoan_nguon", "Tài khoản tại nguồn"], ["alias_kind", "sdt_bam", "SĐT băm"], ["alias_kind", "ten", "Tên hiển thị"],
@@ -58,11 +62,11 @@ function dotBien(fn) {
   return YAML.stringify(doc);
 }
 
-test("VB-AC-1 sổ thật: đủ 15 trục, đúng code + nhãn từng byte", () => {
+test("VB-AC-1 sổ thật: đủ 16 trục, đúng code + nhãn từng byte", () => {
   const reg = loadRegister(SO_THAT);
   validateRegister(reg); // đối chứng dương: sổ thật không ném
   assert.deepEqual(reg.axes.map((a) => a.name), AXES);
-  assert.equal(NHAN.length, 59);
+  assert.equal(NHAN.length, 67);
   // wanted-thanh-inquiry AC-1: yêu cầu là bên mua, đối xứng với listing bên bán.
   const li = reg.axes.find((a) => a.name === "listing_intent");
   assert.deepEqual(li.values.map((v) => v.code), ["offer", "inquiry", "not_listing", "unknown"]);
