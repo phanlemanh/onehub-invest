@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 39eefa6f2c41bf4b63a3de0a9842970f5e53ae4f
+verified_commit: 3a3ac643af89c55433b7d1548c407ade21375aa8
 human_signoff: Mạnh 2026-10-29
 ---
 
@@ -162,3 +162,7 @@ none — every multi-run eval is uniform
 
 Round 1: E7 đỏ ở cụm đối chứng của tập dượt (dựng cụm không thử lại, lỗi docker không in); trả về triển khai, sửa ở 759f7614 rồi chấm lại, ghim mốc hạn giữ bản lùi.
 Round 2: E1 đến E7 xanh, sáu lệnh suite xanh, E8 đề xuất PASS; verified_commit 39eefa6f2c41bf4b63a3de0a9842970f5e53ae4f.
+
+### Re-pin lần 1 — 2026-10-29, do sau db-volume-check-volume-khac-ten (tự kiểm live thêm bốn nhánh dữ liệu)
+run_id: repin-20261029T143629Z-28454
+sha: 3a3ac643af89c55433b7d1548c407ade21375aa8 · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng · ngoài làn máy: E8 · diff chạm vật đo ngoài làn máy: E8 — chưa chứng lại, đi vòng S4 delta
