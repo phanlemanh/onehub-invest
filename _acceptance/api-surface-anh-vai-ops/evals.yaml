@@ -1,0 +1,57 @@
+schema_version: 1
+feature_slug: api-surface-anh-vai-ops
+# Ca «ASO-AC-n» ở app/tests/api-surface-anh-vai-ops.test.tsx (node --test + tsx; ảnh thật trong thư mục tạm, lõi
+# serveZaloMedia thật; không DB). Hai bộ kiểm tĩnh của kho (check-api-surface mutation, check-portal-compliance) mang sẵn
+# chiều đỏ của chúng. Mỗi phép đo mới có cặp hai chiều trên cùng dữ liệu, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.api_surface_ops
+    paths: [app/src/lib/api-surface.ts, app/tests/api-surface-anh-vai-ops.test.tsx]
+    expected: "exit 0; ca 'ASO-AC-1' xanh: dòng zalo-media của API_SURFACE có mode 'ops-session', methods ['GET'], note ghim ba quan hệ viết trước, mỗi quan hệ trong cùng một mệnh đề (tách bằng «;»): «snapshot» cùng «vai Vận hành», «?path=» cùng «admin», «Người xem» cùng «404». Hai chiều đỏ: dòng đổi mode 'admin' → 'ASO-AC-1: zalo-media phải khai ops-session'; note đảo cặp (snapshot↔admin, ?path=↔vai Vận hành) → 'ASO-AC-1: note phải gắn snapshot↔vai Vận hành'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.api_surface_ops
+    layer: backend-effect
+    paths: [app/src/lib/api-surface.ts, app/src/lib/ops/zalo-media.ts, app/src/lib/ops-access.ts, app/tests/api-surface-anh-vai-ops.test.tsx]
+    expected: "exit 0; ca 'ASO-AC-2' xanh: ma trận viết trước 6 người gọi (khách, user, viewer, ops, admin, bearer không phiên) × 2 chế độ (snapshot, path) = 12 ô gọi serveZaloMedia thật trên ảnh có thật; ô mã cho (200) ghim trước: ops×snapshot, admin×snapshot, admin×path, mọi ô khác 404; mọi ô 200 đều qua cổng của chế độ sổ (ops-session = không bearer ∧ canAccessOps); viewer qua cổng sổ mà mã 404 (mã chặt hơn sổ). Chiều đỏ trên cùng ma trận: chế độ sổ 'admin' → 'ASO-AC-2: mã cho ops × snapshot mà sổ (admin) không cho'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.zalo_media_core
+    paths: [app/src/lib/ops/zalo-media.ts, app/tests/zalo-media.test.tsx]
+    expected: "exit 0; lệnh chạy đích danh app/tests/zalo-media.test.tsx; output có tên các ca của bộ lõi (snapshot cho vai ops, ?path= chặn ops, rào đọc tệp) và 'fail 0' — hồi quy quyền thật không đổi"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.api_surface_ops
+    paths: [app/src/app/api/zalo-media/route.ts, app/tests/api-surface-anh-vai-ops.test.tsx]
+    expected: "exit 0; ca 'ASO-AC-3' xanh: route (bỏ chú thích) gọi getSessionUser() đúng một lần, có 'if (!canAccessOps(user)) return' đứng trước 'serveZaloMedia(req, user)', không readFile/realpath/stat(; docstring không còn nguyên văn dòng cũ «GET /api/zalo-media — ảnh tin (tầng A) cho trang /ops, chỉ admin.» và ghim hai quan hệ trong cùng mệnh đề: «snapshot» cùng «vai Vận hành», «?path=» cùng «admin». Chiều đỏ: bản sao route bỏ dòng chặn canAccessOps → 'ASO-AC-3: route phải chặn canAccessOps trước khi chuyển phiên cho lõi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.script.api_surface_mutation
+    paths: [scripts/check-api-surface.mjs, app/src/lib/api-surface.ts, app/src/app/api/zalo-media/route.ts, app/src/lib/ops/zalo-media.ts]
+    expected: "exit 0; dòng 'bản nguyên ĐẠT' (0 vi phạm trên cây vòng); mọi ca M1…M20 in 'ok' TRƯỢT đúng thông điệp, gồm M13 «route admin (dựng mới) mất isAdmin» → «chế độ admin mà mã không có isAdmin», M15 «route admin (dựng mới) thêm nhánh bearer» → «chế độ admin mà mã nhận bearer OPS_API_TOKEN», M20 «route ops-session (zalo-media) mất canAccessOps» → «chế độ ops-session mà mã thiếu canAccessOps»; 'api-surface mutation: ĐẠT'. Chiều đỏ là chính bảng đột biến (mỗi ca phải trượt)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.portal_static
+    paths: [scripts/check-portal-compliance.mjs, app/src/app/api/zalo-media/route.ts, app/src/lib/ops/zalo-media.ts]
+    expected: "exit 0; dòng 'zalo-media: xemNoiDungTin chặn trước stat/readFile; nhánh ?path= chặn isAdmin' ok với route mới (đọc phiên một lần, chuyển 'serveZaloMedia(req, user)'); ba dòng chiều đỏ ok: 'chiều đỏ zalo-media: bản sao bỏ isAdmin ở nhánh ?path= → báo', 'chiều đỏ zalo-media: bản sao route có readFile → báo', 'chiều đỏ zalo-media: bản sao route gọi serveZaloMedia(req) không kèm phiên → báo'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.api_surface_ops
+    layer: backend-effect
+    paths: [app/src/app/api/zalo-media/route.ts, app/src/lib/ops/zalo-media.ts, app/tests/api-surface-anh-vai-ops.test.tsx]
+    expected: "exit 0; ca 'ASO-AC-3b' xanh: handler GET của route (bản chép chỉ thay dòng import getSessionUser bằng hàm trả người gọi của ô) chạy ma trận viết trước 5 vai (khách, user, viewer, ops, admin) × ?snapshot= với ảnh có thật: khách/user/viewer 404 với thân 'not found' trùng byte với 404 của lõi, ops và admin 200 image/jpeg; 5 assert. Chiều đỏ: bản chép route chặn bằng 403 → 'ASO-AC-3b: route phải chặn bằng 404 như lõi'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

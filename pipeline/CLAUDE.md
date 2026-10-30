@@ -25,6 +25,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | scripts/trang-thai-roundtrip.mjs | Thước PL19 (AC-8): trang-thai-chao hai lần trên DB thử, đếm độc lập, chiều đỏ DB không tới được |
 | dung-nguoi.mjs | DB2b: dựng danh bạ Người + vai người đăng một lượt (chạy đêm đi qua `buocDem` của refresh-bait-gap); `--thu` ROLLBACK |
 | scripts/nap-lai-nguoi.mjs | Thước DB2b: hai lượt transform + bước đêm trong giao dịch ROLLBACK, lượt 2 bằng 0, đối chứng bỏ tra bí danh; `--doi-chung-hong` |
+| label-mau.mjs | PL8: tập tin mẫu lát OCP1 có đáp án biết sẵn (`--lat ocp1 --n 200 --seed s [--out f.jsonl]`); hàm thuần `lib/tap-mau.mjs` + khuôn `lib/khuon-mau-ocp1.mjs`, không DB, không đường tới canonical/stg |
 | finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 
 ## SQL Files (execute in order)
