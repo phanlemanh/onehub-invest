@@ -1,17 +1,17 @@
 ---
 slug: loc-enrich-thu-ops-audit
-at: 2026-10-30T09:28:42.575Z
-sha: 5b45514e9c26daa7f41798aa77eee0bd91b46dcf
-nen: do
+at: 2026-10-30T09:34:38.488Z
+sha: e9c8d2fc3d67a397cce5885a353663ddb26eaf08
+nen: xanh
 cong_cu: xanh
-suite: do
+suite: xanh
 luoi: xanh
 engine: xanh
 ---
 
 ## Dòng đỏ
 
-- nen suite: DO SAN executors.test.app_ui ma 1
+- không có
 
 ## Dòng vàng
 
