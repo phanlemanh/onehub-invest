@@ -42,6 +42,20 @@ export function parseSnapshotDirName(name) {
 const DB_URL =
   process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 
+// 3010-3 (GẤP): U+0000 trong chuỗi làm Postgres từ chối UTF8 — lọc ĐỆ QUY
+// khỏi mọi chuỗi (kể cả giá trị lồng trong mảng/đối tượng/jsonb) TRƯỚC khi
+// ghi stg. Snapshot bất biến — lọc ở BÊN ĐỌC, không sửa tệp.
+export function stripNullBytes(value) {
+  if (typeof value === "string") return value.replace(/\0/g, "");
+  if (Array.isArray(value)) return value.map(stripNullBytes);
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) out[stripNullBytes(k)] = stripNullBytes(v);
+    return out;
+  }
+  return value;
+}
+
 // meta.mediaFiles (v2) → giá trị cột media_files. Gắn snapshotId vào từng phần
 // tử: `file` tương đối theo thư mục snapshot, còn snapshot_id của dòng không đổi
 // khi bài xuất hiện lại ở snapshot sau (upsert theo post_id).
@@ -196,16 +210,16 @@ async function main() {
           [
             it.sourceId,
             manifest.snapshotId,
-            it.payload?.group ?? null,
-            it.payload?.author ?? it.payload?.agent_id ?? null,
+            stripNullBytes(it.payload?.group ?? null),
+            stripNullBytes(it.payload?.author ?? it.payload?.agent_id ?? null),
             it.fetchedAt,
-            it.payload?.text ?? "",
-            it.payload?.senderName ?? null,
-            it.payload?.senderId ?? null,
-            it.payload?.conversationId ?? null,
-            JSON.stringify(it.payload?.media ?? null),
-            it.payload?.agent_id ?? null,
-            mediaFiles ? JSON.stringify(mediaFiles) : null,
+            stripNullBytes(it.payload?.text ?? ""),
+            stripNullBytes(it.payload?.senderName ?? null),
+            stripNullBytes(it.payload?.senderId ?? null),
+            stripNullBytes(it.payload?.conversationId ?? null),
+            JSON.stringify(stripNullBytes(it.payload?.media ?? null)),
+            stripNullBytes(it.payload?.agent_id ?? null),
+            mediaFiles ? JSON.stringify(stripNullBytes(mediaFiles)) : null,
             manifest.finishedAt, // 2410-1 v2: giờ thu snapshot — không rơi DEFAULT now()
           ],
         );
