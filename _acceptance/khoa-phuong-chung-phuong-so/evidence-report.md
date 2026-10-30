@@ -1,29 +1,25 @@
 ---
 schema_version: 2
 feature_slug: khoa-phuong-chung-phuong-so
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 1196bb46de497f69ab24b14776dfe99cd8295476
+verified_commit: 77dbc4936f9be85e104272bfd87d5a4c26c4cdf7
 human_signoff:
 ---
 
 # Evidence Report: khoa-phuong-chung-phuong-so
 
-Vòng 2. Verdict REJECT do một lệnh suite hồi quy (lint) chạy hỏng và không gắn eval nào (failed_evals để trống vì không eval nào đỏ). Cả năm eval E1–E5 được mang từ vòng 1 vì delta không chạm paths của chúng.
-
-Lệnh fail không gắn eval: `cd app && npx tsc --noEmit && npm run lint` — ESLint dừng giữa chừng với lỗi ENOENT khi mở tệp tạm `app/tests/.tpl-cu-83992-0.ts` (tệp do test tạo rồi xoá, ESLint đã liệt kê nhưng không còn đọc được). Đây là lỗi hạ tầng/đua tệp tạm, chưa phải kết luận về chất lượng mã; cần chạy lại lệnh khi không có test nào đang chạy song song.
-
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
-| E1 | AC-1 | test | PASS (carry-forward từ round 1) |
-| E2 | AC-2 | test | PASS (carry-forward từ round 1) |
-| E3 | AC-3 | test | PASS (carry-forward từ round 1) |
-| E4 | AC-4 | test | PASS (carry-forward từ round 1) |
-| E5 | AC-4 | test | PASS (carry-forward từ round 1) |
+| E1 | AC-1 | test | PASS |
+| E2 | AC-2 | test | PASS |
+| E3 | AC-3 | test | PASS |
+| E4 | AC-4 | test | PASS |
+| E5 | AC-4 | test | PASS |
 
 ## Evidence
 
@@ -80,35 +76,34 @@ Lệnh fail không gắn eval: `cd app && npx tsc --noEmit && npm run lint` — 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-npm_test__bb6271-r2
+  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-npm_test__bb6271-r3
   exit_code: 0
-  verified_at: 2026-10-30T16:14:38Z
+  verified_at: 2026-10-30T16:22:16Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-lint-r2
-  exit_code: 2
-  verified_at: 2026-10-30T16:14:38Z
-  note: ESLint 9.39.5 dừng với ENOENT khi mở app/tests/.tpl-cu-83992-0.ts (tệp tạm của test đã biến mất); lệnh không gắn eval nào.
+  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-lint-r3
+  exit_code: 0
+  verified_at: 2026-10-30T16:22:16Z
 
 - cmd: cd app && npm test
-  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-npm_test__bd9a35-r2
+  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-npm_test__bd9a35-r3
   exit_code: 0
-  verified_at: 2026-10-30T16:14:38Z
+  verified_at: 2026-10-30T16:22:16Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-npm_test__13563d-r2
+  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-npm_test__13563d-r3
   exit_code: 0
-  verified_at: 2026-10-30T16:14:38Z
+  verified_at: 2026-10-30T16:22:16Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-test_lint_rules-r2
+  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-test_lint_rules-r3
   exit_code: 0
-  verified_at: 2026-10-30T16:14:38Z
+  verified_at: 2026-10-30T16:22:16Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-node_scripts_check_portal_compliance_mjs-r2
+  run_id: minted-khoa-phuong-chung-phuong-so-SUITE-node_scripts_check_portal_compliance_mjs-r3
   exit_code: 0
-  verified_at: 2026-10-30T16:14:38Z
+  verified_at: 2026-10-30T16:22:16Z
 
 ## Known limits
 
@@ -116,13 +111,18 @@ Lệnh fail không gắn eval: `cd app && npx tsc --noEmit && npm run lint` — 
 
 ## Analyst
 
-none — moi eval feature deu red tren baseline (co phan biet)
+carried tu round 2 — baseline khong do lai round nay
+
+Baseline khong do: ca năm eval E1–E5 đều mang baseline n-a vì round này không đo lại (evals.yaml không đổi từ lần baseline cuối, round 2).
+
+Eval không-phân-biệt: none
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — mọi eval chạy một lần, không có eval nhiều lượt.
 
 ## Iterations
 
-Round 1: E1–E5 đều xanh (verified_at 2026-10-30T16:01:55Z).
-Round 2: E1–E5 mang từ round 1 (delta không chạm paths của eval). Lệnh suite lint của app chạy hỏng vì ESLint không đọc được một tệp tạm của test (ENOENT), không gắn eval nào; năm lệnh suite còn lại xanh. Verdict REJECT, quay lại chạy lại lint khi không có test song song.
+Round 1: E1–E5 chạy và xanh; các eval này được mang tiếp (carry-forward) sang các round sau vì delta không chạm paths của chúng.
+Round 2: REJECT ở bước S4 — chập chờn: eslint đọc tệp chép tạm .tpl-cu đã xoá (ENOENT) khi lint chạy chồng; bàn đo cũng được ghi lại từ lượt đầu (DB local 0 thẻ chờ). Trả về triển khai.
+Round 3: eslint bỏ qua bản chép tạm .tpl-cu-* (commit 77dbc493); sáu lệnh suite xanh; E1–E5 mang tiếp từ round 1. Verdict PASS.
