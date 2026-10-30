@@ -345,6 +345,10 @@ executors:
     tsd_mut: "bash _acceptance/test-scripts-sau-87-90/probes/mut.sh \"$PWD\""
     tsd_scope: "bash _acceptance/test-scripts-sau-87-90/probes/scope.sh \"$PWD\""
     tsd_ac7: "bash _acceptance/test-scripts-sau-87-90/probes/ac7.sh \"$PWD\""
+    # check-s08-harness (30/10, PR #200) — script kiểm S08 local-only chép thêm import-s08-row.mjs
+    cs8h_lo: "bash _acceptance/check-s08-harness/probes/local-only.sh \"$PWD\""
+    cs8h_base: "bash _acceptance/check-s08-harness/probes/baseline.sh \"$PWD\""
+    cs8h_scope: "bash _acceptance/check-s08-harness/probes/scope.sh \"$PWD\""
     # hook-spool-nghiem-ngat (2410-23, ZC6 nối tiếp, T3) — cùng hộp cát ZC6: handler chép ra thư mục tạm, HOME giả, collector/Kev giả; không chạm ~/.openclaw, :9210, :8009
     hsn_auth_held: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs auth-held"
     hsn_held_then_hang: "node scripts/hook-spool-nghiem-ngat/acceptance.mjs held-then-hang"
