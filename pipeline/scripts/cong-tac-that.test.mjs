@@ -29,7 +29,7 @@ const PSQL = (sql) => {
     const c = new pg.Client({ connectionString: "${DB}" });
     try { await c.connect(); const r = await c.query(${JSON.stringify(sql)}); await c.end(); }
     catch (e) { console.error(e.message); process.exit(1); }
-  `], { encoding: "utf8", timeout: 30_000 });
+  `], { encoding: "utf8", timeout: 30_000, cwd: join(import.meta.dirname, "..") });
   return r;
 };
 

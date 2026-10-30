@@ -42,7 +42,7 @@ function fixture(script) {
   if (script.includes("chotot-daily")) {
     writeFileSync(join(root, "pipeline/collect-chotot.mjs"), "// giả\nprocess.exit(0);\n");
     writeFileSync(join(root, "pipeline/import-chotot.mjs"), "// giả\nconsole.log(\"[giả] import-chotot\");\nprocess.exit(0);\n");
-    for (const [f] of [["transform-chotot.mjs"], ["refresh-bait-gap.mjs"], ["resolve-properties.mjs"]]) {
+    for (const [f] of [["transform-chotot.mjs"], ["transform-media.mjs"], ["refresh-bait-gap.mjs"], ["resolve-properties.mjs"]]) {
       writeFileSync(join(root, "pipeline/" + f), `// giả — đếm lượt chạy\nconst { appendFileSync } = await import("node:fs");\nappendFileSync("${join(S, "runs.log")}", "${f.replace(".mjs", "")}\\n");\n`);
     }
     mkdirSync(join(root, "pipeline/logs"), { recursive: true });
