@@ -5,7 +5,7 @@ slug: enrich-chay-sau-nap
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-enrich-chay-sau-nap-design.md
