@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 54ede278b2c1e16c8f6fef941c7b49c42173092a
-human_signoff:
+human_signoff: Mạnh 2026-10-31
 ---
 
 # Evidence Report: eval-classify-wilson

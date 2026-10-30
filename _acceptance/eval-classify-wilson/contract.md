@@ -5,7 +5,7 @@ slug: eval-classify-wilson
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-eval-classify-wilson-design.md
@@ -109,3 +109,11 @@ bảng nhãn PL7 (054); tập mẫu PL8 (JSONL). Hôm nay lát OCP1 có 0 nhãn 
 ## Notes
 
 - Lát OCP1 hôm nay có 0 nhãn người: lượt chạy thật chỉ ra ô `skip`; số thật có khi đội gắn nhãn.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Lượt --split dev ghi sau lượt test thì bảng «Kiểm chất lượng» hiện kết quả tập chỉnh luật ở cùng ô; chạy lại lượt test là hiện đúng.
+  - Ngoài-2: Loại hình không còn ở lượt sau thì dòng cũ của nó vẫn hiện trên bảng tới 7 ngày, không có dấu đã cũ.
+  - Ngoài-3: Phép đo «lỗi giữa lượt thì hoàn tác cả lượt» chưa có đối chứng dương nên chưa chắc bắt được nếu giao dịch hỏng về sau.
+  - Ngoài-4: Định dạng số kiểu Việt trên bảng mới được ghim ở 2 ca, chưa phủ cả ma trận trạng thái.
+  - Ngoài-5: Dữ liệu thử của tin mẫu viết tay theo khoá nối của bên đọc, không qua bước sinh mẫu thật — đổi bước sinh mẫu thì phép đo vẫn có thể xanh.
+  - Ngoài-6: Ca hoàn tác ở ô thứ 5 chấp nhận mọi lỗi, không ghim lỗi NOT NULL của cột trạng thái.
+  - Ngoài-7: Lượt --dry trên DB máy thu chỉ kiểm có đủ 9 dòng ô, chưa so trạng thái từng ô.
