@@ -21,6 +21,7 @@ const TEN_KIEM: Record<string, string> = {
   "truthful-coverage": "Độ phủ tham chiếu",
   "extraction-quality": "Chất lượng trích xuất",
   "enum-vocab:property_type-coverage": "Độ phủ loại hình",
+  "media:local-file": "Ảnh tin đã tải", // pipeline/transform-media.mjs (NH1)
 }
 const COT_ENUM: Record<string, string> = {
   kind: "loại tin",
@@ -66,6 +67,7 @@ export function dqEntityLabel(entity: string, areaNames: ReadonlyMap<string, str
   if (Object.hasOwn(DOI_TUONG, entity)) return { text: DOI_TUONG[entity], known: true }
   const tin = entity.match(/^sale_offers:(S0\d)$/)
   if (tin) return { text: `Tin rao · ${tin[1]}`, known: true }
+  if (/^S0\d$/.test(entity)) return { text: `Nguồn ${entity}`, known: true } // mã nguồn trần (media:local-file)
   const nguon = entity.match(/^(S0\d)\/(.+)$/)
   const tt = marketNameOf(nguon ? nguon[2] : entity, areaNames)
   if (tt.known) return { text: nguon ? `${nguon[1]} · ${tt.name}` : tt.name, known: true }
@@ -139,6 +141,8 @@ export function dqDetail(check: string, detail: string | null): DqText {
     return { text: `${nguyen(m[1])} giá trị ngoài danh sách cho phép, ví dụ:`, code: m[2], known: true }
   if ((m = d.match(/^(\d+)\/(\d+) offers có loại hình$/)))
     return { text: `${nguyen(m[1])}/${nguyen(m[2])} tin rao có loại hình`, known: true }
+  if ((m = d.match(/^rows=(\d+) local=(\d+) offers_with_media=(\d+)$/)))
+    return { text: `${nguyen(m[1])} ảnh · ${nguyen(m[2])} đã tải · ${nguyen(m[3])} tin có ảnh`, known: true }
   if (d === "samples=0") return { text: "Chưa có mẫu", known: true }
   if ((m = d.match(/^samples=(\d+) avgF1=([\d.]+)((?: \w+=[\d.]+)*)$/))) {
     const truong = m[3].trim() ? m[3].trim().split(" ").map((kv) => kv.split("=")) : []

@@ -26,8 +26,9 @@ const LAT = "mgn-thu"
 /** Bản đột biến của labels-queries.ts (chép sang thư mục tạm, đổi đúng một chỗ) — chiều đỏ của phép đo trên cùng fixture. */
 async function banDot(tu: string, thanh: string): Promise<typeof import("../src/lib/labels-queries")> {
   const goc = readFileSync(join(APP, "src/lib/labels-queries.ts"), "utf8")
-  const dot = goc.replace(tu, thanh).replace('from "./db"', `from "${pathToFileURL(join(APP, "src/lib/db.ts")).href}"`)
-  assert.notEqual(dot.replace(`from "${pathToFileURL(join(APP, "src/lib/db.ts")).href}"`, 'from "./db"'), goc, `đột biến không áp được: ${tu}`)
+  assert.ok(goc.includes(tu), `đột biến không áp được: ${tu}`)
+  // Import tương đối của bản chép trỏ về src/lib thật (bản chép nằm ở thư mục tạm).
+  const dot = goc.replace(tu, thanh).replace(/from "\.\/([\w-]+)"/g, (_m, ten: string) => `from "${pathToFileURL(join(APP, `src/lib/${ten}.ts`)).href}"`)
   const f = join(mkdtempSync(join(tmpdir(), "mgn-dot-")), "labels-queries.ts")
   writeFileSync(f, dot)
   return import(pathToFileURL(f).href)
