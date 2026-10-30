@@ -44,7 +44,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.gia_ty_chan_dong_so
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/so-gia-ty-chan-dong.mjs]
-    expected: "exit 0; so-gia-ty-chan-dong in số bài S03 thật, số bài đổi giá, số bài đổi danh sách SĐT (=0), và mỗi bài đổi giá kèm mã bài + nhãn dạng; mọi bài đổi giá mang nhãn 'gia-ty-chan-dong', bài đổi ngoài dạng ấy = 0; đối chứng: --dot-bien (bản sao đưa điều kiện dấu chấm/phẩy vào PHONE_RE dùng chung) trên cùng bộ bài thật cộng một bài tổng hợp «Cho thuê 2PN 9tr LH 0901234567,0912345678 T.Lan» ra exit 1 gọi tên bài tổng hợp đổi SĐT"
+    expected: "exit 0; so-gia-ty-chan-dong in số bài S03 thật, số bài đổi giá, số bài đổi danh sách SĐT (=0), và mỗi bài đổi giá kèm mã bài + nhãn dạng; mọi bài đổi giá mang nhãn 'gia-ty-chan-dong', bài đổi ngoài dạng ấy = 0; lượt đối chứng (luôn chạy trong cùng lệnh): bản sao đưa điều kiện dấu chấm/phẩy vào PHONE_RE dùng chung, trên cùng bộ bài thật cộng một bài tổng hợp «Cho thuê 2PN 9tr LH 0901234567,0912345678 T.Lan», phải TRƯỢT và gọi tên bài tổng hợp đổi SĐT — không bắt được thì lệnh exit 1"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5b
     criterion: AC-5
