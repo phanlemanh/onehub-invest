@@ -1,19 +1,19 @@
 ---
 schema_version: 2
 feature_slug: bang-yeu-cau
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: ec485fa5156b97b4480921a12782171564ca3d47
+verified_commit: 7ec8eaa82fde1e83022a5f5ca253dd7bbef9a38d
 human_signoff:
 ---
 
 # Evidence Report: bang-yeu-cau
 
-Round 1. Cả 12 eval máy đều xanh. Tổng thể là REJECT vì một lệnh suite hồi quy không gắn eval nào (`cd app && npm test`) đỏ ở ca ON12-AC-5. Lệnh này nằm ngoài danh sách eval nên `failed_evals` để trống; chi tiết ở mục «Lệnh suite (hồi quy)».
+Round 2. Cả 12 eval máy đều xanh và cả năm lệnh suite hồi quy đều xanh (lệnh suite `cd app && npm test` đỏ ở round 1 đã xanh lại sau khi gộp main). E2, E2b, E10 và năm lệnh suite chạy lại ở round này; E1, E3, E4, E5, E6, E7, E8, E9, E10b mang từ round 1 vì delta không chạm paths của chúng. Không có mục judgment nào chờ người.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -32,7 +32,38 @@ Round 1. Cả 12 eval máy đều xanh. Tổng thể là REJECT vì một lệnh
 
 ## Evidence
 
-Nhóm A: lệnh `bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/yeu-cau.itest.mjs scripts/kev-phat-bieu.itest.mjs scripts/phat-bieu-db.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-yeu-cau.mjs` phủ E1, E4, E5, E6, E7, E8, E9, E10b (một lần chạy, một kết quả chung).
+Nhóm A, chạy lại ở round 2: lệnh `bash db/db-thu.sh oneinvest_p1_n2 && cd pipeline && node vocab.mjs --check && node vocab.mjs --lint && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n2 node scripts/yeu-cau-vocab-db.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_p1_n2 --xoa; exit $r` phủ E2.
+
+- eval: E2
+  run_id: minted-bang-yeu-cau-E2-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.yeu_cau_vocab
+  verified_at: 2026-10-30T11:55:21Z
+  output: |
+    db-thu: đã xoá oneinvest_p1_n2
+
+Nhóm B, chạy lại ở round 2: lệnh `cd pipeline && npm test` phủ E2b và E10.
+
+- eval: E2b
+  run_id: minted-bang-yeu-cau-E2b-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-10-30T11:55:21Z
+  output: |
+    ℹ duration_ms 66296.452708
+
+- eval: E10
+  run_id: minted-bang-yeu-cau-E10-r2
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.test.pipeline
+  verified_at: 2026-10-30T11:55:21Z
+  output: |
+    ℹ duration_ms 66296.452708
+
+Nhóm C, mang từ round 1: carry-forward từ round 1 — delta không chạm paths của các eval này, round 2 không chạy lại.
 
 - eval: E1
   run_id: minted-bang-yeu-cau-E1-r1
@@ -40,93 +71,9 @@ Nhóm A: lệnh `bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_UR
   baseline: n-a
   verifier: config:executors.script.yeu_cau_that
   verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
   output: |
-    do-yeu-cau: xanh
-
-- eval: E4
-  run_id: minted-bang-yeu-cau-E4-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_that
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    do-yeu-cau: xanh
-
-- eval: E5
-  run_id: minted-bang-yeu-cau-E5-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_that
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    do-yeu-cau: xanh
-
-- eval: E6
-  run_id: minted-bang-yeu-cau-E6-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_that
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    do-yeu-cau: xanh
-
-- eval: E7
-  run_id: minted-bang-yeu-cau-E7-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_that
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    do-yeu-cau: xanh
-
-- eval: E8
-  run_id: minted-bang-yeu-cau-E8-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_that
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    do-yeu-cau: xanh
-
-- eval: E9
-  run_id: minted-bang-yeu-cau-E9-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_that
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    do-yeu-cau: xanh
-
-- eval: E10b
-  run_id: minted-bang-yeu-cau-E10b-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_that
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    do-yeu-cau: xanh
-
-Nhóm B: lệnh `bash db/db-thu.sh oneinvest_p1_n2 && cd pipeline && node vocab.mjs --check && node vocab.mjs --lint && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n2 node scripts/yeu-cau-vocab-db.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_p1_n2 --xoa; exit $r` phủ E2.
-
-- eval: E2
-  run_id: minted-bang-yeu-cau-E2-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.script.yeu_cau_vocab
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    db-thu: đã xoá oneinvest_p1_n2
-
-Nhóm C: lệnh `cd pipeline && npm test` phủ E2b, E3, E10.
-
-- eval: E2b
-  run_id: minted-bang-yeu-cau-E2b-r1
-  exit_code: 0
-  baseline: n-a
-  verifier: config:executors.test.pipeline
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    ℹ duration_ms 54140.493542
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
   run_id: minted-bang-yeu-cau-E3-r1
@@ -134,55 +81,106 @@ Nhóm C: lệnh `cd pipeline && npm test` phủ E2b, E3, E10.
   baseline: n-a
   verifier: config:executors.test.pipeline
   verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
   output: |
-    ℹ duration_ms 54140.493542
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
-- eval: E10
-  run_id: minted-bang-yeu-cau-E10-r1
+- eval: E4
+  run_id: minted-bang-yeu-cau-E4-r1
   exit_code: 0
   baseline: n-a
-  verifier: config:executors.test.pipeline
+  verifier: config:executors.script.yeu_cau_that
   verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
   output: |
-    ℹ duration_ms 54140.493542
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E5
+  run_id: minted-bang-yeu-cau-E5-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.yeu_cau_that
+  verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E6
+  run_id: minted-bang-yeu-cau-E6-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.yeu_cau_that
+  verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E7
+  run_id: minted-bang-yeu-cau-E7-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.yeu_cau_that
+  verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E8
+  run_id: minted-bang-yeu-cau-E8-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.yeu_cau_that
+  verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E9
+  run_id: minted-bang-yeu-cau-E9-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.yeu_cau_that
+  verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
+
+- eval: E10b
+  run_id: minted-bang-yeu-cau-E10b-r1
+  exit_code: 0
+  baseline: n-a
+  verifier: config:executors.script.yeu_cau_that
+  verified_at: 2026-10-30T11:20:45Z
+  carried_from_round: 1
+  output: |
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-bang-yeu-cau-SUITE-npm_test__bb6271-r1
+  run_id: minted-bang-yeu-cau-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-30T11:20:45Z
+  verified_at: 2026-10-30T11:55:21Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-bang-yeu-cau-SUITE-lint-r1
+  run_id: minted-bang-yeu-cau-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-30T11:20:45Z
+  verified_at: 2026-10-30T11:55:21Z
 
 - cmd: cd app && npm test
-  run_id: minted-bang-yeu-cau-SUITE-npm_test__bd9a35-r1
-  exit_code: 1
-  verified_at: 2026-10-30T11:20:45Z
-  output: |
-    tests 606, pass 605, fail 1
-    ca đỏ duy nhất: tests/ops-nhan-theo-context.test.tsx — ON12-AC-5 bảng kiểm chất lượng trên DB local diễn giải đủ
-    thông báo: «dòng kiểm chưa diễn giải»; kỳ vọng danh sách rỗng, thực tế có 5 dòng:
-      enrich:proposal-assertion · enrich:proposal-assertion
-      enrich:proposal-assertion · enrichment_proposals
-      enrich:proposal-assertion · applied=0 missing=0
-      data-level:distribution · data-level:distribution
-      data-level:distribution · units=26781 B0=913 B1=5 B2=25863 B3=0 B4=0 B5=0
+  run_id: minted-bang-yeu-cau-SUITE-npm_test__bd9a35-r2
+  exit_code: 0
+  verified_at: 2026-10-30T11:55:21Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-bang-yeu-cau-SUITE-test_lint_rules-r1
+  run_id: minted-bang-yeu-cau-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-30T11:20:45Z
+  verified_at: 2026-10-30T11:55:21Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-bang-yeu-cau-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-bang-yeu-cau-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-30T11:20:45Z
-
-Lệnh fail không gắn eval: `cd app && npm test` (không eval nào khai lệnh này). Ca đỏ là ON12-AC-5 trong `app/tests/ops-nhan-theo-context.test.tsx`, đọc bảng kiểm chất lượng trên DB local (các dòng `enrich:proposal-assertion` và `data-level:distribution`). Báo cáo này không quy nó cho thay đổi nào của bang-yeu-cau; người quyết xem ở Cổng 2 hoặc trả về triển khai để xác định nguồn gốc.
+  verified_at: 2026-10-30T11:55:21Z
 
 ## Known limits
 
@@ -190,14 +188,13 @@ Lệnh fail không gắn eval: `cd app && npm test` (không eval nào khai lện
 
 ## Analyst
 
-baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
-Danh sách eval không-phân-biệt (xanh cả trên HEAD lẫn baseline) không đo được ở round này vì baseline không chạy; mọi field baseline ghi n-a.
+Danh sách eval không-phân-biệt (xanh cả trên HEAD lẫn baseline): không có eval nào được liệt kê, nhưng danh sách này không đo được ở round này vì baseline không chạy; mọi field baseline ghi n-a.
 
 Baseline khong do:
-- bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/yeu-cau.itest.mjs scripts/kev-phat-bieu.itest.mjs scripts/phat-bieu-db.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-yeu-cau.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
-- bash db/db-thu.sh oneinvest_p1_n2 && cd pipeline && node vocab.mjs --check && node vocab.mjs --lint && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n2 node scripts/yeu-cau-vocab-db.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_p1_n2 --xoa; exit $r: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
-- cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- bash db/db-thu.sh oneinvest_p1_n2 && cd pipeline && node vocab.mjs --check && node vocab.mjs --lint && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n2 node scripts/yeu-cau-vocab-db.mjs; r=$?; cd .. && bash db/db-thu.sh oneinvest_p1_n2 --xoa; exit $r: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+- cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
 ## Variance
 
@@ -205,4 +202,5 @@ none — mọi eval chạy một lần (deterministic), kết quả đồng nh�
 
 ## Iterations
 
-Round 1: 12 eval máy đều xanh; lệnh suite `cd app && npm test` đỏ ở ca ON12-AC-5 (không gắn eval nào). Trả về triển khai.
+Round 1: 12 eval máy đều xanh; lệnh suite `cd app && npm test` đỏ ở ca ON12-AC-5 (không gắn eval nào). Trả về triển khai, sửa bằng gộp main và cập nhật PL5.
+Round 2: 12 eval máy xanh (E2, E2b, E10 chạy lại; chín eval còn lại mang từ round 1), năm lệnh suite xanh. Verdict PASS.
