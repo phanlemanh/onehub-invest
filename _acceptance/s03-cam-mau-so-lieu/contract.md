@@ -5,9 +5,9 @@ slug: s03-cam-mau-so-lieu
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs, pipeline/lib/** — không khớp t3_paths
 surfaces: [cli]
-status: draft
-approved_by:
-approved_at:
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-s03-cam-mau-so-lieu-design.md
 ---
 
@@ -33,11 +33,10 @@ phường Hà Nội. Căn cứ: `docs/research/s03-boc-tach-cau-truc-3010.md` §
   `parsePost` đọc, Then mỗi dòng ra đúng giá (hoặc giá/m²) của đáp án.
 - AC-4: Given ma trận viết trước «64m», «43.2m», «DT:43.2m», «65m2», «DT 70m²» và các dạng bề ngang «mặt tiền 5m», «ngang 4m»,
   «hẻm 3m», «đường 12m», When `parsePost` đọc, Then năm dạng đầu ra đúng diện tích, bốn dạng bề ngang ra diện tích
-  null.
+  null; biên khoảng «Nm»: «15m» ra 15, «14m» và «501m» ra null.
 - AC-5: Given bài đã đọc là thuê giá từ 1 tỷ, hoặc bán giá trên 100 tỷ, When transform dựng offer, Then bài ấy không
   thành offer và được đếm theo lý do `thue-tu-1-ty` / `ban-tren-100-ty` trong kết quả của `runTransformZalo`; bài thuê
-  999 triệu và bán 100 tỷ vẫn thành offer. (Theo khuyến nghị Hỏi-2; người chọn lối (b) thì Then đổi thành: offer vẫn
-  ghi, `price_vnd` null, đếm theo cùng lý do.)
+  999 triệu và bán 100 tỷ vẫn thành offer. (Hỏi-2 = (a), Mạnh duyệt 30/10.)
 - AC-6: Given hai bài cùng người đăng, cùng loại tin, giá, phòng ngủ, thiếu phường và diện tích, When dựng khoá gom,
   Then khác mã toà/căn → hai khoá, cùng mã → một khoá; không mã thì khoá như hôm nay (`…|?|người đăng`); đủ phường và diện tích thì khoá giữ đúng khuôn nội dung cũ `kind|phường|giá|DT|PN`.
 - AC-7: Given nhóm repost có bài mang `sender_name` và bài không, When transform ghi offer, Then `seller_name` của
@@ -45,7 +44,7 @@ phường Hà Nội. Căn cứ: `docs/research/s03-boc-tach-cau-truc-3010.md` §
   (cross-layer)
 - AC-8: Given bài S03 có tên phường TP.HCM thuộc nhóm khai `market_codes = {vn-hcmc}`, và bài có tên phường Hà Nội
   thuộc nhóm khai `{vn-hanoi}`, When transform chạy, Then `area_id` lần lượt là `vn-hcmc-…` và `vn-hanoi-…`; nhóm khai
-  `{vn-hanoi}` không nhận phường TP.HCM; nhóm chưa khai thị trường (theo khuyến nghị Hỏi-1): tên chỉ thuộc một thị trường
+  `{vn-hanoi}` không nhận phường TP.HCM; nhóm chưa khai thị trường (Hỏi-1 = khuyến nghị, Mạnh duyệt 30/10): tên chỉ thuộc một thị trường
   ra phường của thị trường ấy, tên trùng giữa hai thị trường ra `area_id` null. (cross-layer)
 - AC-9: Given bản chép dữ liệu thật trên DB thử, When chạy lại transform S03 trong BEGIN…ROLLBACK, Then: 0 offer thuê
   giá từ 1 tỷ, 0 offer bán giá trên 100 tỷ, 0 offer có giá chỉ xuất hiện trong URL của bài, không offer nào gom quá 10
