@@ -390,6 +390,14 @@ _Avoid_: calibration
 - Ghi chú: Tiêu đề trang `/ops/review` là «Hàng duyệt» từ ON12 (24/10).
 _Avoid_: Review Queue, hàng chờ
 
+**Lý do quyết định**: Câu người duyệt ghi khi quyết một thẻ ở Hàng duyệt — bắt buộc, tối đa 1.000 ký tự; ghi vào thẻ và nhật ký Ops trong cùng một giao dịch với quyết định (PL3). Nhãn ô: «Lý do».
+- Code: `review_queue.decision_note` · `ops_audit.detail.ly_do` · RESO: không có — extension local
+_Avoid_: ghi chú, comment, note
+
+**Suy luận của AI** (trên thẻ ghép căn): Gợi ý cùng căn/khác căn và lời giải thích của bộ chấm LLM. Hiện tách khỏi căn cứ, không đổi thứ tự hay kiểu nút; không kèm điểm hay độ tự tin (Q9).
+- Code: `review_queue.ai_suggestion`, `ai_reasoning` · RESO: —
+_Avoid_: AI tự tin, điểm B, gợi ý mặc định
+
 ## Vận hành (cổng Ops)
 
 Nhãn cổng Ops cho máy móc thu thập và an toàn kênh — thêm ở ON12 `ops-nhan-theo-context` (24/10). Chữ tiếng Anh cũ trên

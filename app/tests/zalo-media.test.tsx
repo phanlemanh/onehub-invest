@@ -83,16 +83,21 @@ test("AC-1 should-NOT-fire: cùng snapshot mà file không có trên đĩa → 4
   assert.equal(r.status, 404);
 });
 
-test("AC-2 không phải admin → 404 ở cả hai chế độ, kể cả file hợp lệ", async () => {
+test("AC-2 dưới vai Vận hành → 404 ở cả hai chế độ; vai ops chỉ chế độ snapshot (PL3), kể cả file hợp lệ", async () => {
   const okSnap = snapQs(SNAP, "media/a.jpg");
   const okPath = `path=${encodeURIComponent(join(tmp, "home", ".openclaw", "media", "inbound", "x.png"))}`;
-  for (const u of [null, user("user"), user("ops")]) {
+  for (const u of [null, user("user"), user("viewer")]) {
     for (const qs of [okSnap, okPath]) {
       const r = await get(qs, u);
       assert.equal(r.status, 404, `${u?.role ?? "khách"} ${qs}`);
       assert.equal((await bodyOf(r)).toString(), "not found");
     }
   }
+  // PL3 (the-duyet-du-can-cu Hỏi-1): ảnh đã tải vào snapshot tới vai ops; gốc OpenClaw (?path=) vẫn chỉ admin.
+  assert.equal((await get(okSnap, user("ops"))).status, 200, "ops snapshot");
+  const p = await get(okPath, user("ops"));
+  assert.equal(p.status, 404, "ops path");
+  assert.equal((await bodyOf(p)).toString(), "not found");
 });
 
 test("AC-3 should-NOT-fire: tham số cố ra khỏi vùng cho phép không bao giờ trả byte đích", async () => {

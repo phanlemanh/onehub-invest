@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { fmtVnDateTime } from "@/lib/format"
+import type { ReviewContext } from "@/lib/ops/review-context"
 import type { ReviewMedia } from "@/lib/ops/review-media"
 import type { ReviewItem } from "@/lib/ops/review-queue"
 
@@ -17,9 +18,10 @@ import { ReviewStatusBadge, ReviewTypeBadge } from "./review-badges"
  * thân cuộn = nội dung thẻ hiện có + dải ảnh tin, chân ghim = nút quyết định. Màn hẹp: toàn bề ngang.
  * `key` theo id để trạng thái chọn của thẻ xung đột không dính sang thẻ khác.
  */
-export function ReviewDetailSheet({ item, media, onOpenChange }: {
+export function ReviewDetailSheet({ item, media, context, onOpenChange }: {
   item: ReviewItem | null
   media: ReviewMedia | undefined
+  context?: ReviewContext
   onOpenChange: (open: boolean) => void
 }) {
   return (
@@ -30,7 +32,7 @@ export function ReviewDetailSheet({ item, media, onOpenChange }: {
         className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-2xl"
       >
         {item && (
-          <ReviewCard key={item.id} item={item} media={media}>
+          <ReviewCard key={item.id} item={item} media={media} context={context}>
             {({ body, actions }) => (
               <>
                 <SheetHeader className="gap-2 border-b">

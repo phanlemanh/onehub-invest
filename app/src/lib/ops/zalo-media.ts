@@ -2,15 +2,15 @@ import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { User } from "@/lib/auth";
-import { isAdmin } from "@/lib/ops-access";
+import { isAdmin, xemNoiDungTin } from "@/lib/ops-access";
 import { isLoginQrFile } from "@/lib/zalo-admin";
 
 /**
  * Lõi của GET /api/zalo-media — phục vụ ảnh tin (PII tầng A, ADR-0007) cho trang /ops.
- * Chỉ admin; KHÔNG sync cloud (file chỉ có trên máy local → ở cloud route trả 404).
+ * KHÔNG sync cloud (file chỉ có trên máy local → ở cloud route trả 404).
  * Hai chế độ:
- *   - `?path=<tuyệt đối>`: ảnh staging OpenClaw cho /ops/deals (PR #5).
- *   - `?snapshot=<snapshotId>&file=media/<tên>`: ảnh N1 tải vào raw snapshot
+ *   - `?path=<tuyệt đối>`: ảnh staging OpenClaw cho /ops/deals (PR #5) — chỉ admin.
+ *   - `?snapshot=<snapshotId>&file=media/<tên>`: vai Vận hành trở lên (PL3); ảnh N1 tải vào raw snapshot
  *     (`<SNAPSHOTS_DIR>/<market>/<snapshotId>/media/*`, DATA-CONTRACT v2) cho /ops/review.
  *     Route tự ghép đường dưới gốc snapshots — không nhận đường tuyệt đối từ ngoài.
  * Cả hai qua đúng hai lớp kiểm: theo chữ (`isInside`) rồi theo đĩa (`realpath`).
@@ -110,7 +110,8 @@ async function sendImage(resolved: string, roots: string[], mediaOnly: boolean):
 }
 
 export async function serveZaloMedia(req: Request, user: User | null): Promise<Response> {
-  if (!isAdmin(user)) return new Response("not found", { status: 404 });
+  // Ảnh tin đã tải vào snapshot: vai Vận hành trở lên (PL3, AGENTS.md luật 6). Chế độ ?path= (gốc OpenClaw) giữ admin.
+  if (!xemNoiDungTin(user)) return new Response("not found", { status: 404 });
   const q = new URL(req.url).searchParams;
   const snapshot = q.get("snapshot");
   const file = q.get("file");
@@ -120,6 +121,7 @@ export async function serveZaloMedia(req: Request, user: User | null): Promise<R
     if (!joined) return outside();
     return sendImage(joined, [snapshotsRoot()], true);
   }
+  if (!isAdmin(user)) return new Response("not found", { status: 404 });
   const p = q.get("path");
   if (!p) return new Response("thiếu path", { status: 400 });
   return sendImage(path.resolve(p), openclawRoots(), false);
