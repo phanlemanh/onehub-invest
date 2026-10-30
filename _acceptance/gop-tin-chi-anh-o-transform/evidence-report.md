@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: f74f3fb04a27437338d4d4f6118cf053ecab6cd8
+verified_commit: a04ea0e1c8e0428afb5b6496f33462d8dcf9c41a
 human_signoff:
 ---
 
@@ -30,114 +30,112 @@ human_signoff:
 - eval: E1
   run_id: minted-gop-tin-chi-anh-o-transform-E1-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.test.pipeline
   verified_at: 2026-10-30T05:57:43Z
   output: |
-    cd pipeline && npm test
-    ℹ duration_ms 47704.888583
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2
   run_id: minted-gop-tin-chi-anh-o-transform-E2-r1
   exit_code: 0
+  carried_from_round: 1
   baseline: n-a
   verifier: config:executors.test.pipeline
   verified_at: 2026-10-30T05:57:43Z
   output: |
-    cd pipeline && npm test
-    ℹ duration_ms 47704.888583
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E3
-  run_id: minted-gop-tin-chi-anh-o-transform-E3-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gop_anh_that
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
   output: |
     do-gop-anh: ĐẠT — offer có ảnh tăng và đạt ngưỡng; ngày mẫu khớp hai chiều; đối chứng lệch
 
 - eval: E4
-  run_id: minted-gop-tin-chi-anh-o-transform-E4-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gop_anh_that
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
   output: |
     do-gop-anh: ĐẠT — offer có ảnh tăng và đạt ngưỡng; ngày mẫu khớp hai chiều; đối chứng lệch
 
 - eval: E5
-  run_id: minted-gop-tin-chi-anh-o-transform-E5-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gop_anh_that
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
   output: |
     do-gop-anh: ĐẠT — offer có ảnh tăng và đạt ngưỡng; ngày mẫu khớp hai chiều; đối chứng lệch
 
 - eval: E6
-  run_id: minted-gop-tin-chi-anh-o-transform-E6-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gop_anh_that
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
   output: |
     do-gop-anh: ĐẠT — offer có ảnh tăng và đạt ngưỡng; ngày mẫu khớp hai chiều; đối chứng lệch
 
 - eval: E7
-  run_id: minted-gop-tin-chi-anh-o-transform-E7-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.pipeline
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
   output: |
-    cd pipeline && npm test
-    ℹ duration_ms 47704.888583
+    ℹ duration_ms 47509.646542
 
 - eval: E7b
-  run_id: minted-gop-tin-chi-anh-o-transform-E7b-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-E7b-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.media_app
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
   output: |
-    cd app && node --import tsx --test tests/media-canonical.test.tsx
-    ℹ duration_ms 2180.270042
+    ℹ duration_ms 2356.607125
 
 - eval: E7c
-  run_id: minted-gop-tin-chi-anh-o-transform-E7c-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-E7c-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.script.gop_anh_that
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
   output: |
     do-gop-anh: ĐẠT — offer có ảnh tăng và đạt ngưỡng; ngày mẫu khớp hai chiều; đối chứng lệch
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-npm_test__bb6271-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-lint-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
 
 - cmd: cd app && npm test
-  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-npm_test__bd9a35-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-test_lint_rules-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-gop-tin-chi-anh-o-transform-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-30T05:57:43Z
+  verified_at: 2026-10-30T06:06:24Z
 
 ## Known limits
 
@@ -145,19 +143,21 @@ human_signoff:
 
 ## Analyst
 
-baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+
+Baseline không đo, nên round này không xác định được eval nào không-phân-biệt (danh sách eval không-phân-biệt: không đo được).
 
 Baseline khong do:
-- cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
-- bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/gop-anh.itest.mjs scripts/media-canonical.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-gop-anh.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
-- cd app && node --import tsx --test tests/media-canonical.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
 
-Eval không-phân-biệt (xanh cả HEAD lẫn baseline): none (baseline không đo được ở round này nên danh sách không do được; không có eval nào được xác nhận là xanh-cả-hai-phía).
+- bash db/db-thu.sh oneinvest_p1_n1 && cd pipeline && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node --test scripts/gop-anh.itest.mjs scripts/media-canonical.itest.mjs && DATABASE_URL=postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p1_n1 node scripts/do-gop-anh.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+- cd pipeline && npm test: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+- cd app && node --import tsx --test tests/media-canonical.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
 
 ## Variance
 
-none — every multi-run eval is uniform (mọi eval chạy một lần, deterministic)
+none — every multi-run eval is uniform (mọi eval chạy một lần, xác định)
 
 ## Iterations
 
-Round 1: mọi eval xanh (E1-E7c), các lệnh suite xanh; baseline không đo được do hạ tầng. Verdict PASS.
+Round 1: mọi eval xanh; một phát hiện trong hợp đồng AC-3 (ảnh bài chỉ-ảnh không luôn xếp sau ảnh bài chữ khi trộn ảnh đã tải và ảnh từ xa). Trả về triển khai, sửa ở a04ea0e1.
+Round 2: E3, E4, E5, E6, E7, E7b, E7c chạy lại trên a04ea0e1 và xanh; E1, E2 mang từ round 1 (delta không chạm paths của eval); các lệnh suite xanh.

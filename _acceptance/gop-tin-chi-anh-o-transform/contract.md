@@ -5,7 +5,7 @@ slug: gop-tin-chi-anh-o-transform
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-media.mjs, pipeline/lib/ — không khớp t3_paths; không migration
 surfaces: [cli]
-status: implemented
+status: verified
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-gop-tin-chi-anh-o-transform-design.md
