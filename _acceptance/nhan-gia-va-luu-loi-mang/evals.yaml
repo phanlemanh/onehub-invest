@@ -1,0 +1,55 @@
+schema_version: 1
+feature_slug: nhan-gia-va-luu-loi-mang
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.ngl_app
+    layer: backend-effect
+    paths: [app/src/lib/labels-normalize.ts, app/tests/labels-gia.test.tsx]
+    expected: "exit 0; ma trận viết trước 7 đơn vị (ty, trieu → qua; tỷ, TY, billion, chuỗi rỗng, vắng → lỗi ô giá 'Đơn vị giá không hợp lệ'); ca route: POST /api/v1/ops/labels với unit 'tỷ' trên lược đồ tạm → 400 nêu price_min_vnd, 0 dòng eval_labels; đối chứng đỏ trên cùng ma trận: bản chép labels-normalize.ts bỏ kiểm đơn vị → phép đo bắt (thông điệp 'DON VI LA LOT QUA')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.ngl_app
+    paths: [app/src/lib/labels-normalize.ts, app/tests/labels-gia.test.tsx]
+    expected: "exit 0; ma trận viết trước: '4.350' và '4,350' (tỷ, triệu, diện tích), '1.200' và '12.500' (diện tích, giá) → lỗi đúng ô 'Dấu ngăn nghìn không được nhận'; '4.350.000', '1.200,5', '4.350,5' → lỗi đúng ô 'phải là số'; '3.5', '3.85', '4,35', '4350', '64.5', '64,5', '4.3500' → qua với giá trị chuẩn hoá viết trước (VND nguyên, diện tích '64.5'); khứ hồi '4,35 tỷ' và '4350 triệu' → cùng '4350000000'; đối chứng đỏ: bản chép bỏ luật dấu ngăn nghìn → phép đo bắt ('DAU CHAM NGHIN LOT QUA'); bản chép chỉ chặn dấu chấm (bỏ dấu phẩy) → phép đo bắt ('DAU PHAY NGHIN LOT QUA')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.ngl_app
+    layer: backend-effect
+    paths: [app/src/components/ops/labels/label-form.tsx, app/tests/labels-gia.test.tsx]
+    expected: "exit 0; trên lược đồ tạm có migration 054, gọi route POST /api/v1/ops/labels thật lấy Response cho: 200 (lượt đúng), 400 (unit 'tỷ'; giá '4.350'), 409 người khác (tin đơn đã có người gắn), 409 của chính mình (gắn lại tin mình đã gắn) — đưa đúng các Response ấy vào guiNhan → da-luu, loi-truong (kèm lỗi ô giá), loi-truong, da-co-nguoi, da-luu; chỉ 500 và fetch ném TypeError được giả lập → loi-may-chu, mat-ket-noi; sau ca 409 của chính mình, eval_labels có đúng 9 dòng của người đó cho tin; Alert lỗi mạng dựng ra có chữ 'Không chắc đã lưu' và nút 'Lưu lại'; đối chứng đỏ: bản chép guiNhan không bắt lỗi fetch → ca 'mat-ket-noi' đỏ ('LOI MANG BI NUOT')"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-3
+    executor: ui-check
+    layer: ui-observed
+    cmd: config:executors.design.ui_check
+    target: "http://localhost:3465/ops/labels"
+    paths: [app/src/components/ops/labels/**, app/src/lib/labels-normalize.ts]
+    steps:
+      - "Bản chạy: dev server của worktree ở http://localhost:3465, DATABASE_URL của DB thử oneinvest_p4_ngl (không phải oneinvest) đã áp 054 và mồi lát ocp1 bằng _acceptance/man-gan-nhan-mu/probes/seed.mjs với MGN_DB=oneinvest_p4_ngl. KHÔNG tạo hay sửa tệp nào trong cây; không có bản chạy thì FAIL 'bản chạy không lên'"
+      - "Đăng nhập tài khoản ops thử qua bước chụp của kho (DATABASE_URL=<DB thử> bash scripts/ui-capture.sh http://localhost:3465/ops/labels _acceptance/nhan-gia-va-luu-loi-mang/evidence/E4-step1.png); KHÔNG đọc hay in mật khẩu"
+      - "Trong trình duyệt của kho (ego-browser), điền đủ chín ô với giá thấp nhất '4.350' và cao nhất '4.400' (triệu), bấm Lưu → chụp evidence/E4-step2.png: lỗi «Dấu ngăn nghìn không được nhận» dưới ô giá, các ô khác còn chữ, cùng tin (AC-4)"
+      - "Sửa giá thành '4350' và '4400', rồi chạy trong trang `window.__fetchGoc = window.fetch; window.fetch = () => Promise.reject(new TypeError('Failed to fetch'))` để giả mất mạng, bấm Lưu → chụp evidence/E4-step3.png: Alert «Không chắc đã lưu» + nút «Lưu lại», chữ đã gõ còn, URL không đổi"
+      - "Chạy `window.fetch = window.__fetchGoc` (có mạng lại), bấm «Lưu lại» → trang sang tin khác; chụp evidence/E4-step4.png"
+    expected: "Bước 3: lỗi dấu chấm ngăn nghìn dưới ô giá, không sang tin khác (AC-4); bước 4: Alert lỗi mạng có nút «Lưu lại», chữ đã gõ còn nguyên, trang không tải lại; bước 5: «Lưu lại» khi có mạng → sang tin kế"
+    evidence_required: [run_id, screenshot, observed, verifier, verified_at]
+  - id: E5
+    criterion: AC-4
+    executor: script
+    cmd: config:executors.design.ngl_gate
+    paths: [app/src/components/ops/labels/label-form.tsx]
+    expected: "exit 0; design-gate (P0 floor) xanh trên label-form.tsx"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-5
+    executor: script
+    cmd: config:executors.script.ngl_pham_vi
+    paths: [_acceptance/nhan-gia-va-luu-loi-mang/probes/pham-vi.sh]
+    expected: "exit 0; mọi tệp đổi so merge-base với origin/main khớp danh sách của AC-5; in 'PHAM VI OK'; chiều đỏ: tệp giả app/src/lib/khac.ts → 'NGOAI PHAM VI'"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

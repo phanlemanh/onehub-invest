@@ -1,0 +1,46 @@
+{
+ "feature_plain": "Màn gắn nhãn thôi lưu sai giá 1000 lần: số giá có dấu ngăn nghìn hay đơn vị lạ bị chặn với lỗi ngay dưới ô, và khi mất mạng lúc bấm Lưu người gắn thấy thông báo kèm nút lưu lại.",
+ "will_do": [
+  {
+   "id": "AC-1",
+   "p": "Sẽ chặn mọi đơn vị giá ngoài «tỷ» và «triệu» (kể cả thiếu đơn vị) với lỗi ở ô giá, không lưu gì."
+  },
+  {
+   "id": "AC-2",
+   "p": "Sẽ chặn số giá hay diện tích có dấu ngăn nghìn (4.350, 4,350) và số có nhiều dấu, chỉ dẫn gõ 4350 hoặc 4,35; số thập phân thường vẫn nhận đúng."
+  },
+  {
+   "id": "AC-4",
+   "p": "Sẽ hiện lỗi dấu ngăn nghìn ngay dưới ô giá trên màn, các ô khác giữ nguyên chữ."
+  },
+  {
+   "id": "AC-5",
+   "p": "Sẽ chỉ đổi thư viện chuẩn hoá nhãn, biểu mẫu nhãn và test của chúng."
+  }
+ ],
+ "wont_do": [
+  {
+   "id": "AC-3",
+   "p": "Sẽ KHÔNG im lặng khi mất mạng lúc Lưu: hiện «Không chắc đã lưu» kèm nút «Lưu lại», giữ chữ đã gõ; nếu lượt trước thực ra đã vào thì «Lưu lại» sang tin kế."
+  },
+  {
+   "id": "OOS-1",
+   "p": "Chưa sửa lỗi ô sai kiểu trả lỗi chung (Ngoài-4) và lấy mẫu bổ sung lệch cơ cấu (Ngoài-6)."
+  },
+  {
+   "id": "OOS-2",
+   "p": "Không sửa các hạn chế của phép đo nghiệm thu PL7."
+  },
+  {
+   "id": "OOS-3",
+   "p": "Không đổi cách nhập giá (ô số có định dạng, chọn đơn vị khác)."
+  }
+ ],
+ "coverage_plain": [
+  {
+   "i": 0,
+   "p": "Mỗi lỗi đã khai một trục: đơn vị giá, dấu ngăn nghìn (cả vế màn), lỗi mạng khi lưu, phạm vi tệp. Không quét hình thái vì phạm vi là ba lỗi đã định danh."
+  }
+ ],
+ "scope_plain": "Vòng này chỉ sửa ba hạn chế Ngoài-3, Ngoài-5, Ngoài-7 của màn gắn nhãn."
+}
