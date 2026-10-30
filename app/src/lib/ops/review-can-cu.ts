@@ -97,10 +97,9 @@ export type HangSo = {
 };
 
 /** Trống, hoặc «chưa rõ» (`unknown` của loại hình): không phải một giá trị để so — so ra Thiếu, không ra Lệch (H9). */
-const trong = (v: unknown): v is null | undefined =>
-  v === null || v === undefined || (typeof v === "string" && (v.trim() === "" || v.trim().toLowerCase() === "unknown"));
-const khoa = (v: string | number) =>
-  typeof v === "number" ? String(v) : /^-?\d+(\.\d+)?$/.test(v.trim()) ? String(Number(v)) : v.trim().toLowerCase();
+// Một dòng: agent/tests/judge-nguong.test.ts rút nguyên văn hằng này (khuôn `^const <tên> = .*;$`).
+const trong = (v: unknown): v is null | undefined => v === null || v === undefined || (typeof v === "string" && (v.trim() === "" || v.trim().toLowerCase() === "unknown"));
+const khoa = (v: string | number) => (typeof v === "number" ? String(v) : /^-?\d+(\.\d+)?$/.test(v.trim()) ? String(Number(v)) : v.trim().toLowerCase());
 
 /** So hai giá trị: thiếu một bên (hay cả hai) → Thiếu; cùng khoá → Khớp; khác → Lệch. Tất định, không ngưỡng. */
 export function soGiaTri(a: string | number | null | undefined, b: string | number | null | undefined): So {
