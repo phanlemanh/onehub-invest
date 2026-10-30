@@ -17,13 +17,11 @@ import { join } from "node:path";
  */
 
 // 2610-13 vòng 3: tự CREATE DATABASE tạm qua pg (không docker exec — CI dùng
-// service postgres); áp lược đồ bằng chính db/migrations (source_groups = VIEW
+// service postgres); lược đồ tối giản đúng hình 047/048 (source_groups = VIEW
 // trên collection_units như thật); DROP khi xong.
 const TAMP_DB = `zcode_tv2b_test_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 const DB_ROOT = process.env.TEST_DATABASE_URL_ADMIN ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 const DB = `postgres://oneinvest:oneinvest@localhost:5433/${TAMP_DB}`;
-const { readdirSync } = await import("node:fs");
-const MIG_DIR = join(import.meta.dirname, "../../db/migrations");
 
 const PSQL = (sql) => {
   const r = spawnSync("node", ["--input-type=module", "-e", `
@@ -36,7 +34,10 @@ const PSQL = (sql) => {
 };
 
 test.before(async () => {
-  // tạo database tạm + áp migrations theo thứ tự số
+  // Tạo database tạm + lược đồ TỐI GIẢN đúng hình thật: bộ db/migrations không
+  // chạy được từ DB trống (012 cần area_sources do pipeline/sql dựng), nên dựng
+  // tay đúng hai thứ các script đọc — source_registry và source_groups là VIEW
+  // trên collection_units (048), cột group_key + enabled sinh từ status (047).
   const admin = (await import("pg")).default;
   const c = new admin.Client({ connectionString: DB_ROOT });
   await c.connect();
@@ -45,11 +46,17 @@ test.before(async () => {
   await c.end();
   const client = new admin.Client({ connectionString: DB });
   await client.connect();
-  const files = readdirSync(MIG_DIR).filter((f) => f.endsWith(".sql")).sort();
-  for (const f of files) {
-    const sql = (await import("node:fs/promises")).readFileSync(join(MIG_DIR, f), "utf8");
-    await client.query(sql);
-  }
+  await client.query(`
+    CREATE TABLE source_registry (code text PRIMARY KEY, status text NOT NULL DEFAULT 'active', reason text, resume_when timestamptz);
+    CREATE TABLE collection_units (
+      id serial PRIMARY KEY, source_code text NOT NULL, group_key text NOT NULL, name text,
+      status text NOT NULL DEFAULT 'active', enabled boolean GENERATED ALWAYS AS (status = 'active') STORED,
+      params jsonb NOT NULL DEFAULT '{}', note text, reason text, resume_when timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE VIEW source_groups AS
+      SELECT id, source_code, group_key, name, enabled, params, note, created_at, updated_at, status, reason, resume_when
+        FROM collection_units;
+  `);
   await client.end();
 });
 
@@ -67,16 +74,19 @@ const seed = (rows) => {
   PSQL("DELETE FROM source_registry");
   PSQL(`INSERT INTO source_registry(code, status) VALUES ${rows.registry.map((r) => `('${r[0]}','${r[1]}')`).join(",")}`);
   for (const g of rows.groups ?? []) {
-    PSQL(`INSERT INTO collection_units(source_code, unit_key, status, params) VALUES ('${g.sc}','${g.key}','${g.st}','${JSON.stringify(g.params ?? {})}')`);
+    PSQL(`INSERT INTO collection_units(source_code, group_key, status, params) VALUES ('${g.sc}','${g.key}','${g.st}','${JSON.stringify(g.params ?? {})}')`);
   }
 };
 
 /** Server giả: đếm lời gọi theo nguồn; trả payload đúng hình mỗi nhà cung cấp. */
 function fakeProvider() {
   const hits = [];
-  const srv = createServer((req, res) => {
+  const srv = createServer(async (req, res) => {
     const u = new URL(req.url, "http://x");
-    hits.push(u.searchParams.toString());
+    // ghi cả thân POST: startRun gửi startUrls trong body, không trong query
+    let body = "";
+    for await (const chunk of req) body += chunk;
+    hits.push(u.searchParams.toString() + (body ? ` ${body}` : ""));
     if (u.pathname.startsWith("/apify")) {
       // APIFY_API=<fake>/apify — start run / poll / dataset
       if (u.pathname.includes("runs") && !u.pathname.includes("status") && req.method === "POST") {
