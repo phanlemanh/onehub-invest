@@ -31,7 +31,8 @@ evals:
       - "Chụp bằng bước chụp của kho KÈM CÙNG DATABASE_URL của DB thử: DATABASE_URL=<DB thử> bash scripts/ui-capture.sh http://localhost:3464/ops/labels _acceptance/man-gan-nhan-mu/evidence/E3-step1.png — 1280 sáng; KHÔNG đọc hay in mật khẩu"
       - "Cùng lệnh với UI_CAPTURE_SIZE=390x844 UI_CAPTURE_SCHEME=dark → evidence/E3-step2.png; ghi dòng «bề rộng: …» lệnh in"
       - "Điền chín ô của tin đang hiện bằng dữ liệu của probes/seed.mjs (GIA_TRI_MAU) qua trình duyệt của kho (ego-browser) rồi bấm «Lưu và sang tin kế»; chụp evidence/E3-step3.png; rồi chạy DATABASE_URL=<DB thử> node _acceptance/man-gan-nhan-mu/probes/doc-nhan.mjs để in các dòng eval_labels của tin vừa lưu"
-    expected: "Trang hiện ô số, chữ gốc của tin, nhóm, giờ đăng và biểu mẫu chín ô; ba ô chọn mang đúng các nhãn của sổ từ vựng; sau Lưu trang chuyển sang tin khác và doc-nhan in 9 dòng mang labeler_id của tài khoản ops thử; ảnh desktop sáng + điện thoại tối không cuộn ngang cấp trang"
+      - "Ở tin kế: điền đủ chín ô nhưng giá thấp nhất 5 và giá cao nhất 4 (tỷ), bấm Lưu → chụp evidence/E3-step4.png: lỗi «Giá thấp nhất lớn hơn giá cao nhất» hiện dưới ô giá, các ô đã gõ còn nguyên giá trị; không tải sang tin khác"
+    expected: "Trang hiện ô số, chữ gốc của tin, nhóm, giờ đăng và biểu mẫu chín ô; ba ô chọn mang đúng các nhãn của sổ từ vựng; sau Lưu trang chuyển sang tin khác và doc-nhan in 9 dòng mang labeler_id của tài khoản ops thử; ảnh desktop sáng + điện thoại tối không cuộn ngang cấp trang; lượt giá ngược hiện lỗi dưới ô giá và giữ chữ đã gõ (AC-7 vế màn)"
     evidence_required: [run_id, screenshot, observed, verifier, verified_at]
   - id: E4
     criterion: AC-3
@@ -39,7 +40,7 @@ evals:
     cmd: config:executors.test.mgn_app
     layer: backend-effect
     paths: [app/src/app/api/v1/ops/labels/**, app/src/lib/labels-queries.ts, app/src/components/ops/labels/**, app/tests/labels.test.tsx]
-    expected: "exit 0; ca 'luu chin truong' xanh: gọi handler POST với phiên vai ops (DB thử, giao dịch ROLLBACK) → 9 dòng eval_labels đúng field/value/not_stated, labeler_id = người gọi; ô «Tin không nêu» → not_stated true, value null; ca 'lua chon theo so tu vung': option của ba ô chọn = các code của trục cùng tên trong vocab.generated.ts, cùng thứ tự; đối chứng đỏ: handler bỏ labeler_id → ca đỏ 'NHAN KHONG CO NGUOI GAN'"
+    expected: "exit 0; ca 'luu chin truong' xanh: gọi handler POST với phiên vai ops (lược đồ tạm có migration 054) → 9 dòng eval_labels đúng field/value/not_stated, labeler_id = người gọi; ô «Tin không nêu» → not_stated true, value null; ca 'lua chon theo so tu vung': option của ba ô chọn = các code của trục cùng tên trong vocab.generated.ts, cùng thứ tự; đối chứng đỏ trên cùng fixture: bản chép labels-queries.ts ghi labeler_id rỗng → phép đo bắt (thông điệp 'NHAN KHONG CO NGUOI GAN')"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E5
     criterion: AC-4
@@ -55,7 +56,7 @@ evals:
     cmd: config:executors.test.mgn_app
     layer: backend-effect
     paths: [app/src/lib/labels-queries.ts, app/src/app/api/v1/ops/labels/**, app/tests/labels.test.tsx]
-    expected: "exit 0; ma trận viết trước 2 người (A, B) × 4 loại tin (đơn chưa ai, đơn đã A, trùng chưa ai, trùng đã A, trùng đã A+B): tin kế của mỗi người đúng bảng kỳ vọng từng bước (tin trùng đã một người đứng trước tin mới); không bao giờ trả lại tin người đó đã gắn; B ghi tin đơn đã A → 409, 0 dòng; người thứ ba ghi tin trùng đã đủ → 409, 0 dòng; ca đồng thời: hai client pg hai giao dịch song song ghi cùng tin đơn, rồi cùng tin trùng còn một chỗ → đúng một thành công, một 409, đếm người gắn của tin = 1 và = 2; đối chứng đỏ thứ hai: bản bỏ FOR UPDATE → 'GHI DOI KHI DONG THOI'; đối chứng đỏ: bản truy vấn bỏ điều kiện 'chua do nguoi nay gan' → ca 'TRA LAI TIN DA GAN' đỏ"
+    expected: "exit 0; ma trận viết trước 2 người (A, B) × 4 loại tin (đơn chưa ai, đơn đã A, trùng chưa ai, trùng đã A, trùng đã A+B): tin kế của mỗi người đúng bảng kỳ vọng từng bước (tin trùng đã một người đứng trước tin mới); không bao giờ trả lại tin người đó đã gắn; B ghi tin đơn đã A → 409, 0 dòng; người thứ ba ghi tin trùng đã đủ → 409, 0 dòng; ca đồng thời: hai client pg hai giao dịch song song ghi cùng tin đơn, rồi cùng tin trùng còn một chỗ → đúng một thành công, một 409, đếm người gắn của tin = 1 và = 2 (thông điệp ghim 'GHI DOI KHI DONG THOI'; không có bản đột biến bỏ FOR UPDATE vì đua giữa hai giao dịch không tất định — giới hạn khai ở đây); đối chứng đỏ: bản chép truy vấn tin kế bỏ điều kiện 'chưa do người này gắn' đưa lại tin cho người đã gắn → phép đo bắt ('TRA LAI TIN DA GAN')"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-6
@@ -63,7 +64,7 @@ evals:
     cmd: config:executors.script.mgn_dong_thuan
     layer: backend-effect
     paths: [db/migrations/054_labels.sql, pipeline/label-agreement.mjs, pipeline/lib/eval-labels.mjs, _acceptance/man-gan-nhan-mu/probes/dong-thuan.mjs]
-    expected: "exit 0; probe COMMIT vào DB thử lát mgn-thu rồi DELETE sau khi đo; lệnh label-agreement chạy bằng TIẾN TRÌNH CON; ma trận viết trước: mỗi trường một tổ hợp cặp (khớp; lệch; cùng tin không nêu; một bên tin không nêu; số 3500000000 vs 3.5e9; chữ 'LD2' vs ' ld2 '; tin trùng mới một người): view trả đúng số cặp đủ, số khớp, tỉ lệ của bảng kỳ vọng; trường không có cặp đủ → tỉ lệ null; label-agreement.mjs --lat mgn-thu --json in đúng cùng số + thap_nhat; phut_cong: ma trận labeled_at viết trước (người A: 0, 2, 5 phút, nghỉ 40 phút, 43 phút) → A = 8 phút; khứ hồi qua bộ ghi thật (hàm chuẩn hoá của route, dùng chung với probe bằng import): '4,35 tỷ' với '4350 triệu', 'LD2' với ' ld2 ', NFC với NFD → khớp 1/1; đối chứng đỏ thứ hai: bản cộng cả khoảng nghỉ → 'PHUT CONG CONG KHOANG NGHI'; đối chứng đỏ: bản view coi null là khớp → 'NULL KHONG PHAI KHOP'; cuối 'DONG THUAN OK'"
+    expected: "exit 0; probe COMMIT vào DB thử lát mgn-dt (và mgn-dt0 cho ca chưa có cặp) rồi DELETE sau khi đo; lệnh label-agreement chạy bằng TIẾN TRÌNH CON; ma trận viết trước: mỗi trường một tổ hợp cặp (khớp; lệch; cùng tin không nêu; một bên tin không nêu; giá '4,35 tỷ' vs '4350 triệu'; chữ 'LD2' vs ' ld2 '; tin trùng mới một người): view trả đúng số cặp đủ, số khớp, tỉ lệ của bảng kỳ vọng; trường không có cặp đủ → tỉ lệ null; label-agreement.mjs --lat mgn-dt --json in đúng cùng số + thap_nhat; phut_cong: ma trận labeled_at viết trước (người A lưu ở phút 0, 2, 5, 45, 48; người B ở phút 1 và 30) → A = 8, B = 0; khứ hồi qua bộ ghi thật (hàm chuẩn hoá của route, dùng chung với probe bằng import): '4,35 tỷ' với '4350 triệu', 'LD2' với ' ld2 ', NFC với NFD → khớp 1/1; đối chứng đỏ thứ hai: bản cộng cả khoảng nghỉ → 'PHUT CONG CONG KHOANG NGHI'; đối chứng đỏ: bản view coi null là khớp → 'NULL KHONG PHAI KHOP'; cuối 'DONG THUAN OK'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-6
@@ -78,14 +79,14 @@ evals:
     cmd: config:executors.test.mgn_app
     layer: backend-effect
     paths: [app/src/app/api/v1/ops/labels/**, app/src/lib/labels-queries.ts, app/src/lib/ops-access.ts, app/tests/labels.test.tsx]
-    expected: "exit 0; bảy ca sai (thiếu trường, giá trị ngoài sổ, min>max, số âm, diện tích 0, phòng ngủ 2.5, tin ngoài lát) → mỗi ca 400 nêu đúng tên trường, 0 dòng ghi; vai viewer → 403, bearer chung → 401 hoặc 403, 0 dòng ghi; đối chứng dương: lượt đúng → 200, 9 dòng; ca màn: lỗi 400 hiện dưới đúng ô, ô đã gõ giữ giá trị"
+    expected: "exit 0; bảy ca sai (thiếu trường, giá trị ngoài sổ, min>max, số âm, diện tích 0, phòng ngủ 2.5, tin ngoài lát) → mỗi ca 400 nêu đúng tên trường, 0 dòng ghi; vai viewer → 403, bearer chung → 401 hoặc 403, 0 dòng ghi; đối chứng dương: lượt đúng → 200; ca lỗi hiện dưới đúng ô trên màn thuộc bước 4 của E3"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E10
     criterion: AC-8
     executor: test
     cmd: config:executors.test.mgn_app
     paths: [app/src/app/ops/labels/**, app/src/components/ops/labels/**, app/tests/labels.test.tsx]
-    expected: "exit 0; sáu ca trạng thái: rỗng → chữ «Chưa có tin nào của lát để gắn» + lệnh label-sample; đang tải → Skeleton; lỗi → Alert có nút «Thử lại»; đã gắn hết → «Anh đã gắn hết tin của lát» + bảng đồng thuận; viewer → không có biểu mẫu, có câu «Cần vai ops để gắn nhãn»; VERCEL=1 → «Chỉ ở máy thu» và hàm truy vấn nhãn không được gọi (đếm lời gọi = 0)"
+    expected: "exit 0; sáu ca trạng thái: rỗng → chữ «Chưa có tin nào của lát để gắn» + lệnh label-sample; đang tải → Skeleton; lỗi → trang bọc vùng trong RegionError (Alert có nút «Thử lại» của kho) và Suspense với khung tải; đã gắn hết → «Anh đã gắn hết tin của lát» + bảng đồng thuận; viewer → không có biểu mẫu, có câu «Cần vai ops để gắn nhãn»; VERCEL=1 → «Chỉ ở máy thu» và hàm truy vấn nhãn không được gọi (đếm lời gọi = 0)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E11
     criterion: AC-8

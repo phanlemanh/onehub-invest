@@ -3,9 +3,10 @@
 // (Cookie phiên). public không được chạm. Ma trận viết trước; mỗi phép đo có đối chứng.
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import pg from "pg"
 import { renderToStaticMarkup } from "react-dom/server"
 
@@ -22,6 +23,15 @@ process.env.OPS_API_TOKEN = TOKEN
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const MIG = join(APP, "../db/migrations/054_labels.sql")
 const LAT = "mgn-thu"
+/** Bản đột biến của labels-queries.ts (chép sang thư mục tạm, đổi đúng một chỗ) — chiều đỏ của phép đo trên cùng fixture. */
+async function banDot(tu: string, thanh: string): Promise<typeof import("../src/lib/labels-queries")> {
+  const goc = readFileSync(join(APP, "src/lib/labels-queries.ts"), "utf8")
+  const dot = goc.replace(tu, thanh).replace('from "./db"', `from "${pathToFileURL(join(APP, "src/lib/db.ts")).href}"`)
+  assert.notEqual(dot.replace(`from "${pathToFileURL(join(APP, "src/lib/db.ts")).href}"`, 'from "./db"'), goc, `đột biến không áp được: ${tu}`)
+  const f = join(mkdtempSync(join(tmpdir(), "mgn-dot-")), "labels-queries.ts")
+  writeFileSync(f, dot)
+  return import(pathToFileURL(f).href)
+}
 const admin = new pg.Client({ connectionString: localDbUrl() })
 const sc = new pg.Client({ connectionString: schemaUrl(S) })
 
@@ -89,7 +99,14 @@ test("MGN-AC-3 lưu chín trường: 9 dòng mang labeler_id người gọi, gi�
   assert.deepEqual(v, {
     area_m2: "64.5", bedrooms: "∅", building: "ld2", kind: "sale", listing_intent: "offer",
     price_max_vnd: "4350000000", price_min_vnd: "4350000000", project: "vinhomes ocean park", property_type: "apartment",
-  })
+  })  // Chiều đỏ trên cùng fixture: bản ghi bỏ labeler_id (ghi chuỗi rỗng) → phép đo phải bắt «NHAN KHONG CO NGUOI GAN».
+  const dot = await banDot("[itemId, userId, r.field, r.value, r.not_stated]", '[itemId, "", r.field, r.value, r.not_stated]')
+  const { chuanHoaLuot } = await import("../src/lib/labels-normalize")
+  const ch = chuanHoaLuot(DU)
+  assert.ok(ch.ok)
+  await dot.ghiNhan(sc, a.id, LAT, 2, ch.rows)
+  const { rows: r2 } = await sc.query(`SELECT labeler_id FROM eval_labels WHERE item_id = 2`)
+  assert.ok(r2.length === 9 && !r2.every((r) => r.labeler_id === a.id), "đối chứng không đỏ: NHAN KHONG CO NGUOI GAN không bắt được bản bỏ labeler_id")
 })
 
 test("MGN-AC-3 lựa chọn ba ô chọn = code của trục cùng tên trong sổ từ vựng, cùng thứ tự, nhãn của sổ", async () => {
@@ -126,7 +143,12 @@ test("MGN-AC-5 phân tin hai người: không trả lại tin đã gắn; tin tr
     assert.equal(kq.ok ? 200 : kq.status, 409, `ghi ${id} phải 409`)
   }
   const { rows } = await sc.query(`SELECT item_id::int, count(DISTINCT labeler_id)::int AS n FROM eval_labels GROUP BY item_id ORDER BY item_id`)
-  assert.deepEqual(rows, [{ item_id: 1, n: 1 }, { item_id: 4, n: 2 }])
+  assert.deepEqual(rows, [{ item_id: 1, n: 1 }, { item_id: 4, n: 2 }])  // Chiều đỏ trên cùng dữ liệu: gỡ nhãn của B ở tin 4 (tin trùng còn một chỗ, A đã gắn). Bản tin kế bỏ điều kiện «chưa do
+  // người này gắn» đưa lại tin 4 cho A; bản thật thì không.
+  const dot = await banDot("WHERE i.lat = $2 AND NOT coalesce(n.cua_toi, false) AND", "WHERE i.lat = $2 AND")
+  await sc.query(`DELETE FROM eval_labels WHERE item_id = 4 AND labeler_id = $1`, [b.id])
+  assert.equal((await dot.tinKe(a.id, LAT, sc))?.itemId, 4, "đối chứng không đỏ: TRA LAI TIN DA GAN không bắt được bản bỏ điều kiện")
+  assert.notEqual(await ke(a.id), 4, "TRA LAI TIN DA GAN")
 })
 
 test("MGN-AC-5 ghi đồng thời: hai giao dịch song song vào cùng tin đơn, rồi tin trùng còn một chỗ → một thành công, một 409", async () => {
