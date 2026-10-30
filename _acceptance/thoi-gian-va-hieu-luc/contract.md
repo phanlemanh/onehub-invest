@@ -5,7 +5,7 @@ slug: thoi-gian-va-hieu-luc
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (t3_paths) — migration 059
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-thoi-gian-va-hieu-luc-design.md
@@ -95,3 +95,7 @@ không có bộ ghi bằng chứng cho chúng (bộ đọc chữ «đã bán/đ�
 - «Mọi phát biểu có observed_at»: ràng buộc NOT NULL (AC-1) — không còn đường ghi thiếu.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Gộp mã mà chưa áp 059 lên máy thu thì mỗi lượt đồng bộ cloud báo lỗi ở bước trạng thái chào cho tới khi áp — triển khai áp 059 trước.
+  - Ngoài-3: Bài kiểm của tính năng gán nhãn mù (man-gan-nhan-mu E5) báo đỏ giả sau 059 vì chèn phát biểu thiếu thời điểm quan sát, cho tới khi bài kiểm được sửa.

@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: thoi-gian-va-hieu-luc
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 254c5f632b573bbce9fbdd07da365a3dbc72a9ad
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: thoi-gian-va-hieu-luc
@@ -179,7 +179,7 @@ Round 2. Mọi eval máy đều xanh. Còn một mục judgment (E15) chờ ngư
   rationale: Panel giữ nguyên từ round 2 — inputs không đổi, không chấm lại; rationale xem round đó. Đề xuất PASS, chờ người chốt ở Cổng 2.
   required_evidence:
     - (judge không nêu bằng-chứng-thiếu)
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-30 — Đạt
   panel_proposal: PASS
   votes:
     - domain-correctness: PASS (r2)
