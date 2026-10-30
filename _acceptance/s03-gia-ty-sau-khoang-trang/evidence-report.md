@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6d6304ba8d838facdbccbc17924146ef13707e4c
+verified_commit: 019b79f716edc909bef759a46f393738dc82e6ad
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -143,3 +143,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, xác đ
 ## Iterations
 
 Round 1: mọi eval xanh (E1–E6, E5b) và năm lệnh suite xanh; verdict PASS. Baseline A/B bị chặn hạ tầng nên mọi field baseline là n-a.
+
+### Re-pin lần 1 — 2026-10-30, do gộp origin/main (PR #192, #195) sau chữ ký
+run_id: repin-20261030T051252Z-30186
+sha: 019b79f716edc909bef759a46f393738dc82e6ad · suites: 6 lệnh exit 0 · evals: 7/7 eval máy đạt kỳ vọng
