@@ -5,7 +5,9 @@ slug: danh-ba-nguoi-tren-ops
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: draft
+status: approved
+approved_by: Mạnh
+approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-danh-ba-nguoi-tren-ops-design.md
 ---
 
@@ -23,7 +25,7 @@ Cổng Đáng: build, Mạnh 30/10 «Mở hàng, máy thu» (`LUAT.md` đợt do
 - AC-2: Given lược đồ tạm có migration 055 và ma trận người viết trước (người đang dùng nhiều tin, một tin, không tin; người đã gộp; vai đã rút; bí danh đã nghỉ; hai nguồn), When gọi hàm danh sách, Then mỗi người đang dùng đúng một hàng, người đã gộp không có hàng, số tin bằng số khoá tin khác nhau có vai «Người đăng» chưa rút, số bí danh chỉ đếm bí danh chưa nghỉ, và hàng xếp theo số tin giảm dần.
 - AC-3: Given cùng lược đồ tạm, When lọc `source=S05` hoặc tìm `q` theo một phần tên hay tài khoản (khác hoa thường), Then chỉ người khớp được trả và tổng số khớp đúng; `source` không phải mã `S0x` bị bỏ qua (không lọc, không lỗi); danh sách chia trang 100 người theo `?page=` (theo Hỏi-2), trang ngoài khoảng hay sai khuôn về trang 1, và trang `/ops/people` hiện «Trang k/n · m người khớp» cùng ba số đầu trang (người đang dùng, vai sống, người theo nguồn) bằng số kỳ vọng của ma trận.
 - AC-4: Given một người có bí danh sống, bí danh đã nghỉ, vai sống và vai đã rút, When mở `/ops/people/<khoá>`, Then trang hiện từng bí danh với nhãn loại tiếng Việt, nguồn, ngày thấy và dấu đã nghỉ; hiện các tin đã đăng (khoá tin, phương pháp, lớp bằng chứng, ngày ghi) chỉ gồm vai sống; và nêu số vai đã rút; khoá sai khuôn `pty_…` hay không tồn tại trả 404.
-- AC-5: Given người có từ N tin sống trở lên và người dưới N (N theo Hỏi-1), When xem danh sách và trang người, Then chỉ người từ N tin mang nhãn «Có thể là môi giới» kèm chữ «suy luận»; và sau khi dựng hai trang, số dòng của bốn bảng danh bạ không đổi — mã truy vấn chỉ có `SELECT`.
+- AC-5: Given người có từ N = 5 tin sống trở lên và người dưới N (N theo Hỏi-1, Cổng Phạm vi 30/10), When xem danh sách và trang người, Then chỉ người từ N tin mang nhãn «Có thể là môi giới» kèm chữ «suy luận»; và sau khi dựng hai trang, số dòng của bốn bảng danh bạ không đổi — mã truy vấn chỉ có `SELECT`.
 - AC-6: Given phiên vai Người xem, When mở hai trang, Then thấy mã người, nguồn, số tin, nhãn suy luận nhưng mọi giá trị bí danh (tên, tài khoản, SĐT băm) hiện «Ẩn với vai Người xem»; phiên Vận hành và Quản trị thấy giá trị; phiên không vào được Ops không thấy trang. (cross-layer)
 - AC-7: Given hai trang đã dựng trên dữ liệu thử có một bí danh tên chứa tên nguồn thật, When đọc HTML và mã truy vấn, Then nguồn chỉ hiện dạng mã `S0x`; tên nguồn thật không xuất hiện (bí danh ấy hiện bản đã che bằng bộ che chung `maskSourceNames`); mã truy vấn danh bạ không đọc `source_registry`, `real_name`, `users`, `sessions`, `user_events`, `user_profile`; SĐT băm chỉ hiện 8 ký tự đầu.
 - AC-8: Given danh bạ rỗng, lọc không khớp, đang tải, truy vấn lỗi, When mở `/ops/people`, Then lần lượt hiện ô trống kèm lệnh dựng danh bạ, ô trống kèm nút «Xoá lọc», khung chờ theo bố cục, và lỗi kèm «Thử lại».
