@@ -1,19 +1,17 @@
 ---
 schema_version: 2
 feature_slug: ho-nguoi-theo-nguon
-verdict: REJECT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6d0df830156dd987338e9ff7b89cbf767d9b9fad
+verified_commit: e00c822ea11d0329071c6ed46decc33059aff1c9
 human_signoff:
 ---
 
 # Evidence Report: ho-nguoi-theo-nguon
-
-Round 1. Mọi lệnh máy đều chạy xong và trả kết quả xanh. Hồ sơ vẫn bị trả lại vì rà soát phát hiện một lỗi TRONG hợp đồng (AC-6, mức high): thước đo nhánh «bài mất thì không sinh vai parser mới» không chứng minh được điều nó hứa. Chi tiết ở `review-findings.md` mục «Trong hợp đồng» và ở phần Iterations bên dưới.
 
 | Eval | Criterion | Executor | Verdict |
 |---|---|---|---|
@@ -33,156 +31,155 @@ Round 1. Mọi lệnh máy đều chạy xong và trả kết quả xanh. Hồ s
 ## Evidence
 
 - eval: E1
-  run_id: minted-ho-nguoi-theo-nguon-E1-r1
+  run_id: minted-ho-nguoi-theo-nguon-E1-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_db
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.itest.mjs (DB thử oneinvest_p3_nguoi)
-    ℹ duration_ms 42722.763667
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs
+    ℹ duration_ms 46719.034084
 
 - eval: E2
-  run_id: minted-ho-nguoi-theo-nguon-E2-r1
+  run_id: minted-ho-nguoi-theo-nguon-E2-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_db
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.itest.mjs (DB thử oneinvest_p3_nguoi)
-    ℹ duration_ms 42722.763667
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs
+    ℹ duration_ms 46719.034084
 
 - eval: E2b
   run_id: minted-ho-nguoi-theo-nguon-E2b-r1
   exit_code: 0
-  baseline: n-a
+  carried_from_round: 1
   verifier: config:executors.test.nguoi_app
   verified_at: 2026-10-30T06:36:38Z
   output: |
-    cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx
-    ℹ duration_ms 411.653375
+    carry-forward tu round 1 — delta khong cham paths cua eval
 
 - eval: E2c
-  run_id: minted-ho-nguoi-theo-nguon-E2c-r1
+  run_id: minted-ho-nguoi-theo-nguon-E2c-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.vocab
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
-    ℹ duration_ms 1078.039209
+    $ cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs
+    ℹ duration_ms 1102.58075
 
 - eval: E3
-  run_id: minted-ho-nguoi-theo-nguon-E3-r1
+  run_id: minted-ho-nguoi-theo-nguon-E3-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_db
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.itest.mjs (DB thử oneinvest_p3_nguoi)
-    ℹ duration_ms 42722.763667
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs
+    ℹ duration_ms 46719.034084
 
 - eval: E4
-  run_id: minted-ho-nguoi-theo-nguon-E4-r1
+  run_id: minted-ho-nguoi-theo-nguon-E4-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_db
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.itest.mjs (DB thử oneinvest_p3_nguoi)
-    ℹ duration_ms 42722.763667
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs
+    ℹ duration_ms 46719.034084
 
 - eval: E5
-  run_id: minted-ho-nguoi-theo-nguon-E5-r1
+  run_id: minted-ho-nguoi-theo-nguon-E5-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs
-    ℹ duration_ms 56.423542
+    $ cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs
+    ℹ duration_ms 60.316541
 
 - eval: E6
-  run_id: minted-ho-nguoi-theo-nguon-E6-r1
+  run_id: minted-ho-nguoi-theo-nguon-E6-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_db
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.itest.mjs (DB thử oneinvest_p3_nguoi)
-    ℹ duration_ms 42722.763667
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs
+    ℹ duration_ms 46719.034084
 
 - eval: E7
-  run_id: minted-ho-nguoi-theo-nguon-E7-r1
+  run_id: minted-ho-nguoi-theo-nguon-E7-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_nap_lai
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node scripts/nap-lai-nguoi.mjs
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs
     nap-lai-nguoi: ĐẠT
 
 - eval: E8
-  run_id: minted-ho-nguoi-theo-nguon-E8-r1
+  run_id: minted-ho-nguoi-theo-nguon-E8-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_db
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.itest.mjs (DB thử oneinvest_p3_nguoi)
-    ℹ duration_ms 42722.763667
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs
+    ℹ duration_ms 46719.034084
 
 - eval: E9
-  run_id: minted-ho-nguoi-theo-nguon-E9-r1
+  run_id: minted-ho-nguoi-theo-nguon-E9-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs
-    ℹ duration_ms 56.423542
+    $ cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs
+    ℹ duration_ms 60.316541
 
 - eval: E10
-  run_id: minted-ho-nguoi-theo-nguon-E10-r1
+  run_id: minted-ho-nguoi-theo-nguon-E10-r2
   exit_code: 0
   baseline: n-a
   verifier: config:executors.test.nguoi_db
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
   output: |
-    cd pipeline && node --test scripts/danh-ba-nguoi.itest.mjs (DB thử oneinvest_p3_nguoi)
-    ℹ duration_ms 42722.763667
+    $ cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs
+    ℹ duration_ms 46719.034084
 
 ### Lệnh suite (hồi quy)
 
 - cmd: cd agent && npm test
-  run_id: minted-ho-nguoi-theo-nguon-SUITE-npm_test__bb6271-r1
+  run_id: minted-ho-nguoi-theo-nguon-SUITE-npm_test__bb6271-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
 
 - cmd: cd app && npx tsc --noEmit && npm run lint
-  run_id: minted-ho-nguoi-theo-nguon-SUITE-lint-r1
+  run_id: minted-ho-nguoi-theo-nguon-SUITE-lint-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
 
 - cmd: cd app && npm test
-  run_id: minted-ho-nguoi-theo-nguon-SUITE-npm_test__bd9a35-r1
+  run_id: minted-ho-nguoi-theo-nguon-SUITE-npm_test__bd9a35-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
 
 - cmd: cd pipeline && npm test
-  run_id: minted-ho-nguoi-theo-nguon-SUITE-npm_test__13563d-r1
+  run_id: minted-ho-nguoi-theo-nguon-SUITE-npm_test__13563d-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
 
 - cmd: cd app && npm run test:lint-rules
-  run_id: minted-ho-nguoi-theo-nguon-SUITE-test_lint_rules-r1
+  run_id: minted-ho-nguoi-theo-nguon-SUITE-test_lint_rules-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
 
 - cmd: node scripts/check-portal-compliance.mjs
-  run_id: minted-ho-nguoi-theo-nguon-SUITE-node_scripts_check_portal_compliance_mjs-r1
+  run_id: minted-ho-nguoi-theo-nguon-SUITE-node_scripts_check_portal_compliance_mjs-r2
   exit_code: 0
-  verified_at: 2026-10-30T06:36:38Z
+  verified_at: 2026-10-30T06:49:20Z
 
 ## Known limits
 
@@ -190,24 +187,22 @@ Round 1. Mọi lệnh máy đều chạy xong và trả kết quả xanh. Hồ s
 
 ## Analyst
 
-baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+baseline: BLOCKED ha tang — lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
 
-Eval không-phân-biệt: danh sách rỗng, nhưng baseline không đo được ở round này (mọi eval máy đều ghi baseline n-a) nên chưa chứng minh được tính phân biệt của chúng so với code cũ.
+Eval không-phân-biệt: không liệt kê được ở round này — baseline không đo nên chưa xác nhận được eval nào phân biệt hay không (mọi field baseline là n-a).
 
-Lưu ý nội dung, không đổi kết quả máy: E6 (AC-6) xanh, song nhánh âm tính «bài mất thì không sinh vai parser mới» chạy trên fixture không có SĐT nên không chạm điều kiện sinh vai parser; xem finding t4 trong `review-findings.md`.
+Baseline khong do
 
-### Baseline khong do
-
-- cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
-- cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «<\tool_use_error>Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.<\/tool_use_error>»
+- cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- cd pipeline && node --test scripts/vocab.test.mjs scripts/vocab-lint.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
+- cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs: BLOCKED ha tang baseline: lenh baseline khong chay dong nao (cong cu tu choi loi goi, hoac khong ghi duoc tep kich ban) — cong cu tra: «Error: No such tool available: Write. Write is not among the tools available here. Continue with the tools you have.»
 
 ## Variance
 
-none — every multi-run eval is uniform
+none — every multi-run eval is uniform (mọi eval chạy một lượt, xác định)
 
 ## Iterations
 
-Round 1: mọi eval máy và mọi lệnh suite đều xanh; hồ sơ bị trả lại (REJECT) vì rà soát phát hiện một lỗi trong hợp đồng ở AC-6 (mức high): ca «bài mất thì giữ vai cũ, không ghi vai parser mới» dùng fixture không có SĐT nên không chứng minh được điều đó, và thiếu đối chứng đỏ. Trả lại phần triển khai để sửa fixture/thước đo (tin có SĐT, lấy vaiLuotNay từ giaiNguoi) rồi verify lại.
+Round 1: một finding trong hợp đồng ở AC-6 (hình dạng 4: kiểm «bài mất không sinh vai parser mới» rỗng nghĩa vì fixture không mang SĐT). Returned to implementation, sửa ở commit e00c822e.
+Round 2: toàn bộ eval xanh trên commit e00c822ea11d0329071c6ed46decc33059aff1c9; E2b mang sang từ round 1 (delta không chạm paths của eval).
