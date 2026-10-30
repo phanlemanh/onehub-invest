@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { KHOA_DANH_BA, LY_DO_RUT, chotDbThuNguoi, dungNguoi, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
+import { napKev } from "../lib/nap-057.mjs";
 import { KIEM_ENUM, kiemEnum } from "../dq-enum-vocab.mjs";
 import { buocDem } from "../refresh-bait-gap.mjs";
 
@@ -119,13 +120,22 @@ test("AC-1 khung danh bạ: 055 idempotent, ràng buộc và rào chỉ-thêm", 
 
 test("AC-2 enum và DQ (a): sổ từ vựng khớp DB cho bốn trục mới, chiều đỏ khi thiếu dòng", async () => {
   const reg = readMappings(ROOT);
-  await trongGiaoDich(async () => {
+  // PL5: sổ có mã kev ở assertion_method (057 nới CHECK party_roles.method). Khoá 33033 lấy TRƯỚC khoá danh bạ — cùng chiều
+  // với test nạp 057 (chỉ giữ 33033), để không deadlock khi chạy song song.
+  await c.query("BEGIN");
+  try {
+    await c.query("SELECT pg_advisory_xact_lock(33033)");
+    await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA_DANH_BA]);
+    await c.query(SQL_055);
+    await napKev(c);
     const lechMoi = (ds) => ds.filter((x) => TRUC_MOI.includes(x.axis) || /party_roles\./.test(x.column ?? ""));
     assert.deepEqual(lechMoi(await checkDb(c, reg)).map((x) => x.msg), [], "AC-2 sổ lệch DB");
     await c.query(`DELETE FROM ref_lookup WHERE lookup_name = 'party_role' AND lookup_value = 'nguoi_dang'`);
     const lech = lechMoi(await checkDb(c, reg));
     assert.ok(lech.some((x) => x.axis === "party_role"), `AC-2 --check-db không báo trục party_role: ${JSON.stringify(lech)}`);
-  });
+  } finally {
+    await c.query("ROLLBACK");
+  }
 });
 
 // ---- Task 3: bộ dựng dungNguoi trên fixture tự chèn (khoá TEST-DB2b-*, không va dữ liệu thật) ----

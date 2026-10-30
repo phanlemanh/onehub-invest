@@ -14,6 +14,7 @@ import { resolveOffers, subjectKey, writeAssertions } from "../lib/assert.mjs";
 import { VOCAB } from "../lib/vocab.generated.mjs";
 import { scanProcs } from "../lib/scan-canonical-write.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
+import { napKev } from "../lib/nap-057.mjs";
 import { kiemNguonGoc } from "./dung-lai-canonical.mjs";
 import { catChuyen } from "../phat-bieu-cat-chuyen.mjs";
 import { spawnSync } from "node:child_process";
@@ -84,7 +85,7 @@ test("PD-AC-1 045 áp hai lần: bảng, CHECK theo sổ, chỉ mục sống, c�
     assert.equal(await bamTin(), truoc, "045 ghi vào năm cột của tin");
     // cột nguồn gốc có trên view sống
     assert.equal((await one(`SELECT count(*)::int AS n FROM information_schema.columns
-      WHERE table_name = 'sale_offers' AND column_name = 'field_provenance'`)).n, 1, "view sale_offers thiếu field_provenance");
+      WHERE table_schema = 'public' AND table_name = 'sale_offers' AND column_name = 'field_provenance'`)).n, 1, "view sale_offers thiếu field_provenance");
     await c.query("SELECT count(*) FROM v_ruler_p2");
     await c.query("SELECT count(*) FROM v_ruler_p2_area");
 
@@ -102,13 +103,16 @@ test("PD-AC-1 045 áp hai lần: bảng, CHECK theo sổ, chỉ mục sống, c�
       await assert.rejects(c.query(sql), (e) => { assert.match(e.message, rang); return true; });
       await c.query("ROLLBACK TO SAVEPOINT s"); n++;
     };
-    await tuChoi(chen(`('TST:ac1-k', 'kind', 'sale', 'observed', 'parser')`), /field_assertions_field_chk/);
+    // Trường lạ với cả bộ 045 lẫn 057 (PL5 thêm listing_intent, kind) — ca chạy đúng trước và sau khi áp 057.
+    await tuChoi(chen(`('TST:ac1-k', 'khac', 'x', 'observed', 'parser')`), /field_assertions_field_chk/);
     for (const t of VOCAB.evidence_tier) {
       const m = t === "fact" ? "hitl" : "e1_rule";
       await c.query(chen(`('TST:ac1-t-${t}', 'street_raw', 'y', '${t}', '${m}')`)); n++;
     }
     await tuChoi(chen(`('TST:ac1-t', 'street_raw', 'y', 'khac', 'parser')`), /field_assertions_evidence_tier_chk/);
-    for (const m of VOCAB.assertion_method) {
+    // kev (057, PL5) chỉ đi với inferred — đo ở kev-phat-bieu.itest.mjs KP-AC-1, không ở ca 045.
+    const PP_045 = VOCAB.assertion_method.filter((m) => m !== "kev");
+    for (const m of PP_045) {
       const t = m === "hitl" || m === "source_field" ? "fact" : "observed";
       await c.query(chen(`('TST:ac1-m-${m}', 'street_raw', 'y', '${t}', '${m}')`)); n++;
     }
@@ -119,7 +123,7 @@ test("PD-AC-1 045 áp hai lần: bảng, CHECK theo sổ, chỉ mục sống, c�
     await tuChoi(chen(`('TST:ac1-street_raw', 'street_raw', ' X ', 'observed', 'parser')`), /field_assertions_live_uq/);
     await c.query(`UPDATE field_assertions SET retracted_at = now(), retract_reason = 'thử' WHERE subject_key = 'TST:ac1-street_raw'`);
     await c.query(chen(`('TST:ac1-street_raw', 'street_raw', 'x', 'observed', 'parser')`)); n++;
-    assert.equal(n, NAM_COT.length + VOCAB.evidence_tier.length + VOCAB.assertion_method.length + 7);
+    assert.equal(n, NAM_COT.length + VOCAB.evidence_tier.length + PP_045.length + 7);
   } finally {
     await c.query("ROLLBACK");
   }
@@ -513,10 +517,12 @@ test("PD-AC-7 đối chứng: ghi-thang, rut, legacy-khac đều thấy lệch n
   }
 });
 
-test("PD-AC-1 sổ: sau 045 trong giao dịch, DB khớp sổ từ vựng (checkDb của vocab --check-db); xoá một mục trục mới thì lệch nêu trục", async () => {
+// PL5: sổ có trục assertion_field + mã kev (migration 057) — DB khớp sổ khi đã áp cả 045 lẫn 057.
+test("PD-AC-1 sổ: sau 045 (+ 057, PL5) trong giao dịch, DB khớp sổ từ vựng (checkDb của vocab --check-db); xoá một mục trục mới thì lệch nêu trục", async () => {
   await trongGiaoDich(c, async () => {
+    await napKev(c);
     const reg = readMappings(ROOT);
-    assert.deepEqual((await checkDb(c, reg)).map((x) => x.msg), [], "DB sau 045 lệch sổ");
+    assert.deepEqual((await checkDb(c, reg)).map((x) => x.msg), [], "DB sau 045 + 057 lệch sổ");
     await c.query("DELETE FROM ref_lookup WHERE lookup_name = 'assertion_method' AND lookup_value = 'legacy'");
     const lech = await checkDb(c, reg);
     assert.equal(lech.length, 1);
