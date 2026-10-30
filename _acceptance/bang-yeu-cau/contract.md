@@ -5,7 +5,7 @@ slug: bang-yeu-cau
 owner: phanlemanh@gmail.com
 risk_tier: T3      # máy suy: db/migrations/ (058) — khớp t3_paths
 surfaces: [cli]
-status: approved
+status: implemented
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-bang-yeu-cau-design.md
