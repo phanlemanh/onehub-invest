@@ -5,7 +5,7 @@ slug: s03-gia-ty-chan-dong
 owner: phanlemanh@gmail.com
 risk_tier: T2      # máy suy: pipeline/transform-zalo.mjs — không khớp t3_paths
 surfaces: [cli]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-30T02:52:00Z
 approved_by:
@@ -61,3 +61,11 @@ hợp đồng mới» (30/10). Đo 30/10 trên bài thật: 150 bài có giá đ
   trên DB thử). Dữ liệu thật hôm nay có 0 bài thuộc dạng lỗi, nên không có thước «trước → sau» trên bài thật.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Thẻ Cổng Phạm vi và sổ quyết định còn câu «không có thước trước → sau trên bài thật», trong khi AC-6 chính là thước đó.
+  - Ngoài-2: Phép so trên bài thật của AC-6 chỉ so giá và SĐT, không so diện tích, số phòng ngủ hay các trường khác cũng đọc từ chữ đã gạt.
+  - Ngoài-4: Phép so AC-6 vẫn in ĐẠT khi DB rỗng hoặc trỏ nhầm; người đọc phải tự xem số bài đã so.
+  - Ngoài-5: Nhãn «giá tỷ chẵn» của phép so AC-6 hẹp hơn điều bước gạt SĐT thực sự giữ lại, nên có thể báo trượt giả.
+  - Ngoài-6: Nhãn «giá tỷ chẵn» của AC-6 chỉ kiểm bài có chứa một số tỷ chẵn, chưa chứng giá đổi chính vì số ấy.
+  - Ngoài-7: AC-6 hứa so đầu ra đọc tin nhưng chỉ so giá, đơn giá và SĐT.
