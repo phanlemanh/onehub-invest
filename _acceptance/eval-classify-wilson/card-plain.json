@@ -1,37 +1,3 @@
 {
-  "feature_plain": "Người vận hành dữ liệu gõ một lệnh để biết mỗi cách đọc tin đọc đúng từng trường của từng phân khúc tới đâu, so với ngưỡng tự áp của F3 theo cận dưới Wilson; kết quả ghi vào bảng kiểm chất lượng.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ tính cận dưới Wilson 95% khớp các mốc cỡ tập của F3 theo cả hai chiều; chưa có nhãn thì báo «không có số», không báo 0."},
-    {"id": "AC-2", "p": "Sẽ so ô nhóm A (ý định, loại tin, loại hình, dự án, toà) với 0,95 và nhóm B (giá, diện tích, phòng ngủ) với 0,90 theo cận dưới; ô thiếu cách đọc hay thiếu nhãn là «bỏ qua» kèm lý do."},
-    {"id": "AC-3", "p": "Sẽ chấm đúng/sai từng trường: chữ so sau chuẩn hoá, giá bằng từng đồng, diện tích lệch tối đa 3%, phòng ngủ bằng nhau; «tin không nêu» chỉ đúng khi cách đọc cũng không trả gì."},
-    {"id": "AC-4", "p": "Sẽ có cách đọc đầu tiên là bộ đọc theo luật hiện có (parser) — trả loại tin, giá, diện tích, phòng ngủ, toà, đúng khuôn nhãn của màn gắn nhãn."},
-    {"id": "AC-5", "p": "Sẽ lấy nhãn người của đúng lát và tập test; trường hai người gắn khác nhau bị loại và đếm, tin mất chữ bị loại và đếm; chỉ đọc DB."},
-    {"id": "AC-6", "p": "Sẽ ra đủ ô cho mọi (cách đọc × trường × phân khúc), phân khúc là lát cộng từng loại hình; hôm nay 0 nhãn thì ra 9 ô «bỏ qua» có tên."},
-    {"id": "AC-7", "p": "Sẽ ghi mỗi ô một dòng kiểm trong một lượt trọn vẹn — lỗi giữa chừng thì không dòng nào ở lại; dòng không mang người gắn, chữ tin hay tên nguồn thật."},
-    {"id": "AC-8", "p": "Sẽ chấm được trên tập tin mẫu của PL8 bằng tệp, chỉ in ra màn hình, không chạm DB."},
-    {"id": "AC-9", "p": "Sẽ cho dòng kiểm mới hiện bằng tiếng Việt trong bảng «Kiểm chất lượng» của /ops/quality, không làm đỏ ca kiểm diễn giải đủ của app."},
-    {"id": "AC-10", "p": "Sẽ chỉ đổi đúng các tệp đã kê."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "Không dựng màn số độ đúng riêng trên /ops/quality — việc của C4."},
-    {"id": "OOS-2", "p": "Không thêm cách đọc luật E1, LLM, Kev; không nhóm mô tả; không chạy trong CI hay đo lại hằng tuần."},
-    {"id": "OOS-3", "p": "Không ghi số tập mẫu vào DB, không dựng bảng kết quả riêng."},
-    {"id": "OOS-4", "p": "Không sửa dòng «150 nhãn được ≤ 8 lỗi» trong tài liệu F3 ở vòng này (đúng là ≤ 7)."},
-    {"id": "OOS-5", "p": "Không làm cặp ghép căn, không làm lát khác Ocean Park 1."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Chín trường của màn gắn nhãn, mỗi trường đúng nhóm ngưỡng — AC-2, AC-3."},
-    {"i": 1, "p": "Bốn trạng thái ô: đạt, không đạt, bỏ qua vì chưa có nhãn, bỏ qua vì chưa có cách đọc — AC-2, AC-6."},
-    {"i": 2, "p": "Hai nguồn đáp án: nhãn người theo tập test/dev, tập tin mẫu — AC-5, AC-8."},
-    {"i": 3, "p": "Sáu ca nhãn người: một người, đồng nhãn, bất đồng, mất chữ, khác lát, khác tập — AC-5."},
-    {"i": 4, "p": "Bốn đường ra: bảng in, chạy thử không ghi, bảng kiểm DB, chữ trên /ops/quality — AC-7, AC-8, AC-9."},
-    {"i": 5, "p": "Phép đo dùng ma trận viết trước, số khẳng định bằng số phần tử; mốc Wilson lấy từ bảng F3."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Dòng kiểm mới sẽ hiện trên /ops/quality và làm đỏ ca kiểm «diễn giải đủ» của app nếu app không hiểu nó — đã thêm tiêu chí diễn giải bằng tiếng Việt và chạy chính ca ấy sau một lượt ghi thật."},
-    {"i": 1, "p": "Phép đo đòi 13 khoá chi tiết trong khi hợp đồng có 12 — đã ghim đúng 12 khoá, thiếu hay thừa đều đỏ."},
-    {"i": 2, "p": "Chưa đo lượt ghi thật của lệnh — đã thêm lượt chạy lệnh thật trên DB thử: số dòng thêm bằng số ô, một mã lượt, lỗi giữa chừng thì hoàn tác cả lượt."},
-    {"i": 3, "p": "Dữ liệu thử dựng chung giao dịch với hàm nên không đo được chế độ chỉ đọc — đã tách kết nối, ghi lại câu lệnh của hàm, dọn sạch sau phép đo."},
-    {"i": 4, "p": "Nhãn thử viết tay, không qua bên ghi thật — đã ghi nhãn thử bằng chính bộ chuẩn hoá và hàm ghi của màn gắn nhãn, và đưa mọi giá trị bộ đọc qua bộ chuẩn hoá ấy."}
-  ]
+  "feature_plain": "Người vận hành dữ liệu gõ một lệnh để biết mỗi cách đọc tin đọc đúng từng trường của từng phân khúc tới đâu, so với ngưỡng tự áp của F3 theo cận dưới Wilson; kết quả ghi vào bảng kiểm chất lượng và hiện bằng tiếng Việt trên /ops/quality."
 }
