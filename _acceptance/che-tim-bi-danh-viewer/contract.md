@@ -5,7 +5,7 @@ slug: che-tim-bi-danh-viewer
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-che-tim-bi-danh-viewer-design.md
@@ -40,3 +40,7 @@ giá trị thô, nên gõ dần là dựng lại được tên, tài khoản đ�
 ## Notes
 
 - Hỏi-1: nếu Mạnh chọn cho viewer tìm theo mã `pty_`, AC-1 đổi Then thành: viewer với `q` là một phần mã người nhận đúng người khớp mã, `q` theo tên bị bỏ; AC-2 giữ ô tìm cho viewer với chữ gợi ý «Mã người».
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: Tệp tiêu chí ghi sai tên tệp bị thử phá ở ca kiểm ô tìm của vai Người xem; ca kiểm thật phá đúng chỗ.
+  - Ngoài-2: Vai Người xem chọn nguồn không có ai vẫn được gợi ý «đổi chữ tìm» dù không có ô tìm.
+  - Ngoài-3: Bộ kiểm ô tìm chưa thử vai Chủ sở hữu và không tự báo khi thêm vai mới.
