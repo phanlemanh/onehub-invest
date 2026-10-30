@@ -5,7 +5,11 @@ slug: sellers-them-dong-lai
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [pipeline]
-status: draft
+status: approved
+veto_state: mo
+veto_opened_at: 2026-10-30T18:01:20Z
+approved_by:
+approved_at:
 design_doc: docs/superpowers/specs/2026-10-31-sellers-them-dong-lai-design.md
 ---
 
@@ -26,7 +30,8 @@ và xoá dòng `sellers`, không thêm: bảng đứng ở 19 dòng trong khi `s
 - AC-4: Given người bán không còn tin nào và người bán còn tin, When chạy bước bait gap, Then dòng mồ côi bị xoá kèm một dòng audit `bait-gap:sellers-orphan`, dòng còn tin được giữ — như trước vòng.
 - AC-5: Given dữ liệu thật trên DB máy thu, When chạy bước bait gap trong giao dịch ROLLBACK hai lượt, Then sau lượt một số dòng `sellers` bằng số SĐT khác nhau trên `sale_offers`, và lượt hai không đổi số dòng.
 - AC-6 (cross-layer): Given dữ liệu thật trên DB máy thu sau bước bait gap trong ROLLBACK, When chạy câu đọc Căn giá tốt của app (`dealsSql`), Then mọi dòng có SĐT người bán có số tin của người bán (`broker_n_ads` khác rỗng).
-- AC-7: Given một tin mang SĐT chưa có người sống trong danh bạ và chưa có dòng `sellers`, When đối chiếu `sellersThieuNguoi`, Then cặp «SĐT:nguồn» của tin đó có trong kết quả.
+- AC-7: Given một tin mang SĐT chưa có người sống trong danh bạ và chưa có dòng `sellers`, When đối chiếu `sellersThieuNguoi`, Then cặp «SĐT:nguồn» của tin đó có trong kết quả; phép đối chiếu đọc tập (SĐT, nguồn) của `sale_offers`, không đọc `sellers`.
+- AC-8 (cross-layer): Given lát của AC-1 sau bước bait gap, When đọc bảng `sellers` bằng câu đọc local của `sync-cloud.mjs` (`selectList` + `localReadSql`), Then payload có đúng một dòng cho mỗi SĐT trên tin và không dòng nào mang cột `name`.
 
 ## Coverage
 
@@ -36,13 +41,13 @@ Quét tay ba trục (dòng sổ «bỏ coverage-scan»), mỗi ô một AC:
 |---|---|---|
 | Trạng thái SĐT trước bước | đã có dòng · chưa có dòng một tin · chưa có dòng nhiều tin nhiều nguồn · dòng mồ côi | AC-1, AC-4 |
 | Lượt chạy | lượt đầu · lượt lặp · dữ liệu thật | AC-1, AC-2, AC-5 |
-| Bên đọc | cột tổng hợp · tên · chip Căn giá tốt · đối chiếu danh bạ | AC-1, AC-3, AC-6, AC-7 |
+| Bên đọc | cột tổng hợp · tên · chip Căn giá tốt · đối chiếu danh bạ · đồng bộ cloud | AC-1, AC-3, AC-6, AC-7, AC-8 |
 
 ## Đường đo
 
 | Ngưỡng (opportunity.md) | Đo bằng |
 |---|---|
-| Số dòng `sellers` bằng số SĐT khác nhau trên `sale_offers` | AC-5 trên DB máy thu, AC-1 trên lát |
+| Số dòng `sellers` bằng số SĐT khác nhau trên `sale_offers` | AC-5 trên DB máy thu (hiệu tập hai chiều rỗng), AC-1 trên lát |
 | Chạy lại lần hai không đổi số dòng | AC-2, AC-5 |
 | Test đỏ khi bỏ lệnh thêm dòng | chiều đỏ của AC-1 (bản đột biến bỏ lệnh thêm dòng) |
 | Chip môi giới có ở mọi tin có SĐT | AC-6 (số tin người bán có mặt; luật hiện chip >1 tin không đổi) |
@@ -52,4 +57,4 @@ Quét tay ba trục (dòng sổ «bỏ coverage-scan»), mỗi ô một AC:
 - `sellers` thành view trên danh bạ, khoá SĐT `+84…` — Hỏi-C bước 2, hàng SD3 `sdt-luu-goc-e164`.
 - Đo trục SĐT hằng đêm trên `/ops/quality` — hàng `do-danh-ba-sdt`.
 - Đổi luật hiện chip môi giới (người bán chỉ một tin vẫn không có chip).
-- Đổi cột lên cloud của `sellers` — `sync-cloud.mjs` giữ nguyên (`name` ở lại máy).
+- Đổi cột lên cloud của `sellers` — `sync-cloud.mjs` giữ nguyên (`name` ở lại máy); AC-8 chỉ đo payload phía máy, không gọi cloud.
