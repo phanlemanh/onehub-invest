@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: e00c822ea11d0329071c6ed46decc33059aff1c9
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: ho-nguoi-theo-nguon

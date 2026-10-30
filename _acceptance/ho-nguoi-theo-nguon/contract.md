@@ -5,7 +5,7 @@ slug: ho-nguoi-theo-nguon
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-ho-nguoi-theo-nguon-design.md
@@ -65,3 +65,10 @@ Source input: hàng DB2b `docs/plan/lo-trinh.json` (câu giao + `bat_khi`) · `o
 - DB thử `oneinvest_p3_nguoi` dựng bằng `bash db/db-thu.sh oneinvest_p3_nguoi` (luật đợt 27/10: không thử migration chưa merge trên `oneinvest`).
 - Migration 055 đã được điều phối liên làn cấp (30/10, sổ SO-MIGRATION); thử trên DB thử, không tự áp lên cloud — áp `ref_lookup` lên Supabase chờ Mạnh duyệt sau gộp.
 - Hỏi-4 (luật nối SĐT): nếu Mạnh chọn lối khác — gắn SĐT chưa ai giữ vào người tài khoản duy nhất của tin — AC-5 đổi Then thành: SĐT gắn vào người tài khoản duy nhất của tin khi chưa ai giữ, không đổi chủ khi đã có người giữ, tạo người theo SĐT khi tin không tài khoản hoặc có ≥ 2 người gửi; tin chỉ-SĐT mang vai tới người đã giữ SĐT.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Mã enum mới của danh bạ Người đặt tên tiếng Việt, lệch quy ước tên tiếng Anh.
+  - Ngoài-3: Khi hoàn tác của bước danh bạ đêm cũng lỗi, nhật ký chỉ còn lỗi hoàn tác, mất nguyên nhân gốc.
+  - Ngoài-4: Bài kiểm tra «chỉ ghi hai loại bằng chứng» so với hằng tự khai, chưa ghim tập chữ.
+  - Ngoài-5: Bài kiểm tra «không đọc dữ liệu người dùng app» chỉ có một chiều đỏ, có thể lọt cách viết có tiền tố schema.
+  - Ngoài-6: Bài kiểm tra nhãn trang chất lượng Ops chép tay mẫu chữ mô tả kiểm tra.
+  - Ngoài-8: Ma trận dữ liệu sai bị chặn chưa ghim đúng quy tắc chặn cho các dòng 2–8.
