@@ -122,6 +122,9 @@ async function luot(nguon, opts) {
     await c.query("BEGIN");
     await c.query("SELECT pg_advisory_xact_lock(33033)");
     await napPhatBieu(c);
+    // Thước chỉ đo cái transform của lượt tự ghi: DB thử chép từ DB chung đã nạp N1 nên offer cũ mang sẵn seller_name, và
+    // transform đời trước không ghi cột này — không xoá trắng thì lượt đối chứng đọc lại giá trị N1 để sẵn (ROLLBACK cuối lượt).
+    await c.query("UPDATE sale_offer_records SET seller_name = NULL WHERE source = 'S03'");
     const t0 = Date.now();
     await m.runTransformZalo(c);
     const thuoc = await demThuoc(c, m, opts);
