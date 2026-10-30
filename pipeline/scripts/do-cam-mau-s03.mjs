@@ -2,10 +2,13 @@
 // Hai lượt, mỗi lượt BEGIN…ROLLBACK trên DATABASE_URL (chỉ DB thử oneinvest_<dãy>_<việc>):
 //   lượt cây — transform-zalo.mjs của cây: mọi thước phải ĐẠT;
 //   lượt đối chứng — transform-zalo.mjs của commit nền ghim NEN (trước N1): mỗi thước phụ thuộc transform phải TRƯỢT đúng
-//   mốc gốc; noi_nhom_pct đối chứng bằng phép nối sai khoá (group_name thay conversation_id).
+//   mốc gốc; noi_nhom_pct đối chứng bằng phép nối sai khoá (group_name thay conversation_id);
+//   lượt đối chứng thứ hai — transform của cây bỏ người đăng khỏi khoá gom: gom_qua_10_nhieu_nguoi phải TRƯỢT.
+// Vế «quá 10 nội dung» (Hỏi-3, Mạnh duyệt 30/10): đăng lại một căn có sửa chữ là gom đúng — thước chặn khi offer quá 10
+// nội dung gom bài của hơn một người đăng; max_noi_dung_moi_offer chỉ in số.
 // Sai một điều → exit 1, gọi tên thước.
 import { execFileSync } from "node:child_process";
-import { rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -30,10 +33,19 @@ const gat = (t) => (t ?? "").replace(URL_RE, " ").replace(PHONE_RE, " ");
 const chuan = (t) => gat(t).normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 const bare = (n) => n.normalize("NFC").toLowerCase().replace(/^(quận|huyện|phường|thị xã|thị trấn|xã)\s+/i, "");
 
+const BO_NGUOI = ["return `${noiDung}|${ma.join(\",\") || \"?\"}|${nguoi}`;", "return noiDung;"];
+
 async function napModule(nguon) {
   if (nguon === "cay") return import(pathToFileURL(join(PIPE, "transform-zalo.mjs")).href);
-  const src = execFileSync("git", ["show", `${NEN}:pipeline/transform-zalo.mjs`], { cwd: PIPE, encoding: "utf8" });
-  const f = join(PIPE, `.cm-nen-${process.pid}.mjs`);
+  let src;
+  if (nguon === "bo-nguoi") {
+    src = readFileSync(join(PIPE, "transform-zalo.mjs"), "utf8");
+    if (!src.includes(BO_NGUOI[0])) throw new Error("do-cam-mau-s03: đột biến bỏ người đăng không khớp mã nguồn");
+    src = src.replace(BO_NGUOI[0], BO_NGUOI[1]);
+  } else {
+    src = execFileSync("git", ["show", `${NEN}:pipeline/transform-zalo.mjs`], { cwd: PIPE, encoding: "utf8" });
+  }
+  const f = join(PIPE, `.cm-${nguon}-${process.pid}.mjs`);
   writeFileSync(f, src);
   try {
     return await import(pathToFileURL(f).href);
@@ -60,14 +72,16 @@ async function demThuoc(c, m, { noiTheo = "conversation_id" } = {}) {
   const chiHcm = hcm.filter((t) => t.length >= 4 && sach(t, hn));
   const coTen = (text, ds) => { const l = text.normalize("NFC").toLowerCase(); return ds.some((t) => l.includes(t)); };
 
-  let thue = 0, ban = 0, url = 0, maxNd = 0, coTenBan = 0, hcmSai = 0;
+  let thue = 0, ban = 0, url = 0, maxNd = 0, qua10NhieuNguoi = 0, coTenBan = 0, hcmSai = 0;
   for (const o of offers) {
     if (o.kind === "rent_lt" && o.gia >= 1e9) thue++;
     if (o.kind === "sale" && o.gia > 100e9) ban++;
     const ps = o.post_ids.map((id) => bai.get(id)).filter(Boolean);
     if (o.gia != null && ps.some((p) => m.parsePost(p.text).priceVnd === o.gia
       && m.parsePost(p.text.replace(URL_RE, " ")).priceVnd !== o.gia)) url++;
-    maxNd = Math.max(maxNd, new Set(ps.map((p) => chuan(p.text))).size);
+    const nd = new Set(ps.map((p) => chuan(p.text))).size;
+    maxNd = Math.max(maxNd, nd);
+    if (nd > 10 && new Set(ps.map((p) => p.sender_id ?? p.author_hash ?? p.post_id)).size > 1) qua10NhieuNguoi++;
     if (o.seller_name) coTenBan++;
     const dau = ps[0];
     if (dau && coTen(dau.text, chiHcm) && !coTen(dau.text, hn.filter((t) => t.length >= 4))) {
@@ -80,23 +94,24 @@ async function demThuoc(c, m, { noiTheo = "conversation_id" } = {}) {
     thue_tu_1_ty: thue,
     ban_tren_100_ty: ban,
     gia_tu_url: url,
-    max_noi_dung_moi_offer: maxNd,
+    gom_qua_10_nhieu_nguoi: qua10NhieuNguoi,
     seller_name_pct: offers.length ? +(100 * coTenBan / offers.length).toFixed(1) : 0,
     noi_nhom_pct: posts.length ? +(100 * noi / posts.length).toFixed(1) : 0,
     hcm_sai_thi_truong: hcmSai,
     _offers: offers.length,
+    _max_noi_dung_moi_offer: maxNd,
   };
 }
 
 // Ngưỡng ĐẠT của lượt cây và mốc gốc phải tái lập ở lượt đối chứng (evals E9).
 const DAT = {
   thue_tu_1_ty: (v) => v === 0, ban_tren_100_ty: (v) => v === 0, gia_tu_url: (v) => v === 0,
-  max_noi_dung_moi_offer: (v) => v <= 10, seller_name_pct: (v) => v >= 95, noi_nhom_pct: (v) => v >= 95,
+  gom_qua_10_nhieu_nguoi: (v) => v === 0, seller_name_pct: (v) => v >= 95, noi_nhom_pct: (v) => v >= 95,
   hcm_sai_thi_truong: (v) => v === 0,
 };
 const MOC_GOC = {
   thue_tu_1_ty: (v) => v >= 1, ban_tren_100_ty: (v) => v >= 1, gia_tu_url: (v) => v >= 1,
-  max_noi_dung_moi_offer: (v) => v > 10, seller_name_pct: (v) => v === 0, hcm_sai_thi_truong: (v) => v > 0,
+  seller_name_pct: (v) => v === 0, hcm_sai_thi_truong: (v) => v > 0,
 };
 
 async function luot(nguon, opts) {
@@ -120,7 +135,7 @@ async function luot(nguon, opts) {
 
 const loi = [];
 const cay = await luot("cay");
-console.log(`lượt cây (${cay.giay}s, ${cay.thuoc._offers} offer S03):`);
+console.log(`lượt cây (${cay.giay}s, ${cay.thuoc._offers} offer S03; max_noi_dung_moi_offer=${cay.thuoc._max_noi_dung_moi_offer}, chỉ in):`);
 for (const [k, ok] of Object.entries(DAT)) {
   const v = cay.thuoc[k];
   console.log(`  ${k}=${v} ${ok(v) ? "ĐẠT" : "TRƯỢT"}`);
@@ -130,10 +145,15 @@ const nen = await luot("nen", { noiSai: true });
 console.log(`lượt đối chứng transform ${NEN} (${nen.giay}s, ${nen.thuoc._offers} offer S03):`);
 for (const [k, ok] of Object.entries(DAT)) {
   const v = nen.thuoc[k];
+  if (k === "gom_qua_10_nhieu_nguoi") continue; // đối chứng ở lượt bỏ người đăng
   const tai = k === "noi_nhom_pct" ? !ok(v) : MOC_GOC[k](v);
   console.log(`  ${k}=${v} ${ok(v) ? "ĐẠT" : "TRƯỢT"}${tai ? "" : " — KHÔNG tái lập mốc gốc"}`);
   if (!tai) loi.push(`đối chứng: ${k}=${v} không tái lập mốc gốc`);
 }
+const boNguoi = await luot("bo-nguoi");
+const vBo = boNguoi.thuoc.gom_qua_10_nhieu_nguoi;
+console.log(`lượt đối chứng bỏ người đăng khỏi khoá gom: gom_qua_10_nhieu_nguoi=${vBo} ${vBo > 0 ? "TRƯỢT" : "ĐẠT — KHÔNG tái lập mốc gốc"}`);
+if (!(vBo > 0)) loi.push(`đối chứng bỏ người đăng: gom_qua_10_nhieu_nguoi=${vBo} không tái lập mốc gốc`);
 if (loi.length) {
   console.error(`do-cam-mau-s03: ${loi.length} lỗi — ${loi.join("; ")}`);
   process.exit(1);

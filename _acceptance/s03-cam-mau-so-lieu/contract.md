@@ -47,8 +47,9 @@ phường Hà Nội. Căn cứ: `docs/research/s03-boc-tach-cau-truc-3010.md` §
   `{vn-hanoi}` không nhận phường TP.HCM; nhóm chưa khai thị trường (Hỏi-1 = khuyến nghị, Mạnh duyệt 30/10): tên chỉ thuộc một thị trường
   ra phường của thị trường ấy, tên trùng giữa hai thị trường ra `area_id` null. (cross-layer)
 - AC-9: Given bản chép dữ liệu thật trên DB thử, When chạy lại transform S03 trong BEGIN…ROLLBACK, Then: 0 offer thuê
-  giá từ 1 tỷ, 0 offer bán giá trên 100 tỷ, 0 offer có giá chỉ xuất hiện trong URL của bài, không offer nào gom quá 10
-  nội dung khác nhau (đếm trên chữ đã bỏ URL và SĐT), `seller_name` có ở ≥ 95% offer S03, ≥ 95% bài S03 nối được tới một dòng
+  giá từ 1 tỷ, 0 offer bán giá trên 100 tỷ, 0 offer có giá chỉ xuất hiện trong URL của bài, offer nào gom quá 10
+  nội dung khác nhau (đếm trên chữ đã bỏ URL và SĐT) thì mọi bài là của một người đăng (Hỏi-3, Mạnh duyệt 30/10; số nội
+  dung lớn nhất in ra, không chặn), `seller_name` có ở ≥ 95% offer S03, ≥ 95% bài S03 nối được tới một dòng
   `collection_units`, và mọi offer có bài mang tên phường chỉ thuộc TP.HCM (không trùng tên phường Hà Nội), ở nhóm
   không khai thị trường loại trừ TP.HCM, mang `area_id` `vn-hcmc-…`. (cross-layer)
 - AC-10: Given cây sau sửa, When chạy bộ test pipeline, Then tất cả xanh (gồm `parse.test.mjs` với ca «2.900 tỷ» đổi

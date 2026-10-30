@@ -122,7 +122,9 @@ flowchart LR
   BEGIN…ROLLBACK, đếm bảy thước, exit 1 khi một thước trượt. Lượt đối chứng chạy transform của commit nền ghim
   `c333a342` (chép tạm cạnh tệp thật) và phải tái lập mốc gốc của TỪNG thước. Định nghĩa:
   - `gia_tu_url`: offer mang giá X mà có bài đọc chữ gốc (chưa gạt) ra X còn đọc chữ đã gạt URL không ra X.
-  - `max_noi_dung_moi_offer`: số chữ khác nhau (đã gạt URL, SĐT, chuẩn hoá) trong các bài của một offer.
+  - `gom_qua_10_nhieu_nguoi` (Hỏi-3): số offer có quá 10 chữ khác nhau (đã gạt URL, SĐT, chuẩn hoá) mà bài của hơn một
+    người đăng — đăng lại một căn có sửa chữ là gom đúng; số chữ khác nhau lớn nhất chỉ in ra. Đối chứng: transform của
+    cây bỏ người đăng khỏi khoá gom.
   - `noi_nhom_pct`: % bài S03 có `conversation_id` khớp một `collection_units.group_key` của S03.
   - `hcm_sai_thi_truong`: offer có bài mang tên phường chỉ thuộc TP.HCM (không trùng tên Hà Nội), ở nhóm không khai
     thị trường loại trừ TP.HCM, mà `area_id` không phải `vn-hcmc-…`.
