@@ -1,0 +1,42 @@
+schema_version: 1
+feature_slug: judge-giu-quyet-dinh-nguoi
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-1 thẻ bị quyết giữa lúc chấm' trong agent/tests/judge-run.test.ts xanh (DB thử oneinvest_p3_judge_test_<pid>): ma trận viết trước 3 ô — trạng thái người đặt ∈ {approved, rejected, deferred}; mỗi ô một cặp needs_llm có một thẻ pending, queryPair giả UPDATE thẻ ấy sang trạng thái của ô (kèm decided_by, decided_at, ai_suggestion='NGUOI') rồi mới trả cặp; sau chamMotLuot to_jsonb của thẻ BẰNG ảnh chụp ngay sau khi người quyết, dem.boQua = 1, dem.capNhat = 0; số assert ảnh = 3. Đối chứng đỏ cùng fixture: trên thẻ approved của ô đầu, chạy câu UPDATE cũ không chặn status (chép nguyên văn từ judge-run.ts trước vòng, nhúng trong test) với cùng tham số mà chamMotLuot dùng → hàm kiểm báo 'AC-1 máy ghi đè thẻ người vừa quyết: <id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-2 hai chiều, một thẻ bị quyết' trong agent/tests/judge-run.test.ts xanh: cặp có thẻ pending 'pair:a|b' và 'pair:b|a', queryPair giả đặt 'pair:b|a' sang rejected giữa chừng → to_jsonb của 'pair:b|a' bằng ảnh chụp sau khi quyết, to_jsonb của 'pair:a|b' bằng ảnh chụp trước lượt chấm (không có evidence.cham); dem.boQua = 1, dem.capNhat = 0. Đối chứng đỏ cùng fixture: chạy câu UPDATE chỉ chặn status từng dòng (không chặn cả cặp) lên hai thẻ → hàm kiểm báo 'AC-2 máy sửa thẻ anh em của cặp người đã quyết: <id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-7 chạy lại' (PL25) trong agent/tests/judge-run.test.ts vẫn xanh và thêm assert dem.capNhat của lượt 2 = số thẻ pending của fixture (4), ai_suggestion của từng thẻ = apNguong của cặp; đối chứng đỏ: hàm đếm cập nhật trên dem.capNhat = 0 → 'AC-3 thẻ chờ không được cập nhật'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-4 phường khớp thẻ duyệt' trong agent/tests/judge-nguong.test.ts xanh (không DB): rút NGUYÊN VĂN thân khoaPhuong và soPhuong (cùng soGiaTri, trong, khoa) từ app/src/lib/ops/review-can-cu.ts bằng regex theo tên hàm, bỏ kiểu bằng stripTypeScriptTypes của node:module, dựng hàm; ma trận viết trước ĐÚNG 18 cặp kèm nhãn mong đợi của thẻ: (1) 'Phương Liệt'/'Phường Phương Liệt' khop; (2) 'Phương Liệt'/'Phương Mai' lech; (3) 'Phượng Dực'/'Xã Phượng Dực' khop; (4) 'Xã Kim Chung'/'kim-chung' khop; (5) 'Xã Kim Chung'/'Xã Kim Nỗ' lech; (6) 'Thị trấn Đông Anh'/'Đông Anh' khop; (7) 'Thị trấn Đông Anh'/'Thị trấn Trâu Quỳ' lech; (8) 'P.Bến Nghé'/'Phường Bến Nghé' khop; (9) 'P. Bến Nghé'/'Bến Nghé' khop; (10) 'P.Bến Nghé'/'P.Đa Kao' lech; (11) 'Phường Bình Thạnh'/'binh-thanh' khop; (12) 'tay-nam'/'Phường Tây Mỗ' lech; (13) 'Phường 12'/'Phường 12' khop; (14) 'Phường 12'/'P.12' lech; (15) 'Phường 12'/'Phường 13' lech; (16) 'Phường'/'Bình Thạnh' thieu; (17) null/'Bình Thạnh' thieu; (18) ''/'Bình Thạnh' thieu. Với mỗi cặp: nhãn soPhuong của bản rút từ app BẰNG nhãn mong đợi, và mã lý do phường của apNguong (cung_phuong/khac_phuong/thieu_phuong → khop/lech/thieu) BẰNG nhãn ấy, cả hai chiều A↔B; số assert = 36 (18 cặp × 2 chiều, mỗi assert so ba nhãn). Rút hàm không được → thông điệp 'AC-4 không rút được <tên hàm> từ review-can-cu.ts'. Đối chứng đỏ cùng ma trận: chạy với chuanHoaPhuong cũ (nhúng nguyên văn trong test, truyền qua tham số so phường của apNguong) → báo 'AC-4 luật lệch thẻ duyệt ở: Phương Liệt | Phường Phương Liệt'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts, app/src/lib/ops/review-can-cu.ts]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-5 cùng phường ghi khác kiểu ra yes' trong agent/tests/judge-nguong.test.ts xanh: ma trận viết trước 5 ô trên cặp số đo của ô (1) ma trận AC-1 PL25 (giá/m² lệch 5%, dt lệch 4%, cùng loại) — bốn cặp tên cùng phường của AC-5 → same_house 'yes' và ly_do có 'cung_phuong', cả hai chiều; 'Phương Liệt'/'Phương Mai' → 'no' và ly_do có 'khac_phuong'; số assert = 10. Ca 'AC-1 ma trận luật' của PL25 vẫn xanh. Đối chứng đỏ: chuanHoaPhuong cũ trên ô 'Phương Liệt'/'Phường Phương Liệt' → báo 'AC-5 luật sai ở ô: Phương Liệt | Phường Phương Liệt'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts]

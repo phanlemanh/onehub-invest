@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "bac": "M1",
+  "ly_do": "có giao diện (256 tệp khớp design.surface_globs), chưa khai nguồn — design_floor.tokens chưa khai; design_floor.registry chưa khai",
+  "tri_thuc": {
+    "trang_thai": "doc-duoc",
+    "ly_do": "",
+    "goc": "/var/folders/bp/cf66dm9n18x8q1rcjsylk6ph0000gq/T/design-floor-tri-thuc/a7ad5f1e650321ac325734e9199f266c9b990212",
+    "chi_muc": {
+      "path": "knowledge/index.json",
+      "byte": 21239,
+      "token": 5310
+    },
+    "tep": [
+      {
+        "id": "component-catalog",
+        "path": "knowledge/component-catalog.md",
+        "diem": 2,
+        "byte": 9231,
+        "token": 2308
+      },
+      {
+        "id": "design-review",
+        "path": "knowledge/design-review.md",
+        "diem": 1,
+        "byte": 3361,
+        "token": 841
+      }
+    ]
+  },
+  "reuse_plan": {
+    "ket": "chua-nguon",
+    "ma": null,
+    "n": null
+  },
+  "flow": null,
+  "dong": [
+    "Bậc kho: M1 — có giao diện (256 tệp khớp design.surface_globs), chưa khai nguồn — design_floor.tokens chưa khai; design_floor.registry chưa khai",
+    "Tri thức thiết kế: chỉ mục (5310 token) + knowledge/component-catalog.md (2308 token), knowledge/design-review.md (841 token)",
+    "Kế hoạch dùng lại: chưa khai nguồn — không kiểm"
+  ]
+}

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { ActivityIcon, BadgePercentIcon, BotIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon, TagsIcon, WorkflowIcon } from "lucide-react"
+import { ActivityIcon, BadgePercentIcon, BotIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon, TagsIcon, UsersIcon, WorkflowIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
@@ -116,6 +116,15 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       href: "/ops/labels",
       icon: glyph(TagsIcon),
       match: (p) => p.startsWith("/ops/labels"),
+      group: "Xử lý",
+    },
+    {
+      // Danh bạ người (danh-ba-nguoi-tren-ops) — chỉ ở máy thu; trên cloud trang nói «Chỉ ở máy thu».
+      id: "people",
+      label: "Danh bạ người",
+      href: "/ops/people",
+      icon: glyph(UsersIcon),
+      match: (p) => p.startsWith("/ops/people"),
       group: "Xử lý",
     },
     {
