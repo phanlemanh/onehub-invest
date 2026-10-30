@@ -44,7 +44,7 @@ liệu thật của phần 1), mọi tiêu chí đo trên dữ liệu mẫu và 
 - AC-6: Given DB thử chưa áp 057 (không có cột Kev), When chạy transform-zalo, Then luồng offer chạy hết như trước, không
   ghi phát biểu Kev nào và in đúng một dòng «chưa áp 057». (cross-layer)
 - AC-7: Given bản chép dữ liệu thật (DB thử, ROLLBACK) với phân phối tổng hợp điền cho mọi bài S03, When đo transform-zalo
-  có và không có Kev, Then in giây hai lượt, số phát biểu thêm, cỡ thêm của bốn cột (byte/bài) và offer giống hệt;
+  có và không có Kev, Then in giây hai lượt, số phát biểu thêm, cỡ thêm của bảy cột (byte/bài) và offer giống hệt;
   `field_assertions` không nằm trong danh sách bảng sync cloud. (cross-layer)
 - AC-8: Given cây sau sửa, When chạy bộ test pipeline và ca DB của phát biểu (045) trên DB thử, Then tất cả xanh.
 - AC-9: Given ngày v5 gần nhất trên máy thu (ngày có bài mang `kev_intent`, sau phần 1, chỉ đọc), When chạy thước dữ liệu

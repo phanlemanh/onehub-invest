@@ -47,7 +47,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.kev_phat_bieu_that
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/kev-phat-bieu.itest.mjs]
-    expected: "exit 0; ca 'KP-AC-6' xanh: trong giao dịch xoá 4 cột kev_* (ALTER … DROP COLUMN, ROLLBACK), transform-zalo chạy hết, số offer bằng lượt có cột, 0 phát biểu kev, đúng 1 dòng log «chưa áp 057»"
+    expected: "exit 0; ca 'KP-AC-6' xanh: trong giao dịch xoá 7 cột kev_* (ALTER … DROP COLUMN, ROLLBACK), transform-zalo chạy hết, số offer bằng lượt có cột, 0 phát biểu kev, đúng 1 dòng log «chưa áp 057»"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E7
     criterion: AC-7
@@ -55,7 +55,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.kev_phat_bieu_that
     paths: [pipeline/transform-zalo.mjs, pipeline/scripts/do-kev-phat-bieu.mjs]
-    expected: "exit 0; do-kev-phat-bieu in số bài S03 (> 500, không thì exit 1), giây transform-zalo không Kev → có Kev, số phát biểu kev thêm (= số bài có điểm), byte/bài của 4 cột, offer giống hệt (exit 1 nếu lệch), và xác nhận field_assertions không có trong danh sách bảng của pipeline/sync-cloud.mjs"
+    expected: "exit 0; do-kev-phat-bieu in số bài S03 (> 500, không thì exit 1), giây transform-zalo không Kev → có Kev, số phát biểu kev thêm (= số bài có điểm), byte/bài của 7 cột, offer giống hệt (exit 1 nếu lệch), và xác nhận field_assertions không có trong danh sách bảng của pipeline/sync-cloud.mjs"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E8
     criterion: AC-8
