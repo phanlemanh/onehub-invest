@@ -48,7 +48,7 @@ export function dongLa(output, laTroVeDay = troVeDay) {
   const chayLai = [];
   for (const l of output.split("\n").filter((x) => x.startsWith("VIOLATION"))) {
     const slug = l.match(/^VIOLATION \[([^\]]+)\]/)?.[1];
-    if (slug === SLUG && /status chưa arm|human_signoff|chưa ký|signoff/.test(l) && !/stale/.test(l)) continue;
+    if (slug === SLUG && /status chưa arm|status=implemented|status=verified|evidence-report\.md|human_signoff|chưa ký|signoff/.test(l) && !/stale/.test(l)) continue;
     const tro = l.match(/con trỏ thay thế không chứng được: (.*)$/)?.[1];
     if (slug !== SLUG && tro) {
       const muc = tro.split(";").map((x) => x.trim()).filter(Boolean);

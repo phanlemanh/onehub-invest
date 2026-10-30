@@ -16,7 +16,8 @@ import { mediaRowsFromAd, mediaRowsFromPosts } from "./media-rows.mjs";
 const DB_URL = process.env.DATABASE_URL ?? "postgres://oneinvest:oneinvest@localhost:5433/oneinvest";
 export const NGUON_BAI = ["S03", "S05"];
 export const NGUON = [...NGUON_BAI, "S06"];
-const KHOA = 53053;
+/** Khoá advisory của bảng media — mọi bên chạm bảng trong giao dịch lấy khoá này TRƯỚC (tránh deadlock với lượt song song). */
+export const KHOA = 53053;
 const LO = 5000;
 const COT = [
   "media_key",

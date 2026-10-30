@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { chotDbThu } from "../media-rows.mjs";
-import { runTransformMedia } from "../transform-media.mjs";
+import { KHOA, runTransformMedia } from "../transform-media.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_053 = readFileSync(path.join(ROOT, "db/migrations/053_media.sql"), "utf8");
@@ -37,10 +37,13 @@ after(async () => {
   await c?.end();
 });
 
-/** Chạy fn trong một giao dịch luôn ROLLBACK, với 053 đã nạp (idempotent). */
+/** Chạy fn trong một giao dịch luôn ROLLBACK, với 053 đã nạp (idempotent). Khoá advisory của bảng media lấy TRƯỚC khi
+ * áp 053 (053 giữ khoá bảng media) — cùng thứ tự với runTransformMedia, nên lượt chạy song song (probe, mồi thẻ) chỉ xếp
+ * hàng chứ không deadlock (S4 round 1: 40P01). */
 export async function trongGiaoDich(fn) {
   await c.query("BEGIN");
   try {
+    await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
     await c.query(SQL_053);
     return await fn(c);
   } finally {
