@@ -35,15 +35,7 @@ export type SoPhuong = "khop" | "lech" | "thieu";
 
 // ── Chép từ app/src/lib/ops/review-can-cu.ts (gói agent/ không nạp được tệp app: bí danh `@/` của Next). Luật ghép
 // căn so phường bằng ĐÚNG khoá của thẻ duyệt, để «cùng / khác / thiếu phường» của luật trùng nhãn người duyệt thấy.
-// tests/judge-nguong.test.ts (AC-4) rút nguyên văn các hàm này từ tệp app và chạy cùng ma trận — lệch một ô là đỏ.
-const trong = (v: unknown): v is null | undefined => v === null || v === undefined || (typeof v === "string" && v.trim() === "");
-const khoa = (v: string | number) => (typeof v === "number" ? String(v) : v.trim().toLowerCase());
-
-function soGiaTri(a: string | number | null | undefined, b: string | number | null | undefined): SoPhuong {
-  if (trong(a) || trong(b)) return "thieu";
-  return khoa(a) === khoa(b) ? "khop" : "lech";
-}
-
+// tests/judge-nguong.test.ts (KP-AC-2) rút nguyên văn các hàm này từ tệp app và chạy cùng ma trận — lệch một ô là đỏ.
 /** Khoá tên phường: bỏ MỘT tiền tố hành chính trên chuỗi còn dấu, rồi slug. Bỏ tiền tố trước khi bỏ dấu vì «Phường»
  *  và «Phương» cùng thành `phuong` — «Phương Liệt», «Phượng Dực» là tên phường thật. */
 export function khoaPhuong(v: string): string {
@@ -59,14 +51,13 @@ export function khoaPhuong(v: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Khoá rỗng (chỉ có tiền tố) → thiếu. Khoá chỉ số («Phường 12» của hai quận) → so chuỗi gốc, nên «Phường 12» với
- *  «P.12» vẫn là lệch — giới hạn kế thừa có chủ ý từ thẻ duyệt. */
+/** Khoá rỗng (chỉ có tiền tố) → thiếu. Khoá chỉ số so như mọi khoá: «Phường 12» với «P.12» cùng khoá «12» nên cùng
+ *  phường (hồ sơ khoa-phuong-chung-phuong-so). */
 export function soPhuong(a: string | number | null, b: string | number | null): SoPhuong {
   if (a === null || b === null) return "thieu";
   const ka = khoaPhuong(String(a));
   const kb = khoaPhuong(String(b));
   if (ka === "" || kb === "") return "thieu";
-  if (/^\d+$/.test(ka) || /^\d+$/.test(kb)) return soGiaTri(a, b);
   return ka === kb ? "khop" : "lech";
 }
 

@@ -22,6 +22,8 @@ evals:
     criterion: AC-3
     executor: test
     cmd: config:executors.test.the_duyet_phuong
+    status: not-run
+    superseded_by: khoa-phuong-chung-phuong-so#AC-1
     paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
     expected: "exit 0; ca 'TPL-AC-3' xanh: ma trận viết trước 4 cặp so với hành vi trước vòng (soGiaTri trên chuỗi gốc): Phường 12/phuong-12 → 'lech', Phường 12/P.12 → 'lech', Phường 12/Phường 21 → 'lech', Phường 12/' phường 12 ' → 'khop' (giống hệt sau trim + lower, như trước vòng — OOS-5); 4 assert, mỗi assert so cả với nhãn ghim lẫn với soGiaTri(chuỗi gốc). Chiều đỏ: bản chép bỏ chặn khoá chỉ-số → 'TPL-AC-3: Phường 12 ↔ P.12 không được Khớp chỉ vì cùng số' (phuong-12 vốn Lệch vì slug không mang tiền tố)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
