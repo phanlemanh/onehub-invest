@@ -83,3 +83,35 @@ wall: 317s
 - **claude-sonnet-5-5**: 4 agent · 9 calls · out 15,760 · in 18 · cache_read 123,095 · cache_create 128,889
 - **claude-haiku-5-5**: 12 agent · 24 calls · out 16,931 · in 48 · cache_read 260,963 · cache_create 235,449
 
+### S4 round 2 — wf_d66bd84a-aad (12 agent, 34,572 out-tok)
+
+| label | model | calls | out | in | cache_read | s |
+|---|---|--:|--:|--:|--:|--:|
+| review:measurement | claude-opus-5-5 | 5 | 6,712 | 12 | 135,866 | 69 |
+| review:bugs | claude-opus-5-5 | 11 | 6,221 | 22 | 411,667 | 65 |
+| synthesize:report | claude-sonnet-5-5 | 4 | 4,967 | 8 | 122,020 | 32 |
+| triage | claude-sonnet-5-5 | 2 | 2,610 | 4 | 21,811 | 20 |
+| machine:cd app && npm test | claude-haiku-5-5 | 2 | 2,496 | 4 | 21,777 | 68 |
+| review:conventions | claude-opus-5-5 | 6 | 2,346 | 12 | 170,136 | 25 |
+| machine:cd agent && npm test | claude-haiku-5-5 | 2 | 2,233 | 4 | 21,779 | 43 |
+| machine:cd pipeline && npm test | claude-haiku-5-5 | 2 | 2,063 | 4 | 21,783 | 67 |
+| machine:node scripts/check-portal-compliance.mjs | claude-haiku-5-5 | 2 | 1,919 | 4 | 21,797 | 8 |
+| machine:cd app && npm run test:lint-rules | claude-haiku-5-5 | 2 | 1,722 | 4 | 21,791 | 8 |
+| machine:cd app && npx tsc --noEmit && npm run li | claude-haiku-5-5 | 2 | 957 | 4 | 21,802 | 15 |
+| capture:provenance | claude-sonnet-5-5 | 2 | 326 | 4 | 17,437 | 5 |
+
+
+wall: 266s
+
+| vai tro | agents | out | cache_read | wall s | bat dau | ket thuc |
+|---|--:|--:|--:|--:|---|---|
+| machine | 6 | 11,390 | 130,729 | 209 | 22:42:47 | 22:46:16 |
+| review | 3 | 15,279 | 717,669 | 70 | 22:42:47 | 22:43:58 |
+| triage | 1 | 2,610 | 21,811 | 20 | 22:46:16 | 22:46:37 |
+| capture | 1 | 326 | 17,437 | 5 | 22:46:37 | 22:46:42 |
+| synthesize | 1 | 4,967 | 122,020 | 32 | 22:46:42 | 22:47:14 |
+
+- **claude-opus-5-5**: 3 agent · 22 calls · out 15,279 · in 46 · cache_read 717,669 · cache_create 153,055
+- **claude-sonnet-5-5**: 3 agent · 8 calls · out 7,903 · in 16 · cache_read 161,268 · cache_create 95,109
+- **claude-haiku-5-5**: 6 agent · 12 calls · out 11,390 · in 24 · cache_read 130,729 · cache_create 120,916
+
