@@ -1,0 +1,18 @@
+{
+  "feature_plain": "Ảnh mà môi giới S03 gửi thành tin riêng (trước hay sau tin chữ, cùng người, dưới 2 phút) hiện trên thẻ của đúng tin rao; dữ liệu nạp và danh sách tin không đổi.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ nhận ra tin chỉ có ảnh (chữ chỉ là đường dẫn ảnh) và không nhầm tin có lời kèm ảnh."},
+    {"id": "AC-2", "p": "Sẽ gắn mỗi tin chỉ-ảnh vào tin chữ gần nhất của cùng người, cùng nhóm, trước hay sau dưới 2 phút."},
+    {"id": "AC-3", "p": "Sẽ đưa ảnh ấy vào đúng tin rao, xếp sau ảnh có sẵn, nạp lại không nhân, và gỡ khỏi tin cũ khi có tin chữ gần hơn tới sau."},
+    {"id": "AC-4", "p": "Sẽ không gắn ảnh vào tin rao khi tin chữ gần nhất của người đó không phải tin rao (theo khuyến nghị Hỏi-1)."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên dữ liệu nạp và danh sách bài của từng tin rao."},
+    {"id": "AC-6", "p": "Sẽ đo trên bản chép dữ liệu thật tỉ lệ tin rao S03 có ảnh trước và sau, so với ngưỡng của ô cơ hội, và so từng cặp ảnh–tin của một ngày mẫu."},
+    {"id": "AC-7", "p": "Sẽ giữ các phép thử của bảng ảnh NH1 và pipeline đều xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không đổi trang dòng chảy: tin chỉ-ảnh vẫn đếm là «không đọc được» (theo khuyến nghị Hỏi-2)."},
+    {"id": "OOS-2", "p": "Không gắn tin chỉ-ảnh vào danh sách bài hay số lần đăng lại của tin rao."},
+    {"id": "OOS-3", "p": "Không đọc chữ trong ảnh, không sửa tải ảnh lỗi của máy thu, không làm nguồn S05."},
+    {"id": "OOS-4", "p": "Không nạp lại bảng ảnh thật trong vòng này (bước triển khai sau gộp)."}
+  ]
+}

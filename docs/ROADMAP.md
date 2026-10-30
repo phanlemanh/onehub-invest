@@ -111,6 +111,9 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   Bước gạt SĐT bỏ qua đuôi nhóm nghìn của giá đồng: «3.000.000.000» (`_acceptance/s03-gia-ty-chan-dong`) và cả khi sau giá là
   khoảng trắng/xuống dòng + 1–2 chữ số, «3.000.000.000\n50m2» (`_acceptance/s03-gia-ty-sau-khoang-trang`; nhóm cuối «000», thân
   số tiền không dính chữ — SĐT 3-3-3 kèm đuôi vẫn bị gạt); 21.934 bài thật: 0 bài đổi.
+  Ảnh của tin chỉ-ảnh S03 (mỗi ảnh một tin, chữ là URL) vào offer của tin chữ GẦN NHẤT cùng người, cùng nhóm, dưới 2 phút
+  — ở bước dựng bảng `media` (`transform-media.mjs` + `lib/gop-anh.mjs`), `sale_offers` và bảng nạp không đổi
+  (`_acceptance/gop-tin-chi-anh-o-transform`, PL28): DB thử 276 → 422/885 offer có ảnh (31,2% → 47,7%, ngưỡng ≥ 45%).
   Listing Airbnb transform cho nghỉ ngoài phường mang toạ độ của lần thu mới nhất (thiếu → NULL), giữ mốc + lý do nghỉ cũ
   (`_acceptance/airbnb-nghi-khong-hoi-sinh`) — reassign-areas chỉ đánh thức listing nghỉ khi toạ độ HIỆN HÀNH vào phường.
 - Phát biểu + phân xử (PL15, `_acceptance/phat-bieu-va-phan-xu`, migration 045): bảng chỉ-thêm `field_assertions`
