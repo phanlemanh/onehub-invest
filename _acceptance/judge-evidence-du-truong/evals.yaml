@@ -1,0 +1,53 @@
+schema_version: 1
+feature_slug: judge-evidence-du-truong
+# Ca «JE-AC-n». judge-run.test.ts dùng DB thử RỖNG riêng (oneinvest_p3_judge_test_<pid>); judge-pair.test.ts dùng DB thử
+# riêng (oneinvest_p3_pair_test_<pid>) có sale_offers dựng theo kiểu cột của oneinvest.sale_offers (đọc information_schema,
+# chỉ SELECT trên oneinvest). Mỗi phép đo có đối chứng đỏ chạy đúng hàm kiểm trên vật hỏng, thông điệp ghim.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'JE-AC-1 sinh thẻ đủ mười trường' trong agent/tests/judge-run.test.ts xanh: DB thử có 3 cặp property_candidates needs_llm + 1 cặp pending, 0 thẻ → chamMotLuot(khongLlm) → đúng 3 thẻ entity_match pending, item_id 'pair:<offer_a>|<offer_b>', evidence.offer_a.offer_id/offer_b.offer_id khớp cặp, ai_suggestion khớp apNguong, title mở bằng 'Cùng căn? '; cặp pending không có thẻ; câu đếm CAU_DEM_THIEU_THE = 0. Khuôn khoá mong đợi rút từ HAI tệp thật, không viết tay: khoá jsonb_build_object của 'offer_a'/'offer_b' trong seed db/migrations/029_review_queue.sql HỢP khoá 'key:' của TRUONG_GHEP_CAN trong app/src/lib/ops/review-can-cu.ts (test assert tập rút từ review-can-cu.ts có đúng 10 phần tử); tập khoá Object.keys của evidence.offer_a và evidence.offer_b BẰNG khuôn của bên đó; với fixture có bốn trường null, Object.hasOwn(evidence.offer_x, k) đúng và giá trị === null cho street, block, floor, bathrooms ở cả hai bên. Đối chứng đỏ cùng fixture: (1) bỏ bước sinh → 'JE-AC-1 ứng viên thiếu thẻ: o1|o2'; (2) bộ khoá bỏ 'street' → 'JE-AC-1 thẻ lệch khuôn: street'; (3) đối tượng bên A mà street là undefined (khoá rơi khi JSON hoá) → 'JE-AC-1 thẻ lệch khuôn: street'; (4) rút TRUONG_GHEP_CAN không được (tên hằng sai) → 'JE-AC-1 không rút được TRUONG_GHEP_CAN'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts, db/migrations/029_review_queue.sql, app/src/lib/ops/review-can-cu.ts]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'JE-AC-2 queryPair đọc bốn trường' trong agent/tests/judge-pair.test.ts xanh: DB thử có sale_offers với các cột queryPair đọc, kiểu cột lấy từ information_schema.columns của oneinvest.sale_offers (thiếu cột nào ở oneinvest → thông điệp 'JE-AC-2 oneinvest.sale_offers thiếu cột <tên>'), cùng property_candidates, stg_zalo_posts, stg_chotot_ads tối thiểu và extension pgcrypto. Ma trận viết trước ĐÚNG 16 ô = 4 trường (street_raw→street, block_raw→block, floor_raw→floor, bathrooms→bathrooms) × 2 bên (A, B) × {có, null}: hai cặp tin — cặp 'có' (A: 'Đường Phan Văn Trị', 'A1', '12', 2; B: 'Phan Văn Trị', 'B2', '7', 3 — mỗi giá trị khác nhau giữa hai bên để bắt hoán đổi bên) và cặp 'null' (cả bốn cột NULL hai bên). Gọi queryPair THẬT (câu SELECT của agent/src/tools/native.ts, truyền client DB thử); mỗi ô assert pair.<bên>.<trường> === giá trị VIẾT TRƯỚC của đúng tin đó (không so với hàng đọc lại); số assert giá trị = 16; thêm 8 assert kiểu cho các ô 'có': typeof street/block/floor === 'string', typeof bathrooms === 'number'. Đối chứng đỏ cùng fixture: (1) hàm kiểm trên PairData mà street hai bên bị hoán đổi → 'JE-AC-2 sai giá trị: a.street'; (2) bản chép native.ts đọc từ tệp thật, bỏ 'street_raw' khỏi câu SELECT, ghi tệp .ts tạm cạnh tests rồi import qua tsx → 'JE-AC-2 sai giá trị: a.street'; (3) hàm kiểm trên PairData mà a.bathrooms là chuỗi '2' → 'JE-AC-2 sai kiểu: a.bathrooms'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/tools/native.ts, agent/tests/judge-pair.test.ts]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'JE-AC-3 thẻ mang giá trị bốn trường' trong agent/tests/judge-run.test.ts xanh: queryPair giả trả cặp có bốn trường khác nhau giữa hai bên (A: street 'Đường Phan Văn Trị', block 'A1', floor '12', bathrooms 2; B: 'Phan Văn Trị', 'B2', '7', 3) và một cặp bốn trường null; chamMotLuot(khongLlm) sinh thẻ; ma trận viết trước ĐÚNG 16 ô (4 trường × 2 bên × {có, null}): evidence.offer_<bên>.<khoá> === PairData.<bên>.<trường>; số assert = 16. Rồi evidence của hai thẻ ấy đi qua soTruongGhepCan THẬT của app/src/lib/ops/review-can-cu.ts (bản chép tạm cạnh tests, chỉ đổi đường import '@/lib/vocab.generated' thành đường tuyệt đối tới app/src/lib/vocab.generated.ts): ma trận viết trước 16 ô bảng so: hàng street/block/floor/bathrooms, cột a/b — ô 'có' mang đúng giá trị PairData, ô 'null' mang null và hàng có so === 'thieu'; số assert bảng so = 16. Đối chứng đỏ cùng fixture: (1) hàm kiểm trên evidence mà offer_a và offer_b bị tráo bốn trường → 'JE-AC-3 thẻ sai giá trị: offer_a.street'; (2) evidence đổi khoá 'street' thành 'street_raw' ở bên A rồi qua soTruongGhepCan → 'JE-AC-3 bảng so sai: street.a'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts, app/src/lib/ops/review-can-cu.ts]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'JE-AC-4 thẻ cũ giữ khuôn' trong agent/tests/judge-run.test.ts xanh: DB thử có cặp needs_llm kèm một thẻ entity_match đang chờ chèn sẵn với evidence khuôn tám khoá (offer_a/offer_b mỗi bên offer_id, source, price_vnd, area_m2, price_perm2, bedrooms, phuong, property_type, kèm text/subject); chụp to_jsonb(evidence->'offer_a') và (evidence->'offer_b') trước; chamMotLuot(khongLlm) → dem.sinh = 0, dem.capNhat = 1; sau lượt, hai ảnh offer_a/offer_b BẰNG ảnh trước (so jsonb), và evidence.cham có mặt. Đối chứng đỏ cùng fixture: chạy câu UPDATE thay evidence bằng evidenceThe của lượt (evidence = $3::jsonb thay vì nối cham) lên chính thẻ ấy → 'JE-AC-4 thẻ cũ bị sửa dữ liệu tin: offer_a'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; toàn bộ agent npm test xanh, gồm mọi ca đã ký của judge-nguong-la-code (trừ E6 bị thay, ca 'AC-6 sinh thẻ' đã thay bằng 'JE-AC-1 …') và judge-giu-quyet-dinh-nguoi trong agent/tests/judge-run.test.ts và agent/tests/judge-nguong.test.ts. (Kiểu PairData mới được kiểm qua tsx khi nạp test; tsc --noEmit của agent chạy ở suite lint của S4, không thuộc eval này. Việc E6 của judge-nguong-la-code được ghi là bị thay do lưới trước gộp kiểm — thay-khong-nhan / ac-thay-khong-con-eval — không thuộc eval này.)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/scripts/judge-run.ts, agent/src/tools/native.ts, agent/tests/judge-run.test.ts, agent/tests/judge-nguong.test.ts, agent/tests/judge-chung.ts]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: "cd agent && node --import tsx --test tests/judge-lo-that.itest.ts"
+    expected: "exit 0; ca 'JE-AC-6 lô thật' trong agent/tests/judge-lo-that.itest.ts xanh (tệp ngoài glob tests/*.test.ts — chỉ chạy ở máy có kho local, CI không chạy): DB thử riêng (oneinvest_p3_lo_that_<pid>) dựng sale_offers theo kiểu cột của oneinvest (information_schema), property_candidates từ 027, review_queue từ 029 tới «-- Seed», ai_calls từ 052, stg_zalo_posts/stg_chotot_ads tối thiểu, pgcrypto. Chép từ oneinvest CHỈ BẰNG SELECT: mọi cặp property_candidates status needs_llm, hàng sale_offers của hai tin mỗi cặp (các cột queryPair đọc), và thẻ entity_match đang chờ của các cặp đó. Lô rỗng → 'JE-AC-6 kho không có cặp needs_llm'. Lượt 1: chụp offer_a/offer_b của mọi thẻ cũ → chamMotLuot(khongLlm, queryPair thật trên client DB thử) → mọi ảnh bằng trước. Lượt 2 (gieo lại): xoá thẻ entity_match của lô trên DB thử → chamMotLuot → số thẻ mới = số cặp; mỗi thẻ có khuôn khoá như E1 (seed 029 ∪ TRUONG_GHEP_CAN); với mỗi bên, street/block/floor/bathrooms === street_raw/block_raw/floor_raw/bathrooms của chính tin đó trong hàng đã chép. Output in số cặp, số thẻ cũ, số giá trị khác null của từng trường. Đối chứng đỏ cùng lô: (1) hàm kiểm khuôn trên thẻ bỏ khoá 'street' → 'JE-AC-6 thẻ lệch khuôn: street'; (2) hàm kiểm thẻ cũ trên ảnh sau mà offer_a bị thay bằng evidence lượt mới → 'JE-AC-6 thẻ cũ bị sửa dữ liệu tin: offer_a'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/src/tools/native.ts, agent/tests/judge-lo-that.itest.ts]
