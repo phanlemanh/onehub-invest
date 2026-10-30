@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 feature_slug: tap-nhan-mau-ocp1
-verdict: PENDING-JUDGMENT
+verdict: PASS
 failed_evals: []
 reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: f595ecf65069e1d41293362030392adefab8acad
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: tap-nhan-mau-ocp1
@@ -149,7 +149,7 @@ Round 2. Mọi eval máy đều xanh; còn một mục judgment (E9) chờ ngư�
     - Quyết định của Mạnh, ghi vào docs/superpowers/specs/2026-10-30-man-gan-nhan-mu-design.md mục «Trường lõi», về việc ngân sách trong tin inquiry («tc», «tài chính») có tính là giá `price_min_vnd`/`price_max_vnd` hay là «tin không nêu»; có quy tắc này thì phán được tin -0, -9, -19, -28, -38.
     - Quy tắc trong cùng tài liệu về «Căn <mã>» (vd «Căn H2», «Căn PR2»): mã đó là `building` hay là mã căn để ngoài phạm vi; có quy tắc này thì phán được tin -7, -17, -36.
     - Bằng chứng một người gắn độc lập, không thấy cột `nhan`, đã gắn lại 5 tin inquiry có giá và 3 tin «Căn <mã>» ở trên, so khớp với `nhan` hiện có (ví dụ kết quả `pipeline/label-agreement.mjs --lat ocp1` trên các tin này). Nếu họ gắn khớp thì ra PASS.
-  human_override:  # chi nguoi ghi
+  human_override: Mạnh 2026-10-30 — Đạt
 
 ### Lệnh suite (hồi quy)
 
