@@ -131,6 +131,14 @@ thu (S0x, launchd tự động) → raw snapshots (DATA-CONTRACT)
   `assertion_field`, mã `kev` chỉ đi với suy luận) — không ngưỡng, không lọc, luồng offer không đọc cột Kev; bài Yêu cầu
   không thành offer vẫn giữ phát biểu. 057 chưa áp → bỏ bước, một dòng log. Thước `do-kev-phat-bieu.mjs` (KV3: +0,7 giây/
   lượt, ~49 byte/bài) · `so-kev-du-lieu-that.mjs` (một ngày v5 thật). Chỉ local.
+- Bảng Yêu cầu bên mua (`_acceptance/bang-yeu-cau`, migration 058): `inquiry_records` + view sống `inquiries` (khoá/hệ
+  thống theo RESO SavedSearch, tiêu chí dùng lại trường Property phía bán; sổ khối `inquiries`). transform-zalo, sau bước
+  Kev, dựng mỗi nhóm bài S03 có phát biểu `listing_intent = inquiry` lớp cao nhất (người thắng Kev) thành một Yêu cầu:
+  gom cùng nguồn · người gửi (SĐT khi vắng) · chữ chuẩn hoá (Hỏi-2), dịch vụ/loại hình từ phát biểu rồi từ chữ theo bảng
+  ánh xạ (Hỏi-3, «nhà» trơn ra trống), PN/diện tích qua `parsePost`, ngân sách khoảng/trần/sàn — số tiền đứng một mình là
+  trần (Hỏi-1), giá phi lý bỏ —, phường theo thị trường nhóm. Upsert ghi đủ `post_ids` mỗi lượt; hết phát biểu → nghỉ
+  `het-phat-bieu`, không DELETE (răng `scan-delete`). 058 chưa áp → bỏ bước, một dòng log. Thước `do-yeu-cau.mjs` (bản chép
+  thật, Kev tổng hợp: 993 bài → 535 Yêu cầu, quan hệ bài ↔ Yêu cầu 0 lỗi, +0,3 giây/lượt, offer không lệch). Chỉ local.
 - Danh bạ Người theo nguồn (DB2b, `_acceptance/ho-nguoi-theo-nguon`, migration 055, ADR-0016 §8): bốn bảng chỉ-thêm
   (rào trigger chặn DELETE/TRUNCATE và sửa khoá) `parties` (khoá mờ `pty_<ULID>`, một nguồn mỗi người) · `registry_aliases`
   (tài khoản tại nguồn, SĐT băm, tên) · `registry_events` · `party_roles` (vai `nguoi_dang` trỏ chủ thể `S0x:<khoá nguồn>`,
@@ -372,6 +380,7 @@ Thiết kế: `docs/superpowers/specs/2026-10-22-ui-ux-standards-design.md`.
 | PL14 | Nạp lại không xoá: bảng bản ghi + view sống (lối A, 044), khoá dính S03/S05, tin/listing nghỉ (`retired_at`) thay DELETE, 6 khoá ngoại RESTRICT, đối soát chuyển quyết định sang tin kế — `_acceptance/nap-lai-khong-xoa` | 🔶 vòng S4; sau merge: áp 044 lên DB local NGAY (launchd chạy code main); cloud không đổi lược đồ (`docs/ops/cloud-schema-catchup-2026-10-26.md`) |
 | PL15 | Bảng phát biểu chỉ-thêm + bộ phân xử ba lớp dựng năm cột phân loại kèm nguồn gốc, chạy lại ra y nguyên (045) — `_acceptance/phat-bieu-va-phan-xu` | 🔶 vòng S4; sau merge: áp 045 + `phat-bieu-cat-chuyen.mjs` trên DB local TRƯỚC lượt nạp đêm kế; cloud không đổi lược đồ |
 | PL5 | Điểm Kev typed (ý định tin, bán/thuê) có cột ở bảng nạp và thành phát biểu theo bài cho mọi tin S03, không loại tin nào (057) — `_acceptance/meta-kev-thanh-phat-bieu` | 🔶 phần (2) xong trên mẫu + DB thử; Cổng Bằng chứng chờ một ngày v5 thật từ phần (1) của ZCode; sau merge: áp 057 lên DB local |
+| bang-yeu-cau | Bảng Yêu cầu bên mua (cần mua · cần thuê) đối xứng listing, transform ghi từ phát biểu ý định = Yêu cầu, nạp lại không nhân dòng (058) — `_acceptance/bang-yeu-cau` | 🔶 S3 xong trên mẫu + DB thử; PR mở sau PL5; sau merge: áp 058 lên DB local (trước đó transform in «chưa áp 058»); KHÔNG áp Supabase, không sync cloud |
 | DB2b | Danh bạ Người theo nguồn (ADR-0016 §8, 055): bốn bảng chỉ-thêm `parties` · `registry_aliases` · `registry_events` · `party_roles`; mỗi tài khoản/SĐT tại một nguồn là một người (khoá `pty_<ULID>`), vai «Người đăng» trỏ từ tin (`S0x:<khoá nguồn>`); bộ dựng chạy cuối bước bait gap trong giao dịch riêng; chỉ local — `_acceptance/ho-nguoi-theo-nguon` | 🔶 vòng S3; sau merge: áp 055 lên DB local (trước đó job đêm in «bỏ qua»); KHÔNG áp Supabase, không sync cloud |
 | NH1 | Ảnh tin canonical theo RESO Media (bảng `media`, 053) cho S03/S05/S06; `/ops/review` + hồ sơ tin đọc bảng này — `_acceptance/media-canonical-reso` | 🔶 vòng S4; sau merge: `pg_dump` → áp 053 lên DB local → chạy `transform-media.mjs` một lần → xoá DB thử `oneinvest_p2_media`; không áp Supabase |
 | G-3 | Kev-V media gate + VLM collage + LLM judge (≡ A2) | ⬜ |

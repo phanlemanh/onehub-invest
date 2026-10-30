@@ -9,7 +9,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 |--------|---------|
 | import-airbnb.mjs | Import snapshots (verify sha256, write staging tables) |
 | transform-airbnb.mjs | Staging → canonical (listings, nights); area = phường chứa tọa độ; ngoài mọi phường → nghỉ `ngoai_phuong` mang toạ độ lần thu mới (reassign không đánh thức bằng toạ độ cũ) |
-| transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs); số đọc trên chữ đã gạt URL/SĐT (đuôi nhóm nghìn của giá đồng không bị gạt, kể cả khi sau là khoảng trắng + 1–2 chữ số), luật giá VN, chặn giá phi lý, phường theo thị trường nhóm (N1); điểm Kev của mọi bài → phát biểu `listing_intent`/`kind` lớp suy luận (PL5, `lib/kev-phat-bieu.mjs`; chưa áp 057 → «chưa áp 057», bỏ bước) |
+| transform-zalo.mjs | Zalo posts → sale_offers, rent_lt_offers (gạt post thử qua lib/test-posts.mjs); số đọc trên chữ đã gạt URL/SĐT (đuôi nhóm nghìn của giá đồng không bị gạt, kể cả khi sau là khoảng trắng + 1–2 chữ số), luật giá VN, chặn giá phi lý, phường theo thị trường nhóm (N1); điểm Kev của mọi bài → phát biểu `listing_intent`/`kind` lớp suy luận (PL5, `lib/kev-phat-bieu.mjs`; chưa áp 057 → «chưa áp 057», bỏ bước); bài có phát biểu ý định thắng = inquiry → bảng Yêu cầu `inquiry_records` (bang-yeu-cau, `lib/yeu-cau.mjs`; chưa áp 058 → «chưa áp 058», bỏ bước) |
 | transform-media.mjs | Bảng `media` (RESO Media, NH1) cho tin sống S03/S05/S06; S03 nối thêm ảnh của tin chỉ-ảnh vào offer của tin chữ gần nhất cùng người, dưới 2 phút (PL28, `lib/gop-anh.mjs`) |
 | refresh-bait-gap.mjs | Bait gap P1 + registry sellers (xoá người bán không còn tin, audit); `buocDem` rồi dựng danh bạ Người trong giao dịch riêng |
 | scripts/test-data-residue.mjs | Đếm tin sinh từ post thử còn sót; `--simulate` chạy thử dọn rồi ROLLBACK |
@@ -45,6 +45,8 @@ market_metrics (area_id, month, listing_count, revenue, adr, occupancy, revpar)
 sale_offer_records (offer_id, …, retired_at, retired_reason, superseded_by, originating_system_key) — bảng bản ghi (044)
 sale_offers = VIEW sống của sale_offer_records (offer_id, area_id, kind, price_vnd, area_m2, confidence, …)
 market_asset_stats (area_id, kind, median_perm2, median_rent)
+inquiry_records (inquiry_id, post_ids, kind, property_type, budget_min/max_vnd, …, retired_at) — Yêu cầu bên mua (058, chỉ local)
+inquiries = VIEW sống của inquiry_records
 parties / registry_aliases / registry_events / party_roles — danh bạ Người (055, chỉ-thêm, chỉ local; khoá `pty_<ULID>`)
 airdna_markets / airdna_scores / airdna_market_metrics
 ```
@@ -75,3 +77,5 @@ airdna_markets / airdna_scores / airdna_market_metrics
    và thước trong giao dịch: `napPhatBieu(c)` (`lib/nap-045.mjs`) nạp 045 + mở cổng trong giao dịch.
 8. **Nạp 057 trong giao dịch**: `napKev(c)` (`lib/nap-057.mjs`) giữ khoá 33033 rồi khoá danh bạ (057 sửa `party_roles`) —
    thứ tự khoá này ở mọi chỗ, không thì ca danh bạ chạy song song deadlock. Sổ đòi DB có 057 nên ca so sổ–DB nạp nó trước.
+9. **Nạp 058 trong giao dịch**: `napYeuCau(c)` (`lib/nap-058.mjs`, khoá 33033) sau `napPhatBieu` + `napKev`. Bảng Yêu cầu
+   chỉ NGHỈ (`het-phat-bieu`), không DELETE; `post_ids` dựng lại đủ mỗi lượt từ mọi bài thật của stg — đừng cộng dồn.
