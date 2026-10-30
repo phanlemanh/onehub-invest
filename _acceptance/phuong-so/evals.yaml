@@ -1,0 +1,42 @@
+schema_version: 1
+feature_slug: phuong-so
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    expected: "exit 0; ca 'PS-AC-1 phường số theo cấp và số' trong app/tests/the-duyet-phuong-lech-gia.test.tsx xanh: ma trận viết trước ĐÚNG 14 cặp qua soTruongGhepCan (hàng key 'phuong'), gồm đủ 6 ô của KP-AC-1 cũ (ô 'Phường 12'/'phuong-12' nay khop, năm ô kia giữ nhãn): khop — 'Phường 12'/'P.12', 'Phường 12'/'P. 12', 'Phường 12'/' phường 12 ', 'Phường 01'/'Phường 1', 'Phường 12'/'P12', 'Phường 12'/'phuong-12', 'Xã 12'/'xa-12', 'Thị trấn 12'/'thi-tran-12'; lech — 'Phường 12'/'Phường 21', 'Phường 1'/'Phường 12', 'Xã 12'/'Phường 12', 'Thị trấn 12'/'Phường 12', '12'/'Phường 12', 'Xã 12'/'Thị trấn 12'; mỗi cặp hai chiều, số assert = 28. Đối chứng đỏ cùng ma trận: bản chép review-can-cu.ts bỏ dòng 'if (so) return' của khoaPhuong — ô lệch đầu tiên theo thứ tự trên là 'Phường 01'/'Phường 1' → 'PS-AC-1: Phường 01 ↔ Phường 1 phải Khớp'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'PS-AC-2 phường khớp thẻ duyệt' trong agent/tests/judge-nguong.test.ts xanh (không DB): rút NGUYÊN VĂN thân trong, khoa, soGiaTri, khoaPhuong, soPhuong từ app/src/lib/ops/review-can-cu.ts, bỏ kiểu bằng stripTypeScriptTypes; ma trận viết trước ĐÚNG 32 cặp, theo thứ tự chạy — 21 ô của KP-AC-2 (khoa-phuong-chung-phuong-so) giữ nguyên nhãn trừ ô 21: (1) 'Phương Liệt'/'Phường Phương Liệt' khop; (2) 'Phương Liệt'/'Phương Mai' lech; (3) 'Phượng Dực'/'Xã Phượng Dực' khop; (4) 'Xã Kim Chung'/'kim-chung' khop; (5) 'Xã Kim Chung'/'Xã Kim Nỗ' lech; (6) 'Thị trấn Đông Anh'/'Đông Anh' khop; (7) 'Thị trấn Đông Anh'/'Thị trấn Trâu Quỳ' lech; (8) 'P.Bến Nghé'/'Phường Bến Nghé' khop; (9) 'P. Bến Nghé'/'Bến Nghé' khop; (10) 'P.Bến Nghé'/'P.Đa Kao' lech; (11) 'Phường Bình Thạnh'/'binh-thanh' khop; (12) 'tay-nam'/'Phường Tây Mỗ' lech; (13) 'Phường 12'/'Phường 12' khop; (14) 'Phường 12'/'P.12' khop; (15) 'Phường 12'/'Phường 13' lech; (16) 'Phường'/'Bình Thạnh' thieu; (17) null/'Bình Thạnh' thieu; (18) ''/'Bình Thạnh' thieu; (19) 'Phường 12'/'P. 12' khop; (20) 'Phường 1'/'Phường 12' lech; (21) 'Phường 12'/'phuong-12' khop (ô DUY NHẤT đổi nhãn, trước là lech); rồi 11 ô mới: (22) 'Phường 01'/'Phường 1' khop; (23) 'Phường 12'/'P12' khop; (24) 'Phường 12'/'phuong 12' khop; (25) 'Xã 12'/'xa-12' khop; (26) 'Thị trấn 12'/'thi-tran-12' khop; (27) '12'/'12' khop; (28) 'Phường 12' dạng NFD/'Phường 12' khop; (29) 'Xã 12'/'Phường 12' lech; (30) 'Thị trấn 12'/'Phường 12' lech; (31) '12'/'Phường 12' lech; (32) 'Phường 12A'/'Phường 12' lech. Với mỗi cặp, nhãn soPhuong của bản rút từ app BẰNG nhãn mong đợi BẰNG nhãn luật (mã lý do phường của apNguong: cung_phuong/khac_phuong/thieu_phuong → khop/lech/thieu), hai chiều; số assert = 64; test assert độ dài ma trận = 32. Lượt xanh gọi apNguong KHÔNG kèm tham số so phường. Rút hàm không được → 'PS-AC-2 không rút được <tên hàm> từ review-can-cu.ts'. Đối chứng đỏ 1 cùng ma trận: soPhuong dùng khoaPhuong của vòng trước (nhúng nguyên văn trong test) truyền qua tham số so phường của apNguong — ô lệch đầu tiên theo thứ tự là (21) → 'PS-AC-2 luật lệch thẻ duyệt ở: Phường 12 | phuong-12'. Đối chứng đỏ 2: bản chép judge-entity.ts đọc từ tệp thật, bỏ dòng 'if (so) return' của khoaPhuong, ghi thành tệp .ts tạm cạnh tests rồi import qua tsx, chạy apNguong mặc định của bản chép — cũng dừng ở ô (21) → cùng thông điệp. Đối chứng đỏ 3: rút một tên hàm không có trong tệp app → 'PS-AC-2 không rút được'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts, app/src/lib/ops/review-can-cu.ts]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'PS-AC-3 phường số ra yes/no' trong agent/tests/judge-nguong.test.ts xanh: trên cặp số đo của ma trận AC-5 hồ sơ judge-giu-quyet-dinh-nguoi (giá/m² lệch 5%, diện tích lệch 4%, cùng loại), 4 ô viết trước — 'Phường 12'/'P.12' và 'Phường 01'/'Phường 1' → same_house 'yes' và ly_do có 'cung_phuong'; 'Phường 12'/'Phường 21' và 'Xã 12'/'Phường 12' → 'no' và ly_do có 'khac_phuong'; hai chiều, số assert = 8; apNguong gọi KHÔNG kèm tham số so phường. Đối chứng đỏ: soPhuong dùng khoaPhuong của vòng trước → 'PS-AC-3 luật sai ở ô: Phường 01 | Phường 1'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.the_duyet_phuong
+    expected: "exit 0; toàn tệp app/tests/the-duyet-phuong-lech-gia.test.tsx xanh, gồm các ca đã ký TPL-AC-1 (15 cặp), TPL-AC-2 (5 cặp), TPL-AC-4 (CHI_TIEN_TO 4, KHAC_PHUONG 9) và TPL-AC-5 cùng đối chứng đỏ của chúng; ca KP-AC-1 được thay bằng PS-AC-1. Ghim so với nền 4704315b: không ô nào của các ma trận TPL giữ lại đổi (bước soát diff ở S4)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [app/src/lib/ops/review-can-cu.ts, app/tests/the-duyet-phuong-lech-gia.test.tsx]
+
+  - id: E5
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; cd agent && npm test xanh, gồm ca 'AC-1 ma trận luật' của judge-nguong-la-code (12 ô) và ca 'AC-5 cùng phường ghi khác kiểu ra yes' của judge-giu-quyet-dinh-nguoi (5 ô) với nhãn như trước vòng; ca KP-AC-2, KP-AC-3 được thay bằng PS-AC-2, PS-AC-3. Ghim so với nền 4704315b: không ô nào của hai ma trận ấy đổi (bước soát diff ở S4)."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts]
