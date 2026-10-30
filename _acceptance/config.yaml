@@ -38,6 +38,8 @@ executors:
     sca_agent: "cd agent && node --import tsx --test tests/ai-call-log.test.ts"   # so-cuoc-goi-ai AC-2..AC-4 — model giả + DB local trong ROLLBACK
     sca_tong_hop: "node --test pipeline/lib/ai-calls.test.mjs"   # so-cuoc-goi-ai AC-5 — ma trận viết trước, không DB
     mgn_app: "cd app && node --import tsx --test tests/labels.test.tsx"   # man-gan-nhan-mu AC-3, AC-5..AC-8 — lược đồ tạm, route thật
+    tnm_pipeline: "node --test pipeline/lib/tap-mau.test.mjs"   # tap-nhan-mau-ocp1 E1, E2, E4, E7, E8 — hàm thuần, không DB
+    tnm_app: "cd app && node --import tsx --test tests/labels-mau.test.tsx"   # tap-nhan-mau-ocp1 E3 — chuanHoaLuot thật, không DB
     kns_lich_unit: "node --test pipeline/scripts/s05-b-lich.test.mjs"   # G1 2510-14
     kns_s05_unit: "node --test pipeline/scripts/s05-paused.test.mjs"   # 2510-4: luật chỉ active mới thu
     cal_unit: "node --test pipeline/scripts/install-collector-api.test.mjs"   # ZC4 2510-33
@@ -426,6 +428,8 @@ executors:
     mgn_dong_thuan: "cd app && node --import tsx ../_acceptance/man-gan-nhan-mu/probes/dong-thuan.mjs"   # man-gan-nhan-mu E7
     mgn_duong: "bash _acceptance/man-gan-nhan-mu/probes/duong.sh"   # man-gan-nhan-mu E12
     mgn_pham_vi: "bash _acceptance/man-gan-nhan-mu/probes/pham-vi.sh"   # man-gan-nhan-mu E13
+    tnm_db: "node _acceptance/tap-nhan-mau-ocp1/probes/db.mjs"   # tap-nhan-mau-ocp1 E5, E6, E8b — DB local, giao dịch READ ONLY
+    tnm_pham_vi: "bash _acceptance/tap-nhan-mau-ocp1/probes/pham-vi.sh"   # tap-nhan-mau-ocp1 E10
     # ui-standards-reui-thuoc-loi-thoi — bản sao app tạm (node_modules symlink) và bản chép tài liệu; không đổi cây thật
     urt_guard: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/guard.sh"
     urt_doc: "bash _acceptance/ui-standards-reui-thuoc-loi-thoi/probes/doc.sh"

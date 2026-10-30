@@ -20,6 +20,7 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | phat-bieu-cat-chuyen.mjs | PL15 bước chuyển: giá trị có sẵn của năm cột → phát biểu `legacy`, mở cổng phân xử; `--thu` ROLLBACK |
 | scripts/dung-lai-canonical.mjs | Thước PL15: xoá năm cột rồi dựng lại trong giao dịch ROLLBACK (0 ô lệch); `--nguon-goc`; `--doi-chung=…` |
 | scripts/phat-bieu-chay-that.mjs | PL15: ba transform + phân xử trên dữ liệu thật, đo giây, ROLLBACK (`--thu`) |
+| label-mau.mjs | PL8: tập tin mẫu lát OCP1 có đáp án biết sẵn (`--lat ocp1 --n 200 --seed s [--out f.jsonl]`); hàm thuần `lib/tap-mau.mjs` + khuôn `lib/khuon-mau-ocp1.mjs`, không DB, không đường tới canonical/stg |
 | finalize-hanoi.sh | Full pipeline: import → reassign-areas → transform → 300/400/410 |
 
 ## SQL Files (execute in order)
