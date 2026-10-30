@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 794bf035df134a7fa6a995df84d9262a7bfa8bf5
+verified_commit: 19b79dc3dc8f317446352c5c47dae9e7235834b4
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -267,3 +267,7 @@ Round 1: mọi eval máy (E1-E16, E18) đều xanh; E17 là mục judgment chờ
 ### Re-pin lần 1 — 2026-10-30, do ghim lại sau gộp origin/main
 run_id: repin-20261030T082715Z-16834
 sha: 794bf035df134a7fa6a995df84d9262a7bfa8bf5 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)
+
+### Re-pin lần 2 — 2026-10-30, do ghim lại sau gộp origin/main (#203)
+run_id: repin-20261030T090121Z-91057
+sha: 19b79dc3dc8f317446352c5c47dae9e7235834b4 · suites: 6 lệnh exit 0 · evals: 17/17 eval máy đạt kỳ vọng · ngoài làn máy: E17 (E17 không khai paths)
