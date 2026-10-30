@@ -74,6 +74,8 @@ _Avoid_: master data, MDM
 
 **Danh bạ người**: Phần người của danh bạ — mỗi người một khoá mờ `pty_…` cấp một lần, thuộc đúng một nguồn (chưa nối xuyên nguồn); định danh tại nguồn là bí danh, quan hệ với tin là vai trò (ADR-0016 §8). Chỉ ở DB local.
 - Code: `party` · RESO: resource Member (khung), khoá local
+- Slug URL: `people`
+- Ghi chú: trang `/ops/people` «Danh bạ người» (máy thu) liệt người theo nguồn, số tin, bí danh; nhãn «Có thể là môi giới» là suy luận chỉ hiển thị (từ 5 tin còn sống).
 _Avoid_: hồ sơ người bán
 
 **Bí danh**: Một định danh của thực thể danh bạ tại một nguồn — tài khoản tại nguồn, SĐT băm hay tên hiển thị. Bí danh tài khoản và SĐT thuộc đúng một người sống của nguồn ấy; SĐT luôn là người riêng, không gắn vào người tài khoản (DB2b, Hỏi-4).

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hỏi-2 phân trang</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1240px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 1000px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · danh-ba-nguoi-tren-ops · phan-trang</p>
+    <h1>Hỏi-2: phân trang danh bạ người</h1>
+    <p class="sub">AC-3 · hai cách người vận hành tới một người ít tin; nhánh tô cam là nhánh khuyến nghị</p>
+
+    <svg viewBox="0 0 1224 480" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Khung nhánh (nền, vẽ trước) ============ -->
+      <!-- Nhánh A: khung nhấn duy nhất -->
+      <rect x="400" y="40" width="800" height="168" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="424" y="60" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH A</text>
+      <text x="424" y="80" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Phân trang máy chủ (khuyến nghị)</text>
+      <!-- Nhánh B -->
+      <rect x="400" y="240" width="800" height="168" rx="8" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="424" y="260" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH B</text>
+      <text x="424" y="280" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">Cắt 500</text>
+
+      <!-- ============ Mũi tên (vẽ trước nút) ============ -->
+      <!-- Chung: mở trang → lọc nguồn -->
+      <line x1="168" y1="228" x2="200" y2="228" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Lọc nguồn → A (attach y=216) -->
+      <path d="M 360 216 L 372 216 Q 380 216 380 208 L 380 140 Q 380 132 388 132 L 424 132" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <!-- Lọc nguồn → B (attach y=240) -->
+      <path d="M 360 240 L 372 240 Q 380 240 380 248 L 380 316 Q 380 324 388 324 L 424 324" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- Trong nhánh A -->
+      <line x1="648" y1="132" x2="688" y2="132" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <line x1="912" y1="132" x2="952" y2="132" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <!-- Trong nhánh B -->
+      <line x1="648" y1="324" x2="688" y2="324" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="912" y1="324" x2="952" y2="324" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <!-- ============ Nút chung ============ -->
+      <!-- Bắt đầu: oval -->
+      <rect x="24" y="200" width="144" height="56" rx="20" fill="#f5f5f5"/>
+      <rect x="24" y="200" width="144" height="56" rx="20" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="96" y="232" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Mở <tspan font-family="'Geist Mono', monospace" font-weight="500">/ops/people</tspan></text>
+
+      <!-- Lọc nguồn -->
+      <rect x="200" y="200" width="160" height="56" rx="6" fill="#f5f5f5"/>
+      <rect x="200" y="200" width="160" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="280" y="224" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Lọc nguồn S06</text>
+      <text x="280" y="242" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">(9.411 người)</text>
+
+      <!-- ============ Nhánh A ============ -->
+      <rect x="424" y="100" width="224" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="424" y="100" width="224" height="64" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+      <text x="536" y="128" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Trang 1/95 —</text>
+      <text x="536" y="146" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">100 người nhiều tin nhất</text>
+
+      <rect x="688" y="100" width="224" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="688" y="100" width="224" height="64" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+      <text x="800" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Trang sau … Trang 95</text>
+
+      <!-- Kết thúc A: oval -->
+      <rect x="952" y="100" width="224" height="64" rx="20" fill="#f5f5f5"/>
+      <rect x="952" y="100" width="224" height="64" rx="20" fill="#ffffff" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="1064" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Thấy cả người 1 tin</text>
+
+      <!-- ============ Nhánh B ============ -->
+      <rect x="424" y="292" width="224" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="424" y="292" width="224" height="64" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+      <text x="536" y="320" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">500 người nhiều tin nhất,</text>
+      <text x="536" y="338" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">sắp/lọc tức thì</text>
+
+      <rect x="688" y="292" width="224" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="688" y="292" width="224" height="64" rx="6" fill="#ffffff" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+      <text x="800" y="320" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Người thứ 501+</text>
+      <text x="800" y="338" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">(73% có ≤ 2 tin)</text>
+
+      <!-- Kết thúc B: oval -->
+      <rect x="952" y="292" width="224" height="64" rx="20" fill="#f5f5f5"/>
+      <rect x="952" y="292" width="224" height="64" rx="20" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="1064" y="320" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Chỉ tới bằng ô tìm</text>
+      <text x="1064" y="338" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" text-anchor="middle">khi đã biết tên</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="24" y1="432" x2="1200" y2="432" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="24" y="460" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="120" y="452" width="24" height="12" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="152" y="461" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Điểm vào / kết cục</text>
+
+      <rect x="280" y="452" width="24" height="12" rx="2" fill="#ffffff" stroke="rgba(45,49,66,0.40)" stroke-width="1"/>
+      <text x="312" y="461" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước</text>
+
+      <rect x="384" y="452" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="416" y="461" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh khuyến nghị</text>
+
+      <rect x="552" y="452" width="24" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="584" y="461" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh còn lại</text>
+    </svg>
+  </div>
+</body>
+</html>
