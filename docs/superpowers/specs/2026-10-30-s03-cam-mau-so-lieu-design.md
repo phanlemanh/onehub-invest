@@ -48,7 +48,7 @@ flowchart LR
 | tỷ, số nguyên từ 1.000 không dấu | «2400 tỷ thu về» | 2,4 tỷ (môi giới viết triệu kèm chữ tỷ) |
 | tỷ chen phần lẻ | «2ty450», «1ty650», «3ty2», «2 tỷ 450» | 2,45 · 1,65 · 3,2 · 2,45 tỷ |
 | triệu chen phần lẻ | «5tr5», «8tr5», «4tr8» | 5,5 · 8,5 · 4,8 triệu |
-| «Giá:» theo sau số có nhóm nghìn, không đơn vị | «Giá: 4,000 (thu về)» | 4 tỷ (đơn vị triệu) |
+| «Giá:» theo sau số có nhóm nghìn, không đơn vị, tin bán | «Giá: 4,000 (thu về)» | 4 tỷ (đơn vị triệu); tin thuê giữ null |
 | số đồng đủ ba nhóm, không đơn vị | «7.000.000», «Giá 7.500.000/tháng» | 7 triệu · 7,5 triệu |
 | giữ như cũ | «2.9 tỷ», «2,93 tỷ», «3 tỷ», «45.5tr/m²», «8,5tr/tháng», «12 triệu/th» | không đổi |
 
