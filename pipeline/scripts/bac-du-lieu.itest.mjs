@@ -3,7 +3,7 @@
 // oneinvest_p2_bac) — không trên DB `oneinvest` dùng chung khi 056 chưa áp (luật đo của đợt dot0-cam-mau).
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -11,6 +11,9 @@ import { chay, ghiAnhChup, KHOA as KHOA_BAC, SQL_610, SQL_KIEM_DE_XUAT } from ".
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_056 = readFileSync(path.join(ROOT, "db/migrations/056_data_level.sql"), "utf8");
+// PL19: 059 thay property_data_level (thêm vị từ B5) — có tệp thì nạp sau 056, mọi ca PL16 phải trả như cũ.
+const TEP_059 = path.join(ROOT, "db/migrations/059_thoi_gian_hieu_luc.sql");
+const SQL_059 = existsSync(TEP_059) ? readFileSync(TEP_059, "utf8") : null;
 const KHOA = KHOA_BAC; // khoá của bac-du-lieu.mjs lấy TRƯỚC khi áp 056 để lượt song song xếp hàng, không deadlock
 const LOI = ["kind", "property_type", "price_vnd", "area_m2", "area_id"];
 const MARKET = "vn-tst-bac-m";
@@ -33,6 +36,7 @@ export async function trongGiaoDich(fn) {
   try {
     await c.query("SELECT pg_advisory_xact_lock($1)", [KHOA]);
     await c.query(SQL_056);
+    if (SQL_059) await c.query(SQL_059);
     await c.query(`INSERT INTO areas (id, parent_id, region_type, name, country_code, meta) VALUES
       ($1, NULL, 'market', 'Thị trường thử PL16', 'VN', '{}'), ($2, $1, 'submarket', 'Phường thử PL16', 'VN', '{}')`, [MARKET, WARD]);
     return await fn(c);
@@ -168,7 +172,8 @@ async function deXuat(offer, status, value = "3") {
   return Number(r.id);
 }
 const phatBieu = (offer, method, evidence = {}) => c.query(`INSERT INTO field_assertions (subject_key, field, value,
-    evidence_tier, method, evidence) VALUES ($1, 'bedrooms', '3', 'observed', $2, $3)`, [`S06:${offer}`, method, evidence]);
+    evidence_tier, method, evidence, observed_at) VALUES ($1, 'bedrooms', '3', 'observed', $2, $3, now())`,
+  [`S06:${offer}`, method, evidence]);
 const dongKiem = async () => (await c.query(`SELECT status, detail FROM dq_check_results
   WHERE check_name = 'enrich:proposal-assertion' ORDER BY id DESC LIMIT 1`)).rows[0];
 const im = () => {};

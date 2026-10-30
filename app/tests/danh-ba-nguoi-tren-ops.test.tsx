@@ -4,7 +4,7 @@
 // có chiều đỏ trên cùng fixture (bản đột biến chép sang thư mục tạm, đổi đúng một chỗ), thông điệp ghim.
 import { after, before, test } from "node:test"
 import assert from "node:assert/strict"
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
@@ -408,7 +408,7 @@ test("DBN-AC-8 trạng thái: danh bạ rỗng, lọc không khớp, khung chờ
   const { PeopleSkeleton } = await import("../src/components/ops/people/people-skeleton")
   const { LENH_DUNG } = await import("../src/components/ops/people/people-text")
   const rong = renderToStaticMarkup(
-    <PeopleView mode="local" tong={{ nguoi: 0, vaiSong: 0, theoNguon: [] }} loc={{ source: null, q: "", page: 1 }} rows={[]} total={0} page={1} pages={1} />,
+    <PeopleView mode="local" coTim boTim={false} tong={{ nguoi: 0, vaiSong: 0, theoNguon: [] }} loc={{ source: null, q: "", page: 1 }} rows={[]} total={0} page={1} pages={1} />,
   )
   assert.ok(rong.includes(LENH_DUNG) && LENH_DUNG === "node pipeline/dung-nguoi.mjs")
   const loc = await htmlDanhSach(ADMIN, { source: null, q: "khongkhopxyz", page: 1 })
@@ -433,6 +433,81 @@ test("DBN-AC-9 thanh bên Ops có «Danh bạ người» nhóm Xử lý; portals
   assert.match(khoi, /href: "\/ops\/people"/)
   assert.match(khoi, /group: "Xử lý"/)
   assert.match(readFileSync(join(ROOT, "docs/architecture/portals.md"), "utf8"), /^\| `\/ops\/people` \|/m)
+})
+
+// ---------- che-tim-bi-danh-viewer (CTV-AC-n): vai dưới Vận hành không lọc được bằng ?q= ----------
+const maNguoi = (h: string) => [...new Set(h.match(/pty_[0-9A-HJKMNP-TV-Z]{26}/g) ?? [])].sort()
+const dauTrang = (h: string) => [h.match(/Trang [\d.]+\/[\d.]+ · [\d.]+ người khớp/)?.[0], h.match(/[\d.]+ người đang dùng/)?.[0], h.match(/[\d.]+ vai Người đăng/)?.[0]]
+
+test("CTV-AC-1 viewer gõ q qua page thật: danh sách như không q, có dòng báo; ops/admin lọc đúng; một chỗ gọi", async () => {
+  const listPage = await banChep<PageMod>("src/app/ops/people/page.tsx", [STUB])
+  const { PeopleContent } = await import("../src/components/ops/people/people-content")
+  const { BO_TIM } = await import("../src/components/ops/people/people-text")
+  const qua = (role: string, sp: Record<string, string>) => quaPage(listPage, PeopleContent, { searchParams: Promise.resolve(sp) }, user(role))
+  const khong = await qua("viewer", {})
+  const coQ = await qua("viewer", { q: "chị lan" })
+  assert.deepEqual(maNguoi(coQ), maNguoi(khong), "CTV-AC-1 viewer lọc được bằng q")
+  assert.deepEqual(dauTrang(coQ), dauTrang(khong), "CTV-AC-1 viewer lọc được bằng q")
+  assert.ok(coQ.includes(BO_TIM) && !khong.includes(BO_TIM), "CTV-AC-1 dòng báo")
+  for (const role of ["ops", "admin"]) {
+    const h = await qua(role, { q: "chị lan" })
+    assert.deepEqual(maNguoi(h), [P[2]], `CTV-AC-1 ${role} lọc`)
+    assert.match(h, /Trang 1\/1 · 1 người khớp/)
+    assert.ok(!h.includes(BO_TIM))
+  }
+  const goi: string[] = []
+  const quet = (d: string) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const f = join(d, e.name)
+      if (e.isDirectory()) quet(f)
+      else if (/\.tsx?$/.test(e.name) && /danhSachNguoi\(/.test(readFileSync(f, "utf8").replace(/export async function danhSachNguoi\(/, ""))) goi.push(f.slice(APP.length + 1))
+    }
+  }
+  quet(join(APP, "src"))
+  assert.deepEqual(goi, ["src/components/ops/people/people-content.tsx"], "CTV-AC-1 chỗ gọi hàm danh sách")
+  // Chiều đỏ: bản chép bỏ chỗ xoá q cho viewer → viewer lọc được.
+  const dot = await banChep<{ PeopleContent: typeof PeopleContent }>("src/components/ops/people/people-content.tsx", [
+    ["const locDung = xem ? loc : { ...loc, q: \"\" }", "const locDung = loc"],
+  ])
+  const hDot = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: null, q: "chị lan", page: 1 } }))
+  assert.throws(() => assert.deepEqual(maNguoi(hDot), maNguoi(khong), "CTV-AC-1 viewer lọc được bằng q"), /CTV-AC-1 viewer lọc được bằng q/)
+})
+
+test("CTV-AC-2 ô tìm chỉ có với ops và admin (5 vai qua page thật)", async () => {
+  const listPage = await banChep<PageMod>("src/app/ops/people/page.tsx", [STUB])
+  const { PeopleContent } = await import("../src/components/ops/people/people-content")
+  let o = 0
+  for (const role of [null, "user", "viewer", "ops", "admin"]) {
+    const h = await quaPage(listPage, PeopleContent, { searchParams: Promise.resolve({}) }, user(role))
+    o++
+    if (role === null || role === "user") assert.ok(h.includes("Cần đăng nhập ops."), `CTV-AC-2 ${role ?? "khách"}`)
+    else if (role === "viewer") {
+      assert.ok(h.includes('aria-label="Nguồn"'), "CTV-AC-2 viewer mất bộ chọn nguồn")
+      assert.ok(!h.includes('name="q"') && !/>Tìm</.test(h), "CTV-AC-2 viewer thấy ô tìm")
+    } else assert.ok(h.includes('name="q"') && />Tìm</.test(h), `CTV-AC-2 ${role} không có ô tìm`)
+  }
+  assert.equal(o, 5)
+  // Chiều đỏ: bản chép truyền coTim luôn đúng → viewer thấy ô tìm.
+  const dot = await banChep<{ PeopleContent: typeof PeopleContent }>("src/components/ops/people/people-content.tsx", [["      coTim={xem}", "      coTim"]])
+  const h = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: null, q: "", page: 1 } }))
+  assert.throws(() => assert.ok(!h.includes('name="q"'), "CTV-AC-2 viewer thấy ô tìm"), /CTV-AC-2 viewer thấy ô tìm/)
+})
+
+test("CTV-AC-3 viewer: lọc nguồn vẫn áp, q bị bỏ (so hai tập)", async () => {
+  const listPage = await banChep<PageMod>("src/app/ops/people/page.tsx", [STUB])
+  const { PeopleContent } = await import("../src/components/ops/people/people-content")
+  const qua = (role: string, sp: Record<string, string>) => quaPage(listPage, PeopleContent, { searchParams: Promise.resolve(sp) }, user(role))
+  const coQ = await qua("viewer", { source: "S05", q: "zzz" })
+  const khongQ = await qua("viewer", { source: "S05" })
+  assert.deepEqual([maNguoi(coQ), dauTrang(coQ)[0]], [maNguoi(khongQ), dauTrang(khongQ)[0]], "CTV-AC-3 viewer mất lọc nguồn")
+  assert.deepEqual(maNguoi(coQ), [P[7]])
+  assert.match(await qua("ops", { source: "S05", q: "zzz" }), /Không có người khớp bộ lọc/)
+  // Chiều đỏ: bản chép bỏ luôn source cho viewer.
+  const dot = await banChep<{ PeopleContent: typeof PeopleContent }>("src/components/ops/people/people-content.tsx", [
+    ["const locDung = xem ? loc : { ...loc, q: \"\" }", "const locDung = xem ? loc : { ...loc, q: \"\", source: null }"],
+  ])
+  const hDot = renderToStaticMarkup(await dot.PeopleContent({ user: user("viewer") as User, loc: { source: "S05", q: "zzz", page: 1 } }))
+  assert.throws(() => assert.deepEqual(maNguoi(hDot), maNguoi(khongQ), "CTV-AC-3 viewer mất lọc nguồn"), /CTV-AC-3 viewer mất lọc nguồn/)
 })
 
 // Cuối tệp: dựng RegionError trong jsdom với con ném lỗi → câu «Thử lại» hiện (ranh giới lỗi chỉ chạy khi dựng phía khách).
