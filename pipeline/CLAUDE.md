@@ -21,6 +21,8 @@ Reads raw snapshots from `../collector/snapshots/` → validates → transforms 
 | phat-bieu-cat-chuyen.mjs | PL15 bước chuyển: giá trị có sẵn của năm cột → phát biểu `legacy`, mở cổng phân xử; `--thu` ROLLBACK |
 | scripts/dung-lai-canonical.mjs | Thước PL15: xoá năm cột rồi dựng lại trong giao dịch ROLLBACK (0 ô lệch); `--nguon-goc`; `--doi-chung=…` |
 | scripts/phat-bieu-chay-that.mjs | PL15: ba transform + phân xử trên dữ liệu thật, đo giây, ROLLBACK (`--thu`) |
+| trang-thai-chao.mjs | PL19: bộ ghi bằng chứng + phân xử trạng thái chào mọi tin (059 `ghi_bang_chung_chao`, `resolve_offer_status`), in đếm năm trạng thái — bước cloud-sync ngay trước `bac-du-lieu`; khoá 56056 |
+| scripts/trang-thai-roundtrip.mjs | Thước PL19 (AC-8): trang-thai-chao hai lần trên DB thử, đếm độc lập, chiều đỏ DB không tới được |
 | dung-nguoi.mjs | DB2b: dựng danh bạ Người + vai người đăng một lượt (chạy đêm đi qua `buocDem` của refresh-bait-gap); `--thu` ROLLBACK |
 | scripts/nap-lai-nguoi.mjs | Thước DB2b: hai lượt transform + bước đêm trong giao dịch ROLLBACK, lượt 2 bằng 0, đối chứng bỏ tra bí danh; `--doi-chung-hong` |
 | label-mau.mjs | PL8: tập tin mẫu lát OCP1 có đáp án biết sẵn (`--lat ocp1 --n 200 --seed s [--out f.jsonl]`); hàm thuần `lib/tap-mau.mjs` + khuôn `lib/khuon-mau-ocp1.mjs`, không DB, không đường tới canonical/stg |
@@ -45,6 +47,7 @@ nights (listing_id, night, available, price)
 market_metrics (area_id, month, listing_count, revenue, adr, occupancy, revpar)
 sale_offer_records (offer_id, …, retired_at, retired_reason, superseded_by, originating_system_key) — bảng bản ghi (044)
 sale_offers = VIEW sống của sale_offer_records (offer_id, area_id, kind, price_vnd, area_m2, confidence, …)
+history_transactional (resource_record_key = offer_id, field_name ListPrice|StandardStatus, change_type, …) — lịch sử giá/trạng thái (059, trigger trên sale_offer_records, chỉ local); property_price_history = VIEW gom theo căn
 market_asset_stats (area_id, kind, median_perm2, median_rent)
 parties / registry_aliases / registry_events / party_roles — danh bạ Người (055, chỉ-thêm, chỉ local; khoá `pty_<ULID>`)
 airdna_markets / airdna_scores / airdna_market_metrics

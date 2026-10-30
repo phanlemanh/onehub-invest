@@ -92,8 +92,9 @@ async function enrichedOffer(c, id, posts) {
   await writeOffers(c, SRC, [row(id, posts)]);
   // PL15: giá trị đã enrich trước vòng = phát biểu legacy (như DB sau cắt chuyển), không UPDATE thẳng.
   for (const [f, v] of [["property_type", "house"], ["street_raw", "Quang Trung"], ["bathrooms", "2"]]) {
-    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence)
-      VALUES ($1, $2, $3, 'observed', 'legacy', '045', jsonb_build_object('offer_id', $4::text))`, [`${SRC}:${posts[0]}`, f, v, id]);
+    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, method_version, evidence,
+        observed_at) VALUES ($1, $2, $3, 'observed', 'legacy', '045', jsonb_build_object('offer_id', $4::text), now())`,
+    [`${SRC}:${posts[0]}`, f, v, id]);
   }
   await c.query(`SELECT resolve_offer_fields(ARRAY[$1])`, [id]);
   const cardId = await card(c, id);
@@ -190,8 +191,8 @@ test("AC-2 offer kế có giá trị máy khác: quyết định người áp l�
   await withTx(async (c) => {
     const x = uid("x"); const y = uid("y");
     const { ids } = await enrichedOffer(c, x, ["p1"]);
-    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method)
-      VALUES ($1, 'property_type', 'apartment', 'observed', 'parser')`, [`${SRC}:p1`]);
+    await c.query(`INSERT INTO field_assertions (subject_key, field, value, evidence_tier, method, observed_at)
+      VALUES ($1, 'property_type', 'apartment', 'observed', 'parser', now())`, [`${SRC}:p1`]);
     await writeOffers(c, SRC, [row(y, ["p1"])]);
     const o = await offer(c, y);
     assert.equal(o.property_type, "house", "PL15 quyết định người áp lại phải thắng giá trị máy");
