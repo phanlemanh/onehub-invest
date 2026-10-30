@@ -1,0 +1,74 @@
+schema_version: 1
+feature_slug: judge-nguong-la-code
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-1 ma trận luật' trong agent/tests/judge-nguong.test.ts xanh (không DB, không model): ma trận viết trước 12 ô, số assert = 12 — (1) giá/m² lệch 5%, dt lệch 4%, cùng phường, cùng loại → yes; (2) giá/m² lệch 40% → no; (3) khác phường (cả hai có) → no; (4) khác loại (cả hai khác unknown) → no; (5) giá/m² lệch 20%, cùng phường, cùng loại → unsure; (6) thiếu diện tích một bên, còn lại khớp → unsure; (7) phường 'Phường Bình Thạnh' vs 'binh thanh' coi là cùng phường → yes; (8) loại 'unknown' một bên, giá lệch 5% → unsure (không no); (9) chỉ một bên có phường, còn lại khớp → unsure (không no); (10) giá/m² lệch đúng 15% (100 vs 117,647…, tức |a−b|/max = 0,15) → không yes; (11) giá/m² 100 vs 140 (lệch theo max 28,6%) → unsure, không no — ô phân biệt mẫu số: theo mẫu số min (40%) sẽ ra no; (12) giá/m² lệch đúng 0,30 theo max (100 vs 142,857…) → không no. Mỗi ô chạy cả hai chiều A↔B, kết luận bằng nhau. Đối chứng đỏ cùng fixture: ô (1) với dt lệch 12% → không còn yes; hàm lệch thay bằng |a−b|/min trên ô (11) → ra no, thông điệp ghim. Ghim 'AC-1 luật sai ở ô: <ô>'; hằng NGUONG xuất từ judge-entity.ts bằng {giaM2YesMax:0.15, dienTichYesMax:0.10, giaM2NoMin:0.30}."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/tests/judge-nguong.test.ts]
+
+  - id: E2
+    criterion: AC-2
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; hai ca xanh. (a) 'AC-2 prompt không ngưỡng' trong agent/tests/judge-nguong.test.ts: với judgeEntityAgent.systemPrompt và buildJudgeInput(pair, apNguong(pair)) của ô (1)–(9) ma trận AC-1 (ô 10–12 sát ngưỡng để ngoài vì số đo trùng 15/30), hàm soi chung (xuất từ tệp test, dùng lại ở judge-run.test.ts) không thấy: '15%', '10%', '30%', '0.15', '0.1', '0.3' đứng một mình, hay mẫu /[<>≤≥]\\s*\\d/. Đối chứng đỏ cùng hàm soi: systemPrompt cũ (chép nguyên văn từ git trước vòng, nhúng trong test) → hàm soi báo 'AC-2 prompt chứa ngưỡng'. (b) 'AC-2 prompt model nhận' trong agent/tests/judge-run.test.ts: model giả bắt nguyên văn prompt (system + user) mà doGenerate nhận trong chamMotLuot cho fixture phủ yes/no/unsure → hàm soi không thấy ngưỡng; đối chứng đỏ: một đoạn có NGUONG nối vào prompt bắt được → hàm soi báo 'AC-2 prompt chứa ngưỡng'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/scripts/judge-run.ts, agent/tests/judge-nguong.test.ts, agent/tests/judge-run.test.ts]
+
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-3 model trái luật' trong agent/tests/judge-run.test.ts xanh (DB thử oneinvest_p3_judge_test_<pid>, model giả MockLanguageModelV4): cặp luật nói yes, model trả '{\"same_house\":\"no\",\"giai_thich\":\"GT-MAU\"}' → thẻ ai_suggestion = 'yes', evidence.cham.ket_luan = 'yes', ai_reasoning chứa 'GT-MAU' và không chứa 'same_house'. Đối chứng đỏ: hàm kiểm chạy trên thẻ giả ai_suggestion='no' → báo 'AC-3 model đè kết luận luật'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E4
+    criterion: AC-4
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-4 model và trace' trong agent/tests/judge-run.test.ts xanh (DB thử có 052_ai_calls.sql thật, DATABASE_URL trỏ DB thử, bản bọc gọi tiếp recordCallDb thật): một lượt chamMotLuot với model giả modelId 'mock-giai-thich' trên 1 cặp → bảng ai_calls tăng đúng 1 dòng viec='judge-entity'; thẻ evidence.cham.model = cột model của dòng ấy = 'mock-giai-thich', evidence.cham.trace = cột trace của dòng ấy, tệp trace tồn tại, evidence.cham.ok = true; ai_reasoning kết bằng 'LLM mock-giai-thich · trace <tên tệp trace>'; ai_confidence IS NULL. Đối chứng đỏ: bản bọc không gọi recordCallDb → hàm kiểm báo 'AC-4 sổ ai_calls thiếu cuộc gọi'; thẻ thiếu cham.trace → 'AC-4 thẻ thiếu model/trace'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts, db/migrations/052_ai_calls.sql]
+
+  - id: E5
+    criterion: AC-5
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-5 model lỗi' xanh, ma trận 3 ô viết trước: (a) model ném lỗi có responseBody chứa 'PROMPT-MAU' → thẻ có ai_suggestion = kết luận luật, ai_reasoning chứa lý do luật tiếng Việt, cham.ok=false, cham.model='mock-loi', cham.loi ≤ 80 ký tự không chứa 'PROMPT-MAU'; (b) model trả 'khong phai json' → cham.ok=false, cham.loi='sai-khuon', kết luận luật giữ; (c) khongLlm=true → model không được gọi (bộ đếm doGenerate = 0), cham.model=null, cham.loi='khong-llm'. Đối chứng đỏ: hàm kiểm trên thẻ ai_suggestion NULL → 'AC-5 lỗi model làm mất kết luận'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/src/agents/judge-entity.ts, agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E6
+    criterion: AC-6
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-6 sinh thẻ' xanh: DB thử có 3 cặp property_candidates needs_llm + 1 cặp pending (không phải needs_llm), 0 thẻ → chamMotLuot(khongLlm) → đúng 3 thẻ entity_match pending, item_id 'pair:<offer_a>|<offer_b>', evidence.offer_a.offer_id/offer_b.offer_id khớp cặp, ai_suggestion ∈ {yes,no,unsure} khớp apNguong; cặp pending không có thẻ; tập khoá của evidence.offer_a và evidence.offer_b BẰNG tập khoá rút từ jsonb_build_object của 'offer_a'/'offer_b' trong đoạn seed của db/migrations/029_review_queue.sql (đọc tệp thật), title mở bằng 'Cùng căn? '. Câu đếm đường đo của design doc §4 = 0. Đối chứng đỏ cùng fixture: bỏ qua bước sinh (chỉ cập nhật thẻ có sẵn) → câu đếm = 3, thông điệp 'AC-6 ứng viên thiếu thẻ: <cặp>'; bộ khoá thiếu 'phuong' → 'AC-6 thẻ lệch khuôn seed 029: <khoá>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts, db/migrations/029_review_queue.sql]
+
+  - id: E7
+    criterion: AC-7
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-7 chạy lại' xanh: sau lượt 1 của fixture AC-6, thêm một thẻ pending cũ ghi cặp thứ tư theo chiều ngược 'pair:<b>|<a>' với ai_suggestion NULL; lượt 2 → tổng số thẻ entity_match chỉ tăng 0 so với trước lượt 2, id các thẻ không đổi, thẻ chiều ngược được điền ai_suggestion + evidence.cham, evidence.offer_a giữ nguyên. Đối chứng đỏ: hàm đếm trên bảng có thêm một thẻ trùng cặp → 'AC-7 nhân đôi thẻ: <cặp>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-8 thẻ đã quyết' xanh, ma trận 3 ô (approved · rejected · deferred), mỗi ô một cặp needs_llm có thẻ trạng thái ấy với ai_suggestion 'GIU' và decided_by 'nguoi-thu' → sau chamMotLuot: thẻ đó y nguyên (so cả dòng to_jsonb), không thẻ pending nào cho cặp. Đối chứng đỏ: hàm so trên thẻ đã đổi ai_suggestion → 'AC-8 sửa thẻ người đã quyết: <id>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
+
+  - id: E9
+    criterion: AC-9
+    executor: test
+    cmd: config:executors.test.agent
+    expected: "exit 0; ca 'AC-9 không ghi ngoài hàng duyệt' xanh: băm md5 của string_agg toàn bảng property_candidates và sale_offers (sắp theo khoá) trước và sau chamMotLuot (fixture AC-6, cả nhánh có model và khongLlm) bằng nhau. Đối chứng đỏ: UPDATE một dòng property_candidates trong test → băm khác, thông điệp 'AC-9 judge ghi ngoài hàng duyệt: <bảng>'."
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+    paths: [agent/scripts/judge-run.ts, agent/tests/judge-run.test.ts]
