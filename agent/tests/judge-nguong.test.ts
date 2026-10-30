@@ -98,6 +98,24 @@ test("AC-2 đối chứng đỏ: prompt cũ bị hàm soi bắt", () => {
   assert.throws(() => kiemKhongNguong(PROMPT_CU), /AC-2 prompt chứa ngưỡng/);
 });
 
+// S4 r1 (AC-2): lệch sát ngưỡng không được in thành đúng số ngưỡng, và chữ không trái kết luận.
+test("AC-2 sát ngưỡng — lý do không làm tròn thành số ngưỡng", () => {
+  const SAT: { p: PairData; ky_vong: KetLuan; chu: string }[] = [
+    { p: cap(voi({ perm2: 85.1 * TR }), voi({ perm2: 100 * TR })), ky_vong: "yes", chu: "giá/m² lệch 14,9%" },
+    { p: cap(voi({ perm2: 70.4 * TR }), voi({ perm2: 100 * TR })), ky_vong: "unsure", chu: "giá/m² lệch 29,6%" },
+    { p: cap(voi({ perm2: 69.6 * TR }), voi({ perm2: 100 * TR })), ky_vong: "no", chu: "giá/m² lệch 30,4%" },
+    { p: cap(voi({ area: 45.25 }), voi({ perm2: 105 * TR, area: 50 })), ky_vong: "yes", chu: "diện tích lệch 9,5%" },
+  ];
+  for (const s of SAT) {
+    const kq = apNguong(s.p);
+    assert.equal(kq.same_house, s.ky_vong);
+    assert.ok(kq.ly_do.some((l) => l.cau === s.chu), `thiếu «${s.chu}»: ${kq.ly_do.map((l) => l.cau).join("; ")}`);
+    kiemKhongNguong(buildJudgeInput(s.p, kq));
+  }
+  // đối chứng đỏ: định dạng cũ Math.round in «15%» cho lệch 0,149
+  assert.throws(() => kiemKhongNguong(`giá/m² lệch ${Math.round(0.149 * 100)}%`), /AC-2 prompt chứa ngưỡng/);
+});
+
 test("parseGiaiThich chỉ rút lời giải thích", () => {
   assert.equal(parseGiaiThich('{"same_house":"no","giai_thich":"GT-MAU"}'), "GT-MAU");
   assert.equal(parseGiaiThich("khong phai json"), null);

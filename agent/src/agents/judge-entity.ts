@@ -46,7 +46,9 @@ const loaiHinh = (s: string | null): string | null => {
 };
 const giaM2 = (t: PairData["a"] | PairData["b"]): number | null =>
   t.pricePerm2 ?? (t.priceVnd !== null && t.areaM2 ? t.priceVnd / t.areaM2 : null);
-const phanTram = (x: number) => `${Math.round(x * 100)}%`;
+/** Độ lệch thành phần trăm một chữ số thập phân, cắt xuống (không làm tròn lên): 0,149 phải hiện «14,9%», không thành
+ *  «15%» — làm tròn sát ngưỡng in đúng số ngưỡng vào prompt và trái với kết luận (S4 r1, AC-2). */
+export const phanTram = (x: number) => `${(Math.floor(x * 1000 + 1e-6) / 10).toFixed(1).replace(".", ",")}%`;
 
 /** Luật ghép căn — tất định, đối xứng A↔B. `lechFn` chỉ để test đối chứng. */
 export function apNguong(pair: PairData, lechFn: typeof lech = lech): KetQuaLuat {
