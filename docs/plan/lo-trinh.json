@@ -2847,7 +2847,7 @@
         "pipeline/transform-zalo.mjs",
         "pipeline/transform-fb.mjs"
       ],
-      "ghi_chu": "Dãy P3, T3 (migration + sync-cloud). 11 tiêu chí: lưu số gốc, đổi khoá và view sellers phải đi một lượt để khoá SĐT chỉ đổi một lần (Hỏi-C) — tách ra thì đổi khoá hai lần. Số migration do điều phối liên làn cấp. Đưa số gốc lên cloud là quyết định riêng, không thuộc hàng này."
+      "ghi_chu": "Dãy P3, T3 (migration + sync-cloud). 11 tiêu chí: lưu số gốc, đổi khoá và view sellers phải đi một lượt để khoá SĐT chỉ đổi một lần (Hỏi-C) — tách ra thì đổi khoá hai lần. Migration số 060 (điều phối liên làn cấp 30/10, sổ SO-MIGRATION); áp lên cloud chỉ khi Mạnh duyệt. Đưa số gốc lên cloud là quyết định riêng, không thuộc hàng này."
     },
     {
       "dung_tren": [
