@@ -5,7 +5,7 @@ slug: man-gan-nhan-mu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api, cli]
-status: implemented
+status: verified
 design_doc: docs/superpowers/specs/2026-10-30-man-gan-nhan-mu-design.md
 approved_by: Mạnh
 approved_at: 2026-10-30
