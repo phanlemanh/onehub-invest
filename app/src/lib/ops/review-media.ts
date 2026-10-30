@@ -5,14 +5,16 @@ import { isAdmin } from "@/lib/ops-access";
 import { snapshotMediaUrl } from "./zalo-media";
 
 /**
- * Ảnh tin cho thẻ ở hàng duyệt /ops/review — người duyệt nhìn ảnh để quyết
- * (vd. E1 ghi «đất» mà ảnh là nhà 4 tầng). Ảnh tin là PII tầng A (ADR-0007):
- * chỉ admin, chỉ DB local (`stg_zalo_posts` không sync cloud).
+ * Ảnh tin cho thẻ ở hàng duyệt /ops/review và hồ sơ tin của /ops/data-flow — người duyệt nhìn ảnh để quyết
+ * (vd. E1 ghi «đất» mà ảnh là nhà 4 tầng). Ảnh tin chỉ cho admin, chỉ DB máy thu: bảng `media` không sync cloud
+ * (URL ảnh S06 mang tên miền nguồn — tầng A).
  *
- * Nguồn, theo thứ tự `sale_offers.post_ids`:
- *   1. `stg_zalo_posts.media_files` (035) — file N1 đã tải vào raw snapshot → qua /api/zalo-media
- *   2. `media_files[].url` lỗi tải + `stg_zalo_posts.media[].url` — URL gốc, fbcdn/zdn có hạn
- *   3. `evidence.*.image_url` (S06 Chợ Tốt, không có post)
+ * Nguồn: bảng `media` (053, RESO Media; NH1 media-canonical-reso) do pipeline/transform-media.mjs dựng mỗi đêm
+ * cho S03, S05, S06 theo `media_order`:
+ *   1. dòng có `local_file` — ảnh đã tải vào raw snapshot → qua /api/zalo-media
+ *   2. dòng chỉ có `media_url` — URL gốc, fbcdn/zdn có hạn
+ *   3. `evidence.*.image_url` của thẻ mẫu, đứng cuối
+ * `buildOfferImages` (ghép từ bài) giữ làm thước đối chiếu: bên ghi dựng dòng media theo đúng luật của nó.
  */
 
 export type ReviewImage = {
@@ -38,7 +40,10 @@ export type PostMediaRow = {
 
 export type ReviewMediaItem = { id: number; item_type: string; evidence: unknown };
 
-type Query = (text: string, values: unknown[]) => Promise<{ rows: PostMediaRow[] }>;
+/** Một dòng bảng `media` mà bên đọc cần, theo `media_order` của tin. */
+export type MediaRow = { offer_id: string; media_url: string | null; local_file: string | null };
+
+export type MediaRowQuery = (text: string, values: unknown[]) => Promise<{ rows: MediaRow[] }>;
 
 export const MAX_IMAGES_PER_OFFER = 12;
 
@@ -100,6 +105,50 @@ export function buildOfferImages(posts: PostMediaRow[], evidenceImageUrl?: unkno
   return out;
 }
 
+/** `local_file` (`<snapshotId>/media/<tên>`) → URL /api/zalo-media; null khi khuôn hỏng. */
+function localMediaSrc(localFile: string | null): string | null {
+  if (!localFile) return null;
+  const cut = localFile.indexOf("/");
+  return cut > 0 ? snapshotMediaUrl(localFile.slice(0, cut), localFile.slice(cut + 1)) : null;
+}
+
+/** Danh sách ảnh của một tin từ dòng `media` (đã theo media_order): ảnh đã tải trước, rồi URL gốc; không trùng; tối đa 12. */
+export function buildMediaImages(rows: MediaRow[], evidenceImageUrl?: unknown): ReviewImage[] {
+  const out: ReviewImage[] = [];
+  const seen = new Set<string>();
+  const push = (img: ReviewImage | null) => {
+    if (!img || seen.has(img.src) || out.length >= MAX_IMAGES_PER_OFFER) return;
+    seen.add(img.src);
+    out.push(img);
+  };
+  for (const r of rows) {
+    const src = localMediaSrc(r.local_file);
+    if (!src) continue;
+    push({ src, origin: "local", expiring: false });
+    const orig = remoteImage(r.media_url);
+    if (orig) seen.add(orig.src);
+  }
+  for (const r of rows) if (!localMediaSrc(r.local_file)) push(remoteImage(r.media_url));
+  push(remoteImage(evidenceImageUrl));
+  return out;
+}
+
+const MEDIA_SQL = `
+  SELECT resource_record_key AS offer_id, media_url, local_file
+  FROM media
+  WHERE resource_record_key = ANY($1::text[])
+  ORDER BY resource_record_key, media_order`;
+
+const defaultMediaQuery: MediaRowQuery = (text, values) => pool.query<MediaRow>(text, values);
+
+/** Dòng `media` của các tin, khoá theo offer_id, một truy vấn. Lỗi DB (kể cả 42P01 ở cloud) để người gọi quyết. */
+export async function loadOfferMedia(offerIds: string[], query: MediaRowQuery = defaultMediaQuery): Promise<Map<string, MediaRow[]>> {
+  const { rows } = await query(MEDIA_SQL, [offerIds]);
+  const byOffer = new Map<string, MediaRow[]>();
+  for (const r of rows) byOffer.set(r.offer_id, [...(byOffer.get(r.offer_id) ?? []), r]);
+  return byOffer;
+}
+
 type Side = { key: keyof ReviewMedia; offerId: string; imageUrl: unknown };
 
 function sidesOf(item: ReviewMediaItem): Side[] {
@@ -132,45 +181,32 @@ export function stripEvidenceImages(evidence: unknown): Record<string, unknown> 
   return ev;
 }
 
-const SQL = `
-  SELECT o.offer_id, p.snapshot_id, p.media, p.media_files
-  FROM sale_offers o
-  CROSS JOIN LATERAL unnest(o.post_ids) WITH ORDINALITY AS u(post_id, ord)
-  JOIN stg_zalo_posts p ON p.post_id = u.post_id
-  WHERE o.offer_id = ANY($1::text[])
-  ORDER BY o.offer_id, u.ord`;
-
-const defaultQuery: Query = (text, values) => pool.query<PostMediaRow>(text, values);
-
 /**
  * Ảnh cho từng thẻ, khoá theo `review_queue.id`. Một truy vấn cho cả hàng duyệt.
- * Không phải admin → `{}` (không chạm DB). DB thiếu `stg_zalo_posts` (cloud) → `{}`.
+ * Không phải admin → `{}` (không chạm DB). DB thiếu bảng `media` (cloud) → `{}`.
  */
 export async function loadReviewMedia(
   items: ReviewMediaItem[],
   user: User | null,
-  query: Query = defaultQuery,
+  query: MediaRowQuery = defaultMediaQuery,
 ): Promise<Record<number, ReviewMedia>> {
   if (!isAdmin(user)) return {};
   const plan = items.map((item) => ({ id: item.id, sides: sidesOf(item) })).filter((p) => p.sides.length > 0);
   if (plan.length === 0) return {};
 
   const offerIds = [...new Set(plan.flatMap((p) => p.sides.map((s) => s.offerId)))];
-  let rows: PostMediaRow[];
+  let byOffer: Map<string, MediaRow[]>;
   try {
-    ({ rows } = await query(SQL, [offerIds]));
+    byOffer = await loadOfferMedia(offerIds, query);
   } catch (err) {
-    if ((err as { code?: string }).code === "42P01") return {}; // undefined_table: cloud không có stg_*
+    if ((err as { code?: string }).code === "42P01") return {}; // undefined_table: cloud không có bảng media
     throw err;
   }
-
-  const posts = new Map<string, PostMediaRow[]>();
-  for (const r of rows) posts.set(r.offer_id, [...(posts.get(r.offer_id) ?? []), r]);
 
   const out: Record<number, ReviewMedia> = {};
   for (const { id, sides } of plan) {
     const media: ReviewMedia = {};
-    for (const s of sides) media[s.key] = buildOfferImages(posts.get(s.offerId) ?? [], s.imageUrl);
+    for (const s of sides) media[s.key] = buildMediaImages(byOffer.get(s.offerId) ?? [], s.imageUrl);
     out[id] = media;
   }
   return out;

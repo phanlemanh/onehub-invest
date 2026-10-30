@@ -1,0 +1,13 @@
+== requests ==
+### Result
+
+Note: 53 static requests not shown, run with --static option to see them.
+
+== console (warning+) ==
+### Result
+Total messages: 5 (Errors: 0, Warnings: 3)
+Returning 3 messages for level "warning"
+
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/ops/data-flow:0
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/ops/data-flow:0
+[WARNING] The resource http://localhost:3462/_next/static/chunks/%5Bnext%5D_internal_font_google_0tyzi283u5s1q._.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3462/ops/data-flow:0

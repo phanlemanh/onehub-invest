@@ -142,6 +142,47 @@ canonical:
       checked_on: "2026-10-22"
 
 # --------------------------------------------------------------------------
+# LỚP MEDIA — bảng `media` (migration 053, NH1 media-canonical-reso): ảnh tin theo resource Media
+# của RESO DD 2.1, một dòng mỗi ảnh khác nhau của một tin. Bên ghi pipeline/transform-media.mjs.
+# KHÔNG sync cloud (media_url S06 mang tên miền nguồn, tầng A). ResourceName = Property và
+# MediaCategory = Photo ngầm hiểu (bảng chỉ chứa ảnh của tin) — thêm cột kèm lookup khi có loại khác.
+# --------------------------------------------------------------------------
+media:
+  table: media
+  dd_resource: Media
+  dd_version: "2.1"
+  checked_on: "2026-10-30"  # tra research-local/reso/dd-2.1.json
+  fields:
+    media_key:
+      dd: MediaKey
+      note: "md5(resource_record_key | local_file ?? media_url) — ổn định qua các lượt nạp"
+    resource_record_key:
+      dd: ResourceRecordKey
+      note: "offer_id (FK sale_offer_records); ResourceName = Property ngầm hiểu"
+    originating_system_name:
+      dd: OriginatingSystemName
+      note: "mã S0x (ADR-0007), không phải tên nguồn thật"
+    originating_system_resource_record_key:
+      dd: OriginatingSystemResourceRecordKey
+      note: "post_id (S03/S05) hoặc list_id (S06) — bản ghi gốc ở nguồn"
+    media_url:
+      dd: MediaURL
+      note: "URL gốc http(s); tầng A với S06 (tên miền nguồn) — chỉ máy thu"
+    media_order:
+      dd: Order
+      note: "ảnh đã tải trước, rồi URL gốc (luật ghép của review-media-backend AC-5)"
+    local_file:
+      dd: null
+      rationale: >
+        con trỏ tới ảnh đã tải vào raw snapshot của máy thu, dạng <snapshotId>/media/<tên>
+        (route /api/zalo-media) — DD 2.1 resource Media không có trường cho bản lưu cục bộ;
+        không phải trường miền nghiệp vụ. DQ: dq_check_results `media:local-file` mỗi nguồn mỗi lượt.
+      checked_on: "2026-10-30"
+    media_modification_timestamp:
+      dd: MediaModificationTimestamp
+      note: "đổi khi nội dung dòng đổi; dòng không đổi giữ nguyên"
+
+# --------------------------------------------------------------------------
 # LỚP NGUỒN — staging → canonical
 # --------------------------------------------------------------------------
 sources:
@@ -154,7 +195,8 @@ sources:
     fields:
       text: "→ price_vnd, area_m2, bedrooms, phuong_raw, kind (regex + fallback)"
       post_id: "→ thành phần hash offer_id"
-      media_files: "chưa map — ảnh N1 đã tải (DATA-CONTRACT v2, PII tầng A, chỉ local); lên canonical → RESO Media"
+      media_files: "→ bảng media (053) qua transform-media.mjs: local_file khi tải được, media_url khi lỗi — chỉ máy thu"
+      media: "→ bảng media (053): URL gốc chưa có bản tải, đứng sau ảnh đã tải"
   S05:
     label: "facebook groups (P2)"
     staging: stg_zalo_posts
@@ -177,6 +219,7 @@ sources:
       "ward_name_v3 | ward_name | area_name + subject": "→ phuong_raw / district_raw (match areas)"
       "seller.full_name": "→ seller_name"
       "payload.account_id": "→ seller_ref"
+      images: "→ bảng media (053) qua transform-media.mjs: mảng images.images, giữ thứ tự, bỏ trùng — URL mang tên miền nguồn, chỉ máy thu"
     da_dua_sang_canonical:
       - "category → property_type (migration 025 — ĐÃ LÀM)"
     chua_dua_sang_canonical:

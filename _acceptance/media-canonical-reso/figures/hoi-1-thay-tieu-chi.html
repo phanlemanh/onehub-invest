@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hỏi-1 thay tiêu chí</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;1,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f5f5f5;
+      --color-ink:     #2d3142;
+      --color-muted:   #4f5d75;
+      --color-accent:  #eb6c36;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Lora', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1040px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--color-ink);
+      margin-bottom: 0.5rem;
+    }
+    .sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Cổng Phạm vi · media-canonical-reso · hoi-1-thay-tieu-chi</p>
+    <h1>Hỏi-1: thay năm ô đã ký bằng tiêu chí NH1, hay giữ đường đọc bài song song</h1>
+    <p class="sub">NH1 · design §2.4 · AC-5, AC-6, AC-7, AC-10 · hai nhánh, nhánh tô cam là nhánh máy khuyên</p>
+
+    <svg viewBox="0 0 1000 584" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ============ Khung nhánh (nền, vẽ trước) ============ -->
+      <rect x="48" y="136" width="448" height="356" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="64" y="160" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH A · MÁY KHUYÊN</text>
+
+      <rect x="504" y="136" width="448" height="356" rx="8" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="520" y="160" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">NHÁNH B</text>
+
+      <!-- ============ Mũi tên (vẽ trước nút) ============ -->
+      <!-- gốc → hai nhánh: hai điểm gắn riêng ở cạnh dưới gốc -->
+      <path d="M484 88 V100 Q484 108 476 108 H280 Q272 108 272 116 V136" fill="none" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+      <path d="M516 88 V100 Q516 108 524 108 H720 Q728 108 728 116 V136" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <!-- chuỗi nhánh A -->
+      <line x1="272" y1="264" x2="272" y2="288" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="272" y1="328" x2="272" y2="352" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- ============ Gốc ============ -->
+      <rect x="248" y="24" width="504" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="248" y="24" width="504" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="264" y="44" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỎI-1 · AC-10</text>
+      <text x="500" y="70" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Hai hồ sơ đã ký ghim điều NH1 đổi</text>
+
+      <!-- ============ Nhánh A ============ -->
+      <rect x="64" y="176" width="416" height="88" rx="6" fill="#f5f5f5"/>
+      <rect x="64" y="176" width="416" height="88" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="80" y="200" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">năm ô cũ</text>
+      <text x="80" y="224" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">review-media-backend<tspan font-family="'Geist', sans-serif" font-size="12">  E6, E7, E8</tspan></text>
+      <text x="80" y="248" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">ops-dong-chay-df0<tspan font-family="'Geist', sans-serif" font-size="12">  E15, E16</tspan></text>
+
+      <rect x="64" y="288" width="416" height="40" rx="6" fill="#f5f5f5"/>
+      <rect x="64" y="288" width="416" height="40" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="272" y="312" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">not-run + superseded_by</text>
+
+      <rect x="64" y="352" width="416" height="40" rx="6" fill="#f5f5f5"/>
+      <rect x="64" y="352" width="416" height="40" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="272" y="376" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">AC-5, AC-6, AC-7 của NH1</text>
+
+      <text x="64" y="424" fill="#ba4513" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỆ QUẢ</text>
+      <text x="64" y="448" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif">E5 giữ làm thước đối chiếu</text>
+      <text x="64" y="468" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">một nguồn sự thật</text>
+
+      <!-- ============ Nhánh B ============ -->
+      <rect x="520" y="176" width="416" height="88" rx="6" fill="#f5f5f5"/>
+      <rect x="520" y="176" width="416" height="88" rx="6" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="728" y="224" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">giữ đường đọc bài song song</text>
+
+      <text x="520" y="424" fill="#4f5d75" font-size="9" font-weight="500" font-family="'Geist Mono', monospace" letter-spacing="0.14em">HỆ QUẢ</text>
+      <text x="520" y="448" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif">hai nguồn sự thật cho dải ảnh</text>
+      <text x="520" y="468" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif">S06 vẫn không ảnh ở đường cũ</text>
+
+      <!-- ============ Chú giải ============ -->
+      <line x1="48" y1="516" x2="952" y2="516" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+      <text x="48" y="540" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ GIẢI</text>
+
+      <rect x="48" y="552" width="24" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+      <text x="80" y="562" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh máy khuyên</text>
+
+      <rect x="228" y="552" width="24" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+      <text x="260" y="562" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Nhánh còn lại</text>
+
+      <rect x="408" y="552" width="24" height="12" rx="2" fill="#ffffff" stroke="#bfc0c0" stroke-width="1"/>
+      <text x="440" y="562" fill="#4f5d75" font-size="9" font-family="'Geist', sans-serif">Bước của nhánh</text>
+    </svg>
+  </div>
+</body>
+</html>
