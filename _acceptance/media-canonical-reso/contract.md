@@ -5,7 +5,7 @@ slug: media-canonical-reso
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (053) + pipeline/sync-cloud.mjs nằm trong t3_paths
 surfaces: [ui, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-30-media-canonical-reso-design.md
 approved_by: Mạnh
 approved_at: 2026-10-30
@@ -112,3 +112,20 @@ này. Bảng chỉ ở máy thu: URL ảnh S06 mang tên miền nguồn (tầng 
   risk-premortem), bốn trục và Core/Later/Never ghi ở đó.
 - Mọi phép đo chạm DB chạy trên DB thử `oneinvest_p2_media`. 053 không áp lên `oneinvest` :5433 trước khi gộp; bước sau
   gộp (`pg_dump`, áp 053, chạy `transform-media.mjs` một lần, xoá DB thử) do giám sát giao.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: probe «không lùi» bỏ qua mọi vi phạm của chính hồ sơ trừ «evidence is stale», rộng hơn lời E12; lưới trước-merge vẫn chặn các vi phạm ấy.
+  - Ngoài-2: tệp bằng chứng mạng của bước chụp màn lượt 2 không còn ghi mã trả về của ảnh; ảnh chụp vẫn cho thấy ảnh hiện đúng.
+  - Ngoài-3: bộ phân loại của probe «không lùi» chưa có ca thử chiều đỏ cho vi phạm lạ của chính hồ sơ.
+  - Ngoài-4: ảnh tin S05 chỉ được dựng ở lượt đêm của job S03, không ngay sau job dựng tin S05; tin S05 mới có thể chưa có ảnh tới lượt đêm kế.
+  - Ngoài-6: job S05 (apify-facebook-daily) không có bước dựng ảnh; khi bật lại S05, tin mới có thể «không có ảnh» tới khoảng 18 giờ.
+  - Ngoài-7: chiều đỏ của ca tương đương NH-AC-3 không đo đúng đột biến đã khai (đảo thứ tự), chỉ so với một đầu vào khác.
+  - Ngoài-8: chiều đỏ «ảnh phải thuộc đúng tin đang mở» chỉ đổi dữ liệu vào, không đổi component.
+  - Ngoài-9: ca «hai bản regex» tự dựng lại luật trong test thay vì gọi hàm của bên ghi.
+  - Ngoài-10: (trùng Ngoài-4, lượt 1) ảnh S05 dựng ở job zalo-import thay vì job dựng tin S05.
+  - Ngoài-11: (trùng Ngoài-6, lượt 1) job S05 không gọi bước dựng ảnh.
+  - Ngoài-12: nếu sau gộp quên áp 053 ở máy thu, Hàng duyệt và hồ sơ tin báo «không có ảnh» thay vì báo lỗi; bước triển khai sau gộp chặn chỗ này.
+  - Ngoài-13: executor cũ review_media_roundtrip trong config.yaml còn trỏ tới tệp đã xoá; ai chạy nhầm sẽ gặp lỗi không tìm thấy tệp.
+  - Ngoài-14: probe «không lùi» coi hồ sơ không còn lệnh nào (0/0) là xanh.
+  - Ngoài-15: (trùng Ngoài-7) chiều đỏ NH-AC-3 không ghim thông điệp.
+  - Ngoài-16: truy vấn giả trong test app bỏ qua câu SQL thật, nên thứ tự media_order ở bên đọc không được đo bằng test (probe đầu-cuối đo trên dữ liệu thật).
+  - Ngoài-17: bộ phân loại của probe «không lùi» nhận dòng theo chuỗi con và chưa có đối chứng dương.

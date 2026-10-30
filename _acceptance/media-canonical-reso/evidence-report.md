@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 35b0178c274d558249a49e50e5d6bd3ec8ffc4f1
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: media-canonical-reso
