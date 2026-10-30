@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 97f6a455c7cd852ba85f33a9bf7558d419478621
+verified_commit: 71d13bca7d372b82393f7cac705cb12d28c1ddad
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -124,3 +124,7 @@ Round 2: E1, E2, E3 chạy lại trên bản sửa khoá cả cặp trong câu g
 ### Re-pin lần 1 — 2026-10-30, do eval bị thay bởi khoa-phuong-chung-phuong-so (P.12 = Phường 12)
 run_id: repin-20261030T164739Z-87521
 sha: 97f6a455c7cd852ba85f33a9bf7558d419478621 · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E4 · thay bởi hồ sơ đã ký: E4→khoa-phuong-chung-phuong-so#AC-2 · AC không có chốt máy: AC-4
+
+### Re-pin lần 2 — 2026-10-30, do phuong-so đổi khoaPhuong; trỏ eval thay thế tới phuong-so; gộp main
+run_id: repin-20261030T222258Z-25093
+sha: 71d13bca7d372b82393f7cac705cb12d28c1ddad · suites: 6 lệnh exit 0 · evals: 4/4 eval máy đạt kỳ vọng · không chạy theo hồ sơ: E4 · thay bởi hồ sơ đã ký: E4→phuong-so#AC-2 · AC không có chốt máy: AC-4

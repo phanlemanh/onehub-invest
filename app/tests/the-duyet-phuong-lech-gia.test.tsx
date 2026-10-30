@@ -96,36 +96,40 @@ test("TPL-AC-2 khác phường → Lệch, kể cả tên này là phần đầu
   assert.throws(() => kiemAc2(sai), /TPL-AC-2: Bình Thạnh ↔ Bình Thạnh Đông phải Lệch/)
 })
 
-// ---------- KP-AC-1 (hồ sơ khoa-phuong-chung-phuong-so; thay ca TPL-AC-3) ----------
-// Khoá phường chung: phường số ghi khác kiểu cùng khoá → Khớp; số khác, slug phuong-12 → Lệch.
+// ---------- PS-AC-1 (hồ sơ phuong-so; thay ca KP-AC-1 của khoa-phuong-chung-phuong-so) ----------
+// Phường số: cùng cấp, cùng số (bỏ số 0 đầu) → Khớp; khác cấp («Xã 12», «12» trần) hay khác số → Lệch. Gồm đủ 6 ô
+// KP-AC-1 cũ (ô phuong-12 nay Khớp).
 const SO: [string, string, "khop" | "lech"][] = [
   ["Phường 12", "P.12", "khop"],
   ["Phường 12", "P. 12", "khop"],
   ["Phường 12", " phường 12 ", "khop"],
+  ["Phường 01", "Phường 1", "khop"],
+  ["Phường 12", "P12", "khop"],
+  ["Phường 12", "phuong-12", "khop"],
+  ["Xã 12", "xa-12", "khop"],
+  ["Thị trấn 12", "thi-tran-12", "khop"],
   ["Phường 12", "Phường 21", "lech"],
   ["Phường 1", "Phường 12", "lech"],
-  ["Phường 12", "phuong-12", "lech"],
+  ["Xã 12", "Phường 12", "lech"],
+  ["Thị trấn 12", "Phường 12", "lech"],
+  ["12", "Phường 12", "lech"],
+  ["Xã 12", "Thị trấn 12", "lech"],
 ]
-function kiemKp1(mod: CanCuMod) {
+function kiemPs1(mod: CanCuMod) {
   let n = 0
   for (const [a, b, nhan] of SO) {
     for (const [x, y] of [[a, b], [b, a]]) {
-      assert.equal(soPhuong(mod, x, y).so, nhan, `KP-AC-1: ${x} ↔ ${y} phải ${nhan === "khop" ? "Khớp" : "Lệch"}`)
+      assert.equal(soPhuong(mod, x, y).so, nhan, `PS-AC-1: ${x} ↔ ${y} phải ${nhan === "khop" ? "Khớp" : "Lệch"}`)
       n++
     }
   }
-  assert.equal(SO.length, 6)
-  assert.equal(n, 12)
+  assert.equal(SO.length, 14)
+  assert.equal(n, 28)
 }
-test("KP-AC-1 phường số ghi khác kiểu → Khớp, số khác → Lệch (6 cặp viết trước, hai chiều)", async () => {
-  kiemKp1(canCu)
-  const sai = await banChep((s) =>
-    s.replace(
-      '  if (ka === "" || kb === "") return "thieu";\n',
-      '  if (ka === "" || kb === "") return "thieu";\n  if (/^\\d+$/.test(ka) || /^\\d+$/.test(kb)) return soGiaTri(a, b);\n',
-    ),
-  )
-  assert.throws(() => kiemKp1(sai), /KP-AC-1: Phường 12 ↔ P\.12 phải Khớp/)
+test("PS-AC-1 phường số theo cấp và số (14 cặp viết trước, hai chiều)", async () => {
+  kiemPs1(canCu)
+  const sai = await banChep((s) => s.replace(/^ {2}if \(so\) return .*\n/m, ""))
+  assert.throws(() => kiemPs1(sai), /PS-AC-1: Phường 01 ↔ Phường 1 phải Khớp/)
 })
 
 // ---------- TPL-AC-4 ----------

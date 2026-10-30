@@ -114,6 +114,8 @@ executors:
     enrich_giao_dich: "cd agent && node --import tsx --test tests/enrich-giao-dich.test.ts"   # enrich-chay-sau-nap AC-2..AC-4 — runEnrich trong BEGIN…ROLLBACK trên :5433, giao dịch mỗi tin = SAVEPOINT
     enrich_buoc_job: "node --test scripts/enrich-buoc-job.test.mjs"   # enrich-chay-sau-nap AC-6..AC-8 — bước enrich-run của zalo-import-daily (node giả, không DB)
     audit_loc: "cd app && node --import tsx --test tests/audit-loc.test.tsx"   # loc-enrich-thu-ops-audit AC-1..AC-5 — lược đồ tạm (ops_audit + phiên), route GET thật, public không chạm
+    sellers_them: "cd pipeline && node --test scripts/bait-gap-sellers.test.mjs"   # sellers-them-dong-lai (SD1) — fixture BEGIN…ROLLBACK trên :5433 (CI có lược đồ) + probe DB máy thu bỏ qua có lý do dưới CI
+    sellers_chip: "cd app && node --import tsx --test tests/sellers-chip.test.tsx"   # sellers-them-dong-lai AC-6 — dealsSql thật sau bước bait gap, ROLLBACK trên DB máy thu; bỏ qua có lý do dưới CI
     nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
     nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)
     nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
