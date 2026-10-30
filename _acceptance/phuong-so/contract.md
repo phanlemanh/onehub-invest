@@ -5,7 +5,7 @@ slug: phuong-so
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-30-phuong-so-design.md
@@ -60,3 +60,5 @@ Trục quét (preset entity-feature, làm tay vì chỉ có hai trục nhỏ): *
 
 - Ba eval đã ký bị thay khi hồ sơ này được ký: `khoa-phuong-chung-phuong-so/E1` → AC-1, `/E2` → AC-2, `/E3` → AC-3
   (bảng ở design doc §4).
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: tên phường số gõ thừa dấu chấm/phẩy ở cuối («Phường 12.») hay có hai dấu cách («Thị  trấn 12») được so như tên chữ, nên hàng Phường có thể báo Lệch hoặc Khớp sai so với dạng gõ sạch.
