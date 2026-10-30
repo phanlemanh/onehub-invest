@@ -5,7 +5,7 @@ slug: man-gan-nhan-mu
 owner: phanlemanh@gmail.com
 risk_tier: T3
 surfaces: [ui, api, cli]
-status: verified
+status: signed-off
 design_doc: docs/superpowers/specs/2026-10-30-man-gan-nhan-mu-design.md
 approved_by: Mạnh
 approved_at: 2026-10-30
@@ -117,3 +117,13 @@ khuyến nghị» — ngưỡng đồng thuận ≥ 0,9 trên phần gắn trùn
 - Câu chờ Mạnh ở Cổng Phạm vi: Hỏi-1 (cách đo đồng thuận), Hỏi-2 (ai được gắn), Hỏi-3 (chín trường lõi), Hỏi-4 (bỏ
   design-pass), Hỏi-5 (định nghĩa lát), Hỏi-6 (cắt cặp G3, co ngưỡng giờ công) — sổ
   quyết định, dòng dạng câu hỏi.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: bộ kiểm nghiệm thu có thể báo đỏ giả khi phép đo gắn mù và phép đo lấy mẫu chạy cùng lúc, vì tin thử của hai bên nằm cùng một tên nhóm; chạy lần lượt thì qua.
+  - Ngoài-2: cùng gốc với Ngoài-1 — phép đo lấy mẫu có thể nhận thêm một tin thử của phép đo khác và báo thiếu mẫu hay lệch tỉ lệ giả khi chạy song song.
+  - Ngoài-3: công cụ ngoài màn gửi đơn vị giá viết lạ (vd «tỷ» có dấu) thì giá bị lưu thấp hơn 1000 lần mà không báo lỗi; biểu mẫu trên màn chỉ gửi hai đơn vị chuẩn.
+  - Ngoài-4: lượt ghi gửi ô sai kiểu (số thay vì chữ) nhận lỗi chung thay vì lỗi chỉ đúng ô; không lưu gì.
+  - Ngoài-5: mất mạng đúng lúc bấm Lưu thì người gắn không thấy thông báo nào; chữ đã gõ vẫn còn để lưu lại.
+  - Ngoài-6: lát lấy thiếu rồi chạy lại khi có tin mới thì lát có thể vượt số tin đã định và lệch tỉ lệ gắn trùng 20% hay chia đôi dev/test.
+  - Ngoài-7: gõ giá có dấu chấm ngăn nghìn (vd «4.350 triệu») bị hiểu là 4,35 triệu và lưu thấp hơn 1000 lần mà không báo lỗi.
+  - Ngoài-8: phép đo phân tin cho hai người chưa thử hết các tổ hợp người × loại tin đã hứa.
+  - Ngoài-9: trạng thái lỗi có nút «Thử lại» mới được kiểm bằng đọc mã trang, chưa dựng thử khi truy vấn hỏng.
