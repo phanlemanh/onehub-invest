@@ -1,0 +1,82 @@
+schema_version: 1
+feature_slug: meta-kev-thanh-phat-bieu
+# Ca test thuần «KP-AC-n» ở pipeline/scripts/kev-phat-bieu.test.mjs (npm test); ca DB ở pipeline/scripts/kev-phat-bieu.itest.mjs
+# (DB thử, nạp 045 + 057 trong giao dịch). Mỗi ma trận có ca đỏ trên bản sao đột biến chép cạnh tệp thật rồi xoá.
+evals:
+  - id: E1
+    criterion: AC-1
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.kev_phat_bieu_that
+    paths: [db/migrations/057_*.sql, pipeline/scripts/kev-phat-bieu.itest.mjs]
+    expected: "exit 0; ca 'KP-AC-1' xanh: sau khi áp 057 hai lần, information_schema có đúng 7 cột kev_* với kiểu viết trước; INSERT field_assertions (listing_intent, kev, inferred) và (kind, kev, inferred) vào được, (kev, observed) và (kev, fact) bị từ chối với thông điệp «cặp lớp/phương pháp»; INSERT stg với kev_intent = 'mua' hay kev_kind = 'rent_lt' bị CHECK chặn; ca đỏ: bản sao 057 bỏ dòng kev khỏi hàm canh ghim «kev / inferred»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E2
+    criterion: AC-2
+    executor: script
+    cmd: config:executors.script.kev_vocab
+    paths: [pipeline/mappings.yaml, pipeline/lib/vocab.generated.mjs]
+    expected: "exit 0; vocab --check, --lint xanh và --check-db trên DB thử đã áp 057 xanh; lib/vocab.generated.mjs có ASSERTION_METHOD chứa kev và ASSERTION_FIELD chứa listing_intent, kind; ca đỏ trong cùng lệnh: --check-db trên DB thử chưa áp 057 phải đỏ gọi tên field_assertions"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E3
+    criterion: AC-3
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/lib/kev-phat-bieu.mjs, pipeline/scripts/kev-phat-bieu.test.mjs]
+    expected: "exit 0; ca 'KP-AC-3' xanh: 7 dòng viết trước, số assert bằng số dòng, mỗi dòng đúng danh sách phát biểu (hoặc rỗng); hai ca đỏ: bản sao bỏ bước đổi rent → rent_lt ghim dòng Yêu cầu thuê, bản sao bỏ kiểm giá trị ngoài bộ ghim dòng ngoài bộ"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E4
+    criterion: AC-4
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.kev_phat_bieu_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/kev-phat-bieu.mjs, pipeline/lib/test-posts.mjs, pipeline/scripts/kev-phat-bieu.itest.mjs]
+    expected: "exit 0; ca 'KP-AC-4' xanh: 3 bài có điểm mỗi bài đúng 1 phát biểu listing_intent sống (offer, inquiry, not_listing), 2 bài có kev_kind mỗi bài đúng 1 phát biểu kind sống (sale, rent_lt), bài gate down 0; lượt hai thêm 0 và rút 0 dòng sống; hai ca đỏ: bản sao transform-zalo chỉ ghi phát biểu cho bài thành offer ghim bài «khách tìm thuê», bản sao replaceOwn khoá theo (chủ thể, phương pháp) bỏ trường ghim «kind bị rút»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E5
+    criterion: AC-5
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.kev_phat_bieu_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/kev-phat-bieu.itest.mjs]
+    expected: "exit 0; ca 'KP-AC-5' xanh: tập (offer_id, post_ids, kind, price_vnd) và năm cột canonical của offer S03 bằng nhau giữa lượt có Kev và lượt xoá trắng cột Kev; ca đỏ: bản sao transform-zalo bỏ bài có listing_intent not_listing khỏi luồng offer ghim chính bài ấy"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E6
+    criterion: AC-6
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.kev_phat_bieu_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/kev-phat-bieu.itest.mjs]
+    expected: "exit 0; ca 'KP-AC-6' xanh: trong giao dịch xoá 4 cột kev_* (ALTER … DROP COLUMN, ROLLBACK), transform-zalo chạy hết, số offer bằng lượt có cột, 0 phát biểu kev, đúng 1 dòng log «chưa áp 057»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E7
+    criterion: AC-7
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.kev_phat_bieu_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/scripts/do-kev-phat-bieu.mjs]
+    expected: "exit 0; do-kev-phat-bieu in số bài S03 (> 500, không thì exit 1), giây transform-zalo không Kev → có Kev, số phát biểu kev thêm (= số bài có điểm), byte/bài của 4 cột, offer giống hệt (exit 1 nếu lệch), và xác nhận field_assertions không có trong danh sách bảng của pipeline/sync-cloud.mjs"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8
+    criterion: AC-8
+    executor: test
+    cmd: config:executors.test.pipeline
+    paths: [pipeline/**]
+    expected: "exit 0; toàn bộ test pipeline xanh, gồm kev-phat-bieu.test.mjs, vocab và phat-bieu"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E8b
+    criterion: AC-8
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.kev_phat_bieu_that
+    paths: [pipeline/transform-zalo.mjs]
+    expected: "exit 0; trong cùng lệnh ca DB phát biểu 045 (phat-bieu-db.itest.mjs) xanh trên DB thử"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+  - id: E9
+    criterion: AC-9
+    executor: script
+    layer: backend-effect
+    cmd: config:executors.script.kev_du_lieu_that
+    paths: [pipeline/transform-zalo.mjs, pipeline/lib/kev-phat-bieu.mjs, pipeline/scripts/so-kev-du-lieu-that.mjs]
+    expected: "exit 0; so-kev-du-lieu-that (chỉ đọc + ROLLBACK) chọn ngày v5 gần nhất (giờ VN, có bài mang kev_intent) và in khoá nhận diện: số bài, số bài gate down, số bài có kev_at mà thiếu kev_intent (= 0, không thì exit 1), số offer có Kev = xoá trắng Kev (exit 1 nếu lệch), số bài «khách tìm/cần mua/cần thuê» và số có phát biểu listing_intent (= nhau, không thì exit 1), tỉ lệ ra inquiry, số bài stg S03 và số offer cạnh trung vị 7 ngày trước (chỉ in); chưa có ngày v5 → exit 2 «chưa có dữ liệu v5»"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

@@ -1,0 +1,20 @@
+{
+  "feature_plain": "Mỗi tin S03 mang điểm Kev (tin rao · Yêu cầu · không phải tin; bán hay thuê) trong bảng nạp, và điểm ấy thành lời khai theo bài để lọc sau này chạy lại được — không tin nào bị bỏ theo Kev.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ thêm bảy cột điểm Kev vào bảng nạp tin Zalo và cho bảng lời khai nhận ý định tin, loại tin và phương pháp «Bộ lọc Kev» ở lớp suy luận."},
+    {"id": "AC-2", "p": "Sẽ cập nhật sổ từ vựng cho khớp với cơ sở dữ liệu."},
+    {"id": "AC-3", "p": "Sẽ đổi đúng điểm Kev của từng tin thành lời khai, «rent» thành «Cho thuê», bỏ qua tin chưa có điểm."},
+    {"id": "AC-4", "p": "Sẽ ghi lời khai cho mọi tin có điểm — kể cả bài «khách tìm thuê» không thành tin rao — và chạy lại không nhân dòng."},
+    {"id": "AC-5", "p": "Sẽ giữ nguyên danh sách tin rao dù có hay không có điểm Kev."},
+    {"id": "AC-6", "p": "Sẽ không làm gãy bước dựng tin rao khi máy thu chưa áp migration."},
+    {"id": "AC-7", "p": "Sẽ đo thời gian chạy và dung lượng thêm khi mọi tin có điểm Kev."},
+    {"id": "AC-8", "p": "Sẽ giữ các phép thử pipeline và bảng lời khai đều xanh."},
+    {"id": "AC-9", "p": "Sẽ đo trên một ngày dữ liệu thật v5 (sau khi ZCode giao phần thu): tin đủ điểm, tin rao không giảm, bài «khách tìm…» không bị bỏ."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không sửa hook, OpenClaw, bước nạp hay hợp đồng dữ liệu — phần của ZCode."},
+    {"id": "OOS-2", "p": "Không đặt ngưỡng hay lọc tin theo Kev, không huấn luyện lại Kev, không làm bảng lưu Yêu cầu."},
+    {"id": "OOS-3", "p": "Không đưa ý định hay loại tin của Kev vào cột chính thức của tin rao."},
+    {"id": "OOS-4", "p": "Không áp migration lên máy thu trong vòng này — bước triển khai sau gộp."}
+  ]
+}
