@@ -13,6 +13,7 @@ import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { phatBieuPhongNgu } from "./lib/assert.mjs";
 import { ghiPhatBieuKev } from "./lib/kev-phat-bieu.mjs";
+import { ghiYeuCau } from "./lib/yeu-cau.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 
@@ -315,14 +316,14 @@ export async function docThiTruongNhom(client) {
 }
 
 /**
- * Thân transform S03 — người gọi giữ transaction (main bọc BEGIN…COMMIT; test và thước dư
- * lượng bọc BEGIN…ROLLBACK). Post thử bị gạt ở đầu đọc (lib/test-posts.mjs, PL2).
+ * Ngữ cảnh phường của bài S03 (N1): nhóm khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu phường của các
+ * thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường. Dùng chung cho tin rao và
+ * Yêu cầu (lib/yeu-cau.mjs).
  * @param {import("pg").Client} client
+ * @returns {Promise<{phuongCua: (post: {text: string, conversation_id?: string}) => ({id: string, slug: string, market: string}|null),
+ *   thiTruongKhai: (post: {conversation_id?: string}) => string[]}>}
  */
-// `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
-export async function runTransformZalo(client, { parse = parsePost } = {}) {
-  // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
-  // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
+export async function taoNguCanhPhuong(client) {
   const moiThiTruong = await docThiTruongCoPhuong(client);
   const areas = await docPhuongHopLe(client, moiThiTruong);
   const entriesCua = new Map(); // khoá thị trường đã sắp → danh sách phường
@@ -335,6 +336,25 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     return entriesCua.get(k);
   };
   const thiTruongNhom = await docThiTruongNhom(client);
+  const thiTruongKhai = (p) => thiTruongNhom.get(p.conversation_id) ?? [];
+  return {
+    thiTruongKhai,
+    phuongCua: (p) => {
+      const khai = thiTruongKhai(p);
+      return matchPhuongThiTruong(p.text, entries(khai.length ? khai : moiThiTruong));
+    },
+  };
+}
+
+/**
+ * Thân transform S03 — người gọi giữ transaction (main bọc BEGIN…COMMIT; test và thước dư
+ * lượng bọc BEGIN…ROLLBACK). Post thử bị gạt ở đầu đọc (lib/test-posts.mjs, PL2).
+ * @param {import("pg").Client} client
+ */
+// `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); `buocYeuCau` chỉ để ca đỏ của bang-yeu-cau chạy bản sao đột
+// biến của bước Yêu cầu qua transform thật. Đường chạy thật luôn dùng parsePost và ghiYeuCau.
+export async function runTransformZalo(client, { parse = parsePost, buocYeuCau = ghiYeuCau } = {}) {
+  const ctx = await taoNguCanhPhuong(client);
 
   // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
   // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
@@ -351,8 +371,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     if (!pr.kind) { nFail++; continue; }
     const lyDo = lyDoGiaPhiLy(pr);
     if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
-    const khai = thiTruongNhom.get(p.conversation_id);
-    const ph = matchPhuongThiTruong(p.text, entries(khai?.length ? khai : moiThiTruong));
+    const ph = ctx.phuongCua(p);
     if (ph) { pr.phuong = ph.slug; pr.areaId = ph.id; }
     // tính price_perm2 nếu thiếu
     if (!pr.pricePerm2Vnd && pr.priceVnd && pr.areaM2) {
@@ -440,7 +459,9 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   // PL5: điểm Kev của mọi bài thật (kể cả bài Yêu cầu không thành offer) → phát biểu theo bài, lớp suy luận. Luồng dựng
   // offer phía trên không đọc cột Kev — không tin nào bị loại hay đổi theo Kev.
   const kev = await ghiPhatBieuKev(client, posts);
-  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, kev };
+  // bang-yeu-cau: bài có phát biểu ý định thắng = inquiry (sau bước Kev) → bảng Yêu cầu (058). Không đụng luồng offer.
+  const yeuCau = await buocYeuCau(client, posts, ctx);
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, kev, yeuCau };
 }
 
 async function main() {

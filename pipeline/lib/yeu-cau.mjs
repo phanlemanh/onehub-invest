@@ -8,7 +8,8 @@
 
 import { createHash } from "node:crypto";
 import { extractPhones, gatSo, lyDoGiaPhiLy, normText, parsePost, parseVnNumber, soTy } from "../transform-zalo.mjs";
-import { KIND, PROPERTY_TYPE } from "./vocab.generated.mjs";
+import { subjectKey } from "./assert.mjs";
+import { ASSERTION_FIELD, KIND, LISTING_INTENT, PROPERTY_TYPE } from "./vocab.generated.mjs";
 
 // ---- Ngân sách (Hỏi-1: số tiền không kèm chữ chỉ chiều là trần) ----
 const NUM = String.raw`(\d+(?:[.,]\d+)*)`;
@@ -166,4 +167,94 @@ export function gomYeuCau(source, items) {
     });
   }
   return rows;
+}
+
+// ---- Phần DB ----
+
+// Ba trường phát biểu Yêu cầu đọc: ý định (ai là Yêu cầu), dịch vụ và loại hình (tiêu chí — đi trước chữ).
+const TRUONG = [ASSERTION_FIELD.listing_intent, ASSERTION_FIELD.kind, ASSERTION_FIELD.property_type];
+
+/**
+ * Phát biểu sống THẮNG của từng bài theo trường: lớp cao nhất (fact › observed › inferred), trong lớp theo
+ * assertion_method_rank của 045, rồi observed_at mới nhất, rồi id.
+ * @param {import("pg").Client} client
+ * @param {string} source
+ * @param {string[]} postIds
+ * @returns {Promise<Map<string, Record<string, {assertion_id: number, value: string, method: string, tier: string, p: number|null}>>>}
+ */
+export async function docPhatBieuThang(client, source, postIds) {
+  const { rows } = await client.query(
+    `SELECT DISTINCT ON (subject_key, field) id, subject_key, field, value, method, evidence_tier, evidence->>'p' AS p
+       FROM field_assertions
+      WHERE retracted_at IS NULL AND subject_key = ANY($1::text[]) AND field = ANY($2::text[])
+      ORDER BY subject_key, field, CASE evidence_tier WHEN 'fact' THEN 0 WHEN 'observed' THEN 1 ELSE 2 END,
+               assertion_method_rank(method), observed_at DESC NULLS LAST, id DESC`,
+    [postIds.map((id) => subjectKey(source, id)), TRUONG]);
+  const out = new Map();
+  for (const r of rows) {
+    const id = r.subject_key.slice(source.length + 1);
+    if (!out.has(id)) out.set(id, {});
+    out.get(id)[r.field] = {
+      assertion_id: Number(r.id), value: r.value, method: r.method, tier: r.evidence_tier, p: r.p == null ? null : Number(r.p),
+    };
+  }
+  return out;
+}
+
+// Cột ghi của inquiry_records (trừ retired_*, created_at, updated_at) — đúng thứ tự hàng gomYeuCau.
+const COT = [
+  ["inquiry_id", "text"], ["source", "text"], ["originating_system_key", "text"], ["post_ids", "text[]"], ["kind", "text"],
+  ["property_type", "text"], ["bedrooms", "int"], ["area_m2", "numeric"], ["budget_min_vnd", "bigint"],
+  ["budget_max_vnd", "bigint"], ["area_id", "text"], ["market_id", "text"], ["first_seen", "timestamptz"],
+  ["last_seen", "timestamptz"], ["intent_evidence", "jsonb"],
+];
+const TEN = COT.map(([c]) => c);
+const SQL_UPSERT = `
+  INSERT INTO inquiry_records (${TEN.join(", ")})
+  SELECT ${TEN.join(", ")} FROM jsonb_to_recordset($1::jsonb) AS x(${COT.map(([c, t]) => `${c} ${t}`).join(", ")})
+  ON CONFLICT (inquiry_id) DO UPDATE SET
+    ${TEN.slice(1).map((c) => `${c} = EXCLUDED.${c}`).join(", ")}, retired_at = NULL, retired_reason = NULL, updated_at = now()
+  WHERE inquiry_records.retired_at IS NOT NULL
+     OR (${TEN.slice(1).map((c) => `inquiry_records.${c}`).join(", ")}) IS DISTINCT FROM (${TEN.slice(1).map((c) => `EXCLUDED.${c}`).join(", ")})
+  RETURNING inquiry_id`;
+
+/**
+ * Bước Yêu cầu của transform (sau bước Kev): mọi bài trong `posts` (đã gạt bài thử) có phát biểu ý định thắng = inquiry
+ * thành Yêu cầu, gom theo Hỏi-2; upsert ghi đủ cột (post_ids là tập đầy đủ của lượt), gỡ nghỉ; Yêu cầu sống của nguồn không
+ * còn bài nào thì nghỉ 'het-phat-bieu'. Không DELETE. Người gọi giữ transaction. Thiếu bảng (chưa áp 058) → bỏ bước.
+ * @param {import("pg").Client} client
+ * @param {Array<{post_id: string, text: string, posted_at: any, sender_id?: string|null}>} posts
+ * @param {{phuongCua: Function, thiTruongKhai: Function}} ctx taoNguCanhPhuong của transform-zalo
+ * @returns {Promise<null|{xet: number, yeuCau: number, them: number, capNhat: number, songLai: number, nghi: number}>}
+ */
+export async function ghiYeuCau(client, posts, ctx, source = "S03") {
+  const { rows: [co] } = await client.query("SELECT to_regclass('inquiry_records') IS NOT NULL AS co");
+  if (!co.co) {
+    console.log("yêu cầu: chưa áp 058 — bỏ bước Yêu cầu");
+    return null;
+  }
+  const thang = await docPhatBieuThang(client, source, posts.map((p) => p.post_id));
+  const items = [];
+  for (const post of posts) {
+    const t = thang.get(post.post_id);
+    if (t?.listing_intent?.value !== LISTING_INTENT.inquiry) continue;
+    items.push({ post, thang: t, tieuChi: tieuChiYeuCau(post, t, ctx) });
+  }
+  const rows = gomYeuCau(source, items);
+  const { rows: truoc } = await client.query(
+    "SELECT inquiry_id, retired_at IS NOT NULL AS nghi FROM inquiry_records WHERE source = $1", [source]);
+  const daCo = new Map(truoc.map((r) => [r.inquiry_id, r.nghi]));
+  const { rows: ghi } = await client.query(SQL_UPSERT, [JSON.stringify(rows)]);
+  let them = 0, capNhat = 0, songLai = 0;
+  for (const { inquiry_id } of ghi) {
+    if (!daCo.has(inquiry_id)) them++;
+    else if (daCo.get(inquiry_id)) songLai++;
+    else capNhat++;
+  }
+  const { rowCount: nghi } = await client.query(
+    `UPDATE inquiry_records SET retired_at = now(), retired_reason = 'het-phat-bieu', updated_at = now()
+      WHERE source = $1 AND retired_at IS NULL AND inquiry_id <> ALL($2::text[])`,
+    [source, rows.map((r) => r.inquiry_id)]);
+  console.log(`yêu cầu: ${items.length} bài inquiry · ${rows.length} Yêu cầu (thêm ${them}, cập nhật ${capNhat}, sống lại ${songLai}, nghỉ ${nghi})`);
+  return { xet: items.length, yeuCau: rows.length, them, capNhat, songLai, nghi };
 }
