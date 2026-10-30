@@ -32,8 +32,8 @@ Căn cứ: AUDIT-H2 · LO-TRINH-HD9 · TRI-THUC hang-duyet-ghep-can.
 - AC-4: Given ứng viên lưu theo chiều ngược với `item_id` của thẻ (`offer_a` = bên B), When quyết, Then vẫn chạm đúng dòng
   ấy như AC-3.
 - AC-5: Given hai dòng ứng viên còn chờ khớp cùng cặp theo hai chiều, When quyết, Then 422 với `so_dong: 2`, không dòng nào
-  đổi; Given một dòng còn chờ và một dòng đã quyết khớp cùng cặp theo hai chiều, When quyết, Then chạm đúng dòng còn chờ như
-  AC-3.
+  đổi; Given một dòng còn chờ và một dòng đã quyết khớp cùng cặp theo hai chiều, When quyết, Then chạm đúng dòng còn chờ
+  như ở AC-3.
 - AC-6: Given thẻ ghép căn có `item_id` sai khuôn (không tiền tố `pair:`, hoặc thiếu một bên), When quyết, Then 422 với
   `code: "khong-cham-ung-vien"`, không dòng nào đổi.
 - AC-7: Given route trả 422 của AC-1, When thẻ trên `/ops/review` nhận phản hồi, Then dòng lỗi của thẻ hiện nguyên câu lỗi của
