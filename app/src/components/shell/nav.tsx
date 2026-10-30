@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { ActivityIcon, BadgePercentIcon, BotIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon, WorkflowIcon } from "lucide-react"
+import { ActivityIcon, BadgePercentIcon, BotIcon, CalculatorIcon, DatabaseIcon, GaugeIcon, GitCompareIcon, HouseIcon, InboxIcon, MapIcon, PaletteIcon, ShieldCheckIcon, TagsIcon, WorkflowIcon } from "lucide-react"
 
 /**
  * Cấu hình điều hướng theo cổng (docs/architecture/portals.md).
@@ -107,6 +107,15 @@ export const NAV_SECTIONS: Record<Portal, NavSection[]> = {
       href: "/ops/review",
       icon: glyph(InboxIcon),
       match: (p) => p.startsWith("/ops/review"),
+      group: "Xử lý",
+    },
+    {
+      // Gắn nhãn đánh giá mù (PL7) — chỉ ở máy thu; trên cloud trang nói «Chỉ ở máy thu».
+      id: "labels",
+      label: "Gắn nhãn",
+      href: "/ops/labels",
+      icon: glyph(TagsIcon),
+      match: (p) => p.startsWith("/ops/labels"),
       group: "Xử lý",
     },
     {

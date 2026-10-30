@@ -12,6 +12,7 @@ export type HanhDong =
   | "audit.read"
   | "ingest.push"
   | "review.decide"
+  | "label.write"
   | "unit.toggle"
   | "unit.create"
   | "unit.delete"
@@ -29,6 +30,8 @@ export const QUYEN_OPS: Record<HanhDong, { vai: Exclude<Vai, "user">; bearer: bo
   "audit.read": { vai: "admin", bearer: false },
   "ingest.push": { vai: "ops", bearer: true },
   "review.decide": { vai: "ops", bearer: false },
+  // Gắn nhãn đánh giá (PL7 man-gan-nhan-mu, Hỏi-2): một người thật từ vai ops, ghi ở máy thu — nhãn gắn với người gắn.
+  "label.write": { vai: "ops", bearer: false },
   "unit.toggle": { vai: "admin", bearer: false },
   "unit.create": { vai: "admin", bearer: false },
   "unit.delete": { vai: "admin", bearer: false },

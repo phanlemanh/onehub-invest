@@ -143,11 +143,11 @@ test("QV-AC-8 canAccessOps / isAdmin theo bậc vai; OPS_EMAILS tính như ops; 
   assert.equal(await nguoiTuRequest(req()), null)
 })
 
-// ---- kiemQuyen mức hàm: 10 hành động × 7 người gọi (ma trận route thật ở QV-AC-2) ----
+// ---- kiemQuyen mức hàm: 11 hành động × 7 người gọi (ma trận route thật ở QV-AC-2) ----
 test("QV-AC-8b kiemQuyen trả 401/403/qua đúng bảng; bearer chỉ qua ở ops.read và ingest.push; bearer + phiên admin dùng phiên", async () => {
   const { kiemQuyen, QUYEN_OPS, BAC_VAI } = await import("../src/lib/ops-access")
   const hds = Object.keys(QUYEN_OPS) as (keyof typeof QUYEN_OPS)[]
-  assert.deepEqual(hds.length, 10)
+  assert.deepEqual(hds.length, 11) // + label.write (PL7 man-gan-nhan-mu)
   const nguoi: Record<string, string> = {}
   for (const v of ["user", "viewer", "ops", "admin", "owner"]) nguoi[v] = (await taoNguoi(sc, v)).cookie
   for (const hd of hds) {
