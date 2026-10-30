@@ -3,12 +3,14 @@
 // oneinvest_p3_nguoi), không trên DB `oneinvest` dùng chung khi 055 chưa áp (luật đo của đợt dot0-cam-mau).
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { KHOA_DANH_BA, LY_DO_RUT, chotDbThuNguoi, dungNguoi, sellersThieuNguoi } from "../lib/danh-ba-nguoi.mjs";
 import { checkDb, readMappings } from "../lib/vocab-core.mjs";
+import { buocDem } from "../refresh-bait-gap.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_055 = readFileSync(path.join(ROOT, "db/migrations/055_danh_ba_nguoi.sql"), "utf8");
@@ -298,4 +300,73 @@ test("RF3 post_ids: cột NOT NULL (lõi vẫn chịu null), tin S03 mảng rỗ
     await dungNguoi(db, { runId: "itest-rf3", out: im });
     assert.equal((await vaiSong(db, s)).length, 1, "RF3 tin post_ids rỗng mất vai SĐT");
   });
+});
+
+// ---- Task 4: bước đêm (AC-10) + hai lượt chồng nhau (RF5) ----
+const VUNG_THUOC = "vn-hcmc-binh-hung-hoa"; // phường có thước P2 trên dữ liệu thật (n≥5)
+
+test("AC-10 chạy đêm: bộ dựng trong giao dịch riêng, lỗi ném ra mà không kéo lùi bait gap/sellers", { timeout: 300_000 }, async () => {
+  const lap = async (db) => {
+    await fixtureS06(db);
+    const hz = ai("hz");
+    const tin = `${T}-p1`;
+    await db.query(
+      `INSERT INTO sale_offer_records (offer_id, kind, first_seen, last_seen, source, post_ids, originating_system_key,
+                                       area_id, price_tier, price_perm2, area_m2, bedrooms, seller_phone_hash)
+       VALUES ($1, 'sale', now(), now(), 'S03', '{}', $1, $2, 'P1', 50000000, 60, 2, $3)`, [tin, VUNG_THUOC, hz]);
+    await db.query(`INSERT INTO sellers (phone_hash, sources, n_ads, first_seen, last_seen) VALUES ($1, ARRAY['S03'], 0, now(), now())`, [hz]);
+    return { tin, hz };
+  };
+  const banGhi = async (db, { tin, hz }) => ({
+    bait_gap_pct: (await db.query("SELECT bait_gap_pct FROM sale_offers WHERE offer_id = $1", [tin])).rows[0]?.bait_gap_pct ?? null,
+    n_ads: (await db.query("SELECT n_ads FROM sellers WHERE phone_hash = $1", [hz])).rows[0]?.n_ads ?? null,
+  });
+
+  await trongGiaoDich(async (db) => {
+    await lap(db);
+    const kq = await buocDem(db, { savepoint: true, runId: "itest-ac10" });
+    assert.ok(kq.nguoi && kq.nguoi.nguoi_moi > 0 && "vai_moi" in kq.nguoi && "khong_dinh_danh" in kq.nguoi, "AC-10 thiếu khoá nguoi");
+    assert.equal((await nguoiCua(db, "S06", "tai_khoan_nguon", "900001")).length, 1, "AC-10 parties thiếu người của t1");
+  });
+
+  await trongGiaoDich(async (db) => {
+    const f = await lap(db);
+    await db.query("DROP TABLE party_roles");
+    await assert.rejects(buocDem(db, { savepoint: true, runId: "itest-ac10-do" }), /party_roles/, "AC-10 bộ dựng lỗi bị nuốt");
+    const sau = await banGhi(db, f);
+    assert.ok(sau.bait_gap_pct !== null, "AC-10 bộ dựng lỗi kéo bait gap: bait_gap_pct");
+    assert.equal(Number(sau.n_ads), 1, "AC-10 bộ dựng lỗi kéo bait gap: sellers.n_ads");
+    assert.deepEqual(await nguoiCua(db, "S06", "tai_khoan_nguon", "900001"), [], "AC-10 parties còn người của lượt lỗi");
+  });
+
+  const r = spawnSync(process.execPath, ["refresh-bait-gap.mjs"], {
+    cwd: path.join(ROOT, "pipeline"), encoding: "utf8",
+    env: { ...process.env, DATABASE_URL: "postgres://oneinvest:oneinvest@localhost:5433/khong_ton_tai_db2b" },
+  });
+  assert.notEqual(r.status, 0, `AC-10 tiến trình lỗi DB mà thoát 0: ${r.stderr}`);
+});
+
+test("RF5 hai lượt dựng chồng nhau: lượt sau chờ khoá 55055 rồi chạy xong, không va chỉ mục", { timeout: 300_000 }, async () => {
+  const b = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await b.connect();
+  try {
+    const pidB = (await b.query("SELECT pg_backend_pid() AS p")).rows[0].p;
+    let luotB;
+    await trongGiaoDich(async (db) => {
+      await fixtureS06(db);
+      await dungNguoi(db, { runId: "itest-rf5-a", out: im });
+      luotB = trongGiaoDich((x) => dungNguoi(x, { runId: "itest-rf5-b", out: im }), b);
+      luotB.catch(() => {}); // lỗi (nếu có) do await bên dưới báo
+      let cho = false;
+      for (let i = 0; i < 50 && !cho; i++) {
+        cho = (await db.query(
+          `SELECT 1 FROM pg_locks WHERE pid = $1 AND locktype = 'advisory' AND NOT granted AND objid = $2`, [pidB, KHOA_DANH_BA])).rowCount > 0;
+        if (!cho) await new Promise((ok) => setTimeout(ok, 100));
+      }
+      assert.ok(cho, "RF5 lượt B không chờ khoá danh bạ");
+    });
+    await assert.doesNotReject(luotB, "RF5 lượt B lỗi sau khi A nhả khoá");
+  } finally {
+    await b.end();
+  }
 });
