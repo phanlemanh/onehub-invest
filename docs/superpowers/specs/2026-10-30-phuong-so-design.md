@@ -56,6 +56,8 @@ Ba eval của hồ sơ trước đo đúng hành vi hàng này đổi (ô `phuon
 | khoa-phuong-chung-phuong-so/E1 | KP-AC-1: 6 cặp, ô «Phường 12» · `phuong-12` Lệch | phuong-so#AC-1 |
 | khoa-phuong-chung-phuong-so/E2 | KP-AC-2: ma trận 21 cặp, ô `phuong-12` Lệch, đối chứng đỏ khoá-chỉ-số | phuong-so#AC-2 |
 | khoa-phuong-chung-phuong-so/E3 | KP-AC-3: e2e yes/no, đối chứng đỏ khoá-chỉ-số | phuong-so#AC-3 |
+| the-duyet-phuong-lech-gia/E3 | TPL-AC-3: «Phường 12» · `phuong-12` · «P.12» Lệch (đã trỏ khoa-phuong-chung-phuong-so#AC-1; trỏ thẳng tới đây khi eval đó bị thay) | phuong-so#AC-1 |
+| judge-giu-quyet-dinh-nguoi/E4 | AC-4: 18 cặp luật = thẻ (đã trỏ khoa-phuong-chung-phuong-so#AC-2; trỏ thẳng tới đây khi eval đó bị thay) | phuong-so#AC-2 |
 
 Ca test cũ được thay bằng ca mới trong cùng tệp; ma trận mới giữ đủ các ô cũ (trừ ô `phuong-12` đổi nhãn).
 
