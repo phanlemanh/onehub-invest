@@ -5,7 +5,7 @@ slug: do-danh-ba-sdt
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [cli]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-31
 design_doc: docs/superpowers/specs/2026-10-31-do-danh-ba-sdt-design.md
@@ -72,3 +72,13 @@ thứ tự đề xuất». Căn cứ: `docs/research/audit-bang-nguoi-sdt-3010.m
 ## Notes
 
 - Hôm nay mọi kiểm dự kiến `fail` (các lỗi chưa sửa); đó là số trước khi sửa, đúng mục đích.
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-31:
+  - Ngoài-1: N5 đếm thiếu bài có số đứng ngay sau chữ tận cùng «o» («zalo 091 23•45 678», «Alo …») vì bộ dò rộng của audit lấy «o» làm đầu số.
+  - Ngoài-2: Phép thử chưa đi qua đường đọc DB cho hai quy tắc loại trừ «vai đã rút» và «người đã gộp».
+  - Ngoài-5: Phép quét lọt SĐT/khoá băm trên dòng kiểm chưa có ca cài số để chứng nó bắt được.
+  - Ngoài-6: Ca «có vai đã rút» trong test hàm thuần chỉ là người không có vai, không có dòng vai đã rút thật.
+  - Ngoài-7: Kiểm «dùng đúng extractPhones» chỉ đọc dòng import, chưa đo hành vi bộ bóc.
+  - Ngoài-8: Phép quét SĐT/khoá băm/tên người gửi chỉ có chiều sạch, chưa có đối chứng dương.
+  - Ngoài-9: Bộ dò rộng N5 bỏ sót số đứng sau «Zalo» (cùng lỗi Ngoài-1, ghi ở lượt 1).
+  - Ngoài-10: Cờ «đã gộp» và «có vai» trong test là tập dựng tay; câu SQL sinh ra chúng chưa được thử bằng ca riêng.
+  - Ngoài-13: Fixture khoá băm của phép đo DB không phải 32 hex nên phép quét khoá băm không thể đỏ trên chính fixture.
