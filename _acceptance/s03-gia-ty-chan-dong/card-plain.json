@@ -1,0 +1,16 @@
+{
+  "feature_plain": "Tin S03 ghi giá tròn tỷ bằng chữ số đồng («3.000.000.000 đ») ra đúng giá thay vì để trống, mà không làm SĐT nào lọt vào bước đọc số.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ đọc đúng giá tròn tỷ viết bằng đồng («3.000.000.000 đ» là 3 tỷ) và giữ đúng các dạng đã đọc được."},
+    {"id": "AC-2", "p": "Sẽ vẫn gạt mọi SĐT khỏi bước đọc số, kể cả SĐT đứng sau dấu câu, hai SĐT nối nhau và SĐT sau «m2,»."},
+    {"id": "AC-3", "p": "Sẽ giữ nguyên danh sách SĐT người bán trích từ tin."},
+    {"id": "AC-4", "p": "Sẽ cho giá đồng mới đọc được đi qua chốt giá phi lý như mọi giá khác."},
+    {"id": "AC-5", "p": "Sẽ giữ bộ test pipeline và bảy thước của N1 trên dữ liệu thật đều xanh."},
+    {"id": "AC-6", "p": "Sẽ so toàn bộ bài thật trước và sau sửa: không bài nào đổi SĐT, bài nào đổi giá phải là dạng giá tròn tỷ bằng đồng."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "Không sửa hai lỗi giá N1 đã ghi Known limits («/mỗi tháng», tin có cả tổng giá lẫn đơn giá bằng đồng)."},
+    {"id": "OOS-2", "p": "Không đổi cách làm luật giá, không nạp lại dữ liệu thật trong vòng này."},
+    {"id": "OOS-3", "p": "Không đọc giá nhóm nghìn bằng dấu cách («3 000 000 000 đ»)."}
+  ]
+}
