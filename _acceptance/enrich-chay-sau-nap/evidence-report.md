@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: c20577c9b5131a43f8b9871f8257f1af4205989d
+verified_commit: d67c5b9ff812f376b9ae1589dc9bcf757bcc3e2c
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -203,3 +203,7 @@ none — every multi-run eval is uniform (mọi eval chạy một lần, xác đ
 
 Round 1: 10 eval máy chạy xanh; phép đo bị đánh dấu ba chỗ «assertion âm tính đứng một mình» ở EC-AC-2 (hai chỗ) và EC-AC-9 — đã trả về làm lại phép đo (commit c20577c9).
 Round 2: chạy lại E1-E7, E12, E13 và năm lệnh suite trên c20577c9; E8-E11 carry-forward từ round 1 (delta không chạm paths của các eval này). Giờ chạy chính xác của round 2 nằm ở run-log do main loop ghi; verified_at ở trên chỉ mang ngày chạy.
+
+### Re-pin lần 1 — 2026-10-30, do gộp main vào nhánh sau chữ ký (gỡ xung đột LO-TRINH/config)
+run_id: repin-20261030T085108Z-72275
+sha: d67c5b9ff812f376b9ae1589dc9bcf757bcc3e2c · suites: 6 lệnh exit 0 · evals: 13/13 eval máy đạt kỳ vọng
