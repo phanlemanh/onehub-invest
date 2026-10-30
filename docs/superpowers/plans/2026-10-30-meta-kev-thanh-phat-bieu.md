@@ -34,8 +34,9 @@ câu riêng (không đụng `loadStgPosts`, dùng chung với S05) rồi ghi qua
    (Task 2, ca KP-AC-1b).
 2. Bài có `kev_intent` nhưng là bài thử (zalo-mock, e2e, nhóm TEST) → không có phát biểu: đọc điểm chỉ cho post_id mà
    `loadStgPosts` trả (Task 4, ca KP-AC-4 có một bài thử mang điểm).
-3. Một post_id có nhiều snapshot (bản cũ v3 chỉ `kev_p`, bản mới v5 đủ điểm) → lấy đúng bản mới nhất theo
-   `captured_at DESC`, cùng thứ tự `loadStgPosts` (Task 4, ca KP-AC-4 có post hai snapshot).
+3. ~~Một post_id có nhiều snapshot~~ — không thể: khoá chính `stg_zalo_posts` là `post_id` (mỗi bài một dòng, importer
+   upsert). Thay bằng: lượt sau Kev chỉ còn ý định (kind trống) → phát biểu kind cũ giữ nguyên (khoá replaceOwn có
+   trường; ca KP-AC-4 lượt ba + ca đỏ «kind bị rút»).
 4. Lượt sau Kev đổi ý (offer → inquiry) cho cùng bài → phát biểu cũ bị rút `thay-boi-luot`, đúng một phát biểu sống
    (Task 4, ca KP-AC-4c).
 5. DB máy thu đã có 057 nhưng chưa có 045 (không thể theo thứ tự số, nhưng DB thử cũ có thể thiếu) → bước Kev bỏ qua như

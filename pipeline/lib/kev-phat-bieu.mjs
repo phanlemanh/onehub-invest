@@ -4,7 +4,7 @@
 // Spec: docs/superpowers/specs/2026-10-30-meta-kev-thanh-phat-bieu-design.md §Phát biểu.
 
 import { ASSERTION_FIELD, ASSERTION_METHOD, EVIDENCE_TIER, KIND, VOCAB } from "./vocab.generated.mjs";
-import { subjectKey } from "./assert.mjs";
+import { subjectKey, writeAssertions } from "./assert.mjs";
 
 // Kev không bao giờ trả «unknown» — lớp đó là của người/luật khi chưa rõ.
 const Y_DINH = VOCAB.listing_intent.filter((v) => v !== "unknown");
@@ -36,4 +36,49 @@ export function kevThanhPhatBieu(row, source = "S03") {
     else ngoaiBo++;
   }
   return { rows, ngoaiBo };
+}
+
+/**
+ * Điểm Kev của các bài (khoá chính stg_zalo_posts là post_id — mỗi bài một dòng). `null` khi DB chưa áp 057 (thiếu cột
+ * kev_intent) hoặc chưa có bảng phát biểu (045) — máy thu chạy mã mới trước khi migration được áp.
+ * @param {import("pg").Client} client
+ * @param {string[]} postIds
+ */
+export async function docDiemKev(client, postIds) {
+  const { rows: [co] } = await client.query(
+    `SELECT to_regclass('field_assertions') IS NOT NULL
+        AND EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = 'stg_zalo_posts'::regclass AND attname = 'kev_intent'
+                       AND NOT attisdropped) AS co`);
+  if (!co.co) return null;
+  const { rows } = await client.query(
+    `SELECT post_id, kev_p, kev_intent, kev_intent_p, kev_kind, kev_kind_p, kev_model, kev_at
+       FROM stg_zalo_posts WHERE post_id = ANY($1::text[])`, [postIds]);
+  return rows;
+}
+
+/**
+ * Bước Kev của transform: đọc điểm của MỌI bài đã qua cửa gạt bài thử (kể cả bài không thành offer), ghi phát biểu
+ * bằng một lần writeAssertions replaceOwn — khoá (chủ thể, trường, phương pháp): chạy lại thay chính nó, listing_intent
+ * và kind không thay nhau. Người gọi giữ transaction.
+ * @param {import("pg").Client} client
+ * @param {Array<{post_id: string}>} posts
+ * @returns {Promise<null|{bai: number, phatBieu: number, ngoaiBo: number, inserted: number, retracted: number}>}
+ */
+export async function ghiPhatBieuKev(client, posts, source = "S03") {
+  const diem = await docDiemKev(client, posts.map((p) => p.post_id));
+  if (!diem) {
+    console.log("kev: chưa áp 057 — bỏ bước phát biểu Kev");
+    return null;
+  }
+  const rows = [];
+  let bai = 0, ngoaiBo = 0;
+  for (const d of diem) {
+    if (d.kev_at != null) bai++;
+    const kq = kevThanhPhatBieu(d, source);
+    rows.push(...kq.rows);
+    ngoaiBo += kq.ngoaiBo;
+  }
+  const w = await writeAssertions(client, rows, { replaceOwn: true });
+  console.log(`kev: ${bai} bài có điểm · ${rows.length} phát biểu (thêm ${w.inserted}, rút ${w.retracted}) · ${ngoaiBo} ngoài bộ`);
+  return { bai, phatBieu: rows.length, ngoaiBo, ...w };
 }

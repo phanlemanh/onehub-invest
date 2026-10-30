@@ -12,6 +12,7 @@ import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
 import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { phatBieuPhongNgu } from "./lib/assert.mjs";
+import { ghiPhatBieuKev } from "./lib/kev-phat-bieu.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
 import { CONFIDENCE } from "./lib/vocab.generated.mjs";
 
@@ -436,7 +437,10 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
   const { reconcile } = await writeOffers(client, "S03", rows, { assertions: phatBieuPhongNgu("S03", nhom, "transform-zalo@045") });
   console.log(`đối soát: ${JSON.stringify({ ...reconcile, pairs: undefined })}`);
   console.log(`offers ghi: ${dedup.size} (SĐT: ${sellerAgg.size} người bán)`);
-  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy };
+  // PL5: điểm Kev của mọi bài thật (kể cả bài Yêu cầu không thành offer) → phát biểu theo bài, lớp suy luận. Luồng dựng
+  // offer phía trên không đọc cột Kev — không tin nào bị loại hay đổi theo Kev.
+  const kev = await ghiPhatBieuKev(client, posts);
+  return { offers: rows.length, rejected, reconcile, loaiGiaPhiLy, kev };
 }
 
 async function main() {
