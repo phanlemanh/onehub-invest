@@ -5,7 +5,7 @@ slug: api-surface-anh-vai-ops
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [api]
-status: verified
+status: signed-off
 approved_by: Mạnh
 approved_at: 2026-10-30
 design_doc: docs/superpowers/specs/2026-10-30-api-surface-anh-vai-ops-design.md
@@ -54,3 +54,7 @@ Core → AC-1…AC-5. Never: đổi quyền thật của route (giữ quyết đ
 - OOS-2: Thêm chế độ thứ sáu cho sổ, hay sửa dòng sổ của route khác.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Ca chạy route ASO-AC-3b vẫn xanh nếu ai gỡ cổng canAccessOps của /api/zalo-media, vì lõi trả cùng 404; chỉ ca đọc mã (ASO-AC-3, M20) bắt được.
+  - Ngoài-2: Hàng «gọi bằng khoá API không đăng nhập» trong ma trận ASO-AC-2 thực chất là hàng khách; ai sau này mở đường cho khoá xem ảnh thì ma trận không báo.
