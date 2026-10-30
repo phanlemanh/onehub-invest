@@ -37,12 +37,13 @@ export type SoPhuong = "khop" | "lech" | "thieu";
 // căn so phường bằng ĐÚNG khoá của thẻ duyệt, để «cùng / khác / thiếu phường» của luật trùng nhãn người duyệt thấy.
 // tests/judge-nguong.test.ts (KP-AC-2) rút nguyên văn các hàm này từ tệp app và chạy cùng ma trận — lệch một ô là đỏ.
 /** Khoá tên phường: bỏ MỘT tiền tố hành chính trên chuỗi còn dấu, rồi slug. Bỏ tiền tố trước khi bỏ dấu vì «Phường»
- *  và «Phương» cùng thành `phuong` — «Phương Liệt», «Phượng Dực» là tên phường thật. */
+ *  và «Phương» cùng thành `phuong` — «Phương Liệt», «Phượng Dực» là tên phường thật. Phường số mang cấp và bỏ số 0
+ *  đầu: «Phường 01», «P12», `phuong-12` → `p-12`, «Xã 12» → `x-12`, «12» trần → `12` (hồ sơ phuong-so). */
 export function khoaPhuong(v: string): string {
-  return v
-    .normalize("NFC")
-    .trim()
-    .toLowerCase()
+  const s = v.normalize("NFC").trim().toLowerCase();
+  const so = s.match(/^(?:(phường|phuong|p)|(xã|xa)|(thị trấn|thi[\s-]*tran))?[\s.-]*0*(\d+)$/u);
+  if (so) return `${so[1] ? "p-" : so[2] ? "x-" : so[3] ? "tt-" : ""}${so[4]}`;
+  return s
     .replace(/^(?:(?:phường|xã|thị trấn)(?:\s+|$)|p\.\s*)/u, "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -51,8 +52,7 @@ export function khoaPhuong(v: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Khoá rỗng (chỉ có tiền tố) → thiếu. Khoá chỉ số so như mọi khoá: «Phường 12» với «P.12» cùng khoá «12» nên cùng
- *  phường (hồ sơ khoa-phuong-chung-phuong-so). */
+/** Khoá rỗng (chỉ có tiền tố) → thiếu; còn lại cùng khoá → cùng phường, khác → khác phường. */
 export function soPhuong(a: string | number | null, b: string | number | null): SoPhuong {
   if (a === null || b === null) return "thieu";
   const ka = khoaPhuong(String(a));
