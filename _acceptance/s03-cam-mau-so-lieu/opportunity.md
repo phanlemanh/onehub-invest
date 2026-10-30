@@ -3,10 +3,10 @@ schema_version: 1
 slug: s03-cam-mau-so-lieu
 feature: Transform S03 đọc giá và diện tích từ chữ bài đã bỏ URL và SĐT, chuẩn hoá cách viết giá của môi giới, gom repost theo mã toà/căn khi thiếu phường và diện tích, ghi tên người bán và phường theo thị trường của nhóm
 owner: phanlemanh@gmail.com
-stage: discovery              # discovery | decided | archived
-decision:         # build | iterate | park | kill — người ký Cổng 0 điền
-decided_by: 
-decided_at:     # ISO UTC
+stage: decided              # discovery | decided | archived
+decision: build         # build | iterate | park | kill — người ký Cổng 0 điền
+decided_by: Mạnh
+decided_at: 2026-10-30T01:02:02Z     # ISO UTC
 prototype:
   base_commit:     # điểm cắt nhánh proto khỏi nhánh chính — guard diffBase khi keep
   disposition:     # keep | archive
