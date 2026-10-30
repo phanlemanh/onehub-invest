@@ -95,6 +95,13 @@ ký của NH1. Mỗi ô cũ trỏ tới tiêu chí của NH1 đo lại đúng đ
 | `review-media-backend/E8` | roundtrip DB: bài trong giao dịch → `loadReviewMedia` | `media-canonical-reso#AC-7` |
 | `ops-dong-chay-df0/E15` | bộ nạp ảnh dòng chảy: S06 vắng khoá, ghép từ bài | `media-canonical-reso#AC-6` |
 | `ops-dong-chay-df0/E16` | hồ sơ tin S06 ghi đúng câu «chưa gắn được ảnh» | `media-canonical-reso#AC-6` |
+| `transform-zalo-boc-job-run/E1` | job đêm S03 gọi đúng ba bước import-airbnb → transform-zalo → refresh-bait-gap | `media-canonical-reso#AC-10` |
+| `transform-zalo-boc-job-run/E6` | mọi lời gọi `node` giả của job đêm S03 nằm trong ba nhãn | `media-canonical-reso#AC-10` |
+
+Hai ô cuối thêm ở S3 theo Hỏi-3 (Mạnh chọn lối B, 30/10): bước đêm `transform-media` làm job S03 thành bốn bước, nên
+lời «ba bước» của hai ô ấy không còn đúng; AC-10 của NH1 đo trọn dãy bốn bước và ca bước ảnh hỏng. `job-bao-loi-that`
+không bị thay: lời tiêu chí của nó chỉ đòi «khớp đúng dãy viết trước», nên chỉ dãy viết trước trong
+`scripts/job-exit.test.mjs` thêm bước mới.
 
 `review-media-backend/E5` (luật ghép `buildOfferImages`) không bị thay: nó vẫn chạy và còn thành thước đối chiếu của
 AC-3. Lối khác là giữ đường đọc bài song song với bảng mới. Cái giá là hai nguồn sự thật cho cùng một dải ảnh, và S06 vẫn

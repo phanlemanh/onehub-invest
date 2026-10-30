@@ -111,3 +111,19 @@ evals:
     paths: [app/src/components/ops/data-flow/record-sheet.tsx]
     expected: "exit 0; sàn thiết kế bậc M1 của kho không báo hex thô mới trên tệp giao diện vòng chạm (record-sheet.tsx chỉ bỏ một nhánh chữ, không thêm màu)"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E14
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.zalo_import_job
+    paths: [scripts/zalo-import-daily.sh, scripts/lib/job-step.sh, scripts/zalo-import-job.test.mjs]
+    expected: "exit 0; ca 'ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự bốn bước (NH-AC-10), không JOB FAIL' xanh: bản chép nguyên zalo-import-daily.sh + job-step.sh với node giả gọi đúng import-airbnb → transform-zalo → transform-media → refresh-bait-gap, thoát 0; ca 'ZJ-AC-6 …' xanh: mọi lời gọi node giả nằm trong bốn nhãn ấy; ca 'NH-AC-10 zalo-import-daily: transform-media hỏng → ≠0, dòng ghim, bước sau vẫn chạy' xanh: thoát 1, đúng dòng 'JOB FAIL [zalo-import-daily] bước transform-media mã 1', refresh-bait-gap vẫn được gọi. Chiều đỏ: các ca ZJ-AC-2 sẵn có ghim dòng JOB FAIL theo từng bước hỏng"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]
+
+  - id: E15
+    criterion: AC-10
+    executor: test
+    cmd: config:executors.test.job_exit
+    paths: [scripts/chotot-daily.sh, scripts/lib/job-step.sh, scripts/job-exit.test.mjs]
+    expected: "exit 0; ca 'AC-1 chotot-daily: mọi bước lành → 0, nhật ký lời gọi khớp dãy viết trước' xanh với dãy collect-chotot → import-chotot → transform-chotot → transform-media → refresh-bait-gap → resolve-properties; ca 'AC-1 chotot-daily: transform-media hỏng → ≠0, dòng ghim, bước sau vẫn chạy' xanh; chiều đỏ cùng cây: ca 'AC-1 chotot-daily: bản đột biến bỏ ghi mã sau transform-media → bị bắt' xanh (hàm kiểm bắt được bản đột biến, thông điệp nêu tên bước transform-media)"
+    evidence_required: [run_id, exit_code, verifier, verified_at, output]

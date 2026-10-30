@@ -5,10 +5,10 @@ slug: media-canonical-reso
 owner: phanlemanh@gmail.com
 risk_tier: T3      # db/migrations/** (053) + pipeline/sync-cloud.mjs nằm trong t3_paths
 surfaces: [ui, cli]
-status: approved
+status: draft
 design_doc: docs/superpowers/specs/2026-10-30-media-canonical-reso-design.md
-approved_by: Mạnh
-approved_at: 2026-10-30
+approved_by:
+approved_at:
 ---
 
 # Acceptance Contract: media-canonical-reso
@@ -67,10 +67,15 @@ này. Bảng chỉ ở máy thu: URL ảnh S06 mang tên miền nguồn (tầng 
 - AC-9: Given `pipeline/sync-cloud.mjs` sau vòng, When đọc `FILL` và chạy `leakGate` với `exec` giả, Then `FILL` không
   có `media`; cloud có bảng `media` có dòng thì leak gate báo `media=<n>`; bảng vắng hay rỗng thì không báo. `data-api/`
   không nhắc tới bảng `media`.
-- AC-10: Given cây sau vòng, When đọc `scripts/chotot-daily.sh` và `scripts/zalo-import-daily.sh`, Then mỗi script có
-  đúng một bước `job_run … transform-media` cho nguồn của nó (S06; S03 S05), đứng ngay sau bước transform của nguồn đó.
-  When chạy các suite và làn ghim lại của mọi hồ sơ đã ký có tệp đo bị vòng chạm, Then mọi suite thoát 0, và mỗi hồ sơ
-  ấy có dòng `repin` mới xanh, hoặc ô bị chạm được thay bởi một AC của hồ sơ này theo Hỏi-1.
+- AC-10: Given bản chép nguyên `scripts/chotot-daily.sh` và `scripts/zalo-import-daily.sh` cùng `scripts/lib/job-step.sh`,
+  chạy với `node` giả (ghi nhật ký lời gọi), When mọi bước lành, Then mỗi script có đúng một bước `job_run … transform-media`
+  cho nguồn của nó (S06; S03 S05) và job thoát 0, không có dòng `JOB FAIL`. `chotot-daily` gọi đúng dãy collect-chotot →
+  import-chotot → transform-chotot → transform-media → refresh-bait-gap → resolve-properties. `zalo-import-daily` gọi đúng
+  thứ tự import-airbnb → transform-zalo → transform-media → refresh-bait-gap, và mọi lời gọi `node` giả của nó nằm trong bốn
+  nhãn ấy. When bước `transform-media` hỏng, Then job thoát ≠ 0, stderr có đúng dòng `JOB FAIL [<job>] bước transform-media
+  mã 1`, và các bước sau vẫn được gọi. When chạy các suite và làn ghim lại của mọi hồ sơ đã ký có tệp đo bị vòng chạm,
+  Then mọi suite thoát 0, và mỗi hồ sơ ấy có dòng `repin` mới xanh, hoặc ô bị chạm được thay bởi một AC của hồ sơ này
+  (Hỏi-1, Hỏi-3).
 
 ## Coverage
 

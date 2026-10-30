@@ -1,5 +1,4 @@
-// media-wiring.test.mjs — NH1 `media-canonical-reso`: khai RESO của bảng media (E2, NH-AC-1). Ca bước đêm (E11, NH-AC-10)
-// chờ Mạnh quyết cách nối (Hỏi-3: dãy bước của job đêm đang ghim ở hồ sơ đã ký).
+// media-wiring.test.mjs — NH1 `media-canonical-reso`: khai RESO của bảng media (E2, NH-AC-1) và dòng bước đêm (E11, NH-AC-10).
 // Không cần DB: đọc tệp migration, pipeline/mappings.yaml và hai script đêm.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -70,4 +69,16 @@ test("NH-AC-1 mappings khai bảng media", () => {
   // Chiều đỏ: bản sao mappings bỏ mục media_order → đỏ gọi tên cột thiếu.
   const thieu = doc("pipeline/mappings.yaml").replace(/\n {4}media_order:\n(?: {6}.*\n)+/, "\n");
   assert.throws(() => kiemMappings(thieu, sql), /thiếu cột media_order/);
+});
+
+test("NH-AC-10 chạy hằng đêm", () => {
+  for (const [rel, kv] of DEM) kiemBuocDem(doc(rel), rel, kv);
+  // Chiều đỏ: bản sao đặt bước media trước bước transform → đỏ gọi tên script.
+  const [rel, kv] = DEM[0];
+  const l = doc(rel).split("\n");
+  const i = l.findIndex((x) => x.includes("transform-media"));
+  [l[i - 1], l[i]] = [l[i], l[i - 1]];
+  const dir = mkdtempSync(path.join(tmpdir(), "nh1-dem-"));
+  writeFileSync(path.join(dir, "chotot-daily.sh"), l.join("\n"));
+  assert.throws(() => kiemBuocDem(readFileSync(path.join(dir, "chotot-daily.sh"), "utf8"), rel, kv), /scripts\/chotot-daily\.sh: bước media phải đứng ngay sau transform-chotot/);
 });
