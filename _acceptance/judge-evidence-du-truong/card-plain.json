@@ -1,31 +1,3 @@
 {
-  "feature_plain": "Thẻ «Cùng căn?» do máy chấm sinh ra sẽ hiện đủ Đường, Toà, Tầng, WC của cả hai tin, thay vì luôn ghi «Thiếu».",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ sinh đúng một thẻ cho mỗi cặp cần chấm, mỗi bên ghi đủ mười trường của bảng so; trường tin không có vẫn ghi rõ là trống."},
-    {"id": "AC-2", "p": "Sẽ đọc đường, toà, tầng, số WC của từng tin từ kho, đúng tin nào ra giá trị tin đó."},
-    {"id": "AC-3", "p": "Sẽ để bảng so trên thẻ hiện đúng bốn giá trị ấy cho từng bên; bên không có hiện «Thiếu»."},
-    {"id": "AC-4", "p": "Sẽ KHÔNG sửa dữ liệu hai tin trên các thẻ đang chờ đã sinh trước; chỉ phần kết quả chấm được cập nhật như cũ."},
-    {"id": "AC-5", "p": "Sẽ giữ nguyên mọi kết quả chấm đã ký trước đây — luật chấm không đổi."},
-    {"id": "AC-6", "p": "Sẽ thử gieo lại cả lô cặp thật của kho trên một bản chép: mọi thẻ mới đủ trường, đúng giá trị, thẻ cũ không đổi."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "Chưa hiện người đăng mỗi bên — hàng HD13."},
-    {"id": "OOS-2", "p": "Thẻ vẫn hiện giá trị lúc sinh, chưa đọc giá trị sống từ kho — đợt 2."},
-    {"id": "OOS-3", "p": "Chưa sửa chuyện «Chưa rõ» bị so ra «Lệch» — việc riêng."},
-    {"id": "OOS-4", "p": "Luật chấm chưa dùng bốn trường mới để loại cặp — hàng HD2."},
-    {"id": "OOS-5", "p": "Không gieo lại thẻ trên kho thật trong vòng này; việc đó làm sau khi gộp. Phép đo lô thật chạy trên bản chép."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Đọc từ kho: 4 trường × 2 bên × có/trống = 16 ô, đo trên câu đọc thật (AC-2)."},
-    {"i": 1, "p": "Ghi lên thẻ: đủ khoá (AC-1) và đúng giá trị (AC-3)."},
-    {"i": 2, "p": "Thẻ cũ giữ nguyên (AC-4), phần còn lại không đổi (AC-5), bảng so hiện đúng qua chính hàm của trang duyệt (AC-3)."},
-    {"i": 3, "p": "Ngưỡng «gieo lại một lô thẻ» đo trên bản chép lô cặp thật, không ghi vào kho (AC-6)."},
-    {"i": 4, "p": "Mỗi phép đo đếm đúng số ô viết trước và có một lượt cố ý làm hỏng để chứng nó bắt được lỗi."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Ngưỡng «gieo lại một lô thẻ» chưa có phép đo trên dữ liệu thật — đã thêm AC-6 đo trên bản chép lô thật, và ghi rõ việc gieo trên kho thật để sau gộp."},
-    {"i": 1, "p": "Chưa chứng bảng so trên thẻ thật sự hiện giá trị — đã cho thẻ sinh thật đi qua chính hàm dựng bảng so của trang duyệt."},
-    {"i": 2, "p": "Chưa ghim số WC phải là số (không phải chữ) — đã thêm kiểm kiểu."},
-    {"i": 3, "p": "Chưa có phép đo rằng phép đo cũ bị thay đã được ghi nhận — để lưới kiểm trước gộp chặn, như mọi hồ sơ."}
-  ]
+  "feature_plain": "Thẻ «Cùng căn?» do máy chấm sinh ra nay hiện đủ Đường, Toà, Tầng, WC của cả hai tin; đã thử trên lô 7 cặp thật (bản chép), 7/7 thẻ đủ trường, 7 thẻ cũ giữ nguyên."
 }
