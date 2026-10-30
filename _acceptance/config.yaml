@@ -94,6 +94,10 @@ executors:
     media_db: "cd pipeline && DATABASE_URL=${MEDIA_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p2_media} node --test scripts/media-canonical.itest.mjs"   # media-canonical-reso E1/E3/E5: 053 + bên ghi transform-media, giao dịch ROLLBACK — DB thử (sau gộp: MEDIA_DB_URL)
     media_app: "cd app && node --import tsx --test tests/media-canonical.test.tsx"   # media-canonical-reso E4/E6/E7: tương đương buildOfferImages, hai loader, hồ sơ tin (jsdom) — không DB
     cam_mau_s03: "cd pipeline && node --test scripts/cam-mau-s03.test.mjs"   # s03-cam-mau-so-lieu (N1): ma trận giá/DT/khoá gom/chốt khoảng — không cần DB (giám sát duyệt P1-47)
+    nguoi: "cd pipeline && node --test scripts/danh-ba-nguoi.test.mjs"   # ho-nguoi-theo-nguon (DB2b): luật bí danh + đọc tĩnh chỉ-local/không-suy/không-tầng-A — không DB (giám sát duyệt P3-114)
+    nguoi_db: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node --test scripts/danh-ba-nguoi.itest.mjs"   # DB2b: 055 + bộ dựng, giao dịch ROLLBACK trên DB thử (db/db-thu.sh oneinvest_p3_nguoi)
+    nguoi_nap_lai: "cd pipeline && DATABASE_URL=${NGUOI_DB_URL:-postgres://oneinvest:oneinvest@localhost:5433/oneinvest_p3_nguoi} node scripts/nap-lai-nguoi.mjs"   # DB2b bat_khi: nạp lại mọi nguồn hai lần + đối chứng, ROLLBACK — CHỈ trên DB thử, không trên oneinvest
+    nguoi_app: "cd app && node --import tsx --test tests/dq-nhan-danh-ba.test.tsx"   # DB2b AC-2: nhãn dòng kiểm DQ ba bảng mới — không DB (giám sát duyệt P3-115)
   script:
     lo_trinh_static: "bash scripts/check-lo-trinh.sh static"        # hồ sơ lo-trinh-2310: cấu hình, trang, răng phủ, bản chép kit, quy định
     lo_trinh_mutation: "bash scripts/check-lo-trinh.sh mutation"    # 6 bản lộ trình hỏng → răng đỏ (should-NOT-fire)
