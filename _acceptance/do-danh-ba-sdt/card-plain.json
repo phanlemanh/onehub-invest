@@ -1,29 +1,3 @@
 {
-  "feature_plain": "Mỗi ngày máy tự đo năm con số về số điện thoại trong danh bạ Người (cặp chưa gộp, người không có tin, bảng người bán lệch, tin nhiều số, số bộ bóc bỏ sót) và hiện trên bảng Kiểm chất lượng của /ops/quality, để so trước và sau các bản sửa danh bạ.",
-  "will_do": [
-    {"id": "AC-1", "p": "Sẽ đếm năm số theo nguồn S03, S05 đúng định nghĩa của bản audit 30/10, chỉ đọc DB."},
-    {"id": "AC-2", "p": "Sẽ chứng mười số trùng với câu đo độc lập chép từ bản audit trên cùng bản chép DB, và mỗi ca thử đẩy đúng một số lên 1."},
-    {"id": "AC-3", "p": "Sẽ ghi mỗi kiểm một dòng mỗi ngày (ngày theo giờ Việt Nam); chạy lại trong ngày không nhân dòng; không ghi số điện thoại, khoá băm hay tên."},
-    {"id": "AC-4", "p": "Sẽ chạy ở bước cuối của job đồng bộ 15 phút (cloud-sync); kiểm đỏ không làm job lỗi."},
-    {"id": "AC-5", "p": "Sẽ cho năm dòng kiểm hiện bằng tiếng Việt trên /ops/quality, không làm đỏ ca kiểm diễn giải đủ của app."},
-    {"id": "AC-6", "p": "Sẽ chỉ đổi đúng các tệp đã kê, không đụng tệp của làn thu (ZCode)."}
-  ],
-  "wont_do": [
-    {"id": "OOS-1", "p": "Không sửa các lỗi được đo (gộp người, bóc số, lưu số gốc, bảng người bán) và không đo nguồn rao vặt S06."},
-    {"id": "OOS-2", "p": "Không dựng màn số riêng, không đặt ngưỡng cảnh báo theo xu hướng."},
-    {"id": "OOS-3", "p": "Không đọc loại bí danh nào khác ngoài SĐT băm hôm nay và SĐT gốc sau bản lưu số gốc."}
-  ],
-  "coverage_plain": [
-    {"i": 0, "p": "Năm số đo × hai nguồn (bảng người bán là một dòng chung) — AC-1, AC-2."},
-    {"i": 1, "p": "Đạt hay không đạt theo ngưỡng của từng số — AC-3, AC-5."},
-    {"i": 2, "p": "Bảng in, ghi theo ngày, chạy lại trong ngày, job 15 phút, /ops/quality — AC-3, AC-4, AC-5."},
-    {"i": 3, "p": "Thước là câu đo độc lập của bản audit trên cùng bản chép DB, mỗi ca thử đẩy đúng một ô."}
-  ],
-  "gap_probe_plain": [
-    {"i": 0, "p": "Thay ngưỡng «ra đúng sáu số của ngày 30/10» đã ký là việc của anh — đã thành Hỏi-2; DB ngày 30/10 không còn để chạy lại."},
-    {"i": 1, "p": "Gắn bước đo vào job đêm thu Zalo là chạm tệp của làn thu — đã đổi sang job đồng bộ của làn Claude và thành Hỏi-3."},
-    {"i": 2, "p": "Ca thử chưa phủ đủ mười ô và chưa chứng các ô khác đứng yên — đã thêm ma trận 11 ô."},
-    {"i": 3, "p": "Chưa thử loại bí danh SĐT gốc và vai chưa rút — đã thêm ca và một ca đỏ cho bản chỉ đọc SĐT băm."},
-    {"i": 4, "p": "Chưa thử ranh giới ngày giữa giờ UTC và giờ Việt Nam — đã thêm ca."}
-  ]
+  "feature_plain": "Mỗi ngày máy tự đo năm con số về số điện thoại trong danh bạ Người theo nguồn S03, S05 và hiện bằng tiếng Việt trên bảng Kiểm chất lượng của /ops/quality, để so trước và sau các bản sửa danh bạ."
 }
