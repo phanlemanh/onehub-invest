@@ -45,7 +45,8 @@ async function banSaoDotBien(thay) {
     rmSync(f, { force: true });
   }
 }
-const BO_NOI = [['if (source === "S03") posts.push(...(anhGan.get(offerId) ?? []));', ""]];
+const BO_NOI = [['const gop = source === "S03" ? noiSau(cua, mediaRowsFromPosts(offerId, source, anhGan.get(offerId) ?? [])) : [];', "const gop = [];"]];
+const TRON_CHUNG = [["rows.push(...cua, ...gop);", "rows.push(...mediaRowsFromPosts(offerId, source, [...posts, ...(anhGan.get(offerId) ?? [])]));"]];
 const BO_XOA = [["`DELETE FROM media x WHERE x.originating_system_name", "`SELECT 1 FROM media x WHERE x.originating_system_name"]];
 const LOC_OFFER = [["const chu = posts.filter((p) => !laChiAnh(p.text));", "const chu = posts.filter((p) => !laChiAnh(p.text) && offerCua.has(p.post_id));"]];
 
@@ -62,11 +63,13 @@ async function trongGiaoDich(fn) {
 const snapCua = async (db) => (await db.query(`SELECT snapshot_id FROM stg_zalo_posts WHERE split_part(snapshot_id, '__', 2) !~* '(mock|test|e2e)'
                    AND split_part(snapshot_id, '__', 2) <> 'example' LIMIT 1`)).rows[0].snapshot_id;
 /** Bài chữ (chữ thật) hay bài chỉ-ảnh (chữ là URL ảnh) của cùng một người trong cùng một nhóm. */
-async function themBai(db, id, giay, { chu = null, anh }) {
+async function themBai(db, id, giay, { chu = null, anh, daTai = false }) {
+  const snap = await snapCua(db);
+  const tep = daTai ? JSON.stringify([{ url: URL_(anh), file: `media/${P}-${anh}.jpg`, snapshotId: snap }]) : null;
   await db.query(
-    `INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, media, posted_at, sender_id, conversation_id)
-     VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7)`,
-    [`${P}-${id}`, await snapCua(db), chu ?? URL_(anh), JSON.stringify([{ url: URL_(anh) }]), luc(giay), NGUOI, NHOM],
+    `INSERT INTO stg_zalo_posts (post_id, snapshot_id, text, media, media_files, posted_at, sender_id, conversation_id)
+     VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8)`,
+    [`${P}-${id}`, snap, chu ?? URL_(anh), JSON.stringify([{ url: URL_(anh) }]), tep, luc(giay), NGUOI, NHOM],
   );
 }
 async function themTin(db, id, postIds) {
@@ -140,6 +143,31 @@ test("GA-AC-3b đột biến: bỏ bước xoá dòng không còn sinh → ảnh
     await themTin(db, "T2", ["d"]);
     await m.runTransformMedia(db, ["S03"]);
     assert.deepEqual((await dongCuaBai(db, "a3")).sort(), ["T", "T2"], "GA-AC-3b đột biến đã gỡ ảnh a3 khỏi T — thước không đo bước xoá");
+  });
+});
+
+/** Bài chữ chỉ có ảnh từ xa (c1, c2), bài chỉ-ảnh có ảnh ĐÃ TẢI (a1) — luật ghép NH1 đưa ảnh đã tải lên trước nếu trộn chung. */
+async function dungTronTep(db) {
+  await themBai(db, "c1", 0, { chu: "Bán căn 2PN giá 3 tỷ", anh: 1 });
+  await themBai(db, "c2", 10, { chu: "Bán căn 2PN giá 3 tỷ, sổ hồng", anh: 2 });
+  await themBai(db, "a1", 40, { anh: 11, daTai: true });
+  await themTin(db, "T", ["c1", "c2"]);
+}
+
+test("GA-AC-3c bài chữ chỉ có ảnh từ xa, bài chỉ-ảnh có ảnh đã tải: ảnh gộp vẫn xếp SAU", async () => {
+  await trongGiaoDich(async (db) => {
+    await dungTronTep(db);
+    await runTransformMedia(db, ["S03"]);
+    assert.deepEqual((await anhCua(db, ["T"])).map(([, k, n]) => [k, n]), [["c1", 0], ["c2", 1], ["a1", 2]], "GA-AC-3c ảnh đã tải của bài chỉ-ảnh phải đứng sau ảnh của hai bài chữ");
+  });
+});
+
+test("GA-AC-3c đột biến: trộn chung một danh sách bài → ảnh đã tải của bài chỉ-ảnh lên đầu", async () => {
+  const m = await banSaoDotBien(TRON_CHUNG);
+  await trongGiaoDich(async (db) => {
+    await dungTronTep(db);
+    await m.runTransformMedia(db, ["S03"]);
+    assert.equal((await anhCua(db, ["T"]))[0][1], "a1", "GA-AC-3c đột biến ảnh a1 vẫn không lên đầu — thước không đo thứ tự khi trộn tệp");
   });
 });
 

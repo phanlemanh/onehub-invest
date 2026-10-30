@@ -23,7 +23,7 @@ evals:
     layer: backend-effect
     cmd: config:executors.script.gop_anh_that
     paths: [pipeline/transform-media.mjs, pipeline/lib/gop-anh.mjs, pipeline/scripts/gop-anh.itest.mjs]
-    expected: "exit 0; ca 'GA-AC-3' xanh trên DB thử: offer tổng hợp có dòng ảnh của đúng 3 bài chỉ-ảnh trong cửa sổ, media_order của chúng lớn hơn mọi ảnh của hai bài chữ, không dòng nào của bài cách 5 phút; lượt hai: thêm 0 · đổi 0 · xoá 0; ca 'GA-AC-3b': chèn bài chữ gần hơn thuộc offer khác (và biến thể không offer), lượt ba → offer cũ 0 dòng của bài ảnh, offer mới đúng dòng của nó (biến thể: không offer nào); hai ca đỏ: bản sao transform-media bỏ bước nối bài ảnh ghim «3 bài chỉ-ảnh», bản sao bỏ bước xoá dòng không còn sinh ghim 'GA-AC-3b'"
+    expected: "exit 0; ca 'GA-AC-3' xanh trên DB thử: offer tổng hợp có dòng ảnh của đúng 3 bài chỉ-ảnh trong cửa sổ, media_order của chúng lớn hơn mọi ảnh của hai bài chữ, không dòng nào của bài cách 5 phút; lượt hai: thêm 0 · đổi 0 · xoá 0; ca 'GA-AC-3b': chèn bài chữ gần hơn thuộc offer khác (và biến thể không offer), lượt ba → offer cũ 0 dòng của bài ảnh, offer mới đúng dòng của nó (biến thể: không offer nào); ca 'GA-AC-3c': bài chữ chỉ có ảnh từ xa, bài chỉ-ảnh có ảnh đã tải → ảnh gộp vẫn có media_order lớn hơn; ba ca đỏ: bản sao transform-media bỏ bước nối bài ảnh ghim «3 bài chỉ-ảnh», bản sao bỏ bước xoá dòng không còn sinh ghim 'GA-AC-3b', bản sao trộn chung một danh sách bài ghim 'GA-AC-3c'"
     evidence_required: [run_id, exit_code, verifier, verified_at, output]
   - id: E4
     criterion: AC-4
