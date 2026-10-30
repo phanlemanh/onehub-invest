@@ -2,7 +2,7 @@
 // Kiểm TĨNH ranh giới cổng (AGENTS.md luật 5, 6, 9): đo TRẠNG THÁI cây mã, không đo diff.
 //   - Căn giá tốt (SPL tầng A) chỉ ở /ops/deals, không ở Invest;
 //   - khối liên hệ/nội dung/ảnh tin ở /ops/deals chỉ cho admin, nguồn hiện bằng mã S0x;
-//   - /api/zalo-media chặn admin trước khi đọc file;
+//   - /api/zalo-media chặn vai Vận hành trở lên trước khi đọc file, nhánh ?path= (OpenClaw) chặn admin (PL3);
 //   - /yield (gồm mục «Dòng tiền vốn vay» nhận phần của bộ Mô phỏng đầu tư cũ) không hiện chữ AirDNA/tên nguồn thật;
 //   - /api/zalo-media chỉ mở hai gốc staging ảnh (+ media/ của raw snapshot qua snapshot+file),
 //     so theo đoạn đường dẫn + realpath;
@@ -88,20 +88,35 @@ const realNames = /\b(Zalo|Facebook|Chợ Tốt|Chotot|AirDNA)\b/;
 const dealsLeaks = deals.split("\n").filter((l) => realNames.test(l) && !/zalo-media/.test(l));
 check(dealsLeaks.length === 0, `ops/deals: không tên nguồn thật trong mã render (${dealsLeaks.length} dòng)`);
 
-// 6. /api/zalo-media: gate admin ĐỨNG TRƯỚC mọi đọc file. Route chỉ chuyển phiên cho lõi
-//    `lib/ops/zalo-media.ts`; mọi đọc đĩa nằm trong sendImage (không export), chỉ gọi sau gate.
+// 6. /api/zalo-media: gate vai Vận hành trở lên (xemNoiDungTin) ĐỨNG TRƯỚC mọi đọc file; nhánh ?path= (gốc OpenClaw)
+//    thêm gate admin trước lần đọc của nó (PL3 the-duyet-du-can-cu Hỏi-1: ảnh đã tải tới vai ops, staging OpenClaw chỉ
+//    admin). Route chỉ chuyển phiên cho lõi `lib/ops/zalo-media.ts`; mọi đọc đĩa nằm trong sendImage (không export).
 const mediaRoute = code(read("src/app/api/zalo-media/route.ts"));
 const media = code(read("src/lib/ops/zalo-media.ts"));
 const serve = media.slice(media.indexOf("export async function serveZaloMedia"));
-const gateAt = serve.indexOf("if (!isAdmin(user)) return");
-const sendAt = serve.indexOf("sendImage(");
+function mediaGated(src) {
+  const serve = src.slice(src.indexOf("export async function serveZaloMedia"));
+  const gateNoiDung = serve.indexOf("if (!xemNoiDungTin(user)) return");
+  const firstSend = serve.indexOf("sendImage(");
+  const gateAdmin = serve.indexOf("if (!isAdmin(user)) return");
+  const sendPath = serve.indexOf("sendImage(path.resolve(p)");
+  return (
+    !/export async function sendImage/.test(src) &&
+    gateNoiDung >= 0 && firstSend > gateNoiDung &&
+    gateAdmin > firstSend && sendPath > gateAdmin &&
+    src.indexOf("await stat(") > src.indexOf("async function sendImage")
+  );
+}
 check(
   /serveZaloMedia\(req, await getSessionUser\(\)\)/.test(mediaRoute) &&
     !/readFile|realpath|stat\(/.test(mediaRoute) &&
-    !/export async function sendImage/.test(media) &&
-    gateAt >= 0 && sendAt > gateAt &&
-    media.indexOf("await stat(") > media.indexOf("async function sendImage"),
-  "zalo-media: isAdmin chặn trước stat/readFile",
+    mediaGated(media),
+  "zalo-media: xemNoiDungTin chặn trước stat/readFile; nhánh ?path= chặn isAdmin",
+);
+// Chiều đỏ: bản sao bỏ gate admin của nhánh ?path= → phép kiểm phải báo.
+check(
+  !mediaGated(media.replace(/if \(!isAdmin\(user\)\) return [^\n]*\n/, "")),
+  "chiều đỏ zalo-media: bản sao bỏ isAdmin ở nhánh ?path= → báo",
 );
 
 // 7. /yield + mục «Dòng tiền vốn vay» (Mô phỏng đầu tư cũ gộp vào, UI3): không chữ AirDNA/tên nguồn thật trong mã render;

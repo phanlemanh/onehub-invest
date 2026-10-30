@@ -3,12 +3,14 @@ import { pool } from "@/lib/db";
 import { kiemQuyen } from "@/lib/ops-access";
 import { ghiAuditTrong } from "@/lib/audit";
 import { planEnrichApproval, type EnrichChoices } from "@/lib/enrich-choices";
+import { LY_DO_TOI_DA, lyDoHopLe } from "@/lib/ops/review-can-cu";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/v1/ops/review/:id/decide — HITL quyết định review item.
- * Body: { status: "approved" | "rejected" | "deferred", choices?: { <field>: <proposal_id> | null } }
+ * Body: { status: "approved" | "rejected" | "deferred", reason: string, choices?: { <field>: <proposal_id> | null } }
+ * `reason` bắt buộc (PL3): cắt khoảng trắng hai đầu, 1…1.000 ký tự — thiếu/trắng/quá dài → 400 trước BEGIN, không đổi gì.
  *
  * Entity_match approved → property_candidates status='merged'
  * Entity_match rejected → property_candidates status='rejected'
@@ -17,7 +19,8 @@ export const dynamic = "force-dynamic";
  *   Thẻ có field xung đột (luật E1 trái LLM, AC-11): approved bắt buộc `choices` cho mỗi
  *   field đó (thiếu → 400, không đổi gì) → apply_enrichment(đề xuất được chọn + không xung
  *   đột) rồi decide_enrichment_review(...,'rejected') bác phần còn lại, cùng transaction.
- * Quyền `review.decide` (vai ops, không bearer); quyết định và dòng audit ghi cùng transaction.
+ * Quyền `review.decide` (vai ops, không bearer); quyết định, lý do (`decision_note`) và dòng audit (`detail.ly_do`) ghi
+ * cùng transaction — audit hỏng thì ROLLBACK cả quyết định lẫn lý do.
  */
 export async function POST(
   req: Request,
@@ -34,10 +37,14 @@ export async function POST(
     return NextResponse.json({ error: "id không hợp lệ" }, { status: 400 });
   }
 
-  const body = (await req.json().catch(() => null)) as { status?: string; choices?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { status?: string; choices?: unknown; reason?: unknown } | null;
   const status = body?.status;
   if (!status || !["approved", "rejected", "deferred"].includes(status)) {
     return NextResponse.json({ error: "status phải là approved|rejected|deferred" }, { status: 400 });
+  }
+  const reason = lyDoHopLe(body?.reason);
+  if (reason === null) {
+    return NextResponse.json({ error: `lý do bắt buộc, 1–${LY_DO_TOI_DA.toLocaleString("vi-VN")} ký tự` }, { status: 400 });
   }
   const choices = parseChoices(body?.choices);
   if (choices === false) {
@@ -82,10 +89,10 @@ export async function POST(
       }
     }
 
-    // Cập nhật review_queue
+    // Cập nhật review_queue kèm lý do người duyệt (PL3)
     await client.query(
-      `UPDATE review_queue SET status = $1, decided_by = $2, decided_at = now() WHERE id = $3`,
-      [status, user.id, id],
+      `UPDATE review_queue SET status = $1, decided_by = $2, decided_at = now(), decision_note = $4 WHERE id = $3`,
+      [status, user.id, id, reason],
     );
 
     // Nếu entity_match → cập nhật property_candidates tương ứng
@@ -119,7 +126,7 @@ export async function POST(
     // Dòng audit trong CÙNG transaction: ghi hỏng → ROLLBACK cả quyết định.
     await ghiAuditTrong(client, q.actor, "review.decide", {
       thao_tac: "decide", reviewId: id, item_type: item.item_type, item_id: item.item_id,
-      from: item.status, to: status,
+      from: item.status, to: status, ly_do: reason,
       ...(applyIds ? { choices } : {}),
     });
     await client.query("COMMIT");
