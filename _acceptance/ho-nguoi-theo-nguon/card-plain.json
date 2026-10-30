@@ -1,0 +1,40 @@
+{
+  "feature_plain": "Mỗi tin rao bán biết ai đăng: máy dựng một danh bạ người đăng riêng cho từng nguồn, nối mỗi tin với người đăng kèm bằng chứng, và nạp lại bao nhiêu lần cũng không đẻ thêm người.",
+  "will_do": [
+    {"id": "AC-2", "p": "Sẽ khai bốn bộ giá trị mới (trạng thái, loại bí danh, loại sự kiện, vai) đúng luật RESO cho đặc trưng VN, và trang chất lượng dữ liệu ở Ops hiện dòng kiểm của chúng bằng chữ dễ hiểu."},
+    {"id": "AC-3", "p": "Sẽ nối mỗi tin S06 (nguồn tin rao có tài khoản) với người của tài khoản đăng; hai tin cùng tài khoản về cùng một người."},
+    {"id": "AC-4", "p": "Sẽ nối mỗi tin S03/S05 (nhóm chat, kênh mạng xã hội) với người gửi bài; tin hai người gửi có hai người; tin chỉ có SĐT nối với người theo SĐT; tin không có gì được đếm riêng; tin đã nghỉ vẫn được nối."},
+    {"id": "AC-5", "p": "Sẽ coi mỗi SĐT là một người riêng của nguồn, không tự gán SĐT cho tài khoản nào; cùng SĐT ở hai nguồn là hai người."},
+    {"id": "AC-6", "p": "Sẽ không thay đổi gì khi chạy lại trên cùng dữ liệu; người gửi đổi thì ghi vai mới và rút vai cũ có lý do; bài tạm mất khỏi kho thu thì giữ nguyên vai."},
+    {"id": "AC-7", "p": "Sẽ chứng trên bản sao dữ liệu thật: nạp lại mọi nguồn hai lần, số người và số vai không đổi, không ghi mới, không rút; bản đối chứng cố tình bỏ tra bí danh thì đỏ."},
+    {"id": "AC-8", "p": "Sẽ đảm bảo mọi người bán trong danh sách cũ đều có người tương ứng ở danh bạ mới, theo từng nguồn."},
+    {"id": "AC-9", "p": "Sẽ giữ danh bạ chỉ trên máy local: không đẩy lên cloud, chỉ ghi vai «người đăng» từ trường nguồn hay chữ tin, không đọc dữ liệu người dùng app hay tài khoản thu."},
+    {"id": "AC-10", "p": "Sẽ chạy mỗi đêm sau bước giá mồi và người bán; danh bạ lỗi thì job đỏ nhưng số giá mồi và người bán của đêm đó vẫn giữ."}
+  ],
+  "wont_do": [
+    {"id": "AC-1", "p": "Chặn mọi lệnh xoá hay dọn sạch trên bốn bảng danh bạ, chặn khoá sai dạng, trạng thái lạ và tên nguồn thật — chỉ được thêm, và rút có lý do."},
+    {"id": "OOS-1", "p": "KHÔNG gộp người giữa các nguồn (đợt sau)."},
+    {"id": "OOS-2", "p": "KHÔNG nối người theo SĐT với người tài khoản cùng nguồn (đợt gộp sau, theo Hỏi-4)."},
+    {"id": "OOS-3", "p": "KHÔNG suy vai môi giới hay sàn."},
+    {"id": "OOS-4", "p": "KHÔNG thay danh sách người bán cũ; giá mồi vẫn đọc danh sách cũ (theo Hỏi-2)."},
+    {"id": "OOS-5", "p": "KHÔNG đẩy danh bạ lên cloud (theo Hỏi-3)."},
+    {"id": "OOS-6", "p": "KHÔNG làm toà, trục, căn (hàng DB1)."},
+    {"id": "OOS-7", "p": "KHÔNG làm người đăng của listing thuê ngắn hạn — nguồn không có dữ liệu ấy."},
+    {"id": "OOS-8", "p": "KHÔNG làm trang Ops xem danh bạ."}
+  ],
+  "coverage_plain": [
+    {"i": 0, "p": "Nguồn: S06, S03, S05 đều phủ; listing thuê ngắn hạn ngoài phạm vi vì không có người đăng (đếm trên DB local 30/10)."},
+    {"i": 1, "p": "Cách tin mang danh tính: chỉ tài khoản, tài khoản kèm SĐT, chỉ SĐT, hai người gửi, không gì, bài không còn nối được — mỗi ô có tiêu chí (AC-3 đến AC-6)."},
+    {"i": 2, "p": "Các lượt chạy: lần đầu, chạy lại, người gửi đổi, bài mất, tin nghỉ, nạp lại thật hai lần, bộ dựng lỗi giữa đêm (AC-4, AC-6, AC-7, AC-10)."},
+    {"i": 3, "p": "Luật khung danh bạ: khoá không mang nghĩa, trạng thái, chỉ thêm, bộ giá trị có ràng buộc, không gộp nguồn, chỉ local, không suy vai (AC-1, AC-2, AC-5, AC-9)."},
+    {"i": 4, "p": "Mọi ô trên đều có tiêu chí; quét không gian làm thu gọn ngay trong mục này."},
+    {"i": 5, "p": "Giả định: mã người gửi ở kho bài thu là định danh tài khoản ổn định tại nguồn."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Luật gán SĐT cho tài khoản là một lựa chọn chưa được trình ra — đã chuyển thành Hỏi-4, khuyến nghị coi SĐT là người riêng."},
+    {"i": 1, "p": "Danh bạ lỗi có thể kéo đỏ cả số giá mồi trên Ops — đã tách danh bạ vào giao dịch riêng chạy sau, kèm phép đo số giá mồi giữ nguyên khi danh bạ lỗi."},
+    {"i": 2, "p": "Thiếu ô «bài tạm mất» và «tin nghỉ», có thể làm bảng vai phình mỗi đêm — đã thêm luật giữ vai và phép đo."},
+    {"i": 3, "p": "Phép đo nạp lại chỉ so số sống, bỏ sót kiểu rút-rồi-ghi-lại — đã đòi lượt hai không ghi, không rút, tổng dòng bằng nhau."},
+    {"i": 4, "p": "Phép đo chặn xoá mới thử một nửa số ô — đã mở đủ 18 ô."}
+  ]
+}
