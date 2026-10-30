@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 import { auditRejected, loadStgPosts } from "./lib/test-posts.mjs";
-import { docPhuongHopLe } from "./lib/osm.mjs";
+import { docPhuongHopLe, docThiTruongCoPhuong } from "./lib/osm.mjs";
 import { writeOffers } from "./lib/write-offers.mjs";
 import { phatBieuPhongNgu } from "./lib/assert.mjs";
 import { assignStickyIds } from "./lib/offer-key.mjs";
@@ -198,6 +198,34 @@ export function matchPhuong(text, phuongSlugs) {
   return best;
 }
 
+/**
+ * Phường theo thị trường (N1): khớp dài nhất như matchPhuong trên danh sách phường của nhiều thị trường; khớp dài nhất
+ * rơi vào hai thị trường (tên trùng giữa Hà Nội và TP.HCM) thì không đoán — trả null.
+ * @param {string} text
+ * @param {{ id: string, name: string, market: string }[]} entries
+ * @returns {{ id: string, slug: string, market: string } | null}
+ */
+export function matchPhuongThiTruong(text, entries) {
+  const textLower = text.normalize("NFC").toLowerCase();
+  let best = null;
+  let bestLen = 0;
+  let tranh = false;
+  for (const e of entries) {
+    const slug = e.id.slice(e.market.length + 1);
+    const variants = [e.name, slug.replace(/-/g, " "), e.name.replace(/^(Quận|Huyện|Phường|Thị xã|Thị trấn|Xã)\s+/i, "")]
+      .map((v) => v.normalize("NFC").toLowerCase());
+    let len = 0;
+    for (const v of variants) {
+      if (v.length < 2 || /^[\d\s]+$/.test(v)) continue;
+      if (textLower.includes(v) && v.length > len) len = v.length;
+    }
+    if (len === 0) continue;
+    if (len > bestLen) { best = { id: e.id, slug, market: e.market }; bestLen = len; tranh = false; }
+    else if (len === bestLen && best && best.market !== e.market) tranh = true;
+  }
+  return tranh ? null : best;
+}
+
 /** Chữ bài đã chuẩn hoá để so trùng: NFC, chữ thường, mọi dãy không phải chữ/số thành một dấu cách. */
 export const normText = (text) => (text ?? "").normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 
@@ -241,16 +269,41 @@ export function lyDoGiaPhiLy(pr) {
 }
 
 /**
+ * Thị trường khai của từng nhóm S03 ở sổ nhóm (collection_units, PL12): group_key (= stg_zalo_posts.conversation_id) →
+ * market_codes. Sổ chưa có (DB chưa áp 048) → bảng rỗng, mọi nhóm đi nhánh «chưa khai».
+ * @param {import("pg").Client} client
+ * @returns {Promise<Map<string, string[]>>}
+ */
+export async function docThiTruongNhom(client) {
+  const { rows: co } = await client.query("SELECT to_regclass('collection_units') IS NOT NULL AS ok");
+  if (!co[0].ok) return new Map();
+  const { rows } = await client.query(
+    "SELECT group_key, market_codes FROM collection_units WHERE source_code = 'S03' AND cardinality(market_codes) > 0",
+  );
+  return new Map(rows.map((r) => [r.group_key, r.market_codes]));
+}
+
+/**
  * Thân transform S03 — người gọi giữ transaction (main bọc BEGIN…COMMIT; test và thước dư
  * lượng bọc BEGIN…ROLLBACK). Post thử bị gạt ở đầu đọc (lib/test-posts.mjs, PL2).
  * @param {import("pg").Client} client
  */
 // `parse` chỉ để thước giả lập đổi rule parser (PL14 NL-AC-4); đường chạy thật luôn dùng parsePost.
 export async function runTransformZalo(client, { parse = parsePost } = {}) {
-  // Load phường list (tên + area_id)
-  const areas = await docPhuongHopLe(client, ["vn-hanoi"]);
-  const phuongSlugs = areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.name]);
-  const areaBySlug = new Map(areas.map((a) => [a.id.replace("vn-hanoi-", ""), a.id]));
+  // Phường theo thị trường của nhóm (N1): nhóm S03 khai market_codes ở sổ nhóm (collection_units, PL12) chỉ đối chiếu
+  // phường của các thị trường đó; nhóm chưa khai (Hỏi-1, Mạnh duyệt 30/10) đối chiếu mọi thị trường có phường.
+  const moiThiTruong = await docThiTruongCoPhuong(client);
+  const areas = await docPhuongHopLe(client, moiThiTruong);
+  const entriesCua = new Map(); // khoá thị trường đã sắp → danh sách phường
+  const entries = (markets) => {
+    const k = [...markets].sort().join(",");
+    if (!entriesCua.has(k)) {
+      const set = new Set(markets);
+      entriesCua.set(k, areas.filter((a) => set.has(a.parent_id)).map((a) => ({ id: a.id, name: a.name, market: a.parent_id })));
+    }
+    return entriesCua.get(k);
+  };
+  const thiTruongNhom = await docThiTruongNhom(client);
 
   // Load staging posts (mới nhất per post_id). Chỉ nguồn Zalo — posts
   // Facebook (agent_id apify-facebook) do transform-fb.mjs xử lý (S05).
@@ -267,8 +320,9 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     if (!pr.kind) { nFail++; continue; }
     const lyDo = lyDoGiaPhiLy(pr);
     if (lyDo) { loaiGiaPhiLy[lyDo]++; continue; }
-    const ph = matchPhuong(p.text, phuongSlugs);
-    if (ph) pr.phuong = ph.slug;
+    const khai = thiTruongNhom.get(p.conversation_id);
+    const ph = matchPhuongThiTruong(p.text, entries(khai?.length ? khai : moiThiTruong));
+    if (ph) { pr.phuong = ph.slug; pr.areaId = ph.id; }
     // tính price_perm2 nếu thiếu
     if (!pr.pricePerm2Vnd && pr.priceVnd && pr.areaM2) {
       pr.pricePerm2Vnd = Math.round(pr.priceVnd / pr.areaM2);
@@ -291,22 +345,29 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
     if (pr.confidence === "low") continue;
     const key = createHash("sha256").update(repostKey(pr, pr.post)).digest("hex").slice(0, 16);
     const offerId = `offer_${key}`;
-    if (!dedup.has(offerId)) {
-      dedup.set(offerId, {
-        offerId, kind: pr.kind, areaId: pr.phuong ? areaBySlug.get(pr.phuong) : null,
+    let o = dedup.get(offerId);
+    if (!o) {
+      o = {
+        offerId, kind: pr.kind, areaId: pr.areaId ?? null,
         priceVnd: pr.priceVnd, areaM2: pr.areaM2, pricePerm2: pr.pricePerm2Vnd,
         bedrooms: pr.bedrooms, phuongRaw: pr.phuong, confidence: pr.confidence,
         firstSeen: pr.post.posted_at, lastSeen: pr.post.posted_at, nReposts: 1,
         postIds: [pr.post.post_id], posts: [{ post_id: pr.post.post_id, posted_at: pr.post.posted_at }],
-        phone: pr.phone, authorHash: pr.post.author_hash,
-      });
+        phone: pr.phone, authorHash: pr.post.author_hash, sellerName: null, sellerNameAt: null,
+      };
+      dedup.set(offerId, o);
     } else {
-      const o = dedup.get(offerId);
       o.nReposts++;
       o.postIds.push(pr.post.post_id);
       o.posts.push({ post_id: pr.post.post_id, posted_at: pr.post.posted_at });
       if (new Date(pr.post.posted_at) < new Date(o.firstSeen)) o.firstSeen = pr.post.posted_at;
       if (new Date(pr.post.posted_at) > new Date(o.lastSeen)) o.lastSeen = pr.post.posted_at;
+    }
+    // seller_name (N1): tên hiển thị của bài mới nhất có tên — người bán trên tin rao là tầng C (ADR-0007 sửa đổi 23/10).
+    const ten = (pr.post.sender_name ?? "").trim();
+    if (ten && (o.sellerNameAt === null || new Date(pr.post.posted_at) >= new Date(o.sellerNameAt))) {
+      o.sellerName = ten;
+      o.sellerNameAt = pr.post.posted_at;
     }
   }
   console.log(`dedup: ${dedup.size} unique offers (từ ${parsed.filter(p => p.confidence !== "low").length} tin có giá)`);
@@ -330,7 +391,7 @@ export async function runTransformZalo(client, { parse = parsePost } = {}) {
       area_m2: o.areaM2, price_perm2: o.pricePerm2, phuong_raw: o.phuongRaw,
       confidence: o.confidence, first_seen: o.firstSeen, last_seen: o.lastSeen,
       n_reposts: o.nReposts, post_ids: o.postIds, price_tier: "P1", seller_phone: o.phone,
-      seller_phone_hash: phoneHash, seller_ref: o.authorHash,
+      seller_phone_hash: phoneHash, seller_ref: o.authorHash, seller_name: o.sellerName,
     });
     if (phoneHash) {
       const s = sellerAgg.get(phoneHash) ?? { n: 0, first: o.firstSeen, last: o.lastSeen };

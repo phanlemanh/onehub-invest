@@ -20,6 +20,18 @@ export const phuongHopLe = (p = "") => `${p}meta->>'source' = 'osm-phuong' AND N
 export const NGUON_PHUONG = "osm-phuong";
 
 /**
+ * Các thị trường có ít nhất một phường hợp lệ — đối chiếu tên phường khi nhóm S03 chưa khai thị trường (N1, Hỏi-1).
+ * @param {import("pg").Client} client
+ * @returns {Promise<string[]>}
+ */
+export async function docThiTruongCoPhuong(client) {
+  const { rows } = await client.query(
+    `SELECT DISTINCT parent_id FROM areas WHERE region_type = 'submarket' AND ${phuongHopLe()} ORDER BY parent_id`,
+  );
+  return rows.map((r) => r.parent_id);
+}
+
+/**
  * Phường hợp lệ của các thị trường — danh sách khớp tên dùng chung của transform tin rao (S03/S05/S06).
  * @param {import("pg").Client} client
  * @param {string[]} markets id thị trường, vd ["vn-hanoi"]
