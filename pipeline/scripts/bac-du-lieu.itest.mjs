@@ -7,10 +7,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { chay, ghiAnhChup, KHOA as KHOA_BAC, SQL_610, SQL_KIEM_DE_XUAT } from "../bac-du-lieu.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SQL_056 = readFileSync(path.join(ROOT, "db/migrations/056_data_level.sql"), "utf8");
-const KHOA = 56056; // trùng KHOA của bac-du-lieu.mjs: khoá lấy TRƯỚC khi áp 056 để lượt song song xếp hàng, không deadlock
+const KHOA = KHOA_BAC; // khoá của bac-du-lieu.mjs lấy TRƯỚC khi áp 056 để lượt song song xếp hàng, không deadlock
 const LOI = ["kind", "property_type", "price_vnd", "area_m2", "area_id"];
 const MARKET = "vn-tst-bac-m";
 const WARD = "vn-tst-bac-w";
@@ -149,5 +150,85 @@ test("AC-9 056 chạy hai lần không nhân dòng trục", async () => {
       (SELECT count(*)::int FROM ref_field_lookup WHERE table_name = 'data_level_snapshot') AS rel,
       (SELECT count(*)::int FROM ref_lookup WHERE lookup_name = 'data_level') AS truc`);
     assert.deepEqual(r, { rel: 1, truc: 6 });
+  });
+});
+
+// —— Việc 3: ảnh chụp 610 + kiểm đề xuất ——
+
+async function deXuat(offer, status, value = "3") {
+  const { rows: [r] } = await c.query(`INSERT INTO enrichment_proposals (run_id, offer_id, field, value, value_key, source,
+      route, status, applied_at) VALUES ('pl16-tst', $1, 'bedrooms', $2, $2, 'e1_rule', 'direct', $3, now()) RETURNING id`,
+  [offer, value, status]);
+  return Number(r.id);
+}
+const phatBieu = (offer, method, evidence = {}) => c.query(`INSERT INTO field_assertions (subject_key, field, value,
+    evidence_tier, method, evidence) VALUES ($1, 'bedrooms', '3', 'observed', $2, $3)`, [`S06:${offer}`, method, evidence]);
+const dongKiem = async () => (await c.query(`SELECT status, detail FROM dq_check_results
+  WHERE check_name = 'enrich:proposal-assertion' ORDER BY id DESC LIMIT 1`)).rows[0];
+const im = () => {};
+
+function kiemAC7(r) {
+  assert.deepEqual(r, { applied: 4, missing: 2 }, "legacy không được tính là phát biểu của đề xuất");
+}
+test("AC-7 enrich:proposal-assertion bốn dạng → applied=4 missing=2 fail; bỏ c,d → pass; rỗng → pass; mã thoát 0", async () => {
+  await trongGiaoDich(async () => {
+    await c.query("UPDATE enrichment_proposals SET status = 'skipped' WHERE status = 'applied'"); // nền 0 (ROLLBACK trả lại)
+    const [ta, tb, tc, td] = [await tin(), await tin(), await tin(), await tin()];
+    const a = await deXuat(ta, "applied");
+    await phatBieu(ta, "e1_rule", { proposal_id: a, route: "direct" });
+    await deXuat(tb, "applied");
+    await phatBieu(tb, "e1_rule");
+    const pc = await deXuat(tc, "applied");
+    await phatBieu(tc, "legacy");
+    const pd = await deXuat(td, "applied");
+
+    assert.equal(await chay(c, { write: true, out: im }), 0, "dòng kiểm fail không đổi mã thoát");
+    assert.deepEqual(await dongKiem(), { status: "fail", detail: "applied=4 missing=2" });
+    kiemAC7((await c.query(SQL_KIEM_DE_XUAT)).rows[0]);
+    // Bản lệch: nhận cả phát biểu legacy cùng giá trị (lỗi «giá trị có trước che đề xuất thiếu» — gap-probe).
+    const lech = SQL_KIEM_DE_XUAT.replace("AND fa.method <> 'legacy'", "")
+      .replace("fa.method = CASE WHEN", "fa.method IN ('legacy', CASE WHEN").replace("ELSE ep.source END))", "ELSE ep.source END)))");
+    assert.equal((lech.match(/'legacy', CASE/g) ?? []).length, 1, "bản lệch: câu kiểm đã đổi — sửa ca đỏ");
+    await assert.rejects(async () => kiemAC7((await c.query(lech)).rows[0]), /legacy không được tính là phát biểu của đề xuất/);
+
+    await c.query("UPDATE enrichment_proposals SET status = 'rejected' WHERE id = ANY ($1)", [[pc, pd]]);
+    assert.equal(await chay(c, { write: true, out: im }), 0);
+    assert.deepEqual(await dongKiem(), { status: "pass", detail: "applied=2 missing=0" });
+
+    await c.query("UPDATE enrichment_proposals SET status = 'rejected' WHERE status = 'applied'");
+    assert.equal(await chay(c, { write: true, out: im }), 0);
+    assert.deepEqual(await dongKiem(), { status: "pass", detail: "applied=0 missing=0" });
+  });
+});
+
+const nCua = async (market, pt, unit, lv) => (await c.query(`SELECT coalesce(sum(n), 0)::int AS n FROM data_level_snapshot
+  WHERE snap_date = current_date AND market_id = $1 AND property_type = $2 AND unit = $3 AND data_level = $4`,
+[market, pt, unit, lv])).rows[0].n;
+
+async function kiemPhanKhuc(truoc) {
+  assert.equal(await nCua("chua-ro", "land", "tin_le", "B0"), truoc + 1, "tin không phường phải ở chua-ro");
+  assert.equal(await nCua(MARKET, "apartment", "can", "B2"), 1, "căn ở phường con của thị trường, loại hình lấy từ căn");
+  assert.equal(await nCua(MARKET, "house", "can", "B2"), 0, "loại hình của căn không lấy từ tin gắn");
+  assert.equal(await nCua(MARKET, "house", "tin_le", "B1"), 1, "tin lẻ đủ trường lõi ở thị trường của phường");
+}
+test("AC-5 phân khúc của đơn vị: thị trường = cha market của phường, không phường → chua-ro (kèm chiều đỏ)", async () => {
+  await trongGiaoDich(async () => {
+    await ghiAnhChup(c);
+    const truoc = await nCua("chua-ro", "land", "tin_le", "B0");
+    await tin({ pt: "land", ward: null, source: "S03" });
+    await can({ pt: "apartment" }, await tin({ pt: "house" }));
+    await tin({ pt: "house", source: "S05" });
+    await ghiAnhChup(c);
+    await kiemPhanKhuc(truoc);
+    const { rows: [t] } = await c.query(`SELECT
+      (SELECT sum(n)::int FROM data_level_snapshot WHERE snap_date = current_date) AS snap,
+      (SELECT count(*)::int FROM properties)
+        + (SELECT count(*)::int FROM sale_offers o WHERE o.source IN ('S03', 'S05', 'S06')
+             AND NOT EXISTS (SELECT 1 FROM property_offers po WHERE po.offer_id = o.offer_id)) AS dem`);
+    assert.equal(t.snap, t.dem, "tổng ảnh chụp = số căn + số tin lẻ còn sống");
+    const lech = SQL_610.replace("LEFT JOIN areas w ON w.id = d.area_id", "JOIN areas w ON w.id = d.area_id");
+    assert.notEqual(lech, SQL_610, "bản lệch: 610 không còn LEFT JOIN phường — sửa ca đỏ");
+    await c.query(lech);
+    await assert.rejects(kiemPhanKhuc(truoc), /tin không phường phải ở chua-ro/);
   });
 });
