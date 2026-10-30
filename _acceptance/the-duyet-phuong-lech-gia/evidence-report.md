@@ -8,7 +8,7 @@ verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
 verified_commit: 99185e22e479e128f9161e4685e485774e65b2bb
-human_signoff:
+human_signoff: Mạnh 2026-10-30
 ---
 
 # Evidence Report: the-duyet-phuong-lech-gia

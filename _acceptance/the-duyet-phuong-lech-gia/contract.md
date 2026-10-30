@@ -5,7 +5,7 @@ slug: the-duyet-phuong-lech-gia
 owner: phanlemanh@gmail.com
 risk_tier: T2
 surfaces: [ui]
-status: verified
+status: signed-off
 veto_state: mo
 veto_opened_at: 2026-10-30T09:32:27Z
 approved_by:
@@ -68,3 +68,8 @@ từ quận hay thành phố đi kèm tên.
 - OOS-5: Hai chuỗi phường số giống hệt ở hai quận khác nhau — «Khớp» như trước vòng; vòng chỉ sửa «Lệch» giả.
 
 ## Notes
+
+- Known limits — chọn ở Cổng Bằng chứng 2026-10-30:
+  - Ngoài-1: Bảng so ghép căn thêm một hàng mới thì ca TPL-AC-4 không tự đo hàng đó có bị chuẩn hoá phường lan sang không.
+  - Ngoài-2: Ca sheet TPL-AC-5 không kiểm nhãn «Phường» và hai giá trị nằm đúng cột — chỉ kiểm có mặt trong hàng.
+  - Ngoài-3: Ca sheet TPL-AC-5 dựng evidence viết tay; bên sinh thẻ đổi tên trường phường thì ca này không báo.
