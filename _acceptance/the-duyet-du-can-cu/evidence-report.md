@@ -7,7 +7,7 @@ reason:
 verified_by: fresh-context verification subagent
 enforcement_mode: strict
 bypass_used: false
-verified_commit: 6cccdb14e9f3316134ec9b85eb14ed96dd85de9c
+verified_commit: a788632b0a69bdd17b1e7a7eb14f5127cb55268a
 human_signoff: Mạnh 2026-10-30
 ---
 
@@ -262,3 +262,11 @@ sha: 15f752e595fda44f166af5a24c0df9aa45ab93a2 · suites: 6 lệnh exit 0 · eval
 ### Re-pin lần 2 — 2026-10-30, do ba ca probe DB máy thu bỏ qua có lời ở CI
 run_id: repin-20261030T075624Z-91866
 sha: 6cccdb14e9f3316134ec9b85eb14ed96dd85de9c · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13
+
+### Re-pin lần 3 — 2026-10-30, do probe hàng duyệt bỏ qua khi bàn đo rỗng (giám sát giao 30/10)
+run_id: repin-20261030T170847Z-10219
+sha: 1b8f33197cf99361500cebdf33f6755a03773630 · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13
+
+### Re-pin lần 4 — 2026-10-30, do gộp main (#215 đổi review-can-cu) sau sửa probe hàng duyệt
+run_id: repin-20261030T171737Z-58733
+sha: a788632b0a69bdd17b1e7a7eb14f5127cb55268a · suites: 6 lệnh exit 0 · evals: 15/15 eval máy đạt kỳ vọng · ngoài làn máy: E13

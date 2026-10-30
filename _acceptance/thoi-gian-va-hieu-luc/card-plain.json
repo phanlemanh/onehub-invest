@@ -1,0 +1,36 @@
+{
+  "feature_plain": "Mỗi tin có thời điểm quan sát cho mọi giá trị, có trạng thái chào (đang chào · đã gỡ…) lấy từ bằng chứng theo thời gian, giá và trạng thái được giữ thành lịch sử gom theo căn, và căn lên bậc cao nhất B5 khi đang chào, còn tươi, có lịch sử giá.",
+  "will_do": [
+    {"id": "AC-1", "p": "Sẽ cho mọi giá trị đã ghi một thời điểm quan sát — điền lùi cho 50.278 giá trị có trước, và từ nay không ghi được giá trị thiếu thời điểm."},
+    {"id": "AC-2", "p": "Sẽ cho cả ba đường ghi giá trị (bộ đọc tin, áp đề xuất làm giàu, bước chuyển) tự ghi thời điểm quan sát khi nguồn không cho ngày đăng."},
+    {"id": "AC-3", "p": "Sẽ thêm trạng thái chào cho mỗi tin (mặc định «Chưa rõ») theo đúng năm giá trị đã duyệt, và sổ từ vựng khớp cơ sở dữ liệu."},
+    {"id": "AC-4", "p": "Sẽ ghi bằng chứng «đang chào» cho tin còn trên sàn hay còn trong nhóm, «đã gỡ» cho tin sàn biến mất khỏi lượt quét; tin đổi khoá không bị coi là gỡ; chạy lại không ghi trùng."},
+    {"id": "AC-5", "p": "Sẽ chọn trạng thái theo bằng chứng mới nhất: tin gỡ rồi đăng lại về «đang chào»; tin chỉ lâu chưa thấy lại thì giữ nguyên trạng thái."},
+    {"id": "AC-6", "p": "Sẽ ghi lịch sử mỗi lần tin mới, đổi giá, đổi trạng thái, gom được theo căn; ghi lại cùng giá không sinh dòng."},
+    {"id": "AC-7", "p": "Sẽ cho căn lên B5 khi đang chào, còn trong cửa sổ độ tươi, có lịch sử giá; quá cửa sổ thì tự về B4, và bảng phân bố bậc thấy rõ việc tụt."},
+    {"id": "AC-8", "p": "Sẽ có một lệnh cập nhật trạng thái cho toàn bộ tin và in số tin theo từng trạng thái; chạy lại không đổi gì."},
+    {"id": "AC-9", "p": "Sẽ chạy cập nhật trạng thái mỗi 15 phút ngay trước bước chụp phân bố bậc; thêm thuật ngữ «Trạng thái chào» và «Lịch sử giá»; mọi bộ test cũ vẫn xanh."}
+  ],
+  "wont_do": [
+    {"id": "OOS-1", "p": "KHÔNG đọc chữ «đã bán / đã cọc» trong tin nhóm ở vòng này — việc của làn đọc tin."},
+    {"id": "OOS-2", "p": "KHÔNG hiện trạng thái hay lịch sử giá trên trang nào."},
+    {"id": "OOS-3", "p": "KHÔNG đưa trạng thái và lịch sử lên máy chủ cloud."},
+    {"id": "OOS-4", "p": "KHÔNG đặt cửa sổ độ tươi riêng cho từng nguồn."},
+    {"id": "OOS-5", "p": "KHÔNG ghi giá chốt hay giá niêm yết trước trên tin."},
+    {"id": "OOS-6", "p": "KHÔNG dọn cột lịch sử giá cũ trên bảng căn."},
+    {"id": "OOS-7", "p": "KHÔNG thêm trạng thái «hết hạn» (xem Hỏi-1)."}
+  ],
+  "scope_plain": "Những việc dưới đây để cho các hàng sau hoặc không làm:",
+  "coverage_plain": [
+    {"i": 0, "p": "Mọi đường ghi giá trị × nguồn có/không có ngày đăng — AC-1, AC-2, AC-4."},
+    {"i": 1, "p": "Mọi loại bằng chứng (tin còn trên sàn, bài nhóm, biến mất khỏi lượt quét, đổi khoá, đăng lại, lâu chưa thấy) × trạng thái — AC-4, AC-5, theo bảng bằng chứng của khung RESO."},
+    {"i": 2, "p": "Đường đi của trạng thái: bằng chứng → chọn trạng thái → lịch sử → bậc B5 → chạy mỗi 15 phút — AC-5 tới AC-9."}
+  ],
+  "gap_probe_plain": [
+    {"i": 0, "p": "Nghĩa của «căn có lịch sử giá» là lựa chọn của anh mà máy đã tự chốt; sau khi điền lùi, cách hiểu «ít nhất một dòng» không lọc căn nào — đã đưa thành Hỏi-3."},
+    {"i": 1, "p": "Luật chọn trạng thái theo thời gian lệch luật chọn theo lớp bằng chứng của PL15, mà lối giữ luật cũ vẫn khả thi — đã đưa thành Hỏi-4."},
+    {"i": 2, "p": "Chưa định thời điểm quan sát của bằng chứng «đang chào»; lấy giờ chạy thì tin đã gỡ vẫn hiện đang chào — đã chốt lấy lần thấy cuối và thêm ca kiểm đầu–cuối có chiều đỏ."},
+    {"i": 3, "p": "Đường đo cắt mất vế «tự về hết hạn» của ngưỡng và chưa có phép đo đọc bảng phân bố thấy căn tụt — đã trích nguyên văn, nêu phụ thuộc Hỏi-1, thêm ca chụp trước/sau."},
+    {"i": 4, "p": "Chưa định căn nhiều tin lên B5 khi một tin đạt hay mọi tin đạt — đã thêm hai ô căn hai tin, căn lấy tin tốt nhất như PL16."}
+  ]
+}
