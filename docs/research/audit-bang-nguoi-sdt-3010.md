@@ -35,7 +35,7 @@ cờ giấu, và danh bạ chỉ giữ dạng băm nên `/ops/people` không hi�
 | N4 | Tin chỉ giữ SĐT đầu của bài đầu | 11/885 tin S03 sống có ≥ 2 SĐT qua các bài, chỉ giữ 1; 3 tin `seller_phone` rỗng dù bài khác trong tin có số. 105 bài S03 có ≥ 2 SĐT | Trung | Bộ bóc thiếu luật chọn | Claude · P1 |
 | N5 | Số viết tách lạ bị sót | 46 bài trên 12.110 bài có số (**0,38%**; 20 văn bản khác nhau): `ddd dd•dd ddd` 32, `(+dd) dddd ddddd` 7, `ddd. dd.ddddd` 4, `(ddd) dddd ddd` 3. Số viết tách thường («09x.xxx.xxx», «0 9 x x…») bắt đủ; 0 bài viết «o» thay «0» | Thấp | Bộ bóc thiếu dấu tách | Claude · P1 |
 | N6 | Nhận số 11 chữ số | Di động VN chỉ còn 10 số từ 2018. 27 bài khớp số 11 chữ số; 1 tin sống mang số đó làm `seller_phone` | Thấp | Lỗi nhỏ | Claude · P1 |
-| N7 | Khoá SĐT không chuẩn và «băm» không bảo vệ gì | Dạng lưu `0xxxxxxxxx`, không E.164. Khoá = `sha256(số)` cắt 32 ký tự hex, không muối: vét ~5×10⁸ số di động là ra lại số gốc. Khoá này lên cloud qua `sale_offers.seller_phone_hash`, `sellers.phone_hash`, `properties.seller_phone_hash` | Trung | Đúng luật tầng C, nhưng tên gọi gây hiểu nhầm | Mạnh quyết · P3 |
+| N7 | Khoá SĐT không chuẩn và «băm» không bảo vệ gì | Dạng lưu `0xxxxxxxxx`, không E.164. Khoá = `sha256(số)` cắt 32 ký tự hex, không muối: vét ~5×10⁸ số di động là ra lại số gốc. Khoá này lên cloud qua `sale_offers.seller_phone_hash`, `sellers.phone_hash`, `properties.seller_phone_hash` | Trung | Đúng luật tầng C, nhưng tên gọi gây hiểu nhầm | **Đã quyết** (Hỏi-A: lưu số gốc, một dạng `+84…`) · P3 |
 | N8 | `/ops/people` không hiện, không tìm được SĐT | Chỉ hiện 8 ký tự băm (`people.ts:77`); ô tìm chỉ khớp tên và tài khoản (`people.ts:81–86`). Số gốc có sẵn ở `sale_offer_records.seller_phone` (máy thu). `/ops/deals` **đã** hiện số gốc cho `admin` (`deal-card.tsx:97–103`) | Trung | Thiếu tính năng | Claude · U1 |
 | N9 | S06 không thu SĐT | 0/29.604 payload có số. Cờ `phone_hidden = true` chỉ ở **4.096** (13,8%); **25.508** tin không giấu, nhưng API danh sách không trả số. Bản audit trước ghi «nguồn giấu» (H16), cần sửa thành «API danh sách không trả, cần gọi riêng từng tin» | Trung | Đúng hiện trạng (SH3 chờ SH1) | ZCode · liên làn (chờ quyết) |
 | N10 | Chú thích «SĐT là tầng A» còn sót | `app/src/lib/deals.ts:10`, `app/src/app/ops/deals/page.tsx:15`, `mappings.yaml` (`seller_phone`: «LOCAL-ONLY (PII)»), comment migration 022. Trái chốt 23/10. `/ops/deals` khoá số cho `admin`, `/ops/people` mở bí danh cho vai Vận hành: hai cổng, hai mức | Thấp | Lỗi chữ + lệch quyền | Claude · U1 |
@@ -221,11 +221,12 @@ Cần gì để hiện số gốc cho vai Vận hành ở máy thu (không cần
 3. Ô tìm nhận SĐT: chuẩn hoá chuỗi gõ về `0xxxxxxxxx` (cùng hàm của bộ bóc), băm, so `sdt_bam`. Viewer không được tìm theo SĐT
    (khớp hướng của `che-tim-bi-danh-viewer`).
 4. Bảng chỉ ở máy thu (055 không lên cloud, Hỏi-3) nên không chạm `sync-cloud`.
-5. Cần một quyết định: số gốc mở cho **vai Vận hành** (như bí danh ở `/ops/people`) hay chỉ `admin` (như `/ops/deals`)?
-   Theo chốt 23/10 thì vai Vận hành là đủ; khi đó `/ops/deals` nên hạ cổng theo cho thống nhất.
+5. **Đã quyết (Hỏi-B, Mạnh 30/10)**: số gốc mở cho **cả vai Vận hành và `admin`**. `/ops/deals` hạ cổng liên hệ từ
+   `isAdmin` xuống cùng mức để hai trang thống nhất.
 
-Thay vì nối lúc hiển thị, có thể lưu số gốc thành bí danh mới (`alias_kind = sdt`, migration mới). Cách này bền hơn khi tin
-nghỉ bị dọn, nhưng là T3 và cần N7 quyết trước. Đề xuất: làm cách nối lúc hiển thị trước (T2), sau đó mới quyết lưu.
+**Đã quyết (Hỏi-A, Mạnh 30/10)**: lưu số gốc, một dạng duy nhất `+84…` (E.164). Vì vậy cách bền là bí danh mới chứa số gốc
+(`alias_kind = sdt`, migration mới, T3), không phải nối lúc hiển thị. Cách nối lúc hiển thị ở trên chỉ còn là đường lùi nếu
+hàng migration bị chậm.
 
 ---
 
@@ -245,8 +246,8 @@ Tra `dd.reso.org/DD2.1` ngày 30/10 (ADR-0011 RESO-first; ADR-0016 §8 đã đ�
 
 Khuyến nghị: **khoá Người vẫn là `party_key`**, không phải SĐT. SĐT là bí danh mạnh nhất để **tìm và gộp** người
 (`MemberMobilePhone` / `OtherPhones`), nhưng không làm khoá chính, vì 6 SĐT S03 dùng chung và 3 người gửi dùng nhiều số
-(§3.3). Dạng chuẩn của bí danh nên là E.164. Đổi dạng sẽ đổi mọi giá trị băm, nên phải đi qua nghỉ bí danh cũ, thêm bí danh
-mới (055 cho phép), không sửa tại chỗ.
+(§3.3). Dạng chuẩn của bí danh là E.164 (**Mạnh chốt 30/10**, Hỏi-A). Đổi dạng sẽ đổi mọi giá trị băm, nên phải đi qua
+nghỉ bí danh cũ, thêm bí danh mới (055 cho phép), không sửa tại chỗ.
 
 ---
 
@@ -259,10 +260,11 @@ Mọi hàng dưới đây **chưa cắt**. Cắt thật đi qua `/acceptance-gat
 
 | Slug | Câu giao (nháp) | Ranh giới tệp | Tầng | Dãy | Gánh |
 |---|---|---|---|---|---|
+| `sdt-luu-goc-e164` | **Theo Hỏi-A.** Mọi chỗ lưu SĐT dùng một dạng `+84xxxxxxxxx`: bộ bóc trả E.164, `sale_offers.seller_phone` ghi E.164, danh bạ có bí danh mới `alias_kind = sdt` giữ số gốc (thêm giá trị vào CHECK + `ref_lookup`, chỉ mục duy nhất định danh mở cho `sdt`). Dữ liệu cũ đi qua nghỉ bí danh `sdt_bam` + thêm bí danh `sdt`, không sửa tại chỗ. Khoá băm, nếu còn cần cho cloud, tính từ E.164. `sellers` thành view trên danh bạ (Hỏi-C bước 2). `seller_phone` vẫn ở lại máy (`PII_EXCLUDE`): đưa số gốc lên cloud là quyết định riêng. **Bật khi**: 0 giá trị SĐT nào trong DB không khớp `^\+84[35789]\d{8}$`; 165/165 người theo SĐT có bí danh `sdt`; nạp lại lượt 2 = 0 bí danh mới; leak gate cloud xanh | migration mới (số do điều phối liên làn cấp), `pipeline/transform-zalo.mjs`, `pipeline/transform-fb.mjs`, `pipeline/lib/danh-ba-nguoi.mjs`, `pipeline/refresh-bait-gap.mjs`, `pipeline/sync-cloud.mjs`, `pipeline/vocab.mjs` (sinh lại từ vựng), test | **T3** | **P3** | N7, N3 (bước 2) |
 | `gop-nguoi-sdt-tai-khoan` | Bộ dựng danh bạ gộp người theo SĐT vào người theo tài khoản **cùng nguồn** khi SĐT có đúng một người gửi trên mọi tin sống và người gửi đó có đúng một SĐT. Ghi `registry_events` `gop`, `parties.status = merged`, vai `parser` chuyển sang người tài khoản. Ca nhiều–nhiều sinh thẻ duyệt `entity_match` loại người, không tự gộp. Nạp lại không gộp lại, không nhân sự kiện. **Bật khi**: trên DB 30/10, người mang cả tài khoản + SĐT S03 = 129, S05 = 13; người SĐT không vai S03 từ 138 xuống ≤ 10; nạp lại lượt 2 = 0 sự kiện mới; 6 + 1 SĐT dùng chung thành thẻ | `pipeline/lib/danh-ba-nguoi.mjs`, `pipeline/dung-nguoi.mjs`, `pipeline/scripts/danh-ba-nguoi*.test.mjs`, `pipeline/scripts/nap-lai-nguoi.mjs` | T2 (không migration: 055 đã có `registry_events`, `merged_into`) | **P3** | N1, N2 |
-| `sellers-theo-danh-ba` | `sellers` không còn đứng yên: hoặc (a) `refresh-bait-gap` thêm dòng cho SĐT mới (khôi phục `INSERT … ON CONFLICT` đã mất ở `907f4bd4`), hoặc (b) `sellers` thành view trên `parties` + bí danh `sdt_bam` (Hỏi-2 của DB2b). AC-8 của DB2b đối chiếu trên tập SĐT của `sale_offers`, không trên `sellers`. **Bật khi**: số dòng `sellers` = số SĐT khác nhau trên `sale_offers` (hôm nay 19 so với 161); chip môi giới `/ops/deals` có ở mọi tin có SĐT | (a) `pipeline/refresh-bait-gap.mjs`, `pipeline/scripts/bait-gap-sellers.test.mjs`, `pipeline/lib/danh-ba-nguoi.mjs` (`sellersThieu`); (b) thêm migration + `sync-cloud.mjs` | (a) T2 · (b) **T3** | **P3** | N3 |
-| `boc-sdt-du-va-chon-ro` | Bộ bóc SĐT nhận thêm dấu tách `•`, `·`, mã `(+84)`, đầu số trong ngoặc và hai ký tự tách liền; bỏ số 11 chữ số. Tin chọn `seller_phone` bằng luật rõ trên **mọi** bài của tin (số xuất hiện ở nhiều bài nhất; hoà thì bài neo), không lấy số đầu của bài đầu. Đếm tin nhiều SĐT vào log transform. **Bật khi**: trên 33.090 bài S03, bài sót theo bộ dò rộng từ 46 xuống 0; 0 bài nhận số 11 chữ số; 3 tin S03 rỗng SĐT mà bài có số thành có; test cố định 4 dạng ở §2.2 | `pipeline/transform-zalo.mjs`, `pipeline/transform-fb.mjs`, `pipeline/parse.test.mjs` | T2 | **P1** | N4, N5, N6 |
-| `people-hien-so-goc` | `/ops/people` và trang một người hiện số gốc (`0xxx xxx xxx`, `tel:`) cho vai Vận hành ở máy thu, nối `sdt_bam` → `sale_offer_records.seller_phone` phía máy chủ; ô tìm nhận SĐT (chuẩn hoá rồi băm); vai Người xem không nhận số và không tìm được theo SĐT. Trang một người hiện «cùng SĐT với người …» khi chưa gộp (N1). Sửa chú thích «SĐT tầng A» ở `deals.ts`, `ops/deals/page.tsx`. **Bật khi**: 165/165 người theo SĐT hiện số với vai `ops`; HTML/JSON của vai `viewer` không chứa chuỗi 10 chữ số nào; tìm một SĐT ra đúng người | `app/src/lib/ops/people.ts`, `app/src/components/ops/people/**`, `app/src/app/ops/people/**`, `app/tests/danh-ba-nguoi*`, `app/src/lib/deals.ts`, `app/src/app/ops/deals/page.tsx` | T2 | **U1** | N8, N10 |
+| `sellers-them-dong-lai` | **Hỏi-C bước 1 (Mạnh duyệt 30/10).** `refresh-bait-gap` thêm dòng `sellers` cho SĐT mới (khôi phục `INSERT … ON CONFLICT` đã mất ở `907f4bd4`, giữ vai «chủ duy nhất» của cột tổng hợp). AC-8 của DB2b đối chiếu trên tập SĐT của `sale_offers`, không trên `sellers`. **Bật khi**: số dòng `sellers` = số SĐT khác nhau trên `sale_offers` (hôm nay 19 so với 161); chip môi giới `/ops/deals` có ở mọi tin có SĐT; test đỏ khi bỏ lệnh thêm dòng | `pipeline/refresh-bait-gap.mjs`, `pipeline/scripts/bait-gap-sellers.test.mjs`, `pipeline/lib/danh-ba-nguoi.mjs` (`sellersThieu`) | T2 | **P3** | N3 |
+| `boc-sdt-du-va-chon-ro` | Bộ bóc SĐT nhận thêm dấu tách `•`, `·`, mã `(+84)`, đầu số trong ngoặc và hai ký tự tách liền; bỏ số 11 chữ số; trả dạng `+84…` (Hỏi-A; hàm chuẩn hoá dùng chung cho ô tìm ở `/ops/people`). Tin chọn `seller_phone` bằng luật rõ trên **mọi** bài của tin (số xuất hiện ở nhiều bài nhất; hoà thì bài neo), không lấy số đầu của bài đầu. Đếm tin nhiều SĐT vào log transform. **Bật khi**: trên 33.090 bài S03, bài sót theo bộ dò rộng từ 46 xuống 0; 0 bài nhận số 11 chữ số; 3 tin S03 rỗng SĐT mà bài có số thành có; test cố định 4 dạng ở §2.2 | `pipeline/transform-zalo.mjs`, `pipeline/transform-fb.mjs`, `pipeline/parse.test.mjs` | T2 | **P1** | N4, N5, N6 |
+| `people-hien-so-goc` | `/ops/people` và trang một người hiện số gốc (lưu `+84…`, hiện `0xxx xxx xxx`, `tel:`) cho **vai Vận hành và `admin`** ở máy thu (Hỏi-B), đọc bí danh `sdt` (sau `sdt-luu-goc-e164`; trước đó nối `sdt_bam` → `sale_offer_records.seller_phone` phía máy chủ); ô tìm nhận SĐT (chuẩn hoá về `+84…`); vai Người xem không nhận số và không tìm được theo SĐT. Trang một người hiện «cùng SĐT với người …» khi chưa gộp (N1). `/ops/deals` hạ cổng liên hệ từ `isAdmin` xuống vai Vận hành; sửa chú thích «SĐT tầng A» ở `deals.ts`, `ops/deals/page.tsx`. **Bật khi**: 165/165 người theo SĐT hiện số với vai `ops` và `admin`; vai `ops` thấy liên hệ trên `/ops/deals`; HTML/JSON của vai `viewer` không chứa chuỗi SĐT nào; tìm một SĐT (gõ `09…` hay `+84…`) ra đúng người | `app/src/lib/ops/people.ts`, `app/src/components/ops/people/**`, `app/src/app/ops/people/**`, `app/tests/danh-ba-nguoi*`, `app/src/lib/deals.ts`, `app/src/app/ops/deals/page.tsx`, `app/src/components/ops/deal-card.tsx` | T2 | **U1** | N8, N10 |
 | `do-danh-ba-sdt` | Mỗi đêm đo trục SĐT của danh bạ: số SĐT nối 1–1 mà chưa gộp; người theo SĐT không vai; dòng `sellers` so với SĐT trên tin; tin nhiều SĐT; bài sót theo bộ dò rộng. Ghi `dq_check_results`, hiện ở `/ops/quality`. **Bật khi**: chạy trên DB 30/10 ra đúng số ở §0 (129 · 13 · 150 · 19/161 · 11 · 46) | `pipeline/` (bộ đo DQ), `pipeline/sql/450_*` | T2 | **P4** | đo N1–N5 |
 
 ### 6.2 Sửa câu giao hàng đã có (không cắt trùng)
@@ -282,23 +284,36 @@ Mọi hàng dưới đây **chưa cắt**. Cắt thật đi qua `/acceptance-gat
 | `s06-sdt-theo-tin` (= SH3) | **Chỉ mở khi SH1 quyết.** Bộ thu S06 gọi lệnh lộ số cho tin được chọn (trần/ngày như SH3), ghi số vào payload; DATA-CONTRACT thêm trường, tăng `schemaVersion`; bỏ qua tin `phone_hidden = true` | T2 | N9 |
 | `s05-sender-id` | Khi S05 thu lại (TV15): kiểm vì sao 56/100 bài không có `sender_id` trong payload; nếu nguồn có tác giả thì bộ thu ghi đủ | T1/T2 | N12 |
 
-### 6.4 Mạnh quyết (ra khỏi kho)
+### 6.4 Quyết định của Mạnh (30/10)
 
-- **Hỏi-A (N7)**: khoá SĐT dạng nào? (a) giữ `0xxxxxxxxx` + băm như hôm nay, chỉ đổi tên gọi thành «khoá SĐT»; (b) chuẩn E.164
-  `+84…` theo RESO, đi qua nghỉ bí danh cũ, thêm bí danh mới; (c) lưu số gốc thành bí danh (`alias_kind = sdt`, migration
-  T3), bỏ băm trong danh bạ. Khuyến nghị: (b) cho khoá, hiển thị nối lúc đọc (`people-hien-so-goc`), (c) để sau.
-- **Hỏi-B (N8, N10)**: số gốc mở cho vai Vận hành, hay chỉ `admin`? Khuyến nghị vai Vận hành, và hạ `/ops/deals` theo.
-- **Hỏi-C (N3)**: `sellers` sửa kiểu (a) khôi phục thêm dòng, hay (b) view trên danh bạ? Khuyến nghị (a) ngay vì nhỏ, (b)
-  cùng Hỏi-2 của DB2b.
+- **Hỏi-A (N7) — đã chốt**: **lưu số gốc**, mọi chỗ dùng **một dạng `+84…`** (E.164, khớp RESO). Gánh bằng
+  `sdt-luu-goc-e164` (P3, T3). Cloud vẫn chỉ nhận khoá: đưa số gốc lên cloud là quyết định riêng, chưa mở.
+- **Hỏi-B (N8, N10) — đã chốt**: số gốc mở cho **cả vai Vận hành và `admin`** ở máy thu. `/ops/deals` hạ cổng theo. Gánh
+  bằng `people-hien-so-goc` (U1, T2).
+- **Hỏi-C (N3) — đã duyệt (Mạnh 30/10, «duyệt cả hai bước»)**:
+
+| | (a) Khôi phục lệnh thêm dòng | (b) `sellers` thành view trên danh bạ |
+|---|---|---|
+| Sửa gì | ~10 dòng `INSERT … ON CONFLICT` trong `refresh-bait-gap.mjs` | Migration: bỏ bảng, tạo view gom bí danh SĐT theo giá trị qua các nguồn + đếm từ `sale_offers`; `sync-cloud` đọc view |
+| Tầng · thời gian | T2, một lượt nhỏ | T3, cần Cổng Đáng + chữ ký |
+| Hết lệch 19 ↔ 161 | Ngay lượt đêm kế | Khi hàng T3 gộp |
+| Một nguồn chân lý | Không: vẫn hai sổ người theo SĐT (`sellers` gộp liên nguồn, danh bạ theo nguồn) | Có: `sellers` chỉ là cách nhìn của danh bạ |
+| Đụng Hỏi-A | Khoá `phone_hash` sẽ phải đổi lần nữa khi chuyển `+84…` | Đổi khoá **một lần**, cùng migration của Hỏi-A |
+| Rủi ro | Thấp; giữ nguyên người đọc (`deals.ts`, bait gap, cloud) | Cột tổng hợp (`flags`, `n_ads`, trung vị bait gap) phải tính lại trong view; cloud đổi khoá |
+
+**Đã duyệt: làm cả hai, theo thứ tự.** Bước 1 là (a) ngay (`sellers-them-dong-lai`, P3, T2): sửa số sai trên
+`/ops/deals` hôm nay, chi phí gần như bằng không. Bước 2 là (b), gộp vào `sdt-luu-goc-e164`: migration T3 đó đằng nào cũng
+đổi khoá SĐT ở mọi bảng, nên chuyển `sellers` sang view cùng lúc để chỉ đổi khoá một lần và còn một sổ người. Không làm (b)
+riêng trước Hỏi-A, vì sẽ đổi khoá hai lần.
 
 ### 6.5 Thứ tự chạy gợi ý
 
-1. P3 `sellers-theo-danh-ba` (a), nhỏ và đang sai số trên `/ops/deals`.
-2. P1 `boc-sdt-du-va-chon-ro` song song (ranh giới `pipeline/transform-*` riêng).
-3. P3 `gop-nguoi-sdt-tai-khoan` sau khi P1 xong, để gộp trên SĐT đã chọn đúng; rồi `judge-evidence-du-truong`.
-4. U1 `people-hien-so-goc` sau `che-tim-bi-danh-viewer`; nếu `gop-nguoi-sdt-tai-khoan` chưa xong thì vẫn chạy được (hiện
-   «cùng SĐT với người …»).
-5. P4 `do-danh-ba-sdt` bất cứ lúc nào, nên trước bước 3 để có số đối chứng.
+1. P3 `sellers-them-dong-lai` (Hỏi-C bước 1): nhỏ, sửa số sai trên `/ops/deals`.
+2. P1 `boc-sdt-du-va-chon-ro` song song (ranh giới `pipeline/transform-*` riêng), trả `+84…`.
+3. P3 `sdt-luu-goc-e164` (T3) sau bước 2: lưu số gốc, đổi khoá một lần, `sellers` thành view.
+4. P3 `gop-nguoi-sdt-tai-khoan` sau bước 3, gộp trên bí danh `sdt`; rồi `judge-evidence-du-truong`.
+5. U1 `people-hien-so-goc` sau `che-tim-bi-danh-viewer`; đọc bí danh `sdt` khi bước 3 xong, trước đó dùng đường nối lùi.
+6. P4 `do-danh-ba-sdt` bất cứ lúc nào, nên trước bước 4 để có số đối chứng.
 
 ---
 
