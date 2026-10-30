@@ -21,13 +21,14 @@ const SNAP = "collector/snapshots/hanoi/hanoi__zalo-agent__2026-10-25T000000Z";
 const STATE = "pipeline/logs/apify-daily.state";
 const MOC_CU = "2026-10-24T000000Z";
 // NH1 media-canonical-reso (Hỏi-3 = B, Mạnh 30/10): transform-media đứng ngay sau transform-zalo. ZJ-AC-1, ZJ-AC-6 của
-// hồ sơ transform-zalo-boc-job-run (lời «ba bước») thay bởi media-canonical-reso#AC-10.
-const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap"];
+// hồ sơ transform-zalo-boc-job-run (lời «ba bước») thay bởi media-canonical-reso#AC-10. enrich-chay-sau-nap (AC-6, Mạnh
+// duyệt 30/10): enrich-run đứng cuối — lời «bốn bước» của media-canonical-reso#AC-10 thay bởi enrich-chay-sau-nap#AC-6.
+const NHAN = ["import-airbnb", "transform-zalo", "transform-media", "refresh-bait-gap", "enrich-run"];
 
-// node giả: nhãn = tên tệp .mjs đầu tiên (không đuôi); ghi nhãn + môi trường thấy được; hỏng theo FAIL_STEPS (nhan:ma,…).
+// node giả: nhãn = tên tệp .mjs/.js/.ts đầu tiên (không đuôi); ghi nhãn + môi trường thấy được; hỏng theo FAIL_STEPS (nhan:ma,…).
 const NODE_SHIM = `#!/bin/bash
 step=node
-for a in "$@"; do case "$a" in *.mjs|*.js) step="$(basename "$a")"; step="\${step%.*}"; break;; esac; done
+for a in "$@"; do case "$a" in *.mjs|*.js|*.ts) step="$(basename "$a")"; step="\${step%.*}"; break;; esac; done
 echo "$step" >> "$CALLS"
 echo "$PATH|$HOME|$DATABASE_URL" >> "$ENVS"
 IFS=',' read -ra items <<< "\${FAIL_STEPS:-}"
@@ -55,6 +56,7 @@ function cay(noiDung) {
   // 2510-8: tệp bọc chỉ nạp snapshot đã có manifest (thiếu manifest < 30′ = đang ghi → dừng chuỗi)
   writeFileSync(path.join(root, SNAP, "manifest.json"), "{}\n");
   mkdirSync(path.join(root, "pipeline/logs"), { recursive: true });
+  mkdirSync(path.join(root, "agent")); // bước enrich-run chạy trong agent/
   writeFileSync(path.join(root, STATE), MOC_CU);
   const bin = path.join(root, ".shim-bin");
   mkdirSync(bin);
@@ -97,7 +99,7 @@ function chay(root, failSteps = "", failMsg = "") {
 const daChay = [];
 const ghi = (r) => (daChay.push(r), r);
 
-test("ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự bốn bước (NH-AC-10), không JOB FAIL", () => {
+test("ZJ-AC-1 mọi bước lành → mã 0, đúng thứ tự năm bước (NH-AC-10, enrich-chay-sau-nap AC-6), không JOB FAIL", () => {
   const r = ghi(chay(cay()));
   assert.equal(r.code, 0, r.stderr);
   assert.deepEqual(r.calls, NHAN);
