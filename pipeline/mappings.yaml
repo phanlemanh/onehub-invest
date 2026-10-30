@@ -381,7 +381,7 @@ enums:
     local: true
     rationale: "extension DataLevel — thang bậc FRAMING §3.4 (Mạnh duyệt 23/10)"
     checked_on: "2026-10-23"
-    columns: []
+    columns: [data_level_snapshot.data_level]
     nullable: false
     values:
       - { code: B0, label_vi: Có lời khai }
