@@ -40,16 +40,27 @@ export const FIELD_LABEL: Record<LabelField, string> = {
   bedrooms: "Phòng ngủ",
 }
 
-export type PriceUnit = "ty" | "trieu"
+export const PRICE_UNITS = ["ty", "trieu"] as const
+export type PriceUnit = (typeof PRICE_UNITS)[number]
+
+/** Chữ lỗi khi người gắn ghi lại tin CHÍNH MÌNH đã gắn (409). Một chỗ: truy vấn ghi trả nó, biểu mẫu nhận ra nó để coi
+ * lượt trước đã vào (lỗi mạng sau khi máy thu đã ghi) — hàng nhan-gia-va-luu-loi-mang. */
+export const DA_GAN_CUA_TOI = "Anh đã gắn tin này"
+
+/** Số mơ hồ: một dấu `.`/`,` theo sau đúng ba chữ số — ngăn nghìn hay thập phân? Từ chối, không đoán (Ngoài-7 của PL7). */
+export const MSG_NGAN_NGHIN = "Dấu ngăn nghìn không được nhận — gõ 4350 hoặc 4,35"
+export const MSG_DON_VI = "Đơn vị giá không hợp lệ — chọn tỷ hoặc triệu"
 /** Một ô như người gõ: `not_stated` = «Tin không nêu». Giá mang đơn vị. */
 export type RawCell = { not_stated?: boolean; value?: string; unit?: PriceUnit }
 export type RawLabels = Partial<Record<LabelField, RawCell>>
 export type LabelRow = { field: LabelField; value: string | null; not_stated: boolean }
 export type Chuan = { ok: true; rows: LabelRow[] } | { ok: false; loi: Partial<Record<LabelField, string>> }
 
-/** Số thập phân như người Việt gõ («4,35», «4.35», «64»): trả phần nguyên đã nhân 10^scale. Sai khuôn → null. */
-function docThapPhan(s: string): { so: bigint; scale: number } | null {
+/** Số thập phân như người Việt gõ («4,35», «4.35», «64»): trả phần nguyên đã nhân 10^scale. Sai khuôn (kể cả hơn một
+ * dấu) → null; một dấu theo sau đúng ba chữ số («4.350», «4,350») → "nghin" (mơ hồ, bên gọi báo MSG_NGAN_NGHIN). */
+function docThapPhan(s: string): { so: bigint; scale: number } | "nghin" | null {
   const t = s.trim().replace(/\s+/g, "")
+  if (/^\d+[.,]\d{3}$/.test(t)) return "nghin"
   const m = /^(\d+)(?:[.,](\d+))?$/.exec(t)
   if (!m) return null
   const phan = m[2] ?? ""
@@ -57,9 +68,9 @@ function docThapPhan(s: string): { so: bigint; scale: number } | null {
 }
 
 /** Đổi về VND nguyên bằng số nguyên (không số thực): tỷ = 10^9, triệu = 10^6; phần lẻ dưới 1 đồng làm tròn. */
-export function veVnd(s: string, unit: PriceUnit): bigint | null {
+export function veVnd(s: string, unit: PriceUnit): bigint | "nghin" | null {
   const d = docThapPhan(s)
-  if (!d) return null
+  if (d === null || d === "nghin") return d
   const mu = unit === "ty" ? 9 : 6
   if (d.scale <= mu) return d.so * BigInt(10) ** BigInt(mu - d.scale)
   const chia = BigInt(10) ** BigInt(d.scale - mu)
@@ -107,7 +118,8 @@ export function chuanHoaLuot(raw: RawLabels | null | undefined): Chuan {
       rows.push({ field: f, value: chuanChu(v), not_stated: false })
     } else if (f === "area_m2") {
       const d = docThapPhan(v)
-      if (!d) loi[f] = "Diện tích phải là số, vd 64,5"
+      if (d === "nghin") loi[f] = MSG_NGAN_NGHIN
+      else if (!d) loi[f] = "Diện tích phải là số, vd 64,5"
       else if (d.so <= BigInt(0)) loi[f] = "Diện tích phải lớn hơn 0"
       else rows.push({ field: f, value: chuanThapPhan(d), not_stated: false })
     } else if (f === "bedrooms") {
@@ -124,11 +136,19 @@ export function chuanHoaLuot(raw: RawLabels | null | undefined): Chuan {
     } else if (lo.not_stated) {
       rows.push({ field: "price_min_vnd", value: null, not_stated: true }, { field: "price_max_vnd", value: null, not_stated: true })
     } else {
-      const a = veVnd(lo.value!, lo.unit ?? "ty")
-      const b = veVnd(hi.value!, hi.unit ?? "ty")
-      if (a == null) loi.price_min_vnd = "Giá phải là số không âm, vd 4,35"
-      if (b == null) loi.price_max_vnd = "Giá phải là số không âm, vd 4,35"
-      if (a != null && b != null) {
+      // Đơn vị đóng: vắng hay khác «ty»/«trieu» là lỗi — không còn ngầm mặc định (Ngoài-3 của PL7).
+      const donVi = (c: RawCell) => ((PRICE_UNITS as readonly string[]).includes(String(c.unit)) ? (c.unit as PriceUnit) : null)
+      const uLo = donVi(lo)
+      const uHi = donVi(hi)
+      if (!uLo) loi.price_min_vnd = MSG_DON_VI
+      if (!uHi) loi.price_max_vnd = MSG_DON_VI
+      const a = uLo ? veVnd(lo.value!, uLo) : null
+      const b = uHi ? veVnd(hi.value!, uHi) : null
+      if (uLo && a == null) loi.price_min_vnd = "Giá phải là số không âm, vd 4,35"
+      if (uHi && b == null) loi.price_max_vnd = "Giá phải là số không âm, vd 4,35"
+      if (a === "nghin") loi.price_min_vnd = MSG_NGAN_NGHIN
+      if (b === "nghin") loi.price_max_vnd = MSG_NGAN_NGHIN
+      if (typeof a === "bigint" && typeof b === "bigint") {
         if (a > b) loi.price_max_vnd = "Giá thấp nhất lớn hơn giá cao nhất"
         else rows.push({ field: "price_min_vnd", value: a.toString(), not_stated: false }, { field: "price_max_vnd", value: b.toString(), not_stated: false })
       }
